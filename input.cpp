@@ -400,15 +400,15 @@ static wint_t input_exec_binding(const input_mapping_t &m, const wcstring &seq)
         switch (code)
         {
 
-        case R_SELF_INSERT:
-        {
-            return seq[0];
-        }
+            case R_SELF_INSERT:
+            {
+                return seq[0];
+            }
 
-        default:
-        {
-            return code;
-        }
+            default:
+            {
+                return code;
+            }
 
         }
     }

@@ -153,21 +153,21 @@ FILE *wfopen(const wcstring &path, const char *mode)
     size_t idx = 0;
     switch (mode[idx++])
     {
-    case 'r':
-        permissions = O_RDONLY;
-        break;
-    case 'w':
-        permissions = O_WRONLY;
-        options = O_CREAT | O_TRUNC;
-        break;
-    case 'a':
-        permissions = O_WRONLY;
-        options = O_CREAT | O_APPEND;
-        break;
-    default:
-        errno = EINVAL;
-        return NULL;
-        break;
+        case 'r':
+            permissions = O_RDONLY;
+            break;
+        case 'w':
+            permissions = O_WRONLY;
+            options = O_CREAT | O_TRUNC;
+            break;
+        case 'a':
+            permissions = O_WRONLY;
+            options = O_CREAT | O_APPEND;
+            break;
+        default:
+            errno = EINVAL;
+            return NULL;
+            break;
     }
     /* Skip binary */
     if (mode[idx] == 'b')

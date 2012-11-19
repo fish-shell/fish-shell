@@ -383,51 +383,51 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t &out_chain, s
 
         switch (in->io_mode)
         {
-        default:
-            /* Unknown type, should never happen */
-            fprintf(stderr, "Unknown io_mode %ld\n", (long)in->io_mode);
-            abort();
-            break;
+            default:
+                /* Unknown type, should never happen */
+                fprintf(stderr, "Unknown io_mode %ld\n", (long)in->io_mode);
+                abort();
+                break;
 
-            /*
-              These redirections don't need transmogrification. They can be passed through.
-            */
-        case IO_PIPE:
-        case IO_FD:
-        case IO_BUFFER:
-        case IO_CLOSE:
-        {
-            out = new io_data_t(*in);
-            break;
-        }
-
-        /*
-          Transmogrify file redirections
-        */
-        case IO_FILE:
-        {
-            out = new io_data_t();
-            out->fd = in->fd;
-            out->io_mode = IO_FD;
-            out->param2.close_old = 1;
-
-            int fd;
-            if ((fd=open(in->filename_cstr, in->param2.flags, OPEN_MASK))==-1)
+                /*
+                  These redirections don't need transmogrification. They can be passed through.
+                */
+            case IO_PIPE:
+            case IO_FD:
+            case IO_BUFFER:
+            case IO_CLOSE:
             {
-                debug(1,
-                      FILE_ERROR,
-                      in->filename_cstr);
-
-                wperror(L"open");
-                success = false;
+                out = new io_data_t(*in);
                 break;
             }
 
-            opened_fds.push_back(fd);
-            out->param1.old_fd = fd;
+            /*
+              Transmogrify file redirections
+            */
+            case IO_FILE:
+            {
+                out = new io_data_t();
+                out->fd = in->fd;
+                out->io_mode = IO_FD;
+                out->param2.close_old = 1;
 
-            break;
-        }
+                int fd;
+                if ((fd=open(in->filename_cstr, in->param2.flags, OPEN_MASK))==-1)
+                {
+                    debug(1,
+                          FILE_ERROR,
+                          in->filename_cstr);
+
+                    wperror(L"open");
+                    success = false;
+                    break;
+                }
+
+                opened_fds.push_back(fd);
+                out->param1.old_fd = fd;
+
+                break;
+            }
         }
 
         /* Record this IO redirection even if we failed (so we can free it) */
@@ -784,234 +784,234 @@ void exec(parser_t &parser, job_t *j)
 
         switch (p->type)
         {
-        case INTERNAL_FUNCTION:
-        {
-            wchar_t * def=0;
-            int shadows;
-
-
-            /*
-              Calls to function_get_definition might need to
-              source a file as a part of autoloading, hence there
-              must be no blocks.
-            */
-
-            signal_unblock();
-            wcstring orig_def;
-            function_get_definition(p->argv0(), &orig_def);
-
-            // function_get_named_arguments may trigger autoload, which deallocates the orig_def.
-            // We should make function_get_definition return a wcstring (but how to handle NULL...)
-            if (! orig_def.empty())
-                def = wcsdup(orig_def.c_str());
-
-            wcstring_list_t named_arguments = function_get_named_arguments(p->argv0());
-            shadows = function_get_shadows(p->argv0());
-
-            signal_block();
-
-            if (def == NULL)
+            case INTERNAL_FUNCTION:
             {
-                debug(0, _(L"Unknown function '%ls'"), p->argv0());
-                break;
-            }
-            function_block_t *newv = new function_block_t(p, p->argv0(), shadows);
-            parser.push_block(newv);
+                wchar_t * def=0;
+                int shadows;
 
-
-            /*
-              set_argv might trigger an event
-              handler, hence we need to unblock
-              signals.
-            */
-            signal_unblock();
-            parse_util_set_argv(p->get_argv()+1, named_arguments);
-            signal_block();
-
-            parser.forbid_function(p->argv0());
-
-            if (p->next)
-            {
-                io_buffer = io_buffer_create(0);
-                j->io.push_back(io_buffer);
-            }
-
-            internal_exec_helper(parser, def, TOP, j->io);
-
-            parser.allow_function();
-            parser.pop_block();
-            free(def);
-
-            break;
-        }
-
-        case INTERNAL_BLOCK:
-        {
-            if (p->next)
-            {
-                io_buffer = io_buffer_create(0);
-                j->io.push_back(io_buffer);
-            }
-
-            internal_exec_helper(parser, p->argv0(), TOP, j->io);
-            break;
-
-        }
-
-        case INTERNAL_BUILTIN:
-        {
-            int builtin_stdin=0;
-            int fg;
-            int close_stdin=0;
-
-            /*
-              If this is the first process, check the io
-              redirections and see where we should be reading
-              from.
-            */
-            if (p == j->first_process)
-            {
-                const io_data_t *in = io_chain_get(j->io, 0);
-
-                if (in)
-                {
-                    switch (in->io_mode)
-                    {
-
-                    case IO_FD:
-                    {
-                        builtin_stdin = in->param1.old_fd;
-                        break;
-                    }
-                    case IO_PIPE:
-                    {
-                        builtin_stdin = in->param1.pipe_fd[0];
-                        break;
-                    }
-
-                    case IO_FILE:
-                    {
-                        /* Do not set CLO_EXEC because child needs access */
-                        builtin_stdin=open(in->filename_cstr,
-                                           in->param2.flags, OPEN_MASK);
-                        if (builtin_stdin == -1)
-                        {
-                            debug(1,
-                                  FILE_ERROR,
-                                  in->filename_cstr);
-                            wperror(L"open");
-                        }
-                        else
-                        {
-                            close_stdin = 1;
-                        }
-
-                        break;
-                    }
-
-                    case IO_CLOSE:
-                    {
-                        /*
-                          FIXME:
-
-                          When
-                          requesting
-                          that
-                          stdin
-                          be
-                          closed,
-                          we
-                          really
-                          don't
-                          do
-                          anything. How
-                          should
-                          this
-                          be
-                          handled?
-                         */
-                        builtin_stdin = -1;
-
-                        break;
-                    }
-
-                    default:
-                    {
-                        builtin_stdin=-1;
-                        debug(1,
-                              _(L"Unknown input redirection type %d"),
-                              in->io_mode);
-                        break;
-                    }
-
-                    }
-                }
-            }
-            else
-            {
-                builtin_stdin = pipe_read.param1.pipe_fd[0];
-            }
-
-            if (builtin_stdin == -1)
-            {
-                exec_error = true;
-                break;
-            }
-            else
-            {
-                int old_out = builtin_out_redirect;
-                int old_err = builtin_err_redirect;
 
                 /*
-                   Since this may be the foreground job, and since
-                   a builtin may execute another foreground job,
-                   we need to pretend to suspend this job while
-                   running the builtin, in order to avoid a
-                   situation where two jobs are running at once.
-
-                   The reason this is done here, and not by the
-                   relevant builtins, is that this way, the
-                   builtin does not need to know what job it is
-                   part of. It could probably figure that out by
-                   walking the job list, but it seems more robust
-                   to make exec handle things.
+                  Calls to function_get_definition might need to
+                  source a file as a part of autoloading, hence there
+                  must be no blocks.
                 */
 
-                builtin_push_io(parser, builtin_stdin);
-
-                builtin_out_redirect = has_fd(j->io, 1);
-                builtin_err_redirect = has_fd(j->io, 2);
-
-                fg = job_get_flag(j, JOB_FOREGROUND);
-                job_set_flag(j, JOB_FOREGROUND, 0);
-
                 signal_unblock();
+                wcstring orig_def;
+                function_get_definition(p->argv0(), &orig_def);
 
-                p->status = builtin_run(parser, p->get_argv(), j->io);
+                // function_get_named_arguments may trigger autoload, which deallocates the orig_def.
+                // We should make function_get_definition return a wcstring (but how to handle NULL...)
+                if (! orig_def.empty())
+                    def = wcsdup(orig_def.c_str());
 
-                builtin_out_redirect=old_out;
-                builtin_err_redirect=old_err;
+                wcstring_list_t named_arguments = function_get_named_arguments(p->argv0());
+                shadows = function_get_shadows(p->argv0());
 
                 signal_block();
 
+                if (def == NULL)
+                {
+                    debug(0, _(L"Unknown function '%ls'"), p->argv0());
+                    break;
+                }
+                function_block_t *newv = new function_block_t(p, p->argv0(), shadows);
+                parser.push_block(newv);
+
+
                 /*
-                  Restore the fg flag, which is temporarily set to
-                  false during builtin execution so as not to confuse
-                  some job-handling builtins.
+                  set_argv might trigger an event
+                  handler, hence we need to unblock
+                  signals.
                 */
-                job_set_flag(j, JOB_FOREGROUND, fg);
+                signal_unblock();
+                parse_util_set_argv(p->get_argv()+1, named_arguments);
+                signal_block();
+
+                parser.forbid_function(p->argv0());
+
+                if (p->next)
+                {
+                    io_buffer = io_buffer_create(0);
+                    j->io.push_back(io_buffer);
+                }
+
+                internal_exec_helper(parser, def, TOP, j->io);
+
+                parser.allow_function();
+                parser.pop_block();
+                free(def);
+
+                break;
             }
 
-            /*
-              If stdin has been redirected, close the redirection
-              stream.
-            */
-            if (close_stdin)
+            case INTERNAL_BLOCK:
             {
-                exec_close(builtin_stdin);
+                if (p->next)
+                {
+                    io_buffer = io_buffer_create(0);
+                    j->io.push_back(io_buffer);
+                }
+
+                internal_exec_helper(parser, p->argv0(), TOP, j->io);
+                break;
+
             }
-            break;
-        }
+
+            case INTERNAL_BUILTIN:
+            {
+                int builtin_stdin=0;
+                int fg;
+                int close_stdin=0;
+
+                /*
+                  If this is the first process, check the io
+                  redirections and see where we should be reading
+                  from.
+                */
+                if (p == j->first_process)
+                {
+                    const io_data_t *in = io_chain_get(j->io, 0);
+
+                    if (in)
+                    {
+                        switch (in->io_mode)
+                        {
+
+                            case IO_FD:
+                            {
+                                builtin_stdin = in->param1.old_fd;
+                                break;
+                            }
+                            case IO_PIPE:
+                            {
+                                builtin_stdin = in->param1.pipe_fd[0];
+                                break;
+                            }
+
+                            case IO_FILE:
+                            {
+                                /* Do not set CLO_EXEC because child needs access */
+                                builtin_stdin=open(in->filename_cstr,
+                                                   in->param2.flags, OPEN_MASK);
+                                if (builtin_stdin == -1)
+                                {
+                                    debug(1,
+                                          FILE_ERROR,
+                                          in->filename_cstr);
+                                    wperror(L"open");
+                                }
+                                else
+                                {
+                                    close_stdin = 1;
+                                }
+
+                                break;
+                            }
+
+                            case IO_CLOSE:
+                            {
+                                /*
+                                  FIXME:
+
+                                  When
+                                  requesting
+                                  that
+                                  stdin
+                                  be
+                                  closed,
+                                  we
+                                  really
+                                  don't
+                                  do
+                                  anything. How
+                                  should
+                                  this
+                                  be
+                                  handled?
+                                 */
+                                builtin_stdin = -1;
+
+                                break;
+                            }
+
+                            default:
+                            {
+                                builtin_stdin=-1;
+                                debug(1,
+                                      _(L"Unknown input redirection type %d"),
+                                      in->io_mode);
+                                break;
+                            }
+
+                        }
+                    }
+                }
+                else
+                {
+                    builtin_stdin = pipe_read.param1.pipe_fd[0];
+                }
+
+                if (builtin_stdin == -1)
+                {
+                    exec_error = true;
+                    break;
+                }
+                else
+                {
+                    int old_out = builtin_out_redirect;
+                    int old_err = builtin_err_redirect;
+
+                    /*
+                       Since this may be the foreground job, and since
+                       a builtin may execute another foreground job,
+                       we need to pretend to suspend this job while
+                       running the builtin, in order to avoid a
+                       situation where two jobs are running at once.
+
+                       The reason this is done here, and not by the
+                       relevant builtins, is that this way, the
+                       builtin does not need to know what job it is
+                       part of. It could probably figure that out by
+                       walking the job list, but it seems more robust
+                       to make exec handle things.
+                    */
+
+                    builtin_push_io(parser, builtin_stdin);
+
+                    builtin_out_redirect = has_fd(j->io, 1);
+                    builtin_err_redirect = has_fd(j->io, 2);
+
+                    fg = job_get_flag(j, JOB_FOREGROUND);
+                    job_set_flag(j, JOB_FOREGROUND, 0);
+
+                    signal_unblock();
+
+                    p->status = builtin_run(parser, p->get_argv(), j->io);
+
+                    builtin_out_redirect=old_out;
+                    builtin_err_redirect=old_err;
+
+                    signal_block();
+
+                    /*
+                      Restore the fg flag, which is temporarily set to
+                      false during builtin execution so as not to confuse
+                      some job-handling builtins.
+                    */
+                    job_set_flag(j, JOB_FOREGROUND, fg);
+                }
+
+                /*
+                  If stdin has been redirected, close the redirection
+                  stream.
+                */
+                if (close_stdin)
+                {
+                    exec_close(builtin_stdin);
+                }
+                break;
+            }
         }
 
         if (exec_error)
@@ -1022,56 +1022,109 @@ void exec(parser_t &parser, job_t *j)
         switch (p->type)
         {
 
-        case INTERNAL_BLOCK:
-        case INTERNAL_FUNCTION:
-        {
-            int status = proc_get_last_status();
-
-            /*
-              Handle output from a block or function. This usually
-              means do nothing, but in the case of pipes, we have
-              to buffer such io, since otherwise the internal pipe
-              buffer might overflow.
-            */
-            if (!io_buffer)
+            case INTERNAL_BLOCK:
+            case INTERNAL_FUNCTION:
             {
+                int status = proc_get_last_status();
+
                 /*
-                  No buffer, so we exit directly. This means we
-                  have to manually set the exit status.
+                  Handle output from a block or function. This usually
+                  means do nothing, but in the case of pipes, we have
+                  to buffer such io, since otherwise the internal pipe
+                  buffer might overflow.
                 */
-                if (p->next == 0)
+                if (!io_buffer)
                 {
-                    proc_set_last_status(job_get_flag(j, JOB_NEGATE)?(!status):status);
+                    /*
+                      No buffer, so we exit directly. This means we
+                      have to manually set the exit status.
+                    */
+                    if (p->next == 0)
+                    {
+                        proc_set_last_status(job_get_flag(j, JOB_NEGATE)?(!status):status);
+                    }
+                    p->completed = 1;
+                    break;
                 }
-                p->completed = 1;
+
+                io_remove(j->io, io_buffer);
+
+                io_buffer_read(io_buffer);
+
+                const char *buffer = io_buffer->out_buffer_ptr();
+                size_t count = io_buffer->out_buffer_size();
+
+                if (io_buffer->out_buffer_size() > 0)
+                {
+                    /* We don't have to drain threads here because our child process is simple */
+                    if (g_log_forks)
+                    {
+                        printf("Executing fork for internal block or function for '%ls'\n", p->argv0());
+                    }
+                    pid = execute_fork(false);
+                    if (pid == 0)
+                    {
+
+                        /*
+                          This is the child process. Write out the contents of the pipeline.
+                        */
+                        p->pid = getpid();
+                        setup_child_process(j, p);
+
+                        exec_write_and_exit(io_buffer->fd, buffer, count, status);
+                    }
+                    else
+                    {
+                        /*
+                           This is the parent process. Store away
+                           information on the child, and possibly give
+                           it control over the terminal.
+                        */
+                        p->pid = pid;
+                        set_child_group(j, p, 0);
+
+                    }
+
+                }
+                else
+                {
+                    if (p->next == 0)
+                    {
+                        proc_set_last_status(job_get_flag(j, JOB_NEGATE)?(!status):status);
+                    }
+                    p->completed = 1;
+                }
+
+                io_buffer_destroy(io_buffer);
+
+                io_buffer=0;
                 break;
+
             }
 
-            io_remove(j->io, io_buffer);
 
-            io_buffer_read(io_buffer);
-
-            const char *buffer = io_buffer->out_buffer_ptr();
-            size_t count = io_buffer->out_buffer_size();
-
-            if (io_buffer->out_buffer_size() > 0)
+            case INTERNAL_BUFFER:
             {
+
+                const char *buffer = input_redirect->out_buffer_ptr();
+                size_t count = input_redirect->out_buffer_size();
+
                 /* We don't have to drain threads here because our child process is simple */
                 if (g_log_forks)
                 {
-                    printf("Executing fork for internal block or function for '%ls'\n", p->argv0());
+                    printf("fork #%d: Executing fork for internal buffer for '%ls'\n", g_fork_count, p->argv0() ? p->argv0() : L"(null)");
                 }
                 pid = execute_fork(false);
                 if (pid == 0)
                 {
-
                     /*
-                      This is the child process. Write out the contents of the pipeline.
+                      This is the child process. Write out the
+                      contents of the pipeline.
                     */
                     p->pid = getpid();
                     setup_child_process(j, p);
 
-                    exec_write_and_exit(io_buffer->fd, buffer, count, status);
+                    exec_write_and_exit(1, buffer, count, 0);
                 }
                 else
                 {
@@ -1082,282 +1135,229 @@ void exec(parser_t &parser, job_t *j)
                     */
                     p->pid = pid;
                     set_child_group(j, p, 0);
-
                 }
 
-            }
-            else
-            {
-                if (p->next == 0)
-                {
-                    proc_set_last_status(job_get_flag(j, JOB_NEGATE)?(!status):status);
-                }
-                p->completed = 1;
-            }
-
-            io_buffer_destroy(io_buffer);
-
-            io_buffer=0;
-            break;
-
-        }
-
-
-        case INTERNAL_BUFFER:
-        {
-
-            const char *buffer = input_redirect->out_buffer_ptr();
-            size_t count = input_redirect->out_buffer_size();
-
-            /* We don't have to drain threads here because our child process is simple */
-            if (g_log_forks)
-            {
-                printf("fork #%d: Executing fork for internal buffer for '%ls'\n", g_fork_count, p->argv0() ? p->argv0() : L"(null)");
-            }
-            pid = execute_fork(false);
-            if (pid == 0)
-            {
-                /*
-                  This is the child process. Write out the
-                  contents of the pipeline.
-                */
-                p->pid = getpid();
-                setup_child_process(j, p);
-
-                exec_write_and_exit(1, buffer, count, 0);
-            }
-            else
-            {
-                /*
-                   This is the parent process. Store away
-                   information on the child, and possibly give
-                   it control over the terminal.
-                */
-                p->pid = pid;
-                set_child_group(j, p, 0);
-            }
-
-            break;
-        }
-
-        case INTERNAL_BUILTIN:
-        {
-            int skip_fork;
-
-            /*
-              Handle output from builtin commands. In the general
-              case, this means forking of a worker process, that
-              will write out the contents of the stdout and stderr
-              buffers to the correct file descriptor. Since
-              forking is expensive, fish tries to avoid it wehn
-              possible.
-            */
-
-            /*
-              If a builtin didn't produce any output, and it is
-              not inside a pipeline, there is no need to fork
-            */
-            skip_fork =
-                get_stdout_buffer().empty() &&
-                get_stderr_buffer().empty() &&
-                !p->next;
-
-            /*
-              If the output of a builtin is to be sent to an internal
-              buffer, there is no need to fork. This helps out the
-              performance quite a bit in complex completion code.
-            */
-
-            io_data_t *io = io_chain_get(j->io, 1);
-            bool buffer_stdout = io && io->io_mode == IO_BUFFER;
-
-            if ((get_stderr_buffer().empty()) &&
-                    (!p->next) &&
-                    (! get_stdout_buffer().empty()) &&
-                    (buffer_stdout))
-            {
-                const std::string res = wcs2string(get_stdout_buffer());
-                io->out_buffer_append(res.c_str(), res.size());
-                skip_fork = 1;
-            }
-
-            if (! skip_fork && j->io.empty())
-            {
-                /* PCA for some reason, fish forks a lot, even for basic builtins like echo just to write out their buffers. I'm certain a lot of this is unnecessary, but I am not sure exactly when. If j->io is NULL, then it means there's no pipes or anything, so we can certainly just write out our data. Beyond that, we may be able to do the same if io_get returns 0 for STDOUT_FILENO and STDERR_FILENO. */
-                if (g_log_forks)
-                {
-                    printf("fork #-: Skipping fork for internal builtin for '%ls'\n", p->argv0());
-                }
-                const wcstring &out = get_stdout_buffer(), &err = get_stderr_buffer();
-                char *outbuff = wcs2str(out.c_str()), *errbuff = wcs2str(err.c_str());
-                do_builtin_io(outbuff, errbuff);
-                free(outbuff);
-                free(errbuff);
-                skip_fork = 1;
-            }
-
-            for (io_chain_t::iterator iter = j->io.begin(); iter != j->io.end(); iter++)
-            {
-                io_data_t *tmp_io = *iter;
-                if (tmp_io->io_mode == IO_FILE && strcmp(tmp_io->filename_cstr, "/dev/null") != 0)
-                {
-                    skip_fork = 0;
-                    break;
-                }
-            }
-
-
-            if (skip_fork)
-            {
-                p->completed=1;
-                if (p->next == 0)
-                {
-                    debug(3, L"Set status of %ls to %d using short circut", j->command_wcstr(), p->status);
-
-                    int status = p->status;
-                    proc_set_last_status(job_get_flag(j, JOB_NEGATE)?(!status):status);
-                }
                 break;
             }
 
-
-            /* Ok, unfortunatly, we have to do a real fork. Bummer. We work hard to make sure we don't have to wait for all our threads to exit, by arranging things so that we don't have to allocate memory or do anything except system calls in the child. */
-
-            /* Get the strings we'll write before we fork (since they call malloc) */
-            const wcstring &out = get_stdout_buffer(), &err = get_stderr_buffer();
-            char *outbuff = wcs2str(out.c_str()), *errbuff = wcs2str(err.c_str());
-
-            fflush(stdout);
-            fflush(stderr);
-            if (g_log_forks)
+            case INTERNAL_BUILTIN:
             {
-                printf("fork #%d: Executing fork for internal builtin for '%ls'\n", g_fork_count, p->argv0());
-                io_print(io_chain_t(io));
-            }
-            pid = execute_fork(false);
-            if (pid == 0)
-            {
+                int skip_fork;
+
                 /*
-                  This is the child process. Setup redirections,
-                  print correct output to stdout and stderr, and
-                  then exit.
+                  Handle output from builtin commands. In the general
+                  case, this means forking of a worker process, that
+                  will write out the contents of the stdout and stderr
+                  buffers to the correct file descriptor. Since
+                  forking is expensive, fish tries to avoid it wehn
+                  possible.
                 */
-                p->pid = getpid();
-                setup_child_process(j, p);
-                do_builtin_io(outbuff, errbuff);
-                exit_without_destructors(p->status);
 
+                /*
+                  If a builtin didn't produce any output, and it is
+                  not inside a pipeline, there is no need to fork
+                */
+                skip_fork =
+                    get_stdout_buffer().empty() &&
+                    get_stderr_buffer().empty() &&
+                    !p->next;
+
+                /*
+                  If the output of a builtin is to be sent to an internal
+                  buffer, there is no need to fork. This helps out the
+                  performance quite a bit in complex completion code.
+                */
+
+                io_data_t *io = io_chain_get(j->io, 1);
+                bool buffer_stdout = io && io->io_mode == IO_BUFFER;
+
+                if ((get_stderr_buffer().empty()) &&
+                        (!p->next) &&
+                        (! get_stdout_buffer().empty()) &&
+                        (buffer_stdout))
+                {
+                    const std::string res = wcs2string(get_stdout_buffer());
+                    io->out_buffer_append(res.c_str(), res.size());
+                    skip_fork = 1;
+                }
+
+                if (! skip_fork && j->io.empty())
+                {
+                    /* PCA for some reason, fish forks a lot, even for basic builtins like echo just to write out their buffers. I'm certain a lot of this is unnecessary, but I am not sure exactly when. If j->io is NULL, then it means there's no pipes or anything, so we can certainly just write out our data. Beyond that, we may be able to do the same if io_get returns 0 for STDOUT_FILENO and STDERR_FILENO. */
+                    if (g_log_forks)
+                    {
+                        printf("fork #-: Skipping fork for internal builtin for '%ls'\n", p->argv0());
+                    }
+                    const wcstring &out = get_stdout_buffer(), &err = get_stderr_buffer();
+                    char *outbuff = wcs2str(out.c_str()), *errbuff = wcs2str(err.c_str());
+                    do_builtin_io(outbuff, errbuff);
+                    free(outbuff);
+                    free(errbuff);
+                    skip_fork = 1;
+                }
+
+                for (io_chain_t::iterator iter = j->io.begin(); iter != j->io.end(); iter++)
+                {
+                    io_data_t *tmp_io = *iter;
+                    if (tmp_io->io_mode == IO_FILE && strcmp(tmp_io->filename_cstr, "/dev/null") != 0)
+                    {
+                        skip_fork = 0;
+                        break;
+                    }
+                }
+
+
+                if (skip_fork)
+                {
+                    p->completed=1;
+                    if (p->next == 0)
+                    {
+                        debug(3, L"Set status of %ls to %d using short circut", j->command_wcstr(), p->status);
+
+                        int status = p->status;
+                        proc_set_last_status(job_get_flag(j, JOB_NEGATE)?(!status):status);
+                    }
+                    break;
+                }
+
+
+                /* Ok, unfortunatly, we have to do a real fork. Bummer. We work hard to make sure we don't have to wait for all our threads to exit, by arranging things so that we don't have to allocate memory or do anything except system calls in the child. */
+
+                /* Get the strings we'll write before we fork (since they call malloc) */
+                const wcstring &out = get_stdout_buffer(), &err = get_stderr_buffer();
+                char *outbuff = wcs2str(out.c_str()), *errbuff = wcs2str(err.c_str());
+
+                fflush(stdout);
+                fflush(stderr);
+                if (g_log_forks)
+                {
+                    printf("fork #%d: Executing fork for internal builtin for '%ls'\n", g_fork_count, p->argv0());
+                    io_print(io_chain_t(io));
+                }
+                pid = execute_fork(false);
+                if (pid == 0)
+                {
+                    /*
+                      This is the child process. Setup redirections,
+                      print correct output to stdout and stderr, and
+                      then exit.
+                    */
+                    p->pid = getpid();
+                    setup_child_process(j, p);
+                    do_builtin_io(outbuff, errbuff);
+                    exit_without_destructors(p->status);
+
+                }
+                else
+                {
+                    /* Free the strings in the parent */
+                    free(outbuff);
+                    free(errbuff);
+
+                    /*
+                       This is the parent process. Store away
+                       information on the child, and possibly give
+                       it control over the terminal.
+                    */
+                    p->pid = pid;
+
+                    set_child_group(j, p, 0);
+
+                }
+
+                break;
             }
-            else
+
+            case EXTERNAL:
             {
-                /* Free the strings in the parent */
-                free(outbuff);
-                free(errbuff);
+                /* Get argv and envv before we fork */
+                null_terminated_array_t<char> argv_array = convert_wide_array_to_narrow(p->get_argv_array());
+
+                null_terminated_array_t<char> envv_array;
+                env_export_arr(false, envv_array);
+
+                char **envv = envv_array.get();
+                char **argv = argv_array.get();
+
+                std::string actual_cmd_str = wcs2string(p->actual_cmd);
+                const char *actual_cmd = actual_cmd_str.c_str();
+
+                const wchar_t *reader_current_filename();
+                if (g_log_forks)
+                {
+                    const wchar_t *file = reader_current_filename();
+                    const wchar_t *func = parser_t::principal_parser().is_function();
+                    printf("fork #%d: forking for '%s' in '%ls:%ls'\n", g_fork_count, actual_cmd, file ? file : L"", func ? func : L"?");
+
+                    fprintf(stderr, "IO chain for %s:\n", actual_cmd);
+                    io_print(j->io);
+                }
+
+#if FISH_USE_POSIX_SPAWN
+                /* Prefer to use posix_spawn, since it's faster on some systems like OS X */
+                bool use_posix_spawn = g_use_posix_spawn && can_use_posix_spawn_for_job(j, p);
+                if (use_posix_spawn)
+                {
+                    /* Create posix spawn attributes and actions */
+                    posix_spawnattr_t attr = posix_spawnattr_t();
+                    posix_spawn_file_actions_t actions = posix_spawn_file_actions_t();
+                    bool made_it = fork_actions_make_spawn_properties(&attr, &actions, j, p);
+                    if (made_it)
+                    {
+                        /* We successfully made the attributes and actions; actually call posix_spawn */
+                        int spawn_ret = posix_spawn(&pid, actual_cmd, &actions, &attr, argv, envv);
+
+                        /* This usleep can be used to test for various race conditions (https://github.com/fish-shell/fish-shell/issues/360) */
+                        //usleep(10000);
+
+                        if (spawn_ret != 0)
+                        {
+                            safe_report_exec_error(spawn_ret, actual_cmd, argv, envv);
+                            /* Make sure our pid isn't set */
+                            pid = 0;
+                        }
+
+                        /* Clean up our actions */
+                        posix_spawn_file_actions_destroy(&actions);
+                        posix_spawnattr_destroy(&attr);
+                    }
+
+                    /* A 0 pid means we failed to posix_spawn. Since we have no pid, we'll never get told when it's exited, so we have to mark the process as failed. */
+                    if (pid == 0)
+                    {
+                        job_mark_process_as_failed(j, p);
+                        exec_error = true;
+                    }
+                }
+                else
+#endif
+                {
+                    pid = execute_fork(false);
+                    if (pid == 0)
+                    {
+                        /* This is the child process. */
+                        p->pid = getpid();
+                        setup_child_process(j, p);
+                        safe_launch_process(p, actual_cmd, argv, envv);
+
+                        /*
+                          safe_launch_process _never_ returns...
+                        */
+                    }
+                }
+
 
                 /*
                    This is the parent process. Store away
-                   information on the child, and possibly give
+                   information on the child, and possibly fice
                    it control over the terminal.
                 */
                 p->pid = pid;
 
                 set_child_group(j, p, 0);
 
+                break;
             }
-
-            break;
-        }
-
-        case EXTERNAL:
-        {
-            /* Get argv and envv before we fork */
-            null_terminated_array_t<char> argv_array = convert_wide_array_to_narrow(p->get_argv_array());
-
-            null_terminated_array_t<char> envv_array;
-            env_export_arr(false, envv_array);
-
-            char **envv = envv_array.get();
-            char **argv = argv_array.get();
-
-            std::string actual_cmd_str = wcs2string(p->actual_cmd);
-            const char *actual_cmd = actual_cmd_str.c_str();
-
-            const wchar_t *reader_current_filename();
-            if (g_log_forks)
-            {
-                const wchar_t *file = reader_current_filename();
-                const wchar_t *func = parser_t::principal_parser().is_function();
-                printf("fork #%d: forking for '%s' in '%ls:%ls'\n", g_fork_count, actual_cmd, file ? file : L"", func ? func : L"?");
-
-                fprintf(stderr, "IO chain for %s:\n", actual_cmd);
-                io_print(j->io);
-            }
-
-#if FISH_USE_POSIX_SPAWN
-            /* Prefer to use posix_spawn, since it's faster on some systems like OS X */
-            bool use_posix_spawn = g_use_posix_spawn && can_use_posix_spawn_for_job(j, p);
-            if (use_posix_spawn)
-            {
-                /* Create posix spawn attributes and actions */
-                posix_spawnattr_t attr = posix_spawnattr_t();
-                posix_spawn_file_actions_t actions = posix_spawn_file_actions_t();
-                bool made_it = fork_actions_make_spawn_properties(&attr, &actions, j, p);
-                if (made_it)
-                {
-                    /* We successfully made the attributes and actions; actually call posix_spawn */
-                    int spawn_ret = posix_spawn(&pid, actual_cmd, &actions, &attr, argv, envv);
-
-                    /* This usleep can be used to test for various race conditions (https://github.com/fish-shell/fish-shell/issues/360) */
-                    //usleep(10000);
-
-                    if (spawn_ret != 0)
-                    {
-                        safe_report_exec_error(spawn_ret, actual_cmd, argv, envv);
-                        /* Make sure our pid isn't set */
-                        pid = 0;
-                    }
-
-                    /* Clean up our actions */
-                    posix_spawn_file_actions_destroy(&actions);
-                    posix_spawnattr_destroy(&attr);
-                }
-
-                /* A 0 pid means we failed to posix_spawn. Since we have no pid, we'll never get told when it's exited, so we have to mark the process as failed. */
-                if (pid == 0)
-                {
-                    job_mark_process_as_failed(j, p);
-                    exec_error = true;
-                }
-            }
-            else
-#endif
-            {
-                pid = execute_fork(false);
-                if (pid == 0)
-                {
-                    /* This is the child process. */
-                    p->pid = getpid();
-                    setup_child_process(j, p);
-                    safe_launch_process(p, actual_cmd, argv, envv);
-
-                    /*
-                      safe_launch_process _never_ returns...
-                    */
-                }
-            }
-
-
-            /*
-               This is the parent process. Store away
-               information on the child, and possibly fice
-               it control over the terminal.
-            */
-            p->pid = pid;
-
-            set_child_group(j, p, 0);
-
-            break;
-        }
 
         }
 

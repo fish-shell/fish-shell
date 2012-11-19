@@ -344,83 +344,83 @@ static int builtin_ulimit(parser_t &parser, wchar_t ** argv)
 
         switch (opt)
         {
-        case 0:
-            if (long_options[opt_index].flag != 0)
+            case 0:
+                if (long_options[opt_index].flag != 0)
+                    break;
+                append_format(stderr_buffer,
+                              BUILTIN_ERR_UNKNOWN,
+                              argv[0],
+                              long_options[opt_index].name);
+                builtin_print_help(parser, argv[0], stderr_buffer);
+
+                return 1;
+
+            case L'a':
+                report_all=1;
                 break;
-            append_format(stderr_buffer,
-                          BUILTIN_ERR_UNKNOWN,
-                          argv[0],
-                          long_options[opt_index].name);
-            builtin_print_help(parser, argv[0], stderr_buffer);
 
-            return 1;
+            case L'H':
+                hard=1;
+                break;
 
-        case L'a':
-            report_all=1;
-            break;
+            case L'S':
+                soft=1;
+                break;
 
-        case L'H':
-            hard=1;
-            break;
+            case L'c':
+                what=RLIMIT_CORE;
+                break;
 
-        case L'S':
-            soft=1;
-            break;
+            case L'd':
+                what=RLIMIT_DATA;
+                break;
 
-        case L'c':
-            what=RLIMIT_CORE;
-            break;
-
-        case L'd':
-            what=RLIMIT_DATA;
-            break;
-
-        case L'f':
-            what=RLIMIT_FSIZE;
-            break;
+            case L'f':
+                what=RLIMIT_FSIZE;
+                break;
 #ifdef RLIMIT_MEMLOCK
-        case L'l':
-            what=RLIMIT_MEMLOCK;
-            break;
+            case L'l':
+                what=RLIMIT_MEMLOCK;
+                break;
 #endif
 
 #ifdef RLIMIT_RSS
-        case L'm':
-            what=RLIMIT_RSS;
-            break;
+            case L'm':
+                what=RLIMIT_RSS;
+                break;
 #endif
 
-        case L'n':
-            what=RLIMIT_NOFILE;
-            break;
+            case L'n':
+                what=RLIMIT_NOFILE;
+                break;
 
-        case L's':
-            what=RLIMIT_STACK;
-            break;
+            case L's':
+                what=RLIMIT_STACK;
+                break;
 
-        case L't':
-            what=RLIMIT_CPU;
-            break;
+            case L't':
+                what=RLIMIT_CPU;
+                break;
 
 #ifdef RLIMIT_NPROC
-        case L'u':
-            what=RLIMIT_NPROC;
-            break;
+            case L'u':
+                what=RLIMIT_NPROC;
+                break;
 #endif
 
 #ifdef RLIMIT_AS
-        case L'v':
-            what=RLIMIT_AS;
-            break;
+            case L'v':
+                what=RLIMIT_AS;
+                break;
 #endif
 
-        case L'h':
-            builtin_print_help(parser, argv[0], stdout_buffer);
-            return 0;
+            case L'h':
+                builtin_print_help(parser, argv[0], stdout_buffer);
+                return 0;
 
-        case L'?':
-            builtin_unknown_option(parser, argv[0], argv[woptind-1]);
-            return 1;
+            case L'?':
+                builtin_unknown_option(parser, argv[0], argv[woptind-1]);
+                return 1;
         }
     }
 
@@ -443,69 +443,69 @@ static int builtin_ulimit(parser_t &parser, wchar_t ** argv)
 
     switch (argc - woptind)
     {
-    case 0:
-    {
-        /*
-          Show current limit value
-        */
-        print(what, hard);
-        break;
-    }
-
-    case 1:
-    {
-        /*
-          Change current limit value
-        */
-        rlim_t new_limit;
-        wchar_t *end;
-
-        /*
-          Set both hard and soft limits if nothing else was specified
-        */
-        if (!(hard+soft))
+        case 0:
         {
-            hard=soft=1;
+            /*
+              Show current limit value
+            */
+            print(what, hard);
+            break;
         }
 
-        if (wcscasecmp(argv[woptind], L"unlimited")==0)
+        case 1:
         {
-            new_limit = RLIM_INFINITY;
-        }
-        else if (wcscasecmp(argv[woptind], L"hard")==0)
-        {
-            new_limit = get(what, 1);
-        }
-        else if (wcscasecmp(argv[woptind], L"soft")==0)
-        {
-            new_limit = get(what, soft);
-        }
-        else
-        {
-            errno=0;
-            new_limit = wcstol(argv[woptind], &end, 10);
-            if (errno || *end)
+            /*
+              Change current limit value
+            */
+            rlim_t new_limit;
+            wchar_t *end;
+
+            /*
+              Set both hard and soft limits if nothing else was specified
+            */
+            if (!(hard+soft))
             {
-                append_format(stderr_buffer,
-                              L"%ls: Invalid limit '%ls'\n",
-                              argv[0],
-                              argv[woptind]);
-                builtin_print_help(parser, argv[0], stderr_buffer);
-                return 1;
+                hard=soft=1;
             }
-            new_limit *= get_multiplier(what);
+
+            if (wcscasecmp(argv[woptind], L"unlimited")==0)
+            {
+                new_limit = RLIM_INFINITY;
+            }
+            else if (wcscasecmp(argv[woptind], L"hard")==0)
+            {
+                new_limit = get(what, 1);
+            }
+            else if (wcscasecmp(argv[woptind], L"soft")==0)
+            {
+                new_limit = get(what, soft);
+            }
+            else
+            {
+                errno=0;
+                new_limit = wcstol(argv[woptind], &end, 10);
+                if (errno || *end)
+                {
+                    append_format(stderr_buffer,
+                                  L"%ls: Invalid limit '%ls'\n",
+                                  argv[0],
+                                  argv[woptind]);
+                    builtin_print_help(parser, argv[0], stderr_buffer);
+                    return 1;
+                }
+                new_limit *= get_multiplier(what);
+            }
+
+            return set(what, hard, soft, new_limit);
         }
 
-        return set(what, hard, soft, new_limit);
-    }
-
-    default:
-    {
-        stderr_buffer.append(argv[0]);
-        stderr_buffer.append(L": Too many arguments\n");
-        builtin_print_help(parser, argv[0], stderr_buffer);
-        return 1;
-    }
+        default:
+        {
+            stderr_buffer.append(argv[0]);
+            stderr_buffer.append(L": Too many arguments\n");
+            builtin_print_help(parser, argv[0], stderr_buffer);
+            return 1;
+        }
 
     }
     return 0;

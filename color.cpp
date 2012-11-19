@@ -31,46 +31,46 @@ static int parse_hex_digit(wchar_t x)
 {
     switch (x)
     {
-    case L'0':
-        return 0x0;
-    case L'1':
-        return 0x1;
-    case L'2':
-        return 0x2;
-    case L'3':
-        return 0x3;
-    case L'4':
-        return 0x4;
-    case L'5':
-        return 0x5;
-    case L'6':
-        return 0x6;
-    case L'7':
-        return 0x7;
-    case L'8':
-        return 0x8;
-    case L'9':
-        return 0x9;
-    case L'a':
-    case L'A':
-        return 0xA;
-    case L'b':
-    case L'B':
-        return 0xB;
-    case L'c':
-    case L'C':
-        return 0xC;
-    case L'd':
-    case L'D':
-        return 0xD;
-    case L'e':
-    case L'E':
-        return 0xE;
-    case L'f':
-    case L'F':
-        return 0xF;
-    default:
-        return -1;
+        case L'0':
+            return 0x0;
+        case L'1':
+            return 0x1;
+        case L'2':
+            return 0x2;
+        case L'3':
+            return 0x3;
+        case L'4':
+            return 0x4;
+        case L'5':
+            return 0x5;
+        case L'6':
+            return 0x6;
+        case L'7':
+            return 0x7;
+        case L'8':
+            return 0x8;
+        case L'9':
+            return 0x9;
+        case L'a':
+        case L'A':
+            return 0xA;
+        case L'b':
+        case L'B':
+            return 0xB;
+        case L'c':
+        case L'C':
+            return 0xC;
+        case L'd':
+        case L'D':
+            return 0xD;
+        case L'e':
+        case L'E':
+            return 0xE;
+        case L'f':
+        case L'F':
+            return 0xF;
+        default:
+            return -1;
     }
 }
 
@@ -334,20 +334,20 @@ wcstring rgb_color_t::description() const
 {
     switch (type)
     {
-    case type_none:
-        return L"none";
-    case type_named:
-        return format_string(L"named(%d: %ls)", (int)data.name_idx, name_for_color_idx(data.name_idx));
-    case type_rgb:
-        return format_string(L"rgb(0x%02x%02x%02x)", data.rgb[0], data.rgb[1], data.rgb[2]);
-    case type_reset:
-        return L"reset";
-    case type_normal:
-        return L"normal";
-    case type_ignore:
-        return L"ignore";
-    default:
-        abort();
-        return L"";
+        case type_none:
+            return L"none";
+        case type_named:
+            return format_string(L"named(%d: %ls)", (int)data.name_idx, name_for_color_idx(data.name_idx));
+        case type_rgb:
+            return format_string(L"rgb(0x%02x%02x%02x)", data.rgb[0], data.rgb[1], data.rgb[2]);
+        case type_reset:
+            return L"reset";
+        case type_normal:
+            return L"normal";
+        case type_ignore:
+            return L"ignore";
+        default:
+            abort();
+            return L"";
     }
 }

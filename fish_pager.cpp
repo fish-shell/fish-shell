@@ -717,107 +717,107 @@ static int completion_try_print(int cols,
 
                 switch (c)
                 {
-                case LINE_UP:
-                {
-                    if (pos > 0)
+                    case LINE_UP:
                     {
-                        pos--;
-                        writembs(tparm(cursor_address, 0, 0));
-                        writembs(scroll_reverse);
-                        completion_print(cols,
-                                         width,
-                                         pos,
-                                         pos+1,
-                                         prefix,
-                                         is_quoted,
-                                         lst);
-                        writembs(tparm(cursor_address,
-                                       termsize.ws_row-1, 0));
-                        writembs(clr_eol);
+                        if (pos > 0)
+                        {
+                            pos--;
+                            writembs(tparm(cursor_address, 0, 0));
+                            writembs(scroll_reverse);
+                            completion_print(cols,
+                                             width,
+                                             pos,
+                                             pos+1,
+                                             prefix,
+                                             is_quoted,
+                                             lst);
+                            writembs(tparm(cursor_address,
+                                           termsize.ws_row-1, 0));
+                            writembs(clr_eol);
+
+                        }
+
+                        break;
+                    }
+
+                    case LINE_DOWN:
+                    {
+                        if (pos <= (rows - termsize.ws_row))
+                        {
+                            pos++;
+                            completion_print(cols,
+                                             width,
+                                             pos+termsize.ws_row-2,
+                                             pos+termsize.ws_row-1,
+                                             prefix,
+                                             is_quoted,
+                                             lst);
+                        }
+                        break;
+                    }
+
+                    case PAGE_DOWN:
+                    {
+
+                        npos = mini((int)(rows - termsize.ws_row+1), (int)(pos + termsize.ws_row-1));
+                        if (npos != pos)
+                        {
+                            pos = npos;
+                            completion_print(cols,
+                                             width,
+                                             pos,
+                                             pos+termsize.ws_row-1,
+                                             prefix,
+                                             is_quoted,
+                                             lst);
+                        }
+                        else
+                        {
+                            if (flash_screen)
+                                writembs(flash_screen);
+                        }
+
+                        break;
+                    }
+
+                    case PAGE_UP:
+                    {
+                        npos = maxi(0,
+                                    pos - termsize.ws_row+1);
+
+                        if (npos != pos)
+                        {
+                            pos = npos;
+                            completion_print(cols,
+                                             width,
+                                             pos,
+                                             pos+termsize.ws_row-1,
+                                             prefix,
+                                             is_quoted,
+                                             lst);
+                        }
+                        else
+                        {
+                            if (flash_screen)
+                                writembs(flash_screen);
+                        }
+                        break;
+                    }
+
+                    case R_NULL:
+                    {
+                        do_loop=0;
+                        res=PAGER_RESIZE;
+                        break;
 
                     }
 
-                    break;
-                }
-
-                case LINE_DOWN:
-                {
-                    if (pos <= (rows - termsize.ws_row))
+                    default:
                     {
-                        pos++;
-                        completion_print(cols,
-                                         width,
-                                         pos+termsize.ws_row-2,
-                                         pos+termsize.ws_row-1,
-                                         prefix,
-                                         is_quoted,
-                                         lst);
+                        out_buff.push_back(c);
+                        do_loop = 0;
+                        break;
                     }
-                    break;
-                }
-
-                case PAGE_DOWN:
-                {
-
-                    npos = mini((int)(rows - termsize.ws_row+1), (int)(pos + termsize.ws_row-1));
-                    if (npos != pos)
-                    {
-                        pos = npos;
-                        completion_print(cols,
-                                         width,
-                                         pos,
-                                         pos+termsize.ws_row-1,
-                                         prefix,
-                                         is_quoted,
-                                         lst);
-                    }
-                    else
-                    {
-                        if (flash_screen)
-                            writembs(flash_screen);
-                    }
-
-                    break;
-                }
-
-                case PAGE_UP:
-                {
-                    npos = maxi(0,
-                                pos - termsize.ws_row+1);
-
-                    if (npos != pos)
-                    {
-                        pos = npos;
-                        completion_print(cols,
-                                         width,
-                                         pos,
-                                         pos+termsize.ws_row-1,
-                                         prefix,
-                                         is_quoted,
-                                         lst);
-                    }
-                    else
-                    {
-                        if (flash_screen)
-                            writembs(flash_screen);
-                    }
-                    break;
-                }
-
-                case R_NULL:
-                {
-                    do_loop=0;
-                    res=PAGER_RESIZE;
-                    break;
-
-                }
-
-                default:
-                {
-                    out_buff.push_back(c);
-                    do_loop = 0;
-                    break;
-                }
                 }
             }
             writembs(clr_eol);
@@ -1273,45 +1273,45 @@ int main(int argc, char **argv)
 
             switch (opt)
             {
-            case 0:
-            {
-                break;
-            }
+                case 0:
+                {
+                    break;
+                }
 
-            case 'r':
-            {
-                result_fd = get_fd(optarg);
-                break;
-            }
+                case 'r':
+                {
+                    result_fd = get_fd(optarg);
+                    break;
+                }
 
-            case 'c':
-            {
-                completion_fd = get_fd(optarg);
-                break;
-            }
+                case 'c':
+                {
+                    completion_fd = get_fd(optarg);
+                    break;
+                }
 
-            case 'p':
-            {
-                prefix = str2wcs(optarg);
-                break;
-            }
+                case 'p':
+                {
+                    prefix = str2wcs(optarg);
+                    break;
+                }
 
-            case 'h':
-            {
-                print_help(argv[0], 1);
-                exit(0);
-            }
+                case 'h':
+                {
+                    print_help(argv[0], 1);
+                    exit(0);
+                }
 
-            case 'v':
-            {
-                debug(0, L"%ls, version %s\n", program_name, PACKAGE_VERSION);
-                exit(0);
-            }
+                case 'v':
+                {
+                    debug(0, L"%ls, version %s\n", program_name, PACKAGE_VERSION);
+                    exit(0);
+                }
 
-            case 'q':
-            {
-                is_quoted = 1;
-            }
+                case 'q':
+                {
+                    is_quoted = 1;
+                }
 
             }
         }
@@ -1411,22 +1411,22 @@ int main(int argc, char **argv)
         switch (completion_try_print(i, prefix, is_quoted, completions))
         {
 
-        case PAGER_RETRY:
-            break;
+            case PAGER_RETRY:
+                break;
 
-        case PAGER_DONE:
-            i=0;
-            break;
+            case PAGER_DONE:
+                i=0;
+                break;
 
-        case PAGER_RESIZE:
-            /*
-              This means we got a resize event, so we start
-              over from the beginning. Since it the screen got
-              bigger, we might be able to fit all completions
-              on-screen.
-            */
-            i=PAGER_MAX_COLS+1;
-            break;
+            case PAGER_RESIZE:
+                /*
+                  This means we got a resize event, so we start
+                  over from the beginning. Since it the screen got
+                  bigger, we might be able to fit all completions
+                  on-screen.
+                */
+                i=PAGER_MAX_COLS+1;
+                break;
 
         }
     }

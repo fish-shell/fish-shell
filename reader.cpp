@@ -1443,35 +1443,35 @@ static bool handle_completions(const std::vector<completion_t> &comp)
      */
     switch (comp.size())
     {
-        /* No suitable completions found, flash screen and return */
-    case 0:
-    {
-        reader_flash();
-        done = true;
-        success = false;
-        break;
-    }
-
-    /* Exactly one suitable completion found - insert it */
-    case 1:
-    {
-
-        const completion_t &c = comp.at(0);
-
-        /*
-          If this is a replacement completion, check
-          that we know how to replace it, e.g. that
-          the token doesn't contain evil operators
-          like {}
-         */
-        if (! c.is_case_insensitive() || reader_can_replace(tok, c.flags))
+            /* No suitable completions found, flash screen and return */
+        case 0:
         {
-            completion_insert(c.completion.c_str(), c.flags);
+            reader_flash();
+            done = true;
+            success = false;
+            break;
         }
-        done = true;
-        success = true;
-        break;
-    }
+
+        /* Exactly one suitable completion found - insert it */
+        case 1:
+        {
+
+            const completion_t &c = comp.at(0);
+
+            /*
+              If this is a replacement completion, check
+              that we know how to replace it, e.g. that
+              the token doesn't contain evil operators
+              like {}
+             */
+            if (! c.is_case_insensitive() || reader_can_replace(tok, c.flags))
+            {
+                completion_insert(c.completion.c_str(), c.flags);
+            }
+            done = true;
+            success = true;
+            break;
+        }
     }
 
 
@@ -1902,26 +1902,26 @@ static void handle_token_history(int forward, int reset)
             {
                 switch (tok_last_type(&tok))
                 {
-                case TOK_STRING:
-                {
-                    if (wcsstr(tok_last(&tok), data->search_buff.c_str()))
+                    case TOK_STRING:
                     {
-                        //debug( 3, L"Found token at pos %d\n", tok_get_pos( &tok ) );
-                        if (tok_get_pos(&tok) >= current_pos)
+                        if (wcsstr(tok_last(&tok), data->search_buff.c_str()))
                         {
-                            break;
-                        }
-                        //debug( 3, L"ok pos" );
+                            //debug( 3, L"Found token at pos %d\n", tok_get_pos( &tok ) );
+                            if (tok_get_pos(&tok) >= current_pos)
+                            {
+                                break;
+                            }
+                            //debug( 3, L"ok pos" );
 
-                        const wcstring last_tok = tok_last(&tok);
-                        if (find(data->search_prev.begin(), data->search_prev.end(), last_tok) == data->search_prev.end())
-                        {
-                            data->token_history_pos = tok_get_pos(&tok);
-                            str = wcsdup(tok_last(&tok));
-                        }
+                            const wcstring last_tok = tok_last(&tok);
+                            if (find(data->search_prev.begin(), data->search_prev.end(), last_tok) == data->search_prev.end())
+                            {
+                                data->token_history_pos = tok_get_pos(&tok);
+                                str = wcsdup(tok_last(&tok));
+                            }
 
+                        }
                     }
-                }
                 }
             }
 
@@ -1966,24 +1966,24 @@ public:
         /* Note fall-through in all of these! */
         switch (state)
         {
-        case s_whitespace:
-            if (iswspace(c))
-                return true;
-            state = s_punctuation;
+            case s_whitespace:
+                if (iswspace(c))
+                    return true;
+                state = s_punctuation;
 
-        case s_punctuation:
-            if (iswpunct(c))
-                return true;
-            state = s_alphanumeric_or_punctuation_except_slash;
+            case s_punctuation:
+                if (iswpunct(c))
+                    return true;
+                state = s_alphanumeric_or_punctuation_except_slash;
 
-        case s_alphanumeric_or_punctuation_except_slash:
-            if (c != L'/' && (iswalnum(c) || iswpunct(c)))
-                return true;
-            state = s_end;
+            case s_alphanumeric_or_punctuation_except_slash:
+                if (c != L'/' && (iswalnum(c) || iswpunct(c)))
+                    return true;
+                state = s_end;
 
-        case s_end:
-        default:
-            return false;
+            case s_end:
+            default:
+                return false;
         }
     }
 };
@@ -2006,6 +2006,7 @@ public:
    Interesting test case:
      /foo/bar/baz/ -> /foo/bar/ -> /foo/ -> /
      echo --foo --bar -> echo --foo -> echo
+     echo hi>/dev/null -> echo hi>/dev/ -> echo hi >/ -> echo hi > -> echo hi -> echo
 */
 enum move_word_dir_t
 {
@@ -2750,168 +2751,191 @@ const wchar_t *reader_readline()
         switch (c)
         {
 
-            /* go to beginning of line*/
-        case R_BEGINNING_OF_LINE:
-        {
-            while ((data->buff_pos>0) &&
-                    (buff[data->buff_pos-1] != L'\n'))
+                /* go to beginning of line*/
+            case R_BEGINNING_OF_LINE:
             {
-                data->buff_pos--;
-            }
-
-            reader_repaint();
-            break;
-        }
-
-        case R_END_OF_LINE:
-        {
-            while (buff[data->buff_pos] &&
-                    buff[data->buff_pos] != L'\n')
-            {
-                data->buff_pos++;
-            }
-
-            reader_repaint();
-            break;
-        }
-
-
-        case R_BEGINNING_OF_BUFFER:
-        {
-            data->buff_pos = 0;
-
-            reader_repaint();
-            break;
-        }
-
-        /* go to EOL*/
-        case R_END_OF_BUFFER:
-        {
-            data->buff_pos = data->command_length();
-
-            reader_repaint();
-            break;
-        }
-
-        case R_NULL:
-        {
-            reader_repaint_if_needed();
-            break;
-        }
-
-        case R_REPAINT:
-        {
-            exec_prompt();
-            write_loop(1, "\r", 1);
-            s_reset(&data->screen, false);
-            reader_repaint();
-            break;
-        }
-
-        case R_EOF:
-        {
-            exit_forced = 1;
-            data->end_loop=1;
-            break;
-        }
-
-        /* complete */
-        case R_COMPLETE:
-        {
-
-            if (!data->complete_func)
-                break;
-
-            if (! comp_empty && last_char == R_COMPLETE)
-            {
-                /* The user typed R_COMPLETE more than once in a row. Cycle through our available completions */
-                const completion_t *next_comp = cycle_competions(comp, cycle_command_line, &completion_cycle_idx);
-                if (next_comp != NULL)
+                while ((data->buff_pos>0) &&
+                        (buff[data->buff_pos-1] != L'\n'))
                 {
-                    size_t cursor_pos = cycle_cursor_pos;
-                    const wcstring new_cmd_line = completion_apply_to_command_line(next_comp->completion, next_comp->flags, cycle_command_line, &cursor_pos);
-                    reader_set_buffer(new_cmd_line, cursor_pos);
-
-                    /* Since we just inserted a completion, don't immediately do a new autosuggestion */
-                    data->suppress_autosuggestion = true;
-                }
-            }
-            else
-            {
-                /* Either the user hit tab only once, or we had no visible completion list. */
-                const wchar_t *begin, *end;
-                const wchar_t *token_begin, *token_end;
-                const wchar_t *buff = data->command_line.c_str();
-                long cursor_steps;
-
-                /* Clear the completion list */
-                comp.clear();
-
-                parse_util_cmdsubst_extent(buff, data->buff_pos, &begin, &end);
-
-                parse_util_token_extent(begin, data->buff_pos - (begin-buff), &token_begin, &token_end, 0, 0);
-
-                cursor_steps = token_end - buff- data->buff_pos;
-                data->buff_pos += cursor_steps;
-                if (is_backslashed(buff, data->buff_pos))
-                {
-                    remove_backward();
+                    data->buff_pos--;
                 }
 
                 reader_repaint();
-
-                size_t len = data->buff_pos - (begin-buff);
-                const wcstring buffcpy = wcstring(begin, len);
-
-                data->complete_func(buffcpy, comp, COMPLETE_DEFAULT, NULL);
-
-                /* Munge our completions */
-                sort(comp.begin(), comp.end());
-                remove_duplicates(comp);
-                prioritize_completions(comp);
-
-                /* Record our cycle_command_line */
-                cycle_command_line = data->command_line;
-                cycle_cursor_pos = data->buff_pos;
-
-                comp_empty = handle_completions(comp);
-
-                /* Start the cycle at the beginning */
-                completion_cycle_idx = (size_t)(-1);
+                break;
             }
 
-            break;
-        }
-
-        /* kill */
-        case R_KILL_LINE:
-        {
-            const wchar_t *buff = data->command_line.c_str();
-            const wchar_t *begin = &buff[data->buff_pos];
-            const wchar_t *end = begin;
-
-            while (*end && *end != L'\n')
-                end++;
-
-            if (end==begin && *end)
-                end++;
-
-            size_t len = end-begin;
-            if (len)
+            case R_END_OF_LINE:
             {
-                reader_kill(begin - buff, len, KILL_APPEND, last_char!=R_KILL_LINE);
+                while (buff[data->buff_pos] &&
+                        buff[data->buff_pos] != L'\n')
+                {
+                    data->buff_pos++;
+                }
+
+                reader_repaint();
+                break;
             }
 
-            break;
-        }
 
-        case R_BACKWARD_KILL_LINE:
-        {
-            if (data->buff_pos > 0)
+            case R_BEGINNING_OF_BUFFER:
+            {
+                data->buff_pos = 0;
+
+                reader_repaint();
+                break;
+            }
+
+            /* go to EOL*/
+            case R_END_OF_BUFFER:
+            {
+                data->buff_pos = data->command_length();
+
+                reader_repaint();
+                break;
+            }
+
+            case R_NULL:
+            {
+                reader_repaint_if_needed();
+                break;
+            }
+
+            case R_REPAINT:
+            {
+                exec_prompt();
+                write_loop(1, "\r", 1);
+                s_reset(&data->screen, false);
+                reader_repaint();
+                break;
+            }
+
+            case R_EOF:
+            {
+                exit_forced = 1;
+                data->end_loop=1;
+                break;
+            }
+
+            /* complete */
+            case R_COMPLETE:
+            {
+
+                if (!data->complete_func)
+                    break;
+
+                if (! comp_empty && last_char == R_COMPLETE)
+                {
+                    /* The user typed R_COMPLETE more than once in a row. Cycle through our available completions */
+                    const completion_t *next_comp = cycle_competions(comp, cycle_command_line, &completion_cycle_idx);
+                    if (next_comp != NULL)
+                    {
+                        size_t cursor_pos = cycle_cursor_pos;
+                        const wcstring new_cmd_line = completion_apply_to_command_line(next_comp->completion, next_comp->flags, cycle_command_line, &cursor_pos);
+                        reader_set_buffer(new_cmd_line, cursor_pos);
+
+                        /* Since we just inserted a completion, don't immediately do a new autosuggestion */
+                        data->suppress_autosuggestion = true;
+                    }
+                }
+                else
+                {
+                    /* Either the user hit tab only once, or we had no visible completion list. */
+                    const wchar_t *begin, *end;
+                    const wchar_t *token_begin, *token_end;
+                    const wchar_t *buff = data->command_line.c_str();
+                    long cursor_steps;
+
+                    /* Clear the completion list */
+                    comp.clear();
+
+                    parse_util_cmdsubst_extent(buff, data->buff_pos, &begin, &end);
+
+                    parse_util_token_extent(begin, data->buff_pos - (begin-buff), &token_begin, &token_end, 0, 0);
+
+                    cursor_steps = token_end - buff- data->buff_pos;
+                    data->buff_pos += cursor_steps;
+                    if (is_backslashed(buff, data->buff_pos))
+                    {
+                        remove_backward();
+                    }
+
+                    reader_repaint();
+
+                    size_t len = data->buff_pos - (begin-buff);
+                    const wcstring buffcpy = wcstring(begin, len);
+
+                    data->complete_func(buffcpy, comp, COMPLETE_DEFAULT, NULL);
+
+                    /* Munge our completions */
+                    sort(comp.begin(), comp.end());
+                    remove_duplicates(comp);
+                    prioritize_completions(comp);
+
+                    /* Record our cycle_command_line */
+                    cycle_command_line = data->command_line;
+                    cycle_cursor_pos = data->buff_pos;
+
+                    comp_empty = handle_completions(comp);
+
+                    /* Start the cycle at the beginning */
+                    completion_cycle_idx = (size_t)(-1);
+                }
+
+                break;
+            }
+
+            /* kill */
+            case R_KILL_LINE:
+            {
+                const wchar_t *buff = data->command_line.c_str();
+                const wchar_t *begin = &buff[data->buff_pos];
+                const wchar_t *end = begin;
+
+                while (*end && *end != L'\n')
+                    end++;
+
+                if (end==begin && *end)
+                    end++;
+
+                size_t len = end-begin;
+                if (len)
+                {
+                    reader_kill(begin - buff, len, KILL_APPEND, last_char!=R_KILL_LINE);
+                }
+
+                break;
+            }
+
+            case R_BACKWARD_KILL_LINE:
+            {
+                if (data->buff_pos > 0)
+                {
+                    const wchar_t *buff = data->command_line.c_str();
+                    const wchar_t *end = &buff[data->buff_pos];
+                    const wchar_t *begin = end;
+
+                    while (begin > buff  && *begin != L'\n')
+                        begin--;
+
+                    if (*begin == L'\n')
+                        begin++;
+
+                    size_t len = maxi<size_t>(end-begin, 1);
+                    begin = end - len;
+
+                    reader_kill(begin - buff, len, KILL_PREPEND, last_char!=R_BACKWARD_KILL_LINE);
+
+                }
+                break;
+
+            }
+
+            case R_KILL_WHOLE_LINE:
             {
                 const wchar_t *buff = data->command_line.c_str();
                 const wchar_t *end = &buff[data->buff_pos];
                 const wchar_t *begin = end;
+                size_t len;
 
                 while (begin > buff  && *begin != L'\n')
                     begin--;
@@ -2919,418 +2943,395 @@ const wchar_t *reader_readline()
                 if (*begin == L'\n')
                     begin++;
 
-                size_t len = maxi<size_t>(end-begin, 1);
+                len = maxi<size_t>(end-begin, 0);
                 begin = end - len;
 
-                reader_kill(begin - buff, len, KILL_PREPEND, last_char!=R_BACKWARD_KILL_LINE);
+                while (*end && *end != L'\n')
+                    end++;
 
-            }
-            break;
+                if (begin == end && *end)
+                    end++;
 
-        }
+                len = end-begin;
 
-        case R_KILL_WHOLE_LINE:
-        {
-            const wchar_t *buff = data->command_line.c_str();
-            const wchar_t *end = &buff[data->buff_pos];
-            const wchar_t *begin = end;
-            size_t len;
+                if (len)
+                {
+                    reader_kill(begin - buff, len, KILL_APPEND, last_char!=R_KILL_WHOLE_LINE);
+                }
 
-            while (begin > buff  && *begin != L'\n')
-                begin--;
-
-            if (*begin == L'\n')
-                begin++;
-
-            len = maxi<size_t>(end-begin, 0);
-            begin = end - len;
-
-            while (*end && *end != L'\n')
-                end++;
-
-            if (begin == end && *end)
-                end++;
-
-            len = end-begin;
-
-            if (len)
-            {
-                reader_kill(begin - buff, len, KILL_APPEND, last_char!=R_KILL_WHOLE_LINE);
+                break;
             }
 
-            break;
-        }
-
-        /* yank*/
-        case R_YANK:
-        {
-            yank_str = kill_yank();
-            insert_string(yank_str);
-            yank_len = wcslen(yank_str);
-            break;
-        }
-
-        /* rotate killring*/
-        case R_YANK_POP:
-        {
-            if (yank_len)
+            /* yank*/
+            case R_YANK:
             {
-                for (size_t i=0; i<yank_len; i++)
-                    remove_backward();
-
-                yank_str = kill_yank_rotate();
+                yank_str = kill_yank();
                 insert_string(yank_str);
                 yank_len = wcslen(yank_str);
-            }
-            break;
-        }
-
-        /* Escape was pressed */
-        case L'\x1b':
-        {
-            if (data->search_mode)
-            {
-                data->search_mode= NO_SEARCH;
-
-                if (data->token_history_pos==-1)
-                {
-                    //history_reset();
-                    data->history_search.go_to_end();
-                    reader_set_buffer(data->search_buff.c_str(), data->search_buff.size());
-                }
-                else
-                {
-                    reader_replace_current_token(data->search_buff.c_str());
-                }
-                data->search_buff.clear();
-                reader_super_highlight_me_plenty(data->buff_pos);
-                reader_repaint();
-
-            }
-
-            break;
-        }
-
-        /* delete backward*/
-        case R_BACKWARD_DELETE_CHAR:
-        {
-            remove_backward();
-            break;
-        }
-
-        /* delete forward*/
-        case R_DELETE_CHAR:
-        {
-            /**
-             Remove the current character in the character buffer and on the
-             screen using syntax highlighting, etc.
-             */
-            if (data->buff_pos < data->command_length())
-            {
-                data->buff_pos++;
-                remove_backward();
-            }
-            break;
-        }
-
-        /*
-         Evaluate. If the current command is unfinished, or if
-         the charater is escaped using a backslash, insert a
-         newline
-         */
-        case R_EXECUTE:
-        {
-            /* Delete any autosuggestion */
-            data->autosuggestion.clear();
-
-            /*
-             Allow backslash-escaped newlines
-             */
-            if (is_backslashed(data->command_line.c_str(), data->buff_pos))
-            {
-                insert_char('\n');
                 break;
             }
 
-            switch (data->test_func(data->command_line.c_str()))
+            /* rotate killring*/
+            case R_YANK_POP:
             {
-
-            case 0:
-            {
-                /*
-                 Finished commend, execute it
-                 */
-                if (! data->command_line.empty())
+                if (yank_len)
                 {
-                    if (data->history)
+                    for (size_t i=0; i<yank_len; i++)
+                        remove_backward();
+
+                    yank_str = kill_yank_rotate();
+                    insert_string(yank_str);
+                    yank_len = wcslen(yank_str);
+                }
+                break;
+            }
+
+            /* Escape was pressed */
+            case L'\x1b':
+            {
+                if (data->search_mode)
+                {
+                    data->search_mode= NO_SEARCH;
+
+                    if (data->token_history_pos==-1)
                     {
-                        data->history->add_with_file_detection(data->command_line);
-                    }
-                }
-                finished=1;
-                data->buff_pos=data->command_length();
-                reader_repaint();
-                break;
-            }
-
-            /*
-             We are incomplete, continue editing
-             */
-            case PARSER_TEST_INCOMPLETE:
-            {
-                insert_char('\n');
-                break;
-            }
-
-            /*
-             Result must be some combination including an
-             error. The error message will already be
-             printed, all we need to do is repaint
-             */
-            default:
-            {
-                s_reset(&data->screen, true);
-                reader_repaint();
-                break;
-            }
-
-            }
-
-            break;
-        }
-
-        /* History functions */
-        case R_HISTORY_SEARCH_BACKWARD:
-        case R_HISTORY_TOKEN_SEARCH_BACKWARD:
-        case R_HISTORY_SEARCH_FORWARD:
-        case R_HISTORY_TOKEN_SEARCH_FORWARD:
-        {
-            int reset = 0;
-
-            if (data->search_mode == NO_SEARCH)
-            {
-                reset = 1;
-                if ((c == R_HISTORY_SEARCH_BACKWARD) ||
-                        (c == R_HISTORY_SEARCH_FORWARD))
-                {
-                    data->search_mode = LINE_SEARCH;
-                }
-                else
-                {
-                    data->search_mode = TOKEN_SEARCH;
-                }
-
-                data->search_buff.append(data->command_line);
-                data->history_search = history_search_t(*data->history, data->search_buff, HISTORY_SEARCH_TYPE_CONTAINS);
-
-                /* Skip the autosuggestion as history */
-                const wcstring &suggest = data->autosuggestion;
-                if (! suggest.empty())
-                {
-                    data->history_search.skip_matches(wcstring_list_t(&suggest, 1 + &suggest));
-                }
-            }
-
-            switch (data->search_mode)
-            {
-
-            case LINE_SEARCH:
-            {
-                if ((c == R_HISTORY_SEARCH_BACKWARD) ||
-                        (c == R_HISTORY_TOKEN_SEARCH_BACKWARD))
-                {
-                    data->history_search.go_backwards();
-                }
-                else
-                {
-                    if (! data->history_search.go_forwards())
-                    {
-                        /* If you try to go forwards past the end, we just go to the end */
+                        //history_reset();
                         data->history_search.go_to_end();
+                        reader_set_buffer(data->search_buff.c_str(), data->search_buff.size());
+                    }
+                    else
+                    {
+                        reader_replace_current_token(data->search_buff.c_str());
+                    }
+                    data->search_buff.clear();
+                    reader_super_highlight_me_plenty(data->buff_pos);
+                    reader_repaint();
+
+                }
+
+                break;
+            }
+
+            /* delete backward*/
+            case R_BACKWARD_DELETE_CHAR:
+            {
+                remove_backward();
+                break;
+            }
+
+            /* delete forward*/
+            case R_DELETE_CHAR:
+            {
+                /**
+                 Remove the current character in the character buffer and on the
+                 screen using syntax highlighting, etc.
+                 */
+                if (data->buff_pos < data->command_length())
+                {
+                    data->buff_pos++;
+                    remove_backward();
+                }
+                break;
+            }
+
+            /*
+             Evaluate. If the current command is unfinished, or if
+             the charater is escaped using a backslash, insert a
+             newline
+             */
+            case R_EXECUTE:
+            {
+                /* Delete any autosuggestion */
+                data->autosuggestion.clear();
+
+                /*
+                 Allow backslash-escaped newlines
+                 */
+                if (is_backslashed(data->command_line.c_str(), data->buff_pos))
+                {
+                    insert_char('\n');
+                    break;
+                }
+
+                switch (data->test_func(data->command_line.c_str()))
+                {
+
+                    case 0:
+                    {
+                        /*
+                         Finished commend, execute it
+                         */
+                        if (! data->command_line.empty())
+                        {
+                            if (data->history)
+                            {
+                                data->history->add_with_file_detection(data->command_line);
+                            }
+                        }
+                        finished=1;
+                        data->buff_pos=data->command_length();
+                        reader_repaint();
+                        break;
+                    }
+
+                    /*
+                     We are incomplete, continue editing
+                     */
+                    case PARSER_TEST_INCOMPLETE:
+                    {
+                        insert_char('\n');
+                        break;
+                    }
+
+                    /*
+                     Result must be some combination including an
+                     error. The error message will already be
+                     printed, all we need to do is repaint
+                     */
+                    default:
+                    {
+                        s_reset(&data->screen, true);
+                        reader_repaint();
+                        break;
+                    }
+
+                }
+
+                break;
+            }
+
+            /* History functions */
+            case R_HISTORY_SEARCH_BACKWARD:
+            case R_HISTORY_TOKEN_SEARCH_BACKWARD:
+            case R_HISTORY_SEARCH_FORWARD:
+            case R_HISTORY_TOKEN_SEARCH_FORWARD:
+            {
+                int reset = 0;
+
+                if (data->search_mode == NO_SEARCH)
+                {
+                    reset = 1;
+                    if ((c == R_HISTORY_SEARCH_BACKWARD) ||
+                            (c == R_HISTORY_SEARCH_FORWARD))
+                    {
+                        data->search_mode = LINE_SEARCH;
+                    }
+                    else
+                    {
+                        data->search_mode = TOKEN_SEARCH;
+                    }
+
+                    data->search_buff.append(data->command_line);
+                    data->history_search = history_search_t(*data->history, data->search_buff, HISTORY_SEARCH_TYPE_CONTAINS);
+
+                    /* Skip the autosuggestion as history */
+                    const wcstring &suggest = data->autosuggestion;
+                    if (! suggest.empty())
+                    {
+                        data->history_search.skip_matches(wcstring_list_t(&suggest, 1 + &suggest));
                     }
                 }
 
-                wcstring new_text;
-                if (data->history_search.is_at_end())
+                switch (data->search_mode)
                 {
-                    new_text = data->search_buff;
+
+                    case LINE_SEARCH:
+                    {
+                        if ((c == R_HISTORY_SEARCH_BACKWARD) ||
+                                (c == R_HISTORY_TOKEN_SEARCH_BACKWARD))
+                        {
+                            data->history_search.go_backwards();
+                        }
+                        else
+                        {
+                            if (! data->history_search.go_forwards())
+                            {
+                                /* If you try to go forwards past the end, we just go to the end */
+                                data->history_search.go_to_end();
+                            }
+                        }
+
+                        wcstring new_text;
+                        if (data->history_search.is_at_end())
+                        {
+                            new_text = data->search_buff;
+                        }
+                        else
+                        {
+                            new_text = data->history_search.current_string();
+                        }
+                        set_command_line_and_position(new_text, new_text.size());
+
+                        break;
+                    }
+
+                    case TOKEN_SEARCH:
+                    {
+                        if ((c == R_HISTORY_SEARCH_BACKWARD) ||
+                                (c == R_HISTORY_TOKEN_SEARCH_BACKWARD))
+                        {
+                            handle_token_history(SEARCH_BACKWARD, reset);
+                        }
+                        else
+                        {
+                            handle_token_history(SEARCH_FORWARD, reset);
+                        }
+
+                        break;
+                    }
+
+                }
+                break;
+            }
+
+
+            /* Move left*/
+            case R_BACKWARD_CHAR:
+            {
+                if (data->buff_pos > 0)
+                {
+                    data->buff_pos--;
+                    reader_repaint();
+                }
+                break;
+            }
+
+            /* Move right*/
+            case R_FORWARD_CHAR:
+            {
+                if (data->buff_pos < data->command_length())
+                {
+                    data->buff_pos++;
+                    reader_repaint();
                 }
                 else
                 {
-                    new_text = data->history_search.current_string();
+                    accept_autosuggestion();
                 }
-                set_command_line_and_position(new_text, new_text.size());
+                break;
+            }
+
+            /* kill one word left */
+            case R_BACKWARD_KILL_WORD:
+            {
+                move_word(MOVE_DIR_LEFT, true /* erase */, last_char!=R_BACKWARD_KILL_WORD);
+                break;
+            }
+
+            /* kill one word right */
+            case R_KILL_WORD:
+            {
+                move_word(MOVE_DIR_RIGHT, true /* erase */, last_char!=R_KILL_WORD);
+                break;
+            }
+
+            /* move one word left*/
+            case R_BACKWARD_WORD:
+            {
+                move_word(MOVE_DIR_LEFT, false /* do not erase */, false);
+                break;
+            }
+
+            /* move one word right*/
+            case R_FORWARD_WORD:
+            {
+                move_word(MOVE_DIR_RIGHT, false /* do not erase */, false);
+                break;
+            }
+
+            case R_BEGINNING_OF_HISTORY:
+            {
+                data->history_search = history_search_t(*data->history, data->command_line, HISTORY_SEARCH_TYPE_PREFIX);
+                data->history_search.go_to_beginning();
+                if (! data->history_search.is_at_end())
+                {
+                    wcstring new_text = data->history_search.current_string();
+                    set_command_line_and_position(new_text, new_text.size());
+                }
 
                 break;
             }
 
-            case TOKEN_SEARCH:
+            case R_END_OF_HISTORY:
             {
-                if ((c == R_HISTORY_SEARCH_BACKWARD) ||
-                        (c == R_HISTORY_TOKEN_SEARCH_BACKWARD))
-                {
-                    handle_token_history(SEARCH_BACKWARD, reset);
-                }
+                data->history_search.go_to_end();
+                break;
+            }
+
+            case R_UP_LINE:
+            case R_DOWN_LINE:
+            {
+                int line_old = parse_util_get_line_from_offset(data->command_line, data->buff_pos);
+                int line_new;
+
+                if (c == R_UP_LINE)
+                    line_new = line_old-1;
                 else
+                    line_new = line_old+1;
+
+                int line_count = parse_util_lineno(data->command_line.c_str(), data->command_length())-1;
+
+                if (line_new >= 0 && line_new <= line_count)
                 {
-                    handle_token_history(SEARCH_FORWARD, reset);
+                    size_t base_pos_new;
+                    size_t base_pos_old;
+
+                    int indent_old;
+                    int indent_new;
+                    size_t line_offset_old;
+                    size_t total_offset_new;
+
+                    base_pos_new = parse_util_get_offset_from_line(data->command_line, line_new);
+
+                    base_pos_old = parse_util_get_offset_from_line(data->command_line,  line_old);
+
+                    assert(base_pos_new != (size_t)(-1) && base_pos_old != (size_t)(-1));
+                    indent_old = data->indents.at(base_pos_old);
+                    indent_new = data->indents.at(base_pos_new);
+
+                    line_offset_old = data->buff_pos - parse_util_get_offset_from_line(data->command_line, line_old);
+                    total_offset_new = parse_util_get_offset(data->command_line, line_new, line_offset_old - 4*(indent_new-indent_old));
+                    data->buff_pos = total_offset_new;
+                    reader_repaint();
                 }
 
                 break;
             }
 
-            }
-            break;
-        }
-
-
-        /* Move left*/
-        case R_BACKWARD_CHAR:
-        {
-            if (data->buff_pos > 0)
+            case R_SUPPRESS_AUTOSUGGESTION:
             {
-                data->buff_pos--;
+                data->suppress_autosuggestion = true;
+                data->autosuggestion.clear();
                 reader_repaint();
+                break;
             }
-            break;
-        }
 
-        /* Move right*/
-        case R_FORWARD_CHAR:
-        {
-            if (data->buff_pos < data->command_length())
-            {
-                data->buff_pos++;
-                reader_repaint();
-            }
-            else
+            case R_ACCEPT_AUTOSUGGESTION:
             {
                 accept_autosuggestion();
+                break;
             }
-            break;
-        }
 
-        /* kill one word left */
-        case R_BACKWARD_KILL_WORD:
-        {
-            move_word(MOVE_DIR_LEFT, true /* erase */, last_char!=R_BACKWARD_KILL_WORD);
-            break;
-        }
-
-        /* kill one word right */
-        case R_KILL_WORD:
-        {
-            move_word(MOVE_DIR_RIGHT, true /* erase */, last_char!=R_KILL_WORD);
-            break;
-        }
-
-        /* move one word left*/
-        case R_BACKWARD_WORD:
-        {
-            move_word(MOVE_DIR_LEFT, false /* do not erase */, false);
-            break;
-        }
-
-        /* move one word right*/
-        case R_FORWARD_WORD:
-        {
-            move_word(MOVE_DIR_RIGHT, false /* do not erase */, false);
-            break;
-        }
-
-        case R_BEGINNING_OF_HISTORY:
-        {
-            data->history_search = history_search_t(*data->history, data->command_line, HISTORY_SEARCH_TYPE_PREFIX);
-            data->history_search.go_to_beginning();
-            if (! data->history_search.is_at_end())
+            /* Other, if a normal character, we add it to the command */
+            default:
             {
-                wcstring new_text = data->history_search.current_string();
-                set_command_line_and_position(new_text, new_text.size());
+
+                if ((!wchar_private(c)) && (((c>31) || (c==L'\n'))&& (c != 127)))
+                {
+                    /* Regular character */
+                    insert_char(c);
+                }
+                else
+                {
+                    /*
+                     Low priority debug message. These can happen if
+                     the user presses an unefined control
+                     sequnece. No reason to report.
+                     */
+                    debug(2, _(L"Unknown keybinding %d"), c);
+                }
+                break;
             }
-
-            break;
-        }
-
-        case R_END_OF_HISTORY:
-        {
-            data->history_search.go_to_end();
-            break;
-        }
-
-        case R_UP_LINE:
-        case R_DOWN_LINE:
-        {
-            int line_old = parse_util_get_line_from_offset(data->command_line, data->buff_pos);
-            int line_new;
-
-            if (c == R_UP_LINE)
-                line_new = line_old-1;
-            else
-                line_new = line_old+1;
-
-            int line_count = parse_util_lineno(data->command_line.c_str(), data->command_length())-1;
-
-            if (line_new >= 0 && line_new <= line_count)
-            {
-                size_t base_pos_new;
-                size_t base_pos_old;
-
-                int indent_old;
-                int indent_new;
-                size_t line_offset_old;
-                size_t total_offset_new;
-
-                base_pos_new = parse_util_get_offset_from_line(data->command_line, line_new);
-
-                base_pos_old = parse_util_get_offset_from_line(data->command_line,  line_old);
-
-                assert(base_pos_new != (size_t)(-1) && base_pos_old != (size_t)(-1));
-                indent_old = data->indents.at(base_pos_old);
-                indent_new = data->indents.at(base_pos_new);
-
-                line_offset_old = data->buff_pos - parse_util_get_offset_from_line(data->command_line, line_old);
-                total_offset_new = parse_util_get_offset(data->command_line, line_new, line_offset_old - 4*(indent_new-indent_old));
-                data->buff_pos = total_offset_new;
-                reader_repaint();
-            }
-
-            break;
-        }
-
-        case R_SUPPRESS_AUTOSUGGESTION:
-        {
-            data->suppress_autosuggestion = true;
-            data->autosuggestion.clear();
-            reader_repaint();
-            break;
-        }
-
-        case R_ACCEPT_AUTOSUGGESTION:
-        {
-            accept_autosuggestion();
-            break;
-        }
-
-        /* Other, if a normal character, we add it to the command */
-        default:
-        {
-
-            if ((!wchar_private(c)) && (((c>31) || (c==L'\n'))&& (c != 127)))
-            {
-                /* Regular character */
-                insert_char(c);
-            }
-            else
-            {
-                /*
-                 Low priority debug message. These can happen if
-                 the user presses an unefined control
-                 sequnece. No reason to report.
-                 */
-                debug(2, _(L"Unknown keybinding %d"), c);
-            }
-            break;
-        }
 
         }
 

@@ -110,18 +110,18 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path, const en
             {
                 switch (errno)
                 {
-                case ENOENT:
-                case ENAMETOOLONG:
-                case EACCES:
-                case ENOTDIR:
-                    break;
-                default:
-                {
-                    debug(1,
-                          MISSING_COMMAND_ERR_MSG,
-                          nxt_path.c_str());
-                    wperror(L"access");
-                }
+                    case ENOENT:
+                    case ENAMETOOLONG:
+                    case EACCES:
+                    case ENOTDIR:
+                        break;
+                    default:
+                    {
+                        debug(1,
+                              MISSING_COMMAND_ERR_MSG,
+                              nxt_path.c_str());
+                        wperror(L"access");
+                    }
                 }
             }
         }

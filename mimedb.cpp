@@ -434,28 +434,28 @@ static char *munge(char *in)
 
         switch (*in)
         {
-        case ' ':
-        case '\n':
-        case '\t':
-        case '\r':
-        {
-            had_whitespace = 1;
-            break;
-        }
-        case '\0':
-            *p = '\0';
-            return out;
-        default:
-        {
-            if (printed && had_whitespace)
+            case ' ':
+            case '\n':
+            case '\t':
+            case '\r':
             {
-                *(p++)=' ';
+                had_whitespace = 1;
+                break;
             }
-            printed=1;
-            had_whitespace=0;
-            *(p++)=*in;
-            break;
-        }
+            case '\0':
+                *p = '\0';
+                return out;
+            default:
+            {
+                if (printed && had_whitespace)
+                {
+                    *(p++)=' ';
+                }
+                printed=1;
+                had_whitespace=0;
+                *(p++)=*in;
+                break;
+            }
         }
         in++;
     }
@@ -486,22 +486,22 @@ static char *get_lang_re()
     {
         switch (*lang)
         {
-        case '@':
-        case '.':
-        case '_':
-            if (close)
-            {
-                *out++ = ')';
-                *out++ = '?';
-            }
+            case '@':
+            case '.':
+            case '_':
+                if (close)
+                {
+                    *out++ = ')';
+                    *out++ = '?';
+                }
 
-            close=1;
-            *out++ = '(';
-            *out++ = *lang;
-            break;
+                close=1;
+                *out++ = '(';
+                *out++ = *lang;
+                break;
 
-        default:
-            *out++ = *lang;
+            default:
+                *out++ = *lang;
         }
     }
 
@@ -969,59 +969,59 @@ static void write_file(const char *file, int print_path)
     {
         switch (*str)
         {
-        case ')':
-        case '(':
-        case '-':
-        case '#':
-        case '$':
-        case '}':
-        case '{':
-        case ']':
-        case '[':
-        case '*':
-        case '?':
-        case ' ':
-        case '|':
-        case '<':
-        case '>':
-        case '^':
-        case '&':
-        case '\\':
-        case '`':
-        case '\'':
-        case '\"':
-            writer('\\');
-            writer(*str);
-            break;
+            case ')':
+            case '(':
+            case '-':
+            case '#':
+            case '$':
+            case '}':
+            case '{':
+            case ']':
+            case '[':
+            case '*':
+            case '?':
+            case ' ':
+            case '|':
+            case '<':
+            case '>':
+            case '^':
+            case '&':
+            case '\\':
+            case '`':
+            case '\'':
+            case '\"':
+                writer('\\');
+                writer(*str);
+                break;
 
-        case '\n':
-            writer('\\');
-            writer('n');
-            break;
+            case '\n':
+                writer('\\');
+                writer('n');
+                break;
 
-        case '\r':
-            writer('\\');
-            writer('r');
-            break;
+            case '\r':
+                writer('\\');
+                writer('r');
+                break;
 
-        case '\t':
-            writer('\\');
-            writer('t');
-            break;
+            case '\t':
+                writer('\\');
+                writer('t');
+                break;
 
-        case '\b':
-            writer('\\');
-            writer('b');
-            break;
+            case '\b':
+                writer('\\');
+                writer('b');
+                break;
 
-        case '\v':
-            writer('\\');
-            writer('v');
-            break;
+            case '\v':
+                writer('\\');
+                writer('v');
+                break;
 
-        default:
-            writer(*str);
-            break;
+            default:
+                writer(*str);
+                break;
         }
         str++;
     }
@@ -1056,106 +1056,106 @@ static void launch(char *filter, const string_list_t &files, size_t fileno)
             filter++;
             switch (*filter)
             {
-            case 'u':
-            {
-                launch_again = 1;
-                write_url(files.at(fileno).c_str());
-                break;
-            }
-            case 'U':
-            {
-                for (size_t i=0; i<files.size(); i++)
+                case 'u':
                 {
-                    if (i != 0)
-                        writer(' ');
-                    write_url(files.at(i).c_str());
-                    if (error)
-                        break;
+                    launch_again = 1;
+                    write_url(files.at(fileno).c_str());
+                    break;
                 }
-
-                break;
-            }
-
-            case 'f':
-            case 'n':
-            {
-                launch_again = 1;
-                write_file(files.at(fileno).c_str(), *filter == 'f');
-                break;
-            }
-
-            case 'F':
-            case 'N':
-            {
-                for (size_t i=0; i<files.size(); i++)
+                case 'U':
                 {
-                    if (i != 0)
-                        writer(' ');
-                    write_file(files.at(i).c_str(), *filter == 'F');
-                    if (error)
-                        break;
-                }
-                break;
-            }
+                    for (size_t i=0; i<files.size(); i++)
+                    {
+                        if (i != 0)
+                            writer(' ');
+                        write_url(files.at(i).c_str());
+                        if (error)
+                            break;
+                    }
 
-
-            case 'd':
-            {
-                const char *cpy = get_fullfile(files.at(fileno).c_str());
-                char *dir;
-
-                launch_again=1;
-                /*
-                  We wish to modify this string, make sure it is only a copy
-                */
-                if (cpy == files.at(fileno).c_str())
-                    cpy = my_strdup(cpy);
-
-                if (cpy == 0)
-                {
                     break;
                 }
 
-                dir=dirname((char *)cpy);
-                write_file(dir, 1);
-                free((void *)cpy);
-
-                break;
-            }
-
-            case 'D':
-            {
-                for (size_t i=0; i<files.size(); i++)
+                case 'f':
+                case 'n':
                 {
-                    const char *cpy = get_fullfile(files.at(i).c_str());
+                    launch_again = 1;
+                    write_file(files.at(fileno).c_str(), *filter == 'f');
+                    break;
+                }
+
+                case 'F':
+                case 'N':
+                {
+                    for (size_t i=0; i<files.size(); i++)
+                    {
+                        if (i != 0)
+                            writer(' ');
+                        write_file(files.at(i).c_str(), *filter == 'F');
+                        if (error)
+                            break;
+                    }
+                    break;
+                }
+
+
+                case 'd':
+                {
+                    const char *cpy = get_fullfile(files.at(fileno).c_str());
                     char *dir;
 
+                    launch_again=1;
                     /*
                       We wish to modify this string, make sure it is only a copy
                     */
-                    if (cpy == files.at(i).c_str())
+                    if (cpy == files.at(fileno).c_str())
                         cpy = my_strdup(cpy);
 
                     if (cpy == 0)
                     {
                         break;
                     }
+
                     dir=dirname((char *)cpy);
-
-                    if (i != 0)
-                        writer(' ');
-
                     write_file(dir, 1);
                     free((void *)cpy);
 
+                    break;
                 }
-                break;
-            }
 
-            default:
-                fprintf(stderr, _("%s: Unsupported switch '%c' in launch string '%s'\n"), MIMEDB, *filter, filter_org);
-                launch_len=0;
-                break;
+                case 'D':
+                {
+                    for (size_t i=0; i<files.size(); i++)
+                    {
+                        const char *cpy = get_fullfile(files.at(i).c_str());
+                        char *dir;
+
+                        /*
+                          We wish to modify this string, make sure it is only a copy
+                        */
+                        if (cpy == files.at(i).c_str())
+                            cpy = my_strdup(cpy);
+
+                        if (cpy == 0)
+                        {
+                            break;
+                        }
+                        dir=dirname((char *)cpy);
+
+                        if (i != 0)
+                            writer(' ');
+
+                        write_file(dir, 1);
+                        free((void *)cpy);
+
+                    }
+                    break;
+                }
+
+                default:
+                    fprintf(stderr, _("%s: Unsupported switch '%c' in launch string '%s'\n"), MIMEDB, *filter, filter_org);
+                    launch_len=0;
+                    break;
 
             }
         }
@@ -1171,31 +1171,31 @@ static void launch(char *filter, const string_list_t &files, size_t fileno)
 
     switch (launch_len)
     {
-    case -1:
-    {
-        launch_len = 0;
-        fprintf(stderr, _("%s: Out of memory\n"), MIMEDB);
-        return;
-    }
-    case 0:
-    {
-        return;
-    }
-    default:
-    {
-
-        writer(' ');
-        writer('&');
-        writer('\0');
-
-        if (system(launch_buff) == -1)
+        case -1:
         {
-            fprintf(stderr, _(ERROR_SYSTEM), MIMEDB, launch_buff);
-            exit(STATUS_ERROR_SYSTEM);
+            launch_len = 0;
+            fprintf(stderr, _("%s: Out of memory\n"), MIMEDB);
+            return;
         }
+        case 0:
+        {
+            return;
+        }
+        default:
+        {
 
-        break;
-    }
+            writer(' ');
+            writer('&');
+            writer('\0');
+
+            if (system(launch_buff) == -1)
+            {
+                fprintf(stderr, _(ERROR_SYSTEM), MIMEDB, launch_buff);
+                exit(STATUS_ERROR_SYSTEM);
+            }
+
+            break;
+        }
     }
     if (launch_again)
     {
@@ -1296,47 +1296,47 @@ int main(int argc, char *argv[])
 
         switch (opt)
         {
-        case 0:
-            break;
+            case 0:
+                break;
 
-        case 't':
-            input_type=FILEDATA;
-            break;
+            case 't':
+                input_type=FILEDATA;
+                break;
 
-        case 'f':
-            input_type=FILENAME;
-            break;
+            case 'f':
+                input_type=FILENAME;
+                break;
 
-        case 'i':
-            input_type=MIMETYPE;
-            break;
+            case 'i':
+                input_type=MIMETYPE;
+                break;
 
-        case 'm':
-            output_type=MIMETYPE;
-            break;
+            case 'm':
+                output_type=MIMETYPE;
+                break;
 
-        case 'd':
-            output_type=DESCRIPTION;
-            break;
+            case 'd':
+                output_type=DESCRIPTION;
+                break;
 
-        case 'a':
-            output_type=ACTION;
-            break;
+            case 'a':
+                output_type=ACTION;
+                break;
 
-        case 'l':
-            output_type=LAUNCH;
-            break;
+            case 'l':
+                output_type=LAUNCH;
+                break;
 
-        case 'h':
-            print_help(argv[0], 1);
-            exit(0);
+            case 'h':
+                print_help(argv[0], 1);
+                exit(0);
 
-        case 'v':
-            printf(_("%s, version %s\n"), MIMEDB, PACKAGE_VERSION);
-            exit(0);
+            case 'v':
+                printf(_("%s, version %s\n"), MIMEDB, PACKAGE_VERSION);
+                exit(0);
 
-        case '?':
-            return 1;
+            case '?':
+                return 1;
 
         }
     }
@@ -1381,37 +1381,37 @@ int main(int argc, char *argv[])
         */
         switch (output_type)
         {
-        case MIMETYPE:
-        {
-            output = (char *)mimetype;
-            break;
+            case MIMETYPE:
+            {
+                output = (char *)mimetype;
+                break;
 
-        }
-        case DESCRIPTION:
-        {
-            output = get_description(mimetype);
-            if (!output)
-                output = strdup(_("Unknown"));
+            }
+            case DESCRIPTION:
+            {
+                output = get_description(mimetype);
+                if (!output)
+                    output = strdup(_("Unknown"));
 
-            break;
-        }
-        case ACTION:
-        {
-            output = get_action(mimetype);
-            break;
-        }
-        case LAUNCH:
-        {
-            /*
-              There may be more files using the same launcher, we
-              add them all up in little array_list_ts and launched
-              them together after all the arguments have been
-              parsed.
-            */
-            output = 0;
-            string_list_t &l = launch_hash[mimetype];
-            l.push_back(argv[i]);
-        }
+                break;
+            }
+            case ACTION:
+            {
+                output = get_action(mimetype);
+                break;
+            }
+            case LAUNCH:
+            {
+                /*
+                  There may be more files using the same launcher, we
+                  add them all up in little array_list_ts and launched
+                  them together after all the arguments have been
+                  parsed.
+                */
+                output = 0;
+                string_list_t &l = launch_hash[mimetype];
+                l.push_back(argv[i]);
+            }
         }
 
         /*

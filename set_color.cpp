@@ -261,35 +261,35 @@ int main(int argc, char **argv)
 
         switch (opt)
         {
-        case 0:
-            break;
+            case 0:
+                break;
 
-        case 'b':
-            bgcolor = optarg;
-            break;
-        case 'h':
-            print_help(argv[0], 1);
-            exit(0);
+            case 'b':
+                bgcolor = optarg;
+                break;
+            case 'h':
+                print_help(argv[0], 1);
+                exit(0);
 
-        case 'o':
-            bold=true;
-            break;
+            case 'o':
+                bold=true;
+                break;
 
-        case 'u':
-            underline=true;
-            break;
+            case 'u':
+                underline=true;
+                break;
 
-        case 'v':
-            check_locale_init();
-            fprintf(stderr, _("%s, version %s\n"), SET_COLOR, PACKAGE_VERSION);
-            exit(0);
+            case 'v':
+                check_locale_init();
+                fprintf(stderr, _("%s, version %s\n"), SET_COLOR, PACKAGE_VERSION);
+                exit(0);
 
-        case 'c':
-            print_colors();
-            exit(0);
+            case 'c':
+                print_colors();
+                exit(0);
 
-        case '?':
-            return 1;
+            case '?':
+                return 1;
 
         }
 
@@ -297,19 +297,19 @@ int main(int argc, char **argv)
 
     switch (argc-optind)
     {
-    case 0:
+        case 0:
 //      printf( "no fg\n" );
-        break;
+            break;
 
-    case 1:
-        fgcolor=argv[optind];
+        case 1:
+            fgcolor=argv[optind];
 //      printf( "fg %s\n", fgcolor );
-        break;
+            break;
 
-    default:
-        check_locale_init();
-        printf(_("%s: Too many arguments\n"), SET_COLOR);
-        return 1;
+        default:
+            check_locale_init();
+            printf(_("%s: Too many arguments\n"), SET_COLOR);
+            return 1;
     }
 
     /* Infer term256 support */

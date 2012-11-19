@@ -73,13 +73,13 @@ static wcstring apply_working_directory(const wcstring &path, const wcstring &wo
     bool prepend_wd;
     switch (path.at(0))
     {
-    case L'/':
-    case L'~':
-        prepend_wd = false;
-        break;
-    default:
-        prepend_wd = true;
-        break;
+        case L'/':
+        case L'~':
+            prepend_wd = false;
+            break;
+        default:
+            prepend_wd = true;
+            break;
     }
 
     if (! prepend_wd)
@@ -158,30 +158,30 @@ bool is_potential_path(const wcstring &const_path, const wcstring_list_t &direct
         wchar_t c = path.at(i);
         switch (c)
         {
-        case PROCESS_EXPAND:
-        case VARIABLE_EXPAND:
-        case VARIABLE_EXPAND_SINGLE:
-        case BRACKET_BEGIN:
-        case BRACKET_END:
-        case BRACKET_SEP:
-        case ANY_CHAR:
-        case ANY_STRING:
-        case ANY_STRING_RECURSIVE:
-        {
-            has_magic = 1;
-            break;
-        }
+            case PROCESS_EXPAND:
+            case VARIABLE_EXPAND:
+            case VARIABLE_EXPAND_SINGLE:
+            case BRACKET_BEGIN:
+            case BRACKET_END:
+            case BRACKET_SEP:
+            case ANY_CHAR:
+            case ANY_STRING:
+            case ANY_STRING_RECURSIVE:
+            {
+                has_magic = 1;
+                break;
+            }
 
-        case INTERNAL_SEPARATOR:
-        {
-            break;
-        }
+            case INTERNAL_SEPARATOR:
+            {
+                break;
+            }
 
-        default:
-        {
-            clean_path.push_back(c);
-            break;
-        }
+            default:
+            {
+                clean_path.push_back(c);
+                break;
+            }
 
         }
 
@@ -392,276 +392,276 @@ static void highlight_param(const wcstring &buffstr, std::vector<int> &colors, w
         wchar_t c = buffstr.at(in_pos);
         switch (mode)
         {
-            /*
-             Mode 0 means unquoted string
-             */
-        case e_unquoted:
-        {
-            if (c == L'\\')
+                /*
+                 Mode 0 means unquoted string
+                 */
+            case e_unquoted:
             {
-                size_t start_pos = in_pos;
-                in_pos++;
-
-                if (wcschr(L"~%", buff[in_pos]))
+                if (c == L'\\')
                 {
-                    if (in_pos == 1)
+                    size_t start_pos = in_pos;
+                    in_pos++;
+
+                    if (wcschr(L"~%", buff[in_pos]))
                     {
-                        colors.at(start_pos) = HIGHLIGHT_ESCAPE;
-                        colors.at(in_pos+1) = normal_status;
+                        if (in_pos == 1)
+                        {
+                            colors.at(start_pos) = HIGHLIGHT_ESCAPE;
+                            colors.at(in_pos+1) = normal_status;
+                        }
                     }
-                }
-                else if (buff[in_pos]==L',')
-                {
-                    if (bracket_count)
+                    else if (buff[in_pos]==L',')
                     {
-                        colors.at(start_pos) = HIGHLIGHT_ESCAPE;
-                        colors.at(in_pos+1) = normal_status;
+                        if (bracket_count)
+                        {
+                            colors.at(start_pos) = HIGHLIGHT_ESCAPE;
+                            colors.at(in_pos+1) = normal_status;
+                        }
                     }
-                }
-                else if (wcschr(L"abefnrtv*?$(){}[]'\"<>^ \\#;|&", buff[in_pos]))
-                {
-                    colors.at(start_pos)=HIGHLIGHT_ESCAPE;
-                    colors.at(in_pos+1)=normal_status;
-                }
-                else if (wcschr(L"c", buff[in_pos]))
-                {
-                    colors.at(start_pos)=HIGHLIGHT_ESCAPE;
-                    if (in_pos+2 < colors.size())
-                        colors.at(in_pos+2)=normal_status;
-                }
-                else if (wcschr(L"uUxX01234567", buff[in_pos]))
-                {
-                    int i;
-                    long long res=0;
-                    int chars=2;
-                    int base=16;
+                    else if (wcschr(L"abefnrtv*?$(){}[]'\"<>^ \\#;|&", buff[in_pos]))
+                    {
+                        colors.at(start_pos)=HIGHLIGHT_ESCAPE;
+                        colors.at(in_pos+1)=normal_status;
+                    }
+                    else if (wcschr(L"c", buff[in_pos]))
+                    {
+                        colors.at(start_pos)=HIGHLIGHT_ESCAPE;
+                        if (in_pos+2 < colors.size())
+                            colors.at(in_pos+2)=normal_status;
+                    }
+                    else if (wcschr(L"uUxX01234567", buff[in_pos]))
+                    {
+                        int i;
+                        long long res=0;
+                        int chars=2;
+                        int base=16;
 
-                    wchar_t max_val = ASCII_MAX;
+                        wchar_t max_val = ASCII_MAX;
 
+                        switch (buff[in_pos])
+                        {
+                            case L'u':
+                            {
+                                chars=4;
+                                max_val = UCS2_MAX;
+                                break;
+                            }
+
+                            case L'U':
+                            {
+                                chars=8;
+                                max_val = WCHAR_MAX;
+                                break;
+                            }
+
+                            case L'x':
+                            {
+                                break;
+                            }
+
+                            case L'X':
+                            {
+                                max_val = BYTE_MAX;
+                                break;
+                            }
+
+                            default:
+                            {
+                                base=8;
+                                chars=3;
+                                in_pos--;
+                                break;
+                            }
+                        }
+
+                        for (i=0; i<chars; i++)
+                        {
+                            long d = convert_digit(buff[++in_pos],base);
+
+                            if (d < 0)
+                            {
+                                in_pos--;
+                                break;
+                            }
+
+                            res=(res*base)|d;
+                        }
+
+                        if ((res <= max_val))
+                        {
+                            colors.at(start_pos) = HIGHLIGHT_ESCAPE;
+                            colors.at(in_pos+1) = normal_status;
+                        }
+                        else
+                        {
+                            colors.at(start_pos) = HIGHLIGHT_ERROR;
+                            colors.at(in_pos+1) = normal_status;
+                        }
+                    }
+
+                }
+                else
+                {
                     switch (buff[in_pos])
                     {
-                    case L'u':
-                    {
-                        chars=4;
-                        max_val = UCS2_MAX;
-                        break;
-                    }
-
-                    case L'U':
-                    {
-                        chars=8;
-                        max_val = WCHAR_MAX;
-                        break;
-                    }
-
-                    case L'x':
-                    {
-                        break;
-                    }
-
-                    case L'X':
-                    {
-                        max_val = BYTE_MAX;
-                        break;
-                    }
-
-                    default:
-                    {
-                        base=8;
-                        chars=3;
-                        in_pos--;
-                        break;
-                    }
-                    }
-
-                    for (i=0; i<chars; i++)
-                    {
-                        long d = convert_digit(buff[++in_pos],base);
-
-                        if (d < 0)
+                        case L'~':
+                        case L'%':
                         {
-                            in_pos--;
+                            if (in_pos == 0)
+                            {
+                                colors.at(in_pos) = HIGHLIGHT_OPERATOR;
+                                colors.at(in_pos+1) = normal_status;
+                            }
                             break;
                         }
 
-                        res=(res*base)|d;
+                        case L'$':
+                        {
+                            wchar_t n = buff[in_pos+1];
+                            colors.at(in_pos) = (n==L'$'||wcsvarchr(n))? HIGHLIGHT_OPERATOR:HIGHLIGHT_ERROR;
+                            colors.at(in_pos+1) = normal_status;
+                            break;
+                        }
+
+
+                        case L'*':
+                        case L'?':
+                        case L'(':
+                        case L')':
+                        {
+                            colors.at(in_pos) = HIGHLIGHT_OPERATOR;
+                            colors.at(in_pos+1) = normal_status;
+                            break;
+                        }
+
+                        case L'{':
+                        {
+                            colors.at(in_pos) = HIGHLIGHT_OPERATOR;
+                            colors.at(in_pos+1) = normal_status;
+                            bracket_count++;
+                            break;
+                        }
+
+                        case L'}':
+                        {
+                            colors.at(in_pos) = HIGHLIGHT_OPERATOR;
+                            colors.at(in_pos+1) = normal_status;
+                            bracket_count--;
+                            break;
+                        }
+
+                        case L',':
+                        {
+                            if (bracket_count)
+                            {
+                                colors.at(in_pos) = HIGHLIGHT_OPERATOR;
+                                colors.at(in_pos+1) = normal_status;
+                            }
+
+                            break;
+                        }
+
+                        case L'\'':
+                        {
+                            colors.at(in_pos) = HIGHLIGHT_QUOTE;
+                            mode = e_single_quoted;
+                            break;
+                        }
+
+                        case L'\"':
+                        {
+                            colors.at(in_pos) = HIGHLIGHT_QUOTE;
+                            mode = e_double_quoted;
+                            break;
+                        }
+
                     }
-
-                    if ((res <= max_val))
-                    {
-                        colors.at(start_pos) = HIGHLIGHT_ESCAPE;
-                        colors.at(in_pos+1) = normal_status;
-                    }
-                    else
-                    {
-                        colors.at(start_pos) = HIGHLIGHT_ERROR;
-                        colors.at(in_pos+1) = normal_status;
-                    }
-                }
-
-            }
-            else
-            {
-                switch (buff[in_pos])
-                {
-                case L'~':
-                case L'%':
-                {
-                    if (in_pos == 0)
-                    {
-                        colors.at(in_pos) = HIGHLIGHT_OPERATOR;
-                        colors.at(in_pos+1) = normal_status;
-                    }
-                    break;
-                }
-
-                case L'$':
-                {
-                    wchar_t n = buff[in_pos+1];
-                    colors.at(in_pos) = (n==L'$'||wcsvarchr(n))? HIGHLIGHT_OPERATOR:HIGHLIGHT_ERROR;
-                    colors.at(in_pos+1) = normal_status;
-                    break;
-                }
-
-
-                case L'*':
-                case L'?':
-                case L'(':
-                case L')':
-                {
-                    colors.at(in_pos) = HIGHLIGHT_OPERATOR;
-                    colors.at(in_pos+1) = normal_status;
-                    break;
-                }
-
-                case L'{':
-                {
-                    colors.at(in_pos) = HIGHLIGHT_OPERATOR;
-                    colors.at(in_pos+1) = normal_status;
-                    bracket_count++;
-                    break;
-                }
-
-                case L'}':
-                {
-                    colors.at(in_pos) = HIGHLIGHT_OPERATOR;
-                    colors.at(in_pos+1) = normal_status;
-                    bracket_count--;
-                    break;
-                }
-
-                case L',':
-                {
-                    if (bracket_count)
-                    {
-                        colors.at(in_pos) = HIGHLIGHT_OPERATOR;
-                        colors.at(in_pos+1) = normal_status;
-                    }
-
-                    break;
-                }
-
-                case L'\'':
-                {
-                    colors.at(in_pos) = HIGHLIGHT_QUOTE;
-                    mode = e_single_quoted;
-                    break;
-                }
-
-                case L'\"':
-                {
-                    colors.at(in_pos) = HIGHLIGHT_QUOTE;
-                    mode = e_double_quoted;
-                    break;
-                }
-
-                }
-            }
-            break;
-        }
-
-        /*
-         Mode 1 means single quoted string, i.e 'foo'
-         */
-        case e_single_quoted:
-        {
-            if (c == L'\\')
-            {
-                size_t start_pos = in_pos;
-                switch (buff[++in_pos])
-                {
-                case '\\':
-                case L'\'':
-                {
-                    colors.at(start_pos) = HIGHLIGHT_ESCAPE;
-                    colors.at(in_pos+1) = HIGHLIGHT_QUOTE;
-                    break;
-                }
-
-                case 0:
-                {
-                    return;
-                }
-
-                }
-
-            }
-            if (c == L'\'')
-            {
-                mode = e_unquoted;
-                colors.at(in_pos+1) = normal_status;
-            }
-
-            break;
-        }
-
-        /*
-         Mode 2 means double quoted string, i.e. "foo"
-         */
-        case e_double_quoted:
-        {
-            switch (c)
-            {
-            case '"':
-            {
-                mode = e_unquoted;
-                colors.at(in_pos+1) = normal_status;
-                break;
-            }
-
-            case '\\':
-            {
-                size_t start_pos = in_pos;
-                switch (buff[++in_pos])
-                {
-                case L'\0':
-                {
-                    return;
-                }
-
-                case '\\':
-                case L'$':
-                case '"':
-                {
-                    colors.at(start_pos) = HIGHLIGHT_ESCAPE;
-                    colors.at(in_pos+1) = HIGHLIGHT_QUOTE;
-                    break;
-                }
                 }
                 break;
             }
 
-            case '$':
+            /*
+             Mode 1 means single quoted string, i.e 'foo'
+             */
+            case e_single_quoted:
             {
-                wchar_t n = buff[in_pos+1];
-                colors.at(in_pos) = (n==L'$'||wcsvarchr(n))? HIGHLIGHT_OPERATOR:HIGHLIGHT_ERROR;
-                colors.at(in_pos+1) = HIGHLIGHT_QUOTE;
+                if (c == L'\\')
+                {
+                    size_t start_pos = in_pos;
+                    switch (buff[++in_pos])
+                    {
+                        case '\\':
+                        case L'\'':
+                        {
+                            colors.at(start_pos) = HIGHLIGHT_ESCAPE;
+                            colors.at(in_pos+1) = HIGHLIGHT_QUOTE;
+                            break;
+                        }
+
+                        case 0:
+                        {
+                            return;
+                        }
+
+                    }
+
+                }
+                if (c == L'\'')
+                {
+                    mode = e_unquoted;
+                    colors.at(in_pos+1) = normal_status;
+                }
+
                 break;
             }
 
+            /*
+             Mode 2 means double quoted string, i.e. "foo"
+             */
+            case e_double_quoted:
+            {
+                switch (c)
+                {
+                    case '"':
+                    {
+                        mode = e_unquoted;
+                        colors.at(in_pos+1) = normal_status;
+                        break;
+                    }
+
+                    case '\\':
+                    {
+                        size_t start_pos = in_pos;
+                        switch (buff[++in_pos])
+                        {
+                            case L'\0':
+                            {
+                                return;
+                            }
+
+                            case '\\':
+                            case L'$':
+                            case '"':
+                            {
+                                colors.at(start_pos) = HIGHLIGHT_ESCAPE;
+                                colors.at(in_pos+1) = HIGHLIGHT_QUOTE;
+                                break;
+                            }
+                        }
+                        break;
+                    }
+
+                    case '$':
+                    {
+                        wchar_t n = buff[in_pos+1];
+                        colors.at(in_pos) = (n==L'$'||wcsvarchr(n))? HIGHLIGHT_OPERATOR:HIGHLIGHT_ERROR;
+                        colors.at(in_pos+1) = HIGHLIGHT_QUOTE;
+                        break;
+                    }
+
+                }
+                break;
             }
-            break;
-        }
         }
     }
 }
@@ -698,91 +698,91 @@ static bool autosuggest_parse_command(const wcstring &str, wcstring *out_command
 
         switch (last_type)
         {
-        case TOK_STRING:
-        {
-            if (had_cmd)
+            case TOK_STRING:
             {
-                /* Parameter to the command. We store these escaped. */
-                args.push_back(tok_last(&tok));
-                arg_pos = tok_get_pos(&tok);
-            }
-            else
-            {
-                /* Command. First check that the command actually exists. */
-                wcstring local_cmd = tok_last(&tok);
-                bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
-                if (! expanded || has_expand_reserved(cmd.c_str()))
+                if (had_cmd)
                 {
-                    /* We can't expand this cmd, ignore it */
+                    /* Parameter to the command. We store these escaped. */
+                    args.push_back(tok_last(&tok));
+                    arg_pos = tok_get_pos(&tok);
                 }
                 else
                 {
-                    bool is_subcommand = false;
-                    int mark = tok_get_pos(&tok);
-
-                    if (parser_keywords_is_subcommand(cmd))
+                    /* Command. First check that the command actually exists. */
+                    wcstring local_cmd = tok_last(&tok);
+                    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
+                    if (! expanded || has_expand_reserved(cmd.c_str()))
                     {
-                        int sw;
-                        tok_next(&tok);
+                        /* We can't expand this cmd, ignore it */
+                    }
+                    else
+                    {
+                        bool is_subcommand = false;
+                        int mark = tok_get_pos(&tok);
 
-                        sw = parser_keywords_is_switch(tok_last(&tok));
-                        if (!parser_keywords_is_block(cmd) &&
-                                sw == ARG_SWITCH)
+                        if (parser_keywords_is_subcommand(cmd))
                         {
-                            /* It's an argument to the subcommand itself */
+                            int sw;
+                            tok_next(&tok);
+
+                            sw = parser_keywords_is_switch(tok_last(&tok));
+                            if (!parser_keywords_is_block(cmd) &&
+                                    sw == ARG_SWITCH)
+                            {
+                                /* It's an argument to the subcommand itself */
+                            }
+                            else
+                            {
+                                if (sw == ARG_SKIP)
+                                    mark = tok_get_pos(&tok);
+                                is_subcommand = true;
+                            }
+                            tok_set_pos(&tok, mark);
                         }
-                        else
+
+                        if (!is_subcommand)
                         {
-                            if (sw == ARG_SKIP)
-                                mark = tok_get_pos(&tok);
-                            is_subcommand = true;
+                            /* It's really a command */
+                            had_cmd = true;
+                            cmd = local_cmd;
                         }
-                        tok_set_pos(&tok, mark);
                     }
 
-                    if (!is_subcommand)
-                    {
-                        /* It's really a command */
-                        had_cmd = true;
-                        cmd = local_cmd;
-                    }
                 }
-
+                break;
             }
-            break;
-        }
 
-        case TOK_REDIRECT_NOCLOB:
-        case TOK_REDIRECT_OUT:
-        case TOK_REDIRECT_IN:
-        case TOK_REDIRECT_APPEND:
-        case TOK_REDIRECT_FD:
-        {
-            if (!had_cmd)
+            case TOK_REDIRECT_NOCLOB:
+            case TOK_REDIRECT_OUT:
+            case TOK_REDIRECT_IN:
+            case TOK_REDIRECT_APPEND:
+            case TOK_REDIRECT_FD:
+            {
+                if (!had_cmd)
+                {
+                    break;
+                }
+                tok_next(&tok);
+                break;
+            }
+
+            case TOK_PIPE:
+            case TOK_BACKGROUND:
+            case TOK_END:
+            {
+                had_cmd = false;
+                cmd.empty();
+                args.empty();
+                arg_pos = -1;
+                break;
+            }
+
+            case TOK_COMMENT:
+            case TOK_ERROR:
+            default:
             {
                 break;
             }
-            tok_next(&tok);
-            break;
-        }
-
-        case TOK_PIPE:
-        case TOK_BACKGROUND:
-        case TOK_END:
-        {
-            had_cmd = false;
-            cmd.empty();
-            args.empty();
-            arg_pos = -1;
-            break;
-        }
-
-        case TOK_COMMENT:
-        case TOK_ERROR:
-        default:
-        {
-            break;
-        }
         }
     }
     tok_destroy(&tok);
@@ -964,297 +964,316 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
 
         switch (last_type)
         {
-        case TOK_STRING:
-        {
-            if (had_cmd)
+            case TOK_STRING:
             {
-
-                /*Parameter */
-                wchar_t *param = tok_last(&tok);
-                if (param[0] == L'-')
+                if (had_cmd)
                 {
-                    if (wcscmp(param, L"--") == 0)
+
+                    /*Parameter */
+                    wchar_t *param = tok_last(&tok);
+                    if (param[0] == L'-')
                     {
-                        accept_switches = 0;
-                        color.at(tok_get_pos(&tok)) = HIGHLIGHT_PARAM;
-                    }
-                    else if (accept_switches)
-                    {
-                        if (complete_is_valid_option(last_cmd, param, error, false /* no autoload */))
+                        if (wcscmp(param, L"--") == 0)
+                        {
+                            accept_switches = 0;
                             color.at(tok_get_pos(&tok)) = HIGHLIGHT_PARAM;
+                        }
+                        else if (accept_switches)
+                        {
+                            if (complete_is_valid_option(last_cmd, param, error, false /* no autoload */))
+                                color.at(tok_get_pos(&tok)) = HIGHLIGHT_PARAM;
+                            else
+                                color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+                        }
                         else
-                            color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+                        {
+                            color.at(tok_get_pos(&tok)) = HIGHLIGHT_PARAM;
+                        }
                     }
                     else
                     {
                         color.at(tok_get_pos(&tok)) = HIGHLIGHT_PARAM;
                     }
-                }
-                else
-                {
-                    color.at(tok_get_pos(&tok)) = HIGHLIGHT_PARAM;
-                }
 
-                if (cmd == L"cd")
-                {
-                    wcstring dir = tok_last(&tok);
-                    if (expand_one(dir, EXPAND_SKIP_CMDSUBST))
+                    if (cmd == L"cd")
                     {
-                        int is_help = string_prefixes_string(dir, L"--help") || string_prefixes_string(dir, L"-h");
-                        if (!is_help && ! is_potential_cd_path(dir, working_directory, PATH_EXPAND_TILDE, NULL))
+                        wcstring dir = tok_last(&tok);
+                        if (expand_one(dir, EXPAND_SKIP_CMDSUBST))
                         {
-                            color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+                            int is_help = string_prefixes_string(dir, L"--help") || string_prefixes_string(dir, L"-h");
+                            if (!is_help && ! is_potential_cd_path(dir, working_directory, PATH_EXPAND_TILDE, NULL))
+                            {
+                                color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+                            }
                         }
                     }
-                }
 
-                /* Highlight the parameter. highlight_param wants to write one more color than we have characters (hysterical raisins) so allocate one more in the vector. But don't copy it back. */
-                const wcstring param_str = param;
-                size_t tok_pos = tok_get_pos(&tok);
+                    /* Highlight the parameter. highlight_param wants to write one more color than we have characters (hysterical raisins) so allocate one more in the vector. But don't copy it back. */
+                    const wcstring param_str = param;
+                    size_t tok_pos = tok_get_pos(&tok);
 
-                std::vector<int>::const_iterator where = color.begin() + tok_pos;
-                std::vector<int> subcolors(where, where + param_str.size());
-                subcolors.push_back(-1);
-                highlight_param(param_str, subcolors, error);
+                    std::vector<int>::const_iterator where = color.begin() + tok_pos;
+                    std::vector<int> subcolors(where, where + param_str.size());
+                    subcolors.push_back(-1);
+                    highlight_param(param_str, subcolors, error);
 
-                /* Copy the subcolors back into our colors array */
-                std::copy(subcolors.begin(), subcolors.begin() + param_str.size(), color.begin() + tok_pos);
-            }
-            else
-            {
-                /*
-                 Command. First check that the command actually exists.
-                 */
-                cmd = tok_last(&tok);
-                bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS);
-                if (! expanded || has_expand_reserved(cmd.c_str()))
-                {
-                    color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+                    /* Copy the subcolors back into our colors array */
+                    std::copy(subcolors.begin(), subcolors.begin() + param_str.size(), color.begin() + tok_pos);
                 }
                 else
                 {
-                    bool is_cmd = false;
-                    int is_subcommand = 0;
-                    int mark = tok_get_pos(&tok);
-                    color.at(tok_get_pos(&tok)) = HIGHLIGHT_COMMAND;
-
-                    if (parser_keywords_is_subcommand(cmd))
+                    /*
+                     Command. First check that the command actually exists.
+                     */
+                    cmd = tok_last(&tok);
+                    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS);
+                    if (! expanded || has_expand_reserved(cmd.c_str()))
                     {
+                        color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+                    }
+                    else
+                    {
+                        bool is_cmd = false;
+                        int is_subcommand = 0;
+                        int mark = tok_get_pos(&tok);
+                        color.at(tok_get_pos(&tok)) = HIGHLIGHT_COMMAND;
 
-                        int sw;
-
-                        if (cmd == L"builtin")
+                        if (parser_keywords_is_subcommand(cmd))
                         {
-                            use_function = 0;
-                            use_command  = 0;
-                            use_builtin  = 1;
+
+                            int sw;
+
+                            if (cmd == L"builtin")
+                            {
+                                use_function = 0;
+                                use_command  = 0;
+                                use_builtin  = 1;
+                            }
+                            else if (cmd == L"command")
+                            {
+                                use_command  = 1;
+                                use_function = 0;
+                                use_builtin  = 0;
+                            }
+
+                            tok_next(&tok);
+
+                            sw = parser_keywords_is_switch(tok_last(&tok));
+
+                            if (!parser_keywords_is_block(cmd) &&
+                                    sw == ARG_SWITCH)
+                            {
+                                /*
+                                 The 'builtin' and 'command' builtins
+                                 are normally followed by another
+                                 command, but if they are invoked
+                                 with a switch, they aren't.
+
+                                 */
+                                use_command  = 1;
+                                use_function = 1;
+                                use_builtin  = 2;
+                            }
+                            else
+                            {
+                                if (sw == ARG_SKIP)
+                                {
+                                    color.at(tok_get_pos(&tok)) = HIGHLIGHT_PARAM;
+                                    mark = tok_get_pos(&tok);
+                                }
+
+                                is_subcommand = 1;
+                            }
+                            tok_set_pos(&tok, mark);
                         }
-                        else if (cmd == L"command")
-                        {
-                            use_command  = 1;
-                            use_function = 0;
-                            use_builtin  = 0;
-                        }
 
-                        tok_next(&tok);
-
-                        sw = parser_keywords_is_switch(tok_last(&tok));
-
-                        if (!parser_keywords_is_block(cmd) &&
-                                sw == ARG_SWITCH)
+                        if (!is_subcommand)
                         {
                             /*
-                             The 'builtin' and 'command' builtins
-                             are normally followed by another
-                             command, but if they are invoked
-                             with a switch, they aren't.
-
+                             OK, this is a command, it has been
+                             successfully expanded and everything
+                             looks ok. Lets check if the command
+                             exists.
                              */
-                            use_command  = 1;
-                            use_function = 1;
-                            use_builtin  = 2;
-                        }
-                        else
-                        {
-                            if (sw == ARG_SKIP)
+
+                            /*
+                             First check if it is a builtin or
+                             function, since we don't have to stat
+                             any files for that
+                             */
+                            if (! is_cmd && use_builtin)
+                                is_cmd = builtin_exists(cmd);
+
+                            if (! is_cmd && use_function)
+                                is_cmd = function_exists_no_autoload(cmd, vars);
+
+                            /*
+                             Moving on to expensive tests
+                             */
+
+                            /*
+                             Check if this is a regular command
+                             */
+                            if (! is_cmd && use_command)
                             {
-                                color.at(tok_get_pos(&tok)) = HIGHLIGHT_PARAM;
-                                mark = tok_get_pos(&tok);
+                                is_cmd = path_get_path(cmd, NULL, vars);
                             }
 
-                            is_subcommand = 1;
-                        }
-                        tok_set_pos(&tok, mark);
-                    }
-
-                    if (!is_subcommand)
-                    {
-                        /*
-                         OK, this is a command, it has been
-                         successfully expanded and everything
-                         looks ok. Lets check if the command
-                         exists.
-                         */
-
-                        /*
-                         First check if it is a builtin or
-                         function, since we don't have to stat
-                         any files for that
-                         */
-                        if (! is_cmd && use_builtin)
-                            is_cmd = builtin_exists(cmd);
-
-                        if (! is_cmd && use_function)
-                            is_cmd = function_exists_no_autoload(cmd, vars);
-
-                        /*
-                         Moving on to expensive tests
-                         */
-
-                        /*
-                         Check if this is a regular command
-                         */
-                        if (! is_cmd && use_command)
-                        {
-                            is_cmd = path_get_path(cmd, NULL, vars);
-                        }
-
-                        /* Maybe it is a path for a implicit cd command. */
-                        if (! is_cmd)
-                        {
-                            if (use_builtin || (use_function && function_exists_no_autoload(L"cd", vars)))
-                                is_cmd = path_can_be_implicit_cd(cmd, NULL, working_directory.c_str(), vars);
-                        }
-
-                        if (is_cmd)
-                        {
-                            color.at(tok_get_pos(&tok)) = HIGHLIGHT_COMMAND;
-                        }
-                        else
-                        {
-                            if (error)
+                            /* Maybe it is a path for a implicit cd command. */
+                            if (! is_cmd)
                             {
-                                error->push_back(format_string(L"Unknown command \'%ls\'", cmd.c_str()));
+                                if (use_builtin || (use_function && function_exists_no_autoload(L"cd", vars)))
+                                    is_cmd = path_can_be_implicit_cd(cmd, NULL, working_directory.c_str(), vars);
                             }
-                            color.at(tok_get_pos(&tok)) = (HIGHLIGHT_ERROR);
+
+                            if (is_cmd)
+                            {
+                                color.at(tok_get_pos(&tok)) = HIGHLIGHT_COMMAND;
+                            }
+                            else
+                            {
+                                if (error)
+                                {
+                                    error->push_back(format_string(L"Unknown command \'%ls\'", cmd.c_str()));
+                                }
+                                color.at(tok_get_pos(&tok)) = (HIGHLIGHT_ERROR);
+                            }
+                            had_cmd = 1;
                         }
-                        had_cmd = 1;
+
+                        if (had_cmd)
+                        {
+                            last_cmd = tok_last(&tok);
+                        }
                     }
 
-                    if (had_cmd)
-                    {
-                        last_cmd = tok_last(&tok);
-                    }
                 }
-
-            }
-            break;
-        }
-
-        case TOK_REDIRECT_NOCLOB:
-        case TOK_REDIRECT_OUT:
-        case TOK_REDIRECT_IN:
-        case TOK_REDIRECT_APPEND:
-        case TOK_REDIRECT_FD:
-        {
-            if (!had_cmd)
-            {
-                color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
-                if (error)
-                    error->push_back(L"Redirection without a command");
                 break;
             }
 
-            wcstring target_str;
-            const wchar_t *target=NULL;
-
-            color.at(tok_get_pos(&tok)) = HIGHLIGHT_REDIRECTION;
-            tok_next(&tok);
-
-            /*
-             Check that we are redirecting into a file
-             */
-
-            switch (tok_last_type(&tok))
+            case TOK_REDIRECT_NOCLOB:
+            case TOK_REDIRECT_OUT:
+            case TOK_REDIRECT_IN:
+            case TOK_REDIRECT_APPEND:
+            case TOK_REDIRECT_FD:
             {
-            case TOK_STRING:
-            {
-                target_str = tok_last(&tok);
-                if (expand_one(target_str, EXPAND_SKIP_CMDSUBST))
+                if (!had_cmd)
                 {
-                    target = target_str.c_str();
+                    color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+                    if (error)
+                        error->push_back(L"Redirection without a command");
+                    break;
                 }
-                /*
-                 Redirect filename may contain a cmdsubst.
-                 If so, it will be ignored/not flagged.
-                 */
-            }
-            break;
-            default:
-            {
-                size_t pos = tok_get_pos(&tok);
-                if (pos < color.size())
-                {
-                    color.at(pos) = HIGHLIGHT_ERROR;
-                }
-                if (error)
-                    error->push_back(L"Invalid redirection");
-            }
 
-            }
+                wcstring target_str;
+                const wchar_t *target=NULL;
 
-            if (target != 0)
-            {
-                wcstring dir = target;
-                size_t slash_idx = dir.find_last_of(L'/');
-                struct stat buff;
-                /*
-                 If file is in directory other than '.', check
-                 that the directory exists.
-                 */
-                if (slash_idx != wcstring::npos)
-                {
-                    dir.resize(slash_idx);
-                    if (wstat(dir, &buff) == -1)
-                    {
-                        color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
-                        if (error)
-                            error->push_back(format_string(L"Directory \'%ls\' does not exist", dir.c_str()));
-
-                    }
-                }
+                color.at(tok_get_pos(&tok)) = HIGHLIGHT_REDIRECTION;
+                tok_next(&tok);
 
                 /*
-                 If the file is read from or appended to, check
-                 if it exists.
+                 Check that we are redirecting into a file
                  */
-                if (last_type == TOK_REDIRECT_IN ||
-                        last_type == TOK_REDIRECT_APPEND)
-                {
-                    if (wstat(target, &buff) == -1)
-                    {
-                        color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
-                        if (error)
-                            error->push_back(format_string(L"File \'%ls\' does not exist", target));
-                    }
-                }
-                if (last_type == TOK_REDIRECT_NOCLOB)
-                {
-                    if (wstat(target, &buff) != -1)
-                    {
-                        color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
-                        if (error)
-                            error->push_back(format_string(L"File \'%ls\' exists", target));
-                    }
-                }
-            }
-            break;
-        }
 
-        case TOK_PIPE:
-        case TOK_BACKGROUND:
-        {
-            if (had_cmd)
+                switch (tok_last_type(&tok))
+                {
+                    case TOK_STRING:
+                    {
+                        target_str = tok_last(&tok);
+                        if (expand_one(target_str, EXPAND_SKIP_CMDSUBST))
+                        {
+                            target = target_str.c_str();
+                        }
+                        /*
+                         Redirect filename may contain a cmdsubst.
+                         If so, it will be ignored/not flagged.
+                         */
+                    }
+                    break;
+                    default:
+                    {
+                        size_t pos = tok_get_pos(&tok);
+                        if (pos < color.size())
+                        {
+                            color.at(pos) = HIGHLIGHT_ERROR;
+                        }
+                        if (error)
+                            error->push_back(L"Invalid redirection");
+                    }
+
+                }
+
+                if (target != 0)
+                {
+                    wcstring dir = target;
+                    size_t slash_idx = dir.find_last_of(L'/');
+                    struct stat buff;
+                    /*
+                     If file is in directory other than '.', check
+                     that the directory exists.
+                     */
+                    if (slash_idx != wcstring::npos)
+                    {
+                        dir.resize(slash_idx);
+                        if (wstat(dir, &buff) == -1)
+                        {
+                            color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+                            if (error)
+                                error->push_back(format_string(L"Directory \'%ls\' does not exist", dir.c_str()));
+
+                        }
+                    }
+
+                    /*
+                     If the file is read from or appended to, check
+                     if it exists.
+                     */
+                    if (last_type == TOK_REDIRECT_IN ||
+                            last_type == TOK_REDIRECT_APPEND)
+                    {
+                        if (wstat(target, &buff) == -1)
+                        {
+                            color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+                            if (error)
+                                error->push_back(format_string(L"File \'%ls\' does not exist", target));
+                        }
+                    }
+                    if (last_type == TOK_REDIRECT_NOCLOB)
+                    {
+                        if (wstat(target, &buff) != -1)
+                        {
+                            color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+                            if (error)
+                                error->push_back(format_string(L"File \'%ls\' exists", target));
+                        }
+                    }
+                }
+                break;
+            }
+
+            case TOK_PIPE:
+            case TOK_BACKGROUND:
+            {
+                if (had_cmd)
+                {
+                    color.at(tok_get_pos(&tok)) = HIGHLIGHT_END;
+                    had_cmd = 0;
+                    use_command  = 1;
+                    use_function = 1;
+                    use_builtin  = 1;
+                    accept_switches = 1;
+                }
+                else
+                {
+                    color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+                    if (error)
+                        error->push_back(L"No job to put in background");
+                }
+
+                break;
+            }
+
+            case TOK_END:
             {
                 color.at(tok_get_pos(&tok)) = HIGHLIGHT_END;
                 had_cmd = 0;
@@ -1262,45 +1281,26 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
                 use_function = 1;
                 use_builtin  = 1;
                 accept_switches = 1;
+                break;
             }
-            else
+
+            case TOK_COMMENT:
             {
-                color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
-                if (error)
-                    error->push_back(L"No job to put in background");
+                color.at(tok_get_pos(&tok)) = HIGHLIGHT_COMMENT;
+                break;
             }
 
-            break;
-        }
-
-        case TOK_END:
-        {
-            color.at(tok_get_pos(&tok)) = HIGHLIGHT_END;
-            had_cmd = 0;
-            use_command  = 1;
-            use_function = 1;
-            use_builtin  = 1;
-            accept_switches = 1;
-            break;
-        }
-
-        case TOK_COMMENT:
-        {
-            color.at(tok_get_pos(&tok)) = HIGHLIGHT_COMMENT;
-            break;
-        }
-
-        case TOK_ERROR:
-        default:
-        {
-            /*
-             If the tokenizer reports an error, highlight it as such.
-             */
-            if (error)
-                error->push_back(tok_last(&tok));
-            color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
-            break;
-        }
+            case TOK_ERROR:
+            default:
+            {
+                /*
+                 If the tokenizer reports an error, highlight it as such.
+                 */
+                if (error)
+                    error->push_back(tok_last(&tok));
+                color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+                break;
+            }
         }
     }
     tok_destroy(&tok);
@@ -1465,44 +1465,44 @@ static void highlight_universal_internal(const wcstring &buffstr, std::vector<in
             {
                 switch (*str)
                 {
-                case L'\\':
-                    str++;
-                    break;
-                case L'\"':
-                case L'\'':
-                    if (level == 0)
-                    {
-                        level++;
-                        lst.push_back(str-buff);
-                        prev_q = *str;
-                    }
-                    else
-                    {
-                        if (prev_q == *str)
-                        {
-                            long pos1, pos2;
-
-                            level--;
-                            pos1 = lst.back();
-                            pos2 = str-buff;
-                            if (pos1==pos || pos2==pos)
-                            {
-                                color.at(pos1)|=HIGHLIGHT_MATCH<<16;
-                                color.at(pos2)|=HIGHLIGHT_MATCH<<16;
-                                match_found = 1;
-
-                            }
-                            prev_q = *str==L'\"'?L'\'':L'\"';
-                        }
-                        else
+                    case L'\\':
+                        str++;
+                        break;
+                    case L'\"':
+                    case L'\'':
+                        if (level == 0)
                         {
                             level++;
                             lst.push_back(str-buff);
                             prev_q = *str;
                         }
-                    }
+                        else
+                        {
+                            if (prev_q == *str)
+                            {
+                                long pos1, pos2;
 
-                    break;
+                                level--;
+                                pos1 = lst.back();
+                                pos2 = str-buff;
+                                if (pos1==pos || pos2==pos)
+                                {
+                                    color.at(pos1)|=HIGHLIGHT_MATCH<<16;
+                                    color.at(pos2)|=HIGHLIGHT_MATCH<<16;
+                                    match_found = 1;
+
+                                }
+                                prev_q = *str==L'\"'?L'\'':L'\"';
+                            }
+                            else
+                            {
+                                level++;
+                                lst.push_back(str-buff);
+                                prev_q = *str;
+                            }
+                        }
+
+                        break;
                 }
                 if ((*str == L'\0'))
                     break;

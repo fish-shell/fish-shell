@@ -102,29 +102,29 @@ static void replace_part(const wchar_t *begin,
 
     switch (append_mode)
     {
-    case REPLACE_MODE:
-    {
+        case REPLACE_MODE:
+        {
 
-        out.append(insert);
-        out_pos = wcslen(insert) + (begin-buff);
-        break;
+            out.append(insert);
+            out_pos = wcslen(insert) + (begin-buff);
+            break;
 
-    }
-    case APPEND_MODE:
-    {
-        out.append(begin, end-begin);
-        out.append(insert);
-        break;
-    }
-    case INSERT_MODE:
-    {
-        long cursor = get_cursor_pos() -(begin-buff);
-        out.append(begin, cursor);
-        out.append(insert);
-        out.append(begin+cursor, end-begin-cursor);
-        out_pos +=  wcslen(insert);
-        break;
-    }
+        }
+        case APPEND_MODE:
+        {
+            out.append(begin, end-begin);
+            out.append(insert);
+            break;
+        }
+        case INSERT_MODE:
+        {
+            long cursor = get_cursor_pos() -(begin-buff);
+            out.append(begin, cursor);
+            out.append(insert);
+            out.append(begin+cursor, end-begin-cursor);
+            out_pos +=  wcslen(insert);
+            break;
+        }
     }
     out.append(end);
     reader_set_buffer(out, out_pos);
@@ -166,12 +166,12 @@ static void write_part(const wchar_t *begin,
 
             switch (tok_last_type(&tok))
             {
-            case TOK_STRING:
-            {
-                out.append(escape_string(tok_last(&tok), UNESCAPE_INCOMPLETE));
-                out.push_back(L'\n');
-                break;
-            }
+                case TOK_STRING:
+                {
+                    out.append(escape_string(tok_last(&tok), UNESCAPE_INCOMPLETE));
+                    out.push_back(L'\n');
+                    break;
+                }
 
             }
         }
@@ -333,82 +333,82 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
 
         switch (opt)
         {
-        case 0:
-            if (long_options[opt_index].flag != 0)
+            case 0:
+                if (long_options[opt_index].flag != 0)
+                    break;
+                append_format(stderr_buffer,
+                              BUILTIN_ERR_UNKNOWN,
+                              argv[0],
+                              long_options[opt_index].name);
+                builtin_print_help(parser, argv[0], stderr_buffer);
+
+                return 1;
+
+            case L'a':
+                append_mode = APPEND_MODE;
                 break;
-            append_format(stderr_buffer,
-                          BUILTIN_ERR_UNKNOWN,
-                          argv[0],
-                          long_options[opt_index].name);
-            builtin_print_help(parser, argv[0], stderr_buffer);
 
-            return 1;
-
-        case L'a':
-            append_mode = APPEND_MODE;
-            break;
-
-        case L'b':
-            buffer_part = STRING_MODE;
-            break;
+            case L'b':
+                buffer_part = STRING_MODE;
+                break;
 
 
-        case L'i':
-            append_mode = INSERT_MODE;
-            break;
+            case L'i':
+                append_mode = INSERT_MODE;
+                break;
 
-        case L'r':
-            append_mode = REPLACE_MODE;
-            break;
+            case L'r':
+                append_mode = REPLACE_MODE;
+                break;
 
-        case 'c':
-            cut_at_cursor=1;
-            break;
+            case 'c':
+                cut_at_cursor=1;
+                break;
 
-        case 't':
-            buffer_part = TOKEN_MODE;
-            break;
+            case 't':
+                buffer_part = TOKEN_MODE;
+                break;
 
-        case 'j':
-            buffer_part = JOB_MODE;
-            break;
+            case 'j':
+                buffer_part = JOB_MODE;
+                break;
 
-        case 'p':
-            buffer_part = PROCESS_MODE;
-            break;
+            case 'p':
+                buffer_part = PROCESS_MODE;
+                break;
 
-        case 'f':
-            function_mode=1;
-            break;
+            case 'f':
+                function_mode=1;
+                break;
 
-        case 'o':
-            tokenize=1;
-            break;
+            case 'o':
+                tokenize=1;
+                break;
 
-        case 'I':
-            current_buffer = woptarg;
-            current_cursor_pos = wcslen(woptarg);
-            break;
+            case 'I':
+                current_buffer = woptarg;
+                current_cursor_pos = wcslen(woptarg);
+                break;
 
-        case 'C':
-            cursor_mode = 1;
-            break;
+            case 'C':
+                cursor_mode = 1;
+                break;
 
-        case 'L':
-            line_mode = 1;
-            break;
+            case 'L':
+                line_mode = 1;
+                break;
 
-        case 'S':
-            search_mode = 1;
-            break;
+            case 'S':
+                search_mode = 1;
+                break;
 
-        case 'h':
-            builtin_print_help(parser, argv[0], stdout_buffer);
-            return 0;
+            case 'h':
+                builtin_print_help(parser, argv[0], stdout_buffer);
+                return 0;
 
-        case L'?':
-            builtin_unknown_option(parser, argv[0], argv[woptind-1]);
-            return 1;
+            case L'?':
+                builtin_unknown_option(parser, argv[0], argv[woptind-1]);
+                return 1;
         }
     }
 
@@ -574,72 +574,72 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
 
     switch (buffer_part)
     {
-    case STRING_MODE:
-    {
-        begin = get_buffer();
-        end = begin+wcslen(begin);
-        break;
-    }
+        case STRING_MODE:
+        {
+            begin = get_buffer();
+            end = begin+wcslen(begin);
+            break;
+        }
 
-    case PROCESS_MODE:
-    {
-        parse_util_process_extent(get_buffer(),
+        case PROCESS_MODE:
+        {
+            parse_util_process_extent(get_buffer(),
+                                      get_cursor_pos(),
+                                      &begin,
+                                      &end);
+            break;
+        }
+
+        case JOB_MODE:
+        {
+            parse_util_job_extent(get_buffer(),
                                   get_cursor_pos(),
                                   &begin,
                                   &end);
-        break;
-    }
+            break;
+        }
 
-    case JOB_MODE:
-    {
-        parse_util_job_extent(get_buffer(),
-                              get_cursor_pos(),
-                              &begin,
-                              &end);
-        break;
-    }
-
-    case TOKEN_MODE:
-    {
-        parse_util_token_extent(get_buffer(),
-                                get_cursor_pos(),
-                                &begin,
-                                &end,
-                                0, 0);
-        break;
-    }
+        case TOKEN_MODE:
+        {
+            parse_util_token_extent(get_buffer(),
+                                    get_cursor_pos(),
+                                    &begin,
+                                    &end,
+                                    0, 0);
+            break;
+        }
 
     }
 
     switch (argc-woptind)
     {
-    case 0:
-    {
-        write_part(begin, end, cut_at_cursor, tokenize);
-        break;
-    }
-
-    case 1:
-    {
-        replace_part(begin, end, argv[woptind], append_mode);
-        break;
-    }
-
-    default:
-    {
-        wcstring sb = argv[woptind];
-        int i;
-
-        for (i=woptind+1; i<argc; i++)
+        case 0:
         {
-            sb.push_back(L'\n');
-            sb.append(argv[i]);
+            write_part(begin, end, cut_at_cursor, tokenize);
+            break;
         }
 
-        replace_part(begin, end, sb.c_str(), append_mode);
+        case 1:
+        {
+            replace_part(begin, end, argv[woptind], append_mode);
+            break;
+        }
 
-        break;
-    }
+        default:
+        {
+            wcstring sb = argv[woptind];
+            int i;
+
+            for (i=woptind+1; i<argc; i++)
+            {
+                sb.push_back(L'\n');
+                sb.append(argv[i]);
+            }
+
+            replace_part(begin, end, sb.c_str(), append_mode);
+
+            break;
+        }
     }
 
     return 0;

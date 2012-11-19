@@ -176,36 +176,55 @@ static int handle_child_io(io_chain_t &io_chain)
 
         switch (io->io_mode)
         {
-        case IO_CLOSE:
-        {
-            if (close(io->fd))
+            case IO_CLOSE:
             {
-                debug_safe_int(0, "Failed to close file descriptor %s", io->fd);
-                wperror(L"close");
+                if (close(io->fd))
+                {
+                    debug_safe_int(0, "Failed to close file descriptor %s", io->fd);
+                    wperror(L"close");
+                }
+                break;
             }
-            break;
-        }
 
-        case IO_FILE:
-        {
-            // Here we definitely do not want to set CLO_EXEC because our child needs access
-            if ((tmp=open(io->filename_cstr,
-                          io->param2.flags, OPEN_MASK))==-1)
+            case IO_FILE:
             {
-                if ((io->param2.flags & O_EXCL) &&
-                        (errno ==EEXIST))
+                // Here we definitely do not want to set CLO_EXEC because our child needs access
+                if ((tmp=open(io->filename_cstr,
+                              io->param2.flags, OPEN_MASK))==-1)
                 {
-                    debug_safe(1, NOCLOB_ERROR, io->filename_cstr);
-                }
-                else
-                {
-                    debug_safe(1, FILE_ERROR, io->filename_cstr);
-                    perror("open");
-                }
+                    if ((io->param2.flags & O_EXCL) &&
+                            (errno ==EEXIST))
+                    {
+                        debug_safe(1, NOCLOB_ERROR, io->filename_cstr);
+                    }
+                    else
+                    {
+                        debug_safe(1, FILE_ERROR, io->filename_cstr);
+                        perror("open");
+                    }
 
-                return -1;
+                    return -1;
+                }
+                else if (tmp != io->fd)
+                {
+                    /*
+                      This call will sometimes fail, but that is ok,
+                      this is just a precausion.
+                    */
+                    close(io->fd);
+
+                    if (dup2(tmp, io->fd) == -1)
+                    {
+                        debug_safe_int(1,  FD_ERROR, io->fd);
+                        perror("dup2");
+                        return -1;
+                    }
+                    exec_close(tmp);
+                }
+                break;
             }
-            else if (tmp != io->fd)
+
+            case IO_FD:
             {
                 /*
                   This call will sometimes fail, but that is ok,
@@ -213,61 +232,42 @@ static int handle_child_io(io_chain_t &io_chain)
                 */
                 close(io->fd);
 
-                if (dup2(tmp, io->fd) == -1)
+                if (dup2(io->param1.old_fd, io->fd) == -1)
                 {
-                    debug_safe_int(1,  FD_ERROR, io->fd);
+                    debug_safe_int(1, FD_ERROR, io->fd);
+                    wperror(L"dup2");
+                    return -1;
+                }
+                break;
+            }
+
+            case IO_BUFFER:
+            case IO_PIPE:
+            {
+                /* If write_pipe_idx is 0, it means we're connecting to the read end (first pipe fd). If it's 1, we're connecting to the write end (second pipe fd). */
+                unsigned int write_pipe_idx = (io->is_input ? 0 : 1);
+                /*
+                        debug( 0,
+                             L"%ls %ls on fd %d (%d %d)",
+                             write_pipe?L"write":L"read",
+                             (io->io_mode == IO_BUFFER)?L"buffer":L"pipe",
+                             io->fd,
+                             io->param1.pipe_fd[0],
+                             io->param1.pipe_fd[1]);
+                */
+                if (dup2(io->param1.pipe_fd[write_pipe_idx], io->fd) != io->fd)
+                {
+                    debug_safe(1, LOCAL_PIPE_ERROR);
                     perror("dup2");
                     return -1;
                 }
-                exec_close(tmp);
+
+                if (io->param1.pipe_fd[0] >= 0)
+                    exec_close(io->param1.pipe_fd[0]);
+                if (io->param1.pipe_fd[1] >= 0)
+                    exec_close(io->param1.pipe_fd[1]);
+                break;
             }
-            break;
-        }
-
-        case IO_FD:
-        {
-            /*
-              This call will sometimes fail, but that is ok,
-              this is just a precausion.
-            */
-            close(io->fd);
-
-            if (dup2(io->param1.old_fd, io->fd) == -1)
-            {
-                debug_safe_int(1, FD_ERROR, io->fd);
-                wperror(L"dup2");
-                return -1;
-            }
-            break;
-        }
-
-        case IO_BUFFER:
-        case IO_PIPE:
-        {
-            /* If write_pipe_idx is 0, it means we're connecting to the read end (first pipe fd). If it's 1, we're connecting to the write end (second pipe fd). */
-            unsigned int write_pipe_idx = (io->is_input ? 0 : 1);
-            /*
-                    debug( 0,
-                         L"%ls %ls on fd %d (%d %d)",
-                         write_pipe?L"write":L"read",
-                         (io->io_mode == IO_BUFFER)?L"buffer":L"pipe",
-                         io->fd,
-                         io->param1.pipe_fd[0],
-                         io->param1.pipe_fd[1]);
-            */
-            if (dup2(io->param1.pipe_fd[write_pipe_idx], io->fd) != io->fd)
-            {
-                debug_safe(1, LOCAL_PIPE_ERROR);
-                perror("dup2");
-                return -1;
-            }
-
-            if (io->param1.pipe_fd[0] >= 0)
-                exec_close(io->param1.pipe_fd[0]);
-            if (io->param1.pipe_fd[1] >= 0)
-                exec_close(io->param1.pipe_fd[1]);
-            break;
-        }
 
         }
     }
@@ -456,52 +456,52 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr, posix_spawn_fil
         }
         switch (io->io_mode)
         {
-        case IO_CLOSE:
-        {
-            if (! err)
-                err = posix_spawn_file_actions_addclose(actions, io->fd);
-            break;
-        }
-
-        case IO_FILE:
-        {
-            if (! err)
-                err = posix_spawn_file_actions_addopen(actions, io->fd, io->filename_cstr, io->param2.flags /* mode */, OPEN_MASK);
-            break;
-        }
-
-        case IO_FD:
-        {
-            if (! err)
-                err = posix_spawn_file_actions_adddup2(actions, io->param1.old_fd /* from */, io->fd /* to */);
-            break;
-        }
-
-        case IO_BUFFER:
-        case IO_PIPE:
-        {
-            unsigned int write_pipe_idx = (io->is_input ? 0 : 1);
-            int from_fd = io->param1.pipe_fd[write_pipe_idx];
-            int to_fd = io->fd;
-            if (! err)
-                err = posix_spawn_file_actions_adddup2(actions, from_fd, to_fd);
-
-
-            if (write_pipe_idx > 0)
+            case IO_CLOSE:
             {
                 if (! err)
-                    err = posix_spawn_file_actions_addclose(actions, io->param1.pipe_fd[0]);
-                if (! err)
-                    err = posix_spawn_file_actions_addclose(actions, io->param1.pipe_fd[1]);
+                    err = posix_spawn_file_actions_addclose(actions, io->fd);
+                break;
             }
-            else
+
+            case IO_FILE:
             {
                 if (! err)
-                    err = posix_spawn_file_actions_addclose(actions, io->param1.pipe_fd[0]);
-
+                    err = posix_spawn_file_actions_addopen(actions, io->fd, io->filename_cstr, io->param2.flags /* mode */, OPEN_MASK);
+                break;
             }
-            break;
-        }
+
+            case IO_FD:
+            {
+                if (! err)
+                    err = posix_spawn_file_actions_adddup2(actions, io->param1.old_fd /* from */, io->fd /* to */);
+                break;
+            }
+
+            case IO_BUFFER:
+            case IO_PIPE:
+            {
+                unsigned int write_pipe_idx = (io->is_input ? 0 : 1);
+                int from_fd = io->param1.pipe_fd[write_pipe_idx];
+                int to_fd = io->fd;
+                if (! err)
+                    err = posix_spawn_file_actions_adddup2(actions, from_fd, to_fd);
+
+
+                if (write_pipe_idx > 0)
+                {
+                    if (! err)
+                        err = posix_spawn_file_actions_addclose(actions, io->param1.pipe_fd[0]);
+                    if (! err)
+                        err = posix_spawn_file_actions_addclose(actions, io->param1.pipe_fd[1]);
+                }
+                else
+                {
+                    if (! err)
+                        err = posix_spawn_file_actions_addclose(actions, io->param1.pipe_fd[0]);
+
+                }
+                break;
+            }
         }
     }
 
@@ -523,81 +523,81 @@ void safe_report_exec_error(int err, const char *actual_cmd, char **argv, char *
     switch (err)
     {
 
-    case E2BIG:
-    {
-        char sz1[128], sz2[128];
-
-        long arg_max = -1;
-
-        size_t sz = 0;
-        char **p;
-        for (p=argv; *p; p++)
+        case E2BIG:
         {
-            sz += strlen(*p)+1;
+            char sz1[128], sz2[128];
+
+            long arg_max = -1;
+
+            size_t sz = 0;
+            char **p;
+            for (p=argv; *p; p++)
+            {
+                sz += strlen(*p)+1;
+            }
+
+            for (p=envv; *p; p++)
+            {
+                sz += strlen(*p)+1;
+            }
+
+            format_size_safe(sz1, sz);
+            arg_max = sysconf(_SC_ARG_MAX);
+
+            if (arg_max > 0)
+            {
+                format_size_safe(sz2, sz);
+                debug_safe(0, "The total size of the argument and environment lists %s exceeds the operating system limit of %s.", sz1, sz2);
+            }
+            else
+            {
+                debug_safe(0, "The total size of the argument and environment lists (%s) exceeds the operating system limit.", sz1);
+            }
+
+            debug_safe(0, "Try running the command again with fewer arguments.");
+            break;
         }
 
-        for (p=envv; *p; p++)
+        case ENOEXEC:
         {
-            sz += strlen(*p)+1;
+            /* Hope strerror doesn't allocate... */
+            const char *err = strerror(errno);
+            debug_safe(0, "exec: %s", err);
+
+            debug_safe(0, "The file '%s' is marked as an executable but could not be run by the operating system.", actual_cmd);
+            break;
         }
 
-        format_size_safe(sz1, sz);
-        arg_max = sysconf(_SC_ARG_MAX);
-
-        if (arg_max > 0)
+        case ENOENT:
         {
-            format_size_safe(sz2, sz);
-            debug_safe(0, "The total size of the argument and environment lists %s exceeds the operating system limit of %s.", sz1, sz2);
+            /* ENOENT is returned by exec() when the path fails, but also returned by posix_spawn if an open file action fails. These cases appear to be impossible to distinguish. We address this by not using posix_spawn for file redirections, so all the ENOENTs we find must be errors from exec(). */
+            char interpreter_buff[128] = {}, *interpreter;
+            interpreter = get_interpreter(actual_cmd, interpreter_buff, sizeof interpreter_buff);
+            if (interpreter && 0 != access(interpreter, X_OK))
+            {
+                debug_safe(0, "The file '%s' specified the interpreter '%s', which is not an executable command.", actual_cmd, interpreter);
+            }
+            else
+            {
+                debug_safe(0, "The file '%s' does not exist or could not be executed.", actual_cmd);
+            }
+            break;
         }
-        else
+
+        case ENOMEM:
         {
-            debug_safe(0, "The total size of the argument and environment lists (%s) exceeds the operating system limit.", sz1);
+            debug_safe(0, "Out of memory");
+            break;
         }
 
-        debug_safe(0, "Try running the command again with fewer arguments.");
-        break;
-    }
-
-    case ENOEXEC:
-    {
-        /* Hope strerror doesn't allocate... */
-        const char *err = strerror(errno);
-        debug_safe(0, "exec: %s", err);
-
-        debug_safe(0, "The file '%s' is marked as an executable but could not be run by the operating system.", actual_cmd);
-        break;
-    }
-
-    case ENOENT:
-    {
-        /* ENOENT is returned by exec() when the path fails, but also returned by posix_spawn if an open file action fails. These cases appear to be impossible to distinguish. We address this by not using posix_spawn for file redirections, so all the ENOENTs we find must be errors from exec(). */
-        char interpreter_buff[128] = {}, *interpreter;
-        interpreter = get_interpreter(actual_cmd, interpreter_buff, sizeof interpreter_buff);
-        if (interpreter && 0 != access(interpreter, X_OK))
+        default:
         {
-            debug_safe(0, "The file '%s' specified the interpreter '%s', which is not an executable command.", actual_cmd, interpreter);
+            /* Hope strerror doesn't allocate... */
+            const char *err = strerror(errno);
+            debug_safe(0, "exec: %s", err);
+
+            //    debug(0, L"The file '%ls' is marked as an executable but could not be run by the operating system.", p->actual_cmd);
+            break;
         }
-        else
-        {
-            debug_safe(0, "The file '%s' does not exist or could not be executed.", actual_cmd);
-        }
-        break;
-    }
-
-    case ENOMEM:
-    {
-        debug_safe(0, "Out of memory");
-        break;
-    }
-
-    default:
-    {
-        /* Hope strerror doesn't allocate... */
-        const char *err = strerror(errno);
-        debug_safe(0, "exec: %s", err);
-
-        //    debug(0, L"The file '%ls' is marked as an executable but could not be run by the operating system.", p->actual_cmd);
-        break;
-    }
     }
 }

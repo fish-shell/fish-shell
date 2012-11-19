@@ -393,21 +393,21 @@ static void universal_callback(fish_message_type_t type,
 
     switch (type)
     {
-    case SET:
-    case SET_EXPORT:
-    {
-        str=L"SET";
-        break;
-    }
+        case SET:
+        case SET_EXPORT:
+        {
+            str=L"SET";
+            break;
+        }
 
-    case ERASE:
-    {
-        str=L"ERASE";
-        break;
-    }
+        case ERASE:
+        {
+            str=L"ERASE";
+            break;
+        }
 
-    default:
-        break;
+        default:
+            break;
     }
 
     if (str)

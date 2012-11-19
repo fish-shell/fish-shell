@@ -373,36 +373,36 @@ static void job_or_process_extent(const wchar_t *buff,
 
         switch (tok_last_type(&tok))
         {
-        case TOK_PIPE:
-        {
-            if (!process)
+            case TOK_PIPE:
             {
+                if (!process)
+                {
+                    break;
+                }
+            }
+
+            case TOK_END:
+            case TOK_BACKGROUND:
+            {
+
+                if (tok_begin >= pos)
+                {
+                    finished=1;
+                    if (b)
+                    {
+                        *b = (wchar_t *)buff + tok_begin;
+                    }
+                }
+                else
+                {
+                    if (a)
+                    {
+                        *a = (wchar_t *)buff + tok_begin+1;
+                    }
+                }
+
                 break;
             }
-        }
-
-        case TOK_END:
-        case TOK_BACKGROUND:
-        {
-
-            if (tok_begin >= pos)
-            {
-                finished=1;
-                if (b)
-                {
-                    *b = (wchar_t *)buff + tok_begin;
-                }
-            }
-            else
-            {
-                if (a)
-                {
-                    *a = (wchar_t *)buff + tok_begin+1;
-                }
-            }
-
-            break;
-        }
         }
     }
 
@@ -611,50 +611,50 @@ wchar_t *parse_util_unescape_wildcards(const wchar_t *str)
     {
         switch (*in)
         {
-        case L'\\':
-        {
-            switch (*(in + 1))
-            {
-            case L'*':
-            case L'?':
-            {
-                in++;
-                *(out++)=*in;
-                break;
-            }
             case L'\\':
             {
-                in++;
-                *(out++)=L'\\';
-                *(out++)=L'\\';
+                switch (*(in + 1))
+                {
+                    case L'*':
+                    case L'?':
+                    {
+                        in++;
+                        *(out++)=*in;
+                        break;
+                    }
+                    case L'\\':
+                    {
+                        in++;
+                        *(out++)=L'\\';
+                        *(out++)=L'\\';
+                        break;
+                    }
+                    default:
+                    {
+                        *(out++)=*in;
+                        break;
+                    }
+                }
                 break;
             }
+
+            case L'*':
+            {
+                *(out++)=ANY_STRING;
+                break;
+            }
+
+            case L'?':
+            {
+                *(out++)=ANY_CHAR;
+                break;
+            }
+
             default:
             {
                 *(out++)=*in;
                 break;
             }
-            }
-            break;
-        }
-
-        case L'*':
-        {
-            *(out++)=ANY_STRING;
-            break;
-        }
-
-        case L'?':
-        {
-            *(out++)=ANY_CHAR;
-            break;
-        }
-
-        default:
-        {
-            *(out++)=*in;
-            break;
-        }
         }
     }
     *out = *in;
@@ -786,17 +786,17 @@ wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote)
             wchar_t c = cmd.at(i);
             switch (c)
             {
-            case L'\n':
-            case L'\t':
-            case L'\b':
-            case L'\r':
-                unescapable = true;
-                break;
-            default:
-                if (c == quote)
-                    result.push_back(L'\\');
-                result.push_back(c);
-                break;
+                case L'\n':
+                case L'\t':
+                case L'\b':
+                case L'\r':
+                    unescapable = true;
+                    break;
+                default:
+                    if (c == quote)
+                        result.push_back(L'\\');
+                    result.push_back(c);
+                    break;
             }
         }
 

@@ -176,17 +176,17 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
     switch (type)
     {
 
-    case HISTORY_SEARCH_TYPE_CONTAINS:
-        /* We consider equal strings to NOT match a contains search (so that you don't have to see history equal to what you typed). The length check ensures that. */
-        return contents.size() > term.size() && contents.find(term) != wcstring::npos;
+        case HISTORY_SEARCH_TYPE_CONTAINS:
+            /* We consider equal strings to NOT match a contains search (so that you don't have to see history equal to what you typed). The length check ensures that. */
+            return contents.size() > term.size() && contents.find(term) != wcstring::npos;
 
-    case HISTORY_SEARCH_TYPE_PREFIX:
-        /* We consider equal strings to match a prefix search, so that autosuggest will allow suggesting what you've typed */
-        return string_prefixes_string(term, contents);
+        case HISTORY_SEARCH_TYPE_PREFIX:
+            /* We consider equal strings to match a prefix search, so that autosuggest will allow suggesting what you've typed */
+            return string_prefixes_string(term, contents);
 
-    default:
-        sanity_lose();
-        return false;
+        default:
+            sanity_lose();
+            return false;
     }
 }
 
@@ -388,25 +388,25 @@ static size_t offset_of_next_item_fish_1_x(const char *begin, size_t mmap_length
 
         switch (*pos)
         {
-        case '\\':
-        {
-            pos++;
-            break;
-        }
+            case '\\':
+            {
+                pos++;
+                break;
+            }
 
-        case '\n':
-        {
-            if (ignore_newline)
+            case '\n':
             {
-                ignore_newline = false;
+                if (ignore_newline)
+                {
+                    ignore_newline = false;
+                }
+                else
+                {
+                    /* Note: pos will be left pointing just after this newline, because of the ++ in the loop */
+                    all_done = true;
+                }
+                break;
             }
-            else
-            {
-                /* Note: pos will be left pointing just after this newline, because of the ++ in the loop */
-                all_done = true;
-            }
-            break;
-        }
         }
     }
     *inout_cursor = (pos - begin);
@@ -419,19 +419,19 @@ static size_t offset_of_next_item(const char *begin, size_t mmap_length, history
     size_t result;
     switch (mmap_type)
     {
-    case history_type_fish_2_0:
-        result = offset_of_next_item_fish_2_0(begin, mmap_length, inout_cursor, cutoff_timestamp);
-        break;
+        case history_type_fish_2_0:
+            result = offset_of_next_item_fish_2_0(begin, mmap_length, inout_cursor, cutoff_timestamp);
+            break;
 
-    case history_type_fish_1_x:
-        result = offset_of_next_item_fish_1_x(begin, mmap_length, inout_cursor, cutoff_timestamp);
-        break;
+        case history_type_fish_1_x:
+            result = offset_of_next_item_fish_1_x(begin, mmap_length, inout_cursor, cutoff_timestamp);
+            break;
 
-    default:
-    case history_type_unknown:
-        // Oh well
-        result = (size_t)(-1);
-        break;
+        default:
+        case history_type_unknown:
+            // Oh well
+            result = (size_t)(-1);
+            break;
     }
     return result;
 }
@@ -706,12 +706,12 @@ history_item_t history_t::decode_item(const char *base, size_t len, history_file
 {
     switch (type)
     {
-    case history_type_fish_1_x:
-        return history_t::decode_item_fish_1_x(base, len);
-    case history_type_fish_2_0:
-        return history_t::decode_item_fish_2_0(base, len);
-    default:
-        return history_item_t(L"");
+        case history_type_fish_1_x:
+            return history_t::decode_item_fish_1_x(base, len);
+        case history_type_fish_2_0:
+            return history_t::decode_item_fish_2_0(base, len);
+        default:
+            return history_item_t(L"");
     }
 }
 

@@ -535,41 +535,41 @@ static void daemonize()
     */
     switch (fork())
     {
-    case -1:
-        debug(0, L"Could not put fishd in background. Quitting");
-        wperror(L"fork");
-        exit(1);
+        case -1:
+            debug(0, L"Could not put fishd in background. Quitting");
+            wperror(L"fork");
+            exit(1);
 
-    case 0:
-    {
-        /* Ordinarily there's very limited things we will do after fork, due to multithreading. But fishd is safe because it's single threaded. So don't die in is_forked_child. */
-        setup_fork_guards();
+        case 0:
+        {
+            /* Ordinarily there's very limited things we will do after fork, due to multithreading. But fishd is safe because it's single threaded. So don't die in is_forked_child. */
+            setup_fork_guards();
 
-        /*
-          Make fishd ignore the HUP signal.
-        */
-        struct sigaction act;
-        sigemptyset(& act.sa_mask);
-        act.sa_flags=0;
-        act.sa_handler=SIG_IGN;
-        sigaction(SIGHUP, &act, 0);
+            /*
+              Make fishd ignore the HUP signal.
+            */
+            struct sigaction act;
+            sigemptyset(& act.sa_mask);
+            act.sa_flags=0;
+            act.sa_handler=SIG_IGN;
+            sigaction(SIGHUP, &act, 0);
 
-        /*
-          Make fishd save and exit on the TERM signal.
-        */
-        sigfillset(& act.sa_mask);
-        act.sa_flags=0;
-        act.sa_handler=&handle_term;
-        sigaction(SIGTERM, &act, 0);
-        break;
+            /*
+              Make fishd save and exit on the TERM signal.
+            */
+            sigfillset(& act.sa_mask);
+            act.sa_flags=0;
+            act.sa_handler=&handle_term;
+            sigaction(SIGTERM, &act, 0);
+            break;
 
-    }
+        }
 
-    default:
-    {
-        debug(0, L"Parent process exiting (This is normal)");
-        exit(0);
-    }
+        default:
+        {
+            debug(0, L"Parent process exiting (This is normal)");
+            exit(0);
+        }
     }
 
     /*
@@ -792,19 +792,19 @@ int main(int argc, char ** argv)
 
         switch (opt)
         {
-        case 0:
-            break;
+            case 0:
+                break;
 
-        case 'h':
-            print_help(argv[0], 1);
-            exit(0);
+            case 'h':
+                print_help(argv[0], 1);
+                exit(0);
 
-        case 'v':
-            debug(0, L"%ls, version %s\n", program_name, PACKAGE_VERSION);
-            exit(0);
+            case 'v':
+                debug(0, L"%ls, version %s\n", program_name, PACKAGE_VERSION);
+                exit(0);
 
-        case '?':
-            return 1;
+            case '?':
+                return 1;
 
         }
     }

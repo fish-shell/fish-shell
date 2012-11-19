@@ -141,19 +141,19 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope)
 
     switch (env_set(key, val_str, scope | ENV_USER))
     {
-    case ENV_PERM:
-    {
-        append_format(stderr_buffer, _(L"%ls: Tried to change the read-only variable '%ls'\n"), L"set", key);
-        retcode=1;
-        break;
-    }
+        case ENV_PERM:
+        {
+            append_format(stderr_buffer, _(L"%ls: Tried to change the read-only variable '%ls'\n"), L"set", key);
+            retcode=1;
+            break;
+        }
 
-    case ENV_INVALID:
-    {
-        append_format(stderr_buffer, _(L"%ls: Unknown error"), L"set");
-        retcode=1;
-        break;
-    }
+        case ENV_INVALID:
+        {
+            append_format(stderr_buffer, _(L"%ls: Unknown error"), L"set");
+            retcode=1;
+            break;
+        }
     }
 
     return retcode;
@@ -470,55 +470,55 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
 
         switch (c)
         {
-        case 0:
-            break;
+            case 0:
+                break;
 
-        case 'e':
-            erase = 1;
-            break;
+            case 'e':
+                erase = 1;
+                break;
 
-        case 'n':
-            list = 1;
-            break;
+            case 'n':
+                list = 1;
+                break;
 
-        case 'x':
-            exportv = 1;
-            break;
+            case 'x':
+                exportv = 1;
+                break;
 
-        case 'l':
-            local = 1;
-            break;
+            case 'l':
+                local = 1;
+                break;
 
-        case 'g':
-            global = 1;
-            break;
+            case 'g':
+                global = 1;
+                break;
 
-        case 'u':
-            unexport = 1;
-            break;
+            case 'u':
+                unexport = 1;
+                break;
 
-        case 'U':
-            universal = 1;
-            break;
+            case 'U':
+                universal = 1;
+                break;
 
-        case 'L':
-            shorten_ok = false;
-            break;
+            case 'L':
+                shorten_ok = false;
+                break;
 
-        case 'q':
-            query = 1;
-            break;
+            case 'q':
+                query = 1;
+                break;
 
-        case 'h':
-            builtin_print_help(parser, argv[0], stdout_buffer);
-            return 0;
+            case 'h':
+                builtin_print_help(parser, argv[0], stdout_buffer);
+                return 0;
 
-        case '?':
-            builtin_unknown_option(parser, argv[0], argv[woptind-1]);
-            return 1;
+            case '?':
+                builtin_unknown_option(parser, argv[0], argv[woptind-1]);
+                return 1;
 
-        default:
-            break;
+            default:
+                break;
         }
     }
 

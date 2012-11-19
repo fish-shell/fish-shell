@@ -76,79 +76,79 @@ static void builtin_jobs_print(const job_t *j, int mode, int header)
     process_t *p;
     switch (mode)
     {
-    case JOBS_DEFAULT:
-    {
-
-        if (header)
+        case JOBS_DEFAULT:
         {
-            /*
-              Print table header before first job
-            */
-            stdout_buffer.append(_(L"Job\tGroup\t"));
+
+            if (header)
+            {
+                /*
+                  Print table header before first job
+                */
+                stdout_buffer.append(_(L"Job\tGroup\t"));
 #ifdef HAVE__PROC_SELF_STAT
-            stdout_buffer.append(_(L"CPU\t"));
+                stdout_buffer.append(_(L"CPU\t"));
 #endif
-            stdout_buffer.append(_(L"State\tCommand\n"));
-        }
+                stdout_buffer.append(_(L"State\tCommand\n"));
+            }
 
-        append_format(stdout_buffer, L"%d\t%d\t", j->job_id, j->pgid);
+            append_format(stdout_buffer, L"%d\t%d\t", j->job_id, j->pgid);
 
 #ifdef HAVE__PROC_SELF_STAT
-        append_format(stdout_buffer, L"%d%%\t", cpu_use(j));
+            append_format(stdout_buffer, L"%d%%\t", cpu_use(j));
 #endif
-        stdout_buffer.append(job_is_stopped(j)?_(L"stopped"):_(L"running"));
-        stdout_buffer.append(L"\t");
-        stdout_buffer.append(j->command_wcstr());
-        stdout_buffer.append(L"\n");
-        break;
-    }
-
-    case JOBS_PRINT_GROUP:
-    {
-        if (header)
-        {
-            /*
-              Print table header before first job
-            */
-            stdout_buffer.append(_(L"Group\n"));
-        }
-        append_format(stdout_buffer, L"%d\n", j->pgid);
-        break;
-    }
-
-    case JOBS_PRINT_PID:
-    {
-        if (header)
-        {
-            /*
-              Print table header before first job
-            */
-            stdout_buffer.append(_(L"Procces\n"));
+            stdout_buffer.append(job_is_stopped(j)?_(L"stopped"):_(L"running"));
+            stdout_buffer.append(L"\t");
+            stdout_buffer.append(j->command_wcstr());
+            stdout_buffer.append(L"\n");
+            break;
         }
 
-        for (p=j->first_process; p; p=p->next)
+        case JOBS_PRINT_GROUP:
         {
-            append_format(stdout_buffer, L"%d\n", p->pid);
-        }
-        break;
-    }
-
-    case JOBS_PRINT_COMMAND:
-    {
-        if (header)
-        {
-            /*
-              Print table header before first job
-            */
-            stdout_buffer.append(_(L"Command\n"));
+            if (header)
+            {
+                /*
+                  Print table header before first job
+                */
+                stdout_buffer.append(_(L"Group\n"));
+            }
+            append_format(stdout_buffer, L"%d\n", j->pgid);
+            break;
         }
 
-        for (p=j->first_process; p; p=p->next)
+        case JOBS_PRINT_PID:
         {
-            append_format(stdout_buffer, L"%ls\n", p->argv0());
+            if (header)
+            {
+                /*
+                  Print table header before first job
+                */
+                stdout_buffer.append(_(L"Procces\n"));
+            }
+
+            for (p=j->first_process; p; p=p->next)
+            {
+                append_format(stdout_buffer, L"%d\n", p->pid);
+            }
+            break;
         }
-        break;
-    }
+
+        case JOBS_PRINT_COMMAND:
+        {
+            if (header)
+            {
+                /*
+                  Print table header before first job
+                */
+                stdout_buffer.append(_(L"Command\n"));
+            }
+
+            for (p=j->first_process; p; p=p->next)
+            {
+                append_format(stdout_buffer, L"%ls\n", p->argv0());
+            }
+            break;
+        }
     }
 
 }
@@ -212,45 +212,45 @@ static int builtin_jobs(parser_t &parser, wchar_t **argv)
 
         switch (opt)
         {
-        case 0:
-            if (long_options[opt_index].flag != 0)
+            case 0:
+                if (long_options[opt_index].flag != 0)
+                    break;
+                append_format(stderr_buffer,
+                              BUILTIN_ERR_UNKNOWN,
+                              argv[0],
+                              long_options[opt_index].name);
+
+                builtin_print_help(parser, argv[0], stderr_buffer);
+
+
+                return 1;
+
+
+            case 'p':
+                mode=JOBS_PRINT_PID;
                 break;
-            append_format(stderr_buffer,
-                          BUILTIN_ERR_UNKNOWN,
-                          argv[0],
-                          long_options[opt_index].name);
 
-            builtin_print_help(parser, argv[0], stderr_buffer);
+            case 'c':
+                mode=JOBS_PRINT_COMMAND;
+                break;
 
+            case 'g':
+                mode=JOBS_PRINT_GROUP;
+                break;
 
-            return 1;
+            case 'l':
+            {
+                print_last = 1;
+                break;
+            }
 
+            case 'h':
+                builtin_print_help(parser, argv[0], stdout_buffer);
+                return 0;
 
-        case 'p':
-            mode=JOBS_PRINT_PID;
-            break;
-
-        case 'c':
-            mode=JOBS_PRINT_COMMAND;
-            break;
-
-        case 'g':
-            mode=JOBS_PRINT_GROUP;
-            break;
-
-        case 'l':
-        {
-            print_last = 1;
-            break;
-        }
-
-        case 'h':
-            builtin_print_help(parser, argv[0], stdout_buffer);
-            return 0;
-
-        case '?':
-            builtin_unknown_option(parser, argv[0], argv[woptind-1]);
-            return 1;
+            case '?':
+                builtin_unknown_option(parser, argv[0], argv[woptind-1]);
+                return 1;
 
         }
     }

@@ -215,17 +215,17 @@ static wchar_t *utf2wcs(const char *in)
     switch (sizeof(wchar_t))
     {
 
-    case 2:
-        to_name = iconv_wide_names_2;
-        break;
+        case 2:
+            to_name = iconv_wide_names_2;
+            break;
 
-    case 4:
-        to_name = iconv_wide_names_4;
-        break;
+        case 4:
+            to_name = iconv_wide_names_4;
+            break;
 
-    default:
-        to_name = iconv_wide_names_unknown;
-        break;
+        default:
+            to_name = iconv_wide_names_unknown;
+            break;
     }
 
 
@@ -336,17 +336,17 @@ static char *wcs2utf(const wchar_t *in)
     switch (sizeof(wchar_t))
     {
 
-    case 2:
-        from_name = iconv_wide_names_2;
-        break;
+        case 2:
+            from_name = iconv_wide_names_2;
+            break;
 
-    case 4:
-        from_name = iconv_wide_names_4;
-        break;
+        case 4:
+            from_name = iconv_wide_names_4;
+            break;
 
-    default:
-        from_name = iconv_wide_names_unknown;
-        break;
+        default:
+            from_name = iconv_wide_names_unknown;
+            break;
     }
 
     const char **to_name = iconv_utf8_names;
@@ -478,34 +478,34 @@ void read_message(connection_t *src)
 
         switch (ib)
         {
-        case ENV_UNIVERSAL_AGAIN:
-        {
-            return;
-        }
-
-        case ENV_UNIVERSAL_ERROR:
-        {
-            debug(2, L"Read error on fd %d, set killme flag", src->fd);
-            if (debug_level > 2)
-                wperror(L"read");
-            src->killme = 1;
-            return;
-        }
-
-        case ENV_UNIVERSAL_EOF:
-        {
-            src->killme = 1;
-            debug(3, L"Fd %d has reached eof, set killme flag", src->fd);
-            if (src->input.size() > 0)
+            case ENV_UNIVERSAL_AGAIN:
             {
-                char c = 0;
-                src->input.push_back(c);
-                debug(1,
-                      L"Universal variable connection closed while reading command. Partial command recieved: '%s'",
-                      &src->input.at(0));
+                return;
             }
-            return;
-        }
+
+            case ENV_UNIVERSAL_ERROR:
+            {
+                debug(2, L"Read error on fd %d, set killme flag", src->fd);
+                if (debug_level > 2)
+                    wperror(L"read");
+                src->killme = 1;
+                return;
+            }
+
+            case ENV_UNIVERSAL_EOF:
+            {
+                src->killme = 1;
+                debug(3, L"Fd %d has reached eof, set killme flag", src->fd);
+                if (src->input.size() > 0)
+                {
+                    char c = 0;
+                    src->input.push_back(c);
+                    debug(1,
+                          L"Universal variable connection closed while reading command. Partial command recieved: '%s'",
+                          &src->input.at(0));
+                }
+                return;
+            }
         }
 
         b = (char)ib;
@@ -712,17 +712,17 @@ static int try_send(message_t *msg,
     {
         switch (errno)
         {
-        case EAGAIN:
-            return 0;
+            case EAGAIN:
+                return 0;
 
-        default:
-            debug(2,
-                  L"Error while sending universal variable message to fd %d. Closing connection",
-                  fd);
-            if (debug_level > 2)
-                wperror(L"write");
+            default:
+                debug(2,
+                      L"Error while sending universal variable message to fd %d. Closing connection",
+                      fd);
+                if (debug_level > 2)
+                    wperror(L"write");
 
-            return -1;
+                return -1;
         }
     }
     msg->count--;
@@ -743,18 +743,18 @@ void try_send_all(connection_t *c)
     {
         switch (try_send(c->unsent->front(), c->fd))
         {
-        case 1:
-            c->unsent->pop();
-            break;
+            case 1:
+                c->unsent->pop();
+                break;
 
-        case 0:
-            debug(4,
-                  L"Socket full, send rest later");
-            return;
+            case 0:
+                debug(4,
+                      L"Socket full, send rest later");
+                return;
 
-        case -1:
-            c->killme = 1;
-            return;
+            case -1:
+                c->killme = 1;
+                return;
         }
     }
 }
@@ -852,44 +852,44 @@ message_t *create_message(fish_message_type_t type,
 
     switch (type)
     {
-    case SET:
-    case SET_EXPORT:
-    {
-        if (!val_in)
+        case SET:
+        case SET_EXPORT:
         {
-            val_in=L"";
+            if (!val_in)
+            {
+                val_in=L"";
+            }
+
+            wcstring esc = full_escape(val_in);
+            char *val = wcs2utf(esc.c_str());
+            set_body(msg, (type==SET?SET_MBS:SET_EXPORT_MBS), " ", key, ":", val, "\n", NULL);
+            free(val);
+
+            break;
         }
 
-        wcstring esc = full_escape(val_in);
-        char *val = wcs2utf(esc.c_str());
-        set_body(msg, (type==SET?SET_MBS:SET_EXPORT_MBS), " ", key, ":", val, "\n", NULL);
-        free(val);
+        case ERASE:
+        {
+            set_body(msg, ERASE_MBS, " ", key, "\n", NULL);
+            break;
+        }
 
-        break;
-    }
+        case BARRIER:
+        {
+            set_body(msg, BARRIER_MBS, "\n", NULL);
+            break;
+        }
 
-    case ERASE:
-    {
-        set_body(msg, ERASE_MBS, " ", key, "\n", NULL);
-        break;
-    }
+        case BARRIER_REPLY:
+        {
+            set_body(msg, BARRIER_REPLY_MBS, "\n", NULL);
+            break;
+        }
 
-    case BARRIER:
-    {
-        set_body(msg, BARRIER_MBS, "\n", NULL);
-        break;
-    }
-
-    case BARRIER_REPLY:
-    {
-        set_body(msg, BARRIER_REPLY_MBS, "\n", NULL);
-        break;
-    }
-
-    default:
-    {
-        debug(0, L"create_message: Unknown message type");
-    }
+        default:
+        {
+            debug(0, L"create_message: Unknown message type");
+        }
     }
 
     free(key);

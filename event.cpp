@@ -107,24 +107,24 @@ static int event_match(const event_t *classv, const event_t *instance)
     switch (classv->type)
     {
 
-    case EVENT_SIGNAL:
-        if (classv->param1.signal == EVENT_ANY_SIGNAL)
-            return 1;
-        return classv->param1.signal == instance->param1.signal;
+        case EVENT_SIGNAL:
+            if (classv->param1.signal == EVENT_ANY_SIGNAL)
+                return 1;
+            return classv->param1.signal == instance->param1.signal;
 
-    case EVENT_VARIABLE:
-        return instance->str_param1 == classv->str_param1;
+        case EVENT_VARIABLE:
+            return instance->str_param1 == classv->str_param1;
 
-    case EVENT_EXIT:
-        if (classv->param1.pid == EVENT_ANY_PID)
-            return 1;
-        return classv->param1.pid == instance->param1.pid;
+        case EVENT_EXIT:
+            if (classv->param1.pid == EVENT_ANY_PID)
+                return 1;
+            return classv->param1.pid == instance->param1.pid;
 
-    case EVENT_JOB_ID:
-        return classv->param1.job_id == instance->param1.job_id;
+        case EVENT_JOB_ID:
+            return classv->param1.job_id == instance->param1.job_id;
 
-    case EVENT_GENERIC:
-        return instance->str_param1 == classv->str_param1;
+        case EVENT_GENERIC:
+            return instance->str_param1 == classv->str_param1;
 
     }
 
@@ -176,48 +176,48 @@ wcstring event_get_desc(const event_t *e)
     switch (e->type)
     {
 
-    case EVENT_SIGNAL:
-        result = format_string(_(L"signal handler for %ls (%ls)"), sig2wcs(e->param1.signal), signal_get_desc(e->param1.signal));
-        break;
+        case EVENT_SIGNAL:
+            result = format_string(_(L"signal handler for %ls (%ls)"), sig2wcs(e->param1.signal), signal_get_desc(e->param1.signal));
+            break;
 
-    case EVENT_VARIABLE:
-        result = format_string(_(L"handler for variable '%ls'"), e->str_param1.c_str());
-        break;
+        case EVENT_VARIABLE:
+            result = format_string(_(L"handler for variable '%ls'"), e->str_param1.c_str());
+            break;
 
-    case EVENT_EXIT:
-        if (e->param1.pid > 0)
+        case EVENT_EXIT:
+            if (e->param1.pid > 0)
+            {
+                result = format_string(_(L"exit handler for process %d"), e->param1.pid);
+            }
+            else
+            {
+                job_t *j = job_get_from_pid(-e->param1.pid);
+                if (j)
+                    result = format_string(_(L"exit handler for job %d, '%ls'"), j->job_id, j->command_wcstr());
+                else
+                    result = format_string(_(L"exit handler for job with process group %d"), -e->param1.pid);
+            }
+
+            break;
+
+        case EVENT_JOB_ID:
         {
-            result = format_string(_(L"exit handler for process %d"), e->param1.pid);
-        }
-        else
-        {
-            job_t *j = job_get_from_pid(-e->param1.pid);
+            job_t *j = job_get(e->param1.job_id);
             if (j)
                 result = format_string(_(L"exit handler for job %d, '%ls'"), j->job_id, j->command_wcstr());
             else
-                result = format_string(_(L"exit handler for job with process group %d"), -e->param1.pid);
+                result = format_string(_(L"exit handler for job with job id %d"), e->param1.job_id);
+
+            break;
         }
 
-        break;
+        case EVENT_GENERIC:
+            result = format_string(_(L"handler for generic event '%ls'"), e->str_param1.c_str());
+            break;
 
-    case EVENT_JOB_ID:
-    {
-        job_t *j = job_get(e->param1.job_id);
-        if (j)
-            result = format_string(_(L"exit handler for job %d, '%ls'"), j->job_id, j->command_wcstr());
-        else
-            result = format_string(_(L"exit handler for job with job id %d"), e->param1.job_id);
-
-        break;
-    }
-
-    case EVENT_GENERIC:
-        result = format_string(_(L"handler for generic event '%ls'"), e->str_param1.c_str());
-        break;
-
-    default:
-        result = format_string(_(L"Unknown event type"));
-        break;
+        default:
+            result = format_string(_(L"Unknown event type"));
+            break;
 
     }
 

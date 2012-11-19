@@ -228,26 +228,26 @@ static bool is_string_char(wchar_t c, bool is_first)
 {
     switch (c)
     {
-        /* Unconditional separators */
-    case L'\0':
-    case L' ':
-    case L'\n':
-    case L'|':
-    case L'\t':
-    case L';':
-    case L'#':
-    case L'\r':
-    case L'<':
-    case L'>':
-    case L'&':
-        return false;
+            /* Unconditional separators */
+        case L'\0':
+        case L' ':
+        case L'\n':
+        case L'|':
+        case L'\t':
+        case L';':
+        case L'#':
+        case L'\r':
+        case L'<':
+        case L'>':
+        case L'&':
+            return false;
 
-        /* Conditional separator */
-    case L'^':
-        return ! is_first;
+            /* Conditional separator */
+        case L'^':
+            return ! is_first;
 
-    default:
-        return true;
+        default:
+            return true;
 
     }
 }
@@ -323,118 +323,118 @@ static void read_string(tokenizer *tok)
             */
             switch (mode)
             {
-            case 0:
-            {
-                switch (*tok->buff)
+                case 0:
                 {
-                case L'(':
-                {
-                    paran_count=1;
-                    mode = 1;
-                    break;
-                }
-
-                case L'[':
-                {
-                    if (tok->buff != start)
-                        mode=2;
-                    break;
-                }
-
-                case L'\'':
-                case L'"':
-                {
-
-                    const wchar_t *end = quote_end(tok->buff);
-                    tok->last_quote = *tok->buff;
-                    if (end)
+                    switch (*tok->buff)
                     {
-                        tok->buff=(wchar_t *)end;
-                    }
-                    else
-                    {
-                        tok->buff += wcslen(tok->buff);
-
-                        if ((!tok->accept_unfinished))
+                        case L'(':
                         {
-                            TOK_CALL_ERROR(tok, TOK_UNTERMINATED_QUOTE, QUOTE_ERROR);
-                            return;
+                            paran_count=1;
+                            mode = 1;
+                            break;
                         }
-                        do_loop = 0;
 
-                    }
-                    break;
-                }
-
-                default:
-                {
-                    if (!is_string_char(*(tok->buff), is_first))
-                    {
-                        do_loop=0;
-                    }
-                }
-                }
-                break;
-            }
-
-            case 3:
-            case 1:
-                switch (*tok->buff)
-                {
-                case L'\'':
-                case L'\"':
-                {
-                    const wchar_t *end = quote_end(tok->buff);
-                    if (end)
-                    {
-                        tok->buff=(wchar_t *)end;
-                    }
-                    else
-                    {
-                        tok->buff += wcslen(tok->buff);
-                        if ((!tok->accept_unfinished))
+                        case L'[':
                         {
-                            TOK_CALL_ERROR(tok, TOK_UNTERMINATED_QUOTE, QUOTE_ERROR);
-                            return;
+                            if (tok->buff != start)
+                                mode=2;
+                            break;
                         }
-                        do_loop = 0;
-                    }
 
+                        case L'\'':
+                        case L'"':
+                        {
+
+                            const wchar_t *end = quote_end(tok->buff);
+                            tok->last_quote = *tok->buff;
+                            if (end)
+                            {
+                                tok->buff=(wchar_t *)end;
+                            }
+                            else
+                            {
+                                tok->buff += wcslen(tok->buff);
+
+                                if ((!tok->accept_unfinished))
+                                {
+                                    TOK_CALL_ERROR(tok, TOK_UNTERMINATED_QUOTE, QUOTE_ERROR);
+                                    return;
+                                }
+                                do_loop = 0;
+
+                            }
+                            break;
+                        }
+
+                        default:
+                        {
+                            if (!is_string_char(*(tok->buff), is_first))
+                            {
+                                do_loop=0;
+                            }
+                        }
+                    }
                     break;
                 }
 
-                case L'(':
-                    paran_count++;
-                    break;
-                case L')':
-                    paran_count--;
-                    if (paran_count == 0)
+                case 3:
+                case 1:
+                    switch (*tok->buff)
                     {
-                        mode--;
+                        case L'\'':
+                        case L'\"':
+                        {
+                            const wchar_t *end = quote_end(tok->buff);
+                            if (end)
+                            {
+                                tok->buff=(wchar_t *)end;
+                            }
+                            else
+                            {
+                                tok->buff += wcslen(tok->buff);
+                                if ((!tok->accept_unfinished))
+                                {
+                                    TOK_CALL_ERROR(tok, TOK_UNTERMINATED_QUOTE, QUOTE_ERROR);
+                                    return;
+                                }
+                                do_loop = 0;
+                            }
+
+                            break;
+                        }
+
+                        case L'(':
+                            paran_count++;
+                            break;
+                        case L')':
+                            paran_count--;
+                            if (paran_count == 0)
+                            {
+                                mode--;
+                            }
+                            break;
+                        case L'\0':
+                            do_loop = 0;
+                            break;
                     }
                     break;
-                case L'\0':
-                    do_loop = 0;
-                    break;
-                }
-                break;
-            case 2:
-                switch (*tok->buff)
-                {
-                case L'(':
-                    paran_count=1;
-                    mode = 3;
-                    break;
+                case 2:
+                    switch (*tok->buff)
+                    {
+                        case L'(':
+                            paran_count=1;
+                            mode = 3;
+                            break;
 
-                case L']':
-                    mode=0;
-                    break;
+                        case L']':
+                            mode=0;
+                            break;
 
-                case L'\0':
-                    do_loop = 0;
+                        case L'\0':
+                            do_loop = 0;
+                            break;
+                    }
                     break;
-                }
-                break;
             }
         }
 
@@ -643,62 +643,62 @@ void tok_next(tokenizer *tok)
     switch (*tok->buff)
     {
 
-    case L'\0':
-        tok->last_type = TOK_END;
-        /*fwprintf( stderr, L"End of string\n" );*/
-        tok->has_next = false;
-        break;
-    case 13:
-    case L'\n':
-    case L';':
-        tok->last_type = TOK_END;
-        tok->buff++;
-        break;
-    case L'&':
-        tok->last_type = TOK_BACKGROUND;
-        tok->buff++;
-        break;
+        case L'\0':
+            tok->last_type = TOK_END;
+            /*fwprintf( stderr, L"End of string\n" );*/
+            tok->has_next = false;
+            break;
+        case 13:
+        case L'\n':
+        case L';':
+            tok->last_type = TOK_END;
+            tok->buff++;
+            break;
+        case L'&':
+            tok->last_type = TOK_BACKGROUND;
+            tok->buff++;
+            break;
 
-    case L'|':
-        check_size(tok, 2);
+        case L'|':
+            check_size(tok, 2);
 
-        tok->last[0]=L'1';
-        tok->last[1]=L'\0';
-        tok->last_type = TOK_PIPE;
-        tok->buff++;
-        break;
+            tok->last[0]=L'1';
+            tok->last[1]=L'\0';
+            tok->last_type = TOK_PIPE;
+            tok->buff++;
+            break;
 
-    case L'>':
-        read_redirect(tok, 1);
-        return;
-    case L'<':
-        read_redirect(tok, 0);
-        return;
-    case L'^':
-        read_redirect(tok, 2);
-        return;
+        case L'>':
+            read_redirect(tok, 1);
+            return;
+        case L'<':
+            read_redirect(tok, 0);
+            return;
+        case L'^':
+            read_redirect(tok, 2);
+            return;
 
-    default:
-    {
-        if (iswdigit(*tok->buff))
+        default:
         {
-            const wchar_t *orig = tok->buff;
-            int fd = 0;
-            while (iswdigit(*tok->buff))
-                fd = (fd*10) + (*(tok->buff++) - L'0');
-
-            switch (*(tok->buff))
+            if (iswdigit(*tok->buff))
             {
-            case L'^':
-            case L'>':
-            case L'<':
-                read_redirect(tok, fd);
-                return;
+                const wchar_t *orig = tok->buff;
+                int fd = 0;
+                while (iswdigit(*tok->buff))
+                    fd = (fd*10) + (*(tok->buff++) - L'0');
+
+                switch (*(tok->buff))
+                {
+                    case L'^':
+                    case L'>':
+                    case L'<':
+                        read_redirect(tok, fd);
+                        return;
+                }
+                tok->buff = orig;
             }
-            tok->buff = orig;
+            read_string(tok);
         }
-        read_string(tok);
-    }
 
     }
 
@@ -720,12 +720,12 @@ wchar_t *tok_first(const wchar_t *str)
 
     switch (tok_last_type(&t))
     {
-    case TOK_STRING:
+        case TOK_STRING:
 //        fwprintf( stderr, L"Got token %ls\n", tok_last( &t ));
-        res = wcsdup(tok_last(&t));
-        break;
-    default:
-        break;
+            res = wcsdup(tok_last(&t));
+            break;
+        default:
+            break;
     }
 
     tok_destroy(&t);
@@ -766,24 +766,24 @@ int main(int argc, char **argv)
         {
             switch (tok_last_type(&tok))
             {
-            case TOK_INVALID:
-                wprintf(L"Type: INVALID\n");
-                break;
-            case TOK_STRING:
-                wprintf(L"Type: STRING\t Value: %ls\n", tok_last(&tok));
-                break;
-            case TOK_PIPE:
-                wprintf(L"Type: PIPE\n");
-                break;
-            case TOK_END:
-                wprintf(L"Type: END\n");
-                break;
-            case TOK_ERROR:
-                wprintf(L"Type: ERROR\n");
-                break;
-            default:
-                wprintf(L"Type: Unknown\n");
-                break;
+                case TOK_INVALID:
+                    wprintf(L"Type: INVALID\n");
+                    break;
+                case TOK_STRING:
+                    wprintf(L"Type: STRING\t Value: %ls\n", tok_last(&tok));
+                    break;
+                case TOK_PIPE:
+                    wprintf(L"Type: PIPE\n");
+                    break;
+                case TOK_END:
+                    wprintf(L"Type: END\n");
+                    break;
+                case TOK_ERROR:
+                    wprintf(L"Type: ERROR\n");
+                    break;
+                default:
+                    wprintf(L"Type: Unknown\n");
+                    break;
             }
         }
         tok_destroy(&tok);

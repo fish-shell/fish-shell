@@ -395,99 +395,99 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
 
         switch (opt)
         {
-        case 0:
-            if (long_options[opt_index].flag != 0)
-                break;
-            append_format(stderr_buffer,
-                          BUILTIN_ERR_UNKNOWN,
-                          argv[0],
-                          long_options[opt_index].name);
-            builtin_print_help(parser, argv[0], stderr_buffer);
+            case 0:
+                if (long_options[opt_index].flag != 0)
+                    break;
+                append_format(stderr_buffer,
+                              BUILTIN_ERR_UNKNOWN,
+                              argv[0],
+                              long_options[opt_index].name);
+                builtin_print_help(parser, argv[0], stderr_buffer);
 
 
-            res = true;
-            break;
-
-        case 'x':
-            result_mode |= EXCLUSIVE;
-            break;
-
-        case 'f':
-            result_mode |= NO_FILES;
-            break;
-
-        case 'r':
-            result_mode |= NO_COMMON;
-            break;
-
-        case 'p':
-        case 'c':
-        {
-            wcstring tmp = woptarg;
-            if (unescape_string(tmp, 1))
-            {
-                if (opt=='p')
-                    path.push_back(tmp);
-                else
-                    cmd.push_back(tmp);
-            }
-            else
-            {
-                append_format(stderr_buffer, L"%ls: Invalid token '%ls'\n", argv[0], woptarg);
                 res = true;
+                break;
+
+            case 'x':
+                result_mode |= EXCLUSIVE;
+                break;
+
+            case 'f':
+                result_mode |= NO_FILES;
+                break;
+
+            case 'r':
+                result_mode |= NO_COMMON;
+                break;
+
+            case 'p':
+            case 'c':
+            {
+                wcstring tmp = woptarg;
+                if (unescape_string(tmp, 1))
+                {
+                    if (opt=='p')
+                        path.push_back(tmp);
+                    else
+                        cmd.push_back(tmp);
+                }
+                else
+                {
+                    append_format(stderr_buffer, L"%ls: Invalid token '%ls'\n", argv[0], woptarg);
+                    res = true;
+                }
+                break;
             }
-            break;
-        }
 
-        case 'd':
-            desc = woptarg;
-            break;
+            case 'd':
+                desc = woptarg;
+                break;
 
-        case 'u':
-            authoritative=0;
-            break;
+            case 'u':
+                authoritative=0;
+                break;
 
-        case 'A':
-            authoritative=1;
-            break;
+            case 'A':
+                authoritative=1;
+                break;
 
-        case 's':
-            short_opt.append(woptarg);
-            break;
+            case 's':
+                short_opt.append(woptarg);
+                break;
 
-        case 'l':
-            gnu_opt.push_back(woptarg);
-            break;
+            case 'l':
+                gnu_opt.push_back(woptarg);
+                break;
 
-        case 'o':
-            old_opt.push_back(woptarg);
-            break;
+            case 'o':
+                old_opt.push_back(woptarg);
+                break;
 
-        case 'a':
-            comp = woptarg;
-            break;
+            case 'a':
+                comp = woptarg;
+                break;
 
-        case 'e':
-            remove = 1;
-            break;
+            case 'e':
+                remove = 1;
+                break;
 
-        case 'n':
-            condition = woptarg;
-            break;
+            case 'n':
+                condition = woptarg;
+                break;
 
-        case 'C':
-            do_complete = true;
-            do_complete_param = woptarg ? woptarg : reader_get_buffer();
-            break;
+            case 'C':
+                do_complete = true;
+                do_complete_param = woptarg ? woptarg : reader_get_buffer();
+                break;
 
-        case 'h':
-            builtin_print_help(parser, argv[0], stdout_buffer);
-            return 0;
+            case 'h':
+                builtin_print_help(parser, argv[0], stdout_buffer);
+                return 0;
 
-        case '?':
-            builtin_unknown_option(parser, argv[0], argv[woptind-1]);
-            res = true;
-            break;
+            case '?':
+                builtin_unknown_option(parser, argv[0], argv[woptind-1]);
+                res = true;
+                break;
 
         }
 

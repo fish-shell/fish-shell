@@ -592,12 +592,12 @@ bool unary_operator::evaluate(wcstring_list_t &errors)
 {
     switch (token)
     {
-    case test_bang:
-        assert(subject.get());
-        return ! subject->evaluate(errors);
-    default:
-        errors.push_back(format_string(L"Unknown token type in %s", __func__));
-        return false;
+        case test_bang:
+            assert(subject.get());
+            return ! subject->evaluate(errors);
+        default:
+            errors.push_back(format_string(L"Unknown token type in %s", __func__));
+            return false;
 
     }
 }
@@ -606,51 +606,51 @@ bool combining_expression::evaluate(wcstring_list_t &errors)
 {
     switch (token)
     {
-    case test_combine_and:
-    case test_combine_or:
-    {
-        /* One-element case */
-        if (subjects.size() == 1)
-            return subjects.at(0)->evaluate(errors);
-
-        /* Evaluate our lists, remembering that AND has higher precedence than OR. We can visualize this as a sequence of OR expressions of AND expressions. */
-        assert(combiners.size() + 1 == subjects.size());
-        assert(! subjects.empty());
-
-        size_t idx = 0, max = subjects.size();
-        bool or_result = false;
-        while (idx < max)
+        case test_combine_and:
+        case test_combine_or:
         {
-            if (or_result)
-            {
-                /* Short circuit */
-                break;
-            }
+            /* One-element case */
+            if (subjects.size() == 1)
+                return subjects.at(0)->evaluate(errors);
 
-            /* Evaluate a stream of AND starting at given subject index. It may only have one element.  */
-            bool and_result = true;
-            for (; idx < max; idx++)
-            {
-                /* Evaluate it, short-circuiting */
-                and_result = and_result && subjects.at(idx)->evaluate(errors);
+            /* Evaluate our lists, remembering that AND has higher precedence than OR. We can visualize this as a sequence of OR expressions of AND expressions. */
+            assert(combiners.size() + 1 == subjects.size());
+            assert(! subjects.empty());
 
-                /* If the combiner at this index (which corresponding to how we combine with the next subject) is not AND, then exit the loop */
-                if (idx + 1 < max && combiners.at(idx) != test_combine_and)
+            size_t idx = 0, max = subjects.size();
+            bool or_result = false;
+            while (idx < max)
+            {
+                if (or_result)
                 {
-                    idx++;
+                    /* Short circuit */
                     break;
                 }
+
+                /* Evaluate a stream of AND starting at given subject index. It may only have one element.  */
+                bool and_result = true;
+                for (; idx < max; idx++)
+                {
+                    /* Evaluate it, short-circuiting */
+                    and_result = and_result && subjects.at(idx)->evaluate(errors);
+
+                    /* If the combiner at this index (which corresponding to how we combine with the next subject) is not AND, then exit the loop */
+                    if (idx + 1 < max && combiners.at(idx) != test_combine_and)
+                    {
+                        idx++;
+                        break;
+                    }
+                }
+
+                /* OR it in */
+                or_result = or_result || and_result;
             }
-
-            /* OR it in */
-            or_result = or_result || and_result;
+            return or_result;
         }
-        return or_result;
-    }
 
-    default:
-        errors.push_back(format_string(L"Unknown token type in %s", __func__));
-        return BUILTIN_TEST_FAIL;
+        default:
+            errors.push_back(format_string(L"Unknown token type in %s", __func__));
+            return BUILTIN_TEST_FAIL;
 
     }
 }
@@ -675,33 +675,33 @@ static bool binary_primary_evaluate(test_expressions::token_t token, const wcstr
     long long left_num, right_num;
     switch (token)
     {
-    case test_string_equal:
-        return left == right;
+        case test_string_equal:
+            return left == right;
 
-    case test_string_not_equal:
-        return left != right;
+        case test_string_not_equal:
+            return left != right;
 
-    case test_number_equal:
-        return parse_number(left, &left_num) && parse_number(right, &right_num) && left_num == right_num;
+        case test_number_equal:
+            return parse_number(left, &left_num) && parse_number(right, &right_num) && left_num == right_num;
 
-    case test_number_not_equal:
-        return parse_number(left, &left_num) && parse_number(right, &right_num) && left_num != right_num;
+        case test_number_not_equal:
+            return parse_number(left, &left_num) && parse_number(right, &right_num) && left_num != right_num;
 
-    case test_number_greater:
-        return parse_number(left, &left_num) && parse_number(right, &right_num) && left_num > right_num;
+        case test_number_greater:
+            return parse_number(left, &left_num) && parse_number(right, &right_num) && left_num > right_num;
 
-    case test_number_greater_equal:
-        return parse_number(left, &left_num) && parse_number(right, &right_num) && left_num >= right_num;
+        case test_number_greater_equal:
+            return parse_number(left, &left_num) && parse_number(right, &right_num) && left_num >= right_num;
 
-    case test_number_lesser:
-        return parse_number(left, &left_num) && parse_number(right, &right_num) && left_num < right_num;
+        case test_number_lesser:
+            return parse_number(left, &left_num) && parse_number(right, &right_num) && left_num < right_num;
 
-    case test_number_lesser_equal:
-        return parse_number(left, &left_num) && parse_number(right, &right_num) && left_num <= right_num;
+        case test_number_lesser_equal:
+            return parse_number(left, &left_num) && parse_number(right, &right_num) && left_num <= right_num;
 
-    default:
-        errors.push_back(format_string(L"Unknown token type in %s", __func__));
-        return false;
+        default:
+            errors.push_back(format_string(L"Unknown token type in %s", __func__));
+            return false;
     }
 }
 
@@ -713,61 +713,61 @@ static bool unary_primary_evaluate(test_expressions::token_t token, const wcstri
     long long num;
     switch (token)
     {
-    case test_filetype_b:            // "-b", for block special files
-        return !wstat(arg, &buf) && S_ISBLK(buf.st_mode);
+        case test_filetype_b:            // "-b", for block special files
+            return !wstat(arg, &buf) && S_ISBLK(buf.st_mode);
 
-    case test_filetype_c:            // "-c" for character special files
-        return !wstat(arg, &buf) && S_ISCHR(buf.st_mode);
+        case test_filetype_c:            // "-c" for character special files
+            return !wstat(arg, &buf) && S_ISCHR(buf.st_mode);
 
-    case test_filetype_d:            // "-d" for directories
-        return !wstat(arg, &buf) && S_ISDIR(buf.st_mode);
+        case test_filetype_d:            // "-d" for directories
+            return !wstat(arg, &buf) && S_ISDIR(buf.st_mode);
 
-    case test_filetype_e:            // "-e" for files that exist
-        return !wstat(arg, &buf);
+        case test_filetype_e:            // "-e" for files that exist
+            return !wstat(arg, &buf);
 
-    case test_filetype_f:            // "-f" for for regular files
-        return !wstat(arg, &buf) && S_ISREG(buf.st_mode);
+        case test_filetype_f:            // "-f" for for regular files
+            return !wstat(arg, &buf) && S_ISREG(buf.st_mode);
 
-    case test_filetype_g:            // "-g" for set-group-id
-        return !wstat(arg, &buf) && (S_ISGID & buf.st_mode);
+        case test_filetype_g:            // "-g" for set-group-id
+            return !wstat(arg, &buf) && (S_ISGID & buf.st_mode);
 
-    case test_filetype_h:            // "-h" for symbolic links
-    case test_filetype_L:            // "-L", same as -h
-        return !lwstat(arg, &buf) && S_ISLNK(buf.st_mode);
+        case test_filetype_h:            // "-h" for symbolic links
+        case test_filetype_L:            // "-L", same as -h
+            return !lwstat(arg, &buf) && S_ISLNK(buf.st_mode);
 
-    case test_filetype_p:            // "-p", for FIFO
-        return !wstat(arg, &buf) && S_ISFIFO(buf.st_mode);
+        case test_filetype_p:            // "-p", for FIFO
+            return !wstat(arg, &buf) && S_ISFIFO(buf.st_mode);
 
-    case test_filetype_S:            // "-S", socket
-        return !wstat(arg, &buf) && S_ISSOCK(buf.st_mode);
+        case test_filetype_S:            // "-S", socket
+            return !wstat(arg, &buf) && S_ISSOCK(buf.st_mode);
 
-    case test_filesize_s:            // "-s", size greater than zero
-        return !wstat(arg, &buf) && buf.st_size > 0;
+        case test_filesize_s:            // "-s", size greater than zero
+            return !wstat(arg, &buf) && buf.st_size > 0;
 
-    case test_filedesc_t:            // "-t", whether the fd is associated with a terminal
-        return parse_number(arg, &num) && num == (int)num && isatty((int)num);
+        case test_filedesc_t:            // "-t", whether the fd is associated with a terminal
+            return parse_number(arg, &num) && num == (int)num && isatty((int)num);
 
-    case test_fileperm_r:            // "-r", read permission
-        return !waccess(arg, R_OK);
+        case test_fileperm_r:            // "-r", read permission
+            return !waccess(arg, R_OK);
 
-    case test_fileperm_u:            // "-u", whether file is setuid
-        return !wstat(arg, &buf) && (S_ISUID & buf.st_mode);
+        case test_fileperm_u:            // "-u", whether file is setuid
+            return !wstat(arg, &buf) && (S_ISUID & buf.st_mode);
 
-    case test_fileperm_w:            // "-w", whether file write permission is allowed
-        return !waccess(arg, W_OK);
+        case test_fileperm_w:            // "-w", whether file write permission is allowed
+            return !waccess(arg, W_OK);
 
-    case test_fileperm_x:            // "-x", whether file execute/search is allowed
-        return !waccess(arg, X_OK);
+        case test_fileperm_x:            // "-x", whether file execute/search is allowed
+            return !waccess(arg, X_OK);
 
-    case test_string_n:              // "-n", non-empty string
-        return ! arg.empty();
+        case test_string_n:              // "-n", non-empty string
+            return ! arg.empty();
 
-    case test_string_z:              // "-z", true if length of string is 0
-        return arg.empty();
+        case test_string_z:              // "-z", true if length of string is 0
+            return arg.empty();
 
-    default:
-        errors.push_back(format_string(L"Unknown token type in %s", __func__));
-        return false;
+        default:
+            errors.push_back(format_string(L"Unknown token type in %s", __func__));
+            return false;
     }
 }
 

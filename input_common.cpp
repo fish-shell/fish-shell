@@ -105,34 +105,34 @@ static wint_t readb()
         {
             switch (errno)
             {
-            case EINTR:
-            case EAGAIN:
-            {
-                if (interrupt_handler)
+                case EINTR:
+                case EAGAIN:
                 {
-                    int res = interrupt_handler();
-                    if (res)
+                    if (interrupt_handler)
                     {
-                        return res;
-                    }
-                    if (lookahead_count)
-                    {
-                        return lookahead_arr[--lookahead_count];
+                        int res = interrupt_handler();
+                        if (res)
+                        {
+                            return res;
+                        }
+                        if (lookahead_count)
+                        {
+                            return lookahead_arr[--lookahead_count];
+                        }
+
                     }
 
+
+                    do_loop = true;
+                    break;
                 }
-
-
-                do_loop = true;
-                break;
-            }
-            default:
-            {
-                /*
-                  The terminal has been closed. Save and exit.
-                */
-                return R_EOF;
-            }
+                default:
+                {
+                    /*
+                      The terminal has been closed. Save and exit.
+                    */
+                    return R_EOF;
+                }
             }
         }
         else
@@ -198,14 +198,14 @@ wchar_t input_common_readch(int timed)
 
             switch (count)
             {
-            case 0:
-                return WEOF;
+                case 0:
+                    return WEOF;
 
-            case -1:
-                return WEOF;
-                break;
-            default:
-                break;
+                case -1:
+                    return WEOF;
+                    break;
+                default:
+                    break;
 
             }
         }
@@ -229,17 +229,17 @@ wchar_t input_common_readch(int timed)
 
             switch (sz)
             {
-            case (size_t)(-1):
-                memset(&state, '\0', sizeof(state));
-                debug(2, L"Illegal input");
-                return R_NULL;
-            case (size_t)(-2):
-                break;
-            case 0:
-                return 0;
-            default:
+                case (size_t)(-1):
+                    memset(&state, '\0', sizeof(state));
+                    debug(2, L"Illegal input");
+                    return R_NULL;
+                case (size_t)(-2):
+                    break;
+                case 0:
+                    return 0;
+                default:
 
-                return res;
+                    return res;
             }
         }
     }

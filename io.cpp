@@ -224,21 +224,21 @@ void io_print(const io_chain_t &chain)
         fprintf(stderr, "\t%lu: fd:%d, input:%s, ", (unsigned long)i, io->fd, io->is_input ? "yes" : "no");
         switch (io->io_mode)
         {
-        case IO_FILE:
-            fprintf(stderr, "file (%s)\n", io->filename_cstr);
-            break;
-        case IO_PIPE:
-            fprintf(stderr, "pipe {%d, %d}\n", io->param1.pipe_fd[0], io->param1.pipe_fd[1]);
-            break;
-        case IO_FD:
-            fprintf(stderr, "FD map %d -> %d\n", io->param1.old_fd, io->fd);
-            break;
-        case IO_BUFFER:
-            fprintf(stderr, "buffer %p (size %lu)\n", io->out_buffer_ptr(), io->out_buffer_size());
-            break;
-        case IO_CLOSE:
-            fprintf(stderr, "close %d\n", io->fd);
-            break;
+            case IO_FILE:
+                fprintf(stderr, "file (%s)\n", io->filename_cstr);
+                break;
+            case IO_PIPE:
+                fprintf(stderr, "pipe {%d, %d}\n", io->param1.pipe_fd[0], io->param1.pipe_fd[1]);
+                break;
+            case IO_FD:
+                fprintf(stderr, "FD map %d -> %d\n", io->param1.old_fd, io->fd);
+                break;
+            case IO_BUFFER:
+                fprintf(stderr, "buffer %p (size %lu)\n", io->out_buffer_ptr(), io->out_buffer_size());
+                break;
+            case IO_CLOSE:
+                fprintf(stderr, "close %d\n", io->fd);
+                break;
         }
     }
 }

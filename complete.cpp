@@ -702,20 +702,20 @@ int complete_is_valid_option(const wcstring &str,
     switch (opt.size())
     {
 
-    case 0:
-    case 1:
-    {
-        return true;
-    }
-
-    case 2:
-    {
-        if (opt == L"--")
+        case 0:
+        case 1:
         {
             return true;
         }
-        break;
-    }
+
+        case 2:
+        {
+            if (opt == L"--")
+            {
+                return true;
+            }
+            break;
+        }
     }
 
     if (opt.at(0) != L'-')
@@ -1816,73 +1816,73 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, complete_ty
             switch (tok_last_type(&tok))
             {
 
-            case TOK_STRING:
-            {
-
-                const wcstring ncmd = tok_last(&tok);
-                int is_ddash = (ncmd == L"--") && ((tok_get_pos(&tok)+2) < (long)pos);
-
-                if (!had_cmd)
+                case TOK_STRING:
                 {
 
-                    if (parser_keywords_is_subcommand(ncmd))
+                    const wcstring ncmd = tok_last(&tok);
+                    int is_ddash = (ncmd == L"--") && ((tok_get_pos(&tok)+2) < (long)pos);
+
+                    if (!had_cmd)
                     {
-                        if (ncmd == L"builtin")
+
+                        if (parser_keywords_is_subcommand(ncmd))
                         {
-                            use_function = 0;
-                            use_command  = 0;
-                            use_builtin  = 1;
+                            if (ncmd == L"builtin")
+                            {
+                                use_function = 0;
+                                use_command  = 0;
+                                use_builtin  = 1;
+                            }
+                            else if (ncmd == L"command")
+                            {
+                                use_command  = 1;
+                                use_function = 0;
+                                use_builtin  = 0;
+                            }
+                            break;
                         }
-                        else if (ncmd == L"command")
+
+
+                        if (!is_ddash ||
+                                ((use_command && use_function && use_builtin)))
                         {
-                            use_command  = 1;
-                            use_function = 0;
-                            use_builtin  = 0;
+                            current_command = ncmd;
+
+                            size_t token_end = tok_get_pos(&tok) + ncmd.size();
+
+                            on_command = (pos <= token_end);
+                            had_cmd=1;
                         }
-                        break;
+
+                    }
+                    else
+                    {
+                        if (is_ddash)
+                        {
+                            had_ddash = 1;
+                        }
                     }
 
-
-                    if (!is_ddash ||
-                            ((use_command && use_function && use_builtin)))
-                    {
-                        current_command = ncmd;
-
-                        size_t token_end = tok_get_pos(&tok) + ncmd.size();
-
-                        on_command = (pos <= token_end);
-                        had_cmd=1;
-                    }
-
+                    break;
                 }
-                else
+
+                case TOK_END:
+                case TOK_PIPE:
+                case TOK_BACKGROUND:
                 {
-                    if (is_ddash)
-                    {
-                        had_ddash = 1;
-                    }
+                    had_cmd=0;
+                    had_ddash = 0;
+                    use_command  = 1;
+                    use_function = 1;
+                    use_builtin  = 1;
+                    break;
                 }
 
-                break;
-            }
-
-            case TOK_END:
-            case TOK_PIPE:
-            case TOK_BACKGROUND:
-            {
-                had_cmd=0;
-                had_ddash = 0;
-                use_command  = 1;
-                use_function = 1;
-                use_builtin  = 1;
-                break;
-            }
-
-            case TOK_ERROR:
-            {
-                end_loop=1;
-                break;
-            }
+                case TOK_ERROR:
+                {
+                    end_loop=1;
+                    break;
+                }
 
             }
 

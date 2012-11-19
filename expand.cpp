@@ -169,18 +169,18 @@ static int is_quotable(const wchar_t *str)
 {
     switch (*str)
     {
-    case 0:
-        return 1;
+        case 0:
+            return 1;
 
-    case L'\n':
-    case L'\t':
-    case L'\r':
-    case L'\b':
-    case L'\x1b':
-        return 0;
+        case L'\n':
+        case L'\t':
+        case L'\r':
+        case L'\b':
+        case L'\x1b':
+            return 0;
 
-    default:
-        return is_quotable(str+1);
+        default:
+            return is_quotable(str+1);
     }
     return 0;
 
@@ -201,35 +201,15 @@ wcstring expand_escape_variable(const wcstring &in)
 
     switch (lst.size())
     {
-    case 0:
-        buff.append(L"''");
-        break;
+        case 0:
+            buff.append(L"''");
+            break;
 
-    case 1:
-    {
-        const wcstring &el = lst.at(0);
+        case 1:
+        {
+            const wcstring &el = lst.at(0);
 
-        if (el.find(L' ') != wcstring::npos && is_quotable(el))
-        {
-            buff.append(L"'");
-            buff.append(el);
-            buff.append(L"'");
-        }
-        else
-        {
-            buff.append(escape_string(el, 1));
-        }
-        break;
-    }
-    default:
-    {
-        for (size_t j=0; j<lst.size(); j++)
-        {
-            const wcstring &el = lst.at(j);
-            if (j)
-                buff.append(L"  ");
-
-            if (is_quotable(el))
+            if (el.find(L' ') != wcstring::npos && is_quotable(el))
             {
                 buff.append(L"'");
                 buff.append(el);
@@ -239,8 +219,28 @@ wcstring expand_escape_variable(const wcstring &in)
             {
                 buff.append(escape_string(el, 1));
             }
+            break;
         }
-    }
+        default:
+        {
+            for (size_t j=0; j<lst.size(); j++)
+            {
+                const wcstring &el = lst.at(j);
+                if (j)
+                    buff.append(L"  ");
+
+                if (is_quotable(el))
+                {
+                    buff.append(L"'");
+                    buff.append(el);
+                    buff.append(L"'");
+                }
+                else
+                {
+                    buff.append(escape_string(el, 1));
+                }
+            }
+        }
     }
     return buff;
 }
@@ -814,79 +814,79 @@ void expand_variable_error(parser_t &parser, const wchar_t *token, size_t token_
 
     switch (token[stop_pos])
     {
-    case BRACKET_BEGIN:
-    {
-        wchar_t *cpy = wcsdup(token);
-        *(cpy+token_pos)=0;
-        wchar_t *name = &cpy[stop_pos+1];
-        wchar_t *end = wcschr(name, BRACKET_END);
-        wchar_t *post;
-        int is_var=0;
-        if (end)
+        case BRACKET_BEGIN:
         {
-            post = end+1;
-            *end = 0;
-
-            if (!wcsvarname(name))
+            wchar_t *cpy = wcsdup(token);
+            *(cpy+token_pos)=0;
+            wchar_t *name = &cpy[stop_pos+1];
+            wchar_t *end = wcschr(name, BRACKET_END);
+            wchar_t *post;
+            int is_var=0;
+            if (end)
             {
-                is_var = 1;
+                post = end+1;
+                *end = 0;
+
+                if (!wcsvarname(name))
+                {
+                    is_var = 1;
+                }
             }
+
+            if (is_var)
+            {
+                parser.error(SYNTAX_ERROR,
+                             error_pos,
+                             COMPLETE_VAR_BRACKET_DESC,
+                             cpy,
+                             name,
+                             post);
+            }
+            else
+            {
+                parser.error(SYNTAX_ERROR,
+                             error_pos,
+                             COMPLETE_VAR_BRACKET_DESC,
+                             L"",
+                             L"VARIABLE",
+                             L"");
+            }
+            free(cpy);
+
+            break;
         }
 
-        if (is_var)
+        case INTERNAL_SEPARATOR:
         {
             parser.error(SYNTAX_ERROR,
                          error_pos,
-                         COMPLETE_VAR_BRACKET_DESC,
-                         cpy,
-                         name,
-                         post);
+                         COMPLETE_VAR_PARAN_DESC);
+            break;
         }
-        else
+
+        case 0:
         {
             parser.error(SYNTAX_ERROR,
                          error_pos,
-                         COMPLETE_VAR_BRACKET_DESC,
-                         L"",
-                         L"VARIABLE",
-                         L"");
+                         COMPLETE_VAR_NULL_DESC);
+            break;
         }
-        free(cpy);
 
-        break;
-    }
+        default:
+        {
+            wchar_t token_stop_char = token[stop_pos];
+            // Unescape (see http://github.com/fish-shell/fish-shell/issues/50)
+            if (token_stop_char == ANY_CHAR)
+                token_stop_char = L'?';
+            else if (token_stop_char == ANY_STRING || token_stop_char == ANY_STRING_RECURSIVE)
+                token_stop_char = L'*';
 
-    case INTERNAL_SEPARATOR:
-    {
-        parser.error(SYNTAX_ERROR,
-                     error_pos,
-                     COMPLETE_VAR_PARAN_DESC);
-        break;
-    }
-
-    case 0:
-    {
-        parser.error(SYNTAX_ERROR,
-                     error_pos,
-                     COMPLETE_VAR_NULL_DESC);
-        break;
-    }
-
-    default:
-    {
-        wchar_t token_stop_char = token[stop_pos];
-        // Unescape (see http://github.com/fish-shell/fish-shell/issues/50)
-        if (token_stop_char == ANY_CHAR)
-            token_stop_char = L'?';
-        else if (token_stop_char == ANY_STRING || token_stop_char == ANY_STRING_RECURSIVE)
-            token_stop_char = L'*';
-
-        parser.error(SYNTAX_ERROR,
-                     error_pos,
-                     (token_stop_char == L'?' ? COMPLETE_YOU_WANT_STATUS : COMPLETE_VAR_DESC),
-                     token_stop_char);
-        break;
-    }
+            parser.error(SYNTAX_ERROR,
+                         error_pos,
+                         (token_stop_char == L'?' ? COMPLETE_YOU_WANT_STATUS : COMPLETE_VAR_DESC),
+                         token_stop_char);
+            break;
+        }
     }
 }
 
@@ -1219,33 +1219,33 @@ static int expand_brackets(parser_t &parser, const wcstring &instr, int flags, s
     {
         switch (*pos)
         {
-        case BRACKET_BEGIN:
-        {
-            bracket_begin = pos;
-
-            bracket_count++;
-            break;
-
-        }
-        case BRACKET_END:
-        {
-            bracket_count--;
-            if (bracket_end < bracket_begin)
+            case BRACKET_BEGIN:
             {
-                bracket_end = pos;
-            }
+                bracket_begin = pos;
 
-            if (bracket_count < 0)
-            {
-                syntax_error = true;
+                bracket_count++;
+                break;
+
             }
-            break;
-        }
-        case BRACKET_SEP:
-        {
-            if (bracket_count == 1)
-                last_sep = pos;
-        }
+            case BRACKET_END:
+            {
+                bracket_count--;
+                if (bracket_end < bracket_begin)
+                {
+                    bracket_end = pos;
+                }
+
+                if (bracket_count < 0)
+                {
+                    syntax_error = true;
+                }
+                break;
+            }
+            case BRACKET_SEP:
+            {
+                if (bracket_count == 1)
+                    last_sep = pos;
+            }
         }
     }
 
@@ -1345,17 +1345,17 @@ static int expand_cmdsubst(parser_t &parser, const wcstring &input, std::vector<
                         &paran_end,
                         0))
     {
-    case -1:
-        parser.error(SYNTAX_ERROR,
-                     -1,
-                     L"Mismatched parenthesis");
-        return 0;
-    case 0:
-        outList.push_back(completion_t(input));
-        return 1;
-    case 1:
+        case -1:
+            parser.error(SYNTAX_ERROR,
+                         -1,
+                         L"Mismatched parenthesis");
+            return 0;
+        case 0:
+            outList.push_back(completion_t(input));
+            return 1;
+        case 1:
 
-        break;
+            break;
     }
 
     const wcstring subcmd(paran_begin + 1, paran_end-paran_begin - 1);
@@ -1547,13 +1547,13 @@ static void remove_internal_separator(wcstring &str, bool conv)
         {
             switch (str.at(idx))
             {
-            case ANY_CHAR:
-                str.at(idx) = L'?';
-                break;
-            case ANY_STRING:
-            case ANY_STRING_RECURSIVE:
-                str.at(idx) = L'*';
-                break;
+                case ANY_CHAR:
+                    str.at(idx) = L'?';
+                    break;
+                case ANY_STRING:
+                case ANY_STRING_RECURSIVE:
+                    str.at(idx) = L'*';
+                    break;
             }
         }
     }
@@ -1724,34 +1724,34 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
 
                 switch (wc_res)
                 {
-                case 0:
-                {
-                    if (!(flags & ACCEPT_INCOMPLETE))
+                    case 0:
                     {
-                        if (res == EXPAND_OK)
-                            res = EXPAND_WILDCARD_NO_MATCH;
+                        if (!(flags & ACCEPT_INCOMPLETE))
+                        {
+                            if (res == EXPAND_OK)
+                                res = EXPAND_WILDCARD_NO_MATCH;
+                            break;
+                        }
+                    }
+
+                    case 1:
+                    {
+                        size_t j;
+                        res = EXPAND_WILDCARD_MATCH;
+                        sort_completions(*out);
+
+                        for (j=0; j< out->size(); j++)
+                        {
+                            output.push_back(out->at(j));
+                        }
+                        out->clear();
                         break;
                     }
-                }
 
-                case 1:
-                {
-                    size_t j;
-                    res = EXPAND_WILDCARD_MATCH;
-                    sort_completions(*out);
-
-                    for (j=0; j< out->size(); j++)
+                    case -1:
                     {
-                        output.push_back(out->at(j));
+                        return EXPAND_ERROR;
                     }
-                    out->clear();
-                    break;
-                }
-
-                case -1:
-                {
-                    return EXPAND_ERROR;
-                }
 
                 }
             }

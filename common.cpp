@@ -144,19 +144,19 @@ int fgetws2(wcstring *s, FILE *f)
 
         switch (c)
         {
-            /* End of line */
-        case WEOF:
-        case L'\n':
-        case L'\0':
-            return i;
-            /* Ignore carriage returns */
-        case L'\r':
-            break;
+                /* End of line */
+            case WEOF:
+            case L'\n':
+            case L'\0':
+                return i;
+                /* Ignore carriage returns */
+            case L'\r':
+                break;
 
-        default:
-            i++;
-            s->push_back((wchar_t)c);
-            break;
+            default:
+                i++;
+                s->push_back((wchar_t)c);
+                break;
         }
     }
 }
@@ -225,25 +225,25 @@ wchar_t *str2wcs_internal(const char *in, wchar_t *out)
 
             switch (res)
             {
-            case (size_t)(-2):
-            case (size_t)(-1):
-            {
-                out[out_pos] = ENCODE_DIRECT_BASE + (unsigned char)in[in_pos];
-                in_pos++;
-                memset(&state, 0, sizeof(state));
-                break;
-            }
+                case (size_t)(-2):
+                case (size_t)(-1):
+                {
+                    out[out_pos] = ENCODE_DIRECT_BASE + (unsigned char)in[in_pos];
+                    in_pos++;
+                    memset(&state, 0, sizeof(state));
+                    break;
+                }
 
-            case 0:
-            {
-                return out;
-            }
+                case 0:
+                {
+                    return out;
+                }
 
-            default:
-            {
-                in_pos += res;
-                break;
-            }
+                default:
+                {
+                    in_pos += res;
+                    break;
+                }
             }
             out_pos++;
         }
@@ -957,107 +957,107 @@ wchar_t *escape(const wchar_t *in_orig, escape_flags_t flags)
             wchar_t c = *in;
             switch (c)
             {
-            case L'\t':
-                *(pos++) = L'\\';
-                *(pos++) = L't';
-                need_escape=need_complex_escape=1;
-                break;
+                case L'\t':
+                    *(pos++) = L'\\';
+                    *(pos++) = L't';
+                    need_escape=need_complex_escape=1;
+                    break;
 
-            case L'\n':
-                *(pos++) = L'\\';
-                *(pos++) = L'n';
-                need_escape=need_complex_escape=1;
-                break;
+                case L'\n':
+                    *(pos++) = L'\\';
+                    *(pos++) = L'n';
+                    need_escape=need_complex_escape=1;
+                    break;
 
-            case L'\b':
-                *(pos++) = L'\\';
-                *(pos++) = L'b';
-                need_escape=need_complex_escape=1;
-                break;
+                case L'\b':
+                    *(pos++) = L'\\';
+                    *(pos++) = L'b';
+                    need_escape=need_complex_escape=1;
+                    break;
 
-            case L'\r':
-                *(pos++) = L'\\';
-                *(pos++) = L'r';
-                need_escape=need_complex_escape=1;
-                break;
+                case L'\r':
+                    *(pos++) = L'\\';
+                    *(pos++) = L'r';
+                    need_escape=need_complex_escape=1;
+                    break;
 
-            case L'\x1b':
-                *(pos++) = L'\\';
-                *(pos++) = L'e';
-                need_escape=need_complex_escape=1;
-                break;
+                case L'\x1b':
+                    *(pos++) = L'\\';
+                    *(pos++) = L'e';
+                    need_escape=need_complex_escape=1;
+                    break;
 
 
-            case L'\\':
-            case L'\'':
-            {
-                need_escape=need_complex_escape=1;
-                if (escape_all)
-                    *pos++ = L'\\';
-                *pos++ = *in;
-                break;
-            }
-
-            case L'&':
-            case L'$':
-            case L' ':
-            case L'#':
-            case L'^':
-            case L'<':
-            case L'>':
-            case L'(':
-            case L')':
-            case L'[':
-            case L']':
-            case L'{':
-            case L'}':
-            case L'?':
-            case L'*':
-            case L'|':
-            case L';':
-            case L'"':
-            case L'%':
-            case L'~':
-            {
-                if (! no_tilde || c != L'~')
+                case L'\\':
+                case L'\'':
                 {
-                    need_escape=1;
+                    need_escape=need_complex_escape=1;
                     if (escape_all)
                         *pos++ = L'\\';
-                }
-                *pos++ = *in;
-                break;
-            }
-
-            default:
-            {
-                if (*in < 32)
-                {
-                    if (*in <27 && *in > 0)
-                    {
-                        *(pos++) = L'\\';
-                        *(pos++) = L'c';
-                        *(pos++) = L'a' + *in -1;
-
-                        need_escape=need_complex_escape=1;
-                        break;
-
-                    }
-
-
-                    int tmp = (*in)%16;
-                    *pos++ = L'\\';
-                    *pos++ = L'x';
-                    *pos++ = ((*in>15)? L'1' : L'0');
-                    *pos++ = tmp > 9? L'a'+(tmp-10):L'0'+tmp;
-                    need_escape=need_complex_escape=1;
-                }
-                else
-                {
                     *pos++ = *in;
+                    break;
                 }
-                break;
-            }
+
+                case L'&':
+                case L'$':
+                case L' ':
+                case L'#':
+                case L'^':
+                case L'<':
+                case L'>':
+                case L'(':
+                case L')':
+                case L'[':
+                case L']':
+                case L'{':
+                case L'}':
+                case L'?':
+                case L'*':
+                case L'|':
+                case L';':
+                case L'"':
+                case L'%':
+                case L'~':
+                {
+                    if (! no_tilde || c != L'~')
+                    {
+                        need_escape=1;
+                        if (escape_all)
+                            *pos++ = L'\\';
+                    }
+                    *pos++ = *in;
+                    break;
+                }
+
+                default:
+                {
+                    if (*in < 32)
+                    {
+                        if (*in <27 && *in > 0)
+                        {
+                            *(pos++) = L'\\';
+                            *(pos++) = L'c';
+                            *(pos++) = L'a' + *in -1;
+
+                            need_escape=need_complex_escape=1;
+                            break;
+
+                        }
+
+
+                        int tmp = (*in)%16;
+                        *pos++ = L'\\';
+                        *pos++ = L'x';
+                        *pos++ = ((*in>15)? L'1' : L'0');
+                        *pos++ = tmp > 9? L'a'+(tmp-10):L'0'+tmp;
+                        need_escape=need_complex_escape=1;
+                    }
+                    else
+                    {
+                        *pos++ = *in;
+                    }
+                    break;
+                }
             }
         }
 
@@ -1116,503 +1116,503 @@ wchar_t *unescape(const wchar_t * orig, int flags)
         switch (mode)
         {
 
-            /*
-              Mode 0 means unquoted string
-            */
-        case 0:
-        {
-            if (c == L'\\')
+                /*
+                  Mode 0 means unquoted string
+                */
+            case 0:
             {
-                switch (in[++in_pos])
+                if (c == L'\\')
                 {
-
-                    /*
-                      A null character after a backslash is an
-                      error, return null
-                    */
-                case L'\0':
-                {
-                    if (!allow_incomplete)
+                    switch (in[++in_pos])
                     {
-                        free(in);
-                        return 0;
+
+                            /*
+                              A null character after a backslash is an
+                              error, return null
+                            */
+                        case L'\0':
+                        {
+                            if (!allow_incomplete)
+                            {
+                                free(in);
+                                return 0;
+                            }
+                        }
+
+                        /*
+                          Numeric escape sequences. No prefix means
+                          octal escape, otherwise hexadecimal.
+                        */
+
+                        case L'0':
+                        case L'1':
+                        case L'2':
+                        case L'3':
+                        case L'4':
+                        case L'5':
+                        case L'6':
+                        case L'7':
+                        case L'u':
+                        case L'U':
+                        case L'x':
+                        case L'X':
+                        {
+                            int i;
+                            long long res=0;
+                            int chars=2;
+                            int base=16;
+
+                            int byte = 0;
+                            wchar_t max_val = ASCII_MAX;
+
+                            switch (in[in_pos])
+                            {
+                                case L'u':
+                                {
+                                    chars=4;
+                                    max_val = UCS2_MAX;
+                                    break;
+                                }
+
+                                case L'U':
+                                {
+                                    chars=8;
+                                    max_val = WCHAR_MAX;
+                                    break;
+                                }
+
+                                case L'x':
+                                {
+                                    break;
+                                }
+
+                                case L'X':
+                                {
+                                    byte=1;
+                                    max_val = BYTE_MAX;
+                                    break;
+                                }
+
+                                default:
+                                {
+                                    base=8;
+                                    chars=3;
+                                    // note in_pod must be larger than 0 since we incremented it above
+                                    assert(in_pos > 0);
+                                    in_pos--;
+                                    break;
+                                }
+                            }
+
+                            for (i=0; i<chars; i++)
+                            {
+                                long d = convert_digit(in[++in_pos],base);
+
+                                if (d < 0)
+                                {
+                                    in_pos--;
+                                    break;
+                                }
+
+                                res=(res*base)|d;
+                            }
+
+                            if ((res <= max_val))
+                            {
+                                in[out_pos] = (wchar_t)((byte?ENCODE_DIRECT_BASE:0)+res);
+                            }
+                            else
+                            {
+                                free(in);
+                                return 0;
+                            }
+
+                            break;
+                        }
+
+                        /*
+                          \a means bell (alert)
+                        */
+                        case L'a':
+                        {
+                            in[out_pos]=L'\a';
+                            break;
+                        }
+
+                        /*
+                          \b means backspace
+                        */
+                        case L'b':
+                        {
+                            in[out_pos]=L'\b';
+                            break;
+                        }
+
+                        /*
+                          \cX means control sequence X
+                        */
+                        case L'c':
+                        {
+                            in_pos++;
+                            if (in[in_pos] >= L'a' &&
+                                    in[in_pos] <= (L'a'+32))
+                            {
+                                in[out_pos]=in[in_pos]-L'a'+1;
+                            }
+                            else if (in[in_pos] >= L'A' &&
+                                     in[in_pos] <= (L'A'+32))
+                            {
+                                in[out_pos]=in[in_pos]-L'A'+1;
+                            }
+                            else
+                            {
+                                free(in);
+                                return 0;
+                            }
+                            break;
+
+                        }
+
+                        /*
+                          \x1b means escape
+                        */
+                        case L'e':
+                        {
+                            in[out_pos]=L'\x1b';
+                            break;
+                        }
+
+                        /*
+                          \f means form feed
+                        */
+                        case L'f':
+                        {
+                            in[out_pos]=L'\f';
+                            break;
+                        }
+
+                        /*
+                          \n means newline
+                        */
+                        case L'n':
+                        {
+                            in[out_pos]=L'\n';
+                            break;
+                        }
+
+                        /*
+                          \r means carriage return
+                        */
+                        case L'r':
+                        {
+                            in[out_pos]=L'\r';
+                            break;
+                        }
+
+                        /*
+                          \t means tab
+                         */
+                        case L't':
+                        {
+                            in[out_pos]=L'\t';
+                            break;
+                        }
+
+                        /*
+                          \v means vertical tab
+                        */
+                        case L'v':
+                        {
+                            in[out_pos]=L'\v';
+                            break;
+                        }
+
+                        default:
+                        {
+                            if (unescape_special)
+                                in[out_pos++] = INTERNAL_SEPARATOR;
+                            in[out_pos]=in[in_pos];
+                            break;
+                        }
                     }
                 }
-
-                /*
-                  Numeric escape sequences. No prefix means
-                  octal escape, otherwise hexadecimal.
-                */
-
-                case L'0':
-                case L'1':
-                case L'2':
-                case L'3':
-                case L'4':
-                case L'5':
-                case L'6':
-                case L'7':
-                case L'u':
-                case L'U':
-                case L'x':
-                case L'X':
+                else
                 {
-                    int i;
-                    long long res=0;
-                    int chars=2;
-                    int base=16;
-
-                    int byte = 0;
-                    wchar_t max_val = ASCII_MAX;
-
                     switch (in[in_pos])
                     {
-                    case L'u':
+                        case L'~':
+                        {
+                            if (unescape_special && (in_pos == 0))
+                            {
+                                in[out_pos]=HOME_DIRECTORY;
+                            }
+                            else
+                            {
+                                in[out_pos] = L'~';
+                            }
+                            break;
+                        }
+
+                        case L'%':
+                        {
+                            if (unescape_special && (in_pos == 0))
+                            {
+                                in[out_pos]=PROCESS_EXPAND;
+                            }
+                            else
+                            {
+                                in[out_pos]=in[in_pos];
+                            }
+                            break;
+                        }
+
+                        case L'*':
+                        {
+                            if (unescape_special)
+                            {
+                                if (out_pos > 0 && in[out_pos-1]==ANY_STRING)
+                                {
+                                    out_pos--;
+                                    in[out_pos] = ANY_STRING_RECURSIVE;
+                                }
+                                else
+                                    in[out_pos]=ANY_STRING;
+                            }
+                            else
+                            {
+                                in[out_pos]=in[in_pos];
+                            }
+                            break;
+                        }
+
+                        case L'?':
+                        {
+                            if (unescape_special)
+                            {
+                                in[out_pos]=ANY_CHAR;
+                            }
+                            else
+                            {
+                                in[out_pos]=in[in_pos];
+                            }
+                            break;
+                        }
+
+                        case L'$':
+                        {
+                            if (unescape_special)
+                            {
+                                in[out_pos]=VARIABLE_EXPAND;
+                            }
+                            else
+                            {
+                                in[out_pos]=in[in_pos];
+                            }
+                            break;
+                        }
+
+                        case L'{':
+                        {
+                            if (unescape_special)
+                            {
+                                bracket_count++;
+                                in[out_pos]=BRACKET_BEGIN;
+                            }
+                            else
+                            {
+                                in[out_pos]=in[in_pos];
+                            }
+                            break;
+                        }
+
+                        case L'}':
+                        {
+                            if (unescape_special)
+                            {
+                                bracket_count--;
+                                in[out_pos]=BRACKET_END;
+                            }
+                            else
+                            {
+                                in[out_pos]=in[in_pos];
+                            }
+                            break;
+                        }
+
+                        case L',':
+                        {
+                            if (unescape_special && bracket_count && prev!=BRACKET_SEP)
+                            {
+                                in[out_pos]=BRACKET_SEP;
+                            }
+                            else
+                            {
+                                in[out_pos]=in[in_pos];
+                            }
+                            break;
+                        }
+
+                        case L'\'':
+                        {
+                            mode = 1;
+                            if (unescape_special)
+                                in[out_pos] = INTERNAL_SEPARATOR;
+                            else
+                                out_pos--;
+                            break;
+                        }
+
+                        case L'\"':
+                        {
+                            mode = 2;
+                            if (unescape_special)
+                                in[out_pos] = INTERNAL_SEPARATOR;
+                            else
+                                out_pos--;
+                            break;
+                        }
+
+                        default:
+                        {
+                            in[out_pos] = in[in_pos];
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+
+            /*
+              Mode 1 means single quoted string, i.e 'foo'
+            */
+            case 1:
+            {
+                if (c == L'\\')
+                {
+                    switch (in[++in_pos])
                     {
-                        chars=4;
-                        max_val = UCS2_MAX;
+                        case '\\':
+                        case L'\'':
+                        case L'\n':
+                        {
+                            in[out_pos]=in[in_pos];
+                            break;
+                        }
+
+                        case 0:
+                        {
+                            if (!allow_incomplete)
+                            {
+                                free(in);
+                                return 0;
+                            }
+                            else
+                            {
+                                //We may ever escape a NULL character, but still appending a \ in case I am wrong.
+                                in[out_pos] = L'\\';
+                            }
+                        }
+                        break;
+                        default:
+                        {
+                            in[out_pos++] = L'\\';
+                            in[out_pos]= in[in_pos];
+                        }
+                    }
+
+                }
+                if (c == L'\'')
+                {
+                    if (unescape_special)
+                        in[out_pos] = INTERNAL_SEPARATOR;
+                    else
+                        out_pos--;
+                    mode = 0;
+                }
+                else
+                {
+                    in[out_pos] = in[in_pos];
+                }
+
+                break;
+            }
+
+            /*
+              Mode 2 means double quoted string, i.e. "foo"
+            */
+            case 2:
+            {
+                switch (c)
+                {
+                    case '"':
+                    {
+                        mode = 0;
+                        if (unescape_special)
+                            in[out_pos] = INTERNAL_SEPARATOR;
+                        else
+                            out_pos--;
                         break;
                     }
 
-                    case L'U':
+                    case '\\':
                     {
-                        chars=8;
-                        max_val = WCHAR_MAX;
+                        switch (in[++in_pos])
+                        {
+                            case L'\0':
+                            {
+                                if (!allow_incomplete)
+                                {
+                                    free(in);
+                                    return 0;
+                                }
+                                else
+                                {
+                                    //We probably don't need it since NULL character is always appended before ending this function.
+                                    in[out_pos]=in[in_pos];
+                                }
+                            }
+                            break;
+                            case '\\':
+                            case L'$':
+                            case '"':
+                            case '\n':
+                            {
+                                in[out_pos]=in[in_pos];
+                                break;
+                            }
+
+                            default:
+                            {
+                                in[out_pos++] = L'\\';
+                                in[out_pos] = in[in_pos];
+                                break;
+                            }
+                        }
                         break;
                     }
 
-                    case L'x':
+                    case '$':
                     {
-                        break;
-                    }
-
-                    case L'X':
-                    {
-                        byte=1;
-                        max_val = BYTE_MAX;
+                        if (unescape_special)
+                        {
+                            in[out_pos]=VARIABLE_EXPAND_SINGLE;
+                        }
+                        else
+                        {
+                            in[out_pos]=in[in_pos];
+                        }
                         break;
                     }
 
                     default:
                     {
-                        base=8;
-                        chars=3;
-                        // note in_pod must be larger than 0 since we incremented it above
-                        assert(in_pos > 0);
-                        in_pos--;
+                        in[out_pos] = in[in_pos];
                         break;
                     }
-                    }
 
-                    for (i=0; i<chars; i++)
-                    {
-                        long d = convert_digit(in[++in_pos],base);
-
-                        if (d < 0)
-                        {
-                            in_pos--;
-                            break;
-                        }
-
-                        res=(res*base)|d;
-                    }
-
-                    if ((res <= max_val))
-                    {
-                        in[out_pos] = (wchar_t)((byte?ENCODE_DIRECT_BASE:0)+res);
-                    }
-                    else
-                    {
-                        free(in);
-                        return 0;
-                    }
-
-                    break;
-                }
-
-                /*
-                  \a means bell (alert)
-                */
-                case L'a':
-                {
-                    in[out_pos]=L'\a';
-                    break;
-                }
-
-                /*
-                  \b means backspace
-                */
-                case L'b':
-                {
-                    in[out_pos]=L'\b';
-                    break;
-                }
-
-                /*
-                  \cX means control sequence X
-                */
-                case L'c':
-                {
-                    in_pos++;
-                    if (in[in_pos] >= L'a' &&
-                            in[in_pos] <= (L'a'+32))
-                    {
-                        in[out_pos]=in[in_pos]-L'a'+1;
-                    }
-                    else if (in[in_pos] >= L'A' &&
-                             in[in_pos] <= (L'A'+32))
-                    {
-                        in[out_pos]=in[in_pos]-L'A'+1;
-                    }
-                    else
-                    {
-                        free(in);
-                        return 0;
-                    }
-                    break;
-
-                }
-
-                /*
-                  \x1b means escape
-                */
-                case L'e':
-                {
-                    in[out_pos]=L'\x1b';
-                    break;
-                }
-
-                /*
-                  \f means form feed
-                */
-                case L'f':
-                {
-                    in[out_pos]=L'\f';
-                    break;
-                }
-
-                /*
-                  \n means newline
-                */
-                case L'n':
-                {
-                    in[out_pos]=L'\n';
-                    break;
-                }
-
-                /*
-                  \r means carriage return
-                */
-                case L'r':
-                {
-                    in[out_pos]=L'\r';
-                    break;
-                }
-
-                /*
-                  \t means tab
-                 */
-                case L't':
-                {
-                    in[out_pos]=L'\t';
-                    break;
-                }
-
-                /*
-                  \v means vertical tab
-                */
-                case L'v':
-                {
-                    in[out_pos]=L'\v';
-                    break;
-                }
-
-                default:
-                {
-                    if (unescape_special)
-                        in[out_pos++] = INTERNAL_SEPARATOR;
-                    in[out_pos]=in[in_pos];
-                    break;
-                }
-                }
-            }
-            else
-            {
-                switch (in[in_pos])
-                {
-                case L'~':
-                {
-                    if (unescape_special && (in_pos == 0))
-                    {
-                        in[out_pos]=HOME_DIRECTORY;
-                    }
-                    else
-                    {
-                        in[out_pos] = L'~';
-                    }
-                    break;
-                }
-
-                case L'%':
-                {
-                    if (unescape_special && (in_pos == 0))
-                    {
-                        in[out_pos]=PROCESS_EXPAND;
-                    }
-                    else
-                    {
-                        in[out_pos]=in[in_pos];
-                    }
-                    break;
-                }
-
-                case L'*':
-                {
-                    if (unescape_special)
-                    {
-                        if (out_pos > 0 && in[out_pos-1]==ANY_STRING)
-                        {
-                            out_pos--;
-                            in[out_pos] = ANY_STRING_RECURSIVE;
-                        }
-                        else
-                            in[out_pos]=ANY_STRING;
-                    }
-                    else
-                    {
-                        in[out_pos]=in[in_pos];
-                    }
-                    break;
-                }
-
-                case L'?':
-                {
-                    if (unescape_special)
-                    {
-                        in[out_pos]=ANY_CHAR;
-                    }
-                    else
-                    {
-                        in[out_pos]=in[in_pos];
-                    }
-                    break;
-                }
-
-                case L'$':
-                {
-                    if (unescape_special)
-                    {
-                        in[out_pos]=VARIABLE_EXPAND;
-                    }
-                    else
-                    {
-                        in[out_pos]=in[in_pos];
-                    }
-                    break;
-                }
-
-                case L'{':
-                {
-                    if (unescape_special)
-                    {
-                        bracket_count++;
-                        in[out_pos]=BRACKET_BEGIN;
-                    }
-                    else
-                    {
-                        in[out_pos]=in[in_pos];
-                    }
-                    break;
-                }
-
-                case L'}':
-                {
-                    if (unescape_special)
-                    {
-                        bracket_count--;
-                        in[out_pos]=BRACKET_END;
-                    }
-                    else
-                    {
-                        in[out_pos]=in[in_pos];
-                    }
-                    break;
-                }
-
-                case L',':
-                {
-                    if (unescape_special && bracket_count && prev!=BRACKET_SEP)
-                    {
-                        in[out_pos]=BRACKET_SEP;
-                    }
-                    else
-                    {
-                        in[out_pos]=in[in_pos];
-                    }
-                    break;
-                }
-
-                case L'\'':
-                {
-                    mode = 1;
-                    if (unescape_special)
-                        in[out_pos] = INTERNAL_SEPARATOR;
-                    else
-                        out_pos--;
-                    break;
-                }
-
-                case L'\"':
-                {
-                    mode = 2;
-                    if (unescape_special)
-                        in[out_pos] = INTERNAL_SEPARATOR;
-                    else
-                        out_pos--;
-                    break;
-                }
-
-                default:
-                {
-                    in[out_pos] = in[in_pos];
-                    break;
-                }
-                }
-            }
-            break;
-        }
-
-        /*
-          Mode 1 means single quoted string, i.e 'foo'
-        */
-        case 1:
-        {
-            if (c == L'\\')
-            {
-                switch (in[++in_pos])
-                {
-                case '\\':
-                case L'\'':
-                case L'\n':
-                {
-                    in[out_pos]=in[in_pos];
-                    break;
-                }
-
-                case 0:
-                {
-                    if (!allow_incomplete)
-                    {
-                        free(in);
-                        return 0;
-                    }
-                    else
-                    {
-                        //We may ever escape a NULL character, but still appending a \ in case I am wrong.
-                        in[out_pos] = L'\\';
-                    }
-                }
-                break;
-                default:
-                {
-                    in[out_pos++] = L'\\';
-                    in[out_pos]= in[in_pos];
-                }
-                }
-
-            }
-            if (c == L'\'')
-            {
-                if (unescape_special)
-                    in[out_pos] = INTERNAL_SEPARATOR;
-                else
-                    out_pos--;
-                mode = 0;
-            }
-            else
-            {
-                in[out_pos] = in[in_pos];
-            }
-
-            break;
-        }
-
-        /*
-          Mode 2 means double quoted string, i.e. "foo"
-        */
-        case 2:
-        {
-            switch (c)
-            {
-            case '"':
-            {
-                mode = 0;
-                if (unescape_special)
-                    in[out_pos] = INTERNAL_SEPARATOR;
-                else
-                    out_pos--;
-                break;
-            }
-
-            case '\\':
-            {
-                switch (in[++in_pos])
-                {
-                case L'\0':
-                {
-                    if (!allow_incomplete)
-                    {
-                        free(in);
-                        return 0;
-                    }
-                    else
-                    {
-                        //We probably don't need it since NULL character is always appended before ending this function.
-                        in[out_pos]=in[in_pos];
-                    }
-                }
-                break;
-                case '\\':
-                case L'$':
-                case '"':
-                case '\n':
-                {
-                    in[out_pos]=in[in_pos];
-                    break;
-                }
-
-                default:
-                {
-                    in[out_pos++] = L'\\';
-                    in[out_pos] = in[in_pos];
-                    break;
-                }
                 }
                 break;
             }
-
-            case '$':
-            {
-                if (unescape_special)
-                {
-                    in[out_pos]=VARIABLE_EXPAND_SINGLE;
-                }
-                else
-                {
-                    in[out_pos]=in[in_pos];
-                }
-                break;
-            }
-
-            default:
-            {
-                in[out_pos] = in[in_pos];
-                break;
-            }
-
-            }
-            break;
-        }
         }
     }
 

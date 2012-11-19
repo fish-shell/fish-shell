@@ -477,15 +477,15 @@ static wcstring file_get_desc(const wcstring &filename,
             {
                 switch (err)
                 {
-                case ENOENT:
-                {
-                    return COMPLETE_ROTTEN_SYMLINK_DESC;
-                }
+                    case ENOENT:
+                    {
+                        return COMPLETE_ROTTEN_SYMLINK_DESC;
+                    }
 
-                case ELOOP:
-                {
-                    return COMPLETE_LOOP_SYMLINK_DESC;
-                }
+                    case ELOOP:
+                    {
+                        return COMPLETE_LOOP_SYMLINK_DESC;
+                    }
                 }
                 /*
                   On unknown errors we do nothing. The file will be

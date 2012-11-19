@@ -398,15 +398,15 @@ _xdg_glob_hash_append_glob(XdgGlobHash *glob_hash,
 
     switch (type)
     {
-    case XDG_GLOB_LITERAL:
-        glob_hash->literal_list = _xdg_glob_list_append(glob_hash->literal_list, strdup(glob), strdup(mime_type));
-        break;
-    case XDG_GLOB_SIMPLE:
-        glob_hash->simple_node = _xdg_glob_hash_insert_text(glob_hash->simple_node, glob + 1, strdup(mime_type));
-        break;
-    case XDG_GLOB_FULL:
-        glob_hash->full_list = _xdg_glob_list_append(glob_hash->full_list, strdup(glob), strdup(mime_type));
-        break;
+        case XDG_GLOB_LITERAL:
+            glob_hash->literal_list = _xdg_glob_list_append(glob_hash->literal_list, strdup(glob), strdup(mime_type));
+            break;
+        case XDG_GLOB_SIMPLE:
+            glob_hash->simple_node = _xdg_glob_hash_insert_text(glob_hash->simple_node, glob + 1, strdup(mime_type));
+            break;
+        case XDG_GLOB_FULL:
+            glob_hash->full_list = _xdg_glob_list_append(glob_hash->full_list, strdup(glob), strdup(mime_type));
+            break;
     }
 }
 

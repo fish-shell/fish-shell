@@ -457,68 +457,68 @@ static void s_desired_append_char(screen_t *s,
 
     switch (b)
     {
-    case L'\n':
-    {
-        int i;
-        /* Current line is definitely hard wrapped */
-        s->desired.line(s->desired.cursor.y).is_soft_wrapped = false;
-        s->desired.create_line(s->desired.line_count());
-        s->desired.cursor.y++;
-        s->desired.cursor.x=0;
-        for (i=0; i < prompt_width+indent*INDENT_STEP; i++)
+        case L'\n':
         {
-            s_desired_append_char(s, L' ', 0, indent, prompt_width);
-        }
-        break;
-    }
-
-    case L'\r':
-    {
-        line_t &current = s->desired.line(line_no);
-        current.clear();
-        s->desired.cursor.x = 0;
-        break;
-    }
-
-    default:
-    {
-        int screen_width = common_get_width();
-        int cw = fish_wcwidth(b);
-
-        s->desired.create_line(line_no);
-
-        /*
-               Check if we are at the end of the line. If so, continue on the next line.
-               */
-        if ((s->desired.cursor.x + cw) > screen_width)
-        {
-            /* Current line is soft wrapped (assuming we support it) */
-            s->desired.line(s->desired.cursor.y).is_soft_wrapped = true;
-            //fprintf(stderr, "\n\n1 Soft wrapping %d\n\n", s->desired.cursor.y);
-
-            line_no = (int)s->desired.line_count();
-            s->desired.add_line();
+            int i;
+            /* Current line is definitely hard wrapped */
+            s->desired.line(s->desired.cursor.y).is_soft_wrapped = false;
+            s->desired.create_line(s->desired.line_count());
             s->desired.cursor.y++;
             s->desired.cursor.x=0;
-            for (size_t i=0; i < prompt_width; i++)
+            for (i=0; i < prompt_width+indent*INDENT_STEP; i++)
             {
                 s_desired_append_char(s, L' ', 0, indent, prompt_width);
             }
+            break;
         }
 
-        line_t &line = s->desired.line(line_no);
-        line.append(b, c);
-        s->desired.cursor.x+= cw;
-
-        /* Maybe wrap the cursor to the next line, even if the line itself did not wrap. This avoids wonkiness in the last column. */
-        if (s->desired.cursor.x >= screen_width)
+        case L'\r':
         {
-            line.is_soft_wrapped = true;
+            line_t &current = s->desired.line(line_no);
+            current.clear();
             s->desired.cursor.x = 0;
-            s->desired.cursor.y++;
+            break;
         }
-        break;
-    }
+
+        default:
+        {
+            int screen_width = common_get_width();
+            int cw = fish_wcwidth(b);
+
+            s->desired.create_line(line_no);
+
+            /*
+                   Check if we are at the end of the line. If so, continue on the next line.
+                   */
+            if ((s->desired.cursor.x + cw) > screen_width)
+            {
+                /* Current line is soft wrapped (assuming we support it) */
+                s->desired.line(s->desired.cursor.y).is_soft_wrapped = true;
+                //fprintf(stderr, "\n\n1 Soft wrapping %d\n\n", s->desired.cursor.y);
+
+                line_no = (int)s->desired.line_count();
+                s->desired.add_line();
+                s->desired.cursor.y++;
+                s->desired.cursor.x=0;
+                for (size_t i=0; i < prompt_width; i++)
+                {
+                    s_desired_append_char(s, L' ', 0, indent, prompt_width);
+                }
+            }
+
+            line_t &line = s->desired.line(line_no);
+            line.append(b, c);
+            s->desired.cursor.x+= cw;
+
+            /* Maybe wrap the cursor to the next line, even if the line itself did not wrap. This avoids wonkiness in the last column. */
+            if (s->desired.cursor.x >= screen_width)
+            {
+                line.is_soft_wrapped = true;
+                s->desired.cursor.x = 0;
+                s->desired.cursor.y++;
+            }
+            break;
+        }
     }
 
 }

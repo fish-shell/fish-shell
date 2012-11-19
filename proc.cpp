@@ -566,16 +566,16 @@ void job_handle_signal(int signal, siginfo_t *info, void *con)
     {
         switch (pid=waitpid(-1,&status,WUNTRACED|WNOHANG))
         {
-        case 0:
-        case -1:
-        {
-            errno=errno_old;
-            return;
-        }
-        default:
+            case 0:
+            case -1:
+            {
+                errno=errno_old;
+                return;
+            }
+            default:
 
-            handle_child_status(pid, status);
-            break;
+                handle_child_status(pid, status);
+                break;
         }
     }
     kill(0, SIGIO);
@@ -1123,45 +1123,45 @@ void job_continue(job_t *j, int cont)
 //					debug( 1, L"select_try()" );
                     switch (select_try(j))
                     {
-                    case 1:
-                    {
-                        read_try(j);
-                        break;
-                    }
-
-                    case -1:
-                    {
-                        /*
-                          If there is no funky IO magic, we can use
-                          waitpid instead of handling child deaths
-                          through signals. This gives a rather large
-                          speed boost (A factor 3 startup time
-                          improvement on my 300 MHz machine) on
-                          short-lived jobs.
-                        */
-                        int status;
-                        pid_t pid = waitpid(-1, &status, WUNTRACED);
-                        if (pid > 0)
+                        case 1:
                         {
-                            handle_child_status(pid, status);
+                            read_try(j);
+                            break;
                         }
-                        else
+
+                        case -1:
                         {
                             /*
-                              This probably means we got a
-                              signal. A signal might mean that the
-                              terminal emulator sent us a hup
-                              signal to tell is to close. If so,
-                              we should exit.
+                              If there is no funky IO magic, we can use
+                              waitpid instead of handling child deaths
+                              through signals. This gives a rather large
+                              speed boost (A factor 3 startup time
+                              improvement on my 300 MHz machine) on
+                              short-lived jobs.
                             */
-                            if (reader_exit_forced())
+                            int status;
+                            pid_t pid = waitpid(-1, &status, WUNTRACED);
+                            if (pid > 0)
                             {
-                                quit = 1;
+                                handle_child_status(pid, status);
                             }
+                            else
+                            {
+                                /*
+                                  This probably means we got a
+                                  signal. A signal might mean that the
+                                  terminal emulator sent us a hup
+                                  signal to tell is to close. If so,
+                                  we should exit.
+                                */
+                                if (reader_exit_forced())
+                                {
+                                    quit = 1;
+                                }
 
+                            }
+                            break;
                         }
-                        break;
-                    }
 
                     }
                 }

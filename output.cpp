@@ -453,10 +453,10 @@ int writech(wint_t ch)
 
         switch (bytes)
         {
-        case (size_t)(-1):
-        {
-            return 1;
-        }
+            case (size_t)(-1):
+            {
+                return 1;
+            }
         }
     }
 

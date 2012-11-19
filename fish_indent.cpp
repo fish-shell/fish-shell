@@ -101,157 +101,157 @@ static int indent(wcstring &out, const wcstring &in, int flags)
 
         switch (type)
         {
-        case TOK_STRING:
-        {
-            if (is_command)
+            case TOK_STRING:
             {
-                int next_indent = indent;
-                is_command = 0;
-
-                wcstring unesc = last;
-                unescape_string(unesc, UNESCAPE_SPECIAL);
-
-                if (parser_keywords_is_block(unesc))
+                if (is_command)
                 {
-                    next_indent++;
-                }
-                else if (unesc == L"else")
-                {
-                    indent--;
-                }
-                /* case should have the same indent level as switch*/
-                else if (unesc == L"case")
-                {
-                    indent--;
-                }
-                else if (unesc == L"end")
-                {
-                    indent--;
-                    next_indent--;
-                }
+                    int next_indent = indent;
+                    is_command = 0;
+
+                    wcstring unesc = last;
+                    unescape_string(unesc, UNESCAPE_SPECIAL);
+
+                    if (parser_keywords_is_block(unesc))
+                    {
+                        next_indent++;
+                    }
+                    else if (unesc == L"else")
+                    {
+                        indent--;
+                    }
+                    /* case should have the same indent level as switch*/
+                    else if (unesc == L"case")
+                    {
+                        indent--;
+                    }
+                    else if (unesc == L"end")
+                    {
+                        indent--;
+                        next_indent--;
+                    }
 
 
-                if (do_indent && flags && prev_type != TOK_PIPE)
+                    if (do_indent && flags && prev_type != TOK_PIPE)
+                    {
+                        insert_tabs(out, indent);
+                    }
+
+                    append_format(out, L"%ls", last);
+
+                    indent = next_indent;
+
+                }
+                else
+                {
+                    if (prev_type != TOK_REDIRECT_FD)
+                        out.append(L" ");
+                    out.append(last);
+                }
+
+                break;
+            }
+
+            case TOK_END:
+            {
+                if (prev_type != TOK_END || prev_prev_type != TOK_END)
+                    out.append(L"\n");
+                do_indent = 1;
+                is_command = 1;
+                break;
+            }
+
+            case TOK_PIPE:
+            {
+                out.append(L" ");
+                if (last[0] == '2' && !last[1])
+                {
+                    out.append(L"^");
+                }
+                else if (last[0] != '1' || last[1])
+                {
+                    out.append(last);
+                    out.append(L">");
+                }
+                out.append(L" | ");
+                is_command = 1;
+                break;
+            }
+
+            case TOK_REDIRECT_OUT:
+            {
+                out.append(L" ");
+                if (wcscmp(last, L"2") == 0)
+                {
+                    out.append(L"^");
+                }
+                else
+                {
+                    if (wcscmp(last, L"1") != 0)
+                        out.append(last);
+                    out.append(L"> ");
+                }
+                break;
+            }
+
+            case TOK_REDIRECT_APPEND:
+            {
+                out.append(L" ");
+                if (wcscmp(last, L"2") == 0)
+                {
+                    out.append(L"^^");
+                }
+                else
+                {
+                    if (wcscmp(last, L"1") != 0)
+                        out.append(last);
+                    out.append(L">> ");
+                }
+                break;
+            }
+
+            case TOK_REDIRECT_IN:
+            {
+                out.append(L" ");
+                if (wcscmp(last, L"0") != 0)
+                    out.append(last);
+                out.append(L"< ");
+                break;
+            }
+
+            case TOK_REDIRECT_FD:
+            {
+                out.append(L" ");
+                if (wcscmp(last, L"1") != 0)
+                    out.append(last);
+                out.append(L">& ");
+                break;
+            }
+
+            case TOK_BACKGROUND:
+            {
+                out.append(L"&\n");
+                do_indent = 1;
+                is_command = 1;
+                break;
+            }
+
+            case TOK_COMMENT:
+            {
+                if (do_indent && flags)
                 {
                     insert_tabs(out, indent);
                 }
 
                 append_format(out, L"%ls", last);
-
-                indent = next_indent;
-
+                do_indent = 1;
+                break;
             }
-            else
+
+            default:
             {
-                if (prev_type != TOK_REDIRECT_FD)
-                    out.append(L" ");
-                out.append(last);
+                debug(0, L"Unknown token '%ls'", last);
+                exit(1);
             }
-
-            break;
-        }
-
-        case TOK_END:
-        {
-            if (prev_type != TOK_END || prev_prev_type != TOK_END)
-                out.append(L"\n");
-            do_indent = 1;
-            is_command = 1;
-            break;
-        }
-
-        case TOK_PIPE:
-        {
-            out.append(L" ");
-            if (last[0] == '2' && !last[1])
-            {
-                out.append(L"^");
-            }
-            else if (last[0] != '1' || last[1])
-            {
-                out.append(last);
-                out.append(L">");
-            }
-            out.append(L" | ");
-            is_command = 1;
-            break;
-        }
-
-        case TOK_REDIRECT_OUT:
-        {
-            out.append(L" ");
-            if (wcscmp(last, L"2") == 0)
-            {
-                out.append(L"^");
-            }
-            else
-            {
-                if (wcscmp(last, L"1") != 0)
-                    out.append(last);
-                out.append(L"> ");
-            }
-            break;
-        }
-
-        case TOK_REDIRECT_APPEND:
-        {
-            out.append(L" ");
-            if (wcscmp(last, L"2") == 0)
-            {
-                out.append(L"^^");
-            }
-            else
-            {
-                if (wcscmp(last, L"1") != 0)
-                    out.append(last);
-                out.append(L">> ");
-            }
-            break;
-        }
-
-        case TOK_REDIRECT_IN:
-        {
-            out.append(L" ");
-            if (wcscmp(last, L"0") != 0)
-                out.append(last);
-            out.append(L"< ");
-            break;
-        }
-
-        case TOK_REDIRECT_FD:
-        {
-            out.append(L" ");
-            if (wcscmp(last, L"1") != 0)
-                out.append(last);
-            out.append(L">& ");
-            break;
-        }
-
-        case TOK_BACKGROUND:
-        {
-            out.append(L"&\n");
-            do_indent = 1;
-            is_command = 1;
-            break;
-        }
-
-        case TOK_COMMENT:
-        {
-            if (do_indent && flags)
-            {
-                insert_tabs(out, indent);
-            }
-
-            append_format(out, L"%ls", last);
-            do_indent = 1;
-            break;
-        }
-
-        default:
-        {
-            debug(0, L"Unknown token '%ls'", last);
-            exit(1);
-        }
         }
 
         prev_prev_type = prev_type;
@@ -331,38 +331,38 @@ int main(int argc, char **argv)
 
         switch (opt)
         {
-        case 0:
-        {
-            break;
-        }
+            case 0:
+            {
+                break;
+            }
 
-        case 'h':
-        {
-            print_help("fish_indent", 1);
-            exit(0);
-            break;
-        }
+            case 'h':
+            {
+                print_help("fish_indent", 1);
+                exit(0);
+                break;
+            }
 
-        case 'v':
-        {
-            fwprintf(stderr,
-                     _(L"%ls, version %s\n"),
-                     program_name,
-                     PACKAGE_VERSION);
-            exit(0);
-        }
+            case 'v':
+            {
+                fwprintf(stderr,
+                         _(L"%ls, version %s\n"),
+                         program_name,
+                         PACKAGE_VERSION);
+                exit(0);
+            }
 
-        case 'i':
-        {
-            do_indent = 0;
-            break;
-        }
+            case 'i':
+            {
+                do_indent = 0;
+                break;
+            }
 
 
-        case '?':
-        {
-            exit(1);
-        }
+            case '?':
+            {
+                exit(1);
+            }
 
         }
     }

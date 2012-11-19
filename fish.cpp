@@ -306,81 +306,81 @@ static int fish_parse_opt(int argc, char **argv, const char **cmd_ptr)
 
         switch (opt)
         {
-        case 0:
-        {
-            break;
-        }
-
-        case 'c':
-        {
-            *cmd_ptr = optarg;
-            is_interactive_session = 0;
-            break;
-        }
-
-        case 'd':
-        {
-            char *end;
-            long tmp;
-
-            errno = 0;
-            tmp = strtol(optarg, &end, 10);
-
-            if (tmp >= 0 && tmp <=10 && !*end && !errno)
+            case 0:
             {
-                debug_level = (int)tmp;
+                break;
             }
-            else
+
+            case 'c':
             {
-                debug(0, _(L"Invalid value '%s' for debug level switch"), optarg);
+                *cmd_ptr = optarg;
+                is_interactive_session = 0;
+                break;
+            }
+
+            case 'd':
+            {
+                char *end;
+                long tmp;
+
+                errno = 0;
+                tmp = strtol(optarg, &end, 10);
+
+                if (tmp >= 0 && tmp <=10 && !*end && !errno)
+                {
+                    debug_level = (int)tmp;
+                }
+                else
+                {
+                    debug(0, _(L"Invalid value '%s' for debug level switch"), optarg);
+                    exit_without_destructors(1);
+                }
+                break;
+            }
+
+            case 'h':
+            {
+                *cmd_ptr = "__fish_print_help fish";
+                break;
+            }
+
+            case 'i':
+            {
+                force_interactive = 1;
+                break;
+            }
+
+            case 'l':
+            {
+                is_login=1;
+                break;
+            }
+
+            case 'n':
+            {
+                no_exec=1;
+                break;
+            }
+
+            case 'p':
+            {
+                profile = optarg;
+                break;
+            }
+
+            case 'v':
+            {
+                fwprintf(stderr,
+                         _(L"%s, version %s\n"),
+                         PACKAGE_NAME,
+                         PACKAGE_VERSION);
+                exit_without_destructors(0);
+            }
+
+            case '?':
+            {
                 exit_without_destructors(1);
             }
-            break;
-        }
-
-        case 'h':
-        {
-            *cmd_ptr = "__fish_print_help fish";
-            break;
-        }
-
-        case 'i':
-        {
-            force_interactive = 1;
-            break;
-        }
-
-        case 'l':
-        {
-            is_login=1;
-            break;
-        }
-
-        case 'n':
-        {
-            no_exec=1;
-            break;
-        }
-
-        case 'p':
-        {
-            profile = optarg;
-            break;
-        }
-
-        case 'v':
-        {
-            fwprintf(stderr,
-                     _(L"%s, version %s\n"),
-                     PACKAGE_NAME,
-                     PACKAGE_VERSION);
-            exit_without_destructors(0);
-        }
-
-        case '?':
-        {
-            exit_without_destructors(1);
-        }
 
         }
     }

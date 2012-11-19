@@ -203,338 +203,338 @@ static int vgwprintf(void (*writer)(wchar_t),
 
                 switch (*filter)
                 {
-                case L'l':
-                    /* Long variable */
-                    is_long++;
-                    filter++;
-                    break;
+                    case L'l':
+                        /* Long variable */
+                        is_long++;
+                        filter++;
+                        break;
 
-                case L'*':
-                    /* Set minimum field width */
-                    width = va_arg(va, int);
-                    filter++;
-                    break;
+                    case L'*':
+                        /* Set minimum field width */
+                        width = va_arg(va, int);
+                        filter++;
+                        break;
 
-                case L'-':
-                    filter++;
-                    pad_left=0;
-                    break;
+                    case L'-':
+                        filter++;
+                        pad_left=0;
+                        break;
 
-                case L'.':
-                    /*
-                       Set precision.
-                    */
-                    filter++;
-                    if (*filter == L'*')
-                    {
-                        precision = va_arg(va, int);
-                    }
-                    else
-                    {
-                        precision=0;
-                        while ((*filter >= L'0') && (*filter <= L'9'))
+                    case L'.':
+                        /*
+                           Set precision.
+                        */
+                        filter++;
+                        if (*filter == L'*')
                         {
-                            precision=10*precision+(*filter++ - L'0');
+                            precision = va_arg(va, int);
                         }
-                    }
-                    break;
+                        else
+                        {
+                            precision=0;
+                            while ((*filter >= L'0') && (*filter <= L'9'))
+                            {
+                                precision=10*precision+(*filter++ - L'0');
+                            }
+                        }
+                        break;
 
-                default:
-                    loop=0;
-                    break;
+                    default:
+                        loop=0;
+                        break;
                 }
             }
 
             switch (*filter)
             {
-            case L'c':
-            {
-                wchar_t c;
-
-                if ((width >= 0) && pad_left)
+                case L'c':
                 {
-                    pad(writer, width-1);
-                    count += maxi(width-1, 0);
-                }
+                    wchar_t c;
 
-                c = is_long?va_arg(va, wint_t):btowc(va_arg(va, int));
-                if (precision != 0)
-                    writer(c);
-
-
-                if ((width >= 0) && !pad_left)
-                {
-                    pad(writer, width-1);
-                    count += maxi(width-1, 0);
-                }
-
-                count++;
-
-                break;
-            }
-            case L's':
-            {
-
-                wchar_t *ss=0;
-                if (is_long)
-                {
-                    ss = va_arg(va, wchar_t *);
-                }
-                else
-                {
-                    char *ns = va_arg(va, char*);
-
-                    if (ns)
+                    if ((width >= 0) && pad_left)
                     {
-                        ss = str2wcs(ns);
+                        pad(writer, width-1);
+                        count += maxi(width-1, 0);
                     }
-                }
 
-                if (!ss)
-                {
-                    return -1;
-                }
+                    c = is_long?va_arg(va, wint_t):btowc(va_arg(va, int));
+                    if (precision != 0)
+                        writer(c);
 
-                if ((width >= 0) && pad_left)
-                {
-                    pad(writer, width-wcslen(ss));
-                    count += maxi(width-wcslen(ss), 0);
-                }
 
-                wchar_t *s=ss;
-                int precount = count;
+                    if ((width >= 0) && !pad_left)
+                    {
+                        pad(writer, width-1);
+                        count += maxi(width-1, 0);
+                    }
 
-                while (*s)
-                {
-                    if ((precision > 0) && (precision <= (count-precount)))
-                        break;
-
-                    writer(*(s++));
                     count++;
-                }
 
-                if ((width >= 0) && !pad_left)
-                {
-                    pad(writer, width-wcslen(ss));
-                    count += maxi(width-wcslen(ss), 0);
-                }
-
-                if (!is_long)
-                    free(ss);
-
-                break;
-            }
-
-            case L'd':
-            case L'i':
-            case L'o':
-            case L'u':
-            case L'x':
-            case L'X':
-            {
-                char str[33];
-                char *pos;
-                char format[16];
-                int len;
-
-                format[0]=0;
-                strcat(format, "%");
-                if (precision >= 0)
-                    strcat(format, ".*");
-                switch (is_long)
-                {
-                case 2:
-                    strcat(format, "ll");
-                    break;
-                case 1:
-                    strcat(format, "l");
                     break;
                 }
-
-                len = strlen(format);
-                format[len++]=(char)*filter;
-                format[len]=0;
-
-                switch (*filter)
-                {
-                case L'd':
-                case L'i':
+                case L's':
                 {
 
-                    switch (is_long)
+                    wchar_t *ss=0;
+                    if (is_long)
                     {
-                    case 0:
+                        ss = va_arg(va, wchar_t *);
+                    }
+                    else
                     {
-                        int d = va_arg(va, int);
-                        if (precision >= 0)
-                            snprintf(str, 32, format, precision, d);
-                        else
-                            snprintf(str, 32, format, d);
+                        char *ns = va_arg(va, char*);
 
-                        break;
+                        if (ns)
+                        {
+                            ss = str2wcs(ns);
+                        }
                     }
 
-                    case 1:
+                    if (!ss)
                     {
-                        long d = va_arg(va, long);
-                        if (precision >= 0)
-                            snprintf(str, 32, format, precision, d);
-                        else
-                            snprintf(str, 32, format, d);
-                        break;
-                    }
-
-                    case 2:
-                    {
-                        long long d = va_arg(va, long long);
-                        if (precision >= 0)
-                            snprintf(str, 32, format, precision, d);
-                        else
-                            snprintf(str, 32, format, d);
-                        break;
-                    }
-
-                    default:
-                        debug(0, L"Invalid length modifier in string %ls\n", filter_org);
                         return -1;
                     }
-                    break;
 
+                    if ((width >= 0) && pad_left)
+                    {
+                        pad(writer, width-wcslen(ss));
+                        count += maxi(width-wcslen(ss), 0);
+                    }
+
+                    wchar_t *s=ss;
+                    int precount = count;
+
+                    while (*s)
+                    {
+                        if ((precision > 0) && (precision <= (count-precount)))
+                            break;
+
+                        writer(*(s++));
+                        count++;
+                    }
+
+                    if ((width >= 0) && !pad_left)
+                    {
+                        pad(writer, width-wcslen(ss));
+                        count += maxi(width-wcslen(ss), 0);
+                    }
+
+                    if (!is_long)
+                        free(ss);
+
+                    break;
                 }
 
-                case L'u':
+                case L'd':
+                case L'i':
                 case L'o':
+                case L'u':
                 case L'x':
                 case L'X':
                 {
+                    char str[33];
+                    char *pos;
+                    char format[16];
+                    int len;
 
+                    format[0]=0;
+                    strcat(format, "%");
+                    if (precision >= 0)
+                        strcat(format, ".*");
                     switch (is_long)
                     {
-                    case 0:
-                    {
-                        unsigned d = va_arg(va, unsigned);
-                        if (precision >= 0)
-                            snprintf(str, 32, format, precision, d);
-                        else
-                            snprintf(str, 32, format, d);
-                        break;
+                        case 2:
+                            strcat(format, "ll");
+                            break;
+                        case 1:
+                            strcat(format, "l");
+                            break;
                     }
 
-                    case 1:
+                    len = strlen(format);
+                    format[len++]=(char)*filter;
+                    format[len]=0;
+
+                    switch (*filter)
                     {
-                        unsigned long d = va_arg(va, unsigned long);
-                        if (precision >= 0)
-                            snprintf(str, 32, format, precision, d);
-                        else
-                            snprintf(str, 32, format, d);
-                        break;
+                        case L'd':
+                        case L'i':
+                        {
+
+                            switch (is_long)
+                            {
+                                case 0:
+                                {
+                                    int d = va_arg(va, int);
+                                    if (precision >= 0)
+                                        snprintf(str, 32, format, precision, d);
+                                    else
+                                        snprintf(str, 32, format, d);
+
+                                    break;
+                                }
+
+                                case 1:
+                                {
+                                    long d = va_arg(va, long);
+                                    if (precision >= 0)
+                                        snprintf(str, 32, format, precision, d);
+                                    else
+                                        snprintf(str, 32, format, d);
+                                    break;
+                                }
+
+                                case 2:
+                                {
+                                    long long d = va_arg(va, long long);
+                                    if (precision >= 0)
+                                        snprintf(str, 32, format, precision, d);
+                                    else
+                                        snprintf(str, 32, format, d);
+                                    break;
+                                }
+
+                                default:
+                                    debug(0, L"Invalid length modifier in string %ls\n", filter_org);
+                                    return -1;
+                            }
+                            break;
+
+                        }
+
+                        case L'u':
+                        case L'o':
+                        case L'x':
+                        case L'X':
+                        {
+
+                            switch (is_long)
+                            {
+                                case 0:
+                                {
+                                    unsigned d = va_arg(va, unsigned);
+                                    if (precision >= 0)
+                                        snprintf(str, 32, format, precision, d);
+                                    else
+                                        snprintf(str, 32, format, d);
+                                    break;
+                                }
+
+                                case 1:
+                                {
+                                    unsigned long d = va_arg(va, unsigned long);
+                                    if (precision >= 0)
+                                        snprintf(str, 32, format, precision, d);
+                                    else
+                                        snprintf(str, 32, format, d);
+                                    break;
+                                }
+
+                                case 2:
+                                {
+                                    unsigned long long d = va_arg(va, unsigned long long);
+                                    if (precision >= 0)
+                                        snprintf(str, 32, format, precision, d);
+                                    else
+                                        snprintf(str, 32, format, d);
+                                    break;
+                                }
+
+                                default:
+                                    debug(0, L"Invalid length modifier in string %ls\n", filter_org);
+                                    return -1;
+                            }
+                            break;
+
+                        }
+
+                        default:
+                            debug(0, L"Invalid filter %ls in string %ls\n", *filter, filter_org);
+                            return -1;
+
                     }
 
-                    case 2:
+                    if ((width >= 0) && pad_left)
                     {
-                        unsigned long long d = va_arg(va, unsigned long long);
-                        if (precision >= 0)
-                            snprintf(str, 32, format, precision, d);
-                        else
-                            snprintf(str, 32, format, d);
-                        break;
+                        int l = maxi(width-strlen(str), 0);
+                        pad(writer, l);
+                        count += l;
                     }
 
-                    default:
-                        debug(0, L"Invalid length modifier in string %ls\n", filter_org);
-                        return -1;
+                    pos = str;
+
+                    while (*pos)
+                    {
+                        writer(*(pos++));
+                        count++;
                     }
+
+                    if ((width >= 0) && !pad_left)
+                    {
+                        int l = maxi(width-strlen(str), 0);
+                        pad(writer, l);
+                        count += l;
+                    }
+
                     break;
-
                 }
 
+                case L'f':
+                {
+                    char str[32];
+                    char *pos;
+                    double val = va_arg(va, double);
+
+                    if (precision>= 0)
+                    {
+                        if (width>= 0)
+                        {
+                            snprintf(str, 32, "%*.*f", width, precision, val);
+                        }
+                        else
+                        {
+                            snprintf(str, 32, "%.*f", precision, val);
+                        }
+                    }
+                    else
+                    {
+                        if (width>= 0)
+                        {
+                            snprintf(str, 32, "%*f", width, val);
+                        }
+                        else
+                        {
+                            snprintf(str, 32, "%f", val);
+                        }
+                    }
+
+                    pos = str;
+
+                    while (*pos)
+                    {
+                        writer(*(pos++));
+                        count++;
+                    }
+
+                    break;
+                }
+
+                case L'n':
+                {
+                    int *n = va_arg(va, int *);
+
+                    *n = count;
+                    break;
+                }
+                case L'%':
+                {
+                    writer('%');
+                    count++;
+                    break;
+                }
                 default:
-                    debug(0, L"Invalid filter %ls in string %ls\n", *filter, filter_org);
+                    debug(0, L"Unknown switch %lc in string %ls\n", *filter, filter_org);
                     return -1;
-
-                }
-
-                if ((width >= 0) && pad_left)
-                {
-                    int l = maxi(width-strlen(str), 0);
-                    pad(writer, l);
-                    count += l;
-                }
-
-                pos = str;
-
-                while (*pos)
-                {
-                    writer(*(pos++));
-                    count++;
-                }
-
-                if ((width >= 0) && !pad_left)
-                {
-                    int l = maxi(width-strlen(str), 0);
-                    pad(writer, l);
-                    count += l;
-                }
-
-                break;
-            }
-
-            case L'f':
-            {
-                char str[32];
-                char *pos;
-                double val = va_arg(va, double);
-
-                if (precision>= 0)
-                {
-                    if (width>= 0)
-                    {
-                        snprintf(str, 32, "%*.*f", width, precision, val);
-                    }
-                    else
-                    {
-                        snprintf(str, 32, "%.*f", precision, val);
-                    }
-                }
-                else
-                {
-                    if (width>= 0)
-                    {
-                        snprintf(str, 32, "%*f", width, val);
-                    }
-                    else
-                    {
-                        snprintf(str, 32, "%f", val);
-                    }
-                }
-
-                pos = str;
-
-                while (*pos)
-                {
-                    writer(*(pos++));
-                    count++;
-                }
-
-                break;
-            }
-
-            case L'n':
-            {
-                int *n = va_arg(va, int *);
-
-                *n = count;
-                break;
-            }
-            case L'%':
-            {
-                writer('%');
-                count++;
-                break;
-            }
-            default:
-                debug(0, L"Unknown switch %lc in string %ls\n", *filter, filter_org);
-                return -1;
             }
         }
         else
@@ -673,16 +673,16 @@ wint_t fgetwc(FILE *stream)
 
         switch (sz)
         {
-        case -1:
-            memset(&state, '\0', sizeof(state));
-            return WEOF;
+            case -1:
+                memset(&state, '\0', sizeof(state));
+                return WEOF;
 
-        case -2:
-            break;
-        case 0:
-            return 0;
-        default:
-            return res;
+            case -2:
+                break;
+            case 0:
+                return 0;
+            default:
+                return res;
         }
     }
 

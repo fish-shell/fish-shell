@@ -295,7 +295,9 @@ static void read_string(tokenizer *tok)
                     }
                     else
                     {
+                        /* Since we are about to increment tok->buff, decrement it first so the increment doesn't go past the end of the buffer. https://github.com/fish-shell/fish-shell/issues/389 */
                         do_loop = 0;
+                        tok->buff--;
                     }
 
 

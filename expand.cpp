@@ -1201,28 +1201,26 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
 */
 static int expand_brackets(parser_t &parser, const wcstring &instr, int flags, std::vector<completion_t> &out)
 {
-    const wchar_t *pos;
     bool syntax_error = false;
     int bracket_count=0;
 
-    const wchar_t *bracket_begin=0, *bracket_end=0;
-    const wchar_t *last_sep=0;
+    const wchar_t *bracket_begin = NULL, *bracket_end = NULL;
+    const wchar_t *last_sep = NULL;
 
     const wchar_t *item_begin;
-    size_t len1, len2, tot_len;
+    size_t length_preceding_brackets, length_following_brackets, tot_len;
 
     const wchar_t * const in = instr.c_str();
 
-    for (pos=in;
-            (*pos) && !syntax_error;
-            pos++)
+    /* Locate the first non-nested bracket pair */
+    for (const wchar_t *pos = in; (*pos) && !syntax_error; pos++)
     {
         switch (*pos)
         {
             case BRACKET_BEGIN:
             {
-                bracket_begin = pos;
-
+                if (bracket_count == 0)
+                    bracket_begin = pos;
                 bracket_count++;
                 break;
 
@@ -1230,16 +1228,16 @@ static int expand_brackets(parser_t &parser, const wcstring &instr, int flags, s
             case BRACKET_END:
             {
                 bracket_count--;
-                if (bracket_end < bracket_begin)
-                {
-                    bracket_end = pos;
-                }
-
                 if (bracket_count < 0)
                 {
                     syntax_error = true;
                 }
-                break;
+                else if (bracket_count == 0)
+                {
+                    bracket_end = pos;
+                    break;
+                }
+
             }
             case BRACKET_SEP:
             {
@@ -1257,6 +1255,7 @@ static int expand_brackets(parser_t &parser, const wcstring &instr, int flags, s
         }
         else
         {
+            /* The user hasn't typed an end bracket yet; make one up and append it, then expand that. */
             wcstring mod;
             if (last_sep)
             {
@@ -1282,17 +1281,17 @@ static int expand_brackets(parser_t &parser, const wcstring &instr, int flags, s
         return 0;
     }
 
-    if (bracket_begin == 0)
+    if (bracket_begin == NULL)
     {
-        append_completion(out, in);
+        append_completion(out, instr);
         return 1;
     }
 
-    len1 = (bracket_begin-in);
-    len2 = wcslen(bracket_end)-1;
-    tot_len = len1+len2;
+    length_preceding_brackets = (bracket_begin-in);
+    length_following_brackets = wcslen(bracket_end)-1;
+    tot_len = length_preceding_brackets+length_following_brackets;
     item_begin = bracket_begin+1;
-    for (pos=(bracket_begin+1); 1; pos++)
+    for (const wchar_t *pos =(bracket_begin+1); true; pos++)
     {
         if (bracket_count == 0)
         {
@@ -1303,7 +1302,7 @@ static int expand_brackets(parser_t &parser, const wcstring &instr, int flags, s
 
                 wcstring whole_item;
                 whole_item.reserve(tot_len + item_len + 2);
-                whole_item.append(in, len1);
+                whole_item.append(in, length_preceding_brackets);
                 whole_item.append(item_begin, item_len);
                 whole_item.append(bracket_end + 1);
                 expand_brackets(parser, whole_item, flags, out);

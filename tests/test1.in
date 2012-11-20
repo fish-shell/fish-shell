@@ -10,6 +10,11 @@ for i in 1 2 #Comment on same line as command
 	end;
 end
 
+# Bracket expansion
+echo x-{1}
+echo x-{1,2}
+echo foo-{1,2{3,4}}
+
 # Simple alias tests
 
 function foo

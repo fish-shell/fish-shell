@@ -592,11 +592,11 @@ install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config/sample_prompts
 	$(INSTALL) -m 644 etc/config.fish                  $(DESTDIR)$(sysconfdir)/fish/
 	$(INSTALL) -m 644 share/config.fish                $(DESTDIR)$(datadir)/fish/
-	for i in $(COMPLETIONS_DIR_FILES); do \
+	for i in $(COMPLETIONS_DIR_FILES:%='%'); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/completions/; \
 		true; \
 	done;
-	for i in $(FUNCTIONS_DIR_FILES); do \
+	for i in $(FUNCTIONS_DIR_FILES:%='%'); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/functions/; \
 		true; \
 	done;

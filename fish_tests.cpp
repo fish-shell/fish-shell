@@ -317,8 +317,6 @@ static void test_tok()
       This should crash if there is a bug. No reliable way to detect otherwise.
     */
     say(L"Test destruction of broken tokenizer");
-    tok_destroy(&t);
-
     {
 
         const wchar_t *str = L"string <redirection  2>&1 'nested \"quoted\" '(string containing subshells ){and,brackets}$as[$well (as variable arrays)] not_a_redirect^ ^ ^^is_a_redirect";

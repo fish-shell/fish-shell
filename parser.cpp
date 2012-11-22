@@ -597,8 +597,6 @@ static const wchar_t *parser_find_end(const wchar_t * buff)
         }
 
     }
-
-    tok_destroy(&tok);
     if (!count && !error)
     {
 
@@ -871,8 +869,6 @@ int parser_t::eval_args(const wchar_t *line, std::vector<completion_t> &args)
 
     if (show_errors)
         this->print_errors_stderr();
-
-    tok_destroy(&tok);
 
     current_tokenizer=previous_tokenizer;
     current_tokenizer_pos = previous_pos;
@@ -2234,8 +2230,6 @@ int parser_t::parse_job(process_t *p,
                         }
                     }
                 }
-
-                tok_destroy(&subtok);
             }
 
             if (make_sub_block)
@@ -2721,7 +2715,6 @@ int parser_t::eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type
 
     this->print_errors_stderr();
 
-    tok_destroy(current_tokenizer);
     delete current_tokenizer;
 
     while (forbidden_function.size() > forbid_count)
@@ -2959,8 +2952,6 @@ int parser_t::test_args(const  wchar_t * buff, wcstring *out, const wchar_t *pre
             }
         }
     }
-
-    tok_destroy(&tok);
 
     current_tokenizer = previous_tokenizer;
     current_tokenizer_pos = previous_pos;
@@ -3762,8 +3753,6 @@ int parser_t::test(const  wchar_t * buff,
     /*
       Cleanup
     */
-
-    tok_destroy(&tok);
 
     current_tokenizer=previous_tokenizer;
     current_tokenizer_pos = previous_pos;

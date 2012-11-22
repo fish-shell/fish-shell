@@ -257,8 +257,6 @@ static int indent(wcstring &out, const wcstring &in, int flags)
 
     }
 
-    tok_destroy(&tok);
-
     return res;
 }
 

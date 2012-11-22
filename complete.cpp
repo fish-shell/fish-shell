@@ -1893,8 +1893,6 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, complete_ty
 
         }
 
-        tok_destroy(&tok);
-
         /*
           Get the string to complete
         */

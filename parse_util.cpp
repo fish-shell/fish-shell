@@ -404,9 +404,6 @@ static void job_or_process_extent(const wchar_t *buff,
     }
 
     free(buffcpy);
-
-    tok_destroy(&tok);
-
 }
 
 void parse_util_process_extent(const wchar_t *buff,
@@ -516,8 +513,6 @@ void parse_util_token_extent(const wchar_t *buff,
     }
 
     free(buffcpy);
-
-    tok_destroy(&tok);
 
     if (tok_begin)
     {
@@ -720,8 +715,6 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
 
         prev_pos = tok_get_pos(&tok);
     }
-
-    tok_destroy(&tok);
 
     wchar_t *cmd_tmp = wcsdup(cmd.c_str());
     cmd_tmp[pos]=0;

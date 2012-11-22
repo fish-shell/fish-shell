@@ -785,7 +785,6 @@ static bool autosuggest_parse_command(const wcstring &str, wcstring *out_command
             }
         }
     }
-    tok_destroy(&tok);
 
     /* Remember our command if we have one */
     if (had_cmd)
@@ -1301,7 +1300,6 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
             }
         }
     }
-    tok_destroy(&tok);
 }
 
 

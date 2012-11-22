@@ -10,6 +10,7 @@
 #define FISH_TOKENIZER_H
 
 #include <wchar.h>
+#include "common.h"
 
 /**
    Token types
@@ -72,13 +73,12 @@ struct tokenizer_t
     const wchar_t *buff;
     /** A copy of the original string */
     const wchar_t *orig_buff;
-    /** A pointer to the last token*/
-    wchar_t *last;
+    /** The last token */
+    wcstring last_token;
 
     /** Type of last token*/
     int last_type;
-    /** Length of last token*/
-    size_t last_len;
+
     /** Offset of last token*/
     size_t last_pos;
     /** Whether there are more tokens*/
@@ -128,7 +128,7 @@ int tok_last_type(tokenizer_t *tok);
 /**
   Returns the last token string. The string should not be freed by the caller.
 */
-wchar_t *tok_last(tokenizer_t *tok);
+const wchar_t *tok_last(tokenizer_t *tok);
 
 /**
   Returns the type of quote from the last TOK_QSTRING

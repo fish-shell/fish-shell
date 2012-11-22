@@ -95,7 +95,7 @@ static int indent(wcstring &out, const wcstring &in, int flags)
     for (; tok_has_next(&tok); tok_next(&tok))
     {
         int type = tok_last_type(&tok);
-        wchar_t *last = tok_last(&tok);
+        const wchar_t *last = tok_last(&tok);
 
         switch (type)
         {

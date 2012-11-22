@@ -968,7 +968,7 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
                 {
 
                     /*Parameter */
-                    wchar_t *param = tok_last(&tok);
+                    const wchar_t *param = tok_last(&tok);
                     if (param[0] == L'-')
                     {
                         if (wcscmp(param, L"--") == 0)

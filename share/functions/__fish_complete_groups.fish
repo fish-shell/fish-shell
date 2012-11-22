@@ -1,4 +1,8 @@
 
 function __fish_complete_groups --description "Print a list of local groups, with group members as the description"
-	cat /etc/group | sed -e "s/^\([^:]*\):[^:]*:[^:]*:\(.*\)/\1\tMembers: \2/"
+	if test -x /usr/bin/getent
+		getent group | cut -d ':' -f 1,4 | sed 's/:/\t/'
+	else
+		cut -d ':' -f 1,4 /etc/group | sed 's/:/\t/'
+	end
 end

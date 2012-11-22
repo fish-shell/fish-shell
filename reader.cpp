@@ -1921,8 +1921,6 @@ static void handle_token_history(int forward, int reset)
                     }
                 }
             }
-
-            tok_destroy(&tok);
         }
 
         if (str)

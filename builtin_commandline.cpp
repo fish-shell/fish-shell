@@ -177,7 +177,6 @@ static void write_part(const wchar_t *begin,
         stdout_buffer.append(out);
 
         free(buff);
-        tok_destroy(&tok);
     }
     else
     {

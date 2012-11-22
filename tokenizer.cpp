@@ -110,11 +110,6 @@ tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig
     tok_next(this);
 }
 
-void tok_destroy(tokenizer_t *tok)
-{
-    CHECK(tok,);
-}
-
 int tok_last_type(tokenizer_t *tok)
 {
     CHECK(tok, TOK_ERROR);
@@ -664,7 +659,6 @@ wchar_t *tok_first(const wchar_t *str)
             break;
     }
 
-    tok_destroy(&t);
     return res;
 }
 
@@ -722,8 +716,6 @@ int main(int argc, char **argv)
                     break;
             }
         }
-        tok_destroy(&tok);
-
     }
 }
 

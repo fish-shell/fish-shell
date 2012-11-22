@@ -146,12 +146,6 @@ int tok_has_next(tokenizer_t *tok);
 int tok_get_pos(tokenizer_t *tok);
 
 /**
-   Destroy the tokenizer and free asociated memory
-*/
-void tok_destroy(tokenizer_t *tok);
-
-
-/**
    Returns the original string to tokenizer
  */
 const wchar_t *tok_string(tokenizer_t *tok);

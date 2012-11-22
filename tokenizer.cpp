@@ -255,14 +255,6 @@ static void read_string(tokenizer_t *tok)
                         tok->buff--;
                         do_loop = 0;
                     }
-
-
-                }
-                else if (*tok->buff == L'\n' && mode == mode_regular_text)
-                {
-                    tok->buff--;
-                    do_loop = 0;
-                    break;
                 }
 
                 tok->buff++;

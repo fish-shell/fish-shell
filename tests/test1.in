@@ -15,6 +15,15 @@ echo x-{1}
 echo x-{1,2}
 echo foo-{1,2{3,4}}
 
+# Escpaed newlines
+echo foo\ bar
+echo foo\
+bar
+echo "foo\
+bar"
+echo 'foo\
+bar'
+
 # Simple alias tests
 
 function foo

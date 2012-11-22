@@ -92,8 +92,9 @@ only backslash escape accepted within single quotes is \\', which
 escapes a single quote and \\\\, which escapes the backslash
 symbol. The only backslash escapes accepted within double quotes are
 \\", which escapes a double quote, \\$, which escapes a dollar
-character, and \\\\, which escapes the backslash symbol. Single quotes
-have no special meaning withing double quotes and vice versa.
+character, \\ followed by a newline, which deletes the backslash
+and the newline, and lastly \\\\, which escapes the backslash symbol.
+Single quotes have no special meaning withing double quotes and vice versa.
 
 Example:
 
@@ -1454,7 +1455,6 @@ g++, javac, java, gcj, lpr, doxygen, whois)
 - Descriptions for variables using 'set -d'.
 - Parse errors should when possible honor IO redirections
 - Support for writing strings like /u/l/b/foo and have them expand to /usr/local/bin/foo - perhaps through tab expansion
-- Right-side prompt
 - Selectable completions in the pager
 - Per process output redirection
 - Reduce the space of the pager by one line to allow the commandline to remain visible.
@@ -1484,8 +1484,6 @@ g++, javac, java, gcj, lpr, doxygen, whois)
 - There have been stray reports of issues with strange values of the PATH variable during startup.
 - bindings in config.fish are overwritten by default key bindings.
 - Adding 'bind -k ...' doesn't overwrite non-keybinding binds of the same sequence.
-- History file does not remove duplicates.
-- History file should apply some kind of maximum history length.
 - Older versions of Doxygen has bugs in the man-page generation which cause the builtin help to render incorrectly. Version 1.2.14 is known to have this problem.
 
 If you think you have found a bug not described here, please send a

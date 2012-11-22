@@ -5,6 +5,11 @@
 x-1
 x-1 x-2
 foo-1 foo-23 foo-24
+foo bar
+foobar
+foobar
+foo\
+bar
 Test 2 pass
 Test  pass
 Test 3 pass

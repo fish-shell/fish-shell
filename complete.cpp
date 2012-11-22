@@ -1810,7 +1810,6 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, complete_ty
         tokenizer_t tok(buff.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
         while (tok_has_next(&tok) && !end_loop)
         {
-
             switch (tok_last_type(&tok))
             {
 
@@ -1881,7 +1880,6 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, complete_ty
                     end_loop=1;
                     break;
                 }
-
             }
 
             if (tok_get_pos(&tok) >= (long)pos)

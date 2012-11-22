@@ -84,7 +84,6 @@ static void insert_tabs(wcstring &out, int indent)
  */
 static int indent(wcstring &out, const wcstring &in, int flags)
 {
-    tokenizer tok;
     int res=0;
     int is_command = 1;
     int indent = 0;
@@ -92,8 +91,7 @@ static int indent(wcstring &out, const wcstring &in, int flags)
     int prev_type = 0;
     int prev_prev_type = 0;
 
-    tok_init(&tok, in.c_str(), TOK_SHOW_COMMENTS);
-
+    tokenizer_t tok(in.c_str(), TOK_SHOW_COMMENTS);
     for (; tok_has_next(&tok); tok_next(&tok))
     {
         int type = tok_last_type(&tok);

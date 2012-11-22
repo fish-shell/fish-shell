@@ -295,7 +295,7 @@ struct profile_item_t
     wcstring cmd;
 };
 
-struct tokenizer;
+struct tokenizer_t;
 
 class parser_t
 {
@@ -316,7 +316,7 @@ private:
     wcstring err_buff;
 
     /** Pointer to the current tokenizer */
-    tokenizer *current_tokenizer;
+    tokenizer_t *current_tokenizer;
 
     /** String for representing the current line */
     wcstring lineinfo;
@@ -344,10 +344,10 @@ private:
     parser_t(const parser_t&);
     parser_t& operator=(const parser_t&);
 
-    void parse_job_argument_list(process_t *p, job_t *j, tokenizer *tok, std::vector<completion_t>&, bool);
-    int parse_job(process_t *p, job_t *j, tokenizer *tok);
+    void parse_job_argument_list(process_t *p, job_t *j, tokenizer_t *tok, std::vector<completion_t>&, bool);
+    int parse_job(process_t *p, job_t *j, tokenizer_t *tok);
     void skipped_exec(job_t * j);
-    void eval_job(tokenizer *tok);
+    void eval_job(tokenizer_t *tok);
     int parser_test_argument(const wchar_t *arg, wcstring *out, const wchar_t *prefix, int offset);
     void print_errors(wcstring &target, const wchar_t *prefix);
     void print_errors_stderr();

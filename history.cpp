@@ -1415,10 +1415,8 @@ void history_t::add_with_file_detection(const wcstring &str)
     ASSERT_IS_MAIN_THREAD();
     path_list_t potential_paths;
 
-    tokenizer tokenizer;
-    for (tok_init(&tokenizer, str.c_str(), TOK_SQUASH_ERRORS);
-            tok_has_next(&tokenizer);
-            tok_next(&tokenizer))
+    tokenizer_t tokenizer(str.c_str(), TOK_SQUASH_ERRORS);
+    for (; tok_has_next(&tokenizer); tok_next(&tokenizer))
     {
         int type = tok_last_type(&tokenizer);
         if (type == TOK_STRING)

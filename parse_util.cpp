@@ -326,8 +326,6 @@ static void job_or_process_extent(const wchar_t *buff,
     wchar_t *buffcpy;
     int finished=0;
 
-    tokenizer tok;
-
     CHECK(buff,);
 
     if (a)
@@ -365,9 +363,8 @@ static void job_or_process_extent(const wchar_t *buff,
         DIE_MEM();
     }
 
-    for (tok_init(&tok, buffcpy, TOK_ACCEPT_UNFINISHED);
-            tok_has_next(&tok) && !finished;
-            tok_next(&tok))
+    tokenizer_t tok(buffcpy, TOK_ACCEPT_UNFINISHED);
+    for (; tok_has_next(&tok) && !finished; tok_next(&tok))
     {
         int tok_begin = tok_get_pos(&tok);
 
@@ -440,8 +437,6 @@ void parse_util_token_extent(const wchar_t *buff,
     long pos;
     wchar_t *buffcpy;
 
-    tokenizer tok;
-
     const wchar_t *a = NULL, *b = NULL, *pa = NULL, *pb = NULL;
 
     CHECK(buff,);
@@ -474,9 +469,8 @@ void parse_util_token_extent(const wchar_t *buff,
         DIE_MEM();
     }
 
-    for (tok_init(&tok, buffcpy, TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
-            tok_has_next(&tok);
-            tok_next(&tok))
+    tokenizer_t tok(buffcpy, TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
+    for (; tok_has_next(&tok); tok_next(&tok))
     {
         size_t tok_begin = tok_get_pos(&tok);
         size_t tok_end = tok_begin;
@@ -711,9 +705,7 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
     wchar_t last_quote = '\0';
     int unfinished;
 
-    tokenizer tok;
-    tok_init(&tok, cmd.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
-
+    tokenizer_t tok(cmd.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
     for (; tok_has_next(&tok); tok_next(&tok))
     {
         if (tok_get_pos(&tok) > pos)

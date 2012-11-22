@@ -1821,7 +1821,6 @@ static void handle_token_history(int forward, int reset)
 
     const wchar_t *str=0;
     long current_pos;
-    tokenizer tok;
 
     if (reset)
     {
@@ -1895,10 +1894,8 @@ static void handle_token_history(int forward, int reset)
         {
 
             //debug( 3, L"new '%ls'", data->token_history_buff.c_str() );
-
-            for (tok_init(&tok, data->token_history_buff.c_str(), TOK_ACCEPT_UNFINISHED);
-                    tok_has_next(&tok);
-                    tok_next(&tok))
+            tokenizer_t tok(data->token_history_buff.c_str(), TOK_ACCEPT_UNFINISHED);
+            for (; tok_has_next(&tok); tok_next(&tok))
             {
                 switch (tok_last_type(&tok))
                 {

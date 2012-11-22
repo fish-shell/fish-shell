@@ -289,13 +289,12 @@ static void test_convert()
 */
 static void test_tok()
 {
-    tokenizer t;
 
     say(L"Testing tokenizer");
 
 
     say(L"Testing invalid input");
-    tok_init(&t, 0, 0);
+    tokenizer_t t(NULL, 0);
 
     if (tok_last_type(&t) != TOK_ERROR)
     {
@@ -326,14 +325,12 @@ static void test_tok()
         const int types[] =
         {
             TOK_STRING, TOK_REDIRECT_IN, TOK_STRING, TOK_REDIRECT_FD, TOK_STRING, TOK_STRING, TOK_STRING, TOK_REDIRECT_OUT, TOK_REDIRECT_APPEND, TOK_STRING, TOK_END
-        }
-        ;
-        size_t i;
+        };
 
         say(L"Test correct tokenization");
-
-        for (i=0, tok_init(&t, str, 0); i<(sizeof(types)/sizeof(int)); i++,tok_next(&t))
-        {
+        
+        tokenizer_t t(str, 0);
+        for (size_t i=0; i < sizeof types / sizeof *types; i++, tok_next(&t)) {
             if (types[i] != tok_last_type(&t))
             {
                 err(L"Tokenization error:");

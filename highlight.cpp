@@ -691,8 +691,8 @@ static bool autosuggest_parse_command(const wcstring &str, wcstring *out_command
     int arg_pos = -1;
 
     bool had_cmd = false;
-    tokenizer tok;
-    for (tok_init(&tok, str.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS); tok_has_next(&tok); tok_next(&tok))
+    tokenizer_t tok(str.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
+    for (; tok_has_next(&tok); tok_next(&tok))
     {
         int last_type = tok_last_type(&tok);
 
@@ -955,10 +955,8 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
 
     std::fill(color.begin(), color.end(), -1);
 
-    tokenizer tok;
-    for (tok_init(&tok, buff, TOK_SHOW_COMMENTS | TOK_SQUASH_ERRORS);
-            tok_has_next(&tok);
-            tok_next(&tok))
+    tokenizer_t tok(buff, TOK_SHOW_COMMENTS | TOK_SQUASH_ERRORS);
+    for (; tok_has_next(&tok); tok_next(&tok))
     {
         int last_type = tok_last_type(&tok);
 

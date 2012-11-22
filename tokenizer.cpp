@@ -52,11 +52,6 @@ segments.
 #define SEP L" \n|\t;#\r<>^&"
 
 /**
-   Maximum length of a string containing a file descriptor number
-*/
-#define FD_STR_MAX_LEN 16
-
-/**
    Descriptions of all tokenizer errors
 */
 static const wchar_t *tok_desc[] =
@@ -74,31 +69,7 @@ static const wchar_t *tok_desc[] =
     N_(L"Redirect output to file if file does not exist"),
     N_(L"Run job in background"),
     N_(L"Comment")
-}
-;
-
-/**
-   Tests if the tokenizer buffer is large enough to hold contents of
-   the specified length, and if not, reallocates the tokenizer buffer.
-
-   \return 0 if the system could not provide the memory needed, and 1 otherwise.
-*/
-static int check_size(tokenizer_t *tok, size_t len)
-{
-    if (tok->last_len <= len)
-    {
-        wchar_t *tmp;
-        tok->last_len = len +1;
-        tmp = (wchar_t *)realloc(tok->last, sizeof(wchar_t)*tok->last_len);
-        if (tmp == 0)
-        {
-            wperror(L"realloc");
-            return 0;
-        }
-        tok->last = tmp;
-    }
-    return 1;
-}
+};
 
 /**
    Set the latest tokens string to be the specified error message
@@ -107,14 +78,7 @@ static void tok_call_error(tokenizer_t *tok, int error_type, const wchar_t *erro
 {
     tok->last_type = TOK_ERROR;
     tok->error = error_type;
-    if (!check_size(tok, wcslen(error_message)+1))
-    {
-        if (tok->last != 0)
-            *tok->last=0;
-        return;
-    }
-
-    wcscpy(tok->last, error_message);
+    tok->last_token = error_message;
 }
 
 int tok_get_error(tokenizer_t *tok)
@@ -123,7 +87,7 @@ int tok_get_error(tokenizer_t *tok)
 }
 
 
-tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig_buff(NULL), last(NULL), last_type(0), last_len(0), last_pos(0), has_next(false), accept_unfinished(false), show_comments(false), last_quote(0), error(0), squash_errors(false), cached_lineno_offset(0), cached_lineno_count(0)
+tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig_buff(NULL), last_type(0), last_pos(0), has_next(false), accept_unfinished(false), show_comments(false), last_quote(0), error(0), squash_errors(false), cached_lineno_offset(0), cached_lineno_count(0)
 {
 
     /* We can only generate error messages on the main thread due to wgettext() thread safety issues. */
@@ -149,8 +113,6 @@ tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig
 void tok_destroy(tokenizer_t *tok)
 {
     CHECK(tok,);
-
-    free(tok->last);
 }
 
 int tok_last_type(tokenizer_t *tok)
@@ -161,11 +123,11 @@ int tok_last_type(tokenizer_t *tok)
     return tok->last_type;
 }
 
-wchar_t *tok_last(tokenizer_t *tok)
+const wchar_t *tok_last(tokenizer_t *tok)
 {
     CHECK(tok, 0);
 
-    return tok->last;
+    return tok->last_token.c_str();
 }
 
 int tok_has_next(tokenizer_t *tok)
@@ -447,11 +409,7 @@ static void read_string(tokenizer_t *tok)
 
     len = tok->buff - start;
 
-    if (!check_size(tok, len))
-        return;
-
-    memcpy(tok->last, start, sizeof(wchar_t)*len);
-    tok->last[len] = L'\0';
+    tok->last_token.assign(start, len);
     tok->last_type = TOK_STRING;
 }
 
@@ -465,13 +423,10 @@ static void read_comment(tokenizer_t *tok)
     start = tok->buff;
     while (*(tok->buff)!= L'\n' && *(tok->buff)!= L'\0')
         tok->buff++;
+    
 
     size_t len = tok->buff - start;
-    if (!check_size(tok, len))
-        return;
-
-    memcpy(tok->last, start, sizeof(wchar_t)*len);
-    tok->last[len] = L'\0';
+    tok->last_token.assign(start, len);
     tok->last_type = TOK_COMMENT;
 }
 
@@ -503,9 +458,8 @@ static void read_redirect(tokenizer_t *tok, int fd)
                 TOK_CALL_ERROR(tok, TOK_OTHER, PIPE_ERROR);
                 return;
             }
-            check_size(tok, FD_STR_MAX_LEN);
             tok->buff++;
-            swprintf(tok->last, FD_STR_MAX_LEN, L"%d", fd);
+            tok->last_token = to_string<int>(fd);
             tok->last_type = TOK_PIPE;
             return;
         }
@@ -520,12 +474,7 @@ static void read_redirect(tokenizer_t *tok, int fd)
         TOK_CALL_ERROR(tok, TOK_OTHER, REDIRECT_ERROR);
     }
 
-    if (!check_size(tok, 2))
-    {
-        return;
-    }
-
-    swprintf(tok->last, tok->last_len, L"%d", fd);
+    tok->last_token = to_string(fd);
 
     if (*tok->buff == L'&')
     {
@@ -652,10 +601,7 @@ void tok_next(tokenizer_t *tok)
             break;
 
         case L'|':
-            check_size(tok, 2);
-
-            tok->last[0]=L'1';
-            tok->last[1]=L'\0';
+            tok->last_token = L"1";
             tok->last_type = TOK_PIPE;
             tok->buff++;
             break;

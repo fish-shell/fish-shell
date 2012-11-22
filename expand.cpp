@@ -517,12 +517,7 @@ bool process_iterator_t::next_process(wcstring *out_str, pid_t *out_pid)
             signal_unblock();
 
             /* The command line needs to be escaped */
-            wchar_t *first_arg = tok_first(full_command_line.c_str());
-            if (first_arg)
-            {
-                cmd = first_arg;
-                free(first_arg);
-            }
+            cmd = tok_first(full_command_line.c_str());
         }
 #ifdef SunOS
         else if ((cmdfile=wfopen(path + L"/psinfo", "r")))

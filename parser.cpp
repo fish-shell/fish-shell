@@ -525,7 +525,6 @@ static int parser_is_pipe_forbidden(const wcstring &word)
 */
 static const wchar_t *parser_find_end(const wchar_t * buff)
 {
-    tokenizer tok;
     int had_cmd=0;
     int count = 0;
     int error=0;
@@ -533,9 +532,8 @@ static const wchar_t *parser_find_end(const wchar_t * buff)
 
     CHECK(buff, 0);
 
-    for (tok_init(&tok, buff, 0);
-            tok_has_next(&tok) && !error;
-            tok_next(&tok))
+    tokenizer_t tok(buff, 0);
+    for (; tok_has_next(&tok) && !error; tok_next(&tok))
     {
         int last_type = tok_last_type(&tok);
         switch (last_type)
@@ -796,7 +794,6 @@ void parser_t::print_errors_stderr()
 
 int parser_t::eval_args(const wchar_t *line, std::vector<completion_t> &args)
 {
-    tokenizer tok;
 
     expand_flags_t eflags = 0;
     if (! show_errors)
@@ -808,8 +805,8 @@ int parser_t::eval_args(const wchar_t *line, std::vector<completion_t> &args)
       eval_args may be called while evaulating another command, so we
       save the previous tokenizer and restore it on exit
     */
-    tokenizer *previous_tokenizer=current_tokenizer;
-    int previous_pos=current_tokenizer_pos;
+    tokenizer_t * const previous_tokenizer = current_tokenizer;
+    const int previous_pos = current_tokenizer_pos;
     int do_loop=1;
 
     CHECK(line, 1);
@@ -819,10 +816,10 @@ int parser_t::eval_args(const wchar_t *line, std::vector<completion_t> &args)
     if (this->parser_type == PARSER_TYPE_GENERAL)
         proc_push_interactive(0);
 
+    tokenizer_t tok(line, (show_errors ? 0 : TOK_SQUASH_ERRORS));
     current_tokenizer = &tok;
     current_tokenizer_pos = 0;
 
-    tok_init(&tok, line, (show_errors ? 0 : TOK_SQUASH_ERRORS));
     error_code=0;
 
     for (; do_loop && tok_has_next(&tok) ; tok_next(&tok))
@@ -1319,7 +1316,7 @@ job_t *parser_t::job_get_from_pid(int pid)
 */
 void parser_t::parse_job_argument_list(process_t *p,
                                        job_t *j,
-                                       tokenizer *tok,
+                                       tokenizer_t *tok,
                                        std::vector<completion_t> &args,
                                        bool unskip)
 {
@@ -1718,7 +1715,7 @@ f
 */
 int parser_t::parse_job(process_t *p,
                         job_t *j,
-                        tokenizer *tok)
+                        tokenizer_t *tok)
 {
     std::vector<completion_t> args; // The list that will become the argc array for the program
     int use_function = 1;   // May functions be considered when checking what action this command represents
@@ -2185,7 +2182,6 @@ int parser_t::parse_job(process_t *p,
 
         const wchar_t *end=parser_find_end(tok_string(tok) +
                                            current_tokenizer_pos);
-        tokenizer subtok;
         int make_sub_block = j->first_process != p;
 
         if (!end)
@@ -2202,9 +2198,8 @@ int parser_t::parse_job(process_t *p,
             {
                 int done=0;
 
-                for (tok_init(&subtok, end, 0);
-                        !done && tok_has_next(&subtok);
-                        tok_next(&subtok))
+                tokenizer_t subtok(end, 0);
+                for (; ! done && tok_has_next(&subtok); tok_next(&subtok))
                 {
 
                     switch (tok_last_type(&subtok))
@@ -2388,7 +2383,7 @@ static bool job_should_skip_elseif(const job_t *job, const block_t *current_bloc
    \param tok The tokenizer to read tokens from
 */
 
-void parser_t::eval_job(tokenizer *tok)
+void parser_t::eval_job(tokenizer_t *tok)
 {
     ASSERT_IS_MAIN_THREAD();
     job_t *j;
@@ -2630,7 +2625,7 @@ int parser_t::eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type
     const wchar_t * const cmd = cmdStr.c_str();
     size_t forbid_count;
     int code;
-    tokenizer *previous_tokenizer=current_tokenizer;
+    tokenizer_t *previous_tokenizer=current_tokenizer;
     block_t *start_current_block = current_block;
 
     /* Record the current chain so we can put it back later */
@@ -2676,8 +2671,7 @@ int parser_t::eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type
 
     this->push_block(new scope_block_t(block_type));
 
-    current_tokenizer = new tokenizer;
-    tok_init(current_tokenizer, cmd, 0);
+    current_tokenizer = new tokenizer_t(cmd, 0);
 
     error_code = 0;
 
@@ -2907,19 +2901,17 @@ int parser_t::parser_test_argument(const wchar_t *arg, wcstring *out, const wcha
 
 int parser_t::test_args(const  wchar_t * buff, wcstring *out, const wchar_t *prefix)
 {
-    tokenizer tok;
-    tokenizer *previous_tokenizer = current_tokenizer;
-    int previous_pos = current_tokenizer_pos;
+    tokenizer_t *const previous_tokenizer = current_tokenizer;
+    const int previous_pos = current_tokenizer_pos;
     int do_loop = 1;
     int err = 0;
 
     CHECK(buff, 1);
 
-    current_tokenizer = &tok;
 
-    for (tok_init(&tok, buff, 0);
-            do_loop && tok_has_next(&tok);
-            tok_next(&tok))
+    tokenizer_t tok(buff, 0);
+    current_tokenizer = &tok;
+    for (; do_loop && tok_has_next(&tok); tok_next(&tok))
     {
         current_tokenizer_pos = tok_get_pos(&tok);
         switch (tok_last_type(&tok))
@@ -2970,7 +2962,7 @@ int parser_t::test_args(const  wchar_t * buff, wcstring *out, const wchar_t *pre
 
     tok_destroy(&tok);
 
-    current_tokenizer=previous_tokenizer;
+    current_tokenizer = previous_tokenizer;
     current_tokenizer_pos = previous_pos;
 
     error_code=0;
@@ -2985,7 +2977,6 @@ int parser_t::test(const  wchar_t * buff,
 {
     ASSERT_IS_MAIN_THREAD();
 
-    tokenizer tok;
     /*
        Set to one if a command name has been given for the currently
        parsed process specification
@@ -2994,8 +2985,8 @@ int parser_t::test(const  wchar_t * buff,
     int err=0;
     int unfinished = 0;
 
-    tokenizer *previous_tokenizer=current_tokenizer;
-    int previous_pos=current_tokenizer_pos;
+    tokenizer_t * const previous_tokenizer=current_tokenizer;
+    const int previous_pos=current_tokenizer_pos;
 
     int block_pos[BLOCK_MAX_COUNT] = {};
     block_type_t block_type[BLOCK_MAX_COUNT] = {};
@@ -3043,11 +3034,10 @@ int parser_t::test(const  wchar_t * buff,
 
     }
 
+    tokenizer_t tok(buff, 0);
     current_tokenizer = &tok;
 
-    for (tok_init(&tok, buff, 0);
-            ;
-            tok_next(&tok))
+    for (;; tok_next(&tok))
     {
         current_tokenizer_pos = tok_get_pos(&tok);
 

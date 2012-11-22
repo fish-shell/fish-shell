@@ -143,7 +143,6 @@ static void write_part(const wchar_t *begin,
                        int cut_at_cursor,
                        int tokenize)
 {
-    tokenizer tok;
     wcstring out;
     wchar_t *buff;
     size_t pos;
@@ -155,9 +154,8 @@ static void write_part(const wchar_t *begin,
         buff = wcsndup(begin, end-begin);
 //    fwprintf( stderr, L"Subshell: %ls, end char %lc\n", buff, *end );
         out.clear();
-
-        for (tok_init(&tok, buff, TOK_ACCEPT_UNFINISHED);
-                tok_has_next(&tok);
+        tokenizer_t tok(buff, TOK_ACCEPT_UNFINISHED);
+        for (; tok_has_next(&tok);
                 tok_next(&tok))
         {
             if ((cut_at_cursor) &&

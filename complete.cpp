@@ -1765,7 +1765,6 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, complete_ty
     completer_t completer(cmd, type);
 
     const wchar_t *tok_begin, *tok_end, *cmdsubst_begin, *cmdsubst_end, *prev_begin, *prev_end;
-    tokenizer tok;
     const wchar_t *current_token=0, *prev_token=0;
     wcstring current_command;
     int on_command=0;
@@ -1807,9 +1806,8 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, complete_ty
 
         int had_cmd=0;
         int end_loop=0;
-
-        tok_init(&tok, buff.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
-
+        
+        tokenizer_t tok(buff.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
         while (tok_has_next(&tok) && !end_loop)
         {
 

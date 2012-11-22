@@ -1088,8 +1088,6 @@ wcstring escape_string(const wcstring &in, escape_flags_t flags)
 
 wchar_t *unescape(const wchar_t * orig, int flags)
 {
-
-    int mode = 0;
     int out_pos;
     size_t in_pos;
     size_t len;
@@ -1097,8 +1095,8 @@ wchar_t *unescape(const wchar_t * orig, int flags)
     int bracket_count=0;
     wchar_t prev=0;
     wchar_t *in;
-    int unescape_special = flags & UNESCAPE_SPECIAL;
-    int allow_incomplete = flags & UNESCAPE_INCOMPLETE;
+    bool unescape_special = !! (flags & UNESCAPE_SPECIAL);
+    bool allow_incomplete = !! (flags & UNESCAPE_INCOMPLETE);
 
     CHECK(orig, 0);
 
@@ -1107,6 +1105,12 @@ wchar_t *unescape(const wchar_t * orig, int flags)
 
     if (!in)
         DIE_MEM();
+    
+    enum {
+        mode_unquoted,
+        mode_single_quotes,
+        mode_double_quotes
+    } mode = mode_unquoted;
 
     for (in_pos=0, out_pos=0;
             in_pos<len;
@@ -1116,20 +1120,20 @@ wchar_t *unescape(const wchar_t * orig, int flags)
         switch (mode)
         {
 
-                /*
-                  Mode 0 means unquoted string
-                */
-            case 0:
+            /*
+              Mode 0 means unquoted string
+            */
+            case mode_unquoted:
             {
                 if (c == L'\\')
                 {
                     switch (in[++in_pos])
                     {
 
-                            /*
-                              A null character after a backslash is an
-                              error, return null
-                            */
+                        /*
+                          A null character after a backslash is an
+                          error, return null
+                        */
                         case L'\0':
                         {
                             if (!allow_incomplete)
@@ -1317,7 +1321,7 @@ wchar_t *unescape(const wchar_t * orig, int flags)
                             in[out_pos]=L'\t';
                             break;
                         }
-
+                        
                         /*
                           \v means vertical tab
                         */
@@ -1326,6 +1330,11 @@ wchar_t *unescape(const wchar_t * orig, int flags)
                             in[out_pos]=L'\v';
                             break;
                         }
+                        
+                        /* If a backslash is followed by an actual newline, swallow them both */
+                        case L'\n':
+                            out_pos--;
+                            break;
 
                         default:
                         {
@@ -1454,7 +1463,7 @@ wchar_t *unescape(const wchar_t * orig, int flags)
 
                         case L'\'':
                         {
-                            mode = 1;
+                            mode = mode_single_quotes;
                             if (unescape_special)
                                 in[out_pos] = INTERNAL_SEPARATOR;
                             else
@@ -1464,7 +1473,7 @@ wchar_t *unescape(const wchar_t * orig, int flags)
 
                         case L'\"':
                         {
-                            mode = 2;
+                            mode = mode_double_quotes;
                             if (unescape_special)
                                 in[out_pos] = INTERNAL_SEPARATOR;
                             else
@@ -1483,9 +1492,10 @@ wchar_t *unescape(const wchar_t * orig, int flags)
             }
 
             /*
-              Mode 1 means single quoted string, i.e 'foo'
+              Mode 1 means single quoted string, i.e 'foo'.
+              A backslash at the end of a line in a single quoted string does not swallow the backslash or newline.
             */
-            case 1:
+            case mode_single_quotes:
             {
                 if (c == L'\\')
                 {
@@ -1493,13 +1503,12 @@ wchar_t *unescape(const wchar_t * orig, int flags)
                     {
                         case '\\':
                         case L'\'':
-                        case L'\n':
                         {
                             in[out_pos]=in[in_pos];
                             break;
                         }
 
-                        case 0:
+                        case L'\0':
                         {
                             if (!allow_incomplete)
                             {
@@ -1513,6 +1522,7 @@ wchar_t *unescape(const wchar_t * orig, int flags)
                             }
                         }
                         break;
+                        
                         default:
                         {
                             in[out_pos++] = L'\\';
@@ -1527,7 +1537,7 @@ wchar_t *unescape(const wchar_t * orig, int flags)
                         in[out_pos] = INTERNAL_SEPARATOR;
                     else
                         out_pos--;
-                    mode = 0;
+                    mode = mode_unquoted;
                 }
                 else
                 {
@@ -1540,13 +1550,13 @@ wchar_t *unescape(const wchar_t * orig, int flags)
             /*
               Mode 2 means double quoted string, i.e. "foo"
             */
-            case 2:
+            case mode_double_quotes:
             {
                 switch (c)
                 {
                     case '"':
                     {
-                        mode = 0;
+                        mode = mode_unquoted;
                         if (unescape_special)
                             in[out_pos] = INTERNAL_SEPARATOR;
                         else
@@ -1575,9 +1585,14 @@ wchar_t *unescape(const wchar_t * orig, int flags)
                             case '\\':
                             case L'$':
                             case '"':
-                            case '\n':
                             {
                                 in[out_pos]=in[in_pos];
+                                break;
+                            }
+                            
+                            case '\n':
+                            {
+                                out_pos--;
                                 break;
                             }
 

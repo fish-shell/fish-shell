@@ -155,8 +155,7 @@ static void write_part(const wchar_t *begin,
 //    fwprintf( stderr, L"Subshell: %ls, end char %lc\n", buff, *end );
         out.clear();
         tokenizer_t tok(buff, TOK_ACCEPT_UNFINISHED);
-        for (; tok_has_next(&tok);
-                tok_next(&tok))
+        for (; tok_has_next(&tok); tok_next(&tok))
         {
             if ((cut_at_cursor) &&
                     (tok_get_pos(&tok)+wcslen(tok_last(&tok)) >= pos))

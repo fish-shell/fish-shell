@@ -642,24 +642,26 @@ const wchar_t *tok_string(tokenizer_t *tok)
     return tok?tok->orig_buff:0;
 }
 
-wchar_t *tok_first(const wchar_t *str)
+wcstring tok_first(const wchar_t *str)
 {
-    wchar_t *res=0;
-
-    CHECK(str, 0);
-
-    tokenizer_t t(str, TOK_SQUASH_ERRORS);
-    switch (tok_last_type(&t))
+    wcstring result;
+    if (str)
     {
-        case TOK_STRING:
-//        fwprintf( stderr, L"Got token %ls\n", tok_last( &t ));
-            res = wcsdup(tok_last(&t));
-            break;
-        default:
-            break;
+        tokenizer_t t(str, TOK_SQUASH_ERRORS);
+        switch (tok_last_type(&t))
+        {
+            case TOK_STRING:
+            {
+                const wchar_t *tmp = tok_last(&t);
+                if (tmp != NULL)
+                    result = tmp;
+                break;
+            }
+            default:
+                break;
+        }
     }
-
-    return res;
+    return result;
 }
 
 int tok_get_pos(tokenizer_t *tok)

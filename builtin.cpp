@@ -3254,10 +3254,9 @@ static int builtin_fg(parser_t &parser, wchar_t **argv)
                      j->command_wcstr());
         }
 
-        wchar_t *ft = tok_first(j->command_wcstr());
-        if (ft != 0)
-            env_set(L"_", ft, ENV_EXPORT);
-        free(ft);
+        const wcstring ft = tok_first(j->command_wcstr());
+        if (! ft.empty())
+            env_set(L"_", ft.c_str(), ENV_EXPORT);
         reader_write_title();
 
         make_first(j);

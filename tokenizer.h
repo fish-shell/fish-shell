@@ -156,9 +156,9 @@ const wchar_t *tok_string(tokenizer_t *tok);
    convenience function, used to retrieve the first token of a
    string. This can be useful for error messages, etc.
 
-   The string should be freed. After use.
+   On failure, returns the empty string.
 */
-wchar_t *tok_first(const wchar_t *str);
+wcstring tok_first(const wchar_t *str);
 
 /**
    Indicates whether a character can be part of a string, or is a string separator.

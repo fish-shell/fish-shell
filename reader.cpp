@@ -2200,14 +2200,12 @@ void set_env_cmd_duration(struct timeval *after, struct timeval *before)
 void reader_run_command(parser_t &parser, const wchar_t *cmd)
 {
 
-    wchar_t *ft;
     struct timeval time_before, time_after;
 
-    ft= tok_first(cmd);
+    wcstring ft = tok_first(cmd);
 
-    if (ft != 0)
-        env_set(L"_", ft, ENV_GLOBAL);
-    free(ft);
+    if (! ft.empty())
+        env_set(L"_", ft.c_str(), ENV_GLOBAL);
 
     reader_write_title();
 

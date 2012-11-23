@@ -96,7 +96,7 @@ public:
 
     /**
        Autoload the specified file, if it exists in the specified path. Do
-       not load it multiple times unless it's timestamp changes or
+       not load it multiple times unless its timestamp changes or
        parse_util_unload is called.
 
        Autoloading one file may unload another.

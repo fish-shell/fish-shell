@@ -1895,7 +1895,7 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, complete_ty
           Get the string to complete
         */
 
-        current_token = wcsndup(tok_begin, cursor_pos-(tok_begin-cmd_cstr));
+        current_token.assign(tok_begin, cursor_pos-(tok_begin-cmd_cstr));
 
         if (prev_begin)
         {

@@ -130,17 +130,33 @@ def builtcommand(options, description):
     # Maybe it's all for naught
     if not fish_options: return
 
-    first_period = description.find(".")
-    if first_period >= 45 or (first_period == -1 and len(description) > 45):
-        description = description[:45] + '... [See Man Page]'
-    elif first_period >= 0:
-        description = description[:first_period]
+    # Here's what we'll use to truncate if necessary
+    max_description_width = 63
+    truncation_suffix = '… [See Man Page]'
+    
+    # Try to include as many whole sentences as will fit
+    sentences = description.split('.')
+    truncated_description = sentences[0] + '.'
+    for line in sentences[1:]:
+        if not line: continue
+        proposed_description = truncated_description + ' ' + line + '.'
+        if len(proposed_description) <= max_description_width:
+            # It fits
+            truncated_description = proposed_description
+        else:
+            # No fit
+            break
+    
+    # If the first sentence does not fit, truncate if necessary
+    if len(truncated_description) > max_description_width:
+        prefix_len = max_description_width - len(truncation_suffix)
+        truncated_description = truncated_description[:prefix_len] + truncation_suffix
 
     # Escape some more things
-    description = fish_escape_single_quote(description)
+    truncated_description = fish_escape_single_quote(truncated_description)
     escaped_cmd = fish_escape_single_quote(CMDNAME)
 
-    output_complete_command(escaped_cmd, fish_options, description, built_command_output)
+    output_complete_command(escaped_cmd, fish_options, truncated_description, built_command_output)
 
 
 
@@ -507,12 +523,34 @@ class TypeDarwinManParser(ManParser):
         # Skip leading groff crud
         while re.match('[A-Z][a-z]\s', line):
             line = line[3:]
+            
+        # If the line ends with a space and then a period or comma, then erase the space
+        # This hack handles lines of the form '.Ar projectname .'
+        if line.endswith(' ,') or line.endswith(' .'):
+            line = line[:-2] + line[-1]
         return line
+
+    def count_argument_dashes(self, line):
+        # Determine how many dashes the line has using the following regex hack
+        # Look for the start of a line, followed by a dot, then a sequence of
+        # one or more dashes ('Fl')
+        result = 0
+        if line.startswith('.'):
+            line = line[4:]
+            while line.startswith('Fl '):
+                result = result + 1
+                line = line[3:]
+        return result
+            
+        
+
 
     # Replace some groff escapes. There's a lot we don't bother to handle.
     def groff_replace_escapes(self, line):
+        line = line.replace('.Nm', CMDNAME)
         line = line.replace('\\ ', ' ')
         line = line.replace('\& ', '')
+        line = line.replace(r'.\"', '')
         return line
 
     def is_option(self, line):
@@ -535,6 +573,10 @@ class TypeDarwinManParser(ManParser):
 
             # Get the line and clean it up
             line = lines.pop(0)
+            
+            # Try to guess how many dashes this argument has
+            dash_count = self.count_argument_dashes(line)
+                        
             line = self.groff_replace_escapes(line)
             line = self.trim_groff(line)
             line = line.strip()
@@ -544,19 +586,25 @@ class TypeDarwinManParser(ManParser):
             name = line.split(None, 2)[0]
 
             # Extract the description
-            desc = ''
+            desc_lines = []
             while lines and not self.is_option(lines[0]):
-                # print "*", lines[0]
-                desc = desc + lines.pop(0)
+                line = lines.pop(0).strip()
+                if line.startswith('.'):
+                    line = self.groff_replace_escapes(line)
+                    line = self.trim_groff(line).strip()
+                if line:
+                    desc_lines.append(line)
+            desc = ' '.join(desc_lines)
 
             # print "name: ", name
+            # print "desc: ", desc
 
             if name == '-':
                 # Skip double -- arguments
                 continue
             elif len(name) > 1:
                 # Output the command
-                builtcommand('--' + name, desc)
+                builtcommand(('-' * dash_count) + name, desc)
                 got_something = True
             elif len(name) == 1:
                 builtcommand('-' + name, desc)
@@ -747,10 +795,10 @@ def parse_manpage_at_path(manpage_path, yield_to_dirs, output_directory):
                     add_diagnostic("Unable to open file '%s': error(%d): %s" % (fullpath, err.errno, err.strerror))
                     return False
 
-            built_command_output.insert(0, "# %s: %s" % (CMDNAME, parser.name()))
+            built_command_output.insert(0, "# " + CMDNAME)
 
             # Output the magic word Autogenerated so we can tell if we can overwrite this
-            built_command_output.insert(1, "# Autogenerated from man pages")
+            built_command_output.insert(1, "# Autogenerated from man page " + manpage_path)
             built_command_output.insert(2, "# using " + parser_name)
             for line in built_command_output:
                 output_file.write(line)

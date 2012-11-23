@@ -1095,8 +1095,8 @@ wchar_t *unescape(const wchar_t * orig, int flags)
     int bracket_count=0;
     wchar_t prev=0;
     wchar_t *in;
-    bool unescape_special = !! (flags & UNESCAPE_SPECIAL);
-    bool allow_incomplete = !! (flags & UNESCAPE_INCOMPLETE);
+    bool unescape_special = !!(flags & UNESCAPE_SPECIAL);
+    bool allow_incomplete = !!(flags & UNESCAPE_INCOMPLETE);
 
     CHECK(orig, 0);
 
@@ -1105,8 +1105,9 @@ wchar_t *unescape(const wchar_t * orig, int flags)
 
     if (!in)
         DIE_MEM();
-    
-    enum {
+
+    enum
+    {
         mode_unquoted,
         mode_single_quotes,
         mode_double_quotes
@@ -1120,9 +1121,9 @@ wchar_t *unescape(const wchar_t * orig, int flags)
         switch (mode)
         {
 
-            /*
-              Mode 0 means unquoted string
-            */
+                /*
+                  Mode 0 means unquoted string
+                */
             case mode_unquoted:
             {
                 if (c == L'\\')
@@ -1130,10 +1131,10 @@ wchar_t *unescape(const wchar_t * orig, int flags)
                     switch (in[++in_pos])
                     {
 
-                        /*
-                          A null character after a backslash is an
-                          error, return null
-                        */
+                            /*
+                              A null character after a backslash is an
+                              error, return null
+                            */
                         case L'\0':
                         {
                             if (!allow_incomplete)
@@ -1321,7 +1322,7 @@ wchar_t *unescape(const wchar_t * orig, int flags)
                             in[out_pos]=L'\t';
                             break;
                         }
-                        
+
                         /*
                           \v means vertical tab
                         */
@@ -1330,7 +1331,7 @@ wchar_t *unescape(const wchar_t * orig, int flags)
                             in[out_pos]=L'\v';
                             break;
                         }
-                        
+
                         /* If a backslash is followed by an actual newline, swallow them both */
                         case L'\n':
                             out_pos--;
@@ -1522,7 +1523,7 @@ wchar_t *unescape(const wchar_t * orig, int flags)
                             }
                         }
                         break;
-                        
+
                         default:
                         {
                             in[out_pos++] = L'\\';
@@ -1589,7 +1590,7 @@ wchar_t *unescape(const wchar_t * orig, int flags)
                                 in[out_pos]=in[in_pos];
                                 break;
                             }
-                            
+
                             case '\n':
                             {
                                 out_pos--;

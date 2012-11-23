@@ -227,7 +227,8 @@ static void read_string(tokenizer_t *tok)
     start = tok->buff;
     bool is_first = true;
 
-    enum tok_mode_t {
+    enum tok_mode_t
+    {
         mode_regular_text = 0, // regular text
         mode_subshell = 1, // inside of subshell
         mode_array_brackets = 2, // inside of array brackets
@@ -260,7 +261,7 @@ static void read_string(tokenizer_t *tok)
                 tok->buff++;
                 continue;
             }
-            
+
             switch (mode)
             {
                 case mode_regular_text:
@@ -358,7 +359,7 @@ static void read_string(tokenizer_t *tok)
                             break;
                     }
                     break;
-                    
+
                 case mode_array_brackets:
                     switch (*tok->buff)
                     {
@@ -410,7 +411,7 @@ static void read_comment(tokenizer_t *tok)
     start = tok->buff;
     while (*(tok->buff)!= L'\n' && *(tok->buff)!= L'\0')
         tok->buff++;
-    
+
 
     size_t len = tok->buff - start;
     tok->last_token.assign(start, len);

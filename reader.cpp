@@ -1187,7 +1187,7 @@ struct autosuggestion_context_t
         if (! cursor_at_end && iswspace(last_char))
             return 0;
 
-        // On the other hand, if the line ends with a quote, don't go dumping stuff after the quote
+        /* On the other hand, if the line ends with a quote, don't go dumping stuff after the quote */
         if (wcschr(L"'\"", last_char) && cursor_at_end)
             return 0;
 

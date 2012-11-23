@@ -1765,7 +1765,7 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, complete_ty
     completer_t completer(cmd, type);
 
     const wchar_t *tok_begin, *tok_end, *cmdsubst_begin, *cmdsubst_end, *prev_begin, *prev_end;
-    const wchar_t *current_token=0, *prev_token=0;
+    wcstring current_token, prev_token;
     wcstring current_command;
     int on_command=0;
     size_t pos;
@@ -1789,7 +1789,7 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, complete_ty
 
     /**
        If we are completing a variable name or a tilde expansion user
-       name, we do that and return. No need for any other competions.
+       name, we do that and return. No need for any other completions.
     */
 
     if (!done)
@@ -1806,7 +1806,7 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, complete_ty
 
         int had_cmd=0;
         int end_loop=0;
-        
+
         tokenizer_t tok(buff.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
         while (tok_has_next(&tok) && !end_loop)
         {
@@ -1897,7 +1897,14 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, complete_ty
 
         current_token = wcsndup(tok_begin, cursor_pos-(tok_begin-cmd_cstr));
 
-        prev_token = prev_begin ? wcsndup(prev_begin, prev_end - prev_begin): wcsdup(L"");
+        if (prev_begin)
+        {
+            prev_token.assign(prev_begin, prev_end - prev_begin);
+        }
+        else
+        {
+            prev_token.clear();
+        }
 
 //    debug( 0, L"on_command: %d, %ls %ls\n", on_command, current_command, current_token );
 
@@ -1908,8 +1915,8 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, complete_ty
           subcommand.
         */
 
-        if ((on_command || (wcscmp(current_token, L"--") == 0)) &&
-                (current_token[0] == L'-') &&
+        if ((on_command || current_token == L"--") &&
+                string_prefixes_string(L"-", current_token) &&
                 !(use_command && use_function && use_builtin))
         {
             if (use_command == 0)
@@ -1929,62 +1936,43 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, complete_ty
             on_command=1;
         }
 
-        /*
-          We don't want these to be null
-        */
 
-        if (!current_token)
+        if (on_command)
         {
-            current_token = wcsdup(L"");
+            /* Complete command filename */
+            completer.complete_cmd(current_token, use_function, use_builtin, use_command);
         }
-
-        if (!prev_token)
+        else
         {
-            prev_token = wcsdup(L"");
-        }
+            int do_file=0;
 
-        if (current_token && prev_token)
-        {
-            if (on_command)
+            wcstring current_command_unescape = current_command;
+            wcstring prev_token_unescape = prev_token;
+            wcstring current_token_unescape = current_token;
+
+            if (unescape_string(current_command_unescape, 0) &&
+                    unescape_string(prev_token_unescape, 0) &&
+                    unescape_string(current_token_unescape, UNESCAPE_INCOMPLETE))
             {
-                /* Complete command filename */
-                completer.complete_cmd(current_token, use_function, use_builtin, use_command);
+                do_file = completer.complete_param(current_command_unescape,
+                                                   prev_token_unescape,
+                                                   current_token_unescape,
+                                                   !had_ddash);
             }
-            else
-            {
-                int do_file=0;
 
-                wcstring current_command_unescape = current_command;
-                wcstring prev_token_unescape = prev_token;
-                wcstring current_token_unescape = current_token;
+            /*
+            If we have found no command specific completions at
+            all, fall back to using file completions.
+            */
+            if (completer.empty())
+                do_file = 1;
 
-                if (unescape_string(current_command_unescape, 0) &&
-                        unescape_string(prev_token_unescape, 0) &&
-                        unescape_string(current_token_unescape, UNESCAPE_INCOMPLETE))
-                {
-                    do_file = completer.complete_param(current_command_unescape,
-                                                       prev_token_unescape,
-                                                       current_token_unescape,
-                                                       !had_ddash);
-                }
-
-                /*
-                If we have found no command specific completions at
-                all, fall back to using file completions.
-                */
-                if (completer.empty())
-                    do_file = 1;
-
-                /*
-                  This function wants the unescaped string
-                */
-                completer.complete_param_expand(current_token, do_file);
-            }
+            /*
+              This function wants the unescaped string
+            */
+            completer.complete_param_expand(current_token, do_file);
         }
     }
-
-    free((void *)current_token);
-    free((void *)prev_token);
 
     comps = completer.get_completions();
     completer.get_commands_to_load(commands_to_load);

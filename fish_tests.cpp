@@ -326,9 +326,10 @@ static void test_tok()
         };
 
         say(L"Test correct tokenization");
-        
+
         tokenizer_t t(str, 0);
-        for (size_t i=0; i < sizeof types / sizeof *types; i++, tok_next(&t)) {
+        for (size_t i=0; i < sizeof types / sizeof *types; i++, tok_next(&t))
+        {
             if (types[i] != tok_last_type(&t))
             {
                 err(L"Tokenization error:");

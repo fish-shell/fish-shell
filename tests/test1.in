@@ -24,6 +24,12 @@ bar"
 echo 'foo\
 bar'
 
+for i in \
+    a b c
+    echo $i
+end
+
+
 # Simple alias tests
 
 function foo

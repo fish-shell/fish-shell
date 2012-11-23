@@ -401,6 +401,11 @@ public:
             lst->insert(lst->end(), commands_to_load.begin(), commands_to_load.end());
     }
 
+    bool has_commands_to_load() const
+    {
+        return ! commands_to_load.empty();
+    }
+
 };
 
 /* Autoloader for completions */
@@ -1944,7 +1949,7 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, complete_ty
         }
         else
         {
-            int do_file=0;
+            bool do_file = false;
 
             wcstring current_command_unescape = current_command;
             wcstring prev_token_unescape = prev_token;
@@ -1960,12 +1965,16 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, complete_ty
                                                    !had_ddash);
             }
 
-            /*
-            If we have found no command specific completions at
+            /* If we have found no command specific completions at
             all, fall back to using file completions.
             */
             if (completer.empty())
-                do_file = 1;
+                do_file = true;
+
+            /* But if we are planning on loading commands, don't do file completions.
+               See https://github.com/fish-shell/fish-shell/issues/378 */
+            if (commands_to_load != NULL && completer.has_commands_to_load())
+                do_file = false;
 
             /*
               This function wants the unescaped string

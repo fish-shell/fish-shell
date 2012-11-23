@@ -491,12 +491,9 @@ wchar_t tok_last_quote(tokenizer_t *tok)
    Test if a character is whitespace. Differs from iswspace in that it
    does not consider a newline to be whitespace.
 */
-static int my_iswspace(wchar_t c)
+static bool my_iswspace(wchar_t c)
 {
-    if (c == L'\n')
-        return 0;
-    else
-        return iswspace(c);
+    return c != L'\n' && iswspace(c);
 }
 
 
@@ -531,19 +528,16 @@ void tok_next(tokenizer_t *tok)
 
     while (1)
     {
-        if (my_iswspace(*(tok->buff)))
+        if (tok->buff[0] == L'\\' && tok->buff[1] == L'\n')
+        {
+            tok->buff += 2;
+        }
+        else if (my_iswspace(tok->buff[0]))
         {
             tok->buff++;
         }
         else
         {
-            if ((*(tok->buff) == L'\\') &&(*(tok->buff+1) == L'\n'))
-            {
-                tok->last_pos = tok->buff - tok->orig_buff;
-                tok->buff+=2;
-                tok->last_type = TOK_END;
-                return;
-            }
             break;
         }
     }

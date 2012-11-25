@@ -1205,31 +1205,35 @@ void s_reset(screen_t *s, screen_reset_mode_t mode)
         s->actual_lines_before_reset =  maxi(s->actual_lines_before_reset, s->actual.line_count());
     }
 
-    int prev_line = s->actual.cursor.y;
-
     if (repaint_prompt)
     {
-        /* If the prompt is multi-line, we need to move up to the prompt's initial line. We do this by lying to ourselves and claiming that we're really below what we consider "line 0" (which is the last line of the prompt). This will cause is to move up to try to get back to line 0, but really we're getting back to the initial line of the prompt. */
-        const size_t prompt_line_count = calc_prompt_lines(s->actual_left_prompt);
-        assert(prompt_line_count >= 1);
-        prev_line += (prompt_line_count - 1);
-
         /* Clear the prompt */
         s->actual_left_prompt.clear();
     }
 
+    if (repaint_prompt && ! abandon_line)
+    {
+        
+        /* If the prompt is multi-line, we need to move up to the prompt's initial line. We do this by lying to ourselves and claiming that we're really below what we consider "line 0" (which is the last line of the prompt). This will cause us to move up to try to get back to line 0, but really we're getting back to the initial line of the prompt. */
+        const size_t prompt_line_count = calc_prompt_lines(s->actual_left_prompt);
+        assert(prompt_line_count >= 1);
+        s->actual.cursor.y += (prompt_line_count - 1);
+    }
+    else if (abandon_line)
+    {
+        s->actual.cursor.y = 0;
+    }
+
     s->actual.resize(0);
-    s->actual.cursor.x = 0;
-    s->actual.cursor.y = 0;
 
     s->need_clear_lines = true;
     s->need_clear_screen = s->need_clear_screen || clear_to_eos;
 
-    if (!abandon_line)
+    if (! abandon_line)
     {
-        /* This should prevent reseting the cursor position during the next repaint. */
+        /* This should prevent resetting the cursor position during the next repaint. */
         write_loop(1, "\r", 1);
-        s->actual.cursor.y = prev_line;
+        s->actual.cursor.x = 0;
     }
 
     fstat(1, &s->prev_buff_1);

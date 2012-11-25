@@ -760,7 +760,7 @@ void reader_repaint_if_needed()
 {
     if (data && data->screen_reset_needed)
     {
-        s_reset(&data->screen, false);
+        s_reset(&data->screen, screen_reset_current_line_and_prompt);
         data->screen_reset_needed = false;
     }
 
@@ -1605,7 +1605,7 @@ static bool handle_completions(const std::vector<completion_t> &comp)
 
             run_pager(prefix, is_quoted, comp);
         }
-        s_reset(&data->screen, true);
+        s_reset(&data->screen, screen_reset_abandon_line);
         reader_repaint();
         success = false;
     }
@@ -2316,7 +2316,7 @@ void reader_pop()
     {
         end_loop = 0;
         //history_set_mode( data->app_name.c_str() );
-        s_reset(&data->screen, true);
+        s_reset(&data->screen, screen_reset_abandon_line);
     }
 }
 
@@ -2449,10 +2449,6 @@ static void highlight_complete(background_highlight_context_t *ctx, int result)
         if (data->colors != ctx->colors)
         {
             data->colors.swap(ctx->colors);
-
-            //data->repaint_needed = 1;
-            //s_reset( &data->screen, 1 );
-
             sanity_check();
             highlight_search();
             reader_repaint();
@@ -2715,7 +2711,7 @@ const wchar_t *reader_readline()
     exec_prompt();
 
     reader_super_highlight_me_plenty(data->buff_pos);
-    s_reset(&data->screen, true);
+    s_reset(&data->screen, screen_reset_abandon_line);
     reader_repaint();
 
     /*
@@ -2841,7 +2837,7 @@ const wchar_t *reader_readline()
             {
                 exec_prompt();
                 write_loop(1, "\r", 1);
-                s_reset(&data->screen, false);
+                s_reset(&data->screen, screen_reset_current_line_and_prompt);
                 reader_repaint();
                 break;
             }
@@ -3127,7 +3123,7 @@ const wchar_t *reader_readline()
                      */
                     default:
                     {
-                        s_reset(&data->screen, true);
+                        s_reset(&data->screen, screen_reset_abandon_line);
                         reader_repaint();
                         break;
                     }

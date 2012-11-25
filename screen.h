@@ -145,9 +145,13 @@ public:
      This flag is set to true when there is reason to suspect that
      the parts of the screen lines where the actual content is not
      filled in may be non-empty. This means that a clr_eol command
-     has to be sent to the terminal at the end of each line.
+     has to be sent to the terminal at the end of each line, including
+     actual_lines_before_reset.
     */
-    bool need_clear;
+    bool need_clear_lines;
+    
+    /** Whether there may be yet more content after the lines, and we issue a clr_eos if possible. */
+    bool need_clear_screen;
 
     /** If we need to clear, this is how many lines the actual screen had, before we reset it. This is used when resizing the window larger: if the cursor jumps to the line above, we need to remember to clear the subsequent lines. */
     size_t actual_lines_before_reset;
@@ -211,5 +215,23 @@ void s_write(screen_t *s,
     which will quicly fill the screen.
 */
 void s_reset(screen_t *s, bool reset_cursor, bool reset_prompt = true);
+
+
+enum screen_reset_mode_t {
+    /* Do not make a new line, do not repaint the prompt. */
+    screen_reset_current_line_contents,
+
+    /* Do not make a new line, do repaint the prompt. */
+    screen_reset_current_line_and_prompt,
+    
+    /* Abandon the current line, go to the next one, repaint the prompt */
+    screen_reset_abandon_line,
+    
+    /* Abandon the current line, go to the next one, clear the rest of the screen */
+    screen_reset_abandon_line_and_clear_to_end_of_screen
+};
+
+void s_reset(screen_t *s, screen_reset_mode_t mode);
+
 
 #endif

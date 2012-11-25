@@ -175,7 +175,7 @@ static size_t calc_prompt_width_and_lines(const wchar_t *prompt, size_t *out_pro
     size_t res = 0;
     size_t j, k;
     *out_prompt_lines = 1;
-    
+
     for (j=0; prompt[j]; j++)
     {
         if (prompt[j] == L'\x1b')
@@ -186,7 +186,7 @@ static size_t calc_prompt_width_and_lines(const wchar_t *prompt, size_t *out_pro
             size_t p;
             int len=0;
             bool found = false;
-            
+
             /*
              Detect these terminfo color escapes with parameter
              value 0..7, all of which don't move the cursor
@@ -199,7 +199,7 @@ static size_t calc_prompt_width_and_lines(const wchar_t *prompt, size_t *out_pro
                 set_background,
             }
             ;
-            
+
             /*
              Detect these semi-common terminfo escapes without any
              parameter values, all of which don't move the cursor
@@ -228,12 +228,12 @@ static size_t calc_prompt_width_and_lines(const wchar_t *prompt, size_t *out_pro
                 enter_secure_mode
             }
             ;
-            
+
             for (p=0; p < sizeof esc / sizeof *esc && !found; p++)
             {
                 if (!esc[p])
                     continue;
-                
+
                 for (k=0; k<8; k++)
                 {
                     len = try_sequence(tparm(esc[p],k), &prompt[j]);
@@ -245,7 +245,7 @@ static size_t calc_prompt_width_and_lines(const wchar_t *prompt, size_t *out_pro
                     }
                 }
             }
-            
+
             /* PCA for term256 support, let's just detect the escape codes directly */
             if (! found)
             {
@@ -256,8 +256,8 @@ static size_t calc_prompt_width_and_lines(const wchar_t *prompt, size_t *out_pro
                     found = true;
                 }
             }
-            
-            
+
+
             for (p=0; p < (sizeof(esc2)/sizeof(char *)) && !found; p++)
             {
                 if (!esc2[p])
@@ -269,14 +269,14 @@ static size_t calc_prompt_width_and_lines(const wchar_t *prompt, size_t *out_pro
                  */
                 len = maxi(try_sequence(tparm(esc2[p]), &prompt[j]),
                            try_sequence(esc2[p], &prompt[j]));
-                
+
                 if (len)
                 {
                     j += (len-1);
                     found = true;
                 }
             }
-            
+
             if (!found)
             {
                 if (prompt[j+1] == L'k')
@@ -307,7 +307,7 @@ static size_t calc_prompt_width_and_lines(const wchar_t *prompt, size_t *out_pro
                     }
                 }
             }
-            
+
         }
         else if (prompt[j] == L'\t')
         {
@@ -1173,40 +1173,40 @@ void s_write(screen_t *s,
 void s_reset(screen_t *s, screen_reset_mode_t mode)
 {
     CHECK(s,);
-    
+
     bool abandon_line = false, repaint_prompt = false, clear_to_eos = false;
     switch (mode)
     {
         case screen_reset_current_line_contents:
             break;
-            
+
         case screen_reset_current_line_and_prompt:
             repaint_prompt = true;
             break;
-        
+
         case screen_reset_abandon_line:
             abandon_line = true;
             repaint_prompt = true;
             break;
-            
+
         case screen_reset_abandon_line_and_clear_to_end_of_screen:
             abandon_line = true;
             repaint_prompt = true;
             clear_to_eos = true;
             break;
     }
-    
+
     /* If we're abandoning the line, we must also be repainting the prompt */
     assert(! abandon_line || repaint_prompt);
-    
+
     /* If we are not abandoning the line, we need to remember how many lines we had output to, so we can clear the remaining lines in the next call to s_update. This prevents leaving junk underneath the cursor when resizing a window wider such that it reduces our desired line count. */
     if (! abandon_line)
     {
         s->actual_lines_before_reset =  maxi(s->actual_lines_before_reset, s->actual.line_count());
     }
-    
+
     int prev_line = s->actual.cursor.y;
-    
+
     if (repaint_prompt)
     {
         /* If the prompt is multi-line, we need to move up to the prompt's initial line. We do this by lying to ourselves and claiming that we're really below what we consider "line 0" (which is the last line of the prompt). This will cause is to move up to try to get back to line 0, but really we're getting back to the initial line of the prompt. */
@@ -1217,21 +1217,21 @@ void s_reset(screen_t *s, screen_reset_mode_t mode)
         /* Clear the prompt */
         s->actual_left_prompt.clear();
     }
-    
+
     s->actual.resize(0);
     s->actual.cursor.x = 0;
     s->actual.cursor.y = 0;
-    
+
     s->need_clear_lines = true;
     s->need_clear_screen = s->need_clear_screen || clear_to_eos;
-    
+
     if (!abandon_line)
     {
         /* This should prevent reseting the cursor position during the next repaint. */
         write_loop(1, "\r", 1);
         s->actual.cursor.y = prev_line;
     }
-    
+
     fstat(1, &s->prev_buff_1);
     fstat(2, &s->prev_buff_2);
 }

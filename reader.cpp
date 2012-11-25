@@ -2696,6 +2696,9 @@ const wchar_t *reader_readline()
     std::vector<completion_t> comp;
     int finished=0;
     struct termios old_modes;
+    
+    /* Coalesce redundant repaints. When we get a repaint, we set this to true, and skip repaints until we get something else. */
+    bool coalescing_repaints = false;
 
     /* The cycle index in our completion list */
     size_t completion_cycle_idx = (size_t)(-1);
@@ -2778,8 +2781,13 @@ const wchar_t *reader_readline()
                 break;
         }
 
+        /* If we get something other than a repaint, then stop coalescing them */
+        if (c != R_REPAINT)
+            coalescing_repaints = false;
+
         if (last_char != R_YANK && last_char != R_YANK_POP)
             yank_len=0;
+        
         const wchar_t *buff = data->command_line.c_str();
         switch (c)
         {
@@ -2835,10 +2843,13 @@ const wchar_t *reader_readline()
 
             case R_REPAINT:
             {
-                exec_prompt();
-                write_loop(1, "\r", 1);
-                s_reset(&data->screen, screen_reset_current_line_and_prompt);
-                reader_repaint();
+                if (! coalescing_repaints)
+                {
+                    coalescing_repaints = true;
+                    exec_prompt();
+                    s_reset(&data->screen, screen_reset_current_line_contents);
+                    reader_repaint();
+                }
                 break;
             }
 

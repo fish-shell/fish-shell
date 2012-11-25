@@ -14,6 +14,8 @@ Implementation file for the low level input library
 #include <sys/types.h>
 #include <unistd.h>
 #include <wchar.h>
+#include <stack>
+#include <list>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
@@ -34,15 +36,30 @@ Implementation file for the low level input library
 */
 #define WAIT_ON_ESCAPE 10
 
-/**
-   Characters that have been read and returned by the sequence matching code
-*/
-static wint_t lookahead_arr[1024];
+/** Characters that have been read and returned by the sequence matching code */
+static std::stack<wint_t, std::list<wint_t> > lookahead_list;
 
-/**
-   Number of entries in lookahead_arr
-*/
-static int lookahead_count = 0;
+static bool has_lookahead(void)
+{
+    return ! lookahead_list.empty();
+}
+
+static wint_t lookahead_pop(void)
+{
+    wint_t result = lookahead_list.top();
+    lookahead_list.pop();
+    return result;
+}
+
+static void lookahead_push(wint_t c)
+{
+    lookahead_list.push(c);
+}
+
+static wint_t lookahead_top(void)
+{
+    return lookahead_list.top();
+}
 
 /** Callback function for handling interrupts on reading */
 static int (*interrupt_handler)();
@@ -115,9 +132,9 @@ static wint_t readb()
                         {
                             return res;
                         }
-                        if (lookahead_count)
+                        if (has_lookahead())
                         {
-                            return lookahead_arr[--lookahead_count];
+                            return lookahead_pop();
                         }
 
                     }
@@ -144,18 +161,18 @@ static wint_t readb()
             {
                 debug(3, L"Wake up on universal variable event");
                 env_universal_read_all();
-                if (lookahead_count)
+                if (has_lookahead())
                 {
-                    return lookahead_arr[--lookahead_count];
+                    return lookahead_pop();
                 }
             }
 
             if (ioport > 0 && FD_ISSET(ioport, &fdset))
             {
                 iothread_service_completion();
-                if (lookahead_count)
+                if (has_lookahead())
                 {
-                    return lookahead_arr[--lookahead_count];
+                    return lookahead_pop();
                 }
             }
 
@@ -179,7 +196,7 @@ static wint_t readb()
 
 wchar_t input_common_readch(int timed)
 {
-    if (lookahead_count == 0)
+    if (! has_lookahead())
     {
         if (timed)
         {
@@ -247,19 +264,19 @@ wchar_t input_common_readch(int timed)
     {
         if (!timed)
         {
-            while ((lookahead_count >= 0) && (lookahead_arr[lookahead_count-1] == WEOF))
-                lookahead_count--;
-            if (lookahead_count == 0)
+            while (has_lookahead() && lookahead_top() == WEOF)
+                lookahead_pop();
+            if (! has_lookahead())
                 return input_common_readch(0);
         }
 
-        return lookahead_arr[--lookahead_count];
+        return lookahead_pop();
     }
 }
 
 
 void input_common_unreadch(wint_t ch)
 {
-    lookahead_arr[lookahead_count++] = ch;
+    lookahead_push(ch);
 }
 

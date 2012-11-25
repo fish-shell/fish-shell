@@ -2847,7 +2847,7 @@ const wchar_t *reader_readline()
                 {
                     coalescing_repaints = true;
                     exec_prompt();
-                    s_reset(&data->screen, screen_reset_current_line_contents);
+                    s_reset(&data->screen, screen_reset_current_line_and_prompt);
                     reader_repaint();
                 }
                 break;

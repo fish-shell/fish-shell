@@ -735,11 +735,74 @@ static void invalidate_soft_wrap(screen_t *scr)
     scr->soft_wrap_location = INVALID_LOCATION;
 }
 
+/* Various code for testing term behavior */
+#if 0
+static bool test_stuff(screen_t *scr)
+{
+    data_buffer_t output;
+    scoped_buffer_t scoped_buffer(&output);
+    
+    s_move(scr, &output, 0, 0);
+    int screen_width = common_get_width();
+    
+    const wchar_t *left = L"left";
+    const wchar_t *right = L"right";
+    
+    for (size_t idx = 0; left[idx]; idx++)
+    {
+        s_write_char(scr, &output, left[idx]);
+    }
+    
+    s_move(scr, &output, screen_width - wcslen(right), 0);
+    
+    for (size_t idx = 0; right[idx]; idx++)
+    {
+        s_write_char(scr, &output, right[idx]);
+    }
+    
+    if (! output.empty())
+    {
+        write_loop(1, &output.at(0), output.size());
+        output.clear();
+    }
+    
+    sleep(5);
+    
+    for (size_t i=0; i < 1; i++) {
+        writembs(cursor_left);
+    }
+    
+    if (! output.empty())
+    {
+        write_loop(1, &output.at(0), output.size());
+        output.clear();
+    }
+
+    
+
+    while (1) {
+        int c = getchar();
+        if (c != EOF) break;
+    }
+
+    
+    while (1) {
+        int c = getchar();
+        if (c != EOF) break;
+    }
+    puts("Bye");
+    exit(0);
+    while (1) sleep(10000);
+    return true;
+}
+#endif
+
 /**
    Update the screen to match the desired output.
 */
 static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *right_prompt)
 {
+    //if (test_stuff(scr)) return;
     const size_t left_prompt_width = calc_prompt_layout(left_prompt).last_line_width;
     const size_t right_prompt_width = calc_prompt_layout(right_prompt).last_line_width;
 
@@ -754,7 +817,6 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
     bool need_clear_lines = scr->need_clear_lines;
     bool need_clear_screen = scr->need_clear_screen;
     bool has_cleared_screen = false;
-
 
     if (scr->actual_width != screen_width)
     {
@@ -803,7 +865,7 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
         /* Note that skip_remaining is a width, not a character count */
         size_t skip_remaining = start_pos;
 
-        //if (! should_clear_screen_this_line)
+        if (! should_clear_screen_this_line)
         {
             /* Compute how much we should skip. At a minimum we skip over the prompt. But also skip over the shared prefix of what we want to output now, and what we output before, to avoid repeatedly outputting it. */
             const size_t shared_prefix = line_shared_prefix(o_line, s_line);
@@ -897,7 +959,14 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
             s_move(scr, &output, (int)(screen_width - right_prompt_width), (int)i);
             s_set_color(scr, &output, 0xffffffff);
             s_write_str(&output, right_prompt);
-            /* We output in the last column. Some terms (Linux) push the cursor further right, past the window. Others make it "stick." Since we don't really know which is which, issue a cr so it goes back to the left. */
+            scr->actual.cursor.x += right_prompt_width;
+            
+            /* We output in the last column. Some terms (Linux) push the cursor further right, past the window. Others make it "stick." Since we don't really know which is which, issue a cr so it goes back to the left. 
+            
+               However, if the user is resizing the window smaller, then it's possible the cursor wrapped. If so, then a cr will go to the beginning of the following line! So instead issue a bunch of "move left" commands to get back onto the line, and then jump to the front of it (!)
+            */
+            
+            s_move(scr, &output, scr->actual.cursor.x - (int)right_prompt_width, scr->actual.cursor.y);
             s_write_str(&output, L"\r");
             scr->actual.cursor.x = 0;
         }
@@ -1052,7 +1121,10 @@ static screen_layout_t compute_layout(screen_t *s,
     1. Left prompt visible, right prompt visible, command line visible, autosuggestion visible
     2. Left prompt visible, right prompt visible, command line visible, autosuggestion truncated (possibly to zero)
     3. Left prompt visible, right prompt hidden, command line visible, autosuggestion hidden
-    4. Newline separator (left prompt visible, right prompt visible, command line visible, autosuggestion visible)
+    4. Newline separator (left prompt visible, right prompt hidden, command line visible, autosuggestion visible)
+    
+    A remark about layout #4: if we've pushed the command line to a new line, why can't we draw the right prompt? The issue is resizing: if you resize the window smaller, then the right prompt will wrap to the next line. This means that we can't go back to the line that we were on, and things turn to chaos very quickly.
+    
     */
 
     bool done = false;
@@ -1098,7 +1170,8 @@ static screen_layout_t compute_layout(screen_t *s,
     {
         result.left_prompt = left_prompt;
         result.left_prompt_space = left_prompt_width;
-        result.right_prompt = right_prompt;
+        // See remark about for why we can't use the right prompt here
+        //result.right_prompt = right_prompt;
         result.prompts_get_own_line = true;
         done = true;
     }

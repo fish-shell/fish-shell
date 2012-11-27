@@ -1939,95 +1939,82 @@ static void handle_token_history(int forward, int reset)
     }
 }
 
-/* Our state machine that implements "one word" movement or erasure. */
+enum move_word_dir_t
+{
+    MOVE_DIR_LEFT,
+    MOVE_DIR_RIGHT
+};
+
+
+/* Our state machine that implements "one word" movement or erasure.
+   The rules are:
+     if moving left: consume any separator chars, then any non-separator chars
+     if moving right:  non-separators, then separators
+
+*/
+
 class move_word_state_machine_t
 {
+
+    bool move_right;
     enum
     {
-        s_whitespace,
+        s_begin,
         s_separator,
-        s_slash,
-        s_nonseparators_except_slash,
-        s_end
+        s_word,
     } state;
+    env_var_t separator_chars;
 
 public:
 
-    move_word_state_machine_t() : state(s_whitespace)
+    move_word_state_machine_t(bool move_right) :
+            move_right(move_right),
+            state(s_begin),
+            separator_chars(env_get_string(L"FISH_WORD_SEPARATORS"))
     {
+    }
+
+    bool is_separator(wchar_t c){
+        return separator_chars.find(c) != wcstring::npos;
     }
 
     bool consume_char(wchar_t c)
     {
-        //printf("state %d, consume '%lc'\n", state, c);
-        bool consumed = false;
-        /* Always treat separators as first. All this does is ensure that we treat ^ as a string character instead of as stderr redirection, which I hypothesize is usually what is desired. */
-        bool was_first = true;
-        while (state != s_end && ! consumed)
-        {
-            switch (state)
+        if (state == s_begin){
+            if (separator_chars.missing())
             {
-                case s_whitespace:
-                    if (iswspace(c))
-                    {
-                        /* Consumed whitespace */
-                        consumed = true;
-                    }
-                    else if (tok_is_string_character(c, was_first))
-                    {
-                        /* String path */
-                        state = s_slash;
-                    }
-                    else
-                    {
-                        /* Separator path */
-                        state = s_separator;
-                    }
-                    break;
-
-                case s_separator:
-                    if (! iswspace(c) && ! tok_is_string_character(c, was_first))
-                    {
-                        /* Consumed separator */
-                        consumed = true;
-                    }
-                    else
-                    {
-                        state = s_end;
-                    }
-                    break;
-
-                case s_slash:
-                    if (c == L'/')
-                    {
-                        /* Consumed slash */
-                        consumed = true;
-                    }
-                    else
-                    {
-                        state = s_nonseparators_except_slash;
-                    }
-                    break;
-
-                case s_nonseparators_except_slash:
-                    if (c != L'/' && tok_is_string_character(c, was_first))
-                    {
-                        /* Consumed string character except slash */
-                        consumed = true;
-                    }
-                    else
-                    {
-                        state = s_end;
-                    }
-                    break;
-
-                    /* We won't get here, but keep the compiler happy */
-                case s_end:
-                default:
-                    break;
+                separator_chars = L" /\t.";
             }
+            state = (is_separator(c) ? s_separator : s_word);
         }
-        return consumed;
+        switch (state){
+            case s_separator:
+                if (is_separator(c))
+                {
+                    return true;
+                }
+                else
+                {
+                    state = s_word;
+                    if (move_right){
+                        return false;
+                    }
+                    return true;
+                }
+                break;
+            case s_word:
+                if (is_separator(c))
+                {
+                    state = s_separator;
+                    if (move_right){
+                        return true;
+                    }
+                    return false;
+                }
+                return true;
+            default:
+                return false;
+        }
     }
 };
 
@@ -2042,22 +2029,15 @@ public:
 
    The regex we implement:
 
-      WHITESPACE*
-        (SEPARATOR+)
-      |
-        (SLASH*
-         TOK_STRING_CHARACTERS_EXCEPT_SLASH*)
+      WORD+(SEPARATOR*)
+
+   Where SEPARATOR is defined by the FISH_WORD_SEPARATORS envar
 
    Interesting test case:
      /foo/bar/baz/ -> /foo/bar/ -> /foo/ -> /
      echo --foo --bar -> echo --foo -> echo
-     echo hi>/dev/null -> echo hi>/dev/ -> echo hi >/ -> echo hi > -> echo hi -> echo
+     echo hi > /dev/null -> echo hi > /dev/ -> echo hi > / -> echo hi -> echo
 */
-enum move_word_dir_t
-{
-    MOVE_DIR_LEFT,
-    MOVE_DIR_RIGHT
-};
 
 static void move_word(bool move_right, bool erase, bool newv)
 {
@@ -2067,7 +2047,7 @@ static void move_word(bool move_right, bool erase, bool newv)
         return;
 
     /* When moving left, a value of 1 means the character at index 0. */
-    move_word_state_machine_t state;
+    move_word_state_machine_t state(move_right);
     const wchar_t * const command_line = data->command_line.c_str();
     const size_t start_buff_pos = data->buff_pos;
 

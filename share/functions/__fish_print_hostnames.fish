@@ -5,7 +5,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
 	if test -x /usr/bin/getent
 		getent hosts | tr -s ' ' ' ' | cut -d ' ' -f 2- | tr ' ' '\n'
 	elseif test -f /etc/hosts
-		tr -s ' \t' '  ' < /etc/hosts | sed 's/ *#.*//' | cut -s -d ' ' -f 2- | grep -o '[^ ]*'
+		tr -s ' \t' '  ' < /etc/hosts | sed 's/ *#.*//' | cut -s -d ' ' -f 2- | sgrep -o '[^ ]*'
 	end
 	# Print nfs servers from /etc/fstab
 	if test -f /etc/fstab
@@ -17,7 +17,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
 
 	# Print hosts from ssh configuration file
 	if [ -e ~/.ssh/config ]
-		grep '^ *Host' ~/.ssh/config | grep -v '[*?]' | cut -d ' ' -f 2
+		sgrep '^ *Host' ~/.ssh/config | grep -v '[*?]' | cut -d ' ' -f 2
 	end
 end
 

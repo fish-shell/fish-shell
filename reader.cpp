@@ -1983,7 +1983,7 @@ public:
         if (state == s_begin){
             if (separator_chars.missing())
             {
-                separator_chars = L" /\t.";
+                separator_chars = L" /\t.\n|;#\r";
             }
             state = (is_separator(c) ? s_separator : s_word);
         }

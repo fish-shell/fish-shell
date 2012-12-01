@@ -813,8 +813,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				D0F019EC15A976F30034B3B1 /* base */,
 				D07D265615E33B86009E43F6 /* install_tree */,
+				D0F019EC15A976F30034B3B1 /* base */,
 				D0D02A9915985A75008E62BD /* fish.app */,
 				D0D2693B159835CA005D9B9C /* fish_shell */,
 				D0D02ABB15985EF9008E62BD /* fishd */,

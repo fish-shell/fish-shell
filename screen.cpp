@@ -456,7 +456,7 @@ static void s_check_status(screen_t *s)
         */
 
         int prev_line = s->actual.cursor.y;
-        write_loop(1, "\r", 1);
+        write_loop(STDOUT_FILENO, "\r", 1);
         s_reset(s, screen_reset_current_line_and_prompt);
         s->actual.cursor.y = prev_line;
     }
@@ -762,7 +762,7 @@ static bool test_stuff(screen_t *scr)
     
     if (! output.empty())
     {
-        write_loop(1, &output.at(0), output.size());
+        write_loop(STDOUT_FILENO, &output.at(0), output.size());
         output.clear();
     }
     
@@ -1208,9 +1208,9 @@ void s_write(screen_t *s,
         const std::string prompt_narrow = wcs2string(left_prompt);
         const std::string command_line_narrow = wcs2string(explicit_command_line);
 
-        write_loop(1, "\r", 1);
-        write_loop(1, prompt_narrow.c_str(), prompt_narrow.size());
-        write_loop(1, command_line_narrow.c_str(), command_line_narrow.size());
+        write_loop(STDOUT_FILENO, "\r", 1);
+        write_loop(STDOUT_FILENO, prompt_narrow.c_str(), prompt_narrow.size());
+        write_loop(STDOUT_FILENO, command_line_narrow.c_str(), command_line_narrow.size());
 
         return;
     }
@@ -1330,10 +1330,31 @@ void s_reset(screen_t *s, screen_reset_mode_t mode)
     s->need_clear_lines = true;
     s->need_clear_screen = s->need_clear_screen || clear_to_eos;
 
+    if (abandon_line)
+    {
+        /* Do the PROMPT_SP hack */
+        int screen_width = common_get_width();
+        wcstring abandon_line_string;
+        abandon_line_string.reserve(screen_width);
+        
+        int non_space_width = wcwidth(omitted_newline_char);
+        if (screen_width > non_space_width)
+        {
+            abandon_line_string.append(L"\x1b[7m"); //invert text ANSI escape sequence
+            abandon_line_string.push_back(omitted_newline_char);
+            abandon_line_string.append(L"\x1b[0m"); //normal text ANSI escape sequence
+            abandon_line_string.append(screen_width - non_space_width - 1, L' ');
+        }
+        abandon_line_string.push_back(L'\r');
+        const std::string narrow_abandon_line_string = wcs2string(abandon_line_string);
+        write_loop(STDOUT_FILENO, narrow_abandon_line_string.c_str(), narrow_abandon_line_string.size());
+        s->actual.cursor.x = 0;
+    }
+
     if (! abandon_line)
     {
         /* This should prevent resetting the cursor position during the next repaint. */
-        write_loop(1, "\r", 1);
+        write_loop(STDOUT_FILENO, "\r", 1);
         s->actual.cursor.x = 0;
     }
 

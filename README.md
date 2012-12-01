@@ -29,9 +29,8 @@ fish can be built using autotools or Xcode.
 
 ### Xcode Build and Install
 
-    mkdir /tmp/fish_build
-    xcodebuild install -target install_tree DSTROOT=/tmp/fish_build
-    sudo ditto /tmp/fish_build/ /
+    xcodebuild install
+    sudo ditto /tmp/fish.dst /
 
 ## Contact Us
 

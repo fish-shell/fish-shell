@@ -89,6 +89,7 @@ static pthread_t main_thread_id = 0;
 static bool thread_assertions_configured_for_testing = false;
 
 wchar_t ellipsis_char;
+wchar_t omitted_newline_char;
 
 char *profile=0;
 
@@ -521,8 +522,13 @@ wcstring wsetlocale(int category, const wchar_t *locale)
       Use ellipsis if on known unicode system, otherwise use $
     */
     char *ctype = setlocale(LC_CTYPE, NULL);
-    ellipsis_char = (strstr(ctype, ".UTF")||strstr(ctype, ".utf"))?L'\x2026':L'$';
-
+    bool unicode = (strstr(ctype, ".UTF") || strstr(ctype, ".utf"));
+    
+    ellipsis_char = unicode ? L'\x2026' : L'$';
+    
+    // U+23CE is the "return" character
+    omitted_newline_char = unicode ? L'\x23CE' : L'~';
+    
     if (!res)
         return wcstring();
     else

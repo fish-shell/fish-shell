@@ -96,6 +96,9 @@ extern struct termios shell_modes;
 */
 extern wchar_t ellipsis_char;
 
+/* Character representing an omitted newline at the end of text */
+extern wchar_t omitted_newline_char;
+
 /**
    The verbosity level of fish. If a call to debug has a severity
    level higher than \c debug_level, it will not be printed.

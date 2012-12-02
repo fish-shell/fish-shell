@@ -17,7 +17,7 @@ Redistributions in binary form must reproduce the above copyright notice, this l
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import string, sys, re, os.path, gzip, traceback, getopt, errno
+import string, sys, re, os.path, gzip, traceback, getopt, errno, codecs
 from deroff import Deroffer
 
 # Whether we're Python 3
@@ -132,7 +132,7 @@ def builtcommand(options, description):
 
     # Here's what we'll use to truncate if necessary
     max_description_width = 63
-    truncation_suffix = '… [See Man Page]'
+    truncation_suffix = u'… [See Man Page]'
     
     # Try to include as many whole sentences as will fit
     sentences = description.split('.')
@@ -787,7 +787,7 @@ def parse_manpage_at_path(manpage_path, yield_to_dirs, output_directory):
                 fullpath = os.path.join(output_directory, CMDNAME + '.fish')
                 try:
                     if file_missing_or_overwritable(fullpath):
-                        output_file = open(fullpath, 'w')
+                        output_file = codecs.open(fullpath, "w", encoding="utf-8");
                     else:
                         add_diagnostic("Not overwriting the file at '%s'" % fullpath)
 

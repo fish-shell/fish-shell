@@ -758,13 +758,19 @@ void reader_repaint_needed()
 
 void reader_repaint_if_needed()
 {
-    if (data && data->screen_reset_needed)
+    if (data == NULL)
+        return;
+    
+    bool needs_reset = data->screen_reset_needed;
+    bool needs_repaint = needs_reset || data->repaint_needed;
+    
+    if (needs_reset)
     {
         s_reset(&data->screen, screen_reset_current_line_and_prompt);
         data->screen_reset_needed = false;
     }
 
-    if (data && data->repaint_needed)
+    if (needs_repaint)
     {
         reader_repaint();
         /* reader_repaint clears repaint_needed */
@@ -2848,6 +2854,7 @@ const wchar_t *reader_readline()
                     coalescing_repaints = true;
                     exec_prompt();
                     s_reset(&data->screen, screen_reset_current_line_and_prompt);
+                    data->screen_reset_needed = false;
                     reader_repaint();
                 }
                 break;

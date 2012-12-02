@@ -1338,12 +1338,12 @@ void s_reset(screen_t *s, screen_reset_mode_t mode)
         abandon_line_string.reserve(screen_width);
         
         int non_space_width = wcwidth(omitted_newline_char);
-        if (screen_width > non_space_width)
+        if (screen_width >= non_space_width)
         {
             abandon_line_string.append(L"\x1b[7m"); //invert text ANSI escape sequence
             abandon_line_string.push_back(omitted_newline_char);
             abandon_line_string.append(L"\x1b[0m"); //normal text ANSI escape sequence
-            abandon_line_string.append(screen_width - non_space_width - 1, L' ');
+            abandon_line_string.append(screen_width - non_space_width, L' ');
         }
         abandon_line_string.push_back(L'\r');
         const std::string narrow_abandon_line_string = wcs2string(abandon_line_string);

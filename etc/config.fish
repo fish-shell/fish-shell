@@ -37,13 +37,3 @@ if status --is-login
 	end
 end
 
-#
-# Load additional initialization files
-#
-
-if test -d include
-	for i in include/*.fish
-		. $i
-	end
-end
-

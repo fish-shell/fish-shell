@@ -569,6 +569,14 @@ install-sh:
 install: all install-sh check-uninstall install-force
 .PHONY: install
 
+#
+# Xcode install
+#
+xcode-install:
+	rm -Rf /tmp/fish_build;\
+	xcodebuild install DSTROOT=/tmp/fish_build;\
+	ditto /tmp/fish_build /
+.PHONY: xcode-install
 
 #
 # Force installation, even in presense of incompatible previous

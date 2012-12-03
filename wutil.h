@@ -15,6 +15,7 @@
 #include <sys/types.h>
 #include <stdarg.h>
 #include <string>
+#include <utility>
 #include "common.h"
 
 /**
@@ -143,5 +144,9 @@ int wrename(const wcstring &oldName, const wcstring &newName);
 
 /** Like wcstol(), but fails on a value outside the range of an int */
 int fish_wcstoi(const wchar_t *str, wchar_t ** endptr, int base);
+
+/** Class for representing a file's inode. We use this to detect and avoid symlink loops, among other things. */
+typedef std::pair<dev_t, ino_t> file_id_t;
+
 
 #endif

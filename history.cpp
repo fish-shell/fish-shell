@@ -96,6 +96,20 @@ static bool history_file_lock(int fd, short type)
     return ret != -1;
 }
 
+/* Get a file_id_t corresponding to the given fd */
+static file_id_t history_file_identify(int fd)
+{
+    file_id_t result(-1, -1);
+    struct stat buf = {};
+    if (0 == fstat(fd, &buf))
+    {
+        result.first = buf.st_dev;
+        result.second = buf.st_ino;
+    }
+    return result;
+}
+
+
 /* Our LRU cache is used for restricting the amount of history we have, and limiting how long we order it. */
 class history_lru_node_t : public lru_node_t
 {
@@ -457,12 +471,12 @@ history_t & history_t::history_with_name(const wcstring &name)
 history_t::history_t(const wcstring &pname) :
     name(pname),
     first_unwritten_new_item_index(0),
-    unsaved_item_count(0),
     mmap_start(NULL),
     mmap_length(0),
     birth_timestamp(time(NULL)),
     save_timestamp(0),
-    loaded_old(false)
+    loaded_old(false),
+    chaos_mode(false)
 {
     pthread_mutex_init(&lock, NULL);
 }
@@ -485,7 +499,6 @@ void history_t::add(const history_item_t &item)
     {
         /* We have to add a new item */
         new_items.push_back(item);
-        unsaved_item_count++;
     }
 
     /* Prevent the first write from always triggering a save */
@@ -494,10 +507,12 @@ void history_t::add(const history_item_t &item)
         save_timestamp = now;
 
     /* This might be a good candidate for moving to a background thread */
-    if ((now > save_timestamp + SAVE_INTERVAL) || (unsaved_item_count >= SAVE_COUNT))
+    
+    assert(new_items.size() >= first_unwritten_new_item_index);
+    if ((now > save_timestamp + SAVE_INTERVAL) || (new_items.size() - first_unwritten_new_item_index >= SAVE_COUNT))
     {
         time_profiler_t profiler("save_internal");
-        this->save_internal();
+        this->save_internal(false);
     }
 
 }
@@ -880,7 +895,7 @@ void history_t::populate_from_mmap(void)
 }
 
 /* Do a private, read-only map of the entirety of a history file with the given name. Returns true if successful. Returns the mapped memory region by reference. */
-static bool map_file(const wcstring &name, const char **out_map_start, size_t *out_map_len)
+static bool map_file(const wcstring &name, const char **out_map_start, size_t *out_map_len, file_id_t *file_id)
 {
     bool result = false;
     wcstring filename = history_filename(name, L"");
@@ -889,7 +904,12 @@ static bool map_file(const wcstring &name, const char **out_map_start, size_t *o
         int fd = wopen_cloexec(filename, O_RDONLY);
         if (fd >= 0)
         {
-            /* Take a read lock to guard against someone else appending. This is released when the file is closed (below). */
+        
+            /* Get the file ID if requested */
+            if (file_id != NULL)
+                *file_id = history_file_identify(fd);
+        
+            /* Take a read lock to guard against someone else appending. This is released when the file is closed (below). We will read the file after taking the lock, but that's not a problem, because we never modify already written data. In short, the purpose of this lock is to ensure we don't see the file size change mid-update. */
             if (history_file_lock(fd, F_RDLCK))
             {
                 off_t len = lseek(fd, 0, SEEK_END);
@@ -924,7 +944,7 @@ bool history_t::load_old_if_needed(void)
     //signal_block();
 
     bool ok = false;
-    if (map_file(name, &mmap_start, &mmap_length))
+    if (map_file(name, &mmap_start, &mmap_length, &mmap_file_id))
     {
         // Here we've mapped the file
         ok = true;
@@ -1149,7 +1169,7 @@ bool history_t::save_internal_via_rewrite()
         /* Map in existing items (which may have changed out from underneath us, so don't trust our old mmap'd data) */
         const char *local_mmap_start = NULL;
         size_t local_mmap_size = 0;
-        if (map_file(name, &local_mmap_start, &local_mmap_size))
+        if (map_file(name, &local_mmap_start, &local_mmap_size, NULL))
         {
             const history_file_type_t local_mmap_type = infer_file_type(local_mmap_start, local_mmap_size);
             size_t cursor = 0;
@@ -1196,14 +1216,14 @@ bool history_t::save_internal_via_rewrite()
 
         signal_block();
 
-        int out_fd = wopen_cloexec(tmp_name, O_WRONLY | O_CREAT | O_TRUNC);
+        int out_fd = wopen_cloexec(tmp_name, O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if (out_fd >= 0)
         {
             FILE *out = fdopen(out_fd, "w");
             if (out)
             {
-                /* Be block buffered */
-                setvbuf(out, NULL, _IOFBF, 0);
+                /* Be block buffered. In chaos mode, choose a tiny buffer so as to magnify the effects of race conditions. Otherwise, use the default buffer */
+                setvbuf(out, NULL, _IOFBF, chaos_mode ? 1 : 0);
                 
                 /* Write them out */
                 for (history_lru_cache_t::iterator iter = lru.begin(); iter != lru.end(); ++iter)
@@ -1252,6 +1272,17 @@ bool history_t::save_internal_via_rewrite()
         lru.evict_all_nodes();
     }
     
+    if (ok)
+    {
+        /* We've saved everything, so we have no more unsaved items */
+        this->first_unwritten_new_item_index = new_items.size();
+        this->deleted_items.clear();
+        
+        /* Our history has been written to the file, so clear our state so we can re-reference the file. */
+        this->clear_file_state();
+    }
+
+    
     return ok;
 }
 
@@ -1260,7 +1291,13 @@ bool history_t::save_internal_via_appending()
     /* This must be called while locked */
     ASSERT_IS_LOCKED(lock);
     
+    /* No deleting allowed */
+    assert(deleted_items.empty());
+    
     bool ok = false;
+    
+    /* If the file is different (someone vacuumed it) then we need to update our mmap */
+    bool file_changed = false;
     
     /* Get the path to the real history file */
     wcstring history_path = history_filename(name, wcstring());
@@ -1271,25 +1308,31 @@ bool history_t::save_internal_via_appending()
     int out_fd = wopen_cloexec(history_path, O_WRONLY | O_APPEND);
     if (out_fd >= 0)
     {
+        /* Check to see if the file changed */
+        if (history_file_identify(out_fd) == mmap_file_id)
+            file_changed = true;
+    
         /* Exclusive lock on the entire file. This is released when we close the file (below). */
-        struct flock flk = {};
-        flk.l_type = F_WRLCK;
-        flk.l_whence = SEEK_SET;
-        
         if (history_file_lock(out_fd, F_WRLCK))
         {
             /* We successfully took the exclusive lock. Append to the file.
                Note that this is sketchy for a few reasons:
                  - Another shell may have appended its own items with a later timestamp, so our file may no longer be sorted by timestamp.
                  - Another shell may have appended the same items, so our file may now contain duplicates.
+             
+               We cannot modify any previous parts of our file, because other instances may be reading those portions. We can only append.
+             
                Originally we always rewrote the file on saving, which avoided both of these problems. However, appending allows us to save history after every command, which is nice!
                
-               Periodically we "clean up" the file by rewriting it, so that most of the time it doesn't have these issues.
+               Periodically we "clean up" the file by rewriting it, so that most of the time it doesn't have duplicates, although we don't yet sort by timestamp (the timestamp isn't really used for much anyways).
             */
             
             FILE *out = fdopen(out_fd, "a");
             if (out)
             {
+                /* Be block buffered. In chaos mode, choose a tiny buffer so as to magnify the effects of race conditions. Otherwise, use the default buffer */
+                setvbuf(out, NULL, _IOFBF, chaos_mode ? 1 : 0);
+            
                 bool errored = false;
                 
                 /* Write all items at or after first_unwritten_new_item_index */
@@ -1316,6 +1359,7 @@ bool history_t::save_internal_via_appending()
                     errored = true;
                 }
                 
+                /* We're OK if we did not error */
                 ok = ! errored;
             }
         }
@@ -1325,11 +1369,18 @@ bool history_t::save_internal_via_appending()
         close(out_fd);
 
     signal_unblock();
+    
+    /* If someone has replaced the file, forget our file state */
+    if (file_changed)
+    {
+        this->clear_file_state();
+    }
+    
     return ok;
 }
 
-/** Save the specified mode to file */
-void history_t::save_internal()
+/** Save the specified mode to file; optionally also vacuums */
+void history_t::save_internal(bool vacuum)
 {
     /* This must be called while locked */
     ASSERT_IS_LOCKED(lock);
@@ -1343,25 +1394,28 @@ void history_t::save_internal()
 
     /* Try saving. If we have items to delete, we have to rewrite the file. If we do not, we can append to it. */
     bool ok = false;
-    if (
-    ok = save_internal_via_appending();
-    if (! ok)
-        ok = this->save_internal_via_rewrite();
-    
-    if (ok)
+    if (! vacuum && deleted_items.empty())
     {
-        /* We've saved everything, so we have no more unsaved items */
-        unsaved_item_count = 0;
-
-        /* Our history has been written to the file, so clear our state so we can re-reference the file. */
-        this->clear_file_state();
+        /* Try doing a fast append */
+        ok = save_internal_via_appending();
+    }
+    if (! ok)
+    {
+        /* We did not or could not append; rewrite the file ("vacuum" it) */
+        ok = this->save_internal_via_rewrite();
     }
 }
 
 void history_t::save(void)
 {
     scoped_lock locker(lock);
-    this->save_internal();
+    this->save_internal(false);
+}
+
+void history_t::save_and_vacuum(void)
+{
+    scoped_lock locker(lock);
+    this->save_internal(true);
 }
 
 void history_t::clear(void)
@@ -1370,7 +1424,6 @@ void history_t::clear(void)
     new_items.clear();
     deleted_items.clear();
     first_unwritten_new_item_index = 0;
-    unsaved_item_count = 0;
     old_item_offsets.clear();
     wcstring filename = history_filename(name, L"");
     if (! filename.empty())

@@ -8,6 +8,7 @@
 #include <wchar.h>
 #include "common.h"
 #include "pthread.h"
+#include "wutil.h"
 #include <vector>
 #include <utility>
 #include <list>
@@ -120,9 +121,6 @@ private:
     /** Deleted item contents. */
     std::set<wcstring> deleted_items;
 
-    /** How many items we've added without saving */
-    size_t unsaved_item_count;
-
     /** The mmaped region for the history file */
     const char *mmap_start;
 
@@ -131,6 +129,9 @@ private:
 
     /** The type of file we mmap'd */
     history_file_type_t mmap_type;
+    
+    /** The file ID of the file we mmap'd */
+    file_id_t mmap_file_id;
 
     /** Timestamp of when this history was created */
     const time_t birth_timestamp;
@@ -159,7 +160,10 @@ private:
     bool save_internal_via_appending();
 
     /** Saves history */
-    void save_internal();
+    void save_internal(bool vacuum);
+
+    /** Whether we're in maximum chaos mode, useful for testing */
+    bool chaos_mode;
 
     /* Versioned decoding */
     static history_item_t decode_item_fish_2_0(const char *base, size_t len);
@@ -184,6 +188,9 @@ public:
 
     /** Saves history */
     void save();
+    
+    /** Performs a full (non-incremental) save */
+    void save_and_vacuum();
 
     /** Irreversibly clears history */
     void clear();

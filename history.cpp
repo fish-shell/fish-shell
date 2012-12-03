@@ -58,7 +58,7 @@ Our history format is intended to be valid YAML. Here it is:
 #define SAVE_COUNT 5
 
 /** Whether we print timing information */
-#define LOG_TIMES 1
+#define LOG_TIMES 0
 
 class time_profiler_t
 {

@@ -123,7 +123,7 @@ private:
 
     /** New items. Note that these are NOT discarded on save. We need to keep these around so we can distinguish between items in our history and items in the history of other shells that were started after we were started. */
     std::vector<history_item_t> new_items;
-    
+
     /** The index of the first new item that we have not yet written. */
     size_t first_unwritten_new_item_index;
 
@@ -138,7 +138,7 @@ private:
 
     /** The type of file we mmap'd */
     history_file_type_t mmap_type;
-    
+
     /** The file ID of the file we mmap'd */
     file_id_t mmap_file_id;
 
@@ -165,7 +165,7 @@ private:
 
     /** Saves history by rewriting the file */
     bool save_internal_via_rewrite();
-    
+
     /** Saves history by appending to the file */
     bool save_internal_via_appending();
 
@@ -198,7 +198,7 @@ public:
 
     /** Saves history */
     void save();
-    
+
     /** Performs a full (non-incremental) save */
     void save_and_vacuum();
 

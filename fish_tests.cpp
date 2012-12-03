@@ -978,7 +978,8 @@ public:
     static void test_history(void);
     static void test_history_merge(void);
     static void test_history_formats(void);
-    
+    static void test_history_speed(void);
+
     static void test_history_races(void);
     static void test_history_races_pound_on_history();
 };
@@ -1110,16 +1111,16 @@ void history_tests_t::test_history_races_pound_on_history()
 void history_tests_t::test_history_races(void)
 {
     say(L"Testing history race conditions");
-    
+
     // Ensure history is clear
     history_t *hist = new history_t(L"race_test");
     hist->clear();
     delete hist;
-    
+
     // Test concurrent history writing
 #define RACE_COUNT 10
     pid_t children[RACE_COUNT];
-    
+
     for (size_t i=0; i < RACE_COUNT; i++)
     {
         pid_t pid = fork();
@@ -1136,21 +1137,21 @@ void history_tests_t::test_history_races(void)
             children[i] = pid;
         }
     }
-    
+
     // Wait for all children
     for (size_t i=0; i < RACE_COUNT; i++)
     {
         int stat;
         waitpid(children[i], &stat, WUNTRACED);
     }
-    
+
     // Compute the expected lines
     wcstring_list_t lines[RACE_COUNT];
     for (size_t i=0; i < RACE_COUNT; i++)
     {
         lines[i] = generate_history_lines(children[i]);
     }
-    
+
     // Count total lines
     size_t line_count = 0;
     for (size_t i=0; i < RACE_COUNT; i++)
@@ -1160,7 +1161,7 @@ void history_tests_t::test_history_races(void)
 
     // Ensure we consider the lines that have been outputted as part of our history
     time_barrier();
-    
+
     /* Ensure that we got sane, sorted results */
     hist = new history_t(L"race_test");
     hist->chaos_mode = true;
@@ -1170,7 +1171,7 @@ void history_tests_t::test_history_races(void)
         history_item_t item = hist->item_at_index(hist_idx);
         if (item.empty())
             break;
-        
+
         // The item must be present in one of our 'lines' arrays
         // If it is present, then every item after it is assumed to be missed
         size_t i;
@@ -1181,7 +1182,7 @@ void history_tests_t::test_history_races(void)
             {
                 // Delete everything from the found location onwards
                 lines[i].resize(where - lines[i].begin());
-                
+
                 // Break because we found it
                 break;
             }
@@ -1193,7 +1194,7 @@ void history_tests_t::test_history_races(void)
     }
     // every write should add at least one item
     assert(hist_idx >= RACE_COUNT);
-    
+
     //hist->clear();
     delete hist;
 }
@@ -1408,6 +1409,32 @@ void history_tests_t::test_history_formats(void)
     }
 }
 
+void history_tests_t::test_history_speed(void)
+{
+    say(L"Testing history speed");
+    history_t *hist = new history_t(L"speed_test");
+    wcstring item = L"History Speed Test - X";
+
+    /* Test for 10 seconds */
+    double start = timef();
+    double end = start + 4;
+    double stop = 0;
+    size_t count = 0;
+    for (;;)
+    {
+        item[item.size() - 1] = L'0' + (count % 10);
+        hist->add(item);
+        count++;
+
+        stop = timef();
+        if (stop >= end)
+            break;
+    }
+    printf("%lu items - %.2f msec per item\n", (unsigned long)count, (stop - start) * 1E6 / count);
+    hist->clear();
+    delete hist;
+}
+
 
 /**
    Main test
@@ -1448,6 +1475,7 @@ int main(int argc, char **argv)
     history_tests_t::test_history_merge();
     history_tests_t::test_history_races();
     history_tests_t::test_history_formats();
+    //history_tests_t::test_history_speed();
 
     say(L"Encountered %d errors in low-level tests", err_count);
 

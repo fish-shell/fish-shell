@@ -531,7 +531,13 @@ void history_t::add(const history_item_t &item)
 
 void history_t::add(const wcstring &str, const path_list_t &valid_paths)
 {
-    this->add(history_item_t(str, time(NULL), valid_paths));
+    time_t when = time(NULL);
+    /* Big hack: do not allow timestamps equal to our birthdate. This is because we include items whose timestamps are equal to our birthdate when reading old history, so we can catch "just closed" items. But this means that we may interpret our own items, that we just wrote, as old items, if we wrote them in the same second as our birthdate.
+    */
+    if (when == this->birth_timestamp)
+        when++;
+
+    this->add(history_item_t(str, when, valid_paths));
 }
 
 void history_t::remove(const wcstring &str)
@@ -1168,8 +1174,8 @@ bool history_t::save_internal_via_rewrite()
     
     bool ok = true;
 
-    wcstring tmp_name = history_filename(name, L".tmp");
-    if (! tmp_name.empty())
+    wcstring tmp_name_template = history_filename(name, L".XXXXXX");
+    if (! tmp_name_template.empty())
     {
         /* Make an LRU cache to save only the last N elements */
         history_lru_cache_t lru(HISTORY_SAVE_MAX);
@@ -1227,9 +1233,24 @@ bool history_t::save_internal_via_rewrite()
 
         signal_block();
 
-        int out_fd = wopen_cloexec(tmp_name, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        /* Try to create a temporary file, up to 10 times. We don't use mkstemps because we want to open it CLO_EXEC. This should almost always succeed on the first try. */
+        int out_fd = -1;
+        wcstring tmp_name;
+        for (size_t attempt = 0; attempt < 10 && out_fd == -1; attempt++)
+        {
+            char *narrow_str = wcs2str(tmp_name_template.c_str());
+            if (narrow_str && mktemp(narrow_str))
+            {
+                /* It was successfully templated; try opening it atomically */
+                tmp_name = str2wcstring(narrow_str);
+                out_fd = wopen_cloexec(tmp_name, O_WRONLY | O_CREAT | O_EXCL | O_TRUNC, 0644);
+            }
+            free(narrow_str);
+        }
+        
         if (out_fd >= 0)
         {
+            /* Success */
             FILE *out = fdopen(out_fd, "w");
             if (out)
             {

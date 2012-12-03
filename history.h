@@ -14,6 +14,15 @@
 #include <list>
 #include <set>
 
+/* fish supports multiple shells writing to history at once. Here is its strategy:
+
+1. All history files are append-only. Data, once written, is never modified.
+2. A history file may be re-written ("vacuumed"). This involves reading in the file and writing a new one, while performing maintenance tasks: discarding items in an LRU fashion until we reach the desired maximum count, removing duplicates, and sorting them by timestamp (eventually, not implemented yet). The new file is atomically moved into place via rename().
+3. History files are mapped in via mmap(). Before the file is mapped, the file takes a fcntl read lock. The purpose of this lock is to avoid seeing a transient state where partial data has been written to the file.
+4. History is appended to under a fcntl write lock.
+5. The chaos_mode boolean can be set to true to do things like lower buffer sizes which can trigger race conditions. This is useful for testing.
+*/
+
 typedef std::vector<wcstring> path_list_t;
 
 enum history_search_type_t

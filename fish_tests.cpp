@@ -1117,7 +1117,7 @@ void history_tests_t::test_history_races(void)
     delete hist;
     
     // Test concurrent history writing
-#define RACE_COUNT 20
+#define RACE_COUNT 10
     pid_t children[RACE_COUNT];
     
     for (size_t i=0; i < RACE_COUNT; i++)
@@ -1186,7 +1186,10 @@ void history_tests_t::test_history_races(void)
                 break;
             }
         }
-        assert(i < RACE_COUNT && "Line expected to be at end of some array");
+        if (i >= RACE_COUNT)
+        {
+            err(L"Line '%ls' found in history not found in some array", item.str().c_str());
+        }
     }
     // every write should add at least one item
     assert(hist_idx >= RACE_COUNT);
@@ -1428,7 +1431,6 @@ int main(int argc, char **argv)
     reader_init();
     env_init();
 
-#if 0
     test_format();
     test_escape();
     test_convert();
@@ -1442,11 +1444,9 @@ int main(int argc, char **argv)
     test_is_potential_path();
     test_colors();
     test_autosuggest_suggest_special();
-#endif
     history_tests_t::test_history();
     history_tests_t::test_history_merge();
     history_tests_t::test_history_races();
-    return 0;
     history_tests_t::test_history_formats();
 
     say(L"Encountered %d errors in low-level tests", err_count);

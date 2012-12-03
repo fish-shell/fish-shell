@@ -686,9 +686,6 @@ static void insert_completion_if_missing(const wcstring &str, std::vector<comple
         append_completion(out, str);
 }
 
-/** Helper stuff to avoid symlink loops */
-typedef std::pair<dev_t, ino_t> file_id_t;
-
 /**
    The real implementation of wildcard expansion is in this
    function. Other functions are just wrappers around this one.

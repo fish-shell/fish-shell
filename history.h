@@ -111,8 +111,11 @@ private:
     /** The name of this list. Used for picking a suitable filename and for switching modes. */
     const wcstring name;
 
-    /** New items. */
+    /** New items. Note that these are NOT discarded on save. We need to keep these around so we can distinguish between items in our history and items in the history of other shells that were started after we were started. */
     std::vector<history_item_t> new_items;
+    
+    /** The index of the first new item that we have not yet written. */
+    size_t first_unwritten_new_item_index;
 
     /** Deleted item contents. */
     std::set<wcstring> deleted_items;
@@ -148,6 +151,12 @@ private:
 
     /** Deletes duplicates in new_items. */
     void compact_new_items();
+
+    /** Saves history by rewriting the file */
+    bool save_internal_via_rewrite();
+    
+    /** Saves history by appending to the file */
+    bool save_internal_via_appending();
 
     /** Saves history */
     void save_internal();
@@ -187,8 +196,6 @@ public:
 
     /** Return the specified history at the specified index. 0 is the index of the current commandline. (So the most recent item is at index 1.) */
     history_item_t item_at_index(size_t idx);
-
-    bool is_deleted(const history_item_t &item) const;
 };
 
 class history_search_t

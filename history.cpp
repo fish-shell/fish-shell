@@ -85,6 +85,17 @@ public:
     }
 };
 
+/* Lock a file via fcntl; returns true on success, false on failure. */
+static bool history_file_lock(int fd, short type)
+{
+    assert(type == F_RDLCK || type == F_WRLCK);
+    struct flock flk = {};
+    flk.l_type = type;
+    flk.l_whence = SEEK_SET;
+    int ret = fcntl(fd, F_SETLKW, (void *)&flk);
+    return ret != -1;
+}
+
 /* Our LRU cache is used for restricting the amount of history we have, and limiting how long we order it. */
 class history_lru_node_t : public lru_node_t
 {
@@ -96,8 +107,6 @@ public:
         timestamp(item.timestamp()),
         required_paths(item.required_paths)
     {}
-
-    bool write_yaml_to_file(FILE *f) const;
 };
 
 class history_lru_cache_t : public lru_cache_t<history_lru_node_t>
@@ -190,10 +199,10 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
     }
 }
 
-/* Output our YAML to a file */
-bool history_lru_node_t::write_yaml_to_file(FILE *f) const
+/* Output our YAML history format to a file. */
+static bool write_yaml_to_file(const wcstring &wcmd, time_t timestamp, const path_list_t &required_paths, FILE *f)
 {
-    std::string cmd = wcs2string(key);
+    std::string cmd = wcs2string(wcmd);
     escape_yaml(cmd);
     if (fprintf(f, "- cmd: %s\n", cmd.c_str()) < 0)
         return false;
@@ -217,7 +226,6 @@ bool history_lru_node_t::write_yaml_to_file(FILE *f) const
     }
     return true;
 }
-
 
 // Parse a timestamp line that looks like this: spaces, "when:", spaces, timestamp, newline
 // The string is NOT null terminated; however we do know it contains a newline, so stop when we reach it
@@ -448,6 +456,7 @@ history_t & history_t::history_with_name(const wcstring &name)
 
 history_t::history_t(const wcstring &pname) :
     name(pname),
+    first_unwritten_new_item_index(0),
     unsaved_item_count(0),
     mmap_start(NULL),
     mmap_length(0),
@@ -504,17 +513,21 @@ void history_t::remove(const wcstring &str)
     deleted_items.insert(str);
 
     /* Remove from our list of new items */
-    for (std::vector<history_item_t>::iterator iter = new_items.begin(); iter != new_items.end();)
+    size_t idx = new_items.size();
+    while (idx--)
     {
-        if (iter->str() == str)
+        if (new_items[idx].str() == str)
         {
-            iter = new_items.erase(iter);
-        }
-        else
-        {
-            iter++;
+            new_items.erase(new_items.begin() + idx);
+            
+            /* If this index is before our first_unwritten_new_item_index, then subtract one from that index so it stays pointing at the same item. If it is equal to or larger, then we have not yet writen this item, so we don't have to adjust the index. */
+            if (idx < first_unwritten_new_item_index)
+            {
+                first_unwritten_new_item_index--;
+            }
         }
     }
+    assert(first_unwritten_new_item_index <= new_items.size());
 }
 
 void history_t::get_string_representation(wcstring &result, const wcstring &separator)
@@ -866,28 +879,32 @@ void history_t::populate_from_mmap(void)
     }
 }
 
-// Do a private, read-only map of the entirety of a history file with the given name. Returns true if successful. Returns the mapped memory region by reference.
+/* Do a private, read-only map of the entirety of a history file with the given name. Returns true if successful. Returns the mapped memory region by reference. */
 static bool map_file(const wcstring &name, const char **out_map_start, size_t *out_map_len)
 {
     bool result = false;
     wcstring filename = history_filename(name, L"");
     if (! filename.empty())
     {
-        int fd;
-        if ((fd = wopen_cloexec(filename, O_RDONLY)) > 0)
+        int fd = wopen_cloexec(filename, O_RDONLY);
+        if (fd >= 0)
         {
-            off_t len = lseek(fd, 0, SEEK_END);
-            if (len != (off_t)-1)
+            /* Take a read lock to guard against someone else appending. This is released when the file is closed (below). */
+            if (history_file_lock(fd, F_RDLCK))
             {
-                size_t mmap_length = (size_t)len;
-                if (lseek(fd, 0, SEEK_SET) == 0)
+                off_t len = lseek(fd, 0, SEEK_END);
+                if (len != (off_t)-1)
                 {
-                    char *mmap_start;
-                    if ((mmap_start = (char *)mmap(0, mmap_length, PROT_READ, MAP_PRIVATE, fd, 0)) != MAP_FAILED)
+                    size_t mmap_length = (size_t)len;
+                    if (lseek(fd, 0, SEEK_SET) == 0)
                     {
-                        result = true;
-                        *out_map_start = mmap_start;
-                        *out_map_len = mmap_length;
+                        char *mmap_start;
+                        if ((mmap_start = (char *)mmap(0, mmap_length, PROT_READ, MAP_PRIVATE, fd, 0)) != MAP_FAILED)
+                        {
+                            result = true;
+                            *out_map_start = mmap_start;
+                            *out_map_len = mmap_length;
+                        }
                     }
                 }
             }
@@ -1103,23 +1120,21 @@ void history_t::compact_new_items()
         {
             // This item was not inserted because it was already in the set, so delete the item at this index
             new_items.erase(new_items.begin() + idx);
+            
+            if (idx < first_unwritten_new_item_index)
+            {
+                /* Decrement first_unwritten_new_item_index if we are deleting a previously written item */
+                first_unwritten_new_item_index--;
+            }
         }
     }
 }
 
-/** Save the specified mode to file */
-void history_t::save_internal()
+bool history_t::save_internal_via_rewrite()
 {
     /* This must be called while locked */
     ASSERT_IS_LOCKED(lock);
-
-    /* Nothing to do if there's no new items */
-    if (new_items.empty() && deleted_items.empty())
-        return;
-
-    /* Compact our new items so we don't have duplicates */
-    this->compact_new_items();
-
+    
     bool ok = true;
 
     wcstring tmp_name = history_filename(name, L".tmp");
@@ -1147,7 +1162,7 @@ void history_t::save_internal()
 
                 /* Try decoding an old item */
                 const history_item_t old_item = history_t::decode_item(local_mmap_start + offset, local_mmap_size - offset, local_mmap_type);
-                if (old_item.empty() || is_deleted(old_item))
+                if (old_item.empty() || deleted_items.count(old_item.str()) > 0)
                 {
 //                    debug(0, L"Item is deleted : %s\n", old_item.str().c_str());
                     continue;
@@ -1181,46 +1196,163 @@ void history_t::save_internal()
 
         signal_block();
 
-        FILE *out;
-        if ((out=wfopen(tmp_name, "w")))
+        int out_fd = wopen_cloexec(tmp_name, O_WRONLY | O_CREAT | O_TRUNC);
+        if (out_fd >= 0)
         {
-            /* Write them out */
-            for (history_lru_cache_t::iterator iter = lru.begin(); iter != lru.end(); ++iter)
+            FILE *out = fdopen(out_fd, "w");
+            if (out)
             {
-                const history_lru_node_t *node = *iter;
-                if (! node->write_yaml_to_file(out))
+                /* Be block buffered */
+                setvbuf(out, NULL, _IOFBF, 0);
+                
+                /* Write them out */
+                for (history_lru_cache_t::iterator iter = lru.begin(); iter != lru.end(); ++iter)
                 {
+                    const history_lru_node_t *node = *iter;
+                    if (! write_yaml_to_file(node->key, node->timestamp, node->required_paths, out))
+                    {
+                        ok = false;
+                        break;
+                    }
+                }
+                
+                if (0 == fclose(out))
+                {
+                    /* fclose closed out_fd, so mark it as -1 so we don't try to close it later */
+                    out_fd = -1;
+                }
+                else
+                {
+                    /* error on close */
                     ok = false;
-                    break;
+                }
+
+                if (! ok)
+                {
+                    /*
+                      This message does not have high enough priority to
+                      be shown by default.
+                    */
+                    debug(2, L"Error when writing history file");
+                }
+                else
+                {
+                    wcstring new_name = history_filename(name, wcstring());
+                    wrename(tmp_name, new_name);
                 }
             }
-
-            if (fclose(out) || !ok)
-            {
-                /*
-                  This message does not have high enough priority to
-                  be shown by default.
-                */
-                debug(2, L"Error when writing history file");
-            }
-            else
-            {
-                wcstring new_name = history_filename(name, wcstring());
-                wrename(tmp_name, new_name);
-            }
         }
+        
+        if (out_fd >= 0)
+            close(out_fd);
 
         signal_unblock();
 
         /* Make sure we clear all nodes, since this doesn't happen automatically */
         lru.evict_all_nodes();
-
-        /* We've saved everything, so we have no more unsaved items */
-        unsaved_item_count = 0;
     }
+    
+    return ok;
+}
 
+bool history_t::save_internal_via_appending()
+{
+    /* This must be called while locked */
+    ASSERT_IS_LOCKED(lock);
+    
+    bool ok = false;
+    
+    /* Get the path to the real history file */
+    wcstring history_path = history_filename(name, wcstring());
+    
+    signal_block();
+    
+    /* Open the file */
+    int out_fd = wopen_cloexec(history_path, O_WRONLY | O_APPEND);
+    if (out_fd >= 0)
+    {
+        /* Exclusive lock on the entire file. This is released when we close the file (below). */
+        struct flock flk = {};
+        flk.l_type = F_WRLCK;
+        flk.l_whence = SEEK_SET;
+        
+        if (history_file_lock(out_fd, F_WRLCK))
+        {
+            /* We successfully took the exclusive lock. Append to the file.
+               Note that this is sketchy for a few reasons:
+                 - Another shell may have appended its own items with a later timestamp, so our file may no longer be sorted by timestamp.
+                 - Another shell may have appended the same items, so our file may now contain duplicates.
+               Originally we always rewrote the file on saving, which avoided both of these problems. However, appending allows us to save history after every command, which is nice!
+               
+               Periodically we "clean up" the file by rewriting it, so that most of the time it doesn't have these issues.
+            */
+            
+            FILE *out = fdopen(out_fd, "a");
+            if (out)
+            {
+                bool errored = false;
+                
+                /* Write all items at or after first_unwritten_new_item_index */
+                while (first_unwritten_new_item_index < new_items.size())
+                {
+                    const history_item_t &item = new_items.at(first_unwritten_new_item_index);
+                    if (! write_yaml_to_file(item.str(), item.timestamp(), item.get_required_paths(), out))
+                    {
+                        errored = true;
+                        break;
+                    }
+                    
+                    /* We wrote this item, hooray */
+                    first_unwritten_new_item_index++;
+                }
+            
+                if (0 == fclose(out))
+                {
+                    /* fclose just closed our out_fd; mark it as -1 so we don't re-close it */
+                    out_fd = -1;
+                }
+                else
+                {
+                    errored = true;
+                }
+                
+                ok = ! errored;
+            }
+        }
+    }
+    
+    if (out_fd >= 0)
+        close(out_fd);
+
+    signal_unblock();
+    return ok;
+}
+
+/** Save the specified mode to file */
+void history_t::save_internal()
+{
+    /* This must be called while locked */
+    ASSERT_IS_LOCKED(lock);
+
+    /* Nothing to do if there's no new items */
+    if (new_items.empty() && deleted_items.empty())
+        return;
+
+    /* Compact our new items so we don't have duplicates */
+    this->compact_new_items();
+
+    /* Try saving. If we have items to delete, we have to rewrite the file. If we do not, we can append to it. */
+    bool ok = false;
+    if (
+    ok = save_internal_via_appending();
+    if (! ok)
+        ok = this->save_internal_via_rewrite();
+    
     if (ok)
     {
+        /* We've saved everything, so we have no more unsaved items */
+        unsaved_item_count = 0;
+
         /* Our history has been written to the file, so clear our state so we can re-reference the file. */
         this->clear_file_state();
     }
@@ -1237,6 +1369,7 @@ void history_t::clear(void)
     scoped_lock locker(lock);
     new_items.clear();
     deleted_items.clear();
+    first_unwritten_new_item_index = 0;
     unsaved_item_count = 0;
     old_item_offsets.clear();
     wcstring filename = history_filename(name, L"");
@@ -1444,7 +1577,3 @@ void history_t::add_with_file_detection(const wcstring &str)
     }
 }
 
-bool history_t::is_deleted(const history_item_t &item) const
-{
-    return deleted_items.count(item.str()) > 0;
-}

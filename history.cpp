@@ -474,8 +474,8 @@ history_t::history_t(const wcstring &pname) :
     mmap_start(NULL),
     mmap_length(0),
     mmap_file_id(-1, -1),
-    countdown_to_vacuum(-1),
     birth_timestamp(time(NULL)),
+    countdown_to_vacuum(-1),
     loaded_old(false),
     chaos_mode(false)
 {

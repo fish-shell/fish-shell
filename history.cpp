@@ -368,8 +368,8 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
                 has_timestamp = parse_timestamp(interior_line, &timestamp);
             }
 
-            /* Skip this item if the timestamp is at or after our cutoff. */
-            if (has_timestamp && timestamp >= cutoff_timestamp)
+            /* Skip this item if the timestamp is past our cutoff. */
+            if (has_timestamp && timestamp > cutoff_timestamp)
             {
                 continue;
             }

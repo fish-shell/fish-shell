@@ -136,9 +136,10 @@ private:
     /** Timestamp of when this history was created */
     const time_t birth_timestamp;
 
-    /** Timestamp of last save */
-    time_t save_timestamp;
+    /** How many items we add until the next vacuum. Initially a random value. */
+    int countdown_to_vacuum;
 
+    /** Figure out the offsets of our mmap data */
     void populate_from_mmap(void);
 
     /** List of old items, as offsets into out mmap data */

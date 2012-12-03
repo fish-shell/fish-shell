@@ -58,7 +58,7 @@ Our history format is intended to be valid YAML. Here it is:
 #define SAVE_COUNT 5
 
 /** Whether we print timing information */
-#define LOG_TIMES 0
+#define LOG_TIMES 1
 
 class time_profiler_t
 {
@@ -80,7 +80,7 @@ public:
         if (LOG_TIMES)
         {
             double end = timef();
-            printf("(LOG_TIMES %s: %02f msec)\n", what, (end - start) * 1000);
+            fprintf(stderr, "(LOG_TIMES %s: %02f msec)\n", what, (end - start) * 1000);
         }
     }
 };
@@ -473,8 +473,9 @@ history_t::history_t(const wcstring &pname) :
     first_unwritten_new_item_index(0),
     mmap_start(NULL),
     mmap_length(0),
+    mmap_file_id(-1, -1),
+    countdown_to_vacuum(-1),
     birth_timestamp(time(NULL)),
-    save_timestamp(0),
     loaded_old(false),
     chaos_mode(false)
 {
@@ -500,20 +501,31 @@ void history_t::add(const history_item_t &item)
         /* We have to add a new item */
         new_items.push_back(item);
     }
-
-    /* Prevent the first write from always triggering a save */
-    time_t now = time(NULL);
-    if (! save_timestamp)
-        save_timestamp = now;
+    
+    /* We may or may not vacuum. We try to vacuum every kVacuumFrequency items, but start the countdown at a random number so that even if the user never runs more than 25 commands, we'll eventually vacuum.  If countdown_to_vacuum is -1, it means we haven't yet picked a value for the counter. */
+    const int kVacuumFrequency = 25;
+    if (countdown_to_vacuum < 0)
+    {
+        static unsigned int seed = (unsigned int)time(NULL);
+        /* Generate a number in the range [0, kVacuumFrequency) */
+        countdown_to_vacuum = rand_r(&seed) / (RAND_MAX / kVacuumFrequency + 1);
+    }
+    
+    /* Determine if we're going to vacuum */
+    bool vacuum = false;
+    if (countdown_to_vacuum == 0)
+    {
+        countdown_to_vacuum = kVacuumFrequency;
+        vacuum = true;
+    }
 
     /* This might be a good candidate for moving to a background thread */
-    
-    assert(new_items.size() >= first_unwritten_new_item_index);
-    if ((now > save_timestamp + SAVE_INTERVAL) || (new_items.size() - first_unwritten_new_item_index >= SAVE_COUNT))
-    {
-        time_profiler_t profiler("save_internal");
-        this->save_internal(false);
-    }
+    time_profiler_t profiler(vacuum ? "save_internal vacuum" : "save_internal no vacuum");
+    this->save_internal(vacuum);
+
+    /* Update our countdown */
+    assert(countdown_to_vacuum > 0);
+    countdown_to_vacuum--;
 
 }
 
@@ -1125,7 +1137,6 @@ void history_t::clear_file_state()
     mmap_length = 0;
     loaded_old = false;
     old_item_offsets.clear();
-    save_timestamp=time(0);
 }
 
 void history_t::compact_new_items()
@@ -1309,7 +1320,7 @@ bool history_t::save_internal_via_appending()
     if (out_fd >= 0)
     {
         /* Check to see if the file changed */
-        if (history_file_identify(out_fd) == mmap_file_id)
+        if (history_file_identify(out_fd) != mmap_file_id)
             file_changed = true;
     
         /* Exclusive lock on the entire file. This is released when we close the file (below). */

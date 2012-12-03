@@ -501,7 +501,7 @@ void history_t::add(const history_item_t &item)
         /* We have to add a new item */
         new_items.push_back(item);
     }
-    
+
     /* We may or may not vacuum. We try to vacuum every kVacuumFrequency items, but start the countdown at a random number so that even if the user never runs more than 25 commands, we'll eventually vacuum.  If countdown_to_vacuum is -1, it means we haven't yet picked a value for the counter. */
     const int kVacuumFrequency = 25;
     if (countdown_to_vacuum < 0)
@@ -510,7 +510,7 @@ void history_t::add(const history_item_t &item)
         /* Generate a number in the range [0, kVacuumFrequency) */
         countdown_to_vacuum = rand_r(&seed) / (RAND_MAX / kVacuumFrequency + 1);
     }
-    
+
     /* Determine if we're going to vacuum */
     bool vacuum = false;
     if (countdown_to_vacuum == 0)
@@ -552,7 +552,7 @@ void history_t::remove(const wcstring &str)
         if (new_items[idx].str() == str)
         {
             new_items.erase(new_items.begin() + idx);
-            
+
             /* If this index is before our first_unwritten_new_item_index, then subtract one from that index so it stays pointing at the same item. If it is equal to or larger, then we have not yet writen this item, so we don't have to adjust the index. */
             if (idx < first_unwritten_new_item_index)
             {
@@ -922,11 +922,11 @@ static bool map_file(const wcstring &name, const char **out_map_start, size_t *o
         int fd = wopen_cloexec(filename, O_RDONLY);
         if (fd >= 0)
         {
-        
+
             /* Get the file ID if requested */
             if (file_id != NULL)
                 *file_id = history_file_identify(fd);
-        
+
             /* Take a read lock to guard against someone else appending. This is released when the file is closed (below). We will read the file after taking the lock, but that's not a problem, because we never modify already written data. In short, the purpose of this lock is to ensure we don't see the file size change mid-update. */
             if (history_file_lock(fd, F_RDLCK))
             {
@@ -1157,7 +1157,7 @@ void history_t::compact_new_items()
         {
             // This item was not inserted because it was already in the set, so delete the item at this index
             new_items.erase(new_items.begin() + idx);
-            
+
             if (idx < first_unwritten_new_item_index)
             {
                 /* Decrement first_unwritten_new_item_index if we are deleting a previously written item */
@@ -1171,7 +1171,7 @@ bool history_t::save_internal_via_rewrite()
 {
     /* This must be called while locked */
     ASSERT_IS_LOCKED(lock);
-    
+
     bool ok = true;
 
     wcstring tmp_name_template = history_filename(name, L".XXXXXX");
@@ -1247,7 +1247,7 @@ bool history_t::save_internal_via_rewrite()
             }
             free(narrow_str);
         }
-        
+
         if (out_fd >= 0)
         {
             /* Success */
@@ -1256,7 +1256,7 @@ bool history_t::save_internal_via_rewrite()
             {
                 /* Be block buffered. In chaos mode, choose a tiny buffer so as to magnify the effects of race conditions. Otherwise, use the default buffer */
                 setvbuf(out, NULL, _IOFBF, chaos_mode ? 1 : 0);
-                
+
                 /* Write them out */
                 for (history_lru_cache_t::iterator iter = lru.begin(); iter != lru.end(); ++iter)
                 {
@@ -1267,7 +1267,7 @@ bool history_t::save_internal_via_rewrite()
                         break;
                     }
                 }
-                
+
                 if (0 == fclose(out))
                 {
                     /* fclose closed out_fd, so mark it as -1 so we don't try to close it later */
@@ -1294,7 +1294,7 @@ bool history_t::save_internal_via_rewrite()
                 }
             }
         }
-        
+
         if (out_fd >= 0)
             close(out_fd);
 
@@ -1303,18 +1303,20 @@ bool history_t::save_internal_via_rewrite()
         /* Make sure we clear all nodes, since this doesn't happen automatically */
         lru.evict_all_nodes();
     }
-    
+
     if (ok)
     {
         /* We've saved everything, so we have no more unsaved items */
         this->first_unwritten_new_item_index = new_items.size();
+
+        /* We deleted our deleted items */
         this->deleted_items.clear();
-        
+
         /* Our history has been written to the file, so clear our state so we can re-reference the file. */
         this->clear_file_state();
     }
 
-    
+
     return ok;
 }
 
@@ -1322,20 +1324,20 @@ bool history_t::save_internal_via_appending()
 {
     /* This must be called while locked */
     ASSERT_IS_LOCKED(lock);
-    
+
     /* No deleting allowed */
     assert(deleted_items.empty());
-    
+
     bool ok = false;
-    
+
     /* If the file is different (someone vacuumed it) then we need to update our mmap */
     bool file_changed = false;
-    
+
     /* Get the path to the real history file */
     wcstring history_path = history_filename(name, wcstring());
-    
+
     signal_block();
-    
+
     /* Open the file */
     int out_fd = wopen_cloexec(history_path, O_WRONLY | O_APPEND);
     if (out_fd >= 0)
@@ -1343,7 +1345,7 @@ bool history_t::save_internal_via_appending()
         /* Check to see if the file changed */
         if (history_file_identify(out_fd) != mmap_file_id)
             file_changed = true;
-    
+
         /* Exclusive lock on the entire file. This is released when we close the file (below). */
         if (history_file_lock(out_fd, F_WRLCK))
         {
@@ -1351,22 +1353,22 @@ bool history_t::save_internal_via_appending()
                Note that this is sketchy for a few reasons:
                  - Another shell may have appended its own items with a later timestamp, so our file may no longer be sorted by timestamp.
                  - Another shell may have appended the same items, so our file may now contain duplicates.
-             
+
                We cannot modify any previous parts of our file, because other instances may be reading those portions. We can only append.
-             
+
                Originally we always rewrote the file on saving, which avoided both of these problems. However, appending allows us to save history after every command, which is nice!
-               
+
                Periodically we "clean up" the file by rewriting it, so that most of the time it doesn't have duplicates, although we don't yet sort by timestamp (the timestamp isn't really used for much anyways).
             */
-            
+
             FILE *out = fdopen(out_fd, "a");
             if (out)
             {
                 /* Be block buffered. In chaos mode, choose a tiny buffer so as to magnify the effects of race conditions. Otherwise, use the default buffer */
                 setvbuf(out, NULL, _IOFBF, chaos_mode ? 1 : 0);
-            
+
                 bool errored = false;
-                
+
                 /* Write all items at or after first_unwritten_new_item_index */
                 while (first_unwritten_new_item_index < new_items.size())
                 {
@@ -1376,11 +1378,11 @@ bool history_t::save_internal_via_appending()
                         errored = true;
                         break;
                     }
-                    
+
                     /* We wrote this item, hooray */
                     first_unwritten_new_item_index++;
                 }
-            
+
                 if (0 == fclose(out))
                 {
                     /* fclose just closed our out_fd; mark it as -1 so we don't re-close it */
@@ -1390,24 +1392,24 @@ bool history_t::save_internal_via_appending()
                 {
                     errored = true;
                 }
-                
+
                 /* We're OK if we did not error */
                 ok = ! errored;
             }
         }
     }
-    
+
     if (out_fd >= 0)
         close(out_fd);
 
     signal_unblock();
-    
+
     /* If someone has replaced the file, forget our file state */
     if (file_changed)
     {
         this->clear_file_state();
     }
-    
+
     return ok;
 }
 
@@ -1418,7 +1420,7 @@ void history_t::save_internal(bool vacuum)
     ASSERT_IS_LOCKED(lock);
 
     /* Nothing to do if there's no new items */
-    if (new_items.empty() && deleted_items.empty())
+    if (first_unwritten_new_item_index >= new_items.size() && deleted_items.empty())
         return;
 
     /* Compact our new items so we don't have duplicates */

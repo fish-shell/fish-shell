@@ -323,9 +323,9 @@ bool path_can_be_implicit_cd(const wcstring &path, wcstring *out_path, const wch
     return result;
 }
 
-bool path_get_config(wcstring &path)
+static wcstring path_create_config()
 {
-    int done = 0;
+    bool done = false;
     wcstring res;
 
     const env_var_t xdg_dir  = env_get_string(L"XDG_CONFIG_HOME");
@@ -334,7 +334,7 @@ bool path_get_config(wcstring &path)
         res = xdg_dir + L"/fish";
         if (!create_directory(res))
         {
-            done = 1;
+            done = true;
         }
     }
     else
@@ -345,22 +345,26 @@ bool path_get_config(wcstring &path)
             res = home + L"/.config/fish";
             if (!create_directory(res))
             {
-                done = 1;
+                done = true;
             }
         }
     }
 
-    if (done)
+    if (! done)
     {
-        path = res;
-        return true;
-    }
-    else
-    {
-        debug(0, _(L"Unable to create a configuration directory for fish. Your personal settings will not be saved. Please set the $XDG_CONFIG_HOME variable to a directory where the current user has write access."));
-        return false;
-    }
+        res.clear();
 
+        debug(0, _(L"Unable to create a configuration directory for fish. Your personal settings will not be saved. Please set the $XDG_CONFIG_HOME variable to a directory where the current user has write access."));
+    }
+    return res;
+}
+
+/* Cache the config path */
+bool path_get_config(wcstring &path)
+{
+    static const wcstring result = path_create_config();
+    path = result;
+    return ! result.empty();
 }
 
 static void replace_all(wcstring &str, const wchar_t *needle, const wchar_t *replacement)

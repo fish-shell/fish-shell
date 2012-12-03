@@ -760,10 +760,10 @@ void reader_repaint_if_needed()
 {
     if (data == NULL)
         return;
-    
+
     bool needs_reset = data->screen_reset_needed;
     bool needs_repaint = needs_reset || data->repaint_needed;
-    
+
     if (needs_reset)
     {
         s_reset(&data->screen, screen_reset_current_line_and_prompt);
@@ -2702,7 +2702,7 @@ const wchar_t *reader_readline()
     std::vector<completion_t> comp;
     int finished=0;
     struct termios old_modes;
-    
+
     /* Coalesce redundant repaints. When we get a repaint, we set this to true, and skip repaints until we get something else. */
     bool coalescing_repaints = false;
 
@@ -2793,7 +2793,7 @@ const wchar_t *reader_readline()
 
         if (last_char != R_YANK && last_char != R_YANK_POP)
             yank_len=0;
-        
+
         const wchar_t *buff = data->command_line.c_str();
         switch (c)
         {

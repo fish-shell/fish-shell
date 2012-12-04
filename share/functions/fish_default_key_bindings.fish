@@ -85,7 +85,7 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind \cu backward-kill-line
 	bind \ed kill-word
 	bind \cw backward-kill-word
-	bind \ed 'if test -z (commandline); dirh; commandline -f repaint; else; commandline -f kill-word; end'
+	bind \ed 'set -l cmd (commandline); if test -z "$cmd"; dirh; commandline -f repaint; else; commandline -f kill-word; end'
 	bind \cd delete-or-exit
 
 	# This will make sure the output of the current command is paged using the less pager when you press Meta-p

@@ -159,6 +159,9 @@ private:
 
     /** Loads old if necessary */
     bool load_old_if_needed(void);
+    
+    /** Memory maps the history file if necessary */
+    bool mmap_if_needed(void);
 
     /** Deletes duplicates in new_items. */
     void compact_new_items();

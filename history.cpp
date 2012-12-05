@@ -1468,14 +1468,35 @@ void history_t::clear(void)
 
 bool history_t::is_empty(void)
 {
-    bool result = false;
     scoped_lock locker(lock);
-    if (new_items.empty())
+    
+    /* If we have new items, we're not empty */
+    if (! new_items.empty())
+        return false;
+
+    bool empty = false;
+    if (loaded_old)
     {
-        load_old_if_needed();
-        result = old_item_offsets.empty();
+        /* If we've loaded old items, see if we have any offsets */
+        empty = old_item_offsets.empty();
     }
-    return result;
+    else
+    {
+        /* If we have not loaded old items, don't actually load them (which may be expensive); just stat the file and see if it exists and is nonempty */
+        const wcstring where = history_filename(name, L"");
+        struct stat buf = {};
+        if (wstat(where, &buf) != 0)
+        {
+            /* Access failed, assume missing */
+            empty = true;
+        }
+        else
+        {
+            /* We're empty if the file is empty */
+            empty = (buf.st_size == 0);
+        }
+    }
+    return empty;
 }
 
 /* Indicate whether we ought to import the bash history file into fish */

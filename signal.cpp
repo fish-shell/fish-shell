@@ -694,7 +694,7 @@ void signal_unblock()
 //	debug( 0, L"signal block level decreased to %d", block_count );
 }
 
-int signal_is_blocked()
+bool signal_is_blocked()
 {
     return !!block_count;
 }

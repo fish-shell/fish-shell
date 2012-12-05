@@ -55,7 +55,7 @@ void signal_unblock();
 /**
    Returns true if signals are being blocked
 */
-int signal_is_blocked();
+bool signal_is_blocked();
 
 /**
   Returns signals with non-default handlers

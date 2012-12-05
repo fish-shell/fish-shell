@@ -1469,7 +1469,7 @@ void history_t::clear(void)
 bool history_t::is_empty(void)
 {
     scoped_lock locker(lock);
-    
+
     /* If we have new items, we're not empty */
     if (! new_items.empty())
         return false;

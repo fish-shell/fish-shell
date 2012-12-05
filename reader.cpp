@@ -1618,6 +1618,55 @@ static bool handle_completions(const std::vector<completion_t> &comp)
     return success;
 }
 
+/* Return true if we believe ourselves to be orphaned. loop_count is how many times we've tried to stop ourselves via SIGGTIN */
+static bool check_for_orphaned_process(unsigned long loop_count, pid_t shell_pgid)
+{
+    bool we_think_we_are_orphaned = false;
+    /* Try kill-0'ing the process whose pid corresponds to our process group ID. It's possible this will fail because we don't have permission to signal it. But more likely it will fail because it no longer exists, and we are orphaned. */
+    if (loop_count % 64 == 0)
+    {
+        if (kill(shell_pgid, 0) < 0 && errno == ESRCH)
+        {
+            we_think_we_are_orphaned = true;
+        }
+    }
+
+    if (! we_think_we_are_orphaned && loop_count % 128 == 0)
+    {
+        /* Try reading from the tty; if we get EIO we are orphaned. This is sort of bad because it may block. */
+
+        char *tty = ctermid(NULL);
+        if (! tty)
+        {
+            wperror(L"ctermid");
+            exit_without_destructors(1);
+        }
+
+        /* Open the tty. Presumably this is stdin, but maybe not? */
+        int tty_fd = open(tty, O_RDONLY | O_NONBLOCK);
+        if (tty_fd < 0)
+        {
+            wperror(L"open");
+            exit_without_destructors(1);
+        }
+
+        char tmp;
+        if (read(tty_fd, &tmp, 1) < 0 && errno == EIO)
+        {
+            we_think_we_are_orphaned = true;
+        }
+
+        close(tty_fd);
+    }
+
+    /* Just give up if we've done it a lot times */
+    if (loop_count > 4096)
+    {
+        we_think_we_are_orphaned = true;
+    }
+
+    return we_think_we_are_orphaned;
+}
 
 /**
    Initialize data for interactive use
@@ -1641,7 +1690,7 @@ static void reader_interactive_init()
        semi-expensive things like reset signal handlers unless we
        really have to, which we often don't.
      */
-    if (tcgetpgrp(0) != shell_pgid)
+    if (tcgetpgrp(STDIN_FILENO) != shell_pgid)
     {
         int block_count = 0;
         int i;
@@ -1664,13 +1713,45 @@ static void reader_interactive_init()
         }
         signal_reset_handlers();
 
-        /*
-          Ok, signal handlers are taken out of the picture. Stop ourself in a loop
-          until we are in control of the terminal.
+        /* Ok, signal handlers are taken out of the picture. Stop ourself in a loop until we are in control of the terminal. However, the call to signal(SIGTTIN) may silently not do anything if we are orphaned.
+
+            As far as I can tell there's no really good way to detect that we are orphaned. One way is to just detect if the group leader exited, via kill(shell_pgid, 0). Another possibility is that read() from the tty fails with EIO - this is more reliable but it's harder, because it may succeed or block. So we loop for a while, trying those strategies. Eventually we just give up and assume we're orphaend.
          */
-        while (tcgetpgrp(0) != shell_pgid)
+        for (unsigned long loop_count = 0;; loop_count++)
         {
-            killpg(shell_pgid, SIGTTIN);
+            pid_t owner = tcgetpgrp(STDIN_FILENO);
+            shell_pgid = getpgrp();
+            if (owner < 0 && errno == ENOTTY)
+            {
+                // No TTY, cannot be interactive?
+                debug(1,
+                      _(L"No TTY for interactive shell (tcgetpgrp failed)"));
+                wperror(L"setpgid");
+                exit_without_destructors(1);
+            }
+            if (owner == shell_pgid)
+            {
+                /* Success */
+                break;
+            }
+            else
+            {
+                if (check_for_orphaned_process(loop_count, shell_pgid))
+                {
+                    /* We're orphaned, so we just die. Another sad statistic. */
+                    debug(1,
+                          _(L"I appear to be an orphaned process, so I am quitting politely. My pid is %d."), (int)getpid());
+                    exit_without_destructors(1);
+                }
+
+                /* Try stopping us */
+                int ret = killpg(shell_pgid, SIGTTIN);
+                if (ret < 0)
+                {
+                    wperror(L"killpg");
+                    exit_without_destructors(1);
+                }
+            }
         }
 
         signal_set_handlers();
@@ -1692,7 +1773,7 @@ static void reader_interactive_init()
             debug(1,
                   _(L"Couldn't put the shell in its own process group"));
             wperror(L"setpgid");
-            exit(1);
+            exit_without_destructors(1);
         }
     }
 

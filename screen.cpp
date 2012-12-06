@@ -566,6 +566,22 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y)
 {
     if (s->actual.cursor.x == new_x && s->actual.cursor.y == new_y)
         return;
+    
+    // If we are at the end of our window, then either the cursor stuck to the edge or it didn't. We don't know! We can fix it up though.
+    if (s->actual.cursor.x == common_get_width()) {
+        // Either issue a cr to go back to the beginning of this line, or a nl to go to the beginning of the next one, depending on what we think is more efficient
+        if (new_y <= s->actual.cursor.y)
+        {
+            b->push_back('\r');
+        }
+        else
+        {
+            b->push_back('\n');
+            s->actual.cursor.y++;
+        }
+        // Either way we're not in the first column
+        s->actual.cursor.x = 0;
+    }
 
     int i;
     int x_steps, y_steps;
@@ -661,9 +677,7 @@ static void s_write_char(screen_t *s, data_buffer_t *b, wchar_t c)
         s->soft_wrap_location.x = 0;
         s->soft_wrap_location.y = s->actual.cursor.y + 1;
 
-        /* If auto_right_margin is set, then the cursor sticks to the right edge when it's in the rightmost column, so reflect that fact */
-        if (auto_right_margin)
-            s->actual.cursor.x--;
+        /* Note that our cursor position may be a lie: Apple Terminal makes the right cursor stick to the margin, while Ubuntu makes it "go off the end" (but still doesn't wrap). We rely on s_move to fix this up. */
     }
     else
     {
@@ -748,16 +762,9 @@ static bool test_stuff(screen_t *scr)
     const wchar_t *left = L"left";
     const wchar_t *right = L"right";
 
-    for (size_t idx = 0; left[idx]; idx++)
+    for (size_t idx = 0; idx < 80; idx++)
     {
-        s_write_char(scr, &output, left[idx]);
-    }
-
-    s_move(scr, &output, screen_width - wcslen(right), 0);
-
-    for (size_t idx = 0; right[idx]; idx++)
-    {
-        s_write_char(scr, &output, right[idx]);
+        output.push_back('A');
     }
 
     if (! output.empty())
@@ -879,9 +886,21 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
                     skip_remaining = prefix_width;
             }
 
-            /* Don't skip over the last two characters in a soft-wrapped line, so that we maintain soft-wrapping */
-            if (o_line.is_soft_wrapped)
-                skip_remaining = mini(skip_remaining, (size_t)(scr->actual_width - 2));
+            /* If we're soft wrapped, and if we're going to change the first character of the next line, don't skip over the last two characters so that we maintain soft-wrapping */
+            if (o_line.is_soft_wrapped && i + 1 < scr->desired.line_count()) {
+                bool first_character_of_next_line_will_change = true;
+                if (i + 1 < scr->actual.line_count())
+                {
+                    if (line_shared_prefix(scr->desired.line(i+1), scr->actual.line(i+1)) > 0)
+                    {
+                        first_character_of_next_line_will_change = false;
+                    }
+                }
+                if (first_character_of_next_line_will_change)
+                {
+                    skip_remaining = mini(skip_remaining, (size_t)(scr->actual_width - 2));
+                }
+            }
         }
 
         /* Skip over skip_remaining width worth of characters */

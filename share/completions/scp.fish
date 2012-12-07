@@ -22,7 +22,7 @@ complete -c scp -d Hostname -a "
 	cat ~/.ssh/known_hosts{,2} ^/dev/null|cut -d ' ' -f 1| cut -d , -f 1
 ):
 
-(__fish_print_users)@
+(__fish_print_users)@\tUsername
 
 "
 

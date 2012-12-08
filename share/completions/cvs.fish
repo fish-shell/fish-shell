@@ -21,16 +21,17 @@ complete -c cvs -n '__fish_use_subcommand' -s r --description 'Make checked-out 
 complete -c cvs -n '__fish_use_subcommand' -s w --description 'Make checked-out files read-write (default).'
 complete -c cvs -n '__fish_use_subcommand' -s n --description 'Do not execute anything that will change the disk.'
 complete -c cvs -n '__fish_use_subcommand' -s t --description 'Show trace of program execution -- try with -n.'
+complete -c cvs -n '__fish_use_subcommand' -s R --description 'Assume repository is read-only, such as CDROM'
 complete -c cvs -n '__fish_use_subcommand' -s v --description 'CVS version and copyright.'
 complete -c cvs -n '__fish_use_subcommand' -s T -x --description 'Use \'tmpdir\' for temporary files.'
 complete -c cvs -n '__fish_use_subcommand' -s e -x --description 'Use \'editor\' for editing log information.'
 complete -c cvs -n '__fish_use_subcommand' -s d -x --description 'Overrides $CVSROOT as the root of the CVS tree.'
 complete -c cvs -n '__fish_use_subcommand' -s f --description 'Do not use the ~/.cvsrc file.'
-complete -c cvs -n '__fish_use_subcommand' -s z -x --description 'Use compression level \'#\' for net traffic.'
+complete -c cvs -n '__fish_use_subcommand' -s z -x --description 'Request compression level \'#\' for net traffic.'
 complete -c cvs -n '__fish_use_subcommand' -s x --description 'Encrypt all net traffic.'
 complete -c cvs -n '__fish_use_subcommand' -s a --description 'Authenticate all net traffic.'
-complete -c cvs -n '__fish_use_subcommand' -s 4 --description 'Use IPv4.'
-complete -c cvs -n '__fish_use_subcommand' -s 6 --description 'Use IPv6.'
+complete -c cvs -n '__fish_use_subcommand' -s 4 --description 'Use IPv4 addresses only.'
+complete -c cvs -n '__fish_use_subcommand' -s 6 --description 'Use IPv6 addresses only.'
 complete -c cvs -n '__fish_use_subcommand' -s s -x --description 'Set CVS user variable.'
 
 #
@@ -53,12 +54,14 @@ complete -c cvs -n '__fish_use_subcommand' -x -a kserver --description 'Kerberos
 complete -c cvs -n '__fish_use_subcommand' -x -a log --description 'Print out history information for files'
 complete -c cvs -n '__fish_use_subcommand' -x -a login --description 'Prompt for password for authenticating server'
 complete -c cvs -n '__fish_use_subcommand' -x -a logout --description 'Removes entry in .cvspass for remote repository'
+complete -c cvs -n '__fish_use_subcommand' -x -a ls --description 'List files available from CVS'
 complete -c cvs -n '__fish_use_subcommand' -x -a pserver --description 'Password server mode'
 complete -c cvs -n '__fish_use_subcommand' -x -a rannotate --description 'Show last revision where each line of module was modified'
 complete -c cvs -n '__fish_use_subcommand' -x -a rdiff --description 'Create \'patch\' format diffs between releases'
 complete -c cvs -n '__fish_use_subcommand' -x -a release --description 'Indicate that a Module is no longer in use'
 complete -c cvs -n '__fish_use_subcommand' -x -a remove --description 'Remove an entry from the repository'
 complete -c cvs -n '__fish_use_subcommand' -x -a rlog --description 'Print out history information for a module'
+complete -c cvs -n '__fish_use_subcommand' -x -a rls --description 'List files in a module'
 complete -c cvs -n '__fish_use_subcommand' -x -a rtag --description 'Add a symbolic tag to a module'
 complete -c cvs -n '__fish_use_subcommand' -x -a server --description 'Server mode'
 complete -c cvs -n '__fish_use_subcommand' -x -a status --description 'Display status information on checked out files'
@@ -140,6 +143,7 @@ complete -c cvs -n 'contains \'checkout\' (commandline -poc)' -s j -x --descript
 # Completions for the 'commit' subcommand
 #
 
+complete -c cvs -n 'contains \'commit\' (commandline -poc)' -s c --description 'Check for valid edits before committing.'
 complete -c cvs -n 'contains \'commit\' (commandline -poc)' -s R --description 'Process directories recursively.'
 complete -c cvs -n 'contains \'commit\' (commandline -poc)' -s l --description 'Local directory only (not recursive).'
 complete -c cvs -n 'contains \'commit\' (commandline -poc)' -s f --description 'Force the file to be committed; disables recursion.'
@@ -200,6 +204,8 @@ complete -c cvs -n 'contains \'diff\' (commandline -poc)' -s H --description '--
 complete -c cvs -n 'contains \'edit\' (commandline -poc)' -s l --description 'Local directory only, not recursive.'
 complete -c cvs -n 'contains \'edit\' (commandline -poc)' -s R --description 'Process directories recursively (default).'
 complete -c cvs -n 'contains \'edit\' (commandline -poc)' -s a --description 'Specify action to register for temporary watch, one of:'
+complete -c cvs -n 'contains \'edit\' (commandline -poc)' -s c --description 'Check for <file>s edited by others and abort if found.'
+complete -c cvs -n 'contains \'edit\' (commandline -poc)' -s f --description 'Allow edit if <file>s are edited by others (default).'
 
 
 #
@@ -254,6 +260,7 @@ complete -c cvs -n 'contains \'history\' (commandline -poc)' -s z -x --descripti
 #
 
 complete -c cvs -n 'contains \'import\' (commandline -poc)' -s d --description 'Use the file\'s modification time as the time of import.'
+complete -c cvs -n 'contains \'import\' (commandline -poc)' -s X --description 'When importing new files, mark their trunk revisions as dead.'
 complete -c cvs -n 'contains \'import\' (commandline -poc)' -s k -x --description 'Set default RCS keyword substitution mode.'
 complete -c cvs -n 'contains \'import\' (commandline -poc)' -s I -x --description 'More files to ignore (! to reset).'
 complete -c cvs -n 'contains \'import\' (commandline -poc)' -s b -x --description 'Vendor branch id.'
@@ -305,9 +312,23 @@ complete -c cvs -n 'contains \'log\' (commandline -poc)' -s w --description '[lo
 
 
 #
+# Completions for the 'ls' subcommand
+#
+
+complete -c cvs -n 'contains \'ls\' (commandline -poc)' -s d --description 'Show dead revisions (with tag when specified).'
+complete -c cvs -n 'contains \'ls\' (commandline -poc)' -s e --description 'Display in CVS/Entries format.'
+complete -c cvs -n 'contains \'ls\' (commandline -poc)' -s l --description 'Display all details.'
+complete -c cvs -n 'contains \'ls\' (commandline -poc)' -s P --description 'Prune empty directories.'
+complete -c cvs -n 'contains \'ls\' (commandline -poc)' -s R --description 'List recursively.'
+complete -c cvs -n 'contains \'ls\' (commandline -poc)' -s r -x --description 'Show files with revision or tag.'
+complete -c cvs -n 'contains \'ls\' (commandline -poc)' -s D -x --description 'Show files from date.'
+
+
+#
 # Completions for the 'pserver' subcommand
 #
 
+complete -c cvs -n 'contains \'pserver\' (commandline -poc)' -s c -x --description 'Path to an alternative CVS config file.'
 
 
 #
@@ -376,6 +397,19 @@ complete -c cvs -n 'contains \'rlog\' (commandline -poc)' -s w --description '[l
 
 
 #
+# Completions for the 'rls' subcommand
+#
+
+complete -c cvs -n 'contains \'rls\' (commandline -poc)' -s d --description 'Show dead revisions (with tag when specified).'
+complete -c cvs -n 'contains \'rls\' (commandline -poc)' -s e --description 'Display in CVS/Entries format.'
+complete -c cvs -n 'contains \'rls\' (commandline -poc)' -s l --description 'Display all details.'
+complete -c cvs -n 'contains \'rls\' (commandline -poc)' -s P --description 'Prune empty directories.'
+complete -c cvs -n 'contains \'rls\' (commandline -poc)' -s R --description 'List recursively.'
+complete -c cvs -n 'contains \'rls\' (commandline -poc)' -s r -x --description 'Show files with revision or tag.'
+complete -c cvs -n 'contains \'rls\' (commandline -poc)' -s D -x --description 'Show files from date.'
+
+
+#
 # Completions for the 'rtag' subcommand
 #
 
@@ -396,6 +430,7 @@ complete -c cvs -n 'contains \'rtag\' (commandline -poc)' -s D --description 'Ex
 # Completions for the 'server' subcommand
 #
 
+complete -c cvs -n 'contains \'server\' (commandline -poc)' -s c -x --description 'Path to an alternative CVS config file.'
 
 
 #

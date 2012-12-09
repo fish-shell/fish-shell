@@ -36,7 +36,6 @@
 #include "parser_keywords.h"
 #include "env.h"
 #include "expand.h"
-#include "builtin_scripts.h"
 
 /**
    Table containing all functions
@@ -58,9 +57,7 @@ public:
 static function_autoload_t function_autoloader;
 
 /** Constructor */
-function_autoload_t::function_autoload_t() : autoload_t(L"fish_function_path",
-            internal_function_scripts,
-            sizeof internal_function_scripts / sizeof *internal_function_scripts)
+function_autoload_t::function_autoload_t() : autoload_t(L"fish_function_path", NULL, 0)
 {
 }
 

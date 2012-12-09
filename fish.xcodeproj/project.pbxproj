@@ -50,7 +50,6 @@
 		D033781115DC6D4C00A634BA /* completions in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02715D1FEA100B9DB63 /* completions */; };
 		D033781215DC6D5200A634BA /* functions in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02815D1FEA100B9DB63 /* functions */; };
 		D033781315DC6D5400A634BA /* tools in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02915D1FEA100B9DB63 /* tools */; };
-		D07A7D3C15A7A38100811FC6 /* builtin_scripts.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0F5E28215A7A32D00315DFF /* builtin_scripts.cpp */; };
 		D07B247315BCC15700D4ADB4 /* add-shell in Resources */ = {isa = PBXBuildFile; fileRef = D07B247215BCC15700D4ADB4 /* add-shell */; };
 		D07B247615BCC4BE00D4ADB4 /* install.sh in Resources */ = {isa = PBXBuildFile; fileRef = D07B247515BCC4BE00D4ADB4 /* install.sh */; };
 		D07D266A15E33B86009E43F6 /* config.fish in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0C4FD9415A7D7EE00212EF1 /* config.fish */; };
@@ -764,7 +763,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = D0D26943159835CA005D9B9C /* Build configuration list for PBXNativeTarget "fish_shell" */;
 			buildPhases = (
-				D0D02A90159844FD008E62BD /* ShellScript */,
 				D0D26938159835CA005D9B9C /* Sources */,
 				D0D26939159835CA005D9B9C /* Frameworks */,
 			);
@@ -840,22 +838,6 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		D0D02A90159844FD008E62BD /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "mkdir -p \"${DERIVED_FILE_DIR}\"\n\"${SRCROOT}/internalize_scripts.py\" --output \"${DERIVED_FILE_DIR}\"\n";
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
 		D0D02AB815985EF9008E62BD /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -903,7 +885,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D07A7D3C15A7A38100811FC6 /* builtin_scripts.cpp in Sources */,
 				D0D02A7C159839D5008E62BD /* autoload.cpp in Sources */,
 				D0D02A7D159839D5008E62BD /* builtin_test.cpp in Sources */,
 				D0D02A7E159839D5008E62BD /* color.cpp in Sources */,

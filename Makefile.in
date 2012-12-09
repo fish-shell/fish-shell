@@ -887,7 +887,7 @@ clean:
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 
 autoload.o: config.h autoload.h common.h util.h lru.h wutil.h signal.h env.h
-autoload.o: builtin_scripts.h exec.h proc.h io.h
+autoload.o: exec.h proc.h io.h
 builtin.o: config.h signal.h fallback.h util.h wutil.h common.h builtin.h
 builtin.o: io.h function.h event.h complete.h proc.h parser.h reader.h env.h
 builtin.o: wgetopt.h sanity.h tokenizer.h wildcard.h expand.h input_common.h
@@ -904,7 +904,6 @@ builtin_complete.o: builtin.h io.h complete.h wgetopt.h parser.h proc.h
 builtin_complete.o: event.h function.h reader.h
 builtin_jobs.o: config.h fallback.h signal.h util.h wutil.h common.h
 builtin_jobs.o: builtin.h io.h proc.h parser.h event.h function.h wgetopt.h
-builtin_scripts.o: builtin_scripts.h
 builtin_set.o: config.h signal.h fallback.h util.h wutil.h common.h builtin.h
 builtin_set.o: io.h env.h expand.h wgetopt.h proc.h parser.h event.h
 builtin_set.o: function.h
@@ -920,7 +919,6 @@ complete.o: config.h signal.h fallback.h util.h tokenizer.h common.h
 complete.o: wildcard.h expand.h proc.h io.h parser.h event.h function.h
 complete.o: complete.h builtin.h env.h exec.h reader.h history.h wutil.h
 complete.o: intern.h parse_util.h autoload.h lru.h parser_keywords.h path.h
-complete.o: builtin_scripts.h
 env.o: config.h signal.h fallback.h util.h wutil.h common.h proc.h io.h env.h
 env.o: sanity.h expand.h history.h reader.h complete.h parser.h event.h
 env.o: function.h env_universal.h env_universal_common.h input.h
@@ -956,7 +954,6 @@ fishd.o: env_universal_common.h path.h env.h print_help.h
 function.o: config.h signal.h wutil.h common.h util.h fallback.h function.h
 function.o: event.h proc.h io.h parser.h intern.h reader.h complete.h
 function.o: parse_util.h autoload.h lru.h parser_keywords.h env.h expand.h
-function.o: builtin_scripts.h
 highlight.o: config.h signal.h fallback.h util.h wutil.h common.h highlight.h
 highlight.o: env.h screen.h color.h tokenizer.h proc.h io.h parser.h event.h
 highlight.o: function.h parse_util.h autoload.h lru.h parser_keywords.h

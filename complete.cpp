@@ -44,7 +44,6 @@
 #include "parser_keywords.h"
 #include "wutil.h"
 #include "path.h"
-#include "builtin_scripts.h"
 
 /*
   Completion description strings, mostly for different types of files, such as sockets, block devices, etc.
@@ -419,9 +418,7 @@ public:
 static completion_autoload_t completion_autoloader;
 
 /** Constructor */
-completion_autoload_t::completion_autoload_t() : autoload_t(L"fish_complete_path",
-            internal_completion_scripts,
-            sizeof internal_completion_scripts / sizeof *internal_completion_scripts)
+completion_autoload_t::completion_autoload_t() : autoload_t(L"fish_complete_path", NULL, 0)
 {
 }
 

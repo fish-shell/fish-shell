@@ -34,6 +34,10 @@ struct autoload_function_t : public lru_node_t
     bool is_internalized; /** Whether this function came from a builtin "internalized" script */
 };
 
+struct builtin_script_t {
+	const wchar_t *name;
+	const char *def;
+};
 
 struct builtin_script_t;
 class env_vars_snapshot_t;

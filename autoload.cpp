@@ -9,7 +9,6 @@ The classes responsible for autoloading functions and completions.
 #include "common.h"
 #include "signal.h"
 #include "env.h"
-#include "builtin_scripts.h"
 #include "exec.h"
 #include <assert.h>
 #include <algorithm>

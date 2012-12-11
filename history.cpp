@@ -85,6 +85,8 @@ public:
     }
 };
 
+static const file_id_t kInvalidFileID((dev_t)(-1), (ino_t)(-1));
+
 /* Lock a file via fcntl; returns true on success, false on failure. */
 static bool history_file_lock(int fd, short type)
 {
@@ -99,7 +101,7 @@ static bool history_file_lock(int fd, short type)
 /* Get a file_id_t corresponding to the given fd */
 static file_id_t history_file_identify(int fd)
 {
-    file_id_t result(-1, -1);
+    file_id_t result = kInvalidFileID;
     struct stat buf = {};
     if (0 == fstat(fd, &buf))
     {
@@ -473,7 +475,7 @@ history_t::history_t(const wcstring &pname) :
     first_unwritten_new_item_index(0),
     mmap_start(NULL),
     mmap_length(0),
-    mmap_file_id(-1, -1),
+    mmap_file_id(kInvalidFileID),
     birth_timestamp(time(NULL)),
     countdown_to_vacuum(-1),
     loaded_old(false),
@@ -569,8 +571,8 @@ void history_t::get_string_representation(wcstring &result, const wcstring &sepa
 
     bool first = true;
 
-    /* Append new items */
-    for (std::vector<history_item_t>::const_reverse_iterator iter=new_items.rbegin(); iter < new_items.rend(); ++iter)
+    /* Append new items. Note that in principle we could use const_reverse_iterator, but we do not because reverse_iterator is not convertible to const_reverse_iterator ( http://github.com/fish-shell/fish-shell/issues/431 ) */
+    for (std::vector<history_item_t>::reverse_iterator iter=new_items.rbegin(); iter < new_items.rend(); ++iter)
     {
         if (! first)
             result.append(separator);
@@ -580,7 +582,7 @@ void history_t::get_string_representation(wcstring &result, const wcstring &sepa
 
     /* Append old items */
     load_old_if_needed();
-    for (std::vector<size_t>::const_reverse_iterator iter = old_item_offsets.rbegin(); iter != old_item_offsets.rend(); ++iter)
+    for (std::vector<size_t>::reverse_iterator iter = old_item_offsets.rbegin(); iter != old_item_offsets.rend(); ++iter)
     {
         size_t offset = *iter;
         const history_item_t item = history_t::decode_item(mmap_start + offset, mmap_length - offset, mmap_type);

@@ -97,6 +97,11 @@ private:
         evict_node((node_type_t *)mouth.prev);
     }
 
+    static lru_node_t *get_previous(lru_node_t *node)
+    {
+        return node->prev;
+    }
+
 protected:
 
     /** Head of the linked list */
@@ -218,11 +223,11 @@ public:
         iterator(lru_node_t *val) : node(val) { }
         void operator++()
         {
-            node = node->prev;
+            node = lru_cache_t::get_previous(node);
         }
         void operator++(int x)
         {
-            node = node->prev;
+            node = lru_cache_t::get_previous(node);
         }
         bool operator==(const iterator &other)
         {

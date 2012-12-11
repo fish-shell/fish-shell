@@ -1283,13 +1283,29 @@ static void update_autosuggestion(void)
 #endif
 }
 
-static void accept_autosuggestion(void)
+/* Accept any autosuggestion by replacing the command line with it. If full is true, take the whole thing; if it's false, then take only the first "word" */
+static void accept_autosuggestion(bool full)
 {
-    /* Accept any autosuggestion by replacing the command line with it. */
     if (! data->autosuggestion.empty())
     {
         /* Accept the autosuggestion */
-        data->command_line = data->autosuggestion;
+        if (full)
+        {
+            /* Just take the whole thing */
+            data->command_line = data->autosuggestion;
+        }
+        else
+        {
+            /* Accept characters up to a word separator */
+            move_word_state_machine_t state;
+            for (size_t idx = data->command_line.size(); idx < data->autosuggestion.size(); idx++)
+            {
+                wchar_t wc = data->autosuggestion.at(idx);
+                if (! state.consume_char(wc))
+                    break;
+                data->command_line.push_back(wc);
+            }
+        }
         data->buff_pos = data->command_line.size();
         data->command_line_changed();
         reader_super_highlight_me_plenty(data->buff_pos);
@@ -2025,98 +2041,6 @@ static void handle_token_history(int forward, int reset)
         }
     }
 }
-
-/* Our state machine that implements "one word" movement or erasure. */
-class move_word_state_machine_t
-{
-    enum
-    {
-        s_whitespace,
-        s_separator,
-        s_slash,
-        s_nonseparators_except_slash,
-        s_end
-    } state;
-
-public:
-
-    move_word_state_machine_t() : state(s_whitespace)
-    {
-    }
-
-    bool consume_char(wchar_t c)
-    {
-        //printf("state %d, consume '%lc'\n", state, c);
-        bool consumed = false;
-        /* Always treat separators as first. All this does is ensure that we treat ^ as a string character instead of as stderr redirection, which I hypothesize is usually what is desired. */
-        bool was_first = true;
-        while (state != s_end && ! consumed)
-        {
-            switch (state)
-            {
-                case s_whitespace:
-                    if (iswspace(c))
-                    {
-                        /* Consumed whitespace */
-                        consumed = true;
-                    }
-                    else if (tok_is_string_character(c, was_first))
-                    {
-                        /* String path */
-                        state = s_slash;
-                    }
-                    else
-                    {
-                        /* Separator path */
-                        state = s_separator;
-                    }
-                    break;
-
-                case s_separator:
-                    if (! iswspace(c) && ! tok_is_string_character(c, was_first))
-                    {
-                        /* Consumed separator */
-                        consumed = true;
-                    }
-                    else
-                    {
-                        state = s_end;
-                    }
-                    break;
-
-                case s_slash:
-                    if (c == L'/')
-                    {
-                        /* Consumed slash */
-                        consumed = true;
-                    }
-                    else
-                    {
-                        state = s_nonseparators_except_slash;
-                    }
-                    break;
-
-                case s_nonseparators_except_slash:
-                    if (c != L'/' && tok_is_string_character(c, was_first))
-                    {
-                        /* Consumed string character except slash */
-                        consumed = true;
-                    }
-                    else
-                    {
-                        state = s_end;
-                    }
-                    break;
-
-                    /* We won't get here, but keep the compiler happy */
-                case s_end:
-                default:
-                    break;
-            }
-        }
-        return consumed;
-    }
-};
 
 /**
    Move buffer position one word or erase one word. This function
@@ -3338,7 +3262,7 @@ const wchar_t *reader_readline()
                 }
                 else
                 {
-                    accept_autosuggestion();
+                    accept_autosuggestion(true);
                 }
                 break;
             }
@@ -3367,7 +3291,14 @@ const wchar_t *reader_readline()
             /* move one word right*/
             case R_FORWARD_WORD:
             {
-                move_word(MOVE_DIR_RIGHT, false /* do not erase */, false);
+                if (data->buff_pos < data->command_length())
+                {
+                    move_word(MOVE_DIR_RIGHT, false /* do not erase */, false);
+                }
+                else
+                {
+                    accept_autosuggestion(false /* accept only one word */);
+                }
                 break;
             }
 
@@ -3440,7 +3371,7 @@ const wchar_t *reader_readline()
 
             case R_ACCEPT_AUTOSUGGESTION:
             {
-                accept_autosuggestion();
+                accept_autosuggestion(true);
                 break;
             }
 

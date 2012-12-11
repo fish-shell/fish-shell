@@ -566,9 +566,10 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y)
 {
     if (s->actual.cursor.x == new_x && s->actual.cursor.y == new_y)
         return;
-    
+
     // If we are at the end of our window, then either the cursor stuck to the edge or it didn't. We don't know! We can fix it up though.
-    if (s->actual.cursor.x == common_get_width()) {
+    if (s->actual.cursor.x == common_get_width())
+    {
         // Either issue a cr to go back to the beginning of this line, or a nl to go to the beginning of the next one, depending on what we think is more efficient
         if (new_y <= s->actual.cursor.y)
         {
@@ -887,7 +888,8 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
             }
 
             /* If we're soft wrapped, and if we're going to change the first character of the next line, don't skip over the last two characters so that we maintain soft-wrapping */
-            if (o_line.is_soft_wrapped && i + 1 < scr->desired.line_count()) {
+            if (o_line.is_soft_wrapped && i + 1 < scr->desired.line_count())
+            {
                 bool first_character_of_next_line_will_change = true;
                 if (i + 1 < scr->actual.line_count())
                 {

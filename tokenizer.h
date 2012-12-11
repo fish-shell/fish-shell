@@ -184,4 +184,22 @@ const wchar_t *tok_get_desc(int type);
 int tok_get_error(tokenizer_t *tok);
 
 
+/* Our state machine that implements "one word" movement or erasure. */
+class move_word_state_machine_t
+{
+    enum
+    {
+        s_whitespace,
+        s_separator,
+        s_slash,
+        s_nonseparators_except_slash,
+        s_end
+    } state;
+
+public:
+    move_word_state_machine_t();
+    bool consume_char(wchar_t c);
+};
+
+
 #endif

@@ -461,7 +461,7 @@ static void builtin_bind_function_names()
 /**
    Add specified key binding.
  */
-static int builtin_bind_add(wchar_t *seq, wchar_t *cmd, int terminfo)
+static int builtin_bind_add(const wchar_t *seq, const wchar_t *cmd, int terminfo)
 {
 
     if (terminfo)

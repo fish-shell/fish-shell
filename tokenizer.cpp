@@ -669,6 +669,85 @@ void tok_set_pos(tokenizer_t *tok, int pos)
 }
 
 
+
+move_word_state_machine_t::move_word_state_machine_t() : state(s_whitespace)
+{
+}
+
+bool move_word_state_machine_t::consume_char(wchar_t c)
+{
+    //printf("state %d, consume '%lc'\n", state, c);
+    bool consumed = false;
+    /* Always treat separators as first. All this does is ensure that we treat ^ as a string character instead of as stderr redirection, which I hypothesize is usually what is desired. */
+    bool was_first = true;
+    while (state != s_end && ! consumed)
+    {
+        switch (state)
+        {
+            case s_whitespace:
+                if (iswspace(c))
+                {
+                    /* Consumed whitespace */
+                    consumed = true;
+                }
+                else if (tok_is_string_character(c, was_first))
+                {
+                    /* String path */
+                    state = s_slash;
+                }
+                else
+                {
+                    /* Separator path */
+                    state = s_separator;
+                }
+                break;
+
+            case s_separator:
+                if (! iswspace(c) && ! tok_is_string_character(c, was_first))
+                {
+                    /* Consumed separator */
+                    consumed = true;
+                }
+                else
+                {
+                    state = s_end;
+                }
+                break;
+
+            case s_slash:
+                if (c == L'/')
+                {
+                    /* Consumed slash */
+                    consumed = true;
+                }
+                else
+                {
+                    state = s_nonseparators_except_slash;
+                }
+                break;
+
+            case s_nonseparators_except_slash:
+                if (c != L'/' && tok_is_string_character(c, was_first))
+                {
+                    /* Consumed string character except slash */
+                    consumed = true;
+                }
+                else
+                {
+                    state = s_end;
+                }
+                break;
+
+                /* We won't get here, but keep the compiler happy */
+            case s_end:
+            default:
+                break;
+        }
+    }
+    return consumed;
+}
+
+
 #ifdef TOKENIZER_TEST
 
 /**

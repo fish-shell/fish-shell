@@ -768,14 +768,6 @@ set_color: set_color.o print_help.o common.o color.o wutil.o
 
 
 #
-# Test program for the tokenizer library
-#
-
-tokenizer_test: tokenizer.cpp tokenizer.h wutil.o common.o
-	$(CXX) $(CXXFLAGS) tokenizer.cpp wutil.o common.o -D TOKENIZER_TEST $(LDFLAGS) -o $@
-
-
-#
 # Build the fish_indent program.
 #
 
@@ -869,7 +861,7 @@ clean:
 	rm -f *.o doc.h doc.tmp doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr
 	rm -f $(GENERATED_INTERN_SCRIPT_FILES)
 	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
-	rm -f $(PROGRAMS) fish_tests tokenizer_test key_reader
+	rm -f $(PROGRAMS) fish_tests key_reader
 	rm -f command_list.txt toc.txt
 	rm -f doc_src/index.hdr doc_src/commands.hdr
 	rm -f fish-@PACKAGE_VERSION@.tar

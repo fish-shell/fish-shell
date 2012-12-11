@@ -27,7 +27,7 @@ will write <code>hello</code> whenever the user enters \c hi.
 If the user enters any additional arguments after the function, they
 are inserted into the environment <a href="index.html#variables-arrays">variable array</a> argv.
 
-By using one of the event handler switches, a function can be made to run automatically at specific events. The user may generate new events using the <a href='#emit">emit</a> builtin. Fish generates the following named events:
+By using one of the event handler switches, a function can be made to run automatically at specific events. The user may generate new events using the <a href="#emit">emit</a> builtin. Fish generates the following named events:
 
 - \c fish_prompt, which is emitted whenever a new fish prompt is about to be displayed
 - \c fish_command_not_found, which is emitted whenever a command lookup failed

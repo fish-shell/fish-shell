@@ -7,14 +7,21 @@ IS_PY2 = sys.version_info[0] == 2
 if IS_PY2:
     import SimpleHTTPServer
     import SocketServer
-    from urlparse import parse_qs
+    try:
+        from urllib.parse import parse_qs
+    except ImportError:
+        from cgi import parse_qs
 else:
     import http.server as SimpleHTTPServer
     import socketserver as SocketServer
     from urllib.parse import parse_qs
 import webbrowser
 import subprocess
-import re, json, socket, os, sys, cgi, select, time, glob
+import re, socket, os, sys, cgi, select, time, glob
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 def run_fish_cmd(text):
     from subprocess import PIPE
@@ -605,8 +612,8 @@ if len(sys.argv) > 1:
             initial_tab = '#' + tab
             break
 
-url = 'http://localhost:{0}/{1}'.format(PORT, initial_tab)
-print("Web config started at '{0}'. Hit enter to stop.".format(url))
+url = 'http://localhost:%d/%s' % (PORT, initial_tab)
+print("Web config started at '%s'. Hit enter to stop." % url)
 webbrowser.open(url)
 
 # Select on stdin and httpd

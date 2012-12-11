@@ -1154,7 +1154,7 @@ static screen_layout_t compute_layout(screen_t *s,
     bool done = false;
 
     /* Case 1 */
-    if (! done && left_prompt_width + right_prompt_width + first_command_line_width + autosuggestion_total_width + 10 < screen_width)
+    if (! done && left_prompt_width + right_prompt_width + first_command_line_width + autosuggestion_total_width < screen_width)
     {
         result.left_prompt = left_prompt;
         result.left_prompt_space = left_prompt_width;

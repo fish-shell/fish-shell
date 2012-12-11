@@ -26,10 +26,11 @@ class lru_node_t
 {
     template<class T> friend class lru_cache_t;
 
+public:
+
     /** Our linked list pointer */
     lru_node_t *prev, *next;
 
-public:
     /** The key used to look up in the cache */
     const wcstring key;
 

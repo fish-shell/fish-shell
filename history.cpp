@@ -570,7 +570,7 @@ void history_t::get_string_representation(wcstring &result, const wcstring &sepa
     bool first = true;
 
     /* Append new items */
-    for (std::vector<history_item_t>::const_reverse_iterator iter=new_items.rbegin(); iter < new_items.rend(); ++iter)
+    for (std::vector<history_item_t>::reverse_iterator iter = new_items.rbegin(), end_iter = new_items.rend(); iter < end_iter; ++iter)
     {
         if (! first)
             result.append(separator);
@@ -580,7 +580,7 @@ void history_t::get_string_representation(wcstring &result, const wcstring &sepa
 
     /* Append old items */
     load_old_if_needed();
-    for (std::vector<size_t>::const_reverse_iterator iter = old_item_offsets.rbegin(); iter != old_item_offsets.rend(); ++iter)
+    for (std::vector<size_t>::reverse_iterator iter = old_item_offsets.rbegin(), end_iter = old_item_offsets.rend(); iter != end_iter; ++iter)
     {
         size_t offset = *iter;
         const history_item_t item = history_t::decode_item(mmap_start + offset, mmap_length - offset, mmap_type);

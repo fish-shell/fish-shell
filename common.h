@@ -273,16 +273,6 @@ void assert_is_background_thread(const char *who);
 void assert_is_locked(void *mutex, const char *who, const char *caller);
 #define ASSERT_IS_LOCKED(x) assert_is_locked((void *)(&x), #x, __FUNCTION__)
 
-/**
-   Converts the wide character string \c in into it's narrow
-   equivalent, stored in \c out. \c out must have enough space to fit
-   the entire string.
-
-   This function decodes illegal character sequences in a reversible
-   way using the private use area.
-*/
-char *wcs2str_internal(const wchar_t *in, char *out);
-
 /** Format the specified size (in bytes, kilobytes, etc.) into the specified stringbuffer. */
 wcstring format_size(long long sz);
 

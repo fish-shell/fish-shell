@@ -221,21 +221,24 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		commandline -f repaint
 	end
 
-	# If the ubuntu command-not-found package can be found, add a handler for it
-
-	# First check in /usr/lib, this is where modern Ubuntus place this command
-	if test -f /usr/lib/command-not-found
-		function fish_command_not_found_handler --on-event fish_command_not_found
-			/usr/lib/command-not-found $argv
-		end
-	else
-		# Ubuntu Feisty places this command in the regular path instead
-		if which command-not-found > /dev/null 2> /dev/null
+	# The first time a command is not found, look for command-not-found
+	# This is not cheap so we try to avoid doing it during startup
+	function fish_command_not_found_setup --on-event fish_command_not_found
+		# Remove fish_command_not_found_setup so we only execute this once
+		functions --erase fish_command_not_found_setup
+		
+		# First check in /usr/lib, this is where modern Ubuntus place this command
+		if test -f /usr/lib/command-not-found
 			function fish_command_not_found_handler --on-event fish_command_not_found
-				command-not-found $argv
+				/usr/lib/command-not-found $argv
+			end
+		else
+			# Ubuntu Feisty places this command in the regular path instead
+			if type -p command-not-found > /dev/null 2> /dev/null
+				function fish_command_not_found_handler --on-event fish_command_not_found
+					command-not-found $argv
+				end
 			end
 		end
 	end
-
 end
-

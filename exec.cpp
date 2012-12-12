@@ -498,13 +498,12 @@ static void internal_exec_helper(parser_t &parser,
 }
 
 /** Perform output from builtins. Called from a forked child, so don't do anything that may allocate memory, etc.. */
-static void do_builtin_io(const char *out, const char *err)
+static void do_builtin_io(const char *out, size_t outlen, const char *err, size_t errlen)
 {
-    size_t len;
-    if (out && (len = strlen(out)))
+    if (out && outlen)
     {
 
-        if (write_loop(STDOUT_FILENO, out, len) == -1)
+        if (write_loop(STDOUT_FILENO, out, outlen) == -1)
         {
             debug(0, L"Error while writing to stdout");
             wperror(L"write_loop");
@@ -512,9 +511,9 @@ static void do_builtin_io(const char *out, const char *err)
         }
     }
 
-    if (err && (len = strlen(err)))
+    if (err && errlen)
     {
-        if (write_loop(STDERR_FILENO, err, len) == -1)
+        if (write_loop(STDERR_FILENO, err, errlen) == -1)
         {
             /*
               Can't really show any error message here, since stderr is
@@ -1189,10 +1188,9 @@ void exec(parser_t &parser, job_t *j)
                         printf("fork #-: Skipping fork for internal builtin for '%ls'\n", p->argv0());
                     }
                     const wcstring &out = get_stdout_buffer(), &err = get_stderr_buffer();
-                    char *outbuff = wcs2str(out.c_str()), *errbuff = wcs2str(err.c_str());
-                    do_builtin_io(outbuff, errbuff);
-                    free(outbuff);
-                    free(errbuff);
+                    const std::string outbuff = wcs2string(out);
+                    const std::string errbuff = wcs2string(err);
+                    do_builtin_io(outbuff.data(), outbuff.size(), errbuff.data(), errbuff.size());
                     skip_fork = 1;
                 }
 
@@ -1225,7 +1223,15 @@ void exec(parser_t &parser, job_t *j)
 
                 /* Get the strings we'll write before we fork (since they call malloc) */
                 const wcstring &out = get_stdout_buffer(), &err = get_stderr_buffer();
-                char *outbuff = wcs2str(out.c_str()), *errbuff = wcs2str(err.c_str());
+                
+                /* These strings may contain embedded nulls, so don't treat them as C strings */
+                const std::string outbuff_str = wcs2string(out);
+                const char *outbuff = outbuff_str.data();
+                size_t outbuff_len = outbuff_str.size();
+                
+                const std::string errbuff_str = wcs2string(err);
+                const char *errbuff = errbuff_str.data();
+                size_t errbuff_len = errbuff_str.size();
 
                 fflush(stdout);
                 fflush(stderr);
@@ -1244,16 +1250,12 @@ void exec(parser_t &parser, job_t *j)
                     */
                     p->pid = getpid();
                     setup_child_process(j, p);
-                    do_builtin_io(outbuff, errbuff);
+                    do_builtin_io(outbuff, outbuff_len, errbuff, errbuff_len);
                     exit_without_destructors(p->status);
 
                 }
                 else
                 {
-                    /* Free the strings in the parent */
-                    free(outbuff);
-                    free(errbuff);
-
                     /*
                        This is the parent process. Store away
                        information on the child, and possibly give

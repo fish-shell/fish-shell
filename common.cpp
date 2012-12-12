@@ -102,6 +102,7 @@ int debug_level=1;
 */
 static struct winsize termsize;
 
+static char *wcs2str_internal(const wchar_t *in, char *out);
 
 void show_stackframe()
 {
@@ -292,15 +293,58 @@ char *wcs2str(const wchar_t *in)
     return wcs2str_internal(in, out);
 }
 
+/* This function is distinguished from wcs2str_internal in that it allows embedded null bytes */
 std::string wcs2string(const wcstring &input)
 {
-    char *tmp = wcs2str(input.c_str());
-    std::string result = tmp;
-    free(tmp);
+    std::string result;
+    result.reserve(input.size());
+    
+    mbstate_t state;
+    memset(&state, 0, sizeof(state));
+    
+    size_t converted_max_len = (size_t)(1 + __mb_cur_max);
+    char *converted = new char[converted_max_len];
+    
+    for (size_t i=0; i < input.size(); i++)
+    {
+        wchar_t wc = input[i];
+        if (wc == INTERNAL_SEPARATOR)
+        {
+        }
+        else if ((wc >= ENCODE_DIRECT_BASE) &&
+                 (wc < ENCODE_DIRECT_BASE+256))
+        {
+            result.push_back(wc - ENCODE_DIRECT_BASE);
+        }
+        else
+        {
+            bzero(converted, converted_max_len);
+            size_t len = wcrtomb(converted, wc, &state);
+            if (len == (size_t)(-1))
+            {
+                debug(1, L"Wide character %d has no narrow representation", wc);
+                memset(&state, 0, sizeof(state));
+            }
+            else
+            {
+                result.append(converted, len);
+            }
+        }
+    }
+    
+    delete [] converted;
     return result;
 }
 
-char *wcs2str_internal(const wchar_t *in, char *out)
+/**
+   Converts the wide character string \c in into it's narrow
+   equivalent, stored in \c out. \c out must have enough space to fit
+   the entire string.
+
+   This function decodes illegal character sequences in a reversible
+   way using the private use area.
+*/
+static char *wcs2str_internal(const wchar_t *in, char *out)
 {
     size_t res=0;
     size_t in_pos=0;

@@ -275,10 +275,12 @@ if test "$GCC" = yes; then
   CXXFLAGS="$CXXFLAGS -Wall"
 
   #
-  # This is needed in order to get the really cool backtraces
+  # This is needed in order to get the really cool backtraces on Linux
   #
 
-  LDFLAGS_FISH="$LDFLAGS_FISH -rdynamic"
+  if test `uname` != "Darwin"; then
+    LDFLAGS_FISH="$LDFLAGS_FISH -rdynamic"
+  fi
 
 fi
 

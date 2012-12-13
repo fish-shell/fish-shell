@@ -302,8 +302,7 @@ std::string wcs2string(const wcstring &input)
     mbstate_t state;
     memset(&state, 0, sizeof(state));
     
-    size_t converted_max_len = (size_t)(1 + __mb_cur_max);
-    char *converted = new char[converted_max_len];
+    char converted[MB_LEN_MAX + 1];
     
     for (size_t i=0; i < input.size(); i++)
     {
@@ -318,7 +317,7 @@ std::string wcs2string(const wcstring &input)
         }
         else
         {
-            bzero(converted, converted_max_len);
+            bzero(converted, sizeof converted);
             size_t len = wcrtomb(converted, wc, &state);
             if (len == (size_t)(-1))
             {
@@ -332,7 +331,6 @@ std::string wcs2string(const wcstring &input)
         }
     }
     
-    delete [] converted;
     return result;
 }
 

@@ -5,6 +5,7 @@ Doxyfile.help
 Makefile
 autom4te.cache/
 command_list.txt
+confdefs.h
 config.h
 config.h.in
 config.log

@@ -1,5 +1,5 @@
 
-complete -c bind -s a -l all --description 'Show unavaliable key bindings/erase all bindings'
+complete -c bind -s a -l all --description 'Show unavailable key bindings/erase all bindings'
 complete -c bind -s e -l erase --description 'Erase mode'
 complete -c bind -s f -l function-names --description 'Print names of available functions'
 complete -c bind -s h -l help --description "Display help and exit"

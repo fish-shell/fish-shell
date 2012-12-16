@@ -13,7 +13,7 @@
 
 	3). Create a file doc_src/NAME.txt, containing the manual for the builtin in Doxygen-format. Check the other builtin manuals for proper syntax.
 
-	4). Use 'darcs add doc_src/NAME.txt' to start tracking changes to the documentation file.
+	4). Use 'git add doc_src/NAME.txt' to start tracking changes to the documentation file.
 
 */
 

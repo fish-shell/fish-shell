@@ -749,7 +749,7 @@ void parser_t::destroy()
    Print error message to string if an error has occured while parsing
 
    \param target the buffer to write to
-   \param prefix: The string token to prefix the ech line with. Usually the name of the command trying to parse something.
+   \param prefix: The string token to prefix the each line with. Usually the name of the command trying to parse something.
 */
 void parser_t::print_errors(wcstring &target, const wchar_t *prefix)
 {
@@ -898,7 +898,7 @@ void parser_t::stack_trace(block_t *b, wcstring &buff)
         buff.append(L"\n");
 
         /*
-          Stop recursing at event handler. No reason to belive that
+          Stop recursing at event handler. No reason to believe that
           any other code is relevant.
 
           It might make sense in the future to continue printing the
@@ -1066,7 +1066,7 @@ const wchar_t *parser_t::current_filename() const
 /**
    Calculates the on-screen width of the specified substring of the
    specified string. This function takes into account the width and
-   allignment of the tab character, but other wise behaves like
+   alignment of the tab character, but other wise behaves like
    repeatedly calling wcwidth.
 */
 static int printed_width(const wchar_t *str, int len)
@@ -1368,7 +1368,7 @@ void parser_t::parse_job_argument_list(process_t *p,
                 tok_next(tok);
 
                 /*
-                  Don't do anything on failiure. parse_job will notice
+                  Don't do anything on failure. parse_job will notice
                   the error flag and report any errors for us
                 */
                 parse_job(p->next, j, tok);
@@ -1713,7 +1713,7 @@ int parser_t::parse_job(process_t *p,
                         job_t *j,
                         tokenizer_t *tok)
 {
-    std::vector<completion_t> args; // The list that will become the argc array for the program
+    std::vector<completion_t> args; // The list that will become the argv array for the program
     int use_function = 1;   // May functions be considered when checking what action this command represents
     int use_builtin = 1;    // May builtins be considered when checking what action this command represents
     int use_command = 1;    // May commands be considered when checking what action this command represents

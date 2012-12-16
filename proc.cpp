@@ -860,7 +860,7 @@ void proc_update_jiffies()
 
    \param j the job to test
 
-   \return 1 if buffers were avaialble, zero otherwise
+   \return 1 if buffers were available, zero otherwise
 */
 static int select_try(job_t *j)
 {
@@ -989,7 +989,7 @@ static int terminal_give_to_job(job_t *j, int cont)
 }
 
 /**
-   Returns contol of the terminal to the shell, and saves the terminal
+   Returns control of the terminal to the shell, and saves the terminal
    attribute state to the job, so that we can restore the terminal
    ownership to the job at a later time .
 */

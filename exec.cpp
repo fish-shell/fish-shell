@@ -2,7 +2,7 @@
   Functions for executing a program.
 
   Some of the code in this file is based on code from the Glibc
-  manual, though I the changes performed have been massive.
+  manual, though the changes performed have been massive.
 */
 
 #include "config.h"
@@ -913,20 +913,8 @@ void exec(parser_t &parser, job_t *j)
                                 /*
                                   FIXME:
 
-                                  When
-                                  requesting
-                                  that
-                                  stdin
-                                  be
-                                  closed,
-                                  we
-                                  really
-                                  don't
-                                  do
-                                  anything. How
-                                  should
-                                  this
-                                  be
+                                  When requesting that stdin be closed, we
+                                  really don't do anything. How should this be
                                   handled?
                                  */
                                 builtin_stdin = -1;

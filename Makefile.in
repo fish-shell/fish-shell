@@ -234,7 +234,7 @@ COMPLETIONS_DIR_FILES := $(wildcard share/completions/*.fish)
 # Files in ./share/functions/
 #
 
-FUNCTIONS_DIR_FILES := $(wildcard share/functions/*.fish)
+FUNCTIONS_DIR_FILES := $(wildcard share/functions/*.fish) share/functions/__fish_print_commands.fish
 
 
 #
@@ -308,7 +308,7 @@ prof: all
 # intermediate *.hdr and doc.h files if needed
 # Allow doxygen to fail, e.g. if it does not exist
 
-user_doc: $(HDR_FILES_SRC) Doxyfile.user user_doc.head.html $(HELP_SRC) doc.h $(HDR_FILES)
+user_doc: $(HDR_FILES_SRC) Doxyfile.user user_doc.head.html $(HELP_SRC) doc.h $(HDR_FILES) share/functions/__fish_print_commands.fish
 	- doxygen Doxyfile.user && touch user_doc
 
 
@@ -366,6 +366,13 @@ doc_src/commands.hdr:$(HELP_SRC) doc_src/commands.hdr.in
 	mv command_list.tmp command_list.txt
 	cat $@.in | awk '{if ($$0 ~ /@command_list@/){ system("cat command_list.txt");} else{ print $$0;}}' >$@
 
+share/functions/__fish_print_commands.fish: share/functions/__fish_print_commands.fish.in doc_src/commands.hdr
+	-rm $@
+	cp $@.in $@
+	for i in `awk '{if ($$1 == "\\\\section") print $$2; }' < doc_src/commands.hdr`; do \
+	    sed -i "s|@command_name@|$$i\n@command_name@|" $@; \
+	done
+	sed -i 's|@command_name@||' $@
 
 toc.txt: $(subst index.hdr,index.hdr.in,$(HDR_FILES))
 	-rm toc.tmp $@
@@ -869,6 +876,7 @@ clean:
 	rm -f fish-@PACKAGE_VERSION@.tar.bz2
 	if command -v doxygen; then \
 		rm -rf doc user_doc share/man; \
+		rm -f share/functions/__fish_print_commands.fish; \
 	fi
 	rm -rf fish-@PACKAGE_VERSION@
 	rm -f $(TRANSLATIONS)

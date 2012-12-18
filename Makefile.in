@@ -373,8 +373,8 @@ toc.txt: $(subst index.hdr,index.hdr.in,$(HDR_FILES))
 		NAME=`basename $$i .hdr`; \
 		NAME=`basename $$NAME .hdr.in`; \
 		sed <$$i >>toc.tmp -n \
-		-e 's,.*\\page *\([^ ]*\) *\(.*\)$$,- <a href="'$$NAME'.html" name="toc-'$$NAME'">\2</a>,p' \
-		-e 's,.*\\section *\([^ ]*\) *\(.*\)$$,  - <a href="'$$NAME'.html#\1" name="toc-'$$NAME'">\2</a>,p'; \
+		-e 's,.*\\page *\([^ ]*\) *\(.*\)$$,- <a href="'$$NAME'.html" id="toc-'$$NAME'">\2</a>,p' \
+		-e 's,.*\\section *\([^ ]*\) *\(.*\)$$,  - <a href="'$$NAME'.html#\1">\2</a>,p'; \
 	done
 	mv toc.tmp $@
 

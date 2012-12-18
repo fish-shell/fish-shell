@@ -139,7 +139,7 @@ int fgetws2(wcstring *s, FILE *f)
 
         c = getwc(f);
 
-        if (errno == EILSEQ)
+        if (errno == EILSEQ || errno == EINTR)
         {
             continue;
         }

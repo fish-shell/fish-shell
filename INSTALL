@@ -36,7 +36,7 @@ Always begin by uninstalling any previous fish versions. This is done
 by running the command 'make uninstall' in the source directory of
 your previous fish installation.
 
-Next, if you have downloaded a fresh copy of the darcs repository of
+Next, if you have downloaded a fresh copy of the git repository of
 fish, you need to run the 'autoconf' command.
 
 Then, use following commands to compile fish:
@@ -62,7 +62,7 @@ Substitute /bin/bash with /bin/tcsh or /bin/zsh as appropriate.
 Local install procedure
 =======================
 
-If you have downloaded the darcs repository of fish, you need to run
+If you have downloaded the git repository of fish, you need to run
 autoconf to generate the configure script.
 
 To install fish in your own home directory (typically as non-root),

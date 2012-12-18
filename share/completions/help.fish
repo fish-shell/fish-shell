@@ -3,7 +3,7 @@
 #
 
 if test -f "$__fish_help_dir/commands.html"
-	for i in case (sed -n < $__fish_help_dir/commands.html -e "s/.*<h[12]><a class=\"anchor\" name=\"\([^\"]*\)\">.*/\1/p")
+	for i in (sed -n 's/.*<h1><a class="anchor" \(id\|name\)="\([^"]*\)">.*/\2/p' $__fish_help_dir/commands.html)
 		complete -c help -x -a $i --description "Help for the specified command"
 	end
 end

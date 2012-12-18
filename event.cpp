@@ -25,6 +25,9 @@
 #include "event.h"
 #include "signal.h"
 
+FILE *checkfile;
+FILE *tracefile;
+
 /**
    Number of signals that can be queued before an overflow occurs
 */
@@ -131,6 +134,7 @@ static int event_match(const event_t *classv, const event_t *instance)
     /**
        This should never be reached
     */
+    debug(1, "Warning: Unreachable code reached in event_match in event.cpp\n");
     return 0;
 }
 
@@ -216,7 +220,7 @@ wcstring event_get_desc(const event_t *e)
             break;
 
         default:
-            result = format_string(_(L"Unknown event type"));
+						result = format_string(_(L"Unknown event type '0x%x'"), e->type);
             break;
 
     }
@@ -237,12 +241,60 @@ static void show_all_handlers(void)
 }
 #endif
 
+
+static wcstring event_type_str(const event_t *event) {
+	wcstring res;
+	char const *temp;
+	int sig; 
+	switch(event->type) {
+		case EVENT_ANY:
+			res += L"EVENT_ANY";
+			break;
+		case EVENT_VARIABLE:
+ 			if(event->str_param1.c_str()) {
+				res += format_string(L"EVENT_VARIABLE($%ls)", event->str_param1.c_str());
+			} else {
+				res += L"EVENT_VARIABLE([any])";
+			}
+			break;
+		case EVENT_SIGNAL:
+			sig = event->param1.signal;
+			if(sig == EVENT_ANY_SIGNAL) {
+				temp = "[all signals]";
+			} else if(sig == 0) {
+				temp = "not set";
+			} else {
+				temp = strsignal(sig);
+			}
+			res += format_string(L"EVENT_SIGNAL(%d: %s)", sig, temp);
+			break;
+		case EVENT_EXIT:
+			if(event->param1.pid == EVENT_ANY_PID) {
+				res += L"EVENT_EXIT([all child processes])";
+			} else {
+				res += format_string(L"EVENT_EXIT(pid %d)", event->param1.pid);
+			}
+			break;
+		case EVENT_JOB_ID:
+			res += format_string(L"EVENT_JOB_ID(%d)", event->param1.job_id);
+			break;
+		case EVENT_GENERIC:
+			res += format_string(L"EVENT_GENERIC(%ls)", event->str_param1.c_str());
+			break;
+		default:
+			res += format_string(L"unknown/illegal event(%x)", event->type);
+	}
+	return format_string(L"%ls: \"%ls\"", res.c_str(), event->function_name.c_str());
+}
+
+
 void event_add_handler(const event_t *event)
 {
     event_t *e;
 
     CHECK(event,);
-
+		fprintf(tracefile, "register: %ls\n", event_type_str(event).c_str());
+		
     e = event_copy(event, 0);
 
     if (e->type == EVENT_SIGNAL)
@@ -263,6 +315,7 @@ void event_remove(event_t *criterion)
     event_list_t new_list;
 
     CHECK(criterion,);
+		fprintf(tracefile, "unregister: %ls\n", event_type_str(criterion).c_str());
 
     /*
       Because of concurrency issues (env_remove could remove an event
@@ -369,6 +422,13 @@ static int event_is_killed(event_t *e)
     return std::find(killme.begin(), killme.end(), e) != killme.end();
 }
 
+void event_print_all(FILE *f, const wcstring& header, const std::vector<event_t *> &events) {
+	fprintf(f, "%ls", header.c_str());
+	for(uint i=0; i<events.size(); i++) {
+		fprintf(f, "  %u: %ls\n", i, event_type_str(events.at(i)).c_str());
+	}
+}
+
 /**
    Perform the specified event. Since almost all event firings will
    not be matched by even a single event handler, we make sure to
@@ -415,6 +475,9 @@ static void event_fire_internal(const event_t *event)
     if (fire.empty())
         return;
 
+		event_print_all(tracefile, format_string(L"firing matches for %ls\n", event_type_str(event).c_str()), fire);
+
+
     /*
       Iterate over our list of matching events
     */
@@ -445,7 +508,7 @@ static void event_fire_internal(const event_t *event)
             }
         }
 
-//    debug( 1, L"Event handler fires command '%ls'", buffer.c_str() );
+    debug( 1, L"Event handler fires command '%ls'", buffer.c_str() );
 
         /*
           Event handlers are not part of the main flow of code, so
@@ -599,6 +662,9 @@ void event_fire(event_t *event)
 
 void event_init()
 {
+	tracefile = fdopen(4, "w");
+	checkfile = fopen("/dev/null", "w");
+	setbuf(tracefile, NULL);
 }
 
 void event_destroy()

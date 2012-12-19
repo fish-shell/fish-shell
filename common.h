@@ -206,34 +206,17 @@ void show_stackframe();
 */
 int fgetws2(wcstring *s, FILE *f);
 
-/**
-   Returns a newly allocated wide character string equivalent of the
-   specified multibyte character string
-
-   This function encodes illegal character sequences in a reversible
-   way using the private use area.
-*/
-wchar_t *str2wcs(const char *in);
 
 /**
- Returns a newly allocated wide character string equivalent of the
+ Returns a  wide character string equivalent of the
  specified multibyte character string
 
  This function encodes illegal character sequences in a reversible
  way using the private use area.
  */
 wcstring str2wcstring(const char *in);
+wcstring str2wcstring(const char *in, size_t len);
 wcstring str2wcstring(const std::string &in);
-
-/**
-   Converts the narrow character string \c in into it's wide
-   equivalent, stored in \c out. \c out must have enough space to fit
-   the entire string.
-
-   This function encodes illegal character sequences in a reversible
-   way using the private use area.
-*/
-wchar_t *str2wcs_internal(const char *in, wchar_t *out);
 
 /**
    Returns a newly allocated multibyte character string equivalent of

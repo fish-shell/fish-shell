@@ -115,7 +115,7 @@ enum
 };
 
 /** Character for separating two array elements. We use 30, i.e. the ascii record separator since that seems logical. */
-#define ARRAY_SEP 0x1e
+#define ARRAY_SEP ((wchar_t)(0x1e))
 
 /** String containing the character for separating two array elements */
 #define ARRAY_SEP_STR L"\x1e"

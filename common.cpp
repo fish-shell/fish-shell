@@ -81,6 +81,7 @@ parts of fish.
 #include "fallback.cpp"
 
 
+static wchar_t *str2wcs_internal(const char *in, const size_t in_len, wchar_t *out);
 
 struct termios shell_modes;
 
@@ -163,23 +164,31 @@ int fgetws2(wcstring *s, FILE *f)
     }
 }
 
-wchar_t *str2wcs(const char *in)
+static wchar_t *str2wcs(const char *in)
 {
-    wchar_t *out;
     size_t len = strlen(in);
-
-    out = (wchar_t *)malloc(sizeof(wchar_t)*(len+1));
-
+    wchar_t *out = (wchar_t *)malloc(sizeof(wchar_t)*(len+1));
     if (!out)
     {
         DIE_MEM();
     }
 
-    return str2wcs_internal(in, out);
+    return str2wcs_internal(in, strlen(in), out);
+}
+
+wcstring str2wcstring(const char *in, size_t len)
+{
+    assert(in != NULL);
+    std::string tmp_str(in, len);
+    wchar_t *tmp = str2wcs(tmp_str.c_str());
+    wcstring result = tmp;
+    free(tmp);
+    return result;
 }
 
 wcstring str2wcstring(const char *in)
 {
+    assert(in != NULL);
     wchar_t *tmp = str2wcs(in);
     wcstring result = tmp;
     free(tmp);
@@ -194,24 +203,31 @@ wcstring str2wcstring(const std::string &in)
     return result;
 }
 
-wchar_t *str2wcs_internal(const char *in, wchar_t *out)
+/**
+   Converts the narrow character string \c in into it's wide
+   equivalent, stored in \c out. \c out must have enough space to fit
+   the entire string.
+
+   The string may contain embedded nulls.
+
+   This function encodes illegal character sequences in a reversible
+   way using the private use area.
+*/
+static wchar_t *str2wcs_internal(const char *in, const size_t in_len, wchar_t *out)
 {
     size_t res=0;
     size_t in_pos=0;
     size_t out_pos = 0;
     mbstate_t state;
-    size_t len;
 
     CHECK(in, 0);
     CHECK(out, 0);
-
-    len = strlen(in);
 
     memset(&state, 0, sizeof(state));
 
     while (in[in_pos])
     {
-        res = mbrtowc(&out[out_pos], &in[in_pos], len-in_pos, &state);
+        res = mbrtowc(&out[out_pos], &in[in_pos], in_len-in_pos, &state);
 
         if (((out[out_pos] >= ENCODE_DIRECT_BASE) &&
                 (out[out_pos] < ENCODE_DIRECT_BASE+256)) ||
@@ -298,12 +314,12 @@ std::string wcs2string(const wcstring &input)
 {
     std::string result;
     result.reserve(input.size());
-    
+
     mbstate_t state;
     memset(&state, 0, sizeof(state));
-    
+
     char converted[MB_LEN_MAX + 1];
-    
+
     for (size_t i=0; i < input.size(); i++)
     {
         wchar_t wc = input[i];
@@ -330,7 +346,7 @@ std::string wcs2string(const wcstring &input)
             }
         }
     }
-    
+
     return result;
 }
 

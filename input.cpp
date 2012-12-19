@@ -353,7 +353,7 @@ int input_init()
     }
     const env_var_t term = env_get_string(L"TERM");
     assert(! term.missing());
-    output_set_term(term.c_str());
+    output_set_term(term);
 
     input_terminfo_init();
 

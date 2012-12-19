@@ -1098,18 +1098,16 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
     int nil=0;
     out->out_buffer_append((char *)&nil, 1);
 
-    wchar_t *tmp;
-    wchar_t *str = str2wcs(out->out_buffer_ptr());
-
-    if (str)
+    const char *outbuff = out->out_buffer_ptr();
+    if (outbuff)
     {
-        for (tmp = str + wcslen(str)-1; tmp >= str; tmp--)
+        const wcstring str = str2wcstring(outbuff);
+        size_t idx = str.size();
+        while (idx--)
         {
-            input_unreadch(*tmp);
+            input_unreadch(str.at(idx));
         }
-        free(str);
     }
-
 
     io_buffer_destroy(out);
     io_buffer_destroy(in);
@@ -3466,9 +3464,6 @@ static int read_ni(int fd, const io_chain_t &io)
     in_stream = fdopen(des, "r");
     if (in_stream != 0)
     {
-        wchar_t *str;
-        size_t acc_used;
-
         while (!feof(in_stream))
         {
             char buff[4096];
@@ -3489,9 +3484,8 @@ static int read_ni(int fd, const io_chain_t &io)
 
             acc.insert(acc.end(), buff, buff + c);
         }
-        acc.push_back(0);
-        acc_used = acc.size();
-        str = str2wcs(&acc.at(0));
+
+        const wcstring str = str2wcstring(&acc.at(0), acc.size());
         acc.clear();
 
         if (fclose(in_stream))
@@ -3502,36 +3496,16 @@ static int read_ni(int fd, const io_chain_t &io)
             res = 1;
         }
 
-        if (str)
+        wcstring sb;
+        if (! parser.test(str.c_str(), 0, &sb, L"fish"))
         {
-            wcstring sb;
-            if (! parser.test(str, 0, &sb, L"fish"))
-            {
-                parser.eval(str, io, TOP);
-            }
-            else
-            {
-                fwprintf(stderr, L"%ls", sb.c_str());
-                res = 1;
-            }
-            free(str);
+            parser.eval(str, io, TOP);
         }
         else
         {
-            if (acc_used > 1)
-            {
-                debug(1,
-                      _(L"Could not convert input. Read %d bytes."),
-                      acc_used-1);
-            }
-            else
-            {
-                debug(1,
-                      _(L"Could not read input stream"));
-            }
-            res=1;
+            fwprintf(stderr, L"%ls", sb.c_str());
+            res = 1;
         }
-
     }
     else
     {

@@ -1211,12 +1211,12 @@ void exec(parser_t &parser, job_t *j)
 
                 /* Get the strings we'll write before we fork (since they call malloc) */
                 const wcstring &out = get_stdout_buffer(), &err = get_stderr_buffer();
-                
+
                 /* These strings may contain embedded nulls, so don't treat them as C strings */
                 const std::string outbuff_str = wcs2string(out);
                 const char *outbuff = outbuff_str.data();
                 size_t outbuff_len = outbuff_str.size();
-                
+
                 const std::string errbuff_str = wcs2string(err);
                 const char *errbuff = errbuff_str.data();
                 size_t errbuff_len = errbuff_str.size();
@@ -1466,25 +1466,19 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
 
     begin=end=io_buffer->out_buffer_ptr();
 
+    //REWRITEME
+
     if (lst)
     {
         while (1)
         {
             if (*end == 0)
             {
+                assert(begin != NULL);
                 if (begin != end)
                 {
-                    wchar_t *el = str2wcs(begin);
-                    if (el)
-                    {
-                        lst->push_back(el);
-
-                        free(el);
-                    }
-                    else
-                    {
-                        debug(2, L"Got null string on line %d of file %s", __LINE__, __FILE__);
-                    }
+                    const wcstring el = str2wcstring(begin);
+                    lst->push_back(el);
                 }
                 io_buffer_destroy(io_buffer);
 
@@ -1492,19 +1486,9 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
             }
             else if (*end == sep)
             {
-                wchar_t *el;
                 *end=0;
-                el = str2wcs(begin);
-                if (el)
-                {
-                    lst->push_back(el);
-
-                    free(el);
-                }
-                else
-                {
-                    debug(2, L"Got null string on line %d of file %s", __LINE__, __FILE__);
-                }
+                const wcstring el = str2wcstring(begin);
+                lst->push_back(el);
                 begin = end+1;
             }
             end++;

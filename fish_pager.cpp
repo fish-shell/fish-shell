@@ -479,7 +479,7 @@ static void completion_print(int cols,
                              int *width,
                              int row_start,
                              int row_stop,
-                             wchar_t *prefix,
+                             const wchar_t *prefix,
                              int is_quoted,
                              const std::vector<comp_t *> &lst)
 {
@@ -529,7 +529,7 @@ static void completion_print(int cols,
 */
 
 static int completion_try_print(int cols,
-                                wchar_t *prefix,
+                                const wchar_t *prefix,
                                 int is_quoted,
                                 std::vector<comp_t *> &lst)
 {
@@ -1086,9 +1086,8 @@ static void init(int mangle_descriptors, int out)
     term = getenv("TERM");
     if (term)
     {
-        wchar_t *wterm = str2wcs(term);
+        wcstring wterm = str2wcstring(term);
         output_set_term(wterm);
-        free(wterm);
     }
 
     /* Infer term256 support */
@@ -1129,7 +1128,6 @@ static void read_array(FILE* file, wcstring_list_t &comp)
 {
     std::vector<char> buffer;
     int c;
-    wchar_t *wcs;
 
     while (!feof(file))
     {
@@ -1154,16 +1152,10 @@ static void read_array(FILE* file, wcstring_list_t &comp)
         if (! buffer.empty())
         {
             buffer.push_back(0);
-
-            wcs = str2wcs(&buffer.at(0));
-            if (wcs)
+            wcstring wcs = str2wcstring(&buffer.at(0));
+            if (unescape_string(wcs, false))
             {
-                wcstring tmp = wcs;
-                if (unescape_string(tmp, 0))
-                {
-                    comp.push_back(tmp);
-                }
-                free(wcs);
+                comp.push_back(wcs);
             }
         }
     }
@@ -1191,7 +1183,7 @@ int main(int argc, char **argv)
     int i;
     int is_quoted=0;
     wcstring_list_t comp;
-    wchar_t *prefix = 0;
+    wcstring prefix;
 
     int mangle_descriptors = 0;
     int result_fd = -1;
@@ -1292,7 +1284,7 @@ int main(int argc, char **argv)
 
                 case 'p':
                 {
-                    prefix = str2wcs(optarg);
+                    prefix = str2wcstring(optarg);
                     break;
                 }
 
@@ -1335,12 +1327,6 @@ int main(int argc, char **argv)
             exit(1);
         }
 
-        if (!prefix)
-        {
-            prefix = wcsdup(L"");
-        }
-
-
     }
     else
     {
@@ -1364,7 +1350,7 @@ int main(int argc, char **argv)
         {
             mangle_descriptors = 1;
 
-            prefix = str2wcs(argv[2]);
+            prefix = str2wcstring(argv[2]);
             is_quoted = strcmp("1", argv[1])==0;
 
             if (argc > 3)
@@ -1395,10 +1381,10 @@ int main(int argc, char **argv)
 
     mangle_descriptions(comp);
 
-    if (wcscmp(prefix, L"-") == 0)
+    if (prefix == L"-")
         join_completions(comp);
 
-    std::vector<comp_t *> completions = mangle_completions(comp, prefix);
+    std::vector<comp_t *> completions = mangle_completions(comp, prefix.c_str());
 
     /**
        Try to print the completions. Start by trying to print the
@@ -1408,7 +1394,7 @@ int main(int argc, char **argv)
     */
     for (i = PAGER_MAX_COLS; i>0; i--)
     {
-        switch (completion_try_print(i, prefix, is_quoted, completions))
+        switch (completion_try_print(i, prefix.c_str(), is_quoted, completions))
         {
 
             case PAGER_RETRY:
@@ -1430,8 +1416,6 @@ int main(int argc, char **argv)
 
         }
     }
-
-    free(prefix);
 
     fwprintf(out_file, L"%ls", out_buff.c_str());
     if (is_ca_mode)

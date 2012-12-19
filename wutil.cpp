@@ -296,23 +296,22 @@ void wperror(const wcstring &s)
 
 wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path)
 {
-    cstring tmp = wcs2string(pathname);
-    char *narrow_res = realpath(tmp.c_str(), 0);
-    wchar_t *res;
+    cstring narrow_path = wcs2string(pathname);
+    char *narrow_res = realpath(narrow_path.c_str(), NULL);
 
     if (!narrow_res)
-        return 0;
+        return NULL;
 
+    wchar_t *res;
+    wcstring wide_res = str2wcstring(narrow_res);
     if (resolved_path)
     {
-        wchar_t *tmp2 = str2wcs(narrow_res);
-        wcslcpy(resolved_path, tmp2, PATH_MAX);
-        free(tmp2);
+        wcslcpy(resolved_path, wide_res.c_str(), PATH_MAX);
         res = resolved_path;
     }
     else
     {
-        res = str2wcs(narrow_res);
+        res = wcsdup(wide_res.c_str());
     }
 
     free(narrow_res);

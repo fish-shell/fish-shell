@@ -518,9 +518,11 @@ static void env_set_defaults()
     if (env_get_string(L"USER").missing())
     {
         struct passwd *pw = getpwuid(getuid());
-        wchar_t *unam = str2wcs(pw->pw_name);
-        env_set(L"USER", unam, ENV_GLOBAL);
-        free(unam);
+        if (pw->pw_name != NULL)
+        {
+            const wcstring wide_name = str2wcstring(pw->pw_name);
+            env_set(L"USER", NULL, ENV_GLOBAL);
+        }
     }
 
     if (env_get_string(L"HOME").missing())
@@ -528,9 +530,11 @@ static void env_set_defaults()
         const env_var_t unam = env_get_string(L"USER");
         char *unam_narrow = wcs2str(unam.c_str());
         struct passwd *pw = getpwnam(unam_narrow);
-        wchar_t *dir = str2wcs(pw->pw_dir);
-        env_set(L"HOME", dir, ENV_GLOBAL);
-        free(dir);
+        if (pw->pw_dir != NULL)
+        {
+            const wcstring dir = str2wcstring(pw->pw_dir);
+            env_set(L"HOME", dir.c_str(), ENV_GLOBAL);
+        }
         free(unam_narrow);
     }
 
@@ -539,9 +543,9 @@ static void env_set_defaults()
 }
 
 // Some variables should not be arrays. This used to be handled by a startup script, but we'd like to get down to 0 forks for startup, so handle it here.
-static bool variable_can_be_array(const wchar_t *key)
+static bool variable_can_be_array(const wcstring &key)
 {
-    if (! wcscmp(key, L"DISPLAY"))
+    if (key == L"DISPLAY")
     {
         return false;
     }
@@ -554,9 +558,6 @@ static bool variable_can_be_array(const wchar_t *key)
 void env_init(const struct config_paths_t *paths /* or NULL */)
 {
     char **p;
-    struct passwd *pw;
-    wchar_t *uname;
-    wchar_t *version;
 
     /*
       env_read_only variables can not be altered directly by the user
@@ -610,41 +611,24 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     */
     for (p=environ?environ:__environ; p && *p; p++)
     {
-        wchar_t *key, *val;
-
-        key = str2wcs(*p);
-
-        if (!key)
+        const wcstring key_and_val = str2wcstring(*p); //like foo=bar
+        size_t eql = key_and_val.find(L'=');
+        if (eql == wcstring::npos)
         {
-            continue;
-        }
-
-        val = wcschr(key, L'=');
-
-        if (val == 0)
-        {
-            env_set(key, L"", ENV_EXPORT);
+            // no equals found
+            env_set(key_and_val, L"", ENV_EXPORT);
         }
         else
         {
-            *val = L'\0';
-            val++;
-
-            //fwprintf( stderr, L"Set $%ls to %ls\n", key, val );
+            wcstring key = key_and_val.substr(0, eql);
+            wcstring val = key_and_val.substr(eql + 1);
             if (variable_can_be_array(val))
             {
-                for (size_t i=0; val[i] != L'\0'; i++)
-                {
-                    if (val[i] == L':')
-                    {
-                        val[i] = ARRAY_SEP;
-                    }
-                }
+                std::replace(val.begin(), val.end(), L':', ARRAY_SEP);
             }
 
-            env_set(key, val, ENV_EXPORT | ENV_GLOBAL);
+            env_set(key, val.c_str(), ENV_EXPORT | ENV_GLOBAL);
         }
-        free(key);
     }
 
     /* Set the given paths in the environment, if we have any */
@@ -664,21 +648,19 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     /*
       Set up the USER variable
     */
-    pw = getpwuid(getuid());
-    if (pw)
+    const struct passwd *pw = getpwuid(getuid());
+    if (pw && pw->pw_name)
     {
-        uname = str2wcs(pw->pw_name);
-        env_set(L"USER", uname, ENV_GLOBAL | ENV_EXPORT);
-        free(uname);
+        const wcstring uname = str2wcstring(pw->pw_name);
+        env_set(L"USER", uname.c_str(), ENV_GLOBAL | ENV_EXPORT);
     }
 
     /*
       Set up the version variables
     */
-    version = str2wcs(PACKAGE_VERSION);
-    env_set(L"version", version, ENV_GLOBAL);
-    env_set(L"FISH_VERSION", version, ENV_GLOBAL);
-    free(version);
+    wcstring version = str2wcstring(PACKAGE_VERSION);
+    env_set(L"version", version.c_str(), ENV_GLOBAL);
+    env_set(L"FISH_VERSION", version.c_str(), ENV_GLOBAL);
 
     const env_var_t fishd_dir_wstr = env_get_string(L"FISHD_SOCKET_DIR");
     const env_var_t user_dir_wstr = env_get_string(L"USER");

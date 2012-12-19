@@ -25,7 +25,6 @@ mimedb
 seq
 set_color
 share/config.fish
-share/functions/__fish_print_commands.fish
 share/man/
 toc.txt
 user_doc/

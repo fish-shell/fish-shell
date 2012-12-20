@@ -1100,7 +1100,7 @@ static void functions_def(const wcstring &name, wcstring &out)
     search.function_name = name;
 
     std::vector<event_t *> ev;
-    event_get(&search, &ev);
+    event_get(search, &ev);
 
     out.append(L"function ");
 

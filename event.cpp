@@ -87,45 +87,45 @@ static event_list_t blocked;
    they must name the same function.
 
 */
-static int event_match(const event_t *classv, const event_t *instance)
+static int event_match(const event_t &classv, const event_t &instance)
 {
 
     /* If the function names are both non-empty and different, then it's not a match */
-    if (! classv->function_name.empty() &&
-            ! instance->function_name.empty() &&
-            classv->function_name != instance->function_name)
+    if (! classv.function_name.empty() &&
+            ! instance.function_name.empty() &&
+            classv.function_name != instance.function_name)
     {
         return 0;
     }
 
-    if (classv->type == EVENT_ANY)
+    if (classv.type == EVENT_ANY)
         return 1;
 
-    if (classv->type != instance->type)
+    if (classv.type != instance.type)
         return 0;
 
 
-    switch (classv->type)
+    switch (classv.type)
     {
 
         case EVENT_SIGNAL:
-            if (classv->param1.signal == EVENT_ANY_SIGNAL)
+            if (classv.param1.signal == EVENT_ANY_SIGNAL)
                 return 1;
-            return classv->param1.signal == instance->param1.signal;
+            return classv.param1.signal == instance.param1.signal;
 
         case EVENT_VARIABLE:
-            return instance->str_param1 == classv->str_param1;
+            return instance.str_param1 == classv.str_param1;
 
         case EVENT_EXIT:
-            if (classv->param1.pid == EVENT_ANY_PID)
+            if (classv.param1.pid == EVENT_ANY_PID)
                 return 1;
-            return classv->param1.pid == instance->param1.pid;
+            return classv.param1.pid == instance.param1.pid;
 
         case EVENT_JOB_ID:
-            return classv->param1.job_id == instance->param1.job_id;
+            return classv.param1.job_id == instance.param1.job_id;
 
         case EVENT_GENERIC:
-            return instance->str_param1 == classv->str_param1;
+            return instance.str_param1 == classv.str_param1;
 
     }
 
@@ -141,68 +141,66 @@ static int event_match(const event_t *classv, const event_t *instance)
 /**
    Test if specified event is blocked
 */
-static int event_is_blocked(event_t *e)
+static int event_is_blocked(const event_t &e)
 {
     block_t *block;
     parser_t &parser = parser_t::principal_parser();
     for (block = parser.current_block; block; block = block->outer)
     {
-        if (event_block_list_blocks_type(block->event_blocks, e->type))
+        if (event_block_list_blocks_type(block->event_blocks, e.type))
             return true;
     }
-    return event_block_list_blocks_type(parser.global_event_blocks, e->type);
+    return event_block_list_blocks_type(parser.global_event_blocks, e.type);
 }
 
-wcstring event_get_desc(const event_t *e)
+wcstring event_get_desc(const event_t &e)
 {
 
-    CHECK(e, 0);
-
     wcstring result;
-    switch (e->type)
+    switch (e.type)
     {
 
         case EVENT_SIGNAL:
-            result = format_string(_(L"signal handler for %ls (%ls)"), sig2wcs(e->param1.signal), signal_get_desc(e->param1.signal));
+            result = format_string(_(L"signal handler for %ls (%ls)"), sig2wcs(e.param1.signal), signal_get_desc(e.param1.signal));
             break;
 
         case EVENT_VARIABLE:
-            result = format_string(_(L"handler for variable '%ls'"), e->str_param1.c_str());
+            result = format_string(_(L"handler for variable '%ls'"), e.str_param1.c_str());
             break;
 
         case EVENT_EXIT:
-            if (e->param1.pid > 0)
+            if (e.param1.pid > 0)
             {
-                result = format_string(_(L"exit handler for process %d"), e->param1.pid);
+                result = format_string(_(L"exit handler for process %d"), e.param1.pid);
             }
             else
             {
-                job_t *j = job_get_from_pid(-e->param1.pid);
+                job_t *j = job_get_from_pid(-e.param1.pid);
                 if (j)
                     result = format_string(_(L"exit handler for job %d, '%ls'"), j->job_id, j->command_wcstr());
                 else
-                    result = format_string(_(L"exit handler for job with process group %d"), -e->param1.pid);
+                    result = format_string(_(L"exit handler for job with process group %d"), -e.param1.pid);
             }
 
             break;
 
         case EVENT_JOB_ID:
         {
-            job_t *j = job_get(e->param1.job_id);
+            job_t *j = job_get(e.param1.job_id);
             if (j)
                 result = format_string(_(L"exit handler for job %d, '%ls'"), j->job_id, j->command_wcstr());
             else
-                result = format_string(_(L"exit handler for job with job id %d"), e->param1.job_id);
+                result = format_string(_(L"exit handler for job with job id %d"), e.param1.job_id);
 
             break;
         }
 
         case EVENT_GENERIC:
-            result = format_string(_(L"handler for generic event '%ls'"), e->str_param1.c_str());
+            result = format_string(_(L"handler for generic event '%ls'"), e.str_param1.c_str());
             break;
 
         default:
-						result = format_string(_(L"Unknown event type '0x%x'"), e->type);
+						result = format_string(_(L"Unknown event type '0x%x'"), e.type);
             break;
 
     }
@@ -223,24 +221,24 @@ static void show_all_handlers(void)
 }
 #endif
 
-
-static wcstring event_type_str(const event_t *event) {
+  
+wcstring event_type_str(const event_t &event) {
 	wcstring res;
 	wchar_t const *temp;
 	int sig; 
-	switch(event->type) {
+	switch(event.type) {
 		case EVENT_ANY:
 			res = L"EVENT_ANY";
 			break;
 		case EVENT_VARIABLE:
- 			if(event->str_param1.c_str()) {
-				res = format_string(L"EVENT_VARIABLE($%ls)", event->str_param1.c_str());
+ 			if(event.str_param1.c_str()) {
+				res = format_string(L"EVENT_VARIABLE($%ls)", event.str_param1.c_str());
 			} else {
 				res = L"EVENT_VARIABLE([any])";
 			}
 			break;
 		case EVENT_SIGNAL:
-			sig = event->param1.signal;
+			sig = event.param1.signal;
 			if(sig == EVENT_ANY_SIGNAL) {
 				temp = L"[all signals]";
 			} else if(sig == 0) {
@@ -251,50 +249,49 @@ static wcstring event_type_str(const event_t *event) {
 			res = format_string(L"EVENT_SIGNAL(%ls)", temp);
 			break;
 		case EVENT_EXIT:
-			if(event->param1.pid == EVENT_ANY_PID) {
+			if(event.param1.pid == EVENT_ANY_PID) {
 				res = wcstring(L"EVENT_EXIT([all child processes])");
-			} else if (event->param1.pid > 0) {
-				res = format_string(L"EVENT_EXIT(pid %d)", event->param1.pid);
+			} else if (event.param1.pid > 0) {
+				res = format_string(L"EVENT_EXIT(pid %d)", event.param1.pid);
 			} else {
-				job_t *j = job_get_from_pid(-event->param1.pid);
+				job_t *j = job_get_from_pid(-event.param1.pid);
 				if (j)
 						res = format_string(L"EVENT_EXIT(jobid %d: \"%ls\")", j->job_id, j->command_wcstr());
 				else
-						res = format_string(L"EVENT_EXIT(pgid %d)", -event->param1.pid);
+						res = format_string(L"EVENT_EXIT(pgid %d)", -event.param1.pid);
 			}
 			break;
 		case EVENT_JOB_ID:
 			{
-			job_t *j = job_get(event->param1.job_id);
+			job_t *j = job_get(event.param1.job_id);
 			if (j)
 					res = format_string(L"EVENT_JOB_ID(job %d: \"%ls\")", j->job_id, j->command_wcstr());
 			else
-					res = format_string(L"EVENT_JOB_ID(jobid %d)", event->param1.job_id);
+					res = format_string(L"EVENT_JOB_ID(jobid %d)", event.param1.job_id);
 			break;
 			}
 		case EVENT_GENERIC:
-			res = format_string(L"EVENT_GENERIC(%ls)", event->str_param1.c_str());
+			res = format_string(L"EVENT_GENERIC(%ls)", event.str_param1.c_str());
 			break;
 		default:
-			res = format_string(L"unknown/illegal event(%x)", event->type);
+			res = format_string(L"unknown/illegal event(%x)", event.type);
 	}
-	if(event->function_name.size()) {
-		return format_string(L"%ls: \"%ls\"", res.c_str(), event->function_name.c_str());
+	if(event.function_name.size()) {
+		return format_string(L"%ls: \"%ls\"", res.c_str(), event.function_name.c_str());
 	} else {
 		return res;
 	}
 }
 
 
-void event_add_handler(const event_t *event)
+void event_add_handler(const event_t &event)
 {
     event_t *e;
 
-    CHECK(event,);
     if(debug_level >= 3)
         debug(3, "register: %ls\n", event_type_str(event).c_str());
 
-    e = new event_t(*event);
+    e = new event_t(event);
 
     if (e->type == EVENT_SIGNAL)
     {
@@ -307,13 +304,12 @@ void event_add_handler(const event_t *event)
     signal_unblock();
 }
 
-void event_remove(event_t *criterion)
+void event_remove(event_t &criterion)
 {
 
     size_t i;
     event_list_t new_list;
 
-    CHECK(criterion,);
 		if(debug_level >= 3)
 				debug(3, "unregister: %ls\n", event_type_str(criterion).c_str());
 
@@ -332,7 +328,7 @@ void event_remove(event_t *criterion)
     for (i=0; i<events.size(); i++)
     {
         event_t *n = events.at(i);
-        if (event_match(criterion, n))
+        if (event_match(criterion, *n))
         {
             killme.push_back(n);
 
@@ -344,7 +340,7 @@ void event_remove(event_t *criterion)
             if (n->type == EVENT_SIGNAL)
             {
                 event_t e = event_t::signal_event(n->param1.signal);
-                if (event_get(&e, 0) == 1)
+                if (event_get(e, 0) == 1)
                 {
                     signal_handle(e.param1.signal, 0);
                 }
@@ -360,7 +356,7 @@ void event_remove(event_t *criterion)
     signal_unblock();
 }
 
-int event_get(event_t *criterion, std::vector<event_t *> *out)
+int event_get(const event_t &criterion, std::vector<event_t *> *out)
 {
     size_t i;
     int found = 0;
@@ -368,12 +364,10 @@ int event_get(event_t *criterion, std::vector<event_t *> *out)
     if (events.empty())
         return 0;
 
-    CHECK(criterion, 0);
-
     for (i=0; i<events.size(); i++)
     {
         event_t *n = events.at(i);
-        if (event_match(criterion, n))
+        if (event_match(criterion, *n))
         {
             found++;
             if (out)
@@ -417,9 +411,9 @@ static void event_free_kills()
 /**
    Test if the specified event is waiting to be killed
 */
-static int event_is_killed(event_t *e)
+static int event_is_killed(const event_t &e)
 {
-    return std::find(killme.begin(), killme.end(), e) != killme.end();
+    return std::find(killme.begin(), killme.end(), &e) != killme.end();
 }
 
 /**
@@ -428,7 +422,7 @@ static int event_is_killed(event_t *e)
    optimize the 'no matches' path. This means that nothing is
    allocated/initialized unless needed.
 */
-static void event_fire_internal(const event_t *event)
+static void event_fire_internal(const event_t &event)
 {
 
     size_t i, j;
@@ -458,7 +452,7 @@ static void event_fire_internal(const event_t *event)
         /*
           Check if this event is a match
         */
-        if (event_match(criterion, event))
+        if (event_match(*criterion, event))
         {
             fire.push_back(criterion);
         }
@@ -482,7 +476,7 @@ static void event_fire_internal(const event_t *event)
         /*
           Check if this event has been removed, if so, dont fire it
         */
-        if (event_is_killed(criterion))
+        if (event_is_killed(*criterion))
             continue;
 
         /*
@@ -490,11 +484,11 @@ static void event_fire_internal(const event_t *event)
         */
         wcstring buffer = criterion->function_name;
 
-        if (! event->arguments.empty())
+        if (! event.arguments.empty())
         {
-            for (j=0; j < event->arguments.size(); j++)
+            for (j=0; j < event.arguments.size(); j++)
             {
-                wcstring arg_esc = escape_string(event->arguments.at(j), 1);
+                wcstring arg_esc = escape_string(event.arguments.at(j), 1);
                 buffer += L" ";
                 buffer += arg_esc;
             }
@@ -510,7 +504,7 @@ static void event_fire_internal(const event_t *event)
         prev_status = proc_get_last_status();
         parser_t &parser = parser_t::principal_parser();
 
-        block_t *block = new event_block_t(event);
+        block_t *block = new event_block_t((const event_t*)&event);
         parser.push_block(block);
         parser.eval(buffer, io_chain_t(), TOP);
         parser.pop_block();
@@ -548,13 +542,13 @@ static void event_fire_delayed()
         for (i=0; i<blocked.size(); i++)
         {
             event_t *e = blocked.at(i);
-            if (event_is_blocked(e))
+            if (event_is_blocked(*e))
             {
                 new_blocked.push_back(new event_t(*e));
             }
             else
             {
-                event_fire_internal(e);
+                event_fire_internal(*e);
                 event_free(e);
             }
         }
@@ -590,13 +584,13 @@ static void event_fire_delayed()
         {
             e.param1.signal = lst->signal[i];
             e.arguments.at(0) = sig2wcs(e.param1.signal);
-            if (event_is_blocked(&e))
+            if (event_is_blocked(e))
             {
                 blocked.push_back(new event_t(e));
             }
             else
             {
-                event_fire_internal(&e);
+                event_fire_internal(e);
             }
         }
 
@@ -636,13 +630,13 @@ void event_fire(event_t *event)
 
         if (event)
         {
-            if (event_is_blocked(event))
+            if (event_is_blocked(*event))
             {
                 blocked.push_back(new event_t(*event));
             }
             else
             {
-                event_fire_internal(event);
+                event_fire_internal(*event);
             }
         }
         is_event--;

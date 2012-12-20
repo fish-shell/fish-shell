@@ -893,7 +893,7 @@ void parser_t::stack_trace(block_t *b, wcstring &buff)
           This is an event handler
         */
         const event_block_t *eb = static_cast<const event_block_t *>(b);
-        wcstring description = event_get_desc(eb->event);
+        wcstring description = event_get_desc(*eb->event);
         append_format(buff, _(L"in event handler: %ls\n"), description.c_str());
         buff.append(L"\n");
 

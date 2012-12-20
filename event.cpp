@@ -137,22 +137,6 @@ static int event_match(const event_t *classv, const event_t *instance)
 }
 
 
-/**
-   Create an identical copy of an event. Use deep copying, i.e. make
-   duplicates of any strings used as well.
-*/
-static event_t *event_copy(const event_t *event, int copy_arguments)
-{
-    event_t *e = new event_t(*event);
-
-    e->arguments.reset(new wcstring_list_t);
-    if (copy_arguments && event->arguments.get() != NULL)
-    {
-        *(e->arguments) = *(event->arguments);
-    }
-
-    return e;
-}
 
 /**
    Test if specified event is blocked
@@ -307,10 +291,10 @@ void event_add_handler(const event_t *event)
     event_t *e;
 
     CHECK(event,);
-		if(debug_level >= 3)
-				debug(3, "register: %ls\n", event_type_str(event).c_str());
-		
-    e = event_copy(event, 0);
+    if(debug_level >= 3)
+        debug(3, "register: %ls\n", event_type_str(event).c_str());
+
+    e = new event_t(*event);
 
     if (e->type == EVENT_SIGNAL)
     {
@@ -506,11 +490,11 @@ static void event_fire_internal(const event_t *event)
         */
         wcstring buffer = criterion->function_name;
 
-        if (event->arguments.get())
+        if (! event->arguments.empty())
         {
-            for (j=0; j< event->arguments->size(); j++)
+            for (j=0; j < event->arguments.size(); j++)
             {
-                wcstring arg_esc = escape_string(event->arguments->at(j), 1);
+                wcstring arg_esc = escape_string(event->arguments.at(j), 1);
                 buffer += L" ";
                 buffer += arg_esc;
             }
@@ -566,7 +550,7 @@ static void event_fire_delayed()
             event_t *e = blocked.at(i);
             if (event_is_blocked(e))
             {
-                new_blocked.push_back(e);
+                new_blocked.push_back(new event_t(*e));
             }
             else
             {
@@ -592,7 +576,6 @@ static void event_fire_delayed()
           Set up
         */
         event_t e = event_t::signal_event(0);
-        e.arguments.reset(new wcstring_list_t(1)); //one element
         lst = &sig_list[1-active_list];
 
         if (lst->overflow)
@@ -606,18 +589,16 @@ static void event_fire_delayed()
         for (int i=0; i < lst->count; i++)
         {
             e.param1.signal = lst->signal[i];
-            e.arguments->at(0) = sig2wcs(e.param1.signal);
+            e.arguments.at(0) = sig2wcs(e.param1.signal);
             if (event_is_blocked(&e))
             {
-                blocked.push_back(event_copy(&e, 1));
+                blocked.push_back(new event_t(e));
             }
             else
             {
                 event_fire_internal(&e);
             }
         }
-
-        e.arguments.reset(NULL);
 
     }
 }
@@ -657,7 +638,7 @@ void event_fire(event_t *event)
         {
             if (event_is_blocked(event))
             {
-                blocked.push_back(event_copy(event, 1));
+                blocked.push_back(new event_t(*event));
             }
             else
             {
@@ -696,7 +677,7 @@ void event_fire_generic(const wchar_t *name, wcstring_list_t *args)
     event_t ev(EVENT_GENERIC);
     ev.str_param1 = name;
     if (args)
-        ev.arguments.reset(new wcstring_list_t(*args));
+        ev.arguments = *args;
     event_fire(&ev);
 }
 
@@ -720,14 +701,4 @@ event_t event_t::generic_event(const wcstring &str)
     event.str_param1 = str;
     return event;
 }
-
-event_t::event_t(const event_t &x) :
-    type(x.type),
-    param1(x.param1),
-    str_param1(x.str_param1),
-    function_name(x.function_name)
-{
-    const wcstring_list_t *ptr = x.arguments.get();
-    if (ptr)
-        arguments.reset(new wcstring_list_t(*ptr));
-}
+ 

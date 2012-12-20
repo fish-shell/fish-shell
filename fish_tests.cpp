@@ -284,7 +284,6 @@ static void test_convert()
 /* Verify correct behavior with embedded nulls */
 static void test_convert_nulls(void)
 {
-    return;
     say(L"Testing embedded nulls in string conversion");
     const wchar_t in[] = L"AAA\0BBB";
     const size_t in_len = (sizeof in / sizeof *in) - 1;

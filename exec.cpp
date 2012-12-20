@@ -1459,7 +1459,7 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
     proc_set_last_status(prev_status);
 
     is_subshell = prev_subshell;
-    
+
     if (lst != NULL)
     {
         const char *begin = io_buffer->out_buffer_ptr();
@@ -1478,12 +1478,12 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
             // Stop now points at the first character we do not want to copy)
             const wcstring wc = str2wcstring(cursor, stop - cursor);
             lst->push_back(wc);
-            
+
             // If we hit a separator, skip over it; otherwise we're at the end
             cursor = stop + (hit_separator ? 1 : 0);
         }
     }
-    
+
     io_buffer_destroy(io_buffer);
     return status;
 }

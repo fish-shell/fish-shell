@@ -724,9 +724,9 @@ rgb_color_t parse_color(const wcstring &val, bool is_background)
     return result;
 }
 
-void output_set_term(const wchar_t *term)
+void output_set_term(const wcstring &term)
 {
-    current_term = term;
+    current_term.assign(term);
 }
 
 const wchar_t *output_get_term()

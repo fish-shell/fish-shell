@@ -598,7 +598,8 @@ static wchar_t *fishd_env_get(const wchar_t *key)
     free(nkey);
     if (nres)
     {
-        return str2wcs(nres);
+        wcstring tmp = str2wcstring(nres);
+        return wcsdup(tmp.c_str());
     }
     else
     {

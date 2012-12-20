@@ -512,9 +512,7 @@ bool process_iterator_t::next_process(wcstring *out_str, pid_t *out_pid)
         if ((cmdfile=wfopen(path + L"/cmdline", "r")))
         {
             wcstring full_command_line;
-            signal_block();
             fgetws2(&full_command_line, cmdfile);
-            signal_unblock();
 
             /* The command line needs to be escaped */
             cmd = tok_first(full_command_line.c_str());

@@ -13,7 +13,7 @@ last search position is remembered and a new search continues from the
 last search position. All search results are saved in the list
 'search_prev'. When the user searches forward, i.e. presses Alt-down,
 the list is consulted for previous search result, and subsequent
-backwards searches are also handled by consultiung the list up until
+backwards searches are also handled by consulting the list up until
 the end of the list is reached, at which point regular searching will
 commence.
 
@@ -139,7 +139,7 @@ commence.
 /**
    The maximum number of characters to read from the keyboard without
    repainting. Note that this readahead will only occur if new
-   characters are avaialble for reading, fish will never block for
+   characters are available for reading, fish will never block for
    more input without repainting.
 */
 #define READAHEAD_MAX 256
@@ -161,12 +161,12 @@ commence.
  */
 #define NO_SEARCH 0
 /**
-   History search mode. This value means that we are perforing a line
+   History search mode. This value means that we are performing a line
    history search.
  */
 #define LINE_SEARCH 1
 /**
-   History search mode. This value means that we are perforing a token
+   History search mode. This value means that we are performing a token
    history search.
  */
 #define TOKEN_SEARCH 2
@@ -320,7 +320,7 @@ public:
      */
     bool repaint_needed;
 
-    /** Whether the a screen reset is needed after a repaint. */
+    /** Whether a screen reset is needed after a repaint. */
     bool screen_reset_needed;
 
     /** Constructor */
@@ -577,7 +577,7 @@ void reader_data_t::command_line_changed()
 }
 
 
-/** Remove any duplicate completions in the list. This relies on the list first beeing sorted. */
+/** Remove any duplicate completions in the list. This relies on the list first being sorted. */
 static void remove_duplicates(std::vector<completion_t> &l)
 {
     l.erase(std::unique(l.begin(), l.end()), l.end());
@@ -602,7 +602,7 @@ void reader_write_title()
       as that of a virtual terminal, we assume it supports setting the
       title. If we recognise it as that of a console, we assume it
       does not support setting the title. Otherwise we check the
-      ttyname and see if we belive it is a virtual terminal.
+      ttyname and see if we believe it is a virtual terminal.
 
       One situation in which this breaks down is with screen, since
       screen supports setting the terminal title if the underlying
@@ -797,7 +797,7 @@ static void remove_backward()
     if (data->buff_pos <= 0)
         return;
 
-    /* Fake composed character sequences by continuning to delete until we delete a character of width at least 1. */
+    /* Fake composed character sequences by continuing to delete until we delete a character of width at least 1. */
     int width;
     do
     {
@@ -1098,18 +1098,16 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
     int nil=0;
     out->out_buffer_append((char *)&nil, 1);
 
-    wchar_t *tmp;
-    wchar_t *str = str2wcs(out->out_buffer_ptr());
-
-    if (str)
+    const char *outbuff = out->out_buffer_ptr();
+    if (outbuff)
     {
-        for (tmp = str + wcslen(str)-1; tmp >= str; tmp--)
+        const wcstring str = str2wcstring(outbuff);
+        size_t idx = str.size();
+        while (idx--)
         {
-            input_unreadch(*tmp);
+            input_unreadch(str.at(idx));
         }
-        free(str);
     }
-
 
     io_buffer_destroy(out);
     io_buffer_destroy(in);
@@ -3466,9 +3464,6 @@ static int read_ni(int fd, const io_chain_t &io)
     in_stream = fdopen(des, "r");
     if (in_stream != 0)
     {
-        wchar_t *str;
-        size_t acc_used;
-
         while (!feof(in_stream))
         {
             char buff[4096];
@@ -3489,9 +3484,8 @@ static int read_ni(int fd, const io_chain_t &io)
 
             acc.insert(acc.end(), buff, buff + c);
         }
-        acc.push_back(0);
-        acc_used = acc.size();
-        str = str2wcs(&acc.at(0));
+
+        const wcstring str = str2wcstring(&acc.at(0), acc.size());
         acc.clear();
 
         if (fclose(in_stream))
@@ -3502,36 +3496,16 @@ static int read_ni(int fd, const io_chain_t &io)
             res = 1;
         }
 
-        if (str)
+        wcstring sb;
+        if (! parser.test(str.c_str(), 0, &sb, L"fish"))
         {
-            wcstring sb;
-            if (! parser.test(str, 0, &sb, L"fish"))
-            {
-                parser.eval(str, io, TOP);
-            }
-            else
-            {
-                fwprintf(stderr, L"%ls", sb.c_str());
-                res = 1;
-            }
-            free(str);
+            parser.eval(str, io, TOP);
         }
         else
         {
-            if (acc_used > 1)
-            {
-                debug(1,
-                      _(L"Could not convert input. Read %d bytes."),
-                      acc_used-1);
-            }
-            else
-            {
-                debug(1,
-                      _(L"Could not read input stream"));
-            }
-            res=1;
+            fwprintf(stderr, L"%ls", sb.c_str());
+            res = 1;
         }
-
     }
     else
     {

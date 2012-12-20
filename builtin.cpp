@@ -13,7 +13,7 @@
 
 	3). Create a file doc_src/NAME.txt, containing the manual for the builtin in Doxygen-format. Check the other builtin manuals for proper syntax.
 
-	4). Use 'darcs add doc_src/NAME.txt' to start tracking changes to the documentation file.
+	4). Use 'git add doc_src/NAME.txt' to start tracking changes to the documentation file.
 
 */
 
@@ -188,12 +188,11 @@ static void builtin_wperror(const wchar_t *s)
         stderr_buffer.append(L": ");
     }
     char *err = strerror(errno);
-    wchar_t *werr = str2wcs(err);
-    if (werr)
+    if (err)
     {
+        const wcstring werr = str2wcstring(err);
         stderr_buffer.append(werr);
         stderr_buffer.push_back(L'\n');
-        free(werr);
     }
 }
 
@@ -3065,7 +3064,7 @@ static int builtin_source(parser_t &parser, wchar_t ** argv)
             return STATUS_BUILTIN_ERROR;
         }
 
-        fn = wrealpath(argv[1], 0);
+        fn = wrealpath(argv[1], NULL);
 
         if (!fn)
         {

@@ -483,11 +483,10 @@ int main(int argc, char **argv)
     const io_chain_t empty_ios;
     if (read_init(paths))
     {
-        if (cmd != 0)
+        if (cmd != NULL)
         {
-            wchar_t *cmd_wcs = str2wcs(cmd);
+            const wcstring cmd_wcs = str2wcstring(cmd);
             res = parser.eval(cmd_wcs, empty_ios, TOP);
-            free(cmd_wcs);
             reader_exit(0, 0);
         }
         else
@@ -502,7 +501,6 @@ int main(int argc, char **argv)
                 char *file = *(argv+(my_optind++));
                 int i;
                 int fd;
-                wchar_t *rel_filename, *abs_filename;
 
 
                 if ((fd = open(file, O_RDONLY)) == -1)
@@ -527,17 +525,16 @@ int main(int argc, char **argv)
                     env_set(L"argv", sb.c_str(), 0);
                 }
 
-                rel_filename = str2wcs(file);
-                abs_filename = wrealpath(rel_filename, 0);
+                const wcstring rel_filename = str2wcstring(file);
+                const wchar_t *abs_filename = wrealpath(rel_filename, NULL);
 
                 if (!abs_filename)
                 {
-                    abs_filename = wcsdup(rel_filename);
+                    abs_filename = wcsdup(rel_filename.c_str());
                 }
 
                 reader_push_current_filename(intern(abs_filename));
-                free(rel_filename);
-                free(abs_filename);
+                free((void *)abs_filename);
 
                 res = reader_read(fd, empty_ios);
 

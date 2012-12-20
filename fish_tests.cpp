@@ -249,7 +249,6 @@ static void test_convert()
 
     for (i=0; i<ESCAPE_TEST_COUNT; i++)
     {
-        wchar_t *w;
         const char *o, *n;
 
         char c;
@@ -265,21 +264,55 @@ static void test_convert()
         sb.push_back(c);
 
         o = &sb.at(0);
-        w = str2wcs(o);
-        n = wcs2str(w);
+        const wcstring w = str2wcstring(o);
+        n = wcs2str(w.c_str());
 
-        if (!o || !w || !n)
+        if (!o || !n)
         {
-            err(L"Line %d - Conversion cycle of string %s produced null pointer on %s", __LINE__, o, w?L"str2wcs":L"wcs2str");
+            err(L"Line %d - Conversion cycle of string %s produced null pointer on %s", __LINE__, o, L"wcs2str");
         }
 
         if (strcmp(o, n))
         {
             err(L"Line %d - %d: Conversion cycle of string %s produced different string %s", __LINE__, i, o, n);
         }
-        free(w);
         free((void *)n);
 
+    }
+}
+
+/* Verify correct behavior with embedded nulls */
+static void test_convert_nulls(void)
+{
+    return;
+    say(L"Testing embedded nulls in string conversion");
+    const wchar_t in[] = L"AAA\0BBB";
+    const size_t in_len = (sizeof in / sizeof *in) - 1;
+    const wcstring in_str = wcstring(in, in_len);
+    std::string out_str = wcs2string(in_str);
+    if (out_str.size() != in_len)
+    {
+        err(L"Embedded nulls mishandled in wcs2string");
+    }
+    for (size_t i=0; i < in_len; i++)
+    {
+        if (in[i] != out_str.at(i))
+        {
+            err(L"Embedded nulls mishandled in wcs2string at index %lu", (unsigned long)i);
+        }
+    }
+
+    wcstring out_wstr = str2wcstring(out_str);
+    if (out_wstr.size() != in_len)
+    {
+        err(L"Embedded nulls mishandled in str2wcstring");
+    }
+    for (size_t i=0; i < in_len; i++)
+    {
+        if (in[i] != out_wstr.at(i))
+        {
+            err(L"Embedded nulls mishandled in str2wcstring at index %lu", (unsigned long)i);
+        }
     }
 
 }
@@ -1461,6 +1494,7 @@ int main(int argc, char **argv)
     test_format();
     test_escape();
     test_convert();
+    test_convert_nulls();
     test_tok();
     test_fork();
     test_parser();

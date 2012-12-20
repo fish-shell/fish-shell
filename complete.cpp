@@ -1719,17 +1719,16 @@ bool completer_t::try_complete_user(const wcstring &str)
             while ((pw=getpwent()) != 0)
             {
                 double current_time = timef();
-                wchar_t *pw_name;
 
                 if (current_time - start_time > 0.2)
                 {
                     return 1;
                 }
 
-                pw_name = str2wcs(pw->pw_name);
-
-                if (pw_name)
+                if (pw->pw_name)
                 {
+                    const wcstring pw_name_str = str2wcstring(pw->pw_name);
+                    const wchar_t *pw_name = pw_name_str.c_str();
                     if (wcsncmp(user_name, pw_name, name_len)==0)
                     {
                         wcstring desc = format_string(COMPLETE_USER_DESC, pw_name);
@@ -1751,7 +1750,6 @@ bool completer_t::try_complete_user(const wcstring &str)
                                           COMPLETE_NO_CASE | COMPLETE_DONT_ESCAPE | COMPLETE_NO_SPACE);
                         res=1;
                     }
-                    free(pw_name);
                 }
             }
             endpwent();

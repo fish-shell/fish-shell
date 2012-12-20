@@ -2,7 +2,7 @@
   Functions for executing a program.
 
   Some of the code in this file is based on code from the Glibc
-  manual, though I the changes performed have been massive.
+  manual, though the changes performed have been massive.
 */
 
 #include "config.h"
@@ -913,20 +913,8 @@ void exec(parser_t &parser, job_t *j)
                                 /*
                                   FIXME:
 
-                                  When
-                                  requesting
-                                  that
-                                  stdin
-                                  be
-                                  closed,
-                                  we
-                                  really
-                                  don't
-                                  do
-                                  anything. How
-                                  should
-                                  this
-                                  be
+                                  When requesting that stdin be closed, we
+                                  really don't do anything. How should this be
                                   handled?
                                  */
                                 builtin_stdin = -1;
@@ -1223,12 +1211,12 @@ void exec(parser_t &parser, job_t *j)
 
                 /* Get the strings we'll write before we fork (since they call malloc) */
                 const wcstring &out = get_stdout_buffer(), &err = get_stderr_buffer();
-                
+
                 /* These strings may contain embedded nulls, so don't treat them as C strings */
                 const std::string outbuff_str = wcs2string(out);
                 const char *outbuff = outbuff_str.data();
                 size_t outbuff_len = outbuff_str.size();
-                
+
                 const std::string errbuff_str = wcs2string(err);
                 const char *errbuff = errbuff_str.data();
                 size_t errbuff_len = errbuff_str.size();
@@ -1430,8 +1418,6 @@ void exec(parser_t &parser, job_t *j)
 static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
 {
     ASSERT_IS_MAIN_THREAD();
-    char *begin, *end;
-    char z=0;
     int prev_subshell = is_subshell;
     int status, prev_status;
     io_data_t *io_buffer;
@@ -1473,58 +1459,32 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
     proc_set_last_status(prev_status);
 
     is_subshell = prev_subshell;
-
-    io_buffer->out_buffer_append(&z, 1);
-
-    begin=end=io_buffer->out_buffer_ptr();
-
-    if (lst)
+    
+    if (lst != NULL)
     {
-        while (1)
+        const char *begin = io_buffer->out_buffer_ptr();
+        const char *end = begin + io_buffer->out_buffer_size();
+        const char *cursor = begin;
+        while (cursor < end)
         {
-            if (*end == 0)
+            // Look for the next separator
+            const char *stop = (const char *)memchr(cursor, sep, end - cursor);
+            bool hit_separator = (stop != NULL);
+            if (! hit_separator)
             {
-                if (begin != end)
-                {
-                    wchar_t *el = str2wcs(begin);
-                    if (el)
-                    {
-                        lst->push_back(el);
-
-                        free(el);
-                    }
-                    else
-                    {
-                        debug(2, L"Got null string on line %d of file %s", __LINE__, __FILE__);
-                    }
-                }
-                io_buffer_destroy(io_buffer);
-
-                return status;
+                // If it's not found, just use the end
+                stop = end;
             }
-            else if (*end == sep)
-            {
-                wchar_t *el;
-                *end=0;
-                el = str2wcs(begin);
-                if (el)
-                {
-                    lst->push_back(el);
-
-                    free(el);
-                }
-                else
-                {
-                    debug(2, L"Got null string on line %d of file %s", __LINE__, __FILE__);
-                }
-                begin = end+1;
-            }
-            end++;
+            // Stop now points at the first character we do not want to copy)
+            const wcstring wc = str2wcstring(cursor, stop - cursor);
+            lst->push_back(wc);
+            
+            // If we hit a separator, skip over it; otherwise we're at the end
+            cursor = stop + (hit_separator ? 1 : 0);
         }
     }
-
+    
     io_buffer_destroy(io_buffer);
-
     return status;
 }
 

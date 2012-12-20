@@ -97,7 +97,7 @@ function help --description "Show help for the fish shell"
 		# documentation.  It's a bit of a hack, since it relies on the
 		# Doxygen markup format to never change.
 
-		case (sed -n 's/.*<h2><a class="anchor" \(id\|name\)="\([^"]*\)">.*/\2/p' $__fish_help_dir/commands.html)
+                case (sed -n 's/.*<h[12]><a class="anchor" \(id\|name\)="\([^"]*\)">.*/\2/p' $__fish_help_dir/commands.html)
 			set fish_help_page "commands.html\#$fish_help_item"
 		case $help_topics
 			set fish_help_page "index.html\#$fish_help_item"

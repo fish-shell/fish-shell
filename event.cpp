@@ -689,26 +689,15 @@ void event_free(event_t *e)
     delete e;
 }
 
-
-void event_fire_generic_internal(const wchar_t *name, ...)
+void event_fire_generic(const wchar_t *name, wcstring_list_t *args)
 {
-    va_list va;
-    wchar_t *arg;
-
     CHECK(name,);
 
     event_t ev(EVENT_GENERIC);
     ev.str_param1 = name;
-    ev.arguments.reset(new wcstring_list_t);
-    va_start(va, name);
-    while ((arg=va_arg(va, wchar_t *))!= 0)
-    {
-        ev.arguments->push_back(arg);
-    }
-    va_end(va);
-
+    if (args)
+        ev.arguments.reset(new wcstring_list_t(*args));
     event_fire(&ev);
-    ev.arguments.reset(NULL);
 }
 
 event_t event_t::signal_event(int sig)

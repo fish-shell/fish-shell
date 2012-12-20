@@ -1418,8 +1418,6 @@ void exec(parser_t &parser, job_t *j)
 static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
 {
     ASSERT_IS_MAIN_THREAD();
-    char *begin, *end;
-    char z=0;
     int prev_subshell = is_subshell;
     int status, prev_status;
     io_data_t *io_buffer;
@@ -1461,42 +1459,32 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
     proc_set_last_status(prev_status);
 
     is_subshell = prev_subshell;
-
-    io_buffer->out_buffer_append(&z, 1);
-
-    begin=end=io_buffer->out_buffer_ptr();
-
-    //REWRITEME
-
-    if (lst)
+    
+    if (lst != NULL)
     {
-        while (1)
+        const char *begin = io_buffer->out_buffer_ptr();
+        const char *end = begin + io_buffer->out_buffer_size();
+        const char *cursor = begin;
+        while (cursor < end)
         {
-            if (*end == 0)
+            // Look for the next separator
+            const char *stop = (const char *)memchr(cursor, sep, end - cursor);
+            bool hit_separator = (stop != NULL);
+            if (! hit_separator)
             {
-                assert(begin != NULL);
-                if (begin != end)
-                {
-                    const wcstring el = str2wcstring(begin);
-                    lst->push_back(el);
-                }
-                io_buffer_destroy(io_buffer);
-
-                return status;
+                // If it's not found, just use the end
+                stop = end;
             }
-            else if (*end == sep)
-            {
-                *end=0;
-                const wcstring el = str2wcstring(begin);
-                lst->push_back(el);
-                begin = end+1;
-            }
-            end++;
+            // Stop now points at the first character we do not want to copy)
+            const wcstring wc = str2wcstring(cursor, stop - cursor);
+            lst->push_back(wc);
+            
+            // If we hit a separator, skip over it; otherwise we're at the end
+            cursor = stop + (hit_separator ? 1 : 0);
         }
     }
-
+    
     io_buffer_destroy(io_buffer);
-
     return status;
 }
 

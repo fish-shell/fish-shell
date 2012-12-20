@@ -893,7 +893,7 @@ void parser_t::stack_trace(block_t *b, wcstring &buff)
           This is an event handler
         */
         const event_block_t *eb = static_cast<const event_block_t *>(b);
-        wcstring description = event_get_desc(eb->event);
+        wcstring description = event_get_desc(*eb->event);
         append_format(buff, _(L"in event handler: %ls\n"), description.c_str());
         buff.append(L"\n");
 
@@ -2077,6 +2077,7 @@ int parser_t::parse_job(process_t *p,
 
                     int tmp;
                     const wchar_t *cmd = args.at(0).completion.c_str();
+                    wcstring_list_t event_args;
 
                     /*
                      We couldn't find the specified command.
@@ -2157,7 +2158,9 @@ int parser_t::parse_job(process_t *p,
                     current_tokenizer_pos=tmp;
 
                     job_set_flag(j, JOB_SKIP, 1);
-                    event_fire_generic(L"fish_command_not_found", (wchar_t *)(args.at(0).completion.c_str()));
+
+                    event_args.push_back(args.at(0).completion);
+                    event_fire_generic(L"fish_command_not_found", &event_args);
                     proc_set_last_status(err==ENOENT?STATUS_UNKNOWN_COMMAND:STATUS_NOT_EXECUTABLE);
                 }
             }

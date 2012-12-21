@@ -1295,7 +1295,7 @@ static void accept_autosuggestion(bool full)
         else
         {
             /* Accept characters up to a word separator */
-            move_word_state_machine_t state;
+            move_word_state_machine_t state(move_word_style_punctuation);
             for (size_t idx = data->command_line.size(); idx < data->autosuggestion.size(); idx++)
             {
                 wchar_t wc = data->autosuggestion.at(idx);
@@ -2048,19 +2048,6 @@ static void handle_token_history(int forward, int reset)
    \param dir Direction to move/erase. 0 means move left, 1 means move right.
    \param erase Whether to erase the characters along the way or only move past them.
    \param new if the new kill item should be appended to the previous kill item or not.
-
-   The regex we implement:
-
-      WHITESPACE*
-        (SEPARATOR+)
-      |
-        (SLASH*
-         TOK_STRING_CHARACTERS_EXCEPT_SLASH*)
-
-   Interesting test case:
-     /foo/bar/baz/ -> /foo/bar/ -> /foo/ -> /
-     echo --foo --bar -> echo --foo -> echo
-     echo hi>/dev/null -> echo hi>/dev/ -> echo hi >/ -> echo hi > -> echo hi -> echo
 */
 enum move_word_dir_t
 {
@@ -2068,7 +2055,7 @@ enum move_word_dir_t
     MOVE_DIR_RIGHT
 };
 
-static void move_word(bool move_right, bool erase, bool newv)
+static void move_word(bool move_right, bool erase, enum move_word_style_t style, bool newv)
 {
     /* Return if we are already at the edge */
     const size_t boundary = move_right ? data->command_length() : 0;
@@ -2076,7 +2063,7 @@ static void move_word(bool move_right, bool erase, bool newv)
         return;
 
     /* When moving left, a value of 1 means the character at index 0. */
-    move_word_state_machine_t state;
+    move_word_state_machine_t state(style);
     const wchar_t * const command_line = data->command_line.c_str();
     const size_t start_buff_pos = data->buff_pos;
 
@@ -2696,7 +2683,6 @@ static bool is_backslashed(const wchar_t *str, size_t pos)
 
 const wchar_t *reader_readline()
 {
-
     wint_t c;
     int last_char=0;
     size_t yank_len=0;
@@ -3268,21 +3254,21 @@ const wchar_t *reader_readline()
             /* kill one word left */
             case R_BACKWARD_KILL_WORD:
             {
-                move_word(MOVE_DIR_LEFT, true /* erase */, last_char!=R_BACKWARD_KILL_WORD);
+                move_word(MOVE_DIR_LEFT, true /* erase */, move_word_style_path_components, last_char!=R_BACKWARD_KILL_WORD);
                 break;
             }
 
             /* kill one word right */
             case R_KILL_WORD:
             {
-                move_word(MOVE_DIR_RIGHT, true /* erase */, last_char!=R_KILL_WORD);
+                move_word(MOVE_DIR_RIGHT, true /* erase */, move_word_style_punctuation, last_char!=R_KILL_WORD);
                 break;
             }
 
             /* move one word left*/
             case R_BACKWARD_WORD:
             {
-                move_word(MOVE_DIR_LEFT, false /* do not erase */, false);
+                move_word(MOVE_DIR_LEFT, false /* do not erase */, move_word_style_punctuation, false);
                 break;
             }
 
@@ -3291,7 +3277,7 @@ const wchar_t *reader_readline()
             {
                 if (data->buff_pos < data->command_length())
                 {
-                    move_word(MOVE_DIR_RIGHT, false /* do not erase */, false);
+                    move_word(MOVE_DIR_RIGHT, false /* do not erase */, move_word_style_punctuation, false);
                 }
                 else
                 {

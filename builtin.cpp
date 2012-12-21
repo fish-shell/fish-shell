@@ -2031,7 +2031,7 @@ static int builtin_function(parser_t &parser, wchar_t **argv)
         {
             const wchar_t *nxt = names.at(i).c_str();
             size_t l = wcslen(nxt + 2);
-            if (chars+l > common_get_width())
+            if (chars+l > (size_t)common_get_width())
             {
                 chars = 0;
                 stderr_buffer.push_back(L'\n');

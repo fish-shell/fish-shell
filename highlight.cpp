@@ -1447,7 +1447,7 @@ static void highlight_universal_internal(const wcstring &buffstr, std::vector<in
         */
         if ((buffstr.at(pos) == L'\'') || (buffstr.at(pos) == L'\"'))
         {
-            std::vector<long> lst;
+            std::vector<size_t> lst;
 
             int level=0;
             wchar_t prev_q=0;
@@ -1476,7 +1476,7 @@ static void highlight_universal_internal(const wcstring &buffstr, std::vector<in
                         {
                             if (prev_q == *str)
                             {
-                                long pos1, pos2;
+                                size_t pos1, pos2;
 
                                 level--;
                                 pos1 = lst.back();

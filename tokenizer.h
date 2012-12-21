@@ -183,22 +183,29 @@ const wchar_t *tok_get_desc(int type);
 */
 int tok_get_error(tokenizer_t *tok);
 
+enum move_word_style_t
+{
+    move_word_style_punctuation, //stop at punctuation
+    move_word_style_path_components //stops at path components
+};
 
 /* Our state machine that implements "one word" movement or erasure. */
 class move_word_state_machine_t
 {
-    enum
-    {
-        s_whitespace,
-        s_separator,
-        s_slash,
-        s_nonseparators_except_slash,
-        s_end
-    } state;
+private:
+    
+    bool consume_char_punctuation(wchar_t c);
+    bool consume_char_path_components(wchar_t c);
+    bool is_path_component_character(wchar_t c);
+    
+    int state;
+    move_word_style_t style;
 
 public:
-    move_word_state_machine_t();
+
+    move_word_state_machine_t(move_word_style_t st);
     bool consume_char(wchar_t c);
+    void reset();
 };
 
 

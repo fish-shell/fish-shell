@@ -668,42 +668,111 @@ void tok_set_pos(tokenizer_t *tok, int pos)
     tok_next(tok);
 }
 
-
-
-move_word_state_machine_t::move_word_state_machine_t() : state(s_whitespace)
+bool move_word_state_machine_t::consume_char_punctuation(wchar_t c)
 {
-}
-
-bool move_word_state_machine_t::consume_char(wchar_t c)
-{
-    //printf("state %d, consume '%lc'\n", state, c);
+    enum
+    {
+        s_always_one = 0,
+        s_whitespace,
+        s_alphanumeric,
+        s_end
+    };
+    
     bool consumed = false;
-    /* Always treat separators as first. All this does is ensure that we treat ^ as a string character instead of as stderr redirection, which I hypothesize is usually what is desired. */
-    bool was_first = true;
     while (state != s_end && ! consumed)
     {
         switch (state)
         {
+            case s_always_one:
+                /* Always consume the first character */
+                consumed = true;
+                state = s_whitespace;
+                break;
+            
             case s_whitespace:
                 if (iswspace(c))
                 {
                     /* Consumed whitespace */
                     consumed = true;
                 }
-                else if (tok_is_string_character(c, was_first))
+                else
                 {
-                    /* String path */
+                    state = s_alphanumeric;
+                }
+                break;
+            
+            case s_alphanumeric:
+                if (iswalnum(c))
+                {
+                    /* Consumed alphanumeric */
+                    consumed = true;
+                }
+                else
+                {
+                    state = s_end;
+                }
+                break;
+                
+            case s_end:
+            default:
+                break;
+        }
+    }
+    return consumed;
+}
+
+bool move_word_state_machine_t::is_path_component_character(wchar_t c)
+{
+    /* Always treat separators as first. All this does is ensure that we treat ^ as a string character instead of as stderr redirection, which I hypothesize is usually what is desired. */
+    return tok_is_string_character(c, true) && ! wcschr(L"/={,}'\"", c);
+}
+
+bool move_word_state_machine_t::consume_char_path_components(wchar_t c)
+{
+    enum
+    {
+        s_initial_punctuation,
+        s_whitespace,
+        s_separator,
+        s_slash,
+        s_path_component_characters,
+        s_end
+    };
+    
+    //printf("state %d, consume '%lc'\n", state, c);
+    bool consumed = false;
+    while (state != s_end && ! consumed)
+    {
+        switch (state)
+        {
+            case s_initial_punctuation:
+                if (! is_path_component_character(c))
+                {
+                    consumed = true;
+                }
+                state = s_whitespace;
+                break;
+            
+            case s_whitespace:
+                if (iswspace(c))
+                {
+                    /* Consumed whitespace */
+                    consumed = true;
+                }
+                else if (c == L'/' || is_path_component_character(c))
+                {
+                    /* Path component */
                     state = s_slash;
                 }
                 else
                 {
-                    /* Separator path */
+                    /* Path separator */
                     state = s_separator;
                 }
                 break;
 
             case s_separator:
-                if (! iswspace(c) && ! tok_is_string_character(c, was_first))
+                if (! iswspace(c) && ! is_path_component_character(c))
                 {
                     /* Consumed separator */
                     consumed = true;
@@ -722,12 +791,12 @@ bool move_word_state_machine_t::consume_char(wchar_t c)
                 }
                 else
                 {
-                    state = s_nonseparators_except_slash;
+                    state = s_path_component_characters;
                 }
                 break;
 
-            case s_nonseparators_except_slash:
-                if (c != L'/' && tok_is_string_character(c, was_first))
+            case s_path_component_characters:
+                if (is_path_component_character(c))
                 {
                     /* Consumed string character except slash */
                     consumed = true;
@@ -747,3 +816,21 @@ bool move_word_state_machine_t::consume_char(wchar_t c)
     return consumed;
 }
 
+bool move_word_state_machine_t::consume_char(wchar_t c)
+{
+    switch (style)
+    {
+        case move_word_style_punctuation: return consume_char_punctuation(c);
+        case move_word_style_path_components: return consume_char_path_components(c);
+        default: return false;
+    }
+}
+
+move_word_state_machine_t::move_word_state_machine_t(move_word_style_t syl) : state(0), style(syl)
+{
+}
+
+void move_word_state_machine_t::reset()
+{
+    state = 0;
+}

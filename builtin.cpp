@@ -1595,13 +1595,19 @@ static int builtin_echo(parser_t &parser, wchar_t **argv)
         {
             print_newline = false;
         }
-        else if (! wcscmp(*argv, L"-s"))
-        {
-            print_spaces = false;
-        }
         else if (! wcscmp(*argv, L"-e"))
         {
             interpret_special_chars = true;
+        }
+        else if (! wcscmp(*argv, L"-ne"))
+        {
+            print_newline = false;
+            interpret_special_chars = true;
+        }
+        else if (! wcscmp(*argv, L"-s"))
+        {
+            // fish-specific extension, which we should try to nix
+            print_spaces = false;
         }
         else if (! wcscmp(*argv, L"-E"))
         {

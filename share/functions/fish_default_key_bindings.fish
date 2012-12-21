@@ -84,7 +84,7 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind \cc 'commandline ""'
 	bind \cu backward-kill-line
 	bind \ed kill-word
-	bind \cw backward-kill-word
+	bind \cw backward-kill-path-component
 	bind \ed 'set -l cmd (commandline); if test -z "$cmd"; dirh; commandline -f repaint; else; commandline -f kill-word; end'
 	bind \cd delete-or-exit
 

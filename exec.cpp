@@ -646,16 +646,15 @@ void exec(parser_t &parser, job_t *j)
 
     }
 
-    pipe_read.fd=0;
-    pipe_write.fd=1;
-    pipe_read.io_mode=IO_PIPE;
-    pipe_read.param1.pipe_fd[0] = -1;
-    pipe_read.param1.pipe_fd[1] = -1;
+    pipe_read.fd = 0;
+    pipe_read.io_mode = IO_PIPE;
     pipe_read.is_input = 1;
+    pipe_read.param1.pipe_fd[0] = pipe_read.param1.pipe_fd[1] = -1;
 
-    pipe_write.io_mode=IO_PIPE;
+    pipe_write.fd = 1;
+    pipe_write.io_mode = IO_PIPE;
     pipe_write.is_input = 0;
-    pipe_write.param1.pipe_fd[0]=pipe_write.param1.pipe_fd[1]=-1;
+    pipe_write.param1.pipe_fd[0] = pipe_write.param1.pipe_fd[1] = -1;
 
     j->io.push_back(&pipe_write);
 

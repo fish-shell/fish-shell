@@ -1129,7 +1129,7 @@ void exec(parser_t &parser, job_t *j)
 
             case INTERNAL_BUILTIN:
             {
-                int skip_fork;
+                bool skip_fork;
 
                 /*
                   Handle output from builtin commands. In the general
@@ -1165,7 +1165,7 @@ void exec(parser_t &parser, job_t *j)
                 {
                     const std::string res = wcs2string(get_stdout_buffer());
                     io->out_buffer_append(res.c_str(), res.size());
-                    skip_fork = 1;
+                    skip_fork = true;
                 }
 
                 if (! skip_fork && j->io.empty())
@@ -1179,7 +1179,7 @@ void exec(parser_t &parser, job_t *j)
                     const std::string outbuff = wcs2string(out);
                     const std::string errbuff = wcs2string(err);
                     do_builtin_io(outbuff.data(), outbuff.size(), errbuff.data(), errbuff.size());
-                    skip_fork = 1;
+                    skip_fork = true;
                 }
 
                 for (io_chain_t::iterator iter = j->io.begin(); iter != j->io.end(); iter++)
@@ -1187,7 +1187,7 @@ void exec(parser_t &parser, job_t *j)
                     io_data_t *tmp_io = *iter;
                     if (tmp_io->io_mode == IO_FILE && strcmp(tmp_io->filename_cstr, "/dev/null") != 0)
                     {
-                        skip_fork = 0;
+                        skip_fork = false;
                         break;
                     }
                 }

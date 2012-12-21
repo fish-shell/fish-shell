@@ -3253,8 +3253,11 @@ const wchar_t *reader_readline()
 
             /* kill one word left */
             case R_BACKWARD_KILL_WORD:
+            case R_BACKWARD_KILL_PATH_COMPONENT:
             {
-                move_word(MOVE_DIR_LEFT, true /* erase */, move_word_style_path_components, last_char!=R_BACKWARD_KILL_WORD);
+                move_word_style_t style = (c == R_BACKWARD_KILL_PATH_COMPONENT ? move_word_style_path_components : move_word_style_punctuation);
+                bool newv = (last_char != R_BACKWARD_KILL_WORD && last_char != R_BACKWARD_KILL_PATH_COMPONENT);
+                move_word(MOVE_DIR_LEFT, true /* erase */, style, newv);
                 break;
             }
 
@@ -3471,7 +3474,7 @@ static int read_ni(int fd, const io_chain_t &io)
             acc.insert(acc.end(), buff, buff + c);
         }
 
-        const wcstring str = str2wcstring(&acc.at(0), acc.size());
+        const wcstring str = acc.empty() ? wcstring() : str2wcstring(&acc.at(0), acc.size());
         acc.clear();
 
         if (fclose(in_stream))

@@ -1237,7 +1237,7 @@ int parser_t::is_help(const wchar_t *s, int min_match) const
     min_match = maxi(min_match, 3);
 
     return (wcscmp(L"-h", s) == 0) ||
-           (len >= min_match && (wcsncmp(L"--help", s, len) == 0));
+           (len >= (size_t)min_match && (wcsncmp(L"--help", s, len) == 0));
 }
 
 job_t *parser_t::job_create(void)

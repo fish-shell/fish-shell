@@ -674,6 +674,95 @@ static void test_path()
     }
 }
 
+enum word_motion_t {
+    word_motion_left,
+    word_motion_right
+};
+static void test_1_word_motion(word_motion_t motion, move_word_style_t style, const wcstring &test)
+{
+    wcstring command;
+    std::set<size_t> stops;
+    
+    // Carets represent stops and should be cut out of the command
+    for (size_t i=0; i < test.size(); i++) {
+        wchar_t wc = test.at(i);
+        if (wc == L'^')
+        {
+            stops.insert(command.size());
+        }
+        else
+        {
+            command.push_back(wc);
+        }
+    }
+    
+    size_t idx, end;
+    if (motion == word_motion_left)
+    {
+        idx = command.size();
+        end = 0;
+    }
+    else
+    {
+        idx = 0;
+        end = command.size();
+    }
+    
+    move_word_state_machine_t sm(style);
+    while (idx != end)
+    {
+        size_t char_idx = (motion == word_motion_left ? idx - 1 : idx);
+        wchar_t wc = command.at(char_idx);
+        bool will_stop = ! sm.consume_char(wc);
+        //printf("idx %lu, looking at %lu (%c): %d\n", idx, char_idx, (char)wc, will_stop);
+        bool expected_stop = (stops.count(idx) > 0);
+        if (will_stop != expected_stop)
+        {
+            wcstring tmp = command;
+            tmp.insert(idx, L"^");
+            const char *dir = (motion == word_motion_left ? "left" : "right");
+            if (will_stop)
+            {
+                err(L"Word motion: moving %s, unexpected stop at idx %lu: '%ls'", dir, idx, tmp.c_str());
+            }
+            else if (! will_stop && expected_stop)
+            {
+                err(L"Word motion: moving %s, should have stopped at idx %lu: '%ls'", dir, idx, tmp.c_str());
+            }
+        }
+        // We don't expect to stop here next time
+        if (expected_stop)
+        {
+            stops.erase(idx);
+        }
+        if (will_stop)
+        {
+            sm.reset();
+        }
+        else
+        {
+            idx += (motion == word_motion_left ? -1 : 1);
+        }
+    }
+}
+
+/** Test word motion (forward-word, etc.). Carets represent cursor stops. */
+static void test_word_motion()
+{
+    say(L"Testing word motion");
+    test_1_word_motion(word_motion_left, move_word_style_punctuation, L"^echo ^hello_^world.^txt");
+    test_1_word_motion(word_motion_right, move_word_style_punctuation, L"echo^ hello^_world^.txt^");
+    
+    test_1_word_motion(word_motion_left, move_word_style_punctuation, L"echo ^foo_^foo_^foo/^/^/^/^/^    ");
+    test_1_word_motion(word_motion_right, move_word_style_punctuation, L"echo^ foo^_foo^_foo^/^/^/^/^/    ^");
+    
+    test_1_word_motion(word_motion_left, move_word_style_path_components, L"^/^foo/^bar/^baz/");
+    test_1_word_motion(word_motion_left, move_word_style_path_components, L"^echo ^--foo ^--bar");
+    test_1_word_motion(word_motion_left, move_word_style_path_components, L"^echo ^hi ^> /^dev/^null");
+    
+    test_1_word_motion(word_motion_left, move_word_style_path_components, L"^echo /^foo/^bar{^aaa,^bbb,^ccc}^bak/");
+}
+
 /** Test is_potential_path */
 static void test_is_potential_path()
 {
@@ -1489,6 +1578,9 @@ int main(int argc, char **argv)
     builtin_init();
     reader_init();
     env_init();
+    
+    test_word_motion();
+    return 0;
 
     test_format();
     test_escape();
@@ -1501,6 +1593,7 @@ int main(int argc, char **argv)
     test_expand();
     test_test();
     test_path();
+    test_word_motion();
     test_is_potential_path();
     test_colors();
     test_autosuggest_suggest_special();

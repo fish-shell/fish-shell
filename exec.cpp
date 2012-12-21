@@ -1469,13 +1469,13 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
         {
             // Look for the next separator
             const char *stop = (const char *)memchr(cursor, sep, end - cursor);
-            bool hit_separator = (stop != NULL);
+            const bool hit_separator = (stop != NULL);
             if (! hit_separator)
             {
                 // If it's not found, just use the end
                 stop = end;
             }
-            // Stop now points at the first character we do not want to copy)
+            // Stop now points at the first character we do not want to copy
             const wcstring wc = str2wcstring(cursor, stop - cursor);
             lst->push_back(wc);
 

@@ -109,7 +109,7 @@ void event_add_handler(const event_t &event);
 
    May not be called by a signal handler, since it may free allocated memory.
 */
-void event_remove(event_t &event);
+void event_remove(const event_t &event);
 
 /**
    Return all events which match the specified event class
@@ -170,12 +170,6 @@ void event_free(event_t *e);
    Returns a string describing the specified event.
 */
 wcstring event_get_desc(const event_t &e);
-
-/**
-   Returns a string describing the event. This version is more concise and
-   more detailed than event_get_desc.
-*/
-wcstring event_type_str(const event_t &e);
 
 /**
    Fire a generic event with the specified name

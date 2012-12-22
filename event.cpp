@@ -221,8 +221,11 @@ static void show_all_handlers(void)
 }
 #endif
 
-  
-wcstring event_type_str(const event_t &event) {
+/*
+    Give a more condensed description of \c event compared to \c event_get_desc. 
+    It includes what function will fire if the \c event is an event handler. 
+ */
+static wcstring event_desc_compact(const event_t &event) {
 	wcstring res;
 	wchar_t const *temp;
 	int sig; 
@@ -288,8 +291,10 @@ void event_add_handler(const event_t &event)
 {
     event_t *e;
 
-    if(debug_level >= 3)
-        debug(3, "register: %ls\n", event_type_str(event).c_str());
+    if(debug_level >= 3) {
+        wcstring desc = event_desc_compact(event);
+        debug(3, "register: %ls\n", desc.c_str());
+    }
 
     e = new event_t(event);
 
@@ -304,14 +309,16 @@ void event_add_handler(const event_t &event)
     signal_unblock();
 }
 
-void event_remove(event_t &criterion)
+void event_remove(const event_t &criterion)
 {
 
     size_t i;
     event_list_t new_list;
 
-		if(debug_level >= 3)
-				debug(3, "unregister: %ls\n", event_type_str(criterion).c_str());
+    if(debug_level >= 3) {
+        wcstring desc = event_desc_compact(criterion);
+        debug(3, "unregister: %ls\n", desc.c_str());
+    }
 
     /*
       Because of concurrency issues (env_remove could remove an event
@@ -504,7 +511,7 @@ static void event_fire_internal(const event_t &event)
         prev_status = proc_get_last_status();
         parser_t &parser = parser_t::principal_parser();
 
-        block_t *block = new event_block_t((const event_t*)&event);
+        block_t *block = new event_block_t(event);
         parser.push_block(block);
         parser.eval(buffer, io_chain_t(), TOP);
         parser.pop_block();
@@ -570,6 +577,7 @@ static void event_fire_delayed()
           Set up
         */
         event_t e = event_t::signal_event(0);
+        e.arguments.resize(1);
         lst = &sig_list[1-active_list];
 
         if (lst->overflow)

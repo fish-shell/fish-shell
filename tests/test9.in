@@ -23,3 +23,6 @@ function test3 --on-event test3
 end
 
 emit test3 foo bar
+
+# test empty argument
+emit

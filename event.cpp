@@ -200,7 +200,7 @@ wcstring event_get_desc(const event_t &e)
             break;
 
         default:
-						result = format_string(_(L"Unknown event type '0x%x'"), e.type);
+            result = format_string(_(L"Unknown event type '0x%x'"), e.type);
             break;
 
     }
@@ -222,68 +222,86 @@ static void show_all_handlers(void)
 #endif
 
 /*
-    Give a more condensed description of \c event compared to \c event_get_desc. 
-    It includes what function will fire if the \c event is an event handler. 
+    Give a more condensed description of \c event compared to \c event_get_desc.
+    It includes what function will fire if the \c event is an event handler.
  */
-static wcstring event_desc_compact(const event_t &event) {
-	wcstring res;
-	wchar_t const *temp;
-	int sig; 
-	switch(event.type) {
-		case EVENT_ANY:
-			res = L"EVENT_ANY";
-			break;
-		case EVENT_VARIABLE:
- 			if(event.str_param1.c_str()) {
-				res = format_string(L"EVENT_VARIABLE($%ls)", event.str_param1.c_str());
-			} else {
-				res = L"EVENT_VARIABLE([any])";
-			}
-			break;
-		case EVENT_SIGNAL:
-			sig = event.param1.signal;
-			if(sig == EVENT_ANY_SIGNAL) {
-				temp = L"[all signals]";
-			} else if(sig == 0) {
-				temp = L"not set";
-			} else {
-				temp = sig2wcs(sig);
-			}
-			res = format_string(L"EVENT_SIGNAL(%ls)", temp);
-			break;
-		case EVENT_EXIT:
-			if(event.param1.pid == EVENT_ANY_PID) {
-				res = wcstring(L"EVENT_EXIT([all child processes])");
-			} else if (event.param1.pid > 0) {
-				res = format_string(L"EVENT_EXIT(pid %d)", event.param1.pid);
-			} else {
-				job_t *j = job_get_from_pid(-event.param1.pid);
-				if (j)
-						res = format_string(L"EVENT_EXIT(jobid %d: \"%ls\")", j->job_id, j->command_wcstr());
-				else
-						res = format_string(L"EVENT_EXIT(pgid %d)", -event.param1.pid);
-			}
-			break;
-		case EVENT_JOB_ID:
-			{
-			job_t *j = job_get(event.param1.job_id);
-			if (j)
-					res = format_string(L"EVENT_JOB_ID(job %d: \"%ls\")", j->job_id, j->command_wcstr());
-			else
-					res = format_string(L"EVENT_JOB_ID(jobid %d)", event.param1.job_id);
-			break;
-			}
-		case EVENT_GENERIC:
-			res = format_string(L"EVENT_GENERIC(%ls)", event.str_param1.c_str());
-			break;
-		default:
-			res = format_string(L"unknown/illegal event(%x)", event.type);
-	}
-	if(event.function_name.size()) {
-		return format_string(L"%ls: \"%ls\"", res.c_str(), event.function_name.c_str());
-	} else {
-		return res;
-	}
+static wcstring event_desc_compact(const event_t &event)
+{
+    wcstring res;
+    wchar_t const *temp;
+    int sig;
+    switch (event.type)
+    {
+        case EVENT_ANY:
+            res = L"EVENT_ANY";
+            break;
+        case EVENT_VARIABLE:
+            if (event.str_param1.c_str())
+            {
+                res = format_string(L"EVENT_VARIABLE($%ls)", event.str_param1.c_str());
+            }
+            else
+            {
+                res = L"EVENT_VARIABLE([any])";
+            }
+            break;
+        case EVENT_SIGNAL:
+            sig = event.param1.signal;
+            if (sig == EVENT_ANY_SIGNAL)
+            {
+                temp = L"[all signals]";
+            }
+            else if (sig == 0)
+            {
+                temp = L"not set";
+            }
+            else
+            {
+                temp = sig2wcs(sig);
+            }
+            res = format_string(L"EVENT_SIGNAL(%ls)", temp);
+            break;
+        case EVENT_EXIT:
+            if (event.param1.pid == EVENT_ANY_PID)
+            {
+                res = wcstring(L"EVENT_EXIT([all child processes])");
+            }
+            else if (event.param1.pid > 0)
+            {
+                res = format_string(L"EVENT_EXIT(pid %d)", event.param1.pid);
+            }
+            else
+            {
+                job_t *j = job_get_from_pid(-event.param1.pid);
+                if (j)
+                    res = format_string(L"EVENT_EXIT(jobid %d: \"%ls\")", j->job_id, j->command_wcstr());
+                else
+                    res = format_string(L"EVENT_EXIT(pgid %d)", -event.param1.pid);
+            }
+            break;
+        case EVENT_JOB_ID:
+        {
+            job_t *j = job_get(event.param1.job_id);
+            if (j)
+                res = format_string(L"EVENT_JOB_ID(job %d: \"%ls\")", j->job_id, j->command_wcstr());
+            else
+                res = format_string(L"EVENT_JOB_ID(jobid %d)", event.param1.job_id);
+            break;
+        }
+        case EVENT_GENERIC:
+            res = format_string(L"EVENT_GENERIC(%ls)", event.str_param1.c_str());
+            break;
+        default:
+            res = format_string(L"unknown/illegal event(%x)", event.type);
+    }
+    if (event.function_name.size())
+    {
+        return format_string(L"%ls: \"%ls\"", res.c_str(), event.function_name.c_str());
+    }
+    else
+    {
+        return res;
+    }
 }
 
 
@@ -291,7 +309,8 @@ void event_add_handler(const event_t &event)
 {
     event_t *e;
 
-    if(debug_level >= 3) {
+    if (debug_level >= 3)
+    {
         wcstring desc = event_desc_compact(event);
         debug(3, "register: %ls\n", desc.c_str());
     }
@@ -315,7 +334,8 @@ void event_remove(const event_t &criterion)
     size_t i;
     event_list_t new_list;
 
-    if(debug_level >= 3) {
+    if (debug_level >= 3)
+    {
         wcstring desc = event_desc_compact(criterion);
         debug(3, "unregister: %ls\n", desc.c_str());
     }
@@ -436,11 +456,11 @@ static void event_fire_internal(const event_t &event)
     event_list_t fire;
 
     /*
-      First we free all events that have been removed, but only if this 
-			invocation of event_fire_internal is not a recursive call. 
+      First we free all events that have been removed, but only if this
+    		invocation of event_fire_internal is not a recursive call.
     */
-		if(is_event <= 1)
-		    event_free_kills();
+    if (is_event <= 1)
+        event_free_kills();
 
     if (events.empty())
         return;
@@ -501,7 +521,7 @@ static void event_fire_internal(const event_t &event)
             }
         }
 
-    // debug( 1, L"Event handler fires command '%ls'", buffer.c_str() );
+        // debug( 1, L"Event handler fires command '%ls'", buffer.c_str() );
 
         /*
           Event handlers are not part of the main flow of code, so
@@ -522,8 +542,8 @@ static void event_fire_internal(const event_t &event)
     /*
       Free killed events
     */
-		if(is_event <= 1)
-		    event_free_kills();
+    if (is_event <= 1)
+        event_free_kills();
 
 }
 
@@ -703,4 +723,4 @@ event_t event_t::generic_event(const wcstring &str)
     event.str_param1 = str;
     return event;
 }
- 
+

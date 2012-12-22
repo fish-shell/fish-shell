@@ -677,7 +677,7 @@ bool move_word_state_machine_t::consume_char_punctuation(wchar_t c)
         s_alphanumeric,
         s_end
     };
-    
+
     bool consumed = false;
     while (state != s_end && ! consumed)
     {
@@ -688,7 +688,7 @@ bool move_word_state_machine_t::consume_char_punctuation(wchar_t c)
                 consumed = true;
                 state = s_whitespace;
                 break;
-            
+
             case s_whitespace:
                 if (iswspace(c))
                 {
@@ -700,7 +700,7 @@ bool move_word_state_machine_t::consume_char_punctuation(wchar_t c)
                     state = s_alphanumeric;
                 }
                 break;
-            
+
             case s_alphanumeric:
                 if (iswalnum(c))
                 {
@@ -712,7 +712,7 @@ bool move_word_state_machine_t::consume_char_punctuation(wchar_t c)
                     state = s_end;
                 }
                 break;
-                
+
             case s_end:
             default:
                 break;
@@ -738,7 +738,7 @@ bool move_word_state_machine_t::consume_char_path_components(wchar_t c)
         s_path_component_characters,
         s_end
     };
-    
+
     //printf("state %d, consume '%lc'\n", state, c);
     bool consumed = false;
     while (state != s_end && ! consumed)
@@ -752,7 +752,7 @@ bool move_word_state_machine_t::consume_char_path_components(wchar_t c)
                 }
                 state = s_whitespace;
                 break;
-            
+
             case s_whitespace:
                 if (iswspace(c))
                 {
@@ -820,9 +820,12 @@ bool move_word_state_machine_t::consume_char(wchar_t c)
 {
     switch (style)
     {
-        case move_word_style_punctuation: return consume_char_punctuation(c);
-        case move_word_style_path_components: return consume_char_path_components(c);
-        default: return false;
+        case move_word_style_punctuation:
+            return consume_char_punctuation(c);
+        case move_word_style_path_components:
+            return consume_char_path_components(c);
+        default:
+            return false;
     }
 }
 

@@ -674,7 +674,8 @@ static void test_path()
     }
 }
 
-enum word_motion_t {
+enum word_motion_t
+{
     word_motion_left,
     word_motion_right
 };
@@ -682,9 +683,10 @@ static void test_1_word_motion(word_motion_t motion, move_word_style_t style, co
 {
     wcstring command;
     std::set<size_t> stops;
-    
+
     // Carets represent stops and should be cut out of the command
-    for (size_t i=0; i < test.size(); i++) {
+    for (size_t i=0; i < test.size(); i++)
+    {
         wchar_t wc = test.at(i);
         if (wc == L'^')
         {
@@ -695,7 +697,7 @@ static void test_1_word_motion(word_motion_t motion, move_word_style_t style, co
             command.push_back(wc);
         }
     }
-    
+
     size_t idx, end;
     if (motion == word_motion_left)
     {
@@ -707,7 +709,7 @@ static void test_1_word_motion(word_motion_t motion, move_word_style_t style, co
         idx = 0;
         end = command.size();
     }
-    
+
     move_word_state_machine_t sm(style);
     while (idx != end)
     {
@@ -752,14 +754,14 @@ static void test_word_motion()
     say(L"Testing word motion");
     test_1_word_motion(word_motion_left, move_word_style_punctuation, L"^echo ^hello_^world.^txt");
     test_1_word_motion(word_motion_right, move_word_style_punctuation, L"echo^ hello^_world^.txt^");
-    
+
     test_1_word_motion(word_motion_left, move_word_style_punctuation, L"echo ^foo_^foo_^foo/^/^/^/^/^    ");
     test_1_word_motion(word_motion_right, move_word_style_punctuation, L"echo^ foo^_foo^_foo^/^/^/^/^/    ^");
-    
+
     test_1_word_motion(word_motion_left, move_word_style_path_components, L"^/^foo/^bar/^baz/");
     test_1_word_motion(word_motion_left, move_word_style_path_components, L"^echo ^--foo ^--bar");
     test_1_word_motion(word_motion_left, move_word_style_path_components, L"^echo ^hi ^> /^dev/^null");
-    
+
     test_1_word_motion(word_motion_left, move_word_style_path_components, L"^echo /^foo/^bar{^aaa,^bbb,^ccc}^bak/");
 }
 
@@ -1578,7 +1580,7 @@ int main(int argc, char **argv)
     builtin_init();
     reader_init();
     env_init();
-    
+
     test_word_motion();
     return 0;
 

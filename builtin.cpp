@@ -1009,9 +1009,10 @@ static int builtin_emit(parser_t &parser, wchar_t **argv)
 
     }
 
-    if(!argv[woptind]) {
-      append_format(stderr_buffer, L"%ls: expected event name\n", argv[0]);
-      return STATUS_BUILTIN_ERROR;
+    if (!argv[woptind])
+    {
+        append_format(stderr_buffer, L"%ls: expected event name\n", argv[0]);
+        return STATUS_BUILTIN_ERROR;
     }
     wchar_t *eventname = argv[woptind];
     wcstring_list_t args(argv + woptind + 1, argv + argc);

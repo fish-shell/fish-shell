@@ -162,7 +162,6 @@ static std::vector<int> interactive_stack;
 void proc_init()
 {
     proc_push_interactive(0);
-    event.arguments.reset(new wcstring_list_t);
 }
 
 
@@ -194,7 +193,6 @@ void job_free(job_t * j)
 
 void proc_destroy()
 {
-    event.arguments.reset(NULL);
     job_list_t &jobs = parser_t::principal_parser().job_list();
     while (! jobs.empty())
     {
@@ -603,11 +601,11 @@ void proc_fire_event(const wchar_t *msg, int type, pid_t pid, int status)
     event.type=type;
     event.param1.pid = pid;
 
-    event.arguments->push_back(msg);
-    event.arguments->push_back(to_string<int>(pid));
-    event.arguments->push_back(to_string<int>(status));
+    event.arguments.push_back(msg);
+    event.arguments.push_back(to_string<int>(pid));
+    event.arguments.push_back(to_string<int>(status));
     event_fire(&event);
-    event.arguments->resize(0);
+    event.arguments.resize(0);
 }
 
 int job_reap(bool interactive)

@@ -1009,15 +1009,15 @@ static int builtin_emit(parser_t &parser, wchar_t **argv)
 
     }
 
-    for (; woptind < argc; woptind++)
-    {
-        event_fire_generic(argv[woptind]);
+    if(!argv[woptind]) {
+      append_format(stderr_buffer, L"%ls: expected event name\n", argv[0]);
+      return STATUS_BUILTIN_ERROR;
     }
+    wchar_t *eventname = argv[woptind];
+    wcstring_list_t args(argv + woptind + 1, argv + argc);
+    event_fire_generic(eventname, &args);
 
     return STATUS_BUILTIN_OK;
-
-
-
 }
 
 
@@ -1099,7 +1099,7 @@ static void functions_def(const wcstring &name, wcstring &out)
     search.function_name = name;
 
     std::vector<event_t *> ev;
-    event_get(&search, &ev);
+    event_get(search, &ev);
 
     out.append(L"function ");
 

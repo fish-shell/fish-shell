@@ -84,12 +84,13 @@ struct event_t
        event_fire. In all other situations, the value of this variable
        is ignored.
     */
-    std::auto_ptr<wcstring_list_t> arguments;
+    wcstring_list_t arguments;
 
     event_t(int t) : type(t), param1(), str_param1(), function_name(), arguments() { }
 
-    /** Copy constructor */
-    event_t(const event_t &x);
+    /** default copy constructor */
+		//event_t(const event_t &x); 
+
 
     static event_t signal_event(int sig);
     static event_t variable_event(const wcstring &str);
@@ -101,14 +102,14 @@ struct event_t
 
    May not be called by a signal handler, since it may allocate new memory.
 */
-void event_add_handler(const event_t *event);
+void event_add_handler(const event_t &event);
 
 /**
    Remove all events matching the specified criterion.
 
    May not be called by a signal handler, since it may free allocated memory.
 */
-void event_remove(event_t *event);
+void event_remove(const event_t &event);
 
 /**
    Return all events which match the specified event class
@@ -121,7 +122,7 @@ void event_remove(event_t *event);
 
    \return the number of found matches
 */
-int event_get(event_t *criterion, std::vector<event_t *> *out);
+int event_get(const event_t &criterion, std::vector<event_t *> *out);
 
 /**
     Returns whether an event listener is registered for the given signal.
@@ -168,13 +169,11 @@ void event_free(event_t *e);
 /**
    Returns a string describing the specified event.
 */
-wcstring event_get_desc(const event_t *e);
+wcstring event_get_desc(const event_t &e);
 
 /**
    Fire a generic event with the specified name
 */
-#define event_fire_generic( ... ) event_fire_generic_internal( __VA_ARGS__, NULL )
-
-void event_fire_generic_internal(const wchar_t *name,...);
+void event_fire_generic(const wchar_t *name, wcstring_list_t *args = NULL);
 
 #endif

@@ -330,8 +330,6 @@ void event_add_handler(const event_t &event)
 
 void event_remove(const event_t &criterion)
 {
-
-    size_t i;
     event_list_t new_list;
 
     if (debug_level >= 3)
@@ -352,7 +350,7 @@ void event_remove(const event_t &criterion)
     if (events.empty())
         return;
 
-    for (i=0; i<events.size(); i++)
+    for (size_t i=0; i<events.size(); i++)
     {
         event_t *n = events.at(i);
         if (event_match(criterion, *n))
@@ -452,7 +450,6 @@ static int event_is_killed(const event_t &e)
 static void event_fire_internal(const event_t &event)
 {
 
-    size_t i, j;
     event_list_t fire;
 
     /*
@@ -472,7 +469,7 @@ static void event_fire_internal(const event_t &event)
       event_add_handler, which will change the contents of the \c
       events list.
     */
-    for (i=0; i<events.size(); i++)
+    for (size_t i=0; i<events.size(); i++)
     {
         event_t *criterion = events.at(i);
 
@@ -495,7 +492,7 @@ static void event_fire_internal(const event_t &event)
       Iterate over our list of matching events
     */
 
-    for (i=0; i<fire.size(); i++)
+    for (size_t i=0; i<fire.size(); i++)
     {
         event_t *criterion = fire.at(i);
         int prev_status;
@@ -511,14 +508,11 @@ static void event_fire_internal(const event_t &event)
         */
         wcstring buffer = criterion->function_name;
 
-        if (! event.arguments.empty())
+        for (size_t j=0; j < event.arguments.size(); j++)
         {
-            for (j=0; j < event.arguments.size(); j++)
-            {
-                wcstring arg_esc = escape_string(event.arguments.at(j), 1);
-                buffer += L" ";
-                buffer += arg_esc;
-            }
+            wcstring arg_esc = escape_string(event.arguments.at(j), 1);
+            buffer += L" ";
+            buffer += arg_esc;
         }
 
         // debug( 1, L"Event handler fires command '%ls'", buffer.c_str() );

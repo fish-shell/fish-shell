@@ -158,7 +158,7 @@ struct if_block_t : public block_t
 
 struct event_block_t : public block_t
 {
-    event_t const &event;
+    event_t const event;
     event_block_t(const event_t &evt);
 };
 

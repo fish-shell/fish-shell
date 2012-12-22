@@ -89,8 +89,6 @@ struct event_t
     event_t(int t) : type(t), param1(), str_param1(), function_name(), arguments() { }
 
     /** default copy constructor */
-    //event_t(const event_t &x);
-
 
     static event_t signal_event(int sig);
     static event_t variable_event(const wcstring &str);

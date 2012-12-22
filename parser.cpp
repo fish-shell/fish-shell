@@ -2077,7 +2077,6 @@ int parser_t::parse_job(process_t *p,
 
                     int tmp;
                     const wchar_t *cmd = args.at(0).completion.c_str();
-                    wcstring_list_t event_args;
 
                     /*
                      We couldn't find the specified command.
@@ -2159,6 +2158,7 @@ int parser_t::parse_job(process_t *p,
 
                     job_set_flag(j, JOB_SKIP, 1);
 
+                    wcstring_list_t event_args;
                     event_args.push_back(args.at(0).completion);
                     event_fire_generic(L"fish_command_not_found", &event_args);
                     proc_set_last_status(err==ENOENT?STATUS_UNKNOWN_COMMAND:STATUS_NOT_EXECUTABLE);

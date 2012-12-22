@@ -1,0 +1,28 @@
+# Test events. 
+
+# This pattern caused a crash; github issue #449
+
+set -g var before
+
+function test1 --on-event test
+    set -g var $var:test1
+    functions -e test2
+end
+
+function test2 --on-event test
+    # this should not run, as test2 gets removed before it has a chance of running
+    set -g var $var:test2a
+end
+emit test
+
+echo $var
+
+
+function test3 --on-event test3
+    echo received event test3 with args: $argv
+end
+
+emit test3 foo bar
+
+# test empty argument
+emit

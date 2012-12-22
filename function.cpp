@@ -199,7 +199,7 @@ void function_add(const function_data_t &data, const parser_t &parser)
     /* Add event handlers */
     for (std::vector<event_t>::const_iterator iter = data.events.begin(); iter != data.events.end(); ++iter)
     {
-        event_add_handler(&*iter);
+        event_add_handler(*iter);
     }
 }
 
@@ -229,7 +229,7 @@ static bool function_remove_ignore_autoload(const wcstring &name)
     {
         event_t ev(EVENT_ANY);
         ev.function_name=name;
-        event_remove(&ev);
+        event_remove(ev);
     }
     return erased;
 

@@ -415,12 +415,10 @@ static void universal_callback(fish_message_type_t type,
         mark_changed_exported();
 
         event_t ev = event_t::variable_event(name);
-        ev.arguments.reset(new wcstring_list_t());
-        ev.arguments->push_back(L"VARIABLE");
-        ev.arguments->push_back(str);
-        ev.arguments->push_back(name);
+        ev.arguments.push_back(L"VARIABLE");
+        ev.arguments.push_back(str);
+        ev.arguments.push_back(name);
         event_fire(&ev);
-        ev.arguments.reset(NULL);
     }
 
     if (name)
@@ -961,15 +959,13 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
     if (!is_universal)
     {
         event_t ev = event_t::variable_event(key);
-        ev.arguments.reset(new wcstring_list_t);
-        ev.arguments->push_back(L"VARIABLE");
-        ev.arguments->push_back(L"SET");
-        ev.arguments->push_back(key);
+        ev.arguments.push_back(L"VARIABLE");
+        ev.arguments.push_back(L"SET");
+        ev.arguments.push_back(key);
 
         //  debug( 1, L"env_set: fire events on variable %ls", key );
         event_fire(&ev);
         //  debug( 1, L"env_set: return from event firing" );
-        ev.arguments.reset(NULL);
     }
 
     react_to_variable_change(key);
@@ -1048,14 +1044,12 @@ int env_remove(const wcstring &key, int var_mode)
         if (try_remove(first_node, key.c_str(), var_mode))
         {
             event_t ev = event_t::variable_event(key);
-            ev.arguments.reset(new wcstring_list_t);
-            ev.arguments->push_back(L"VARIABLE");
-            ev.arguments->push_back(L"ERASE");
-            ev.arguments->push_back(key);
+            ev.arguments.push_back(L"VARIABLE");
+            ev.arguments.push_back(L"ERASE");
+            ev.arguments.push_back(key);
 
             event_fire(&ev);
 
-            ev.arguments.reset(NULL);
             erased = 1;
         }
     }

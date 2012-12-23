@@ -40,15 +40,15 @@ typedef struct
     /**
        Number of delivered signals
     */
-    int count;
+    volatile int count;
     /**
        Whether signals have been skipped
     */
-    int overflow;
+    volatile int overflow;
     /**
        Array of signal events
     */
-    int signal[SIG_UNHANDLED_MAX];
+    volatile int signal[SIG_UNHANDLED_MAX];
 }
 signal_list_t;
 
@@ -62,7 +62,7 @@ static signal_list_t sig_list[]= {{0,0},{0,0}};
 /**
    The index of sig_list that is the list of signals currently written to
 */
-static int active_list=0;
+static volatile int active_list=0;
 
 typedef std::vector<event_t *> event_list_t;
 
@@ -576,23 +576,26 @@ static void event_fire_delayed()
         blocked.swap(new_blocked);
     }
 
-    while (sig_list[active_list].count > 0)
+    int al = active_list;
+
+    while (sig_list[al].count > 0)
     {
         signal_list_t *lst;
 
         /*
           Switch signal lists
         */
-        sig_list[1-active_list].count=0;
-        sig_list[1-active_list].overflow=0;
-        active_list=1-active_list;
+        sig_list[1-al].count=0;
+        sig_list[1-al].overflow=0;
+        al = 1-al;
+        active_list=al;
 
         /*
           Set up
         */
+        lst = &sig_list[1-al];
         event_t e = event_t::signal_event(0);
         e.arguments.resize(1);
-        lst = &sig_list[1-active_list];
 
         if (lst->overflow)
         {

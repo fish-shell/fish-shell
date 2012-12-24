@@ -333,14 +333,13 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path)
 
     if (resolved_path)
     {
-        wchar_t *tmp2 = str2wcs(narrow_res);
-        wcslcpy(resolved_path, tmp2, PATH_MAX);
-        free(tmp2);
+        wcstring tmp2 = str2wcstring(narrow_res);
+        wcslcpy(resolved_path, tmp2.c_str(), PATH_MAX);
         res = resolved_path;
     }
     else
     {
-        res = str2wcs(narrow_res);
+        res = wcsdup(str2wcstring(narrow_res).c_str());
     }
     return res;
 }

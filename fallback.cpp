@@ -276,6 +276,7 @@ static int vgwprintf(void (*writer)(wchar_t),
                 {
 
                     wchar_t *ss=0;
+                    wcstring wide_ss;
                     if (is_long)
                     {
                         ss = va_arg(va, wchar_t *);
@@ -286,7 +287,8 @@ static int vgwprintf(void (*writer)(wchar_t),
 
                         if (ns)
                         {
-                            ss = str2wcs(ns);
+                            wide_ss = str2wcstring(ns);
+                            ss = wide_ss.c_str();
                         }
                     }
 
@@ -318,9 +320,6 @@ static int vgwprintf(void (*writer)(wchar_t),
                         pad(writer, width-wcslen(ss));
                         count += maxi(width-wcslen(ss), 0);
                     }
-
-                    if (!is_long)
-                        free(ss);
 
                     break;
                 }

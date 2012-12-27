@@ -197,7 +197,7 @@ DOC_SRC_DIR_FILES := $(HDR_FILES_SRC) $(HELP_SRC)
 # Files in ./
 #
 
-MAIN_DIR_FILES_UNSORTED := Doxyfile Doxyfile.user Doxyfile.help.in		\
+MAIN_DIR_FILES_UNSORTED := Doxyfile Doxyfile.user Doxyfile.help		\
     Makefile.in configure configure.ac config.h.in install-sh			\
     set_color.cpp key_reader.cpp $(MIME_OBJS:.o=.h)					\
     $(MIME_OBJS:.o=.cpp) $(FISH_OBJS:.o=.h) $(BUILTIN_FILES)				\
@@ -842,7 +842,7 @@ rpm: fish-@PACKAGE_VERSION@.tar.bz2 fish.spec
 #
 
 distclean: clean
-	rm -f fish.spec Doxyfile.help
+	rm -f fish.spec
 	rm -f config.status config.log config.h Makefile
 	rm -rf $(XSEL)
 .PHONY: distclean

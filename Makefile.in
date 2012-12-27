@@ -309,7 +309,7 @@ prof: all
 # Allow doxygen to fail, e.g. if it does not exist
 
 user_doc: $(HDR_FILES_SRC) Doxyfile.user user_doc.head.html $(HELP_SRC) doc.h $(HDR_FILES)
-	- doxygen Doxyfile.user && touch user_doc
+	- (cat Doxyfile.user ; echo PROJECT_NUMBER=@PACKAGE_VERSION@) | doxygen - && touch user_doc
 
 
 #
@@ -317,7 +317,7 @@ user_doc: $(HDR_FILES_SRC) Doxyfile.user user_doc.head.html $(HELP_SRC) doc.h $(
 #
 
 doc: *.h *.cpp doc.h Doxyfile
-	doxygen;
+	(cat Doxyfile ; echo PROJECT_NUMBER=@PACKAGE_VERSION@) | doxygen -;
 
 
 #
@@ -497,7 +497,7 @@ share/man: $(HELP_SRC)
 		echo "*/" >>$$FILE; \
 	done
 	if command -v doxygen; then \
-		doxygen Doxyfile.help ; \
+		(cat Doxyfile.help ; echo PROJECT_NUMBER=@PACKAGE_VERSION@) | doxygen - ; \
 		for i in $(HELP_SRC); do \
 			CMD_NAME=`basename $$i .txt`; \
 			sed -e "s/\(.\)\\.SH/\1/" -e "s/$$CMD_NAME *\\\\- *\"\(.*\)\"/\1/" <help_doc/man/man1/$$CMD_NAME.1 >share/man/$$CMD_NAME.1; \

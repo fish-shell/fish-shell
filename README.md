@@ -25,7 +25,7 @@ fish can be built using autotools or Xcode.
 ### Xcode Development Build
 
 * Build the `base` target in Xcode
-* Run the fish executable, for example, in `DerivedData/FishsFish/Build/Products/Debug/base/bin/fish`
+* Run the fish executable, for example, in `DerivedData/fish/Build/Products/Debug/base/bin/fish`
 
 ### Xcode Build and Install
 

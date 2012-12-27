@@ -317,7 +317,7 @@ user_doc: $(HDR_FILES_SRC) Doxyfile.user user_doc.head.html $(HELP_SRC) doc.h $(
 #
 
 doc: *.h *.cpp doc.h Doxyfile
-	(cat Doxyfile ; echo PROJECT_NUMBER=@PACKAGE_VERSION@) | doxygen -;
+	(cat Doxyfile ; echo PROJECT_NUMBER=@PACKAGE_VERSION@) | doxygen - ;
 
 
 #

@@ -6,7 +6,7 @@ Release:                0%{?dist}
 
 License:                GPL
 Group:                  System Environment/Shells
-URL:                    http://ridiculousfish.com/shell/
+URL:                    http://fishshell.com/
 
 Source0:                http://ridiculousfish.com/shell/files/%{version}/%{name}-%{version}.tar.bz2
 

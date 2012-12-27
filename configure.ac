@@ -937,7 +937,7 @@ case $target_os in
 esac
 
 # Tell the world what we know
-AC_CONFIG_FILES([Makefile fish.spec Doxyfile.help seq])
+AC_CONFIG_FILES([Makefile fish.spec seq])
 AC_OUTPUT
 
 if test ! x$local_found_posix_switch = xyes; then

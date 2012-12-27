@@ -1,14 +1,5 @@
-
-#
-# help should use 'open' to find a suitable browser, but only
-# if there is a mime database _and_ DISPLAY is set, since the
-# browser will most likely be graphical. Since most systems which
-# have a mime databe also have the htmlview program, this is mostly a
-# theoretical problem.
-#
-
-function help --description "Show help for the fish shell"
-
+function help --description 'Show help for the fish shell'
+	
 	# Declare variables to set correct scope
 	set -l fish_browser
 	set -l fish_browser_bg
@@ -67,10 +58,13 @@ function help --description "Show help for the fish shell"
 		if type xdg-open > /dev/null
 			set fish_browser xdg-open
 		end
-
-		# On OS X, just use open
+	
+	
+		# On OS X, we go through osascript by default
 		if test (uname) = Darwin
-			set fish_browser (which open)
+			if type osascript >/dev/null
+				set fish_browser osascript
+			end
 		end
 
 	end
@@ -120,7 +114,13 @@ function help --description "Show help for the fish shell"
 		set page_url http://fishshell.com/docs/$version_string/$fish_help_page
 	end
 	
-
+	# OS X /usr/bin/open swallows fragments (anchors), so use osascript
+	# Eval is just a cheesy way of removing the hash escaping
+	if test "$fish_browser" = osascript
+		osascript -e 'open location "'(eval echo $page_url)'"'
+		return
+	end
+	
 	if test $fish_browser_bg
 
 		switch $fish_browser

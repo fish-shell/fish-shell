@@ -102,14 +102,24 @@ function help --description "Show help for the fish shell"
 				# the annoying useless "builtin" man page bash
 				# installs on OS X
 				set -l man_arg "$__fish_datadir/man/man1/$fish_help_item.1"
-				if test ! -f "$man_arg"
-					set man_arg $fish_help_item
+				if test -f "$man_arg"
+					man $man_arg
+					return
 				end
-				man $man_arg
-				return
 			end
 			set fish_help_page "index.html"
 	end
+	
+	set -l page_url
+	if test -f $__fish_help_dir/index.html
+		# Help is installed, use it
+		set page_url file://$__fish_help_dir/$fish_help_page
+	else
+		# Go to the web. Only include one dot in the version string
+		set -l version_string (echo $FISH_VERSION| cut -d . -f 1,2)
+		set page_url http://fishshell.com/docs/$version_string/$fish_help_page
+	end
+	
 
 	if test $fish_browser_bg
 
@@ -122,8 +132,8 @@ function help --description "Show help for the fish shell"
 
 		end
 
-		eval "$fish_browser file://$__fish_help_dir/$fish_help_page &"
+		eval "$fish_browser $page_url &"
 	else
-		eval $fish_browser file://$__fish_help_dir/$fish_help_page
+		eval $fish_browser $page_url
 	end
 end

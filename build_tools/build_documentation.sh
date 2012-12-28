@@ -42,7 +42,7 @@ mkdir -p "${OUTPUTDIR}"
 
 
 # Make a temporary directory
-TMPLOC=`mktemp -d -t fish_doc_build` || { echo >&2 "Could not build documentation because mktemp failed"; exit 1; }
+TMPLOC=`mktemp -d -t fish_doc_build_XXXXXX` || { echo >&2 "Could not build documentation because mktemp failed"; exit 1; }
 
 # Copy stuff to the temp directory
 for i in "$FISHDIR"/doc_src/*.txt; do

@@ -90,7 +90,7 @@ fi
 echo "Cleaning up '$TMPLOC'"
 rm -Rf "$TMPLOC"
 
-if test $RESULT == 0; then
+if test "$RESULT" = 0; then
     # Tell the user what we did
     echo "Output man pages into '${OUTPUTDIR}'"
 else

@@ -60,14 +60,13 @@
 
 #include "complete.h"
 
-/**
-   Command used to start fishd
-*/
+/** Command used to start fishd */
 #define FISHD_CMD L"fishd ^ /tmp/fishd.log.%s"
 
-/**
-   Value denoting a null string
-*/
+// Version for easier debugging
+//#define FISHD_CMD L"fishd"
+
+/** Value denoting a null string */
 #define ENV_NULL L"\x1d"
 
 /** Some configuration path environment variables */
@@ -261,7 +260,6 @@ static void start_fishd()
             cmd.insert(0, bin_dir + L"/");
         }
     }
-
     parser_t &parser = parser_t::principal_parser();
     parser.eval(cmd, io_chain_t(), TOP);
 }

@@ -58,6 +58,9 @@ static int init = 0;
 */
 static int get_socket_count = 0;
 
+#define DEFAULT_RETRY_COUNT 15
+#define DEFAULT_RETRY_DELAY 0.2
+
 static wchar_t * path;
 static wchar_t *user;
 static void (*start_fishd)();
@@ -75,21 +78,14 @@ static int is_dead()
     return env_universal_server.fd < 0;
 }
 
-
-/**
-   Get a socket for reading from the server
-*/
-static int get_socket(int fork_ok)
+static int try_get_socket_once(void)
 {
     int s, len;
-    struct sockaddr_un local;
 
-    char *name;
     wchar_t *wdir;
     wchar_t *wuname;
-    char *dir =0, *uname=0;
+    char *dir = 0;
 
-    get_socket_count++;
     wdir = path;
     wuname = user;
 
@@ -104,48 +100,39 @@ static int get_socket(int fork_ok)
     else
         dir = strdup("/tmp");
 
+    std::string uname;
     if (wuname)
-        uname = wcs2str(wuname);
+    {
+        uname = wcs2string(wuname);
+    }
     else
     {
-        struct passwd *pw;
-        pw = getpwuid(getuid());
-        uname = strdup(pw->pw_name);
+        struct passwd *pw = getpwuid(getuid());
+        if (pw && pw->pw_name)
+        {
+            uname = pw->pw_name;
+        }
     }
-
-    name = (char *)malloc(strlen(dir) +
-                          strlen(uname) +
-                          strlen(SOCK_FILENAME) +
-                          2);
-
-    strcpy(name, dir);
-    strcat(name, "/");
-    strcat(name, SOCK_FILENAME);
-    strcat(name, uname);
-
+    
+    std::string name;
+    name.reserve(strlen(dir) + uname.size() + strlen(SOCK_FILENAME) + 2);
+    name.append(dir);
+    name.append("/");
+    name.append(SOCK_FILENAME);
+    name.append(uname);
+    
     free(dir);
-    free(uname);
 
-    debug(3, L"Connect to socket %s at fd %2", name, s);
+    debug(3, L"Connect to socket %s at fd %2", name.c_str(), s);
 
+    struct sockaddr_un local = {};
     local.sun_family = AF_UNIX;
-    strcpy(local.sun_path, name);
-    free(name);
+    strncpy(local.sun_path, name.c_str(), (sizeof local.sun_path) - 1);
     len = sizeof(local);
 
-    if (connect(s, (struct sockaddr *)&local, len) == -1)
+    if (connect(s, (struct sockaddr *)&local, sizeof local) == -1)
     {
         close(s);
-        if (fork_ok && start_fishd)
-        {
-            debug(2, L"Could not connect to socket %d, starting fishd", s);
-
-            start_fishd();
-
-            return get_socket(0);
-        }
-
-        debug(1, L"Could not connect to universal variable server, already tried manual restart (or no command supplied). You will not be able to share variable values between fish sessions. Is fish properly installed?");
         return -1;
     }
 
@@ -158,7 +145,44 @@ static int get_socket(int fork_ok)
     }
 
     debug(3, L"Connected to fd %d", s);
+    
+    return s;
+}
 
+/**
+   Get a socket for reading from the server
+*/
+static int get_socket(void)
+{
+    get_socket_count++;
+    
+    int s = try_get_socket_once();
+    if (s < 0)
+    {
+        if (start_fishd)
+        {
+            debug(2, L"Could not connect to socket %d, starting fishd", s);
+            
+            start_fishd();
+            
+            for (size_t i=0; s < 0 && i < DEFAULT_RETRY_COUNT; i++)
+            {
+                if (i > 0)
+                {
+                    // Wait before next try
+                    usleep((useconds_t)(DEFAULT_RETRY_DELAY * 1E6));
+                }
+                s = try_get_socket_once();
+            }
+        }
+    }
+    
+    if (s < 0)
+    {
+        debug(1, L"Could not connect to universal variable server, already tried manual restart (or no command supplied). You will not be able to share variable values between fish sessions. Is fish properly installed?");
+        return -1;
+    }
+    
     return s;
 }
 
@@ -237,7 +261,7 @@ static void reconnect()
 
     init = 0;
     env_universal_server.buffer_consumed = env_universal_server.buffer_used = 0;
-    env_universal_server.fd = get_socket(1);
+    env_universal_server.fd = get_socket();
     init = 1;
     if (env_universal_server.fd >= 0)
     {
@@ -259,7 +283,7 @@ void env_universal_init(wchar_t * p,
 
     connection_init(&env_universal_server, -1);
 
-    env_universal_server.fd = get_socket(1);
+    env_universal_server.fd = get_socket();
     env_universal_common_init(&callback);
     env_universal_read_all();
     init = 1;

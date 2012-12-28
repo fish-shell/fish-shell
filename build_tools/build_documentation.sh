@@ -84,7 +84,7 @@ fi
 
 # Destroy TMPLOC
 echo "Cleaning up '$TMPLOC'"
-#rm -Rf "$TMPLOC"
+rm -Rf "$TMPLOC"
 
 if test $RESULT == 0; then
     # Tell the user what we did

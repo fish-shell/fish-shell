@@ -486,25 +486,10 @@ common.o: $(COMMON_FILES)
 #
 
 share/man: $(HELP_SRC)
-	-rm doc_src/*.doxygen # Remove temp files from previous run
-	-rm -r help_doc
 	-mkdir share/man
 	touch share/man
-	for i in $(HELP_SRC); do \
-		FILE=doc_src/`basename $$i .txt`.doxygen; \
-		echo  "/** \page" `basename $$i .txt` >$$FILE; \
-		cat $$i >>$$FILE; \
-		echo "*/" >>$$FILE; \
-	done
-	if command -v doxygen; then \
-		(cat Doxyfile.help ; echo PROJECT_NUMBER=@PACKAGE_VERSION@) | doxygen - ; \
-		for i in $(HELP_SRC); do \
-			CMD_NAME=`basename $$i .txt`; \
-			sed -e "s/\(.\)\\.SH/\1/" -e "s/$$CMD_NAME *\\\\- *\"\(.*\)\"/\1/" <help_doc/man/man1/$$CMD_NAME.1 >share/man/$$CMD_NAME.1; \
-		done \
-	fi
-	rm doc_src/*.doxygen   # Clean up intermediate files in doc_src/
-	rm -rf help_doc         # Clean up intermediate help_doc tree
+	-rm -r help_doc
+	./build_tools/build_documentation.sh
 
 #
 # The build rules for installing/uninstalling fish

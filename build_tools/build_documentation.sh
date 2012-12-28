@@ -55,12 +55,13 @@ done
 # Make some extra stuff to pass to doxygen
 # Input is kept as . because we cd to the input directory beforehand
 # This prevents doxygen from generating "documentation" for intermediate directories
-read -d '' DOXYPARAMS <<EOF
+DOXYPARAMS=$(cat <<EOF
 PROJECT_NUMBER=2.0.0
 INPUT=.
 OUTPUT_DIRECTORY=$OUTPUTDIR
 QUIET=YES
 EOF
+);
 
 # echo "$DOXYPARAMS"
 
@@ -74,11 +75,14 @@ cd "$TMPLOC"
 # Remember errors
 RESULT=$?
 
-if test $RESULT == 0; then
+cd "${OUTPUTDIR}/man/man1/"
+if test "$RESULT" = 0 ; then
 	# Postprocess the files
 	for i in "$FISHDIR"/doc_src/*.txt; do
+		# It would be nice to use -i here for edit in place, but that is not portable 
 		CMD_NAME=`basename "$i" .txt`;
-		sed -i '' -e "s/\(.\)\\.SH/\1/" -e "s/$CMD_NAME *\\\\- *\"\(.*\)\"/\1/" "${OUTPUTDIR}/man/man1/${CMD_NAME}.1"
+		sed -e "s/\(.\)\\.SH/\1/" -e "s/$CMD_NAME *\\\\- *\"\(.*\)\"/\1/" "${CMD_NAME}.1" > "${CMD_NAME}.1.tmp"
+		mv "${CMD_NAME}.1.tmp" "${CMD_NAME}.1"
 	done
 fi
 

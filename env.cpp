@@ -811,7 +811,7 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
 
     if (var_mode & ENV_UNIVERSAL)
     {
-        int exportv = 0;
+        int exportv;
 
         if (!(var_mode & ENV_EXPORT) &&
                 !(var_mode & ENV_UNEXPORT))
@@ -868,12 +868,12 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
 
                 if (env_universal_get(key))
                 {
-                    int exportv = 0;
+                    int exportv;
 
                     if (!(var_mode & ENV_EXPORT) &&
                             !(var_mode & ENV_UNEXPORT))
                     {
-                        env_universal_get_export(key);
+                        exportv = env_universal_get_export(key);
                     }
                     else
                     {

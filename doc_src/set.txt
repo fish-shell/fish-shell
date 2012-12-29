@@ -21,6 +21,7 @@ The <code>set</code> builtin causes fish to assign the variable <code>VARIABLE_N
 - <code>-q</code> or <code>--query</code> test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that were not defined.
 - <code>-u</code> or <code>--unexport</code> causes the specified environment not to be exported to child processes
 - <code>-x</code> or <code>--export</code> causes the specified environment variable to be exported to child processes
+- <code>-L</code> or <code>--long</code> do not abbreviate long values when printing set variables
 
 If set is called with no arguments, the names and values of all
 environment variables are printed. If some of the scope or export

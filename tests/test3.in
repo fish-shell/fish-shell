@@ -134,3 +134,87 @@ if test $foo '=' def
 else
 	echo Test 11 fail
 end
+
+# Test combinations of export and scope
+
+set -ge foo
+
+set -Ue foo
+set -Ux foo bar
+set foo baz
+if test (/bin/sh -c 'echo $foo') = baz -a (../fish -c 'echo $foo') = baz
+  echo Test 12 pass
+else
+  echo Test 12 fail
+end
+
+set -Ue foo
+set -Ux foo bar
+set -U foo baz
+if test (/bin/sh -c 'echo $foo') = baz -a (../fish -c 'echo $foo') = baz
+  echo Test 13 pass
+else
+  echo Test 13 fail
+end
+
+set -Ux foo bar
+set -u foo bar
+if test (/bin/sh -c 'echo $foo') = '' -a (../fish -c 'echo $foo') = bar
+  echo Test 14 pass
+else
+  echo Test 14 fail
+end
+
+set -Ux foo bar
+set -Uu foo baz
+if test (/bin/sh -c 'echo $foo') = '' -a (../fish -c 'echo $foo') = baz
+  echo Test 15 pass
+else
+  echo Test 15 fail
+end
+
+set -eU foo
+
+# test erasing variables without a specified scope
+
+set -g test16res
+
+set -U foo universal
+set -g foo global
+begin
+  set -l foo blocklocal
+  function test16
+    set -l foo function
+    begin
+      set -l foo functionblock
+
+      set test16res $test16res (echo $foo)
+      set -e foo
+      set test16res $test16res (echo $foo)
+      set -e foo
+      set test16res $test16res (echo $foo)
+      set -e foo
+      set test16res $test16res (echo $foo)
+      set -e foo
+      set test16res $test16res (echo $foo)
+    end
+    set test16res $test16res (echo $foo)
+    set -e foo
+  end
+  test16
+  set test16res $test16res (echo $foo)
+end
+set test16res $test16res (echo $foo)
+
+#echo count: (count $test16res) "content:[$test16res]"
+
+if test (count $test16res) = 8 -a "$test16res" = "functionblock function global universal   blocklocal "
+  echo Test 16 pass
+else
+  echo Test 16 fail
+end
+
+
+# clear foo for other shells
+set -eU foo
+true

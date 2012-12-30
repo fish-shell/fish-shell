@@ -1266,7 +1266,7 @@ wchar_t *unescape(const wchar_t * orig, int flags)
                                     break;
                                 }
 
-                                res=(res*base)|d;
+                                res=(res*base)+d;
                             }
 
                             if ((res <= max_val))

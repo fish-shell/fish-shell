@@ -108,7 +108,7 @@ public:
     {
     }
 
-    ~io_data_t()
+    virtual ~io_data_t()
     {
         free((void *)filename_cstr);
     }

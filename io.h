@@ -97,10 +97,10 @@ public:
     /** Set to true if this is an input io redirection */
     bool is_input;
 
-    io_data_t() :
+    io_data_t(io_mode_t m = IO_INVALID, int f=0) :
         out_buffer(),
-        io_mode(IO_INVALID),
-        fd(0),
+        io_mode(m),
+        fd(f),
         param1(),
         param2(),
         filename_cstr(NULL),

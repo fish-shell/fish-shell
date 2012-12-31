@@ -172,7 +172,7 @@ io_chain_t io_chain_t::duplicate() const
     result.reserve(this->size());
     for (io_chain_t::const_iterator iter = this->begin(); iter != this->end(); iter++)
     {
-        result.push_back(shared_ptr<io_data_t>(new io_data_t(**iter)));
+        result.push_back(*iter);
     }
     return result;
 }
@@ -183,7 +183,7 @@ void io_chain_t::duplicate_prepend(const io_chain_t &src)
     this->insert(this->begin(), src.size(), shared_ptr<io_data_t>());
     for (size_t idx = 0; idx < src.size(); idx++)
     {
-        this->at(idx).reset(new io_data_t(*src.at(idx)));
+        this->at(idx) = src.at(idx);
     }
 }
 

@@ -107,17 +107,6 @@ public:
     {
     }
 
-    io_data_t(const io_data_t &rhs) :
-        out_buffer(rhs.out_buffer),
-        io_mode(rhs.io_mode),
-        fd(rhs.fd),
-        param1(rhs.param1),
-        param2(rhs.param2),
-        filename_cstr(rhs.filename_cstr ? strdup(rhs.filename_cstr) : NULL),
-        is_input(rhs.is_input)
-    {
-    }
-
     ~io_data_t()
     {
         free((void *)filename_cstr);

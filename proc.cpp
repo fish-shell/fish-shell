@@ -869,7 +869,7 @@ static int select_try(job_t *j)
 
     for (size_t idx = 0; idx < j->io.size(); idx++)
     {
-        const io_data_t *d = j->io.at(idx);
+        const io_data_t *d = j->io.at(idx).get();
         if (d->io_mode == IO_BUFFER)
         {
             int fd = d->param1.pipe_fd[0];
@@ -909,7 +909,7 @@ static void read_try(job_t *j)
     */
     for (size_t idx = 0; idx < j->io.size(); idx++)
     {
-        io_data_t *d = j->io.at(idx);
+        io_data_t *d = j->io.at(idx).get();
         if (d->io_mode == IO_BUFFER)
         {
             buff=d;

@@ -8,7 +8,7 @@ using std::tr1::shared_ptr;
 /**
    Describes what type of IO operation an io_data_t represents
 */
-enum io_mode
+enum io_mode_t
 {
     IO_FILE, IO_PIPE, IO_FD, IO_BUFFER, IO_CLOSE
 };
@@ -26,7 +26,7 @@ private:
 
 public:
     /** Type of redirect */
-    int io_mode;
+    io_mode_t io_mode;
     /** FD to redirect */
     int fd;
 
@@ -99,7 +99,7 @@ public:
 
     io_data_t() :
         out_buffer(),
-        io_mode(0),
+        io_mode(IO_FILE),
         fd(0),
         param1(),
         param2(),

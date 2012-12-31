@@ -10,7 +10,7 @@ using std::tr1::shared_ptr;
 */
 enum io_mode_t
 {
-    IO_FILE, IO_PIPE, IO_FD, IO_BUFFER, IO_CLOSE
+    IO_INVALID, IO_FILE, IO_PIPE, IO_FD, IO_BUFFER, IO_CLOSE
 };
 
 /** Represents an FD redirection */
@@ -99,7 +99,7 @@ public:
 
     io_data_t() :
         out_buffer(),
-        io_mode(IO_FILE),
+        io_mode(IO_INVALID),
         fd(0),
         param1(),
         param2(),

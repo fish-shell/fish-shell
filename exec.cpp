@@ -397,7 +397,7 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t &out_chain, s
             case IO_BUFFER:
             case IO_CLOSE:
             {
-                out.reset(new io_data_t(*in));
+                out = in;
                 break;
             }
 

@@ -44,7 +44,7 @@ will run the \c ls command, using the \c -l option, while passing on any additio
 
 <pre>
 function mkdir -d "Create a directory and set CWD"
-	mkdir $argv
+	command mkdir $argv
 	if test $status = 0
 		switch $argv[(count $argv)]
 			case '-*'

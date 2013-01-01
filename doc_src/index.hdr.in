@@ -284,7 +284,7 @@ turning on colors on GNU systems is \c '--color=auto'. A wrapper
 around \c ls might look like this:
 
 <pre>function ls
-	ls --color=auto $argv
+	command ls --color=auto $argv
 end
 </pre>
 
@@ -292,7 +292,7 @@ There are a few important things that need to be noted about wrapper
 functions:
 
 - Wrappers should always take care to add the $argv variable to the list of parameters to the wrapped command. This makes sure that if the user specifies any additional parameters to the function, they are passed on to the underlying command.
-- If the wrapped command is not the first command to be called by the wrapper, it is necessary to prefix the call to the command with the word 'command' in order to tell fish that the function should not call itself, but rather a command with the same name. Failing to do so will cause infinite recursion bugs.
+- If the wrapper has the same name as the wrapped command, it is necessary to prefix the call to the command with the word 'command' in order to tell fish that the function should not call itself, but rather a command with the same name. Failing to do so will cause infinite recursion bugs.
 
 \subsubsection syntax-function-autoloading Autoloading functions
 

@@ -1581,9 +1581,6 @@ int main(int argc, char **argv)
     reader_init();
     env_init();
 
-    test_word_motion();
-    return 0;
-
     test_format();
     test_escape();
     test_convert();

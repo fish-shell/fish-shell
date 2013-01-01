@@ -160,7 +160,7 @@ static bool use_fd_in_pipe(int fd, const io_chain_t &io_chain)
 {
     for (size_t idx = 0; idx < io_chain.size(); idx++)
     {
-        shared_ptr<const io_data_t> io = io_chain.at(idx);
+        const shared_ptr<const io_data_t> &io = io_chain.at(idx);
         if ((io->io_mode == IO_BUFFER) ||
                 (io->io_mode == IO_PIPE))
         {
@@ -378,7 +378,7 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t &out_chain, s
 
     for (size_t idx = 0; idx < in_chain.size(); idx++)
     {
-        shared_ptr<io_data_t> in = in_chain.at(idx);
+        const shared_ptr<io_data_t> &in = in_chain.at(idx);
         shared_ptr<io_data_t> out; //gets allocated via new
 
         switch (in->io_mode)
@@ -544,7 +544,7 @@ static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *proce
     bool result = true;
     for (size_t idx = 0; idx < job->io.size(); idx++)
     {
-        shared_ptr<const io_data_t> io = job->io.at(idx);
+        const shared_ptr<const io_data_t> &io = job->io.at(idx);
         if (io->io_mode == IO_FILE)
         {
             const char *path = io->filename_cstr;
@@ -869,7 +869,7 @@ void exec(parser_t &parser, job_t *j)
                 */
                 if (p == j->first_process)
                 {
-                    shared_ptr<const io_data_t> in = io_chain_get(j->io, 0);
+                    const shared_ptr<const io_data_t> &in = io_chain_get(j->io, 0);
 
                     if (in)
                     {
@@ -1154,7 +1154,7 @@ void exec(parser_t &parser, job_t *j)
                   performance quite a bit in complex completion code.
                 */
 
-                shared_ptr<io_data_t> io = io_chain_get(j->io, 1);
+                const shared_ptr<io_data_t> &io = io_chain_get(j->io, 1);
                 bool buffer_stdout = io && io->io_mode == IO_BUFFER;
 
                 if ((get_stderr_buffer().empty()) &&
@@ -1183,7 +1183,7 @@ void exec(parser_t &parser, job_t *j)
 
                 for (io_chain_t::iterator iter = j->io.begin(); iter != j->io.end(); iter++)
                 {
-                    shared_ptr<io_data_t> tmp_io = *iter;
+                    shared_ptr<io_data_t> &tmp_io = *iter;
                     if (tmp_io->io_mode == IO_FILE && strcmp(tmp_io->filename_cstr, "/dev/null") != 0)
                     {
                         skip_fork = false;

@@ -1,7 +1,7 @@
 # fish completion for git
 
 function __fish_git_branches
-  git branch --no-color -a 2>/dev/null | sed 's/^..//; s/^remotes\///'
+  git branch --no-color -a ^/dev/null | grep -v ' -> ' | sed -e 's/^..//' -e 's/^remotes\///'
 end
 
 function __fish_git_tags

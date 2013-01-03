@@ -1030,7 +1030,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = ". \"${SRCROOT}/build_tools/build_documentation.sh\"\n";
+			shellScript = "cd \"${SRCROOT}\" ;\n. \"./build_tools/build_documentation.sh\" \"./Doxyfile.help\" \"./doc_src\" \"$BUILT_PRODUCTS_DIR\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

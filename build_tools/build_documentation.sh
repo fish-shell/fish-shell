@@ -32,9 +32,9 @@ DOXYFILE=`resolve_path "$DOXYFILE"`
 INPUTDIR=`resolve_path "$INPUTDIR"`
 OUTPUTDIR=`resolve_path "$OUTPUTDIR"`
 
-echo "\t    doxygen file: $DOXYFILE"
-echo "\t input directory: $INPUTDIR"
-echo "\toutput directory: $OUTPUTDIR"
+echo "      doxygen file: $DOXYFILE"
+echo "   input directory: $INPUTDIR"
+echo "  output directory: $OUTPUTDIR"
 
 # Make sure INPUTDIR is found
 if test ! -d "$INPUTDIR"; then

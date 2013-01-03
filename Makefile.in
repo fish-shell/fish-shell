@@ -490,6 +490,8 @@ share/man: $(HELP_SRC)
 	touch share/man
 	-rm -r help_doc
 	./build_tools/build_documentation.sh
+	cp help_doc/man/man1/*.1 share/man
+	rm -r help_doc
 
 #
 # The build rules for installing/uninstalling fish

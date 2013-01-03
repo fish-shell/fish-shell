@@ -249,7 +249,7 @@ PROGRAMS := $(SIMPLE_PROGRAMS) @XSEL_BIN@ @SEQ_FALLBACK@
 # Manual pages to install
 #
 
-MANUALS := $(addsuffix .1, $(addprefix share/man/,	\
+MANUALS := $(addsuffix .1, $(addprefix share/man/man1/,	\
 	$(SIMPLE_PROGRAMS))) @XSEL_MAN_PATH@
 
 
@@ -488,10 +488,8 @@ common.o: $(COMMON_FILES)
 share/man: $(HELP_SRC)
 	-mkdir share/man
 	touch share/man
-	-rm -r help_doc
-	./build_tools/build_documentation.sh
-	mv help_doc/man/man1/*.1 share/man
-	rm -r help_doc
+	-rm -R share/man/man1
+	./build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share
 
 #
 # The build rules for installing/uninstalling fish
@@ -586,7 +584,7 @@ install-force: all install-translations
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/functions/; \
 		true; \
 	done;
-	for i in share/man/*.1; do \
+	for i in share/man/man1/*.1; do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/man/man1/; \
 		true; \
 	done;

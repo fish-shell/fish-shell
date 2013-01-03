@@ -1,19 +1,44 @@
 #!/bin/sh
 
 # This script is run as part of the build process
-# It looks for doc_src, and then builds documentation out of it
-# into either help_doc or $BUILT_PRODUCTS_DIR (if set)
 
-# If running from Xcode, the fish directory is in SRCROOT;
-# otherwise assume it's the current directory
-FISHDIR=`pwd`
-if test -n "$SRCROOT"; then
-    FISHDIR="$SRCROOT"
+if test $# -eq 0
+then
+	# Use fish's defaults
+	DOXYFILE=Doxyfile.help
+	INPUTDIR=doc_src
+	OUTPUTDIR=share
+	echo "Using defaults: $0 ${DOXYFILE} ${INPUTDIR} ${OUTPUTDIR}"
+elif test $# -eq 3
+then
+	DOXYFILE="$1"
+	INPUTDIR="$2"
+	OUTPUTDIR="$3"
+else
+	echo "Usage: $0 doxygen_file input_directory output_directory"
+	exit 1
 fi
 
-# Make sure doc_src is found
-if test ! -d "${FISHDIR}/doc_src"; then
-	echo >&2 "doc_src not found in '${FISHDIR}'"
+# Helper function to turn a relative path into an absolute path
+resolve_path()
+{
+	D=`command dirname "$1"`
+	B=`command basename "$1"`
+	echo "`cd \"$D\" 2>/dev/null && pwd || echo \"$D\"`/$B"
+}
+
+# Expand relative paths
+DOXYFILE=`resolve_path "$DOXYFILE"`
+INPUTDIR=`resolve_path "$INPUTDIR"`
+OUTPUTDIR=`resolve_path "$OUTPUTDIR"`
+
+echo "\t    doxygen file: $DOXYFILE"
+echo "\t input directory: $INPUTDIR"
+echo "\toutput directory: $OUTPUTDIR"
+
+# Make sure INPUTDIR is found
+if test ! -d "$INPUTDIR"; then
+	echo >&2 "Could not find input directory '${INPUTDIR}'"
 	exit 1
 fi
 
@@ -34,22 +59,19 @@ if test -z "$DOXYGENPATH"; then
 fi
 
 # Determine where our output should go
-OUTPUTDIR="${FISHDIR}/help_doc"
-if test -n "$BUILT_PRODUCTS_DIR"; then
-	OUTPUTDIR="$BUILT_PRODUCTS_DIR" 
+if ! mkdir -p "${OUTPUTDIR}" ; then
+    echo "Could not create output directory '${OUTPUTDIR}'"
 fi
-mkdir -p "${OUTPUTDIR}"
-
 
 # Make a temporary directory
 TMPLOC=`mktemp -d -t fish_doc_build_XXXXXX` || { echo >&2 "Could not build documentation because mktemp failed"; exit 1; }
 
 # Copy stuff to the temp directory
-for i in "$FISHDIR"/doc_src/*.txt; do
-	DOXYFILE=$TMPLOC/`basename $i .txt`.doxygen
-	echo  "/** \page" `basename $i .txt` >$DOXYFILE;
-	cat $i >>$DOXYFILE;
-	echo "*/" >>$DOXYFILE;
+for i in "$INPUTDIR"/*.txt; do
+	INPUTFILE=$TMPLOC/`basename $i .txt`.doxygen
+	echo  "/** \page" `basename $i .txt` > $INPUTFILE
+	cat $i >>$INPUTFILE
+	echo "*/" >>$INPUTFILE
 done
 
 # Make some extra stuff to pass to doxygen
@@ -70,7 +92,7 @@ find "${OUTPUTDIR}" -name "*.1" -delete
 
 # Run doxygen
 cd "$TMPLOC"
-(cat "${FISHDIR}/Doxyfile.help" ; echo "$DOXYPARAMS";) | "$DOXYGENPATH" - 
+(cat "${DOXYFILE}" ; echo "$DOXYPARAMS";) | "$DOXYGENPATH" - 
 
 # Remember errors
 RESULT=$?
@@ -78,7 +100,7 @@ RESULT=$?
 cd "${OUTPUTDIR}/man/man1/"
 if test "$RESULT" = 0 ; then
 	# Postprocess the files
-	for i in "$FISHDIR"/doc_src/*.txt; do
+	for i in "$INPUTDIR"/*.txt; do
 		# It would be nice to use -i here for edit in place, but that is not portable 
 		CMD_NAME=`basename "$i" .txt`;
 		sed -e "s/\(.\)\\.SH/\1/" -e "s/$CMD_NAME *\\\\- *\"\(.*\)\"/\1/" "${CMD_NAME}.1" > "${CMD_NAME}.1.tmp"

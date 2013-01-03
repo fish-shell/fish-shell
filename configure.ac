@@ -12,7 +12,8 @@
 AC_INIT(fish,2.0.0,fish-users@lists.sf.net)
 
 #
-# preserve configure arguments for xsel
+# preserve configure arguments for xsel. This breaks if arguments 
+# contain whitespace, so don't do that. 
 #
 
 conf_arg=$@
@@ -264,7 +265,18 @@ if test "$GCC" = yes; then
   # bug has been verified to not exist on Linux using GCC 3.3.3.
   #
 
-  CXXFLAGS="$CXXFLAGS -fno-optimize-sibling-calls"
+  GCC_VERSION=$($CC -dumpversion)
+  GCC_VERSION_MAJOR=$(echo $GCC_VERSION | cut -d'.' -f1)
+  GCC_VERSION_MINOR=$(echo $GCC_VERSION | cut -d'.' -f2)
+  GCC_VERSION_PATCH=$(echo $GCC_VERSION | cut -d'.' -f3)
+
+  if test "$GCC_VERSION_MAJOR" -le 3; then
+    if test 0"$GCC_VERSION_MINOR" -le 3; then
+      if test 0"$GCC_VERSION_PATCH" -le 3; then
+        CXXFLAGS="$CXXFLAGS -fno-optimize-sibling-calls"
+      fi
+    fi
+  fi
 
 
   #

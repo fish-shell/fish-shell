@@ -166,12 +166,6 @@ void io_chain_t::remove(const shared_ptr<const io_data_t> &element)
     }
 }
 
-io_chain_t io_chain_t::duplicate() const
-{
-    io_chain_t result = *this;
-    return result;
-}
-
 void io_chain_t::duplicate_prepend(const io_chain_t &src)
 {
     /* Prepend a duplicate of src before this. */
@@ -186,11 +180,6 @@ void io_chain_t::destroy()
 void io_remove(io_chain_t &list, const shared_ptr<const io_data_t> &element)
 {
     list.remove(element);
-}
-
-io_chain_t io_duplicate(const io_chain_t &chain)
-{
-    return chain.duplicate();
 }
 
 void io_print(const io_chain_t &chain)

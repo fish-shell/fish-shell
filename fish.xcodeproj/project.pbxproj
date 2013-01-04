@@ -13,6 +13,7 @@
 			buildPhases = (
 				D07D266915E33B86009E43F6 /* CopyFiles */,
 				D07D266B15E33B86009E43F6 /* Copy Files */,
+				D01A2CA716965ADD00767098 /* CopyFiles */,
 			);
 			dependencies = (
 				D07D265715E33B86009E43F6 /* PBXTargetDependency */,
@@ -44,6 +45,7 @@
 				D0F019F715A977A00034B3B1 /* CopyFiles */,
 				D0F019FC15A977B40034B3B1 /* CopyFiles */,
 				D033780F15DC6D2A00A634BA /* CopyFiles */,
+				D01A2C9B16964C8200767098 /* CopyFiles */,
 			);
 			dependencies = (
 				D0F01A1315AA36280034B3B1 /* PBXTargetDependency */,
@@ -59,6 +61,16 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		D01A2CA216965AD000767098 /* fish.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D01A2C9D16964D0500767098 /* fish.1 */; };
+		D01A2CA316965AD000767098 /* set_color.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D01A2C9E16964D1900767098 /* set_color.1 */; };
+		D01A2CA416965AD000767098 /* fish_pager.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D01A2C9F16964D2800767098 /* fish_pager.1 */; };
+		D01A2CA516965AD000767098 /* fishd.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D01A2CA016964D2F00767098 /* fishd.1 */; };
+		D01A2CA616965AD000767098 /* fish_indent.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D01A2CA116964D3500767098 /* fish_indent.1 */; };
+		D01A2CA816965AEC00767098 /* fish.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D01A2C9D16964D0500767098 /* fish.1 */; };
+		D01A2CA916965AEC00767098 /* set_color.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D01A2C9E16964D1900767098 /* set_color.1 */; };
+		D01A2CAA16965AEC00767098 /* fish_pager.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D01A2C9F16964D2800767098 /* fish_pager.1 */; };
+		D01A2CAB16965AEC00767098 /* fishd.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D01A2CA016964D2F00767098 /* fishd.1 */; };
+		D01A2CAC16965AEC00767098 /* fish_indent.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D01A2CA116964D3500767098 /* fish_indent.1 */; };
 		D031890C15E36E4600D9CC39 /* base in Resources */ = {isa = PBXBuildFile; fileRef = D031890915E36D9800D9CC39 /* base */; };
 		D033781115DC6D4C00A634BA /* completions in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02715D1FEA100B9DB63 /* completions */; };
 		D033781215DC6D5200A634BA /* functions in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02815D1FEA100B9DB63 /* functions */; };
@@ -252,6 +264,34 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		D01A2C9B16964C8200767098 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = base/share/man/man1;
+			dstSubfolderSpec = 1;
+			files = (
+				D01A2CA216965AD000767098 /* fish.1 in CopyFiles */,
+				D01A2CA316965AD000767098 /* set_color.1 in CopyFiles */,
+				D01A2CA416965AD000767098 /* fish_pager.1 in CopyFiles */,
+				D01A2CA516965AD000767098 /* fishd.1 in CopyFiles */,
+				D01A2CA616965AD000767098 /* fish_indent.1 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D01A2CA716965ADD00767098 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 8;
+			dstPath = "${INSTALL_PATH}/share/man/man1/";
+			dstSubfolderSpec = 0;
+			files = (
+				D01A2CA816965AEC00767098 /* fish.1 in CopyFiles */,
+				D01A2CA916965AEC00767098 /* set_color.1 in CopyFiles */,
+				D01A2CAA16965AEC00767098 /* fish_pager.1 in CopyFiles */,
+				D01A2CAB16965AEC00767098 /* fishd.1 in CopyFiles */,
+				D01A2CAC16965AEC00767098 /* fish_indent.1 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		D033780F15DC6D2A00A634BA /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -327,6 +367,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D01A2C9D16964D0500767098 /* fish.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; name = fish.1; path = man/man1/fish.1; sourceTree = BUILT_PRODUCTS_DIR; };
+		D01A2C9E16964D1900767098 /* set_color.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; name = set_color.1; path = man/man1/set_color.1; sourceTree = BUILT_PRODUCTS_DIR; };
+		D01A2C9F16964D2800767098 /* fish_pager.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; name = fish_pager.1; path = man/man1/fish_pager.1; sourceTree = BUILT_PRODUCTS_DIR; };
+		D01A2CA016964D2F00767098 /* fishd.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; name = fishd.1; path = man/man1/fishd.1; sourceTree = BUILT_PRODUCTS_DIR; };
+		D01A2CA116964D3500767098 /* fish_indent.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; name = fish_indent.1; path = man/man1/fish_indent.1; sourceTree = BUILT_PRODUCTS_DIR; };
 		D025C02715D1FEA100B9DB63 /* completions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = completions; path = share/completions; sourceTree = "<group>"; };
 		D025C02815D1FEA100B9DB63 /* functions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = functions; path = share/functions; sourceTree = "<group>"; };
 		D025C02915D1FEA100B9DB63 /* tools */ = {isa = PBXFileReference; lastKnownFileType = folder; name = tools; path = share/tools; sourceTree = "<group>"; };
@@ -455,8 +500,6 @@
 		D0D2693C159835CA005D9B9C /* fish */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fish; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0F019DC15A969970034B3B1 /* set_color */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = set_color; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0F3373A1506DE3C00ECEFC0 /* builtin_test.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = builtin_test.cpp; sourceTree = "<group>"; };
-		D0F5E28215A7A32D00315DFF /* builtin_scripts.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = builtin_scripts.cpp; sourceTree = "<group>"; };
-		D0F5E28315A7A32D00315DFF /* builtin_scripts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = builtin_scripts.h; sourceTree = "<group>"; };
 		D0F5E28415A7A32D00315DFF /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -517,6 +560,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D01A2C9C16964CF600767098 /* manpath_pages */ = {
+			isa = PBXGroup;
+			children = (
+				D01A2C9D16964D0500767098 /* fish.1 */,
+				D01A2C9E16964D1900767098 /* set_color.1 */,
+				D01A2C9F16964D2800767098 /* fish_pager.1 */,
+				D01A2CA016964D2F00767098 /* fishd.1 */,
+				D01A2CA116964D3500767098 /* fish_indent.1 */,
+			);
+			name = manpath_pages;
+			sourceTree = "<group>";
+		};
 		D031890A15E36DB500D9CC39 /* Other Build Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -670,6 +725,7 @@
 				D07B247515BCC4BE00D4ADB4 /* install.sh */,
 				D0D02AA915985C0C008E62BD /* Info.plist */,
 				D0A564F2168D1F2000AF6161 /* build_documentation.sh */,
+				D01A2C9C16964CF600767098 /* manpath_pages */,
 				D0A564F1168D0BAB00AF6161 /* man */,
 				D025C02715D1FEA100B9DB63 /* completions */,
 				D025C02815D1FEA100B9DB63 /* functions */,
@@ -703,8 +759,6 @@
 		D0F5E28115A7A32D00315DFF /* DerivedSources */ = {
 			isa = PBXGroup;
 			children = (
-				D0F5E28215A7A32D00315DFF /* builtin_scripts.cpp */,
-				D0F5E28315A7A32D00315DFF /* builtin_scripts.h */,
 				D0F5E28415A7A32D00315DFF /* config.h */,
 			);
 			name = DerivedSources;

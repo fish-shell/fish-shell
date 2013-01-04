@@ -1970,11 +1970,11 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, complete_ty
                See https://github.com/fish-shell/fish-shell/issues/378 */
             if (commands_to_load != NULL && completer.has_commands_to_load())
                 do_file = false;
-            
+
             /* And if we're autosuggesting, and the token is empty, don't do file suggestions */
             if (type == COMPLETE_AUTOSUGGEST && current_token_unescape.empty())
                 do_file = false;
-            
+
             /*
               This function wants the unescaped string
             */

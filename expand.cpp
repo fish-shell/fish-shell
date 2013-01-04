@@ -1785,3 +1785,116 @@ bool expand_one(wcstring &string, expand_flags_t flags)
     }
     return result;
 }
+
+
+/*
+
+https://github.com/fish-shell/fish-shell/issues/367
+
+With them the Seed of Wisdom did I sow,
+And with my own hand labour'd it to grow:
+And this was all the Harvest that I reap'd---
+"I came like Water, and like Wind I go."
+
+*/
+
+static std::string escape_single_quoted_hack_hack_hack_hack(const char *str)
+{
+    std::string result;
+    size_t len = strlen(str);
+    result.reserve(len + 2);
+    result.push_back('\'');
+    for (size_t i=0; i < len; i++)
+    {
+        char c = str[i];
+        // Escape backslashes and single quotes only
+        if (c == '\\' || c == '\'')
+            result.push_back('\\');
+        result.push_back(c);
+    }
+    result.push_back('\'');
+    return result;
+}
+
+bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc, const char * const *argv)
+{
+    bool result = false;
+    if (cmds && cmds->size() == 1)
+    {
+        const std::string &cmd = cmds->at(0);
+        if (cmd == "exec \"${@}\"" || cmd == "exec \"$@\"")
+        {
+            /* We're going to construct a new command that starts with exec, and then has the remaining arguments escaped */
+            std::string new_cmd = "exec";
+            for (int i=1; i < argc; i++)
+            {
+                const char *arg = argv[i];
+                if (arg)
+                {
+                    new_cmd.push_back(' ');
+                    new_cmd.append(escape_single_quoted_hack_hack_hack_hack(arg));
+                }
+            }
+
+            cmds->at(0) = new_cmd;
+            result = true;
+        }
+    }
+    return result;
+}
+
+bool fish_openSUSE_dbus_hack_hack_hack_hack(std::vector<completion_t> *args)
+{
+    static signed char isSUSE = -1;
+    if (isSUSE == 0)
+        return false;
+
+    bool result = false;
+    if (args && ! args->empty())
+    {
+        const wcstring &cmd = args->at(0).completion;
+        if (cmd.find(L"DBUS_SESSION_BUS_") != wcstring::npos)
+        {
+            /* See if we are SUSE */
+            if (isSUSE < 0)
+            {
+                struct stat buf = {};
+                isSUSE = (0 == stat("/etc/SuSE-release", &buf));
+            }
+
+            if (isSUSE)
+            {
+                /* Look for an equal sign */
+                size_t where = cmd.find(L'=');
+                if (where != wcstring::npos)
+                {
+                    /* Oh my. It's presumably of the form foo=bar; find the = and split */
+                    const wcstring key = wcstring(cmd, 0, where);
+
+                    /* Trim whitespace and semicolon */
+                    wcstring val = wcstring(cmd, where+1);
+                    size_t last_good = val.find_last_not_of(L"\n ;");
+                    if (last_good != wcstring::npos)
+                        val.resize(last_good + 1);
+
+                    args->clear();
+                    args->push_back(completion_t(L"set"));
+                    if (key == L"DBUS_SESSION_BUS_ADDRESS")
+                        args->push_back(completion_t(L"-x"));
+                    args->push_back(completion_t(key));
+                    args->push_back(completion_t(val));
+                    result = true;
+                }
+                else if (string_prefixes_string(L"export DBUS_SESSION_BUS_ADDRESS;", cmd))
+                {
+                    /* Nothing, we already exported it */
+                    args->clear();
+                    args->push_back(completion_t(L"echo"));
+                    args->push_back(completion_t(L"-n"));
+                    result = true;
+                }
+            }
+        }
+    }
+    return result;
+}

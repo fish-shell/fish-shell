@@ -245,51 +245,26 @@ static int read_init(const struct config_paths_t &paths)
   Parse the argument list, return the index of the first non-switch
   arguments.
  */
-static int fish_parse_opt(int argc, char **argv, const char **cmd_ptr)
+static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *out_cmds)
 {
     int my_optind;
     int force_interactive=0;
+    bool has_cmd = false;
 
     while (1)
     {
         static struct option
                 long_options[] =
         {
-            {
-                "command", required_argument, 0, 'c'
-            }
-            ,
-            {
-                "debug-level", required_argument, 0, 'd'
-            }
-            ,
-            {
-                "interactive", no_argument, 0, 'i'
-            }
-            ,
-            {
-                "login", no_argument, 0, 'l'
-            }
-            ,
-            {
-                "no-execute", no_argument, 0, 'n'
-            }
-            ,
-            {
-                "profile", required_argument, 0, 'p'
-            }
-            ,
-            {
-                "help", no_argument, 0, 'h'
-            }
-            ,
-            {
-                "version", no_argument, 0, 'v'
-            }
-            ,
-            {
-                0, 0, 0, 0
-            }
+            { "command", required_argument, 0, 'c' },
+            { "debug-level", required_argument, 0, 'd' },
+            { "interactive", no_argument, 0, 'i' } ,
+            { "login", no_argument, 0, 'l' },
+            { "no-execute", no_argument, 0, 'n' },
+            { "profile", required_argument, 0, 'p' },
+            { "help", no_argument, 0, 'h' },
+            { "version", no_argument, 0, 'v' },
+            { 0, 0, 0, 0 }
         }
         ;
 
@@ -313,7 +288,8 @@ static int fish_parse_opt(int argc, char **argv, const char **cmd_ptr)
 
             case 'c':
             {
-                *cmd_ptr = optarg;
+                out_cmds->push_back(optarg ? optarg : "");
+                has_cmd = true;
                 is_interactive_session = 0;
                 break;
             }
@@ -340,7 +316,8 @@ static int fish_parse_opt(int argc, char **argv, const char **cmd_ptr)
 
             case 'h':
             {
-                *cmd_ptr = "__fish_print_help fish";
+                out_cmds->push_back("__fish_print_help fish");
+                has_cmd = true;
                 break;
             }
 
@@ -393,7 +370,7 @@ static int fish_parse_opt(int argc, char **argv, const char **cmd_ptr)
       We are an interactive session if we have not been given an
       explicit command to execute, _and_ stdin is a tty.
      */
-    is_interactive_session &= (*cmd_ptr == 0);
+    is_interactive_session &= has_cmd;
     is_interactive_session &= (my_optind == argc);
     is_interactive_session &= isatty(STDIN_FILENO);
 
@@ -439,7 +416,6 @@ extern int g_fork_count;
 int main(int argc, char **argv)
 {
     int res=1;
-    const char *cmd=0;
     int my_optind=0;
 
     set_main_thread();
@@ -453,7 +429,8 @@ int main(int argc, char **argv)
     //struct stat tmp;
     //stat("----------FISH_HIT_MAIN----------", &tmp);
 
-    my_optind = fish_parse_opt(argc, argv, &cmd);
+    std::vector<std::string> cmds;
+    my_optind = fish_parse_opt(argc, argv, &cmds);
 
     /*
       No-exec is prohibited when in interactive mode
@@ -483,10 +460,19 @@ int main(int argc, char **argv)
     const io_chain_t empty_ios;
     if (read_init(paths))
     {
-        if (cmd != NULL)
+        /* Run the commands specified as arguments, if any */
+        if (! cmds.empty())
         {
-            const wcstring cmd_wcs = str2wcstring(cmd);
-            res = parser.eval(cmd_wcs, empty_ios, TOP);
+            /* Do something nasty to support OpenSUSE assuming we're bash. This may modify cmds. */
+            if (is_login)
+            {
+                fish_xdm_login_hack_hack_hack_hack(&cmds, argc - my_optind, argv + my_optind);
+            }
+            for (size_t i=0; i < cmds.size(); i++)
+            {
+                const wcstring cmd_wcs = str2wcstring(cmds.at(i));
+                res = parser.eval(cmd_wcs, empty_ios, TOP);
+            }
             reader_exit(0, 0);
         }
         else

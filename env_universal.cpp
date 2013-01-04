@@ -113,14 +113,14 @@ static int try_get_socket_once(void)
             uname = pw->pw_name;
         }
     }
-    
+
     std::string name;
     name.reserve(strlen(dir) + uname.size() + strlen(SOCK_FILENAME) + 2);
     name.append(dir);
     name.append("/");
     name.append(SOCK_FILENAME);
     name.append(uname);
-    
+
     free(dir);
 
     debug(3, L"Connect to socket %s at fd %2", name.c_str(), s);
@@ -145,7 +145,7 @@ static int try_get_socket_once(void)
     }
 
     debug(3, L"Connected to fd %d", s);
-    
+
     return s;
 }
 
@@ -155,16 +155,16 @@ static int try_get_socket_once(void)
 static int get_socket(void)
 {
     get_socket_count++;
-    
+
     int s = try_get_socket_once();
     if (s < 0)
     {
         if (start_fishd)
         {
             debug(2, L"Could not connect to socket %d, starting fishd", s);
-            
+
             start_fishd();
-            
+
             for (size_t i=0; s < 0 && i < DEFAULT_RETRY_COUNT; i++)
             {
                 if (i > 0)
@@ -176,13 +176,13 @@ static int get_socket(void)
             }
         }
     }
-    
+
     if (s < 0)
     {
         debug(1, L"Could not connect to universal variable server, already tried manual restart (or no command supplied). You will not be able to share variable values between fish sessions. Is fish properly installed?");
         return -1;
     }
-    
+
     return s;
 }
 

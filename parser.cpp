@@ -2071,6 +2071,18 @@ int parser_t::parse_job(process_t *p,
                     }
                 }
 
+                // Disabled pending discussion in https://github.com/fish-shell/fish-shell/issues/367
+#if 0
+                if (! has_command && ! use_implicit_cd)
+                {
+                    if (fish_openSUSE_dbus_hack_hack_hack_hack(&args))
+                    {
+                        has_command = true;
+                        p->type = INTERNAL_BUILTIN;
+                    }
+                }
+#endif
+
                 /* Check if the specified command exists */
                 if (! has_command && ! use_implicit_cd)
                 {
@@ -3858,3 +3870,4 @@ breakpoint_block_t::breakpoint_block_t() :
     block_t(BREAKPOINT)
 {
 }
+

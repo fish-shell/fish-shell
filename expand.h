@@ -200,4 +200,11 @@ void expand_variable_error(parser_t &parser, const wchar_t *token, size_t token_
 */
 std::vector<wcstring> expand_get_all_process_names(void);
 
+/* Terrible hacks */
+bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc, const char * const *argv);
+bool fish_openSUSE_dbus_hack_hack_hack_hack(std::vector<completion_t> *args);
+
+
 #endif
+
+

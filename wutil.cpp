@@ -330,7 +330,7 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path)
 
     if (!narrow_res)
         return 0;
-    
+
     const wcstring wide_res = str2wcstring(narrow_res);
     if (resolved_path)
     {

@@ -1183,7 +1183,7 @@ void exec(parser_t &parser, job_t *j)
 
                 for (io_chain_t::iterator iter = j->io.begin(); iter != j->io.end(); iter++)
                 {
-                    shared_ptr<io_data_t> &tmp_io = *iter;
+                    const shared_ptr<io_data_t> &tmp_io = *iter;
                     if (tmp_io->io_mode == IO_FILE && strcmp(tmp_io->filename_cstr, "/dev/null") != 0)
                     {
                         skip_fork = false;
@@ -1439,7 +1439,7 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
 
     is_subshell=1;
 
-    shared_ptr<io_data_t> io_buffer(io_buffer_create(0));
+    const shared_ptr<io_data_t> io_buffer(io_buffer_create(0));
 
     prev_status = proc_get_last_status();
 

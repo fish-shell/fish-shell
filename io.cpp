@@ -133,7 +133,7 @@ io_data_t *io_buffer_create(bool is_input)
     return buffer_redirect;
 }
 
-void io_buffer_destroy(shared_ptr<io_data_t> io_buffer)
+void io_buffer_destroy(const shared_ptr<io_data_t> &io_buffer)
 {
 
     /**
@@ -153,7 +153,7 @@ void io_buffer_destroy(shared_ptr<io_data_t> io_buffer)
     */
 }
 
-void io_chain_t::remove(shared_ptr<const io_data_t> element)
+void io_chain_t::remove(const shared_ptr<const io_data_t> &element)
 {
     // See if you can guess why std::find doesn't work here
     for (io_chain_t::iterator iter = this->begin(); iter != this->end(); ++iter)
@@ -168,35 +168,22 @@ void io_chain_t::remove(shared_ptr<const io_data_t> element)
 
 io_chain_t io_chain_t::duplicate() const
 {
-    io_chain_t result;
-    result.reserve(this->size());
-    for (io_chain_t::const_iterator iter = this->begin(); iter != this->end(); iter++)
-    {
-        result.push_back(*iter);
-    }
+    io_chain_t result = *this;
     return result;
 }
 
 void io_chain_t::duplicate_prepend(const io_chain_t &src)
 {
-    /* Prepend a duplicate of src before this. Start by inserting a bunch of empty shared_ptr's (so we only have to reallocate once) and then replace them. */
-    this->insert(this->begin(), src.size(), shared_ptr<io_data_t>());
-    for (size_t idx = 0; idx < src.size(); idx++)
-    {
-        this->at(idx) = src.at(idx);
-    }
+    /* Prepend a duplicate of src before this. */
+    this->insert(this->begin(), src.begin(), src.end());
 }
 
 void io_chain_t::destroy()
 {
-    for (size_t idx = 0; idx < this->size(); idx++)
-    {
-        this->at(idx).reset();
-    }
     this->clear();
 }
 
-void io_remove(io_chain_t &list, shared_ptr<const io_data_t> element)
+void io_remove(io_chain_t &list, const shared_ptr<const io_data_t> &element)
 {
     list.remove(element);
 }
@@ -217,7 +204,7 @@ void io_print(const io_chain_t &chain)
     fprintf(stderr, "Chain %p (%ld items):\n", &chain, (long)chain.size());
     for (size_t i=0; i < chain.size(); i++)
     {
-        shared_ptr<const io_data_t> io = chain.at(i);
+        const shared_ptr<const io_data_t> &io = chain.at(i);
         fprintf(stderr, "\t%lu: fd:%d, input:%s, ", (unsigned long)i, io->fd, io->is_input ? "yes" : "no");
         switch (io->io_mode)
         {
@@ -256,7 +243,7 @@ shared_ptr<const io_data_t> io_chain_t::get_io_for_fd(int fd) const
     size_t idx = this->size();
     while (idx--)
     {
-        shared_ptr<const io_data_t> data = this->at(idx);
+        const shared_ptr<const io_data_t> &data = this->at(idx);
         if (data->fd == fd)
         {
             return data;
@@ -270,7 +257,7 @@ shared_ptr<io_data_t> io_chain_t::get_io_for_fd(int fd)
     size_t idx = this->size();
     while (idx--)
     {
-        shared_ptr<io_data_t> data = this->at(idx);
+        const shared_ptr<io_data_t> &data = this->at(idx);
         if (data->fd == fd)
         {
             return data;
@@ -290,7 +277,7 @@ shared_ptr<io_data_t> io_chain_get(io_chain_t &src, int fd)
     return src.get_io_for_fd(fd);
 }
 
-io_chain_t::io_chain_t(shared_ptr<io_data_t> data) :
+io_chain_t::io_chain_t(const shared_ptr<io_data_t> &data) :
     std::vector<shared_ptr<io_data_t> >(1, data)
 {
 

@@ -20,9 +20,10 @@ private:
     /** buffer to save output in for IO_BUFFER. Note that in the original fish, the buffer was a pointer to a buffer_t stored in the param2 union down below, and when an io_data_t was duplicated the pointer was copied so that two io_data_ts referenced the same buffer. It's not clear to me how this was ever cleaned up correctly. But it's important that they share the same buffer for reasons I don't yet understand either. We can get correct sharing and cleanup with shared_ptr. */
     shared_ptr<std::vector<char> > out_buffer;
 
-    /* No assignment allowed */
+    /* No assignment or copying allowed */
+    io_data_t(const io_data_t &rhs);
     void operator=(const io_data_t &rhs);
-
+    
 public:
     /** Type of redirect */
     int io_mode;
@@ -117,9 +118,9 @@ class io_chain_t : public std::vector<shared_ptr<io_data_t> >
 {
 public:
     io_chain_t();
-    io_chain_t(shared_ptr<io_data_t> );
+    io_chain_t(const shared_ptr<io_data_t> &);
 
-    void remove(shared_ptr<const io_data_t> element);
+    void remove(const shared_ptr<const io_data_t> &element);
     io_chain_t duplicate() const;
     void duplicate_prepend(const io_chain_t &src);
     void destroy();
@@ -132,7 +133,7 @@ public:
 /**
    Remove the specified io redirection from the chain
 */
-void io_remove(io_chain_t &list, shared_ptr<const io_data_t> element);
+void io_remove(io_chain_t &list, const shared_ptr<const io_data_t> &element);
 
 /** Make a copy of the specified chain of redirections. Uses operator new. */
 io_chain_t io_duplicate(const io_chain_t &chain);
@@ -156,7 +157,7 @@ shared_ptr<io_data_t> io_chain_get(io_chain_t &src, int fd);
 /**
    Free all resources used by a IO_BUFFER type io redirection.
 */
-void io_buffer_destroy(shared_ptr<io_data_t> io_buffer);
+void io_buffer_destroy(const shared_ptr<io_data_t> &io_buffer);
 
 /**
    Create a IO_BUFFER type io redirection, complete with a pipe and a

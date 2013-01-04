@@ -135,9 +135,6 @@ public:
 */
 void io_remove(io_chain_t &list, const shared_ptr<const io_data_t> &element);
 
-/** Make a copy of the specified chain of redirections. Uses operator new. */
-io_chain_t io_duplicate(const io_chain_t &chain);
-
 /** Return a shallow copy of the specified chain of redirections that contains only the applicable redirections. That is, if there's multiple redirections for the same fd, only the second one is included. */
 io_chain_t io_unique(const io_chain_t &chain);
 

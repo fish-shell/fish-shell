@@ -377,7 +377,7 @@ parser_t::parser_t(enum parser_type_t type, bool errors) :
     job_start_pos(0),
     eval_level(-1),
     current_block(NULL),
-    block_io(NULL)
+    block_io(shared_ptr<io_data_t>())
 {
 
 }
@@ -1495,7 +1495,7 @@ void parser_t::parse_job_argument_list(process_t *p,
             case TOK_REDIRECT_NOCLOB:
             {
                 int type = tok_last_type(tok);
-                std::auto_ptr<io_data_t> new_io;
+                shared_ptr<io_data_t> new_io;
                 wcstring target;
                 bool has_target = false;
                 wchar_t *end;
@@ -1633,7 +1633,7 @@ void parser_t::parse_job_argument_list(process_t *p,
                     }
                 }
 
-                j->io.push_back(new_io.release());
+                j->io.push_back(new_io);
 
             }
             break;

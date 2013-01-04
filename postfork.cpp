@@ -117,7 +117,7 @@ static void free_redirected_fds_from_pipes(io_chain_t &io_chain)
         for (size_t j = 0; j < max; j++)
         {
             /* We're only interested in pipes */
-            io_data_t *possible_conflict = io_chain.at(j);
+            shared_ptr<io_data_t> possible_conflict = io_chain.at(j);
             if (possible_conflict->io_mode != IO_PIPE && possible_conflict->io_mode != IO_BUFFER)
                 continue;
 
@@ -166,7 +166,7 @@ static int handle_child_io(io_chain_t &io_chain)
     free_redirected_fds_from_pipes(io_chain);
     for (size_t idx = 0; idx < io_chain.size(); idx++)
     {
-        io_data_t *io = io_chain.at(idx);
+        shared_ptr<io_data_t> io = io_chain.at(idx);
         int tmp;
 
         if (io->io_mode == IO_FD && io->fd == io->param1.old_fd)
@@ -441,7 +441,7 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr, posix_spawn_fil
 
     for (size_t idx = 0; idx < j->io.size(); idx++)
     {
-        const io_data_t *io = j->io.at(idx);
+        shared_ptr<const io_data_t> io = j->io.at(idx);
 
         if (io->io_mode == IO_FD && io->fd == io->param1.old_fd)
         {

@@ -160,7 +160,7 @@ static bool use_fd_in_pipe(int fd, const io_chain_t &io_chain)
 {
     for (size_t idx = 0; idx < io_chain.size(); idx++)
     {
-        const io_data_t *io = io_chain.at(idx);
+        const shared_ptr<const io_data_t> &io = io_chain.at(idx);
         if ((io->io_mode == IO_BUFFER) ||
                 (io->io_mode == IO_PIPE))
         {
@@ -378,8 +378,8 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t &out_chain, s
 
     for (size_t idx = 0; idx < in_chain.size(); idx++)
     {
-        io_data_t *in = in_chain.at(idx);
-        io_data_t *out = NULL; //gets allocated via new
+        const shared_ptr<io_data_t> &in = in_chain.at(idx);
+        shared_ptr<io_data_t> out; //gets allocated via new
 
         switch (in->io_mode)
         {
@@ -397,7 +397,7 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t &out_chain, s
             case IO_BUFFER:
             case IO_CLOSE:
             {
-                out = new io_data_t(*in);
+                out = in;
                 break;
             }
 
@@ -406,7 +406,7 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t &out_chain, s
             */
             case IO_FILE:
             {
-                out = new io_data_t();
+                out.reset(new io_data_t());
                 out->fd = in->fd;
                 out->io_mode = IO_FD;
                 out->param2.close_old = 1;
@@ -544,7 +544,7 @@ static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *proce
     bool result = true;
     for (size_t idx = 0; idx < job->io.size(); idx++)
     {
-        const io_data_t *io = job->io.at(idx);
+        const shared_ptr<const io_data_t> &io = job->io.at(idx);
         if (io->io_mode == IO_FILE)
         {
             const char *path = io->filename_cstr;
@@ -567,9 +567,7 @@ void exec(parser_t &parser, job_t *j)
     int mypipe[2];
     sigset_t chldset;
 
-    io_data_t pipe_read, pipe_write;
-
-    io_data_t *io_buffer =0;
+    shared_ptr<io_data_t> io_buffer;
 
     /*
       Set to true if something goes wrong while exec:ing the job, in
@@ -597,7 +595,7 @@ void exec(parser_t &parser, job_t *j)
         io_duplicate_prepend(parser.block_io, j->io);
     }
 
-    const io_data_t *input_redirect = NULL;
+    shared_ptr<const io_data_t> input_redirect;
     for (size_t idx = 0; idx < j->io.size(); idx++)
     {
         input_redirect = j->io.at(idx);
@@ -646,17 +644,19 @@ void exec(parser_t &parser, job_t *j)
 
     }
 
-    pipe_read.fd = 0;
-    pipe_read.io_mode = IO_PIPE;
-    pipe_read.is_input = 1;
-    pipe_read.param1.pipe_fd[0] = pipe_read.param1.pipe_fd[1] = -1;
+    shared_ptr<io_data_t> pipe_read(new io_data_t);
+    pipe_read->fd = 0;
+    pipe_read->io_mode = IO_PIPE;
+    pipe_read->is_input = 1;
+    pipe_read->param1.pipe_fd[0] = pipe_read->param1.pipe_fd[1] = -1;
 
-    pipe_write.fd = 1;
-    pipe_write.io_mode = IO_PIPE;
-    pipe_write.is_input = 0;
-    pipe_write.param1.pipe_fd[0] = pipe_write.param1.pipe_fd[1] = -1;
+    shared_ptr<io_data_t> pipe_write(new io_data_t);
+    pipe_write->fd = 1;
+    pipe_write->io_mode = IO_PIPE;
+    pipe_write->is_input = 0;
+    pipe_write->param1.pipe_fd[0] = pipe_write->param1.pipe_fd[1] = -1;
 
-    j->io.push_back(&pipe_write);
+    j->io.push_back(pipe_write);
 
     signal_block();
 
@@ -728,9 +728,9 @@ void exec(parser_t &parser, job_t *j)
         const bool p_wants_pipe = (p->next != NULL);
         mypipe[1]=-1;
 
-        pipe_write.fd = p->pipe_write_fd;
-        pipe_read.fd = p->pipe_read_fd;
-//    debug( 0, L"Pipe created from fd %d to fd %d", pipe_write.fd, pipe_read.fd );
+        pipe_write->fd = p->pipe_write_fd;
+        pipe_read->fd = p->pipe_read_fd;
+//    debug( 0, L"Pipe created from fd %d to fd %d", pipe_write->fd, pipe_read->fd );
 
 
         /*
@@ -752,7 +752,7 @@ void exec(parser_t &parser, job_t *j)
 
         if (p == j->first_process->next)
         {
-            j->io.push_back(&pipe_read);
+            j->io.push_back(pipe_read);
         }
 
         if (p_wants_pipe)
@@ -767,7 +767,7 @@ void exec(parser_t &parser, job_t *j)
                 break;
             }
 
-            memcpy(pipe_write.param1.pipe_fd, mypipe, sizeof(int)*2);
+            memcpy(pipe_write->param1.pipe_fd, mypipe, sizeof(int)*2);
         }
         else
         {
@@ -775,7 +775,7 @@ void exec(parser_t &parser, job_t *j)
               This is the last element of the pipeline.
               Remove the io redirection for pipe output.
             */
-            io_chain_t::iterator where = std::find(j->io.begin(), j->io.end(), &pipe_write);
+            io_chain_t::iterator where = std::find(j->io.begin(), j->io.end(), pipe_write);
             if (where != j->io.end())
                 j->io.erase(where);
         }
@@ -830,7 +830,7 @@ void exec(parser_t &parser, job_t *j)
 
                 if (p->next)
                 {
-                    io_buffer = io_buffer_create(0);
+                    io_buffer.reset(io_buffer_create(0));
                     j->io.push_back(io_buffer);
                 }
 
@@ -847,7 +847,7 @@ void exec(parser_t &parser, job_t *j)
             {
                 if (p->next)
                 {
-                    io_buffer = io_buffer_create(0);
+                    io_buffer.reset(io_buffer_create(0));
                     j->io.push_back(io_buffer);
                 }
 
@@ -869,7 +869,7 @@ void exec(parser_t &parser, job_t *j)
                 */
                 if (p == j->first_process)
                 {
-                    const io_data_t *in = io_chain_get(j->io, 0);
+                    const shared_ptr<const io_data_t> &in = io_chain_get(j->io, 0);
 
                     if (in)
                     {
@@ -935,7 +935,7 @@ void exec(parser_t &parser, job_t *j)
                 }
                 else
                 {
-                    builtin_stdin = pipe_read.param1.pipe_fd[0];
+                    builtin_stdin = pipe_read->param1.pipe_fd[0];
                 }
 
                 if (builtin_stdin == -1)
@@ -1035,7 +1035,7 @@ void exec(parser_t &parser, job_t *j)
 
                 io_remove(j->io, io_buffer);
 
-                io_buffer_read(io_buffer);
+                io_buffer_read(io_buffer.get());
 
                 const char *buffer = io_buffer->out_buffer_ptr();
                 size_t count = io_buffer->out_buffer_size();
@@ -1083,7 +1083,7 @@ void exec(parser_t &parser, job_t *j)
 
                 io_buffer_destroy(io_buffer);
 
-                io_buffer=0;
+                io_buffer.reset();
                 break;
 
             }
@@ -1154,7 +1154,7 @@ void exec(parser_t &parser, job_t *j)
                   performance quite a bit in complex completion code.
                 */
 
-                io_data_t *io = io_chain_get(j->io, 1);
+                const shared_ptr<io_data_t> &io = io_chain_get(j->io, 1);
                 bool buffer_stdout = io && io->io_mode == IO_BUFFER;
 
                 if ((get_stderr_buffer().empty()) &&
@@ -1183,7 +1183,7 @@ void exec(parser_t &parser, job_t *j)
 
                 for (io_chain_t::iterator iter = j->io.begin(); iter != j->io.end(); iter++)
                 {
-                    io_data_t *tmp_io = *iter;
+                    shared_ptr<io_data_t> &tmp_io = *iter;
                     if (tmp_io->io_mode == IO_FILE && strcmp(tmp_io->filename_cstr, "/dev/null") != 0)
                     {
                         skip_fork = false;
@@ -1357,14 +1357,14 @@ void exec(parser_t &parser, job_t *j)
            Close the pipe the current process uses to read from the
            previous process_t
         */
-        if (pipe_read.param1.pipe_fd[0] >= 0)
-            exec_close(pipe_read.param1.pipe_fd[0]);
+        if (pipe_read->param1.pipe_fd[0] >= 0)
+            exec_close(pipe_read->param1.pipe_fd[0]);
         /*
            Set up the pipe the next process uses to read from the
            current process_t
         */
         if (p_wants_pipe)
-            pipe_read.param1.pipe_fd[0] = mypipe[0];
+            pipe_read->param1.pipe_fd[0] = mypipe[0];
 
         /*
            If there is a next process in the pipeline, close the
@@ -1392,7 +1392,7 @@ void exec(parser_t &parser, job_t *j)
 
     debug(3, L"Job is constructed");
 
-    io_remove(j->io, &pipe_read);
+    io_remove(j->io, pipe_read);
 
     for (io_chain_t::const_iterator iter = parser.block_io.begin(); iter != parser.block_io.end(); iter++)
     {
@@ -1419,7 +1419,6 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
     ASSERT_IS_MAIN_THREAD();
     int prev_subshell = is_subshell;
     int status, prev_status;
-    io_data_t *io_buffer;
     char sep=0;
 
     const env_var_t ifs = env_get_string(L"IFS");
@@ -1439,7 +1438,8 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
     }
 
     is_subshell=1;
-    io_buffer= io_buffer_create(0);
+
+    shared_ptr<io_data_t> io_buffer(io_buffer_create(0));
 
     prev_status = proc_get_last_status();
 
@@ -1453,7 +1453,7 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
         status = proc_get_last_status();
     }
 
-    io_buffer_read(io_buffer);
+    io_buffer_read(io_buffer.get());
 
     proc_set_last_status(prev_status);
 

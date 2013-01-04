@@ -107,43 +107,32 @@ public:
     {
     }
 
-    io_data_t(const io_data_t &rhs) :
-        out_buffer(rhs.out_buffer),
-        io_mode(rhs.io_mode),
-        fd(rhs.fd),
-        param1(rhs.param1),
-        param2(rhs.param2),
-        filename_cstr(rhs.filename_cstr ? strdup(rhs.filename_cstr) : NULL),
-        is_input(rhs.is_input)
-    {
-    }
-
     ~io_data_t()
     {
         free((void *)filename_cstr);
     }
 };
 
-class io_chain_t : public std::vector<io_data_t *>
+class io_chain_t : public std::vector<shared_ptr<io_data_t> >
 {
 public:
     io_chain_t();
-    io_chain_t(io_data_t *);
+    io_chain_t(shared_ptr<io_data_t> );
 
-    void remove(const io_data_t *element);
+    void remove(shared_ptr<const io_data_t> element);
     io_chain_t duplicate() const;
     void duplicate_prepend(const io_chain_t &src);
     void destroy();
 
-    const io_data_t *get_io_for_fd(int fd) const;
-    io_data_t *get_io_for_fd(int fd);
+    shared_ptr<const io_data_t> get_io_for_fd(int fd) const;
+    shared_ptr<io_data_t> get_io_for_fd(int fd);
 
 };
 
 /**
    Remove the specified io redirection from the chain
 */
-void io_remove(io_chain_t &list, const io_data_t *element);
+void io_remove(io_chain_t &list, shared_ptr<const io_data_t> element);
 
 /** Make a copy of the specified chain of redirections. Uses operator new. */
 io_chain_t io_duplicate(const io_chain_t &chain);
@@ -160,14 +149,14 @@ void io_chain_destroy(io_chain_t &chain);
 /**
    Return the last io redirection in the chain for the specified file descriptor.
 */
-const io_data_t *io_chain_get(const io_chain_t &src, int fd);
-io_data_t *io_chain_get(io_chain_t &src, int fd);
+shared_ptr<const io_data_t> io_chain_get(const io_chain_t &src, int fd);
+shared_ptr<io_data_t> io_chain_get(io_chain_t &src, int fd);
 
 
 /**
    Free all resources used by a IO_BUFFER type io redirection.
 */
-void io_buffer_destroy(io_data_t *io_buffer);
+void io_buffer_destroy(shared_ptr<io_data_t> io_buffer);
 
 /**
    Create a IO_BUFFER type io redirection, complete with a pipe and a

@@ -1014,7 +1014,7 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
                                  is_quoted?L"-q":L"",
                                  prefix_esc.c_str());
 
-    io_data_t *in = io_buffer_create(true);
+    shared_ptr<io_data_t> in(io_buffer_create(true));
     in->fd = 3;
 
     escaped_separator = escape(COMPLETE_SEP_STR, 1);
@@ -1083,7 +1083,7 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
 
     term_donate();
 
-    io_data_t *out = io_buffer_create(false);
+    shared_ptr<io_data_t> out(io_buffer_create(false));
     out->fd = 4;
 
     parser_t &parser = parser_t::principal_parser();
@@ -1093,7 +1093,7 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
     parser.eval(cmd, io_chain, TOP);
     term_steal();
 
-    io_buffer_read(out);
+    io_buffer_read(out.get());
 
     int nil=0;
     out->out_buffer_append((char *)&nil, 1);

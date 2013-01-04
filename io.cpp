@@ -133,7 +133,7 @@ io_data_t *io_buffer_create(bool is_input)
     return buffer_redirect;
 }
 
-void io_buffer_destroy(io_data_t *io_buffer)
+void io_buffer_destroy(shared_ptr<io_data_t> io_buffer)
 {
 
     /**
@@ -151,10 +151,9 @@ void io_buffer_destroy(io_data_t *io_buffer)
       Dont free fd for writing. This should already be free'd before
       calling exec_read_io_buffer on the buffer
     */
-    delete io_buffer;
 }
 
-void io_chain_t::remove(const io_data_t *element)
+void io_chain_t::remove(shared_ptr<const io_data_t> element)
 {
     // See if you can guess why std::find doesn't work here
     for (io_chain_t::iterator iter = this->begin(); iter != this->end(); ++iter)
@@ -173,20 +172,18 @@ io_chain_t io_chain_t::duplicate() const
     result.reserve(this->size());
     for (io_chain_t::const_iterator iter = this->begin(); iter != this->end(); iter++)
     {
-        const io_data_t *io = *iter;
-        result.push_back(new io_data_t(*io));
+        result.push_back(*iter);
     }
     return result;
 }
 
 void io_chain_t::duplicate_prepend(const io_chain_t &src)
 {
-    /* Prepend a duplicate of src before this. Start by inserting a bunch of NULLs (so we only have to reallocate once) and then replace them. */
-    this->insert(this->begin(), src.size(), NULL);
+    /* Prepend a duplicate of src before this. Start by inserting a bunch of empty shared_ptr's (so we only have to reallocate once) and then replace them. */
+    this->insert(this->begin(), src.size(), shared_ptr<io_data_t>());
     for (size_t idx = 0; idx < src.size(); idx++)
     {
-        const io_data_t *src_data = src.at(idx);
-        this->at(idx) = new io_data_t(*src_data);
+        this->at(idx) = src.at(idx);
     }
 }
 
@@ -194,12 +191,12 @@ void io_chain_t::destroy()
 {
     for (size_t idx = 0; idx < this->size(); idx++)
     {
-        delete this->at(idx);
+        this->at(idx).reset();
     }
     this->clear();
 }
 
-void io_remove(io_chain_t &list, const io_data_t *element)
+void io_remove(io_chain_t &list, shared_ptr<const io_data_t> element)
 {
     list.remove(element);
 }
@@ -220,7 +217,7 @@ void io_print(const io_chain_t &chain)
     fprintf(stderr, "Chain %p (%ld items):\n", &chain, (long)chain.size());
     for (size_t i=0; i < chain.size(); i++)
     {
-        const io_data_t *io = chain.at(i);
+        shared_ptr<const io_data_t> io = chain.at(i);
         fprintf(stderr, "\t%lu: fd:%d, input:%s, ", (unsigned long)i, io->fd, io->is_input ? "yes" : "no");
         switch (io->io_mode)
         {
@@ -254,50 +251,51 @@ void io_chain_destroy(io_chain_t &chain)
 }
 
 /* Return the last IO for the given fd */
-const io_data_t *io_chain_t::get_io_for_fd(int fd) const
+shared_ptr<const io_data_t> io_chain_t::get_io_for_fd(int fd) const
 {
     size_t idx = this->size();
     while (idx--)
     {
-        const io_data_t *data = this->at(idx);
+        shared_ptr<const io_data_t> data = this->at(idx);
         if (data->fd == fd)
         {
             return data;
         }
     }
-    return NULL;
+    return shared_ptr<const io_data_t>();
 }
 
-io_data_t *io_chain_t::get_io_for_fd(int fd)
+shared_ptr<io_data_t> io_chain_t::get_io_for_fd(int fd)
 {
     size_t idx = this->size();
     while (idx--)
     {
-        io_data_t *data = this->at(idx);
+        shared_ptr<io_data_t> data = this->at(idx);
         if (data->fd == fd)
         {
             return data;
         }
     }
-    return NULL;
+    return shared_ptr<io_data_t>();
 }
 
 /* The old function returned the last match, so we mimic that. */
-const io_data_t *io_chain_get(const io_chain_t &src, int fd)
+shared_ptr<const io_data_t> io_chain_get(const io_chain_t &src, int fd)
 {
     return src.get_io_for_fd(fd);
 }
 
-io_data_t *io_chain_get(io_chain_t &src, int fd)
+shared_ptr<io_data_t> io_chain_get(io_chain_t &src, int fd)
 {
     return src.get_io_for_fd(fd);
 }
 
-io_chain_t::io_chain_t(io_data_t *data) : std::vector<io_data_t *>(1, data)
+io_chain_t::io_chain_t(shared_ptr<io_data_t> data) :
+    std::vector<shared_ptr<io_data_t> >(1, data)
 {
 
 }
 
-io_chain_t::io_chain_t() : std::vector<io_data_t *>()
+io_chain_t::io_chain_t() : std::vector<shared_ptr<io_data_t> >()
 {
 }

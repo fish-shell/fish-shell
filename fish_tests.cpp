@@ -809,15 +809,20 @@ static void test_is_potential_path()
 
 /** Test the 'test' builtin */
 int builtin_test(parser_t &parser, wchar_t **argv);
-static bool run_test_test(int expected, wcstring_list_t &lst)
+static bool run_one_test_test(int expected, wcstring_list_t &lst, bool bracket)
 {
     parser_t parser(PARSER_TYPE_GENERAL, true);
     size_t i, count = lst.size();
-    wchar_t **argv = new wchar_t *[count+2];
-    argv[0] = (wchar_t *)L"test";
+    wchar_t **argv = new wchar_t *[count+3];
+    argv[0] = (wchar_t *)(bracket ? L"[" : L"test");
     for (i=0; i < count; i++)
     {
         argv[i+1] = (wchar_t *)lst.at(i).c_str();
+    }
+    if (bracket)
+    {
+        argv[i+1] = (wchar_t *)L"]";
+        i++;
     }
     argv[i+1] = NULL;
     int result = builtin_test(parser, argv);
@@ -834,12 +839,33 @@ static bool run_test_test(int expected, const wcstring &str)
     copy(istream_iterator<wcstring, wchar_t, std::char_traits<wchar_t> >(iss),
          istream_iterator<wstring, wchar_t, std::char_traits<wchar_t> >(),
          back_inserter<vector<wcstring> >(lst));
-    return run_test_test(expected, lst);
+    
+    bool bracket = run_one_test_test(expected, lst, true);
+    bool nonbracket = run_one_test_test(expected, lst, false);
+    assert(bracket == nonbracket);
+    return nonbracket;
+}
+
+static void test_test_brackets()
+{
+    // Ensure [ knows it needs a ]
+    parser_t parser(PARSER_TYPE_GENERAL, true);
+    
+    const wchar_t *argv1[] = {L"[", L"foo", NULL};
+    assert(builtin_test(parser, (wchar_t **)argv1) != 0);
+    
+    const wchar_t *argv2[] = {L"[", L"foo", L"]", NULL};
+    assert(builtin_test(parser, (wchar_t **)argv2) == 0);
+    
+    const wchar_t *argv3[] = {L"[", L"foo", L"]", L"bar", NULL};
+    assert(builtin_test(parser, (wchar_t **)argv3) != 0);
+
 }
 
 static void test_test()
 {
     say(L"Testing test builtin");
+    test_test_brackets();
 
     assert(run_test_test(0, L"5 -ne 6"));
     assert(run_test_test(0, L"5 -eq 5"));
@@ -892,6 +918,10 @@ static void test_test()
     /* We didn't properly handle multiple "just strings" either */
     assert(run_test_test(0, L"foo"));
     assert(run_test_test(0, L"foo -a bar"));
+    
+    /* These should be errors */
+    assert(run_test_test(1, L"foo bar"));
+    assert(run_test_test(1, L"foo bar baz"));
 }
 
 /** Testing colors */

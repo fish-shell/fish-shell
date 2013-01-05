@@ -345,6 +345,7 @@ expression *test_parser::parse_combining_expression(unsigned int start, unsigned
             if (combiner != test_combine_and && combiner != test_combine_or)
             {
                 /* Not a combiner, we're done */
+                this->errors.insert(this->errors.begin(), format_string(L"Expected a combining operator like '-a' at index %u", idx));
                 break;
             }
             combiners.push_back(combiner);
@@ -561,16 +562,20 @@ expression *test_parser::parse_args(const wcstring_list_t &args, wcstring &err)
         break;
     }
 
-    if (! errored && result)
+    if (result)
     {
         /* It's also an error if there are any unused arguments. This is not detected by parse_expression() */
         assert(result->range.end <= args.size());
         if (result->range.end < args.size())
         {
-            append_format(err, L"test: unexpected argument at index %lu: '%ls'\n", (unsigned long)result->range.end, args.at(result->range.end).c_str());
+            if (err.empty())
+            {
+                append_format(err, L"test: unexpected argument at index %lu: '%ls'\n", (unsigned long)result->range.end, args.at(result->range.end).c_str());
+            }
+            errored = true;
+            
             delete result;
             result = NULL;
-            errored = true;
         }
     }
 
@@ -790,10 +795,31 @@ int builtin_test(parser_t &parser, wchar_t **argv)
     /* The first argument should be the name of the command ('test') */
     if (! argv[0])
         return BUILTIN_TEST_FAIL;
+    
+    /* Whether we are invoked with bracket '[' or not */
+    const bool is_bracket = ! wcscmp(argv[0], L"[");
 
     size_t argc = 0;
     while (argv[argc + 1])
         argc++;
+    
+    /* If we're bracket, the last argument ought to be ]; we ignore it. Note that argc is the number of arguments after the command name; thus argv[argc] is the last argument. */
+    if (is_bracket)
+    {
+        if (! wcscmp(argv[argc], L"]"))
+        {
+            /* Ignore the closing bracketp */
+            argc--;
+        }
+        else
+        {
+            builtin_show_error(L"[: the last argument must be ']'\n");
+            return BUILTIN_TEST_FAIL;
+        }
+
+    }
+    
+    /* Collect the arguments into a list */
     const wcstring_list_t args(argv + 1, argv + 1 + argc);
 
     if (argc == 0)

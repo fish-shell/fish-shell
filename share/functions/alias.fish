@@ -40,9 +40,6 @@ function alias --description "Legacy function for creating shellscript functions
 			set prefix command
 		case builtin
 			set prefix builtin
-		case function
-			printf ( _ "%s: A function with the name '%s' already exists. Use the 'functions' or 'funced' commands to edit it.") alias "$name"
-			return 1
 	end
 
 	eval "function $name; $prefix $body \$argv; end"

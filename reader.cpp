@@ -1260,25 +1260,12 @@ static void autosuggest_completed(autosuggestion_context_t *ctx, int result)
 static void update_autosuggestion(void)
 {
     /* Updates autosuggestion. We look for an autosuggestion if the command line is non-empty and if we're not doing a history search.  */
-#if 0
-    /* Old non-threaded mode */
-    data->autosuggestion.clear();
-    if (can_autosuggest())
-    {
-        history_search_t searcher = history_search_t(*data->history, data->command_line, HISTORY_SEARCH_TYPE_PREFIX);
-        if (searcher.go_backwards())
-        {
-            data->autosuggestion = searcher.current_item().str();
-        }
-    }
-#else
     data->autosuggestion.clear();
     if (data->allow_autosuggestion && ! data->suppress_autosuggestion && ! data->command_line.empty() && data->history_search.is_at_end())
     {
         autosuggestion_context_t *ctx = new autosuggestion_context_t(data->history, data->command_line, data->buff_pos);
         iothread_perform(threaded_autosuggest, autosuggest_completed, ctx);
     }
-#endif
 }
 
 /* Accept any autosuggestion by replacing the command line with it. If full is true, take the whole thing; if it's false, then take only the first "word" */
@@ -2421,15 +2408,14 @@ static void highlight_search(void)
 {
     if (! data->search_buff.empty() && ! data->history_search.is_at_end())
     {
-        const wchar_t *buff = data->command_line.c_str();
-        const wchar_t *match = wcsstr(buff, data->search_buff.c_str());
-        if (match)
+        const wcstring &needle = data->search_buff;
+        size_t match_pos = data->command_line.find(needle);
+        if (match_pos != wcstring::npos)
         {
-            size_t start = match-buff;
-            size_t i, count = data->search_buff.size();
-            for (i=0; i<count; i++)
+            size_t end = match_pos + needle.size();
+            for (size_t i=match_pos; i < end; i++)
             {
-                data->colors.at(start+i) |= HIGHLIGHT_SEARCH_MATCH<<16;
+                data->colors.at(i) |= (HIGHLIGHT_SEARCH_MATCH<<16);
             }
         }
     }
@@ -2464,7 +2450,7 @@ static int threaded_highlight(background_highlight_context_t *ctx)
 /**
    Call specified external highlighting function and then do search
    highlighting. Lastly, clear the background color under the cursor
-   to avoid repaint issues on terminals where e.g. syntax highligthing
+   to avoid repaint issues on terminals where e.g. syntax highlighting
    maykes characters under the sursor unreadable.
 
    \param match_highlight_pos the position to use for bracket matching. This need not be the same as the surrent cursor position

@@ -1022,6 +1022,18 @@ static void test_autosuggest_suggest_special()
     system("rm -Rf ~/test_autosuggest_suggest_special/");
 }
 
+static void test_autosuggestion_combining()
+{
+    say(L"Testing autosuggestion combining");
+    assert(combine_command_and_autosuggestion(L"alpha", L"alphabeta") == L"alphabeta");
+    
+    // when the last token contains no capital letters, we use the case of the autosuggestion
+    assert(combine_command_and_autosuggestion(L"alpha", L"ALPHABETA") == L"ALPHABETA");
+    
+    // when the last token contains capital letters, we use its case
+    assert(combine_command_and_autosuggestion(L"alPha", L"alphabeTa") == L"alPhabeTa");
+}
+
 
 /**
    Test speed of completion calculations
@@ -1625,6 +1637,7 @@ int main(int argc, char **argv)
     test_word_motion();
     test_is_potential_path();
     test_colors();
+    test_autosuggestion_combining();
     test_autosuggest_suggest_special();
     history_tests_t::test_history();
     history_tests_t::test_history_merge();

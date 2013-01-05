@@ -180,16 +180,6 @@ public:
     \param cursor_pos where the cursor is
 */
 void s_write(screen_t *s,
-             const wchar_t *left_prompt,
-             const wchar_t *right_prompt,
-             const wchar_t *commandline,
-             size_t explicit_len,
-             const int *colors,
-             const int *indent,
-             size_t cursor_pos);
-
-
-void s_write(screen_t *s,
              const wcstring &left_prompt,
              const wcstring &right_prompt,
              const wcstring &commandline,

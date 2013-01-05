@@ -214,5 +214,8 @@ int reader_shell_test(const wchar_t *b);
  */
 int reader_search_mode();
 
+/* Given a command line and an autosuggestion, return the string that gets shown to the user. Exposed for testing purposes only. */
+wcstring combine_command_and_autosuggestion(const wcstring &cmdline, const wcstring &autosuggestion);
+
 
 #endif

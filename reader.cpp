@@ -449,6 +449,53 @@ int reader_exit_forced()
     return exit_forced;
 }
 
+/* Given a command line and an autosuggestion, return the string that gets shown to the user */
+wcstring combine_command_and_autosuggestion(const wcstring &cmdline, const wcstring &autosuggestion)
+{
+    // We want to compute the full line, containing the command line and the autosuggestion
+    // They may disagree on whether characters are uppercase or lowercase
+    // Here we do something funny: if the last token of the command line contains any uppercase characters, we use its case
+    // Otherwise we use the case of the autosuggestion
+    // This is an idea from https://github.com/fish-shell/fish-shell/issues/335
+    wcstring full_line;
+    if (autosuggestion.size() <= cmdline.size() || cmdline.empty())
+    {
+        // No or useless autosuggestion, or no command line
+        full_line = cmdline;
+    }
+    else if (string_prefixes_string(cmdline, autosuggestion))
+    {
+        // No case disagreements, or no extra characters in the autosuggestion
+        full_line = autosuggestion;
+    }
+    else
+    {
+        // We have an autosuggestion which is not a prefix of the command line, i.e. a case disagreement
+        // Decide whose case we want to use
+        const wchar_t *begin = NULL, *cmd = cmdline.c_str();
+        parse_util_token_extent(cmd, cmdline.size() - 1, &begin, NULL, NULL, NULL);
+        bool last_token_contains_uppercase = false;
+        if (begin)
+        {
+            const wchar_t *end = begin + wcslen(begin);
+            last_token_contains_uppercase = (std::find_if(begin, end, iswupper) != end);
+        }
+        if (! last_token_contains_uppercase)
+        {
+            // Use the autosuggestion's case
+            full_line = autosuggestion;
+        }
+        else
+        {
+            // Use the command line case for its characters, then append the remaining characters in the autosuggestion
+            // Note that we know that autosuggestion.size() > cmdline.size() due to the first test above
+            full_line = cmdline;
+            full_line.append(autosuggestion, cmdline.size(), autosuggestion.size() - cmdline.size());
+        }
+    }
+    return full_line;
+}
+
 /**
    Repaint the entire commandline. This means reset and clear the
    commandline, write the prompt, perform syntax highlighting, write
@@ -457,10 +504,12 @@ int reader_exit_forced()
 
 static void reader_repaint()
 {
-    //Update the indentation
+    // Update the indentation
     parser_t::principal_parser().test(data->command_line.c_str(), &data->indents[0], 0, 0);
 
-    wcstring full_line = (data->autosuggestion.empty() ? data->command_line : data->autosuggestion);
+    // Combine the command and autosuggestion into one string
+    wcstring full_line = combine_command_and_autosuggestion(data->command_line, data->autosuggestion);
+    
     size_t len = full_line.size();
     if (len < 1)
         len = 1;

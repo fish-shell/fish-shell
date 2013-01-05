@@ -973,6 +973,7 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
         }
         if (clear_remainder)
         {
+            s_set_color(scr, &output, 0xffffffff);
             s_move(scr, &output, current_width, (int)i);
             s_write_mbs(&output, clr_eol);
         }
@@ -998,8 +999,9 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
 
 
     /* Clear remaining lines (if any) if we haven't cleared the screen. */
-    if (! has_cleared_screen)
+    if (! has_cleared_screen && scr->desired.line_count() < lines_with_stuff)
     {
+        s_set_color(scr, &output, 0xffffffff);
         for (size_t i=scr->desired.line_count(); i < lines_with_stuff; i++)
         {
             s_move(scr, &output, 0, (int)i);

@@ -334,11 +334,12 @@ expression *test_parser::parse_combining_expression(unsigned int start, unsigned
     std::vector<expression *> subjects;
     std::vector<token_t> combiners;
     unsigned int idx = start;
+    bool first = true;
 
     while (idx < end)
     {
 
-        if (! subjects.empty())
+        if (! first)
         {
             /* This is not the first expression, so we expect a combiner. */
             token_t combiner = token_for_string(arg(idx))->tok;
@@ -357,12 +358,18 @@ expression *test_parser::parse_combining_expression(unsigned int start, unsigned
         if (! expr)
         {
             add_error(L"Missing argument at index %u", idx);
+            if (! first)
+            {
+                /* Clean up the dangling combiner, since it never got its right hand expression */
+                combiners.pop_back();
+            }
             break;
         }
 
         /* Go to the end of this expression */
         idx = expr->range.end;
         subjects.push_back(expr);
+        first = false;
     }
 
     if (! subjects.empty())

@@ -922,6 +922,9 @@ static void test_test()
     /* These should be errors */
     assert(run_test_test(1, L"foo bar"));
     assert(run_test_test(1, L"foo bar baz"));
+    
+    /* This crashed */
+    assert(run_test_test(1, L"1 = 1 -a = 1"));
 }
 
 /** Testing colors */

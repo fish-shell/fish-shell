@@ -481,8 +481,8 @@ static void s_desired_append_char(screen_t *s,
         {
             int i;
             /* Current line is definitely hard wrapped */
-            s->desired.line(s->desired.cursor.y).is_soft_wrapped = false;
             s->desired.create_line(s->desired.line_count());
+            s->desired.line(s->desired.cursor.y).is_soft_wrapped = false;
             s->desired.cursor.y++;
             s->desired.cursor.x=0;
             for (i=0; i < prompt_width+indent*INDENT_STEP; i++)

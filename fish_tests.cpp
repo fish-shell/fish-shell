@@ -1032,6 +1032,10 @@ static void test_autosuggestion_combining()
     
     // when the last token contains capital letters, we use its case
     assert(combine_command_and_autosuggestion(L"alPha", L"alphabeTa") == L"alPhabeTa");
+    
+    // if autosuggestion is not longer than input, use the input's case
+    assert(combine_command_and_autosuggestion(L"alpha", L"ALPHAA") == L"ALPHAA");
+    assert(combine_command_and_autosuggestion(L"alpha", L"ALPHA") == L"alpha");
 }
 
 

@@ -772,7 +772,6 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
             else
             {
                 wcstring_list_t value;
-//        al_init(&value);
 
                 while (woptind < argc)
                 {
@@ -790,17 +789,9 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
 
                 my_env_set(dest, result, scope);
 
-//        al_destroy( &value );
 
             }
         }
-
-//    al_foreach( &result, &free );
-//    al_destroy( &result );
-
-//    al_destroy(&indexes);
-//    al_destroy(&values);
-
     }
     else
     {

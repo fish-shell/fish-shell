@@ -370,7 +370,7 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *out_c
       We are an interactive session if we have not been given an
       explicit command to execute, _and_ stdin is a tty.
      */
-    is_interactive_session &= has_cmd;
+    is_interactive_session &= ! has_cmd;
     is_interactive_session &= (my_optind == argc);
     is_interactive_session &= isatty(STDIN_FILENO);
 

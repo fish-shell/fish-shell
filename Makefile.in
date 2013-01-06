@@ -488,7 +488,7 @@ common.o: $(COMMON_FILES)
 share/man: $(HELP_SRC)
 	-mkdir share/man
 	touch share/man
-	-rm -R share/man/man1
+	-rm -Rf share/man/man1
 	./build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share
 
 #

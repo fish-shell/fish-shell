@@ -79,13 +79,13 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind \e\> end-of-buffer
 
 	bind \el __fish_list_current_token
-	bind \ew 'set tok (commandline -pt); if test $tok[1]; whatis $tok[1]; commandline -f repaint; end'
+        bind \ew 'set tok (commandline -pt); if test $tok[1]; echo; whatis $tok[1]; commandline -f repaint; end'
 	bind \cl 'clear; commandline -f repaint'
 	bind \cc 'commandline ""'
 	bind \cu backward-kill-line
 	bind \ed kill-word
 	bind \cw backward-kill-path-component
-	bind \ed 'set -l cmd (commandline); if test -z "$cmd"; dirh; commandline -f repaint; else; commandline -f kill-word; end'
+        bind \ed 'set -l cmd (commandline); if test -z "$cmd"; echo; dirh; commandline -f repaint; else; commandline -f kill-word; end'
 	bind \cd delete-or-exit
 
 	# This will make sure the output of the current command is paged using the less pager when you press Meta-p

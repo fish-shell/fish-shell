@@ -1394,11 +1394,6 @@ void exec(parser_t &parser, job_t *j)
 
     io_remove(j->io, &pipe_read);
 
-    for (io_chain_t::const_iterator iter = parser.block_io.begin(); iter != parser.block_io.end(); iter++)
-    {
-        io_remove(j->io, *iter);
-    }
-
     job_set_flag(j, JOB_CONSTRUCTED, 1);
 
     if (!job_get_flag(j, JOB_FOREGROUND))

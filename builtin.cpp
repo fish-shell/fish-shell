@@ -3088,7 +3088,7 @@ static int builtin_source(parser_t &parser, wchar_t ** argv)
     parser.push_block(new source_block_t(fn_intern));
     reader_push_current_filename(fn_intern);
 
-    parse_util_set_argv((argc>2)?(argv+2):(argv+1), wcstring_list_t());
+    parse_util_set_argv(argv+2, wcstring_list_t());
 
     res = reader_read(fd, real_io ? *real_io : io_chain_t());
 

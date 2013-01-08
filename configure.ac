@@ -621,7 +621,7 @@ AC_CHECK_HEADER(
 
 XCFLAGS="$CXXFLAGS"
 
-echo Checking how to use -D_XOPEN_SOURCE=600 and -D_POSIX_C_SOURCE=200112L...
+echo checking how to use -D_XOPEN_SOURCE=600 and -D_POSIX_C_SOURCE=200112L...
 local_found_posix_switch=no
 
 for i in "" "-D_POSIX_C_SOURCE=200112L" "-D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=200112L"; do

@@ -45,7 +45,7 @@ fi
 # Make sure doxygen is found
 DOXYGENPATH=`command -v doxygen`
 if test -z "$DOXYGENPATH" ; then
-    for i in /usr/local/bin/doxygen /opt/bin/doxygen; do
+    for i in /usr/local/bin/doxygen /opt/bin/doxygen /Applications/Doxygen.app/Contents/Resources/doxygen ~/Applications/Doxygen.app/Contents/Resources/doxygen ; do
     	if test -f "$i"; then
     	    DOXYGENPATH="$i"
     	    break

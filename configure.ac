@@ -720,6 +720,7 @@ AC_CHECK_FUNCS( wcsdup wcsndup wcslen wcscasecmp wcsncasecmp fwprintf )
 AC_CHECK_FUNCS( futimes wcwidth wcswidth wcstok fputwc fgetwc )
 AC_CHECK_FUNCS( wcstol wcslcat wcslcpy lrand48_r killpg gettext )
 AC_CHECK_FUNCS( dcgettext backtrace backtrace_symbols sysconf )
+AC_CHECK_FUNCS( getifaddrs )
 
 #
 # The Makefile also needs to know if we have gettext, so it knows if

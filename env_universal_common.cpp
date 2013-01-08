@@ -276,7 +276,7 @@ start_conversion:
     /* FreeBSD has this prototype: size_t iconv (iconv_t, const char **...)
        OS X and Linux this one: size_t iconv (iconv_t, char **...)
        AFAIK there's no single type that can be passed as both char ** and const char **.
-       So we cast the function pointer instead (!)
+       Hence this hack.
     */
     nconv = hack_iconv(cd, &in, &in_len, &nout, &out_len);
 

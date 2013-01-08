@@ -163,9 +163,8 @@ int fgetws2(wcstring *s, FILE *f)
 }
 
 /**
-   Converts the narrow character string \c in into it's wide
-   equivalent, stored in \c out. \c out must have enough space to fit
-   the entire string.
+   Converts the narrow character string \c in into its wide
+   equivalent, and return it
 
    The string may contain embedded nulls.
 

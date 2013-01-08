@@ -839,7 +839,7 @@ static bool run_test_test(int expected, const wcstring &str)
     copy(istream_iterator<wcstring, wchar_t, std::char_traits<wchar_t> >(iss),
          istream_iterator<wstring, wchar_t, std::char_traits<wchar_t> >(),
          back_inserter<vector<wcstring> >(lst));
-    
+
     bool bracket = run_one_test_test(expected, lst, true);
     bool nonbracket = run_one_test_test(expected, lst, false);
     assert(bracket == nonbracket);
@@ -850,13 +850,13 @@ static void test_test_brackets()
 {
     // Ensure [ knows it needs a ]
     parser_t parser(PARSER_TYPE_GENERAL, true);
-    
+
     const wchar_t *argv1[] = {L"[", L"foo", NULL};
     assert(builtin_test(parser, (wchar_t **)argv1) != 0);
-    
+
     const wchar_t *argv2[] = {L"[", L"foo", L"]", NULL};
     assert(builtin_test(parser, (wchar_t **)argv2) == 0);
-    
+
     const wchar_t *argv3[] = {L"[", L"foo", L"]", L"bar", NULL};
     assert(builtin_test(parser, (wchar_t **)argv3) != 0);
 
@@ -918,11 +918,11 @@ static void test_test()
     /* We didn't properly handle multiple "just strings" either */
     assert(run_test_test(0, L"foo"));
     assert(run_test_test(0, L"foo -a bar"));
-    
+
     /* These should be errors */
     assert(run_test_test(1, L"foo bar"));
     assert(run_test_test(1, L"foo bar baz"));
-    
+
     /* This crashed */
     assert(run_test_test(1, L"1 = 1 -a = 1"));
 }
@@ -1029,13 +1029,13 @@ static void test_autosuggestion_combining()
 {
     say(L"Testing autosuggestion combining");
     assert(combine_command_and_autosuggestion(L"alpha", L"alphabeta") == L"alphabeta");
-    
+
     // when the last token contains no capital letters, we use the case of the autosuggestion
     assert(combine_command_and_autosuggestion(L"alpha", L"ALPHABETA") == L"ALPHABETA");
-    
+
     // when the last token contains capital letters, we use its case
     assert(combine_command_and_autosuggestion(L"alPha", L"alphabeTa") == L"alPhabeTa");
-    
+
     // if autosuggestion is not longer than input, use the input's case
     assert(combine_command_and_autosuggestion(L"alpha", L"ALPHAA") == L"ALPHAA");
     assert(combine_command_and_autosuggestion(L"alpha", L"ALPHA") == L"alpha");

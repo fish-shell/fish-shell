@@ -509,7 +509,7 @@ static void reader_repaint()
 
     // Combine the command and autosuggestion into one string
     wcstring full_line = combine_command_and_autosuggestion(data->command_line, data->autosuggestion);
-    
+
     size_t len = full_line.size();
     if (len < 1)
         len = 1;

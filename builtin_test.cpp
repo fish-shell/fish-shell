@@ -580,7 +580,7 @@ expression *test_parser::parse_args(const wcstring_list_t &args, wcstring &err)
                 append_format(err, L"test: unexpected argument at index %lu: '%ls'\n", (unsigned long)result->range.end, args.at(result->range.end).c_str());
             }
             errored = true;
-            
+
             delete result;
             result = NULL;
         }
@@ -802,14 +802,14 @@ int builtin_test(parser_t &parser, wchar_t **argv)
     /* The first argument should be the name of the command ('test') */
     if (! argv[0])
         return BUILTIN_TEST_FAIL;
-    
+
     /* Whether we are invoked with bracket '[' or not */
     const bool is_bracket = ! wcscmp(argv[0], L"[");
 
     size_t argc = 0;
     while (argv[argc + 1])
         argc++;
-    
+
     /* If we're bracket, the last argument ought to be ]; we ignore it. Note that argc is the number of arguments after the command name; thus argv[argc] is the last argument. */
     if (is_bracket)
     {
@@ -825,7 +825,7 @@ int builtin_test(parser_t &parser, wchar_t **argv)
         }
 
     }
-    
+
     /* Collect the arguments into a list */
     const wcstring_list_t args(argv + 1, argv + 1 + argc);
 

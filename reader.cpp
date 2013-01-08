@@ -815,6 +815,7 @@ void reader_repaint_if_needed()
 
     if (needs_reset)
     {
+        exec_prompt();
         s_reset(&data->screen, screen_reset_current_line_and_prompt);
         data->screen_reset_needed = false;
     }

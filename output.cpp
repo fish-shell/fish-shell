@@ -136,7 +136,7 @@ static bool term256_support_is_native(void)
     return max_colors == 256;
 }
 
-bool output_get_supports_term256()
+bool output_get_supports_term256(void)
 {
     return support_term256;
 }

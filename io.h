@@ -116,6 +116,17 @@ public:
     }
 };
 
+class io_close_t : public io_data_t
+{
+public:
+    io_close_t(int f) :
+        io_data_t(IO_CLOSE, f)
+    {
+    }
+
+    virtual void print() const;
+};
+
 class io_chain_t : public std::vector<shared_ptr<io_data_t> >
 {
 public:

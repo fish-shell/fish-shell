@@ -1601,7 +1601,7 @@ void parser_t::parse_job_argument_list(process_t *p,
                             {
                                 if (target == L"-")
                                 {
-                                    new_io.reset(new io_data_t(IO_CLOSE, fd));
+                                    new_io.reset(new io_close_t(fd));
                                 }
                                 else
                                 {

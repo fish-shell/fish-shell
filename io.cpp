@@ -67,10 +67,12 @@ void io_data_t::print() const
         case IO_BUFFER:
             fprintf(stderr, "buffer %p (size %lu)\n", out_buffer_ptr(), out_buffer_size());
             break;
-        case IO_CLOSE:
-            fprintf(stderr, "close %d\n", fd);
-            break;
     }
+}
+
+void io_close_t::print() const
+{
+    fprintf(stderr, "close %d\n", fd);
 }
 
 void io_buffer_read(io_data_t *d)

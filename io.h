@@ -94,6 +94,8 @@ public:
         return out_buffer->size();
     }
 
+    virtual void print() const;
+
     /** Set to true if this is an input io redirection */
     bool is_input;
 

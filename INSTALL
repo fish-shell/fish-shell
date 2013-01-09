@@ -1,10 +1,9 @@
-
 Known issues
 ============
 
 Fish is developed using GCC, with the goal of using only C89 language
 features. Fish does, however use the *wprintf family of functions,
-which are new to the C99 standrard. It is not unlikely that any given
+which are new to the C99 standard. It is not unlikely that any given
 release contains a few GCC:isms, but ICC 9.0.030 has been found to
 produce working binaries. GCC 2.95.* won't compile fish, but GCC 3.2.3
 is known to work. Patches to fix any remaining GNU:isms are welcome.

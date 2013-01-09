@@ -1518,13 +1518,12 @@ void parser_t::parse_job_argument_list(process_t *p,
                     break;
                 }
 
-                new_io.reset(new io_data_t);
 
                 errno = 0;
-                new_io->fd = fish_wcstoi(tok_last(tok),
-                                         &end,
-                                         10);
-                if (new_io->fd < 0 || errno || *end)
+                int fd = fish_wcstoi(tok_last(tok),
+                                     &end,
+                                     10);
+                if (fd < 0 || errno || *end)
                 {
                     error(SYNTAX_ERROR,
                           tok_get_pos(tok),
@@ -1575,25 +1574,25 @@ void parser_t::parse_job_argument_list(process_t *p,
                         switch (type)
                         {
                             case TOK_REDIRECT_APPEND:
-                                new_io->io_mode = IO_FILE;
+                                new_io.reset(new io_data_t(IO_FILE, fd));
                                 new_io->param2.flags = O_CREAT | O_APPEND | O_WRONLY;
                                 new_io->set_filename(target);
                                 break;
 
                             case TOK_REDIRECT_OUT:
-                                new_io->io_mode = IO_FILE;
+                                new_io.reset(new io_data_t(IO_FILE, fd));
                                 new_io->param2.flags = O_CREAT | O_WRONLY | O_TRUNC;
                                 new_io->set_filename(target);
                                 break;
 
                             case TOK_REDIRECT_NOCLOB:
-                                new_io->io_mode = IO_FILE;
+                                new_io.reset(new io_data_t(IO_FILE, fd));
                                 new_io->param2.flags = O_CREAT | O_EXCL | O_WRONLY;
                                 new_io->set_filename(target);
                                 break;
 
                             case TOK_REDIRECT_IN:
-                                new_io->io_mode = IO_FILE;
+                                new_io.reset(new io_data_t(IO_FILE, fd));
                                 new_io->param2.flags = O_RDONLY;
                                 new_io->set_filename(target);
                                 break;
@@ -1602,13 +1601,13 @@ void parser_t::parse_job_argument_list(process_t *p,
                             {
                                 if (target == L"-")
                                 {
-                                    new_io->io_mode = IO_CLOSE;
+                                    new_io.reset(new io_data_t(IO_CLOSE, fd));
                                 }
                                 else
                                 {
                                     wchar_t *end;
 
-                                    new_io->io_mode = IO_FD;
+                                    new_io.reset(new io_data_t(IO_FD, fd));
                                     errno = 0;
 
                                     new_io->param1.old_fd = fish_wcstoi(target.c_str(), &end, 10);

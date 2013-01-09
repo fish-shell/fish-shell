@@ -379,16 +379,19 @@ static void test_tok()
 static int test_fork_helper(void *unused)
 {
     size_t i;
-    for (i=0; i < 100000; i++)
+    for (i=0; i < 1000; i++)
     {
-        delete [](new char[4 * 1024 * 1024]);
+        //delete [](new char[4 * 1024 * 1024]);
+        for (int j=0; j < 1024; j++) {
+            strerror(j);
+        }
     }
     return 0;
 }
 
 static void test_fork(void)
 {
-    return; // Test is disabled until I can force it to fail
+    return;
     say(L"Testing fork");
     size_t i, max = 100;
     for (i=0; i < 100; i++)
@@ -396,7 +399,7 @@ static void test_fork(void)
         printf("%lu / %lu\n", i+1, max);
         /* Do something horrible to try to trigger an error */
 #define THREAD_COUNT 8
-#define FORK_COUNT 200
+#define FORK_COUNT 10
 #define FORK_LOOP_COUNT 16
         signal_block();
         for (size_t i=0; i < THREAD_COUNT; i++)
@@ -417,7 +420,12 @@ static void test_fork(void)
                 else if (pid == 0)
                 {
                     /* Child */
-                    new char[4 * 1024 * 1024];
+                    //new char[4 * 1024 * 1024];
+                    for (size_t i=0; i < 1024 * 16; i++) {
+                        for (int j=0; j < 256; j++) {
+                            strerror(j);
+                        }
+                    }
                     exit_without_destructors(0);
                 }
                 else

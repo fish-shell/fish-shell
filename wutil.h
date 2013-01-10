@@ -83,6 +83,16 @@ int wunlink(const wcstring &pathname);
 void wperror(const wcstring &s);
 
 /**
+  Async-safe version of perror().
+*/
+void safe_perror(const char *message);
+
+/**
+  Async-safe version of strerror().
+*/
+const char *safe_strerror(int err);
+
+/**
    Wide character version of getcwd().
 */
 wchar_t *wgetcwd(wchar_t *buff, size_t sz);

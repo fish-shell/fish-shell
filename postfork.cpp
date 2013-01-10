@@ -76,7 +76,7 @@ int set_child_group(job_t *j, process_t *p, int print_errors)
                            getpgid_buff,
                            job_pgid_buff);
 
-                wperror(L"setpgid");
+                safe_perror("setpgid");
                 res = -1;
             }
         }
@@ -93,7 +93,7 @@ int set_child_group(job_t *j, process_t *p, int print_errors)
             char job_id_buff[128];
             format_long_safe(job_id_buff, j->job_id);
             debug_safe(1, "Could not send job %s ('%s') to foreground", job_id_buff, j->command_cstr());
-            wperror(L"tcsetpgrp");
+            safe_perror("tcsetpgrp");
             res = -1;
         }
     }
@@ -136,7 +136,7 @@ static void free_redirected_fds_from_pipes(io_chain_t &io_chain)
                     if (replacement_fd == -1 && errno != EINTR)
                     {
                         debug_safe_int(1, FD_ERROR, fd_to_free);
-                        wperror(L"dup");
+                        safe_perror("dup");
                         FATAL_EXIT();
                     }
                 }
@@ -181,7 +181,7 @@ static int handle_child_io(io_chain_t &io_chain)
                 if (close(io->fd))
                 {
                     debug_safe_int(0, "Failed to close file descriptor %s", io->fd);
-                    wperror(L"close");
+                    safe_perror("close");
                 }
                 break;
             }
@@ -200,7 +200,7 @@ static int handle_child_io(io_chain_t &io_chain)
                     else
                     {
                         debug_safe(1, FILE_ERROR, io->filename_cstr);
-                        perror("open");
+                        safe_perror("open");
                     }
 
                     return -1;
@@ -216,7 +216,7 @@ static int handle_child_io(io_chain_t &io_chain)
                     if (dup2(tmp, io->fd) == -1)
                     {
                         debug_safe_int(1,  FD_ERROR, io->fd);
-                        perror("dup2");
+                        safe_perror("dup2");
                         return -1;
                     }
                     exec_close(tmp);
@@ -235,7 +235,7 @@ static int handle_child_io(io_chain_t &io_chain)
                 if (dup2(io->param1.old_fd, io->fd) == -1)
                 {
                     debug_safe_int(1, FD_ERROR, io->fd);
-                    wperror(L"dup2");
+                    safe_perror("dup2");
                     return -1;
                 }
                 break;
@@ -258,7 +258,7 @@ static int handle_child_io(io_chain_t &io_chain)
                 if (dup2(io->param1.pipe_fd[write_pipe_idx], io->fd) != io->fd)
                 {
                     debug_safe(1, LOCAL_PIPE_ERROR);
-                    perror("dup2");
+                    safe_perror("dup2");
                     return -1;
                 }
 
@@ -358,7 +358,7 @@ pid_t execute_fork(bool wait_for_threads_to_die)
     }
 
     debug_safe(0, FORK_ERROR);
-    wperror(L"fork");
+    safe_perror("fork");
     FATAL_EXIT();
     return 0;
 }
@@ -560,8 +560,7 @@ void safe_report_exec_error(int err, const char *actual_cmd, char **argv, char *
 
         case ENOEXEC:
         {
-            /* Hope strerror doesn't allocate... */
-            const char *err = strerror(errno);
+            const char *err = safe_strerror(errno);
             debug_safe(0, "exec: %s", err);
 
             debug_safe(0, "The file '%s' is marked as an executable but could not be run by the operating system.", actual_cmd);
@@ -592,8 +591,7 @@ void safe_report_exec_error(int err, const char *actual_cmd, char **argv, char *
 
         default:
         {
-            /* Hope strerror doesn't allocate... */
-            const char *err = strerror(errno);
+            const char *err = safe_strerror(errno);
             debug_safe(0, "exec: %s", err);
 
             //    debug(0, L"The file '%ls' is marked as an executable but could not be run by the operating system.", p->actual_cmd);

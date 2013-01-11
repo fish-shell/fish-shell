@@ -599,3 +599,28 @@ void safe_report_exec_error(int err, const char *actual_cmd, char **argv, char *
         }
     }
 }
+
+/** Perform output from builtins. May be called from a forked child, so don't do anything that may allocate memory, etc.. */
+bool do_builtin_io(const char *out, size_t outlen, const char *err, size_t errlen)
+{
+    bool success = true;
+    if (out && outlen)
+    {
+
+        if (write_loop(STDOUT_FILENO, out, outlen) < 0)
+        {
+            debug(0, L"Error while writing to stdout");
+            safe_perror("write_loop");
+            success = false;
+        }
+    }
+
+    if (err && errlen)
+    {
+        if (write_loop(STDERR_FILENO, err, errlen) < 0)
+        {
+            success = false;
+        }
+    }
+    return success;
+}

@@ -135,7 +135,6 @@ std::wstring wbasename(const std::wstring &path);
    around gettext, like all other functions in this file.
 */
 const wchar_t *wgettext(const wchar_t *in);
-wcstring wgettext2(const wcstring &in);
 
 /**
    Wide character version of getenv

@@ -497,32 +497,6 @@ static void internal_exec_helper(parser_t &parser,
     is_block=is_block_old;
 }
 
-/** Perform output from builtins. Called from a forked child, so don't do anything that may allocate memory, etc.. */
-static void do_builtin_io(const char *out, size_t outlen, const char *err, size_t errlen)
-{
-    if (out && outlen)
-    {
-
-        if (write_loop(STDOUT_FILENO, out, outlen) == -1)
-        {
-            debug(0, L"Error while writing to stdout");
-            wperror(L"write_loop");
-            show_stackframe();
-        }
-    }
-
-    if (err && errlen)
-    {
-        if (write_loop(STDERR_FILENO, err, errlen) == -1)
-        {
-            /*
-              Can't really show any error message here, since stderr is
-              dead.
-            */
-        }
-    }
-}
-
 /* Returns whether we can use posix spawn for a given process in a given job.
  Per https://github.com/fish-shell/fish-shell/issues/364 , error handling for file redirections is too difficult with posix_spawn
  So in that case we use fork/exec
@@ -1177,7 +1151,11 @@ void exec(parser_t &parser, job_t *j)
                     const wcstring &out = get_stdout_buffer(), &err = get_stderr_buffer();
                     const std::string outbuff = wcs2string(out);
                     const std::string errbuff = wcs2string(err);
-                    do_builtin_io(outbuff.data(), outbuff.size(), errbuff.data(), errbuff.size());
+                    bool builtin_io_done = do_builtin_io(outbuff.data(), outbuff.size(), errbuff.data(), errbuff.size());
+                    if (! builtin_io_done)
+                    {
+                        show_stackframe();
+                    }
                     skip_fork = true;
                 }
 
@@ -1239,7 +1217,6 @@ void exec(parser_t &parser, job_t *j)
                     setup_child_process(j, p);
                     do_builtin_io(outbuff, outbuff_len, errbuff, errbuff_len);
                     exit_without_destructors(p->status);
-
                 }
                 else
                 {

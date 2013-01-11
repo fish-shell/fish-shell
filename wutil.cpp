@@ -455,15 +455,6 @@ const wchar_t *wgettext(const wchar_t *in)
     return val->c_str();
 }
 
-wcstring wgettext2(const wcstring &in)
-{
-    wgettext_init_if_necessary();
-    std::string mbs_in = wcs2string(in);
-    char *out = gettext(mbs_in.c_str());
-    wcstring result = format_string(L"%s", out);
-    return result;
-}
-
 const wchar_t *wgetenv(const wcstring &name)
 {
     ASSERT_IS_MAIN_THREAD();

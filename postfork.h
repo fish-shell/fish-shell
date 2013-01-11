@@ -65,6 +65,9 @@ int setup_child_process(job_t *j, process_t *p);
 */
 pid_t execute_fork(bool wait_for_threads_to_die);
 
+/* Perform output from builtins. Returns true on success. */
+bool do_builtin_io(const char *out, size_t outlen, const char *err, size_t errlen);
+
 /** Report an error from failing to exec or posix_spawn a command */
 void safe_report_exec_error(int err, const char *actual_cmd, char **argv, char **envv);
 

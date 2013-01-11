@@ -771,8 +771,8 @@ static bool autosuggest_parse_command(const wcstring &str, wcstring *out_command
             case TOK_END:
             {
                 had_cmd = false;
-                cmd.empty();
-                args.empty();
+                cmd.clear();
+                args.clear();
                 arg_pos = -1;
                 break;
             }

@@ -23,7 +23,7 @@ private:
     /* No assignment or copying allowed */
     io_data_t(const io_data_t &rhs);
     void operator=(const io_data_t &rhs);
-
+    
 public:
     /** Type of redirect */
     int io_mode;

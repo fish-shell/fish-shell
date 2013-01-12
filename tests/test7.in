@@ -110,3 +110,15 @@ if not echo skip1 > /dev/null
 else if echo skip2 > /dev/null
 	echo "zeta 6.2"
 end
+
+echo '###'
+
+# Ensure 'type' works
+# https://github.com/fish-shell/fish-shell/issues/513
+function fish_test_type_zzz
+	true
+end
+# Should succeed
+type fish_test_type_zzz >/dev/null ; echo $status
+# Should fail
+type -f fish_test_type_zzz >/dev/null ; echo $status

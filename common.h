@@ -226,6 +226,7 @@ wcstring str2wcstring(const std::string &in);
    way using the private use area.
 */
 char *wcs2str(const wchar_t *in);
+char *wcs2str(const wcstring &in);
 std::string wcs2string(const wcstring &input);
 
 /** Test if a string prefixes another. Returns true if a is a prefix of b */

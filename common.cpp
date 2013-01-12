@@ -293,6 +293,11 @@ char *wcs2str(const wchar_t *in)
     return wcs2str_internal(in, out);
 }
 
+char *wcs2str(const wcstring &in)
+{
+    return wcs2str(in.c_str());
+}
+
 /* This function is distinguished from wcs2str_internal in that it allows embedded null bytes */
 std::string wcs2string(const wcstring &input)
 {

@@ -53,7 +53,10 @@ enum
     EXPAND_SKIP_PROCESS = 1 << 7,
 
     /** Don't expand jobs (but you can still expand processes). This is because job expansion is not thread safe. */
-    EXPAND_SKIP_JOBS = 1 << 8
+    EXPAND_SKIP_JOBS = 1 << 8,
+    
+    /** Don't expand home directories */
+    EXPAND_SKIP_HOME_DIRECTORIES = 1 << 9
 };
 typedef int expand_flags_t;
 

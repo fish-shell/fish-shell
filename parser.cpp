@@ -3061,8 +3061,10 @@ int parser_t::test(const  wchar_t * buff,
                     arg_count=0;
 
                     command = tok_last(&tok);
-                    has_command = expand_one(command, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
-                    if (!has_command)
+                    
+                    // Pass SKIP_HOME_DIRECTORIES for https://github.com/fish-shell/fish-shell/issues/512
+                    has_command = expand_one(command, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_HOME_DIRECTORIES);
+                    if (! has_command)
                     {
                         command = L"";
                         err=1;

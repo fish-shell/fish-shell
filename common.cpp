@@ -106,7 +106,7 @@ static char *wcs2str_internal(const wchar_t *in, char *out);
 void show_stackframe()
 {
     ASSERT_IS_NOT_FORKED_CHILD();
-    
+
     /* Hack to avoid showing backtraces in the tester */
     if (program_name && ! wcscmp(program_name, L"(ignore)"))
         return;

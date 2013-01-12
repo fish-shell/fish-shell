@@ -1644,7 +1644,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
     {
         wcstring next = in->at(i).completion;
 
-        if (! (EXPAND_SKIP_HOME_DIRECTORIES & flags))
+        if (!(EXPAND_SKIP_HOME_DIRECTORIES & flags))
             expand_home_directory(next);
 
 

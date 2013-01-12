@@ -382,7 +382,8 @@ static int test_fork_helper(void *unused)
     for (i=0; i < 1000; i++)
     {
         //delete [](new char[4 * 1024 * 1024]);
-        for (int j=0; j < 1024; j++) {
+        for (int j=0; j < 1024; j++)
+        {
             strerror(j);
         }
     }
@@ -421,8 +422,10 @@ static void test_fork(void)
                 {
                     /* Child */
                     //new char[4 * 1024 * 1024];
-                    for (size_t i=0; i < 1024 * 16; i++) {
-                        for (int j=0; j < 256; j++) {
+                    for (size_t i=0; i < 1024 * 16; i++)
+                    {
+                        for (int j=0; j < 256; j++)
+                        {
                             strerror(j);
                         }
                     }

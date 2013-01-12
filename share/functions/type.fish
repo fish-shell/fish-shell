@@ -5,23 +5,15 @@ function type --description "Print the type of a command"
 	set -l res 1
 	set -l mode normal
 	set -l selection all
-	
-	set -l new_getopt
-	if not getopt -T > /dev/null
-		set new_getopt 1
-	else
-		set new_getopt ''
-	end
-	
+		
 	#
 	# Get options
 	#
 	set -l options
 	set -l shortopt tpPafh
-	set -l longopt
-	if test $new_getopt
+	if not getopt -T > /dev/null
 		# GNU getopt
-		set longopt type,path,force-path,all,no-functions,help
+		set -l longopt type,path,force-path,all,no-functions,help
 		set options -o $shortopt -l $longopt --
 		# Verify options
 		if not getopt -n type $options $argv >/dev/null

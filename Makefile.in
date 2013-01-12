@@ -204,7 +204,7 @@ MAIN_DIR_FILES_UNSORTED := Doxyfile Doxyfile.user Doxyfile.help		\
     $(COMMON_FILES) $(COMMON_FILES:.cpp=.h) $(FISH_OBJS:.o=.cpp)			\
     fish.spec.in INSTALL README user_doc.head.html xsel-0.9.6.tar		\
     ChangeLog config.sub config.guess fish_tests.cpp fish.cpp fish_pager.cpp	\
-    fishd.cpp seq.in make_vcs_completions.fish $(FISH_INDENT_OBJS:.o=.cpp)
+    fishd.cpp make_vcs_completions.fish $(FISH_INDENT_OBJS:.o=.cpp)
 
 #
 # The sorting is not meaningful in itself, but it has the side effect
@@ -242,7 +242,7 @@ FUNCTIONS_DIR_FILES := $(wildcard share/functions/*.fish)
 #
 
 SIMPLE_PROGRAMS := fish set_color mimedb fish_pager fishd fish_indent
-PROGRAMS := $(SIMPLE_PROGRAMS) @XSEL_BIN@ @SEQ_FALLBACK@
+PROGRAMS := $(SIMPLE_PROGRAMS) @XSEL_BIN@
 
 
 #
@@ -443,10 +443,10 @@ doc.h: $(HDR_FILES)
 # Create a template translation object
 #
 
-messages.pot: *.cpp *.h share/completions/*.fish share/functions/*.fish seq
+messages.pot: *.cpp *.h share/completions/*.fish share/functions/*.fish
 	if test $(HAVE_GETTEXT) = 1;then \
 		xgettext -k_ -kN_ *.cpp *.h -o messages.pot; \
-		if xgettext -j -k_ -kN_ -k--description -LShell share/completions/*.fish share/functions/*.fish seq -o messages.pot; then true; else \
+		if xgettext -j -k_ -kN_ -k--description -LShell share/completions/*.fish share/functions/*.fish -o messages.pot; then true; else \
 			echo "Your xgettext version is too old to build the messages.pot file"\
 			rm messages.pot\
 			false;\
@@ -527,6 +527,17 @@ check-uninstall:
 .PHONY: check-uninstall
 
 
+# seq used to be a shell script that we would install
+# Now we just look for previously installed seqs, and erase them
+# No big deal if it fails
+cleanup_old_seq:
+	SEQLOC=`which seq`;\
+	if test -x "$$SEQLOC" && grep -q '\(^#!/.*/fish\|^#!/usr/bin/env fish\)' "$$SEQLOC"; then\
+		rm -f "$$SEQLOC";\
+	fi;\
+	true;
+.PHONY: cleanup_old_seq
+
 #
 # This check makes sure that the install-sh script is executable. The
 # darcs repo doesn't preserve the executable bit, so this needs to be
@@ -542,7 +553,7 @@ install-sh:
 # Try to install after checking for incompatible installed versions.
 #
 
-install: all install-sh check-uninstall install-force
+install: all cleanup_old_seq install-sh check-uninstall install-force
 .PHONY: install
 
 #

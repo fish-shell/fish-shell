@@ -5,25 +5,44 @@ function type --description "Print the type of a command"
 	set -l res 1
 	set -l mode normal
 	set -l selection all
-
+	
+	set -l new_getopt
+	if not getopt -T > /dev/null
+		set new_getopt 1
+	else
+		set new_getopt ''
+	end
+	
 	#
 	# Get options
 	#
-	set -l shortopt -o tpPafh
+	set -l options
+	set -l shortopt tpPafh
 	set -l longopt
-	if not getopt -T >/dev/null
-		set longopt -l type,path,force-path,all,no-functions,help
+	if test $new_getopt
+		# GNU getopt
+		set longopt type,path,force-path,all,no-functions,help
+		set options -o $shortopt -l $longopt --
+		# Verify options
+		if not getopt -n type $options $argv >/dev/null
+			return 1
+		end
+	else
+		# Old getopt, used on OS X
+		set options $shortopt
+		# Verify options
+		if not getopt $options $argv >/dev/null
+			return 1
+		end
 	end
 
-	if not getopt -n type -Q $shortopt $longopt -- $argv >/dev/null
-		return 1
-	end
+	# Do the real getopt invocation
+	set -l tmp (getopt $options $argv)
 
-	set -l tmp (getopt $shortopt $longopt -- $argv)
-
+	# Break tmp up into an array
 	set -l opt
 	eval set opt $tmp
-
+	
 	for i in $opt
 		switch $i
 			case -t --type

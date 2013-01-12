@@ -306,17 +306,17 @@ const char *safe_strerror(int err)
     else
     {
         int saved_err = errno;
-        
+
         /* Use a shared buffer for this case */
         static char buff[384];
         char errnum_buff[64];
         format_long_safe(errnum_buff, err);
-        
+
         buff[0] = '\0';
         safe_append(buff, "unknown error (errno was ", sizeof buff);
         safe_append(buff, errnum_buff, sizeof buff);
         safe_append(buff, ")", sizeof buff);
-        
+
         errno = saved_err;
         return buff;
     }
@@ -326,17 +326,18 @@ void safe_perror(const char *message)
 {
     // Note we cannot use strerror, because on Linux it uses gettext, which is not safe
     int err = errno;
-    
+
     char buff[384];
     buff[0] = '\0';
-    
-    if (message) {
+
+    if (message)
+    {
         safe_append(buff, message, sizeof buff);
         safe_append(buff, ": ", sizeof buff);
     }
     safe_append(buff, safe_strerror(err), sizeof buff);
     safe_append(buff, "\n", sizeof buff);
-    
+
     write(STDERR_FILENO, buff, strlen(buff));
     errno = err;
 }

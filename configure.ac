@@ -34,7 +34,6 @@ AC_SUBST(LIBS_SET_COLOR)
 AC_SUBST(localedir)
 AC_SUBST(optbindirs)
 AC_SUBST(prefix)
-AC_SUBST(SEQ_FALLBACK)
 AC_SUBST(XSEL)
 AC_SUBST(XSEL_MAN)
 AC_SUBST(XSEL_BIN)
@@ -166,37 +165,6 @@ AH_BOTTOM([#if __GNUC__ >= 3
 AC_PROG_CXX([g++ c++])
 AC_PROG_CPP
 AC_PROG_INSTALL
-
-#
-# Check for seq command. If missing, make sure fallback shellscript
-# implementation is installed.
-#
-
-AC_CHECK_PROG( SEQ_FALLBACK, seq, [ ], [seq])
-
-
-if test "$SEQ_FALLBACK"; then
-
-  #
-  # We already have seq. Check if the seq version is installed by an
-  # earlier fish version. If it is, we'll replace it.
-  #
-
-  file=`which seq`
-  if test -f "$file"; then
-
-    AC_MSG_CHECKING([if seq comes from a previous fish version])
-    shebang=`grep "\(^#!/.*/fish\|^#!/usr/bin/env fish\)" $file`
-
-    if test "$shebang"; then
-      SEQ_FALLBACK=seq
-      AC_MSG_RESULT(yes, replace it)
-    else
-      AC_MSG_RESULT(no, keep it)
-    fi
-  fi
-fi
-
 
 #
 # Optionally drop xsel command
@@ -950,7 +918,7 @@ case $target_os in
 esac
 
 # Tell the world what we know
-AC_CONFIG_FILES([Makefile fish.spec seq])
+AC_CONFIG_FILES([Makefile fish.spec])
 AC_OUTPUT
 
 if test ! x$local_found_posix_switch = xyes; then

@@ -639,72 +639,70 @@ void parser_t::error(int ec, int p, const wchar_t *str, ...)
 /**
    Print profiling information to the specified stream
 */
-static void print_profile(const std::vector<profile_item_t> &items,
-                          size_t pos,
+static void print_profile(const std::vector<profile_item_t*> &items,
                           FILE *out)
 {
-    const profile_item_t *me, *prev;
-    size_t i;
-    int my_time;
-
-    if (pos >= items.size())
+    size_t pos;
+    for (pos = 0; pos < items.size(); pos++)
     {
-        return;
-    }
+        const profile_item_t *me, *prev;
+        size_t i;
+        int my_time;
 
-    me= &items.at(pos);
-    if (!me->skipped)
-    {
-        my_time=me->parse+me->exec;
-
-        for (i=pos+1; i<items.size(); i++)
+        me = items.at(pos);
+        if (!me->skipped)
         {
-            prev = &items.at(i);
-            if (prev->skipped)
+            my_time=me->parse+me->exec;
+
+            for (i=pos+1; i<items.size(); i++)
             {
-                continue;
+                prev = items.at(i);
+                if (prev->skipped)
+                {
+                    continue;
+                }
+
+                if (prev->level <= me->level)
+                {
+                    break;
+                }
+
+                if (prev->level > me->level+1)
+                {
+                    continue;
+                }
+
+                my_time -= prev->parse;
+                my_time -= prev->exec;
             }
 
-            if (prev->level <= me->level)
+            if (me->cmd.size() > 0)
             {
-                break;
-            }
+                if (fwprintf(out, L"%d\t%d\t", my_time, me->parse+me->exec) < 0)
+                {
+                    wperror(L"fwprintf");
+                    return;
+                }
 
-            if (prev->level > me->level+1)
-            {
-                continue;
-            }
+                for (i=0; i<me->level; i++)
+                {
+                    if (fwprintf(out, L"-") < 0)
+                    {
+                        wperror(L"fwprintf");
+                        return;
+                    }
 
-            my_time -= prev->parse;
-            my_time -= prev->exec;
-        }
-
-        if (me->cmd.size() > 0)
-        {
-            if (fwprintf(out, L"%d\t%d\t", my_time, me->parse+me->exec) < 0)
-            {
-                wperror(L"fwprintf");
-                return;
-            }
-
-            for (i=0; i<me->level; i++)
-            {
-                if (fwprintf(out, L"-") < 0)
+                }
+                if (fwprintf(out, L"> %ls\n", me->cmd.c_str()) < 0)
                 {
                     wperror(L"fwprintf");
                     return;
                 }
 
             }
-            if (fwprintf(out, L"> %ls\n", me->cmd.c_str()) < 0)
-            {
-                wperror(L"fwprintf");
-                return;
-            }
-
+				delete me;
         }
     }
-    print_profile(items, pos+1, out);
 }
 
 void parser_t::destroy()
@@ -729,7 +727,7 @@ void parser_t::destroy()
             }
             else
             {
-                print_profile(profile_items, 0, f);
+                print_profile(profile_items, f);
             }
 
             if (fclose(f))
@@ -2408,10 +2406,9 @@ void parser_t::eval_job(tokenizer_t *tok)
 
     if (do_profile)
     {
-        profile_items.resize(profile_items.size() + 1);
-        profile_item = &profile_items.back();
-        profile_item->cmd = L"";
+        profile_item = new profile_item_t();
         profile_item->skipped = 1;
+        profile_items.push_back(profile_item);
         t1 = get_time();
     }
 

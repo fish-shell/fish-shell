@@ -353,7 +353,7 @@ private:
     void print_errors_stderr();
 
 public:
-    std::vector<profile_item_t> profile_items;
+    std::vector<profile_item_t*> profile_items;
 
     /**
        Returns the name of the currently evaluated function if we are

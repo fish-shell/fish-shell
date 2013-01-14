@@ -2460,7 +2460,7 @@ void parser_t::eval_job(tokenizer_t *tok)
                 if (do_profile)
                 {
                     t2 = get_time();
-                    profile_item->cmd = wcsdup(j->command_wcstr());
+                    profile_item->cmd = j->command();
                     profile_item->skipped=current_block->skip;
                 }
 

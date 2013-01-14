@@ -32,6 +32,12 @@ if [ "$argv" != '-n' ]
 	echo Exit status differs for file test.fish
   end
 
+  ../fish -p /dev/null -c 'echo testing' >/dev/null
+  if test $status -ne 0
+	set res fail
+	echo Profiling fails
+  end
+
   if test $res = ok;
 	echo File test.fish tested ok
   else

@@ -406,11 +406,6 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t &out_chain, s
             */
             case IO_FILE:
             {
-                out.reset(new io_data_t());
-                out->fd = in->fd;
-                out->io_mode = IO_FD;
-                out->param2.close_old = 1;
-
                 int fd;
                 if ((fd=open(in->filename_cstr, in->param2.flags, OPEN_MASK))==-1)
                 {
@@ -424,7 +419,7 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t &out_chain, s
                 }
 
                 opened_fds.push_back(fd);
-                out->param1.old_fd = fd;
+                out.reset(new io_fd_t(in->fd, fd, true));
 
                 break;
             }
@@ -852,7 +847,8 @@ void exec(parser_t &parser, job_t *j)
 
                             case IO_FD:
                             {
-                                builtin_stdin = in->param1.old_fd;
+                                CAST_INIT(const io_fd_t *, in_fd, in.get());
+                                builtin_stdin = in_fd->old_fd;
                                 break;
                             }
                             case IO_PIPE:

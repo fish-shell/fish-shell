@@ -1607,13 +1607,11 @@ void parser_t::parse_job_argument_list(process_t *p,
                                 {
                                     wchar_t *end;
 
-                                    new_io.reset(new io_data_t(IO_FD, fd));
                                     errno = 0;
 
-                                    new_io->param1.old_fd = fish_wcstoi(target.c_str(), &end, 10);
+                                    int old_fd = fish_wcstoi(target.c_str(), &end, 10);
 
-                                    if ((new_io->param1.old_fd < 0) ||
-                                            errno || *end)
+                                    if (old_fd < 0 || errno || *end)
                                     {
                                         error(SYNTAX_ERROR,
                                               tok_get_pos(tok),
@@ -1621,6 +1619,10 @@ void parser_t::parse_job_argument_list(process_t *p,
                                               target.c_str());
 
                                         tok_next(tok);
+                                    }
+                                    else
+                                    {
+                                        new_io.reset(new io_fd_t(fd, old_fd));
                                     }
                                 }
                                 break;

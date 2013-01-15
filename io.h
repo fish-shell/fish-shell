@@ -27,15 +27,6 @@ public:
     /** FD to redirect */
     int fd;
 
-    /**
-      Type-specific parameter for redirection
-    */
-    union
-    {
-        /** Fds for IO_PIPE and for IO_BUFFER */
-        int pipe_fd[2];
-    } param1;
-
     virtual void print() const;
 
     /** Set to true if this is an input io redirection */
@@ -44,7 +35,6 @@ public:
     io_data_t(io_mode_t m = IO_INVALID, int f=0) :
         io_mode(m),
         fd(f),
-        param1(),
         is_input(0)
     {
     }
@@ -113,16 +103,31 @@ public:
     }
 };
 
-class io_buffer_t : public io_data_t
+class io_pipe_t : public io_data_t
+{
+public:
+    int pipe_fd[2];
+
+    virtual void print() const;
+
+    io_pipe_t(int f):
+        io_data_t(IO_PIPE, f),
+        pipe_fd()
+    {
+    }
+};
+
+class io_buffer_t : public io_pipe_t
 {
 private:
     /** buffer to save output in */
     shared_ptr<std::vector<char> > out_buffer;
 
     io_buffer_t(int f):
-        io_data_t(IO_BUFFER, f),
+        io_pipe_t(f),
         out_buffer()
     {
+        io_mode = IO_BUFFER;
     }
 
 public:

@@ -1143,7 +1143,7 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
     parser.eval(cmd, io_chain, TOP);
     term_steal();
 
-    io_buffer_read(out.get());
+    out->read();
 
     int nil=0;
     out->out_buffer_append((char *)&nil, 1);

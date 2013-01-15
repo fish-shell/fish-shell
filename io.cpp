@@ -81,23 +81,23 @@ void io_buffer_t::print() const
     fprintf(stderr, "buffer %p (size %lu)\n", out_buffer_ptr(), out_buffer_size());
 }
 
-void io_buffer_read(io_buffer_t *d)
+void io_buffer_t::read()
 {
-    exec_close(d->param1.pipe_fd[1]);
+    exec_close(param1.pipe_fd[1]);
 
-    if (d->io_mode == IO_BUFFER)
+    if (io_mode == IO_BUFFER)
     {
-        /*    if( fcntl( d->param1.pipe_fd[0], F_SETFL, 0 ) )
+        /*    if( fcntl( param1.pipe_fd[0], F_SETFL, 0 ) )
             {
               wperror( L"fcntl" );
               return;
               }  */
-        debug(4, L"io_buffer_read: blocking read on fd %d", d->param1.pipe_fd[0]);
+        debug(4, L"io_buffer_t::read: blocking read on fd %d", param1.pipe_fd[0]);
         while (1)
         {
             char b[4096];
             long l;
-            l=read_blocked(d->param1.pipe_fd[0], b, 4096);
+            l=read_blocked(param1.pipe_fd[0], b, 4096);
             if (l==0)
             {
                 break;
@@ -115,15 +115,15 @@ void io_buffer_read(io_buffer_t *d)
                 {
                     debug(1,
                           _(L"An error occured while reading output from code block on file descriptor %d"),
-                          d->param1.pipe_fd[0]);
-                    wperror(L"io_buffer_read");
+                          param1.pipe_fd[0]);
+                    wperror(L"io_buffer_t::read");
                 }
 
                 break;
             }
             else
             {
-                d->out_buffer_append(b, l);
+                out_buffer_append(b, l);
             }
         }
     }

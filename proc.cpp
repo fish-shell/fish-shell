@@ -902,7 +902,7 @@ static int select_try(job_t *j)
 */
 static void read_try(job_t *j)
 {
-    io_data_t *buff=NULL;
+    io_buffer_t *buff=NULL;
 
     /*
       Find the last buffer, which is the one we want to read from
@@ -912,7 +912,7 @@ static void read_try(job_t *j)
         io_data_t *d = j->io.at(idx).get();
         if (d->io_mode == IO_BUFFER)
         {
-            buff=d;
+            buff = static_cast<io_buffer_t *>(d);
         }
     }
 

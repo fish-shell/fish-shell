@@ -538,7 +538,7 @@ void exec(parser_t &parser, job_t *j)
     int mypipe[2];
     sigset_t chldset;
 
-    shared_ptr<io_data_t> io_buffer;
+    shared_ptr<io_buffer_t> io_buffer;
 
     /*
       Set to true if something goes wrong while exec:ing the job, in
@@ -566,24 +566,24 @@ void exec(parser_t &parser, job_t *j)
         io_duplicate_prepend(parser.block_io, j->io);
     }
 
-    shared_ptr<const io_data_t> input_redirect;
+    const io_buffer_t *input_redirect = 0;
     for (size_t idx = 0; idx < j->io.size(); idx++)
     {
-        input_redirect = j->io.at(idx);
+        shared_ptr<io_data_t> &io = j->io.at(idx);
 
-        if ((input_redirect->io_mode == IO_BUFFER) &&
-                input_redirect->is_input)
+        if ((io->io_mode == IO_BUFFER) && io->is_input)
         {
             /*
               Input redirection - create a new gobetween process to take
-              care of buffering
+              care of buffering, save the redirection in input_redirect
             */
             process_t *fake = new process_t();
             fake->type  = INTERNAL_BUFFER;
             fake->pipe_write_fd = 1;
-            j->first_process->pipe_read_fd = input_redirect->fd;
+            j->first_process->pipe_read_fd = io->fd;
             fake->next = j->first_process;
             j->first_process = fake;
+            input_redirect = static_cast<const io_buffer_t *>(io.get());
             break;
         }
     }
@@ -1135,8 +1135,9 @@ void exec(parser_t &parser, job_t *j)
                         (! get_stdout_buffer().empty()) &&
                         (buffer_stdout))
                 {
+                    CAST_INIT(io_buffer_t *, io_buffer, io.get());
                     const std::string res = wcs2string(get_stdout_buffer());
-                    io->out_buffer_append(res.c_str(), res.size());
+                    io_buffer->out_buffer_append(res.c_str(), res.size());
                     skip_fork = true;
                 }
 
@@ -1410,7 +1411,7 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
 
     is_subshell=1;
 
-    const shared_ptr<io_data_t> io_buffer(io_buffer_create(0));
+    const shared_ptr<io_buffer_t> io_buffer(io_buffer_create(0));
 
     prev_status = proc_get_last_status();
 

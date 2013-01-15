@@ -58,9 +58,6 @@ void io_data_t::print() const
         case IO_PIPE:
             fprintf(stderr, "pipe {%d, %d}\n", param1.pipe_fd[0], param1.pipe_fd[1]);
             break;
-        case IO_BUFFER:
-            fprintf(stderr, "buffer %p (size %lu)\n", out_buffer_ptr(), out_buffer_size());
-            break;
     }
 }
 
@@ -79,7 +76,12 @@ void io_file_t::print() const
     fprintf(stderr, "file (%s)\n", filename_cstr);
 }
 
-void io_buffer_read(io_data_t *d)
+void io_buffer_t::print() const
+{
+    fprintf(stderr, "buffer %p (size %lu)\n", out_buffer_ptr(), out_buffer_size());
+}
+
+void io_buffer_read(io_buffer_t *d)
 {
     exec_close(d->param1.pipe_fd[1]);
 
@@ -128,14 +130,12 @@ void io_buffer_read(io_data_t *d)
 }
 
 
-io_data_t *io_buffer_create(bool is_input)
+io_buffer_t *io_buffer_create(bool is_input)
 {
     bool success = true;
-    io_data_t *buffer_redirect = new io_data_t;
+    io_buffer_t *buffer_redirect = new io_buffer_t(is_input ? 0 : 1);
     buffer_redirect->out_buffer_create();
-    buffer_redirect->io_mode = IO_BUFFER;
     buffer_redirect->is_input = is_input ? true : false;
-    buffer_redirect->fd=is_input?0:1;
 
     if (exec_pipe(buffer_redirect->param1.pipe_fd) == -1)
     {
@@ -161,7 +161,7 @@ io_data_t *io_buffer_create(bool is_input)
     return buffer_redirect;
 }
 
-void io_buffer_destroy(const shared_ptr<io_data_t> &io_buffer)
+void io_buffer_destroy(const shared_ptr<io_buffer_t> &io_buffer)
 {
 
     /**

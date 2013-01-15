@@ -51,6 +51,10 @@ Utilities for io redirection.
 #include "io.h"
 
 
+io_data_t::~io_data_t()
+{
+}
+
 void io_data_t::print() const
 {
 }

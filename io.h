@@ -10,7 +10,7 @@ using std::tr1::shared_ptr;
 */
 enum io_mode_t
 {
-    IO_INVALID, IO_FILE, IO_PIPE, IO_FD, IO_BUFFER, IO_CLOSE
+    IO_FILE, IO_PIPE, IO_FD, IO_BUFFER, IO_CLOSE
 };
 
 /** Represents an FD redirection */
@@ -21,27 +21,26 @@ private:
     io_data_t(const io_data_t &rhs);
     void operator=(const io_data_t &rhs);
 
-public:
-    /** Type of redirect */
-    io_mode_t io_mode;
-    /** FD to redirect */
-    int fd;
-
-    virtual void print() const;
-
-    /** Set to true if this is an input io redirection */
-    bool is_input;
-
-    io_data_t(io_mode_t m = IO_INVALID, int f=0) :
+protected:
+    io_data_t(io_mode_t m, int f) :
         io_mode(m),
         fd(f),
         is_input(0)
     {
     }
 
-    virtual ~io_data_t()
-    {
-    }
+public:
+    /** Type of redirect */
+    io_mode_t io_mode;
+    /** FD to redirect */
+    int fd;
+
+    virtual void print() const = 0;
+
+    /** Set to true if this is an input io redirection */
+    bool is_input;
+
+    virtual ~io_data_t() = 0;
 };
 
 class io_close_t : public io_data_t

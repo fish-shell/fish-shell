@@ -1008,7 +1008,7 @@ void exec(parser_t &parser, job_t *j)
 
                 io_remove(j->io, io_buffer);
 
-                io_buffer_read(io_buffer.get());
+                io_buffer->read();
 
                 const char *buffer = io_buffer->out_buffer_ptr();
                 size_t count = io_buffer->out_buffer_size();
@@ -1423,7 +1423,7 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
         status = proc_get_last_status();
     }
 
-    io_buffer_read(io_buffer.get());
+    io_buffer->read();
 
     proc_set_last_status(prev_status);
 

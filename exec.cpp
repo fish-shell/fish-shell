@@ -1054,8 +1054,6 @@ void exec(parser_t &parser, job_t *j)
                     p->completed = 1;
                 }
 
-                io_buffer_destroy(io_buffer);
-
                 io_buffer.reset();
                 break;
 
@@ -1455,7 +1453,6 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
         }
     }
 
-    io_buffer_destroy(io_buffer);
     return status;
 }
 

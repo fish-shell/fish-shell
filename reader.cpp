@@ -1158,9 +1158,6 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
             input_unreadch(str.at(idx));
         }
     }
-
-    io_buffer_destroy(out);
-    io_buffer_destroy(in);
 }
 
 struct autosuggestion_context_t

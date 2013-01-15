@@ -161,19 +161,19 @@ io_buffer_t *io_buffer_create(bool is_input)
     return buffer_redirect;
 }
 
-void io_buffer_destroy(const shared_ptr<io_buffer_t> &io_buffer)
+io_buffer_t::~io_buffer_t()
 {
 
     /**
        If this is an input buffer, then io_read_buffer will not have
        been called, and we need to close the output fd as well.
     */
-    if (io_buffer->is_input)
+    if (is_input)
     {
-        exec_close(io_buffer->param1.pipe_fd[1]);
+        exec_close(param1.pipe_fd[1]);
     }
 
-    exec_close(io_buffer->param1.pipe_fd[0]);
+    exec_close(param1.pipe_fd[0]);
 
     /*
       Dont free fd for writing. This should already be free'd before

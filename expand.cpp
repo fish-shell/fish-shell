@@ -753,14 +753,14 @@ static int expand_pid(const wcstring &instr_with_sep,
         if (wcsncmp(in+1, SELF_STR, wcslen(in+1))==0)
         {
             append_completion(out,
-                              SELF_STR+wcslen(in+1),
+                              &SELF_STR[wcslen(in+1)],
                               COMPLETE_SELF_DESC,
                               0);
         }
         else if (wcsncmp(in+1, LAST_STR, wcslen(in+1))==0)
         {
             append_completion(out,
-                              LAST_STR+wcslen(in+1),
+                              &LAST_STR[wcslen(in+1)],
                               COMPLETE_LAST_DESC,
                               0);
         }

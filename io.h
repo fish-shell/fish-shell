@@ -17,9 +17,6 @@ enum io_mode_t
 class io_data_t
 {
 private:
-    /** buffer to save output in for IO_BUFFER. Note that in the original fish, the buffer was a pointer to a buffer_t stored in the param2 union down below, and when an io_data_t was duplicated the pointer was copied so that two io_data_ts referenced the same buffer. It's not clear to me how this was ever cleaned up correctly. But it's important that they share the same buffer for reasons I don't yet understand either. We can get correct sharing and cleanup with shared_ptr. */
-    shared_ptr<std::vector<char> > out_buffer;
-
     /* No assignment or copying allowed */
     io_data_t(const io_data_t &rhs);
     void operator=(const io_data_t &rhs);
@@ -39,46 +36,12 @@ public:
         int pipe_fd[2];
     } param1;
 
-    /** Function to create the output buffer */
-    void out_buffer_create()
-    {
-        out_buffer.reset(new std::vector<char>);
-    }
-
-    /** Function to append to the buffer */
-    void out_buffer_append(const char *ptr, size_t count)
-    {
-        assert(out_buffer.get() != NULL);
-        out_buffer->insert(out_buffer->end(), ptr, ptr + count);
-    }
-
-    /** Function to get a pointer to the buffer */
-    char *out_buffer_ptr(void)
-    {
-        assert(out_buffer.get() != NULL);
-        return out_buffer->empty() ? NULL : &out_buffer->at(0);
-    }
-
-    const char *out_buffer_ptr(void) const
-    {
-        assert(out_buffer.get() != NULL);
-        return out_buffer->empty() ? NULL : &out_buffer->at(0);
-    }
-
-    /** Function to get the size of the buffer */
-    size_t out_buffer_size(void) const
-    {
-        assert(out_buffer.get() != NULL);
-        return out_buffer->size();
-    }
-
     virtual void print() const;
 
     /** Set to true if this is an input io redirection */
     bool is_input;
 
     io_data_t(io_mode_t m = IO_INVALID, int f=0) :
-        out_buffer(),
         io_mode(m),
         fd(f),
         param1(),
@@ -150,6 +113,55 @@ public:
     }
 };
 
+class io_buffer_t : public io_data_t
+{
+private:
+    /** buffer to save output in */
+    shared_ptr<std::vector<char> > out_buffer;
+
+public:
+    virtual void print() const;
+
+    io_buffer_t(int f):
+        io_data_t(IO_BUFFER, f),
+        out_buffer()
+    {
+    }
+
+    /** Function to create the output buffer */
+    void out_buffer_create()
+    {
+        out_buffer.reset(new std::vector<char>);
+    }
+
+    /** Function to append to the buffer */
+    void out_buffer_append(const char *ptr, size_t count)
+    {
+        assert(out_buffer.get() != NULL);
+        out_buffer->insert(out_buffer->end(), ptr, ptr + count);
+    }
+
+    /** Function to get a pointer to the buffer */
+    char *out_buffer_ptr(void)
+    {
+        assert(out_buffer.get() != NULL);
+        return out_buffer->empty() ? NULL : &out_buffer->at(0);
+    }
+
+    const char *out_buffer_ptr(void) const
+    {
+        assert(out_buffer.get() != NULL);
+        return out_buffer->empty() ? NULL : &out_buffer->at(0);
+    }
+
+    /** Function to get the size of the buffer */
+    size_t out_buffer_size(void) const
+    {
+        assert(out_buffer.get() != NULL);
+        return out_buffer->size();
+    }
+};
+
 class io_chain_t : public std::vector<shared_ptr<io_data_t> >
 {
 public:
@@ -190,7 +202,7 @@ shared_ptr<io_data_t> io_chain_get(io_chain_t &src, int fd);
 /**
    Free all resources used by a IO_BUFFER type io redirection.
 */
-void io_buffer_destroy(const shared_ptr<io_data_t> &io_buffer);
+void io_buffer_destroy(const shared_ptr<io_buffer_t> &io_buffer);
 
 /**
    Create a IO_BUFFER type io redirection, complete with a pipe and a
@@ -201,12 +213,12 @@ void io_buffer_destroy(const shared_ptr<io_data_t> &io_buffer);
    used to buffer the output of a command, or non-zero to buffer the
    input to a command.
 */
-io_data_t *io_buffer_create(bool is_input);
+io_buffer_t *io_buffer_create(bool is_input);
 
 /**
    Close output pipe, and read from input pipe until eof.
 */
-void io_buffer_read(io_data_t *d);
+void io_buffer_read(io_buffer_t *d);
 
 /** Print debug information about the specified IO redirection chain to stderr. */
 void io_print(const io_chain_t &chain);

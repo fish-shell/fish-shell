@@ -164,8 +164,8 @@ static bool use_fd_in_pipe(int fd, const io_chain_t &io_chain)
         if ((io->io_mode == IO_BUFFER) ||
                 (io->io_mode == IO_PIPE))
         {
-            if (io->param1.pipe_fd[0] == fd ||
-                    io->param1.pipe_fd[1] == fd)
+            CAST_INIT(const io_pipe_t *, io_pipe, io.get());
+            if (io_pipe->pipe_fd[0] == fd || io_pipe->pipe_fd[1] == fd)
                 return true;
         }
     }
@@ -615,17 +615,13 @@ void exec(parser_t &parser, job_t *j)
 
     }
 
-    shared_ptr<io_data_t> pipe_read(new io_data_t);
-    pipe_read->fd = 0;
-    pipe_read->io_mode = IO_PIPE;
+    shared_ptr<io_pipe_t> pipe_read(new io_pipe_t(0));
     pipe_read->is_input = 1;
-    pipe_read->param1.pipe_fd[0] = pipe_read->param1.pipe_fd[1] = -1;
+    pipe_read->pipe_fd[0] = pipe_read->pipe_fd[1] = -1;
 
-    shared_ptr<io_data_t> pipe_write(new io_data_t);
-    pipe_write->fd = 1;
-    pipe_write->io_mode = IO_PIPE;
+    shared_ptr<io_pipe_t> pipe_write(new io_pipe_t(1));
     pipe_write->is_input = 0;
-    pipe_write->param1.pipe_fd[0] = pipe_write->param1.pipe_fd[1] = -1;
+    pipe_write->pipe_fd[0] = pipe_write->pipe_fd[1] = -1;
 
     j->io.push_back(pipe_write);
 
@@ -738,7 +734,7 @@ void exec(parser_t &parser, job_t *j)
                 break;
             }
 
-            memcpy(pipe_write->param1.pipe_fd, mypipe, sizeof(int)*2);
+            memcpy(pipe_write->pipe_fd, mypipe, sizeof(int)*2);
         }
         else
         {
@@ -855,7 +851,8 @@ void exec(parser_t &parser, job_t *j)
                             }
                             case IO_PIPE:
                             {
-                                builtin_stdin = in->param1.pipe_fd[0];
+                                CAST_INIT(const io_pipe_t *, in_pipe, in.get());
+                                builtin_stdin = in_pipe->pipe_fd[0];
                                 break;
                             }
 
@@ -908,7 +905,7 @@ void exec(parser_t &parser, job_t *j)
                 }
                 else
                 {
-                    builtin_stdin = pipe_read->param1.pipe_fd[0];
+                    builtin_stdin = pipe_read->pipe_fd[0];
                 }
 
                 if (builtin_stdin == -1)
@@ -1332,14 +1329,14 @@ void exec(parser_t &parser, job_t *j)
            Close the pipe the current process uses to read from the
            previous process_t
         */
-        if (pipe_read->param1.pipe_fd[0] >= 0)
-            exec_close(pipe_read->param1.pipe_fd[0]);
+        if (pipe_read->pipe_fd[0] >= 0)
+            exec_close(pipe_read->pipe_fd[0]);
         /*
            Set up the pipe the next process uses to read from the
            current process_t
         */
         if (p_wants_pipe)
-            pipe_read->param1.pipe_fd[0] = mypipe[0];
+            pipe_read->pipe_fd[0] = mypipe[0];
 
         /*
            If there is a next process in the pipeline, close the

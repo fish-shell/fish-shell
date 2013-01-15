@@ -189,17 +189,18 @@ static int handle_child_io(io_chain_t &io_chain)
             case IO_FILE:
             {
                 // Here we definitely do not want to set CLO_EXEC because our child needs access
-                if ((tmp=open(io->filename_cstr,
-                              io->param2.flags, OPEN_MASK))==-1)
+                CAST_INIT(io_file_t *, io_file, io);
+                if ((tmp=open(io_file->filename_cstr,
+                              io_file->flags, OPEN_MASK))==-1)
                 {
-                    if ((io->param2.flags & O_EXCL) &&
+                    if ((io_file->flags & O_EXCL) &&
                             (errno ==EEXIST))
                     {
-                        debug_safe(1, NOCLOB_ERROR, io->filename_cstr);
+                        debug_safe(1, NOCLOB_ERROR, io_file->filename_cstr);
                     }
                     else
                     {
-                        debug_safe(1, FILE_ERROR, io->filename_cstr);
+                        debug_safe(1, FILE_ERROR, io_file->filename_cstr);
                         safe_perror("open");
                     }
 
@@ -467,8 +468,9 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr, posix_spawn_fil
 
             case IO_FILE:
             {
+                CAST_INIT(const io_file_t *, io_file, io.get());
                 if (! err)
-                    err = posix_spawn_file_actions_addopen(actions, io->fd, io->filename_cstr, io->param2.flags /* mode */, OPEN_MASK);
+                    err = posix_spawn_file_actions_addopen(actions, io->fd, io_file->filename_cstr, io_file->flags /* mode */, OPEN_MASK);
                 break;
             }
 

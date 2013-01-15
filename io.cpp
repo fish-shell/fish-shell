@@ -55,9 +55,6 @@ void io_data_t::print() const
 {
     switch (io_mode)
     {
-        case IO_FILE:
-            fprintf(stderr, "file (%s)\n", filename_cstr);
-            break;
         case IO_PIPE:
             fprintf(stderr, "pipe {%d, %d}\n", param1.pipe_fd[0], param1.pipe_fd[1]);
             break;
@@ -75,6 +72,11 @@ void io_close_t::print() const
 void io_fd_t::print() const
 {
     fprintf(stderr, "FD map %d -> %d\n", old_fd, fd);
+}
+
+void io_file_t::print() const
+{
+    fprintf(stderr, "file (%s)\n", filename_cstr);
 }
 
 void io_buffer_read(io_data_t *d)

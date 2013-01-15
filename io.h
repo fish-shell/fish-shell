@@ -37,8 +37,6 @@ public:
     {
         /** Fds for IO_PIPE and for IO_BUFFER */
         int pipe_fd[2];
-        /** fd to redirect specified fd to, for IO_FD */
-        int old_fd;
     } param1;
 
 
@@ -47,8 +45,6 @@ public:
     {
         /** file creation flags to send to open for IO_FILE */
         int flags;
-        /** Whether to close old_fd for IO_FD */
-        int close_old;
     } param2;
 
     /** Filename IO_FILE. malloc'd. This needs to be used after fork, so don't use wcstring here. */
@@ -125,6 +121,24 @@ public:
     }
 
     virtual void print() const;
+};
+
+class io_fd_t : public io_data_t
+{
+public:
+    /** fd to redirect specified fd to */
+    int old_fd;
+    /** Whether to close old_fd */
+    int close_old;
+
+    virtual void print() const;
+
+    io_fd_t(int f, int old, bool close = false) :
+        io_data_t(IO_FD, f),
+        old_fd(old),
+        close_old(close)
+    {
+    }
 };
 
 class io_chain_t : public std::vector<shared_ptr<io_data_t> >

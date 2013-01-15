@@ -169,7 +169,7 @@ static int handle_child_io(io_chain_t &io_chain)
         io_data_t *io = io_chain.at(idx).get();
         int tmp;
 
-        if (io->io_mode == IO_FD && io->fd == io->param1.old_fd)
+        if (io->io_mode == IO_FD && io->fd == static_cast<io_fd_t*>(io)->old_fd)
         {
             continue;
         }
@@ -232,7 +232,7 @@ static int handle_child_io(io_chain_t &io_chain)
                 */
                 close(io->fd);
 
-                if (dup2(io->param1.old_fd, io->fd) == -1)
+                if (dup2(static_cast<const io_fd_t *>(io)->old_fd, io->fd) == -1)
                 {
                     debug_safe_int(1, FD_ERROR, io->fd);
                     safe_perror("dup2");
@@ -443,9 +443,11 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr, posix_spawn_fil
     {
         shared_ptr<const io_data_t> io = j->io.at(idx);
 
-        if (io->io_mode == IO_FD && io->fd == io->param1.old_fd)
+        if (io->io_mode == IO_FD)
         {
-            continue;
+            CAST_INIT(const io_fd_t *, io_fd, io.get());
+            if (io->fd == io_fd->old_fd)
+                continue;
         }
 
         if (io->fd > 2)
@@ -472,8 +474,9 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr, posix_spawn_fil
 
             case IO_FD:
             {
+                CAST_INIT(const io_fd_t *, io_fd, io.get());
                 if (! err)
-                    err = posix_spawn_file_actions_adddup2(actions, io->param1.old_fd /* from */, io->fd /* to */);
+                    err = posix_spawn_file_actions_adddup2(actions, io_fd->old_fd /* from */, io->fd /* to */);
                 break;
             }
 

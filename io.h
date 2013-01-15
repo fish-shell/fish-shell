@@ -164,6 +164,11 @@ public:
     }
 
     /**
+       Close output pipe, and read from input pipe until eof.
+    */
+    void read();
+
+    /**
        Create a IO_BUFFER type io redirection, complete with a pipe and a
        vector<char> for output. The default file descriptor used is 1 for
        output buffering and 0 for input buffering.
@@ -211,11 +216,6 @@ void io_chain_destroy(io_chain_t &chain);
 shared_ptr<const io_data_t> io_chain_get(const io_chain_t &src, int fd);
 shared_ptr<io_data_t> io_chain_get(io_chain_t &src, int fd);
 
-
-/**
-   Close output pipe, and read from input pipe until eof.
-*/
-void io_buffer_read(io_buffer_t *d);
 
 /** Print debug information about the specified IO redirection chain to stderr. */
 void io_print(const io_chain_t &chain);

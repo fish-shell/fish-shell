@@ -128,6 +128,8 @@ public:
     {
     }
 
+    ~io_buffer_t();
+
     /** Function to create the output buffer */
     void out_buffer_create()
     {
@@ -198,11 +200,6 @@ void io_chain_destroy(io_chain_t &chain);
 shared_ptr<const io_data_t> io_chain_get(const io_chain_t &src, int fd);
 shared_ptr<io_data_t> io_chain_get(io_chain_t &src, int fd);
 
-
-/**
-   Free all resources used by a IO_BUFFER type io redirection.
-*/
-void io_buffer_destroy(const shared_ptr<io_buffer_t> &io_buffer);
 
 /**
    Create a IO_BUFFER type io redirection, complete with a pipe and a

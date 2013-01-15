@@ -130,7 +130,7 @@ void io_buffer_read(io_buffer_t *d)
 }
 
 
-io_buffer_t *io_buffer_create(bool is_input)
+io_buffer_t *io_buffer_t::create(bool is_input)
 {
     bool success = true;
     io_buffer_t *buffer_redirect = new io_buffer_t(is_input ? 0 : 1);

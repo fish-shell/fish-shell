@@ -39,24 +39,6 @@ public:
         int pipe_fd[2];
     } param1;
 
-
-    /**  Second type-specific paramter for redirection */
-    union
-    {
-        /** file creation flags to send to open for IO_FILE */
-        int flags;
-    } param2;
-
-    /** Filename IO_FILE. malloc'd. This needs to be used after fork, so don't use wcstring here. */
-    const char *filename_cstr;
-
-    /** Convenience to set filename_cstr via wcstring */
-    void set_filename(const wcstring &str)
-    {
-        free((void *)filename_cstr);
-        filename_cstr = wcs2str(str.c_str());
-    }
-
     /** Function to create the output buffer */
     void out_buffer_create()
     {
@@ -100,15 +82,12 @@ public:
         io_mode(m),
         fd(f),
         param1(),
-        param2(),
-        filename_cstr(NULL),
         is_input(0)
     {
     }
 
     virtual ~io_data_t()
     {
-        free((void *)filename_cstr);
     }
 };
 
@@ -138,6 +117,36 @@ public:
         old_fd(old),
         close_old(close)
     {
+    }
+};
+
+class io_file_t : public io_data_t
+{
+public:
+    /** Filename, malloc'd. This needs to be used after fork, so don't use wcstring here. */
+    const char *filename_cstr;
+    /** file creation flags to send to open */
+    int flags;
+
+    /** Convenience to set filename_cstr via wcstring */
+    void set_filename(const wcstring &str)
+    {
+        free((void *)filename_cstr);
+        filename_cstr = wcs2str(str.c_str());
+    }
+
+    virtual void print() const;
+
+    io_file_t(int f, const char *fname = NULL, int fl = 0) :
+        io_data_t(IO_FILE, f),
+        filename_cstr(fname ? strdup(fname) : NULL),
+        flags(fl)
+    {
+    }
+
+    virtual ~io_file_t()
+    {
+        free((void *)filename_cstr);
     }
 };
 

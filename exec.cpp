@@ -407,11 +407,12 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t &out_chain, s
             case IO_FILE:
             {
                 int fd;
-                if ((fd=open(in->filename_cstr, in->param2.flags, OPEN_MASK))==-1)
+                CAST_INIT(io_file_t *, in_file, in.get());
+                if ((fd=open(in_file->filename_cstr, in_file->flags, OPEN_MASK))==-1)
                 {
                     debug(1,
                           FILE_ERROR,
-                          in->filename_cstr);
+                          in_file->filename_cstr);
 
                     wperror(L"open");
                     success = false;
@@ -516,7 +517,8 @@ static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *proce
         const shared_ptr<const io_data_t> &io = job->io.at(idx);
         if (io->io_mode == IO_FILE)
         {
-            const char *path = io->filename_cstr;
+            CAST_INIT(const io_file_t *, io_file, io.get());
+            const char *path = io_file->filename_cstr;
             /* This IO action is a file redirection. Only allow /dev/null, which is a common case we assume won't fail. */
             if (strcmp(path, "/dev/null") != 0)
             {
@@ -860,13 +862,14 @@ void exec(parser_t &parser, job_t *j)
                             case IO_FILE:
                             {
                                 /* Do not set CLO_EXEC because child needs access */
-                                builtin_stdin=open(in->filename_cstr,
-                                                   in->param2.flags, OPEN_MASK);
+                                CAST_INIT(const io_file_t *, in_file, in.get());
+                                builtin_stdin=open(in_file->filename_cstr,
+                                                   in_file->flags, OPEN_MASK);
                                 if (builtin_stdin == -1)
                                 {
                                     debug(1,
                                           FILE_ERROR,
-                                          in->filename_cstr);
+                                          in_file->filename_cstr);
                                     wperror(L"open");
                                 }
                                 else
@@ -1158,7 +1161,7 @@ void exec(parser_t &parser, job_t *j)
                 for (io_chain_t::iterator iter = j->io.begin(); iter != j->io.end(); iter++)
                 {
                     const shared_ptr<io_data_t> &tmp_io = *iter;
-                    if (tmp_io->io_mode == IO_FILE && strcmp(tmp_io->filename_cstr, "/dev/null") != 0)
+                    if (tmp_io->io_mode == IO_FILE && strcmp(static_cast<const io_file_t *>(tmp_io.get())->filename_cstr, "/dev/null") != 0)
                     {
                         skip_fork = false;
                         break;

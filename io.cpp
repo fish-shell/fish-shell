@@ -53,12 +53,6 @@ Utilities for io redirection.
 
 void io_data_t::print() const
 {
-    switch (io_mode)
-    {
-        case IO_PIPE:
-            fprintf(stderr, "pipe {%d, %d}\n", param1.pipe_fd[0], param1.pipe_fd[1]);
-            break;
-    }
 }
 
 void io_close_t::print() const
@@ -76,6 +70,11 @@ void io_file_t::print() const
     fprintf(stderr, "file (%s)\n", filename_cstr);
 }
 
+void io_pipe_t::print() const
+{
+    fprintf(stderr, "pipe {%d, %d}\n", pipe_fd[0], pipe_fd[1]);
+}
+
 void io_buffer_t::print() const
 {
     fprintf(stderr, "buffer %p (size %lu)\n", out_buffer_ptr(), out_buffer_size());
@@ -83,21 +82,21 @@ void io_buffer_t::print() const
 
 void io_buffer_t::read()
 {
-    exec_close(param1.pipe_fd[1]);
+    exec_close(pipe_fd[1]);
 
     if (io_mode == IO_BUFFER)
     {
-        /*    if( fcntl( param1.pipe_fd[0], F_SETFL, 0 ) )
+        /*    if( fcntl( pipe_fd[0], F_SETFL, 0 ) )
             {
               wperror( L"fcntl" );
               return;
               }  */
-        debug(4, L"io_buffer_t::read: blocking read on fd %d", param1.pipe_fd[0]);
+        debug(4, L"io_buffer_t::read: blocking read on fd %d", pipe_fd[0]);
         while (1)
         {
             char b[4096];
             long l;
-            l=read_blocked(param1.pipe_fd[0], b, 4096);
+            l=read_blocked(pipe_fd[0], b, 4096);
             if (l==0)
             {
                 break;
@@ -115,7 +114,7 @@ void io_buffer_t::read()
                 {
                     debug(1,
                           _(L"An error occured while reading output from code block on file descriptor %d"),
-                          param1.pipe_fd[0]);
+                          pipe_fd[0]);
                     wperror(L"io_buffer_t::read");
                 }
 
@@ -137,13 +136,13 @@ io_buffer_t *io_buffer_t::create(bool is_input)
     buffer_redirect->out_buffer_create();
     buffer_redirect->is_input = is_input ? true : false;
 
-    if (exec_pipe(buffer_redirect->param1.pipe_fd) == -1)
+    if (exec_pipe(buffer_redirect->pipe_fd) == -1)
     {
         debug(1, PIPE_ERROR);
         wperror(L"pipe");
         success = false;
     }
-    else if (fcntl(buffer_redirect->param1.pipe_fd[0],
+    else if (fcntl(buffer_redirect->pipe_fd[0],
                    F_SETFL,
                    O_NONBLOCK))
     {
@@ -170,10 +169,10 @@ io_buffer_t::~io_buffer_t()
     */
     if (is_input)
     {
-        exec_close(param1.pipe_fd[1]);
+        exec_close(pipe_fd[1]);
     }
 
-    exec_close(param1.pipe_fd[0]);
+    exec_close(pipe_fd[0]);
 
     /*
       Dont free fd for writing. This should already be free'd before

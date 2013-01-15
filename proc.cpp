@@ -869,10 +869,11 @@ static int select_try(job_t *j)
 
     for (size_t idx = 0; idx < j->io.size(); idx++)
     {
-        const io_data_t *d = j->io.at(idx).get();
-        if (d->io_mode == IO_BUFFER)
+        const io_data_t *io = j->io.at(idx).get();
+        if (io->io_mode == IO_BUFFER)
         {
-            int fd = d->param1.pipe_fd[0];
+            CAST_INIT(const io_pipe_t *, io_pipe, io);
+            int fd = io_pipe->pipe_fd[0];
 //			fwprintf( stderr, L"fd %d on job %ls\n", fd, j->command );
             FD_SET(fd, &fds);
             maxfd = maxi(maxfd, fd);
@@ -924,7 +925,7 @@ static void read_try(job_t *j)
             char b[BUFFER_SIZE];
             long l;
 
-            l=read_blocked(buff->param1.pipe_fd[0],
+            l=read_blocked(buff->pipe_fd[0],
                            b, BUFFER_SIZE);
             if (l==0)
             {

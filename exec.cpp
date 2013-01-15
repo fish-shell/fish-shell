@@ -801,7 +801,7 @@ void exec(parser_t &parser, job_t *j)
 
                 if (p->next)
                 {
-                    io_buffer.reset(io_buffer_create(0));
+                    io_buffer.reset(io_buffer_t::create(0));
                     j->io.push_back(io_buffer);
                 }
 
@@ -818,7 +818,7 @@ void exec(parser_t &parser, job_t *j)
             {
                 if (p->next)
                 {
-                    io_buffer.reset(io_buffer_create(0));
+                    io_buffer.reset(io_buffer_t::create(0));
                     j->io.push_back(io_buffer);
                 }
 
@@ -1409,7 +1409,7 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
 
     is_subshell=1;
 
-    const shared_ptr<io_buffer_t> io_buffer(io_buffer_create(0));
+    const shared_ptr<io_buffer_t> io_buffer(io_buffer_t::create(0));
 
     prev_status = proc_get_last_status();
 

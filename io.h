@@ -119,14 +119,14 @@ private:
     /** buffer to save output in */
     shared_ptr<std::vector<char> > out_buffer;
 
-public:
-    virtual void print() const;
-
     io_buffer_t(int f):
         io_data_t(IO_BUFFER, f),
         out_buffer()
     {
     }
+
+public:
+    virtual void print() const;
 
     ~io_buffer_t();
 
@@ -162,6 +162,17 @@ public:
         assert(out_buffer.get() != NULL);
         return out_buffer->size();
     }
+
+    /**
+       Create a IO_BUFFER type io redirection, complete with a pipe and a
+       vector<char> for output. The default file descriptor used is 1 for
+       output buffering and 0 for input buffering.
+
+       \param is_input set this parameter to zero if the buffer should be
+       used to buffer the output of a command, or non-zero to buffer the
+       input to a command.
+    */
+    static io_buffer_t *create(bool is_input);
 };
 
 class io_chain_t : public std::vector<shared_ptr<io_data_t> >
@@ -200,17 +211,6 @@ void io_chain_destroy(io_chain_t &chain);
 shared_ptr<const io_data_t> io_chain_get(const io_chain_t &src, int fd);
 shared_ptr<io_data_t> io_chain_get(io_chain_t &src, int fd);
 
-
-/**
-   Create a IO_BUFFER type io redirection, complete with a pipe and a
-   vector<char> for output. The default file descriptor used is 1 for
-   output buffering and 0 for input buffering.
-
-   \param is_input set this parameter to zero if the buffer should be
-   used to buffer the output of a command, or non-zero to buffer the
-   input to a command.
-*/
-io_buffer_t *io_buffer_create(bool is_input);
 
 /**
    Close output pipe, and read from input pipe until eof.

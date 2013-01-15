@@ -1568,67 +1568,60 @@ void parser_t::parse_job_argument_list(process_t *p,
                                   _(L"Invalid IO redirection"));
                         tok_next(tok);
                     }
+                    else if (type == TOK_REDIRECT_FD)
+                    {
+                        if (target == L"-")
+                        {
+                            new_io.reset(new io_close_t(fd));
+                        }
+                        else
+                        {
+                            wchar_t *end;
+
+                            errno = 0;
+
+                            int old_fd = fish_wcstoi(target.c_str(), &end, 10);
+
+                            if (old_fd < 0 || errno || *end)
+                            {
+                                error(SYNTAX_ERROR,
+                                      tok_get_pos(tok),
+                                      _(L"Requested redirection to something that is not a file descriptor %ls"),
+                                      target.c_str());
+
+                                tok_next(tok);
+                            }
+                            else
+                            {
+                                new_io.reset(new io_fd_t(fd, old_fd));
+                            }
+                        }
+                    }
                     else
                     {
-
+                        int flags = 0;
                         switch (type)
                         {
                             case TOK_REDIRECT_APPEND:
-                                new_io.reset(new io_data_t(IO_FILE, fd));
-                                new_io->param2.flags = O_CREAT | O_APPEND | O_WRONLY;
-                                new_io->set_filename(target);
+                                flags = O_CREAT | O_APPEND | O_WRONLY;
                                 break;
 
                             case TOK_REDIRECT_OUT:
-                                new_io.reset(new io_data_t(IO_FILE, fd));
-                                new_io->param2.flags = O_CREAT | O_WRONLY | O_TRUNC;
-                                new_io->set_filename(target);
+                                flags = O_CREAT | O_WRONLY | O_TRUNC;
                                 break;
 
                             case TOK_REDIRECT_NOCLOB:
-                                new_io.reset(new io_data_t(IO_FILE, fd));
-                                new_io->param2.flags = O_CREAT | O_EXCL | O_WRONLY;
-                                new_io->set_filename(target);
+                                flags = O_CREAT | O_EXCL | O_WRONLY;
                                 break;
 
                             case TOK_REDIRECT_IN:
-                                new_io.reset(new io_data_t(IO_FILE, fd));
-                                new_io->param2.flags = O_RDONLY;
-                                new_io->set_filename(target);
+                                flags = O_RDONLY;
                                 break;
 
-                            case TOK_REDIRECT_FD:
-                            {
-                                if (target == L"-")
-                                {
-                                    new_io.reset(new io_close_t(fd));
-                                }
-                                else
-                                {
-                                    wchar_t *end;
-
-                                    errno = 0;
-
-                                    int old_fd = fish_wcstoi(target.c_str(), &end, 10);
-
-                                    if (old_fd < 0 || errno || *end)
-                                    {
-                                        error(SYNTAX_ERROR,
-                                              tok_get_pos(tok),
-                                              _(L"Requested redirection to something that is not a file descriptor %ls"),
-                                              target.c_str());
-
-                                        tok_next(tok);
-                                    }
-                                    else
-                                    {
-                                        new_io.reset(new io_fd_t(fd, old_fd));
-                                    }
-                                }
-                                break;
-                            }
                         }
-
+                        io_file_t *new_io_file = new io_file_t(fd, NULL, flags);
+                        new_io_file->set_filename(target);
+                        new_io.reset(new_io_file);
                     }
                 }
 

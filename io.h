@@ -132,7 +132,7 @@ private:
 public:
     virtual void print() const;
 
-    ~io_buffer_t();
+    virtual ~io_buffer_t();
 
     /** Function to append to the buffer */
     void out_buffer_append(const char *ptr, size_t count)

@@ -72,12 +72,14 @@ void io_file_t::print() const
 
 void io_pipe_t::print() const
 {
-    fprintf(stderr, "pipe {%d, %d}\n", pipe_fd[0], pipe_fd[1]);
+    fprintf(stderr, "pipe {%d, %d} (input: %s)\n", pipe_fd[0], pipe_fd[1],
+            is_input ? "yes" : "no");
 }
 
 void io_buffer_t::print() const
 {
-    fprintf(stderr, "buffer %p (size %lu)\n", out_buffer_ptr(), out_buffer_size());
+    fprintf(stderr, "buffer %p (input: %s, size %lu)\n", out_buffer_ptr(),
+            is_input ? "yes" : "no", out_buffer_size());
 }
 
 void io_buffer_t::read()
@@ -132,8 +134,7 @@ void io_buffer_t::read()
 io_buffer_t *io_buffer_t::create(bool is_input)
 {
     bool success = true;
-    io_buffer_t *buffer_redirect = new io_buffer_t(is_input ? 0 : 1);
-    buffer_redirect->is_input = is_input ? true : false;
+    io_buffer_t *buffer_redirect = new io_buffer_t(is_input ? 0 : 1, is_input);
 
     if (exec_pipe(buffer_redirect->pipe_fd) == -1)
     {
@@ -221,7 +222,7 @@ void io_print(const io_chain_t &chain)
     for (size_t i=0; i < chain.size(); i++)
     {
         const shared_ptr<const io_data_t> &io = chain.at(i);
-        fprintf(stderr, "\t%lu: fd:%d, input:%s, ", (unsigned long)i, io->fd, io->is_input ? "yes" : "no");
+        fprintf(stderr, "\t%lu: fd:%d, ", (unsigned long)i, io->fd);
         io->print();
     }
 }

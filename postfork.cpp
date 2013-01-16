@@ -248,7 +248,7 @@ static int handle_child_io(io_chain_t &io_chain)
             {
                 CAST_INIT(io_pipe_t *, io_pipe, io);
                 /* If write_pipe_idx is 0, it means we're connecting to the read end (first pipe fd). If it's 1, we're connecting to the write end (second pipe fd). */
-                unsigned int write_pipe_idx = (io->is_input ? 0 : 1);
+                unsigned int write_pipe_idx = (io_pipe->is_input ? 0 : 1);
                 /*
                         debug( 0,
                              L"%ls %ls on fd %d (%d %d)",
@@ -488,7 +488,7 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr, posix_spawn_fil
             case IO_PIPE:
             {
                 CAST_INIT(const io_pipe_t *, io_pipe, io.get());
-                unsigned int write_pipe_idx = (io->is_input ? 0 : 1);
+                unsigned int write_pipe_idx = (io_pipe->is_input ? 0 : 1);
                 int from_fd = io_pipe->pipe_fd[write_pipe_idx];
                 int to_fd = io->fd;
                 if (! err)

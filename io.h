@@ -24,8 +24,7 @@ private:
 protected:
     io_data_t(io_mode_t m, int f) :
         io_mode(m),
-        fd(f),
-        is_input(0)
+        fd(f)
     {
     }
 
@@ -36,10 +35,6 @@ public:
     int fd;
 
     virtual void print() const = 0;
-
-    /** Set to true if this is an input io redirection */
-    bool is_input;
-
     virtual ~io_data_t() = 0;
 };
 
@@ -106,12 +101,14 @@ class io_pipe_t : public io_data_t
 {
 public:
     int pipe_fd[2];
+    bool is_input;
 
     virtual void print() const;
 
-    io_pipe_t(int f):
+    io_pipe_t(int f, bool i):
         io_data_t(IO_PIPE, f),
-        pipe_fd()
+        pipe_fd(),
+        is_input(i)
     {
     }
 };
@@ -122,8 +119,8 @@ private:
     /** buffer to save output in */
     std::vector<char> *out_buffer;
 
-    io_buffer_t(int f):
-        io_pipe_t(f),
+    io_buffer_t(int f, bool i):
+        io_pipe_t(f, i),
         out_buffer(new std::vector<char>)
     {
         io_mode = IO_BUFFER;

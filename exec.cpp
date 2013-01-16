@@ -571,20 +571,24 @@ void exec(parser_t &parser, job_t *j)
     {
         shared_ptr<io_data_t> &io = j->io.at(idx);
 
-        if ((io->io_mode == IO_BUFFER) && io->is_input)
+        if ((io->io_mode == IO_BUFFER))
         {
-            /*
-              Input redirection - create a new gobetween process to take
-              care of buffering, save the redirection in input_redirect
-            */
-            process_t *fake = new process_t();
-            fake->type  = INTERNAL_BUFFER;
-            fake->pipe_write_fd = 1;
-            j->first_process->pipe_read_fd = io->fd;
-            fake->next = j->first_process;
-            j->first_process = fake;
-            input_redirect = static_cast<const io_buffer_t *>(io.get());
-            break;
+            CAST_INIT(io_buffer_t *, io_buffer, io.get());
+            if (io_buffer->is_input)
+            {
+                /*
+                  Input redirection - create a new gobetween process to take
+                  care of buffering, save the redirection in input_redirect
+                */
+                process_t *fake = new process_t();
+                fake->type  = INTERNAL_BUFFER;
+                fake->pipe_write_fd = 1;
+                j->first_process->pipe_read_fd = io->fd;
+                fake->next = j->first_process;
+                j->first_process = fake;
+                input_redirect = io_buffer;
+                break;
+            }
         }
     }
 
@@ -615,12 +619,10 @@ void exec(parser_t &parser, job_t *j)
 
     }
 
-    shared_ptr<io_pipe_t> pipe_read(new io_pipe_t(0));
-    pipe_read->is_input = 1;
+    shared_ptr<io_pipe_t> pipe_read(new io_pipe_t(0, true));
     pipe_read->pipe_fd[0] = pipe_read->pipe_fd[1] = -1;
 
-    shared_ptr<io_pipe_t> pipe_write(new io_pipe_t(1));
-    pipe_write->is_input = 0;
+    shared_ptr<io_pipe_t> pipe_write(new io_pipe_t(1, false));
     pipe_write->pipe_fd[0] = pipe_write->pipe_fd[1] = -1;
 
     j->io.push_back(pipe_write);

@@ -128,7 +128,7 @@ private:
 public:
     virtual void print() const;
 
-    ~io_buffer_t();
+    virtual ~io_buffer_t();
 
     /** Function to create the output buffer */
     void out_buffer_create()

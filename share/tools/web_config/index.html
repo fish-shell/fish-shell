@@ -404,6 +404,7 @@ function run_get_request_with_bulk_handler(url, handler) {
 	$.ajax({
 		  type: "GET",
 		  url: url,
+		  dataType: "text",
 		  success: function(data){
 			$('#global_error').text('')
 			handler($.parseJSON(data))
@@ -426,6 +427,7 @@ function run_post_request(url, data_map, handler) {
 	$.ajax({
 		  type: "POST",
 		  url: url,
+		  dataType: "text",
 		  data: data_map,
 		  success: function(data){
 			$('#global_error').text('')

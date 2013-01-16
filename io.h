@@ -120,11 +120,11 @@ class io_buffer_t : public io_pipe_t
 {
 private:
     /** buffer to save output in */
-    shared_ptr<std::vector<char> > out_buffer;
+    std::vector<char> *out_buffer;
 
     io_buffer_t(int f):
         io_pipe_t(f),
-        out_buffer()
+        out_buffer(new std::vector<char>)
     {
         io_mode = IO_BUFFER;
     }
@@ -134,36 +134,26 @@ public:
 
     virtual ~io_buffer_t();
 
-    /** Function to create the output buffer */
-    void out_buffer_create()
-    {
-        out_buffer.reset(new std::vector<char>);
-    }
-
     /** Function to append to the buffer */
     void out_buffer_append(const char *ptr, size_t count)
     {
-        assert(out_buffer.get() != NULL);
         out_buffer->insert(out_buffer->end(), ptr, ptr + count);
     }
 
     /** Function to get a pointer to the buffer */
     char *out_buffer_ptr(void)
     {
-        assert(out_buffer.get() != NULL);
         return out_buffer->empty() ? NULL : &out_buffer->at(0);
     }
 
     const char *out_buffer_ptr(void) const
     {
-        assert(out_buffer.get() != NULL);
         return out_buffer->empty() ? NULL : &out_buffer->at(0);
     }
 
     /** Function to get the size of the buffer */
     size_t out_buffer_size(void) const
     {
-        assert(out_buffer.get() != NULL);
         return out_buffer->size();
     }
 

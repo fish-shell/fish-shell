@@ -700,7 +700,7 @@ static void print_profile(const std::vector<profile_item_t*> &items,
                 }
 
             }
-				delete me;
+            delete me;
         }
     }
 }

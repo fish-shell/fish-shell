@@ -566,7 +566,7 @@ void exec(parser_t &parser, job_t *j)
         io_duplicate_prepend(parser.block_io, j->io);
     }
 
-    const io_buffer_t *input_redirect;
+    const io_buffer_t *input_redirect = 0;
     for (size_t idx = 0; idx < j->io.size(); idx++)
     {
         shared_ptr<io_data_t> &io = j->io.at(idx);

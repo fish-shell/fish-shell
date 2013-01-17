@@ -26,7 +26,7 @@
    Avoid writing the type name twice in a common "static_cast-initialization".
    Caveat: This doesn't work with type names containing commas!
 */
-#define CAST_INIT(type, dst, src) type dst = static_cast<type >(src);
+#define CAST_INIT(type, dst, src) type dst = static_cast<type >(src)
 
 class completion_t;
 

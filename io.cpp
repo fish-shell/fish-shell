@@ -135,6 +135,7 @@ io_buffer_t *io_buffer_t::create(bool is_input)
 {
     bool success = true;
     io_buffer_t *buffer_redirect = new io_buffer_t(is_input ? 0 : 1, is_input);
+    buffer_redirect->out_buffer_create();
 
     if (exec_pipe(buffer_redirect->pipe_fd) == -1)
     {
@@ -163,7 +164,6 @@ io_buffer_t *io_buffer_t::create(bool is_input)
 io_buffer_t::~io_buffer_t()
 {
 
-    delete out_buffer;
     /**
        If this is an input buffer, then io_read_buffer will not have
        been called, and we need to close the output fd as well.

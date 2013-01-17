@@ -86,7 +86,7 @@ public:
 
     io_file_t(int f, const char *fname = NULL, int fl = 0) :
         io_data_t(IO_FILE, f),
-        filename_cstr(fname),
+        filename_cstr(strdup(fname)),
         flags(fl)
     {
     }

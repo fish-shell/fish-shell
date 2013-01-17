@@ -9,6 +9,10 @@
 #include "iothread.h"
 #include "exec.h"
 
+#ifndef JOIN_THREADS_BEFORE_FORK
+  #define JOIN_THREADS_BEFORE_FORK 0
+#endif
+
 /** The number of times to try to call fork() before giving up */
 #define FORK_LAPS 5
 
@@ -319,7 +323,7 @@ pid_t execute_fork(bool wait_for_threads_to_die)
 {
     ASSERT_IS_MAIN_THREAD();
 
-    if (wait_for_threads_to_die)
+    if (wait_for_threads_to_die || JOIN_THREADS_BEFORE_FORK)
     {
         /* Make sure we have no outstanding threads before we fork. This is a pretty sketchy thing to do here, both because exec.cpp shouldn't have to know about iothreads, and because the completion handlers may do unexpected things. */
         iothread_drain_all();

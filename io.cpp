@@ -55,10 +55,6 @@ io_data_t::~io_data_t()
 {
 }
 
-void io_data_t::print() const
-{
-}
-
 void io_close_t::print() const
 {
     fprintf(stderr, "close %d\n", fd);

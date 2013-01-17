@@ -164,8 +164,8 @@ static bool use_fd_in_pipe(int fd, const io_chain_t &io_chain)
         if ((io->io_mode == IO_BUFFER) ||
                 (io->io_mode == IO_PIPE))
         {
-            if (io->param1.pipe_fd[0] == fd ||
-                    io->param1.pipe_fd[1] == fd)
+            CAST_INIT(const io_pipe_t *, io_pipe, io.get());
+            if (io_pipe->pipe_fd[0] == fd || io_pipe->pipe_fd[1] == fd)
                 return true;
         }
     }
@@ -406,17 +406,13 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t &out_chain, s
             */
             case IO_FILE:
             {
-                out.reset(new io_data_t());
-                out->fd = in->fd;
-                out->io_mode = IO_FD;
-                out->param2.close_old = 1;
-
                 int fd;
-                if ((fd=open(in->filename_cstr, in->param2.flags, OPEN_MASK))==-1)
+                CAST_INIT(io_file_t *, in_file, in.get());
+                if ((fd=open(in_file->filename_cstr, in_file->flags, OPEN_MASK))==-1)
                 {
                     debug(1,
                           FILE_ERROR,
-                          in->filename_cstr);
+                          in_file->filename_cstr);
 
                     wperror(L"open");
                     success = false;
@@ -424,7 +420,7 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t &out_chain, s
                 }
 
                 opened_fds.push_back(fd);
-                out->param1.old_fd = fd;
+                out.reset(new io_fd_t(in->fd, fd, true));
 
                 break;
             }
@@ -521,7 +517,8 @@ static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *proce
         const shared_ptr<const io_data_t> &io = job->io.at(idx);
         if (io->io_mode == IO_FILE)
         {
-            const char *path = io->filename_cstr;
+            CAST_INIT(const io_file_t *, io_file, io.get());
+            const char *path = io_file->filename_cstr;
             /* This IO action is a file redirection. Only allow /dev/null, which is a common case we assume won't fail. */
             if (strcmp(path, "/dev/null") != 0)
             {
@@ -541,7 +538,7 @@ void exec(parser_t &parser, job_t *j)
     int mypipe[2];
     sigset_t chldset;
 
-    shared_ptr<io_data_t> io_buffer;
+    shared_ptr<io_buffer_t> io_buffer;
 
     /*
       Set to true if something goes wrong while exec:ing the job, in
@@ -569,25 +566,29 @@ void exec(parser_t &parser, job_t *j)
         io_duplicate_prepend(parser.block_io, j->io);
     }
 
-    shared_ptr<const io_data_t> input_redirect;
+    const io_buffer_t *input_redirect = 0;
     for (size_t idx = 0; idx < j->io.size(); idx++)
     {
-        input_redirect = j->io.at(idx);
+        shared_ptr<io_data_t> &io = j->io.at(idx);
 
-        if ((input_redirect->io_mode == IO_BUFFER) &&
-                input_redirect->is_input)
+        if ((io->io_mode == IO_BUFFER))
         {
-            /*
-              Input redirection - create a new gobetween process to take
-              care of buffering
-            */
-            process_t *fake = new process_t();
-            fake->type  = INTERNAL_BUFFER;
-            fake->pipe_write_fd = 1;
-            j->first_process->pipe_read_fd = input_redirect->fd;
-            fake->next = j->first_process;
-            j->first_process = fake;
-            break;
+            CAST_INIT(io_buffer_t *, io_buffer, io.get());
+            if (io_buffer->is_input)
+            {
+                /*
+                  Input redirection - create a new gobetween process to take
+                  care of buffering, save the redirection in input_redirect
+                */
+                process_t *fake = new process_t();
+                fake->type  = INTERNAL_BUFFER;
+                fake->pipe_write_fd = 1;
+                j->first_process->pipe_read_fd = io->fd;
+                fake->next = j->first_process;
+                j->first_process = fake;
+                input_redirect = io_buffer;
+                break;
+            }
         }
     }
 
@@ -618,17 +619,11 @@ void exec(parser_t &parser, job_t *j)
 
     }
 
-    shared_ptr<io_data_t> pipe_read(new io_data_t);
-    pipe_read->fd = 0;
-    pipe_read->io_mode = IO_PIPE;
-    pipe_read->is_input = 1;
-    pipe_read->param1.pipe_fd[0] = pipe_read->param1.pipe_fd[1] = -1;
+    shared_ptr<io_pipe_t> pipe_read(new io_pipe_t(0, true));
+    pipe_read->pipe_fd[0] = pipe_read->pipe_fd[1] = -1;
 
-    shared_ptr<io_data_t> pipe_write(new io_data_t);
-    pipe_write->fd = 1;
-    pipe_write->io_mode = IO_PIPE;
-    pipe_write->is_input = 0;
-    pipe_write->param1.pipe_fd[0] = pipe_write->param1.pipe_fd[1] = -1;
+    shared_ptr<io_pipe_t> pipe_write(new io_pipe_t(1, false));
+    pipe_write->pipe_fd[0] = pipe_write->pipe_fd[1] = -1;
 
     j->io.push_back(pipe_write);
 
@@ -741,7 +736,7 @@ void exec(parser_t &parser, job_t *j)
                 break;
             }
 
-            memcpy(pipe_write->param1.pipe_fd, mypipe, sizeof(int)*2);
+            memcpy(pipe_write->pipe_fd, mypipe, sizeof(int)*2);
         }
         else
         {
@@ -804,7 +799,7 @@ void exec(parser_t &parser, job_t *j)
 
                 if (p->next)
                 {
-                    io_buffer.reset(io_buffer_create(0));
+                    io_buffer.reset(io_buffer_t::create(0));
                     j->io.push_back(io_buffer);
                 }
 
@@ -821,7 +816,7 @@ void exec(parser_t &parser, job_t *j)
             {
                 if (p->next)
                 {
-                    io_buffer.reset(io_buffer_create(0));
+                    io_buffer.reset(io_buffer_t::create(0));
                     j->io.push_back(io_buffer);
                 }
 
@@ -852,25 +847,28 @@ void exec(parser_t &parser, job_t *j)
 
                             case IO_FD:
                             {
-                                builtin_stdin = in->param1.old_fd;
+                                CAST_INIT(const io_fd_t *, in_fd, in.get());
+                                builtin_stdin = in_fd->old_fd;
                                 break;
                             }
                             case IO_PIPE:
                             {
-                                builtin_stdin = in->param1.pipe_fd[0];
+                                CAST_INIT(const io_pipe_t *, in_pipe, in.get());
+                                builtin_stdin = in_pipe->pipe_fd[0];
                                 break;
                             }
 
                             case IO_FILE:
                             {
                                 /* Do not set CLO_EXEC because child needs access */
-                                builtin_stdin=open(in->filename_cstr,
-                                                   in->param2.flags, OPEN_MASK);
+                                CAST_INIT(const io_file_t *, in_file, in.get());
+                                builtin_stdin=open(in_file->filename_cstr,
+                                                   in_file->flags, OPEN_MASK);
                                 if (builtin_stdin == -1)
                                 {
                                     debug(1,
                                           FILE_ERROR,
-                                          in->filename_cstr);
+                                          in_file->filename_cstr);
                                     wperror(L"open");
                                 }
                                 else
@@ -909,7 +907,7 @@ void exec(parser_t &parser, job_t *j)
                 }
                 else
                 {
-                    builtin_stdin = pipe_read->param1.pipe_fd[0];
+                    builtin_stdin = pipe_read->pipe_fd[0];
                 }
 
                 if (builtin_stdin == -1)
@@ -1009,7 +1007,7 @@ void exec(parser_t &parser, job_t *j)
 
                 io_remove(j->io, io_buffer);
 
-                io_buffer_read(io_buffer.get());
+                io_buffer->read();
 
                 const char *buffer = io_buffer->out_buffer_ptr();
                 size_t count = io_buffer->out_buffer_size();
@@ -1054,8 +1052,6 @@ void exec(parser_t &parser, job_t *j)
                     }
                     p->completed = 1;
                 }
-
-                io_buffer_destroy(io_buffer);
 
                 io_buffer.reset();
                 break;
@@ -1136,8 +1132,9 @@ void exec(parser_t &parser, job_t *j)
                         (! get_stdout_buffer().empty()) &&
                         (buffer_stdout))
                 {
+                    CAST_INIT(io_buffer_t *, io_buffer, io.get());
                     const std::string res = wcs2string(get_stdout_buffer());
-                    io->out_buffer_append(res.c_str(), res.size());
+                    io_buffer->out_buffer_append(res.c_str(), res.size());
                     skip_fork = true;
                 }
 
@@ -1162,7 +1159,7 @@ void exec(parser_t &parser, job_t *j)
                 for (io_chain_t::iterator iter = j->io.begin(); iter != j->io.end(); iter++)
                 {
                     const shared_ptr<io_data_t> &tmp_io = *iter;
-                    if (tmp_io->io_mode == IO_FILE && strcmp(tmp_io->filename_cstr, "/dev/null") != 0)
+                    if (tmp_io->io_mode == IO_FILE && strcmp(static_cast<const io_file_t *>(tmp_io.get())->filename_cstr, "/dev/null") != 0)
                     {
                         skip_fork = false;
                         break;
@@ -1334,14 +1331,14 @@ void exec(parser_t &parser, job_t *j)
            Close the pipe the current process uses to read from the
            previous process_t
         */
-        if (pipe_read->param1.pipe_fd[0] >= 0)
-            exec_close(pipe_read->param1.pipe_fd[0]);
+        if (pipe_read->pipe_fd[0] >= 0)
+            exec_close(pipe_read->pipe_fd[0]);
         /*
            Set up the pipe the next process uses to read from the
            current process_t
         */
         if (p_wants_pipe)
-            pipe_read->param1.pipe_fd[0] = mypipe[0];
+            pipe_read->pipe_fd[0] = mypipe[0];
 
         /*
            If there is a next process in the pipeline, close the
@@ -1411,7 +1408,7 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
 
     is_subshell=1;
 
-    const shared_ptr<io_data_t> io_buffer(io_buffer_create(0));
+    const shared_ptr<io_buffer_t> io_buffer(io_buffer_t::create(0));
 
     prev_status = proc_get_last_status();
 
@@ -1425,7 +1422,7 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
         status = proc_get_last_status();
     }
 
-    io_buffer_read(io_buffer.get());
+    io_buffer->read();
 
     proc_set_last_status(prev_status);
 
@@ -1455,7 +1452,6 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
         }
     }
 
-    io_buffer_destroy(io_buffer);
     return status;
 }
 

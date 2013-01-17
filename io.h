@@ -30,7 +30,7 @@ protected:
 
 public:
     /** Type of redirect */
-    io_mode_t io_mode;
+    const io_mode_t io_mode;
     /** FD to redirect */
     int fd;
 
@@ -99,6 +99,14 @@ public:
 
 class io_pipe_t : public io_data_t
 {
+protected:
+    io_pipe_t(io_mode_t m, int f, bool i):
+        io_data_t(m, f),
+        pipe_fd(),
+        is_input(i)
+    {
+    }
+
 public:
     int pipe_fd[2];
     bool is_input;
@@ -120,10 +128,9 @@ private:
     std::vector<char> *out_buffer;
 
     io_buffer_t(int f, bool i):
-        io_pipe_t(f, i),
+        io_pipe_t(IO_BUFFER, f, i),
         out_buffer(new std::vector<char>)
     {
-        io_mode = IO_BUFFER;
     }
 
 public:

@@ -544,7 +544,6 @@ job_t::~job_t()
 {
     if (first_process != NULL)
         delete first_process;
-    io_chain_destroy(this->io);
     release_job_id(job_id);
 }
 

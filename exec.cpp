@@ -332,20 +332,11 @@ static int has_fd(const io_chain_t &d, int fd)
 }
 
 /**
-   Free a transmogrified io chain. Only the chain itself and resources
-   used by a transmogrified IO_FILE redirection are freed, since the
-   original chain may still be needed.
+   Close a list of fds.
 */
-static void io_cleanup_chains(io_chain_t &chains, const std::vector<int> &opened_fds)
+static void io_cleanup_fds(const std::vector<int> &opened_fds)
 {
-    /* Close all the fds */
-    for (size_t idx = 0; idx < opened_fds.size(); idx++)
-    {
-        close(opened_fds.at(idx));
-    }
-
-    /* Then delete all of the redirections we made */
-    chains.destroy();
+    std::for_each(opened_fds.begin(), opened_fds.end(), close);
 }
 
 /**
@@ -446,7 +437,8 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t &out_chain, s
     else
     {
         /* No dice - clean up */
-        io_cleanup_chains(result_chain, opened_fds);
+        result_chain.clear();
+        io_cleanup_fds(opened_fds);
     }
     return success;
 }
@@ -488,7 +480,8 @@ static void internal_exec_helper(parser_t &parser,
 
     signal_block();
 
-    io_cleanup_chains(morphed_chain, opened_fds);
+    morphed_chain.clear();
+    io_cleanup_fds(opened_fds);
     job_reap(0);
     is_block=is_block_old;
 }
@@ -563,7 +556,7 @@ void exec(parser_t &parser, job_t *j)
 
     if (! parser.block_io.empty())
     {
-        io_duplicate_prepend(parser.block_io, j->io);
+        j->io.insert(j->io.begin(), parser.block_io.begin(), parser.block_io.end());
     }
 
     const io_buffer_t *input_redirect = 0;

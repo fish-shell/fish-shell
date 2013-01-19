@@ -1619,8 +1619,7 @@ void parser_t::parse_job_argument_list(process_t *p,
                                 break;
 
                         }
-                        io_file_t *new_io_file = new io_file_t(fd, NULL, flags);
-                        new_io_file->set_filename(target);
+                        io_file_t *new_io_file = new io_file_t(fd, target, flags);
                         new_io.reset(new_io_file);
                     }
                 }

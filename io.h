@@ -71,22 +71,15 @@ class io_file_t : public io_data_t
 {
 public:
     /** Filename, malloc'd. This needs to be used after fork, so don't use wcstring here. */
-    const char *filename_cstr;
+    const char * const filename_cstr;
     /** file creation flags to send to open */
     int flags;
-
-    /** Convenience to set filename_cstr via wcstring */
-    void set_filename(const wcstring &str)
-    {
-        free((void *)filename_cstr);
-        filename_cstr = wcs2str(str.c_str());
-    }
-
+    
     virtual void print() const;
 
-    io_file_t(int f, const char *fname = NULL, int fl = 0) :
+    io_file_t(int f, const wcstring &fname, int fl = 0) :
         io_data_t(IO_FILE, f),
-        filename_cstr(fname ? strdup(fname) : NULL),
+        filename_cstr(wcs2str(fname)),
         flags(fl)
     {
     }
@@ -125,7 +118,7 @@ class io_buffer_t : public io_pipe_t
 {
 private:
     /** buffer to save output in */
-    shared_ptr<std::vector<char> > out_buffer;
+    std::vector<char> out_buffer;
 
     io_buffer_t(int f, bool i):
         io_pipe_t(IO_BUFFER, f, i),
@@ -138,37 +131,27 @@ public:
 
     virtual ~io_buffer_t();
 
-    /** Function to create the output buffer */
-    void out_buffer_create()
-    {
-        out_buffer.reset(new std::vector<char>);
-    }
-
     /** Function to append to the buffer */
     void out_buffer_append(const char *ptr, size_t count)
     {
-        assert(out_buffer.get() != NULL);
-        out_buffer->insert(out_buffer->end(), ptr, ptr + count);
+        out_buffer.insert(out_buffer.end(), ptr, ptr + count);
     }
 
     /** Function to get a pointer to the buffer */
     char *out_buffer_ptr(void)
     {
-        assert(out_buffer.get() != NULL);
-        return out_buffer->empty() ? NULL : &out_buffer->at(0);
+        return out_buffer.empty() ? NULL : &out_buffer.at(0);
     }
 
     const char *out_buffer_ptr(void) const
     {
-        assert(out_buffer.get() != NULL);
-        return out_buffer->empty() ? NULL : &out_buffer->at(0);
+        return out_buffer.empty() ? NULL : &out_buffer.at(0);
     }
 
     /** Function to get the size of the buffer */
     size_t out_buffer_size(void) const
     {
-        assert(out_buffer.get() != NULL);
-        return out_buffer->size();
+        return out_buffer.size();
     }
 
     /**
@@ -195,9 +178,6 @@ public:
     io_chain_t(const shared_ptr<io_data_t> &);
 
     void remove(const shared_ptr<const io_data_t> &element);
-    io_chain_t duplicate() const;
-    void duplicate_prepend(const io_chain_t &src);
-    void destroy();
 
     shared_ptr<const io_data_t> get_io_for_fd(int fd) const;
     shared_ptr<io_data_t> get_io_for_fd(int fd);
@@ -208,12 +188,6 @@ public:
    Remove the specified io redirection from the chain
 */
 void io_remove(io_chain_t &list, const shared_ptr<const io_data_t> &element);
-
-/** Return a shallow copy of the specified chain of redirections that contains only the applicable redirections. That is, if there's multiple redirections for the same fd, only the second one is included. */
-io_chain_t io_unique(const io_chain_t &chain);
-
-/** Prepends a copy of the specified 'src' chain of redirections to 'dst.' Uses operator new. */
-void io_duplicate_prepend(const io_chain_t &src, io_chain_t &dst);
 
 /** Destroys an io_chain */
 void io_chain_destroy(io_chain_t &chain);

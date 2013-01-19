@@ -3619,7 +3619,7 @@ static int builtin_else(parser_t &parser, wchar_t **argv)
         if_block->skip = ! run_else;
         if_block->else_evaluated = true;
         env_pop();
-        env_push(0);
+        env_push(false);
     }
 
     /*

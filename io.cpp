@@ -51,23 +51,54 @@ Utilities for io redirection.
 #include "io.h"
 
 
-void io_buffer_read(io_data_t *d)
+io_data_t::~io_data_t()
 {
-    exec_close(d->param1.pipe_fd[1]);
+}
 
-    if (d->io_mode == IO_BUFFER)
+void io_close_t::print() const
+{
+    fprintf(stderr, "close %d\n", fd);
+}
+
+void io_fd_t::print() const
+{
+    fprintf(stderr, "FD map %d -> %d\n", old_fd, fd);
+}
+
+void io_file_t::print() const
+{
+    fprintf(stderr, "file (%s)\n", filename_cstr);
+}
+
+void io_pipe_t::print() const
+{
+    fprintf(stderr, "pipe {%d, %d} (input: %s)\n", pipe_fd[0], pipe_fd[1],
+            is_input ? "yes" : "no");
+}
+
+void io_buffer_t::print() const
+{
+    fprintf(stderr, "buffer %p (input: %s, size %lu)\n", out_buffer_ptr(),
+            is_input ? "yes" : "no", out_buffer_size());
+}
+
+void io_buffer_t::read()
+{
+    exec_close(pipe_fd[1]);
+
+    if (io_mode == IO_BUFFER)
     {
-        /*    if( fcntl( d->param1.pipe_fd[0], F_SETFL, 0 ) )
+        /*    if( fcntl( pipe_fd[0], F_SETFL, 0 ) )
             {
               wperror( L"fcntl" );
               return;
               }  */
-        debug(4, L"io_buffer_read: blocking read on fd %d", d->param1.pipe_fd[0]);
+        debug(4, L"io_buffer_t::read: blocking read on fd %d", pipe_fd[0]);
         while (1)
         {
             char b[4096];
             long l;
-            l=read_blocked(d->param1.pipe_fd[0], b, 4096);
+            l=read_blocked(pipe_fd[0], b, 4096);
             if (l==0)
             {
                 break;
@@ -85,37 +116,34 @@ void io_buffer_read(io_data_t *d)
                 {
                     debug(1,
                           _(L"An error occured while reading output from code block on file descriptor %d"),
-                          d->param1.pipe_fd[0]);
-                    wperror(L"io_buffer_read");
+                          pipe_fd[0]);
+                    wperror(L"io_buffer_t::read");
                 }
 
                 break;
             }
             else
             {
-                d->out_buffer_append(b, l);
+                out_buffer_append(b, l);
             }
         }
     }
 }
 
 
-io_data_t *io_buffer_create(bool is_input)
+io_buffer_t *io_buffer_t::create(bool is_input)
 {
     bool success = true;
-    io_data_t *buffer_redirect = new io_data_t;
+    io_buffer_t *buffer_redirect = new io_buffer_t(is_input ? 0 : 1, is_input);
     buffer_redirect->out_buffer_create();
-    buffer_redirect->io_mode = IO_BUFFER;
-    buffer_redirect->is_input = is_input ? true : false;
-    buffer_redirect->fd=is_input?0:1;
 
-    if (exec_pipe(buffer_redirect->param1.pipe_fd) == -1)
+    if (exec_pipe(buffer_redirect->pipe_fd) == -1)
     {
         debug(1, PIPE_ERROR);
         wperror(L"pipe");
         success = false;
     }
-    else if (fcntl(buffer_redirect->param1.pipe_fd[0],
+    else if (fcntl(buffer_redirect->pipe_fd[0],
                    F_SETFL,
                    O_NONBLOCK))
     {
@@ -133,19 +161,19 @@ io_data_t *io_buffer_create(bool is_input)
     return buffer_redirect;
 }
 
-void io_buffer_destroy(const shared_ptr<io_data_t> &io_buffer)
+io_buffer_t::~io_buffer_t()
 {
 
     /**
        If this is an input buffer, then io_read_buffer will not have
        been called, and we need to close the output fd as well.
     */
-    if (io_buffer->is_input)
+    if (is_input)
     {
-        exec_close(io_buffer->param1.pipe_fd[1]);
+        exec_close(pipe_fd[1]);
     }
 
-    exec_close(io_buffer->param1.pipe_fd[0]);
+    exec_close(pipe_fd[0]);
 
     /*
       Dont free fd for writing. This should already be free'd before
@@ -194,25 +222,8 @@ void io_print(const io_chain_t &chain)
     for (size_t i=0; i < chain.size(); i++)
     {
         const shared_ptr<const io_data_t> &io = chain.at(i);
-        fprintf(stderr, "\t%lu: fd:%d, input:%s, ", (unsigned long)i, io->fd, io->is_input ? "yes" : "no");
-        switch (io->io_mode)
-        {
-            case IO_FILE:
-                fprintf(stderr, "file (%s)\n", io->filename_cstr);
-                break;
-            case IO_PIPE:
-                fprintf(stderr, "pipe {%d, %d}\n", io->param1.pipe_fd[0], io->param1.pipe_fd[1]);
-                break;
-            case IO_FD:
-                fprintf(stderr, "FD map %d -> %d\n", io->param1.old_fd, io->fd);
-                break;
-            case IO_BUFFER:
-                fprintf(stderr, "buffer %p (size %lu)\n", io->out_buffer_ptr(), io->out_buffer_size());
-                break;
-            case IO_CLOSE:
-                fprintf(stderr, "close %d\n", io->fd);
-                break;
-        }
+        fprintf(stderr, "\t%lu: fd:%d, ", (unsigned long)i, io->fd);
+        io->print();
     }
 }
 

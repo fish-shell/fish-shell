@@ -91,8 +91,8 @@ extern char **__environ;
 */
 struct var_entry_t
 {
-    bool exportv; /**< Whether the variable should be exported */
     wcstring val; /**< The value of the variable */
+    bool exportv; /**< Whether the variable should be exported */
 
     var_entry_t() : exportv(false) { }
 };
@@ -118,7 +118,7 @@ struct env_node_t
       invisible. If new_scope is set for the global variable node,
       the universe will explode.
     */
-    int new_scope;
+    bool new_scope;
     /**
        Does this node contain any variables which are exported to subshells
     */
@@ -130,7 +130,7 @@ struct env_node_t
     struct env_node_t *next;
 
 
-    env_node_t() : new_scope(0), exportv(false), next(NULL) { }
+    env_node_t() : new_scope(false), exportv(false), next(NULL) { }
 };
 
 class variable_entry_t
@@ -1244,7 +1244,7 @@ static int local_scope_exports(env_node_t *n)
     return local_scope_exports(n->next);
 }
 
-void env_push(int new_scope)
+void env_push(bool new_scope)
 {
     env_node_t *node = new env_node_t;
     node->next = top;

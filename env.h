@@ -167,7 +167,7 @@ int env_remove(const wcstring &key, int mode);
 /**
   Push the variable stack. Used for implementing local variables for functions and for-loops.
 */
-void env_push(int new_scope);
+void env_push(bool new_scope);
 
 /**
   Pop the variable stack. Used for implementing local variables for functions and for-loops.

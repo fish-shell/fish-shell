@@ -146,13 +146,13 @@ public:
 env_var_t env_get_string(const wcstring &key);
 
 /**
-   Returns 1 if the specified key exists. This can't be reliably done
+   Returns true if the specified key exists. This can't be reliably done
    using env_get, since env_get returns null for 0-element arrays
 
    \param key The name of the variable to remove
    \param mode the scope to search in. All scopes are searched if unset
 */
-int env_exist(const wchar_t *key, int mode);
+bool env_exist(const wchar_t *key, int mode);
 
 /**
    Remove environemnt variable

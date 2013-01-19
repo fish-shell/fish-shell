@@ -350,10 +350,10 @@ wchar_t *env_universal_get(const wcstring &name)
     return env_universal_common_get(name);
 }
 
-int env_universal_get_export(const wcstring &name)
+bool env_universal_get_export(const wcstring &name)
 {
     if (!init)
-        return 0;
+        return false;
 
     return env_universal_common_get_export(name);
 }
@@ -421,7 +421,7 @@ void env_universal_barrier()
 }
 
 
-void env_universal_set(const wcstring &name, const wcstring &value, int exportv)
+void env_universal_set(const wcstring &name, const wcstring &value, bool exportv)
 {
     message_t *msg;
 
@@ -483,8 +483,8 @@ int env_universal_remove(const wchar_t *name)
 }
 
 void env_universal_get_names2(wcstring_list_t &lst,
-                              int show_exported,
-                              int show_unexported)
+                              bool show_exported,
+                              bool show_unexported)
 {
     if (!init)
         return;

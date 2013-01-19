@@ -135,7 +135,6 @@ io_buffer_t *io_buffer_t::create(bool is_input)
 {
     bool success = true;
     io_buffer_t *buffer_redirect = new io_buffer_t(is_input ? 0 : 1, is_input);
-    buffer_redirect->out_buffer_create();
 
     if (exec_pipe(buffer_redirect->pipe_fd) == -1)
     {
@@ -194,17 +193,6 @@ void io_chain_t::remove(const shared_ptr<const io_data_t> &element)
     }
 }
 
-void io_chain_t::duplicate_prepend(const io_chain_t &src)
-{
-    /* Prepend a duplicate of src before this. */
-    this->insert(this->begin(), src.begin(), src.end());
-}
-
-void io_chain_t::destroy()
-{
-    this->clear();
-}
-
 void io_remove(io_chain_t &list, const shared_ptr<const io_data_t> &element)
 {
     list.remove(element);
@@ -225,16 +213,6 @@ void io_print(const io_chain_t &chain)
         fprintf(stderr, "\t%lu: fd:%d, ", (unsigned long)i, io->fd);
         io->print();
     }
-}
-
-void io_duplicate_prepend(const io_chain_t &src, io_chain_t &dst)
-{
-    return dst.duplicate_prepend(src);
-}
-
-void io_chain_destroy(io_chain_t &chain)
-{
-    chain.destroy();
 }
 
 /* Return the last IO for the given fd */

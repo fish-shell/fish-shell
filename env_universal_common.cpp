@@ -93,9 +93,9 @@
 */
 typedef struct var_uni_entry
 {
-    int exportv; /**< Whether the variable should be exported */
+    bool exportv; /**< Whether the variable should be exported */
     wcstring val; /**< The value of the variable */
-    var_uni_entry():exportv(0), val() { }
+    var_uni_entry():exportv(false), val() { }
 }
 var_uni_entry_t;
 
@@ -562,19 +562,19 @@ void env_universal_common_remove(const wcstring &name)
 /**
    Test if the message msg contains the command cmd
 */
-static int match(const wchar_t *msg, const wchar_t *cmd)
+static bool match(const wchar_t *msg, const wchar_t *cmd)
 {
     size_t len = wcslen(cmd);
     if (wcsncasecmp(msg, cmd, len) != 0)
-        return 0;
+        return false;
 
     if (msg[len] && msg[len]!= L' ' && msg[len] != L'\t')
-        return 0;
+        return false;
 
-    return 1;
+    return true;
 }
 
-void env_universal_common_set(const wchar_t *key, const wchar_t *val, int exportv)
+void env_universal_common_set(const wchar_t *key, const wchar_t *val, bool exportv)
 {
     var_uni_entry_t *entry;
 
@@ -609,7 +609,7 @@ static void parse_message(wchar_t *msg,
     if (match(msg, SET_STR) || match(msg, SET_EXPORT_STR))
     {
         wchar_t *name, *tmp;
-        int exportv = match(msg, SET_EXPORT_STR);
+        bool exportv = match(msg, SET_EXPORT_STR);
 
         name = msg+(exportv?wcslen(SET_EXPORT_STR):wcslen(SET_STR));
         while (wcschr(L"\t ", *name))
@@ -903,8 +903,8 @@ message_t *create_message(fish_message_type_t type,
   Put exported or unexported variables in a string list
 */
 void env_universal_common_get_names(wcstring_list_t &lst,
-                                    int show_exported,
-                                    int show_unexported)
+                                    bool show_exported,
+                                    bool show_unexported)
 {
     env_var_table_t::const_iterator iter;
     for (iter = env_universal_var.begin(); iter != env_universal_var.end(); ++iter)
@@ -936,7 +936,7 @@ wchar_t *env_universal_common_get(const wcstring &name)
     return 0;
 }
 
-int env_universal_common_get_export(const wcstring &name)
+bool env_universal_common_get_export(const wcstring &name)
 {
     env_var_table_t::const_iterator result = env_universal_var.find(name);
     if (result != env_universal_var.end())
@@ -945,7 +945,7 @@ int env_universal_common_get_export(const wcstring &name)
         if (e != NULL)
             return e->exportv;
     }
-    return 0;
+    return false;
 }
 
 void enqueue_all(connection_t *c)

@@ -151,8 +151,8 @@ void env_universal_common_destroy();
    variables, it does not communicate with any other process.
 */
 void env_universal_common_get_names(wcstring_list_t &lst,
-                                    int show_exported,
-                                    int show_unexported);
+                                    bool show_exported,
+                                    bool show_unexported);
 
 /**
    Perform the specified variable assignment.
@@ -163,7 +163,7 @@ void env_universal_common_get_names(wcstring_list_t &lst,
    Do not call this function. Create a message to do it. This function
    is only to be used when fishd is dead.
 */
-void env_universal_common_set(const wchar_t *key, const wchar_t *val, int exportv);
+void env_universal_common_set(const wchar_t *key, const wchar_t *val, bool exportv);
 
 /**
    Remove the specified variable.
@@ -186,12 +186,12 @@ wchar_t *env_universal_common_get(const wcstring &name);
 
 /**
    Get the export flag of the variable with the specified
-   name. Returns 0 if the variable doesn't exist.
+   name. Returns false if the variable doesn't exist.
 
    This function operate agains the local copy of all universal
    variables, it does not communicate with any other process.
 */
-int env_universal_common_get_export(const wcstring &name);
+bool env_universal_common_get_export(const wcstring &name);
 
 /**
    Add messages about all existing variables to the specified connection

@@ -32,6 +32,10 @@ fish can be built using autotools or Xcode.
     xcodebuild install
     sudo ditto /tmp/fish.dst /
 
+## Packages for Linux
+
+Nightly builds for several Linux distros can be downloaded from <http://download.opensuse.org/repositories/home:/siteshwar/>
+
 ## Contact Us
 
 Questions, comments, rants and raves can be posted to the official fish mailing list at <https://lists.sourceforge.net/lists/listinfo/fish-users>

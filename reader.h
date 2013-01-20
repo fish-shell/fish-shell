@@ -112,8 +112,17 @@ void reader_set_buffer(const wcstring &b, size_t p);
 size_t reader_get_cursor_pos();
 
 /**
+   Clear the interrupted flag unconditionally without handling anything. The 
+   flag could have been set e.g. when an interrupt arrived just as we were 
+   ending an earlier \c reader_readline invocation but before the 
+   \c is_interactive_read flag was cleared. 
+*/
+void reader_reset_interrupted();
+
+/**
    Return the value of the interrupted flag, which is set by the sigint
-   handler, and clear it if it was set.
+   handler, and clear it if it was set. If the current reader is interruptible,
+   call \c reader_exit(). 
 */
 int reader_interrupted();
 
@@ -180,6 +189,9 @@ void reader_set_right_prompt(const wcstring &prompt);
 
 /** Sets whether autosuggesting is allowed. */
 void reader_set_allow_autosuggesting(bool flag);
+
+/** Sets whether the reader should exit on ^C. */
+void reader_set_interruptible(bool flag);
 
 /**
    Returns true if the shell is exiting, 0 otherwise.

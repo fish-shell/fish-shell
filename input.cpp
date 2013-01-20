@@ -507,7 +507,7 @@ wint_t input_readch()
     /*
        Clear the interrupted flag
        */
-    reader_interrupted();
+    reader_reset_interrupted();
 
     /*
        Search for sequence in mapping tables

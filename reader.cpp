@@ -323,6 +323,9 @@ public:
     /** Whether a screen reset is needed after a repaint. */
     bool screen_reset_needed;
 
+    /** Whether the reader should exit on ^C. */
+    bool interruptible;
+
     /** Constructor */
     reader_data_t() :
         allow_autosuggestion(0),
@@ -339,7 +342,8 @@ public:
         next(0),
         search_mode(0),
         repaint_needed(0),
-        screen_reset_needed(0)
+        screen_reset_needed(0),
+        interruptible(0)
     {
     }
 };
@@ -373,7 +377,7 @@ static pid_t original_pid;
 /**
    This variable is set to true by the signal handler when ^C is pressed
 */
-static int interrupted=0;
+static volatile int interrupted=0;
 
 
 /*
@@ -632,11 +636,23 @@ static void remove_duplicates(std::vector<completion_t> &l)
     l.erase(std::unique(l.begin(), l.end()), l.end());
 }
 
+
+void reader_reset_interrupted()
+{
+    interrupted = 0;
+}
+
 int reader_interrupted()
 {
     int res=interrupted;
     if (res)
+    {
         interrupted=0;
+    }
+    if (res && data && data->interruptible)
+    {
+        reader_exit(1, 0);
+    }
     return res;
 }
 
@@ -2378,6 +2394,11 @@ void reader_set_highlight_function(highlight_function_t func)
 void reader_set_test_function(int (*f)(const wchar_t *))
 {
     data->test_func = f;
+}
+
+void reader_set_interruptible(bool i)
+{
+    data->interruptible = i;
 }
 
 void reader_import_history_if_necessary(void)

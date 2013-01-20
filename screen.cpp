@@ -1,7 +1,7 @@
 /** \file screen.c High level library for handling the terminal screen
 
 The screen library allows the interactive reader to write its
-output to screen efficiently by keeping an inetrnal representation
+output to screen efficiently by keeping an internal representation
 of the current screen contents and trying to find the most
 efficient way for transforming that to the desired screen content.
 */

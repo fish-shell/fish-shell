@@ -156,14 +156,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	end
 
 	#
-	# Set exit message
-	#
-
-	function fish_on_exit --description "Commands to execute when fish exits" --on-process %self
-		echo (_ "Goodbye")
-	end
-
-	#
 	# This event handler makes sure the prompt is repainted when
 	# fish_color_cwd changes value. Like all event handlers, it can't be
 	# autoloaded.

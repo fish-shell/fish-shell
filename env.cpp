@@ -742,9 +742,9 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
     bool has_changed_old = has_changed_exported;
     bool has_changed_new = false;
     int done=0;
-    
+
     int is_universal = 0;
-    
+
     if (val && contains(key, L"PWD", L"HOME"))
     {
         /* Canoncalize our path; if it changes, recurse and try again. */
@@ -755,16 +755,16 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
             return env_set(key, val_canonical.c_str(), var_mode);
         }
     }
-    
+
     if ((var_mode & ENV_USER) && is_read_only(key))
     {
         return ENV_PERM;
     }
-    
+
     if (key == L"umask")
     {
         wchar_t *end;
-        
+
         /*
          Set the new umask
          */
@@ -772,7 +772,7 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
         {
             errno=0;
             long mask = wcstol(val, &end, 8);
-            
+
             if (!errno && (!*end) && (mask <= 0777) && (mask >= 0))
             {
                 umask(mask);
@@ -781,7 +781,7 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
         /* Do not actually create a umask variable, on env_get, it will be calculated dynamically */
         return 0;
     }
-    
+
     /*
      Zero element arrays are internaly not coded as null but as this
      placeholder string
@@ -790,7 +790,7 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
     {
         val = ENV_NULL;
     }
-    
+
     if (var_mode & ENV_UNIVERSAL)
     {
         bool exportv;
@@ -811,12 +811,12 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
         }
         env_universal_set(key, val, exportv);
         is_universal = 1;
-        
+
     }
     else
     {
         // Determine the node
-        
+
         env_node_t *preexisting_node = env_get_node(key);
         bool preexisting_entry_exportv = false;
         if (preexisting_node != NULL)
@@ -830,7 +830,7 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
                 has_changed_new = true;
             }
         }
-        
+
         env_node_t *node = NULL;
         if (var_mode & ENV_GLOBAL)
         {
@@ -843,7 +843,7 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
         else if (preexisting_node != NULL)
         {
             node = preexisting_node;
-            
+
             if ((var_mode & (ENV_EXPORT | ENV_UNEXPORT)) == 0)
             {
                 // use existing entry's exportv
@@ -857,7 +857,7 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
                 set_proc_had_barrier(true);
                 env_universal_barrier();
             }
-            
+
             if (env_universal_get(key))
             {
                 bool exportv;
@@ -873,12 +873,12 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
                 {
                     exportv = env_universal_get_export(key);
                 }
-                
+
                 env_universal_set(key, val, exportv);
                 is_universal = 1;
-                
+
                 done = 1;
-                
+
             }
             else
             {
@@ -895,7 +895,7 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
                 }
             }
         }
-        
+
         if (!done)
         {
             // Set the entry in the node
@@ -918,27 +918,27 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
             {
                 entry.exportv = false;
             }
-            
+
             if (has_changed_old || has_changed_new)
                 mark_changed_exported();
         }
-        
+
     }
-    
+
     if (!is_universal)
     {
         event_t ev = event_t::variable_event(key);
         ev.arguments.push_back(L"VARIABLE");
         ev.arguments.push_back(L"SET");
         ev.arguments.push_back(key);
-        
+
         //  debug( 1, L"env_set: fire events on variable %ls", key );
         event_fire(&ev);
         //  debug( 1, L"env_set: return from event firing" );
     }
-    
+
     react_to_variable_change(key);
-    
+
     return 0;
 }
 

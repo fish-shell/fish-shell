@@ -74,7 +74,7 @@ public:
     const char * const filename_cstr;
     /** file creation flags to send to open */
     int flags;
-    
+
     virtual void print() const;
 
     io_file_t(int f, const wcstring &fname, int fl = 0) :

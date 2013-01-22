@@ -97,7 +97,7 @@ C_STRTOD (wchar_t const *nptr, wchar_t **endptr)
 
   if (!saved_locale.empty())
     {
-      wsetlocale (LC_NUMERIC, L"C");
+      setlocale (LC_NUMERIC, "C");
     }
 
   r = STRTOD (nptr, endptr);
@@ -322,24 +322,21 @@ static void print_direc (const wchar_t *start, size_t length, wchar_t conversion
 	length_modifier = L"L";
 	length_modifier_len = 1;
 	break;
-      case L's':
-	length_modifier = L"l";
-	length_modifier_len = 1;
-	break;
+
       default:
 	length_modifier = start;  /* Any valid pointer will do.  */
 	length_modifier_len = 0;
 	break;
       }
 
-    p = new wchar_t[length + length_modifier_len + 2];
-    q = static_cast<wchar_t*>(mempcpy (p, start, sizeof(wchar_t) * length));
-    q = static_cast<wchar_t*>(mempcpy (q, length_modifier, sizeof(wchar_t) * length_modifier_len));
+    p = static_cast<wchar_t*>(malloc (length + length_modifier_len + 2));
+    q = static_cast<wchar_t*>(mempcpy (p, start, length));
+    q = static_cast<wchar_t*>(mempcpy (q, length_modifier, length_modifier_len));
     *q++ = conversion;
     *q = L'\0';
   }
-
-  fmt = p;
+  
+  append_format(fmt, L"%%l%lc", conversion);
   switch (conversion)
     {
     case L'd':
@@ -396,6 +393,7 @@ static void print_direc (const wchar_t *start, size_t length, wchar_t conversion
     case L'g':
     case L'G':
       {
+debug(0, "Field width %d, Precision %d", field_width, precision);
 
 	long double arg = vstrtold (argument);
 	if (!have_field_width)
@@ -423,6 +421,8 @@ static void print_direc (const wchar_t *start, size_t length, wchar_t conversion
       break;
 
     case L's':
+
+debug(0, "Field width %d, Precision %d", field_width, precision);
       if (!have_field_width)
 	{
 	  if (!have_precision){
@@ -529,18 +529,16 @@ static void print_direc (const wchar_t *start, size_t length, wchar_t conversion
 		   ++argv;
 		   --argc;
 		 }
-		 else{
-		  field_width = 0;
-		}
+	       else
+		 field_width = 0;
 	       have_field_width = true;
 	     }
-	   else {
+	   else
 	     while (iswdigit(*f))
 	       {
 		 ++f;
 		 ++direc_length;
 	       }
-		}
 	   if (*f == L'.')
 	     {
 	       ++f;

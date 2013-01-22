@@ -660,6 +660,9 @@ int reader_reading_interrupted()
     {
         reader_exit(1, 0);
         parser_t::skip_all_blocks();
+        // We handled the interrupt ourselves, our caller doesn't need to 
+        // handle it.
+        return 0;
     }
     return res;
 }

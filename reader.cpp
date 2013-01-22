@@ -324,7 +324,7 @@ public:
     bool screen_reset_needed;
 
     /** Whether the reader should exit on ^C. */
-    bool interruptible;
+    bool exit_on_interrupt;
 
     /** Constructor */
     reader_data_t() :
@@ -343,7 +343,7 @@ public:
         search_mode(0),
         repaint_needed(0),
         screen_reset_needed(0),
-        interruptible(0)
+        exit_on_interrupt(0)
     {
     }
 };
@@ -656,7 +656,7 @@ int reader_interrupted()
 int reader_reading_interrupted()
 {
     int res = reader_interrupted();
-    if (res && data && data->interruptible)
+    if (res && data && data->exit_on_interrupt)
     {
         reader_exit(1, 0);
         parser_t::skip_all_blocks();
@@ -2404,9 +2404,9 @@ void reader_set_test_function(int (*f)(const wchar_t *))
     data->test_func = f;
 }
 
-void reader_set_interruptible(bool i)
+void reader_set_exit_on_interrupt(bool i)
 {
-    data->interruptible = i;
+    data->exit_on_interrupt = i;
 }
 
 void reader_import_history_if_necessary(void)

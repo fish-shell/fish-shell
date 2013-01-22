@@ -197,7 +197,7 @@ void reader_set_right_prompt(const wcstring &prompt);
 void reader_set_allow_autosuggesting(bool flag);
 
 /** Sets whether the reader should exit on ^C. */
-void reader_set_interruptible(bool flag);
+void reader_set_exit_on_interrupt(bool flag);
 
 /**
    Returns true if the shell is exiting, 0 otherwise.

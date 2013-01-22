@@ -2399,7 +2399,7 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
         }
         /* No autosuggestions in builtin_read */
         reader_set_allow_autosuggesting(false);
-        reader_set_interruptible(true);
+        reader_set_exit_on_interrupt(true);
 
         reader_set_buffer(commandline, wcslen(commandline));
         proc_push_interactive(1);

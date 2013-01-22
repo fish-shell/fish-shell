@@ -390,6 +390,7 @@ static void builtin_missing_argument(parser_t &parser, const wchar_t *cmd, const
 #include "builtin_complete.cpp"
 #include "builtin_ulimit.cpp"
 #include "builtin_jobs.cpp"
+#include "builtin_printf.cpp"
 
 /* builtin_test lives in builtin_test.cpp */
 int builtin_test(parser_t &parser, wchar_t **argv);
@@ -4024,6 +4025,7 @@ static const builtin_data_t builtin_datas[]=
     { 		L"jobs",  &builtin_jobs, N_(L"Print currently running jobs")   },
     { 		L"not",  &builtin_generic, N_(L"Negate exit status of job")  },
     { 		L"or",  &builtin_generic, N_(L"Execute command if previous command failed")  },
+    { 		L"printf",  &builtin_printf, N_(L"Prints formatted text")  },
     { 		L"pwd",  &builtin_pwd, N_(L"Print the working directory")  },
     { 		L"random",  &builtin_random, N_(L"Generate random number")  },
     { 		L"read",  &builtin_read, N_(L"Read a line of input into variables")   },

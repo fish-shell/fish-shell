@@ -106,7 +106,8 @@ parser_keywords.o wutil.o tokenizer.o
 #
 
 BUILTIN_FILES := builtin_set.cpp builtin_commandline.cpp	\
-	builtin_ulimit.cpp builtin_complete.cpp builtin_jobs.cpp
+	builtin_ulimit.cpp builtin_complete.cpp builtin_jobs.cpp	\
+	builtin_printf.cpp
 
 
 #
@@ -871,7 +872,7 @@ builtin.o: wgetopt.h sanity.h tokenizer.h wildcard.h expand.h input_common.h
 builtin.o: input.h intern.h exec.h highlight.h screen.h color.h parse_util.h
 builtin.o: autoload.h lru.h parser_keywords.h path.h history.h
 builtin.o: builtin_set.cpp builtin_commandline.cpp builtin_complete.cpp
-builtin.o: builtin_ulimit.cpp builtin_jobs.cpp
+builtin.o: builtin_ulimit.cpp builtin_jobs.cpp builtin_printf.cpp
 builtin_commandline.o: config.h signal.h fallback.h util.h wutil.h common.h
 builtin_commandline.o: builtin.h io.h wgetopt.h reader.h complete.h proc.h
 builtin_commandline.o: parser.h event.h function.h tokenizer.h input_common.h
@@ -888,6 +889,7 @@ builtin_test.o: config.h common.h util.h builtin.h io.h wutil.h proc.h
 builtin_test.o: signal.h
 builtin_ulimit.o: config.h fallback.h signal.h util.h builtin.h io.h common.h
 builtin_ulimit.o: wgetopt.h
+builtin_printf.o: wgetopt.h
 color.o: color.h config.h common.h util.h fallback.h signal.h
 common.o: config.h fallback.h signal.h util.h wutil.h common.h expand.h
 common.o: proc.h io.h wildcard.h parser.h event.h function.h complete.h

@@ -657,11 +657,17 @@ void reader_reset_interrupted()
 
 int reader_interrupted()
 {
-    int res=interrupted;
+    int res = interrupted;
     if (res)
     {
         interrupted=0;
     }
+    return res;
+}
+
+int reader_reading_interrupted()
+{
+    int res = reader_interrupted();
     if (res && data && data->interruptible)
     {
         reader_exit(1, 0);

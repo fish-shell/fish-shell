@@ -181,7 +181,10 @@ commence.
 #define SEARCH_FORWARD 1
 
 /* Any time the contents of a buffer changes, we update the generation count. This allows for our background highlighting thread to notice it and skip doing work that it would otherwise have to do. */
-static unsigned int s_generation_count;
+static volatile unsigned int s_generation_count;
+
+/* This threadlocal generation count is set when an autosuggestion background thread starts up, so it can easily check if the work it is doing is no longer useful. */
+static __thread unsigned int thread_generation_count;
 
 /* A color is an int */
 typedef int color_t;
@@ -665,6 +668,12 @@ int reader_reading_interrupted()
         return 0;
     }
     return res;
+}
+
+bool reader_cancel_thread()
+{
+    ASSERT_IS_BACKGROUND_THREAD();
+    return s_generation_count != thread_generation_count;
 }
 
 void reader_write_title()
@@ -1224,6 +1233,8 @@ struct autosuggestion_context_t
         {
             return 0;
         }
+
+        thread_generation_count = generation_count;
 
         /* Let's make sure we aren't using the empty string */
         if (search_string.empty())

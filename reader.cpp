@@ -581,22 +581,10 @@ static void reader_kill(size_t begin_idx, size_t length, int mode, int newv)
 }
 
 
-/* 
-   Called from a signal handler, so make sure to check \c data exists.
-   This is in fact racey as there is no guarantee that \c *data's members are
-   written to memory before \c data is. But signal handling is currently racey 
-   anyway, so this should be fixed together with the rest of the signal 
-   handling infrastructure. 
-*/
-static bool get_interruptible()
-{
-    return data ? data->interruptible : false;
-}
-
 /* This is called from a signal handler! */
 void reader_handle_int(int sig)
 {
-    if (!is_interactive_read || get_interruptible())
+    if (!is_interactive_read)
     {
         parser_t::skip_all_blocks();
     }
@@ -671,6 +659,7 @@ int reader_reading_interrupted()
     if (res && data && data->interruptible)
     {
         reader_exit(1, 0);
+        parser_t::skip_all_blocks();
     }
     return res;
 }

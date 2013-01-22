@@ -133,6 +133,14 @@ void reader_reset_interrupted();
 int reader_reading_interrupted();
 
 /**
+   Returns true if the current reader generation count does not equal the 
+   generation count the current thread was started with. 
+   Note: currently only valid for autocompletion threads! Other threads don't
+   set the threadlocal generation count when they start up. 
+*/
+bool reader_cancel_thread();
+
+/**
    Read one line of input. Before calling this function, reader_push()
    must have been called in order to set up a valid reader
    environment.

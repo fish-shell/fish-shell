@@ -112,6 +112,12 @@ void reader_set_buffer(const wcstring &b, size_t p);
 size_t reader_get_cursor_pos();
 
 /**
+   Return the value of the interrupted flag, which is set by the sigint
+   handler, and clear it if it was set.
+*/
+int reader_interrupted();
+
+/**
    Clear the interrupted flag unconditionally without handling anything. The 
    flag could have been set e.g. when an interrupt arrived just as we were 
    ending an earlier \c reader_readline invocation but before the 
@@ -124,7 +130,7 @@ void reader_reset_interrupted();
    handler, and clear it if it was set. If the current reader is interruptible,
    call \c reader_exit(). 
 */
-int reader_interrupted();
+int reader_reading_interrupted();
 
 /**
    Read one line of input. Before calling this function, reader_push()

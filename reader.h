@@ -135,8 +135,10 @@ int reader_reading_interrupted();
 /**
    Returns true if the current reader generation count does not equal the 
    generation count the current thread was started with. 
-   Note: currently only valid for autocompletion threads! Other threads don't
+   Note 1: currently only valid for autocompletion threads! Other threads don't
    set the threadlocal generation count when they start up. 
+   Note 2: This function uses conditional compilation for thread-local storage. 
+   If the compiler doesn't support that this function always returns `false`.
 */
 bool reader_cancel_thread();
 

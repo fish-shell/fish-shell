@@ -184,7 +184,9 @@ commence.
 static volatile unsigned int s_generation_count;
 
 /* This threadlocal generation count is set when an autosuggestion background thread starts up, so it can easily check if the work it is doing is no longer useful. */
-static __thread unsigned int thread_generation_count;
+#ifdef TLS
+static TLS unsigned int thread_generation_count;
+#endif
 
 /* A color is an int */
 typedef int color_t;
@@ -672,8 +674,12 @@ int reader_reading_interrupted()
 
 bool reader_cancel_thread()
 {
+#ifdef TLS
     ASSERT_IS_BACKGROUND_THREAD();
     return s_generation_count != thread_generation_count;
+#else
+    return 0;
+#endif
 }
 
 void reader_write_title()
@@ -1234,7 +1240,9 @@ struct autosuggestion_context_t
             return 0;
         }
 
+#ifdef TLS
         thread_generation_count = generation_count;
+#endif
 
         /* Let's make sure we aren't using the empty string */
         if (search_string.empty())

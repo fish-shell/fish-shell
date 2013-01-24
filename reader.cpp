@@ -674,7 +674,7 @@ int reader_reading_interrupted()
 bool reader_cancel_thread()
 {
     ASSERT_IS_BACKGROUND_THREAD();
-    return ((size_t) s_generation_count) != (size_t) pthread_getspecific(generation_count_key);
+    return (void*)(uintptr_t) s_generation_count != pthread_getspecific(generation_count_key);
 }
 
 void reader_write_title()
@@ -795,9 +795,6 @@ static void exec_prompt()
 
 void reader_init()
 {
-    // We store unsigned ints cast to size_t's cast to void* in pthreads tls storage
-    assert(sizeof(size_t) >= sizeof(unsigned int));
-    assert(sizeof(void*) >= sizeof(size_t));
     VOMIT_ON_FAILURE(pthread_key_create(&generation_count_key, NULL));
 
     tcgetattr(0,&shell_modes);        /* get the current terminal modes */
@@ -1240,9 +1237,7 @@ struct autosuggestion_context_t
             return 0;
         }
 
-        // The manpage doesn't list any errors pthread_setspecific can return, 
-        // so I'm assuming it can not fail. 
-        pthread_setspecific(generation_count_key, (void*)(size_t) generation_count);
+        VOMIT_ON_FAILURE(pthread_setspecific(generation_count_key, (void*)(uintptr_t) generation_count));
 
         /* Let's make sure we aren't using the empty string */
         if (search_string.empty())

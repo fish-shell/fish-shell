@@ -135,7 +135,7 @@ public:
     /** Returns whether the color is bold */
     bool is_bold() const
     {
-        return flags & flag_bold;
+        return !! (flags & flag_bold);
     }
 
     /** Set whether the color is bold */

@@ -1165,7 +1165,7 @@ void exec(parser_t &parser, job_t *j)
                     p->completed=1;
                     if (p->next == 0)
                     {
-                        debug(3, L"Set status of %ls to %d using short circut", j->command_wcstr(), p->status);
+                        debug(3, L"Set status of %ls to %d using short circuit", j->command_wcstr(), p->status);
 
                         int status = p->status;
                         proc_set_last_status(job_get_flag(j, JOB_NEGATE)?(!status):status);

@@ -1655,7 +1655,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
                 /*
                  If process expansion matches, we are not
                  interested in other completions, so we
-                 short-circut and return
+                 short-circuit and return
                  */
                 if (!(flags & EXPAND_SKIP_PROCESS))
                     expand_pid(next, flags, output);

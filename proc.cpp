@@ -1188,7 +1188,7 @@ void job_continue(job_t *j, int cont)
             {
                 /*
                    Mark process status only if we are in the foreground
-                   and the last process in a pipe, and it is not a short circuted builtin
+                   and the last process in a pipe, and it is not a short circuited builtin
                 */
                 if (p->pid)
                 {

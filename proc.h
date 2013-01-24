@@ -252,7 +252,7 @@ enum
     /** This flag is set to one on wildcard expansion errors. It means that the current command should not be executed */
     JOB_WILDCARD_ERROR = 1 << 6,
 
-    /** Skip executing this job. This flag is set by the short-circut builtins, i.e. and and or  */
+    /** Skip executing this job. This flag is set by the short-circuit builtins, i.e. and and or  */
     JOB_SKIP = 1 << 7,
 
     /** Whether the job is under job control  */

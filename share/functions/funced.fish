@@ -1,32 +1,32 @@
 function funced --description 'Edit function definition'
-	set -l editor $EDITOR
+    set -l editor $EDITOR
     set -l interactive
     set -l funcname
     while set -q argv[1]
         switch $argv[1]
-			case -h --help
-				__fish_print_help funced
-				return 0
+            case -h --help
+                __fish_print_help funced
+                return 0
 
             case -e --editor
-            set editor $argv[2]
-            set -e argv[2]
+                set editor $argv[2]
+                set -e argv[2]
 
             case -i --interactive
-            set interactive 1
+                set interactive 1
 
             case --
-            set funcname $funcname $argv[2]
-            set -e argv[2]
+                set funcname $funcname $argv[2]
+                set -e argv[2]
 
-			case '-*'
-            set_color red
-            printf (_ "%s: Unknown option %s\n") funced $argv[1]
-            set_color normal
-            return 1
+            case '-*'
+                set_color red
+                printf (_ "%s: Unknown option %s\n") funced $argv[1]
+                set_color normal
+                return 1
 
             case '*' '.*'
-            set funcname $funcname $argv[1]
+                set funcname $funcname $argv[1]
         end
         set -e argv[1]
     end
@@ -47,7 +47,7 @@ function funced --description 'Edit function definition'
         set init function $funcname\n\nend
     end
 
-    if not type -f "$editor" >/dev/null
+    if not type -f "$editor[1]" >/dev/null
         set interactive 1
     end
 

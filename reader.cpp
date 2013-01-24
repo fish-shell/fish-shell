@@ -505,7 +505,7 @@ wcstring combine_command_and_autosuggestion(const wcstring &cmdline, const wcstr
 static void reader_repaint()
 {
     // Update the indentation
-    parser_t::principal_parser().test(data->command_line.c_str(), &data->indents[0], 0, 0);
+    parser_t::principal_parser().test(data->command_line.c_str(), &data->indents[0]);
 
     // Combine the command and autosuggestion into one string
     wcstring full_line = combine_command_and_autosuggestion(data->command_line, data->autosuggestion);
@@ -2263,7 +2263,7 @@ void reader_run_command(parser_t &parser, const wchar_t *cmd)
 
 int reader_shell_test(const wchar_t *b)
 {
-    int res = parser_t::principal_parser().test(b, 0, 0, 0);
+    int res = parser_t::principal_parser().test(b);
 
     if (res & PARSER_TEST_ERROR)
     {
@@ -2283,7 +2283,7 @@ int reader_shell_test(const wchar_t *b)
                 0);
 
 
-        parser_t::principal_parser().test(b, 0, &sb, L"fish");
+        parser_t::principal_parser().test(b, NULL, &sb, L"fish");
         fwprintf(stderr, L"%ls", sb.c_str());
     }
     return res;

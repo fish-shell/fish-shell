@@ -76,7 +76,7 @@ enum
     COMPLETE_NO_SPACE = 1 << 0,
 
     /**
-       This compeltion is case insensitive.
+       This completion is case insensitive.
 
        Warning: The contents of the completion_t structure is actually
        different if this flag is set! Specifically, the completion string
@@ -85,7 +85,7 @@ enum
     COMPLETE_NO_CASE = 1 << 1,
 
     /**
-       This compeltion is the whole argument, not just the remainder. This
+       This completion is the whole argument, not just the remainder. This
        flag must never be set on completions returned from the complete()
        function. It is strictly for internal use in the completion code.
     */
@@ -127,7 +127,7 @@ public:
        Flags determining the completion behaviour.
 
        Determines whether a space should be inserted after this
-       compeltion if it is the only possible completion using the
+       completion if it is the only possible completion using the
        COMPLETE_NO_SPACE flag.
 
        The COMPLETE_NO_CASE can be used to signal that this completion

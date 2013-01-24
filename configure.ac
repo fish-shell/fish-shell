@@ -40,38 +40,6 @@ AC_SUBST(XSEL_BIN)
 AC_SUBST(XSEL_MAN_PATH)
 
 
-# Copied from http://git.savannah.gnu.org/gitweb/?p=autoconf-archive.git;a=blob_plain;f=m4/ax_tls.m4, 
-# This definition is licenced under GPLv3+. 
-AC_DEFUN([AX_TLS], [
-  AC_MSG_CHECKING(for thread local storage (TLS) class)
-  AC_CACHE_VAL(ac_cv_tls, [
-    ax_tls_keywords="__thread __declspec(thread) none"
-    for ax_tls_keyword in $ax_tls_keywords; do
-       AS_CASE([$ax_tls_keyword],
-          [none], [ac_cv_tls=none ; break],
-          [AC_TRY_COMPILE(
-              [#include <stdlib.h>
-               static void
-               foo(void) {
-               static ] $ax_tls_keyword [ int bar;
-               exit(1);
-               }],
-               [],
-               [ac_cv_tls=$ax_tls_keyword ; break],
-               ac_cv_tls=none
-           )])
-    done
-  ])
-  AC_MSG_RESULT($ac_cv_tls)
-
-  AS_IF([test "$ac_cv_tls" != "none"],
-    AC_DEFINE_UNQUOTED([TLS], $ac_cv_tls, [If the compiler supports a TLS storage class define it to that here])
-      m4_ifnblank([$1], [$1]),
-    m4_ifnblank([$2], [$2])
-  )
-])
-
-AX_TLS
 
 #
 # If needed, run autoconf to regenerate the configure file

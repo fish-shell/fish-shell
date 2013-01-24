@@ -463,52 +463,52 @@ static void test_parser()
     parser_t parser(PARSER_TYPE_GENERAL, true);
 
     say(L"Testing null input to parser");
-    if (!parser.test(0, 0, 0, 0))
+    if (!parser.test(NULL))
     {
         err(L"Null input to parser.test undetected");
     }
 
     say(L"Testing block nesting");
-    if (!parser.test(L"if; end", 0, 0, 0))
+    if (!parser.test(L"if; end"))
     {
         err(L"Incomplete if statement undetected");
     }
-    if (!parser.test(L"if test; echo", 0, 0, 0))
+    if (!parser.test(L"if test; echo"))
     {
         err(L"Missing end undetected");
     }
-    if (!parser.test(L"if test; end; end", 0, 0, 0))
+    if (!parser.test(L"if test; end; end"))
     {
         err(L"Unbalanced end undetected");
     }
 
     say(L"Testing detection of invalid use of builtin commands");
-    if (!parser.test(L"case foo", 0, 0, 0))
+    if (!parser.test(L"case foo"))
     {
         err(L"'case' command outside of block context undetected");
     }
-    if (!parser.test(L"switch ggg; if true; case foo;end;end", 0, 0, 0))
+    if (!parser.test(L"switch ggg; if true; case foo;end;end"))
     {
         err(L"'case' command outside of switch block context undetected");
     }
-    if (!parser.test(L"else", 0, 0, 0))
+    if (!parser.test(L"else"))
     {
         err(L"'else' command outside of conditional block context undetected");
     }
-    if (!parser.test(L"else if", 0, 0, 0))
+    if (!parser.test(L"else if"))
     {
         err(L"'else if' command outside of conditional block context undetected");
     }
-    if (!parser.test(L"if false; else if; end", 0, 0, 0))
+    if (!parser.test(L"if false; else if; end"))
     {
         err(L"'else if' missing command undetected");
     }
 
-    if (!parser.test(L"break", 0, 0, 0))
+    if (!parser.test(L"break"))
     {
         err(L"'break' command outside of loop block context undetected");
     }
-    if (!parser.test(L"exec ls|less", 0, 0, 0) || !parser.test(L"echo|return", 0, 0, 0))
+    if (!parser.test(L"exec ls|less") || !parser.test(L"echo|return"))
     {
         err(L"Invalid pipe command undetected");
     }

@@ -497,14 +497,14 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
     {
         if (condition && wcslen(condition))
         {
-            if (parser.test(condition, 0, 0, 0))
+            if (parser.test(condition))
             {
                 append_format(stderr_buffer,
                               L"%ls: Condition '%ls' contained a syntax error\n",
                               argv[0],
                               condition);
 
-                parser.test(condition, 0, &stderr_buffer, argv[0]);
+                parser.test(condition, NULL, &stderr_buffer, argv[0]);
 
                 res = true;
             }

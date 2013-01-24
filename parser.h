@@ -484,7 +484,7 @@ public:
        \param out if non-null, any errors in the command will be filled out into this buffer
        \param prefix the prefix string to prepend to each error message written to the \c out buffer
     */
-    int test(const wchar_t * buff, int *block_level, wcstring *out, const wchar_t *prefix);
+    int test(const wchar_t * buff, int *block_level = NULL, wcstring *out = NULL, const wchar_t *prefix = NULL);
 
     /**
        Test if the specified string can be parsed as an argument list,

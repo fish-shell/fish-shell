@@ -45,6 +45,7 @@ commence.
 #include <unistd.h>
 #include <wctype.h>
 #include <stack>
+#include <pthread.h>
 
 #if HAVE_NCURSES_H
 #include <ncurses.h>
@@ -183,10 +184,8 @@ commence.
 /* Any time the contents of a buffer changes, we update the generation count. This allows for our background highlighting thread to notice it and skip doing work that it would otherwise have to do. */
 static volatile unsigned int s_generation_count;
 
-/* This threadlocal generation count is set when an autosuggestion background thread starts up, so it can easily check if the work it is doing is no longer useful. */
-#ifdef TLS
-static TLS unsigned int thread_generation_count;
-#endif
+/* This pthreads generation count is set when an autosuggestion background thread starts up, so it can easily check if the work it is doing is no longer useful. */
+static pthread_key_t generation_count_key;
 
 /* A color is an int */
 typedef int color_t;
@@ -674,12 +673,8 @@ int reader_reading_interrupted()
 
 bool reader_cancel_thread()
 {
-#ifdef TLS
     ASSERT_IS_BACKGROUND_THREAD();
-    return s_generation_count != thread_generation_count;
-#else
-    return 0;
-#endif
+    return ((size_t) s_generation_count) != (size_t) pthread_getspecific(generation_count_key);
 }
 
 void reader_write_title()
@@ -800,6 +795,10 @@ static void exec_prompt()
 
 void reader_init()
 {
+    // We store unsigned ints cast to size_t's cast to void* in pthreads tls storage
+    assert(sizeof(size_t) >= sizeof(unsigned int));
+    assert(sizeof(void*) >= sizeof(size_t));
+    VOMIT_ON_FAILURE(pthread_key_create(&generation_count_key, NULL));
 
     tcgetattr(0,&shell_modes);        /* get the current terminal modes */
     memcpy(&saved_modes,
@@ -826,6 +825,7 @@ void reader_init()
 void reader_destroy()
 {
     tcsetattr(0, TCSANOW, &saved_modes);
+    pthread_key_delete(generation_count_key);
 }
 
 
@@ -1240,9 +1240,9 @@ struct autosuggestion_context_t
             return 0;
         }
 
-#ifdef TLS
-        thread_generation_count = generation_count;
-#endif
+        // The manpage doesn't list any errors pthread_setspecific can return, 
+        // so I'm assuming it can not fail. 
+        pthread_setspecific(generation_count_key, (void*)(size_t) generation_count);
 
         /* Let's make sure we aren't using the empty string */
         if (search_string.empty())

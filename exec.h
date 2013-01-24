@@ -31,7 +31,7 @@
    output of the builtin. This is surprisingly cheap on my computer,
    probably because of the marvels of copy on write forking.
 
-   This rule is short circuted in the case where a builtin does not
+   This rule is short circuited in the case where a builtin does not
    output to a pipe and does in fact not output anything. The speed
    improvement from this optimization is not noticable on a normal
    computer/OS in regular use, but the promiscous amounts of forking

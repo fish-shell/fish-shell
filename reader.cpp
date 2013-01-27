@@ -723,29 +723,25 @@ static void exec_prompt()
     {
         proc_push_interactive(0);
 
-        if (data->left_prompt.size())
+        if (! data->left_prompt.empty())
         {
             wcstring_list_t prompt_list;
-            if (exec_subshell(data->left_prompt, prompt_list) == 0)
+            exec_subshell(data->left_prompt, prompt_list);
+            for (size_t i = 0; i < prompt_list.size(); i++)
             {
-                for (size_t i = 0; i < prompt_list.size(); i++)
-                {
-                    if (i > 0) data->left_prompt_buff += L'\n';
-                    data->left_prompt_buff += prompt_list.at(i);
-                }
+                if (i > 0) data->left_prompt_buff += L'\n';
+                data->left_prompt_buff += prompt_list.at(i);
             }
         }
 
-        if (data->right_prompt.size())
+        if (! data->right_prompt.empty())
         {
             wcstring_list_t prompt_list;
-            if (exec_subshell(data->right_prompt, prompt_list) == 0)
+            exec_subshell(data->right_prompt, prompt_list);
+            for (size_t i = 0; i < prompt_list.size(); i++)
             {
-                for (size_t i = 0; i < prompt_list.size(); i++)
-                {
-                    // Right prompt does not support multiple lines, so just concatenate all of them
-                    data->right_prompt_buff += prompt_list.at(i);
-                }
+                // Right prompt does not support multiple lines, so just concatenate all of them
+                data->right_prompt_buff += prompt_list.at(i);
             }
         }
 

@@ -48,12 +48,19 @@ function funced --description 'Edit function definition'
     end
 
     # Break editor up to get its first command (i.e. discard flags)
-    set -l editor_cmd
-    eval set editor_cmd $editor
-    if not type -f "$editor_cmd[1]" >/dev/null
-    	_ "funced: The value for \$EDITOR '$editor' could not be used because the command '$editor_cmd[1]' could not be found
-"
-        set interactive 1
+    if test -n "$editor"
+        set -l editor_cmd
+        eval set editor_cmd $editor
+        if not type -f "$editor_cmd[1]" >/dev/null
+            _ "funced: The value for \$EDITOR '$editor' could not be used because the command '$editor_cmd[1]' could not be found
+    "
+            set editor fish
+        end
+    end
+    
+    # If no editor is specified, use fish
+    if test -z "$editor"
+        set editor fish
     end
 
     if begin; set -q interactive[1]; or test "$editor" = fish; end

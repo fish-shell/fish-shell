@@ -138,7 +138,15 @@ def builtcommand(options, description):
         truncation_suffix = u'… [See Man Page]'
     
     # Try to include as many whole sentences as will fit
-    sentences = description.split('.')
+    # Clean up some probably bogus escapes in the process
+    clean_desc = description.replace("\\'", "'").replace("\\.", ".")
+    sentences = clean_desc.split('.')
+    
+    # Clean up "sentences" that are just whitespace
+    # But don't let it be empty
+    sentences = [x for x in sentences if x.strip()]
+    if not sentences: sentences = ['']
+    
     truncated_description = sentences[0] + '.'
     for line in sentences[1:]:
         if not line: continue

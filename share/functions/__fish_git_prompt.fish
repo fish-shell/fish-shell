@@ -157,10 +157,8 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 					set upstream (/bin/sh -c 'echo "${1%/$2}"' -- $pattern $trunk)/$upstream
 				end
 			end
-		else
-			if test $upstream = svn+git
-				set upstream '@{upstream}'
-			end
+                else if test $upstream = svn+git
+                        set upstream '@{upstream}'
 		end
 	end
 
@@ -225,51 +223,46 @@ function __fish_git_prompt --description "Prompt function for Git"
 	if test -f $git_dir/rebase-merge/interactive
 		set r "|REBASE-i"
 		set b (cat $git_dir/rebase-merge/head-name)
-	else; if test -d $git_dir/rebase-merge
-			set r "|REBASE-m"
-			set b (cat $git_dir/rebase-merge/head-name)
-		else
-			if test -d $git_dir/rebase-apply
-				if test -f $git_dir/rebase-apply/rebasing
-					set r "|REBASE"
-				else; if test -f $git_dir/rebase-apply/applying
-						set r "|AM"
-					else
-						set r "|AM/REBASE"
-					end
-				end
-			else; if test -f $git_dir/MERGE_HEAD
-					set r "|MERGING"
-				else; if test -f $git_dir/CHERRY_PICK_HEAD
-						set r "|CHERRY-PICKING"
-					else; if test -f $git_dir/BISECT_LOG
-							set r "|BISECTING"
-						end
-					end
-				end
+        else if test -d $git_dir/rebase-merge
+                set r "|REBASE-m"
+                set b (cat $git_dir/rebase-merge/head-name)
+        else
+                if test -d $git_dir/rebase-apply
+                        if test -f $git_dir/rebase-apply/rebasing
+                                set r "|REBASE"
+                        else if test -f $git_dir/rebase-apply/applying
+                                set r "|AM"
+                        else
+                                set r "|AM/REBASE"
 			end
+                else if test -f $git_dir/MERGE_HEAD
+                        set r "|MERGING"
+                else if test -f $git_dir/CHERRY_PICK_HEAD
+                        set r "|CHERRY-PICKING"
+                else if test -f $git_dir/BISECT_LOG
+                        set r "|BISECTING"
+                end
 
-			set -l os
-			set b (git symbolic-ref HEAD ^/dev/null; set os $status)
+                set -l os
+                set b (git symbolic-ref HEAD ^/dev/null; set os $status)
+                if test $os -ne 0
+                        set b (switch "$__fish_git_prompt_describe_style"
+                                        case contains
+                                                git describe --contains HEAD
+                                        case branch
+                                                git describe --contains --all HEAD
+                                        case describe
+                                                git describe HEAD
+                                        case default '*'
+                                                git describe --tags --exact-match HEAD
+                                        end ^/dev/null; set os $status)
 			if test $os -ne 0
-				set b (switch "$__fish_git_prompt_describe_style"
-						case contains
-							git describe --contains HEAD
-						case branch
-							git describe --contains --all HEAD
-						case describe
-							git describe HEAD
-						case default '*'
-							git describe --tags --exact-match HEAD
-						end ^/dev/null; set os $status)
+                                set b (cut -c1-7 $git_dir/HEAD ^/dev/null; set os $status)
 				if test $os -ne 0
-					set b (cut -c1-7 $git_dir/HEAD ^/dev/null; set os $status)
-					if test $os -ne 0
-						set b unknown
-					end
+                                        set b unknown
 				end
-				set b "($b)"
 			end
+                        set b "($b)"
 		end
 	end
 
@@ -288,32 +281,31 @@ function __fish_git_prompt --description "Prompt function for Git"
 		else
 			set b "GIT_DIR!"
 		end
-	else; if test "true" = (git rev-parse --is-inside-work-tree ^/dev/null)
-			if test -n "$__fish_git_prompt_showdirtystate"
-				set -l config (git config --bool bash.showDirtyState)
-				if test "$config" != "false"
-					git diff --no-ext-diff --quiet --exit-code; or set w $___fish_git_prompt_char_dirtystate
-					if git rev-parse --quiet --verify HEAD >/dev/null
-						git diff-index --cached --quiet HEAD --; or set i $___fish_git_prompt_char_stagedstate
-					else
-						set i $___fish_git_prompt_char_invalidstate
-					end
+        else if test "true" = (git rev-parse --is-inside-work-tree ^/dev/null)
+                if test -n "$__fish_git_prompt_showdirtystate"
+                        set -l config (git config --bool bash.showDirtyState)
+                        if test "$config" != "false"
+                                git diff --no-ext-diff --quiet --exit-code; or set w $___fish_git_prompt_char_dirtystate
+                                if git rev-parse --quiet --verify HEAD >/dev/null
+                                        git diff-index --cached --quiet HEAD --; or set i $___fish_git_prompt_char_stagedstate
+                                else
+                                        set i $___fish_git_prompt_char_invalidstate
 				end
 			end
-			if test -n "$__fish_git_prompt_showstashstate"
-				git rev-parse --verify refs/stash >/dev/null ^&1; and set s $___fish_git_prompt_char_stashstate
-			end
+                end
+                if test -n "$__fish_git_prompt_showstashstate"
+                        git rev-parse --verify refs/stash >/dev/null ^&1; and set s $___fish_git_prompt_char_stashstate
+                end
 
-			if test -n "$__fish_git_prompt_showuntrackedfiles"
-				set -l files (git ls-files --others --exclude-standard)
-				if test -n "$files"
-					set u $___fish_git_prompt_char_untrackedfiles
-				end
+                if test -n "$__fish_git_prompt_showuntrackedfiles"
+                        set -l files (git ls-files --others --exclude-standard)
+                        if test -n "$files"
+                                set u $___fish_git_prompt_char_untrackedfiles
 			end
+                end
 
-			if test -n "$__fish_git_prompt_showupstream"
-				set p (__fish_git_prompt_show_upstream)
-			end
+                if test -n "$__fish_git_prompt_showupstream"
+                        set p (__fish_git_prompt_show_upstream)
 		end
 	end
 

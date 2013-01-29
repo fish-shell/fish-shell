@@ -124,7 +124,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 		set -l svn_upstream (git log --first-parent -1 --grep="^git-svn-id: \($svn_url_pattern\)" ^/dev/null)
 		if test (count $svn_upstream) -ne 0
 			echo $svn_upstream[-1] | read -l _ svn_upstream _
-			set svn_upstream (echo $svn_upstream | sed 's/@.*//')
+                        set svn_upstream (/bin/sh -c 'echo "${1%@*}"' -- $svn_upstream)
 			set -l cur_prefix
 			for i in (seq (count $svn_remote))
 				set -l remote $svn_remote[$i]
@@ -145,11 +145,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 					set upstream git-svn
 				end
 			else
-				if test (echo $svn_upstream | cut -c 1) = /
-					set upstream (echo $svn_upstream | cut -c 2-)
-				else
-					set upstream $svn_upstream
-				end
+                                set upstream (/bin/sh -c 'val=${1#/branches}; echo "${val#/}"' -- $svn_upstream)
 				set -l fetch_val (git config "$cur_prefix".fetch)
 				if test -n "$fetch_val"
 					set -l IFS :

@@ -1048,6 +1048,13 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
     wcstring msg;
     wcstring prefix_esc;
     char *foo;
+    
+    shared_ptr<io_buffer_t> in(io_buffer_t::create(true));
+    shared_ptr<io_buffer_t> out(io_buffer_t::create(false));
+    
+    // The above may fail e.g. if we have too many open fds
+    if (in.get() == NULL || out.get() == NULL)
+        return;
 
     wchar_t *escaped_separator;
     int has_case_sensitive=0;
@@ -1066,7 +1073,6 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
                                  is_quoted?L"-q":L"",
                                  prefix_esc.c_str());
 
-    shared_ptr<io_buffer_t> in(io_buffer_t::create(true));
     in->fd = 3;
 
     escaped_separator = escape(COMPLETE_SEP_STR, 1);
@@ -1133,11 +1139,9 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
     in->out_buffer_append(foo, strlen(foo));
     free(foo);
 
-    term_donate();
-
-    shared_ptr<io_buffer_t> out(io_buffer_t::create(false));
     out->fd = 4;
-
+    
+    term_donate();
     parser_t &parser = parser_t::principal_parser();
     io_chain_t io_chain;
     io_chain.push_back(out);

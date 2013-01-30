@@ -80,7 +80,7 @@ static int is_dead()
 
 static int try_get_socket_once(void)
 {
-    int s, len;
+    int s;
 
     wchar_t *wdir;
     wchar_t *wuname;
@@ -128,7 +128,6 @@ static int try_get_socket_once(void)
     struct sockaddr_un local = {};
     local.sun_family = AF_UNIX;
     strncpy(local.sun_path, name.c_str(), (sizeof local.sun_path) - 1);
-    len = sizeof(local);
 
     if (connect(s, (struct sockaddr *)&local, sizeof local) == -1)
     {

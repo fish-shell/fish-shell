@@ -141,8 +141,8 @@ private:
 public:
 
     process_t();
-
     ~process_t();
+
 
     /**
       Type of process. Can be one of \c EXTERNAL, \c
@@ -453,12 +453,12 @@ extern int no_exec;
 /**
    Add the specified flag to the bitset of flags for the specified job
  */
-void job_set_flag(job_t *j, int flag, int set);
+void job_set_flag(job_t *j, unsigned int flag, int set);
 
 /**
    Returns one if the specified flag is set in the specified job, 0 otherwise.
  */
-int job_get_flag(const job_t *j, int flag);
+int job_get_flag(const job_t *j, unsigned int flag);
 
 /**
    Sets the status of the last process to exit
@@ -515,7 +515,7 @@ int job_is_completed(const job_t *j);
   \param j The job
   \param cont Whether the function should wait for the job to complete before returning
 */
-void job_continue(job_t *j, int cont);
+void job_continue(job_t *j, bool cont);
 
 /**
    Notify the user about stopped or terminated jobs. Delete terminated

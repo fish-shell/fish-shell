@@ -117,6 +117,15 @@ job_iterator_t::job_iterator_t() : job_list(&parser_t::principal_parser().job_li
     this->reset();
 }
 
+void print_jobs(void)
+{
+    job_iterator_t jobs;
+    job_t *j;
+    while ((j = jobs.next()))
+    {
+        printf("%p -> %ls -> (foreground %d, complete %d, stopped %d, constructed %d)\n", j, j->command_wcstr(), job_get_flag(j, JOB_FOREGROUND), job_is_completed(j), job_is_stopped(j), job_get_flag(j, JOB_CONSTRUCTED));
+    }
+}
 
 int is_interactive_session=0;
 int is_subshell=0;
@@ -305,17 +314,21 @@ int job_is_completed(const job_t *j)
 
 }
 
-void job_set_flag(job_t *j, int flag, int set)
+void job_set_flag(job_t *j, unsigned int flag, int set)
 {
     if (set)
+    {
         j->flags |= flag;
+    }
     else
-        j->flags = j->flags & ((unsigned int)(-1) ^ flag);
+    {
+        j->flags &= ~flag;
+    }
 }
 
-int job_get_flag(const job_t *j, int flag)
+int job_get_flag(const job_t *j, unsigned int flag)
 {
-    return j->flags&flag?1:0;
+    return !! (j->flags & flag);
 }
 
 int job_signal(job_t *j, int signal)
@@ -396,7 +409,10 @@ static void mark_process_status(const job_t *j,
 void job_mark_process_as_failed(const job_t *job, process_t *p)
 {
     /* The given process failed to even lift off (e.g. posix_spawn failed) and so doesn't have a valid pid. Mark it as dead. */
-    p->completed = 1;
+    for (process_t *cursor = p; p != NULL; p = p->next)
+    {
+        cursor->completed = 1;
+    }
 }
 
 /**
@@ -630,7 +646,6 @@ int job_reap(bool interactive)
     {
         job_t *j = jnext;
         jnext = jobs.next();
-        process_t *p;
 
         /*
           If we are reaping only jobs who do not need status messages
@@ -642,7 +657,7 @@ int job_reap(bool interactive)
             continue;
         }
 
-        for (p=j->first_process; p; p=p->next)
+        for (process_t *p = j->first_process; p; p=p->next)
         {
             int s;
             if (!p->completed)
@@ -902,7 +917,7 @@ static int select_try(job_t *j)
 */
 static void read_try(job_t *j)
 {
-    io_buffer_t *buff=NULL;
+    io_buffer_t *buff = NULL;
 
     /*
       Find the last buffer, which is the one we want to read from
@@ -1030,7 +1045,7 @@ static int terminal_return_from_job(job_t *j)
     return 1;
 }
 
-void job_continue(job_t *j, int cont)
+void job_continue(job_t *j, bool cont)
 {
     /*
       Put job first in the job list

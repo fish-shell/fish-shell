@@ -156,6 +156,10 @@ io_buffer_t *io_buffer_t::create(bool is_input)
         delete buffer_redirect;
         buffer_redirect = NULL;
     }
+    else
+    {
+        //fprintf(stderr, "Created pipes {%d, %d} for %p\n", buffer_redirect->pipe_fd[0], buffer_redirect->pipe_fd[1], buffer_redirect);
+    }
 
     return buffer_redirect;
 }
@@ -163,16 +167,20 @@ io_buffer_t *io_buffer_t::create(bool is_input)
 io_buffer_t::~io_buffer_t()
 {
 
+    //fprintf(stderr, "Deallocating pipes {%d, %d} for %p\n", this->pipe_fd[0], this->pipe_fd[1], this);
     /**
        If this is an input buffer, then io_read_buffer will not have
        been called, and we need to close the output fd as well.
     */
-    if (is_input)
+    if (is_input && pipe_fd[1] >= 0)
     {
         exec_close(pipe_fd[1]);
     }
 
-    exec_close(pipe_fd[0]);
+    if (pipe_fd[0] >= 0)
+    {
+        exec_close(pipe_fd[0]);
+    }
 
     /*
       Dont free fd for writing. This should already be free'd before
@@ -191,6 +199,13 @@ void io_chain_t::remove(const shared_ptr<const io_data_t> &element)
             break;
         }
     }
+}
+
+void io_chain_t::push_back(const shared_ptr<io_data_t> &element)
+{
+    // Ensure we never push back NULL
+    assert(element.get() != NULL);
+    std::vector<shared_ptr<io_data_t> >:: push_back(element);
 }
 
 void io_remove(io_chain_t &list, const shared_ptr<const io_data_t> &element)

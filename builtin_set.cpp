@@ -65,7 +65,7 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope)
     if (is_path_variable(key))
     {
         /* Fix for https://github.com/fish-shell/fish-shell/issues/199 . Return success if any path setting succeeds. */
-        bool any_success = false, any_error = false;
+        bool any_success = false;
 
         for (i=0; i< val.size() ; i++)
         {
@@ -93,7 +93,6 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope)
             }
             else
             {
-                any_error = true;
                 const wchar_t *colon;
                 append_format(stderr_buffer, _(BUILTIN_SET_PATH_ERROR), L"set", dir, key);
                 colon = wcschr(dir, L':');

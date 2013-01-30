@@ -409,7 +409,7 @@ static void mark_process_status(const job_t *j,
 void job_mark_process_as_failed(const job_t *job, process_t *p)
 {
     /* The given process failed to even lift off (e.g. posix_spawn failed) and so doesn't have a valid pid. Mark it as dead. */
-    for (process_t *cursor = p; p != NULL; p = p->next)
+    for (process_t *cursor = p; cursor != NULL; cursor = cursor->next)
     {
         cursor->completed = 1;
     }

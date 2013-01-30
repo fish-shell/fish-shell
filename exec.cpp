@@ -688,9 +688,6 @@ void exec(parser_t &parser, job_t *j)
         }
     }
     
-    /* Make a set of file descriptors that we will need to close */
-    std::set<int> fds_to_close;
-    
     /*
       This loop loops over every process_t in the job, starting it as
       appropriate. This turns out to be rather complex, since a
@@ -698,11 +695,30 @@ void exec(parser_t &parser, job_t *j)
 
       The loop also has to handle pipelining between the jobs.
     */
-
+    
+    /* We can have up to three pipes "in flight" at a time:
+    
+    1. The pipe the current process should read from (courtesy of the previous process)
+    2. The pipe that the current process should write to
+    3. The pipe that the next process should read from (courtesy of us)
+    
+    We are careful to set these to -1 when closed, so if we exit the loop abruptly, we can still close them.
+    
+    */
+    
+    int pipe_current_read = -1, pipe_current_write = -1, pipe_next_read = -1;
     for (process_t *p=j->first_process; p; p = p->next)
     {
-        const bool p_wants_pipe = (p->next != NULL);
-        int mypipe[2] = {-1, -1};
+        /* "Consume" any pipe_next_read by making it current */
+        assert(pipe_current_read == -1);
+        pipe_current_read = pipe_next_read;
+        pipe_next_read = -1;
+        
+        /* Record the current read in pipe_read */
+        pipe_read->pipe_fd[0] = pipe_current_read;
+        
+        /* See if we need a pipe */
+        const bool pipes_to_next_command = (p->next != NULL);
 
         pipe_write->fd = p->pipe_write_fd;
         pipe_read->fd = p->pipe_read_fd;
@@ -728,15 +744,15 @@ void exec(parser_t &parser, job_t *j)
 
         if (p == j->first_process->next)
         {
-            /* We are the first process that could possibly read from a pipe (aka the second process), so add the pipe read redireciton */
+            /* We are the first process that could possibly read from a pipe (aka the second process), so add the pipe read redirection */
             j->io.push_back(pipe_read);
         }
 
-        if (p_wants_pipe)
+        if (pipes_to_next_command)
         {
 //      debug( 1, L"%ls|%ls" , p->argv[0], p->next->argv[0]);
-
-            if (exec_pipe(mypipe) == -1)
+            int local_pipe[2] = {-1, -1};
+            if (exec_pipe(local_pipe) == -1)
             {
                 debug(1, PIPE_ERROR);
                 wperror(L"pipe");
@@ -745,11 +761,16 @@ void exec(parser_t &parser, job_t *j)
                 break;
             }
             
-            fds_to_close.insert(mypipe[0]);
-            fds_to_close.insert(mypipe[1]);
-            
             // This tells the redirection about the fds, but the redirection does not close them
-            memcpy(pipe_write->pipe_fd, mypipe, sizeof(int)*2);
+            memcpy(pipe_write->pipe_fd, local_pipe, sizeof(int)*2);
+            
+            // Record our pipes
+            // The fds should be negative to indicate that we aren't overwriting an fd we failed to close
+            assert(pipe_current_write == -1);
+            pipe_current_write = local_pipe[1];
+            
+            assert(pipe_next_read == -1);
+            pipe_next_read = local_pipe[0];
         }
         else
         {
@@ -1363,45 +1384,32 @@ void exec(parser_t &parser, job_t *j)
            Close the pipe the current process uses to read from the
            previous process_t
         */
-        if (pipe_read->pipe_fd[0] >= 0)
+        if (pipe_current_read >= 0)
         {
-            exec_close(pipe_read->pipe_fd[0]);
-            fds_to_close.erase(pipe_read->pipe_fd[0]);
+            exec_close(pipe_current_read);
+            pipe_current_read = -1;
         }
-        /*
-           Set up the pipe the next process uses to read from the
-           current process_t
-        */
-        if (p_wants_pipe)
+        
+        /* Close the write end too, since the curent child subprocess already has a copy of it. */
+        if (pipe_current_write >= 0)
         {
-            /* The next process will read from this pipe */
-            assert(p->next != NULL);
-            pipe_read->pipe_fd[0] = mypipe[0];
-
-            /*
-               If there is a next process in the pipeline, close the
-               output end of the current pipe (the current child
-               subprocess already has a copy of the pipe - this makes sure
-               we don't leak file descriptors either in the shell or in
-               the children).
-            */
-            exec_close(mypipe[1]);
-            fds_to_close.erase(mypipe[1]);
+            exec_close(pipe_current_write);
+            pipe_current_write = -1;
         }
     }
-
-    /*
-      The keepalive process is no longer needed, so we terminate it
-      with extreme prejudice
-    */
+    
+    /* Clean up any file descriptors we left open */
+    if (pipe_current_read >= 0)
+        exec_close(pipe_current_read);
+    if (pipe_current_write >= 0)
+        exec_close(pipe_current_write);
+    if (pipe_next_read >= 0)
+        exec_close(pipe_next_read);
+    
+    /* The keepalive process is no longer needed, so we terminate it with extreme prejudice */
     if (needs_keepalive)
     {
         kill(keepalive.pid, SIGKILL);
-    }
-    
-    for (std::set<int>::iterator foo = fds_to_close.begin(); foo != fds_to_close.end(); ++foo)
-    {
-        fprintf(stderr, "-Malingering %d\n", *foo);
     }
 
     signal_unblock();

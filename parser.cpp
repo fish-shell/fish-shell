@@ -1202,11 +1202,14 @@ bool parser_t::job_remove(job_t *j)
 
 void parser_t::job_promote(job_t *job)
 {
+    signal_block();
+    
     job_list_t::iterator loc = std::find(my_job_list.begin(), my_job_list.end(), job);
     assert(loc != my_job_list.end());
 
     /* Move the job to the beginning */
     my_job_list.splice(my_job_list.begin(), my_job_list, loc);
+    signal_unblock();
 }
 
 job_t *parser_t::job_get(job_id_t id)
@@ -3755,7 +3758,7 @@ event_block_t::event_block_t(const event_t &evt) :
 {
 }
 
-function_block_t::function_block_t(process_t *p, const wcstring &n, bool shadows) :
+function_block_t::function_block_t(const process_t *p, const wcstring &n, bool shadows) :
     block_t(shadows ? FUNCTION_CALL : FUNCTION_CALL_NO_SHADOW),
     process(p),
     name(n)

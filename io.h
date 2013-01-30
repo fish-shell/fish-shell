@@ -95,22 +95,22 @@ class io_pipe_t : public io_data_t
 protected:
     io_pipe_t(io_mode_t m, int f, bool i):
         io_data_t(m, f),
-        pipe_fd(),
         is_input(i)
     {
+        pipe_fd[0] = pipe_fd[1] = -1;
     }
 
 public:
     int pipe_fd[2];
-    bool is_input;
+    const bool is_input;
 
     virtual void print() const;
 
     io_pipe_t(int f, bool i):
         io_data_t(IO_PIPE, f),
-        pipe_fd(),
         is_input(i)
     {
+        pipe_fd[0] = pipe_fd[1] = -1;
     }
 };
 
@@ -178,6 +178,7 @@ public:
     io_chain_t(const shared_ptr<io_data_t> &);
 
     void remove(const shared_ptr<const io_data_t> &element);
+    void push_back(const shared_ptr<io_data_t> &element);
 
     shared_ptr<const io_data_t> get_io_for_fd(int fd) const;
     shared_ptr<io_data_t> get_io_for_fd(int fd);

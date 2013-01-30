@@ -124,13 +124,14 @@ void exec_close(int fd)
 
 int exec_pipe(int fd[2])
 {
+    ASSERT_IS_MAIN_THREAD();
+    
     int res;
-
     while ((res=pipe(fd)))
     {
         if (errno != EINTR)
         {
-            wperror(L"pipe");
+            // caller will call wperror
             return res;
         }
     }
@@ -146,6 +147,17 @@ int exec_pipe(int fd[2])
     open_fds.at(fd[1]) = true;
 
     return res;
+}
+
+void print_open_fds(void)
+{
+    for (size_t i=0; i < open_fds.size(); ++i)
+    {
+        if (open_fds.at(i))
+        {
+            fprintf(stderr, "fd %lu\n", i);
+        }
+    }
 }
 
 /**
@@ -526,9 +538,7 @@ static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *proce
 
 void exec(parser_t &parser, job_t *j)
 {
-    process_t *p;
     pid_t pid = 0;
-    int mypipe[2];
     sigset_t chldset;
 
     shared_ptr<io_buffer_t> io_buffer;
@@ -559,10 +569,10 @@ void exec(parser_t &parser, job_t *j)
         j->io.insert(j->io.begin(), parser.block_io.begin(), parser.block_io.end());
     }
 
-    const io_buffer_t *input_redirect = 0;
+    const io_buffer_t *input_redirect = NULL;
     for (size_t idx = 0; idx < j->io.size(); idx++)
     {
-        shared_ptr<io_data_t> &io = j->io.at(idx);
+        const shared_ptr<io_data_t> &io = j->io.at(idx);
 
         if ((io->io_mode == IO_BUFFER))
         {
@@ -611,12 +621,13 @@ void exec(parser_t &parser, job_t *j)
         }
 
     }
-
+    
+    // This is a pipe that the "current" process in our loop below reads from
+    // Only pipe_read->pipe_fd[0] is used
     shared_ptr<io_pipe_t> pipe_read(new io_pipe_t(0, true));
-    pipe_read->pipe_fd[0] = pipe_read->pipe_fd[1] = -1;
-
+    
+    // This is the pipe that the "current" process in our loop below writes to
     shared_ptr<io_pipe_t> pipe_write(new io_pipe_t(1, false));
-    pipe_write->pipe_fd[0] = pipe_write->pipe_fd[1] = -1;
 
     j->io.push_back(pipe_write);
 
@@ -634,7 +645,7 @@ void exec(parser_t &parser, job_t *j)
 
     if (job_get_flag(j, JOB_CONTROL))
     {
-        for (p=j->first_process; p; p = p->next)
+        for (const process_t *p = j->first_process; p; p = p->next)
         {
             if (p->type != EXTERNAL)
             {
@@ -676,7 +687,10 @@ void exec(parser_t &parser, job_t *j)
             set_child_group(j, &keepalive, 0);
         }
     }
-
+    
+    /* Make a set of file descriptors that we will need to close */
+    std::set<int> fds_to_close;
+    
     /*
       This loop loops over every process_t in the job, starting it as
       appropriate. This turns out to be rather complex, since a
@@ -685,10 +699,10 @@ void exec(parser_t &parser, job_t *j)
       The loop also has to handle pipelining between the jobs.
     */
 
-    for (p=j->first_process; p; p = p->next)
+    for (process_t *p=j->first_process; p; p = p->next)
     {
         const bool p_wants_pipe = (p->next != NULL);
-        mypipe[1]=-1;
+        int mypipe[2] = {-1, -1};
 
         pipe_write->fd = p->pipe_write_fd;
         pipe_read->fd = p->pipe_read_fd;
@@ -714,6 +728,7 @@ void exec(parser_t &parser, job_t *j)
 
         if (p == j->first_process->next)
         {
+            /* We are the first process that could possibly read from a pipe (aka the second process), so add the pipe read redireciton */
             j->io.push_back(pipe_read);
         }
 
@@ -726,9 +741,14 @@ void exec(parser_t &parser, job_t *j)
                 debug(1, PIPE_ERROR);
                 wperror(L"pipe");
                 exec_error = true;
+                job_mark_process_as_failed(j, p);
                 break;
             }
-
+            
+            fds_to_close.insert(mypipe[0]);
+            fds_to_close.insert(mypipe[1]);
+            
+            // This tells the redirection about the fds, but the redirection does not close them
             memcpy(pipe_write->pipe_fd, mypipe, sizeof(int)*2);
         }
         else
@@ -746,7 +766,6 @@ void exec(parser_t &parser, job_t *j)
         {
             case INTERNAL_FUNCTION:
             {
-                wchar_t * def=0;
                 int shadows;
 
 
@@ -757,27 +776,21 @@ void exec(parser_t &parser, job_t *j)
                 */
 
                 signal_unblock();
-                wcstring orig_def;
-                function_get_definition(p->argv0(), &orig_def);
-
-                // function_get_named_arguments may trigger autoload, which deallocates the orig_def.
-                // We should make function_get_definition return a wcstring (but how to handle NULL...)
-                if (! orig_def.empty())
-                    def = wcsdup(orig_def.c_str());
+                wcstring def;
+                bool function_exists = function_get_definition(p->argv0(), &def);
 
                 wcstring_list_t named_arguments = function_get_named_arguments(p->argv0());
                 shadows = function_get_shadows(p->argv0());
 
                 signal_block();
 
-                if (def == NULL)
+                if (! function_exists)
                 {
                     debug(0, _(L"Unknown function '%ls'"), p->argv0());
                     break;
                 }
                 function_block_t *newv = new function_block_t(p, p->argv0(), shadows);
                 parser.push_block(newv);
-
 
                 /*
                   set_argv might trigger an event
@@ -792,15 +805,26 @@ void exec(parser_t &parser, job_t *j)
 
                 if (p->next)
                 {
+                    // Be careful to handle failure, e.g. too many open fds
                     io_buffer.reset(io_buffer_t::create(0));
-                    j->io.push_back(io_buffer);
+                    if (io_buffer.get() == NULL)
+                    {
+                        exec_error = true;
+                        job_mark_process_as_failed(j, p);
+                    }
+                    else
+                    {
+                        j->io.push_back(io_buffer);
+                    }
                 }
-
-                internal_exec_helper(parser, def, TOP, j->io);
+                
+                if (! exec_error)
+                {
+                    internal_exec_helper(parser, def.c_str(), TOP, j->io);
+                }
 
                 parser.allow_function();
                 parser.pop_block();
-                free(def);
 
                 break;
             }
@@ -810,10 +834,21 @@ void exec(parser_t &parser, job_t *j)
                 if (p->next)
                 {
                     io_buffer.reset(io_buffer_t::create(0));
-                    j->io.push_back(io_buffer);
+                    if (io_buffer.get() == NULL)
+                    {
+                        exec_error = true;
+                        job_mark_process_as_failed(j, p);
+                    }
+                    else
+                    {
+                        j->io.push_back(io_buffer);
+                    }
                 }
-
-                internal_exec_helper(parser, p->argv0(), TOP, j->io);
+                
+                if (! exec_error)
+                {
+                    internal_exec_helper(parser, p->argv0(), TOP, j->io);
+                }
                 break;
 
             }
@@ -821,7 +856,6 @@ void exec(parser_t &parser, job_t *j)
             case INTERNAL_BUILTIN:
             {
                 int builtin_stdin=0;
-                int fg;
                 int close_stdin=0;
 
                 /*
@@ -933,7 +967,7 @@ void exec(parser_t &parser, job_t *j)
                     builtin_out_redirect = has_fd(j->io, 1);
                     builtin_err_redirect = has_fd(j->io, 2);
 
-                    fg = job_get_flag(j, JOB_FOREGROUND);
+                    const int fg = job_get_flag(j, JOB_FOREGROUND);
                     job_set_flag(j, JOB_FOREGROUND, 0);
 
                     signal_unblock();
@@ -1300,6 +1334,11 @@ void exec(parser_t &parser, job_t *j)
                           safe_launch_process _never_ returns...
                         */
                     }
+                    else if (pid < 0)
+                    {
+                        job_mark_process_as_failed(j, p);
+                        exec_error = true;
+                    }
                 }
 
 
@@ -1325,24 +1364,29 @@ void exec(parser_t &parser, job_t *j)
            previous process_t
         */
         if (pipe_read->pipe_fd[0] >= 0)
+        {
             exec_close(pipe_read->pipe_fd[0]);
+            fds_to_close.erase(pipe_read->pipe_fd[0]);
+        }
         /*
            Set up the pipe the next process uses to read from the
            current process_t
         */
         if (p_wants_pipe)
+        {
+            /* The next process will read from this pipe */
+            assert(p->next != NULL);
             pipe_read->pipe_fd[0] = mypipe[0];
 
-        /*
-           If there is a next process in the pipeline, close the
-           output end of the current pipe (the surrent child
-           subprocess already has a copy of the pipe - this makes sure
-           we don't leak file descriptors either in the shell or in
-           the children).
-        */
-        if (p->next)
-        {
+            /*
+               If there is a next process in the pipeline, close the
+               output end of the current pipe (the current child
+               subprocess already has a copy of the pipe - this makes sure
+               we don't leak file descriptors either in the shell or in
+               the children).
+            */
             exec_close(mypipe[1]);
+            fds_to_close.erase(mypipe[1]);
         }
     }
 
@@ -1353,6 +1397,11 @@ void exec(parser_t &parser, job_t *j)
     if (needs_keepalive)
     {
         kill(keepalive.pid, SIGKILL);
+    }
+    
+    for (std::set<int>::iterator foo = fds_to_close.begin(); foo != fds_to_close.end(); ++foo)
+    {
+        fprintf(stderr, "-Malingering %d\n", *foo);
     }
 
     signal_unblock();
@@ -1368,9 +1417,14 @@ void exec(parser_t &parser, job_t *j)
         proc_last_bg_pid = j->pgid;
     }
 
-    if (!exec_error)
+    if (! exec_error)
     {
-        job_continue(j, 0);
+        job_continue(j, false);
+    }
+    else
+    {
+        /* Mark the errored job as not in the foreground. I can't fully justify whether this is the right place, but it prevents sanity_lose from complaining. */
+        job_set_flag(j, JOB_FOREGROUND, 0);
     }
 
 }
@@ -1401,27 +1455,35 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
 
     is_subshell=1;
 
-    const shared_ptr<io_buffer_t> io_buffer(io_buffer_t::create(0));
-
     prev_status = proc_get_last_status();
 
-    parser_t &parser = parser_t::principal_parser();
-    if (parser.eval(cmd, io_chain_t(io_buffer), SUBST))
+    const shared_ptr<io_buffer_t> io_buffer(io_buffer_t::create(0));
+    
+    // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may be null
+    if (io_buffer.get() == NULL)
     {
         status = -1;
     }
     else
     {
-        status = proc_get_last_status();
+        parser_t &parser = parser_t::principal_parser();
+        if (parser.eval(cmd, io_chain_t(io_buffer), SUBST))
+        {
+            status = -1;
+        }
+        else
+        {
+            status = proc_get_last_status();
+        }
+        
+        io_buffer->read();
     }
-
-    io_buffer->read();
 
     proc_set_last_status(prev_status);
 
     is_subshell = prev_subshell;
 
-    if (lst != NULL)
+    if (lst != NULL && io_buffer.get() != NULL)
     {
         const char *begin = io_buffer->out_buffer_ptr();
         const char *end = begin + io_buffer->out_buffer_size();

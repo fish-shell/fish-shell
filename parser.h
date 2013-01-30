@@ -164,9 +164,9 @@ struct event_block_t : public block_t
 
 struct function_block_t : public block_t
 {
-    process_t *process;
+    const process_t *process;
     wcstring name;
-    function_block_t(process_t *p, const wcstring &n, bool shadows);
+    function_block_t(const process_t *p, const wcstring &n, bool shadows);
 };
 
 struct source_block_t : public block_t

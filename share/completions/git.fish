@@ -46,6 +46,12 @@ function __fish_git_using_command
     if [ $argv[1] = $cmd[2] ]
       return 0
     end
+
+    # aliased command
+    set aliased (git config --get "alias.$cmd[2]" | sed 's/ .*$//')
+    if [ $argv[1] = "$aliased" ]
+      return 0
+    end
   end
   return 1
 end

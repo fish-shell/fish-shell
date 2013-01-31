@@ -358,11 +358,9 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
     /* If we have a script, either built-in or a file source, then run it */
     if (really_load && has_script_source)
     {
-        if (exec_subshell(script_source) == -1)
+        if (exec_subshell(script_source, false /* do not apply exit status */) == -1)
         {
-            /*
-              Do nothing on failiure
-            */
+            /* Do nothing on failure */
         }
 
     }

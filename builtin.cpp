@@ -215,7 +215,7 @@ wcstring builtin_help_get(parser_t &parser, const wchar_t *name)
     wcstring out;
     const wcstring name_esc = escape_string(name, 1);
     const wcstring cmd = format_string(L"__fish_print_help %ls", name_esc.c_str());
-    if (exec_subshell(cmd, lst) >= 0)
+    if (exec_subshell(cmd, lst, false /* don't apply exit status */) >= 0)
     {
         for (size_t i=0; i<lst.size(); i++)
         {

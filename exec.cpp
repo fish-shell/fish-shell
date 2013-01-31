@@ -125,7 +125,7 @@ void exec_close(int fd)
 int exec_pipe(int fd[2])
 {
     ASSERT_IS_MAIN_THREAD();
-    
+
     int res;
     while ((res=pipe(fd)))
     {
@@ -621,11 +621,11 @@ void exec(parser_t &parser, job_t *j)
         }
 
     }
-    
+
     // This is a pipe that the "current" process in our loop below reads from
     // Only pipe_read->pipe_fd[0] is used
     shared_ptr<io_pipe_t> pipe_read(new io_pipe_t(0, true));
-    
+
     // This is the pipe that the "current" process in our loop below writes to
     shared_ptr<io_pipe_t> pipe_write(new io_pipe_t(1, false));
 
@@ -687,7 +687,7 @@ void exec(parser_t &parser, job_t *j)
             set_child_group(j, &keepalive, 0);
         }
     }
-    
+
     /*
       This loop loops over every process_t in the job, starting it as
       appropriate. This turns out to be rather complex, since a
@@ -695,17 +695,17 @@ void exec(parser_t &parser, job_t *j)
 
       The loop also has to handle pipelining between the jobs.
     */
-    
+
     /* We can have up to three pipes "in flight" at a time:
-    
+
     1. The pipe the current process should read from (courtesy of the previous process)
     2. The pipe that the current process should write to
     3. The pipe that the next process should read from (courtesy of us)
-    
+
     We are careful to set these to -1 when closed, so if we exit the loop abruptly, we can still close them.
-    
+
     */
-    
+
     int pipe_current_read = -1, pipe_current_write = -1, pipe_next_read = -1;
     for (process_t *p=j->first_process; p; p = p->next)
     {
@@ -713,10 +713,10 @@ void exec(parser_t &parser, job_t *j)
         assert(pipe_current_read == -1);
         pipe_current_read = pipe_next_read;
         pipe_next_read = -1;
-        
+
         /* Record the current read in pipe_read */
         pipe_read->pipe_fd[0] = pipe_current_read;
-        
+
         /* See if we need a pipe */
         const bool pipes_to_next_command = (p->next != NULL);
 
@@ -760,15 +760,15 @@ void exec(parser_t &parser, job_t *j)
                 job_mark_process_as_failed(j, p);
                 break;
             }
-            
+
             // This tells the redirection about the fds, but the redirection does not close them
             memcpy(pipe_write->pipe_fd, local_pipe, sizeof(int)*2);
-            
+
             // Record our pipes
             // The fds should be negative to indicate that we aren't overwriting an fd we failed to close
             assert(pipe_current_write == -1);
             pipe_current_write = local_pipe[1];
-            
+
             assert(pipe_next_read == -1);
             pipe_next_read = local_pipe[0];
         }
@@ -838,7 +838,7 @@ void exec(parser_t &parser, job_t *j)
                         j->io.push_back(io_buffer);
                     }
                 }
-                
+
                 if (! exec_error)
                 {
                     internal_exec_helper(parser, def.c_str(), TOP, j->io);
@@ -865,7 +865,7 @@ void exec(parser_t &parser, job_t *j)
                         j->io.push_back(io_buffer);
                     }
                 }
-                
+
                 if (! exec_error)
                 {
                     internal_exec_helper(parser, p->argv0(), TOP, j->io);
@@ -1389,7 +1389,7 @@ void exec(parser_t &parser, job_t *j)
             exec_close(pipe_current_read);
             pipe_current_read = -1;
         }
-        
+
         /* Close the write end too, since the curent child subprocess already has a copy of it. */
         if (pipe_current_write >= 0)
         {
@@ -1397,7 +1397,7 @@ void exec(parser_t &parser, job_t *j)
             pipe_current_write = -1;
         }
     }
-    
+
     /* Clean up any file descriptors we left open */
     if (pipe_current_read >= 0)
         exec_close(pipe_current_read);
@@ -1405,7 +1405,7 @@ void exec(parser_t &parser, job_t *j)
         exec_close(pipe_current_write);
     if (pipe_next_read >= 0)
         exec_close(pipe_next_read);
-    
+
     /* The keepalive process is no longer needed, so we terminate it with extreme prejudice */
     if (needs_keepalive)
     {
@@ -1438,11 +1438,11 @@ void exec(parser_t &parser, job_t *j)
 }
 
 
-static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
+static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, bool apply_exit_status)
 {
     ASSERT_IS_MAIN_THREAD();
     int prev_subshell = is_subshell;
-    int status, prev_status;
+    const int prev_status = proc_get_last_status();
     char sep=0;
 
     const env_var_t ifs = env_get_string(L"IFS");
@@ -1456,38 +1456,33 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
         else
         {
             sep = 0;
-            debug(0, L"Warning - invalid command substitution separator '%lc'. Please change the firsta character of IFS", ifs[0]);
+            debug(0, L"Warning - invalid command substitution separator '%lc'. Please change the first character of IFS", ifs[0]);
         }
 
     }
 
     is_subshell=1;
 
-    prev_status = proc_get_last_status();
 
-    const shared_ptr<io_buffer_t> io_buffer(io_buffer_t::create(0));
-    
+    int subcommand_status = -1; //assume the worst
+
     // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may be null
-    if (io_buffer.get() == NULL)
-    {
-        status = -1;
-    }
-    else
+    const shared_ptr<io_buffer_t> io_buffer(io_buffer_t::create(0));
+    if (io_buffer.get() != NULL)
     {
         parser_t &parser = parser_t::principal_parser();
-        if (parser.eval(cmd, io_chain_t(io_buffer), SUBST))
+        if (parser.eval(cmd, io_chain_t(io_buffer), SUBST) == 0)
         {
-            status = -1;
+            subcommand_status = proc_get_last_status();
         }
-        else
-        {
-            status = proc_get_last_status();
-        }
-        
+
         io_buffer->read();
     }
 
-    proc_set_last_status(prev_status);
+    // If the caller asked us to preserve the exit status, restore the old status
+    // Otherwise set the status of the subcommand
+    proc_set_last_status(apply_exit_status ? subcommand_status : prev_status);
+
 
     is_subshell = prev_subshell;
 
@@ -1515,17 +1510,17 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst)
         }
     }
 
-    return status;
+    return subcommand_status;
 }
 
-int exec_subshell(const wcstring &cmd, std::vector<wcstring> &outputs)
+int exec_subshell(const wcstring &cmd, std::vector<wcstring> &outputs, bool apply_exit_status)
 {
     ASSERT_IS_MAIN_THREAD();
-    return exec_subshell_internal(cmd, &outputs);
+    return exec_subshell_internal(cmd, &outputs, apply_exit_status);
 }
 
-__warn_unused int exec_subshell(const wcstring &cmd)
+__warn_unused int exec_subshell(const wcstring &cmd, bool apply_exit_status)
 {
     ASSERT_IS_MAIN_THREAD();
-    return exec_subshell_internal(cmd, NULL);
+    return exec_subshell_internal(cmd, NULL, apply_exit_status);
 }

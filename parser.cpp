@@ -1203,7 +1203,7 @@ bool parser_t::job_remove(job_t *j)
 void parser_t::job_promote(job_t *job)
 {
     signal_block();
-    
+
     job_list_t::iterator loc = std::find(my_job_list.begin(), my_job_list.end(), job);
     assert(loc != my_job_list.end());
 
@@ -2900,11 +2900,12 @@ int parser_t::test_args(const  wchar_t * buff, wcstring *out, const wchar_t *pre
 }
 
 // helper type used in parser::test below
-struct block_info_t {
+struct block_info_t
+{
     int position; //tokenizer position
     block_type_t type; //type of the block
     int indentation; //indentation associated with the block
-    
+
     bool has_had_case; //if we are a switch, whether we've encountered a case
 };
 
@@ -2922,7 +2923,7 @@ int parser_t::test(const wchar_t *buff, int *block_level, wcstring *out, const w
 
     tokenizer_t * const previous_tokenizer=current_tokenizer;
     const int previous_pos=current_tokenizer_pos;
-    
+
     // These are very nearly stacks, but sometimes we have to inspect non-top elements (e.g. return)
     std::vector<struct block_info_t> block_infos;
     int indentation_sum = 0; //sum of indentation in block_infos
@@ -3040,7 +3041,7 @@ int parser_t::test(const wchar_t *buff, int *block_level, wcstring *out, const w
                     {
                         tok_next(&tok);
                         tok_set_pos(&tok, mark);
-                        
+
                         /* Test that end is not used when not inside any block */
                         if (block_infos.empty())
                         {
@@ -3060,7 +3061,7 @@ int parser_t::test(const wchar_t *buff, int *block_level, wcstring *out, const w
                         {
                             indentation_sum -= block_infos.back().indentation;
                             block_infos.pop_back();
-                            
+
                         }
                     }
 

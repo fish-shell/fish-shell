@@ -1352,7 +1352,7 @@ static int expand_cmdsubst(parser_t &parser, const wcstring &input, std::vector<
 
     const wcstring subcmd(paran_begin + 1, paran_end-paran_begin - 1);
 
-    if (exec_subshell(subcmd, sub_res) == -1)
+    if (exec_subshell(subcmd, sub_res, true /* do apply exit status */) == -1)
     {
         parser.error(CMDSUBST_ERROR, -1, L"Unknown error while evaulating command substitution");
         return 0;

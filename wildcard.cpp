@@ -336,7 +336,7 @@ static wcstring complete_get_desc_suffix_internal(const wcstring &suff)
     wcstring_list_t lst;
     wcstring desc;
 
-    if (exec_subshell(cmd, lst) != -1)
+    if (exec_subshell(cmd, lst, false /* do not apply exit status */) != -1)
     {
         if (lst.size()>0)
         {

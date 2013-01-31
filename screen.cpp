@@ -1373,20 +1373,20 @@ void s_reset(screen_t *s, screen_reset_mode_t mode)
             }
             else
             {
-                 // draw in "bright black" (gray)
+                // draw in "bright black" (gray)
                 abandon_line_string.append(L"\x1b[0m" //bright
                                            L"\x1b[30;1m"); //black
             }
             abandon_line_string.push_back(omitted_newline_char);
             abandon_line_string.append(L"\x1b[0m"); //normal text ANSI escape sequence
             abandon_line_string.append(screen_width - non_space_width, L' ');
-            
+
         }
         abandon_line_string.push_back(L'\r');
         // now we are certainly on a new line. But we may have dropped the omitted newline char on it. So append enough spaces to overwrite the omitted newline char, and then
         abandon_line_string.append(non_space_width, L' ');
         abandon_line_string.push_back(L'\r');
-        
+
         const std::string narrow_abandon_line_string = wcs2string(abandon_line_string);
         write_loop(STDOUT_FILENO, narrow_abandon_line_string.c_str(), narrow_abandon_line_string.size());
         s->actual.cursor.x = 0;

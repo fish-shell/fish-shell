@@ -150,7 +150,7 @@ extern const wchar_t *program_name;
 		read( 0, &exit_read_buff, 1 );			\
 		exit_without_destructors( 1 );												\
 	}															\
-
+ 
 
 /**
    Exit program at once, leaving an error message about running out of memory.

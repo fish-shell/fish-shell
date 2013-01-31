@@ -465,7 +465,7 @@ bool completer_t::condition_test(const wcstring &condition)
     if (cached_entry == condition_cache.end())
     {
         /* Compute new value and reinsert it */
-        test_res = (0 == exec_subshell(condition));
+        test_res = (0 == exec_subshell(condition, false /* don't apply exit status */));
         condition_cache[condition] = test_res;
     }
     else
@@ -1007,7 +1007,7 @@ void completer_t::complete_cmd_desc(const wcstring &str)
       since apropos is only called once.
     */
     wcstring_list_t list;
-    if (exec_subshell(lookup_cmd, list) != -1)
+    if (exec_subshell(lookup_cmd, list, false /* don't apply exit status */) != -1)
     {
 
         /*

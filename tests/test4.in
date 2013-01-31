@@ -160,3 +160,20 @@ else
 end;
 
 set -U -e baz
+
+echo "Verify subcommand statuses"
+echo (false) $status (true) $status (false) $status
+
+echo "Verify that set passes through exit status, except when passed -n or -q or -e"
+false ; set foo bar ; echo 1 $status # passthrough
+true ; set foo bar ; echo 2 $status # passthrough
+false ; set -q foo ; echo 3 $status # no passthrough
+true ; set -q foo ; echo 4 $status  # no passthrough
+false ; set -n > /dev/null ; echo 5 $status # no passthrough
+false ; set -e foo ; echo 6 $status # no passthrough
+true ; set -e foo ; echo 7 $status # no passthrough
+false ; set -h > /dev/null ; echo 8 $status # no passthrough
+true ; set -NOT_AN_OPTION 2> /dev/null ; echo 9 $status # no passthrough
+false ; set foo (echo A; true) ; echo 10 $status $foo
+true ; set foo (echo B; false) ; echo 11 $status $foo
+true

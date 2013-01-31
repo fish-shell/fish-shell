@@ -379,58 +379,21 @@ static void print_variables(int include_values, int esc, bool shorten_ok, int sc
 */
 static int builtin_set(parser_t &parser, wchar_t **argv)
 {
-
-    /**
-       Variables used for parsing the argument list
-    */
-    static const struct woption
-            long_options[] =
+    /** Variables used for parsing the argument list */
+    const struct woption long_options[] =
     {
-        {
-            L"export", no_argument, 0, 'x'
-        }
-        ,
-        {
-            L"global", no_argument, 0, 'g'
-        }
-        ,
-        {
-            L"local", no_argument, 0, 'l'
-        }
-        ,
-        {
-            L"erase", no_argument, 0, 'e'
-        }
-        ,
-        {
-            L"names", no_argument, 0, 'n'
-        }
-        ,
-        {
-            L"unexport", no_argument, 0, 'u'
-        }
-        ,
-        {
-            L"universal", no_argument, 0, 'U'
-        }
-        ,
-        {
-            L"long", no_argument, 0, 'L'
-        }
-        ,
-        {
-            L"query", no_argument, 0, 'q'
-        }
-        ,
-        {
-            L"help", no_argument, 0, 'h'
-        }
-        ,
-        {
-            0, 0, 0, 0
-        }
-    }
-    ;
+        { L"export", no_argument, 0, 'x' },
+        { L"global", no_argument, 0, 'g' },
+        { L"local", no_argument, 0, 'l' },
+        { L"erase", no_argument, 0, 'e' },
+        { L"names", no_argument, 0, 'n' },
+        { L"unexport", no_argument, 0, 'u' },
+        { L"universal", no_argument, 0, 'U' },
+        { L"long", no_argument, 0, 'L' },
+        { L"query", no_argument, 0, 'q' },
+        { L"help", no_argument, 0, 'h' },
+        { 0, 0, 0, 0 }
+    } ;
 
     const wchar_t *short_options = L"+xglenuULqh";
 
@@ -443,6 +406,8 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
     int erase = 0, list = 0, unexport=0;
     int universal = 0, query=0;
     bool shorten_ok = true;
+    bool preserve_incoming_failure_exit_status = true;
+    const int incoming_exit_status = proc_get_last_status();
 
     /*
       Variables used for performing the actual work
@@ -474,10 +439,12 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
 
             case 'e':
                 erase = 1;
+                preserve_incoming_failure_exit_status = false;
                 break;
 
             case 'n':
                 list = 1;
+                preserve_incoming_failure_exit_status = false;
                 break;
 
             case 'x':
@@ -506,6 +473,7 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
 
             case 'q':
                 query = 1;
+                preserve_incoming_failure_exit_status = false;
                 break;
 
             case 'h':
@@ -825,6 +793,8 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
 
     free(dest);
 
+    if (retcode == STATUS_BUILTIN_OK && preserve_incoming_failure_exit_status)
+        retcode = incoming_exit_status;
     return retcode;
 
 }

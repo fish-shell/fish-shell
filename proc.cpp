@@ -328,7 +328,7 @@ void job_set_flag(job_t *j, unsigned int flag, int set)
 
 int job_get_flag(const job_t *j, unsigned int flag)
 {
-    return !! (j->flags & flag);
+    return !!(j->flags & flag);
 }
 
 int job_signal(job_t *j, int signal)

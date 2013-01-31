@@ -10,7 +10,7 @@
 #include "exec.h"
 
 #ifndef JOIN_THREADS_BEFORE_FORK
-  #define JOIN_THREADS_BEFORE_FORK 0
+#define JOIN_THREADS_BEFORE_FORK 0
 #endif
 
 /** The number of times to try to call fork() before giving up */

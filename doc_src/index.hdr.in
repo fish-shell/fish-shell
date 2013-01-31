@@ -578,9 +578,8 @@ this list is executed, and substituted by the output. If the output is
 more than one line long, each line will be expanded to a new
 parameter.
 
-A command substitution will not change the value of the <a
-href='#variables-status'>status</a> variable outside of the command
-substitution.
+The exit status of the last run command substitution is available in the <a
+href='#variables-status'>status</a> variable.
 
 Only part of the output can be used, see <a href='#expand-index-range'>index
 range expansion</a> for details.

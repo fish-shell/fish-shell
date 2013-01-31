@@ -692,7 +692,7 @@ void reader_write_title()
     wcstring_list_t lst;
 
     proc_push_interactive(0);
-    if (exec_subshell(title, lst) != -1)
+    if (exec_subshell(title, lst, false /* do not apply exit status */) != -1)
     {
         size_t i;
         if (lst.size() > 0)
@@ -718,6 +718,9 @@ static void exec_prompt()
     data->left_prompt_buff.clear();
     data->right_prompt_buff.clear();
 
+    /* Do not allow the exit status of the prompts to leak through */
+    const bool apply_exit_status = false;
+
     /* If we have any prompts, they must be run non-interactively */
     if (data->left_prompt.size() || data->right_prompt.size())
     {
@@ -726,9 +729,9 @@ static void exec_prompt()
         if (! data->left_prompt.empty())
         {
             wcstring_list_t prompt_list;
-            // status is ignored
-            if (exec_subshell(data->left_prompt, prompt_list))
+            if (exec_subshell(data->left_prompt, prompt_list, apply_exit_status))
             {
+                // returned status value is ignored
             }
             for (size_t i = 0; i < prompt_list.size(); i++)
             {
@@ -741,8 +744,9 @@ static void exec_prompt()
         {
             wcstring_list_t prompt_list;
             // status is ignored
-            if (exec_subshell(data->right_prompt, prompt_list))
+            if (exec_subshell(data->right_prompt, prompt_list, apply_exit_status))
             {
+                // returned status value is ignored
             }
             for (size_t i = 0; i < prompt_list.size(); i++)
             {
@@ -1048,10 +1052,10 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
     wcstring msg;
     wcstring prefix_esc;
     char *foo;
-    
+
     shared_ptr<io_buffer_t> in(io_buffer_t::create(true));
     shared_ptr<io_buffer_t> out(io_buffer_t::create(false));
-    
+
     // The above may fail e.g. if we have too many open fds
     if (in.get() == NULL || out.get() == NULL)
         return;
@@ -1140,7 +1144,7 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
     free(foo);
 
     out->fd = 4;
-    
+
     term_donate();
     parser_t &parser = parser_t::principal_parser();
     io_chain_t io_chain;

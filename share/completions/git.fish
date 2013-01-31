@@ -48,7 +48,7 @@ function __fish_git_using_command
     end
 
     # aliased command
-    set aliased (git config --get "alias.$cmd[2]" | sed 's/ .*$//')
+    set -l aliased (git config --get "alias.$cmd[2]" | sed 's/ .*$//')
     if [ $argv[1] = "$aliased" ]
       return 0
     end

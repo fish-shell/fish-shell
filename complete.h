@@ -80,27 +80,20 @@ enum
 
        Warning: The contents of the completion_t structure is actually
        different if this flag is set! Specifically, the completion string
-       contains the _entire_ completion token, not only the current
+       contains the _entire_ completion token, not merely its suffix.
     */
     COMPLETE_NO_CASE = 1 << 1,
-
-    /**
-       This completion is the whole argument, not just the remainder. This
-       flag must never be set on completions returned from the complete()
-       function. It is strictly for internal use in the completion code.
-    */
-    COMPLETE_WHOLE_ARGUMENT = 1 << 2,
 
     /**
        This completion may or may not want a space at the end - guess by
        checking the last character of the completion.
     */
-    COMPLETE_AUTO_SPACE = 1 << 3,
+    COMPLETE_AUTO_SPACE = 1 << 2,
 
     /**
        This completion should be inserted as-is, without escaping.
     */
-    COMPLETE_DONT_ESCAPE = 1 << 4
+    COMPLETE_DONT_ESCAPE = 1 << 3
 };
 typedef int complete_flags_t;
 

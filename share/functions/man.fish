@@ -1,4 +1,5 @@
 function man --description "Format and display the on-line manual pages"
+
 	# Work around OS X's "builtin" manpage that everything symlinks to,
 	# by prepending our fish datadir to man. This also ensures that man gives fish's
 	# man pages priority, without having to put fish's bin directories first in $PATH

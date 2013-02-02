@@ -380,6 +380,9 @@ static int interrupted=0;
   Prototypes for a bunch of functions defined later on.
 */
 
+static bool is_backslashed(const wcstring &str, size_t pos);
+static wchar_t unescaped_quote(const wcstring &str, size_t pos);
+
 /**
    Stores the previous termios mode so we can reset the modes when
    we execute programs and when the shell exits.
@@ -626,9 +629,10 @@ void reader_data_t::command_line_changed()
 }
 
 
-/** Remove any duplicate completions in the list. This relies on the list first being sorted. */
-static void remove_duplicates(std::vector<completion_t> &l)
+/** Sorts and remove any duplicate completions in the list. */
+static void sort_and_make_unique(std::vector<completion_t> &l)
 {
+    sort(l.begin(), l.end());
     l.erase(std::unique(l.begin(), l.end()), l.end());
 }
 
@@ -937,21 +941,21 @@ static size_t comp_ilen(const wchar_t *a, const wchar_t *b)
    \param flags A union of all flags describing the completion to insert. See the completion_t struct for more information on possible values.
    \param command_line The command line into which we will insert
    \param inout_cursor_pos On input, the location of the cursor within the command line. On output, the new desired position.
+   \param append_only Whether we can only append to the command line, or also modify previous characters. This is used to determine whether we go inside a trailing quote.
    \return The completed string
 */
-static wcstring completion_apply_to_command_line(const wcstring &val_str, int flags, const wcstring &command_line, size_t *inout_cursor_pos)
+wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flags_t flags, const wcstring &command_line, size_t *inout_cursor_pos, bool append_only)
 {
     const wchar_t *val = val_str.c_str();
     bool add_space = !(flags & COMPLETE_NO_SPACE);
     bool do_replace = !!(flags & COMPLETE_NO_CASE);
     bool do_escape = !(flags & COMPLETE_DONT_ESCAPE);
+    
     const size_t cursor_pos = *inout_cursor_pos;
-
-    //	debug( 0, L"Insert completion %ls with flags %d", val, flags);
+    bool back_into_trailing_quote = false;
 
     if (do_replace)
     {
-
         size_t move_cursor;
         const wchar_t *begin, *end;
         wchar_t *escaped;
@@ -994,19 +998,41 @@ static wcstring completion_apply_to_command_line(const wcstring &val_str, int fl
         if (do_escape)
         {
             parse_util_get_parameter_info(command_line, cursor_pos, &quote, NULL, NULL);
+            
+            /* If the token is reported as unquoted, but ends with a (unescaped) quote, and we can modify the command line, then delete the trailing quote so that we can insert within the quotes instead of after them. See https://github.com/fish-shell/fish-shell/issues/552 */
+            if (quote == L'\0' && ! append_only && cursor_pos > 0)
+            {
+                /* The entire token is reported as unquoted...see if the last character is an unescaped quote */
+                wchar_t trailing_quote = unescaped_quote(command_line, cursor_pos - 1);
+                if (trailing_quote != L'\0')
+                {
+                    quote = trailing_quote;
+                    back_into_trailing_quote = true;
+                }
+            }
+            
             replaced = parse_util_escape_string_with_quote(val_str, quote);
         }
         else
         {
             replaced = val;
         }
-
+        
+        size_t insertion_point = cursor_pos;
+        if (back_into_trailing_quote)
+        {
+            /* Move the character back one so we enter the terminal quote */
+            assert(insertion_point > 0);
+            insertion_point--;
+        }
+        
+        /* Perform the insertion and compute the new location */
         wcstring result = command_line;
-        result.insert(cursor_pos, replaced);
-        size_t new_cursor_pos = cursor_pos + replaced.size();
+        result.insert(insertion_point, replaced);
+        size_t new_cursor_pos = insertion_point + replaced.size() + (back_into_trailing_quote ? 1 : 0);
         if (add_space)
         {
-            if (quote && (command_line.c_str()[cursor_pos] != quote))
+            if (quote != L'\0' && unescaped_quote(command_line, insertion_point) != quote)
             {
                 /* This is a quoted parameter, first print a quote */
                 result.insert(new_cursor_pos++, wcstring(&quote, 1));
@@ -1027,10 +1053,10 @@ static wcstring completion_apply_to_command_line(const wcstring &val_str, int fl
    \param flags A union of all flags describing the completion to insert. See the completion_t struct for more information on possible values.
 
 */
-static void completion_insert(const wchar_t *val, int flags)
+static void completion_insert(const wchar_t *val, complete_flags_t flags)
 {
     size_t cursor = data->buff_pos;
-    wcstring new_command_line = completion_apply_to_command_line(val, flags, data->command_line, &cursor);
+    wcstring new_command_line = completion_apply_to_command_line(val, flags, data->command_line, &cursor, false /* not append only */);
     reader_set_buffer(new_command_line, cursor);
 
     /* Since we just inserted a completion, don't immediately do a new autosuggestion */
@@ -1259,7 +1285,7 @@ struct autosuggestion_context_t
         {
             const completion_t &comp = completions.at(0);
             size_t cursor = this->cursor_pos;
-            this->autosuggestion = completion_apply_to_command_line(comp.completion.c_str(), comp.flags, this->search_string, &cursor);
+            this->autosuggestion = completion_apply_to_command_line(comp.completion.c_str(), comp.flags, this->search_string, &cursor, true /* append only */);
             return 1;
         }
 
@@ -2706,21 +2732,38 @@ static int wchar_private(wchar_t c)
 
 /**
    Test if the specified character in the specified string is
-   backslashed.
+   backslashed. pos may be at the end of the string, which indicates
+   if there is a trailing backslash.
 */
-static bool is_backslashed(const wchar_t *str, size_t pos)
+static bool is_backslashed(const wcstring &str, size_t pos)
 {
-    size_t count = 0;
-    size_t idx = pos;
+    /* note pos == str.size() is OK */
+    if (pos > str.size())
+        return false;
+    
+    size_t count = 0, idx = pos;
     while (idx--)
     {
-        if (str[idx] != L'\\')
+        if (str.at(idx) != L'\\')
             break;
-
         count++;
     }
 
     return (count % 2) == 1;
+}
+
+static wchar_t unescaped_quote(const wcstring &str, size_t pos)
+{
+    wchar_t result = L'\0';
+    if (pos < str.size())
+    {
+        wchar_t c = str.at(pos);
+        if ((c == L'\'' || c == L'"') && ! is_backslashed(str, pos))
+        {
+            result = c;
+        }
+    }
+    return result;
 }
 
 
@@ -2913,7 +2956,7 @@ const wchar_t *reader_readline()
                     if (next_comp != NULL)
                     {
                         size_t cursor_pos = cycle_cursor_pos;
-                        const wcstring new_cmd_line = completion_apply_to_command_line(next_comp->completion, next_comp->flags, cycle_command_line, &cursor_pos);
+                        const wcstring new_cmd_line = completion_apply_to_command_line(next_comp->completion, next_comp->flags, cycle_command_line, &cursor_pos, false);
                         reader_set_buffer(new_cmd_line, cursor_pos);
 
                         /* Since we just inserted a completion, don't immediately do a new autosuggestion */
@@ -2923,35 +2966,42 @@ const wchar_t *reader_readline()
                 else
                 {
                     /* Either the user hit tab only once, or we had no visible completion list. */
-                    const wchar_t *begin, *end;
+                    const wchar_t *cmdsub_begin, *cmdsub_end;
                     const wchar_t *token_begin, *token_end;
-                    const wchar_t *buff = data->command_line.c_str();
-                    long cursor_steps;
+                    const wchar_t * const buff = data->command_line.c_str();
 
                     /* Clear the completion list */
                     comp.clear();
+                    
+                    /* Figure out the extent of the command substitution surrounding the cursor. This is because we only look at the current command substitution to form completions - stuff happening outside of it is not interesting. */
+                    parse_util_cmdsubst_extent(buff, data->buff_pos, &cmdsub_begin, &cmdsub_end);
+                    
+                    /* Figure out the extent of the token within the command substitution. Note we pass cmdsub_begin here, not buff */
+                    parse_util_token_extent(cmdsub_begin, data->buff_pos - (cmdsub_begin-buff), &token_begin, &token_end, 0, 0);
+                    
+                    /* Figure out how many steps to get from the current position to the end of the current token. */
+                    size_t end_of_token_offset = token_end - buff;
 
-                    parse_util_cmdsubst_extent(buff, data->buff_pos, &begin, &end);
-
-                    parse_util_token_extent(begin, data->buff_pos - (begin-buff), &token_begin, &token_end, 0, 0);
-
-                    cursor_steps = token_end - buff- data->buff_pos;
-                    data->buff_pos += cursor_steps;
-                    if (is_backslashed(buff, data->buff_pos))
+                    /* Move the cursor to the end */
+                    if (data->buff_pos != end_of_token_offset)
+                    {
+                        data->buff_pos = end_of_token_offset;
+                        reader_repaint();
+                    }
+                    
+                    /* Remove a trailing backslash. This may trigger an extra repaint, but this is rare. */
+                    if (is_backslashed(data->command_line, data->buff_pos))
                     {
                         remove_backward();
                     }
-
-                    reader_repaint();
-
-                    size_t len = data->buff_pos - (begin-buff);
-                    const wcstring buffcpy = wcstring(begin, len);
+                    
+                    /* Construct a copy of the string from the beginning of the command substitution up to the end of the token we're completing */
+                    const wcstring buffcpy = wcstring(cmdsub_begin, token_end);
 
                     data->complete_func(buffcpy, comp, COMPLETE_DEFAULT, NULL);
 
                     /* Munge our completions */
-                    sort(comp.begin(), comp.end());
-                    remove_duplicates(comp);
+                    sort_and_make_unique(comp);
                     prioritize_completions(comp);
 
                     /* Record our cycle_command_line */
@@ -3130,7 +3180,7 @@ const wchar_t *reader_readline()
                 /*
                  Allow backslash-escaped newlines
                  */
-                if (is_backslashed(data->command_line.c_str(), data->buff_pos))
+                if (is_backslashed(data->command_line, data->buff_pos))
                 {
                     insert_char('\n');
                     break;

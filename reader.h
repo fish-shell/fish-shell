@@ -217,5 +217,8 @@ int reader_search_mode();
 /* Given a command line and an autosuggestion, return the string that gets shown to the user. Exposed for testing purposes only. */
 wcstring combine_command_and_autosuggestion(const wcstring &cmdline, const wcstring &autosuggestion);
 
+/* Apply a completion string. Exposed for testing only. */
+wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flags_t flags, const wcstring &command_line, size_t *inout_cursor_pos, bool append_only);
+
 
 #endif

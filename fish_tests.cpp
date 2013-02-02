@@ -955,6 +955,57 @@ static void test_colors()
     assert(rgb_color_t(L"mooganta").is_none());
 }
 
+static void test_1_completion(wcstring line, const wcstring &completion, complete_flags_t flags, bool append_only, wcstring expected, long source_line)
+{
+    // str is given with a caret, which we use to represent the cursor position
+    // find it
+    const size_t in_cursor_pos = line.find(L'^');
+    assert(in_cursor_pos != wcstring::npos);
+    line.erase(in_cursor_pos, 1);
+    
+    const size_t out_cursor_pos = expected.find(L'^');
+    assert(out_cursor_pos != wcstring::npos);
+    expected.erase(out_cursor_pos, 1);
+    
+    size_t cursor_pos = in_cursor_pos;
+    wcstring result = completion_apply_to_command_line(completion, flags, line, &cursor_pos, append_only);
+    if (result != expected)
+    {
+        fprintf(stderr, "line %ld: %ls + %ls -> [%ls], expected [%ls]\n", source_line, line.c_str(), completion.c_str(), result.c_str(), expected.c_str());
+    }
+    assert(result == expected);
+    assert(cursor_pos == out_cursor_pos);
+}
+
+static void test_completions()
+{
+    #define TEST_1_COMPLETION(a, b, c, d, e) test_1_completion(a, b, c, d, e, __LINE__)
+    say(L"Testing completions");
+    TEST_1_COMPLETION(L"foo^", L"bar", 0, false, L"foobar ^");
+    TEST_1_COMPLETION(L"foo^ baz", L"bar", 0, false, L"foobar ^ baz"); //we really do want to insert two spaces here - otherwise it's hidden by the cursor
+    TEST_1_COMPLETION(L"'foo^", L"bar", 0, false, L"'foobar' ^");
+    TEST_1_COMPLETION(L"'foo'^", L"bar", 0, false, L"'foobar' ^");
+    TEST_1_COMPLETION(L"'foo\\'^", L"bar", 0, false, L"'foo\\'bar' ^");
+    TEST_1_COMPLETION(L"foo\\'^", L"bar", 0, false, L"foo\\'bar ^");
+    
+    // Test append only
+    TEST_1_COMPLETION(L"foo^", L"bar", 0, true, L"foobar ^");
+    TEST_1_COMPLETION(L"foo^ baz", L"bar", 0, true, L"foobar ^ baz");
+    TEST_1_COMPLETION(L"'foo^", L"bar", 0, true, L"'foobar' ^");
+    TEST_1_COMPLETION(L"'foo'^", L"bar", 0, true, L"'foo'bar ^");
+    TEST_1_COMPLETION(L"'foo\\'^", L"bar", 0, true, L"'foo\\'bar' ^");
+    TEST_1_COMPLETION(L"foo\\'^", L"bar", 0, true, L"foo\\'bar ^");
+    
+    TEST_1_COMPLETION(L"foo^", L"bar", COMPLETE_NO_SPACE, false, L"foobar^");
+    TEST_1_COMPLETION(L"'foo^", L"bar", COMPLETE_NO_SPACE, false, L"'foobar^");
+    TEST_1_COMPLETION(L"'foo'^", L"bar", COMPLETE_NO_SPACE, false, L"'foobar'^");
+    TEST_1_COMPLETION(L"'foo\\'^", L"bar", COMPLETE_NO_SPACE, false, L"'foo\\'bar^");
+    TEST_1_COMPLETION(L"foo\\'^", L"bar", COMPLETE_NO_SPACE, false, L"foo\\'bar^");
+
+    TEST_1_COMPLETION(L"foo^", L"bar", COMPLETE_NO_CASE, false, L"bar ^");
+    TEST_1_COMPLETION(L"'foo^", L"bar", COMPLETE_NO_CASE, false, L"bar ^");
+}
+
 static void perform_one_autosuggestion_test(const wcstring &command, const wcstring &wd, const wcstring &expected, long line)
 {
     wcstring suggestion;
@@ -1655,6 +1706,7 @@ int main(int argc, char **argv)
     test_word_motion();
     test_is_potential_path();
     test_colors();
+    test_completions();
     test_autosuggestion_combining();
     test_autosuggest_suggest_special();
     history_tests_t::test_history();

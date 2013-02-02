@@ -1657,6 +1657,9 @@ void history_t::add_with_file_detection(const wcstring &str)
 {
     ASSERT_IS_MAIN_THREAD();
     path_list_t potential_paths;
+    
+    /* Hack hack hack - if the command is likely to trigger an exit, then don't do background file detection, because we won't be able to write it to our history file before we exit. */
+    bool impending_exit = false;
 
     tokenizer_t tokenizer(str.c_str(), TOK_SQUASH_ERRORS);
     for (; tok_has_next(&tokenizer); tok_next(&tokenizer))
@@ -1671,12 +1674,19 @@ void history_t::add_with_file_detection(const wcstring &str)
                 if (unescape_string(potential_path, false) && string_could_be_path(potential_path))
                 {
                     potential_paths.push_back(potential_path);
+                    
+                    /* What a hack! */
+                    impending_exit = impending_exit || contains(potential_path, L"exec", L"exit", L"reboot");
                 }
             }
         }
     }
-
-    if (! potential_paths.empty())
+    
+    if (potential_paths.empty() || impending_exit)
+    {
+        this->add(str);
+    }
+    else
     {
         /* We have some paths. Make a context. */
         file_detection_context_t *context = new file_detection_context_t(this, str);

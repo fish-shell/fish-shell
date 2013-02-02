@@ -71,13 +71,19 @@ switch $USER
 	set path_list $path_list /sbin /usr/sbin /usr/local/sbin
 end
 
+#
+# It's desirable to only modify PATH once, because fish will check it for validity,
+# which performs disk I/O. Construct the new PATH locally.
+#
+
+set -l path_under_construction $PATH
 for i in $path_list
-	if not contains $i $PATH
-		if test -d $i
-			set PATH $PATH $i
-		end
+	if begin ; not contains $i $path_under_construction ; and test -d $i ; end
+		set path_under_construction $path_under_construction $i
 	end
 end
+
+set PATH $path_under_construction
 
 #
 # Launch debugger on SIGTRAP

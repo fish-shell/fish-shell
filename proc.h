@@ -95,14 +95,14 @@ enum
 /**
   A structure representing a single fish process. Contains variables
   for tracking process state and the process argument
-  list. Actually, a fish process can be either a regular externa
-  lrocess, an internal builtin which may or may not spawn a fake IO
+  list. Actually, a fish process can be either a regular external
+  process, an internal builtin which may or may not spawn a fake IO
   process during execution, a shellscript function or a block of
   commands to be evaluated by calling eval. Lastly, this process can
   be the result of an exec command. The role of this process_t is
   determined by the type field, which can be one of EXTERNAL,
-  INTERNAL_BUILTIN, INTERNAL_FUNCTION, INTERNAL_BLOCK and
-  INTERNAL_EXEC, INTERNAL_BUFFER
+  INTERNAL_BUILTIN, INTERNAL_FUNCTION, INTERNAL_BLOCK, INTERNAL_EXEC,
+  and INTERNAL_BUFFER.
 
   The process_t contains information on how the process should be
   started, such as command name and arguments, as well as runtime
@@ -224,10 +224,12 @@ public:
 #endif
 };
 
-/*   Constants for the flag variable in the job struct */
+/**
+  Constants for the flag variable in the job struct
+*/
 enum
 {
-    /** true if user was told about stopped job */
+    /** Whether the user has been told about stopped job */
     JOB_NOTIFIED = 1 << 0,
 
     /** Whether this job is in the foreground */
@@ -243,16 +245,16 @@ enum
     /** Whether the specified job is a part of a subshell, event handler or some other form of special job that should not be reported */
     JOB_SKIP_NOTIFICATION = 1 << 3,
 
-    /** Should the exit status be negated? This flag can only be set by the not builtin. */
+    /** Whether the exit status should be negated. This flag can only be set by the not builtin. */
     JOB_NEGATE = 1 << 4,
 
-    /** Should the exit status be used to reevaluate the condition in an if block? This is only used by elseif and is a big hack. */
+    /** Whether the exit status should be used to re-evaluate the condition in an if block? This is only used by elseif and is a big hack. */
     JOB_ELSEIF = 1 << 5,
 
     /** This flag is set to one on wildcard expansion errors. It means that the current command should not be executed */
     JOB_WILDCARD_ERROR = 1 << 6,
 
-    /** Skip executing this job. This flag is set by the short-circuit builtins, i.e. and and or  */
+    /** Whether to skip executing this job. This flag is set by the short-circuit builtins, i.e. and and or  */
     JOB_SKIP = 1 << 7,
 
     /** Whether the job is under job control  */
@@ -262,14 +264,14 @@ enum
     JOB_TERMINAL = 1 << 9
 };
 
-/**
-    A struct represeting a job. A job is basically a pipeline of one
-    or more processes and a couple of flags.
- */
 typedef int job_id_t;
 job_id_t acquire_job_id(void);
 void release_job_id(job_id_t jobid);
 
+/**
+    A struct represeting a job. A job is basically a pipeline of one
+    or more processes and a couple of flags.
+ */
 class job_t
 {
     /**
@@ -432,7 +434,7 @@ bool get_proc_had_barrier();
 void set_proc_had_barrier(bool flag);
 
 /**
-   Pid of last process to be started in the background
+   Pid of last process started in the background
 */
 extern pid_t proc_last_bg_pid;
 
@@ -476,7 +478,7 @@ int proc_get_last_status();
 void job_free(job_t* j);
 
 /**
- Promotes a job to the front of the job list.
+   Promotes a job to the front of the job list.
 */
 void job_promote(job_t *job);
 
@@ -499,17 +501,17 @@ job_t *job_get_from_pid(int pid);
 
 /**
    Tests if the job is stopped
- */
+*/
 int job_is_stopped(const job_t *j);
 
 /**
    Tests if the job has completed, i.e. if the last process of the pipeline has ended.
- */
+*/
 int job_is_completed(const job_t *j);
 
 /**
   Reassume a (possibly) stopped job. Put job j in the foreground.  If
-  cont is nonzero, restore the saved terminal modes and send the
+  cont is true, restore the saved terminal modes and send the
   process group a SIGCONT signal to wake it up before we block.
 
   \param j The job
@@ -536,7 +538,9 @@ void job_handle_signal(int signal, siginfo_t *info, void *con);
 */
 int job_signal(job_t *j, int signal);
 
-/* Marks a process as failed to execute (and therefore completed) */
+/**
+   Mark a process as failed to execute (and therefore completed)
+*/
 void job_mark_process_as_failed(const job_t *job, process_t *p);
 
 #ifdef HAVE__PROC_SELF_STAT
@@ -564,12 +568,12 @@ void proc_sanity_check();
 
 /**
    Send a process/job exit event notification. This function is a
-   conveniance wrapper around event_fire().
+   convenience wrapper around event_fire().
 */
 void proc_fire_event(const wchar_t *msg, int type, pid_t pid, int status);
 
 /**
-  Initializations
+   Initializations
 */
 void proc_init();
 
@@ -593,7 +597,7 @@ void proc_pop_interactive();
 /**
    Format an exit status code as returned by e.g. wait into a fish exit code number as accepted by proc_set_last_status.
  */
-int proc_format_status(int status) ;
+int proc_format_status(int status);
 
 
 #endif

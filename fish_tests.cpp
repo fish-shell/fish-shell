@@ -962,11 +962,11 @@ static void test_1_completion(wcstring line, const wcstring &completion, complet
     const size_t in_cursor_pos = line.find(L'^');
     assert(in_cursor_pos != wcstring::npos);
     line.erase(in_cursor_pos, 1);
-    
+
     const size_t out_cursor_pos = expected.find(L'^');
     assert(out_cursor_pos != wcstring::npos);
     expected.erase(out_cursor_pos, 1);
-    
+
     size_t cursor_pos = in_cursor_pos;
     wcstring result = completion_apply_to_command_line(completion, flags, line, &cursor_pos, append_only);
     if (result != expected)
@@ -979,7 +979,7 @@ static void test_1_completion(wcstring line, const wcstring &completion, complet
 
 static void test_completions()
 {
-    #define TEST_1_COMPLETION(a, b, c, d, e) test_1_completion(a, b, c, d, e, __LINE__)
+#define TEST_1_COMPLETION(a, b, c, d, e) test_1_completion(a, b, c, d, e, __LINE__)
     say(L"Testing completions");
     TEST_1_COMPLETION(L"foo^", L"bar", 0, false, L"foobar ^");
     TEST_1_COMPLETION(L"foo^ baz", L"bar", 0, false, L"foobar ^ baz"); //we really do want to insert two spaces here - otherwise it's hidden by the cursor
@@ -987,7 +987,7 @@ static void test_completions()
     TEST_1_COMPLETION(L"'foo'^", L"bar", 0, false, L"'foobar' ^");
     TEST_1_COMPLETION(L"'foo\\'^", L"bar", 0, false, L"'foo\\'bar' ^");
     TEST_1_COMPLETION(L"foo\\'^", L"bar", 0, false, L"foo\\'bar ^");
-    
+
     // Test append only
     TEST_1_COMPLETION(L"foo^", L"bar", 0, true, L"foobar ^");
     TEST_1_COMPLETION(L"foo^ baz", L"bar", 0, true, L"foobar ^ baz");
@@ -995,7 +995,7 @@ static void test_completions()
     TEST_1_COMPLETION(L"'foo'^", L"bar", 0, true, L"'foo'bar ^");
     TEST_1_COMPLETION(L"'foo\\'^", L"bar", 0, true, L"'foo\\'bar' ^");
     TEST_1_COMPLETION(L"foo\\'^", L"bar", 0, true, L"foo\\'bar ^");
-    
+
     TEST_1_COMPLETION(L"foo^", L"bar", COMPLETE_NO_SPACE, false, L"foobar^");
     TEST_1_COMPLETION(L"'foo^", L"bar", COMPLETE_NO_SPACE, false, L"'foobar^");
     TEST_1_COMPLETION(L"'foo'^", L"bar", COMPLETE_NO_SPACE, false, L"'foobar'^");

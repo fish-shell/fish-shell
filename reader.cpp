@@ -950,7 +950,7 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
     bool add_space = !(flags & COMPLETE_NO_SPACE);
     bool do_replace = !!(flags & COMPLETE_NO_CASE);
     bool do_escape = !(flags & COMPLETE_DONT_ESCAPE);
-    
+
     const size_t cursor_pos = *inout_cursor_pos;
     bool back_into_trailing_quote = false;
 
@@ -998,7 +998,7 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
         if (do_escape)
         {
             parse_util_get_parameter_info(command_line, cursor_pos, &quote, NULL, NULL);
-            
+
             /* If the token is reported as unquoted, but ends with a (unescaped) quote, and we can modify the command line, then delete the trailing quote so that we can insert within the quotes instead of after them. See https://github.com/fish-shell/fish-shell/issues/552 */
             if (quote == L'\0' && ! append_only && cursor_pos > 0)
             {
@@ -1010,14 +1010,14 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
                     back_into_trailing_quote = true;
                 }
             }
-            
+
             replaced = parse_util_escape_string_with_quote(val_str, quote);
         }
         else
         {
             replaced = val;
         }
-        
+
         size_t insertion_point = cursor_pos;
         if (back_into_trailing_quote)
         {
@@ -1025,7 +1025,7 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
             assert(insertion_point > 0);
             insertion_point--;
         }
-        
+
         /* Perform the insertion and compute the new location */
         wcstring result = command_line;
         result.insert(insertion_point, replaced);
@@ -2740,7 +2740,7 @@ static bool is_backslashed(const wcstring &str, size_t pos)
     /* note pos == str.size() is OK */
     if (pos > str.size())
         return false;
-    
+
     size_t count = 0, idx = pos;
     while (idx--)
     {
@@ -2972,13 +2972,13 @@ const wchar_t *reader_readline()
 
                     /* Clear the completion list */
                     comp.clear();
-                    
+
                     /* Figure out the extent of the command substitution surrounding the cursor. This is because we only look at the current command substitution to form completions - stuff happening outside of it is not interesting. */
                     parse_util_cmdsubst_extent(buff, data->buff_pos, &cmdsub_begin, &cmdsub_end);
-                    
+
                     /* Figure out the extent of the token within the command substitution. Note we pass cmdsub_begin here, not buff */
                     parse_util_token_extent(cmdsub_begin, data->buff_pos - (cmdsub_begin-buff), &token_begin, &token_end, 0, 0);
-                    
+
                     /* Figure out how many steps to get from the current position to the end of the current token. */
                     size_t end_of_token_offset = token_end - buff;
 
@@ -2988,13 +2988,13 @@ const wchar_t *reader_readline()
                         data->buff_pos = end_of_token_offset;
                         reader_repaint();
                     }
-                    
+
                     /* Remove a trailing backslash. This may trigger an extra repaint, but this is rare. */
                     if (is_backslashed(data->command_line, data->buff_pos))
                     {
                         remove_backward();
                     }
-                    
+
                     /* Construct a copy of the string from the beginning of the command substitution up to the end of the token we're completing */
                     const wcstring buffcpy = wcstring(cmdsub_begin, token_end);
 

@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>${EXECUTABLE_NAME}</string>
 	<key>CFBundleIconFile</key>
-	<string>fish.icns</string>
+        <string>fish_term_icon</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.ridiculousfish.fish-shell</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -24,10 +24,10 @@
 	<string>public.app-category.productivity</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>10.6</string>
+        <key>LSUIElement</key>
+        <true/>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2012, ridiculous_fish
 All rights reserved.</string>
-	<key>LSUIElement</key>
-	<true/>
 </dict>
 </plist>

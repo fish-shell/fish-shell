@@ -53,9 +53,9 @@ class io_fd_t : public io_data_t
 {
 public:
     /** fd to redirect specified fd to */
-    int old_fd;
+    const int old_fd;
     /** Whether to close old_fd */
-    int close_old;
+    const bool close_old;
 
     virtual void print() const;
 

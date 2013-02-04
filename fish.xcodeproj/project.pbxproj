@@ -74,6 +74,7 @@
 		D07D266D15E33B86009E43F6 /* functions in Copy Files */ = {isa = PBXBuildFile; fileRef = D025C02815D1FEA100B9DB63 /* functions */; };
 		D07D266E15E33B86009E43F6 /* tools in Copy Files */ = {isa = PBXBuildFile; fileRef = D025C02915D1FEA100B9DB63 /* tools */; };
 		D07D267215E34171009E43F6 /* config.fish in Copy Files */ = {isa = PBXBuildFile; fileRef = D0CBD580159EE48F0024809C /* config.fish */; };
+                D0879AC816BF9AAB00E98E56 /* fish_term_icon.icns in Resources */ = {isa = PBXBuildFile; fileRef = D0879AC616BF9A1A00E98E56 /* fish_term_icon.icns */; };
 		D0A564FE168D23D800AF6161 /* man in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0A564F1168D0BAB00AF6161 /* man */; };
 		D0A56501168D258300AF6161 /* man in Copy Files */ = {isa = PBXBuildFile; fileRef = D0A564F1168D0BAB00AF6161 /* man */; };
 		D0CBD587159EF0E10024809C /* launch_fish.scpt in Resources */ = {isa = PBXBuildFile; fileRef = D0CBD586159EF0E10024809C /* launch_fish.scpt */; };
@@ -360,6 +361,7 @@
 		D03EE83814DF88B200FC7150 /* lru.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lru.h; sourceTree = "<group>"; };
 		D07B247215BCC15700D4ADB4 /* add-shell */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = "add-shell"; path = "build_tools/osx_package_scripts/add-shell"; sourceTree = "<group>"; };
 		D07B247515BCC4BE00D4ADB4 /* install.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = install.sh; path = osx/install.sh; sourceTree = "<group>"; };
+                D0879AC616BF9A1A00E98E56 /* fish_term_icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = fish_term_icon.icns; path = osx/fish_term_icon.icns; sourceTree = "<group>"; };
 		D09B1C1914FC7B5B00F91077 /* postfork.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = postfork.cpp; sourceTree = "<group>"; };
 		D09B1C1A14FC7B5B00F91077 /* postfork.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = postfork.h; sourceTree = "<group>"; };
 		D0A0850313B3ACEE0099B651 /* builtin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = builtin.h; sourceTree = "<group>"; };
@@ -695,6 +697,7 @@
 		D0D02AAB15985C14008E62BD /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+                                D0879AC616BF9A1A00E98E56 /* fish_term_icon.icns */,
 				D07B247215BCC15700D4ADB4 /* add-shell */,
 				D0CBD586159EF0E10024809C /* launch_fish.scpt */,
 				D0CBD580159EE48F0024809C /* config.fish */,
@@ -900,6 +903,7 @@
 			files = (
 				D031890C15E36E4600D9CC39 /* base in Resources */,
 				D0CBD587159EF0E10024809C /* launch_fish.scpt in Resources */,
+                                D0879AC816BF9AAB00E98E56 /* fish_term_icon.icns in Resources */,
 				D07B247315BCC15700D4ADB4 /* add-shell in Resources */,
 				D07B247615BCC4BE00D4ADB4 /* install.sh in Resources */,
 			);

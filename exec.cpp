@@ -622,15 +622,6 @@ void exec(parser_t &parser, job_t *j)
 
     }
 
-    // This is a pipe that the "current" process in our loop below reads from
-    // Only pipe_read->pipe_fd[0] is used
-    shared_ptr<io_pipe_t> pipe_read(new io_pipe_t(0, true));
-
-    // This is the pipe that the "current" process in our loop below writes to
-    shared_ptr<io_pipe_t> pipe_write(new io_pipe_t(1, false));
-
-    j->io.push_back(pipe_write);
-
     signal_block();
 
     /*
@@ -714,16 +705,29 @@ void exec(parser_t &parser, job_t *j)
         pipe_current_read = pipe_next_read;
         pipe_next_read = -1;
 
-        /* Record the current read in pipe_read */
-        pipe_read->pipe_fd[0] = pipe_current_read;
-
         /* See if we need a pipe */
         const bool pipes_to_next_command = (p->next != NULL);
 
-        pipe_write->fd = p->pipe_write_fd;
-        pipe_read->fd = p->pipe_read_fd;
+        /* The pipes the current process write to and read from.
+           Unfortunately these can't be just allocated on the stack, since
+           j->io wants shared_ptr. */
+        shared_ptr<io_pipe_t> pipe_write(new io_pipe_t(p->pipe_write_fd, false));
+        shared_ptr<io_pipe_t> pipe_read(new io_pipe_t(p->pipe_read_fd, true));
+
+        /* Record the current read in pipe_read */
+        pipe_read->pipe_fd[0] = pipe_current_read;
+
 //    debug( 0, L"Pipe created from fd %d to fd %d", pipe_write->fd, pipe_read->fd );
 
+        if (p != j->first_process)
+        {
+            j->io.push_back(pipe_read);
+        }
+
+        if (p->next)
+        {
+            j->io.push_back(pipe_write);
+        }
 
         /*
            This call is used so the global environment variable array
@@ -741,12 +745,6 @@ void exec(parser_t &parser, job_t *j)
         /*
           Set up fd:s that will be used in the pipe
         */
-
-        if (p == j->first_process->next)
-        {
-            /* We are the first process that could possibly read from a pipe (aka the second process), so add the pipe read redirection */
-            j->io.push_back(pipe_read);
-        }
 
         if (pipes_to_next_command)
         {
@@ -771,16 +769,6 @@ void exec(parser_t &parser, job_t *j)
 
             assert(pipe_next_read == -1);
             pipe_next_read = local_pipe[0];
-        }
-        else
-        {
-            /*
-              This is the last element of the pipeline.
-              Remove the io redirection for pipe output.
-            */
-            io_chain_t::iterator where = std::find(j->io.begin(), j->io.end(), pipe_write);
-            if (where != j->io.end())
-                j->io.erase(where);
         }
 
         switch (p->type)
@@ -1396,6 +1384,9 @@ void exec(parser_t &parser, job_t *j)
             exec_close(pipe_current_write);
             pipe_current_write = -1;
         }
+
+        j->io.remove(pipe_write);
+        j->io.remove(pipe_read);
     }
 
     /* Clean up any file descriptors we left open */
@@ -1415,8 +1406,6 @@ void exec(parser_t &parser, job_t *j)
     signal_unblock();
 
     debug(3, L"Job is constructed");
-
-    io_remove(j->io, pipe_read);
 
     job_set_flag(j, JOB_CONSTRUCTED, 1);
 

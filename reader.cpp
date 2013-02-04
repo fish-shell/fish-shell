@@ -1113,8 +1113,8 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
     wcstring prefix_esc;
     char *foo;
 
-    shared_ptr<io_buffer_t> in(io_buffer_t::create(true));
-    shared_ptr<io_buffer_t> out(io_buffer_t::create(false));
+    shared_ptr<io_buffer_t> in(io_buffer_t::create(true, 3));
+    shared_ptr<io_buffer_t> out(io_buffer_t::create(false, 4));
 
     // The above may fail e.g. if we have too many open fds
     if (in.get() == NULL || out.get() == NULL)
@@ -1136,8 +1136,6 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
                                  // L"valgrind --track-fds=yes --log-file=pager.txt --leak-check=full ./fish_pager %d %ls",
                                  is_quoted?L"-q":L"",
                                  prefix_esc.c_str());
-
-    in->fd = 3;
 
     escaped_separator = escape(COMPLETE_SEP_STR, 1);
 
@@ -1202,8 +1200,6 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
     foo = wcs2str(msg.c_str());
     in->out_buffer_append(foo, strlen(foo));
     free(foo);
-
-    out->fd = 4;
 
     term_donate();
     parser_t &parser = parser_t::principal_parser();

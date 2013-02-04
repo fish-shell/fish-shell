@@ -131,10 +131,14 @@ void io_buffer_t::read()
 }
 
 
-io_buffer_t *io_buffer_t::create(bool is_input)
+io_buffer_t *io_buffer_t::create(bool is_input, int fd)
 {
     bool success = true;
-    io_buffer_t *buffer_redirect = new io_buffer_t(is_input ? 0 : 1, is_input);
+    if (fd == -1)
+    {
+        fd = is_input ? 0 : 1;
+    }
+    io_buffer_t *buffer_redirect = new io_buffer_t(fd, is_input);
 
     if (exec_pipe(buffer_redirect->pipe_fd) == -1)
     {

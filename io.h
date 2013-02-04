@@ -73,7 +73,7 @@ public:
     /** Filename, malloc'd. This needs to be used after fork, so don't use wcstring here. */
     const char * const filename_cstr;
     /** file creation flags to send to open */
-    int flags;
+    const int flags;
 
     virtual void print() const;
 

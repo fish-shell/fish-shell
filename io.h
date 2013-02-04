@@ -32,7 +32,7 @@ public:
     /** Type of redirect */
     const io_mode_t io_mode;
     /** FD to redirect */
-    int fd;
+    const int fd;
 
     virtual void print() const = 0;
     virtual ~io_data_t() = 0;
@@ -167,8 +167,10 @@ public:
        \param is_input set this parameter to zero if the buffer should be
        used to buffer the output of a command, or non-zero to buffer the
        input to a command.
+
+       \param fd when -1, determined from is_input.
     */
-    static io_buffer_t *create(bool is_input);
+    static io_buffer_t *create(bool is_input, int fd = -1);
 };
 
 class io_chain_t : public std::vector<shared_ptr<io_data_t> >

@@ -85,10 +85,10 @@ function type --description "Print the type of a command"
 						functions $i
 
 					case type
-						printf (_ 'function\n')
+						echo (_ 'function')
 
 					case path
-						 echo
+						echo
 
 				end
 				if test $selection != multi
@@ -105,7 +105,7 @@ function type --description "Print the type of a command"
 						printf (_ '%s is a builtin\n') $i
 
 					case type
-						printf (_ 'builtin\n')
+						echo (_ 'builtin')
 
 					case path
 						echo
@@ -126,7 +126,7 @@ function type --description "Print the type of a command"
 					printf (_ '%s is %s\n') $i $path
 
 					case type
-						printf (_ 'file\n')
+						echo (_ 'file')
 
 					case path
 						echo $path

@@ -711,8 +711,8 @@ void exec(parser_t &parser, job_t *j)
         /* The pipes the current process write to and read from.
            Unfortunately these can't be just allocated on the stack, since
            j->io wants shared_ptr. */
-        shared_ptr<io_pipe_t> pipe_write(new io_pipe_t(p->pipe_write_fd, false));
-        shared_ptr<io_pipe_t> pipe_read(new io_pipe_t(p->pipe_read_fd, true));
+        shared_ptr<io_pipe_t> pipe_write;
+        shared_ptr<io_pipe_t> pipe_read;
 
         /* Record the current read in pipe_read */
         pipe_read->pipe_fd[0] = pipe_current_read;
@@ -721,11 +721,13 @@ void exec(parser_t &parser, job_t *j)
 
         if (p != j->first_process)
         {
+            pipe_read.reset(new io_pipe_t(p->pipe_read_fd, true));
             j->io.push_back(pipe_read);
         }
 
         if (p->next)
         {
+            pipe_write.reset(new io_pipe_t(p->pipe_write_fd, false));
             j->io.push_back(pipe_write);
         }
 
@@ -1385,8 +1387,11 @@ void exec(parser_t &parser, job_t *j)
             pipe_current_write = -1;
         }
 
-        j->io.remove(pipe_write);
-        j->io.remove(pipe_read);
+        if (pipe_write.get())
+            j->io.remove(pipe_write);
+
+        if (pipe_read.get())
+            j->io.remove(pipe_read);
     }
 
     /* Clean up any file descriptors we left open */

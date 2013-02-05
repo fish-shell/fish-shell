@@ -728,7 +728,7 @@ static int wildcard_expand_internal(const wchar_t *wc,
 
     //  debug( 3, L"WILDCARD_EXPAND %ls in %ls", wc, base_dir );
 
-    if (is_main_thread() ? reader_interrupted() : reader_cancel_thread())
+    if (is_main_thread() ? reader_interrupted() : reader_thread_job_is_stale())
     {
         return -1;
     }

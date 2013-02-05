@@ -181,7 +181,7 @@ commence.
  */
 #define SEARCH_FORWARD 1
 
-/* Any time the contents of a buffer changes, we update the generation count. This allows for our background highlighting thread to notice it and skip doing work that it would otherwise have to do. */
+/* Any time the contents of a buffer changes, we update the generation count. This allows for our background highlighting thread to notice it and skip doing work that it would otherwise have to do. This variable should really be of some kind of interlocked or atomic type that guarantees we're not reading stale cache values. With C++11 we should use atomics, but until then volatile should work as well, at least on x86.*/
 static volatile unsigned int s_generation_count;
 
 /* This pthreads generation count is set when an autosuggestion background thread starts up, so it can easily check if the work it is doing is no longer useful. */
@@ -671,7 +671,7 @@ int reader_reading_interrupted()
     return res;
 }
 
-bool reader_cancel_thread()
+bool reader_thread_job_is_stale()
 {
     ASSERT_IS_BACKGROUND_THREAD();
     return (void*)(uintptr_t) s_generation_count != pthread_getspecific(generation_count_key);

@@ -35,11 +35,18 @@ function alias --description "Legacy function for creating shellscript functions
 			return 1
 	end
 
-	switch (type -t $name)
-		case file
-			set prefix command
-		case builtin
-			set prefix builtin
+
+	# If we are shadowing an existing (internal or external) command, set the
+	# correct prefix. If $name is different from the command in $body, we assume
+	# the user knows what he/she is doing.
+
+	switch $body
+		case $name $name\ \* $name\t\*
+			if contains $name (builtin --names)
+				set prefix builtin
+			else if which $name >/dev/null
+				set prefix command
+			end
 	end
 
 	eval "function $name; $prefix $body \$argv; end"

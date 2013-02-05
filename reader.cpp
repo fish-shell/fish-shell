@@ -45,6 +45,7 @@ commence.
 #include <unistd.h>
 #include <wctype.h>
 #include <stack>
+#include <pthread.h>
 
 #if HAVE_NCURSES_H
 #include <ncurses.h>
@@ -180,8 +181,11 @@ commence.
  */
 #define SEARCH_FORWARD 1
 
-/* Any time the contents of a buffer changes, we update the generation count. This allows for our background highlighting thread to notice it and skip doing work that it would otherwise have to do. */
-static unsigned int s_generation_count;
+/* Any time the contents of a buffer changes, we update the generation count. This allows for our background highlighting thread to notice it and skip doing work that it would otherwise have to do. This variable should really be of some kind of interlocked or atomic type that guarantees we're not reading stale cache values. With C++11 we should use atomics, but until then volatile should work as well, at least on x86.*/
+static volatile unsigned int s_generation_count;
+
+/* This pthreads generation count is set when an autosuggestion background thread starts up, so it can easily check if the work it is doing is no longer useful. */
+static pthread_key_t generation_count_key;
 
 /* A color is an int */
 typedef int color_t;
@@ -323,6 +327,9 @@ public:
     /** Whether a screen reset is needed after a repaint. */
     bool screen_reset_needed;
 
+    /** Whether the reader should exit on ^C. */
+    bool exit_on_interrupt;
+
     /** Constructor */
     reader_data_t() :
         allow_autosuggestion(0),
@@ -339,7 +346,8 @@ public:
         next(0),
         search_mode(0),
         repaint_needed(0),
-        screen_reset_needed(0)
+        screen_reset_needed(0),
+        exit_on_interrupt(0)
     {
     }
 };
@@ -373,7 +381,7 @@ static pid_t original_pid;
 /**
    This variable is set to true by the signal handler when ^C is pressed
 */
-static int interrupted=0;
+static volatile int interrupted=0;
 
 
 /*
@@ -579,6 +587,7 @@ static void reader_kill(size_t begin_idx, size_t length, int mode, int newv)
 
 }
 
+
 /* This is called from a signal handler! */
 void reader_handle_int(int sig)
 {
@@ -636,12 +645,40 @@ static void sort_and_make_unique(std::vector<completion_t> &l)
     l.erase(std::unique(l.begin(), l.end()), l.end());
 }
 
+
+void reader_reset_interrupted()
+{
+    interrupted = 0;
+}
+
 int reader_interrupted()
 {
-    int res=interrupted;
+    int res = interrupted;
     if (res)
+    {
         interrupted=0;
+    }
     return res;
+}
+
+int reader_reading_interrupted()
+{
+    int res = reader_interrupted();
+    if (res && data && data->exit_on_interrupt)
+    {
+        reader_exit(1, 0);
+        parser_t::skip_all_blocks();
+        // We handled the interrupt ourselves, our caller doesn't need to 
+        // handle it.
+        return 0;
+    }
+    return res;
+}
+
+bool reader_thread_job_is_stale()
+{
+    ASSERT_IS_BACKGROUND_THREAD();
+    return (void*)(uintptr_t) s_generation_count != pthread_getspecific(generation_count_key);
 }
 
 void reader_write_title()
@@ -768,6 +805,7 @@ static void exec_prompt()
 
 void reader_init()
 {
+    VOMIT_ON_FAILURE(pthread_key_create(&generation_count_key, NULL));
 
     tcgetattr(0,&shell_modes);        /* get the current terminal modes */
     memcpy(&saved_modes,
@@ -794,6 +832,7 @@ void reader_init()
 void reader_destroy()
 {
     tcsetattr(0, TCSANOW, &saved_modes);
+    pthread_key_delete(generation_count_key);
 }
 
 
@@ -1233,6 +1272,8 @@ struct autosuggestion_context_t
         {
             return 0;
         }
+
+        VOMIT_ON_FAILURE(pthread_setspecific(generation_count_key, (void*)(uintptr_t) generation_count));
 
         /* Let's make sure we aren't using the empty string */
         if (search_string.empty())
@@ -2414,6 +2455,11 @@ void reader_set_highlight_function(highlight_function_t func)
 void reader_set_test_function(int (*f)(const wchar_t *))
 {
     data->test_func = f;
+}
+
+void reader_set_exit_on_interrupt(bool i)
+{
+    data->exit_on_interrupt = i;
 }
 
 void reader_import_history_if_necessary(void)

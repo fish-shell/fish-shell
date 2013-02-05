@@ -137,10 +137,8 @@ int reader_reading_interrupted();
    generation count the current thread was started with. 
    Note 1: currently only valid for autocompletion threads! Other threads don't
    set the threadlocal generation count when they start up. 
-   Note 2: This function uses conditional compilation for thread-local storage. 
-   If the compiler doesn't support that this function always returns `false`.
 */
-bool reader_cancel_thread();
+bool reader_thread_job_is_stale();
 
 /**
    Read one line of input. Before calling this function, reader_push()

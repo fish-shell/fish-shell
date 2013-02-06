@@ -1519,7 +1519,7 @@ int exec_subshell(const wcstring &cmd, std::vector<wcstring> &outputs, bool appl
     return exec_subshell_internal(cmd, &outputs, apply_exit_status);
 }
 
-__warn_unused int exec_subshell(const wcstring &cmd, bool apply_exit_status)
+int exec_subshell(const wcstring &cmd, bool apply_exit_status)
 {
     ASSERT_IS_MAIN_THREAD();
     return exec_subshell_internal(cmd, NULL, apply_exit_status);

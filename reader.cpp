@@ -770,10 +770,8 @@ static void exec_prompt()
         if (! data->left_prompt.empty())
         {
             wcstring_list_t prompt_list;
-            if (exec_subshell(data->left_prompt, prompt_list, apply_exit_status))
-            {
-                // returned status value is ignored
-            }
+            // ignore return status
+            exec_subshell(data->left_prompt, prompt_list, apply_exit_status);
             for (size_t i = 0; i < prompt_list.size(); i++)
             {
                 if (i > 0) data->left_prompt_buff += L'\n';
@@ -785,10 +783,7 @@ static void exec_prompt()
         {
             wcstring_list_t prompt_list;
             // status is ignored
-            if (exec_subshell(data->right_prompt, prompt_list, apply_exit_status))
-            {
-                // returned status value is ignored
-            }
+            exec_subshell(data->right_prompt, prompt_list, apply_exit_status);
             for (size_t i = 0; i < prompt_list.size(); i++)
             {
                 // Right prompt does not support multiple lines, so just concatenate all of them

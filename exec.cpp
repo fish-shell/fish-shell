@@ -714,14 +714,11 @@ void exec(parser_t &parser, job_t *j)
         shared_ptr<io_pipe_t> pipe_write;
         shared_ptr<io_pipe_t> pipe_read;
 
-        /* Record the current read in pipe_read */
-        pipe_read->pipe_fd[0] = pipe_current_read;
-
-//    debug( 0, L"Pipe created from fd %d to fd %d", pipe_write->fd, pipe_read->fd );
-
         if (p != j->first_process)
         {
             pipe_read.reset(new io_pipe_t(p->pipe_read_fd, true));
+            /* Record the current read in pipe_read */
+            pipe_read->pipe_fd[0] = pipe_current_read;
             j->io.push_back(pipe_read);
         }
 

@@ -16,7 +16,7 @@ yes, 1 otherwise
 <pre>
 for i in ~/bin /usr/local/bin
 	if not contains \$i \$PATH
-		set PATH \$PATH i
+		set PATH \$PATH \$i
 	end
 end
 </pre>

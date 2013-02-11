@@ -1,9 +1,4 @@
 function __fish_complete_cd -d "Completions for the cd command"
-	false
-end
-
-
-function __fish_complete_cd -d "Completions for the cd command"
 	#
 	# We can't simply use __fish_complete_directories because of the CDPATH
 	#
@@ -52,4 +47,3 @@ function __fish_complete_cd -d "Completions for the cd command"
 
 	builtin cd $wd
 end
-

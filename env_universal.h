@@ -29,7 +29,7 @@ void env_universal_destroy();
 /**
    Get the value of a universal variable
 */
-wchar_t *env_universal_get(const wcstring &name);
+const wchar_t *env_universal_get(const wcstring &name);
 
 /**
    Get the export flag of the variable with the specified
@@ -60,9 +60,9 @@ int env_universal_read_all();
    \param show_exported whether exported variables should be shown
    \param show_unexported whether unexported variables should be shown
 */
-void env_universal_get_names2(wcstring_list_t &list,
-                              bool show_exported,
-                              bool show_unexported);
+void env_universal_get_names(wcstring_list_t &list,
+                             bool show_exported,
+                             bool show_unexported);
 
 /**
    Synchronize with fishd

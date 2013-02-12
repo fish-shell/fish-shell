@@ -106,7 +106,7 @@ static void parse_message(wchar_t *msg,
 /**
    The table of all universal variables
 */
-typedef std::map<wcstring, var_uni_entry_t*> env_var_table_t;
+typedef std::map<wcstring, var_uni_entry_t> env_var_table_t;
 env_var_table_t env_universal_var;
 
 /**
@@ -416,18 +416,6 @@ void env_universal_common_init(void (*cb)(fish_message_type_t type, const wchar_
     callback = cb;
 }
 
-
-void env_universal_common_destroy()
-{
-    env_var_table_t::iterator iter;
-
-    for (iter = env_universal_var.begin(); iter != env_universal_var.end(); ++iter)
-    {
-        var_uni_entry_t* value = iter->second;
-        delete value;
-    }
-}
-
 /**
    Read one byte of date form the specified connection
  */
@@ -550,13 +538,7 @@ void read_message(connection_t *src)
 */
 void env_universal_common_remove(const wcstring &name)
 {
-    env_var_table_t::iterator result =  env_universal_var.find(name);
-    if (result != env_universal_var.end())
-    {
-        var_uni_entry_t* v = result->second;
-        env_universal_var.erase(result);
-        delete v;
-    }
+    env_universal_var.erase(name);
 }
 
 /**
@@ -576,18 +558,13 @@ static bool match(const wchar_t *msg, const wchar_t *cmd)
 
 void env_universal_common_set(const wchar_t *key, const wchar_t *val, bool exportv)
 {
-    var_uni_entry_t *entry;
-
     CHECK(key,);
     CHECK(val,);
 
-    entry = new var_uni_entry_t;
+    var_uni_entry_t &entry = env_universal_var[key];
+    entry.exportv=exportv;
+    entry.val = val;
 
-    entry->exportv=exportv;
-    entry->val = val;
-    env_universal_common_remove(key);
-
-    env_universal_var[key] = entry;
     if (callback)
     {
         callback(exportv?SET_EXPORT:SET, key, val);
@@ -909,31 +886,27 @@ void env_universal_common_get_names(wcstring_list_t &lst,
     env_var_table_t::const_iterator iter;
     for (iter = env_universal_var.begin(); iter != env_universal_var.end(); ++iter)
     {
-        const wcstring& key = iter->first;
-        const var_uni_entry_t *e = iter->second;
-        if ((e->exportv && show_exported) ||
-                (!e->exportv && show_unexported))
+        const wcstring &key = iter->first;
+        const var_uni_entry_t &e = iter->second;
+        if ((e.exportv && show_exported) || (! e.exportv && show_unexported))
         {
             lst.push_back(key);
         }
-
     }
 
 }
 
 
-wchar_t *env_universal_common_get(const wcstring &name)
+const wchar_t *env_universal_common_get(const wcstring &name)
 {
     env_var_table_t::const_iterator result = env_universal_var.find(name);
-
     if (result != env_universal_var.end())
     {
-        const var_uni_entry_t *e = result->second;
-        if (e)
-            return const_cast<wchar_t*>(e->val.c_str());
+        const var_uni_entry_t &e = result->second;
+        return const_cast<wchar_t*>(e.val.c_str());
     }
 
-    return 0;
+    return NULL;
 }
 
 bool env_universal_common_get_export(const wcstring &name)
@@ -941,9 +914,8 @@ bool env_universal_common_get_export(const wcstring &name)
     env_var_table_t::const_iterator result = env_universal_var.find(name);
     if (result != env_universal_var.end())
     {
-        const var_uni_entry_t *e = result->second;
-        if (e != NULL)
-            return e->exportv;
+        const var_uni_entry_t &e = result->second;
+        return e.exportv;
     }
     return false;
 }
@@ -951,13 +923,12 @@ bool env_universal_common_get_export(const wcstring &name)
 void enqueue_all(connection_t *c)
 {
     env_var_table_t::const_iterator iter;
-
     for (iter = env_universal_var.begin(); iter != env_universal_var.end(); ++iter)
     {
         const wcstring &key = iter->first;
-        const var_uni_entry_t *val = iter->second;
+        const var_uni_entry_t &entry = iter->second;
 
-        message_t *msg = create_message(val->exportv?SET_EXPORT:SET, key.c_str(), val->val.c_str());
+        message_t *msg = create_message(entry.exportv ? SET_EXPORT : SET, key.c_str(), entry.val.c_str());
         msg->count=1;
         c->unsent->push(msg);
     }

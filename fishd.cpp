@@ -708,27 +708,20 @@ static void daemonize()
 }
 
 /**
-   Get environment variable value. The resulting string needs to be free'd.
+   Get environment variable value.
 */
-static wchar_t *fishd_env_get(const wchar_t *key)
+static env_var_t fishd_env_get(const char *key)
 {
-    char *nres, *nkey;
-    wchar_t *res;
-
-    nkey = wcs2str(key);
-    nres = getenv(nkey);
-    free(nkey);
-    if (nres)
+    const char *env = getenv(key);
+    if (env != NULL)
     {
-        wcstring tmp = str2wcstring(nres);
-        return wcsdup(tmp.c_str());
+        return env_var_t(str2wcstring(env));
     }
     else
     {
-        res = env_universal_common_get(key);
-        if (res)
-            res = wcsdup(res);
-        return res;
+        const wcstring wkey = str2wcstring(key);
+        const wchar_t *tmp = env_universal_common_get(wkey);
+        return tmp ? env_var_t(tmp) : env_var_t::missing_var();
     }
 }
 
@@ -740,12 +733,11 @@ static wchar_t *fishd_env_get(const wchar_t *key)
 */
 static wcstring fishd_get_config()
 {
-    wchar_t *xdg_dir, *home;
     bool done = false;
     wcstring result;
 
-    xdg_dir = fishd_env_get(L"XDG_CONFIG_HOME");
-    if (xdg_dir)
+    env_var_t xdg_dir = fishd_env_get("XDG_CONFIG_HOME");
+    if (! xdg_dir.missing_or_empty())
     {
         result = xdg_dir;
         append_path_component(result, L"/fish");
@@ -753,12 +745,11 @@ static wcstring fishd_get_config()
         {
             done = true;
         }
-        free(xdg_dir);
     }
     else
     {
-        home = fishd_env_get(L"HOME");
-        if (home)
+        env_var_t home = fishd_env_get("HOME");
+        if (! home.missing_or_empty())
         {
             result = home;
             append_path_component(result, L"/.config/fish");
@@ -766,7 +757,6 @@ static wcstring fishd_get_config()
             {
                 done = 1;
             }
-            free(home);
         }
     }
 
@@ -1100,7 +1090,6 @@ int main(int argc, char ** argv)
         {
             debug(0, L"No more clients. Quitting");
             save();
-            env_universal_common_destroy();
             break;
         }
 

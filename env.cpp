@@ -1029,13 +1029,6 @@ int env_remove(const wcstring &key, int var_mode)
     return !erased;
 }
 
-env_var_t env_var_t::missing_var(void)
-{
-    env_var_t result(L"");
-    result.is_missing = true;
-    return result;
-}
-
 const wchar_t *env_var_t::c_str(void) const
 {
     assert(! is_missing);
@@ -1119,7 +1112,7 @@ env_var_t env_get_string(const wcstring &key)
             env_universal_barrier();
         }
 
-        wchar_t *item = env_universal_get(key);
+        const wchar_t *item = env_universal_get(key);
 
         if (!item || (wcscmp(item, ENV_NULL)==0))
         {
@@ -1135,7 +1128,7 @@ env_var_t env_get_string(const wcstring &key)
 bool env_exist(const wchar_t *key, int mode)
 {
     env_node_t *env;
-    wchar_t *item=0;
+    const wchar_t *item = NULL;
 
     CHECK(key, false);
 
@@ -1387,9 +1380,9 @@ wcstring_list_t env_get_names(int flags)
     {
 
         wcstring_list_t uni_list;
-        env_universal_get_names2(uni_list,
-                                 show_exported,
-                                 show_unexported);
+        env_universal_get_names(uni_list,
+                                show_exported,
+                                show_unexported);
         names.insert(uni_list.begin(), uni_list.end());
     }
 
@@ -1472,7 +1465,7 @@ static void update_export_array_if_necessary(bool recalc)
         get_exported(top, vals);
 
         wcstring_list_t uni;
-        env_universal_get_names2(uni, 1, 0);
+        env_universal_get_names(uni, 1, 0);
         for (i=0; i<uni.size(); i++)
         {
             const wcstring &key = uni.at(i);

@@ -1422,14 +1422,14 @@ static void export_func(const std::map<wcstring, wcstring> &envs, std::vector<st
     std::map<wcstring, wcstring>::const_iterator iter;
     for (iter = envs.begin(); iter != envs.end(); ++iter)
     {
-        std::string ks = wcs2string(iter->first);
-        const std::string vs = wcs2string(iter->second);
+        const std::string ks = wcs2string(iter->first);
+        std::string vs = wcs2string(iter->second);
         
-        for (size_t i=0; i < ks.size(); i++)
+        for (size_t i=0; i < vs.size(); i++)
         {
-            char &kc = ks.at(i);
-            if (kc == ARRAY_SEP)
-                kc = ':';
+            char &vc = vs.at(i);
+            if (vc == ARRAY_SEP)
+                vc = ':';
         }
 
         /* Put a string on the vector */

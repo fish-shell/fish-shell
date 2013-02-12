@@ -1422,27 +1422,25 @@ static void export_func(const std::map<wcstring, wcstring> &envs, std::vector<st
     std::map<wcstring, wcstring>::const_iterator iter;
     for (iter = envs.begin(); iter != envs.end(); ++iter)
     {
-        char* ks = wcs2str(iter->first.c_str());
-        char* vs = wcs2str(iter->second.c_str());
-        char *pos = vs;
-        while (*pos)
+        std::string ks = wcs2string(iter->first);
+        const std::string vs = wcs2string(iter->second);
+        
+        for (size_t i=0; i < ks.size(); i++)
         {
-            if (*pos == ARRAY_SEP)
-                *pos = ':';
-            pos++;
+            char &kc = ks.at(i);
+            if (kc == ARRAY_SEP)
+                kc = ':';
         }
 
         /* Put a string on the vector */
         out.push_back(std::string());
         std::string &str = out.back();
+        str.reserve(ks.size() + 1 + vs.size());
 
         /* Append our environment variable data to it */
         str.append(ks);
         str.append("=");
         str.append(vs);
-
-        free(ks);
-        free(vs);
     }
 }
 

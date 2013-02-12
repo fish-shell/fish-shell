@@ -140,11 +140,6 @@ message_t *create_message(fish_message_type_t type, const wchar_t *key, const wc
 void env_universal_common_init(void (*cb)(fish_message_type_t type, const wchar_t *key, const wchar_t *val));
 
 /**
-   Destroy library data
-*/
-void env_universal_common_destroy();
-
-/**
    Add all variable names to the specified list
 
    This function operate agains the local copy of all universal
@@ -182,7 +177,7 @@ void env_universal_common_remove(const wcstring &key);
    This function operate agains the local copy of all universal
    variables, it does not communicate with any other process.
 */
-wchar_t *env_universal_common_get(const wcstring &name);
+const wchar_t *env_universal_common_get(const wcstring &name);
 
 /**
    Get the export flag of the variable with the specified

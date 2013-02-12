@@ -108,20 +108,31 @@ class env_var_t : public wcstring
 private:
     bool is_missing;
 public:
-    static env_var_t missing_var(void);
+    static env_var_t missing_var(void)
+    {
+        env_var_t result(L"");
+        result.is_missing = true;
+        return result;
+
+    }
+
     env_var_t(const env_var_t &x) : wcstring(x), is_missing(x.is_missing) { }
     env_var_t(const wcstring & x) : wcstring(x), is_missing(false) { }
     env_var_t(const wchar_t *x) : wcstring(x), is_missing(false) { }
     env_var_t() : wcstring(L""), is_missing(false) { }
+
     bool missing(void) const
     {
         return is_missing;
     }
+
     bool missing_or_empty(void) const
     {
         return missing() || empty();
     }
+
     const wchar_t *c_str(void) const;
+
     env_var_t &operator=(const env_var_t &s)
     {
         is_missing = s.is_missing;
@@ -131,13 +142,34 @@ public:
 
     bool operator==(const env_var_t &s) const
     {
-        if (is_missing &&  s.is_missing)
-            return true;
-        else if (s.is_missing || s.is_missing)
-            return false;
-        else
-            return *static_cast<const wcstring *>(this) == *static_cast<const wcstring *>(&s);
+        return is_missing == s.is_missing && static_cast<const wcstring &>(*this) == static_cast<const wcstring &>(s);
     }
+
+    bool operator==(const wcstring &s) const
+    {
+        return ! is_missing && static_cast<const wcstring &>(*this) == s;
+    }
+
+    bool operator!=(const env_var_t &s) const
+    {
+        return !(*this == s);
+    }
+
+    bool operator!=(const wcstring &s) const
+    {
+        return !(*this == s);
+    }
+
+    bool operator==(const wchar_t *s) const
+    {
+        return ! is_missing && static_cast<const wcstring &>(*this) == s;
+    }
+
+    bool operator!=(const wchar_t *s) const
+    {
+        return !(*this == s);
+    }
+
 
 };
 /**

@@ -118,25 +118,25 @@ size_t reader_get_cursor_pos();
 int reader_interrupted();
 
 /**
-   Clear the interrupted flag unconditionally without handling anything. The 
-   flag could have been set e.g. when an interrupt arrived just as we were 
-   ending an earlier \c reader_readline invocation but before the 
-   \c is_interactive_read flag was cleared. 
+   Clear the interrupted flag unconditionally without handling anything. The
+   flag could have been set e.g. when an interrupt arrived just as we were
+   ending an earlier \c reader_readline invocation but before the
+   \c is_interactive_read flag was cleared.
 */
 void reader_reset_interrupted();
 
 /**
    Return the value of the interrupted flag, which is set by the sigint
    handler, and clear it if it was set. If the current reader is interruptible,
-   call \c reader_exit(). 
+   call \c reader_exit().
 */
 int reader_reading_interrupted();
 
 /**
-   Returns true if the current reader generation count does not equal the 
-   generation count the current thread was started with. 
+   Returns true if the current reader generation count does not equal the
+   generation count the current thread was started with.
    Note 1: currently only valid for autocompletion threads! Other threads don't
-   set the threadlocal generation count when they start up. 
+   set the threadlocal generation count when they start up.
 */
 bool reader_thread_job_is_stale();
 

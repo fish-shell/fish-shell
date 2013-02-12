@@ -49,9 +49,9 @@
 connection_t env_universal_server;
 
 /**
-   Set to 1 after initialization has been performed
+   Set to true after initialization has been performed
 */
-static int init = 0;
+static bool s_env_univeral_inited = false;
 
 /**
    The number of attempts to start fishd
@@ -207,7 +207,7 @@ static void callback(fish_message_type_t type, const wchar_t *name, const wchar_
 */
 static void check_connection()
 {
-    if (!init)
+    if (! s_env_univeral_inited)
         return;
 
     if (env_universal_server.killme)
@@ -258,10 +258,10 @@ static void reconnect()
 
     debug(3, L"Get new fishd connection");
 
-    init = 0;
+    s_env_univeral_inited = false;
     env_universal_server.buffer_consumed = env_universal_server.buffer_used = 0;
     env_universal_server.fd = get_socket();
-    init = 1;
+    s_env_univeral_inited = true;
     if (env_universal_server.fd >= 0)
     {
         env_universal_remove_all();
@@ -285,7 +285,7 @@ void env_universal_init(wchar_t * p,
     env_universal_server.fd = get_socket();
     env_universal_common_init(&callback);
     env_universal_read_all();
-    init = 1;
+    s_env_univeral_inited = true;
     if (env_universal_server.fd >= 0)
     {
         env_universal_barrier();
@@ -308,8 +308,7 @@ void env_universal_destroy()
 
     connection_destroy(&env_universal_server);
     env_universal_server.fd =-1;
-    env_universal_common_destroy();
-    init = 0;
+    s_env_univeral_inited = false;
 }
 
 
@@ -318,7 +317,7 @@ void env_universal_destroy()
 */
 int env_universal_read_all()
 {
-    if (!init)
+    if (! s_env_univeral_inited)
         return 0;
 
     if (env_universal_server.fd == -1)
@@ -341,17 +340,17 @@ int env_universal_read_all()
     }
 }
 
-wchar_t *env_universal_get(const wcstring &name)
+const wchar_t *env_universal_get(const wcstring &name)
 {
-    if (!init)
-        return 0;
+    if (!s_env_univeral_inited)
+        return NULL;
 
     return env_universal_common_get(name);
 }
 
 bool env_universal_get_export(const wcstring &name)
 {
-    if (!init)
+    if (!s_env_univeral_inited)
         return false;
 
     return env_universal_common_get_export(name);
@@ -363,7 +362,7 @@ void env_universal_barrier()
     message_t *msg;
     fd_set fds;
 
-    if (!init || is_dead())
+    if (!s_env_univeral_inited || is_dead())
         return;
 
     barrier_reply = 0;
@@ -424,7 +423,7 @@ void env_universal_set(const wcstring &name, const wcstring &value, bool exportv
 {
     message_t *msg;
 
-    if (!init)
+    if (!s_env_univeral_inited)
         return;
 
     debug(3, L"env_universal_set( \"%ls\", \"%ls\" )", name.c_str(), value.c_str());
@@ -456,7 +455,7 @@ int env_universal_remove(const wchar_t *name)
     int res;
 
     message_t *msg;
-    if (!init)
+    if (!s_env_univeral_inited)
         return 1;
 
     CHECK(name, 1);
@@ -481,11 +480,11 @@ int env_universal_remove(const wchar_t *name)
     return res;
 }
 
-void env_universal_get_names2(wcstring_list_t &lst,
-                              bool show_exported,
-                              bool show_unexported)
+void env_universal_get_names(wcstring_list_t &lst,
+                             bool show_exported,
+                             bool show_unexported)
 {
-    if (!init)
+    if (!s_env_univeral_inited)
         return;
 
     env_universal_common_get_names(lst,

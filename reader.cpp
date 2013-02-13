@@ -1097,6 +1097,23 @@ static void completion_insert(const wchar_t *val, complete_flags_t flags)
     data->suppress_autosuggestion = true;
 }
 
+/* Return an escaped path to fish_pager */
+static wcstring escaped_fish_pager_path(void)
+{
+    wcstring result;
+    const env_var_t bin_dir = env_get_string(L"__fish_bin_dir");
+    if (bin_dir.missing_or_empty())
+    {
+        /* This isn't good, hope our normal command stuff can find it */
+        result = L"fish_pager";
+    }
+    else
+    {
+        result = escape_string(bin_dir + L"/fish_pager", ESCAPE_ALL);
+    }
+    return result;
+}
+
 /**
    Run the fish_pager command to display the completion list. If the
    fish_pager outputs any text, it is inserted into the input
@@ -1106,7 +1123,6 @@ static void completion_insert(const wchar_t *val, complete_flags_t flags)
    \param is_quoted should be set if the argument is quoted. This will change the display style.
    \param comp the list of completions to display
 */
-
 static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<completion_t> &comp)
 {
     wcstring msg;
@@ -1131,9 +1147,12 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
     {
         prefix_esc = escape_string(prefix, 1);
     }
-
-    wcstring cmd = format_string(L"fish_pager -c 3 -r 4 %ls -p %ls",
-                                 // L"valgrind --track-fds=yes --log-file=pager.txt --leak-check=full ./fish_pager %d %ls",
+    
+    
+    const wcstring pager_path = escaped_fish_pager_path();
+    const wcstring cmd = format_string(L"%ls -c 3 -r 4 %ls -p %ls",
+                                 // L"valgrind --track-fds=yes --log-file=pager.txt --leak-check=full ./%ls %d %ls",
+                                 pager_path.c_str(),
                                  is_quoted?L"-q":L"",
                                  prefix_esc.c_str());
 

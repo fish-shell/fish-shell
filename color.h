@@ -169,6 +169,9 @@ public:
     {
         return !(*this == other);
     }
+
+    /** Returns the names of all named colors */
+    static wcstring_list_t named_color_names(void);
 };
 
 #endif

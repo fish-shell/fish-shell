@@ -1424,7 +1424,7 @@ static void export_func(const std::map<wcstring, wcstring> &envs, std::vector<st
     {
         const std::string ks = wcs2string(iter->first);
         std::string vs = wcs2string(iter->second);
-        
+
         for (size_t i=0; i < vs.size(); i++)
         {
             char &vc = vs.at(i);

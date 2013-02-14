@@ -167,7 +167,7 @@ static const io_chain_t *real_io;
 static int builtin_count_args(wchar_t **argv)
 {
     int argc = 1;
-    while (argv[argc] != 0)
+    while (argv[argc] != NULL)
     {
         argc++;
     }
@@ -390,7 +390,7 @@ static void builtin_missing_argument(parser_t &parser, const wchar_t *cmd, const
 #include "builtin_complete.cpp"
 #include "builtin_ulimit.cpp"
 #include "builtin_jobs.cpp"
-#include "builtin_printf.cpp"
+#include "builtin_set_color.cpp"
 
 /* builtin_test lives in builtin_test.cpp */
 int builtin_test(parser_t &parser, wchar_t **argv);
@@ -4026,12 +4026,12 @@ static const builtin_data_t builtin_datas[]=
     { 		L"jobs",  &builtin_jobs, N_(L"Print currently running jobs")   },
     { 		L"not",  &builtin_generic, N_(L"Negate exit status of job")  },
     { 		L"or",  &builtin_generic, N_(L"Execute command if previous command failed")  },
-    { 		L"printf",  &builtin_printf, N_(L"Prints formatted text")  },
     { 		L"pwd",  &builtin_pwd, N_(L"Print the working directory")  },
     { 		L"random",  &builtin_random, N_(L"Generate random number")  },
     { 		L"read",  &builtin_read, N_(L"Read a line of input into variables")   },
     { 		L"return",  &builtin_return, N_(L"Stop the currently evaluated function")   },
     { 		L"set",  &builtin_set, N_(L"Handle environment variables")   },
+    { 		L"set_color",  &builtin_set_color, N_(L"Set the terminal color")   },
     { 		L"status",  &builtin_status, N_(L"Return status information about fish")  },
     { 		L"switch",  &builtin_switch, N_(L"Conditionally execute a block of commands")   },
     { 		L"test",  &builtin_test, N_(L"Test a condition")   },

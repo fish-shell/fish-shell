@@ -18,7 +18,6 @@ as A0FF33 or f2f. fish will choose the closest supported color.
 - \c -h, \c --help Display help message and exit
 - \c -o, \c --bold Set bold or extra bright mode
 - \c -u, \c --underline Set underlined mode
-- \c -v, \c --version Display version and exit
 
 
 Calling <tt>set_color normal</tt> will set the terminal color to

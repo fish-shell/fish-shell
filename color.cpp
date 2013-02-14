@@ -170,6 +170,18 @@ static const named_color_t named_colors[11] =
     {L"normal", 8, {0xFF, 0xFF, 0XFF}}
 };
 
+wcstring_list_t rgb_color_t::named_color_names(void)
+{
+    size_t count = sizeof named_colors / sizeof *named_colors;
+    wcstring_list_t result;
+    result.reserve(count);
+    for (size_t i=0; i < count; i++)
+    {
+        result.push_back(named_colors[i].name);
+    }
+    return result;
+}
+
 bool rgb_color_t::try_parse_named(const wcstring &str)
 {
     bzero(&data, sizeof data);

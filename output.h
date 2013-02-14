@@ -163,4 +163,9 @@ const wchar_t *output_get_term();
 bool output_get_supports_term256();
 void output_set_supports_term256(bool val);
 
+/* Exported for builtin_set_color's usage only */
+bool write_foreground_color(unsigned char idx);
+bool write_background_color(unsigned char idx);
+unsigned char index_for_color(rgb_color_t c);
+
 #endif

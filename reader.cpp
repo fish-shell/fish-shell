@@ -1147,14 +1147,14 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
     {
         prefix_esc = escape_string(prefix, 1);
     }
-    
-    
+
+
     const wcstring pager_path = escaped_fish_pager_path();
     const wcstring cmd = format_string(L"%ls -c 3 -r 4 %ls -p %ls",
-                                 // L"valgrind --track-fds=yes --log-file=pager.txt --leak-check=full ./%ls %d %ls",
-                                 pager_path.c_str(),
-                                 is_quoted?L"-q":L"",
-                                 prefix_esc.c_str());
+                                       // L"valgrind --track-fds=yes --log-file=pager.txt --leak-check=full ./%ls %d %ls",
+                                       pager_path.c_str(),
+                                       is_quoted?L"-q":L"",
+                                       prefix_esc.c_str());
 
     escaped_separator = escape(COMPLETE_SEP_STR, 1);
 

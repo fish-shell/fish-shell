@@ -146,7 +146,7 @@ void output_set_supports_term256(bool val)
     support_term256 = val;
 }
 
-static unsigned char index_for_color(rgb_color_t c)
+unsigned char index_for_color(rgb_color_t c)
 {
     if (c.is_named() || ! output_get_supports_term256())
     {
@@ -192,7 +192,7 @@ static bool write_color(char *todo, unsigned char idx, bool is_fg)
     return result;
 }
 
-static bool write_foreground_color(unsigned char idx)
+bool write_foreground_color(unsigned char idx)
 {
     if (set_a_foreground && set_a_foreground[0])
     {
@@ -208,7 +208,7 @@ static bool write_foreground_color(unsigned char idx)
     }
 }
 
-static bool write_background_color(unsigned char idx)
+bool write_background_color(unsigned char idx)
 {
     if (set_a_background && set_a_background[0])
     {

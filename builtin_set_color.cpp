@@ -9,6 +9,12 @@ Functions used for implementing the set_color builtin.
 #include "color.h"
 #include "output.h"
 
+#if HAVE_NCURSES_H
+#include <ncurses.h>
+#else
+#include <curses.h>
+#endif
+
 #if HAVE_TERM_H
 #include <term.h>
 #elif HAVE_NCURSES_TERM_H
@@ -157,6 +163,23 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
         append_format(stderr_buffer, _("%s: Unknown color '%s'\n"), argv[0], bgcolor);
         return STATUS_BUILTIN_ERROR;
     }
+    
+    /* Make sure that the term exists */
+    if (cur_term == NULL && setupterm(0, STDOUT_FILENO, 0) == ERR)
+    {
+        append_format(stderr_buffer, _("%s: Could not set up terminal\n"), argv[0]);
+        return STATUS_BUILTIN_ERROR;
+    }
+
+    /*
+       Test if we have at least basic support for setting fonts, colors
+       and related bits - otherwise just give up...
+    */
+    if (! exit_attribute_mode)
+    {
+        return STATUS_BUILTIN_ERROR;
+    }
+
 
     /* Save old output function so we can restore it */
     int (* const saved_writer_func)(char) = output_get_writer();

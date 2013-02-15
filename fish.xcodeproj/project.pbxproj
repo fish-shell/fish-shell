@@ -423,7 +423,6 @@
 		D0A0855813B3ACEE0099B651 /* reader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = reader.cpp; sourceTree = "<group>"; };
 		D0A0855913B3ACEE0099B651 /* sanity.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sanity.cpp; sourceTree = "<group>"; };
 		D0A0855A13B3ACEE0099B651 /* screen.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = screen.cpp; sourceTree = "<group>"; };
-		D0A0855B13B3ACEE0099B651 /* set_color.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = set_color.cpp; sourceTree = "<group>"; };
 		D0A0855C13B3ACEE0099B651 /* signal.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = signal.cpp; sourceTree = "<group>"; };
 		D0A0855D13B3ACEE0099B651 /* tokenizer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tokenizer.cpp; sourceTree = "<group>"; };
 		D0A0855E13B3ACEE0099B651 /* util.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = util.cpp; sourceTree = "<group>"; };
@@ -634,7 +633,6 @@
 				D0A0855A13B3ACEE0099B651 /* screen.cpp */,
 				D0A0852413B3ACEE0099B651 /* signal.h */,
 				D0A0855C13B3ACEE0099B651 /* signal.cpp */,
-				D0A0855B13B3ACEE0099B651 /* set_color.cpp */,
 				D0A0852513B3ACEE0099B651 /* tokenizer.h */,
 				D0A0855D13B3ACEE0099B651 /* tokenizer.cpp */,
 				D0A0852613B3ACEE0099B651 /* util.h */,

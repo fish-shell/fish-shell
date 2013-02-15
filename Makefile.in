@@ -69,7 +69,6 @@ LDFLAGS_FISH_INDENT = ${LDFLAGS} @LIBS_FISH_INDENT@
 LDFLAGS_FISH_PAGER = ${LDFLAGS} @LIBS_FISH_PAGER@
 LDFLAGS_FISHD = ${LDFLAGS} @LIBS_FISHD@
 LDFLAGS_MIMEDB = ${LDFLAGS} @LIBS_MIMEDB@
-LDFLAGS_SET_COLOR = ${LDFLAGS} @LIBS_SET_COLOR@
 
 #
 # Set to 1 if we have gettext
@@ -106,7 +105,8 @@ parser_keywords.o wutil.o tokenizer.o
 #
 
 BUILTIN_FILES := builtin_set.cpp builtin_commandline.cpp	\
-	builtin_ulimit.cpp builtin_complete.cpp builtin_jobs.cpp
+	builtin_ulimit.cpp builtin_complete.cpp builtin_jobs.cpp \
+	bulitin_set_color.cpp
 
 
 #
@@ -199,7 +199,7 @@ DOC_SRC_DIR_FILES := $(HDR_FILES_SRC) $(HELP_SRC)
 
 MAIN_DIR_FILES_UNSORTED := Doxyfile Doxyfile.user Doxyfile.help		\
     Makefile.in configure configure.ac config.h.in install-sh			\
-    set_color.cpp key_reader.cpp $(MIME_OBJS:.o=.h)					\
+    key_reader.cpp $(MIME_OBJS:.o=.h)					\
     $(MIME_OBJS:.o=.cpp) $(FISH_OBJS:.o=.h) $(BUILTIN_FILES)				\
     $(COMMON_FILES) $(COMMON_FILES:.cpp=.h) $(FISH_OBJS:.o=.cpp)			\
     fish.spec.in INSTALL README user_doc.head.html xsel-0.9.6.tar		\
@@ -241,7 +241,7 @@ FUNCTIONS_DIR_FILES := $(wildcard share/functions/*.fish)
 # Programs to install
 #
 
-SIMPLE_PROGRAMS := fish set_color mimedb fish_pager fishd fish_indent
+SIMPLE_PROGRAMS := fish mimedb fish_pager fishd fish_indent
 PROGRAMS := $(SIMPLE_PROGRAMS) @XSEL_BIN@
 
 
@@ -756,14 +756,6 @@ mimedb: $(MIME_OBJS)
 
 
 #
-# Build the set_color program
-#
-
-set_color: set_color.o print_help.o common.o color.o wutil.o
-	$(CXX) set_color.o print_help.o common.o wutil.o color.o $(LDFLAGS_SET_COLOR) -o $@
-
-
-#
 # Build the fish_indent program.
 #
 
@@ -992,8 +984,6 @@ sanity.o: config.h signal.h fallback.h util.h common.h sanity.h proc.h io.h
 sanity.o: history.h wutil.h reader.h complete.h kill.h
 screen.o: config.h fallback.h signal.h common.h util.h wutil.h output.h
 screen.o: screen.h color.h highlight.h env.h
-set_color.o: config.h fallback.h signal.h print_help.h color.h common.h
-set_color.o: util.h
 signal.o: config.h signal.h common.h util.h fallback.h wutil.h event.h
 signal.o: reader.h io.h complete.h proc.h
 tokenizer.o: config.h fallback.h signal.h util.h wutil.h common.h tokenizer.h

@@ -530,13 +530,19 @@ check-uninstall:
 # seq used to be a shell script that we would install
 # Now we just look for previously installed seqs, and erase them
 # No big deal if it fails
-cleanup_old_seq:
+# same with set_color, which is now a builtin.
+# Invoke set_color with -v to make sure it's ours.
+cleanup_old_binaries:
 	SEQLOC=`which seq`;\
 	if test -x "$$SEQLOC" && grep -q '\(^#!/.*/fish\|^#!/usr/bin/env fish\)' "$$SEQLOC"; then\
 		rm -f "$$SEQLOC";\
 	fi;\
+	SETCOLOR_LOC=`which set_color`;\
+	if test -x "$$SETCOLOR_LOC" && $$SETCOLOR_LOC -v 2>&1 >/dev/null | grep -q "^set_color, version "; then\
+		rm -f "$$SETCOLOR_LOC";\
+	fi;\
 	true;
-.PHONY: cleanup_old_seq
+.PHONY: cleanup_old_binaries
 
 #
 # This check makes sure that the install-sh script is executable. The
@@ -553,7 +559,7 @@ install-sh:
 # Try to install after checking for incompatible installed versions.
 #
 
-install: all cleanup_old_seq install-sh check-uninstall install-force
+install: all cleanup_old_binaries install-sh check-uninstall install-force
 .PHONY: install
 
 #

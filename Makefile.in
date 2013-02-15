@@ -106,7 +106,7 @@ parser_keywords.o wutil.o tokenizer.o
 
 BUILTIN_FILES := builtin_set.cpp builtin_commandline.cpp	\
 	builtin_ulimit.cpp builtin_complete.cpp builtin_jobs.cpp \
-	bulitin_set_color.cpp
+	builtin_set_color.cpp
 
 
 #

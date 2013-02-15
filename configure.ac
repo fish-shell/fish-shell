@@ -30,7 +30,6 @@ AC_SUBST(LIBS_FISH_INDENT)
 AC_SUBST(LIBS_FISH_PAGER)
 AC_SUBST(LIBS_FISHD)
 AC_SUBST(LIBS_MIMEDB)
-AC_SUBST(LIBS_SET_COLOR)
 AC_SUBST(localedir)
 AC_SUBST(optbindirs)
 AC_SUBST(prefix)
@@ -526,18 +525,6 @@ fi
 LIBS_MIMEDB=$LIBS
 LIBS=$LIBS_COMMON
 
-
-#
-# Check for libraries needed by set_color
-#
-
-LIBS_COMMON=$LIBS
-LIBS="$LIBS_SHARED"
-if test x$local_gettext != xno; then
-  AC_SEARCH_LIBS( gettext, intl,,)
-fi
-LIBS_SET_COLOR=$LIBS
-LIBS=$LIBS_COMMON
 
 #
 # Check presense of various header files

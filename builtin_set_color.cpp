@@ -45,13 +45,21 @@ static void print_colors(void)
     }
 }
 
+/* function we set as the output writer */
+static std::string builtin_set_color_output;
+static int set_color_builtin_outputter(char c)
+{
+    ASSERT_IS_MAIN_THREAD();
+    builtin_set_color_output.push_back(c);
+    return 0;
+}
+
 /**
    set_color builtin
 */
 static int builtin_set_color(parser_t &parser, wchar_t **argv)
 {
     /** Variables used for parsing the argument list */
-
     const struct woption long_options[] =
     {
         { L"background", required_argument, 0, 'b'},
@@ -150,16 +158,23 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
         return STATUS_BUILTIN_ERROR;
     }
 
+    /* Save old output function so we can restore it */
+    int (* const saved_writer_func)(char) = output_get_writer();
+    
+    /* Set our output function, which writes to a std::string */
+    builtin_set_color_output.clear();
+    output_set_writer(set_color_builtin_outputter);
+
     if (bold)
     {
         if (enter_bold_mode)
-            putp(enter_bold_mode);
+            writembs(tparm(enter_bold_mode));
     }
 
     if (underline)
     {
         if (enter_underline_mode)
-            putp(enter_underline_mode);
+            writembs(enter_underline_mode);
     }
 
     if (bgcolor != NULL)
@@ -167,7 +182,7 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
         if (bg.is_normal())
         {
             write_background_color(0);
-            putp(tparm(exit_attribute_mode));
+            writembs(tparm(exit_attribute_mode));
         }
     }
 
@@ -176,7 +191,7 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
         if (fg.is_normal())
         {
             write_foreground_color(0);
-            putp(tparm(exit_attribute_mode));
+            writembs(tparm(exit_attribute_mode));
         }
         else
         {
@@ -191,5 +206,14 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
             write_background_color(index_for_color(bg));
         }
     }
+    
+    /* Restore saved writer function */
+    output_set_writer(saved_writer_func);
+    
+    /* Output the collected string */
+    std::string local_output;
+    std::swap(builtin_set_color_output, local_output);
+    stdout_buffer.append(str2wcstring(local_output));
+    
     return STATUS_BUILTIN_OK;
 }

@@ -238,7 +238,7 @@ static std::vector<terminfo_mapping_t> mappings;
 /**
    Set to one when the input subsytem has been initialized.
 */
-static int is_init = 0;
+static bool is_init = false;
 
 /**
    Initialize terminfo.
@@ -344,7 +344,7 @@ int input_init()
     if (is_init)
         return 1;
 
-    is_init = 1;
+    is_init = true;
 
     input_common_init(&interrupt_handler);
 
@@ -381,7 +381,7 @@ void input_destroy()
         return;
 
 
-    is_init=0;
+    is_init = false;
 
     input_common_destroy();
 

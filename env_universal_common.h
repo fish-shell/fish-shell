@@ -107,17 +107,12 @@ class connection_t
     /**
        The read buffer.
     */
-    char buffer[ENV_UNIVERSAL_BUFFER_SIZE];
+    std::vector<char> read_buffer;
 
     /**
        Number of bytes that have already been consumed.
     */
     size_t buffer_consumed;
-
-    /**
-       Number of bytes that have been read into the buffer.
-    */
-    size_t buffer_used;
     
     /* Constructor */
     connection_t(int input_fd);

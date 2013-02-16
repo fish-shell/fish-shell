@@ -1049,7 +1049,7 @@ struct screen_layout_t
 /* Given a vector whose indexes are offsets and whose values are the widths of the string if truncated at that offset, return the offset that fits in the given width. Returns width_by_offset.size() - 1 if they all fit. The first value in width_by_offset is assumed to be 0. */
 static size_t truncation_offset_for_width(const std::vector<size_t> &width_by_offset, size_t max_width)
 {
-    assert(width_by_offset.size() > 0 && width_by_offset.at(0) == 0);
+    assert(! width_by_offset.empty() && width_by_offset.at(0) == 0);
     size_t i;
     for (i=1; i < width_by_offset.size(); i++)
     {

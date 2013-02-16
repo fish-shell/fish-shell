@@ -564,7 +564,7 @@ void parse_util_set_argv(const wchar_t * const *argv, const wcstring_list_t &nam
         env_set(L"argv", 0, ENV_LOCAL);
     }
 
-    if (named_arguments.size())
+    if (! named_arguments.empty())
     {
         const wchar_t * const *arg;
         size_t i;

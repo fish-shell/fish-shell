@@ -76,8 +76,14 @@ typedef std::queue<message_t *> message_queue_t;
 /**
    This struct represents a connection between a universal variable server/client
 */
-struct connection_t
+class connection_t
 {
+    private:
+    /* No assignment */
+    connection_t &operator=(const connection_t &);
+    
+    public:
+    
     /**
        The file descriptor this socket lives on
     */
@@ -112,11 +118,6 @@ struct connection_t
        Number of bytes that have been read into the buffer.
     */
     size_t buffer_used;
-
-    /**
-       Link to the next connection
-    */
-    struct connection_t *next;
     
     /* Constructor */
     connection_t(int input_fd);

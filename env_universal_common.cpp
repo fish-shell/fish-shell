@@ -931,12 +931,11 @@ void enqueue_all(connection_t *c)
     try_send_all(c);
 }
 
-connection_t::connection_t(const int input_fd) :
+connection_t::connection_t(int input_fd) :
     fd(input_fd),
     killme(false),
     buffer_consumed(0),
-    buffer_used(0),
-    next(NULL)
+    buffer_used(0)
 {
 }
 

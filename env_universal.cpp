@@ -205,7 +205,7 @@ static void callback(fish_message_type_t type, const wchar_t *name, const wchar_
    Make sure the connection is healthy. If not, close it, and try to
    establish a new connection.
 */
-static void check_connection()
+static void check_connection(void)
 {
     if (! s_env_univeral_inited)
         return;

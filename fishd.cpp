@@ -64,6 +64,7 @@ time the original barrier request was sent have been received.
 #include <errno.h>
 #include <locale.h>
 #include <signal.h>
+#include <list>
 
 #include "fallback.h"
 #include "util.h"
@@ -140,7 +141,8 @@ time the original barrier request was sent have been received.
 /**
    The list of connections to clients
 */
-static connection_t *conn;
+typedef std::list<connection_t> connection_list_t;
+static connection_list_t connections;
 
 /**
    The socket to accept new clients on
@@ -622,10 +624,9 @@ unlock:
 */
 static void broadcast(fish_message_type_t type, const wchar_t *key, const wchar_t *val)
 {
-    connection_t *c;
     message_t *msg;
 
-    if (!conn)
+    if (connections.empty())
         return;
 
     msg = create_message(type, key, val);
@@ -635,15 +636,15 @@ static void broadcast(fish_message_type_t type, const wchar_t *key, const wchar_
       prematurely
     */
 
-    for (c = conn; c; c=c->next)
+    for (connection_list_t::iterator iter = connections.begin(); iter != connections.end(); ++iter)
     {
         msg->count++;
-        c->unsent.push(msg);
+        iter->unsent.push(msg);
     }
 
-    for (c = conn; c; c=c->next)
+    for (connection_list_t::iterator iter = connections.begin(); iter != connections.end(); ++iter)
     {
-        try_send_all(c);
+        try_send_all(&*iter);
     }
 }
 
@@ -947,7 +948,6 @@ int main(int argc, char ** argv)
     init();
     while (1)
     {
-        connection_t *c;
         int res;
 
         t = sizeof(remote);
@@ -956,14 +956,15 @@ int main(int argc, char ** argv)
         FD_ZERO(&write_fd);
         FD_SET(sock, &read_fd);
         max_fd = sock+1;
-        for (c=conn; c; c=c->next)
+        for (connection_list_t::const_iterator iter = connections.begin(); iter != connections.end(); ++iter)
         {
-            FD_SET(c->fd, &read_fd);
-            max_fd = maxi(max_fd, c->fd+1);
+            const connection_t &c = *iter;
+            FD_SET(c.fd, &read_fd);
+            max_fd = maxi(max_fd, c.fd+1);
 
-            if (! c->unsent.empty())
+            if (! c.unsent.empty())
             {
-                FD_SET(c->fd, &write_fd);
+                FD_SET(c.fd, &write_fd);
             }
         }
 
@@ -1008,28 +1009,27 @@ int main(int argc, char ** argv)
                 }
                 else
                 {
-                    connection_t *newc = new connection_t(child_socket);
-                    newc->next = conn;
-                    send(newc->fd, GREETING, strlen(GREETING), MSG_DONTWAIT);
-                    enqueue_all(newc);
-                    conn=newc;
+                    connections.push_front(connection_t(child_socket));
+                    connection_t &newc = connections.front();
+                    send(newc.fd, GREETING, strlen(GREETING), MSG_DONTWAIT);
+                    enqueue_all(&newc);
                 }
             }
         }
 
-        for (c=conn; c; c=c->next)
+        for (connection_list_t::iterator iter = connections.begin(); iter != connections.end(); ++iter)
         {
-            if (FD_ISSET(c->fd, &write_fd))
+            if (FD_ISSET(iter->fd, &write_fd))
             {
-                try_send_all(c);
+                try_send_all(&*iter);
             }
         }
 
-        for (c=conn; c; c=c->next)
+        for (connection_list_t::iterator iter = connections.begin(); iter != connections.end(); ++iter)
         {
-            if (FD_ISSET(c->fd, &read_fd))
+            if (FD_ISSET(iter->fd, &read_fd))
             {
-                read_message(c);
+                read_message(&*iter);
 
                 /*
                   Occasionally we save during normal use, so that we
@@ -1044,47 +1044,31 @@ int main(int argc, char ** argv)
             }
         }
 
-        connection_t *prev=0;
-        c=conn;
-
-        while (c)
+        for (connection_list_t::iterator iter = connections.begin(); iter != connections.end(); )
         {
-            if (c->killme)
+            if (iter->killme)
             {
-                debug(4, L"Close connection %d", c->fd);
+                debug(4, L"Close connection %d", iter->fd);
 
-                while (! c->unsent.empty())
+                while (! iter->unsent.empty())
                 {
-                    message_t *msg = c->unsent.front();
-                    c->unsent.pop();
+                    message_t *msg = iter->unsent.front();
+                    iter->unsent.pop();
                     msg->count--;
-                    if (!msg->count)
+                    if (! msg->count)
                         free(msg);
                 }
 
-                connection_destroy(c);
-                if (prev)
-                {
-                    prev->next=c->next;
-                }
-                else
-                {
-                    conn=c->next;
-                }
-
-                delete c;
-
-                c=(prev?prev->next:conn);
-
+                connection_destroy(&*iter);
+                iter = connections.erase(iter);
             }
             else
             {
-                prev=c;
-                c=c->next;
+                ++iter;
             }
         }
 
-        if (!conn)
+        if (connections.empty())
         {
             debug(0, L"No more clients. Quitting");
             save();

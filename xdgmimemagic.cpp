@@ -183,7 +183,13 @@ _xdg_mime_magic_read_to_newline(FILE *magic_file,
         if (pos % 128 == 127)
         {
             len = len + 128;
-            retval = (char *)realloc(retval, len);
+            char *tmp = (char *)realloc(retval, len);
+            if (tmp == NULL)
+            {
+                free(retval);
+                return NULL;
+            }
+            retval = tmp;
         }
     }
 

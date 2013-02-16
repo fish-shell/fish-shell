@@ -19,6 +19,15 @@ else
 	exit 1
 fi
 
+# Determine which man pages we don't want to generate.
+# Don't make a test man page. fish's test is conforming, so the system man pages
+# are applicable and generally better.
+# on OS X, don't make a man page for open, since we defeat fish's open function on OS X.
+CONDEMNED_PAGES=test.1
+if test `uname` = 'Darwin'; then
+	CONDEMNED_PAGES="$CONDEMNED_PAGES open.1"
+fi
+
 # Helper function to turn a relative path into an absolute path
 resolve_path()
 {
@@ -35,6 +44,7 @@ OUTPUTDIR=`resolve_path "$OUTPUTDIR"`
 echo "      doxygen file: $DOXYFILE"
 echo "   input directory: $INPUTDIR"
 echo "  output directory: $OUTPUTDIR"
+echo "          skipping: $CONDEMNED_PAGES"
 
 # Make sure INPUTDIR is found
 if test ! -d "$INPUTDIR"; then
@@ -99,6 +109,7 @@ RESULT=$?
 
 cd "${OUTPUTDIR}/man/man1/"
 if test "$RESULT" = 0 ; then
+
 	# Postprocess the files
 	for i in "$INPUTDIR"/*.txt; do
 		# It would be nice to use -i here for edit in place, but that is not portable 
@@ -106,6 +117,10 @@ if test "$RESULT" = 0 ; then
 		sed -e "s/\(.\)\\.SH/\1/" -e "s/$CMD_NAME *\\\\- *\"\(.*\)\"/\1/" "${CMD_NAME}.1" > "${CMD_NAME}.1.tmp"
 		mv "${CMD_NAME}.1.tmp" "${CMD_NAME}.1"
 	done
+	
+	# Erase condemned pages
+	rm -f $CONDEMNED_PAGES
+	
 fi
 
 # Destroy TMPLOC

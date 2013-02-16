@@ -860,7 +860,7 @@ int complete_is_valid_option(const wcstring &str,
                     if (errors)
                     {
                         const wcstring str = opt.substr(j, 1);
-                        errors->push_back(format_error(_(L"Unknown option: "), str.c_str()));
+                        errors->push_back(format_error(_(L"Unknown option: "), str));
                     }
 
                     opt_found = 0;
@@ -1375,7 +1375,7 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
     /* Now release the lock and test each option that we captured above.
        We have to do this outside the lock because callouts (like the condition) may add or remove completions.
        See https://github.com/ridiculousfish/fishfish/issues/2 */
-    for (std::vector<local_options_t>::const_iterator iter = all_options.begin(); iter != all_options.end(); iter++)
+    for (std::vector<local_options_t>::const_iterator iter = all_options.begin(); iter != all_options.end(); ++iter)
     {
         const option_list_t &options = iter->options;
         use_common=1;

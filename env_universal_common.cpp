@@ -487,7 +487,7 @@ void read_message(connection_t *src)
             {
                 src->killme = 1;
                 debug(3, L"Fd %d has reached eof, set killme flag", src->fd);
-                if (src->input.size() > 0)
+                if (! src->input.empty())
                 {
                     char c = 0;
                     src->input.push_back(c);
@@ -799,10 +799,7 @@ message_t *create_message(fish_message_type_t type,
                           const wchar_t *key_in,
                           const wchar_t *val_in)
 {
-    message_t *msg = new message_t;
-    msg->count = 0;
-
-    char *key=0;
+    char *key = NULL;
 
     //  debug( 4, L"Crete message of type %d", type );
 
@@ -811,7 +808,7 @@ message_t *create_message(fish_message_type_t type,
         if (wcsvarname(key_in))
         {
             debug(0, L"Illegal variable name: '%ls'", key_in);
-            return 0;
+            return NULL;
         }
 
         key = wcs2utf(key_in);
@@ -820,10 +817,12 @@ message_t *create_message(fish_message_type_t type,
             debug(0,
                   L"Could not convert %ls to narrow character string",
                   key_in);
-            return 0;
+            return NULL;
         }
     }
 
+    message_t *msg = new message_t;
+    msg->count = 0;
 
     switch (type)
     {
@@ -839,7 +838,6 @@ message_t *create_message(fish_message_type_t type,
             char *val = wcs2utf(esc.c_str());
             set_body(msg, (type==SET?SET_MBS:SET_EXPORT_MBS), " ", key, ":", val, "\n", NULL);
             free(val);
-
             break;
         }
 

@@ -735,11 +735,10 @@ void reader_write_title()
     proc_push_interactive(0);
     if (exec_subshell(title, lst, false /* do not apply exit status */) != -1)
     {
-        size_t i;
-        if (lst.size() > 0)
+        if (! lst.empty())
         {
             writestr(L"\x1b]0;");
-            for (i=0; i<lst.size(); i++)
+            for (size_t i=0; i<lst.size(); i++)
             {
                 writestr(lst.at(i).c_str());
             }

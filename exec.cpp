@@ -1191,7 +1191,7 @@ void exec(parser_t &parser, job_t *j)
                     skip_fork = true;
                 }
 
-                for (io_chain_t::iterator iter = j->io.begin(); iter != j->io.end(); iter++)
+                for (io_chain_t::iterator iter = j->io.begin(); iter != j->io.end(); ++iter)
                 {
                     const shared_ptr<io_data_t> &tmp_io = *iter;
                     if (tmp_io->io_mode == IO_FILE && strcmp(static_cast<const io_file_t *>(tmp_io.get())->filename_cstr, "/dev/null") != 0)

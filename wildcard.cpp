@@ -338,7 +338,7 @@ static wcstring complete_get_desc_suffix_internal(const wcstring &suff)
 
     if (exec_subshell(cmd, lst, false /* do not apply exit status */) != -1)
     {
-        if (lst.size()>0)
+        if (! lst.empty())
         {
             const wcstring & ln = lst.at(0);
             if (ln.size() > 0 && ln != L"unknown")
@@ -620,7 +620,7 @@ static void wildcard_completion_allocate(std::vector<completion_t> &list,
     bool wants_desc = !(expand_flags & EXPAND_NO_DESCRIPTIONS);
     wcstring desc;
     if (wants_desc)
-        desc = file_get_desc(fullname.c_str(), lstat_res, lbuf, stat_res, buf, stat_errno);
+        desc = file_get_desc(fullname, lstat_res, lbuf, stat_res, buf, stat_errno);
 
     if (sz >= 0 && S_ISDIR(buf.st_mode))
     {

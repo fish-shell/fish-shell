@@ -157,9 +157,8 @@ static int quit=0;
 /**
    Constructs the fish socket filename
 */
-static char *get_socket_filename()
+static std::string get_socket_filename(void)
 {
-    char *name;
     const char *dir = getenv("FISHD_SOCKET_DIR");
     char *uname = getenv("USER");
 
@@ -170,25 +169,20 @@ static char *get_socket_filename()
 
     if (uname == NULL)
     {
-        struct passwd *pw;
-        pw = getpwuid(getuid());
-        uname = strdup(pw->pw_name);
+        const struct passwd *pw = getpwuid(getuid());
+        uname = pw->pw_name;
     }
 
-    name = (char *)malloc(strlen(dir)+ strlen(uname)+ strlen(SOCK_FILENAME) + 2);
-    if (name == NULL)
-    {
-        wperror(L"get_socket_filename");
-        exit(EXIT_FAILURE);
-    }
-    strcpy(name, dir);
-    strcat(name, "/");
-    strcat(name, SOCK_FILENAME);
-    strcat(name, uname);
+    std::string name;
+    name.reserve(strlen(dir)+ strlen(uname)+ strlen(SOCK_FILENAME) + 1);
+    name.append(dir);
+    name.push_back('/');
+    name.append(SOCK_FILENAME);
+    name.append(uname);
 
-    if (strlen(name) >= UNIX_PATH_MAX)
+    if (name.size() >= UNIX_PATH_MAX)
     {
-        debug(1, L"Filename too long: '%s'", name);
+        debug(1, L"Filename too long: '%s'", name.c_str());
         exit(EXIT_FAILURE);
     }
     return name;
@@ -256,7 +250,7 @@ static void sprint_rand_digits(char *str, int maxlen)
  fallback.
  The memory returned should be freed using free().
  */
-static std::string gen_unique_nfs_filename(const char *filename)
+static std::string gen_unique_nfs_filename(const std::string &filename)
 {
     char hostname[HOST_NAME_MAX + 1];
     char pid_str[256];
@@ -403,7 +397,7 @@ static std::string get_machine_identifier(void)
  A unique temporary file named by appending characters to the lockfile name
  is used; any pre-existing file of the same name is subject to deletion.
  */
-static int acquire_lock_file(const char *lockfile, const int timeout, int force)
+static int acquire_lock_file(const std::string &lockfile_str, const int timeout, int force)
 {
     int fd, timed_out = 0;
     int ret = 0; /* early exit returns failure */
@@ -411,6 +405,7 @@ static int acquire_lock_file(const char *lockfile, const int timeout, int force)
     struct timeval start, end;
     double elapsed;
     struct stat statbuf;
+    const char * const lockfile = lockfile_str.c_str();
 
     /*
        (Re)create a unique file and check that it has one only link.
@@ -514,52 +509,47 @@ done:
    The returned string must be free()d after unlink()ing the file to release
    the lock
 */
-static char *acquire_socket_lock(const char *sock_name)
+static bool acquire_socket_lock(const std::string &sock_name, std::string *out_lockfile_name)
 {
-    size_t len = strlen(sock_name);
-    char *lockfile = (char *)malloc(len + strlen(LOCKPOSTFIX) + 1);
-
-    if (lockfile == NULL)
+    bool success = false;
+    std::string lockfile;
+    lockfile.reserve(sock_name.size() + strlen(LOCKPOSTFIX));
+    lockfile = sock_name;
+    lockfile.append(LOCKPOSTFIX);
+    if (acquire_lock_file(lockfile, LOCKTIMEOUT, 1))
     {
-        wperror(L"acquire_socket_lock");
-        exit(EXIT_FAILURE);
+        out_lockfile_name->swap(lockfile);
+        success = true;
     }
-    strcpy(lockfile, sock_name);
-    strcpy(lockfile + len, LOCKPOSTFIX);
-    if (!acquire_lock_file(lockfile, LOCKTIMEOUT, 1))
-    {
-        free(lockfile);
-        lockfile = NULL;
-    }
-    return lockfile;
+    return success;
 }
 
 /**
    Connects to the fish socket and starts listening for connections
 */
-static int get_socket()
+static int get_socket(void)
 {
     int s, len, doexit = 0;
     int exitcode = EXIT_FAILURE;
     struct sockaddr_un local;
-    char *sock_name = get_socket_filename();
+    const std::string sock_name = get_socket_filename();
 
     /*
        Start critical section protected by lock
     */
-    char *lockfile = acquire_socket_lock(sock_name);
-    if (lockfile == NULL)
+    std::string lockfile;
+    if (! acquire_socket_lock(sock_name, &lockfile))
     {
         debug(0, L"Unable to obtain lock on socket, exiting");
         exit(EXIT_FAILURE);
     }
-    debug(4, L"Acquired lockfile: %s", lockfile);
+    debug(4, L"Acquired lockfile: %s", lockfile.c_str());
 
     local.sun_family = AF_UNIX;
-    strcpy(local.sun_path, sock_name);
+    strcpy(local.sun_path, sock_name.c_str());
     len = sizeof(local);
 
-    debug(1, L"Connect to socket at %s", sock_name);
+    debug(1, L"Connect to socket at %s", sock_name.c_str());
 
     if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
     {
@@ -601,19 +591,15 @@ static int get_socket()
     }
 
 unlock:
-    (void)unlink(lockfile);
-    debug(4, L"Released lockfile: %s", lockfile);
+    (void)unlink(lockfile.c_str());
+    debug(4, L"Released lockfile: %s", lockfile.c_str());
     /*
        End critical section protected by lock
     */
 
-    free(lockfile);
-
-    free(sock_name);
-
     if (doexit)
     {
-        exit(exitcode);
+        exit_without_destructors(exitcode);
     }
 
     return s;

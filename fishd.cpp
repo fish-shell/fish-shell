@@ -638,7 +638,7 @@ static void broadcast(fish_message_type_t type, const wchar_t *key, const wchar_
     for (c = conn; c; c=c->next)
     {
         msg->count++;
-        c->unsent->push(msg);
+        c->unsent.push(msg);
     }
 
     for (c = conn; c; c=c->next)
@@ -787,8 +787,7 @@ static bool load_or_save_variables_at_path(bool save, const std::string &path)
     {
         /* Success */
         result = true;
-        connection_t c = {};
-        connection_init(&c, fd);
+        connection_t c(fd);
 
         if (save)
         {
@@ -962,7 +961,7 @@ int main(int argc, char ** argv)
             FD_SET(c->fd, &read_fd);
             max_fd = maxi(max_fd, c->fd+1);
 
-            if (! c->unsent->empty())
+            if (! c->unsent.empty())
             {
                 FD_SET(c->fd, &write_fd);
             }
@@ -1009,8 +1008,7 @@ int main(int argc, char ** argv)
                 }
                 else
                 {
-                    connection_t *newc = (connection_t *)malloc(sizeof(connection_t));
-                    connection_init(newc, child_socket);
+                    connection_t *newc = new connection_t(child_socket);
                     newc->next = conn;
                     send(newc->fd, GREETING, strlen(GREETING), MSG_DONTWAIT);
                     enqueue_all(newc);
@@ -1055,10 +1053,10 @@ int main(int argc, char ** argv)
             {
                 debug(4, L"Close connection %d", c->fd);
 
-                while (! c->unsent->empty())
+                while (! c->unsent.empty())
                 {
-                    message_t *msg = c->unsent->front();
-                    c->unsent->pop();
+                    message_t *msg = c->unsent.front();
+                    c->unsent.pop();
                     msg->count--;
                     if (!msg->count)
                         free(msg);
@@ -1074,7 +1072,7 @@ int main(int argc, char ** argv)
                     conn=c->next;
                 }
 
-                free(c);
+                delete c;
 
                 c=(prev?prev->next:conn);
 

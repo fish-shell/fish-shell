@@ -46,7 +46,7 @@
 #define RECONNECT_COUNT 32
 
 
-connection_t env_universal_server;
+connection_t env_universal_server(-1);
 
 /**
    Set to true after initialization has been performed
@@ -280,8 +280,6 @@ void env_universal_init(wchar_t * p,
     start_fishd=sf;
     external_callback = cb;
 
-    connection_init(&env_universal_server, -1);
-
     env_universal_server.fd = get_socket();
     env_universal_common_init(&callback);
     env_universal_read_all();
@@ -372,7 +370,7 @@ void env_universal_barrier()
     */
     msg= create_message(BARRIER, 0, 0);
     msg->count=1;
-    env_universal_server.unsent->push(msg);
+    env_universal_server.unsent.push(msg);
 
     /*
       Wait until barrier request has been sent
@@ -383,7 +381,7 @@ void env_universal_barrier()
         try_send_all(&env_universal_server);
         check_connection();
 
-        if (env_universal_server.unsent->empty())
+        if (env_universal_server.unsent.empty())
             break;
 
         if (env_universal_server.fd == -1)
@@ -445,7 +443,7 @@ void env_universal_set(const wcstring &name, const wcstring &value, bool exportv
         }
 
         msg->count=1;
-        env_universal_server.unsent->push(msg);
+        env_universal_server.unsent.push(msg);
         env_universal_barrier();
     }
 }
@@ -473,7 +471,7 @@ int env_universal_remove(const wchar_t *name)
     {
         msg= create_message(ERASE, name, 0);
         msg->count=1;
-        env_universal_server.unsent->push(msg);
+        env_universal_server.unsent.push(msg);
         env_universal_barrier();
     }
 

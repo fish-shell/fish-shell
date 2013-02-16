@@ -1467,7 +1467,7 @@ static void update_export_array_if_necessary(bool recalc)
         for (i=0; i<uni.size(); i++)
         {
             const wcstring &key = uni.at(i);
-            const wchar_t *val = env_universal_get(key.c_str());
+            const wchar_t *val = env_universal_get(key);
 
             if (wcscmp(val, ENV_NULL))
             {

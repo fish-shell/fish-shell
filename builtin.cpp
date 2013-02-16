@@ -1171,7 +1171,7 @@ static void functions_def(const wcstring &name, wcstring &out)
 
 
     wcstring_list_t named = function_get_named_arguments(name);
-    if (named.size() > 0)
+    if (! named.empty())
     {
         append_format(out, L" --argument");
         for (size_t i=0; i < named.size(); i++)
@@ -3531,7 +3531,7 @@ static int builtin_end(parser_t &parser, wchar_t **argv)
                     const wcstring val = for_vars.back();
                     for_vars.pop_back();
                     const wcstring &for_variable = fb->variable;
-                    env_set(for_variable.c_str(), val.c_str(),  ENV_LOCAL);
+                    env_set(for_variable, val.c_str(),  ENV_LOCAL);
                     parser.current_block->loop_status = LOOP_NORMAL;
                     parser.current_block->skip = 0;
 

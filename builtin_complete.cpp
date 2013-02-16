@@ -98,7 +98,7 @@ static void  builtin_complete_add2(const wchar_t *cmd,
                      flags);
     }
 
-    if (old_opt.size() == 0 && gnu_opt.size() == 0 && wcslen(short_opt) == 0)
+    if (old_opt.empty() && gnu_opt.empty() && wcslen(short_opt) == 0)
     {
         complete_add(cmd,
                      cmd_type,
@@ -204,7 +204,7 @@ static void  builtin_complete_remove2(const wchar_t *cmd,
     {
         for (; *s; s++)
         {
-            if (old_opt.size() == 0 && gnu_opt.size() == 0)
+            if (old_opt.empty() && gnu_opt.empty())
             {
                 complete_remove(cmd,
                                 cmd_type,

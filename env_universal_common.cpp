@@ -595,21 +595,16 @@ static void parse_message(wchar_t *msg,
         tmp = wcschr(name, L':');
         if (tmp)
         {
-            wchar_t *key;
             wchar_t *val;
-
-            key = (wchar_t *)malloc(sizeof(wchar_t)*(tmp-name+1));
-            memcpy(key, name, sizeof(wchar_t)*(tmp-name));
-            key[tmp-name]=0;
-
+            const wcstring key(name, tmp - name);
+            
             val = tmp+1;
             val = unescape(val, 0);
 
-            if (key && val)
-                env_universal_common_set(key, val, exportv);
+            if (val != NULL)
+                env_universal_common_set(key.c_str(), val, exportv);
 
             free(val);
-            free(key);
         }
         else
         {
@@ -646,7 +641,7 @@ static void parse_message(wchar_t *msg,
     {
         message_t *msg = create_message(BARRIER_REPLY, 0, 0);
         msg->count = 1;
-        src->unsent->push(msg);
+        src->unsent.push(msg);
         try_send_all(src);
     }
     else if (match(msg, BARRIER_REPLY_STR))
@@ -716,12 +711,12 @@ void try_send_all(connection_t *c)
     /*  debug( 3,
            L"Send all updates to connection on fd %d",
            c->fd );*/
-    while (!c->unsent->empty())
+    while (!c->unsent.empty())
     {
-        switch (try_send(c->unsent->front(), c->fd))
+        switch (try_send(c->unsent.front(), c->fd))
         {
             case 1:
-                c->unsent->pop();
+                c->unsent.pop();
                 break;
 
             case 0:
@@ -930,25 +925,23 @@ void enqueue_all(connection_t *c)
 
         message_t *msg = create_message(entry.exportv ? SET_EXPORT : SET, key.c_str(), entry.val.c_str());
         msg->count=1;
-        c->unsent->push(msg);
+        c->unsent.push(msg);
     }
 
     try_send_all(c);
 }
 
-
-void connection_init(connection_t *c, int fd)
+connection_t::connection_t(const int input_fd) :
+    fd(input_fd),
+    killme(false),
+    buffer_consumed(0),
+    buffer_used(0),
+    next(NULL)
 {
-    memset(c, 0, sizeof(connection_t));
-    c->fd = fd;
-    c->unsent = new std::queue<message_t *>;
-    c->buffer_consumed = c->buffer_used = 0;
 }
 
 void connection_destroy(connection_t *c)
 {
-    if (c->unsent) delete c->unsent;
-
     /*
       A connection need not always be open - we only try to close it
       if it is open.

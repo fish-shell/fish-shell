@@ -76,20 +76,22 @@ typedef std::queue<message_t *> message_queue_t;
 /**
    This struct represents a connection between a universal variable server/client
 */
-typedef struct connection
+struct connection_t
 {
     /**
        The file descriptor this socket lives on
     */
     int fd;
+    
     /**
-       Queue of onsent messages
+       Queue of unsent messages
     */
-    message_queue_t *unsent;
+    std::queue<message_t *> unsent;
+
     /**
        Set to one when this connection should be killed
     */
-    int killme;
+    bool killme;
     /**
        The input string. Input from the socket goes here. When a
        newline is encountered, the buffer is parsed and cleared.
@@ -111,13 +113,14 @@ typedef struct connection
     */
     size_t buffer_used;
 
-
     /**
        Link to the next connection
     */
-    struct connection *next;
-}
-connection_t;
+    struct connection_t *next;
+    
+    /* Constructor */
+    connection_t(int input_fd);
+};
 
 /**
    Read all available messages on this connection
@@ -192,12 +195,6 @@ bool env_universal_common_get_export(const wcstring &name);
    Add messages about all existing variables to the specified connection
 */
 void enqueue_all(connection_t *c);
-
-/**
-   Fill in the specified connection_t struct. Use the specified file
-   descriptor for communication.
-*/
-void connection_init(connection_t *c, int fd);
 
 /**
    Close and destroy the specified connection struct. This frees

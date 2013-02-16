@@ -112,11 +112,10 @@ void show_stackframe()
         return;
 
     void *trace[32];
-    char **messages = (char **)NULL;
     int i, trace_size = 0;
 
     trace_size = backtrace(trace, 32);
-    messages = backtrace_symbols(trace, trace_size);
+    char **messages = backtrace_symbols(trace, trace_size);
 
     if (messages)
     {

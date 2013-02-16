@@ -422,10 +422,11 @@ void env_universal_common_init(void (*cb)(fish_message_type_t type, const wchar_
 static int read_byte(connection_t *src)
 {
 
-    if (src->buffer_consumed >= src->buffer_used)
+    if (src->buffer_consumed >= src->read_buffer.size())
     {
-
-        ssize_t res = read(src->fd, src->buffer, ENV_UNIVERSAL_BUFFER_SIZE);
+        char local[ENV_UNIVERSAL_BUFFER_SIZE];
+        
+        ssize_t res = read(src->fd, local, sizeof local);
 
 //    debug(4, L"Read chunk '%.*s'", res, src->buffer );
 
@@ -441,17 +442,19 @@ static int read_byte(connection_t *src)
             return ENV_UNIVERSAL_ERROR;
 
         }
-
-        if (res == 0)
+        else if (res == 0)
         {
             return ENV_UNIVERSAL_EOF;
         }
-
-        src->buffer_consumed = 0;
-        src->buffer_used = res;
+        else
+        {
+            src->read_buffer.clear();
+            src->read_buffer.insert(src->read_buffer.begin(), local, local + res);
+            src->buffer_consumed = 0;
+        }
     }
 
-    return src->buffer[src->buffer_consumed++];
+    return src->read_buffer.at(src->buffer_consumed++);
 
 }
 
@@ -934,8 +937,7 @@ void enqueue_all(connection_t *c)
 connection_t::connection_t(int input_fd) :
     fd(input_fd),
     killme(false),
-    buffer_consumed(0),
-    buffer_used(0)
+    buffer_consumed(0)
 {
 }
 

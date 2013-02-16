@@ -259,7 +259,8 @@ static void reconnect()
     debug(3, L"Get new fishd connection");
 
     s_env_univeral_inited = false;
-    env_universal_server.buffer_consumed = env_universal_server.buffer_used = 0;
+    env_universal_server.buffer_consumed = 0;
+    env_universal_server.read_buffer.clear();
     env_universal_server.fd = get_socket();
     s_env_univeral_inited = true;
     if (env_universal_server.fd >= 0)

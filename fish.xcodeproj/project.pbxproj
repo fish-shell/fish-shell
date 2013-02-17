@@ -816,7 +816,7 @@
 		D0A084F213B3AC130099B651 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0440;
+                                LastUpgradeCheck = 0460;
 			};
 			buildConfigurationList = D0A084F513B3AC130099B651 /* Build configuration list for PBXProject "fish" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -1276,6 +1276,7 @@
 		D0A564E7168CFDD800AF6161 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+                                COMBINE_HIDPI_IMAGES = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1283,6 +1284,7 @@
 		D0A564E8168CFDD800AF6161 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+                                COMBINE_HIDPI_IMAGES = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

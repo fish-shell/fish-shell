@@ -3102,8 +3102,9 @@ const wchar_t *reader_readline()
                     const wchar_t *end = &buff[data->buff_pos];
                     const wchar_t *begin = end;
 
-                    while (begin > buff  && *begin != L'\n')
+                    do
                         begin--;
+                    while (begin > buff && *begin != L'\n');
 
                     if (*begin == L'\n')
                         begin++;

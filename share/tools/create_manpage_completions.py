@@ -29,7 +29,7 @@ CMDNAME = ""
 # Information used to track which of our parsers were successful
 PARSER_INFO = {}
 
-# builtcommand writes into this global variable, yuck
+# built_command writes into this global variable, yuck
 built_command_output = []
 
 # Diagnostic output
@@ -101,7 +101,7 @@ def output_complete_command(cmdname, args, description, output_list):
         comps.append(description)
     output_list.append(' '.join(comps))
 
-def builtcommand(options, description):
+def built_command(options, description):
 #    print "Options are: ", options
     man_optionlist = re.split(" |,|\"|=|[|]", options)
     fish_options = []
@@ -258,7 +258,7 @@ class Type1ManParser(ManParser):
                     optionName = unquoteSingleQuotes(optionName)
                     optionDescription = data[1].strip().replace("\n"," ")
 #                    print >> sys.stderr, "Option: ", optionName," Description: ", optionDescription , '\n'
-                    builtcommand(optionName, optionDescription)
+                    built_command(optionName, optionDescription)
 
             else:
                 add_diagnostic('Unable to split option from description')
@@ -288,7 +288,7 @@ class Type1ManParser(ManParser):
                     optionName = unquoteSingleQuotes(optionName)
                     optionDescription = data[1].strip().replace("\n"," ")
 #                    print "Option: ", optionName," Description: ", optionDescription , '\n'
-                    builtcommand(optionName, optionDescription)
+                    built_command(optionName, optionDescription)
             else:
                 add_diagnostic('Unable to split option from description')
                 return False
@@ -329,7 +329,7 @@ class Type1ManParser(ManParser):
                     optionName = unquoteSingleQuotes(optionName)
                     optionDescription = data[1].strip().replace("\n"," ")
 #                    print "Option: ", optionName," Description: ", optionDescription , '\n'
-                    builtcommand(optionName, optionDescription)
+                    built_command(optionName, optionDescription)
             else:
 #                print data
                 add_diagnostic('Unable to split option from description')
@@ -395,7 +395,7 @@ class Type2ManParser(ManParser):
                     optionName = unquoteSingleQuotes(optionName)
                     optionDescription = data[1].strip().replace("\n"," ")
 #                    print "Option: ", optionName," Description: ", optionDescription , '\n'
-                    builtcommand(optionName, optionDescription)
+                    built_command(optionName, optionDescription)
             else:
                 # print >> sys.stderr, data
                 add_diagnostic('Unable to split option from description')
@@ -452,7 +452,7 @@ class Type3ManParser(ManParser):
                     optionName = unquoteSingleQuotes(optionName)
                     optionDescription = data[1].strip().replace("\n"," ")
 #                    print >> sys.stderr, "Option: ", optionName," Description: ", optionDescription , '\n'
-                    builtcommand(optionName, optionDescription)
+                    built_command(optionName, optionDescription)
 
             else:
                 add_diagnostic('Unable to split option from description')
@@ -508,7 +508,7 @@ class Type4ManParser(ManParser):
                     optionName = unquoteSingleQuotes(optionName)
                     optionDescription = data[1].strip().replace("\n"," ")
 #                    print "Option: ", optionName," Description: ", optionDescription , '\n'
-                    builtcommand(optionName, optionDescription)
+                    built_command(optionName, optionDescription)
 
             else:
                 add_diagnostic('Unable to split option from description')
@@ -615,10 +615,10 @@ class TypeDarwinManParser(ManParser):
                 continue
             elif len(name) > 1:
                 # Output the command
-                builtcommand(('-' * dash_count) + name, desc)
+                built_command(('-' * dash_count) + name, desc)
                 got_something = True
             elif len(name) == 1:
-                builtcommand('-' + name, desc)
+                built_command('-' + name, desc)
                 got_something = True
 
         return got_something
@@ -673,7 +673,7 @@ class TypeDeroffManParser(ManParser):
                 if description: description += ' '
                 description += lines.pop(0)
 
-            builtcommand(options, description)
+            built_command(options, description)
             got_something = True
 
         return got_something
@@ -704,19 +704,25 @@ def file_is_overwritable(path):
 
     file.close()
     return result
-
-
-# Return whether the file at the given path either does not exist, or exists but appears to be a file we output (and hence can overwrite)
-def file_missing_or_overwritable(path):
+    
+# Remove any and all autogenerated completions in the given directory
+def cleanup_autogenerated_completions_in_directory(dir):
     try:
-        return file_is_overwritable(path)
-    except IOError as err:
-        if err.errno == 2:
-            # File does not exist, full steam ahead
-            return True
-        else:
-            # Something else happened
-            return False
+        for filename in os.listdir(dir):
+            # Skip non .fish files
+            if not filename.endswith('.fish'): continue
+            path = os.path.join(dir, filename)
+            try:
+                if file_is_overwritable(path):
+                    os.unlink(path)
+            except IOError:
+                pass
+            except OSError:
+                pass
+                
+    except OSError as err:
+        return False
+
 
 # Delete the file if it is autogenerated
 def cleanup_autogenerated_file(path):
@@ -726,7 +732,7 @@ def cleanup_autogenerated_file(path):
     except (OSError, IOError):
         pass
 
-def parse_manpage_at_path(manpage_path, yield_to_dirs, output_directory):
+def parse_manpage_at_path(manpage_path, output_directory):
     filename = os.path.basename(manpage_path)
 
     # Clear diagnostics
@@ -800,11 +806,7 @@ def parse_manpage_at_path(manpage_path, yield_to_dirs, output_directory):
             else:
                 fullpath = os.path.join(output_directory, CMDNAME + '.fish')
                 try:
-                    if file_missing_or_overwritable(fullpath):
-                        output_file = codecs.open(fullpath, "w", encoding="utf-8");
-                    else:
-                        add_diagnostic("Not overwriting the file at '%s'" % fullpath)
-
+                    output_file = codecs.open(fullpath, "w", encoding="utf-8")
                 except IOError as err:
                     add_diagnostic("Unable to open file '%s': error(%d): %s" % (fullpath, err.errno, err.strerror))
                     return False
@@ -836,17 +838,7 @@ def parse_manpage_at_path(manpage_path, yield_to_dirs, output_directory):
                 
     return success
 
-# Indicates whether the given filename has a presence in one of the yield-to directories
-# If so, there's a bespoke completion and we should not generate one
-def file_in_yield_directory(filename, yield_to_dirs):
-    for yield_dir in yield_to_dirs:
-        test_path = os.path.join(yield_dir, filename)
-        if os.path.isfile(test_path):
-            # Yield to the existing file
-            return True
-    return False
-
-def parse_and_output_man_pages(paths, output_directory, yield_to_dirs, show_progress):
+def parse_and_output_man_pages(paths, output_directory, show_progress):
     global diagnostic_indent, CMDNAME
     paths.sort()
     total_count = len(paths)
@@ -878,20 +870,12 @@ def parse_and_output_man_pages(paths, output_directory, yield_to_dirs, show_prog
             # Compute the path that we would write to
             output_path = os.path.join(output_directory, output_file_name)
 
-            if file_in_yield_directory(output_file_name, yield_to_dirs):
-                # We're duplicating a bespoke completion - delete any existing completion
-                skip = True
-                cleanup_autogenerated_file(output_path)
-            elif not file_missing_or_overwritable(output_path):
-                # Don't overwrite a user-created completion
-                skip = True
-
         # Now skip if requested
         if skip:
             continue
 
         try:
-            if parse_manpage_at_path(manpage_path, yield_to_dirs, output_directory):
+            if parse_manpage_at_path(manpage_path, output_directory):
                 successful_count += 1
         except IOError:
             diagnostic_indent = 0
@@ -928,16 +912,13 @@ def get_paths_from_manpath():
             result.append(os.path.join(directory_path, name))
     return result
 
-
-
 def usage(script_name):
     print("Usage: {0} [-v, --verbose] [-s, --stdout] [-d, --directory] [-p, --progress] files...".format(script_name))
     print("""Command options are:
      -h, --help\t\tShow this help message
      -v, --verbose [0, 1, 2]\tShow debugging output to stderr. Larger is more verbose.
      -s, --stdout\tWrite all completions to stdout (trumps the --directory option)
-     -d, --directory [dir]\tWrite all completions to the given directory, instead of to ~/.config/fish/completions
-     -y, --yield-to [dir]\tSkip completions that are already present in the given directory
+     -d, --directory [dir]\tWrite all completions to the given directory, instead of to ~/.config/fish/generated_completions
      -m, --manpath\tProcess all man1 files available in the manpath (as determined by manpath)
      -p, --progress\tShow progress
     """)
@@ -945,15 +926,16 @@ def usage(script_name):
 if __name__ == "__main__":
     script_name = sys.argv[0]
     try:
-        opts, file_paths = getopt.gnu_getopt(sys.argv[1:], 'v:sd:hmpy:z', ['verbose=', 'stdout', 'directory=', 'help', 'manpath', 'progress', 'yield-to='])
+        opts, file_paths = getopt.gnu_getopt(sys.argv[1:], 'v:sd:hmpc:z', ['verbose=', 'stdout', 'directory=', 'cleanup-in=', 'help', 'manpath', 'progress'])
     except getopt.GetoptError as err:
         print(err.msg) # will print something like "option -a not recognized"
         usage(script_name)
         sys.exit(2)
-
-    # If a completion already exists in one of the yield-to directories, then don't overwrite it
-    # And even delete an existing autogenerated one
-    yield_to_dirs = []
+        
+    # Directories within which we will clean up autogenerated completions
+    # This script originally wrote completions into ~/.config/fish/completions
+    # Now it writes them into a separate directory
+    cleanup_directories = []
 
     use_manpath, show_progress, custom_dir = False, False, False
     output_directory = ''
@@ -971,10 +953,8 @@ if __name__ == "__main__":
             use_manpath = True
         elif opt in ('-p', '--progress'):
             show_progress = True
-        elif opt in ('-y', '--yield-to'):
-            yield_to_dirs.append(value)
-            if not os.path.isdir(value):
-                sys.stderr.write("Warning: yield-to directory does not exist: '{0}'\n".format(value))
+        elif opt in ('-c', '--cleanup-in'):
+            cleanup_directories.append(value)
         elif opt in ('-z'):
             DEROFF_ONLY = True
         else:
@@ -984,14 +964,18 @@ if __name__ == "__main__":
         # Fetch all man1 files from the manpath
         file_paths.extend(get_paths_from_manpath())
 
+    if cleanup_directories:
+        for cleanup_dir in cleanup_directories:
+            cleanup_autogenerated_completions_in_directory(cleanup_dir)
+
     if not file_paths:
         print("No paths specified")
         sys.exit(0)
-
+        
     if not WRITE_TO_STDOUT and not output_directory:
-        # Default to ~/.config/fish/completions/
+        # Default to ~/.config/fish/generated_completions/
         # Create it if it doesn't exist
-        output_directory = os.path.expanduser('~/.config/fish/completions/')
+        output_directory = os.path.expanduser('~/.config/fish/generated_completions/')
         try:
             os.makedirs(output_directory)
         except OSError as e:
@@ -999,11 +983,11 @@ if __name__ == "__main__":
                 raise
 
     if True:
-        parse_and_output_man_pages(file_paths, output_directory, yield_to_dirs, show_progress)
+        parse_and_output_man_pages(file_paths, output_directory, show_progress)
     else:
         # Profiling code
         import cProfile, pstats
-        cProfile.run('parse_and_output_man_pages(file_paths, output_directory, yield_to_dirs, show_progress)', 'fooprof')
+        cProfile.run('parse_and_output_man_pages(file_paths, output_directory, show_progress)', 'fooprof')
         p = pstats.Stats('fooprof')
         p.sort_stats('cumulative').print_stats(100)
 

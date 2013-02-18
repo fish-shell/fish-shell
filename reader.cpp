@@ -543,6 +543,15 @@ static void reader_repaint()
     data->repaint_needed = false;
 }
 
+static void reader_repaint_without_autosuggestion()
+{
+    const wcstring saved_autosuggestion = data->autosuggestion;
+
+    data->autosuggestion.clear();
+    reader_repaint();
+    data->autosuggestion = saved_autosuggestion;
+}
+
 /**
    Internal helper function for handling killing parts of text.
 */
@@ -1742,6 +1751,9 @@ static bool handle_completions(const std::vector<completion_t> &comp)
             wchar_t quote;
             parse_util_get_parameter_info(data->command_line, data->buff_pos, &quote, NULL, NULL);
             is_quoted = (quote != L'\0');
+
+            /* Clear the autosuggestion from the old commandline before abandoning it (see #561) */
+            reader_repaint_without_autosuggestion();
 
             write_loop(1, "\n", 1);
 

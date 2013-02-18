@@ -429,10 +429,7 @@ void completion_autoload_t::command_removed(const wcstring &cmd)
 }
 
 
-/**
-   Create a new completion entry
-
-*/
+/** Create a new completion entry */
 void append_completion(std::vector<completion_t> &completions, const wcstring &comp, const wcstring &desc, complete_flags_t flags)
 {
     completions.push_back(completion_t(comp, desc, flags));

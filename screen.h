@@ -194,15 +194,15 @@ void s_write(screen_t *s,
     function than s_write has written to the screen.
 
     \param s the screen to reset
-    \param reset_cursor whether the line on which the curor has changed should be assumed to have changed. If \c reset_cursor is false, the library will attempt to make sure that the screen area does not seem to move up or down on repaint.
-    \param Whether to reset the prompt as well. If so
+    \param reset_cursor whether the line on which the cursor has changed should be assumed to have changed. If \c reset_cursor is false, the library will attempt to make sure that the screen area does not seem to move up or down on repaint.
+    \param reset_prompt whether to reset the prompt as well.
 
-    If reset_cursor is incorreclt set to 0, this may result in screen
-    contents being erased. If it is incorrectly set to one, it may
-    result in one or more lines of garbage on screen on the next
+    If reset_cursor is incorrectly set to false, this may result in
+    screen contents being erased. If it is incorrectly set to true, it
+    may result in one or more lines of garbage on screen on the next
     repaint. If this happens during a loop, such as an interactive
     resizing, there will be one line of garbage for every repaint,
-    which will quicly fill the screen.
+    which will quickly fill the screen.
 */
 void s_reset(screen_t *s, bool reset_cursor, bool reset_prompt = true);
 

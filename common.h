@@ -125,8 +125,8 @@ extern const wchar_t *program_name;
 /**
    This macro is used to check that an input argument is not null. It
    is a bit lika a non-fatal form of assert. Instead of exit-ing on
-   failiure, the current function is ended at once. The second
-   parameter is the return value of the current function on failiure.
+   failure, the current function is ended at once. The second
+   parameter is the return value of the current function on failure.
 */
 #define CHECK( arg, retval )											\
 	if (!(arg)) 														\
@@ -203,7 +203,7 @@ void show_stackframe();
 
 /**
    Read a line from the stream f into the string. Returns
-   the number of bytes read or -1 on failiure.
+   the number of bytes read or -1 on failure.
 
    If the carriage return character is encountered, it is
    ignored. fgetws() considers the line to end if reading the file
@@ -621,13 +621,13 @@ __sentinel bool contains_internal(const wcstring &needle, ...);
 long read_blocked(int fd, void *buf, size_t count);
 
 /**
-   Loop a write request while failiure is non-critical. Return -1 and set errno
+   Loop a write request while failure is non-critical. Return -1 and set errno
    in case of critical error.
  */
 ssize_t write_loop(int fd, const char *buff, size_t count);
 
 /**
-   Loop a read request while failiure is non-critical. Return -1 and set errno
+   Loop a read request while failure is non-critical. Return -1 and set errno
    in case of critical error.
  */
 ssize_t read_loop(int fd, void *buff, size_t count);

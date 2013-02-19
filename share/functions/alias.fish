@@ -36,15 +36,14 @@ function alias --description "Legacy function for creating shellscript functions
 	end
 
 
-	# If we are shadowing an existing (internal or external) command, set the
-	# correct prefix. If $name is different from the command in $body, we assume
-	# the user knows what he/she is doing.
+	# Prevent the alias from immediately running into an infinite recursion if
+	# $body starts with the same command as $name.
 
 	switch $body
 		case $name $name\ \* $name\t\*
 			if contains $name (builtin --names)
 				set prefix builtin
-			else if which $name >/dev/null
+			else
 				set prefix command
 			end
 	end

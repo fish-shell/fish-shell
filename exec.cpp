@@ -429,10 +429,10 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t &out_chain, s
             }
         }
 
-        /* Record this IO redirection even if we failed (so we can free it) */
-        result_chain.push_back(out);
+        if (out.get() != NULL)
+            result_chain.push_back(out);
 
-        /* But don't go any further if we failed */
+        /* Don't go any further if we failed */
         if (! success)
         {
             break;

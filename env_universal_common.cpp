@@ -425,7 +425,7 @@ static int read_byte(connection_t *src)
     if (src->buffer_consumed >= src->read_buffer.size())
     {
         char local[ENV_UNIVERSAL_BUFFER_SIZE];
-        
+
         ssize_t res = read(src->fd, local, sizeof local);
 
 //    debug(4, L"Read chunk '%.*s'", res, src->buffer );
@@ -600,7 +600,7 @@ static void parse_message(wchar_t *msg,
         {
             wchar_t *val;
             const wcstring key(name, tmp - name);
-            
+
             val = tmp+1;
             val = unescape(val, 0);
 

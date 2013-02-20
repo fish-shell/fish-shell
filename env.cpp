@@ -130,7 +130,13 @@ struct env_node_t
     struct env_node_t *next;
 
 
-    env_node_t() : new_scope(false), exportv(false), next(NULL) { }
+    env_node_t() : new_scope(false), exportv(false) { }
+
+    /* Returns a pointer to the given entry if present, or NULL. */
+    const var_entry_t *find_entry(const wcstring &key);
+
+    /* Returns the next scope to search in order, respecting the new_scope flag, or NULL if we're done. */
+    env_node_t *next_scope_to_search(void);
 };
 
 class variable_entry_t
@@ -141,15 +147,11 @@ class variable_entry_t
 
 static pthread_mutex_t env_lock = PTHREAD_MUTEX_INITIALIZER;
 
-/**
-   Top node on the function stack
-*/
-static env_node_t *top=0;
+/** Top node on the function stack */
+static env_node_t *top = NULL;
 
-/**
-   Bottom node on the function stack
-*/
-static env_node_t *global_env = 0;
+/** Bottom node on the function stack */
+static env_node_t *global_env = NULL;
 
 
 /**
@@ -157,32 +159,40 @@ static env_node_t *global_env = 0;
 */
 static var_table_t *global;
 
-/**
-   Table of variables that may not be set using the set command.
-*/
-static std::set<wcstring> env_read_only;
+/* Helper class for storing constant strings, without needing to wrap them in a wcstring */
+
+/* Comparer for const string set */
+struct const_string_set_comparer
+{
+    bool operator()(const wchar_t *a, const wchar_t *b)
+    {
+        return wcscmp(a, b) < 0;
+    }
+};
+typedef std::set<const wchar_t *, const_string_set_comparer> const_string_set_t;
+
+/** Table of variables that may not be set using the set command. */
+static const_string_set_t env_read_only;
 
 static bool is_read_only(const wcstring &key)
 {
-    return env_read_only.find(key) != env_read_only.end();
+    return env_read_only.find(key.c_str()) != env_read_only.end();
 }
 
 /**
    Table of variables whose value is dynamically calculated, such as umask, status, etc
 */
-static std::set<wcstring> env_electric;
+static const_string_set_t env_electric;
 
 static bool is_electric(const wcstring &key)
 {
-    return env_electric.find(key) != env_electric.end();
+    return env_electric.find(key.c_str()) != env_electric.end();
 }
-
 
 /**
    Exported variable array used by execv
 */
 static null_terminated_array_t<char> export_array;
-
 
 /**
    Flag for checking if we need to regenerate the exported variable
@@ -193,12 +203,6 @@ static void mark_changed_exported()
 {
     has_changed_exported = true;
 }
-
-/**
-   This string is used to store the value of dynamically
-   generated variables, such as history.
-*/
-static wcstring dyn_var;
 
 /**
    List of all locale variable names
@@ -215,6 +219,23 @@ static const wchar_t * const locale_variable[] =
     L"LC_TIME",
     NULL
 };
+
+
+const var_entry_t *env_node_t::find_entry(const wcstring &key)
+{
+    const var_entry_t *result = NULL;
+    var_table_t::const_iterator where = env.find(key);
+    if (where != env.end())
+    {
+        result = &where->second;
+    }
+    return result;
+}
+
+env_node_t *env_node_t::next_scope_to_search(void)
+{
+    return this->new_scope ? global_env : this->next;
+}
 
 
 /**
@@ -376,7 +397,7 @@ static void universal_callback(fish_message_type_t type,
                                const wchar_t *name,
                                const wchar_t *val)
 {
-    const wchar_t *str=0;
+    const wchar_t *str = NULL;
 
     switch (type)
     {
@@ -417,37 +438,32 @@ static void universal_callback(fish_message_type_t type,
 */
 static void setup_path()
 {
-    size_t i;
-    int j;
-    wcstring_list_t lst;
-
     const wchar_t *path_el[] =
     {
         L"/bin",
         L"/usr/bin",
-        PREFIX L"/bin",
-        0
-    }
-    ;
+        NULL
+    };
 
     env_var_t path = env_get_string(L"PATH");
 
-    if (!path.missing())
+    wcstring_list_t lst;
+    if (! path.missing())
     {
         tokenize_variable_array(path, lst);
     }
 
-    for (j=0; path_el[j]; j++)
+    for (size_t j=0; path_el[j] != NULL; j++)
     {
 
-        int has_el=0;
+        bool has_el = false;
 
-        for (i=0; i<lst.size(); i++)
+        for (size_t i=0; i<lst.size(); i++)
         {
-            wcstring el = lst.at(i);
+            const wcstring &el = lst.at(i);
             size_t len = el.size();
 
-            while ((len > 0) && (el[len-1]==L'/'))
+            while ((len > 0) && (el.at(len-1)==L'/'))
             {
                 len--;
             }
@@ -455,11 +471,12 @@ static void setup_path()
             if ((wcslen(path_el[j]) == len) &&
                     (wcsncmp(el.c_str(), path_el[j], len)==0))
             {
-                has_el = 1;
+                has_el = true;
+                break;
             }
         }
 
-        if (!has_el)
+        if (! has_el)
         {
             wcstring buffer;
 
@@ -470,8 +487,8 @@ static void setup_path()
                 buffer += path;
             }
 
-            buffer += ARRAY_SEP_STR;
-            buffer += path_el[j];
+            buffer.append(ARRAY_SEP_STR);
+            buffer.append(path_el[j]);
 
             env_set(L"PATH", buffer.empty()?NULL:buffer.c_str(), ENV_GLOBAL | ENV_EXPORT);
 
@@ -542,8 +559,6 @@ static bool variable_can_be_array(const wcstring &key)
 
 void env_init(const struct config_paths_t *paths /* or NULL */)
 {
-    char **p;
-
     /*
       env_read_only variables can not be altered directly by the user
     */
@@ -594,7 +609,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     /*
       Import environment variables
     */
-    for (p=environ?environ:__environ; p && *p; p++)
+    for (char **p = (environ ? environ : __environ); p && *p; p++)
     {
         const wcstring key_and_val = str2wcstring(*p); //like foo=bar
         size_t eql = key_and_val.find(L'=');
@@ -719,19 +734,12 @@ static env_node_t *env_get_node(const wcstring &key)
     env_node_t *env = top;
     while (env != NULL)
     {
-        if (env->env.find(key) != env->env.end())
+        if (env->find_entry(key) != NULL)
         {
             break;
         }
 
-        if (env->new_scope)
-        {
-            env = global_env;
-        }
-        else
-        {
-            env = env->next;
-        }
+        env = env->next_scope_to_search();
     }
     return env;
 }
@@ -1079,28 +1087,20 @@ env_var_t env_get_string(const wcstring &key)
 
             while (env != NULL)
             {
-                var_table_t::iterator result =  env->env.find(key);
-                if (result != env->env.end())
+                const var_entry_t *entry = env->find_entry(key);
+                if (entry != NULL)
                 {
-                    const var_entry_t &res = result->second;
-                    if (res.val == ENV_NULL)
+                    if (entry->val == ENV_NULL)
                     {
                         return env_var_t::missing_var();
                     }
                     else
                     {
-                        return res.val;
+                        return entry->val;
                     }
                 }
 
-                if (env->new_scope)
-                {
-                    env = global_env;
-                }
-                else
-                {
-                    env = env->next;
-                }
+                env = env->next_scope_to_search();
             }
         }
 
@@ -1180,14 +1180,7 @@ bool env_exist(const wchar_t *key, int mode)
             if (mode & ENV_LOCAL)
                 break;
 
-            if (env->new_scope)
-            {
-                env = global_env;
-            }
-            else
-            {
-                env = env->next;
-            }
+            env = env->next_scope_to_search();
         }
     }
 

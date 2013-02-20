@@ -3101,18 +3101,18 @@ const wchar_t *reader_readline()
                     const wchar_t *buff = data->command_line.c_str();
                     const wchar_t *end = &buff[data->buff_pos];
                     const wchar_t *begin = end;
-                    
+
                     /* Make sure we delete at least one character (see #580) */
                     begin--;
-                    
+
                     /* Delete until we hit a newline, or the beginning of the string */
                     while (begin > buff  && *begin != L'\n')
                         begin--;
-                    
+
                     /* If we landed on a newline, don't delete it */
                     if (*begin == L'\n')
                         begin++;
-                    
+
                     assert(end >= begin);
                     size_t len = maxi<size_t>(end-begin, 1);
                     begin = end - len;

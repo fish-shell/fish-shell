@@ -57,38 +57,32 @@ if test -d /usr/xpg4/bin
 	end
 end
 
-#
-# Add a few common directories to path, if they exists. Note that pure
-# console programs like makedep sometimes live in /usr/X11R6/bin, so we
-# want this even for text-only terminals.
-#
-
-set -l path_list /bin /usr/bin /usr/X11R6/bin /usr/local/bin $__fish_bin_dir
-
-# Root should also have the sbin directories in the path
-switch $USER
-	case root
-	set path_list $path_list /sbin /usr/sbin /usr/local/sbin
-end
-
-#
-# It's desirable to only modify PATH once, because fish will check it for validity,
-# which performs disk I/O. Construct the new PATH locally.
-#
-
-set -l path_under_construction $PATH
-for i in $path_list
-	if begin ; not contains $i $path_under_construction ; and test -d $i ; end
-		set path_under_construction $path_under_construction $i
+# Add a handler for when fish_user_path changes, so we can apply the same changes to PATH
+# Invoke it immediately to apply the current value of fish_user_path
+function __fish_reconstruct_path -d "Update PATH when fish_user_paths changes" --on-variable fish_user_paths
+        set -l local_path $PATH
+        set -l x
+        for x in $__fish_added_user_paths
+                if set -l idx (contains --index $x $local_path)
+                        set -e local_path[$idx]
+                end
 	end
-end
 
-set PATH $path_under_construction
+        set -e __fish_added_user_paths
+        for x in $fish_user_paths
+                if not contains $x $local_path
+                        set local_path $local_path $x
+                        set -g __fish_added_user_paths $__fish_added_user_paths $x
+                end
+        end
+        set -xg PATH $local_path
+end
+__fish_reconstruct_path
 
 #
 # Launch debugger on SIGTRAP
 #
-function fish_sigtrap_handler --on-signal TRAP --no-scope-shadowing --description "Signal handler for the TRAP signal. Lanches a debug prompt."
+function fish_sigtrap_handler --on-signal TRAP --no-scope-shadowing --description "Signal handler for the TRAP signal. Launches a debug prompt."
 	breakpoint
 end
 

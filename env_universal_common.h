@@ -78,17 +78,17 @@ typedef std::queue<message_t *> message_queue_t;
 */
 class connection_t
 {
-    private:
+private:
     /* No assignment */
     connection_t &operator=(const connection_t &);
-    
-    public:
-    
+
+public:
+
     /**
        The file descriptor this socket lives on
     */
     int fd;
-    
+
     /**
        Queue of unsent messages
     */
@@ -113,7 +113,7 @@ class connection_t
        Number of bytes that have already been consumed.
     */
     size_t buffer_consumed;
-    
+
     /* Constructor */
     connection_t(int input_fd);
 };

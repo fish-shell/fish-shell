@@ -67,15 +67,26 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope)
         /* Fix for https://github.com/fish-shell/fish-shell/issues/199 . Return success if any path setting succeeds. */
         bool any_success = false;
 
+        /* Don't bother validating (or complaining about) values that are already present */
+        wcstring_list_t existing_values;
+        const env_var_t existing_variable = env_get_string(key);
+        if (! existing_variable.missing_or_empty())
+            tokenize_variable_array(existing_variable, existing_values);
+
         for (i=0; i< val.size() ; i++)
         {
+            const wcstring &dir = val.at(i);
+            if (list_contains_string(existing_values, dir))
+            {
+                any_success = true;
+                continue;
+            }
+
             bool show_perror = false;
             int show_hint = 0;
             bool error = false;
 
             struct stat buff;
-            const wchar_t *dir = val[i].c_str();
-
             if (wstat(dir, &buff))
             {
                 error = true;
@@ -93,9 +104,8 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope)
             }
             else
             {
-                const wchar_t *colon;
-                append_format(stderr_buffer, _(BUILTIN_SET_PATH_ERROR), L"set", dir, key);
-                colon = wcschr(dir, L':');
+                append_format(stderr_buffer, _(BUILTIN_SET_PATH_ERROR), L"set", dir.c_str(), key);
+                const wchar_t *colon = wcschr(dir.c_str(), L':');
 
                 if (colon && *(colon+1))
                 {
@@ -111,7 +121,7 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope)
 
             if (show_hint)
             {
-                append_format(stderr_buffer, _(BUILTIN_SET_PATH_HINT), L"set", key, key, wcschr(dir, L':')+1);
+                append_format(stderr_buffer, _(BUILTIN_SET_PATH_HINT), L"set", key, key, wcschr(dir.c_str(), L':')+1);
             }
 
         }

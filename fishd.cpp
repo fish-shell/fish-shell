@@ -1030,7 +1030,7 @@ int main(int argc, char ** argv)
             }
         }
 
-        for (connection_list_t::iterator iter = connections.begin(); iter != connections.end(); )
+        for (connection_list_t::iterator iter = connections.begin(); iter != connections.end();)
         {
             if (iter->killme)
             {

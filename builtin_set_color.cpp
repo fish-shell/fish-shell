@@ -163,7 +163,7 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
         append_format(stderr_buffer, _("%s: Unknown color '%s'\n"), argv[0], bgcolor);
         return STATUS_BUILTIN_ERROR;
     }
-    
+
     /* Make sure that the term exists */
     if (cur_term == NULL && setupterm(0, STDOUT_FILENO, 0) == ERR)
     {
@@ -183,7 +183,7 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
 
     /* Save old output function so we can restore it */
     int (* const saved_writer_func)(char) = output_get_writer();
-    
+
     /* Set our output function, which writes to a std::string */
     builtin_set_color_output.clear();
     output_set_writer(set_color_builtin_outputter);
@@ -229,14 +229,14 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
             write_background_color(index_for_color(bg));
         }
     }
-    
+
     /* Restore saved writer function */
     output_set_writer(saved_writer_func);
-    
+
     /* Output the collected string */
     std::string local_output;
     std::swap(builtin_set_color_output, local_output);
     stdout_buffer.append(str2wcstring(local_output));
-    
+
     return STATUS_BUILTIN_OK;
 }

@@ -32,7 +32,7 @@ function __fish_complete_cd -d "Completions for the cd command"
 			# in case the CDPATH directory is relative
 
 			builtin cd $wd
-			eval builtin cd $i
+			eval builtin cd \"$i\"
 
 			# What we would really like to do is skip descriptions if all
 			# valid paths are in the same directory, but we don't know how to

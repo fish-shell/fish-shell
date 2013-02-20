@@ -130,7 +130,7 @@ struct env_node_t
     struct env_node_t *next;
 
 
-    env_node_t() : new_scope(false), exportv(false) { }
+    env_node_t() : new_scope(false), exportv(false), next(NULL) { }
 
     /* Returns a pointer to the given entry if present, or NULL. */
     const var_entry_t *find_entry(const wcstring &key);

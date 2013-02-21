@@ -545,16 +545,14 @@ static void reader_repaint()
 
 static void reader_repaint_without_autosuggestion()
 {
-    const wcstring saved_autosuggestion = data->autosuggestion;
-
-    data->autosuggestion.clear();
+    // Swap in an empty autosuggestion, repaint, then swap it out
+    wcstring saved_autosuggestion;
+    data->autosuggestion.swap(saved_autosuggestion);
     reader_repaint();
-    data->autosuggestion = saved_autosuggestion;
+    data->autosuggestion.swap(saved_autosuggestion);
 }
 
-/**
-   Internal helper function for handling killing parts of text.
-*/
+/** Internal helper function for handling killing parts of text. */
 static void reader_kill(size_t begin_idx, size_t length, int mode, int newv)
 {
     const wchar_t *begin = data->command_line.c_str() + begin_idx;
@@ -1753,7 +1751,8 @@ static bool handle_completions(const std::vector<completion_t> &comp)
             is_quoted = (quote != L'\0');
 
             /* Clear the autosuggestion from the old commandline before abandoning it (see #561) */
-            reader_repaint_without_autosuggestion();
+            if (! data->autosuggestion.empty())
+                reader_repaint_without_autosuggestion();
 
             write_loop(1, "\n", 1);
 

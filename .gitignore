@@ -4,6 +4,7 @@
 Doxyfile.help
 Makefile
 autom4te.cache/
+build/
 command_list.txt
 confdefs.h
 config.h
@@ -28,6 +29,7 @@ share/config.fish
 share/man/
 toc.txt
 user_doc/
+xcuserdata
 xsel-1.2.0/
 tests/*tmp.*
 tests/foo.txt

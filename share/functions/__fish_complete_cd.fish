@@ -17,7 +17,7 @@ function __fish_complete_cd -d "Completions for the cd command"
 	# Note how this works: we evaluate $ctoken*/
 	# That trailing slash ensures that we only expand directories
 
-    set -l ctoken (commandline -ct)
+	set -l ctoken (commandline -ct)
 	if echo $ctoken | sgrep '^/\|^\./\|^\.\./\|^~/' >/dev/null
 		# This is an absolute search path
 		# Squelch descriptions per issue 254
@@ -32,7 +32,7 @@ function __fish_complete_cd -d "Completions for the cd command"
 			# in case the CDPATH directory is relative
 
 			builtin cd $wd
-			eval builtin cd $i
+			builtin cd $i
 
 			# What we would really like to do is skip descriptions if all
 			# valid paths are in the same directory, but we don't know how to

@@ -731,12 +731,6 @@ int parser_t::eval_args(const wchar_t *line, std::vector<completion_t> &args)
     if (this->parser_type != PARSER_TYPE_GENERAL)
         eflags |= EXPAND_SKIP_CMDSUBST;
 
-    /*
-      eval_args may be called while evaulating another command, so we
-      save the previous tokenizer and restore it on exit
-    */
-    tokenizer_t * const previous_tokenizer = current_tokenizer;
-    const int previous_pos = current_tokenizer_pos;
     int do_loop=1;
 
     CHECK(line, 1);
@@ -747,8 +741,13 @@ int parser_t::eval_args(const wchar_t *line, std::vector<completion_t> &args)
         proc_push_interactive(0);
 
     tokenizer_t tok(line, (show_errors ? 0 : TOK_SQUASH_ERRORS));
-    current_tokenizer = &tok;
-    current_tokenizer_pos = 0;
+
+    /*
+      eval_args may be called while evaulating another command, so we
+      save the previous tokenizer and restore it on exit
+    */
+    scoped_push<tokenizer_t*> tokenizer_push(current_tokenizer, &tok);
+    scoped_push<int> tokenizer_pos_push(current_tokenizer_pos, 0);
 
     error_code=0;
 
@@ -801,9 +800,6 @@ int parser_t::eval_args(const wchar_t *line, std::vector<completion_t> &args)
 
     if (show_errors)
         this->print_errors_stderr();
-
-    current_tokenizer=previous_tokenizer;
-    current_tokenizer_pos = previous_pos;
 
     if (this->parser_type == PARSER_TYPE_GENERAL)
         proc_pop_interactive();
@@ -1652,9 +1648,7 @@ int parser_t::parse_job(process_t *p,
     bool allow_bogus_command = false; // If we are an elseif that will not be executed, or an AND or OR that will have been short circuited, don't complain about non-existent commands
 
     block_t *prev_block = current_block;
-    int prev_tokenizer_pos = current_tokenizer_pos;
-
-    current_tokenizer_pos = tok_get_pos(tok);
+    scoped_push<int> tokenizer_pos_push(current_tokenizer_pos, tok_get_pos(tok));
 
     while (args.empty())
     {
@@ -1677,7 +1671,6 @@ int parser_t::parse_job(process_t *p,
                           ILLEGAL_CMD_ERR_MSG,
                           tok_last(tok));
 
-                    current_tokenizer_pos = prev_tokenizer_pos;
                     return 0;
                 }
                 break;
@@ -1690,7 +1683,6 @@ int parser_t::parse_job(process_t *p,
                       TOK_ERR_MSG,
                       tok_last(tok));
 
-                current_tokenizer_pos = prev_tokenizer_pos;
                 return 0;
             }
 
@@ -1712,7 +1704,6 @@ int parser_t::parse_job(process_t *p,
                           tok_get_desc(tok_last_type(tok)));
                 }
 
-                current_tokenizer_pos = prev_tokenizer_pos;
                 return 0;
             }
 
@@ -1723,7 +1714,6 @@ int parser_t::parse_job(process_t *p,
                       CMD_ERR_MSG,
                       tok_get_desc(tok_last_type(tok)));
 
-                current_tokenizer_pos = prev_tokenizer_pos;
                 return 0;
             }
         }
@@ -1746,7 +1736,6 @@ int parser_t::parse_job(process_t *p,
                 error(SYNTAX_ERROR,
                       tok_get_pos(tok),
                       EXEC_ERR_MSG);
-                current_tokenizer_pos = prev_tokenizer_pos;
                 return 0;
             }
 
@@ -1801,7 +1790,7 @@ int parser_t::parse_job(process_t *p,
                     use_function = 0;
                     use_builtin=0;
                     p->type=INTERNAL_EXEC;
-                    current_tokenizer_pos = prev_tokenizer_pos;
+                    tokenizer_pos_push.restore();
                 }
             }
         }
@@ -2231,7 +2220,6 @@ int parser_t::parse_job(process_t *p,
             parser_t::pop_block();
         }
     }
-    current_tokenizer_pos = prev_tokenizer_pos;
     return !error_code;
 }
 
@@ -2333,7 +2321,7 @@ void parser_t::eval_job(tokenizer_t *tok)
 
     profile_item_t *profile_item = NULL;
     bool skip = false;
-    int job_begin_pos, prev_tokenizer_pos;
+    int job_begin_pos;
     const bool do_profile = profile;
 
     if (do_profile)
@@ -2422,10 +2410,8 @@ void parser_t::eval_job(tokenizer_t *tok)
                     int was_builtin = 0;
                     if (j->first_process->type==INTERNAL_BUILTIN && !j->first_process->next)
                         was_builtin = 1;
-                    prev_tokenizer_pos = current_tokenizer_pos;
-                    current_tokenizer_pos = job_begin_pos;
+                    scoped_push<int> tokenizer_pos_push(current_tokenizer_pos, job_begin_pos);
                     exec(*this, j);
-                    current_tokenizer_pos = prev_tokenizer_pos;
 
                     /* Only external commands require a new fishd barrier */
                     if (!was_builtin)
@@ -2563,14 +2549,12 @@ int parser_t::eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type
     const wchar_t * const cmd = cmdStr.c_str();
     size_t forbid_count;
     int code;
-    tokenizer_t *previous_tokenizer=current_tokenizer;
     block_t *start_current_block = current_block;
 
     /* Record the current chain so we can put it back later */
-    const io_chain_t prev_io = block_io;
-    block_io = io;
+    scoped_push<io_chain_t> block_io_push(block_io, io);
 
-    std::vector<wcstring> prev_forbidden = forbidden_function;
+    scoped_push<std::vector<wcstring> > forbidden_function_push(forbidden_function);
 
     if (block_type == SUBST)
     {
@@ -2580,8 +2564,6 @@ int parser_t::eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type
     CHECK_BLOCK(1);
 
     forbid_count = forbidden_function.size();
-
-    block_io = io;
 
     job_reap(0);
 
@@ -2609,7 +2591,7 @@ int parser_t::eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type
 
     this->push_block(new scope_block_t(block_type));
 
-    current_tokenizer = new tokenizer_t(cmd, 0);
+    scoped_push<tokenizer_t*> tokenizer_push(current_tokenizer, new tokenizer_t(cmd, 0));
 
     error_code = 0;
 
@@ -2667,9 +2649,6 @@ int parser_t::eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type
     /*
       Restore previous eval state
     */
-    forbidden_function = prev_forbidden;
-    current_tokenizer=previous_tokenizer;
-    block_io = prev_io;
     eval_level--;
 
     code=error_code;
@@ -2834,16 +2813,15 @@ int parser_t::parser_test_argument(const wchar_t *arg, wcstring *out, const wcha
 
 int parser_t::test_args(const  wchar_t * buff, wcstring *out, const wchar_t *prefix)
 {
-    tokenizer_t *const previous_tokenizer = current_tokenizer;
-    const int previous_pos = current_tokenizer_pos;
     int do_loop = 1;
     int err = 0;
 
     CHECK(buff, 1);
 
-
     tokenizer_t tok(buff, 0);
-    current_tokenizer = &tok;
+    scoped_push<tokenizer_t*> tokenizer_push(current_tokenizer, &tok);
+    scoped_push<int> tokenizer_pos_push(current_tokenizer_pos);
+
     for (; do_loop && tok_has_next(&tok); tok_next(&tok))
     {
         current_tokenizer_pos = tok_get_pos(&tok);
@@ -2893,9 +2871,6 @@ int parser_t::test_args(const  wchar_t * buff, wcstring *out, const wchar_t *pre
         }
     }
 
-    current_tokenizer = previous_tokenizer;
-    current_tokenizer_pos = previous_pos;
-
     error_code=0;
 
     return err;
@@ -2922,9 +2897,6 @@ int parser_t::test(const wchar_t *buff, int *block_level, wcstring *out, const w
     int had_cmd=0;
     int err=0;
     int unfinished = 0;
-
-    tokenizer_t * const previous_tokenizer=current_tokenizer;
-    const int previous_pos=current_tokenizer_pos;
 
     // These are very nearly stacks, but sometimes we have to inspect non-top elements (e.g. return)
     std::vector<struct block_info_t> block_infos;
@@ -2973,7 +2945,9 @@ int parser_t::test(const wchar_t *buff, int *block_level, wcstring *out, const w
     }
 
     tokenizer_t tok(buff, 0);
-    current_tokenizer = &tok;
+
+    scoped_push<tokenizer_t*> tokenizer_push(current_tokenizer, &tok);
+    scoped_push<int> tokenizer_pos_push(current_tokenizer_pos);
 
     for (;; tok_next(&tok))
     {
@@ -3713,9 +3687,6 @@ int parser_t::test(const wchar_t *buff, int *block_level, wcstring *out, const w
     /*
       Cleanup
     */
-
-    current_tokenizer=previous_tokenizer;
-    current_tokenizer_pos = previous_pos;
 
     error_code=0;
 

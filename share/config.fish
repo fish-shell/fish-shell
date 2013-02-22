@@ -79,6 +79,19 @@ function __fish_reconstruct_path -d "Update PATH when fish_user_paths changes" -
 end
 __fish_reconstruct_path
 
+# OS X-ism: Load the path files out of /etc/paths and /etc/paths.d/*
+function __fish_load_path_helper_paths
+    while read -l new_path_comp
+        if not contains $new_path_comp $PATH
+        	set PATH $PATH $new_path_comp
+        end
+    end
+end
+if test -r /etc/paths ; __fish_load_path_helper_paths < /etc/paths ; end
+for pathfile in /etc/paths.d/* ; __fish_load_path_helper_paths < $pathfile ; end
+functions -e __fish_load_path_helper_paths
+
+
 #
 # Launch debugger on SIGTRAP
 #

@@ -209,7 +209,7 @@ void io_chain_t::push_back(const shared_ptr<io_data_t> &element)
 {
     // Ensure we never push back NULL
     assert(element.get() != NULL);
-    std::vector<shared_ptr<io_data_t> >:: push_back(element);
+    std::vector<shared_ptr<io_data_t> >::push_back(element);
 }
 
 void io_remove(io_chain_t &list, const shared_ptr<const io_data_t> &element)
@@ -229,8 +229,15 @@ void io_print(const io_chain_t &chain)
     for (size_t i=0; i < chain.size(); i++)
     {
         const shared_ptr<const io_data_t> &io = chain.at(i);
-        fprintf(stderr, "\t%lu: fd:%d, ", (unsigned long)i, io->fd);
-        io->print();
+        if (io.get() == NULL)
+        {
+            fprintf(stderr, "\t(null)\n");
+        }
+        else
+        {
+            fprintf(stderr, "\t%lu: fd:%d, ", (unsigned long)i, io->fd);
+            io->print();
+        }
     }
 }
 

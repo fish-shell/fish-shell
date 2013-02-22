@@ -444,6 +444,49 @@ public:
     ~scoped_lock();
 };
 
+
+/**
+   A scoped manager to save the current value of some variable, and optionally
+   set it to a new value. On destruction it restores the variable to its old
+   value.
+
+   This can be handy when there are multiple code paths to exit a block.
+*/
+template <typename T>
+class scoped_push
+{
+    T &ref;
+    T saved_value;
+    bool restored;
+
+public:
+    scoped_push(T &r):
+        ref(r), restored(false)
+    {
+        saved_value = ref;
+    }
+
+    scoped_push(T &r, T new_value):
+        ref(r), restored(false)
+    {
+        saved_value = ref;
+        ref = new_value;
+    }
+
+    ~scoped_push()
+    {
+        if (!restored)
+            restore();
+    }
+
+    void restore()
+    {
+        ref = saved_value;
+        restored = true;
+    }
+};
+
+
 /* Wrapper around wcstok */
 class wcstokenizer
 {

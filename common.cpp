@@ -2176,16 +2176,16 @@ template <typename CharType_t>
 static CharType_t **make_null_terminated_array_helper(const std::vector<std::basic_string<CharType_t> > &argv)
 {
     size_t count = argv.size();
-    
+
     /* We allocate everything in one giant block. First compute how much space we need. */
 
     /* N + 1 pointers */
     size_t pointers_allocation_len = (count + 1) * sizeof(CharType_t *);
-    
+
     /* In the very unlikely event that CharType_t has stricter alignment requirements than does a pointer, round us up to the size of a CharType_t */
     pointers_allocation_len += sizeof(CharType_t) - 1;
     pointers_allocation_len -= pointers_allocation_len % sizeof(CharType_t);
-    
+
     /* N null terminated strings */
     size_t strings_allocation_len = 0;
     for (size_t i=0; i < count; i++)
@@ -2193,22 +2193,22 @@ static CharType_t **make_null_terminated_array_helper(const std::vector<std::bas
         /* The size of the string, plus a null terminator */
         strings_allocation_len += (argv.at(i).size() + 1) * sizeof(CharType_t);
     }
-    
+
     /* Now allocate their sum */
     unsigned char *base = static_cast<unsigned char *>(malloc(pointers_allocation_len + strings_allocation_len));
     if (! base) return NULL;
-    
+
     /* Divvy it up into the pointers and strings */
     CharType_t **pointers = reinterpret_cast<CharType_t **>(base);
     CharType_t *strings = reinterpret_cast<CharType_t *>(base + pointers_allocation_len);
-    
+
     /* Start copying */
     for (size_t i=0; i < count; i++)
     {
         const std::basic_string<CharType_t> &str = argv.at(i);
         // store the current string pointer into self
         *pointers++ = strings;
-        
+
         // copy the string into strings
         strings = std::copy(str.begin(), str.end(), strings);
         // each string needs a null terminator
@@ -2216,12 +2216,12 @@ static CharType_t **make_null_terminated_array_helper(const std::vector<std::bas
     }
     // array of pointers needs a null terminator
     *pointers++ = NULL;
-    
+
     // Make sure we know what we're doing
-    assert((unsigned char *)pointers - base == (ptrdiff_t)pointers_allocation_len);
-    assert((unsigned char *)strings - (unsigned char *)pointers == (ptrdiff_t)strings_allocation_len);
-    assert((unsigned char *)strings - base == (ptrdiff_t)(pointers_allocation_len + strings_allocation_len));
-    
+    assert((unsigned char *)pointers - base == (std::ptrdiff_t)pointers_allocation_len);
+    assert((unsigned char *)strings - (unsigned char *)pointers == (std::ptrdiff_t)strings_allocation_len);
+    assert((unsigned char *)strings - base == (std::ptrdiff_t)(pointers_allocation_len + strings_allocation_len));
+
     // Return what we did
     return reinterpret_cast<CharType_t**>(base);
 }
@@ -2235,4 +2235,3 @@ char **make_null_terminated_array(const std::vector<std::string> &lst)
 {
     return make_null_terminated_array_helper(lst);
 }
-

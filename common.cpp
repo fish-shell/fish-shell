@@ -1978,18 +1978,21 @@ void exit_without_destructors(int code)
 }
 
 /* Helper function to convert from a null_terminated_array_t<wchar_t> to a null_terminated_array_t<char_t> */
-null_terminated_array_t<char> convert_wide_array_to_narrow(const null_terminated_array_t<wchar_t> &wide_arr)
+void convert_wide_array_to_narrow(const null_terminated_array_t<wchar_t> &wide_arr, null_terminated_array_t<char> *output)
 {
     const wchar_t *const *arr = wide_arr.get();
     if (! arr)
-        return null_terminated_array_t<char>();
+    {
+        output->clear();
+        return;
+    }
 
     std::vector<std::string> list;
     for (size_t i=0; arr[i]; i++)
     {
         list.push_back(wcs2string(arr[i]));
     }
-    return null_terminated_array_t<char>(list);
+    output->set(list);
 }
 
 void append_path_component(wcstring &path, const wcstring &component)
@@ -2167,3 +2170,69 @@ wcstokenizer::~wcstokenizer()
 {
     free(buffer);
 }
+
+
+template <typename CharType_t>
+static CharType_t **make_null_terminated_array_helper(const std::vector<std::basic_string<CharType_t> > &argv)
+{
+    size_t count = argv.size();
+    
+    /* We allocate everything in one giant block. First compute how much space we need. */
+
+    /* N + 1 pointers */
+    size_t pointers_allocation_len = (count + 1) * sizeof(CharType_t *);
+    
+    /* In the very unlikely event that CharType_t has stricter alignment requirements than does a pointer, round us up to the size of a CharType_t */
+    pointers_allocation_len += sizeof(CharType_t) - 1;
+    pointers_allocation_len -= pointers_allocation_len % sizeof(CharType_t);
+    
+    /* N null terminated strings */
+    size_t strings_allocation_len = 0;
+    for (size_t i=0; i < count; i++)
+    {
+        /* The size of the string, plus a null terminator */
+        strings_allocation_len += (argv.at(i).size() + 1) * sizeof(CharType_t);
+    }
+    
+    /* Now allocate their sum */
+    unsigned char *base = static_cast<unsigned char *>(malloc(pointers_allocation_len + strings_allocation_len));
+    if (! base) return NULL;
+    
+    /* Divvy it up into the pointers and strings */
+    CharType_t **pointers = reinterpret_cast<CharType_t **>(base);
+    CharType_t *strings = reinterpret_cast<CharType_t *>(base + pointers_allocation_len);
+    
+    /* Start copying */
+    for (size_t i=0; i < count; i++)
+    {
+        const std::basic_string<CharType_t> &str = argv.at(i);
+        // store the current string pointer into self
+        *pointers++ = strings;
+        
+        // copy the string into strings
+        strings = std::copy(str.begin(), str.end(), strings);
+        // each string needs a null terminator
+        *strings++ = (CharType_t)(0);
+    }
+    // array of pointers needs a null terminator
+    *pointers++ = NULL;
+    
+    // Make sure we know what we're doing
+    assert((unsigned char *)pointers - base == (ptrdiff_t)pointers_allocation_len);
+    assert((unsigned char *)strings - (unsigned char *)pointers == (ptrdiff_t)strings_allocation_len);
+    assert((unsigned char *)strings - base == (ptrdiff_t)(pointers_allocation_len + strings_allocation_len));
+    
+    // Return what we did
+    return reinterpret_cast<CharType_t**>(base);
+}
+
+wchar_t **make_null_terminated_array(const wcstring_list_t &lst)
+{
+    return make_null_terminated_array_helper(lst);
+}
+
+char **make_null_terminated_array(const std::vector<std::string> &lst)
+{
+    return make_null_terminated_array_helper(lst);
+}
+

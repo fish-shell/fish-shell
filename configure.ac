@@ -530,7 +530,11 @@ LIBS=$LIBS_COMMON
 # Check presense of various header files
 #
 
-AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h ncurses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h sys/termios.h libintl.h execinfo.h spawn.h])
+AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h ncurses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h sys/termios.h execinfo.h spawn.h])
+
+if test x$local_gettext != xno; then
+  AC_CHECK_HEADERS([libintl.h])
+fi
 
 AC_CHECK_HEADER(
   [regex.h],

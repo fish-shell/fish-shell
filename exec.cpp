@@ -271,13 +271,16 @@ char *get_interpreter(const char *command, char *interpreter, size_t buff_size)
    in \c p. It never returns.
 */
 /* Called in a forked child! Do not allocate memory, etc. */
-static void safe_launch_process(process_t *p, const char *actual_cmd, char **argv, char **envv)
+static void safe_launch_process(process_t *p, const char *actual_cmd, const char *const* cargv, const char *const *cenvv)
 {
     int err;
 
 //  debug( 1, L"exec '%ls'", p->argv[0] );
 
-    // Wow, this wcs2str call totally allocates memory
+    // This function never returns, so we take certain liberties with constness
+    char * const * envv = const_cast<char* const *>(cenvv);
+    char * const * argv = const_cast<char* const *>(cargv);
+
     execve(actual_cmd, argv, envv);
 
     err = errno;
@@ -326,7 +329,7 @@ static void launch_process_nofork(process_t *p)
     ASSERT_IS_NOT_FORKED_CHILD();
 
     char **argv = wcsv2strv(p->get_argv());
-    char **envv = env_export_arr(false);
+    const char *const *envv = env_export_arr(false);
     char *actual_cmd = wcs2str(p->actual_cmd.c_str());
 
     /* Bounce to launch_process. This never returns. */
@@ -1275,13 +1278,11 @@ void exec(parser_t &parser, job_t *j)
             case EXTERNAL:
             {
                 /* Get argv and envv before we fork */
-                null_terminated_array_t<char> argv_array = convert_wide_array_to_narrow(p->get_argv_array());
+                null_terminated_array_t<char> argv_array;
+                convert_wide_array_to_narrow(p->get_argv_array(), &argv_array);
 
-                null_terminated_array_t<char> envv_array;
-                env_export_arr(false, envv_array);
-
-                char **envv = envv_array.get();
-                char **argv = argv_array.get();
+                const char * const *argv = argv_array.get();
+                const char * const *envv = env_export_arr(false);
 
                 std::string actual_cmd_str = wcs2string(p->actual_cmd);
                 const char *actual_cmd = actual_cmd_str.c_str();
@@ -1309,7 +1310,7 @@ void exec(parser_t &parser, job_t *j)
                     if (made_it)
                     {
                         /* We successfully made the attributes and actions; actually call posix_spawn */
-                        int spawn_ret = posix_spawn(&pid, actual_cmd, &actions, &attr, argv, envv);
+                        int spawn_ret = posix_spawn(&pid, actual_cmd, &actions, &attr, const_cast<char * const *>(argv), const_cast<char * const *>(envv));
 
                         /* This usleep can be used to test for various race conditions (https://github.com/fish-shell/fish-shell/issues/360) */
                         //usleep(10000);

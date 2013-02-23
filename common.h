@@ -330,140 +330,70 @@ inline wcstring to_string(const int &x)
     return to_string(static_cast<long>(x));
 }
 
+wchar_t **make_null_terminated_array(const wcstring_list_t &lst);
+char **make_null_terminated_array(const std::vector<std::string> &lst);
 
 /* Helper class for managing a null-terminated array of null-terminated strings (of some char type) */
 template <typename CharType_t>
 class null_terminated_array_t
 {
     CharType_t **array;
+    
+    /* No assignment or copying */
+    void operator=(null_terminated_array_t rhs);
+    null_terminated_array_t(const null_terminated_array_t &);
 
-    typedef std::basic_string<CharType_t> string_t;
-    typedef std::vector<string_t> string_list_t;
-
-    void swap(null_terminated_array_t<CharType_t> &him)
-    {
-        std::swap(array, him.array);
-    }
-
-    /* Silly function to get the length of a null terminated array of...something */
-    template <typename T>
-    static size_t count_not_null(const T *arr)
-    {
-        size_t len;
-        for (len=0; arr[len] != T(0); len++)
-            ;
-        return len;
-    }
+    typedef std::vector<std::basic_string<CharType_t> > string_list_t;
 
     size_t size() const
     {
-        return count_not_null(array);
+        size_t len = 0;
+        if (array != NULL)
+        {
+            while (array[len] != NULL)
+            {
+                len++;
+            }
+        }
+        return len;
     }
 
     void free(void)
     {
-        if (array != NULL)
-        {
-            for (size_t i = 0; array[i] != NULL; i++)
-            {
-                delete [] array[i];
-            }
-            delete [] array;
-            array = NULL;
-        }
+        ::free((void *)array);
+        array = NULL;
     }
 
 public:
     null_terminated_array_t() : array(NULL) { }
-    null_terminated_array_t(const string_list_t &argv) : array(NULL)
+    null_terminated_array_t(const string_list_t &argv) : array(make_null_terminated_array(argv))
     {
-        this->set(argv);
     }
+    
     ~null_terminated_array_t()
     {
         this->free();
     }
 
-    /** operator=. Notice the pass-by-value parameter. */
-    null_terminated_array_t& operator=(null_terminated_array_t rhs)
-    {
-        if (this != &rhs)
-            this->swap(rhs);
-        return *this;
-    }
-
-    /* Copy constructor. */
-    null_terminated_array_t(const null_terminated_array_t &him) : array(NULL)
-    {
-        this->set(him.array);
-    }
-
     void set(const string_list_t &argv)
     {
-        /* Get rid of the old argv */
         this->free();
-
-        /* Allocate our null-terminated array of null-terminated strings */
-        size_t i, count = argv.size();
-        this->array = new CharType_t * [count + 1];
-        for (i=0; i < count; i++)
-        {
-            const string_t &str = argv.at(i);
-            this->array[i] = new CharType_t [1 + str.size()];
-            std::copy(str.begin(), str.end(), this->array[i]);
-            this->array[i][str.size()] = CharType_t(0);
-        }
-        this->array[count] = NULL;
+        this->array = make_null_terminated_array(argv);
     }
 
-    void set(const CharType_t * const *new_array)
-    {
-        if (new_array == array)
-            return;
-
-        /* Get rid of the old argv */
-        this->free();
-
-        /* Copy the new one */
-        if (new_array)
-        {
-            size_t i, count = count_not_null(new_array);
-            this->array = new CharType_t * [count + 1];
-            for (i=0; i < count; i++)
-            {
-                size_t len = count_not_null(new_array[i]);
-                this->array[i] = new CharType_t [1 + len];
-                std::copy(new_array[i], new_array[i] + len, this->array[i]);
-                this->array[i][len] = CharType_t(0);
-            }
-            this->array[count] = NULL;
-        }
-    }
-
-    CharType_t **get()
-    {
-        return array;
-    }
     const CharType_t * const *get() const
     {
         return array;
     }
-
-    string_list_t to_list() const
+    
+    void clear()
     {
-        string_list_t lst;
-        if (array != NULL)
-        {
-            size_t count = this->size();
-            lst.reserve(count);
-            lst.insert(lst.end(), array, array + count);
-        }
-        return lst;
+        this->free();
     }
 };
 
 /* Helper function to convert from a null_terminated_array_t<wchar_t> to a null_terminated_array_t<char_t> */
-null_terminated_array_t<char> convert_wide_array_to_narrow(const null_terminated_array_t<wchar_t> &arr);
+void convert_wide_array_to_narrow(const null_terminated_array_t<wchar_t> &arr, null_terminated_array_t<char> *output);
 
 /* Helper class to cache a narrow version of a wcstring in a malloc'd buffer, so that we can read it after fork() */
 class narrow_string_rep_t

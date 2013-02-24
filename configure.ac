@@ -537,7 +537,7 @@ LIBS=$LIBS_COMMON
 # Check presense of various header files
 #
 
-AC_CHECK_HEADERS([getopt.h termio.h sys/resource.h term.h ncurses/term.h ncurses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h sys/termios.h execinfo.h spawn.h])
+AC_CHECK_HEADERS([getopt.h termios.h sys/resource.h term.h ncurses/term.h ncurses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h execinfo.h spawn.h])
 
 if test x$local_gettext != xno; then
   AC_CHECK_HEADERS([libintl.h])
@@ -618,13 +618,6 @@ for i in "" "-D_POSIX_C_SOURCE=200112L" "-D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=2
        * For: siginfo_t (also defined by signal.h when in
        * POSIX/extensions mode). */
       #include <siginfo.h>
-      #endif
-
-      #ifdef HAVE_SYS_TERMIOS_H
-      /* Neither POSIX, C89 nor C99: a common extension.
-       * For: TIOCGWINSZ and struct winsize (under at least
-       * Solaris, NetBSD and (dual-listed) FreeBSD). */
-      #include <sys/termios.h>
       #endif
 
       #ifdef HAVE_SYS_IOCTL_H
@@ -750,8 +743,8 @@ AC_LINK_IFELSE(
   [
     AC_LANG_PROGRAM(
       [
-        #ifdef HAVE_SYS_TERMIOS_H
-        #include <sys/termios.h>
+        #ifdef HAVE_TERMIOS_H
+        #include <termios.h>
         #endif
 
         #ifdef HAVE_SYS_IOCTL_H

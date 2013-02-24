@@ -677,16 +677,16 @@ fi
 
 AC_CHECK_FUNCS( wcsdup wcsndup wcslen wcscasecmp wcsncasecmp fwprintf )
 AC_CHECK_FUNCS( futimes wcwidth wcswidth wcstok fputwc fgetwc )
-AC_CHECK_FUNCS( wcstol wcslcat wcslcpy lrand48_r killpg gettext )
-AC_CHECK_FUNCS( dcgettext backtrace backtrace_symbols sysconf )
-AC_CHECK_FUNCS( getifaddrs )
+AC_CHECK_FUNCS( wcstol wcslcat wcslcpy lrand48_r killpg )
+AC_CHECK_FUNCS( backtrace backtrace_symbols sysconf getifaddrs )
+
+if test x$local_gettext != xno; then
+  AC_CHECK_FUNCS( gettext dcgettext )
 
 #
 # The Makefile also needs to know if we have gettext, so it knows if
 # the translations should be installed.
 #
-
-if test x$local_gettext != xno; then
   AC_CHECK_FUNC( gettext, HAVE_GETTEXT=1, HAVE_GETTEXT=0 )
 fi
 

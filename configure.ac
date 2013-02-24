@@ -194,18 +194,25 @@ fi
 
 AC_ARG_WITH(
   gettext,
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--without-gettext],
     [do not translate messages, even if gettext is available]
   ),
   [local_gettext=$withval],
-  [local_gettext=yes]
+  [local_gettext=check]
 )
 
-if test x$local_gettext != xno; then
-  AC_DEFINE([USE_GETTEXT],[1],[Perform string translations with gettext])
-fi
-
+AS_IF([test x$local_gettext != xno],
+  [ AC_CHECK_PROGS( [found_msgfmt], [msgfmt], [no] )
+    if test x$found_msgfmt!= xno; then
+      AC_DEFINE([USE_GETTEXT],[1],[Perform string translations with gettext])
+    elif test "x$local_gettext" != "xcheck" ; then
+      AC_MSG_FAILURE([--with-gettext was given, but the msgfmt program could not be found])
+    else
+      local_gettext=no
+    fi
+   ],
+)
 
 #
 # Try to enable large file support. This will make sure that on systems

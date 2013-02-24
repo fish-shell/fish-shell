@@ -25,10 +25,6 @@
 #include <curses.h>
 #endif
 
-#if HAVE_TERMIO_H
-#include <termio.h>
-#endif
-
 #if HAVE_TERM_H
 #include <term.h>
 #elif HAVE_NCURSES_TERM_H

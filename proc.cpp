@@ -22,10 +22,6 @@ Some of the code in this file is based on code from the Glibc manual.
 #include <sys/stat.h>
 #include <algorithm>
 
-#ifdef HAVE_SYS_TERMIOS_H
-#include <sys/termios.h>
-#endif
-
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
@@ -39,10 +35,6 @@ Some of the code in this file is based on code from the Glibc manual.
 #include <ncurses.h>
 #else
 #include <curses.h>
-#endif
-
-#if HAVE_TERMIO_H
-#include <termio.h>
 #endif
 
 #if HAVE_TERM_H

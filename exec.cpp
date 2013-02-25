@@ -271,13 +271,16 @@ char *get_interpreter(const char *command, char *interpreter, size_t buff_size)
    in \c p. It never returns.
 */
 /* Called in a forked child! Do not allocate memory, etc. */
-static void safe_launch_process(process_t *p, const char *actual_cmd, char **argv, char **envv)
+static void safe_launch_process(process_t *p, const char *actual_cmd, const char *const* cargv, const char *const *cenvv)
 {
     int err;
 
 //  debug( 1, L"exec '%ls'", p->argv[0] );
 
-    // Wow, this wcs2str call totally allocates memory
+    // This function never returns, so we take certain liberties with constness
+    char * const * envv = const_cast<char* const *>(cenvv);
+    char * const * argv = const_cast<char* const *>(cargv);
+
     execve(actual_cmd, argv, envv);
 
     err = errno;
@@ -326,7 +329,7 @@ static void launch_process_nofork(process_t *p)
     ASSERT_IS_NOT_FORKED_CHILD();
 
     char **argv = wcsv2strv(p->get_argv());
-    char **envv = env_export_arr(false);
+    const char *const *envv = env_export_arr(false);
     char *actual_cmd = wcs2str(p->actual_cmd.c_str());
 
     /* Bounce to launch_process. This never returns. */
@@ -1159,23 +1162,25 @@ void exec(parser_t &parser, job_t *j)
                   performance quite a bit in complex completion code.
                 */
 
-                const shared_ptr<io_data_t> &io = io_chain_get(j->io, 1);
-                bool buffer_stdout = io && io->io_mode == IO_BUFFER;
+                const shared_ptr<io_data_t> &stdout_io = io_chain_get(j->io, STDOUT_FILENO);
+                const shared_ptr<io_data_t> &stderr_io = io_chain_get(j->io, STDERR_FILENO);
+                const bool buffer_stdout = stdout_io && stdout_io->io_mode == IO_BUFFER;
 
                 if ((get_stderr_buffer().empty()) &&
                         (!p->next) &&
                         (! get_stdout_buffer().empty()) &&
                         (buffer_stdout))
                 {
-                    CAST_INIT(io_buffer_t *, io_buffer, io.get());
+                    CAST_INIT(io_buffer_t *, io_buffer, stdout_io.get());
                     const std::string res = wcs2string(get_stdout_buffer());
                     io_buffer->out_buffer_append(res.c_str(), res.size());
                     skip_fork = true;
                 }
-
-                if (! skip_fork && j->io.empty())
+                
+                /* PCA for some reason, fish forks a lot, even for basic builtins like echo just to write out their buffers. I'm certain a lot of this is unnecessary, but I am not sure exactly when. If j->io is NULL, then it means there's no pipes or anything, so we can certainly just write out our data. Beyond that, we may be able to do the same if io_get returns 0 for STDOUT_FILENO and STDERR_FILENO.
+                */
+                if (! skip_fork && stdout_io.get() == NULL && stderr_io.get() == NULL)
                 {
-                    /* PCA for some reason, fish forks a lot, even for basic builtins like echo just to write out their buffers. I'm certain a lot of this is unnecessary, but I am not sure exactly when. If j->io is NULL, then it means there's no pipes or anything, so we can certainly just write out our data. Beyond that, we may be able to do the same if io_get returns 0 for STDOUT_FILENO and STDERR_FILENO. */
                     if (g_log_forks)
                     {
                         printf("fork #-: Skipping fork for internal builtin for '%ls'\n", p->argv0());
@@ -1194,10 +1199,14 @@ void exec(parser_t &parser, job_t *j)
                 for (io_chain_t::iterator iter = j->io.begin(); iter != j->io.end(); ++iter)
                 {
                     const shared_ptr<io_data_t> &tmp_io = *iter;
-                    if (tmp_io->io_mode == IO_FILE && strcmp(static_cast<const io_file_t *>(tmp_io.get())->filename_cstr, "/dev/null") != 0)
+                    if (tmp_io->io_mode == IO_FILE)
                     {
-                        skip_fork = false;
-                        break;
+                        const io_file_t *tmp_file_io = static_cast<const io_file_t *>(tmp_io.get());
+                        if (strcmp(tmp_file_io->filename_cstr, "/dev/null"))
+                        {
+                            skip_fork = false;
+                            break;
+                        }
                     }
                 }
 
@@ -1235,7 +1244,7 @@ void exec(parser_t &parser, job_t *j)
                 if (g_log_forks)
                 {
                     printf("fork #%d: Executing fork for internal builtin for '%ls'\n", g_fork_count, p->argv0());
-                    io_print(io_chain_t(io));
+                    io_print(j->io);
                 }
                 pid = execute_fork(false);
                 if (pid == 0)
@@ -1269,13 +1278,11 @@ void exec(parser_t &parser, job_t *j)
             case EXTERNAL:
             {
                 /* Get argv and envv before we fork */
-                null_terminated_array_t<char> argv_array = convert_wide_array_to_narrow(p->get_argv_array());
+                null_terminated_array_t<char> argv_array;
+                convert_wide_array_to_narrow(p->get_argv_array(), &argv_array);
 
-                null_terminated_array_t<char> envv_array;
-                env_export_arr(false, envv_array);
-
-                char **envv = envv_array.get();
-                char **argv = argv_array.get();
+                const char * const *argv = argv_array.get();
+                const char * const *envv = env_export_arr(false);
 
                 std::string actual_cmd_str = wcs2string(p->actual_cmd);
                 const char *actual_cmd = actual_cmd_str.c_str();
@@ -1303,7 +1310,7 @@ void exec(parser_t &parser, job_t *j)
                     if (made_it)
                     {
                         /* We successfully made the attributes and actions; actually call posix_spawn */
-                        int spawn_ret = posix_spawn(&pid, actual_cmd, &actions, &attr, argv, envv);
+                        int spawn_ret = posix_spawn(&pid, actual_cmd, &actions, &attr, const_cast<char * const *>(argv), const_cast<char * const *>(envv));
 
                         /* This usleep can be used to test for various race conditions (https://github.com/fish-shell/fish-shell/issues/360) */
                         //usleep(10000);

@@ -1560,8 +1560,10 @@ void parser_t::parse_job_argument_list(process_t *p,
                         new_io.reset(new_io_file);
                     }
                 }
-
-                j->io.push_back(new_io);
+                
+                if (new_io.get() != NULL) {
+                    j->io.push_back(new_io);
+                }
 
             }
             break;

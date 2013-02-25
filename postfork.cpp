@@ -528,7 +528,7 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr, posix_spawn_fil
 }
 #endif //FISH_USE_POSIX_SPAWN
 
-void safe_report_exec_error(int err, const char *actual_cmd, char **argv, char **envv)
+void safe_report_exec_error(int err, const char *actual_cmd, const char * const *argv, const char *const *envv)
 {
     debug_safe(0, "Failed to execute process '%s'. Reason:", actual_cmd);
 
@@ -542,7 +542,7 @@ void safe_report_exec_error(int err, const char *actual_cmd, char **argv, char *
             long arg_max = -1;
 
             size_t sz = 0;
-            char **p;
+            const char * const *p;
             for (p=argv; *p; p++)
             {
                 sz += strlen(*p)+1;

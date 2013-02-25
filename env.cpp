@@ -1478,18 +1478,11 @@ static void update_export_array_if_necessary(bool recalc)
 
 }
 
-char **env_export_arr(bool recalc)
+const char * const *env_export_arr(bool recalc)
 {
     ASSERT_IS_MAIN_THREAD();
     update_export_array_if_necessary(recalc);
     return export_array.get();
-}
-
-void env_export_arr(bool recalc, null_terminated_array_t<char> &output)
-{
-    ASSERT_IS_MAIN_THREAD();
-    update_export_array_if_necessary(recalc);
-    output = export_array;
 }
 
 env_vars_snapshot_t::env_vars_snapshot_t(const wchar_t * const *keys)

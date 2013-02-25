@@ -247,7 +247,13 @@ complete -f -c git -n '__fish_git_using_command format-patch' -a '(__fish_git_br
 
 ## git submodule
 complete -f -c git -n '__fish_git_needs_command' -a submodule -d 'Initialize, update or inspect submodules'
-complete -f -c git -n '__fish_git_using_command submodule' -a 'add status init update summary foreach sync' -d 'Make a GPG-signed tag'
+complete -f -c git -n '__fish_git_using_command submodule' -a 'add' -d 'Add a submodule'
+complete -f -c git -n '__fish_git_using_command submodule' -a 'status' -d 'Show submodule status'
+complete -f -c git -n '__fish_git_using_command submodule' -a 'init' -d 'Initialize all submodules'
+complete -f -c git -n '__fish_git_using_command submodule' -a 'update' -d 'Update all submodules'
+complete -f -c git -n '__fish_git_using_command submodule' -a 'summary' -d 'Show commit summary'
+complete -f -c git -n '__fish_git_using_command submodule' -a 'foreach' -d 'Run command on each submodule'
+complete -f -c git -n '__fish_git_using_command submodule' -a 'sync' -d 'Sync submodules\' URL with .gitmodules'
 
 ## git whatchanged
 complete -f -c git -n '__fish_git_needs_command' -a whatchanged -d 'Show logs with difference each commit introduces'

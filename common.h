@@ -338,7 +338,7 @@ template <typename CharType_t>
 class null_terminated_array_t
 {
     CharType_t **array;
-    
+
     /* No assignment or copying */
     void operator=(null_terminated_array_t rhs);
     null_terminated_array_t(const null_terminated_array_t &);
@@ -369,7 +369,7 @@ public:
     null_terminated_array_t(const string_list_t &argv) : array(make_null_terminated_array(argv))
     {
     }
-    
+
     ~null_terminated_array_t()
     {
         this->free();
@@ -385,7 +385,7 @@ public:
     {
         return array;
     }
-    
+
     void clear()
     {
         this->free();
@@ -455,34 +455,32 @@ public:
 template <typename T>
 class scoped_push
 {
-    T &ref;
+    T * const ref;
     T saved_value;
     bool restored;
 
 public:
-    scoped_push(T &r):
-        ref(r), restored(false)
+    scoped_push(T *r): ref(r), saved_value(*r), restored(false)
     {
-        saved_value = ref;
     }
 
-    scoped_push(T &r, T new_value):
-        ref(r), restored(false)
+    scoped_push(T *r, const T &new_value) : ref(r), saved_value(*r), restored(false)
     {
-        saved_value = ref;
-        ref = new_value;
+        *r = new_value;
     }
 
     ~scoped_push()
     {
-        if (!restored)
-            restore();
+        restore();
     }
 
     void restore()
     {
-        ref = saved_value;
-        restored = true;
+        if (!restored)
+        {
+            std::swap(*ref, saved_value);
+            restored = true;
+        }
     }
 };
 

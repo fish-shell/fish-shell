@@ -350,9 +350,9 @@ size_t wcslcpy(wchar_t *dst, const wchar_t *src, size_t siz);
    BSD del_curterm seems to do a double-free. We redefine it as a no-op
 */
 #ifdef HAVE_BROKEN_DEL_CURTERM
-  #define fish_del_curterm(X) OK
+#define fish_del_curterm(X) OK
 #else
-  #define fish_del_curterm(X) del_curterm(X)
+#define fish_del_curterm(X) del_curterm(X)
 #endif
 
 #ifndef HAVE_LRAND48_R

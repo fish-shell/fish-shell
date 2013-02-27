@@ -1176,7 +1176,7 @@ void exec(parser_t &parser, job_t *j)
                     io_buffer->out_buffer_append(res.c_str(), res.size());
                     skip_fork = true;
                 }
-                
+
                 /* PCA for some reason, fish forks a lot, even for basic builtins like echo just to write out their buffers. I'm certain a lot of this is unnecessary, but I am not sure exactly when. If j->io is NULL, then it means there's no pipes or anything, so we can certainly just write out our data. Beyond that, we may be able to do the same if io_get returns 0 for STDOUT_FILENO and STDERR_FILENO.
                 */
                 if (! skip_fork && stdout_io.get() == NULL && stderr_io.get() == NULL)

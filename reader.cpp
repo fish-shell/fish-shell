@@ -1592,7 +1592,7 @@ static bool handle_completions(const std::vector<completion_t> &comp)
      */
     switch (comp.size())
     {
-        /* No suitable completions found, flash screen and return */
+            /* No suitable completions found, flash screen and return */
         case 0:
         {
             reader_flash();

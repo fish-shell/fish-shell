@@ -385,7 +385,7 @@ void input_destroy()
 
     input_common_destroy();
 
-    if (del_curterm(cur_term) == ERR)
+    if (fish_del_curterm(cur_term) == ERR)
     {
         debug(0, _(L"Error while closing terminfo"));
     }

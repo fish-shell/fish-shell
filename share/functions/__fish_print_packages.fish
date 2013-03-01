@@ -25,13 +25,13 @@ function __fish_print_packages
     # yum is slow, just like rpm, so go to the background
 	if type -f /usr/share/yum-cli/completion-helper.py >/dev/null
 
-		# If the cache is less than five minutes old, we do not recalculate it
+		# If the cache is less than six hours old, we do not recalculate it
 
 		set cache_file /tmp/.yum-cache.$USER
 			if test -f $cache_file
 			cat $cache_file
 			set age (math (date +%s) - (stat -c '%Y' $cache_file))
-			set max_age 250
+			set max_age 21600
 			if test $age -lt $max_age
 				return
 			end

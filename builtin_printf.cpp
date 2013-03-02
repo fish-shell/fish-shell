@@ -52,7 +52,7 @@
 
 #include "common.h"
 
-// This file has bee imported from source code of printf command in GNU Coreutils version 6.9
+// This file has been imported from source code of printf command in GNU Coreutils version 6.9
 
 /* The official name of this program (e.g., no `g' prefix).  */
 #define PROGRAM_NAME "printf"
@@ -312,7 +312,7 @@ static void print_direc (const wchar_t *start, size_t length, wchar_t conversion
 
     switch (conversion)
       {
-      case L'd': case L'i': case L'o': case L'u': case L'x': case L'X':
+    case L'd': case L'i':
 	length_modifier = PRIdMAX;
 	length_modifier_len = sizeof PRIdMAX - 2;
 	break;
@@ -322,7 +322,7 @@ static void print_direc (const wchar_t *start, size_t length, wchar_t conversion
 	length_modifier = L"L";
 	length_modifier_len = 1;
 	break;
-      case L's':
+      case L's': case L'u':
 	length_modifier = L"l";
 	length_modifier_len = 1;
 	break;

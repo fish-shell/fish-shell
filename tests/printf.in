@@ -1,0 +1,19 @@
+printf "Hello %d %i %f %F %g %G\n" 1 2 3 4 5 6
+
+printf "%x %X %o %u\n" 10 11 8 -1
+printf "%a %A\n" 14 15
+
+printf "%c %s\n" a hello
+printf "%e %E\n" 5 6
+
+printf "%20d\n" 50
+printf "%-20d%d\n" 5 10
+
+printf "%*d\n" 10 100
+
+printf "%%\"\\\n" 
+printf "%s\b%s\n" x y
+printf "abc\rdef\n"
+printf "Msg1\fMsg2\n"
+printf "foo\vbar\vbaz\n"
+printf "\111 \x50" # \u0051 \U00000052

@@ -448,22 +448,27 @@ static int print_formatted (const wchar_t *format, int argc, wchar_t **argv) {
     int field_width = 0;		/* Arg to first '*'.  */
     bool have_precision;		/* True if PRECISION is valid.  */
     int precision = 0;		/* Arg to second '*'.  */
-    wchar_t ok[UCHAR_MAX + 1];	/* ok['x'] is true if %x is allowed.  */
+    bool ok[UCHAR_MAX + 1] = { };	/* ok['x'] is true if %x is allowed.  */
 
-    for (f = format; *f != L'\0'; ++f) {
-        switch (*f) {
+    for (f = format; *f != L'\0'; ++f)
+    {
+        switch (*f)
+        {
             case L'%':
                 direc_start = f++;
                 direc_length = 1;
                 have_field_width = have_precision = false;
-                if (*f == L'%') {
+                if (*f == L'%')
+                {
                     append_format(stdout_buffer, L"%lc", L'%');
                     break;
                 }
-                if (*f == L'b') {
+                if (*f == L'b')
+                {
                     /* FIXME: Field width and precision are not supported
                     for %b, even though POSIX requires it.  */
-                    if (argc > 0) {
+                    if (argc > 0)
+                    {
                         print_esc_string (*argv);
                         ++argv;
                         --argc;
@@ -471,27 +476,28 @@ static int print_formatted (const wchar_t *format, int argc, wchar_t **argv) {
                     break;
                 }
 
-                memset (ok, 0, sizeof ok);
                 ok['a'] = ok['A'] = ok['c'] = ok['d'] = ok['e'] = ok['E'] =
                 ok['f'] = ok['F'] = ok['g'] = ok['G'] = ok['i'] = ok['o'] =
-                ok['s'] = ok['u'] = ok['x'] = ok['X'] = 1;
+                ok['s'] = ok['u'] = ok['x'] = ok['X'] = true;
 
-                for (;; f++, direc_length++) {
-                    switch (*f) {
+                for (;; f++, direc_length++)
+                {
+                    switch (*f)
+                    {
 #if (__GLIBC__ == 2 && 2 <= __GLIBC_MINOR__) || 3 <= __GLIBC__
                         case L'I':
 #endif
                         case L'\'':
                         ok['a'] = ok['A'] = ok['c'] = ok['e'] = ok['E'] =
-                        ok['o'] = ok['s'] = ok['x'] = ok['X'] = 0;
+                        ok['o'] = ok['s'] = ok['x'] = ok['X'] = false;
                         break;
                         case '-': case '+': case ' ':
                         break;
                         case L'#':
-                        ok['c'] = ok['d'] = ok['i'] = ok['s'] = ok['u'] = 0;
+                        ok['c'] = ok['d'] = ok['i'] = ok['s'] = ok['u'] = false;
                         break;
                         case '0':
-                        ok['c'] = ok['s'] = 0;
+                        ok['c'] = ok['s'] = false;
                         break;
                         default:
                         goto no_more_flag_characters;
@@ -499,10 +505,12 @@ static int print_formatted (const wchar_t *format, int argc, wchar_t **argv) {
                 }
                 no_more_flag_characters:;
 
-                if (*f == L'*') {
+                if (*f == L'*')
+                {
                     ++f;
                     ++direc_length;
-                    if (argc > 0) {
+                    if (argc > 0)
+                    {
                         intmax_t width = vstrtoimax (*argv);
                         if (INT_MIN <= width && width <= INT_MAX)
                             field_width = width;
@@ -511,27 +519,34 @@ static int print_formatted (const wchar_t *format, int argc, wchar_t **argv) {
                         ++argv;
                         --argc;
                     }
-                    else {
+                    else
+                    {
                         field_width = 0;
                     }
                     have_field_width = true;
                 }
-                else {
-                    while (iswdigit(*f)) {
+                else
+                {
+                    while (iswdigit(*f))
+                    {
                         ++f;
                         ++direc_length;
                     }
                 }
-                if (*f == L'.') {
+                if (*f == L'.')
+                {
                     ++f;
                     ++direc_length;
-                    ok['c'] = 0;
-                    if (*f == L'*') {
+                    ok['c'] = false;
+                    if (*f == L'*')
+                    {
                         ++f;
                         ++direc_length;
-                        if (argc > 0) {
+                        if (argc > 0)
+                        {
                             intmax_t prec = vstrtoimax (*argv);
-                            if (prec < 0) {
+                            if (prec < 0)
+                            {
                             /* A negative precision is taken as if the
                             precision were omitted, so -1 is safe
                             here even if prec < INT_MIN.  */
@@ -539,19 +554,23 @@ static int print_formatted (const wchar_t *format, int argc, wchar_t **argv) {
                             }
                             else if (INT_MAX < prec)
                                 append_format(stderr_buffer, _(L"invalid precision: %ls"), *argv);
-                            else {
+                            else
+                            {
                                 precision = prec;
                             }
                             ++argv;
                             --argc;
                         }
-                    else {
+                    else
+                    {
                         precision = 0;
                     }
                     have_precision = true;
                 }
-                else {
-                    while (iswdigit(*f)) {
+                else
+                {
+                    while (iswdigit(*f))
+                    {
                         ++f;
                         ++direc_length;
                     }

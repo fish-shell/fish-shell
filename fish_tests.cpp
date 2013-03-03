@@ -936,6 +936,10 @@ static void test_test()
 
     /* This crashed */
     assert(run_test_test(1, L"1 = 1 -a = 1"));
+    
+    /* Make sure we can treat -S as a parameter instead of an operator. https://github.com/fish-shell/fish-shell/issues/601 */
+    assert(run_test_test(0, L"-S = -S"));
+    assert(run_test_test(1, L"! ! ! A"));
 }
 
 /** Testing colors */

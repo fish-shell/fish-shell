@@ -1,7 +1,7 @@
 \section set_color set_color - set the terminal color
 
 \subsection set_color-synopsis Synopsis
- <tt>set_color [-v --version] [-h --help] [-b --background COLOR] [COLOR]</tt>
+ <tt>set_color [-h --help] [-b --background COLOR] [COLOR]</tt>
 
 \subsection set_color-description Description
 

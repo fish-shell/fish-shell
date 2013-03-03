@@ -297,7 +297,6 @@ static void print_direc (const wchar_t *start, size_t length, wchar_t conversion
 	     bool have_precision, int precision,
 	     wchar_t const *argument)
 {
-    wchar_t *p;		/* Null-terminated copy of % directive. */
     wcstring fmt;
 
     /*  Create a null-terminated copy of the % directive, with an
@@ -328,14 +327,15 @@ static void print_direc (const wchar_t *start, size_t length, wchar_t conversion
                 length_modifier_len = 0;
                 break;
         }
-        p = new wchar_t[length + length_modifier_len + 2];
-        q = static_cast<wchar_t*>(mempcpy (p, start, sizeof(wchar_t) * length));
-        q = static_cast<wchar_t*>(mempcpy (q, length_modifier, sizeof(wchar_t) * length_modifier_len));
+
+        wchar_t p[length + length_modifier_len + 2];		/* Null-terminated copy of % directive. */
+        q = wmemcpy(p, start,  length) + length;
+        q = wmemcpy(q, length_modifier, length_modifier_len) + length_modifier_len;
         *q++ = conversion;
         *q = L'\0';
+        fmt = p;
     }
 
-    fmt = p;
     switch (conversion)
     {
         case L'd':
@@ -432,7 +432,6 @@ static void print_direc (const wchar_t *start, size_t length, wchar_t conversion
             }
             break;
     }
-    free (p);
 }
 
 /* Print the text in FORMAT, using ARGV (with ARGC elements) for
@@ -628,4 +627,5 @@ static int builtin_printf(parser_t &parser, wchar_t **argv)
         argv += args_used;
     }
     while (args_used > 0 && argc > 0);
+	return 0;
 }

@@ -91,42 +91,42 @@ int strtoumax (wchar_t const *ptr, wchar_t **endptr, int base)
 double
 C_STRTOD (wchar_t const *nptr, wchar_t **endptr)
 {
-  double r;
+    double r;
 
-  const wcstring saved_locale = wsetlocale (LC_NUMERIC, NULL);
+    const wcstring saved_locale = wsetlocale (LC_NUMERIC, NULL);
 
-  if (!saved_locale.empty())
+    if (!saved_locale.empty())
     {
-      wsetlocale (LC_NUMERIC, L"C");
+        wsetlocale (LC_NUMERIC, L"C");
     }
 
-  r = STRTOD (nptr, endptr);
+    r = STRTOD (nptr, endptr);
 
-  if (!saved_locale.empty())
+    if (!saved_locale.empty())
     {
-      wsetlocale (LC_NUMERIC, saved_locale.c_str());
+        wsetlocale (LC_NUMERIC, saved_locale.c_str());
     }
 
-  return r;
+    return r;
 }
 
 static inline unsigned wchar_t to_uchar (wchar_t ch)
 {
-  return ch;
+    return ch;
 }
 
 static void verify_numeric (const wchar_t *s, const wchar_t *end)
 {
-  if (errno)
+    if (errno)
     {
-      append_format(stderr_buffer, L"%ls", s);
+        append_format(stderr_buffer, L"%ls", s);
     }
-  else if (*end)
+    else if (*end)
     {
-      if (s == end)
-	 append_format(stderr_buffer, _(L"%ls: expected a numeric value"), s);
-      else
-	 append_format(stderr_buffer, _(L"%ls: value not completely converted"), s);
+        if (s == end)
+            append_format(stderr_buffer, _(L"%ls: expected a numeric value"), s);
+        else
+            append_format(stderr_buffer, _(L"%ls: value not completely converted"), s);
     }
 }
 
@@ -134,27 +134,27 @@ static void verify_numeric (const wchar_t *s, const wchar_t *end)
 static TYPE								 \
 FUNC_NAME (wchar_t const *s)						 \
 {									 \
-  wchar_t *end;								 \
-  TYPE val;								 \
+    wchar_t *end;								 \
+    TYPE val;								 \
 									 \
-  if (*s == L'\"' || *s == L'\'')						 \
+    if (*s == L'\"' || *s == L'\'')						 \
     {									 \
-      unsigned wchar_t ch = *++s;						 \
-      val = ch;								 \
-      /* If POSIXLY_CORRECT is not set, then give a warning that there	 \
-	 are characters following the character constant and that GNU	 \
-	 printf is ignoring those characters.  If POSIXLY_CORRECT *is*	 \
-	 set, then don't give the warning.  */				 \
-      if (*++s != 0 && !posixly_correct)				 \
-	append_format(stderr_buffer, _(cfcc_msg), s);					 \
-    }									 \
-  else									 \
+        unsigned wchar_t ch = *++s;						 \
+        val = ch;								 \
+        /* If POSIXLY_CORRECT is not set, then give a warning that there	 \
+        are characters following the character constant and that GNU	 \
+        printf is ignoring those characters.  If POSIXLY_CORRECT *is*	 \
+        set, then don't give the warning.  */				 \
+        if (*++s != 0 && !posixly_correct)				 \
+            append_format(stderr_buffer, _(cfcc_msg), s);					 \
+        }									 \
+    else									 \
     {									 \
-      errno = 0;							 \
-      val = (LIB_FUNC_EXPR);						 \
-      verify_numeric (s, end);						 \
+        errno = 0;							 \
+        val = (LIB_FUNC_EXPR);						 \
+        verify_numeric (s, end);						 \
     }									 \
-  return val;								 \
+    return val;								 \
 }									 \
 
 STRTOX (intmax_t,    vstrtoimax, strtoimax (s, &end, 0))
@@ -166,35 +166,35 @@ STRTOX (long double, vstrtold, C_STRTOD(s, &end))
 static void
 print_esc_char (wchar_t c)
 {
-  switch (c)
+    switch (c)
     {
     case L'a':			/* Alert. */
-      append_format(stdout_buffer, L"%lc", L'\a');
-      break;
-    case L'b':			/* Backspace. */
-      append_format(stdout_buffer, L"%lc", L'\b');
-      break;
+        append_format(stdout_buffer, L"%lc", L'\a');
+        break;
+        case L'b':			/* Backspace. */
+        append_format(stdout_buffer, L"%lc", L'\b');
+        break;
     case L'c':			/* Cancel the rest of the output. */
-      exit (EXIT_SUCCESS);
-      break;
+        exit (EXIT_SUCCESS);
+        break;
     case L'f':			/* Form feed. */
-      append_format(stdout_buffer, L"%lc", L'\f');
-      break;
+        append_format(stdout_buffer, L"%lc", L'\f');
+        break;
     case L'n':			/* New line. */
-      append_format(stdout_buffer, L"%lc", L'\n');
-      break;
+        append_format(stdout_buffer, L"%lc", L'\n');
+        break;
     case L'r':			/* Carriage retturn. */
-      append_format(stdout_buffer, L"%lc", L'\r');
-      break;
+        append_format(stdout_buffer, L"%lc", L'\r');
+        break;
     case L't':			/* Horizontal tab. */
-      append_format(stdout_buffer, L"%lc", L'\t');
-      break;
+        append_format(stdout_buffer, L"%lc", L'\t');
+        break;
     case L'v':			/* Vertical tab. */
-      append_format(stdout_buffer, L"%lc", L'\v');
-      break;
+        append_format(stdout_buffer, L"%lc", L'\v');
+        break;
     default:
-      append_format(stdout_buffer, L"%lc", c);
-      break;
+        append_format(stdout_buffer, L"%lc", c);
+        break;
     }
 }
 
@@ -203,75 +203,73 @@ print_esc_char (wchar_t c)
    besides the backslash.
    If OCTAL_0 is nonzero, octal escapes are of the form \0ooo, where o
    is an octal digit; otherwise they are of the form \ooo.  */
-
 static int print_esc (const wchar_t *escstart, bool octal_0)
 {
-  const wchar_t *p = escstart + 1;
-  int esc_value = 0;		/* Value of \nnn escape. */
-  int esc_length;		/* Length of \nnn escape. */
+    const wchar_t *p = escstart + 1;
+    int esc_value = 0;		/* Value of \nnn escape. */
+    int esc_length;		/* Length of \nnn escape. */
 
-  if (*p == L'x')
+    if (*p == L'x')
     {
-      /* A hexadecimal \xhh escape sequence must have 1 or 2 hex. digits.  */
-      for (esc_length = 0, ++p;
-	   esc_length < 2 && isxdigit (to_uchar (*p));
-	   ++esc_length, ++p)
-	esc_value = esc_value * 16 + hextobin (*p);
-      if (esc_length == 0)
-	append_format(stderr_buffer, _(L"missing hexadecimal number in escape"));
-      append_format (stdout_buffer, L"%lc", esc_value);
+        /* A hexadecimal \xhh escape sequence must have 1 or 2 hex. digits.  */
+        for (esc_length = 0, ++p;
+        esc_length < 2 && isxdigit (to_uchar (*p));
+        ++esc_length, ++p)
+         esc_value = esc_value * 16 + hextobin (*p);
+        if (esc_length == 0)
+            append_format(stderr_buffer, _(L"missing hexadecimal number in escape"));
+        append_format (stdout_buffer, L"%lc", esc_value);
     }
-  else if (isodigit (*p))
+    else if (isodigit (*p))
     {
-      /* Parse \0ooo (if octal_0 && *p == L'0') or \ooo (otherwise).
-         Allow \ooo if octal_0 && *p != L'0'; this is an undocumented
-         extension to POSIX that is compatible with Bash 2.05b.  */
-      for (esc_length = 0, p += octal_0 && *p == L'0';
-	   esc_length < 3 && isodigit (*p);
-	   ++esc_length, ++p)
-	esc_value = esc_value * 8 + octtobin (*p);
-      append_format(stdout_buffer, L"%c", esc_value);
-    }
-  else if (*p && wcschr (L"\"\\abcfnrtv", *p))
-    print_esc_char (*p++);
-  else if (*p == L'u' || *p == L'U')
+        /* Parse \0ooo (if octal_0 && *p == L'0') or \ooo (otherwise).
+        Allow \ooo if octal_0 && *p != L'0'; this is an undocumented
+        extension to POSIX that is compatible with Bash 2.05b.  */
+        for (esc_length = 0, p += octal_0 && *p == L'0';
+            esc_length < 3 && isodigit (*p);
+            ++esc_length, ++p)
+            esc_value = esc_value * 8 + octtobin (*p);
+        append_format(stdout_buffer, L"%c", esc_value);
+     }
+    else if (*p && wcschr (L"\"\\abcfnrtv", *p))
+        print_esc_char (*p++);
+    else if (*p == L'u' || *p == L'U')
     {
-      wchar_t esc_char = *p;
-      unsigned int uni_value;
+        wchar_t esc_char = *p;
+        unsigned int uni_value;
 
-      uni_value = 0;
-      for (esc_length = (esc_char == L'u' ? 4 : 8), ++p;
-	   esc_length > 0;
-	   --esc_length, ++p)
-	{
-	  if (! isxdigit (to_uchar (*p)))
-	    append_format(stderr_buffer, _(L"missing hexadecimal number in escape"));
-	  uni_value = uni_value * 16 + hextobin (*p);
-	}
+        uni_value = 0;
+        for (esc_length = (esc_char == L'u' ? 4 : 8), ++p;
+        esc_length > 0;
+        --esc_length, ++p)
+        {
+            if (! isxdigit (to_uchar (*p)))
+                append_format(stderr_buffer, _(L"missing hexadecimal number in escape"));
+            uni_value = uni_value * 16 + hextobin (*p);
+        }
 
-      /* A universal character name shall not specify a character short
-	 identifier in the range 00000000 through 00000020, 0000007F through
-	 0000009F, or 0000D800 through 0000DFFF inclusive. A universal
-	 character name shall not designate a character in the required
-	 character set.  */
-      if ((uni_value <= 0x9f
-	   && uni_value != 0x24 && uni_value != 0x40 && uni_value != 0x60)
-	  || (uni_value >= 0xd800 && uni_value <= 0xdfff))
-	append_format(stderr_buffer, _(L"invalid universal character name \\%c%0*x"),
-	       esc_char, (esc_char == L'u' ? 4 : 8), uni_value);
-
-      append_format(stdout_buffer, L"%lc", uni_value);
+        /* A universal character name shall not specify a character short
+        identifier in the range 00000000 through 00000020, 0000007F through
+        0000009F, or 0000D800 through 0000DFFF inclusive. A universal
+        character name shall not designate a character in the required
+        character set.  */
+        if ((uni_value <= 0x9f
+        && uni_value != 0x24 && uni_value != 0x40 && uni_value != 0x60)
+        || (uni_value >= 0xd800 && uni_value <= 0xdfff))
+            append_format(stderr_buffer, _(L"invalid universal character name \\%c%0*x"),
+            esc_char, (esc_char == L'u' ? 4 : 8), uni_value);
+            append_format(stdout_buffer, L"%lc", uni_value);
     }
-  else
+    else
     {
-      append_format(stdout_buffer, L"%lc", L'\\');
-      if (*p)
-	{
-	  append_format (stdout_buffer, L"%lc", *p);
-	  p++;
-	}
+        append_format(stdout_buffer, L"%lc", L'\\');
+        if (*p)
+        {
+            append_format (stdout_buffer, L"%lc", *p);
+            p++;
+        }
     }
-  return p - escstart - 1;
+    return p - escstart - 1;
 }
 
 /* Print string STR, evaluating \ escapes. */
@@ -279,11 +277,11 @@ static int print_esc (const wchar_t *escstart, bool octal_0)
 static void
 print_esc_string (const wchar_t *str)
 {
-  for (; *str; str++)
-    if (*str == L'\\')
-      str += print_esc (str, true);
-    else
-      append_format (stdout_buffer, L"%lc", *str);
+    for (; *str; str++)
+        if (*str == L'\\')
+            str += print_esc (str, true);
+        else
+            append_format (stdout_buffer, L"%lc", *str);
 }
 
 /* Evaluate a printf conversion specification.  START is the start of
@@ -299,338 +297,316 @@ static void print_direc (const wchar_t *start, size_t length, wchar_t conversion
 	     bool have_precision, int precision,
 	     wchar_t const *argument)
 {
-  wchar_t *p;		/* Null-terminated copy of % directive. */
-  wcstring fmt;
+    wchar_t *p;		/* Null-terminated copy of % directive. */
+    wcstring fmt;
 
-  /* Create a null-terminated copy of the % directive, with an
-     intmax_t-wide length modifier substituted for any existing
-     integer length modifier.  */
-  {
-    wchar_t *q;
-    wchar_t const *length_modifier;
-    size_t length_modifier_len;
-
-    switch (conversion)
-      {
-    case L'd': case L'i':
-	length_modifier = PRIdMAX;
-	length_modifier_len = sizeof PRIdMAX - 2;
-	break;
-
-      case L'a': case L'e': case L'f': case L'g':
-      case L'A': case L'E': case L'F': case L'G':
-	length_modifier = L"L";
-	length_modifier_len = 1;
-	break;
-      case L's': case L'u':
-	length_modifier = L"l";
-	length_modifier_len = 1;
-	break;
-      default:
-	length_modifier = start;  /* Any valid pointer will do.  */
-	length_modifier_len = 0;
-	break;
-      }
-
-    p = new wchar_t[length + length_modifier_len + 2];
-    q = static_cast<wchar_t*>(mempcpy (p, start, sizeof(wchar_t) * length));
-    q = static_cast<wchar_t*>(mempcpy (q, length_modifier, sizeof(wchar_t) * length_modifier_len));
-    *q++ = conversion;
-    *q = L'\0';
-  }
-
-  fmt = p;
-  switch (conversion)
+    /*  Create a null-terminated copy of the % directive, with an
+        intmax_t-wide length modifier substituted for any existing
+        integer length modifier.  */
     {
-    case L'd':
-    case L'i':
-      {
-	intmax_t arg = vstrtoimax (argument);
-	if (!have_field_width)
-	  {
-	    if (!have_precision)
-	      append_format(stdout_buffer, fmt.c_str(), arg);
-	    else
-	      append_format(stdout_buffer, fmt.c_str(), precision, arg);
-	  }
-	else
-	  {
-	    if (!have_precision)
-	      append_format(stdout_buffer, fmt.c_str(), field_width, arg);
-	    else
-	      append_format(stdout_buffer, fmt.c_str(), field_width, precision, arg);
-	  }
-      }
-      break;
+        wchar_t *q;
+        wchar_t const *length_modifier;
+        size_t length_modifier_len;
 
-    case L'o':
-    case L'u':
-    case L'x':
-    case L'X':
-      {
-
-	uintmax_t arg = vstrtoumax (argument);
-	if (!have_field_width)
-	  {
-	    if (!have_precision)
-	      append_format(stdout_buffer, fmt.c_str(), arg);
-	    else
-	      append_format(stdout_buffer, fmt.c_str(), precision, arg);
-	  }
-	else
-	  {
-	    if (!have_precision)
-	      append_format(stdout_buffer, fmt.c_str(), field_width, arg);
-	    else
-	      append_format(stdout_buffer, fmt.c_str(), field_width, precision, arg);
-	  }
-      }
-      break;
-
-    case L'a':
-    case L'A':
-    case L'e':
-    case L'E':
-    case L'f':
-    case L'F':
-    case L'g':
-    case L'G':
-      {
-
-	long double arg = vstrtold (argument);
-	if (!have_field_width)
-	  {
-	    if (!have_precision)
-	      append_format(stdout_buffer, fmt.c_str(), arg);
-	    else
-	      append_format(stdout_buffer, fmt.c_str(), precision, arg);
-	  }
-	else
-	  {
-	    if (!have_precision)
-	      append_format(stdout_buffer, fmt.c_str(), field_width, arg);
-	    else
-	      append_format(stdout_buffer, fmt.c_str(), field_width, precision, arg);
-	  }
-      }
-      break;
-
-    case L'c':
-      if (!have_field_width)
-	append_format(stdout_buffer, fmt.c_str(), *argument);
-      else
-	append_format(stdout_buffer, fmt.c_str(), field_width, *argument);
-      break;
-
-    case L's':
-      if (!have_field_width)
-	{
-	  if (!have_precision){
-	    append_format(stdout_buffer, fmt.c_str(), argument);}
-	  else
-	    append_format(stdout_buffer, fmt.c_str(), precision, argument);
-	}
-      else
-	{
-
-	  if (!have_precision)
-	    append_format(stdout_buffer, fmt.c_str(), field_width, argument);
-	  else
-	    append_format(stdout_buffer, fmt.c_str(), field_width, precision, argument);
-	}
-      break;
+        switch (conversion)
+        {
+            case L'd': case L'i':
+                length_modifier = PRIdMAX;
+                length_modifier_len = sizeof PRIdMAX - 2;
+                break;
+            case L'a': case L'e': case L'f': case L'g':
+            case L'A': case L'E': case L'F': case L'G':
+                length_modifier = L"L";
+                length_modifier_len = 1;
+                break;
+            case L's': case L'u':
+                length_modifier = L"l";
+                length_modifier_len = 1;
+                break;
+            default:
+                length_modifier = start;  /* Any valid pointer will do.  */
+                length_modifier_len = 0;
+                break;
+        }
+        p = new wchar_t[length + length_modifier_len + 2];
+        q = static_cast<wchar_t*>(mempcpy (p, start, sizeof(wchar_t) * length));
+        q = static_cast<wchar_t*>(mempcpy (q, length_modifier, sizeof(wchar_t) * length_modifier_len));
+        *q++ = conversion;
+        *q = L'\0';
     }
 
-  free (p);
+    fmt = p;
+    switch (conversion)
+    {
+        case L'd':
+        case L'i':
+        {
+            intmax_t arg = vstrtoimax (argument);
+            if (!have_field_width)
+            {
+                if (!have_precision)
+                    append_format(stdout_buffer, fmt.c_str(), arg);
+                else
+                    append_format(stdout_buffer, fmt.c_str(), precision, arg);
+            }
+            else
+            {
+                if (!have_precision)
+                    append_format(stdout_buffer, fmt.c_str(), field_width, arg);
+                else
+                    append_format(stdout_buffer, fmt.c_str(), field_width, precision, arg);
+            }
+        }
+        break;
+
+        case L'o':
+        case L'u':
+        case L'x':
+        case L'X':
+        {
+            uintmax_t arg = vstrtoumax (argument);
+            if (!have_field_width)
+            {
+                if (!have_precision)
+                    append_format(stdout_buffer, fmt.c_str(), arg);
+                else
+                    append_format(stdout_buffer, fmt.c_str(), precision, arg);
+            }
+            else
+            {
+                if (!have_precision)
+                    append_format(stdout_buffer, fmt.c_str(), field_width, arg);
+                else
+                    append_format(stdout_buffer, fmt.c_str(), field_width, precision, arg);
+            }
+        }
+        break;
+
+        case L'a':
+        case L'A':
+        case L'e':
+        case L'E':
+        case L'f':
+        case L'F':
+        case L'g':
+        case L'G':
+        {
+            long double arg = vstrtold (argument);
+            if (!have_field_width)
+            {
+                if (!have_precision)
+                    append_format(stdout_buffer, fmt.c_str(), arg);
+                else
+                    append_format(stdout_buffer, fmt.c_str(), precision, arg);
+            }
+            else
+            {
+                if (!have_precision)
+                    append_format(stdout_buffer, fmt.c_str(), field_width, arg);
+                else
+                    append_format(stdout_buffer, fmt.c_str(), field_width, precision, arg);
+            }
+        }
+        break;
+
+        case L'c':
+            if (!have_field_width)
+            append_format(stdout_buffer, fmt.c_str(), *argument);
+            else
+            append_format(stdout_buffer, fmt.c_str(), field_width, *argument);
+            break;
+        case L's':
+            if (!have_field_width)
+            {
+                if (!have_precision){
+                    append_format(stdout_buffer, fmt.c_str(), argument);}
+                else
+                    append_format(stdout_buffer, fmt.c_str(), precision, argument);
+            }
+            else
+            {
+                if (!have_precision)
+                    append_format(stdout_buffer, fmt.c_str(), field_width, argument);
+                else
+                    append_format(stdout_buffer, fmt.c_str(), field_width, precision, argument);
+            }
+            break;
+    }
+    free (p);
 }
 
 /* Print the text in FORMAT, using ARGV (with ARGC elements) for
    arguments to any `%' directives.
    Return the number of elements of ARGV used.  */
 
- static int print_formatted (const wchar_t *format, int argc, wchar_t **argv)
- {
-   int save_argc = argc;		/* Preserve original value.  */
-   const wchar_t *f;		/* Pointer into `format'.  */
-   const wchar_t *direc_start;	/* Start of % directive.  */
-   size_t direc_length;		/* Length of % directive.  */
-   bool have_field_width;	/* True if FIELD_WIDTH is valid.  */
-   int field_width = 0;		/* Arg to first '*'.  */
-   bool have_precision;		/* True if PRECISION is valid.  */
-   int precision = 0;		/* Arg to second '*'.  */
-   wchar_t ok[UCHAR_MAX + 1];	/* ok['x'] is true if %x is allowed.  */
+static int print_formatted (const wchar_t *format, int argc, wchar_t **argv) {
+    int save_argc = argc;		/* Preserve original value.  */
+    const wchar_t *f;		/* Pointer into `format'.  */
+    const wchar_t *direc_start;	/* Start of % directive.  */
+    size_t direc_length;		/* Length of % directive.  */
+    bool have_field_width;	/* True if FIELD_WIDTH is valid.  */
+    int field_width = 0;		/* Arg to first '*'.  */
+    bool have_precision;		/* True if PRECISION is valid.  */
+    int precision = 0;		/* Arg to second '*'.  */
+    wchar_t ok[UCHAR_MAX + 1];	/* ok['x'] is true if %x is allowed.  */
 
-   for (f = format; *f != L'\0'; ++f)
-     {
-       switch (*f)
-	 {
-	 case L'%':
-	   direc_start = f++;
-	   direc_length = 1;
-	   have_field_width = have_precision = false;
-	   if (*f == L'%')
-	     {
-	       append_format(stdout_buffer, L"%lc", L'%');
-	       break;
-	     }
-	   if (*f == L'b')
-	     {
-	       /* FIXME: Field width and precision are not supported
-		  for %b, even though POSIX requires it.  */
-	       if (argc > 0)
-		 {
-		   print_esc_string (*argv);
-		   ++argv;
-		   --argc;
-		 }
-	       break;
-	     }
+    for (f = format; *f != L'\0'; ++f) {
+        switch (*f) {
+            case L'%':
+                direc_start = f++;
+                direc_length = 1;
+                have_field_width = have_precision = false;
+                if (*f == L'%') {
+                    append_format(stdout_buffer, L"%lc", L'%');
+                    break;
+                }
+                if (*f == L'b') {
+                    /* FIXME: Field width and precision are not supported
+                    for %b, even though POSIX requires it.  */
+                    if (argc > 0) {
+                        print_esc_string (*argv);
+                        ++argv;
+                        --argc;
+                    }
+                    break;
+                }
 
-	   memset (ok, 0, sizeof ok);
-	   ok['a'] = ok['A'] = ok['c'] = ok['d'] = ok['e'] = ok['E'] =
-	     ok['f'] = ok['F'] = ok['g'] = ok['G'] = ok['i'] = ok['o'] =
-	     ok['s'] = ok['u'] = ok['x'] = ok['X'] = 1;
+                memset (ok, 0, sizeof ok);
+                ok['a'] = ok['A'] = ok['c'] = ok['d'] = ok['e'] = ok['E'] =
+                ok['f'] = ok['F'] = ok['g'] = ok['G'] = ok['i'] = ok['o'] =
+                ok['s'] = ok['u'] = ok['x'] = ok['X'] = 1;
 
-	   for (;; f++, direc_length++)
-	     switch (*f)
-	       {
+                for (;; f++, direc_length++) {
+                    switch (*f) {
 #if (__GLIBC__ == 2 && 2 <= __GLIBC_MINOR__) || 3 <= __GLIBC__
-	       case L'I':
+                        case L'I':
 #endif
-	       case L'\'':
-		 ok['a'] = ok['A'] = ok['c'] = ok['e'] = ok['E'] =
-		   ok['o'] = ok['s'] = ok['x'] = ok['X'] = 0;
-		 break;
-	       case '-': case '+': case ' ':
-		 break;
-	       case L'#':
-		 ok['c'] = ok['d'] = ok['i'] = ok['s'] = ok['u'] = 0;
-		 break;
-	       case '0':
-		 ok['c'] = ok['s'] = 0;
-		 break;
-	       default:
-		 goto no_more_flag_characters;
-	       }
-	 no_more_flag_characters:;
+                        case L'\'':
+                        ok['a'] = ok['A'] = ok['c'] = ok['e'] = ok['E'] =
+                        ok['o'] = ok['s'] = ok['x'] = ok['X'] = 0;
+                        break;
+                        case '-': case '+': case ' ':
+                        break;
+                        case L'#':
+                        ok['c'] = ok['d'] = ok['i'] = ok['s'] = ok['u'] = 0;
+                        break;
+                        case '0':
+                        ok['c'] = ok['s'] = 0;
+                        break;
+                        default:
+                        goto no_more_flag_characters;
+                    }
+                }
+                no_more_flag_characters:;
 
-	   if (*f == L'*')
-	     {
-	       ++f;
-	       ++direc_length;
-	       if (argc > 0)
-		 {
-		   intmax_t width = vstrtoimax (*argv);
-		   if (INT_MIN <= width && width <= INT_MAX)
-		     field_width = width;
-		   else
-		     append_format(stderr_buffer, _(L"invalid field width: %ls"),
-				   *argv);
-		   ++argv;
-		   --argc;
-		 }
-		 else{
-		  field_width = 0;
-		}
-	       have_field_width = true;
-	     }
-	   else {
-	     while (iswdigit(*f))
-	       {
-		 ++f;
-		 ++direc_length;
-	       }
-		}
-	   if (*f == L'.')
-	     {
-	       ++f;
-	       ++direc_length;
-	       ok['c'] = 0;
-	       if (*f == L'*')
-		 {
-		   ++f;
-		   ++direc_length;
-		   if (argc > 0)
-		     {
-		       intmax_t prec = vstrtoimax (*argv);
-		       if (prec < 0)
-			 {
-			   /* A negative precision is taken as if the
-			      precision were omitted, so -1 is safe
-			      here even if prec < INT_MIN.  */
-			   precision = -1;
-			 }
-		       else if (INT_MAX < prec)
-			 append_format(stderr_buffer, _(L"invalid precision: %ls"),
-				       *argv);
-		       else
-			 precision = prec;
-		       ++argv;
-		       --argc;
-		     }
-		   else
-		     precision = 0;
-		   have_precision = true;
-		 }
-	       else
-		 while (iswdigit(*f))
-		   {
-		     ++f;
-		     ++direc_length;
-		   }
-	     }
+                if (*f == L'*') {
+                    ++f;
+                    ++direc_length;
+                    if (argc > 0) {
+                        intmax_t width = vstrtoimax (*argv);
+                        if (INT_MIN <= width && width <= INT_MAX)
+                            field_width = width;
+                        else
+                            append_format(stderr_buffer, _(L"invalid field width: %ls"), *argv);
+                        ++argv;
+                        --argc;
+                    }
+                    else {
+                        field_width = 0;
+                    }
+                    have_field_width = true;
+                }
+                else {
+                    while (iswdigit(*f)) {
+                        ++f;
+                        ++direc_length;
+                    }
+                }
+                if (*f == L'.') {
+                    ++f;
+                    ++direc_length;
+                    ok['c'] = 0;
+                    if (*f == L'*') {
+                        ++f;
+                        ++direc_length;
+                        if (argc > 0) {
+                            intmax_t prec = vstrtoimax (*argv);
+                            if (prec < 0) {
+                            /* A negative precision is taken as if the
+                            precision were omitted, so -1 is safe
+                            here even if prec < INT_MIN.  */
+                            precision = -1;
+                            }
+                            else if (INT_MAX < prec)
+                                append_format(stderr_buffer, _(L"invalid precision: %ls"), *argv);
+                            else {
+                                precision = prec;
+                            }
+                            ++argv;
+                            --argc;
+                        }
+                    else {
+                        precision = 0;
+                    }
+                    have_precision = true;
+                }
+                else {
+                    while (iswdigit(*f)) {
+                        ++f;
+                        ++direc_length;
+                    }
+                }
+            }
 
-	   while (*f == L'l' || *f == L'L' || *f == L'h'
-		  || *f == L'j' || *f == L't' || *f == L'z')
-	     ++f;
+        while (*f == L'l' || *f == L'L' || *f == L'h'
+            || *f == L'j' || *f == L't' || *f == L'z')
+            ++f;
+        {
+            unsigned wchar_t conversion = *f;
+            if (! ok[conversion])
+            append_format(stderr_buffer,
+                _("%.*ls: invalid conversion specification"),
+                (int) (f + 1 - direc_start), direc_start);
+        }
 
-	   {
-	     unsigned wchar_t conversion = *f;
-	     if (! ok[conversion])
-	       append_format(stderr_buffer,
-			     _("%.*ls: invalid conversion specification"),
-			     (int) (f + 1 - direc_start), direc_start);
-	   }
+        print_direc (direc_start, direc_length, *f,
+            have_field_width, field_width,
+            have_precision, precision,
+            (argc <= 0 ? L"" : (argc--, *argv++)));
+            break;
 
-	   print_direc (direc_start, direc_length, *f,
-			have_field_width, field_width,
-			have_precision, precision,
-			(argc <= 0 ? L"" : (argc--, *argv++)));
-	   break;
+            case L'\\':
+                f += print_esc (f, false);
+                break;
 
-	 case L'\\':
-	   f += print_esc (f, false);
-	   break;
-
-	 default:
-	   append_format (stdout_buffer, L"%lc", *f);
-	 }
-     }
-
-   return save_argc - argc;
+            default:
+                append_format (stdout_buffer, L"%lc", *f);
+            }
+        }
+    return save_argc - argc;
 }
 
 static int builtin_printf(parser_t &parser, wchar_t **argv)
 {
-  wchar_t *format;
-  int args_used;
-  int argc=builtin_count_args(argv);
+    wchar_t *format;
+    int args_used;
+    int argc = builtin_count_args(argv);
 
- if (argc <= 1)
+    if (argc <= 1)
     {
-      append_format(stderr_buffer, _(L"missing operand"));
-      return EXIT_FAILURE;
+        append_format(stderr_buffer, _(L"missing operand"));
+        return EXIT_FAILURE;
     }
 
-  format = argv[1];
-  argc -= 2;
-  argv += 2;
+    format = argv[1];
+    argc -= 2;
+    argv += 2;
 
- do
+    do
     {
-      args_used = print_formatted (format, argc, argv);
-      argc -= args_used;
-      argv += args_used;
+        args_used = print_formatted (format, argc, argv);
+        argc -= args_used;
+        argv += args_used;
     }
-  while (args_used > 0 && argc > 0);
+    while (args_used > 0 && argc > 0);
 }

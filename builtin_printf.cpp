@@ -68,6 +68,8 @@
 
 # define PRIdMAX L"ld"
 
+static int exit_code;
+
 /* True if the POSIXLY_CORRECT environment variable is set.  */
 static bool posixly_correct;
 
@@ -120,6 +122,7 @@ static void verify_numeric (const wchar_t *s, const wchar_t *end)
     if (errno)
     {
         append_format(stderr_buffer, L"%ls", s);
+        exit_code = EXIT_FAILURE;
     }
     else if (*end)
     {
@@ -127,6 +130,7 @@ static void verify_numeric (const wchar_t *s, const wchar_t *end)
             append_format(stderr_buffer, _(L"%ls: expected a numeric value"), s);
         else
             append_format(stderr_buffer, _(L"%ls: value not completely converted"), s);
+        exit_code = EXIT_FAILURE;
     }
 }
 
@@ -175,7 +179,7 @@ print_esc_char (wchar_t c)
         append_format(stdout_buffer, L"%lc", L'\b');
         break;
     case L'c':			/* Cancel the rest of the output. */
-        exit (EXIT_SUCCESS);
+        return;
         break;
     case L'f':			/* Form feed. */
         append_format(stdout_buffer, L"%lc", L'\f');
@@ -610,6 +614,8 @@ static int builtin_printf(parser_t &parser, wchar_t **argv)
     int args_used;
     int argc = builtin_count_args(argv);
 
+    exit_code = EXIT_SUCCESS;
+
     if (argc <= 1)
     {
         append_format(stderr_buffer, _(L"missing operand"));
@@ -627,5 +633,5 @@ static int builtin_printf(parser_t &parser, wchar_t **argv)
         argv += args_used;
     }
     while (args_used > 0 && argc > 0);
-	return 0;
+	return exit_code;
 }

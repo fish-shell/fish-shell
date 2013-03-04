@@ -37,3 +37,9 @@ incomplete terminfo databases, and may lack color information for
 terminals that support it. Download and install the latest version of
 ncurses and recompile fish against it in order to fix this issue.
 
+\subsection set_color-example Examples
+<pre>set_color red; echo "Roses are red"
+set_color blue; echo "Violets are blue"
+set_color 62A ; echo "Eggplants are dark purple"
+set_color normal; echo "Normal is nice too"
+</pre>

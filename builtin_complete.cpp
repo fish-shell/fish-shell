@@ -545,7 +545,7 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
                 recursion_level++;
 
                 std::vector<completion_t> comp;
-                complete(do_complete_param, comp, COMPLETE_DEFAULT);
+                complete(do_complete_param, comp, COMPLETION_REQUEST_DEFAULT);
 
                 for (size_t i=0; i< comp.size() ; i++)
                 {
@@ -553,7 +553,7 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
 
                     const wchar_t *prepend;
 
-                    if (next.flags & COMPLETE_NO_CASE)
+                    if (next.flags & COMPLETE_REPLACES_TOKEN)
                     {
                         prepend = L"";
                     }

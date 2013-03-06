@@ -225,7 +225,7 @@ static bool wildcard_complete_internal(const wcstring &orig,
         wcstring out_completion;
         wcstring out_desc = (desc ? desc : L"");
 
-        if (flags & COMPLETE_NO_CASE)
+        if (flags & COMPLETE_REPLACES_TOKEN)
         {
             out_completion = orig;
         }
@@ -292,7 +292,7 @@ static bool wildcard_complete_internal(const wcstring &orig,
     }
     else if (towlower(*wc) == towlower(*str))
     {
-        return wildcard_complete_internal(orig, str+1, wc+1, 0, desc, desc_func, out, flags | COMPLETE_NO_CASE);
+        return wildcard_complete_internal(orig, str+1, wc+1, 0, desc, desc_func, out, flags | COMPLETE_CASE_INSENSITIVE | COMPLETE_REPLACES_TOKEN);
     }
     return false;
 }
@@ -1095,7 +1095,7 @@ int wildcard_expand(const wchar_t *wc,
         {
             completion_t &c = out.at(i);
 
-            if (c.flags & COMPLETE_NO_CASE)
+            if (c.flags & COMPLETE_REPLACES_TOKEN)
             {
                 c.completion = format_string(L"%ls%ls%ls", base_dir, wc_base.c_str(), c.completion.c_str());
             }

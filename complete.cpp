@@ -104,14 +104,25 @@
 #define C_(string) (string)
 #endif
 
+/* Testing apparatus */
+const wcstring_list_t *s_override_variable_names = NULL;
 
-/**
-   The maximum amount of time that we're willing to spend doing
-   username tilde completion. This special limit has been coded in
-   because user lookup can be extremely slow in cases of a humongous
-   LDAP database. (Google, I'm looking at you)
- */
-#define MAX_USER_LOOKUP_TIME 0.2
+void complete_set_variable_names(const wcstring_list_t *names)
+{
+    s_override_variable_names = names;
+}
+
+static inline wcstring_list_t complete_get_variable_names(void)
+{
+    if (s_override_variable_names != NULL)
+    {
+        return *s_override_variable_names;
+    }
+    else
+    {
+        return env_get_names(0);
+    }
+}
 
 /**
    Struct describing a completion option entry.
@@ -326,7 +337,7 @@ void sort_completions(std::vector<completion_t> &completions)
 /** Class representing an attempt to compute completions */
 class completer_t
 {
-    const complete_type_t type;
+    const completion_request_flags_t flags;
     const wcstring initial_cmd;
     std::vector<completion_t> completions;
     wcstring_list_t commands_to_load;
@@ -334,10 +345,32 @@ class completer_t
     /** Table of completions conditions that have already been tested and the corresponding test results */
     typedef std::map<wcstring, bool> condition_cache_t;
     condition_cache_t condition_cache;
+    
+    enum complete_type_t
+    {
+        COMPLETE_DEFAULT,
+        COMPLETE_AUTOSUGGEST
+    };
+    
+    complete_type_t type() const
+    {
+        return (flags & COMPLETION_REQUEST_AUTOSUGGESTION) ? COMPLETE_AUTOSUGGEST : COMPLETE_DEFAULT;
+    }
+    
+    bool wants_descriptions() const
+    {
+        return !! (flags & COMPLETION_REQUEST_DESCRIPTIONS);
+    }
+    
+    bool fuzzy() const
+    {
+        return !! (flags & COMPLETION_REQUEST_FUZZY_MATCH);
+    }
+
 
 public:
-    completer_t(const wcstring &c, complete_type_t t) :
-        type(t),
+    completer_t(const wcstring &c, completion_request_flags_t f) :
+        flags(f),
         initial_cmd(c)
     {
     }
@@ -389,7 +422,7 @@ public:
     {
         /* Never do command substitution in autosuggestions. Sadly, we also can't yet do job expansion because it's not thread safe. */
         expand_flags_t result = 0;
-        if (type == COMPLETE_AUTOSUGGEST)
+        if (this->type() == COMPLETE_AUTOSUGGEST)
             result |= EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_JOBS;
         return result;
     }
@@ -449,7 +482,7 @@ bool completer_t::condition_test(const wcstring &condition)
         return 1;
     }
 
-    if (this->type == COMPLETE_AUTOSUGGEST)
+    if (this->type() == COMPLETE_AUTOSUGGEST)
     {
         /* Autosuggestion can't support conditions */
         return 0;
@@ -1096,8 +1129,6 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
     if (cdpath.missing_or_empty())
         cdpath = L".";
 
-    const bool wants_description = (type == COMPLETE_DEFAULT);
-
     if (str_cmd.find(L'/') != wcstring::npos || str_cmd.at(0) == L'~')
     {
 
@@ -1106,7 +1137,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
 
             if (expand_string(str_cmd, this->completions, ACCEPT_INCOMPLETE | EXECUTABLES_ONLY | this->expand_flags()) != EXPAND_ERROR)
             {
-                if (wants_description)
+                if (this->wants_descriptions())
                 {
                     this->complete_cmd_desc(str_cmd);
                 }
@@ -1144,7 +1175,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
                         for (size_t i=prev_count; i< this->completions.size(); i++)
                         {
                             completion_t &c =  this->completions.at(i);
-                            if (c.flags & COMPLETE_NO_CASE)
+                            if (c.flags & COMPLETE_REPLACES_TOKEN)
                             {
 
                                 c.completion.erase(0, base_path.size());
@@ -1152,7 +1183,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
                         }
                     }
                 }
-                if (wants_description)
+                if (this->wants_descriptions())
                     this->complete_cmd_desc(str_cmd);
             }
         }
@@ -1205,7 +1236,7 @@ void completer_t::complete_from_args(const wcstring &str,
 
     std::vector<completion_t> possible_comp;
 
-    bool is_autosuggest = (this->type == COMPLETE_AUTOSUGGEST);
+    bool is_autosuggest = (this->type() == COMPLETE_AUTOSUGGEST);
     parser_t parser(is_autosuggest ? PARSER_TYPE_COMPLETIONS_ONLY : PARSER_TYPE_GENERAL, false);
 
     /* If type is COMPLETE_AUTOSUGGEST, it means we're on a background thread, so don't call proc_push_interactive */
@@ -1335,11 +1366,11 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
     wcstring cmd, path;
     parse_cmd_string(cmd_orig, path, cmd);
 
-    if (this->type == COMPLETE_DEFAULT)
+    if (this->type() == COMPLETE_DEFAULT)
     {
         complete_load(cmd, true);
     }
-    else if (this->type == COMPLETE_AUTOSUGGEST)
+    else if (this->type() == COMPLETE_AUTOSUGGEST)
     {
         /* Maybe indicate we should try loading this on the main thread */
         if (! list_contains_string(this->commands_to_load, cmd) && ! completion_autoloader.has_tried_loading(cmd))
@@ -1514,11 +1545,14 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
                             size_t offset = 0;
                             complete_flags_t flags = 0;
 
-
                             if (match)
+                            {
                                 offset = wcslen(str);
+                            }
                             else
-                                flags = COMPLETE_NO_CASE;
+                            {
+                                flags = COMPLETE_REPLACES_TOKEN | COMPLETE_CASE_INSENSITIVE;
+                            }
 
                             has_arg = ! o->comp.empty();
                             req_arg = (o->result_mode & NO_COMMON);
@@ -1580,7 +1614,7 @@ void completer_t::complete_param_expand(const wcstring &sstr, bool do_file)
         flags |= EXPAND_SKIP_WILDCARDS;
 
     /* Squelch file descriptions per issue 254 */
-    if (type == COMPLETE_AUTOSUGGEST || do_file)
+    if (this->type() == COMPLETE_AUTOSUGGEST || do_file)
         flags |= EXPAND_NO_DESCRIPTIONS;
 
     if (expand_string(comp_str,
@@ -1608,9 +1642,8 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset)
     const wchar_t *var = &whole_var[start_offset];
     size_t varlen = wcslen(var);
     int res = 0;
-    bool wants_description = (type != COMPLETE_AUTOSUGGEST);
 
-    const wcstring_list_t names = env_get_names(0);
+    const wcstring_list_t names = complete_get_variable_names();
     for (size_t i=0; i<names.size(); i++)
     {
         const wcstring & env_name = names.at(i);
@@ -1640,18 +1673,18 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset)
             {
                 comp.append(whole_var, start_offset);
                 comp.append(env_name);
-                flags = COMPLETE_NO_CASE | COMPLETE_DONT_ESCAPE;
+                flags = COMPLETE_CASE_INSENSITIVE | COMPLETE_REPLACES_TOKEN | COMPLETE_DONT_ESCAPE;
             }
 
             wcstring desc;
-            if (wants_description)
+            if (this->wants_descriptions())
             {
                 env_var_t value_unescaped = env_get_string(env_name);
                 if (value_unescaped.missing())
                     continue;
 
                 wcstring value = expand_escape_variable(value_unescaped);
-                if (type != COMPLETE_AUTOSUGGEST)
+                if (this->type() != COMPLETE_AUTOSUGGEST)
                     desc = format_string(COMPLETE_VAR_DESC_VAL, value.c_str());
             }
 
@@ -1744,7 +1777,7 @@ bool completer_t::try_complete_user(const wcstring &str)
                         append_completion(this->completions,
                                           name,
                                           desc,
-                                          COMPLETE_NO_CASE | COMPLETE_DONT_ESCAPE | COMPLETE_NO_SPACE);
+                                          COMPLETE_CASE_INSENSITIVE | COMPLETE_REPLACES_TOKEN | COMPLETE_DONT_ESCAPE | COMPLETE_NO_SPACE);
                         res=1;
                     }
                 }
@@ -1756,11 +1789,12 @@ bool completer_t::try_complete_user(const wcstring &str)
     return res;
 }
 
-void complete(const wcstring &cmd, std::vector<completion_t> &comps, complete_type_t type, wcstring_list_t *commands_to_load)
+void complete(const wcstring &cmd, std::vector<completion_t> &comps, completion_request_flags_t flags, wcstring_list_t *commands_to_load)
 {
     /* Make our completer */
-    completer_t completer(cmd, type);
+    completer_t completer(cmd, flags);
 
+    const bool fuzzy = !! (flags & COMPLETION_REQUEST_FUZZY_MATCH);
     const wchar_t *tok_begin, *tok_end, *cmdsubst_begin, *cmdsubst_end, *prev_begin, *prev_end;
     wcstring current_token, prev_token;
     wcstring current_command;
@@ -1969,7 +2003,7 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, complete_ty
                 do_file = false;
 
             /* And if we're autosuggesting, and the token is empty, don't do file suggestions */
-            if (type == COMPLETE_AUTOSUGGEST && current_token_unescape.empty())
+            if ((flags & COMPLETION_REQUEST_AUTOSUGGESTION) && current_token_unescape.empty())
                 do_file = false;
 
             /*

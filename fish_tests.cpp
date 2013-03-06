@@ -959,6 +959,25 @@ static void test_colors()
     assert(rgb_color_t(L"mooganta").is_none());
 }
 
+static void test_complete(void)
+{
+    say(L"Testing complete");
+    const wchar_t *name_strs[] = {L"Foo1", L"Foo2", L"Foo3", L"Bar1", L"Bar2", L"Bar3"};
+    size_t count = sizeof name_strs / sizeof *name_strs;
+    const wcstring_list_t names(name_strs, name_strs + count);
+    
+    complete_set_variable_names(&names);
+    
+    std::vector<completion_t> completions;
+    complete(L"$F", completions, COMPLETION_REQUEST_DEFAULT);
+    assert(completions.size() == 3);
+    assert(completions.at(0).completion == L"oo1");
+    assert(completions.at(1).completion == L"oo2");
+    assert(completions.at(2).completion == L"oo3");
+    
+    complete_set_variable_names(NULL);
+}
+
 static void test_1_completion(wcstring line, const wcstring &completion, complete_flags_t flags, bool append_only, wcstring expected, long source_line)
 {
     // str is given with a caret, which we use to represent the cursor position
@@ -981,10 +1000,10 @@ static void test_1_completion(wcstring line, const wcstring &completion, complet
     assert(cursor_pos == out_cursor_pos);
 }
 
-static void test_completions()
+static void test_completion_insertions()
 {
 #define TEST_1_COMPLETION(a, b, c, d, e) test_1_completion(a, b, c, d, e, __LINE__)
-    say(L"Testing completions");
+    say(L"Testing completion insertions");
     TEST_1_COMPLETION(L"foo^", L"bar", 0, false, L"foobar ^");
     TEST_1_COMPLETION(L"foo^ baz", L"bar", 0, false, L"foobar ^ baz"); //we really do want to insert two spaces here - otherwise it's hidden by the cursor
     TEST_1_COMPLETION(L"'foo^", L"bar", 0, false, L"'foobar' ^");
@@ -1006,8 +1025,8 @@ static void test_completions()
     TEST_1_COMPLETION(L"'foo\\'^", L"bar", COMPLETE_NO_SPACE, false, L"'foo\\'bar^");
     TEST_1_COMPLETION(L"foo\\'^", L"bar", COMPLETE_NO_SPACE, false, L"foo\\'bar^");
 
-    TEST_1_COMPLETION(L"foo^", L"bar", COMPLETE_NO_CASE, false, L"bar ^");
-    TEST_1_COMPLETION(L"'foo^", L"bar", COMPLETE_NO_CASE, false, L"bar ^");
+    TEST_1_COMPLETION(L"foo^", L"bar", COMPLETE_CASE_INSENSITIVE | COMPLETE_REPLACES_TOKEN, false, L"bar ^");
+    TEST_1_COMPLETION(L"'foo^", L"bar", COMPLETE_CASE_INSENSITIVE | COMPLETE_REPLACES_TOKEN, false, L"bar ^");
 }
 
 static void perform_one_autosuggestion_test(const wcstring &command, const wcstring &wd, const wcstring &expected, long line)
@@ -1139,7 +1158,7 @@ void perf_complete()
         str[0]=c;
         reader_set_buffer(str, 0);
 
-        complete(str, out, COMPLETE_DEFAULT, NULL);
+        complete(str, out, COMPLETION_REQUEST_DEFAULT, NULL);
 
         matches += out.size();
         out.clear();
@@ -1159,7 +1178,7 @@ void perf_complete()
 
         reader_set_buffer(str, 0);
 
-        complete(str, out, COMPLETE_DEFAULT, NULL);
+        complete(str, out, COMPLETION_REQUEST_DEFAULT, NULL);
 
         matches += out.size();
         out.clear();
@@ -1695,7 +1714,7 @@ int main(int argc, char **argv)
     builtin_init();
     reader_init();
     env_init();
-
+    
     test_format();
     test_escape();
     test_convert();
@@ -1710,7 +1729,8 @@ int main(int argc, char **argv)
     test_word_motion();
     test_is_potential_path();
     test_colors();
-    test_completions();
+    test_complete();
+    test_completion_insertions();
     test_autosuggestion_combining();
     test_autosuggest_suggest_special();
     history_tests_t::test_history();

@@ -75,25 +75,20 @@ enum
     */
     COMPLETE_NO_SPACE = 1 << 0,
 
-    /**
-       This completion is case insensitive.
-
-       Warning: The contents of the completion_t structure is actually
-       different if this flag is set! Specifically, the completion string
-       contains the _entire_ completion token, not merely its suffix.
-    */
-    COMPLETE_NO_CASE = 1 << 1,
+    /** This completion is case insensitive. */
+    COMPLETE_CASE_INSENSITIVE = 1 << 1,
+    
+    /** This is not the suffix of a token, but replaces it entirely */
+    COMPLETE_REPLACES_TOKEN = 1 << 2,
 
     /**
        This completion may or may not want a space at the end - guess by
        checking the last character of the completion.
     */
-    COMPLETE_AUTO_SPACE = 1 << 2,
+    COMPLETE_AUTO_SPACE = 1 << 3,
 
-    /**
-       This completion should be inserted as-is, without escaping.
-    */
-    COMPLETE_DONT_ESCAPE = 1 << 3
+    /** This completion should be inserted as-is, without escaping. */
+    COMPLETE_DONT_ESCAPE = 1 << 4
 };
 typedef int complete_flags_t;
 
@@ -130,7 +125,7 @@ public:
 
     bool is_case_insensitive() const
     {
-        return !!(flags & COMPLETE_NO_CASE);
+        return !!(flags & COMPLETE_CASE_INSENSITIVE);
     }
 
     /* Construction. Note: defining these so that they are not inlined reduces the executable size. */
@@ -144,11 +139,13 @@ public:
     bool operator != (const completion_t& rhs) const;
 };
 
-enum complete_type_t
-{
-    COMPLETE_DEFAULT,
-    COMPLETE_AUTOSUGGEST
+enum {
+    COMPLETION_REQUEST_DEFAULT = 0,
+    COMPLETION_REQUEST_AUTOSUGGESTION = 1 << 0, // indicates the completion is for an autosuggestion
+    COMPLETION_REQUEST_DESCRIPTIONS = 1 << 1, // indicates that we want descriptions
+    COMPLETION_REQUEST_FUZZY_MATCH = 1 << 2 // indicates that we don't require a prefix match
 };
+typedef uint32_t completion_request_flags_t;
 
 /** Given a list of completions, returns a list of their completion fields */
 wcstring_list_t completions_to_wcstring_list(const std::vector<completion_t> &completions);
@@ -233,7 +230,7 @@ void complete_remove(const wchar_t *cmd,
  */
 void complete(const wcstring &cmd,
               std::vector<completion_t> &comp,
-              complete_type_t type,
+              completion_request_flags_t flags,
               wcstring_list_t *to_load = NULL);
 
 /**
@@ -284,5 +281,7 @@ void complete_load(const wcstring &cmd, bool reload);
 */
 void append_completion(std::vector<completion_t> &completions, const wcstring &comp, const wcstring &desc = L"", int flags = 0);
 
+/* Function used for testing */
+void complete_set_variable_names(const wcstring_list_t *names);
 
 #endif

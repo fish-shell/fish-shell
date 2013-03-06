@@ -979,7 +979,7 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
 {
     const wchar_t *val = val_str.c_str();
     bool add_space = !(flags & COMPLETE_NO_SPACE);
-    bool do_replace = !!(flags & COMPLETE_NO_CASE);
+    bool do_replace = !!(flags & COMPLETE_REPLACES_TOKEN);
     bool do_escape = !(flags & COMPLETE_DONT_ESCAPE);
 
     const size_t cursor_pos = *inout_cursor_pos;
@@ -1134,7 +1134,6 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
         return;
 
     wchar_t *escaped_separator;
-    int has_case_sensitive=0;
 
     if (prefix.empty())
     {
@@ -1155,10 +1154,15 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
 
     escaped_separator = escape(COMPLETE_SEP_STR, 1);
 
+    bool has_case_sensitive = false;
     for (size_t i=0; i< comp.size(); i++)
     {
         const completion_t &el = comp.at(i);
-        has_case_sensitive |= !(el.flags & COMPLETE_NO_CASE);
+        if (! (el.flags & COMPLETE_CASE_INSENSITIVE))
+        {
+            has_case_sensitive = true;
+            break;
+        }
     }
 
     for (size_t i=0; i< comp.size(); i++)
@@ -1170,13 +1174,13 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
         wcstring completion_text;
         wcstring description_text;
 
-        if (has_case_sensitive && (el.flags & COMPLETE_NO_CASE))
+        if (has_case_sensitive && (el.flags & COMPLETE_CASE_INSENSITIVE))
         {
             continue;
         }
 
         // Note that an empty completion is perfectly sensible here, e.g. tab-completing 'foo' with a file called 'foo' and another called 'foobar'
-        if (el.flags & COMPLETE_NO_CASE)
+        if (el.flags & COMPLETE_REPLACES_TOKEN)
         {
             if (base_len == -1)
             {
@@ -1328,7 +1332,7 @@ struct autosuggestion_context_t
 
         /* Try normal completions */
         std::vector<completion_t> completions;
-        complete(search_string, completions, COMPLETE_AUTOSUGGEST, &this->commands_to_load);
+        complete(search_string, completions, COMPLETION_REQUEST_AUTOSUGGESTION, &this->commands_to_load);
         if (! completions.empty())
         {
             const completion_t &comp = completions.at(0);
@@ -3057,8 +3061,9 @@ const wchar_t *reader_readline()
 
                     /* Construct a copy of the string from the beginning of the command substitution up to the end of the token we're completing */
                     const wcstring buffcpy = wcstring(cmdsub_begin, token_end);
-
-                    data->complete_func(buffcpy, comp, COMPLETE_DEFAULT, NULL);
+                    
+                    //fprintf(stderr, "Complete (%ls)\n", buffcpy.c_str());
+                    data->complete_func(buffcpy, comp, COMPLETION_REQUEST_DEFAULT | COMPLETION_REQUEST_DESCRIPTIONS, NULL);
 
                     /* Munge our completions */
                     sort_and_make_unique(comp);

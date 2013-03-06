@@ -9,8 +9,29 @@ Display a line of text.
                                                                                                                                                                           
 - \c -n, \c Do not output a newline
 - \c -s, \c Do not separate arguments with spaces                                                                                                                                
+- \c -E, \c Disable interpretation of backslash escapes (default)
+- \c -e, \c Enable interpretation of backslash escapes
 - \c -h, \c --help Display this help
+
+\subsection echo-escapes Escape Sequences
+
+If -e is in effect, the following sequences are recognized:
+
+- \c \\\\ \c backslash
+- \\a alert (BEL)
+- \\b backspace
+- \\c produce no further output
+- \\e escape
+- \\f form feed
+- \\n new line
+- \\r carriage return
+- \\t horizontal tab
+- \\v vertical tab
+- \\0NNN byte with octal value NNN (1 to 3 digits)
+- \\xHH byte with hexadecimal value HH (1 to 2 digits)
 
 \subsection echo-example Example
 
 <tt>echo 'Hello World'</tt> Print hello world to stdout
+
+<tt>echo -e 'Top\\nBottom'</tt> Print Top and Bottom on separate lines, using an escape sequence

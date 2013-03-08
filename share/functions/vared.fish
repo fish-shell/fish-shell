@@ -39,7 +39,7 @@ function vared --description "Edit variable value"
 					end
 				else
 
-					printf (_ '%s: %s is an array variable. Use %svared%s %s[n] to edit the n:th element of %s\n') $argv (set_color $fish_color_command) (set_color $fish_color_normal) vared $argv $argv
+                                        printf (_ '%s: %s is an array variable. Use %svared%s %s[n] to edit the n:th element of %s\n') vared $argv (set_color $fish_color_command) (set_color $fish_color_normal) $argv $argv
 				end
 		end
 	else

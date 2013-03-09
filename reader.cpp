@@ -3252,7 +3252,7 @@ const wchar_t *reader_readline()
                          */
                         if (! data->command_line.empty())
                         {
-                            if (data->history)
+                            if (data->history && data->command_line.c_str()[0] != ' ')
                             {
                                 data->history->add_with_file_detection(data->command_line);
                             }

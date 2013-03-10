@@ -3261,12 +3261,10 @@ const wchar_t *reader_readline()
 
                     case 0:
                     {
-                        /*
-                         Finished commend, execute it
-                         */
-                        if (! data->command_line.empty())
+                        /* Finished commend, execute it. Don't add items that start with a leading space. */
+                        if (! data->command_line.empty() && data->command_line.at(0) != L' ')
                         {
-                            if (data->history)
+                            if (data->history != NULL)
                             {
                                 data->history->add_with_file_detection(data->command_line);
                             }

@@ -15,6 +15,8 @@ parameter expansion.
 #include <errno.h>
 #include <pwd.h>
 #include <unistd.h>
+#include <limits.h>
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #include <termios.h>

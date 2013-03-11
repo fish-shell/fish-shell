@@ -3261,7 +3261,7 @@ const wchar_t *reader_readline()
 
                     case 0:
                     {
-                        /* Finished commend, execute it. Don't add items that start with a leading space. */
+                        /* Finished command, execute it. Don't add items that start with a leading space. */
                         if (! data->command_line.empty() && data->command_line.at(0) != L' ')
                         {
                             if (data->history != NULL)

@@ -3247,13 +3247,14 @@ const wchar_t *reader_readline()
                 /* Delete any autosuggestion */
                 data->autosuggestion.clear();
 
-                /*
-                 Allow backslash-escaped newlines
-                 */
+                /* Allow backslash-escaped newlines, but only if the following character is whitespace, or we're at the end of the text (see issue #163) */
                 if (is_backslashed(data->command_line, data->buff_pos))
                 {
-                    insert_char('\n');
-                    break;
+                    if (data->buff_pos >= data->command_length() || iswspace(data->command_line.at(data->buff_pos)))
+                    {
+                        insert_char('\n');
+                        break;
+                    }
                 }
 
                 switch (data->test_func(data->command_line.c_str()))

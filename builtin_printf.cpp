@@ -90,11 +90,11 @@ int hextobin(const wchar_t &c)
             return 11;
         case L'c':
             return 12;
-        case 'd':
+        case L'd':
             return 13;
-        case 'e':
+        case L'e':
             return 14;
-        case 'f':
+        case L'f':
             return 15;
         default:
             append_format(stderr_buffer, L"Invalid hex number : %lc", c);
@@ -138,33 +138,33 @@ static bool posixly_correct;
 static wchar_t const *const cfcc_msg =
  N_(L"warning: %ls: character(s) following character constant have been ignored");
 
-double C_STRTOD (wchar_t const *nptr, wchar_t **endptr)
+double C_STRTOD(wchar_t const *nptr, wchar_t **endptr)
 {
     double r;
 
-    const wcstring saved_locale = wsetlocale (LC_NUMERIC, NULL);
+    const wcstring saved_locale = wsetlocale(LC_NUMERIC, NULL);
 
     if (!saved_locale.empty())
     {
-        wsetlocale (LC_NUMERIC, L"C");
+        wsetlocale(LC_NUMERIC, L"C");
     }
 
     r = wcstod(nptr, endptr);
 
     if (!saved_locale.empty())
     {
-        wsetlocale (LC_NUMERIC, saved_locale.c_str());
+        wsetlocale(LC_NUMERIC, saved_locale.c_str());
     }
 
     return r;
 }
 
-static inline unsigned wchar_t to_uchar (wchar_t ch)
+static inline unsigned wchar_t to_uwchar_t(wchar_t ch)
 {
     return ch;
 }
 
-static void verify_numeric (const wchar_t *s, const wchar_t *end)
+static void verify_numeric(const wchar_t *s, const wchar_t *end)
 {
     if (errno)
     {
@@ -183,7 +183,7 @@ static void verify_numeric (const wchar_t *s, const wchar_t *end)
 
 #define STRTOX(TYPE, FUNC_NAME, LIB_FUNC_EXPR)				 \
 static TYPE								 \
-FUNC_NAME (wchar_t const *s)						 \
+FUNC_NAME(wchar_t const *s)						 \
 {									 \
     wchar_t *end;								 \
     TYPE val;								 \
@@ -203,18 +203,18 @@ FUNC_NAME (wchar_t const *s)						 \
     {									 \
         errno = 0;							 \
         val = (LIB_FUNC_EXPR);						 \
-        verify_numeric (s, end);						 \
+        verify_numeric(s, end);						 \
     }									 \
     return val;								 \
 }									 \
 
-STRTOX (intmax_t,    vwcstoimax, wcstoimax (s, &end, 0))
-STRTOX (uintmax_t,   vwcstoumax, wcstoumax (s, &end, 0))
-STRTOX (long double, vwcstold, C_STRTOD(s, &end))
+STRTOX(intmax_t,    vwcstoimax, wcstoimax(s, &end, 0))
+STRTOX(uintmax_t,   vwcstoumax, wcstoumax(s, &end, 0))
+STRTOX(long double, vwcstold, C_STRTOD(s, &end))
 
 /* Output a single-character \ escape.  */
 
-static void print_esc_char (wchar_t c)
+static void print_esc_char(wchar_t c)
 {
     switch (c)
     {
@@ -253,7 +253,7 @@ static void print_esc_char (wchar_t c)
    besides the backslash.
    If OCTAL_0 is nonzero, octal escapes are of the form \0ooo, where o
    is an octal digit; otherwise they are of the form \ooo.  */
-static int print_esc (const wchar_t *escstart, bool octal_0)
+static int print_esc(const wchar_t *escstart, bool octal_0)
 {
     const wchar_t *p = escstart + 1;
     int esc_value = 0;		/* Value of \nnn escape. */
@@ -263,26 +263,26 @@ static int print_esc (const wchar_t *escstart, bool octal_0)
     {
         /* A hexadecimal \xhh escape sequence must have 1 or 2 hex. digits.  */
         for (esc_length = 0, ++p;
-        esc_length < 2 && isxdigit (to_uchar (*p));
+        esc_length < 2 && isxdigit(to_uwchar_t(*p));
         ++esc_length, ++p)
-         esc_value = esc_value * 16 + hextobin (*p);
+         esc_value = esc_value * 16 + hextobin(*p);
         if (esc_length == 0)
             append_format(stderr_buffer, _(L"missing hexadecimal number in escape"));
-        append_format (stdout_buffer, L"%lc", esc_value);
+        append_format(stdout_buffer, L"%lc", esc_value);
     }
-    else if (isodigit (*p))
+    else if (isodigit(*p))
     {
         /* Parse \0ooo (if octal_0 && *p == L'0') or \ooo (otherwise).
         Allow \ooo if octal_0 && *p != L'0'; this is an undocumented
         extension to POSIX that is compatible with Bash 2.05b.  */
         for (esc_length = 0, p += octal_0 && *p == L'0';
-            esc_length < 3 && isodigit (*p);
+            esc_length < 3 && isodigit(*p);
             ++esc_length, ++p)
-            esc_value = esc_value * 8 + octtobin (*p);
+            esc_value = esc_value * 8 + octtobin(*p);
         append_format(stdout_buffer, L"%c", esc_value);
      }
-    else if (*p && wcschr (L"\"\\abcfnrtv", *p))
-        print_esc_char (*p++);
+    else if (*p && wcschr(L"\"\\abcfnrtv", *p))
+        print_esc_char(*p++);
     else if (*p == L'u' || *p == L'U')
     {
         wchar_t esc_char = *p;
@@ -293,9 +293,9 @@ static int print_esc (const wchar_t *escstart, bool octal_0)
         esc_length > 0;
         --esc_length, ++p)
         {
-            if (! isxdigit (to_uchar (*p)))
+            if (! isxdigit(to_uwchar_t(*p)))
                 append_format(stderr_buffer, _(L"missing hexadecimal number in escape"));
-            uni_value = uni_value * 16 + hextobin (*p);
+            uni_value = uni_value * 16 + hextobin(*p);
         }
 
         /* A universal character name shall not specify a character short
@@ -315,7 +315,7 @@ static int print_esc (const wchar_t *escstart, bool octal_0)
         append_format(stdout_buffer, L"%lc", L'\\');
         if (*p)
         {
-            append_format (stdout_buffer, L"%lc", *p);
+            append_format(stdout_buffer, L"%lc", *p);
             p++;
         }
     }
@@ -325,13 +325,13 @@ static int print_esc (const wchar_t *escstart, bool octal_0)
 /* Print string STR, evaluating \ escapes. */
 
 static void
-print_esc_string (const wchar_t *str)
+print_esc_string(const wchar_t *str)
 {
     for (; *str; str++)
         if (*str == L'\\')
-            str += print_esc (str, true);
+            str += print_esc(str, true);
         else
-            append_format (stdout_buffer, L"%lc", *str);
+            append_format(stdout_buffer, L"%lc", *str);
 }
 
 /* Evaluate a printf conversion specification.  START is the start of
@@ -342,7 +342,7 @@ print_esc_string (const wchar_t *str)
    HAVE_PRECISION are true, respectively.  ARGUMENT is the argument to
    be formatted.  */
 
-static void print_direc (const wchar_t *start, size_t length, wchar_t conversion,
+static void print_direc(const wchar_t *start, size_t length, wchar_t conversion,
 	     bool have_field_width, int field_width,
 	     bool have_precision, int precision,
 	     wchar_t const *argument)
@@ -391,7 +391,7 @@ static void print_direc (const wchar_t *start, size_t length, wchar_t conversion
         case L'd':
         case L'i':
         {
-            intmax_t arg = vwcstoimax (argument);
+            intmax_t arg = vwcstoimax(argument);
             if (!have_field_width)
             {
                 if (!have_precision)
@@ -414,7 +414,7 @@ static void print_direc (const wchar_t *start, size_t length, wchar_t conversion
         case L'x':
         case L'X':
         {
-            uintmax_t arg = vwcstoumax (argument);
+            uintmax_t arg = vwcstoumax(argument);
             if (!have_field_width)
             {
                 if (!have_precision)
@@ -441,7 +441,7 @@ static void print_direc (const wchar_t *start, size_t length, wchar_t conversion
         case L'g':
         case L'G':
         {
-            long double arg = vwcstold (argument);
+            long double arg = vwcstold(argument);
             if (!have_field_width)
             {
                 if (!have_precision)
@@ -488,7 +488,7 @@ static void print_direc (const wchar_t *start, size_t length, wchar_t conversion
    arguments to any `%' directives.
    Return the number of elements of ARGV used.  */
 
-static int print_formatted (const wchar_t *format, int argc, wchar_t **argv) {
+static int print_formatted(const wchar_t *format, int argc, wchar_t **argv) {
     int save_argc = argc;		/* Preserve original value.  */
     const wchar_t *f;		/* Pointer into `format'.  */
     const wchar_t *direc_start;	/* Start of % directive.  */
@@ -518,7 +518,7 @@ static int print_formatted (const wchar_t *format, int argc, wchar_t **argv) {
                     for %b, even though POSIX requires it.  */
                     if (argc > 0)
                     {
-                        print_esc_string (*argv);
+                        print_esc_string(*argv);
                         ++argv;
                         --argc;
                     }
@@ -560,7 +560,7 @@ static int print_formatted (const wchar_t *format, int argc, wchar_t **argv) {
                     ++direc_length;
                     if (argc > 0)
                     {
-                        intmax_t width = vwcstoimax (*argv);
+                        intmax_t width = vwcstoimax(*argv);
                         if (INT_MIN <= width && width <= INT_MAX)
                             field_width = width;
                         else
@@ -593,7 +593,7 @@ static int print_formatted (const wchar_t *format, int argc, wchar_t **argv) {
                         ++direc_length;
                         if (argc > 0)
                         {
-                            intmax_t prec = vwcstoimax (*argv);
+                            intmax_t prec = vwcstoimax(*argv);
                             if (prec < 0)
                             {
                             /* A negative precision is taken as if the
@@ -637,18 +637,18 @@ static int print_formatted (const wchar_t *format, int argc, wchar_t **argv) {
                 (int) (f + 1 - direc_start), direc_start);
         }
 
-        print_direc (direc_start, direc_length, *f,
+        print_direc(direc_start, direc_length, *f,
             have_field_width, field_width,
             have_precision, precision,
             (argc <= 0 ? L"" : (argc--, *argv++)));
             break;
 
             case L'\\':
-                f += print_esc (f, false);
+                f += print_esc(f, false);
                 break;
 
             default:
-                append_format (stdout_buffer, L"%lc", *f);
+                append_format(stdout_buffer, L"%lc", *f);
             }
         }
     return save_argc - argc;
@@ -674,7 +674,7 @@ static int builtin_printf(parser_t &parser, wchar_t **argv)
 
     do
     {
-        args_used = print_formatted (format, argc, argv);
+        args_used = print_formatted(format, argc, argv);
         argc -= args_used;
         argv += args_used;
     }

@@ -46,13 +46,14 @@
 
    David MacKenzie <djm@gnu.ai.mit.edu> */
 
+/* This file has been imported from source code of printf command in GNU Coreutils version 6.9 */
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <getopt.h>
+#include <inttypes.h>
 
 #include "common.h"
-
-// This file has been imported from source code of printf command in GNU Coreutils version 6.9
 
 /* The official name of this program (e.g., no `g' prefix).  */
 #define PROGRAM_NAME "printf"
@@ -142,20 +143,7 @@ static bool posixly_correct;
 static wchar_t const *const cfcc_msg =
  N_(L"warning: %s: character(s) following character constant have been ignored");
 
-int strtoimax (wchar_t const *ptr, wchar_t **endptr, int base)
-{
-    return wcstol (ptr, endptr, base);
-}
-
-int strtoumax (wchar_t const *ptr, wchar_t **endptr, int base)
-{
-    return wcstol (ptr, endptr, base);
-}
-
-# define STRTOD wcstod
-
-double
-C_STRTOD (wchar_t const *nptr, wchar_t **endptr)
+double C_STRTOD (wchar_t const *nptr, wchar_t **endptr)
 {
     double r;
 
@@ -166,7 +154,7 @@ C_STRTOD (wchar_t const *nptr, wchar_t **endptr)
         wsetlocale (LC_NUMERIC, L"C");
     }
 
-    r = STRTOD (nptr, endptr);
+    r = wcstod(nptr, endptr);
 
     if (!saved_locale.empty())
     {
@@ -225,8 +213,8 @@ FUNC_NAME (wchar_t const *s)						 \
     return val;								 \
 }									 \
 
-STRTOX (intmax_t,    vstrtoimax, strtoimax (s, &end, 0))
-STRTOX (uintmax_t,   vstrtoumax, strtoumax (s, &end, 0))
+STRTOX (intmax_t,    vwcstoimax, wcstoimax (s, &end, 0))
+STRTOX (uintmax_t,   vwcstoumax, wcstoumax (s, &end, 0))
 STRTOX (long double, vstrtold, C_STRTOD(s, &end))
 
 /* Output a single-character \ escape.  */
@@ -409,7 +397,7 @@ static void print_direc (const wchar_t *start, size_t length, wchar_t conversion
         case L'd':
         case L'i':
         {
-            intmax_t arg = vstrtoimax (argument);
+            intmax_t arg = vwcstoimax (argument);
             if (!have_field_width)
             {
                 if (!have_precision)
@@ -432,7 +420,7 @@ static void print_direc (const wchar_t *start, size_t length, wchar_t conversion
         case L'x':
         case L'X':
         {
-            uintmax_t arg = vstrtoumax (argument);
+            uintmax_t arg = vwcstoumax (argument);
             if (!have_field_width)
             {
                 if (!have_precision)
@@ -578,7 +566,7 @@ static int print_formatted (const wchar_t *format, int argc, wchar_t **argv) {
                     ++direc_length;
                     if (argc > 0)
                     {
-                        intmax_t width = vstrtoimax (*argv);
+                        intmax_t width = vwcstoimax (*argv);
                         if (INT_MIN <= width && width <= INT_MAX)
                             field_width = width;
                         else
@@ -611,7 +599,7 @@ static int print_formatted (const wchar_t *format, int argc, wchar_t **argv) {
                         ++direc_length;
                         if (argc > 0)
                         {
-                            intmax_t prec = vstrtoimax (*argv);
+                            intmax_t prec = vwcstoimax (*argv);
                             if (prec < 0)
                             {
                             /* A negative precision is taken as if the

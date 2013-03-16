@@ -66,8 +66,6 @@
 
 # define ISDIGIT(c) ((unsigned int) (c) - L'0' <= 9)
 
-# define PRIdMAX L"ld"
-
 static int exit_code;
 
 /* True if the POSIXLY_CORRECT environment variable is set.  */
@@ -314,8 +312,8 @@ static void print_direc (const wchar_t *start, size_t length, wchar_t conversion
         switch (conversion)
         {
             case L'd': case L'i':
-                length_modifier = PRIdMAX;
-                length_modifier_len = sizeof PRIdMAX - 2;
+                length_modifier = L"lld";
+                length_modifier_len = sizeof L"lld" - 2;
                 break;
             case L'a': case L'e': case L'f': case L'g':
             case L'A': case L'E': case L'F': case L'G':

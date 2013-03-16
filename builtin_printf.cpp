@@ -59,12 +59,78 @@
 
 #define AUTHORS "David MacKenzie"
 
-#define isodigit(c) ((c) >= L'0' && (c) <= L'7')
-#define hextobin(c) ((c) >= L'a' && (c) <= L'f' ? (c) - L'a' + 10 : \
-		     (c) >= L'A' && (c) <= L'F' ? (c) - L'A' + 10 : (c) - L'0')
-#define octtobin(c) ((c) - L'0')
+bool isodigit(const wchar_t &c)
+{
+    return wcschr(L"01234567", c) != NULL;
+}
 
-# define ISDIGIT(c) ((unsigned int) (c) - L'0' <= 9)
+int hextobin(const wchar_t &c)
+{
+    switch (c)
+    {
+        case L'0':
+            return 0;
+        case L'1':
+            return 1;
+        case L'2':
+            return 2;
+        case L'3':
+            return 3;
+        case L'4':
+            return 4;
+        case L'5':
+            return 5;
+        case L'6':
+            return 6;
+        case L'7':
+            return 7;
+        case L'8':
+            return 8;
+        case L'9':
+            return 9;
+        case L'a':
+            return 10;
+        case L'b':
+            return 11;
+        case L'c':
+            return 12;
+        case 'd':
+            return 13;
+        case 'e':
+            return 14;
+        case 'f':
+            return 15;
+        default:
+            append_format(stderr_buffer, L"Invalid hex number : %lc", c);
+            return -1;
+    }    
+}
+
+int octtobin(const wchar_t &c)
+{
+    switch (c)
+    {
+        case L'0':
+            return 0;
+        case L'1':
+            return 1;
+        case L'2':
+            return 2;
+        case L'3':
+            return 3;
+        case L'4':
+            return 4;
+        case L'5':
+            return 5;
+        case L'6':
+            return 6;
+        case L'7':
+            return 7;
+        default:
+            append_format(stderr_buffer, L"Invalid octal number : %lc", c);
+            return -1;
+    }
+}
 
 static int exit_code;
 

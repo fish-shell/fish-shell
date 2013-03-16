@@ -55,11 +55,6 @@
 
 #include "common.h"
 
-/* The official name of this program (e.g., no `g' prefix).  */
-#define PROGRAM_NAME "printf"
-
-#define AUTHORS "David MacKenzie"
-
 bool isodigit(const wchar_t &c)
 {
     return wcschr(L"01234567", c) != NULL;
@@ -141,7 +136,7 @@ static bool posixly_correct;
 /* This message appears in N_() here rather than just in _() below because
    the sole use would have been in a #define.  */
 static wchar_t const *const cfcc_msg =
- N_(L"warning: %s: character(s) following character constant have been ignored");
+ N_(L"warning: %ls: character(s) following character constant have been ignored");
 
 double C_STRTOD (wchar_t const *nptr, wchar_t **endptr)
 {
@@ -215,12 +210,11 @@ FUNC_NAME (wchar_t const *s)						 \
 
 STRTOX (intmax_t,    vwcstoimax, wcstoimax (s, &end, 0))
 STRTOX (uintmax_t,   vwcstoumax, wcstoumax (s, &end, 0))
-STRTOX (long double, vstrtold, C_STRTOD(s, &end))
+STRTOX (long double, vwcstold, C_STRTOD(s, &end))
 
 /* Output a single-character \ escape.  */
 
-static void
-print_esc_char (wchar_t c)
+static void print_esc_char (wchar_t c)
 {
     switch (c)
     {
@@ -447,7 +441,7 @@ static void print_direc (const wchar_t *start, size_t length, wchar_t conversion
         case L'g':
         case L'G':
         {
-            long double arg = vstrtold (argument);
+            long double arg = vwcstold (argument);
             if (!have_field_width)
             {
                 if (!have_precision)

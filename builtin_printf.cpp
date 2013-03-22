@@ -50,17 +50,29 @@
 
 #include <stdio.h>
 #include <sys/types.h>
-#include <getopt.h>
 #include <inttypes.h>
 
 #include "common.h"
 
-bool isodigit(const wchar_t &c)
+struct builtin_printf_state_t {
+    int exit_code;
+    
+    void verify_numeric(const wchar_t *s, const wchar_t *end);
+    
+    void print_direc(const wchar_t *start, size_t length, wchar_t conversion,
+	     bool have_field_width, int field_width,
+	     bool have_precision, int precision,
+	     wchar_t const *argument);
+    
+    int print_formatted(const wchar_t *format, int argc, wchar_t **argv);
+};
+
+static bool isodigit(const wchar_t &c)
 {
     return wcschr(L"01234567", c) != NULL;
 }
 
-int hextobin(const wchar_t &c)
+static int hextobin(const wchar_t &c)
 {
     switch (c)
     {
@@ -102,7 +114,7 @@ int hextobin(const wchar_t &c)
     }    
 }
 
-int octtobin(const wchar_t &c)
+static int octtobin(const wchar_t &c)
 {
     switch (c)
     {
@@ -127,11 +139,6 @@ int octtobin(const wchar_t &c)
             return -1;
     }
 }
-
-static int exit_code;
-
-/* True if the POSIXLY_CORRECT environment variable is set.  */
-static bool posixly_correct;
 
 /* This message appears in N_() here rather than just in _() below because
    the sole use would have been in a #define.  */
@@ -164,12 +171,12 @@ static inline unsigned wchar_t to_uwchar_t(wchar_t ch)
     return ch;
 }
 
-static void verify_numeric(const wchar_t *s, const wchar_t *end)
+void builtin_printf_state_t::verify_numeric(const wchar_t *s, const wchar_t *end)
 {
     if (errno)
     {
         append_format(stderr_buffer, L"%ls", s);
-        exit_code = EXIT_FAILURE;
+        this->exit_code = STATUS_BUILTIN_ERROR;
     }
     else if (*end)
     {
@@ -177,40 +184,50 @@ static void verify_numeric(const wchar_t *s, const wchar_t *end)
             append_format(stderr_buffer, _(L"%ls: expected a numeric value"), s);
         else
             append_format(stderr_buffer, _(L"%ls: value not completely converted"), s);
-        exit_code = EXIT_FAILURE;
+        this->exit_code = STATUS_BUILTIN_ERROR;
     }
 }
 
-#define STRTOX(TYPE, FUNC_NAME, LIB_FUNC_EXPR)				 \
-static TYPE								 \
-FUNC_NAME(wchar_t const *s)						 \
-{									 \
-    wchar_t *end;								 \
-    TYPE val;								 \
-									 \
-    if (*s == L'\"' || *s == L'\'')						 \
-    {									 \
-        unsigned wchar_t ch = *++s;						 \
-        val = ch;								 \
-        /* If POSIXLY_CORRECT is not set, then give a warning that there	 \
-        are characters following the character constant and that GNU	 \
-        printf is ignoring those characters.  If POSIXLY_CORRECT *is*	 \
-        set, then don't give the warning.  */				 \
-        if (*++s != 0 && !posixly_correct)				 \
-            append_format(stderr_buffer, _(cfcc_msg), s);					 \
-        }									 \
-    else									 \
-    {									 \
-        errno = 0;							 \
-        val = (LIB_FUNC_EXPR);						 \
-        verify_numeric(s, end);						 \
-    }									 \
-    return val;								 \
-}									 \
+template<typename T>
+T raw_string_to_scalar_type(const wchar_t *s, wchar_t ** end);
 
-STRTOX(intmax_t,    vwcstoimax, wcstoimax(s, &end, 0))
-STRTOX(uintmax_t,   vwcstoumax, wcstoumax(s, &end, 0))
-STRTOX(long double, vwcstold, C_STRTOD(s, &end))
+template<>
+intmax_t raw_string_to_scalar_type(const wchar_t *s, wchar_t ** end)
+{
+    return wcstoimax(s, end, 0);
+}
+
+template<>
+uintmax_t raw_string_to_scalar_type(const wchar_t *s, wchar_t ** end)
+{
+    return wcstoumax(s, end, 0);
+}
+
+
+template<>
+long double raw_string_to_scalar_type(const wchar_t *s, wchar_t ** end)
+{
+    return C_STRTOD(s, end);
+}
+
+template<typename T>
+T string_to_scalar_type(const wchar_t *s, builtin_printf_state_t *state)
+{
+    T val;
+    if (*s == L'\"' || *s == L'\'')
+    {                              
+        unsigned wchar_t ch = *++s;
+        val = ch;                  
+    }                              
+    else                           
+    {
+        wchar_t *end = NULL;
+        errno = 0;
+        val = raw_string_to_scalar_type<T>(s, &end);
+        state->verify_numeric(s, end);
+    }
+    return val;
+}
 
 /* Output a single-character \ escape.  */
 
@@ -253,7 +270,7 @@ static void print_esc_char(wchar_t c)
    besides the backslash.
    If OCTAL_0 is nonzero, octal escapes are of the form \0ooo, where o
    is an octal digit; otherwise they are of the form \ooo.  */
-static int print_esc(const wchar_t *escstart, bool octal_0)
+static long print_esc(const wchar_t *escstart, bool octal_0)
 {
     const wchar_t *p = escstart + 1;
     int esc_value = 0;		/* Value of \nnn escape. */
@@ -342,7 +359,7 @@ print_esc_string(const wchar_t *str)
    HAVE_PRECISION are true, respectively.  ARGUMENT is the argument to
    be formatted.  */
 
-static void print_direc(const wchar_t *start, size_t length, wchar_t conversion,
+void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wchar_t conversion,
 	     bool have_field_width, int field_width,
 	     bool have_precision, int precision,
 	     wchar_t const *argument)
@@ -391,7 +408,7 @@ static void print_direc(const wchar_t *start, size_t length, wchar_t conversion,
         case L'd':
         case L'i':
         {
-            intmax_t arg = vwcstoimax(argument);
+            intmax_t arg = string_to_scalar_type<intmax_t>(argument, this);
             if (!have_field_width)
             {
                 if (!have_precision)
@@ -414,7 +431,7 @@ static void print_direc(const wchar_t *start, size_t length, wchar_t conversion,
         case L'x':
         case L'X':
         {
-            uintmax_t arg = vwcstoumax(argument);
+            uintmax_t arg = string_to_scalar_type<uintmax_t>(argument, this);
             if (!have_field_width)
             {
                 if (!have_precision)
@@ -441,7 +458,7 @@ static void print_direc(const wchar_t *start, size_t length, wchar_t conversion,
         case L'g':
         case L'G':
         {
-            long double arg = vwcstold(argument);
+            long double arg = string_to_scalar_type<long double>(argument, this);
             if (!have_field_width)
             {
                 if (!have_precision)
@@ -488,7 +505,7 @@ static void print_direc(const wchar_t *start, size_t length, wchar_t conversion,
    arguments to any `%' directives.
    Return the number of elements of ARGV used.  */
 
-static int print_formatted(const wchar_t *format, int argc, wchar_t **argv) {
+int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wchar_t **argv) {
     int save_argc = argc;		/* Preserve original value.  */
     const wchar_t *f;		/* Pointer into `format'.  */
     const wchar_t *direc_start;	/* Start of % directive.  */
@@ -560,9 +577,9 @@ static int print_formatted(const wchar_t *format, int argc, wchar_t **argv) {
                     ++direc_length;
                     if (argc > 0)
                     {
-                        intmax_t width = vwcstoimax(*argv);
+                        intmax_t width = string_to_scalar_type<intmax_t>(*argv, this);
                         if (INT_MIN <= width && width <= INT_MAX)
-                            field_width = width;
+                            field_width = static_cast<int>(width);
                         else
                             append_format(stderr_buffer, _(L"invalid field width: %ls"), *argv);
                         ++argv;
@@ -593,7 +610,7 @@ static int print_formatted(const wchar_t *format, int argc, wchar_t **argv) {
                         ++direc_length;
                         if (argc > 0)
                         {
-                            intmax_t prec = vwcstoimax(*argv);
+                            intmax_t prec = string_to_scalar_type<intmax_t>(*argv, this);
                             if (prec < 0)
                             {
                             /* A negative precision is taken as if the
@@ -605,7 +622,7 @@ static int print_formatted(const wchar_t *format, int argc, wchar_t **argv) {
                                 append_format(stderr_buffer, _(L"invalid precision: %ls"), *argv);
                             else
                             {
-                                precision = prec;
+                                precision = static_cast<int>(prec);
                             }
                             ++argv;
                             --argc;
@@ -656,16 +673,17 @@ static int print_formatted(const wchar_t *format, int argc, wchar_t **argv) {
 
 static int builtin_printf(parser_t &parser, wchar_t **argv)
 {
+    builtin_printf_state_t state;
+    state.exit_code = STATUS_BUILTIN_OK;
+    
     wchar_t *format;
     int args_used;
     int argc = builtin_count_args(argv);
 
-    exit_code = EXIT_SUCCESS;
-
     if (argc <= 1)
     {
         append_format(stderr_buffer, _(L"missing operand"));
-        return EXIT_FAILURE;
+        return STATUS_BUILTIN_ERROR;
     }
 
     format = argv[1];
@@ -674,10 +692,10 @@ static int builtin_printf(parser_t &parser, wchar_t **argv)
 
     do
     {
-        args_used = print_formatted(format, argc, argv);
+        args_used = state.print_formatted(format, argc, argv);
         argc -= args_used;
         argv += args_used;
     }
     while (args_used > 0 && argc > 0);
-	return exit_code;
+	return state.exit_code;
 }

@@ -190,7 +190,7 @@ void builtin_printf_state_t::verify_numeric(const wchar_t *s, const wchar_t *end
 }
 
 template<typename T>
-T raw_string_to_scalar_type(const wchar_t *s, wchar_t ** end);
+static T raw_string_to_scalar_type(const wchar_t *s, wchar_t ** end);
 
 template<>
 intmax_t raw_string_to_scalar_type(const wchar_t *s, wchar_t ** end)
@@ -212,7 +212,7 @@ long double raw_string_to_scalar_type(const wchar_t *s, wchar_t ** end)
 }
 
 template<typename T>
-T string_to_scalar_type(const wchar_t *s, builtin_printf_state_t *state)
+static T string_to_scalar_type(const wchar_t *s, builtin_printf_state_t *state)
 {
     T val;
     if (*s == L'\"' || *s == L'\'')
@@ -237,31 +237,31 @@ static void print_esc_char(wchar_t c)
     switch (c)
     {
         case L'a':			/* Alert. */
-            append_format(stdout_buffer, L"%lc", L'\a');
+            stdout_buffer.push_back(L'\a');
             break;
         case L'b':			/* Backspace. */
-            append_format(stdout_buffer, L"%lc", L'\b');
+            stdout_buffer.push_back(L'\b');
             break;
         case L'c':			/* Cancel the rest of the output. */
             return;
             break;
         case L'f':			/* Form feed. */
-            append_format(stdout_buffer, L"%lc", L'\f');
+            stdout_buffer.push_back(L'\f');
             break;
         case L'n':			/* New line. */
-            append_format(stdout_buffer, L"%lc", L'\n');
+            stdout_buffer.push_back(L'\n');
             break;
-        case L'r':			/* Carriage retturn. */
-            append_format(stdout_buffer, L"%lc", L'\r');
+        case L'r':			/* Carriage return. */
+            stdout_buffer.push_back(L'\r');
             break;
         case L't':			/* Horizontal tab. */
-            append_format(stdout_buffer, L"%lc", L'\t');
+            stdout_buffer.push_back(L'\t');
             break;
         case L'v':			/* Vertical tab. */
-            append_format(stdout_buffer, L"%lc", L'\v');
+            stdout_buffer.push_back(L'\v');
             break;
         default:
-            append_format(stdout_buffer, L"%lc", c);
+            stdout_buffer.push_back(c);
             break;
     }
 }
@@ -538,7 +538,7 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
                 have_field_width = have_precision = false;
                 if (*f == L'%')
                 {
-                    append_format(stdout_buffer, L"%lc", L'%');
+                    stdout_buffer.push_back(L'%');
                     break;
                 }
                 if (*f == L'b')
@@ -562,9 +562,7 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
                 {
                     switch (*f)
                     {
-#if (__GLIBC__ == 2 && 2 <= __GLIBC_MINOR__) || 3 <= __GLIBC__
                         case L'I':
-#endif
                         case L'\'':
                             ok['a'] = ok['A'] = ok['c'] = ok['e'] = ok['E'] =
                                     ok['o'] = ok['s'] = ok['x'] = ok['X'] = false;
@@ -680,7 +678,7 @@ no_more_flag_characters:
                 break;
 
             default:
-                append_format(stdout_buffer, L"%lc", *f);
+                stdout_buffer.push_back(*f);
         }
     }
     return save_argc - argc;
@@ -697,7 +695,7 @@ static int builtin_printf(parser_t &parser, wchar_t **argv)
 
     if (argc <= 1)
     {
-        append_format(stderr_buffer, _(L"missing operand"));
+        append_format(stderr_buffer, _(L"printf: not enough arguments"));
         return STATUS_BUILTIN_ERROR;
     }
 

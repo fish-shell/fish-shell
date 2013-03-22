@@ -1158,7 +1158,7 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
     for (size_t i=0; i< comp.size(); i++)
     {
         const completion_t &el = comp.at(i);
-        if (! (el.flags & COMPLETE_CASE_INSENSITIVE))
+        if (!(el.flags & COMPLETE_CASE_INSENSITIVE))
         {
             has_case_sensitive = true;
             break;
@@ -3061,7 +3061,7 @@ const wchar_t *reader_readline()
 
                     /* Construct a copy of the string from the beginning of the command substitution up to the end of the token we're completing */
                     const wcstring buffcpy = wcstring(cmdsub_begin, token_end);
-                    
+
                     //fprintf(stderr, "Complete (%ls)\n", buffcpy.c_str());
                     data->complete_func(buffcpy, comp, COMPLETION_REQUEST_DEFAULT | COMPLETION_REQUEST_DESCRIPTIONS, NULL);
 

@@ -546,7 +546,7 @@ expression *test_parser::parse_3_arg_expression(unsigned int start, unsigned int
 {
     assert(end - start == 3);
     expression *result = NULL;
-    
+
     const token_info_t *center_token = token_for_string(arg(start + 1));
     if (center_token->flags & BINARY_PRIMARY)
     {
@@ -577,7 +577,7 @@ expression *test_parser::parse_4_arg_expression(unsigned int start, unsigned int
 {
     assert(end - start == 4);
     expression *result = NULL;
-    
+
     token_t first_token = token_for_string(arg(start))->tok;
     if (first_token == test_bang)
     {
@@ -605,14 +605,14 @@ expression *test_parser::parse_expression(unsigned int start, unsigned int end)
     {
         return error(L"Missing argument at index %u", start);
     }
-    
+
     unsigned int argc = end - start;
     switch (argc)
     {
         case 0:
             assert(0); //should have been caught by the above test
             return NULL;
-            
+
         case 1:
         {
             return error(L"Missing argument at index %u", start + 1);
@@ -621,17 +621,17 @@ expression *test_parser::parse_expression(unsigned int start, unsigned int end)
         {
             return parse_unary_expression(start, end);
         }
-        
+
         case 3:
         {
             return parse_3_arg_expression(start, end);
         }
-        
+
         case 4:
         {
             return parse_4_arg_expression(start, end);
         }
-        
+
         default:
         {
             return parse_combining_expression(start, end);
@@ -888,18 +888,18 @@ static bool unary_primary_evaluate(test_expressions::token_t token, const wcstri
 int builtin_test(parser_t &parser, wchar_t **argv)
 {
     using namespace test_expressions;
-    
+
     /* The first argument should be the name of the command ('test') */
     if (! argv[0])
         return BUILTIN_TEST_FAIL;
-    
+
     /* Whether we are invoked with bracket '[' or not */
     const bool is_bracket = ! wcscmp(argv[0], L"[");
-    
+
     size_t argc = 0;
     while (argv[argc + 1])
         argc++;
-    
+
     /* If we're bracket, the last argument ought to be ]; we ignore it. Note that argc is the number of arguments after the command name; thus argv[argc] is the last argument. */
     if (is_bracket)
     {
@@ -913,12 +913,12 @@ int builtin_test(parser_t &parser, wchar_t **argv)
             builtin_show_error(L"[: the last argument must be ']'\n");
             return BUILTIN_TEST_FAIL;
         }
-        
+
     }
-    
+
     /* Collect the arguments into a list */
     const wcstring_list_t args(argv + 1, argv + 1 + argc);
-    
+
     switch (argc)
     {
         case 0:

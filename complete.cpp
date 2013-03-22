@@ -345,26 +345,26 @@ class completer_t
     /** Table of completions conditions that have already been tested and the corresponding test results */
     typedef std::map<wcstring, bool> condition_cache_t;
     condition_cache_t condition_cache;
-    
+
     enum complete_type_t
     {
         COMPLETE_DEFAULT,
         COMPLETE_AUTOSUGGEST
     };
-    
+
     complete_type_t type() const
     {
         return (flags & COMPLETION_REQUEST_AUTOSUGGESTION) ? COMPLETE_AUTOSUGGEST : COMPLETE_DEFAULT;
     }
-    
+
     bool wants_descriptions() const
     {
-        return !! (flags & COMPLETION_REQUEST_DESCRIPTIONS);
+        return !!(flags & COMPLETION_REQUEST_DESCRIPTIONS);
     }
-    
+
     bool fuzzy() const
     {
-        return !! (flags & COMPLETION_REQUEST_FUZZY_MATCH);
+        return !!(flags & COMPLETION_REQUEST_FUZZY_MATCH);
     }
 
 
@@ -1794,7 +1794,6 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, completion_
     /* Make our completer */
     completer_t completer(cmd, flags);
 
-    const bool fuzzy = !! (flags & COMPLETION_REQUEST_FUZZY_MATCH);
     const wchar_t *tok_begin, *tok_end, *cmdsubst_begin, *cmdsubst_end, *prev_begin, *prev_end;
     wcstring current_token, prev_token;
     wcstring current_command;

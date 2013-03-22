@@ -77,7 +77,7 @@ enum
 
     /** This completion is case insensitive. */
     COMPLETE_CASE_INSENSITIVE = 1 << 1,
-    
+
     /** This is not the suffix of a token, but replaces it entirely */
     COMPLETE_REPLACES_TOKEN = 1 << 2,
 
@@ -139,7 +139,8 @@ public:
     bool operator != (const completion_t& rhs) const;
 };
 
-enum {
+enum
+{
     COMPLETION_REQUEST_DEFAULT = 0,
     COMPLETION_REQUEST_AUTOSUGGESTION = 1 << 0, // indicates the completion is for an autosuggestion
     COMPLETION_REQUEST_DESCRIPTIONS = 1 << 1, // indicates that we want descriptions

@@ -936,7 +936,7 @@ static void test_test()
 
     /* This crashed */
     assert(run_test_test(1, L"1 = 1 -a = 1"));
-    
+
     /* Make sure we can treat -S as a parameter instead of an operator. https://github.com/fish-shell/fish-shell/issues/601 */
     assert(run_test_test(0, L"-S = -S"));
     assert(run_test_test(1, L"! ! ! A"));
@@ -965,16 +965,16 @@ static void test_complete(void)
     const wchar_t *name_strs[] = {L"Foo1", L"Foo2", L"Foo3", L"Bar1", L"Bar2", L"Bar3"};
     size_t count = sizeof name_strs / sizeof *name_strs;
     const wcstring_list_t names(name_strs, name_strs + count);
-    
+
     complete_set_variable_names(&names);
-    
+
     std::vector<completion_t> completions;
     complete(L"$F", completions, COMPLETION_REQUEST_DEFAULT);
     assert(completions.size() == 3);
     assert(completions.at(0).completion == L"oo1");
     assert(completions.at(1).completion == L"oo2");
     assert(completions.at(2).completion == L"oo3");
-    
+
     complete_set_variable_names(NULL);
 }
 
@@ -1714,7 +1714,7 @@ int main(int argc, char **argv)
     builtin_init();
     reader_init();
     env_init();
-    
+
     test_format();
     test_escape();
     test_convert();

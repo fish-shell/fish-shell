@@ -38,5 +38,6 @@ Nightly builds for several Linux distros can be downloaded from <http://download
 
 ## Contact Us
 
-Questions, comments, rants and raves can be posted to the official fish mailing list at <https://lists.sourceforge.net/lists/listinfo/fish-users>
+Questions, comments, rants and raves can be posted to the official fish mailing list at <https://lists.sourceforge.net/lists/listinfo/fish-users> or join us on our IRC channel #fish at irc.oftc.net
+
 Found a bug? Have an awesome idea? Please open an issue on this github page.

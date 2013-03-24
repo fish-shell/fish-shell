@@ -365,22 +365,19 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
         bool have_precision, int precision,
         wchar_t const *argument)
 {
-    wcstring fmt;
+    // Start with everything except the conversion specifier
+    wcstring fmt(start, length);
 
     /*  Create a null-terminated copy of the % directive, with an
-        intmax_t-wide length modifier substituted for any existing
+        intmax_t-wide width modifier substituted for any existing
         integer length modifier.  */
     {
-        wchar_t *q;
-        wchar_t const *length_modifier;
-        size_t length_modifier_len;
-
+        // Append the appropriate width specifier
         switch (conversion)
         {
             case L'd':
             case L'i':
-                length_modifier = L"lld";
-                length_modifier_len = sizeof L"lld" - 2;
+                fmt.append(L"ll");
                 break;
             case L'a':
             case L'e':
@@ -390,26 +387,18 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
             case L'E':
             case L'F':
             case L'G':
-                length_modifier = L"L";
-                length_modifier_len = 1;
+                fmt.append(L"L");
                 break;
             case L's':
             case L'u':
-                length_modifier = L"l";
-                length_modifier_len = 1;
+                fmt.append(L"l");
                 break;
             default:
-                length_modifier = start;  /* Any valid pointer will do.  */
-                length_modifier_len = 0;
                 break;
         }
 
-        wchar_t p[length + length_modifier_len + 2];		/* Null-terminated copy of % directive. */
-        q = wmemcpy(p, start,  length) + length;
-        q = wmemcpy(q, length_modifier, length_modifier_len) + length_modifier_len;
-        *q++ = conversion;
-        *q = L'\0';
-        fmt = p;
+        // Append the conversion itself
+        fmt.push_back(conversion);
     }
 
     switch (conversion)

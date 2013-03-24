@@ -153,21 +153,21 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
     const rgb_color_t fg = rgb_color_t(fgcolor ? fgcolor : L"");
     if (fgcolor && fg.is_none())
     {
-        append_format(stderr_buffer, _("%s: Unknown color '%s'\n"), argv[0], fgcolor);
+        append_format(stderr_buffer, _(L"%ls: Unknown color '%ls'\n"), argv[0], fgcolor);
         return STATUS_BUILTIN_ERROR;
     }
 
     const rgb_color_t bg = rgb_color_t(bgcolor ? bgcolor : L"");
     if (bgcolor && bg.is_none())
     {
-        append_format(stderr_buffer, _("%s: Unknown color '%s'\n"), argv[0], bgcolor);
+        append_format(stderr_buffer, _(L"%ls: Unknown color '%ls'\n"), argv[0], bgcolor);
         return STATUS_BUILTIN_ERROR;
     }
 
     /* Make sure that the term exists */
     if (cur_term == NULL && setupterm(0, STDOUT_FILENO, 0) == ERR)
     {
-        append_format(stderr_buffer, _("%s: Could not set up terminal\n"), argv[0]);
+        append_format(stderr_buffer, _(L"%ls: Could not set up terminal\n"), argv[0]);
         return STATUS_BUILTIN_ERROR;
     }
 

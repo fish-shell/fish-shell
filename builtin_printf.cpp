@@ -56,7 +56,10 @@
 
 struct builtin_printf_state_t
 {
+    /* The status of the operation */
     int exit_code;
+
+    /* Whether we should stop outputting. This gets set in the case of an error, and also with the \c specifier. */
     bool early_exit;
 
     builtin_printf_state_t() : exit_code(0), early_exit(false)
@@ -172,8 +175,12 @@ void builtin_printf_state_t::fatal_error(const wchar_t *fmt, ...)
 
     va_list va;
     va_start(va, fmt);
-    append_formatv(stderr_buffer, fmt, va);
+    wcstring errstr = vformat_string(fmt, va);
     va_end(va);
+    stderr_buffer.append(errstr);
+    if (! string_suffixes_string(L"\n", errstr))
+        stderr_buffer.push_back(L'\n');
+
     this->exit_code = STATUS_BUILTIN_ERROR;
     this->early_exit = true;
 }
@@ -682,7 +689,7 @@ no_more_flag_characters:
                     unsigned wchar_t conversion = *f;
                     if (! ok[conversion])
                     {
-                        this->fatal_error(_("%.*ls: invalid conversion specification"), (int)(f + 1 - direc_start), direc_start);
+                        this->fatal_error(_(L"%.*ls: invalid conversion specification"), (int)(f + 1 - direc_start), direc_start);
                         return 0;
                     }
                 }

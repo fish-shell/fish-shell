@@ -66,7 +66,7 @@ struct builtin_printf_state_t
     {
     }
 
-    void verify_numeric(const wchar_t *s, const wchar_t *end);
+    void verify_numeric(const wchar_t *s, const wchar_t *end, int errcode);
 
     void print_direc(const wchar_t *start, size_t length, wchar_t conversion,
                      bool have_field_width, int field_width,
@@ -216,11 +216,11 @@ void builtin_printf_state_t::append_format_output(const wchar_t *fmt, ...)
 }
 
 
-void builtin_printf_state_t::verify_numeric(const wchar_t *s, const wchar_t *end)
+void builtin_printf_state_t::verify_numeric(const wchar_t *s, const wchar_t *end, int errcode)
 {
-    if (errno)
+    if (errcode != 0)
     {
-        this->fatal_error(L"%ls", s);
+        this->fatal_error(L"%ls: %s", s, strerror(errcode));
     }
     else if (*end)
     {
@@ -267,7 +267,7 @@ static T string_to_scalar_type(const wchar_t *s, builtin_printf_state_t *state)
         wchar_t *end = NULL;
         errno = 0;
         val = raw_string_to_scalar_type<T>(s, &end);
-        state->verify_numeric(s, end);
+        state->verify_numeric(s, end, errno);
     }
     return val;
 }
@@ -405,38 +405,33 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
     // Start with everything except the conversion specifier
     wcstring fmt(start, length);
 
-    /*  Create a null-terminated copy of the % directive, with an
-        intmax_t-wide width modifier substituted for any existing
-        integer length modifier.  */
+    /*  Create a copy of the % directive, with an intmax_t-wide width modifier substituted for any existing integer length modifier. */
+    switch (conversion)
     {
-        // Append the appropriate width specifier
-        switch (conversion)
-        {
-            case L'd':
-            case L'i':
-                fmt.append(L"ll");
-                break;
-            case L'a':
-            case L'e':
-            case L'f':
-            case L'g':
-            case L'A':
-            case L'E':
-            case L'F':
-            case L'G':
-                fmt.append(L"L");
-                break;
-            case L's':
-            case L'u':
-                fmt.append(L"l");
-                break;
-            default:
-                break;
-        }
-
-        // Append the conversion itself
-        fmt.push_back(conversion);
+        case L'd':
+        case L'i':
+            fmt.append(L"ll");
+            break;
+        case L'a':
+        case L'e':
+        case L'f':
+        case L'g':
+        case L'A':
+        case L'E':
+        case L'F':
+        case L'G':
+            fmt.append(L"L");
+            break;
+        case L's':
+        case L'u':
+            fmt.append(L"l");
+            break;
+        default:
+            break;
     }
+
+    // Append the conversion itself
+    fmt.push_back(conversion);
 
     switch (conversion)
     {
@@ -444,16 +439,16 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
         case L'i':
         {
             intmax_t arg = string_to_scalar_type<intmax_t>(argument, this);
-            if (!have_field_width)
+            if (! have_field_width)
             {
-                if (!have_precision)
+                if (! have_precision)
                     this->append_format_output(fmt.c_str(), arg);
                 else
                     this->append_format_output(fmt.c_str(), precision, arg);
             }
             else
             {
-                if (!have_precision)
+                if (! have_precision)
                     this->append_format_output(fmt.c_str(), field_width, arg);
                 else
                     this->append_format_output(fmt.c_str(), field_width, precision, arg);
@@ -735,6 +730,6 @@ static int builtin_printf(parser_t &parser, wchar_t **argv)
         argc -= args_used;
         argv += args_used;
     }
-    while (args_used > 0 && argc > 0);
+    while (args_used > 0 && argc > 0 && ! state.early_exit);
     return state.exit_code;
 }

@@ -182,7 +182,7 @@ extern const wchar_t *program_name;
 /**
    Shorthand for wgettext call
 */
-#define _(wstr) wgettext((const wchar_t *)wstr)
+#define _(wstr) wgettext(wstr)
 
 /**
    Noop, used to tell xgettext that a string should be translated,

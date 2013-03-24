@@ -17,3 +17,15 @@ printf "abc\rdef\n"
 printf "Msg1\fMsg2\n"
 printf "foo\vbar\vbaz\n"
 printf "\111 \x50" # \u0051 \U00000052
+
+echo
+echo "Test escapes"
+
+# \c escape means "stop printing"
+printf 'a\cb'
+echo
+
+# Bogus printf specifier, should produce no stdout
+printf "%5" 10 ^ /dev/null
+
+true

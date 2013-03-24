@@ -471,15 +471,21 @@ wcstring vformat_string(const wchar_t *format, va_list va_orig)
     return result;
 }
 
-void append_format(wcstring &str, const wchar_t *format, ...)
+void append_formatv(wcstring &str, const wchar_t *format, va_list ap)
 {
     /* Preserve errno across this call since it likes to stomp on it */
     int err = errno;
+    str.append(vformat_string(format, ap));
+    errno = err;
+
+}
+
+void append_format(wcstring &str, const wchar_t *format, ...)
+{
     va_list va;
     va_start(va, format);
-    str.append(vformat_string(format, va));
+    append_formatv(str, format, va);
     va_end(va);
-    errno = err;
 }
 
 wchar_t *wcsvarname(const wchar_t *str)

@@ -57,6 +57,11 @@
 struct builtin_printf_state_t
 {
     int exit_code;
+    bool early_exit;
+
+    builtin_printf_state_t() : exit_code(0), early_exit(false)
+    {
+    }
 
     void verify_numeric(const wchar_t *s, const wchar_t *end);
 
@@ -66,78 +71,65 @@ struct builtin_printf_state_t
                      wchar_t const *argument);
 
     int print_formatted(const wchar_t *format, int argc, wchar_t **argv);
+
+    void fatal_error(const wchar_t *format, ...);
+
+    long print_esc(const wchar_t *escstart, bool octal_0);
+    void print_esc_string(const wchar_t *str);
+    void print_esc_char(wchar_t c);
+
+    void append_output(wchar_t c);
+    void append_output(const wchar_t *c);
+    void append_format_output(const wchar_t *fmt, ...);
 };
 
-static bool isodigit(const wchar_t &c)
+static bool is_octal_digit(wchar_t c)
 {
-    return wcschr(L"01234567", c) != NULL;
+    return c != L'\0' && wcschr(L"01234567", c) != NULL;
 }
 
-static int hextobin(const wchar_t &c)
+static bool is_hex_digit(wchar_t c)
+{
+    return c != L'\0' && wcschr(L"0123456789ABCDEFabcdef", c) != NULL;
+}
+
+static int hex_to_bin(const wchar_t &c)
 {
     switch (c)
     {
-        case L'0':
-            return 0;
-        case L'1':
-            return 1;
-        case L'2':
-            return 2;
-        case L'3':
-            return 3;
-        case L'4':
-            return 4;
-        case L'5':
-            return 5;
-        case L'6':
-            return 6;
-        case L'7':
-            return 7;
-        case L'8':
-            return 8;
-        case L'9':
-            return 9;
-        case L'a':
-            return 10;
-        case L'b':
-            return 11;
-        case L'c':
-            return 12;
-        case L'd':
-            return 13;
-        case L'e':
-            return 14;
-        case L'f':
-            return 15;
-        default:
-            append_format(stderr_buffer, L"Invalid hex number : %lc", c);
-            return -1;
+        case L'0': return 0;
+        case L'1': return 1;
+        case L'2': return 2;
+        case L'3': return 3;
+        case L'4': return 4;
+        case L'5': return 5;
+        case L'6': return 6;
+        case L'7': return 7;
+        case L'8': return 8;
+        case L'9': return 9;
+        case L'a': case L'A': return 10;
+        case L'b': case L'B': return 11;
+        case L'c': case L'C': return 12;
+        case L'd': case L'D': return 13;
+        case L'e': case L'E': return 14;
+        case L'f': case L'F': return 15;
+        default: return -1;
     }
 }
 
-static int octtobin(const wchar_t &c)
+static int octal_to_bin(wchar_t c)
 {
     switch (c)
     {
-        case L'0':
-            return 0;
-        case L'1':
-            return 1;
-        case L'2':
-            return 2;
-        case L'3':
-            return 3;
-        case L'4':
-            return 4;
-        case L'5':
-            return 5;
-        case L'6':
-            return 6;
-        case L'7':
-            return 7;
-        default:
-            append_format(stderr_buffer, L"Invalid octal number : %lc", c);
-            return -1;
+        case L'0': return 0;
+        case L'1': return 1;
+        case L'2': return 2;
+        case L'3': return 3;
+        case L'4': return 4;
+        case L'5': return 5;
+        case L'6': return 6;
+        case L'7': return 7;
+        default: return -1;
     }
 }
 
@@ -172,20 +164,63 @@ static inline unsigned wchar_t to_uwchar_t(wchar_t ch)
     return ch;
 }
 
+void builtin_printf_state_t::fatal_error(const wchar_t *fmt, ...)
+{
+    // Don't error twice
+    if (early_exit)
+        return;
+
+    va_list va;
+    va_start(va, fmt);
+    append_formatv(stderr_buffer, fmt, va);
+    va_end(va);
+    this->exit_code = STATUS_BUILTIN_ERROR;
+    this->early_exit = true;
+}
+
+void builtin_printf_state_t::append_output(wchar_t c)
+{
+    // Don't output if we're done
+    if (early_exit)
+        return;
+
+    stdout_buffer.push_back(c);
+}
+
+void builtin_printf_state_t::append_output(const wchar_t *c)
+{
+    // Don't output if we're done
+    if (early_exit)
+        return;
+
+    stdout_buffer.append(c);
+}
+
+void builtin_printf_state_t::append_format_output(const wchar_t *fmt, ...)
+{
+    // Don't output if we're done
+    if (early_exit)
+        return;
+
+    va_list va;
+    va_start(va, fmt);
+    append_formatv(stdout_buffer, fmt, va);
+    va_end(va);
+}
+
+
 void builtin_printf_state_t::verify_numeric(const wchar_t *s, const wchar_t *end)
 {
     if (errno)
     {
-        append_format(stderr_buffer, L"%ls", s);
-        this->exit_code = STATUS_BUILTIN_ERROR;
+        this->fatal_error(L"%ls", s);
     }
     else if (*end)
     {
         if (s == end)
-            append_format(stderr_buffer, _(L"%ls: expected a numeric value"), s);
+            this->fatal_error(_(L"%ls: expected a numeric value"), s);
         else
-            append_format(stderr_buffer, _(L"%ls: value not completely converted"), s);
-        this->exit_code = STATUS_BUILTIN_ERROR;
+            this->fatal_error(_(L"%ls: value not completely converted"), s);
     }
 }
 
@@ -232,36 +267,36 @@ static T string_to_scalar_type(const wchar_t *s, builtin_printf_state_t *state)
 
 /* Output a single-character \ escape.  */
 
-static void print_esc_char(wchar_t c)
+void builtin_printf_state_t::print_esc_char(wchar_t c)
 {
     switch (c)
     {
         case L'a':			/* Alert. */
-            stdout_buffer.push_back(L'\a');
+            this->append_output(L'\a');
             break;
         case L'b':			/* Backspace. */
-            stdout_buffer.push_back(L'\b');
+            this->append_output(L'\b');
             break;
         case L'c':			/* Cancel the rest of the output. */
-            return;
+            this->early_exit = true;
             break;
         case L'f':			/* Form feed. */
-            stdout_buffer.push_back(L'\f');
+            this->append_output(L'\f');
             break;
         case L'n':			/* New line. */
-            stdout_buffer.push_back(L'\n');
+            this->append_output(L'\n');
             break;
         case L'r':			/* Carriage return. */
-            stdout_buffer.push_back(L'\r');
+            this->append_output(L'\r');
             break;
         case L't':			/* Horizontal tab. */
-            stdout_buffer.push_back(L'\t');
+            this->append_output(L'\t');
             break;
         case L'v':			/* Vertical tab. */
-            stdout_buffer.push_back(L'\v');
+            this->append_output(L'\v');
             break;
         default:
-            stdout_buffer.push_back(c);
+            this->append_output(c);
             break;
     }
 }
@@ -271,7 +306,7 @@ static void print_esc_char(wchar_t c)
    besides the backslash.
    If OCTAL_0 is nonzero, octal escapes are of the form \0ooo, where o
    is an octal digit; otherwise they are of the form \ooo.  */
-static long print_esc(const wchar_t *escstart, bool octal_0)
+long builtin_printf_state_t::print_esc(const wchar_t *escstart, bool octal_0)
 {
     const wchar_t *p = escstart + 1;
     int esc_value = 0;		/* Value of \nnn escape. */
@@ -280,24 +315,20 @@ static long print_esc(const wchar_t *escstart, bool octal_0)
     if (*p == L'x')
     {
         /* A hexadecimal \xhh escape sequence must have 1 or 2 hex. digits.  */
-        for (esc_length = 0, ++p;
-                esc_length < 2 && isxdigit(to_uwchar_t(*p));
-                ++esc_length, ++p)
-            esc_value = esc_value * 16 + hextobin(*p);
+        for (esc_length = 0, ++p; esc_length < 2 && is_hex_digit(*p); ++esc_length, ++p)
+            esc_value = esc_value * 16 + hex_to_bin(*p);
         if (esc_length == 0)
-            append_format(stderr_buffer, _(L"missing hexadecimal number in escape"));
-        append_format(stdout_buffer, L"%lc", esc_value);
+            this->fatal_error(_(L"missing hexadecimal number in escape"));
+        this->append_format_output(L"%lc", esc_value);
     }
-    else if (isodigit(*p))
+    else if (is_octal_digit(*p))
     {
         /* Parse \0ooo (if octal_0 && *p == L'0') or \ooo (otherwise).
         Allow \ooo if octal_0 && *p != L'0'; this is an undocumented
         extension to POSIX that is compatible with Bash 2.05b.  */
-        for (esc_length = 0, p += octal_0 && *p == L'0';
-                esc_length < 3 && isodigit(*p);
-                ++esc_length, ++p)
-            esc_value = esc_value * 8 + octtobin(*p);
-        append_format(stdout_buffer, L"%c", esc_value);
+        for (esc_length = 0, p += octal_0 && *p == L'0'; esc_length < 3 && is_octal_digit(*p); ++esc_length, ++p)
+            esc_value = esc_value * 8 + octal_to_bin(*p);
+        this->append_format_output(L"%c", esc_value);
     }
     else if (*p && wcschr(L"\"\\abcfnrtv", *p))
         print_esc_char(*p++);
@@ -311,9 +342,9 @@ static long print_esc(const wchar_t *escstart, bool octal_0)
                 esc_length > 0;
                 --esc_length, ++p)
         {
-            if (! isxdigit(to_uwchar_t(*p)))
-                append_format(stderr_buffer, _(L"missing hexadecimal number in escape"));
-            uni_value = uni_value * 16 + hextobin(*p);
+            if (! is_hex_digit(*p))
+                this->fatal_error(_(L"missing hexadecimal number in escape"));
+            uni_value = uni_value * 16 + hex_to_bin(*p);
         }
 
         /* A universal character name shall not specify a character short
@@ -324,16 +355,16 @@ static long print_esc(const wchar_t *escstart, bool octal_0)
         if ((uni_value <= 0x9f
                 && uni_value != 0x24 && uni_value != 0x40 && uni_value != 0x60)
                 || (uni_value >= 0xd800 && uni_value <= 0xdfff))
-            append_format(stderr_buffer, _(L"invalid universal character name \\%c%0*x"),
+            this->fatal_error(_(L"invalid universal character name \\%c%0*x"),
                           esc_char, (esc_char == L'u' ? 4 : 8), uni_value);
-        append_format(stdout_buffer, L"%lc", uni_value);
+        this->append_format_output(L"%lc", uni_value);
     }
     else
     {
-        append_format(stdout_buffer, L"%lc", L'\\');
+        this->append_format_output(L"%lc", L'\\');
         if (*p)
         {
-            append_format(stdout_buffer, L"%lc", *p);
+            this->append_format_output(L"%lc", *p);
             p++;
         }
     }
@@ -342,14 +373,13 @@ static long print_esc(const wchar_t *escstart, bool octal_0)
 
 /* Print string STR, evaluating \ escapes. */
 
-static void
-print_esc_string(const wchar_t *str)
+void builtin_printf_state_t::print_esc_string(const wchar_t *str)
 {
     for (; *str; str++)
         if (*str == L'\\')
             str += print_esc(str, true);
         else
-            append_format(stdout_buffer, L"%lc", *str);
+            this->append_format_output(L"%lc", *str);
 }
 
 /* Evaluate a printf conversion specification.  START is the start of
@@ -410,16 +440,16 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
             if (!have_field_width)
             {
                 if (!have_precision)
-                    append_format(stdout_buffer, fmt.c_str(), arg);
+                    this->append_format_output(fmt.c_str(), arg);
                 else
-                    append_format(stdout_buffer, fmt.c_str(), precision, arg);
+                    this->append_format_output(fmt.c_str(), precision, arg);
             }
             else
             {
                 if (!have_precision)
-                    append_format(stdout_buffer, fmt.c_str(), field_width, arg);
+                    this->append_format_output(fmt.c_str(), field_width, arg);
                 else
-                    append_format(stdout_buffer, fmt.c_str(), field_width, precision, arg);
+                    this->append_format_output(fmt.c_str(), field_width, precision, arg);
             }
         }
         break;
@@ -433,16 +463,16 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
             if (!have_field_width)
             {
                 if (!have_precision)
-                    append_format(stdout_buffer, fmt.c_str(), arg);
+                    this->append_format_output(fmt.c_str(), arg);
                 else
-                    append_format(stdout_buffer, fmt.c_str(), precision, arg);
+                    this->append_format_output(fmt.c_str(), precision, arg);
             }
             else
             {
                 if (!have_precision)
-                    append_format(stdout_buffer, fmt.c_str(), field_width, arg);
+                    this->append_format_output(fmt.c_str(), field_width, arg);
                 else
-                    append_format(stdout_buffer, fmt.c_str(), field_width, precision, arg);
+                    this->append_format_output(fmt.c_str(), field_width, precision, arg);
             }
         }
         break;
@@ -460,42 +490,42 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
             if (!have_field_width)
             {
                 if (!have_precision)
-                    append_format(stdout_buffer, fmt.c_str(), arg);
+                    this->append_format_output(fmt.c_str(), arg);
                 else
-                    append_format(stdout_buffer, fmt.c_str(), precision, arg);
+                    this->append_format_output(fmt.c_str(), precision, arg);
             }
             else
             {
                 if (!have_precision)
-                    append_format(stdout_buffer, fmt.c_str(), field_width, arg);
+                    this->append_format_output(fmt.c_str(), field_width, arg);
                 else
-                    append_format(stdout_buffer, fmt.c_str(), field_width, precision, arg);
+                    this->append_format_output(fmt.c_str(), field_width, precision, arg);
             }
         }
         break;
 
         case L'c':
             if (!have_field_width)
-                append_format(stdout_buffer, fmt.c_str(), *argument);
+                this->append_format_output(fmt.c_str(), *argument);
             else
-                append_format(stdout_buffer, fmt.c_str(), field_width, *argument);
+                this->append_format_output(fmt.c_str(), field_width, *argument);
             break;
         case L's':
             if (!have_field_width)
             {
                 if (!have_precision)
                 {
-                    append_format(stdout_buffer, fmt.c_str(), argument);
+                    this->append_format_output(fmt.c_str(), argument);
                 }
                 else
-                    append_format(stdout_buffer, fmt.c_str(), precision, argument);
+                    this->append_format_output(fmt.c_str(), precision, argument);
             }
             else
             {
                 if (!have_precision)
-                    append_format(stdout_buffer, fmt.c_str(), field_width, argument);
+                    this->append_format_output(fmt.c_str(), field_width, argument);
                 else
-                    append_format(stdout_buffer, fmt.c_str(), field_width, precision, argument);
+                    this->append_format_output(fmt.c_str(), field_width, precision, argument);
             }
             break;
     }
@@ -527,7 +557,7 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
                 have_field_width = have_precision = false;
                 if (*f == L'%')
                 {
-                    stdout_buffer.push_back(L'%');
+                    this->append_output(L'%');
                     break;
                 }
                 if (*f == L'b')
@@ -583,7 +613,7 @@ no_more_flag_characters:
                         if (INT_MIN <= width && width <= INT_MAX)
                             field_width = static_cast<int>(width);
                         else
-                            append_format(stderr_buffer, _(L"invalid field width: %ls"), *argv);
+                            this->fatal_error(_(L"invalid field width: %ls"), *argv);
                         ++argv;
                         --argc;
                     }
@@ -621,7 +651,7 @@ no_more_flag_characters:
                                 precision = -1;
                             }
                             else if (INT_MAX < prec)
-                                append_format(stderr_buffer, _(L"invalid precision: %ls"), *argv);
+                                this->fatal_error(_(L"invalid precision: %ls"), *argv);
                             else
                             {
                                 precision = static_cast<int>(prec);
@@ -645,15 +675,16 @@ no_more_flag_characters:
                     }
                 }
 
-                while (*f == L'l' || *f == L'L' || *f == L'h'
-                        || *f == L'j' || *f == L't' || *f == L'z')
+                while (*f == L'l' || *f == L'L' || *f == L'h' || *f == L'j' || *f == L't' || *f == L'z')
                     ++f;
+
                 {
                     unsigned wchar_t conversion = *f;
                     if (! ok[conversion])
-                        append_format(stderr_buffer,
-                                      _("%.*ls: invalid conversion specification"),
-                                      (int)(f + 1 - direc_start), direc_start);
+                    {
+                        this->fatal_error(_("%.*ls: invalid conversion specification"), (int)(f + 1 - direc_start), direc_start);
+                        return 0;
+                    }
                 }
 
                 print_direc(direc_start, direc_length, *f,
@@ -667,7 +698,7 @@ no_more_flag_characters:
                 break;
 
             default:
-                stdout_buffer.push_back(*f);
+                this->append_output(*f);
         }
     }
     return save_argc - argc;
@@ -676,7 +707,6 @@ no_more_flag_characters:
 static int builtin_printf(parser_t &parser, wchar_t **argv)
 {
     builtin_printf_state_t state;
-    state.exit_code = STATUS_BUILTIN_OK;
 
     wchar_t *format;
     int args_used;
@@ -684,7 +714,7 @@ static int builtin_printf(parser_t &parser, wchar_t **argv)
 
     if (argc <= 1)
     {
-        append_format(stderr_buffer, _(L"printf: not enough arguments"));
+        state.fatal_error(_(L"printf: not enough arguments"));
         return STATUS_BUILTIN_ERROR;
     }
 

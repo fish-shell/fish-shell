@@ -1,4 +1,5 @@
 Testing high level script functionality
+File printf.in tested ok
 File test1.in tested ok
 File test2.in tested ok
 File test3.in tested ok
@@ -7,3 +8,4 @@ File test5.in tested ok
 File test6.in tested ok
 File test7.in tested ok
 File test8.in tested ok
+File test9.in tested ok

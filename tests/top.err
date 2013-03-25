@@ -1,6 +1,0 @@
-fish: Expected redirection specification, got token of type '$i'
-/usr/local/src/grissioms-fish-shell/tests/test.fish (line 51):   ../fish <$i >tmp.out ^tmp.err
-                                                                          ^
-fish: Expected redirection specification, got token of type '$i'
-/usr/local/src/grissioms-fish-shell/tests/test.fish (line 51):   ../fish <$i >tmp.out ^tmp.err
-                                                                          ^

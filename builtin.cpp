@@ -211,6 +211,10 @@ static int count_char(const wchar_t *str, wchar_t c)
 
 wcstring builtin_help_get(parser_t &parser, const wchar_t *name)
 {
+    /* This won't ever work if no_exec is set */
+    if (no_exec)
+        return wcstring();
+    
     wcstring_list_t lst;
     wcstring out;
     const wcstring name_esc = escape_string(name, 1);
@@ -3481,7 +3485,7 @@ static int builtin_end(parser_t &parser, wchar_t **argv)
            are rewinding a loop, this should be set to false, so that
            variables in the current loop scope won't die between laps.
         */
-        int kill_block = 1;
+        bool kill_block = true;
 
         switch (parser.current_block->type())
         {
@@ -3495,7 +3499,7 @@ static int builtin_end(parser_t &parser, wchar_t **argv)
                 {
                     parser.current_block->loop_status = LOOP_NORMAL;
                     parser.current_block->skip = 0;
-                    kill_block = 0;
+                    kill_block = false;
                     parser.set_pos(parser.current_block->tok_pos);
                     while_block_t *blk = static_cast<while_block_t *>(parser.current_block);
                     blk->status = WHILE_TEST_AGAIN;
@@ -3536,7 +3540,7 @@ static int builtin_end(parser_t &parser, wchar_t **argv)
                     parser.current_block->loop_status = LOOP_NORMAL;
                     parser.current_block->skip = 0;
 
-                    kill_block = 0;
+                    kill_block = false;
                     parser.set_pos(parser.current_block->tok_pos);
                 }
                 break;

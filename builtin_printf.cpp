@@ -234,18 +234,18 @@ void builtin_printf_state_t::verify_numeric(const wchar_t *s, const wchar_t *end
 template<typename T>
 static T raw_string_to_scalar_type(const wchar_t *s, wchar_t ** end);
 
+// we use wcstoll instead of wcstoimax because FreeBSD 8 has busted wcstoumax and wcstoimax - see #626
 template<>
 intmax_t raw_string_to_scalar_type(const wchar_t *s, wchar_t ** end)
 {
-    return wcstoimax(s, end, 0);
+    return wcstoll(s, end, 0);
 }
 
 template<>
 uintmax_t raw_string_to_scalar_type(const wchar_t *s, wchar_t ** end)
 {
-    return wcstoumax(s, end, 0);
+    return wcstoull(s, end, 0);
 }
-
 
 template<>
 long double raw_string_to_scalar_type(const wchar_t *s, wchar_t ** end)

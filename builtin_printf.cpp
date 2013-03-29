@@ -373,8 +373,8 @@ long builtin_printf_state_t::print_esc(const wchar_t *escstart, bool octal_0)
             this->append_output(uni_value);
 #else
             this->append_format_output(L"%lc", uni_value);
-        }
 #endif
+        }
     }
     else
     {

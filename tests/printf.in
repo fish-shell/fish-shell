@@ -16,7 +16,7 @@ printf "%s\b%s\n" x y
 printf "abc\rdef\n"
 printf "Msg1\fMsg2\n"
 printf "foo\vbar\vbaz\n"
-printf "\111 \x50" # \u0051 \U00000052
+printf "\111 \x50 \u0051 \U00000052"
 
 echo
 echo "Test escapes"

@@ -57,7 +57,7 @@ static wchar_t *cut_buffer=0;
 */
 static int has_xsel()
 {
-    static int res=-1;
+    static signed char res=-1;
     if (res < 0)
     {
         res = !! path_get_path(L"xsel", NULL);
@@ -103,10 +103,10 @@ void kill_add(const wcstring &str)
         const env_var_t disp_wstr = env_get_string(L"DISPLAY");
         if (!disp_wstr.missing())
         {
-            escaped_str = escape(str.c_str(), 1);
-            cmd.assign(L"echo ");
+            escaped_str = escape_string(str, ESCAPE_ALL);
+            cmd.assign(L"echo -n ");
             cmd.append(escaped_str);
-            cmd.append(L"|xsel -b");
+            cmd.append(L" | xsel -i -b");
         }
     }
 

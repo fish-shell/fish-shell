@@ -30,6 +30,5 @@ share/man/
 toc.txt
 user_doc/
 xcuserdata
-xsel-1.2.0/
 tests/*tmp.*
 tests/foo.txt

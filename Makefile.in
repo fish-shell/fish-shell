@@ -157,7 +157,7 @@ HDR_FILES_SRC := doc_src/index.hdr.in doc_src/commands.hdr.in doc_src/design.hdr
 # These are the generated result files
 #
 
-HDR_FILES := $(subst .hdr.in,.hdr,$(HDR_FILES_SRC))
+HDR_FILES := $(HDR_FILES_SRC:.hdr.in=.hdr)
 
 # Use a pattern rule so that Make knows to only issue one invocation
 # per http://www.gnu.org/software/make/manual/make.html#Pattern-Intro
@@ -350,9 +350,9 @@ doc_src/commands.hdr:$(HELP_SRC) doc_src/commands.hdr.in
 	cat $@.in | awk '{if ($$0 ~ /@command_list@/){ system("cat command_list.txt");} else{ print $$0;}}' >$@
 
 
-toc.txt: $(subst index.hdr,index.hdr.in,$(HDR_FILES))
+toc.txt: $(HDR_FILES:index.hdr=index.hdr.in)
 	-rm toc.tmp $@
-	for i in $(subst index.hdr,index.hdr.in,$(HDR_FILES)); do\
+	for i in $(HDR_FILES:index.hdr=index.hdr.in); do\
 		NAME=`basename $$i .hdr`; \
 		NAME=`basename $$NAME .hdr.in`; \
 		sed <$$i >>toc.tmp -n \

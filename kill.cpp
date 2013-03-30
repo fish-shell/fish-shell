@@ -103,7 +103,7 @@ void kill_add(const wcstring &str)
         const env_var_t disp_wstr = env_get_string(L"DISPLAY");
         if (!disp_wstr.missing())
         {
-            escaped_str = escape_string(str, ESCAPE_ALL);
+            escaped_str = escape(str.c_str(), ESCAPE_ALL);
             cmd.assign(L"echo -n ");
             cmd.append(escaped_str);
             cmd.append(L" | xsel -i -b");

@@ -197,12 +197,12 @@ DOC_SRC_DIR_FILES := $(HDR_FILES_SRC) $(HELP_SRC)
 # Files in ./
 #
 
-MAIN_DIR_FILES_UNSORTED := Doxyfile Doxyfile.user Doxyfile.help		\
-    Makefile.in configure configure.ac config.h.in install-sh			\
-    key_reader.cpp $(MIME_OBJS:.o=.h)					\
-    $(MIME_OBJS:.o=.cpp) $(FISH_OBJS:.o=.h) $(BUILTIN_FILES)				\
-    $(COMMON_FILES) $(COMMON_FILES:.cpp=.h) $(FISH_OBJS:.o=.cpp)			\
-    fish.spec.in INSTALL README user_doc.head.html xsel-0.9.6.tar		\
+MAIN_DIR_FILES_UNSORTED := Doxyfile Doxyfile.user Doxyfile.help					\
+    Makefile.in configure configure.ac config.h.in install-sh					\
+    key_reader.cpp $(MIME_OBJS:.o=.h)											\
+    $(MIME_OBJS:.o=.cpp) $(FISH_OBJS:.o=.h) $(BUILTIN_FILES)					\
+    $(COMMON_FILES) $(COMMON_FILES:.cpp=.h) $(FISH_OBJS:.o=.cpp)				\
+    fish.spec.in INSTALL README user_doc.head.html								\
     ChangeLog config.sub config.guess fish_tests.cpp fish.cpp fish_pager.cpp	\
     fishd.cpp make_vcs_completions.fish $(FISH_INDENT_OBJS:.o=.cpp)
 
@@ -241,16 +241,14 @@ FUNCTIONS_DIR_FILES := $(wildcard share/functions/*.fish)
 # Programs to install
 #
 
-SIMPLE_PROGRAMS := fish mimedb fish_pager fishd fish_indent
-PROGRAMS := $(SIMPLE_PROGRAMS) @XSEL_BIN@
-
+PROGRAMS := fish mimedb fish_pager fishd fish_indent
 
 #
 # Manual pages to install
 #
 
 MANUALS := $(addsuffix .1, $(addprefix share/man/man1/,	\
-	$(SIMPLE_PROGRAMS))) @XSEL_MAN_PATH@
+	$(PROGRAMS)))
 
 
 #
@@ -260,13 +258,6 @@ MANUALS := $(addsuffix .1, $(addprefix share/man/man1/,	\
 TRANSLATIONS_SRC := $(wildcard po/*.po)
 TRANSLATIONS := $(TRANSLATIONS_SRC:.po=.gmo)
 
-
-#
-# Extra util
-#
-
-XSEL := @XSEL@
-XSEL_BIN := @XSEL_BIN@
 
 #
 # Make everything needed for installing fish
@@ -339,14 +330,6 @@ doc/refman.pdf: doc
 test: $(PROGRAMS) fish_tests
 	./fish_tests; cd tests; ../fish <test.fish;
 .PHONY: test
-
-
-#
-# Build the xsel program, which is maintained in its own tarball
-#
-
-$(XSEL_BIN):
-	$(MAKE) -C $(XSEL) || echo "Failed to build xsel - either add the required dependencies or use './configure --without-xsel' to disable it."
 
 
 #
@@ -656,7 +639,6 @@ uninstall: uninstall-translations
 	-for i in $(PROGRAMS); do \
 		rm -f $(DESTDIR)$(bindir)/$$i; \
 	done;
-	-rm -f $(DESTDIR)$(bindir)/xsel
 	-rm -rf $(DESTDIR)$(sysconfdir)/fish
 	-if test -d $(DESTDIR)$(datadir)/fish; then \
 		rm -r $(DESTDIR)$(datadir)/fish; \
@@ -838,7 +820,6 @@ rpm: fish-@PACKAGE_VERSION@.tar.bz2 fish.spec
 distclean: clean
 	rm -f fish.spec
 	rm -f config.status config.log config.h Makefile
-	rm -rf $(XSEL)
 .PHONY: distclean
 
 
@@ -866,7 +847,6 @@ clean:
 	fi
 	rm -rf fish-@PACKAGE_VERSION@
 	rm -f $(TRANSLATIONS)
-	test ! -d "$(XSEL)" || make -C $(XSEL) clean
 .PHONY: clean
 
 

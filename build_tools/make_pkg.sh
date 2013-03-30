@@ -13,7 +13,7 @@ export CFLAGS="$CFLAGS -isysroot $OSX_SDK -mmacosx-version-min=$MACOSX_DEPLOYMEN
 export CXXFLAGS="$CXXFLAGS -isysroot $OSX_SDK -mmacosx-version-min=$MACOSX_DEPLOYMENT_TARGET"
 export LDFLAGS="$LDFLAGS -isysroot $OSX_SDK -mmacosx-version-min=$MACOSX_DEPLOYMENT_TARGET"
 autoconf
-./configure --without-xsel
+./configure
 
 # Actually build it now
 if make -j 4 DESTDIR=/tmp/fish_pkg install

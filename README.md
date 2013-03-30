@@ -18,7 +18,7 @@ fish can be built using autotools or Xcode.
 ### Autotools Build
 
     autoconf
-    ./configure [--without-xsel]
+    ./configure
     make [gmake on BSD]
     sudo make install
 

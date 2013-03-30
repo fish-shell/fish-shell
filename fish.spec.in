@@ -121,7 +121,6 @@ fi
 %_mandir/man1/fishd.1*
 %_mandir/man1/mimedb.1*
 %_mandir/man1/set_color.1*
-%_mandir/man1/xsel.1x*
 
 # The program binaries
 %attr(0755,root,root) %_bindir/fish
@@ -130,7 +129,6 @@ fi
 %attr(0755,root,root) %_bindir/fishd
 %attr(0755,root,root) %_bindir/mimedb
 %attr(0755,root,root) %_bindir/set_color
-%attr(0755,root,root) %_bindir/xsel
 
 # Configuration files
 %config %_sysconfdir/fish/config.fish

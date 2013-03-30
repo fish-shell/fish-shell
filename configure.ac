@@ -11,11 +11,6 @@
 
 AC_INIT(fish,2.0.0,fish-users@lists.sf.net)
 
-#
-# preserve configure arguments for xsel. This breaks if arguments 
-# contain whitespace, so don't do that. 
-#
-
 conf_arg=$@
 
 #
@@ -33,11 +28,6 @@ AC_SUBST(LIBS_MIMEDB)
 AC_SUBST(localedir)
 AC_SUBST(optbindirs)
 AC_SUBST(prefix)
-AC_SUBST(XSEL)
-AC_SUBST(XSEL_MAN)
-AC_SUBST(XSEL_BIN)
-AC_SUBST(XSEL_MAN_PATH)
-
 
 
 #
@@ -164,28 +154,6 @@ AH_BOTTOM([#if __GNUC__ >= 3
 AC_PROG_CXX([g++ c++])
 AC_PROG_CPP
 AC_PROG_INSTALL
-
-#
-# Optionally drop xsel command
-#
-
-AC_ARG_WITH(
-  xsel,
-  AC_HELP_STRING(
-    [--without-xsel],
-    [do not build the xsel program needed for X clipboard integration.
-     If build xsel, it will be configured with the same options as fish.]
-  ),
-  [xsel=$withval],
-  [xsel=with_xsel]
-)
-
-if [[ "$xsel" = "with_xsel" ]]; then
-  XSEL=xsel-1.2.0
-  XSEL_BIN=$XSEL/xsel
-  XSEL_MAN=xsel.1x
-  XSEL_MAN_PATH=$XSEL/xsel.1x
-fi
 
 
 #
@@ -917,12 +885,6 @@ if test ! x$local_found_posix_switch = xyes; then
   echo "Some fish features may be disabled."
 fi
 
-if [[ "$xsel" = "with_xsel" ]]; then
-  echo "Now configure xsel with $conf_arg"
-  rm -rf $XSEL
-  tar xf $XSEL.tar.gz
-  cd $XSEL && ./configure $conf_arg
-fi
 echo "fish is now configured."
 echo "Use 'make' and 'make install' to build and install fish."
 

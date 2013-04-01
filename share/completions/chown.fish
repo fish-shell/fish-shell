@@ -1,8 +1,8 @@
 complete -c chown -s c -l changes --description "Output diagnostic for changed files"
-complete -c chown -l dereference --description "Dereferense symbolic links"
+complete -c chown -l dereference --description "Dereference symbolic links"
 complete -c chown -s h -l no-dereference --description "Do not dereference symbolic links"
 complete -c chown -l from --description "Change from owner/group"
-complete -c chown -s f -l silent --description "Supress errors"
+complete -c chown -s f -l silent --description "Suppress errors"
 complete -c chown -l reference --description "Use same owner/group as file" -r
 complete -c chown -s R -l recursive --description "Operate recursively"
 complete -c chown -s v -l verbose --description "Output diagnostic for every file"

@@ -1,4 +1,4 @@
-function __fish_make_completion_signals --description 'Make list of kill signals for copmletion'
+function __fish_make_completion_signals --description 'Make list of kill signals for completion'
     set -q __kill_signals; and return 0
 
     if kill -L ^/dev/null >/dev/null

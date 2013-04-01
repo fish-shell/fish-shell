@@ -430,7 +430,7 @@ complete -c hg -n 'contains \'status\' (commandline -poc)' -s u -l unknown --des
 complete -c hg -n 'contains \'status\' (commandline -poc)' -s i -l ignored --description 'Show ignored files'
 complete -c hg -n 'contains \'status\' (commandline -poc)' -s n -l no-status --description 'Hide status prefix'
 complete -c hg -n 'contains \'status\' (commandline -poc)' -s C -l copies --description 'Show source of copied files'
-complete -c hg -n 'contains \'status\' (commandline -poc)' -s 0 -l print0 --description 'End filenames with NUL, for use with xargs'
+complete -c hg -n 'contains \'status\' (commandline -poc)' -s 0 -l print0 --description 'End filenames with NULL, for use with xargs'
 complete -c hg -n 'contains \'status\' (commandline -poc)' -s I -l include --description 'Include names matching the given patterns'
 complete -c hg -n 'contains \'status\' (commandline -poc)' -s X -l exclude --description 'Exclude names matching the given patterns'
 

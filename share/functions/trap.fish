@@ -20,7 +20,7 @@ function __trap_switch
 
 end
 
-function trap -d 'Perform an action when the shell recives a signal'
+function trap -d 'Perform an action when the shell receives a signal'
 
 	set -l mode
 	set -l cmd

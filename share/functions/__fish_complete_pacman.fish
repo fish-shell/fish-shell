@@ -38,7 +38,7 @@ function __fish_complete_pacman -d 'Complete pacman (ARCH package manager)' --ar
     complete -c $progname -s v -l verbose -d 'Output more status messages'
     complete -c $progname -l arch      -d 'Alternate architecture'
     complete -c $progname -l cachedir  -d 'Alternative package cache location'
-    complete -c $progname -l config    -d 'Altenate config file'
+    complete -c $progname -l config    -d 'Alternate config file'
     complete -c $progname -l debug     -d 'Display debug messages'
     complete -c $progname -l gpgdir    -d 'GPG directory to verify signatures'
     complete -c $progname -l logfile   -d 'Specify alternative log file'
@@ -48,8 +48,8 @@ function __fish_complete_pacman -d 'Complete pacman (ARCH package manager)' --ar
     for condition in sync remove upgrade
         complete -c $progname -n $$condition -s d -l nodeps     -d 'Skip [all] dependency checks'
         complete -c $progname -n $$condition -l dbonly          -d 'Modify database entry only'
-        complete -c $progname -n $$condition -l noprogressbar   -d 'Do not display progressbar'
-        complete -c $progname -n $$condition -l noscriptlet     -d 'Do not execute intall script'
+        complete -c $progname -n $$condition -l noprogressbar   -d 'Do not display progress bar'
+        complete -c $progname -n $$condition -l noscriptlet     -d 'Do not execute install script'
         complete -c $progname -n $$condition -s p -l print      -d 'Dry run, only print targets'
         complete -c $progname -n $$condition -l print-format -x -d 'Specify printf-like format'
     end
@@ -78,7 +78,7 @@ function __fish_complete_pacman -d 'Complete pacman (ARCH package manager)' --ar
     end
 
     # Query options
-    complete -c $progname -n $query -s c -l changelog  -d 'View the changelog of PACKAGE'
+    complete -c $progname -n $query -s c -l changelog  -d 'View the change log of PACKAGE'
     complete -c $progname -n $query -s d -l deps       -d 'List only non-explicit packages (dependencies)'
     complete -c $progname -n $query -s e -l explicit   -d 'List only explicitly installed packages'
     complete -c $progname -n $query -s k -l check      -d 'Check if all files owned by PACKAGE are present'

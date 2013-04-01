@@ -6,7 +6,7 @@ where:
   separator - a symbol, separating individual entries
   function - a function which prints a completion list to complete each entry
   prefix - a prefix, which is printed before the list
-  itemprefix - a prefi, which is printed before each item" > /dev/stderr
+  itemprefix - a prefix, which is printed before each item" > /dev/stderr
 		return 1
 	end
 	set -q iprefix[1]

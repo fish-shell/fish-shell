@@ -47,5 +47,5 @@ complete -c scp -s P -x --description "Port"
 complete -c scp -s p --description "Preserves modification times, access times, and modes from the original file"
 complete -c scp -s q --description "Do not display progress bar"
 complete -c scp -s r --description "Recursively copy"
-complete -c scp -s S --description "Encyption program"
+complete -c scp -s S --description "Encryption program"
 

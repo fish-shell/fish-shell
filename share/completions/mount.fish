@@ -8,7 +8,7 @@ complete -x -c mount -a '(cat /etc/fstab|sed -e "s/^\([^ \t]*\)[ \t]*\([^ \t]*\)
 complete -c mount -s V --description 'Display version and exit'
 complete -c mount -s h --description 'Display help and exit'
 complete -c mount -s v --description 'Verbose mode'
-complete -c mount -s a --description 'Mount filesystems in fstab'
+complete -c mount -s a --description 'Mount file systems in fstab'
 complete -c mount -s F --description 'Fork process for each mount'
 complete -c mount -s f --description 'Fake mounting'
 complete -c mount -s l --description 'Add label to output'
@@ -18,10 +18,10 @@ complete -c mount -s r --description 'Read only'
 complete -c mount -s w --description 'Read/Write mode'
 complete -x -c mount -s L --description 'Mount partition with specified label'
 complete -x -c mount -s U --description 'Mount partition with specified UID'
-complete -c mount -s O -x --description 'Exclude filesystems'
+complete -c mount -s O -x --description 'Exclude file systems'
 complete -c mount -l bind -f --description 'Remount a subtree to a second position'
 complete -c mount -l move -f --description 'Move a subtree to a new position'
-complete -c mount -x -s t --description 'Filesystem' -a "(__fish_print_filesystems)"
+complete -c mount -x -s t --description 'File system' -a "(__fish_print_filesystems)"
 
 complete -c mount -x -s o --description 'Mount option' -a '(__fish_append , $__fish_mount_opts)'
 

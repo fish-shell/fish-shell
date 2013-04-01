@@ -39,8 +39,8 @@
 # __fish_git_prompt_showstashstate to a nonempty value. If something is
 # stashed, then a '$' will be shown next to the branch name.
 #
-# If you would like to see if they're untracked files, then you can set
-# __fish_git_prompt_showuntrackedfiles to a nonempty value. If they're
+# If you would like to see if there are untracked files, then you can set
+# __fish_git_prompt_showuntrackedfiles to a nonempty value. If there are
 # untracked files, then a '%' will be shown next to the branch name.
 #
 # If you would like to see the difference between HEAD and its upstream, set

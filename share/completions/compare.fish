@@ -13,7 +13,7 @@ complete -c compare -o encipher                    -d 'Convert plain pixels to c
 complete -c compare -o extract                     -d 'Extract area from image [geometry]'
 complete -c compare -o format                      -d 'Output formatted image characteristics ["string"]'
 complete -c compare -o fuzz                        -d 'Colors within this distance are considered equal [distance]'
-complete -c compare -o highlight-color             -d 'Empasize pixel differences with this color [color]' -xa '(__fish_complete_convert_options color)'
+complete -c compare -o highlight-color             -d 'Emphasize pixel differences with this color [color]' -xa '(__fish_complete_convert_options color)'
 complete -c compare -o identify                    -d 'Identify the format and characteristics of the image'
 complete -c compare -o interlace                   -d 'Type of image interlacing scheme [type]' -xa '(compare -list interlace)'
 complete -c compare -o limit                       -d 'Pixel cache resource limit [type value]' -x

@@ -25,12 +25,12 @@ function __fish_complete_atool --description 'Complete atool' --argument-names c
     complete -c $cmd -s 0 -l null               -d 'filenames from standard in are null-byte separated'
     complete -c $cmd -s E -l explain            -d 'explain what is being done by atool'
     complete -c $cmd -s S -l simulate           -d 'simulation mode - no filesystem changes are made'
-    complete -c $cmd -s o -l option -x          -d 'override a configuration optioni (KEY=VALUE)'
+    complete -c $cmd -s o -l option -x          -d 'override a configuration option (KEY=VALUE)'
     complete -c $cmd -l config -r               -d 'load configuration defaults from file'
 
     switch $cmd
         case als aunpack acat
-        complete -c $cmd -a '(__fish_complete_atool_archive_contents)' -d 'Achive content'
+        complete -c $cmd -a '(__fish_complete_atool_archive_contents)' -d 'Archive content'
     end
     #man -P cat atool | grep '(default')'
 

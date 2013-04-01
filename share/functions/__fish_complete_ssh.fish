@@ -1,8 +1,8 @@
 
 function __fish_complete_ssh -d "common completions for ssh commands" --argument command
 
-	complete -c $command -s 1 --description "Protocoll version 1 only"
-	complete -c $command -s 2 --description "Protocoll version 2 only"
+        complete -c $command -s 1 --description "Protocol version 1 only"
+        complete -c $command -s 2 --description "Protocol version 2 only"
 	complete -c $command -s 4 --description "IPv4 addresses only"
 	complete -c $command -s 6 --description "IPv6 addresses only"
 	complete -c $command -s C --description "Compress all data"

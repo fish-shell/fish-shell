@@ -221,7 +221,7 @@ complete -f -c git -n '__fish_git_needs_command' -a status -d 'Show the working 
 complete -f -c git -n '__fish_git_using_command status' -s s -l short -d 'Give the output in the short-format'
 complete -f -c git -n '__fish_git_using_command status' -s b -l branch -d 'Show the branch and tracking info even in short-format'
 complete -f -c git -n '__fish_git_using_command status'      -l porcelain -d 'Give the output in a stable, easy-to-parse format'
-complete -f -c git -n '__fish_git_using_command status' -s z -d 'Terminate entries with NULL character'
+complete -f -c git -n '__fish_git_using_command status' -s z -d 'Terminate entries with null character'
 complete -f -c git -n '__fish_git_using_command status' -s u -l untracked-files -x -a 'no normal all' -d 'The untracked files handling mode'
 complete -f -c git -n '__fish_git_using_command status' -l ignore-submodules -x -a 'none untracked dirty all' -d 'Ignore changes to submodules'
 # TODO options

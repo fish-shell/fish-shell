@@ -6,6 +6,23 @@ function __fish_tmux_clients --description 'connected clients'
     tmux list-clients -F "#{client_tty}	#{session_name}: Created: #{client_created_string} [#{client_width}x#{client_height} #{client_termname}]" ^/dev/null
 end
 
+function __fish_tmux_panes --description 'window panes'
+	set -l panes (tmux list-panes -F "#S:#{window_name}.")
+
+	#fully qualified pane names
+	for i in (seq (count $panes))
+		echo "$panes[$i]"(math $i - 1)'	session:window.pane'
+	end
+
+	#panes by themselves
+	for i in (seq (count $panes))
+		echo (math $i - 1)'	pane'
+	end
+
+	#windows by themselves
+	tmux list-panes -F '#{window_name}	window'
+end
+
 #don't allow dirs in the completion list...
 complete -c tmux -x
 
@@ -106,7 +123,6 @@ complete -c tmux -n "__fish_seen_subcommand_from $lsc $ls" -rs F -d 'format stri
 ###############  End:   Windows and Panes ###############
 
 ###############  Begin: Key Bindings ###############
-#todo: implement completion for -t target-pane options
 set -l bind 'bind-key bind'
 set -l lsk 'list-keys lsk'
 set -l send 'send-keys send'
@@ -126,11 +142,11 @@ complete -c tmux -n "__fish_seen_subcommand_from $lsk" -s t -d 'key table' -xa "
 
 complete -c tmux -n '__fish_use_subcommand' -a $send -d 'list all key bindings'
 complete -c tmux -n "__fish_seen_subcommand_from $send" -s R -d 'reset terminal state'
-complete -c tmux -n "__fish_seen_subcommand_from $send" -xs t -d 'target pane'
+complete -c tmux -n "__fish_seen_subcommand_from $send" -xs t -a '(__fish_tmux_panes)' -d 'target pane'
 
 complete -c tmux -n '__fish_use_subcommand' -a $sendprefix -d 'send the prefix key'
 complete -c tmux -n "__fish_seen_subcommand_from $sendprefix" -s 2 -d 'use secondary prefix'
-complete -c tmux -n "__fish_seen_subcommand_from $sendprefix" -xs t -d 'target pane'
+complete -c tmux -n "__fish_seen_subcommand_from $sendprefix" -xs t -a '(__fish_tmux_panes)' -d 'target pane'
 
 complete -c tmux -n '__fish_use_subcommand' -a $unbind -d 'unbind the command bound to key'
 complete -c tmux -n "__fish_seen_subcommand_from $unbind" -s a -d 'remove all key bindings'

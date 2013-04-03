@@ -6,6 +6,9 @@ function __fish_tmux_clients --description 'connected clients'
     tmux list-clients -F "#{client_tty}	#{session_name}: Created: #{client_created_string} [#{client_width}x#{client_height} #{client_termname}]" ^/dev/null
 end
 
+#don't allow dirs in the completion list...
+complete -c tmux -x
+
 ###############  Begin: Front  Flags ###############
 #these do not require parameters
 complete -c tmux -n '__fish_use_subcommand' -s 2 -d 'Force tmux to assume the terminal supports 256 colours'

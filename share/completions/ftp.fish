@@ -1,0 +1,1 @@
+__fish_complete_ftp ftp

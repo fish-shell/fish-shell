@@ -86,9 +86,38 @@ complete -c tmux -n "__fish_seen_subcommand_from $lsc $ls" -rs F -d 'format stri
 ###############  End:   Windows and Panes ###############
 
 ###############  Begin: Key Bindings ###############
-#TODO - these commands are not currently implemented.
-#there is a section in the tmux man page that has the same title as this section
-#use the "Clients and Sessions" code as an example when implementing this
+#todo: implement completion for -t target-pane options
+set -l bind 'bind-key bind'
+set -l lsk 'list-keys lsk'
+set -l send 'send-keys send'
+set -l sendprefix 'send-prefix'
+set -l unbind 'unbind-key unbind'
+
+set -l key_table 'vi-edit emacs-edit vi-choice emacs-choice vi-copy emacs-copy'
+
+complete -c tmux -n '__fish_use_subcommand' -a $bind -d 'bind key to command'
+complete -c tmux -n "__fish_seen_subcommand_from $bind" -s c -d 'bind for command mode instead of normal mode'
+complete -c tmux -n "__fish_seen_subcommand_from $bind" -s n -d 'make the binding work without using a prefix key'
+complete -c tmux -n "__fish_seen_subcommand_from $bind" -s r -d 'key may repeat'
+complete -c tmux -n "__fish_seen_subcommand_from $bind" -xs t -d 'choose key table for binding' -xa "$key_table"
+
+complete -c tmux -n '__fish_use_subcommand' -a $lsk -d 'list all key bindings'
+complete -c tmux -n "__fish_seen_subcommand_from $lsk" -s t -d 'key table' -xa "$key_table"
+
+complete -c tmux -n '__fish_use_subcommand' -a $send -d 'list all key bindings'
+complete -c tmux -n "__fish_seen_subcommand_from $send" -s R -d 'reset terminal state'
+complete -c tmux -n "__fish_seen_subcommand_from $send" -xs t -d 'target pane'
+
+complete -c tmux -n '__fish_use_subcommand' -a $sendprefix -d 'send the prefix key'
+complete -c tmux -n "__fish_seen_subcommand_from $sendprefix" -s 2 -d 'use secondary prefix'
+complete -c tmux -n "__fish_seen_subcommand_from $sendprefix" -xs t -d 'target pane'
+
+complete -c tmux -n '__fish_use_subcommand' -a $unbind -d 'unbind the command bound to key'
+complete -c tmux -n "__fish_seen_subcommand_from $unbind" -s a -d 'remove all key bindings'
+complete -c tmux -n "__fish_seen_subcommand_from $unbind" -s c -d 'binding for command mode'
+complete -c tmux -n "__fish_seen_subcommand_from $unbind" -s n -d 'command bound to key without a prefix (if any) removed'
+complete -c tmux -n "__fish_seen_subcommand_from $unbind" -xs t -d 'key table' -xa "$key_table"
+
 ###############  End:   Key Bindings ###############
 
 ###############  Begin: Options ###############

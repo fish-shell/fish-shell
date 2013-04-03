@@ -6,6 +6,23 @@ function __fish_tmux_clients --description 'connected clients'
     tmux list-clients -F "#{client_tty}	#{session_name}: Created: #{client_created_string} [#{client_width}x#{client_height} #{client_termname}]" ^/dev/null
 end
 
+###############  Begin: Front  Flags ###############
+#these do not require parameters
+complete -c tmux -n '__fish_use_subcommand' -s 2 -d 'Force tmux to assume the terminal supports 256 colours'
+complete -c tmux -n '__fish_use_subcommand' -s 8 -d 'Like -2, but indicates that the terminal supports 88 colours'
+complete -c tmux -n '__fish_use_subcommand' -s l    -d 'Behave as a login shell'
+complete -c tmux -n '__fish_use_subcommand' -s q    -d 'Set the quiet server option'
+complete -c tmux -n '__fish_use_subcommand' -s u    -d 'Flag explicitly informs tmux that UTF-8 is supported'
+complete -c tmux -n '__fish_use_subcommand' -s v    -d 'Request verbose logging'
+complete -c tmux -n '__fish_use_subcommand' -s V    -d 'Report the tmux version'
+
+#these require parameters
+complete -c tmux -n '__fish_use_subcommand' -xs c   -d 'Execute command using the default shell'
+complete -c tmux -n '__fish_use_subcommand' -rs f   -d 'Alternate config file'
+complete -c tmux -n '__fish_use_subcommand' -rs L   -d 'Specify the name of the server socket to use'
+complete -c tmux -n '__fish_use_subcommand' -rs S   -d 'Full path to sever socket. If set, -L is ignored.'
+###############  End:   Front  Flags ###############
+
 ###############  Begin: Clients and Sessions ###############
 set -l attach 'attach-session attach'
 set -l detach 'detach-client detach'
@@ -149,20 +166,3 @@ complete -c tmux -n "__fish_seen_subcommand_from $unbind" -xs t -d 'key table' -
 #there is a section in the tmux man page that has the same title as this section
 #use the "Clients and Sessions" code as an example when implementing this
 ###############  End:   Miscellaneous ###############
-
-###############  Begin: Front  Flags ###############
-#these do not require parameters
-complete -c tmux -n '__fish_use_subcommand' -s 2 -d 'Force tmux to assume the terminal supports 256 colours'
-complete -c tmux -n '__fish_use_subcommand' -s 8 -d 'Like -2, but indicates that the terminal supports 88 colours'
-complete -c tmux -n '__fish_use_subcommand' -s l    -d 'Behave as a login shell'
-complete -c tmux -n '__fish_use_subcommand' -s q    -d 'Set the quiet server option'
-complete -c tmux -n '__fish_use_subcommand' -s u    -d 'Flag explicitly informs tmux that UTF-8 is supported'
-complete -c tmux -n '__fish_use_subcommand' -s v    -d 'Request verbose logging'
-complete -c tmux -n '__fish_use_subcommand' -s V    -d 'Report the tmux version'
-
-#these require parameters
-complete -c tmux -n '__fish_use_subcommand' -xs c   -d 'Execute command using the default shell'
-complete -c tmux -n '__fish_use_subcommand' -rs f   -d 'Alternate config file'
-complete -c tmux -n '__fish_use_subcommand' -rs L   -d 'Specify the name of the server socket to use'
-complete -c tmux -n '__fish_use_subcommand' -rs S   -d 'Full path to sever socket. If set, -L is ignored.'
-###############  End:   Front  Flags ###############

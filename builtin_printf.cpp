@@ -396,7 +396,7 @@ void builtin_printf_state_t::print_esc_string(const wchar_t *str)
         if (*str == L'\\')
             str += print_esc(str, true);
         else
-            this->append_format_output(L"%lc", *str);
+            this->append_output(*str);
 }
 
 /* Evaluate a printf conversion specification.  START is the start of

@@ -39,6 +39,12 @@ Implementation file for the low level input library
 /** Characters that have been read and returned by the sequence matching code */
 static std::stack<wint_t, std::list<wint_t> > lookahead_list;
 
+/* Queue of pairs of (function pointer, argument) to be invoked */
+typedef std::pair<void (*)(void *), void *> callback_info_t;
+typedef std::queue<callback_info_t, std::list<callback_info_t> > callback_queue_t;
+static callback_queue_t callback_queue;
+static void input_flush_callbacks(void);
+
 static bool has_lookahead(void)
 {
     return ! lookahead_list.empty();
@@ -64,18 +70,9 @@ static wint_t lookahead_top(void)
 /** Callback function for handling interrupts on reading */
 static int (*interrupt_handler)();
 
-/** Callback function to be invoked before reading each byte */
-static void (*poll_handler)();
-
-
 void input_common_init(int (*ih)())
 {
     interrupt_handler = ih;
-}
-
-void input_common_set_poll_callback(void (*handler)(void))
-{
-    poll_handler = handler;
 }
 
 void input_common_destroy()
@@ -95,9 +92,8 @@ static wint_t readb()
 
     do
     {
-        /* Invoke any poll handler */
-        if (poll_handler)
-            poll_handler();
+        /* Flush callbacks */
+        input_flush_callbacks();
 
         fd_set fdset;
         int fd_max=0;
@@ -280,3 +276,25 @@ void input_common_unreadch(wint_t ch)
     lookahead_push(ch);
 }
 
+void input_common_add_callback(void (*callback)(void *), void *arg)
+{
+    ASSERT_IS_MAIN_THREAD();
+    callback_queue.push(callback_info_t(callback, arg));
+}
+
+static void input_flush_callbacks(void)
+{
+    /* Nothing to do if nothing to do */
+    if (callback_queue.empty())
+        return;
+    
+    /* We move the queue into a local variable, so that events queued up during a callback don't get fired until next round. */
+    callback_queue_t local_queue;
+    std::swap(local_queue, callback_queue);
+    while (! local_queue.empty())
+    {
+        const callback_info_t &callback = local_queue.front();
+        callback.first(callback.second); //cute
+        local_queue.pop();
+    }
+}

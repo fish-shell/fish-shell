@@ -30,9 +30,6 @@ enum
 */
 void input_common_init(int (*ih)());
 
-/* Sets a callback to be invoked every time a byte is read */
-void input_common_set_poll_callback(void (*handler)(void));
-
 /**
    Free memory used by the library
 */
@@ -55,5 +52,10 @@ wchar_t input_common_readch(int timed);
    0.
 */
 void input_common_unreadch(wint_t ch);
+
+/** Adds a callback to be invoked at the next turn of the "event loop." The callback function will be invoked and passed arg. */
+void input_common_add_callback(void (*callback)(void *), void *arg);
+
+
 
 #endif

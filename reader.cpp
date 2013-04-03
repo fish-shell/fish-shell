@@ -815,9 +815,6 @@ void reader_init()
 #ifdef VDSUSP
     shell_modes.c_cc[VDSUSP] = _POSIX_VDISABLE;
 #endif
-
-    /* Repaint if necessary before each byte is read. This lets us react immediately to universal variable color changes. */
-    input_common_set_poll_callback(reader_repaint_if_needed);
 }
 
 
@@ -868,12 +865,21 @@ void reader_repaint_if_needed()
     }
 }
 
+static void reader_repaint_if_needed_one_arg(void * unused)
+{
+    reader_repaint_if_needed();
+}
+
 void reader_react_to_color_change()
 {
-    if (data)
+    if (! data)
+        return;
+    
+    if (! data->repaint_needed || ! data->screen_reset_needed)
     {
         data->repaint_needed = true;
         data->screen_reset_needed = true;
+        input_common_add_callback(reader_repaint_if_needed_one_arg, NULL);
     }
 }
 

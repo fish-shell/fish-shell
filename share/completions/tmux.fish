@@ -1,9 +1,9 @@
 function __fish_tmux_sessions --description 'available sessions'
-    tmux list-sessions -F "#S	#{session_windows} windows Created: #{session_created_string} [#{session_width}x#{session_height}] Attached=#{session_attached}" ^/dev/null
+	tmux list-sessions -F "#S	#{session_windows} windows Created: #{session_created_string} [#{session_width}x#{session_height}] Attached=#{session_attached}" ^/dev/null
 end
 
 function __fish_tmux_clients --description 'connected clients'
-    tmux list-clients -F "#{client_tty}	#{session_name}: Created: #{client_created_string} [#{client_width}x#{client_height} #{client_termname}]" ^/dev/null
+	tmux list-clients -F "#{client_tty}	#{session_name}: Created: #{client_created_string} [#{client_width}x#{client_height} #{client_termname}]" ^/dev/null
 end
 
 function __fish_tmux_panes --description 'window panes'

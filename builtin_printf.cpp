@@ -378,10 +378,10 @@ long builtin_printf_state_t::print_esc(const wchar_t *escstart, bool octal_0)
     }
     else
     {
-        this->append_format_output(L"%lc", L'\\');
+        this->append_output(L'\\');
         if (*p)
         {
-            this->append_format_output(L"%lc", *p);
+            this->append_output(*p);
             p++;
         }
     }
@@ -420,6 +420,7 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
     {
         case L'd':
         case L'i':
+        case L'u':
             fmt.append(L"ll");
             break;
         case L'a':
@@ -433,8 +434,7 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
             fmt.append(L"L");
             break;
         case L's':
-        case L'u':
-            fmt.append(L"ll");
+            fmt.append(L"l");
             break;
         default:
             break;

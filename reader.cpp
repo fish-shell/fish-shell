@@ -3083,6 +3083,9 @@ const wchar_t *reader_readline()
 
                     /* Start the cycle at the beginning */
                     completion_cycle_idx = (size_t)(-1);
+                    
+                    /* Repaint */
+                    reader_repaint_if_needed();
                 }
 
                 break;

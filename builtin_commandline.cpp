@@ -437,8 +437,8 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
         }
         for (i=woptind; i<argc; i++)
         {
-            wint_t c = input_function_get_code(argv[i]);
-            if (c != -1)
+            wchar_t c = input_function_get_code(argv[i]);
+            if (c != (wchar_t)(-1))
             {
                 /*
                   input_unreadch inserts the specified keypress or

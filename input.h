@@ -128,7 +128,6 @@ bool input_terminfo_get_name(const wcstring &seq, wcstring &name);
 /** Return a list of all known terminfo names */
 wcstring_list_t input_terminfo_get_names(bool skip_null);
 
-
 /** Returns the input function code for the given input function name. */
 wchar_t input_function_get_code(const wcstring &name);
 

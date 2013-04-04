@@ -19,6 +19,7 @@
 
 #include "wutil.h"
 #include "function.h"
+#include "input_common.h"
 #include "proc.h"
 #include "parser.h"
 #include "common.h"
@@ -441,6 +442,16 @@ static int event_is_killed(const event_t &e)
     return std::find(killme.begin(), killme.end(), &e) != killme.end();
 }
 
+/* Callback for firing (and then deleting) an event */
+static void fire_event_callback(void *arg)
+{
+    ASSERT_IS_MAIN_THREAD();
+    assert(arg != NULL);
+    event_t *event = static_cast<event_t *>(arg);
+    event_fire(event);
+    delete event;
+}
+
 /**
    Perform the specified event. Since almost all event firings will
    not be matched by even a single event handler, we make sure to
@@ -487,6 +498,14 @@ static void event_fire_internal(const event_t &event)
     */
     if (fire.empty())
         return;
+
+    if (signal_is_blocked())
+    {
+        /* Fix for https://github.com/fish-shell/fish-shell/issues/608. Don't run event handlers while signals are blocked. */
+        event_t *heap_event = new event_t(event);
+        input_common_add_callback(fire_event_callback, heap_event);
+        return;
+    }
 
     /*
       Iterate over our list of matching events
@@ -637,10 +656,10 @@ void event_fire_signal(int signal)
 }
 
 
-void event_fire(event_t *event)
+void event_fire(const event_t *event)
 {
 
-    if (event && (event->type == EVENT_SIGNAL))
+    if (event && event->type == EVENT_SIGNAL)
     {
         event_fire_signal(event->param1.signal);
     }

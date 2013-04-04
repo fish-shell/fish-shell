@@ -434,7 +434,7 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
             break;
         case L's':
         case L'u':
-            fmt.append(L"l");
+            fmt.append(L"ll");
             break;
         default:
             break;

@@ -7,20 +7,24 @@ function __fish_tmux_clients --description 'connected clients'
 end
 
 function __fish_tmux_panes --description 'window panes'
-        set -l panes (tmux list-panes -F "#S:#{window_name}.")
+        set -l panes (tmux list-panes -F "#S:#{window_name}." ^ /dev/null)
 
         #fully qualified pane names
-        for i in (seq (count $panes))
-                echo "$panes[$i]"(math $i - 1)'	session:window.pane'
-        end
+        if count $panes
+			for i in (seq (count $panes))
+					echo "$panes[$i]"(math $i - 1)'	session:window.pane'
+			end
+		end
 
         #panes by themselves
-        for i in (seq (count $panes))
-                echo (math $i - 1)'	pane'
-        end
+        if count $panes
+			for i in (seq (count $panes))
+					echo (math $i - 1)'	pane'
+			end
+		end
 
         #windows by themselves
-        tmux list-panes -F '#{window_name}	window'
+        tmux list-panes -F '#{window_name}	window' ^ /dev/null
 end
 
 #don't allow dirs in the completion list...

@@ -167,9 +167,19 @@ complete -c tmux -n "__fish_seen_subcommand_from $unbind" -xs t -d 'key table' -
 ###############  End:   Options ###############
 
 ###############  Begin: Environment ###############
-#TODO - these commands are not currently implemented.
-#there is a section in the tmux man page that has the same title as this section
-#use the "Clients and Sessions" code as an example when implementing this
+set -l setenv 'set-environment setenv'
+set -l showenv 'show-environment showenv'
+
+complete -c tmux -n '__fish_use_subcommand' -a $setenv -d 'Set or unset an environment variable'
+complete -c tmux -n "__fish_seen_subcommand_from $setenv" -s g -d 'global environment'
+complete -c tmux -n "__fish_seen_subcommand_from $setenv" -s r -d 'remove from environment before starting a new process'
+complete -c tmux -n "__fish_seen_subcommand_from $setenv" -s u -d 'unset variable'
+complete -c tmux -xs t -n "__fish_seen_subcommand_from $setenv" -a '(__fish_tmux_sessions)' -d 'target-session'
+
+complete -c tmux -n '__fish_use_subcommand' -a $showenv -d 'bind key to command'
+complete -c tmux -n "__fish_seen_subcommand_from $showenv" -s g -d 'global environment'
+complete -c tmux -xs t -n "__fish_seen_subcommand_from $showenv" -a '(__fish_tmux_sessions)' -d 'target-session'
+
 ###############  End:   Environment ###############
 
 ###############  Begin: Status Line ###############

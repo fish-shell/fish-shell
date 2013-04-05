@@ -183,9 +183,19 @@ complete -c tmux -xs t -n "__fish_seen_subcommand_from $showenv" -a '(__fish_tmu
 ###############  End:   Environment ###############
 
 ###############  Begin: Status Line ###############
-#TODO - these commands are not currently implemented.
-#there is a section in the tmux man page that has the same title as this section
-#use the "Clients and Sessions" code as an example when implementing this
+set -l commandprompt 'command-prompt'
+set -l display 'display-message display'
+
+complete -c tmux -n '__fish_use_subcommand' -a $commandprompt -d 'Open the command prompt in a client'
+complete -c tmux -n "__fish_seen_subcommand_from $commandprompt" -s I -x -d 'Comma-separated list of initial text for each prompt'
+complete -c tmux -n "__fish_seen_subcommand_from $commandprompt" -s p -x -d 'Comma-separated list of prompts'
+complete -c tmux -n "__fish_seen_subcommand_from $commandprompt" -s t -xa '(__fish_tmux_clients)' -d 'target-client'
+
+complete -c tmux -n '__fish_use_subcommand' -a $display -d 'Display a message'
+complete -c tmux -n "__fish_seen_subcommand_from $display" -s p -d 'print to stdout'
+complete -c tmux -n "__fish_seen_subcommand_from $display" -s t -xa '(__fish_tmux_panes)' -d 'target-pane'
+complete -c tmux -n "__fish_seen_subcommand_from $display" -s c -xa '(__fish_tmux_clients)' -d 'target-client'
+
 ###############  End:   Status Line ###############
 
 ###############  Begin: Buffers ###############

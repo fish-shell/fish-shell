@@ -21,6 +21,7 @@
 #include "util.h"
 #include "sanity.h"
 #include "tokenizer.h"
+#include "reader.h"
 
 #include "wutil.h"
 #include "history.h"
@@ -1010,10 +1011,17 @@ bool history_search_t::go_backwards()
     if (idx == max_idx)
         return false;
 
+    const bool main_thread = is_main_thread();
+    
     while (++idx < max_idx)
     {
+        if (main_thread ? reader_interrupted() : reader_thread_job_is_stale())
+        {
+            return false;
+        }
+    
         const history_item_t item = history->item_at_index(idx);
-        /* We're done if it's empty */
+        /* We're done if it's empty or we cancelled */
         if (item.empty())
         {
             return false;

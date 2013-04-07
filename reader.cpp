@@ -1298,7 +1298,7 @@ struct autosuggestion_context_t
             return 0;
         }
 
-        while (searcher.go_backwards())
+        while (! reader_thread_job_is_stale() && searcher.go_backwards())
         {
             history_item_t item = searcher.current_item();
 
@@ -1312,8 +1312,11 @@ struct autosuggestion_context_t
                 this->autosuggestion = searcher.current_string();
                 return 1;
             }
-
         }
+
+        /* Maybe cancel here */
+        if (reader_thread_job_is_stale())
+            return 0;
 
         /* Try handling a special command like cd */
         wcstring special_suggestion;
@@ -1322,6 +1325,10 @@ struct autosuggestion_context_t
             this->autosuggestion = special_suggestion;
             return 1;
         }
+        
+        /* Maybe cancel here */
+        if (reader_thread_job_is_stale())
+            return 0;
 
         // Here we do something a little funny
         // If the line ends with a space, and the cursor is not at the end,

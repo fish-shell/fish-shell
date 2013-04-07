@@ -48,9 +48,13 @@ int wopen(const wcstring &pathname, int flags, mode_t mode = 0);
 /** Wide character version of open() that also sets the close-on-exec flag (atomically when possible). */
 int wopen_cloexec(const wcstring &pathname, int flags, mode_t mode = 0);
 
-/**
-   Wide character version of creat().
-*/
+/** Mark an fd as nonblocking; returns errno or 0 on success */
+int make_fd_nonblocking(int fd);
+
+/** Mark an fd as blocking; returns errno or 0 on success */
+int make_fd_blocking(int fd);
+
+/** Wide character version of creat(). */
 int wcreat(const wcstring &pathname, mode_t mode);
 
 

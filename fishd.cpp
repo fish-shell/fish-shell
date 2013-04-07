@@ -578,7 +578,7 @@ static int get_socket(void)
         goto unlock;
     }
 
-    if (fcntl(s, F_SETFL, O_NONBLOCK) != 0)
+    if (make_fd_nonblocking(s) != 0)
     {
         wperror(L"fcntl");
         close(s);
@@ -988,7 +988,7 @@ int main(int argc, char ** argv)
             {
                 debug(4, L"Connected with new child on fd %d", child_socket);
 
-                if (fcntl(child_socket, F_SETFL, O_NONBLOCK) != 0)
+                if (make_fd_nonblocking(child_socket) != 0)
                 {
                     wperror(L"fcntl");
                     close(child_socket);

@@ -362,9 +362,7 @@ int job_signal(job_t *j, int signal)
    Return 0 if all went well, nonzero otherwise.
    This is called from a signal handler.
 */
-static void mark_process_status(const job_t *j,
-                                process_t *p,
-                                int status)
+static void mark_process_status(const job_t *j, process_t *p, int status)
 {
 //	debug( 0, L"Process %ls %ls", p->argv[0], WIFSTOPPED (status)?L"stopped":(WIFEXITED( status )?L"exited":(WIFSIGNALED( status )?L"signaled to exit":L"BLARGH")) );
     p->status = status;
@@ -418,8 +416,8 @@ void job_mark_process_as_failed(const job_t *job, process_t *p)
 static void handle_child_status(pid_t pid, int status)
 {
     bool found_proc = false;
-    const job_t *j=0;
-    process_t *p=0;
+    const job_t *j = NULL;
+    process_t *p = NULL;
 //	char mess[MESS_SIZE];
     /*
       snprintf( mess,
@@ -965,7 +963,7 @@ static void read_try(job_t *j)
    a job that has previously been stopped. In that case, we need to
    set the terminal attributes to those saved in the job.
  */
-static int terminal_give_to_job(job_t *j, int cont)
+static bool terminal_give_to_job(job_t *j, int cont)
 {
 
     if (tcsetpgrp(0, j->pgid))
@@ -975,7 +973,7 @@ static int terminal_give_to_job(job_t *j, int cont)
               j->job_id,
               j->command_wcstr());
         wperror(L"tcsetpgrp");
-        return 0;
+        return false;
     }
 
     if (cont)
@@ -987,10 +985,10 @@ static int terminal_give_to_job(job_t *j, int cont)
                   j->job_id,
                   j->command_wcstr());
             wperror(L"tcsetattr");
-            return 0;
+            return false;
         }
     }
-    return 1;
+    return true;
 }
 
 /**
@@ -1059,18 +1057,17 @@ void job_continue(job_t *j, bool cont)
     {
         if (job_get_flag(j, JOB_TERMINAL) && job_get_flag(j, JOB_FOREGROUND))
         {
-            /* Put the job into the foreground.  */
-            int ok;
-
+            /* Put the job into the foreground. Hack: ensure that stdin is marked as blocking first (#176). */
+            make_fd_blocking(STDIN_FILENO);
+            
             signal_block();
 
-            ok = terminal_give_to_job(j, cont);
+            bool ok = terminal_give_to_job(j, cont);
 
             signal_unblock();
 
             if (!ok)
                 return;
-
         }
 
         /*
@@ -1186,7 +1183,6 @@ void job_continue(job_t *j, bool cont)
             // were sometimes having their output combined with the set_color calls in the wrong order!
             read_try(j);
 
-
             process_t *p = j->first_process;
             while (p->next)
                 p = p->next;
@@ -1205,9 +1201,8 @@ void job_continue(job_t *j, bool cont)
                 }
             }
         }
-        /*
-           Put the shell back in the foreground.
-        */
+        
+        /* Put the shell back in the foreground. */
         if (job_get_flag(j, JOB_TERMINAL) && job_get_flag(j, JOB_FOREGROUND))
         {
             int ok;

@@ -135,7 +135,7 @@ static int try_get_socket_once(void)
         return -1;
     }
 
-    if ((fcntl(s, F_SETFL, O_NONBLOCK) != 0) || (fcntl(s, F_SETFD, FD_CLOEXEC) != 0))
+    if ((make_fd_nonblocking(s) != 0) || (fcntl(s, F_SETFD, FD_CLOEXEC) != 0))
     {
         wperror(L"fcntl");
         close(s);

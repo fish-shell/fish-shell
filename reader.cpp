@@ -2328,12 +2328,12 @@ void set_env_cmd_duration(struct timeval *after, struct timeval *before)
     }
 }
 
-void reader_run_command(parser_t &parser, const wchar_t *cmd)
+void reader_run_command(parser_t &parser, const wcstring &cmd)
 {
 
     struct timeval time_before, time_after;
 
-    wcstring ft = tok_first(cmd);
+    wcstring ft = tok_first(cmd.c_str());
 
     if (! ft.empty())
         env_set(L"_", ft.c_str(), ENV_GLOBAL);
@@ -2709,7 +2709,7 @@ static void handle_end_loop()
    Read interactively. Read input from stdin while providing editing
    facilities.
 */
-static int read_i()
+static int read_i(void)
 {
     reader_push(L"fish");
     reader_set_complete_function(&complete);
@@ -2724,8 +2724,6 @@ static int read_i()
 
     while ((!data->end_loop) && (!sanity_check()))
     {
-        const wchar_t *tmp;
-
         event_fire_generic(L"fish_prompt");
         if (function_exists(LEFT_PROMPT_FUNCTION_NAME))
             reader_set_left_prompt(LEFT_PROMPT_FUNCTION_NAME);
@@ -2744,9 +2742,7 @@ static int read_i()
           during evaluation.
         */
 
-
-        tmp = reader_readline();
-
+        const wchar_t *tmp = reader_readline();
 
         if (data->end_loop)
         {
@@ -2754,13 +2750,11 @@ static int read_i()
         }
         else if (tmp)
         {
-            tmp = wcsdup(tmp);
-
+            wcstring command = tmp;
             data->buff_pos=0;
             data->command_line.clear();
             data->command_line_changed();
-            reader_run_command(parser, tmp);
-            free((void *)tmp);
+            reader_run_command(parser, command);
             if (data->end_loop)
             {
                 handle_end_loop();
@@ -2837,7 +2831,7 @@ static wchar_t unescaped_quote(const wcstring &str, size_t pos)
 }
 
 
-const wchar_t *reader_readline()
+const wchar_t *reader_readline(void)
 {
     wint_t c;
     int last_char=0;
@@ -3612,7 +3606,7 @@ static int read_ni(int fd, const io_chain_t &io)
     wchar_t *buff=0;
     std::vector<char> acc;
 
-    int des = fd == 0 ? dup(0) : fd;
+    int des = (fd == STDIN_FILENO ? dup(STDIN_FILENO) : fd);
     int res=0;
 
     if (des == -1)
@@ -3629,14 +3623,23 @@ static int read_ni(int fd, const io_chain_t &io)
             char buff[4096];
             size_t c = fread(buff, 1, 4096, in_stream);
 
-            if (ferror(in_stream) && (errno != EINTR))
+            if (ferror(in_stream))
             {
-                debug(1,
-                      _(L"Error while reading from file descriptor"));
+                if (errno == EINTR)
+                {
+                    /* We got a signal, just keep going */
+                    continue;
+                }
+                else if ((errno == EAGAIN || errno == EWOULDBLOCK) && make_fd_blocking(des) == 0)
+                {
+                    /* We succeeded in making the fd blocking, try again */
+                    continue;
+                }
+                
+                /* Fatal error */
+                debug(1, _(L"Error while reading from file descriptor"));
 
-                /*
-                  Reset buffer on error. We won't evaluate incomplete files.
-                */
+                /* Reset buffer on error. We won't evaluate incomplete files. */
                 acc.clear();
                 break;
 

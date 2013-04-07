@@ -138,9 +138,7 @@ io_buffer_t *io_buffer_t::create(bool is_input, int fd)
         wperror(L"pipe");
         success = false;
     }
-    else if (fcntl(buffer_redirect->pipe_fd[0],
-                   F_SETFL,
-                   O_NONBLOCK))
+    else if (make_fd_nonblocking(buffer_redirect->pipe_fd[0]) != 0)
     {
         debug(1, PIPE_ERROR);
         wperror(L"fcntl");

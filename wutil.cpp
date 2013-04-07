@@ -264,11 +264,9 @@ int wstat(const wcstring &file_name, struct stat *buf)
 
 int lwstat(const wcstring &file_name, struct stat *buf)
 {
-    // fprintf(stderr, "%s\n", __PRETTY_FUNCTION__);
     cstring tmp = wcs2string(file_name);
     return lstat(tmp.c_str(), buf);
 }
-
 
 int waccess(const wcstring &file_name, int mode)
 {
@@ -290,6 +288,28 @@ void wperror(const wcstring &s)
         fwprintf(stderr, L"%ls: ", s.c_str());
     }
     fwprintf(stderr, L"%s\n", strerror(e));
+}
+
+int make_fd_nonblocking(int fd)
+{
+    int flags = fcntl(fd, F_GETFL, 0);
+    int err = 0;
+    if (! (flags & O_NONBLOCK))
+    {
+        err = fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+    }
+    return err == -1 ? errno : 0;
+}
+
+int make_fd_blocking(int fd)
+{
+    int flags = fcntl(fd, F_GETFL, 0);
+    int err = 0;
+    if (flags & O_NONBLOCK)
+    {
+        err = fcntl(fd, F_SETFL, flags & ~O_NONBLOCK);
+    }
+    return err == -1 ? errno : 0;
 }
 
 static inline void safe_append(char *buffer, const char *s, size_t buffsize)

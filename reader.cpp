@@ -3627,22 +3627,23 @@ static int read_ni(int fd, const io_chain_t &io)
             {
                 if (errno == EINTR)
                 {
-                    /* We got a signal, just keep going */
-                    continue;
+                    /* We got a signal, just keep going. Be sure that we call insert() below because we may get data as well as EINTR. */
+                    clearerr(in_stream);
                 }
                 else if ((errno == EAGAIN || errno == EWOULDBLOCK) && make_fd_blocking(des) == 0)
                 {
-                    /* We succeeded in making the fd blocking, try again */
-                    continue;
+                    /* We succeeded in making the fd blocking, keep going */
+                    clearerr(in_stream);
                 }
-                
-                /* Fatal error */
-                debug(1, _(L"Error while reading from file descriptor"));
+                else
+                {
+                    /* Fatal error */
+                    debug(1, _(L"Error while reading from file descriptor"));
 
-                /* Reset buffer on error. We won't evaluate incomplete files. */
-                acc.clear();
-                break;
-
+                    /* Reset buffer on error. We won't evaluate incomplete files. */
+                    acc.clear();
+                    break;
+                }
             }
 
             acc.insert(acc.end(), buff, buff + c);

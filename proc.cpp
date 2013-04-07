@@ -205,6 +205,7 @@ void proc_destroy()
 
 void proc_set_last_status(int s)
 {
+    ASSERT_IS_MAIN_THREAD();
     last_status = s;
 }
 

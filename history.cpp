@@ -657,7 +657,7 @@ static size_t trim_leading_spaces(std::string &str)
     return i;
 }
 
-static bool extract_prefix(std::string &key, std::string &value, const std::string &line)
+static bool extract_prefix_and_unescape_yaml(std::string &key, std::string &value, const std::string &line)
 {
     size_t where = line.find(":");
     if (where != std::string::npos)
@@ -689,7 +689,7 @@ history_item_t history_t::decode_item_fish_2_0(const char *base, size_t len)
     /* Read the "- cmd:" line */
     size_t advance = read_line(base, cursor, len, line);
     trim_leading_spaces(line);
-    if (! extract_prefix(key, value, line) || key != "- cmd")
+    if (! extract_prefix_and_unescape_yaml(key, value, line) || key != "- cmd")
         goto done;
 
     cursor += advance;
@@ -709,11 +709,10 @@ history_item_t history_t::decode_item_fish_2_0(const char *base, size_t len)
         if (this_indent == 0 || indent != this_indent)
             break;
 
-        if (! extract_prefix(key, value, line))
+        if (! extract_prefix_and_unescape_yaml(key, value, line))
             break;
 
         /* We are definitely going to consume this line */
-        unescape_yaml(value);
         cursor += advance;
 
         if (key == "when")
@@ -1099,31 +1098,40 @@ static void escape_yaml(std::string &str)
     replace_all(str, "\n", "\\n"); //replace newline with backslash + literal n
 }
 
+/* This function is called frequently, so it ought to be fast. */
 static void unescape_yaml(std::string &str)
 {
-    bool prev_escape = false;
-    for (size_t idx = 0; idx < str.size(); idx++)
+    size_t cursor = 0, size = str.size();
+    while (cursor < size)
     {
-        char c = str.at(idx);
-        if (prev_escape)
+        // Operate on a const version of str, to avoid needless COWs that at() does.
+        const std::string &const_str = str;
+        
+        // Look for a backslash
+        size_t backslash = const_str.find('\\', cursor);
+        if (backslash == std::string::npos || backslash + 1 >= size)
         {
-            if (c == '\\')
-            {
-                /* Two backslashes in a row. Delete this one */
-                str.erase(idx, 1);
-                idx--;
-            }
-            else if (c == 'n')
-            {
-                /* Replace backslash + n with an actual newline */
-                str.replace(idx - 1, 2, "\n");
-                idx--;
-            }
-            prev_escape = false;
+            // Either not found, or found as the last character
+            break;
         }
         else
         {
-            prev_escape = (c == '\\');
+            // Backslash found. Maybe we'll do something about it. Be sure to invoke the const version of at().
+            char escaped_char = const_str.at(backslash + 1);
+            if (escaped_char == '\\')
+            {
+                // Two backslashes in a row. Delete the second one.
+                str.erase(backslash + 1, 1);
+                size--;
+            }
+            else if (escaped_char == 'n')
+            {
+                // Backslash + n. Replace with a newline.
+                str.replace(backslash, 2, "\n");
+                size--;
+            }
+            // The character at index backslash has now been made whole; start at the next character
+            cursor = backslash + 1;
         }
     }
 }

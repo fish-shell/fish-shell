@@ -81,7 +81,7 @@ void input_common_destroy()
 }
 
 /**
-   Internal function used by input_common_readch to read one byte from fd 1. This function should only be called by
+   Internal function used by input_common_readch to read one byte from fd 0. This function should only be called by
    input_common_readch().
 */
 static wint_t readb()

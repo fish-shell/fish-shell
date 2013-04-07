@@ -502,10 +502,10 @@ static void internal_exec_helper(parser_t &parser,
 }
 
 /* Returns whether we can use posix spawn for a given process in a given job.
- Per https://github.com/fish-shell/fish-shell/issues/364 , error handling for file redirections is too difficult with posix_spawn
- So in that case we use fork/exec
+ Per https://github.com/fish-shell/fish-shell/issues/364 , error handling for file redirections is too difficult with posix_spawn,
+ so in that case we use fork/exec.
 
- Furthermore, to avoid the race between the caller calling tcsetpgrp() and the client checking the foreground process group, we don't use posix_spawn if we're going to foreground the process. (If we use fork(), we can call tcsetpgrp after the fork, before the exec, and avoid the racse).
+ Furthermore, to avoid the race between the caller calling tcsetpgrp() and the client checking the foreground process group, we don't use posix_spawn if we're going to foreground the process. (If we use fork(), we can call tcsetpgrp after the fork, before the exec, and avoid the race).
 */
 static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *process)
 {
@@ -1312,6 +1312,9 @@ void exec(parser_t &parser, job_t *j)
                 /* Get argv and envv before we fork */
                 null_terminated_array_t<char> argv_array;
                 convert_wide_array_to_narrow(p->get_argv_array(), &argv_array);
+                
+                /* Ensure that stdin is blocking before we hand it off (see issue #176). It's a little strange that we only do this with stdin and not with stdout or stderr. However in practice, setting or clearing O_NONBLOCK on stdin also sets it for the other two fds, presumably because they refer to the same underlying file (/dev/tty?) */
+                make_fd_blocking(STDIN_FILENO);
 
                 const char * const *argv = argv_array.get();
                 const char * const *envv = env_export_arr(false);

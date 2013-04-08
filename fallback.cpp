@@ -1122,21 +1122,38 @@ int futimes(int fd, const struct timeval *times)
 
 #endif
 
-#ifndef HAVE_GETTEXT
+#if HAVE_GETTEXT
 
-char * gettext(const char * msgid)
+char * fish_gettext(const char * msgid)
+{
+    return gettext(msgid);;
+}
+
+char * fish_bindtextdomain(const char * domainname, const char * dirname)
+{
+    return bindtextdomain(domainname, dirname);
+}
+
+char * fish_textdomain(const char * domainname)
+{
+    return textdomain(domainname);
+}
+
+#else
+
+char * fish_gettext(const char * msgid)
 {
     return (char *)msgid;
 }
 
-char * bindtextdomain(const char * domainname, const char * dirname)
+char * fish_bindtextdomain(const char * domainname, const char * dirname)
 {
-    return 0;
+    return NULL;
 }
 
-char * textdomain(const char * domainname)
+char * fish_textdomain(const char * domainname)
 {
-    return 0;
+    return NULL;
 }
 
 #endif

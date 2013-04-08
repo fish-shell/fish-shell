@@ -156,7 +156,7 @@ static int launch_pos=0;
    gettext alias
 */
 #ifdef USE_GETTEXT
-#define _(string) gettext(string)
+#define _(string) fish_gettext(string)
 #else
 #define _(string) (string)
 #endif
@@ -1210,8 +1210,8 @@ static void launch(char *filter, const string_list_t &files, size_t fileno)
 static void locale_init()
 {
     setlocale(LC_ALL, "");
-    bindtextdomain(PACKAGE_NAME, LOCALEDIR);
-    textdomain(PACKAGE_NAME);
+    fish_bindtextdomain(PACKAGE_NAME, LOCALEDIR);
+    fish_textdomain(PACKAGE_NAME);
 }
 
 

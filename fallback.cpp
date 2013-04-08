@@ -1141,28 +1141,33 @@ char * fish_textdomain(const char * domainname)
 
 #else
 
-char * fish_gettext(const char * msgid)
+char *fish_gettext(const char * msgid)
 {
     return (char *)msgid;
 }
 
-char * fish_bindtextdomain(const char * domainname, const char * dirname)
+char *fish_bindtextdomain(const char * domainname, const char * dirname)
 {
     return NULL;
 }
 
-char * fish_textdomain(const char * domainname)
+char *fish_textdomain(const char * domainname)
 {
     return NULL;
 }
 
 #endif
 
-#ifndef HAVE_DCGETTEXT
+#if HAVE_DCGETTEXT
 
-char * dcgettext(const char * domainname,
-                 const char * msgid,
-                 int category)
+char *fish_dcgettext(const char * domainname, const char * msgid, int category)
+{
+    return dcgettext(msgid);
+}
+
+#else
+
+char *fish_dcgettext(const char * domainname, const char * msgid, int category)
 {
     return (char *)msgid;
 }

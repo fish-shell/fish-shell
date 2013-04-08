@@ -357,7 +357,7 @@ static void handle_locale()
         extern int _nl_msg_cat_cntr;
         _nl_msg_cat_cntr++;
 
-        dcgettext("fish", "Changing language to English", LC_MESSAGES);
+        fish_dcgettext("fish", "Changing language to English", LC_MESSAGES);
 
         if (get_is_interactive())
         {

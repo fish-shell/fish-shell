@@ -439,8 +439,8 @@ wcstring wbasename(const wcstring &path)
 static void wgettext_really_init()
 {
     pthread_mutex_init(&wgettext_lock, NULL);
-    bindtextdomain(PACKAGE_NAME, LOCALEDIR);
-    textdomain(PACKAGE_NAME);
+    fish_bindtextdomain(PACKAGE_NAME, LOCALEDIR);
+    fish_textdomain(PACKAGE_NAME);
 }
 
 /**
@@ -469,7 +469,7 @@ const wchar_t *wgettext(const wchar_t *in)
     if (val == NULL)
     {
         cstring mbs_in = wcs2string(key);
-        char *out = gettext(mbs_in.c_str());
+        char *out = fish_gettext(mbs_in.c_str());
         val = new wcstring(format_string(L"%s", out));
     }
     errno = err;

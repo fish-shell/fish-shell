@@ -662,13 +662,13 @@ static bool extract_prefix_and_unescape_yaml(std::string &key, std::string &valu
     size_t where = line.find(":");
     if (where != std::string::npos)
     {
-        key = line.substr(0, where);
+        key.assign(line, 0, where);
 
         // skip a space after the : if necessary
         size_t val_start = where + 1;
         if (val_start < line.size() && line.at(val_start) == ' ')
             val_start++;
-        value = line.substr(val_start);
+        value.assign(line, val_start, line.size() - val_start);
 
         unescape_yaml(key);
         unescape_yaml(value);
@@ -717,12 +717,10 @@ history_item_t history_t::decode_item_fish_2_0(const char *base, size_t len)
 
         if (key == "when")
         {
-            /* Parse an int from the timestamp */
-            long tmp = 0;
-            if (sscanf(value.c_str(), "%ld", &tmp) > 0)
-            {
-                when = tmp;
-            }
+            /* Parse an int from the timestamp. Should this fail, strtol returns 0; that's acceptable. */
+            char *end = NULL;
+            long tmp = strtol(value.c_str(), &end, 0);
+            when = tmp;
         }
         else if (key == "paths")
         {

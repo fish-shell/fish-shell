@@ -703,8 +703,7 @@ static int wildcard_expand_internal(const wchar_t *wc,
                                     expand_flags_t flags,
                                     std::vector<completion_t> &out,
                                     std::set<wcstring> &completion_set,
-                                    std::set<file_id_t> &visited_files
-                                   )
+                                    std::set<file_id_t> &visited_files)
 {
 
     /* Points to the end of the current wildcard segment */

@@ -1005,7 +1005,9 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
 
         if (do_escape)
         {
-            escaped = escape(val, ESCAPE_ALL | ESCAPE_NO_QUOTED);
+            /* Respect COMPLETE_DONT_ESCAPE_TILDES */
+            bool no_tilde = !! (flags & COMPLETE_DONT_ESCAPE_TILDES);
+            escaped = escape(val, ESCAPE_ALL | ESCAPE_NO_QUOTED | (no_tilde ? ESCAPE_NO_TILDE : 0));
             sb.append(escaped);
             move_cursor = wcslen(escaped);
             free(escaped);
@@ -1034,6 +1036,7 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
         wcstring replaced;
         if (do_escape)
         {
+            /* Note that we ignore COMPLETE_DONT_ESCAPE_TILDES here. We get away with this because unexpand_tildes only operates on completions that have COMPLETE_REPLACES_TOKEN set, but we ought to respect them */
             parse_util_get_parameter_info(command_line, cursor_pos, &quote, NULL, NULL);
 
             /* If the token is reported as unquoted, but ends with a (unescaped) quote, and we can modify the command line, then delete the trailing quote so that we can insert within the quotes instead of after them. See https://github.com/fish-shell/fish-shell/issues/552 */

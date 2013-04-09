@@ -2,8 +2,15 @@
 #define FISH_IO_H
 
 #include <vector>
-#include <tr1/memory>
-using std::tr1::shared_ptr;
+#if __cplusplus > 199711L
+ // C++11
+ #include <memory>
+ using std::shared_ptr;
+#else
+ // C++03
+ #include <tr1/memory>
+ using std::tr1::shared_ptr;
+#endif
 
 /**
    Describes what type of IO operation an io_data_t represents

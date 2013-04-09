@@ -1174,6 +1174,136 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		D007FDDA17136EAA00A52BE6 /* Release_C++11 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"LOCALEDIR=\\\"/usr/local/share/locale\\\"",
+					"PREFIX=L\\\"/usr/local\\\"",
+					"DATADIR=L\\\"/usr/local/share\\\"",
+					"SYSCONFDIR=L\\\"/usr/local/etc\\\"",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				SDKROOT = macosx;
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/**";
+			};
+			name = "Release_C++11";
+		};
+		D007FDDB17136EAA00A52BE6 /* Release_C++11 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INSTALL_PATH = /usr/local;
+				PRODUCT_NAME = "base copy";
+				SKIP_INSTALL = NO;
+			};
+			name = "Release_C++11";
+		};
+		D007FDDC17136EAA00A52BE6 /* Release_C++11 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INSTALL_PATH = /usr/local;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = NO;
+			};
+			name = "Release_C++11";
+		};
+		D007FDDD17136EAA00A52BE6 /* Release_C++11 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				EXECUTABLE_NAME = fish_launcher;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				INFOPLIST_FILE = osx/Info.plist;
+				PRODUCT_NAME = fish;
+				WRAPPER_EXTENSION = app;
+			};
+			name = "Release_C++11";
+		};
+		D007FDDE17136EAA00A52BE6 /* Release_C++11 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				PRODUCT_NAME = fish;
+			};
+			name = "Release_C++11";
+		};
+		D007FDDF17136EAA00A52BE6 /* Release_C++11 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = "Release_C++11";
+		};
+		D007FDE017136EAA00A52BE6 /* Release_C++11 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = "Release_C++11";
+		};
+		D007FDE117136EAA00A52BE6 /* Release_C++11 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = "Release_C++11";
+		};
+		D007FDE217136EAA00A52BE6 /* Release_C++11 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = "Release_C++11";
+		};
+		D007FDE317136EAA00A52BE6 /* Release_C++11 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = "Release_C++11";
+		};
 		D07D267015E33B86009E43F6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1198,9 +1328,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
-				CLANG_CXX_LIBRARY = "compiler-default";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -1224,10 +1352,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
-				CLANG_CXX_LIBRARY = "compiler-default";
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"LOCALEDIR=\\\"/usr/local/share/locale\\\"",
@@ -1459,6 +1585,7 @@
 			buildConfigurations = (
 				D07D267015E33B86009E43F6 /* Debug */,
 				D07D267115E33B86009E43F6 /* Release */,
+				D007FDDB17136EAA00A52BE6 /* Release_C++11 */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1468,6 +1595,7 @@
 			buildConfigurations = (
 				D0A084F813B3AC130099B651 /* Debug */,
 				D0A084F913B3AC130099B651 /* Release */,
+				D007FDDA17136EAA00A52BE6 /* Release_C++11 */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1477,6 +1605,7 @@
 			buildConfigurations = (
 				D0A084FB13B3AC130099B651 /* Debug */,
 				D0A084FC13B3AC130099B651 /* Release */,
+				D007FDE317136EAA00A52BE6 /* Release_C++11 */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1486,6 +1615,7 @@
 			buildConfigurations = (
 				D0A564E7168CFDD800AF6161 /* Debug */,
 				D0A564E8168CFDD800AF6161 /* Release */,
+				D007FDE217136EAA00A52BE6 /* Release_C++11 */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1495,6 +1625,7 @@
 			buildConfigurations = (
 				D0D02AA515985A75008E62BD /* Debug */,
 				D0D02AA615985A75008E62BD /* Release */,
+				D007FDDD17136EAA00A52BE6 /* Release_C++11 */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1504,6 +1635,7 @@
 			buildConfigurations = (
 				D0D02AC015985EFA008E62BD /* Debug */,
 				D0D02AC115985EFA008E62BD /* Release */,
+				D007FDDF17136EAA00A52BE6 /* Release_C++11 */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1513,6 +1645,7 @@
 			buildConfigurations = (
 				D0D02AD41598642A008E62BD /* Debug */,
 				D0D02AD51598642A008E62BD /* Release */,
+				D007FDE017136EAA00A52BE6 /* Release_C++11 */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1522,6 +1655,7 @@
 			buildConfigurations = (
 				D0D02AE815986537008E62BD /* Debug */,
 				D0D02AE915986537008E62BD /* Release */,
+				D007FDE117136EAA00A52BE6 /* Release_C++11 */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1531,6 +1665,7 @@
 			buildConfigurations = (
 				D0D26944159835CA005D9B9C /* Debug */,
 				D0D26945159835CA005D9B9C /* Release */,
+				D007FDDE17136EAA00A52BE6 /* Release_C++11 */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1540,6 +1675,7 @@
 			buildConfigurations = (
 				D0F019EE15A976F30034B3B1 /* Debug */,
 				D0F019EF15A976F30034B3B1 /* Release */,
+				D007FDDC17136EAA00A52BE6 /* Release_C++11 */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

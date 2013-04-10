@@ -28,8 +28,8 @@ if status --is-login
 	# Put linux consoles in unicode mode.
 	#
 
-	if expr "$LANG" : ".*\.[Uu][Tt][Ff].*" >/dev/null
-		if test "$TERM" = linux
+	if test "$TERM" = linux
+		if expr "$LANG" : ".*\.[Uu][Tt][Ff].*" >/dev/null
 			if which unicode_start >/dev/null
 				unicode_start
 			end

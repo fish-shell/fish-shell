@@ -59,7 +59,7 @@ struct builtin_printf_state_t
     /* The status of the operation */
     int exit_code;
 
-    /* Whether we should stop outputting. This gets set in the case of an error, and also with the \c specifier. */
+    /* Whether we should stop outputting. This gets set in the case of an error, and also with the \c escape. */
     bool early_exit;
 
     builtin_printf_state_t() : exit_code(0), early_exit(false)

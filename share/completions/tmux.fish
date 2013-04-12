@@ -1,30 +1,20 @@
 function __fish_tmux_sessions --description 'available sessions'
-        tmux list-sessions -F "#S	#{session_windows} windows Created: #{session_created_string} [#{session_width}x#{session_height}] Attached=#{session_attached}" ^/dev/null
+	tmux list-sessions -F "#S	#{session_windows} windows created: #{session_created_string} [#{session_width}x#{session_height}]#{session_attached}" | sed 's/0$//;s/1$/ (attached)/' ^/dev/null
 end
 
 function __fish_tmux_clients --description 'connected clients'
-        tmux list-clients -F "#{client_tty}	#{session_name}: Created: #{client_created_string} [#{client_width}x#{client_height} #{client_termname}]" ^/dev/null
+	tmux list-clients -F "#{client_tty}	#S: Created: #{client_created_string} [#{client_width}x#{client_height} #{client_termname}]" ^/dev/null
 end
 
 function __fish_tmux_panes --description 'window panes'
-        set -l panes (tmux list-panes -F "#S:#{window_name}." ^ /dev/null)
+	#fully qualified pane names
+	tmux list-panes -F '#S:#W.#P	session:window.pane' ^/dev/null
 
-        #fully qualified pane names
-        if count $panes
-			for i in (seq (count $panes))
-					echo "$panes[$i]"(math $i - 1)'	session:window.pane'
-			end
-		end
+	#panes by themselves
+	tmux list-panes -F '#P	pane' ^/dev/null
 
-        #panes by themselves
-        if count $panes
-			for i in (seq (count $panes))
-					echo (math $i - 1)'	pane'
-			end
-		end
-
-        #windows by themselves
-        tmux list-panes -F '#{window_name}	window' ^ /dev/null
+	#windows by themselves
+	tmux list-panes -F '#W	window' ^/dev/null
 end
 
 #don't allow dirs in the completion list...
@@ -167,15 +157,35 @@ complete -c tmux -n "__fish_seen_subcommand_from $unbind" -xs t -d 'key table' -
 ###############  End:   Options ###############
 
 ###############  Begin: Environment ###############
-#TODO - these commands are not currently implemented.
-#there is a section in the tmux man page that has the same title as this section
-#use the "Clients and Sessions" code as an example when implementing this
+set -l setenv 'set-environment setenv'
+set -l showenv 'show-environment showenv'
+
+complete -c tmux -n '__fish_use_subcommand' -a $setenv -d 'Set or unset an environment variable'
+complete -c tmux -n "__fish_seen_subcommand_from $setenv" -s g -d 'global environment'
+complete -c tmux -n "__fish_seen_subcommand_from $setenv" -s r -d 'remove from environment before starting a new process'
+complete -c tmux -n "__fish_seen_subcommand_from $setenv" -s u -d 'unset variable'
+complete -c tmux -xs t -n "__fish_seen_subcommand_from $setenv" -a '(__fish_tmux_sessions)' -d 'target-session'
+
+complete -c tmux -n '__fish_use_subcommand' -a $showenv -d 'bind key to command'
+complete -c tmux -n "__fish_seen_subcommand_from $showenv" -s g -d 'global environment'
+complete -c tmux -xs t -n "__fish_seen_subcommand_from $showenv" -a '(__fish_tmux_sessions)' -d 'target-session'
+
 ###############  End:   Environment ###############
 
 ###############  Begin: Status Line ###############
-#TODO - these commands are not currently implemented.
-#there is a section in the tmux man page that has the same title as this section
-#use the "Clients and Sessions" code as an example when implementing this
+set -l commandprompt 'command-prompt'
+set -l display 'display-message display'
+
+complete -c tmux -n '__fish_use_subcommand' -a $commandprompt -d 'Open the command prompt in a client'
+complete -c tmux -n "__fish_seen_subcommand_from $commandprompt" -s I -x -d 'Comma-separated list of initial text for each prompt'
+complete -c tmux -n "__fish_seen_subcommand_from $commandprompt" -s p -x -d 'Comma-separated list of prompts'
+complete -c tmux -n "__fish_seen_subcommand_from $commandprompt" -s t -xa '(__fish_tmux_clients)' -d 'target-client'
+
+complete -c tmux -n '__fish_use_subcommand' -a $display -d 'Display a message'
+complete -c tmux -n "__fish_seen_subcommand_from $display" -s p -d 'print to stdout'
+complete -c tmux -n "__fish_seen_subcommand_from $display" -s t -xa '(__fish_tmux_panes)' -d 'target-pane'
+complete -c tmux -n "__fish_seen_subcommand_from $display" -s c -xa '(__fish_tmux_clients)' -d 'target-client'
+
 ###############  End:   Status Line ###############
 
 ###############  Begin: Buffers ###############

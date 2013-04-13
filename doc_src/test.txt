@@ -9,7 +9,7 @@ Tests the expression given and returns true or false.
 
 - \c -h, \c Display this help
 - \c -G, \c File owned by effective group ID
-- \c -L, \c File is syslink
+- \c -L, \c File is symlink
 - \c -O, \c File owned by effective user ID
 - \c -S, \c File is socket
 - \c -a, \c Logical and 

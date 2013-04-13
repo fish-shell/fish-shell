@@ -13,7 +13,7 @@ Most tradeoffs between power and ease of use can be avoided with careful design.
 -# Whenever possible without breaking the above goals, fish should
 follow the Posix syntax.
 
-To achive these high-level goals, the fish design relies on a number
+To achieve these high-level goals, the fish design relies on a number
 of more specific design principles. These are presented below,
 together with a rationale and a few examples for each.
 
@@ -33,7 +33,7 @@ program harder to maintain and update.
 Examples:
 
 - Here documents are too similar to using echo inside of a pipeline.
-- Subshells, command substitution and process substitution are strongly related. \c fish only supports command substitution, the others can be achived either using a block or the psub shellscript function.
+- Subshells, command substitution and process substitution are strongly related. \c fish only supports command substitution, the others can be achieved either using a block or the psub shellscript function.
 - Having both aliases and functions is confusing, especially since both of them have limitations and problems. \c fish functions have none of the drawbacks of either syntax.
 - The many Posix quoting styles are silly, especially \$''.
 

@@ -1,11 +1,15 @@
 # fish completion for git
 
+function __fish_git_command
+  command __fish_git_cmd $argv
+end
+
 function __fish_git_branches
-  git branch --no-color -a ^/dev/null | grep -v ' -> ' | sed -e 's/^..//' -e 's/^remotes\///'
+  __fish_git_cmd branch --no-color -a ^/dev/null | grep -v ' -> ' | sed -e 's/^..//' -e 's/^remotes\///'
 end
 
 function __fish_git_tags
-  git tag
+  __fish_git_cmd tag
 end
 
 function __fish_git_heads
@@ -14,7 +18,7 @@ function __fish_git_heads
 end
 
 function __fish_git_remotes
-  git remote
+  __fish_git_cmd remote
 end
 
 function __fish_git_ranges
@@ -48,7 +52,7 @@ function __fish_git_using_command
     end
 
     # aliased command
-    set -l aliased (git config --get "alias.$cmd[2]" | sed 's/ .*$//')
+    set -l aliased (__fish_git_cmd config --get "alias.$cmd[2]" | sed 's/ .*$//')
     if [ $argv[1] = "$aliased" ]
       return 0
     end

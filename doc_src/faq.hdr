@@ -26,7 +26,7 @@ handled, and are varitations of the following example:
 
 Writing <code>cd images; ls ..</code> given the above directory
 structure would list the contents of ~/Documents, not of ~, even
-though using <code>cd ..</code> changes the current direcotry to ~,
+though using <code>cd ..</code> changes the current directory to ~,
 and the prompt, the pwd builtin and many other directory information
 sources suggest that the the current directory is ~/images and it's
 parent is ~. This issue is not possible to fix without either making
@@ -47,7 +47,7 @@ silently fails in shells that don't resolve symlinked paths.
 Because they are completions. In fish, if you specify a relative
 directory to the cd command, i.e. any path that does not start with
 either './' or '/', the environment variable CDPATH will be examined, and any
-directories in this path is used as a base direcotry. To disable this
+directories in this path is used as a base directory. To disable this
 feature, write <code>set CDPATH .</code> on the commandline.
 
 <hr>

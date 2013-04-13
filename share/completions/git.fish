@@ -1,7 +1,7 @@
 # fish completion for git
 
-function __fish_git_command
-  command __fish_git_cmd $argv
+function __fish_git_cmd
+  command git $argv
 end
 
 function __fish_git_branches

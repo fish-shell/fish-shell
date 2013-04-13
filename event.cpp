@@ -719,6 +719,14 @@ void event_fire_generic(const wchar_t *name, wcstring_list_t *args)
     event_fire(&ev);
 }
 
+event_t::event_t(int t) : type(t), param1(), str_param1(), function_name(), arguments()
+{
+}
+
+event_t::~event_t()
+{
+}
+
 event_t event_t::signal_event(int sig)
 {
     event_t event(EVENT_SIGNAL);

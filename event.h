@@ -49,9 +49,9 @@ enum
 */
 struct event_t
 {
-    /**
-       Type of event
-    */
+    public:
+
+    /** Type of event */
     int type;
 
     /** The type-specific parameter. The int types are one of the following:
@@ -86,9 +86,8 @@ struct event_t
     */
     wcstring_list_t arguments;
 
-    event_t(int t) : type(t), param1(), str_param1(), function_name(), arguments() { }
-
-    /** default copy constructor */
+    event_t(int t);
+    ~event_t();
 
     static event_t signal_event(int sig);
     static event_t variable_event(const wcstring &str);

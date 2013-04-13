@@ -1743,7 +1743,6 @@ static int builtin_function(parser_t &parser, wchar_t **argv)
     int res=STATUS_BUILTIN_OK;
     wchar_t *desc=0;
     std::vector<event_t> events;
-
     std::auto_ptr<wcstring_list_t> named_arguments(NULL);
 
     wchar_t *name = 0;
@@ -1754,50 +1753,19 @@ static int builtin_function(parser_t &parser, wchar_t **argv)
     function_def_block_t * const fdb = new function_def_block_t();
     parser.push_block(fdb);
 
-    static const struct woption
-            long_options[] =
+    const struct woption long_options[] =
     {
-        {
-            L"description", required_argument, 0, 'd'
-        }
-        ,
-        {
-            L"on-signal", required_argument, 0, 's'
-        }
-        ,
-        {
-            L"on-job-exit", required_argument, 0, 'j'
-        }
-        ,
-        {
-            L"on-process-exit", required_argument, 0, 'p'
-        }
-        ,
-        {
-            L"on-variable", required_argument, 0, 'v'
-        }
-        ,
-        {
-            L"on-event", required_argument, 0, 'e'
-        }
-        ,
-        {
-            L"help", no_argument, 0, 'h'
-        }
-        ,
-        {
-            L"argument-names", no_argument, 0, 'a'
-        }
-        ,
-        {
-            L"no-scope-shadowing", no_argument, 0, 'S'
-        }
-        ,
-        {
-            0, 0, 0, 0
-        }
-    }
-    ;
+        { L"description", required_argument, 0, 'd' },
+        { L"on-signal", required_argument, 0, 's' },
+        { L"on-job-exit", required_argument, 0, 'j' },
+        { L"on-process-exit", required_argument, 0, 'p' },
+        { L"on-variable", required_argument, 0, 'v' },
+        { L"on-event", required_argument, 0, 'e' },
+        { L"help", no_argument, 0, 'h' },
+        { L"argument-names", no_argument, 0, 'a' },
+        { L"no-scope-shadowing", no_argument, 0, 'S' },
+        { 0, 0, 0, 0 }
+    };
 
     while (1 && (!res))
     {
@@ -2081,7 +2049,6 @@ static int builtin_function(parser_t &parser, wchar_t **argv)
     parser.current_block->skip = 1;
 
     return STATUS_BUILTIN_OK;
-
 }
 
 /**

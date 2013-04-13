@@ -5,5 +5,5 @@
 
 \subsection pushd-description Description
 The <tt>pushd</tt> function adds DIRECTORY to the top of the directory stack
-and makes it the current directory. Use <tt>popd</tt> to pop it off and and
+and makes it the current directory. Use <tt>popd</tt> to pop it off and
 return to the original directory.

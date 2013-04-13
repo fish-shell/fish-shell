@@ -297,7 +297,7 @@ static char *file_exists(const char *dir, const char *in)
    from xdg_run_command_on_dirs.
 
    \param list Full file paths will be appended to this list.
-   \param f The relative filename search for the the data directories.
+   \param f The relative filename search for the data directories.
    \param all If zero, then stop after the first filename.
    \return The number of filenames added to the list.
 */

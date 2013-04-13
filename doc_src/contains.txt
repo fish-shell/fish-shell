@@ -5,7 +5,7 @@
 
 \subsection contains-description Description
 
-- \c -i or \c --index print the the word index
+- \c -i or \c --index print the word index
 - \c -h or \c --help display this message
 
 Test if the set VALUES contains the string KEY. Return status is 0 if

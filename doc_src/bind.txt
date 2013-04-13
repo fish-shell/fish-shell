@@ -22,7 +22,7 @@ If SEQUENCE is the empty string, i.e. an empty set of quotes, this is
 interpreted as the default keybinding. It will be used whenever no
 other binding matches. For most key bindings, it makes sense to use
 the \c self-insert function (i.e. <tt>bind '' self-insert</tt> as the
-default keybining. This will insert any keystrokes not specifically
+default keybinding. This will insert any keystrokes not specifically
 bound to into the editor. Non-printable characters are ignored by the
 editor, so this will not result in e.g. control sequences being
 printable.

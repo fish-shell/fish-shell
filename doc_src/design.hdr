@@ -37,39 +37,18 @@ Examples:
 - Having both aliases and functions is confusing, especially since both of them have limitations and problems. \c fish functions have none of the drawbacks of either syntax.
 - The many Posix quoting styles are silly, especially \$''.
 
+\section sep The law of responsiveness
 
-\section sep The law of minimalism
-
-The shell should only contain features that cannot be implemented in
-a reasonable way outside of the shell. A large performance decrease,
-as well as some program complexity increase is acceptable in order to
-improve separation.
+The shell should attempt to remain responsive to the user at all times, even in the face of contended or unresponsive filesystems. It is only acceptable to block in response to a user initiated action, such as running a command.
 
 Rationale:
 
-A modular project is easier to maintain since smaller programs are far
-easier to understand than larger ones. A modular project is also more
-future proof since the modules can be individually
-replaced. Modularity also decreases the severity of bugs, since there
-is good hope that a bug, even a serious one, in one module, does not
-take the whole system down.
+Bad performance increases user-facing complexity, because it trains users to recognize and route around slow use cases. It is also incredibly frustrating.
 
 Examples:
 
-- Builtin commands should only be created when it cannot be
-avoided. \c echo, \c kill, \c printf and \c time are among the commands
-that fish does not implement internally since they can be provided as
-external commands. Several other commands that are commonly implemented
-as builtins and can not be implemented as external commands,
-including \c type, \c vared, \c pushd and \c popd are implemented as shellscript
-functions in fish.
-- Mathematical calculations, regex matching, generating lists of numbers
-and many other funtions can easily be done in external programs. They
-should not be supported internally by the shell.
-
-The law of minimalism does not imply that a large feature set is
-bad. So long as a feature is not part of the shell itself, but a
-separate command or at least a shellscript function, bloat is fine.
+- Features like syntax highlighting and autosuggestions must perform all of their disk I/O asynchronously.
+- Startup should minimize forks and disk I/O, so that fish can be started even if the system is under load.
 
 \section conf Configurability is the root of all evil
 

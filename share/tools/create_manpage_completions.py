@@ -135,7 +135,8 @@ def built_command(options, description):
     if IS_PY3:
         truncation_suffix = '… [See Man Page]'
     else:
-        truncation_suffix = u'… [See Man Page]'
+        ELLIPSIS_CODE_POINT = 0x2026
+        truncation_suffix = unichr(ELLIPSIS_CODE_POINT) + unicode(' [See Man Page]')
     
     # Try to include as many whole sentences as will fit
     # Clean up some probably bogus escapes in the process

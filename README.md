@@ -22,6 +22,15 @@ fish can be built using autotools or Xcode.
     make [gmake on BSD]
     sudo make install
 
+### Autotools Build (EC2 Amazon Linux AMI)
+
+    autoconf
+    export LDFLAGS="-ltinfo"
+    ./configure --without-xsel
+    make
+    sudo yum install gettext
+    sudo make install
+
 ### Xcode Development Build
 
 * Build the `base` target in Xcode

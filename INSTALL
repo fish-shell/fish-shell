@@ -1,32 +1,23 @@
-Known issues
+Overview
 ============
 
-Fish is developed using GCC, with the goal of using only C89 language
-features. Fish does, however use the *wprintf family of functions,
-which are new to the C99 standard. It is not unlikely that any given
-release contains a few GCC:isms, but ICC 9.0.030 has been found to
-produce working binaries. GCC 2.95.* won't compile fish, but GCC 3.2.3
-is known to work. Patches to fix any remaining GNU:isms are welcome.
-
-Older versions of Doxygen has bugs in the man-page generation which
-cause the builtin help to render incorrectly. Doxygen 1.2.14 is known
-to have this problem.
-
+fish is written in a sane subset of C++98, and uses a few components from C++TR1. It is known to build successfully with g++ 4.2 or later, and with clang 4.2. It also builds successfully as C++11.
 
 Prerequisites
 =============
 
-Fish requires the following programs and libraries to build:
+fish requires the following programs and libraries to build:
 
- - Doxygen
- - Curses or Ncurses
- - GNU make
- - GCC
+ - GNU make or Xcode tools
+ - GCC or clang
+ - curses or ncurses
+ 
+ It will also use if available:
+ 
+  - Doxygen
 
 fish also relies on standard unix tools such as cat, cut, grep, sed,
-whoami, bc and echo. Fish does not yet support cross-compilation,
-separate build directories or any other fancy configure options.
-
+whoami, bc and echo.
 
 Simple install procedure
 ========================
@@ -35,17 +26,44 @@ Always begin by uninstalling any previous fish versions. This is done
 by running the command 'make uninstall' in the source directory of
 your previous fish installation.
 
-Next, if you have downloaded a fresh copy of the git repository of
-fish, you need to run the 'autoconf' command.
+Autotools Build and Install
+========================
 
-Then, use following commands to compile fish:
+    autoconf              # Create configure file
+    ./configure           # Generate Makefile
+    make [gmake on BSD]   # Compile fish
+    sudo make install     # Install fish
 
-   ./configure
-   make                                   # Compile fish
-   make install                           # Install fish
-   echo /usr/local/bin/fish >>/etc/shells # Add fish to list of shells
+configure supports the ---prefix option, for example:
 
-Finally, if you wish to use fish as your default shell, use the
+    ./configure --prefix=$HOME
+
+If fish reports that it could not find curses, try installing a curses development package and build again.
+
+On Debian or Ubuntu you want:
+
+	sudo apt-get install libncurses5-dev libncursesw5-dev
+
+on RedHat, CentOS, or Amazon EC2:
+
+    sudo yum install ncurses-devel
+
+Xcode Development Build
+========================
+
+Build the 'base' target in Xcode
+Run the fish executable, for example, in DerivedData/fish/Build/Products/Debug/base/bin/fish
+
+Xcode Build and Install
+========================
+
+    xcodebuild install
+    sudo ditto /tmp/fish.dst /
+
+Starting fish
+========================
+
+If you wish to use fish as your default shell, use the
 following command:
 
  % chsh -s /usr/local/bin/fish
@@ -58,20 +76,3 @@ To switch your default shell back, you can run:
 
 Substitute /bin/bash with /bin/tcsh or /bin/zsh as appropriate.
 
-Local install procedure
-=======================
-
-If you have downloaded the git repository of fish, you need to run
-autoconf to generate the configure script.
-
-To install fish in your own home directory (typically as non-root),
-type:
-
- % ./configure --prefix=$HOME
- % make					# Compile fish
- % make install			# Install fish
-
-You will not be able to use fish as the default shell unless you also
-add the corresponding line to /etc/shells, which mostly defeats the
-point of a local install. As a workaround, you can add fish as the
-last command of the init files for your regular shell.

@@ -13,6 +13,8 @@ Detailed user documentation is available by running `help` within fish, and also
 
 ## Building
 
+fish is written in a sane subset of C++98, with a few components from C++TR1. It builds successfully with g++ 4.2 or later, and with clang. It also will build as C++11.
+
 fish can be built using autotools or Xcode.
 
 ### Autotools Build
@@ -32,9 +34,35 @@ fish can be built using autotools or Xcode.
     xcodebuild install
     sudo ditto /tmp/fish.dst /
 
+## Help, it didn't build!
+
+If fish reports that it could not find curses, try installing a curses development package and build again.
+
+On Debian or Ubuntu you want:
+
+	sudo apt-get install libncurses5-dev libncursesw5-dev
+
+on RedHat, CentOS, or Amazon EC2:
+
+    sudo yum install ncurses-devel
+
 ## Packages for Linux
 
 Nightly builds for several Linux distros can be downloaded from <http://download.opensuse.org/repositories/home:/siteshwar/>
+
+## Switching to fish
+
+If you wish to use fish as your default shell, use the following command:
+
+	chsh -s /usr/local/bin/fish
+
+chsh will prompt you for your password, and change your default shell.
+
+To switch your default shell back, you can run:
+
+	chsh -s /bin/bash
+
+Substitute /bin/bash with /bin/tcsh or /bin/zsh as appropriate.
 
 ## Contact Us
 

@@ -94,6 +94,7 @@ complete -c go -f -n '__fish_use_subcommand' -a version -d 'print Go version'
 complete -c go -f -n '__fish_seen_subcommand_from version'
 
 # vet
-complete -c vet -n '__fish_use_subcommand' -a vet -d 'vet packages'
+complete -c go -n '__fish_use_subcommand' -a vet -d 'vet packages'
 complete -c go -n '__fish_seen_subcommand_from vet' -s n -d "print the command that would be executed"
 complete -c go -n '__fish_seen_subcommand_from vet' -s x -d "prints commands as they are executed"
+

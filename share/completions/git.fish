@@ -1,11 +1,12 @@
 # fish completion for git
+# Use 'command git' to avoid interactions for aliases from git to (e.g.) hub
 
 function __fish_git_branches
-  git branch --no-color -a ^/dev/null | grep -v ' -> ' | sed -e 's/^..//' -e 's/^remotes\///'
+  command git branch --no-color -a ^/dev/null | grep -v ' -> ' | sed -e 's/^..//' -e 's/^remotes\///'
 end
 
 function __fish_git_tags
-  git tag
+  command git tag
 end
 
 function __fish_git_heads
@@ -14,7 +15,7 @@ function __fish_git_heads
 end
 
 function __fish_git_remotes
-  git remote
+  command git remote
 end
 
 function __fish_git_ranges
@@ -48,7 +49,7 @@ function __fish_git_using_command
     end
 
     # aliased command
-    set -l aliased (git config --get "alias.$cmd[2]" | sed 's/ .*$//')
+    set -l aliased (command git config --get "alias.$cmd[2]" | sed 's/ .*$//')
     if [ $argv[1] = "$aliased" ]
       return 0
     end
@@ -266,4 +267,4 @@ complete -f -c git -n '__fish_git_using_command submodule' -a 'sync' -d 'Sync su
 complete -f -c git -n '__fish_git_needs_command' -a whatchanged -d 'Show logs with difference each commit introduces'
 
 ## Aliases (custom user-defined commands)
-complete -c git -n '__fish_git_needs_command' -a '(git config --get-regexp alias | sed "s/^alias\.\([^ ]*\).*/\1/")' -d 'Alias (user-defined command)'
+complete -c git -n '__fish_git_needs_command' -a '(command git config --get-regexp alias | sed "s/^alias\.\([^ ]*\).*/\1/")' -d 'Alias (user-defined command)'

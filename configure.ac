@@ -220,6 +220,10 @@ if test "$GCC" = yes; then
     fi
   fi
 
+  # fish does not use exceptions
+  # Disabling exceptions saves about 20% (!) of the compiled code size
+  CXXFLAGS="$CXXFLAGS -fno-exceptions"
+
 
   #
   # -Wall is there to keep me on my toes

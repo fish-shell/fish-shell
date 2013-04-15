@@ -117,10 +117,10 @@ bool input_mapping_get(const wcstring &sequence, wcstring &cmd);
 /**
    Return the sequence for the terminfo variable of the specified name.
 
-   If no terminfo variable of the specified name could be found, return 0 and set errno to ENOENT.
-   If the terminfo variable does not have a value, return 0 and set errno to EILSEQ.
+   If no terminfo variable of the specified name could be found, return false and set errno to ENOENT.
+   If the terminfo variable does not have a value, return false and set errno to EILSEQ.
  */
-const wchar_t *input_terminfo_get_sequence(const wchar_t *name);
+bool input_terminfo_get_sequence(const wchar_t *name, wcstring *out_seq);
 
 /** Return the name of the terminfo variable with the specified sequence */
 bool input_terminfo_get_name(const wcstring &seq, wcstring &name);

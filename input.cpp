@@ -241,17 +241,14 @@ static void input_terminfo_init();
    Returns the function description for the given function code.
 */
 
-void input_mapping_add(const wchar_t *sequence,
-                       const wchar_t *command)
+void input_mapping_add(const wchar_t *sequence, const wchar_t *command)
 {
-    size_t i;
     CHECK(sequence,);
     CHECK(command,);
 
     //  debug( 0, L"Add mapping from %ls to %ls", escape(sequence, 1), escape(command, 1 ) );
 
-
-    for (i=0; i<mapping_list.size(); i++)
+    for (size_t i=0; i<mapping_list.size(); i++)
     {
         input_mapping_t &m = mapping_list.at(i);
         if (m.seq == sequence)
@@ -774,12 +771,11 @@ static void input_terminfo_init()
     terminfo_mappings.insert(terminfo_mappings.end(), tinfos, tinfos + count);
 }
 
-const wchar_t *input_terminfo_get_sequence(const wchar_t *name)
+bool input_terminfo_get_sequence(const wchar_t *name, wcstring *out_seq)
 {
     ASSERT_IS_MAIN_THREAD();
 
     const char *res = 0;
-    static wcstring buff;
     int err = ENOENT;
 
     CHECK(name, 0);
@@ -799,11 +795,11 @@ const wchar_t *input_terminfo_get_sequence(const wchar_t *name)
     if (!res)
     {
         errno = err;
-        return 0;
-    }
-
-    buff = format_string(L"%s", res);
-    return buff.c_str();
+        return false;
+    }   
+    
+    *out_seq = format_string(L"%s", res);
+    return true;
 
 }
 

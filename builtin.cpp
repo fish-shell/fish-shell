@@ -471,10 +471,10 @@ static int builtin_bind_add(const wchar_t *seq, const wchar_t *cmd, int terminfo
 
     if (terminfo)
     {
-        const wchar_t *seq2 = input_terminfo_get_sequence(seq);
-        if (seq2)
+        wcstring seq2;
+        if (input_terminfo_get_sequence(seq, &seq2))
         {
-            input_mapping_add(seq2, cmd);
+            input_mapping_add(seq2.c_str(), cmd);
         }
         else
         {

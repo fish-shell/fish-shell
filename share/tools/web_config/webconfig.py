@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # Whether we're Python 2
-import sys
+import sys, os
 IS_PY2 = sys.version_info[0] == 2
 
 if IS_PY2:
@@ -23,9 +23,10 @@ try:
 except ImportError:
     import simplejson as json
 
+FISH_BIN_PATH = False # will be set later
 def run_fish_cmd(text):
     from subprocess import PIPE
-    p = subprocess.Popen(["fish"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    p = subprocess.Popen([FISH_BIN_PATH], stdin=PIPE, stdout=PIPE, stderr=PIPE)
     if IS_PY2:
         out, err = p.communicate(text)
     else:
@@ -573,6 +574,32 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def log_request(self, code='-', size='-'):
         """ Disable request logging """
         pass
+        
+# find fish
+fish_bin_dir = os.environ.get('__fish_bin_dir')
+fish_bin_path = None
+if not fish_bin_dir:
+	print('The __fish_bin_dir environment variable is not set. Looking in $PATH...')
+	# distutils.spawn is terribly broken, because it looks in wd before PATH,
+	# and doesn't actually validate that the file is even executabl
+	for p in os.environ['PATH'].split(os.pathsep):
+		proposed_path = os.path.join(p, 'fish')
+		if os.access(proposed_path, os.X_OK):
+			fish_bin_path = proposed_path
+			break
+	if not fish_bin_path:
+		print("fish could not be found. Is fish installed correctly?")
+		sys.exit(-1)
+	else:
+		print("fish found at '%s'" % fish_bin_path)
+
+else:
+	fish_bin_path = os.path.join(fish_bin_dir, 'fish')
+		
+if not os.access(fish_bin_path, os.X_OK):
+	print("fish could not be executed at path '%s'. Is fish installed correctly?" % fish_bin_path)
+	sys.exit(-1)
+FISH_BIN_PATH = fish_bin_path
 
 # We want to show the demo prompts in the directory from which this was invoked,
 # so get the current working directory
@@ -618,12 +645,16 @@ webbrowser.open(url)
 
 # Select on stdin and httpd
 stdin_no = sys.stdin.fileno()
-while True:
-    ready_read = select.select([sys.stdin.fileno(), httpd.fileno()], [], [])
-    if ready_read[0][0] < 1:
-        print("Shutting down.")
-        # Consume the newline so it doesn't get printed by the caller
-        sys.stdin.readline()
-        break
-    else:
-        httpd.handle_request()
+try:
+	while True:
+		ready_read = select.select([sys.stdin.fileno(), httpd.fileno()], [], [])
+		if ready_read[0][0] < 1:
+			print("Shutting down.")
+			# Consume the newline so it doesn't get printed by the caller
+			sys.stdin.readline()
+			break
+		else:
+			httpd.handle_request()
+except KeyboardInterrupt:
+	print("\nShutting down.")
+

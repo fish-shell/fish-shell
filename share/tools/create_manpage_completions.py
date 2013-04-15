@@ -93,13 +93,28 @@ def fish_escape_single_quote(str):
     str = str.replace("'", "\\'") # Replace one single quote with a backslash-single-quote
     return "'" + str + "'"
 
+# Make a string Unicode by attempting to decode it as latin-1, or UTF8. See #658
+def lossy_unicode(s):
+    # All strings are unicode in Python 3
+    if IS_PY3 or isinstance(s, unicode): return s
+    try:
+        return s.decode('latin-1')
+    except UnicodeEncodeError:
+        pass
+    try:
+        return s.decode('utf-8')
+    except UnicodeEncodeError:
+        pass
+    return s.decode('latin-1', 'ignore')
+    
+
 def output_complete_command(cmdname, args, description, output_list):
     comps = ['complete -c', cmdname]
     comps.extend(args)
     if description:
         comps.append('--description')
         comps.append(description)
-    output_list.append(' '.join(comps))
+    output_list.append(lossy_unicode(' ').join([lossy_unicode(c) for c in comps]))
 
 def built_command(options, description):
 #    print "Options are: ", options

@@ -86,6 +86,17 @@ else
   AC_MSG_RESULT([no])
 fi
 
+#
+# Set up various programs needed for install
+# Note AC_PROG_CXX sets CXXFLAGS if not set, which we want
+# So ensure this happens before we modify CXXFLAGS below
+#
+
+AC_PROG_CXX([g++ c++])
+AC_PROG_CPP
+AC_PROG_INSTALL
+
+echo "CXXFLAGS: $CXXFLAGS"
 
 #
 # Detect directories which may contain additional headers, libraries
@@ -145,15 +156,6 @@ AH_BOTTOM([#if __GNUC__ >= 3
 #define __warn_unused
 #define __sentinel
 #endif])
-
-
-#
-# Set up various programs needed for install
-#
-
-AC_PROG_CXX([g++ c++])
-AC_PROG_CPP
-AC_PROG_INSTALL
 
 
 #

@@ -202,7 +202,7 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
         paths.data = L"" DATADIR "/fish";
         paths.sysconf = L"" SYSCONFDIR "/fish";
         paths.doc = L"" DATADIR "/doc/fish";
-        paths.bin = L"" PREFIX "/bin";
+        paths.bin = L"" BINDIR;
 
         done = true;
     }

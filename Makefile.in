@@ -61,7 +61,7 @@ optbindirs = @optbindirs@
 # Various flags
 #
 
-MACROS = -DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\"
+MACROS = -DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\" -DBINDIR=L\"$(bindir)\"
 CXXFLAGS = @CXXFLAGS@ $(MACROS) $(EXTRA_CXXFLAGS)
 LDFLAGS = @LIBS@ @LDFLAGS@
 LDFLAGS_FISH = ${LDFLAGS} @LIBS_FISH@ @LDFLAGS_FISH@

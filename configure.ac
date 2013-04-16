@@ -172,7 +172,7 @@ AC_ARG_WITH(
 
 AS_IF([test x$local_gettext != xno],
   [ AC_CHECK_PROGS( [found_msgfmt], [msgfmt], [no] )
-    if test x$found_msgfmt!= xno; then
+    if test x$found_msgfmt != xno; then
       AC_DEFINE([USE_GETTEXT],[1],[Perform string translations with gettext])
     elif test "x$local_gettext" != "xcheck" ; then
       AC_MSG_FAILURE([--with-gettext was given, but the msgfmt program could not be found])

@@ -275,6 +275,10 @@ const wcstring &completion_entry_t::get_short_opt_str() const
     return short_opt_str;
 }
 
+completion_t::~completion_t()
+{
+}
+
 /* completion_t functions */
 completion_t::completion_t(const wcstring &comp, const wcstring &desc, int flags_val) : completion(comp), description(desc), flags(flags_val)
 {

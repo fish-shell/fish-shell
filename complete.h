@@ -104,6 +104,9 @@ private:
     completion_t();
 public:
 
+    /* Destructor. Not inlining it saves code size. */
+    ~completion_t();
+
     /**
        The completion string
     */

@@ -27,6 +27,10 @@
 #include <limits.h>
 #include <assert.h>
 
+#if HAVE_GETTEXT
+#include <libintl.h>
+#endif
+
 #if HAVE_NCURSES_H
 #include <ncurses.h>
 #else
@@ -1162,7 +1166,7 @@ char *fish_textdomain(const char * domainname)
 
 char *fish_dcgettext(const char * domainname, const char * msgid, int category)
 {
-    return dcgettext(msgid);
+    return dcgettext(domainname, msgid, category);
 }
 
 #else

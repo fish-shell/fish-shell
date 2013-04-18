@@ -277,7 +277,7 @@ href='commands.html#function'>function</a> builtin.
 
 \subsubsection syntax-function-wrappers Defining wrapper functions
 
-One of the most common used for functions is to slightly alter the
+One of the most common uses for functions is to slightly alter the
 behavior of an already existing command. For example, one might want
 to redefine the \c ls command to display colors. The switch for
 turning on colors on GNU systems is \c '--color=auto'. A wrapper

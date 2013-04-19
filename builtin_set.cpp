@@ -371,7 +371,7 @@ static void print_variables(int include_values, int esc, bool shorten_ok, int sc
 
                 if (shorten)
                 {
-                    stdout_buffer.append(L"\u2026");
+                    stdout_buffer.push_back(ellipsis_char);
                 }
 
             }

@@ -1331,7 +1331,7 @@ void highlight_shell(const wcstring &buff, std::vector<int> &color, size_t pos, 
 
     wchar_t * const subbuff = wcsdup(buff.c_str());
     wchar_t * subpos = subbuff;
-    int done=0;
+    bool done = false;
 
     while (1)
     {
@@ -1342,10 +1342,11 @@ void highlight_shell(const wcstring &buff, std::vector<int> &color, size_t pos, 
             break;
         }
 
+        /* Note: This *end = 0 writes into subbuff! */
         if (!*end)
-            done=1;
+            done = true;
         else
-            *end=0;
+            *end = 0;
 
         //our subcolors start at color + (begin-subbuff)+1
         size_t start = begin - subbuff + 1, len = wcslen(begin + 1);
@@ -1377,10 +1378,12 @@ void highlight_shell(const wcstring &buff, std::vector<int> &color, size_t pos, 
     int last_val=0;
     for (size_t i=0; i < buff.size(); i++)
     {
-        if (color.at(i) >= 0)
-            last_val = color.at(i);
-        else
-            color.at(i) = last_val;
+        int &current_val = color.at(i);
+        if (current_val >= 0) {
+            last_val = current_val;
+        } else {
+            current_val = last_val; //note - this writes into the vector
+        }
     }
 
     /*

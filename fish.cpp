@@ -554,5 +554,6 @@ int main(int argc, char **argv)
     if (g_log_forks)
         printf("%d: g_fork_count: %d\n", __LINE__, g_fork_count);
 
-    return res?STATUS_UNKNOWN_COMMAND:proc_get_last_status();
+    exit_without_destructors(res ? STATUS_UNKNOWN_COMMAND : proc_get_last_status());
+    return EXIT_FAILURE; //above line should always exit
 }

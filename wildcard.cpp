@@ -143,15 +143,13 @@ int wildcard_has(const wchar_t *str, int internal)
    \param wc The wildcard.
    \param is_first Whether files beginning with dots should not be matched against wildcards.
 */
-static bool wildcard_match2(const wchar_t *str,
-                            const wchar_t *wc,
-                            bool is_first)
+static bool wildcard_match_internal(const wchar_t *str, const wchar_t *wc, bool leading_dots_fail_to_match, bool is_first)
 {
     if (*str == 0 && *wc==0)
         return true;
 
-    /* Hackish fix for https://github.com/fish-shell/fish-shell/issues/270. Prevent wildcards from matching . or .., but we must still allow literal matches. */
-    if (is_first && contains(str, L".", L".."))
+    /* Hackish fix for https://github.com/fish-shell/fish-shell/issues/270 . Prevent wildcards from matching . or .., but we must still allow literal matches. */
+    if (leading_dots_fail_to_match && is_first && contains(str, L".", L".."))
     {
         /* The string is '.' or '..'. Return true if the wildcard exactly matches. */
         return ! wcscmp(str, wc);
@@ -160,7 +158,7 @@ static bool wildcard_match2(const wchar_t *str,
     if (*wc == ANY_STRING || *wc == ANY_STRING_RECURSIVE)
     {
         /* Ignore hidden file */
-        if (is_first && *str == L'.')
+        if (leading_dots_fail_to_match && is_first && *str == L'.')
         {
             return false;
         }
@@ -168,7 +166,7 @@ static bool wildcard_match2(const wchar_t *str,
         /* Try all submatches */
         do
         {
-            if (wildcard_match2(str, wc+1, false))
+            if (wildcard_match_internal(str, wc+1, leading_dots_fail_to_match, false))
                 return true;
         }
         while (*(str++) != 0);
@@ -190,11 +188,11 @@ static bool wildcard_match2(const wchar_t *str,
             return false;
         }
 
-        return wildcard_match2(str+1, wc+1, false);
+        return wildcard_match_internal(str+1, wc+1, leading_dots_fail_to_match, false);
     }
 
     if (*wc == *str)
-        return wildcard_match2(str+1, wc+1, false);
+        return wildcard_match_internal(str+1, wc+1, leading_dots_fail_to_match, false);
 
     return false;
 }
@@ -310,9 +308,9 @@ bool wildcard_complete(const wcstring &str,
 }
 
 
-bool wildcard_match(const wcstring &str, const wcstring &wc)
+bool wildcard_match(const wcstring &str, const wcstring &wc, bool leading_dots_fail_to_match)
 {
-    return wildcard_match2(str.c_str(), wc.c_str(), true);
+    return wildcard_match_internal(str.c_str(), wc.c_str(), leading_dots_fail_to_match, true /* first */);
 }
 
 /**
@@ -821,20 +819,19 @@ static int wildcard_expand_internal(const wchar_t *wc,
             /*
               This is the last wildcard segment, and it is not empty. Match files/directories.
             */
-            wcstring next;
-            while (wreaddir(dir, next))
+            wcstring name_str;
+            while (wreaddir(dir, name_str))
             {
-                const wchar_t * const name = next.c_str();
                 if (flags & ACCEPT_INCOMPLETE)
                 {
 
-                    const wcstring long_name = make_path(base_dir, next);
+                    const wcstring long_name = make_path(base_dir, name_str);
 
                     /*
                       Test for matches before stating file, so as to minimize the number of calls to the much slower stat function
                     */
                     std::vector<completion_t> test;
-                    if (wildcard_complete(name,
+                    if (wildcard_complete(name_str,
                                           wc,
                                           L"",
                                           0,
@@ -845,7 +842,7 @@ static int wildcard_expand_internal(const wchar_t *wc,
                         {
                             wildcard_completion_allocate(out,
                                                          long_name,
-                                                         name,
+                                                         name_str,
                                                          wc,
                                                          flags);
 
@@ -854,9 +851,9 @@ static int wildcard_expand_internal(const wchar_t *wc,
                 }
                 else
                 {
-                    if (wildcard_match2(name, wc, true))
+                    if (wildcard_match(name_str, wc, true /* skip files with leading dots */))
                     {
-                        const wcstring long_name = make_path(base_dir, next);
+                        const wcstring long_name = make_path(base_dir, name_str);
                         int skip = 0;
 
                         if (is_recursive)
@@ -940,16 +937,14 @@ static int wildcard_expand_internal(const wchar_t *wc,
 
         wcscpy(new_dir, base_dir);
 
-        wcstring next;
-        while (wreaddir(dir, next))
+        wcstring name_str;
+        while (wreaddir(dir, name_str))
         {
-            const wchar_t *name = next.c_str();
-
             /*
               Test if the file/directory name matches the whole
               wildcard element, i.e. regular matching.
             */
-            int whole_match = wildcard_match2(name, wc_str, true);
+            int whole_match = wildcard_match(name_str, wc_str, true /* ignore leading dots */);
             int partial_match = 0;
 
             /*
@@ -962,7 +957,7 @@ static int wildcard_expand_internal(const wchar_t *wc,
             {
                 const wchar_t *end = wcschr(wc, ANY_STRING_RECURSIVE);
                 wchar_t *wc_sub = wcsndup(wc, end-wc+1);
-                partial_match = wildcard_match2(name, wc_sub, true);
+                partial_match = wildcard_match(name_str, wc_sub, true /* ignore leading dots */);
                 free(wc_sub);
             }
 
@@ -973,7 +968,7 @@ static int wildcard_expand_internal(const wchar_t *wc,
                 int stat_res;
                 int new_res;
 
-                wcscpy(&new_dir[base_len], name);
+                wcscpy(&new_dir[base_len], name_str.c_str());
                 dir_str = wcs2str(new_dir);
 
                 if (dir_str)

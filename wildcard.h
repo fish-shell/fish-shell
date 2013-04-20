@@ -73,9 +73,10 @@ int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_
 
    \param str The string to test
    \param wc The wildcard to test against
+   \param leading_dots_fail_to_match if set, strings with leading dots are assumed to be hidden files and are not matched
    \return true if the wildcard matched
 */
-bool wildcard_match(const wcstring &str, const wcstring &wc);
+bool wildcard_match(const wcstring &str, const wcstring &wc, bool leading_dots_fail_to_match = false);
 
 
 /**

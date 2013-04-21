@@ -1698,12 +1698,6 @@ void history_tests_t::test_history_speed(void)
 */
 int main(int argc, char **argv)
 {
-    std::string tmp = "sldfjsdlkfjsdlkfjlf";
-    for (size_t i=0; i < 1000000; i++) {
-        str2wcstring(tmp);
-    }
-    exit(0);
-
     setlocale(LC_ALL, "");
     srand(time(0));
     configure_thread_assertions_for_testing();

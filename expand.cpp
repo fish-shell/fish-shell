@@ -1613,17 +1613,6 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
     size_t i;
     int res = EXPAND_OK;
 
-    /* Make the empty string handling behavior explicit. It's a little weird, but expand_one depends on this. */
-    if (input.empty())
-    {
-        /* Return OK. But only append a completion if ACCEPT_INCOMPLETE is not set. */
-        if (! (flags & ACCEPT_INCOMPLETE))
-        {
-            output.push_back(completion_t(input));
-        }
-        return EXPAND_OK;
-    }
-
     if ((!(flags & ACCEPT_INCOMPLETE)) && expand_is_clean(input.c_str()))
     {
         output.push_back(completion_t(input));

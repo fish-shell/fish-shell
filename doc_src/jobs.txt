@@ -1,6 +1,6 @@
 \section jobs jobs - print currently running jobs
 
-\subsection jobs-synopsis
+\subsection jobs-synopsis Synopsis
 <code>jobs [OPTIONS] [PID]</code>
 
 \subsection jobs-description Description

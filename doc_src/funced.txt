@@ -5,10 +5,16 @@
 
 \subsection funced-description Description
 
-Use the funced command to edit the definition of a
-function. If there is no function with the name specified, a skeleton function is inserted, if a function exist, the definition will be shown in your editor or on the command line.
+Use the funced command to edit the definition of a function. If there is no
+function with the name specified, a skeleton function is inserted. If the
+function exists, its definition will be shown in your editor or on the command
+line.
 
-By default, funced edits functions using the text editor in your $EDITOR variable, if set; otherwise it uses the built-in editor.
+By default, funced edits functions using the text editor in your $EDITOR
+variable, if set; otherwise it uses the built-in editor.
 
-- <code>-e command</code> or <code>--editor command</code> Open the function body inside the text editor given by the command (for example, "vi"). The command 'fish' will use the built-in editor.
-- <code>-i</code> or <code>--interactive</code> Open function body in built-in editor.
+- <code>-e command</code> or <code>--editor command</code> Open the function
+  body inside the text editor given by the command (for example, "vi"). The
+  command 'fish' will use the built-in editor.
+- <code>-i</code> or <code>--interactive</code> Open function body in the
+  built-in editor.

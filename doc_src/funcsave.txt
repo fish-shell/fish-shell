@@ -1,4 +1,4 @@
-\section funcsave funcsave - save the definition of a function to the users autoload directory
+\section funcsave funcsave - save the definition of a function to the user's autoload directory
 
 \subsection funcsave-synopsis Synopsis
  <tt>funcsave FUNCTION_NAME</tt>

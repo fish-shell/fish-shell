@@ -94,7 +94,7 @@ symbol. The only backslash escapes accepted within double quotes are
 \\", which escapes a double quote, \\$, which escapes a dollar
 character, \\ followed by a newline, which deletes the backslash
 and the newline, and lastly \\\\, which escapes the backslash symbol.
-Single quotes have no special meaning withing double quotes and vice versa.
+Single quotes have no special meaning within double quotes and vice versa.
 
 Example:
 
@@ -226,7 +226,7 @@ using the less pager.
 When you start a job in \c fish, \c fish itself will pause, and give
 control of the terminal to the program just started. Sometimes, you
 want to continue using the commandline, and have the job run in the
-background. To create a background job, append a \& (ampersand) to
+background. To create a background job, append an \& (ampersand) to
 your command. This will tell fish to run the job in the
 background. Background jobs are very useful when running programs that
 have a graphical user interface.
@@ -239,8 +239,8 @@ will start the emacs text editor in the background.
 
 \subsection syntax-job-control Job control
 
-Most programs allow you to suspend the programs execution and return
-control to \c fish by Pressing ^Z (Press and hold the Control key and
+Most programs allow you to suspend the program's execution and return
+control to \c fish by pressing ^Z (press and hold the Control key and
 press 'z'). Once back at the \c fish commandline, you can start other
 programs and do anything you want. If you then want you can go back to
 the suspended command by using the <a href="commands.html#fg">fg</a>

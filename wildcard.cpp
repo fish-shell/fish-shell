@@ -697,24 +697,18 @@ static void insert_completion_if_missing(const wcstring &str, std::vector<comple
    which would be too expensive to construct for all substrings.
  */
 static int wildcard_expand_internal(const wchar_t *wc,
-                                    const wchar_t *base_dir,
+                                    const wchar_t * const base_dir,
                                     expand_flags_t flags,
                                     std::vector<completion_t> &out,
                                     std::set<wcstring> &completion_set,
                                     std::set<file_id_t> &visited_files)
 {
 
-    /* Points to the end of the current wildcard segment */
-    const wchar_t *wc_end;
-
     /* Variables for traversing a directory */
     DIR *dir;
 
     /* The result returned */
     int res = 0;
-
-    /* Length of the directory to search in */
-    size_t base_len;
 
     /* Variables for testing for presense of recursive wildcards */
     const wchar_t *wc_recursive;
@@ -735,6 +729,8 @@ static int wildcard_expand_internal(const wchar_t *wc,
         debug(2, L"Got null string on line %d of file %s", __LINE__, __FILE__);
         return 0;
     }
+    
+    const size_t base_dir_len = wcslen(base_dir);
 
     if (flags & ACCEPT_INCOMPLETE)
     {
@@ -763,8 +759,8 @@ static int wildcard_expand_internal(const wchar_t *wc,
         return 0;
     }
 
-    wc_end = wcschr(wc,L'/');
-    base_len = wcslen(base_dir);
+    /* Points to the end of the current wildcard segment */
+    const wchar_t * const wc_end = wcschr(wc,L'/');
 
     /*
       Test for recursive match string in current segment
@@ -888,55 +884,20 @@ static int wildcard_expand_internal(const wchar_t *wc,
         */
 
         /*
-          wc_str is the part of the wildcarded string from the
-          beginning to the first slash
-        */
-        wchar_t *wc_str;
-
-        /*
-          new_dir is a scratch area containing the full path to a
-          file/directory we are iterating over
-        */
-        wchar_t *new_dir;
-
-        /*
-          The maximum length of a file element
-        */
-        long ln=MAX_FILE_LENGTH;
-        char * narrow_dir_string = wcs2str(dir_string);
-
-        /*
           In recursive mode, we look through the directory twice. If
           so, this rewind is needed.
         */
         rewinddir(dir);
 
-        if (narrow_dir_string)
-        {
-            /*
-               Find out how long the filename can be in a worst case
-               scenario
-            */
-            ln = pathconf(narrow_dir_string, _PC_NAME_MAX);
+        /*
+          wc_str is the part of the wildcarded string from the
+          beginning to the first slash
+        */
+        const wcstring wc_str = wcstring(wc, wc_end ? wc_end - wc : wcslen(wc));
 
-            /*
-              If not specified, use som large number as fallback
-            */
-            if (ln < 0)
-                ln = MAX_FILE_LENGTH;
-            free(narrow_dir_string);
-        }
-        new_dir= (wchar_t *)malloc(sizeof(wchar_t)*(base_len+ln+2));
-
-        wc_str = wc_end?wcsndup(wc, wc_end-wc):wcsdup(wc);
-
-        if ((!new_dir) || (!wc_str))
-        {
-            DIE_MEM();
-        }
-
-        wcscpy(new_dir, base_dir);
-
+        /* new_dir is a scratch area containing the full path to a file/directory we are iterating over */
+        wcstring new_dir = base_dir;
+        
         wcstring name_str;
         while (wreaddir(dir, name_str))
         {
@@ -964,93 +925,83 @@ static int wildcard_expand_internal(const wchar_t *wc,
             if (whole_match || partial_match)
             {
                 struct stat buf;
-                char *dir_str;
-                int stat_res;
                 int new_res;
+                
+                // new_dir is base_dir + some other path components
+                // Replace everything after base_dir with the new path component
+                new_dir.replace(base_dir_len, wcstring::npos, name_str);
+                
+                int stat_res = wstat(new_dir, &buf);
 
-                wcscpy(&new_dir[base_len], name_str.c_str());
-                dir_str = wcs2str(new_dir);
-
-                if (dir_str)
+                if (!stat_res)
                 {
-                    stat_res = stat(dir_str, &buf);
-                    free(dir_str);
-
-                    if (!stat_res)
+                    // Insert a "file ID" into visited_files
+                    // If the insertion fails, we've already visited this file (i.e. a symlink loop)
+                    // If we're not recursive, insert anyways (in case we loop back around in a future recursive segment), but continue on; the idea being that literal path components should still work
+                    const file_id_t file_id(buf.st_dev, buf.st_ino);
+                    if (S_ISDIR(buf.st_mode) && (visited_files.insert(file_id).second || ! is_recursive))
                     {
-                        // Insert a "file ID" into visited_files
-                        // If the insertion fails, we've already visited this file (i.e. a symlink loop)
-                        // If we're not recursive, insert anyways (in case we loop back around in a future recursive segment), but continue on; the idea being that literal path components should still work
-                        const file_id_t file_id(buf.st_dev, buf.st_ino);
-                        if (S_ISDIR(buf.st_mode) && (visited_files.insert(file_id).second || ! is_recursive))
+                        new_dir.push_back(L'/');
+                        
+                        /*
+                          Regular matching
+                        */
+                        if (whole_match)
                         {
-                            size_t new_len = wcslen(new_dir);
-                            new_dir[new_len] = L'/';
-                            new_dir[new_len+1] = L'\0';
-
-                            /*
-                              Regular matching
-                            */
-                            if (whole_match)
+                            const wchar_t *new_wc = L"";
+                            if (wc_end)
                             {
-                                const wchar_t *new_wc = L"";
-                                if (wc_end)
+                                new_wc=wc_end+1;
+                                /*
+                                  Accept multiple '/' as a single direcotry separator
+                                */
+                                while (*new_wc==L'/')
                                 {
-                                    new_wc=wc_end+1;
-                                    /*
-                                      Accept multiple '/' as a single direcotry separator
-                                    */
-                                    while (*new_wc==L'/')
-                                    {
-                                        new_wc++;
-                                    }
+                                    new_wc++;
                                 }
-
-                                new_res = wildcard_expand_internal(new_wc,
-                                                                   new_dir,
-                                                                   flags,
-                                                                   out,
-                                                                   completion_set,
-                                                                   visited_files);
-
-                                if (new_res == -1)
-                                {
-                                    res = -1;
-                                    break;
-                                }
-                                res |= new_res;
-
                             }
 
-                            /*
-                              Recursive matching
-                            */
-                            if (partial_match)
+                            new_res = wildcard_expand_internal(new_wc,
+                                                               new_dir.c_str(),
+                                                               flags,
+                                                               out,
+                                                               completion_set,
+                                                               visited_files);
+
+                            if (new_res == -1)
                             {
-
-                                new_res = wildcard_expand_internal(wcschr(wc, ANY_STRING_RECURSIVE),
-                                                                   new_dir,
-                                                                   flags | WILDCARD_RECURSIVE,
-                                                                   out,
-                                                                   completion_set,
-                                                                   visited_files);
-
-                                if (new_res == -1)
-                                {
-                                    res = -1;
-                                    break;
-                                }
-                                res |= new_res;
-
+                                res = -1;
+                                break;
                             }
+                            res |= new_res;
+
+                        }
+
+                        /*
+                          Recursive matching
+                        */
+                        if (partial_match)
+                        {
+
+                            new_res = wildcard_expand_internal(wcschr(wc, ANY_STRING_RECURSIVE),
+                                                               new_dir.c_str(),
+                                                               flags | WILDCARD_RECURSIVE,
+                                                               out,
+                                                               completion_set,
+                                                               visited_files);
+
+                            if (new_res == -1)
+                            {
+                                res = -1;
+                                break;
+                            }
+                            res |= new_res;
+
                         }
                     }
                 }
             }
         }
-
-        free(wc_str);
-        free(new_dir);
     }
     closedir(dir);
 

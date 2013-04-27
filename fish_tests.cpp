@@ -1668,13 +1668,13 @@ void history_tests_t::test_history_formats(void)
 
 void history_tests_t::test_history_speed(void)
 {
-    say(L"Testing history speed");
+    say(L"Testing history speed (pid is %d)", getpid());
     history_t *hist = new history_t(L"speed_test");
     wcstring item = L"History Speed Test - X";
 
     /* Test for 10 seconds */
     double start = timef();
-    double end = start + 4;
+    double end = start + 10;
     double stop = 0;
     size_t count = 0;
     for (;;)
@@ -1715,7 +1715,6 @@ int main(int argc, char **argv)
     reader_init();
     env_init();
     
-
     test_format();
     test_escape();
     test_convert();

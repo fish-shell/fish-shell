@@ -617,7 +617,7 @@ install-force: all install-translations
 	@echo To run fish, type \'fish\' in your terminal.
 	@echo
 	@echo To use fish as your login shell:
-	@echo \* add the line \'$(DESTDIR)$(bindir)/fish\' to the file \'/etc/shells\'.
+	@grep -q -- "$(DESTDIR)$(bindir)/fish" /etc/shells || echo \* add the line \'$(DESTDIR)$(bindir)/fish\' to the file \'/etc/shells\'.
 	@echo \* use the command \'chsh -s $(DESTDIR)$(bindir)/fish\'.
 	@echo
 	@echo To set your colors, run \'fish_config\'

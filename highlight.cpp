@@ -1320,14 +1320,12 @@ void highlight_shell(const wcstring &buff, std::vector<int> &color, size_t pos, 
     std::fill(color.begin(), color.end(), -1);
 
     /* Do something sucky and get the current working directory on this background thread. This should really be passed in. Note that we also need this as a vector (of one directory). */
-    const wcstring working_directory = get_working_directory();
+    const wcstring working_directory = env_get_pwd_slash();
 
     /* Tokenize the string */
     tokenize(buff.c_str(), color, pos, error, working_directory, vars);
 
-    /*
-      Locate and syntax highlight cmdsubsts recursively
-    */
+    /* Locate and syntax highlight cmdsubsts recursively */
 
     wchar_t * const subbuff = wcsdup(buff.c_str());
     wchar_t * subpos = subbuff;

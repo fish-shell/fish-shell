@@ -446,18 +446,3 @@ bool paths_are_same_file(const wcstring &path1, const wcstring &path2)
         return false;
     }
 }
-
-wcstring get_working_directory(void)
-{
-    wcstring wd = L"./";
-    wchar_t dir_path[4096];
-    const wchar_t *cwd = wgetcwd(dir_path, 4096);
-    if (cwd)
-    {
-        wd = cwd;
-        /* Make sure the working directory ends with a slash */
-        if (! wd.empty() && wd.at(wd.size() - 1) != L'/')
-            wd.push_back(L'/');
-    }
-    return wd;
-}

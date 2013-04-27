@@ -213,13 +213,11 @@ const char * const * env_export_arr(bool recalc);
 */
 wcstring_list_t env_get_names(int flags);
 
-
-
-/**
-   Update the PWD variable
-   directory
-*/
+/** Update the PWD variable directory */
 int env_set_pwd();
+
+/* Returns the PWD with a terminating slash */
+wcstring env_get_pwd_slash();
 
 class env_vars_snapshot_t
 {

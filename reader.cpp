@@ -1275,7 +1275,7 @@ struct autosuggestion_context_t
         cursor_pos(pos),
         searcher(*history, term, HISTORY_SEARCH_TYPE_PREFIX),
         detector(history, term),
-        working_directory(get_working_directory()),
+        working_directory(env_get_pwd_slash()),
         vars(env_vars_snapshot_t::highlighting_keys),
         generation_count(s_generation_count),
         has_tried_reloading(false)

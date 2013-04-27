@@ -78,7 +78,4 @@ bool path_is_valid(const wcstring &path, const wcstring &working_directory);
 /** Returns whether the two paths refer to the same file */
 bool paths_are_same_file(const wcstring &path1, const wcstring &path2);
 
-/* Returns the current working directory as returned by wgetcwd */
-wcstring get_working_directory(void);
-
 #endif

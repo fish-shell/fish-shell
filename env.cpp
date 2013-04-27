@@ -507,6 +507,20 @@ int env_set_pwd()
     return 1;
 }
 
+wcstring env_get_pwd_slash(void)
+{
+    env_var_t pwd = env_get_string(L"PWD");
+    if (pwd.missing_or_empty())
+    {
+        return L"";
+    }
+    if (! string_suffixes_string(L"/", pwd))
+    {
+        pwd.push_back(L'/');
+    }
+    return pwd;
+}
+
 /**
    Set up default values for various variables if not defined.
  */

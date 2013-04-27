@@ -1639,7 +1639,7 @@ file_detection_context_t::file_detection_context_t(history_t *hist, const wcstri
     history(hist),
     command(cmd),
     when(time(NULL)),
-    working_directory(get_working_directory())
+    working_directory(env_get_pwd_slash())
 {
 }
 

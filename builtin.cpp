@@ -2904,28 +2904,17 @@ static int builtin_contains(parser_t &parser, wchar_t ** argv)
 {
     int argc;
     argc = builtin_count_args(argv);
-    int i;
     wchar_t *needle;
-    int index=0;
+    bool should_output_index = false;
 
     woptind=0;
 
-    const struct woption
-            long_options[] =
+    const struct woption long_options[] =
     {
-        {
-            L"help", no_argument, 0, 'h'
-        }
-        ,
-        {
-            L"index", no_argument, 0, 'i'
-        }
-        ,
-        {
-            0, 0, 0, 0
-        }
-    }
-    ;
+        { L"help", no_argument, 0, 'h' } ,
+        { L"index", no_argument, 0, 'i' },
+        { 0, 0, 0, 0 }
+    };
 
     while (1)
     {
@@ -2967,13 +2956,11 @@ static int builtin_contains(parser_t &parser, wchar_t ** argv)
                 return STATUS_BUILTIN_ERROR;
 
             case 'i':
-                index=1;
+                should_output_index = true;
                 break;
         }
 
     }
-
-
 
     needle = argv[woptind];
     if (!needle)
@@ -2982,12 +2969,12 @@ static int builtin_contains(parser_t &parser, wchar_t ** argv)
     }
 
 
-    for (i=woptind+1; i<argc; i++)
+    for (int i=woptind+1; i<argc; i++)
     {
 
         if (!wcscmp(needle, argv[i]))
         {
-            if (index) append_format(stdout_buffer, L"%d\n", i-woptind);
+            if (should_output_index) append_format(stdout_buffer, L"%d\n", i-woptind);
             return 0;
         }
     }

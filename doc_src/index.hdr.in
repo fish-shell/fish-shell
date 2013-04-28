@@ -242,8 +242,8 @@ will start the emacs text editor in the background.
 Most programs allow you to suspend the programs execution and return
 control to \c fish by Pressing ^Z (Press and hold the Control key and
 press 'z'). Once back at the \c fish commandline, you can start other
-programs and do anything you want. If you then want to go back to the
-suspended command by using the <a href="commands.html#fg">fg</a>
+programs and do anything you want. If you then want you can go back to
+the suspended command by using the <a href="commands.html#fg">fg</a>
 command.
 
 If you instead want to put a suspended job into the background, use

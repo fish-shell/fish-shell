@@ -18,8 +18,8 @@ displayed, but if a help option is contained inside of a variable or
 is the result of expansion, it will simply be counted like any other
 argument.
 
-Count exits with a non-zero exit status if no arguments where passed
-to it, with zero otherwise.
+Count exits with a non-zero exit status if no arguments were passed
+to it, and with zero if at least one argument was passed.
 
 \subsection count-example Example
 

@@ -4,6 +4,9 @@
  <tt>status [OPTION]</tt>
 
 \subsection status-description Description
+With no arguments, <tt>status</tt> displays a summary of the current login and job control status of the shell.
+
+The following arguments are available:
 - <tt>-c</tt> or <tt>--is-command-substitution</tt> returns 0 if fish is currently executing a command substitution
 - <tt>-b</tt> or <tt>--is-block</tt> returns 0 if fish is currently executing a block of code
 - <tt>-i</tt> or <tt>--is-interactive</tt> returns 0 if fish is interactive, i.e.connected to a keyboard

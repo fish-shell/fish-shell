@@ -48,7 +48,7 @@ Every program on your computer can be used as a command in \c fish. If
 the program file is located in one of the directories in the <a
 href="#variables-special">PATH</a>, it is sufficient to type the name
 of the program to use it. Otherwise the whole filename, including the
-directory (like \c /home/me/code/checkers/checkers or \c ../checkers)
+directory (like \c /home/me/code/checkers/checkers or <code>../checkers</code>)
 has to be used.
 
 Here is a list of some useful commands:
@@ -111,35 +111,35 @@ would remove the two files 'cumbersome' and 'filename.txt'.
 Some characters can not be written directly on the command line. For
 these characters, so called escape sequences are provided. These are:
 
-- <code>'\\a'</code>, escapes the alert character
-- <code>'\\b'</code>, escapes the backspace character
-- <code>'\\e'</code>, escapes the escape character
-- <code>'\\f'</code>, escapes the form feed character
-- <code>'\\n'</code>, escapes a newline character
-- <code>'\\r'</code>, escapes the carriage return character
-- <code>'\\t'</code>, escapes the tab character
-- <code>'\\v'</code>, escapes the vertical tab character
-- <code>'\\ '</code>, escapes the space character
-- <code>'\\$'</code>, escapes the dollar character
-- <code>'\\\\'</code>, escapes the backslash character
-- <code>'\\*'</code>, escapes the star character
-- <code>'\\?'</code>, escapes the question mark character
-- <code>'\\~'</code>, escapes the tilde character
-- <code>'\\%%'</code>, escapes the percent character
-- <code>'\\#'</code>, escapes the hash character
-- <code>'\\('</code>, escapes the left parenthesis character
-- <code>'\\)'</code>, escapes the right parenthesis character
-- <code>'\\{'</code>, escapes the left curly bracket character
-- <code>'\\}'</code>, escapes the right curly bracket character
-- <code>'\\['</code>, escapes the left bracket character
-- <code>'\\]'</code>, escapes the right bracket character
-- <code>'\\\<'</code>, escapes the less than character
-- <code>'\\\>'</code>, escapes the more than character
-- <code>'\\^'</code>, escapes the circumflex character
-- <code>'\\&'</code>, escapes the ampersand character
-- <code>'\\;'</code>, escapes the semicolon character
-- <code>'\\"'</code>, escapes the quote character
-- <code>'\\''</code>, escapes the apostrophe character
+- <code>'\\a'</code> escapes the alert character
+- <code>'\\b'</code> escapes the backspace character
+- <code>'\\e'</code> escapes the escape character
+- <code>'\\f'</code> escapes the form feed character
+- <code>'\\n'</code> escapes a newline character
+- <code>'\\r'</code> escapes the carriage return character
+- <code>'\\t'</code> escapes the tab character
+- <code>'\\v'</code> escapes the vertical tab character
+- <code>'\\ '</code> escapes the space character
+- <code>'\\$'</code> escapes the dollar character
+- <code>'\\\\'</code> escapes the backslash character
+- <code>'\\*'</code> escapes the star character
+- <code>'\\?'</code> escapes the question mark character
+- <code>'\\~'</code> escapes the tilde character
+- <code>'\\%%'</code> escapes the percent character
+- <code>'\\#'</code> escapes the hash character
+- <code>'\\('</code> escapes the left parenthesis character
+- <code>'\\)'</code> escapes the right parenthesis character
+- <code>'\\{'</code> escapes the left curly bracket character
+- <code>'\\}'</code> escapes the right curly bracket character
+- <code>'\\['</code> escapes the left bracket character
+- <code>'\\]'</code> escapes the right bracket character
+- <code>'\\\<'</code> escapes the less than character
+- <code>'\\\>'</code> escapes the more than character
+- <code>'\\^'</code> escapes the circumflex character
+- <code>'\\&'</code> escapes the ampersand character
+- <code>'\\;'</code> escapes the semicolon character
+- <code>'\\"'</code> escapes the quote character
+- <code>'\\''</code> escapes the apostrophe character
 - <code>'\\x<i>xx</i>'</code>, where <code><i>xx</i></code> is a hexadecimal number, escapes the ascii character with the specified value. For example, \\x9 is the tab character.
 - <code>'\\X<i>xx</i>'</code>, where <code><i>xx</i></code> is a hexadecimal number, escapes a byte of data with the specified value. If you are using a mutibyte encoding, this can be used to enter invalid strings. Only use this if you know what you are doing.
 - <code>'\\<i>ooo</i>'</code>, where <code><i>ooo</i></code> is an octal number, escapes the ascii character with the specified value. For example, \\011 is the tab character.
@@ -266,7 +266,7 @@ function ll
 end
 </pre>
 
-The first line tells fish that a function by the name of ll is to be
+The first line tells fish that a function by the name of \c ll is to be
 defined. To use it, simply write <code>ll</code> on the
 commandline. The second line tells fish that the command <code>ls -l
 $argv</code> should be called when ll is invoked. $argv is an array
@@ -304,13 +304,13 @@ definition is changed, all running shells will automatically reload
 the altered version, startup time and memory usage is improved, etc.
 
 Fish automatically searches through any directories in the array
-variable \$fish_function_path, and any functions defined are
+variable \c $fish_function_path, and any functions defined are
 automatically loaded when needed. A function definition file must have
 a filename consisting of the name of the function plus the suffix
 '.fish'.
 
-The default value for \$fish_function_path is \c ~/.config/fish/functions
-\c /etc/fish/functions \c /usr/share/fish/functions. The exact path
+The default value for \c $fish_function_path is <code>~/.config/fish/functions
+/etc/fish/functions /usr/share/fish/functions</code>. The exact path
 to the last two of these may be slightly different depending on what
 install path prefix was chosen at configuration time. The rationale
 behind having three different directories is that the first one is for
@@ -360,7 +360,7 @@ This is a short explanation of some of the commonly used words in fish.
 \section help Help
 
 \c fish has an extensive help system. Use the <a
-href="commands.html#help"><code>help</code></a> command to obtain help on
+href="commands.html#help">help</a> command to obtain help on
 a specific subject or command. For instance, writing <code>help
 syntax</code> displays the <a href="#syntax">syntax section</a> of this
 documentation.
@@ -397,14 +397,14 @@ These are the general purpose tab completions that \c fish provides:
 of these completions are simple options like the \c -l option for \c
 ls, but some are more advanced. The latter include:
 
-- The programs 'man' and 'whatis' show all installed
+- The programs \c man and \c whatis show all installed
 manual pages as completions.
-- The 'make' program uses all targets in the Makefile in
+- The \c make program uses all targets in the Makefile in
 the current directory as completions.
-- The 'mount' command uses all mount points specified in fstab as completions.
-- The 'ssh' command uses all hosts that are stored
-in the known_hosts file as completions. (see the ssh documentation for more information)
-- The 'su' command uses all users on the system as completions.
+- The \c mount command uses all mount points specified in fstab as completions.
+- The \c ssh command uses all hosts that are stored
+in the known_hosts file as completions. (See the ssh documentation for more information)
+- The \c su command uses all users on the system as completions.
 - The \c apt-get, \c rpm and \c yum commands use all installed packages as completions.
 
 \subsection completion-own Writing your own completions
@@ -441,7 +441,7 @@ href="commands.html#complete">complete</a> builtin, or write 'complete
 --help' inside the \c fish shell.
 
 For examples of how to write your own complex completions, study the
-completions in /usr/share/fish/completions. (The exact path depends on
+completions in \c /usr/share/fish/completions. (The exact path depends on
 your chosen installation prefix and may be slightly different)
 
 \subsection completion-func Useful functions for writing completions
@@ -508,12 +508,12 @@ Debian, rpm and Gentoo packages.
 Completions can be defined on the commandline or in a configuration
 file, but they can also be automatically loaded. Fish automatically
 searches through any directories in the array variable
-\$fish_complete_path, and any completions defined are automatically
+\c $fish_complete_path, and any completions defined are automatically
 loaded when needed. A completion file must have a filename consisting
 of the name of the command to complete and the suffix '.fish'.
 
-The default value for \$fish_complete_path is ~/.config/fish/completions,
-/etc/fish/completions and /usr/share/fish/completions. The exact
+The default value for \c $fish_complete_path is <code>~/.config/fish/completions
+/etc/fish/completions /usr/share/fish/completions</code>. The exact
 path to the last two of these may be slightly different depending on
 what install path prefix was chosen at configuration time. If a
 suitable file is found in one of these directories, it will be
@@ -670,20 +670,20 @@ end
 
 The above code demonstrates how to use multiple '$' symbols to expand
 the value of a variable as a variable name. One can think of
-the $-symbol as a variable dereference operator. When using this
+the $ symbol as a variable dereference operator. When using this
 feature together with array brackets, the brackets will always match
-the innermost $ dereference. Thus, $$foo[5] will always mean the fifth
-element of the foo variable should be dereferenced and never that the fifth
-element of the doubly dereferenced variable foo. The latter can
-instead be expressed as $$foo[1][5].
+the innermost $ dereference. Thus, <code>$$foo[5]</code> will always mean the fifth
+element of the \c foo variable should be dereferenced, not the fifth
+element of the doubly dereferenced variable \c foo. The latter can
+instead be expressed as <code>$$foo[1][5]</code>.
 
 \subsection expand-index-range Index range expansion
 
 Both command substitution and environment variables support accessing only 
 specific items by providing a set of indices in square brackets. It's 
-often needed to access a sequence of elements. To do this, one can use
-range operator '..' for this. A range 'a..b', where range limits 'a' and 'b' 
-are integer numbers, is expanded into a sequence of indices 
+often needed to access a sequence of elements. To do this, use the range
+operator '..' for this. A range <code>'a..b'</code>, where range limits 'a'
+and 'b' are integer numbers, is expanded into a sequence of indices
 'a a+1 a+2 ... b' or 'a a-1 a-2 ... b' depending on which of 'a' or 'b' 
 is higher. The negative range limits are calculated from the end of the array
 or command substitution.
@@ -815,9 +815,9 @@ explicitly requests it using <code>set -e</code>. Local variables are
 specific to the current fish session, and associated with a specific
 block of commands, and is automatically erased when a specific block
 goes out of scope. A block of commands is a series of commands that
-begins with one of the commands \c 'for, \c 'while' , \c 'if', \c
-'function', \c 'begin' or \c 'switch', and ends with the command \c
-'end'. The user can specify that a variable should have either global
+begins with one of the commands \c for, \c while , \c if, \c
+function, \c begin or \c switch, and ends with the command \c
+end. The user can specify that a variable should have either global
 or local scope using the \c -g/--global or \c -l/--local switches.
 
 Variables can be explicitly set to be universal with the \c -U or \c
@@ -918,7 +918,7 @@ echo $PATH[3]
 </pre>
 
 Note that array indices start at 1 in fish, not 0, as is more common
-in other languages. This is because many common Unix tools like seq
+in other languages. This is because many common Unix tools like \c seq
 are more suited to such use.
 
 If you do not use any brackets, all the elements of the array will be
@@ -997,7 +997,7 @@ started by fish, those in lowercase are not exported. This rule is not
 enforced by fish, but it is good coding practice to use casing to
 distinguish between exported and unexported variables. \c fish also
 uses several variables internally. Such variables are prefixed with
-the string __FISH or __fish. These should never be used by the
+the string \c __FISH or \c __fish. These should never be used by the
 user. Changing their value may break fish.
 
 \subsection variables-status The status variable
@@ -1012,7 +1012,7 @@ some form of problem.
 Fish stores the exit status of the last process in the last job to
 exit in the \c status variable.
 
-If fish encounters a problem while executing a command, the status
+If \c fish encounters a problem while executing a command, the status
 variable may also be set to a specific value:
 
 - 1 is the generally the exit status from fish builtins if they where supplied with invalid arguments
@@ -1189,7 +1189,7 @@ read on startup and merged on program exit.
 
 Example:
 
-To search for previous entries containing the word 'make', type 'make'
+To search for previous entries containing the word \c 'make', type \c 'make'
 in the console and press the up key.
 
 \subsection multiline Multiline editing

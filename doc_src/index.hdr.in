@@ -252,12 +252,14 @@ the <a href="commands.html#bg">bg</a> command.
 To get a listing of all currently started jobs, use the <a
 href="commands.html#jobs">jobs</a> command.
 
-\subsection syntax-function Shellscript functions
+\subsection syntax-function Functions
 
-Functions are used to group together commands and arguments using a
-single name. It can also be used to start a specific command with
-additional arguments. For example, the following is a function
-definition that calls the command 'ls -l' to print a detailed listing
+Functions are programs written in the fish syntax. They group together one
+or more commands and their arguments using a single name. It can also be
+used to start a specific command with additional arguments.
+
+For example, the following is a function definition that calls the command
+\c ls with the argument '-l' to print a detailed listing
 of the contents of the current directory:
 
 <pre>
@@ -275,24 +277,26 @@ the example above, these are simply passed on to the ls command. For
 more information on functions, see the documentation for the <a
 href='commands.html#function'>function</a> builtin.
 
-\subsubsection syntax-function-wrappers Defining wrapper functions
+\subsubsection syntax-function-wrappers Defining aliases
 
 One of the most common uses for functions is to slightly alter the
 behavior of an already existing command. For example, one might want
 to redefine the \c ls command to display colors. The switch for
-turning on colors on GNU systems is \c '--color=auto'. A wrapper
-around \c ls might look like this:
+turning on colors on GNU systems is \c '--color=auto'. An alias, or
+wrapper, around \c ls might look like this:
 
 <pre>function ls
 	command ls --color=auto $argv
 end
 </pre>
 
-There are a few important things that need to be noted about wrapper
-functions:
+There are a few important things that need to be noted about aliases:
 
-- Wrappers should always take care to add the $argv variable to the list of parameters to the wrapped command. This makes sure that if the user specifies any additional parameters to the function, they are passed on to the underlying command.
-- If the wrapper has the same name as the wrapped command, it is necessary to prefix the call to the command with the word 'command' in order to tell fish that the function should not call itself, but rather a command with the same name. Failing to do so will cause infinite recursion bugs.
+- Always take care to add the \c $argv variable to the list of parameters to the wrapped command. This makes sure that if the user specifies any additional parameters to the function, they are passed on to the underlying command.
+- If the alias has the same name as the aliased command, it is necessary to prefix the call to the program with \c command in order to tell fish that the function should not call itself, but rather a command with the same name. Failing to do so will cause infinite recursion bugs.
+
+To easily create a function of this form, you can use the
+<a href="commands.html#alias">alias</a> command.
 
 \subsubsection syntax-function-autoloading Autoloading functions
 
@@ -325,7 +329,7 @@ definition for the specified function and nothing else. Otherwise, it
 is possible that autoloading a function files requires that the
 function already be loaded, which creates a circular dependency.
 
-\subsection syntax-conditional Conditional execution of code
+\subsection syntax-conditional Conditional execution of code and flow control
 
 There are four fish builtins that let you execute commands only if a
 specific criterion is met. These builtins are
@@ -614,33 +618,25 @@ value of the environment variable with the same name. For an
 introduction to the concept of environment variables, read the <a
 href="#variables">Environment variables</a> section.
 
-Example:
+Undefined and empty variables expand to nothing.
 
-<code> echo \$HOME</code> prints the home directory of the current
+To separate a variable name from text it should immediately be followed by,
+encase the variable within braces.
+
+Examples:
+
+<code>echo $HOME</code> prints the home directory of the current
 user.
 
-If you wish to combine environment variables with text, you can
-encase the variables within braces to embed a variable inside running
-text like <code>echo Konnichiwa {$USER}san</code>, which will print a
-personalized Japanese greeting.
+<code>echo $nonexistentvariable</code> prints no output.
 
-The {$USER}san syntax might need a bit of an elaboration.  Posix
-shells allow you to specify a variable name using '$VARNAME' or
-'${VARNAME}'. Fish supports the former, and has no support whatsoever
-for the latter or anything like it. So what is '{$VARNAME}' then?
-Well, '{WHATEVER}' is <a href='#brace'>brace expansion</a>, e.g. 'a{b,c}d' -> 'abd acd'.
-So '{$VARNAME}' is a bracket-expansion with
-only a single element, i.e.  it becomes expanded to '$VARNAME', which
-will be variable expanded to the value of the variable 'VARNAME'. So
-you might think that the brackets don't actually do anything, and that
-is nearly the truth. The snag is that there once along the way was a
-'}' in there somewhere, and } is not a valid character in a variable
-name.  So anything after the otherwise pointless bracket expansion
-becomes explicitly NOT a part of the variable name, even if it happens
-to be a legal variable name character. That's why '{$USER}san' looks
-for the variable '$USER' and not for the variable '$USERsan'. It's
-simply a case of one syntax lending itself nicely to solving an
-unrelated problem in its spare time.
+<code>echo The plural of $WORD is {$WORD}s</code> prints "The plural of
+cat is cats" when \c $WORD is set to cat. Note that without the braces, fish
+will try to expand a variable called <code>$WORDs</code>, which may not exist.
+
+The latter syntax works by exploiting <a href="#expand-brace">brace
+expansion</a>; care should be taken with array variables and undefined
+variables, as these behave very differently to POSIX shells.
 
 Variable expansion is the only type of expansion performed on double
 quoted strings. There is, however, an important difference in how
@@ -652,7 +648,9 @@ array of five elements, the argument $foo will expand to five
 elements. When quoted, like "$foo", a variable expansion will always
 result in exactly one argument. Undefined variables will expand to the
 empty string, and array variables will be concatenated using the space
-character.
+character. The dangers noted in the third example above can therefore be
+avoided by wrapping the variable in double quotes
+(<code>echo {"$WORD"}s</code>).
 
 There is one further notable feature of fish variable
 expansion. Consider the following code snippet:
@@ -782,11 +780,8 @@ will output 'abar1 abar2 abar3 afoo1 afoo2 afoo3'.
 
 \section variables Environment variables
 
-The concept of environment variables are central to any
-shell. Environment variables are variables, whose values can be set
-and used by the user. For information on how to use the current value
-of a variable, see the section on <a href='#expand-variable'>variable
-expansion</a>.
+Environment variables are named pieces of data, which can be created, deleted
+and their values changed and used by the user.
 
 To set a variable value, use the <a href="commands.html#set"> \c set
 command</a>.
@@ -961,6 +956,10 @@ array. For example, the index -1 means the last index of an array.
 A range of indices can be specified, see <a href='#expand-index-range'>index
 range expansion</a> for details.
 
+All arrays are one-dimensional and cannot contain other arrays, although
+it is possible to fake nested arrays using the dereferencing rules of
+<a href="#expand-variable">variable expansion</a>.
+
 \subsection variables-special Special variables
 
 The user can change the settings of \c fish by changing the values of
@@ -989,10 +988,7 @@ values of most of these variables.
 
 The names of these variables are mostly derived from the csh family of
 shells and differ from the ones used by Bourne style shells such as
-bash. The csh names where chosen because Bourne style names, such as
-?, * and @ lead to significantly less readable code, and much larger
-discoverability problems, and given the existence of tab completion,
-the keystroke savings are minimal.
+bash.
 
 Variables whose name are in uppercase are exported to the commands
 started by fish, while those in lowercase are not exported. This rule is not
@@ -1081,13 +1077,13 @@ variables set the specified aspect of the locale information. LANG
 is a fallback value, it will be used if none of the LC_ variables are
 specified.
 
-\section builtin-overview Builtins
+\section builtin-overview Builtin commands
 
 Many other shells have a large library of builtin commands. Most of
 these commands are also available as standalone commands, but have
-been implemented in the shell anyway for whatever reason. To avoid
+been implemented in the shell anyway. To avoid
 code duplication, and to avoid the confusion of subtly differing
-versions of the same command, \c fish only implements builtins for
+versions of the same command, \c fish generally only implements builtins for
 actions which cannot be performed by a regular command.
 
 For a list of all builtins, functions and commands shipped with fish,
@@ -1099,7 +1095,8 @@ switch of the command.
 
 The \c fish editor features copy and paste, a searchable history and
 many editor functions that can be bound to special keyboard
-shortcuts. The most important keybinding is probably the tab key, which is bound to the complete function.
+shortcuts.
+
 Here are some of the commands available in the editor:
 
 - Tab <a href="#completion">completes</a> the current token
@@ -1177,9 +1174,9 @@ the string entered into the command line are shown.
 
 By pressing Alt-Up and Alt-Down, a history search is also performed,
 but instead of searching for a complete commandline, each commandline
-is tokenized into separate elements just like it would be before
-execution, and each such token is matched against the token under the
-cursor when the search began.
+is broken into separate elements just like it would be before
+execution, and the history is searched for an element matching that under
+the cursor.
 
 History searches can be aborted by pressing the escape key.
 
@@ -1188,10 +1185,13 @@ from being stored in the history.
 
 The history is stored in the file <code~/.config/fish/fish_history</code>.
 
-Example:
+Examples:
 
 To search for previous entries containing the word \c 'make', type \c 'make'
 in the console and press the up key.
+
+If the commandline reads '<code>cd m</code>', place the cursor over the \c m
+character and press Alt-Up to search for previously typed words containing 'm'.
 
 \subsection multiline Multiline editing
 
@@ -1430,67 +1430,19 @@ are ways to avoid this, but they are too complicated for this short
 introduction. See the full manual for the printf C function for more
 information.)
 
-Once you have provided a translation for fish, please send it to <a
-href='fish-users@lists.sf.net'>fish-users@lists.sf.net</a>.
+Once you have provided a translation for fish, please submit it via
+the instructions in <a href="#more-help">Further help and development</a>.
 
-\section todo Missing features and bugs
+\section more-help Further help and development
 
-\subsection todo-features Missing features
+If you have a question not answered by this documentation, there are
+several avenues for help:
 
-- Complete vi-mode key bindings
-- More completions (for example konsole, gnome-terminal,
-rlogin, rsync, arch, finger, bibtex, aspell, xpdf,
-compress, wine, dig, batch,
-g++, javac, java, gcj, lpr, doxygen, whois)
-- Undo support
-- wait shellscript
-- Support for the screen clipboard
-- It should be possible to test in a script if a function is autoloaded or manually defined
-- The validator should be better about error reporting unclosed quotes. They are usually reported as something else.
+-# The official mailing list at <a href='fish-users@lists.sf.net'>fish-users@lists.sf.net</a>
+-# The Internet Relay Chat channel, \c #fish on \c irc.oftc.net
+-# The <a href="http://github.com/fish-shell/fish-shell/">project GitHub page</a>
 
-\subsection todo-possible Possible features
-
-- mouse support like zsh has with http://stchaz.free.fr/mouse.zsh
-  installed would be awesome
-- suggest a completion on unique matches by writing it out in an understated color
-- Highlight beginning/end of block when moving over a block command
-- command specific wildcarding (use case * instead of case '*', etc.)
-- Map variables. (export only the values. When expanding with no key specified, expand to all values.)
-- Descriptions for variables using 'set -d'.
-- Parse errors should when possible honor IO redirections
-- Support for writing strings like /u/l/b/foo and have them expand to /usr/local/bin/foo - perhaps through tab expansion
-- Selectable completions in the pager
-- Per process output redirection
-- Reduce the space of the pager by one line to allow the commandline to remain visible.
-- down-arrow could be used to save the current command to the history. Or give the next command in-sequence. Or both.
-- History could reload itself when the file is updated. This would need to be done in a clever way to avoid chain reactions
-- The error function should probably be moved into it's own library, and be made mere general purpose.
-- The code validation functions should be moved from the parser to parse_util.
-- Try to remove more malloc calls to reduce memory usage. The time_t arrays used by the autoloader sound like a good candidate.
-- The code validator should warn about unknown commands.
-- Auto-newlines
-- A fault injector could be written to increase robustness and testing of error recovery paths
-- The parser/validator could be more clever in order to make things like writing 'function --help' work as expected
-- Some event handler functions make much more sense as oneshots - maybe they should be automatically deleted after firing?
-- exec_subshell should be either merged with eval or moved to parser.c
-- Don't use expand_string to perform completions. wildcard_complete can be called directly, the brace expansion handling should be universal, and the process expansion can be moved to complete.c.
-- Make the history search support incremental searching
-- An automatic logout feature
-- Make tab completions completely silent by default, i.e. kill stderr when running completion commands. This needs to be overridalbe for debugging purposes.
-- Move history to an environment variable
-
-\subsection bugs Known bugs and issues
-
-- Suspending and then resuming pipelines containing a builtin or a shellscript function is broken. Ideally, the exec function in exec.c should be able to resume execution of a partially executed job.
-- delete-word is broken on the commandline 'sudo update-alternatives --config x-'
-- Sometimes autoheader needs to be run on a fresh tarball. Fix dates before creating tarballs.
-- The completion autoloader does not remember which completions where actually autoloaded, and may unload manually specified completions.
-- There have been stray reports of issues with strange values of the PATH variable during startup.
-- bindings in config.fish are overwritten by default key bindings.
-- Adding 'bind -k ...' doesn't overwrite non-keybinding binds of the same sequence.
-- Older versions of Doxygen has bugs in the man-page generation which cause the builtin help to render incorrectly. Version 1.2.14 is known to have this problem.
-
-If you think you have found a bug not described here, please send a
-report to <a href="mailto:fish-users@lists.sf.net">fish-users@lists.sf.net</a>.
+If you have an improvement for fish, you can submit it via the mailing list
+or the GitHub page.
 
 */

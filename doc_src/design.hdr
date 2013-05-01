@@ -77,7 +77,7 @@ A special note on the evils of configurability is the long list of
 very useful features found in some shells, that are not turned on by
 default. Both zsh and bash support command specific completions, but
 no such completions are shipped with bash by default, and they are
-turned of by default in zsh. Other features that zsh support that are
+turned off by default in zsh. Other features that zsh support that are
 disabled by default include tab-completion of strings containing
 wildcards, a sane completion pager and a history file.
 

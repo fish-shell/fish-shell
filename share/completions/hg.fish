@@ -183,7 +183,6 @@ complete -c hg -n 'contains \'bookmarks\' (commandline -poc)' -s i -l inactive -
 # Completions for the 'branch' subcommand
 #
 
-complete -c hg -n 'contains \'branch\' (commandline -poc)' -l close-branch" -x --description 'Mark this branch as closed'
 complete -c hg -n 'contains \'branch\' (commandline -poc)' -s f -l force -x --description 'Branch name even if it shadows an existing branch'
 complete -c hg -n 'contains \'branch\' (commandline -poc)' -s C -l clean -x --description 'Branch name to parent branch name'
 
@@ -783,9 +782,6 @@ complete -c hg -n 'contains \'config\' (commandline -poc)' -l ---END --descripti
 #
 # Completions for the 'glossary' subcommand
 #
-
-complete -c hg -n 'contains \'glossary\' (commandline -poc)' -l close-branch" -x --description 'More information on managing branches'
-
 
 #
 # Completions for the 'hgignore' subcommand

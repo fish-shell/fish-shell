@@ -183,7 +183,6 @@ complete -c hg -n 'contains \'bookmarks\' (commandline -poc)' -s i -l inactive -
 # Completions for the 'branch' subcommand
 #
 
-complete -c hg -n 'contains \'branch\' (commandline -poc)' -l close-branch" -x --description 'Mark this branch as closed'
 complete -c hg -n 'contains \'branch\' (commandline -poc)' -s f -l force -x --description 'Branch name even if it shadows an existing branch'
 complete -c hg -n 'contains \'branch\' (commandline -poc)' -s C -l clean -x --description 'Branch name to parent branch name'
 
@@ -253,7 +252,7 @@ complete -c hg -n 'contains \'commit\' (commandline -poc)' -s d -l date -x --des
 complete -c hg -n 'contains \'commit\' (commandline -poc)' -s u -l user -x --description 'Record the specified user as committer'
 complete -c hg -n 'contains \'commit\' (commandline -poc)' -s S -l subrepos --description 'Recurse into subrepositories'
 
-
+#
 #
 # Completions for the 'copy' subcommand
 #
@@ -784,9 +783,6 @@ complete -c hg -n 'contains \'config\' (commandline -poc)' -l ---END --descripti
 # Completions for the 'glossary' subcommand
 #
 
-complete -c hg -n 'contains \'glossary\' (commandline -poc)' -l close-branch" -x --description 'More information on managing branches'
-
-
 #
 # Completions for the 'hgignore' subcommand
 #
@@ -845,14 +841,10 @@ complete -c hg -n 'contains \'glossary\' (commandline -poc)' -l close-branch" -x
 # Completions for the 'templating' subcommand
 #
 
-complete -c hg -n 'contains \'templating\' (commandline -poc)' -l template -x --description 'Or select an existing template-style (--style)'
-complete -c hg -n 'contains \'templating\' (commandline -poc)' -l copied -x --description 'Is set'
+#complete -c hg -n 'contains \'templating\' (commandline -poc)' -l template -x --description 'Or select an existing template-style (--style)'
+#complete -c hg -n 'contains \'templating\' (commandline -poc)' -l copied -x --description 'Is set'
 
 
 #
 # Completions for the 'urls' subcommand
 #
-
-
-
-

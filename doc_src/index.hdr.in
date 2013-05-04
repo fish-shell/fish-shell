@@ -369,6 +369,9 @@ a specific subject or command. For instance, writing <code>help
 syntax</code> displays the <a href="#syntax">syntax section</a> of this
 documentation.
 
+fish also has man pages for its commands. For example, <code>man set</code>
+will show the documentation for \c set as a man page.
+
 Help on a specific builtin can also be obtained with the <code>-h</code>
 parameter. For instance, to obtain help on the \c fg builtin, either
 type <code>fg -h</code> or <code>help fg</code>.

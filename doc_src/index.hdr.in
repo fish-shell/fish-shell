@@ -149,7 +149,7 @@ these characters, so called escape sequences are provided. These are:
 
 \subsection redirects Input/Output (IO) redirection
 
-Most programs use three types of input/output (IO) methods, each represented by
+Most programs use three input/output (IO) streams, each represented by
 a number called a file descriptor (FD). These are:
 
 - Standard input, FD 0, for reading, defaults to reading from the keyboard.

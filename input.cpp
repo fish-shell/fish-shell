@@ -796,8 +796,8 @@ bool input_terminfo_get_sequence(const wchar_t *name, wcstring *out_seq)
     {
         errno = err;
         return false;
-    }   
-    
+    }
+
     *out_seq = format_string(L"%s", res);
     return true;
 

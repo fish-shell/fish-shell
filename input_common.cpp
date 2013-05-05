@@ -287,7 +287,7 @@ static void input_flush_callbacks(void)
     /* Nothing to do if nothing to do */
     if (callback_queue.empty())
         return;
-    
+
     /* We move the queue into a local variable, so that events queued up during a callback don't get fired until next round. */
     callback_queue_t local_queue;
     std::swap(local_queue, callback_queue);

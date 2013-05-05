@@ -49,7 +49,7 @@ enum
 */
 struct event_t
 {
-    public:
+public:
 
     /** Type of event */
     int type;

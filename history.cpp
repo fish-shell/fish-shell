@@ -70,7 +70,7 @@ class history_output_buffer_t
         return s ? strlen(s) : 0;
     }
 
-    public:
+public:
 
     /* Add a bit more to HISTORY_OUTPUT_BUFFER_SIZE because we flush once we've exceeded that size */
     history_output_buffer_t() : buffer(HISTORY_OUTPUT_BUFFER_SIZE + 128, '\0'), offset(0)
@@ -1070,14 +1070,14 @@ bool history_search_t::go_backwards()
         return false;
 
     const bool main_thread = is_main_thread();
-    
+
     while (++idx < max_idx)
     {
         if (main_thread ? reader_interrupted() : reader_thread_job_is_stale())
         {
             return false;
         }
-    
+
         const history_item_t item = history->item_at_index(idx);
         /* We're done if it's empty or we cancelled */
         if (item.empty())
@@ -1165,7 +1165,7 @@ static void unescape_yaml(std::string &str)
     {
         // Operate on a const version of str, to avoid needless COWs that at() does.
         const std::string &const_str = str;
-        
+
         // Look for a backslash
         size_t backslash = const_str.find('\\', cursor);
         if (backslash == std::string::npos || backslash + 1 >= size)
@@ -1429,7 +1429,7 @@ bool history_t::save_internal_via_appending()
         */
 
         /* So far so good. Write all items at or after first_unwritten_new_item_index */
-        
+
         bool errored = false;
         history_output_buffer_t buffer;
         while (first_unwritten_new_item_index < new_items.size())

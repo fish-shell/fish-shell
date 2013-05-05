@@ -1490,7 +1490,7 @@ static void expand_home_directory(wcstring &input)
     {
         size_t tail_idx;
         wcstring username = get_home_directory_name(input, &tail_idx);
-        
+
         bool tilde_error = false;
         wcstring home;
         if (username.empty())
@@ -1539,7 +1539,7 @@ static void unexpand_tildes(const wcstring &input, std::vector<completion_t> *co
     // If it does not, there's nothing to do
     if (input.empty() || input.at(0) != L'~')
         return;
-    
+
     // We only operate on completions that replace their contents
     // If we don't have any, we're done.
     // In particular, empty vectors are common.
@@ -1554,15 +1554,15 @@ static void unexpand_tildes(const wcstring &input, std::vector<completion_t> *co
     }
     if (! has_candidate_completion)
         return;
-    
+
     size_t tail_idx;
     wcstring username_with_tilde = L"~";
     username_with_tilde.append(get_home_directory_name(input, &tail_idx));
-    
+
     // Expand username_with_tilde
     wcstring home = username_with_tilde;
     expand_tilde(home);
-    
+
     // Now for each completion that starts with home, replace it with the username_with_tilde
     for (size_t i=0; i < completions->size(); i++)
     {
@@ -1570,7 +1570,7 @@ static void unexpand_tildes(const wcstring &input, std::vector<completion_t> *co
         if ((comp.flags & COMPLETE_REPLACES_TOKEN) && string_prefixes_string(home, comp.completion))
         {
             comp.completion.replace(0, home.size(), username_with_tilde);
-            
+
             // And mark that our tilde is literal, so it doesn't try to escape it
             comp.flags |= COMPLETE_DONT_ESCAPE_TILDES;
         }
@@ -1607,9 +1607,9 @@ static void remove_internal_separator(wcstring &str, bool conv)
 
 
 int expand_string(const wcstring &input, std::vector<completion_t> &output, expand_flags_t flags)
-{    
+{
     parser_t parser(PARSER_TYPE_ERRORS_ONLY, true /* show errors */);
-    
+
     size_t i;
     int res = EXPAND_OK;
 
@@ -1618,7 +1618,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
         output.push_back(completion_t(input));
         return EXPAND_OK;
     }
-    
+
     std::vector<completion_t> clist1, clist2;
     std::vector<completion_t> *in = &clist1, *out = &clist2;
 
@@ -1642,7 +1642,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
         if (! cmdsubst_ok)
             return EXPAND_ERROR;
     }
-    
+
     for (i=0; i < in->size(); i++)
     {
         /*
@@ -1785,19 +1785,19 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
         }
         else
         {
-            if (! (flags & ACCEPT_INCOMPLETE))
+            if (!(flags & ACCEPT_INCOMPLETE))
             {
                 out->push_back(completion_t(next_str));
             }
         }
     }
-    
+
     // Hack to un-expand tildes (see #647)
-    if (! (flags & EXPAND_SKIP_HOME_DIRECTORIES))
+    if (!(flags & EXPAND_SKIP_HOME_DIRECTORIES))
     {
         unexpand_tildes(input, out);
     }
-    
+
     // Return our output
     output.insert(output.end(), out->begin(), out->end());
 

@@ -3,13 +3,13 @@
 
 #include <vector>
 #if __cplusplus > 199711L
- // C++11
- #include <memory>
- using std::shared_ptr;
+// C++11
+#include <memory>
+using std::shared_ptr;
 #else
- // C++03
- #include <tr1/memory>
- using std::tr1::shared_ptr;
+// C++03
+#include <tr1/memory>
+using std::tr1::shared_ptr;
 #endif
 
 /**

@@ -462,7 +462,7 @@ int main(int argc, char **argv)
     {
         /* Stop the exit status of any initialization commands (#635) */
         proc_set_last_status(STATUS_BUILTIN_OK);
-        
+
         /* Run the commands specified as arguments, if any */
         if (! cmds.empty())
         {

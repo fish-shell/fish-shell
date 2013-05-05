@@ -729,7 +729,7 @@ static int wildcard_expand_internal(const wchar_t *wc,
         debug(2, L"Got null string on line %d of file %s", __LINE__, __FILE__);
         return 0;
     }
-    
+
     const size_t base_dir_len = wcslen(base_dir);
 
     if (flags & ACCEPT_INCOMPLETE)
@@ -897,7 +897,7 @@ static int wildcard_expand_internal(const wchar_t *wc,
 
         /* new_dir is a scratch area containing the full path to a file/directory we are iterating over */
         wcstring new_dir = base_dir;
-        
+
         wcstring name_str;
         while (wreaddir(dir, name_str))
         {
@@ -926,11 +926,11 @@ static int wildcard_expand_internal(const wchar_t *wc,
             {
                 struct stat buf;
                 int new_res;
-                
+
                 // new_dir is base_dir + some other path components
                 // Replace everything after base_dir with the new path component
                 new_dir.replace(base_dir_len, wcstring::npos, name_str);
-                
+
                 int stat_res = wstat(new_dir, &buf);
 
                 if (!stat_res)
@@ -942,7 +942,7 @@ static int wildcard_expand_internal(const wchar_t *wc,
                     if (S_ISDIR(buf.st_mode) && (visited_files.insert(file_id).second || ! is_recursive))
                     {
                         new_dir.push_back(L'/');
-                        
+
                         /*
                           Regular matching
                         */

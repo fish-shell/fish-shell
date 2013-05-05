@@ -1377,9 +1377,12 @@ void highlight_shell(const wcstring &buff, std::vector<int> &color, size_t pos, 
     for (size_t i=0; i < buff.size(); i++)
     {
         int &current_val = color.at(i);
-        if (current_val >= 0) {
+        if (current_val >= 0)
+        {
             last_val = current_val;
-        } else {
+        }
+        else
+        {
             current_val = last_val; //note - this writes into the vector
         }
     }

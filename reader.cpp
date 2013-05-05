@@ -874,7 +874,7 @@ void reader_react_to_color_change()
 {
     if (! data)
         return;
-    
+
     if (! data->repaint_needed || ! data->screen_reset_needed)
     {
         data->repaint_needed = true;
@@ -1006,7 +1006,7 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
         if (do_escape)
         {
             /* Respect COMPLETE_DONT_ESCAPE_TILDES */
-            bool no_tilde = !! (flags & COMPLETE_DONT_ESCAPE_TILDES);
+            bool no_tilde = !!(flags & COMPLETE_DONT_ESCAPE_TILDES);
             escaped = escape(val, ESCAPE_ALL | ESCAPE_NO_QUOTED | (no_tilde ? ESCAPE_NO_TILDE : 0));
             sb.append(escaped);
             move_cursor = wcslen(escaped);
@@ -1328,7 +1328,7 @@ struct autosuggestion_context_t
             this->autosuggestion = special_suggestion;
             return 1;
         }
-        
+
         /* Maybe cancel here */
         if (reader_thread_job_is_stale())
             return 0;
@@ -3087,7 +3087,7 @@ const wchar_t *reader_readline(void)
 
                     /* Start the cycle at the beginning */
                     completion_cycle_idx = (size_t)(-1);
-                    
+
                     /* Repaint */
                     reader_repaint_if_needed();
                 }

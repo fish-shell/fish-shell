@@ -214,7 +214,7 @@ wcstring builtin_help_get(parser_t &parser, const wchar_t *name)
     /* This won't ever work if no_exec is set */
     if (no_exec)
         return wcstring();
-    
+
     wcstring_list_t lst;
     wcstring out;
     const wcstring name_esc = escape_string(name, 1);

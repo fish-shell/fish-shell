@@ -590,7 +590,8 @@ void exec(parser_t &parser, job_t *j)
     CHECK(j,);
     CHECK_BLOCK();
 
-    if (no_exec) {
+    if (no_exec)
+    {
         exec_no_exec(parser, j);
         return;
     }
@@ -1312,7 +1313,7 @@ void exec(parser_t &parser, job_t *j)
                 /* Get argv and envv before we fork */
                 null_terminated_array_t<char> argv_array;
                 convert_wide_array_to_narrow(p->get_argv_array(), &argv_array);
-                
+
                 /* Ensure that stdin is blocking before we hand it off (see issue #176). It's a little strange that we only do this with stdin and not with stdout or stderr. However in practice, setting or clearing O_NONBLOCK on stdin also sets it for the other two fds, presumably because they refer to the same underlying file (/dev/tty?) */
                 make_fd_blocking(STDIN_FILENO);
 

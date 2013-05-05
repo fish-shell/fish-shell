@@ -100,23 +100,46 @@ static int hex_to_bin(const wchar_t &c)
 {
     switch (c)
     {
-        case L'0': return 0;
-        case L'1': return 1;
-        case L'2': return 2;
-        case L'3': return 3;
-        case L'4': return 4;
-        case L'5': return 5;
-        case L'6': return 6;
-        case L'7': return 7;
-        case L'8': return 8;
-        case L'9': return 9;
-        case L'a': case L'A': return 10;
-        case L'b': case L'B': return 11;
-        case L'c': case L'C': return 12;
-        case L'd': case L'D': return 13;
-        case L'e': case L'E': return 14;
-        case L'f': case L'F': return 15;
-        default: return -1;
+        case L'0':
+            return 0;
+        case L'1':
+            return 1;
+        case L'2':
+            return 2;
+        case L'3':
+            return 3;
+        case L'4':
+            return 4;
+        case L'5':
+            return 5;
+        case L'6':
+            return 6;
+        case L'7':
+            return 7;
+        case L'8':
+            return 8;
+        case L'9':
+            return 9;
+        case L'a':
+        case L'A':
+            return 10;
+        case L'b':
+        case L'B':
+            return 11;
+        case L'c':
+        case L'C':
+            return 12;
+        case L'd':
+        case L'D':
+            return 13;
+        case L'e':
+        case L'E':
+            return 14;
+        case L'f':
+        case L'F':
+            return 15;
+        default:
+            return -1;
     }
 }
 
@@ -124,15 +147,24 @@ static int octal_to_bin(wchar_t c)
 {
     switch (c)
     {
-        case L'0': return 0;
-        case L'1': return 1;
-        case L'2': return 2;
-        case L'3': return 3;
-        case L'4': return 4;
-        case L'5': return 5;
-        case L'6': return 6;
-        case L'7': return 7;
-        default: return -1;
+        case L'0':
+            return 0;
+        case L'1':
+            return 1;
+        case L'2':
+            return 2;
+        case L'3':
+            return 3;
+        case L'4':
+            return 4;
+        case L'5':
+            return 5;
+        case L'6':
+            return 6;
+        case L'7':
+            return 7;
+        default:
+            return -1;
     }
 }
 
@@ -358,9 +390,9 @@ long builtin_printf_state_t::print_esc(const wchar_t *escstart, bool octal_0)
             uni_value = uni_value * 16 + hex_to_bin(*p);
             p++;
         }
-        
+
         /* PCA GNU printf respects the limitations described in ISO N717, about which universal characters "shall not" be specified. I believe this limitation is for the benefit of compilers; I see no reason to impose it in builtin_printf.
-        
+
           If __STDC_ISO_10646__ is defined, then it means wchar_t can and does hold Unicode code points, so just use that. If not defined, use the %lc printf conversion; this probably won't do anything good if your wide character set is not Unicode, but such platforms are exceedingly rare.
         */
         if (uni_value > 0x10FFFF)

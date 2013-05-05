@@ -568,7 +568,7 @@ wcstring wsetlocale(int category, const wchar_t *locale)
 
     // U+23CE is the "return" character
     omitted_newline_char = unicode ? L'\x23CE' : L'~';
-    
+
     if (!res)
         return wcstring();
     else

@@ -1701,7 +1701,7 @@ int main(int argc, char **argv)
     setlocale(LC_ALL, "");
     srand(time(0));
     configure_thread_assertions_for_testing();
-    
+
     program_name=L"(ignore)";
 
     say(L"Testing low-level functionality");
@@ -1714,7 +1714,7 @@ int main(int argc, char **argv)
     builtin_init();
     reader_init();
     env_init();
-    
+
     test_format();
     test_escape();
     test_convert();

@@ -294,7 +294,7 @@ int make_fd_nonblocking(int fd)
 {
     int flags = fcntl(fd, F_GETFL, 0);
     int err = 0;
-    if (! (flags & O_NONBLOCK))
+    if (!(flags & O_NONBLOCK))
     {
         err = fcntl(fd, F_SETFL, flags | O_NONBLOCK);
     }

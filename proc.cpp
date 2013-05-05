@@ -1060,7 +1060,7 @@ void job_continue(job_t *j, bool cont)
         {
             /* Put the job into the foreground. Hack: ensure that stdin is marked as blocking first (#176). */
             make_fd_blocking(STDIN_FILENO);
-            
+
             signal_block();
 
             bool ok = terminal_give_to_job(j, cont);
@@ -1202,7 +1202,7 @@ void job_continue(job_t *j, bool cont)
                 }
             }
         }
-        
+
         /* Put the shell back in the foreground. */
         if (job_get_flag(j, JOB_TERMINAL) && job_get_flag(j, JOB_FOREGROUND))
         {

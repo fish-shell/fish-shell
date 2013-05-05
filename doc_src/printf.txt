@@ -1,9 +1,0 @@
-\section printf printf - format and print data
-
-\subsection printf-synopsis Synopsis
-<tt>printf FORMAT [ARGUMENT]...</tt>
-
-\subsection printf-description Description
-Print ARGUMENT(s) according to FORMAT
-
-Fish has imported printf builtin from GNU Coreutils. For more information see : http://www.gnu.org/software/coreutils/manual/html_node/printf-invocation.html

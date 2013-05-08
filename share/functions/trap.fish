@@ -26,33 +26,13 @@ function trap -d 'Perform an action when the shell receives a signal'
 	set -l cmd
 	set -l sig
 
-	set -l options
-	set -l longopt
-	set -l shortopt lph
-	if not getopt -T > /dev/null
-		# GNU getopt
-		set longopt print,help,list-signals
-		set options -o $shortopt -l $longopt --
-		# Verify options
-		if not getopt -n type $options $argv >/dev/null
-			return 1
-		end
-	else
-		# Old getopt, used on OS X
-		set options $shortopt
-		# Verify options
-		if not getopt $options $argv >/dev/null
-			return 1
-		end
+	set -l options lph -l print,help,list-signals -n trap -- $argv
+	if not __fish_getopt $options >/dev/null
+		return 1
 	end
 
-	# Do the real getopt invocation
-	set -l tmp (getopt $options $argv)
-
-	# Break tmp up into an array
 	set -l opt
-	eval set opt $tmp
-
+	eval set opt (__fish_getopt $options)
 	while count $opt >/dev/null
 		switch $opt[1]
 			case -h --help

@@ -5,21 +5,14 @@ function psub --description "Read from stdin into a file and output the filename
 	set -l filename
 	set -l funcname
 	set -l use_fifo 1
-	set -l shortopt -o hf
-	set -l longopt -l help,file
+	set -l options hf -l help,file -n psub -- $argv
 
-	if getopt -T >/dev/null
-		set longopt
-	end
-
-	if not getopt -n psub -Q $shortopt $longopt -- $argv >/dev/null
+	if not __fish_getopt $options >/dev/null
 		return 1
 	end
 
-	set -l tmp (getopt $shortopt $longopt -- $argv)
-
-	eval set opt $tmp
-
+	set -l opt
+	eval set opt (__fish_getopt $options)
 	while count $opt >/dev/null
 
 		switch $opt[1]

@@ -9,32 +9,13 @@ function type --description "Print the type of a command"
 	#
 	# Get options
 	#
-	set -l options
-	set -l shortopt tpPafh
-	if not getopt -T > /dev/null
-		# GNU getopt
-		set -l longopt type,path,force-path,all,no-functions,help
-		set options -o $shortopt -l $longopt --
-		# Verify options
-		if not getopt -n type $options $argv >/dev/null
-			return 1
-		end
-	else
-		# Old getopt, used on OS X
-		set options $shortopt
-		# Verify options
-		if not getopt $options $argv >/dev/null
-			return 1
-		end
+	set -l options tpPafh -l type,path,force-path,all,no-functions,help -n type -- $argv
+	if not __fish_getopt $options >/dev/null
+		return 1
 	end
 
-	# Do the real getopt invocation
-	set -l tmp (getopt $options $argv)
-
-	# Break tmp up into an array
 	set -l opt
-	eval set opt $tmp
-	
+	eval set opt (__fish_getopt $options)
 	for i in $opt
 		switch $i
 			case -t --type

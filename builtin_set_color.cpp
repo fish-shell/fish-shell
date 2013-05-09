@@ -83,6 +83,7 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
 
     const wchar_t *bgcolor = NULL;
     bool bold = false, underline=false;
+    int errret;
 
     /* Parse options to obtain the requested operation and the modifiers */
     woptind = 0;
@@ -165,7 +166,7 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
     }
 
     /* Make sure that the term exists */
-    if (cur_term == NULL && setupterm(0, STDOUT_FILENO, 0) == ERR)
+    if (cur_term == NULL && setupterm(0, STDOUT_FILENO, &errret) == ERR)
     {
         append_format(stderr_buffer, _(L"%ls: Could not set up terminal\n"), argv[0]);
         return STATUS_BUILTIN_ERROR;

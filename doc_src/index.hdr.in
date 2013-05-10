@@ -1224,6 +1224,10 @@ which the user can change <code>fish</code>'s behavior.
 -# By pressing ^Z, the user stops a currently running foreground  program and returns control to \c fish. Some programs do not support this feature, or remap it to another key. GNU Emacs uses ^X z to stop running.
 -# By using the <a href="commands.html#fg">fg</a> and <a href="commands.html#bg">bg</a> builtin commands, the user can send any currently running job into the foreground or background.
 
+Note that functions cannot be started in the background. Functions that
+are stopped and then restarted in the background using the \c bg command
+will not execute correctly.
+
 \section initialization Initialization files
 
 On startup, \c fish evaluates the files /usr/share/fish/config.fish

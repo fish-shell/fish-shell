@@ -163,7 +163,7 @@ Any file descriptor can be directed to a different output than its
 default through a simple mechanism called a redirection.
 
 An example of a file redirection is <code> echo hello \>output.txt</code>,
-which directs the output of the echo command to the file error.txt.
+which directs the output of the echo command to the file output.txt.
 
 - To redirect standard input, write <code>\<SOURCE_FILE</code>
 - To redirect standard output, write <code>\>DESTINATION</code>
@@ -398,7 +398,7 @@ These are the general purpose tab completions that \c fish provides:
 - Completion of environment variable names.
 - Completion of usernames for tilde expansion.
 - Completion of filenames, even on strings with wildcards such as '*', '**' and '?'.
-- Completion of job id, job name and process names for <a href="#expand-process">process expansion</a>.
+- Completion of job ID, job name and process names for <a href="#expand-process">process expansion</a>.
 
 \c fish provides a large number of program specific completions. Most
 of these completions are simple options like the \c -l option for \c
@@ -1186,7 +1186,7 @@ History searches can be aborted by pressing the escape key.
 Prefixing the commandline with a space will prevent the entire line
 from being stored in the history.
 
-The history is stored in the file <code~/.config/fish/fish_history</code>.
+The history is stored in the file <code>~/.config/fish/fish_history</code>.
 
 Examples:
 
@@ -1221,7 +1221,7 @@ continue using the shell. In such cases, there are several ways in
 which the user can change <code>fish</code>'s behavior.
 
 -# By ending a command with the \& (ampersand) symbol, the user tells \c fish to put the specified command into the background. A background process will be run simultaneous with \c fish. \c fish will retain control of the terminal, so the program will not be able to read from the keyboard.
--# By pressing ^Z, the user stops a currently running foreground  program and returns control to \c fish. Some programs do not support this feature, or remap it to another key. Gnu emacs uses ^X z to stop running.
+-# By pressing ^Z, the user stops a currently running foreground  program and returns control to \c fish. Some programs do not support this feature, or remap it to another key. GNU Emacs uses ^X z to stop running.
 -# By using the <a href="commands.html#fg">fg</a> and <a href="commands.html#bg">bg</a> builtin commands, the user can send any currently running job into the foreground or background.
 
 \section initialization Initialization files

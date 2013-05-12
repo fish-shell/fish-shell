@@ -5,15 +5,36 @@
 
 \subsection block-description Description
 
-- <tt>-l</tt> or <tt>--local</tt> Release the block at the end of the currently innermost block scope
+\c block prevents events triggered by \c fish or the
+<a href="commands.html#emit"><code>emit</code></a> command from
+being delivered and acted upon while the block is in place.
+
+In functions, \c block can be useful while performing work that
+should not be interrupted by the shell.
+
+The block can be removed. Any events which triggered while the
+block was in place will then be delivered.
+
+Event blocks should not be confused with code blocks, which are created
+with <code>begin</code>, <code>if</code>, <code>while</code> or
+<code>for</code>
+
+The following parameters are available:
+
+- <tt>-l</tt> or <tt>--local</tt> Release the block automatically at the end of the current innermost code block scope
 - <tt>-g</tt> or <tt>--global</tt> Never automatically release the lock
 - <tt>-e</tt> or <tt>--erase</tt> Release global block
 
 \subsection block-example Example
 
 <pre>
+# Create a function that listens for events
+function --on-event foo foo; echo 'foo fired'; end
+# Block the delivery of events
 block -g
-\#Do something that should not be interrupted
+emit foo
+# No output will be produced
 block -e
+# 'foo fired' will now be printed
 </pre>
 

@@ -1,6 +1,9 @@
-\section fish_update_completions fish_update_completions - Update man-page completions
+\section fish_update_completions fish_update_completions - Update completions using manual pages
 
 \subsection fish_update_completions-description Description
 
-This command parses your installed man pages and writes completion files to the fish config directory. This does not overwrite custom completions.
+\c fish_update_completions parses manual pages installed on the system, and attempts to create completion files in the \c fish configuration directory.
 
+This does not overwrite custom completions.
+
+There are no parameters for <code>fish_update_completions</code>.

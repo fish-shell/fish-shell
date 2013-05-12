@@ -1,12 +1,12 @@
-\section complete complete - edit command specific tab-completions.
+\section complete complete - edit command specific tab-completions
 
 \subsection complete-synopsis Synopsis
 <tt>complete (-c|--command|-p|--path) COMMAND [(-s|--short-option) SHORT_OPTION] [(-l|--long-option|-o|--old-option) LONG_OPTION [(-a||--arguments) OPTION_ARGUMENTS] [(-d|--description) DESCRIPTION] </tt>
 
 \subsection complete-description Description
 
-For an introduction to how to specify completions, see the section <a
-href='index.html#completion-own'>Writing your own completions</a> of
+For an introduction to specifying completions, see <a
+href='index.html#completion-own'>Writing your own completions</a> in
 the fish manual.
 
 - <tt>COMMAND</tt> is the name of the command for which to add a completion

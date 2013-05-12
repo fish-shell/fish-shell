@@ -6,16 +6,16 @@
 \subsection status-description Description
 With no arguments, <tt>status</tt> displays a summary of the current login and job control status of the shell.
 
-The following arguments are available:
-- <tt>-c</tt> or <tt>--is-command-substitution</tt> returns 0 if fish is currently executing a command substitution
-- <tt>-b</tt> or <tt>--is-block</tt> returns 0 if fish is currently executing a block of code
-- <tt>-i</tt> or <tt>--is-interactive</tt> returns 0 if fish is interactive, i.e.connected to a keyboard
-- <tt>-l</tt> or <tt>--is-login</tt> returns 0 if fish is a login shell, i.e. if fish should perform login tasks such as setting up the PATH.
-- <tt>--is-full-job-control</tt> returns 0 if full job control is enabled
-- <tt>--is-interactive-job-control</tt> returns 0 if interactive job control is enabled
-- <tt>--is-no-job-control</tt> returns 0 if no job control is enabled
-- <tt>-f</tt> or <tt>--current-filename</tt> prints the filename of the currently running script
-- <tt>-n</tt> or <tt>--current-line-number</tt> prints the line number of the currently running script
-- <tt>-j CONTROLTYPE</tt> or <tt>--job-control=CONTROLTYPE</tt> set the job control type.  Can be one of: none, full, interactive
-- <tt>-t</tt> or <tt>--print-stack-trace</tt> prints a stack trace of all function calls on the call stack
-- <tt>-h</tt> or <tt>--help</tt> display a help message and exit
+The following options are available:
+- <tt>-c</tt> or <tt>--is-command-substitution</tt> returns 0 if fish is currently executing a command substitution.
+- <tt>-b</tt> or <tt>--is-block</tt> returns 0 if fish is currently executing a block of code.
+- <tt>-i</tt> or <tt>--is-interactive</tt> returns 0 if fish is interactive - that is, connected to a keyboard.
+- <tt>-l</tt> or <tt>--is-login</tt> returns 0 if fish is a login shell - that is, if fish should perform login tasks such as setting up the PATH.
+- <tt>--is-full-job-control</tt> returns 0 if full job control is enabled.
+- <tt>--is-interactive-job-control</tt> returns 0 if interactive job control is enabled.
+- <tt>--is-no-job-control</tt> returns 0 if no job control is enabled.
+- <tt>-f</tt> or <tt>--current-filename</tt> prints the filename of the currently running script.
+- <tt>-n</tt> or <tt>--current-line-number</tt> prints the line number of the currently running script.
+- <tt>-j CONTROLTYPE</tt> or <tt>--job-control=CONTROLTYPE</tt> sets the job control type, which can be <tt>none</tt>, <tt>full</tt>, or <tt>interactive</tt>.
+- <tt>-t</tt> or <tt>--print-stack-trace</tt> prints a stack trace of all function calls on the call stack.
+- <tt>-h</tt> or <tt>--help</tt> displays a help message and exit.

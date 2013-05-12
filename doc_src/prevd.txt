@@ -1,11 +1,24 @@
 \section prevd prevd - move backward through directory history
 
 \subsection prevd-synopsis Synopsis
-<tt>prevd [-l | --list] [pos]</tt>
+<tt>prevd [-l | --list] [POS]</tt>
 
 \subsection prevd-description Description
 
-<tt>prevd</tt> moves backwards <tt>pos</tt> positions in the history
+<tt>prevd</tt> moves backwards <tt>POS</tt> positions in the history
 of visited directories; if the beginning of the history has been hit,
-a warning is printed. If the <code>-l</code> or <code>--list</code>
-flag is specified, the current history is also displayed.
+a warning is printed.
+
+If the <code>-l</code> or <code>--list</code> flag is specified, the current
+history is also displayed.
+
+\subsection prevd-example Example
+
+<pre>cd /usr/src
+# Working directory is now /usr/src
+cd /usr/src/fish-shell
+# Working directory is now /usr/src/fish-shell
+prevd
+# Working directory is now /usr/src
+nextd
+# Working directory is now /usr/src/fish-shell</pre>

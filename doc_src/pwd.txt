@@ -1,8 +1,10 @@
-\section pwd pwd - returns the current directory
+\section pwd pwd - output the current working directory
 
 \subsection pwd-synopsis Synopsis
  <tt>pwd</tt>
 
 \subsection pwd-description Description
 
-Returns the current directory. Note that fish always resolves symbolic links in the current directory path.
+\c pwd outputs (prints) the current working directory.
+
+Note that \c fish always resolves symbolic links in the current directory path.

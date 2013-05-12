@@ -4,16 +4,18 @@
 <tt>while CONDITION; COMMANDS...; end</tt>
 
 \subsection while-description Description
-The <tt>while</tt> builtin causes fish to continually execute CONDITION and
-execute COMMANDS as long as CONDITION returned with status 0. If CONDITION is
-false on the first time, COMMANDS will not be executed at all. Hints: use
-<a href="#begin"><tt>begin; ...; end</tt></a> for complex conditions; more
+<tt>while</tt> repeatedly executes <tt>CONDITION</tt>, and if the exit status
+is 0, then executes <tt>COMMANDS</tt>.
+
+If the exit status of \c CONDITION is non-zero on the first iteration,
+\c COMMANDS will not be executed at all.
+
+Use <a href="#begin"><tt>begin; ...; end</tt></a> for complex conditions; more
 complex control can be achieved with <tt>while true</tt> containing a
 <a href="#break">break</a>.
 
 \subsection while-example Example
 
 <tt>while test -f foo.txt; echo file exists; sleep 10; end</tt>
-
-causes fish to print the line 'file exists' at 10 second intervals as long as
+outputs 'file exists' at 10 second intervals as long as
 the file foo.txt exists.

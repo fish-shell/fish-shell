@@ -4,5 +4,21 @@
 <tt>popd</tt>
 
 \subsection popd-description Description
+
 <tt>popd</tt> removes the top directory from the directory stack and
-cd's to the new top directory.
+changes the working directory to the new top directory. Use <a
+href="#pushd"><tt>pushd</tt></a> to add directories to the stack.
+
+\subsection popd-example Example
+
+<pre>
+pushd /usr/src
+# Working directory is now /usr/src
+# Directory stack contains /usr/src
+pushd /usr/src/fish-shell
+# Working directory is now /usr/src/fish-shell
+# Directory stack contains /usr/src /usr/src/fish-shell
+popd
+# Working directory is now /usr/src
+# Directory stack contains /usr/src
+</pre>

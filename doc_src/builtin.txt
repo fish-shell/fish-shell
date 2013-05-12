@@ -5,12 +5,12 @@
 
 \subsection builtin-description Description
 
-- <tt>-n</tt> or <tt>--names</tt> List the names of all defined builtins
+\c builtin forces the shell to use a builtin command, rather than a function or program.
 
-Prefixing a command with the word 'builtin' forces fish to ignore any functions with the same name.
+The following parameters are available:
+
+- <tt>-n</tt> or <tt>--names</tt> List the names of all defined builtins
 
 \subsection builtin-example Example
 
-<tt>builtin jobs</tt>
-
-causes fish to execute the jobs builtin, even if a function named jobs exists.
+<tt>builtin jobs</tt> executes the jobs builtin, even if a function named jobs exists.

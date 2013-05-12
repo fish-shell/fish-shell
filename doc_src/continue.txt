@@ -1,13 +1,13 @@
-\section continue continue - skip the rest of the current lap of the innermost currently evaluated loop
+\section continue continue - skip the remainder of the current iteration of the current inner loop
 
 \subsection continue-synopsis Synopsis
 <tt>LOOP_CONSTRUCT; [COMMANDS...;] continue; [COMMANDS...;] end</tt>
 
 \subsection continue-description Description
-The \c continue builtin is used to skip the current lap of the innermost currently running loop, such as a <a href="#for">for</a> loop or a <a href="#while">while</a> loop. It is usually added inside of a conditional block such as an <a href="#if">if</a> statement or a <a href="#switch">switch</a> statement.
+\c continue skips the remainder of the current iteration of the current inner loop, such as a <a href="#for">for</a> loop or a <a href="#while">while</a> loop. It is usually added inside of a conditional block such as an <a href="#if">if</a> statement or a <a href="#switch">switch</a> statement.
 
 \subsection continue-example Example
-The following code removes all tmp files without smurfs.
+The following code removes all tmp files that do not contain the word smurf.
 
 <pre>
 for i in *.tmp

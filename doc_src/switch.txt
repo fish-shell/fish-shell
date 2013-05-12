@@ -5,27 +5,24 @@
 
 \subsection switch-description Description
 
-The \c switch statement is used to perform one of several blocks of
-commands depending on whether a specified value equals one of several
-wildcarded values. The \c case statement is used together with the \c
-switch statement in order to determine which block should be
-performed.
+\c switch performs one of several blocks of commands, depending on whether
+a specified value equals one of several wildcarded values. \c case is used
+together with the \c switch statement in order to determine which block should
+be executed.
 
-Each \c case command is given one or more parameter. The first \c case
+Each \c case command is given one or more parameters. The first \c case
 command with a parameter that matches the string specified in the
 switch command will be evaluated. \c case parameters may contain
 wildcards. These need to be escaped or quoted in order to avoid
 regular wildcard expansion using filenames.
 
-Note that fish does not fall through on case statements. Though the
-syntax may look a bit like C switch statements, it behaves more like
-the case statements of traditional shells.
+Note that fish does not fall through on case statements. Only the
+first matching case is executed.
 
-Also note that command substitutions in a case statement will be
-evaluated even if it's body is not taken. This may seem
-counterintuitive at first, but it is unavoidable, since it would be
-impossible to know if a case command will evaluate to true before all
-forms of parameter expansion have been performed for the case command.
+Note that command substitutions in a case statement will be
+evaluated even if its body is not taken. All substitutions, including
+command substitutions, must be performed before the value can be compared
+against the parameter.
 
 \subsection switch-example Example
 

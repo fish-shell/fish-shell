@@ -5,15 +5,18 @@
 
 \subsection begin-description Description
 
-The \c begin builtin is used to create a new block of code. The block
+\c begin is used to create a new block of code.
+
+The block
 is unconditionally executed. <code>begin; ...; end</tt> is equivalent
-to <tt>if true; ...; end</tt>. The begin command is used to group any
-number of commands into a block. The reason for doing so is usually
-either to introduce a new variable scope, to redirect the input or
+to <tt>if true; ...; end</tt>.
+
+\c begin is used to group a number of commands into a block.
+This allows the introduction of a new variable scope, redirection of the input or
 output of a set of commands as a group, or to specify precedence when
 using the conditional commands like \c and.
 
-The \c begin command does not change the current exit status.
+\c begin does not change the current exit status.
 
 \subsection begin-example Example
 

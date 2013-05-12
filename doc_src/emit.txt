@@ -5,7 +5,7 @@
 
 \subsection emit-description Description
 
-The emit builtin fires a generic fish event. Such events can be caught by special functions called event handlers. The arguments are passed to the event handlers as function arguments. 
+\c emit emits, or fires, an event. Events are delivered to, or caught by, special functions called event handlers. The arguments are passed to the event handlers as function arguments.
 
 \subsection emit-example Example
 

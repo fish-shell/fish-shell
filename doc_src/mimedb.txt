@@ -5,21 +5,22 @@
 
 \subsection mimedb-description Description
 
-- \c FILES is a list of files to analyse
-- \c -t, \c --input-file-data the specified files type should be determined both by their filename and by their contents (Default)
-- \c -f, \c --input-filename the specified files type should be determined by their filename
-- \c -i, \c --input-mime the arguments are not files but mimetypes
-- \c -m, \c --output-mime the output will be the mimetype of each file (Default)
-- \c -f, \c --output-description the output will be the description of each mimetype
-- \c -a, \c --output-action the output will be the default action of each mimetype
-- \c -l, \c --launch launch the default action for the specified file(s)
-- \c -h, \c --help display a help message and exit
-- \c -v, \c --version display version number and exit
+\c mimedb queries the MIME type database and the \c .desktop files
+installed on the system in order to find information on
+the files listed in <code>FILES</code>. The information that \c mimedb
+can retrieve includes the MIME type for a file, a description of the type,
+and the default action that can be performed on the file. \c mimedb can also
+be used to launch the default action for this file.
 
-The mimedb command is used to query the mimetype database and the
-.desktop files installed on the system in order to find information on
-a file. The information that mimedb can retrieve includes the mimetype
-for a file, a description of the type and what its default action
-is. mimedb can also be used to launch the default action for this
-file.
+The following options are available:
+
+- \c -t, \c --input-file-data determines the files' type both by their filename and by their contents (default behaviour).
+- \c -f, \c --input-filename determines the files' type by their filename.
+- \c -i, \c --input-mime specifies that the arguments are not files, but MIME types.
+- \c -m, \c --output-mime outputs the MIME type of each file (default behaviour).
+- \c -f, \c --output-description outputs the description of each MIME type.
+- \c -a, \c --output-action outputs the default action of each MIME type.
+- \c -l, \c --launch launches the default action for the specified files.
+- \c -h, \c --help displays a help message and exit.
+- \c -v, \c --version displays the version number and exits.
 

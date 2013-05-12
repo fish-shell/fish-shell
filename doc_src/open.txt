@@ -5,7 +5,7 @@
 
 \subsection open-description Description
 
-The \c open command is used to open a file in its default application. \c open is implemented using the \c xdg-open command if it exists, or else the <a href="commands.html#mimedb">mimedb</a> command.
+\c open opens a file in its default application, using the \c xdg-open command if it exists, or else the <a href="commands.html#mimedb">mimedb</a> command.
 
 \subsection open-example Example
 

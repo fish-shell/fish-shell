@@ -5,33 +5,34 @@
 
 \subsection bind-description Description
 
-The <tt>bind</tt> builtin causes fish to add a key binding from the specified sequence.
+<tt>bind</tt> adds a binding for the specified key sequence to the
+specified command.
 
-SEQUENCE is the character sequence to bind to. Usually, one would use
-fish escape sequences to express them. For example, because pressing
+SEQUENCE is the character sequence to bind to. These should be written as
+<a href="index.html#escapes">fish escape sequences</a>. For example, because pressing
 the Alt key and another character sends that character prefixed with
 an escape character, Alt-based key bindings can be written using the
 \c \\e escape. For example, Alt-w can be written as
-<tt>\\ew</tt>. Control character can be written in much the same way
-using the \c \\c escape, for example Control-x can be written as
+<tt>\\ew</tt>. The control character can be written in much the same way
+using the \c \\c escape, for example Control-x (^X) can be written as
 <tt>\\cx</tt>. Note that Alt-based key bindings are case sensitive and
-Control base key bindings are not. This is not a design choice in
-fish, it is simply how terminals work.
+Control-based key bindings are not. This is a constraint of text-based
+termainls, not \c fish.
 
-If SEQUENCE is the empty string, i.e. an empty set of quotes, this is
-interpreted as the default keybinding. It will be used whenever no
+The default key binding can be set by specifying a SEQUENCE of the empty
+string (that is, <code>''</code>). It will be used whenever no
 other binding matches. For most key bindings, it makes sense to use
 the \c self-insert function (i.e. <tt>bind '' self-insert</tt> as the
 default keybinding. This will insert any keystrokes not specifically
 bound to into the editor. Non-printable characters are ignored by the
-editor, so this will not result in e.g. control sequences being
+editor, so this will not result in control sequences being
 printable.
 
 If the -k switch is used, the name of the key (such as down, up or
 backspace) is used instead of a sequence. The names used are the same
 as the corresponding curses variables, but without the 'key_'
-prefix. (See man 5 terminfo for more information, or use <tt>bind
---key-names</tt> for a list of all available named keys)
+prefix. (See \c terminfo(5) for more information, or use <tt>bind
+--key-names</tt> for a list of all available named keys.)
 
 COMMAND can be any fish command, but it can also be one of a set of
 special input functions. These include functions for moving the
@@ -45,19 +46,19 @@ bind to the function name. This way it becomes significantly easier to
 test the function while editing, and the result is usually more
 readable as well.
 
-If you want to autoload bindings each time you start shell, you should 
-define them inside fish_user_key_bindings function.
+Key bindings are not saved between sessions by default. To save custom
+keybindings, edit the \c fish_user_key_bindings function and insert the
+appropirate \c bind statements.
 
-- <tt>-a</tt> or <tt>--all</tt> If --key-names is specified, show all key names, not only the ones that actually are defined for the current terminal. If erase mode is specified, this switch will cause all current bindings to be erased.
-- <tt>-e</tt> or <tt>--erase</tt> Erase mode. All non-switch arguments are interpreted as character sequences and any commands associated with those sequences are erased.
-- <tt>-h</tt> or <tt>--help</tt> Display help and exit
+The following parameters are available:
+
 - <tt>-k</tt> or <tt>--key</tt> Specify a key name, such as 'left' or 'backspace' instead of a character sequence
 - <tt>-K</tt> or <tt>--key-names</tt> Display a list of available key names
 - <tt>-f</tt> or <tt>--function-names</tt> Display a list of available input functions
 
-\subsection bind-example Example
+\subsection bind-example Examples
 
-<tt>bind \\cd 'exit'</tt> causes fish to exit on Control-d
+<tt>bind \\cd 'exit'</tt> causes \c fish to exit when Control-d is pressed.
 
-<tt>bind -k ppage history-search-backward</tt> Causes fish to perform a history search when the page up key is pressed
+<tt>bind -k ppage history-search-backward</tt> performs a history search when the Page Up key is pressed.
 

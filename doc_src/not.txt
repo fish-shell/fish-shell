@@ -5,11 +5,13 @@
 
 \subsection not-description Description
 
-The \c not builtin is used to negate the exit status of another command.
+\c not negates the exit status of another command. If the exit status
+is zero, \c not returns 1. Otherwise, \c not returns 0.
 
 \subsection not-example Example
 
 The following code reports an error and exits if no file named spoon can be found.
+
 <pre>
 if not test -f spoon
 	echo There is no spoon

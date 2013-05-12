@@ -4,6 +4,20 @@
 <tt>pushd [DIRECTORY]</tt>
 
 \subsection pushd-description Description
-The <tt>pushd</tt> function adds DIRECTORY to the top of the directory stack
-and makes it the current directory. Use <tt>popd</tt> to pop it off and
+The <tt>pushd</tt> function adds \c DIRECTORY to the top of the directory stack
+and makes it the current working directory. <a href="#popd"><tt>popd</tt></a> will pop it off and
 return to the original directory.
+
+\subsection pushd-example Example
+
+<pre>
+pushd /usr/src
+# Working directory is now /usr/src
+# Directory stack contains /usr/src
+pushd /usr/src/fish-shell
+# Working directory is now /usr/src/fish-shell
+# Directory stack contains /usr/src /usr/src/fish-shell
+popd
+# Working directory is now /usr/src
+# Directory stack contains /usr/src
+</pre>

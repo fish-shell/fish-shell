@@ -5,12 +5,14 @@
 
 \subsection contains-description Description
 
+\c contains tests whether the set \c VALUES contains the string
+<code>KEY</code>. If so, \c contains exits with status 0; if not, it exits
+with status 1.
+
+The following options are available:
+
 - \c -i or \c --index print the word index
 - \c -h or \c --help display this message
-
-Test if the set VALUES contains the string KEY. Return status is 0 if
-yes, 1 otherwise
-
 
 \subsection contains-example Example
 <pre>
@@ -21,4 +23,4 @@ for i in ~/bin /usr/local/bin
 end
 </pre>
 
-The above code tests if ~/bin and  /usr/local/bin are in the path and if they are not, they are added.
+The above code tests if \c ~/bin and \c /usr/local/bin are in the path and adds them if not.

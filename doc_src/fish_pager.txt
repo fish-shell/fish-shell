@@ -2,7 +2,6 @@
 
 \subsection fish_pager-description Description
 
-This command is used internally by fish to display a list of
-completions. It should not be used by other commands, as it's
-interface is liable to change in the future.
+\c fish_pager is used internally by fish. It should not be used by other
+commands, as its interface is liable to change in the future.
 

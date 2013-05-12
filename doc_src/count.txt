@@ -5,20 +5,13 @@
 
 \subsection count-description Description
 
-The <tt>count</tt> builtin prints the number of arguments that were
+<tt>count</tt> prints the number of arguments that were
 passed to it. This is usually used to find out how many elements an
-environment variable array contains, but this is not the only
-potential usage for the count command.
+environment variable array contains.
 
-The count command does not accept any options, not even '-h'. This way
-the user does not have to worry about an array containing elements
-such as dashes. \c fish performs a special check when invoking the
-count command, and if the user uses a help option, this help page is
-displayed, but if a help option is contained inside of a variable or
-is the result of expansion, it will simply be counted like any other
-argument.
+\c count does not accept any options, including '-h'.
 
-Count exits with a non-zero exit status if no arguments were passed
+\c count exits with a non-zero exit status if no arguments were passed
 to it, and with zero if at least one argument was passed.
 
 \subsection count-example Example

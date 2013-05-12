@@ -5,6 +5,10 @@
 
 \subsection breakpoint-description Description
 
-The \c breakpoint builtin is used to halt a running script and launch
-an interactive debug prompt.
+\c breakpoint is used to halt a running script and launch
+an interactive debugging prompt.
 
+For more details, see <a href="index.html#debugging">Debugging fish
+scripts</a> in the \c fish manual.
+
+There are no parameters for <code>breakpoint</code>.

@@ -10,7 +10,9 @@ switch VALUE; [case [WILDCARD...]; [COMMANDS...]; ...] end
 </pre>
 
 \subsection end-description Description
-<tt>end</tt> ends a block of commands. For more information, read the
+<tt>end</tt> ends a block of commands.
+
+For more information, read the
 documentation for the block constructs, such as \c if, \c for and \c
 while.
 

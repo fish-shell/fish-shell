@@ -4,5 +4,9 @@
 <tt>dirh</tt>
 
 \subsection dirh-description Description
+
 <tt>dirh</tt> prints the current directory history. The current position in the
-history is highlighted using <tt>$fish_color_history_current</tt>.
+history is highlighted using the color defined in the
+<tt>fish_color_history_current</tt> environment variable.
+
+\c dirh does not accept any parameters.

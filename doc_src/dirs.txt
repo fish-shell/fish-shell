@@ -4,4 +4,7 @@
 <tt>dirs</tt>
 
 \subsection dirs-description Description
-<tt>dirs</tt> prints the current directory stack.
+<tt>dirs</tt> prints the current directory stack, as created by the
+<code><a href="#pushd">pushd</a></code> command.
+
+\c dirs does not accept any parameters.

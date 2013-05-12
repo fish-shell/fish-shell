@@ -5,9 +5,11 @@ fish [-h] [-v] [-c command] [FILE [ARGUMENTS...]]
 
 \subsection fish-description Description
 
-A commandline shell written mainly with interactive use in mind. The
+\c fish is a command-line shell written mainly with interactive use in mind. The
 full manual is available <a href='index.html'>in HTML</a> by using the
 <a href='#help'>help</a> command from inside fish.
+
+The following options are available:
 
 - <code>-c</code> or <code>--command=COMMANDS</code> evaluate the specified commands instead of reading from the commandline
 - <code>-d</code> or <code>--debug-level=DEBUG_LEVEL</code> specify the verbosity level of fish. A higher number means higher verbosity. The default level is 1.

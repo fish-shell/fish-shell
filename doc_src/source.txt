@@ -5,24 +5,22 @@
 
 \subsection source-description Description
 
-Evaluates the commands of the specified file in the current
+\c . (source) evaluates the commands of the specified file in the current
 shell. This is different from starting a new process to perform the
 commands (i.e. <tt>fish < FILENAME</tt>) since the commands will be
 evaluated by the current shell, which means that changes in
-environment variables, etc., will remain. If additional arguments are
+environment variables affect the current shell. If additional arguments are
 specified after the file name, they will be inserted into the $argv
 variable.
 
 If no file is specified, or if the file name '-' is used, stdin will
 be read.
 
-The return status of . is the return status of the last job to
+The return status of \c . is the return status of the last job to
 execute. If something goes wrong while opening or reading the file,
-. exits with a non-zero status.
+\c . exits with a non-zero status.
 
 \subsection source-example Example
 
-<tt>. ~/.config/fish/config.fish</tt>
-
-causes fish to reread its initialization file.
+<tt>. ~/.config/fish/config.fish</tt> causes fish to re-read its initialization file.
 

@@ -6,13 +6,29 @@ alias NAME=DEFINITION</pre>
 
 \subsection alias-description Description
 
-Alias is a shellscript wrapper around the function builtin.
+\c alias is a simple wrapper for the \c function builtin.
 It exists for backwards compatibility with Posix
 shells. For other uses, it is recommended to define a <a
 href='#function'>function</a>.
 
-Alias does not keep track of which functions have been defined using
-alias, nor does it allow erasing of aliases.
+\c fish does not keep track of which functions have been defined using
+\c alias. They must be erased using <code>functions -e</code>.
 
-- NAME is the name of the function to define
-- DEFINITION is the body of the function. The string " $argv" will be appended to the body.
+- NAME is the name of the alias
+- DEFINITION is the actual command to execute. The string " $argv" will be appended.
+
+You cannot create an alias to a function with the same name.
+
+\subsection alias-example Example
+
+The following code will create \c rmi, which runs \c rm with additional
+arguments on every invocation.
+
+<code>alias rmi "rm -i"</code>
+
+This is equivalent to entering the following function:
+
+<pre>function rmi
+    rm -i $argv
+end</pre>
+

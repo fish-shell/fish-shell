@@ -163,7 +163,7 @@ Any file descriptor can be directed to a different output than its
 default through a simple mechanism called a redirection.
 
 An example of a file redirection is <code> echo hello \>output.txt</code>,
-which directs the output of the echo command to the file error.txt.
+which directs the output of the echo command to the file output.txt.
 
 - To redirect standard input, write <code>\<SOURCE_FILE</code>
 - To redirect standard output, write <code>\>DESTINATION</code>

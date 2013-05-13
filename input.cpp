@@ -336,7 +336,8 @@ int input_init()
 
     input_common_init(&interrupt_handler);
 
-    if (setupterm(0, STDOUT_FILENO, 0) == ERR)
+    int errret;
+    if (setupterm(0, STDOUT_FILENO, &errret) == ERR)
     {
         debug(0, _(L"Could not set up terminal"));
         exit_without_destructors(1);

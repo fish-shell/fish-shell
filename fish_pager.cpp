@@ -1069,8 +1069,8 @@ static void init(int mangle_descriptors, int out)
         exit(1);
     }
 
-
-    if (setupterm(0, STDOUT_FILENO, 0) == ERR)
+    int errret;
+    if (setupterm(0, STDOUT_FILENO, &errret) == ERR)
     {
         debug(0, _(L"Could not set up terminal"));
         exit(1);

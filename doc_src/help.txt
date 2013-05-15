@@ -5,12 +5,14 @@
 
 \subsection help-description Description
 
-The \c help command is used to display a section of the fish help documentation.
+\c help displays the fish help documentation.
+
+If a \c SECTION is specified, the help for that command is shown.
 
 If the BROWSER environment variable is set, it will be used to display the
-documentation, otherwise fish will search for a suitable browser.
+documentation. Otherwise, fish will search for a suitable browser.
 
-Note also that most builtin commands display their help in the terminal when
+Note that most builtin commands display their help in the terminal when
 given the <tt>--help</tt> option.
 
 \subsection help-example Example

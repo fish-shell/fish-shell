@@ -1,4 +1,4 @@
-\section history history - Show and manipulate user's command history 
+\section history history - Show and manipulate command history
 
 \subsection history-synopsis Synopsis
 <pre>
@@ -8,29 +8,37 @@ history (--search | --delete ) (--prefix "prefix string" | --contains "search st
 
 \subsection history-description Description
 
-history is used to list, search and delete user's command history
+\c history is used to list, search and delete the history of commands used.
+
+The following options are available:
+
+- \c --save saves all changes in the history file. The shell automatically
+saves the history file; this option is provided for internal use.
+- \c --clear clears the history file. A prompt is displayed before the history
+is erased.
+- \c --search returns history items in keeping with the \c --prefix or
+\c --contains options.
+- \c --delete deletes history items.
+- \c --prefix searches or deletes items in the history that begin with the
+specified text string.
+- \c --contains searches or deletes items in the history that contain the
+specified text string.
+
+If \c --search is specified without \c --contains or <code>--prefix</code>,
+\c --contains will be assumed.
+
+If \c --delete is specified without \c --contains or <code>--prefix</code>,
+only a history item which exactly matches the parameter will be erased. No
+prompt will be given. If \c --delete is specified with either of these
+parameters, an interactive prompt will be displayed before any items are
+deleted.
 
 \subsection history-examples Example
 
-<pre>
-history --save
-Save all changes in history file
+<code>history --clear</code> deletes all history items
 
-history --clear
-Delete all history items
+<code>history --search --contains "foo"</code> outputs a list of all previous
+commands containing the string "foo".
 
-history --search --contains "foo"
-Searches commands containing "foo" string
-
-history --search --prefix "foo"
-Searches for commands with prefix "foo"
-
-history --delete --contains "foo"
-Interactively delete commands containing string "foo"
-
-history --delete --prefix "foo"
-Interactively delete commands with prefix "foo"
-
-history --delete "foo"
-Delete command "foo" from history
-</pre>
+<code>history --delete --prefix "foo"</code> interactively deletes the record
+of previous commands which start with "foo".

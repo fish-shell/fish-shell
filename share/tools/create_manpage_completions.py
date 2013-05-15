@@ -162,11 +162,14 @@ def built_command(options, description):
     # But don't let it be empty
     sentences = [x for x in sentences if x.strip()]
     if not sentences: sentences = ['']
+
+    udot = lossy_unicode('.')
+    uspace = lossy_unicode(' ') 
     
-    truncated_description = sentences[0] + '.'
+    truncated_description = lossy_unicode(sentences[0]) + udot 
     for line in sentences[1:]:
         if not line: continue
-        proposed_description = truncated_description + ' ' + line + '.'
+        proposed_description = lossy_unicode(truncated_description) + uspace + lossy_unicode(line) + udot 
         if len(proposed_description) <= max_description_width:
             # It fits
             truncated_description = proposed_description

@@ -5,13 +5,14 @@
 
 \subsection funced-description Description
 
-Use the funced command to edit the definition of a function. If there is no
-function with the name specified, a skeleton function is inserted. If the
-function exists, its definition will be shown in your editor or on the command
-line.
+\c funced provides an interface to edit the definition of the function
+<code>NAME</code>.
 
-By default, funced edits functions using the text editor in your $EDITOR
-variable, if set; otherwise it uses the built-in editor.
+If the \c $EDITOR environment variable is set, it will be used as the program
+to edit the function. Otherwise, a built-in editor will be used.
+
+If there is no function called \c NAME a new function will be created with
+the specified name
 
 - <code>-e command</code> or <code>--editor command</code> Open the function
   body inside the text editor given by the command (for example, "vi"). The

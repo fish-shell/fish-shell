@@ -1,31 +1,51 @@
 \section functions functions - print or erase functions
 
 \subsection function-synopsis Synopsis
-<code>functions [-e] FUNCTIONS...</code>
+<pre>functions [-n]
+functions -c OLDNAME NEWNAME
+functions -d DESCRIPTION FUNCTION
+functions [-eq] FUNCTIONS...</pre>
 
 \subsection functions-description Description
 
-This builtin command is used to print or erase functions.
+\c functions prints or erases functions.
 
-- <code>-a</code> or <code>--all</code> list all functions, even those whose name start with an underscore.
+The following options are available:
+
+- <code>-a</code> or <code>--all</code> lists all functions, even those whose name start with an underscore.
 - <code>-c OLDNAME NEWNAME</code> or <code>--copy OLDNAME NEWNAME</code> creates a new function named NEWNAME, using the definition of the OLDNAME function.
-- <code>-d DESCRIPTION</code> or <code>--description=DESCRIPTION</code> change the description of this function
+- <code>-d DESCRIPTION</code> or <code>--description=DESCRIPTION</code> changes the description of this function.
 - <code>-e</code> or <code>--erase</code> causes the specified functions to be erased.
-- <code>-h</code> or <code>--help</code> display a help message and exit
-- <code>-n</code> or <code>--names</code> list only the names of all defined functions, not their definition
-- <code>-q</code> or <code>--query</code> test if the specified functions exist. Does not output anything, but the builtins exit status is the number of functions specified that were not defined.
+- <code>-h</code> or <code>--help</code> displays a help message and exits.
+- <code>-n</code> or <code>--names</code> lists the names of all defined functions.
+- <code>-q</code> or <code>--query</code> tests if the specified functions exist.
 
-The default behavior of \c functions when called with no arguments,
-is to print the names and definitions of all defined functions. If any
-non-switch parameters are given, only the definition of the specified
+The default behavior of <code>functions</code>, when called with no arguments,
+is to print the names of all defined functions. Unless the \c -a option is
+given, no functions starting with underscores are not included in the output.
+
+If any non-option parameters are given, the definition of the specified
 functions are printed.
 
-Automatically loaded functions can not be removed using functions
--e. Either remove the definition file or change the
+Automatically loaded functions cannot be removed using <code>functions
+-e</code>. Either remove the definition file or change the
 $fish_function_path variable to remove autoloaded functions.
 
-Function copies, created with -c, will not have any event/signal/on-exit 
-notifications that the original may have had.
+Copying a function using \c -c copies only the body of the function, and
+does not attach any event notifications from the original function.
 
-The exit status of the functions builtin is the number functions
-specified in the argument list that do not exist.
+Only one function's description can be changed in a single invocation
+of <code>functions -d</code>.
+
+The exit status of \c functions is the number of functions
+specified in the argument list that do not exist, which can be used in
+concert with the \c -q option.
+
+\subsection functions-example Examples
+
+<code>functions -n</code> displays a list of currently-defined functions.
+
+<code>functions -c foo bar</code> copies the \c foo function to a new function called
+<code>bar</code>.
+
+<code>functions -e bar</code> erases the function <code>bar</code>.

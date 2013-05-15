@@ -5,8 +5,8 @@
 
 \subsection for-description Description
 <tt>for</tt> is a loop construct. It will perform the commands specified by
-COMMANDS multiple times. Each time the environment variable specified by
-VARNAME is assigned a new value from VALUES. If VALUES is empty, COMMANDS will
+\c COMMANDS multiple times. On each iteration, the environment variable specified by
+\c VARNAME is assigned a new value from \c VALUES. If \c VALUES is empty, \c COMMANDS will
 not be executed at all.
 
 \subsection for-example Example

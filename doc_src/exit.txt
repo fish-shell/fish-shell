@@ -1,13 +1,13 @@
-\section exit exit - exit the shell.
+\section exit exit - exit the shell
 
 \subsection exit-synopsis Synopsis
 <tt>exit [STATUS]</tt>
 
 \subsection exit-description Description
 
-The <tt>exit</tt> builtin causes fish to exit. If <tt>STATUS</tt> is
+\c exit causes fish to exit. If <tt>STATUS</tt> is
 supplied, it will be converted to an integer and used as the exit
-code. Otherwise the exit code will be that of the last command executed.
+code. Otherwise, the exit code will be that of the last command executed.
 
 If exit is called while sourcing a file (using the <a
 href="#source">.</a> builtin) the rest of the file will be skipped,

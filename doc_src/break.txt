@@ -1,13 +1,16 @@
-\section break break - stop the innermost currently evaluated loop
+\section break break - stop the current inner loop
 
 \subsection break-synopsis Synopsis
  <tt>LOOP_CONSTRUCT; [COMMANDS...] break; [COMMANDS...] end</tt>
 
 \subsection break-description Description
-The \c break builtin is used to halt a currently running loop, such as a <a href="#for">for</a> loop or a <a href="#while">while</a> loop. It is usually added inside of a conditional block such as an <a href="#if">if</a> statement or a <a href="#switch">switch</a> statement.
+
+\c break halts a currently running loop, such as a <a href="#for">for</a> loop or a <a href="#while">while</a> loop. It is usually added inside of a conditional block such as an <a href="#if">if</a> statement or a <a href="#switch">switch</a> statement.
+
+There are no parameters for <code>break</code>.
 
 \subsection break-example Example
-The following code searches all .c files for smurfs, and halts at the first occurrence.
+The following code searches all .c files for "smurf", and halts at the first occurrence.
 
 <pre>
 for i in *.c

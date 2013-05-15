@@ -1,21 +1,23 @@
-\section type type - indicate how a name would be interpreted if used as a command name
+\section type type - indicate how a command would be interpreted
 
 \subsection type-synopsis Synopsis
- <tt>type [OPTIONS] name [name ...]</tt>
+ <tt>type [OPTIONS] NAME [NAME ...]</tt>
 
 \subsection type-description Description
 
-With no options, indicate how each name would be interpreted if used as a command name.
+With no options, \c type indicates how each \c NAME would be interpreted if used as a command name.
 
-- \c -h or \c --help print this message
-- \c -a or \c --all print all of possible definitions of the specified names
-- \c -f or \c --no-functions suppresses function and builtin lookup
-- \c -t or \c --type print a string which is one of keyword, function, builtin, or file if name is a shell reserved word, function, builtin, or disk file, respectively
-- \c -p or \c --path either return the name of the disk file that would be executed if name were specified as a command name, or nothing if 'type  -t  name' would  not  return 'file'
-- \c -P or \c --force-path either return the name of the disk file that would be executed if name were specified as a command name, or nothing no file with the specified name could be found in the PATH
+The following options are available:
 
-\c type returns a zero exit status if the specified command was found,
-otherwise the exit status is one.
+- \c -h or \c --help prints help and then exits.
+- \c -a or \c --all prints all of possible definitions of the specified names.
+- \c -f or \c --no-functions suppresses function and builtin lookup.
+- \c -t or \c --type prints <tt>keyword</tt>, <tt>function</tt>, <tt>builtin</tt>, or <tt>file</tt> if \c NAME is a shell reserved word, function, builtin, or disk file, respectively.
+- \c -p or \c --path returns the name of the disk file that would be executed, or nothing if 'type  -t  name' would not return 'file'.
+- \c -P or \c --force-path returns the name of the disk file that would be executed, or nothing no file with the specified name could be found in the <tt>$PATH</tt>.
+
+\c type sets the exit status to 0 if the specified command was found,
+and 1 if it could not be found.
 
 \subsection type-example Example
 

@@ -1,32 +1,34 @@
-\section commandline commandline - set or get the current commandline buffer
+\section commandline commandline - set or get the current command line buffer
 
 \subsection commandline-synopsis Synopsis
 <tt>commandline [OPTIONS] [CMD]</tt>
 
 \subsection commandline-description Description
 
+\c commandline can be used to set or get the current contents of the command
+line buffer.
 
-- \c CMD is the new value of the commandline. If unspecified, the
-  current value of the commandline is written to standard output. All
-  output from the commandline builtin is escaped, i.e. quotes are
-  removed, backslash escapes are expanded, etc..
+With no parameters, \c commandline returns the current value of the command
+line.
 
-The following switches change what the commandline builtin does
+With \c CMD specified, the command line buffer is erased and replaced with
+the contents of \c CMD.
+
+The following options are available:
 
 - \c -C or \c --cursor set or get the current cursor position, not
   the contents of the buffer. If no argument is given, the current
   cursor position is printed, otherwise the argument is interpreted
   as the new cursor position.
 - \c -f or \c --function inject readline functions into the
-  reader. This option can not be combined with any other option. It
+  reader. This option cannot be combined with any other option. It
   will cause any additional arguments to be interpreted as readline
   functions, and these functions will be injected into the reader, so
   that they will be returned to the reader before any additional
   actual key presses are read.
 
-
-The following switches change the way \c commandline updates the
-commandline buffer
+The following options change the way \c commandline updates the
+command line buffer:
 
 - \c -a or \c --append do not remove the current commandline, append
   the specified string at the end of it
@@ -35,29 +37,27 @@ commandline buffer
 - \c -r or \c --replace remove the current commandline and replace it
   with the specified string (default)
 
-The following switches change what part of the commandline is printed
-or updated
+The following options change what part of the commandline is printed
+or updated:
 
 - \c -b or \c --current-buffer select the entire buffer (default)
 - \c -j or \c --current-job select the current job
 - \c -p or \c --current-process select the current process
 - \c -t or \c --current-token select the current token.
 
-The following switch changes the way \c commandline prints the current
-commandline buffer
+The following options change the way \c commandline prints the current
+commandline buffer:
 
 - \c -c or \c --cut-at-cursor only print selection up until the
   current cursor position
 - \c -o or \c --tokenize tokenize the selection and print one string-type token per line
 
 
-If commandline is called during a call to complete a given string
-using <code>complete -C STRING</code>, commandline will consider the
-specified string to be the current contents of the commandline.
+If \c commandline is called during a call to complete a given string
+using <code>complete -C STRING</code>, \c commandline will consider the
+specified string to be the current contents of the command line.
 
 \subsection commandline-example Example
 
-<tt>commandline -j $history[3]</tt>
-
-replaces the job under the cursor with the third item from the
-commandline history.
+<tt>commandline -j $history[3]</tt> replaces the job under the cursor with the
+third item from the command line history.

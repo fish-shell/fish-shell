@@ -5,11 +5,11 @@
 
 \subsection exec-description Description
 
-The \c exec builtin is used to replace the currently running shells
-process image with a new command. On successful completion, exec never
-returns. exec can not be used inside a pipeline.
+\c exec replaces the currently running shell with a new command.
+On successful completion, \c exec never returns. \c exec cannot be used
+inside a pipeline.
 
 \subsection exec-example Example
 
-<tt>exec emacs</tt> starts up the emacs text editor. When emacs exits,
-the session will terminate.
+<tt>exec emacs</tt> starts up the emacs text editor, and exits \c fish.
+When emacs exits, the session will terminate.

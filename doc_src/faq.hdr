@@ -7,6 +7,7 @@
 - <a href='#faq-titlebar'>I'm seeing weird output before each prompt when using screen. What's wrong?</a>
 - <a href='#faq-greeting'>How do I change the greeting message?</a>
 - <a href='#faq-history'>Why doesn't history substitution ("!$" etc.) work?</a>
+- <a href='#faq-uninstalling'>How do I uninstall fish?</a>
 
 <hr>
 
@@ -145,5 +146,20 @@ Fish history recall is very simple yet effective:
     - If you want to reuse several arguments from the same line ("!!:3*" and the like), consider recalling the whole line and removing what you don't need (Alt+D and Alt+Backspace are your friends).
 
 See <a href='index.html#editor'>documentation</a> for more details about line editing in fish.
+
+<hr>
+
+\section faq-uninstalling Uninstalling fish
+
+Should you wish to uninstall fish, first ensure fish is not set as your shell. Run <code>chsh -s /bin/bash</code> if you are not sure. 
+
+Next, do the following (assuming fish was installed to /usr/local):
+
+<pre>
+rm -Rf /usr/local/etc/fish /usr/local/share/fish ~/.config/fish
+rm /usr/local/share/man/man1/fish*.1
+cd /usr/local/bin
+rm -f fish mimedb fish_pager fishd fish_indent
+</pre>
 
 */

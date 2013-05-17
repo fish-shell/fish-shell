@@ -202,7 +202,7 @@ MAIN_DIR_FILES_UNSORTED := Doxyfile Doxyfile.user Doxyfile.help					\
     key_reader.cpp $(MIME_OBJS:.o=.h)											\
     $(MIME_OBJS:.o=.cpp) $(FISH_OBJS:.o=.h) $(BUILTIN_FILES)					\
     $(COMMON_FILES) $(COMMON_FILES:.cpp=.h) $(FISH_OBJS:.o=.cpp)				\
-    fish.spec.in INSTALL README user_doc.head.html								\
+    fish.spec.in INSTALL README user_doc.head.html doxygen_overrides.css	\
     ChangeLog config.sub config.guess fish_tests.cpp fish.cpp fish_pager.cpp	\
     fishd.cpp make_vcs_completions.fish $(FISH_INDENT_OBJS:.o=.cpp)
 
@@ -608,6 +608,7 @@ install-force: all install-translations
 			$(INSTALL) -m 644 $$i $(DESTDIR)$(docdir); \
 		fi; \
 	done;
+	$(INSTALL) -m 644 doxygen_overrides.css $(DESTDIR)$(docdir)
 	$(INSTALL) -m 755 -d $(DESTDIR)$(mandir)/man1
 	for i in $(MANUALS); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(mandir)/man1/; \

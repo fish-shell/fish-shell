@@ -34,8 +34,8 @@ make share/man
 cd /tmp
 rm -f "$prefix"
 ln -s "$wd" "$prefix"
-tar --append --file="$path" "$prefix"/user_doc/html
-tar --append --file="$path" "$prefix"/share/man
+gnutar --append --file="$path" "$prefix"/user_doc/html
+gnutar --append --file="$path" "$prefix"/share/man
 rm -f "$prefix"
 
 # gzip it

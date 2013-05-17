@@ -217,8 +217,10 @@ int wcwidth(wchar_t c);
 #if __APPLE__ && __DARWIN_C_LEVEL >= 200809L
 wchar_t *wcsdup_use_weak(const wchar_t *);
 int wcscasecmp_use_weak(const wchar_t *, const wchar_t *);
+int wcsncasecmp_use_weak(const wchar_t *s1, const wchar_t *s2, size_t n);
 #define wcsdup(a) wcsdup_use_weak((a))
 #define wcscasecmp(a, b) wcscasecmp_use_weak((a), (b))
+#define wcsncasecmp(a, b, c) wcsncasecmp_use_weak((a), (b), (c))
 
 #else
 
@@ -273,7 +275,7 @@ size_t wcslen(const wchar_t *in);
    fish and guaranteed to be a sane, english word. Using wcsncasecmp on
    a user-supplied string should be considered a bug.
 */
-int wcsncasecmp(const wchar_t *a, const wchar_t *b, int count);
+int wcsncasecmp(const wchar_t *a, const wchar_t *b, size_t count);
 
 /**
    Returns a newly allocated wide character string wich is a copy of

@@ -52,11 +52,12 @@ code
 
 pre
 {
+  white-space: pre;
+  overflow: auto; 
   font-family: monospace, fixed;
   background: #eeeeee;
-  padding: 4px 8px;
-  overflow: scroll; 
+  padding: 8px 12px;
   font-size: 0.9em;
   line-height: 1.2em;
-  border: 1px solid #CCCCCC;
+  border: 1px solid #aaaaaa;
 }

@@ -193,13 +193,13 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 		switch "$count"
 		case '' # no upstream
 		case "0	0" # equal to upstream
-			echo " u="
+			echo " $___fish_git_prompt_char_upstream_equal"
 		case "0	*" # ahead of upstream
-			echo " u+$ahead"
+			echo " $___fish_git_prompt_char_upstream_ahead$ahead"
 		case "*	0" # behind upstream
-			echo " u-$behind"
+			echo " $___fish_git_prompt_char_upstream_behind$behind"
 		case '*' # diverged from upstream
-			echo " u+$ahead-$behind"
+			echo " $__fish_git_prompt_char_upstream_diverged$ahead-$behind"
 		end
 	end
 end

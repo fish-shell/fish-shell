@@ -3035,6 +3035,9 @@ const wchar_t *reader_readline(void)
 
                         /* Since we just inserted a completion, don't immediately do a new autosuggestion */
                         data->suppress_autosuggestion = true;
+
+                        /* Trigger repaint (see #765) */
+                        reader_repaint_if_needed();
                     }
                 }
                 else

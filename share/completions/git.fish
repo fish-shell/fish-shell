@@ -184,12 +184,23 @@ complete -f -c git -n '__fish_git_needs_command' -a merge -d 'Join two or more d
 complete -f -c git -n '__fish_git_using_command merge' -a '(__fish_git_branches)' -d 'Branch'
 complete -f -c git -n '__fish_git_using_command merge' -l commit -d "Autocommit the merge"
 complete -f -c git -n '__fish_git_using_command merge' -l no-commit -d "Don't autocommit the merge"
+complete -f -c git -n '__fish_git_using_command merge' -l edit -d 'Edit auto-generated merge message'
+complete -f -c git -n '__fish_git_using_command merge' -l no-edit -d "Don't edit auto-generated merge message"
+complete -f -c git -n '__fish_git_using_command merge' -l ff -d "Don't generate a merge commit if merge is fast-forward"
+complete -f -c git -n '__fish_git_using_command merge' -l no-ff -d "Generate a merge commit even if merge is fast-forward"
+complete -f -c git -n '__fish_git_using_command merge' -l ff-only -d 'Refuse to merge unless fast-forward possible'
+complete -f -c git -n '__fish_git_using_command merge' -l log -d 'Populate the log message with one-line descriptions'
+complete -f -c git -n '__fish_git_using_command merge' -l no-log -d "Don't populate the log message with one-line descriptions"
 complete -f -c git -n '__fish_git_using_command merge' -l stat -d "Show diffstat of the merge"
 complete -f -c git -n '__fish_git_using_command merge' -s n -l no-stat -d "Don't show diffstat of the merge"
 complete -f -c git -n '__fish_git_using_command merge' -l squash -d "Squash changes from other branch as a single commit"
 complete -f -c git -n '__fish_git_using_command merge' -l no-squash -d "Don't squash changes"
-complete -f -c git -n '__fish_git_using_command merge' -l ff -d "Don't generate a merge commit if merge is fast forward"
-complete -f -c git -n '__fish_git_using_command merge' -l no-ff -d "Generate a merge commit even if merge is fast forward"
+complete -f -c git -n '__fish_git_using_command merge' -s q -l quiet -d 'Be quiet'
+complete -f -c git -n '__fish_git_using_command merge' -s v -l verbose -d 'Be verbose'
+complete -f -c git -n '__fish_git_using_command merge' -l progress -d 'Force progress status'
+complete -f -c git -n '__fish_git_using_command merge' -l no-progress -d 'Force no progress status'
+complete -f -c git -n '__fish_git_using_command merge' -s m -d 'Set the commit message'
+complete -f -c git -n '__fish_git_using_command merge' -l abort -d 'Abort the current conflict resolution process'
 
 # TODO options
 

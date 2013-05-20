@@ -3043,17 +3043,25 @@ const wchar_t *reader_readline(void)
                 else
                 {
                     /* Either the user hit tab only once, or we had no visible completion list. */
-                    const wchar_t *cmdsub_begin, *cmdsub_end;
-                    const wchar_t *token_begin, *token_end;
+                    
+                    /* Remove a trailing backslash. This may trigger an extra repaint, but this is rare. */
+                    if (is_backslashed(data->command_line, data->buff_pos))
+                    {
+                        remove_backward();
+                    }
+
+                    /* Get the string; we have to do this after removing any trailing backslash */
                     const wchar_t * const buff = data->command_line.c_str();
 
                     /* Clear the completion list */
                     comp.clear();
 
                     /* Figure out the extent of the command substitution surrounding the cursor. This is because we only look at the current command substitution to form completions - stuff happening outside of it is not interesting. */
+                    const wchar_t *cmdsub_begin, *cmdsub_end;
                     parse_util_cmdsubst_extent(buff, data->buff_pos, &cmdsub_begin, &cmdsub_end);
 
                     /* Figure out the extent of the token within the command substitution. Note we pass cmdsub_begin here, not buff */
+                    const wchar_t *token_begin, *token_end;
                     parse_util_token_extent(cmdsub_begin, data->buff_pos - (cmdsub_begin-buff), &token_begin, &token_end, 0, 0);
 
                     /* Figure out how many steps to get from the current position to the end of the current token. */
@@ -3064,12 +3072,6 @@ const wchar_t *reader_readline(void)
                     {
                         data->buff_pos = end_of_token_offset;
                         reader_repaint();
-                    }
-
-                    /* Remove a trailing backslash. This may trigger an extra repaint, but this is rare. */
-                    if (is_backslashed(data->command_line, data->buff_pos))
-                    {
-                        remove_backward();
                     }
 
                     /* Construct a copy of the string from the beginning of the command substitution up to the end of the token we're completing */

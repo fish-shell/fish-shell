@@ -208,7 +208,21 @@ complete -f -c git -n '__fish_git_using_command pull' -a '(__fish_git_branches)'
 
 ### push
 complete -f -c git -n '__fish_git_needs_command' -a push -d 'Update remote refs along with associated objects'
-# TODO options
+complete -f -c git -n '__fish_git_using_command push' -a '(git remote)' -d 'Remote alias'
+complete -f -c git -n '__fish_git_using_command push' -a '(__fish_git_branches)' -d 'Branch'
+complete -f -c git -n '__fish_git_using_command push' -l all -d 'Push all refs under refs/heads/'
+complete -f -c git -n '__fish_git_using_command push' -l prune -d "Remove remote branches that don't have a local counterpart"
+complete -f -c git -n '__fish_git_using_command push' -l mirror -d 'Push all refs under refs/'
+complete -f -c git -n '__fish_git_using_command push' -l delete -d 'Delete all listed refs from the remote repository'
+complete -f -c git -n '__fish_git_using_command push' -l tags -d 'Push all refs under refs/tags'
+complete -f -c git -n '__fish_git_using_command push' -s n -l dry-run -d 'Do everything except actually send the updates'
+complete -f -c git -n '__fish_git_using_command push' -l porcelain -d 'Produce machine-readable output'
+complete -f -c git -n '__fish_git_using_command push' -s f -l force -d 'Force update of remote refs'
+complete -f -c git -n '__fish_git_using_command push' -s u -l set-upstream -d 'Add upstream (tracking) reference'
+complete -f -c git -n '__fish_git_using_command push' -s q -l quiet -d 'Suppress all output'
+complete -f -c git -n '__fish_git_using_command push' -s v -l verbose -d 'Run verbosely'
+complete -f -c git -n '__fish_git_using_command push' -l progress -d 'Force progress status'
+# TODO --recurse-submodules=check|on-demand
 
 ### rebase
 complete -f -c git -n '__fish_git_needs_command' -a rebase -d 'Forward-port local commits to the updated upstream head'

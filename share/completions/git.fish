@@ -241,15 +241,33 @@ complete -f -c git -n '__fish_git_using_command push' -s n -l dry-run -d 'Do eve
 complete -f -c git -n '__fish_git_using_command push' -l porcelain -d 'Produce machine-readable output'
 complete -f -c git -n '__fish_git_using_command push' -s f -l force -d 'Force update of remote refs'
 complete -f -c git -n '__fish_git_using_command push' -s u -l set-upstream -d 'Add upstream (tracking) reference'
-complete -f -c git -n '__fish_git_using_command push' -s q -l quiet -d 'Suppress all output'
-complete -f -c git -n '__fish_git_using_command push' -s v -l verbose -d 'Run verbosely'
+complete -f -c git -n '__fish_git_using_command push' -s q -l quiet -d 'Be quiet'
+complete -f -c git -n '__fish_git_using_command push' -s v -l verbose -d 'Be verbose'
 complete -f -c git -n '__fish_git_using_command push' -l progress -d 'Force progress status'
 # TODO --recurse-submodules=check|on-demand
 
 ### rebase
 complete -f -c git -n '__fish_git_needs_command' -a rebase -d 'Forward-port local commits to the updated upstream head'
+complete -f -c git -n '__fish_git_using_command rebase' -a '(git remote)' -d 'Remote alias'
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_branches)' -d 'Branch'
-# TODO options
+complete -f -c git -n '__fish_git_using_command rebase' -l continue -d 'Restart the rebasing process'
+complete -f -c git -n '__fish_git_using_command rebase' -l abort -d 'Abort the rebase operation'
+complete -f -c git -n '__fish_git_using_command rebase' -l keep-empty -d "Keep the commits that don't cahnge anything"
+complete -f -c git -n '__fish_git_using_command rebase' -l skip -d 'Restart the rebasing process by skipping the current patch'
+complete -f -c git -n '__fish_git_using_command rebase' -s m -l merge -d 'Use merging strategies to rebase'
+complete -f -c git -n '__fish_git_using_command rebase' -s q -l quiet -d 'Be quiet'
+complete -f -c git -n '__fish_git_using_command rebase' -s v -l verbose -d 'Be verbose'
+complete -f -c git -n '__fish_git_using_command rebase' -l stat -d "Show diffstat of the rebase"
+complete -f -c git -n '__fish_git_using_command rebase' -s n -l no-stat -d "Don't show diffstat of the rebase"
+complete -f -c git -n '__fish_git_using_command rebase' -l verify -d "Allow the pre-rebase hook to run"
+complete -f -c git -n '__fish_git_using_command rebase' -l no-verify -d "Don't allow the pre-rebase hook to run"
+complete -f -c git -n '__fish_git_using_command rebase' -s f -l force-rebase -d 'Force the rebase'
+complete -f -c git -n '__fish_git_using_command rebase' -s i -l interactive -d 'Interactive mode'
+complete -f -c git -n '__fish_git_using_command rebase' -s p -l preserve-merges -d 'Try to recreate merges'
+complete -f -c git -n '__fish_git_using_command rebase' -l root -d 'Rebase all reachable commits'
+complete -f -c git -n '__fish_git_using_command rebase' -l autosquash -d 'Automatic squashing'
+complete -f -c git -n '__fish_git_using_command rebase' -l no-autosquash -d 'No automatic squashing'
+complete -f -c git -n '__fish_git_using_command rebase' -l no-ff -d 'No fast-forward'
 
 ### reset
 complete -c git -n '__fish_git_needs_command'    -a reset -d 'Reset current HEAD to the specified state'
@@ -267,7 +285,7 @@ complete -c git -n '__fish_git_using_command rm' -f
 complete -c git -n '__fish_git_using_command rm' -l cached -d 'Keep local copies'
 complete -c git -n '__fish_git_using_command rm' -l ignore-unmatch -d 'Exit with a zero status even if no files matched'
 complete -c git -n '__fish_git_using_command rm' -s r -d 'Allow recursive removal'
-complete -c git -n '__fish_git_using_command rm' -s q -l quiet -d 'Suppress the output'
+complete -c git -n '__fish_git_using_command rm' -s q -l quiet -d 'Be quiet'
 complete -c git -n '__fish_git_using_command rm' -s f -l force -d 'Override the up-to-date check'
 complete -c git -n '__fish_git_using_command rm' -s n -l dry-run -d 'Dry run'
 # TODO options

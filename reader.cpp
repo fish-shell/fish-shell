@@ -3542,6 +3542,33 @@ const wchar_t *reader_readline(void)
                 break;
             }
 
+            case R_TRANSPOSE_CHARS:
+            {
+                if (data->command_length() < 2) {
+                    break;
+                }
+
+                /* If the cursor is at the end, transpose the last two characters of the line */
+                if (data->buff_pos == data->command_length())
+                {
+                    data->buff_pos--;
+                }
+
+                /*
+                 Drag the character before the cursor forward over the character at the cursor, moving
+                 the cursor forward as well.
+                 */
+                if (data->buff_pos > 0)
+                {
+                    wchar_t tmp = data->command_line[data->buff_pos];
+                    data->command_line[data->buff_pos] = data->command_line[data->buff_pos-1];
+                    data->command_line[data->buff_pos-1] = tmp;
+                    data->buff_pos++;
+                    reader_repaint();
+                }
+                break;
+            }
+
             /* Other, if a normal character, we add it to the command */
             default:
             {

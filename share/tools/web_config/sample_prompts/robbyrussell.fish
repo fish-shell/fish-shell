@@ -33,5 +33,5 @@ function fish_prompt
     end
   end
 
-  echo -n -s $arrow $cwd $git_info $normal '>'
+  echo -n -s $arrow ' '$cwd $git_info $normal ' '
 end

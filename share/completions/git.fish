@@ -263,10 +263,12 @@ complete -f -c git -n '__fish_git_using_command status' -l ignore-submodules -x 
 ### tag
 complete -f -c git -n '__fish_git_needs_command' -a tag -d 'Create, list, delete or verify a tag object signed with GPG'
 complete -f -c git -n '__fish_git_using_command tag; and __fish_not_contain_opt -s d; and __fish_not_contain_opt -s v; and test (count (commandline -opc | sgrep -v -e \'^-\')) -eq 3' -a '(__fish_git_branches)' -d 'Branch'
-complete -f -c git -n '__fish_git_using_command tag' -s d -d 'Remove a tag'
-complete -f -c git -n '__fish_git_using_command tag' -s v -d 'Verify signature of a tag'
-complete -f -c git -n '__fish_git_using_command tag' -s f -d 'Force overwriting exising tag'
-complete -f -c git -n '__fish_git_using_command tag' -s s -d 'Make a GPG-signed tag'
+complete -f -c git -n '__fish_git_using_command tag' -s a -l annotate -d 'Make an unsigned, annotated tag object'
+complete -f -c git -n '__fish_git_using_command tag' -s s -l sign -d 'Make a GPG-signed tag'
+complete -f -c git -n '__fish_git_using_command tag' -s d -l delete -d 'Remove a tag'
+complete -f -c git -n '__fish_git_using_command tag' -s v -l verify -d 'Verify signature of a tag'
+complete -f -c git -n '__fish_git_using_command tag' -s f -l force -d 'Force overwriting exising tag'
+complete -f -c git -n '__fish_git_using_command tag' -s l -l list -d 'List tags'
 complete -f -c git -n '__fish_contains_opt -s d' -a '(__fish_git_tags)' -d 'Tag'
 complete -f -c git -n '__fish_contains_opt -s v' -a '(__fish_git_tags)' -d 'Tag'
 # TODO options

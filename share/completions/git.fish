@@ -271,6 +271,17 @@ complete -f -c git -n '__fish_contains_opt -s d' -a '(__fish_git_tags)' -d 'Tag'
 complete -f -c git -n '__fish_contains_opt -s v' -a '(__fish_git_tags)' -d 'Tag'
 # TODO options
 
+### stash
+complete -c git -n '__fish_git_needs_command' -a stash -d 'Stash away changes'
+complete -f -c git -n '__fish_git_using_command stash' -a list -d 'List stashes'
+complete -f -c git -n '__fish_git_using_command stash' -a show -d 'Show the changes recorded in the stash'
+complete -f -c git -n '__fish_git_using_command stash' -a pop -d 'Apply and remove a single stashed state'
+complete -f -c git -n '__fish_git_using_command stash' -a apply -d 'Apply a single stashed state'
+complete -f -c git -n '__fish_git_using_command stash' -a clear -d 'Remove all stashed states'
+complete -f -c git -n '__fish_git_using_command stash' -a drop -d 'Remove a single stashed state from the stash list'
+complete -f -c git -n '__fish_git_using_command stash' -a create -d 'Create a stash'
+# TODO other options
+
 ### config
 complete -f -c git -n '__fish_git_needs_command' -a config -d 'Set and read git configuration variables'
 # TODO options

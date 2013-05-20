@@ -192,7 +192,19 @@ complete -f -c git -n '__fish_git_needs_command' -a prune -d 'Prune all unreacha
 
 ### pull
 complete -f -c git -n '__fish_git_needs_command' -a pull -d 'Fetch from and merge with another repository or a local branch'
-# TODO options
+complete -f -c git -n '__fish_git_using_command pull' -s q -l quiet -d 'Be quiet'
+complete -f -c git -n '__fish_git_using_command pull' -s v -l verbose -d 'Be verbose'
+# Options related to fetching
+complete -f -c git -n '__fish_git_using_command pull' -l all -d 'Fetch all remotes'
+complete -f -c git -n '__fish_git_using_command pull' -s a -l append -d 'Append ref names and object names'
+complete -f -c git -n '__fish_git_using_command pull' -s f -l force -d 'Force update of local branches'
+complete -f -c git -n '__fish_git_using_command pull' -s k -l keep -d 'Keep downloaded pack'
+complete -f -c git -n '__fish_git_using_command pull' -l no-tags -d 'Disable automatic tag following'
+# TODO --upload-pack
+complete -f -c git -n '__fish_git_using_command pull' -l progress -d 'Force progress status'
+complete -f -c git -n '__fish_git_using_command pull' -a '(git remote)' -d 'Remote alias'
+complete -f -c git -n '__fish_git_using_command pull' -a '(__fish_git_branches)' -d 'Branch'
+# TODO other options
 
 ### push
 complete -f -c git -n '__fish_git_needs_command' -a push -d 'Update remote refs along with associated objects'

@@ -104,3 +104,18 @@ complete -c rsync -s 6 -l ipv6 --description "Prefer IPv6"
 complete -c rsync -l version --description "Display version and exit"
 complete -c rsync -l help --description "Display help and exit"
 
+#
+# Remote path
+#
+complete -c rsync -d "Remote Path" -n "echo (commandline -ct)|sgrep -o '.*:';and true" -a "
+
+(
+	#Prepend any user@host information supplied before the remote completion
+	echo (commandline -ct)|sgrep -o '.*:'
+)(
+	#Get the list of remote files from the specified ssh server
+        ssh -o \"BatchMode yes\" (echo (commandline -ct)|sed -ne 's/\(.*\):.*/\1/p') ls\ -dp\ (echo (commandline -ct)|sed -ne 's/.*://p')\*
+)
+
+"
+

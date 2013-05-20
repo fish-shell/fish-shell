@@ -93,7 +93,18 @@ complete -f -c git -n '__fish_git_using_command show-branch' -a '(__fish_git_hea
 
 ### add
 complete -c git -n '__fish_git_needs_command'    -a add -d 'Add file contents to the index'
-# TODO options
+complete -c git -n '__fish_git_using_command add' -s n -l dry-run -d "Don't actually add the file(s)"
+complete -c git -n '__fish_git_using_command add' -s v -l verbose -d 'Be verbose'
+complete -c git -n '__fish_git_using_command add' -s f -l force -d 'Allow adding otherwise ignored files'
+complete -c git -n '__fish_git_using_command add' -s i -l interactive -d 'Interactive mode'
+complete -c git -n '__fish_git_using_command add' -s p -l patch -d 'Interactively choose hunks to stage'
+complete -c git -n '__fish_git_using_command add' -s e -l edit -d 'Manually create a patch'
+complete -c git -n '__fish_git_using_command add' -s u -l update -d 'Only match tracked files'
+complete -c git -n '__fish_git_using_command add' -s A -l all -d 'Match files both in working tree and index'
+complete -c git -n '__fish_git_using_command add' -s N -l intent-to-add -d 'Record only the fact that the path will be added later'
+complete -c git -n '__fish_git_using_command add' -l refresh -d "Don't add the file(s), but only refresh their stat"
+complete -c git -n '__fish_git_using_command add' -l ignore-errors -d 'Ignore errors'
+complete -c git -n '__fish_git_using_command add' -l ignore-missing -d 'Check if any of the given files would be ignored'
 
 ### checkout
 complete -f -c git -n '__fish_git_needs_command'    -a checkout -d 'Checkout and switch to a branch'

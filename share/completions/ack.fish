@@ -72,7 +72,7 @@ complete -c ack -l noenv -l no-env -d 'Ignores environment variables and ackrc f
 complete -c ack -l ackrc -d 'Specifies location of ackrc file'
 complete -c ack -l ignore-ack-defaults -d 'Ignore default definitions ack includes'
 complete -c ack -l create-ackrc -d 'Outputs default ackrc'
-complete -c ack -s ? -l help -d 'Shows help'
+complete -c ack -s \? -l help -d 'Shows help'
 complete -c ack -l help-types -d 'Shows all known types'
 complete -c ack -l dump -d 'Dump information on which options are loaded'
 complete -c ack -l filter -d 'Forces ack to treat input as a pipe'

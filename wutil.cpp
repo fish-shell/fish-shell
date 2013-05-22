@@ -317,6 +317,9 @@ static inline void safe_append(char *buffer, const char *s, size_t buffsize)
     strncat(buffer, s, buffsize - strlen(buffer) - 1);
 }
 
+#if defined(__UCLIBC__)
+#define safe_strerror(x) strerror((x))
+#else
 const char *safe_strerror(int err)
 {
     if (err >= 0 && err < sys_nerr && sys_errlist[err] != NULL)
@@ -341,6 +344,7 @@ const char *safe_strerror(int err)
         return buff;
     }
 }
+#endif
 
 void safe_perror(const char *message)
 {

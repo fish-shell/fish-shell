@@ -100,7 +100,7 @@ language will often be rather low-level.
 Examples:
 
 - There should only be one type of input to the shell, lists of commands. Loops, conditionals and variable assignments are all performed through regular commands.
-- The differences between builtin commands, shellscript functions and builtin commands should be made as small as possible. Builtins and shellscript functions should have exactly the same types of argument expansion as other commands, should be possible to use in any position in a pipeline, and should support any io redirection.
+- The differences between builtin commands and shellscript functions should be made as small as possible. Builtins and shellscript functions should have exactly the same types of argument expansion as other commands, should be possible to use in any position in a pipeline, and should support any io redirection.
 - Instead of forking when performing command substitution to provide a fake variable scope, all fish commands are performed from the same process, and fish instead supports true scoping.
 - All blocks end with the \c end builtin.
 

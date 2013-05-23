@@ -58,16 +58,16 @@ function complete_from_list
 			case '=DIRECTORY' ' dir'
 				set str $str -x -a "'(__fish_complete_directories (commandline -ct))'"
 
-			case '=COMMAND'
+			case '=COMMAND' ' CMD'
 				set str $str -x -a "'(__fish_complete_command)'"
 
-			case '=USERNAME' ' <user>'
+			case '=USERNAME' ' USER' ' <user>'
 				set str $str -x -a "'(__fish_complete_users)'"
 
-			case '=FILENAME' '=FILE' ' <file>'
+			case '=FILENAME' '=FILE' ' FILE' ' <file>'
 				set str $str -r
 
-			case ' arg'
+			case ' arg' ' ARG'
 				set str $str -x
 
 			case ' (*):'

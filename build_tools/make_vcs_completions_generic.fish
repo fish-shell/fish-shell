@@ -187,7 +187,7 @@ function write_completions
 		case '*'
 
 		function list_subcommand
-			cmd help | sed -n -e 's/^  *\([^ ][^ ]*\) .*$/\1/p'
+			cmd help | sed -n -e '0,/^additional help topics:$/s/^  *\([^ ][^ ]*\) .*$/\1/p'
 		end
 
 		function list_subcommand_help

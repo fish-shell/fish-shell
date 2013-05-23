@@ -6,6 +6,7 @@
 - <a href='#faq-cmd-history'>How do I run a command from history?</a>
 - <a href='#faq-subcommand'>How do I run a subcommand? The backtick doesn't work!</a>
 - <a href='#faq-exit-status'>How do I get the exit status of a command?</a>
+- <a href='#faq-single-env'>How do I set an environment variable for just one command?</a>
 - <a href='#faq-customize-colors'>How do I customize my syntax highlighting colors?</a>
 - <a href='#faq-update-manpage-completions'>How do I update man page completions?</a>
 - <a href='#faq-cwd-symlink'>Why does cd, pwd and other fish commands always resolve symlinked directories to their canonical path?</a>
@@ -74,6 +75,23 @@ end</pre>
 
 Use the \c $status variable. This replaces the \c $? variable used in some
 other shells.
+
+<hr>
+
+\section faq-single-env How do I set an environment variable for just one command?
+
+<i><tt>SOME_VAR=1 command</tt> produces an error: <tt>Unknown command "SOME_VAR=1"</tt>.</i>
+
+Use the \c env command.
+
+<tt>env SOME_VAR=1 command</tt>
+
+You can also declare a local variable in a block:
+
+<pre>begin
+  set -lx SOME_VAR 1
+  command
+end</pre>
 
 <hr>
 

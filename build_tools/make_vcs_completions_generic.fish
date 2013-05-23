@@ -192,7 +192,7 @@ function write_completions
 
 		function list_subcommand_help
 			set -l short_exp '\(-.\|\)\( [^ -][^ ]*\|\)'
-			set -l long_exp '\(--[^ =,]*\)'
+			set -l long_exp '\(--[^ =,"]*\)'
 			set -l arg_exp '\(\|[= ][^ ][^ ]*\)'
 			set -l desc_exp '\([\t ]*:[\t ]*\|\)\([^ ].*[^.]\)'
 			set -l re "^ *$short_exp  *$long_exp$arg_exp  *$desc_exp\(\|\\.\)\$"

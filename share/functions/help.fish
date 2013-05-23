@@ -71,7 +71,7 @@ function help --description 'Show help for the fish shell'
 
 	if test -z $fish_browser
 		printf (_ '%s: Could not find a web browser.\n') help
-		printf (_ 'Please set the variable $BROWSER to a suitable browser and try again\n\n')
+                printf (_ 'Please set the variable $BROWSER to a suitable browser and try again.\n\n')
 		return 1
 	end
 
@@ -82,8 +82,6 @@ function help --description 'Show help for the fish shell'
 			set fish_help_page index.html
 		case "."
 			set fish_help_page "commands.html\#source"
-		case difference
-			set fish_help_page difference.html
 		case globbing
 			set fish_help_page "index.html\#expand"
 		case (__fish_print_commands)
@@ -125,10 +123,10 @@ function help --description 'Show help for the fish shell'
 
 		switch $fish_browser
 			case 'htmlview' 'x-www-browser'
-				printf (_ 'help: Help is being displayed in your default browser\n')
+                                printf (_ 'help: Help is being displayed in your default browser.\n')
 
 			case '*'
-				printf (_ 'help: Help is being displayed in %s\n') $fish_browser
+                                printf (_ 'help: Help is being displayed in %s.\n') $fish_browser
 
 		end
 

@@ -200,7 +200,7 @@ function write_completions
 			cmd help $argv | sed -n -e 's/'$re'/\1\t\3\t\4\t\6/p'
 		end
 
-		set cmd_str (cmd help | sed -n -e 's/^  *\([^ ][^ ]*\)[\t ]*\([^ ].*[^.]\)\(\|\\.\)$/-a \1 --description \'\2\'/p')
+		set cmd_str (cmd help | sed -n -e 's/\'/\\\\\'/g' -e 's/^  *\([^ ][^ ]*\)[\t ]*\([^ ].*[^.]\)\(\|\\.\)$/-a \1 --description \'\2\'/p')
 
 	end
 

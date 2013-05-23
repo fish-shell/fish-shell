@@ -388,7 +388,7 @@ void input_destroy()
 static wint_t input_exec_binding(const input_mapping_t &m, const wcstring &seq)
 {
     wchar_t code = input_function_get_code(m.command);
-    if (code != -1)
+    if (code != (wchar_t)-1)
     {
         switch (code)
         {

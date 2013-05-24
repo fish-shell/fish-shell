@@ -98,6 +98,8 @@ complete -f -c git -n '__fish_git_using_command show-branch' -a '(__fish_git_hea
 ### add
 complete -c git -n '__fish_git_needs_command'    -a add -d 'Add file contents to the index'
 complete -f -c git -n '__fish_git_using_command add; and __fish_contains_opt -s p patch' -a (__fish_git_modified_files)
+complete -f -c git -n '__fish_git_using_command add' -s p -d 'Interactively add hunks to staging area'
+complete -f -c git -n '__fish_git_using_command add' -s u -d 'Update already tracked files'
 # TODO options
 
 ### checkout

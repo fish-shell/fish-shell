@@ -345,6 +345,34 @@ end
 
 ### helper functions
 
+function __fish_git_prompt_current_operation --description "__fish_git_prompt helper, returns the current Git operation being performed"
+  set -l operation
+
+  set -l git_dir $argv[1]
+	if test -f $git_dir/rebase-merge/interactive
+		set operation "|REBASE-i"
+  else if test -d $git_dir/rebase-merge
+    set operation "|REBASE-m"
+  else
+    if test -d $git_dir/rebase-apply
+      if test -f $git_dir/rebase-apply/rebasing
+              set operation "|REBASE"
+      else if test -f $git_dir/rebase-apply/applying
+              set operation "|AM"
+      else
+              set operation "|AM/REBASE"
+			end
+    else if test -f $git_dir/MERGE_HEAD
+            set operation "|MERGING"
+    else if test -f $git_dir/CHERRY_PICK_HEAD
+            set operation "|CHERRY-PICKING"
+    else if test -f $git_dir/BISECT_LOG
+            set operation "|BISECTING"
+    end
+	end
+  echo $operation
+end
+
 function __fish_git_prompt_git_dir --description "__fish_git_prompt helper, returns .git dir if any"
   echo (git rev-parse --git-dir ^/dev/null)
 end

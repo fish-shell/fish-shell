@@ -18,6 +18,10 @@ function __fish_git_remotes
   command git remote
 end
 
+function __fish_git_modified_files
+    command git status -s | grep -e "^ M" | sed "s/^ M //"
+end
+
 function __fish_git_ranges
   set -l from (commandline -ot | perl -ne 'if (index($_, "..") > 0) { my @parts = split(/\.\./); print $parts[0]; }')
   if test -z "$from"
@@ -93,6 +97,7 @@ complete -f -c git -n '__fish_git_using_command show-branch' -a '(__fish_git_hea
 
 ### add
 complete -c git -n '__fish_git_needs_command'    -a add -d 'Add file contents to the index'
+complete -f -c git -n '__fish_git_using_command add; and __fish_contains_opt -s p patch' -a (__fish_git_modified_files)
 # TODO options
 
 ### checkout

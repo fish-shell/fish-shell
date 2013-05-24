@@ -345,6 +345,18 @@ end
 
 ### helper functions
 
+function __fish_git_prompt_dirty --description "__fish_git_prompt helper, tells whether or not the current branch has tracked, modified files"
+  set -l dirty
+
+  set -l os
+  git diff --no-ext-diff --quiet --exit-code
+  set os $status
+  if test $os -ne 0
+    set dirty $___fish_git_prompt_char_dirtystate
+  end
+  echo $dirty
+end
+
 function __fish_git_prompt_current_branch_bare --description "__fish_git_prompt helper, tells wheter or not the current branch is bare"
   set -l bare
 

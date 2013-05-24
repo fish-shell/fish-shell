@@ -345,6 +345,17 @@ end
 
 ### helper functions
 
+function __fish_git_prompt_current_branch_bare --description "__fish_git_prompt helper, tells wheter or not the current branch is bare"
+  set -l bare
+
+	if test "true" = (git rev-parse --is-inside-git-dir ^/dev/null)
+		if test "true" = (git rev-parse --is-bare-repository ^/dev/null)
+			set bare "BARE:"
+    end
+  end
+  echo $bare
+end
+
 function __fish_git_prompt_current_branch --description "__fish_git_prompt helper, returns the current Git branch"
   set -l branch
 

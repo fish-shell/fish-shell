@@ -345,6 +345,16 @@ end
 
 ### helper functions
 
+function __fish_git_prompt_staged --description "__fish_git_prompt helper, tells whether or not the current branch has staged files"
+  set -l staged
+
+  if git rev-parse --quiet --verify HEAD >/dev/null
+    git diff-index --cached --quiet HEAD --; or set staged $___fish_git_prompt_char_stagedstate
+  else
+    set staged $___fish_git_prompt_char_invalidstate
+  end
+end
+
 function __fish_git_prompt_dirty --description "__fish_git_prompt helper, tells whether or not the current branch has tracked, modified files"
   set -l dirty
 

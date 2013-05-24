@@ -319,14 +319,6 @@ function __fish_git_prompt --description "Prompt function for Git"
 	if test -n "$u"
 		set u "$___fish_git_prompt_color_untrackedfiles$u$___fish_git_prompt_color_untrackedfiles_done"
 	end
-	set -l f "$w$i$s$u"
-	set -l format $argv[1]
-	if test -z "$format"
-		set format " (%s)"
-	end
-	if test -n "$f"
-		set f " $f"
-	end
 	set b (/bin/sh -c 'echo "${1#refs/heads/}"' -- $b)
 	if test -n "$b"
 		set b "$___fish_git_prompt_color_branch$b$___fish_git_prompt_color_branch_done"
@@ -340,6 +332,17 @@ function __fish_git_prompt --description "Prompt function for Git"
 	if test -n "$p"
 		set p "$___fish_git_prompt_color_upstream$p$___fish_git_prompt_color_upstream_done"
 	end
+  
+  # Formatting
+	set -l f "$w$i$s$u"
+	if test -n "$f"
+		set f " $f"
+	end
+	set -l format $argv[1]
+	if test -z "$format"
+		set format " (%s)"
+	end
+
 	printf "%s$format%s" "$___fish_git_prompt_color_prefix" "$___fish_git_prompt_color_prefix_done$c$b$f$r$p$___fish_git_prompt_color_suffix" "$___git_ps_color_suffix_done"
 end
 

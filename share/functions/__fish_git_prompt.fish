@@ -345,6 +345,40 @@ end
 
 ### helper functions
 
+function __fish_git_prompt_current_branch --description "__fish_git_prompt helper, returns the current Git branch"
+  set -l branch
+
+  set -l os
+  set branch (git symbolic-ref HEAD ^/dev/null; set os $status)
+  if test $os -ne 0
+          set branch (switch "$__fish_git_prompt_describe_style"
+                          case contains
+                                  git describe --contains HEAD
+                          case branch
+                                  git describe --contains --all HEAD
+                          case describe
+                                  git describe HEAD
+                          case default '*'
+                                  git describe --tags --exact-match HEAD
+                          end ^/dev/null; set os $status)
+      if test $os -ne 0
+        set branch (cut -c1-7 $git_dir/HEAD ^/dev/null; set os $status)
+      if test $os -ne 0
+        set branch unknown
+      end
+    end
+    set branch "($branch)"
+  end
+
+  # I honestly don't know when this is relevant
+	if test "true" = (git rev-parse --is-inside-git-dir ^/dev/null)
+		if test "false" = (git rev-parse --is-bare-repository ^/dev/null)
+      set branch "GIT_DIR!"
+    end
+  end
+  echo $branch
+end
+
 function __fish_git_prompt_current_operation --description "__fish_git_prompt helper, returns the current Git operation being performed"
   set -l operation
 

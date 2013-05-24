@@ -345,6 +345,10 @@ end
 
 ### helper functions
 
+function __fish_git_prompt_git_dir --description "__fish_git_prompt helper, returns .git dir if any"
+  echo (git rev-parse --git-dir ^/dev/null)
+end
+
 function __fish_git_prompt_validate_chars --description "__fish_git_prompt helper, checks char variables"
 	if not set -q ___fish_git_prompt_char_dirtystate
 		set -g ___fish_git_prompt_char_dirtystate (set -q __fish_git_prompt_char_dirtystate; and echo $__fish_git_prompt_char_dirtystate; or echo '*')

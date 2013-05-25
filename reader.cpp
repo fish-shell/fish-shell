@@ -948,29 +948,6 @@ static int insert_char(wchar_t c)
 
 
 /**
-   Calculate the length of the common prefix substring of two strings.
-*/
-static size_t comp_len(const wchar_t *a, const wchar_t *b)
-{
-    size_t i;
-    for (i=0; a[i] != L'\0' && b[i] != L'\0' && a[i]==b[i]; i++)
-        ;
-    return i;
-}
-
-/**
-   Calculate the case insensitive length of the common prefix substring of two strings.
-*/
-static size_t comp_ilen(const wchar_t *a, const wchar_t *b)
-{
-    size_t i;
-    for (i=0; a[i] != L'\0' && b[i] != L'\0' && towlower(a[i])==towlower(b[i]); i++)
-        ;
-    return i;
-}
-
-
-/**
    Insert the string in the given command line at the given cursor
    position. The function checks if the string is quoted or not and
    correctly escapes the string.
@@ -1162,35 +1139,19 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
                                        prefix_esc.c_str());
 
     escaped_separator = escape(COMPLETE_SEP_STR, 1);
-
-    bool has_case_sensitive = false;
+    
     for (size_t i=0; i< comp.size(); i++)
     {
-        const completion_t &el = comp.at(i);
-        if (!(el.flags & COMPLETE_CASE_INSENSITIVE))
-        {
-            has_case_sensitive = true;
-            break;
-        }
-    }
-
-    for (size_t i=0; i< comp.size(); i++)
-    {
-
         long base_len=-1;
         const completion_t &el = comp.at(i);
-
+        
         wcstring completion_text;
         wcstring description_text;
 
-        if (has_case_sensitive && (el.flags & COMPLETE_CASE_INSENSITIVE))
-        {
-            continue;
-        }
-
         // Note that an empty completion is perfectly sensible here, e.g. tab-completing 'foo' with a file called 'foo' and another called 'foobar'
-        if (el.flags & COMPLETE_REPLACES_TOKEN)
+        if ((el.flags & COMPLETE_REPLACES_TOKEN) && match_type_shares_prefix(el.match.type))
         {
+            // Compute base_len if we have not yet
             if (base_len == -1)
             {
                 const wchar_t *begin, *buff = data->command_line.c_str();
@@ -1511,14 +1472,16 @@ static bool reader_can_replace(const wcstring &in, int flags)
     return true;
 }
 
-/* Compare two completions, except make the case insensitive comes larger than everyone (so they come last) */
-bool case_sensitive_completion_compare(const completion_t &a, const completion_t &b)
+/* Compare two completions, ordering completions with better match types first */
+bool compare_completions_by_match_type(const completion_t &a, const completion_t &b)
 {
-    if (a.is_case_insensitive() != b.is_case_insensitive())
+    /* Compare match types */
+    int match_compare = a.match.compare(b.match);
+    if (match_compare != 0)
     {
-        /* Case insensitive ones come last. Exactly one of a, b is case insensitive. If it's a, return false, i.e. not less than, to make it appear at the end. */
-        return ! a.is_case_insensitive();
+        return match_compare < 0;
     }
+
     /* Compare using file comparison */
     return wcsfilecmp(a.completion.c_str(), b.completion.c_str()) < 0;
 }
@@ -1526,7 +1489,28 @@ bool case_sensitive_completion_compare(const completion_t &a, const completion_t
 /* Order completions such that case insensitive completions come first. */
 static void prioritize_completions(std::vector<completion_t> &comp)
 {
-    sort(comp.begin(), comp.end(), case_sensitive_completion_compare);
+    /* Determine the best match type */
+    size_t i;
+    fuzzy_match_type_t best_type = fuzzy_match_none;
+    for (i=0; i < comp.size(); i++)
+    {
+        const completion_t &el = comp.at(i);
+        if (el.match.type < best_type)
+            best_type = el.match.type;
+    }
+    
+    /* Throw out completions whose match types are not the best. */
+    i = comp.size();
+    while (i--)
+    {
+        if (comp.at(i).match.type != best_type)
+        {
+            comp.erase(comp.begin() + i);
+        }
+    }
+    
+    /* Sort the remainder */
+    sort(comp.begin(), comp.end(), compare_completions_by_match_type);
 }
 
 /* Given a list of completions, get the completion at an index past *inout_idx, and then increment it. inout_idx should be initialized to (size_t)(-1) for the first call. */
@@ -1552,7 +1536,7 @@ static const completion_t *cycle_competions(const std::vector<completion_t> &com
         const completion_t &c = comp.at(idx);
 
         /* Try this completion */
-        if (! c.is_case_insensitive() || reader_can_replace(command_line, c.flags))
+        if (! (c.flags & COMPLETE_REPLACES_TOKEN) || reader_can_replace(command_line, c.flags))
         {
             /* Success */
             result = &c;
@@ -1586,12 +1570,8 @@ static const completion_t *cycle_competions(const std::vector<completion_t> &com
 
 static bool handle_completions(const std::vector<completion_t> &comp)
 {
-    wchar_t *base = NULL;
-    size_t len = 0;
     bool done = false;
     bool success = false;
-    int count = 0;
-    int flags=0;
     const wchar_t *begin, *end, *buff = data->command_line.c_str();
 
     parse_util_token_extent(buff, data->buff_pos, &begin, 0, 0, 0);
@@ -1625,7 +1605,7 @@ static bool handle_completions(const std::vector<completion_t> &comp)
               the token doesn't contain evil operators
               like {}
              */
-            if (! c.is_case_insensitive() || reader_can_replace(tok, c.flags))
+            if (! (c.flags & COMPLETE_REPLACES_TOKEN) || reader_can_replace(tok, c.flags))
             {
                 completion_insert(c.completion.c_str(), c.flags);
             }
@@ -1638,141 +1618,146 @@ static bool handle_completions(const std::vector<completion_t> &comp)
 
     if (!done)
     {
-        /* Try to find something to insert with the correct case */
-        for (size_t i=0; i< comp.size() ; i++)
+    
+        /* Determine the type of the best match(es) */
+        fuzzy_match_type_t best_match_type = fuzzy_match_none;
+        for (size_t i=0; i < comp.size(); i++)
         {
-            const completion_t &c =  comp.at(i);
-
-            /* Ignore case insensitive completions for now */
-            if (c.is_case_insensitive())
-                continue;
-
-            count++;
-
-            if (base)
+            const completion_t &el = comp.at(i);
+            if (el.match.type < best_match_type)
             {
-                size_t new_len = comp_len(base, c.completion.c_str());
-                len = mini(new_len, len);
+                best_match_type = el.match.type;
+            }
+        }
+        
+        /* Determine whether we are going to replace the token or not. If any commands of the best type do not require replacement, then ignore all those that want to use replacement */
+        bool will_replace_token = true;
+        for (size_t i=0; i< comp.size(); i++)
+        {
+            const completion_t &el = comp.at(i);
+            if (el.match.type == best_match_type && ! (el.flags & COMPLETE_REPLACES_TOKEN))
+            {
+                will_replace_token = false;
+                break;
+            }
+        }
+        
+        /* Decide which completions survived. There may be a lot of them; it would be nice if we could figure out how to avoid copying them here */
+        std::vector<completion_t> surviving_completions;
+        for (size_t i=0; i < comp.size(); i++)
+        {
+            const completion_t &el = comp.at(i);
+            /* Only use completions with the best match type */
+            if (el.match.type != best_match_type)
+                continue;
+            
+            /* Only use completions that match replace_token */
+            bool completion_replace_token = !! (el.flags & COMPLETE_REPLACES_TOKEN);
+            if (completion_replace_token != will_replace_token)
+                continue;
+            
+            /* Don't use completions that want to replace, if we cannot replace them */
+            if (completion_replace_token && ! reader_can_replace(tok, el.flags))
+                continue;
+            
+            /* This completion survived */
+            surviving_completions.push_back(el);
+        }
+        
+        
+        /* Try to find a common prefix to insert among the surviving completions */
+        wcstring common_prefix;
+        complete_flags_t flags = 0;
+        bool prefix_is_partial_completion = false;
+        for (size_t i=0; i < surviving_completions.size(); i++)
+        {
+            const completion_t &el = surviving_completions.at(i);
+            if (i == 0)
+            {
+                /* First entry, use the whole string */
+                common_prefix = el.completion;
+                flags = el.flags;
             }
             else
             {
-                base = wcsdup(c.completion.c_str());
-                len = wcslen(base);
-                flags = c.flags;
-            }
-        }
-
-        /* If we found something to insert, do it. */
-        if (len > 0)
-        {
-            if (count > 1)
-                flags = flags | COMPLETE_NO_SPACE;
-
-            base[len]=L'\0';
-            completion_insert(base, flags);
-            done = true;
-            success = true;
-        }
-    }
-
-
-
-    if (!done && base == NULL)
-    {
-        /* Try to find something to insert ignoring case */
-        if (begin)
-        {
-            size_t offset = tok.size();
-
-            count = 0;
-
-            for (size_t i=0; i< comp.size(); i++)
-            {
-                const completion_t &c = comp.at(i);
-
-                if (! c.is_case_insensitive())
-                    continue;
-
-                if (!reader_can_replace(tok, c.flags))
-                {
-                    len=0;
+                /* Determine the shared prefix length. */
+                size_t idx, max = mini(common_prefix.size(), el.completion.size());
+                for (idx=0; idx < max; idx++) {
+                    wchar_t ac = common_prefix.at(idx), bc = el.completion.at(idx);
+                    bool matches = (ac == bc);
+                    /* If we are replacing the token, allow case to vary */
+                    if (will_replace_token && ! matches)
+                    {
+                        /* Hackish way to compare two strings in a case insensitive way, hopefully better than towlower(). */
+                        matches = (wcsncasecmp(&ac, &bc, 1) == 0);
+                    }
+                    if (! matches)
+                        break;
+                }
+                
+                /* idx is now the length of the new common prefix */
+                common_prefix.resize(idx);
+                prefix_is_partial_completion = true;
+                
+                /* Early out if we decide there's no common prefix */
+                if (idx == 0)
                     break;
-                }
-
-                count++;
-
-                if (base)
-                {
-                    size_t new_len = offset + comp_ilen(base+offset, c.completion.c_str()+offset);
-                    len = new_len < len ? new_len: len;
-                }
-                else
-                {
-                    base = wcsdup(c.completion.c_str());
-                    len = wcslen(base);
-                    flags = c.flags;
-
-                }
             }
-
-            if (len > offset)
-            {
-                if (count > 1)
-                    flags = flags | COMPLETE_NO_SPACE;
-
-                base[len]=L'\0';
-                completion_insert(base, flags);
-                done = 1;
-                success = true;
-            }
-
         }
-    }
-
-    free(base);
-
-    if (!done)
-    {
-        /*
-          There is no common prefix in the completions, and show_list
-          is true, so we print the list
-        */
-        size_t len, prefix_start = 0;
-        wcstring prefix;
-        parse_util_get_parameter_info(data->command_line, data->buff_pos, NULL, &prefix_start, NULL);
-
-        assert(data->buff_pos >= prefix_start);
-        len = data->buff_pos - prefix_start;
-
-        if (len <= PREFIX_MAX_LEN)
+        
+        if (! common_prefix.empty())
         {
-            prefix.append(data->command_line, prefix_start, len);
+            /* We got something. If more than one completion contributed, then it means we have a prefix; don't insert a space after it */
+            if (prefix_is_partial_completion)
+                flags |= COMPLETE_NO_SPACE;
+            completion_insert(common_prefix.c_str(), flags);
+            success = true;
         }
         else
         {
-            // append just the end of the string
-            prefix = wcstring(&ellipsis_char, 1);
-            prefix.append(data->command_line, prefix_start + len - PREFIX_MAX_LEN, PREFIX_MAX_LEN);
+            /* We didn't get a common prefix. Print the list. */
+            size_t len, prefix_start = 0;
+            wcstring prefix;
+            parse_util_get_parameter_info(data->command_line, data->buff_pos, NULL, &prefix_start, NULL);
+
+            assert(data->buff_pos >= prefix_start);
+            len = data->buff_pos - prefix_start;
+            
+            if (match_type_requires_full_replacement(best_match_type))
+            {
+                // No prefix
+                prefix.clear();
+            }
+            else if (len <= PREFIX_MAX_LEN)
+            {
+                prefix.append(data->command_line, prefix_start, len);
+            }
+            else
+            {
+                // append just the end of the string
+                prefix = wcstring(&ellipsis_char, 1);
+                prefix.append(data->command_line, prefix_start + len - PREFIX_MAX_LEN, PREFIX_MAX_LEN);
+            }
+
+            {
+                int is_quoted;
+
+                wchar_t quote;
+                parse_util_get_parameter_info(data->command_line, data->buff_pos, &quote, NULL, NULL);
+                is_quoted = (quote != L'\0');
+
+                /* Clear the autosuggestion from the old commandline before abandoning it (see #561) */
+                if (! data->autosuggestion.empty())
+                    reader_repaint_without_autosuggestion();
+
+                write_loop(1, "\n", 1);
+                
+                run_pager(prefix, is_quoted, surviving_completions);
+            }
+            s_reset(&data->screen, screen_reset_abandon_line);
+            reader_repaint();
+            success = false;
         }
-
-        {
-            int is_quoted;
-
-            wchar_t quote;
-            parse_util_get_parameter_info(data->command_line, data->buff_pos, &quote, NULL, NULL);
-            is_quoted = (quote != L'\0');
-
-            /* Clear the autosuggestion from the old commandline before abandoning it (see #561) */
-            if (! data->autosuggestion.empty())
-                reader_repaint_without_autosuggestion();
-
-            write_loop(1, "\n", 1);
-
-            run_pager(prefix, is_quoted, comp);
-        }
-        s_reset(&data->screen, screen_reset_abandon_line);
-        reader_repaint();
-        success = false;
     }
     return success;
 }
@@ -3078,7 +3063,7 @@ const wchar_t *reader_readline(void)
                     const wcstring buffcpy = wcstring(cmdsub_begin, token_end);
 
                     //fprintf(stderr, "Complete (%ls)\n", buffcpy.c_str());
-                    data->complete_func(buffcpy, comp, COMPLETION_REQUEST_DEFAULT | COMPLETION_REQUEST_DESCRIPTIONS, NULL);
+                    data->complete_func(buffcpy, comp, COMPLETION_REQUEST_DEFAULT | COMPLETION_REQUEST_DESCRIPTIONS | COMPLETION_REQUEST_FUZZY_MATCH, NULL);
 
                     /* Munge our completions */
                     sort_and_make_unique(comp);

@@ -661,7 +661,21 @@ static void test_expand()
         err(L"Expansion not correctly handling literal path components in dotfiles");
     }
 
-    //system("rm -Rf /tmp/fish_expand_test");
+    system("rm -Rf /tmp/fish_expand_test");
+}
+
+static void test_fuzzy_match(void)
+{
+    say(L"Testing fuzzy string matching");
+
+    if (string_fuzzy_match_string(L"", L"").type != fuzzy_match_exact) err(L"test_fuzzy_match failed on line %ld", __LINE__);
+    if (string_fuzzy_match_string(L"alpha", L"alpha").type != fuzzy_match_exact) err(L"test_fuzzy_match failed on line %ld", __LINE__);
+    if (string_fuzzy_match_string(L"alp", L"alpha").type != fuzzy_match_prefix) err(L"test_fuzzy_match failed on line %ld", __LINE__);
+    if (string_fuzzy_match_string(L"ALPHA!", L"alPhA!").type != fuzzy_match_case_insensitive) err(L"test_fuzzy_match failed on line %ld", __LINE__);
+    if (string_fuzzy_match_string(L"alPh", L"ALPHA!").type != fuzzy_match_prefix_case_insensitive) err(L"test_fuzzy_match failed on line %ld", __LINE__);
+    if (string_fuzzy_match_string(L"LPH", L"ALPHA!").type != fuzzy_match_substring) err(L"test_fuzzy_match failed on line %ld", __LINE__);
+    if (string_fuzzy_match_string(L"AA", L"ALPHA!").type != fuzzy_match_subsequence_insertions_only) err(L"test_fuzzy_match failed on line %ld", __LINE__);
+    if (string_fuzzy_match_string(L"BB", L"ALPHA!").type != fuzzy_match_none) err(L"test_fuzzy_match failed on line %ld", __LINE__);
 }
 
 /** Test path functions */
@@ -974,7 +988,18 @@ static void test_complete(void)
     assert(completions.at(0).completion == L"oo1");
     assert(completions.at(1).completion == L"oo2");
     assert(completions.at(2).completion == L"oo3");
+    
+    completions.clear();
+    complete(L"$1", completions, COMPLETION_REQUEST_DEFAULT);
+    assert(completions.empty());
+    
+    completions.clear();
+    complete(L"$1", completions, COMPLETION_REQUEST_DEFAULT | COMPLETION_REQUEST_FUZZY_MATCH);
+    assert(completions.size() == 2);
+    assert(completions.at(0).completion == L"$Foo1");
+    assert(completions.at(1).completion == L"$Bar1");
 
+    
     complete_set_variable_names(NULL);
 }
 
@@ -1025,8 +1050,8 @@ static void test_completion_insertions()
     TEST_1_COMPLETION(L"'foo\\'^", L"bar", COMPLETE_NO_SPACE, false, L"'foo\\'bar^");
     TEST_1_COMPLETION(L"foo\\'^", L"bar", COMPLETE_NO_SPACE, false, L"foo\\'bar^");
 
-    TEST_1_COMPLETION(L"foo^", L"bar", COMPLETE_CASE_INSENSITIVE | COMPLETE_REPLACES_TOKEN, false, L"bar ^");
-    TEST_1_COMPLETION(L"'foo^", L"bar", COMPLETE_CASE_INSENSITIVE | COMPLETE_REPLACES_TOKEN, false, L"bar ^");
+    TEST_1_COMPLETION(L"foo^", L"bar", COMPLETE_REPLACES_TOKEN, false, L"bar ^");
+    TEST_1_COMPLETION(L"'foo^", L"bar", COMPLETE_REPLACES_TOKEN, false, L"bar ^");
 }
 
 static void perform_one_autosuggestion_test(const wcstring &command, const wcstring &wd, const wcstring &expected, long line)
@@ -1724,6 +1749,7 @@ int main(int argc, char **argv)
     test_parser();
     test_lru();
     test_expand();
+    test_fuzzy_match();
     test_test();
     test_path();
     test_word_motion();

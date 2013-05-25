@@ -280,7 +280,11 @@ completion_t::~completion_t()
 }
 
 /* completion_t functions */
-completion_t::completion_t(const wcstring &comp, const wcstring &desc, int flags_val) : completion(comp), description(desc), flags(flags_val)
+completion_t::completion_t(const wcstring &comp, const wcstring &desc, string_fuzzy_match_t mat, int flags_val) :
+    completion(comp),
+    description(desc),
+    match(mat),
+    flags(flags_val)
 {
     if (flags & COMPLETE_AUTO_SPACE)
     {
@@ -292,7 +296,7 @@ completion_t::completion_t(const wcstring &comp, const wcstring &desc, int flags
 
 }
 
-completion_t::completion_t(const completion_t &him) : completion(him.completion), description(him.description), flags(him.flags)
+completion_t::completion_t(const completion_t &him) : completion(him.completion), description(him.description), match(him.match), flags(him.flags)
 {
 }
 
@@ -302,6 +306,7 @@ completion_t &completion_t::operator=(const completion_t &him)
     {
         this->completion = him.completion;
         this->description = him.description;
+        this->match = him.match;
         this->flags = him.flags;
     }
     return *this;
@@ -370,6 +375,12 @@ class completer_t
     {
         return !!(flags & COMPLETION_REQUEST_FUZZY_MATCH);
     }
+    
+    fuzzy_match_type_t max_fuzzy_match_type() const
+    {
+        /* If we are doing fuzzy matching, request all types; if not request only prefix matching */
+        return (flags & COMPLETION_REQUEST_FUZZY_MATCH) ? fuzzy_match_none : fuzzy_match_prefix_case_insensitive;
+    }
 
 
 public:
@@ -428,6 +439,11 @@ public:
         expand_flags_t result = 0;
         if (this->type() == COMPLETE_AUTOSUGGEST)
             result |= EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_JOBS;
+        
+        /* Allow fuzzy matching */
+        if (this->fuzzy())
+            result |= EXPAND_FUZZY_MATCH;
+        
         return result;
     }
 
@@ -467,9 +483,9 @@ void completion_autoload_t::command_removed(const wcstring &cmd)
 
 
 /** Create a new completion entry */
-void append_completion(std::vector<completion_t> &completions, const wcstring &comp, const wcstring &desc, complete_flags_t flags)
+void append_completion(std::vector<completion_t> &completions, const wcstring &comp, const wcstring &desc, complete_flags_t flags, string_fuzzy_match_t match)
 {
-    completions.push_back(completion_t(comp, desc, flags));
+    completions.push_back(completion_t(comp, desc, match, flags));
 }
 
 /**
@@ -969,7 +985,7 @@ void completer_t::complete_strings(const wcstring &wc_escaped,
 
         if (next_str)
         {
-            wildcard_complete(next_str, wc, desc, desc_func, this->completions, flags);
+            wildcard_complete(next_str, wc, desc, desc_func, this->completions, this->expand_flags(), flags);
         }
     }
 
@@ -1191,11 +1207,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
                     this->complete_cmd_desc(str_cmd);
             }
         }
-
-        /*
-          These return the original strings - don't free them
-        */
-
+        
         if (use_function)
         {
             //function_get_names( &possible_comp, cmd[0] == L'_' );
@@ -1555,7 +1567,7 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
                             }
                             else
                             {
-                                flags = COMPLETE_REPLACES_TOKEN | COMPLETE_CASE_INSENSITIVE;
+                                flags = COMPLETE_REPLACES_TOKEN;
                             }
 
                             has_arg = ! o->comp.empty();
@@ -1645,57 +1657,50 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset)
     const wchar_t * const whole_var = str.c_str();
     const wchar_t *var = &whole_var[start_offset];
     size_t varlen = wcslen(var);
-    int res = 0;
-
+    bool res = false;
+    
     const wcstring_list_t names = complete_get_variable_names();
     for (size_t i=0; i<names.size(); i++)
     {
         const wcstring & env_name = names.at(i);
-        size_t namelen = env_name.size();
-        int match=0, match_no_case=0;
-
-        if (varlen > namelen)
+        
+        string_fuzzy_match_t match = string_fuzzy_match_string(var, env_name, this->max_fuzzy_match_type());
+        if (match.type == fuzzy_match_none)
+        {
+            // No match
             continue;
-
-        match = string_prefixes_string(var, env_name);
-
-        if (!match)
-        {
-            match_no_case = (wcsncasecmp(var, env_name.c_str(), varlen) == 0);
         }
-
-        if (match || match_no_case)
+        
+        wcstring comp;
+        int flags = 0;
+        
+        if (! match_type_requires_full_replacement(match.type))
         {
-            wcstring comp;
-            int flags = 0;
-
-            if (match)
-            {
-                comp.append(env_name.c_str() + varlen);
-            }
-            else
-            {
-                comp.append(whole_var, start_offset);
-                comp.append(env_name);
-                flags = COMPLETE_CASE_INSENSITIVE | COMPLETE_REPLACES_TOKEN | COMPLETE_DONT_ESCAPE;
-            }
-
-            wcstring desc;
-            if (this->wants_descriptions())
-            {
-                env_var_t value_unescaped = env_get_string(env_name);
-                if (value_unescaped.missing())
-                    continue;
-
-                wcstring value = expand_escape_variable(value_unescaped);
-                if (this->type() != COMPLETE_AUTOSUGGEST)
-                    desc = format_string(COMPLETE_VAR_DESC_VAL, value.c_str());
-            }
-
-            append_completion(this->completions,  comp.c_str(), desc.c_str(), flags);
-            res =1;
-
+            // Take only the suffix
+            comp.append(env_name.c_str() + varlen);
         }
+        else
+        {
+            comp.append(whole_var, start_offset);
+            comp.append(env_name);
+            flags = COMPLETE_REPLACES_TOKEN | COMPLETE_DONT_ESCAPE;
+        }
+        
+        wcstring desc;
+        if (this->wants_descriptions())
+        {
+            env_var_t value_unescaped = env_get_string(env_name);
+            if (value_unescaped.missing())
+                continue;
+            
+            wcstring value = expand_escape_variable(value_unescaped);
+            if (this->type() != COMPLETE_AUTOSUGGEST)
+                desc = format_string(COMPLETE_VAR_DESC_VAL, value.c_str());
+        }
+        
+        append_completion(this->completions,  comp.c_str(), desc.c_str(), flags, match);
+        
+        res = true;
     }
 
     return res;
@@ -1781,7 +1786,7 @@ bool completer_t::try_complete_user(const wcstring &str)
                         append_completion(this->completions,
                                           name,
                                           desc,
-                                          COMPLETE_CASE_INSENSITIVE | COMPLETE_REPLACES_TOKEN | COMPLETE_DONT_ESCAPE | COMPLETE_NO_SPACE);
+                                          COMPLETE_REPLACES_TOKEN | COMPLETE_DONT_ESCAPE | COMPLETE_NO_SPACE);
                         res=1;
                     }
                 }
@@ -1836,7 +1841,7 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, completion_
     {
         pos = cursor_pos-(cmdsubst_begin-cmd_cstr);
 
-        wcstring buff = wcstring(cmdsubst_begin, cmdsubst_end-cmdsubst_begin);
+        const wcstring buff = wcstring(cmdsubst_begin, cmdsubst_end-cmdsubst_begin);
 
         int had_cmd=0;
         int end_loop=0;

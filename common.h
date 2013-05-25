@@ -243,9 +243,80 @@ bool string_prefixes_string(const wchar_t *proposed_prefix, const wcstring &valu
 bool string_suffixes_string(const wcstring &proposed_suffix, const wcstring &value);
 bool string_suffixes_string(const wchar_t *proposed_suffix, const wcstring &value);
 
-
 /** Test if a string prefixes another without regard to case. Returns true if a is a prefix of b */
 bool string_prefixes_string_case_insensitive(const wcstring &proposed_prefix, const wcstring &value);
+
+enum fuzzy_match_type_t
+{
+    /* We match the string exactly: FOOBAR matches FOOBAR */
+    fuzzy_match_exact = 0,
+    
+    /* We match a prefix of the string: FO matches FOOBAR */
+    fuzzy_match_prefix,
+    
+    /* We match the string exactly, but in a case insensitive way: foobar matches FOOBAR */
+    fuzzy_match_case_insensitive,
+    
+    /* We match a prefix of the string, in a case insensitive way: foo matches FOOBAR */
+    fuzzy_match_prefix_case_insensitive,
+    
+    /* We match a substring of the string: OOBA matches FOOBAR */
+    fuzzy_match_substring,
+    
+    /* A subsequence match with insertions only: FBR matches FOOBAR */
+    fuzzy_match_subsequence_insertions_only,
+    
+    /* We don't match the string */
+    fuzzy_match_none
+};
+
+/* Indicates where a match type requires replacing the entire token */
+static inline bool match_type_requires_full_replacement(fuzzy_match_type_t t)
+{
+    switch (t)
+    {
+        case fuzzy_match_exact:
+        case fuzzy_match_prefix:
+            return false;
+        default:
+            return true;
+    }
+}
+
+/* Indicates where a match shares a prefix with the string it matches */
+static inline bool match_type_shares_prefix(fuzzy_match_type_t t)
+{
+    switch (t)
+    {
+        case fuzzy_match_exact:
+        case fuzzy_match_prefix:
+        case fuzzy_match_case_insensitive:
+        case fuzzy_match_prefix_case_insensitive:
+            return true;
+        default:
+            return false;
+    }
+}
+
+/** Test if string is a fuzzy match to another */
+struct string_fuzzy_match_t
+{
+    enum fuzzy_match_type_t type;
+    
+    /* Strength of the match. The value depends on the type. Lower is stronger. */
+    size_t match_distance_first;
+    size_t match_distance_second;
+    
+    /* Constructor */
+    string_fuzzy_match_t(enum fuzzy_match_type_t t, size_t distance_first = 0, size_t distance_second = 0);
+    
+    /* Return -1, 0, 1 if this match is (respectively) better than, equal to, or worse than rhs */
+    int compare(const string_fuzzy_match_t &rhs) const;
+};
+
+/* Compute a fuzzy match for a string. If maximum_match is not fuzzy_match_none, limit the type to matches at or below that type. */
+string_fuzzy_match_t string_fuzzy_match_string(const wcstring &string, const wcstring &match_against, fuzzy_match_type_t limit_type = fuzzy_match_none);
+
 
 /** Test if a list contains a string using a linear search. */
 bool list_contains_string(const wcstring_list_t &list, const wcstring &str);

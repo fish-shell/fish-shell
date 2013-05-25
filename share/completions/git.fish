@@ -93,7 +93,18 @@ complete -f -c git -n '__fish_git_using_command show-branch' -a '(__fish_git_hea
 
 ### add
 complete -c git -n '__fish_git_needs_command'    -a add -d 'Add file contents to the index'
-# TODO options
+complete -c git -n '__fish_git_using_command add' -s n -l dry-run -d "Don't actually add the file(s)"
+complete -c git -n '__fish_git_using_command add' -s v -l verbose -d 'Be verbose'
+complete -c git -n '__fish_git_using_command add' -s f -l force -d 'Allow adding otherwise ignored files'
+complete -c git -n '__fish_git_using_command add' -s i -l interactive -d 'Interactive mode'
+complete -c git -n '__fish_git_using_command add' -s p -l patch -d 'Interactively choose hunks to stage'
+complete -c git -n '__fish_git_using_command add' -s e -l edit -d 'Manually create a patch'
+complete -c git -n '__fish_git_using_command add' -s u -l update -d 'Only match tracked files'
+complete -c git -n '__fish_git_using_command add' -s A -l all -d 'Match files both in working tree and index'
+complete -c git -n '__fish_git_using_command add' -s N -l intent-to-add -d 'Record only the fact that the path will be added later'
+complete -c git -n '__fish_git_using_command add' -l refresh -d "Don't add the file(s), but only refresh their stat"
+complete -c git -n '__fish_git_using_command add' -l ignore-errors -d 'Ignore errors'
+complete -c git -n '__fish_git_using_command add' -l ignore-missing -d 'Check if any of the given files would be ignored'
 
 ### checkout
 complete -f -c git -n '__fish_git_needs_command'    -a checkout -d 'Checkout and switch to a branch'
@@ -173,12 +184,23 @@ complete -f -c git -n '__fish_git_needs_command' -a merge -d 'Join two or more d
 complete -f -c git -n '__fish_git_using_command merge' -a '(__fish_git_branches)' -d 'Branch'
 complete -f -c git -n '__fish_git_using_command merge' -l commit -d "Autocommit the merge"
 complete -f -c git -n '__fish_git_using_command merge' -l no-commit -d "Don't autocommit the merge"
+complete -f -c git -n '__fish_git_using_command merge' -l edit -d 'Edit auto-generated merge message'
+complete -f -c git -n '__fish_git_using_command merge' -l no-edit -d "Don't edit auto-generated merge message"
+complete -f -c git -n '__fish_git_using_command merge' -l ff -d "Don't generate a merge commit if merge is fast-forward"
+complete -f -c git -n '__fish_git_using_command merge' -l no-ff -d "Generate a merge commit even if merge is fast-forward"
+complete -f -c git -n '__fish_git_using_command merge' -l ff-only -d 'Refuse to merge unless fast-forward possible'
+complete -f -c git -n '__fish_git_using_command merge' -l log -d 'Populate the log message with one-line descriptions'
+complete -f -c git -n '__fish_git_using_command merge' -l no-log -d "Don't populate the log message with one-line descriptions"
 complete -f -c git -n '__fish_git_using_command merge' -l stat -d "Show diffstat of the merge"
 complete -f -c git -n '__fish_git_using_command merge' -s n -l no-stat -d "Don't show diffstat of the merge"
 complete -f -c git -n '__fish_git_using_command merge' -l squash -d "Squash changes from other branch as a single commit"
 complete -f -c git -n '__fish_git_using_command merge' -l no-squash -d "Don't squash changes"
-complete -f -c git -n '__fish_git_using_command merge' -l ff -d "Don't generate a merge commit if merge is fast forward"
-complete -f -c git -n '__fish_git_using_command merge' -l no-ff -d "Generate a merge commit even if merge is fast forward"
+complete -f -c git -n '__fish_git_using_command merge' -s q -l quiet -d 'Be quiet'
+complete -f -c git -n '__fish_git_using_command merge' -s v -l verbose -d 'Be verbose'
+complete -f -c git -n '__fish_git_using_command merge' -l progress -d 'Force progress status'
+complete -f -c git -n '__fish_git_using_command merge' -l no-progress -d 'Force no progress status'
+complete -f -c git -n '__fish_git_using_command merge' -s m -d 'Set the commit message'
+complete -f -c git -n '__fish_git_using_command merge' -l abort -d 'Abort the current conflict resolution process'
 
 # TODO options
 
@@ -192,16 +214,60 @@ complete -f -c git -n '__fish_git_needs_command' -a prune -d 'Prune all unreacha
 
 ### pull
 complete -f -c git -n '__fish_git_needs_command' -a pull -d 'Fetch from and merge with another repository or a local branch'
-# TODO options
+complete -f -c git -n '__fish_git_using_command pull' -s q -l quiet -d 'Be quiet'
+complete -f -c git -n '__fish_git_using_command pull' -s v -l verbose -d 'Be verbose'
+# Options related to fetching
+complete -f -c git -n '__fish_git_using_command pull' -l all -d 'Fetch all remotes'
+complete -f -c git -n '__fish_git_using_command pull' -s a -l append -d 'Append ref names and object names'
+complete -f -c git -n '__fish_git_using_command pull' -s f -l force -d 'Force update of local branches'
+complete -f -c git -n '__fish_git_using_command pull' -s k -l keep -d 'Keep downloaded pack'
+complete -f -c git -n '__fish_git_using_command pull' -l no-tags -d 'Disable automatic tag following'
+# TODO --upload-pack
+complete -f -c git -n '__fish_git_using_command pull' -l progress -d 'Force progress status'
+complete -f -c git -n '__fish_git_using_command pull' -a '(git remote)' -d 'Remote alias'
+complete -f -c git -n '__fish_git_using_command pull' -a '(__fish_git_branches)' -d 'Branch'
+# TODO other options
 
 ### push
 complete -f -c git -n '__fish_git_needs_command' -a push -d 'Update remote refs along with associated objects'
-# TODO options
+complete -f -c git -n '__fish_git_using_command push' -a '(git remote)' -d 'Remote alias'
+complete -f -c git -n '__fish_git_using_command push' -a '(__fish_git_branches)' -d 'Branch'
+complete -f -c git -n '__fish_git_using_command push' -l all -d 'Push all refs under refs/heads/'
+complete -f -c git -n '__fish_git_using_command push' -l prune -d "Remove remote branches that don't have a local counterpart"
+complete -f -c git -n '__fish_git_using_command push' -l mirror -d 'Push all refs under refs/'
+complete -f -c git -n '__fish_git_using_command push' -l delete -d 'Delete all listed refs from the remote repository'
+complete -f -c git -n '__fish_git_using_command push' -l tags -d 'Push all refs under refs/tags'
+complete -f -c git -n '__fish_git_using_command push' -s n -l dry-run -d 'Do everything except actually send the updates'
+complete -f -c git -n '__fish_git_using_command push' -l porcelain -d 'Produce machine-readable output'
+complete -f -c git -n '__fish_git_using_command push' -s f -l force -d 'Force update of remote refs'
+complete -f -c git -n '__fish_git_using_command push' -s u -l set-upstream -d 'Add upstream (tracking) reference'
+complete -f -c git -n '__fish_git_using_command push' -s q -l quiet -d 'Be quiet'
+complete -f -c git -n '__fish_git_using_command push' -s v -l verbose -d 'Be verbose'
+complete -f -c git -n '__fish_git_using_command push' -l progress -d 'Force progress status'
+# TODO --recurse-submodules=check|on-demand
 
 ### rebase
 complete -f -c git -n '__fish_git_needs_command' -a rebase -d 'Forward-port local commits to the updated upstream head'
+complete -f -c git -n '__fish_git_using_command rebase' -a '(git remote)' -d 'Remote alias'
 complete -f -c git -n '__fish_git_using_command rebase' -a '(__fish_git_branches)' -d 'Branch'
-# TODO options
+complete -f -c git -n '__fish_git_using_command rebase' -l continue -d 'Restart the rebasing process'
+complete -f -c git -n '__fish_git_using_command rebase' -l abort -d 'Abort the rebase operation'
+complete -f -c git -n '__fish_git_using_command rebase' -l keep-empty -d "Keep the commits that don't cahnge anything"
+complete -f -c git -n '__fish_git_using_command rebase' -l skip -d 'Restart the rebasing process by skipping the current patch'
+complete -f -c git -n '__fish_git_using_command rebase' -s m -l merge -d 'Use merging strategies to rebase'
+complete -f -c git -n '__fish_git_using_command rebase' -s q -l quiet -d 'Be quiet'
+complete -f -c git -n '__fish_git_using_command rebase' -s v -l verbose -d 'Be verbose'
+complete -f -c git -n '__fish_git_using_command rebase' -l stat -d "Show diffstat of the rebase"
+complete -f -c git -n '__fish_git_using_command rebase' -s n -l no-stat -d "Don't show diffstat of the rebase"
+complete -f -c git -n '__fish_git_using_command rebase' -l verify -d "Allow the pre-rebase hook to run"
+complete -f -c git -n '__fish_git_using_command rebase' -l no-verify -d "Don't allow the pre-rebase hook to run"
+complete -f -c git -n '__fish_git_using_command rebase' -s f -l force-rebase -d 'Force the rebase'
+complete -f -c git -n '__fish_git_using_command rebase' -s i -l interactive -d 'Interactive mode'
+complete -f -c git -n '__fish_git_using_command rebase' -s p -l preserve-merges -d 'Try to recreate merges'
+complete -f -c git -n '__fish_git_using_command rebase' -l root -d 'Rebase all reachable commits'
+complete -f -c git -n '__fish_git_using_command rebase' -l autosquash -d 'Automatic squashing'
+complete -f -c git -n '__fish_git_using_command rebase' -l no-autosquash -d 'No automatic squashing'
+complete -f -c git -n '__fish_git_using_command rebase' -l no-ff -d 'No fast-forward'
 
 ### reset
 complete -c git -n '__fish_git_needs_command'    -a reset -d 'Reset current HEAD to the specified state'
@@ -219,7 +285,7 @@ complete -c git -n '__fish_git_using_command rm' -f
 complete -c git -n '__fish_git_using_command rm' -l cached -d 'Keep local copies'
 complete -c git -n '__fish_git_using_command rm' -l ignore-unmatch -d 'Exit with a zero status even if no files matched'
 complete -c git -n '__fish_git_using_command rm' -s r -d 'Allow recursive removal'
-complete -c git -n '__fish_git_using_command rm' -s q -l quiet -d 'Suppress the output'
+complete -c git -n '__fish_git_using_command rm' -s q -l quiet -d 'Be quiet'
 complete -c git -n '__fish_git_using_command rm' -s f -l force -d 'Override the up-to-date check'
 complete -c git -n '__fish_git_using_command rm' -s n -l dry-run -d 'Dry run'
 # TODO options
@@ -237,13 +303,26 @@ complete -f -c git -n '__fish_git_using_command status' -l ignore-submodules -x 
 ### tag
 complete -f -c git -n '__fish_git_needs_command' -a tag -d 'Create, list, delete or verify a tag object signed with GPG'
 complete -f -c git -n '__fish_git_using_command tag; and __fish_not_contain_opt -s d; and __fish_not_contain_opt -s v; and test (count (commandline -opc | sgrep -v -e \'^-\')) -eq 3' -a '(__fish_git_branches)' -d 'Branch'
-complete -f -c git -n '__fish_git_using_command tag' -s d -d 'Remove a tag'
-complete -f -c git -n '__fish_git_using_command tag' -s v -d 'Verify signature of a tag'
-complete -f -c git -n '__fish_git_using_command tag' -s f -d 'Force overwriting exising tag'
-complete -f -c git -n '__fish_git_using_command tag' -s s -d 'Make a GPG-signed tag'
+complete -f -c git -n '__fish_git_using_command tag' -s a -l annotate -d 'Make an unsigned, annotated tag object'
+complete -f -c git -n '__fish_git_using_command tag' -s s -l sign -d 'Make a GPG-signed tag'
+complete -f -c git -n '__fish_git_using_command tag' -s d -l delete -d 'Remove a tag'
+complete -f -c git -n '__fish_git_using_command tag' -s v -l verify -d 'Verify signature of a tag'
+complete -f -c git -n '__fish_git_using_command tag' -s f -l force -d 'Force overwriting exising tag'
+complete -f -c git -n '__fish_git_using_command tag' -s l -l list -d 'List tags'
 complete -f -c git -n '__fish_contains_opt -s d' -a '(__fish_git_tags)' -d 'Tag'
 complete -f -c git -n '__fish_contains_opt -s v' -a '(__fish_git_tags)' -d 'Tag'
 # TODO options
+
+### stash
+complete -c git -n '__fish_git_needs_command' -a stash -d 'Stash away changes'
+complete -f -c git -n '__fish_git_using_command stash' -a list -d 'List stashes'
+complete -f -c git -n '__fish_git_using_command stash' -a show -d 'Show the changes recorded in the stash'
+complete -f -c git -n '__fish_git_using_command stash' -a pop -d 'Apply and remove a single stashed state'
+complete -f -c git -n '__fish_git_using_command stash' -a apply -d 'Apply a single stashed state'
+complete -f -c git -n '__fish_git_using_command stash' -a clear -d 'Remove all stashed states'
+complete -f -c git -n '__fish_git_using_command stash' -a drop -d 'Remove a single stashed state from the stash list'
+complete -f -c git -n '__fish_git_using_command stash' -a create -d 'Create a stash'
+# TODO other options
 
 ### config
 complete -f -c git -n '__fish_git_needs_command' -a config -d 'Set and read git configuration variables'

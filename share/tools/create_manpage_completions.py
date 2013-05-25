@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Run me like this: ./create_manpage_completions.py /usr/share/man/man1/* > man_completions.fish
+# Run me like this: ./create_manpage_completions.py /usr/share/man/man{1,8}/* > man_completions.fish
 
 """
 <OWNER> = Siteshwar Vashisht
@@ -911,7 +911,7 @@ def parse_and_output_man_pages(paths, output_directory, show_progress):
     flush_diagnostics(sys.stderr)
 
 def get_paths_from_manpath():
-    # Return all the paths to man(1) files in the manpath
+    # Return all the paths to man(1) and man(8) files in the manpath
     import subprocess, os
     proc = subprocess.Popen(['manpath'], stdout=subprocess.PIPE)
     manpath, err_data = proc.communicate()
@@ -921,14 +921,15 @@ def get_paths_from_manpath():
         sys.exit(-1)
     result = []
     for parent_path in parent_paths:
-        directory_path = os.path.join(parent_path, 'man1')
-        try:
-            names = os.listdir(directory_path)
-        except OSError as e:
-            names = []
-        names.sort()
-        for name in names:
-            result.append(os.path.join(directory_path, name))
+        for section in ['man1', 'man8']:
+            directory_path = os.path.join(parent_path, section)
+            try:
+                names = os.listdir(directory_path)
+            except OSError as e:
+                names = []
+            names.sort()
+            for name in names:
+                result.append(os.path.join(directory_path, name))
     return result
 
 def usage(script_name):
@@ -938,7 +939,7 @@ def usage(script_name):
      -v, --verbose [0, 1, 2]\tShow debugging output to stderr. Larger is more verbose.
      -s, --stdout\tWrite all completions to stdout (trumps the --directory option)
      -d, --directory [dir]\tWrite all completions to the given directory, instead of to ~/.config/fish/generated_completions
-     -m, --manpath\tProcess all man1 files available in the manpath (as determined by manpath)
+     -m, --manpath\tProcess all man1 and man8 files available in the manpath (as determined by manpath)
      -p, --progress\tShow progress
     """)
 
@@ -980,7 +981,7 @@ if __name__ == "__main__":
             assert False, "unhandled option"
 
     if use_manpath:
-        # Fetch all man1 files from the manpath
+        # Fetch all man1 and man8 files from the manpath
         file_paths.extend(get_paths_from_manpath())
 
     if cleanup_directories:

@@ -22,11 +22,11 @@ function help --description 'Show help for the fish shell'
 	# Find a suitable browser for viewing the help pages. This is needed
 	# by the help function defined below.
 	#
-        set -l graphical_browsers htmlview x-www-browser firefox galeon mozilla konqueror epiphany opera netscape rekonq google-chrome chromium-browser
+	set -l graphical_browsers htmlview x-www-browser firefox galeon mozilla konqueror epiphany opera netscape rekonq google-chrome chromium-browser
 	set -l text_browsers htmlview www-browser links elinks lynx w3m
 
-        if type $BROWSER >/dev/null
-                # User has manually set a preferred browser, so we respect that
+	if type "$BROWSER" >/dev/null
+		# User has manually set a preferred browser, so we respect that
 		set fish_browser $BROWSER
 
 		# If browser is known to be graphical, put into background
@@ -71,7 +71,7 @@ function help --description 'Show help for the fish shell'
 
 	if test -z $fish_browser
 		printf (_ '%s: Could not find a web browser.\n') help
-                printf (_ 'Please set the variable $BROWSER to a suitable browser and try again.\n\n')
+				printf (_ 'Please set the variable $BROWSER to a suitable browser and try again.\n\n')
 		return 1
 	end
 
@@ -123,10 +123,10 @@ function help --description 'Show help for the fish shell'
 
 		switch $fish_browser
 			case 'htmlview' 'x-www-browser'
-                                printf (_ 'help: Help is being displayed in your default browser.\n')
+				printf (_ 'help: Help is being displayed in your default browser.\n')
 
 			case '*'
-                                printf (_ 'help: Help is being displayed in %s.\n') $fish_browser
+				printf (_ 'help: Help is being displayed in %s.\n') $fish_browser
 
 		end
 

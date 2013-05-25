@@ -319,6 +319,11 @@ static inline void safe_append(char *buffer, const char *s, size_t buffsize)
 
 const char *safe_strerror(int err)
 {
+#if defined(__UCLIBC__)
+    // uClibc does not have sys_errlist, however, its strerror is believed to be async-safe
+    // See #808
+    return strerror(err);
+#else
     if (err >= 0 && err < sys_nerr && sys_errlist[err] != NULL)
     {
         return sys_errlist[err];
@@ -340,6 +345,7 @@ const char *safe_strerror(int err)
         errno = saved_err;
         return buff;
     }
+#endif
 }
 
 void safe_perror(const char *message)

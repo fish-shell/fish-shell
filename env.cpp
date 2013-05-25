@@ -1076,7 +1076,7 @@ env_var_t env_get_string(const wcstring &key)
     }
     else if (key == L"LINES")
     {
-        return to_string(common_get_width());
+        return to_string(common_get_height());
     }
     else if (key == L"status")
     {

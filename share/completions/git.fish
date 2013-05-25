@@ -18,6 +18,10 @@ function __fish_git_remotes
   command git remote
 end
 
+function __fish_git_modified_files
+    command git status -s | grep -e "^ M" | sed "s/^ M //"
+end
+
 function __fish_git_ranges
   set -l from (commandline -ot | perl -ne 'if (index($_, "..") > 0) { my @parts = split(/\.\./); print $parts[0]; }')
   if test -z "$from"
@@ -105,6 +109,8 @@ complete -c git -n '__fish_git_using_command add' -s N -l intent-to-add -d 'Reco
 complete -c git -n '__fish_git_using_command add' -l refresh -d "Don't add the file(s), but only refresh their stat"
 complete -c git -n '__fish_git_using_command add' -l ignore-errors -d 'Ignore errors'
 complete -c git -n '__fish_git_using_command add' -l ignore-missing -d 'Check if any of the given files would be ignored'
+complete -f -c git -n '__fish_git_using_command add; and __fish_contains_opt -s p patch' -a '(__fish_git_modified_files)'
+# TODO options
 
 ### checkout
 complete -f -c git -n '__fish_git_needs_command'    -a checkout -d 'Checkout and switch to a branch'

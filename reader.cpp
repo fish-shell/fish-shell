@@ -3043,7 +3043,7 @@ const wchar_t *reader_readline(void)
                 else
                 {
                     /* Either the user hit tab only once, or we had no visible completion list. */
-                    
+
                     /* Remove a trailing backslash. This may trigger an extra repaint, but this is rare. */
                     if (is_backslashed(data->command_line, data->buff_pos))
                     {
@@ -3544,7 +3544,8 @@ const wchar_t *reader_readline(void)
 
             case R_TRANSPOSE_CHARS:
             {
-                if (data->command_length() < 2) {
+                if (data->command_length() < 2)
+                {
                     break;
                 }
 
@@ -3560,11 +3561,9 @@ const wchar_t *reader_readline(void)
                  */
                 if (data->buff_pos > 0)
                 {
-                    wchar_t tmp = data->command_line[data->buff_pos];
-                    data->command_line[data->buff_pos] = data->command_line[data->buff_pos-1];
-                    data->command_line[data->buff_pos-1] = tmp;
-                    data->buff_pos++;
-                    reader_repaint();
+                    wcstring local_cmd = data->command_line;
+                    std::swap(local_cmd.at(data->buff_pos), local_cmd.at(data->buff_pos-1));
+                    set_command_line_and_position(local_cmd, data->buff_pos + 1);
                 }
                 break;
             }

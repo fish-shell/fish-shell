@@ -3553,6 +3553,46 @@ const wchar_t *reader_readline(void)
                 break;
             }
 
+            case R_TRANSPOSE_WORDS:
+            {
+                size_t orig_pos = data->buff_pos;
+                size_t len = data->command_length();
+                const wchar_t *buff = data->command_line.c_str();
+                const wchar_t *tok_begin, *tok_end, *prev_begin, *prev_end;
+
+                /* If we are not in a token, look for one ahead */
+                while (data->buff_pos != len && !iswalnum(buff[data->buff_pos]))
+                    data->buff_pos++;
+
+                parse_util_token_extent(buff, data->buff_pos, &tok_begin, &tok_end, &prev_begin, &prev_end);
+
+                /* In case we didn't find a token at or after the cursor... */
+                if (tok_begin == &buff[len])
+                {
+                    /* ...retry beginning from the previous token */
+                    size_t pos = prev_end - &buff[0];
+                    parse_util_token_extent(buff, pos, &tok_begin, &tok_end, &prev_begin, &prev_end);
+                }
+
+                /* Make sure we have two tokens */
+                if (prev_begin < prev_end && tok_begin < tok_end && tok_begin > prev_begin)
+                {
+                    wcstring prev(prev_begin, prev_end - prev_begin);
+                    wcstring sep(prev_end, tok_begin - prev_end);
+                    wcstring tok(tok_begin, tok_end - tok_begin);
+                    wcstring trail(tok_end, &buff[len] - tok_end);
+
+                    /* Compose new command line with swapped tokens */
+                    wcstring new_buff(buff, prev_begin - buff);
+                    new_buff.append(tok);
+                    new_buff.append(sep);
+                    new_buff.append(prev);
+                    new_buff.append(trail);
+                    set_command_line_and_position(new_buff, orig_pos);
+                }
+                break;
+            }
+
             /* Other, if a normal character, we add it to the command */
             default:
             {

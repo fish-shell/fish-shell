@@ -3555,7 +3555,6 @@ const wchar_t *reader_readline(void)
 
             case R_TRANSPOSE_WORDS:
             {
-                size_t orig_pos = data->buff_pos;
                 size_t len = data->command_length();
                 const wchar_t *buff = data->command_line.c_str();
                 const wchar_t *tok_begin, *tok_end, *prev_begin, *prev_end;
@@ -3588,7 +3587,8 @@ const wchar_t *reader_readline(void)
                     new_buff.append(sep);
                     new_buff.append(prev);
                     new_buff.append(trail);
-                    set_command_line_and_position(new_buff, orig_pos);
+                    /* Put cursor right after the second token */
+                    set_command_line_and_position(new_buff, tok_end - buff);
                 }
                 break;
             }

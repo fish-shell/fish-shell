@@ -1739,7 +1739,6 @@ bool string_prefixes_string(const wchar_t *proposed_prefix, const wcstring &valu
     return prefix_size <= value.size() && value.compare(0, prefix_size, proposed_prefix) == 0;
 }
 
-
 bool string_prefixes_string(const wcstring &proposed_prefix, const wcstring &value)
 {
     size_t prefix_size = proposed_prefix.size();

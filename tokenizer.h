@@ -22,7 +22,7 @@ enum token_type
     TOK_INVALID,/**< Invalid token */
     TOK_STRING,/**< String token */
     TOK_PIPE,/**< Pipe token */
-    TOK_END,/**< End token */
+    TOK_END,/**< End token (semicolon or newline, not literal end) */
     TOK_REDIRECT_OUT, /**< redirection token */
     TOK_REDIRECT_APPEND,/**< redirection append token */
     TOK_REDIRECT_IN,/**< input redirection token */

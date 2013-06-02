@@ -1311,6 +1311,7 @@ void parser_t::parse_job_argument_list(process_t *p,
             case TOK_BACKGROUND:
             {
                 job_set_flag(j, JOB_FOREGROUND, 0);
+                // PCA note fall through, this is deliberate. The background modifier & terminates a command
             }
 
             case TOK_END:

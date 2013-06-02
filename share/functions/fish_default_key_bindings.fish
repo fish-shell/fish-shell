@@ -68,7 +68,7 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind \cf forward-char
 	bind \cb backward-char
 	bind \ct transpose-chars
-        bind \et transpose-words
+	bind \et transpose-words
 	bind \e\x7f backward-kill-word
 	bind \eb backward-word
 	bind \ef forward-word

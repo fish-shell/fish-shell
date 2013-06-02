@@ -3576,10 +3576,10 @@ const wchar_t *reader_readline(void)
                 /* Make sure we have two tokens */
                 if (prev_begin < prev_end && tok_begin < tok_end && tok_begin > prev_begin)
                 {
-                    wcstring prev(prev_begin, prev_end - prev_begin);
-                    wcstring sep(prev_end, tok_begin - prev_end);
-                    wcstring tok(tok_begin, tok_end - tok_begin);
-                    wcstring trail(tok_end, &buff[len] - tok_end);
+                    const wcstring prev(prev_begin, prev_end - prev_begin);
+                    const wcstring sep(prev_end, tok_begin - prev_end);
+                    const wcstring tok(tok_begin, tok_end - tok_begin);
+                    const wcstring trail(tok_end, &buff[len] - tok_end);
 
                     /* Compose new command line with swapped tokens */
                     wcstring new_buff(buff, prev_begin - buff);

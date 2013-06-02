@@ -988,18 +988,18 @@ static void test_complete(void)
     assert(completions.at(0).completion == L"oo1");
     assert(completions.at(1).completion == L"oo2");
     assert(completions.at(2).completion == L"oo3");
-    
+
     completions.clear();
     complete(L"$1", completions, COMPLETION_REQUEST_DEFAULT);
     assert(completions.empty());
-    
+
     completions.clear();
     complete(L"$1", completions, COMPLETION_REQUEST_DEFAULT | COMPLETION_REQUEST_FUZZY_MATCH);
     assert(completions.size() == 2);
     assert(completions.at(0).completion == L"$Foo1");
     assert(completions.at(1).completion == L"$Bar1");
 
-    
+
     complete_set_variable_names(NULL);
 }
 

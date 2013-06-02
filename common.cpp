@@ -1772,13 +1772,13 @@ static bool subsequence_in_string(const wcstring &seq, const wcstring &str)
     {
         return false;
     }
-    
+
     /* Empty strings are considered to be subsequences of everything */
     if (seq.empty())
     {
         return true;
     }
-    
+
     size_t str_idx, seq_idx;
     for (seq_idx = str_idx = 0; seq_idx < seq.size() && str_idx < str.size(); seq_idx++)
     {
@@ -1795,16 +1795,16 @@ static bool subsequence_in_string(const wcstring &seq, const wcstring &str)
             str_idx = char_loc + 1;
         }
     }
-    
+
     /* We succeeded if we exhausted our sequence */
     assert(seq_idx <= seq.size());
     return seq_idx == seq.size();
 }
 
 string_fuzzy_match_t::string_fuzzy_match_t(enum fuzzy_match_type_t t, size_t distance_first, size_t distance_second) :
-        type(t),
-        match_distance_first(distance_first),
-        match_distance_second(distance_second)
+    type(t),
+    match_distance_first(distance_first),
+    match_distance_second(distance_second)
 {
 }
 

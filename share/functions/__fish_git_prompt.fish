@@ -346,7 +346,7 @@ function __fish_git_prompt_current_branch --description "__fish_git_prompt helpe
 		set branch "($branch)"
 	end
 
-	# I honestly don't know when this is relevant
+	# Let user know they're inside the git dir of a non-bare repo
 	if test "true" = (git rev-parse --is-inside-git-dir ^/dev/null)
 		if test "false" = (git rev-parse --is-bare-repository ^/dev/null)
 			set branch "GIT_DIR!"

@@ -107,14 +107,12 @@ complete -c rsync -l help --description "Display help and exit"
 #
 # Remote path
 #
-complete -c rsync -d "Remote Path" -n "commandline -ct|sgrep -o '.*:'" -a "
-
+complete -c rsync -d "Remote path" -n "commandline -ct|sgrep -q :" -a "
 (
-	#Prepend any user@host information supplied before the remote completion
-	commandline -ct|sgrep -o '.*:'
+	#Prepend any user@host:/path information supplied before the remote completion
+	commandline -ct|sgrep -Eo '.*:+(.*/)?'
 )(
-	#Get the list of remote files from the specified ssh server
-        ssh -o \"BatchMode yes\" (commandline -ct|sed -ne 's/\(.*\):.*/\1/p') ls\ -dp\ (commandline -ct|sed -ne 's/.*://p')\* 2> /dev/null
+	#Get the list of remote files from the specified rsync server
+	rsync --list-only (commandline -ct|sgrep -Eo '.*:+(.*/)?') ^/dev/null | awk '{if (\$1 ~ \"^d\" ) {print \$NF \"/\";} else {print \$NF;} };' 
 )
-
 "

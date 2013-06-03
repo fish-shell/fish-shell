@@ -124,7 +124,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 		set -l svn_upstream (git log --first-parent -1 --grep="^git-svn-id: \($svn_url_pattern\)" ^/dev/null)
 		if test (count $svn_upstream) -ne 0
 			echo $svn_upstream[-1] | read -l _ svn_upstream _
-                        set svn_upstream (/bin/sh -c 'echo "${1%@*}"' -- $svn_upstream)
+			set svn_upstream (/bin/sh -c 'echo "${1%@*}"' -- $svn_upstream)
 			set -l cur_prefix
 			for i in (seq (count $svn_remote))
 				set -l remote $svn_remote[$i]
@@ -145,7 +145,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 					set upstream git-svn
 				end
 			else
-                                set upstream (/bin/sh -c 'val=${1#/branches}; echo "${val#/}"' -- $svn_upstream)
+				set upstream (/bin/sh -c 'val=${1#/branches}; echo "${val#/}"' -- $svn_upstream)
 				set -l fetch_val (git config "$cur_prefix".fetch)
 				if test -n "$fetch_val"
 					set -l IFS :
@@ -153,8 +153,8 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 					set upstream (/bin/sh -c 'echo "${1%/$2}"' -- $pattern $trunk)/$upstream
 				end
 			end
-                else if test $upstream = svn+git
-                        set upstream '@{upstream}'
+			else if test $upstream = svn+git
+			set upstream '@{upstream}'
 		end
 	end
 
@@ -193,54 +193,54 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 		switch "$count"
 		case '' # no upstream
 		case "0	0" # equal to upstream
-                        echo " $___fish_git_prompt_char_upstream_equal"
+			echo " $___fish_git_prompt_char_upstream_equal"
 		case "0	*" # ahead of upstream
-                        echo " $___fish_git_prompt_char_upstream_ahead$ahead"
+			echo " $___fish_git_prompt_char_upstream_ahead$ahead"
 		case "*	0" # behind upstream
-                        echo " $___fish_git_prompt_char_upstream_behind$behind"
+			echo " $___fish_git_prompt_char_upstream_behind$behind"
 		case '*' # diverged from upstream
-                        echo " $__fish_git_prompt_char_upstream_diverged$ahead-$behind"
+			echo " $__fish_git_prompt_char_upstream_diverged$ahead-$behind"
 		end
 	end
 end
 
 function __fish_git_prompt --description "Prompt function for Git"
-        set -l git_dir (__fish_git_prompt_git_dir)
+	set -l git_dir (__fish_git_prompt_git_dir)
 	test -n "$git_dir"; or return
 
-        set -l r (__fish_git_prompt_current_operation $git_dir)
-        set -l b (__fish_git_prompt_current_branch)
-        set -l w #dirty working directory
-        set -l i #staged changes
-        set -l s #stashes
-        set -l u #untracked
-        set -l c (__fish_git_prompt_current_branch_bare)
-        set -l p #upstream
+	set -l r (__fish_git_prompt_current_operation $git_dir)
+	set -l b (__fish_git_prompt_current_branch)
+	set -l w #dirty working directory
+	set -l i #staged changes
+	set -l s #stashes
+	set -l u #untracked
+	set -l c (__fish_git_prompt_current_branch_bare)
+	set -l p #upstream
 
 	__fish_git_prompt_validate_chars
 
-  if test "true" = (git rev-parse --is-inside-work-tree ^/dev/null)
-    if test -n "$__fish_git_prompt_showdirtystate"
-      set -l config (git config --bool bash.showDirtyState)
-      if test "$config" != "false"
-        set w (__fish_git_prompt_dirty)
-        set i (__fish_git_prompt_staged)
-      end
-    end
+	if test "true" = (git rev-parse --is-inside-work-tree ^/dev/null)
+		if test -n "$__fish_git_prompt_showdirtystate"
+			set -l config (git config --bool bash.showDirtyState)
+			if test "$config" != "false"
+				set w (__fish_git_prompt_dirty)
+				set i (__fish_git_prompt_staged)
+			end
+		end
 
-    if test -n "$__fish_git_prompt_showstashstate"
-      git rev-parse --verify refs/stash >/dev/null ^&1; and set s $___fish_git_prompt_char_stashstate
-    end
+		if test -n "$__fish_git_prompt_showstashstate"
+			git rev-parse --verify refs/stash >/dev/null ^&1; and set s $___fish_git_prompt_char_stashstate
+		end
 
-    if test -n "$__fish_git_prompt_showuntrackedfiles"
-      set -l files (git ls-files --others --exclude-standard)
-      if test -n "$files"
-        set u $___fish_git_prompt_char_untrackedfiles
-      end
-    end
+		if test -n "$__fish_git_prompt_showuntrackedfiles"
+			set -l files (git ls-files --others --exclude-standard)
+			if test -n "$files"
+				set u $___fish_git_prompt_char_untrackedfiles
+			end
+		end
 
-    if test -n "$__fish_git_prompt_showupstream"
-      set p (__fish_git_prompt_show_upstream)
+		if test -n "$__fish_git_prompt_showupstream"
+			set p (__fish_git_prompt_show_upstream)
 		end
 	end
 
@@ -272,15 +272,15 @@ function __fish_git_prompt --description "Prompt function for Git"
 		set p "$___fish_git_prompt_color_upstream$p$___fish_git_prompt_color_upstream_done"
 	end
 
-  # Formatting
-        set -l f "$w$i$s$u"
-        if test -n "$f"
-                set f " $f"
-        end
-        set -l format $argv[1]
-        if test -z "$format"
-                set format " (%s)"
-        end
+	# Formatting
+	set -l f "$w$i$s$u"
+	if test -n "$f"
+		set f " $f"
+	end
+	set -l format $argv[1]
+	if test -z "$format"
+		set format " (%s)"
+	end
 
 	printf "%s$format%s" "$___fish_git_prompt_color_prefix" "$___fish_git_prompt_color_prefix_done$c$b$f$r$p$___fish_git_prompt_color_suffix" "$___git_ps_color_suffix_done"
 end
@@ -288,102 +288,102 @@ end
 ### helper functions
 
 function __fish_git_prompt_staged --description "__fish_git_prompt helper, tells whether or not the current branch has staged files"
-  set -l staged
+	set -l staged
 
-  if git rev-parse --quiet --verify HEAD >/dev/null
-    git diff-index --cached --quiet HEAD --; or set staged $___fish_git_prompt_char_stagedstate
-  else
-    set staged $___fish_git_prompt_char_invalidstate
-  end
+	if git rev-parse --quiet --verify HEAD >/dev/null
+		git diff-index --cached --quiet HEAD --; or set staged $___fish_git_prompt_char_stagedstate
+	else
+		set staged $___fish_git_prompt_char_invalidstate
+	end
 end
 
 function __fish_git_prompt_dirty --description "__fish_git_prompt helper, tells whether or not the current branch has tracked, modified files"
-  set -l dirty
+	set -l dirty
 
-  set -l os
-  git diff --no-ext-diff --quiet --exit-code
-  set os $status
-  if test $os -ne 0
-    set dirty $___fish_git_prompt_char_dirtystate
-  end
-  echo $dirty
+	set -l os
+	git diff --no-ext-diff --quiet --exit-code
+	set os $status
+	if test $os -ne 0
+		set dirty $___fish_git_prompt_char_dirtystate
+	end
+	echo $dirty
 end
 
 function __fish_git_prompt_current_branch_bare --description "__fish_git_prompt helper, tells wheter or not the current branch is bare"
-  set -l bare
+	set -l bare
 
-        if test "true" = (git rev-parse --is-inside-git-dir ^/dev/null)
-                if test "true" = (git rev-parse --is-bare-repository ^/dev/null)
-                        set bare "BARE:"
-    end
-  end
-  echo $bare
+	if test "true" = (git rev-parse --is-inside-git-dir ^/dev/null)
+		if test "true" = (git rev-parse --is-bare-repository ^/dev/null)
+			set bare "BARE:"
+		end
+	end
+	echo $bare
 end
 
 function __fish_git_prompt_current_branch --description "__fish_git_prompt helper, returns the current Git branch"
-  set -l branch
+	set -l branch
 
-  set -l os
-  set branch (git symbolic-ref HEAD ^/dev/null; set os $status)
-  if test $os -ne 0
-          set branch (switch "$__fish_git_prompt_describe_style"
-                          case contains
-                                  git describe --contains HEAD
-                          case branch
-                                  git describe --contains --all HEAD
-                          case describe
-                                  git describe HEAD
-                          case default '*'
-                                  git describe --tags --exact-match HEAD
-                          end ^/dev/null; set os $status)
-      if test $os -ne 0
-        set branch (cut -c1-7 $git_dir/HEAD ^/dev/null; set os $status)
-      if test $os -ne 0
-        set branch unknown
-      end
-    end
-    set branch "($branch)"
-  end
+	set -l os
+	set branch (git symbolic-ref HEAD ^/dev/null; set os $status)
+	if test $os -ne 0
+		set branch (switch "$__fish_git_prompt_describe_style"
+					case contains
+						git describe --contains HEAD
+					case branch
+						git describe --contains --all HEAD
+					case describe
+						git describe HEAD
+					case default '*'
+						git describe --tags --exact-match HEAD
+					end ^/dev/null; set os $status)
+		if test $os -ne 0
+			set branch (cut -c1-7 $git_dir/HEAD ^/dev/null; set os $status)
+			if test $os -ne 0
+				set branch unknown
+			end
+		end
+		set branch "($branch)"
+	end
 
-  # I honestly don't know when this is relevant
-        if test "true" = (git rev-parse --is-inside-git-dir ^/dev/null)
-                if test "false" = (git rev-parse --is-bare-repository ^/dev/null)
-      set branch "GIT_DIR!"
-    end
-  end
-  echo $branch
+	# I honestly don't know when this is relevant
+	if test "true" = (git rev-parse --is-inside-git-dir ^/dev/null)
+		if test "false" = (git rev-parse --is-bare-repository ^/dev/null)
+			set branch "GIT_DIR!"
+		end
+	end
+	echo $branch
 end
 
 function __fish_git_prompt_current_operation --description "__fish_git_prompt helper, returns the current Git operation being performed"
-  set -l operation
+	set -l operation
 
-  set -l git_dir $argv[1]
-        if test -f $git_dir/rebase-merge/interactive
-                set operation "|REBASE-i"
-  else if test -d $git_dir/rebase-merge
-    set operation "|REBASE-m"
-  else
-    if test -d $git_dir/rebase-apply
-      if test -f $git_dir/rebase-apply/rebasing
-              set operation "|REBASE"
-      else if test -f $git_dir/rebase-apply/applying
-              set operation "|AM"
-      else
-              set operation "|AM/REBASE"
-                        end
-    else if test -f $git_dir/MERGE_HEAD
-            set operation "|MERGING"
-    else if test -f $git_dir/CHERRY_PICK_HEAD
-            set operation "|CHERRY-PICKING"
-    else if test -f $git_dir/BISECT_LOG
-            set operation "|BISECTING"
-    end
-        end
-  echo $operation
+	set -l git_dir $argv[1]
+	if test -f $git_dir/rebase-merge/interactive
+		set operation "|REBASE-i"
+	else if test -d $git_dir/rebase-merge
+		set operation "|REBASE-m"
+	else
+		if test -d $git_dir/rebase-apply
+			if test -f $git_dir/rebase-apply/rebasing
+				set operation "|REBASE"
+			else if test -f $git_dir/rebase-apply/applying
+				set operation "|AM"
+			else
+				set operation "|AM/REBASE"
+			end
+		else if test -f $git_dir/MERGE_HEAD
+			set operation "|MERGING"
+		else if test -f $git_dir/CHERRY_PICK_HEAD
+			set operation "|CHERRY-PICKING"
+		else if test -f $git_dir/BISECT_LOG
+			set operation "|BISECTING"
+		end
+	end
+	echo $operation
 end
 
 function __fish_git_prompt_git_dir --description "__fish_git_prompt helper, returns .git dir if any"
-  echo (git rev-parse --git-dir ^/dev/null)
+	echo (git rev-parse --git-dir ^/dev/null)
 end
 
 function __fish_git_prompt_validate_chars --description "__fish_git_prompt helper, checks char variables"

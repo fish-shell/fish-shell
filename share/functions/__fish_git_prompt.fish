@@ -295,6 +295,7 @@ function __fish_git_prompt_staged --description "__fish_git_prompt helper, tells
 	else
 		set staged $___fish_git_prompt_char_invalidstate
 	end
+	echo $staged
 end
 
 function __fish_git_prompt_dirty --description "__fish_git_prompt helper, tells whether or not the current branch has tracked, modified files"

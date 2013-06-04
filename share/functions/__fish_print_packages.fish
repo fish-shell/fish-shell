@@ -22,6 +22,17 @@ function __fish_print_packages
 		return
 	end
 
+        # Pkg is fast on FreeBSD and provides versioning info which we want for
+        # installed packages
+        if begin
+                        type -f pkg > /dev/null
+                        and test (uname) = "FreeBSD"
+                end
+                pkg query "%n-%v"
+                return
+        end
+
+
     # yum is slow, just like rpm, so go to the background
 	if type -f /usr/share/yum-cli/completion-helper.py >/dev/null
 

@@ -19,7 +19,7 @@ class parse_ll_t;
 class parse_sr_t;
 class parse_t
 {
-    parse_sr_t * const parser;
+    parse_ll_t * const parser;
     parse_t();
 };
 

@@ -97,21 +97,6 @@ enum parse_keyword_t
     parse_keyword_builtin
 };
 
-struct parse_stack_element_t
-{
-    enum parse_token_type_t type;
-    enum parse_keyword_t keyword;
-    
-    // Construct a token type, with no keyword
-    parse_stack_element_t(enum parse_token_type_t t) : type(t), keyword(parse_keyword_none)
-    {
-    }
-    
-    // Construct a string type from a keyword
-    parse_stack_element_t(enum parse_keyword_t k) : type(parse_token_type_string), keyword(k)
-    {
-    }
-};
 
 struct parse_token_t
 {
@@ -165,9 +150,6 @@ class parse_tree_t
 /** Base class for nodes of a parse tree */
 class parse_node_base_t
 {
-    /* Backreference to the tree */
-    parse_tree_t * const tree;
-    
     /* Type of the node */
     const enum parse_token_type_t type;
     
@@ -177,8 +159,12 @@ class parse_node_base_t
     /* Length of our range in the source code */
     const unsigned int source_length;
     
+    protected:
+    /* Index of the production used */
+    unsigned char branch;
+    
     public:
-    parse_node_base_t(parse_tree_t *tr, parse_token_type_t ty) : tree(tr), type(ty), source_start(0), source_length(0)
+    parse_node_base_t(parse_token_type_t ty) : type(ty), source_start(0), source_length(0)
     {
     }
     
@@ -187,12 +173,25 @@ class parse_node_base_t
     }
 };
 
+class parse_node_t : public parse_node_base_t
+{
+    public:
+    parse_node_t *p1;
+    parse_node_t *p2;
+    uint32_t c1;
+    
+    parse_node_t(parse_token_type_t ty) : parse_node_base_t(ty), p1(NULL), p2(NULL), c1(0)
+    {
+    }
+};
+
 class parse_statement_t;
 class parse_statement_list_t : public parse_node_base_t
 {
-    std::vector<parse_statement_t *> statements; //deleted by destructor
     public:
-    parse_statement_list_t(parse_tree_t *t) : parse_node_base_t(t, symbol_statement_list)
+    parse_statement_t *statement;
+    parse_statement_list_t *next;
+    parse_statement_list_t() : parse_node_base_t(symbol_statement_list), statement(NULL), next(NULL)
     {
     }
 };
@@ -200,49 +199,82 @@ class parse_statement_list_t : public parse_node_base_t
 class parse_statement_t : public parse_node_base_t
 {
     // abstract class
-    
     public:
-    parse_statement_t(parse_tree_t *t, parse_token_type_t ty) : parse_node_base_t(t, ty)
+    parse_statement_t(parse_token_type_t ty) : parse_node_base_t(ty)
+    {
+    }
+};
+
+class parse_abstract_statement_t : public parse_statement_t
+{
+    public:
+    parse_statement_t *subject;
+    parse_abstract_statement_t() : parse_statement_t(symbol_statement), subject(NULL)
     {
     }
 };
 
 class parse_boolean_statement_t : public parse_statement_t
 {
+    public:
     enum {
+        boolean_invalid,
         boolean_and,
         boolean_or,
         boolean_not
-    };
-    parse_statement_t *subject;
+    } condition;
     
-    parse_boolean_statement_t(parse_tree_t *t) : subject(NULL), parse_statement_t(t, symbol_boolean_statement)
+    parse_boolean_statement_t() : parse_statement_t(symbol_boolean_statement), condition(boolean_invalid)
     {
+#if 0
+        switch (keyword)
+        {
+            case parse_keyword_and:
+                condition = boolean_and;
+                break;
+            
+            case parse_keyword_or:
+                condition = boolean_or;
+                break;
+            
+            case parse_keyword_not:
+                condition = boolean_not;
+                break;
+                
+            default:
+                PARSE_ASSERT(0 && "Unknown keyword");
+                break;
+        }
+#endif
     }
 };
 
 class parse_plain_statement_t;
 class parse_decorated_statement_t : public parse_statement_t
 {
+public:
     enum {
+        decoration_none,
         decoration_command,
         decoration_builtin
     } decoration;
     
     parse_plain_statement_t *subject;
     
-    parse_decorated_statement_t(parse_tree_t *t) : subject(NULL), parse_statement_t(t, symbol_decorated_statement)
+    parse_decorated_statement_t() : parse_statement_t(symbol_decorated_statement), subject(NULL), decoration(decoration_none)
     {
     }
 
 };
 
+class parse_string_t;
 class parse_plain_statement_t : public parse_statement_t
 {
-    wcstring_list_t arguments;
-    wcstring_list_t redirections;
+    parse_string_t *command;
+    parse_arguments_or_redirection_list_t *arguments_or_redirections_list;
     
-    parse_plain_statement_t(parse_tree_t *t) : parse_statement_t(t, symbol_plain_statement)
+    public:
+    parse_plain_statement_t() : parse_statement_t(symbol_plain_statement)
     {
     }
 };
@@ -250,27 +282,107 @@ class parse_plain_statement_t : public parse_statement_t
 class parse_block_statement_t : public parse_statement_t
 {
     // abstract class
-    parse_block_statement_t(parse_tree_t *t, parse_token_type_t ty) : parse_statement_t(t, ty)
+    parse_block_statement_t(parse_tree_t *t, parse_token_type_t ty) : parse_statement_t(ty)
     {
     }
 };
+
+class parse_string_t : public parse_node_base_t
+{
+};
+
+class parse_arguments_or_redirection_list_t : public parse_node_base_t
+{
+};
+
+
+struct parse_stack_element_t
+{
+    enum parse_token_type_t type;
+    enum parse_keyword_t keyword;
+    parse_node_base_t *node;
+    
+    private:
+    void allocate_node(void)
+    {
+        assert(node == NULL);
+        switch (type)
+        {
+            // Set up our node
+            case symbol_statement_list:
+                node = new parse_statement_list_t();
+                break;
+                
+            case symbol_statement:
+                node = new parse_abstract_statement_t();
+                break;
+                
+            case symbol_block_statement:
+            case symbol_block_header:
+            case symbol_if_header:
+            case symbol_for_header:
+            case symbol_while_header:
+            case symbol_begin_header:
+            case symbol_function_header:
+                break;
+            
+            case symbol_boolean_statement:
+                node = new parse_boolean_statement_t();
+                break;
+                
+            case symbol_decorated_statement:
+                node = new parse_decorated_statement_t();
+                break;
+                
+            case symbol_plain_statement:
+                node = new parse_plain_statement_t();
+                break;
+                
+            case symbol_arguments_or_redirections_list:
+            case symbol_argument_or_redirection:
+            
+            default:
+            ;
+                // nothing
+        }
+    }
+
+    
+    public:
+    
+    // Construct a token type, with no keyword
+    parse_stack_element_t(enum parse_token_type_t t) : type(t), keyword(parse_keyword_none)
+    {
+        allocate_node();
+    }
+    
+    // Construct a string type from a keyword
+    parse_stack_element_t(enum parse_keyword_t k) : type(parse_token_type_string), keyword(k), node(NULL)
+    {
+        allocate_node();
+    }
+};
+
+template<typename T>
+static T* cast_node(parse_node_base_t *node)
+{
+    return static_cast<T*>(node);
+}
 
 class parse_ll_t
 {
     friend class parse_t;
     
-    std::stack<parse_stack_element_t> symbol_stack; // LL parser stack
-    std::stack<parse_node_base_t *> node_stack; // stack of nodes we are constructing; owned by the tree (not by us!)
+    std::vector<parse_stack_element_t> symbol_stack; // LL parser stack
     parse_tree_t *tree; //tree we are constructing
     
     // Constructor
     parse_ll_t()
     {
         this->tree = new parse_tree_t();
-        tree->root = new parse_statement_list_t(this->tree);;
 
-        symbol_stack.push(symbol_statement_list); // goal token
-        node_stack.push(tree->root); //outermost node
+        symbol_stack.push_back(symbol_statement_list); // goal token
+        tree->root = stack_get_node_cast<parse_statement_list_t>(0);
     }
     
     // implementation of certain parser constructions
@@ -280,6 +392,7 @@ class parse_ll_t
     void accept_token_block_header(parse_token_t token);
     void accept_token_boolean_statement(parse_token_t token);
     void accept_token_decorated_statement(parse_token_t token);
+    void accept_token_plain_statement(parse_token_t token);
     void accept_token_arguments_or_redirections_list(parse_token_t token);
     void accept_token_argument_or_redirection(parse_token_t token);
     
@@ -289,18 +402,33 @@ class parse_ll_t
     
     parse_token_type_t stack_top_type() const
     {
-        return symbol_stack.top().type;
+        return symbol_stack.back().type;
+    }
+    
+    template<typename T>
+    T* stack_get_node_cast(unsigned int idx)
+    {
+        assert(idx < symbol_stack.size());
+        parse_node_base_t *base_node = symbol_stack.at(symbol_stack.size() - idx - 1).node;
+        return static_cast<T *>(base_node);
+
+    }
+    
+    parse_node_base_t *stack_get_node(unsigned int idx) const
+    {
+        assert(idx < symbol_stack.size());
+        return symbol_stack.at(symbol_stack.size() - idx - 1).node;
     }
     
     // Pop from the top of the symbol stack, then push. Note that these are pushed in reverse order, so the first argument will be on the top of the stack
     inline void symbol_stack_pop_push(parse_stack_element_t tok1 = token_type_invalid, parse_stack_element_t tok2 = token_type_invalid, parse_stack_element_t tok3 = token_type_invalid, parse_stack_element_t tok4 = token_type_invalid, parse_stack_element_t tok5 = token_type_invalid)
     {
-        symbol_stack.pop();
-        if (tok5.type != token_type_invalid) symbol_stack.push(tok5);
-        if (tok4.type != token_type_invalid) symbol_stack.push(tok4);
-        if (tok3.type != token_type_invalid) symbol_stack.push(tok3);
-        if (tok2.type != token_type_invalid) symbol_stack.push(tok2);
-        if (tok1.type != token_type_invalid) symbol_stack.push(tok1);
+        symbol_stack.pop_back();
+        if (tok5.type != token_type_invalid) symbol_stack.push_back(tok5);
+        if (tok4.type != token_type_invalid) symbol_stack.push_back(tok4);
+        if (tok3.type != token_type_invalid) symbol_stack.push_back(tok3);
+        if (tok2.type != token_type_invalid) symbol_stack.push_back(tok2);
+        if (tok1.type != token_type_invalid) symbol_stack.push_back(tok1);
     }
 };
 
@@ -317,7 +445,8 @@ void parse_ll_t::parse_error(const wchar_t *expected, parse_token_t token)
 
 void parse_ll_t::accept_token_statement_list(parse_token_t token)
 {
-    PARSE_ASSERT(symbol_stack.top().type == symbol_statement_list);
+    PARSE_ASSERT(stack_top_type() == symbol_statement_list);
+    parse_statement_list_t *list = stack_get_node_cast<parse_statement_list_t>(0);
     switch (token.type)
     {
         case parse_token_type_string:
@@ -326,7 +455,8 @@ void parse_ll_t::accept_token_statement_list(parse_token_t token)
         case parse_token_background:
         case parse_token_type_end:
             symbol_stack_pop_push(symbol_statement, symbol_statement_list);
-            
+            list->next = stack_get_node_cast<parse_statement_list_t>(0);
+            list->statement = stack_get_node_cast<parse_statement_t>(1);
             break;
             
         case parse_token_type_terminate:
@@ -343,6 +473,7 @@ void parse_ll_t::accept_token_statement_list(parse_token_t token)
 void parse_ll_t::accept_token_statement(parse_token_t token)
 {
     PARSE_ASSERT(stack_top_type() == symbol_statement);
+    parse_abstract_statement_t *statement = stack_get_node_cast<parse_abstract_statement_t>(0);
     switch (token.type)
     {
         case parse_token_type_string:
@@ -352,6 +483,7 @@ void parse_ll_t::accept_token_statement(parse_token_t token)
                 case parse_keyword_or:
                 case parse_keyword_not:
                     symbol_stack_pop_push(symbol_boolean_statement);
+                    statement->subject = stack_get_node_cast<parse_boolean_statement_t>(0);
                     break;
 
                 case parse_keyword_if:
@@ -363,6 +495,7 @@ void parse_ll_t::accept_token_statement(parse_token_t token)
                 case parse_keyword_function:
                 case parse_keyword_switch:
                     symbol_stack_pop_push(symbol_block_statement);
+                    assert(0 && "Need assignment");
                     break;
                     
                 case parse_keyword_end:
@@ -373,6 +506,7 @@ void parse_ll_t::accept_token_statement(parse_token_t token)
                 case parse_keyword_command:
                 case parse_keyword_builtin:
                     symbol_stack_pop_push(symbol_decorated_statement);
+                    statement->subject = stack_get_node_cast<parse_decorated_statement_t>(0);
                     break;
                     
             }
@@ -441,18 +575,22 @@ void parse_ll_t::accept_token_block_header(parse_token_t token)
 void parse_ll_t::accept_token_boolean_statement(parse_token_t token)
 {
     PARSE_ASSERT(stack_top_type() == symbol_boolean_statement);
+    parse_boolean_statement_t *statement = stack_get_node_cast<parse_boolean_statement_t>(0);
     switch (token.type)
     {
         case parse_token_type_string:
             switch (token.keyword)
             {
                 case parse_keyword_and:
+                    statement->condition = parse_boolean_statement_t::boolean_and;
                     symbol_stack_pop_push(parse_keyword_and, symbol_statement);
                     break;
                 case parse_keyword_or:
+                    statement->condition = parse_boolean_statement_t::boolean_or;
                     symbol_stack_pop_push(parse_keyword_or, symbol_statement);
                     break;
                 case parse_keyword_not:
+                    statement->condition = parse_boolean_statement_t::boolean_not;
                     symbol_stack_pop_push(parse_keyword_not, symbol_statement);
                     break;
                     
@@ -470,19 +608,29 @@ void parse_ll_t::accept_token_boolean_statement(parse_token_t token)
 void parse_ll_t::accept_token_decorated_statement(parse_token_t token)
 {
     PARSE_ASSERT(stack_top_type() == symbol_decorated_statement);
+    parse_decorated_statement_t *statement = stack_get_node_cast<parse_decorated_statement_t>(0);
     switch (token.type)
     {
         case parse_token_type_string:
             switch (token.keyword)
             {
                 case parse_keyword_command:
-                    symbol_stack_pop_push(parse_keyword_command, symbol_statement);
+                    symbol_stack_pop_push(parse_keyword_command, symbol_plain_statement);
+                    statement->subject = stack_get_node_cast<parse_plain_statement_t>(0);
+                    statement->decoration = parse_decorated_statement_t::decoration_command;
+
                     break;
+                    
                 case parse_keyword_builtin:
-                    symbol_stack_pop_push(parse_keyword_builtin, symbol_statement);
+                    symbol_stack_pop_push(parse_keyword_builtin, symbol_plain_statement);
+                    statement->subject = stack_get_node_cast<parse_plain_statement_t>(0);
+                    statement->decoration = parse_decorated_statement_t::decoration_builtin;
                     break;
+                    
                 default:
                     symbol_stack_pop_push(symbol_plain_statement);
+                    statement->subject = stack_get_node_cast<parse_plain_statement_t>(0);
+                    statement->decoration = parse_decorated_statement_t::decoration_none;
                     break;
             }
             
@@ -490,6 +638,14 @@ void parse_ll_t::accept_token_decorated_statement(parse_token_t token)
             token_unhandled(token, __FUNCTION__);
             break;
     }
+}
+
+void parse_ll_t::accept_token_plain_statement(parse_token_t token)
+{
+    PARSE_ASSERT(stack_top_type() == symbol_decorated_statement);
+    parse_plain_statement_t *statement = stack_get_node_cast<parse_plain_statement_t>(0);
+    symbol_stack_pop_push(parse_token_type_string, symbol_arguments_or_redirections_list, parse_token_type_end);
+    statement->
 }
 
 void parse_ll_t::accept_token_arguments_or_redirections_list(parse_token_t token)
@@ -579,7 +735,7 @@ void parse_ll_t::accept_token(parse_token_t token)
             break;
             
         case symbol_plain_statement:
-            symbol_stack_pop_push(parse_token_type_string, symbol_arguments_or_redirections_list, parse_token_type_end);
+            accept_token_plain_statement(token);
             break;
             
         case symbol_arguments_or_redirections_list:
@@ -593,15 +749,42 @@ void parse_ll_t::accept_token(parse_token_t token)
 }
 #endif
 
-
+#if 0
 class parse_sr_t
 {
     friend class parse_t;
     
     std::vector<parse_node_base_t *> node_stack;
     void accept_token(parse_token_t token);
+    
+    void accept_token_string(parse_token_t token);
 };
 
-parse_t::parse_t() : parser(new parse_sr_t())
+void parse_sr_t::accept_token_string(parse_token_t token)
+{
+    assert(token.type == parse_token_type_string);
+}
+
+void parse_sr_t::accept_token(parse_token_t token)
+{
+    // We are a SR parser. Our action depends on a combination of the top element(s) of our node stack and the token type.
+    // Switch on the token type to make progress
+    switch (token.type)
+    {
+        case parse_token_type_string:
+            accept_token_string(token);
+            break;
+            
+        case parse_token_type_pipe:
+        case parse_token_type_redirection:
+        case parse_token_background:
+        case parse_token_type_end:
+        case parse_token_type_terminate:
+    }
+}
+
+#endif
+
+parse_t::parse_t() : parser(new parse_ll_t())
 {
 }

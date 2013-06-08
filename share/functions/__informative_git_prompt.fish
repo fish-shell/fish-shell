@@ -98,8 +98,7 @@ function ___print_remote_info
     end
 
     set rev_git (eval "git rev-list --left-right $remote_ref...HEAD" ^/dev/null)
-
-    if test $status = 0
+    if test $status != "0"
         set rev_git (git rev-list --left-right $merge_name...HEAD)
     end
 
@@ -109,8 +108,13 @@ function ___print_remote_info
         end
     end
 
-    set ahead (count $isAhead)
-    set behind (math (count $rev_git) - $ahead)
+    set -l remote_diff (count $rev_git)
+    set -l ahead (count $isAhead)
+    set -l behind (math $remote_diff - $ahead)
+
+    if [ $remote_diff != "0" ]
+        echo -n " "
+    end
 
     if [ $ahead != "0" ]
         set_color -o $fish_color_git_remote

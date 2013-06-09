@@ -722,7 +722,7 @@ void parser_t::print_errors_stderr()
 
 }
 
-int parser_t::eval_args(const wchar_t *line, std::vector<completion_t> &args)
+void parser_t::eval_args(const wchar_t *line, std::vector<completion_t> &args)
 {
 
     expand_flags_t eflags = 0;
@@ -731,10 +731,9 @@ int parser_t::eval_args(const wchar_t *line, std::vector<completion_t> &args)
     if (this->parser_type != PARSER_TYPE_GENERAL)
         eflags |= EXPAND_SKIP_CMDSUBST;
 
-    int do_loop=1;
+    bool do_loop=1;
 
-    CHECK(line, 1);
-//  CHECK( args, 1 );
+    if (! line) return;
 
     // PCA we need to suppress calling proc_push_interactive off of the main thread. I'm not sure exactly what it does.
     if (this->parser_type == PARSER_TYPE_GENERAL)
@@ -803,8 +802,6 @@ int parser_t::eval_args(const wchar_t *line, std::vector<completion_t> &args)
 
     if (this->parser_type == PARSER_TYPE_GENERAL)
         proc_pop_interactive();
-
-    return 1;
 }
 
 void parser_t::stack_trace(block_t *b, wcstring &buff)

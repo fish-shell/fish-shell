@@ -60,7 +60,8 @@
 #include "postfork.h"
 #include "signal.h"
 #include "highlight.h"
-#include "expression.h"
+#include "parse_tree.h"
+#include "parse_exec.h"
 
 /**
    The number of tests to run

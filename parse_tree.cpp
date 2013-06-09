@@ -2,47 +2,9 @@
 #include "tokenizer.h"
 #include <vector>
 
-
-/* Fish grammar:
-
-# A statement_list is a list of statements, separated by semicolons or newlines
-
-    statement_list = <empty> |
-                     statement statement_list
-
-# A statement is a normal job, or an if / while / and etc.
-
-    statement = boolean_statement | block_statement | decorated_statement
-    
-# A block is a conditional, loop, or begin/end
-
-    block_statement = block_header statement_list END arguments_or_redirections_list
-    block_header = if_header | for_header | while_header | function_header | begin_header
-    if_header = IF statement
-    for_header = FOR var_name IN arguments_or_redirections_list STATEMENT_TERMINATOR
-    while_header = WHILE statement
-    begin_header = BEGIN STATEMENT_TERMINATOR
-    function_header = FUNCTION arguments_or_redirections_list STATEMENT_TERMINATOR
-    
-# A boolean statement is AND or OR or NOT
-
-    boolean_statement = AND statement | OR statement | NOT statement
- 
-# A decorated_statement is a command with a list of arguments_or_redirections, possibly with "builtin" or "command"
-
-    decorated_statement = COMMAND plain_statement | BUILTIN plain_statement | plain_statement
-    plain_statement = command arguments_or_redirections_list terminator
-
-    arguments_or_redirections_list = <empty> |
-                                     argument_or_redirection arguments_or_redirections_list
-    argument_or_redirection = redirection | <TOK_STRING>
-    redirection = <TOK_REDIRECTION>
-    
-    terminator = <TOK_END> | <TOK_BACKGROUND>
- 
-*/
-
+struct parse_node_t;
 typedef size_t node_offset_t;
+typedef std::vector<parse_node_t> parse_node_tree_t;
 
 #define PARSE_ASSERT(a) assert(a)
 
@@ -208,7 +170,7 @@ class parse_node_t
     }
 };
 
-static void dump_tree_recursive(const std::vector<parse_node_t> &nodes, const wcstring &src, size_t start, size_t indent, wcstring *result, size_t *line)
+static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &src, size_t start, size_t indent, wcstring *result, size_t *line)
 {
     assert(start < nodes.size());
     const parse_node_t &node = nodes.at(start);
@@ -234,7 +196,7 @@ static void dump_tree_recursive(const std::vector<parse_node_t> &nodes, const wc
     }
 }
 
-static wcstring dump_tree(const std::vector<parse_node_t> &nodes, const wcstring &src)
+static wcstring dump_tree(const parse_node_tree_t &nodes, const wcstring &src)
 {
     if (nodes.empty())
         return L"(empty!)";
@@ -244,7 +206,6 @@ static wcstring dump_tree(const std::vector<parse_node_t> &nodes, const wcstring
     dump_tree_recursive(nodes, src, 0, 0, &result, &line);
     return result;
 }
-
 
 struct parse_stack_element_t
 {
@@ -261,12 +222,36 @@ struct parse_stack_element_t
     }
 };
 
+class parse_execution_context_t
+{
+    wcstring src;
+    const parse_node_tree_t nodes;
+    size_t node_idx;
+    
+    public:
+    parse_execution_context_t(const parse_node_tree_t &n, const wcstring &s) : src(s), nodes(n), node_idx(0)
+    {
+    }
+    
+    wcstring simulate(void);
+};
+
+wcstring parse_execution_context_t::simulate()
+{
+    if (nodes.empty())
+        return L"(empty!");
+    
+    PARSE_ASSERT(node_idx < nodes.size());
+    PARSE_ASSERT(nodes.at(node_idx).type == symbol_statement_list);
+    
+}
+
 class parse_ll_t
 {
     friend class parse_t;
     
     std::vector<parse_stack_element_t> symbol_stack; // LL parser stack
-    std::vector<parse_node_t> nodes;
+    parse_node_tree_t nodes;
     bool errored;
     
     // Constructor
@@ -642,7 +627,6 @@ void parse_ll_t::accept_token(parse_token_t token)
     bool consumed = false;
     while (! consumed && ! this->errored)
     {
-        fprintf(stderr, "Top type %ls\n", token_type_description(stack_top_type()).c_str());
         if (top_node_match_token(token))
         {
             consumed = true;
@@ -785,5 +769,5 @@ void parse_t::parse(const wcstring &str)
     }
     wcstring result = dump_tree(this->parser->nodes, str);
     fprintf(stderr, "Tree (%ld nodes):\n%ls", this->parser->nodes.size(), result.c_str());
-    fprintf(stderr, "node size %ld", sizeof(parse_node_t));
+    fprintf(stderr, "node size %ld\n", sizeof(parse_node_t));
 }

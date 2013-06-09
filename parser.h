@@ -396,7 +396,7 @@ public:
 
     /**
       Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and cmdsubst execution on the tokens.
-      The output is inserted into output, and should be freed by the caller.
+      The output is inserted into output.
 
       \param line Line to evaluate
       \param output List to insert output to
@@ -405,7 +405,7 @@ public:
       \param line Line to evaluate
       \param output List to insert output to
     */
-    int eval_args(const wchar_t *line, std::vector<completion_t> &output);
+    void eval_args(const wchar_t *line, std::vector<completion_t> &output);
 
     /**
        Sets the current evaluation error. This function should only be used by libraries that are called by

@@ -1,11 +1,10 @@
-/**\file expression.h
+/**\file parse_tree.h
 
     Programmatic representation of fish code.
-
 */
 
-#ifndef FISH_EXPRESSION_H
-#define FISH_EXPRESSION_H
+#ifndef FISH_PARSE_TREE_H
+#define FISH_PARSE_TREE_H
 
 #include <wchar.h>
 
@@ -65,17 +64,6 @@ class parse_t
     
     terminator = <TOK_END> | <TOK_BACKGROUND>
  
-*/
-
-
-/* fish Shift-Reduce grammar:
-
-   
-   IF <- if_statement
-   FOR <- for_statement
-   
-   
-
 */
 
 #endif

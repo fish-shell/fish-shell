@@ -31,7 +31,7 @@ function funced --description 'Edit function definition'
         set -e argv[1]
     end
 
-    if begin; set -q funcname[2]; or not test "$funcname[1]"; end
+    if test (count $funcname) -ne 1
         set_color red
         _ "funced: You must specify one function name
 "

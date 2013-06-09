@@ -19,7 +19,6 @@ enum token_type
 {
     TOK_NONE, /**< Tokenizer not yet constructed */
     TOK_ERROR, /**< Error reading token */
-    TOK_INVALID,/**< Invalid token */
     TOK_STRING,/**< String token */
     TOK_PIPE,/**< Pipe token */
     TOK_END,/**< End token (semicolon or newline, not literal end) */

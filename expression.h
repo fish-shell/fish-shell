@@ -20,8 +20,13 @@ class parse_sr_t;
 class parse_t
 {
     parse_ll_t * const parser;
+    
+    public:
     parse_t();
+    void parse(const wcstring &str);
 };
+
+
 
 /* Fish grammar:
 

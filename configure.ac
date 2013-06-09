@@ -92,7 +92,7 @@ fi
 # So ensure this happens before we modify CXXFLAGS below
 #
 
-AC_PROG_CXX([g++ c++])
+AC_PROG_CXX([clang++ g++ c++])
 AC_PROG_CPP
 AC_PROG_INSTALL
 

@@ -2042,7 +2042,7 @@ int parser_t::parse_job(process_t *p,
                         free(cpy);
 
                     }
-                    else if (cmd[0]==L'$')
+                    else if (cmd[0]==L'$' || cmd[0] == VARIABLE_EXPAND || cmd[0] == VARIABLE_EXPAND_SINGLE)
                     {
 
                         const env_var_t val_wstr = env_get_string(cmd+1);

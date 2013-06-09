@@ -289,7 +289,7 @@ static prompt_layout_t calc_prompt_layout(const wchar_t *prompt)
                 if (prompt[j+1] == L'k')
                 {
                     const env_var_t term_name = env_get_string(L"TERM");
-                    if (!term_name.missing() && wcsstr(term_name.c_str(), L"screen") == term_name)
+                    if (!term_name.missing() && string_prefixes_string(L"screen", term_name))
                     {
                         const wchar_t *end;
                         j+=2;

@@ -250,22 +250,22 @@ enum fuzzy_match_type_t
 {
     /* We match the string exactly: FOOBAR matches FOOBAR */
     fuzzy_match_exact = 0,
-    
+
     /* We match a prefix of the string: FO matches FOOBAR */
     fuzzy_match_prefix,
-    
+
     /* We match the string exactly, but in a case insensitive way: foobar matches FOOBAR */
     fuzzy_match_case_insensitive,
-    
+
     /* We match a prefix of the string, in a case insensitive way: foo matches FOOBAR */
     fuzzy_match_prefix_case_insensitive,
-    
+
     /* We match a substring of the string: OOBA matches FOOBAR */
     fuzzy_match_substring,
-    
+
     /* A subsequence match with insertions only: FBR matches FOOBAR */
     fuzzy_match_subsequence_insertions_only,
-    
+
     /* We don't match the string */
     fuzzy_match_none
 };
@@ -302,14 +302,14 @@ static inline bool match_type_shares_prefix(fuzzy_match_type_t t)
 struct string_fuzzy_match_t
 {
     enum fuzzy_match_type_t type;
-    
+
     /* Strength of the match. The value depends on the type. Lower is stronger. */
     size_t match_distance_first;
     size_t match_distance_second;
-    
+
     /* Constructor */
     string_fuzzy_match_t(enum fuzzy_match_type_t t, size_t distance_first = 0, size_t distance_second = 0);
-    
+
     /* Return -1, 0, 1 if this match is (respectively) better than, equal to, or worse than rhs */
     int compare(const string_fuzzy_match_t &rhs) const;
 };

@@ -1139,12 +1139,12 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
                                        prefix_esc.c_str());
 
     escaped_separator = escape(COMPLETE_SEP_STR, 1);
-    
+
     for (size_t i=0; i< comp.size(); i++)
     {
         long base_len=-1;
         const completion_t &el = comp.at(i);
-        
+
         wcstring completion_text;
         wcstring description_text;
 
@@ -1498,7 +1498,7 @@ static void prioritize_completions(std::vector<completion_t> &comp)
         if (el.match.type < best_type)
             best_type = el.match.type;
     }
-    
+
     /* Throw out completions whose match types are not the best. */
     i = comp.size();
     while (i--)
@@ -1508,7 +1508,7 @@ static void prioritize_completions(std::vector<completion_t> &comp)
             comp.erase(comp.begin() + i);
         }
     }
-    
+
     /* Sort the remainder */
     sort(comp.begin(), comp.end(), compare_completions_by_match_type);
 }
@@ -1536,7 +1536,7 @@ static const completion_t *cycle_competions(const std::vector<completion_t> &com
         const completion_t &c = comp.at(idx);
 
         /* Try this completion */
-        if (! (c.flags & COMPLETE_REPLACES_TOKEN) || reader_can_replace(command_line, c.flags))
+        if (!(c.flags & COMPLETE_REPLACES_TOKEN) || reader_can_replace(command_line, c.flags))
         {
             /* Success */
             result = &c;
@@ -1605,7 +1605,7 @@ static bool handle_completions(const std::vector<completion_t> &comp)
               the token doesn't contain evil operators
               like {}
              */
-            if (! (c.flags & COMPLETE_REPLACES_TOKEN) || reader_can_replace(tok, c.flags))
+            if (!(c.flags & COMPLETE_REPLACES_TOKEN) || reader_can_replace(tok, c.flags))
             {
                 completion_insert(c.completion.c_str(), c.flags);
             }
@@ -1618,7 +1618,7 @@ static bool handle_completions(const std::vector<completion_t> &comp)
 
     if (!done)
     {
-    
+
         /* Determine the type of the best match(es) */
         fuzzy_match_type_t best_match_type = fuzzy_match_none;
         for (size_t i=0; i < comp.size(); i++)
@@ -1629,19 +1629,19 @@ static bool handle_completions(const std::vector<completion_t> &comp)
                 best_match_type = el.match.type;
             }
         }
-        
+
         /* Determine whether we are going to replace the token or not. If any commands of the best type do not require replacement, then ignore all those that want to use replacement */
         bool will_replace_token = true;
         for (size_t i=0; i< comp.size(); i++)
         {
             const completion_t &el = comp.at(i);
-            if (el.match.type == best_match_type && ! (el.flags & COMPLETE_REPLACES_TOKEN))
+            if (el.match.type == best_match_type && !(el.flags & COMPLETE_REPLACES_TOKEN))
             {
                 will_replace_token = false;
                 break;
             }
         }
-        
+
         /* Decide which completions survived. There may be a lot of them; it would be nice if we could figure out how to avoid copying them here */
         std::vector<completion_t> surviving_completions;
         for (size_t i=0; i < comp.size(); i++)
@@ -1650,21 +1650,21 @@ static bool handle_completions(const std::vector<completion_t> &comp)
             /* Only use completions with the best match type */
             if (el.match.type != best_match_type)
                 continue;
-            
+
             /* Only use completions that match replace_token */
-            bool completion_replace_token = !! (el.flags & COMPLETE_REPLACES_TOKEN);
+            bool completion_replace_token = !!(el.flags & COMPLETE_REPLACES_TOKEN);
             if (completion_replace_token != will_replace_token)
                 continue;
-            
+
             /* Don't use completions that want to replace, if we cannot replace them */
             if (completion_replace_token && ! reader_can_replace(tok, el.flags))
                 continue;
-            
+
             /* This completion survived */
             surviving_completions.push_back(el);
         }
-        
-        
+
+
         /* Try to find a common prefix to insert among the surviving completions */
         wcstring common_prefix;
         complete_flags_t flags = 0;
@@ -1682,7 +1682,8 @@ static bool handle_completions(const std::vector<completion_t> &comp)
             {
                 /* Determine the shared prefix length. */
                 size_t idx, max = mini(common_prefix.size(), el.completion.size());
-                for (idx=0; idx < max; idx++) {
+                for (idx=0; idx < max; idx++)
+                {
                     wchar_t ac = common_prefix.at(idx), bc = el.completion.at(idx);
                     bool matches = (ac == bc);
                     /* If we are replacing the token, allow case to vary */
@@ -1694,17 +1695,17 @@ static bool handle_completions(const std::vector<completion_t> &comp)
                     if (! matches)
                         break;
                 }
-                
+
                 /* idx is now the length of the new common prefix */
                 common_prefix.resize(idx);
                 prefix_is_partial_completion = true;
-                
+
                 /* Early out if we decide there's no common prefix */
                 if (idx == 0)
                     break;
             }
         }
-        
+
         if (! common_prefix.empty())
         {
             /* We got something. If more than one completion contributed, then it means we have a prefix; don't insert a space after it */
@@ -1722,7 +1723,7 @@ static bool handle_completions(const std::vector<completion_t> &comp)
 
             assert(data->buff_pos >= prefix_start);
             len = data->buff_pos - prefix_start;
-            
+
             if (match_type_requires_full_replacement(best_match_type))
             {
                 // No prefix
@@ -1751,7 +1752,7 @@ static bool handle_completions(const std::vector<completion_t> &comp)
                     reader_repaint_without_autosuggestion();
 
                 write_loop(1, "\n", 1);
-                
+
                 run_pager(prefix, is_quoted, surviving_completions);
             }
             s_reset(&data->screen, screen_reset_abandon_line);
@@ -3549,6 +3550,46 @@ const wchar_t *reader_readline(void)
                     wcstring local_cmd = data->command_line;
                     std::swap(local_cmd.at(data->buff_pos), local_cmd.at(data->buff_pos-1));
                     set_command_line_and_position(local_cmd, data->buff_pos + 1);
+                }
+                break;
+            }
+
+            case R_TRANSPOSE_WORDS:
+            {
+                size_t len = data->command_length();
+                const wchar_t *buff = data->command_line.c_str();
+                const wchar_t *tok_begin, *tok_end, *prev_begin, *prev_end;
+
+                /* If we are not in a token, look for one ahead */
+                while (data->buff_pos != len && !iswalnum(buff[data->buff_pos]))
+                    data->buff_pos++;
+
+                parse_util_token_extent(buff, data->buff_pos, &tok_begin, &tok_end, &prev_begin, &prev_end);
+
+                /* In case we didn't find a token at or after the cursor... */
+                if (tok_begin == &buff[len])
+                {
+                    /* ...retry beginning from the previous token */
+                    size_t pos = prev_end - &buff[0];
+                    parse_util_token_extent(buff, pos, &tok_begin, &tok_end, &prev_begin, &prev_end);
+                }
+
+                /* Make sure we have two tokens */
+                if (prev_begin < prev_end && tok_begin < tok_end && tok_begin > prev_begin)
+                {
+                    const wcstring prev(prev_begin, prev_end - prev_begin);
+                    const wcstring sep(prev_end, tok_begin - prev_end);
+                    const wcstring tok(tok_begin, tok_end - tok_begin);
+                    const wcstring trail(tok_end, &buff[len] - tok_end);
+
+                    /* Compose new command line with swapped tokens */
+                    wcstring new_buff(buff, prev_begin - buff);
+                    new_buff.append(tok);
+                    new_buff.append(sep);
+                    new_buff.append(prev);
+                    new_buff.append(trail);
+                    /* Put cursor right after the second token */
+                    set_command_line_and_position(new_buff, tok_end - buff);
                 }
                 break;
             }

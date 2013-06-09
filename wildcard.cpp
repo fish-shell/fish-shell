@@ -217,12 +217,12 @@ static bool wildcard_complete_internal(const wcstring &orig,
         debug(2, L"Got null string on line %d of file %s", __LINE__, __FILE__);
         return 0;
     }
-    
+
     bool has_match = false;
     string_fuzzy_match_t fuzzy_match(fuzzy_match_exact);
     const bool at_end_of_wildcard = (*wc == L'\0');
     const wchar_t *completion_string = NULL;
-    
+
     // Hack hack hack
     // Implement EXPAND_FUZZY_MATCH by short-circuiting everything if there are no remaining wildcards
     if ((expand_flags & EXPAND_FUZZY_MATCH) && ! at_end_of_wildcard && ! wildcard_has(wc, true))
@@ -231,7 +231,7 @@ static bool wildcard_complete_internal(const wcstring &orig,
         if (fuzzy_match.type != fuzzy_match_none)
         {
             has_match = true;
-            
+
             /* If we're not a prefix or exact match, then we need to replace the token. Note that in this case we're not going to call ourselves recursively, so these modified flags won't "leak" except into the completion. */
             if (match_type_requires_full_replacement(fuzzy_match.type))
             {
@@ -247,9 +247,10 @@ static bool wildcard_complete_internal(const wcstring &orig,
             }
         }
     }
-    
+
     /* Maybe we satisfied the wildcard normally */
-    if (! has_match) {
+    if (! has_match)
+    {
         bool file_has_leading_dot = (is_first && str[0] == L'.');
         if (at_end_of_wildcard && ! file_has_leading_dot)
         {
@@ -264,7 +265,7 @@ static bool wildcard_complete_internal(const wcstring &orig,
             }
         }
     }
-    
+
     if (has_match)
     {
         /* Wildcard complete */
@@ -281,7 +282,7 @@ static bool wildcard_complete_internal(const wcstring &orig,
         }
         else
         {
-            if (desc_func && ! (expand_flags & EXPAND_NO_DESCRIPTIONS))
+            if (desc_func && !(expand_flags & EXPAND_NO_DESCRIPTIONS))
             {
                 /*
                   A description generating function is specified, call
@@ -299,7 +300,7 @@ static bool wildcard_complete_internal(const wcstring &orig,
         append_completion(out, out_completion, out_desc, flags, fuzzy_match);
         return true;
     }
-    
+
     if (*wc == ANY_STRING)
     {
         bool res=false;

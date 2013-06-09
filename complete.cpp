@@ -375,7 +375,7 @@ class completer_t
     {
         return !!(flags & COMPLETION_REQUEST_FUZZY_MATCH);
     }
-    
+
     fuzzy_match_type_t max_fuzzy_match_type() const
     {
         /* If we are doing fuzzy matching, request all types; if not request only prefix matching */
@@ -439,11 +439,11 @@ public:
         expand_flags_t result = 0;
         if (this->type() == COMPLETE_AUTOSUGGEST)
             result |= EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_JOBS;
-        
+
         /* Allow fuzzy matching */
         if (this->fuzzy())
             result |= EXPAND_FUZZY_MATCH;
-        
+
         return result;
     }
 
@@ -1207,7 +1207,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
                     this->complete_cmd_desc(str_cmd);
             }
         }
-        
+
         if (use_function)
         {
             //function_get_names( &possible_comp, cmd[0] == L'_' );
@@ -1658,22 +1658,22 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset)
     const wchar_t *var = &whole_var[start_offset];
     size_t varlen = wcslen(var);
     bool res = false;
-    
+
     const wcstring_list_t names = complete_get_variable_names();
     for (size_t i=0; i<names.size(); i++)
     {
         const wcstring & env_name = names.at(i);
-        
+
         string_fuzzy_match_t match = string_fuzzy_match_string(var, env_name, this->max_fuzzy_match_type());
         if (match.type == fuzzy_match_none)
         {
             // No match
             continue;
         }
-        
+
         wcstring comp;
         int flags = 0;
-        
+
         if (! match_type_requires_full_replacement(match.type))
         {
             // Take only the suffix
@@ -1685,21 +1685,21 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset)
             comp.append(env_name);
             flags = COMPLETE_REPLACES_TOKEN | COMPLETE_DONT_ESCAPE;
         }
-        
+
         wcstring desc;
         if (this->wants_descriptions())
         {
             env_var_t value_unescaped = env_get_string(env_name);
             if (value_unescaped.missing())
                 continue;
-            
+
             wcstring value = expand_escape_variable(value_unescaped);
             if (this->type() != COMPLETE_AUTOSUGGEST)
                 desc = format_string(COMPLETE_VAR_DESC_VAL, value.c_str());
         }
-        
+
         append_completion(this->completions,  comp.c_str(), desc.c_str(), flags, match);
-        
+
         res = true;
     }
 

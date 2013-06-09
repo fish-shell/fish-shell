@@ -109,14 +109,14 @@
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #define HAVE_SYS_STAT_H 1
 
-/* Define to 1 if you have the <sys/termios.h> header file. */
-#define HAVE_SYS_TERMIOS_H 1
+/* Define to 1 if you have the <sys/sysctl.h> header file. */
+#define HAVE_SYS_SYSCTL_H 1
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1
 
-/* Define to 1 if you have the <termio.h> header file. */
-/* #undef HAVE_TERMIO_H */
+/* Define to 1 if you have the <termios.h> header file. */
+#define HAVE_TERMIOS_H 1
 
 /* Define to 1 if you have the <term.h> header file. */
 #define HAVE_TERM_H 1
@@ -204,7 +204,7 @@
 /* #undef TPUTS_KLUDGE */
 
 /* Perform string translations with gettext */
-#define USE_GETTEXT 1
+/* #undef USE_GETTEXT */
 
 /* Macro to enable additional prototypes under BSD */
 /* #undef _NETBSD_SOURCE */

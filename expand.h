@@ -57,7 +57,7 @@ enum
 
     /** Don't expand home directories */
     EXPAND_SKIP_HOME_DIRECTORIES = 1 << 9,
-    
+
     /** Allow fuzzy matching */
     EXPAND_FUZZY_MATCH = 1 << 10
 };

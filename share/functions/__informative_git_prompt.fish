@@ -41,7 +41,7 @@ function __informative_git_prompt --description 'Write out the git prompt'
 
     set -l branch (git symbolic-ref -q HEAD | cut -c 12-)
 
-    echo -n " ("
+    echo -n "("
     set_color -o $fish_color_git_branch
 
     if test -z $branch

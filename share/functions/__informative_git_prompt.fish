@@ -26,9 +26,6 @@ set -g fish_prompt_git_status_order staged conflicted changed untracked
 
 function __informative_git_prompt --description 'Write out the git prompt'
 
-    set -l color_branch (set_color -o $fish_color_git_branch)
-    set -l color_normal (set_color $fish_color_normal)
-
     set -l branch (git rev-parse --abbrev-ref HEAD ^/dev/null)
     if test -z $branch
         return
@@ -37,11 +34,14 @@ function __informative_git_prompt --description 'Write out the git prompt'
     set -l git_branch_info (___fish_git_print_branch_info)
     set -l git_status_info (___fish_git_print_status_info)
 
-    printf "($color_branch$git_branch_info$color_normal|$git_status_info$color_normal)"
+    printf "($git_branch_info|$git_status_info)"
 
 end
 
 function ___fish_git_print_branch_info
+
+    set -l color_branch (set_color -o $fish_color_git_branch)
+    set -l color_normal (set_color $fish_color_normal)
 
     set -l branch (git symbolic-ref -q HEAD | cut -c 12-)
     set -l remote_info
@@ -53,7 +53,7 @@ function ___fish_git_print_branch_info
         set remote_info (___fish_git_print_remote_info $branch)
     end
 
-    echo "$branch$remote_info"
+    echo "$color_branch$branch$color_normal$remote_info"
 
 end
 
@@ -62,10 +62,13 @@ function ___fish_git_print_status_info
     set -l color_normal (set_color $fish_color_normal)
     set -l color_git_clean (set_color -o $fish_color_git_clean)
 
-    set -l untracked (___fish_git_untracked_files_count)
-    set -l changed (___fish_git_changed_files_count)
-    set -l staged (___fish_git_staged_files_count)
-    set -l conflicted (___fish_git_conflicted_files_count)
+    set -l changedFiles (git diff --name-status | cut -c 1-2)
+    set -l stagedFiles (git diff --staged --name-status | cut -c 1-2)
+
+    set -l changed (math (count $changedFiles) - (count (echo $changedFiles | grep "U")))
+    set -l conflicted (count (echo $stagedFiles | grep "U"))
+    set -l staged (math (count $stagedFiles) - $conflicted)
+    set -l untracked (count (git ls-files --others --exclude-standard))
 
     if [ (math $changed + $conflicted + $staged + $untracked) = 0 ]
         set git_status $color_git_clean$fish_prompt_git_status_clean$color_normal
@@ -81,65 +84,33 @@ function ___fish_git_print_status_info
         end
     end
 
-    echo $git_status
+    echo $git_status$color_normal
 
 end
 
 function ___fish_git_print_remote_info
 
+    set color_remote (set_color -o $fish_color_git_remote)
+    set color_normal (set_color $fish_color_normal)
+
     set -l branch $argv[1]
     set -l remote (____fish_git_remote_info $branch)
     set -l ahead $remote[1]
     set -l behind $remote[2]
+    set -l remote_info
 
-    if [ $ahead != "0" -a $behind != "0" ]
-        echo -n " "
-    end
 
     if [ $ahead != "0" ]
-        set_color -o $fish_color_git_remote
-        echo -n $fish_prompt_git_remote_ahead_of
-        set_color $fish_color_normal
-        echo -n $ahead
+        set remote_info $color_remote$fish_prompt_git_remote_ahead_of$color_normal$ahead
     end
 
     if [ $behind != "0" ]
-        set_color -o $fish_color_git_remote
-        echo -n $fish_prompt_git_remote_behind
-        set_color $fish_color_normal
-        echo -n $behind
+        set remote_info $remote_info$color_remote$fish_prompt_git_remote_behind$color_normal$behind
     end
 
-end
-
-function ___fish_git_changed_files_count
-
-    set -l changedFiles (git diff --name-status | cut -c 1-2)
-
-    echo (math (count $changedFiles) - (count (echo $changedFiles | grep "U")))
-
-end
-
-function ___fish_git_untracked_files_count
-
-    echo (count (git ls-files --others --exclude-standard))
-
-end
-
-function ___fish_git_staged_files_count
-
-    set -l stagedFiles (git diff --staged --name-status | cut -c 1-2)
-    set -l conflicted (count (echo $stagedFiles | grep "U"))
-
-    echo (math (count $stagedFiles) - $conflicted)
-
-end
-
-function ___fish_git_conflicted_files_count
-
-    set -l stagedFiles (git diff --staged --name-status | cut -c 1-2)
-
-    echo (count (echo $stagedFiles | grep "U"))
+    if test -n "$remote_info"
+        echo " $remote_info"
+    end
 
 end
 

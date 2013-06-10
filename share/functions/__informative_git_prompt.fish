@@ -4,25 +4,25 @@
 # This is fish port of Informative git prompt for bash (https://github.com/magicmonty/bash-git-prompt)
 #
 
-set -gx fish_color_git_clean green
-set -gx fish_color_git_branch magenta
-set -gx fish_color_git_remote green
+set -g fish_color_git_clean green
+set -g fish_color_git_branch magenta
+set -g fish_color_git_remote green
 
-set -gx fish_color_git_staged yellow
-set -gx fish_color_git_conflicts red
-set -gx fish_color_git_changed blue
-set -gx fish_color_git_untracked $fish_color_normal
+set -g fish_color_git_staged yellow
+set -g fish_color_git_conflicts red
+set -g fish_color_git_changed blue
+set -g fish_color_git_untracked $fish_color_normal
 
-set -gx fish_prompt_git_remote_ahead_of "↑"
-set -gx fish_prompt_git_remote_behind  "↓"
+set -g fish_prompt_git_remote_ahead_of "↑"
+set -g fish_prompt_git_remote_behind  "↓"
 
-set -gx fish_prompt_git_status_staged "●"
-set -gx fish_prompt_git_status_conflicts '✖'
-set -gx fish_prompt_git_status_changed '✚'
-set -gx fish_prompt_git_status_untracked "…"
-set -gx fish_prompt_git_status_clean "✔"
+set -g fish_prompt_git_status_staged "●"
+set -g fish_prompt_git_status_conflicts '✖'
+set -g fish_prompt_git_status_changed '✚'
+set -g fish_prompt_git_status_untracked "…"
+set -g fish_prompt_git_status_clean "✔"
 
-set -gx fish_prompt_git_status_order staged conflicts changed untracked
+set -g fish_prompt_git_status_order staged conflicts changed untracked
 
 function __informative_git_prompt --description 'Write out the git prompt'
 

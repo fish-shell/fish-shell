@@ -136,7 +136,7 @@ function ____fish_git_remote_info
 
     set -l rev_git (eval "git rev-list --left-right $remote_ref...HEAD" ^/dev/null)
     if test $status != "0"
-        set rev_git (git rev-list --left-right $merge_name...HEAD)
+        set rev_git (eval "git rev-list --left-right $merge_name...HEAD" ^/dev/null)
     end
 
     for i in $rev_git

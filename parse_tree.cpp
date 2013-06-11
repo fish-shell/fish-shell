@@ -1,47 +1,9 @@
-#include "expression.h"
+#include "parse_tree.h"
 #include "tokenizer.h"
 #include <vector>
 
-struct parse_node_t;
-typedef size_t node_offset_t;
-typedef std::vector<parse_node_t> parse_node_tree_t;
-
-#define PARSE_ASSERT(a) assert(a)
-
-#define PARSER_DIE() assert(0)
 
 class parse_command_t;
-
-enum parse_token_type_t
-{
-    token_type_invalid,
-    
-    // Non-terminal tokens
-    symbol_statement_list,
-    symbol_statement,
-    symbol_block_statement,
-    symbol_block_header,
-    symbol_if_header,
-    symbol_for_header,
-    symbol_while_header,
-    symbol_begin_header,
-    symbol_function_header,
-    symbol_boolean_statement,
-    symbol_decorated_statement,
-    symbol_plain_statement,
-    symbol_arguments_or_redirections_list,
-    symbol_argument_or_redirection,
-
-    // Terminal types
-    parse_token_type_string,
-    parse_token_type_pipe,
-    parse_token_type_redirection,
-    parse_token_background,
-    parse_token_type_end,
-    parse_token_type_terminate,
-    
-    FIRST_PARSE_TOKEN_TYPE = parse_token_type_string
-};
 
 static wcstring token_type_description(parse_token_type_t type)
 {
@@ -75,25 +37,11 @@ static wcstring token_type_description(parse_token_type_t type)
     }
 }
 
-enum parse_keyword_t
+wcstring parse_node_t::describe(void) const
 {
-    parse_keyword_none,
-    parse_keyword_if,
-    parse_keyword_else,
-    parse_keyword_for,
-    parse_keyword_in,
-    parse_keyword_while,
-    parse_keyword_begin,
-    parse_keyword_function,
-    parse_keyword_switch,
-    parse_keyword_end,
-    parse_keyword_and,
-    parse_keyword_or,
-    parse_keyword_not,
-    parse_keyword_command,
-    parse_keyword_builtin
-};
-
+    wcstring result = token_type_description(type);
+    return result;
+}
 
 struct parse_token_t
 {
@@ -134,41 +82,6 @@ static parse_token_t parse_token_from_tokenizer_token(enum token_type tokenizer_
     }
     return result;
 }
-
-/** Base class for nodes of a parse tree */
-class parse_node_t
-{
-    public:
-        
-    /* Start in the source code */
-    size_t source_start;
-    
-    /* Length of our range in the source code */
-    size_t source_length;
-
-    /* Children */
-    node_offset_t child_start;
-    node_offset_t child_count;
-    
-    /* Type-dependent data */
-    uint32_t tag;
-    
-    /* Type of the node */
-    enum parse_token_type_t type;
-
-    
-    /* Description */
-    wcstring describe(void) const
-    {
-        wcstring result = token_type_description(type);
-        return result;
-    }
-    
-    /* Constructor */
-    explicit parse_node_t(parse_token_type_t ty) : type(ty), source_start(0), source_length(0), child_start(0), child_count(0), tag(0)
-    {
-    }
-};
 
 static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &src, size_t start, size_t indent, wcstring *result, size_t *line)
 {
@@ -221,30 +134,6 @@ struct parse_stack_element_t
     {
     }
 };
-
-class parse_execution_context_t
-{
-    wcstring src;
-    const parse_node_tree_t nodes;
-    size_t node_idx;
-    
-    public:
-    parse_execution_context_t(const parse_node_tree_t &n, const wcstring &s) : src(s), nodes(n), node_idx(0)
-    {
-    }
-    
-    wcstring simulate(void);
-};
-
-wcstring parse_execution_context_t::simulate()
-{
-    if (nodes.empty())
-        return L"(empty!");
-    
-    PARSE_ASSERT(node_idx < nodes.size());
-    PARSE_ASSERT(nodes.at(node_idx).type == symbol_statement_list);
-    
-}
 
 class parse_ll_t
 {

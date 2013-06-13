@@ -209,7 +209,7 @@ function __fish_git_prompt --description "Prompt function for Git"
 	test -n "$git_dir"; or return
 
 	set -l r (__fish_git_prompt_current_operation $git_dir)
-	set -l b (__fish_git_prompt_current_branch)
+	set -l b (__fish_git_prompt_current_branch $git_dir)
 	set -l w #dirty working directory
 	set -l i #staged changes
 	set -l s #stashes
@@ -322,6 +322,7 @@ function __fish_git_prompt_current_branch_bare --description "__fish_git_prompt 
 end
 
 function __fish_git_prompt_current_branch --description "__fish_git_prompt helper, returns the current Git branch"
+	set -l git_dir $argv[1]
 	set -l branch
 
 	set -l os

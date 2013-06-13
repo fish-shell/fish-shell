@@ -22,21 +22,29 @@ set -g fish_prompt_git_status_changed '✚'
 set -g fish_prompt_git_status_untracked "…"
 set -g fish_prompt_git_status_clean "✔"
 
+set -g fish_prompt_git_status_git_dir "*"
+
 set -g fish_prompt_git_status_order staged conflicted changed untracked
 
 function __informative_git_prompt --description 'Write out the git prompt'
 
-    set -l branch (git rev-parse --abbrev-ref HEAD ^/dev/null)
-    if test -z $branch
+    set -l is_inside_work_tree (git rev-parse --is-inside-work-tree ^/dev/null )
+
+    if test -z $is_inside_work_tree
         return
     end
 
-    set -l git_branch_info (___fish_git_print_branch_info)
-    set -l git_status_info (___fish_git_print_status_info)
+    if test "true" = $is_inside_work_tree
+        set git_status_info (___fish_git_print_status_info)
+    else
+        set git_status_info $fish_prompt_git_status_git_dir
+    end
 
-    printf "($git_branch_info|$git_status_info)"
+    printf "(%s|%s)" (___fish_git_print_branch_info) $git_status_info
 
 end
+
+
 
 function ___fish_git_print_branch_info
 

@@ -64,6 +64,8 @@
 #include "expand.h"
 #include "path.h"
 #include "history.h"
+#include "parse_tree.h"
+#include "parse_exec.h"
 
 /**
    The default prompt for the read command
@@ -3938,6 +3940,30 @@ static int builtin_history(parser_t &parser, wchar_t **argv)
     return STATUS_BUILTIN_ERROR;
 }
 
+int builtin_parse(parser_t &parser, wchar_t **argv)
+{
+    std::vector<char> txt;
+    for (;;)
+    {
+        char buff[256];
+        ssize_t amt = read_loop(builtin_stdin, buff, sizeof buff);
+        if (amt <= 0) break;
+        txt.insert(txt.end(), buff, buff + amt);
+    }
+    if (! txt.empty())
+    {
+        const wcstring src = str2wcstring(&txt.at(0), txt.size());
+        parse_node_tree_t parse_tree;
+        parse_t parser;
+        parser.parse(src, &parse_tree);
+        parse_execution_context_t ctx(parse_tree, src);
+        stdout_buffer.append(L"Simulating execution:");
+        wcstring simulation = ctx.simulate();
+        stdout_buffer.append(simulation);
+        stdout_buffer.push_back(L'\n');
+    }
+    return STATUS_BUILTIN_OK;
+}
 
 /*
   END OF BUILTIN COMMANDS
@@ -3985,6 +4011,7 @@ static const builtin_data_t builtin_datas[]=
     { 		L"jobs",  &builtin_jobs, N_(L"Print currently running jobs")   },
     { 		L"not",  &builtin_generic, N_(L"Negate exit status of job")  },
     { 		L"or",  &builtin_generic, N_(L"Execute command if previous command failed")  },
+    { 		L"parse",  &builtin_parse, N_(L"Try out the new parser")  },
     { 		L"printf",  &builtin_printf, N_(L"Prints formatted text")  },
     { 		L"pwd",  &builtin_pwd, N_(L"Print the working directory")  },
     { 		L"random",  &builtin_random, N_(L"Generate random number")  },
@@ -4144,4 +4171,3 @@ void builtin_pop_io(parser_t &parser)
         builtin_stdin = 0;
     }
 }
-

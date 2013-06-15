@@ -17,21 +17,20 @@
 #define PARSE_ASSERT(a) assert(a)
 #define PARSER_DIE() assert(0)
 
+class parse_node_t;
+typedef std::vector<parse_node_t> parse_node_tree_t;
+typedef size_t node_offset_t;
+
 
 class parse_ll_t;
-class parse_sr_t;
 class parse_t
 {
     parse_ll_t * const parser;
     
     public:
     parse_t();
-    void parse(const wcstring &str);
+    void parse(const wcstring &str, parse_node_tree_t *output);
 };
-
-class parse_node_t;
-typedef std::vector<parse_node_t> parse_node_tree_t;
-typedef size_t node_offset_t;
 
 
 enum parse_token_type_t

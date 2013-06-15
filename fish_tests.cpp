@@ -1722,8 +1722,16 @@ void history_tests_t::test_history_speed(void)
 static void test_new_parser(void)
 {
     say(L"Testing new parser!");
+    const wcstring src = L"echo hello world";
+    parse_node_tree_t parse_tree;
     parse_t parser;
-    parser.parse(L"echo hello");
+    parser.parse(src, &parse_tree);
+    parse_execution_context_t ctx(parse_tree, src);
+    say(L"Simulating execution:");
+    wcstring simulation = ctx.simulate();
+    printf("%ls\n", simulation.c_str());
+    
+    
 }
 
 /**

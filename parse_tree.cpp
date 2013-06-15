@@ -634,7 +634,7 @@ static parse_keyword_t keyword_for_token(token_type tok, const wchar_t *tok_txt)
     return result;
 }
 
-void parse_t::parse(const wcstring &str)
+void parse_t::parse(const wcstring &str, parse_node_tree_t *output)
 {
     tokenizer_t tok = tokenizer_t(str.c_str(), 0);
     for (; tok_has_next(&tok); tok_next(&tok))
@@ -658,5 +658,11 @@ void parse_t::parse(const wcstring &str)
     }
     wcstring result = dump_tree(this->parser->nodes, str);
     fprintf(stderr, "Tree (%ld nodes):\n%ls", this->parser->nodes.size(), result.c_str());
-    fprintf(stderr, "node size %ld\n", sizeof(parse_node_t));
+    fprintf(stderr, "%lu nodes, node size %lu, %lu bytes\n", this->parser->nodes.size(), sizeof(parse_node_t), this->parser->nodes.size() * sizeof(parse_node_t));
+    
+    if (output != NULL)
+    {
+        output->swap(this->parser->nodes);
+        this->parser->nodes.clear();
+    }
 }

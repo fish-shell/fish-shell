@@ -1725,13 +1725,18 @@ static void test_new_parser(void)
     const wcstring src = L"echo hello world";
     parse_node_tree_t parse_tree;
     parse_t parser;
-    parser.parse(src, &parse_tree);
-    parse_execution_context_t ctx(parse_tree, src);
-    say(L"Simulating execution:");
-    wcstring simulation = ctx.simulate();
-    printf("%ls\n", simulation.c_str());
-    
-    
+    bool success = parser.parse(src, &parse_tree, NULL);
+    if (! success)
+    {
+        say(L"Parsing failed");
+    }
+    else
+    {
+        parse_execution_context_t ctx(parse_tree, src);
+        say(L"Simulating execution:");
+        wcstring simulation = ctx.simulate();
+        say(simulation.c_str());
+    }
 }
 
 /**

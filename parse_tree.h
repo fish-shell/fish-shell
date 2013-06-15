@@ -21,6 +21,19 @@ class parse_node_t;
 typedef std::vector<parse_node_t> parse_node_tree_t;
 typedef size_t node_offset_t;
 
+struct parse_error_t
+{
+    /** Text of the error */
+    wcstring text;
+    
+    /** Offset and length of the token in the source code that triggered this error */
+    size_t source_start;
+    size_t source_length;
+    
+    /** Return a string describing the error, suitable for presentation to the user */
+    wcstring describe(const wcstring &src) const;
+};
+typedef std::vector<parse_error_t> parse_error_list_t;
 
 class parse_ll_t;
 class parse_t
@@ -29,7 +42,7 @@ class parse_t
     
     public:
     parse_t();
-    void parse(const wcstring &str, parse_node_tree_t *output);
+    bool parse(const wcstring &str, parse_node_tree_t *output, parse_error_list_t *errors);
 };
 
 

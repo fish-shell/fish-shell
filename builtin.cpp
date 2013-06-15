@@ -3954,13 +3954,26 @@ int builtin_parse(parser_t &parser, wchar_t **argv)
     {
         const wcstring src = str2wcstring(&txt.at(0), txt.size());
         parse_node_tree_t parse_tree;
+        parse_error_list_t errors;
         parse_t parser;
-        parser.parse(src, &parse_tree);
-        parse_execution_context_t ctx(parse_tree, src);
-        stdout_buffer.append(L"Simulating execution:");
-        wcstring simulation = ctx.simulate();
-        stdout_buffer.append(simulation);
-        stdout_buffer.push_back(L'\n');
+        bool success = parser.parse(src, &parse_tree, &errors);
+        if (! success)
+        {
+            stdout_buffer.append(L"Parsing failed:\n");
+            for (size_t i=0; i < errors.size(); i++)
+            {
+                stdout_buffer.append(errors.at(i).describe(src));
+                stdout_buffer.push_back(L'\n');
+            }
+        }
+        else
+        {
+            parse_execution_context_t ctx(parse_tree, src);
+            stdout_buffer.append(L"Simulating execution:\n");
+            wcstring simulation = ctx.simulate();
+            stdout_buffer.append(simulation);
+            stdout_buffer.push_back(L'\n');
+        }
     }
     return STATUS_BUILTIN_OK;
 }

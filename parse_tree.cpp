@@ -3,7 +3,40 @@
 #include <vector>
 
 
-class parse_command_t;
+wcstring parse_error_t::describe(const wcstring &src) const
+{
+    wcstring result = text;
+    if (source_start < src.size() && source_start + source_length <= src.size())
+    {
+        // Locate the beginning of this line of source
+        size_t line_start = 0;
+        
+        // Look for a newline prior to source_start. If we don't find one, start at the beginning of the string; otherwise start one past the newline
+        size_t newline = src.find_last_of(L'\n', source_start);
+        if (newline != wcstring::npos)
+        {
+            line_start = newline + 1;
+        }
+        
+        size_t line_end = src.find(L'\n', source_start + source_length);
+        if (line_end == wcstring::npos)
+        {
+            line_end = src.size();
+        }
+        assert(line_end >= line_start);
+        assert(source_start >= line_start);
+        
+        // Append the line of text
+        result.push_back(L'\n');
+        result.append(src, line_start, line_end - line_start);
+        
+        // Append the caret line
+        result.push_back(L'\n');
+        result.append(source_start - line_start, L' ');
+        result.push_back(L'^');
+    }
+    return result;
+}
 
 static wcstring token_type_description(parse_token_type_t type)
 {
@@ -141,10 +174,12 @@ class parse_ll_t
     
     std::vector<parse_stack_element_t> symbol_stack; // LL parser stack
     parse_node_tree_t nodes;
-    bool errored;
+    
+    bool fatal_errored;
+    parse_error_list_t errors;
     
     // Constructor
-    parse_ll_t() : errored(false)
+    parse_ll_t() : fatal_errored(false)
     {
         // initial node
         parse_stack_element_t elem = symbol_statement_list;
@@ -170,6 +205,7 @@ class parse_ll_t
     void token_unhandled(parse_token_t token, const char *function);
     
     void parse_error(const wchar_t *expected, parse_token_t token);
+    void append_error_callout(wcstring &error_message, parse_token_t token);
     
     // Get the node corresponding to the top element of the stack
     parse_node_t &node_for_top_symbol()
@@ -239,7 +275,13 @@ void parse_ll_t::token_unhandled(parse_token_t token, const char *function)
 
 void parse_ll_t::parse_error(const wchar_t *expected, parse_token_t token)
 {
-    fprintf(stderr, "Expected a %ls, instead got a token of type %d\n", expected, (int)token.type);
+    wcstring desc = token_type_description(token.type);
+    parse_error_t error;
+    error.text = format_string(L"Expected a %ls, instead got a token of type %ls", expected, desc.c_str());
+    error.source_start = token.source_start;
+    error.source_start = token.source_length;
+    errors.push_back(error);
+    fatal_errored = true;
 }
 
 void parse_ll_t::accept_token_statement_list(parse_token_t token)
@@ -514,7 +556,7 @@ void parse_ll_t::accept_token(parse_token_t token)
     PARSE_ASSERT(token.type >= FIRST_PARSE_TOKEN_TYPE);
     PARSE_ASSERT(! symbol_stack.empty());
     bool consumed = false;
-    while (! consumed && ! this->errored)
+    while (! consumed && ! this->fatal_errored)
     {
         if (top_node_match_token(token))
         {
@@ -634,10 +676,10 @@ static parse_keyword_t keyword_for_token(token_type tok, const wchar_t *tok_txt)
     return result;
 }
 
-void parse_t::parse(const wcstring &str, parse_node_tree_t *output)
+bool parse_t::parse(const wcstring &str, parse_node_tree_t *output, parse_error_list_t *errors)
 {
     tokenizer_t tok = tokenizer_t(str.c_str(), 0);
-    for (; tok_has_next(&tok); tok_next(&tok))
+    for (; tok_has_next(&tok) && ! this->parser->fatal_errored; tok_next(&tok))
     {
         token_type tok_type = static_cast<token_type>(tok_last_type(&tok));
         const wchar_t *tok_txt = tok_last(&tok);
@@ -656,6 +698,7 @@ void parse_t::parse(const wcstring &str, parse_node_tree_t *output)
         token.keyword = keyword_for_token(tok_type, tok_txt);
         this->parser->accept_token(token);
     }
+
     wcstring result = dump_tree(this->parser->nodes, str);
     fprintf(stderr, "Tree (%ld nodes):\n%ls", this->parser->nodes.size(), result.c_str());
     fprintf(stderr, "%lu nodes, node size %lu, %lu bytes\n", this->parser->nodes.size(), sizeof(parse_node_t), this->parser->nodes.size() * sizeof(parse_node_t));
@@ -665,4 +708,12 @@ void parse_t::parse(const wcstring &str, parse_node_tree_t *output)
         output->swap(this->parser->nodes);
         this->parser->nodes.clear();
     }
+    
+    if (errors != NULL)
+    {
+        errors->swap(this->parser->errors);
+        this->parser->errors.clear();
+    }
+    
+    return ! this->parser->fatal_errored;
 }

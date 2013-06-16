@@ -507,7 +507,7 @@ int job_is_stopped(const job_t *j);
 /**
    Tests if the job has completed, i.e. if the last process of the pipeline has ended.
 */
-int job_is_completed(const job_t *j);
+bool job_is_completed(const job_t *j);
 
 /**
   Reassume a (possibly) stopped job. Put job j in the foreground.  If

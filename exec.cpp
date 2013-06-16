@@ -1196,8 +1196,8 @@ void exec(parser_t &parser, job_t *j)
                   performance quite a bit in complex completion code.
                 */
 
-                const shared_ptr<io_data_t> &stdout_io = io_chain_get(j->io, STDOUT_FILENO);
-                const shared_ptr<io_data_t> &stderr_io = io_chain_get(j->io, STDERR_FILENO);
+                const shared_ptr<io_data_t> stdout_io = io_chain_get(j->io, STDOUT_FILENO);
+                const shared_ptr<io_data_t> stderr_io = io_chain_get(j->io, STDERR_FILENO);
                 const bool buffer_stdout = stdout_io && stdout_io->io_mode == IO_BUFFER;
 
                 if ((get_stderr_buffer().empty()) &&

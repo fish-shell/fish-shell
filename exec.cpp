@@ -149,6 +149,25 @@ int exec_pipe(int fd[2])
     return res;
 }
 
+/* Returns true if the redirection is a file redirection to a file other than /dev/null */
+static bool redirection_is_to_real_file(const io_data_t *io)
+{
+    bool result = false;
+    if (io != NULL && io->io_mode == IO_FILE)
+    {
+        /* It's a file redirection. Compare the path to /dev/null */
+        CAST_INIT(const io_file_t *, io_file, io);
+        const char *path = io_file->filename_cstr;
+        if (strcmp(path, "/dev/null") != 0)
+        {
+            /* It's not /dev/null */
+            result = true;
+        }
+
+    }
+    return result;
+}
+
 void print_open_fds(void)
 {
     for (size_t i=0; i < open_fds.size(); ++i)
@@ -518,21 +537,16 @@ static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *proce
             return false;
         }
     }
-
+    
+    /* Now see if we have a redirection involving a file. The only one we allow is /dev/null, which we assume will not fail. */
     bool result = true;
     for (size_t idx = 0; idx < job->io.size(); idx++)
     {
         const shared_ptr<const io_data_t> &io = job->io.at(idx);
-        if (io->io_mode == IO_FILE)
+        if (redirection_is_to_real_file(io.get()))
         {
-            CAST_INIT(const io_file_t *, io_file, io.get());
-            const char *path = io_file->filename_cstr;
-            /* This IO action is a file redirection. Only allow /dev/null, which is a common case we assume won't fail. */
-            if (strcmp(path, "/dev/null") != 0)
-            {
                 result = false;
                 break;
-            }
         }
     }
     return result;
@@ -910,7 +924,7 @@ void exec(parser_t &parser, job_t *j)
                 */
                 if (p == j->first_process)
                 {
-                    const shared_ptr<const io_data_t> &in = io_chain_get(j->io, 0);
+                    const shared_ptr<const io_data_t> in = io_chain_get(j->io, 0);
 
                     if (in)
                     {
@@ -1170,82 +1184,75 @@ void exec(parser_t &parser, job_t *j)
 
             case INTERNAL_BUILTIN:
             {
-                bool skip_fork;
-
                 /*
                   Handle output from builtin commands. In the general
                   case, this means forking of a worker process, that
                   will write out the contents of the stdout and stderr
                   buffers to the correct file descriptor. Since
-                  forking is expensive, fish tries to avoid it wehn
+                  forking is expensive, fish tries to avoid it when
                   possible.
                 */
-
-                /*
-                  If a builtin didn't produce any output, and it is
-                  not inside a pipeline, there is no need to fork
-                */
-                skip_fork =
-                    get_stdout_buffer().empty() &&
-                    get_stderr_buffer().empty() &&
-                    !p->next;
-
-                /*
-                  If the output of a builtin is to be sent to an internal
-                  buffer, there is no need to fork. This helps out the
-                  performance quite a bit in complex completion code.
-                */
-
-                const shared_ptr<io_data_t> &stdout_io = io_chain_get(j->io, STDOUT_FILENO);
-                const shared_ptr<io_data_t> &stderr_io = io_chain_get(j->io, STDERR_FILENO);
-                const bool buffer_stdout = stdout_io && stdout_io->io_mode == IO_BUFFER;
-
-                if ((get_stderr_buffer().empty()) &&
-                        (!p->next) &&
-                        (! get_stdout_buffer().empty()) &&
-                        (buffer_stdout))
-                {
-                    CAST_INIT(io_buffer_t *, io_buffer, stdout_io.get());
-                    const std::string res = wcs2string(get_stdout_buffer());
-                    io_buffer->out_buffer_append(res.c_str(), res.size());
-                    skip_fork = true;
-                }
-
-                /* PCA for some reason, fish forks a lot, even for basic builtins like echo just to write out their buffers. I'm certain a lot of this is unnecessary, but I am not sure exactly when. If j->io is NULL, then it means there's no pipes or anything, so we can certainly just write out our data. Beyond that, we may be able to do the same if io_get returns 0 for STDOUT_FILENO and STDERR_FILENO.
-                */
-                if (! skip_fork && stdout_io.get() == NULL && stderr_io.get() == NULL)
-                {
-                    if (g_log_forks)
+                
+                bool fork_was_skipped = false;
+                
+                const shared_ptr<io_data_t> stdout_io = io_chain_get(j->io, STDOUT_FILENO);
+                const shared_ptr<io_data_t> stderr_io = io_chain_get(j->io, STDERR_FILENO);
+                
+                /* If we are outputting to a file, we have to actually do it, even if we have no output, so that we can truncate the file. Does not apply to /dev/null. */
+                bool must_fork = redirection_is_to_real_file(stdout_io.get()) || redirection_is_to_real_file(stderr_io.get());
+                if (! must_fork)
+                {   
+                    if (p->next == NULL)
                     {
-                        printf("fork #-: Skipping fork for internal builtin for '%ls'\n", p->argv0());
-                    }
-                    const wcstring &out = get_stdout_buffer(), &err = get_stderr_buffer();
-                    const std::string outbuff = wcs2string(out);
-                    const std::string errbuff = wcs2string(err);
-                    bool builtin_io_done = do_builtin_io(outbuff.data(), outbuff.size(), errbuff.data(), errbuff.size());
-                    if (! builtin_io_done)
-                    {
-                        show_stackframe();
-                    }
-                    skip_fork = true;
-                }
+                        const bool stdout_is_to_buffer = stdout_io && stdout_io->io_mode == IO_BUFFER;
+                        const bool no_stdout_output =  get_stdout_buffer().empty();
+                        const bool no_stderr_output =  get_stderr_buffer().empty();
 
-                for (io_chain_t::iterator iter = j->io.begin(); iter != j->io.end(); ++iter)
-                {
-                    const shared_ptr<io_data_t> &tmp_io = *iter;
-                    if (tmp_io->io_mode == IO_FILE)
-                    {
-                        const io_file_t *tmp_file_io = static_cast<const io_file_t *>(tmp_io.get());
-                        if (strcmp(tmp_file_io->filename_cstr, "/dev/null"))
+                        if (no_stdout_output && no_stderr_output)
                         {
-                            skip_fork = false;
-                            break;
+                            /* The builtin produced no output and is not inside of a pipeline. No need to fork or even output anything. */
+                            if (g_log_forks)
+                            {
+                                // This one is very wordy
+                                //printf("fork #-: Skipping fork due to no output for internal builtin for '%ls'\n", p->argv0());
+                            }
+                            fork_was_skipped = true;
+                        }
+                        else if (no_stderr_output && stdout_is_to_buffer)
+                        {
+                            /* The builtin produced no stderr, and its stdout is going to an internal buffer. There is no need to fork. This helps out the performance quite a bit in complex completion code. */
+                            if (g_log_forks)
+                            {
+                                printf("fork #-: Skipping fork due to buffered output for internal builtin for '%ls'\n", p->argv0());
+                            }
+
+                            CAST_INIT(io_buffer_t *, io_buffer, stdout_io.get());
+                            const std::string res = wcs2string(get_stdout_buffer());
+                            io_buffer->out_buffer_append(res.data(), res.size());
+                            fork_was_skipped = true;
+                        }
+                        else if (stdout_io.get() == NULL && stderr_io.get() == NULL)
+                        {
+                            /* We are writing to normal stdout and stderr. Just do it - no need to fork. */
+                            if (g_log_forks)
+                            {
+                                printf("fork #-: Skipping fork due to ordinary output for internal builtin for '%ls'\n", p->argv0());
+                            }
+                            const wcstring &out = get_stdout_buffer(), &err = get_stderr_buffer();
+                            const std::string outbuff = wcs2string(out);
+                            const std::string errbuff = wcs2string(err);
+                            bool builtin_io_done = do_builtin_io(outbuff.data(), outbuff.size(), errbuff.data(), errbuff.size());
+                            if (! builtin_io_done)
+                            {
+                                show_stackframe();
+                            }
+                            fork_was_skipped = true;
                         }
                     }
                 }
+                
 
-
-                if (skip_fork)
+                if (fork_was_skipped)
                 {
                     p->completed=1;
                     if (p->next == 0)
@@ -1255,54 +1262,56 @@ void exec(parser_t &parser, job_t *j)
                         int status = p->status;
                         proc_set_last_status(job_get_flag(j, JOB_NEGATE)?(!status):status);
                     }
-                    break;
-                }
-
-
-                /* Ok, unfortunatly, we have to do a real fork. Bummer. We work hard to make sure we don't have to wait for all our threads to exit, by arranging things so that we don't have to allocate memory or do anything except system calls in the child. */
-
-                /* Get the strings we'll write before we fork (since they call malloc) */
-                const wcstring &out = get_stdout_buffer(), &err = get_stderr_buffer();
-
-                /* These strings may contain embedded nulls, so don't treat them as C strings */
-                const std::string outbuff_str = wcs2string(out);
-                const char *outbuff = outbuff_str.data();
-                size_t outbuff_len = outbuff_str.size();
-
-                const std::string errbuff_str = wcs2string(err);
-                const char *errbuff = errbuff_str.data();
-                size_t errbuff_len = errbuff_str.size();
-
-                fflush(stdout);
-                fflush(stderr);
-                if (g_log_forks)
-                {
-                    printf("fork #%d: Executing fork for internal builtin for '%ls'\n", g_fork_count, p->argv0());
-                    io_print(j->io);
-                }
-                pid = execute_fork(false);
-                if (pid == 0)
-                {
-                    /*
-                      This is the child process. Setup redirections,
-                      print correct output to stdout and stderr, and
-                      then exit.
-                    */
-                    p->pid = getpid();
-                    setup_child_process(j, p);
-                    do_builtin_io(outbuff, outbuff_len, errbuff, errbuff_len);
-                    exit_without_destructors(p->status);
                 }
                 else
                 {
-                    /*
-                       This is the parent process. Store away
-                       information on the child, and possibly give
-                       it control over the terminal.
-                    */
-                    p->pid = pid;
 
-                    set_child_group(j, p, 0);
+
+                    /* Ok, unfortunately, we have to do a real fork. Bummer. We work hard to make sure we don't have to wait for all our threads to exit, by arranging things so that we don't have to allocate memory or do anything except system calls in the child. */
+
+                    /* Get the strings we'll write before we fork (since they call malloc) */
+                    const wcstring &out = get_stdout_buffer(), &err = get_stderr_buffer();
+
+                    /* These strings may contain embedded nulls, so don't treat them as C strings */
+                    const std::string outbuff_str = wcs2string(out);
+                    const char *outbuff = outbuff_str.data();
+                    size_t outbuff_len = outbuff_str.size();
+
+                    const std::string errbuff_str = wcs2string(err);
+                    const char *errbuff = errbuff_str.data();
+                    size_t errbuff_len = errbuff_str.size();
+
+                    fflush(stdout);
+                    fflush(stderr);
+                    if (g_log_forks)
+                    {
+                        printf("fork #%d: Executing fork for internal builtin for '%ls'\n", g_fork_count, p->argv0());
+                        io_print(j->io);
+                    }
+                    pid = execute_fork(false);
+                    if (pid == 0)
+                    {
+                        /*
+                          This is the child process. Setup redirections,
+                          print correct output to stdout and stderr, and
+                          then exit.
+                        */
+                        p->pid = getpid();
+                        setup_child_process(j, p);
+                        do_builtin_io(outbuff, outbuff_len, errbuff, errbuff_len);
+                        exit_without_destructors(p->status);
+                    }
+                    else
+                    {
+                        /*
+                           This is the parent process. Store away
+                           information on the child, and possibly give
+                           it control over the terminal.
+                        */
+                        p->pid = pid;
+
+                        set_child_group(j, p, 0);
+                    }
                 }
 
                 break;

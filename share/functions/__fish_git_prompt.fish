@@ -75,6 +75,8 @@
 # 'upstream_equal', 'upstream_behind', 'upstream_ahead', and
 # 'upstream_diverged'.
 
+set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles
+
 function __fish_git_prompt_show_upstream --description "Helper function for __fish_git_prompt"
 	# Ask git-config for some config options
 	set -l svn_remote
@@ -326,6 +328,49 @@ function __fish_git_prompt_dirty --description "__fish_git_prompt helper, tells 
 	echo $dirty
 end
 
+function  __fish_git_prompt_status_info
+
+    set -l changedFiles (git diff --name-status | cut -c 1-2)
+    set -l stagedFiles (git diff --staged --name-status | cut -c 1-2)
+
+    set -l dirtystate (math (count $changedFiles) - (count (echo $changedFiles | grep "U")))
+    set -l invalidstate (count (echo $stagedFiles | grep "U"))
+    set -l stagedstate (math (count $stagedFiles) - $invalidstate)
+    set -l untrackedfiles (count (git ls-files --others --exclude-standard))
+
+    set -l info
+
+    __fish_git_prompt_validate_colors
+    __fish_git_prompt_validate_chars
+
+    if [ (math $dirtystate + $invalidstate + $stagedstate + $untrackedfiles) = 0 ]
+        set git_status $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done
+    else
+        for i in $___fish_git_prompt_status_order
+             if [ $$i != "0" ]
+                set -l color_var ___fish_git_prompt_color_$i
+                set -l color_done_var ___fish_git_prompt_color_$i
+                set -l symbol_var ___fish_git_prompt_char_$i
+
+                set -l color $$color_var
+                set -l color_done $$color_done_var
+                set -l symbol $$symbol_var
+
+                set -l count
+
+                if not set -q __fish_git_prompt_hide_$i
+                    set count $$i
+                end
+
+                set info "$info$color$symbol$count$color_done"
+            end
+        end
+    end
+
+    echo $info
+
+end
+
 function __fish_git_prompt_current_branch_bare --description "__fish_git_prompt helper, tells wheter or not the current branch is bare"
 	set -l bare
 
@@ -405,6 +450,9 @@ function __fish_git_prompt_git_dir --description "__fish_git_prompt helper, retu
 end
 
 function __fish_git_prompt_validate_chars --description "__fish_git_prompt helper, checks char variables"
+	if not set -q ___fish_git_prompt_char_cleanstate
+		set -g ___fish_git_prompt_char_cleanstate (set -q __fish_git_prompt_char_cleanstate; and echo $__fish_git_prompt_char_cleanstate; or echo '.')
+	end
 	if not set -q ___fish_git_prompt_char_dirtystate
 		set -g ___fish_git_prompt_char_dirtystate (set -q __fish_git_prompt_char_dirtystate; and echo $__fish_git_prompt_char_dirtystate; or echo '*')
 	end
@@ -490,6 +538,15 @@ function __fish_git_prompt_validate_colors --description "__fish_git_prompt help
 		else
 			set -g ___fish_git_prompt_color_branch $___fish_git_prompt_color
 			set -g ___fish_git_prompt_color_branch_done $___fish_git_prompt_color_done
+		end
+	end
+	if not set -q ___fish_git_prompt_color_cleanstate
+		if test -n "$__fish_git_prompt_color_cleanstate"
+			set -g ___fish_git_prompt_color_cleanstate (set_color $__fish_git_prompt_color_cleanstate)
+			set -g ___fish_git_prompt_color_cleanstate_done (set_color normal)
+		else
+			set -g ___fish_git_prompt_color_cleanstate $___fish_git_prompt_color
+			set -g ___fish_git_prompt_color_cleanstate_done $___fish_git_prompt_color_done
 		end
 	end
 	if not set -q ___fish_git_prompt_color_dirtystate

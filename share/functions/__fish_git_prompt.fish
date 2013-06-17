@@ -199,7 +199,6 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
         switch "$count"
         case '' # no upstream
         case "0	0" # equal to upstream
-            echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_equal"
         case "0	*" # ahead of upstream
             echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead"
         case "*	0" # behind upstream
@@ -234,32 +233,39 @@ function __fish_git_prompt --description "Prompt function for Git"
 	set -l u #untracked
 	set -l c (__fish_git_prompt_current_branch_bare)
 	set -l p #upstream
+	set -l status_info
 
 	__fish_git_prompt_validate_chars
 
 	if test "true" = (git rev-parse --is-inside-work-tree ^/dev/null)
-		if test -n "$__fish_git_prompt_showdirtystate"
-			set -l config (git config --bool bash.showDirtyState)
-			if test "$config" != "false"
-				set w (__fish_git_prompt_dirty)
-				set i (__fish_git_prompt_staged)
-			end
-		end
 
-		if test -n "$__fish_git_prompt_showstashstate"
-			git rev-parse --verify refs/stash >/dev/null ^&1; and set s $___fish_git_prompt_char_stashstate
-		end
+        if test -n "$__fish_git_prompt_show_status"
+            set status_info "|"(__fish_git_prompt_status_info)
+        else
+            if test -n "$__fish_git_prompt_showdirtystate"
+                set -l config (git config --bool bash.showDirtyState)
+                if test "$config" != "false"
+                    set w (__fish_git_prompt_dirty)
+                    set i (__fish_git_prompt_staged)
+                end
+            end
 
-		if test -n "$__fish_git_prompt_showuntrackedfiles"
-			set -l files (git ls-files --others --exclude-standard)
-			if test -n "$files"
-				set u $___fish_git_prompt_char_untrackedfiles
-			end
+            if test -n "$__fish_git_prompt_showstashstate"
+                git rev-parse --verify refs/stash >/dev/null ^&1; and set s $___fish_git_prompt_char_stashstate
+            end
+
+            if test -n "$__fish_git_prompt_showuntrackedfiles"
+                set -l files (git ls-files --others --exclude-standard)
+                if test -n "$files"
+                    set u $___fish_git_prompt_char_untrackedfiles
+                end
+            end
 		end
 
 		if test -n "$__fish_git_prompt_showupstream"
 			set p (__fish_git_prompt_show_upstream)
 		end
+
 	end
 
 	__fish_git_prompt_validate_colors
@@ -300,7 +306,7 @@ function __fish_git_prompt --description "Prompt function for Git"
 		set format " (%s)"
 	end
 
-	printf "%s$format%s" "$___fish_git_prompt_color_prefix" "$___fish_git_prompt_color_prefix_done$c$b$f$r$p$___fish_git_prompt_color_suffix" "$___git_ps_color_suffix_done"
+	printf "%s$format%s" "$___fish_git_prompt_color_prefix" "$___fish_git_prompt_color_prefix_done$c$b$f$r$p$status_info$___fish_git_prompt_color_suffix" "$___git_ps_color_suffix_done"
 end
 
 ### helper functions
@@ -344,7 +350,7 @@ function  __fish_git_prompt_status_info
     __fish_git_prompt_validate_chars
 
     if [ (math $dirtystate + $invalidstate + $stagedstate + $untrackedfiles) = 0 ]
-        set git_status $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done
+        set info $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done
     else
         for i in $___fish_git_prompt_status_order
              if [ $$i != "0" ]

@@ -32,7 +32,3 @@ user_doc/
 xcuserdata
 tests/*tmp.*
 tests/foo.txt
-
-.idea
-*.iml
-pom.xml

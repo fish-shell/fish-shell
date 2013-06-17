@@ -199,7 +199,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 		case "*	0" # behind upstream
 			echo " $___fish_git_prompt_char_upstream_behind$behind"
 		case '*' # diverged from upstream
-			echo " $__fish_git_prompt_char_upstream_diverged$ahead-$behind"
+			echo " $___fish_git_prompt_char_upstream_diverged$ahead-$behind"
 		end
 	end
 end

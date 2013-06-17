@@ -1,2 +1,4 @@
+Testing that builtins can truncate files
+abc
 before:test1
 received event test3 with args: foo bar

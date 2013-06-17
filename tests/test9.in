@@ -1,4 +1,13 @@
+# ensure that builtins that produce no output can still truncate files
+# (bug PCA almost reintroduced!)
+echo "Testing that builtins can truncate files"
+echo abc > /tmp/file_truncation_test.txt
+cat /tmp/file_truncation_test.txt
+echo -n > /tmp/file_truncation_test.txt
+cat /tmp/file_truncation_test.txt
+
 # Test events. 
+
 
 # This pattern caused a crash; github issue #449
 

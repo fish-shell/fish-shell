@@ -452,40 +452,34 @@ function __fish_git_prompt_git_dir --description "__fish_git_prompt helper, retu
 	echo (git rev-parse --git-dir ^/dev/null)
 end
 
+function __fish_git_prompt_set_char
+	set -l user_variable_name "$argv[1]"
+	set -l char $argv[2]
+	set -l user_variable $$user_variable_name
+
+	set -l variable _$user_variable_name
+	set -l variable_done "$variable"_done
+
+	if not set -q $variable
+		set -g $variable (set -q $user_variable_name; and echo $user_variable; or echo $char)
+	end
+
+end
+
 function __fish_git_prompt_validate_chars --description "__fish_git_prompt helper, checks char variables"
-	if not set -q ___fish_git_prompt_char_cleanstate
-		set -g ___fish_git_prompt_char_cleanstate (set -q __fish_git_prompt_char_cleanstate; and echo $__fish_git_prompt_char_cleanstate; or echo '.')
-	end
-	if not set -q ___fish_git_prompt_char_dirtystate
-		set -g ___fish_git_prompt_char_dirtystate (set -q __fish_git_prompt_char_dirtystate; and echo $__fish_git_prompt_char_dirtystate; or echo '*')
-	end
-	if not set -q ___fish_git_prompt_char_stagedstate
-		set -g ___fish_git_prompt_char_stagedstate (set -q __fish_git_prompt_char_stagedstate; and echo $__fish_git_prompt_char_stagedstate; or echo '+')
-	end
-	if not set -q ___fish_git_prompt_char_invalidstate
-		set -g ___fish_git_prompt_char_invalidstate (set -q __fish_git_prompt_char_invalidstate; and echo $__fish_git_prompt_char_invalidstate; or echo '#')
-	end
-	if not set -q ___fish_git_prompt_char_stashstate
-		set -g ___fish_git_prompt_char_stashstate (set -q __fish_git_prompt_char_stashstate; and echo $__fish_git_prompt_char_stashstate; or echo '$')
-	end
-	if not set -q ___fish_git_prompt_char_untrackedfiles
-		set -g ___fish_git_prompt_char_untrackedfiles (set -q __fish_git_prompt_char_untrackedfiles; and echo $__fish_git_prompt_char_untrackedfiles; or echo '%')
-	end
-	if not set -q ___fish_git_prompt_char_upstream_equal
-		set -g ___fish_git_prompt_char_upstream_equal (set -q __fish_git_prompt_char_upstream_equal; and echo $__fish_git_prompt_char_upstream_equal; or echo '=')
-	end
-	if not set -q ___fish_git_prompt_char_upstream_behind
-		set -g ___fish_git_prompt_char_upstream_behind (set -q __fish_git_prompt_char_upstream_behind; and echo $__fish_git_prompt_char_upstream_behind; or echo '<')
-	end
-	if not set -q ___fish_git_prompt_char_upstream_ahead
-		set -g ___fish_git_prompt_char_upstream_ahead (set -q __fish_git_prompt_char_upstream_ahead; and echo $__fish_git_prompt_char_upstream_ahead; or echo '>')
-	end
-	if not set -q ___fish_git_prompt_char_upstream_diverged
-		set -g ___fish_git_prompt_char_upstream_diverged (set -q __fish_git_prompt_char_upstream_diverged; and echo $__fish_git_prompt_char_upstream_diverged; or echo '<>')
-	end
-	if not set -q ___fish_git_prompt_char_upstream_prefix
-		set -g ___fish_git_prompt_char_upstream_prefix (set -q __fish_git_prompt_char_upstream_prefix; and echo $__fish_git_prompt_char_upstream_prefix; or echo ' ')
-	end
+
+	__fish_git_prompt_set_char __fish_git_prompt_char_cleanstate  			'.'
+	__fish_git_prompt_set_char __fish_git_prompt_char_dirtystate  			'*'
+	__fish_git_prompt_set_char __fish_git_prompt_char_stagedstate  			'+'
+	__fish_git_prompt_set_char __fish_git_prompt_char_invalidstate  		'#'
+	__fish_git_prompt_set_char __fish_git_prompt_char_stashstate  			'$'
+	__fish_git_prompt_set_char __fish_git_prompt_char_untrackedfiles  		'%'
+	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_equal  		'='
+	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_behind 		'<'
+	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_ahead  		'>'
+	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_diverged  	'<>'
+	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_prefix  		' '
+
 end
 
 function __fish_git_prompt_set_color

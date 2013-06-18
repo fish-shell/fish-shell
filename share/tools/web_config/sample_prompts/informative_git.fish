@@ -1,7 +1,7 @@
 # name: Informative Git Prompt
 # author: Mariusz Smykula <mariuszs at gmail.com>
 
-set -g __fish_git_prompt_show_status 1
+set -g __fish_git_prompt_show_informative_status 1
 set -g __fish_git_prompt_hide_untrackedfiles 1
 
 set -g __fish_git_prompt_color_branch magenta bold

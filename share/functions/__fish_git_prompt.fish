@@ -233,14 +233,14 @@ function __fish_git_prompt --description "Prompt function for Git"
 	set -l u #untracked
 	set -l c (__fish_git_prompt_current_branch_bare)
 	set -l p #upstream
-	set -l status_info
+	set -l informative_status
 
 	__fish_git_prompt_validate_chars
 
 	if test "true" = (git rev-parse --is-inside-work-tree ^/dev/null)
 
-		if test -n "$__fish_git_prompt_show_status"
-			set status_info "|"(__fish_git_prompt_status_info)
+		if test -n "$__fish_git_prompt_show_informative_status"
+			set informative_status "|"(__fish_git_prompt_informative_status)
 		else
 			if test -n "$__fish_git_prompt_showdirtystate"
 				set -l config (git config --bool bash.showDirtyState)
@@ -306,7 +306,7 @@ function __fish_git_prompt --description "Prompt function for Git"
 		set format " (%s)"
 	end
 
-	printf "%s$format%s" "$___fish_git_prompt_color_prefix" "$___fish_git_prompt_color_prefix_done$c$b$f$r$p$status_info$___fish_git_prompt_color_suffix" "$___git_ps_color_suffix_done"
+	printf "%s$format%s" "$___fish_git_prompt_color_prefix" "$___fish_git_prompt_color_prefix_done$c$b$f$r$p$informative_status$___fish_git_prompt_color_suffix" "$___git_ps_color_suffix_done"
 end
 
 ### helper functions
@@ -334,7 +334,7 @@ function __fish_git_prompt_dirty --description "__fish_git_prompt helper, tells 
 	echo $dirty
 end
 
-function  __fish_git_prompt_status_info
+function  __fish_git_prompt_informative_status
 
 	set -l changedFiles (git diff --name-status | cut -c 1-2)
 	set -l stagedFiles (git diff --staged --name-status | cut -c 1-2)
@@ -345,9 +345,6 @@ function  __fish_git_prompt_status_info
 	set -l untrackedfiles (count (git ls-files --others --exclude-standard))
 
 	set -l info
-
-	__fish_git_prompt_validate_colors
-	__fish_git_prompt_validate_chars
 
 	if [ (math $dirtystate + $invalidstate + $stagedstate + $untrackedfiles) = 0 ]
 		set info $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done

@@ -493,13 +493,24 @@ end
 
 function __fish_git_prompt_set_color
 	set -l user_variable_name "$argv[1]"
+	set -l user_variable $$user_variable_name
+	set -l user_variable_bright
+
+	if test (count $user_variable) -eq 2
+		set user_variable_bright $user_variable[2]
+		set user_variable $user_variable[1]
+	end
+
 	set -l variable _$user_variable_name
 	set -l variable_done "$variable"_done
-	set -l user_variable $$user_variable_name
 
 	if not set -q $variable
 		if test -n "$user_variable"
-			set -g $variable (set_color $user_variable)
+			if test -n "$user_variable_bright"
+				set -g $variable (set_color -o $user_variable)
+			else
+				set -g $variable (set_color $user_variable)
+			end
 			set -g $variable_done (set_color normal)
 		else
 			set -g $variable ''

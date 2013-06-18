@@ -112,8 +112,8 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 			set upstream $option
 		case verbose
 			set verbose 1
-	    case informative
-	        set informative 1
+		case informative
+			set informative 1
 		case legacy
 			set legacy 1
 		end
@@ -182,42 +182,42 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 
 	# calculate the result
 	if test -n "$verbose"
-        echo $count | read -l behind ahead
-        switch "$count"
-        case '' # no upstream
-        case "0	0" # equal to upstream
-            echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_equal"
-        case "0	*" # ahead of upstream
-            echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead"
-        case "*	0" # behind upstream
-            echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind$behind"
-        case '*' # diverged from upstream
-            echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_diverged$ahead-$behind"
-        end
-    else if test -n informative
-        echo $count | read -l behind ahead
-        switch "$count"
-        case '' # no upstream
-        case "0	0" # equal to upstream
-        case "0	*" # ahead of upstream
-            echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead"
-        case "*	0" # behind upstream
-            echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind$behind"
-        case '*' # diverged from upstream
-            echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead$___fish_git_prompt_char_upstream_behind$behind"
-        end
+		echo $count | read -l behind ahead
+		switch "$count"
+		case '' # no upstream
+		case "0	0" # equal to upstream
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_equal"
+		case "0	*" # ahead of upstream
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead"
+		case "*	0" # behind upstream
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind$behind"
+		case '*' # diverged from upstream
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_diverged$ahead-$behind"
+		end
+	else if test -n informative
+		echo $count | read -l behind ahead
+		switch "$count"
+		case '' # no upstream
+		case "0	0" # equal to upstream
+		case "0	*" # ahead of upstream
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead"
+		case "*	0" # behind upstream
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind$behind"
+		case '*' # diverged from upstream
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead$___fish_git_prompt_char_upstream_behind$behind"
+		end
 	else
-        switch "$count"
-        case '' # no upstream
-        case "0	0" # equal to upstream
-            echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_equal"
-        case "0	*" # ahead of upstream
-            echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead"
-        case "*	0" # behind upstream
-            echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind$behind"
-        case '*' # diverged from upstream
-            echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_diverged$ahead-$behind"
-        end
+		switch "$count"
+		case '' # no upstream
+		case "0	0" # equal to upstream
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_equal"
+		case "0	*" # ahead of upstream
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead"
+		case "*	0" # behind upstream
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind$behind"
+		case '*' # diverged from upstream
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_diverged$ahead-$behind"
+		end
 	end
 end
 
@@ -239,27 +239,27 @@ function __fish_git_prompt --description "Prompt function for Git"
 
 	if test "true" = (git rev-parse --is-inside-work-tree ^/dev/null)
 
-        if test -n "$__fish_git_prompt_show_status"
-            set status_info "|"(__fish_git_prompt_status_info)
-        else
-            if test -n "$__fish_git_prompt_showdirtystate"
-                set -l config (git config --bool bash.showDirtyState)
-                if test "$config" != "false"
-                    set w (__fish_git_prompt_dirty)
-                    set i (__fish_git_prompt_staged)
-                end
-            end
+		if test -n "$__fish_git_prompt_show_status"
+			set status_info "|"(__fish_git_prompt_status_info)
+		else
+			if test -n "$__fish_git_prompt_showdirtystate"
+				set -l config (git config --bool bash.showDirtyState)
+				if test "$config" != "false"
+					set w (__fish_git_prompt_dirty)
+					set i (__fish_git_prompt_staged)
+				end
+			end
 
-            if test -n "$__fish_git_prompt_showstashstate"
-                git rev-parse --verify refs/stash >/dev/null ^&1; and set s $___fish_git_prompt_char_stashstate
-            end
+			if test -n "$__fish_git_prompt_showstashstate"
+				git rev-parse --verify refs/stash >/dev/null ^&1; and set s $___fish_git_prompt_char_stashstate
+			end
 
-            if test -n "$__fish_git_prompt_showuntrackedfiles"
-                set -l files (git ls-files --others --exclude-standard)
-                if test -n "$files"
-                    set u $___fish_git_prompt_char_untrackedfiles
-                end
-            end
+			if test -n "$__fish_git_prompt_showuntrackedfiles"
+				set -l files (git ls-files --others --exclude-standard)
+				if test -n "$files"
+					set u $___fish_git_prompt_char_untrackedfiles
+				end
+			end
 		end
 
 		if test -n "$__fish_git_prompt_showupstream"
@@ -336,44 +336,44 @@ end
 
 function  __fish_git_prompt_status_info
 
-    set -l changedFiles (git diff --name-status | cut -c 1-2)
-    set -l stagedFiles (git diff --staged --name-status | cut -c 1-2)
+	set -l changedFiles (git diff --name-status | cut -c 1-2)
+	set -l stagedFiles (git diff --staged --name-status | cut -c 1-2)
 
-    set -l dirtystate (math (count $changedFiles) - (count (echo $changedFiles | grep "U")))
-    set -l invalidstate (count (echo $stagedFiles | grep "U"))
-    set -l stagedstate (math (count $stagedFiles) - $invalidstate)
-    set -l untrackedfiles (count (git ls-files --others --exclude-standard))
+	set -l dirtystate (math (count $changedFiles) - (count (echo $changedFiles | grep "U")))
+	set -l invalidstate (count (echo $stagedFiles | grep "U"))
+	set -l stagedstate (math (count $stagedFiles) - $invalidstate)
+	set -l untrackedfiles (count (git ls-files --others --exclude-standard))
 
-    set -l info
+	set -l info
 
-    __fish_git_prompt_validate_colors
-    __fish_git_prompt_validate_chars
+	__fish_git_prompt_validate_colors
+	__fish_git_prompt_validate_chars
 
-    if [ (math $dirtystate + $invalidstate + $stagedstate + $untrackedfiles) = 0 ]
-        set info $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done
-    else
-        for i in $___fish_git_prompt_status_order
-             if [ $$i != "0" ]
-                set -l color_var ___fish_git_prompt_color_$i
-                set -l color_done_var ___fish_git_prompt_color_$i
-                set -l symbol_var ___fish_git_prompt_char_$i
+	if [ (math $dirtystate + $invalidstate + $stagedstate + $untrackedfiles) = 0 ]
+		set info $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done
+	else
+		for i in $___fish_git_prompt_status_order
+			 if [ $$i != "0" ]
+				set -l color_var ___fish_git_prompt_color_$i
+				set -l color_done_var ___fish_git_prompt_color_$i
+				set -l symbol_var ___fish_git_prompt_char_$i
 
-                set -l color $$color_var
-                set -l color_done $$color_done_var
-                set -l symbol $$symbol_var
+				set -l color $$color_var
+				set -l color_done $$color_done_var
+				set -l symbol $$symbol_var
 
-                set -l count
+				set -l count
 
-                if not set -q __fish_git_prompt_hide_$i
-                    set count $$i
-                end
+				if not set -q __fish_git_prompt_hide_$i
+					set count $$i
+				end
 
-                set info "$info$color$symbol$count$color_done"
-            end
-        end
-    end
+				set info "$info$color$symbol$count$color_done"
+			end
+		end
+	end
 
-    echo $info
+	echo $info
 
 end
 
@@ -486,9 +486,9 @@ function __fish_git_prompt_validate_chars --description "__fish_git_prompt helpe
 	if not set -q ___fish_git_prompt_char_upstream_diverged
 		set -g ___fish_git_prompt_char_upstream_diverged (set -q __fish_git_prompt_char_upstream_diverged; and echo $__fish_git_prompt_char_upstream_diverged; or echo '<>')
 	end
-    if not set -q ___fish_git_prompt_char_upstream_prefix
-        set -g ___fish_git_prompt_char_upstream_prefix (set -q __fish_git_prompt_char_upstream_prefix; and echo $__fish_git_prompt_char_upstream_prefix; or echo ' ')
-    end
+	if not set -q ___fish_git_prompt_char_upstream_prefix
+		set -g ___fish_git_prompt_char_upstream_prefix (set -q __fish_git_prompt_char_upstream_prefix; and echo $__fish_git_prompt_char_upstream_prefix; or echo ' ')
+	end
 end
 
 function __fish_git_prompt_validate_colors --description "__fish_git_prompt helper, checks color variables"

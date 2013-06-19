@@ -19,6 +19,7 @@ conf_arg=$@
 
 AC_SUBST(docdir)
 AC_SUBST(HAVE_GETTEXT)
+AC_SUBST(HAVE_DOXYGEN)
 AC_SUBST(LDFLAGS_FISH)
 AC_SUBST(LIBS_FISH)
 AC_SUBST(LIBS_FISH_INDENT)
@@ -182,6 +183,47 @@ AS_IF([test x$local_gettext != xno],
       local_gettext=no
     fi
    ],
+)
+
+#
+# Build/clean the documentation only if Doxygen is available
+#
+
+doxygen_minimum=1.5
+
+AC_ARG_WITH(
+  doxygen,
+  AS_HELP_STRING(
+    [--with-doxygen],
+    [use Doxygen to regenerate documentation]
+  ),
+  [use_doxygen=$withval],
+  [use_doxygen=auto]
+)
+
+AS_IF([test "$use_doxygen" != "no"],
+  [
+    AC_CHECK_PROGS([found_doxygen], [doxygen], [no])
+    if test "$found_doxygen" != no; then
+      # test version
+      AC_MSG_CHECKING([the doxygen version])
+      doxygen_version=`doxygen --version 2>/dev/null`
+      AC_MSG_RESULT([$doxygen_version])
+      AS_VERSION_COMPARE([$doxygen_version], [$doxygen_minimum],
+        [ if test "$use_doxygen" = auto; then
+            AC_MSG_WARN([doxygen version $doxygen_version found, but $doxygen_minimum required])
+            HAVE_DOXYGEN=0
+          else
+            AC_MSG_FAILURE([doxygen version $doxygen_version found, but $doxygen_minimum required])
+          fi
+        ],
+        [HAVE_DOXYGEN=1], [HAVE_DOXYGEN=1])
+    elif test "$use_doxygen" != auto; then
+      AC_MSG_FAILURE([--with-doxygen was given, but the doxygen program could not be found])
+    else
+      HAVE_DOXYGEN=0
+    fi
+  ],
 )
 
 #

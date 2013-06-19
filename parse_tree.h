@@ -136,9 +136,9 @@ class parse_node_t
     statement_list = <empty> |
                      statement statement_list
 
-# A statement is a normal job, or an if / while / and etc.
+# A statement is a normal job, or an if / while / and etc, or just a nothing (i.e. newline)
 
-    statement = boolean_statement | block_statement | decorated_statement
+    statement = boolean_statement | block_statement | decorated_statement | <TOK_END>
     
 # A block is a conditional, loop, or begin/end
 

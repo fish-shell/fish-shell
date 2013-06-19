@@ -121,8 +121,16 @@ static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &
     assert(start < nodes.size());
     const parse_node_t &node = nodes.at(start);
     
+    const size_t spacesPerIndent = 2;
+    
+    // unindent statement lists by 1 to flatten them
+    if (node.type == symbol_statement_list || node.type == symbol_arguments_or_redirections_list)
+    {
+        if (indent > 0) indent -= 1;
+    }
+    
     append_format(*result, L"%2lu   ", *line);
-    result->append(indent, L' ');;
+    result->append(indent * spacesPerIndent, L' ');;
     result->append(node.describe());
     if (node.child_count > 0)
     {
@@ -138,7 +146,7 @@ static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &
     ++*line;
     for (size_t child_idx = node.child_start; child_idx < node.child_start + node.child_count; child_idx++)
     {
-        dump_tree_recursive(nodes, src, child_idx, indent + 2, result, line);
+        dump_tree_recursive(nodes, src, child_idx, indent + 1, result, line);
     }
 }
 
@@ -239,6 +247,18 @@ class parse_ll_t
     // Pop from the top of the symbol stack, then push, updating node counts. Note that these are pushed in reverse order, so the first argument will be on the top of the stack.
     inline void symbol_stack_pop_push(parse_stack_element_t tok1 = token_type_invalid, parse_stack_element_t tok2 = token_type_invalid, parse_stack_element_t tok3 = token_type_invalid, parse_stack_element_t tok4 = token_type_invalid, parse_stack_element_t tok5 = token_type_invalid)
     {
+    
+        // Logging?
+        if (1)
+        {
+            fprintf(stderr, "Pop %ls\n", token_type_description(symbol_stack.back().type).c_str());
+            if (tok5.type != token_type_invalid) fprintf(stderr, "Push %ls\n", token_type_description(tok5.type).c_str());
+            if (tok4.type != token_type_invalid) fprintf(stderr, "Push %ls\n", token_type_description(tok4.type).c_str());
+            if (tok3.type != token_type_invalid) fprintf(stderr, "Push %ls\n", token_type_description(tok3.type).c_str());
+            if (tok2.type != token_type_invalid) fprintf(stderr, "Push %ls\n", token_type_description(tok2.type).c_str());
+            if (tok1.type != token_type_invalid) fprintf(stderr, "Push %ls\n", token_type_description(tok1.type).c_str());
+        }
+    
         // Get the node for the top symbol and tell it about its children
         size_t node_idx = symbol_stack.back().node_idx;
         parse_node_t &node = nodes.at(node_idx);
@@ -323,21 +343,38 @@ void parse_ll_t::accept_token_statement(parse_token_t token)
                     break;
 
                 case parse_keyword_if:
-                case parse_keyword_else:
+                    symbol_stack_pop_push(symbol_if_header);
+                    break;
+                    
                 case parse_keyword_for:
-                case parse_keyword_in:
+                    symbol_stack_pop_push(symbol_for_header);
+                    break;
+                    
                 case parse_keyword_while:
+                    symbol_stack_pop_push(symbol_while_header);
+                    break;
+                    
                 case parse_keyword_begin:
+                    symbol_stack_pop_push(symbol_begin_header);
+                    break;
+                    
                 case parse_keyword_function:
+                    symbol_stack_pop_push(symbol_function_header);
+                    break;
+                
+                case parse_keyword_else:
                 case parse_keyword_switch:
                     symbol_stack_pop_push(symbol_block_statement);
-                    assert(0 && "Need assignment");
+                    fprintf(stderr, "Unimplemented type\n");
+                    PARSER_DIE();
                     break;
                     
                 case parse_keyword_end:
                     // TODO
                     break;
-                    
+                
+                // 'in' is only special within a for_header
+                case parse_keyword_in:
                 case parse_keyword_none:
                 case parse_keyword_command:
                 case parse_keyword_builtin:
@@ -347,12 +384,16 @@ void parse_ll_t::accept_token_statement(parse_token_t token)
             }
             break;
             
+        case parse_token_type_end:
+            // Empty line, or just a semicolon
+            symbol_stack_pop_push(parse_token_type_end);
+            break;
+            
         case parse_token_type_pipe:
         case parse_token_type_redirection:
         case parse_token_background:
-        case parse_token_type_end:
         case parse_token_type_terminate:
-            parse_error(L"command", token);
+            parse_error(L"statement", token);
             break;
                     
         default:
@@ -553,6 +594,10 @@ bool parse_ll_t::top_node_match_token(parse_token_t token)
 
 void parse_ll_t::accept_token(parse_token_t token)
 {
+    if (1)
+    {
+        fprintf(stderr, "Accept token of type %ls\n", token_type_description(token.type).c_str());
+    }
     PARSE_ASSERT(token.type >= FIRST_PARSE_TOKEN_TYPE);
     PARSE_ASSERT(! symbol_stack.empty());
     bool consumed = false;
@@ -628,7 +673,7 @@ void parse_ll_t::accept_token(parse_token_t token)
                 break;
                 
             default:
-                fprintf(stderr, "Bailing with token type %d\n", (int)token.type);
+                fprintf(stderr, "Bailing with token type %ls\n", token_type_description(token.type).c_str());
                 break;
         }
     }

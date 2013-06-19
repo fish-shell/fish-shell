@@ -260,9 +260,22 @@ void parse_exec_t::run_top_node()
             break;
             
         case symbol_statement:
+        {
             PARSE_ASSERT(parse_node.child_count == 1);
-            pop_push_all();
+            // See if we're just an empty statement
+            const parse_node_t &child = parse_tree.at(parse_node.child_start + 0);
+            if (child.type == parse_token_type_end)
+            {
+                // Empty statement
+                pop();
+            }
+            else
+            {
+                // We have a statement to execute
+                pop_push_all();
+            }
             break;
+        }
             
         case symbol_decorated_statement:
         {

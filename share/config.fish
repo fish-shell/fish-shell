@@ -69,9 +69,9 @@ function __fish_reconstruct_path -d "Update PATH when fish_user_paths changes" -
 	end
 
         set -e __fish_added_user_paths
-        for x in $fish_user_paths
+        for x in $fish_user_paths[-1..1]
                 if not contains $x $local_path
-                        set local_path $local_path $x
+                        set local_path $x $local_path
                         set -g __fish_added_user_paths $__fish_added_user_paths $x
                 end
         end

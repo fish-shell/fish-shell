@@ -973,7 +973,7 @@ certain environment variables.
 - A large number of variable starting with the prefixes \c fish_color and \c fish_pager_color. See <a href='#variables-color'>Variables for changing highlighting colors</a> for more information.
 - \c fish_greeting, the greeting message printed on startup.
 - \c LANG, \c LC_ALL, \c LC_COLLATE, \c LC_CTYPE, \c LC_MESSAGES, \c LC_MONETARY, \c LC_NUMERIC and \c LC_TIME set the language option for the shell and subprograms. See the section <a href='#variables-locale'>Locale variables</a> for more information.
-- \c fish_user_paths, an array of directories that are appended to PATH. This can be a universal variable.
+- \c fish_user_paths, an array of directories that are prepended to PATH. This can be a universal variable.
 - \c PATH, an array of directories in which to search for commands
 - \c umask, the current file creation mask. The preferred way to change the umask variable is through the <a href="commands.html#umask">umask function</a>. An attempt to set umask to an invalid value will always fail.
 

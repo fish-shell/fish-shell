@@ -76,6 +76,11 @@ LDFLAGS_MIMEDB = ${LDFLAGS} @LIBS_MIMEDB@
 
 HAVE_GETTEXT=@HAVE_GETTEXT@
 
+#
+# Set to 1 if we have doxygen
+#
+
+HAVE_DOXYGEN=@HAVE_DOXYGEN@
 
 #
 #Additional .cpp files used by common.o. These also have a corresponding
@@ -258,12 +263,21 @@ MANUALS := $(addsuffix .1, $(addprefix share/man/man1/,	\
 TRANSLATIONS_SRC := $(wildcard po/*.po)
 TRANSLATIONS := $(TRANSLATIONS_SRC:.po=.gmo)
 
+#
+# If Doxygen is not available, don't attempt to build the documentation
+#
+
+ifeq ($(HAVE_DOXYGEN), 1)
+  user_doc=user_doc
+else
+  user_doc=
+endif
 
 #
 # Make everything needed for installing fish
 #
 
-all: $(PROGRAMS) user_doc share/man $(TRANSLATIONS)
+all: $(PROGRAMS) $(user_doc) share/man $(TRANSLATIONS)
 	@echo fish has now been built.
 	@echo Use \'$(MAKE) install\' to install fish.
 .PHONY: all
@@ -297,10 +311,9 @@ prof: all
 
 # Depend on the sources (*.hdr.in) and manually make the
 # intermediate *.hdr and doc.h files if needed
-# Allow doxygen to fail, e.g. if it does not exist
 
 user_doc: $(HDR_FILES_SRC) Doxyfile.user user_doc.head.html $(HELP_SRC) doc.h $(HDR_FILES)
-	- (cat Doxyfile.user ; echo PROJECT_NUMBER=@PACKAGE_VERSION@) | doxygen - && touch user_doc
+	(cat Doxyfile.user ; echo PROJECT_NUMBER=@PACKAGE_VERSION@) | doxygen - && touch user_doc
 
 
 #
@@ -839,7 +852,7 @@ clean:
 	rm -f fish-@PACKAGE_VERSION@.tar
 	rm -f fish-@PACKAGE_VERSION@.tar.gz
 	rm -f fish-@PACKAGE_VERSION@.tar.bz2
-	if command -v doxygen; then \
+	if test $(HAVE_DOXYGEN) = 1; then \
 		rm -rf doc user_doc share/man; \
 	fi
 	rm -rf fish-@PACKAGE_VERSION@

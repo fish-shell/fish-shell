@@ -9,7 +9,10 @@
 # configure the build process.
 #
 
-AC_INIT(fish,2.0.0,fish-users@lists.sf.net)
+# Get version from git, 2.0.0 otherwise
+AC_INIT(fish, m4_esyscmd([git describe --dirty 2> /dev/null | awk '
+  { printf "%s", $0 ? $0 : "2.0.0" }
+']), fish-users@lists.sf.net)
 
 #
 # preserve configure arguments for xsel. This breaks if arguments 

@@ -10,7 +10,7 @@
 #
 
 # Get version from git, 2.0.0 otherwise
-AC_INIT(fish, m4_esyscmd([git describe --dirty 2> /dev/null | awk '
+AC_INIT(fish, m4_esyscmd([git describe --tags --dirty 2> /dev/null | awk '
   { printf "%s", $0 ? $0 : "2.0.0" }
 ']), fish-users@lists.sf.net)
 

@@ -24,16 +24,27 @@ struct exec_argument_t
     node_offset_t parse_node_idx;
     sanity_id_t command_sanity_id;
 };
+typedef std::vector<exec_argument_t> exec_argument_list_t;
 
 struct exec_redirection_t
 {
+    node_offset_t parse_node_idx;
+};
+typedef std::vector<exec_redirection_t> exec_redirection_list_t;
 
+struct exec_arguments_and_redirections_t
+{
+    exec_argument_list_t arguments;
+    exec_redirection_list_t redirections;
 };
 
 struct exec_basic_statement_t
 {
     // Node containing the command
     node_offset_t command_idx;
+    
+    // Arguments
+    exec_arguments_and_redirections_t arguments_and_redirections;
     
     // Decoration
     enum
@@ -43,8 +54,6 @@ struct exec_basic_statement_t
         decoration_builtin
     } decoration;
     
-    std::vector<exec_argument_t> arguments;
-    std::vector<exec_redirection_t> redirections;
     uint16_t sanity_id;
     
     exec_basic_statement_t() : command_idx(0), decoration(decoration_plain)
@@ -70,9 +79,47 @@ struct exec_basic_statement_t
                 PARSER_DIE();
                 break;
         }
-                
+    }
+    
+    const exec_argument_list_t &arguments() const
+    {
+        return arguments_and_redirections.arguments;
+    }
+    
+    const exec_redirection_list_t &redirections() const
+    {
+        return arguments_and_redirections.redirections;
     }
 };
+
+struct exec_block_statement_t
+{
+    // Arguments
+    exec_arguments_and_redirections_t arguments_and_redirections;
+    
+    const exec_argument_list_t &arguments() const
+    {
+        return arguments_and_redirections.arguments;
+    }
+    
+    const exec_redirection_list_t &redirections() const
+    {
+        return arguments_and_redirections.redirections;
+    }
+
+};
+
+struct exec_job_t
+{
+    // List of statements (separated with pipes)
+    std::vector<exec_basic_statement_t> statements;
+    
+    void add_statement(const exec_basic_statement_t &statement)
+    {
+        statements.push_back(statement);
+    }
+};
+
 
 class parse_exec_t
 {
@@ -85,6 +132,9 @@ class parse_exec_t
     /* The stack of nodes as we execute them */
     std::vector<exec_node_t> exec_nodes;
     
+    /* The stack of jobs being built */
+    std::vector<exec_job_t> assembling_jobs;
+    
     /* The stack of commands being built */
     std::vector<exec_basic_statement_t> assembling_statements;
     
@@ -95,7 +145,39 @@ class parse_exec_t
         PARSE_ASSERT(node.source_start + node.source_length <= src.size());
         output->assign(src, node.source_start, node.source_length);
     }
+    
+    const parse_node_t &get_child(parse_node_t &parent, node_offset_t which) const
+    {
+        return parse_tree.at(parent.child_offset(which));
+    }
+    
+    void pop_push_specific(node_offset_t idx1, node_offset_t idx2 = NODE_OFFSET_INVALID, node_offset_t idx3 = NODE_OFFSET_INVALID, node_offset_t idx4 = NODE_OFFSET_INVALID, node_offset_t idx5 = NODE_OFFSET_INVALID)
+    {
+        PARSE_ASSERT(! exec_nodes.empty());
+        // Figure out the offset of the children
+        exec_node_t &top = exec_nodes.back();
+        const parse_node_t &parse_node = parse_tree.at(top.parse_node_idx);
+        node_offset_t child_node_idx = parse_node.child_start;
         
+        // Remove the top node
+        exec_nodes.pop_back();
+        
+        // Append the given children, backwards
+        sanity_id_t command_sanity_id = assembling_statements.empty() ? 0 : assembling_statements.back().sanity_id;
+        const node_offset_t idxs[] = {idx5, idx4, idx3, idx2, idx1};
+        for (size_t q=0; q < sizeof idxs / sizeof *idxs; q++)
+        {
+            node_offset_t idx = idxs[q];
+            if (idx != (node_offset_t)(-1))
+            {
+                PARSE_ASSERT(idx < parse_node.child_count);
+                exec_nodes.push_back(child_node_idx + idx);
+                exec_nodes.back().command_sanity_id = command_sanity_id;
+            }
+        }
+
+    }
+    
     void pop_push(node_offset_t child_idx, node_offset_t child_count = 1)
     {
         PARSE_ASSERT(! exec_nodes.empty());
@@ -139,90 +221,130 @@ class parse_exec_t
         pop_push(0, parse_node.child_count);
     }
     
-    void assemble_command(node_offset_t idx)
-    {
-        // Set the command for our top basic statement
-        PARSE_ASSERT(! assembling_statements.empty());
-        assembling_statements.back().command_idx = idx;
-    }
-    
-    void assemble_argument_or_redirection(node_offset_t idx)
+    void assemble_1_argument_or_redirection(node_offset_t idx, exec_arguments_and_redirections_t *output) const
     {
         const parse_node_t &node = parse_tree.at(idx);
-        PARSE_ASSERT(! assembling_statements.empty());
-        exec_basic_statement_t &statement = assembling_statements.back();
-        switch (node.type)
+        PARSE_ASSERT(output != NULL);
+        PARSE_ASSERT(node.type == symbol_argument_or_redirection);
+        PARSE_ASSERT(node.child_count == 1);
+        node_offset_t child_idx = node.child_offset(0);
+        const parse_node_t &child = parse_tree.at(child_idx);
+        switch (child.type)
         {
             case parse_token_type_string:
                 // Argument
                 {
                     exec_argument_t arg = exec_argument_t();
                     arg.parse_node_idx = idx;
-                    arg.command_sanity_id = statement.sanity_id;
-                    statement.arguments.push_back(arg);
+                    output->arguments.push_back(arg);
                 }
                 break;
                 
             case parse_token_type_redirection:
                 // Redirection
+                {
+                    exec_redirection_t redirect = exec_redirection_t();
+                    redirect.parse_node_idx = idx;
+                    output->redirections.push_back(redirect);
+                }
                 break;
                 
             default:
                 PARSER_DIE();
                 break;
         }
-        
     }
     
-    void assembly_complete()
+    void assemble_arguments_and_redirections(node_offset_t start_idx, exec_arguments_and_redirections_t *output) const
     {
-        // Finished building a command
-        PARSE_ASSERT(! assembling_statements.empty());
-        const exec_basic_statement_t &statement = assembling_statements.back();
+        node_offset_t idx = start_idx;
+        for (;;)
+        {
+            const parse_node_t &node = parse_tree.at(idx);
+            PARSE_ASSERT(node.type == symbol_arguments_or_redirections_list);
+            PARSE_ASSERT(node.child_count == 0 || node.child_count == 2);
+            if (node.child_count == 0)
+            {
+                // No more children
+                break;
+            }
+            else
+            {
+                // Skip to next child
+                assemble_1_argument_or_redirection(node.child_offset(0), output);
+                idx = node.child_offset(1);
+            }
+        }
+    }
+    
+    void assemble_command_for_plain_statement(node_offset_t idx, parse_keyword_t decoration)
+    {
+        const parse_node_t &node = parse_tree.at(idx);
+        PARSE_ASSERT(node.type == symbol_plain_statement);
+        PARSE_ASSERT(node.child_count == 2);
+        exec_basic_statement_t statement;
+        statement.set_decoration(decoration);
+        statement.command_idx = node.child_offset(0);
+        assemble_arguments_and_redirections(node.child_offset(1), &statement.arguments_and_redirections);
+        assembling_jobs.back().add_statement(statement);   
+    }
+    
+    void job_assembly_complete()
+    {
+        PARSE_ASSERT(! assembling_jobs.empty());
+        const exec_job_t &job = assembling_jobs.back();
         
         if (simulating)
         {
-            simulate_statement(statement);
+            simulate_job(job);
         }
-        assembling_statements.pop_back();
+        assembling_jobs.pop_back();
     }
     
-    void simulate_statement(const exec_basic_statement_t &statement)
+    void simulate_job(const exec_job_t &job)
     {
         PARSE_ASSERT(simulating);
         wcstring line;
-        switch (statement.decoration)
+        for (size_t i=0; i < job.statements.size(); i++)
         {
-            case exec_basic_statement_t::decoration_builtin:
-                line.append(L"<builtin> ");
-                break;
-            
-            case exec_basic_statement_t::decoration_command:
-                line.append(L"<command> ");
-                break;
+            if (i > 0)
+            {
+                line.append(L" <pipe> ");
+            }
+            const exec_basic_statement_t &statement = job.statements.at(i);
+            switch (statement.decoration)
+            {
+                case exec_basic_statement_t::decoration_builtin:
+                    line.append(L"<builtin> ");
+                    break;
                 
-            default:
-            break;
-        }
-        
-        wcstring tmp;
-        get_node_string(statement.command_idx, &tmp);
-        line.append(L"cmd:");
-        line.append(tmp);
-        for (size_t i=0; i < statement.arguments.size(); i++)
-        {
-            const exec_argument_t &arg = statement.arguments.at(i);
-            get_node_string(arg.parse_node_idx, &tmp);
-            line.append(L" ");
-            line.append(L"arg:");            
+                case exec_basic_statement_t::decoration_command:
+                    line.append(L"<command> ");
+                    break;
+                    
+                default:
+                break;
+            }
+            
+            wcstring tmp;
+            get_node_string(statement.command_idx, &tmp);
+            line.append(L"cmd:");
             line.append(tmp);
+            for (size_t i=0; i < statement.arguments().size(); i++)
+            {
+                const exec_argument_t &arg = statement.arguments().at(i);
+                get_node_string(arg.parse_node_idx, &tmp);
+                line.append(L" ");
+                line.append(L"arg:");            
+                line.append(tmp);
+            }
         }
-        simulation_result.push_back(line);
+        simulation_result.push_back(line);        
     }
     
     void enter_parse_node(size_t idx);
     void run_top_node(void);
-    exec_basic_statement_t *create_basic_statement(void);
+    exec_job_t *create_job(void);
     
     public:
     parse_exec_t(const parse_node_tree_t &tree, const wcstring &s) : parse_tree(tree), src(s), simulating(false)
@@ -231,10 +353,10 @@ class parse_exec_t
     wcstring simulate(void);
 };
 
-exec_basic_statement_t *parse_exec_t::create_basic_statement()
+exec_job_t *parse_exec_t::create_job()
 {
-    assembling_statements.push_back(exec_basic_statement_t());
-    return &assembling_statements.back();
+    assembling_jobs.push_back(exec_job_t());
+    return &assembling_jobs.back();
 }
 
 void parse_exec_t::run_top_node()
@@ -242,7 +364,7 @@ void parse_exec_t::run_top_node()
     PARSE_ASSERT(! exec_nodes.empty());
     exec_node_t &top = exec_nodes.back();
     const parse_node_t &parse_node = parse_tree.at(top.parse_node_idx);
-    bool log = false;
+    bool log = true;
     
     if (log)
     {
@@ -254,68 +376,102 @@ void parse_exec_t::run_top_node()
     
     switch (parse_node.type)
     {
-        case symbol_statement_list:
+        case symbol_job_list:
             PARSE_ASSERT(parse_node.child_count == 0 || parse_node.child_count == 2);
+            if (parse_node.child_count == 0)
+            {
+                // No more jobs, done
+                pop();
+            }
+            else if (parse_tree.at(parse_node.child_start + 0).type == parse_token_type_end)
+            {
+                // Empty job, so just skip it
+                pop_push(1, 1);
+            }
+            else
+            {
+                // Normal job
+                pop_push(0, 2);
+            }
+            break;
+        
+        case symbol_job:
+        {
+            PARSE_ASSERT(parse_node.child_count == 2);
+            exec_job_t *job = create_job();
             pop_push_all();
             break;
-            
-        case symbol_statement:
-        {
-            PARSE_ASSERT(parse_node.child_count == 1);
-            // See if we're just an empty statement
-            const parse_node_t &child = parse_tree.at(parse_node.child_start + 0);
-            if (child.type == parse_token_type_end)
+        }
+        
+        case symbol_job_continuation:
+            PARSE_ASSERT(parse_node.child_count == 0 || parse_node.child_count == 3);
+            if (parse_node.child_count == 0)
             {
-                // Empty statement
+                // All done with this job
+                job_assembly_complete();
                 pop();
             }
             else
             {
-                // We have a statement to execute
-                pop_push_all();
+                // Skip the pipe
+                pop_push(1, 2);
             }
+            break;            
+        
+        case symbol_statement:
+        {
+            PARSE_ASSERT(parse_node.child_count == 1);
+            pop_push_all();
+            break;
+        }
+        
+        case symbol_block_statement:
+        {
+            PARSE_ASSERT(parse_node.child_count == 5);
+            pop_push_specific(0, 2, 4);
+            break;
+        }
+        
+        case symbol_block_header:
+        {
+            PARSE_ASSERT(parse_node.child_count == 1);
+            pop_push_all();
+            break;
+        }
+        
+        case symbol_function_header:
+        {
+            PARSE_ASSERT(parse_node.child_count == 3);
+            //pop_push_all();
+            pop();
             break;
         }
             
         case symbol_decorated_statement:
         {
-            PARSE_ASSERT(parse_node.child_count == 1 || parse_node.child_count == 2 );
-            exec_basic_statement_t *cmd = create_basic_statement();
-            cmd->set_decoration(parse_node.tag);
+            PARSE_ASSERT(parse_node.child_count == 1 || parse_node.child_count == 2);
             
-            // Push the last node (skip any decoration)
-            pop_push(parse_node.child_count - 1, 1);
+            node_offset_t plain_statement_idx = parse_node.child_offset(parse_node.child_count - 1);
+            parse_keyword_t decoration = static_cast<parse_keyword_t>(parse_node.tag);
+            assemble_command_for_plain_statement(plain_statement_idx, decoration);
+            pop();
             break;
         }
-            
+
+        // The following symbols should be handled by their parents, i.e. never pushed on our stack
         case symbol_plain_statement:
-            PARSE_ASSERT(parse_node.child_count == 3);
-            // Extract the command
-            PARSE_ASSERT(! assembling_statements.empty());
-            assemble_command(parse_node.child_start + 0);
-            // Jump to statement list, then terminator
-            pop_push(1, 2);
-            break;
-            
         case symbol_arguments_or_redirections_list:
-            PARSE_ASSERT(parse_node.child_count == 0 || parse_node.child_count == 2);
-            pop_push_all();
-            break;
-        
         case symbol_argument_or_redirection:
-            PARSE_ASSERT(parse_node.child_count == 1);
-            assemble_argument_or_redirection(parse_node.child_start + 0);
-            pop();
+            PARSER_DIE();
             break;
             
         case parse_token_type_end:
             PARSE_ASSERT(parse_node.child_count == 0);
-            assembly_complete();
             pop();
             break;
             
         default:
-            fprintf(stderr, "Unhandled token type %ld\n", (long)parse_node.type);
+            fprintf(stderr, "Unhandled token type %ls at index %ld\n", token_type_description(parse_node.type).c_str(), top.parse_node_idx);
             PARSER_DIE();
             break;
         

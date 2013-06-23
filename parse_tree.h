@@ -20,6 +20,7 @@
 class parse_node_t;
 typedef std::vector<parse_node_t> parse_node_tree_t;
 typedef size_t node_offset_t;
+#define NODE_OFFSET_INVALID (static_cast<node_offset_t>(-1))
 
 struct parse_error_t
 {
@@ -51,7 +52,9 @@ enum parse_token_type_t
     token_type_invalid,
     
     // Non-terminal tokens
-    symbol_statement_list,
+    symbol_job_list,
+    symbol_job,
+    symbol_job_continuation,
     symbol_statement,
     symbol_block_statement,
     symbol_block_header,
@@ -96,6 +99,9 @@ enum parse_keyword_t
     parse_keyword_builtin
 };
 
+wcstring token_type_description(parse_token_type_t type);
+wcstring keyword_description(parse_keyword_t type);
+
 /** Base class for nodes of a parse tree */
 class parse_node_t
 {
@@ -125,31 +131,46 @@ class parse_node_t
     explicit parse_node_t(parse_token_type_t ty) : type(ty), source_start(0), source_length(0), child_start(0), child_count(0), tag(0)
     {
     }
+    
+    node_offset_t child_offset(node_offset_t which) const
+    {
+        PARSE_ASSERT(which < child_count);
+        return child_start + which;
+    }
 };
 
 
 
 /* Fish grammar:
 
-# A statement_list is a list of statements, separated by semicolons or newlines
+# A job_list is a list of jobs, separated by semicolons or newlines
 
-    statement_list = <empty> |
-                     statement statement_list
+    job_list = <empty> |
+                <TOK_END> job_list |
+                job job_list
 
-# A statement is a normal job, or an if / while / and etc, or just a nothing (i.e. newline)
+# A job is a non-empty list of statements, separated by pipes. (Non-empty is useful for cases like if statements, where we require a command). To represent "non-empty", we require a statement, followed by a possibly empty job_continuation
 
-    statement = boolean_statement | block_statement | decorated_statement | <TOK_END>
+    job = statement job_continuation
+    job_continuation = <empty> | 
+                       <TOK_PIPE> statement job_continuation
+
+# A statement is a normal command, or an if / while / and etc
+
+    statement = boolean_statement | block_statement | decorated_statement
     
 # A block is a conditional, loop, or begin/end
 
-    block_statement = block_header statement_list END arguments_or_redirections_list
+    block_statement = block_header STATEMENT_TERMINATOR job_list <END> arguments_or_redirections_list
     block_header = if_header | for_header | while_header | function_header | begin_header
     if_header = IF statement
-    for_header = FOR var_name IN arguments_or_redirections_list STATEMENT_TERMINATOR
+    for_header = FOR var_name IN arguments_or_redirections_list 
     while_header = WHILE statement
-    begin_header = BEGIN STATEMENT_TERMINATOR
-    function_header = FUNCTION arguments_or_redirections_list STATEMENT_TERMINATOR
+    begin_header = BEGIN
+    function_header = FUNCTION function_name arguments_or_redirections_list
     
+#(TODO: functions should not support taking redirections in their arguments)
+ 
 # A boolean statement is AND or OR or NOT
 
     boolean_statement = AND statement | OR statement | NOT statement
@@ -157,7 +178,7 @@ class parse_node_t
 # A decorated_statement is a command with a list of arguments_or_redirections, possibly with "builtin" or "command"
 
     decorated_statement = COMMAND plain_statement | BUILTIN plain_statement | plain_statement
-    plain_statement = command arguments_or_redirections_list terminator
+    plain_statement = command arguments_or_redirections_list 
 
     arguments_or_redirections_list = <empty> |
                                      argument_or_redirection arguments_or_redirections_list

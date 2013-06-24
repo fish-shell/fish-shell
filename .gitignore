@@ -32,3 +32,4 @@ user_doc/
 xcuserdata
 tests/*tmp.*
 tests/foo.txt
+FISH-BUILD-VERSION-FILE

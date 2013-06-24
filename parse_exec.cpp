@@ -1,124 +1,25 @@
 #include "parse_exec.h"
 #include <stack>
 
-typedef uint16_t sanity_id_t;
-static sanity_id_t next_sanity_id()
-{
-    static sanity_id_t last_sanity_id;
-    return ++last_sanity_id;
-}
-
 struct exec_node_t
 {
     node_offset_t parse_node_idx;
-    sanity_id_t command_sanity_id;
+    node_offset_t body_parse_node_idx;
+    bool visited;
     
-    exec_node_t(size_t pni) : parse_node_idx(pni)
+    explicit exec_node_t(node_offset_t pni) : parse_node_idx(pni), body_parse_node_idx(NODE_OFFSET_INVALID), visited(false)
     {
     }
     
+    explicit exec_node_t(node_offset_t pni, node_offset_t body_pni) : parse_node_idx(pni), body_parse_node_idx(body_pni), visited(false)
+    {
+    }
 };
 
-struct exec_argument_t
+exec_basic_statement_t::exec_basic_statement_t() : command_idx(0), decoration(decoration_plain)
 {
-    node_offset_t parse_node_idx;
-    sanity_id_t command_sanity_id;
-};
-typedef std::vector<exec_argument_t> exec_argument_list_t;
-
-struct exec_redirection_t
-{
-    node_offset_t parse_node_idx;
-};
-typedef std::vector<exec_redirection_t> exec_redirection_list_t;
-
-struct exec_arguments_and_redirections_t
-{
-    exec_argument_list_t arguments;
-    exec_redirection_list_t redirections;
-};
-
-struct exec_basic_statement_t
-{
-    // Node containing the command
-    node_offset_t command_idx;
     
-    // Arguments
-    exec_arguments_and_redirections_t arguments_and_redirections;
-    
-    // Decoration
-    enum
-    {
-        decoration_plain,
-        decoration_command,
-        decoration_builtin
-    } decoration;
-    
-    uint16_t sanity_id;
-    
-    exec_basic_statement_t() : command_idx(0), decoration(decoration_plain)
-    {
-        sanity_id = next_sanity_id();
-    }
-    
-    void set_decoration(uint32_t k)
-    {
-        PARSE_ASSERT(k == parse_keyword_none || k == parse_keyword_command || k == parse_keyword_builtin);
-        switch (k)
-        {
-            case parse_keyword_none:
-                decoration = decoration_plain;
-                break;
-            case parse_keyword_command:
-                decoration = decoration_command;
-                break;
-            case parse_keyword_builtin:
-                decoration = decoration_builtin;
-                break;
-            default:
-                PARSER_DIE();
-                break;
-        }
-    }
-    
-    const exec_argument_list_t &arguments() const
-    {
-        return arguments_and_redirections.arguments;
-    }
-    
-    const exec_redirection_list_t &redirections() const
-    {
-        return arguments_and_redirections.redirections;
-    }
-};
-
-struct exec_block_statement_t
-{
-    // Arguments
-    exec_arguments_and_redirections_t arguments_and_redirections;
-    
-    const exec_argument_list_t &arguments() const
-    {
-        return arguments_and_redirections.arguments;
-    }
-    
-    const exec_redirection_list_t &redirections() const
-    {
-        return arguments_and_redirections.redirections;
-    }
-
-};
-
-struct exec_job_t
-{
-    // List of statements (separated with pipes)
-    std::vector<exec_basic_statement_t> statements;
-    
-    void add_statement(const exec_basic_statement_t &statement)
-    {
-        statements.push_back(statement);
-    }
-};
+}
 
 
 class parse_exec_t
@@ -126,26 +27,15 @@ class parse_exec_t
     parse_node_tree_t parse_tree;
     wcstring src;
     
-    bool simulating;
-    wcstring_list_t simulation_result;
-    
     /* The stack of nodes as we execute them */
     std::vector<exec_node_t> exec_nodes;
-    
-    /* The stack of jobs being built */
-    std::vector<exec_job_t> assembling_jobs;
     
     /* The stack of commands being built */
     std::vector<exec_basic_statement_t> assembling_statements;
     
-    void get_node_string(node_offset_t idx, wcstring *output) const
-    {
-        const parse_node_t &node = parse_tree.at(idx);
-        PARSE_ASSERT(node.source_start <= src.size());
-        PARSE_ASSERT(node.source_start + node.source_length <= src.size());
-        output->assign(src, node.source_start, node.source_length);
-    }
-    
+    /* Current visitor (very transient) */
+    struct parse_execution_visitor_t * visitor;
+        
     const parse_node_t &get_child(parse_node_t &parent, node_offset_t which) const
     {
         return parse_tree.at(parent.child_offset(which));
@@ -163,7 +53,6 @@ class parse_exec_t
         exec_nodes.pop_back();
         
         // Append the given children, backwards
-        sanity_id_t command_sanity_id = assembling_statements.empty() ? 0 : assembling_statements.back().sanity_id;
         const node_offset_t idxs[] = {idx5, idx4, idx3, idx2, idx1};
         for (size_t q=0; q < sizeof idxs / sizeof *idxs; q++)
         {
@@ -171,12 +60,22 @@ class parse_exec_t
             if (idx != (node_offset_t)(-1))
             {
                 PARSE_ASSERT(idx < parse_node.child_count);
-                exec_nodes.push_back(child_node_idx + idx);
-                exec_nodes.back().command_sanity_id = command_sanity_id;
+                exec_nodes.push_back(exec_node_t(child_node_idx + idx));
             }
         }
 
     }
+    
+    void push(node_offset_t global_idx)
+    {
+        exec_nodes.push_back(exec_node_t(global_idx));
+    }
+    
+    void push(const exec_node_t &node)
+    {
+        exec_nodes.push_back(node);
+    }
+
     
     void pop_push(node_offset_t child_idx, node_offset_t child_count = 1)
     {
@@ -198,12 +97,10 @@ class parse_exec_t
             exec_nodes.pop_back();
             
             // Append the given children, backwards
-            sanity_id_t command_sanity_id = assembling_statements.empty() ? 0 : assembling_statements.back().sanity_id;
             node_offset_t cursor = child_count;
             while (cursor--)
             {
-                exec_nodes.push_back(child_node_idx + cursor);
-                exec_nodes.back().command_sanity_id = command_sanity_id;
+                exec_nodes.push_back(exec_node_t(child_node_idx + cursor));
             }
         }
     }
@@ -235,7 +132,7 @@ class parse_exec_t
                 // Argument
                 {
                     exec_argument_t arg = exec_argument_t();
-                    arg.parse_node_idx = idx;
+                    arg.parse_node_idx = child_idx;
                     output->arguments.push_back(arg);
                 }
                 break;
@@ -244,7 +141,7 @@ class parse_exec_t
                 // Redirection
                 {
                     exec_redirection_t redirect = exec_redirection_t();
-                    redirect.parse_node_idx = idx;
+                    redirect.parse_node_idx = child_idx;
                     output->redirections.push_back(redirect);
                 }
                 break;
@@ -286,84 +183,106 @@ class parse_exec_t
         statement.set_decoration(decoration);
         statement.command_idx = node.child_offset(0);
         assemble_arguments_and_redirections(node.child_offset(1), &statement.arguments_and_redirections);
-        assembling_jobs.back().add_statement(statement);   
+        visitor->visit_basic_statement(statement);
     }
     
-    void job_assembly_complete()
+    void assemble_block_statement(node_offset_t parse_node_idx)
     {
-        PARSE_ASSERT(! assembling_jobs.empty());
-        const exec_job_t &job = assembling_jobs.back();
         
-        if (simulating)
-        {
-            simulate_job(job);
-        }
-        assembling_jobs.pop_back();
+        const parse_node_t &node = parse_tree.at(parse_node_idx);
+        PARSE_ASSERT(node.type == symbol_block_statement);
+        PARSE_ASSERT(node.child_count == 5);
+
+        // Fetch arguments and redirections. These ought to be evaluated before the job list
+        exec_block_statement_t statement;
+        assemble_arguments_and_redirections(node.child_offset(4), &statement.arguments_and_redirections);
+        
+        // Generic visit
+        visitor->enter_block_statement(statement);
+        
+        // Dig into the header to discover the type
+        const parse_node_t &header_parent = parse_tree.at(node.child_offset(0));
+        PARSE_ASSERT(header_parent.type == symbol_block_header);
+        PARSE_ASSERT(header_parent.child_count == 1);        
+        const node_offset_t header_idx = header_parent.child_offset(0);
+        
+        // Fetch body (job list)
+        node_offset_t body_idx = node.child_offset(2);
+        PARSE_ASSERT(parse_tree.at(body_idx).type == symbol_job_list);
+        
+        pop();
+        push(exec_node_t(header_idx, body_idx));
     }
     
-    void simulate_job(const exec_job_t &job)
+    void assemble_function_header(const exec_node_t &exec_node, const parse_node_t &header)
     {
-        PARSE_ASSERT(simulating);
-        wcstring line;
-        for (size_t i=0; i < job.statements.size(); i++)
+        PARSE_ASSERT(header.type == symbol_function_header);
+        PARSE_ASSERT(&header == &parse_tree.at(exec_node.parse_node_idx));
+        PARSE_ASSERT(exec_node.body_parse_node_idx != NODE_OFFSET_INVALID);
+        exec_function_header_t function_info;
+        function_info.name_idx = header.child_offset(1);
+        function_info.body_idx = exec_node.body_parse_node_idx;
+        assemble_arguments_and_redirections(header.child_offset(2), &function_info.arguments_and_redirections);
+        visitor->visit_function(function_info);
+        
+        // Always pop
+        pop();
+    }
+    
+    void assemble_if_header(exec_node_t &exec_node, const parse_node_t &header)
+    {
+        PARSE_ASSERT(header.type == symbol_if_header);
+        PARSE_ASSERT(&header == &parse_tree.at(exec_node.parse_node_idx));
+        PARSE_ASSERT(exec_node.body_parse_node_idx != NODE_OFFSET_INVALID);
+        if_header_t if_header;
+        if_header.body = exec_node.body_parse_node_idx;
+        // We may hit this on enter or exit
+        if (! exec_node.visited)
         {
-            if (i > 0)
-            {
-                line.append(L" <pipe> ");
-            }
-            const exec_basic_statement_t &statement = job.statements.at(i);
-            switch (statement.decoration)
-            {
-                case exec_basic_statement_t::decoration_builtin:
-                    line.append(L"<builtin> ");
-                    break;
-                
-                case exec_basic_statement_t::decoration_command:
-                    line.append(L"<command> ");
-                    break;
-                    
-                default:
-                break;
-            }
-            
-            wcstring tmp;
-            get_node_string(statement.command_idx, &tmp);
-            line.append(L"cmd:");
-            line.append(tmp);
-            for (size_t i=0; i < statement.arguments().size(); i++)
-            {
-                const exec_argument_t &arg = statement.arguments().at(i);
-                get_node_string(arg.parse_node_idx, &tmp);
-                line.append(L" ");
-                line.append(L"arg:");            
-                line.append(tmp);
-            }
+            // Entry. Don't pop the header - just push the job. We'll pop it on exit.
+            exec_node.visited = true;
+            visitor->enter_if_header(if_header);
+            push(header.child_offset(1));
         }
-        simulation_result.push_back(line);        
+        else
+        {
+            // Exit. Pop it.
+            visitor->exit_if_header(if_header);
+            pop();
+        }
+
     }
     
     void enter_parse_node(size_t idx);
     void run_top_node(void);
-    exec_job_t *create_job(void);
     
     public:
-    parse_exec_t(const parse_node_tree_t &tree, const wcstring &s) : parse_tree(tree), src(s), simulating(false)
+    
+    void get_node_string(node_offset_t idx, wcstring *output) const
     {
+        const parse_node_t &node = parse_tree.at(idx);
+        PARSE_ASSERT(node.source_start <= src.size());
+        PARSE_ASSERT(node.source_start + node.source_length <= src.size());
+        output->assign(src, node.source_start, node.source_length);
     }
-    wcstring simulate(void);
+    
+    bool visit_next_node(parse_execution_visitor_t *v);
+    
+    parse_exec_t(const parse_node_tree_t &tree, const wcstring &s) : parse_tree(tree), src(s), visitor(NULL)
+    {
+        if (! parse_tree.empty())
+        {
+            exec_nodes.push_back(exec_node_t(0));
+        }
+    }
 };
-
-exec_job_t *parse_exec_t::create_job()
-{
-    assembling_jobs.push_back(exec_job_t());
-    return &assembling_jobs.back();
-}
 
 void parse_exec_t::run_top_node()
 {
     PARSE_ASSERT(! exec_nodes.empty());
-    exec_node_t &top = exec_nodes.back();
-    const parse_node_t &parse_node = parse_tree.at(top.parse_node_idx);
+    exec_node_t &exec_node = exec_nodes.back();
+    const node_offset_t parse_node_idx = exec_node.parse_node_idx;
+    const parse_node_t &parse_node = parse_tree.at(exec_node.parse_node_idx);
     bool log = true;
     
     if (log)
@@ -381,6 +300,7 @@ void parse_exec_t::run_top_node()
             if (parse_node.child_count == 0)
             {
                 // No more jobs, done
+                visitor->exit_job_list();
                 pop();
             }
             else if (parse_tree.at(parse_node.child_start + 0).type == parse_token_type_end)
@@ -391,6 +311,7 @@ void parse_exec_t::run_top_node()
             else
             {
                 // Normal job
+                visitor->enter_job_list();
                 pop_push(0, 2);
             }
             break;
@@ -398,7 +319,7 @@ void parse_exec_t::run_top_node()
         case symbol_job:
         {
             PARSE_ASSERT(parse_node.child_count == 2);
-            exec_job_t *job = create_job();
+            visitor->enter_job();
             pop_push_all();
             break;
         }
@@ -408,7 +329,7 @@ void parse_exec_t::run_top_node()
             if (parse_node.child_count == 0)
             {
                 // All done with this job
-                job_assembly_complete();
+                visitor->exit_job();
                 pop();
             }
             else
@@ -428,7 +349,7 @@ void parse_exec_t::run_top_node()
         case symbol_block_statement:
         {
             PARSE_ASSERT(parse_node.child_count == 5);
-            pop_push_specific(0, 2, 4);
+            assemble_block_statement(parse_node_idx);
             break;
         }
         
@@ -442,8 +363,14 @@ void parse_exec_t::run_top_node()
         case symbol_function_header:
         {
             PARSE_ASSERT(parse_node.child_count == 3);
-            //pop_push_all();
-            pop();
+            assemble_function_header(exec_node, parse_node);
+            break;
+        }
+        
+        case symbol_if_header:
+        {
+            PARSE_ASSERT(parse_node.child_count == 2);
+            assemble_if_header(exec_node, parse_node);
             break;
         }
             
@@ -462,6 +389,7 @@ void parse_exec_t::run_top_node()
         case symbol_plain_statement:
         case symbol_arguments_or_redirections_list:
         case symbol_argument_or_redirection:
+            fprintf(stderr, "Unhandled token type %ls at index %ld\n", token_type_description(parse_node.type).c_str(), exec_node.parse_node_idx);
             PARSER_DIE();
             break;
             
@@ -471,11 +399,26 @@ void parse_exec_t::run_top_node()
             break;
             
         default:
-            fprintf(stderr, "Unhandled token type %ls at index %ld\n", token_type_description(parse_node.type).c_str(), top.parse_node_idx);
+            fprintf(stderr, "Unhandled token type %ls at index %ld\n", token_type_description(parse_node.type).c_str(), exec_node.parse_node_idx);
             PARSER_DIE();
             break;
         
     }
+}
+
+bool parse_exec_t::visit_next_node(parse_execution_visitor_t *v)
+{
+    PARSE_ASSERT(v != NULL);
+    PARSE_ASSERT(visitor == NULL);
+    if (exec_nodes.empty())
+    {
+        return false;
+    }
+    
+    visitor = v;
+    run_top_node();
+    visitor = NULL;
+    return true;
 }
 
 void parse_exec_t::enter_parse_node(size_t idx)
@@ -485,36 +428,27 @@ void parse_exec_t::enter_parse_node(size_t idx)
     exec_nodes.push_back(exec);
 }
 
-wcstring parse_exec_t::simulate(void)
-{
-    if (parse_tree.empty())
-        return L"(empty!)";
-    
-    PARSE_ASSERT(exec_nodes.empty());
-    simulating = true;
-    
-    enter_parse_node(0);
-    while (! exec_nodes.empty())
-    {
-        run_top_node();
-    }
-    
-    wcstring result;
-    for (size_t i=0; i < simulation_result.size(); i++)
-    {
-        result.append(simulation_result.at(i));
-        result.append(L"\n");
-    }
-    
-    return result;
-}
 
 parse_execution_context_t::parse_execution_context_t(const parse_node_tree_t &n, const wcstring &s)
 {
     ctx = new parse_exec_t(n, s);
 }
 
-wcstring parse_execution_context_t::simulate(void)
+parse_execution_context_t::~parse_execution_context_t()
 {
-    return ctx->simulate();
+    delete ctx;
 }
+
+bool parse_execution_context_t::visit_next_node(parse_execution_visitor_t *visitor)
+{
+    return ctx->visit_next_node(visitor);
+}
+
+void parse_execution_context_t::get_source(node_offset_t idx, wcstring *result) const
+{
+    return ctx->get_node_string(idx, result);
+}
+
+
+
+

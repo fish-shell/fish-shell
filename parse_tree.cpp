@@ -244,6 +244,7 @@ class parse_ll_t
     void accept_token_job_continuation(parse_token_t token);
     void accept_token_statement(parse_token_t token);
     void accept_token_block_header(parse_token_t token);
+    void accept_token_if_header(parse_token_t token);
     void accept_token_boolean_statement(parse_token_t token);
     void accept_token_decorated_statement(parse_token_t token);
     void accept_token_plain_statement(parse_token_t token);
@@ -713,6 +714,7 @@ void parse_ll_t::accept_token(parse_token_t token, const wcstring &src)
                 break;
                 
             case symbol_if_header:
+                symbol_stack_pop_push(parse_keyword_if, symbol_job);
                 break;
                 
             case symbol_for_header:

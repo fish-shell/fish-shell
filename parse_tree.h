@@ -18,7 +18,7 @@
 #define PARSER_DIE() assert(0)
 
 class parse_node_t;
-typedef std::vector<parse_node_t> parse_node_tree_t;
+class parse_node_tree_t;
 typedef size_t node_offset_t;
 #define NODE_OFFSET_INVALID (static_cast<node_offset_t>(-1))
 
@@ -123,7 +123,6 @@ class parse_node_t
     /* Type-dependent data */
     uint32_t tag;
     
-    
     /* Description */
     wcstring describe(void) const;
     
@@ -139,6 +138,9 @@ class parse_node_t
     }
 };
 
+class parse_node_tree_t : public std::vector<parse_node_t>
+{
+};
 
 
 /* Fish grammar:
@@ -163,7 +165,7 @@ class parse_node_t
 
     block_statement = block_header STATEMENT_TERMINATOR job_list <END> arguments_or_redirections_list
     block_header = if_header | for_header | while_header | function_header | begin_header
-    if_header = IF statement
+    if_header = IF job
     for_header = FOR var_name IN arguments_or_redirections_list 
     while_header = WHILE statement
     begin_header = BEGIN

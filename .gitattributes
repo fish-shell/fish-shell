@@ -1,4 +1,20 @@
 .gitattributes export-ignore
 .gitignore export-ignore
-/build_tools export-ignore
+/build_tools/make_svn_completions.fish export-ignore
+/build_tools/description-pak export-ignore
+/build_tools/make_hg_completions.fish export-ignore
+/build_tools/make_vcs_completions.fish export-ignore
+/build_tools/make_vcs_completions_generic.fish export-ignore
+/build_tools/osx_package_resources export-ignore
+/build_tools/osx_package_resources/terminal_logo.png export-ignore
+/build_tools/osx_package_resources/welcome.rtf export-ignore
+/build_tools/make_csv_completions.fish export-ignore
+/build_tools/osx_distribution.xml export-ignore
+/build_tools/make_tarball.sh export-ignore
+/build_tools/make_deb.sh export-ignore
+/build_tools/osx_package_scripts export-ignore
+/build_tools/osx_package_scripts/add-shell export-ignore
+/build_tools/osx_package_scripts/postinstall export-ignore
+/build_tools/make_pkg.sh export-ignore
+/build_tools/make_darcs_completions.fish export-ignore
 

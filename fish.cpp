@@ -350,7 +350,7 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *out_c
                 fwprintf(stderr,
                          _(L"%s, version %s\n"),
                          PACKAGE_NAME,
-                         PACKAGE_VERSION);
+                         FISH_BUILD_VERSION);
                 exit_without_destructors(0);
             }
 

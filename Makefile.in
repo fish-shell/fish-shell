@@ -282,6 +282,17 @@ all: $(PROGRAMS) $(user_doc) share/man $(TRANSLATIONS)
 	@echo Use \'$(MAKE) install\' to install fish.
 .PHONY: all
 
+#
+# Pull version information
+#
+
+FISH-BUILD-VERSION-FILE: FORCE
+	@./build_tools/git_version_gen.sh
+-include FISH-BUILD-VERSION-FILE
+CPPFLAGS += -DFISH_BUILD_VERSION=\"$(FISH_BUILD_VERSION)\"
+.PHONY: FORCE
+env.o fish.o fish_indent.o fish_pager.o fishd.o mimedb.o: FISH-BUILD-VERSION-FILE
+
 
 #
 # These dependencies make sure that autoconf and configure are run
@@ -313,7 +324,7 @@ prof: all
 # intermediate *.hdr and doc.h files if needed
 
 user_doc: $(HDR_FILES_SRC) Doxyfile.user user_doc.head.html $(HELP_SRC) doc.h $(HDR_FILES)
-	(cat Doxyfile.user ; echo PROJECT_NUMBER=@PACKAGE_VERSION@) | doxygen - && touch user_doc
+	(cat Doxyfile.user ; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION)) | doxygen - && touch user_doc
 
 
 #
@@ -321,7 +332,7 @@ user_doc: $(HDR_FILES_SRC) Doxyfile.user user_doc.head.html $(HELP_SRC) doc.h $(
 #
 
 doc: *.h *.cpp doc.h Doxyfile
-	(cat Doxyfile ; echo PROJECT_NUMBER=@PACKAGE_VERSION@) | doxygen - ;
+	(cat Doxyfile ; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION)) | doxygen - ;
 
 
 #
@@ -849,6 +860,7 @@ clean:
 	rm -f $(PROGRAMS) fish_tests key_reader
 	rm -f command_list.txt toc.txt
 	rm -f doc_src/index.hdr doc_src/commands.hdr
+	rm -f FISH-BUILD-VERSION-FILE
 	rm -f fish-@PACKAGE_VERSION@.tar
 	rm -f fish-@PACKAGE_VERSION@.tar.gz
 	rm -f fish-@PACKAGE_VERSION@.tar.bz2

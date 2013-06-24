@@ -19,8 +19,11 @@ wd="$PWD"
 # The name of the prefix, which is the directory that you get when you untar
 prefix="fish"
 
+# Get the version from git-describe
+VERSION=`git describe --tags --dirty 2>/dev/null`
+
 # The path where we will output the tar file
-path=~/fish_built/fish-2.0.tar
+path=~/fish_built/fish-$VERSION.tar
 
 # Clean up stuff we've written before
 rm -f "$path" "$path".gz
@@ -31,11 +34,13 @@ git archive --format=tar --prefix="$prefix"/ master > "$path"
 # tarball out the documentation
 make user_doc
 make share/man
+echo $VERSION > version
 cd /tmp
 rm -f "$prefix"
 ln -s "$wd" "$prefix"
 gnutar --append --file="$path" "$prefix"/user_doc/html
 gnutar --append --file="$path" "$prefix"/share/man
+gnutar --append --file="$path" "$prefix"/version
 rm -f "$prefix"
 
 # gzip it

@@ -51,11 +51,16 @@ wcstring token_type_description(parse_token_type_t type)
         case symbol_statement: return L"statement";
         case symbol_block_statement: return L"block_statement";
         case symbol_block_header: return L"block_header";
-        case symbol_if_header: return L"if_header";
         case symbol_for_header: return L"for_header";
         case symbol_while_header: return L"while_header";
         case symbol_begin_header: return L"begin_header";
         case symbol_function_header: return L"function_header";
+        
+        case symbol_if_statement: return L"if_statement";
+        case symbol_if_clause: return L"if_clause";
+        case symbol_else_clause: return L"else_clause";
+        case symbol_else_continuation: return L"else_continuation";
+        
         case symbol_boolean_statement: return L"boolean_statement";
         case symbol_decorated_statement: return L"decorated_statement";
         case symbol_plain_statement: return L"plain_statement";
@@ -213,6 +218,17 @@ struct parse_stack_element_t
     parse_stack_element_t(parse_keyword_t k) : type(parse_token_type_string), keyword(k), node_idx(-1)
     {
     }
+    
+    wcstring describe(void) const
+    {
+        wcstring result = token_type_description(type);
+        if (keyword != parse_keyword_none)
+        {
+            append_format(result, L" <%ls>", keyword_description(keyword).c_str());
+        }
+        return result;
+    }
+
 };
 
 class parse_ll_t
@@ -244,7 +260,8 @@ class parse_ll_t
     void accept_token_job_continuation(parse_token_t token);
     void accept_token_statement(parse_token_t token);
     void accept_token_block_header(parse_token_t token);
-    void accept_token_if_header(parse_token_t token);
+    void accept_token_else_clause(parse_token_t token);
+    void accept_token_else_continuation(parse_token_t token);
     void accept_token_boolean_statement(parse_token_t token);
     void accept_token_decorated_statement(parse_token_t token);
     void accept_token_plain_statement(parse_token_t token);
@@ -256,6 +273,8 @@ class parse_ll_t
     
     void parse_error(const wchar_t *expected, parse_token_t token);
     void append_error_callout(wcstring &error_message, parse_token_t token);
+    
+    void dump_stack(void) const;
     
     // Get the node corresponding to the top element of the stack
     parse_node_t &node_for_top_symbol()
@@ -294,11 +313,11 @@ class parse_ll_t
         if (1)
         {
             fprintf(stderr, "Pop %ls\n", token_type_description(symbol_stack.back().type).c_str());
-            if (tok5.type != token_type_invalid) fprintf(stderr, "Push %ls\n", token_type_description(tok5.type).c_str());
-            if (tok4.type != token_type_invalid) fprintf(stderr, "Push %ls\n", token_type_description(tok4.type).c_str());
-            if (tok3.type != token_type_invalid) fprintf(stderr, "Push %ls\n", token_type_description(tok3.type).c_str());
-            if (tok2.type != token_type_invalid) fprintf(stderr, "Push %ls\n", token_type_description(tok2.type).c_str());
-            if (tok1.type != token_type_invalid) fprintf(stderr, "Push %ls\n", token_type_description(tok1.type).c_str());
+            if (tok5.type != token_type_invalid) fprintf(stderr, "Push %ls\n", tok5.describe().c_str());
+            if (tok4.type != token_type_invalid) fprintf(stderr, "Push %ls\n", tok4.describe().c_str());
+            if (tok3.type != token_type_invalid) fprintf(stderr, "Push %ls\n", tok3.describe().c_str());
+            if (tok2.type != token_type_invalid) fprintf(stderr, "Push %ls\n", tok2.describe().c_str());
+            if (tok1.type != token_type_invalid) fprintf(stderr, "Push %ls\n", tok1.describe().c_str());
         }
     
         // Get the node for the top symbol and tell it about its children
@@ -329,9 +348,41 @@ class parse_ll_t
     }
 };
 
+void parse_ll_t::dump_stack(void) const
+{
+    // Walk backwards from the top, looking for parents
+    wcstring_list_t lines;
+    if (symbol_stack.empty())
+    {
+        lines.push_back(L"(empty)");
+    }
+    else
+    {
+        node_offset_t child = symbol_stack.back().node_idx;
+        node_offset_t cursor = child;
+        lines.push_back(nodes.at(cursor).describe());
+        while (cursor--)
+        {
+            const parse_node_t &node = nodes.at(cursor);
+            if (node.child_start <= child && node.child_start + node.child_count > child)
+            {
+                lines.push_back(node.describe());
+                child = cursor;
+            }
+        }
+    }
+    
+    fprintf(stderr, "Stack dump (%lu elements):\n", symbol_stack.size());
+    for (size_t idx = 0; idx < lines.size(); idx++)
+    {
+        fprintf(stderr, "    %ls\n", lines.at(idx).c_str());
+    }
+}
+
 void parse_ll_t::token_unhandled(parse_token_t token, const char *function)
 {
     fprintf(stderr, "Unhandled token with type %ls in function %s\n", token_type_description(token.type).c_str(), function);
+    this->dump_stack();
     PARSER_DIE();
 }
 
@@ -424,12 +475,15 @@ void parse_ll_t::accept_token_statement(parse_token_t token)
                     symbol_stack_pop_push(symbol_boolean_statement);
                     break;
                     
-                case parse_keyword_if:
                 case parse_keyword_for:
                 case parse_keyword_while:
                 case parse_keyword_function:
                 case parse_keyword_begin:
                     symbol_stack_pop_push(symbol_block_statement);
+                    break;
+                    
+                case parse_keyword_if:
+                    symbol_stack_pop_push(symbol_if_statement);
                     break;
                 
                 case parse_keyword_else:
@@ -475,10 +529,6 @@ void parse_ll_t::accept_token_block_header(parse_token_t token)
         case parse_token_type_string:
             switch (token.keyword)
             {
-                case parse_keyword_if:
-                    symbol_stack_pop_push(symbol_if_header);
-                    break;
-                    
                 case parse_keyword_else:
                     PARSER_DIE(); //todo
                     break;
@@ -509,6 +559,36 @@ void parse_ll_t::accept_token_block_header(parse_token_t token)
                     
         default:
             token_unhandled(token, __FUNCTION__);
+            break;
+    }
+}
+
+void parse_ll_t::accept_token_else_clause(parse_token_t token)
+{
+    PARSE_ASSERT(stack_top_type() == symbol_else_clause);
+    switch (token.keyword)
+    {
+        case parse_keyword_else:
+            symbol_stack_pop_push(parse_keyword_else, symbol_else_continuation);
+            break;
+        
+        default:
+            symbol_stack_pop_push();
+            break;
+    }
+}
+
+void parse_ll_t::accept_token_else_continuation(parse_token_t token)
+{
+    PARSE_ASSERT(stack_top_type() == symbol_else_continuation);
+    switch (token.keyword)
+    {
+        case parse_keyword_if:
+            symbol_stack_pop_push(symbol_if_clause, symbol_else_clause);
+            break;
+        
+        default:
+            symbol_stack_pop_push(parse_token_type_end, symbol_job_list);
             break;
     }
 }
@@ -705,16 +785,28 @@ void parse_ll_t::accept_token(parse_token_t token, const wcstring &src)
                 accept_token_statement(token);
                 break;
                 
+            case symbol_if_statement:
+                symbol_stack_pop_push(symbol_if_clause, symbol_else_clause, parse_keyword_end);
+                break;
+                
+            case symbol_if_clause:
+                symbol_stack_pop_push(parse_keyword_if, symbol_job, parse_token_type_end, symbol_job_list);
+                break;
+                
+            case symbol_else_clause:
+                accept_token_else_clause(token);
+                break;
+                
+            case symbol_else_continuation:
+                accept_token_else_continuation(token);
+                break;
+                
             case symbol_block_statement:
                 symbol_stack_pop_push(symbol_block_header, parse_token_type_end, symbol_job_list, parse_keyword_end, symbol_arguments_or_redirections_list);
                 break;
                 
             case symbol_block_header:
                 accept_token_block_header(token);
-                break;
-                
-            case symbol_if_header:
-                symbol_stack_pop_push(parse_keyword_if, symbol_job);
                 break;
                 
             case symbol_for_header:

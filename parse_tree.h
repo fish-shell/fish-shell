@@ -15,7 +15,7 @@
 #include <vector>
 
 #define PARSE_ASSERT(a) assert(a)
-#define PARSER_DIE() assert(0)
+#define PARSER_DIE() exit_without_destructors(-1)
 
 class parse_node_t;
 class parse_node_tree_t;
@@ -58,11 +58,16 @@ enum parse_token_type_t
     symbol_statement,
     symbol_block_statement,
     symbol_block_header,
-    symbol_if_header,
     symbol_for_header,
     symbol_while_header,
     symbol_begin_header,
     symbol_function_header,
+    
+    symbol_if_statement,
+    symbol_if_clause,
+    symbol_else_clause,
+    symbol_else_continuation,
+    
     symbol_boolean_statement,
     symbol_decorated_statement,
     symbol_plain_statement,
@@ -159,17 +164,24 @@ class parse_node_tree_t : public std::vector<parse_node_t>
 
 # A statement is a normal command, or an if / while / and etc
 
-    statement = boolean_statement | block_statement | decorated_statement
+    statement = boolean_statement | block_statement | if_statement | decorated_statement
     
 # A block is a conditional, loop, or begin/end
 
+    if_statement = if_clause else_clause <END>
+    if_clause = <IF> job STATEMENT_TERMINATOR job_list
+    else_clause = <empty> |
+                 <ELSE> else_continuation
+    else_continuation = if_clause else_clause |
+                        STATEMENT_TERMINATOR job_list
+
     block_statement = block_header STATEMENT_TERMINATOR job_list <END> arguments_or_redirections_list
-    block_header = if_header | for_header | while_header | function_header | begin_header
-    if_header = IF job
-    for_header = FOR var_name IN arguments_or_redirections_list 
+    block_header = for_header | while_header | function_header | begin_header
+    for_header = FOR var_name IN arguments_or_redirections_list
     while_header = WHILE statement
     begin_header = BEGIN
     function_header = FUNCTION function_name arguments_or_redirections_list
+ 
     
 #(TODO: functions should not support taking redirections in their arguments)
  

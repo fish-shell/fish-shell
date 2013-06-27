@@ -228,30 +228,7 @@ class parse_exec_t
         // Always pop
         pop();
     }
-    
-    void assemble_if_header(exec_node_t &exec_node, const parse_node_t &header)
-    {
-        PARSE_ASSERT(header.type == symbol_if_header);
-        PARSE_ASSERT(&header == &parse_tree.at(exec_node.parse_node_idx));
-        PARSE_ASSERT(exec_node.body_parse_node_idx != NODE_OFFSET_INVALID);
-        if_header_t if_header;
-        if_header.body = exec_node.body_parse_node_idx;
-        // We may hit this on enter or exit
-        if (! exec_node.visited)
-        {
-            // Entry. Don't pop the header - just push the job. We'll pop it on exit.
-            exec_node.visited = true;
-            visitor->enter_if_header(if_header);
-            push(header.child_offset(1));
-        }
-        else
-        {
-            // Exit. Pop it.
-            visitor->exit_if_header(if_header);
-            pop();
-        }
 
-    }
     
     void enter_parse_node(size_t idx);
     void run_top_node(void);
@@ -367,11 +344,11 @@ void parse_exec_t::run_top_node()
             break;
         }
         
-        case symbol_if_header:
+        case symbol_if_statement:
         {
-            PARSE_ASSERT(parse_node.child_count == 2);
-            assemble_if_header(exec_node, parse_node);
-            break;
+            PARSE_ASSERT(parse_node.child_count == 3);
+            
+        
         }
             
         case symbol_decorated_statement:

@@ -41,7 +41,7 @@ complete -c darcs -n '__fish_use_subcommand' -x -a obliterate --description 'Del
 complete -c darcs -n '__fish_use_subcommand' -x -a rollback --description 'Record a new patch reversing some recorded changes'
 complete -c darcs -n '__fish_use_subcommand' -x -a push --description 'Copy and apply patches from this repository to another one'
 complete -c darcs -n '__fish_use_subcommand' -x -a send --description 'Send by email a bundle of one or more patches'
-complete -c darcs -n '__fish_use_subcommand' -x -a apply --description 'Apply a patch bundle created by `darcs send''
+complete -c darcs -n '__fish_use_subcommand' -x -a apply --description 'Apply a patch bundle created by `darcs send\''
 complete -c darcs -n '__fish_use_subcommand' -x -a get --description 'Create a local copy of a repository'
 complete -c darcs -n '__fish_use_subcommand' -x -a put --description 'Makes a copy of the repository'
 complete -c darcs -n '__fish_use_subcommand' -x -a initialize --description 'Make the current directory a repository'

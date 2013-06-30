@@ -3983,11 +3983,11 @@ struct parse_execution_simulator_t : public parse_execution_visitor_t
     {
     }
     
-    virtual void enter_if_header(const if_header_t &statement)
+    virtual void enter_if_clause(const exec_if_clause_t &statement)
     {
     }
     
-    virtual void exit_if_header(const if_header_t &statement)
+    virtual void exit_if_clause(const exec_if_clause_t &statement)
     {
         append_format(back(), L"\nIF successful jump to %lu", (unsigned long)statement.body);
     }
@@ -4041,6 +4041,12 @@ struct parse_execution_simulator_t : public parse_execution_visitor_t
 
 int builtin_parse(parser_t &parser, wchar_t **argv)
 {
+    struct sigaction act;
+    sigemptyset(& act.sa_mask);
+    act.sa_flags=0;
+    act.sa_handler=SIG_DFL;
+    sigaction(SIGINT, &act, 0);
+
     std::vector<char> txt;
     for (;;)
     {

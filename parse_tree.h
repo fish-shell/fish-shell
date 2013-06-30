@@ -68,11 +68,18 @@ enum parse_token_type_t
     symbol_else_clause,
     symbol_else_continuation,
     
+    symbol_switch_statement,
+    symbol_case_item_list,
+    symbol_case_item,
+    
     symbol_boolean_statement,
     symbol_decorated_statement,
     symbol_plain_statement,
     symbol_arguments_or_redirections_list,
     symbol_argument_or_redirection,
+    
+    symbol_argument_list_nonempty,
+    symbol_argument_list,
 
     // Terminal types
     parse_token_type_string,
@@ -96,6 +103,7 @@ enum parse_keyword_t
     parse_keyword_begin,
     parse_keyword_function,
     parse_keyword_switch,
+    parse_keyword_case,
     parse_keyword_end,
     parse_keyword_and,
     parse_keyword_or,
@@ -164,7 +172,7 @@ class parse_node_tree_t : public std::vector<parse_node_t>
 
 # A statement is a normal command, or an if / while / and etc
 
-    statement = boolean_statement | block_statement | if_statement | decorated_statement
+    statement = boolean_statement | block_statement | if_statement | switch_statement | decorated_statement
     
 # A block is a conditional, loop, or begin/end
 
@@ -174,16 +182,21 @@ class parse_node_tree_t : public std::vector<parse_node_t>
                  <ELSE> else_continuation
     else_continuation = if_clause else_clause |
                         STATEMENT_TERMINATOR job_list
+                        
+    switch_statement = SWITCH <TOK_STRING> STATEMENT_TERMINATOR case_item_list <END>
+    case_item_list = <empty> |
+                    case_item case_item_list
+    case_item = CASE argument_list STATEMENT_TERMINATOR job_list
+    
+    argument_list_nonempty = <TOK_STRING> argument_list
+    argument_list = <empty> | argument_list_nonempty
 
     block_statement = block_header STATEMENT_TERMINATOR job_list <END> arguments_or_redirections_list
     block_header = for_header | while_header | function_header | begin_header
     for_header = FOR var_name IN arguments_or_redirections_list
     while_header = WHILE statement
     begin_header = BEGIN
-    function_header = FUNCTION function_name arguments_or_redirections_list
- 
-    
-#(TODO: functions should not support taking redirections in their arguments)
+    function_header = FUNCTION function_name argument_list
  
 # A boolean statement is AND or OR or NOT
 

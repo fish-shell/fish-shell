@@ -28,6 +28,12 @@ class parse_execution_context_t
 struct exec_argument_t
 {
     node_offset_t parse_node_idx;
+    exec_argument_t(node_offset_t p) : parse_node_idx(p)
+    {
+    }
+    exec_argument_t()
+    {
+    }
 };
 typedef std::vector<exec_argument_t> exec_argument_list_t;
 
@@ -101,7 +107,7 @@ struct exec_function_header_t
     node_offset_t body_idx;
     
     // Arguments
-    exec_arguments_and_redirections_t arguments_and_redirections;
+    exec_argument_list_t arguments;
 };
 
 struct exec_block_statement_t
@@ -110,10 +116,22 @@ struct exec_block_statement_t
     exec_arguments_and_redirections_t arguments_and_redirections;
 };
 
-struct if_header_t
+struct exec_if_clause_t
 {
     // Node containing the body of the if statement
     node_offset_t body;
+};
+
+struct exec_switch_case_t
+{
+    exec_argument_list_t arguments;
+    node_offset_t body;
+};
+
+struct exec_switch_statement_t
+{
+    exec_argument_t argument;
+    std::vector<exec_switch_case_t> cases;
 };
 
 struct parse_execution_visitor_t
@@ -131,8 +149,11 @@ struct parse_execution_visitor_t
     virtual void visit_function(const exec_function_header_t &function) { }
     virtual bool enter_block_statement(const exec_block_statement_t &statement) { return true; }
     
-    virtual void enter_if_header(const if_header_t &statement) { }
-    virtual void exit_if_header(const if_header_t &statement) { }
+    virtual void enter_if_clause(const exec_if_clause_t &statement) { }
+    virtual void exit_if_clause(const exec_if_clause_t &statement) { }
+    
+    virtual void visit_switch_statement(const exec_switch_statement_t &header) { }
+
     
     virtual void visit_boolean_statement(void) { }
     virtual void visit_basic_statement(const exec_basic_statement_t &statement) { }

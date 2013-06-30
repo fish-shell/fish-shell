@@ -36,7 +36,7 @@ class parse_exec_t
     /* Current visitor (very transient) */
     struct parse_execution_visitor_t * visitor;
         
-    const parse_node_t &get_child(parse_node_t &parent, node_offset_t which) const
+    const parse_node_t &get_child(const parse_node_t &parent, node_offset_t which) const
     {
         return parse_tree.at(parent.child_offset(which));
     }
@@ -214,6 +214,118 @@ class parse_exec_t
         push(exec_node_t(header_idx, body_idx));
     }
     
+    /* which: 0 -> if, 1 -> else if, 2 -> else */
+    void assemble_if_else_clause(exec_node_t &exec_node, const parse_node_t &node, int which)
+    {
+        if (which == 0)
+        {
+            PARSE_ASSERT(node.type == symbol_if_clause);
+            PARSE_ASSERT(node.child_count == 4);
+        }
+        else if (which == 2)
+        {
+            PARSE_ASSERT(node.type == symbol_else_continuation);
+            PARSE_ASSERT(node.child_count == 2);
+        }
+        
+        struct exec_if_clause_t clause;
+        if (which == 0)
+        {
+            clause.body = node.child_offset(3);
+        }
+        else
+        {
+            clause.body = node.child_offset(1);
+        }
+        if (! exec_node.visited)
+        {
+            visitor->enter_if_clause(clause);
+            exec_node.visited = true;
+            if (which == 0)
+            {
+                push(node.child_offset(1));
+            }
+        }
+        else
+        {
+            visitor->exit_if_clause(clause);
+            pop();
+        }
+    }
+    
+    void assemble_arguments(node_offset_t start_idx, exec_argument_list_t *output) const
+    {
+        node_offset_t idx = start_idx;
+        for (;;)
+        {
+            const parse_node_t &node = parse_tree.at(idx);
+            PARSE_ASSERT(node.type == symbol_argument_list || node.type == symbol_argument_list_nonempty);
+            if (node.type == symbol_argument_list)
+            {
+                // argument list, may be empty
+                PARSE_ASSERT(node.child_count == 0 || node.child_count == 1);
+                if (node.child_count == 0)
+                {
+                    break;
+                }
+                else
+                {
+                    idx = node.child_offset(0);
+                }
+            }
+            else
+            {
+                // nonempty argument list
+                PARSE_ASSERT(node.child_count == 2);
+                output->push_back(exec_argument_t(node.child_offset(0)));
+                idx = node.child_offset(1);
+            }
+        }
+    }
+    
+    void assemble_1_case_item(exec_switch_statement_t *statement, node_offset_t node_idx)
+    {
+        const parse_node_t &node = parse_tree.at(node_idx);
+        PARSE_ASSERT(node.type == symbol_case_item);
+        
+        // add a new case
+        size_t len = statement->cases.size();
+        statement->cases.resize(len + 1);
+        exec_switch_case_t &new_case = statement->cases.back();
+        
+        // assemble it
+        new_case.body = node.child_offset(3);
+        assemble_arguments(node.child_offset(1), &new_case.arguments);
+        
+    
+    }
+    
+    void assemble_case_item_list(exec_switch_statement_t *statement, node_offset_t node_idx)
+    {
+        const parse_node_t &node = parse_tree.at(node_idx);
+        PARSE_ASSERT(node.type == symbol_case_item_list);
+        PARSE_ASSERT(node.child_count == 0 || node.child_count == 2);
+        if (node.child_count == 2)
+        {
+            assemble_1_case_item(statement, node.child_offset(0));
+            assemble_case_item_list(statement, node.child_offset(1));
+        }
+    }
+    
+    void assemble_switch_statement(const exec_node_t &exec_node, const parse_node_t &parse_node)
+    {
+        PARSE_ASSERT(parse_node.type == symbol_switch_statement);
+        exec_switch_statement_t statement;
+        
+        statement.argument.parse_node_idx = parse_node.child_offset(1);
+        assemble_case_item_list(&statement, parse_node.child_offset(3));
+        
+        visitor->visit_switch_statement(statement);
+        
+        // pop off the switch
+        pop();
+    }
+    
     void assemble_function_header(const exec_node_t &exec_node, const parse_node_t &header)
     {
         PARSE_ASSERT(header.type == symbol_function_header);
@@ -222,7 +334,7 @@ class parse_exec_t
         exec_function_header_t function_info;
         function_info.name_idx = header.child_offset(1);
         function_info.body_idx = exec_node.body_parse_node_idx;
-        assemble_arguments_and_redirections(header.child_offset(2), &function_info.arguments_and_redirections);
+        assemble_arguments(header.child_offset(2), &function_info.arguments);
         visitor->visit_function(function_info);
         
         // Always pop
@@ -347,10 +459,59 @@ void parse_exec_t::run_top_node()
         case symbol_if_statement:
         {
             PARSE_ASSERT(parse_node.child_count == 3);
-            
-        
+            pop_push(0, 2);
+            break;
         }
-            
+        
+        case symbol_if_clause:
+        {
+            PARSE_ASSERT(parse_node.child_count == 4);
+            assemble_if_else_clause(exec_node, parse_node, 0);
+            pop();
+            break;            
+        }
+        
+        case symbol_else_clause:
+        {
+            PARSE_ASSERT(parse_node.child_count == 0 || parse_node.child_count == 2);
+            if (parse_node.child_count == 0)
+            {
+                // No else
+                pop();
+            }
+            else
+            {
+                // We have an else
+                pop_push(1);
+            }
+            break;
+        }
+        
+        case symbol_else_continuation:
+        {
+            // Figure out if this is an else if or a terminating else
+            PARSE_ASSERT(parse_node.child_count == 2);
+            const parse_node_t &first_child = get_child(parse_node, 1);
+            PARSE_ASSERT(first_child.type == symbol_if_clause || first_child.type == parse_token_type_end);
+            if (first_child.type == symbol_if_clause)
+            {
+                pop_push_all();
+            }
+            else
+            {
+                // else
+                assemble_if_else_clause(exec_node, parse_node, 2);
+                pop();
+            }
+            break;
+        }
+        
+        case symbol_switch_statement:
+        {
+            assemble_switch_statement(exec_node, parse_node);
+            break;
+        }
+                    
         case symbol_decorated_statement:
         {
             PARSE_ASSERT(parse_node.child_count == 1 || parse_node.child_count == 2);
@@ -363,6 +524,7 @@ void parse_exec_t::run_top_node()
         }
 
         // The following symbols should be handled by their parents, i.e. never pushed on our stack
+        case symbol_case_item_list:
         case symbol_plain_statement:
         case symbol_arguments_or_redirections_list:
         case symbol_argument_or_redirection:

@@ -1,13 +1,14 @@
-# based off of the git-completion script that ships with git
+# based off of the git-prompt script that ships with git
 #
 # Written by Kevin Ballard <kevin@sb.org>
+# Updated by Brian Gernhardt <brian@gernhardtsoftware.com>
 #
-# This is heavily based off of the git-completion.bash script that ships with
+# This is heavily based off of the git-prompt.bash script that ships with
 # git, which is Copyright (C) 2006,2007 Shawn O. Pearce <spearce@spearce.org>.
 # The act of porting the code, along with any new code, are Copyright (C) 2012
 # Kevin Ballard <kevin@sb.org>.
 #
-# By virtue of being based on the git-completion.bash script, this script is
+# By virtue of being based on the git-prompt.bash script, this script is
 # distributed under the GNU General Public License, version 2.0.
 #
 # This script vends a function __fish_git_prompt which takes a format string,
@@ -15,18 +16,14 @@
 # function.
 #
 # The behavior of __fish_git_prompt is very heavily based off of the bash
-# script's __fish_git_prompt function. As such, usage and customization is very
+# script's __git_ps1 function. As such, usage and customization is very
 # similar, although some extra flexibility is provided in this script.
+# Due to differences between bash and fish, the PROMPT_COMMAND style where
+# passing two or three arguments causes the fucnction to set PS1 is not
+# supported.
 #
 # The argument to __fish_git_prompt will be displayed only if you are currently
-# in a git repository. The %s token will be the name of the branch. If HEAD is
-# not a branch, it attempts to show the relevant tag. The tag search is
-# controlled by the __fish_git_prompt_describe_style variable, with the
-# following values:
-#     default (or unset)    Any tag that exactly matches HEAD
-#     contains              Nearest annotated tag that contains HEAD
-#     branch                Nearest tag/branch that contains HEAD
-#     describe              Output of `git describe`
+# in a git repository. The %s token will be the name of the branch.
 #
 # In addition, if you set __fish_git_prompt_showdirtystate to a nonempty value,
 # unstaged (*) and staged (+) changes will be shown next to the branch name.
@@ -45,19 +42,30 @@
 #
 # If you would like to see the difference between HEAD and its upstream, set
 # __fish_git_prompt_showupstream to 'auto'. A "<" indicates you are behind, ">"
-# indicates you are ahead, and "<>" indicates you have diverged. You can
-# further control behavior by setting __fish_git_prompt_showupstream to a
-# space-separated list of values:
+# indicates you are ahead, "<>" indicates you have diverged and "=" indicates
+# that there is no difference. You can further control behavior by setting
+# __fish_git_prompt_showupstream to a space-separated list of values:
+#
 #     verbose        show number of commits head/behind (+/-) upstream
 #     legacy         don't use the '--count' option available in recent versions
 #                    of git-rev-list
 #     git            always compare HEAD to @{upstream}
 #     svn            always compare HEAD to your SVN upstream
+#
 # By default, __fish_git_prompt will compare HEAD to your SVN upstream if it
 # can find one, or @{upstream} otherwise. Once you have set
 # __fish_git_prompt_showupstream, you can override it on a per-repository basis
 # by setting the bash.showUpstream config variable. As before, this variable
 # remains named 'bash' to preserve compatibility.
+#
+# If you would like to see more information about the identity of commits
+# checked out as a detached HEAD, set __fish_git_prompt_describe_style to
+# one of the following values:
+#
+#     contains      relative to newer annotated tag (v1.6.3.2~35)
+#     branch        relative to newer tag or branch (master~4)
+#     describe      relative to older annotated tag (v1.6.3.1-13-gdd42c2f)
+#     default       exactly matching tag
 #
 # This fish-compatible version of __fish_git_prompt includes some additional
 # features on top of the above-documented bash-compatible features:

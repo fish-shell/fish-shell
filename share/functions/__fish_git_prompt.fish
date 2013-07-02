@@ -78,30 +78,36 @@
 set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles
 
 function __fish_git_prompt_show_upstream --description "Helper function for __fish_git_prompt"
-	# Ask git-config for some config options
-	set -l svn_remote
-	set -l svn_prefix
+	set -l show_upstream $__fish_git_prompt_showupstream
+	set -l svn_prefix # For better SVN upstream information
+	set -l informative
+
+	set -l svn_url_pattern
+	set -l count
 	set -l upstream git
 	set -l legacy
 	set -l verbose
-	set -l informative
-	set -l svn_url_pattern
-	set -l show_upstream $__fish_git_prompt_showupstream
-	git config -z --get-regexp '^(svn-remote\..*\.url|bash\.showUpstream)$' ^/dev/null | tr '\0\n' '\n ' | while read -l key value
+
+	set -l svn_remote
+	# get some config options from git-config
+	git config -z --get-regexp '^(svn-remote\..*\.url|bash\.showupstream)$' ^/dev/null | tr '\0\n' '\n ' | while read -l key value
 		switch $key
-		case bash.showUpstream bash.showupstream
+		case bash.showupstream
 			set show_upstream $value
 			test -n "$show_upstream"; or return
 		case svn-remote.'*'.url
 			set svn_remote $svn_remote $value
-			set -l remote_prefix (/bin/sh -c 'echo "${1%.url}"' -- $key)
-			set svn_prefix $svn_prefix $remote_prefix
+			# Avoid adding \| to the beginning to avoid needing #?? later
 			if test -n "$svn_url_pattern"
-				set svn_url_pattern $svn_url_pattern"\|$value"
+				set svn_url_pattern $svn_url_pattern"\\|$value"
 			else
 				set svn_url_pattern $value
 			end
 			set upstream svn+git # default upstream is SVN if available, else git
+
+			# Save the config key (without .url) for later use
+			set -l remote_prefix (/bin/sh -c 'echo "${1%.url}"' -- $key)
+			set svn_prefix $svn_prefix $remote_prefix
 		end
 	end
 
@@ -151,6 +157,8 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 				end
 			else
 				set upstream (/bin/sh -c 'val=${1#/branches}; echo "${val#/}"' -- $svn_upstream)
+
+				# Use fetch config to fix upstream
 				set -l fetch_val (git config "$cur_prefix".fetch)
 				if test -n "$fetch_val"
 					set -l IFS :
@@ -158,13 +166,12 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 					set upstream (/bin/sh -c 'echo "${1%/$2}"' -- $pattern $trunk)/$upstream
 				end
 			end
-			else if test $upstream = svn+git
+		else if test $upstream = svn+git
 			set upstream '@{upstream}'
 		end
 	end
 
 	# Find how many commits we are ahead/behind our upstream
-	set -l count
 	if test -z "$legacy"
 		set count (git rev-list --count --left-right $upstream...HEAD ^/dev/null)
 	else
@@ -238,7 +245,6 @@ function __fish_git_prompt --description "Prompt function for Git"
 	__fish_git_prompt_validate_chars
 
 	if test "true" = (git rev-parse --is-inside-work-tree ^/dev/null)
-
 		if test -n "$__fish_git_prompt_show_informative_status"
 			set informative_status "|"(__fish_git_prompt_informative_status)
 		else
@@ -265,7 +271,6 @@ function __fish_git_prompt --description "Prompt function for Git"
 		if test -n "$__fish_git_prompt_showupstream"
 			set p (__fish_git_prompt_show_upstream)
 		end
-
 	end
 
 	__fish_git_prompt_validate_colors

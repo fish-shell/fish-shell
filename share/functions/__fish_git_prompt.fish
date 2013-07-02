@@ -232,13 +232,14 @@ function __fish_git_prompt --description "Prompt function for Git"
 	set -l git_dir (__fish_git_prompt_git_dir)
 	test -n "$git_dir"; or return
 
-	set -l r (__fish_git_prompt_current_operation $git_dir)
-	set -l b (__fish_git_prompt_current_branch $git_dir)
+	set -l rbc (__fish_git_prompt_operation_branch_bare $git_dir)
+	set -l r $rbc[1] # current operation
+	set -l b $rbc[2] # current branch
 	set -l w #dirty working directory
 	set -l i #staged changes
 	set -l s #stashes
 	set -l u #untracked
-	set -l c (__fish_git_prompt_current_branch_bare)
+	set -l c $rbc[3] # bare repository
 	set -l p #upstream
 	set -l informative_status
 
@@ -379,56 +380,14 @@ function  __fish_git_prompt_informative_status
 
 end
 
-function __fish_git_prompt_current_branch_bare --description "__fish_git_prompt helper, tells wheter or not the current branch is bare"
-	set -l bare
-
-	if test "true" = (git rev-parse --is-inside-git-dir ^/dev/null)
-		if test "true" = (git rev-parse --is-bare-repository ^/dev/null)
-			set bare "BARE:"
-		end
-	end
-	echo $bare
-end
-
-function __fish_git_prompt_current_branch --description "__fish_git_prompt helper, returns the current Git branch"
+# Keeping these together avoids many duplicated checks
+function __fish_git_prompt_operation_branch_bare --description "__fish_git_prompt helper, returns the current Git operation and branch"
 	set -l git_dir $argv[1]
 	set -l branch
-
-	set -l os
-	set branch (git symbolic-ref HEAD ^/dev/null; set os $status)
-	if test $os -ne 0
-		set branch (switch "$__fish_git_prompt_describe_style"
-					case contains
-						git describe --contains HEAD
-					case branch
-						git describe --contains --all HEAD
-					case describe
-						git describe HEAD
-					case default '*'
-						git describe --tags --exact-match HEAD
-					end ^/dev/null; set os $status)
-		if test $os -ne 0
-			set branch (cut -c1-7 $git_dir/HEAD ^/dev/null; set os $status)
-			if test $os -ne 0
-				set branch unknown
-			end
-		end
-		set branch "($branch)"
-	end
-
-	# Let user know they're inside the git dir of a non-bare repo
-	if test "true" = (git rev-parse --is-inside-git-dir ^/dev/null)
-		if test "false" = (git rev-parse --is-bare-repository ^/dev/null)
-			set branch "GIT_DIR!"
-		end
-	end
-	echo $branch
-end
-
-function __fish_git_prompt_current_operation --description "__fish_git_prompt helper, returns the current Git operation being performed"
 	set -l operation
+	set -l bare
+	set -l os
 
-	set -l git_dir $argv[1]
 	if test -f $git_dir/rebase-merge/interactive
 		set operation "|REBASE-i"
 	else if test -d $git_dir/rebase-merge
@@ -450,7 +409,40 @@ function __fish_git_prompt_current_operation --description "__fish_git_prompt he
 			set operation "|BISECTING"
 		end
 	end
+
+	set branch (git symbolic-ref HEAD ^/dev/null; set os $status)
+	if test $os -ne 0
+		set branch (switch "$__fish_git_prompt_describe_style"
+					case contains
+						git describe --contains HEAD
+					case branch
+						git describe --contains --all HEAD
+					case describe
+						git describe HEAD
+					case default '*'
+						git describe --tags --exact-match HEAD
+					end ^/dev/null; set os $status)
+		if test $os -ne 0
+			set branch (cut -c1-7 $git_dir/HEAD ^/dev/null; set os $status)
+			if test $os -ne 0
+				set branch unknown
+			end
+		end
+		set branch "($branch)"
+	end
+
+	if test "true" = (git rev-parse --is-inside-git-dir ^/dev/null)
+		if test "true" = (git rev-parse --is-bare-repository ^/dev/null)
+			set bare "BARE:"
+		else
+			# Let user know they're inside the git dir of a non-bare repo
+			set branch "GIT_DIR!"
+		end
+	end
+
 	echo $operation
+	echo $branch
+	echo $bare
 end
 
 function __fish_git_prompt_git_dir --description "__fish_git_prompt helper, returns .git dir if any"

@@ -70,18 +70,39 @@
 # This fish-compatible version of __fish_git_prompt includes some additional
 # features on top of the above-documented bash-compatible features:
 #
-# The color for the branch name and each individual optional component can be
-# specified using __fish_git_prompt_color_<name>, where <name> is 'prefix',
-# 'suffix', 'bare', 'merging', 'branch', 'dirtystate', 'stagedstate',
-# 'invalidstate', 'stashstate', 'untrackedfiles', and 'upstream'. The variable
+# The color for each component of the prompt can specified using
+# __fish_git_prompt_color_<name>, where <name> is one of the following and the
+# values are specified as arguments to `set_color`.  The variable
 # __fish_git_prompt_color is used for any component that does not have an
-# individual color set. Colors are specified as arguments to `set_color`.
+# individual color set.
 #
-# The characters used for the optional features can be configured using
-# __fish_git_prompt_char_<token>, where <token> is one of 'dirtystate',
-# 'stagedstate', 'invalidstate', 'stashstate', 'untrackedfiles',
-# 'upstream_equal', 'upstream_behind', 'upstream_ahead', and
-# 'upstream_diverged'.
+#     prefix     Anything before %s in the format string
+#     suffix     Anything after  %s in the format string
+#     bare       Marker for a bare repository
+#     merging    Current operation (|MERGING, |REBASE, etc.)
+#     branch     Branch name
+#     upstream   Upstream name and flags (with showupstream)
+#
+# The following optional flags have both colors, as above, and custom
+# characters via __fish_git_prompt_char_<name>.  The default character is
+# shown in parenthesis.
+#
+#   __fish_git_prompt_showdirtystate
+#     dirtystate          unstaged changes (*)
+#     stagedstate         staged changes   (+)
+#     invalidstate        HEAD invalid     (#, colored as stagedstate)
+#
+#   __fish_git_prompt_showstashstate
+#     stashstate          stashed changes  ($)
+#
+#   __fish_git_prompt_showuntrackedfiles
+#     untrackedfiles      untracked files  (%)
+#
+#   __fish_git_prompt_showupstream  (all colored as upstream)
+#     upstream_equal      Branch matches upstream              (=)
+#     upstream_behind     Upstream has more commits            (<)
+#     upstream_ahead      Branch has more commits              (>)
+#     upstream_diverged   Upstream and branch have new commits (<>)
 
 set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles
 

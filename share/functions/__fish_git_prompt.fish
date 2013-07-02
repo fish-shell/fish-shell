@@ -518,6 +518,19 @@ function __fish_git_prompt_set_color
 	set -l user_variable $$user_variable_name
 	set -l user_variable_bright
 
+	set -l default default_done
+	switch (count $argv)
+	case 1 # No defaults given, use prompt color
+		set default $___fish_git_prompt_color
+		set default_done $___fish_git_prompt_color_done
+	case 2 # One default given, use normal for done
+		set default "$argv[2]"
+		set default_done (set_color normal)
+	case 3 # Both defaults given
+		set default "$argv[2]"
+		set default_done "$argv[3]"
+	end
+
 	if test (count $user_variable) -eq 2
 		set user_variable_bright $user_variable[2]
 		set user_variable $user_variable[1]
@@ -529,14 +542,14 @@ function __fish_git_prompt_set_color
 	if not set -q $variable
 		if test -n "$user_variable"
 			if test -n "$user_variable_bright"
-				set -g $variable (set_color -o $user_variable)
+				set -g $variable (set_color --bold $user_variable)
 			else
 				set -g $variable (set_color $user_variable)
 			end
 			set -g $variable_done (set_color normal)
 		else
-			set -g $variable ''
-			set -g $variable_done ''
+			set -g $variable $default
+			set -g $variable_done $default_done
 		end
 	end
 
@@ -544,7 +557,9 @@ end
 
 function __fish_git_prompt_validate_colors --description "__fish_git_prompt helper, checks color variables"
 
-	__fish_git_prompt_set_color __fish_git_prompt_color
+	# Base color defaults to nothing (must be done first)
+	__fish_git_prompt_set_color __fish_git_prompt_color '' ''
+
 	__fish_git_prompt_set_color __fish_git_prompt_color_prefix
 	__fish_git_prompt_set_color __fish_git_prompt_color_suffix
 	__fish_git_prompt_set_color __fish_git_prompt_color_bare

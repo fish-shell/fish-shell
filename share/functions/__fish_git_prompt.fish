@@ -390,8 +390,10 @@ function __fish_git_prompt_operation_branch_bare --description "__fish_git_promp
 
 	if test -f $git_dir/rebase-merge/interactive
 		set operation "|REBASE-i"
+		set branch (cat $git_dir/rebase-merge/head-name ^/dev/null)
 	else if test -d $git_dir/rebase-merge
 		set operation "|REBASE-m"
+		set branch (cat $git_dir/rebase-merge/head-name ^/dev/null)
 	else
 		if test -d $git_dir/rebase-apply
 			if test -f $git_dir/rebase-apply/rebasing
@@ -410,25 +412,28 @@ function __fish_git_prompt_operation_branch_bare --description "__fish_git_promp
 		end
 	end
 
-	set branch (git symbolic-ref HEAD ^/dev/null; set os $status)
-	if test $os -ne 0
-		set branch (switch "$__fish_git_prompt_describe_style"
-					case contains
-						git describe --contains HEAD
-					case branch
-						git describe --contains --all HEAD
-					case describe
-						git describe HEAD
-					case default '*'
-						git describe --tags --exact-match HEAD
-					end ^/dev/null; set os $status)
+	if test -z "$branch"
+		set branch (git symbolic-ref HEAD ^/dev/null; set os $status)
 		if test $os -ne 0
-			set branch (cut -c1-7 $git_dir/HEAD ^/dev/null; set os $status)
+			set detached yes
+			set branch (switch "$__fish_git_prompt_describe_style"
+						case contains
+							git describe --contains HEAD
+						case branch
+							git describe --contains --all HEAD
+						case describe
+							git describe HEAD
+						case default '*'
+							git describe --tags --exact-match HEAD
+						end ^/dev/null; set os $status)
 			if test $os -ne 0
-				set branch unknown
+				set branch (cut -c1-7 $git_dir/HEAD ^/dev/null; set os $status)
+				if test $os -ne 0
+					set branch unknown
+				end
 			end
+			set branch "($branch)"
 		end
-		set branch "($branch)"
 	end
 
 	if test "true" = (git rev-parse --is-inside-git-dir ^/dev/null)

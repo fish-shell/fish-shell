@@ -470,6 +470,7 @@ function __fish_git_prompt_operation_branch_bare --description "__fish_git_promp
 			set step (cat $git_dir/rebase-apply/next ^/dev/null)
 			set total (cat $git_dir/rebase-apply/last ^/dev/null)
 			if test -f $git_dir/rebase-apply/rebasing
+				set branch (cat $git_dir/rebase-apply/head-name ^/dev/null)
 				set operation "|REBASE"
 			else if test -f $git_dir/rebase-apply/applying
 				set operation "|AM"

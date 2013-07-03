@@ -468,6 +468,8 @@ function __fish_git_prompt_operation_branch_bare --description "__fish_git_promp
 			set operation "|MERGING"
 		else if test -f $git_dir/CHERRY_PICK_HEAD
 			set operation "|CHERRY-PICKING"
+		else if test -f $git_dir/REVERT_HEAD
+			set operation "|REVERTING"
 		else if test -f $git_dir/BISECT_LOG
 			set operation "|BISECTING"
 		end

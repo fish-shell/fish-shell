@@ -507,7 +507,7 @@ function __fish_git_prompt_operation_branch_bare --description "__fish_git_promp
 							git describe --tags --exact-match HEAD
 						end ^/dev/null; set os $status)
 			if test $os -ne 0
-				set branch (cut -c1-7 $git_dir/HEAD ^/dev/null; set os $status)
+				set branch (git rev-parse --short HEAD ^/dev/null; set os $status)...
 				if test $os -ne 0
 					set branch unknown
 				end

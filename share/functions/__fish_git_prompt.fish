@@ -38,7 +38,10 @@
 #
 # If you would like to see if there are untracked files, then you can set
 # __fish_git_prompt_showuntrackedfiles to a nonempty value. If there are
-# untracked files, then a '%' will be shown next to the branch name.
+# untracked files, then a '%' will be shown next to the branch name. Once you
+# have set __fish_git_prompt_showuntrackedfiles, you can override it on a
+# per-repository basis by setting the bash.showUntrackedFiles config variable.
+# As before, this variable remains named 'bash' to preserve compatibility.
 #
 # If you would like to see the difference between HEAD and its upstream, set
 # __fish_git_prompt_showupstream to 'auto'. A "<" indicates you are behind, ">"
@@ -308,9 +311,11 @@ function __fish_git_prompt --description "Prompt function for Git"
 			end
 
 			if test -n "$__fish_git_prompt_showuntrackedfiles"
-				set -l files (git ls-files --others --exclude-standard)
-				if test -n "$files"
-					set u $___fish_git_prompt_char_untrackedfiles
+				if test (git config --bool bash.showUntrackedFiles) != false
+					set -l files (git ls-files --others --exclude-standard)
+					if test -n "$files"
+						set u $___fish_git_prompt_char_untrackedfiles
+					end
 				end
 			end
 		end

@@ -447,16 +447,23 @@ function __fish_git_prompt_operation_branch_bare --description "__fish_git_promp
 	set -l operation
 	set -l detached no
 	set -l bare
+	set -l step
+	set -l total
 	set -l os
 
-	if test -f $git_dir/rebase-merge/interactive
-		set operation "|REBASE-i"
+	if test -d $git_dir/rebase-merge
 		set branch (cat $git_dir/rebase-merge/head-name ^/dev/null)
-	else if test -d $git_dir/rebase-merge
-		set operation "|REBASE-m"
-		set branch (cat $git_dir/rebase-merge/head-name ^/dev/null)
+		set step (cat $git_dir/rebase-merge/msgnum ^/dev/null)
+		set total (cat $git_dir/rebase-merge/end ^/dev/null)
+		if test -f $git_dir/rebase-merge/interactive
+			set operation "|REBASE-i"
+		else
+			set operation "|REBASE-m"
+		end
 	else
 		if test -d $git_dir/rebase-apply
+			set step (cat $git_dir/rebase-apply/next ^/dev/null)
+			set total (cat $git_dir/rebase-apply/last ^/dev/null)
 			if test -f $git_dir/rebase-apply/rebasing
 				set operation "|REBASE"
 			else if test -f $git_dir/rebase-apply/applying
@@ -473,6 +480,10 @@ function __fish_git_prompt_operation_branch_bare --description "__fish_git_promp
 		else if test -f $git_dir/BISECT_LOG
 			set operation "|BISECTING"
 		end
+	end
+
+	if test -n "$step" -a -n "$total"
+		set operation "$operation $step/$total"
 	end
 
 	if test -z "$branch"

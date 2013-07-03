@@ -281,11 +281,19 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 end
 
 function __fish_git_prompt --description "Prompt function for Git"
-	set -l git_dir (git rev-parse --git-dir ^/dev/null)
+	set -l repo_info (git rev-parse --git-dir --is-inside-git-dir --is-bare-repository --is-inside-work-tree --short HEAD ^/dev/null)
+	test -n "$repo_info"; or return
 
-	test -n "$git_dir"; or return
+	set -l git_dir         $repo_info[1]
+	set -l inside_gitdir   $repo_info[2]
+	set -l bare_repo       $repo_info[3]
+	set -l inside_worktree $repo_info[4]
+	set -l short_sha
+	if test (count $repo_info) = 5
+		set short_sha $repo_info[5]
+	end
 
-	set -l rbc (__fish_git_prompt_operation_branch_bare $git_dir)
+	set -l rbc (__fish_git_prompt_operation_branch_bare $repo_info)
 	set -l r $rbc[1] # current operation
 	set -l b $rbc[2] # current branch
 	set -l detached $rbc[3]
@@ -299,7 +307,7 @@ function __fish_git_prompt --description "Prompt function for Git"
 
 	__fish_git_prompt_validate_chars
 
-	if test "true" = (git rev-parse --is-inside-work-tree ^/dev/null)
+	if test "true" = $inside_worktree
 		if test -n "$__fish_git_prompt_show_informative_status"
 			set informative_status "|"(__fish_git_prompt_informative_status)
 		else
@@ -307,12 +315,12 @@ function __fish_git_prompt --description "Prompt function for Git"
 				set -l config (git config --bool bash.showDirtyState)
 				if test "$config" != "false"
 					set w (__fish_git_prompt_dirty)
-					set i (__fish_git_prompt_staged)
+					set i (__fish_git_prompt_staged $short_sha)
 				end
 			end
 
-			if test -n "$__fish_git_prompt_showstashstate"
-				git rev-parse --verify refs/stash >/dev/null ^&1; and set s $___fish_git_prompt_char_stashstate
+			if test -n "$__fish_git_prompt_showstashstate" -a -r $git_dir/refs/stash
+				set s $___fish_git_prompt_char_stashstate
 			end
 
 			if test -n "$__fish_git_prompt_showuntrackedfiles"
@@ -384,9 +392,11 @@ end
 ### helper functions
 
 function __fish_git_prompt_staged --description "__fish_git_prompt helper, tells whether or not the current branch has staged files"
+	set -l short_sha $argv[1]
+
 	set -l staged
 
-	if git rev-parse --quiet --verify HEAD >/dev/null
+	if test -n "$short_sha"
 		git diff-index --cached --quiet HEAD --; or set staged $___fish_git_prompt_char_stagedstate
 	else
 		set staged $___fish_git_prompt_char_invalidstate
@@ -448,7 +458,15 @@ end
 
 # Keeping these together avoids many duplicated checks
 function __fish_git_prompt_operation_branch_bare --description "__fish_git_prompt helper, returns the current Git operation and branch"
-	set -l git_dir $argv[1]
+	# This function is passed the full repo_info array
+	set -l git_dir         $argv[1]
+	set -l inside_gitdir   $argv[2]
+	set -l bare_repo       $argv[3]
+	set -l short_sha
+	if test (count $argv) = 5
+		set short_sha $argv[5]
+	end
+
 	set -l branch
 	set -l operation
 	set -l detached no
@@ -508,8 +526,9 @@ function __fish_git_prompt_operation_branch_bare --description "__fish_git_promp
 							git describe --tags --exact-match HEAD
 						end ^/dev/null; set os $status)
 			if test $os -ne 0
-				set branch (git rev-parse --short HEAD ^/dev/null; set os $status)...
-				if test $os -ne 0
+				if test -n "$short_sha"
+					set branch $short_sha...
+				else
 					set branch unknown
 				end
 			end
@@ -517,8 +536,8 @@ function __fish_git_prompt_operation_branch_bare --description "__fish_git_promp
 		end
 	end
 
-	if test "true" = (git rev-parse --is-inside-git-dir ^/dev/null)
-		if test "true" = (git rev-parse --is-bare-repository ^/dev/null)
+	if test "true" = $inside_gitdir
+		if test "true" = $bare_repo
 			set bare "BARE:"
 		else
 			# Let user know they're inside the git dir of a non-bare repo

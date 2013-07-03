@@ -281,7 +281,8 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 end
 
 function __fish_git_prompt --description "Prompt function for Git"
-	set -l git_dir (__fish_git_prompt_git_dir)
+	set -l git_dir (git rev-parse --git-dir ^/dev/null)
+
 	test -n "$git_dir"; or return
 
 	set -l rbc (__fish_git_prompt_operation_branch_bare $git_dir)
@@ -529,10 +530,6 @@ function __fish_git_prompt_operation_branch_bare --description "__fish_git_promp
 	echo $branch
 	echo $detached
 	echo $bare
-end
-
-function __fish_git_prompt_git_dir --description "__fish_git_prompt helper, returns .git dir if any"
-	echo (git rev-parse --git-dir ^/dev/null)
 end
 
 function __fish_git_prompt_set_char

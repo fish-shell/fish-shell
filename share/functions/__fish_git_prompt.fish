@@ -113,6 +113,10 @@
 #     upstream_ahead      Branch has more commits              (>)
 #     upstream_diverged   Upstream and branch have new commits (<>)
 #
+# The separator between the branch name and flags can also be customized via
+# __fish_git_prompt_char_stateseparator.  It defaults to a space ( ) and can
+# only be colored by __fish_git_prompt_color.
+#
 # Turning on __fish_git_prompt_showcolorhints changes the colors as follows to
 # more closely match the behavior in bash.  Note that setting any of these
 # colors manually will override these defaults.
@@ -363,9 +367,10 @@ function __fish_git_prompt --description "Prompt function for Git"
 	end
 
 	# Formatting
+	set -l space "$___fish_git_prompt_color$___fish_git_prompt_char_stateseparator$___fish_git_prompt_color_done"
 	set -l f "$w$i$s$u"
 	if test -n "$f"
-		set f " $f"
+		set f "$space$f"
 	end
 	set -l format $argv[1]
 	if test -z "$format"
@@ -540,7 +545,6 @@ function __fish_git_prompt_set_char
 	if not set -q $variable
 		set -g $variable (set -q $user_variable_name; and echo $user_variable; or echo $char)
 	end
-
 end
 
 function __fish_git_prompt_validate_chars --description "__fish_git_prompt helper, checks char variables"
@@ -550,6 +554,7 @@ function __fish_git_prompt_validate_chars --description "__fish_git_prompt helpe
 	__fish_git_prompt_set_char __fish_git_prompt_char_stagedstate  			'+'
 	__fish_git_prompt_set_char __fish_git_prompt_char_invalidstate  		'#'
 	__fish_git_prompt_set_char __fish_git_prompt_char_stashstate  			'$'
+	__fish_git_prompt_set_char __fish_git_prompt_char_stateseparator  		' '
 	__fish_git_prompt_set_char __fish_git_prompt_char_untrackedfiles  		'%'
 	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_equal  		'='
 	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_behind 		'<'
@@ -669,7 +674,7 @@ function __fish_git_prompt_repaint_color $varargs --description "Event handler, 
 	end
 end
 set -l varargs
-for var in dirtystate stagedstate invalidstate stashstate untrackedfiles upstream_equal upstream_behind upstream_ahead upstream_diverged
+for var in dirtystate stagedstate invalidstate stashstate untrackedfiles upstream_equal upstream_behind upstream_ahead upstream_diverged stateseparator
 	set varargs $varargs --on-variable __fish_git_prompt_char_$var
 end
 function __fish_git_prompt_repaint_char $varargs --description "Event handler, repaints prompt when any char changes"

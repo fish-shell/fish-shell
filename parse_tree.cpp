@@ -863,7 +863,7 @@ void parse_ll_t::accept_token(parse_token_t token, const wcstring &src)
                 break;
                 
             case symbol_begin_header:
-                symbol_stack_pop_push(parse_keyword_begin, parse_token_type_end);
+                symbol_stack_pop_push(parse_keyword_begin);
                 break;
                 
             case symbol_function_header:

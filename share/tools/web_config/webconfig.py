@@ -75,7 +75,6 @@ def better_color(c1, c2):
     if c1 in named_colors: return c2
     return c1
 
-
 def parse_color(color_str):
     """ A basic function to parse a color string, for example, 'red' '--bold' """
     comps = color_str.split(' ')
@@ -97,7 +96,6 @@ def parse_color(color_str):
             color = better_color(color, parse_one_color(comp))
 
     return [color, background_color, bold, underline]
-
 
 def parse_bool(val):
     val = val.lower()
@@ -229,11 +227,11 @@ def ansi_to_html(val):
     # Clean up empty spans, the nasty way
     idx = len(result) - 1
     while idx >= 1:
-    	if result[idx] == '</span>' and result[idx-1].startswith('<span'):
-	    	# Empty span, delete these two
-	    	result[idx-1:idx+1] = []
-	    	idx = idx - 1
-    	idx = idx - 1
+        if result[idx] == '</span>' and result[idx-1].startswith('<span'):
+            # Empty span, delete these two
+            result[idx-1:idx+1] = []
+            idx = idx - 1
+        idx = idx - 1
 
     return ''.join(result)
 
@@ -579,26 +577,26 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 fish_bin_dir = os.environ.get('__fish_bin_dir')
 fish_bin_path = None
 if not fish_bin_dir:
-	print('The __fish_bin_dir environment variable is not set. Looking in $PATH...')
-	# distutils.spawn is terribly broken, because it looks in wd before PATH,
-	# and doesn't actually validate that the file is even executabl
-	for p in os.environ['PATH'].split(os.pathsep):
-		proposed_path = os.path.join(p, 'fish')
-		if os.access(proposed_path, os.X_OK):
-			fish_bin_path = proposed_path
-			break
-	if not fish_bin_path:
-		print("fish could not be found. Is fish installed correctly?")
-		sys.exit(-1)
-	else:
-		print("fish found at '%s'" % fish_bin_path)
+    print('The __fish_bin_dir environment variable is not set. Looking in $PATH...')
+    # distutils.spawn is terribly broken, because it looks in wd before PATH,
+    # and doesn't actually validate that the file is even executabl
+    for p in os.environ['PATH'].split(os.pathsep):
+        proposed_path = os.path.join(p, 'fish')
+        if os.access(proposed_path, os.X_OK):
+            fish_bin_path = proposed_path
+            break
+    if not fish_bin_path:
+        print("fish could not be found. Is fish installed correctly?")
+        sys.exit(-1)
+    else:
+        print("fish found at '%s'" % fish_bin_path)
 
 else:
-	fish_bin_path = os.path.join(fish_bin_dir, 'fish')
-		
+    fish_bin_path = os.path.join(fish_bin_dir, 'fish')
+        
 if not os.access(fish_bin_path, os.X_OK):
-	print("fish could not be executed at path '%s'. Is fish installed correctly?" % fish_bin_path)
-	sys.exit(-1)
+    print("fish could not be executed at path '%s'. Is fish installed correctly?" % fish_bin_path)
+    sys.exit(-1)
 FISH_BIN_PATH = fish_bin_path
 
 # We want to show the demo prompts in the directory from which this was invoked,
@@ -646,15 +644,15 @@ webbrowser.open(url)
 # Select on stdin and httpd
 stdin_no = sys.stdin.fileno()
 try:
-	while True:
-		ready_read = select.select([sys.stdin.fileno(), httpd.fileno()], [], [])
-		if ready_read[0][0] < 1:
-			print("Shutting down.")
-			# Consume the newline so it doesn't get printed by the caller
-			sys.stdin.readline()
-			break
-		else:
-			httpd.handle_request()
+    while True:
+        ready_read = select.select([sys.stdin.fileno(), httpd.fileno()], [], [])
+        if ready_read[0][0] < 1:
+            print("Shutting down.")
+            # Consume the newline so it doesn't get printed by the caller
+            sys.stdin.readline()
+            break
+        else:
+            httpd.handle_request()
 except KeyboardInterrupt:
-	print("\nShutting down.")
+    print("\nShutting down.")
 

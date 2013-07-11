@@ -75,6 +75,8 @@
 # 'upstream_equal', 'upstream_behind', 'upstream_ahead', and
 # 'upstream_diverged'.
 
+set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles
+
 function __fish_git_prompt_show_upstream --description "Helper function for __fish_git_prompt"
 	# Ask git-config for some config options
 	set -l svn_remote
@@ -82,6 +84,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 	set -l upstream git
 	set -l legacy
 	set -l verbose
+	set -l informative
 	set -l svn_url_pattern
 	set -l show_upstream $__fish_git_prompt_showupstream
 	git config -z --get-regexp '^(svn-remote\..*\.url|bash\.showUpstream)$' ^/dev/null | tr '\0\n' '\n ' | while read -l key value
@@ -109,6 +112,8 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 			set upstream $option
 		case verbose
 			set verbose 1
+		case informative
+			set informative 1
 		case legacy
 			set legacy 1
 		end
@@ -176,30 +181,42 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 	end
 
 	# calculate the result
-	if test -z "$verbose"
-		switch "$count"
-		case '' # no upstream
-		case "0	0" # equal to upstream
-			echo $___fish_git_prompt_char_upstream_equal
-		case "0	*" # ahead of upstream
-			echo $___fish_git_prompt_char_upstream_ahead
-		case "*	0" # behind upstream
-			echo $___fish_git_prompt_char_upstream_behind
-		case '*' # diverged from upstream
-			echo $___fish_git_prompt_char_upstream_diverged
-		end
-	else
+	if test -n "$verbose"
 		echo $count | read -l behind ahead
 		switch "$count"
 		case '' # no upstream
 		case "0	0" # equal to upstream
-			echo " $___fish_git_prompt_char_upstream_equal"
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_equal"
 		case "0	*" # ahead of upstream
-			echo " $___fish_git_prompt_char_upstream_ahead$ahead"
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead"
 		case "*	0" # behind upstream
-			echo " $___fish_git_prompt_char_upstream_behind$behind"
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind$behind"
 		case '*' # diverged from upstream
-			echo " $__fish_git_prompt_char_upstream_diverged$ahead-$behind"
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_diverged$ahead-$behind"
+		end
+	else if test -n informative
+		echo $count | read -l behind ahead
+		switch "$count"
+		case '' # no upstream
+		case "0	0" # equal to upstream
+		case "0	*" # ahead of upstream
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead"
+		case "*	0" # behind upstream
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind$behind"
+		case '*' # diverged from upstream
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead$___fish_git_prompt_char_upstream_behind$behind"
+		end
+	else
+		switch "$count"
+		case '' # no upstream
+		case "0	0" # equal to upstream
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_equal"
+		case "0	*" # ahead of upstream
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead"
+		case "*	0" # behind upstream
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind$behind"
+		case '*' # diverged from upstream
+			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_diverged$ahead-$behind"
 		end
 	end
 end
@@ -216,32 +233,39 @@ function __fish_git_prompt --description "Prompt function for Git"
 	set -l u #untracked
 	set -l c (__fish_git_prompt_current_branch_bare)
 	set -l p #upstream
+	set -l informative_status
 
 	__fish_git_prompt_validate_chars
 
 	if test "true" = (git rev-parse --is-inside-work-tree ^/dev/null)
-		if test -n "$__fish_git_prompt_showdirtystate"
-			set -l config (git config --bool bash.showDirtyState)
-			if test "$config" != "false"
-				set w (__fish_git_prompt_dirty)
-				set i (__fish_git_prompt_staged)
+
+		if test -n "$__fish_git_prompt_show_informative_status"
+			set informative_status "|"(__fish_git_prompt_informative_status)
+		else
+			if test -n "$__fish_git_prompt_showdirtystate"
+				set -l config (git config --bool bash.showDirtyState)
+				if test "$config" != "false"
+					set w (__fish_git_prompt_dirty)
+					set i (__fish_git_prompt_staged)
+				end
 			end
-		end
 
-		if test -n "$__fish_git_prompt_showstashstate"
-			git rev-parse --verify refs/stash >/dev/null ^&1; and set s $___fish_git_prompt_char_stashstate
-		end
+			if test -n "$__fish_git_prompt_showstashstate"
+				git rev-parse --verify refs/stash >/dev/null ^&1; and set s $___fish_git_prompt_char_stashstate
+			end
 
-		if test -n "$__fish_git_prompt_showuntrackedfiles"
-			set -l files (git ls-files --others --exclude-standard)
-			if test -n "$files"
-				set u $___fish_git_prompt_char_untrackedfiles
+			if test -n "$__fish_git_prompt_showuntrackedfiles"
+				set -l files (git ls-files --others --exclude-standard)
+				if test -n "$files"
+					set u $___fish_git_prompt_char_untrackedfiles
+				end
 			end
 		end
 
 		if test -n "$__fish_git_prompt_showupstream"
 			set p (__fish_git_prompt_show_upstream)
 		end
+
 	end
 
 	__fish_git_prompt_validate_colors
@@ -282,7 +306,7 @@ function __fish_git_prompt --description "Prompt function for Git"
 		set format " (%s)"
 	end
 
-	printf "%s$format%s" "$___fish_git_prompt_color_prefix" "$___fish_git_prompt_color_prefix_done$c$b$f$r$p$___fish_git_prompt_color_suffix" "$___git_ps_color_suffix_done"
+	printf "%s$format%s" "$___fish_git_prompt_color_prefix" "$___fish_git_prompt_color_prefix_done$c$b$f$r$p$informative_status$___fish_git_prompt_color_suffix" "$___git_ps_color_suffix_done"
 end
 
 ### helper functions
@@ -308,6 +332,46 @@ function __fish_git_prompt_dirty --description "__fish_git_prompt helper, tells 
 		set dirty $___fish_git_prompt_char_dirtystate
 	end
 	echo $dirty
+end
+
+function  __fish_git_prompt_informative_status
+
+	set -l changedFiles (git diff --name-status | cut -c 1-2)
+	set -l stagedFiles (git diff --staged --name-status | cut -c 1-2)
+
+	set -l dirtystate (math (count $changedFiles) - (count (echo $changedFiles | grep "U")))
+	set -l invalidstate (count (echo $stagedFiles | grep "U"))
+	set -l stagedstate (math (count $stagedFiles) - $invalidstate)
+	set -l untrackedfiles (count (git ls-files --others --exclude-standard))
+
+	set -l info
+
+	if [ (math $dirtystate + $invalidstate + $stagedstate + $untrackedfiles) = 0 ]
+		set info $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done
+	else
+		for i in $___fish_git_prompt_status_order
+			 if [ $$i != "0" ]
+				set -l color_var ___fish_git_prompt_color_$i
+				set -l color_done_var ___fish_git_prompt_color_$i
+				set -l symbol_var ___fish_git_prompt_char_$i
+
+				set -l color $$color_var
+				set -l color_done $$color_done_var
+				set -l symbol $$symbol_var
+
+				set -l count
+
+				if not set -q __fish_git_prompt_hide_$i
+					set count $$i
+				end
+
+				set info "$info$color$symbol$count$color_done"
+			end
+		end
+	end
+
+	echo $info
+
 end
 
 function __fish_git_prompt_current_branch_bare --description "__fish_git_prompt helper, tells wheter or not the current branch is bare"
@@ -388,145 +452,81 @@ function __fish_git_prompt_git_dir --description "__fish_git_prompt helper, retu
 	echo (git rev-parse --git-dir ^/dev/null)
 end
 
+function __fish_git_prompt_set_char
+	set -l user_variable_name "$argv[1]"
+	set -l char $argv[2]
+	set -l user_variable $$user_variable_name
+
+	set -l variable _$user_variable_name
+	set -l variable_done "$variable"_done
+
+	if not set -q $variable
+		set -g $variable (set -q $user_variable_name; and echo $user_variable; or echo $char)
+	end
+
+end
+
 function __fish_git_prompt_validate_chars --description "__fish_git_prompt helper, checks char variables"
-	if not set -q ___fish_git_prompt_char_dirtystate
-		set -g ___fish_git_prompt_char_dirtystate (set -q __fish_git_prompt_char_dirtystate; and echo $__fish_git_prompt_char_dirtystate; or echo '*')
+
+	__fish_git_prompt_set_char __fish_git_prompt_char_cleanstate  			'.'
+	__fish_git_prompt_set_char __fish_git_prompt_char_dirtystate  			'*'
+	__fish_git_prompt_set_char __fish_git_prompt_char_stagedstate  			'+'
+	__fish_git_prompt_set_char __fish_git_prompt_char_invalidstate  		'#'
+	__fish_git_prompt_set_char __fish_git_prompt_char_stashstate  			'$'
+	__fish_git_prompt_set_char __fish_git_prompt_char_untrackedfiles  		'%'
+	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_equal  		'='
+	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_behind 		'<'
+	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_ahead  		'>'
+	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_diverged  	'<>'
+	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_prefix  		' '
+
+end
+
+function __fish_git_prompt_set_color
+	set -l user_variable_name "$argv[1]"
+	set -l user_variable $$user_variable_name
+	set -l user_variable_bright
+
+	if test (count $user_variable) -eq 2
+		set user_variable_bright $user_variable[2]
+		set user_variable $user_variable[1]
 	end
-	if not set -q ___fish_git_prompt_char_stagedstate
-		set -g ___fish_git_prompt_char_stagedstate (set -q __fish_git_prompt_char_stagedstate; and echo $__fish_git_prompt_char_stagedstate; or echo '+')
+
+	set -l variable _$user_variable_name
+	set -l variable_done "$variable"_done
+
+	if not set -q $variable
+		if test -n "$user_variable"
+			if test -n "$user_variable_bright"
+				set -g $variable (set_color -o $user_variable)
+			else
+				set -g $variable (set_color $user_variable)
+			end
+			set -g $variable_done (set_color normal)
+		else
+			set -g $variable ''
+			set -g $variable_done ''
+		end
 	end
-	if not set -q ___fish_git_prompt_char_invalidstate
-		set -g ___fish_git_prompt_char_invalidstate (set -q __fish_git_prompt_char_invalidstate; and echo $__fish_git_prompt_char_invalidstate; or echo '#')
-	end
-	if not set -q ___fish_git_prompt_char_stashstate
-		set -g ___fish_git_prompt_char_stashstate (set -q __fish_git_prompt_char_stashstate; and echo $__fish_git_prompt_char_stashstate; or echo '$')
-	end
-	if not set -q ___fish_git_prompt_char_untrackedfiles
-		set -g ___fish_git_prompt_char_untrackedfiles (set -q __fish_git_prompt_char_untrackedfiles; and echo $__fish_git_prompt_char_untrackedfiles; or echo '%')
-	end
-	if not set -q ___fish_git_prompt_char_upstream_equal
-		set -g ___fish_git_prompt_char_upstream_equal (set -q __fish_git_prompt_char_upstream_equal; and echo $__fish_git_prompt_char_upstream_equal; or echo '=')
-	end
-	if not set -q ___fish_git_prompt_char_upstream_behind
-		set -g ___fish_git_prompt_char_upstream_behind (set -q __fish_git_prompt_char_upstream_behind; and echo $__fish_git_prompt_char_upstream_behind; or echo '<')
-	end
-	if not set -q ___fish_git_prompt_char_upstream_ahead
-		set -g ___fish_git_prompt_char_upstream_ahead (set -q __fish_git_prompt_char_upstream_ahead; and echo $__fish_git_prompt_char_upstream_ahead; or echo '>')
-	end
-	if not set -q ___fish_git_prompt_char_upstream_diverged
-		set -g ___fish_git_prompt_char_upstream_diverged (set -q __fish_git_prompt_char_upstream_diverged; and echo $__fish_git_prompt_char_upstream_diverged; or echo '<>')
-	end
+
 end
 
 function __fish_git_prompt_validate_colors --description "__fish_git_prompt helper, checks color variables"
-	if not set -q ___fish_git_prompt_color
-		if test -n "$__fish_git_prompt_color"
-			set -g ___fish_git_prompt_color (set_color $__fish_git_prompt_color)
-			set -g ___fish_git_prompt_color_done (set_color normal)
-		else
-			set -g ___fish_git_prompt_color ''
-			set -g ___fish_git_prompt_color_done ''
-		end
-	end
-	if not set -q ___fish_git_prompt_color_prefix
-		if test -n "$__fish_git_prompt_color_prefix"
-			set -g ___fish_git_prompt_color_prefix (set_color $__fish_git_prompt_color_prefix)
-			set -g ___fish_git_prompt_color_prefix_done (set_color normal)
-		else
-			set -g ___fish_git_prompt_color_prefix $___fish_git_prompt_color
-			set -g ___fish_git_prompt_color_prefix_done $___fish_git_prompt_color_done
-		end
-	end
-	if not set -q ___fish_git_prompt_color_suffix
-		if test -n "$__fish_git_prompt_color_suffix"
-			set -g ___fish_git_prompt_color_suffix (set_color $__fish_git_prompt_color_suffix)
-			set -g ___fish_git_prompt_color_suffix_done (set_color normal)
-		else
-			set -g ___fish_git_prompt_color_suffix $___fish_git_prompt_color
-			set -g ___fish_git_prompt_color_suffix_done $___fish_git_prompt_color_done
-		end
-	end
-	if not set -q ___fish_git_prompt_color_bare
-		if test -n "$__fish_git_prompt_color_bare"
-			set -g ___fish_git_prompt_color_bare (set_color $__fish_git_prompt_color_bare)
-			set -g ___fish_git_prompt_color_bare_done (set_color normal)
-		else
-			set -g ___fish_git_prompt_color_bare $___fish_git_prompt_color
-			set -g ___fish_git_prompt_color_bare_done $___fish_git_prompt_color_done
-		end
-	end
-	if not set -q ___fish_git_prompt_color_merging
-		if test -n "$__fish_git_prompt_color_merging"
-			set -g ___fish_git_prompt_color_merging (set_color $__fish_git_prompt_color_merging)
-			set -g ___fish_git_prompt_color_merging_done (set_color normal)
-		else
-			set -g ___fish_git_prompt_color_merging $___fish_git_prompt_color
-			set -g ___fish_git_prompt_color_merging_done $___fish_git_prompt_color_done
-		end
-	end
-	if not set -q ___fish_git_prompt_color_branch
-		if test -n "$__fish_git_prompt_color_branch"
-			set -g ___fish_git_prompt_color_branch (set_color $__fish_git_prompt_color_branch)
-			set -g ___fish_git_prompt_color_branch_done (set_color normal)
-		else
-			set -g ___fish_git_prompt_color_branch $___fish_git_prompt_color
-			set -g ___fish_git_prompt_color_branch_done $___fish_git_prompt_color_done
-		end
-	end
-	if not set -q ___fish_git_prompt_color_dirtystate
-		if test -n "$__fish_git_prompt_color_dirtystate"
-			set -g ___fish_git_prompt_color_dirtystate (set_color $__fish_git_prompt_color_dirtystate)
-			set -g ___fish_git_prompt_color_dirtystate_done (set_color normal)
-		else
-			set -g ___fish_git_prompt_color_dirtystate $___fish_git_prompt_color
-			set -g ___fish_git_prompt_color_dirtystate_done $___fish_git_prompt_color_done
-		end
-	end
-	if not set -q ___fish_git_prompt_color_stagedstate
-		if test -n "$__fish_git_prompt_color_stagedstate"
-			set -g ___fish_git_prompt_color_stagedstate (set_color $__fish_git_prompt_color_stagedstate)
-			set -g ___fish_git_prompt_color_stagedstate_done (set_color normal)
-		else
-			set -g ___fish_git_prompt_color_stagedstate $___fish_git_prompt_color
-			set -g ___fish_git_prompt_color_stagedstate_done $___fish_git_prompt_color_done
-		end
-	end
-	if not set -q ___fish_git_prompt_color_invalidstate
-		if test -n "$__fish_git_prompt_color_invalidstate"
-			set -g ___fish_git_prompt_color_invalidstate (set_color $__fish_git_prompt_color_invalidstate)
-			set -g ___fish_git_prompt_color_invalidstate_done (set_color normal)
-		else
-			set -g ___fish_git_prompt_color_invalidstate $___fish_git_prompt_color
-			set -g ___fish_git_prompt_color_invalidstate_done $___fish_git_prompt_color_done
-		end
-	end
-	if not set -q ___fish_git_prompt_color_stashstate
-		if test -n "$__fish_git_prompt_color_stashstate"
-			set -g ___fish_git_prompt_color_stashstate (set_color $__fish_git_prompt_color_stashstate)
-			set -g ___fish_git_prompt_color_stashstate_done (set_color normal)
-		else
-			set -g ___fish_git_prompt_color_stashstate $___fish_git_prompt_color
-			set -g ___fish_git_prompt_color_stashstate_done $___fish_git_prompt_color_done
-		end
-	end
-	if not set -q ___fish_git_prompt_color_untrackedfiles
-		if test -n "$__fish_git_prompt_color_untrackedfiles"
-			set -g ___fish_git_prompt_color_untrackedfiles (set_color $__fish_git_prompt_color_untrackedfiles)
-			set -g ___fish_git_prompt_color_untrackedfiles_done (set_color normal)
-		else
-			set -g ___fish_git_prompt_color_untrackedfiles $___fish_git_prompt_color
-			set -g ___fish_git_prompt_color_untrackedfiles_done $___fish_git_prompt_color_done
-		end
-	end
-	if not set -q ___fish_git_prompt_color_upstream
-		if test -n "$__fish_git_prompt_color_upstream"
-			set -g ___fish_git_prompt_color_upstream (set_color $__fish_git_prompt_color_upstream)
-			set -g ___fish_git_prompt_color_upstream_done (set_color normal)
-		else
-			set -g ___fish_git_prompt_color_upstream $___fish_git_prompt_color
-			set -g ___fish_git_prompt_color_upstream_done $___fish_git_prompt_color_done
-		end
-	end
+
+	__fish_git_prompt_set_color __fish_git_prompt_color
+	__fish_git_prompt_set_color __fish_git_prompt_color_prefix
+	__fish_git_prompt_set_color __fish_git_prompt_color_suffix
+	__fish_git_prompt_set_color __fish_git_prompt_color_bare
+	__fish_git_prompt_set_color __fish_git_prompt_color_merging
+	__fish_git_prompt_set_color __fish_git_prompt_color_branch
+	__fish_git_prompt_set_color __fish_git_prompt_color_cleanstate
+	__fish_git_prompt_set_color __fish_git_prompt_color_dirtystate
+	__fish_git_prompt_set_color __fish_git_prompt_color_stagedstate
+	__fish_git_prompt_set_color __fish_git_prompt_color_invalidstate
+	__fish_git_prompt_set_color __fish_git_prompt_color_stashstate
+	__fish_git_prompt_set_color __fish_git_prompt_color_untrackedfiles
+	__fish_git_prompt_set_color __fish_git_prompt_color_upstream
+
 end
 
 set -l varargs

@@ -46,7 +46,6 @@ class parse_t
     bool parse(const wcstring &str, parse_node_tree_t *output, parse_error_list_t *errors);
 };
 
-
 enum parse_token_type_t
 {
     token_type_invalid,
@@ -155,6 +154,266 @@ class parse_node_tree_t : public std::vector<parse_node_t>
 {
 };
 
+namespace parse_symbols
+{
+    
+    #define SYMBOL(x) static inline parse_token_type_t get_token() { return x; }
+    
+    /* Placeholder */
+    struct none
+    {
+        SYMBOL(token_type_invalid);
+    };
+    
+    struct EMPTY
+    {
+        typedef none t0;
+        typedef none t1;
+        typedef none t2;
+        typedef none t3;
+        typedef none t4;
+        typedef none t5;
+    };
+
+    template<typename T0, typename T1, typename T2 = none, typename T3 = none, typename T4 = none, typename T5 = none>
+    struct Seq
+    {
+        typedef T0 t0;
+        typedef T1 t1;
+        typedef T2 t2;
+        typedef T3 t3;
+        typedef T4 t4;
+        typedef T5 t5;
+    };
+    
+    template<typename P0, typename P1, typename P2 = none, typename P3 = none, typename P4 = none, typename P5 = none>
+    struct OR
+    {
+        typedef P0 p0;
+        typedef P1 p1;
+        typedef P2 p2;
+        typedef P3 p3;
+        typedef P4 p4;
+        typedef P5 p5;
+    };
+    
+    template<parse_token_type_t WHICH>
+    struct Token
+    {
+        SYMBOL(WHICH);
+    };
+    
+    template<parse_keyword_t WHICH>
+    struct Keyword
+    {
+        static inline parse_keyword_t get_token() { return WHICH; }
+    };
+    
+    struct job;
+    struct statement;
+    struct job_continuation;
+    struct boolean_statement;
+    struct block_statement;
+    struct if_statement;
+    struct if_clause;
+    struct else_clause;
+    struct else_continuation;
+    struct switch_statement;
+    struct decorated_statement;
+    struct else_clause;
+    struct else_continuation;
+    struct switch_statement;
+    struct case_item_list;
+    struct case_item;
+    struct argument_list_nonempty;
+    struct argument_list;
+    struct block_statement;
+    struct block_header;
+    struct for_header;
+    struct while_header;
+    struct begin_header;
+    struct function_header;
+    struct boolean_statement;
+    struct decorated_statement;
+    struct plain_statement;
+    struct arguments_or_redirections_list;
+    struct argument_or_redirection;
+    struct redirection;
+    struct statement_terminator;
+    
+    /* A job_list is a list of jobs, separated by semicolons or newlines */
+    struct job_list : OR<
+            EMPTY,
+            Seq<job, job_list>,
+            Seq<Token<parse_token_type_end>, job_list>
+            >
+    {
+        SYMBOL(symbol_job_list)
+    };
+    
+    /* A job is a non-empty list of statements, separated by pipes. (Non-empty is useful for cases like if statements, where we require a command). To represent "non-empty", we require a statement, followed by a possibly empty job_continuation */
+    struct job : Seq<statement, job_continuation>
+    {
+        SYMBOL(symbol_job);
+    };
+    
+    struct job_continuation : OR<
+            EMPTY,
+            Seq<Token<parse_token_type_pipe>, statement, job_continuation>
+        >
+    {
+        SYMBOL(symbol_job_continuation);
+    };
+    
+    /* A statement is a normal command, or an if / while / and etc */
+    struct statement : OR<
+            boolean_statement,
+            block_statement,
+            if_statement,
+            switch_statement,
+            decorated_statement
+    >
+    {
+        SYMBOL(symbol_statement);
+    };
+    
+    struct if_statement : Seq<if_clause, else_clause, Keyword<parse_keyword_end> >
+    {
+        SYMBOL(symbol_if_statement);
+    };
+    
+    struct if_clause : Seq<Keyword<parse_keyword_if>, job, statement_terminator, job_list>
+    {
+        SYMBOL(symbol_if_clause);
+    };
+    
+    struct else_clause : OR<
+        EMPTY,
+        Keyword<parse_keyword_else>, else_continuation
+    >
+    {
+        SYMBOL(symbol_else_clause);
+    };
+
+    struct else_continuation : OR<
+        Seq<if_clause, else_clause>,
+        Seq<statement_terminator, job_list>
+    >
+    {
+        SYMBOL(symbol_else_continuation);
+    };
+    
+    struct switch_statement : Seq<Keyword<parse_keyword_switch>, Token<parse_token_type_string>, statement_terminator, case_item_list, Keyword<parse_keyword_end>
+    >
+    {
+        SYMBOL(symbol_switch_statement);
+    };
+
+    struct case_item_list : OR
+    <
+        EMPTY,
+        case_item, case_item_list
+    >
+    {
+        SYMBOL(symbol_case_item_list);
+    };
+    
+    struct case_item : Seq<Keyword<parse_keyword_case>, argument_list, statement_terminator, job_list>
+    {
+        SYMBOL(symbol_case_item);
+    };
+    
+    struct argument_list_nonempty : Seq<Token<parse_token_type_string>, argument_list>
+    {
+        SYMBOL(symbol_argument_list_nonempty);
+    };
+    
+    struct argument_list : OR<EMPTY, argument_list_nonempty>
+    {
+        SYMBOL(symbol_argument_list);
+    };
+
+    struct block_statement : Seq<block_header, statement_terminator, job_list, Keyword<parse_keyword_end>, arguments_or_redirections_list>
+    {
+        SYMBOL(symbol_block_statement);
+    };
+    
+    struct block_header : OR<for_header, while_header, function_header, begin_header>
+    {
+        SYMBOL(symbol_block_header);
+    };
+
+    struct for_header : Seq<Keyword<parse_keyword_for>, Token<parse_token_type_string>, Keyword<parse_keyword_in>, arguments_or_redirections_list>
+    {
+        SYMBOL(symbol_for_header);
+    };
+
+    struct while_header : Seq<Keyword<parse_keyword_while>, statement>
+    {
+        SYMBOL(symbol_while_header);
+    };
+    
+    struct begin_header : Keyword<parse_keyword_begin>
+    {
+        SYMBOL(symbol_begin_header);
+    };
+
+    struct function_header : Keyword<parse_keyword_function>
+    {
+        SYMBOL(symbol_function_header);
+    };
+    
+    /* A boolean statement is AND or OR or NOT */
+    struct boolean_statement : OR<
+        Seq<Keyword<parse_keyword_and>, statement>,
+        Seq<Keyword<parse_keyword_or>, statement>,
+        Seq<Keyword<parse_keyword_not>, statement>
+    >
+    {
+        SYMBOL(symbol_boolean_statement);
+    };
+    
+    /* A decorated_statement is a command with a list of arguments_or_redirections, possibly with "builtin" or "command" */
+    struct decorated_statement : OR<
+        Seq<Keyword<parse_keyword_command>, plain_statement>,
+        Seq<Keyword<parse_keyword_builtin>, plain_statement>,
+        plain_statement
+    >
+    {
+        SYMBOL(symbol_decorated_statement);
+    };
+    
+    struct plain_statement : Seq<Token<parse_token_type_string>, arguments_or_redirections_list>
+    {
+        SYMBOL(symbol_plain_statement);
+    };
+    
+    struct arguments_or_redirections_list : OR<
+        EMPTY,
+        Seq<argument_or_redirection, arguments_or_redirections_list> >
+    {
+        SYMBOL(symbol_arguments_or_redirections_list);
+    };
+    
+    struct argument_or_redirection : OR<
+        Token<parse_token_type_string>,
+        redirection
+        >
+    {
+        SYMBOL(symbol_argument_or_redirection);
+    };
+
+    struct redirection : Token<parse_token_type_redirection>
+    {
+        SYMBOL(parse_token_type_redirection);
+    };
+    
+    struct statement_terminator : Token<parse_token_type_end>
+    {
+        SYMBOL(parse_token_type_end);
+    };
+}
+
 
 /* Fish grammar:
 
@@ -205,7 +464,7 @@ class parse_node_tree_t : public std::vector<parse_node_t>
 # A decorated_statement is a command with a list of arguments_or_redirections, possibly with "builtin" or "command"
 
     decorated_statement = COMMAND plain_statement | BUILTIN plain_statement | plain_statement
-    plain_statement = command arguments_or_redirections_list 
+    plain_statement = COMMAND arguments_or_redirections_list 
 
     arguments_or_redirections_list = <empty> |
                                      argument_or_redirection arguments_or_redirections_list

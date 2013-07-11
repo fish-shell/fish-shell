@@ -2,6 +2,7 @@
 #include "tokenizer.h"
 #include <vector>
 
+using namespace parse_symbols;
 
 wcstring parse_error_t::describe(const wcstring &src) const
 {
@@ -355,6 +356,25 @@ class parse_ll_t
         if (tok2.type != token_type_invalid) symbol_stack.push_back(tok2);
         if (tok1.type != token_type_invalid) symbol_stack.push_back(tok1);
     }
+    
+    template<typename T>
+    inline void symbol_stack_pop_push2()
+    {
+        symbol_stack_pop_push(T::t0::get_token(), T::t1::get_token(), T::t2::get_token(), T::t3::get_token(), T::t4::get_token());
+    }
+    
+    template<typename T>
+    inline void symbol_stack_pop_push_production(int which)
+    {
+        switch (which)
+        {
+            case 0: symbol_stack_pop_push2<typename T::p0>(); break;
+            case 1: symbol_stack_pop_push2<typename T::p1>(); break;
+            case 2: symbol_stack_pop_push2<typename T::p2>(); break;
+            case 3: symbol_stack_pop_push2<typename T::p3>(); break;
+            case 4: symbol_stack_pop_push2<typename T::p4>(); break;
+        }
+    }
 };
 
 void parse_ll_t::dump_stack(void) const
@@ -418,12 +438,12 @@ void parse_ll_t::accept_token_job_list(parse_token_t token)
                 case parse_keyword_end:
                 case parse_keyword_else:
                     // End this job list
-                    symbol_stack_pop_push();
+                    symbol_stack_pop_push_production<job_list>(0);
                     break;
                     
                 default:
                     // Normal string
-                    symbol_stack_pop_push(symbol_job, symbol_job_list);
+                    symbol_stack_pop_push_production<job_list>(1);
                     break;
             }
             break;
@@ -431,16 +451,17 @@ void parse_ll_t::accept_token_job_list(parse_token_t token)
         case parse_token_type_pipe:
         case parse_token_type_redirection:
         case parse_token_background:
-            symbol_stack_pop_push(symbol_job, symbol_job_list);
+            symbol_stack_pop_push_production<job_list>(1);
             break;
         
         case parse_token_type_end:
-            symbol_stack_pop_push(parse_token_type_end, symbol_job_list);
+            // Empty line
+            symbol_stack_pop_push_production<job_list>(2);
             break;
             
         case parse_token_type_terminate:
             // no more commands, just transition to empty
-            symbol_stack_pop_push();
+            symbol_stack_pop_push_production<job_list>(0);
             break;
         
         default:
@@ -452,7 +473,8 @@ void parse_ll_t::accept_token_job_list(parse_token_t token)
 void parse_ll_t::accept_token_job(parse_token_t token)
 {
     PARSE_ASSERT(stack_top_type() == symbol_job);
-    symbol_stack_pop_push(symbol_statement, symbol_job_continuation);
+    //symbol_stack_pop_push(symbol_statement, symbol_job_continuation);
+    symbol_stack_pop_push2<parse_symbols::job>();
 }
 
 void parse_ll_t::accept_token_job_continuation(parse_token_t token)

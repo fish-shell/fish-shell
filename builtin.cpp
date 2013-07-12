@@ -1658,7 +1658,7 @@ static int builtin_echo(parser_t &parser, wchar_t **argv)
                         wc = L'\b';
                         break;
                     case L'e':
-                        wc = L'\e';
+                        wc = L'\x1B';
                         break;
                     case L'f':
                         wc = L'\f';

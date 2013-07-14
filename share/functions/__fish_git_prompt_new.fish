@@ -89,9 +89,6 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 	set -l svn_remote
 	set -l svn_prefix
 	set -l upstream git
-	set -l legacy
-	set -l verbose
-	set -l informative
 	set -l svn_url_pattern
 	set -l show_upstream $__fish_git_prompt_showupstream
 	git config -z --get-regexp '^(svn-remote\..*\.url|bash\.showUpstream)$' ^/dev/null | tr '\0\n' '\n ' | while read -l key value
@@ -117,12 +114,6 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 		switch $option
 		case git svn
 			set upstream $option
-		case verbose
-			set verbose 1
-		case informative
-			set informative 1
-		case legacy
-			set legacy 1
 		end
 	end
 
@@ -171,60 +162,20 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 	end
 
 	# Find how many commits we are ahead/behind our upstream
-	set -l count
-	if test -z "$legacy"
-		set count (git rev-list --count --left-right $upstream...HEAD ^/dev/null)
-	else
-		# produce equivalent output to --count for older versions of git
-		set -l os
-		set -l commits (git rev-list --left-right $upstream...HEAD ^/dev/null; set os $status)
-		if test $os -eq 0
-			set -l behind (count (for arg in $commits; echo $arg; end | grep '^<'))
-			set -l ahead (count (for arg in $commits; echo $arg; end | grep -v '^<'))
-			set count "$behind	$ahead"
-		else
-			set count
-		end
-	end
+	set -l count (git rev-list --count --left-right $upstream...HEAD ^/dev/null)
 
 	# calculate the result
-	if test -n "$verbose"
-		echo $count | read -l behind ahead
-		switch "$count"
-		case '' # no upstream
-		case "0	0" # equal to upstream
-			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_equal"
-		case "0	*" # ahead of upstream
-			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead"
-		case "*	0" # behind upstream
-			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind$behind"
-		case '*' # diverged from upstream
-			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_diverged$ahead-$behind"
-		end
-	else if test -n informative
-		echo $count | read -l behind ahead
-		switch "$count"
-		case '' # no upstream
-		case "0	0" # equal to upstream
-		case "0	*" # ahead of upstream
-			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead"
-		case "*	0" # behind upstream
-			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind$behind"
-		case '*' # diverged from upstream
-			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead$___fish_git_prompt_char_upstream_behind$behind"
-		end
-	else
-		switch "$count"
-		case '' # no upstream
-		case "0	0" # equal to upstream
-			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_equal"
-		case "0	*" # ahead of upstream
-			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead"
-		case "*	0" # behind upstream
-			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind$behind"
-		case '*' # diverged from upstream
-			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_diverged$ahead-$behind"
-		end
+	echo $count | read -l behind ahead
+	switch "$count"
+	case '' # no upstream
+	case "0	0" # equal to upstream
+		echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_equal"
+	case "0	*" # ahead of upstream
+		echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead"
+	case "*	0" # behind upstream
+		echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind$behind"
+	case '*' # diverged from upstream
+		echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead$___fish_git_prompt_char_upstream_behind$behind"
 	end
 end
 

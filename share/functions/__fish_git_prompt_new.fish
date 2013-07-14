@@ -275,6 +275,8 @@ function __fish_git_prompt_current_branch --description "__fish_git_prompt helpe
 				set branch unknown
 			end
 		end
+		#strip "refs/heads/"
+		set branch (/bin/sh -c 'echo "${1#refs/heads/}"' -- $branch)
 		set branch "($branch)"
 	end
 
@@ -284,6 +286,7 @@ function __fish_git_prompt_current_branch --description "__fish_git_prompt helpe
 			set branch "GIT_DIR!"
 		end
 	end
+
 	echo $branch
 end
 

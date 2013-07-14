@@ -63,7 +63,7 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	if test -n "$u"
 		set u "$___fish_git_prompt_color_untrackedfiles$u$___fish_git_prompt_color_untrackedfiles_done"
 	end
-	set b (/bin/sh -c 'echo "${1#refs/heads/}"' -- $b)
+	set b (/bin/sh -c 'echo "${1#refs/heads/}"' -- $b) #what does this do here? -> This strips leading refs/heads/ string
 	if test -n "$b"
 		set b "$___fish_git_prompt_color_branch$b$___fish_git_prompt_color_branch_done"
 	end

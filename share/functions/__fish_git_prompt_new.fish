@@ -56,7 +56,7 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	if test -n "$u"
 		set u "$___fish_git_prompt_color_untrackedfiles$u$___fish_git_prompt_color_untrackedfiles_done"
 	end
-	set b (/bin/sh -c 'echo "${1#refs/heads/}"' -- $b) #what does this do here? -> This strips leading refs/heads/ string
+	set b (/bin/sh -c 'echo "${1#refs/heads/}"' -- $b) #what does this do here? -> This strips leading refs/heads/ string. This should go to the place where the branch is set
 	if test -n "$b"
 		set b "$___fish_git_prompt_color_branch$b$___fish_git_prompt_color_branch_done"
 	end
@@ -229,6 +229,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 	end
 end
 
+# I wonder if this is still necessary. I think: "git diff --staged --name-status" is good enough
 function __fish_git_prompt_staged --description "__fish_git_prompt helper, tells whether or not the current branch has staged files"
 	set -l staged
 

@@ -180,6 +180,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 end
 
 # I wonder if this is still necessary. I think: "git diff --staged --name-status" is good enough
+# DEPRECATED
 function __fish_git_prompt_staged --description "__fish_git_prompt helper, tells whether or not the current branch has staged files"
 	set -l staged
 
@@ -191,6 +192,7 @@ function __fish_git_prompt_staged --description "__fish_git_prompt helper, tells
 	echo $staged
 end
 
+# DEPRECATED
 function __fish_git_prompt_dirty --description "__fish_git_prompt helper, tells whether or not the current branch has tracked, modified files"
 	set -l dirty
 

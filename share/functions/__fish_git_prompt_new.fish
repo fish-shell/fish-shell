@@ -8,7 +8,7 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	set -l git_dir (__fish_git_prompt_git_dir)
 	test -n "$git_dir"; or return
 
-	set -l r (__fish_git_prompt_current_operation $git_dir)
+	set -l current_operation (__fish_git_prompt_current_operation $git_dir)
 	set -l b (__fish_git_prompt_current_branch $git_dir)
 	set -l w #dirty working directory
 	set -l i #staged changes
@@ -72,8 +72,8 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	if test -n "$c"
 		set c "$___fish_git_prompt_color_bare$c$___fish_git_prompt_color_bare_done"
 	end
-	if test -n "$r"
-		set r "$___fish_git_prompt_color_merging$r$___fish_git_prompt_color_merging_done"
+	if test -n "$current_operation"
+		set current_operation "$___fish_git_prompt_color_merging$current_operation$___fish_git_prompt_color_merging_done"
 	end
 	if test -n "$p"
 		set p "$___fish_git_prompt_color_upstream$p$___fish_git_prompt_color_upstream_done"
@@ -89,7 +89,7 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 		set format " (%s)"
 	end
 
-	printf "%s$format%s" "$___fish_git_prompt_color_prefix" "$___fish_git_prompt_color_prefix_done$c$b$f$r$p$informative_status$___fish_git_prompt_color_suffix" "$___git_ps_color_suffix_done"
+	printf "%s$format%s" "$___fish_git_prompt_color_prefix" "$___fish_git_prompt_color_prefix_done$c$b$f$current_operation$p$informative_status$___fish_git_prompt_color_suffix" "$___git_ps_color_suffix_done"
 end
 
 ### helper functions

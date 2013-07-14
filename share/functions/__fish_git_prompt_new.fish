@@ -236,7 +236,6 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 	end
 end
 
-
 function __fish_git_prompt_staged --description "__fish_git_prompt helper, tells whether or not the current branch has staged files"
 	set -l staged
 
@@ -260,6 +259,7 @@ function __fish_git_prompt_dirty --description "__fish_git_prompt helper, tells 
 	echo $dirty
 end
 
+# merge this functionality with the functionality already present
 function  __fish_git_prompt_informative_status
 
 	set -l changedFiles (git diff --name-status | cut -c 1-2)
@@ -272,6 +272,7 @@ function  __fish_git_prompt_informative_status
 
 	set -l info
 
+  # make this consistent, use 'test'
 	if [ (math $dirtystate + $invalidstate + $stagedstate + $untrackedfiles) = 0 ]
 		set info $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done
 	else
@@ -297,7 +298,6 @@ function  __fish_git_prompt_informative_status
 	end
 
 	echo $info
-
 end
 
 function __fish_git_prompt_current_branch_bare --description "__fish_git_prompt helper, tells wheter or not the current branch is bare"

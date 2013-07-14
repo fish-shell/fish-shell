@@ -1,5 +1,7 @@
 #remove all the silly __fish prefixes. It's rather obvious that it is fish.
 #an other design decision. remove all the checks, convertion over configuration
+
+#remove this configuration option
 set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles
 
 function __fish_git_prompt_new --description "Prompt function for Git"

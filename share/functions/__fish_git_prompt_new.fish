@@ -20,30 +20,21 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 
 	__fish_git_prompt_validate_chars
 
-	if test "true" = (git rev-parse --is-inside-work-tree ^/dev/null) #why is this relevant?
+	if test "true" = (git rev-parse --is-inside-work-tree ^/dev/null) #why is this relevant? -> Many commands don't work in the git dir
 
-		if test -n "$__fish_git_prompt_show_informative_status"
-			set informative_status "|"(__fish_git_prompt_informative_status)
-		else 
-			if test -n "$__fish_git_prompt_showdirtystate" #test whether or not to show the dirty state (and staged). This test should be removed
-				set -l config (git config --bool bash.showDirtyState) #this seem very much related to Bash? I think I should remove this test and just do dirty and staged.
-				if test "$config" != "false"
-					set w (__fish_git_prompt_dirty)
-					set i (__fish_git_prompt_staged)
-				end
-			end
+    set w (__fish_git_prompt_dirty)
+    set i (__fish_git_prompt_staged)
 
-			if test -n "$__fish_git_prompt_showstashstate" #remove this check
-				git rev-parse --verify refs/stash >/dev/null ^&1; and set s $___fish_git_prompt_char_stashstate
-			end
+    if test -n "$__fish_git_prompt_showstashstate" #remove this check
+      git rev-parse --verify refs/stash >/dev/null ^&1; and set s $___fish_git_prompt_char_stashstate
+    end
 
-			if test -n "$__fish_git_prompt_showuntrackedfiles" #remove this check
-				set -l files (git ls-files --others --exclude-standard)
-				if test -n "$files"
-					set u $___fish_git_prompt_char_untrackedfiles
-				end
-			end
-		end
+    if test -n "$__fish_git_prompt_showuntrackedfiles" #remove this check
+      set -l files (git ls-files --others --exclude-standard)
+      if test -n "$files"
+        set u $___fish_git_prompt_char_untrackedfiles
+      end
+    end
 
 		if test -n "$__fish_git_prompt_showupstream" #remove this check
 			set p (__fish_git_prompt_show_upstream)

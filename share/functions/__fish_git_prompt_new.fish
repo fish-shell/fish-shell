@@ -206,7 +206,7 @@ function __fish_git_prompt_dirty --description "__fish_git_prompt helper, tells 
 end
 
 # merge this functionality with the functionality already present
-function  __fish_git_prompt_informative_status
+function __fish_git_prompt_informative_status
 
 	set -l changedFiles (git diff --name-status | cut -c 1-2)
 	set -l stagedFiles (git diff --staged --name-status | cut -c 1-2)
@@ -218,7 +218,7 @@ function  __fish_git_prompt_informative_status
 
 	set -l info
 
-  # make this consistent, use 'test'
+	# make this consistent, use 'test'
 	if [ (math $dirtystate + $invalidstate + $stagedstate + $untrackedfiles) = 0 ]
 		set info $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done
 	else
@@ -248,7 +248,7 @@ end
 
 function __fish_git_prompt_current_branch_bare --description "__fish_git_prompt helper, tells wheter or not the current branch is bare"
 	if test "true" = (git rev-parse --is-inside-git-dir ^/dev/null) -a "true" = (git rev-parse --is-bare-repository ^/dev/null)
-    echo bare "BARE:"
+		echo bare "BARE:"
 	end
 end
 

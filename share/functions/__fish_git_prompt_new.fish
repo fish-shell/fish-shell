@@ -9,7 +9,7 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	test -n "$git_dir"; or return
 
 	set -l current_operation (__fish_git_prompt_current_operation $git_dir)
-	set -l b (__fish_git_prompt_current_branch $git_dir)
+	set -l branch (__fish_git_prompt_current_branch $git_dir)
 	set -l w #dirty working directory
 	set -l i #staged changes
 	set -l s #stashes
@@ -57,8 +57,8 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 		set u "$___fish_git_prompt_color_untrackedfiles$u$___fish_git_prompt_color_untrackedfiles_done"
 	end
 	set b (/bin/sh -c 'echo "${1#refs/heads/}"' -- $b) #what does this do here? -> This strips leading refs/heads/ string. This should go to the place where the branch is set
-	if test -n "$b"
-		set b "$___fish_git_prompt_color_branch$b$___fish_git_prompt_color_branch_done"
+	if test -n "$branch"
+		set b "$___fish_git_prompt_color_branch$branch$___fish_git_prompt_color_branch_done"
 	end
 	if test -n "$c"
 		set c "$___fish_git_prompt_color_bare$c$___fish_git_prompt_color_bare_done"
@@ -80,7 +80,7 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 		set format " (%s)"
 	end
 
-	printf "%s$format%s" "$___fish_git_prompt_color_prefix" "$___fish_git_prompt_color_prefix_done$c$b$f$current_operation$p$informative_status$___fish_git_prompt_color_suffix" "$___git_ps_color_suffix_done"
+	printf "%s$format%s" "$___fish_git_prompt_color_prefix" "$___fish_git_prompt_color_prefix_done$c$branch$f$current_operation$p$informative_status$___fish_git_prompt_color_suffix" "$___git_ps_color_suffix_done"
 end
 
 ### helper functions

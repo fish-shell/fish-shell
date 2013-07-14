@@ -10,68 +10,52 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 
 	set -l current_operation (__fish_git_prompt_current_operation $git_dir)
 	set -l branch (__fish_git_prompt_current_branch $git_dir)
-	set -l w #dirty working directory
-	set -l i #staged changes
-	set -l s #stashes
-	set -l u #untracked
-	set -l c (__fish_git_prompt_current_branch_bare)
-	set -l p #upstream
-	set -l informative_status
+	set -l bare_branch (__fish_git_prompt_current_branch_bare)
+
+	set -l nr_of_dirty_files
+	set -l nr_of_staged_files
+	set -l nr_of_untracked_files
+	set -l upstream
 
 	__fish_git_prompt_validate_chars
 
-	if test "true" = (git rev-parse --is-inside-work-tree ^/dev/null) #why is this relevant? -> Many commands don't work in the git dir
-
-    set w (__fish_git_prompt_dirty)
-    set i (__fish_git_prompt_staged)
-
-    if test -n "$__fish_git_prompt_showstashstate" #remove this check
-      git rev-parse --verify refs/stash >/dev/null ^&1; and set s $___fish_git_prompt_char_stashstate
-    end
-
-    if test -n "$__fish_git_prompt_showuntrackedfiles" #remove this check
-      set -l files (git ls-files --others --exclude-standard)
-      if test -n "$files"
-        set u $___fish_git_prompt_char_untrackedfiles
-      end
-    end
-
-		if test -n "$__fish_git_prompt_showupstream" #remove this check
-			set p (__fish_git_prompt_show_upstream)
-		end
-
-	end #fin of seemingly irrelevant 'are we in git dir' check
+	if test "true" = (git rev-parse --is-inside-work-tree ^/dev/null)
+		set nr_of_dirty_files (__fish_git_nr_of_dirty_files)
+		set nr_of_staged_files (__fish_git_nr_of_staged_files)
+		set stashes (__fish_git_has_stashes)
+		set nr_of_untracked_files (__fish_git_nr_of_untracked_files)
+		set upstream (__fish_git_prompt_show_upstream)
+	end
 
 	__fish_git_prompt_validate_colors
 
-	if test -n "$w"
-		set w "$___fish_git_prompt_color_dirtystate$w$___fish_git_prompt_color_dirtystate_done"
+	if test -n "$nr_of_dirty_files"
+		set w "$___fish_git_prompt_color_dirtystate$nr_of_dirty_files$___fish_git_prompt_color_dirtystate_done"
 	end
-	if test -n "$i"
-		set i "$___fish_git_prompt_color_stagedstate$i$___fish_git_prompt_color_stagedstate_done"
+	if test -n "$nr_of_staged_files"
+		set i "$___fish_git_prompt_color_stagedstate$nr_of_staged_files$___fish_git_prompt_color_stagedstate_done"
 	end
-	if test -n "$s"
-		set s "$___fish_git_prompt_color_stashstate$s$___fish_git_prompt_color_stashstate_done"
+	if test -n "$stashes"
+		set s "$___fish_git_prompt_color_stashstate$stashes$___fish_git_prompt_color_stashstate_done"
 	end
-	if test -n "$u"
-		set u "$___fish_git_prompt_color_untrackedfiles$u$___fish_git_prompt_color_untrackedfiles_done"
+	if test -n "$nr_of_untracked_files"
+		set u "$___fish_git_prompt_color_untrackedfiles$nr_of_untracked_files$___fish_git_prompt_color_untrackedfiles_done"
 	end
-	set b (/bin/sh -c 'echo "${1#refs/heads/}"' -- $b) #what does this do here? -> This strips leading refs/heads/ string. This should go to the place where the branch is set
 	if test -n "$branch"
 		set b "$___fish_git_prompt_color_branch$branch$___fish_git_prompt_color_branch_done"
 	end
-	if test -n "$c"
-		set c "$___fish_git_prompt_color_bare$c$___fish_git_prompt_color_bare_done"
+	if test -n "$bare_branch"
+		set c "$___fish_git_prompt_color_bare$bare_branch$___fish_git_prompt_color_bare_done"
 	end
 	if test -n "$current_operation"
 		set current_operation "$___fish_git_prompt_color_merging$current_operation$___fish_git_prompt_color_merging_done"
 	end
-	if test -n "$p"
-		set p "$___fish_git_prompt_color_upstream$p$___fish_git_prompt_color_upstream_done"
+	if test -n "$upsteam"
+		set p "$___fish_git_prompt_color_upstream$upstream$___fish_git_prompt_color_upstream_done"
 	end
 
 	# Formatting
-	set -l f "$w$i$s$u"
+	set -l f "$nr_of_dirty_files$nr_of_staged_files$stashes$nr_of_dirty_files"
 	if test -n "$f"
 		set f " $f"
 	end
@@ -84,6 +68,21 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 end
 
 ### helper functions
+function __fish_git_nr_of_dirty_files --description "Returns the number of tracked, changed files"
+	count (git diff --name-status | cut -c 1-2)
+end
+
+function __fish_git_nr_of_staged_files --description "Returns the number of staged files"
+	count (git diff --staged --name-status | cut -c 1-2)
+end
+
+function __fish_git_nr_of_untracked_files --description "Returns the number of files not yet added to the repository"
+	count (git ls-files --others --exclude-standard)
+end
+
+function __fish_git_has_stashes --description "Returns the 'stash' character if git dir has any number of stashes"
+	git rev-parse --verify refs/stash >/dev/null ^&1; and echo $___fish_git_prompt_char_stashstate
+end
 
 function __fish_git_prompt_show_upstream --description "Helper function for __fish_git_prompt"
 	# Ask git-config for some config options

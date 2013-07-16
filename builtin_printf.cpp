@@ -581,6 +581,16 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
     }
 }
 
+/* For each character in str, set the corresponding boolean in the array to the given flag */
+static inline void modify_allowed_format_specifiers(bool ok[UCHAR_MAX + 1], const char *str, bool flag)
+{
+    for (const char *c  = str; *c != '\0'; c++)
+    {
+        unsigned char idx = static_cast<unsigned char>(*c);
+        ok[idx] = flag;
+    }
+}
+
 /* Print the text in FORMAT, using ARGV (with ARGC elements) for
    arguments to any `%' directives.
    Return the number of elements of ARGV used.  */
@@ -622,10 +632,8 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
                     }
                     break;
                 }
-
-                ok['a'] = ok['A'] = ok['c'] = ok['d'] = ok['e'] = ok['E'] =
-                        ok['f'] = ok['F'] = ok['g'] = ok['G'] = ok['i'] = ok['o'] =
-                                ok['s'] = ok['u'] = ok['x'] = ok['X'] = true;
+                
+                modify_allowed_format_specifiers(ok, "aAcdeEfFgGiosuxX", true);
 
                 for (;; f++, direc_length++)
                 {
@@ -633,18 +641,17 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
                     {
                         case L'I':
                         case L'\'':
-                            ok['a'] = ok['A'] = ok['c'] = ok['e'] = ok['E'] =
-                                    ok['o'] = ok['s'] = ok['x'] = ok['X'] = false;
+                            modify_allowed_format_specifiers(ok, "aAceEosxX", false);
                             break;
                         case '-':
                         case '+':
                         case ' ':
                             break;
                         case L'#':
-                            ok['c'] = ok['d'] = ok['i'] = ok['s'] = ok['u'] = false;
+                            modify_allowed_format_specifiers(ok, "cdisu", false);
                             break;
                         case '0':
-                            ok['c'] = ok['s'] = false;
+                            modify_allowed_format_specifiers(ok, "cs", false);
                             break;
                         default:
                             goto no_more_flag_characters;
@@ -685,7 +692,7 @@ no_more_flag_characters:
                 {
                     ++f;
                     ++direc_length;
-                    ok['c'] = false;
+                    modify_allowed_format_specifiers(ok, "c", false);
                     if (*f == L'*')
                     {
                         ++f;

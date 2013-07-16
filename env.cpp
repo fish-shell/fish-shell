@@ -137,7 +137,6 @@ struct env_node_t
 
 class variable_entry_t
 {
-    bool exportv; /**< Whether the variable should be exported */
     wcstring value; /**< Value of the variable */
 };
 

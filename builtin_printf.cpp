@@ -26,6 +26,7 @@
    \a = alert (bell)
    \b = backspace
    \c = produce no further output
+   \e = escape
    \f = form feed
    \n = new line
    \r = carriage return
@@ -319,6 +320,9 @@ void builtin_printf_state_t::print_esc_char(wchar_t c)
         case L'c':			/* Cancel the rest of the output. */
             this->early_exit = true;
             break;
+        case L'e':			/* Escape */
+            this->append_output(L'\x1B');
+            break;
         case L'f':			/* Form feed. */
             this->append_output(L'\f');
             break;
@@ -369,8 +373,10 @@ long builtin_printf_state_t::print_esc(const wchar_t *escstart, bool octal_0)
             esc_value = esc_value * 8 + octal_to_bin(*p);
         this->append_format_output(L"%c", esc_value);
     }
-    else if (*p && wcschr(L"\"\\abcfnrtv", *p))
+    else if (*p && wcschr(L"\"\\abcefnrtv", *p))
+    {
         print_esc_char(*p++);
+    }
     else if (*p == L'u' || *p == L'U')
     {
         wchar_t esc_char = *p;

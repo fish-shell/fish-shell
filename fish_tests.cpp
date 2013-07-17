@@ -703,6 +703,67 @@ static void test_fuzzy_match(void)
     if (string_fuzzy_match_string(L"BB", L"ALPHA!").type != fuzzy_match_none) err(L"test_fuzzy_match failed on line %ld", __LINE__);
 }
 
+static void test_abbreviations(void)
+{
+    say(L"Testing abbreviations");
+
+    const wchar_t *buff = L"echo (echo (echo (gc";
+    size_t cursor_pos = wcslen(buff) - 2;
+    const wchar_t *cmdsub_begin = NULL, *cmdsub_end = NULL;
+    parse_util_cmdsubst_extent(buff, cursor_pos, &cmdsub_begin, &cmdsub_end);
+    assert(cmdsub_begin != NULL && cmdsub_begin >= buff);
+    assert(cmdsub_end != NULL && cmdsub_end >= cmdsub_begin);
+    fprintf(stderr, "cmdsub of '%ls' at %lu is '%ls'\n", buff, cursor_pos, wcstring(cmdsub_begin, cmdsub_end).c_str());
+    exit(0);
+
+    const wchar_t *abbreviations =
+        L"gc=git checkout" ARRAY_SEP_STR
+        L"foo=" ARRAY_SEP_STR
+        L"gc=something else" ARRAY_SEP_STR
+        L"=" ARRAY_SEP_STR
+        L"=foo" ARRAY_SEP_STR
+        L"foo" ARRAY_SEP_STR
+        L"foo=bar";
+
+    env_push(true);
+
+    int ret = env_set(USER_ABBREVIATIONS_VARIABLE_NAME, abbreviations, ENV_LOCAL);
+    if (ret != 0) err(L"Unable to set abbreviation variable");
+
+    wcstring result;
+    if (expand_abbreviation(L"", &result)) err(L"Unexpected success with empty abbreviation");
+    if (expand_abbreviation(L"nothing", &result)) err(L"Unexpected success with missing abbreviation");
+
+    if (! expand_abbreviation(L"gc", &result)) err(L"Unexpected failure with gc abbreviation");
+    if (result != L"git checkout") err(L"Wrong abbreviation result for gc");
+    result.clear();
+
+    if (! expand_abbreviation(L"foo", &result)) err(L"Unexpected failure with foo abbreviation");
+    if (result != L"bar") err(L"Wrong abbreviation result for foo");
+
+    bool expanded;
+    expanded = reader_expand_abbreviation_in_command(L"just a command", wcslen(L"just "), &result);
+    if (expanded) err(L"Command wrongly expanded on line %ld", (long)__LINE__);
+    expanded = reader_expand_abbreviation_in_command(L"gc somebranch", 0, &result);
+    if (expanded) err(L"Command wrongly expanded on line %ld", (long)__LINE__);
+    expanded = reader_expand_abbreviation_in_command(L"gc somebranch", 1, &result);
+    if (expanded) err(L"Command wrongly expanded on line %ld", (long)__LINE__);
+
+    expanded = reader_expand_abbreviation_in_command(L"gc somebranch", wcslen(L"gc "), &result);
+    if (! expanded) err(L"gc not expanded");
+    if (result != L"git checkout somebranch") err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result.c_str());
+
+    expanded = reader_expand_abbreviation_in_command(L"echo hi ; gc somebranch", wcslen(L"echo hi ; gc "), &result);
+    if (! expanded) err(L"gc not expanded on line %ld", (long)__LINE__);
+    if (result != L"echo hi ; git checkout somebranch") err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
+
+    expanded = reader_expand_abbreviation_in_command(L"echo (echo (echo (echo (gc ", wcslen(L"echo (echo (echo (echo (gc "), &result);
+    if (! expanded) err(L"gc not expanded on line %ld", (long)__LINE__);
+    if (result != L"echo (echo (git checkout ") err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
+
+    env_pop();
+}
+
 /** Test path functions */
 static void test_path()
 {
@@ -1776,6 +1837,7 @@ int main(int argc, char **argv)
     test_lru();
     test_expand();
     test_fuzzy_match();
+    test_abbreviations();
     test_test();
     test_path();
     test_word_motion();

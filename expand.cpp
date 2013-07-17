@@ -1933,3 +1933,42 @@ bool fish_openSUSE_dbus_hack_hack_hack_hack(std::vector<completion_t> *args)
     }
     return result;
 }
+
+bool expand_abbreviation(const wcstring &src, wcstring *output)
+{
+    if (src.empty())
+        return false;
+
+    /* Get the abbreviations. Return false if we have none */
+    env_var_t var = env_get_string(USER_ABBREVIATIONS_VARIABLE_NAME);
+    if (var.missing_or_empty())
+        return false;
+
+    bool result = false;
+    wcstring line;
+    wcstokenizer tokenizer(var, ARRAY_SEP_STR);
+    while (tokenizer.next(line))
+    {
+        /* Line is expected to be of the form 'foo=bar'. Parse out the first =. Be forgiving about spaces, but silently skip on failure (no equals, or equals at the end or beginning). Try to avoid copying any strings until we are sure this is a match. */
+        size_t equals = line.find(L'=');
+        if (equals == wcstring::npos || equals == 0 || equals + 1 == line.size())
+            continue;
+
+        /* Find the character just past the end of the command. Walk backwards, skipping spaces. */
+        size_t cmd_end = equals;
+        while (cmd_end > 0 && iswspace(line.at(cmd_end - 1)))
+            cmd_end--;
+
+        /* See if this command matches */
+        if (line.compare(0, cmd_end, src) == 0)
+        {
+            /* Success. Set output to everythign past the end of the string. */
+            if (output != NULL)
+                output->assign(line, equals + 1, wcstring::npos);
+
+            result = true;
+            break;
+        }
+    }
+    return result;
+}

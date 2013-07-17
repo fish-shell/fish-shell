@@ -204,6 +204,10 @@ void reader_set_right_prompt(const wcstring &prompt);
 /** Sets whether autosuggesting is allowed. */
 void reader_set_allow_autosuggesting(bool flag);
 
+/** Sets whether abbreviation expansion is performed. */
+void reader_set_expand_abbreviations(bool flag);
+
+
 /** Sets whether the reader should exit on ^C. */
 void reader_set_exit_on_interrupt(bool flag);
 
@@ -242,6 +246,9 @@ int reader_search_mode();
 
 /* Given a command line and an autosuggestion, return the string that gets shown to the user. Exposed for testing purposes only. */
 wcstring combine_command_and_autosuggestion(const wcstring &cmdline, const wcstring &autosuggestion);
+
+/* Expand abbreviations at the given cursor position. Exposed for testing purposes only. */
+bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t cursor_pos, wcstring *output);
 
 /* Apply a completion string. Exposed for testing only. */
 wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flags_t flags, const wcstring &command_line, size_t *inout_cursor_pos, bool append_only);

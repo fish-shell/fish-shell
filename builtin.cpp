@@ -2370,8 +2370,9 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
             reader_set_highlight_function(&highlight_shell);
             reader_set_test_function(&reader_shell_test);
         }
-        /* No autosuggestions in builtin_read */
+        /* No autosuggestions or abbreviations in builtin_read */
         reader_set_allow_autosuggesting(false);
+        reader_set_expand_abbreviations(false);
         reader_set_exit_on_interrupt(true);
 
         reader_set_buffer(commandline, wcslen(commandline));

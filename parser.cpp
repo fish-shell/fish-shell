@@ -2716,7 +2716,7 @@ int parser_t::parser_test_argument(const wchar_t *arg, wcstring *out, const wcha
         switch (parse_util_locate_cmdsubst(arg_cpy,
                                            &paran_begin,
                                            &paran_end,
-                                           0))
+                                           false))
         {
             case -1:
                 err=1;

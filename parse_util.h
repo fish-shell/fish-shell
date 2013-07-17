@@ -18,14 +18,14 @@
    \param in the string to search for subshells
    \param begin the starting paranthesis of the subshell
    \param end the ending paranthesis of the subshell
-   \param flags set this variable to ACCEPT_INCOMPLETE if in tab_completion mode
+   \param accept_incomplete whether to permit missing closing parenthesis
    \return -1 on syntax error, 0 if no subshells exist and 1 on sucess
 */
 
 int parse_util_locate_cmdsubst(const wchar_t *in,
                                wchar_t **begin,
                                wchar_t **end,
-                               int flags);
+                               bool accept_incomplete);
 
 /**
    Find the beginning and end of the command substitution under the

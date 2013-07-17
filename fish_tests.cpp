@@ -60,6 +60,7 @@
 #include "postfork.h"
 #include "signal.h"
 #include "highlight.h"
+#include "parse_util.h"
 
 /**
    The number of tests to run
@@ -525,6 +526,30 @@ static void test_parser()
     {
         err(L"Invalid block mode when evaluating undetected");
     }
+}
+
+static void test_utils()
+{
+    say(L"Testing utils");
+    const wchar_t *a = L"echo (echo (echo hi";
+    
+    const wchar_t *begin = NULL, *end = NULL;
+    parse_util_cmdsubst_extent(a, 0, &begin, &end);
+    if (begin != a || end - begin != wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+    parse_util_cmdsubst_extent(a, 1, &begin, &end);
+    if (begin != a || end - begin != wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+    parse_util_cmdsubst_extent(a, 2, &begin, &end);
+    if (begin != a || end - begin != wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+    parse_util_cmdsubst_extent(a, 3, &begin, &end);
+    if (begin != a || end - begin != wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+    
+    parse_util_cmdsubst_extent(a, 8, &begin, &end);
+    if (begin != a + wcslen(L"echo (")) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+
+    parse_util_cmdsubst_extent(a, 17, &begin, &end);
+    if (begin != a + wcslen(L"echo (echo (")) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+
+    
 }
 
 class lru_node_test_t : public lru_node_t
@@ -1747,6 +1772,7 @@ int main(int argc, char **argv)
     test_tok();
     test_fork();
     test_parser();
+    test_utils();
     test_lru();
     test_expand();
     test_fuzzy_match();

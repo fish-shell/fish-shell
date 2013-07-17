@@ -1336,10 +1336,7 @@ static int expand_cmdsubst(parser_t &parser, const wcstring &input, std::vector<
     const wchar_t * const in = input.c_str();
 
     int parse_ret;
-    switch (parse_ret = parse_util_locate_cmdsubst(in,
-                        &paran_begin,
-                        &paran_end,
-                        0))
+    switch (parse_ret = parse_util_locate_cmdsubst(in, &paran_begin, &paran_end, false))
     {
         case -1:
             parser.error(SYNTAX_ERROR,
@@ -1628,10 +1625,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
     {
         wchar_t *begin, *end;
 
-        if (parse_util_locate_cmdsubst(input.c_str(),
-                                       &begin,
-                                       &end,
-                                       1) != 0)
+        if (parse_util_locate_cmdsubst(input.c_str(), &begin, &end, true) != 0)
         {
             parser.error(CMDSUBST_ERROR, -1, L"Command substitutions not allowed");
             return EXPAND_ERROR;

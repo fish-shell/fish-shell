@@ -1106,6 +1106,9 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
                             if (! is_cmd && use_function)
                                 is_cmd = function_exists_no_autoload(cmd, vars);
 
+                            if (! is_cmd)
+                                is_cmd = expand_abbreviation(cmd, NULL);
+
                             /*
                              Moving on to expensive tests
                              */

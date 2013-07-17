@@ -97,8 +97,8 @@ commence.
 #include "iothread.h"
 #include "intern.h"
 #include "path.h"
-
 #include "parse_util.h"
+#include "parser_keywords.h"
 
 /**
    Maximum length of prefix string when printing completion
@@ -249,8 +249,8 @@ public:
     /** Do what we need to do whenever our command line changes */
     void command_line_changed(void);
 
-    /** Expand abbreviations at the current cursor position. Returns true if the command line changed. */
-    bool expand_abbreviation_as_necessary(void);
+    /** Expand abbreviations at the current cursor position. */
+    bool expand_abbreviation_as_necessary();
 
     /** The current position of the cursor in buff. */
     size_t buff_pos;
@@ -647,17 +647,12 @@ void reader_data_t::command_line_changed()
 /* Expand abbreviations at the given cursor position. Does NOT inspect 'data'. */
 bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t cursor_pos, wcstring *output)
 {
-    /* Can't have the cursor at the beginning */
-    if (cursor_pos == 0)
-        return false;
-
     /* See if we are at "command position". Get the surrounding command substitution, and get the extent of the first token. */
     const wchar_t * const buff = cmdline.c_str();
     const wchar_t *cmdsub_begin = NULL, *cmdsub_end = NULL;
     parse_util_cmdsubst_extent(buff, cursor_pos, &cmdsub_begin, &cmdsub_end);
     assert(cmdsub_begin != NULL && cmdsub_begin >= buff);
     assert(cmdsub_end != NULL && cmdsub_end >= cmdsub_begin);
-    fprintf(stderr, "cmdsub of '%ls' at %lu is '%ls'\n", cmdline.c_str(), cursor_pos, wcstring(cmdsub_begin, cmdsub_end).c_str());
 
     /* Determine the offset of this command substitution */
     const size_t subcmd_offset = cmdsub_begin - buff;
@@ -667,8 +662,9 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
 
     /* Get the token before the cursor */
     const wchar_t *subcmd_tok_begin = NULL, *subcmd_tok_end = NULL;
-    size_t subcmd_cursor_pos = cursor_pos + subcmd_offset;
-    parse_util_token_extent(subcmd_cstr, subcmd_cursor_pos, NULL, NULL, &subcmd_tok_begin, &subcmd_tok_end);
+    assert(cursor_pos >= subcmd_offset);
+    size_t subcmd_cursor_pos = cursor_pos - subcmd_offset;
+    parse_util_token_extent(subcmd_cstr, subcmd_cursor_pos, &subcmd_tok_begin, &subcmd_tok_end, NULL, NULL);
 
     /* Compute the offset of the token before the cursor within the subcmd */
     assert(subcmd_tok_begin >= subcmd_cstr);
@@ -700,12 +696,29 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
                 }
                 else
                 {
-                    /* Command. */
-                    had_cmd = true;
-                    if (tok_pos == subcmd_tok_begin_offset)
+                    const wcstring potential_cmd = tok_last(&tok);
+                    if (parser_keywords_is_subcommand(potential_cmd))
                     {
-                        /* This is the token we care about! */
-                        previous_token_is_cmd = true;
+                        if (potential_cmd == L"command" || potential_cmd == L"builtin")
+                        {
+                            /* 'command' and 'builtin' defeat abbreviation expansion. Skip this command. */
+                            had_cmd = true;
+                        }
+                        else
+                        {
+                            /* Other subcommand. Pretend it doesn't exist so that we can expand the following command */
+                            had_cmd = false;
+                        }
+                    }
+                    else
+                    {
+                        /* It's a normal command */
+                        had_cmd = true;
+                        if (tok_pos == subcmd_tok_begin_offset)
+                        {
+                            /* This is the token we care about! */
+                            previous_token_is_cmd = true;
+                        }
                     }
                 }
                 break;
@@ -763,12 +776,13 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
     return result;
 }
 
-/* Expand abbreviations */
-bool reader_data_t::expand_abbreviation_as_necessary(void)
+/* Expand abbreviations. This may change the command line but does NOT repaint it. This is to allow the caller to coalesce repaints. */
+bool reader_data_t::expand_abbreviation_as_necessary()
 {
     bool result = false;
     if (this->expand_abbreviations)
     {
+        /* Try expanding abbreviations */
         wcstring new_cmdline;
         if (reader_expand_abbreviation_in_command(this->command_line, this->buff_pos, &new_cmdline))
         {
@@ -776,11 +790,8 @@ bool reader_data_t::expand_abbreviation_as_necessary(void)
             size_t new_buff_pos = this->buff_pos + new_cmdline.size() - this->command_line.size();
 
             this->command_line.swap(new_cmdline);
-            data->command_line_changed();
             data->buff_pos = new_buff_pos;
-            reader_super_highlight_me_plenty(data->buff_pos);
-            reader_repaint();
-
+            data->command_line_changed();
             result = true;
         }
     }
@@ -3418,12 +3429,14 @@ const wchar_t *reader_readline(void)
 
                 /* See if this command is valid */
                 int command_test_result = data->test_func(data->command_line.c_str());
-                if (command_test_result == 0)
+                if (command_test_result == 0 || command_test_result == PARSER_TEST_INCOMPLETE)
                 {
                     /* This command is valid, but an abbreviation may make it invalid. If so, we will have to test again. */
                     bool abbreviation_expanded = data->expand_abbreviation_as_necessary();
                     if (abbreviation_expanded)
                     {
+                        /* It's our reponsibility to rehighlight and repaint. But everything we do below triggers a repaint. */
+                        reader_super_highlight_me_plenty(data->buff_pos);
                         command_test_result = data->test_func(data->command_line.c_str());
                     }
                 }
@@ -3764,9 +3777,14 @@ const wchar_t *reader_readline(void)
             /* Other, if a normal character, we add it to the command */
             default:
             {
-
                 if ((!wchar_private(c)) && (((c>31) || (c==L'\n'))&& (c != 127)))
                 {
+                    /* Expand abbreviations on space */
+                    if (c == L' ')
+                    {
+                        data->expand_abbreviation_as_necessary();
+                    }
+
                     /* Regular character */
                     insert_char(c);
                 }
@@ -3800,10 +3818,7 @@ const wchar_t *reader_readline(void)
     }
 
     writestr(L"\n");
-    /*
-     if( comp )
-     halloc_free( comp );
-     */
+
     if (!reader_exit_forced())
     {
         if (tcsetattr(0,TCSANOW,&old_modes))      /* return to previous mode */

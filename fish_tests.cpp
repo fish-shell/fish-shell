@@ -535,21 +535,19 @@ static void test_utils()
     
     const wchar_t *begin = NULL, *end = NULL;
     parse_util_cmdsubst_extent(a, 0, &begin, &end);
-    if (begin != a || end - begin != wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+    if (begin != a || end != begin + wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
     parse_util_cmdsubst_extent(a, 1, &begin, &end);
-    if (begin != a || end - begin != wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+    if (begin != a || end != begin + wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
     parse_util_cmdsubst_extent(a, 2, &begin, &end);
-    if (begin != a || end - begin != wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+    if (begin != a || end != begin + wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
     parse_util_cmdsubst_extent(a, 3, &begin, &end);
-    if (begin != a || end - begin != wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+    if (begin != a || end != begin + wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
     
     parse_util_cmdsubst_extent(a, 8, &begin, &end);
     if (begin != a + wcslen(L"echo (")) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
 
     parse_util_cmdsubst_extent(a, 17, &begin, &end);
     if (begin != a + wcslen(L"echo (echo (")) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
-
-    
 }
 
 class lru_node_test_t : public lru_node_t
@@ -707,15 +705,6 @@ static void test_abbreviations(void)
 {
     say(L"Testing abbreviations");
 
-    const wchar_t *buff = L"echo (echo (echo (gc";
-    size_t cursor_pos = wcslen(buff) - 2;
-    const wchar_t *cmdsub_begin = NULL, *cmdsub_end = NULL;
-    parse_util_cmdsubst_extent(buff, cursor_pos, &cmdsub_begin, &cmdsub_end);
-    assert(cmdsub_begin != NULL && cmdsub_begin >= buff);
-    assert(cmdsub_end != NULL && cmdsub_end >= cmdsub_begin);
-    fprintf(stderr, "cmdsub of '%ls' at %lu is '%ls'\n", buff, cursor_pos, wcstring(cmdsub_begin, cmdsub_end).c_str());
-    exit(0);
-
     const wchar_t *abbreviations =
         L"gc=git checkout" ARRAY_SEP_STR
         L"foo=" ARRAY_SEP_STR
@@ -742,24 +731,31 @@ static void test_abbreviations(void)
     if (result != L"bar") err(L"Wrong abbreviation result for foo");
 
     bool expanded;
-    expanded = reader_expand_abbreviation_in_command(L"just a command", wcslen(L"just "), &result);
+    expanded = reader_expand_abbreviation_in_command(L"just a command", 3, &result);
     if (expanded) err(L"Command wrongly expanded on line %ld", (long)__LINE__);
     expanded = reader_expand_abbreviation_in_command(L"gc somebranch", 0, &result);
-    if (expanded) err(L"Command wrongly expanded on line %ld", (long)__LINE__);
-    expanded = reader_expand_abbreviation_in_command(L"gc somebranch", 1, &result);
-    if (expanded) err(L"Command wrongly expanded on line %ld", (long)__LINE__);
+    if (! expanded) err(L"Command not expanded on line %ld", (long)__LINE__);
 
-    expanded = reader_expand_abbreviation_in_command(L"gc somebranch", wcslen(L"gc "), &result);
+    expanded = reader_expand_abbreviation_in_command(L"gc somebranch", wcslen(L"gc"), &result);
     if (! expanded) err(L"gc not expanded");
     if (result != L"git checkout somebranch") err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result.c_str());
 
-    expanded = reader_expand_abbreviation_in_command(L"echo hi ; gc somebranch", wcslen(L"echo hi ; gc "), &result);
+    expanded = reader_expand_abbreviation_in_command(L"echo hi ; gc somebranch", wcslen(L"echo hi ; g"), &result);
     if (! expanded) err(L"gc not expanded on line %ld", (long)__LINE__);
     if (result != L"echo hi ; git checkout somebranch") err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
 
-    expanded = reader_expand_abbreviation_in_command(L"echo (echo (echo (echo (gc ", wcslen(L"echo (echo (echo (echo (gc "), &result);
+    expanded = reader_expand_abbreviation_in_command(L"echo (echo (echo (echo (gc ", wcslen(L"echo (echo (echo (echo (gc"), &result);
     if (! expanded) err(L"gc not expanded on line %ld", (long)__LINE__);
-    if (result != L"echo (echo (git checkout ") err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
+    if (result != L"echo (echo (echo (echo (git checkout ") err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result.c_str());
+
+    /* if commands should be expanded */
+    expanded = reader_expand_abbreviation_in_command(L"if gc", wcslen(L"if gc"), &result);
+    if (! expanded) err(L"gc not expanded on line %ld", (long)__LINE__);
+    if (result != L"if git checkout") err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result.c_str());
+
+    /* others should not be */
+    expanded = reader_expand_abbreviation_in_command(L"of gc", wcslen(L"of gc"), &result);
+    if (expanded) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
 
     env_pop();
 }

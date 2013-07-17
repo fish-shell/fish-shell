@@ -541,7 +541,6 @@ void parse_util_set_argv(const wchar_t * const *argv, const wcstring_list_t &nam
     {
         const wchar_t * const *arg;
         size_t i;
-
         for (i=0, arg=argv; i < named_arguments.size(); i++)
         {
             env_set(named_arguments.at(i).c_str(), *arg, ENV_LOCAL);
@@ -549,10 +548,7 @@ void parse_util_set_argv(const wchar_t * const *argv, const wcstring_list_t &nam
             if (*arg)
                 arg++;
         }
-
-
     }
-
 }
 
 wchar_t *parse_util_unescape_wildcards(const wchar_t *str)

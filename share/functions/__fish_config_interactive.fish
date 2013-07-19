@@ -231,7 +231,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 			end
 		# Use standard fish command not found handler otherwise
 		else
-			function __fish_command_not_found_handler --on-event fish_command_not_found
+			function fish_command_not_found_handler --on-event fish_command_not_found
 				echo fish: Unknown command "'$argv'" >&2
 			end
 		end

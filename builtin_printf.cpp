@@ -362,7 +362,7 @@ long builtin_printf_state_t::print_esc(const wchar_t *escstart, bool octal_0)
             esc_value = esc_value * 16 + hex_to_bin(*p);
         if (esc_length == 0)
             this->fatal_error(_(L"missing hexadecimal number in escape"));
-        this->append_format_output(L"%lc", esc_value);
+        this->append_output(esc_value);
     }
     else if (is_octal_digit(*p))
     {
@@ -371,7 +371,7 @@ long builtin_printf_state_t::print_esc(const wchar_t *escstart, bool octal_0)
         extension to POSIX that is compatible with Bash 2.05b.  */
         for (esc_length = 0, p += octal_0 && *p == L'0'; esc_length < 3 && is_octal_digit(*p); ++esc_length, ++p)
             esc_value = esc_value * 8 + octal_to_bin(*p);
-        this->append_format_output(L"%c", esc_value);
+        this->append_output(esc_value);
     }
     else if (*p && wcschr(L"\"\\abcefnrtv", *p))
     {

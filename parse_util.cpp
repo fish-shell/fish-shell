@@ -153,10 +153,7 @@ size_t parse_util_get_offset(const wcstring &str, int line, long line_offset)
 }
 
 
-int parse_util_locate_cmdsubst(const wchar_t *in,
-                               wchar_t **begin,
-                               wchar_t **end,
-                               int allow_incomplete)
+int parse_util_locate_cmdsubst(const wchar_t *in, wchar_t **begin, wchar_t **end, bool allow_incomplete)
 {
     wchar_t *pos;
     wchar_t prev=0;
@@ -243,73 +240,57 @@ int parse_util_locate_cmdsubst(const wchar_t *in,
     return 1;
 }
 
-
-void parse_util_cmdsubst_extent(const wchar_t *buff,
-                                size_t cursor_pos,
-                                const wchar_t **a,
-                                const wchar_t **b)
+void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **a, const wchar_t **b)
 {
-    wchar_t *begin, *end;
-    wchar_t *pos;
-    const wchar_t *cursor = buff + cursor_pos;
+    const wchar_t * const cursor = buff + cursor_pos;
 
     CHECK(buff,);
-
-    if (a)
+    
+    const size_t bufflen = wcslen(buff);
+    assert(cursor_pos <= bufflen);
+    
+    /* ap and bp are the beginning and end of the tightest command substitition found so far */
+    const wchar_t *ap = buff, *bp = buff + bufflen;
+    const wchar_t *pos = buff;
+    for (;;)
     {
-        *a = (wchar_t *)buff;
-    }
-
-    if (b)
-    {
-        *b = (wchar_t *)buff+wcslen(buff);
-    }
-
-    pos = (wchar_t *)buff;
-
-    while (1)
-    {
-        if (parse_util_locate_cmdsubst(pos,
-                                       &begin,
-                                       &end,
-                                       1) <= 0)
+        wchar_t *begin = NULL, *end = NULL;
+        if (parse_util_locate_cmdsubst(pos, &begin, &end, true) <= 0)
         {
-            /*
-              No subshell found
-            */
+            /* No subshell found, all done */
             break;
         }
-
-        if (!end)
+        
+        /* Intrepret NULL to mean the end */
+        if (end == NULL)
         {
-            end = (wchar_t *)buff + wcslen(buff);
+            end = const_cast<wchar_t *>(buff) + bufflen;
         }
-
-        if ((begin < cursor) && (end >= cursor))
+        
+        if (begin < cursor && end >= cursor)
         {
+            /* This command substitution surrounds the cursor, so it's a tighter fit */
             begin++;
-
-            if (a)
-            {
-                *a = begin;
-            }
-
-            if (b)
-            {
-                *b = end;
-            }
-
-            break;
+            ap = begin;
+            bp = end;
+            pos = begin + 1;
         }
-
-        if (!*end)
+        else if (begin >= cursor)
         {
+            /* This command substitution starts at or after the cursor. Since it was the first command substitution in the string, we're done. */
             break;
         }
-
-        pos = end+1;
+        else
+        {
+            /* This command substitution ends before the cursor. Skip it. */
+            assert(end < cursor);
+            pos = end + 1;
+            assert(pos <= buff + bufflen);
+        }
     }
-
+    
+    if (a != NULL) *a = ap;
+    if (b != NULL) *b = bp;
 }
 
 /**
@@ -432,7 +413,6 @@ void parse_util_token_extent(const wchar_t *buff,
 {
     const wchar_t *begin, *end;
     long pos;
-    wchar_t *buffcpy;
 
     const wchar_t *a = NULL, *b = NULL, *pa = NULL, *pb = NULL;
 
@@ -459,14 +439,9 @@ void parse_util_token_extent(const wchar_t *buff,
     assert(end >= begin);
     assert(end <= (buff+wcslen(buff)));
 
-    buffcpy = wcsndup(begin, end-begin);
+    const wcstring buffcpy = wcstring(begin, end-begin);
 
-    if (!buffcpy)
-    {
-        DIE_MEM();
-    }
-
-    tokenizer_t tok(buffcpy, TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
+    tokenizer_t tok(buffcpy.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
     for (; tok_has_next(&tok); tok_next(&tok))
     {
         size_t tok_begin = tok_get_pos(&tok);
@@ -511,8 +486,6 @@ void parse_util_token_extent(const wchar_t *buff,
             pb = pa + wcslen(tok_last(&tok));
         }
     }
-
-    free(buffcpy);
 
     if (tok_begin)
     {
@@ -568,7 +541,6 @@ void parse_util_set_argv(const wchar_t * const *argv, const wcstring_list_t &nam
     {
         const wchar_t * const *arg;
         size_t i;
-
         for (i=0, arg=argv; i < named_arguments.size(); i++)
         {
             env_set(named_arguments.at(i).c_str(), *arg, ENV_LOCAL);
@@ -576,10 +548,7 @@ void parse_util_set_argv(const wchar_t * const *argv, const wcstring_list_t &nam
             if (*arg)
                 arg++;
         }
-
-
     }
-
 }
 
 wchar_t *parse_util_unescape_wildcards(const wchar_t *str)
@@ -679,7 +648,7 @@ static wchar_t get_quote(const wchar_t *cmd, size_t len)
             {
                 const wchar_t *end = quote_end(&cmd[i]);
                 //fwprintf( stderr, L"Jump %d\n",  end-cmd );
-                if ((end == 0) || (!*end) || (end-cmd > len))
+                if ((end == 0) || (!*end) || (end > cmd + len))
                 {
                     res = cmd[i];
                     break;

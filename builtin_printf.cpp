@@ -26,6 +26,7 @@
    \a = alert (bell)
    \b = backspace
    \c = produce no further output
+   \e = escape
    \f = form feed
    \n = new line
    \r = carriage return
@@ -319,6 +320,9 @@ void builtin_printf_state_t::print_esc_char(wchar_t c)
         case L'c':			/* Cancel the rest of the output. */
             this->early_exit = true;
             break;
+        case L'e':			/* Escape */
+            this->append_output(L'\x1B');
+            break;
         case L'f':			/* Form feed. */
             this->append_output(L'\f');
             break;
@@ -358,7 +362,7 @@ long builtin_printf_state_t::print_esc(const wchar_t *escstart, bool octal_0)
             esc_value = esc_value * 16 + hex_to_bin(*p);
         if (esc_length == 0)
             this->fatal_error(_(L"missing hexadecimal number in escape"));
-        this->append_format_output(L"%lc", esc_value);
+        this->append_output(esc_value);
     }
     else if (is_octal_digit(*p))
     {
@@ -367,10 +371,12 @@ long builtin_printf_state_t::print_esc(const wchar_t *escstart, bool octal_0)
         extension to POSIX that is compatible with Bash 2.05b.  */
         for (esc_length = 0, p += octal_0 && *p == L'0'; esc_length < 3 && is_octal_digit(*p); ++esc_length, ++p)
             esc_value = esc_value * 8 + octal_to_bin(*p);
-        this->append_format_output(L"%c", esc_value);
+        this->append_output(esc_value);
     }
-    else if (*p && wcschr(L"\"\\abcfnrtv", *p))
+    else if (*p && wcschr(L"\"\\abcefnrtv", *p))
+    {
         print_esc_char(*p++);
+    }
     else if (*p == L'u' || *p == L'U')
     {
         wchar_t esc_char = *p;
@@ -575,6 +581,16 @@ void builtin_printf_state_t::print_direc(const wchar_t *start, size_t length, wc
     }
 }
 
+/* For each character in str, set the corresponding boolean in the array to the given flag */
+static inline void modify_allowed_format_specifiers(bool ok[UCHAR_MAX + 1], const char *str, bool flag)
+{
+    for (const char *c  = str; *c != '\0'; c++)
+    {
+        unsigned char idx = static_cast<unsigned char>(*c);
+        ok[idx] = flag;
+    }
+}
+
 /* Print the text in FORMAT, using ARGV (with ARGC elements) for
    arguments to any `%' directives.
    Return the number of elements of ARGV used.  */
@@ -616,10 +632,8 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
                     }
                     break;
                 }
-
-                ok['a'] = ok['A'] = ok['c'] = ok['d'] = ok['e'] = ok['E'] =
-                        ok['f'] = ok['F'] = ok['g'] = ok['G'] = ok['i'] = ok['o'] =
-                                ok['s'] = ok['u'] = ok['x'] = ok['X'] = true;
+                
+                modify_allowed_format_specifiers(ok, "aAcdeEfFgGiosuxX", true);
 
                 for (;; f++, direc_length++)
                 {
@@ -627,18 +641,17 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
                     {
                         case L'I':
                         case L'\'':
-                            ok['a'] = ok['A'] = ok['c'] = ok['e'] = ok['E'] =
-                                    ok['o'] = ok['s'] = ok['x'] = ok['X'] = false;
+                            modify_allowed_format_specifiers(ok, "aAceEosxX", false);
                             break;
                         case '-':
                         case '+':
                         case ' ':
                             break;
                         case L'#':
-                            ok['c'] = ok['d'] = ok['i'] = ok['s'] = ok['u'] = false;
+                            modify_allowed_format_specifiers(ok, "cdisu", false);
                             break;
                         case '0':
-                            ok['c'] = ok['s'] = false;
+                            modify_allowed_format_specifiers(ok, "cs", false);
                             break;
                         default:
                             goto no_more_flag_characters;
@@ -679,7 +692,7 @@ no_more_flag_characters:
                 {
                     ++f;
                     ++direc_length;
-                    ok['c'] = false;
+                    modify_allowed_format_specifiers(ok, "c", false);
                     if (*f == L'*')
                     {
                         ++f;

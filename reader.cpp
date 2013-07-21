@@ -97,8 +97,8 @@ commence.
 #include "iothread.h"
 #include "intern.h"
 #include "path.h"
-
 #include "parse_util.h"
+#include "parser_keywords.h"
 
 /**
    Maximum length of prefix string when printing completion
@@ -182,6 +182,8 @@ static pthread_key_t generation_count_key;
 /* A color is an int */
 typedef int color_t;
 
+static void set_command_line_and_position(const wcstring &new_str, size_t pos);
+
 /**
    A struct describing the state of the interactive reader. These
    states can be stacked, in case reader_readline() calls are
@@ -202,6 +204,9 @@ public:
 
     /** When backspacing, we temporarily suppress autosuggestions */
     bool suppress_autosuggestion;
+
+    /** Whether abbreviations are expanded */
+    bool expand_abbreviations;
 
     /** The representation of the current screen contents */
     screen_t screen;
@@ -243,6 +248,9 @@ public:
 
     /** Do what we need to do whenever our command line changes */
     void command_line_changed(void);
+
+    /** Expand abbreviations at the current cursor position. */
+    bool expand_abbreviation_as_necessary();
 
     /** The current position of the cursor in buff. */
     size_t buff_pos;
@@ -326,6 +334,7 @@ public:
     reader_data_t() :
         allow_autosuggestion(0),
         suppress_autosuggestion(0),
+        expand_abbreviations(0),
         history(0),
         token_history_pos(0),
         search_pos(0),
@@ -635,6 +644,159 @@ void reader_data_t::command_line_changed()
     s_generation_count++;
 }
 
+/* Expand abbreviations at the given cursor position. Does NOT inspect 'data'. */
+bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t cursor_pos, wcstring *output)
+{
+    /* See if we are at "command position". Get the surrounding command substitution, and get the extent of the first token. */
+    const wchar_t * const buff = cmdline.c_str();
+    const wchar_t *cmdsub_begin = NULL, *cmdsub_end = NULL;
+    parse_util_cmdsubst_extent(buff, cursor_pos, &cmdsub_begin, &cmdsub_end);
+    assert(cmdsub_begin != NULL && cmdsub_begin >= buff);
+    assert(cmdsub_end != NULL && cmdsub_end >= cmdsub_begin);
+
+    /* Determine the offset of this command substitution */
+    const size_t subcmd_offset = cmdsub_begin - buff;
+
+    const wcstring subcmd = wcstring(cmdsub_begin, cmdsub_end - cmdsub_begin);
+    const wchar_t *subcmd_cstr = subcmd.c_str();
+
+    /* Get the token before the cursor */
+    const wchar_t *subcmd_tok_begin = NULL, *subcmd_tok_end = NULL;
+    assert(cursor_pos >= subcmd_offset);
+    size_t subcmd_cursor_pos = cursor_pos - subcmd_offset;
+    parse_util_token_extent(subcmd_cstr, subcmd_cursor_pos, &subcmd_tok_begin, &subcmd_tok_end, NULL, NULL);
+
+    /* Compute the offset of the token before the cursor within the subcmd */
+    assert(subcmd_tok_begin >= subcmd_cstr);
+    assert(subcmd_tok_end >= subcmd_tok_begin);
+    const size_t subcmd_tok_begin_offset = subcmd_tok_begin - subcmd_cstr;
+    const size_t subcmd_tok_length = subcmd_tok_end - subcmd_tok_begin;
+
+    /* Now parse the subcmd, looking for commands */
+    bool had_cmd = false, previous_token_is_cmd = false;
+    tokenizer_t tok(subcmd_cstr, TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
+    for (; tok_has_next(&tok); tok_next(&tok))
+    {
+        size_t tok_pos = static_cast<size_t>(tok_get_pos(&tok));
+        if (tok_pos > subcmd_tok_begin_offset)
+        {
+            /* We've passed the token we're interested in */
+            break;
+        }
+
+        int last_type = tok_last_type(&tok);
+
+        switch (last_type)
+        {
+            case TOK_STRING:
+            {
+                if (had_cmd)
+                {
+                    /* Parameter to the command. */
+                }
+                else
+                {
+                    const wcstring potential_cmd = tok_last(&tok);
+                    if (parser_keywords_is_subcommand(potential_cmd))
+                    {
+                        if (potential_cmd == L"command" || potential_cmd == L"builtin")
+                        {
+                            /* 'command' and 'builtin' defeat abbreviation expansion. Skip this command. */
+                            had_cmd = true;
+                        }
+                        else
+                        {
+                            /* Other subcommand. Pretend it doesn't exist so that we can expand the following command */
+                            had_cmd = false;
+                        }
+                    }
+                    else
+                    {
+                        /* It's a normal command */
+                        had_cmd = true;
+                        if (tok_pos == subcmd_tok_begin_offset)
+                        {
+                            /* This is the token we care about! */
+                            previous_token_is_cmd = true;
+                        }
+                    }
+                }
+                break;
+            }
+
+            case TOK_REDIRECT_NOCLOB:
+            case TOK_REDIRECT_OUT:
+            case TOK_REDIRECT_IN:
+            case TOK_REDIRECT_APPEND:
+            case TOK_REDIRECT_FD:
+            {
+                if (!had_cmd)
+                {
+                    break;
+                }
+                tok_next(&tok);
+                break;
+            }
+
+            case TOK_PIPE:
+            case TOK_BACKGROUND:
+            case TOK_END:
+            {
+                had_cmd = false;
+                break;
+            }
+
+            case TOK_COMMENT:
+            case TOK_ERROR:
+            default:
+            {
+                break;
+            }
+        }
+    }
+
+    bool result = false;
+    if (previous_token_is_cmd)
+    {
+        /* The token is a command. Try expanding it as an abbreviation. */
+        const wcstring token = wcstring(subcmd, subcmd_tok_begin_offset, subcmd_tok_length);
+        wcstring abbreviation;
+        if (expand_abbreviation(token, &abbreviation))
+        {
+            /* There was an abbreviation! Replace the token in the full command. Maintain the relative position of the cursor. */
+            if (output != NULL)
+            {
+                size_t cmd_tok_begin_offset = subcmd_tok_begin_offset + subcmd_offset;
+                output->assign(cmdline);
+                output->replace(cmd_tok_begin_offset, subcmd_tok_length, abbreviation);
+            }
+            result = true;
+        }
+    }
+    return result;
+}
+
+/* Expand abbreviations. This may change the command line but does NOT repaint it. This is to allow the caller to coalesce repaints. */
+bool reader_data_t::expand_abbreviation_as_necessary()
+{
+    bool result = false;
+    if (this->expand_abbreviations)
+    {
+        /* Try expanding abbreviations */
+        wcstring new_cmdline;
+        if (reader_expand_abbreviation_in_command(this->command_line, this->buff_pos, &new_cmdline))
+        {
+            /* We expanded an abbreviation! The cursor moves by the difference in the command line lengths. */
+            size_t new_buff_pos = this->buff_pos + new_cmdline.size() - this->command_line.size();
+
+            this->command_line.swap(new_cmdline);
+            data->buff_pos = new_buff_pos;
+            data->command_line_changed();
+            result = true;
+        }
+    }
+    return result;
+}
 
 /** Sorts and remove any duplicate completions in the list. */
 static void sort_and_make_unique(std::vector<completion_t> &l)
@@ -1980,8 +2142,7 @@ void reader_sanity_check()
 }
 
 /**
-   Set the specified string from the history as the current buffer. Do
-   not modify prefix_width.
+   Set the specified string as the current buffer.
 */
 static void set_command_line_and_position(const wcstring &new_str, size_t pos)
 {
@@ -2462,6 +2623,11 @@ void reader_set_allow_autosuggesting(bool flag)
     data->allow_autosuggestion = flag;
 }
 
+void reader_set_expand_abbreviations(bool flag)
+{
+    data->expand_abbreviations = flag;
+}
+
 void reader_set_complete_function(complete_function_t f)
 {
     data->complete_func = f;
@@ -2712,6 +2878,7 @@ static int read_i(void)
     reader_set_highlight_function(&highlight_shell);
     reader_set_test_function(&reader_shell_test);
     reader_set_allow_autosuggesting(true);
+    reader_set_expand_abbreviations(true);
     reader_import_history_if_necessary();
 
     parser_t &parser = parser_t::principal_parser();
@@ -2850,7 +3017,6 @@ const wchar_t *reader_readline(void)
 
     data->search_buff.clear();
     data->search_mode = NO_SEARCH;
-
 
     exec_prompt();
 
@@ -3261,7 +3427,21 @@ const wchar_t *reader_readline(void)
                     }
                 }
 
-                switch (data->test_func(data->command_line.c_str()))
+                /* See if this command is valid */
+                int command_test_result = data->test_func(data->command_line.c_str());
+                if (command_test_result == 0 || command_test_result == PARSER_TEST_INCOMPLETE)
+                {
+                    /* This command is valid, but an abbreviation may make it invalid. If so, we will have to test again. */
+                    bool abbreviation_expanded = data->expand_abbreviation_as_necessary();
+                    if (abbreviation_expanded)
+                    {
+                        /* It's our reponsibility to rehighlight and repaint. But everything we do below triggers a repaint. */
+                        reader_super_highlight_me_plenty(data->buff_pos);
+                        command_test_result = data->test_func(data->command_line.c_str());
+                    }
+                }
+
+                switch (command_test_result)
                 {
 
                     case 0:
@@ -3597,9 +3777,14 @@ const wchar_t *reader_readline(void)
             /* Other, if a normal character, we add it to the command */
             default:
             {
-
                 if ((!wchar_private(c)) && (((c>31) || (c==L'\n'))&& (c != 127)))
                 {
+                    /* Expand abbreviations on space */
+                    if (c == L' ')
+                    {
+                        data->expand_abbreviation_as_necessary();
+                    }
+
                     /* Regular character */
                     insert_char(c);
                 }
@@ -3633,10 +3818,7 @@ const wchar_t *reader_readline(void)
     }
 
     writestr(L"\n");
-    /*
-     if( comp )
-     halloc_free( comp );
-     */
+
     if (!reader_exit_forced())
     {
         if (tcsetattr(0,TCSANOW,&old_modes))      /* return to previous mode */

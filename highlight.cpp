@@ -1106,6 +1106,9 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
                             if (! is_cmd && use_function)
                                 is_cmd = function_exists_no_autoload(cmd, vars);
 
+                            if (! is_cmd)
+                                is_cmd = expand_abbreviation(cmd, NULL);
+
                             /*
                              Moving on to expensive tests
                              */
@@ -1319,7 +1322,7 @@ void highlight_shell(const wcstring &buff, std::vector<int> &color, size_t pos, 
 
     std::fill(color.begin(), color.end(), -1);
 
-    /* Do something sucky and get the current working directory on this background thread. This should really be passed in. Note that we also need this as a vector (of one directory). */
+    /* Do something sucky and get the current working directory on this background thread. This should really be passed in. */
     const wcstring working_directory = env_get_pwd_slash();
 
     /* Tokenize the string */
@@ -1335,7 +1338,7 @@ void highlight_shell(const wcstring &buff, std::vector<int> &color, size_t pos, 
     {
         wchar_t *begin, *end;
 
-        if (parse_util_locate_cmdsubst(subpos, &begin, &end, 1) <= 0)
+        if (parse_util_locate_cmdsubst(subpos, &begin, &end, true) <= 0)
         {
             break;
         }

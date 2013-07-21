@@ -206,6 +206,10 @@ void expand_variable_error(parser_t &parser, const wchar_t *token, size_t token_
 */
 std::vector<wcstring> expand_get_all_process_names(void);
 
+/** Abbreviation support. Expand src as an abbreviation, returning true if one was found, false if not. If result is not-null, returns the abbreviation by reference. */
+#define USER_ABBREVIATIONS_VARIABLE_NAME L"fish_user_abbreviations"
+bool expand_abbreviation(const wcstring &src, wcstring *output);
+
 /* Terrible hacks */
 bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc, const char * const *argv);
 bool fish_openSUSE_dbus_hack_hack_hack_hack(std::vector<completion_t> *args);

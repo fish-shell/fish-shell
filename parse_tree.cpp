@@ -271,7 +271,6 @@ class parse_ll_t
     void accept_token_else_clause(parse_token_t token);
     void accept_token_else_continuation(parse_token_t token);
     void accept_token_boolean_statement(parse_token_t token);
-    void accept_token_case_item_list(parse_token_t token);
     void accept_token_decorated_statement(parse_token_t token);
     void accept_token_plain_statement(parse_token_t token);
     void accept_token_argument_list(parse_token_t token);
@@ -313,10 +312,15 @@ class parse_ll_t
         nodes.push_back(parse_node_t(tok->type));
         nodes.at(parent_node_idx).child_count += 1;
     }
+    
+    inline void symbol_stack_pop()
+    {
+        symbol_stack.pop_back();
+    }
 
     
     // Pop from the top of the symbol stack, then push, updating node counts. Note that these are pushed in reverse order, so the first argument will be on the top of the stack.
-    inline void symbol_stack_pop_push(parse_stack_element_t tok1 = token_type_invalid, parse_stack_element_t tok2 = token_type_invalid, parse_stack_element_t tok3 = token_type_invalid, parse_stack_element_t tok4 = token_type_invalid, parse_stack_element_t tok5 = token_type_invalid)
+    inline void symbol_stack_pop_push_int(parse_stack_element_t tok1 = token_type_invalid, parse_stack_element_t tok2 = token_type_invalid, parse_stack_element_t tok3 = token_type_invalid, parse_stack_element_t tok4 = token_type_invalid, parse_stack_element_t tok5 = token_type_invalid)
     {
     
         // Logging?
@@ -360,7 +364,7 @@ class parse_ll_t
     template<typename T>
     inline void symbol_stack_pop_push2()
     {
-        symbol_stack_pop_push(T::t0::get_token(), T::t1::get_token(), T::t2::get_token(), T::t3::get_token(), T::t4::get_token());
+        symbol_stack_pop_push_int(T::t0::get_token(), T::t1::get_token(), T::t2::get_token(), T::t3::get_token(), T::t4::get_token());
     }
     
     template<typename T>
@@ -374,6 +378,12 @@ class parse_ll_t
             case 3: symbol_stack_pop_push2<typename T::p3>(); break;
             case 4: symbol_stack_pop_push2<typename T::p4>(); break;
         }
+    }
+
+    template<typename T>
+    inline void symbol_stack_produce(parse_token_t tok)
+    {
+        symbol_stack_pop_push_production<T>(T::production(tok.type, tok.keyword));
     }
 };
 
@@ -470,13 +480,6 @@ void parse_ll_t::accept_token_job_list(parse_token_t token)
     }
 }
 
-void parse_ll_t::accept_token_job(parse_token_t token)
-{
-    PARSE_ASSERT(stack_top_type() == symbol_job);
-    //symbol_stack_pop_push(symbol_statement, symbol_job_continuation);
-    symbol_stack_pop_push2<parse_symbols::job>();
-}
-
 void parse_ll_t::accept_token_job_continuation(parse_token_t token)
 {
     PARSE_ASSERT(stack_top_type() == symbol_job_continuation);
@@ -484,12 +487,12 @@ void parse_ll_t::accept_token_job_continuation(parse_token_t token)
     {
         case parse_token_type_pipe:
             // Pipe, continuation
-            symbol_stack_pop_push(parse_token_type_pipe, symbol_statement, symbol_job_continuation);
+            symbol_stack_pop_push_production<job_continuation>(1);
             break;
             
         default:
             // Not a pipe, no job continuation
-            symbol_stack_pop_push();
+            symbol_stack_pop_push_production<job_continuation>(0);
             break;
     }
 }
@@ -506,26 +509,26 @@ void parse_ll_t::accept_token_statement(parse_token_t token)
                 case parse_keyword_and:
                 case parse_keyword_or:
                 case parse_keyword_not:
-                    symbol_stack_pop_push(symbol_boolean_statement);
+                    symbol_stack_pop_push_production<statement>(0);
                     break;
                     
                 case parse_keyword_for:
                 case parse_keyword_while:
                 case parse_keyword_function:
                 case parse_keyword_begin:
-                    symbol_stack_pop_push(symbol_block_statement);
+                    symbol_stack_pop_push_production<statement>(1);
                     break;
                     
                 case parse_keyword_if:
-                    symbol_stack_pop_push(symbol_if_statement);
+                    symbol_stack_pop_push_production<statement>(2);
                     break;
                 
                 case parse_keyword_else:
-                    symbol_stack_pop_push();
+                    symbol_stack_pop();
                     break;
                     
                 case parse_keyword_switch:
-                    symbol_stack_pop_push(symbol_switch_statement);
+                    symbol_stack_pop_push_production<statement>(3);
                     break;
                     
                 case parse_keyword_end:
@@ -538,7 +541,7 @@ void parse_ll_t::accept_token_statement(parse_token_t token)
                 case parse_keyword_command:
                 case parse_keyword_builtin:
                 case parse_keyword_case:
-                    symbol_stack_pop_push(symbol_decorated_statement);
+                    symbol_stack_pop_push_production<statement>(4);
                     break;
                     
             }
@@ -570,22 +573,22 @@ void parse_ll_t::accept_token_block_header(parse_token_t token)
                     break;
                     
                 case parse_keyword_for:
-                    symbol_stack_pop_push(symbol_for_header);
+                    symbol_stack_pop_push_production<block_header>(0);
                     break;
                     
                     
                 case parse_keyword_while:
-                    symbol_stack_pop_push(symbol_while_header);
+                    symbol_stack_pop_push_production<block_header>(1);
+                    break;
+
+                case parse_keyword_function:
+                    symbol_stack_pop_push_production<block_header>(2);
                     break;
                     
                 case parse_keyword_begin:
-                    symbol_stack_pop_push(symbol_begin_header);
+                    symbol_stack_pop_push_production<block_header>(3);
                     break;
                     
-                case parse_keyword_function:
-                    symbol_stack_pop_push(symbol_function_header);
-                    break;
-                                        
                 default:
                     token_unhandled(token, __FUNCTION__);
                     break;
@@ -602,163 +605,52 @@ void parse_ll_t::accept_token_block_header(parse_token_t token)
 void parse_ll_t::accept_token_else_clause(parse_token_t token)
 {
     PARSE_ASSERT(stack_top_type() == symbol_else_clause);
-    switch (token.keyword)
-    {
-        case parse_keyword_else:
-            symbol_stack_pop_push(parse_keyword_else, symbol_else_continuation);
-            break;
-        
-        default:
-            symbol_stack_pop_push();
-            break;
-    }
+    symbol_stack_produce<else_clause>(token);
 }
 
 void parse_ll_t::accept_token_else_continuation(parse_token_t token)
 {
     PARSE_ASSERT(stack_top_type() == symbol_else_continuation);
-    switch (token.keyword)
-    {
-        case parse_keyword_if:
-            symbol_stack_pop_push(symbol_if_clause, symbol_else_clause);
-            break;
-        
-        default:
-            symbol_stack_pop_push(parse_token_type_end, symbol_job_list);
-            break;
-    }
+    symbol_stack_produce<else_continuation>(token);
 }
 
 void parse_ll_t::accept_token_boolean_statement(parse_token_t token)
 {
     PARSE_ASSERT(stack_top_type() == symbol_boolean_statement);
-    switch (token.type)
-    {
-        case parse_token_type_string:
-            switch (token.keyword)
-            {
-                case parse_keyword_and:
-                case parse_keyword_or:
-                case parse_keyword_not:
-                    top_node_set_tag(token.keyword);
-                    symbol_stack_pop_push(token.keyword, symbol_statement);
-                    break;
-                    
-                default:
-                    token_unhandled(token, __FUNCTION__);
-                    break;
-            }
-            break;
-            
-        default:
-            token_unhandled(token, __FUNCTION__);
-            break;
-    }
-}
-
-void parse_ll_t::accept_token_case_item_list(parse_token_t token)
-{
-    PARSE_ASSERT(stack_top_type() == symbol_case_item_list);
-    switch (token.keyword)
-    {
-        case parse_keyword_case:
-            symbol_stack_pop_push(symbol_case_item, symbol_case_item_list);
-            break;
-        
-        default:
-            // empty list
-            symbol_stack_pop_push();
-            break;
-    }
+    top_node_set_tag(token.keyword);
+    symbol_stack_produce<boolean_statement>(token);
 }
 
 void parse_ll_t::accept_token_decorated_statement(parse_token_t token)
 {
     PARSE_ASSERT(stack_top_type() == symbol_decorated_statement);
-    switch (token.type)
-    {
-        case parse_token_type_string:
-            switch (token.keyword)
-            {
-                case parse_keyword_command:
-                    top_node_set_tag(parse_keyword_command);
-                    symbol_stack_pop_push(parse_keyword_command, symbol_plain_statement);
-                    break;
-                    
-                case parse_keyword_builtin:
-                    top_node_set_tag(parse_keyword_builtin);
-                    symbol_stack_pop_push(parse_keyword_builtin, symbol_plain_statement);
-                    break;
-                    
-                default:
-                    top_node_set_tag(parse_keyword_none);
-                    symbol_stack_pop_push(symbol_plain_statement);
-                    break;
-            }
-            break;
-            
-        default:
-            token_unhandled(token, __FUNCTION__);
-            break;
-    }
+    top_node_set_tag(token.keyword);
+    symbol_stack_produce<case_item_list>(token);
 }
 
 void parse_ll_t::accept_token_plain_statement(parse_token_t token)
 {
     PARSE_ASSERT(stack_top_type() == symbol_plain_statement);
-    symbol_stack_pop_push(parse_token_type_string, symbol_arguments_or_redirections_list);
+    symbol_stack_produce<case_item_list>(token);
 }
 
 void parse_ll_t::accept_token_argument_list(parse_token_t token)
 {
     PARSE_ASSERT(stack_top_type() == symbol_argument_list);
-    if (token.type == parse_token_type_string)
-    {
-        symbol_stack_pop_push(symbol_argument_list_nonempty);
-    }
-    else
-    {
-        symbol_stack_pop_push();
-    }
+    symbol_stack_produce<argument_list>(token);
 }
 
 
 void parse_ll_t::accept_token_arguments_or_redirections_list(parse_token_t token)
 {
     PARSE_ASSERT(stack_top_type() == symbol_arguments_or_redirections_list);
-    switch (token.type)
-    {
-        case parse_token_type_string:
-        case parse_token_type_redirection:
-            symbol_stack_pop_push(symbol_argument_or_redirection, symbol_arguments_or_redirections_list);
-            break;
-            
-        default:
-            // Some other token, end of list
-            symbol_stack_pop_push();
-            break;
-    }
+    symbol_stack_produce<arguments_or_redirections_list>(token);
 }
 
 void parse_ll_t::accept_token_argument_or_redirection(parse_token_t token)
 {
     PARSE_ASSERT(stack_top_type() == symbol_argument_or_redirection);
-    switch (token.type)
-    {
-        case parse_token_type_string:
-            symbol_stack_pop_push(parse_token_type_string);
-            // Got an argument
-            break;
-            
-        case parse_token_type_redirection:
-            symbol_stack_pop_push(parse_token_type_redirection);
-            // Got a redirection
-            break;
-            
-        default:
-            token_unhandled(token, __FUNCTION__);
-            break;
-    }
+    symbol_stack_produce<argument_or_redirection>(token);
 }
 
 bool parse_ll_t::accept_token_string(parse_token_t token)
@@ -769,7 +661,7 @@ bool parse_ll_t::accept_token_string(parse_token_t token)
     {
         case parse_token_type_string:
             // Got our string
-            symbol_stack_pop_push();
+            symbol_stack_pop();
             result = true;
             break;
             
@@ -841,7 +733,7 @@ void parse_ll_t::accept_token(parse_token_t token, const wcstring &src)
                 break;
                 
             case symbol_job:
-                accept_token_job(token);
+                symbol_stack_pop_push2<parse_symbols::job>();
                 break;
                 
             case symbol_job_continuation:
@@ -853,11 +745,11 @@ void parse_ll_t::accept_token(parse_token_t token, const wcstring &src)
                 break;
                 
             case symbol_if_statement:
-                symbol_stack_pop_push(symbol_if_clause, symbol_else_clause, parse_keyword_end);
+                symbol_stack_produce<if_statement>(token);
                 break;
                 
             case symbol_if_clause:
-                symbol_stack_pop_push(parse_keyword_if, symbol_job, parse_token_type_end, symbol_job_list);
+                symbol_stack_produce<if_clause>(token);
                 break;
                 
             case symbol_else_clause:
@@ -869,39 +761,39 @@ void parse_ll_t::accept_token(parse_token_t token, const wcstring &src)
                 break;
                 
             case symbol_block_statement:
-                symbol_stack_pop_push(symbol_block_header, parse_token_type_end, symbol_job_list, parse_keyword_end, symbol_arguments_or_redirections_list);
+                symbol_stack_produce<block_statement>(token);
                 break;
                 
             case symbol_block_header:
-                accept_token_block_header(token);
+                symbol_stack_produce<block_header>(token);
                 break;
                 
             case symbol_for_header:
-                symbol_stack_pop_push(parse_keyword_for, parse_token_type_string, parse_keyword_in, symbol_arguments_or_redirections_list, parse_token_type_end);
+                symbol_stack_produce<for_header>(token);
                 break;
                 
             case symbol_while_header:
-                symbol_stack_pop_push(parse_keyword_while, symbol_statement);
+                symbol_stack_produce<while_header>(token);
                 break;
                 
             case symbol_begin_header:
-                symbol_stack_pop_push(parse_keyword_begin);
+                symbol_stack_produce<begin_header>(token);
                 break;
                 
             case symbol_function_header:
-                symbol_stack_pop_push(parse_keyword_function, parse_token_type_string, symbol_argument_list);
+                symbol_stack_produce<function_header>(token);
                 break;
                 
             case symbol_switch_statement:
-                symbol_stack_pop_push(parse_keyword_switch, parse_token_type_string, parse_token_type_end, symbol_case_item_list, parse_keyword_end);
+                symbol_stack_produce<switch_statement>(token);
                 break;
                 
             case symbol_case_item_list:
-                accept_token_case_item_list(token);
+                symbol_stack_produce<case_item_list>(token);
                 break;
                 
             case symbol_case_item:
-                symbol_stack_pop_push(parse_keyword_case, symbol_argument_list, parse_token_type_end, symbol_job_list);
+                symbol_stack_produce<case_item>(token);
                 break;
                 
             case symbol_boolean_statement:
@@ -917,7 +809,7 @@ void parse_ll_t::accept_token(parse_token_t token, const wcstring &src)
                 break;
                 
             case symbol_argument_list_nonempty:
-                symbol_stack_pop_push(parse_token_type_string, symbol_argument_list);
+                symbol_stack_produce<argument_list_nonempty>(token);
                 break;
                 
             case symbol_argument_list:

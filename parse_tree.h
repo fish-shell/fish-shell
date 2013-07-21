@@ -159,11 +159,26 @@ namespace parse_symbols
     
     #define SYMBOL(x) static inline parse_token_type_t get_token() { return x; }
     
-    /* Placeholder */
-    struct none
+    #define PRODUCE(X) static int production(parse_token_type_t tok, parse_keyword_t key) { return X; }
+    
+    #define NO_PRODUCTION (-1)
+    
+    
+    template<parse_token_type_t WHICH>
+    struct Token
     {
-        SYMBOL(token_type_invalid);
+        SYMBOL(WHICH);
+        
+        typedef Token<WHICH> t0;
+        typedef Token<token_type_invalid> t1;
+        typedef Token<token_type_invalid> t2;
+        typedef Token<token_type_invalid> t3;
+        typedef Token<token_type_invalid> t4;
+        typedef Token<token_type_invalid> t5;
     };
+    
+    /* Placeholder */
+    typedef Token<token_type_invalid> none;
     
     struct EMPTY
     {
@@ -197,12 +212,6 @@ namespace parse_symbols
         typedef P5 p5;
     };
     
-    template<parse_token_type_t WHICH>
-    struct Token
-    {
-        SYMBOL(WHICH);
-    };
-    
     template<parse_keyword_t WHICH>
     struct Keyword
     {
@@ -220,8 +229,6 @@ namespace parse_symbols
     struct else_continuation;
     struct switch_statement;
     struct decorated_statement;
-    struct else_clause;
-    struct else_continuation;
     struct switch_statement;
     struct case_item_list;
     struct case_item;
@@ -280,11 +287,13 @@ namespace parse_symbols
     struct if_statement : Seq<if_clause, else_clause, Keyword<parse_keyword_end> >
     {
         SYMBOL(symbol_if_statement);
+        PRODUCE(0)
     };
     
     struct if_clause : Seq<Keyword<parse_keyword_if>, job, statement_terminator, job_list>
     {
         SYMBOL(symbol_if_clause);
+        PRODUCE(0)
     };
     
     struct else_clause : OR<
@@ -293,6 +302,15 @@ namespace parse_symbols
     >
     {
         SYMBOL(symbol_else_clause);
+        
+        static int production(parse_token_type_t tok, parse_keyword_t key)
+        {
+            switch (key)
+            {
+                case parse_keyword_else: return 1;
+                default: return 0;
+            }
+        }
     };
 
     struct else_continuation : OR<
@@ -301,6 +319,15 @@ namespace parse_symbols
     >
     {
         SYMBOL(symbol_else_continuation);
+        
+        static int production(parse_token_type_t tok, parse_keyword_t key)
+        {
+            switch (key)
+            {
+                case parse_keyword_if: return 0;
+                default: return 1;
+            }
+        }
     };
     
     struct switch_statement : Seq<Keyword<parse_keyword_switch>, Token<parse_token_type_string>, statement_terminator, case_item_list, Keyword<parse_keyword_end>
@@ -316,6 +343,15 @@ namespace parse_symbols
     >
     {
         SYMBOL(symbol_case_item_list);
+        
+        static int production(parse_token_type_t tok, parse_keyword_t key)
+        {
+            switch (key)
+            {
+                case parse_keyword_case: return 1;
+                default: return 0;
+            }
+        }
     };
     
     struct case_item : Seq<Keyword<parse_keyword_case>, argument_list, statement_terminator, job_list>
@@ -331,11 +367,20 @@ namespace parse_symbols
     struct argument_list : OR<EMPTY, argument_list_nonempty>
     {
         SYMBOL(symbol_argument_list);
+        static int production(parse_token_type_t tok, parse_keyword_t key)
+        {
+            switch (tok)
+            {
+                case parse_token_type_string: return 1;
+                default: return 0;
+            }
+        }
     };
 
     struct block_statement : Seq<block_header, statement_terminator, job_list, Keyword<parse_keyword_end>, arguments_or_redirections_list>
     {
         SYMBOL(symbol_block_statement);
+        PRODUCE(0)
     };
     
     struct block_header : OR<for_header, while_header, function_header, begin_header>
@@ -371,6 +416,17 @@ namespace parse_symbols
     >
     {
         SYMBOL(symbol_boolean_statement);
+        
+        static int production(parse_token_type_t tok, parse_keyword_t key)
+        {
+            switch (key)
+            {
+                case parse_keyword_and: return 0;
+                case parse_keyword_or: return 1;
+                case parse_keyword_not: return 2;
+                default: return NO_PRODUCTION;
+            }
+        }
     };
     
     /* A decorated_statement is a command with a list of arguments_or_redirections, possibly with "builtin" or "command" */
@@ -381,11 +437,27 @@ namespace parse_symbols
     >
     {
         SYMBOL(symbol_decorated_statement);
+        
+        static int production(parse_token_type_t tok, parse_keyword_t key)
+        {
+            switch (key)
+            {
+                case parse_keyword_command: return 0;
+                case parse_keyword_builtin: return 1;
+                default: return 2;
+            }
+        }
     };
     
     struct plain_statement : Seq<Token<parse_token_type_string>, arguments_or_redirections_list>
     {
         SYMBOL(symbol_plain_statement);
+        
+        static int production(parse_token_type_t tok, parse_keyword_t key)
+        {
+            return 0;
+        }
+
     };
     
     struct arguments_or_redirections_list : OR<
@@ -393,6 +465,18 @@ namespace parse_symbols
         Seq<argument_or_redirection, arguments_or_redirections_list> >
     {
         SYMBOL(symbol_arguments_or_redirections_list);
+        
+        static int production(parse_token_type_t tok, parse_keyword_t key)
+        {
+            switch (tok)
+            {
+                case parse_token_type_string:
+                case parse_token_type_redirection:
+                    return 1;
+                default:
+                    return 0;
+            }
+        }
     };
     
     struct argument_or_redirection : OR<
@@ -401,6 +485,16 @@ namespace parse_symbols
         >
     {
         SYMBOL(symbol_argument_or_redirection);
+        
+        static int production(parse_token_type_t tok, parse_keyword_t key)
+        {
+            switch (tok)
+            {
+                case parse_token_type_string: return 0;
+                case parse_token_type_redirection: return 1;
+                default: return NO_PRODUCTION;
+            }
+        }
     };
 
     struct redirection : Token<parse_token_type_redirection>

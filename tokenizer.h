@@ -142,7 +142,10 @@ int tok_has_next(tokenizer_t *tok);
 /**
   Returns the position of the beginning of the current token in the original string
 */
-int tok_get_pos(tokenizer_t *tok);
+int tok_get_pos(const tokenizer_t *tok);
+
+/** Returns the extent of the current token */
+size_t tok_get_extent(const tokenizer_t *tok);
 
 /**
    Returns the original string to tokenizer

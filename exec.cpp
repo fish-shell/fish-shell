@@ -537,7 +537,7 @@ static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *proce
             return false;
         }
     }
-    
+
     /* Now see if we have a redirection involving a file. The only one we allow is /dev/null, which we assume will not fail. */
     bool result = true;
     for (size_t idx = 0; idx < job->io.size(); idx++)
@@ -545,8 +545,8 @@ static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *proce
         const shared_ptr<const io_data_t> &io = job->io.at(idx);
         if (redirection_is_to_real_file(io.get()))
         {
-                result = false;
-                break;
+            result = false;
+            break;
         }
     }
     return result;
@@ -1192,16 +1192,16 @@ void exec(parser_t &parser, job_t *j)
                   forking is expensive, fish tries to avoid it when
                   possible.
                 */
-                
+
                 bool fork_was_skipped = false;
-                
+
                 const shared_ptr<io_data_t> stdout_io = io_chain_get(j->io, STDOUT_FILENO);
                 const shared_ptr<io_data_t> stderr_io = io_chain_get(j->io, STDERR_FILENO);
-                
+
                 /* If we are outputting to a file, we have to actually do it, even if we have no output, so that we can truncate the file. Does not apply to /dev/null. */
                 bool must_fork = redirection_is_to_real_file(stdout_io.get()) || redirection_is_to_real_file(stderr_io.get());
                 if (! must_fork)
-                {   
+                {
                     if (p->next == NULL)
                     {
                         const bool stdout_is_to_buffer = stdout_io && stdout_io->io_mode == IO_BUFFER;
@@ -1250,7 +1250,7 @@ void exec(parser_t &parser, job_t *j)
                         }
                     }
                 }
-                
+
 
                 if (fork_was_skipped)
                 {

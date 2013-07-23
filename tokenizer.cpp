@@ -651,11 +651,17 @@ wcstring tok_first(const wchar_t *str)
     return result;
 }
 
-int tok_get_pos(tokenizer_t *tok)
+int tok_get_pos(const tokenizer_t *tok)
 {
     CHECK(tok, 0);
-
     return (int)tok->last_pos;
+}
+
+size_t tok_get_extent(const tokenizer_t *tok)
+{
+    CHECK(tok, 0);
+    size_t current_pos = tok->buff - tok->orig_buff;
+    return current_pos > tok->last_pos ? current_pos - tok->last_pos : 0;
 }
 
 

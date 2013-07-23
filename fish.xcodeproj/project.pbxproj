@@ -465,6 +465,7 @@
 		D0D2693C159835CA005D9B9C /* fish */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fish; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0F3373A1506DE3C00ECEFC0 /* builtin_test.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = builtin_test.cpp; sourceTree = "<group>"; };
 		D0F5E28415A7A32D00315DFF /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
+		D0FE8EE6179CA8A5008C9F21 /* parse_tree_construction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = parse_tree_construction.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -589,6 +590,7 @@
 				D0A0850C13B3ACEE0099B651 /* expand.h */,
 				D0A0853D13B3ACEE0099B651 /* expand.cpp */,
 				D0C52F361765284C00BFAB82 /* parse_tree.h */,
+				D0FE8EE6179CA8A5008C9F21 /* parse_tree_construction.h */,
 				D0C52F351765284C00BFAB82 /* parse_tree.cpp */,
 				D0C52F341765281F00BFAB82 /* parse_exec.h */,
 				D0C52F331765281F00BFAB82 /* parse_exec.cpp */,

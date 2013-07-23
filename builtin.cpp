@@ -3946,53 +3946,53 @@ static int builtin_history(parser_t &parser, wchar_t **argv)
 struct parse_execution_simulator_t : public parse_execution_visitor_t
 {
     wcstring_list_t result;
-    
+
     wcstring &back()
     {
         assert(! result.empty());
         return result.back();
     }
-    
+
     void append_src(node_offset_t idx)
     {
         wcstring tmp;
         context->get_source(idx, &tmp);
         back().append(tmp);
     }
-    
+
     void append(const wchar_t *s)
     {
         back().append(s);
     }
-    
+
     bool enter_job_list(void)
     {
         return true;
     }
-    
+
     bool enter_job(void)
     {
         result.resize(result.size() + 1);
         return true;
     }
-    
+
     void visit_statement(void)
     {
     }
-    
+
     virtual void visit_boolean_statement(void)
     {
     }
-    
+
     virtual void enter_if_clause(const exec_if_clause_t &statement)
     {
     }
-    
+
     virtual void exit_if_clause(const exec_if_clause_t &statement)
     {
         append_format(back(), L"\nIF successful jump to %lu", (unsigned long)statement.body);
     }
-    
+
     void visit_basic_statement(const exec_basic_statement_t &statement)
     {
         wcstring &line = this->back();
@@ -4005,34 +4005,35 @@ struct parse_execution_simulator_t : public parse_execution_visitor_t
             case exec_basic_statement_t::decoration_builtin:
                 line.append(L"<builtin> ");
                 break;
-            
+
             case exec_basic_statement_t::decoration_command:
                 line.append(L"<command> ");
                 break;
-                
+
             default:
-            break;
+                break;
         }
-        
+
         line.append(L"cmd:");
         this->append_src(statement.command_idx);
         for (size_t i=0; i < statement.arguments().size(); i++)
         {
             const exec_argument_t &arg = statement.arguments().at(i);
             append(L" ");
-            append(L"arg:");            
+            append(L"arg:");
             append_src(arg.parse_node_idx);
         }
     }
-    
-    void visit_function(const exec_function_header_t &function) {
+
+    void visit_function(const exec_function_header_t &function)
+    {
         wcstring &line = this->back();
         line.append(L"define function: ");
         wcstring tmp;
         context->get_source(function.name_idx, &tmp);
         line.append(tmp);
     }
-    
+
     void exit_job_list(void)
     {
     }
@@ -4074,17 +4075,19 @@ int builtin_parse(parser_t &parser, wchar_t **argv)
         }
         else
         {
-            parse_execution_context_t ctx(parse_tree, src);
-            parse_execution_simulator_t sim;
-            sim.context = &ctx;
-            while (ctx.visit_next_node(&sim))
-            {
-            }
-            stdout_buffer.append(L"Simulating execution:\n");
-            for (size_t i=0; i < sim.result.size(); i++)
-            {
-                stdout_buffer.append(sim.result.at(i));
-                stdout_buffer.push_back(L'\n');
+            if (0) {
+                parse_execution_context_t ctx(parse_tree, src);
+                parse_execution_simulator_t sim;
+                sim.context = &ctx;
+                while (ctx.visit_next_node(&sim))
+                {
+                }
+                stdout_buffer.append(L"Simulating execution:\n");
+                for (size_t i=0; i < sim.result.size(); i++)
+                {
+                    stdout_buffer.append(sim.result.at(i));
+                    stdout_buffer.push_back(L'\n');
+                }
             }
         }
     }

@@ -632,7 +632,7 @@ int builtin_printf_state_t::print_formatted(const wchar_t *format, int argc, wch
                     }
                     break;
                 }
-                
+
                 modify_allowed_format_specifiers(ok, "aAcdeEfFgGiosuxX", true);
 
                 for (;; f++, direc_length++)

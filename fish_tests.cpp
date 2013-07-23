@@ -534,7 +534,7 @@ static void test_utils()
 {
     say(L"Testing utils");
     const wchar_t *a = L"echo (echo (echo hi";
-    
+
     const wchar_t *begin = NULL, *end = NULL;
     parse_util_cmdsubst_extent(a, 0, &begin, &end);
     if (begin != a || end != begin + wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
@@ -544,7 +544,7 @@ static void test_utils()
     if (begin != a || end != begin + wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
     parse_util_cmdsubst_extent(a, 3, &begin, &end);
     if (begin != a || end != begin + wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
-    
+
     parse_util_cmdsubst_extent(a, 8, &begin, &end);
     if (begin != a + wcslen(L"echo (")) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
 
@@ -1842,7 +1842,7 @@ int main(int argc, char **argv)
     builtin_init();
     reader_init();
     env_init();
-    
+
     test_new_parser();
     return 0;
 

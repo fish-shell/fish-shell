@@ -6,7 +6,7 @@
 # complicated to do.
 
 set -l is_assignment "commandline -ct|sgrep '..*='"
-set -l complete_file_assignment '(commandline -ct)(complete --do-complete=this_command_does_not_exist\ (commandline -ct|sed -e \'s/.*=//\'))'
+set -l complete_file_assignment '(commandline -ct|sed -e \'s/=.*/=/\')(complete --do-complete=this_command_does_not_exist\ (commandline -ct|sed -e \'s/.*=//\'))'
 complete -c make --condition $is_assignment -a $complete_file_assignment
 
 complete -x -c make -a "(__fish_print_make_targets)" --description "Target"

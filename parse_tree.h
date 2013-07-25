@@ -3,8 +3,8 @@
     Programmatic representation of fish code.
 */
 
-#ifndef FISH_PARSE_TREE_H
-#define FISH_PARSE_TREE_H
+#ifndef FISH_PARSE_PRODUCTIONS_H
+#define FISH_PARSE_PRODUCTIONS_H
 
 #include <wchar.h>
 

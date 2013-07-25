@@ -10,6 +10,67 @@
 
 /* Terrifying template black magic. */
 
+/*
+
+- Get info for symbol
+- Resolve production from info
+- Get productions for children
+- Get symbols for productions
+
+Production may be:
+
+1. Single value
+2. Sequence of values (possibly empty)
+3. Options of Single / Sequence
+
+Info to specify:
+
+1. Number of different productions
+2. Resolver function
+3. Symbols for associated productions
+
+Choice: should info be a class or a data?
+
+data:
+
+struct Symbol_t
+{
+    enum parse_token_type_t token_type;
+    int (*resolver)(parse_token_type_t tok, parse_keyword_t key); //may be trivial
+    production productions[5];
+}
+
+struct Production_t
+{
+    enum parse_token_type_t symbols[5];
+}
+
+*/
+
+namespace parse_productions
+{
+
+#define MAX_PRODUCTIONS 5
+#define MAX_SYMBOLS_PER_PRODUCTION 5
+
+
+
+struct Production_t
+{
+    enum parse_token_type_t symbols[MAX_SYMBOLS_PER_PRODUCTION];
+};
+
+struct Symbol_t
+{
+    enum parse_token_type_t token_type;
+    int (*resolver)(parse_token_type_t tok, parse_keyword_t key);
+    Production_t productions[MAX_PRODUCTIONS];
+};
+
+
+
+}
+
 namespace parse_symbols
 {
 

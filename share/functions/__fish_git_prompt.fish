@@ -565,18 +565,18 @@ end
 
 function __fish_git_prompt_validate_chars --description "__fish_git_prompt helper, checks char variables"
 
-	__fish_git_prompt_set_char __fish_git_prompt_char_cleanstate  			'.'
-	__fish_git_prompt_set_char __fish_git_prompt_char_dirtystate  			'*'
-	__fish_git_prompt_set_char __fish_git_prompt_char_stagedstate  			'+'
-	__fish_git_prompt_set_char __fish_git_prompt_char_invalidstate  		'#'
-	__fish_git_prompt_set_char __fish_git_prompt_char_stashstate  			'$'
-	__fish_git_prompt_set_char __fish_git_prompt_char_stateseparator  		' '
-	__fish_git_prompt_set_char __fish_git_prompt_char_untrackedfiles  		'%'
-	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_equal  		'='
-	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_behind 		'<'
-	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_ahead  		'>'
-	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_diverged  	'<>'
-	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_prefix  		' '
+	__fish_git_prompt_set_char __fish_git_prompt_char_cleanstate        '.'
+	__fish_git_prompt_set_char __fish_git_prompt_char_dirtystate        '*'
+	__fish_git_prompt_set_char __fish_git_prompt_char_invalidstate      '#'
+	__fish_git_prompt_set_char __fish_git_prompt_char_stagedstate       '+'
+	__fish_git_prompt_set_char __fish_git_prompt_char_stashstate        '$'
+	__fish_git_prompt_set_char __fish_git_prompt_char_stateseparator    ' '
+	__fish_git_prompt_set_char __fish_git_prompt_char_untrackedfiles    '%'
+	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_ahead    '>'
+	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_behind   '<'
+	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_diverged '<>'
+	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_equal    '='
+	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_prefix   ' '
 
 end
 
@@ -670,7 +670,7 @@ function __fish_git_prompt_repaint $varargs --description "Event handler, repain
 end
 
 set -l varargs
-for var in '' _prefix _suffix _bare _merging _branch _dirtystate _stagedstate _invalidstate _stashstate _untrackedfiles _upstream _flags
+for var in '' _prefix _suffix _bare _merging _cleanstate _invalidstate _upstream _flags _branch _dirtystate _stagedstate _branch_detached _stashstate _untrackedfiles
 	set varargs $varargs --on-variable __fish_git_prompt_color$var
 end
 set varargs $varargs --on-variable __fish_git_prompt_showcolorhints
@@ -689,8 +689,9 @@ function __fish_git_prompt_repaint_color $varargs --description "Event handler, 
 		commandline -f repaint ^/dev/null
 	end
 end
+
 set -l varargs
-for var in dirtystate stagedstate invalidstate stashstate untrackedfiles upstream_equal upstream_behind upstream_ahead upstream_diverged stateseparator
+for var in cleanstate dirtystate invalidstate stagedstate stashstate stateseparator untrackedfiles upstream_ahead upstream_behind upstream_diverged upstream_equal upstream_prefix
 	set varargs $varargs --on-variable __fish_git_prompt_char_$var
 end
 function __fish_git_prompt_repaint_char $varargs --description "Event handler, repaints prompt when any char changes"

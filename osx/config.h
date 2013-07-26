@@ -193,6 +193,7 @@
 
 /* Define to the version of this package. */
 #define PACKAGE_VERSION "2.0.0"
+#define FISH_BUILD_VERSION PACKAGE_VERSION
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1

@@ -684,7 +684,7 @@ function __fish_git_prompt_validate_colors --description "__fish_git_prompt help
 end
 
 set -l varargs
-for var in repaint describe_style showdirtystate showstashstate showuntrackedfiles showupstream
+for var in repaint describe_style show_informative_status showdirtystate showstashstate showuntrackedfiles showupstream
 	set varargs $varargs --on-variable __fish_git_prompt_$var
 end
 function __fish_git_prompt_repaint $varargs --description "Event handler, repaints prompt when functionality changes"

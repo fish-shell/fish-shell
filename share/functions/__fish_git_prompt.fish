@@ -17,10 +17,11 @@
 #
 # The behavior of __fish_git_prompt is very heavily based off of the bash
 # script's __git_ps1 function. As such, usage and customization is very
-# similar, although some extra flexibility is provided in this script.
+# similar, although some extra features are provided in this script.
 # Due to differences between bash and fish, the PROMPT_COMMAND style where
 # passing two or three arguments causes the fucnction to set PS1 is not
-# supported.
+# supported.  More information on the additional features is found after the
+# bash-compatable documentation.
 #
 # The argument to __fish_git_prompt will be displayed only if you are currently
 # in a git repository. The %s token will be the name of the branch.
@@ -49,7 +50,8 @@
 # that there is no difference. You can further control behavior by setting
 # __fish_git_prompt_showupstream to a space-separated list of values:
 #
-#     verbose        show number of commits head/behind (+/-) upstream
+#     verbose        show number of commits ahead/behind (+/-) upstream
+#     informative    similar to verbose, but shows nothing when equal (fish only)
 #     legacy         don't use the '--count' option available in recent versions
 #                    of git-rev-list
 #     git            always compare HEAD to @{upstream}
@@ -73,9 +75,21 @@
 # If you would like a colored hint about the current dirty state, set
 # __fish_git_prompt_showcolorhints to a nonempty value.  The default colors are
 # based on the colored output of "git status -sb"
+
+
+# __fish_git_prompt includes some additional features on top of the
+# above-documented bash-compatible features:
 #
-# This fish-compatible version of __fish_git_prompt includes some additional
-# features on top of the above-documented bash-compatible features:
+#
+# An "informative git prompt" mode similar to the scripts for bash and zsh
+# can be activated by setting __fish_git_prompt_show_informative_status
+# This works more like the "informative git prompt" scripts for bash and zsh,
+# giving prompts like (master|+1#2*3%4) where master is the current branch
+# and you have 1 staged, 2 unmerged, 3 dirty, and 4 untracked files.  If you
+# have no changes, it displays (master|.).  The characters and colors can be
+# customized as below, with the following names:
+#
+#     dirtystate, invalidstate, stagedstate, untrackedfiles, cleanstate
 #
 # The color for each component of the prompt can specified using
 # __fish_git_prompt_color_<name>, where <name> is one of the following and the
@@ -90,6 +104,7 @@
 #     branch     Branch name
 #     flags      Optional flags (see below)
 #     upstream   Upstream name and flags (with showupstream)
+#
 #
 # The following optional flags have both colors, as above, and custom
 # characters via __fish_git_prompt_char_<name>.  The default character is
@@ -113,9 +128,18 @@
 #     upstream_ahead      Branch has more commits              (>)
 #     upstream_diverged   Upstream and branch have new commits (<>)
 #
+#   __fish_git_prompt_show_informative_status
+#     (see also the flags for showdirtystate and showuntrackedfiles, above)
+#     cleanstate          Working directory has no changes (.)
+#
+#
 # The separator between the branch name and flags can also be customized via
 # __fish_git_prompt_char_stateseparator.  It defaults to a space ( ) and can
 # only be colored by __fish_git_prompt_color.
+#
+# The separator before the upstream information can be customized via
+# __fish_git_prompt_char_upstream_prefix.  It defaults to a space ( ) and is
+# colored as part of the upstream information.
 #
 # Turning on __fish_git_prompt_showcolorhints changes the colors as follows to
 # more closely match the behavior in bash.  Note that setting any of these

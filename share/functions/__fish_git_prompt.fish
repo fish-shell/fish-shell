@@ -162,6 +162,11 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 	set -l legacy
 	set -l verbose
 
+	# Default to informative if show_informative_status is set
+	if test -n "$__fish_git_prompt_show_informative_status"
+		set informative 1
+	end
+
 	set -l svn_remote
 	# get some config options from git-config
 	git config -z --get-regexp '^(svn-remote\..*\.url|bash\.showupstream)$' ^/dev/null | tr '\0\n' '\n ' | while read -l key value
@@ -186,16 +191,20 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 	end
 
 	# parse configuration variables
+	# and clear informative default when needed
 	for option in $show_upstream
 		switch $option
 		case git svn
 			set upstream $option
+			set -e informative
 		case verbose
 			set verbose 1
+			set -e informative
 		case informative
 			set informative 1
 		case legacy
 			set legacy 1
+			set -e informative
 		end
 	end
 

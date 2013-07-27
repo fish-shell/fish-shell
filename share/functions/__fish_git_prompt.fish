@@ -98,6 +98,7 @@
 #     upstream_prefix ()
 #     upstream_ahead  (↑)
 #     upstream_behind (↓)
+#     stateseparator  (|)
 #     dirtystate      (✚)
 #     invalidstate    (✖)
 #     stagedstate     (●)
@@ -148,8 +149,9 @@
 #
 #
 # The separator between the branch name and flags can also be customized via
-# __fish_git_prompt_char_stateseparator.  It defaults to a space ( ) and can
-# only be colored by __fish_git_prompt_color.
+# __fish_git_prompt_char_stateseparator.  It can only be colored by
+# __fish_git_prompt_color.  It normally defaults to a space ( ) and defaults
+# to a vertical bar (|) when __fish_git_prompt_show_informative_status is set.
 #
 # The separator before the upstream information can be customized via
 # __fish_git_prompt_char_upstream_prefix.  It is colored like the rest of
@@ -358,7 +360,7 @@ function __fish_git_prompt --description "Prompt function for Git"
 
 	if test "true" = $inside_worktree
 		if test -n "$__fish_git_prompt_show_informative_status"
-			set informative_status "|"(__fish_git_prompt_informative_status)
+			set informative_status "$___fish_git_prompt_char_stateseparator"(__fish_git_prompt_informative_status)
 		else
 			if test -n "$__fish_git_prompt_showdirtystate"
 				set -l config (git config --bool bash.showDirtyState)
@@ -627,7 +629,7 @@ function __fish_git_prompt_validate_chars --description "__fish_git_prompt helpe
 	__fish_git_prompt_set_char __fish_git_prompt_char_invalidstate      '#' '✖'
 	__fish_git_prompt_set_char __fish_git_prompt_char_stagedstate       '+' '●'
 	__fish_git_prompt_set_char __fish_git_prompt_char_stashstate        '$'
-	__fish_git_prompt_set_char __fish_git_prompt_char_stateseparator    ' '
+	__fish_git_prompt_set_char __fish_git_prompt_char_stateseparator    ' ' '|'
 	__fish_git_prompt_set_char __fish_git_prompt_char_untrackedfiles    '%' '…'
 	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_ahead    '>' '↑'
 	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_behind   '<' '↓'

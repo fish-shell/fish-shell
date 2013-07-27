@@ -67,6 +67,10 @@
 #     describe      relative to older annotated tag (v1.6.3.1-13-gdd42c2f)
 #     default       exactly matching tag
 #
+# If you would like a colored hint about the current dirty state, set
+# __fish_git_prompt_showcolorhints to a nonempty value.  The default colors are
+# based on the colored output of "git status -sb"
+#
 # This fish-compatible version of __fish_git_prompt includes some additional
 # features on top of the above-documented bash-compatible features:
 #
@@ -81,11 +85,13 @@
 #     bare       Marker for a bare repository
 #     merging    Current operation (|MERGING, |REBASE, etc.)
 #     branch     Branch name
+#     flags      Optional flags (see below)
 #     upstream   Upstream name and flags (with showupstream)
 #
 # The following optional flags have both colors, as above, and custom
 # characters via __fish_git_prompt_char_<name>.  The default character is
-# shown in parenthesis.
+# shown in parenthesis.  The default color for these flags can be also be set
+# via the __fish_git_prompt_color_flags variable.
 #
 #   __fish_git_prompt_showdirtystate
 #     dirtystate          unstaged changes (*)
@@ -103,6 +109,16 @@
 #     upstream_behind     Upstream has more commits            (<)
 #     upstream_ahead      Branch has more commits              (>)
 #     upstream_diverged   Upstream and branch have new commits (<>)
+#
+# Turning on __fish_git_prompt_showcolorhints changes the colors as follows to
+# more closely match the behavior in bash.  Note that setting any of these
+# colors manually will override these defaults.
+#
+#     branch            Defaults to green
+#     branch_detached   New color, when head is detached, default red
+#     dirtystate        Defaults to red
+#     stagedstate       Defaults to green
+#     flags             Defaults to --bold blue
 
 set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles
 
@@ -264,11 +280,12 @@ function __fish_git_prompt --description "Prompt function for Git"
 	set -l rbc (__fish_git_prompt_operation_branch_bare $git_dir)
 	set -l r $rbc[1] # current operation
 	set -l b $rbc[2] # current branch
+	set -l detached $rbc[3]
 	set -l w #dirty working directory
 	set -l i #staged changes
 	set -l s #stashes
 	set -l u #untracked
-	set -l c $rbc[3] # bare repository
+	set -l c $rbc[4] # bare repository
 	set -l p #upstream
 	set -l informative_status
 
@@ -305,6 +322,15 @@ function __fish_git_prompt --description "Prompt function for Git"
 
 	__fish_git_prompt_validate_colors
 
+	set -l branch_color $___fish_git_prompt_color_branch
+	set -l branch_done  $___fish_git_prompt_color_branch_done
+	if test -n "$__fish_git_prompt_showcolorhints"
+		if test $detached = yes
+			set branch_color $___fish_git_prompt_color_branch_detached
+			set branch_done  $___fish_git_prompt_color_branch_detached_done
+		end
+	end
+
 	if test -n "$w"
 		set w "$___fish_git_prompt_color_dirtystate$w$___fish_git_prompt_color_dirtystate_done"
 	end
@@ -319,7 +345,7 @@ function __fish_git_prompt --description "Prompt function for Git"
 	end
 	set b (/bin/sh -c 'echo "${1#refs/heads/}"' -- $b)
 	if test -n "$b"
-		set b "$___fish_git_prompt_color_branch$b$___fish_git_prompt_color_branch_done"
+		set b "$branch_color$b$branch_done"
 	end
 	if test -n "$c"
 		set c "$___fish_git_prompt_color_bare$c$___fish_git_prompt_color_bare_done"
@@ -414,6 +440,7 @@ function __fish_git_prompt_operation_branch_bare --description "__fish_git_promp
 	set -l git_dir $argv[1]
 	set -l branch
 	set -l operation
+	set -l detached no
 	set -l bare
 	set -l os
 
@@ -476,6 +503,7 @@ function __fish_git_prompt_operation_branch_bare --description "__fish_git_promp
 
 	echo $operation
 	echo $branch
+	echo $detached
 	echo $bare
 end
 
@@ -555,23 +583,40 @@ function __fish_git_prompt_set_color
 
 end
 
+
 function __fish_git_prompt_validate_colors --description "__fish_git_prompt helper, checks color variables"
 
 	# Base color defaults to nothing (must be done first)
 	__fish_git_prompt_set_color __fish_git_prompt_color '' ''
 
+	# Normal colors
 	__fish_git_prompt_set_color __fish_git_prompt_color_prefix
 	__fish_git_prompt_set_color __fish_git_prompt_color_suffix
 	__fish_git_prompt_set_color __fish_git_prompt_color_bare
 	__fish_git_prompt_set_color __fish_git_prompt_color_merging
-	__fish_git_prompt_set_color __fish_git_prompt_color_branch
 	__fish_git_prompt_set_color __fish_git_prompt_color_cleanstate
-	__fish_git_prompt_set_color __fish_git_prompt_color_dirtystate
-	__fish_git_prompt_set_color __fish_git_prompt_color_stagedstate
 	__fish_git_prompt_set_color __fish_git_prompt_color_invalidstate
-	__fish_git_prompt_set_color __fish_git_prompt_color_stashstate
-	__fish_git_prompt_set_color __fish_git_prompt_color_untrackedfiles
 	__fish_git_prompt_set_color __fish_git_prompt_color_upstream
+
+	# Colors with defaults with showcolorhints
+	if test -n "$__fish_git_prompt_showcolorhints"
+		__fish_git_prompt_set_color __fish_git_prompt_color_flags       (set_color --bold blue)
+		__fish_git_prompt_set_color __fish_git_prompt_color_branch      (set_color green)
+		__fish_git_prompt_set_color __fish_git_prompt_color_dirtystate  (set_color red)
+		__fish_git_prompt_set_color __fish_git_prompt_color_stagedstate (set_color green)
+	else
+		__fish_git_prompt_set_color __fish_git_prompt_color_flags
+		__fish_git_prompt_set_color __fish_git_prompt_color_branch
+		__fish_git_prompt_set_color __fish_git_prompt_color_dirtystate  $___fish_git_prompt_color_flags $___fish_git_prompt_color_flags_done
+		__fish_git_prompt_set_color __fish_git_prompt_color_stagedstate $___fish_git_prompt_color_flags $___fish_git_prompt_color_flags_done
+	end
+
+	# Branch_detached has a default, but is only used with showcolorhints
+	__fish_git_prompt_set_color __fish_git_prompt_color_branch_detached (set_color red)
+
+	# Colors that depend on flags color
+	__fish_git_prompt_set_color __fish_git_prompt_color_stashstate      $___fish_git_prompt_color_flags $___fish_git_prompt_color_flags_done
+	__fish_git_prompt_set_color __fish_git_prompt_color_untrackedfiles  $___fish_git_prompt_color_flags $___fish_git_prompt_color_flags_done
 
 end
 
@@ -586,17 +631,18 @@ function __fish_git_prompt_repaint $varargs --description "Event handler, repain
 end
 
 set -l varargs
-for var in '' _prefix _suffix _bare _merging _branch _dirtystate _stagedstate _invalidstate _stashstate _untrackedfiles _upstream
+for var in '' _prefix _suffix _bare _merging _branch _dirtystate _stagedstate _invalidstate _stashstate _untrackedfiles _upstream _flags
 	set varargs $varargs --on-variable __fish_git_prompt_color$var
 end
+set varargs $varargs --on-variable __fish_git_prompt_showcolorhints
 function __fish_git_prompt_repaint_color $varargs --description "Event handler, repaints prompt when any color changes"
 	if status --is-interactive
 		set -l var $argv[3]
 		set -e _$var
 		set -e _{$var}_done
-		if test $var = __fish_git_prompt_color
+		if test $var = __fish_git_prompt_color -o $var = __fish_git_prompt_color_flags -o $var = __fish_git_prompt_showcolorhints
 			# reset all the other colors too
-			for name in prefix suffix bare merging branch dirtystate stagedstate invalidstate stashstate untrackedfiles upstream
+			for name in prefix suffix bare merging branch dirtystate stagedstate invalidstate stashstate untrackedfiles upstream flags
 				set -e ___fish_git_prompt_color_$name
 				set -e ___fish_git_prompt_color_{$name}_done
 			end

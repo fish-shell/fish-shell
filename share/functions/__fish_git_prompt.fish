@@ -85,14 +85,25 @@
 # An "informative git prompt" mode similar to the scripts for bash and zsh
 # can be activated by setting __fish_git_prompt_show_informative_status
 # This works more like the "informative git prompt" scripts for bash and zsh,
-# giving prompts like (master >1<2|+3#4*5%6) where master is the current branch,
+# giving prompts like (master↑1↓2|●3✖4✚5…6) where master is the current branch,
 # you have 1 commit your upstream doesn't and it has 2 you don't, and you have
 # 3 staged, 4 unmerged, 5 dirty, and 6 untracked files.  If you have no
-# changes, it displays (master|.).  The characters and colors can be customized
-# as below, with the following names:
+# changes, it displays (master|✔).
 #
-#     upstream_prefix, upstream_ahead, upstream_behind, dirtystate,
-#     invalidstate, stagedstate, untrackedfiles, cleanstate
+# Setting __fish_git_prompt_show_informative_status changes several defaults.
+# The default mode for __fish_git_prompt_showupstream changes to informative
+# and the following characters have their defaults changed.  (The characters
+# and colors can still be customized as described below.)
+#
+#     upstream_prefix ()
+#     upstream_ahead  (↑)
+#     upstream_behind (↓)
+#     dirtystate      (✚)
+#     invalidstate    (✖)
+#     stagedstate     (●)
+#     untrackedfiles  (…)
+#     cleanstate      (✔)
+#
 #
 # The color for each component of the prompt can specified using
 # __fish_git_prompt_color_<name>, where <name> is one of the following and the
@@ -133,7 +144,7 @@
 #
 #   __fish_git_prompt_show_informative_status
 #     (see also the flags for showdirtystate and showuntrackedfiles, above)
-#     cleanstate          Working directory has no changes (.)
+#     cleanstate          Working directory has no changes (✔)
 #
 #
 # The separator between the branch name and flags can also be customized via
@@ -141,8 +152,10 @@
 # only be colored by __fish_git_prompt_color.
 #
 # The separator before the upstream information can be customized via
-# __fish_git_prompt_char_upstream_prefix.  It defaults to a space ( ) and is
-# colored as part of the upstream information.
+# __fish_git_prompt_char_upstream_prefix.  It is colored like the rest of
+# the upstream information.  It normallly defaults to a space ( ) and defaults
+# to nothing () when __fish_git_prompt_show_informative_status is set.
+#
 #
 # Turning on __fish_git_prompt_showcolorhints changes the colors as follows to
 # more closely match the behavior in bash.  Note that setting any of these
@@ -593,6 +606,12 @@ function __fish_git_prompt_set_char
 	set -l char $argv[2]
 	set -l user_variable $$user_variable_name
 
+	if test (count $argv) -ge 3
+		if test -n "$__fish_git_prompt_show_informative_status"
+			set char $argv[3]
+		end
+	end
+
 	set -l variable _$user_variable_name
 	set -l variable_done "$variable"_done
 
@@ -603,15 +622,15 @@ end
 
 function __fish_git_prompt_validate_chars --description "__fish_git_prompt helper, checks char variables"
 
-	__fish_git_prompt_set_char __fish_git_prompt_char_cleanstate        '.'
-	__fish_git_prompt_set_char __fish_git_prompt_char_dirtystate        '*'
-	__fish_git_prompt_set_char __fish_git_prompt_char_invalidstate      '#'
-	__fish_git_prompt_set_char __fish_git_prompt_char_stagedstate       '+'
+	__fish_git_prompt_set_char __fish_git_prompt_char_cleanstate        '✔'
+	__fish_git_prompt_set_char __fish_git_prompt_char_dirtystate        '*' '✚'
+	__fish_git_prompt_set_char __fish_git_prompt_char_invalidstate      '#' '✖'
+	__fish_git_prompt_set_char __fish_git_prompt_char_stagedstate       '+' '●'
 	__fish_git_prompt_set_char __fish_git_prompt_char_stashstate        '$'
 	__fish_git_prompt_set_char __fish_git_prompt_char_stateseparator    ' '
-	__fish_git_prompt_set_char __fish_git_prompt_char_untrackedfiles    '%'
-	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_ahead    '>'
-	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_behind   '<'
+	__fish_git_prompt_set_char __fish_git_prompt_char_untrackedfiles    '%' '…'
+	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_ahead    '>' '↑'
+	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_behind   '<' '↓'
 	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_diverged '<>'
 	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_equal    '='
 	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_prefix   ' '
@@ -703,6 +722,13 @@ for var in repaint describe_style show_informative_status showdirtystate showsta
 end
 function __fish_git_prompt_repaint $varargs --description "Event handler, repaints prompt when functionality changes"
 	if status --is-interactive
+		if test $argv[3] = __fish_git_prompt_show_informative_status
+			# Clear characters that have different defaults with/without informative status
+			for name in cleanstate dirtystate invalidstate stagedstate stateseparator untrackedfiles upstream_ahead upstream_behind
+				set -e ___fish_git_prompt_char_$name
+			end
+		end
+
 		commandline -f repaint ^/dev/null
 	end
 end

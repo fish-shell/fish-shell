@@ -457,7 +457,7 @@ function  __fish_git_prompt_informative_status
 		for i in $___fish_git_prompt_status_order
 			 if [ $$i != "0" ]
 				set -l color_var ___fish_git_prompt_color_$i
-				set -l color_done_var ___fish_git_prompt_color_$i
+				set -l color_done_var ___fish_git_prompt_color_{$i}_done
 				set -l symbol_var ___fish_git_prompt_char_$i
 
 				set -l color $$color_var

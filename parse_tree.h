@@ -89,7 +89,8 @@ enum parse_token_type_t
     parse_token_type_background,
     parse_token_type_end,
     parse_token_type_terminate,
-
+    
+    LAST_TOKEN_OR_SYMBOL = parse_token_type_terminate,
     FIRST_PARSE_TOKEN_TYPE = parse_token_type_string
 };
 

@@ -55,10 +55,12 @@ namespace parse_productions
 
 
 
-struct Production_t
-{
-    enum parse_token_type_t symbols[MAX_SYMBOLS_PER_PRODUCTION];
-};
+/* A production is an array of unsigned char. Symbols are encoded directly as their symbol value. Keywords are encoded with an offset of LAST_TOKEN_OR_SYMBOL + 1. So essentially we glom together keywords and symbols. */
+typedef unsigned char Production_t[MAX_SYMBOLS_PER_PRODUCTION];
+
+typedef Production_t ProductionList_t[MAX_PRODUCTIONS];
+
+#define PRODUCE_KEYWORD(x) ((x) + LAST_TOKEN_OR_SYMBOL + 1)
 
 struct Symbol_t
 {

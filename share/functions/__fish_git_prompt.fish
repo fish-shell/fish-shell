@@ -275,7 +275,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 		case '*' # diverged from upstream
 			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_diverged$ahead-$behind"
 		end
-	else if test -n informative
+	else if test -n "$informative"
 		echo $count | read -l behind ahead
 		switch "$count"
 		case '' # no upstream

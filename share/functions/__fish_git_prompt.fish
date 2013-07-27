@@ -127,8 +127,6 @@
 #     stagedstate       Defaults to green
 #     flags             Defaults to --bold blue
 
-set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles
-
 function __fish_git_prompt_show_upstream --description "Helper function for __fish_git_prompt"
 	set -l show_upstream $__fish_git_prompt_showupstream
 	set -l svn_prefix # For better SVN upstream information
@@ -414,6 +412,8 @@ function __fish_git_prompt_dirty --description "__fish_git_prompt helper, tells 
 	end
 	echo $dirty
 end
+
+set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles
 
 function  __fish_git_prompt_informative_status
 

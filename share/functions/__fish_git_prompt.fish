@@ -275,7 +275,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 		case '*' # diverged from upstream
 			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_diverged$ahead-$behind"
 		end
-	else if test -n informative
+	else if test -n "$informative"
 		echo $count | read -l behind ahead
 		switch "$count"
 		case '' # no upstream
@@ -457,7 +457,7 @@ function  __fish_git_prompt_informative_status
 		for i in $___fish_git_prompt_status_order
 			 if [ $$i != "0" ]
 				set -l color_var ___fish_git_prompt_color_$i
-				set -l color_done_var ___fish_git_prompt_color_$i
+				set -l color_done_var ___fish_git_prompt_color_{$i}_done
 				set -l symbol_var ___fish_git_prompt_char_$i
 
 				set -l color $$color_var
@@ -684,7 +684,7 @@ function __fish_git_prompt_validate_colors --description "__fish_git_prompt help
 end
 
 set -l varargs
-for var in repaint describe_style showdirtystate showstashstate showuntrackedfiles showupstream
+for var in repaint describe_style show_informative_status showdirtystate showstashstate showuntrackedfiles showupstream
 	set varargs $varargs --on-variable __fish_git_prompt_$var
 end
 function __fish_git_prompt_repaint $varargs --description "Event handler, repaints prompt when functionality changes"

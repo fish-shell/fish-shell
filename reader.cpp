@@ -3114,10 +3114,17 @@ const wchar_t *reader_readline(void)
 
             case R_END_OF_LINE:
             {
-                while (buff[data->buff_pos] &&
-                        buff[data->buff_pos] != L'\n')
+                if (data->buff_pos < data->command_length())
                 {
-                    data->buff_pos++;
+                    while (buff[data->buff_pos] &&
+                            buff[data->buff_pos] != L'\n')
+                    {
+                        data->buff_pos++;
+                    }
+                }
+                else
+                {
+                    accept_autosuggestion(true);
                 }
 
                 reader_repaint();

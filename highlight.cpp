@@ -1035,7 +1035,7 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
                         bool is_cmd = false;
                         int is_subcommand = 0;
                         int mark = tok_get_pos(&tok);
-                        color.at(tok_get_pos(&tok)) = HIGHLIGHT_COMMAND;
+                        color.at(tok_get_pos(&tok)) = use_builtin ? HIGHLIGHT_COMMAND : HIGHLIGHT_ERROR;
 
                         if (parser_keywords_is_subcommand(cmd))
                         {
@@ -1048,7 +1048,7 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
                                 use_command  = 0;
                                 use_builtin  = 1;
                             }
-                            else if (cmd == L"command")
+                            else if (cmd == L"command" || cmd == L"exec")
                             {
                                 use_command  = 1;
                                 use_function = 0;

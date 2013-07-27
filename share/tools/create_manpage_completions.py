@@ -952,18 +952,4 @@ if __name__ == "__main__":
             if e.errno != errno.EEXIST:
                 raise
 
-    if True:
-        parse_and_output_man_pages(file_paths, output_directory, show_progress)
-    else:
-        # Profiling code
-        import cProfile, pstats
-        cProfile.run('parse_and_output_man_pages(file_paths, output_directory, show_progress)', 'fooprof')
-        p = pstats.Stats('fooprof')
-        p.sort_stats('cumulative').print_stats(100)
-
-    # Here we can write out all the parser infos
-    if False:
-        for name in PARSER_INFO:
-            print('Parser ' + name + ':')
-            print('\t' + ', '.join(PARSER_INFO[name]))
-            print('')
+    parse_and_output_man_pages(file_paths, output_directory, show_progress)

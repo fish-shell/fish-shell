@@ -56,6 +56,7 @@
 #                    of git-rev-list
 #     git            always compare HEAD to @{upstream}
 #     svn            always compare HEAD to your SVN upstream
+#     none           disables (fish only, useful with show_informative_status)
 #
 # By default, __fish_git_prompt will compare HEAD to your SVN upstream if it
 # can find one, or @{upstream} otherwise. Once you have set
@@ -84,12 +85,14 @@
 # An "informative git prompt" mode similar to the scripts for bash and zsh
 # can be activated by setting __fish_git_prompt_show_informative_status
 # This works more like the "informative git prompt" scripts for bash and zsh,
-# giving prompts like (master|+1#2*3%4) where master is the current branch
-# and you have 1 staged, 2 unmerged, 3 dirty, and 4 untracked files.  If you
-# have no changes, it displays (master|.).  The characters and colors can be
-# customized as below, with the following names:
+# giving prompts like (master >1<2|+3#4*5%6) where master is the current branch,
+# you have 1 commit your upstream doesn't and it has 2 you don't, and you have
+# 3 staged, 4 unmerged, 5 dirty, and 6 untracked files.  If you have no
+# changes, it displays (master|.).  The characters and colors can be customized
+# as below, with the following names:
 #
-#     dirtystate, invalidstate, stagedstate, untrackedfiles, cleanstate
+#     upstream_prefix, upstream_ahead, upstream_behind, dirtystate,
+#     invalidstate, stagedstate, untrackedfiles, cleanstate
 #
 # The color for each component of the prompt can specified using
 # __fish_git_prompt_color_<name>, where <name> is one of the following and the
@@ -205,6 +208,8 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 		case legacy
 			set legacy 1
 			set -e informative
+		case none
+			return
 		end
 	end
 
@@ -363,7 +368,7 @@ function __fish_git_prompt --description "Prompt function for Git"
 			end
 		end
 
-		if test -n "$__fish_git_prompt_showupstream"
+		if test -n "$__fish_git_prompt_showupstream" -o "$__fish_git_prompt_show_informative_status"
 			set p (__fish_git_prompt_show_upstream)
 		end
 	end

@@ -30,6 +30,9 @@ static bool production_is_valid(const production_options_t production_list, prod
 #define RESOLVE(sym) static production_option_idx_t resolve_##sym (parse_token_type_t token_type, parse_keyword_t token_keyword, production_tag_t *tag)
 #define RESOLVE_ONLY(sym) static production_option_idx_t resolve_##sym (parse_token_type_t token_type, parse_keyword_t token_keyword, production_tag_t *tag) { return 0; }
 
+#define PRODUCE_KEYWORD(x) ((x) + LAST_TOKEN_OR_SYMBOL + 1)
+
+
 /* A job_list is a list of jobs, separated by semicolons or newlines */
 PRODUCTIONS(job_list) =
 {
@@ -409,7 +412,7 @@ RESOLVE(optional_background)
 }
 
 #define TEST(sym) case (symbol_##sym): production_list = & productions_ ## sym ; resolver = resolve_ ## sym ; break;
-const production_t *parse_productions::production_for_token(parse_token_type_t node_type, parse_token_type_t input_type, parse_keyword_t input_keyword, production_option_idx_t *out_which_production, production_tag_t *out_tag)
+const production_t *parse_productions::production_for_token(parse_token_type_t node_type, parse_token_type_t input_type, parse_keyword_t input_keyword, production_option_idx_t *out_which_production, production_tag_t *out_tag, wcstring *out_error_text)
 {
     bool log_it = false;
     if (log_it)
@@ -478,7 +481,10 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
     
     if (which == NO_PRODUCTION)
     {
-        fprintf(stderr, "Token type '%ls' has no production for input type '%ls', keyword '%ls' (in %s)\n", token_type_description(node_type).c_str(), token_type_description(input_type).c_str(), keyword_description(input_keyword).c_str(), __FUNCTION__);
+        if (log_it)
+        {
+            fprintf(stderr, "Token type '%ls' has no production for input type '%ls', keyword '%ls' (in %s)\n", token_type_description(node_type).c_str(), token_type_description(input_type).c_str(), keyword_description(input_keyword).c_str(), __FUNCTION__);
+        }
         result = NULL;
     }
     else

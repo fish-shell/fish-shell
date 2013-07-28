@@ -14,7 +14,7 @@ wcstring parse_error_t::describe(const wcstring &src) const
 
         // Look for a newline prior to source_start. If we don't find one, start at the beginning of the string; otherwise start one past the newline
         size_t newline = src.find_last_of(L'\n', source_start);
-        fprintf(stderr, "newline: %lu, source_start %lu, source_length %lu\n", newline, source_start, source_length);
+        //fprintf(stderr, "newline: %lu, source_start %lu, source_length %lu\n", newline, source_start, source_length);
         if (newline != wcstring::npos)
         {
             line_start = newline;// + 1;
@@ -26,7 +26,7 @@ wcstring parse_error_t::describe(const wcstring &src) const
             line_end = src.size();
         }
         assert(line_end >= line_start);
-        fprintf(stderr, "source start: %lu, line start %lu\n", source_start, line_start);
+        //fprintf(stderr, "source start: %lu, line start %lu\n", source_start, line_start);
         assert(source_start >= line_start);
 
         // Append the line of text
@@ -320,8 +320,6 @@ class parse_ll_t
 
     void accept_token(parse_token_t token, const wcstring &src);
 
-    void token_unhandled(parse_token_t token, const char *function);
-
     void parse_error(const wchar_t *expected, parse_token_t token);
     void parse_error(parse_token_t token, const wchar_t *format, ...);
     void append_error_callout(wcstring &error_message, parse_token_t token);
@@ -455,18 +453,6 @@ void parse_ll_t::dump_stack(void) const
     }
 }
 
-void parse_ll_t::token_unhandled(parse_token_t token, const char *function)
-{
-    fprintf(stderr, "Unhandled token with type %ls in function %s\n", token_type_description(token.type).c_str(), function);
-    this->dump_stack();
-    parse_error_t err;
-    err.text = format_string(L"Unhandled token with type %ls in function %s", token_type_description(token.type).c_str(), function);
-    err.source_start = token.source_start;
-    err.source_length = token.source_length;
-    this->errors.push_back(err);
-    this->fatal_errored = true;
-}
-
 void parse_ll_t::parse_error(parse_token_t token, const wchar_t *fmt, ...)
 {
     this->dump_stack();
@@ -551,12 +537,18 @@ void parse_ll_t::accept_token(parse_token_t token, const wcstring &src)
         // Get the production for the top of the stack
         parse_stack_element_t &stack_elem = symbol_stack.back();
         parse_node_t &node = nodes.at(stack_elem.node_idx);
-        const production_t *production = production_for_token(stack_elem.type, token.type, token.keyword, &node.production_idx, &node.tag);
-        PARSE_ASSERT(production != NULL);
-        
-        // Manipulate the symbol stack.
-        // Note that stack_elem is invalidated by popping the stack.
-        symbol_stack_pop_push_production(production);
+        const production_t *production = production_for_token(stack_elem.type, token.type, token.keyword, &node.production_idx, &node.tag, NULL /* error text */);
+        if (production == NULL)
+        {
+            this->parse_error(token, L"Unable to produce a '%ls' from input '%ls'", stack_elem.describe().c_str(), token.describe().c_str());
+            // parse_error sets fatal_errored, which ends the loop
+        }
+        else
+        {
+            // Manipulate the symbol stack.
+            // Note that stack_elem is invalidated by popping the stack.
+            symbol_stack_pop_push_production(production);
+        }
     }
 }
 
@@ -632,7 +624,7 @@ bool parse_t::parse(const wcstring &str, parse_node_tree_t *output, parse_error_
             break;
     }
 
-    wcstring result = L"";//dump_tree(this->parser->nodes, str);
+    wcstring result = dump_tree(this->parser->nodes, str);
     fprintf(stderr, "Tree (%ld nodes):\n%ls", this->parser->nodes.size(), result.c_str());
     fprintf(stderr, "%lu nodes, node size %lu, %lu bytes\n", this->parser->nodes.size(), sizeof(parse_node_t), this->parser->nodes.size() * sizeof(parse_node_t));
 

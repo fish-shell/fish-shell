@@ -23,6 +23,13 @@ typedef uint8_t production_element_t;
 /* An index into a production option list */
 typedef uint8_t production_option_idx_t;
 
+/* A production is an array of production elements */
+typedef production_element_t const production_t[MAX_SYMBOLS_PER_PRODUCTION];
+
+/* A production options is an array of (possible) productions */
+typedef production_t production_options_t[MAX_PRODUCTIONS];
+
+/* Resolve the type from a production element */
 inline parse_token_type_t production_element_type(production_element_t elem)
 {
     if (elem > LAST_TOKEN_OR_SYMBOL)
@@ -35,6 +42,7 @@ inline parse_token_type_t production_element_type(production_element_t elem)
     }
 }
 
+/* Resolve the keyword from a production element */
 inline parse_keyword_t production_element_keyword(production_element_t elem)
 {
     if (elem > LAST_TOKEN_OR_SYMBOL)
@@ -48,19 +56,14 @@ inline parse_keyword_t production_element_keyword(production_element_t elem)
     }
 }
 
-
+/* Check if an element is valid */
 inline bool production_element_is_valid(production_element_t elem)
 {
     return elem != token_type_invalid;
 }
 
-typedef production_element_t const production_t[MAX_SYMBOLS_PER_PRODUCTION];
-
-typedef production_t production_options_t[MAX_PRODUCTIONS];
-
-#define PRODUCE_KEYWORD(x) ((x) + LAST_TOKEN_OR_SYMBOL + 1)
-
-const production_t *production_for_token(parse_token_type_t node_type, parse_token_type_t input_type, parse_keyword_t input_keyword, production_option_idx_t *out_idx, production_tag_t *out_tag);
+/* Fetch a production */
+const production_t *production_for_token(parse_token_type_t node_type, parse_token_type_t input_type, parse_keyword_t input_keyword, production_option_idx_t *out_idx, production_tag_t *out_tag, wcstring *out_error_text);
 
 }
 

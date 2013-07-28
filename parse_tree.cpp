@@ -2,7 +2,7 @@
 #include "tokenizer.h"
 #include <vector>
 
-using namespace parse_symbols;
+using namespace parse_productions;
 
 wcstring parse_error_t::describe(const wcstring &src) const
 {
@@ -260,6 +260,7 @@ static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &
     }
 }
 
+__attribute__((unused))
 static wcstring dump_tree(const parse_node_tree_t &nodes, const wcstring &src)
 {
     if (nodes.empty())
@@ -277,11 +278,11 @@ struct parse_stack_element_t
     enum parse_keyword_t keyword;
     node_offset_t node_idx;
 
-    parse_stack_element_t(parse_token_type_t t) : type(t), keyword(parse_keyword_none), node_idx(-1)
+    explicit parse_stack_element_t(parse_token_type_t t, node_offset_t idx) : type(t), keyword(parse_keyword_none), node_idx(idx)
     {
     }
-
-    parse_stack_element_t(parse_keyword_t k) : type(parse_token_type_string), keyword(k), node_idx(-1)
+    
+    explicit parse_stack_element_t(production_element_t e, node_offset_t idx) : type(production_element_type(e)), keyword(production_element_keyword(e)), node_idx(idx)
     {
     }
 
@@ -311,26 +312,13 @@ class parse_ll_t
     parse_ll_t() : fatal_errored(false)
     {
         // initial node
-        parse_stack_element_t elem = symbol_job_list;
-        elem.node_idx = 0;
-        symbol_stack.push_back(elem); // goal token
+        symbol_stack.push_back(parse_stack_element_t(symbol_job_list, 0)); // goal token
         nodes.push_back(parse_node_t(symbol_job_list));
     }
 
     bool top_node_match_token(parse_token_t token);
 
-    // implementation of certain parser constructions
     void accept_token(parse_token_t token, const wcstring &src);
-    void accept_token_job_list(parse_token_t token);
-    void accept_token_job(parse_token_t token);
-    void accept_token_job_continuation(parse_token_t token);
-    void accept_token_else_clause(parse_token_t token);
-    void accept_token_else_continuation(parse_token_t token);
-    void accept_token_plain_statement(parse_token_t token);
-    void accept_token_argument_list(parse_token_t token);
-    void accept_token_arguments_or_redirections_list(parse_token_t token);
-    void accept_token_argument_or_redirection(parse_token_t token);
-    bool accept_token_string(parse_token_t token);
 
     void token_unhandled(parse_token_t token, const char *function);
 
@@ -373,110 +361,66 @@ class parse_ll_t
         symbol_stack.pop_back();
     }
 
-
-    // Pop from the top of the symbol stack, then push, updating node counts. Note that these are pushed in reverse order, so the first argument will be on the top of the stack.
-    inline void symbol_stack_pop_push_int(parse_stack_element_t tok1 = token_type_invalid, parse_stack_element_t tok2 = token_type_invalid, parse_stack_element_t tok3 = token_type_invalid, parse_stack_element_t tok4 = token_type_invalid, parse_stack_element_t tok5 = token_type_invalid)
+    // Pop from the top of the symbol stack, then push the given production, updating node counts. Note that production_t has type "pointer to array" so some care is required.
+    inline void symbol_stack_pop_push_production(const production_t *production)
     {
-
-        // Logging?
-        if (0)
+        bool logit = false;
+        if (logit)
         {
-            fprintf(stderr, "Pop %ls (%lu)\n", token_type_description(symbol_stack.back().type).c_str(), symbol_stack.size());
-            if (tok5.type != token_type_invalid) fprintf(stderr, "Push %ls\n", tok5.describe().c_str());
-            if (tok4.type != token_type_invalid) fprintf(stderr, "Push %ls\n", tok4.describe().c_str());
-            if (tok3.type != token_type_invalid) fprintf(stderr, "Push %ls\n", tok3.describe().c_str());
-            if (tok2.type != token_type_invalid) fprintf(stderr, "Push %ls\n", tok2.describe().c_str());
-            if (tok1.type != token_type_invalid) fprintf(stderr, "Push %ls\n", tok1.describe().c_str());
+            size_t count = 0;
+            fprintf(stderr, "Applying production:\n");
+            for (size_t i=0; i < MAX_SYMBOLS_PER_PRODUCTION; i++)
+            {
+                production_element_t elem = (*production)[i];
+                if (production_element_is_valid(elem))
+                {
+                    parse_token_type_t type = production_element_type(elem);
+                    parse_keyword_t keyword = production_element_keyword(elem);
+                    fprintf(stderr, "\t%ls <%ls>\n", token_type_description(type).c_str(), keyword_description(keyword).c_str());
+                    count++;
+                }
+            }
+            if (! count) fprintf(stderr, "\t<empty>\n");
         }
 
-        // Get the node for the top symbol and tell it about its children
-        size_t node_idx = symbol_stack.back().node_idx;
-        parse_node_t &node = nodes.at(node_idx);
-
+    
+        // Add the children. Confusingly, we want our nodes to be in forwards order (last token last, so dumps look nice), but the symbols should be reverse order (last token first, so it's lowest on the stack)
+        const size_t child_start = nodes.size();
+        size_t child_count = 0;
+        for (size_t i=0; i < MAX_SYMBOLS_PER_PRODUCTION; i++)
+        {
+            production_element_t elem = (*production)[i];
+            if (production_element_is_valid(elem))
+            {
+                // Generate the parse node. Note that this push_back may invalidate node.
+               parse_token_type_t child_type = production_element_type(elem);
+               nodes.push_back(parse_node_t(child_type));
+               child_count++;
+            }
+        }
+        
+        // Update the parent
+        const size_t parent_node_idx = symbol_stack.back().node_idx;
+        parse_node_t &parent_node = nodes.at(parent_node_idx);
+        
         // Should have no children yet
-        PARSE_ASSERT(node.child_count == 0);
+        PARSE_ASSERT(parent_node.child_count == 0);
 
-        // Tell the node where its children start
-        node.child_start = nodes.size();
-
-        // Add nodes for the children
-        // Confusingly, we want our nodes to be in forwards order (last token last, so dumps look nice), but the symbols should be reverse order (last token first, so it's lowest on the stack)
-        if (tok1.type != token_type_invalid) add_child_to_node(node_idx, &tok1);
-        if (tok2.type != token_type_invalid) add_child_to_node(node_idx, &tok2);
-        if (tok3.type != token_type_invalid) add_child_to_node(node_idx, &tok3);
-        if (tok4.type != token_type_invalid) add_child_to_node(node_idx, &tok4);
-        if (tok5.type != token_type_invalid) add_child_to_node(node_idx, &tok5);
-
-        // The above set the node_idx. Now replace the top of the stack.
+        // Tell the node about its children
+        parent_node.child_start = child_start;
+        parent_node.child_count = child_count;
+        
+        // Replace the top of the stack with new stack elements corresponding to our new nodes. Note that these go in reverse order.
         symbol_stack.pop_back();
-        if (tok5.type != token_type_invalid) symbol_stack.push_back(tok5);
-        if (tok4.type != token_type_invalid) symbol_stack.push_back(tok4);
-        if (tok3.type != token_type_invalid) symbol_stack.push_back(tok3);
-        if (tok2.type != token_type_invalid) symbol_stack.push_back(tok2);
-        if (tok1.type != token_type_invalid) symbol_stack.push_back(tok1);
-    }
-
-    template<typename T>
-    inline void symbol_stack_pop_push2(typename T::magic_seq_type_t x = 0)
-    {
-        symbol_stack_pop_push_int(T::t0::get_token(), T::t1::get_token(), T::t2::get_token(), T::t3::get_token(), T::t4::get_token());
-    }
-
-    template<typename T>
-    inline void symbol_stack_pop_push2(typename T::magic_symbol_type_t x = 0)
-    {
-        symbol_stack_pop_push_int(T::get_token());
-    }
-
-    // Singular. Sole productions are always of type Seq.
-    template<typename T>
-    inline void symbol_stack_produce(parse_token_t tok, typename T::sole_production::magic_seq_type_t magic=0)
-    {
-        typedef typename T::sole_production seq;
-        symbol_stack_pop_push_int(seq::t0::get_token(), seq::t1::get_token(), seq::t2::get_token(), seq::t3::get_token(), seq::t4::get_token());
-    }
-
-    // Plural productions, of type Or.
-    template<typename T>
-    inline void symbol_stack_produce(parse_token_t tok, typename T::productions::magic_or_type_t magic=0)
-    {
-        typedef typename T::productions ors;
-        int which = T::production(tok.type, tok.keyword);
-        switch (which)
+        symbol_stack.reserve(symbol_stack.size() + child_count);
+        size_t idx = child_count;
+        while (idx--)
         {
-            case 0:
-                symbol_stack_pop_push2<typename ors::p0>();
-                break;
-            case 1:
-                symbol_stack_pop_push2<typename ors::p1>();
-                break;
-            case 2:
-                symbol_stack_pop_push2<typename ors::p2>();
-                break;
-            case 3:
-                symbol_stack_pop_push2<typename ors::p3>();
-                break;
-            case 4:
-                symbol_stack_pop_push2<typename ors::p4>();
-                break;
-
-            case NO_PRODUCTION:
-                parse_error(tok, L"Failed to produce with stack top '%ls' for token '%ls'\n", symbol_stack.back().describe().c_str(), tok.describe().c_str());
-                break;
-
-            default:
-                parse_error(tok, L"Unexpected production %d for token %ls\n", which, tok.describe().c_str());
-                break;
+            production_element_t elem = (*production)[idx];
+            PARSE_ASSERT(production_element_is_valid(elem));
+            symbol_stack.push_back(parse_stack_element_t(elem, child_start + idx));
         }
     }
-
-    // Non-sequence basic productions
-    template<typename T>
-    inline void symbol_stack_produce(parse_token_t tok, typename T::sole_production::magic_symbol_type_t magic=0)
-    {
-        symbol_stack_pop_push_int(T::sole_production::get_token());
-    }
-
 
 };
 
@@ -551,57 +495,6 @@ void parse_ll_t::parse_error(const wchar_t *expected, parse_token_t token)
     fatal_errored = true;
 }
 
-void parse_ll_t::accept_token_else_clause(parse_token_t token)
-{
-    PARSE_ASSERT(stack_top_type() == symbol_else_clause);
-    symbol_stack_produce<else_clause>(token);
-}
-
-void parse_ll_t::accept_token_else_continuation(parse_token_t token)
-{
-    PARSE_ASSERT(stack_top_type() == symbol_else_continuation);
-    symbol_stack_produce<else_continuation>(token);
-}
-
-
-void parse_ll_t::accept_token_argument_list(parse_token_t token)
-{
-    PARSE_ASSERT(stack_top_type() == symbol_argument_list);
-    symbol_stack_produce<argument_list>(token);
-}
-
-
-void parse_ll_t::accept_token_arguments_or_redirections_list(parse_token_t token)
-{
-    PARSE_ASSERT(stack_top_type() == symbol_arguments_or_redirections_list);
-    symbol_stack_produce<arguments_or_redirections_list>(token);
-}
-
-void parse_ll_t::accept_token_argument_or_redirection(parse_token_t token)
-{
-    PARSE_ASSERT(stack_top_type() == symbol_argument_or_redirection);
-    symbol_stack_produce<argument_or_redirection>(token);
-}
-
-bool parse_ll_t::accept_token_string(parse_token_t token)
-{
-    PARSE_ASSERT(stack_top_type() == parse_token_type_string);
-    bool result = false;
-    switch (token.type)
-    {
-        case parse_token_type_string:
-            // Got our string
-            symbol_stack_pop();
-            result = true;
-            break;
-
-        default:
-            token_unhandled(token, __FUNCTION__);
-            break;
-    }
-    return result;
-}
-
 bool parse_ll_t::top_node_match_token(parse_token_t token)
 {
     PARSE_ASSERT(! symbol_stack.empty());
@@ -654,122 +547,16 @@ void parse_ll_t::accept_token(parse_token_t token, const wcstring &src)
             consumed = true;
             break;
         }
-
-        switch (stack_top_type())
-        {
-                /* Symbols */
-            case symbol_job_list:
-                symbol_stack_produce<job_list>(token);
-                break;
-
-            case symbol_job:
-                symbol_stack_produce<job>(token);
-                break;
-
-            case symbol_job_continuation:
-                symbol_stack_produce<job_continuation>(token);
-                break;
-
-            case symbol_statement:
-                symbol_stack_produce<statement>(token);
-                break;
-
-            case symbol_if_statement:
-                symbol_stack_produce<if_statement>(token);
-                break;
-
-            case symbol_if_clause:
-                symbol_stack_produce<if_clause>(token);
-                break;
-
-            case symbol_else_clause:
-                accept_token_else_clause(token);
-                break;
-
-            case symbol_else_continuation:
-                accept_token_else_continuation(token);
-                break;
-
-            case symbol_block_statement:
-                symbol_stack_produce<block_statement>(token);
-                break;
-
-            case symbol_block_header:
-                symbol_stack_produce<block_header>(token);
-                break;
-
-            case symbol_for_header:
-                symbol_stack_produce<for_header>(token);
-                break;
-
-            case symbol_while_header:
-                symbol_stack_produce<while_header>(token);
-                break;
-
-            case symbol_begin_header:
-                symbol_stack_produce<begin_header>(token);
-                break;
-
-            case symbol_function_header:
-                symbol_stack_produce<function_header>(token);
-                break;
-
-            case symbol_switch_statement:
-                symbol_stack_produce<switch_statement>(token);
-                break;
-
-            case symbol_case_item_list:
-                symbol_stack_produce<case_item_list>(token);
-                break;
-
-            case symbol_case_item:
-                symbol_stack_produce<case_item>(token);
-                break;
-
-            case symbol_boolean_statement:
-                top_node_set_tag(token.keyword);
-                symbol_stack_produce<boolean_statement>(token);
-                break;
-
-            case symbol_decorated_statement:
-                top_node_set_tag(token.keyword);
-                symbol_stack_produce<decorated_statement>(token);
-                break;
-
-            case symbol_plain_statement:
-                symbol_stack_produce<plain_statement>(token);
-                break;
-
-            case symbol_argument_list_nonempty:
-                symbol_stack_produce<argument_list_nonempty>(token);
-                break;
-
-            case symbol_argument_list:
-                accept_token_argument_list(token);
-                break;
-
-            case symbol_arguments_or_redirections_list:
-                accept_token_arguments_or_redirections_list(token);
-                break;
-
-            case symbol_argument_or_redirection:
-                accept_token_argument_or_redirection(token);
-                break;
-                
-            case symbol_optional_background:
-                symbol_stack_produce<optional_background>(token);
-                break;
-
-                /* Tokens */
-            case parse_token_type_string:
-                consumed = accept_token_string(token);
-                break;
-                
-            default:
-                fprintf(stderr, "Bailing with token type %ls and stack top %ls\n", token_type_description(token.type).c_str(), token_type_description(stack_top_type()).c_str());
-                exit_without_destructors(EXIT_FAILURE);
-                break;
-        }
+        
+        // Get the production for the top of the stack
+        parse_stack_element_t &stack_elem = symbol_stack.back();
+        parse_node_t &node = nodes.at(stack_elem.node_idx);
+        const production_t *production = production_for_token(stack_elem.type, token.type, token.keyword, &node.production_idx, &node.tag);
+        PARSE_ASSERT(production != NULL);
+        
+        // Manipulate the symbol stack.
+        // Note that stack_elem is invalidated by popping the stack.
+        symbol_stack_pop_push_production(production);
     }
 }
 

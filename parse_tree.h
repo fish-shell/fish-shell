@@ -137,6 +137,9 @@ public:
 
     /* Type-dependent data */
     uint32_t tag;
+    
+    /* Which production was used */
+    uint8_t production_idx;
 
     /* Description */
     wcstring describe(void) const;

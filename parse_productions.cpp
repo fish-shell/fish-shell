@@ -1,10 +1,34 @@
 #include "parse_productions.h"
 
 using namespace parse_productions;
+#define NO_PRODUCTION ((production_option_idx_t)(-1))
 
-#define PRODUCTIONS(sym) static const ProductionList_t sym##_productions
-#define RESOLVE(sym) static int resolve_##sym (parse_token_type_t token_type, parse_keyword_t token_keyword)
-#define RESOLVE_ONLY(sym) static int resolve_##sym (parse_token_type_t token_type, parse_keyword_t token_keyword) { return 0; }
+static bool production_is_empty(const production_t production)
+{
+    return production[0] == token_type_invalid;
+}
+
+// Empty productions are allowed but must be first. Validate that the given production is in the valid range, i.e. it is either not empty or there is a non-empty production after it
+static bool production_is_valid(const production_options_t production_list, production_option_idx_t which)
+{
+    if (which < 0 || which >= MAX_PRODUCTIONS)
+        return false;
+    
+    bool nonempty_found = false;
+    for (int i=which; i < MAX_PRODUCTIONS; i++)
+    {
+        if (! production_is_empty(production_list[i]))
+        {
+            nonempty_found = true;
+            break;
+        }
+    }
+    return nonempty_found;
+}
+
+#define PRODUCTIONS(sym) static const production_options_t productions_##sym
+#define RESOLVE(sym) static production_option_idx_t resolve_##sym (parse_token_type_t token_type, parse_keyword_t token_keyword, production_tag_t *tag)
+#define RESOLVE_ONLY(sym) static production_option_idx_t resolve_##sym (parse_token_type_t token_type, parse_keyword_t token_keyword, production_tag_t *tag) { return 0; }
 
 /* A job_list is a list of jobs, separated by semicolons or newlines */
 PRODUCTIONS(job_list) =
@@ -44,7 +68,6 @@ RESOLVE(job_list)
         case parse_token_type_terminate:
             // no more commands, just transition to empty
             return 0;
-            break;
 
         default:
             return NO_PRODUCTION;
@@ -350,3 +373,119 @@ RESOLVE(arguments_or_redirections_list)
     }
 }
 
+PRODUCTIONS(argument_or_redirection) =
+{
+    {parse_token_type_string},
+    {parse_token_type_redirection}
+};
+RESOLVE(argument_or_redirection)
+{
+    switch (token_type)
+    {
+        case parse_token_type_string:
+            return 0;
+        case parse_token_type_redirection:
+            return 1;
+        default:
+            return NO_PRODUCTION;
+    }
+}
+
+PRODUCTIONS(optional_background) =
+{
+    {},
+    { parse_token_type_background }
+};
+
+RESOLVE(optional_background)
+{
+    switch (token_type)
+    {
+        case parse_token_type_background:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+#define TEST(sym) case (symbol_##sym): production_list = & productions_ ## sym ; resolver = resolve_ ## sym ; break;
+const production_t *parse_productions::production_for_token(parse_token_type_t node_type, parse_token_type_t input_type, parse_keyword_t input_keyword, production_option_idx_t *out_which_production, production_tag_t *out_tag)
+{
+    bool log_it = false;
+    if (log_it)
+    {
+        fprintf(stderr, "Resolving production for %ls with input type %ls <%ls>\n", token_type_description(node_type).c_str(), token_type_description(input_type).c_str(), keyword_description(input_keyword).c_str());
+    }
+    
+    /* Fetch the list of productions and the function to resolve them */
+    const production_options_t *production_list = NULL;
+    production_option_idx_t (*resolver)(parse_token_type_t token_type, parse_keyword_t token_keyword, production_tag_t *tag) = NULL;
+    switch (node_type)
+    {
+        TEST(job_list)
+        TEST(job)
+        TEST(statement)
+        TEST(job_continuation)
+        TEST(boolean_statement)
+        TEST(block_statement)
+        TEST(if_statement)
+        TEST(if_clause)
+        TEST(else_clause)
+        TEST(else_continuation)
+        TEST(switch_statement)
+        TEST(decorated_statement)
+        TEST(case_item_list)
+        TEST(case_item)
+        TEST(argument_list_nonempty)
+        TEST(argument_list)
+        TEST(block_header)
+        TEST(for_header)
+        TEST(while_header)
+        TEST(begin_header)
+        TEST(function_header)
+        TEST(plain_statement)
+        TEST(arguments_or_redirections_list)
+        TEST(argument_or_redirection)
+        TEST(optional_background)
+        
+        case parse_token_type_string:
+        case parse_token_type_pipe:
+        case parse_token_type_redirection:
+        case parse_token_type_background:
+        case parse_token_type_end:
+        case parse_token_type_terminate:
+            fprintf(stderr, "Terminal token type %ls passed to %s\n", token_type_description(node_type).c_str(), __FUNCTION__);
+            PARSER_DIE();
+            break;
+            
+        case token_type_invalid:
+            fprintf(stderr, "token_type_invalid passed to %s\n", __FUNCTION__);
+            PARSER_DIE();
+            break;
+        
+    }
+    PARSE_ASSERT(production_list != NULL);
+    PARSE_ASSERT(resolver != NULL);
+    
+    const production_t *result = NULL;
+    production_option_idx_t which = resolver(input_type, input_keyword, out_tag);
+    
+    if (log_it)
+    {
+        fprintf(stderr, "\tresolved to %u\n", (unsigned)which);
+    }
+
+    
+    if (which == NO_PRODUCTION)
+    {
+        fprintf(stderr, "Token type '%ls' has no production for input type '%ls', keyword '%ls' (in %s)\n", token_type_description(node_type).c_str(), token_type_description(input_type).c_str(), keyword_description(input_keyword).c_str(), __FUNCTION__);
+        result = NULL;
+    }
+    else
+    {
+        PARSE_ASSERT(production_is_valid(*production_list, which));
+        result = &((*production_list)[which]);
+    }
+    *out_which_production = which;
+    return result;
+}

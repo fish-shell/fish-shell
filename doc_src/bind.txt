@@ -48,7 +48,7 @@ readable as well.
 
 Key bindings are not saved between sessions by default. To save custom
 keybindings, edit the \c fish_user_key_bindings function and insert the
-appropirate \c bind statements.
+appropriate \c bind statements.
 
 The following parameters are available:
 

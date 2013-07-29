@@ -6,37 +6,91 @@
 \subsection test-description Description
 
 Tests the expression given and sets the exit status to 0 if true,
-and 1 if false.
+and 1 if false. An expression is made up of one or more operators
+and their arguments.
 
-The following options are available:
-- \c -h displays a help message and then exits.
-- <tt>-L FILE</tt> returns true if \c FILE is a symbolic link.
-- <tt>-S FILE</tt> returns true if \c FILE is a socket.
-- <tt>COND1 -a COND2</tt> combines two conditions with a logical and.
+The following operators are available to examine files and directories:
 - <tt>-b FILE</tt> returns true if \c FILE is a block device.
 - <tt>-c FILE</tt> returns true if \c FILE is a character device.
 - <tt>-d FILE</tt> returns true if \c FILE is a directory.
 - <tt>-e FILE</tt> returns true if \c FILE exists.
 - <tt>-f FILE</tt> returns true if \c FILE is a regular file.
-- <tt>-f FILE</tt> returns true if \c FILE has set-group-ID bit set.
-- <tt>-n STRING</tt> returns true if the length of \c STRING is non-zero.
-- <tt>COND1 -o COND2</tt> combines two conditions with a logical or.
+- <tt>-g FILE</tt> returns true if \c FILE has the set-group-ID bit set.
+- <tt>-L FILE</tt> returns true if \c FILE is a symbolic link.
 - <tt>-p FILE</tt> returns true if \c FILE is a named pipe.
-- <tt>-r FILE</tt> returns true if \c FILE is readable.
-- <tt>-s FILE</tt> returns true if the size of \c FILE is non-zero.
-- <tt>-t FD</tt> returns true if \c FD is a terminal (TTY).
-- <tt>-u FILE</tt> returns true if \c FILE has set-user-ID bit set.
-- <tt>-w FILE</tt> returns true if \c FILE is writable.
-- <tt>-x FILE</tt> returns true if \c FILE is executable.
-- <tt>-z STRING</tt> returns true if \c STRING length is zero.
+- <tt>-r FILE</tt> returns true if \c FILE is marked as readable.
+- <tt>-s FILE</tt> returns true if the size of \c FILE is greater than zero.
+- <tt>-S FILE</tt> returns true if \c FILE is a socket.
+- <tt>-t FD</tt> returns true if the file descriptor \c FD is a terminal (TTY).
+- <tt>-u FILE</tt> returns true if \c FILE has the set-user-ID bit set.
+- <tt>-w FILE</tt> returns true if \c FILE is marked as writable; note that this does not check if the filesystem is read-only.
+- <tt>-x FILE</tt> returns true if \c FILE is marked as executable.
 
-\subsection test-example Example
+The following operators are available to compare and examine text strings:
+- <tt>STRING1 = STRING2</tt> returns true if the strings \c STRING1 and
+\c STRING2 are identical.
+- <tt>STRING1 != STRING2</tt> returns true if the strings \c STRING1 and
+\c STRING2 are not identical.
+- <tt>-n STRING</tt> returns true if the length of \c STRING is non-zero.
+- <tt>-z STRING</tt> returns true if the length of \c STRING is zero.
+
+The following operators are available to compare and examine numbers:
+- <tt>NUM1 -eq NUM2</tt> returns true if \c NUM1 and \c NUM2 are numerically equal.
+- <tt>NUM1 -ne NUM2</tt> returns true if \c NUM1 and \c NUM2 are not numerically equal.
+- <tt>NUM1 -gt NUM2</tt> returns true if \c NUM1 is greater than <tt>NUM2</tt>.
+- <tt>NUM1 -ge NUM2</tt> returns true if \c NUM1 is greater than or equal to <tt>NUM2</tt>.
+- <tt>NUM1 -lt NUM2</tt> returns true if \c NUM1 is less than <tt>NUM2</tt>.
+- <tt>NUM1 -le NUM2</tt> returns true if \c NUM1 is less than or equal to <tt>NUM2</tt>.
+
+Note that only integers are supported. For more complex mathematical
+operations, including fractions, the \c env program may be useful. Consult the
+documentation for your operating system.
+
+Expressions can be combined using the following operators:
+- <tt>COND1 -a COND2</tt> returns true if both \c COND1 and \c COND2 are true.
+- <tt>COND1 -o COND2</tt> returns true if either \c COND1 or \c COND2 are true.
+
+Expressions can be inverted using the \c ! operator:
+- <tt>! EXPRESSION</tt> returns true if \c EXPRESSION is false, and false if
+\c EXPRESSION is true.
+
+Expressions can be grouped using parentheses.
+- <tt>( EXPRESSION )</tt> returns the value of <tt>EXPRESSION</tt>.
+Note that parentheses will usually require escaping with <tt>\\(</tt> to avoid
+being interpreted as a command substitution.
+
+\subsection test-example Examples
+
+If the \c /tmp directory exists, copy the \c /etc/motd file to it:
 
 <pre>
-if test -d "/"
-    echo "Fish is cool"
+if test -d /tmp
+    cp /etc/motd /tmp/motd
 end
-</pre> 
+</pre>
 
-Because "/" is a directory, the expression will evaluate to true, and
-"Fish is cool" will be output.
+If the variable \c MANPATH is defined and not empty, print the contents:
+
+<pre>
+if test -n $MANPATH
+    echo $MANPATH
+end
+</pre>
+
+Parentheses and the \c -o and \c -a operators can be combined to produce
+more complicated expressions. In this example, success is printed if there is
+a \c /foo or \c /bar file as well as a \c /baz or \c /bat file.
+
+<pre>
+if test \\( -f /foo -o -f /bar \\) -a \\( -f /baz -o -f /bat \\)
+    echo Success.
+end.
+</pre>
+
+\subsection test-standards Standards
+
+\c test implements a subset of the
+<a href="http://www.unix.com/man-page/POSIX/1/test/">IEEE Std 1003.1-2008
+(POSIX.1) standard</a>. The following exceptions apply:
+- The \c < and \c > operators for comparing strings are not implemented.
+

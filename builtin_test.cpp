@@ -23,12 +23,6 @@ enum
 
 int builtin_test(parser_t &parser, wchar_t **argv);
 
-static const wchar_t * const condstr[] =
-{
-    L"!", L"&&", L"||", L"==", L"!=", L"<", L">", L"-nt", L"-ot", L"-ef", L"-eq",
-    L"-ne", L"-lt", L"-gt", L"-le", L"-ge", L"=~"
-};
-
 namespace test_expressions
 {
 

@@ -789,46 +789,11 @@ depend:
 .PHONY: depend
 
 #
-# Make compressed tar archives
-#
-
-fish-@PACKAGE_VERSION@.tar.gz: fish-@PACKAGE_VERSION@.tar
-	gzip -f --best -c fish-@PACKAGE_VERSION@.tar >fish-@PACKAGE_VERSION@.tar.gz
-
-fish-@PACKAGE_VERSION@.tar.bz2: fish-@PACKAGE_VERSION@.tar
-	bzip2 -f --best -k fish-@PACKAGE_VERSION@.tar
-
-dist: fish-@PACKAGE_VERSION@.tar.bz2
-.PHONY: dist
-
-#
 # Build the RPM spec file.
 #
 
 fish.spec: fish.spec.in
 	./config.status
-
-
-
-#
-# Create .rpm file for the current systems architecture and an
-# .src.rpm file.
-#
-
-rpm: fish-@PACKAGE_VERSION@.tar.bz2 fish.spec
-	@if which rpmbuild; then true; else \
-		echo Could not find the rpmbuild command, needed to build an rpm; \
-		echo You may be able to install it using the following command:; \
-		echo \'yum install rpm-build\'; \
-		false; \
-	fi
-	cp fish.spec /usr/src/redhat/SPECS/
-	cp fish-@PACKAGE_VERSION@.tar.bz2 /usr/src/redhat/SOURCES/
-	rpmbuild -ba --clean /usr/src/redhat/SPECS/fish.spec
-	mv /usr/src/redhat/RPMS/*/fish*@PACKAGE_VERSION@*.rpm .
-	mv /usr/src/redhat/SRPMS/fish*@PACKAGE_VERSION@*.src.rpm .
-.PHONY: rpm
-
 
 #
 # Cleanup targets
@@ -861,13 +826,9 @@ clean:
 	rm -f command_list.txt toc.txt
 	rm -f doc_src/index.hdr doc_src/commands.hdr
 	rm -f FISH-BUILD-VERSION-FILE
-	rm -f fish-@PACKAGE_VERSION@.tar
-	rm -f fish-@PACKAGE_VERSION@.tar.gz
-	rm -f fish-@PACKAGE_VERSION@.tar.bz2
 	if test $(HAVE_DOXYGEN) = 1; then \
 		rm -rf doc user_doc share/man; \
 	fi
-	rm -rf fish-@PACKAGE_VERSION@
 	rm -f $(TRANSLATIONS)
 .PHONY: clean
 

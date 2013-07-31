@@ -375,7 +375,8 @@ function __fish_git_prompt --description "Prompt function for Git"
 			end
 
 			if test -n "$__fish_git_prompt_showuntrackedfiles"
-				if test (git config --bool bash.showUntrackedFiles) != false
+				set -l config (git config --bool bash.showUntrackedFiles)
+				if test "$config" != false
 					if git ls-files --others --exclude-standard --error-unmatch -- '*' >/dev/null ^/dev/null
 						set u $___fish_git_prompt_char_untrackedfiles
 					end

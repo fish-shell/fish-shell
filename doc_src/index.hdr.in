@@ -795,7 +795,7 @@ To set the variable \c smurf_color to the value \c blue, use the command
 <code>set smurf_color blue</code>.
 
 After a variable has been set, you can use the value of a variable in
-the shell through <a href="#expand-variable">variable expansion</a>.
+the shell through <a href="expand-variable">variable expansion</a>.
 
 Example:
 
@@ -1102,56 +1102,27 @@ shortcuts.
 
 Here are some of the commands available in the editor:
 
-- Tab <a href="#completion">completes</a> the current token
-- Home or Ctrl-A moves to the beginning of the line
-- End or Ctrl-E moves to the end of line
-- Left and Right moves one character left or right
-- Alt-Left and Alt-Right moves one word left or right, or moves forward/backward in the directory history if the commandline is empty
+- Tab <a href="#completion">completes</a> the current token.
+- Home or Ctrl-A moves the cursor to the beginning of the line.
+- End or Ctrl-E moves to the end of line. If the cursor is already at the end of the line, and an autosuggestion is available, End or Ctrl-E accepts the autosuggestion.
+- Left (or Ctrl-B) and Right (or Ctrl-F) move the cursor left or right by one character. If the cursor is already at the end of the line, and an autosuggestion is available, the Right key and the Ctrl-F combination accept the suggestion.
+- Alt-Left and Alt-Right move the cursor one word left or right, or moves forward/backward in the directory history if the command line is empty.
 - Up and Down search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the <a href='#history'>history </a>section for more information on history searching.
 - Alt-Up and Alt-Down search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the <a href='#history'>history </a>section for more information on history searching.
-- Delete and Backspace removes one character forwards or backwards respectively
-- Ctrl-C deletes entire line
-- Ctrl-D delete one character to the right of the cursor, unless the buffer is empty, in which case the shell will exit
-- Ctrl-K moves contents from the cursor to the end of line to the <a href="#killring">killring</a>
-- Ctrl-U moves contents from the beginning of line to the cursor to the <a href="#killring">killring</a>
-- Ctrl-L clears and repaints the screen
-- Ctrl-W moves the previous word to the <a href="#killring">killring</a>
-- Alt-D moves the next word to the <a href="#killring">killring</a>
-- Alt-W prints a short description of the command under the cursor
-- Alt-L lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed
+- Delete and Backspace removes one character forwards or backwards respectively.
+- Ctrl-C deletes the entire line.
+- Ctrl-D delete one character to the right of the cursor. If the command line is empty, Ctrl-D will exit fish.
+- Ctrl-K moves contents from the cursor to the end of line to the <a href="#killring">killring</a>.
+- Ctrl-U moves contents from the beginning of line to the cursor to the <a href="#killring">killring</a>.
+- Ctrl-L clears and repaints the screen.
+- Ctrl-W moves the previous word to the <a href="#killring">killring</a>.
+- Alt-D moves the next word to the <a href="#killring">killring</a>.
+- Alt-W prints a short description of the command under the cursor.
+- Alt-L lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed.
 - Alt-P adds the string <code>'| less;'</code> to the end of the job under the cursor. The result is that the output of the command will be paged.
 
 You can change these key bindings using the
 <a href="commands.html#bind">bind</a> builtin command.
-
-
-- \c backward-char, moves one character to the left
-- \c backward-delete-char, deletes one character of input to the left of the cursor
-- \c backward-kill-line, move everything from the beginning of the line to the cursor to the killring
-- \c backward-kill-word, move the word to the left of the cursor to the killring
-- \c backward-word, move one word to the left
-- \c beginning-of-history, move to the beginning of the history
-- \c beginning-of-line, move to the beginning of the line
-- \c complete, guess the remainder of the current token
-- \c delete-char, delete one character to the right of the cursor
-- \c delete-line, delete the entire line
-- \c dump-functions, print a list of all key-bindings
-- \c end-of-history, move to the end of the history
-- \c end-of-line, move to the end of the line
-- \c explain, print a description of possible problems with the current command
-- \c forward-char, move one character to the right
-- \c forward-word, move one word to the right
-- \c history-search-backward, search the history for the previous match
-- \c history-search-forward, search the history for the next match
-- \c kill-line, move everything from the cursor to the end of the line to the killring
-- \c kill-whole-line, move the line to the killring
-- \c kill-word, move the next word to the killring
-- \c yank, insert the latest entry of the killring into the buffer
-- \c yank-pop, rotate to the previous entry of the killring
-
-If such a script produces output, the script needs to finish by
-calling 'commandline -f repaint' in order to tell fish that a repaint
-is in order.
 
 \subsection killring Copy and paste (Kill Ring)
 

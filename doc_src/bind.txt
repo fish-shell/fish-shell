@@ -46,6 +46,10 @@ bind to the function name. This way it becomes significantly easier to
 test the function while editing, and the result is usually more
 readable as well.
 
+If such a script produces output, the script needs to finish by
+calling 'commandline -f repaint' in order to tell fish that a repaint
+is in order.
+
 Key bindings are not saved between sessions by default. To save custom
 keybindings, edit the \c fish_user_key_bindings function and insert the
 appropriate \c bind statements.
@@ -55,6 +59,32 @@ The following parameters are available:
 - <tt>-k</tt> or <tt>--key</tt> Specify a key name, such as 'left' or 'backspace' instead of a character sequence
 - <tt>-K</tt> or <tt>--key-names</tt> Display a list of available key names
 - <tt>-f</tt> or <tt>--function-names</tt> Display a list of available input functions
+
+The following special input functions are available:
+
+- \c backward-char, moves one character to the left
+- \c backward-delete-char, deletes one character of input to the left of the cursor
+- \c backward-kill-line, move everything from the beginning of the line to the cursor to the killring
+- \c backward-kill-word, move the word to the left of the cursor to the killring
+- \c backward-word, move one word to the left
+- \c beginning-of-history, move to the beginning of the history
+- \c beginning-of-line, move to the beginning of the line
+- \c complete, guess the remainder of the current token
+- \c delete-char, delete one character to the right of the cursor
+- \c delete-line, delete the entire line
+- \c dump-functions, print a list of all key-bindings
+- \c end-of-history, move to the end of the history
+- \c end-of-line, move to the end of the line
+- \c explain, print a description of possible problems with the current command
+- \c forward-char, move one character to the right
+- \c forward-word, move one word to the right
+- \c history-search-backward, search the history for the previous match
+- \c history-search-forward, search the history for the next match
+- \c kill-line, move everything from the cursor to the end of the line to the killring
+- \c kill-whole-line, move the line to the killring
+- \c kill-word, move the next word to the killring
+- \c yank, insert the latest entry of the killring into the buffer
+- \c yank-pop, rotate to the previous entry of the killring
 
 \subsection bind-example Examples
 

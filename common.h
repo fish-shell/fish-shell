@@ -608,10 +608,10 @@ const wchar_t *wcsfuncname(const wchar_t *str);
 /**
    Test if the given string is valid in a variable name
 
-   \return 1 if this is a valid name, 0 otherwise
+   \return true if this is a valid name, false otherwise
 */
 
-int wcsvarchr(wchar_t chr);
+bool wcsvarchr(wchar_t chr);
 
 
 /**

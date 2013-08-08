@@ -135,14 +135,12 @@ RESOLVE(statement)
                     return 2;
 
                 case parse_keyword_else:
-                    //symbol_stack_pop();
                     return NO_PRODUCTION;
 
                 case parse_keyword_switch:
                     return 3;
 
                 case parse_keyword_end:
-                    PARSER_DIE(); //todo
                     return NO_PRODUCTION;
 
                     // 'in' is only special within a for_header
@@ -378,7 +376,7 @@ RESOLVE(arguments_or_redirections_list)
 
 PRODUCTIONS(argument_or_redirection) =
 {
-    {parse_token_type_string},
+    {symbol_argument},
     {parse_token_type_redirection}
 };
 RESOLVE(argument_or_redirection)
@@ -393,6 +391,18 @@ RESOLVE(argument_or_redirection)
             return NO_PRODUCTION;
     }
 }
+
+PRODUCTIONS(argument) =
+{
+    {parse_token_type_string}
+};
+RESOLVE_ONLY(argument)
+
+PRODUCTIONS(redirection) =
+{
+    {parse_token_type_redirection}
+};
+RESOLVE_ONLY(redirection)
 
 PRODUCTIONS(optional_background) =
 {
@@ -449,6 +459,8 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
         TEST(plain_statement)
         TEST(arguments_or_redirections_list)
         TEST(argument_or_redirection)
+        TEST(argument)
+        TEST(redirection)
         TEST(optional_background)
         
         case parse_token_type_string:
@@ -460,6 +472,14 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
             fprintf(stderr, "Terminal token type %ls passed to %s\n", token_type_description(node_type).c_str(), __FUNCTION__);
             PARSER_DIE();
             break;
+            
+        case parse_special_type_parse_error:
+        case parse_special_type_tokenizer_error:
+        case parse_special_type_comment:
+            fprintf(stderr, "Special type %ls passed to %s\n", token_type_description(node_type).c_str(), __FUNCTION__);
+            PARSER_DIE();
+            break;
+            
             
         case token_type_invalid:
             fprintf(stderr, "token_type_invalid passed to %s\n", __FUNCTION__);

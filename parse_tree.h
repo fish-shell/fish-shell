@@ -15,7 +15,7 @@
 #include <vector>
 
 #define PARSE_ASSERT(a) assert(a)
-#define PARSER_DIE() exit_without_destructors(-1)
+#define PARSER_DIE() do { fprintf(stderr, "Parser dying!\n"); exit_without_destructors(-1); } while (0)
 
 class parse_node_t;
 class parse_node_tree_t;
@@ -36,6 +36,18 @@ struct parse_error_t
 };
 typedef std::vector<parse_error_t> parse_error_list_t;
 
+enum
+{
+    parse_flag_none = 0,
+    
+    /* Attempt to build a "parse tree" no matter what. This may result in a 'forest' of disconnected trees. This is intended to be used by syntax highlighting. */
+    parse_flag_continue_after_error = 1 << 0,
+    
+    /* Include comment tokens */
+    parse_flag_include_comments = 1 << 1
+};
+typedef unsigned int parse_tree_flags_t;
+
 class parse_ll_t;
 class parse_t
 {
@@ -43,7 +55,8 @@ class parse_t
 
 public:
     parse_t();
-    bool parse(const wcstring &str, parse_node_tree_t *output, parse_error_list_t *errors);
+    ~parse_t();
+    bool parse(const wcstring &str, parse_tree_flags_t flags, parse_node_tree_t *output, parse_error_list_t *errors, bool log_it = false);
 };
 
 enum parse_token_type_t
@@ -80,6 +93,9 @@ enum parse_token_type_t
     symbol_argument_list_nonempty,
     symbol_argument_list,
     
+    symbol_argument,
+    symbol_redirection,
+    
     symbol_optional_background,
 
     // Terminal types
@@ -89,6 +105,11 @@ enum parse_token_type_t
     parse_token_type_background,
     parse_token_type_end,
     parse_token_type_terminate,
+    
+    // Very special terminal types that don't appear in the production list
+    parse_special_type_parse_error,
+    parse_special_type_tokenizer_error,
+    parse_special_type_comment,
     
     LAST_TOKEN_OR_SYMBOL = parse_token_type_terminate,
     FIRST_PARSE_TOKEN_TYPE = parse_token_type_string
@@ -145,7 +166,7 @@ public:
     wcstring describe(void) const;
 
     /* Constructor */
-    explicit parse_node_t(parse_token_type_t ty) : type(ty), source_start(0), source_length(0), child_start(0), child_count(0), tag(0)
+    explicit parse_node_t(parse_token_type_t ty) : type(ty), source_start(-1), source_length(0), child_start(0), child_count(0), tag(0)
     {
     }
 
@@ -154,10 +175,23 @@ public:
         PARSE_ASSERT(which < child_count);
         return child_start + which;
     }
+    
+    bool has_source() const
+    {
+        return source_start != (size_t)(-1);
+    }
 };
 
 class parse_node_tree_t : public std::vector<parse_node_t>
 {
+    public:
+    
+    /* Get the node corresponding to a child of the given node, or NULL if there is no such child. If expected_type is provided, assert that the node has that type. */
+    const parse_node_t *get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type = token_type_invalid) const;
+    
+    /* Find all the nodes of a given type underneath a given node */
+    typedef std::vector<const parse_node_t *> parse_node_list_t;
+    parse_node_list_t find_nodes(const parse_node_t &parent, parse_token_type_t type) const;
 };
 
 
@@ -214,7 +248,8 @@ class parse_node_tree_t : public std::vector<parse_node_t>
 
     arguments_or_redirections_list = <empty> |
                                      argument_or_redirection arguments_or_redirections_list
-    argument_or_redirection = redirection | <TOK_STRING>
+    argument_or_redirection = argument | redirection
+    argument = <TOK_STRING>
     redirection = <TOK_REDIRECTION>
     
     terminator = <TOK_END> | <TOK_BACKGROUND>

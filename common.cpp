@@ -507,7 +507,7 @@ const wchar_t *wcsfuncname(const wchar_t *str)
 }
 
 
-int wcsvarchr(wchar_t chr)
+bool wcsvarchr(wchar_t chr)
 {
     return iswalnum(chr) || chr == L'_';
 }

@@ -84,6 +84,7 @@ struct file_detection_context_t;
    \param error a list in which a description of each error will be inserted. May be 0, in whcich case no error descriptions will be generated.
 */
 void highlight_shell(const wcstring &buffstr, std::vector<int> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
+void highlight_shell_magic(const wcstring &buffstr, std::vector<int> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
 
 /**
    Perform syntax highlighting for the text in buff. Matching quotes and paranthesis are highlighted. The result is

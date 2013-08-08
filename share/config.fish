@@ -83,7 +83,7 @@ __fish_reconstruct_path
 function __fish_load_path_helper_paths
     while read -l new_path_comp
         if not contains $new_path_comp $PATH
-        	set PATH $PATH $new_path_comp
+        	set PATH $new_path_comp $PATH
         end
     end
 end

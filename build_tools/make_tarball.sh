@@ -21,9 +21,10 @@ prefix="fish"
 
 # Get the version from git-describe
 VERSION=`git describe --tags --dirty 2>/dev/null`
+prefix="$prefix-$VERSION"
 
 # The path where we will output the tar file
-path=~/fish_built/fish-$VERSION.tar
+path=~/fish_built/$prefix.tar
 
 # Clean up stuff we've written before
 rm -f "$path" "$path".gz

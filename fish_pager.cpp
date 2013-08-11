@@ -1289,7 +1289,7 @@ int main(int argc, char **argv)
 
                 case 'v':
                 {
-                    debug(0, L"%ls, version %s\n", program_name, PACKAGE_VERSION);
+                    debug(0, L"%ls, version %s\n", program_name, FISH_BUILD_VERSION);
                     exit(0);
                 }
 

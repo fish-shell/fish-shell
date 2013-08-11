@@ -667,7 +667,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     /*
       Set up the version variables
     */
-    wcstring version = str2wcstring(PACKAGE_VERSION);
+    wcstring version = str2wcstring(FISH_BUILD_VERSION);
     env_set(L"version", version.c_str(), ENV_GLOBAL);
     env_set(L"FISH_VERSION", version.c_str(), ENV_GLOBAL);
 

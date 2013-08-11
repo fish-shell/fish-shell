@@ -1816,13 +1816,16 @@ static void test_new_parser_correctness(void)
         {L"if true ; end", true},
         {L"if true; end ; end", false},
         {L"if end; end ; end", false},
-        {L"end", false}
+        {L"if end", false},
+        {L"end", false},
+        {L"for i i", false},
+        {L"for i in a b c ; end", true}
     };
-    
+
     for (size_t i=0; i < sizeof parser_tests / sizeof *parser_tests; i++)
     {
         const parser_test_t *test = &parser_tests[i];
-        
+
         parse_node_tree_t parse_tree;
         parse_t parser;
         bool success = parser.parse(test->src, parse_flag_none, &parse_tree, NULL);
@@ -1837,7 +1840,87 @@ static void test_new_parser_correctness(void)
         }
     }
     say(L"Parse tests complete");
+}
 
+struct parser_fuzz_token_t
+{
+    parse_token_type_t token_type;
+    parse_keyword_t keyword;
+
+    parser_fuzz_token_t() : token_type(FIRST_TERMINAL_TYPE), keyword(parse_keyword_none)
+    {
+    }
+};
+
+static bool increment(std::vector<parser_fuzz_token_t> &tokens)
+{
+    size_t i, end = tokens.size();
+    for (i=0; i < end; i++)
+    {
+        bool wrapped = false;
+
+        struct parser_fuzz_token_t &token = tokens[i];
+        bool incremented_in_keyword = false;
+        if (token.token_type == parse_token_type_string)
+        {
+            // try incrementing the keyword
+            token.keyword++;
+            if (token.keyword <= LAST_KEYWORD)
+            {
+                incremented_in_keyword = true;
+            }
+            else
+            {
+                token.keyword = parse_keyword_none;
+                incremented_in_keyword = false;
+            }
+        }
+
+        if (! incremented_in_keyword)
+        {
+            token.token_type++;
+            if (token.token_type > LAST_TERMINAL_TYPE)
+            {
+                token.token_type = FIRST_TERMINAL_TYPE;
+                wrapped = true;
+            }
+        }
+
+        if (! wrapped)
+        {
+            break;
+        }
+    }
+    return i == end;
+}
+
+static void test_new_parser_fuzzing(void)
+{
+    say(L"Fuzzing parser (node size: %lu)", sizeof(parse_node_t));
+    double start = timef();
+    // ensure nothing crashes
+    size_t max = 5;
+    for (size_t len=1; len <= max; len++)
+    {
+        fprintf(stderr, "%lu / %lu\n", len, max);
+        std::vector<parser_fuzz_token_t> tokens(len);
+        do
+        {
+            parse_t parser;
+            parse_node_tree_t parse_tree;
+            parse_error_list_t errors;
+            for (size_t i=0; i < len; i++)
+            {
+                const parser_fuzz_token_t &token = tokens[i];
+                parser.parse_1_token(token.token_type, token.keyword, &parse_tree, &errors);
+            }
+
+            // keep going until we wrap
+        }
+        while (! increment(tokens));
+    }
+    double end = timef();
+    say(L"All fuzzed in %f seconds!", end - start);
 }
 
 __attribute__((unused))
@@ -1863,6 +1946,104 @@ static void test_new_parser(void)
     }
 }
 
+static void test_highlighting(void)
+{
+    say(L"Testing syntax highlighting");
+    if (system("mkdir -p /tmp/fish_highlight_test/")) err(L"mkdir failed");
+    if (system("touch /tmp/fish_highlight_test/foo")) err(L"touch failed");
+    if (system("touch /tmp/fish_highlight_test/bar")) err(L"touch failed");
+    
+    // Here are the components of our source and the colors we expect those to be
+    struct highlight_component_t {
+        const wchar_t *txt;
+        int color;
+    };
+    
+    const highlight_component_t components1[] =
+    {
+        {L"echo", HIGHLIGHT_COMMAND},
+        {L"/tmp/fish_highlight_test/foo", HIGHLIGHT_PARAM | HIGHLIGHT_VALID_PATH},
+        {L"&", HIGHLIGHT_END},
+        {NULL, -1}
+    };
+    
+    const highlight_component_t components2[] =
+    {
+        {L"command", HIGHLIGHT_COMMAND},
+        {L"echo", HIGHLIGHT_COMMAND},
+        {L"abc", HIGHLIGHT_PARAM},
+        {L"/tmp/fish_highlight_test/foo", HIGHLIGHT_PARAM | HIGHLIGHT_VALID_PATH},
+        {L"&", HIGHLIGHT_END},
+        {NULL, -1}
+    };
+    
+    const highlight_component_t components3[] =
+    {
+        {L"if command ls", HIGHLIGHT_COMMAND},
+        {L"; ", HIGHLIGHT_END},
+        {L"echo", HIGHLIGHT_COMMAND},
+        {L"abc", HIGHLIGHT_PARAM},
+        {L"; ", HIGHLIGHT_END},
+        {L"/bin/definitely_not_a_command", HIGHLIGHT_ERROR},
+        {L"; ", HIGHLIGHT_END},
+        {L"end", HIGHLIGHT_COMMAND},
+        {NULL, -1}
+    };
+    
+    const highlight_component_t *tests[] = {components1, components2, components3};
+    for (size_t which = 0; which < sizeof tests / sizeof *tests; which++)
+    {
+        const highlight_component_t *components = tests[which];
+        // Count how many we have
+        size_t component_count = 0;
+        while (components[component_count].txt != NULL)
+        {
+            component_count++;
+        }
+        
+        // Generate the text
+        wcstring text;
+        std::vector<int> expected_colors;
+        for (size_t i=0; i < component_count; i++)
+        {
+            if (i > 0)
+            {
+                text.push_back(L' ');
+                expected_colors.push_back(0);
+            }
+            text.append(components[i].txt);
+            
+            // hackish space handling
+            const size_t text_len = wcslen(components[i].txt);
+            for (size_t j=0; j < text_len; j++)
+            {
+                bool is_space = (components[i].txt[j] == L' ');
+                expected_colors.push_back(is_space ? 0 : components[i].color);
+            }
+        }
+        assert(expected_colors.size() == text.size());
+        
+        std::vector<int> colors(text.size());
+        highlight_shell(text, colors, 20, NULL, env_vars_snapshot_t());
+        
+        if (expected_colors.size() != colors.size())
+        {
+            err(L"Color vector has wrong size! Expected %lu, actual %lu", expected_colors.size(), colors.size());
+        }
+        assert(expected_colors.size() == colors.size());
+        for (size_t i=0; i < text.size(); i++)
+        {
+            if (expected_colors.at(i) != colors.at(i))
+            {
+                const wcstring spaces(i, L' ');
+                err(L"Wrong color at index %lu in text (expected %d, actual %d):\n%ls\n%ls^", i, expected_colors.at(i), colors.at(i), text.c_str(), spaces.c_str());
+            }
+        }
+    }
+    
+    system("rm -Rf /tmp/fish_highlight_test");
+}
+
 /**
    Main test
 */
@@ -1884,9 +2065,10 @@ int main(int argc, char **argv)
     reader_init();
     env_init();
 
-    test_new_parser_correctness();
+    //test_new_parser_fuzzing();
+    //test_new_parser_correctness();
+    //test_highlighting();
     //test_new_parser();
-    return 0;
 
     test_format();
     test_escape();

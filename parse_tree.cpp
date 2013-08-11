@@ -4,6 +4,7 @@
 
 using namespace parse_productions;
 
+/** Returns a string description of this parse error */
 wcstring parse_error_t::describe(const wcstring &src) const
 {
     wcstring result = text;
@@ -41,6 +42,7 @@ wcstring parse_error_t::describe(const wcstring &src) const
     return result;
 }
 
+/** Returns a string description of the given token type */
 wcstring token_type_description(parse_token_type_t type)
 {
     switch (type)
@@ -121,7 +123,7 @@ wcstring token_type_description(parse_token_type_t type)
             return L"token_terminate";
         case symbol_optional_background:
             return L"optional_background";
-        
+
         case parse_special_type_parse_error:
             return L"parse_error";
         case parse_special_type_tokenizer_error:
@@ -172,70 +174,68 @@ wcstring keyword_description(parse_keyword_t k)
     }
 }
 
+/** Returns a string description of the given parse node */
 wcstring parse_node_t::describe(void) const
 {
     wcstring result = token_type_description(type);
     return result;
 }
 
+/** A struct representing the token type passed to */
 struct parse_token_t
 {
     enum parse_token_type_t type; // The type of the token as represented by the parser
-    enum token_type tokenizer_type; // The type of the token as represented by the tokenizer
     enum parse_keyword_t keyword; // Any keyword represented by this parser
     size_t source_start;
     size_t source_length;
 
-    wcstring describe() const;
+    wcstring describe() const
+    {
+        wcstring result = token_type_description(type);
+        if (keyword != parse_keyword_none)
+        {
+            append_format(result, L" <%ls>", keyword_description(keyword).c_str());
+        }
+        return result;
+    }
 };
 
-wcstring parse_token_t::describe(void) const
+/* Convert from tokenizer_t's token type to a parse_token_t type */
+static parse_token_type_t parse_token_type_from_tokenizer_token(enum token_type tokenizer_token_type)
 {
-    wcstring result = token_type_description(type);
-    if (keyword != parse_keyword_none)
-    {
-        append_format(result, L" <%ls>", keyword_description(keyword).c_str());
-    }
-    return result;
-}
-
-// Convert from tokenizer_t's token type to our token
-static parse_token_t parse_token_from_tokenizer_token(enum token_type tokenizer_token_type)
-{
-    parse_token_t result = {};
-    result.tokenizer_type = tokenizer_token_type;
+    parse_token_type_t result = token_type_invalid;
     switch (tokenizer_token_type)
     {
         case TOK_STRING:
-            result.type = parse_token_type_string;
+            result = parse_token_type_string;
             break;
 
         case TOK_PIPE:
-            result.type = parse_token_type_pipe;
+            result = parse_token_type_pipe;
             break;
 
         case TOK_END:
-            result.type = parse_token_type_end;
+            result = parse_token_type_end;
             break;
 
         case TOK_BACKGROUND:
-            result.type = parse_token_type_background;
+            result = parse_token_type_background;
             break;
-            
+
         case TOK_REDIRECT_OUT:
         case TOK_REDIRECT_APPEND:
         case TOK_REDIRECT_IN:
         case TOK_REDIRECT_FD:
         case TOK_REDIRECT_NOCLOB:
-            result.type = parse_token_type_redirection;
+            result = parse_token_type_redirection;
             break;
-            
+
         case TOK_ERROR:
-            result.type = parse_special_type_tokenizer_error;
+            result = parse_special_type_tokenizer_error;
             break;
-            
+
         case TOK_COMMENT:
-            result.type = parse_special_type_comment;
+            result = parse_special_type_comment;
             break;
 
 
@@ -247,6 +247,7 @@ static parse_token_t parse_token_from_tokenizer_token(enum token_type tokenizer_
     return result;
 }
 
+/* Helper function for dump_tree */
 static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &src, size_t start, size_t indent, wcstring *result, size_t *line)
 {
     assert(start < nodes.size());
@@ -288,8 +289,8 @@ static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &
     }
 }
 
-__attribute__((unused))
-static wcstring dump_tree(const parse_node_tree_t &nodes, const wcstring &src)
+/* Gives a debugging textual description of a parse tree */
+wcstring parse_dump_tree(const parse_node_tree_t &nodes, const wcstring &src)
 {
     if (nodes.empty())
         return L"(empty!)";
@@ -300,6 +301,7 @@ static wcstring dump_tree(const parse_node_tree_t &nodes, const wcstring &src)
     return result;
 }
 
+/* Struct representing elements of the symbol stack, used in the internal state of the LL parser */
 struct parse_stack_element_t
 {
     enum parse_token_type_t type;
@@ -309,7 +311,7 @@ struct parse_stack_element_t
     explicit parse_stack_element_t(parse_token_type_t t, node_offset_t idx) : type(t), keyword(parse_keyword_none), node_idx(idx)
     {
     }
-    
+
     explicit parse_stack_element_t(production_element_t e, node_offset_t idx) : type(production_element_type(e)), keyword(production_element_keyword(e)), node_idx(idx)
     {
     }
@@ -323,40 +325,31 @@ struct parse_stack_element_t
         }
         return result;
     }
-
 };
 
+/* The parser itself, private implementation of class parse_t. This is a hand-coded table-driven LL parser. Most hand-coded LL parsers are recursive descent, but recursive descent parsers are difficult to "pause", unlike table-driven parsers. */
 class parse_ll_t
 {
-    friend class parse_t;
-
-    std::vector<parse_stack_element_t> symbol_stack; // LL parser stack
+    /* Traditional symbol stack of the LL parser */
+    std::vector<parse_stack_element_t> symbol_stack;
+    
+    /* Parser output. This is a parse tree, but stored in an array. */
     parse_node_tree_t nodes;
 
+    /* Whether we ran into a fatal error, including parse errors or tokenizer errors */
     bool fatal_errored;
+    
+    /* List of errors we have encountered */
     parse_error_list_t errors;
 
-    // Constructor
-    parse_ll_t() : fatal_errored(false)
-    {
-        this->reset();
-    }
-
-    bool top_node_match_token(parse_token_t token);
-
-    void accept_token(parse_token_t token, const wcstring &src);
-    
-    // Clear the parse symbol stack (but not the node tree). Add a new job_list_t goal node.
-    void reset(void);
+    /* The symbol stack can contain terminal types or symbols. Symbols go on to do productions, but terminal types are just matched against input tokens. */
+    bool top_node_handle_terminal_types(parse_token_t token);
 
     void parse_error(const wchar_t *expected, parse_token_t token);
     void parse_error(parse_token_t token, const wchar_t *format, ...);
     void append_error_callout(wcstring &error_message, parse_token_t token);
 
     void dump_stack(void) const;
-    
-    // Figure out the ranges of intermediate nodes
-    void determine_node_ranges();
 
     // Get the node corresponding to the top element of the stack
     parse_node_t &node_for_top_symbol()
@@ -413,33 +406,38 @@ class parse_ll_t
             if (! count) fprintf(stderr, "\t<empty>\n");
         }
 
-    
+
         // Add the children. Confusingly, we want our nodes to be in forwards order (last token last, so dumps look nice), but the symbols should be reverse order (last token first, so it's lowest on the stack)
         const size_t child_start = nodes.size();
         size_t child_count = 0;
         for (size_t i=0; i < MAX_SYMBOLS_PER_PRODUCTION; i++)
         {
             production_element_t elem = (*production)[i];
-            if (production_element_is_valid(elem))
+            if (!production_element_is_valid(elem))
+            {
+                // All done, bail out
+                break;
+            }
+            else
             {
                 // Generate the parse node. Note that this push_back may invalidate node.
-               parse_token_type_t child_type = production_element_type(elem);
-               nodes.push_back(parse_node_t(child_type));
-               child_count++;
+                parse_token_type_t child_type = production_element_type(elem);
+                nodes.push_back(parse_node_t(child_type));
+                child_count++;
             }
         }
-        
+
         // Update the parent
         const size_t parent_node_idx = symbol_stack.back().node_idx;
         parse_node_t &parent_node = nodes.at(parent_node_idx);
-        
+
         // Should have no children yet
         PARSE_ASSERT(parent_node.child_count == 0);
 
         // Tell the node about its children
         parent_node.child_start = child_start;
         parent_node.child_count = child_count;
-        
+
         // Replace the top of the stack with new stack elements corresponding to our new nodes. Note that these go in reverse order.
         symbol_stack.pop_back();
         symbol_stack.reserve(symbol_stack.size() + child_count);
@@ -452,6 +450,36 @@ class parse_ll_t
         }
     }
 
+    public:
+    
+    /* Constructor */
+    parse_ll_t() : fatal_errored(false)
+    {
+        this->symbol_stack.reserve(16);
+        this->nodes.reserve(64);
+        this->reset_symbols_and_nodes();
+    }
+
+    /* Input */
+    void accept_token(parse_token_t token);
+    
+    /* Indicate if we hit a fatal error */
+    bool has_fatal_error(void) const
+    {
+        return this->fatal_errored;
+    }
+    
+    /* Clear the parse symbol stack (but not the node tree). Add a new job_list_t goal node. This is called from the constructor */
+    void reset_symbols(void);
+
+    /* Clear the parse symbol stack and the node tree. Add a new job_list_t goal node. This is called from the constructor. */
+    void reset_symbols_and_nodes(void);
+    
+    /* Once parsing is complete, determine the ranges of intermediate nodes */
+    void determine_node_ranges();
+    
+    /* Acquire output after parsing. This transfers directly from within self */
+    void acquire_output(parse_node_tree_t *output, parse_error_list_t *errors);
 };
 
 void parse_ll_t::dump_stack(void) const
@@ -495,11 +523,11 @@ void parse_ll_t::determine_node_ranges(void)
     while (idx--)
     {
         parse_node_t *parent = &nodes.at(idx);
-        
+
         // Skip nodes that already have a source range. These are terminal nodes.
         if (parent->source_start != source_start_invalid)
             continue;
-        
+
         // Ok, this node needs a source range. Get all of its children, and then set its range.
         size_t min_start = source_start_invalid, max_end = 0; //note source_start_invalid is huge
         for (node_offset_t i=0; i < parent->child_count; i++)
@@ -508,8 +536,9 @@ void parse_ll_t::determine_node_ranges(void)
             min_start = std::min(min_start, child.source_start);
             max_end = std::max(max_end, child.source_start + child.source_length);
         }
-        
-        if (min_start != source_start_invalid) {
+
+        if (min_start != source_start_invalid)
+        {
             assert(max_end >= min_start);
             parent->source_start = min_start;
             parent->source_length = max_end - min_start;
@@ -517,11 +546,27 @@ void parse_ll_t::determine_node_ranges(void)
     }
 }
 
+void parse_ll_t::acquire_output(parse_node_tree_t *output, parse_error_list_t *errors)
+{
+    if (output != NULL)
+    {
+        std::swap(*output, this->nodes);
+    }
+    this->nodes.clear();
+    
+    if (errors != NULL)
+    {
+        std::swap(*errors, this->errors);
+    }
+    this->errors.clear();
+    this->symbol_stack.clear();
+}
+
 void parse_ll_t::parse_error(parse_token_t token, const wchar_t *fmt, ...)
 {
     //this->dump_stack();
     parse_error_t err;
-    
+
     va_list va;
     va_start(va, fmt);
     err.text = vformat_string(fmt, va);
@@ -545,19 +590,42 @@ void parse_ll_t::parse_error(const wchar_t *expected, parse_token_t token)
     fatal_errored = true;
 }
 
-void parse_ll_t::reset(void)
+void parse_ll_t::reset_symbols(void)
 {
-    // add a new job_list node and then reset our symbol list to point at it
+    /* Add a new job_list node, and then reset our symbol list to point at it */
     node_offset_t where = nodes.size();
     nodes.push_back(parse_node_t(symbol_job_list));
-    
+
     symbol_stack.clear();
     symbol_stack.push_back(parse_stack_element_t(symbol_job_list, where)); // goal token
     this->fatal_errored = false;
 }
 
+/* Reset both symbols and nodes */
+void parse_ll_t::reset_symbols_and_nodes(void)
+{
+    nodes.clear();
+    this->reset_symbols();
+}
 
-bool parse_ll_t::top_node_match_token(parse_token_t token)
+static bool type_is_terminal_type(parse_token_type_t type)
+{
+    switch (type)
+    {
+        case parse_token_type_string:
+        case parse_token_type_pipe:
+        case parse_token_type_redirection:
+        case parse_token_type_background:
+        case parse_token_type_end:
+        case parse_token_type_terminate:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+bool parse_ll_t::top_node_handle_terminal_types(parse_token_t token)
 {
     if (symbol_stack.empty())
     {
@@ -565,47 +633,64 @@ bool parse_ll_t::top_node_match_token(parse_token_t token)
         this->fatal_errored = true;
         return false;
     }
-    
+
     PARSE_ASSERT(! symbol_stack.empty());
     PARSE_ASSERT(token.type >= FIRST_PARSE_TOKEN_TYPE);
-    bool result = false;
+    bool handled = false;
     parse_stack_element_t &stack_top = symbol_stack.back();
-    if (stack_top.type == token.type)
+    if (type_is_terminal_type(stack_top.type))
     {
-        // So far so good. See if we need a particular keyword.
-        if (stack_top.keyword == parse_keyword_none || stack_top.keyword == token.keyword)
+        // The top of the stack is terminal. We are going to handle this (because we can't produce from a terminal type)
+        handled = true;
+
+        // Now see if we actually matched
+        bool matched = false;
+        if (stack_top.type == token.type)
+        {
+            switch (stack_top.type)
+            {
+                case parse_token_type_string:
+                    // We matched if the keywords match, or no keyword was required
+                    matched = (stack_top.keyword == parse_keyword_none || stack_top.keyword == token.keyword);
+                    break;
+
+                default:
+                    // For other types, we only require that the types match
+                    matched = true;
+                    break;
+            }
+        }
+
+        if (matched)
         {
             // Success. Tell the node that it matched this token
             parse_node_t &node = node_for_top_symbol();
             node.source_start = token.source_start;
             node.source_length = token.source_length;
-
-            // We consumed this symbol
-            symbol_stack.pop_back();
-            result = true;
         }
-        else if (token.type == parse_token_type_pipe)
+        else
         {
-            // Pipes are primitive
-            symbol_stack.pop_back();
-            result = true;
+            // Failure
+            this->fatal_errored = true;
         }
+
+        // We handled the token, so pop the symbol stack
+        symbol_stack.pop_back();
     }
-    return result;
+    return handled;
 }
 
-void parse_ll_t::accept_token(parse_token_t token, const wcstring &src)
+void parse_ll_t::accept_token(parse_token_t token)
 {
     bool logit = false;
     if (logit)
     {
-        const wcstring txt = wcstring(src, token.source_start, token.source_length);
         fprintf(stderr, "Accept token %ls\n", token.describe().c_str());
     }
     PARSE_ASSERT(token.type >= FIRST_PARSE_TOKEN_TYPE);
-    
+
     bool consumed = false;
-    
+
     // Handle special types specially. Note that these are the only types that can be pushed if the symbol stack is empty.
     if (token.type == parse_special_type_parse_error || token.type == parse_special_type_tokenizer_error || token.type == parse_special_type_comment)
     {
@@ -619,8 +704,8 @@ void parse_ll_t::accept_token(parse_token_t token, const wcstring &src)
     while (! consumed && ! this->fatal_errored)
     {
         PARSE_ASSERT(! symbol_stack.empty());
-        
-        if (top_node_match_token(token))
+
+        if (top_node_handle_terminal_types(token))
         {
             if (logit)
             {
@@ -629,11 +714,11 @@ void parse_ll_t::accept_token(parse_token_t token, const wcstring &src)
             consumed = true;
             break;
         }
-        
+
         // top_node_match_token may indicate an error if our stack is empty
         if (this->fatal_errored)
             break;
-        
+
         // Get the production for the top of the stack
         parse_stack_element_t &stack_elem = symbol_stack.back();
         parse_node_t &node = nodes.at(stack_elem.node_idx);
@@ -648,7 +733,7 @@ void parse_ll_t::accept_token(parse_token_t token, const wcstring &src)
             // Manipulate the symbol stack.
             // Note that stack_elem is invalidated by popping the stack.
             symbol_stack_pop_push_production(production);
-            
+
             // If we end up with an empty stack, something bad happened, like an unbalanced end
             if (symbol_stack.empty())
             {
@@ -713,9 +798,9 @@ bool parse_t::parse(const wcstring &str, parse_tree_flags_t parse_flags, parse_n
     tok_flags_t tok_options = TOK_SQUASH_ERRORS;
     if (parse_flags & parse_flag_include_comments)
         tok_options |= TOK_SHOW_COMMENTS;
-        
+
     tokenizer_t tok = tokenizer_t(str.c_str(), tok_options);
-    for (; tok_has_next(&tok) && ! this->parser->fatal_errored; tok_next(&tok))
+    for (; tok_has_next(&tok) && ! this->parser->has_fatal_error(); tok_next(&tok))
     {
         token_type tok_type = static_cast<token_type>(tok_last_type(&tok));
         const wchar_t *tok_txt = tok_last(&tok);
@@ -723,22 +808,22 @@ bool parse_t::parse(const wcstring &str, parse_tree_flags_t parse_flags, parse_n
         size_t tok_extent = tok_get_extent(&tok);
         assert(tok_extent < 10000000); //paranoia
 
-        parse_token_t token = parse_token_from_tokenizer_token(tok_type);
-        token.tokenizer_type = tok_type;
+        parse_token_t token;
+        token.type = parse_token_type_from_tokenizer_token(tok_type);
         token.source_start = (size_t)tok_start;
         token.source_length = tok_extent;
         token.keyword = keyword_for_token(tok_type, tok_txt);
-        this->parser->accept_token(token, str);
-        
-        if (this->parser->fatal_errored)
+        this->parser->accept_token(token);
+
+        if (this->parser->has_fatal_error())
         {
             if (parse_flags & parse_flag_continue_after_error)
             {
                 /* Mark an error and then keep going */
                 token.type = parse_special_type_parse_error;
                 token.keyword = parse_keyword_none;
-                this->parser->accept_token(token, str);
-                this->parser->reset();
+                this->parser->accept_token(token);
+                this->parser->reset_symbols();
             }
             else
             {
@@ -757,19 +842,32 @@ bool parse_t::parse(const wcstring &str, parse_tree_flags_t parse_flags, parse_n
     fprintf(stderr, "%lu nodes, node size %lu, %lu bytes\n", this->parser->nodes.size(), sizeof(parse_node_t), this->parser->nodes.size() * sizeof(parse_node_t));
 #endif
 
-    if (output != NULL)
-    {
-        output->swap(this->parser->nodes);
-        this->parser->nodes.clear();
-    }
+    // Acquire the output from the parser
+    this->parser->acquire_output(output, errors);
+    
+    // Indicate if we had a fatal error
+    return ! this->parser->has_fatal_error();
+}
 
-    if (errors != NULL)
-    {
-        errors->swap(this->parser->errors);
-        this->parser->errors.clear();
-    }
+bool parse_t::parse_1_token(parse_token_type_t token_type, parse_keyword_t keyword, parse_node_tree_t *output, parse_error_list_t *errors)
+{
+    // Only strings can have keywords. So if we have a keyword, the type must be a string
+    assert(keyword == parse_keyword_none || token_type == parse_token_type_string);
 
-    return ! this->parser->fatal_errored;
+    parse_token_t token;
+    token.type = token_type;
+    token.keyword = keyword;
+    token.source_start = -1;
+    token.source_length = 0;
+
+    this->parser->accept_token(token);
+
+    return ! this->parser->has_fatal_error();
+}
+
+void parse_t::clear()
+{
+    this->parser->reset_symbols_and_nodes();
 }
 
 const parse_node_t *parse_node_tree_t::get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type) const
@@ -781,13 +879,13 @@ const parse_node_t *parse_node_tree_t::get_child(const parse_node_t &parent, nod
     {
         result = &this->at(child_offset);
     }
-    
+
     // If we are given an expected type, then the node must be null or that type
     if (result != NULL)
     {
         assert(expected_type == token_type_invalid || expected_type == result->type);
     }
-    
+
     return result;
 }
 

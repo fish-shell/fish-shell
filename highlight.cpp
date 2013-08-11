@@ -1314,7 +1314,8 @@ void highlight_shell_magic(const wcstring &buff, std::vector<int> &color, size_t
 void highlight_shell(const wcstring &buff, std::vector<int> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars)
 {
     ASSERT_IS_BACKGROUND_THREAD();
-    if (1) {
+    if (0)
+    {
         highlight_shell_magic(buff, color, pos, error, vars);
         return;
     }
@@ -1451,12 +1452,12 @@ static void color_node(const parse_node_t &node, int color, std::vector<int> &co
     // Can only color nodes with valid source ranges
     if (! node.has_source())
         return;
-    
+
     // Fill the color array with our color in the corresponding range
     size_t source_end = node.source_start + node.source_length;
     assert(source_end >= node.source_start);
     assert(source_end <= color_array.size());
-    
+
     std::fill(color_array.begin() + node.source_start, color_array.begin() + source_end, color);
 }
 
@@ -1464,7 +1465,7 @@ static void color_argument(const wcstring &buffstr, std::vector<int>::iterator c
 {
     const size_t buff_len = buffstr.size();
     std::fill(colors, colors + buff_len, normal_status);
-    
+
     enum {e_unquoted, e_single_quoted, e_double_quoted} mode = e_unquoted;
     int bracket_count=0;
     for (size_t in_pos=0; in_pos < buff_len; in_pos++)
@@ -1479,11 +1480,11 @@ static void color_argument(const wcstring &buffstr, std::vector<int>::iterator c
                     int fill_color = HIGHLIGHT_ESCAPE; //may be set to HIGHLIGHT_ERROR
                     const size_t backslash_pos = in_pos;
                     size_t fill_end = backslash_pos;
-                    
+
                     // Move to the escaped character
                     in_pos++;
                     const wchar_t escaped_char = (in_pos < buff_len ? buffstr.at(in_pos) : L'\0');
-                    
+
                     if (escaped_char == L'\0')
                     {
                         fill_end = in_pos;
@@ -1559,7 +1560,7 @@ static void color_argument(const wcstring &buffstr, std::vector<int>::iterator c
                                 break;
                             }
                         }
-                        
+
                         // Consume
                         for (int i=0; i < chars && in_pos < buff_len; i++)
                         {
@@ -1572,11 +1573,11 @@ static void color_argument(const wcstring &buffstr, std::vector<int>::iterator c
                         //in_pos is now at the first character that could not be converted (or buff_len)
                         assert(in_pos >= backslash_pos && in_pos <= buff_len);
                         fill_end = in_pos;
-                        
+
                         // It's an error if we exceeded the max value
                         if (res > max_val)
                             fill_color = HIGHLIGHT_ERROR;
-                        
+
                         // Subtract one from in_pos, so that the increment in the loop will move to the next character
                         in_pos--;
                     }
@@ -1746,7 +1747,7 @@ static void color_argument(const wcstring &buffstr, std::vector<int>::iterator c
 static void color_arguments(const wcstring &src, const parse_node_tree_t &tree, const parse_node_t &parent, std::vector<int> &color_array)
 {
     const parse_node_tree_t::parse_node_list_t nodes = tree.find_nodes(parent, symbol_argument);
-    
+
     wcstring param;
     for (node_offset_t i=0; i < nodes.size(); i++)
     {
@@ -1783,20 +1784,20 @@ void highlight_shell_magic(const wcstring &buff, std::vector<int> &color, size_t
 
     /* Do something sucky and get the current working directory on this background thread. This should really be passed in. */
     const wcstring working_directory = env_get_pwd_slash();
-    
+
     /* Parse the buffer */
     parse_node_tree_t parse_tree;
     parse_t parser;
     parser.parse(buff, parse_flag_continue_after_error | parse_flag_include_comments, &parse_tree, NULL);
-    
+
     /* Walk the node tree */
     for (parse_node_tree_t::const_iterator iter = parse_tree.begin(); iter != parse_tree.end(); ++iter)
     {
         const parse_node_t &node = *iter;
-        
+
         switch (node.type)
         {
-            // Color direct string descendants, e.g. 'for' and 'in'.
+                // Color direct string descendants, e.g. 'for' and 'in'.
             case symbol_for_header:
             case symbol_while_header:
             case symbol_begin_header:
@@ -1809,21 +1810,35 @@ void highlight_shell_magic(const wcstring &buff, std::vector<int> &color, size_t
             case symbol_decorated_statement:
                 color_children(parse_tree, node, parse_token_type_string, HIGHLIGHT_COMMAND, color);
                 break;
-                                
+
+            case symbol_if_statement:
+            {
+                // Color the 'end'
+                color_children(parse_tree, node, parse_token_type_string, HIGHLIGHT_COMMAND, color);
+
+                // Color arguments and redirections
+                const parse_node_t *arguments = parse_tree.get_child(node, 3, symbol_arguments_or_redirections_list);
+                if (arguments != NULL)
+                {
+                    color_arguments(buff, parse_tree, *arguments, color);
+                }
+            }
+            break;
+
             case symbol_redirection:
                 color_children(parse_tree, node, parse_token_type_string, HIGHLIGHT_REDIRECTION, color);
                 break;
-            
+
             case parse_token_type_background:
             case parse_token_type_end:
                 color_node(node, HIGHLIGHT_END, color);
                 break;
-                
+
             case symbol_plain_statement:
             {
                 // Color the command
                 color_children(parse_tree, node, parse_token_type_string, HIGHLIGHT_COMMAND, color);
-                
+
                 // Color arguments
                 const parse_node_t *arguments = parse_tree.get_child(node, 1, symbol_arguments_or_redirections_list);
                 if (arguments != NULL)
@@ -1832,22 +1847,22 @@ void highlight_shell_magic(const wcstring &buff, std::vector<int> &color, size_t
                 }
             }
             break;
-            
-            
+
+
             case symbol_arguments_or_redirections_list:
             case symbol_argument_list:
                 /* Nothing, these are handled by their parents */
                 break;
-            
+
             case parse_special_type_parse_error:
             case parse_special_type_tokenizer_error:
                 color_node(node, HIGHLIGHT_ERROR, color);
                 break;
-                
+
             case parse_special_type_comment:
                 color_node(node, HIGHLIGHT_COMMENT, color);
                 break;
-                
+
             default:
                 break;
         }

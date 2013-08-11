@@ -13,7 +13,7 @@ static bool production_is_valid(const production_options_t production_list, prod
 {
     if (which < 0 || which >= MAX_PRODUCTIONS)
         return false;
-    
+
     bool nonempty_found = false;
     for (int i=which; i < MAX_PRODUCTIONS; i++)
     {
@@ -249,8 +249,10 @@ RESOLVE(argument_list)
 {
     switch (token_type)
     {
-        case parse_token_type_string: return 1;
-        default: return 0;
+        case parse_token_type_string:
+            return 1;
+        default:
+            return 0;
     }
 }
 
@@ -429,40 +431,40 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
     {
         fprintf(stderr, "Resolving production for %ls with input type %ls <%ls>\n", token_type_description(node_type).c_str(), token_type_description(input_type).c_str(), keyword_description(input_keyword).c_str());
     }
-    
+
     /* Fetch the list of productions and the function to resolve them */
     const production_options_t *production_list = NULL;
     production_option_idx_t (*resolver)(parse_token_type_t token_type, parse_keyword_t token_keyword, production_tag_t *tag) = NULL;
     switch (node_type)
     {
-        TEST(job_list)
-        TEST(job)
-        TEST(statement)
-        TEST(job_continuation)
-        TEST(boolean_statement)
-        TEST(block_statement)
-        TEST(if_statement)
-        TEST(if_clause)
-        TEST(else_clause)
-        TEST(else_continuation)
-        TEST(switch_statement)
-        TEST(decorated_statement)
-        TEST(case_item_list)
-        TEST(case_item)
-        TEST(argument_list_nonempty)
-        TEST(argument_list)
-        TEST(block_header)
-        TEST(for_header)
-        TEST(while_header)
-        TEST(begin_header)
-        TEST(function_header)
-        TEST(plain_statement)
-        TEST(arguments_or_redirections_list)
-        TEST(argument_or_redirection)
-        TEST(argument)
-        TEST(redirection)
-        TEST(optional_background)
-        
+            TEST(job_list)
+            TEST(job)
+            TEST(statement)
+            TEST(job_continuation)
+            TEST(boolean_statement)
+            TEST(block_statement)
+            TEST(if_statement)
+            TEST(if_clause)
+            TEST(else_clause)
+            TEST(else_continuation)
+            TEST(switch_statement)
+            TEST(decorated_statement)
+            TEST(case_item_list)
+            TEST(case_item)
+            TEST(argument_list_nonempty)
+            TEST(argument_list)
+            TEST(block_header)
+            TEST(for_header)
+            TEST(while_header)
+            TEST(begin_header)
+            TEST(function_header)
+            TEST(plain_statement)
+            TEST(arguments_or_redirections_list)
+            TEST(argument_or_redirection)
+            TEST(argument)
+            TEST(redirection)
+            TEST(optional_background)
+
         case parse_token_type_string:
         case parse_token_type_pipe:
         case parse_token_type_redirection:
@@ -472,33 +474,33 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
             fprintf(stderr, "Terminal token type %ls passed to %s\n", token_type_description(node_type).c_str(), __FUNCTION__);
             PARSER_DIE();
             break;
-            
+
         case parse_special_type_parse_error:
         case parse_special_type_tokenizer_error:
         case parse_special_type_comment:
             fprintf(stderr, "Special type %ls passed to %s\n", token_type_description(node_type).c_str(), __FUNCTION__);
             PARSER_DIE();
             break;
-            
-            
+
+
         case token_type_invalid:
             fprintf(stderr, "token_type_invalid passed to %s\n", __FUNCTION__);
             PARSER_DIE();
             break;
-        
+
     }
     PARSE_ASSERT(production_list != NULL);
     PARSE_ASSERT(resolver != NULL);
-    
+
     const production_t *result = NULL;
     production_option_idx_t which = resolver(input_type, input_keyword, out_tag);
-    
+
     if (log_it)
     {
         fprintf(stderr, "\tresolved to %u\n", (unsigned)which);
     }
 
-    
+
     if (which == NO_PRODUCTION)
     {
         if (log_it)

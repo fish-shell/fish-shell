@@ -4075,7 +4075,10 @@ int builtin_parse(parser_t &parser, wchar_t **argv)
         }
         else
         {
-            if (0) {
+            const wcstring dump = parse_dump_tree(parse_tree, src);
+            fprintf(stderr, "%ls", dump.c_str());
+            if (0)
+            {
                 parse_execution_context_t ctx(parse_tree, src);
                 parse_execution_simulator_t sim;
                 sim.context = &ctx;

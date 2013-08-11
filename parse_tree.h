@@ -36,29 +36,6 @@ struct parse_error_t
 };
 typedef std::vector<parse_error_t> parse_error_list_t;
 
-enum
-{
-    parse_flag_none = 0,
-    
-    /* Attempt to build a "parse tree" no matter what. This may result in a 'forest' of disconnected trees. This is intended to be used by syntax highlighting. */
-    parse_flag_continue_after_error = 1 << 0,
-    
-    /* Include comment tokens */
-    parse_flag_include_comments = 1 << 1
-};
-typedef unsigned int parse_tree_flags_t;
-
-class parse_ll_t;
-class parse_t
-{
-    parse_ll_t * const parser;
-
-public:
-    parse_t();
-    ~parse_t();
-    bool parse(const wcstring &str, parse_tree_flags_t flags, parse_node_tree_t *output, parse_error_list_t *errors, bool log_it = false);
-};
-
 enum parse_token_type_t
 {
     token_type_invalid,
@@ -92,10 +69,10 @@ enum parse_token_type_t
 
     symbol_argument_list_nonempty,
     symbol_argument_list,
-    
+
     symbol_argument,
     symbol_redirection,
-    
+
     symbol_optional_background,
 
     // Terminal types
@@ -105,12 +82,15 @@ enum parse_token_type_t
     parse_token_type_background,
     parse_token_type_end,
     parse_token_type_terminate,
-    
+
     // Very special terminal types that don't appear in the production list
     parse_special_type_parse_error,
     parse_special_type_tokenizer_error,
     parse_special_type_comment,
-    
+
+    FIRST_TERMINAL_TYPE = parse_token_type_string,
+    LAST_TERMINAL_TYPE = parse_token_type_terminate,
+
     LAST_TOKEN_OR_SYMBOL = parse_token_type_terminate,
     FIRST_PARSE_TOKEN_TYPE = parse_token_type_string
 };
@@ -132,8 +112,45 @@ enum parse_keyword_t
     parse_keyword_or,
     parse_keyword_not,
     parse_keyword_command,
-    parse_keyword_builtin
+    parse_keyword_builtin,
+
+    LAST_KEYWORD = parse_keyword_builtin
 };
+
+
+enum
+{
+    parse_flag_none = 0,
+
+    /* Attempt to build a "parse tree" no matter what. This may result in a 'forest' of disconnected trees. This is intended to be used by syntax highlighting. */
+    parse_flag_continue_after_error = 1 << 0,
+
+    /* Include comment tokens */
+    parse_flag_include_comments = 1 << 1
+};
+typedef unsigned int parse_tree_flags_t;
+
+class parse_ll_t;
+class parse_t
+{
+    parse_ll_t * const parser;
+
+public:
+    parse_t();
+    ~parse_t();
+
+    /* Parse a string */
+    bool parse(const wcstring &str, parse_tree_flags_t flags, parse_node_tree_t *output, parse_error_list_t *errors, bool log_it = false);
+
+    /* Parse a single token */
+    bool parse_1_token(parse_token_type_t token, parse_keyword_t keyword, parse_node_tree_t *output, parse_error_list_t *errors);
+    
+    /* Reset, ready to parse something else */
+    void clear();
+
+};
+
+wcstring parse_dump_tree(const parse_node_tree_t &tree, const wcstring &src);
 
 wcstring token_type_description(parse_token_type_t type);
 wcstring keyword_description(parse_keyword_t type);
@@ -158,7 +175,7 @@ public:
 
     /* Type-dependent data */
     uint32_t tag;
-    
+
     /* Which production was used */
     uint8_t production_idx;
 
@@ -175,7 +192,7 @@ public:
         PARSE_ASSERT(which < child_count);
         return child_start + which;
     }
-    
+
     bool has_source() const
     {
         return source_start != (size_t)(-1);
@@ -184,11 +201,11 @@ public:
 
 class parse_node_tree_t : public std::vector<parse_node_t>
 {
-    public:
-    
+public:
+
     /* Get the node corresponding to a child of the given node, or NULL if there is no such child. If expected_type is provided, assert that the node has that type. */
     const parse_node_t *get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type = token_type_invalid) const;
-    
+
     /* Find all the nodes of a given type underneath a given node */
     typedef std::vector<const parse_node_t *> parse_node_list_t;
     parse_node_list_t find_nodes(const parse_node_t &parent, parse_token_type_t type) const;
@@ -200,8 +217,8 @@ class parse_node_tree_t : public std::vector<parse_node_t>
 # A job_list is a list of jobs, separated by semicolons or newlines
 
     job_list = <empty> |
-                <TOK_END> job_list |
                 job job_list
+                <TOK_END> job_list
 
 # A job is a non-empty list of statements, separated by pipes. (Non-empty is useful for cases like if statements, where we require a command). To represent "non-empty", we require a statement, followed by a possibly empty job_continuation
 
@@ -251,9 +268,9 @@ class parse_node_tree_t : public std::vector<parse_node_t>
     argument_or_redirection = argument | redirection
     argument = <TOK_STRING>
     redirection = <TOK_REDIRECTION>
-    
+
     terminator = <TOK_END> | <TOK_BACKGROUND>
- 
+
     optional_background = <empty> | <TOK_BACKGROUND>
 
 */

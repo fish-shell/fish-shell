@@ -1,5 +1,6 @@
 *.o
 *~
+*.exe
 
 Makefile
 autom4te.cache/

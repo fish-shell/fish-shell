@@ -14,7 +14,11 @@ if not test (uname) = Darwin
 			end
 		end
 
-		if type -f xdg-open >/dev/null
+		if type -f cygstart >/dev/null
+			for i in $argv
+				cygstart $i
+			end
+		else if type -f xdg-open >/dev/null
 			for i in $argv
 				xdg-open $i
 			end

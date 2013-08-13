@@ -640,12 +640,12 @@ install-force: all install-translations
 	@echo fish is now installed on your system.
 	@echo To run fish, type \'fish\' in your terminal.
 	@echo
-	if type chsh &> /dev/null; then \
+	@if type chsh &> /dev/null; then \
 		echo To use fish as your login shell:; \
 		grep -q -- "$(DESTDIR)$(bindir)/fish" /etc/shells || echo \* add the line \'$(DESTDIR)$(bindir)/fish\' to the file \'/etc/shells\'.; \
 		echo \* use the command \'chsh -s $(DESTDIR)$(bindir)/fish\'.; \
+		echo; \
 	fi;
-	@echo
 	@echo To set your colors, run \'fish_config\'
 	@echo To scan your man pages for completions, run \'fish_update_completions\'
 	@echo To autocomplete command suggestions press Ctrl + F or right arrow key.

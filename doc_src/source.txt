@@ -1,11 +1,11 @@
-\section source . - evaluate contents of file.
+\section source source - evaluate contents of file.
 
 \subsection source-synopsis Synopsis
-<tt>. FILENAME [ARGUMENTS...]</tt>
+<tt>source FILENAME [ARGUMENTS...]</tt>
 
 \subsection source-description Description
 
-\c . (source) evaluates the commands of the specified file in the current
+\c source evaluates the commands of the specified file in the current
 shell. This is different from starting a new process to perform the
 commands (i.e. <tt>fish < FILENAME</tt>) since the commands will be
 evaluated by the current shell, which means that changes in
@@ -16,11 +16,11 @@ variable.
 If no file is specified, or if the file name '-' is used, stdin will
 be read.
 
-The return status of \c . is the return status of the last job to
+The return status of \c source is the return status of the last job to
 execute. If something goes wrong while opening or reading the file,
-\c . exits with a non-zero status.
+\c source exits with a non-zero status.
 
 \subsection source-example Example
 
-<tt>. ~/.config/fish/config.fish</tt> causes fish to re-read its initialization file.
+<tt>source ~/.config/fish/config.fish</tt> causes fish to re-read its initialization file.
 

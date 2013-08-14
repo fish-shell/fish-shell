@@ -3014,7 +3014,7 @@ static int builtin_source(parser_t &parser, wchar_t ** argv)
         if ((fd = wopen_cloexec(argv[1], O_RDONLY)) == -1)
         {
             append_format(stderr_buffer, _(L"%ls: Error encountered while sourcing file '%ls':\n"), argv[0], argv[1]);
-            builtin_wperror(L".");
+            builtin_wperror(L"source");
             return STATUS_BUILTIN_ERROR;
         }
 
@@ -3022,7 +3022,7 @@ static int builtin_source(parser_t &parser, wchar_t ** argv)
         {
             close(fd);
             append_format(stderr_buffer, _(L"%ls: Error encountered while sourcing file '%ls':\n"), argv[0], argv[1]);
-            builtin_wperror(L".");
+            builtin_wperror(L"source");
             return STATUS_BUILTIN_ERROR;
         }
 
@@ -3953,7 +3953,6 @@ static int builtin_history(parser_t &parser, wchar_t **argv)
 */
 static const builtin_data_t builtin_datas[]=
 {
-    { 		L".",  &builtin_source, N_(L"Evaluate contents of file")   },
     { 		L"[",  &builtin_test, N_(L"Test a condition")   },
     { 		L"and",  &builtin_generic, N_(L"Execute command if previous command suceeded")  },
     { 		L"begin",  &builtin_begin, N_(L"Create a block of code")   },
@@ -3993,6 +3992,7 @@ static const builtin_data_t builtin_datas[]=
     { 		L"return",  &builtin_return, N_(L"Stop the currently evaluated function")   },
     { 		L"set",  &builtin_set, N_(L"Handle environment variables")   },
     { 		L"set_color",  &builtin_set_color, N_(L"Set the terminal color")   },
+    { 		L"source",  &builtin_source, N_(L"Evaluate contents of file")   },
     { 		L"status",  &builtin_status, N_(L"Return status information about fish")  },
     { 		L"switch",  &builtin_switch, N_(L"Conditionally execute a block of commands")   },
     { 		L"test",  &builtin_test, N_(L"Test a condition")   },

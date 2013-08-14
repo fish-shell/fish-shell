@@ -217,8 +217,8 @@ static int read_init(const struct config_paths_t &paths)
 {
     parser_t &parser = parser_t::principal_parser();
     const io_chain_t empty_ios;
-    parser.eval(L"builtin . " + paths.data + L"/config.fish 2>/dev/null", empty_ios, TOP);
-    parser.eval(L"builtin . " + paths.sysconf + L"/config.fish 2>/dev/null", empty_ios, TOP);
+    parser.eval(L"builtin source " + paths.data + L"/config.fish 2>/dev/null", empty_ios, TOP);
+    parser.eval(L"builtin source " + paths.sysconf + L"/config.fish 2>/dev/null", empty_ios, TOP);
 
 
     /*
@@ -233,7 +233,7 @@ static int read_init(const struct config_paths_t &paths)
     if (path_get_config(config_dir))
     {
         wcstring config_dir_escaped = escape_string(config_dir, 1);
-        wcstring eval_buff = format_string(L"builtin . %ls/config.fish 2>/dev/null", config_dir_escaped.c_str());
+        wcstring eval_buff = format_string(L"builtin source %ls/config.fish 2>/dev/null", config_dir_escaped.c_str());
         parser.eval(eval_buff, empty_ios, TOP);
     }
 

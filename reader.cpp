@@ -111,7 +111,7 @@ commence.
    fish specific commands, meaning it will work even if fish is not
    installed. This is used by read_i.
 */
-#define DEFAULT_PROMPT L"echo -n \"$USER@\"(hostname|cut -d . -f 1)' '(pwd)'> '"
+#define DEFAULT_PROMPT L"echo -n \"$USER@\"(hostname|cut -d . -f 1)' '(__fish_pwd)'> '"
 
 /**
    The name of the function that prints the fish prompt
@@ -127,7 +127,7 @@ commence.
 /**
    The default title for the reader. This is used by reader_readline.
 */
-#define DEFAULT_TITLE L"echo $_ \" \"; pwd"
+#define DEFAULT_TITLE L"echo $_ \" \"; __fish_pwd"
 
 /**
    The maximum number of characters to read from the keyboard without

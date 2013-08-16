@@ -1,9 +1,9 @@
 <div id="master_detail_table">
     <div id="master">
-        <div ng-repeat="(name, attrs) in colorConfig">
-            <div ng-class="{'master_element':true, 'selected_master_elem':$index==selectedColorConfig}" style="color: {{ attrs.color }}" ng-click="configClicked($index)">
-                <span class="master_element_text">{{ attrs.name}}</span> 
-                <span class="master_element_description" style="border-bottom-color: rgb(85, 85, 85);"> {{ attrs.description }}</span>
+        <div ng-repeat="colorConfig in colorConfigs">
+            <div ng-class="{'master_element':true, 'selected_master_elem': colorConfig==selectedColorConfig}" style="color: {{ colorConfig.color }}" ng-click="selectConfig(colorConfig)">
+                <span class="master_element_text">{{ colorConfig.name}}</span> 
+                <span class="master_element_description" style="border-bottom-color: rgb(85, 85, 85);"> {{ colorConfig.description }}</span>
             </div>
         </div>
             <tbody>
@@ -33,7 +33,7 @@
                     </tbody>
                 </table>
                 <div class="colorpicker_modifiers">
-                <div ng-class="{'colorpicker_modifier_cell': true, 'modifier_cell_selected': colorConfig[selectedColorConfig].underline}" id="modifier_underline" ng-style="{'text-decoration: underline': true}" onClick='picked_modifier(this)'>Underline</div>
+                <div ng-class="{'colorpicker_modifier_cell': true, 'modifier_cell_selected': selectedColorConfig.underline}" id="modifier_underline" ng-style="{'text-decoration: underline': true}" onClick='picked_modifier(this)'>Underline</div>
             </div>
         </div>
     </div>

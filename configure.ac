@@ -1,4 +1,3 @@
-
 #
 # This file is the main build configuration file for fish. It is used
 # to determine your systems capabilities, and tries to adapt fish to
@@ -8,6 +7,8 @@
 # configure script, which should in turn be executed in order to
 # configure the build process.
 #
+
+m4_pattern_allow(m4_esyscmd_s)
 
 m4_syscmd([build_tools/git_version_gen.sh 2>/dev/null])
 

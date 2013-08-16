@@ -54,21 +54,21 @@ webconfig.controller("colorsController", function($scope, $http) {
         return result;
     };
 
-    $scope.selectedColorConfig = 0;
+    $scope.selectedColorConfig = null;
     $scope.itemsPerRow = range(0, 15);
     $scope.totalRows = range(0, $scope.term256Colors.length/$scope.itemsPerRow.length);
-    $scope.selectedCell = -1;
+    $scope.selectedCell = null;
 
     $scope.target = "text";
 
-    $scope.configClicked = function(index) {
-        $scope.selectedColorConfig = index;
+    $scope.selectConfig = function(newSelection) {
+        $scope.selectedColorConfig = newSelection;
         //console.log("Color :" + $scope.colorConfig[$scope.selectedColorConfig].color.toLowerCase() + $scope.term256Colors.indexOf($scope.colorConfig[$scope.selectedColorConfig].color.toLowerCase()));
         if ($scope.target == "background") {
-            $scope.selectedCell = $scope.term256Colors.indexOf($scope.colorConfig[$scope.selectedColorConfig].background.toLowerCase());
+            $scope.selectedCell = $scope.term256Colors.indexOf($scope.selectedColorConfig.background.toLowerCase());
         }
         else {
-            $scope.selectedCell = $scope.term256Colors.indexOf($scope.colorConfig[$scope.selectedColorConfig].color.toLowerCase());
+            $scope.selectedCell = $scope.term256Colors.indexOf($scope.selectedColorConfig.color.toLowerCase());
        } 
     }
 
@@ -79,13 +79,15 @@ webconfig.controller("colorsController", function($scope, $http) {
     $scope.pickedColorPickerTarget = function(target) {
         console.log("Picked " + target);
         $scope.target = target;
-        $scope.configClicked($scope.selectedColorConfig);
+        // Update selection in color picker
+        $scope.selectConfig($scope.selectedColorConfig);
     }
 
     $scope.fetchColors = function() {
         $http.get("/colors/").success(function(data, status, headers, config) {
-        $scope.colorConfig= data;
-        $scope.selectedCell = $scope.term256Colors.indexOf($scope.colorConfig[$scope.selectedColorConfig].color);
+        $scope.colorConfigs = data;
+        $scope.selectedColorConfig = data[0];
+        $scope.selectedCell = $scope.term256Colors.indexOf($scope.selectedColorConfig.color);
     })};
     $scope.fetchColors();
 });

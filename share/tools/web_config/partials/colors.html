@@ -1,0 +1,39 @@
+<div id="master_detail_table">
+    <div id="master">
+        <div ng-repeat="(name, attrs) in colorConfig">
+            <div ng-class="{'master_element':true, 'selected_master_elem':$index==selectedColorConfig}" style="color: {{ attrs.color }}" ng-click="configClicked($index)">
+                <span class="master_element_text">{{ attrs.name}}</span> 
+                <span class="master_element_description" style="border-bottom-color: rgb(85, 85, 85);"> {{ attrs.description }}</span>
+            </div>
+        </div>
+            <tbody>
+            <tr class="data_table_row">
+            <td class="data_table_cell no_overflow" onclick:"toggle_overflow(this)"="" style="text-align: left; padding-right: 30px;"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="detail">
+        <div id="detail_colorpicker">
+            <div class="colorpicker_target">
+
+                <div ng-class="{'colorpicker_target_tab': true, 'tab_first colorpicker_target_selected': target == 'text'}" id="foreground" ng-click="pickedColorPickerTarget('text')">Text</div><div ng-class="{'colorpicker_target_tab tab_last': true, 'tab_first colorpicker_target_selected': target == 'background'}" id="background" ng-click="pickedColorPickerTarget('background')">Background</div>
+                </div>
+
+                <table id="colorpicker_term256">
+                    <tbody>
+                        <tr ng-repeat="row in totalRows">
+                            <td ng-repeat="item in itemsPerRow">
+                                <div ng-class="{'colorpicker_term256_cell':true, 'colorpicker_cell_selected':(row*itemsPerRow.length)+item == selectedCell}" style="background-color: {{ term256Colors[(row*itemsPerRow.length)+item] }}" ng-click="pickedColorCell((row*itemsPerRow.length)+item)">
+                                <div style="width: 100%; height: 100%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="colorpicker_modifiers">
+                <div ng-class="{'colorpicker_modifier_cell': true, 'modifier_cell_selected': colorConfig[selectedColorConfig].underline}" id="modifier_underline" ng-style="{'text-decoration: underline': true}" onClick='picked_modifier(this)'>Underline</div>
+            </div>
+        </div>
+    </div>

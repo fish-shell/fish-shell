@@ -95,7 +95,7 @@ def parse_color(color_str):
             # Regular color
             color = better_color(color, parse_one_color(comp))
 
-    return [color, background_color, bold, underline]
+    return {"color": color, "background": background_color, "bold": bold, "underline": underline}
 
 def parse_bool(val):
     val = val.lower()
@@ -248,7 +248,7 @@ class FishVar:
         flags = []
         if self.universal: flags.append('universal')
         if self.exported: flags.append('exported')
-        return [self.name, self.value, ', '.join(flags)]
+        return {"name": self.name, "value": self.value, "Flags": ', '.join(flags)}
 
 class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
@@ -308,7 +308,9 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             for match in re.finditer(r"^fish_color_(\S+) ?(.*)", line):
                 color_name, color_value = [x.strip() for x in match.group(1, 2)]
                 color_desc = descriptions.get(color_name, '')
-                result.append([color_name, color_desc, parse_color(color_value)])
+                data = { "name": color_name, "description" : color_desc }
+                data.update(parse_color(color_value))
+                result.append(data)
                 remaining.discard(color_name)
 
         # Ensure that we have all the color names we know about, so that if the

@@ -1,0 +1,25 @@
+<div id="master_detail_table" style="display: table;">
+    <div id="master">
+        <div ng-repeat="prompt in samplePrompts">
+            <div id="master_{{prompt.name}}" ng-class="{'master_element': true, 'selected_master_elem': selectedPrompt == prompt}" ng-style="selectedPrompt == prompt && {color: '#6666ff'} || {color: '#aaaaaa' }" ng-click="selectPrompt(prompt)">
+                <span ng-class="{master_element_text: selectedPrompt == prompt}" ng-style="selectedPrompt == prompt && {font-size: '13pt', border-bottom-color: rgb(0, 6, 111)} || {font-size: '13pt'}">{{ prompt.name }}</span>
+            </div>
+        </div>
+    </div>
+    <div id="detail">
+        <div id="detail_prompt" style="display: block;">
+            <div class="prompt_demo">
+                <div class="prompt_demo_text" style="font-size: 15pt;">
+                </div>
+            </div>
+            <div style="text-align: right">
+                <span class="prompt_save_button" onclick="save_current_prompt()" style="display: none;"> use prompt </span>
+            </div>
+            <div class="prompt_function">
+                <div class="prompt_function_text">
+                    {{ selectedPrompt.function }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

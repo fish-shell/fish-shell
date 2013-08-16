@@ -2,7 +2,7 @@
     <div id="master">
         <div ng-repeat="prompt in samplePrompts">
             <div id="master_{{prompt.name}}" ng-class="{'master_element': true, 'selected_master_elem': selectedPrompt == prompt}" ng-style="selectedPrompt == prompt && {color: '#6666ff'} || {color: '#aaaaaa' }" ng-click="selectPrompt(prompt)">
-                <span ng-class="{master_element_text: selectedPrompt == prompt}" ng-style="selectedPrompt == prompt && {font-size: '13pt', border-bottom-color: rgb(0, 6, 111)} || {font-size: '13pt'}">{{ prompt.name }}</span>
+                <span ng-class="{master_element_text: selectedPrompt == prompt}" ng-style="selectedPrompt == prompt && {'font-size': '13pt', 'border-bottom-color': rgb(0, 6, 111)} || {'font-size': '13pt'}">{{ prompt.name }}</span>
             </div>
         </div>
     </div>

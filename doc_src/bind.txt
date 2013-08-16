@@ -17,7 +17,7 @@ an escape character, Alt-based key bindings can be written using the
 using the \c \\c escape, for example Control-x (^X) can be written as
 <tt>\\cx</tt>. Note that Alt-based key bindings are case sensitive and
 Control-based key bindings are not. This is a constraint of text-based
-termainls, not \c fish.
+terminals, not \c fish.
 
 The default key binding can be set by specifying a SEQUENCE of the empty
 string (that is, <code>''</code>). It will be used whenever no

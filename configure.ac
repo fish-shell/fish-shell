@@ -8,12 +8,10 @@
 # configure the build process.
 #
 
-m4_pattern_allow(m4_esyscmd_s)
-
 m4_syscmd([build_tools/git_version_gen.sh 2>/dev/null])
 
 AC_INIT(fish,
-        m4_esyscmd_s([cut -f 3 -d ' ' FISH-BUILD-VERSION-FILE]),
+        m4_esyscmd([cut -f 3 -d ' ' FISH-BUILD-VERSION-FILE | tr -d '\n']),
         fish-users@lists.sf.net)
 
 conf_arg=$@

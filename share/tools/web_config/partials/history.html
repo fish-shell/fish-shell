@@ -3,7 +3,7 @@
     <tr class="data_table_row" ng-repeat="item in historyItems">
     <td class="data_table_cell no_overflow" style="text-align: left; padding-right: 30px;">{{ item }}</td>
     <td class="data_table_cell" style="text-align: right; width: 25px">
-        <a onclick="tell_fish_to_delete_element({{ $index }})">
+        <a ng-click="deleteHistoryItem(item)">
         <img class="delete_icon" src="delete.png">
         </a>
     </td>

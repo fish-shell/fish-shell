@@ -94,9 +94,9 @@ webconfig.controller("colorsController", function($scope, $http) {
 
 webconfig.controller("promptController", function($scope, $http) {
     $scope.selectedPrompt = null;
-    $scope.fetchCurrentPrompt = function(currentPrompt) {
+    $scope.fetchCurrentPrompt = function(currenttPrompt) {
         $http.get("/current_prompt/").success(function(data, status, headers, config) {
-        currentPrompt.function = data.function;
+        currenttPrompt.function = data.function;
     })};
 
     $scope.fetchSamplePrompts= function() {
@@ -106,14 +106,28 @@ webconfig.controller("promptController", function($scope, $http) {
                 $scope.selectPrompt($scope.samplePrompts[0]);
             }
         })};
+    $scope.fetchSamplePrompt = function(selectedPrompt) {
+        console.log("Fetcing sample prompt");
+         $http.post("/get_sample_prompt/","what=" + encodeURIComponent(selectedPrompt.function), { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config)   {
+            console.log("Data is " + JSON.stringify(data[0]));
+            $scope.demoText= data[0].demo;
+            $scope.demoTextFontSize = data[0].font_size;
+            console.log("Demo text is " + $scope.demoText);
+        })};
 
     $scope.selectPrompt = function(promptt) {
         $scope.selectedPrompt= promptt;
         if ($scope.selectedPrompt.name == "Current") {
             $scope.fetchCurrentPrompt($scope.selectedPrompt);
         }
+        $scope.fetchSamplePrompt($scope.selectedPrompt);
     }
 
+    $scope.setNewPrompt = function(selectedPrompt) {
+        console.log("Set new prompt" + selectedPrompt);
+        $http.post("/set_prompt/","what=" + encodeURIComponent(selectedPrompt.function), { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config){
+            console.log("Data is " + JSON.stringify(data));
+        })};
     $scope.fetchSamplePrompts();
 });
 
@@ -152,6 +166,12 @@ webconfig.controller("historyController", function($scope, $http) {
     $scope.fetchHistory = function() {
         $http.get("/history/").success(function(data, status, headers, config) {
         $scope.historyItems = data;
+    })};
+
+    $scope.deleteHistoryItem = function(item) {
+        index = $scope.historyItems.indexOf(item);
+        $http.post("/delete_history_item/","what=" + encodeURIComponent(item), { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config) {
+        $scope.historyItems.splice(index, 1);
     })};
 
     $scope.fetchHistory();

@@ -110,7 +110,7 @@ function __fish_on_interactive --on-event fish_prompt
 end
 
 # "." command for compatibility with old fish versions.
-function . --description 'Evaluate contents of file (deprecated, see "source")'
+function . --description 'Evaluate contents of file (deprecated, see "source")' --no-scope-shadowing
 	if begin
 			test (count $argv) -eq 0
 			# Uses tty directly, as isatty depends on "."

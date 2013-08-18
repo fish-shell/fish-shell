@@ -188,6 +188,7 @@ public:
 
     void remove(const shared_ptr<const io_data_t> &element);
     void push_back(const shared_ptr<io_data_t> &element);
+    void push_front(const shared_ptr<io_data_t> &element);
 
     shared_ptr<const io_data_t> get_io_for_fd(int fd) const;
     shared_ptr<io_data_t> get_io_for_fd(int fd);

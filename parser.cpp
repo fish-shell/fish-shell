@@ -1559,7 +1559,7 @@ void parser_t::parse_job_argument_list(process_t *p,
 
                 if (new_io.get() != NULL)
                 {
-                    j->io.push_back(new_io);
+                    j->append_io(new_io);
                 }
 
             }
@@ -2318,7 +2318,6 @@ static bool job_should_skip_elseif(const job_t *job, const block_t *current_bloc
 void parser_t::eval_job(tokenizer_t *tok)
 {
     ASSERT_IS_MAIN_THREAD();
-    job_t *j;
 
     int start_pos = job_start_pos = tok_get_pos(tok);
     long long t1=0, t2=0, t3=0;
@@ -2341,7 +2340,7 @@ void parser_t::eval_job(tokenizer_t *tok)
     {
         case TOK_STRING:
         {
-            j = this->job_create();
+            job_t *j = this->job_create();
             job_set_flag(j, JOB_FOREGROUND, 1);
             job_set_flag(j, JOB_TERMINAL, job_get_flag(j, JOB_CONTROL));
             job_set_flag(j, JOB_TERMINAL, job_get_flag(j, JOB_CONTROL) \

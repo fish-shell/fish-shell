@@ -49,7 +49,6 @@
 #include "expand.h"
 #include "signal.h"
 
-
 #include "parse_util.h"
 
 /**
@@ -490,7 +489,7 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t &out_chain, s
 static void internal_exec_helper(parser_t &parser,
                                  const wchar_t *def,
                                  enum block_type_t block_type,
-                                 io_chain_t &ios)
+                                 const io_chain_t &ios)
 {
     io_chain_t morphed_chain;
     std::vector<int> opened_fds;
@@ -540,9 +539,10 @@ static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *proce
     
     /* Now see if we have a redirection involving a file. The only one we allow is /dev/null, which we assume will not fail. */
     bool result = true;
-    for (size_t idx = 0; idx < job->io.size(); idx++)
+    const io_chain_t &ios = job->io_chain();
+    for (size_t idx = 0; idx < ios.size(); idx++)
     {
-        const shared_ptr<const io_data_t> &io = job->io.at(idx);
+        const shared_ptr<const io_data_t> &io = ios.at(idx);
         if (redirection_is_to_real_file(io.get()))
         {
                 result = false;
@@ -621,9 +621,10 @@ void exec(parser_t &parser, job_t *j)
     }
 
     const io_buffer_t *input_redirect = NULL;
-    for (size_t idx = 0; idx < j->io.size(); idx++)
+    const io_chain_t &ios = j->io_chain();
+    for (size_t idx = 0; idx < ios.size(); idx++)
     {
-        const shared_ptr<io_data_t> &io = j->io.at(idx);
+        const shared_ptr<io_data_t> &io = ios.at(idx);
 
         if ((io->io_mode == IO_BUFFER))
         {
@@ -770,13 +771,14 @@ void exec(parser_t &parser, job_t *j)
             pipe_read.reset(new io_pipe_t(p->pipe_read_fd, true));
             /* Record the current read in pipe_read */
             pipe_read->pipe_fd[0] = pipe_current_read;
-            j->io.push_back(pipe_read);
+            j->append_io(pipe_read);
         }
 
         if (p->next)
         {
             pipe_write.reset(new io_pipe_t(p->pipe_write_fd, false));
-            j->io.push_back(pipe_write);
+            j->append_io(pipe_write);
+
         }
 
         /*
@@ -820,6 +822,10 @@ void exec(parser_t &parser, job_t *j)
             assert(pipe_next_read == -1);
             pipe_next_read = local_pipe[0];
         }
+
+        //fprintf(stderr, "before IO: ");
+        //io_print(j->io);
+
 
         switch (p->type)
         {
@@ -873,13 +879,13 @@ void exec(parser_t &parser, job_t *j)
                     }
                     else
                     {
-                        j->io.push_back(io_buffer);
+                        j->append_io(io_buffer);
                     }
                 }
 
                 if (! exec_error)
                 {
-                    internal_exec_helper(parser, def.c_str(), TOP, j->io);
+                    internal_exec_helper(parser, def.c_str(), TOP, j->io_chain());
                 }
 
                 parser.allow_function();
@@ -915,7 +921,7 @@ void exec(parser_t &parser, job_t *j)
             case INTERNAL_BUILTIN:
             {
                 int builtin_stdin=0;
-                int close_stdin=0;
+                bool close_stdin = false;
 
                 /*
                   If this is the first process, check the io
@@ -959,7 +965,7 @@ void exec(parser_t &parser, job_t *j)
                                 }
                                 else
                                 {
-                                    close_stdin = 1;
+                                    close_stdin = true;
                                 }
 
                                 break;

@@ -272,6 +272,7 @@ void release_job_id(job_id_t jobid);
     A struct represeting a job. A job is basically a pipeline of one
     or more processes and a couple of flags.
  */
+class parser_t;
 class job_t
 {
     /**
@@ -283,6 +284,10 @@ class job_t
 
     /* narrow copy so we don't have to convert after fork */
     narrow_string_rep_t command_narrow;
+
+    /** List of all IO redirections for this job. */
+    io_chain_t io;
+    friend void exec(parser_t &parser, job_t *j);
 
     /* No copying */
     job_t(const job_t &rhs);
@@ -350,13 +355,14 @@ public:
     */
     const job_id_t job_id;
 
-    /** List of all IO redirections for this job. */
-    io_chain_t io;
-
     /**
        Bitset containing information about the job. A combination of the JOB_* constants.
     */
     unsigned int flags;
+
+    const io_chain_t &io_chain() const { return this->io; }
+
+    void append_io(const shared_ptr<io_data_t> & new_io) { this->io.push_back(new_io); }
 };
 
 /**

@@ -202,6 +202,12 @@ void io_chain_t::push_back(const shared_ptr<io_data_t> &element)
     std::vector<shared_ptr<io_data_t> >::push_back(element);
 }
 
+void io_chain_t::push_front(const shared_ptr<io_data_t> &element)
+{
+    assert(element.get() != NULL);
+    this->insert(this->begin(), element);
+}
+
 void io_remove(io_chain_t &list, const shared_ptr<const io_data_t> &element)
 {
     list.remove(element);

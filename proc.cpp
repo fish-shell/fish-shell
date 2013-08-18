@@ -542,11 +542,11 @@ process_t::~process_t()
 job_t::job_t(job_id_t jobid) :
     command_str(),
     command_narrow(),
+    io(),
     first_process(NULL),
     pgid(0),
     tmodes(),
     job_id(jobid),
-    io(),
     flags(0)
 {
 }
@@ -876,9 +876,9 @@ static int select_try(job_t *j)
 
     FD_ZERO(&fds);
 
-    for (size_t idx = 0; idx < j->io.size(); idx++)
+    for (size_t idx = 0; idx < j->io_chain().size(); idx++)
     {
-        const io_data_t *io = j->io.at(idx).get();
+        const io_data_t *io = j->io_chain().at(idx).get();
         if (io->io_mode == IO_BUFFER)
         {
             CAST_INIT(const io_pipe_t *, io_pipe, io);
@@ -917,9 +917,9 @@ static void read_try(job_t *j)
     /*
       Find the last buffer, which is the one we want to read from
     */
-    for (size_t idx = 0; idx < j->io.size(); idx++)
+    for (size_t idx = 0; idx < j->io_chain().size(); idx++)
     {
-        io_data_t *d = j->io.at(idx).get();
+        io_data_t *d = j->io_chain().at(idx).get();
         if (d->io_mode == IO_BUFFER)
         {
             buff = static_cast<io_buffer_t *>(d);

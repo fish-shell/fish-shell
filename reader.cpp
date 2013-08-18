@@ -1665,12 +1665,16 @@ static void prioritize_completions(std::vector<completion_t> &comp)
         if (el.match.type < best_type)
             best_type = el.match.type;
     }
+    if (best_type == fuzzy_match_exact)
+    {
+        best_type = fuzzy_match_prefix;
+    }
 
     /* Throw out completions whose match types are not the best. */
     i = comp.size();
     while (i--)
     {
-        if (comp.at(i).match.type != best_type)
+        if (comp.at(i).match.type > best_type)
         {
             comp.erase(comp.begin() + i);
         }
@@ -1796,13 +1800,17 @@ static bool handle_completions(const std::vector<completion_t> &comp)
                 best_match_type = el.match.type;
             }
         }
+        if (best_match_type == fuzzy_match_exact)
+        {
+            best_match_type = fuzzy_match_prefix;
+        }
 
         /* Determine whether we are going to replace the token or not. If any commands of the best type do not require replacement, then ignore all those that want to use replacement */
         bool will_replace_token = true;
         for (size_t i=0; i< comp.size(); i++)
         {
             const completion_t &el = comp.at(i);
-            if (el.match.type == best_match_type && !(el.flags & COMPLETE_REPLACES_TOKEN))
+            if (el.match.type <= best_match_type && !(el.flags & COMPLETE_REPLACES_TOKEN))
             {
                 will_replace_token = false;
                 break;
@@ -1815,7 +1823,7 @@ static bool handle_completions(const std::vector<completion_t> &comp)
         {
             const completion_t &el = comp.at(i);
             /* Only use completions with the best match type */
-            if (el.match.type != best_match_type)
+            if (el.match.type > best_match_type)
                 continue;
 
             /* Only use completions that match replace_token */

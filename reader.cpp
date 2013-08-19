@@ -1274,11 +1274,11 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
     wcstring prefix_esc;
     char *foo;
 
-    shared_ptr<io_buffer_t> in(io_buffer_t::create(true, 3));
-    shared_ptr<io_buffer_t> out(io_buffer_t::create(false, 4));
+    shared_ptr<io_buffer_t> in_buff(io_buffer_t::create(true, 3));
+    shared_ptr<io_buffer_t> out_buff(io_buffer_t::create(false, 4));
 
     // The above may fail e.g. if we have too many open fds
-    if (in.get() == NULL || out.get() == NULL)
+    if (in_buff.get() == NULL || out_buff.get() == NULL)
         return;
 
     wchar_t *escaped_separator;
@@ -1350,26 +1350,26 @@ static void run_pager(const wcstring &prefix, int is_quoted, const std::vector<c
     free(escaped_separator);
 
     foo = wcs2str(msg.c_str());
-    in->out_buffer_append(foo, strlen(foo));
+    in_buff->out_buffer_append(foo, strlen(foo));
     free(foo);
 
     term_donate();
     parser_t &parser = parser_t::principal_parser();
     io_chain_t io_chain;
-    io_chain.push_back(out);
-    io_chain.push_back(in);
+    io_chain.push_back(out_buff);
+    io_chain.push_back(in_buff);
     parser.eval(cmd, io_chain, TOP);
     term_steal();
 
-    out->read();
+    out_buff->read();
 
-    int nil=0;
-    out->out_buffer_append((char *)&nil, 1);
+    const char zero = 0;
+    out_buff->out_buffer_append(&zero, 1);
 
-    const char *outbuff = out->out_buffer_ptr();
-    if (outbuff)
+    const char *out_data = out_buff->out_buffer_ptr();
+    if (out_data)
     {
-        const wcstring str = str2wcstring(outbuff);
+        const wcstring str = str2wcstring(out_data);
         size_t idx = str.size();
         while (idx--)
         {

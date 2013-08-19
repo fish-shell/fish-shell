@@ -1168,9 +1168,9 @@ int parser_t::is_help(const wchar_t *s, int min_match) const
            (len >= (size_t)min_match && (wcsncmp(L"--help", s, len) == 0));
 }
 
-job_t *parser_t::job_create(void)
+job_t *parser_t::job_create()
 {
-    job_t *res = new job_t(acquire_job_id());
+    job_t *res = new job_t(acquire_job_id(), this->block_io);
     this->my_job_list.push_front(res);
 
     job_set_flag(res,
@@ -1255,6 +1255,9 @@ void parser_t::parse_job_argument_list(process_t *p,
 
     wcstring unmatched;
     int unmatched_pos=0;
+
+    /* The set of IO redirections that we construct for the process */
+    io_chain_t process_io_chain;
 
     /*
       Test if this is the 'count' command. We need to special case
@@ -1559,7 +1562,7 @@ void parser_t::parse_job_argument_list(process_t *p,
 
                 if (new_io.get() != NULL)
                 {
-                    j->append_io(new_io);
+                    process_io_chain.push_back(new_io);
                 }
 
             }
@@ -1613,7 +1616,9 @@ void parser_t::parse_job_argument_list(process_t *p,
         }
     }
 
-    return;
+    /* Store our IO chain. The existing chain should be empty. */
+    assert(p->io_chain().empty());
+    p->set_io_chain(process_io_chain);
 }
 
 /*
@@ -2256,7 +2261,7 @@ void parser_t::skipped_exec(job_t * j)
             {
                 if (!current_block->outer->skip)
                 {
-                    exec(*this, j);
+                    exec_job(*this, j);
                     return;
                 }
                 parser_t::pop_block();
@@ -2269,7 +2274,7 @@ void parser_t::skipped_exec(job_t * j)
                     const if_block_t *ib = static_cast<const if_block_t*>(current_block);
                     if (ib->if_expr_evaluated && ! ib->any_branch_taken)
                     {
-                        exec(*this, j);
+                        exec_job(*this, j);
                         return;
                     }
                 }
@@ -2278,7 +2283,7 @@ void parser_t::skipped_exec(job_t * j)
             {
                 if (current_block->type() == SWITCH)
                 {
-                    exec(*this, j);
+                    exec_job(*this, j);
                     return;
                 }
             }
@@ -2415,7 +2420,7 @@ void parser_t::eval_job(tokenizer_t *tok)
                     if (j->first_process->type==INTERNAL_BUILTIN && !j->first_process->next)
                         was_builtin = 1;
                     scoped_push<int> tokenizer_pos_push(&current_tokenizer_pos, job_begin_pos);
-                    exec(*this, j);
+                    exec_job(*this, j);
 
                     /* Only external commands require a new fishd barrier */
                     if (!was_builtin)

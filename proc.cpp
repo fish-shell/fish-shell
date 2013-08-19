@@ -537,10 +537,10 @@ process_t::~process_t()
         delete this->next;
 }
 
-job_t::job_t(job_id_t jobid) :
+job_t::job_t(job_id_t jobid, const io_chain_t &bio) :
     command_str(),
     command_narrow(),
-    io(),
+    block_io(bio),
     first_process(NULL),
     pgid(0),
     tmodes(),
@@ -554,6 +554,17 @@ job_t::~job_t()
     if (first_process != NULL)
         delete first_process;
     release_job_id(job_id);
+}
+
+/* Return all the IO redirections. Start with the block IO, then walk over the processes */
+io_chain_t job_t::all_io_redirections() const
+{
+    io_chain_t result = this->block_io;
+    for (process_t *p = this->first_process; p != NULL; p = p->next)
+    {
+        result.append(p->io_chain());
+    }
+    return result;
 }
 
 /* This is called from a signal handler */
@@ -874,9 +885,10 @@ static int select_try(job_t *j)
 
     FD_ZERO(&fds);
 
-    for (size_t idx = 0; idx < j->io_chain().size(); idx++)
+    const io_chain_t chain = j->all_io_redirections();
+    for (size_t idx = 0; idx < chain.size(); idx++)
     {
-        const io_data_t *io = j->io_chain().at(idx).get();
+        const io_data_t *io = chain.at(idx).get();
         if (io->io_mode == IO_BUFFER)
         {
             CAST_INIT(const io_pipe_t *, io_pipe, io);
@@ -915,9 +927,10 @@ static void read_try(job_t *j)
     /*
       Find the last buffer, which is the one we want to read from
     */
-    for (size_t idx = 0; idx < j->io_chain().size(); idx++)
+    const io_chain_t chain = j->all_io_redirections();
+    for (size_t idx = 0; idx < chain.size(); idx++)
     {
-        io_data_t *d = j->io_chain().at(idx).get();
+        io_data_t *d = chain.at(idx).get();
         if (d->io_mode == IO_BUFFER)
         {
             buff = static_cast<io_buffer_t *>(d);

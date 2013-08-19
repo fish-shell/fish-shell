@@ -292,7 +292,7 @@ static int handle_child_io(const io_chain_t &io_chain)
 }
 
 
-int setup_child_process(job_t *j, process_t *p)
+int setup_child_process(job_t *j, process_t *p, const io_chain_t &io_chain)
 {
     bool ok=true;
 
@@ -303,7 +303,7 @@ int setup_child_process(job_t *j, process_t *p)
 
     if (ok)
     {
-        ok = (0 == handle_child_io(j->io_chain()));
+        ok = (0 == handle_child_io(io_chain));
         if (p != 0 && ! ok)
         {
             exit_without_destructors(1);
@@ -379,7 +379,7 @@ pid_t execute_fork(bool wait_for_threads_to_die)
 }
 
 #if FISH_USE_POSIX_SPAWN
-bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr, posix_spawn_file_actions_t *actions, job_t *j, process_t *p)
+bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr, posix_spawn_file_actions_t *actions, job_t *j, process_t *p, const io_chain_t &io_chain)
 {
     /* Initialize the output */
     if (posix_spawnattr_init(attr) != 0)
@@ -444,19 +444,19 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr, posix_spawn_fil
         err = posix_spawnattr_setsigmask(attr, &sigmask);
 
     /* Make sure that our pipes don't use an fd that the redirection itself wants to use */
-    free_redirected_fds_from_pipes(j->io_chain());
+    free_redirected_fds_from_pipes(io_chain);
 
     /* Close unused internal pipes */
     std::vector<int> files_to_close;
-    get_unused_internal_pipes(files_to_close, j->io_chain());
+    get_unused_internal_pipes(files_to_close, io_chain);
     for (size_t i = 0; ! err && i < files_to_close.size(); i++)
     {
         err = posix_spawn_file_actions_addclose(actions, files_to_close.at(i));
     }
 
-    for (size_t idx = 0; idx < j->io_chain().size(); idx++)
+    for (size_t idx = 0; idx < io_chain.size(); idx++)
     {
-        shared_ptr<const io_data_t> io = j->io_chain().at(idx);
+        const shared_ptr<const io_data_t> io = io_chain.at(idx);
 
         if (io->io_mode == IO_FD)
         {

@@ -339,9 +339,7 @@ int job_signal(job_t *j, int signal)
     }
     else
     {
-        process_t *p;
-
-        for (p = j->first_process; p; p=p->next)
+        for (process_t *p = j->first_process; p; p=p->next)
         {
             if (! p->completed)
             {

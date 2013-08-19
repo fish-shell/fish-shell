@@ -107,8 +107,8 @@ int set_child_group(job_t *j, process_t *p, int print_errors)
     return res;
 }
 
-/** Make sure the fd used by each redirection is not used by a pipe.  */
-static void free_redirected_fds_from_pipes(io_chain_t &io_chain)
+/** Make sure the fd used by each redirection is not used by a pipe. Note that while this does not modify the vector, it does modify the IO redirections within (gulp) */
+static void free_redirected_fds_from_pipes(const io_chain_t &io_chain)
 {
     size_t max = io_chain.size();
     for (size_t i = 0; i < max; i++)
@@ -170,7 +170,7 @@ static int handle_child_io(const io_chain_t &io_chain)
 {
     //fprintf(stderr, "child IO for %d\n", getpid());
     close_unused_internal_pipes(io_chain);
-    //free_redirected_fds_from_pipes(io_chain);
+    free_redirected_fds_from_pipes(io_chain);
     for (size_t idx = 0; idx < io_chain.size(); idx++)
     {
         io_data_t *io = io_chain.at(idx).get();
@@ -444,7 +444,7 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr, posix_spawn_fil
         err = posix_spawnattr_setsigmask(attr, &sigmask);
 
     /* Make sure that our pipes don't use an fd that the redirection itself wants to use */
-    //free_redirected_fds_from_pipes(j->io);
+    free_redirected_fds_from_pipes(j->io_chain());
 
     /* Close unused internal pipes */
     std::vector<int> files_to_close;

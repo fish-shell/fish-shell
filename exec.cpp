@@ -909,7 +909,7 @@ void exec_job(parser_t &parser, job_t *j)
                     }
                     else
                     {
-                        #warning is this bad because we need to be able to read this from select_try?
+                        /* This looks sketchy, because we're adding this io buffer locally - they aren't in the process or job redirection list. Therefore select_try won't be able to read them. However we call block_output_io_buffer->read() below, which reads until EOF. So there's no need to select on this. */
                         process_net_io_chain.push_back(block_output_io_buffer);
                     }
                 }
@@ -929,7 +929,6 @@ void exec_job(parser_t &parser, job_t *j)
             {
                 if (p->next)
                 {
-                    #warning is this bad because we need to be able to read this from select_try?
                     block_output_io_buffer.reset(io_buffer_t::create(0));
                     if (block_output_io_buffer.get() == NULL)
                     {
@@ -938,6 +937,7 @@ void exec_job(parser_t &parser, job_t *j)
                     }
                     else
                     {
+                        /* See the comment above about it's OK to add an IO redirection to this local buffer, even though it won't be handled in select_try */
                         process_net_io_chain.push_back(block_output_io_buffer);
                     }
                 }

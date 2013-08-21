@@ -789,20 +789,19 @@ void exec_job(parser_t &parser, job_t *j)
 
                echo alpha | cat < beta.txt
 
-            Should cat output alpha or beta? bash and ksh output 'beta', tcsh gets it right and complains about ambiguity, and zsh outputs both (!). No shells appear to output 'alpha', so we match bash here. That means putting the pipe first, so that it gets trumped by the file redirection.
+            Should cat output alpha or beta? bash and ksh output 'beta', tcsh gets it right and complains about ambiguity, and zsh outputs both (!). No shells appear to output 'alpha', so we match bash here. That would mean putting the pipe first, so that it gets trumped by the file redirection.
+            
+            However, eval does this:
+            
+               echo "begin; $argv "\n" ;end eval2_inner <&3 3<&-" | source 3<&0
+               
+            which depends on the redirection being evaluated before the pipe. So the write end of the pipe comes first, the read pipe of the pipe comes last. See issue #966.
         */
 
         shared_ptr<io_pipe_t> pipe_write;
         shared_ptr<io_pipe_t> pipe_read;
 
-        if (p != j->first_process)
-        {
-            pipe_read.reset(new io_pipe_t(p->pipe_read_fd, true));
-            /* Record the current read in pipe_read */
-            pipe_read->pipe_fd[0] = pipe_current_read;
-            process_net_io_chain.push_back(pipe_read);
-        }
-
+        /* Write pipe goes first */
         if (p->next)
         {
             pipe_write.reset(new io_pipe_t(p->pipe_write_fd, false));
@@ -810,8 +809,18 @@ void exec_job(parser_t &parser, job_t *j)
 
         }
 
-        /* Now that we've added our pipes, add the rest of the IO redirections associated with that process */
+        /* The explicit IO redirections associated with the process */
         process_net_io_chain.append(p->io_chain());
+        
+        /* Read pipe goes last */
+        if (p != j->first_process)
+        {
+            pipe_read.reset(new io_pipe_t(p->pipe_read_fd, true));
+            /* Record the current read in pipe_read */
+            pipe_read->pipe_fd[0] = pipe_current_read;
+            process_net_io_chain.push_back(pipe_read);
+        }
+        
 
         /*
            This call is used so the global environment variable array

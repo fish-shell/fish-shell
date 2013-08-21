@@ -140,6 +140,9 @@ public:
 
     /** If we support soft wrapping, we can output to this location without any cursor motion. */
     screen_data_t::cursor_t soft_wrap_location;
+    
+    /** Whether the last-drawn autosuggestion (if any) is truncated, or hidden entirely */
+    bool autosuggestion_is_truncated;
 
     /**
      This flag is set to true when there is reason to suspect that
@@ -155,7 +158,7 @@ public:
 
     /** If we need to clear, this is how many lines the actual screen had, before we reset it. This is used when resizing the window larger: if the cursor jumps to the line above, we need to remember to clear the subsequent lines. */
     size_t actual_lines_before_reset;
-
+    
     /**
        These status buffers are used to check if any output has occurred
        other than from fish's main loop, in which case we need to redraw.

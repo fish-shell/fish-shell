@@ -1035,7 +1035,7 @@ struct screen_layout_t
     wcstring autosuggestion;
 
     /* Whether the prompts get their own line or not */
-    bool prompts_get_own_line;
+    bool prompts_get_own_line;    
 };
 
 /* Given a vector whose indexes are offsets and whose values are the widths of the string if truncated at that offset, return the offset that fits in the given width. Returns width_by_offset.size() - 1 if they all fit. The first value in width_by_offset is assumed to be 0. */
@@ -1245,6 +1245,9 @@ void s_write(screen_t *s,
     /* Compute a layout */
     const screen_layout_t layout = compute_layout(s, screen_width, left_prompt, right_prompt, explicit_command_line, autosuggestion, indent);
 
+    /* Determine whether, if we have an autosuggestion, it was truncated */
+    s->autosuggestion_is_truncated = ! autosuggestion.empty() && autosuggestion != layout.autosuggestion;
+
     /* Clear the desired screen */
     s->desired.resize(0);
     s->desired.cursor.x = s->desired.cursor.y = 0;
@@ -1402,6 +1405,7 @@ screen_t::screen_t() :
     last_right_prompt_width(),
     actual_width(SCREEN_WIDTH_UNINITIALIZED),
     soft_wrap_location(INVALID_LOCATION),
+    autosuggestion_is_truncated(false),
     need_clear_lines(false),
     need_clear_screen(false),
     actual_lines_before_reset(0),

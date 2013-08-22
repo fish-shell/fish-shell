@@ -15,6 +15,7 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	set -l branch (__fish_git_prompt_current_branch $git_dir)
 	set -l bare_branch (__fish_git_prompt_current_branch_bare)
 
+	# FIXME move this to the inside of the condition? If statements don't introduce new scope
 	set -l nr_of_dirty_files
 	set -l nr_of_staged_files
 	set -l nr_of_untracked_files

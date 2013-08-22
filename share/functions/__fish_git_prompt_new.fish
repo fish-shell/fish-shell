@@ -205,7 +205,8 @@ function __fish_git_prompt_dirty --description "__fish_git_prompt helper, tells 
 	echo $dirty
 end
 
-# merge this functionality with the functionality already present
+# FIXME merge this functionality with the functionality already present
+# DEPRECATED
 function __fish_git_prompt_informative_status
 
 	set -l changedFiles (git diff --name-status | cut -c 1-2)
@@ -259,6 +260,7 @@ function __fish_git_prompt_current_branch --description "__fish_git_prompt helpe
 
 	set branch (git symbolic-ref HEAD ^/dev/null; set os $status)
 	if test $os -ne 0
+		# FIXME What does this switch/case do?
 		set branch (switch "$__fish_git_prompt_describe_style"
 					case contains
 						git describe --contains HEAD
@@ -284,7 +286,7 @@ function __fish_git_prompt_current_branch --description "__fish_git_prompt helpe
 		end
 	end
 
-	#strip "refs/heads/"
+	# Strip "refs/heads/"
 	set branch (/bin/sh -c 'echo "${1#refs/heads/}"' -- $branch)
 	echo $branch
 end

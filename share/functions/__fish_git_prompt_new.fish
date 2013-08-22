@@ -1,8 +1,11 @@
 #remove all the silly __fish prefixes. It's rather obvious that it is fish.
 #an other design decision. remove all the checks, convertion over configuration
 
-#remove this configuration option
+# FIXME remove this configuration option
 set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles
+
+# FIXME remove this configuration option
+set -xg __fish_git_prompt_color_dirtystate red
 
 function __fish_git_prompt_new --description "Prompt function for Git"
 	set -l git_dir (__fish_git_prompt_git_dir)
@@ -30,7 +33,7 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	__fish_git_prompt_validate_colors
 
 	if test -n "$nr_of_dirty_files"
-		set w "$___fish_git_prompt_color_dirtystate$nr_of_dirty_files$___fish_git_prompt_color_dirtystate_done"
+		set nr_of_dirty_files "$___fish_git_prompt_color_dirtystate$nr_of_dirty_files$___fish_git_prompt_color_dirtystate_done"
 	end
 	if test -n "$nr_of_staged_files"
 		set i "$___fish_git_prompt_color_stagedstate$nr_of_staged_files$___fish_git_prompt_color_stagedstate_done"
@@ -383,7 +386,6 @@ function __fish_git_prompt_set_color
 			set -g $variable_done ''
 		end
 	end
-
 end
 
 function __fish_git_prompt_validate_colors --description "__fish_git_prompt helper, checks color variables"

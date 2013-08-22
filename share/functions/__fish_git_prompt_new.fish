@@ -55,7 +55,7 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	end
 
 	# Formatting
-	set -l f "$nr_of_dirty_files$nr_of_staged_files$stashes$nr_of_dirty_files"
+	set -l f "$nr_of_dirty_files$nr_of_staged_files$nr_of_untracked_files$stashes"
 	if test -n "$f"
 		set f " $f"
 	end

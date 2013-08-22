@@ -44,7 +44,7 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	if test -n "$branch"
 		set b "$___fish_git_prompt_color_branch$branch$___fish_git_prompt_color_branch_done"
 	end
-	if test -n "$bare_branch"
+	if test -n "$bare_branch" # I don't think I'm using this atm. Is 'branch' and 'bare branch' mutually exclusive?
 		set c "$___fish_git_prompt_color_bare$bare_branch$___fish_git_prompt_color_bare_done"
 	end
 	if test -n "$current_operation"
@@ -255,8 +255,8 @@ end
 function __fish_git_prompt_current_branch --description "__fish_git_prompt helper, returns the current Git branch"
 	set -l git_dir $argv[1]
 	set -l branch
-
 	set -l os
+
 	set branch (git symbolic-ref HEAD ^/dev/null; set os $status)
 	if test $os -ne 0
 		set branch (switch "$__fish_git_prompt_describe_style"

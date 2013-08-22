@@ -126,7 +126,7 @@ for i in /usr/pkg /sw /opt /opt/local /usr/local; do
   AC_MSG_CHECKING([for $i/lib library directory])
   if test -d $i/lib; then
     AC_MSG_RESULT(yes)
-    LDFLAGS="$LDFLAGS -L$i/lib/ -Wl,-rpath,$i/lib/"
+    LDFLAGS="$LDFLAGS -L$i/lib/"
   else
     AC_MSG_RESULT(no)
   fi

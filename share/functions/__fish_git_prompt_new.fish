@@ -290,6 +290,10 @@ function __fish_git_prompt_current_branch --description "__fish_git_prompt helpe
 	echo $branch
 end
 
+function debugger --on-event print
+  echo DEBUG: $argv
+end
+
 function __fish_git_prompt_current_operation --description "__fish_git_prompt helper, returns the current Git operation being performed"
 	set -l operation
 

@@ -275,9 +275,6 @@ function __fish_git_prompt_current_branch --description "__fish_git_prompt helpe
 				set branch unknown
 			end
 		end
-		#strip "refs/heads/"
-		set branch (/bin/sh -c 'echo "${1#refs/heads/}"' -- $branch)
-		set branch "($branch)"
 	end
 
 	# Let user know they're inside the git dir of a non-bare repo
@@ -287,6 +284,9 @@ function __fish_git_prompt_current_branch --description "__fish_git_prompt helpe
 		end
 	end
 
+		#strip "refs/heads/"
+    emit print $branch
+		set branch (/bin/sh -c 'echo "${1#refs/heads/}"' -- $branch)
 	echo $branch
 end
 

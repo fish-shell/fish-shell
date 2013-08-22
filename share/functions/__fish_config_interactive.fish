@@ -222,12 +222,12 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		# First check in /usr/lib, this is where modern Ubuntus place this command
 		if test -f /usr/lib/command-not-found
 			function fish_command_not_found_handler --on-event fish_command_not_found
-				/usr/lib/command-not-found $argv
+				/usr/lib/command-not-found -- $argv
 			end
 		# Ubuntu Feisty places this command in the regular path instead
 		else if type -p command-not-found > /dev/null 2> /dev/null
 			function fish_command_not_found_handler --on-event fish_command_not_found
-				command-not-found $argv
+				command-not-found -- $argv
 			end
 		# Use standard fish command not found handler otherwise
 		else

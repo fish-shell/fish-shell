@@ -34,7 +34,8 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	__fish_git_prompt_validate_colors
 
 	if test -n "$nr_of_dirty_files"
-		set nr_of_dirty_files "$___fish_git_prompt_color_dirtystate$nr_of_dirty_files$___fish_git_prompt_color_dirtystate_done"
+		set nr_of_dirty_files (set_color blue)$nr_of_dirty_files(set_color normal)
+		#set nr_of_dirty_files "$___fish_git_prompt_color_dirtystate$nr_of_dirty_files$___fish_git_prompt_color_dirtystate_done"
 	end
 	if test -n "$nr_of_staged_files"
 		set i "$___fish_git_prompt_color_stagedstate$nr_of_staged_files$___fish_git_prompt_color_stagedstate_done"

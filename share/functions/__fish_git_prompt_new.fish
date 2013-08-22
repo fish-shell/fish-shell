@@ -284,9 +284,8 @@ function __fish_git_prompt_current_branch --description "__fish_git_prompt helpe
 		end
 	end
 
-		#strip "refs/heads/"
-    emit print $branch
-		set branch (/bin/sh -c 'echo "${1#refs/heads/}"' -- $branch)
+	#strip "refs/heads/"
+	set branch (/bin/sh -c 'echo "${1#refs/heads/}"' -- $branch)
 	echo $branch
 end
 

@@ -16,7 +16,9 @@ The following operators are available to examine files and directories:
 - <tt>-e FILE</tt> returns true if \c FILE exists.
 - <tt>-f FILE</tt> returns true if \c FILE is a regular file.
 - <tt>-g FILE</tt> returns true if \c FILE has the set-group-ID bit set.
+- <tt>-G FILE</tt> returns true if \c FILE exists and its group matches the effective group id of this process.
 - <tt>-L FILE</tt> returns true if \c FILE is a symbolic link.
+- <tt>-O FILE</tt> returns true if \c FILE exists and its owner matches the effective user id of this process.
 - <tt>-p FILE</tt> returns true if \c FILE is a named pipe.
 - <tt>-r FILE</tt> returns true if \c FILE is marked as readable.
 - <tt>-s FILE</tt> returns true if the size of \c FILE is greater than zero.

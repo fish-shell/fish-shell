@@ -213,6 +213,15 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		commandline -f repaint
 	end
 
+
+	# Notify vte-based terminals when $PWD changes (issue #906)
+	if begin set -q VTE_VERSION; and test $VTE_VERSION -ge 3405; end
+		function __update_vte_cwd --on-variable PWD --description 'Notify VTE of change to $PWD'
+			status --is-command-substitution; and return
+			printf '\033]7;file://%s\a' (pwd | __fish_urlencode)
+		end
+	end
+
 	# The first time a command is not found, look for command-not-found
 	# This is not cheap so we try to avoid doing it during startup
 	function fish_command_not_found_setup --on-event fish_command_not_found

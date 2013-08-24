@@ -249,8 +249,8 @@ public:
     /** Do what we need to do whenever our command line changes */
     void command_line_changed(void);
 
-    /** Expand abbreviations at the current cursor position. */
-    bool expand_abbreviation_as_necessary();
+    /** Expand abbreviations at the current cursor position, minus backtrack_amt. */
+    bool expand_abbreviation_as_necessary(size_t cursor_backtrack);
 
     /** The current position of the cursor in buff. */
     size_t buff_pos;
@@ -660,7 +660,7 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
     const wcstring subcmd = wcstring(cmdsub_begin, cmdsub_end - cmdsub_begin);
     const wchar_t *subcmd_cstr = subcmd.c_str();
 
-    /* Get the token before the cursor */
+    /* Get the token containing the cursor */
     const wchar_t *subcmd_tok_begin = NULL, *subcmd_tok_end = NULL;
     assert(cursor_pos >= subcmd_offset);
     size_t subcmd_cursor_pos = cursor_pos - subcmd_offset;
@@ -776,15 +776,16 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
     return result;
 }
 
-/* Expand abbreviations. This may change the command line but does NOT repaint it. This is to allow the caller to coalesce repaints. */
-bool reader_data_t::expand_abbreviation_as_necessary()
+/* Expand abbreviations at the current cursor position, minus the given  cursor backtrack. This may change the command line but does NOT repaint it. This is to allow the caller to coalesce repaints. */
+bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack)
 {
     bool result = false;
     if (this->expand_abbreviations)
     {
         /* Try expanding abbreviations */
         wcstring new_cmdline;
-        if (reader_expand_abbreviation_in_command(this->command_line, this->buff_pos, &new_cmdline))
+        size_t cursor_pos = this->buff_pos - mini(this->buff_pos, cursor_backtrack);
+        if (reader_expand_abbreviation_in_command(this->command_line, cursor_pos, &new_cmdline))
         {
             /* We expanded an abbreviation! The cursor moves by the difference in the command line lengths. */
             size_t new_buff_pos = this->buff_pos + new_cmdline.size() - this->command_line.size();
@@ -1078,34 +1079,38 @@ static void remove_backward()
 /**
    Insert the characters of the string into the command line buffer
    and print them to the screen using syntax highlighting, etc.
+   Optionally also expand abbreviations.
+   Returns true if the string changed.
 */
-static int insert_string(const wcstring &str)
+static bool insert_string(const wcstring &str, bool should_expand_abbreviations = false)
 {
     size_t len = str.size();
     if (len == 0)
-        return 0;
+        return false;
 
     data->command_line.insert(data->buff_pos, str);
     data->buff_pos += len;
     data->command_line_changed();
     data->suppress_autosuggestion = false;
 
+    if (should_expand_abbreviations)
+        data->expand_abbreviation_as_necessary(1);
+
     /* Syntax highlight. Note we must have that buff_pos > 0 because we just added something nonzero to its length  */
     assert(data->buff_pos > 0);
     reader_super_highlight_me_plenty(data->buff_pos-1);
-
     reader_repaint();
-    return 1;
-}
 
+    return true;
+}
 
 /**
    Insert the character into the command line buffer and print it to
    the screen using syntax highlighting, etc.
 */
-static int insert_char(wchar_t c)
+static bool insert_char(wchar_t c, bool should_expand_abbreviations = false)
 {
-    return insert_string(wcstring(&c, 1));
+    return insert_string(wcstring(1, c), should_expand_abbreviations);
 }
 
 
@@ -3439,7 +3444,7 @@ const wchar_t *reader_readline(void)
                 if (command_test_result == 0 || command_test_result == PARSER_TEST_INCOMPLETE)
                 {
                     /* This command is valid, but an abbreviation may make it invalid. If so, we will have to test again. */
-                    bool abbreviation_expanded = data->expand_abbreviation_as_necessary();
+                    bool abbreviation_expanded = data->expand_abbreviation_as_necessary(1);
                     if (abbreviation_expanded)
                     {
                         /* It's our reponsibility to rehighlight and repaint. But everything we do below triggers a repaint. */
@@ -3786,14 +3791,11 @@ const wchar_t *reader_readline(void)
             {
                 if ((!wchar_private(c)) && (((c>31) || (c==L'\n'))&& (c != 127)))
                 {
-                    /* Expand abbreviations on space */
-                    if (c == L' ')
-                    {
-                        data->expand_abbreviation_as_necessary();
-                    }
+                    /* Expand abbreviations after space */
+                    bool should_expand_abbreviations = (c == L' ');
 
                     /* Regular character */
-                    insert_char(c);
+                    insert_char(c, should_expand_abbreviations);
                 }
                 else
                 {

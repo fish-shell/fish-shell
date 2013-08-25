@@ -376,7 +376,7 @@ static void launch_process_nofork(process_t *p)
 */
 static int has_fd(const io_chain_t &d, int fd)
 {
-    return io_chain_get(d, fd) != NULL;
+    return io_chain_get(d, fd).get() != NULL;
 }
 
 /**

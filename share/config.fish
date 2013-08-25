@@ -60,12 +60,15 @@ end
 # OS X-ism: Load the path files out of /etc/paths and /etc/paths.d/*
 set -g __fish_tmp_path $PATH
 function __fish_load_path_helper_paths
+	# We want to rearrange the path to reflect this order. Delete that path component if it exists and then prepend it.
+	# Since we are prepending but want to preserve the order of the input file, we reverse the array, append, and then reverse it again
+    set __fish_tmp_path $__fish_tmp_path[-1..1] 
     while read -l new_path_comp
-	    # We want to rearrange the path to reflect this order. Delete that path component if it exists and then prepend it.
-	    set -l where (contains -i $new_path_comp $__fish_tmp_path)
+        set -l where (contains -i $new_path_comp $__fish_tmp_path)
         and set -e __fish_tmp_path[$where]
         set __fish_tmp_path $new_path_comp $__fish_tmp_path
     end
+    set __fish_tmp_path $__fish_tmp_path[-1..1]
 end
 test -r /etc/paths ; and __fish_load_path_helper_paths < /etc/paths 
 for pathfile in /etc/paths.d/* ; __fish_load_path_helper_paths < $pathfile ; end

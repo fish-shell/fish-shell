@@ -829,7 +829,7 @@ static bool unary_primary_evaluate(test_expressions::token_t token, const wcstri
             return !wstat(arg, &buf) && S_ISREG(buf.st_mode);
 
         case test_filetype_G:            // "-G", for check effective group id
-            return !lwstat(arg, &buf) && getegid() == buf.st_gid;
+            return !wstat(arg, &buf) && getegid() == buf.st_gid;
 
         case test_filetype_g:            // "-g", for set-group-id
             return !wstat(arg, &buf) && (S_ISGID & buf.st_mode);
@@ -839,7 +839,7 @@ static bool unary_primary_evaluate(test_expressions::token_t token, const wcstri
             return !lwstat(arg, &buf) && S_ISLNK(buf.st_mode);
 
         case test_filetype_O:            // "-O", for check effective user id
-            return !lwstat(arg, &buf) && geteuid() == buf.st_uid;
+            return !wstat(arg, &buf) && geteuid() == buf.st_uid;
 
         case test_filetype_p:            // "-p", for FIFO
             return !wstat(arg, &buf) && S_ISFIFO(buf.st_mode);

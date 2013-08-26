@@ -20,7 +20,7 @@ set -g __git_prompt_char_dirty ✚
 set -g __git_prompt_char_invalid ✖
 set -g __git_prompt_char_staged ●
 set -g __git_prompt_char_untracked …
-set -g __git_prompt_char_stash 𝄐 ⚡
+set -g __git_prompt_char_stash 𝄐
 set -g __git_prompt_char_clean ✔
 
 function __fish_git_prompt_new --description "Prompt function for Git"

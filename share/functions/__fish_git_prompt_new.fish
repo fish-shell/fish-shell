@@ -16,20 +16,15 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	set -l branch (__fish_git_prompt_current_branch $git_dir)
 	set -l bare_branch (__fish_git_prompt_current_branch_bare)
 
-	# FIXME move this to the inside of the condition? If statements don't introduce new scope
-	set -l nr_of_dirty_files
-	set -l nr_of_staged_files
-	set -l nr_of_untracked_files
-	set -l upstream
-
 	__fish_git_prompt_validate_chars
 
 	if test "true" = (git rev-parse --is-inside-work-tree ^/dev/null)
-		set nr_of_dirty_files (__fish_git_nr_of_dirty_files)
-		set nr_of_staged_files (__fish_git_nr_of_staged_files)
-		set stashes (__fish_git_has_stashes)
-		set nr_of_untracked_files (__fish_git_nr_of_untracked_files)
-		set upstream (__fish_git_prompt_show_upstream)
+		set -l nr_of_dirty_files (__fish_git_nr_of_dirty_files)
+		set -l nr_of_staged_files (__fish_git_nr_of_staged_files)
+		set -l nr_of_invalid_files (__fish_git_nr_of_invalid_files)
+		set -l stashes (__fish_git_has_stashes)
+		set -l nr_of_untracked_files (__fish_git_nr_of_untracked_files)
+		set -l upstream (__fish_git_prompt_show_upstream)
 	end
 
 	__fish_git_prompt_validate_colors

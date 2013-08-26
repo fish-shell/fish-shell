@@ -23,7 +23,7 @@ function __fish_complete_man
 		# Do the actual search
 		switch (uname)
 		case Darwin
-			apropos (commandline -ct) ^/dev/null | sgrep \^(commandline -ct) | awk -F " - " '
+			apropos (commandline -ct) ^/dev/null | awk -F " - " '
 {
 	split($1, a, ", ");
 	for (i in a) {

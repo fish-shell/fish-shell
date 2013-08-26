@@ -87,6 +87,7 @@ function __fish_git_has_stashes --description "Returns the 'stash' character if 
 	git rev-parse --verify refs/stash >/dev/null ^&1; and echo $___fish_git_prompt_char_stashstate
 end
 
+# FIXME this is some complex stuff. Could easily be split in a function for grabbing the upstream name and the divergence counts
 function __fish_git_prompt_show_upstream --description "Helper function for __fish_git_prompt"
 	# Ask git-config for some config options
 	set -l svn_remote

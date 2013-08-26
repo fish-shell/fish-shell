@@ -204,13 +204,12 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 	switch "$count"
 	case '' # no upstream
 	case "0	0" # equal to upstream
-		echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_equal"
 	case "0	*" # ahead of upstream
-		echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead"
+		echo "$__git_prompt_char_upstream_ahead$ahead"
 	case "*	0" # behind upstream
-		echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind$behind"
+		echo "$__git_prompt_char_upstream_behind$behind"
 	case '*' # diverged from upstream
-		echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead$___fish_git_prompt_char_upstream_behind$behind"
+		echo "$__git_prompt_char_upstream_ahead$ahead$__git_prompt_char_upstream_behind$behind"
 	end
 end
 

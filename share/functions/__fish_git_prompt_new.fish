@@ -31,50 +31,77 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	set -l branch (__fish_git_prompt_current_branch $git_dir)
 	set -l bare_branch (__fish_git_prompt_current_branch_bare)
 
-	__fish_git_prompt_validate_chars
+	set -l nr_of_dirty_files
+	set -l nr_of_staged_files
+	set -l nr_of_invalid_files
+	set -l stashes
+	set -l nr_of_untracked_files
+	set -l upstream
 
 	if test "true" = (git rev-parse --is-inside-work-tree ^/dev/null)
-		set -l nr_of_dirty_files (__fish_git_nr_of_dirty_files)
-		set -l nr_of_staged_files (__fish_git_nr_of_staged_files)
-		set -l nr_of_invalid_files (__fish_git_nr_of_invalid_files)
-		set -l stashes (__fish_git_has_stashes)
-		set -l nr_of_untracked_files (__fish_git_nr_of_untracked_files)
-		set -l upstream (__fish_git_prompt_show_upstream)
+		set nr_of_dirty_files (__fish_git_nr_of_dirty_files)
+		set nr_of_staged_files (__fish_git_nr_of_staged_files)
+		set nr_of_invalid_files (__fish_git_nr_of_invalid_files)
+		set stashes (__fish_git_has_stashes)
+		set nr_of_untracked_files (__fish_git_nr_of_untracked_files)
+		set upstream (__fish_git_prompt_show_upstream)
 	end
 
 	__fish_git_prompt_validate_colors
 
 	if test $nr_of_dirty_files -ne 0
-		set nr_of_dirty_files (set_color $__fish_git_prompt_color_dirtystate)$__git_prompt_dirty_char$nr_of_dirty_files(set_color normal)
+		set nr_of_dirty_files (set_color $__git_prompt_color_dirty)$__git_prompt_char_dirty$nr_of_dirty_files(set_color normal)
+	else
+		set nr_of_dirty_files ""
+	end
+
+	if test $nr_of_invalid_files -ne 0
+		set nr_of_invalid_files (set_color $__git_prompt_color_invalid)$__git_prompt_char_invalid$nr_of_invalid_files(set_color normal)
+	else
+		set nr_of_invalid_files ""
+	end
+
+	if test $nr_of_staged_files -ne 0
+		set nr_of_staged_files (set_color $__git_prompt_color_staged)$__git_prompt_char_staged$nr_of_staged_files(set_color normal)
 	else
 		set nr_of_staged_files ""
 	end
-	if test -n "$nr_of_staged_files"
-		set i "$___fish_git_prompt_color_stagedstate$nr_of_staged_files$___fish_git_prompt_color_stagedstate_done"
+
+	if test $nr_of_untracked_files -ne 0
+		set nr_of_staged_files (set_color $__git_prompt_color_untracked)$__git_prompt_char_untracked$nr_of_untracked_files(set_color normal)
+	else
+		set nr_of_untracked_files ""
 	end
+
 	if test -n "$stashes"
-		set s "$___fish_git_prompt_color_stashstate$stashes$___fish_git_prompt_color_stashstate_done"
+		set stashes (set_color $__git_prompt_color_stashes)$stashes(set_color normal)
+	else
+		set stashes ""
 	end
-	if test -n "$nr_of_untracked_files"
-		set u "$___fish_git_prompt_color_untrackedfiles$nr_of_untracked_files$___fish_git_prompt_color_untrackedfiles_done"
+
+	set branch (set_color $__git_prompt_color_branch)$branch(set_color normal)
+
+# FIXME I don't think I'm using this atm. Is 'branch' and 'bare branch' mutually exclusive?
+	if test -n "$bare_branch" 
+		set c "$__git_prompt_color_bare$bare_branch$___fish_git_prompt_color_bare_done"
 	end
-	if test -n "$branch"
-		set b "$___fish_git_prompt_color_branch$branch$___fish_git_prompt_color_branch_done"
-	end
-	if test -n "$bare_branch" # I don't think I'm using this atm. Is 'branch' and 'bare branch' mutually exclusive?
-		set c "$___fish_git_prompt_color_bare$bare_branch$___fish_git_prompt_color_bare_done"
-	end
+
 	if test -n "$current_operation"
-		set current_operation "$___fish_git_prompt_color_merging$current_operation$___fish_git_prompt_color_merging_done"
+		set current_operation (set_color $__git_prompt_color_current_operation)$current_operation(set_color normal)
 	end
+
 	if test -n "$upsteam"
-		set p "$___fish_git_prompt_color_upstream$upstream$___fish_git_prompt_color_upstream_done"
+		set upstream (set_color $__git_prompt_color_upstream)$upstream(set_color normal)
+	else
+		set upstream ""
 	end
 
 	# Formatting
 	set -l f "$nr_of_dirty_files$nr_of_staged_files$nr_of_untracked_files$stashes"
 	if test -n "$f"
 		set f "|$f"
+	else
+		set f $__git_prompt_char_clean
 	end
 	set format " (%s)"
 
@@ -99,7 +126,7 @@ function __fish_git_nr_of_untracked_files --description "Returns the number of f
 end
 
 function __fish_git_has_stashes --description "Returns the 'stash' character if git dir has any number of stashes"
-	git rev-parse --verify refs/stash >/dev/null ^&1; and echo $___fish_git_prompt_char_stashstate
+	git rev-parse --verify refs/stash >/dev/null ^&1; and echo $__git_prompt_char_stash
 end
 
 # FIXME this is some complex stuff. Could easily be split in a function for grabbing the upstream name and the divergence counts

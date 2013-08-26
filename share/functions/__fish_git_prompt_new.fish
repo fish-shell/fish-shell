@@ -72,7 +72,7 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	end
 
 	if test -n "$stashes"
-		set stashes (set_color $__git_prompt_color_stashes)$stashes(set_color normal)
+		set stashes (set_color $__git_prompt_color_stashes)$__git_prompt_char_stash(set_color normal)
 	else
 		set stashes ""
 	end
@@ -124,7 +124,7 @@ function __fish_git_nr_of_untracked_files --description "Returns the number of f
 end
 
 function __fish_git_has_stashes --description "Returns the 'stash' character if git dir has any number of stashes"
-	git rev-parse --verify refs/stash >/dev/null ^&1; and echo $__git_prompt_char_stash
+	git rev-parse --verify refs/stash >/dev/null ^&1
 end
 
 # FIXME this is some complex stuff. Could easily be split in a function for grabbing the upstream name and the divergence counts

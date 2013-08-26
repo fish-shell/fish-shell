@@ -47,8 +47,6 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 		set upstream (__fish_git_prompt_show_upstream)
 	end
 
-	__fish_git_prompt_validate_colors
-
 	if test $nr_of_dirty_files -ne 0
 		set nr_of_dirty_files (set_color $__git_prompt_color_dirty)$__git_prompt_char_dirty$nr_of_dirty_files(set_color normal)
 	else
@@ -82,7 +80,7 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	set branch (set_color $__git_prompt_color_branch)$branch(set_color normal)
 
 # FIXME I don't think I'm using this atm. Is 'branch' and 'bare branch' mutually exclusive?
-	if test -n "$bare_branch" 
+	if test -n "$bare_branch"
 		set c "$__git_prompt_color_bare$bare_branch$___fish_git_prompt_color_bare_done"
 	end
 

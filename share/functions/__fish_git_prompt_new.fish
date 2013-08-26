@@ -64,10 +64,7 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	if test -n "$f"
 		set f " $f"
 	end
-	set -l format $argv[1] #this method accepts an argument. Now we have arguments _and_ global vars. I think not.
-	if test -z "$format"
-		set format " (%s)"
-	end
+	set format " (%s)"
 
 	printf "%s$format%s" "$___fish_git_prompt_color_prefix" "$___fish_git_prompt_color_prefix_done$bare_branch$branch$f$current_operation$upstream$___fish_git_prompt_color_suffix" "$___git_ps_color_suffix_done"
 end

@@ -4,9 +4,24 @@
 # FIXME remove this configuration option
 set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles
 
-# FIXME remove this configuration option
-set -xg __fish_git_prompt_color_dirtystate red
-set -g __git_prompt_dirty_char ✚
+set -g __git_prompt_color_upstream red
+set -g __git_prompt_color_dirty yellow
+set -g __git_prompt_color_invalid red
+set -g __git_prompt_color_staged green
+set -g __git_prompt_color_untracked normal
+set -g __git_prompt_color_stashes purple
+set -g __git_prompt_color_clean green
+set -g __git_prompt_color_branch normal
+set -g __git_prompt_color_current_operation normal
+
+set -g __git_prompt_char_upstream_ahead ↑
+set -g __git_prompt_char_upstream_behind ↓
+set -g __git_prompt_char_dirty ✚
+set -g __git_prompt_char_invalid ✖
+set -g __git_prompt_char_staged ●
+set -g __git_prompt_char_untracked …
+set -g __git_prompt_char_stash 𝄐 ⚡
+set -g __git_prompt_char_clean ✔
 
 function __fish_git_prompt_new --description "Prompt function for Git"
 	set -l git_dir (__fish_git_prompt_git_dir)

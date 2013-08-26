@@ -1,9 +1,3 @@
-#remove all the silly __fish prefixes. It's rather obvious that it is fish.
-#an other design decision. remove all the checks, convertion over configuration
-
-# FIXME remove this configuration option
-set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles
-
 set -g __git_prompt_color_upstream red
 set -g __git_prompt_color_dirty yellow
 set -g __git_prompt_color_invalid red
@@ -223,74 +217,6 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 	end
 end
 
-# I wonder if this is still necessary. I think: "git diff --staged --name-status" is good enough
-# DEPRECATED
-function __fish_git_prompt_staged --description "__fish_git_prompt helper, tells whether or not the current branch has staged files"
-	set -l staged
-
-	if git rev-parse --quiet --verify HEAD >/dev/null
-		git diff-index --cached --quiet HEAD --; or set staged $___fish_git_prompt_char_stagedstate
-	else
-		set staged $___fish_git_prompt_char_invalidstate
-	end
-	echo $staged
-end
-
-# DEPRECATED
-function __fish_git_prompt_dirty --description "__fish_git_prompt helper, tells whether or not the current branch has tracked, modified files"
-	set -l dirty
-
-	set -l os
-	git diff --no-ext-diff --quiet --exit-code
-	set os $status
-	if test $os -ne 0
-		set dirty $___fish_git_prompt_char_dirtystate
-	end
-	echo $dirty
-end
-
-# FIXME merge this functionality with the functionality already present
-# DEPRECATED
-function __fish_git_prompt_informative_status
-
-	set -l changedFiles (git diff --name-status | cut -c 1-2)
-	set -l stagedFiles (git diff --staged --name-status | cut -c 1-2)
-
-	set -l dirtystate (math (count $changedFiles) - (count (echo $changedFiles | grep "U")))
-	set -l invalidstate (count (echo $stagedFiles | grep "U"))
-	set -l stagedstate (math (count $stagedFiles) - $invalidstate)
-	set -l untrackedfiles (count (git ls-files --others --exclude-standard))
-
-	set -l info
-
-	# make this consistent, use 'test'
-	if [ (math $dirtystate + $invalidstate + $stagedstate + $untrackedfiles) = 0 ]
-		set info $___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done
-	else
-		for i in $___fish_git_prompt_status_order
-			 if [ $$i != "0" ]
-				set -l color_var ___fish_git_prompt_color_$i
-				set -l color_done_var ___fish_git_prompt_color_$i
-				set -l symbol_var ___fish_git_prompt_char_$i
-
-				set -l color $$color_var
-				set -l color_done $$color_done_var
-				set -l symbol $$symbol_var
-
-				set -l count
-
-				if not set -q __fish_git_prompt_hide_$i
-					set count $$i
-				end
-
-				set info "$info$color$symbol$count$color_done"
-			end
-		end
-	end
-
-	echo $info
-end
-
 function __fish_git_prompt_current_branch_bare --description "__fish_git_prompt helper, tells wheter or not the current branch is bare"
 	if test "true" = (git rev-parse --is-inside-git-dir ^/dev/null) -a "true" = (git rev-parse --is-bare-repository ^/dev/null)
 		echo bare "BARE:"
@@ -371,96 +297,24 @@ function __fish_git_prompt_git_dir --description "__fish_git_prompt helper, retu
 	echo (git rev-parse --git-dir ^/dev/null)
 end
 
-function __fish_git_prompt_set_char
-	set -l user_variable_name "$argv[1]"
-	set -l char $argv[2]
-	set -l user_variable $$user_variable_name
-
-	set -l variable _$user_variable_name
-	set -l variable_done "$variable"_done
-
-	if not set -q $variable
-		set -g $variable (set -q $user_variable_name; and echo $user_variable; or echo $char)
-	end
-
-end
-
-function __fish_git_prompt_validate_chars --description "__fish_git_prompt helper, checks char variables"
-
-	__fish_git_prompt_set_char __fish_git_prompt_char_cleanstate				'.'
-	__fish_git_prompt_set_char __fish_git_prompt_char_dirtystate				'*'
-	__fish_git_prompt_set_char __fish_git_prompt_char_stagedstate				'+'
-	__fish_git_prompt_set_char __fish_git_prompt_char_invalidstate			'#'
-	__fish_git_prompt_set_char __fish_git_prompt_char_stashstate				'$'
-	__fish_git_prompt_set_char __fish_git_prompt_char_untrackedfiles		'%'
-	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_equal		'='
-	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_behind		'<'
-	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_ahead		'>'
-	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_diverged	'<>'
-	__fish_git_prompt_set_char __fish_git_prompt_char_upstream_prefix		' '
-
-end
-
-function __fish_git_prompt_set_color
-	set -l user_variable_name "$argv[1]"
-	set -l user_variable $$user_variable_name
-	set -l user_variable_bright
-
-	if test (count $user_variable) -eq 2
-		set user_variable_bright $user_variable[2]
-		set user_variable $user_variable[1]
-	end
-
-	set -l variable _$user_variable_name
-	set -l variable_done "$variable"_done
-
-	if not set -q $variable
-		if test -n "$user_variable"
-			if test -n "$user_variable_bright"
-				set -g $variable (set_color -o $user_variable)
-			else
-				set -g $variable (set_color $user_variable)
-			end
-			set -g $variable_done (set_color normal)
-		else
-			set -g $variable ''
-			set -g $variable_done ''
-		end
-	end
-end
-
-function __fish_git_prompt_validate_colors --description "__fish_git_prompt helper, checks color variables"
-
-	__fish_git_prompt_set_color __fish_git_prompt_color
-	__fish_git_prompt_set_color __fish_git_prompt_color_prefix
-	__fish_git_prompt_set_color __fish_git_prompt_color_suffix
-	__fish_git_prompt_set_color __fish_git_prompt_color_bare
-	__fish_git_prompt_set_color __fish_git_prompt_color_merging
-	__fish_git_prompt_set_color __fish_git_prompt_color_branch
-	__fish_git_prompt_set_color __fish_git_prompt_color_cleanstate
-	__fish_git_prompt_set_color __fish_git_prompt_color_dirtystate
-	__fish_git_prompt_set_color __fish_git_prompt_color_stagedstate
-	__fish_git_prompt_set_color __fish_git_prompt_color_invalidstate
-	__fish_git_prompt_set_color __fish_git_prompt_color_stashstate
-	__fish_git_prompt_set_color __fish_git_prompt_color_untrackedfiles
-	__fish_git_prompt_set_color __fish_git_prompt_color_upstream
-
-end
-
+# FIXME figure out what this is supposed to do
 set -l varargs
 for var in repaint describe_style showdirtystate showstashstate showuntrackedfiles showupstream
 	set varargs $varargs --on-variable __fish_git_prompt_$var
 end
+
 function __fish_git_prompt_repaint $varargs --description "Event handler, repaints prompt when functionality changes"
 	if status --is-interactive
 		commandline -f repaint ^/dev/null
 	end
 end
 
+# FIXME figure out what this is supposed to do
 set -l varargs
 for var in '' _prefix _suffix _bare _merging _branch _dirtystate _stagedstate _invalidstate _stashstate _untrackedfiles _upstream
 	set varargs $varargs --on-variable __fish_git_prompt_color$var
 end
+
 function __fish_git_prompt_repaint_color $varargs --description "Event handler, repaints prompt when any color changes"
 	if status --is-interactive
 		set -l var $argv[3]
@@ -476,10 +330,13 @@ function __fish_git_prompt_repaint_color $varargs --description "Event handler, 
 		commandline -f repaint ^/dev/null
 	end
 end
+
+# FIXME figure out what this is supposed to do
 set -l varargs
 for var in dirtystate stagedstate invalidstate stashstate untrackedfiles upstream_equal upstream_behind upstream_ahead upstream_diverged
 	set varargs $varargs --on-variable __fish_git_prompt_char_$var
 end
+
 function __fish_git_prompt_repaint_char $varargs --description "Event handler, repaints prompt when any char changes"
 	if status --is-interactive
 		set -e _$argv[3]

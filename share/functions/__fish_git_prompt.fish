@@ -186,7 +186,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 
 	set -l svn_remote
 	# get some config options from git-config
-	git config -z --get-regexp '^(svn-remote\..*\.url|bash\.showupstream)$' ^/dev/null | tr '\0\n' '\n ' | while read -l key value
+	command git config -z --get-regexp '^(svn-remote\..*\.url|bash\.showupstream)$' ^/dev/null | tr '\0\n' '\n ' | while read -l key value
 		switch $key
 		case bash.showupstream
 			set show_upstream $value
@@ -261,7 +261,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 				set upstream (/bin/sh -c 'val=${1#/branches}; echo "${val#/}"' -- $svn_upstream)
 
 				# Use fetch config to fix upstream
-				set -l fetch_val (git config "$cur_prefix".fetch)
+				set -l fetch_val (command git config "$cur_prefix".fetch)
 				if test -n "$fetch_val"
 					set -l IFS :
 					echo "$fetch_val" | read -l trunk pattern
@@ -275,11 +275,11 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 
 	# Find how many commits we are ahead/behind our upstream
 	if test -z "$legacy"
-		set count (git rev-list --count --left-right $upstream...HEAD ^/dev/null)
+		set count (command git rev-list --count --left-right $upstream...HEAD ^/dev/null)
 	else
 		# produce equivalent output to --count for older versions of git
 		set -l os
-		set -l commits (git rev-list --left-right $upstream...HEAD ^/dev/null; set os $status)
+		set -l commits (command git rev-list --left-right $upstream...HEAD ^/dev/null; set os $status)
 		if test $os -eq 0
 			set -l behind (count (for arg in $commits; echo $arg; end | grep '^<'))
 			set -l ahead (count (for arg in $commits; echo $arg; end | grep -v '^<'))
@@ -331,7 +331,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 end
 
 function __fish_git_prompt --description "Prompt function for Git"
-	set -l repo_info (git rev-parse --git-dir --is-inside-git-dir --is-bare-repository --is-inside-work-tree --short HEAD ^/dev/null)
+	set -l repo_info (command git rev-parse --git-dir --is-inside-git-dir --is-bare-repository --is-inside-work-tree --short HEAD ^/dev/null)
 	test -n "$repo_info"; or return
 
 	set -l git_dir         $repo_info[1]
@@ -362,7 +362,7 @@ function __fish_git_prompt --description "Prompt function for Git"
 			set informative_status "$___fish_git_prompt_char_stateseparator"(__fish_git_prompt_informative_status)
 		else
 			if test -n "$__fish_git_prompt_showdirtystate"
-				set -l config (git config --bool bash.showDirtyState)
+				set -l config (command git config --bool bash.showDirtyState)
 				if test "$config" != "false"
 					set w (__fish_git_prompt_dirty)
 					set i (__fish_git_prompt_staged $short_sha)
@@ -374,9 +374,9 @@ function __fish_git_prompt --description "Prompt function for Git"
 			end
 
 			if test -n "$__fish_git_prompt_showuntrackedfiles"
-				set -l config (git config --bool bash.showUntrackedFiles)
+				set -l config (command git config --bool bash.showUntrackedFiles)
 				if test "$config" != false
-					if git ls-files --others --exclude-standard --error-unmatch -- '*' >/dev/null ^/dev/null
+					if command git ls-files --others --exclude-standard --error-unmatch -- '*' >/dev/null ^/dev/null
 						set u $___fish_git_prompt_char_untrackedfiles
 					end
 				end
@@ -447,7 +447,7 @@ function __fish_git_prompt_staged --description "__fish_git_prompt helper, tells
 	set -l staged
 
 	if test -n "$short_sha"
-		git diff-index --cached --quiet HEAD --; or set staged $___fish_git_prompt_char_stagedstate
+		command git diff-index --cached --quiet HEAD --; or set staged $___fish_git_prompt_char_stagedstate
 	else
 		set staged $___fish_git_prompt_char_invalidstate
 	end
@@ -458,7 +458,7 @@ function __fish_git_prompt_dirty --description "__fish_git_prompt helper, tells 
 	set -l dirty
 
 	set -l os
-	git diff --no-ext-diff --quiet --exit-code
+	command git diff --no-ext-diff --quiet --exit-code
 	set os $status
 	if test $os -ne 0
 		set dirty $___fish_git_prompt_char_dirtystate
@@ -470,13 +470,13 @@ set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untra
 
 function  __fish_git_prompt_informative_status
 
-	set -l changedFiles (git diff --name-status | cut -c 1-2)
-	set -l stagedFiles (git diff --staged --name-status | cut -c 1-2)
+	set -l changedFiles (command git diff --name-status | cut -c 1-2)
+	set -l stagedFiles (command git diff --staged --name-status | cut -c 1-2)
 
 	set -l dirtystate (math (count $changedFiles) - (count (echo $changedFiles | grep "U")))
 	set -l invalidstate (count (echo $stagedFiles | grep "U"))
 	set -l stagedstate (math (count $stagedFiles) - $invalidstate)
-	set -l untrackedfiles (count (git ls-files --others --exclude-standard))
+	set -l untrackedfiles (count (command git ls-files --others --exclude-standard))
 
 	set -l info
 
@@ -564,18 +564,18 @@ function __fish_git_prompt_operation_branch_bare --description "__fish_git_promp
 	end
 
 	if test -z "$branch"
-		set branch (git symbolic-ref HEAD ^/dev/null; set os $status)
+		set branch (command git symbolic-ref HEAD ^/dev/null; set os $status)
 		if test $os -ne 0
 			set detached yes
 			set branch (switch "$__fish_git_prompt_describe_style"
 						case contains
-							git describe --contains HEAD
+							command git describe --contains HEAD
 						case branch
-							git describe --contains --all HEAD
+							command git describe --contains --all HEAD
 						case describe
-							git describe HEAD
+							command git describe HEAD
 						case default '*'
-							git describe --tags --exact-match HEAD
+							command git describe --tags --exact-match HEAD
 						end ^/dev/null; set os $status)
 			if test $os -ne 0
 				if test -n "$short_sha"

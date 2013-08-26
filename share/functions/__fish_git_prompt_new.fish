@@ -89,15 +89,12 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	end
 
 	# Formatting
-	set -l f "$nr_of_dirty_files$nr_of_staged_files$nr_of_untracked_files$stashes"
-	if test -n "$f"
-		set f "|$f"
-	else
-		set f $__git_prompt_char_clean
+	set -l concatenated_status "$nr_of_dirty_files$nr_of_staged_files$nr_of_untracked_files$stashes"
+	if test -z "$concatenated_status"
+		set concatenated_status (set_color $__git_prompt_color_clean)$__git_prompt_char_clean(set_color normal)
 	end
-	set format " (%s)"
 
-	printf "%s$format%s" "$___fish_git_prompt_color_prefix" "$___fish_git_prompt_color_prefix_done$bare_branch$branch$upstream$f$current_operation$___fish_git_prompt_color_suffix" "$___git_ps_color_suffix_done"
+	printf "%s (%s)%s" (set_color normal) "$bare_branch$branch$upstream|$concatenated_status$current_operation" (set_color normal)
 end
 
 ### helper functions

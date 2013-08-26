@@ -1653,8 +1653,8 @@ bool compare_completions_by_match_type(const completion_t &a, const completion_t
     return wcsfilecmp(a.completion.c_str(), b.completion.c_str()) < 0;
 }
 
-/* Determine the best match type */
-fuzzy_match_type_t get_best_match_type(const std::vector<completion_t> &comp)
+/* Determine the best match type for a set of completions */
+static fuzzy_match_type_t get_best_match_type(const std::vector<completion_t> &comp)
 {
     fuzzy_match_type_t best_type = fuzzy_match_none;
     for (size_t i=0; i < comp.size(); i++)
@@ -1665,9 +1665,7 @@ fuzzy_match_type_t get_best_match_type(const std::vector<completion_t> &comp)
             best_type = el.match.type;
         }
     }
-    /* For case exact match as best type, make it to lower level as prefix match,
-       because completions with prefix match cannot stay otherwise while they are
-       also candidates of the input along with completion with exact match. */
+    /* If the best type is an exact match, reduce it to prefix match. Otherwise a tab completion will only show one match if it matches a file exactly. (see issue #959) */
     if (best_type == fuzzy_match_exact)
     {
         best_type = fuzzy_match_prefix;
@@ -1818,7 +1816,7 @@ static bool handle_completions(const std::vector<completion_t> &comp)
         for (size_t i=0; i < comp.size(); i++)
         {
             const completion_t &el = comp.at(i);
-            /* Ignore completions with less suitable match type than the best. */
+            /* Ignore completions with a less suitable match type than the best. */
             if (el.match.type > best_match_type)
                 continue;
 

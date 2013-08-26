@@ -6,6 +6,7 @@ set -g ___fish_git_prompt_status_order stagedstate invalidstate dirtystate untra
 
 # FIXME remove this configuration option
 set -xg __fish_git_prompt_color_dirtystate red
+set -g __git_prompt_dirty_char ✚
 
 function __fish_git_prompt_new --description "Prompt function for Git"
 	set -l git_dir (__fish_git_prompt_git_dir)
@@ -33,9 +34,10 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 
 	__fish_git_prompt_validate_colors
 
-	if test -n "$nr_of_dirty_files"
-		set nr_of_dirty_files (set_color $__fish_git_prompt_color_dirtystate)$nr_of_dirty_files(set_color normal)
-		#set nr_of_dirty_files "$___fish_git_prompt_color_dirtystate$nr_of_dirty_files$___fish_git_prompt_color_dirtystate_done"
+	if test $nr_of_dirty_files -ne 0
+		set nr_of_dirty_files (set_color $__fish_git_prompt_color_dirtystate)$__git_prompt_dirty_char$nr_of_dirty_files(set_color normal)
+	else
+		set nr_of_staged_files ""
 	end
 	if test -n "$nr_of_staged_files"
 		set i "$___fish_git_prompt_color_stagedstate$nr_of_staged_files$___fish_git_prompt_color_stagedstate_done"

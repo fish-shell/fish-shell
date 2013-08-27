@@ -435,8 +435,8 @@ static void setup_path()
 {
     const wchar_t *path_el[] =
     {
-        L"/bin",
         L"/usr/bin",
+        L"/bin",
         NULL
     };
 
@@ -448,23 +448,33 @@ static void setup_path()
         tokenize_variable_array(path, lst);
     }
 
+    for (size_t i=0; i<lst.size(); i++)
+    {
+        wchar_t *real_path = wrealpath(lst.at(i), NULL);
+        if (real_path)
+        {
+            lst.at(i) = real_path;
+            free(real_path);
+        }
+        // If !real_path, then just keep the current value of lst.at(i).
+    }
+
+    wcstring new_path;
+    if (!path.missing())
+    {
+        new_path += path;
+    }
+
     for (size_t j=0; path_el[j] != NULL; j++)
     {
-
         bool has_el = false;
+        wchar_t *real_path_el = wrealpath(path_el[j], NULL);
+        if (!real_path_el)
+            continue;
 
         for (size_t i=0; i<lst.size(); i++)
         {
-            const wcstring &el = lst.at(i);
-            size_t len = el.size();
-
-            while ((len > 0) && (el.at(len-1)==L'/'))
-            {
-                len--;
-            }
-
-            if ((wcslen(path_el[j]) == len) &&
-                    (wcsncmp(el.c_str(), path_el[j], len)==0))
+            if (wcscmp(lst.at(i).c_str(), real_path_el)==0)
             {
                 has_el = true;
                 break;
@@ -473,25 +483,16 @@ static void setup_path()
 
         if (! has_el)
         {
-            wcstring buffer;
-
             debug(3, L"directory %ls was missing", path_el[j]);
 
-            if (!path.missing())
-            {
-                buffer += path;
-            }
-
-            buffer.append(ARRAY_SEP_STR);
-            buffer.append(path_el[j]);
-
-            env_set(L"PATH", buffer.empty()?NULL:buffer.c_str(), ENV_GLOBAL | ENV_EXPORT);
-
-            path = env_get_string(L"PATH");
-            lst.resize(0);
-            tokenize_variable_array(path, lst);
+            lst.push_back(real_path_el);
+            new_path.append(ARRAY_SEP_STR);
+            new_path.append(path_el[j]);
         }
+        free(real_path_el);
     }
+
+    env_set(L"PATH", new_path.empty()?NULL:new_path.c_str(), ENV_GLOBAL | ENV_EXPORT);
 }
 
 int env_set_pwd()

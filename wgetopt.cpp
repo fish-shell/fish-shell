@@ -638,6 +638,7 @@ _wgetopt_internal(int argc, wchar_t *const *argv, const wchar_t *optstring, cons
                     fwprintf(stderr, _(L"%ls: Invalid option -- %lc\n"), argv[0], c);
             }
             woptopt = c;
+            woptind++;
             return '?';
         }
         if (temp[1] == ':')

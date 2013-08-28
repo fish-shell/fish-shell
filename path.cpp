@@ -380,24 +380,62 @@ static void replace_all(wcstring &str, const wchar_t *needle, const wchar_t *rep
 
 void path_make_canonical(wcstring &path)
 {
+    // Ignore trailing slashes, unless it's the first character
+    size_t len = path.size();
+    while (len > 1 && path.at(len - 1) == L'/')
+        len--;
 
-    /* Remove double slashes */
-    size_t size;
-    do
+    // Turn runs of slashes into a single slash
+    size_t trailing = 0;
+    bool prev_was_slash = false;
+    for (size_t leading = 0; leading < len; leading++)
     {
-        size = path.size();
-        replace_all(path, L"//", L"/");
-    }
-    while (path.size() != size);
+        wchar_t c = path.at(leading);
+        bool is_slash = (c == '/');
+        if (! prev_was_slash || ! is_slash)
+        {
+            // This is either the first slash in a run, or not a slash at all
+            path.at(trailing++) = c;
+        }
+        prev_was_slash = is_slash;
+    }    
+    assert(trailing <= len);
+    if (trailing < len)
+        path.resize(trailing);
+}
 
-    /* Remove trailing slashes, except don't remove the first one */
-    while (size-- > 1)
+bool paths_are_equivalent(const wcstring &p1, const wcstring &p2)
+{
+    if (p1 == p2)
+        return true;
+    
+    size_t len1 = p1.size(), len2 = p2.size();
+    
+    // Ignore trailing slashes after the first character
+    while (len1 > 1 && p1.at(len1 - 1) == L'/') len1--;
+    while (len2 > 1 && p2.at(len2 - 1) == L'/') len2--;
+    
+    // Start walking
+    size_t idx1 = 0, idx2 = 0;
+    while (idx1 < len1 && idx2 < len2)
     {
-        if (path.at(size) != L'/')
+        wchar_t c1 = p1.at(idx1), c2 = p2.at(idx2);
+        
+        // If the characters are different, the strings are not equivalent
+        if (c1 != c2)
             break;
+        
+        idx1++;
+        idx2++;
+        
+        // If the character was a slash, walk forwards until we hit the end of the string, or a non-slash
+        // Note the first condition is invariant within the loop
+        while (c1 == L'/' && idx1 < len1 && p1.at(idx1) == L'/') idx1++;
+        while (c2 == L'/' && idx2 < len2 && p2.at(idx2) == L'/') idx2++;
     }
-    /* Now size is either -1 (if the entire string was slashes) or is the index of the last non-slash character. Either way this will set it to the correct size. */
-    path.resize(size+1);
+    
+    // We matched if we consumed all of the characters in both strings
+    return idx1 == len1 && idx2 == len2;
 }
 
 bool path_is_valid(const wcstring &path, const wcstring &working_directory)
@@ -433,7 +471,7 @@ bool path_is_valid(const wcstring &path, const wcstring &working_directory)
 
 bool paths_are_same_file(const wcstring &path1, const wcstring &path2)
 {
-    if (path1 == path2)
+    if (paths_are_equivalent(path1, path2))
         return true;
 
     struct stat s1, s2;

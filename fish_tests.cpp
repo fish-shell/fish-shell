@@ -766,9 +766,8 @@ static void test_path()
     say(L"Testing path functions");
 
     wcstring path = L"//foo//////bar/";
-    wcstring canon = path;
-    path_make_canonical(canon);
-    if (canon != L"/foo/bar")
+    path_make_canonical(path);
+    if (path != L"/foo/bar")
     {
         err(L"Bug in canonical PATH code");
     }
@@ -779,6 +778,11 @@ static void test_path()
     {
         err(L"Bug in canonical PATH code");
     }
+    
+    if (paths_are_equivalent(L"/foo/bar/baz", L"foo/bar/baz")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
+    if (! paths_are_equivalent(L"///foo///bar/baz", L"/foo/bar////baz//")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
+    if (! paths_are_equivalent(L"/foo/bar/baz", L"/foo/bar/baz")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
+    if (! paths_are_equivalent(L"/", L"/")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
 }
 
 enum word_motion_t

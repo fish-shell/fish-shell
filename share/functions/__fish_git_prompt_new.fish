@@ -220,40 +220,7 @@ function __fish_git_prompt_current_branch_bare --description "__fish_git_prompt 
 end
 
 function __fish_git_prompt_current_branch --description "__fish_git_prompt helper, returns the current Git branch"
-	set -l git_dir $argv[1]
-	set -l branch
-	set -l os
-
-	set branch (git symbolic-ref HEAD ^/dev/null; set os $status)
-	if test $os -ne 0
-		# FIXME What does this switch/case do?
-		set branch (switch "$__fish_git_prompt_describe_style"
-					case contains
-						git describe --contains HEAD
-					case branch
-						git describe --contains --all HEAD
-					case describe
-						git describe HEAD
-					case default '*'
-						git describe --tags --exact-match HEAD
-					end ^/dev/null; set os $status)
-		if test $os -ne 0
-			set branch (cut -c1-7 $git_dir/HEAD ^/dev/null; set os $status)
-			if test $os -ne 0
-				set branch unknown
-			end
-		end
-	end
-
-	# Let user know they're inside the git dir of a non-bare repo
-	if test "true" = (git rev-parse --is-inside-git-dir ^/dev/null)
-		if test "false" = (git rev-parse --is-bare-repository ^/dev/null)
-			set branch "GIT_DIR!"
-		end
-	end
-
-	# Strip "refs/heads/"
-	set branch (/bin/sh -c 'echo "${1#refs/heads/}"' -- $branch)
+	set branch (git symbolic-ref --short --quiet HEAD ^/dev/null)
 	echo $branch
 end
 

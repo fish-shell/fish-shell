@@ -124,7 +124,7 @@ function __fish_git_prompt_show_upstream --description "__fish_git_prompt helper
 	set -l upstream '@{upstream}'
 
 	# Test if we have a SVN remote
-	(git config -z --get-regexp '^(svn-remote\..*\.url)$' ^/dev/null; set os $status)
+	git config -z --get-regexp '^(svn-remote\..*\.url)$' ^/dev/null; set os $status
 	if test $os -eq 0
 		set upstream (__fish_git_prompt_svn_upstream)
 	end

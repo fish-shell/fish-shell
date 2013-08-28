@@ -14,7 +14,7 @@ set -g __git_prompt_char_dirty ✚
 set -g __git_prompt_char_invalid ✖
 set -g __git_prompt_char_staged ●
 set -g __git_prompt_char_untracked …
-set -g __git_prompt_char_stash 𝄐
+set -g __git_prompt_char_stashes 𝄐
 set -g __git_prompt_char_clean ✔
 
 function __fish_git_prompt_new --description "Prompt function for Git"
@@ -32,43 +32,16 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	set -l nr_of_untracked_files
 	set -l upstream
 
+
 	if test "true" = (git rev-parse --is-inside-work-tree ^/dev/null)
-		set nr_of_dirty_files (__fish_git_nr_of_dirty_files)
-		set nr_of_staged_files (__fish_git_nr_of_staged_files)
-		set nr_of_invalid_files (__fish_git_nr_of_invalid_files)
-		set stashes (__fish_git_has_stashes)
-		set nr_of_untracked_files (__fish_git_nr_of_untracked_files)
+		set nr_of_dirty_files (__fish_git_prompt_part dirty (__fish_git_nr_of_dirty_files))
+		set nr_of_invalid_files (__fish_git_prompt_part invalid (__fish_git_nr_of_invalid_files))
+		set nr_of_staged_files (__fish_git_prompt_part staged (__fish_git_nr_of_staged_files))
+		set nr_of_untracked_files (__fish_git_prompt_part untracked (__fish_git_nr_of_untracked_files))
+		if __fish_git_has_stashes
+			set stashes (__fish_git_prompt_part stashes)
+		end
 		set upstream (__fish_git_prompt_show_upstream)
-	end
-
-	if test $nr_of_dirty_files -ne 0
-		set nr_of_dirty_files $__git_prompt_color_dirty$__git_prompt_char_dirty$nr_of_dirty_files(set_color normal)
-	else
-		set nr_of_dirty_files ""
-	end
-
-	if test $nr_of_invalid_files -ne 0
-		set nr_of_invalid_files $__git_prompt_color_invalid$__git_prompt_char_invalid$nr_of_invalid_files(set_color normal)
-	else
-		set nr_of_invalid_files ""
-	end
-
-	if test $nr_of_staged_files -ne 0
-		set nr_of_staged_files $__git_prompt_color_staged$__git_prompt_char_staged$nr_of_staged_files(set_color normal)
-	else
-		set nr_of_staged_files ""
-	end
-
-	if test $nr_of_untracked_files -ne 0
-		set nr_of_staged_files $__git_prompt_color_untracked$__git_prompt_char_untracked$nr_of_untracked_files(set_color normal)
-	else
-		set nr_of_untracked_files ""
-	end
-
-	if test -n "$stashes"
-		set stashes $__git_prompt_color_stashes$__git_prompt_char_stash(set_color normal)
-	else
-		set stashes ""
 	end
 
 	set branch $__git_prompt_color_branch$branch(set_color normal)
@@ -98,6 +71,21 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 end
 
 ### helper functions
+function __fish_git_prompt_part --description "Output prompt parts"
+	echo $argv | read -l key nr_of_files
+	set -l color __git_prompt_color_$key
+	set -l char __git_prompt_char_$key
+
+	if test -n "$nr_of_files"
+		test $nr_of_files -eq 0; and return
+	end
+
+	echo -n $$color
+	echo -n $$char
+	echo -n $nr_of_files
+	set_color normal
+end
+
 function __fish_git_nr_of_dirty_files --description "Returns the number of tracked, changed files"
 	count (git diff --name-status | cut -c 1-2)
 end

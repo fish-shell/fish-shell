@@ -119,81 +119,14 @@ function __fish_git_has_stashes --description "Returns the 'stash' character if 
 end
 
 # FIXME this is some complex stuff. Could easily be split in a function for grabbing the upstream name and the divergence counts
-function __fish_git_prompt_show_upstream --description "Helper function for __fish_git_prompt"
-	# Ask git-config for some config options
-	set -l svn_remote
-	set -l svn_prefix
-	set -l upstream git
-	set -l svn_url_pattern
-	set -l show_upstream $__fish_git_prompt_showupstream
-	git config -z --get-regexp '^(svn-remote\..*\.url|bash\.showUpstream)$' ^/dev/null | tr '\0\n' '\n ' | while read -l key value
-		switch $key
-		case bash.showUpstream bash.showupstream
-			set show_upstream $value
-			test -n "$show_upstream"; or return
-		case svn-remote.'*'.url
-			set svn_remote $svn_remote $value
-			set -l remote_prefix (/bin/sh -c 'echo "${1%.url}"' -- $key)
-			set svn_prefix $svn_prefix $remote_prefix
-			if test -n "$svn_url_pattern"
-				set svn_url_pattern $svn_url_pattern"\|$value"
-			else
-				set svn_url_pattern $value
-			end
-			set upstream svn+git # default upstream is SVN if available, else git
-		end
-	end
+function __fish_git_prompt_show_upstream --description "__fish_git_prompt helper, returns symbols encoding whether or not and if so how much the upstream and local have diverged"
+	# Default assume we have a regular Git upstream
+	set -l upstream '@{upstream}'
 
-	# parse configuration variables
-	for option in $show_upstream
-		switch $option
-		case git svn
-			set upstream $option
-		end
-	end
-
-	# Find our upstream
-	switch $upstream
-	case git
-		set upstream '@{upstream}'
-	case svn\*
-		# get the upstream from the 'git-svn-id: ...' in a commit message
-		# (git-svn uses essentially the same procedure internally)
-		set -l svn_upstream (git log --first-parent -1 --grep="^git-svn-id: \($svn_url_pattern\)" ^/dev/null)
-		if test (count $svn_upstream) -ne 0
-			echo $svn_upstream[-1] | read -l _ svn_upstream _
-			set svn_upstream (/bin/sh -c 'echo "${1%@*}"' -- $svn_upstream)
-			set -l cur_prefix
-			for i in (seq (count $svn_remote))
-				set -l remote $svn_remote[$i]
-				set -l mod_upstream (/bin/sh -c 'echo "${1#$2}"' -- $svn_upstream $remote)
-				if test "$svn_upstream" != "$mod_upstream"
-					# we found a valid remote
-					set svn_upstream $mod_upstream
-					set cur_prefix $svn_prefix[$i]
-					break
-				end
-			end
-
-			if test -z "$svn_upstream"
-				# default branch name for checkouts with no layout:
-				if test -n "$GIT_SVN_ID"
-					set upstream $GIT_SVN_ID
-				else
-					set upstream git-svn
-				end
-			else
-				set upstream (/bin/sh -c 'val=${1#/branches}; echo "${val#/}"' -- $svn_upstream)
-				set -l fetch_val (git config "$cur_prefix".fetch)
-				if test -n "$fetch_val"
-					set -l IFS :
-					echo "$fetch_val" | read -l trunk pattern
-					set upstream (/bin/sh -c 'echo "${1%/$2}"' -- $pattern $trunk)/$upstream
-				end
-			end
-			else if test $upstream = svn+git
-			set upstream '@{upstream}'
-		end
+	# Test if we have a SVN remote
+	(git config -z --get-regexp '^(svn-remote\..*\.url)$' ^/dev/null; set os $status)
+	if test $os -eq 0
+		set upstream (__fish_git_prompt_svn_upstream)
 	end
 
 	# Find how many commits we are ahead/behind our upstream
@@ -211,6 +144,69 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 	case '*' # diverged from upstream
 		echo "$__git_prompt_char_upstream_ahead$ahead$__git_prompt_char_upstream_behind$behind"
 	end
+end
+
+function __fish_git_prompt_svn_upstream --description "__fish_git_prompt helper, returns the SVN upstream"
+	set -l upstream
+
+	set -l svn_remote
+	set -l svn_prefix
+	set -l svn_url_pattern
+
+	git config -z --get-regexp '^(svn-remote\..*\.url)$' ^/dev/null | tr '\0\n' '\n ' | while read -l key value
+		switch $key
+		case svn-remote.'*'.url
+			set svn_remote $svn_remote $value
+			set -l remote_prefix (/bin/sh -c 'echo "${1%.url}"' -- $key)
+			set svn_prefix $svn_prefix $remote_prefix
+			if test -n "$svn_url_pattern"
+				set svn_url_pattern $svn_url_pattern"\|$value"
+			else
+				set svn_url_pattern $value
+			end
+		end
+	end
+
+	# Find our upstream
+	# get the upstream from the 'git-svn-id: ...' in a commit message
+	# (git-svn uses essentially the same procedure internally)
+	set -l svn_upstream (git log --first-parent -1 --grep="^git-svn-id: \($svn_url_pattern\)" ^/dev/null)
+	if test (count $svn_upstream) -ne 0
+		echo $svn_upstream[-1] | read -l _ svn_upstream _
+		set svn_upstream (/bin/sh -c 'echo "${1%@*}"' -- $svn_upstream)
+		set -l cur_prefix
+		for i in (seq (count $svn_remote))
+			set -l remote $svn_remote[$i]
+			set -l mod_upstream (/bin/sh -c 'echo "${1#$2}"' -- $svn_upstream $remote)
+			if test "$svn_upstream" != "$mod_upstream"
+				# we found a valid remote
+				set svn_upstream $mod_upstream
+				set cur_prefix $svn_prefix[$i]
+				break
+			end
+		end
+
+		if test -z "$svn_upstream"
+			# default branch name for checkouts with no layout:
+			if test -n "$GIT_SVN_ID"
+				set upstream $GIT_SVN_ID
+			else
+				set upstream git-svn
+			end
+		else
+			set upstream (/bin/sh -c 'val=${1#/branches}; echo "${val#/}"' -- $svn_upstream)
+			set -l fetch_val (git config "$cur_prefix".fetch)
+			if test -n "$fetch_val"
+				set -l IFS :
+				echo "$fetch_val" | read -l trunk pattern
+				set upstream (/bin/sh -c 'echo "${1%/$2}"' -- $pattern $trunk)/$upstream
+			end
+		end
+	else if test $upstream = svn+git
+		set upstream '@{upstream}'
+	end
+
+	echo $upstream
 end
 
 function __fish_git_prompt_current_branch_bare --description "__fish_git_prompt helper, tells wheter or not the current branch is bare"

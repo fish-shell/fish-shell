@@ -42,36 +42,36 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	end
 
 	if test $nr_of_dirty_files -ne 0
-		set nr_of_dirty_files $__git_prompt_color_dirty$__git_prompt_char_dirty$nr_of_dirty_files$fish_color_normal
+		set nr_of_dirty_files $__git_prompt_color_dirty$__git_prompt_char_dirty$nr_of_dirty_files(set_color normal)
 	else
 		set nr_of_dirty_files ""
 	end
 
 	if test $nr_of_invalid_files -ne 0
-		set nr_of_invalid_files $__git_prompt_color_invalid$__git_prompt_char_invalid$nr_of_invalid_files$fish_color_normal
+		set nr_of_invalid_files $__git_prompt_color_invalid$__git_prompt_char_invalid$nr_of_invalid_files(set_color normal)
 	else
 		set nr_of_invalid_files ""
 	end
 
 	if test $nr_of_staged_files -ne 0
-		set nr_of_staged_files $__git_prompt_color_staged$__git_prompt_char_staged$nr_of_staged_files$fish_color_normal
+		set nr_of_staged_files $__git_prompt_color_staged$__git_prompt_char_staged$nr_of_staged_files(set_color normal)
 	else
 		set nr_of_staged_files ""
 	end
 
 	if test $nr_of_untracked_files -ne 0
-		set nr_of_staged_files $__git_prompt_color_untracked$__git_prompt_char_untracked$nr_of_untracked_files$fish_color_normal
+		set nr_of_staged_files $__git_prompt_color_untracked$__git_prompt_char_untracked$nr_of_untracked_files(set_color normal)
 	else
 		set nr_of_untracked_files ""
 	end
 
 	if test -n "$stashes"
-		set stashes $__git_prompt_color_stashes$__git_prompt_char_stash$fish_color_normal
+		set stashes $__git_prompt_color_stashes$__git_prompt_char_stash(set_color normal)
 	else
 		set stashes ""
 	end
 
-	set branch $__git_prompt_color_branch$branch$fish_color_normal
+	set branch $__git_prompt_color_branch$branch(set_color normal)
 
 # FIXME I don't think I'm using this atm. Is 'branch' and 'bare branch' mutually exclusive?
 	if test -n "$bare_branch"
@@ -79,11 +79,11 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	end
 
 	if test -n "$current_operation"
-		set current_operation $__git_prompt_color_current_operation$current_operation$fish_color_normal
+		set current_operation $__git_prompt_color_current_operation$current_operation(set_color normal)
 	end
 
 	if test -n "$upsteam"
-		set upstream $__git_prompt_color_upstream$upstream$fish_color_normal
+		set upstream $__git_prompt_color_upstream$upstream(set_color normal)
 	else
 		set upstream ""
 	end
@@ -91,10 +91,10 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	# Formatting
 	set -l concatenated_status "$nr_of_dirty_files$nr_of_staged_files$nr_of_untracked_files$stashes"
 	if test -z "$concatenated_status"
-		set concatenated_status -o $__git_prompt_color_clean$__git_prompt_char_clean$fish_color_normal
+		set concatenated_status -o $__git_prompt_color_clean$__git_prompt_char_clean(set_color normal)
 	end
 
-	printf "%s (%s)%s" $fish_color_normal "$bare_branch$branch$upstream|$concatenated_status$current_operation" $fish_color_normal
+	printf "%s (%s)%s" (set_color normal) "$bare_branch$branch$upstream|$concatenated_status$current_operation" (set_color normal)
 end
 
 ### helper functions

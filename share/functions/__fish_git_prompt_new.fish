@@ -60,7 +60,7 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	end
 
 	if test $nr_of_untracked_files -ne 0
-		set nr_of_staged_files $__git_prompt_color_untracked$__git_prompt_char_untracked$nr_of_untracked_files(set_color normal)
+		set nr_of_untracked_files $__git_prompt_color_untracked$__git_prompt_char_untracked$nr_of_untracked_files(set_color normal)
 	else
 		set nr_of_untracked_files ""
 	end

@@ -3020,7 +3020,7 @@ const wchar_t *reader_readline(void)
 
     /* The command line before completion */
     wcstring cycle_command_line;
-    size_t cycle_cursor_pos;
+    size_t cycle_cursor_pos = 0;
 
     data->search_buff.clear();
     data->search_mode = NO_SEARCH;

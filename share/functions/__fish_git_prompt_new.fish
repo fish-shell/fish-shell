@@ -60,7 +60,6 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	else
 		set upstream ""
 	end
-  emit print $upstream
 
 	# Formatting
 	set -l concatenated_status "$nr_of_dirty_files$nr_of_staged_files$nr_of_untracked_files$stashes"

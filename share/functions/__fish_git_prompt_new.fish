@@ -55,11 +55,12 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 		set current_operation $__git_prompt_color_current_operation$current_operation(set_color normal)
 	end
 
-	if test -n "$upsteam"
+	if test -n "$upstream"
 		set upstream $__git_prompt_color_upstream$upstream(set_color normal)
 	else
 		set upstream ""
 	end
+  emit print $upstream
 
 	# Formatting
 	set -l concatenated_status "$nr_of_dirty_files$nr_of_staged_files$nr_of_untracked_files$stashes"

@@ -64,7 +64,7 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	# Formatting
 	set -l concatenated_status "$nr_of_dirty_files$nr_of_staged_files$nr_of_untracked_files$stashes"
 	if test -z "$concatenated_status"
-		set concatenated_status -o $__git_prompt_color_clean$__git_prompt_char_clean(set_color normal)
+		set concatenated_status $__git_prompt_color_clean$__git_prompt_char_clean(set_color normal)
 	end
 
 	printf "%s (%s)%s" (set_color normal) "$bare_branch$branch$upstream|$concatenated_status$current_operation" (set_color normal)

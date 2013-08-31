@@ -802,8 +802,8 @@ bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack)
 /** Sorts and remove any duplicate completions in the list. */
 static void sort_and_make_unique(std::vector<completion_t> &l)
 {
-    sort(l.begin(), l.end());
-    l.erase(std::unique(l.begin(), l.end()), l.end());
+    sort(l.begin(), l.end(), completion_t::is_alphabetically_less_than);
+    l.erase(std::unique(l.begin(), l.end(), completion_t::is_alphabetically_equal_to), l.end());
 }
 
 
@@ -1642,11 +1642,14 @@ static bool reader_can_replace(const wcstring &in, int flags)
 /* Compare two completions, ordering completions with better match types first */
 bool compare_completions_by_match_type(const completion_t &a, const completion_t &b)
 {
-    /* Compare match types */
-    int match_compare = a.match.compare(b.match);
-    if (match_compare != 0)
+    /* Compare match types, unless both completions are prefix (#923) in which case we always want to compare them alphabetically */
+    if (a.match.type != fuzzy_match_prefix || b.match.type != fuzzy_match_prefix)
     {
-        return match_compare < 0;
+        int match_compare = a.match.compare(b.match);
+        if (match_compare != 0)
+        {
+            return match_compare < 0;
+        }
     }
 
     /* Compare using file comparison */

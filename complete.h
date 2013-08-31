@@ -127,11 +127,10 @@ public:
     completion_t(const wcstring &comp, const wcstring &desc = L"", string_fuzzy_match_t match = string_fuzzy_match_t(fuzzy_match_exact), int flags_val = 0);
     completion_t(const completion_t &);
     completion_t &operator=(const completion_t &);
-
-    /* The following are needed for sorting and uniquing completions */
-    bool operator < (const completion_t& rhs) const;
-    bool operator == (const completion_t& rhs) const;
-    bool operator != (const completion_t& rhs) const;
+    
+    /* Compare two completions. No operating overlaoding to make this always explicit (there's potentially multiple ways to complare completions). */
+    static bool is_alphabetically_less_than(const completion_t &a, const completion_t &b);
+    static bool is_alphabetically_equal_to(const completion_t &a, const completion_t &b);
 };
 
 enum
@@ -145,9 +144,6 @@ typedef uint32_t completion_request_flags_t;
 
 /** Given a list of completions, returns a list of their completion fields */
 wcstring_list_t completions_to_wcstring_list(const std::vector<completion_t> &completions);
-
-/** Sorts a list of completions */
-void sort_completions(std::vector<completion_t> &completions);
 
 /**
 

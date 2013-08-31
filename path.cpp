@@ -367,6 +367,7 @@ bool path_get_config(wcstring &path)
     return ! result.empty();
 }
 
+__attribute__((unused))
 static void replace_all(wcstring &str, const wchar_t *needle, const wchar_t *replacement)
 {
     size_t needle_len = wcslen(needle);

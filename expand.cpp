@@ -1766,7 +1766,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
                     case 1:
                     {
                         res = EXPAND_WILDCARD_MATCH;
-                        sort_completions(expanded);
+                        std::sort(expanded.begin(), expanded.end(), completion_t::is_alphabetically_less_than);
                         out->insert(out->end(), expanded.begin(), expanded.end());
                         break;
                     }

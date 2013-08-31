@@ -312,20 +312,6 @@ completion_t &completion_t::operator=(const completion_t &him)
     return *this;
 }
 
-bool completion_t::operator < (const completion_t& rhs) const
-{
-    return this->completion < rhs.completion;
-}
-
-bool completion_t::operator == (const completion_t& rhs) const
-{
-    return this->completion == rhs.completion;
-}
-
-bool completion_t::operator != (const completion_t& rhs) const
-{
-    return !(*this == rhs);
-}
 
 wcstring_list_t completions_to_wcstring_list(const std::vector<completion_t> &list)
 {
@@ -338,10 +324,16 @@ wcstring_list_t completions_to_wcstring_list(const std::vector<completion_t> &li
     return strings;
 }
 
-void sort_completions(std::vector<completion_t> &completions)
+bool completion_t::is_alphabetically_less_than(const completion_t &a, const completion_t &b)
 {
-    std::sort(completions.begin(), completions.end());
+    return a.completion < b.completion;
 }
+
+bool completion_t::is_alphabetically_equal_to(const completion_t &a, const completion_t &b)
+{
+    return a.completion == b.completion;
+}
+
 
 /** Class representing an attempt to compute completions */
 class completer_t

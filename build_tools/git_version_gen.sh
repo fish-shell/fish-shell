@@ -12,7 +12,7 @@ DEF_VER=2.0.GIT
 if test -f version
 then
 	VN=$(cat version) || VN="$DEF_VER"
-elif test -d .git -o -f .git && which git >/dev/null
+elif test -d .git -o -f .git && type git >/dev/null
 then
 	VN=$(git describe --tags --dirty 2>/dev/null)
 else

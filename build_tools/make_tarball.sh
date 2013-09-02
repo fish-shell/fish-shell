@@ -42,6 +42,7 @@ ln -s "$wd" "$prefix"
 gnutar --append --file="$path" "$prefix"/user_doc/html
 gnutar --append --file="$path" "$prefix"/share/man
 gnutar --append --file="$path" "$prefix"/version
+rm -f "$prefix"/version
 rm -f "$prefix"
 
 # gzip it

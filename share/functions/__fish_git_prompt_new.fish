@@ -203,8 +203,11 @@ function __fish_git_prompt_current_branch_bare --description "__fish_git_prompt 
 	end
 end
 
-function __fish_git_prompt_current_branch --description "__fish_git_prompt helper, returns the current Git branch"
-	set branch (git symbolic-ref --short --quiet HEAD ^/dev/null)
+function __fish_git_prompt_current_branch --description "__fish_git_prompt helper, returns the current Git branch (or SHA if head is detached)"
+	set -l branch (git symbolic-ref --short --quiet HEAD ^/dev/null)
+  if test -z $branch
+    set branch (git rev-parse --short HEAD ^/dev/null)
+  end
 	echo $branch
 end
 

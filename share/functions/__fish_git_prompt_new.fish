@@ -8,14 +8,14 @@ set -g __git_prompt_color_clean (set_color -o green)
 set -g __git_prompt_color_branch (set_color normal)
 set -g __git_prompt_color_current_operation (set_color normal)
 
-set -g __git_prompt_char_upstream_ahead ↑
-set -g __git_prompt_char_upstream_behind ↓
-set -g __git_prompt_char_dirty ✚
-set -g __git_prompt_char_invalid ✖
-set -g __git_prompt_char_staged ●
-set -g __git_prompt_char_untracked …
-set -g __git_prompt_char_stashes 𝄐
-set -g __git_prompt_char_clean ✔
+set -g __git_prompt_char_upstream_ahead >
+set -g __git_prompt_char_upstream_behind <
+set -g __git_prompt_char_dirty *
+set -g __git_prompt_char_invalid #
+set -g __git_prompt_char_staged +
+set -g __git_prompt_char_untracked %
+set -g __git_prompt_char_stashes $
+set -g __git_prompt_char_clean =
 
 function __fish_git_prompt_new --description "Prompt function for Git"
 	set -l git_dir (__fish_git_prompt_git_dir)

@@ -269,15 +269,17 @@ TRANSLATIONS := $(TRANSLATIONS_SRC:.po=.gmo)
 
 ifeq ($(HAVE_DOXYGEN), 1)
   user_doc=user_doc
+  share_man=share/man
 else
   user_doc=
+  share_man=
 endif
 
 #
 # Make everything needed for installing fish
 #
 
-all: $(PROGRAMS) $(user_doc) share/man $(TRANSLATIONS)
+all: $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS)
 	@echo fish has now been built.
 	@echo Use \'$(MAKE) install\' to install fish.
 .PHONY: all
@@ -828,7 +830,7 @@ clean:
 	rm -f command_list.txt toc.txt
 	rm -f doc_src/index.hdr doc_src/commands.hdr
 	rm -f FISH-BUILD-VERSION-FILE
-	if test $(HAVE_DOXYGEN) = 1; then \
+	if test "$(HAVE_DOXYGEN)" = 1; then \
 		rm -rf doc user_doc share/man; \
 	fi
 	rm -f $(TRANSLATIONS)

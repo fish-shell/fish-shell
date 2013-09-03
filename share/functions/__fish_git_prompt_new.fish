@@ -1,12 +1,12 @@
-set -g __git_prompt_color_upstream (set_color red)
-set -g __git_prompt_color_dirty (set_color yellow)
-set -g __git_prompt_color_invalid (set_color red)
-set -g __git_prompt_color_staged (set_color green)
-set -g __git_prompt_color_untracked (set_color normal)
-set -g __git_prompt_color_stashes (set_color purple)
-set -g __git_prompt_color_clean (set_color -o green)
-set -g __git_prompt_color_branch (set_color normal)
-set -g __git_prompt_color_current_operation (set_color normal)
+set -g fish_git_prompt_color_upstream (set_color red)
+set -g fish_git_prompt_color_dirty (set_color yellow)
+set -g fish_git_prompt_color_invalid (set_color red)
+set -g fish_git_prompt_color_staged (set_color green)
+set -g fish_git_prompt_color_untracked (set_color normal)
+set -g fish_git_prompt_color_stashes (set_color purple)
+set -g fish_git_prompt_color_clean (set_color -o green)
+set -g fish_git_prompt_color_branch (set_color normal)
+set -g fish_git_prompt_color_current_operation (set_color normal)
 
 set -g fish_git_prompt_char_upstream_ahead '>'
 set -g fish_git_prompt_char_upstream_behind '<'
@@ -44,19 +44,19 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 		set upstream (__fish_git_prompt_show_upstream)
 	end
 
-	set branch $__git_prompt_color_branch$branch(set_color normal)
+	set branch $fish_git_prompt_color_branch$branch(set_color normal)
 
 # FIXME I don't think I'm using this atm. Is 'branch' and 'bare branch' mutually exclusive?
 	if test -n "$bare_branch"
-		set c "$__git_prompt_color_bare$bare_branch$___fish_git_prompt_color_bare_done"
+		set c "$fish_git_prompt_color_bare$bare_branch$___fish_git_prompt_color_bare_done"
 	end
 
 	if test -n "$current_operation"
-		set current_operation $__git_prompt_color_current_operation$current_operation(set_color normal)
+		set current_operation $fish_git_prompt_color_current_operation$current_operation(set_color normal)
 	end
 
 	if test -n "$upstream"
-		set upstream $__git_prompt_color_upstream$upstream(set_color normal)
+		set upstream $fish_git_prompt_color_upstream$upstream(set_color normal)
 	else
 		set upstream ""
 	end
@@ -64,7 +64,7 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	# Formatting
 	set -l concatenated_status "$nr_of_dirty_files$nr_of_staged_files$nr_of_untracked_files$stashes"
 	if test -z "$concatenated_status"
-		set concatenated_status $__git_prompt_color_clean$__git_prompt_char_clean(set_color normal)
+		set concatenated_status $fish_git_prompt_color_clean$fish_git_prompt_char_clean(set_color normal)
 	end
 
 	printf "%s (%s)%s" (set_color normal) "$bare_branch$branch$upstream|$concatenated_status$current_operation" (set_color normal)
@@ -73,8 +73,8 @@ end
 ### helper functions
 function __fish_git_prompt_part --description "Output prompt parts"
 	echo $argv | read -l key nr_of_files
-	set -l color __git_prompt_color_$key
-	set -l char __git_prompt_char_$key
+	set -l color fish_git_prompt_color_$key
+	set -l char fish_git_prompt_char_$key
 
 	if test -n "$nr_of_files"
 		test $nr_of_files -eq 0; and return
@@ -126,11 +126,11 @@ function __fish_git_prompt_show_upstream --description "__fish_git_prompt helper
 	case '' # no upstream
 	case "0	0" # equal to upstream
 	case "0	*" # ahead of upstream
-		echo "$__git_prompt_char_upstream_ahead$ahead"
+		echo "$fish_git_prompt_char_upstream_ahead$ahead"
 	case "*	0" # behind upstream
-		echo "$__git_prompt_char_upstream_behind$behind"
+		echo "$fish_git_prompt_char_upstream_behind$behind"
 	case '*' # diverged from upstream
-		echo "$__git_prompt_char_upstream_ahead$ahead$__git_prompt_char_upstream_behind$behind"
+		echo "$fish_git_prompt_char_upstream_ahead$ahead$fish_git_prompt_char_upstream_behind$behind"
 	end
 end
 

@@ -2055,15 +2055,17 @@ int parser_t::parse_job(process_t *p,
                         if (val)
                         {
                             debug(0,
-                                  _(L"Variables may not be used as commands. Instead, define a function like 'function %ls; %ls $argv; end'. See the help section for the function command by typing 'help function'."),
+                                  _(L"Variables may not be used as commands. Instead, define a function like 'function %ls; %ls $argv; end' or use the eval builtin instead, like 'eval %ls'. See the help section for the function command by typing 'help function'."),
                                   cmd+1,
                                   val,
+                                  cmd,
                                   cmd);
                         }
                         else
                         {
                             debug(0,
-                                  _(L"Variables may not be used as commands. Instead, define a function. See the help section for the function command by typing 'help function'."),
+                                  _(L"Variables may not be used as commands. Instead, define a function or use the eval builtin instead, like 'eval %ls'. See the help section for the function command by typing 'help function'."),
+                                  cmd,
                                   cmd);
                         }
                     }

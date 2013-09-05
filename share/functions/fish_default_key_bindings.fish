@@ -35,6 +35,7 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	# OS X SnowLeopard doesn't have these keys. Don't show an annoying error message.
 	bind -k home beginning-of-line 2> /dev/null
 	bind -k end end-of-line 2> /dev/null
+	bind \e\[3\;2~ backward-delete-char # Mavericks Terminal.app shift-delete
 
 	bind \e\eOC nextd-or-forward-word
 	bind \e\eOD prevd-or-backward-word

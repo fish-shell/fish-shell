@@ -32,7 +32,8 @@ rm -f "$path" "$path".gz
 # git starts the archive
 git archive --format=tar --prefix="$prefix"/ master > "$path"
 
-# tarball out the documentation
+# tarball out the documentation, generate a configure script and version file
+autoconf
 make user_doc
 make share/man
 echo $VERSION > version
@@ -42,6 +43,7 @@ ln -s "$wd" "$prefix"
 gnutar --append --file="$path" "$prefix"/user_doc/html
 gnutar --append --file="$path" "$prefix"/share/man
 gnutar --append --file="$path" "$prefix"/version
+gnutar --append --file="$path" "$prefix"/configure
 rm -f "$prefix"/version
 rm -f "$prefix"
 

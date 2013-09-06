@@ -10,6 +10,7 @@
 
 m4_syscmd([build_tools/git_version_gen.sh 2>/dev/null])
 
+AC_PREREQ([2.60])
 AC_INIT(fish,
         m4_esyscmd([cut -f 3 -d ' ' FISH-BUILD-VERSION-FILE | tr -d '\n']),
         fish-users@lists.sf.net)
@@ -212,6 +213,7 @@ AS_IF([test "$use_doxygen" != "no"],
       AC_MSG_CHECKING([the doxygen version])
       doxygen_version=`doxygen --version 2>/dev/null`
       AC_MSG_RESULT([$doxygen_version])
+      dnl This requires autoconf 2.60 or newer
       AS_VERSION_COMPARE([$doxygen_version], [$doxygen_minimum],
         [ if test "$use_doxygen" = auto; then
             AC_MSG_WARN([doxygen version $doxygen_version found, but $doxygen_minimum required])

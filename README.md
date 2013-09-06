@@ -15,7 +15,9 @@ Detailed user documentation is available by running `help` within fish, and also
 
 fish is written in a sane subset of C++98, with a few components from C++TR1. It builds successfully with g++ 4.2 or later, and with clang. It also will build as C++11.
 
-fish can be built using autotools or Xcode.
+fish can be built using autotools or Xcode. autoconf 2.60 or later is required.
+
+fish requires gettext for translation support.
 
 ### Autotools Build
 

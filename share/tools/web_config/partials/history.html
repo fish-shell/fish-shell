@@ -1,6 +1,10 @@
+<div id="table_filter_container" style="display: block;">
+    <input id="table_filter_text_box" class="filter_text_box text_box_transient" placeholder="Filter" ng-model="query">
+</div>
+
 <table id="data_table" style="display: table;" >
     <tbody>
-    <tr class="data_table_row" ng-repeat="item in historyItems">
+    <tr class="data_table_row" ng-repeat="item in historyItems | filter:query">
     <td class="data_table_cell no_overflow" style="text-align: left; padding-right: 30px;">{{ item }}</td>
     <td class="data_table_cell" style="text-align: right; width: 25px">
         <a ng-click="deleteHistoryItem(item)">

@@ -33,7 +33,7 @@
                     </tbody>
                 </table>
                 <div class="colorpicker_modifiers">
-                <div ng-class="{'colorpicker_modifier_cell': true, 'modifier_cell_selected': selectedColorConfig.underline}" id="modifier_underline" ng-style="{'text-decoration: underline': true}" onClick='picked_modifier(this)'>Underline</div>
+                <div ng-class="{'colorpicker_modifier_cell': true, 'modifier_cell_selected': selectedColorConfig.underline}" id="modifier_underline" ng-style="{'text-decoration: underline': true}" ng-click="setUnderline()">Underline</div>
             </div>
         </div>
     </div>

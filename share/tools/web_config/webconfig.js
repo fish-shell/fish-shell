@@ -164,9 +164,26 @@ webconfig.controller("functionsController", function($scope, $http) {
             $scope.selectFunction($scope.functions[0]);
     })};
 
+    $scope.cleanupFishFunction = function (contents) {
+        /* Replace leading tabs and groups of four spaces at the beginning of a line with two spaces. */
+        lines = contents.split('\n')
+        rx = /^[\t ]+/
+        for (var i=0; i < lines.length; i++) {
+            line = lines[i]
+            /* Get leading tabs and spaces */
+            whitespace_arr = rx.exec(line)
+            if (whitespace_arr) {
+                /* Replace four spaces with two spaces, and tabs with two spaces */
+                var whitespace = whitespace_arr[0]
+                new_whitespace = whitespace.replace(/(    )|(\t)/g, '  ')
+                lines[i] = new_whitespace + line.slice(whitespace.length)
+            }
+        }
+	    return lines.join('\n')
+    }
     $scope.fetchFunctionDefinition = function(name) {
          $http.post("/get_function/","what=" + name, { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config) {
-            $scope.functionDefinition = data[0];
+            $scope.functionDefinition = $scope.cleanupFishFunction(data[0]);
     })};
     $scope.fetchFunctions();
 });

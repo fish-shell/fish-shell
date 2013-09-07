@@ -47,10 +47,12 @@ webconfig.config(
 
 webconfig.controller("main", function($scope, $location) {
     $scope.currentTab = "colors";
+
     $scope.changeView = function(view) {
         $location.path(view);
         $scope.currentTab = view;
     }
+
     $scope.tabCssClass = function(view) {
         var cls = "tab";
         if ($scope.currentTab == view) {
@@ -75,7 +77,6 @@ webconfig.controller("colorsController", function($scope, $http) {
     $scope.itemsPerRow = range(0, 15);
     $scope.totalRows = range(0, $scope.term256Colors.length/$scope.itemsPerRow.length);
     $scope.selectedCell = null;
-
     $scope.target = "text";
 
     $scope.selectConfig = function(newSelection) {
@@ -92,12 +93,27 @@ webconfig.controller("colorsController", function($scope, $http) {
     $scope.pickedColorCell = function(index) {
         console.log("color picked" + index +  " " + $scope.term256Colors[index]);
         $scope.selectedCell = index;
+
+        if ($scope.target == "background") {
+            $scope.selectedColorConfig.background = $scope.term256Colors[$scope.selectedCell];
+        }
+        else {
+            $scope.selectedColorConfig.color = $scope.term256Colors[$scope.selectedCell];
+        } 
+
+        $scope.setColor();
     }
+
     $scope.pickedColorPickerTarget = function(target) {
         console.log("Picked " + target);
         $scope.target = target;
         // Update selection in color picker
         $scope.selectConfig($scope.selectedColorConfig);
+    }
+
+    $scope.setUnderline = function() {
+        $scope.selectedColorConfig.underline = !$scope.selectedColorConfig.underline;
+        $scope.setColor();
     }
 
     $scope.fetchColors = function() {
@@ -106,11 +122,21 @@ webconfig.controller("colorsController", function($scope, $http) {
         $scope.selectedColorConfig = data[0];
         $scope.selectedCell = $scope.term256Colors.indexOf($scope.selectedColorConfig.color);
     })};
+
+    $scope.setColor = function() {
+        var config = $scope.selectedColorConfig;
+        var postData = "what=" + config.name + "&color=" + config.color + "&background_color="+ config.background + "&bold=" + config.bold + "&underline=" + config.underline;
+        $http.post("/set_color/", postData, { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config) {
+            console.log(data);
+        })
+    };
+
     $scope.fetchColors();
 });
 
 webconfig.controller("promptController", function($scope, $http) {
     $scope.selectedPrompt = null;
+
     $scope.fetchCurrentPrompt = function(currenttPrompt) {
         $http.get("/current_prompt/").success(function(data, status, headers, config) {
         currenttPrompt.function = data.function;
@@ -123,6 +149,7 @@ webconfig.controller("promptController", function($scope, $http) {
                 $scope.selectPrompt($scope.samplePrompts[0]);
             }
         })};
+
     $scope.fetchSamplePrompt = function(selectedPrompt) {
         console.log("Fetcing sample prompt");
          $http.post("/get_sample_prompt/","what=" + encodeURIComponent(selectedPrompt.function), { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config)   {
@@ -145,11 +172,11 @@ webconfig.controller("promptController", function($scope, $http) {
         $http.post("/set_prompt/","what=" + encodeURIComponent(selectedPrompt.function), { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config){
             console.log("Data is " + JSON.stringify(data));
         })};
+
     $scope.fetchSamplePrompts();
 });
 
 webconfig.controller("functionsController", function($scope, $http) {
-
     $scope.selectedFunction = null;
     $scope.functionDefinition = ""; 
 
@@ -181,15 +208,18 @@ webconfig.controller("functionsController", function($scope, $http) {
         }
 	    return lines.join('\n')
     }
+
     $scope.fetchFunctionDefinition = function(name) {
          $http.post("/get_function/","what=" + name, { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config) {
             $scope.functionDefinition = $scope.cleanupFishFunction(data[0]);
     })};
+
     $scope.fetchFunctions();
 });
 
 webconfig.controller("variablesController", function($scope, $http) {
     $scope.query = null;
+
     $scope.fetchVariables= function() {
         $http.get("/variables/").success(function(data, status, headers, config) {
         $scope.variables = data;

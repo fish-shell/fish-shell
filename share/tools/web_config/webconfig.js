@@ -1,5 +1,22 @@
 webconfig = angular.module("webconfig", []);
 
+webconfig.filter("filterVariable", function() {
+    return function(variables, query) {
+        var result = []
+        if (variables == undefined) return result;
+        if (query == null) { return variables };
+
+        for(i=0; i<variables.length; ++i) {
+            variable = variables[i];
+            if (variable.name.indexOf(query) != -1 ||  variable.value.indexOf(query) != -1) {
+                result.push(variable);
+            }
+        }
+
+        return result;
+    }
+});
+
 webconfig.config(
     ["$routeProvider", function($routeProvider) {
         $routeProvider
@@ -155,10 +172,12 @@ webconfig.controller("functionsController", function($scope, $http) {
 });
 
 webconfig.controller("variablesController", function($scope, $http) {
+    $scope.query = null;
     $scope.fetchVariables= function() {
         $http.get("/variables/").success(function(data, status, headers, config) {
         $scope.variables = data;
     })};
+
     $scope.fetchVariables();
 });
 

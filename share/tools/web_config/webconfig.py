@@ -615,7 +615,7 @@ while PORT <= 9000:
         Handler = FishConfigHTTPRequestHandler
         httpd = SocketServer.TCPServer(("", PORT), Handler)
         # Success
-        break;
+        break
     except socket.error:
         err_type, err_value = sys.exc_info()[:2]
         # str(err_value) handles Python3 correctly

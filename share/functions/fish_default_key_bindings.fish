@@ -70,6 +70,10 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind \cb backward-char
 	bind \ct transpose-chars
 	bind \et transpose-words
+	bind \eu upcase-word
+	# This clashes with __fish_list_current_token
+	# bind \el downcase-word
+	bind \ec capitalize-word
 	bind \e\x7f backward-kill-word
 	bind \eb backward-word
 	bind \ef forward-word

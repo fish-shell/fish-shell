@@ -3790,7 +3790,43 @@ const wchar_t *reader_readline(void)
                 }
                 break;
             }
-
+                
+            case R_UPCASE_WORD:
+            {
+                size_t pos = data->buff_pos;
+                move_word(MOVE_DIR_RIGHT, false, move_word_style_punctuation, false);
+                for (; pos < data->buff_pos; pos++)
+                    data->command_line.at(pos) = towupper(data->command_line.at(pos));
+                reader_repaint();
+                break;
+            }
+                
+            case R_DOWNCASE_WORD:
+            {
+                size_t pos = data->buff_pos;
+                move_word(MOVE_DIR_RIGHT, false, move_word_style_punctuation, false);
+                for (; pos < data->buff_pos; pos++)
+                    data->command_line.at(pos) = towlower(data->command_line.at(pos));
+                reader_repaint();
+                break;
+            }
+                
+            case R_CAPITALIZE_WORD:
+            {
+                size_t pos = data->buff_pos;
+                bool capitalized_first = false;
+                move_word(MOVE_DIR_RIGHT, false, move_word_style_punctuation, false);
+                for (; pos < data->buff_pos; pos++) {
+                    if (iswalnum(data->command_line.at(pos)) && !capitalized_first) {
+                        data->command_line.at(pos) = towupper(data->command_line.at(pos));
+                        capitalized_first = true;
+                    } else
+                        data->command_line.at(pos) = towlower(data->command_line.at(pos));
+                }
+                reader_repaint();
+                break;
+            }
+                
             /* Other, if a normal character, we add it to the command */
             default:
             {

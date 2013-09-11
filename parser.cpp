@@ -3535,8 +3535,8 @@ int parser_t::test(const wchar_t *buff, int *block_level, wcstring *out, const w
                 }
                 else
                 {
-                    err = 1;
-                    if (out)
+                    // Only print errors once
+                    if (out && ! err)
                     {
                         error(SYNTAX_ERROR,
                               tok_get_pos(&tok),
@@ -3546,6 +3546,7 @@ int parser_t::test(const wchar_t *buff, int *block_level, wcstring *out, const w
 
                         print_errors(*out, prefix);
                     }
+                    err = 1;
                 }
 
                 break;

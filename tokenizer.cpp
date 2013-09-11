@@ -37,6 +37,12 @@ segments.
 #define PARAN_ERROR _( L"Unexpected end of string, parenthesis do not match" )
 
 /**
+   Error string for mismatched square brackets
+*/
+#define SQUARE_BRACKET_ERROR _( L"Unexpected end of string, square brackets do not match" )
+
+
+/**
    Error string for invalid redirections
 */
 #define REDIRECT_ERROR _( L"Invalid input/output redirection" )
@@ -237,7 +243,6 @@ static void read_string(tokenizer_t *tok)
 
     while (1)
     {
-
         if (!myal(*tok->buff))
         {
             if (*tok->buff == L'\\')
@@ -390,7 +395,19 @@ static void read_string(tokenizer_t *tok)
 
     if ((!tok->accept_unfinished) && (mode != mode_regular_text))
     {
-        TOK_CALL_ERROR(tok, TOK_UNTERMINATED_SUBSHELL, PARAN_ERROR);
+        switch (mode)
+        {
+            case mode_subshell:
+                TOK_CALL_ERROR(tok, TOK_UNTERMINATED_SUBSHELL, PARAN_ERROR);
+                break;
+            case mode_array_brackets:
+            case mode_array_brackets_and_subshell:
+                TOK_CALL_ERROR(tok, TOK_UNTERMINATED_SUBSHELL, SQUARE_BRACKET_ERROR); // TOK_UNTERMINATED_SUBSHELL is a lie but nobody actually looks at it
+                break;
+            default:
+                assert(0 && "Unexpected mode in read_string");
+                break;
+        }
         return;
     }
 

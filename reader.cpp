@@ -1702,17 +1702,16 @@ static const completion_t *cycle_competions(const std::vector<completion_t> &com
     if (size == 0)
         return NULL;
 
+    // note start_idx will be set to -1 initially, so that when it gets incremented we start at 0
     const size_t start_idx = *inout_idx;
     size_t idx = start_idx;
+    
     const completion_t *result = NULL;
-    for (;;)
+    size_t remaining = comp.size();
+    while (remaining--)
     {
         /* Bump the index */
         idx = (idx + 1) % size;
-
-        /* Bail if we've looped */
-        if (idx == start_idx)
-            break;
 
         /* Get the completion */
         const completion_t &c = comp.at(idx);

@@ -1370,6 +1370,11 @@ int main(int argc, char **argv)
 
 //    debug( 3, L"prefix is '%ls'", prefix );
 
+    if (comp.empty())
+    {
+        exit_without_destructors(EXIT_FAILURE);
+    }
+
     init(mangle_descriptors, result_fd);
 
     mangle_descriptions(comp);

@@ -227,13 +227,14 @@ static bool wildcard_complete_internal(const wcstring &orig,
     // Implement EXPAND_FUZZY_MATCH by short-circuiting everything if there are no remaining wildcards
     if ((expand_flags & EXPAND_FUZZY_MATCH) && ! at_end_of_wildcard && ! wildcard_has(wc, true))
     {
-        fuzzy_match = string_fuzzy_match_string(wc, str);
-        if (fuzzy_match.type != fuzzy_match_none)
+        string_fuzzy_match_t local_fuzzy_match = string_fuzzy_match_string(wc, str);
+        if (local_fuzzy_match.type != fuzzy_match_none)
         {
             has_match = true;
+            fuzzy_match = local_fuzzy_match;
 
             /* If we're not a prefix or exact match, then we need to replace the token. Note that in this case we're not going to call ourselves recursively, so these modified flags won't "leak" except into the completion. */
-            if (match_type_requires_full_replacement(fuzzy_match.type))
+            if (match_type_requires_full_replacement(local_fuzzy_match.type))
             {
                 flags |= COMPLETE_REPLACES_TOKEN;
                 completion_string = orig.c_str();
@@ -310,23 +311,38 @@ static bool wildcard_complete_internal(const wcstring &orig,
             return false;
 
         /* Try all submatches */
-        do
+        for (size_t i=0; str[i] != L'\0'; i++)
         {
-            res = wildcard_complete_internal(orig, str, wc+1, 0, desc, desc_func, out, expand_flags, flags);
-            if (res)
-                break;
+            const size_t before_count = out.size();
+            if (wildcard_complete_internal(orig, str + i, wc+1, false, desc, desc_func, out, expand_flags, flags))
+            {
+                res = true;
+                
+                /* #929: if the recursive call gives us a prefix match, just stop. This is sloppy - what we really want to do is say, once we've seen a match of a particular type, ignore all matches of that type further down the string, such that the wildcard produces the "minimal match." */
+                bool has_prefix_match = false;
+                const size_t after_count = out.size();
+                for (size_t j = before_count; j < after_count; j++)
+                {
+                    if (out[j].match.type <= fuzzy_match_prefix)
+                    {
+                        has_prefix_match = true;
+                        break;
+                    }
+                }
+                if (has_prefix_match)
+                    break;
+            }
         }
-        while (*str++ != 0);
         return res;
 
     }
     else if (*wc == ANY_CHAR || *wc == *str)
     {
-        return wildcard_complete_internal(orig, str+1, wc+1, 0, desc, desc_func, out, expand_flags, flags);
+        return wildcard_complete_internal(orig, str+1, wc+1, false, desc, desc_func, out, expand_flags, flags);
     }
     else if (towlower(*wc) == towlower(*str))
     {
-        return wildcard_complete_internal(orig, str+1, wc+1, 0, desc, desc_func, out, expand_flags, flags | COMPLETE_REPLACES_TOKEN);
+        return wildcard_complete_internal(orig, str+1, wc+1, false, desc, desc_func, out, expand_flags, flags | COMPLETE_REPLACES_TOKEN);
     }
     return false;
 }

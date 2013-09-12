@@ -4,7 +4,7 @@
 
 # Test if we are using GNU ls
 
-function __fish_complete_ls -d "Compleletions for ls and its aliases"
+function __fish_complete_ls -d "Completions for ls and its aliases"
 
 	set -l is_gnu
 	command ls --version >/dev/null ^/dev/null; and set is_gnu --is-gnu

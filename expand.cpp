@@ -1729,9 +1729,15 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
 
         remove_internal_separator(next_str, (EXPAND_SKIP_WILDCARDS & flags) ? true : false);
         const wchar_t *next = next_str.c_str();
-
-        if (((flags & ACCEPT_INCOMPLETE) && (!(flags & EXPAND_SKIP_WILDCARDS))) ||
-                wildcard_has(next, 1))
+        
+        const bool has_wildcard = wildcard_has(next, 1);
+        
+        if (has_wildcard && (flags & EXECUTABLES_ONLY))
+        {
+            // Don't do wildcard expansion for executables. See #785. So do nothing here.
+        }
+        else if (((flags & ACCEPT_INCOMPLETE) && (!(flags & EXPAND_SKIP_WILDCARDS))) ||
+                has_wildcard)
         {
             const wchar_t *start, *rest;
 

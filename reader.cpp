@@ -1692,7 +1692,7 @@ static void prioritize_completions(std::vector<completion_t> &comp)
     }
 
     /* Sort the remainder */
-    sort(comp.begin(), comp.end(), compare_completions_by_match_type);
+    sort(comp.begin(), comp.end(), compare_completions_by_alphabet);
 }
 
 /* Given a list of completions, get the completion at an index past *inout_idx, and then increment it. inout_idx should be initialized to (size_t)(-1) for the first call. */
@@ -4005,4 +4005,10 @@ int reader_read(int fd, const io_chain_t &io)
 
     proc_pop_interactive();
     return res;
+}
+
+/* Compares two completions, ordering completions by alphabet */
+bool compare_completions_by_alphabet(const completion_t &a, const completion_t &b)
+{
+    return wcsfilecmp(a.completion.c_str(), b.completion.c_str()) < 0;
 }

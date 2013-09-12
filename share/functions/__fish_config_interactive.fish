@@ -224,26 +224,26 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
 	# The first time a command is not found, look for command-not-found
 	# This is not cheap so we try to avoid doing it during startup
-	function fish_command_not_found_setup --on-event fish_command_not_found
+	function __fish_command_not_found_setup --on-event fish_command_not_found
 		# Remove fish_command_not_found_setup so we only execute this once
-		functions --erase fish_command_not_found_setup
+		functions --erase __fish_command_not_found_setup
 
 		# First check in /usr/lib, this is where modern Ubuntus place this command
 		if test -f /usr/lib/command-not-found
-			function fish_command_not_found_handler --on-event fish_command_not_found
+			function __fish_command_not_found_handler --on-event fish_command_not_found
 				/usr/lib/command-not-found -- $argv
 			end
 		# Ubuntu Feisty places this command in the regular path instead
 		else if type -p command-not-found > /dev/null 2> /dev/null
-			function fish_command_not_found_handler --on-event fish_command_not_found
+			function __fish_command_not_found_handler --on-event fish_command_not_found
 				command-not-found -- $argv
 			end
 		# Use standard fish command not found handler otherwise
 		else
-			function fish_command_not_found_handler --on-event fish_command_not_found
+			function __fish_command_not_found_handler --on-event fish_command_not_found
 				echo fish: Unknown command "'$argv'" >&2
 			end
 		end
-		fish_command_not_found_handler $argv
+		__fish_command_not_found_handler $argv
 	end
 end

@@ -1120,6 +1120,8 @@ Here are some of the commands available in the editor:
 - Alt-W prints a short description of the command under the cursor.
 - Alt-L lists the contents of the current directory, unless the cursor is over a directory argument, in which case the contents of that directory will be listed.
 - Alt-P adds the string <code>'| less;'</code> to the end of the job under the cursor. The result is that the output of the command will be paged.
+- Alt-C capitalizes the current word.
+- Alt-U makes the current work uppercase.
 
 You can change these key bindings using the
 <a href="commands.html#bind">bind</a> builtin command.

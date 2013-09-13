@@ -69,9 +69,11 @@ The following special input functions are available:
 - \c backward-word, move one word to the left
 - \c beginning-of-history, move to the beginning of the history
 - \c beginning-of-line, move to the beginning of the line
+- \c capitalize-word, make the current word begin with a capital letter
 - \c complete, guess the remainder of the current token
 - \c delete-char, delete one character to the right of the cursor
 - \c delete-line, delete the entire line
+- \c downcase-word, make the current work lowercase
 - \c dump-functions, print a list of all key-bindings
 - \c end-of-history, move to the end of the history
 - \c end-of-line, move to the end of the line
@@ -83,6 +85,7 @@ The following special input functions are available:
 - \c kill-line, move everything from the cursor to the end of the line to the killring
 - \c kill-whole-line, move the line to the killring
 - \c kill-word, move the next word to the killring
+- \c upcase-word, make the current word uppercase
 - \c yank, insert the latest entry of the killring into the buffer
 - \c yank-pop, rotate to the previous entry of the killring
 

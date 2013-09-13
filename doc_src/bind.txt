@@ -73,7 +73,7 @@ The following special input functions are available:
 - \c complete, guess the remainder of the current token
 - \c delete-char, delete one character to the right of the cursor
 - \c delete-line, delete the entire line
-- \c downcase-word, make the current work lowercase
+- \c downcase-word, make the current word lowercase
 - \c dump-functions, print a list of all key-bindings
 - \c end-of-history, move to the end of the history
 - \c end-of-line, move to the end of the line

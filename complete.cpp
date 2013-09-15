@@ -1616,7 +1616,7 @@ void completer_t::complete_param_expand(const wcstring &sstr, bool do_file)
         comp_str = str;
     }
 
-    expand_flags_t flags = EXPAND_SKIP_CMDSUBST | ACCEPT_INCOMPLETE;
+    expand_flags_t flags = EXPAND_SKIP_CMDSUBST | ACCEPT_INCOMPLETE | this->expand_flags();
 
     if (! do_file)
         flags |= EXPAND_SKIP_WILDCARDS;
@@ -1625,9 +1625,13 @@ void completer_t::complete_param_expand(const wcstring &sstr, bool do_file)
     if (this->type() == COMPLETE_AUTOSUGGEST || do_file)
         flags |= EXPAND_NO_DESCRIPTIONS;
 
+    /* Don't do fuzzy matching for files if the string begins with a dash (#568). We could consider relaxing this if there was a preceding double-dash argument */
+    if (string_prefixes_string(L"-", sstr))
+        flags &= ~EXPAND_FUZZY_MATCH;
+
     if (expand_string(comp_str,
                       this->completions,
-                      flags | this->expand_flags()) == EXPAND_ERROR)
+                      flags ) == EXPAND_ERROR)
     {
         debug(3, L"Error while expanding string '%ls'", comp_str);
     }

@@ -13,12 +13,9 @@ function __fish_print_packages
 	set -l package (_ Package)
 
 	if type -f apt-cache >/dev/null
-		# Apply the following filters to output of apt-cache:
-		# 1) Remove package names with parentesis in them, since these seem to not correspond to actual packages as reported by rpm
-		# 2) Remove package names that are .so files, since these seem to not correspond to actual packages as reported by rpm
-		# 3) Remove path information such as /usr/bin/, as rpm packages do not have paths
-
-		apt-cache --no-generate pkgnames (commandline -tc)|sgrep -v \( |sgrep -v '\.so\(\.[0-9]\)*$'|sed -e 's/\/.*\///'|sed -e 's/$/'\t$package'/'
+		# Do not generate the cache as apparently sometimes this is slow.
+		# http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=547550
+		apt-cache --no-generate pkgnames (commandline -tc) ^/dev/null | sed -e 's/$/'\t$package'/'
 		return
 	end
 

@@ -2,7 +2,7 @@
 function __fish_print_packages
 
 	# apt-cache is much, much faster than rpm, and can do this in real
-    # time. We use it if available.
+	# time. We use it if available.
 
 	switch (commandline -tc)
 		case '-**'
@@ -22,18 +22,18 @@ function __fish_print_packages
 		return
 	end
 
-        # Pkg is fast on FreeBSD and provides versioning info which we want for
-        # installed packages
-        if begin
-                        type -f pkg > /dev/null
-                        and test (uname) = "FreeBSD"
-                end
-                pkg query "%n-%v"
-                return
-        end
+	# Pkg is fast on FreeBSD and provides versioning info which we want for
+	# installed packages
+	if 	begin
+			type -f pkg > /dev/null
+			and test (uname) = "FreeBSD"
+		end
+		pkg query "%n-%v"
+		return
+	end
 
 
-    # yum is slow, just like rpm, so go to the background
+	# yum is slow, just like rpm, so go to the background
 	if type -f /usr/share/yum-cli/completion-helper.py >/dev/null
 
 		# If the cache is less than six hours old, we do not recalculate it
@@ -49,11 +49,11 @@ function __fish_print_packages
 		end
 
 		# Remove package version information from output and pipe into cache file
-        /usr/share/yum-cli/completion-helper.py list all -d 0 -C >$cache_file | cut -d '.' -f 1 | sed '1d' | sed '/^\s/d' | sed -e 's/$/'\t$package'/' &
+		/usr/share/yum-cli/completion-helper.py list all -d 0 -C >$cache_file | cut -d '.' -f 1 | sed '1d' | sed '/^\s/d' | sed -e 's/$/'\t$package'/' &
 	end
 
 	# Rpm is too slow for this job, so we set it up to do completions
-    # as a background job and cache the results.
+	# as a background job and cache the results.
 
 	if type -f rpm >/dev/null
 

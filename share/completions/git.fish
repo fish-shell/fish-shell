@@ -329,7 +329,7 @@ complete -f -c git -n '__fish_git_using_command stash' -a clear -d 'Remove all s
 complete -f -c git -n '__fish_git_using_command stash' -a drop -d 'Remove a single stashed state from the stash list'
 complete -f -c git -n '__fish_git_using_command stash' -a create -d 'Create a stash'
 complete -f -c git -n '__fish_git_using_command stash' -a save -d 'Save a new stash'
-complete -f -c git -n '__fish_git_using_command stash' -a branch -d 'Create a new branhc from a stash'
+complete -f -c git -n '__fish_git_using_command stash' -a branch -d 'Create a new branch from a stash'
 # TODO other options
 
 ### config

@@ -572,7 +572,7 @@ class TypeDarwinManParser(ManParser):
             # Extract the description
             desc_lines = []
             while lines and not self.is_option(lines[0]):
-                line = lines.pop(0).strip()
+                line = lossy_unicode(lines.pop(0).strip())
                 if line.startswith('.'):
                     line = self.groff_replace_escapes(line)
                     line = self.trim_groff(line).strip()
@@ -871,7 +871,7 @@ def get_paths_from_manpath():
         sys.exit(-1)
     result = []
     for parent_path in parent_paths:
-        for section in ['man1', 'man8']:
+        for section in ['man1', 'man6', 'man8']:
             directory_path = os.path.join(parent_path, section)
             try:
                 names = os.listdir(directory_path)

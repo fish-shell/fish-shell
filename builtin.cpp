@@ -1598,30 +1598,43 @@ static int builtin_echo(parser_t &parser, wchar_t **argv)
     bool print_newline = true, print_spaces = true, interpret_special_chars = false;
     while (*argv)
     {
-        if (! wcscmp(*argv, L"-n"))
+        wchar_t *s = *argv, c = *s;
+        if (c == L'-')
         {
-            print_newline = false;
-        }
-        else if (! wcscmp(*argv, L"-e"))
-        {
-            interpret_special_chars = true;
-        }
-        else if (! wcscmp(*argv, L"-ne"))
-        {
-            print_newline = false;
-            interpret_special_chars = true;
-        }
-        else if (! wcscmp(*argv, L"-s"))
-        {
-            // fish-specific extension, which we should try to nix
-            print_spaces = false;
-        }
-        else if (! wcscmp(*argv, L"-E"))
-        {
-            interpret_special_chars = false;
+            /* Ensure that option is valid */
+            for (++s, c = *s; c != L'\0'; c = *(++s))
+            {
+                if (c != L'n' && c != L'e' && c != L's' && c != L'E')
+                {
+                    goto invalid_echo_option;
+                }
+            }
+
+            /* Parse option */
+            for (s = *argv, ++s, c = *s; c != L'\0'; c = *(++s))
+            {
+                switch (c)
+                {
+                    case L'n':
+                        print_newline = false;
+                    break;
+                    case L'e':
+                        interpret_special_chars = true;
+                    break;
+                    case L's':
+                        // fish-specific extension,
+                        // which we should try to nix
+                        print_spaces = false;
+                    break;
+                    case L'E':
+                        interpret_special_chars = false;
+                    break;
+                }
+            }
         }
         else
         {
+            invalid_echo_option:
             break;
         }
         argv++;

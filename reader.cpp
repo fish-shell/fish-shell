@@ -2170,7 +2170,7 @@ static void reader_replace_current_token(const wchar_t *new_token)
 
     /* Find current token */
     const wchar_t *buff = data->command_line.c_str();
-    parse_util_token_extent((wchar_t *)buff, data->buff_pos, &begin, &end, 0, 0);
+    parse_util_token_extent(buff, data->buff_pos, &begin, &end, 0, 0);
 
     if (!begin || !end)
         return;

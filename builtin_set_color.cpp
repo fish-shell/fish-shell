@@ -152,14 +152,14 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
     }
 
     const rgb_color_t fg = rgb_color_t(fgcolor ? fgcolor : L"");
-    if (fgcolor && fg.is_none())
+    if (fgcolor && (fg.is_none() || fg.is_ignore()))
     {
         append_format(stderr_buffer, _(L"%ls: Unknown color '%ls'\n"), argv[0], fgcolor);
         return STATUS_BUILTIN_ERROR;
     }
 
     const rgb_color_t bg = rgb_color_t(bgcolor ? bgcolor : L"");
-    if (bgcolor && bg.is_none())
+    if (bgcolor && (bg.is_none() || bg.is_ignore()))
     {
         append_format(stderr_buffer, _(L"%ls: Unknown color '%ls'\n"), argv[0], bgcolor);
         return STATUS_BUILTIN_ERROR;
@@ -212,7 +212,7 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
 
     if (fgcolor != NULL)
     {
-        if (fg.is_normal())
+        if (fg.is_normal() || fg.is_reset())
         {
             write_foreground_color(0);
             writembs(tparm(exit_attribute_mode));
@@ -225,7 +225,7 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
 
     if (bgcolor != NULL)
     {
-        if (! bg.is_normal())
+        if (! bg.is_normal() && ! bg.is_reset())
         {
             write_background_color(index_for_color(bg));
         }

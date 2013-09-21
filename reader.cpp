@@ -2162,7 +2162,7 @@ static void set_command_line_and_position(const wcstring &new_str, size_t pos)
     reader_repaint();
 }
 
-void reader_replace_current_token(const wchar_t *new_token)
+static void reader_replace_current_token(const wchar_t *new_token)
 {
 
     const wchar_t *begin, *end;

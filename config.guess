@@ -1213,11 +1213,16 @@ EOF
 	echo ${UNAME_MACHINE}-apple-rhapsody${UNAME_RELEASE}
 	exit ;;
     *:Darwin:*:*)
-	UNAME_PROCESSOR=`uname -p` || UNAME_PROCESSOR=unknown
-	case $UNAME_PROCESSOR in
-	    unknown) UNAME_PROCESSOR=powerpc ;;
-	esac
-	echo ${UNAME_PROCESSOR}-apple-darwin${UNAME_RELEASE}
+  if [ $(uname -p) = i386 ]; then
+    eval $set_cc_for_build
+    if (echo '#ifdef __LP64__'; echo 64BIT; echo '#endif') | (CCOPTS= \
+      $CC_FOR_BUILD $CPPFLAGS $CFLAGS -E - 2>/dev/null) | grep 64BIT >/dev/null
+    then UNAME_PROCESSOR="x86_64"
+    else UNAME_PROCESSOR="i686"
+    fi
+  else UNAME_PROCESSOR=${UNAME_MACHINE}
+  fi
+  echo ${UNAME_PROCESSOR}-apple-darwin${UNAME_RELEASE} | sed -e 's/\..*//'
 	exit ;;
     *:procnto*:*:* | *:QNX:[0123456789]*:*)
 	UNAME_PROCESSOR=`uname -p`

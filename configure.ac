@@ -606,7 +606,7 @@ AC_CHECK_HEADER(
 # conditional definition of __EXTENSIONS__, to avoid redundant tests.
 #
 
-XCFLAGS="$CXXFLAGS"
+XCFLAGS="-x c++ $CXXFLAGS"
 
 echo checking how to use -D_XOPEN_SOURCE=600 and -D_POSIX_C_SOURCE=200112L...
 local_found_posix_switch=no

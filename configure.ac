@@ -98,18 +98,18 @@ fi
 #
 
 AC_PROG_CXX([g++ c++])
-AC_PROG_CPP
 AC_PROG_INSTALL
+AC_LANG(C++)
 
 echo "CXXFLAGS: $CXXFLAGS"
 
 #
 # Detect directories which may contain additional headers, libraries
 # and commands. This needs to be done early - before Autoconf starts
-# to mess with CFLAGS and all the other environemnt variables.
+# to mess with CXXFLAGS and all the other environemnt variables.
 #
 # This mostly helps OS X users, since fink usually installs out of
-# tree and doesn't update CFLAGS.
+# tree and doesn't update CXXFLAGS.
 #
 # It also helps FreeBSD which puts libiconv in /usr/local/lib
 
@@ -119,7 +119,6 @@ for i in /usr/pkg /sw /opt /opt/local /usr/local; do
   if test -d $i/include; then
     AC_MSG_RESULT(yes)
     CXXFLAGS="$CXXFLAGS -I$i/include/"
-    CFLAGS="$CFLAGS -I$i/include/"
   else
   AC_MSG_RESULT(no)
   fi
@@ -329,7 +328,7 @@ if test "$glibc" = yes; then
   # fallback.h, in order to keep fish working on non-gnu platforms.
   #
 
-  CFLAGS="$CFLAGS -D_GNU_SOURCE=1 -D_ISO99_SOURCE=1"
+  CXXFLAGS="$CXXFLAGS -D_GNU_SOURCE=1 -D_ISO99_SOURCE=1"
 else
   AC_MSG_RESULT(no)
 fi
@@ -606,7 +605,7 @@ AC_CHECK_HEADER(
 # conditional definition of __EXTENSIONS__, to avoid redundant tests.
 #
 
-XCFLAGS="$CXXFLAGS"
+XCXXFLAGS="$CXXFLAGS"
 
 echo checking how to use -D_XOPEN_SOURCE=600 and -D_POSIX_C_SOURCE=200112L...
 local_found_posix_switch=no
@@ -614,7 +613,7 @@ local_found_posix_switch=no
 for i in "" "-D_POSIX_C_SOURCE=200112L" "-D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=200112L"; do
 
   AC_MSG_CHECKING( if switches \"$i\" works)
-  CFLAGS="$XCFLAGS $i"
+  CXXFLAGS="$XCXXFLAGS $i"
 
   #
   # Try to run this program, which should test various extensions
@@ -688,7 +687,7 @@ done
 #
 
 if test ! x$local_found_posix_switch = xyes; then
-  CFLAGS="$XCFLAGS"
+  CXXFLAGS="$XCXXFLAGS"
 fi
 
 

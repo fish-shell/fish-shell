@@ -392,11 +392,12 @@ static volatile int interrupted=0;
 static bool is_backslashed(const wcstring &str, size_t pos);
 static wchar_t unescaped_quote(const wcstring &str, size_t pos);
 
-/**
-   Stores the previous termios mode so we can reset the modes when
-   we execute programs and when the shell exits.
-*/
-static struct termios saved_modes;
+/** Mode on startup, which we restore on exit */
+static struct termios terminal_mode_on_startup;
+
+/** Mode we use to execute programs */
+static struct termios terminal_mode_for_executing_programs;
+
 
 static void reader_super_highlight_me_plenty(size_t pos);
 
@@ -415,7 +416,7 @@ static void term_donate()
 
     while (1)
     {
-        if (tcsetattr(0,TCSANOW,&saved_modes))
+        if (tcsetattr(0, TCSANOW, &terminal_mode_for_executing_programs))
         {
             if (errno != EINTR)
             {
@@ -962,28 +963,37 @@ void reader_init()
 {
     VOMIT_ON_FAILURE(pthread_key_create(&generation_count_key, NULL));
 
-    tcgetattr(0,&shell_modes);        /* get the current terminal modes */
-    memcpy(&saved_modes,
-           &shell_modes,
-           sizeof(saved_modes));     /* save a copy so we can reset the terminal later */
+    /* Save the initial terminal mode */
+    tcgetattr(STDIN_FILENO, &terminal_mode_on_startup);
 
+    /* Set the mode used for program execution, initialized to the current mode */
+    memcpy(&terminal_mode_for_executing_programs, &terminal_mode_on_startup, sizeof terminal_mode_for_executing_programs);
+    terminal_mode_for_executing_programs.c_iflag &= ~IXON;     /* disable flow control */
+    terminal_mode_for_executing_programs.c_iflag &= ~IXOFF;    /* disable flow control */
+
+    /* Set the mode used for the terminal, initialized to the current mode */
+    memcpy(&shell_modes, &terminal_mode_on_startup, sizeof shell_modes);
     shell_modes.c_lflag &= ~ICANON;   /* turn off canonical mode */
     shell_modes.c_lflag &= ~ECHO;     /* turn off echo mode */
+    shell_modes.c_iflag &= ~IXON;     /* disable flow control */
+    shell_modes.c_iflag &= ~IXOFF;    /* disable flow control */
     shell_modes.c_cc[VMIN]=1;
     shell_modes.c_cc[VTIME]=0;
 
+#if defined(_POSIX_VDISABLE)
     // PCA disable VDSUSP (typically control-Y), which is a funny job control
     // function available only on OS X and BSD systems
     // This lets us use control-Y for yank instead
-#ifdef VDSUSP
+  #ifdef VDSUSP
     shell_modes.c_cc[VDSUSP] = _POSIX_VDISABLE;
+  #endif
 #endif
 }
 
 
 void reader_destroy()
 {
-    tcsetattr(0, TCSANOW, &saved_modes);
+    tcsetattr(0, TCSANOW, &terminal_mode_on_startup);
     pthread_key_delete(generation_count_key);
 }
 

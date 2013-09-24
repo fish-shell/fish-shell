@@ -17,8 +17,13 @@ Redistributions in binary form must reproduce the above copyright notice, this l
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import string, sys, re, os.path, gzip, traceback, getopt, errno, codecs
+import string, sys, re, os.path, bz2, gzip, traceback, getopt, errno, codecs
 from deroff import Deroffer
+
+try:
+    import backports.lzma as lzma
+except:
+    import lzma
 
 # Whether we're Python 3
 IS_PY3 = sys.version_info[0] >= 3
@@ -715,6 +720,14 @@ def parse_manpage_at_path(manpage_path, output_directory):
 
     if manpage_path.endswith('.gz'):
         fd = gzip.open(manpage_path, 'r')
+        manpage = fd.read()
+        if IS_PY3: manpage = manpage.decode('latin-1')
+    if manpage_path.endswith('.bz2'):
+        fd = bz2.BZ2File(manpage_path, 'r')
+        manpage = fd.read()
+        if IS_PY3: manpage = manpage.decode('latin-1')
+    elif manpage_path.endswith('.xz') or manpage_path.endswith('.lzma'):
+        fd = lzma.LZMAFile(str(manpage_path), 'r')
         manpage = fd.read()
         if IS_PY3: manpage = manpage.decode('latin-1')
     else:

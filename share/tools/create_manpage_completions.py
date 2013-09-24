@@ -722,7 +722,7 @@ def parse_manpage_at_path(manpage_path, output_directory):
         fd = gzip.open(manpage_path, 'r')
         manpage = fd.read()
         if IS_PY3: manpage = manpage.decode('latin-1')
-    if manpage_path.endswith('.bz2'):
+    elif manpage_path.endswith('.bz2'):
         fd = bz2.BZ2File(manpage_path, 'r')
         manpage = fd.read()
         if IS_PY3: manpage = manpage.decode('latin-1')

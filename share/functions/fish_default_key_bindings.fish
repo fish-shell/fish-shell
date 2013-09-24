@@ -79,6 +79,8 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind \ef forward-word
 	bind \e\[1\;5C forward-word
 	bind \e\[1\;5D backward-word
+        bind \e[1\;9B history-token-search-forward # iTerm2
+        bind \e[1\;9A history-token-search-backward # iTerm2
 	bind \e\[1\;9C forward-word #iTerm2
 	bind \e\[1\;9D backward-word #iTerm2
 	bind \ed forward-kill-word

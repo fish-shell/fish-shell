@@ -20,6 +20,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 import string, sys, re, os.path, bz2, gzip, traceback, getopt, errno, codecs
 from deroff import Deroffer
 
+lzma_printed_msg = False
 lzma_available = True
 try:
     try:
@@ -714,7 +715,7 @@ def parse_manpage_at_path(manpage_path, output_directory):
     filename = os.path.basename(manpage_path)
 
     # Clear diagnostics
-    global diagnostic_indent
+    global diagnostic_indent, lzma_printed_msg
     diagnostic_output[:] = []
     diagnostic_indent = 0
 
@@ -732,6 +733,11 @@ def parse_manpage_at_path(manpage_path, output_directory):
         if IS_PY3: manpage = manpage.decode('latin-1')
     elif manpage_path.endswith('.xz') or manpage_path.endswith('.lzma'):
         if not lzma_available:
+            if not lzma_printed_msg:
+                add_diagnostic('A man page is compressed with lzma or xz, but the "lzma" module is not available.'
+                               ' Skipping. (This message is only printed on the first occurrence.)',
+                               NOT_VERBOSE)
+                lzma_printed_msg = True
             return
         fd = lzma.LZMAFile(str(manpage_path), 'r')
         manpage = fd.read()
@@ -835,8 +841,6 @@ def parse_and_output_man_pages(paths, output_directory, show_progress):
     last_progress_string_length = 0
     if show_progress and not WRITE_TO_STDOUT:
         print("Parsing man pages and writing completions to {0}".format(output_directory))
-    if not lzma_available and not WRITE_TO_STDOUT:
-        print('"lzma" module not available, cannot parse man pages compressed with xz or lzma')
     for manpage_path in paths:
         index += 1
 

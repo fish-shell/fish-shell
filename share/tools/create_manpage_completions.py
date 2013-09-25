@@ -22,7 +22,7 @@ from deroff import Deroffer
 
 try:
     import backports.lzma as lzma
-except:
+except ImportError:
     import lzma
 
 # Whether we're Python 3

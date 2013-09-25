@@ -925,7 +925,7 @@ if __name__ == "__main__":
             show_progress = True
         elif opt in ('-c', '--cleanup-in'):
             cleanup_directories.append(value)
-        elif opt in ('-z'):
+        elif opt in ('-z',):
             DEROFF_ONLY = True
         else:
             assert False, "unhandled option"

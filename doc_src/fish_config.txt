@@ -11,7 +11,7 @@ to make changes to your prompt and color configuration.
 you have finished, close the browser window and then press the Enter key to
 terminate the configuration session.
 
-There are no parameters for <code>fish_config</code>.
+<code>fish_config</code> optionally accepts name of the initial configuration tab. For e.g. <code>fish_config history</code> will start configuration interface with history tab.
 
 If the \c BROWSER environment variable is set, it will be used as the name
 of the web browser to open instead of the system default.

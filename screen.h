@@ -227,5 +227,7 @@ enum screen_reset_mode_t
 
 void s_reset(screen_t *s, screen_reset_mode_t mode);
 
+/* Returns the length of an escape code. Exposed for testing purposes only. */
+size_t escape_code_length(const wchar_t *code);
 
 #endif

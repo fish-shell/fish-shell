@@ -92,11 +92,9 @@ public:
    specified position of the specified wide character string. All of
    \c seq must match, but str may be longer than seq.
 */
-static int try_sequence(const char *seq, const wchar_t *str)
+static size_t try_sequence(const char *seq, const wchar_t *str)
 {
-    int i;
-
-    for (i=0;; i++)
+    for (size_t i=0; ; i++)
     {
         if (!seq[i])
             return i;
@@ -121,29 +119,6 @@ static size_t next_tab_stop(size_t in)
     return ((in/tab_width)+1)*tab_width;
 }
 
-// PCA for term256 support, let's just detect the escape codes directly
-static int is_term256_escape(const wchar_t *str)
-{
-    // An escape code looks like this: \x1b[38;5;<num>m
-    // or like this: \x1b[48;5;<num>m
-
-    // parse out the required prefix
-    int len = try_sequence("\x1b[38;5;", str);
-    if (! len) len = try_sequence("\x1b[48;5;", str);
-    if (! len) return 0;
-
-    // now try parsing out a string of digits
-    // we need at least one
-    if (! iswdigit(str[len])) return 0;
-    while (iswdigit(str[len])) len++;
-
-    // look for the terminating m
-    if (str[len++] != L'm') return 0;
-
-    // success
-    return len;
-}
-
 /* Like fish_wcwidth, but returns 0 for control characters instead of -1 */
 static int fish_wcwidth_min_0(wchar_t wc)
 {
@@ -155,6 +130,178 @@ static bool allow_soft_wrap(void)
 {
     // Should we be looking at eat_newline_glitch as well?
     return !! auto_right_margin;
+}
+
+
+/* Returns the number of characters in the escape code starting at 'code' (which should initially contain \x1b) */
+size_t escape_code_length(const wchar_t *code)
+{
+    assert(code != NULL);
+    
+    /* The only escape codes we recognize start with \x1b */
+    if (code[0] != L'\x1b')
+        return 0;
+    
+    size_t resulting_length = 0;
+    bool found = false;
+    
+    if (cur_term != NULL)
+    {
+        /*
+         Detect these terminfo color escapes with parameter
+         value 0..7, all of which don't move the cursor
+         */
+        char * const esc[] =
+        {
+            set_a_foreground,
+            set_a_background,
+            set_foreground,
+            set_background,
+        };
+    
+        for (size_t p=0; p < sizeof esc / sizeof *esc && !found; p++)
+        {
+            if (!esc[p])
+                continue;
+            
+            for (size_t k=0; k<8; k++)
+            {
+                size_t len = try_sequence(tparm(esc[p],k), code);
+                if (len)
+                {
+                    resulting_length = len;
+                    found = true;
+                    break;
+                }
+            }
+        }
+    }
+    
+    if (cur_term != NULL)
+    {
+        /*
+         Detect these semi-common terminfo escapes without any
+         parameter values, all of which don't move the cursor
+         */
+        char * const esc2[] =
+        {
+            enter_bold_mode,
+            exit_attribute_mode,
+            enter_underline_mode,
+            exit_underline_mode,
+            enter_standout_mode,
+            exit_standout_mode,
+            flash_screen,
+            enter_subscript_mode,
+            exit_subscript_mode,
+            enter_superscript_mode,
+            exit_superscript_mode,
+            enter_blink_mode,
+            enter_italics_mode,
+            exit_italics_mode,
+            enter_reverse_mode,
+            enter_shadow_mode,
+            exit_shadow_mode,
+            enter_standout_mode,
+            exit_standout_mode,
+            enter_secure_mode
+        };
+        
+    
+    
+        for (size_t p=0; p < sizeof esc2 / sizeof *esc2 && !found; p++)
+        {
+            if (!esc2[p])
+                continue;
+            /*
+             Test both padded and unpadded version, just to
+             be safe. Most versions of tparm don't actually
+             seem to do anything these days.
+             */
+            size_t len = maxi(try_sequence(tparm(esc2[p]), code), try_sequence(esc2[p], code));
+            if (len)
+            {
+                resulting_length = len;
+                found = true;
+            }
+        }
+    }
+    
+    if (!found)
+    {
+        if (code[1] == L'k')
+        {
+            /* This looks like the escape sequence for setting a screen name */
+            const env_var_t term_name = env_get_string(L"TERM");
+            if (!term_name.missing() && string_prefixes_string(L"screen", term_name))
+            {
+                const wchar_t * const screen_name_end_sentinel = L"\x1b\\";
+                const wchar_t *screen_name_end = wcsstr(&code[2], screen_name_end_sentinel);
+                if (screen_name_end != NULL)
+                {
+                    const wchar_t *escape_sequence_end = screen_name_end + wcslen(screen_name_end_sentinel);
+                    resulting_length = escape_sequence_end - code;
+                }
+                else
+                {
+                    /* Consider just <esc>k to be the code */
+                    resulting_length = 2;
+                }
+                found = true;
+            }
+        }
+    }
+    
+    if (! found)
+    {
+        /* Generic VT100 one byte sequence: CSI followed by something in the range @ through _ */
+        if (code[1] == L'[' && (code[2] >= L'@' && code[2] <= L'_'))
+        {
+            resulting_length = 3;
+            found = true;
+        }
+    }
+    
+    if (! found)
+    {
+        /* Generic VT100 CSI-style sequence. <esc>, followed by zero or more ASCII characters NOT in the range [@,_], followed by one character in that range */
+        if (code[1] == L'[')
+        {
+            // Start at 2 to skip over <esc>[
+            size_t cursor = 2;
+            for (; code[cursor] != L'\0'; cursor++)
+            {
+                /* Consume a sequence of ASCII characters not in the range [@, ~] */
+                wchar_t c = code[cursor];
+                
+                /* If we're not in ASCII, just stop */
+                if (c > 127)
+                    break;
+                
+                /* If we're the end character, then consume it and then stop */
+                if (c >= L'@' && c <= L'~')
+                {
+                    cursor++;
+                    break;
+                }
+            }
+            /* curs now indexes just beyond the end of the sequence (or at the terminating zero) */
+            found = true;
+            resulting_length = cursor;
+        }
+    }
+    
+    if (! found)
+    {
+        /* Generic VT100 two byte sequence: <esc> followed by something in the range @ through _ */
+        if (code[1] >= L'@' && code[1] <= L'_')
+        {
+            resulting_length = 2;
+            found = true;
+        }
+    }
+    
+    return resulting_length;
 }
 
 /* Information about a prompt layout */
@@ -178,7 +325,7 @@ struct prompt_layout_t
 static prompt_layout_t calc_prompt_layout(const wchar_t *prompt)
 {
     size_t current_line_width = 0;
-    size_t j, k;
+    size_t j;
 
     prompt_layout_t prompt_layout = {};
     prompt_layout.line_count = 1;
@@ -187,134 +334,12 @@ static prompt_layout_t calc_prompt_layout(const wchar_t *prompt)
     {
         if (prompt[j] == L'\x1b')
         {
-            /*
-             This is the start of an escape code. Try to guess its width.
-             */
-            size_t p;
-            int len=0;
-            bool found = false;
-
-            /*
-             Detect these terminfo color escapes with parameter
-             value 0..7, all of which don't move the cursor
-             */
-            char * const esc[] =
+            /* This is the start of an escape code. Skip over it if it's at least one character long. */
+            size_t escape_len = escape_code_length(&prompt[j]);
+            if (escape_len > 0)
             {
-                set_a_foreground,
-                set_a_background,
-                set_foreground,
-                set_background,
+                j += escape_len - 1;
             }
-            ;
-
-            /*
-             Detect these semi-common terminfo escapes without any
-             parameter values, all of which don't move the cursor
-             */
-            char * const esc2[] =
-            {
-                enter_bold_mode,
-                exit_attribute_mode,
-                enter_underline_mode,
-                exit_underline_mode,
-                enter_standout_mode,
-                exit_standout_mode,
-                flash_screen,
-                enter_subscript_mode,
-                exit_subscript_mode,
-                enter_superscript_mode,
-                exit_superscript_mode,
-                enter_blink_mode,
-                enter_italics_mode,
-                exit_italics_mode,
-                enter_reverse_mode,
-                enter_shadow_mode,
-                exit_shadow_mode,
-                enter_standout_mode,
-                exit_standout_mode,
-                enter_secure_mode
-            }
-            ;
-
-            for (p=0; p < sizeof esc / sizeof *esc && !found; p++)
-            {
-                if (!esc[p])
-                    continue;
-
-                for (k=0; k<8; k++)
-                {
-                    len = try_sequence(tparm(esc[p],k), &prompt[j]);
-                    if (len)
-                    {
-                        j += (len-1);
-                        found = true;
-                        break;
-                    }
-                }
-            }
-
-            /* PCA for term256 support, let's just detect the escape codes directly */
-            if (! found)
-            {
-                len = is_term256_escape(&prompt[j]);
-                if (len)
-                {
-                    j += (len - 1);
-                    found = true;
-                }
-            }
-
-
-            for (p=0; p < (sizeof(esc2)/sizeof(char *)) && !found; p++)
-            {
-                if (!esc2[p])
-                    continue;
-                /*
-                 Test both padded and unpadded version, just to
-                 be safe. Most versions of tparm don't actually
-                 seem to do anything these days.
-                 */
-                len = maxi(try_sequence(tparm(esc2[p]), &prompt[j]),
-                           try_sequence(esc2[p], &prompt[j]));
-
-                if (len)
-                {
-                    j += (len-1);
-                    found = true;
-                }
-            }
-
-            if (!found)
-            {
-                if (prompt[j+1] == L'k')
-                {
-                    const env_var_t term_name = env_get_string(L"TERM");
-                    if (!term_name.missing() && string_prefixes_string(L"screen", term_name))
-                    {
-                        const wchar_t *end;
-                        j+=2;
-                        found = true;
-                        end = wcsstr(&prompt[j], L"\x1b\\");
-                        if (end)
-                        {
-                            /*
-                             You'd thing this should be
-                             '(end-prompt)+2', in order to move j
-                             past the end of the string, but there is
-                             a 'j++' at the end of each lap, so j
-                             should always point to the last menged
-                             character, e.g. +1.
-                             */
-                            j = (end-prompt)+1;
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-
         }
         else if (prompt[j] == L'\t')
         {

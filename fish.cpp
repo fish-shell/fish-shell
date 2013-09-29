@@ -210,31 +210,29 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
     return paths;
 }
 
+/* Source the file config.fish in the given directory */
+static void source_config_in_directory(const wcstring &dir)
+{
+    /* We want to execute a command like 'builtin source dir/config.fish 2>/dev/null' */
+    const wcstring escaped_dir = escape_string(dir, ESCAPE_ALL);
+    const wcstring cmd = L"builtin source " + escaped_dir + L"/config.fish 2>/dev/null";
+    parser_t &parser = parser_t::principal_parser();
+    parser.eval(cmd, io_chain_t(), TOP);
+}
+
 /**
    Parse init files. exec_path is the path of fish executable as determined by argv[0].
 */
 static int read_init(const struct config_paths_t &paths)
 {
-    parser_t &parser = parser_t::principal_parser();
-    const io_chain_t empty_ios;
-    parser.eval(L"builtin source " + paths.data + L"/config.fish 2>/dev/null", empty_ios, TOP);
-    parser.eval(L"builtin source " + paths.sysconf + L"/config.fish 2>/dev/null", empty_ios, TOP);
+    source_config_in_directory(paths.data);
+    source_config_in_directory(paths.sysconf);
 
-
-    /*
-      We need to get the configuration directory before we can source the user configuration file
-    */
+    /* We need to get the configuration directory before we can source the user configuration file. If path_get_config returns false then we have no configuration directory and no custom config to load. */
     wcstring config_dir;
-
-    /*
-      If path_get_config returns false then we have no configuration directory
-      and no custom config to load.
-    */
     if (path_get_config(config_dir))
     {
-        wcstring config_dir_escaped = escape_string(config_dir, 1);
-        wcstring eval_buff = format_string(L"builtin source %ls/config.fish 2>/dev/null", config_dir_escaped.c_str());
-        parser.eval(eval_buff, empty_ios, TOP);
+        source_config_in_directory(config_dir);
     }
 
     return 1;

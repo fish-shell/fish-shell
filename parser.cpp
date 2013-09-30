@@ -152,7 +152,7 @@ The fish parser. Contains functions for parsing and evaluating code.
 #define INVALID_END_ERR_MSG _( L"'end' command outside of block")
 
 /**
-   Error message for Posix-style assignment
+   Error message for Posix-style assignment: foo=bar
 */
 #define COMMAND_ASSIGN_ERR_MSG _( L"Unknown command '%ls'. Did you mean 'set %ls %ls'? See the help section on the set command by typing 'help set'.")
 
@@ -2014,8 +2014,6 @@ int parser_t::parse_job(process_t *p,
 
                     const wchar_t *cmd = args.at(0).completion.c_str();
                     
-                    fprintf(stderr, "arg count: %lu\n", args.size());
-
                     /*
                      We couldn't find the specified command.
 
@@ -2034,19 +2032,39 @@ int parser_t::parse_job(process_t *p,
                      and zsh).
                      */
 
-                    if (wcschr(cmd, L'='))
+                    const wchar_t * const equals_ptr = wcschr(cmd, L'=');
+                    if (equals_ptr != NULL)
                     {
-                        wchar_t *cpy = wcsdup(cmd);
-                        wchar_t *valpart = wcschr(cpy, L'=');
-                        *valpart++=0;
-
-                        debug(0,
-                              COMMAND_ASSIGN_ERR_MSG,
-                              cmd,
-                              cpy,
-                              valpart);
-                        free(cpy);
-
+                        /* Try to figure out if this is a pure variable assignment (foo=bar), or if this appears to be running a command (foo=bar ruby...) */
+                        
+                        const wcstring name_str = wcstring(cmd, equals_ptr - cmd); //variable name, up to the =
+                        const wcstring val_str = wcstring(equals_ptr + 1); //variable value, past the =
+                        
+                        wcstring next_str;
+                        if (tok_peek_next(tok, &next_str) == TOK_STRING && ! next_str.empty())
+                        {
+                            wcstring ellipsis_str = wcstring(1, ellipsis_char);
+                            if (ellipsis_str == L"$")
+                                ellipsis_str = L"...";
+                            
+                            /* Looks like a command */
+                            debug(0,
+                                  _( L"Unknown command '%ls'. Did you mean to run %ls with a modified environment? Try 'env %ls=%ls %ls%ls'. See the help section on the set command by typing 'help set'."),
+                                  cmd,
+                                  next_str.c_str(),
+                                  name_str.c_str(),
+                                  val_str.c_str(),
+                                  next_str.c_str(),
+                                  ellipsis_str.c_str());
+                        }
+                        else
+                        {
+                            debug(0,
+                                  COMMAND_ASSIGN_ERR_MSG,
+                                  cmd,
+                                  name_str.c_str(),
+                                  val_str.c_str());
+                        }
                     }
                     else if (cmd[0]==L'$' || cmd[0] == VARIABLE_EXPAND || cmd[0] == VARIABLE_EXPAND_SINGLE)
                     {

@@ -145,6 +145,9 @@ int tok_has_next(tokenizer_t *tok);
 */
 int tok_get_pos(tokenizer_t *tok);
 
+/** Returns the token type after the current one, without adjusting the position. Optionally returns the next string by reference. */
+enum token_type tok_peek_next(tokenizer_t *tok, wcstring *out_next_string);
+
 /**
    Returns the original string to tokenizer
  */

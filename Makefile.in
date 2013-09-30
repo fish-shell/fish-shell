@@ -324,9 +324,10 @@ prof: all
 
 # Depend on the sources (*.hdr.in) and manually make the
 # intermediate *.hdr and doc.h files if needed
+# The sed command deletes everything including and after the first -, for simpler version numbers
 
 user_doc: $(HDR_FILES_SRC) Doxyfile.user user_doc.head.html $(HELP_SRC) doc.h $(HDR_FILES)
-	(cat Doxyfile.user ; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION)) | doxygen - && touch user_doc
+	(cat Doxyfile.user ; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | sed "s/-.*//") | doxygen - && touch user_doc
 
 
 #

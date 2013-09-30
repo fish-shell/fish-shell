@@ -2331,6 +2331,13 @@ static void handle_token_history(int forward, int reset)
 
                         }
                     }
+                    break;
+                    
+                    default:
+                    {
+                        break;
+                    }
+
                 }
             }
         }

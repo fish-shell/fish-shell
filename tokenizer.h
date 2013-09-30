@@ -77,7 +77,7 @@ struct tokenizer_t
     wcstring last_token;
 
     /** Type of last token*/
-    int last_type;
+    enum token_type last_type;
 
     /** Offset of last token*/
     size_t last_pos;
@@ -123,7 +123,7 @@ void tok_next(tokenizer_t *tok);
 /**
   Returns the type of the last token. Must be one of the values in the token_type enum.
 */
-int tok_last_type(tokenizer_t *tok);
+enum token_type tok_last_type(tokenizer_t *tok);
 
 /**
   Returns the last token string. The string should not be freed by the caller.
@@ -149,7 +149,6 @@ int tok_get_pos(tokenizer_t *tok);
    Returns the original string to tokenizer
  */
 const wchar_t *tok_string(tokenizer_t *tok);
-
 
 /**
    Returns only the first token from the specified string. This is a

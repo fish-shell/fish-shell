@@ -381,6 +381,11 @@ static void job_or_process_extent(const wchar_t *buff,
 
                 break;
             }
+            
+            default:
+            {
+                break;
+            }
         }
     }
 

@@ -154,7 +154,7 @@ The fish parser. Contains functions for parsing and evaluating code.
 /**
    Error message for Posix-style assignment
 */
-#define COMMAND_ASSIGN_ERR_MSG _( L"Unknown command '%ls'. Did you mean 'set %ls %ls'? For information on assigning values to variables, see the help section on the set command by typing 'help set'.")
+#define COMMAND_ASSIGN_ERR_MSG _( L"Unknown command '%ls'. Did you mean 'set %ls %ls'? See the help section on the set command by typing 'help set'.")
 
 /**
    Error for invalid redirection token
@@ -2012,8 +2012,9 @@ int parser_t::parse_job(process_t *p,
                 if (! has_command && ! use_implicit_cd)
                 {
 
-                    int tmp;
                     const wchar_t *cmd = args.at(0).completion.c_str();
+                    
+                    fprintf(stderr, "arg count: %lu\n", args.size());
 
                     /*
                      We couldn't find the specified command.
@@ -2095,7 +2096,7 @@ int parser_t::parse_job(process_t *p,
                         event_fire_generic(L"fish_command_not_found", &event_args);
                     }
 
-                    tmp = current_tokenizer_pos;
+                    int tmp = current_tokenizer_pos;
                     current_tokenizer_pos = tok_get_pos(tok);
 
                     fwprintf(stderr, L"%ls", parser_t::current_line());

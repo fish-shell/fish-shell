@@ -93,7 +93,7 @@ int tok_get_error(tokenizer_t *tok)
 }
 
 
-tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig_buff(NULL), last_type(0), last_pos(0), has_next(false), accept_unfinished(false), show_comments(false), last_quote(0), error(0), squash_errors(false), cached_lineno_offset(0), cached_lineno_count(0)
+tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig_buff(NULL), last_type(TOK_NONE), last_pos(0), has_next(false), accept_unfinished(false), show_comments(false), last_quote(0), error(0), squash_errors(false), cached_lineno_offset(0), cached_lineno_count(0)
 {
 
     /* We can only generate error messages on the main thread due to wgettext() thread safety issues. */
@@ -116,7 +116,7 @@ tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig
     tok_next(this);
 }
 
-int tok_last_type(tokenizer_t *tok)
+enum token_type tok_last_type(tokenizer_t *tok)
 {
     CHECK(tok, TOK_ERROR);
     CHECK(tok->buff, TOK_ERROR);
@@ -440,7 +440,7 @@ static void read_comment(tokenizer_t *tok)
 */
 static void read_redirect(tokenizer_t *tok, int fd)
 {
-    int mode = -1;
+    enum token_type redirection_mode = TOK_NONE;
 
     if ((*tok->buff == L'>') ||
             (*tok->buff == L'^'))
@@ -449,11 +449,11 @@ static void read_redirect(tokenizer_t *tok, int fd)
         if (*tok->buff == *(tok->buff-1))
         {
             tok->buff++;
-            mode = 1;
+            redirection_mode = TOK_REDIRECT_APPEND;
         }
         else
         {
-            mode = 0;
+            redirection_mode = TOK_REDIRECT_OUT;
         }
 
         if (*tok->buff == L'|')
@@ -472,7 +472,7 @@ static void read_redirect(tokenizer_t *tok, int fd)
     else if (*tok->buff == L'<')
     {
         tok->buff++;
-        mode = 2;
+        redirection_mode = TOK_REDIRECT_IN;
     }
     else
     {
@@ -493,7 +493,7 @@ static void read_redirect(tokenizer_t *tok, int fd)
     }
     else
     {
-        tok->last_type = TOK_REDIRECT_OUT + mode;
+        tok->last_type = redirection_mode;
     }
 }
 

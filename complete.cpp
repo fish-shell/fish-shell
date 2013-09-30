@@ -1915,6 +1915,11 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, completion_
                     end_loop=1;
                     break;
                 }
+                
+                default:
+                {
+                    break;
+                }
             }
 
             if (tok_get_pos(&tok) >= (long)pos)

@@ -376,6 +376,20 @@ Help on a specific builtin can also be obtained with the <code>-h</code>
 parameter. For instance, to obtain help on the \c fg builtin, either
 type <code>fg -h</code> or <code>help fg</code>.
 
+\section autosuggestions Autosuggestions
+
+fish suggests commands as you type, based on command history, completions,
+and valid file paths. As you type commands, you will see a completion offered after the
+cursor, in a muted gray color (which can be changed with the
+<code>fish_color_autosuggestion</code> variable).
+
+To accept the autosuggestion (replacing the command line contents),
+hit right arrow or Control-F. If the autosuggestion is not what you want,
+just ignore it: it won't execute unless you accept it.
+
+Autosuggestions are a powerful way to quickly summon frequently entered commands, by
+typing the first few characters. They are also an efficient technique for navigating
+through directory hierarchies.
 
 \section completion Tab completion
 

@@ -61,6 +61,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "output.h"
 #include "history.h"
 #include "path.h"
+#include "input.h"
 
 /* PATH_MAX may not exist */
 #ifndef PATH_MAX
@@ -419,6 +420,8 @@ int main(int argc, char **argv)
     env_init(&paths);
     reader_init();
     history_init();
+    /* For setcolor to support term256 in config.fish (#1022) */
+    update_fish_term256();
 
     parser_t &parser = parser_t::principal_parser();
 

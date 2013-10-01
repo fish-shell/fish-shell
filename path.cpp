@@ -315,6 +315,7 @@ bool path_can_be_implicit_cd(const wcstring &path, wcstring *out_path, const wch
     if (string_prefixes_string(L"/", exp_path) ||
             string_prefixes_string(L"./", exp_path) ||
             string_prefixes_string(L"../", exp_path) ||
+            string_suffixes_string(L"/", exp_path) ||
             exp_path == L"..")
     {
         /* These paths can be implicit cd, so see if you cd to the path. Note that a single period cannot (that's used for sourcing files anyways) */

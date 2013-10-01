@@ -1141,22 +1141,18 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
     if (cdpath.missing_or_empty())
         cdpath = L".";
 
-    if (str_cmd.find(L'/') != wcstring::npos || str_cmd.at(0) == L'~')
+    if (use_command)
     {
 
-        if (use_command)
+        if (expand_string(str_cmd, this->completions, ACCEPT_INCOMPLETE | EXECUTABLES_ONLY | this->expand_flags()) != EXPAND_ERROR)
         {
-
-            if (expand_string(str_cmd, this->completions, ACCEPT_INCOMPLETE | EXECUTABLES_ONLY | this->expand_flags()) != EXPAND_ERROR)
+            if (this->wants_descriptions())
             {
-                if (this->wants_descriptions())
-                {
-                    this->complete_cmd_desc(str_cmd);
-                }
+                this->complete_cmd_desc(str_cmd);
             }
         }
     }
-    else
+    if (str_cmd.find(L'/') == wcstring::npos && str_cmd.at(0) != L'~')
     {
         if (use_command)
         {

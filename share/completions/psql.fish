@@ -14,18 +14,18 @@ complete -c psql --no-files -a '(__fish_complete_pg_database)'
 # General options:
 #
 
-complete -c psql -s c -l command --description "run only single command (SQL or internal) and exit"
-complete -c psql -s d -l dbname -a '(__fish_complete_pg_database)'      --description "database name to connect to (default: "romaia")"
-complete -c psql -s f -l file -r --description "execute commands from file, then exit"
-complete -c psql -s l -l list               --description "list available databases, then exit"
+complete -c psql -s d -l dbname -a '(__fish_complete_pg_database)'      --description "database name to connect to"
+complete -c psql -s c -l command        --description "run only single command (SQL or internal) and exit"
+complete -c psql -s f -l file -r        --description "execute commands from file, then exit"
+complete -c psql -s l -l list           --description "list available databases, then exit"
 
 # complete -c psql -s v -l set=, --variable=NAME=VALUE
 #                                           set psql variable NAME to VALUE
 
 complete -c psql -s X -l no-psqlrc          --description "do not read startup file (~/.psqlrc)"
 complete -c psql -s 1 -l single-transaction --description "execute command file as a single transaction"
-complete -c psql -l help                   --description "show this help, then exit"
-complete -c psql -l version                --description "output version information, then exit"
+complete -c psql -l help                    --description "show this help, then exit"
+complete -c psql -l version                 --description "output version information, then exit"
 
 #
 #   Input and output options:

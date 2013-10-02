@@ -1,0 +1,99 @@
+<div ng-controller="newColorsController">
+    <!-- ko with: color_picker -->
+    <span style="padding-left: 25px">Click to customize each color:</span><br>
+    <div class="colorpicker_text_sample" data-bind="style: {backgroundColor: selected_sample_text_background_color}">
+        <div class="color_picker_background_cells" data-bind="foreach: sample_text_background_colors">
+            <div data-bind="style: { 'backgroundColor': $data}, click: $parent.selected_sample_text_background_color"></div>
+        </div>
+        <!-- This is the sample text -->
+        <span data-ng-style="{ 'color': selectedSettings.command}">/bright/vixens</span>
+        <span data-ng-style="{ 'color': selectedSettings.param}">jump</span>
+        <span data-ng-style="{ 'color': selectedSettings.end}">|</span>
+        <span data-ng-style="{ 'color': selectedSettings.command}">dozy</span>
+        <span data-ng-style="{ 'color': selectedSettings.quote}"> "fowl" </span>
+        <span data-ng-style="{ 'color': selectedSettings.redirection}">&gt; quack</span>
+        <span data-ng-style="{ 'color': selectedSettings.end}">&</span>
+        <br>
+        <span data-ng-style="{ 'color': selectedSettings.command}">echo</span>
+        <span data-ng-style="{ 'color': selectedSettings.error}">'Errors are the portals to discovery</span>
+        <br>
+        <span data-ng-style="{ 'color': selectedSettings.comment}"># This is a comment</span>
+        <br>
+        <span data-ng-style="{ 'color': selectedSettings.command}">Th</span><span data-ng-style="{ 'color': selectedSettings.autosuggestion }"><span class="fake_cursor"><span style="visibility: hidden">i</span></span>s is an autosuggestion</span>
+
+        <span class="save_button" style="position: absolute; right: 5px; bottom: 5px;" data-ng-style="{'color': text_color_for_color(selectedSettings.preferred_background)}">Apply</span>
+
+    </div>
+            
+    <table class="colorpicker_term256" style="margin: 0px 20px;">
+        <tbody>
+            <tr class="colorpicker_term256_row" data-ng-repeat="color_array in color_arrays_array"> 
+                <td class="colorpicker_term256_cell"
+                    data-ng-style="{'backgroundColor': color, 'color': color, 'border-color': border_color_for_color(color)}"
+                               data-ng-repeat="color in color_array">
+                <!--css: { 'colorpicker_cell_selected': color === $parents[1].selected_color()}, click: $parents[1].select_color" -->
+                </td>
+
+                <!--td class="colorpicker_term256_cell"
+                    data-bind="style: {'backgroundColor': '#' + $data, 'color': '#' + $data, 'border-color': 'black'},
+                               click: $parents[1].select_color">
+                        <div class="colorpicker_term256_selection_indicator" data-bind="visible: $data === $parents[1].selected_color(), style: {borderColor: border_color_for_color($data) }">hi</div>
+                    </td-->
+            </tr>
+        </tbody>
+        <!-- /ko -->
+    </table>
+    
+    <div class="color_scheme_choices_list">
+        <div class="color_scheme_choice_container" data-ng-repeat="color_scheme in color_schemes" data-ng-click="console.log('called'); selectedSettings = color_scheme">
+            <div class="color_scheme_choice_label">
+                <!-- This click/clickBubble nonsense is so that we can have a separate URL inside a parent with an onClick handler -->
+                <span>{{color_scheme.name }}</span><a data-bind="if: $data.url, click: function(){return true;}, clickBubble: false, attr: { href: $data.url}"><img class="external_link_img" src="external_link.png"></a>
+            </div>
+            <div class="colorpicker_text_sample_tight" data-ng-style="{'backgroundColor: preferred_background':true}">
+                <span data-ng-style="{'color': color_scheme.command}">/bright/vixens</span>
+                <span data-ng-style="{'color': color_scheme.param}">jump</span>
+                <span data-ng-style="{'color': color_scheme.end}">|</span>
+                <span data-ng-style="{'color': color_scheme.command}">dozy</span>
+                <span data-ng-style="{'color': color_scheme.quote}"> "fowl" </span>
+                <span data-ng-style="{'color': color_scheme.redirection}">&gt; quack</span>
+                <span data-ng-style="{'color': color_scheme.end}">&</span>
+                <br>
+                <span data-ng-style="{'color': color_scheme.command}">echo</span>
+                <span data-ng-style="{'color': color_scheme.error}">'Errors are the portals to discovery</span>
+                <br>
+                <span data-ng-style="{ 'color': color_scheme.comment}"># This is a comment</span>
+                <br>
+                <span data-ng-style="{ 'color': color_scheme.command}">Th</span><span data-ng-style="{ 'color': color_scheme.autosuggestion}"><span class="fake_cursor"><span style="visibility: hidden">i</span></span>s is an autosuggestion</span>
+            </div>
+        </div>
+    </div>
+            
+    <div style="display: none">
+    <div class="master_detail_table">
+        <div class="master" data-bind="foreach: color_settings">
+            <div class="master_element"
+                 data-bind="text: name,
+                            style: {color: label_color},
+                            click: $parent.selected_setting,
+                            css: {selected_master_elem: $parent.selected_setting() == $data}
+                            "></div>
+        </div>
+        <div class="detail">
+            <table class="colorpicker_term256">
+                <tbody>
+                    <tr class="colorpicker_term256_row" data-ng-repeat="color_array in color_arrays_array"> 
+                        <td class="colorpicker_term256_cell"
+                            data-ng-style="{'backgroundColor': color, 'color': color, 'border-color': border_color_for_color(color)}"
+                                       data-ng-repeat="color in color_array">
+                        <!--css: { 'colorpicker_cell_selected': color === $parents[1].selected_color()}, click: $parents[1].select_color" -->
+                        </td>
+                    </tr>
+                </tbody>
+                <!-- /ko -->
+            </table>
+        </div>
+    </div>
+    </div>
+    <!-- /ko -->
+</div>

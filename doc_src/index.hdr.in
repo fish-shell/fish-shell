@@ -1,9 +1,12 @@
 /** \mainpage Fish user documentation
 
-\section toc Table of contents
-
-- <a href="index.html" name="toc-index">Fish user documentation</a>
+\htmlonly <div class="fish_left_bar"> \endhtmlonly
 @toc@
+\htmlonly </div> \endhtmlonly
+
+\htmlonly
+<div class="fish_right_bar">
+\endhtmlonly
 
 \section introduction Introduction
 
@@ -1377,3 +1380,5 @@ If you have an improvement for fish, you can submit it via the mailing list
 or the GitHub page.
 
 */
+
+\htmlonly </div> \endhtmlonly

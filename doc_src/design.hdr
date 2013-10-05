@@ -1,5 +1,7 @@
 /** \page design Design document
 
+\htmlonly <div class="fish_only_bar"> \endhtmlonly
+
 \section design-overview Overview
 
 This is a description of the design principles that have been used to
@@ -132,3 +134,5 @@ Examples:
 - The language should be uniform, so that once the user understands the command/argument syntax, he will know the whole language, and be able to use tab-completion to discover new featues.
 
 */
+
+\htmlonly </div> \endhtmlonly

@@ -1,0 +1,746 @@
+/** \page tutorial Tutorial
+
+\htmlonly
+
+<style type="text/css">
+
+body.tutorial_body {
+        font-family: "Helvetica Neue", Verdana, Helvetica, Arial, sans-serif;
+        font-size: 13pt;
+        background-color: #1E335E;
+        margin: 0;
+}
+
+pre {
+        border: solid #AAA 1px;
+        background-color: black;
+        color: white;
+        padding: 10px 12px;
+        font-size: 10pt;
+        font-family: Menlo, Monaco, "DejaVu Sans Mono", "Courier New", Courier, monospace;
+        line-height: 140%;
+        white-space: pre-wrap;
+        margin-top: 10px;
+        tab-size: 4;
+        -moz-tab-size: 4;
+        -o-tab-size: 4;
+}
+
+p {
+        margin-bottom: 10px;
+        margin-top: 0;
+        color: #333333;
+        line-height: 1.25em;
+}
+
+tt {
+        font-family: monospace;
+}
+
+.suggest {
+        color: #555;
+}
+
+pre u {
+        border-bottom: 2px solid #0F0;
+        text-decoration: none;
+}
+
+.meta {
+        color: white;
+}
+
+pre b {
+        /* Used for commands */
+        color: #005fd7;
+        font-weight: normal;
+}
+
+pre i {
+        /* Used for arguments */
+        color: #00afff;
+        font-style: normal;
+}
+
+pre em {
+        /* Used for path/help word */
+        color: #0a0;
+        font-style: normal;
+}
+
+.quote {
+        color: #A50;
+}
+
+.error {
+        /* Used for errors */
+        color: #F55;
+        font-weight: bold;
+}
+
+.tutorial_nav {
+        position: relative;
+        z-index: 2;
+        margin-left: 10px;
+        margin-top: 15px;
+}
+
+.tutorial_nav ul {
+        padding: 0 15px;
+        margin: 0;
+}
+
+.tutorial_nav li {
+        margin: 0;
+        line-height: normal;
+        height: auto;
+        color: #EEE;
+        font-size: 12pt;
+        font-family: "Trebuchet MS", Verdana, Arial, sans-serif;
+        list-style-image: none;
+        list-style-position: outside;
+        list-style-type: none;
+        padding: 3px 15px;
+        margin: 0 -15px;
+}
+
+.tutorial_nav a {
+        color: inherit;
+        text-decoration: none;
+        font-family:
+        font-size: 12pt;
+}
+
+.tutorial_nav .chevron {
+        font-family: Times, "Times New Roman";
+        color: #DDF;
+        font-size: 16pt;
+        line-height: 10pt;
+        font-weight: bold;
+}
+
+.no_shadow > li > a,
+.no_shadow {
+        text-shadow: none;
+}
+
+.nav > li > a:hover {
+  text-decoration: none;
+  background-color: inherit;
+  color: #99BBFF;
+}
+
+/* Override some default left bar stuff */
+ul.nav li {
+        margin-bottom: 0;
+}
+
+
+.title_top {
+        width: 100%;
+        text-align: left;
+        color: white;
+        font-size: 18pt;
+        height: 72px;
+        z-index: 1;
+        text-indent: 260px;
+}
+
+.tutorial_content {
+        -moz-box-shadow: -5px 0px 5px -2px black;
+        -webkit-box-shadow: -5px 0px 5px -2px black;
+        box-shadow: -5px 0px 5px -2px black;
+
+        margin-left: 280px;
+        padding: 1px 25px 10px 10px;
+        position: relative;
+        z-index: 5;
+        background-color: white;
+}
+
+h3 {
+        font-size: 25px;
+        margin-top: 12px;
+}
+
+h1, h2, h3 { color: #1E335E; }
+h1.interior_title {
+        color: #333;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #AAA;
+}
+
+h1 { font-size: 150%; }
+h2 { font-size: 135%; }
+h3 { font-size: 110%; }
+
+
+
+</style>
+
+
+<div class="fish_left_bar fish_left_medium">
+        <div class="tutorial_nav">
+          <ul class="nav no_shadow">
+                <li><a href="#tut_why_fish"><span class="chevron">&rsaquo;</span> Why fish?</a></li>
+                <li><a href="#tut_learning_Fish"><span class="chevron">&rsaquo;</span> Learning fish</a></li>
+                <li><a href="#tut_running_commands"><span class="chevron">&rsaquo;</span> Running Commands</a></li>
+                <li><a href="#tut_getting_help"><span class="chevron">&rsaquo;</span> Getting Help</a></li>
+                <li><a href="#tut_syntax_highlighting"><span class="chevron">&rsaquo;</span> Syntax Highlighting</a></li>
+                <li><a href="#tut_wildcards"><span class="chevron">&rsaquo;</span> Wildcards</a></li>
+                <li><a href="#tut_pipes_and_redirections"><span class="chevron">&rsaquo;</span> Pipes and Redirections</a></li>
+                <li><a href="#tut_autosuggestions"><span class="chevron">&rsaquo;</span> Autosuggestions</a></li>
+                <li><a href="#tut_tab_completions"><span class="chevron">&rsaquo;</span> Tab Completions</a></li>
+                <li><a href="#tut_variables"><span class="chevron">&rsaquo;</span> Variables</a></li>
+                <li><a href="#tut_exit_status"><span class="chevron">&rsaquo;</span> Exit Status</a></li>
+                <li><a href="#tut_exports"><span class="chevron">&rsaquo;</span> Environment Variables</a></li>
+                <li><a href="#tut_lists"><span class="chevron">&rsaquo;</span> Lists</a></li>
+                <li><a href="#tut_command_substitutions"><span class="chevron">&rsaquo;</span> Command Substitutions</a></li>
+                <li><a href="#tut_combiners"><span class="chevron">&rsaquo;</span> Combiners (And, Or, Not)</a></li>
+                <li><a href="#tut_conditionals"><span class="chevron">&rsaquo;</span> Conditionals (If, Else, Switch)</a></li>
+                <li><a href="#tut_functions"><span class="chevron">&rsaquo;</span> Functions</a></li>
+                <li><a href="#tut_loops"><span class="chevron">&rsaquo;</span> Loops</a></li>
+                <li><a href="#tut_prompt"><span class="chevron">&rsaquo;</span> Prompt</a></li>
+                <li><a href="#tut_startup"><span class="chevron">&rsaquo;</span> Startup</a></li>
+          </ul>
+        </div>
+</div>
+
+<div class="fish_right_bar fish_right_medium">
+
+<h1 class="interior_title">fish tutorial</h1>
+
+<h2 id="tut_why_fish">Why fish?</h2>
+
+<p>fish is a fully-equipped command line shell (like bash or zsh) that is smart and user-friendly. fish supports powerful features like syntax highlighting, autosuggestions, and tab completions that just work, with nothing to learn or configure.
+
+<p>If you want to make your command line more productive, more useful, and more fun, without learning a bunch of arcane syntax and configuration options, then fish might be just what you're looking for!
+
+<h2 id="tut_learning_Fish">Learning fish</h2>
+
+<p>This tutorial assumes a basic understanding of command line shells and Unix commands, and that you have a working copy of fish.
+
+<p>If you have a strong understanding of other shells, and want to know what fish does differently, search for the magic phrase <i>unlike other shells</i>, which is used to call out important differences.
+
+<p>When you start fish, you should see this:
+
+<pre>
+Welcome to fish, the friendly interactive shell
+Type <em>help</em> for instructions on how to use fish
+you@hostname <em>~</em>>
+</pre>
+
+<p>fish comes with a default prompt that shows your username, hostname, and working directory. You'll see <a href="#tut_prompt">how to change your prompt</a> further down. From now on, we'll pretend your prompt is just a '>' to save space.
+
+<h2 id="tut_running_commands">Running Commands</h2>
+
+<p>fish runs commands like other shells: you type a command, followed by its arguments. Spaces are separators:
+
+<pre>
+> <b>echo</b> <i>hello world</i>
+hello world
+</pre>
+
+You can include a literal space in an argument with a backslash, or by using single or double quotes:
+
+<pre>
+> <b>mkdir</b> <i>My\ Files</i>
+> <b>cp</b> <i>~/Some\ File</i> <i class=quote>'My Files'</i>
+> <b>ls</b> <i class=quote>"My Files"</i>
+Some File
+</pre>
+
+Commands can be chained with semicolons.
+
+<h2 id="tut_getting_help">Getting Help</h2>
+
+fish has excellent help and man pages. Run <tt>help</tt> to open help in a web browser, and <tt>man</tt> to open it in a man page. You can also ask for help with a specific command, for example, <tt>help set</tt> to open in a web browser, or <tt>man set</tt> to see it in the terminal.
+
+<pre>
+> <b>man</b> <i>set</i>
+set - handle environment variables
+  Synopsis...
+</pre>
+
+<h2 id="tut_syntax_highlighting">Syntax Highlighting</h2>
+You'll quickly notice that fish performs syntax highlighting as you type. Invalid commands are colored red by default:
+
+<pre>
+> <b class="error">/bin/mkd</b>
+</pre>
+
+A command may be invalid because it does not exist, or refers to a file that you cannot execute. When the command becomes valid, it is shown in a different color:
+
+<pre>
+> <b>/bin/mkdir</b>
+</pre>
+
+fish will underline valid file paths as you type them:
+
+<pre>
+> <b>cat</b> <i><span style="text-decoration: underline">~/somef<u>i</u></span></i>
+</pre>
+
+<p>This tells you that there exists a file that starts with '<tt>somefi</tt>', which is useful feedback as you type.
+
+<p>These colors, and many more, can be changed by running <tt>fish_config</tt>, or by modifying variables directly.
+
+<h2 id="tut_wildcards">Wildcards</h2>
+
+fish supports the familiar wildcard *. To list all JPEG files:
+
+<pre>
+> <b>ls</b> <i>*.jpg</i>
+lena.jpg
+meena.jpg
+santa maria.jpg
+</pre>
+
+<p>You can include multiple wildcards:
+
+<pre>
+> <b>ls</b> <i>l*.p*</i>
+lena.png
+lesson.pdf
+</pre>
+
+<p>Especially powerful is the <i>recursive wildcard</i> ** which searches directories recursively:
+
+<pre>
+> <b>ls</b> <i>/var/**.log</i>
+/var/log/system.log
+/var/run/sntp.log
+</pre>
+
+<p>If that directory traversal is taking a long time, you can control-C out of it.
+
+<h2 id="tut_pipes_and_redirections">Pipes and Redirections</h2>
+
+<p>You can pipe between commands with the usual vertical bar:
+
+<pre>
+> <b>echo</b> <i>hello world</i> | <b>wc</b>
+           1       2      12
+</pre>
+
+<p>stdin and stdout can be redirected via the familiar &lt; and &gt;. Unlike other shells, stderr is redirected with a caret ^
+
+<pre>
+> <b>grep</b> <i>fish</i> &lt; /etc/shells > ~/output.txt ^ ~/errors.txt
+</pre>
+
+<h2 id="tut_autosuggestions">Autosuggestions</h2>
+
+fish suggests commands as you type, and shows the suggestion to the right of the cursor, in gray. For example:
+
+<pre>
+> <b class="error">/bin/h</b><span class="suggest"><u>o</u>stname</span>
+</pre>
+
+It knows about paths and options:
+
+<pre>
+> <b>grep</b> <i>--i<span class="suggest"><u>g</u>nore-case</span></i>
+</pre>
+
+And history too. Type a command once, and you can re-summon it by just typing a few letters:
+
+<pre>
+> <b>r</b><span class="suggest"><u>s</u>ync -avze ssh . myname@somelonghost.com:/some/long/path/doo/dee/doo/dee/doo</span>
+</pre>
+
+To accept the autosuggestion, hit right arrow or Control-F. If the autosuggestion is not what you want, just ignore it.
+
+<h2 id="tut_tab_completions">Tab Completions</h2>
+
+<p>fish comes with a rich set of tab completions, that work "out of the box."
+
+<p>Press tab, and fish will attempt to complete the command, argument, or path:
+
+<pre>
+> <b class="error">/pri</b><span class="meta">&lt;tab&gt; &rarr;</span> <b>/private/</b>
+</pre>
+
+<p>If there's more than one possibility, it will list them:
+<pre>
+> <b class="error">~/stuff/s</b><span class="meta">&lt;tab&gt;</span>
+<i>~/stuff/s</i>cript.sh  <i class="quote">(Executable, 4.8kB)</i>  <i>~/stuff/s</i>ources/  <i class="quote">(Directory)</i>
+</pre>
+
+<p>Hit tab again to cycle through the possibilities.
+
+<p>fish can also complete many commands, like git branches:
+
+<pre>
+> <b>git</b> <i>merge pr</i><span class="meta">&lt;tab&gt; &rarr;</span> git merge prompt_designer
+> <b>git</b> <i>checkout b</i><span class="meta">&lt;tab&gt;</span>
+<i>b</i>uiltin_list_io_merge  <i class="quote">(Branch)</i>  <i>b</i>uiltin_set_color  <i class="quote">(Branch)</i>  <i>b</i>usted_events  <i class="quote">(Tag)</i>
+</pre>
+
+Try hitting tab and see what fish can do!
+
+<h2 id="tut_variables">Variables</h2>
+
+<p>Like other shells, a dollar sign performs <i>variable substitution</i>:
+
+<pre>
+> <b>echo</b> <i>My home directory is $HOME</i>
+My home directory is /home/tutorial
+</pre>
+
+Variable substitution also occurs in double quotes, but not single quotes:
+
+<pre>
+> <b>echo</b> <i class="quote">"My current directory is </i><i>$</i><i class="quote">PWD"</i>
+My current directory is /home/tutorial
+> <b>echo</b> <i class="quote">'My current directory is $PWD'</i>
+My current directory is $PWD
+</pre>
+
+Unlike other shells, fish has no dedicated syntax for setting variables. Instead it has an ordinary command: <tt>set</tt>, which takes a variable name, and then its value.
+
+<pre>
+> <b>set</b> <i>name</i> <i class="quote">'Mister Noodle'</i>
+> <b>echo</b> <i>$name</i>
+Mister Noodle
+</pre>
+
+<p>(Notice the quotes: without them, <tt>Mister</tt> and <tt>Noodle</tt> would have been separate arguments, and <tt>$name</tt> would have been made into a <i>list</i> of two elements.)
+
+<p>Unlike other shells, variables are <i>not</i> further split after substitution:
+
+<pre>
+> <b>mkdir</b> <i>$name</i>
+> <b>ls</b>
+Mister Noodle
+</pre>
+
+In bash, this would have created two directories "Mister" and "Noodle". In fish, it created only one: the variable had the value "Mister Noodle", so that is the argument that was passed to <span style="mono">mkdir</span>, spaces and all.
+
+<h2 id="tut_exit_status">Exit Status</h2>
+
+Unlike other shells, fish stores the exit status of the last command in <tt>$status</tt> instead of <tt>$?</tt>.
+
+<pre>
+> <b>false</b>
+> <b>echo</b> <i>$status</i>
+1
+</pre>
+
+Zero is considered success, and non-zero is failure.
+
+<h2 id="tut_exports">Exports (Environment Variables)</h2>
+
+Unlike other shells, fish does not have an export command. Instead, a variable is exported via an option to <tt>set</tt>, either <tt>--export</tt> or just <tt>-x</tt>.
+
+<pre>
+> <b>set</b> <i>-x MyVariable SomeValue</i>
+> <b>env</b> | <b>grep</b> <i>MyVariable</i>
+<span style="background: #A0A">MyVariable</span>=SomeValue
+</pre>
+
+You can erase a variable with <tt>-e</tt> or <tt>--erase</tt>
+<pre>
+> <b>set</b> <i>-e MyVariable</i>
+> <b>env</b> | <b>grep</b> <i>MyVariable</i>
+<span class="meta">(no output)</span>
+</pre>
+
+<h2 id="tut_lists">Lists</h2>
+
+<p>The <tt>set</tt> command above used quotes to ensure that <tt>Mister Noodle</tt> was one argument. If it had been two arguments, then <tt>name</tt> would have been a <i>list</i> of length 2.  In fact, all variables in fish are really lists, that can contain any number of values, or none at all.
+
+<p>Some variables, like <tt>$PWD</tt>, only have one value. By convention, we talk about that variable's value, but we really mean its <i>first</i> (and only) value.
+
+<p>Other variables, like <tt>$PATH</tt>, really do have multiple values. During <i>variable expansion</i>, the variable expands to become multiple arguments:
+
+<pre>
+> <b>echo</b> <i>$PATH</i>
+/usr/bin /bin /usr/sbin /sbin /usr/local/bin
+</pre>
+
+<p>Lists cannot contain other lists: there is no recursion.  A variable is a list of strings, full stop.
+
+<p>Get the length of a list with <tt>count</tt>:
+
+<pre>
+> <b>count</b> <i>$PATH</i>
+5
+</pre>
+
+You can append (or prepend) to a list by setting the list to itself, with some additional arguments. Here we append /usr/local/bin to $PATH:
+
+<pre>
+> <b>set</b> <i>PATH $PATH /usr/local/bin</i>
+</pre>
+
+
+You can access individual elements with square brackets. Indexing starts at 1 from the beginning, and -1 from the end:
+<pre>
+> <b>echo</b> <i>$PATH</i>
+/usr/bin /bin /usr/sbin /sbin /usr/local/bin
+> <b>echo</b> <i>$PATH[1]</i>
+/usr/bin
+> <b>echo</b> <i>$PATH[-1]</i>
+/usr/local/bin
+</pre>
+
+You can also access ranges of elements, known as "slices:"
+
+<pre>
+> <b>echo</b> <i>$PATH[1..2]</i>
+/usr/bin /bin
+> <b>echo</b> <i>$PATH[-1..2]</i>
+/usr/local/bin /sbin /usr/sbin /bin
+</pre>
+
+You can iterate over a list (or a slice) with a <i>for loop</i>:
+
+<pre>
+> <b>for</b> <i>val</i> <b>in</b> <i>$PATH</i>
+        <b>echo</b> <i>"entry: $val"</i>
+  <b>end</b>
+entry: usr/bin/
+entry: /bin
+entry: /usr/sbin
+entry: /sbin
+entry: /usr/local/bin
+</pre>
+
+
+<h2 id="tut_command_substitutions">Command Substitutions</h2>
+
+Command substitutions use the output of one command as an argument to another. Unlike other shells, fish does not use backticks ` for command substitutions. Instead, it uses parentheses:
+
+<pre>
+> <b>echo</b> <i>In (</i><b>pwd</b><i>), running (</i><b>uname</b><i>)</i>
+In /home/tutorial, running FreeBSD
+</pre>
+
+A common idiom is to capture the output of a command in a variable:
+
+<pre>
+> <b>set</b> <i>os (</i><b>uname</b><i>)</i>
+> <b>echo</b> <i>$os</i>
+Linux
+</pre>
+
+Command substitutions are not expanded within quotes. Instead, you can temporarily close the quotes, add the command substitution, and reopen them, all in the same argument:
+
+<pre>
+> <b>touch</b> <i class="quote">"testing_"</i><i>(</i><b>date</b> <i>+%s</i><i>)</i><i class="quote">".txt"</i>
+> <b>ls</b> <i>*.txt</i>
+testing_1360099791.txt
+</pre>
+
+<h2 id="tut_combiners">Combiners (And, Or, Not)</h2>
+
+Unlike other shells, fish does not have special syntax like &amp;&amp; or || to combine commands. Instead it has commands <tt>and</tt>, <tt>or</tt>, and <tt>not</tt>.
+
+<pre>
+> <b>cp</b> <i>file1.txt file1_bak.txt</i>; <b>and echo</b> <i class="quote">"Backup successful"</i>; <b>or echo</b> <i class="quote">"Backup failed"</i>
+Backup failed
+</pre>
+
+<h2 id="tut_conditionals">Conditionals (If, Else, Switch)</h2>
+
+Use <tt>if</tt>, <tt>else if</tt>, and <tt>else</tt> to conditionally execute code, based on the exit status of a command.
+
+<pre>
+<b>if grep</b> <i>fish /etc/shells</i>
+        <b>echo</b> <i>Found fish</i>
+<b>else if grep</b> <i>bash /etc/shells</i>
+        <b>echo</b> <i>Found bash</i>
+<b>else</b>
+        <b>echo</b> <i>Got nothing</i>
+<b>end</b>
+</pre>
+
+There is also a <tt>switch</tt> command:
+
+<pre>
+<b>switch</b> <i>(</i><b>uname</b><i>)</i>
+        <b>case</b> <i>Linux</i>
+                <b>echo</b> <i>Hi Tux!</i>
+        <b>case</b> <i>Darwin</i>
+                <b>echo</b> <i>Hi Hexley!</i>
+        <b>case</b> <i>FreeBSD NetBSD DragonFly</i>
+                <b>echo</b> <i>Hi Beastie!</i>
+        <b>case</b> <i class="quote">'*'</i>
+                <b>echo</b> <i>Hi, stranger!</i>
+<b>end</b>
+</pre>
+
+Note that <tt>case</tt> does not fall through, and can accept multiple arguments or (quoted) wildcards.
+
+<h2 id="tut_functions">Functions</h2>
+
+A fish function is a list of commands, which may optionally take arguments. Unlike other shells, arguments are not passed in "numbered variables" like <tt>$1</tt>, but instead in a single list <tt>$argv</tt>. To create a function, use the <tt>function</tt> builtin:
+
+<pre>
+> <i><b>function</b> say_hello
+         <b>echo</b> Hello $argv
+  <b>end</b></i>
+> <b>say_hello</b>
+Hello
+> <b>say_hello <i>everybody!</i></b>
+Hello everybody!
+</pre>
+
+<p>Unlike other shells, fish does not have aliases or special prompt syntax. Functions take their place.
+
+<p>You can list the names of all functions with the <tt>functions</tt> keyword (note the plural!). fish starts out with a number of functions:
+
+<pre>
+> <b>functions</b>
+alias, cd, delete-or-exit, dirh, dirs, down-or-search, eval, export, fish_command_not_found_setup, fish_config, fish_default_key_bindings, fish_prompt, fish_right_prompt, fish_sigtrap_handler, fish_update_completions, funced, funcsave, grep, help, history, isatty, ls, man, math, nextd, nextd-or-forward-word, open, popd, prevd, prevd-or-backward-word, prompt_pwd, psub, pushd, seq, setenv, sgrep, trap, type, umask, up-or-search, vared
+</pre>
+
+<p>You can see the source for any function by passing its name to <tt>functions</tt>:
+
+<pre>
+> <b>functions</b> <i>ls</i>
+function ls --description 'List contents of directory'
+        command ls -G $argv
+end
+</pre>
+
+<h2 id="tut_loops">Loops</h2>
+
+While loops:
+
+<pre>
+> <b>while</b> <i>true</i>
+        <b>echo</b> <i class="quote">"Loop forever"</i>
+<b>end</b>
+Loop forever
+Loop forever
+Loop forever
+...
+</pre>
+
+For loops can be used to iterate over a list. For example, a list of files:
+
+<pre>
+> <b>for</b> <i>file in *.txt</i>
+        <b>cp</b> <i>$file $file.bak</i>
+<b>end</b>
+</pre>
+
+Iterating over a list of numbers can be done with `seq`:
+
+<pre>
+> <b>for</b> <i>x in (</i><b>seq</b> <i>5)</i>
+        <b>touch</b> <i>file_$x.txt</i>
+<b>end</b>
+</pre>
+
+
+<h2 id="tut_prompt">Prompt</h2>
+
+Unlike other shells, there is no prompt variable like PS1. To display your prompt, fish executes a function with the name <tt>fish_prompt</tt>, and its output is used as the prompt.
+
+You can define your own prompt:
+<pre>
+> <b>function <i>fish_prompt</i>
+        echo <i>"New Prompt % "</i>
+  end</b>
+New Prompt % <u> </u>
+</b>
+</pre>
+
+Multiple lines are OK. Colors can be set via <tt>set_color</tt>, passing it named ANSI colors, or hex RGB values:
+
+<pre>
+> <b>function</b> <i>fish_prompt</i>
+        <b>set_color</b> <i>purple</i>
+        <b>date</b> <i class="quote">"+%m/%d/%y"</i>
+        <b>set_color</b> <i>FF0</i>
+        <b>echo</b> <i>(</i><b>pwd</b><i>)</i> <i class="quote">'>'</i>
+        <b>set_color</b> <i>normal</i>
+  <b>end</b>
+<span style="color: purple">02/06/13</span>
+<span style="color: #FF0">/home/tutorial ></span><u> </u>
+</b>
+</pre>
+
+<p>You can choose among some sample prompts by running <tt>fish_config prompt</tt>. fish also supports RPROMPT through <tt>fish_right_prompt</tt>.
+
+<h3>$PATH</h2>
+
+<tt>$PATH</tt> is an environment variable containing the directories in which fish searches for commands. Instead of separating entries with a colon, $PATH is a list. You can modify $PATH in a few ways:
+
+<p><ol>
+<li>By modifying the <tt>$fish_user_paths</tt> variable, which is automatically appended to <tt>$PATH</tt>. For example, to permanently add /usr/local/bin to your <tt>$PATH</tt>, you could write:
+
+<pre>
+> <b>set</b> <i>-U fish_user_paths $fish_user_paths /usr/local/bin</i>
+</pre>
+
+
+<li>Directly in config.fish (see below).</li>
+</ol>
+
+<h2 id="tut_startup">Startup (Where's .bashrc?)</h2>
+
+<p>fish starts by executing commands in <tt>~/.config/fish/config.fish</tt>. You can create it if it does not exist.
+
+<p>It is possible to directly create functions and variables in <tt>config.fish</tt> file, using the commands shown above. For example:
+
+<p><pre>
+> <b>cat</b> <i>~/.config/fish/config.fish</i>
+
+set -x PATH $PATH /sbin/
+
+function ll
+    ls -lh $argv
+end
+</pre>
+
+<p>However, it is more common and efficient to use  <i>autoloading functions</i> and <i>universal variables</i>.
+
+<h3>Autoloading Functions</h2>
+
+<p>When fish encounters a command, it attempts to <i>autoload</i> a function for that command, by looking for a file with the name of that command in <tt>~/.config/fish/functions/</tt>.
+
+<p>For example, if you wanted to have a function <tt>ll</tt>, you would add a text file <tt>ll.fish</tt> to <tt>~/.config/fish/functions</tt>:
+
+<pre>
+> <b>cat</b> <i>~/.config/fish/functions/ll.fish</i>
+function ll
+        ls -lh $argv
+end
+</pre>
+
+This is the preferred way to define your prompt as well:
+
+<pre>
+> <b>cat</b> <i>~/.config/fish/functions/fish_prompt.fish</i>
+function fish_prompt
+        echo (pwd) '> '
+end
+</pre>
+
+<p>See the documentation for <a href="docs/current/commands.html#funced">funced</a> and <a href="docs/current/commands.html#funcsave">funcsave</a> for ways to create these files automatically.
+
+<h3>Universal Variables</h2>
+
+<p>A universal variable is a variable whose value is shared across all instances of fish, now and in the future - even after a reboot. You can make a variable universal with <tt>set -U</tt>:
+
+<pre>
+> <b>set</b> <i>-U EDITOR vim</i>
+</pre>
+
+Now in another shell:
+
+<pre>
+> <b>echo</b> <i>$EDITOR</i>
+vim
+</pre>
+
+<h3>Ready for more?</h2>
+
+<p>If you want to learn more about fish, there is <a href="docs/current/">lots of detailed documentation</a>, an <a href="https://lists.sourceforge.net/lists/listinfo/fish-users">official mailing list</a>, the IRC channel <tt>#fish</tt> on <tt>irc.oftc.net</tt>, and the <a href="http://github.com/fish-shell/fish-shell/">github page</a>.
+
+</div>
+ \endhtmlonly

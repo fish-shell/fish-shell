@@ -2,41 +2,158 @@
 <head>
 <title>fish user documentation</title>
 <link href="doxygen.css" rel="stylesheet" type="text/css">
-<!--
-Override the default doxygen stylesheet to make the difference between different header levels larger
--->
+
 <style type='text/css'>
-H1
+
+/* fish documentation CSS overrides */
+
+/* No scrollbar on the body. Our columns are independently scrollable */
+body
 {
-	font-size: 180%;
+    overflow: hidden;
 }
-H2
+
+.fish_left_bar, .fish_right_bar, .fish_only_bar
 {
-	font-size: 150%;
+    position: absolute;
+    top: 36px;
+    bottom: 0;
+    overflow-y: scroll;
 }
-H3
+
+.fish_left_bar
 {
-	padding-left:10%;
-	font-size: 120%;
+    width: 250px;
+    color: white;
 }
-H4
+.fish_left_bar a { color: white; }
+.fish_left_bar a:visited { color: inherit; }
+.fish_right_bar
 {
-	padding-left:10%;
-	font-style: italic;
-	font-weight: normal;
-	font-size: 90%;
+    margin-left: 250px;
+    margin-right: 0px;
+    padding: 0 0 0 20px; /* 20 px on left */
+    background-color: white;
+        -moz-box-shadow: -5px 0px 5px -2px black;
+        -webkit-box-shadow: -5px 0px 5px -2px black;
+        box-shadow: -5px 0px 5px -2px black;
 }
+
+.fish_right_bar p
+{
+        margin-right: 8px;
+}
+
+.fish_left_big { width: 380px; }
+.fish_right_little { margin-left: 380px; }
+
+.fish_left_medium { width: 280; }
+.fish_right_medium { margin-left: 280; }
+
+.fish_left_little { width: 200px; }
+.fish_right_big { margin-left: 200px; }
+
+
+.fish_only_bar
+{
+    padding: 0px 20px;
+}
+
+h1, h2, h3 { color: #1E335E; }
+
+h1 { font-size: 150%; }
+h2 { font-size: 115%; }
+h3 { font-size: 105%; }
+
+/* Don't show the header */
+div.header { display: none; }
+
+h1.interior_title, h1.interior_title_borderless {
+        color: #333;
+}
+
+h1.interior_title {
+        padding-bottom: 10px;
+        border-bottom: 1px solid #AAA;
+}
+
+div.contents { margin: 0px; }
+
+div.qindex
+{
+    height: 30px;
+    line-height: 30px;
+    text-align: center;
+    background-image: none;
+    color: white;
+    border: none;
+}
+.fish_left_bar, div.header, div.qindex
+{
+    background-color: #1E335E;
+}
+
+div.qindex
+{
+    border: none;
+    padding: 3px 0px;
+
+    /* Ensure the bottom border is visible over the left column */
+    position: relative;
+    z-index: 2;
+}
+div.qindex a
+{
+    color: white;
+}
+
+/* Hide the doxygen logo */
+.footer { display: none; }
+
+/* Don't let pre elements create a minimum width on the right bar */
+.fish_right_bar pre { white-space:pre-wrap; }
+
+/* Adjust list */
+.fish_left_bar ul {
+        padding-left: 27px;
+    padding-right: 10px;
+}
+.fish_left_bar ul li { margin-bottom: 5px; }
+
+/* Tighter lists for the little (command) bar */
+.fish_left_little ul li { margin-bottom: 0; }
+
+/* Adjust sublists */
+.fish_left_bar ul ul { padding-left: 17px; }
+.fish_left_bar ul ul li { margin-bottom: 0; }
+
+/* Link hover */
+.fish_left_bar a:hover {
+  text-decoration: none;
+  background-color: inherit;
+  color: #99BBFF;
+}
+
+/* Horizontal bar */
+hr {
+        height: 1px;
+        border: 0;
+        background-color: #AAA;
+}
+
 </style>
 </head>
 <body>
 
 <div class="qindex">
 
- <a class="qindex" href="http://fishshell.com/"><tt>fish</tt> home</a>
+ <a class="qindex" href="http://fishshell.com/"><tt>fish</tt> shell</a>
 |
- <a class="qindex" href="index.html">Main documentation page</a>
+ <a class="qindex" href="index.html">Documentation</a>
 |
-<a class="qindex" href="design.html">Design document</a>
+ <a class="qindex" href="tutorial.html">Tutorial</a>
+|
+<a class="qindex" href="design.html">Design</a>
 |
 <a class="qindex" href="commands.html">Commands</a>
 |

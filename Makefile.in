@@ -153,9 +153,10 @@ MIME_OBJS := mimedb.o print_help.o xdgmimealias.o xdgmime.o				\
 
 #
 # These files are the source files, they contain a few @FOO@-style substitutions
+# Note that this order defines the order that they appear in the documentation
 #
 
-HDR_FILES_SRC := doc_src/index.hdr.in doc_src/commands.hdr.in doc_src/design.hdr doc_src/license.hdr doc_src/faq.hdr
+HDR_FILES_SRC := doc_src/index.hdr.in doc_src/tutorial.hdr doc_src/design.hdr doc_src/license.hdr doc_src/commands.hdr.in doc_src/faq.hdr
 
 
 #
@@ -330,6 +331,7 @@ user_doc: $(HDR_FILES_SRC) Doxyfile.user user_doc.head.html $(HELP_SRC) doc.h $(
 	(cat Doxyfile.user ; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | sed "s/-.*//") | doxygen - && touch user_doc
 
 
+
 #
 # Source code documentation. Also includes user documentation.
 #
@@ -365,26 +367,34 @@ test: $(PROGRAMS) fish_tests
 #
 
 doc_src/commands.hdr:$(HELP_SRC) doc_src/commands.hdr.in
-	-rm command_list.tmp $@
+	-rm command_list.tmp command_list_toc.tmp $@
 	for i in `printf "%s\n" $(HELP_SRC)|sort`; do \
 		echo "<hr>" >>command_list.tmp; \
 		cat $$i >>command_list.tmp; \
 		echo >>command_list.tmp; \
 		echo >>command_list.tmp; \
+		NAME=`basename $$i .txt`; \
+		echo '- <a href="#'$$NAME'">'$$NAME'</a>' >> command_list_toc.tmp; \
 		echo "Back to <a href='index.html#toc-commands'>index</a>". >>command_list.tmp; \
 	done
 	mv command_list.tmp command_list.txt
-	cat $@.in | awk '{if ($$0 ~ /@command_list@/){ system("cat command_list.txt");} else{ print $$0;}}' >$@
+	mv command_list_toc.tmp command_list_toc.txt
+	cat $@.in | awk '{if ($$0 ~ /@command_list_toc@/) { system("cat command_list_toc.txt"); } else if ($$0 ~ /@command_list@/){ system("cat command_list.txt");} else{ print $$0;}}' >$@
 
 
 toc.txt: $(HDR_FILES:index.hdr=index.hdr.in)
 	-rm toc.tmp $@
+	# Ugly hack to set the toc initial title for the main page
+	echo '- <a href="index.html" id="toc-index">Documentation</a>' > toc.tmp
+	# The first sed command captures the page name, followed by the description
+	# The second sed command captures the command name \1 and the description \2, but only up to a dash
+	# This is to reduce the size of the TOC in the command listing on the main page
 	for i in $(HDR_FILES:index.hdr=index.hdr.in); do\
 		NAME=`basename $$i .hdr`; \
 		NAME=`basename $$NAME .hdr.in`; \
 		sed <$$i >>toc.tmp -n \
 		-e 's,.*\\page *\([^ ]*\) *\(.*\)$$,- <a href="'$$NAME'.html" id="toc-'$$NAME'">\2</a>,p' \
-		-e 's,.*\\section *\([^ ]*\) *\(.*\)$$,  - <a href="'$$NAME'.html#\1">\2</a>,p'; \
+		-e 's,.*\\section *\([^ ]*\) *\([^-]*\)\(.*\)$$,  - <a href="'$$NAME'.html#\1">\2</a>,p'; \
 	done
 	mv toc.tmp $@
 
@@ -828,7 +838,7 @@ clean:
 	rm -f $(GENERATED_INTERN_SCRIPT_FILES)
 	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
 	rm -f $(PROGRAMS) fish_tests key_reader
-	rm -f command_list.txt toc.txt
+	rm -f command_list.txt command_list_toc.txt toc.txt
 	rm -f doc_src/index.hdr doc_src/commands.hdr
 	rm -f FISH-BUILD-VERSION-FILE
 	if test "$(HAVE_DOXYGEN)" = 1; then \

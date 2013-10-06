@@ -14,7 +14,8 @@ If \c DIRECTORY is a relative path, the paths found in the
 path.
 
 Note that the shell will attempt to change directory without requiring \c cd
-if the name of a directory is provided (starting with '.', '/' or '~').
+if the name of a directory is provided (starting with '.', '/' or '~', or ending
+with '/').
 
 \subsection cd-example Examples
 

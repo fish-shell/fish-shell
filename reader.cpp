@@ -3203,9 +3203,15 @@ const wchar_t *reader_readline(void)
 
             /* complete */
             case R_COMPLETE:
+            case R_COMPLETE_UNTIL:
             {
 
                 if (!data->complete_func)
+                    break;
+
+                /* Dont cycle through the options neither show all possible
+                 * completions again */
+                if (!comp_empty && last_char == R_COMPLETE_UNTIL)
                     break;
 
                 if (! comp_empty && last_char == R_COMPLETE)

@@ -30,7 +30,7 @@ static bool production_is_valid(const production_options_t production_list, prod
 #define RESOLVE(sym) static production_option_idx_t resolve_##sym (parse_token_type_t token_type, parse_keyword_t token_keyword, production_tag_t *tag)
 #define RESOLVE_ONLY(sym) static production_option_idx_t resolve_##sym (parse_token_type_t token_type, parse_keyword_t token_keyword, production_tag_t *tag) { return 0; }
 
-#define PRODUCE_KEYWORD(x) ((x) + LAST_TOKEN_OR_SYMBOL + 1)
+#define KEYWORD(x) ((x) + LAST_TOKEN_OR_SYMBOL + 1)
 
 
 /* A job_list is a list of jobs, separated by semicolons or newlines */
@@ -167,20 +167,20 @@ RESOLVE(statement)
 
 PRODUCTIONS(if_statement) =
 {
-    {symbol_if_clause, symbol_else_clause, PRODUCE_KEYWORD(parse_keyword_end), symbol_arguments_or_redirections_list}
+    {symbol_if_clause, symbol_else_clause, KEYWORD(parse_keyword_end), symbol_arguments_or_redirections_list}
 };
 RESOLVE_ONLY(if_statement)
 
 PRODUCTIONS(if_clause) =
 {
-    { PRODUCE_KEYWORD(parse_keyword_if), symbol_job, parse_token_type_end, symbol_job_list }
+    { KEYWORD(parse_keyword_if), symbol_job, parse_token_type_end, symbol_job_list }
 };
 RESOLVE_ONLY(if_clause)
 
 PRODUCTIONS(else_clause) =
 {
     { },
-    { PRODUCE_KEYWORD(parse_keyword_else), symbol_else_continuation }
+    { KEYWORD(parse_keyword_else), symbol_else_continuation }
 };
 RESOLVE(else_clause)
 {
@@ -211,7 +211,7 @@ RESOLVE(else_continuation)
 
 PRODUCTIONS(switch_statement) =
 {
-    { PRODUCE_KEYWORD(parse_keyword_switch), parse_token_type_string, parse_token_type_end, symbol_case_item_list, PRODUCE_KEYWORD(parse_keyword_end)}
+    { KEYWORD(parse_keyword_switch), parse_token_type_string, parse_token_type_end, symbol_case_item_list, KEYWORD(parse_keyword_end)}
 };
 RESOLVE_ONLY(switch_statement)
 
@@ -230,7 +230,7 @@ RESOLVE(case_item_list)
 
 PRODUCTIONS(case_item) =
 {
-    {PRODUCE_KEYWORD(parse_keyword_case), symbol_argument_list, parse_token_type_end, symbol_job_list}
+    {KEYWORD(parse_keyword_case), symbol_argument_list, parse_token_type_end, symbol_job_list}
 };
 RESOLVE_ONLY(case_item)
 
@@ -258,7 +258,7 @@ RESOLVE(argument_list)
 
 PRODUCTIONS(block_statement) =
 {
-    {symbol_block_header, parse_token_type_end, symbol_job_list, PRODUCE_KEYWORD(parse_keyword_end), symbol_arguments_or_redirections_list}
+    {symbol_block_header, parse_token_type_end, symbol_job_list, KEYWORD(parse_keyword_end), symbol_arguments_or_redirections_list}
 };
 RESOLVE_ONLY(block_statement)
 
@@ -290,34 +290,34 @@ RESOLVE(block_header)
 
 PRODUCTIONS(for_header) =
 {
-    {PRODUCE_KEYWORD(parse_keyword_for), parse_token_type_string, PRODUCE_KEYWORD(parse_keyword_in), symbol_arguments_or_redirections_list}
+    {KEYWORD(parse_keyword_for), parse_token_type_string, KEYWORD(parse_keyword_in), symbol_arguments_or_redirections_list}
 };
 RESOLVE_ONLY(for_header)
 
 PRODUCTIONS(while_header) =
 {
-    {PRODUCE_KEYWORD(parse_keyword_while), symbol_statement}
+    {KEYWORD(parse_keyword_while), symbol_statement}
 };
 RESOLVE_ONLY(while_header)
 
 PRODUCTIONS(begin_header) =
 {
-    {PRODUCE_KEYWORD(parse_keyword_begin)}
+    {KEYWORD(parse_keyword_begin)}
 };
 RESOLVE_ONLY(begin_header)
 
 PRODUCTIONS(function_header) =
 {
-    {PRODUCE_KEYWORD(parse_keyword_function), parse_token_type_string, symbol_argument_list}
+    {KEYWORD(parse_keyword_function), parse_token_type_string, symbol_argument_list}
 };
 RESOLVE_ONLY(function_header)
 
 /* A boolean statement is AND or OR or NOT */
 PRODUCTIONS(boolean_statement) =
 {
-    {PRODUCE_KEYWORD(parse_keyword_and), symbol_statement},
-    {PRODUCE_KEYWORD(parse_keyword_or), symbol_statement},
-    {PRODUCE_KEYWORD(parse_keyword_not), symbol_statement}
+    {KEYWORD(parse_keyword_and), symbol_statement},
+    {KEYWORD(parse_keyword_or), symbol_statement},
+    {KEYWORD(parse_keyword_not), symbol_statement}
 };
 RESOLVE(boolean_statement)
 {
@@ -336,19 +336,19 @@ RESOLVE(boolean_statement)
 
 PRODUCTIONS(decorated_statement) =
 {
-    {PRODUCE_KEYWORD(parse_keyword_command), symbol_plain_statement},
-    {PRODUCE_KEYWORD(parse_keyword_builtin), symbol_plain_statement},
-    {symbol_plain_statement}
+    {symbol_plain_statement},
+    {KEYWORD(parse_keyword_command), symbol_plain_statement},
+    {KEYWORD(parse_keyword_builtin), symbol_plain_statement},
 };
 RESOLVE(decorated_statement)
 {
     switch (token_keyword)
     {
-        case parse_keyword_command:
-            return 0;
-        case parse_keyword_builtin:
-            return 1;
         default:
+            return 0;
+        case parse_keyword_command:
+            return 1;
+        case parse_keyword_builtin:
             return 2;
     }
 }

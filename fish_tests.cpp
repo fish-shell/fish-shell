@@ -1922,11 +1922,10 @@ static void test_new_parser_fuzzing(void)
         {
             parse_t parser;
             parse_node_tree_t parse_tree;
-            parse_error_list_t errors;
             for (size_t i=0; i < len; i++)
             {
                 const parser_fuzz_token_t &token = tokens[i];
-                parser.parse_1_token(token.token_type, token.keyword, &parse_tree, &errors);
+                parser.parse_1_token(token.token_type, token.keyword, &parse_tree, NULL);
             }
 
             // keep going until we wrap
@@ -1940,7 +1939,7 @@ static void test_new_parser_fuzzing(void)
 __attribute__((unused))
 static void test_new_parser(void)
 {
-    say(L"Testing new parser!");
+    say(L"Testing new parser");
     const wcstring src = L"echo hello world";
     parse_node_tree_t parse_tree;
     parse_t parser;
@@ -2050,7 +2049,7 @@ static void test_highlighting(void)
             if (expected_colors.at(i) != colors.at(i))
             {
                 const wcstring spaces(i, L' ');
-                err(L"Wrong color at index %lu in text (expected %d, actual %d):\n%ls\n%ls^", i, expected_colors.at(i), colors.at(i), text.c_str(), spaces.c_str());
+                err(L"Wrong color at index %lu in text (expected %#x, actual %#x):\n%ls\n%ls^", i, expected_colors.at(i), colors.at(i), text.c_str(), spaces.c_str());
             }
         }
     }
@@ -2079,10 +2078,12 @@ int main(int argc, char **argv)
     reader_init();
     env_init();
 
-    //test_new_parser_fuzzing();
-    //test_new_parser_correctness();
-    //test_highlighting();
-    //test_new_parser();
+    test_highlighting();
+    return 0;
+    test_new_parser_fuzzing();
+    test_new_parser_correctness();
+    test_highlighting();
+    test_new_parser();
 
     test_format();
     test_escape();

@@ -134,5 +134,9 @@ enum
 typedef unsigned int path_flags_t;
 bool is_potential_path(const wcstring &const_path, const wcstring_list_t &directories, path_flags_t flags, wcstring *out_path = NULL);
 
+/* For testing */
+void highlight_shell_classic(const wcstring &buff, std::vector<int> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
+void highlight_shell_magic(const wcstring &buff, std::vector<int> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
+
 #endif
 

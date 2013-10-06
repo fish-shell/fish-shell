@@ -339,9 +339,12 @@ class parse_ll_t
     /* Whether we ran into a fatal error, including parse errors or tokenizer errors */
     bool fatal_errored;
     
+    /* Whether we should collect error messages or not */
+    bool should_generate_error_messages;
+    
     /* List of errors we have encountered */
     parse_error_list_t errors;
-
+    
     /* The symbol stack can contain terminal types or symbols. Symbols go on to do productions, but terminal types are just matched against input tokens. */
     bool top_node_handle_terminal_types(parse_token_t token);
 
@@ -453,7 +456,7 @@ class parse_ll_t
     public:
     
     /* Constructor */
-    parse_ll_t() : fatal_errored(false)
+    parse_ll_t() : fatal_errored(false), should_generate_error_messages(true)
     {
         this->symbol_stack.reserve(16);
         this->nodes.reserve(64);
@@ -467,6 +470,12 @@ class parse_ll_t
     bool has_fatal_error(void) const
     {
         return this->fatal_errored;
+    }
+    
+    /* Indicate whether we want to generate error messages */
+    void set_should_generate_error_messages(bool flag)
+    {
+        this->should_generate_error_messages = flag;
     }
     
     /* Clear the parse symbol stack (but not the node tree). Add a new job_list_t goal node. This is called from the constructor */
@@ -564,30 +573,36 @@ void parse_ll_t::acquire_output(parse_node_tree_t *output, parse_error_list_t *e
 
 void parse_ll_t::parse_error(parse_token_t token, const wchar_t *fmt, ...)
 {
-    //this->dump_stack();
-    parse_error_t err;
-
-    va_list va;
-    va_start(va, fmt);
-    err.text = vformat_string(fmt, va);
-    va_end(va);
-
-    err.source_start = token.source_start;
-    err.source_length = token.source_length;
-    this->errors.push_back(err);
     this->fatal_errored = true;
+    if (this->should_generate_error_messages)
+    {
+        //this->dump_stack();
+        parse_error_t err;
+
+        va_list va;
+        va_start(va, fmt);
+        err.text = vformat_string(fmt, va);
+        va_end(va);
+
+        err.source_start = token.source_start;
+        err.source_length = token.source_length;
+        this->errors.push_back(err);
+    }
 }
 
 
 void parse_ll_t::parse_error(const wchar_t *expected, parse_token_t token)
 {
-    wcstring desc = token_type_description(token.type);
-    parse_error_t error;
-    error.text = format_string(L"Expected a %ls, instead got a token of type %ls", expected, desc.c_str());
-    error.source_start = token.source_start;
-    error.source_start = token.source_length;
-    errors.push_back(error);
     fatal_errored = true;
+    if (this->should_generate_error_messages)
+    {
+        wcstring desc = token_type_description(token.type);
+        parse_error_t error;
+        error.text = format_string(L"Expected a %ls, instead got a token of type %ls", expected, desc.c_str());
+        error.source_start = token.source_start;
+        error.source_start = token.source_length;
+        errors.push_back(error);
+    }
 }
 
 void parse_ll_t::reset_symbols(void)
@@ -725,7 +740,14 @@ void parse_ll_t::accept_token(parse_token_t token)
         const production_t *production = production_for_token(stack_elem.type, token.type, token.keyword, &node.production_idx, &node.tag, NULL /* error text */);
         if (production == NULL)
         {
-            this->parse_error(token, L"Unable to produce a '%ls' from input '%ls'", stack_elem.describe().c_str(), token.describe().c_str());
+            if (should_generate_error_messages)
+            {
+                this->parse_error(token, L"Unable to produce a '%ls' from input '%ls'", stack_elem.describe().c_str(), token.describe().c_str());
+            }
+            else
+            {
+                this->parse_error(token, NULL);
+            }
             // parse_error sets fatal_errored, which ends the loop
         }
         else
@@ -737,7 +759,7 @@ void parse_ll_t::accept_token(parse_token_t token)
             // If we end up with an empty stack, something bad happened, like an unbalanced end
             if (symbol_stack.empty())
             {
-                this->parse_error(token, L"All symbols removed from symbol stack. Likely unbalanced else or end?", stack_elem.describe().c_str(), token.describe().c_str());
+                this->parse_error(token, L"All symbols removed from symbol stack. Likely unbalanced else or end?");
             }
         }
     }
@@ -793,11 +815,46 @@ static parse_keyword_t keyword_for_token(token_type tok, const wchar_t *tok_txt)
     return result;
 }
 
+// Set type-specific tags for nodes
+// This is not in parse_ll_t because it knows about different node types
+static void tag_nodes(const wcstring &src, parse_node_tree_t *tree)
+{
+    size_t count = tree->size();
+    for (size_t i=0; i < count; i++)
+    {
+        const parse_node_t &node = tree->at(i);
+        switch (node.type)
+        {
+            case symbol_decorated_statement:
+            {
+                // Set a tag on the plain statement to indicate the decoration type
+                // The decoration types matches the production
+                bool is_decorated = (node.production_idx > 0);
+                
+                // Get the plain statement and set the tag equal to the production index we used
+                // This is an enum parse_statement_decoration_t
+                node_offset_t statement_idx = (is_decorated ? 1 : 0);
+                parse_node_t *plain_statement = tree->get_child(node, statement_idx, symbol_plain_statement);
+                if (plain_statement != NULL)
+                {
+                    plain_statement->tag = static_cast<enum parse_statement_decoration_t>(node.production_idx);
+                }
+            }
+            break;
+            
+            default:
+            break;
+        }
+    }
+}
+
 bool parse_t::parse(const wcstring &str, parse_tree_flags_t parse_flags, parse_node_tree_t *output, parse_error_list_t *errors, bool log_it)
 {
     tok_flags_t tok_options = TOK_SQUASH_ERRORS;
     if (parse_flags & parse_flag_include_comments)
         tok_options |= TOK_SHOW_COMMENTS;
+    
+    this->parser->set_should_generate_error_messages(errors != NULL);
 
     tokenizer_t tok = tokenizer_t(str.c_str(), tok_options);
     for (; tok_has_next(&tok) && ! this->parser->has_fatal_error(); tok_next(&tok))
@@ -835,7 +892,9 @@ bool parse_t::parse(const wcstring &str, parse_tree_flags_t parse_flags, parse_n
 
     // Teach each node where its source range is
     this->parser->determine_node_ranges();
-
+    
+    // Tag nodes
+    
 #if 0
     wcstring result = dump_tree(this->parser->nodes, str);
     fprintf(stderr, "Tree (%ld nodes):\n%ls", this->parser->nodes.size(), result.c_str());
@@ -844,6 +903,9 @@ bool parse_t::parse(const wcstring &str, parse_tree_flags_t parse_flags, parse_n
 
     // Acquire the output from the parser
     this->parser->acquire_output(output, errors);
+    
+    // Set node tags
+    tag_nodes(str, output);
     
     // Indicate if we had a fatal error
     return ! this->parser->has_fatal_error();
@@ -859,6 +921,9 @@ bool parse_t::parse_1_token(parse_token_type_t token_type, parse_keyword_t keywo
     token.keyword = keyword;
     token.source_start = -1;
     token.source_length = 0;
+    
+    bool wants_errors = (errors != NULL);
+    this->parser->set_should_generate_error_messages(wants_errors);
 
     this->parser->accept_token(token);
 
@@ -887,6 +952,14 @@ const parse_node_t *parse_node_tree_t::get_child(const parse_node_t &parent, nod
     }
 
     return result;
+}
+
+/* Hackish non-const version of get_child */
+parse_node_t *parse_node_tree_t::get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type)
+{
+    const parse_node_tree_t *const_this = this;
+    const parse_node_t *result = const_this->get_child(parent, which, expected_type);
+    return const_cast<parse_node_t *>(result);
 }
 
 static void find_nodes_recursive(const parse_node_tree_t &tree, const parse_node_t &parent, parse_token_type_t type, parse_node_tree_t::parse_node_list_t *result)

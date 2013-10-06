@@ -124,7 +124,7 @@ enum
 
     /* Attempt to build a "parse tree" no matter what. This may result in a 'forest' of disconnected trees. This is intended to be used by syntax highlighting. */
     parse_flag_continue_after_error = 1 << 0,
-
+    
     /* Include comment tokens */
     parse_flag_include_comments = 1 << 1
 };
@@ -155,7 +155,7 @@ wcstring parse_dump_tree(const parse_node_tree_t &tree, const wcstring &src);
 wcstring token_type_description(parse_token_type_t type);
 wcstring keyword_description(parse_keyword_t type);
 
-/** Base class for nodes of a parse tree */
+/** Class for nodes of a parse tree */
 class parse_node_t
 {
 public:
@@ -193,24 +193,40 @@ public:
         return child_start + which;
     }
 
+    /* Indicate if this node has a range of source code associated with it */
     bool has_source() const
     {
         return source_start != (size_t)(-1);
     }
+    
+    /* Indicate if this node's source range contains a given location. The funny math makes this modulo-overflow safe, though overflow is not expected. */
+    bool source_contains_location(size_t where) const
+    {
+        return this->has_source() && where >= source_start && where - source_start < source_length;
+    }
 };
 
+/* The parse tree itself */
 class parse_node_tree_t : public std::vector<parse_node_t>
 {
 public:
 
     /* Get the node corresponding to a child of the given node, or NULL if there is no such child. If expected_type is provided, assert that the node has that type. */
     const parse_node_t *get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type = token_type_invalid) const;
+    parse_node_t *get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type = token_type_invalid);
 
     /* Find all the nodes of a given type underneath a given node */
     typedef std::vector<const parse_node_t *> parse_node_list_t;
     parse_node_list_t find_nodes(const parse_node_t &parent, parse_token_type_t type) const;
 };
 
+/* Statement decorations, stored in the tag of plain_statement. This matches the order of productions in decorated_statement */
+enum parse_statement_decoration_t
+{
+    parse_statement_decoration_none,
+    parse_statement_decoration_command,
+    parse_statement_decoration_builtin
+};
 
 /* Fish grammar:
 
@@ -259,9 +275,10 @@ public:
     boolean_statement = AND statement | OR statement | NOT statement
 
 # A decorated_statement is a command with a list of arguments_or_redirections, possibly with "builtin" or "command"
+# The tag of a plain statement indicates which mode to use
 
-    decorated_statement = COMMAND plain_statement | BUILTIN plain_statement | plain_statement
-    plain_statement = COMMAND arguments_or_redirections_list optional_background
+    decorated_statement = plain_statement | COMMAND plain_statement | BUILTIN plain_statement
+    plain_statement = <TOK_STRING> arguments_or_redirections_list optional_background
 
     arguments_or_redirections_list = <empty> |
                                      argument_or_redirection arguments_or_redirections_list

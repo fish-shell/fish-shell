@@ -1,6 +1,8 @@
 begin
     set -l unicode 'commandline | sgrep -qe "-[a-zA-Z]*C[a-zA-Z]*\$"'
     set -l noopt 'commandline | not sgrep -qe "-[a-zA-Z]*C[a-zA-Z]*\$"'
+    set -l modules "(find (perl -lE'print for @INC') -name '*.pm' -printf '%P\n' \
+                        | awk '{ gsub(\"/\", \"::\") } !/-/' RS=.pm\n | sort | uniq)"
     complete -c perl -s 0 -n $noopt --description 'Specify record separator'
     complete -c perl -s a -n $noopt --description 'Turn on autosplit mode'
     complete -c perl -s c -n $noopt --description 'Check syntax'
@@ -26,8 +28,8 @@ begin
     complete -c perl -s i -n $noopt -x --description 'Edit files in-place'
     complete -c perl -s I -n $noopt -r --description 'Include path'
     complete -c perl -s l -n $noopt --description 'Automatic line ending processing'
-    complete -c perl -s m -n $noopt -x --description 'Require module'
-    complete -c perl -s M -n $noopt -x --description 'Use module'
+    complete -c perl -s m -n $noopt -x --description 'Require module' -a $modules
+    complete -c perl -s M -n $noopt -x --description 'Use module' -a $modules
     complete -c perl -s n -n $noopt --description 'Loop script'
     complete -c perl -s p -n $noopt --description 'Loop script, print $_'
     complete -c perl -s s -n $noopt --description 'Define custom switches'

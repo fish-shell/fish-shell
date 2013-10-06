@@ -8,7 +8,7 @@ function man --description "Format and display the on-line manual pages"
 		set -l fish_manpath (dirname $__fish_datadir)/fish/man
 		if test -d "$fish_manpath"
 			# Notice local but exported variable
-			set -lx MANPATH "$fish_manpath":(command man --path)
+			set -lx MANPATH "$fish_manpath":(command manpath)
 			
 			# Invoke man with this manpath, and we're done
 			command man $argv

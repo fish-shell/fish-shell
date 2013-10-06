@@ -585,7 +585,30 @@ static int find_process(const wchar_t *proc,
         ASSERT_IS_MAIN_THREAD();
         const job_t *j;
 
-        if (iswnumeric(proc) || (wcslen(proc)==0))
+        // do the empty param check first, because an empty string passes our 'numeric' check
+        if (wcslen(proc)==0)
+        {
+            /*
+              This is an empty job expansion: '%'
+              It expands to the last job backgrounded.
+            */
+            job_iterator_t jobs;
+            while ((j = jobs.next()))
+            {
+                if (!j->command_is_empty())
+                {
+                    append_completion(out, to_string<long>(j->pgid));
+                    break;
+                }
+            }
+            /*
+              You don't *really* want to flip a coin between killing
+              the last process backgrounded and all processes, do you?
+              Let's not try other match methods with the solo '%' syntax.
+            */
+            found = 1;
+        }
+        else if (iswnumeric(proc))
         {
             /*
               This is a numeric job string, like '%2'
@@ -611,11 +634,9 @@ static int find_process(const wchar_t *proc,
                                           0);
                     }
                 }
-
             }
             else
             {
-
                 int jid;
                 wchar_t *end;
 
@@ -624,15 +645,17 @@ static int find_process(const wchar_t *proc,
                 if (jid > 0 && !errno && !*end)
                 {
                     j = job_get(jid);
-                    if ((j != 0) && (j->command_wcstr() != 0))
+                    if ((j != 0) && (j->command_wcstr() != 0) && (!j->command_is_empty()))
                     {
-                        {
-                            append_completion(out, to_string<long>(j->pgid));
-                            found = 1;
-                        }
+                        append_completion(out, to_string<long>(j->pgid));
                     }
                 }
             }
+            /*
+               Stop here so you can't match a random process name
+               when you're just trying to use job control.
+            */
+            found = 1;
         }
         if (found)
             return 1;
@@ -1729,9 +1752,15 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
 
         remove_internal_separator(next_str, (EXPAND_SKIP_WILDCARDS & flags) ? true : false);
         const wchar_t *next = next_str.c_str();
-
-        if (((flags & ACCEPT_INCOMPLETE) && (!(flags & EXPAND_SKIP_WILDCARDS))) ||
-                wildcard_has(next, 1))
+        
+        const bool has_wildcard = wildcard_has(next, 1);
+        
+        if (has_wildcard && (flags & EXECUTABLES_ONLY))
+        {
+            // Don't do wildcard expansion for executables. See #785. So do nothing here.
+        }
+        else if (((flags & ACCEPT_INCOMPLETE) && (!(flags & EXPAND_SKIP_WILDCARDS))) ||
+                has_wildcard)
         {
             const wchar_t *start, *rest;
 
@@ -1766,7 +1795,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
                     case 1:
                     {
                         res = EXPAND_WILDCARD_MATCH;
-                        sort_completions(expanded);
+                        std::sort(expanded.begin(), expanded.end(), completion_t::is_alphabetically_less_than);
                         out->insert(out->end(), expanded.begin(), expanded.end());
                         break;
                     }

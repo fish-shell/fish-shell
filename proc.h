@@ -134,6 +134,8 @@ private:
     /* narrow copy of argv0 so we don't have to convert after fork */
     narrow_string_rep_t argv0_narrow;
 
+    io_chain_t process_io_chain;
+
     /* No copying */
     process_t(const process_t &rhs);
     void operator=(const process_t &rhs);
@@ -188,6 +190,17 @@ public:
     const char *argv0_cstr(void) const
     {
         return argv0_narrow.get();
+    }
+
+    /* IO chain getter and setter */
+    const io_chain_t &io_chain() const
+    {
+        return process_io_chain;
+    }
+
+    void set_io_chain(const io_chain_t &chain)
+    {
+        this->process_io_chain = chain;
     }
 
     /** actual command to pass to exec in case of EXTERNAL or INTERNAL_EXEC. */
@@ -272,6 +285,7 @@ void release_job_id(job_id_t jobid);
     A struct represeting a job. A job is basically a pipeline of one
     or more processes and a couple of flags.
  */
+class parser_t;
 class job_t
 {
     /**
@@ -284,13 +298,16 @@ class job_t
     /* narrow copy so we don't have to convert after fork */
     narrow_string_rep_t command_narrow;
 
+    /* The IO chain associated with the block */
+    const io_chain_t block_io;
+
     /* No copying */
     job_t(const job_t &rhs);
     void operator=(const job_t &);
 
 public:
 
-    job_t(job_id_t jobid);
+    job_t(job_id_t jobid, const io_chain_t &bio);
     ~job_t();
 
     /** Returns whether the command is empty. */
@@ -350,13 +367,16 @@ public:
     */
     const job_id_t job_id;
 
-    /** List of all IO redirections for this job. */
-    io_chain_t io;
-
     /**
        Bitset containing information about the job. A combination of the JOB_* constants.
     */
     unsigned int flags;
+
+    /* Returns the block IO redirections associated with the job. These are things like the IO redirections associated with the begin...end statement. */
+    const io_chain_t &block_io_chain() const { return this->block_io; }
+
+    /* Fetch all the IO redirections associated with the job */
+    io_chain_t all_io_redirections() const;
 };
 
 /**

@@ -312,20 +312,6 @@ completion_t &completion_t::operator=(const completion_t &him)
     return *this;
 }
 
-bool completion_t::operator < (const completion_t& rhs) const
-{
-    return this->completion < rhs.completion;
-}
-
-bool completion_t::operator == (const completion_t& rhs) const
-{
-    return this->completion == rhs.completion;
-}
-
-bool completion_t::operator != (const completion_t& rhs) const
-{
-    return !(*this == rhs);
-}
 
 wcstring_list_t completions_to_wcstring_list(const std::vector<completion_t> &list)
 {
@@ -338,10 +324,16 @@ wcstring_list_t completions_to_wcstring_list(const std::vector<completion_t> &li
     return strings;
 }
 
-void sort_completions(std::vector<completion_t> &completions)
+bool completion_t::is_alphabetically_less_than(const completion_t &a, const completion_t &b)
 {
-    std::sort(completions.begin(), completions.end());
+    return a.completion < b.completion;
 }
+
+bool completion_t::is_alphabetically_equal_to(const completion_t &a, const completion_t &b)
+{
+    return a.completion == b.completion;
+}
+
 
 /** Class representing an attempt to compute completions */
 class completer_t
@@ -1149,22 +1141,18 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
     if (cdpath.missing_or_empty())
         cdpath = L".";
 
-    if (str_cmd.find(L'/') != wcstring::npos || str_cmd.at(0) == L'~')
+    if (use_command)
     {
 
-        if (use_command)
+        if (expand_string(str_cmd, this->completions, ACCEPT_INCOMPLETE | EXECUTABLES_ONLY | this->expand_flags()) != EXPAND_ERROR)
         {
-
-            if (expand_string(str_cmd, this->completions, ACCEPT_INCOMPLETE | EXECUTABLES_ONLY | this->expand_flags()) != EXPAND_ERROR)
+            if (this->wants_descriptions())
             {
-                if (this->wants_descriptions())
-                {
-                    this->complete_cmd_desc(str_cmd);
-                }
+                this->complete_cmd_desc(str_cmd);
             }
         }
     }
-    else
+    if (str_cmd.find(L'/') == wcstring::npos && str_cmd.at(0) != L'~')
     {
         if (use_command)
         {
@@ -1624,7 +1612,7 @@ void completer_t::complete_param_expand(const wcstring &sstr, bool do_file)
         comp_str = str;
     }
 
-    expand_flags_t flags = EXPAND_SKIP_CMDSUBST | ACCEPT_INCOMPLETE;
+    expand_flags_t flags = EXPAND_SKIP_CMDSUBST | ACCEPT_INCOMPLETE | this->expand_flags();
 
     if (! do_file)
         flags |= EXPAND_SKIP_WILDCARDS;
@@ -1633,9 +1621,13 @@ void completer_t::complete_param_expand(const wcstring &sstr, bool do_file)
     if (this->type() == COMPLETE_AUTOSUGGEST || do_file)
         flags |= EXPAND_NO_DESCRIPTIONS;
 
+    /* Don't do fuzzy matching for files if the string begins with a dash (#568). We could consider relaxing this if there was a preceding double-dash argument */
+    if (string_prefixes_string(L"-", sstr))
+        flags &= ~EXPAND_FUZZY_MATCH;
+
     if (expand_string(comp_str,
                       this->completions,
-                      flags | this->expand_flags()) == EXPAND_ERROR)
+                      flags ) == EXPAND_ERROR)
     {
         debug(3, L"Error while expanding string '%ls'", comp_str);
     }
@@ -1917,6 +1909,11 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, completion_
                 case TOK_ERROR:
                 {
                     end_loop=1;
+                    break;
+                }
+                
+                default:
+                {
                     break;
                 }
             }

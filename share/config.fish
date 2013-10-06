@@ -57,40 +57,46 @@ if test -d /usr/xpg4/bin
 	end
 end
 
+# OS X-ism: Load the path files out of /etc/paths and /etc/paths.d/*
+set -g __fish_tmp_path $PATH
+function __fish_load_path_helper_paths
+	# We want to rearrange the path to reflect this order. Delete that path component if it exists and then prepend it.
+	# Since we are prepending but want to preserve the order of the input file, we reverse the array, append, and then reverse it again
+    set __fish_tmp_path $__fish_tmp_path[-1..1] 
+    while read -l new_path_comp
+        set -l where (contains -i $new_path_comp $__fish_tmp_path)
+        and set -e __fish_tmp_path[$where]
+        set __fish_tmp_path $new_path_comp $__fish_tmp_path
+    end
+    set __fish_tmp_path $__fish_tmp_path[-1..1]
+end
+test -r /etc/paths ; and __fish_load_path_helper_paths < /etc/paths 
+for pathfile in /etc/paths.d/* ; __fish_load_path_helper_paths < $pathfile ; end
+set -xg PATH $__fish_tmp_path
+set -e __fish_tmp_path
+functions -e __fish_load_path_helper_paths
+
+
 # Add a handler for when fish_user_path changes, so we can apply the same changes to PATH
 # Invoke it immediately to apply the current value of fish_user_path
 function __fish_reconstruct_path -d "Update PATH when fish_user_paths changes" --on-variable fish_user_paths
-        set -l local_path $PATH
-        set -l x
-        for x in $__fish_added_user_paths
-                if set -l idx (contains --index $x $local_path)
-                        set -e local_path[$idx]
-                end
+	set -l local_path $PATH
+	set -l x
+	for x in $__fish_added_user_paths
+		set -l idx (contains --index $x $local_path)
+		and set -e local_path[$idx]
 	end
 
-        set -e __fish_added_user_paths
-        for x in $fish_user_paths[-1..1]
-                if not contains $x $local_path
-                        set local_path $x $local_path
-                        set -g __fish_added_user_paths $__fish_added_user_paths $x
-                end
-        end
-        set -xg PATH $local_path
+	set -e __fish_added_user_paths
+	for x in $fish_user_paths[-1..1]
+		if not contains $x $local_path
+			set local_path $x $local_path
+			set -g __fish_added_user_paths $__fish_added_user_paths $x
+		end
+	end
+	set -xg PATH $local_path
 end
 __fish_reconstruct_path
-
-# OS X-ism: Load the path files out of /etc/paths and /etc/paths.d/*
-function __fish_load_path_helper_paths
-    while read -l new_path_comp
-        if not contains $new_path_comp $PATH
-        	set PATH $PATH $new_path_comp
-        end
-    end
-end
-if test -r /etc/paths ; __fish_load_path_helper_paths < /etc/paths ; end
-for pathfile in /etc/paths.d/* ; __fish_load_path_helper_paths < $pathfile ; end
-functions -e __fish_load_path_helper_paths
-
 
 #
 # Launch debugger on SIGTRAP
@@ -109,3 +115,16 @@ function __fish_on_interactive --on-event fish_prompt
 	functions -e __fish_on_interactive
 end
 
+# "." command for compatibility with old fish versions.
+function . --description 'Evaluate contents of file (deprecated, see "source")' --no-scope-shadowing
+	if begin
+			test (count $argv) -eq 0
+			# Uses tty directly, as isatty depends on "."
+			and tty 0>&0 >/dev/null
+		end
+		echo "source: '.' command is deprecated, and doesn't work with STDIN anymore. Did you mean 'source' or './'?" >&2
+		return 1
+	else
+		source $argv
+	end
+end

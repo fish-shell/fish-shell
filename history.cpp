@@ -629,10 +629,16 @@ void history_t::get_string_representation(wcstring &result, const wcstring &sepa
     scoped_lock locker(lock);
 
     bool first = true;
+    
+    std::set<wcstring> seen;
 
     /* Append new items. Note that in principle we could use const_reverse_iterator, but we do not because reverse_iterator is not convertible to const_reverse_iterator ( http://github.com/fish-shell/fish-shell/issues/431 ) */
     for (std::vector<history_item_t>::reverse_iterator iter=new_items.rbegin(); iter < new_items.rend(); ++iter)
     {
+        /* Skip duplicates */
+        if (! seen.insert(iter->str()).second)
+            continue;
+            
         if (! first)
             result.append(separator);
         result.append(iter->str());
@@ -645,6 +651,11 @@ void history_t::get_string_representation(wcstring &result, const wcstring &sepa
     {
         size_t offset = *iter;
         const history_item_t item = history_t::decode_item(mmap_start + offset, mmap_length - offset, mmap_type);
+        
+        /* Skip duplicates */
+        if (! seen.insert(item.str()).second)
+            continue;
+        
         if (! first)
             result.append(separator);
         result.append(item.str());

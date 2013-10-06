@@ -19,8 +19,12 @@ wd="$PWD"
 # The name of the prefix, which is the directory that you get when you untar
 prefix="fish"
 
+# Get the version from git-describe
+VERSION=`git describe --tags --dirty 2>/dev/null`
+prefix="$prefix-$VERSION"
+
 # The path where we will output the tar file
-path=~/fish_built/fish-2.0.tar
+path=~/fish_built/$prefix.tar
 
 # Clean up stuff we've written before
 rm -f "$path" "$path".gz
@@ -28,14 +32,22 @@ rm -f "$path" "$path".gz
 # git starts the archive
 git archive --format=tar --prefix="$prefix"/ master > "$path"
 
-# tarball out the documentation
-make user_doc
-make share/man
+# tarball out the documentation, generate a configure script and version file
+# Don't use autoreconf since it invokes commands that may not be installed, like aclocal
+# Don't run autoheader since configure.ac runs it. autoconf is enough.
+autoconf
+./configure --with-doxygen
+make user_doc share/man
+echo $VERSION > version
 cd /tmp
 rm -f "$prefix"
 ln -s "$wd" "$prefix"
-gnutar --append --file="$path" "$prefix"/user_doc/html
-gnutar --append --file="$path" "$prefix"/share/man
+TAR_APPEND="gnutar --append --file=$path --mtime=now --owner=0 --group=0 --mode=g+w,a+rX"
+$TAR_APPEND --no-recursion "$prefix"/user_doc
+$TAR_APPEND "$prefix"/user_doc/html "$prefix"/share/man
+$TAR_APPEND "$prefix"/version
+$TAR_APPEND "$prefix"/configure "$prefix"/config.h.in
+rm -f "$prefix"/version
 rm -f "$prefix"
 
 # gzip it

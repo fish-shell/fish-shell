@@ -1,5 +1,7 @@
 /** \page faq Frequently asked questions
 
+\htmlonly <div class="fish_left_bar fish_left_big"> \endhtmlonly
+
 - <a href='#faq-envvar'>How do I set or clear an environment variable?</a>
 - <a href='#faq-login-cmd'>How do I run a command every login? What's fish's equivalent to <tt>.bashrc</tt>?</a>
 - <a href='#faq-prompt'>How do I set my prompt?</a>
@@ -18,7 +20,12 @@
 - <a href='#faq-history'>Why doesn't history substitution ("!$" etc.) work?</a>
 - <a href='#faq-uninstalling'>How do I uninstall fish?</a>
 
-<hr>
+\htmlonly
+</div>
+<div class="fish_right_bar fish_right_little">
+<h1 class="interior_title">Frequently Asked Questions</h1>
+
+\endhtmlonly
 
 \section faq-envvar How do I set or clear an environment variable?
 
@@ -29,7 +36,7 @@ set -e key</pre>
 
 <hr>
 
-\section faq-login-cmd How do I run a command every login? What's fish's equivalent to <tt>.bashrc</tt>?
+\section faq-login-cmd How do I run a command every login? What's fish's equivalent to .bashrc?
 
 Edit the file <tt>~/.config/fish/config.fish</tt>, creating it if it does not
 exist. (Note the leading period.)
@@ -263,3 +270,7 @@ rm -f fish mimedb fish_pager fishd fish_indent
 </pre>
 
 */
+
+\htmlonly
+</div>
+\endhtmlonly

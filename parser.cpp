@@ -152,9 +152,9 @@ The fish parser. Contains functions for parsing and evaluating code.
 #define INVALID_END_ERR_MSG _( L"'end' command outside of block")
 
 /**
-   Error message for Posix-style assignment
+   Error message for Posix-style assignment: foo=bar
 */
-#define COMMAND_ASSIGN_ERR_MSG _( L"Unknown command '%ls'. Did you mean 'set %ls %ls'? For information on assigning values to variables, see the help section on the set command by typing 'help set'.")
+#define COMMAND_ASSIGN_ERR_MSG _( L"Unknown command '%ls'. Did you mean 'set %ls %ls'? See the help section on the set command by typing 'help set'.")
 
 /**
    Error for invalid redirection token
@@ -1165,9 +1165,9 @@ int parser_t::is_help(const wchar_t *s, int min_match) const
            (len >= (size_t)min_match && (wcsncmp(L"--help", s, len) == 0));
 }
 
-job_t *parser_t::job_create(void)
+job_t *parser_t::job_create()
 {
-    job_t *res = new job_t(acquire_job_id());
+    job_t *res = new job_t(acquire_job_id(), this->block_io);
     this->my_job_list.push_front(res);
 
     job_set_flag(res,
@@ -1252,6 +1252,9 @@ void parser_t::parse_job_argument_list(process_t *p,
 
     wcstring unmatched;
     int unmatched_pos=0;
+
+    /* The set of IO redirections that we construct for the process */
+    io_chain_t process_io_chain;
 
     /*
       Test if this is the 'count' command. We need to special case
@@ -1557,7 +1560,7 @@ void parser_t::parse_job_argument_list(process_t *p,
 
                 if (new_io.get() != NULL)
                 {
-                    j->io.push_back(new_io);
+                    process_io_chain.push_back(new_io);
                 }
 
             }
@@ -1611,7 +1614,9 @@ void parser_t::parse_job_argument_list(process_t *p,
         }
     }
 
-    return;
+    /* Store our IO chain. The existing chain should be empty. */
+    assert(p->io_chain().empty());
+    p->set_io_chain(process_io_chain);
 }
 
 /*
@@ -2005,9 +2010,8 @@ int parser_t::parse_job(process_t *p,
                 if (! has_command && ! use_implicit_cd)
                 {
 
-                    int tmp;
                     const wchar_t *cmd = args.at(0).completion.c_str();
-
+                    
                     /*
                      We couldn't find the specified command.
 
@@ -2026,19 +2030,39 @@ int parser_t::parse_job(process_t *p,
                      and zsh).
                      */
 
-                    if (wcschr(cmd, L'='))
+                    const wchar_t * const equals_ptr = wcschr(cmd, L'=');
+                    if (equals_ptr != NULL)
                     {
-                        wchar_t *cpy = wcsdup(cmd);
-                        wchar_t *valpart = wcschr(cpy, L'=');
-                        *valpart++=0;
-
-                        debug(0,
-                              COMMAND_ASSIGN_ERR_MSG,
-                              cmd,
-                              cpy,
-                              valpart);
-                        free(cpy);
-
+                        /* Try to figure out if this is a pure variable assignment (foo=bar), or if this appears to be running a command (foo=bar ruby...) */
+                        
+                        const wcstring name_str = wcstring(cmd, equals_ptr - cmd); //variable name, up to the =
+                        const wcstring val_str = wcstring(equals_ptr + 1); //variable value, past the =
+                        
+                        wcstring next_str;
+                        if (tok_peek_next(tok, &next_str) == TOK_STRING && ! next_str.empty())
+                        {
+                            wcstring ellipsis_str = wcstring(1, ellipsis_char);
+                            if (ellipsis_str == L"$")
+                                ellipsis_str = L"...";
+                            
+                            /* Looks like a command */
+                            debug(0,
+                                  _( L"Unknown command '%ls'. Did you mean to run %ls with a modified environment? Try 'env %ls=%ls %ls%ls'. See the help section on the set command by typing 'help set'."),
+                                  cmd,
+                                  next_str.c_str(),
+                                  name_str.c_str(),
+                                  val_str.c_str(),
+                                  next_str.c_str(),
+                                  ellipsis_str.c_str());
+                        }
+                        else
+                        {
+                            debug(0,
+                                  COMMAND_ASSIGN_ERR_MSG,
+                                  cmd,
+                                  name_str.c_str(),
+                                  val_str.c_str());
+                        }
                     }
                     else if (cmd[0]==L'$' || cmd[0] == VARIABLE_EXPAND || cmd[0] == VARIABLE_EXPAND_SINGLE)
                     {
@@ -2048,15 +2072,17 @@ int parser_t::parse_job(process_t *p,
                         if (val)
                         {
                             debug(0,
-                                  _(L"Variables may not be used as commands. Instead, define a function like 'function %ls; %ls $argv; end'. See the help section for the function command by typing 'help function'."),
+                                  _(L"Variables may not be used as commands. Instead, define a function like 'function %ls; %ls $argv; end' or use the eval builtin instead, like 'eval %ls'. See the help section for the function command by typing 'help function'."),
                                   cmd+1,
                                   val,
+                                  cmd,
                                   cmd);
                         }
                         else
                         {
                             debug(0,
-                                  _(L"Variables may not be used as commands. Instead, define a function. See the help section for the function command by typing 'help function'."),
+                                  _(L"Variables may not be used as commands. Instead, define a function or use the eval builtin instead, like 'eval %ls'. See the help section for the function command by typing 'help function'."),
+                                  cmd,
                                   cmd);
                         }
                     }
@@ -2086,7 +2112,7 @@ int parser_t::parse_job(process_t *p,
                         event_fire_generic(L"fish_command_not_found", &event_args);
                     }
 
-                    tmp = current_tokenizer_pos;
+                    int tmp = current_tokenizer_pos;
                     current_tokenizer_pos = tok_get_pos(tok);
 
                     fwprintf(stderr, L"%ls", parser_t::current_line());
@@ -2254,7 +2280,7 @@ void parser_t::skipped_exec(job_t * j)
             {
                 if (!current_block->outer->skip)
                 {
-                    exec(*this, j);
+                    exec_job(*this, j);
                     return;
                 }
                 parser_t::pop_block();
@@ -2267,7 +2293,7 @@ void parser_t::skipped_exec(job_t * j)
                     const if_block_t *ib = static_cast<const if_block_t*>(current_block);
                     if (ib->if_expr_evaluated && ! ib->any_branch_taken)
                     {
-                        exec(*this, j);
+                        exec_job(*this, j);
                         return;
                     }
                 }
@@ -2276,7 +2302,7 @@ void parser_t::skipped_exec(job_t * j)
             {
                 if (current_block->type() == SWITCH)
                 {
-                    exec(*this, j);
+                    exec_job(*this, j);
                     return;
                 }
             }
@@ -2316,7 +2342,6 @@ static bool job_should_skip_elseif(const job_t *job, const block_t *current_bloc
 void parser_t::eval_job(tokenizer_t *tok)
 {
     ASSERT_IS_MAIN_THREAD();
-    job_t *j;
 
     int start_pos = job_start_pos = tok_get_pos(tok);
     long long t1=0, t2=0, t3=0;
@@ -2339,7 +2364,7 @@ void parser_t::eval_job(tokenizer_t *tok)
     {
         case TOK_STRING:
         {
-            j = this->job_create();
+            job_t *j = this->job_create();
             job_set_flag(j, JOB_FOREGROUND, 1);
             job_set_flag(j, JOB_TERMINAL, job_get_flag(j, JOB_CONTROL));
             job_set_flag(j, JOB_TERMINAL, job_get_flag(j, JOB_CONTROL) \
@@ -2414,7 +2439,7 @@ void parser_t::eval_job(tokenizer_t *tok)
                     if (j->first_process->type==INTERNAL_BUILTIN && !j->first_process->next)
                         was_builtin = 1;
                     scoped_push<int> tokenizer_pos_push(&current_tokenizer_pos, job_begin_pos);
-                    exec(*this, j);
+                    exec_job(*this, j);
 
                     /* Only external commands require a new fishd barrier */
                     if (!was_builtin)
@@ -3527,8 +3552,8 @@ int parser_t::test(const wchar_t *buff, int *block_level, wcstring *out, const w
                 }
                 else
                 {
-                    err = 1;
-                    if (out)
+                    // Only print errors once
+                    if (out && ! err)
                     {
                         error(SYNTAX_ERROR,
                               tok_get_pos(&tok),
@@ -3538,6 +3563,7 @@ int parser_t::test(const wchar_t *buff, int *block_level, wcstring *out, const w
 
                         print_errors(*out, prefix);
                     }
+                    err = 1;
                 }
 
                 break;

@@ -94,6 +94,11 @@ else
 end
 echo Test 5 $sta
 
+# Verify that we can turn stderr into stdout and then pipe it.
+# Note that the order here seems unspecified - 'errput' appears before 'output', why?
+echo Test redirections
+begin ; echo output ; echo errput 1>&2  ; end 2>&1 | tee /tmp/tee_test.txt ; cat /tmp/tee_test.txt
+
 # echo tests
 
 echo 'abc\ndef'

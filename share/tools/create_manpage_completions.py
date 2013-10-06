@@ -572,7 +572,7 @@ class TypeDarwinManParser(ManParser):
             # Extract the description
             desc_lines = []
             while lines and not self.is_option(lines[0]):
-                line = lines.pop(0).strip()
+                line = lossy_unicode(lines.pop(0).strip())
                 if line.startswith('.'):
                     line = self.groff_replace_escapes(line)
                     line = self.trim_groff(line).strip()
@@ -871,7 +871,7 @@ def get_paths_from_manpath():
         sys.exit(-1)
     result = []
     for parent_path in parent_paths:
-        for section in ['man1', 'man8']:
+        for section in ['man1', 'man6', 'man8']:
             directory_path = os.path.join(parent_path, section)
             try:
                 names = os.listdir(directory_path)
@@ -925,7 +925,7 @@ if __name__ == "__main__":
             show_progress = True
         elif opt in ('-c', '--cleanup-in'):
             cleanup_directories.append(value)
-        elif opt in ('-z'):
+        elif opt in ('-z',):
             DEROFF_ONLY = True
         else:
             assert False, "unhandled option"
@@ -952,18 +952,4 @@ if __name__ == "__main__":
             if e.errno != errno.EEXIST:
                 raise
 
-    if True:
-        parse_and_output_man_pages(file_paths, output_directory, show_progress)
-    else:
-        # Profiling code
-        import cProfile, pstats
-        cProfile.run('parse_and_output_man_pages(file_paths, output_directory, show_progress)', 'fooprof')
-        p = pstats.Stats('fooprof')
-        p.sort_stats('cumulative').print_stats(100)
-
-    # Here we can write out all the parser infos
-    if False:
-        for name in PARSER_INFO:
-            print('Parser ' + name + ':')
-            print('\t' + ', '.join(PARSER_INFO[name]))
-            print('')
+    parse_and_output_man_pages(file_paths, output_directory, show_progress)

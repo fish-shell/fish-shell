@@ -429,68 +429,15 @@ static void universal_callback(fish_message_type_t type,
 }
 
 /**
-   Make sure the PATH variable contains the essential directories
+   Make sure the PATH variable contains something
 */
 static void setup_path()
 {
-    const wchar_t *path_el[] =
+    const env_var_t path = env_get_string(L"PATH");
+    if (path.missing_or_empty())
     {
-        L"/bin",
-        L"/usr/bin",
-        NULL
-    };
-
-    env_var_t path = env_get_string(L"PATH");
-
-    wcstring_list_t lst;
-    if (! path.missing())
-    {
-        tokenize_variable_array(path, lst);
-    }
-
-    for (size_t j=0; path_el[j] != NULL; j++)
-    {
-
-        bool has_el = false;
-
-        for (size_t i=0; i<lst.size(); i++)
-        {
-            const wcstring &el = lst.at(i);
-            size_t len = el.size();
-
-            while ((len > 0) && (el.at(len-1)==L'/'))
-            {
-                len--;
-            }
-
-            if ((wcslen(path_el[j]) == len) &&
-                    (wcsncmp(el.c_str(), path_el[j], len)==0))
-            {
-                has_el = true;
-                break;
-            }
-        }
-
-        if (! has_el)
-        {
-            wcstring buffer;
-
-            debug(3, L"directory %ls was missing", path_el[j]);
-
-            if (!path.missing())
-            {
-                buffer += path;
-            }
-
-            buffer.append(ARRAY_SEP_STR);
-            buffer.append(path_el[j]);
-
-            env_set(L"PATH", buffer.empty()?NULL:buffer.c_str(), ENV_GLOBAL | ENV_EXPORT);
-
-            path = env_get_string(L"PATH");
-            lst.resize(0);
-            tokenize_variable_array(path, lst);
-        }
+        const wchar_t *value = L"/usr/bin" ARRAY_SEP_STR L"/bin";
+        env_set(L"PATH", value, ENV_GLOBAL | ENV_EXPORT);
     }
 }
 
@@ -667,7 +614,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     /*
       Set up the version variables
     */
-    wcstring version = str2wcstring(PACKAGE_VERSION);
+    wcstring version = str2wcstring(FISH_BUILD_VERSION);
     env_set(L"version", version.c_str(), ENV_GLOBAL);
     env_set(L"FISH_VERSION", version.c_str(), ENV_GLOBAL);
 

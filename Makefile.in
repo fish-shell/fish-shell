@@ -153,9 +153,10 @@ MIME_OBJS := mimedb.o print_help.o xdgmimealias.o xdgmime.o				\
 
 #
 # These files are the source files, they contain a few @FOO@-style substitutions
+# Note that this order defines the order that they appear in the documentation
 #
 
-HDR_FILES_SRC := doc_src/index.hdr.in doc_src/commands.hdr.in doc_src/design.hdr doc_src/license.hdr doc_src/faq.hdr
+HDR_FILES_SRC := doc_src/index.hdr.in doc_src/tutorial.hdr doc_src/design.hdr doc_src/license.hdr doc_src/commands.hdr.in doc_src/faq.hdr
 
 
 #
@@ -269,18 +270,31 @@ TRANSLATIONS := $(TRANSLATIONS_SRC:.po=.gmo)
 
 ifeq ($(HAVE_DOXYGEN), 1)
   user_doc=user_doc
+  share_man=share/man
 else
   user_doc=
+  share_man=
 endif
 
 #
 # Make everything needed for installing fish
 #
 
-all: $(PROGRAMS) $(user_doc) share/man $(TRANSLATIONS)
+all: $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS)
 	@echo fish has now been built.
 	@echo Use \'$(MAKE) install\' to install fish.
 .PHONY: all
+
+#
+# Pull version information
+#
+
+FISH-BUILD-VERSION-FILE: FORCE
+	@./build_tools/git_version_gen.sh
+-include FISH-BUILD-VERSION-FILE
+CPPFLAGS += -DFISH_BUILD_VERSION=\"$(FISH_BUILD_VERSION)\"
+.PHONY: FORCE
+env.o fish.o fish_indent.o fish_pager.o fishd.o mimedb.o: FISH-BUILD-VERSION-FILE
 
 
 #
@@ -311,9 +325,11 @@ prof: all
 
 # Depend on the sources (*.hdr.in) and manually make the
 # intermediate *.hdr and doc.h files if needed
+# The sed command deletes everything including and after the first -, for simpler version numbers
 
 user_doc: $(HDR_FILES_SRC) Doxyfile.user user_doc.head.html $(HELP_SRC) doc.h $(HDR_FILES)
-	(cat Doxyfile.user ; echo PROJECT_NUMBER=@PACKAGE_VERSION@) | doxygen - && touch user_doc
+	(cat Doxyfile.user ; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | sed "s/-.*//") | doxygen - && touch user_doc
+
 
 
 #
@@ -321,7 +337,7 @@ user_doc: $(HDR_FILES_SRC) Doxyfile.user user_doc.head.html $(HELP_SRC) doc.h $(
 #
 
 doc: *.h *.cpp doc.h Doxyfile
-	(cat Doxyfile ; echo PROJECT_NUMBER=@PACKAGE_VERSION@) | doxygen - ;
+	(cat Doxyfile ; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION)) | doxygen - ;
 
 
 #
@@ -351,26 +367,34 @@ test: $(PROGRAMS) fish_tests
 #
 
 doc_src/commands.hdr:$(HELP_SRC) doc_src/commands.hdr.in
-	-rm command_list.tmp $@
+	-rm command_list.tmp command_list_toc.tmp $@
 	for i in `printf "%s\n" $(HELP_SRC)|sort`; do \
 		echo "<hr>" >>command_list.tmp; \
 		cat $$i >>command_list.tmp; \
 		echo >>command_list.tmp; \
 		echo >>command_list.tmp; \
+		NAME=`basename $$i .txt`; \
+		echo '- <a href="#'$$NAME'">'$$NAME'</a>' >> command_list_toc.tmp; \
 		echo "Back to <a href='index.html#toc-commands'>index</a>". >>command_list.tmp; \
 	done
 	mv command_list.tmp command_list.txt
-	cat $@.in | awk '{if ($$0 ~ /@command_list@/){ system("cat command_list.txt");} else{ print $$0;}}' >$@
+	mv command_list_toc.tmp command_list_toc.txt
+	cat $@.in | awk '{if ($$0 ~ /@command_list_toc@/) { system("cat command_list_toc.txt"); } else if ($$0 ~ /@command_list@/){ system("cat command_list.txt");} else{ print $$0;}}' >$@
 
 
 toc.txt: $(HDR_FILES:index.hdr=index.hdr.in)
 	-rm toc.tmp $@
+	# Ugly hack to set the toc initial title for the main page
+	echo '- <a href="index.html" id="toc-index">Documentation</a>' > toc.tmp
+	# The first sed command captures the page name, followed by the description
+	# The second sed command captures the command name \1 and the description \2, but only up to a dash
+	# This is to reduce the size of the TOC in the command listing on the main page
 	for i in $(HDR_FILES:index.hdr=index.hdr.in); do\
 		NAME=`basename $$i .hdr`; \
 		NAME=`basename $$NAME .hdr.in`; \
 		sed <$$i >>toc.tmp -n \
 		-e 's,.*\\page *\([^ ]*\) *\(.*\)$$,- <a href="'$$NAME'.html" id="toc-'$$NAME'">\2</a>,p' \
-		-e 's,.*\\section *\([^ ]*\) *\(.*\)$$,  - <a href="'$$NAME'.html#\1">\2</a>,p'; \
+		-e 's,.*\\section *\([^ ]*\) *\([^-]*\)\(.*\)$$,  - <a href="'$$NAME'.html#\1">\2</a>,p'; \
 	done
 	mv toc.tmp $@
 
@@ -629,10 +653,12 @@ install-force: all install-translations
 	@echo fish is now installed on your system.
 	@echo To run fish, type \'fish\' in your terminal.
 	@echo
-	@echo To use fish as your login shell:
-	@grep -q -- "$(DESTDIR)$(bindir)/fish" /etc/shells || echo \* add the line \'$(DESTDIR)$(bindir)/fish\' to the file \'/etc/shells\'.
-	@echo \* use the command \'chsh -s $(DESTDIR)$(bindir)/fish\'.
-	@echo
+	@if type chsh &> /dev/null; then \
+		echo To use fish as your login shell:; \
+		grep -q -- "$(DESTDIR)$(bindir)/fish" /etc/shells || echo \* add the line \'$(DESTDIR)$(bindir)/fish\' to the file \'/etc/shells\'.; \
+		echo \* use the command \'chsh -s $(DESTDIR)$(bindir)/fish\'.; \
+		echo; \
+	fi;
 	@echo To set your colors, run \'fish_config\'
 	@echo To scan your man pages for completions, run \'fish_update_completions\'
 	@echo To autocomplete command suggestions press Ctrl + F or right arrow key.
@@ -778,46 +804,11 @@ depend:
 .PHONY: depend
 
 #
-# Make compressed tar archives
-#
-
-fish-@PACKAGE_VERSION@.tar.gz: fish-@PACKAGE_VERSION@.tar
-	gzip -f --best -c fish-@PACKAGE_VERSION@.tar >fish-@PACKAGE_VERSION@.tar.gz
-
-fish-@PACKAGE_VERSION@.tar.bz2: fish-@PACKAGE_VERSION@.tar
-	bzip2 -f --best -k fish-@PACKAGE_VERSION@.tar
-
-dist: fish-@PACKAGE_VERSION@.tar.bz2
-.PHONY: dist
-
-#
 # Build the RPM spec file.
 #
 
 fish.spec: fish.spec.in
 	./config.status
-
-
-
-#
-# Create .rpm file for the current systems architecture and an
-# .src.rpm file.
-#
-
-rpm: fish-@PACKAGE_VERSION@.tar.bz2 fish.spec
-	@if which rpmbuild; then true; else \
-		echo Could not find the rpmbuild command, needed to build an rpm; \
-		echo You may be able to install it using the following command:; \
-		echo \'yum install rpm-build\'; \
-		false; \
-	fi
-	cp fish.spec /usr/src/redhat/SPECS/
-	cp fish-@PACKAGE_VERSION@.tar.bz2 /usr/src/redhat/SOURCES/
-	rpmbuild -ba --clean /usr/src/redhat/SPECS/fish.spec
-	mv /usr/src/redhat/RPMS/*/fish*@PACKAGE_VERSION@*.rpm .
-	mv /usr/src/redhat/SRPMS/fish*@PACKAGE_VERSION@*.src.rpm .
-.PHONY: rpm
-
 
 #
 # Cleanup targets
@@ -847,15 +838,12 @@ clean:
 	rm -f $(GENERATED_INTERN_SCRIPT_FILES)
 	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
 	rm -f $(PROGRAMS) fish_tests key_reader
-	rm -f command_list.txt toc.txt
+	rm -f command_list.txt command_list_toc.txt toc.txt
 	rm -f doc_src/index.hdr doc_src/commands.hdr
-	rm -f fish-@PACKAGE_VERSION@.tar
-	rm -f fish-@PACKAGE_VERSION@.tar.gz
-	rm -f fish-@PACKAGE_VERSION@.tar.bz2
-	if test $(HAVE_DOXYGEN) = 1; then \
+	rm -f FISH-BUILD-VERSION-FILE
+	if test "$(HAVE_DOXYGEN)" = 1; then \
 		rm -rf doc user_doc share/man; \
 	fi
-	rm -rf fish-@PACKAGE_VERSION@
 	rm -f $(TRANSLATIONS)
 .PHONY: clean
 

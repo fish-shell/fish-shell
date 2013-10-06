@@ -169,7 +169,11 @@ static void write_part(const wchar_t *begin,
                     out.push_back(L'\n');
                     break;
                 }
-
+                
+                default:
+                {
+                    break;
+                }
             }
         }
 

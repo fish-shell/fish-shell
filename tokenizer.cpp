@@ -37,6 +37,12 @@ segments.
 #define PARAN_ERROR _( L"Unexpected end of string, parenthesis do not match" )
 
 /**
+   Error string for mismatched square brackets
+*/
+#define SQUARE_BRACKET_ERROR _( L"Unexpected end of string, square brackets do not match" )
+
+
+/**
    Error string for invalid redirections
 */
 #define REDIRECT_ERROR _( L"Invalid input/output redirection" )
@@ -87,7 +93,7 @@ int tok_get_error(tokenizer_t *tok)
 }
 
 
-tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig_buff(NULL), last_type(0), last_pos(0), has_next(false), accept_unfinished(false), show_comments(false), last_quote(0), error(0), squash_errors(false), cached_lineno_offset(0), cached_lineno_count(0)
+tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig_buff(NULL), last_type(TOK_NONE), last_pos(0), has_next(false), accept_unfinished(false), show_comments(false), last_quote(0), error(0), squash_errors(false), cached_lineno_offset(0), cached_lineno_count(0)
 {
 
     /* We can only generate error messages on the main thread due to wgettext() thread safety issues. */
@@ -110,7 +116,7 @@ tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig
     tok_next(this);
 }
 
-int tok_last_type(tokenizer_t *tok)
+enum token_type tok_last_type(tokenizer_t *tok)
 {
     CHECK(tok, TOK_ERROR);
     CHECK(tok->buff, TOK_ERROR);
@@ -237,7 +243,6 @@ static void read_string(tokenizer_t *tok)
 
     while (1)
     {
-
         if (!myal(*tok->buff))
         {
             if (*tok->buff == L'\\')
@@ -390,7 +395,19 @@ static void read_string(tokenizer_t *tok)
 
     if ((!tok->accept_unfinished) && (mode != mode_regular_text))
     {
-        TOK_CALL_ERROR(tok, TOK_UNTERMINATED_SUBSHELL, PARAN_ERROR);
+        switch (mode)
+        {
+            case mode_subshell:
+                TOK_CALL_ERROR(tok, TOK_UNTERMINATED_SUBSHELL, PARAN_ERROR);
+                break;
+            case mode_array_brackets:
+            case mode_array_brackets_and_subshell:
+                TOK_CALL_ERROR(tok, TOK_UNTERMINATED_SUBSHELL, SQUARE_BRACKET_ERROR); // TOK_UNTERMINATED_SUBSHELL is a lie but nobody actually looks at it
+                break;
+            default:
+                assert(0 && "Unexpected mode in read_string");
+                break;
+        }
         return;
     }
 
@@ -423,7 +440,7 @@ static void read_comment(tokenizer_t *tok)
 */
 static void read_redirect(tokenizer_t *tok, int fd)
 {
-    int mode = -1;
+    enum token_type redirection_mode = TOK_NONE;
 
     if ((*tok->buff == L'>') ||
             (*tok->buff == L'^'))
@@ -432,11 +449,11 @@ static void read_redirect(tokenizer_t *tok, int fd)
         if (*tok->buff == *(tok->buff-1))
         {
             tok->buff++;
-            mode = 1;
+            redirection_mode = TOK_REDIRECT_APPEND;
         }
         else
         {
-            mode = 0;
+            redirection_mode = TOK_REDIRECT_OUT;
         }
 
         if (*tok->buff == L'|')
@@ -455,7 +472,7 @@ static void read_redirect(tokenizer_t *tok, int fd)
     else if (*tok->buff == L'<')
     {
         tok->buff++;
-        mode = 2;
+        redirection_mode = TOK_REDIRECT_IN;
     }
     else
     {
@@ -476,7 +493,7 @@ static void read_redirect(tokenizer_t *tok, int fd)
     }
     else
     {
-        tok->last_type = TOK_REDIRECT_OUT + mode;
+        tok->last_type = redirection_mode;
     }
 }
 
@@ -622,6 +639,31 @@ void tok_next(tokenizer_t *tok)
 
     }
 
+}
+
+enum token_type tok_peek_next(tokenizer_t *tok, wcstring *out_next_string)
+{
+    if (out_next_string != NULL)
+    {
+        out_next_string->clear();
+    }
+        
+    enum token_type result = TOK_END;
+    if (tok_has_next(tok))
+    {
+        int saved = tok_get_pos(tok);
+        tok_next(tok);
+        result = tok_last_type(tok);
+        
+        if (out_next_string != NULL)
+        {
+            const wchar_t *last = tok_last(tok);
+            out_next_string->assign(last ? last : L"");
+        }
+        
+        tok_set_pos(tok, saved);
+    }
+    return result;
 }
 
 const wchar_t *tok_string(tokenizer_t *tok)

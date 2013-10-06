@@ -53,7 +53,7 @@ function __fish_git_using_command
     end
 
     # aliased command
-    set -l aliased (command git config --get "alias.$cmd[2]" | sed 's/ .*$//')
+    set -l aliased (command git config --get "alias.$cmd[2]" ^ /dev/null | sed 's/ .*$//')
     if [ $argv[1] = "$aliased" ]
       return 0
     end
@@ -328,6 +328,8 @@ complete -f -c git -n '__fish_git_using_command stash' -a apply -d 'Apply a sing
 complete -f -c git -n '__fish_git_using_command stash' -a clear -d 'Remove all stashed states'
 complete -f -c git -n '__fish_git_using_command stash' -a drop -d 'Remove a single stashed state from the stash list'
 complete -f -c git -n '__fish_git_using_command stash' -a create -d 'Create a stash'
+complete -f -c git -n '__fish_git_using_command stash' -a save -d 'Save a new stash'
+complete -f -c git -n '__fish_git_using_command stash' -a branch -d 'Create a new branch from a stash'
 # TODO other options
 
 ### config

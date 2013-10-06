@@ -37,6 +37,8 @@
 /** pipe error */
 #define LOCAL_PIPE_ERROR "An error occurred while setting up pipe"
 
+static bool log_redirections = false;
+
 /* Cover for debug_safe that can take an int. The format string should expect a %s */
 static void debug_safe_int(int level, const char *format, int val)
 {
@@ -105,8 +107,8 @@ int set_child_group(job_t *j, process_t *p, int print_errors)
     return res;
 }
 
-/** Make sure the fd used by each redirection is not used by a pipe.  */
-static void free_redirected_fds_from_pipes(io_chain_t &io_chain)
+/** Make sure the fd used by each redirection is not used by a pipe. Note that while this does not modify the vector, it does modify the IO redirections within (gulp) */
+static void free_redirected_fds_from_pipes(const io_chain_t &io_chain)
 {
     size_t max = io_chain.size();
     for (size_t i = 0; i < max; i++)
@@ -164,9 +166,9 @@ static void free_redirected_fds_from_pipes(io_chain_t &io_chain)
 
    \return 0 on sucess, -1 on failiure
 */
-static int handle_child_io(io_chain_t &io_chain)
+static int handle_child_io(const io_chain_t &io_chain)
 {
-
+    //fprintf(stderr, "child IO for %d\n", getpid());
     close_unused_internal_pipes(io_chain);
     free_redirected_fds_from_pipes(io_chain);
     for (size_t idx = 0; idx < io_chain.size(); idx++)
@@ -183,6 +185,7 @@ static int handle_child_io(io_chain_t &io_chain)
         {
             case IO_CLOSE:
             {
+                if (log_redirections) fprintf(stderr, "%d: close %d\n", getpid(), io->fd);
                 if (close(io->fd))
                 {
                     debug_safe_int(0, "Failed to close file descriptor %s", io->fd);
@@ -232,13 +235,17 @@ static int handle_child_io(io_chain_t &io_chain)
 
             case IO_FD:
             {
+                int old_fd = static_cast<const io_fd_t *>(io)->old_fd;
+                if (log_redirections) fprintf(stderr, "%d: fd dup %d to %d\n", getpid(), old_fd, io->fd);
+
                 /*
                   This call will sometimes fail, but that is ok,
                   this is just a precausion.
                 */
                 close(io->fd);
 
-                if (dup2(static_cast<const io_fd_t *>(io)->old_fd, io->fd) == -1)
+
+                if (dup2(old_fd, io->fd) == -1)
                 {
                     debug_safe_int(1, FD_ERROR, io->fd);
                     safe_perror("dup2");
@@ -262,6 +269,7 @@ static int handle_child_io(io_chain_t &io_chain)
                              io->pipe_fd[0],
                              io->pipe_fd[1]);
                 */
+                if (log_redirections) fprintf(stderr, "%d: %s dup %d to %d\n", getpid(), io->io_mode == IO_BUFFER ? "buffer" : "pipe", io_pipe->pipe_fd[write_pipe_idx], io->fd);
                 if (dup2(io_pipe->pipe_fd[write_pipe_idx], io->fd) != io->fd)
                 {
                     debug_safe(1, LOCAL_PIPE_ERROR);
@@ -284,7 +292,7 @@ static int handle_child_io(io_chain_t &io_chain)
 }
 
 
-int setup_child_process(job_t *j, process_t *p)
+int setup_child_process(job_t *j, process_t *p, const io_chain_t &io_chain)
 {
     bool ok=true;
 
@@ -295,7 +303,7 @@ int setup_child_process(job_t *j, process_t *p)
 
     if (ok)
     {
-        ok = (0 == handle_child_io(j->io));
+        ok = (0 == handle_child_io(io_chain));
         if (p != 0 && ! ok)
         {
             exit_without_destructors(1);
@@ -371,7 +379,7 @@ pid_t execute_fork(bool wait_for_threads_to_die)
 }
 
 #if FISH_USE_POSIX_SPAWN
-bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr, posix_spawn_file_actions_t *actions, job_t *j, process_t *p)
+bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr, posix_spawn_file_actions_t *actions, job_t *j, process_t *p, const io_chain_t &io_chain)
 {
     /* Initialize the output */
     if (posix_spawnattr_init(attr) != 0)
@@ -436,19 +444,19 @@ bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr, posix_spawn_fil
         err = posix_spawnattr_setsigmask(attr, &sigmask);
 
     /* Make sure that our pipes don't use an fd that the redirection itself wants to use */
-    free_redirected_fds_from_pipes(j->io);
+    free_redirected_fds_from_pipes(io_chain);
 
     /* Close unused internal pipes */
     std::vector<int> files_to_close;
-    get_unused_internal_pipes(files_to_close, j->io);
+    get_unused_internal_pipes(files_to_close, io_chain);
     for (size_t i = 0; ! err && i < files_to_close.size(); i++)
     {
         err = posix_spawn_file_actions_addclose(actions, files_to_close.at(i));
     }
 
-    for (size_t idx = 0; idx < j->io.size(); idx++)
+    for (size_t idx = 0; idx < io_chain.size(); idx++)
     {
-        shared_ptr<const io_data_t> io = j->io.at(idx);
+        const shared_ptr<const io_data_t> io = io_chain.at(idx);
 
         if (io->io_mode == IO_FD)
         {

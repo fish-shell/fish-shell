@@ -10,17 +10,12 @@ __fish_complete_ssh scp
 
 complete -c scp -d Hostname -a "
 
-(
-	#Find a suitable hostname from the knownhosts files
-	cat ~/.ssh/known_hosts{,2} ^/dev/null|cut -d ' ' -f 1| cut -d , -f 1
-):
+(__fish_print_hostnames):
 
 (
 	#Prepend any username specified in the completion to the hostname
 	commandline -ct |sed -ne 's/\(.*@\).*/\1/p'
-)(
-	cat ~/.ssh/known_hosts{,2} ^/dev/null|cut -d ' ' -f 1| cut -d , -f 1
-):
+)(__fish_print_hostnames):
 
 (__fish_print_users)@\tUsername
 

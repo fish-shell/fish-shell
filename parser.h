@@ -352,6 +352,9 @@ private:
     void print_errors(wcstring &target, const wchar_t *prefix);
     void print_errors_stderr();
 
+    /** Create a job */
+    job_t *job_create();
+
 public:
     std::vector<profile_item_t*> profile_items;
 
@@ -456,9 +459,6 @@ public:
 
     /** Return a description of the given blocktype */
     const wchar_t *get_block_desc(int block) const;
-
-    /** Create a job */
-    job_t *job_create();
 
     /** Removes a job */
     bool job_remove(job_t *job);

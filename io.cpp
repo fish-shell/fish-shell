@@ -128,7 +128,7 @@ io_buffer_t *io_buffer_t::create(bool is_input, int fd)
     bool success = true;
     if (fd == -1)
     {
-        fd = is_input ? 0 : 1;
+        fd = is_input ? STDIN_FILENO : STDOUT_FILENO;
     }
     io_buffer_t *buffer_redirect = new io_buffer_t(fd, is_input);
 
@@ -200,6 +200,17 @@ void io_chain_t::push_back(const shared_ptr<io_data_t> &element)
     // Ensure we never push back NULL
     assert(element.get() != NULL);
     std::vector<shared_ptr<io_data_t> >::push_back(element);
+}
+
+void io_chain_t::push_front(const shared_ptr<io_data_t> &element)
+{
+    assert(element.get() != NULL);
+    this->insert(this->begin(), element);
+}
+
+void io_chain_t::append(const io_chain_t &chain)
+{
+    this->insert(this->end(), chain.begin(), chain.end());
 }
 
 void io_remove(io_chain_t &list, const shared_ptr<const io_data_t> &element)

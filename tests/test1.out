@@ -18,6 +18,11 @@ Test  pass
 Test 3 pass
 Test 4 pass
 Test 5 pass
+Test redirections
+errput
+output
+errput
+output
 abc\ndef
 abc
 def

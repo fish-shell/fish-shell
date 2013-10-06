@@ -552,6 +552,16 @@ static void test_utils()
     if (begin != a + wcslen(L"echo (echo (")) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
 }
 
+static void test_escape_sequences(void)
+{
+    say(L"Testing escape codes");
+    if (escape_code_length(L"") != 0) err(L"test_escape_sequences failed on line %d\n", __LINE__);
+    if (escape_code_length(L"abcd") != 0) err(L"test_escape_sequences failed on line %d\n", __LINE__);
+    if (escape_code_length(L"\x1b[2J") != 4) err(L"test_escape_sequences failed on line %d\n", __LINE__);
+    if (escape_code_length(L"\x1b[38;5;123mABC") != strlen("\x1b[38;5;123m")) err(L"test_escape_sequences failed on line %d\n", __LINE__);
+    if (escape_code_length(L"\x1b@") != 2) err(L"test_escape_sequences failed on line %d\n", __LINE__);
+}
+
 class lru_node_test_t : public lru_node_t
 {
 public:
@@ -768,9 +778,8 @@ static void test_path()
     say(L"Testing path functions");
 
     wcstring path = L"//foo//////bar/";
-    wcstring canon = path;
-    path_make_canonical(canon);
-    if (canon != L"/foo/bar")
+    path_make_canonical(path);
+    if (path != L"/foo/bar")
     {
         err(L"Bug in canonical PATH code");
     }
@@ -781,6 +790,11 @@ static void test_path()
     {
         err(L"Bug in canonical PATH code");
     }
+    
+    if (paths_are_equivalent(L"/foo/bar/baz", L"foo/bar/baz")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
+    if (! paths_are_equivalent(L"///foo///bar/baz", L"/foo/bar////baz//")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
+    if (! paths_are_equivalent(L"/foo/bar/baz", L"/foo/bar/baz")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
+    if (! paths_are_equivalent(L"/", L"/")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
 }
 
 enum word_motion_t
@@ -2078,6 +2092,7 @@ int main(int argc, char **argv)
     test_fork();
     test_parser();
     test_utils();
+    test_escape_sequences();
     test_lru();
     test_expand();
     test_fuzzy_match();

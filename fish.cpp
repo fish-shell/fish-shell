@@ -61,6 +61,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "output.h"
 #include "history.h"
 #include "path.h"
+#include "input.h"
 
 /* PATH_MAX may not exist */
 #ifndef PATH_MAX
@@ -210,31 +211,29 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
     return paths;
 }
 
+/* Source the file config.fish in the given directory */
+static void source_config_in_directory(const wcstring &dir)
+{
+    /* We want to execute a command like 'builtin source dir/config.fish 2>/dev/null' */
+    const wcstring escaped_dir = escape_string(dir, ESCAPE_ALL);
+    const wcstring cmd = L"builtin source " + escaped_dir + L"/config.fish 2>/dev/null";
+    parser_t &parser = parser_t::principal_parser();
+    parser.eval(cmd, io_chain_t(), TOP);
+}
+
 /**
    Parse init files. exec_path is the path of fish executable as determined by argv[0].
 */
 static int read_init(const struct config_paths_t &paths)
 {
-    parser_t &parser = parser_t::principal_parser();
-    const io_chain_t empty_ios;
-    parser.eval(L"builtin . " + paths.data + L"/config.fish 2>/dev/null", empty_ios, TOP);
-    parser.eval(L"builtin . " + paths.sysconf + L"/config.fish 2>/dev/null", empty_ios, TOP);
+    source_config_in_directory(paths.data);
+    source_config_in_directory(paths.sysconf);
 
-
-    /*
-      We need to get the configuration directory before we can source the user configuration file
-    */
+    /* We need to get the configuration directory before we can source the user configuration file. If path_get_config returns false then we have no configuration directory and no custom config to load. */
     wcstring config_dir;
-
-    /*
-      If path_get_config returns false then we have no configuration directory
-      and no custom config to load.
-    */
     if (path_get_config(config_dir))
     {
-        wcstring config_dir_escaped = escape_string(config_dir, 1);
-        wcstring eval_buff = format_string(L"builtin . %ls/config.fish 2>/dev/null", config_dir_escaped.c_str());
-        parser.eval(eval_buff, empty_ios, TOP);
+        source_config_in_directory(config_dir);
     }
 
     return 1;
@@ -350,7 +349,7 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *out_c
                 fwprintf(stderr,
                          _(L"%s, version %s\n"),
                          PACKAGE_NAME,
-                         PACKAGE_VERSION);
+                         FISH_BUILD_VERSION);
                 exit_without_destructors(0);
             }
 
@@ -421,6 +420,8 @@ int main(int argc, char **argv)
     env_init(&paths);
     reader_init();
     history_init();
+    /* For setcolor to support term256 in config.fish (#1022) */
+    update_fish_term256();
 
     parser_t &parser = parser_t::principal_parser();
 

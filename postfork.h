@@ -53,13 +53,13 @@ int set_child_group(job_t *j, process_t *p, int print_errors);
 
    \param j the job to set up the IO for
    \param p the child process to set up
-   \param io_chain the IO chain to use (ignores the job's iochain)
+   \param io_chain the IO chain to use
 
    \return 0 on sucess, -1 on failiure. When this function returns,
    signals are always unblocked. On failiure, signal handlers, io
    redirections and process group of the process is undefined.
 */
-int setup_child_process(job_t *j, process_t *p);
+int setup_child_process(job_t *j, process_t *p, const io_chain_t &io_chain);
 
 /* Call fork(), optionally waiting until we are no longer multithreaded. If the forked child doesn't do anything that could allocate memory, take a lock, etc. (like call exec), then it's not necessary to wait for threads to die. If the forked child may do those things, it should wait for threads to die.
 */
@@ -73,7 +73,7 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char * const 
 
 #if FISH_USE_POSIX_SPAWN
 /* Initializes and fills in a posix_spawnattr_t; on success, the caller should destroy it via posix_spawnattr_destroy */
-bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr, posix_spawn_file_actions_t *actions, job_t *j, process_t *p);
+bool fork_actions_make_spawn_properties(posix_spawnattr_t *attr, posix_spawn_file_actions_t *actions, job_t *j, process_t *p, const io_chain_t &io_chain);
 #endif
 
 #endif

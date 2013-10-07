@@ -259,7 +259,7 @@ class parse_exec_t
         for (;;)
         {
             const parse_node_t &node = parse_tree.at(idx);
-            PARSE_ASSERT(node.type == symbol_argument_list || node.type == symbol_argument_list_nonempty);
+            PARSE_ASSERT(node.type == symbol_argument_list);
             if (node.type == symbol_argument_list)
             {
                 // argument list, may be empty

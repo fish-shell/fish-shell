@@ -1800,23 +1800,9 @@ static void color_children(const parse_node_tree_t &tree, const parse_node_t &pa
     }
 }
 
-/* Color a possibly decorated command */
-static void color_command(const wcstring &src, const parse_node_tree_t &tree, const parse_node_t &cmd_node, enum parse_statement_decoration_t decoration, std::vector<int> &color_array, const wcstring &working_directory, const env_vars_snapshot_t &vars)
+/* Determine if a command is valid */
+static bool command_is_valid(const wcstring &cmd, enum parse_statement_decoration_t decoration, const wcstring &working_directory, const env_vars_snapshot_t &vars)
 {
-    if (! cmd_node.has_source())
-        return;
-    
-    /* Get the source of the command */
-    wcstring cmd(src, cmd_node.source_start, cmd_node.source_length);
-    
-    /* Try expanding it. If we cannot, it's an error. */
-    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS);
-    if (! expanded || has_expand_reserved(cmd))
-    {
-        color_node(cmd_node, HIGHLIGHT_ERROR, color_array);
-        return;
-    }
-    
     /* Determine which types we check, based on the decoration */
     bool builtin_ok = true, function_ok = true, abbreviation_ok = true, command_ok = true, implicit_cd_ok = true;
     if (decoration == parse_statement_decoration_command)
@@ -1859,9 +1845,8 @@ static void color_command(const wcstring &src, const parse_node_tree_t &tree, co
     if (! is_valid && implicit_cd_ok)
         is_valid = path_can_be_implicit_cd(cmd, NULL, working_directory.c_str(), vars);
     
-    /* Color the node */
-    int color = is_valid ? HIGHLIGHT_COMMAND : HIGHLIGHT_ERROR;
-    color_node(cmd_node, color, color_array);
+    /* Return what we got */
+    return is_valid;
 }
 
 void highlight_shell_magic(const wcstring &buff, std::vector<int> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars)
@@ -1874,6 +1859,7 @@ void highlight_shell_magic(const wcstring &buff, std::vector<int> &color, size_t
     if (length == 0)
         return;
 
+    /* Start out at zero */
     std::fill(color.begin(), color.end(), 0);
 
     /* Do something sucky and get the current working directory on this background thread. This should really be passed in. */
@@ -1925,25 +1911,45 @@ void highlight_shell_magic(const wcstring &buff, std::vector<int> &color, size_t
             break;
 
             case symbol_redirection:
+            {
                 color_children(parse_tree, node, parse_token_type_string, HIGHLIGHT_REDIRECTION, color);
-                break;
+            }
+            break;
 
             case parse_token_type_background:
             case parse_token_type_end:
+            {
                 color_node(node, HIGHLIGHT_END, color);
-                break;
+            }
+            break;
 
             case symbol_plain_statement:
             {
-                // Color the command
-                const parse_node_t *cmd = parse_tree.get_child(node, 0, parse_token_type_string);
-                if (cmd != NULL)
+                // Get the decoration from the parent
+                enum parse_statement_decoration_t decoration = parse_statement_decoration_none;
+                const parse_node_t *decorated_statement = parse_tree.get_parent(node, symbol_decorated_statement);
+                if (decorated_statement != NULL)
                 {
-                    enum parse_statement_decoration_t decoration = static_cast<enum parse_statement_decoration_t>(node.tag);
-                    color_command(buff, parse_tree, *cmd, decoration, color, working_directory, vars);
+                    decoration = static_cast<enum parse_statement_decoration_t>(decorated_statement->production_idx);
                 }
 
-                // Color arguments
+                /* Color the command */
+                const parse_node_t *cmd_node = parse_tree.get_child(node, 0, parse_token_type_string);
+                if (cmd_node != NULL && cmd_node->has_source())
+                {
+                    bool is_valid_cmd = false;
+                    wcstring cmd(buff, cmd_node->source_start, cmd_node->source_length);
+                    
+                    /* Try expanding it. If we cannot, it's an error. */
+                    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS);
+                    if (expanded && ! has_expand_reserved(cmd))
+                    {
+                        is_valid_cmd = command_is_valid(cmd, decoration, working_directory, vars);
+                    }
+                    color_node(*cmd_node, is_valid_cmd ? HIGHLIGHT_COMMAND : HIGHLIGHT_ERROR, color);
+                }
+
+                /* Color arguments */
                 const parse_node_t *arguments = parse_tree.get_child(node, 1, symbol_arguments_or_redirections_list);
                 if (arguments != NULL)
                 {
@@ -1978,8 +1984,13 @@ void highlight_shell_magic(const wcstring &buff, std::vector<int> &color, size_t
         for (parse_node_tree_t::const_iterator iter = parse_tree.begin(); iter != parse_tree.end(); ++iter)
         {
             const parse_node_t &node = *iter;
-            /* See if this node contains the cursor */
-            if (node.type == symbol_argument && node.source_contains_location(pos))
+
+            /* Must be an argument with source */
+            if (node.type != symbol_argument || ! node.has_source())
+                continue;
+            
+            /* See if this node contains the cursor. We check <= source_length so that, when backspacing (and the cursor is just beyond the last token), we may still underline it */
+            if (pos >= node.source_start && pos - node.source_start <= node.source_length)
             {
                 /* See if this is a valid path */
                 if (node_is_potential_path(buff, node, working_directory))

@@ -67,7 +67,6 @@ enum parse_token_type_t
     symbol_arguments_or_redirections_list,
     symbol_argument_or_redirection,
 
-    symbol_argument_list_nonempty,
     symbol_argument_list,
 
     symbol_argument,
@@ -168,6 +167,9 @@ public:
 
     /* Length of our range in the source code */
     size_t source_length;
+    
+    /* Parent */
+    node_offset_t parent;
 
     /* Children */
     node_offset_t child_start;
@@ -183,7 +185,7 @@ public:
     wcstring describe(void) const;
 
     /* Constructor */
-    explicit parse_node_t(parse_token_type_t ty) : type(ty), source_start(-1), source_length(0), child_start(0), child_count(0), tag(0)
+    explicit parse_node_t(parse_token_type_t ty) : type(ty), source_start(-1), source_length(0), parent(NODE_OFFSET_INVALID), child_start(0), child_count(0), tag(0)
     {
     }
 
@@ -198,12 +200,6 @@ public:
     {
         return source_start != (size_t)(-1);
     }
-    
-    /* Indicate if this node's source range contains a given location. The funny math makes this modulo-overflow safe, though overflow is not expected. */
-    bool source_contains_location(size_t where) const
-    {
-        return this->has_source() && where >= source_start && where - source_start < source_length;
-    }
 };
 
 /* The parse tree itself */
@@ -212,13 +208,19 @@ class parse_node_tree_t : public std::vector<parse_node_t>
 public:
 
     /* Get the node corresponding to a child of the given node, or NULL if there is no such child. If expected_type is provided, assert that the node has that type. */
-    const parse_node_t *get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type = token_type_invalid) const;
-    parse_node_t *get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type = token_type_invalid);
+    const parse_node_t *get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type = token_type_invalid) const;    
+    
+    /* Get the node corresponding to the parent of the given node, or NULL if there is no such child. If expected_type is provided, only returns the parent if it is of that type. Note the asymmetry: get_child asserts since the children are known, but get_parent does not, since the parent may not be known. */
+    const parse_node_t *get_parent(const parse_node_t &node, parse_token_type_t expected_type = token_type_invalid) const;
+
 
     /* Find all the nodes of a given type underneath a given node */
     typedef std::vector<const parse_node_t *> parse_node_list_t;
     parse_node_list_t find_nodes(const parse_node_t &parent, parse_token_type_t type) const;
 };
+
+
+/* Node type specific data, stored in the tag field */
 
 /* Statement decorations, stored in the tag of plain_statement. This matches the order of productions in decorated_statement */
 enum parse_statement_decoration_t
@@ -226,6 +228,16 @@ enum parse_statement_decoration_t
     parse_statement_decoration_none,
     parse_statement_decoration_command,
     parse_statement_decoration_builtin
+};
+
+/* Argument flags as a bitmask, stored in the tag of argument */
+enum parse_argument_flags_t
+{
+    /* Indicates that this or a prior argument was --, so this should not be treated as an option */
+    parse_argument_no_options = 1 << 0,
+    
+    /* Indicates that the argument is for a cd command */
+    parse_argument_is_for_cd = 1 << 1
 };
 
 /* Fish grammar:
@@ -260,9 +272,6 @@ enum parse_statement_decoration_t
                     case_item case_item_list
     case_item = CASE argument_list STATEMENT_TERMINATOR job_list
 
-    argument_list_nonempty = <TOK_STRING> argument_list
-    argument_list = <empty> | argument_list_nonempty
-
     block_statement = block_header <TOK_END> job_list <END> arguments_or_redirections_list
     block_header = for_header | while_header | function_header | begin_header
     for_header = FOR var_name IN arguments_or_redirections_list
@@ -279,6 +288,9 @@ enum parse_statement_decoration_t
 
     decorated_statement = plain_statement | COMMAND plain_statement | BUILTIN plain_statement
     plain_statement = <TOK_STRING> arguments_or_redirections_list optional_background
+
+    argument_list = <empty> | argument argument_list
+
 
     arguments_or_redirections_list = <empty> |
                                      argument_or_redirection arguments_or_redirections_list

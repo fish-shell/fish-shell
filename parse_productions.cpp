@@ -234,16 +234,10 @@ PRODUCTIONS(case_item) =
 };
 RESOLVE_ONLY(case_item)
 
-PRODUCTIONS(argument_list_nonempty) =
-{
-    {parse_token_type_string, symbol_argument_list}
-};
-RESOLVE_ONLY(argument_list_nonempty)
-
 PRODUCTIONS(argument_list) =
 {
     {},
-    {symbol_argument_list_nonempty}
+    {symbol_argument, symbol_argument_list}
 };
 RESOLVE(argument_list)
 {
@@ -451,7 +445,6 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
             TEST(decorated_statement)
             TEST(case_item_list)
             TEST(case_item)
-            TEST(argument_list_nonempty)
             TEST(argument_list)
             TEST(block_header)
             TEST(for_header)

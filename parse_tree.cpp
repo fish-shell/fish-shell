@@ -88,8 +88,6 @@ wcstring token_type_description(parse_token_type_t type)
         case symbol_case_item:
             return L"case_item";
 
-        case symbol_argument_list_nonempty:
-            return L"argument_list_nonempty";
         case symbol_argument_list:
             return L"argument_list";
 
@@ -369,24 +367,6 @@ class parse_ll_t
         return symbol_stack.back().type;
     }
 
-    void top_node_set_tag(uint32_t tag)
-    {
-        this->node_for_top_symbol().tag = tag;
-    }
-
-    inline void add_child_to_node(size_t parent_node_idx, parse_stack_element_t *tok)
-    {
-        PARSE_ASSERT(tok->type != token_type_invalid);
-        tok->node_idx = nodes.size();
-        nodes.push_back(parse_node_t(tok->type));
-        nodes.at(parent_node_idx).child_count += 1;
-    }
-
-    inline void symbol_stack_pop()
-    {
-        symbol_stack.pop_back();
-    }
-
     // Pop from the top of the symbol stack, then push the given production, updating node counts. Note that production_t has type "pointer to array" so some care is required.
     inline void symbol_stack_pop_push_production(const production_t *production)
     {
@@ -408,7 +388,9 @@ class parse_ll_t
             }
             if (! count) fprintf(stderr, "\t<empty>\n");
         }
-
+        
+        // Get the parent index. But we can't get the parent parse node yet, since it may be made invalid by adding children
+        const size_t parent_node_idx = symbol_stack.back().node_idx;
 
         // Add the children. Confusingly, we want our nodes to be in forwards order (last token last, so dumps look nice), but the symbols should be reverse order (last token first, so it's lowest on the stack)
         const size_t child_start = nodes.size();
@@ -425,13 +407,14 @@ class parse_ll_t
             {
                 // Generate the parse node. Note that this push_back may invalidate node.
                 parse_token_type_t child_type = production_element_type(elem);
-                nodes.push_back(parse_node_t(child_type));
+                parse_node_t child = parse_node_t(child_type);
+                child.parent = parent_node_idx;
+                nodes.push_back(child);
                 child_count++;
             }
         }
 
         // Update the parent
-        const size_t parent_node_idx = symbol_stack.back().node_idx;
         parse_node_t &parent_node = nodes.at(parent_node_idx);
 
         // Should have no children yet
@@ -815,39 +798,6 @@ static parse_keyword_t keyword_for_token(token_type tok, const wchar_t *tok_txt)
     return result;
 }
 
-// Set type-specific tags for nodes
-// This is not in parse_ll_t because it knows about different node types
-static void tag_nodes(const wcstring &src, parse_node_tree_t *tree)
-{
-    size_t count = tree->size();
-    for (size_t i=0; i < count; i++)
-    {
-        const parse_node_t &node = tree->at(i);
-        switch (node.type)
-        {
-            case symbol_decorated_statement:
-            {
-                // Set a tag on the plain statement to indicate the decoration type
-                // The decoration types matches the production
-                bool is_decorated = (node.production_idx > 0);
-                
-                // Get the plain statement and set the tag equal to the production index we used
-                // This is an enum parse_statement_decoration_t
-                node_offset_t statement_idx = (is_decorated ? 1 : 0);
-                parse_node_t *plain_statement = tree->get_child(node, statement_idx, symbol_plain_statement);
-                if (plain_statement != NULL)
-                {
-                    plain_statement->tag = static_cast<enum parse_statement_decoration_t>(node.production_idx);
-                }
-            }
-            break;
-            
-            default:
-            break;
-        }
-    }
-}
-
 bool parse_t::parse(const wcstring &str, parse_tree_flags_t parse_flags, parse_node_tree_t *output, parse_error_list_t *errors, bool log_it)
 {
     tok_flags_t tok_options = TOK_SQUASH_ERRORS;
@@ -904,9 +854,6 @@ bool parse_t::parse(const wcstring &str, parse_tree_flags_t parse_flags, parse_n
     // Acquire the output from the parser
     this->parser->acquire_output(output, errors);
     
-    // Set node tags
-    tag_nodes(str, output);
-    
     // Indicate if we had a fatal error
     return ! this->parser->has_fatal_error();
 }
@@ -938,28 +885,38 @@ void parse_t::clear()
 const parse_node_t *parse_node_tree_t::get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type) const
 {
     const parse_node_t *result = NULL;
-    PARSE_ASSERT(which < parent.child_count);
-    node_offset_t child_offset = parent.child_offset(which);
-    if (child_offset < this->size())
+    
+    /* We may get nodes with no children if we had an imcomplete parse. Don't consider than an error */
+    if (parent.child_count > 0)
     {
-        result = &this->at(child_offset);
-    }
-
-    // If we are given an expected type, then the node must be null or that type
-    if (result != NULL)
-    {
-        assert(expected_type == token_type_invalid || expected_type == result->type);
+        PARSE_ASSERT(which < parent.child_count);
+        node_offset_t child_offset = parent.child_offset(which);
+        if (child_offset < this->size())
+        {
+            result = &this->at(child_offset);
+                        
+            /* If we are given an expected type, then the node must be null or that type */
+            assert(expected_type == token_type_invalid || expected_type == result->type);
+        }
     }
 
     return result;
 }
 
-/* Hackish non-const version of get_child */
-parse_node_t *parse_node_tree_t::get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type)
+const parse_node_t *parse_node_tree_t::get_parent(const parse_node_t &node, parse_token_type_t expected_type) const
 {
-    const parse_node_tree_t *const_this = this;
-    const parse_node_t *result = const_this->get_child(parent, which, expected_type);
-    return const_cast<parse_node_t *>(result);
+    const parse_node_t *result = NULL;
+    if (node.parent != NODE_OFFSET_INVALID)
+    {
+        PARSE_ASSERT(node.parent < this->size());
+        const parse_node_t &parent = this->at(node.parent);
+        if (expected_type == token_type_invalid || expected_type == parent.type)
+        {
+            // The type matches (or no type was requested)
+            result = &parent;
+        }
+    }
+    return result;
 }
 
 static void find_nodes_recursive(const parse_node_tree_t &tree, const parse_node_t &parent, parse_token_type_t type, parse_node_tree_t::parse_node_list_t *result)

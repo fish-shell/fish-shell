@@ -217,6 +217,9 @@ public:
     /* Find all the nodes of a given type underneath a given node */
     typedef std::vector<const parse_node_t *> parse_node_list_t;
     parse_node_list_t find_nodes(const parse_node_t &parent, parse_token_type_t type) const;
+    
+    /* Indicate if the given argument_list or arguments_or_redirections_list is a root list, or has a parent */
+    bool argument_list_is_root(const parse_node_t &node) const;
 };
 
 

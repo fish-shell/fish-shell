@@ -1467,7 +1467,7 @@ static void color_node(const parse_node_t &node, int color, std::vector<int> &co
     std::fill(color_array.begin() + node.source_start, color_array.begin() + source_end, color);
 }
 
-/* This function is a disaster badly in need of refactoring */
+/* This function is a disaster badly in need of refactoring. However, note that it does NOT do any I/O */
 static void color_argument(const wcstring &buffstr, std::vector<int>::iterator colors, int normal_status)
 {
     const size_t buff_len = buffstr.size();
@@ -1772,10 +1772,45 @@ static bool node_is_potential_path(const wcstring &src, const parse_node_t &node
     return result;
 }
 
-// Color all of the arguments of the given command
-static void color_arguments(const wcstring &src, const parse_node_tree_t &tree, const parse_node_t &parent, std::vector<int> &color_array)
+// Gets the expanded command from a plain statement node
+static bool plain_statement_get_expanded_command(const wcstring &src, const parse_node_tree_t &tree, const parse_node_t &plain_statement, wcstring *out_cmd)
 {
-    const parse_node_tree_t::parse_node_list_t nodes = tree.find_nodes(parent, symbol_argument);
+    assert(plain_statement.type == symbol_plain_statement);
+    bool result = false;
+    
+    // Get the command
+    const parse_node_t *cmd_node = tree.get_child(plain_statement, 0, parse_token_type_string);
+    if (cmd_node != NULL && cmd_node->has_source())
+    {
+        wcstring cmd(src, cmd_node->source_start, cmd_node->source_length);
+        
+        /* Try expanding it. If we cannot, it's an error. */
+        if (expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS))
+        {
+            /* Success, return the expanded string by reference */
+            std::swap(cmd, *out_cmd);
+            result = true;
+        }
+    }
+    return result;
+}
+
+// Color all of the arguments of the given command
+static void color_arguments(const wcstring &src, const parse_node_tree_t &tree, const parse_node_t &list_node, const wcstring &working_directory, std::vector<int> &color_array)
+{
+    /* Hack: determine whether the parent is the cd command. */
+    bool cmd_is_cd = false;
+    const parse_node_t *parent = tree.get_parent(list_node, symbol_plain_statement);
+    if (parent != NULL)
+    {
+        wcstring cmd_str;
+        if (plain_statement_get_expanded_command(src, tree, *parent, &cmd_str))
+        {
+            cmd_is_cd = (cmd_str == L"cd");
+        }
+    }
+    
+    const parse_node_tree_t::parse_node_list_t nodes = tree.find_nodes(list_node, symbol_argument);
 
     wcstring param;
     for (node_offset_t i=0; i < nodes.size(); i++)
@@ -1784,6 +1819,19 @@ static void color_arguments(const wcstring &src, const parse_node_tree_t &tree, 
         assert(child != NULL && child->type == symbol_argument);
         param.assign(src, child->source_start, child->source_length);
         color_argument(param, color_array.begin() + child->source_start, HIGHLIGHT_PARAM);
+        
+        if (cmd_is_cd)
+        {
+            /* Mark this as an error if it's not 'help' and not a valid cd path */
+            if (expand_one(param, EXPAND_SKIP_CMDSUBST))
+            {
+                bool is_help = string_prefixes_string(param, L"--help") || string_prefixes_string(param, L"-h");
+                if (!is_help && ! is_potential_cd_path(param, working_directory, PATH_EXPAND_TILDE, NULL))
+                {
+                    color_node(*child, HIGHLIGHT_ERROR, color_array);
+                }
+            }
+        }
     }
 }
 
@@ -1893,20 +1941,10 @@ void highlight_shell_magic(const wcstring &buff, std::vector<int> &color, size_t
             case symbol_switch_statement:
             case symbol_boolean_statement:
             case symbol_decorated_statement:
-                color_children(parse_tree, node, parse_token_type_string, HIGHLIGHT_COMMAND, color);
-                break;
-
             case symbol_if_statement:
             {
                 // Color the 'end'
                 color_children(parse_tree, node, parse_token_type_string, HIGHLIGHT_COMMAND, color);
-
-                // Color arguments and redirections
-                const parse_node_t *arguments = parse_tree.get_child(node, 3, symbol_arguments_or_redirections_list);
-                if (arguments != NULL)
-                {
-                    color_arguments(buff, parse_tree, *arguments, color);
-                }
             }
             break;
 
@@ -1948,21 +1986,20 @@ void highlight_shell_magic(const wcstring &buff, std::vector<int> &color, size_t
                     }
                     color_node(*cmd_node, is_valid_cmd ? HIGHLIGHT_COMMAND : HIGHLIGHT_ERROR, color);
                 }
-
-                /* Color arguments */
-                const parse_node_t *arguments = parse_tree.get_child(node, 1, symbol_arguments_or_redirections_list);
-                if (arguments != NULL)
-                {
-                    color_arguments(buff, parse_tree, *arguments, color);
-                }
             }
             break;
 
 
             case symbol_arguments_or_redirections_list:
             case symbol_argument_list:
-                /* Nothing, these are handled by their parents */
-                break;
+            {
+                /* Only work on root lists, so that we don't re-color child lists */
+                if (parse_tree.argument_list_is_root(node))
+                {
+                    color_arguments(buff, parse_tree, node, working_directory, color);
+                }
+            }
+            break;
 
             case parse_special_type_parse_error:
             case parse_special_type_tokenizer_error:

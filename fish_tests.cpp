@@ -2003,7 +2003,32 @@ static void test_highlighting(void)
         {NULL, -1}
     };
     
-    const highlight_component_t *tests[] = {components1, components2, components3};
+    /* Verify that cd shows errors for non-directories */
+    const highlight_component_t components4[] =
+    {
+        {L"cd", HIGHLIGHT_COMMAND},
+        {L"/tmp/fish_highlight_test", HIGHLIGHT_PARAM | HIGHLIGHT_VALID_PATH},
+        {NULL, -1}
+    };
+    
+    const highlight_component_t components5[] =
+    {
+        {L"cd", HIGHLIGHT_COMMAND},
+        {L"/tmp/fish_highlight_test/foo", HIGHLIGHT_ERROR},
+        {NULL, -1}
+    };
+    
+    const highlight_component_t components6[] =
+    {
+        {L"cd", HIGHLIGHT_COMMAND},
+        {L"--help", HIGHLIGHT_PARAM},
+        {L"-h", HIGHLIGHT_PARAM},
+        {L"definitely_not_a_directory", HIGHLIGHT_ERROR},
+        {NULL, -1}
+    };
+
+    
+    const highlight_component_t *tests[] = {components1, components2, components3, components4, components5, components6};
     for (size_t which = 0; which < sizeof tests / sizeof *tests; which++)
     {
         const highlight_component_t *components = tests[which];

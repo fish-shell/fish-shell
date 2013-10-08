@@ -200,6 +200,15 @@ public:
     {
         return source_start != (size_t)(-1);
     }
+    
+    /* Gets source for the node, or the empty string if it has no source */
+    wcstring get_source(const wcstring &str) const
+    {
+        if (! has_source())
+            return wcstring();
+        else
+            return wcstring(str, this->source_start, this->source_length);
+    }
 };
 
 /* The parse tree itself */
@@ -217,6 +226,9 @@ public:
     /* Find all the nodes of a given type underneath a given node */
     typedef std::vector<const parse_node_t *> parse_node_list_t;
     parse_node_list_t find_nodes(const parse_node_t &parent, parse_token_type_t type) const;
+    
+    /* Finds the last node of a given type underneath a given node, or NULL if it could not be found. If parent is NULL, this finds the last node in the tree of that type. */
+    const parse_node_t *find_last_node_of_type(parse_token_type_t type, const parse_node_t *parent = NULL) const;
     
     /* Indicate if the given argument_list or arguments_or_redirections_list is a root list, or has a parent */
     bool argument_list_is_root(const parse_node_t &node) const;
@@ -287,7 +299,7 @@ enum parse_argument_flags_t
     boolean_statement = AND statement | OR statement | NOT statement
 
 # A decorated_statement is a command with a list of arguments_or_redirections, possibly with "builtin" or "command"
-# The tag of a plain statement indicates which mode to use
+# TODO: we should be able to construct plain_statements out of e.g. 'command --help' or even just 'command'
 
     decorated_statement = plain_statement | COMMAND plain_statement | BUILTIN plain_statement
     plain_statement = <TOK_STRING> arguments_or_redirections_list optional_background

@@ -937,6 +937,48 @@ parse_node_tree_t::parse_node_list_t parse_node_tree_t::find_nodes(const parse_n
     return result;
 }
 
+/* Return true if the given node has the proposed ancestor as an ancestor (or is itself that ancestor) */
+static bool node_has_ancestor(const parse_node_tree_t &tree, const parse_node_t &node, const parse_node_t &proposed_ancestor)
+{
+    if (&node == &proposed_ancestor)
+    {
+        /* Found it */
+        return true;
+    }
+    else if (node.parent == NODE_OFFSET_INVALID)
+    {
+        /* No more parents */
+        return false;
+    }
+    else
+    {
+        /* Recurse to the parent */
+        return node_has_ancestor(tree, tree.at(node.parent), proposed_ancestor);
+    }
+}
+
+const parse_node_t *parse_node_tree_t::find_last_node_of_type(parse_token_type_t type, const parse_node_t *parent) const
+{
+    const parse_node_t *result = NULL;
+    // Find nodes of the given type in the tree, working backwards
+    size_t idx = this->size();
+    while (idx--)
+    {
+        const parse_node_t &node = this->at(idx);
+        if (node.type == type)
+        {
+            // Types match. Check if it has the right parent
+            if (parent == NULL || node_has_ancestor(*this, node, *parent))
+            {
+                // Success
+                result = &node;
+                break;
+            }
+        }
+    }
+    return result;
+}
+
 
 bool parse_node_tree_t::argument_list_is_root(const parse_node_t &node) const
 {

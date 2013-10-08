@@ -329,6 +329,30 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
     return result;
 }
 
+/* Given a plain statement node in a parse tree, get the command and return it, expanded appropriately for commands. If we succeed, return true. */
+static bool plain_statement_get_expanded_command(const wcstring &src, const parse_node_tree_t &tree, const parse_node_t &plain_statement, wcstring *out_cmd)
+{
+    assert(plain_statement.type == symbol_plain_statement);
+    bool result = false;
+    
+    // Get the command
+    const parse_node_t *cmd_node = tree.get_child(plain_statement, 0, parse_token_type_string);
+    if (cmd_node != NULL && cmd_node->has_source())
+    {
+        wcstring cmd(src, cmd_node->source_start, cmd_node->source_length);
+        
+        /* Try expanding it. If we cannot, it's an error. */
+        if (expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS))
+        {
+            /* Success, return the expanded string by reference */
+            std::swap(cmd, *out_cmd);
+            result = true;
+        }
+    }
+    return result;
+}
+
+
 rgb_color_t highlight_get_color(int highlight, bool is_background)
 {
     size_t idx=0;
@@ -683,124 +707,33 @@ static bool has_expand_reserved(const wcstring &str)
 }
 
 /* Parse a command line. Return by reference the last command, its arguments, and the offset in the string of the beginning of the last argument. This is used by autosuggestions */
-static bool autosuggest_parse_command(const wcstring &str, wcstring *out_command, wcstring_list_t *out_arguments, int *out_last_arg_pos)
+static bool autosuggest_parse_command(const wcstring &buff, wcstring *out_expanded_command, const parse_node_t **out_last_arg)
 {
-    if (str.empty())
-        return false;
-
-    wcstring cmd;
-    wcstring_list_t args;
-    int arg_pos = -1;
-
-    bool had_cmd = false;
-    tokenizer_t tok(str.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
-    for (; tok_has_next(&tok); tok_next(&tok))
+    bool result = false;
+    
+    /* Parse the buffer */
+    parse_node_tree_t parse_tree;
+    parse_t parser;
+    parser.parse(buff, parse_flag_continue_after_error, &parse_tree, NULL);
+    
+    /* Find the last statement */
+    const parse_node_t *last_statement = parse_tree.find_last_node_of_type(symbol_plain_statement, NULL);
+    if (last_statement != NULL)
     {
-        int last_type = tok_last_type(&tok);
-
-        switch (last_type)
+        if (plain_statement_get_expanded_command(buff, parse_tree, *last_statement, out_expanded_command))
         {
-            case TOK_STRING:
-            {
-                if (had_cmd)
-                {
-                    /* Parameter to the command. We store these escaped. */
-                    args.push_back(tok_last(&tok));
-                    arg_pos = tok_get_pos(&tok);
-                }
-                else
-                {
-                    /* Command. First check that the command actually exists. */
-                    wcstring local_cmd = tok_last(&tok);
-                    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
-                    if (! expanded || has_expand_reserved(cmd))
-                    {
-                        /* We can't expand this cmd, ignore it */
-                    }
-                    else
-                    {
-                        bool is_subcommand = false;
-                        int mark = tok_get_pos(&tok);
-
-                        if (parser_keywords_is_subcommand(cmd))
-                        {
-                            int sw;
-                            tok_next(&tok);
-
-                            sw = parser_keywords_is_switch(tok_last(&tok));
-                            if (!parser_keywords_is_block(cmd) &&
-                                    sw == ARG_SWITCH)
-                            {
-                                /* It's an argument to the subcommand itself */
-                            }
-                            else
-                            {
-                                if (sw == ARG_SKIP)
-                                    mark = tok_get_pos(&tok);
-                                is_subcommand = true;
-                            }
-                            tok_set_pos(&tok, mark);
-                        }
-
-                        if (!is_subcommand)
-                        {
-                            /* It's really a command */
-                            had_cmd = true;
-                            cmd = local_cmd;
-                        }
-                    }
-
-                }
-                break;
-            }
-
-            case TOK_REDIRECT_NOCLOB:
-            case TOK_REDIRECT_OUT:
-            case TOK_REDIRECT_IN:
-            case TOK_REDIRECT_APPEND:
-            case TOK_REDIRECT_FD:
-            {
-                if (!had_cmd)
-                {
-                    break;
-                }
-                tok_next(&tok);
-                break;
-            }
-
-            case TOK_PIPE:
-            case TOK_BACKGROUND:
-            case TOK_END:
-            {
-                had_cmd = false;
-                cmd.clear();
-                args.clear();
-                arg_pos = -1;
-                break;
-            }
-
-            case TOK_COMMENT:
-            case TOK_ERROR:
-            default:
-            {
-                break;
-            }
+            /* We got it */
+            result = true;
+            
+            /* Find the last argument */
+            *out_last_arg = parse_tree.find_last_node_of_type(symbol_plain_statement, last_statement);
         }
     }
-
-    /* Remember our command if we have one */
-    if (had_cmd)
-    {
-        if (out_command) out_command->swap(cmd);
-        if (out_arguments) out_arguments->swap(args);
-        if (out_last_arg_pos) *out_last_arg_pos = arg_pos;
-    }
-    return had_cmd;
+    return result;
 }
 
-
 /* We have to return an escaped string here */
-bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_directory, wcstring &outSuggestion)
+bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_directory, wcstring &out_suggestion)
 {
     if (str.empty())
         return false;
@@ -809,23 +742,20 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
 
     /* Parse the string */
     wcstring parsed_command;
-    wcstring_list_t parsed_arguments;
-    int parsed_last_arg_pos = -1;
-    if (! autosuggest_parse_command(str, &parsed_command, &parsed_arguments, &parsed_last_arg_pos))
-    {
+    const parse_node_t *last_arg_node = NULL;
+    if (! autosuggest_parse_command(str, &parsed_command, &last_arg_node))
         return false;
-    }
 
     bool result = false;
-    if (parsed_command == L"cd" && ! parsed_arguments.empty())
+    if (parsed_command == L"cd" && last_arg_node != NULL && last_arg_node->has_source())
     {
         /* We can possibly handle this specially */
-        const wcstring escaped_dir = parsed_arguments.back();
+        const wcstring escaped_dir = last_arg_node->get_source(str);
         wcstring suggested_path;
 
         /* We always return true because we recognized the command. This prevents us from falling back to dumber algorithms; for example we won't suggest a non-directory for the cd command. */
         result = true;
-        outSuggestion.clear();
+        out_suggestion.clear();
 
         /* Unescape the parameter */
         wcstring unescaped_dir = escaped_dir;
@@ -844,11 +774,11 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
             wcstring escaped_suggested_path = parse_util_escape_string_with_quote(suggested_path, quote);
 
             /* Return it */
-            outSuggestion = str;
-            outSuggestion.erase(parsed_last_arg_pos);
-            if (quote != L'\0') outSuggestion.push_back(quote);
-            outSuggestion.append(escaped_suggested_path);
-            if (quote != L'\0') outSuggestion.push_back(quote);
+            out_suggestion = str;
+            out_suggestion.erase(last_arg_node->source_start);
+            if (quote != L'\0') out_suggestion.push_back(quote);
+            out_suggestion.append(escaped_suggested_path);
+            if (quote != L'\0') out_suggestion.push_back(quote);
         }
     }
     else
@@ -866,15 +796,14 @@ bool autosuggest_validate_from_history(const history_item_t &item, file_detectio
 
     /* Parse the string */
     wcstring parsed_command;
-    wcstring_list_t parsed_arguments;
-    int parsed_last_arg_pos = -1;
-    if (! autosuggest_parse_command(item.str(), &parsed_command, &parsed_arguments, &parsed_last_arg_pos))
+    const parse_node_t *last_arg_node = NULL;
+    if (! autosuggest_parse_command(item.str(), &parsed_command, &last_arg_node))
         return false;
 
-    if (parsed_command == L"cd" && ! parsed_arguments.empty())
+    if (parsed_command == L"cd" && last_arg_node != NULL && last_arg_node->has_source())
     {
         /* We can possibly handle this specially */
-        wcstring dir = parsed_arguments.back();
+        wcstring dir = last_arg_node->get_source(item.str());
         if (expand_one(dir, EXPAND_SKIP_CMDSUBST))
         {
             handled = true;
@@ -1768,29 +1697,6 @@ static bool node_is_potential_path(const wcstring &src, const parse_node_t &node
         
         const wcstring_list_t working_directory_list(1, working_directory);
         result = is_potential_path(token, working_directory_list, PATH_EXPAND_TILDE);
-    }
-    return result;
-}
-
-// Gets the expanded command from a plain statement node
-static bool plain_statement_get_expanded_command(const wcstring &src, const parse_node_tree_t &tree, const parse_node_t &plain_statement, wcstring *out_cmd)
-{
-    assert(plain_statement.type == symbol_plain_statement);
-    bool result = false;
-    
-    // Get the command
-    const parse_node_t *cmd_node = tree.get_child(plain_statement, 0, parse_token_type_string);
-    if (cmd_node != NULL && cmd_node->has_source())
-    {
-        wcstring cmd(src, cmd_node->source_start, cmd_node->source_length);
-        
-        /* Try expanding it. If we cannot, it's an error. */
-        if (expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS))
-        {
-            /* Success, return the expanded string by reference */
-            std::swap(cmd, *out_cmd);
-            result = true;
-        }
     }
     return result;
 }

@@ -62,8 +62,8 @@ inline bool production_element_is_valid(production_element_t elem)
     return elem != token_type_invalid;
 }
 
-/* Fetch a production */
-const production_t *production_for_token(parse_token_type_t node_type, parse_token_type_t input_type, parse_keyword_t input_keyword, production_option_idx_t *out_idx, wcstring *out_error_text);
+/* Fetch a production. We are passed two input tokens. The first input token is guaranteed to not be invalid; the second token may be invalid if there's no more tokens. */
+const production_t *production_for_token(parse_token_type_t node_type, parse_token_type_t input_type, parse_keyword_t input_keyword, parse_token_type_t input_type2, parse_keyword_t input_keyword2, production_option_idx_t *out_idx, wcstring *out_error_text);
 
 }
 

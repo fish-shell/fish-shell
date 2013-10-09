@@ -1945,6 +1945,85 @@ static void test_new_parser_fuzzing(void)
     say(L"All fuzzed in %f seconds!", end - start);
 }
 
+// Parse a statement, returning the command, args (joined by spaces), and the decoration. Returns true if successful.
+static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *out_joined_args, enum parse_statement_decoration_t *out_deco)
+{
+    out_cmd->clear();
+    out_joined_args->clear();
+    *out_deco = parse_statement_decoration_none;
+    
+    bool result = false;
+    parse_node_tree_t tree;
+    parse_t parser;
+    if (parser.parse(src, parse_flag_none, &tree, NULL))
+    {
+        /* Get the statement. Should only have one */
+        const parse_node_tree_t::parse_node_list_t stmt_nodes = tree.find_nodes(tree.at(0), symbol_plain_statement);
+        if (stmt_nodes.size() != 1)
+        {
+            say(L"Unexpected number of statements (%lu) found in '%ls'", stmt_nodes.size(), src.c_str());
+            return false;
+        }
+        const parse_node_t &stmt = *stmt_nodes.at(0);
+        
+        /* Return its decoration */
+        *out_deco = tree.decoration_for_plain_statement(stmt);
+        
+        /* Return its command */
+        tree.command_for_plain_statement(stmt, src, out_cmd);
+        
+        /* Return arguments separated by spaces */
+        const parse_node_tree_t::parse_node_list_t arg_nodes = tree.find_nodes(stmt, symbol_argument);
+        for (size_t i=0; i < arg_nodes.size(); i++)
+        {
+            if (i > 0) out_joined_args->push_back(L' ');
+            out_joined_args->append(arg_nodes.at(i)->get_source(src));
+        }
+        result = true;
+    }
+    return result;
+}
+
+/* Test the LL2 (two token lookahead) nature of the parser by exercising the special builtin and command handling. In particular, 'command foo' should be a decorated statement 'foo' but 'command --help' should be an undecorated statement 'command' with argument '--help', and NOT attempt to run a command called '--help' */
+static void test_new_parser_ll2(void)
+{
+    say(L"Testing parser two-token lookahead");
+    
+    const struct
+    {
+        wcstring src;
+        wcstring cmd;
+        wcstring args;
+        enum parse_statement_decoration_t deco;
+    } tests[] =
+    {
+        {L"echo hello", L"echo", L"hello", parse_statement_decoration_none},
+        {L"command echo hello", L"echo", L"hello", parse_statement_decoration_command},
+        {L"command command hello", L"command", L"hello", parse_statement_decoration_command},
+        {L"builtin command hello", L"command", L"hello", parse_statement_decoration_builtin},
+        {L"command --help", L"command", L"--help", parse_statement_decoration_none},
+        {L"command -h", L"command", L"-h", parse_statement_decoration_none},
+        {L"command", L"command", L"", parse_statement_decoration_none},
+        {L"function", L"function", L"", parse_statement_decoration_none},
+        {L"function --help", L"function", L"--help", parse_statement_decoration_none}
+    };
+    
+    for (size_t i=0; i < sizeof tests / sizeof *tests; i++)
+    {
+        wcstring cmd, args;
+        enum parse_statement_decoration_t deco = parse_statement_decoration_none;
+        bool success = test_1_parse_ll2(tests[i].src, &cmd, &args, &deco);
+        if (! success)
+            err(L"Parse of '%ls' failed on line %ld", tests[i].cmd.c_str(), (long)__LINE__);
+        if (cmd != tests[i].cmd)
+            err(L"When parsing '%ls', expected command '%ls' but got '%ls' on line %ld", tests[i].src.c_str(), tests[i].cmd.c_str(), cmd.c_str(), (long)__LINE__);
+        if (args != tests[i].args)
+            err(L"When parsing '%ls', expected args '%ls' but got '%ls' on line %ld", tests[i].src.c_str(), tests[i].args.c_str(), args.c_str(), (long)__LINE__);
+        if (deco != tests[i].deco)
+            err(L"When parsing '%ls', expected decoration %d but got %d on line %ld", tests[i].src.c_str(), (int)tests[i].deco, (int)deco, (long)__LINE__);
+    }
+}
+
 __attribute__((unused))
 static void test_new_parser(void)
 {
@@ -2125,6 +2204,7 @@ int main(int argc, char **argv)
     env_init();
 
     test_highlighting();
+    test_new_parser_ll2();
     test_new_parser_fuzzing();
     test_new_parser_correctness();
     test_highlighting();

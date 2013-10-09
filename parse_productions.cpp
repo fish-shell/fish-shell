@@ -8,7 +8,7 @@ static bool production_is_empty(const production_t production)
     return production[0] == token_type_invalid;
 }
 
-// Empty productions are allowed but must be first. Validate that the given production is in the valid range, i.e. it is either not empty or there is a non-empty production after it
+/* Empty productions are allowed but must be first. Validate that the given production is in the valid range, i.e. it is either not empty or there is a non-empty production after it */
 static bool production_is_valid(const production_options_t production_list, production_option_idx_t which)
 {
     if (which < 0 || which >= MAX_PRODUCTIONS)
@@ -26,9 +26,24 @@ static bool production_is_valid(const production_options_t production_list, prod
     return nonempty_found;
 }
 
+/* Helper function indicates whether a token (typically second token) means 'help'. This is so we can treat e.g. 'command --help' as "invoke the 'command' builtin with --help' instead of 'run the --help command'.
+
+    if naked_invocation_invokes_help is true, then we treat an invalid type or something other than a string as indicating help; this means that the user ran e.g. 'command' with no arguments.
+*/
+static inline bool token_means_help(parse_token_type_t type, parse_keyword_t keyword, bool naked_invocation_invokes_help)
+{
+    if (keyword == parse_keyword_dash_h || keyword == parse_keyword_dashdash_help)
+        return true;
+    
+    if (naked_invocation_invokes_help && type != parse_token_type_string)
+        return true;
+    
+    return false;
+}
+
 #define PRODUCTIONS(sym) static const production_options_t productions_##sym
-#define RESOLVE(sym) static production_option_idx_t resolve_##sym (parse_token_type_t token_type, parse_keyword_t token_keyword)
-#define RESOLVE_ONLY(sym) static production_option_idx_t resolve_##sym (parse_token_type_t token_type, parse_keyword_t token_keyword) { return 0; }
+#define RESOLVE(sym) static production_option_idx_t resolve_##sym (parse_token_type_t token_type, parse_keyword_t token_keyword, parse_token_type_t token_type2, parse_keyword_t token_keyword2)
+#define RESOLVE_ONLY(sym) static production_option_idx_t resolve_##sym (parse_token_type_t token_type, parse_keyword_t token_keyword, parse_token_type_t token_type2, parse_keyword_t token_keyword2) { return 0; }
 
 #define KEYWORD(x) ((x) + LAST_TOKEN_OR_SYMBOL + 1)
 
@@ -115,6 +130,17 @@ PRODUCTIONS(statement) =
 };
 RESOLVE(statement)
 {
+    // Go to decorated statements if the subsequent token looks like '--help'
+    // If we are 'begin', then we expect to be invoked with no arguments. But if we are anything else, we require an argument, so do the same thing if the subsequent token is a line end.
+    if (token_type == parse_token_type_string)
+    {
+        bool naked_invocation_invokes_help = (token_keyword != parse_keyword_begin && token_keyword != parse_keyword_end);
+        if (token_means_help(token_type2, token_keyword2, naked_invocation_invokes_help))
+        {
+            return 4; //decorated statement
+        }
+    }
+
     switch (token_type)
     {
         case parse_token_type_string:
@@ -149,6 +175,8 @@ RESOLVE(statement)
                 case parse_keyword_command:
                 case parse_keyword_builtin:
                 case parse_keyword_case:
+                case parse_keyword_dash_h:
+                case parse_keyword_dashdash_help:
                     return 4;
             }
             break;
@@ -336,6 +364,10 @@ PRODUCTIONS(decorated_statement) =
 };
 RESOLVE(decorated_statement)
 {
+    /* If this is e.g. 'command --help' then the command is 'command' and not a decoration */
+    if (token_means_help(token_type2, token_keyword2, true /* naked_invocation_is_help */))
+        return 0;
+    
     switch (token_keyword)
     {
         default:
@@ -418,7 +450,7 @@ RESOLVE(optional_background)
 }
 
 #define TEST(sym) case (symbol_##sym): production_list = & productions_ ## sym ; resolver = resolve_ ## sym ; break;
-const production_t *parse_productions::production_for_token(parse_token_type_t node_type, parse_token_type_t input_type, parse_keyword_t input_keyword, production_option_idx_t *out_which_production, wcstring *out_error_text)
+const production_t *parse_productions::production_for_token(parse_token_type_t node_type, parse_token_type_t input_type, parse_keyword_t input_keyword, parse_token_type_t input_type2, parse_keyword_t input_keyword2, production_option_idx_t *out_which_production, wcstring *out_error_text)
 {
     bool log_it = false;
     if (log_it)
@@ -428,7 +460,7 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
 
     /* Fetch the list of productions and the function to resolve them */
     const production_options_t *production_list = NULL;
-    production_option_idx_t (*resolver)(parse_token_type_t token_type, parse_keyword_t token_keyword) = NULL;
+    production_option_idx_t (*resolver)(parse_token_type_t token_type, parse_keyword_t token_keyword, parse_token_type_t token_type2, parse_keyword_t token_keyword2) = NULL;
     switch (node_type)
     {
             TEST(job_list)
@@ -486,7 +518,7 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
     PARSE_ASSERT(resolver != NULL);
 
     const production_t *result = NULL;
-    production_option_idx_t which = resolver(input_type, input_keyword);
+    production_option_idx_t which = resolver(input_type, input_keyword, input_type2, input_keyword2);
 
     if (log_it)
     {

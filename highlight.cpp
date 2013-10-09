@@ -337,12 +337,10 @@ bool plain_statement_get_expanded_command(const wcstring &src, const parse_node_
     assert(plain_statement.type == symbol_plain_statement);
     bool result = false;
     
-    // Get the command
-    const parse_node_t *cmd_node = tree.get_child(plain_statement, 0, parse_token_type_string);
-    if (cmd_node != NULL && cmd_node->has_source())
+    /* Get the command */
+    wcstring cmd;
+    if (tree.command_for_plain_statement(plain_statement, src, &cmd))
     {
-        wcstring cmd(src, cmd_node->source_start, cmd_node->source_length);
-        
         /* Try expanding it. If we cannot, it's an error. */
         if (expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS))
         {

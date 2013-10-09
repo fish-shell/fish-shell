@@ -112,8 +112,12 @@ enum parse_keyword_t
     parse_keyword_not,
     parse_keyword_command,
     parse_keyword_builtin,
+    
+    /* The following are not really keywords but are necessary for e.g. "command --help" to work */
+    parse_keyword_dash_h,
+    parse_keyword_dashdash_help,
 
-    LAST_KEYWORD = parse_keyword_builtin
+    LAST_KEYWORD = parse_keyword_dashdash_help
 };
 
 
@@ -243,7 +247,12 @@ public:
     bool argument_list_is_root(const parse_node_t &node) const;
     
     /* Utilities */
+    
+    /* Given a plain statement, get the decoration (from the parent node), or none if there is no decoration */
     enum parse_statement_decoration_t decoration_for_plain_statement(const parse_node_t &node) const;
+    
+    /* Given a plain statement, get the command by reference (from the child node). Returns true if successful. Clears the command on failure. */
+    bool command_for_plain_statement(const parse_node_t &node, const wcstring &src, wcstring *out_cmd) const;
 
 };
 

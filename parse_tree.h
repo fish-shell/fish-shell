@@ -176,7 +176,7 @@ public:
 
     /* Children */
     node_offset_t child_start;
-    node_offset_t child_count;
+    uint8_t child_count;
 
     /* Which production was used */
     uint8_t production_idx;

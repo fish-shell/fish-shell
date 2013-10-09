@@ -27,8 +27,8 @@ static bool production_is_valid(const production_options_t production_list, prod
 }
 
 #define PRODUCTIONS(sym) static const production_options_t productions_##sym
-#define RESOLVE(sym) static production_option_idx_t resolve_##sym (parse_token_type_t token_type, parse_keyword_t token_keyword, production_tag_t *tag)
-#define RESOLVE_ONLY(sym) static production_option_idx_t resolve_##sym (parse_token_type_t token_type, parse_keyword_t token_keyword, production_tag_t *tag) { return 0; }
+#define RESOLVE(sym) static production_option_idx_t resolve_##sym (parse_token_type_t token_type, parse_keyword_t token_keyword)
+#define RESOLVE_ONLY(sym) static production_option_idx_t resolve_##sym (parse_token_type_t token_type, parse_keyword_t token_keyword) { return 0; }
 
 #define KEYWORD(x) ((x) + LAST_TOKEN_OR_SYMBOL + 1)
 
@@ -418,7 +418,7 @@ RESOLVE(optional_background)
 }
 
 #define TEST(sym) case (symbol_##sym): production_list = & productions_ ## sym ; resolver = resolve_ ## sym ; break;
-const production_t *parse_productions::production_for_token(parse_token_type_t node_type, parse_token_type_t input_type, parse_keyword_t input_keyword, production_option_idx_t *out_which_production, production_tag_t *out_tag, wcstring *out_error_text)
+const production_t *parse_productions::production_for_token(parse_token_type_t node_type, parse_token_type_t input_type, parse_keyword_t input_keyword, production_option_idx_t *out_which_production, wcstring *out_error_text)
 {
     bool log_it = false;
     if (log_it)
@@ -428,7 +428,7 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
 
     /* Fetch the list of productions and the function to resolve them */
     const production_options_t *production_list = NULL;
-    production_option_idx_t (*resolver)(parse_token_type_t token_type, parse_keyword_t token_keyword, production_tag_t *tag) = NULL;
+    production_option_idx_t (*resolver)(parse_token_type_t token_type, parse_keyword_t token_keyword) = NULL;
     switch (node_type)
     {
             TEST(job_list)
@@ -486,7 +486,7 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
     PARSE_ASSERT(resolver != NULL);
 
     const production_t *result = NULL;
-    production_option_idx_t which = resolver(input_type, input_keyword, out_tag);
+    production_option_idx_t which = resolver(input_type, input_keyword);
 
     if (log_it)
     {

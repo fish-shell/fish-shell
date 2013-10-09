@@ -332,7 +332,7 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
 }
 
 /* Given a plain statement node in a parse tree, get the command and return it, expanded appropriately for commands. If we succeed, return true. */
-static bool plain_statement_get_expanded_command(const wcstring &src, const parse_node_tree_t &tree, const parse_node_t &plain_statement, wcstring *out_cmd)
+bool plain_statement_get_expanded_command(const wcstring &src, const parse_node_tree_t &tree, const parse_node_t &plain_statement, wcstring *out_cmd)
 {
     assert(plain_statement.type == symbol_plain_statement);
     bool result = false;
@@ -708,15 +708,15 @@ static bool has_expand_reserved(const wcstring &str)
     return result;
 }
 
-/* Parse a command line. Return by reference the last command, its arguments, and the offset in the string of the beginning of the last argument. This is used by autosuggestions */
-static bool autosuggest_parse_command(const wcstring &buff, wcstring *out_expanded_command, const parse_node_t **out_last_arg)
+/* Parse a command line. Return by reference the last command, and the last argument to that command (as a copied node), if any. This is used by autosuggestions */
+static bool autosuggest_parse_command(const wcstring &buff, wcstring *out_expanded_command, parse_node_t *out_last_arg)
 {
     bool result = false;
     
     /* Parse the buffer */
     parse_node_tree_t parse_tree;
     parse_t parser;
-    parser.parse(buff, parse_flag_continue_after_error, &parse_tree, NULL);
+    parser.parse(buff, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens, &parse_tree, NULL);
     
     /* Find the last statement */
     const parse_node_t *last_statement = parse_tree.find_last_node_of_type(symbol_plain_statement, NULL);
@@ -727,8 +727,12 @@ static bool autosuggest_parse_command(const wcstring &buff, wcstring *out_expand
             /* We got it */
             result = true;
             
-            /* Find the last argument */
-            *out_last_arg = parse_tree.find_last_node_of_type(symbol_plain_statement, last_statement);
+            /* Find the last argument. If we don't get one, return an invalid node. */
+            const parse_node_t *last_arg = parse_tree.find_last_node_of_type(symbol_argument, last_statement);
+            if (last_arg != NULL)
+            {
+                *out_last_arg = *last_arg;
+            }
         }
     }
     return result;
@@ -739,20 +743,20 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
 {
     if (str.empty())
         return false;
-
+    
     ASSERT_IS_BACKGROUND_THREAD();
 
     /* Parse the string */
     wcstring parsed_command;
-    const parse_node_t *last_arg_node = NULL;
+    parse_node_t last_arg_node(token_type_invalid);
     if (! autosuggest_parse_command(str, &parsed_command, &last_arg_node))
         return false;
 
     bool result = false;
-    if (parsed_command == L"cd" && last_arg_node != NULL && last_arg_node->has_source())
+    if (parsed_command == L"cd" && last_arg_node.type == symbol_argument && last_arg_node.has_source())
     {
         /* We can possibly handle this specially */
-        const wcstring escaped_dir = last_arg_node->get_source(str);
+        const wcstring escaped_dir = last_arg_node.get_source(str);
         wcstring suggested_path;
 
         /* We always return true because we recognized the command. This prevents us from falling back to dumber algorithms; for example we won't suggest a non-directory for the cd command. */
@@ -771,13 +775,12 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
         path_flags_t path_flags = (quote == L'\0') ? PATH_EXPAND_TILDE : 0;
         if (unescaped && is_potential_cd_path(unescaped_dir, working_directory, path_flags, &suggested_path))
         {
-
             /* Note: this looks really wrong for strings that have an "unescapable" character in them, e.g. a \t, because parse_util_escape_string_with_quote will insert that character */
             wcstring escaped_suggested_path = parse_util_escape_string_with_quote(suggested_path, quote);
 
             /* Return it */
             out_suggestion = str;
-            out_suggestion.erase(last_arg_node->source_start);
+            out_suggestion.erase(last_arg_node.source_start);
             if (quote != L'\0') out_suggestion.push_back(quote);
             out_suggestion.append(escaped_suggested_path);
             if (quote != L'\0') out_suggestion.push_back(quote);
@@ -798,14 +801,14 @@ bool autosuggest_validate_from_history(const history_item_t &item, file_detectio
 
     /* Parse the string */
     wcstring parsed_command;
-    const parse_node_t *last_arg_node = NULL;
+    parse_node_t last_arg_node(token_type_invalid);
     if (! autosuggest_parse_command(item.str(), &parsed_command, &last_arg_node))
         return false;
 
-    if (parsed_command == L"cd" && last_arg_node != NULL && last_arg_node->has_source())
+    if (parsed_command == L"cd" && last_arg_node.type == symbol_argument && last_arg_node.has_source())
     {
         /* We can possibly handle this specially */
-        wcstring dir = last_arg_node->get_source(item.str());
+        wcstring dir = last_arg_node.get_source(item.str());
         if (expand_one(dir, EXPAND_SKIP_CMDSUBST))
         {
             handled = true;
@@ -1968,12 +1971,7 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
             case symbol_plain_statement:
             {
                 // Get the decoration from the parent
-                enum parse_statement_decoration_t decoration = parse_statement_decoration_none;
-                const parse_node_t *decorated_statement = parse_tree.get_parent(node, symbol_decorated_statement);
-                if (decorated_statement != NULL)
-                {
-                    decoration = static_cast<enum parse_statement_decoration_t>(decorated_statement->production_idx);
-                }
+                enum parse_statement_decoration_t decoration = parse_tree.decoration_for_plain_statement(node);
 
                 /* Color the command */
                 const parse_node_t *cmd_node = parse_tree.get_child(node, 0, parse_token_type_string);

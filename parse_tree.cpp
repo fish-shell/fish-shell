@@ -720,7 +720,7 @@ void parse_ll_t::accept_token(parse_token_t token)
         // Get the production for the top of the stack
         parse_stack_element_t &stack_elem = symbol_stack.back();
         parse_node_t &node = nodes.at(stack_elem.node_idx);
-        const production_t *production = production_for_token(stack_elem.type, token.type, token.keyword, &node.production_idx, &node.tag, NULL /* error text */);
+        const production_t *production = production_for_token(stack_elem.type, token.type, token.keyword, &node.production_idx, NULL /* error text */);
         if (production == NULL)
         {
             if (should_generate_error_messages)
@@ -804,6 +804,9 @@ bool parse_t::parse(const wcstring &str, parse_tree_flags_t parse_flags, parse_n
     if (parse_flags & parse_flag_include_comments)
         tok_options |= TOK_SHOW_COMMENTS;
     
+    if (parse_flags & parse_flag_accept_incomplete_tokens)
+        tok_options |= TOK_ACCEPT_UNFINISHED;
+    
     this->parser->set_should_generate_error_messages(errors != NULL);
 
     tokenizer_t tok = tokenizer_t(str.c_str(), tok_options);
@@ -845,14 +848,14 @@ bool parse_t::parse(const wcstring &str, parse_tree_flags_t parse_flags, parse_n
     
     // Tag nodes
     
-#if 0
-    wcstring result = dump_tree(this->parser->nodes, str);
-    fprintf(stderr, "Tree (%ld nodes):\n%ls", this->parser->nodes.size(), result.c_str());
-    fprintf(stderr, "%lu nodes, node size %lu, %lu bytes\n", this->parser->nodes.size(), sizeof(parse_node_t), this->parser->nodes.size() * sizeof(parse_node_t));
-#endif
-
     // Acquire the output from the parser
     this->parser->acquire_output(output, errors);
+
+#if 0
+    //wcstring result = dump_tree(this->parser->nodes, str);
+    //fprintf(stderr, "Tree (%ld nodes):\n%ls", this->parser->nodes.size(), result.c_str());
+    fprintf(stderr, "%lu nodes, node size %lu, %lu bytes\n", output->size(), sizeof(parse_node_t), output->size() * sizeof(parse_node_t));
+#endif
     
     // Indicate if we had a fatal error
     return ! this->parser->has_fatal_error();
@@ -991,4 +994,16 @@ bool parse_node_tree_t::argument_list_is_root(const parse_node_t &node) const
         result = parent->type != symbol_arguments_or_redirections_list && parent->type != symbol_argument_list;
     }
     return result;
+}
+
+enum parse_statement_decoration_t parse_node_tree_t::decoration_for_plain_statement(const parse_node_t &node) const
+{
+    assert(node.type == symbol_plain_statement);
+    enum parse_statement_decoration_t decoration = parse_statement_decoration_none;
+    const parse_node_t *decorated_statement = this->get_parent(node, symbol_decorated_statement);
+    if (decorated_statement != NULL)
+    {
+        decoration = static_cast<enum parse_statement_decoration_t>(decorated_statement->production_idx);
+    }
+    return decoration;
 }

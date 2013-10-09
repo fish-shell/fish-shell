@@ -125,7 +125,10 @@ enum
     parse_flag_continue_after_error = 1 << 0,
     
     /* Include comment tokens */
-    parse_flag_include_comments = 1 << 1
+    parse_flag_include_comments = 1 << 1,
+    
+    /* Indicate that the tokenizer should accept incomplete tokens */
+    parse_flag_accept_incomplete_tokens = 1 << 2
 };
 typedef unsigned int parse_tree_flags_t;
 
@@ -175,9 +178,6 @@ public:
     node_offset_t child_start;
     node_offset_t child_count;
 
-    /* Type-dependent data */
-    uint32_t tag;
-
     /* Which production was used */
     uint8_t production_idx;
 
@@ -185,7 +185,7 @@ public:
     wcstring describe(void) const;
 
     /* Constructor */
-    explicit parse_node_t(parse_token_type_t ty) : type(ty), source_start(-1), source_length(0), parent(NODE_OFFSET_INVALID), child_start(0), child_count(0), tag(0)
+    explicit parse_node_t(parse_token_type_t ty) : type(ty), source_start(-1), source_length(0), parent(NODE_OFFSET_INVALID), child_start(0), child_count(0)
     {
     }
 
@@ -211,6 +211,15 @@ public:
     }
 };
 
+/* Statement decorations. This matches the order of productions in decorated_statement */
+enum parse_statement_decoration_t
+{
+    parse_statement_decoration_none,
+    parse_statement_decoration_command,
+    parse_statement_decoration_builtin
+};
+
+
 /* The parse tree itself */
 class parse_node_tree_t : public std::vector<parse_node_t>
 {
@@ -232,27 +241,10 @@ public:
     
     /* Indicate if the given argument_list or arguments_or_redirections_list is a root list, or has a parent */
     bool argument_list_is_root(const parse_node_t &node) const;
-};
-
-
-/* Node type specific data, stored in the tag field */
-
-/* Statement decorations, stored in the tag of plain_statement. This matches the order of productions in decorated_statement */
-enum parse_statement_decoration_t
-{
-    parse_statement_decoration_none,
-    parse_statement_decoration_command,
-    parse_statement_decoration_builtin
-};
-
-/* Argument flags as a bitmask, stored in the tag of argument */
-enum parse_argument_flags_t
-{
-    /* Indicates that this or a prior argument was --, so this should not be treated as an option */
-    parse_argument_no_options = 1 << 0,
     
-    /* Indicates that the argument is for a cd command */
-    parse_argument_is_for_cd = 1 << 1
+    /* Utilities */
+    enum parse_statement_decoration_t decoration_for_plain_statement(const parse_node_t &node) const;
+
 };
 
 /* Fish grammar:

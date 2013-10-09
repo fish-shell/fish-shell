@@ -61,7 +61,6 @@
 #include "signal.h"
 #include "highlight.h"
 #include "parse_tree.h"
-#include "parse_exec.h"
 #include "parse_util.h"
 
 /**
@@ -768,6 +767,11 @@ static void test_abbreviations(void)
     /* others should not be */
     expanded = reader_expand_abbreviation_in_command(L"of gc", wcslen(L"of gc"), &result);
     if (expanded) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
+
+    /* others should not be */
+    expanded = reader_expand_abbreviation_in_command(L"command gc", wcslen(L"command gc"), &result);
+    if (expanded) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
+
 
     env_pop();
 }
@@ -1916,12 +1920,16 @@ static void test_new_parser_fuzzing(void)
     size_t max = 5;
     for (size_t len=1; len <= max; len++)
     {
-        fprintf(stderr, "%lu / %lu\n", len, max);
+        fprintf(stderr, "%lu / %lu...", len, max);
         std::vector<parser_fuzz_token_t> tokens(len);
+        size_t count = 0;
+        parse_t parser;
+        parse_node_tree_t parse_tree;
         do
         {
-            parse_t parser;
-            parse_node_tree_t parse_tree;
+            parser.clear();
+            parse_tree.clear();
+            count++;
             for (size_t i=0; i < len; i++)
             {
                 const parser_fuzz_token_t &token = tokens[i];
@@ -1931,6 +1939,7 @@ static void test_new_parser_fuzzing(void)
             // keep going until we wrap
         }
         while (! increment(tokens));
+        fprintf(stderr, "done (%lu)\n", count);
     }
     double end = timef();
     say(L"All fuzzed in %f seconds!", end - start);
@@ -2108,7 +2117,7 @@ int main(int argc, char **argv)
     say(L"Testing low-level functionality");
     set_main_thread();
     setup_fork_guards();
-    //proc_init();
+    //proc_init(); //disabling this prevents catching SIGINT
     event_init();
     function_init();
     builtin_init();
@@ -2116,7 +2125,6 @@ int main(int argc, char **argv)
     env_init();
 
     test_highlighting();
-    return 0;
     test_new_parser_fuzzing();
     test_new_parser_correctness();
     test_highlighting();

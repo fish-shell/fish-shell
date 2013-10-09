@@ -99,6 +99,7 @@ commence.
 #include "path.h"
 #include "parse_util.h"
 #include "parser_keywords.h"
+#include "parse_tree.h"
 
 /**
    Maximum length of prefix string when printing completion
@@ -659,117 +660,56 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
     const size_t subcmd_offset = cmdsub_begin - buff;
 
     const wcstring subcmd = wcstring(cmdsub_begin, cmdsub_end - cmdsub_begin);
-    const wchar_t *subcmd_cstr = subcmd.c_str();
-
-    /* Get the token containing the cursor */
-    const wchar_t *subcmd_tok_begin = NULL, *subcmd_tok_end = NULL;
-    assert(cursor_pos >= subcmd_offset);
-    size_t subcmd_cursor_pos = cursor_pos - subcmd_offset;
-    parse_util_token_extent(subcmd_cstr, subcmd_cursor_pos, &subcmd_tok_begin, &subcmd_tok_end, NULL, NULL);
-
-    /* Compute the offset of the token before the cursor within the subcmd */
-    assert(subcmd_tok_begin >= subcmd_cstr);
-    assert(subcmd_tok_end >= subcmd_tok_begin);
-    const size_t subcmd_tok_begin_offset = subcmd_tok_begin - subcmd_cstr;
-    const size_t subcmd_tok_length = subcmd_tok_end - subcmd_tok_begin;
-
-    /* Now parse the subcmd, looking for commands */
-    bool had_cmd = false, previous_token_is_cmd = false;
-    tokenizer_t tok(subcmd_cstr, TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
-    for (; tok_has_next(&tok); tok_next(&tok))
+    const size_t subcmd_cursor_pos = cursor_pos - subcmd_offset;
+    
+    /* Parse this subcmd */
+    parse_node_tree_t parse_tree;
+    parse_t parser;
+    parser.parse(subcmd, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens, &parse_tree, NULL);
+    
+    /* Look for plain statements where the cursor is at the end of the command */
+    const parse_node_t *matching_cmd_node = NULL;
+    const size_t len = parse_tree.size();
+    for (size_t i=0; i < len; i++)
     {
-        size_t tok_pos = static_cast<size_t>(tok_get_pos(&tok));
-        if (tok_pos > subcmd_tok_begin_offset)
+        const parse_node_t &node = parse_tree.at(i);
+        
+        /* Only interested in plain statements with source */
+        if (node.type != symbol_plain_statement || ! node.has_source())
+            continue;
+        
+        /* Skip decorated statements */
+        if (parse_tree.decoration_for_plain_statement(node) != parse_statement_decoration_none)
+            continue;
+        
+        /* Get the command node. Skip it if we can't or it has no source */
+        const parse_node_t *cmd_node = parse_tree.get_child(node, 0, parse_token_type_string);
+        if (cmd_node == NULL || ! cmd_node->has_source())
+            continue;
+        
+        /* Now see if its source range contains our cursor, including at the end */
+        if (subcmd_cursor_pos >= cmd_node->source_start && subcmd_cursor_pos <= cmd_node->source_start + cmd_node->source_length)
         {
-            /* We've passed the token we're interested in */
+            /* Success! */
+            matching_cmd_node = cmd_node;
             break;
         }
-
-        int last_type = tok_last_type(&tok);
-
-        switch (last_type)
-        {
-            case TOK_STRING:
-            {
-                if (had_cmd)
-                {
-                    /* Parameter to the command. */
-                }
-                else
-                {
-                    const wcstring potential_cmd = tok_last(&tok);
-                    if (parser_keywords_is_subcommand(potential_cmd))
-                    {
-                        if (potential_cmd == L"command" || potential_cmd == L"builtin")
-                        {
-                            /* 'command' and 'builtin' defeat abbreviation expansion. Skip this command. */
-                            had_cmd = true;
-                        }
-                        else
-                        {
-                            /* Other subcommand. Pretend it doesn't exist so that we can expand the following command */
-                            had_cmd = false;
-                        }
-                    }
-                    else
-                    {
-                        /* It's a normal command */
-                        had_cmd = true;
-                        if (tok_pos == subcmd_tok_begin_offset)
-                        {
-                            /* This is the token we care about! */
-                            previous_token_is_cmd = true;
-                        }
-                    }
-                }
-                break;
-            }
-
-            case TOK_REDIRECT_NOCLOB:
-            case TOK_REDIRECT_OUT:
-            case TOK_REDIRECT_IN:
-            case TOK_REDIRECT_APPEND:
-            case TOK_REDIRECT_FD:
-            {
-                if (!had_cmd)
-                {
-                    break;
-                }
-                tok_next(&tok);
-                break;
-            }
-
-            case TOK_PIPE:
-            case TOK_BACKGROUND:
-            case TOK_END:
-            {
-                had_cmd = false;
-                break;
-            }
-
-            case TOK_COMMENT:
-            case TOK_ERROR:
-            default:
-            {
-                break;
-            }
-        }
     }
-
+    
+    /* Now if we found a command node, expand it */
     bool result = false;
-    if (previous_token_is_cmd)
+    if (matching_cmd_node != NULL)
     {
-        /* The token is a command. Try expanding it as an abbreviation. */
-        const wcstring token = wcstring(subcmd, subcmd_tok_begin_offset, subcmd_tok_length);
+        assert(matching_cmd_node->type == parse_token_type_string);
+        const wcstring token = matching_cmd_node->get_source(subcmd);
         wcstring abbreviation;
         if (expand_abbreviation(token, &abbreviation))
         {
             /* There was an abbreviation! Replace the token in the full command. Maintain the relative position of the cursor. */
             if (output != NULL)
             {
-                size_t cmd_tok_begin_offset = subcmd_tok_begin_offset + subcmd_offset;
                 output->assign(cmdline);
-                output->replace(cmd_tok_begin_offset, subcmd_tok_length, abbreviation);
+                output->replace(subcmd_offset + matching_cmd_node->source_start, matching_cmd_node->source_length, abbreviation);
             }
             result = true;
         }

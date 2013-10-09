@@ -63,7 +63,7 @@ inline bool production_element_is_valid(production_element_t elem)
 }
 
 /* Fetch a production */
-const production_t *production_for_token(parse_token_type_t node_type, parse_token_type_t input_type, parse_keyword_t input_keyword, production_option_idx_t *out_idx, production_tag_t *out_tag, wcstring *out_error_text);
+const production_t *production_for_token(parse_token_type_t node_type, parse_token_type_t input_type, parse_keyword_t input_keyword, production_option_idx_t *out_idx, wcstring *out_error_text);
 
 }
 

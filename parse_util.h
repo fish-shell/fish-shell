@@ -28,6 +28,25 @@ int parse_util_locate_cmdsubst(const wchar_t *in,
                                bool accept_incomplete);
 
 /**
+   Alternative API. Iterate over command substitutions.
+
+   \param str the string to search for subshells
+   \param inout_cursor_offset On input, the location to begin the search. On output, either the end of the string, or just after the closed-paren.
+   \param out_contents On output, the contents of the command substitution
+   \param out_start On output, the offset of the start of the command substitution (open paren)
+   \param out_end On output, the offset of the end of the command substitution (close paren), or the end of the string if it was incomplete
+   \param accept_incomplete whether to permit missing closing parenthesis
+   \return -1 on syntax error, 0 if no subshells exist and 1 on sucess
+*/
+
+int parse_util_locate_cmdsubst_range(const wcstring &str,
+                                    size_t *inout_cursor_offset,
+                                    wcstring *out_contents,
+                                    size_t *out_start,
+                                    size_t *out_end,
+                                    bool accept_incomplete);
+
+/**
    Find the beginning and end of the command substitution under the
    cursor. If no subshell is found, the entire string is returned. If
    the current command substitution is not ended, i.e. the closing

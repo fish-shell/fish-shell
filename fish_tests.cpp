@@ -2026,9 +2026,21 @@ static void test_highlighting(void)
         {L"definitely_not_a_directory", HIGHLIGHT_ERROR},
         {NULL, -1}
     };
+    
+    // Command substitutions
+    const highlight_component_t components7[] =
+    {
+        {L"echo", HIGHLIGHT_COMMAND},
+        {L"param1", HIGHLIGHT_PARAM},
+        {L"(", HIGHLIGHT_OPERATOR},
+        {L"ls", HIGHLIGHT_COMMAND},
+        {L"param2", HIGHLIGHT_PARAM},
+        {L")", HIGHLIGHT_OPERATOR},
+        {NULL, -1}
+    };
 
     
-    const highlight_component_t *tests[] = {components1, components2, components3, components4, components5, components6};
+    const highlight_component_t *tests[] = {components1, components2, components3, components4, components5, components6, components7};
     for (size_t which = 0; which < sizeof tests / sizeof *tests; which++)
     {
         const highlight_component_t *components = tests[which];

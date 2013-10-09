@@ -164,7 +164,7 @@ int parse_util_locate_cmdsubst(const wchar_t *in, wchar_t **begin, wchar_t **end
 
     CHECK(in, 0);
 
-    for (pos = (wchar_t *)in; *pos; pos++)
+    for (pos = const_cast<wchar_t *>(in); *pos; pos++)
     {
         if (prev != '\\')
         {
@@ -238,6 +238,42 @@ int parse_util_locate_cmdsubst(const wchar_t *in, wchar_t **begin, wchar_t **end
     }
 
     return 1;
+}
+
+int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_offset, wcstring *out_contents, size_t *out_start, size_t *out_end, bool accept_incomplete)
+{
+    /* Clear the return values */
+    out_contents->clear();
+    *out_start = 0;
+    *out_end = str.size();
+    
+    /* Nothing to do if the offset is at or past the end of the string. */
+    if (*inout_cursor_offset >= str.size())
+        return 0;
+    
+    /* Defer to the wonky version */
+    const wchar_t * const buff = str.c_str();
+    const wchar_t * const valid_range_start = buff + *inout_cursor_offset, *valid_range_end = buff + str.size();
+    wchar_t *cmdsub_begin = NULL, *cmdsub_end = NULL;
+    int ret = parse_util_locate_cmdsubst(valid_range_start, &cmdsub_begin, &cmdsub_end, accept_incomplete);
+    if (ret > 0)
+    {
+        /* The command substitutions must not be NULL and must be in the valid pointer range, and the end must be bigger than the beginning */
+        assert(cmdsub_begin != NULL && cmdsub_begin >= valid_range_start && cmdsub_begin <= valid_range_end);
+        assert(cmdsub_end != NULL && cmdsub_end > cmdsub_begin && cmdsub_end >= valid_range_start && cmdsub_end <= valid_range_end);
+        
+        /* Assign the substring to the out_contents */
+        const wchar_t *interior_begin = cmdsub_begin + 1;
+        out_contents->assign(interior_begin, cmdsub_end - interior_begin);
+        
+        /* Return the start and end */
+        *out_start = cmdsub_begin - buff;
+        *out_end = cmdsub_end - buff;
+        
+        /* Update the inout_cursor_offset. Note this may cause it to exceed str.size(), though overflow is not likely */
+        *inout_cursor_offset = 1 + *out_end;
+    }
+    return ret;
 }
 
 void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **a, const wchar_t **b)

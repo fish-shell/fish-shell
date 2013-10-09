@@ -1115,7 +1115,7 @@ static void functions_def(const wcstring &name, wcstring &out)
     bool defer_function_name = (name.at(0) == L'-');
     if (! defer_function_name)
     {
-        out.append(name);
+        out.append(escape_string(name, true));
     }
 
     if (! desc.empty())
@@ -1189,7 +1189,7 @@ static void functions_def(const wcstring &name, wcstring &out)
     if (defer_function_name)
     {
         out.append(L" -- ");
-        out.append(name);
+        out.append(escape_string(name, true));
     }
 
     /* This forced tab is sort of crummy - not all functions start with a tab */

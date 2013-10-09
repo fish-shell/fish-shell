@@ -112,13 +112,11 @@
 		D08A32B817B446A300F3A533 /* signal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855C13B3ACEE0099B651 /* signal.cpp */; };
 		D08A32B917B446B100F3A533 /* parse_productions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0FE8EE7179FB75F008C9F21 /* parse_productions.cpp */; };
 		D08A32BA17B446B100F3A533 /* parse_tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0C52F351765284C00BFAB82 /* parse_tree.cpp */; };
-		D08A32BB17B446B100F3A533 /* parse_exec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0C52F331765281F00BFAB82 /* parse_exec.cpp */; };
 		D08A32BC17B4473B00F3A533 /* libncurses.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D02A8C15983CFA008E62BD /* libncurses.dylib */; };
 		D08A32BD17B4474000F3A533 /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D02A8A15983CDF008E62BD /* libiconv.dylib */; };
 		D0A564FE168D23D800AF6161 /* man in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0A564F1168D0BAB00AF6161 /* man */; };
 		D0A56501168D258300AF6161 /* man in Copy Files */ = {isa = PBXBuildFile; fileRef = D0A564F1168D0BAB00AF6161 /* man */; };
 		D0C52F371765284C00BFAB82 /* parse_tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0C52F351765284C00BFAB82 /* parse_tree.cpp */; };
-		D0C52F381765720600BFAB82 /* parse_exec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0C52F331765281F00BFAB82 /* parse_exec.cpp */; };
 		D0CBD587159EF0E10024809C /* launch_fish.scpt in Resources */ = {isa = PBXBuildFile; fileRef = D0CBD586159EF0E10024809C /* launch_fish.scpt */; };
 		D0D02A67159837AD008E62BD /* complete.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853713B3ACEE0099B651 /* complete.cpp */; };
 		D0D02A69159837B2008E62BD /* env.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853A13B3ACEE0099B651 /* env.cpp */; };
@@ -497,8 +495,6 @@
 		D0B6B0FE14E88BA400AD6C10 /* color.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = color.cpp; sourceTree = "<group>"; };
 		D0B6B0FF14E88BA400AD6C10 /* color.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = color.h; sourceTree = "<group>"; };
 		D0C4FD9415A7D7EE00212EF1 /* config.fish */ = {isa = PBXFileReference; lastKnownFileType = text; name = config.fish; path = etc/config.fish; sourceTree = "<group>"; };
-		D0C52F331765281F00BFAB82 /* parse_exec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = parse_exec.cpp; sourceTree = "<group>"; };
-		D0C52F341765281F00BFAB82 /* parse_exec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = parse_exec.h; sourceTree = "<group>"; };
 		D0C52F351765284C00BFAB82 /* parse_tree.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = parse_tree.cpp; sourceTree = "<group>"; };
 		D0C52F361765284C00BFAB82 /* parse_tree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = parse_tree.h; sourceTree = "<group>"; };
 		D0C6FCC914CFA4B0004CE8AD /* autoload.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = autoload.cpp; sourceTree = "<group>"; };
@@ -665,8 +661,6 @@
 				D0FE8EE7179FB75F008C9F21 /* parse_productions.cpp */,
 				D0C52F361765284C00BFAB82 /* parse_tree.h */,
 				D0C52F351765284C00BFAB82 /* parse_tree.cpp */,
-				D0C52F341765281F00BFAB82 /* parse_exec.h */,
-				D0C52F331765281F00BFAB82 /* parse_exec.cpp */,
 				D0A0850D13B3ACEE0099B651 /* fallback.h */,
 				D0A0853E13B3ACEE0099B651 /* fallback.cpp */,
 				D0A0850E13B3ACEE0099B651 /* function.h */,
@@ -1130,7 +1124,6 @@
 			files = (
 				D08A32B917B446B100F3A533 /* parse_productions.cpp in Sources */,
 				D08A32BA17B446B100F3A533 /* parse_tree.cpp in Sources */,
-				D08A32BB17B446B100F3A533 /* parse_exec.cpp in Sources */,
 				D08A32A717B446A300F3A533 /* autoload.cpp in Sources */,
 				D08A32A817B446A300F3A533 /* builtin_test.cpp in Sources */,
 				D08A32A917B446A300F3A533 /* color.cpp in Sources */,
@@ -1255,7 +1248,6 @@
 				D0D02A7B15983928008E62BD /* env_universal_common.cpp in Sources */,
 				D0D02A89159839DF008E62BD /* fish.cpp in Sources */,
 				D0C52F371765284C00BFAB82 /* parse_tree.cpp in Sources */,
-				D0C52F381765720600BFAB82 /* parse_exec.cpp in Sources */,
 				D0FE8EE8179FB760008C9F21 /* parse_productions.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

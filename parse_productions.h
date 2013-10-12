@@ -14,7 +14,6 @@ namespace parse_productions
 #define MAX_PRODUCTIONS 5
 #define MAX_SYMBOLS_PER_PRODUCTION 5
 
-
 typedef uint32_t production_tag_t;
 
 /* A production is an array of unsigned char. Symbols are encoded directly as their symbol value. Keywords are encoded with an offset of LAST_TOKEN_OR_SYMBOL + 1. So essentially we glom together keywords and symbols. */
@@ -63,7 +62,7 @@ inline bool production_element_is_valid(production_element_t elem)
 }
 
 /* Fetch a production. We are passed two input tokens. The first input token is guaranteed to not be invalid; the second token may be invalid if there's no more tokens. */
-const production_t *production_for_token(parse_token_type_t node_type, parse_token_type_t input_type, parse_keyword_t input_keyword, parse_token_type_t input_type2, parse_keyword_t input_keyword2, production_option_idx_t *out_idx, wcstring *out_error_text);
+const production_t *production_for_token(parse_token_type_t node_type, const parse_token_t &input1, const parse_token_t &input2, production_option_idx_t *out_which_production, wcstring *out_error_text);
 
 }
 

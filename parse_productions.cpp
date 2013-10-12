@@ -26,37 +26,9 @@ static bool production_is_valid(const production_options_t production_list, prod
     return nonempty_found;
 }
 
-/* Helper function indicates whether a token (typically second token) causes the preceding token to be treated as a command instead of giving it a special role. This is so we can treat e.g. 'command --help' as "invoke the 'command' builtin with --help' instead of 'run the --help command'.
-
-    if naked_invocation_invokes_help is true, then we treat an invalid type or something other than a string as indicating help; this means that the user ran e.g. 'command' with no arguments.
-*/
-static inline bool token_implies_previous_keyword_is_command(parse_token_type_t type, parse_keyword_t keyword, bool naked_invocation_invokes_help)
-{
-    bool result = false;
-    switch (keyword)
-    {
-        case parse_keyword_dash:
-        case parse_keyword_dashdash:
-        case parse_keyword_dash_h:
-        case parse_keyword_dashdash_help:
-            result = true;
-            break;
-            
-        default:
-            break;
-    }
-    
-    if (! result)
-    {
-        result = naked_invocation_invokes_help && type != parse_token_type_string;
-    }
-    
-    return result;
-}
-
 #define PRODUCTIONS(sym) static const production_options_t productions_##sym
-#define RESOLVE(sym) static production_option_idx_t resolve_##sym (parse_token_type_t token_type, parse_keyword_t token_keyword, parse_token_type_t token_type2, parse_keyword_t token_keyword2)
-#define RESOLVE_ONLY(sym) static production_option_idx_t resolve_##sym (parse_token_type_t token_type, parse_keyword_t token_keyword, parse_token_type_t token_type2, parse_keyword_t token_keyword2) { return 0; }
+#define RESOLVE(sym) static production_option_idx_t resolve_##sym (const parse_token_t &token1, const parse_token_t &token2)
+#define RESOLVE_ONLY(sym) static production_option_idx_t resolve_##sym (const parse_token_t &input1, const parse_token_t &input2) { return 0; }
 
 #define KEYWORD(x) ((x) + LAST_TOKEN_OR_SYMBOL + 1)
 
@@ -71,11 +43,11 @@ PRODUCTIONS(job_list) =
 
 RESOLVE(job_list)
 {
-    switch (token_type)
+    switch (token1.type)
     {
         case parse_token_type_string:
             // 'end' is special
-            switch (token_keyword)
+            switch (token1.keyword)
             {
                 case parse_keyword_end:
                 case parse_keyword_else:
@@ -120,7 +92,7 @@ PRODUCTIONS(job_continuation) =
 };
 RESOLVE(job_continuation)
 {
-    switch (token_type)
+    switch (token1.type)
     {
         case parse_token_type_pipe:
             // Pipe, continuation
@@ -143,21 +115,29 @@ PRODUCTIONS(statement) =
 };
 RESOLVE(statement)
 {
-    // Go to decorated statements if the subsequent token looks like '--help'
+    // Go to decorated statements if the subsequent token looks like '--'
     // If we are 'begin', then we expect to be invoked with no arguments. But if we are anything else, we require an argument, so do the same thing if the subsequent token is a line end.
-    if (token_type == parse_token_type_string)
+    if (token1.type == parse_token_type_string)
     {
-        bool naked_invocation_invokes_help = (token_keyword != parse_keyword_begin && token_keyword != parse_keyword_end);
-        if (token_implies_previous_keyword_is_command(token_type2, token_keyword2, naked_invocation_invokes_help))
+        // If the next token looks like an option (starts with a dash), then parse it as a decorated statement
+        if (token2.has_dash_prefix)
         {
-            return 4; //decorated statement
+            return 4;
         }
+        
+        // Likewise if the next token doesn't look like an argument at all. This corresponds to e.g. a "naked if".
+        bool naked_invocation_invokes_help = (token1.keyword != parse_keyword_begin && token1.keyword != parse_keyword_end);
+        if (naked_invocation_invokes_help && token2.type != parse_token_type_string)
+        {
+            return 4;
+        }
+        
     }
 
-    switch (token_type)
+    switch (token1.type)
     {
         case parse_token_type_string:
-            switch (token_keyword)
+            switch (token1.keyword)
             {
                 case parse_keyword_and:
                 case parse_keyword_or:
@@ -188,10 +168,6 @@ RESOLVE(statement)
                 case parse_keyword_command:
                 case parse_keyword_builtin:
                 case parse_keyword_case:
-                case parse_keyword_dash:
-                case parse_keyword_dashdash:
-                case parse_keyword_dash_h:
-                case parse_keyword_dashdash_help:
                     return 4;
             }
             break;
@@ -227,7 +203,7 @@ PRODUCTIONS(else_clause) =
 };
 RESOLVE(else_clause)
 {
-    switch (token_keyword)
+    switch (token1.keyword)
     {
         case parse_keyword_else:
             return 1;
@@ -243,7 +219,7 @@ PRODUCTIONS(else_continuation) =
 };
 RESOLVE(else_continuation)
 {
-    switch (token_keyword)
+    switch (token1.keyword)
     {
         case parse_keyword_if:
             return 0;
@@ -266,8 +242,8 @@ PRODUCTIONS(case_item_list) =
 };
 RESOLVE(case_item_list)
 {
-    if (token_keyword == parse_keyword_case) return 1;
-    else if (token_type == parse_token_type_end) return 2; //empty line
+    if (token1.keyword == parse_keyword_case) return 1;
+    else if (token1.type == parse_token_type_end) return 2; //empty line
     else return 0;
 }
 
@@ -284,7 +260,7 @@ PRODUCTIONS(argument_list) =
 };
 RESOLVE(argument_list)
 {
-    switch (token_type)
+    switch (token1.type)
     {
         case parse_token_type_string:
             return 1;
@@ -308,7 +284,7 @@ PRODUCTIONS(block_header) =
 };
 RESOLVE(block_header)
 {
-    switch (token_keyword)
+    switch (token1.keyword)
     {
         case parse_keyword_else:
             return NO_PRODUCTION;
@@ -358,7 +334,7 @@ PRODUCTIONS(boolean_statement) =
 };
 RESOLVE(boolean_statement)
 {
-    switch (token_keyword)
+    switch (token1.keyword)
     {
         case parse_keyword_and:
             return 0;
@@ -379,11 +355,13 @@ PRODUCTIONS(decorated_statement) =
 };
 RESOLVE(decorated_statement)
 {
-    /* If this is e.g. 'command --help' then the command is 'command' and not a decoration */
-    if (token_implies_previous_keyword_is_command(token_type2, token_keyword2, true /* naked_invocation_is_help */))
+    /* If this is e.g. 'command --help' then the command is 'command' and not a decoration. If the second token is not a string, then this is a naked 'command' and we should execute it as undecorated. */
+    if (token2.type != parse_token_type_string || token2.has_dash_prefix)
+    {
         return 0;
+    }
     
-    switch (token_keyword)
+    switch (token1.keyword)
     {
         default:
             return 0;
@@ -407,7 +385,7 @@ PRODUCTIONS(arguments_or_redirections_list) =
 };
 RESOLVE(arguments_or_redirections_list)
 {
-    switch (token_type)
+    switch (token1.type)
     {
         case parse_token_type_string:
         case parse_token_type_redirection:
@@ -424,7 +402,7 @@ PRODUCTIONS(argument_or_redirection) =
 };
 RESOLVE(argument_or_redirection)
 {
-    switch (token_type)
+    switch (token1.type)
     {
         case parse_token_type_string:
             return 0;
@@ -455,7 +433,7 @@ PRODUCTIONS(optional_background) =
 
 RESOLVE(optional_background)
 {
-    switch (token_type)
+    switch (token1.type)
     {
         case parse_token_type_background:
             return 1;
@@ -465,17 +443,17 @@ RESOLVE(optional_background)
 }
 
 #define TEST(sym) case (symbol_##sym): production_list = & productions_ ## sym ; resolver = resolve_ ## sym ; break;
-const production_t *parse_productions::production_for_token(parse_token_type_t node_type, parse_token_type_t input_type, parse_keyword_t input_keyword, parse_token_type_t input_type2, parse_keyword_t input_keyword2, production_option_idx_t *out_which_production, wcstring *out_error_text)
+const production_t *parse_productions::production_for_token(parse_token_type_t node_type, const parse_token_t &input1, const parse_token_t &input2, production_option_idx_t *out_which_production, wcstring *out_error_text)
 {
     bool log_it = false;
     if (log_it)
     {
-        fprintf(stderr, "Resolving production for %ls with input type %ls <%ls>\n", token_type_description(node_type).c_str(), token_type_description(input_type).c_str(), keyword_description(input_keyword).c_str());
+        fprintf(stderr, "Resolving production for %ls with input token <%ls>\n", token_type_description(node_type).c_str(), input1.describe().c_str());
     }
 
     /* Fetch the list of productions and the function to resolve them */
     const production_options_t *production_list = NULL;
-    production_option_idx_t (*resolver)(parse_token_type_t token_type, parse_keyword_t token_keyword, parse_token_type_t token_type2, parse_keyword_t token_keyword2) = NULL;
+    production_option_idx_t (*resolver)(const parse_token_t &input1, const parse_token_t &input2) = NULL;
     switch (node_type)
     {
             TEST(job_list)
@@ -533,7 +511,7 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
     PARSE_ASSERT(resolver != NULL);
 
     const production_t *result = NULL;
-    production_option_idx_t which = resolver(input_type, input_keyword, input_type2, input_keyword2);
+    production_option_idx_t which = resolver(input1, input2);
 
     if (log_it)
     {
@@ -545,7 +523,7 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
     {
         if (log_it)
         {
-            fprintf(stderr, "Token type '%ls' has no production for input type '%ls', keyword '%ls' (in %s)\n", token_type_description(node_type).c_str(), token_type_description(input_type).c_str(), keyword_description(input_keyword).c_str(), __FUNCTION__);
+            fprintf(stderr, "Node type '%ls' has no production for input '%ls' (in %s)\n", token_type_description(node_type).c_str(), input1.describe().c_str(), __FUNCTION__);
         }
         result = NULL;
     }
@@ -557,3 +535,4 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
     *out_which_production = which;
     return result;
 }
+

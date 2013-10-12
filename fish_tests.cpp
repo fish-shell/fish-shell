@@ -2004,6 +2004,7 @@ static void test_new_parser_ll2(void)
         {L"command", L"command", L"", parse_statement_decoration_none},
         {L"command -", L"command", L"-", parse_statement_decoration_none},
         {L"command --", L"command", L"--", parse_statement_decoration_none},
+        {L"builtin --names", L"builtin", L"--names", parse_statement_decoration_none},
         {L"function", L"function", L"", parse_statement_decoration_none},
         {L"function --help", L"function", L"--help", parse_statement_decoration_none}
     };

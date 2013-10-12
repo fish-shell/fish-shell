@@ -179,24 +179,18 @@ wcstring parse_node_t::describe(void) const
     return result;
 }
 
-/** A struct representing the token type passed to */
-struct parse_token_t
-{
-    enum parse_token_type_t type; // The type of the token as represented by the parser
-    enum parse_keyword_t keyword; // Any keyword represented by this parser
-    size_t source_start;
-    size_t source_length;
 
-    wcstring describe() const
+/** Returns a string description of the given parse token */
+wcstring parse_token_t::describe() const
+{
+    wcstring result = token_type_description(type);
+    if (keyword != parse_keyword_none)
     {
-        wcstring result = token_type_description(type);
-        if (keyword != parse_keyword_none)
-        {
-            append_format(result, L" <%ls>", keyword_description(keyword).c_str());
-        }
-        return result;
+        append_format(result, L" <%ls>", keyword_description(keyword).c_str());
     }
-};
+    return result;
+}
+
 
 /* Convert from tokenizer_t's token type to a parse_token_t type */
 static inline parse_token_type_t parse_token_type_from_tokenizer_token(enum token_type tokenizer_token_type)
@@ -720,7 +714,7 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2)
         // Get the production for the top of the stack
         parse_stack_element_t &stack_elem = symbol_stack.back();
         parse_node_t &node = nodes.at(stack_elem.node_idx);
-        const production_t *production = production_for_token(stack_elem.type, token1.type, token1.keyword, token2.type, token2.keyword, &node.production_idx, NULL /* error text */);
+        const production_t *production = production_for_token(stack_elem.type, token1, token2, &node.production_idx, NULL /* error text */);
         if (production == NULL)
         {
             if (should_generate_error_messages)
@@ -783,11 +777,7 @@ static parse_keyword_t keyword_for_token(token_type tok, const wchar_t *tok_txt)
             {L"or", parse_keyword_or},
             {L"not", parse_keyword_not},
             {L"command", parse_keyword_command},
-            {L"builtin", parse_keyword_builtin},
-            {L"-", parse_keyword_dash},
-            {L"--", parse_keyword_dashdash},
-            {L"-h", parse_keyword_dash_h},
-            {L"--help", parse_keyword_dashdash_help}
+            {L"builtin", parse_keyword_builtin}
         };
 
         for (size_t i=0; i < sizeof keywords / sizeof *keywords; i++)
@@ -803,7 +793,7 @@ static parse_keyword_t keyword_for_token(token_type tok, const wchar_t *tok_txt)
 }
 
 /* Placeholder invalid token */
-static const parse_token_t kInvalidToken = {token_type_invalid, parse_keyword_none, -1, -1};
+static const parse_token_t kInvalidToken = {token_type_invalid, parse_keyword_none, false, -1, -1};
 
 /* Return a new parse token, advancing the tokenizer */
 static inline parse_token_t next_parse_token(tokenizer_t *tok)
@@ -820,10 +810,13 @@ static inline parse_token_t next_parse_token(tokenizer_t *tok)
     const wchar_t *tok_txt = tok_last(tok);
 
     parse_token_t result;
+    
+    /* Set the type, keyword, and whether there's a dash prefix. Note that this is quite sketchy, because it ignores quotes. This is the historical behavior. For example, `builtin --names` lists builtins, but `builtin "--names"` attempts to run --names as a command. Amazingly as of this writing (10/12/13) nobody seems to have noticed this. Squint at it really hard ant it even starts to look like a feature. */
     result.type = parse_token_type_from_tokenizer_token(tok_type);
+    result.keyword = keyword_for_token(tok_type, tok_txt);
+    result.has_dash_prefix = (tok_txt[0] == L'-');
     result.source_start = (size_t)tok_start;
     result.source_length = tok_extent;
-    result.keyword = keyword_for_token(tok_type, tok_txt);
     
     tok_next(tok);
     return result;

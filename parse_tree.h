@@ -113,13 +113,20 @@ enum parse_keyword_t
     parse_keyword_command,
     parse_keyword_builtin,
     
-    /* The following are not really keywords but are necessary for e.g. "command --help" to work */
-    parse_keyword_dash,
-    parse_keyword_dashdash,
-    parse_keyword_dash_h,
-    parse_keyword_dashdash_help,
+    LAST_KEYWORD = parse_keyword_builtin
+};
 
-    LAST_KEYWORD = parse_keyword_dashdash_help
+
+/** A struct representing the token type that we use internally */
+struct parse_token_t
+{
+    enum parse_token_type_t type; // The type of the token as represented by the parser
+    enum parse_keyword_t keyword; // Any keyword represented by this token
+    bool has_dash_prefix; // Hackish: whether the source contains a dash prefix
+    size_t source_start;
+    size_t source_length;
+
+    wcstring describe() const;
 };
 
 

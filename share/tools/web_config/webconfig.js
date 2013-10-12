@@ -137,19 +137,6 @@ webconfig.controller("colorsController", function($scope, $http) {
 */
 
 webconfig.controller("newColorsController", function($scope, $http) {
-    $scope.changeSelectedColorScheme= function(newScheme) {
-        $scope.selectedColorScheme = newScheme;
-        if ($scope.selectedColorScheme.preferred_background) {
-            $scope.terminalBackgroundColor = $scope.selectedColorScheme.preferred_background;
-        }
-        $scope.selectedColorSetting = 'command';
-        $scope.colorArraysArray = $scope.getColorArraysArray();
-    }
-
-    $scope.changeTerminalBackgroundColor = function(color) {
-        $scope.terminalBackgroundColor = color;
-    }
-
     $scope.term256Colors = [ //247
     "ffd7d7",
     "d7afaf",
@@ -438,6 +425,21 @@ webconfig.controller("newColorsController", function($scope, $http) {
         return adjust_lightness(color_str, compute_constrast);
     }		
 
+    $scope.changeSelectedColorScheme= function(newScheme) {
+        $scope.selectedColorScheme = newScheme;
+        if ($scope.selectedColorScheme.preferred_background) {
+            $scope.terminalBackgroundColor = $scope.selectedColorScheme.preferred_background;
+        }
+        $scope.selectedColorSetting = 'command';
+        $scope.colorArraysArray = $scope.getColorArraysArray();
+        //TODO: Save button should be shown only when colors are changed
+        $scope.showSaveButton = true;
+    }
+
+    $scope.changeTerminalBackgroundColor = function(color) {
+        $scope.terminalBackgroundColor = color;
+    }
+
     $scope.getColorArraysArray = function() {
         var result = null;
         if ($scope.selectedColorScheme.colors.length > 0)
@@ -696,6 +698,18 @@ webconfig.controller("newColorsController", function($scope, $http) {
 
     $scope.changeSelectedColorScheme($scope.color_schemes[0]);
     $scope.color_settings = $scope.color_schemes.colors; 
+    $scope.setTheme = function() {
+        var settingNames = ["autosuggestion", "command", "param", "redirection", "comment", "error", "escape", "operator", "quote", "end"];
+        for (name in settingNames) {
+            var postData = "what=" + settingNames[name] + "&color=" + $scope.selectedColorScheme[settingNames[name]] + "&background_color=&bold=&underline=";
+            $http.post("/set_color/", postData, { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config) {
+                console.log(data);
+            })
+        }
+    };
+
+
+
 
     range = function(start, end) {
         var result = [];
@@ -755,13 +769,6 @@ webconfig.controller("newColorsController", function($scope, $http) {
         $scope.selectedCell = $scope.term256Colors.indexOf($scope.selectedColorConfig.color);
     })};
 
-    $scope.setColor = function() {
-        var config = $scope.selectedColorConfig;
-        var postData = "what=" + config.name + "&color=" + config.color + "&background_color="+ config.background + "&bold=" + config.bold + "&underline=" + config.underline;
-        $http.post("/set_color/", postData, { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config) {
-            console.log(data);
-        })
-    };
 
     $scope.fetchColors();
 });

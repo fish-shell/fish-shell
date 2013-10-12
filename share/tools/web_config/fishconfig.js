@@ -1,6 +1,6 @@
-webconfig = angular.module("webconfig", []);
+fishconfig = angular.module("fishconfig", []);
 
-webconfig.filter("filterVariable", function() {
+fishconfig.filter("filterVariable", function() {
     return function(variables, query) {
         var result = []
         if (variables == undefined) return result;
@@ -17,12 +17,12 @@ webconfig.filter("filterVariable", function() {
     }
 });
 
-webconfig.config(
+fishconfig.config(
     ["$routeProvider", function($routeProvider) {
         $routeProvider
         .when("/colors", {
-            controller: "newColorsController",
-            templateUrl: "partials/new_colors.html"
+            controller: "colorsController",
+            templateUrl: "partials/colors.html"
         })
         .when("/prompt", {
             controller: "promptController",
@@ -45,7 +45,7 @@ webconfig.config(
         })
     }]);
 
-webconfig.controller("main", function($scope, $location) {
+fishconfig.controller("main", function($scope, $location) {
     $scope.currentTab = "colors";
 
     $scope.changeView = function(view) {
@@ -62,81 +62,8 @@ webconfig.controller("main", function($scope, $location) {
     }
 
 })
-/*
-webconfig.controller("colorsController", function($scope, $http) {
-    $scope.term256Colors = [ "ffd7d7", "d7afaf", "af8787", "875f5f", "5f0000", "870000", "af0000", "d70000", "ff0000", "ff5f5f", "d75f5f", "d78787", "ff8787", "ffafaf", "ffaf87", "ffaf5f", "ffaf00", "ff875f", "ff8700", "ff5f00", "d75f00", "af5f5f", "af5f00", "d78700", "d7875f", "af875f", "af8700", "875f00", "d7af87", "ffd7af", "ffd787", "ffd75f", "d7af00", "d7af5f", "ffd700", "ffff5f", "ffff00", "ffff87", "ffffaf", "ffffd7", "d7ff00", "afd75f", "d7d700", "d7d787", "d7d7af", "afaf87", "87875f", "5f5f00", "878700", "afaf00", "afaf5f", "d7d75f", "d7ff5f", "d7ff87", "87ff00", "afff00", "afff5f", "afd700", "87d700", "87af00", "5f8700", "87af5f", "5faf00", "afd787", "d7ffd7", "d7ffaf", "afffaf", "afff87", "5fff00", "5fd700", "87d75f", "5fd75f", "87ff5f", "5fff5f", "87ff87", "afd7af", "87d787", "87d7af", "87af87", "5f875f", "5faf5f", "005f00", "008700", "00af00", "00d700", "00ff00", "00ff5f", "5fff87", "00ff87", "87ffaf", "afffd7", "5fd787", "00d75f", "5faf87", "00af5f", "5fffaf", "00ffaf", "5fd7af", "00d787", "00875f", "00af87", "00d7af", "5fffd7", "87ffd7", "00ffd7", "d7ffff", "afd7d7", "87afaf", "5f8787", "5fafaf", "87d7d7", "5fd7d7", "5fffff", "00ffff", "87ffff", "afffff", "00d7d7", "00d7ff", "5fd7ff", "5fafd7", "00afd7", "00afff", "0087af", "00afaf", "008787", "005f5f", "005f87", "0087d7", "0087ff", "5fafff", "87afff", "5f87d7", "5f87ff", "005fd7", "005fff", "005faf", "5f87af", "87afd7", "afd7ff", "87d7ff", "d7d7ff", "afafd7", "8787af", "afafff", "8787d7", "8787ff", "5f5fff", "5f5fd7", "5f5faf", "5f5f87", "00005f", "000087", "0000af", "0000d7", "0000ff", "5f00ff", "5f00d7", "5f00af", "5f0087", "8700af", "8700d7", "8700ff", "af00ff", "af00d7", "d700ff", "d75fff", "d787ff", "ffafd7", "ffafff", "ffd7ff", "d7afff", "d7afd7", "af87af", "af87d7", "af87ff", "875fd7", "875faf", "875fff", "af5fff", "af5fd7", "af5faf", "d75fd7", "d787d7", "ff87ff", "ff5fff", "ff5fd7", "ff00ff", "ff00af", "ff00d7", "d700af", "d700d7", "af00af", "870087", "5f005f", "87005f", "af005f", "af0087", "d70087", "d7005f", "ff0087", "ff005f", "ff5f87", "d75f87", "d75faf", "ff5faf", "ff87af", "ff87d7", "d787af", "af5f87", "875f87", "000000", "080808", "121212", "1c1c1c", "262626", "303030", "3a3a3a", "444444", "4e4e4e", "585858", "5f5f5f", "626262", "6c6c6c", "767676", "808080", "878787", "8a8a8a", "949494", "9e9e9e", "a8a8a8", "afafaf", "b2b2b2", "bcbcbc", "c6c6c6", "d0d0d0", "d7d7d7", "dadada", "e4e4e4", "eeeeee", "ffffff", ];
 
-    range = function(start, end) {
-        var result = [];
-        for (var i = start; i <= end; i++) {
-            result.push(i);
-        }
-        return result;
-    };
-
-    $scope.selectedColorConfig = null;
-    $scope.itemsPerRow = range(0, 15);
-    $scope.totalRows = range(0, $scope.term256Colors.length/$scope.itemsPerRow.length);
-    $scope.selectedCell = null;
-    $scope.target = "text";
-
-    $scope.selectConfig = function(newSelection) {
-        $scope.selectedColorConfig = newSelection;
-        //console.log("Color :" + $scope.colorConfig[$scope.selectedColorConfig].color.toLowerCase() + $scope.term256Colors.indexOf($scope.colorConfig[$scope.selectedColorConfig].color.toLowerCase()));
-        if ($scope.target == "background") {
-            $scope.selectedCell = $scope.term256Colors.indexOf($scope.selectedColorConfig.background.toLowerCase());
-        }
-        else {
-            $scope.selectedCell = $scope.term256Colors.indexOf($scope.selectedColorConfig.color.toLowerCase());
-       } 
-    }
-
-    $scope.pickedColorCell = function(index) {
-        console.log("color picked" + index +  " " + $scope.term256Colors[index]);
-        $scope.selectedCell = index;
-
-        if ($scope.target == "background") {
-            $scope.selectedColorConfig.background = $scope.term256Colors[$scope.selectedCell];
-        }
-        else {
-            $scope.selectedColorConfig.color = $scope.term256Colors[$scope.selectedCell];
-        } 
-
-        $scope.setColor();
-    }
-
-    $scope.pickedColorPickerTarget = function(target) {
-        console.log("Picked " + target);
-        $scope.target = target;
-        // Update selection in color picker
-        $scope.selectConfig($scope.selectedColorConfig);
-    }
-
-    $scope.setUnderline = function() {
-        $scope.selectedColorConfig.underline = !$scope.selectedColorConfig.underline;
-        $scope.setColor();
-    }
-
-    $scope.fetchColors = function() {
-        $http.get("/colors/").success(function(data, status, headers, config) {
-        $scope.colorConfigs = data;
-        $scope.selectedColorConfig = data[0];
-        $scope.selectedCell = $scope.term256Colors.indexOf($scope.selectedColorConfig.color);
-    })};
-
-    $scope.setColor = function() {
-        var config = $scope.selectedColorConfig;
-        var postData = "what=" + config.name + "&color=" + config.color + "&background_color="+ config.background + "&bold=" + config.bold + "&underline=" + config.underline;
-        $http.post("/set_color/", postData, { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config) {
-            console.log(data);
-        })
-    };
-
-    $scope.fetchColors();
-});
-*/
-
-webconfig.controller("newColorsController", function($scope, $http) {
+fishconfig.controller("colorsController", function($scope, $http) {
     $scope.term256Colors = [ //247
     "ffd7d7",
     "d7afaf",
@@ -773,7 +700,7 @@ webconfig.controller("newColorsController", function($scope, $http) {
     $scope.fetchColors();
 });
 
-webconfig.controller("promptController", function($scope, $http) {
+fishconfig.controller("promptController", function($scope, $http) {
     $scope.selectedPrompt = null;
 
     $scope.fetchCurrentPrompt = function(currenttPrompt) {
@@ -815,7 +742,7 @@ webconfig.controller("promptController", function($scope, $http) {
     $scope.fetchSamplePrompts();
 });
 
-webconfig.controller("functionsController", function($scope, $http) {
+fishconfig.controller("functionsController", function($scope, $http) {
     $scope.selectedFunction = null;
     $scope.functionDefinition = ""; 
 
@@ -856,7 +783,7 @@ webconfig.controller("functionsController", function($scope, $http) {
     $scope.fetchFunctions();
 });
 
-webconfig.controller("variablesController", function($scope, $http) {
+fishconfig.controller("variablesController", function($scope, $http) {
     $scope.query = null;
 
     $scope.fetchVariables= function() {
@@ -867,7 +794,7 @@ webconfig.controller("variablesController", function($scope, $http) {
     $scope.fetchVariables();
 });
 
-webconfig.controller("historyController", function($scope, $http, $timeout) {
+fishconfig.controller("historyController", function($scope, $http, $timeout) {
     $scope.historyItems = [];
     $scope.historySize = 0;
     // Stores items which are yet to be added in history items

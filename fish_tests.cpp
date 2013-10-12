@@ -63,6 +63,26 @@
 #include "parse_tree.h"
 #include "parse_util.h"
 
+static const char * const * s_arguments;
+
+/* Indicate if we should test the given function. Either we test everything (all arguments) or we run only tests that have a prefix in s_arguments */
+static bool should_test_function(const char *func_name)
+{
+    /* No args, test everything */
+    if (! s_arguments || ! s_arguments[0])
+        return true;
+    
+    for (size_t i=0; s_arguments[i] != NULL; i++)
+    {
+        if (! strncmp(func_name, s_arguments[i], strlen(s_arguments[i])))
+        {
+            /* Prefix match */
+            return true;
+        }
+    }
+    return false;
+}
+
 /**
    The number of tests to run
  */
@@ -1100,6 +1120,12 @@ static void test_complete(void)
     assert(completions.size() == 2);
     assert(completions.at(0).completion == L"$Foo1");
     assert(completions.at(1).completion == L"$Bar1");
+    
+    completions.clear();
+    complete(L"echo (/bin/ech", completions, COMPLETION_REQUEST_DEFAULT);
+    assert(completions.size() == 1);
+    assert(completions.at(0).completion == L"o");
+    
 
 
     complete_set_variable_names(NULL);
@@ -2192,6 +2218,7 @@ int main(int argc, char **argv)
     configure_thread_assertions_for_testing();
 
     program_name=L"(ignore)";
+    s_arguments = argv;
 
     say(L"Testing low-level functionality");
     set_main_thread();
@@ -2203,39 +2230,38 @@ int main(int argc, char **argv)
     reader_init();
     env_init();
 
-    test_highlighting();
-    test_new_parser_ll2();
-    test_new_parser_fuzzing();
-    test_new_parser_correctness();
-    test_highlighting();
-    test_new_parser();
+    if (should_test_function("highlighting")) test_highlighting();
+    if (should_test_function("new_parser_ll2")) test_new_parser_ll2();
+    if (should_test_function("new_parser_fuzzing")) test_new_parser_fuzzing();
+    if (should_test_function("new_parser_correctness")) test_new_parser_correctness();
+    if (should_test_function("new_parser")) test_new_parser();
 
-    test_format();
-    test_escape();
-    test_convert();
-    test_convert_nulls();
-    test_tok();
-    test_fork();
-    test_parser();
-    test_utils();
-    test_escape_sequences();
-    test_lru();
-    test_expand();
-    test_fuzzy_match();
-    test_abbreviations();
-    test_test();
-    test_path();
-    test_word_motion();
-    test_is_potential_path();
-    test_colors();
-    test_complete();
-    test_completion_insertions();
-    test_autosuggestion_combining();
-    test_autosuggest_suggest_special();
-    history_tests_t::test_history();
-    history_tests_t::test_history_merge();
-    history_tests_t::test_history_races();
-    history_tests_t::test_history_formats();
+    if (should_test_function("format")) test_format();
+    if (should_test_function("escape")) test_escape();
+    if (should_test_function("convert")) test_convert();
+    if (should_test_function("convert_nulls")) test_convert_nulls();
+    if (should_test_function("tok")) test_tok();
+    if (should_test_function("fork")) test_fork();
+    if (should_test_function("parser")) test_parser();
+    if (should_test_function("utils")) test_utils();
+    if (should_test_function("escape_sequences")) test_escape_sequences();
+    if (should_test_function("lru")) test_lru();
+    if (should_test_function("expand")) test_expand();
+    if (should_test_function("fuzzy_match")) test_fuzzy_match();
+    if (should_test_function("abbreviations")) test_abbreviations();
+    if (should_test_function("test")) test_test();
+    if (should_test_function("path")) test_path();
+    if (should_test_function("word_motion")) test_word_motion();
+    if (should_test_function("is_potential_path")) test_is_potential_path();
+    if (should_test_function("colors")) test_colors();
+    if (should_test_function("complete")) test_complete();
+    if (should_test_function("completion_insertions")) test_completion_insertions();
+    if (should_test_function("autosuggestion_combining")) test_autosuggestion_combining();
+    if (should_test_function("autosuggest_suggest_special")) test_autosuggest_suggest_special();
+    if (should_test_function("history")) history_tests_t::test_history();
+    if (should_test_function("history_merge")) history_tests_t::test_history_merge();
+    if (should_test_function("history_races")) history_tests_t::test_history_races();
+    if (should_test_function("history_formats")) history_tests_t::test_history_formats();
     //history_tests_t::test_history_speed();
 
     say(L"Encountered %d errors in low-level tests", err_count);

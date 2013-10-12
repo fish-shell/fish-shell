@@ -2,7 +2,7 @@
     <input id="table_filter_text_box" class="filter_text_box text_box_transient" placeholder="Filter" ng-model="query">
 </div>
 
-<table id="data_table" style="display: table;">
+<table class="data_table">
     <tbody>
     <tr class="data_table_row" ng-repeat="variable in variables | filterVariable:query">
         <td class="data_table_cell no_overflow" style="text-align: right; padding-right: 30px;">{{ variable.name }}</td>

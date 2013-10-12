@@ -1339,7 +1339,7 @@ static int builtin_functions(parser_t &parser, wchar_t **argv)
     {
         int i;
         for (i=woptind; i<argc; i++)
-            function_remove(argv[i]);
+            function_remove_ignore_autoload(argv[i]);
         return STATUS_BUILTIN_OK;
     }
     else if (desc)

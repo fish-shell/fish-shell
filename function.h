@@ -95,6 +95,9 @@ void function_init();
 /** Add a function. */
 void function_add(const function_data_t &data, const parser_t &parser);
 
+/** Removes a function from our internal table, returning true if it was found and false if not */
+bool function_remove_ignore_autoload(const wcstring &name);
+
 /**
    Remove the function with the specified name.
 */

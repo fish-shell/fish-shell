@@ -577,10 +577,34 @@ webconfig.controller("variablesController", function($scope, $http) {
     $scope.fetchVariables();
 });
 
-webconfig.controller("historyController", function($scope, $http) {
+webconfig.controller("historyController", function($scope, $http, $timeout) {
+    $scope.historyItems = [];
+    $scope.historySize = 0;
+    // Stores items which are yet to be added in history items
+    $scope.remainingItems = [];
+
+    // Populate history items in parts
+    $scope.loadHistory = function() {
+        if ($scope.remainingItems.length <= 0) {
+            $scope.loadingText = "";
+            return;
+        }
+
+        var to_load = $scope.remainingItems.splice(0, 100);
+        for (i in to_load) {
+            $scope.historyItems.push(to_load[i]);
+        }
+
+        $scope.loadingText = "Loading " + $scope.historyItems.length + "/" + $scope.historySize;
+        $timeout($scope.loadHistory, 100);
+    }
+
+    // Get history from server
     $scope.fetchHistory = function() {
         $http.get("/history/").success(function(data, status, headers, config) {
-        $scope.historyItems = data;
+        $scope.historySize = data.length;
+        $scope.remainingItems = data;
+        $timeout($scope.loadHistory, 100);
     })};
 
     $scope.deleteHistoryItem = function(item) {

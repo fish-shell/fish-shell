@@ -21,7 +21,7 @@
         <br>
         <span data-ng-style="{ 'color': selectedColorScheme.command}" ng-click="selectColorSetting('command')">Th</span><span data-ng-style="{ 'color': selectedColorScheme.autosuggestion }" ng-click="selectColorSetting('autosuggestion')"><span class="fake_cursor"><span style="visibility: hidden">i</span></span>s is an autosuggestion</span>
 
-        <span class="save_button" style="position: absolute; right: 5px; bottom: 5px;" data-ng-style="{'color': text_color_for_color(selectedColorScheme.preferred_background || 'white')}">Apply</span>
+        <span class="save_button" style="position: absolute; right: 5px; bottom: 5px;" data-ng-style="{'color': text_color_for_color(selectedColorScheme.preferred_background || 'white')}" ng-show="showSaveButton" ng-click="setTheme()">Apply</span>
 
     </div>
             

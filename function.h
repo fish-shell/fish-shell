@@ -39,7 +39,7 @@ struct function_data_t
     /**
        Function definition
      */
-    wchar_t *definition;
+    const wchar_t *definition;
     /**
        List of all event handlers for this function
      */

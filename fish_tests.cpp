@@ -1122,12 +1122,42 @@ static void test_complete(void)
     assert(completions.at(1).completion == L"$Bar1");
     
     completions.clear();
-    complete(L"echo (/bin/ech", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"echo (/bin/mkdi", completions, COMPLETION_REQUEST_DEFAULT);
     assert(completions.size() == 1);
-    assert(completions.at(0).completion == L"o");
+    assert(completions.at(0).completion == L"r");
     
+    completions.clear();
+    complete(L"echo (ls /bin/mkdi", completions, COMPLETION_REQUEST_DEFAULT);
+    assert(completions.size() == 1);
+    assert(completions.at(0).completion == L"r");
+    
+    completions.clear();
+    complete(L"echo (command ls /bin/mkdi", completions, COMPLETION_REQUEST_DEFAULT);
+    assert(completions.size() == 1);
+    assert(completions.at(0).completion == L"r");
+    
+    /* Add a function and test completing it in various ways */
+    struct function_data_t func_data;
+    func_data.name = L"scuttlebutt";
+    func_data.definition = L"echo gongoozle";
+    function_add(func_data, parser_t::principal_parser());
 
+    /* Complete a function name */
+    completions.clear();
+    complete(L"echo (scuttlebut", completions, COMPLETION_REQUEST_DEFAULT);
+    assert(completions.size() == 1);
+    assert(completions.at(0).completion == L"t");
 
+    /* But not with the command prefix */
+    completions.clear();
+    complete(L"echo (command scuttlebut", completions, COMPLETION_REQUEST_DEFAULT);
+    assert(completions.size() == 0);
+
+    /* Not with the builtin prefix */
+    completions.clear();
+    complete(L"echo (builtin scuttlebut", completions, COMPLETION_REQUEST_DEFAULT);
+    assert(completions.size() == 0);
+    
     complete_set_variable_names(NULL);
 }
 

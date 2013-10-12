@@ -664,8 +664,7 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
     
     /* Parse this subcmd */
     parse_node_tree_t parse_tree;
-    parse_t parser;
-    parser.parse(subcmd, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens, &parse_tree, NULL);
+    parse_t::parse(subcmd, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens, &parse_tree, NULL);
     
     /* Look for plain statements where the cursor is at the end of the command */
     const parse_node_t *matching_cmd_node = NULL;

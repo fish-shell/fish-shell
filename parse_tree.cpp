@@ -827,7 +827,7 @@ static inline parse_token_t next_parse_token(tokenizer_t *tok)
     return result;
 }
 
-bool parse_t::parse(const wcstring &str, parse_tree_flags_t parse_flags, parse_node_tree_t *output, parse_error_list_t *errors, bool log_it)
+bool parse_t::parse_internal(const wcstring &str, parse_tree_flags_t parse_flags, parse_node_tree_t *output, parse_error_list_t *errors, bool log_it)
 {
     this->parser->set_should_generate_error_messages(errors != NULL);
 
@@ -887,6 +887,12 @@ bool parse_t::parse(const wcstring &str, parse_tree_flags_t parse_flags, parse_n
     
     // Indicate if we had a fatal error
     return ! this->parser->has_fatal_error();
+}
+
+bool parse_t::parse(const wcstring &str, parse_tree_flags_t flags, parse_node_tree_t *output, parse_error_list_t *errors, bool log_it)
+{
+    parse_t parse;
+    return parse.parse_internal(str, flags, output, errors, log_it);
 }
 
 bool parse_t::parse_1_token(parse_token_type_t token_type, parse_keyword_t keyword, parse_node_tree_t *output, parse_error_list_t *errors)

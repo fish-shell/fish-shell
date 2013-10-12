@@ -1845,8 +1845,7 @@ static void test_new_parser_correctness(void)
         const parser_test_t *test = &parser_tests[i];
 
         parse_node_tree_t parse_tree;
-        parse_t parser;
-        bool success = parser.parse(test->src, parse_flag_none, &parse_tree, NULL);
+        bool success = parse_t::parse(test->src, parse_flag_none, &parse_tree, NULL);
         say(L"%lu / %lu: Parse \"%ls\": %s", i+1, sizeof parser_tests / sizeof *parser_tests, test->src, success ? "yes" : "no");
         if (success && ! test->ok)
         {
@@ -1954,8 +1953,7 @@ static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *o
     
     bool result = false;
     parse_node_tree_t tree;
-    parse_t parser;
-    if (parser.parse(src, parse_flag_none, &tree, NULL))
+    if (parse_t::parse(src, parse_flag_none, &tree, NULL))
     {
         /* Get the statement. Should only have one */
         const parse_node_tree_t::parse_node_list_t stmt_nodes = tree.find_nodes(tree.at(0), symbol_plain_statement);
@@ -2030,8 +2028,7 @@ static void test_new_parser(void)
     say(L"Testing new parser");
     const wcstring src = L"echo hello world";
     parse_node_tree_t parse_tree;
-    parse_t parser;
-    bool success = parser.parse(src, parse_flag_none, &parse_tree, NULL);
+    bool success = parse_t::parse(src, parse_flag_none, &parse_tree, NULL);
     if (! success)
     {
         say(L"Parsing failed");

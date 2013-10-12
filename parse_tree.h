@@ -141,12 +141,14 @@ class parse_t
 {
     parse_ll_t * const parser;
 
+    bool parse_internal(const wcstring &str, parse_tree_flags_t flags, parse_node_tree_t *output, parse_error_list_t *errors, bool log_it = false);
+
 public:
     parse_t();
     ~parse_t();
 
-    /* Parse a string */
-    bool parse(const wcstring &str, parse_tree_flags_t flags, parse_node_tree_t *output, parse_error_list_t *errors, bool log_it = false);
+    /* Parse a string all at once */
+    static bool parse(const wcstring &str, parse_tree_flags_t flags, parse_node_tree_t *output, parse_error_list_t *errors, bool log_it = false);
 
     /* Parse a single token */
     bool parse_1_token(parse_token_type_t token, parse_keyword_t keyword, parse_node_tree_t *output, parse_error_list_t *errors);

@@ -3976,8 +3976,7 @@ int builtin_parse(parser_t &parser, wchar_t **argv)
         const wcstring src = str2wcstring(&txt.at(0), txt.size());
         parse_node_tree_t parse_tree;
         parse_error_list_t errors;
-        parse_t parser;
-        bool success = parser.parse(src, parse_flag_none, &parse_tree, &errors, true);
+        bool success = parse_t::parse(src, parse_flag_none, &parse_tree, &errors, true);
         if (! success)
         {
             stdout_buffer.append(L"Parsing failed:\n");

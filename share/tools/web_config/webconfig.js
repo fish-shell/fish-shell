@@ -60,6 +60,7 @@ webconfig.controller("main", function($scope, $location) {
         }
         return cls;
     }
+
 })
 /*
 webconfig.controller("colorsController", function($scope, $http) {
@@ -136,7 +137,261 @@ webconfig.controller("colorsController", function($scope, $http) {
 */
 
 webconfig.controller("newColorsController", function($scope, $http) {
-    $scope.term256Colors = [ "ffd7d7", "d7afaf", "af8787", "875f5f", "5f0000", "870000", "af0000", "d70000", "ff0000", "ff5f5f", "d75f5f", "d78787", "ff8787", "ffafaf", "ffaf87", "ffaf5f", "ffaf00", "ff875f", "ff8700", "ff5f00", "d75f00", "af5f5f", "af5f00", "d78700", "d7875f", "af875f", "af8700", "875f00", "d7af87", "ffd7af", "ffd787", "ffd75f", "d7af00", "d7af5f", "ffd700", "ffff5f", "ffff00", "ffff87", "ffffaf", "ffffd7", "d7ff00", "afd75f", "d7d700", "d7d787", "d7d7af", "afaf87", "87875f", "5f5f00", "878700", "afaf00", "afaf5f", "d7d75f", "d7ff5f", "d7ff87", "87ff00", "afff00", "afff5f", "afd700", "87d700", "87af00", "5f8700", "87af5f", "5faf00", "afd787", "d7ffd7", "d7ffaf", "afffaf", "afff87", "5fff00", "5fd700", "87d75f", "5fd75f", "87ff5f", "5fff5f", "87ff87", "afd7af", "87d787", "87d7af", "87af87", "5f875f", "5faf5f", "005f00", "008700", "00af00", "00d700", "00ff00", "00ff5f", "5fff87", "00ff87", "87ffaf", "afffd7", "5fd787", "00d75f", "5faf87", "00af5f", "5fffaf", "00ffaf", "5fd7af", "00d787", "00875f", "00af87", "00d7af", "5fffd7", "87ffd7", "00ffd7", "d7ffff", "afd7d7", "87afaf", "5f8787", "5fafaf", "87d7d7", "5fd7d7", "5fffff", "00ffff", "87ffff", "afffff", "00d7d7", "00d7ff", "5fd7ff", "5fafd7", "00afd7", "00afff", "0087af", "00afaf", "008787", "005f5f", "005f87", "0087d7", "0087ff", "5fafff", "87afff", "5f87d7", "5f87ff", "005fd7", "005fff", "005faf", "5f87af", "87afd7", "afd7ff", "87d7ff", "d7d7ff", "afafd7", "8787af", "afafff", "8787d7", "8787ff", "5f5fff", "5f5fd7", "5f5faf", "5f5f87", "00005f", "000087", "0000af", "0000d7", "0000ff", "5f00ff", "5f00d7", "5f00af", "5f0087", "8700af", "8700d7", "8700ff", "af00ff", "af00d7", "d700ff", "d75fff", "d787ff", "ffafd7", "ffafff", "ffd7ff", "d7afff", "d7afd7", "af87af", "af87d7", "af87ff", "875fd7", "875faf", "875fff", "af5fff", "af5fd7", "af5faf", "d75fd7", "d787d7", "ff87ff", "ff5fff", "ff5fd7", "ff00ff", "ff00af", "ff00d7", "d700af", "d700d7", "af00af", "870087", "5f005f", "87005f", "af005f", "af0087", "d70087", "d7005f", "ff0087", "ff005f", "ff5f87", "d75f87", "d75faf", "ff5faf", "ff87af", "ff87d7", "d787af", "af5f87", "875f87", "000000", "080808", "121212", "1c1c1c", "262626", "303030", "3a3a3a", "444444", "4e4e4e", "585858", "5f5f5f", "626262", "6c6c6c", "767676", "808080", "878787", "8a8a8a", "949494", "9e9e9e", "a8a8a8", "afafaf", "b2b2b2", "bcbcbc", "c6c6c6", "d0d0d0", "d7d7d7", "dadada", "e4e4e4", "eeeeee", "ffffff", ];
+    $scope.changeSelectedColorScheme= function(newScheme) {
+        $scope.selectedColorScheme = newScheme;
+        if ($scope.selectedColorScheme.preferred_background) {
+            $scope.terminalBackgroundColor = $scope.selectedColorScheme.preferred_background;
+        }
+        $scope.selectedColorSetting = 'command';
+        $scope.colorArraysArray = $scope.getColorArraysArray();
+    }
+
+    $scope.changeTerminalBackgroundColor = function(color) {
+        $scope.terminalBackgroundColor = color;
+    }
+
+    $scope.term256Colors = [ //247
+    "ffd7d7",
+    "d7afaf",
+    "af8787",
+    "875f5f",
+    "5f0000",
+    "870000",
+    "af0000",
+    "d70000",
+    "ff0000",
+    "ff5f5f",
+    "d75f5f",
+    "d78787",
+    "ff8787",
+    "ffafaf",
+    "ffaf87",
+    "ffaf5f",
+    "ffaf00",
+    "ff875f",
+    "ff8700",
+    "ff5f00",
+    "d75f00",
+    "af5f5f",
+    "af5f00",
+    "d78700",
+    "d7875f",
+    "af875f",
+    "af8700",
+    "875f00",
+    "d7af87",
+    "ffd7af",
+    "ffd787",
+    "ffd75f",
+    "d7af00",
+    "d7af5f",
+    "ffd700",
+    "ffff5f",
+    "ffff00",
+    "ffff87",
+    "ffffaf",
+    "ffffd7",
+    "d7ff00",
+    "afd75f",
+    "d7d700",
+    "d7d787",
+    "d7d7af",
+    "afaf87",
+    "87875f",
+    "5f5f00",
+    "878700",
+    "afaf00",
+    "afaf5f",
+    "d7d75f",
+    "d7ff5f",
+    "d7ff87",
+    "87ff00",
+    "afff00",
+    "afff5f",
+    "afd700",
+    "87d700",
+    "87af00",
+    "5f8700",
+    "87af5f",
+    "5faf00",
+    "afd787",
+    "d7ffd7",
+    "d7ffaf",
+    "afffaf",
+    "afff87",
+    "5fff00",
+    "5fd700",
+    "87d75f",
+    "5fd75f",
+    "87ff5f",
+    "5fff5f",
+    "87ff87",
+    "afd7af",
+    "87d787",
+    "87d7af",
+    "87af87",
+    "5f875f",
+    "5faf5f",
+    "005f00",
+    "008700",
+    "00af00",
+    "00d700",
+    "00ff00",
+    "00ff5f",
+    "5fff87",
+    "00ff87",
+    "87ffaf",
+    "afffd7",
+    "5fd787",
+    "00d75f",
+    "5faf87",
+    "00af5f",
+    "5fffaf",
+    "00ffaf",
+    "5fd7af",
+    "00d787",
+    "00875f",
+    "00af87",
+    "00d7af",
+    "5fffd7",
+    "87ffd7",
+    "00ffd7",
+    "d7ffff",
+    "afd7d7",
+    "87afaf",
+    "5f8787",
+    "5fafaf",
+    "87d7d7",
+    "5fd7d7",
+    "5fffff",
+    "00ffff",
+    "87ffff",
+    "afffff",
+    "00d7d7",
+    "00d7ff",
+    "5fd7ff",
+    "5fafd7",
+    "00afd7",
+    "00afff",
+    "0087af",
+    "00afaf",
+    "008787",
+    "005f5f",
+    "005f87",
+    "0087d7",
+    "0087ff",
+    "5fafff",
+    "87afff",
+    "5f87d7",
+    "5f87ff",
+    "005fd7",
+    "005fff",
+    "005faf",
+    "5f87af",
+    "87afd7",
+    "afd7ff",
+    "87d7ff",
+    "d7d7ff",
+    "afafd7",
+    "8787af",
+    "afafff",
+    "8787d7",
+    "8787ff",
+    "5f5fff",
+    "5f5fd7",
+    "5f5faf",
+    "5f5f87",
+    "00005f",
+    "000087",
+    "0000af",
+    "0000d7",
+    "0000ff",
+    "5f00ff",
+    "5f00d7",
+    "5f00af",
+    "5f0087",
+    "8700af",
+    "8700d7",
+    "8700ff",
+    "af00ff",
+    "af00d7",
+    "d700ff",
+    "d75fff",
+    "d787ff",
+    "ffafd7",
+    "ffafff",
+    "ffd7ff",
+    "d7afff",
+    "d7afd7",
+    "af87af",
+    "af87d7",
+    "af87ff",
+    "875fd7",
+    "875faf",
+    "875fff",
+    "af5fff",
+    "af5fd7",
+    "af5faf",
+    "d75fd7",
+    "d787d7",
+    "ff87ff",
+    "ff5fff",
+    "ff5fd7",
+    "ff00ff",
+    "ff00af",
+    "ff00d7",
+    "d700af",
+    "d700d7",
+    "af00af",
+    "870087",
+    "5f005f",
+    "87005f",
+    "af005f",
+    "af0087",
+    "d70087",
+    "d7005f",
+    "ff0087",
+    "ff005f",
+    "ff5f87",
+    "d75f87",
+    "d75faf",
+    "ff5faf",
+    "ff87af",
+    "ff87d7",
+    "d787af",
+    "af5f87",
+    "875f87",
+    "000000",
+    "080808",
+    "121212",
+    "1c1c1c",
+    "262626",
+    "303030",
+    "3a3a3a",
+    "444444",
+    "4e4e4e",
+    "585858",
+    "5f5f5f",
+    "626262",
+    "6c6c6c",
+    "767676",
+    "808080",
+    "878787",
+    "8a8a8a",
+    "949494",
+    "9e9e9e",
+    "a8a8a8",
+    "afafaf",
+    "b2b2b2",
+    "bcbcbc",
+    "c6c6c6",
+    "d0d0d0",
+    "d7d7d7",
+    "dadada",
+    "e4e4e4",
+    "eeeeee",
+    "ffffff",
+    ]
 
     /* Returns array of values from a dictionary (or any object) */
     function dict_values(dict) {
@@ -158,6 +413,18 @@ webconfig.controller("newColorsController", function($scope, $http) {
 	    return result;
     }
 
+    /* Given a color, compute a "border color" for it that can show it selected */
+    $scope.border_color_for_color = function (color_str) {
+        return adjust_lightness(color_str, function(lightness){
+            var adjust = .5
+            var new_lightness = lightness + adjust
+            if (new_lightness > 1.0 || new_lightness < 0.0) {
+                new_lightness -= 2 * adjust
+            }
+            return new_lightness
+        })
+    }
+
     $scope.text_color_for_color = function (color_str) {
         /* Use this function to make a color that contrasts well with the given color */
         var adjust = .5
@@ -171,8 +438,22 @@ webconfig.controller("newColorsController", function($scope, $http) {
         return adjust_lightness(color_str, compute_constrast);
     }		
 
-    /* Our colors. The array itself is never modified, but may be replaced. */
-    $scope.color_arrays_array = get_colors_as_nested_array($scope.term256Colors, 32);
+    $scope.getColorArraysArray = function() {
+        var result = null;
+        if ($scope.selectedColorScheme.colors.length > 0)
+            result = get_colors_as_nested_array($scope.selectedColorScheme.colors, 32);
+        else
+            result =  get_colors_as_nested_array($scope.term256Colors, 32);
+        return result;
+    }
+
+    $scope.selectColorSetting = function(name) {
+        $scope.selectedColorSetting = name;
+    }
+
+    $scope.changeSelectedTextColor = function(color) {
+        $scope.selectedColorScheme[$scope.selectedColorSetting] = color;
+    }
 
     var color_scheme_fish_default = {
         "name": "fish default",
@@ -404,6 +685,8 @@ webconfig.controller("newColorsController", function($scope, $http) {
     construct_color_scheme_mono('Mono Smoke', 'black', true)
     ];
 
+    $scope.sampleTerminalBackgroundColors = ['white', '#' + solarized.base3, '#300', '#003', '#' + solarized.base03, '#232323', 'black'];
+
     /* Array of FishColorSchemes */
     $scope.color_schemes = [color_scheme_fish_default, color_scheme_solarized_light, color_scheme_solarized_dark, color_scheme_tomorrow, color_scheme_tomorrow_night, color_scheme_tomorrow_night_bright];
     for (var i=0; i < additional_color_schemes.length; i++)
@@ -411,7 +694,7 @@ webconfig.controller("newColorsController", function($scope, $http) {
 
     var supported_setting_names = ['autosuggestion', 'command', 'comment', 'end', 'error', 'param', 'quote', 'redirection'];
 
-    $scope.selectedSettings = $scope.color_schemes[0];
+    $scope.changeSelectedColorScheme($scope.color_schemes[0]);
     $scope.color_settings = $scope.color_schemes.colors; 
 
     range = function(start, end) {

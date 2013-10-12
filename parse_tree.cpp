@@ -784,6 +784,8 @@ static parse_keyword_t keyword_for_token(token_type tok, const wchar_t *tok_txt)
             {L"not", parse_keyword_not},
             {L"command", parse_keyword_command},
             {L"builtin", parse_keyword_builtin},
+            {L"-", parse_keyword_dash},
+            {L"--", parse_keyword_dashdash},
             {L"-h", parse_keyword_dash_h},
             {L"--help", parse_keyword_dashdash_help}
         };

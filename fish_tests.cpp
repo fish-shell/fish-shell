@@ -2002,6 +2002,8 @@ static void test_new_parser_ll2(void)
         {L"command --help", L"command", L"--help", parse_statement_decoration_none},
         {L"command -h", L"command", L"-h", parse_statement_decoration_none},
         {L"command", L"command", L"", parse_statement_decoration_none},
+        {L"command -", L"command", L"-", parse_statement_decoration_none},
+        {L"command --", L"command", L"--", parse_statement_decoration_none},
         {L"function", L"function", L"", parse_statement_decoration_none},
         {L"function --help", L"function", L"--help", parse_statement_decoration_none}
     };

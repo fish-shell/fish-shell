@@ -26,19 +26,32 @@ static bool production_is_valid(const production_options_t production_list, prod
     return nonempty_found;
 }
 
-/* Helper function indicates whether a token (typically second token) means 'help'. This is so we can treat e.g. 'command --help' as "invoke the 'command' builtin with --help' instead of 'run the --help command'.
+/* Helper function indicates whether a token (typically second token) causes the preceding token to be treated as a command instead of giving it a special role. This is so we can treat e.g. 'command --help' as "invoke the 'command' builtin with --help' instead of 'run the --help command'.
 
     if naked_invocation_invokes_help is true, then we treat an invalid type or something other than a string as indicating help; this means that the user ran e.g. 'command' with no arguments.
 */
-static inline bool token_means_help(parse_token_type_t type, parse_keyword_t keyword, bool naked_invocation_invokes_help)
+static inline bool token_implies_previous_keyword_is_command(parse_token_type_t type, parse_keyword_t keyword, bool naked_invocation_invokes_help)
 {
-    if (keyword == parse_keyword_dash_h || keyword == parse_keyword_dashdash_help)
-        return true;
+    bool result = false;
+    switch (keyword)
+    {
+        case parse_keyword_dash:
+        case parse_keyword_dashdash:
+        case parse_keyword_dash_h:
+        case parse_keyword_dashdash_help:
+            result = true;
+            break;
+            
+        default:
+            break;
+    }
     
-    if (naked_invocation_invokes_help && type != parse_token_type_string)
-        return true;
+    if (! result)
+    {
+        result = naked_invocation_invokes_help && type != parse_token_type_string;
+    }
     
-    return false;
+    return result;
 }
 
 #define PRODUCTIONS(sym) static const production_options_t productions_##sym
@@ -135,7 +148,7 @@ RESOLVE(statement)
     if (token_type == parse_token_type_string)
     {
         bool naked_invocation_invokes_help = (token_keyword != parse_keyword_begin && token_keyword != parse_keyword_end);
-        if (token_means_help(token_type2, token_keyword2, naked_invocation_invokes_help))
+        if (token_implies_previous_keyword_is_command(token_type2, token_keyword2, naked_invocation_invokes_help))
         {
             return 4; //decorated statement
         }
@@ -175,6 +188,8 @@ RESOLVE(statement)
                 case parse_keyword_command:
                 case parse_keyword_builtin:
                 case parse_keyword_case:
+                case parse_keyword_dash:
+                case parse_keyword_dashdash:
                 case parse_keyword_dash_h:
                 case parse_keyword_dashdash_help:
                     return 4;
@@ -365,7 +380,7 @@ PRODUCTIONS(decorated_statement) =
 RESOLVE(decorated_statement)
 {
     /* If this is e.g. 'command --help' then the command is 'command' and not a decoration */
-    if (token_means_help(token_type2, token_keyword2, true /* naked_invocation_is_help */))
+    if (token_implies_previous_keyword_is_command(token_type2, token_keyword2, true /* naked_invocation_is_help */))
         return 0;
     
     switch (token_keyword)

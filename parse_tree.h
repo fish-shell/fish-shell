@@ -114,6 +114,8 @@ enum parse_keyword_t
     parse_keyword_builtin,
     
     /* The following are not really keywords but are necessary for e.g. "command --help" to work */
+    parse_keyword_dash,
+    parse_keyword_dashdash,
     parse_keyword_dash_h,
     parse_keyword_dashdash_help,
 

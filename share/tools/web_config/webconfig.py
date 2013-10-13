@@ -261,6 +261,108 @@ class FishBinding:
     def get_json_obj(self):
         return {"command" : self.command, "binding": self.binding, "description": self.description }
 
+    def get_readable_binding(command):
+        return command
+
+class BindingParser:
+    """ Class to parse codes for bind command """
+
+    def set_buffer(self, buffer):
+        """ Sets code to parse """
+
+        self.buffer = buffer
+        self.index = 0
+
+    def get_char(self):
+        """ Gets next character from buffer """
+
+        c = self.buffer[self.index]
+        self.index += 1
+        return c
+
+    def unget_char(self):
+        """ Goes back by one character for parsing """
+
+        self.index -= 1
+
+    def end(self):
+        """ Returns true if reached end of buffer """
+
+        return self.index >= len(self.buffer)
+
+    def parse_control_sequence(self):
+        """ Parses terminal specifiec control sequences """
+
+        result = ''
+        c = self.get_char()
+        if c == 'O':
+            c = self.get_char()
+
+        if c == '\\' and self.get_char(): c = self.get_char()
+
+        if c == ';': c = self.get_char()
+
+        if c == '3': c = self.get_char()
+
+        if c == '5': c = self.get_char()
+
+        if c == '9': c = self.get_char()
+
+        if c == 'A':
+            result += 'Up Arrow'
+        elif c == 'B':
+            result += 'Down Arrow'
+        elif c == 'C':
+            result += 'Right Arrow'
+        elif c == 'D':
+            result = "Left Arrow"
+        return result
+
+    def get_readable_binding(self):
+        """ Gets a readable representation of binding """
+
+        readable_command = ''
+        result = ''
+        alt = ctrl = False
+
+        while not self.end():
+            c = self.get_char()
+
+            if c == '\\':
+                c = self.get_char() 
+                if c == 'e' and not alt:
+                    alt = True
+                    c = self.get_char()
+                    self.unget_char()
+                    if c == 'O':
+                        result += self.parse_control_sequence()
+                elif c == 'e':
+                    result += self.parse_control_sequence()
+                elif c == 'c':
+                    ctrl = True
+                elif c == '[':
+                    result += self.parse_control_sequence()
+                elif c == 'n':
+                    result += 'Enter'
+                elif c == 't':
+                    result += 'Tab'
+                elif c == 'b':
+                    result += 'Backspace'
+                elif c == '<':
+                    result += "<"
+                elif c == '>':
+                    result += ">"
+                elif c == ';':
+                    result += self.parse_control_sequence()
+            else:
+                result += c
+        if ctrl: 
+            readable_command += 'CTRL - '
+        if alt:
+            readable_command += 'ALT - '
+
+        return readable_command + result
+
 class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def write_to_wfile(self, txt):
@@ -375,6 +477,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         #import ipdb; ipdb.set_trace()
         # Put all the bindings into a dictionary
         bindings = [] 
+        binding_parser = BindingParser()
+
         for line in out.split('\n'):
             comps = line.split(' ', 2)
             if len(comps) < 3:
@@ -383,7 +487,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 key_name, command = comps[2].split(' ', 2)
                 fish_binding = FishBinding(command=command, binding=key_name)
             else:
-                fish_binding = FishBinding(command=comps[2], binding=comps[1])
+                binding_parser.set_buffer(comps[1])
+                fish_binding = FishBinding(command=comps[2], binding=binding_parser.get_readable_binding())
 
             bindings.append(fish_binding)
 

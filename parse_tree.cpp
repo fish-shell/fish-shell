@@ -1013,6 +1013,34 @@ const parse_node_t *parse_node_tree_t::find_last_node_of_type(parse_token_type_t
     return result;
 }
 
+const parse_node_t *parse_node_tree_t::find_node_matching_source_location(parse_token_type_t type, size_t source_loc, const parse_node_t *parent) const
+{
+    const parse_node_t *result = NULL;
+    // Find nodes of the given type in the tree, working backwards
+    const size_t len = this->size();
+    for (size_t idx=0; idx < len; idx++)
+    {
+        const parse_node_t &node = this->at(idx);
+        
+        /* Types must match */
+        if (node.type != type)
+            continue;
+
+        /* Must contain source location */
+        if (! node.location_in_or_at_end_of_source_range(source_loc))
+            continue;
+            
+        /* If a parent is given, it must be an ancestor */
+        if (parent != NULL && node_has_ancestor(*this, node, *parent))
+            continue;
+            
+        /* Found it */
+        result = &node;
+        break;
+    }
+    return result;
+}
+
 
 bool parse_node_tree_t::argument_list_is_root(const parse_node_t &node) const
 {

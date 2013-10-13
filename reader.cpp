@@ -3187,6 +3187,9 @@ const wchar_t *reader_readline(void)
                     /* Figure out the extent of the token within the command substitution. Note we pass cmdsub_begin here, not buff */
                     const wchar_t *token_begin, *token_end;
                     parse_util_token_extent(cmdsub_begin, data->buff_pos - (cmdsub_begin-buff), &token_begin, &token_end, 0, 0);
+                    
+                    /* Hack: the token may extend past the end of the command substitution, e.g. in (echo foo) the last token is 'foo)'. Don't let that happen. */
+                    if (token_end > cmdsub_end) token_end = cmdsub_end;
 
                     /* Figure out how many steps to get from the current position to the end of the current token. */
                     size_t end_of_token_offset = token_end - buff;

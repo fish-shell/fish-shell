@@ -713,8 +713,7 @@ static bool autosuggest_parse_command(const wcstring &buff, wcstring *out_expand
     
     /* Parse the buffer */
     parse_node_tree_t parse_tree;
-    parse_t parser;
-    parser.parse(buff, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens, &parse_tree, NULL);
+    parse_t::parse(buff, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens, &parse_tree, NULL);
     
     /* Find the last statement */
     const parse_node_t *last_statement = parse_tree.find_last_node_of_type(symbol_plain_statement, NULL);
@@ -1709,8 +1708,7 @@ class highlighter_t
     {
         /* Parse the tree */
         this->parse_tree.clear();
-        parse_t parser;
-        parser.parse(buff, parse_flag_continue_after_error | parse_flag_include_comments, &this->parse_tree, NULL);
+        parse_t::parse(buff, parse_flag_continue_after_error | parse_flag_include_comments, &this->parse_tree, NULL);
     }
     
     /* Perform highlighting, returning an array of colors */
@@ -1920,8 +1918,7 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
     
     /* Parse the buffer */
     parse_node_tree_t parse_tree;
-    parse_t parser;
-    parser.parse(buff, parse_flag_continue_after_error | parse_flag_include_comments, &parse_tree, NULL);
+    parse_t::parse(buff, parse_flag_continue_after_error | parse_flag_include_comments, &parse_tree, NULL);
 
 #if 0
     const wcstring dump = parse_dump_tree(parse_tree, buff);

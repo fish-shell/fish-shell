@@ -40,6 +40,10 @@ fishconfig.config(
             controller: "historyController",
             templateUrl: "partials/history.html"
         })
+        .when("/bindings", {
+            controller: "bindingsController",
+            templateUrl: "partials/bindings.html"
+        })
         .otherwise({
             redirectTo: "/colors"
         })
@@ -327,9 +331,39 @@ fishconfig.controller("colorsController", function($scope, $http) {
 	    return result;
     }
 
+    /* Given an RGB color as a hex string, like FF0033, convert to HSL, apply the function to adjust its lightness, then return the new color as an RGB string */
+    $scope.adjust_lightness = function(color_str, func) {
+        /* Hack to handle for example F00 */
+        if (color_str.length == 3) {
+            color_str = color_str[0] + color_str[0] + color_str[1] + color_str[1] + color_str[2] + color_str[2]
+        }
+
+        /* More hacks */
+        if (color_str == 'black') color_str = '000000';
+        if (color_str == 'white') color_str = 'FFFFFF';
+
+
+        rgb = parseInt(color_str, 16)
+        r = (rgb >> 16) & 0xFF
+        g = (rgb >> 8) & 0xFF
+        b = (rgb >> 0) & 0xFF
+
+        hsl = rgb_to_hsl(r, g, b)
+        new_lightness = func(hsl[2])
+        function to_int_str(val) {
+            str = Math.round(val).toString(16)
+            while (str.length < 2)
+                str = '0' + str
+            return str
+        }
+
+        new_rgb = hsl_to_rgb(hsl[0], hsl[1], new_lightness)
+        return to_int_str(new_rgb[0]) + to_int_str(new_rgb[1]) + to_int_str(new_rgb[2])
+    }
+
     /* Given a color, compute a "border color" for it that can show it selected */
     $scope.border_color_for_color = function (color_str) {
-        return adjust_lightness(color_str, function(lightness){
+        return $scope.adjust_lightness(color_str, function(lightness){
             var adjust = .5
             var new_lightness = lightness + adjust
             if (new_lightness > 1.0 || new_lightness < 0.0) {
@@ -349,7 +383,7 @@ fishconfig.controller("colorsController", function($scope, $http) {
             }
             return new_lightness
         }
-        return adjust_lightness(color_str, compute_constrast);
+        return $scope.adjust_lightness(color_str, compute_constrast);
     }		
 
     $scope.changeSelectedColorScheme= function(newScheme) {
@@ -766,4 +800,14 @@ fishconfig.controller("historyController", function($scope, $http, $timeout) {
     })};
 
     $scope.fetchHistory();
+});
+
+fishconfig.controller("bindingsController", function($scope, $http) {
+    $scope.bindings = [];
+    $scope.fetchBindings = function() {
+        $http.get("/bindings/").success(function(data, status, headers, config) {
+            $scope.bindings = data;
+    })};
+
+    $scope.fetchBindings();
 });

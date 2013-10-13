@@ -267,10 +267,19 @@ class FishBinding:
 class BindingParser:
     """ Class to parse codes for bind command """
 
-    def set_buffer(self, buffer):
+    #TODO: What does snext and sprevious mean ? 
+    readable_keys=  { "dc":"Delete", "npage": "Page Up", "ppage":"Page Down",
+                    "sdc": "Shift Delete", "shome": "Shift Home",
+                    "left": "Left Arrow", "right": "Right Arrow",
+                    "up": "Up Arrow", "down": "Down Arrow",
+                    "sleft": "Shift Left", "sright": "Shift Right"
+                    } 
+
+    def set_buffer(self, buffer, is_key=False):
         """ Sets code to parse """
 
         self.buffer = buffer
+        self.is_key = is_key
         self.index = 0
 
     def get_char(self):
@@ -321,6 +330,17 @@ class BindingParser:
     def get_readable_binding(self):
         """ Gets a readable representation of binding """
 
+        if self.is_key:
+            try:
+                result = BindingParser.readable_keys[self.buffer]
+            except KeyError:
+                result = self.buffer.title()
+        else:
+            result = self.parse_binding()
+
+        return result
+
+    def parse_binding(self):
         readable_command = ''
         result = ''
         alt = ctrl = False
@@ -473,9 +493,15 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return [vars[key].get_json_obj() for key in sorted(vars.keys(), key=str.lower)]
 
     def do_get_bindings(self):
-        out, err = run_fish_cmd('fish -i -c "functions --erase fish_prompt; bind"')
-        #import ipdb; ipdb.set_trace()
-        # Put all the bindings into a dictionary
+        """ Get key bindings """
+
+        greeting, err = run_fish_cmd('fish -i')
+        out, err = run_fish_cmd('fish -i -c "bind"')
+
+        # Remove fish greeting from output
+        out = out[len(greeting):]
+
+        # Put all the bindings into a list
         bindings = [] 
         binding_parser = BindingParser()
 
@@ -485,7 +511,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 continue
             if comps[1] == '-k':
                 key_name, command = comps[2].split(' ', 2)
-                fish_binding = FishBinding(command=command, binding=key_name)
+                binding_parser.set_buffer(key_name, True)
+                fish_binding = FishBinding(command=command, binding=binding_parser.get_readable_binding())
             else:
                 binding_parser.set_buffer(comps[1])
                 fish_binding = FishBinding(command=comps[2], binding=binding_parser.get_readable_binding())

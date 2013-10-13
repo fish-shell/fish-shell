@@ -59,30 +59,6 @@ function hsl_to_rgb(h, s, l){
     return [r * 255, g * 255, b * 255]
 }
 
-/* Given an RGB color as a hex string, like FF0033, convert to HSL, apply the function to adjust its lightness, then return the new color as an RGB string */
-function adjust_lightness(color_str, func) {
-	/* Hack to handle for example F00 */
-	if (color_str.length == 3) {
-		color_str = color_str[0] + color_str[0] + color_str[1] + color_str[1] + color_str[2] + color_str[2]
-	}
-
-	rgb = parseInt(color_str, 16)
-	r = (rgb >> 16) & 0xFF
-	g = (rgb >> 8) & 0xFF
-	b = (rgb >> 0) & 0xFF
-	
-	hsl = rgb_to_hsl(r, g, b)
-	new_lightness = func(hsl[2])
-	function to_int_str(val) {
-		str = Math.round(val).toString(16)
-		while (str.length < 2)
-			str = '0' + str
-		return str
-	}
-	
-	new_rgb = hsl_to_rgb(hsl[0], hsl[1], new_lightness)
-	return to_int_str(new_rgb[0]) + to_int_str(new_rgb[1]) + to_int_str(new_rgb[2])
-}
 
 /* Given a color, compute the master text color for it, by giving it a minimum brightness */
 function master_color_for_color(color_str) {
@@ -91,22 +67,6 @@ function master_color_for_color(color_str) {
 			lightness = .33
 		}
 		return lightness
-	})
-}
-
-function post_style_to_server() {
-	style = current_style()
-	if (! style)
-		return
-	
-	run_post_request('/set_color/', {
-		what: current_master_element_name(),
-		color: style.color,
-		background_color: style.background_color,
-		bold: style.bold,
-		underline: style.underline
-	}, function(contents){
-		
 	})
 }
 

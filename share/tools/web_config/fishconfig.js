@@ -621,12 +621,11 @@ fishconfig.controller("colorsController", function($scope, $http) {
     for (var i=0; i < additional_color_schemes.length; i++)
         $scope.color_schemes.push(additional_color_schemes[i])
 
-    var supported_setting_names = ['autosuggestion', 'command', 'comment', 'end', 'error', 'param', 'quote', 'redirection'];
-
     $scope.changeSelectedColorScheme($scope.color_schemes[0]);
     $scope.color_settings = $scope.color_schemes.colors; 
+
     $scope.setTheme = function() {
-        var settingNames = ["autosuggestion", "command", "param", "redirection", "comment", "error", "escape", "operator", "quote", "end"];
+        var settingNames = ["autosuggestion", "command", "param", "redirection", "comment", "error", "quote", "end"];
         for (name in settingNames) {
             var postData = "what=" + settingNames[name] + "&color=" + $scope.selectedColorScheme[settingNames[name]] + "&background_color=&bold=&underline=";
             $http.post("/set_color/", postData, { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config) {

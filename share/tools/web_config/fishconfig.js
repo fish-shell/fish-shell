@@ -17,6 +17,23 @@ fishconfig.filter("filterVariable", function() {
     }
 });
 
+fishconfig.filter("filterBinding", function() {
+    return function(bindings, query) {
+        var result = []
+        if (bindings == undefined) return result;
+        if (query == null) { return bindings};
+
+        for(i=0; i<bindings.length; ++i) {
+            binding = bindings[i];
+            if (binding.command.indexOf(query) != -1) {
+                result.push(binding);
+            }
+        }
+
+        return result;
+    }
+});
+
 fishconfig.config(
     ["$routeProvider", function($routeProvider) {
         $routeProvider

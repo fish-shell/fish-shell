@@ -250,6 +250,17 @@ class FishVar:
         if self.exported: flags.append('exported')
         return {"name": self.name, "value": self.value, "Flags": ', '.join(flags)}
 
+class FishBinding:
+    """A class that represents keyboard binding """
+
+    def __init__(self, command, binding, description=None):
+        self.command =  command
+        self.binding = binding
+        self.description = description
+
+    def get_json_obj(self):
+        return {"command" : self.command, "binding": self.binding, "description": self.description }
+
 class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def write_to_wfile(self, txt):
@@ -359,6 +370,25 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         return [vars[key].get_json_obj() for key in sorted(vars.keys(), key=str.lower)]
 
+    def do_get_bindings(self):
+        out, err = run_fish_cmd('fish -i -c "functions --erase fish_prompt; bind"')
+        #import ipdb; ipdb.set_trace()
+        # Put all the bindings into a dictionary
+        bindings = [] 
+        for line in out.split('\n'):
+            comps = line.split(' ', 2)
+            if len(comps) < 3:
+                continue
+            if comps[1] == '-k':
+                key_name, command = comps[2].split(' ', 2)
+                fish_binding = FishBinding(command=command, binding=key_name)
+            else:
+                fish_binding = FishBinding(command=comps[2], binding=comps[1])
+
+            bindings.append(fish_binding)
+
+        return [ binding.get_json_obj() for binding in bindings ]
+
     def do_get_history(self):
         # Use \x1e ("record separator") to distinguish between history items. The first
         # backslash is so Python passes one backslash to fish
@@ -366,7 +396,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         result = out.split(' \x1e')
         if result: result.pop() # Trim off the trailing element
         return result
-
 
     def do_get_color_for_variable(self, name):
         "Return the color with the given name, or the empty string if there is none"
@@ -498,6 +527,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         elif re.match(r"/color/(\w+)/", p):
             name = re.match(r"/color/(\w+)/", p).group(1)
             output = self.do_get_color_for_variable(name)
+        elif p == '/bindings/':
+            output = self.do_get_bindings()
         else:
             return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
 

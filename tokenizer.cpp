@@ -50,7 +50,7 @@ segments.
 /**
    Error string for when trying to pipe from fd 0
 */
-#define PIPE_ERROR _( L"Can not use fd 0 as pipe output" )
+#define PIPE_ERROR _( L"Cannot use stdin (fd 0) as pipe output" )
 
 /**
    Characters that separate tokens. They are ordered by frequency of occurrence to increase parsing speed.
@@ -435,66 +435,92 @@ static void read_comment(tokenizer_t *tok)
     tok->last_type = TOK_COMMENT;
 }
 
-/**
-   Read a FD redirection.
+/* Reads a redirection or an "fd pipe" (like 2>|) from a string. Returns how many characters were consumed. If zero, then this string was not a redirection.
+
+   Also returns by reference the redirection mode, and the fd to redirection.
 */
-static void read_redirect(tokenizer_t *tok, int fd)
+static size_t read_redirection_or_fd_pipe(const wchar_t *buff, enum token_type *out_redirection_mode, int *out_fd)
 {
+    bool errored = false;
+    int fd = 0;
     enum token_type redirection_mode = TOK_NONE;
 
-    if ((*tok->buff == L'>') ||
-            (*tok->buff == L'^'))
+    size_t idx = 0;
+    
+    /* Determine the fd. This may be specified as a prefix like '2>...' or it may be implicit like '>' or '^'. Try parsing out a number; if we did not get any digits then infer it from the first character */
+    for (; iswdigit(buff[idx]); idx++)
     {
-        tok->buff++;
-        if (*tok->buff == *(tok->buff-1))
+        int digit = buff[idx] - L'0';
+        fd = fd * 10 + digit;
+    }
+    
+    if (idx == 0)
+    {
+        /* We did not find a leading digit, so there's no explicit fd. Infer it from the type */
+        switch (buff[idx])
         {
-            tok->buff++;
-            redirection_mode = TOK_REDIRECT_APPEND;
-        }
-        else
-        {
-            redirection_mode = TOK_REDIRECT_OUT;
-        }
-
-        if (*tok->buff == L'|')
-        {
-            if (fd == 0)
-            {
-                TOK_CALL_ERROR(tok, TOK_OTHER, PIPE_ERROR);
-                return;
-            }
-            tok->buff++;
-            tok->last_token = to_string<int>(fd);
-            tok->last_type = TOK_PIPE;
-            return;
+            case L'>': fd = STDOUT_FILENO; break;
+            case L'<': fd = STDIN_FILENO; break;
+            case L'^': fd = STDERR_FILENO; break;
+            default: errored = true; break;
         }
     }
-    else if (*tok->buff == L'<')
+    
+    /* Either way we should have ended on the redirection character itself like '>' */
+    wchar_t redirect_char = buff[idx++]; //note increment of idx
+    if (redirect_char == L'>' || redirect_char == L'^')
     {
-        tok->buff++;
+        redirection_mode = TOK_REDIRECT_OUT;
+        if (buff[idx] == redirect_char)
+        {
+            /* Doubled up like ^^ or >>. That means append */
+            redirection_mode = TOK_REDIRECT_APPEND;
+            idx++;
+        }
+    }
+    else if (redirect_char == L'<')
+    {
         redirection_mode = TOK_REDIRECT_IN;
     }
     else
     {
-        TOK_CALL_ERROR(tok, TOK_OTHER, REDIRECT_ERROR);
+        /* Something else */
+        errored = true;
     }
-
-    tok->last_token = to_string(fd);
-
-    if (*tok->buff == L'&')
+    
+    /* Optional characters like & or ?, or the pipe char | */
+    wchar_t opt_char = buff[idx];
+    if (opt_char == L'&')
     {
-        tok->buff++;
-        tok->last_type = TOK_REDIRECT_FD;
+        redirection_mode = TOK_REDIRECT_FD;
+        idx++;
     }
-    else if (*tok->buff == L'?')
+    else if (opt_char == L'?')
     {
-        tok->buff++;
-        tok->last_type = TOK_REDIRECT_NOCLOB;
+        redirection_mode = TOK_REDIRECT_NOCLOB;
+        idx++;
     }
-    else
+    else if (opt_char == L'|')
     {
-        tok->last_type = redirection_mode;
+        /* So the string looked like '2>|'. This is not a redirection - it's a pipe! That gets handled elsewhere. */
+        redirection_mode = TOK_PIPE;
+        idx++;
     }
+    
+    /* Don't return valid-looking stuff on error */
+    if (errored)
+    {
+        idx = 0;
+        redirection_mode = TOK_NONE;
+    }
+    
+    /* Return stuff */
+    if (out_redirection_mode != NULL)
+        *out_redirection_mode = redirection_mode;
+    if (out_fd != NULL)
+        *out_fd = fd;
+    
+    return idx;
 }
 
 wchar_t tok_last_quote(tokenizer_t *tok)
@@ -606,36 +632,56 @@ void tok_next(tokenizer_t *tok)
             break;
 
         case L'>':
-            read_redirect(tok, 1);
-            return;
         case L'<':
-            read_redirect(tok, 0);
-            return;
         case L'^':
-            read_redirect(tok, 2);
-            return;
+        {
+            /* There's some duplication with the code in the default case below. The key difference here is that we must never parse these as a string; a failed redirection is an error! */
+            enum token_type mode = TOK_NONE;
+            int fd = -1;
+            size_t consumed = read_redirection_or_fd_pipe(tok->buff, &mode, &fd);
+            if (consumed == 0)
+            {
+                TOK_CALL_ERROR(tok, TOK_OTHER, REDIRECT_ERROR);
+            }
+            else
+            {
+                tok->buff += consumed;
+                tok->last_type = mode;
+                tok->last_token = to_string(fd);
+            }
+        }
+        break;
 
         default:
         {
+            /* Maybe a redirection like '2>&1', maybe a pipe like 2>|, maybe just a string */
+            size_t consumed = 0;
+            enum token_type mode = TOK_NONE;
+            int fd = -1;
             if (iswdigit(*tok->buff))
+                consumed = read_redirection_or_fd_pipe(tok->buff, &mode, &fd);
+            
+            if (consumed > 0)
             {
-                const wchar_t *orig = tok->buff;
-                int fd = 0;
-                while (iswdigit(*tok->buff))
-                    fd = (fd*10) + (*(tok->buff++) - L'0');
-
-                switch (*(tok->buff))
+                /* It looks like a redirection or a pipe. But we don't support piping fd 0. */
+                if (mode == TOK_PIPE && fd == 0)
                 {
-                    case L'^':
-                    case L'>':
-                    case L'<':
-                        read_redirect(tok, fd);
-                        return;
+                    TOK_CALL_ERROR(tok, TOK_OTHER, PIPE_ERROR);
                 }
-                tok->buff = orig;
+                else
+                {
+                    tok->buff += consumed;
+                    tok->last_type = mode;
+                    tok->last_token = to_string(fd);
+                }
             }
-            read_string(tok);
+            else
+            {
+                /* Not a redirection or pipe, so just a stirng */
+                read_string(tok);
+            }
         }
+        break;
 
     }
 

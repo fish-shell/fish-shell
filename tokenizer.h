@@ -187,6 +187,9 @@ const wchar_t *tok_get_desc(int type);
 */
 int tok_get_error(tokenizer_t *tok);
 
+/* Helper function to determine redirection type from a string, or TOK_NONE if the redirection is invalid */
+enum token_type redirection_type_for_string(const wcstring &str);
+
 enum move_word_style_t
 {
     move_word_style_punctuation, //stop at punctuation

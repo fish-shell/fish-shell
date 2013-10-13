@@ -12,6 +12,7 @@
 #include <wctype.h>
 #include <termios.h>
 #include <signal.h>
+#include <algorithm>
 
 #include "fallback.h"
 #include "util.h"
@@ -1692,8 +1693,14 @@ class highlighter_t
     /* Color an argument */
     void color_argument(const parse_node_t &node);
     
+    /* Color a redirection */
+    void color_redirection(const parse_node_t &node);
+
     /* Color the arguments of the given node */
     void color_arguments(const parse_node_t &list_node);
+    
+    /* Color the redirections of the given node */
+    void color_redirections(const parse_node_t &list_node);
     
     /* Color all the children of the command with the given type */
     void color_children(const parse_node_t &parent, parse_token_type_t type, int color);
@@ -1729,6 +1736,7 @@ void highlighter_t::color_node(const parse_node_t &node, int color)
     std::fill(this->color_array.begin() + node.source_start, this->color_array.begin() + source_end, color);
 }
 
+/* node does not necessarily have type symbol_argument here */
 void highlighter_t::color_argument(const parse_node_t &node)
 {
     if (! node.has_source())
@@ -1819,7 +1827,7 @@ void highlighter_t::color_arguments(const parse_node_t &list_node)
     /* Find all the arguments of this list */
     const parse_node_tree_t::parse_node_list_t nodes = this->parse_tree.find_nodes(list_node, symbol_argument);
 
-    for (node_offset_t i=0; i < nodes.size(); i++)
+    for (size_t i=0; i < nodes.size(); i++)
     {
         const parse_node_t *child = nodes.at(i);
         assert(child != NULL && child->type == symbol_argument);
@@ -1838,6 +1846,141 @@ void highlighter_t::color_arguments(const parse_node_t &list_node)
                 }
             }
         }
+    }
+}
+
+void highlighter_t::color_redirection(const parse_node_t &redirection_node)
+{
+    assert(redirection_node.type == symbol_redirection);
+    if (! redirection_node.has_source())
+        return;
+    
+    const parse_node_t *redirection_primitive = this->parse_tree.get_child(redirection_node, 0, parse_token_type_redirection); //like 2>
+    const parse_node_t *redirection_target = this->parse_tree.get_child(redirection_node, 1, parse_token_type_string); //like &1 or file path
+    
+    if (redirection_primitive != NULL)
+    {
+        wcstring target;
+        const enum token_type redirect_type = this->parse_tree.type_for_redirection(redirection_node, this->buff, &target);
+        
+        /* We may get a TOK_NONE redirection type, e.g. if the redirection is invalid */
+        this->color_node(*redirection_primitive, redirect_type == TOK_NONE ? HIGHLIGHT_ERROR : HIGHLIGHT_REDIRECTION);
+        
+        /* Check if the argument contains a command substitution. If so, highlight it as a param even though it's a command redirection, and don't try to do any other validation. */
+        if (parse_util_locate_cmdsubst(target.c_str(), NULL, NULL, true) != 0)
+        {
+            if (redirection_target != NULL)
+                this->color_argument(*redirection_target);
+        }
+        else
+        {
+            /* No command substitution, so we can highlight the target file or fd. For example, disallow redirections into a non-existent directory */
+            bool target_is_valid = true;
+
+            if (! expand_one(target, EXPAND_SKIP_CMDSUBST))
+            {
+                /* Could not be expanded */
+                target_is_valid = false;
+            }
+            else
+            {
+                /* Ok, we successfully expanded our target. Now verify that it works with this redirection. We will probably need it as a path (but not in the case of fd redirections */
+                const wcstring target_path = apply_working_directory(target, this->working_directory);
+                switch (redirect_type)
+                {
+                    case TOK_REDIRECT_FD:
+                    {
+                        /* target should be an fd. It must be all digits, and must not overflow. fish_wcstoi returns INT_MAX on overflow; we could instead check errno to disambiguiate this from a real INT_MAX fd, but instead we just disallow that. */
+                        const wchar_t *target_cstr = target.c_str();
+                        wchar_t *end = NULL;
+                        int fd = fish_wcstoi(target_cstr, &end, 10);
+                        
+                        /* The iswdigit check ensures there's no leading whitespace, the *end check ensures the entire string was consumed, and the numeric checks ensure the fd is at least zero and there was no overflow */
+                        target_is_valid = (iswdigit(target_cstr[0]) && *end == L'\0' && fd >= 0 && fd < INT_MAX);
+                    }
+                    break;
+                    
+                    case TOK_REDIRECT_IN:
+                    {
+                        /* Input redirections must have a readable non-directory */
+                        struct stat buf = {};
+                        target_is_valid = ! waccess(target_path, R_OK) && ! wstat(target_path, &buf) && ! S_ISDIR(buf.st_mode);
+                    }
+                    break;
+                    
+                    case TOK_REDIRECT_OUT:
+                    case TOK_REDIRECT_APPEND:
+                    case TOK_REDIRECT_NOCLOB:
+                    {
+                        /* Test whether the file exists, and whether it's writable (possibly after creating it). access() returns failure if the file does not exist. */
+                        bool file_exists = false, file_is_writable = false;
+                        int err = 0;
+                        
+                        struct stat buf = {};
+                        if (wstat(target_path, &buf) < 0)
+                        {
+                            err = errno;
+                        }
+                        
+                        if (string_suffixes_string(L"/", target))
+                        {
+                            /* Redirections to things that are directories is definitely not allowed */
+                            file_exists = false;
+                            file_is_writable = false;
+                        }
+                        else if (err == 0)
+                        {
+                            /* No err. We can write to it if it's not a directory and we have permission */
+                            file_exists = true;
+                            file_is_writable = ! S_ISDIR(buf.st_mode) && ! waccess(target_path, W_OK);
+                        }
+                        else if (err == ENOENT)
+                        {
+                            /* File does not exist. Check if its parent directory is writable. */
+                            wcstring parent = wdirname(target_path);
+                            
+                            /* Ensure that the parent ends with the path separator. This will ensure that we get an error if the parent directory is not really a directory. */
+                            if (! string_suffixes_string(L"/", parent))
+                                parent.push_back(L'/');
+                            
+                            /* Now the file is considered writable if the parent directory is writable */
+                            file_exists = false;
+                            file_is_writable = (0 == waccess(parent, W_OK));
+                        }
+                        else
+                        {
+                            /* Other errors we treat as not writable. This includes things like ENOTDIR. */
+                            file_exists = false;
+                            file_is_writable = false;
+                        }
+                        
+                        /* NOCLOB means that we must not overwrite files that exist */
+                        target_is_valid = file_is_writable && ! (file_exists && redirect_type == TOK_REDIRECT_NOCLOB);
+                    }
+                    break;
+                    
+                    default:
+                        /* We should not get here, since the node was marked as a redirection, but treat it as an error for paranoia */
+                        target_is_valid = false;
+                        break;
+                }
+            }
+            
+            if (redirection_target != NULL)
+            {
+                this->color_node(*redirection_target, target_is_valid ? HIGHLIGHT_REDIRECTION : HIGHLIGHT_ERROR);
+            }
+        }
+    }
+}
+
+// Color all of the redirections of the given command
+void highlighter_t::color_redirections(const parse_node_t &list_node)
+{
+    const parse_node_tree_t::parse_node_list_t nodes = this->parse_tree.find_nodes(list_node, symbol_redirection);
+    for (size_t i=0; i < nodes.size(); i++)
+    {
+        this->color_redirection(*nodes.at(i));
     }
 }
 
@@ -1950,12 +2093,6 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
             }
             break;
 
-            case symbol_redirection:
-            {
-                this->color_children(node, parse_token_type_string, HIGHLIGHT_REDIRECTION);
-            }
-            break;
-
             case parse_token_type_background:
             case parse_token_type_end:
             {
@@ -1994,6 +2131,7 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
                 if (parse_tree.argument_list_is_root(node))
                 {
                     this->color_arguments(node);
+                    this->color_redirections(node);
                 }
             }
             break;

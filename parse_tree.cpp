@@ -519,8 +519,11 @@ void parse_ll_t::determine_node_ranges(void)
         for (node_offset_t i=0; i < parent->child_count; i++)
         {
             const parse_node_t &child = nodes.at(parent->child_offset(i));
-            min_start = std::min(min_start, child.source_start);
-            max_end = std::max(max_end, child.source_start + child.source_length);
+            if (child.has_source())
+            {
+                min_start = std::min(min_start, child.source_start);
+                max_end = std::max(max_end, child.source_start + child.source_length);
+            }
         }
 
         if (min_start != source_start_invalid)
@@ -691,6 +694,10 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2)
         err_node.source_length = token1.source_length;
         nodes.push_back(err_node);
         consumed = true;
+        
+        /* tokenizer errors are fatal */
+        if (token1.type == parse_special_type_tokenizer_error)
+            this->fatal_errored = true;
     }
 
     while (! consumed && ! this->fatal_errored)
@@ -811,7 +818,7 @@ static inline parse_token_t next_parse_token(tokenizer_t *tok)
 
     parse_token_t result;
     
-    /* Set the type, keyword, and whether there's a dash prefix. Note that this is quite sketchy, because it ignores quotes. This is the historical behavior. For example, `builtin --names` lists builtins, but `builtin "--names"` attempts to run --names as a command. Amazingly as of this writing (10/12/13) nobody seems to have noticed this. Squint at it really hard ant it even starts to look like a feature. */
+    /* Set the type, keyword, and whether there's a dash prefix. Note that this is quite sketchy, because it ignores quotes. This is the historical behavior. For example, `builtin --names` lists builtins, but `builtin "--names"` attempts to run --names as a command. Amazingly as of this writing (10/12/13) nobody seems to have noticed this. Squint at it really hard and it even starts to look like a feature. */
     result.type = parse_token_type_from_tokenizer_token(tok_type);
     result.keyword = keyword_for_token(tok_type, tok_txt);
     result.has_dash_prefix = (tok_txt[0] == L'-');
@@ -906,6 +913,7 @@ bool parse_t::parse_1_token(parse_token_type_t token_type, parse_keyword_t keywo
     bool wants_errors = (errors != NULL);
     this->parser->set_should_generate_error_messages(wants_errors);
 
+    /* Passing invalid_token here is totally wrong. This code is only used in testing however. */
     this->parser->accept_tokens(token, invalid_token);
 
     return ! this->parser->has_fatal_error();
@@ -1080,6 +1088,24 @@ bool parse_node_tree_t::command_for_plain_statement(const parse_node_t &node, co
     else
     {
         out_cmd->clear();
+    }
+    return result;
+}
+
+enum token_type parse_node_tree_t::type_for_redirection(const parse_node_t &redirection_node, const wcstring &src, wcstring *out_target) const
+{
+    assert(redirection_node.type == symbol_redirection);
+    enum token_type result = TOK_NONE;
+    const parse_node_t *redirection_primitive = this->get_child(redirection_node, 0, parse_token_type_redirection); //like 2>
+    const parse_node_t *redirection_target = this->get_child(redirection_node, 1, parse_token_type_string); //like &1 or file path
+    
+    if (redirection_primitive != NULL && redirection_primitive->has_source())
+    {
+        result = redirection_type_for_string(redirection_primitive->get_source(src));
+    }
+    if (out_target != NULL)
+    {
+        *out_target = redirection_target ? redirection_target->get_source(src) : L"";
     }
     return result;
 }

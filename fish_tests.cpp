@@ -396,6 +396,18 @@ static void test_tok()
             }
         }
     }
+    
+    /* Test redirection_type_for_string */
+    if (redirection_type_for_string(L"<") != TOK_REDIRECT_IN) err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
+    if (redirection_type_for_string(L"^") != TOK_REDIRECT_OUT) err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
+    if (redirection_type_for_string(L">") != TOK_REDIRECT_OUT) err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
+    if (redirection_type_for_string(L"2>") != TOK_REDIRECT_OUT) err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
+    if (redirection_type_for_string(L">>") != TOK_REDIRECT_APPEND) err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
+    if (redirection_type_for_string(L"2>>") != TOK_REDIRECT_APPEND) err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
+    if (redirection_type_for_string(L"2>?") != TOK_REDIRECT_NOCLOB) err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
+    if (redirection_type_for_string(L"9999999999999999>?") != TOK_NONE) err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
+    if (redirection_type_for_string(L"2>&3") != TOK_REDIRECT_FD) err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
+    if (redirection_type_for_string(L"2>|") != TOK_NONE) err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
 }
 
 static int test_fork_helper(void *unused)
@@ -2182,9 +2194,59 @@ static void test_highlighting(void)
         {L")", HIGHLIGHT_OPERATOR},
         {NULL, -1}
     };
+    
+    // Redirections substitutions
+    const highlight_component_t components8[] =
+    {
+        {L"echo", HIGHLIGHT_COMMAND},
+        {L"param1", HIGHLIGHT_PARAM},
+        
+        /* Input redirection */
+        {L"<", HIGHLIGHT_REDIRECTION},
+        {L"/bin/echo", HIGHLIGHT_REDIRECTION},
+        
+        /* Output redirection to a valid fd */
+        {L"1>&2", HIGHLIGHT_REDIRECTION},
+        
+        /* Output redirection to an invalid fd */
+        {L"2>&", HIGHLIGHT_REDIRECTION},
+        {L"LOL", HIGHLIGHT_ERROR},
+
+        /* Just a param, not a redirection */
+        {L"/tmp/blah", HIGHLIGHT_PARAM},
+        
+        /* Input redirection from directory */
+        {L"<", HIGHLIGHT_REDIRECTION},
+        {L"/tmp/", HIGHLIGHT_ERROR},
+        
+        /* Output redirection to an invalid path */
+        {L"3>", HIGHLIGHT_REDIRECTION},
+        {L"/not/a/valid/path/nope", HIGHLIGHT_ERROR},
+        
+        /* Output redirection to directory */
+        {L"3>", HIGHLIGHT_REDIRECTION},
+        {L"/tmp/nope/", HIGHLIGHT_ERROR},
+
+        
+        /* Redirections to overflow fd */
+        {L"99999999999999999999>&2", HIGHLIGHT_ERROR},
+        {L"2>&", HIGHLIGHT_REDIRECTION},
+        {L"99999999999999999999", HIGHLIGHT_ERROR},
+        
+        /* Output redirection containing a command substitution */
+        {L"4>", HIGHLIGHT_REDIRECTION},
+        {L"(", HIGHLIGHT_OPERATOR},
+        {L"echo", HIGHLIGHT_COMMAND},
+        {L"/tmp/somewhere", HIGHLIGHT_PARAM},
+        {L")", HIGHLIGHT_OPERATOR},
+        
+        /* Just another param */
+        {L"param2", HIGHLIGHT_PARAM},
+        {NULL, -1}
+    };
 
     
-    const highlight_component_t *tests[] = {components1, components2, components3, components4, components5, components6, components7};
+    const highlight_component_t *tests[] = {components1, components2, components3, components4, components5, components6, components7, components8};
     for (size_t which = 0; which < sizeof tests / sizeof *tests; which++)
     {
         const highlight_component_t *components = tests[which];
@@ -2206,14 +2268,7 @@ static void test_highlighting(void)
                 expected_colors.push_back(0);
             }
             text.append(components[i].txt);
-            
-            // hackish space handling
-            const size_t text_len = wcslen(components[i].txt);
-            for (size_t j=0; j < text_len; j++)
-            {
-                bool is_space = (components[i].txt[j] == L' ');
-                expected_colors.push_back(is_space ? 0 : components[i].color);
-            }
+            expected_colors.resize(text.size(), components[i].color);
         }
         assert(expected_colors.size() == text.size());
         
@@ -2227,6 +2282,10 @@ static void test_highlighting(void)
         assert(expected_colors.size() == colors.size());
         for (size_t i=0; i < text.size(); i++)
         {
+            // Hackish space handling. We don't care about the colors in spaces.
+            if (text.at(i) == L' ')
+                continue;
+            
             if (expected_colors.at(i) != colors.at(i))
             {
                 const wcstring spaces(i, L' ');
@@ -2248,7 +2307,7 @@ int main(int argc, char **argv)
     configure_thread_assertions_for_testing();
 
     program_name=L"(ignore)";
-    s_arguments = argv;
+    s_arguments = argv + 1;
 
     say(L"Testing low-level functionality");
     set_main_thread();
@@ -2262,7 +2321,7 @@ int main(int argc, char **argv)
 
     if (should_test_function("highlighting")) test_highlighting();
     if (should_test_function("new_parser_ll2")) test_new_parser_ll2();
-    if (should_test_function("new_parser_fuzzing")) test_new_parser_fuzzing();
+    //if (should_test_function("new_parser_fuzzing")) test_new_parser_fuzzing(); //fuzzing is expensive
     if (should_test_function("new_parser_correctness")) test_new_parser_correctness();
     if (should_test_function("new_parser")) test_new_parser();
 

@@ -398,7 +398,7 @@ RESOLVE(arguments_or_redirections_list)
 PRODUCTIONS(argument_or_redirection) =
 {
     {symbol_argument},
-    {parse_token_type_redirection}
+    {symbol_redirection}
 };
 RESOLVE(argument_or_redirection)
 {
@@ -421,7 +421,7 @@ RESOLVE_ONLY(argument)
 
 PRODUCTIONS(redirection) =
 {
-    {parse_token_type_redirection}
+    {parse_token_type_redirection, parse_token_type_string}
 };
 RESOLVE_ONLY(redirection)
 

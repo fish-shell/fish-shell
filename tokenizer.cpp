@@ -435,9 +435,11 @@ static void read_comment(tokenizer_t *tok)
     tok->last_type = TOK_COMMENT;
 }
 
+
+
 /* Reads a redirection or an "fd pipe" (like 2>|) from a string. Returns how many characters were consumed. If zero, then this string was not a redirection.
 
-   Also returns by reference the redirection mode, and the fd to redirection.
+   Also returns by reference the redirection mode, and the fd to redirection. If there is overflow, *out_fd is set to -1.
 */
 static size_t read_redirection_or_fd_pipe(const wchar_t *buff, enum token_type *out_redirection_mode, int *out_fd)
 {
@@ -447,12 +449,16 @@ static size_t read_redirection_or_fd_pipe(const wchar_t *buff, enum token_type *
 
     size_t idx = 0;
     
-    /* Determine the fd. This may be specified as a prefix like '2>...' or it may be implicit like '>' or '^'. Try parsing out a number; if we did not get any digits then infer it from the first character */
+    /* Determine the fd. This may be specified as a prefix like '2>...' or it may be implicit like '>' or '^'. Try parsing out a number; if we did not get any digits then infer it from the first character. Watch out for overflow. */
+    long long big_fd = 0;
     for (; iswdigit(buff[idx]); idx++)
     {
-        int digit = buff[idx] - L'0';
-        fd = fd * 10 + digit;
+        /* Note that it's important we consume all the digits here, even if it overflows. */
+        if (big_fd <= INT_MAX)
+            big_fd = big_fd * 10 + (buff[idx] - L'0');
     }
+    
+    fd = (big_fd > INT_MAX ? -1 : static_cast<int>(big_fd));
     
     if (idx == 0)
     {
@@ -521,6 +527,17 @@ static size_t read_redirection_or_fd_pipe(const wchar_t *buff, enum token_type *
         *out_fd = fd;
     
     return idx;
+}
+
+enum token_type redirection_type_for_string(const wcstring &str)
+{
+    enum token_type mode = TOK_NONE;
+    int fd = 0;
+    read_redirection_or_fd_pipe(str.c_str(), &mode, &fd);
+    /* Redirections only, no pipes */
+    if (mode == TOK_PIPE || fd < 0)
+        mode = TOK_NONE;
+    return mode;
 }
 
 wchar_t tok_last_quote(tokenizer_t *tok)
@@ -639,7 +656,7 @@ void tok_next(tokenizer_t *tok)
             enum token_type mode = TOK_NONE;
             int fd = -1;
             size_t consumed = read_redirection_or_fd_pipe(tok->buff, &mode, &fd);
-            if (consumed == 0)
+            if (consumed == 0 || fd < 0)
             {
                 TOK_CALL_ERROR(tok, TOK_OTHER, REDIRECT_ERROR);
             }
@@ -663,7 +680,7 @@ void tok_next(tokenizer_t *tok)
             
             if (consumed > 0)
             {
-                /* It looks like a redirection or a pipe. But we don't support piping fd 0. */
+                /* It looks like a redirection or a pipe. But we don't support piping fd 0. Note that fd 0 may be -1, indicating overflow; but we don't treat that as a tokenizer error. */
                 if (mode == TOK_PIPE && fd == 0)
                 {
                     TOK_CALL_ERROR(tok, TOK_OTHER, PIPE_ERROR);

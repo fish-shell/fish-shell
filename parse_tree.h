@@ -273,7 +273,9 @@ public:
     
     /* Given a plain statement, get the command by reference (from the child node). Returns true if successful. Clears the command on failure. */
     bool command_for_plain_statement(const parse_node_t &node, const wcstring &src, wcstring *out_cmd) const;
-
+    
+    /* Given a redirection, get the redirection type (or TOK_NONE) and target (file path, or fd) */
+    enum token_type type_for_redirection(const parse_node_t &node, const wcstring &src, wcstring *out_target) const;
 };
 
 /* Fish grammar:
@@ -332,7 +334,8 @@ public:
                                      argument_or_redirection arguments_or_redirections_list
     argument_or_redirection = argument | redirection
     argument = <TOK_STRING>
-    redirection = <TOK_REDIRECTION>
+ 
+    redirection = <TOK_REDIRECTION> <TOK_STRING>
 
     terminator = <TOK_END> | <TOK_BACKGROUND>
 

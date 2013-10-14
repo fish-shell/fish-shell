@@ -13,6 +13,7 @@
 #include "common.h"
 #include "tokenizer.h"
 #include <vector>
+#include <inttypes.h>
 
 #define PARSE_ASSERT(a) assert(a)
 #define PARSER_DIE() do { fprintf(stderr, "Parser dying!\n"); exit_without_destructors(-1); } while (0)

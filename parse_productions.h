@@ -7,6 +7,7 @@
 #define FISH_PARSE_TREE_CONSTRUCTION_H
 
 #include "parse_tree.h"
+#include <inttypes.h>
 
 namespace parse_productions
 {

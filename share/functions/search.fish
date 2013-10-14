@@ -4,12 +4,15 @@ function search --description 'Search the web.'
 
   switch $SEARCHENGINE
     case Google google google.com
-      set ENGINE http://google.com
+      set ENGINE http://google.com/search
     case Bing bing bing.com
-      set ENGINE http://bing.com
+      set ENGINE http://bing.com/search
     case Yahoo yahoo yahoo.com
-      set ENGINE http://search.yahoo.com
+      set ENGINE http://search.yahoo.com/search
+    case DuckDuckGo duckduckgo duckduckgo.com
+      set ENGINE http://duckduckgo.com/
+    case '*'
+      set ENGINE $SEARCHENGINE
   end 
-
-  browse "$ENGINE/search?q=$terms"
+  browse "$ENGINE/?q=$terms"
 end

@@ -341,6 +341,7 @@ class parse_ll_t
     bool top_node_handle_terminal_types(parse_token_t token);
 
     void parse_error(const wchar_t *expected, parse_token_t token);
+    void parse_error(parse_token_t token);
     void parse_error(parse_token_t token, const wchar_t *format, ...);
     void append_error_callout(wcstring &error_message, parse_token_t token);
 
@@ -551,19 +552,25 @@ void parse_ll_t::acquire_output(parse_node_tree_t *output, parse_error_list_t *e
     this->symbol_stack.clear();
 }
 
-void parse_ll_t::parse_error(parse_token_t token, const wchar_t *fmt, ...)
+void parse_ll_t::parse_error(parse_token_t token)
 {
     this->fatal_errored = true;
+}
+
+void parse_ll_t::parse_error(parse_token_t token, const wchar_t *fmt, ...)
+{
+    parse_error(token);
+
+    //this->dump_stack();
+    parse_error_t err;
+
+    va_list va;
+    va_start(va, fmt);
+    err.text = vformat_string(fmt, va);
+    va_end(va);
+
     if (this->should_generate_error_messages)
     {
-        //this->dump_stack();
-        parse_error_t err;
-
-        va_list va;
-        va_start(va, fmt);
-        err.text = vformat_string(fmt, va);
-        va_end(va);
-
         err.source_start = token.source_start;
         err.source_length = token.source_length;
         this->errors.push_back(err);
@@ -730,7 +737,7 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2)
             }
             else
             {
-                this->parse_error(token1, NULL);
+                this->parse_error(token1);
             }
             // parse_error sets fatal_errored, which ends the loop
         }

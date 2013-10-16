@@ -95,7 +95,7 @@ def parse_color(color_str):
             # Regular color
             color = better_color(color, parse_one_color(comp))
 
-    return [color, background_color, bold, underline]
+    return {"color": color, "background": background_color, "bold": bold, "underline": underline}
 
 def parse_bool(val):
     val = val.lower()
@@ -248,7 +248,140 @@ class FishVar:
         flags = []
         if self.universal: flags.append('universal')
         if self.exported: flags.append('exported')
-        return [self.name, self.value, ', '.join(flags)]
+        return {"name": self.name, "value": self.value, "Flags": ', '.join(flags)}
+
+class FishBinding:
+    """A class that represents keyboard binding """
+
+    def __init__(self, command, binding, description=None):
+        self.command =  command
+        self.binding = binding
+        self.description = description
+
+    def get_json_obj(self):
+        return {"command" : self.command, "binding": self.binding, "description": self.description }
+
+    def get_readable_binding(command):
+        return command
+
+class BindingParser:
+    """ Class to parse codes for bind command """
+
+    #TODO: What does snext and sprevious mean ? 
+    readable_keys=  { "dc":"Delete", "npage": "Page Up", "ppage":"Page Down",
+                    "sdc": "Shift Delete", "shome": "Shift Home",
+                    "left": "Left Arrow", "right": "Right Arrow",
+                    "up": "Up Arrow", "down": "Down Arrow",
+                    "sleft": "Shift Left", "sright": "Shift Right"
+                    } 
+
+    def set_buffer(self, buffer, is_key=False):
+        """ Sets code to parse """
+
+        self.buffer = buffer
+        self.is_key = is_key
+        self.index = 0
+
+    def get_char(self):
+        """ Gets next character from buffer """
+
+        c = self.buffer[self.index]
+        self.index += 1
+        return c
+
+    def unget_char(self):
+        """ Goes back by one character for parsing """
+
+        self.index -= 1
+
+    def end(self):
+        """ Returns true if reached end of buffer """
+
+        return self.index >= len(self.buffer)
+
+    def parse_control_sequence(self):
+        """ Parses terminal specifiec control sequences """
+
+        result = ''
+        c = self.get_char()
+        if c == 'O':
+            c = self.get_char()
+
+        if c == '\\' and self.get_char(): c = self.get_char()
+
+        if c == ';': c = self.get_char()
+
+        if c == '3': c = self.get_char()
+
+        if c == '5': c = self.get_char()
+
+        if c == '9': c = self.get_char()
+
+        if c == 'A':
+            result += 'Up Arrow'
+        elif c == 'B':
+            result += 'Down Arrow'
+        elif c == 'C':
+            result += 'Right Arrow'
+        elif c == 'D':
+            result = "Left Arrow"
+        return result
+
+    def get_readable_binding(self):
+        """ Gets a readable representation of binding """
+
+        if self.is_key:
+            try:
+                result = BindingParser.readable_keys[self.buffer]
+            except KeyError:
+                result = self.buffer.title()
+        else:
+            result = self.parse_binding()
+
+        return result
+
+    def parse_binding(self):
+        readable_command = ''
+        result = ''
+        alt = ctrl = False
+
+        while not self.end():
+            c = self.get_char()
+
+            if c == '\\':
+                c = self.get_char() 
+                if c == 'e' and not alt:
+                    alt = True
+                    c = self.get_char()
+                    self.unget_char()
+                    if c == 'O':
+                        result += self.parse_control_sequence()
+                elif c == 'e':
+                    result += self.parse_control_sequence()
+                elif c == 'c':
+                    ctrl = True
+                elif c == '[':
+                    result += self.parse_control_sequence()
+                elif c == 'n':
+                    result += 'Enter'
+                elif c == 't':
+                    result += 'Tab'
+                elif c == 'b':
+                    result += 'Backspace'
+                elif c == '<':
+                    result += "<"
+                elif c == '>':
+                    result += ">"
+                elif c == ';':
+                    result += self.parse_control_sequence()
+            else:
+                result += c
+        if ctrl: 
+            readable_command += 'CTRL - '
+        if alt:
+            readable_command += 'ALT - '
+
+        return readable_command + result
 
 class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
@@ -308,7 +441,9 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             for match in re.finditer(r"^fish_color_(\S+) ?(.*)", line):
                 color_name, color_value = [x.strip() for x in match.group(1, 2)]
                 color_desc = descriptions.get(color_name, '')
-                result.append([color_name, color_desc, parse_color(color_value)])
+                data = { "name": color_name, "description" : color_desc }
+                data.update(parse_color(color_value))
+                result.append(data)
                 remaining.discard(color_name)
 
         # Ensure that we have all the color names we know about, so that if the
@@ -357,6 +492,35 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         return [vars[key].get_json_obj() for key in sorted(vars.keys(), key=str.lower)]
 
+    def do_get_bindings(self):
+        """ Get key bindings """
+
+        greeting, err = run_fish_cmd('fish -i')
+        out, err = run_fish_cmd('fish -i -c "bind"')
+
+        # Remove fish greeting from output
+        out = out[len(greeting):]
+
+        # Put all the bindings into a list
+        bindings = [] 
+        binding_parser = BindingParser()
+
+        for line in out.split('\n'):
+            comps = line.split(' ', 2)
+            if len(comps) < 3:
+                continue
+            if comps[1] == '-k':
+                key_name, command = comps[2].split(' ', 2)
+                binding_parser.set_buffer(key_name, True)
+                fish_binding = FishBinding(command=command, binding=binding_parser.get_readable_binding())
+            else:
+                binding_parser.set_buffer(comps[1])
+                fish_binding = FishBinding(command=comps[2], binding=binding_parser.get_readable_binding())
+
+            bindings.append(fish_binding)
+
+        return [ binding.get_json_obj() for binding in bindings ]
+
     def do_get_history(self):
         # Use \x1e ("record separator") to distinguish between history items. The first
         # backslash is so Python passes one backslash to fish
@@ -364,7 +528,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         result = out.split(' \x1e')
         if result: result.pop() # Trim off the trailing element
         return result
-
 
     def do_get_color_for_variable(self, name):
         "Return the color with the given name, or the empty string if there is none"
@@ -496,6 +659,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         elif re.match(r"/color/(\w+)/", p):
             name = re.match(r"/color/(\w+)/", p).group(1)
             output = self.do_get_color_for_variable(name)
+        elif p == '/bindings/':
+            output = self.do_get_bindings()
         else:
             return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
 

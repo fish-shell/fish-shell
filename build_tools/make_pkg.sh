@@ -21,3 +21,10 @@ xcodebuild install -scheme install_tree -configuration Release DSTROOT=/tmp/fish
 pkgbuild --scripts build_tools/osx_package_scripts --root /tmp/fish_pkg/root/ --identifier 'com.ridiculousfish.fish-shell-pkg' --version "$VERSION"  /tmp/fish_pkg/intermediates/fish.pkg
 
 productbuild  --package-path /tmp/fish_pkg/intermediates --distribution build_tools/osx_distribution.xml --resources build_tools/osx_package_resources/ ~/fish_built/fish.pkg
+
+
+# Make the app
+xcodebuild -scheme fish.app -configuration Release DSTROOT=/tmp/fish_app/
+rm -f ~/fish_built/fish.app.zip
+cd DerivedData/fish/Build/Products/Release/
+zip -r ~/fish_built/fish.app.zip fish.app

@@ -260,7 +260,8 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
             /* No subshell found, all done */
             break;
         }
-        /* Interpret NULL to mean the end */
+        
+        /* Intrepret NULL to mean the end */
         if (end == NULL)
         {
             end = const_cast<wchar_t *>(buff) + bufflen;
@@ -272,9 +273,6 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
             begin++;
             ap = begin;
             bp = end;
-            /* pos is where to begin looking for the next one. But if we reached the end there's no next one. */
-            if (begin >= end)
-                break;
             pos = begin + 1;
         }
         else if (begin >= cursor)

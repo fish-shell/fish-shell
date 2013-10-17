@@ -98,8 +98,6 @@ char *tparm_solaris_kludge(char *str, ...)
             || (enter_reverse_mode && ! strcmp(str, enter_reverse_mode))
             || (enter_shadow_mode && ! strcmp(str, enter_shadow_mode))
             || (exit_shadow_mode && ! strcmp(str, exit_shadow_mode))
-            || (enter_standout_mode && ! strcmp(str, enter_standout_mode))
-            || (exit_standout_mode && ! strcmp(str, exit_standout_mode))
             || (enter_secure_mode && ! strcmp(str, enter_secure_mode))
             || (enter_bold_mode && ! strcmp(str, enter_bold_mode)))
     {

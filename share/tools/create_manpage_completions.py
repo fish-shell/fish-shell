@@ -17,8 +17,17 @@ Redistributions in binary form must reproduce the above copyright notice, this l
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import string, sys, re, os.path, gzip, traceback, getopt, errno, codecs
+import string, sys, re, os.path, bz2, gzip, traceback, getopt, errno, codecs
 from deroff import Deroffer
+
+lzma_available = True
+try:
+    try:
+        import backports.lzma as lzma
+    except ImportError:
+        import lzma
+except ImportError:
+    lzma_available = False
 
 # Whether we're Python 3
 IS_PY3 = sys.version_info[0] >= 3
@@ -717,6 +726,16 @@ def parse_manpage_at_path(manpage_path, output_directory):
         fd = gzip.open(manpage_path, 'r')
         manpage = fd.read()
         if IS_PY3: manpage = manpage.decode('latin-1')
+    elif manpage_path.endswith('.bz2'):
+        fd = bz2.BZ2File(manpage_path, 'r')
+        manpage = fd.read()
+        if IS_PY3: manpage = manpage.decode('latin-1')
+    elif manpage_path.endswith('.xz') or manpage_path.endswith('.lzma'):
+        if not lzma_available:
+            return
+        fd = lzma.LZMAFile(str(manpage_path), 'r')
+        manpage = fd.read()
+        if IS_PY3: manpage = manpage.decode('latin-1')
     else:
         if IS_PY3:
             fd = open(manpage_path, 'r', encoding='latin-1')
@@ -816,6 +835,15 @@ def parse_and_output_man_pages(paths, output_directory, show_progress):
     last_progress_string_length = 0
     if show_progress and not WRITE_TO_STDOUT:
         print("Parsing man pages and writing completions to {0}".format(output_directory))
+
+    man_page_suffixes = set([os.path.splitext(m)[1][1:] for m in paths])
+    lzma_xz_occurs = "xz" in man_page_suffixes or "lzma" in man_page_suffixes
+    if lzma_xz_occurs and not lzma_available:
+        add_diagnostic('At least one man page is compressed with lzma or xz, but the "lzma" module is not available.'
+                       ' Any man page compressed with either will be skipped.',
+                       NOT_VERBOSE)
+        flush_diagnostics(sys.stderr)
+
     for manpage_path in paths:
         index += 1
 

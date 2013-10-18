@@ -66,6 +66,12 @@ To switch your default shell back, you can run:
 
 Substitute /bin/bash with /bin/tcsh or /bin/zsh as appropriate.
 
+## Optional Dependencies
+
+In order to generate completions from man pages compressed with either lzma or xz, you may need to install an extra Python package.
+
+Python versions prior to 2.6 are not supported.  For Python versions 2.6 to 3.2 you need to install the module `backports.lzma`.  How to install it depends on your system and how you installed Python.  Most Linux distributions should include it as a package named `backports-lzma` (or similar).  From version 3.3 onwards, Python already includes the required module.
+
 ## Contact Us
 
 Questions, comments, rants and raves can be posted to the official fish mailing list at <https://lists.sourceforge.net/lists/listinfo/fish-users> or join us on our IRC channel [#fish at irc.oftc.net](https://webchat.oftc.net/?channels=fish).

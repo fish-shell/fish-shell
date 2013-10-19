@@ -7,15 +7,6 @@ controllers.controller("main", function($scope, $location) {
         $location.path(view);
         $scope.currentTab = view;
     }
-
-    $scope.tabCssClass = function(view) {
-        var cls = "tab";
-        if ($scope.currentTab == view) {
-            cls += " selected_tab";
-        }
-        return cls;
-    }
-
 })
 
 controllers.controller("colorsController", function($scope, $http) {

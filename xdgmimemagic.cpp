@@ -276,7 +276,10 @@ _xdg_mime_magic_parse_header(FILE *magic_file, XdgMimeMagicMatch *match)
 
     buffer = _xdg_mime_magic_read_to_newline(magic_file, &end_of_file);
     if (end_of_file)
+    {
+        free(buffer);
         return XDG_MIME_MAGIC_EOF;
+    }
 
     end_ptr = buffer;
     while (*end_ptr != ']' && *end_ptr != '\000' && *end_ptr != '\n')

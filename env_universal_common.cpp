@@ -398,6 +398,9 @@ start_conversion:
     {
         debug(0, L"%d %d", in_len, out_len);
         debug(0, L"Error while converting from to string");
+
+        /* Terminate the output string.  */
+        free(out);
         return 0;
     }
 

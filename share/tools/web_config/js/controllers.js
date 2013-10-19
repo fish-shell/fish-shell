@@ -1,72 +1,6 @@
-fishconfig = angular.module("fishconfig", []);
+controllers = angular.module("controllers", []);
 
-fishconfig.filter("filterVariable", function() {
-    return function(variables, query) {
-        var result = []
-        if (variables == undefined) return result;
-        if (query == null) { return variables };
-
-        for(i=0; i<variables.length; ++i) {
-            variable = variables[i];
-            if (variable.name.indexOf(query) != -1 ||  variable.value.indexOf(query) != -1) {
-                result.push(variable);
-            }
-        }
-
-        return result;
-    }
-});
-
-fishconfig.filter("filterBinding", function() {
-    return function(bindings, query) {
-        var result = []
-        if (bindings == undefined) return result;
-        if (query == null) { return bindings};
-
-        for(i=0; i<bindings.length; ++i) {
-            binding = bindings[i];
-            if (binding.command.indexOf(query) != -1) {
-                result.push(binding);
-            }
-        }
-
-        return result;
-    }
-});
-
-fishconfig.config(
-    ["$routeProvider", function($routeProvider) {
-        $routeProvider
-        .when("/colors", {
-            controller: "colorsController",
-            templateUrl: "partials/colors.html"
-        })
-        .when("/prompt", {
-            controller: "promptController",
-            templateUrl: "partials/prompt.html"
-        })
-        .when("/functions", {
-            controller: "functionsController",
-            templateUrl: "partials/functions.html"
-        })
-        .when("/variables", {
-            controller: "variablesController",
-            templateUrl: "partials/variables.html"
-        })
-        .when("/history", {
-            controller: "historyController",
-            templateUrl: "partials/history.html"
-        })
-        .when("/bindings", {
-            controller: "bindingsController",
-            templateUrl: "partials/bindings.html"
-        })
-        .otherwise({
-            redirectTo: "/colors"
-        })
-    }]);
-
-fishconfig.controller("main", function($scope, $location) {
+controllers.controller("main", function($scope, $location) {
     $scope.currentTab = "colors";
 
     $scope.changeView = function(view) {
@@ -84,7 +18,7 @@ fishconfig.controller("main", function($scope, $location) {
 
 })
 
-fishconfig.controller("colorsController", function($scope, $http) {
+controllers.controller("colorsController", function($scope, $http) {
     $scope.term256Colors = [ //247
     "ffd7d7",
     "d7afaf",
@@ -686,7 +620,7 @@ fishconfig.controller("colorsController", function($scope, $http) {
     };
 });
 
-fishconfig.controller("promptController", function($scope, $http) {
+controllers.controller("promptController", function($scope, $http) {
     $scope.selectedPrompt = null;
 
     $scope.fetchCurrentPrompt = function(currenttPrompt) {
@@ -728,7 +662,7 @@ fishconfig.controller("promptController", function($scope, $http) {
     $scope.fetchSamplePrompts();
 });
 
-fishconfig.controller("functionsController", function($scope, $http) {
+controllers.controller("functionsController", function($scope, $http) {
     $scope.selectedFunction = null;
     $scope.functionDefinition = ""; 
 
@@ -769,7 +703,7 @@ fishconfig.controller("functionsController", function($scope, $http) {
     $scope.fetchFunctions();
 });
 
-fishconfig.controller("variablesController", function($scope, $http) {
+controllers.controller("variablesController", function($scope, $http) {
     $scope.query = null;
 
     $scope.fetchVariables= function() {
@@ -780,7 +714,7 @@ fishconfig.controller("variablesController", function($scope, $http) {
     $scope.fetchVariables();
 });
 
-fishconfig.controller("historyController", function($scope, $http, $timeout) {
+controllers.controller("historyController", function($scope, $http, $timeout) {
     $scope.historyItems = [];
     $scope.historySize = 0;
     // Stores items which are yet to be added in history items
@@ -819,7 +753,7 @@ fishconfig.controller("historyController", function($scope, $http, $timeout) {
     $scope.fetchHistory();
 });
 
-fishconfig.controller("bindingsController", function($scope, $http) {
+controllers.controller("bindingsController", function($scope, $http) {
     $scope.bindings = [];
     $scope.fetchBindings = function() {
         $http.get("/bindings/").success(function(data, status, headers, config) {

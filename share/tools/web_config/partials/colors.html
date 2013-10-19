@@ -37,26 +37,26 @@
     </table>
     
     <div class="color_scheme_choices_list">
-        <div class="color_scheme_choice_container" data-ng-repeat="color_scheme in color_schemes" ng-click="changeSelectedColorScheme(color_scheme)">
+        <div class="color_scheme_choice_container" data-ng-repeat="colorScheme in colorSchemes" ng-click="changeSelectedColorScheme(colorScheme)">
             <div class="color_scheme_choice_label">
                 <!-- This click/clickBubble nonsense is so that we can have a separate URL inside a parent with an onClick handler -->
-                <span>{{color_scheme.name }}</span><!--a data-bind="if: $data.url, click: function(){return true;}, clickBubble: false, attr: { href: $data.url}"><img class="external_link_img" src="external_link.png"></a-->
+                <span>{{colorScheme.name }}</span><!--a data-bind="if: $data.url, click: function(){return true;}, clickBubble: false, attr: { href: $data.url}"><img class="external_link_img" src="external_link.png"></a-->
             </div>
-            <div class="colorpicker_text_sample_tight" data-ng-style="{'background-color': color_scheme.preferred_background}">
-                <span data-ng-style="{'color': color_scheme.command}">/bright/vixens</span>
-                <span data-ng-style="{'color': color_scheme.param}">jump</span>
-                <span data-ng-style="{'color': color_scheme.end}">|</span>
-                <span data-ng-style="{'color': color_scheme.command}">dozy</span>
-                <span data-ng-style="{'color': color_scheme.quote}"> "fowl" </span>
-                <span data-ng-style="{'color': color_scheme.redirection}">&gt; quack</span>
-                <span data-ng-style="{'color': color_scheme.end}">&</span>
+            <div class="colorpicker_text_sample_tight" data-ng-style="{'background-color': colorScheme.preferred_background}">
+                <span data-ng-style="{'color': colorScheme.command}">/bright/vixens</span>
+                <span data-ng-style="{'color': colorScheme.param}">jump</span>
+                <span data-ng-style="{'color': colorScheme.end}">|</span>
+                <span data-ng-style="{'color': colorScheme.command}">dozy</span>
+                <span data-ng-style="{'color': colorScheme.quote}"> "fowl" </span>
+                <span data-ng-style="{'color': colorScheme.redirection}">&gt; quack</span>
+                <span data-ng-style="{'color': colorScheme.end}">&</span>
                 <br>
-                <span data-ng-style="{'color': color_scheme.command}">echo</span>
-                <span data-ng-style="{'color': color_scheme.error}">'Errors are the portals to discovery</span>
+                <span data-ng-style="{'color': colorScheme.command}">echo</span>
+                <span data-ng-style="{'color': colorScheme.error}">'Errors are the portals to discovery</span>
                 <br>
-                <span data-ng-style="{ 'color': color_scheme.comment}"># This is a comment</span>
+                <span data-ng-style="{ 'color': colorScheme.comment}"># This is a comment</span>
                 <br>
-                <span data-ng-style="{ 'color': color_scheme.command}">Th</span><span data-ng-style="{ 'color': color_scheme.autosuggestion}"><span class="fake_cursor"><span style="visibility: hidden">i</span></span>s is an autosuggestion</span>
+                <span data-ng-style="{ 'color': colorScheme.command}">Th</span><span data-ng-style="{ 'color': colorScheme.autosuggestion}"><span class="fake_cursor"><span style="visibility: hidden">i</span></span>s is an autosuggestion</span>
             </div>
         </div>
     </div>

@@ -28,7 +28,7 @@ controllers.controller("colorsController", function($scope, $http) {
 
     $scope.getColorArraysArray = function() {
         var result = null;
-        if ($scope.selectedColorScheme.colors.length > 0)
+        if ( $scope.selectedColorScheme.colors && $scope.selectedColorScheme.colors.length > 0)
             result = get_colors_as_nested_array($scope.selectedColorScheme.colors, 32);
         else
             result =  get_colors_as_nested_array(term_256_colors, 32);
@@ -50,7 +50,16 @@ controllers.controller("colorsController", function($scope, $http) {
     for (var i=0; i < additional_color_schemes.length; i++)
         $scope.colorSchemes.push(additional_color_schemes[i])
 
-    $scope.changeSelectedColorScheme($scope.colorSchemes[0]);
+
+    $scope.getCurrentTheme = function() {
+        $http.get("/colors/").success(function(data, status, headers, config) {
+           var currentScheme = { "name": "Current", "colors":[], "preferred_background": "" };
+            for (var i in data) {
+                currentScheme[data[i].name] = data[i].color;
+            }
+            $scope.colorSchemes.splice(0, 0, currentScheme);
+            $scope.changeSelectedColorScheme(currentScheme);
+     })};
 
     $scope.setTheme = function() {
         var settingNames = ["autosuggestion", "command", "param", "redirection", "comment", "error", "quote", "end"];
@@ -61,6 +70,8 @@ controllers.controller("colorsController", function($scope, $http) {
             })
         }
     };
+
+    $scope.getCurrentTheme();
 });
 
 controllers.controller("promptController", function($scope, $http) {
@@ -170,9 +181,9 @@ controllers.controller("historyController", function($scope, $http, $timeout) {
             return;
         }
 
-        var to_load = $scope.remainingItems.splice(0, 100);
-        for (i in to_load) {
-            $scope.historyItems.push(to_load[i]);
+        var toLoad = $scope.remainingItems.splice(0, 100);
+        for (i in toLoad) {
+            $scope.historyItems.push(toLoad[i]);
         }
 
         $scope.loadingText = "Loading " + $scope.historyItems.length + "/" + $scope.historySize;

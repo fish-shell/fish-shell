@@ -495,8 +495,12 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_get_bindings(self):
         """ Get key bindings """
 
-        greeting, err = run_fish_cmd('fish -i')
-        out, err = run_fish_cmd('fish -i -c "bind"')
+        # Running __fish_config_interactive print fish greeting and
+        # loads key bindings
+        greeting, err = run_fish_cmd(' __fish_config_interactive')
+
+        # Load the key bindings and then list them with bind
+        out, err = run_fish_cmd('__fish_config_interactive; bind')
 
         # Remove fish greeting from output
         out = out[len(greeting):]

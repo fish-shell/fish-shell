@@ -173,6 +173,7 @@ controllers.controller("historyController", function($scope, $http, $timeout) {
     $scope.historySize = 0;
     // Stores items which are yet to be added in history items
     $scope.remainingItems = [];
+    $scope.selectedItems = [];
 
     // Populate history items in parts
     $scope.loadHistory = function() {
@@ -190,6 +191,15 @@ controllers.controller("historyController", function($scope, $http, $timeout) {
         $timeout($scope.loadHistory, 100);
     }
 
+    $scope.selectItem = function(item) {
+        var index = $scope.selectedItems.indexOf(item);
+        if ( index >= 0) {
+            $scope.selectedItems.splice(index,1);
+        }
+        else {
+            $scope.selectedItems.push(item);
+        }
+    }
     // Get history from server
     $scope.fetchHistory = function() {
         $http.get("/history/").success(function(data, status, headers, config) {

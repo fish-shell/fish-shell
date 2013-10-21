@@ -51,6 +51,7 @@
 # __fish_git_prompt_showupstream to a space-separated list of values:
 #
 #     verbose        show number of commits ahead/behind (+/-) upstream
+#     name           if verbose, then also show the upstream abbrev name
 #     informative    similar to verbose, but shows nothing when equal (fish only)
 #     legacy         don't use the '--count' option available in recent versions
 #                    of git-rev-list
@@ -178,6 +179,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 	set -l upstream git
 	set -l legacy
 	set -l verbose
+	set -l name
 
 	# Default to informative if show_informative_status is set
 	if test -n "$__fish_git_prompt_show_informative_status"
@@ -222,6 +224,8 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 		case legacy
 			set legacy 1
 			set -e informative
+		case name
+			set name 1
 		case none
 			return
 		end
@@ -302,6 +306,9 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind$behind"
 		case '*' # diverged from upstream
 			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_diverged$ahead-$behind"
+		end
+		if test -n "$count" -a -n "$name"
+			echo " "(command git rev-parse --abbrev-ref "$upstream" ^/dev/null)
 		end
 	else if test -n "$informative"
 		echo $count | read -l behind ahead

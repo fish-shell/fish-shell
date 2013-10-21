@@ -156,7 +156,8 @@
 #
 # The separator before the upstream information can be customized via
 # __fish_git_prompt_char_upstream_prefix.  It is colored like the rest of
-# the upstream information.  It defaults to nothing ().
+# the upstream information.  It normally defaults to nothing () and defaults
+# to a space ( ) when __fish_git_prompt_showupstream contains verbose.
 #
 #
 # Turning on __fish_git_prompt_showcolorhints changes the colors as follows to
@@ -295,17 +296,24 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 
 	# calculate the result
 	if test -n "$verbose"
+		# Verbose has a space by default
+		set -l prefix "$___fish_git_prompt_char_upstream_prefix"
+		# Using two underscore version to check if user explicitly set to nothing
+		if not set -q __fish_git_prompt_char_upstream_prefix
+			set -l prefix " "
+		end
+
 		echo $count | read -l behind ahead
 		switch "$count"
 		case '' # no upstream
 		case "0	0" # equal to upstream
-			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_equal"
+			echo "$prefix$___fish_git_prompt_char_upstream_equal"
 		case "0	*" # ahead of upstream
-			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead"
+			echo "$prefix$___fish_git_prompt_char_upstream_ahead$ahead"
 		case "*	0" # behind upstream
-			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind$behind"
+			echo "$prefix$___fish_git_prompt_char_upstream_behind$behind"
 		case '*' # diverged from upstream
-			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_diverged$ahead-$behind"
+			echo "$prefix$___fish_git_prompt_char_upstream_diverged$ahead-$behind"
 		end
 		if test -n "$count" -a -n "$name"
 			echo " "(command git rev-parse --abbrev-ref "$upstream" ^/dev/null)

@@ -25,7 +25,7 @@ filters.filter("filterBinding", function() {
 
         for(i=0; i<bindings.length; ++i) {
             binding = bindings[i];
-            if (binding.command.indexOf(query) != -1) {
+            if (binding.command.indexOf(query) != -1 || binding.binding.toLowerCase().indexOf(query.toLowerCase()) != -1) {
                 result.push(binding);
             }
         }

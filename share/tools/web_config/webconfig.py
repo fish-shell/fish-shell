@@ -325,8 +325,11 @@ class BindingParser:
             result += 'Right Arrow'
         elif c == 'D':
             result = "Left Arrow"
+        elif c == 'F':
+            result = "End"
         elif c == 'H':
             result = "Home"
+
         return result
 
     def get_readable_binding(self):

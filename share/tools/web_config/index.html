@@ -1,97 +1,17 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html ng-app="fishconfig">
+
 <head>
-<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-<title>fish shell configuration</title>
-<link rel="stylesheet" type="text/css" href="fishconfig.css"/>
-<script type="text/javascript" src="js/angular.js"></script>
-<script type="text/javascript" src="js/colorutils.js"></script>
-<script type="text/javascript" src="js/filters.js"></script>
-<script type="text/javascript" src="js/controllers.js"></script>
-<script type="text/javascript" src="js/app.js"></script>
-
-<script type="text/javascript">
-
-/*
-Need to find what to do with these functions
-*/
-function rgb_to_hsl(r, g, b){	
-    r /= 255, g /= 255, b /= 255;
-    var max = Math.max(r, g, b), min = Math.min(r, g, b);
-    var h, s, l = (max + min) / 2;
-
-    if(max == min){
-        h = s = 0; // achromatic
-    }else{
-        var d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        switch(max){
-            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-            case g: h = (b - r) / d + 2; break;
-            case b: h = (r - g) / d + 4; break;
-        }
-        h /= 6;
-    }
-
-    return [h, s, l];
-}
-
-function hsl_to_rgb(h, s, l){
-    var r, g, b;
-
-    if(s == 0){
-        r = g = b = l; // achromatic
-    }else{
-        function hue2rgb(p, q, t){
-            if(t < 0) t += 1;
-            if(t > 1) t -= 1;
-            if(t < 1/6) return p + (q - p) * 6 * t;
-            if(t < 1/2) return q;
-            if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-            return p;
-        }
-
-        var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-        var p = 2 * l - q;
-        r = hue2rgb(p, q, h + 1.0/3);
-        g = hue2rgb(p, q, h);
-        b = hue2rgb(p, q, h - 1.0/3);
-    }
-
-    return [r * 255, g * 255, b * 255]
-}
-
-
-/* Given a color, compute the master text color for it, by giving it a minimum brightness */
-function master_color_for_color(color_str) {
-	return adjust_lightness(color_str, function(lightness){
-		if (lightness < .33) {
-			lightness = .33
-		}
-		return lightness
-	})
-}
-
-/* Given a color name, like 'normal' or 'red' or 'FF00F0', return an RGB color string (or empty string) */
-function interpret_color(str) {
-	str = str.toLowerCase()
-	if (str == 'black') return '000000'
-	if (str == 'red') return 'FF0000'
-	if (str == 'green') return '00FF00'
-	if (str == 'brown') return '725000'
-	if (str == 'yellow') return 'FFFF00'
-	if (str == 'blue') return '0000FF'
-	if (str == 'magenta') return 'FF00FF'
-	if (str == 'purple') return 'FF00FF'
-	if (str == 'cyan') return '00FFFF'
-	if (str == 'white') return 'FFFFFF'
-	if (str == 'normal') return ''
-	return str
-}
-
-</script>
-
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+    <title>fish shell configuration</title>
+    <link rel="stylesheet" type="text/css" href="fishconfig.css"/>
+    <script type="text/javascript" src="js/angular.js"></script>
+    <script type="text/javascript" src="js/colorutils.js"></script>
+    <script type="text/javascript" src="js/filters.js"></script>
+    <script type="text/javascript" src="js/controllers.js"></script>
+    <script type="text/javascript" src="js/app.js"></script>
 </head>
+
 <body>
 
 <div id="ancestor">

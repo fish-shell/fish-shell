@@ -216,6 +216,17 @@ controllers.controller("historyController", function($scope, $http, $timeout) {
         $scope.historyItems.splice(index, 1);
     })};
 
+    var queryInputTimeout = null;
+    $scope.$watch("queryInput", function() {
+        if (queryInputTimeout){
+            $timeout.cancel(queryInputTimeout);
+        }
+
+        queryInputTimeout = $timeout(function() {
+            $scope.query = $scope.queryInput;
+        }, 1000);
+    });
+
     $scope.fetchHistory();
 });
 

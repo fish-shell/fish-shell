@@ -304,18 +304,30 @@ class BindingParser:
 
         result = ''
         c = self.get_char()
+
+        # \e0 is used to denote start of control sequence
         if c == 'O':
             c = self.get_char()
 
-        if c == '\\' and self.get_char(): c = self.get_char()
+        # \[1\; is start of control sequence
+        if c == '1':
+            self.get_char();self.get_char()
+            c = self.get_char()
 
-        if c == ';': c = self.get_char()
+        # 3 is Alt
+        if c == '3':
+            result += "ALT - "
+            c = self.get_char()
 
-        if c == '3': c = self.get_char()
+        # 5 is Ctrl
+        if c == '5':
+            result += "CTRL - "
+            c = self.get_char()
 
-        if c == '5': c = self.get_char()
-
-        if c == '9': c = self.get_char()
+        # 9 is Alt
+        if c == '9':
+            result += "ALT - "
+            c = self.get_char()
 
         if c == 'A':
             result += 'Up Arrow'
@@ -324,11 +336,11 @@ class BindingParser:
         elif c == 'C':
             result += 'Right Arrow'
         elif c == 'D':
-            result = "Left Arrow"
+            result += "Left Arrow"
         elif c == 'F':
-            result = "End"
+            result += "End"
         elif c == 'H':
-            result = "Home"
+            result += "Home"
 
         return result
 
@@ -355,30 +367,31 @@ class BindingParser:
 
             if c == '\\':
                 c = self.get_char() 
-                if c == 'e' and not alt:
-                    alt = True
-                    c = self.get_char()
-                    self.unget_char()
-                    if c == 'O':
+                if c == 'e':
+                    d = self.get_char()
+                    if d == 'O':
+                        self.unget_char()
                         result += self.parse_control_sequence()
-                elif c == 'e':
-                    result += self.parse_control_sequence()
+                    elif d == '\\':
+                        if self.get_char() == '[':
+                            result += self.parse_control_sequence()
+                        else:
+                            self.unget_char()
+                            self.unget_char()
+                            alt = True
+                    else:
+                        alt = True
+                        self.unget_char()
                 elif c == 'c':
                     ctrl = True
-                elif c == '[':
-                    result += self.parse_control_sequence()
                 elif c == 'n':
                     result += 'Enter'
                 elif c == 't':
                     result += 'Tab'
                 elif c == 'b':
                     result += 'Backspace'
-                elif c == '<':
-                    result += "<"
-                elif c == '>':
-                    result += ">"
-                elif c == ';':
-                    result += self.parse_control_sequence()
+                else:
+                    result += c 
             else:
                 result += c
         if ctrl: 
@@ -387,6 +400,7 @@ class BindingParser:
             readable_command += 'ALT - '
 
         return readable_command + result
+
 
 class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 

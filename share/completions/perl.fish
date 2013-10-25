@@ -2,7 +2,7 @@ begin
     set -l unicode 'commandline | sgrep -qe "-[a-zA-Z]*C[a-zA-Z]*\$"'
     set -l noopt 'commandline | not sgrep -qe "-[a-zA-Z]*C[a-zA-Z]*\$"'
     set -l modules "(find (perl -lE'print for @INC') -name '*.pm' -printf '%P\n' \
-                        | awk '{ gsub(\"/\", \"::\") } !/-/' RS=.pm\n | sort | uniq)"
+                        | awk '{ gsub(\"/\", \"::\") } /[^-.]/' RS=.pm\n | sort | uniq)"
     complete -c perl -s 0 -n $noopt --description 'Specify record separator'
     complete -c perl -s a -n $noopt --description 'Turn on autosplit mode'
     complete -c perl -s c -n $noopt --description 'Check syntax'

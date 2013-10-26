@@ -993,10 +993,18 @@ void reader_init()
 
 void reader_destroy()
 {
-    tcsetattr(0, TCSANOW, &terminal_mode_on_startup);
     pthread_key_delete(generation_count_key);
 }
 
+void restore_term_mode()
+{
+    // Restore the term mode if we own the terminal
+    // It's important we do this before restore_foreground_process_group, otherwise we won't think we own the terminal
+    if (getpid() == tcgetpgrp(STDIN_FILENO))
+    {
+        tcsetattr(STDIN_FILENO, TCSANOW, &terminal_mode_on_startup);
+    }
+}
 
 void reader_exit(int do_exit, int forced)
 {

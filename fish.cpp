@@ -389,7 +389,6 @@ int main(int argc, char **argv)
 
     set_main_thread();
     setup_fork_guards();
-    save_term_foreground_process_group();
 
     wsetlocale(LC_ALL, L"");
     is_interactive_session=1;
@@ -408,6 +407,12 @@ int main(int argc, char **argv)
     {
         debug(1, _(L"Can not use the no-execute mode when running an interactive session"));
         no_exec = 0;
+    }
+
+    /* Only save (and therefore restore) the fg process group if we are interactive. See #197, #1002 */
+    if (is_interactive_session)
+    {
+        save_term_foreground_process_group();
     }
 
     const struct config_paths_t paths = determine_config_directory_paths(argv[0]);
@@ -511,6 +516,7 @@ int main(int argc, char **argv)
 
     proc_fire_event(L"PROCESS_EXIT", EVENT_EXIT, getpid(), res);
 
+    restore_term_mode();
     restore_term_foreground_process_group();
     history_destroy();
     proc_destroy();

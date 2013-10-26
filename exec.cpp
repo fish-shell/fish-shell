@@ -551,7 +551,7 @@ static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *proce
             return false;
         }
     }
-    
+
     /* Now see if we have a redirection involving a file. The only one we allow is /dev/null, which we assume will not fail. */
     bool result = true;
     if (chain_contains_redirection_to_real_file(job->block_io_chain()) || chain_contains_redirection_to_real_file(process->io_chain()))
@@ -790,11 +790,11 @@ void exec_job(parser_t &parser, job_t *j)
                echo alpha | cat < beta.txt
 
             Should cat output alpha or beta? bash and ksh output 'beta', tcsh gets it right and complains about ambiguity, and zsh outputs both (!). No shells appear to output 'alpha', so we match bash here. That would mean putting the pipe first, so that it gets trumped by the file redirection.
-            
+
             However, eval does this:
-            
+
                echo "begin; $argv "\n" ;end eval2_inner <&3 3<&-" | source 3<&0
-               
+
             which depends on the redirection being evaluated before the pipe. So the write end of the pipe comes first, the read pipe of the pipe comes last. See issue #966.
         */
 
@@ -811,7 +811,7 @@ void exec_job(parser_t &parser, job_t *j)
 
         /* The explicit IO redirections associated with the process */
         process_net_io_chain.append(p->io_chain());
-        
+
         /* Read pipe goes last */
         if (p != j->first_process)
         {
@@ -820,7 +820,7 @@ void exec_job(parser_t &parser, job_t *j)
             pipe_read->pipe_fd[0] = pipe_current_read;
             process_net_io_chain.push_back(pipe_read);
         }
-        
+
 
         /*
            This call is used so the global environment variable array
@@ -1241,16 +1241,16 @@ void exec_job(parser_t &parser, job_t *j)
                   forking is expensive, fish tries to avoid it when
                   possible.
                 */
-                
+
                 bool fork_was_skipped = false;
-                
+
                 const shared_ptr<io_data_t> stdout_io = process_net_io_chain.get_io_for_fd(STDOUT_FILENO);
                 const shared_ptr<io_data_t> stderr_io = process_net_io_chain.get_io_for_fd(STDERR_FILENO);
-                
+
                 /* If we are outputting to a file, we have to actually do it, even if we have no output, so that we can truncate the file. Does not apply to /dev/null. */
                 bool must_fork = redirection_is_to_real_file(stdout_io.get()) || redirection_is_to_real_file(stderr_io.get());
                 if (! must_fork)
-                {   
+                {
                     if (p->next == NULL)
                     {
                         const bool stdout_is_to_buffer = stdout_io && stdout_io->io_mode == IO_BUFFER;
@@ -1299,7 +1299,7 @@ void exec_job(parser_t &parser, job_t *j)
                         }
                     }
                 }
-                
+
 
                 if (fork_was_skipped)
                 {

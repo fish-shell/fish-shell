@@ -647,20 +647,20 @@ enum token_type tok_peek_next(tokenizer_t *tok, wcstring *out_next_string)
     {
         out_next_string->clear();
     }
-        
+
     enum token_type result = TOK_END;
     if (tok_has_next(tok))
     {
         int saved = tok_get_pos(tok);
         tok_next(tok);
         result = tok_last_type(tok);
-        
+
         if (out_next_string != NULL)
         {
             const wchar_t *last = tok_last(tok);
             out_next_string->assign(last ? last : L"");
         }
-        
+
         tok_set_pos(tok, saved);
     }
     return result;

@@ -1617,24 +1617,24 @@ static int builtin_echo(parser_t &parser, wchar_t **argv)
                 {
                     case L'n':
                         print_newline = false;
-                    break;
+                        break;
                     case L'e':
                         interpret_special_chars = true;
-                    break;
+                        break;
                     case L's':
                         // fish-specific extension,
                         // which we should try to nix
                         print_spaces = false;
-                    break;
+                        break;
                     case L'E':
                         interpret_special_chars = false;
-                    break;
+                        break;
                 }
             }
         }
         else
         {
-            invalid_echo_option:
+invalid_echo_option:
             break;
         }
         argv++;

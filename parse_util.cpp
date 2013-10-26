@@ -245,10 +245,10 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
     const wchar_t * const cursor = buff + cursor_pos;
 
     CHECK(buff,);
-    
+
     const size_t bufflen = wcslen(buff);
     assert(cursor_pos <= bufflen);
-    
+
     /* ap and bp are the beginning and end of the tightest command substitition found so far */
     const wchar_t *ap = buff, *bp = buff + bufflen;
     const wchar_t *pos = buff;
@@ -265,7 +265,7 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
         {
             end = const_cast<wchar_t *>(buff) + bufflen;
         }
-        
+
         if (begin < cursor && end >= cursor)
         {
             /* This command substitution surrounds the cursor, so it's a tighter fit */
@@ -290,7 +290,7 @@ void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wc
             assert(pos <= buff + bufflen);
         }
     }
-    
+
     if (a != NULL) *a = ap;
     if (b != NULL) *b = bp;
 }
@@ -383,7 +383,7 @@ static void job_or_process_extent(const wchar_t *buff,
 
                 break;
             }
-            
+
             default:
             {
                 break;

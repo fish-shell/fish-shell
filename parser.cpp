@@ -2013,7 +2013,7 @@ int parser_t::parse_job(process_t *p,
                 {
 
                     const wchar_t *cmd = args.at(0).completion.c_str();
-                    
+
                     /*
                      We couldn't find the specified command.
 
@@ -2036,20 +2036,20 @@ int parser_t::parse_job(process_t *p,
                     if (equals_ptr != NULL)
                     {
                         /* Try to figure out if this is a pure variable assignment (foo=bar), or if this appears to be running a command (foo=bar ruby...) */
-                        
+
                         const wcstring name_str = wcstring(cmd, equals_ptr - cmd); //variable name, up to the =
                         const wcstring val_str = wcstring(equals_ptr + 1); //variable value, past the =
-                        
+
                         wcstring next_str;
                         if (tok_peek_next(tok, &next_str) == TOK_STRING && ! next_str.empty())
                         {
                             wcstring ellipsis_str = wcstring(1, ellipsis_char);
                             if (ellipsis_str == L"$")
                                 ellipsis_str = L"...";
-                            
+
                             /* Looks like a command */
                             debug(0,
-                                  _( L"Unknown command '%ls'. Did you mean to run %ls with a modified environment? Try 'env %ls=%ls %ls%ls'. See the help section on the set command by typing 'help set'."),
+                                  _(L"Unknown command '%ls'. Did you mean to run %ls with a modified environment? Try 'env %ls=%ls %ls%ls'. See the help section on the set command by typing 'help set'."),
                                   cmd,
                                   next_str.c_str(),
                                   name_str.c_str(),

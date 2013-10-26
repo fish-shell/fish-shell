@@ -366,9 +366,12 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *out_c
     is_login |= (strcmp(argv[0], "-fish") == 0);
 
     /* We are an interactive session if we are either forced, or have not been given an explicit command to execute and stdin is a tty. */
-    if (force_interactive) {
+    if (force_interactive)
+    {
         is_interactive_session = true;
-    } else if (is_interactive_session) {
+    }
+    else if (is_interactive_session)
+    {
         is_interactive_session = ! has_cmd && (my_optind == argc) && isatty(STDIN_FILENO);
     }
 
@@ -402,7 +405,7 @@ int main(int argc, char **argv)
         debug(1, _(L"Can not use the no-execute mode when running an interactive session"));
         no_exec = 0;
     }
-    
+
     /* Only save (and therefore restore) the fg process group if we are interactive. See #197, #1002 */
     if (is_interactive_session)
     {
@@ -509,7 +512,7 @@ int main(int argc, char **argv)
     }
 
     proc_fire_event(L"PROCESS_EXIT", EVENT_EXIT, getpid(), res);
-    
+
     restore_term_mode();
     restore_term_foreground_process_group();
     history_destroy();

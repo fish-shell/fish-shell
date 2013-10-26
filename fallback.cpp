@@ -1506,7 +1506,7 @@ static int mk_wcswidth(const wchar_t *pwcs, size_t n)
     {
         if (pwcs[i] == L'\0')
             break;
-        
+
         int w = mk_wcwidth(pwcs[i]);
         if (w < 0)
         {

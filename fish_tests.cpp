@@ -532,7 +532,7 @@ static void test_utils()
 {
     say(L"Testing utils");
     const wchar_t *a = L"echo (echo (echo hi";
-    
+
     const wchar_t *begin = NULL, *end = NULL;
     parse_util_cmdsubst_extent(a, 0, &begin, &end);
     if (begin != a || end != begin + wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
@@ -542,7 +542,7 @@ static void test_utils()
     if (begin != a || end != begin + wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
     parse_util_cmdsubst_extent(a, 3, &begin, &end);
     if (begin != a || end != begin + wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
-    
+
     parse_util_cmdsubst_extent(a, 8, &begin, &end);
     if (begin != a + wcslen(L"echo (")) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
 
@@ -788,7 +788,7 @@ static void test_path()
     {
         err(L"Bug in canonical PATH code");
     }
-    
+
     if (paths_are_equivalent(L"/foo/bar/baz", L"foo/bar/baz")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
     if (! paths_are_equivalent(L"///foo///bar/baz", L"/foo/bar////baz//")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
     if (! paths_are_equivalent(L"/foo/bar/baz", L"/foo/bar/baz")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);

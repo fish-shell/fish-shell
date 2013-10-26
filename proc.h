@@ -373,7 +373,10 @@ public:
     unsigned int flags;
 
     /* Returns the block IO redirections associated with the job. These are things like the IO redirections associated with the begin...end statement. */
-    const io_chain_t &block_io_chain() const { return this->block_io; }
+    const io_chain_t &block_io_chain() const
+    {
+        return this->block_io;
+    }
 
     /* Fetch all the IO redirections associated with the job */
     io_chain_t all_io_redirections() const;

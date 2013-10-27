@@ -1,4 +1,3 @@
-
 # Copyright (C) 2005-2006 Axel Liljencrantz
 #
 # This program is free software; you can redistribute it and/or modify
@@ -742,7 +741,7 @@ uninstall-translations:
 #
 
 fish: $(FISH_OBJS) fish.o
-	$(CXX) $(FISH_OBJS) fish.o $(LDFLAGS_FISH) -o $@
+	$(CXX) $(CXXFLAGS) $(FISH_OBJS) fish.o $(LDFLAGS_FISH) -o $@
 
 
 #
@@ -750,7 +749,7 @@ fish: $(FISH_OBJS) fish.o
 #
 
 fish_pager: $(FISH_PAGER_OBJS)
-	$(CXX) $(FISH_PAGER_OBJS) $(LDFLAGS_FISH_PAGER) -o $@
+	$(CXX) $(CXXFLAGS) $(FISH_PAGER_OBJS) $(LDFLAGS_FISH_PAGER) -o $@
 
 
 #
@@ -758,7 +757,7 @@ fish_pager: $(FISH_PAGER_OBJS)
 #
 
 fishd: $(FISHD_OBJS)
-	$(CXX) $(FISHD_OBJS) $(LDFLAGS_FISHD) -o $@
+	$(CXX) $(CXXFLAGS) $(FISHD_OBJS) $(LDFLAGS_FISHD) -o $@
 
 
 #
@@ -766,7 +765,7 @@ fishd: $(FISHD_OBJS)
 #
 
 fish_tests: $(FISH_TESTS_OBJS)
-	$(CXX) $(FISH_TESTS_OBJS) $(LDFLAGS_FISH) -o $@
+	$(CXX) $(CXXFLAGS) $(FISH_TESTS_OBJS) $(LDFLAGS_FISH) -o $@
 
 
 #
@@ -776,7 +775,7 @@ fish_tests: $(FISH_TESTS_OBJS)
 #
 
 mimedb: $(MIME_OBJS)
-	$(CXX) $(MIME_OBJS) $(LDFLAGS_MIMEDB) -o $@
+	$(CXX) $(CXXFLAGS) $(MIME_OBJS) $(LDFLAGS_MIMEDB) -o $@
 
 
 #
@@ -784,7 +783,7 @@ mimedb: $(MIME_OBJS)
 #
 
 fish_indent: $(FISH_INDENT_OBJS)
-	$(CXX) $(FISH_INDENT_OBJS) $(LDFLAGS_FISH_INDENT) -o $@
+	$(CXX) $(CXXFLAGS) $(FISH_INDENT_OBJS) $(LDFLAGS_FISH_INDENT) -o $@
 
 
 #
@@ -792,7 +791,7 @@ fish_indent: $(FISH_INDENT_OBJS)
 #
 
 key_reader: key_reader.o input_common.o common.o env_universal.o env_universal_common.o wutil.o iothread.o
-	$(CXX) key_reader.o input_common.o common.o env_universal.o env_universal_common.o wutil.o iothread.o $(LDFLAGS_FISH) -o $@
+	$(CXX) $(CXXFLAGS) key_reader.o input_common.o common.o env_universal.o env_universal_common.o wutil.o iothread.o $(LDFLAGS_FISH) -o $@
 
 
 #

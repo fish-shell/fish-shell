@@ -253,13 +253,14 @@ class FishVar:
 class FishBinding:
     """A class that represents keyboard binding """
 
-    def __init__(self, command, binding, description=None):
+    def __init__(self, command, binding, readable_binding, description=None):
         self.command =  command
         self.binding = binding
+        self.readable_binding = readable_binding
         self.description = description
 
     def get_json_obj(self):
-        return {"command" : self.command, "binding": self.binding, "description": self.description }
+        return {"command" : self.command, "binding": self.binding, "readable_binding": self.readable_binding, "description": self.description }
 
     def get_readable_binding(command):
         return command
@@ -535,10 +536,10 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             if comps[1] == '-k':
                 key_name, command = comps[2].split(' ', 2)
                 binding_parser.set_buffer(key_name, True)
-                fish_binding = FishBinding(command=command, binding=binding_parser.get_readable_binding())
+                fish_binding = FishBinding(command=command, binding=key_name, readable_binding=binding_parser.get_readable_binding())
             else:
                 binding_parser.set_buffer(comps[1])
-                fish_binding = FishBinding(command=comps[2], binding=binding_parser.get_readable_binding())
+                fish_binding = FishBinding(command=comps[2], binding=comps[1], readable_binding=binding_parser.get_readable_binding())
 
             bindings.append(fish_binding)
 

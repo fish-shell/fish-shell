@@ -46,6 +46,9 @@ void reader_init();
 */
 void reader_destroy();
 
+/** Restore the term mode at startup */
+void restore_term_mode();
+
 /**
    Returns the filename of the file currently read
 */

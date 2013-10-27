@@ -698,7 +698,6 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
           Slice mode
         */
         size_t idx_count, val_count;
-        wcstring_list_t values;
         std::vector<long> indexes;
         wcstring_list_t result;
 

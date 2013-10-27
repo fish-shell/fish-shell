@@ -694,7 +694,7 @@ static void daemonize()
     }
 
     /*
-      Put ourself in out own processing group
+      Put ourself in our own process group
     */
     setsid();
 

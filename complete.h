@@ -127,7 +127,7 @@ public:
     completion_t(const wcstring &comp, const wcstring &desc = L"", string_fuzzy_match_t match = string_fuzzy_match_t(fuzzy_match_exact), int flags_val = 0);
     completion_t(const completion_t &);
     completion_t &operator=(const completion_t &);
-    
+
     /* Compare two completions. No operating overlaoding to make this always explicit (there's potentially multiple ways to compare completions). */
     static bool is_alphabetically_less_than(const completion_t &a, const completion_t &b);
     static bool is_alphabetically_equal_to(const completion_t &a, const completion_t &b);

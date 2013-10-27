@@ -137,14 +137,14 @@ static bool allow_soft_wrap(void)
 size_t escape_code_length(const wchar_t *code)
 {
     assert(code != NULL);
-    
+
     /* The only escape codes we recognize start with \x1b */
     if (code[0] != L'\x1b')
         return 0;
-    
+
     size_t resulting_length = 0;
     bool found = false;
-    
+
     if (cur_term != NULL)
     {
         /*
@@ -158,12 +158,12 @@ size_t escape_code_length(const wchar_t *code)
             set_foreground,
             set_background,
         };
-    
+
         for (size_t p=0; p < sizeof esc / sizeof *esc && !found; p++)
         {
             if (!esc[p])
                 continue;
-            
+
             for (size_t k=0; k<8; k++)
             {
                 size_t len = try_sequence(tparm(esc[p],k), code);
@@ -176,7 +176,7 @@ size_t escape_code_length(const wchar_t *code)
             }
         }
     }
-    
+
     if (cur_term != NULL)
     {
         /*
@@ -206,9 +206,9 @@ size_t escape_code_length(const wchar_t *code)
             exit_standout_mode,
             enter_secure_mode
         };
-        
-    
-    
+
+
+
         for (size_t p=0; p < sizeof esc2 / sizeof *esc2 && !found; p++)
         {
             if (!esc2[p])
@@ -226,7 +226,7 @@ size_t escape_code_length(const wchar_t *code)
             }
         }
     }
-    
+
     if (!found)
     {
         if (code[1] == L'k')
@@ -251,7 +251,7 @@ size_t escape_code_length(const wchar_t *code)
             }
         }
     }
-    
+
     if (! found)
     {
         /* Generic VT100 one byte sequence: CSI followed by something in the range @ through _ */
@@ -261,7 +261,7 @@ size_t escape_code_length(const wchar_t *code)
             found = true;
         }
     }
-    
+
     if (! found)
     {
         /* Generic VT100 CSI-style sequence. <esc>, followed by zero or more ASCII characters NOT in the range [@,_], followed by one character in that range */
@@ -273,11 +273,11 @@ size_t escape_code_length(const wchar_t *code)
             {
                 /* Consume a sequence of ASCII characters not in the range [@, ~] */
                 wchar_t c = code[cursor];
-                
+
                 /* If we're not in ASCII, just stop */
                 if (c > 127)
                     break;
-                
+
                 /* If we're the end character, then consume it and then stop */
                 if (c >= L'@' && c <= L'~')
                 {
@@ -290,7 +290,7 @@ size_t escape_code_length(const wchar_t *code)
             resulting_length = cursor;
         }
     }
-    
+
     if (! found)
     {
         /* Generic VT100 two byte sequence: <esc> followed by something in the range @ through _ */
@@ -300,7 +300,7 @@ size_t escape_code_length(const wchar_t *code)
             found = true;
         }
     }
-    
+
     return resulting_length;
 }
 
@@ -1060,7 +1060,7 @@ struct screen_layout_t
     wcstring autosuggestion;
 
     /* Whether the prompts get their own line or not */
-    bool prompts_get_own_line;    
+    bool prompts_get_own_line;
 };
 
 /* Given a vector whose indexes are offsets and whose values are the widths of the string if truncated at that offset, return the offset that fits in the given width. Returns width_by_offset.size() - 1 if they all fit. The first value in width_by_offset is assumed to be 0. */

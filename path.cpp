@@ -400,7 +400,7 @@ void path_make_canonical(wcstring &path)
             path.at(trailing++) = c;
         }
         prev_was_slash = is_slash;
-    }    
+    }
     assert(trailing <= len);
     if (trailing < len)
         path.resize(trailing);
@@ -410,32 +410,32 @@ bool paths_are_equivalent(const wcstring &p1, const wcstring &p2)
 {
     if (p1 == p2)
         return true;
-    
+
     size_t len1 = p1.size(), len2 = p2.size();
-    
+
     // Ignore trailing slashes after the first character
     while (len1 > 1 && p1.at(len1 - 1) == L'/') len1--;
     while (len2 > 1 && p2.at(len2 - 1) == L'/') len2--;
-    
+
     // Start walking
     size_t idx1 = 0, idx2 = 0;
     while (idx1 < len1 && idx2 < len2)
     {
         wchar_t c1 = p1.at(idx1), c2 = p2.at(idx2);
-        
+
         // If the characters are different, the strings are not equivalent
         if (c1 != c2)
             break;
-        
+
         idx1++;
         idx2++;
-        
+
         // If the character was a slash, walk forwards until we hit the end of the string, or a non-slash
         // Note the first condition is invariant within the loop
         while (c1 == L'/' && idx1 < len1 && p1.at(idx1) == L'/') idx1++;
         while (c2 == L'/' && idx2 < len2 && p2.at(idx2) == L'/') idx2++;
     }
-    
+
     // We matched if we consumed all of the characters in both strings
     return idx1 == len1 && idx2 == len2;
 }

@@ -1630,7 +1630,7 @@ void completer_t::complete_param_expand(const wcstring &sstr, bool do_file)
 
     if (expand_string(comp_str,
                       this->completions,
-                      flags ) == EXPAND_ERROR)
+                      flags) == EXPAND_ERROR)
     {
         debug(3, L"Error while expanding string '%ls'", comp_str);
     }

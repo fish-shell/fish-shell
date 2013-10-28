@@ -20,6 +20,10 @@ The return status of \c source is the return status of the last job to
 execute. If something goes wrong while opening or reading the file,
 \c source exits with a non-zero status.
 
+\c . (a single period) is an alias for the \c source command. The use of \c .
+is deprecated in favour of \c source, and \c . will be removed in a future
+version of fish.
+
 \subsection source-example Example
 
 <tt>source ~/.config/fish/config.fish</tt> causes fish to re-read its initialization file.

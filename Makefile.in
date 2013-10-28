@@ -233,7 +233,7 @@ TESTS_DIR_FILES := $(TEST_IN) $(TEST_IN:.in=.out) $(TEST_IN:.in=.err)	\
 # Files in ./share/completions/
 #
 
-COMPLETIONS_DIR_FILES := $(wildcard share/completions/*.fish)
+COMPLETIONS_DIR_FILES := $(wildcard share/completions/*.fish) share/completions/..fish
 
 
 #

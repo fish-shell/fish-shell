@@ -189,7 +189,8 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
                 paths.bin = base_path + L"/bin";
 
                 struct stat buf;
-                if (0 == wstat(paths.data, &buf) && 0 == wstat(paths.sysconf, &buf))
+                if (0 == wstat(paths.data, &buf) && 0 == wstat(paths.sysconf, &buf) &&
+                        0 == wstat(paths.doc, &buf))
                 {
                     done = true;
                 }
@@ -202,7 +203,7 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
         /* Fall back to what got compiled in. */
         paths.data = L"" DATADIR "/fish";
         paths.sysconf = L"" SYSCONFDIR "/fish";
-        paths.doc = L"" DATADIR "/doc/fish";
+        paths.doc = L"" DOCDIR;
         paths.bin = L"" BINDIR;
 
         done = true;

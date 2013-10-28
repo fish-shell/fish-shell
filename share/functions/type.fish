@@ -116,23 +116,30 @@ function type --description "Print the type of a command"
 			end
 
 		end
-
-		set -l path (which $i ^/dev/null)
-		if test -x (echo $path)
-			set res 0
-			set found 1
-			switch $mode
-				case normal
-					printf (_ '%s is %s\n') $i $path
+		
+		set -l paths
+		if test $selection != multi
+			set paths (which $i ^/dev/null)
+		else
+			set paths (which -a $i ^/dev/null)
+		end
+		for path in $paths
+			if test -x (echo $path)
+				set res 0
+				set found 1
+				switch $mode
+					case normal
+						printf (_ '%s is %s\n') $i $path
 
 					case type
 						echo (_ 'file')
 
 					case path
 						echo $path
-			end
-			if test $selection != multi
-				continue
+				end
+				if test $selection != multi
+					continue
+				end
 			end
 		end
 
@@ -144,4 +151,3 @@ function type --description "Print the type of a command"
 
 	return $res
 end
-

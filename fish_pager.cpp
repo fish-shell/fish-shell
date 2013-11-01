@@ -1289,7 +1289,7 @@ int main(int argc, char **argv)
 
                 case 'v':
                 {
-                    debug(0, L"%ls, version %s\n", program_name, PACKAGE_VERSION);
+                    debug(0, L"%ls, version %s\n", program_name, FISH_BUILD_VERSION);
                     exit(0);
                 }
 
@@ -1369,6 +1369,11 @@ int main(int argc, char **argv)
     }
 
 //    debug( 3, L"prefix is '%ls'", prefix );
+
+    if (comp.empty())
+    {
+        exit_without_destructors(EXIT_FAILURE);
+    }
 
     init(mangle_descriptors, result_fd);
 

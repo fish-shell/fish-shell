@@ -1115,7 +1115,7 @@ static void functions_def(const wcstring &name, wcstring &out)
     bool defer_function_name = (name.at(0) == L'-');
     if (! defer_function_name)
     {
-        out.append(name);
+        out.append(escape_string(name, true));
     }
 
     if (! desc.empty())
@@ -1189,7 +1189,7 @@ static void functions_def(const wcstring &name, wcstring &out)
     if (defer_function_name)
     {
         out.append(L" -- ");
-        out.append(name);
+        out.append(escape_string(name, true));
     }
 
     /* This forced tab is sort of crummy - not all functions start with a tab */
@@ -1339,7 +1339,7 @@ static int builtin_functions(parser_t &parser, wchar_t **argv)
     {
         int i;
         for (i=woptind; i<argc; i++)
-            function_remove(argv[i]);
+            function_remove_ignore_autoload(argv[i]);
         return STATUS_BUILTIN_OK;
     }
     else if (desc)
@@ -1598,30 +1598,43 @@ static int builtin_echo(parser_t &parser, wchar_t **argv)
     bool print_newline = true, print_spaces = true, interpret_special_chars = false;
     while (*argv)
     {
-        if (! wcscmp(*argv, L"-n"))
+        wchar_t *s = *argv, c = *s;
+        if (c == L'-')
         {
-            print_newline = false;
-        }
-        else if (! wcscmp(*argv, L"-e"))
-        {
-            interpret_special_chars = true;
-        }
-        else if (! wcscmp(*argv, L"-ne"))
-        {
-            print_newline = false;
-            interpret_special_chars = true;
-        }
-        else if (! wcscmp(*argv, L"-s"))
-        {
-            // fish-specific extension, which we should try to nix
-            print_spaces = false;
-        }
-        else if (! wcscmp(*argv, L"-E"))
-        {
-            interpret_special_chars = false;
+            /* Ensure that option is valid */
+            for (++s, c = *s; c != L'\0'; c = *(++s))
+            {
+                if (c != L'n' && c != L'e' && c != L's' && c != L'E')
+                {
+                    goto invalid_echo_option;
+                }
+            }
+
+            /* Parse option */
+            for (s = *argv, ++s, c = *s; c != L'\0'; c = *(++s))
+            {
+                switch (c)
+                {
+                    case L'n':
+                        print_newline = false;
+                        break;
+                    case L'e':
+                        interpret_special_chars = true;
+                        break;
+                    case L's':
+                        // fish-specific extension,
+                        // which we should try to nix
+                        print_spaces = false;
+                        break;
+                    case L'E':
+                        interpret_special_chars = false;
+                        break;
+                }
+            }
         }
         else
         {
+invalid_echo_option:
             break;
         }
         argv++;
@@ -1658,7 +1671,7 @@ static int builtin_echo(parser_t &parser, wchar_t **argv)
                         wc = L'\b';
                         break;
                     case L'e':
-                        wc = L'\e';
+                        wc = L'\x1B';
                         break;
                     case L'f':
                         wc = L'\f';
@@ -2370,8 +2383,9 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
             reader_set_highlight_function(&highlight_shell);
             reader_set_test_function(&reader_shell_test);
         }
-        /* No autosuggestions in builtin_read */
+        /* No autosuggestions or abbreviations in builtin_read */
         reader_set_allow_autosuggesting(false);
+        reader_set_expand_abbreviations(false);
         reader_set_exit_on_interrupt(true);
 
         reader_set_buffer(commandline, wcslen(commandline));
@@ -3013,7 +3027,7 @@ static int builtin_source(parser_t &parser, wchar_t ** argv)
         if ((fd = wopen_cloexec(argv[1], O_RDONLY)) == -1)
         {
             append_format(stderr_buffer, _(L"%ls: Error encountered while sourcing file '%ls':\n"), argv[0], argv[1]);
-            builtin_wperror(L".");
+            builtin_wperror(L"source");
             return STATUS_BUILTIN_ERROR;
         }
 
@@ -3021,7 +3035,7 @@ static int builtin_source(parser_t &parser, wchar_t ** argv)
         {
             close(fd);
             append_format(stderr_buffer, _(L"%ls: Error encountered while sourcing file '%ls':\n"), argv[0], argv[1]);
-            builtin_wperror(L".");
+            builtin_wperror(L"source");
             return STATUS_BUILTIN_ERROR;
         }
 
@@ -3952,7 +3966,6 @@ static int builtin_history(parser_t &parser, wchar_t **argv)
 */
 static const builtin_data_t builtin_datas[]=
 {
-    { 		L".",  &builtin_source, N_(L"Evaluate contents of file")   },
     { 		L"[",  &builtin_test, N_(L"Test a condition")   },
     { 		L"and",  &builtin_generic, N_(L"Execute command if previous command suceeded")  },
     { 		L"begin",  &builtin_begin, N_(L"Create a block of code")   },
@@ -3992,6 +4005,7 @@ static const builtin_data_t builtin_datas[]=
     { 		L"return",  &builtin_return, N_(L"Stop the currently evaluated function")   },
     { 		L"set",  &builtin_set, N_(L"Handle environment variables")   },
     { 		L"set_color",  &builtin_set_color, N_(L"Set the terminal color")   },
+    { 		L"source",  &builtin_source, N_(L"Evaluate contents of file")   },
     { 		L"status",  &builtin_status, N_(L"Return status information about fish")  },
     { 		L"switch",  &builtin_switch, N_(L"Conditionally execute a block of commands")   },
     { 		L"test",  &builtin_test, N_(L"Test a condition")   },

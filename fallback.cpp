@@ -98,8 +98,6 @@ char *tparm_solaris_kludge(char *str, ...)
             || (enter_reverse_mode && ! strcmp(str, enter_reverse_mode))
             || (enter_shadow_mode && ! strcmp(str, enter_shadow_mode))
             || (exit_shadow_mode && ! strcmp(str, exit_shadow_mode))
-            || (enter_standout_mode && ! strcmp(str, enter_standout_mode))
-            || (exit_standout_mode && ! strcmp(str, exit_standout_mode))
             || (enter_secure_mode && ! strcmp(str, enter_secure_mode))
             || (enter_bold_mode && ! strcmp(str, enter_bold_mode)))
     {
@@ -1503,14 +1501,20 @@ static int mk_wcwidth(wchar_t ucs)
 
 static int mk_wcswidth(const wchar_t *pwcs, size_t n)
 {
-    int w, width = 0;
+    int width = 0;
+    for (size_t i=0; i < n; i++)
+    {
+        if (pwcs[i] == L'\0')
+            break;
 
-    for (; *pwcs && n-- > 0; pwcs++)
-        if ((w = mk_wcwidth(*pwcs)) < 0)
-            return -1;
-        else
-            width += w;
-
+        int w = mk_wcwidth(pwcs[i]);
+        if (w < 0)
+        {
+            width = -1;
+            break;
+        }
+        width += w;
+    }
     return width;
 }
 

@@ -105,6 +105,22 @@ complete -c rsync -l version --description "Display version and exit"
 complete -c rsync -l help --description "Display help and exit"
 
 #
+# Hostname completion
+#
+complete -c rsync -d Hostname -a "
+
+(__fish_print_hostnames):
+
+(
+	#Prepend any username specified in the completion to the hostname
+	commandline -ct |sed -ne 's/\(.*@\).*/\1/p'
+)(__fish_print_hostnames):
+
+(__fish_print_users)@\tUsername
+
+"
+
+#
 # Remote path
 #
 complete -c rsync -d "Remote path" -n "commandline -ct|sgrep -q :" -a "

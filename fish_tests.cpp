@@ -60,6 +60,7 @@
 #include "postfork.h"
 #include "signal.h"
 #include "highlight.h"
+#include "parse_util.h"
 
 /**
    The number of tests to run
@@ -527,6 +528,38 @@ static void test_parser()
     }
 }
 
+static void test_utils()
+{
+    say(L"Testing utils");
+    const wchar_t *a = L"echo (echo (echo hi";
+
+    const wchar_t *begin = NULL, *end = NULL;
+    parse_util_cmdsubst_extent(a, 0, &begin, &end);
+    if (begin != a || end != begin + wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+    parse_util_cmdsubst_extent(a, 1, &begin, &end);
+    if (begin != a || end != begin + wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+    parse_util_cmdsubst_extent(a, 2, &begin, &end);
+    if (begin != a || end != begin + wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+    parse_util_cmdsubst_extent(a, 3, &begin, &end);
+    if (begin != a || end != begin + wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+
+    parse_util_cmdsubst_extent(a, 8, &begin, &end);
+    if (begin != a + wcslen(L"echo (")) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+
+    parse_util_cmdsubst_extent(a, 17, &begin, &end);
+    if (begin != a + wcslen(L"echo (echo (")) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
+}
+
+static void test_escape_sequences(void)
+{
+    say(L"Testing escape codes");
+    if (escape_code_length(L"") != 0) err(L"test_escape_sequences failed on line %d\n", __LINE__);
+    if (escape_code_length(L"abcd") != 0) err(L"test_escape_sequences failed on line %d\n", __LINE__);
+    if (escape_code_length(L"\x1b[2J") != 4) err(L"test_escape_sequences failed on line %d\n", __LINE__);
+    if (escape_code_length(L"\x1b[38;5;123mABC") != strlen("\x1b[38;5;123m")) err(L"test_escape_sequences failed on line %d\n", __LINE__);
+    if (escape_code_length(L"\x1b@") != 2) err(L"test_escape_sequences failed on line %d\n", __LINE__);
+}
+
 class lru_node_test_t : public lru_node_t
 {
 public:
@@ -678,15 +711,73 @@ static void test_fuzzy_match(void)
     if (string_fuzzy_match_string(L"BB", L"ALPHA!").type != fuzzy_match_none) err(L"test_fuzzy_match failed on line %ld", __LINE__);
 }
 
+static void test_abbreviations(void)
+{
+    say(L"Testing abbreviations");
+
+    const wchar_t *abbreviations =
+        L"gc=git checkout" ARRAY_SEP_STR
+        L"foo=" ARRAY_SEP_STR
+        L"gc=something else" ARRAY_SEP_STR
+        L"=" ARRAY_SEP_STR
+        L"=foo" ARRAY_SEP_STR
+        L"foo" ARRAY_SEP_STR
+        L"foo=bar";
+
+    env_push(true);
+
+    int ret = env_set(USER_ABBREVIATIONS_VARIABLE_NAME, abbreviations, ENV_LOCAL);
+    if (ret != 0) err(L"Unable to set abbreviation variable");
+
+    wcstring result;
+    if (expand_abbreviation(L"", &result)) err(L"Unexpected success with empty abbreviation");
+    if (expand_abbreviation(L"nothing", &result)) err(L"Unexpected success with missing abbreviation");
+
+    if (! expand_abbreviation(L"gc", &result)) err(L"Unexpected failure with gc abbreviation");
+    if (result != L"git checkout") err(L"Wrong abbreviation result for gc");
+    result.clear();
+
+    if (! expand_abbreviation(L"foo", &result)) err(L"Unexpected failure with foo abbreviation");
+    if (result != L"bar") err(L"Wrong abbreviation result for foo");
+
+    bool expanded;
+    expanded = reader_expand_abbreviation_in_command(L"just a command", 3, &result);
+    if (expanded) err(L"Command wrongly expanded on line %ld", (long)__LINE__);
+    expanded = reader_expand_abbreviation_in_command(L"gc somebranch", 0, &result);
+    if (! expanded) err(L"Command not expanded on line %ld", (long)__LINE__);
+
+    expanded = reader_expand_abbreviation_in_command(L"gc somebranch", wcslen(L"gc"), &result);
+    if (! expanded) err(L"gc not expanded");
+    if (result != L"git checkout somebranch") err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result.c_str());
+
+    expanded = reader_expand_abbreviation_in_command(L"echo hi ; gc somebranch", wcslen(L"echo hi ; g"), &result);
+    if (! expanded) err(L"gc not expanded on line %ld", (long)__LINE__);
+    if (result != L"echo hi ; git checkout somebranch") err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
+
+    expanded = reader_expand_abbreviation_in_command(L"echo (echo (echo (echo (gc ", wcslen(L"echo (echo (echo (echo (gc"), &result);
+    if (! expanded) err(L"gc not expanded on line %ld", (long)__LINE__);
+    if (result != L"echo (echo (echo (echo (git checkout ") err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result.c_str());
+
+    /* if commands should be expanded */
+    expanded = reader_expand_abbreviation_in_command(L"if gc", wcslen(L"if gc"), &result);
+    if (! expanded) err(L"gc not expanded on line %ld", (long)__LINE__);
+    if (result != L"if git checkout") err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result.c_str());
+
+    /* others should not be */
+    expanded = reader_expand_abbreviation_in_command(L"of gc", wcslen(L"of gc"), &result);
+    if (expanded) err(L"gc incorrectly expanded on line %ld", (long)__LINE__);
+
+    env_pop();
+}
+
 /** Test path functions */
 static void test_path()
 {
     say(L"Testing path functions");
 
     wcstring path = L"//foo//////bar/";
-    wcstring canon = path;
-    path_make_canonical(canon);
-    if (canon != L"/foo/bar")
+    path_make_canonical(path);
+    if (path != L"/foo/bar")
     {
         err(L"Bug in canonical PATH code");
     }
@@ -697,6 +788,11 @@ static void test_path()
     {
         err(L"Bug in canonical PATH code");
     }
+
+    if (paths_are_equivalent(L"/foo/bar/baz", L"foo/bar/baz")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
+    if (! paths_are_equivalent(L"///foo///bar/baz", L"/foo/bar////baz//")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
+    if (! paths_are_equivalent(L"/foo/bar/baz", L"/foo/bar/baz")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
+    if (! paths_are_equivalent(L"/", L"/")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
 }
 
 enum word_motion_t
@@ -1747,9 +1843,12 @@ int main(int argc, char **argv)
     test_tok();
     test_fork();
     test_parser();
+    test_utils();
+    test_escape_sequences();
     test_lru();
     test_expand();
     test_fuzzy_match();
+    test_abbreviations();
     test_test();
     test_path();
     test_word_motion();

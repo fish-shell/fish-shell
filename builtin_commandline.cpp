@@ -170,6 +170,10 @@ static void write_part(const wchar_t *begin,
                     break;
                 }
 
+                default:
+                {
+                    break;
+                }
             }
         }
 

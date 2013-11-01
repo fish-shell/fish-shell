@@ -2,7 +2,7 @@
 
 function __fish_apt_no_subcommand --description 'Test if apt has yet to be given the subcommand'
 	for i in (commandline -opc)
-		if contains -- $i update upgrade dselect-upgrade dist-upgrade install remove source build-dep check clean autoclean
+		if contains -- $i update upgrade dselect-upgrade dist-upgrade install remove purge source build-dep check clean autoclean
 			return 1
 		end
 	end
@@ -11,7 +11,7 @@ end
 
 function __fish_apt_use_package --description 'Test if apt command should have packages as potential completion'
 	for i in (commandline -opc)
-		if contains -- $i contains install remove build-dep
+		if contains -- $i contains install remove purge build-dep
 			return 0
 		end
 	end

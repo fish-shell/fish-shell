@@ -61,9 +61,6 @@ function_autoload_t::function_autoload_t() : autoload_t(L"fish_function_path", N
 {
 }
 
-/** Removes a function from our internal table, returning true if it was found and false if not */
-static bool function_remove_ignore_autoload(const wcstring &name);
-
 /** Callback when an autoloaded function is removed */
 void function_autoload_t::command_removed(const wcstring &cmd)
 {
@@ -220,7 +217,7 @@ int function_exists_no_autoload(const wcstring &cmd, const env_vars_snapshot_t &
     return loaded_functions.find(cmd) != loaded_functions.end() || function_autoloader.can_load(cmd, vars);
 }
 
-static bool function_remove_ignore_autoload(const wcstring &name)
+bool function_remove_ignore_autoload(const wcstring &name)
 {
     scoped_lock lock(functions_lock);
     bool erased = (loaded_functions.erase(name) > 0);

@@ -344,7 +344,7 @@ int main(int argc, char **argv)
                 fwprintf(stderr,
                          _(L"%ls, version %s\n"),
                          program_name,
-                         PACKAGE_VERSION);
+                         FISH_BUILD_VERSION);
                 exit(0);
             }
 

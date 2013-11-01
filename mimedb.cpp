@@ -1332,7 +1332,7 @@ int main(int argc, char *argv[])
                 exit(0);
 
             case 'v':
-                printf(_("%s, version %s\n"), MIMEDB, PACKAGE_VERSION);
+                printf(_("%s, version %s\n"), MIMEDB, FISH_BUILD_VERSION);
                 exit(0);
 
             case '?':

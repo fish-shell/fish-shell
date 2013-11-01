@@ -61,6 +61,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "output.h"
 #include "history.h"
 #include "path.h"
+#include "input.h"
 
 /* PATH_MAX may not exist */
 #ifndef PATH_MAX
@@ -188,7 +189,8 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
                 paths.bin = base_path + L"/bin";
 
                 struct stat buf;
-                if (0 == wstat(paths.data, &buf) && 0 == wstat(paths.sysconf, &buf))
+                if (0 == wstat(paths.data, &buf) && 0 == wstat(paths.sysconf, &buf) &&
+                        0 == wstat(paths.doc, &buf))
                 {
                     done = true;
                 }
@@ -201,7 +203,7 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
         /* Fall back to what got compiled in. */
         paths.data = L"" DATADIR "/fish";
         paths.sysconf = L"" SYSCONFDIR "/fish";
-        paths.doc = L"" DATADIR "/doc/fish";
+        paths.doc = L"" DOCDIR;
         paths.bin = L"" BINDIR;
 
         done = true;
@@ -210,31 +212,29 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
     return paths;
 }
 
+/* Source the file config.fish in the given directory */
+static void source_config_in_directory(const wcstring &dir)
+{
+    /* We want to execute a command like 'builtin source dir/config.fish 2>/dev/null' */
+    const wcstring escaped_dir = escape_string(dir, ESCAPE_ALL);
+    const wcstring cmd = L"builtin source " + escaped_dir + L"/config.fish 2>/dev/null";
+    parser_t &parser = parser_t::principal_parser();
+    parser.eval(cmd, io_chain_t(), TOP);
+}
+
 /**
    Parse init files. exec_path is the path of fish executable as determined by argv[0].
 */
 static int read_init(const struct config_paths_t &paths)
 {
-    parser_t &parser = parser_t::principal_parser();
-    const io_chain_t empty_ios;
-    parser.eval(L"builtin . " + paths.data + L"/config.fish 2>/dev/null", empty_ios, TOP);
-    parser.eval(L"builtin . " + paths.sysconf + L"/config.fish 2>/dev/null", empty_ios, TOP);
+    source_config_in_directory(paths.data);
+    source_config_in_directory(paths.sysconf);
 
-
-    /*
-      We need to get the configuration directory before we can source the user configuration file
-    */
+    /* We need to get the configuration directory before we can source the user configuration file. If path_get_config returns false then we have no configuration directory and no custom config to load. */
     wcstring config_dir;
-
-    /*
-      If path_get_config returns false then we have no configuration directory
-      and no custom config to load.
-    */
     if (path_get_config(config_dir))
     {
-        wcstring config_dir_escaped = escape_string(config_dir, 1);
-        wcstring eval_buff = format_string(L"builtin . %ls/config.fish 2>/dev/null", config_dir_escaped.c_str());
-        parser.eval(eval_buff, empty_ios, TOP);
+        source_config_in_directory(config_dir);
     }
 
     return 1;
@@ -350,7 +350,7 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *out_c
                 fwprintf(stderr,
                          _(L"%s, version %s\n"),
                          PACKAGE_NAME,
-                         PACKAGE_VERSION);
+                         FISH_BUILD_VERSION);
                 exit_without_destructors(0);
             }
 
@@ -366,50 +366,17 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *out_c
 
     is_login |= (strcmp(argv[0], "-fish") == 0);
 
-    /*
-      We are an interactive session if we have not been given an
-      explicit command to execute, _and_ stdin is a tty.
-     */
-    is_interactive_session &= ! has_cmd;
-    is_interactive_session &= (my_optind == argc);
-    is_interactive_session &= isatty(STDIN_FILENO);
-
-    /*
-      We are also an interactive session if we have are forced-
-     */
-    is_interactive_session |= force_interactive;
+    /* We are an interactive session if we are either forced, or have not been given an explicit command to execute and stdin is a tty. */
+    if (force_interactive)
+    {
+        is_interactive_session = true;
+    }
+    else if (is_interactive_session)
+    {
+        is_interactive_session = ! has_cmd && (my_optind == argc) && isatty(STDIN_FILENO);
+    }
 
     return my_optind;
-}
-
-/**
-   Calls a bunch of init functions, parses the init files and then
-   parses commands from stdin or files, depending on arguments
-*/
-
-static wcstring full_escape(const wchar_t *in)
-{
-    wcstring out;
-    for (; *in; in++)
-    {
-        if (*in < 32)
-        {
-            append_format(out, L"\\x%.2x", *in);
-        }
-        else if (*in < 128)
-        {
-            out.push_back(*in);
-        }
-        else if (*in < 65536)
-        {
-            append_format(out, L"\\u%.4x", *in);
-        }
-        else
-        {
-            append_format(out, L"\\U%.8x", *in);
-        }
-    }
-    return out;
 }
 
 extern int g_fork_count;
@@ -420,7 +387,6 @@ int main(int argc, char **argv)
 
     set_main_thread();
     setup_fork_guards();
-    save_term_foreground_process_group();
 
     wsetlocale(LC_ALL, L"");
     is_interactive_session=1;
@@ -441,6 +407,12 @@ int main(int argc, char **argv)
         no_exec = 0;
     }
 
+    /* Only save (and therefore restore) the fg process group if we are interactive. See #197, #1002 */
+    if (is_interactive_session)
+    {
+        save_term_foreground_process_group();
+    }
+
     const struct config_paths_t paths = determine_config_directory_paths(argv[0]);
 
     proc_init();
@@ -451,6 +423,8 @@ int main(int argc, char **argv)
     env_init(&paths);
     reader_init();
     history_init();
+    /* For setcolor to support term256 in config.fish (#1022) */
+    update_fish_term256();
 
     parser_t &parser = parser_t::principal_parser();
 
@@ -540,6 +514,7 @@ int main(int argc, char **argv)
 
     proc_fire_event(L"PROCESS_EXIT", EVENT_EXIT, getpid(), res);
 
+    restore_term_mode();
     restore_term_foreground_process_group();
     history_destroy();
     proc_destroy();

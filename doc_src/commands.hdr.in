@@ -1,6 +1,15 @@
-/** \page commands Commands, functions and builtins bundled with fish
-Fish ships with a large number of builtin commands, shellscript functions and external commands. These are all described below.
+/** \page commands Commands bundled with fish
 
+\htmlonly <div class="fish_left_bar fish_left_little"> \endhtmlonly
+@command_list_toc@
+\htmlonly </div> \endhtmlonly
+
+\htmlonly
+<div class="fish_right_bar fish_right_big">
+<h1 class="interior_title_borderless">Commands</h1>
+Fish ships with a large number of builtin commands, shellscript functions and external commands. These are all described below.
+\endhtmlonly
 @command_list@
+\htmlonly </div> \endhtmlonly
 
 */

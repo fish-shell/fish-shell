@@ -1189,7 +1189,9 @@
 					"PREFIX=L\\\"/usr/local\\\"",
 					"DATADIR=L\\\"/usr/local/share\\\"",
 					"SYSCONFDIR=L\\\"/usr/local/etc\\\"",
-                                        "BINDIR=L\\\"/usr/local/bin\\\"",
+					"BINDIR=L\\\"/usr/local/bin\\\"",
+					"DOCDIR=L\\\"/usr/local/share/doc\\\"",
+					"FISH_BUILD_VERSION=\\\"2.1.0\\\"",
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
@@ -1197,6 +1199,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/**";
+				WARNING_CFLAGS = "-Wall";
 			};
 			name = "Release_C++11";
 		};
@@ -1339,7 +1342,9 @@
 					"PREFIX=L\\\"/usr/local\\\"",
 					"DATADIR=L\\\"/usr/local/share\\\"",
 					"SYSCONFDIR=L\\\"/usr/local/etc\\\"",
-                                        "BINDIR=L\\\"/usr/local/bin\\\"",
+					"BINDIR=L\\\"/usr/local/bin\\\"",
+					"DOCDIR=L\\\"/usr/local/share/doc\\\"",
+					"FISH_BUILD_VERSION=\\\"2.1.0\\\"",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -1349,6 +1354,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/**";
+				WARNING_CFLAGS = "-Wall";
 			};
 			name = Debug;
 		};
@@ -1365,7 +1371,9 @@
 					"PREFIX=L\\\"/usr/local\\\"",
 					"DATADIR=L\\\"/usr/local/share\\\"",
 					"SYSCONFDIR=L\\\"/usr/local/etc\\\"",
-                                        "BINDIR=L\\\"/usr/local/bin\\\"",
+					"BINDIR=L\\\"/usr/local/bin\\\"",
+					"DOCDIR=L\\\"/usr/local/share/doc\\\"",
+					"FISH_BUILD_VERSION=\\\"2.1.0\\\"",
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
@@ -1373,6 +1381,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/**";
+				WARNING_CFLAGS = "-Wall";
 			};
 			name = Release;
 		};

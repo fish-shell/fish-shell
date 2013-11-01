@@ -23,12 +23,6 @@ enum
 
 int builtin_test(parser_t &parser, wchar_t **argv);
 
-static const wchar_t * const condstr[] =
-{
-    L"!", L"&&", L"||", L"==", L"!=", L"<", L">", L"-nt", L"-ot", L"-ef", L"-eq",
-    L"-ne", L"-lt", L"-gt", L"-le", L"-ge", L"=~"
-};
-
 namespace test_expressions
 {
 
@@ -39,13 +33,15 @@ enum token_t
     test_bang,                  // "!", inverts sense
 
     test_filetype_b,            // "-b", for block special files
-    test_filetype_c,            // "-c" for character special files
-    test_filetype_d,            // "-d" for directories
-    test_filetype_e,            // "-e" for files that exist
-    test_filetype_f,            // "-f" for for regular files
-    test_filetype_g,            // "-g" for set-group-id
-    test_filetype_h,            // "-h" for symbolic links
+    test_filetype_c,            // "-c", for character special files
+    test_filetype_d,            // "-d", for directories
+    test_filetype_e,            // "-e", for files that exist
+    test_filetype_f,            // "-f", for for regular files
+    test_filetype_G,            // "-G", for check effective group id
+    test_filetype_g,            // "-g", for set-group-id
+    test_filetype_h,            // "-h", for symbolic links
     test_filetype_L,            // "-L", same as -h
+    test_filetype_O,            // "-O", for check effective user id
     test_filetype_p,            // "-p", for FIFO
     test_filetype_S,            // "-S", socket
 
@@ -101,9 +97,11 @@ static const struct token_info_t
     {test_filetype_d, L"-d", UNARY_PRIMARY},
     {test_filetype_e, L"-e", UNARY_PRIMARY},
     {test_filetype_f, L"-f", UNARY_PRIMARY},
+    {test_filetype_G, L"-G", UNARY_PRIMARY},
     {test_filetype_g, L"-g", UNARY_PRIMARY},
     {test_filetype_h, L"-h", UNARY_PRIMARY},
     {test_filetype_L, L"-L", UNARY_PRIMARY},
+    {test_filetype_O, L"-O", UNARY_PRIMARY},
     {test_filetype_p, L"-p", UNARY_PRIMARY},
     {test_filetype_S, L"-S", UNARY_PRIMARY},
     {test_filesize_s, L"-s", UNARY_PRIMARY},
@@ -818,24 +816,30 @@ static bool unary_primary_evaluate(test_expressions::token_t token, const wcstri
         case test_filetype_b:            // "-b", for block special files
             return !wstat(arg, &buf) && S_ISBLK(buf.st_mode);
 
-        case test_filetype_c:            // "-c" for character special files
+        case test_filetype_c:            // "-c", for character special files
             return !wstat(arg, &buf) && S_ISCHR(buf.st_mode);
 
-        case test_filetype_d:            // "-d" for directories
+        case test_filetype_d:            // "-d", for directories
             return !wstat(arg, &buf) && S_ISDIR(buf.st_mode);
 
-        case test_filetype_e:            // "-e" for files that exist
+        case test_filetype_e:            // "-e", for files that exist
             return !wstat(arg, &buf);
 
-        case test_filetype_f:            // "-f" for for regular files
+        case test_filetype_f:            // "-f", for for regular files
             return !wstat(arg, &buf) && S_ISREG(buf.st_mode);
 
-        case test_filetype_g:            // "-g" for set-group-id
+        case test_filetype_G:            // "-G", for check effective group id
+            return !wstat(arg, &buf) && getegid() == buf.st_gid;
+
+        case test_filetype_g:            // "-g", for set-group-id
             return !wstat(arg, &buf) && (S_ISGID & buf.st_mode);
 
-        case test_filetype_h:            // "-h" for symbolic links
+        case test_filetype_h:            // "-h", for symbolic links
         case test_filetype_L:            // "-L", same as -h
             return !lwstat(arg, &buf) && S_ISLNK(buf.st_mode);
+
+        case test_filetype_O:            // "-O", for check effective user id
+            return !wstat(arg, &buf) && geteuid() == buf.st_uid;
 
         case test_filetype_p:            // "-p", for FIFO
             return !wstat(arg, &buf) && S_ISFIFO(buf.st_mode);

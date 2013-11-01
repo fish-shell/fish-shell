@@ -2,12 +2,16 @@
 #define FISH_IO_H
 
 #include <vector>
-#if __cplusplus > 199711L
-// C++11
+
+// Note that we have to include something to get any _LIBCPP_VERSION defined so we can detect libc++
+// So it's key that vector go above. If we didn't need vector for other reasons, we might include ciso646, which does nothing
+
+#if defined(_LIBCPP_VERSION) || __cplusplus > 199711L
+// C++11 or libc++ (which is a C++11-only library, but the memory header works OK in C++03)
 #include <memory>
 using std::shared_ptr;
 #else
-// C++03
+// C++03 or libstdc++
 #include <tr1/memory>
 using std::tr1::shared_ptr;
 #endif
@@ -188,6 +192,8 @@ public:
 
     void remove(const shared_ptr<const io_data_t> &element);
     void push_back(const shared_ptr<io_data_t> &element);
+    void push_front(const shared_ptr<io_data_t> &element);
+    void append(const io_chain_t &chain);
 
     shared_ptr<const io_data_t> get_io_for_fd(int fd) const;
     shared_ptr<io_data_t> get_io_for_fd(int fd);

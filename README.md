@@ -15,7 +15,9 @@ Detailed user documentation is available by running `help` within fish, and also
 
 fish is written in a sane subset of C++98, with a few components from C++TR1. It builds successfully with g++ 4.2 or later, and with clang. It also will build as C++11.
 
-fish can be built using autotools or Xcode.
+fish can be built using autotools or Xcode. autoconf 2.60 or later is required.
+
+fish requires gettext for translation support.
 
 ### Autotools Build
 
@@ -40,7 +42,7 @@ If fish reports that it could not find curses, try installing a curses developme
 
 On Debian or Ubuntu you want:
 
-	sudo apt-get install libncurses5-dev libncursesw5-dev
+    sudo apt-get install libncurses5-dev
 
 on RedHat, CentOS, or Amazon EC2:
 
@@ -48,7 +50,7 @@ on RedHat, CentOS, or Amazon EC2:
 
 ## Packages for Linux
 
-Nightly builds for several Linux distros can be downloaded from <http://download.opensuse.org/repositories/home:/siteshwar/>
+Instructions on how to find builds for several Linux distros are at <https://github.com/fish-shell/fish-shell/wiki/Nightly-builds>
 
 ## Switching to fish
 
@@ -64,8 +66,14 @@ To switch your default shell back, you can run:
 
 Substitute /bin/bash with /bin/tcsh or /bin/zsh as appropriate.
 
+## Optional Dependencies
+
+In order to generate completions from man pages compressed with either lzma or xz, you may need to install an extra Python package.
+
+Python versions prior to 2.6 are not supported.  For Python versions 2.6 to 3.2 you need to install the module `backports.lzma`.  How to install it depends on your system and how you installed Python.  Most Linux distributions should include it as a package named `backports-lzma` (or similar).  From version 3.3 onwards, Python already includes the required module.
+
 ## Contact Us
 
-Questions, comments, rants and raves can be posted to the official fish mailing list at <https://lists.sourceforge.net/lists/listinfo/fish-users> or join us on our IRC channel #fish at irc.oftc.net
+Questions, comments, rants and raves can be posted to the official fish mailing list at <https://lists.sourceforge.net/lists/listinfo/fish-users> or join us on our IRC channel [#fish at irc.oftc.net](https://webchat.oftc.net/?channels=fish).
 
 Found a bug? Have an awesome idea? Please open an issue on this github page.

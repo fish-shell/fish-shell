@@ -1,5 +1,7 @@
 /** \page license Licenses
 
+\htmlonly <div class="fish_only_bar"> \endhtmlonly
+
 <h2>License for fish</h2>
 
 Fish Copyright (C) 2005-2009 Axel Liljencrantz. Fish is released under
@@ -1399,3 +1401,5 @@ POSSIBILITY OF SUCH DAMAGES.
 <P>
 
 */
+
+\htmlonly </div> \endhtmlonly

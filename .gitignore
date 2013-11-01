@@ -1,7 +1,7 @@
 *.o
 *~
+*.exe
 
-Doxyfile.help
 Makefile
 autom4te.cache/
 build/
@@ -12,6 +12,7 @@ config.h.in
 config.log
 config.status
 configure
+doc/
 doc.h
 doc_src/commands.hdr
 doc_src/index.hdr
@@ -32,3 +33,5 @@ user_doc/
 xcuserdata
 tests/*tmp.*
 tests/foo.txt
+FISH-BUILD-VERSION-FILE
+version

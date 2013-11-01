@@ -141,6 +141,9 @@ public:
     /** If we support soft wrapping, we can output to this location without any cursor motion. */
     screen_data_t::cursor_t soft_wrap_location;
 
+    /** Whether the last-drawn autosuggestion (if any) is truncated, or hidden entirely */
+    bool autosuggestion_is_truncated;
+
     /**
      This flag is set to true when there is reason to suspect that
      the parts of the screen lines where the actual content is not
@@ -224,5 +227,7 @@ enum screen_reset_mode_t
 
 void s_reset(screen_t *s, screen_reset_mode_t mode);
 
+/* Returns the length of an escape code. Exposed for testing purposes only. */
+size_t escape_code_length(const wchar_t *code);
 
 #endif

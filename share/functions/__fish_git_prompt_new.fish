@@ -1,3 +1,10 @@
+# You can use the following variables to configure your prompt:
+# - fish_git_prompt_color_*
+# - fish_git_prompt_char_*
+#
+# If the other functionality does not meet your needs overwrite
+# the function with which your are not happy.
+
 set -g fish_git_prompt_color_upstream (set_color red)
 set -g fish_git_prompt_color_dirty (set_color yellow)
 set -g fish_git_prompt_color_invalid (set_color red)

@@ -91,11 +91,11 @@ function __fish_git_nr_of_dirty_files --description "Returns the number of track
 end
 
 function __fish_git_nr_of_staged_files --description "Returns the number of staged files"
-	count (git diff --staged --name-status | grep -v "U")
+	count (git diff --staged --name-status --diff-filter=MADRT)
 end
 
 function __fish_git_nr_of_invalid_files --description "Returns the number of files with conflicts"
-	count (git diff --staged --name-status | grep "U")
+	count (git diff --staged --name-status --diff-filter=U)
 end
 
 function __fish_git_nr_of_untracked_files --description "Returns the number of files not yet added to the repository"

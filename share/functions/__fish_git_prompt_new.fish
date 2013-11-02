@@ -84,10 +84,14 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 		set concatenated_status $fish_git_prompt_color_clean$fish_git_prompt_char_clean(set_color normal)
 	end
 
-	printf "%s (%s)%s" (set_color normal) "$bare_branch$branch$upstream|$concatenated_status$current_operation" (set_color normal)
+	printf (__fish_git_prompt_format) (set_color normal) "$bare_branch$branch$upstream|$concatenated_status$current_operation" (set_color normal)
 end
 
 ### helper functions
+function __fish_git_prompt_format --description "Returns a string containing three placeholders and some supporting chars/whitespace"
+	echo "%s (%s)%s"
+end
+
 function __fish_git_all_repo_info --description "Queries the state of the repo in one go for performance"
 	# Please make sure the __INDEX_* variables on top of this file reflect the
 	# ordering of the return values of this 'git rev-parse' command

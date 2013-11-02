@@ -24,7 +24,18 @@ set -g fish_git_prompt_char_untracked '%'
 set -g fish_git_prompt_char_stashes '$'
 set -g fish_git_prompt_char_clean '='
 
+# These variables need never be modified by a user.
+# See also __fish_git_all_repo_info
+set -g __INDEX_GIT_DIR 1
+set -g __INDEX_INSIDE_GIT_DIR 2
+set -g __INDEX_IS_BARE_REPO 3
+set -g __INDEX_IS_INSIDE_WORKING_TREE 4
+set -g __INDEX_SHORT_SHA 5
+
 function __fish_git_prompt_new --description "Prompt function for Git"
+	# This global variable could be accessed by other functions
+	set -g repo_info (__fish_git_all_repo_info)
+
 	set -l git_dir (__fish_git_prompt_git_dir)
 	test -n "$git_dir"; or return
 
@@ -39,8 +50,7 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 	set -l nr_of_untracked_files
 	set -l upstream
 
-
-	if test "true" = (git rev-parse --is-inside-work-tree ^/dev/null)
+	if test "true" = $repo_info[$__INDEX_IS_INSIDE_WORKING_TREE]
 		set nr_of_dirty_files (__fish_git_prompt_part dirty (__fish_git_nr_of_dirty_files))
 		set nr_of_invalid_files (__fish_git_prompt_part invalid (__fish_git_nr_of_invalid_files))
 		set nr_of_staged_files (__fish_git_prompt_part staged (__fish_git_nr_of_staged_files))
@@ -78,6 +88,12 @@ function __fish_git_prompt_new --description "Prompt function for Git"
 end
 
 ### helper functions
+function __fish_git_all_repo_info --description "Queries the state of the repo in one go for performance"
+	# Please make sure the __INDEX_* variables on top of this file reflect the
+	# ordering of the return values of this 'git rev-parse' command
+	git rev-parse --git-dir --is-inside-git-dir --is-bare-repository --is-inside-work-tree --short HEAD ^/dev/null
+end
+
 function __fish_git_prompt_part --description "Output prompt parts"
 	echo $argv | read -l key nr_of_files
 	set -l color fish_git_prompt_color_$key
@@ -205,7 +221,7 @@ function __fish_git_prompt_svn_upstream --description "__fish_git_prompt helper,
 end
 
 function __fish_git_prompt_current_branch_bare --description "__fish_git_prompt helper, tells wheter or not the current branch is bare"
-	if test "true" = (git rev-parse --is-inside-git-dir ^/dev/null) -a "true" = (git rev-parse --is-bare-repository ^/dev/null)
+	if test "true" = $repo_info[$__INDEX_INSIDE_GIT_DIR] -a "true" = $repo_info[$__INDEX_IS_BARE_REPO]
 		echo bare "BARE:"
 	end
 end
@@ -213,7 +229,7 @@ end
 function __fish_git_prompt_current_branch --description "__fish_git_prompt helper, returns the current Git branch (or SHA if head is detached)"
 	set -l branch (git symbolic-ref --short --quiet HEAD ^/dev/null)
   if test -z $branch
-    set branch (git rev-parse --short HEAD ^/dev/null)
+    set branch $repo_info[$__INDEX_SHORT_SHA]
   end
 	echo $branch
 end
@@ -251,5 +267,5 @@ function __fish_git_prompt_current_operation --description "__fish_git_prompt he
 end
 
 function __fish_git_prompt_git_dir --description "__fish_git_prompt helper, returns .git dir if any"
-	echo (git rev-parse --git-dir ^/dev/null)
+	echo $repo_info[$__INDEX_GIT_DIR]
 end

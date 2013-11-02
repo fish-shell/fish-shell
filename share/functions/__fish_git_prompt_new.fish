@@ -244,14 +244,16 @@ end
 
 function __fish_git_prompt_current_operation --description "__fish_git_prompt helper, returns the current Git operation being performed"
 	set -l operation
-
 	set -l git_dir $argv[1]
+
 	if test -f $git_dir/rebase-merge/interactive
 		set operation "|REBASE-i"
 	else if test -d $git_dir/rebase-merge
 		set operation "|REBASE-m"
 	else
 		if test -d $git_dir/rebase-apply
+			set -l step (cat $git_dir/rebase-apply/next ^/dev/null)
+			set -l total (cat $git_dir/rebase-apply/last ^/dev/null)
 			if test -f $git_dir/rebase-apply/rebasing
 				set operation "|REBASE"
 			else if test -f $git_dir/rebase-apply/applying
@@ -259,10 +261,15 @@ function __fish_git_prompt_current_operation --description "__fish_git_prompt he
 			else
 				set operation "|AM/REBASE"
 			end
+			if test -n "$step" -a -n "$total"
+				set operation "$operation $step/$total"
+			end
 		else if test -f $git_dir/MERGE_HEAD
 			set operation "|MERGING"
 		else if test -f $git_dir/CHERRY_PICK_HEAD
 			set operation "|CHERRY-PICKING"
+		else if test -f $git_dir/REVERT_HEAD
+			set operation "|REVERTING"
 		else if test -f $git_dir/BISECT_LOG
 			set operation "|BISECTING"
 		end

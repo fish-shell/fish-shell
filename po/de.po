@@ -2,24 +2,25 @@
 # This file is distributed under the same license as the PACKAGE package.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER.
 # Hermann J. Beckers <hj.beckers@onlinehome.de>, 2006.
+# Benjamin Weis <benjamin.weis@gmx.com>, 2013
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: de\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2006-01-16 20:57+0100\n"
-"PO-Revision-Date: 2006-02-12 13:33GMT\n"
-"Last-Translator: Hermann J. Beckers <hj.beckers@onlinehome.de>\n"
+"PO-Revision-Date: 2013-11-01 18:36+0100\n"
+"Last-Translator: Benjamin\n"
 "Language-Team: deutsch <de@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=ISO-8859-15\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.3\n"
+"X-Generator: Lokalize 1.5\n"
 
 #: builtin.c:80
 #, c-format
 msgid "Send job %d, '%ls' to foreground\n"
-msgstr "Sende Job %d, '%ls' in den Vordergrund\n"
+msgstr "Job %d, '%ls' in den Vordergrund schicken\n"
 
 #: builtin.c:370
 #, c-format
@@ -34,7 +35,7 @@ msgstr "%ls: Keine Blöcke definiert\n"
 #: builtin.c:830 builtin.h:28
 #, c-format
 msgid "%ls: Invalid combination of options\n"
-msgstr "%ls: Kombination der Optionen ungültig\n"
+msgstr "%ls: Ungültige Kombination der Optionen\n"
 
 #: builtin.c:854
 #, c-format
@@ -72,7 +73,7 @@ msgstr "%ls: Kann aufrufenden Job zur Ereignisbehandlung nicht finden\n"
 #: builtin.c:1191
 #, c-format
 msgid "%ls: Invalid process id %ls\n"
-msgstr "%ls: Ungültige Prozess-ID %ls\n"
+msgstr "%ls: Ungültige Prozesskennung %ls\n"
 
 #: builtin.c:1228
 #, c-format
@@ -124,8 +125,10 @@ msgstr "%ls: Konnte Startverzeichnis nicht finden\n"
 
 #: builtin.c:1928
 #, c-format
-msgid "%ls: '%ls' is not a directory or you do not have permission to enter it\n"
-msgstr "%ls: '%ls' ist kein Verzeichnis oder Sie haben keine Rechte zum Wechseln\n"
+msgid ""
+"%ls: '%ls' is not a directory or you do not have permission to enter it\n"
+msgstr ""
+"%ls: '%ls' ist kein Verzeichnis oder Sie haben keine Rechte zum Wechseln\n"
 
 #: builtin.c:1940
 #, c-format
@@ -135,7 +138,7 @@ msgstr "%ls: '%ls' ist kein Verzeichnis\n"
 #: builtin.c:1955
 #, c-format
 msgid "%ls: Could not set PWD variable\n"
-msgstr "%ls: Konnte PWD-Variable nicht setzen\n"
+msgstr "%ls: Konnte PWD-Variable nicht festlegen\n"
 
 #: builtin.c:2110
 #, c-format
@@ -261,7 +264,7 @@ msgstr "%ls: Nicht innerhalb einer Funktion\n"
 #: builtin.c:3147
 #, c-format
 msgid "%ls: 'case' command while not in switch block\n"
-msgstr "%ls: 'case'-Befehl ausserhalb eines switch-Blocks\n"
+msgstr "%ls: 'case'-Befehl außerhalb eines switch-Blocks\n"
 
 #: builtin.c:3345
 #, c-format
@@ -270,7 +273,7 @@ msgstr "unbekannter interner Befehl '%ls'"
 
 #: builtin.c:3367
 msgid "Temporarily block delivery of events"
-msgstr "Blockiere zeitweise Ereignis-Weitergabe"
+msgstr "Ereignisweitergabe vorübergehend blockieren"
 
 #: builtin.c:3368
 msgid "Run a builtin command instead of a function"
@@ -294,7 +297,7 @@ msgstr "Neue Funktion definieren"
 
 #: builtin.c:3373
 msgid "List or remove functions"
-msgstr "Funktionen anzeigen oder entfernen"
+msgstr "Funktionen auflisten oder entfernen"
 
 #: builtin.c:3374
 msgid "End a block of commands"
@@ -330,11 +333,11 @@ msgstr "Job in Hintergrund schicken"
 
 #: builtin.c:3382
 msgid "Print currently running jobs"
-msgstr "Derzeit laufende Jobs anzeigen"
+msgstr "Derzeit laufende Jobs ausgeben"
 
 #: builtin.c:3383
 msgid "Read a line of input into variables"
-msgstr "Eine Eingabe-Zeile in Variablen einlesen"
+msgstr "Eine Eingabezeile in Variablen einlesen"
 
 #: builtin.c:3384
 msgid "Stop the innermost loop"
@@ -350,7 +353,7 @@ msgstr "Derzeit ausgewertete Funktion stoppen"
 
 #: builtin.c:3387
 msgid "Set or get the commandline"
-msgstr "Setzen oder Abrufen der Befehlszeile"
+msgstr "Festlegen oder Abrufen der Befehlszeile"
 
 #: builtin.c:3388 builtin.c:3389
 msgid "Conditionally execute a block of commands"
@@ -382,7 +385,7 @@ msgstr "Befehl im aktuellen Prozess ausführen"
 
 #: builtin.c:3396
 msgid "Negate exit status of job"
-msgstr "Exit-Status des Jobs negieren"
+msgstr "Exit-Status des Jobs verneinen"
 
 #: builtin.c:3397
 msgid "Execute command if previous command failed"
@@ -394,20 +397,20 @@ msgstr "Befehl ausführen, wenn vorheriger Befehl fehlerfrei war"
 
 #: builtin.c:3399
 msgid "Create a block of code"
-msgstr "Code-Block erstellen"
+msgstr "Codeblock erstellen"
 
 #: builtin.c:3400
 msgid "Return status information about fish"
-msgstr "Status-Information über Fish zurückgeben"
+msgstr "Statusinformation über Fish zurückgeben"
 
 #: builtin.c:3401
 msgid "Set or get the shells resource usage limits"
-msgstr "Die Ressourcen-Grenzen der Shell setzen/abrufen"
+msgstr "Die Ressourcengrenzen der Shell festlegen/abrufen"
 
 #: builtin_set.c:96
 #, c-format
 msgid "%ls: Invalid index starting at '%ls'\n"
-msgstr "%ls: Ungüligter Indexstart bei '%ls'\n"
+msgstr "%ls: Ungültiger Indexstart bei '%ls'\n"
 
 #: builtin_set.c:488
 #, c-format
@@ -429,7 +432,7 @@ msgstr ""
 
 #: complete.c:52
 msgid "User home"
-msgstr "Anwender-Startverzeichnis"
+msgstr "Benutzer-Startverzeichnis"
 
 #: complete.c:57
 msgid "Variable: "
@@ -441,7 +444,7 @@ msgstr "Programm"
 
 #: complete.c:66
 msgid "Executable link"
-msgstr "Programm-Link"
+msgstr "Programmlink"
 
 #: complete.c:71
 msgid "File"
@@ -499,7 +502,7 @@ msgstr "Mehrere Treffer für Option: "
 
 #: env.c:195
 msgid "Could not get user information"
-msgstr "Kann Anwender-Information nicht abrufen"
+msgstr "Kann Benutzerinformation nicht abrufen"
 
 #: env.c:291
 msgid "Changing language to english"
@@ -512,11 +515,11 @@ msgstr "Kein Eintrag im Befehlsverlauf bei Index %d\n"
 
 #: env.c:1024
 msgid "Tried to pop empty environment stack."
-msgstr ""
+msgstr "Versuchte, einen leeren Umgebungsstack zu poppen."
 
 #: event.c:490
 msgid "Signal list overflow. Signals have been ignored."
-msgstr "Überlauf Signal-Liste. Signale wurden ignoriert."
+msgstr "Signallistenüberlauf. Signale wurden ignoriert."
 
 #: exec.c:52
 #, c-format
@@ -559,13 +562,18 @@ msgstr "Unbekannter Typ %d bei Eingabeumleitung "
 
 #: exec.c:1249
 #, c-format
-msgid "Sent null command to subshell. This is a fish bug. If it can be reproduced, please send a bug report to %s."
-msgstr "Sendete Null-Befehl an Untershell. Dies ist ein fish-Bug. Wenn er reproduziert werden kann, senden Sie einen Fehlerbericht an %s."
+msgid ""
+"Sent null command to subshell. This is a fish bug. If it can be reproduced, "
+"please send a bug report to %s."
+msgstr ""
+"Sendete Null-Befehl an Untershell. Dies ist ein fish-Bug. Wenn er "
+"reproduziert werden kann, senden Sie einen Fehlerbericht an %s."
 
 #: exec.c:1297
 #, c-format
 msgid "Subshell '%ls' returned illegal string, discarded one entry"
-msgstr "Subshell '%ls' gab ungültige Zeichenkette zurück, ein Eintrag verworfen"
+msgstr ""
+"Subshell '%ls' gab ungültige Zeichenkette zurück, ein Eintrag verworfen"
 
 #: input.c:409
 msgid "Invalid Control sequence"
@@ -578,7 +586,7 @@ msgstr "Konnte Sequenz '%ls' nicht auswerten"
 
 #: input.c:687
 msgid "Invalid sequence - no dash after control\n"
-msgstr "Ungültige Sequenz - kein Strich nach Steuerung\n"
+msgstr "Ungültige Sequenz - kein Bindestrich nach Steuerung\n"
 
 #: input.c:717
 msgid "Invalid sequence - Control-nothing?\n"
@@ -586,7 +594,7 @@ msgstr "Ungültige Sequenz - Steuerung-Nichts?\n"
 
 #: input.c:732
 msgid "Invalid sequence - no dash after meta\n"
-msgstr "Ungültige Sequenz - kein Strich nach Alt\n"
+msgstr "Ungültige Sequenz - kein Bindestrich nach Alt\n"
 
 #: input.c:737
 msgid "Invalid sequence - Meta-nothing?"
@@ -612,7 +620,7 @@ msgstr "Erwartete ein ':'"
 #: input.c:957
 #, c-format
 msgid "I don't know what '%ls' means"
-msgstr "Ich weiss nicht, was '%ls' bedeutet"
+msgstr "Ich weiß nicht, was '%ls' bedeutet"
 
 #: input.c:961
 #, c-format
@@ -621,7 +629,7 @@ msgstr "Zeilenende erwartet, erhielt '%ls'"
 
 #: input.c:966
 msgid "Syntax: set KEY VALUE"
-msgstr "Syntax: set Schlüssel Wert"
+msgstr "Syntax: set SCHLÜSSEL WERT"
 
 #: input.c:1032
 msgid "Unable to parse key binding"
@@ -630,7 +638,7 @@ msgstr "Konnte Tastenkürzel nicht analysieren"
 #: input.c:1058
 #, c-format
 msgid "I don't know what %ls means"
-msgstr "Ich weiss nicht, was '%ls' bedeutet"
+msgstr "Ich weiß nicht, was '%ls' bedeutet"
 
 #: input.c:1084
 #, c-format
@@ -643,13 +651,16 @@ msgstr "Konnte Terminal nicht einrichten"
 
 #: io.c:73
 #, c-format
-msgid "An error occured while reading output from code block on file descriptor %d"
+msgid ""
+"An error occured while reading output from code block on file descriptor %d"
 msgstr "Fehler beim Lesen der Ausgabe des Codeblocks auf Dateideskriptor %d"
 
 #: parser.c:56
 #, c-format
 msgid "If this error can be reproduced, please send a bug report to %s."
-msgstr "Wenn dieser Fehler reproduziert werden kann, senden Sie bitte einen Fehlerbereicht an %s."
+msgstr ""
+"Wenn dieser Fehler reproduziert werden kann, senden Sie bitte einen "
+"Fehlerbereicht an %s."
 
 #: parser.c:61
 msgid "This command can not be used in a pipeline"
@@ -662,19 +673,23 @@ msgstr "Tokenizer-Fehler: '%ls'"
 
 #: parser.c:72
 msgid "Short circut command requires additional command"
-msgstr ""
+msgstr "Ein kurzer Kreisbefehl erfordert einen zusätzlichen Befehl"
 
 #: parser.c:77
 msgid "Maximum recursion depth reached. Accidental infinite loop?"
-msgstr "Maximale Rekursionstiefe erreicht. Zufällige Endlos-Schleife?"
+msgstr "Maximale Rekursionstiefe erreicht. Zufällige Endlosschleife?"
 
 #: parser.c:82
-msgid "Could not locate end of block. The 'end' command is missing, misspelled or a ';' is missing."
-msgstr "Konnte Blockende nicht finden, Der 'end'-Befehl fehlt, ist falsch geschriebne oder ein ':' fehlt."
+msgid ""
+"Could not locate end of block. The 'end' command is missing, misspelled or a "
+"';' is missing."
+msgstr ""
+"Konnte Blockende nicht finden, Der 'end'-Befehl fehlt, ist falsch geschrieben"
+"oder ein ':' fehlt."
 
 #: parser.c:87
 msgid "Maximum number of nested blocks reached."
-msgstr "Maximal-Anzahl geschachtelter Blöcke erreicht."
+msgstr "Maximalanzahl geschachtelter Blöcke erreicht."
 
 #: parser.c:92
 #, c-format
@@ -683,13 +698,25 @@ msgstr "Erwartete einen Befehlsnamen, bekam Zeichen des Typs '%ls'"
 
 #: parser.c:97
 #, c-format
-msgid "Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; or COMMAND'? For more information on the 'or' builtin command, see the help section for 'or' by typing 'help or'."
-msgstr "Erwartete einen Befehlsnamen, bekam Zeichen des Typs '%ls'. Meinten Sie 'Befehl; or Befehl'? Zu weiteren Informationen über den eingebauten Befehl 'or' schauen Sie in der Hilfe zu 'or' nach oder geben Sie 'help or' ein."
+msgid ""
+"Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; or "
+"COMMAND'? For more information on the 'or' builtin command, see the help "
+"section for 'or' by typing 'help or'."
+msgstr ""
+"Erwartete einen Befehlsnamen, bekam Zeichen des Typs '%ls'. Meinten Sie "
+"'Befehl; or Befehl'? Zu weiteren Informationen über den eingebauten Befehl "
+"'or' schauen Sie in der Hilfe zu 'or' nach oder geben Sie 'help or' ein."
 
 #: parser.c:102
 #, c-format
-msgid "Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; and COMMAND'? For more information on the 'and' builtin command, see the help section for 'and' by typing 'help and'."
-msgstr "Erwartete einen Befehlsnamen, bekam Zeichen des Typs '%ls'. Meinten Sie 'Befehl; and Befehl'? Zu weiteren Informationen über den eingebauten Befehl 'and' schauen Sie in der Hilfe zu 'and' nach oder geben Sie 'help and' ein."
+msgid ""
+"Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; and "
+"COMMAND'? For more information on the 'and' builtin command, see the help "
+"section for 'and' by typing 'help and'."
+msgstr ""
+"Erwartete einen Befehlsnamen, bekam Zeichen des Typs '%ls'. Meinten Sie "
+"'Befehl; and Befehl'? Zu weiteren Informationen über den eingebauten Befehl "
+"'and' schauen Sie in der Hilfe zu 'and' nach oder geben Sie 'help and' ein."
 
 #: parser.c:107
 #, c-format
@@ -699,7 +726,9 @@ msgstr "Ungültiger Befehlsname '%ls'"
 #: parser.c:112
 #, c-format
 msgid "Warning: No match for wildcard '%ls'. The command will not be executed."
-msgstr "Warnung: Kein Treffer für Jokerzeichen '%ls'. Der Befehl wird nicht ausgeführt."
+msgstr ""
+"Warnung: Kein Treffer für Jokerzeichen '%ls'. Der Befehl wird nicht "
+"ausgeführt."
 
 #: parser.c:117
 msgid "'case' builtin not inside of switch block"
@@ -707,7 +736,7 @@ msgstr "eingebauter Befehl 'case' nicht innerhalb eines switch-Blocks"
 
 #: parser.c:122
 msgid "Loop control command while not inside of loop"
-msgstr "Schleifensteuerungs-Befehl 'while' nicht innerhalb einer Schleife"
+msgstr "Schleifensteuerungsbefehl 'while' nicht innerhalb einer Schleife"
 
 #: parser.c:127
 msgid "'else' builtin not inside of if block"
@@ -715,12 +744,18 @@ msgstr "eingebauter Befehl 'else' nicht innerhalb eines if-Blocks"
 
 #: parser.c:132
 msgid "'end' command outside of block"
-msgstr "'end'-Befehl ausserhalb eines Blocks"
+msgstr "'end'-Befehl außerhalb eines Blocks"
 
 #: parser.c:137
 #, c-format
-msgid "Unknown command '%ls'. Did you mean 'set VARIABLE VALUE'? For information on setting variable values, see the help section on the set command by typing 'help set'."
-msgstr "Unbekannter Befehl '%ls'. Meinten Sie 'set VARIABLE WERT'? Zu Informationen zum Setzen von Variablen-Werten schauen Sie in der Hilfe zum set-Befehl nach oder geben Sie 'help set' ein."
+msgid ""
+"Unknown command '%ls'. Did you mean 'set VARIABLE VALUE'? For information on "
+"setting variable values, see the help section on the set command by typing "
+"'help set'."
+msgstr ""
+"Unbekannter Befehl '%ls'. Meinten Sie 'set VARIABLE WERT'? Zu Informationen "
+"zum Festlegen von Variablenwerten schauen Sie in der Hilfe zum set-Befehl "
+"nach oder geben Sie 'help set' ein."
 
 #: parser.c:142
 #, c-format
@@ -728,12 +763,16 @@ msgid "Expected redirection specification, got token of type '%ls'"
 msgstr "Erwartete Umleitungsspezifikation, erhielt Zeichen vom Typ '%ls'"
 
 #: parser.c:147
-msgid "Encountered redirection when expecting a command name. Fish does not allow a redirection operation before a command."
-msgstr "Umleitung anstelle eines Befehlsnamens. Fish erlaubt keine Umleitung vor einem Befehl."
+msgid ""
+"Encountered redirection when expecting a command name. Fish does not allow a "
+"redirection operation before a command."
+msgstr ""
+"Umleitung anstelle eines Befehlsnamens. Fish erlaubt keine Umleitung vor "
+"einem Befehl."
 
 #: parser.c:152
 msgid "Tried to evaluate null pointer."
-msgstr "Versuchte, einen Null-Zeiger auszuwerten."
+msgstr "Versuchte, einen Nullzeiger auszuwerten."
 
 #: parser.c:157
 #, c-format
@@ -764,11 +803,11 @@ msgstr "'if'-Bedingungsblock"
 
 #: parser.c:192
 msgid "function definition block"
-msgstr "Funktionsdefinitons-Block"
+msgstr "Funktionsdefinitonsblock"
 
 #: parser.c:198
 msgid "function invocation block"
-msgstr "Funktionsausführungs-Block"
+msgstr "Funktionsausführungsblock"
 
 #: parser.c:204
 msgid "'switch' block"
@@ -784,7 +823,7 @@ msgstr "globaler Root-Block"
 
 #: parser.c:222
 msgid "command substitution block"
-msgstr "Befehlsersetzungs-Block"
+msgstr "Befehlsersetzungsblock"
 
 #: parser.c:228
 msgid "'begin' unconditional block"
@@ -797,7 +836,7 @@ msgstr "unbekannter/ungültiger Block"
 #: parser.c:876
 #, c-format
 msgid "Could not write profiling information to file '%s'"
-msgstr "Konnte Profilierungs-Informationen nicht in Datei '%s' schreiben"
+msgstr "Konnte Profilierungsinformationen nicht in Datei '%s' schreiben"
 
 #: parser.c:882
 msgid "Time\tSum\tCommand\n"
@@ -811,11 +850,11 @@ msgstr "%ls (Zeile %d): "
 #: parser.c:1222
 #, c-format
 msgid "Could not expand string '%ls'"
-msgstr "Konnte Zeichenkette '%ls' nicht expandieren"
+msgstr "Konnte Zeichenkette '%ls' nicht erweitern"
 
 #: parser.c:1324
 msgid "Invalid IO redirection"
-msgstr "Ungültige I/O-Umleitung"
+msgstr "Ungültige E/A-Umleitung"
 
 #: parser.c:1367
 #, c-format
@@ -833,7 +872,7 @@ msgstr "Unpassendes Blockende. Programm wird beendet."
 
 #: proc.c:149
 msgid "Job inconsistency"
-msgstr "Job-Inkonsistenz"
+msgstr "Jobinkonsistenz"
 
 #: proc.c:501
 #, c-format
@@ -847,8 +886,10 @@ msgstr "%ls: Job %d, '%ls' durch Signal %ls (%ls) beendet"
 
 #: proc.c:585
 #, c-format
-msgid "%ls: Process %d, '%ls' from job %d, '%ls' terminated by signal %ls (%ls)"
-msgstr "%ls: Prozess %d, '%ls' aus job %d, '%ls' durch Signal %ls (%ls) beendet"
+msgid ""
+"%ls: Process %d, '%ls' from job %d, '%ls' terminated by signal %ls (%ls)"
+msgstr ""
+"%ls: Prozess %d, '%ls' aus job %d, '%ls' durch Signal %ls (%ls) beendet"
 
 #: proc.c:616
 msgid "ended"
@@ -860,11 +901,11 @@ msgstr "Fehler während des Lesens der Ausgabe aus Codeblock"
 
 #: proc.c:1018 proc.c:1028 proc.c:1038
 msgid "Could not return shell to foreground"
-msgstr "Konnte Shell nicht wieder in Vordergrund setzen"
+msgstr "Konnte Shell nicht wieder in Vordergrund zurückholen"
 
 #: proc.c:1061
 msgid "Job command"
-msgstr "Job-Befehl"
+msgstr "Jobbefehl"
 
 #: proc.c:1064 proc.c:1091
 msgid "Process list pointer"
@@ -903,11 +944,11 @@ msgstr "Job '%ls', Prozess '%ls' hat inkonsistenten Status 'completed'=%d"
 
 #: reader.c:299
 msgid "Could not set terminal mode for new job"
-msgstr "Konnte Terminalmodus für neuen Job nicht setzen"
+msgstr "Konnte Terminalmodus für neuen Job nicht festlegen"
 
 #: reader.c:320
 msgid "Could not set terminal mode for shell"
-msgstr "Konnte Terminalmodus für neue Shell nicht setzen"
+msgstr "Konnte Terminalmodus für neue Shell nicht festlegen"
 
 #: reader.c:1602
 msgid "Couldn't put the shell in its own process group"
@@ -919,7 +960,7 @@ msgstr "Konnte Terminalsteuerung nicht übernehmen"
 
 #: reader.c:1644
 msgid "Could not set exit function"
-msgstr "Konnte Ende-Funktion nicht setzen"
+msgstr "Konnte Ende-Funktion nicht festlegen"
 
 #: reader.c:2376
 msgid "Pop null reader block"
@@ -940,12 +981,12 @@ msgstr "Fehler beim Lesen der Befehle"
 
 #: reader.c:3123
 msgid "Error while closing input stream"
-msgstr "Fehler beim Schliessen des Eingabestroms"
+msgstr "Fehler beim Schließen des Eingabestroms"
 
 #: reader.c:3151
 #, c-format
 msgid "Could not convert input. Read %d bytes."
-msgstr "Konnnte Eingabe nicht konvertieren. %d Bytes gelesen."
+msgstr "Konnte Eingabe nicht konvertieren. %d Bytes gelesen."
 
 #: reader.c:3157
 msgid "Could not read input stream"
@@ -975,11 +1016,11 @@ msgstr "Terminal getrennt"
 
 #: signal.c:61
 msgid "Quit request from job control (^C)"
-msgstr "Quit-Anforderung über Job-Steuerung (^C)"
+msgstr "Quit-Anforderung über Jobsteuerung (^C)"
 
 #: signal.c:67
 msgid "Quit request from job control with core dump (^\\)"
-msgstr "Quit-Anforderung über Job-Steuerung mit Speicherauszug (^\\)"
+msgstr "Quit-Anforderung über Jobsteuerung mit Speicherauszug (^\\)"
 
 #: signal.c:73
 msgid "Illegal instruction"
@@ -987,7 +1028,7 @@ msgstr "Illegale Instruktion"
 
 #: signal.c:79
 msgid "Trace or breakpoint trap"
-msgstr ""
+msgstr "Verfolgungs- oder Haltepunkt erreicht"
 
 #: signal.c:85
 msgid "Abort"
@@ -999,7 +1040,7 @@ msgstr "Fehler: nicht ausgerichtete Adresse"
 
 #: signal.c:97
 msgid "Floating point exception"
-msgstr "Fliesskomma-Ausnahmefehler"
+msgstr "Fließkomma-Ausnahmefehler"
 
 #: signal.c:103
 msgid "Forced quit"
@@ -1007,11 +1048,11 @@ msgstr "Erzwungene Beendigung"
 
 #: signal.c:109
 msgid "User defined signal 1"
-msgstr "Anwender-definiertes Signal 1"
+msgstr "Benutzerdefiniertes Signal 1"
 
 #: signal.c:114
 msgid "User defined signal 2"
-msgstr "Anwender-definiertes Signal 2"
+msgstr "Benutzerdefiniertes Signal 2"
 
 #: signal.c:120
 msgid "Address boundary error"
@@ -1031,7 +1072,7 @@ msgstr "Höfliche Beendigungsanforderung"
 
 #: signal.c:144
 msgid "Child process status changed"
-msgstr "Kindprozess-Status geändert"
+msgstr "Kindprozessstatus geändert"
 
 #: signal.c:150
 msgid "Continue previously stopped process"
@@ -1055,15 +1096,15 @@ msgstr "Stopp durch Terminalausgabe"
 
 #: signal.c:180
 msgid "Urgent socket condition"
-msgstr ""
+msgstr "Vorrangige Socket-Bedingung"
 
 #: signal.c:186
 msgid "CPU time limit exceeded"
-msgstr "CPU-Zeit-Begrenzung überschritten"
+msgstr "CPU-Zeitbegrenzung überschritten"
 
 #: signal.c:192
 msgid "File size limit exceeded"
-msgstr "Dateigrössen-Begrenzung überschritten"
+msgstr "Dateigrößenbegrenzung überschritten"
 
 #: signal.c:198
 msgid "Virtual timer expired"
@@ -1071,11 +1112,11 @@ msgstr "Virtueller Zeitgeber abgelaufen"
 
 #: signal.c:204
 msgid "Profiling timer expired"
-msgstr "Profilierungs-Zeitgeber abgelaufen"
+msgstr "Profilierungszeitgeber abgelaufen"
 
 #: signal.c:210
 msgid "Window size change"
-msgstr "Änderung der Fenstergrösse"
+msgstr "Änderung der Fenstergröße"
 
 #: signal.c:216
 msgid "I/O on asynchronous file descriptor is possible"
@@ -1185,7 +1226,7 @@ msgid ""
 "%ls: Variable scope can only be one of universal, global and local\n"
 "%ls\n"
 msgstr ""
-"%ls: Variablen-Bereich kann nur universell, global oder lokal sein\n"
+"%ls: Variablenbereich kann nur universell, global oder lokal sein\n"
 "%ls\n"
 
 #: builtin.h:43
@@ -1204,8 +1245,12 @@ msgstr "%ls: Unbekannte Option '%ls'\n"
 
 #: builtin.h:50
 #, c-format
-msgid "%ls: Invalid character '%lc' in variable name. Only alphanumerical characters and underscores are valid in a variable name.\n"
-msgstr "%ls: Ungültiges Zeichen '%lc' im Variablenname. Nur alfanumerische Zeichen und Unterstriche sind in einem Variablennamen gültig.\n"
+msgid ""
+"%ls: Invalid character '%lc' in variable name. Only alphanumerical characters "
+"and underscores are valid in a variable name.\n"
+msgstr ""
+"%ls: Ungültiges Zeichen '%lc' im Variablenname. Nur alphanumerische Zeichen "
+"und Unterstriche sind in einem Variablennamen gültig.\n"
 
 #: builtin.h:52
 #, c-format
@@ -1272,7 +1317,7 @@ msgstr "Paket"
 
 #: init/fish_complete.fish.in:292 init/fish_complete.fish:292
 msgid "Start service"
-msgstr "Starte Dienst"
+msgstr "Dienst starten"
 
 #: init/fish_complete.fish.in:293 init/fish_complete.fish:293
 msgid "Stop service"
@@ -1280,7 +1325,7 @@ msgstr "Dienst anhalten"
 
 #: init/fish_complete.fish.in:294 init/fish_complete.fish:294
 msgid "Print service state"
-msgstr "Dienststatus anzeigen"
+msgstr "Dienststatus ausgeben"
 
 #: init/fish_complete.fish.in:295 init/fish_complete.fish:295
 msgid "Stop and then start service"
@@ -1300,7 +1345,7 @@ msgstr "fish"
 
 #: init/fish_interactive.fish.in:13 init/fish_interactive.fish:13
 msgid "Welcome to fish, the friendly interactive shell\\n"
-msgstr "Willkommen zu fish, der Freundlichen Interaktiven Shell\\n"
+msgstr "Willkommen zu fish, der freundlichen interaktiven Shell\\n"
 
 #: init/fish_interactive.fish.in:14 init/fish_interactive.fish:14
 msgid "Type %shelp%s for instructions on how to use fish\\n"
@@ -1316,7 +1361,7 @@ msgstr "Auf Wiedersehen\\n"
 
 #: init/fish_interactive.fish.in:28 init/fish_interactive.fish:28
 msgid "Write out the prompt"
-msgstr "Prompt anzeigen"
+msgstr "Prompt ausgeben"
 
 #: init/fish_function.fish:58
 msgid "%s: Key not specified\\n"
@@ -1328,16 +1373,27 @@ msgstr "Konnte keinen Webbrowser finden.\\n"
 
 #: init/fish_function.fish:131
 #, sh-format
-msgid "Please set the variable $BROWSER to a suitable browser and try again\\n\\n"
-msgstr "Setzen Sie bitte die Variable $BROWSER auf einen passenden Browser und versuchen Sie es erneut\\n\\n"
+msgid ""
+"Please set the variable $BROWSER to a suitable browser and try again\\n\\n"
+msgstr ""
+"Legen Sie bitte die Variable $BROWSER auf einen passenden Browser fest"
+"und versuchen Sie es erneut\\n\\n"
 
 #: init/fish_function.fish:273
-msgid "vared: %s is an array variable. Use %svared%s %s[n] to edit the n:th element of %s\\n"
-msgstr "vared: %s ist eine Feldvariable. Benutzen Sie %svared%s %s[n] zum Editieren den n. Elementes von %s\\n"
+msgid ""
+"vared: %s is an array variable. Use %svared%s %s[n] to edit the n:th element "
+"of %s\\n"
+msgstr ""
+"vared: %s ist eine Feldvariable. Benutzen Sie %svared%s %s[n] zum Editieren "
+"den n. Elementes von %s\\n"
 
 #: init/fish_function.fish:277
-msgid "vared: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s VARIABLE\\n"
-msgstr "vared: Erwartete genau ein Argument, erhielt %s.\\n\\nSynopsis:\\n\\t%svared%s VARIABLE\\n"
+msgid ""
+"vared: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s "
+"VARIABLE\\n"
+msgstr ""
+"vared: Erwartete genau ein Argument, erhielt %s.\\n\\nSynopsis:\\n\\t%svared%"
+"s VARIABLE\\n"
 
 #: init/fish_function.fish:386
 msgid "Hit end of history...\\n"
@@ -1345,7 +1401,8 @@ msgstr "Ende des Befehlsverlaufs errreicht ...\\n"
 
 #: init/fish_function.fish:422
 msgid "The number of positions to skip must be a non-negative integer\\n"
-msgstr "Anzahl zu überspringender Positionen muss eine positive Ganzzahl sein\\n"
+msgstr ""
+"Anzahl zu überspringender Positionen muss eine positive Ganzzahl sein\\n"
 
 #: init/fish_function.fish:775
 msgid "%s is a function with definition\\n"
@@ -1377,7 +1434,7 @@ msgstr "%s: Konnte '%s' nicht finden"
 
 #: init/fish_function.fish:845
 msgid "%s: Invalid mask '%s'\\n"
-msgstr "%s: Ungültige Mmaske '%s'\\n"
+msgstr "%s: Ungültige Maske '%s'\\n"
 
 #: init/fish_function.fish:1032
 msgid "%s: Too many arguments\\n"
@@ -1431,15 +1488,15 @@ msgstr "Version anzeigen und beenden"
 
 #: init/completions/apm.fish:3
 msgid "Print APM info"
-msgstr "APM-Informationen anzeigen"
+msgstr "APM-Informationen ausgeben"
 
 #: init/completions/apm.fish:4
 msgid "Print time remaining"
-msgstr "Verbleibende Zeit anzeigen"
+msgstr "Verbleibende Zeit ausgeben"
 
 #: init/completions/apm.fish:5
 msgid "Monitor status info"
-msgstr "Status-Information beobachten"
+msgstr "Statusinformation beobachten"
 
 #: init/completions/apm.fish:6
 msgid "Request APM standby mode"
@@ -1475,7 +1532,7 @@ msgstr "Debug-Informationen ausgeben"
 #: init/completions/umount.fish:17 init/completions/valgrind.fish:28
 #: init/completions/wget.fish:13 init/completions/zip.fish:14
 msgid "Verbose mode"
-msgstr "Gesprächiger Modus"
+msgstr "Ausführlicher Modus"
 
 #: init/completions/apropos.fish:14
 msgid "Keyword as regex"
@@ -1499,7 +1556,7 @@ msgstr "Man-Pfad angeben"
 
 #: init/completions/apropos.fish:19
 msgid "Specify a configuration file"
-msgstr "eine Konfigurationsdatei angeben"
+msgstr "Eine Konfigurationsdatei angeben"
 
 #: init/completions/apt-build.fish:4
 msgid "Update list of packages"
@@ -1519,7 +1576,7 @@ msgstr "Ein neues Paket erstellen und installieren"
 
 #: init/completions/apt-build.fish:8
 msgid "Download and extract a source"
-msgstr "Eine Quelle abrufen und extrahieren"
+msgstr "Eine Quelle herunterladen und extrahieren"
 
 #: init/completions/apt-build.fish:9
 msgid "Info on a package"
@@ -1547,11 +1604,11 @@ msgstr "Quelle aktualisieren und erneut erstellen"
 
 #: init/completions/apt-build.fish:15
 msgid "Update the repository"
-msgstr "Paket-Depot aktualisieren"
+msgstr "Paketdepot aktualisieren"
 
 #: init/completions/apt-build.fish:16
 msgid "Do not use gcc wrapper"
-msgstr "Nicht die gcc-Ummantelung nutzen"
+msgstr "Nicht die gcc-Ummantelung benutzen"
 
 #: init/completions/apt-build.fish:17
 msgid "Remove build-dep"
@@ -1559,7 +1616,7 @@ msgstr "Erstellungsabhängigkeiten entfernen"
 
 #: init/completions/apt-build.fish:18
 msgid "Do not download source"
-msgstr "Quelle nicht abrufen"
+msgstr "Quelle nicht herunterladen"
 
 #: init/completions/apt-build.fish:19
 msgid "Specify build-dir"
@@ -1583,7 +1640,7 @@ msgstr "<Datei>-Patch anwenden"
 
 #: init/completions/apt-build.fish:24
 msgid "Prefix to strip on patch"
-msgstr ""
+msgstr "Präfix zum Entfernen des Patch"
 
 #: init/completions/apt-build.fish:25 init/completions/apt-listbugs.fish:21
 #: init/completions/yum.fish:50
@@ -1608,15 +1665,15 @@ msgstr "Apt-Zwischenspeicher erstellen"
 
 #: init/completions/apt-cache.fish:4
 msgid "Show package info"
-msgstr "Paket-Information zeigen"
+msgstr "Paketinformation anzeigen"
 
 #: init/completions/apt-cache.fish:5
 msgid "Show cache statistics"
-msgstr "Zwischenspeicherstatistik zeigen"
+msgstr "Zwischenspeicherstatistik anzeigen"
 
 #: init/completions/apt-cache.fish:6
 msgid "Show source package"
-msgstr "Quellpaket zeigen"
+msgstr "Quellpaket anzeigen"
 
 #: init/completions/apt-cache.fish:7
 msgid "Show packages in cache"
@@ -1624,15 +1681,15 @@ msgstr "Pakete im Zwischenspeicher anzeigen"
 
 #: init/completions/apt-cache.fish:8
 msgid "Print available list"
-msgstr "Verfügbare Liste anzeigen"
+msgstr "Verfügbare Liste ausgeben"
 
 #: init/completions/apt-cache.fish:9
 msgid "List unmet dependencies in cache"
-msgstr "Nicht aufgelöste Abhängigkeiten im Zwischenspeicher zeigen"
+msgstr "Nicht aufgelöste Abhängigkeiten im Zwischenspeicher auflisten"
 
 #: init/completions/apt-cache.fish:10
 msgid "Display package record"
-msgstr "Paket-Satz zeigen"
+msgstr "Paketsatz anzeigen"
 
 #: init/completions/apt-cache.fish:11
 msgid "Search packagename by REGEX"
@@ -1648,15 +1705,15 @@ msgstr "Nur Paketname suchen"
 
 #: init/completions/apt-cache.fish:14
 msgid "List dependencies for the package"
-msgstr "Abhängigkeiten für dieses Paket anzeigen"
+msgstr "Abhängigkeiten für dieses Paket auflisten"
 
 #: init/completions/apt-cache.fish:15
 msgid "List reverse dependencies for the package"
-msgstr "Umgekehrte Abhängigkeiten für das Paket anzeigen"
+msgstr "Umgekehrte Abhängigkeiten für das Paket auflisten"
 
 #: init/completions/apt-cache.fish:16
 msgid "Print package name by prefix"
-msgstr ""
+msgstr "Paketname nach Präfix ausgeben"
 
 #: init/completions/apt-cache.fish:17
 msgid "Generate dotty output for packages"
@@ -1668,11 +1725,11 @@ msgstr "Einstellungsdatei prüfen"
 
 #: init/completions/apt-cache.fish:19
 msgid "Select file to store package cache"
-msgstr "Datei zum Speichern des Paketzwischenspeichers wählen"
+msgstr "Datei zum Speichern des Paketzwischenspeichers auswählen"
 
 #: init/completions/apt-cache.fish:20
 msgid "Select file to store source cache"
-msgstr "Datei zum Speichern des Quellenzwischenspeichers wählen"
+msgstr "Datei zum Speichern des Quellenzwischenspeichers auswählen"
 
 #: init/completions/apt-cache.fish:21 init/completions/apt-ftparchive.fish:10
 #: init/completions/apt-get.fish:39 init/completions/configure.fish:3
@@ -1685,27 +1742,27 @@ msgstr "Stiller Modus"
 
 #: init/completions/apt-cache.fish:22
 msgid "Print important dependencies"
-msgstr "Wichtige Abhängigkeiten anzeigen"
+msgstr "Wichtige Abhängigkeiten ausgeben"
 
 #: init/completions/apt-cache.fish:23
 msgid "Print full records"
-msgstr "Vollständige Datensätze anzeigen"
+msgstr "Vollständige Datensätze ausgeben"
 
 #: init/completions/apt-cache.fish:24
 msgid "Auto-gen package cache"
-msgstr ""
+msgstr "Paketcache automatisch generieren"
 
 #: init/completions/apt-cache.fish:25
 msgid "Print all names"
-msgstr "Alle Namen anzeigen"
+msgstr "Alle Namen ausgeben"
 
 #: init/completions/apt-cache.fish:26
 msgid "Dep and rdep recursive"
-msgstr ""
+msgstr "Dep und rdep rekursiv"
 
 #: init/completions/apt-cache.fish:27
 msgid "Limit to installed"
-msgstr ""
+msgstr "Auf Installierte begrenzen"
 
 #: init/completions/apt-cache.fish:29 init/completions/apt-cdrom.fish:12
 #: init/completions/apt-config.fish:6
@@ -1746,7 +1803,7 @@ msgstr "Schnelle Kopie"
 
 #: init/completions/apt-cdrom.fish:9
 msgid "Thorough package scan"
-msgstr "Gründlicher Paket-Scan"
+msgstr "Gründlicher Paketscan"
 
 #: init/completions/apt-cdrom.fish:10
 msgid "No changes"
@@ -1762,7 +1819,7 @@ msgstr "Inhalt der Konfigurationsdatei ausgeben"
 
 #: init/completions/apt-extracttemplates.fish:4
 msgid "Set temp dir"
-msgstr "temp-Verzeichnis setzen"
+msgstr "temp-Verzeichnis festlegen"
 
 #: init/completions/apt-extracttemplates.fish:5
 msgid "Specifiy config file"
@@ -1778,7 +1835,7 @@ msgstr "Paket entsprechend Muster suchen"
 
 #: init/completions/apt-file.fish:5
 msgid "List contents of a package matching pattern"
-msgstr "Inhalte eines Paketes anzeigen, das dem Muster entspricht"
+msgstr "Inhalte eines Paketes auflisten, das dem Muster entspricht"
 
 #: init/completions/apt-file.fish:6
 msgid "Remove all gz files from cache"
@@ -1786,15 +1843,15 @@ msgstr "Alle gz-Dateien aus dem Zwischenspeicher entfernen"
 
 #: init/completions/apt-file.fish:7
 msgid "Set cache dir"
-msgstr "Verzeichnis für Zwischenspeicher setzen"
+msgstr "Verzeichnis für Zwischenspeicher festlegen"
 
 #: init/completions/apt-file.fish:9
 msgid "Use cdrom-mount-point"
-msgstr "CDROM-Einhängepunkt verwenden"
+msgstr "CDROM-Einhängepunkt benutzen"
 
 #: init/completions/apt-file.fish:10 init/completions/apt-file.fish:16
 msgid "Do not expand pattern"
-msgstr "Muster nicht erweitern"
+msgstr "Erweitern Sie das Muster nicht"
 
 #: init/completions/apt-file.fish:11
 msgid "Pattern is regexp"
@@ -1802,7 +1859,7 @@ msgstr "Muster ist ein regulärer Ausdruck"
 
 #: init/completions/apt-file.fish:13
 msgid "Set arch"
-msgstr "Architektur setzen"
+msgstr "Architektur festlegen"
 
 #: init/completions/apt-file.fish:14
 msgid "Set sources.list file"
@@ -1810,7 +1867,7 @@ msgstr "sources.list-Datei angeben"
 
 #: init/completions/apt-file.fish:15
 msgid "Only display package name"
-msgstr "Nur Paketnamen zeigen"
+msgstr "Nur Paketnamen anzeigen"
 
 #: init/completions/apt-file.fish:17
 msgid "Run in dummy mode"
@@ -1822,7 +1879,7 @@ msgstr "Paket aus Quelle generieren"
 
 #: init/completions/apt-ftparchive.fish:4
 msgid "Generate source index file"
-msgstr "Quell-Indexdatei erstellen"
+msgstr "Quellindexdatei erstellen"
 
 #: init/completions/apt-ftparchive.fish:5
 msgid "Generate contents file"
@@ -1846,7 +1903,7 @@ msgstr "Eine Binärdatenbank benutzen"
 
 #: init/completions/apt-ftparchive.fish:11
 msgid "Perform delinking"
-msgstr ""
+msgstr "Trennung ausführen"
 
 #: init/completions/apt-ftparchive.fish:12
 msgid "Perform contents generation"
@@ -1854,11 +1911,11 @@ msgstr "Inhaltsgenerierung durchführen"
 
 #: init/completions/apt-ftparchive.fish:13
 msgid "Use source override"
-msgstr ""
+msgstr "Quell-Override verwenden"
 
 #: init/completions/apt-ftparchive.fish:14
 msgid "Make caching db readonly"
-msgstr "Zwischenspeicher-Datenbank schreibschützen"
+msgstr "Zwischenspeicherdatenbank schreibschützen"
 
 #: init/completions/apt-ftparchive.fish:16
 msgid "Use config file"
@@ -1867,7 +1924,7 @@ msgstr "Konfigurationsdatei benutzen"
 #: init/completions/apt-ftparchive.fish:17
 #: init/completions/apt-sortpkgs.fish:6
 msgid "Set config options"
-msgstr "Konfigurationsoptionen setzen"
+msgstr "Konfigurationsoptionen festlegen"
 
 #: init/completions/apt-get.fish:3
 msgid "Test if apt has yet to be given the subcommand"
@@ -1876,6 +1933,7 @@ msgstr "Test, ob an apt noch ein Unterbefehl gegeben werden muss"
 #: init/completions/apt-get.fish:12
 msgid "Test if apt command should have packages as potential completion"
 msgstr ""
+"Testen, ob der apt-Befehl Pakete zur möglichen Fertigstellung haben sollte"
 
 #: init/completions/apt-get.fish:24
 msgid "Update sources"
@@ -1903,7 +1961,7 @@ msgstr "Ein oder mehrere Paket(e) entfernen"
 
 #: init/completions/apt-get.fish:30
 msgid "Fetch source packages"
-msgstr "Quell-Pakete abrufen"
+msgstr "Quellpakete abrufen"
 
 #: init/completions/apt-get.fish:31
 msgid "Install/remove packages for dependencies"
@@ -1919,11 +1977,11 @@ msgstr "Lokalen Zwischenspeicher und Pakete bereinigen"
 
 #: init/completions/apt-get.fish:34
 msgid "Clean packages no longer be downloaded"
-msgstr ""
+msgstr "Pakete, die nicht länger heruntergeladen werden, bereinigen"
 
 #: init/completions/apt-get.fish:35
 msgid "Download Only"
-msgstr "Nur abrufen"
+msgstr "Nur herunterladen"
 
 #: init/completions/apt-get.fish:36
 msgid "Correct broken dependencies"
@@ -1935,7 +1993,7 @@ msgstr "Fehlende Pakete ignorieren"
 
 #: init/completions/apt-get.fish:38
 msgid "Disable downloading packages"
-msgstr "Abruf von Paketen deaktivieren"
+msgstr "Herunterladen von Paketen deaktivieren"
 
 #: init/completions/apt-get.fish:40
 msgid "Perform a simulation"
@@ -1955,7 +2013,7 @@ msgstr "Volle Versionen der Pakete anzeigen"
 
 #: init/completions/apt-get.fish:44 init/completions/apt-get.fish:45
 msgid "Compile source packages"
-msgstr "Quell-Pakete kompilieren"
+msgstr "Quellpakete kompilieren"
 
 #: init/completions/apt-get.fish:46
 msgid "Ignore package Holds"
@@ -1971,7 +2029,7 @@ msgstr "Ja erzwingen"
 
 #: init/completions/apt-get.fish:49
 msgid "Print the URIs"
-msgstr "URIs anzeigen"
+msgstr "URIs ausgeben"
 
 #: init/completions/apt-get.fish:51
 msgid "Reinstall packages"
@@ -1983,7 +2041,7 @@ msgstr "Veraltete Dateien löschen"
 
 #: init/completions/apt-get.fish:53
 msgid "Control default input to the policy engine"
-msgstr ""
+msgstr "Standardeingabe zur Regelverwaltung leiten"
 
 #: init/completions/apt-get.fish:54
 msgid "Only perform operations that are trivial"
@@ -1995,19 +2053,19 @@ msgstr "Abbruch, falls irgendwelche Pakete entfernt würden"
 
 #: init/completions/apt-get.fish:56
 msgid "Only accept source packages"
-msgstr "Nur Quell-Pakete akzeptieren"
+msgstr "Nur Quellpakete akzeptieren"
 
 #: init/completions/apt-get.fish:57
 msgid "Download only diff file"
-msgstr "Nur diff-Datei abrufen"
+msgstr "Nur diff-Datei herunterladen"
 
 #: init/completions/apt-get.fish:58
 msgid "Download only tar file"
-msgstr "Nur tar-Datei abrufen"
+msgstr "Nur tar-Datei herunterladen"
 
 #: init/completions/apt-get.fish:59
 msgid "Only process arch-dependant build-dependencies"
-msgstr "Nur architektur-abhängige Erstellungsabhängigkeiten verarbeiten"
+msgstr "Nur Architektur-abhängige Erstellungsabhängigkeiten verarbeiten"
 
 #: init/completions/apt-get.fish:60
 msgid "Ignore non-authenticated packages"
@@ -2019,7 +2077,7 @@ msgstr "Konfigurationsdatei angeben"
 
 #: init/completions/apt-get.fish:63
 msgid "Set a config option"
-msgstr "Konfigurationsoption setzen"
+msgstr "Konfigurationsoption festlegen"
 
 #: init/completions/apt-key.fish:2
 msgid "Add a new key"
@@ -2031,11 +2089,11 @@ msgstr "Schlüssel entfernen"
 
 #: init/completions/apt-key.fish:4
 msgid "List trusted keys"
-msgstr "Vertraute Schlüssel anzeigen"
+msgstr "Vertraute Schlüssel auflisten"
 
 #: init/completions/apt-listbugs.fish:3
 msgid "Set severity"
-msgstr "Schwere setzen"
+msgstr "Schwere festlegen"
 
 #: init/completions/apt-listbugs.fish:4
 msgid "Tags you want to see"
@@ -2043,7 +2101,7 @@ msgstr "Markierungen, die Sie sehen möchten"
 
 #: init/completions/apt-listbugs.fish:5
 msgid "Bug-status you want to see"
-msgstr "Bug-Status, die Sie sehen möchten"
+msgstr "Fehlerstatus, den Sie sehen möchten"
 
 #: init/completions/apt-listbugs.fish:6
 msgid "Ignore bugs in your system"
@@ -2051,19 +2109,19 @@ msgstr "Fehler in Ihrem System ignorieren"
 
 #: init/completions/apt-listbugs.fish:7
 msgid "Ignore newer bugs than upgrade packages"
-msgstr ""
+msgstr "Fehler, die neuer sind als Aktualisierungspakete, ignorieren"
 
 #: init/completions/apt-listbugs.fish:8
 msgid "Bugs for downgrade packages"
-msgstr ""
+msgstr "Fehler bei Downgrade-Paketen"
 
 #: init/completions/apt-listbugs.fish:9
 msgid "Bug Tracking system"
-msgstr "Bug-Verfolgungssystem"
+msgstr "Fehlerverfolgungssystem"
 
 #: init/completions/apt-listbugs.fish:10
 msgid "Specify port for web interface"
-msgstr "Port für Web-Oberfläche angeben"
+msgstr "Port für Weboberfläche angeben"
 
 #: init/completions/apt-listbugs.fish:11
 msgid "Use daily bug report"
@@ -2075,15 +2133,15 @@ msgstr "Die rohe index.db verwenden"
 
 #: init/completions/apt-listbugs.fish:13
 msgid "Specify index dir"
-msgstr "Index-Verzeichnis angeben"
+msgstr "Indexverzeichnis angeben"
 
 #: init/completions/apt-listbugs.fish:14
 msgid "Specify Pin-Priority value"
-msgstr ""
+msgstr "Pin-Prioritätswert angeben"
 
 #: init/completions/apt-listbugs.fish:15
 msgid "Specify the title of rss"
-msgstr "Titel für rss angeben"
+msgstr "Geben Sie einen Titel für rss an"
 
 #: init/completions/apt-listbugs.fish:16
 msgid "Retrieve fresh bugs"
@@ -2091,11 +2149,11 @@ msgstr "Neue Bugs abrufen"
 
 #: init/completions/apt-listbugs.fish:17 init/completions/scp.fish:32
 msgid "Do not display progress bar"
-msgstr "Keinen Verlaufsbalken anzeigen"
+msgstr "Keinen Fortschrittsbalken anzeigen"
 
 #: init/completions/apt-listbugs.fish:18
 msgid "Specify local cache dir"
-msgstr "Verzeichnis für lokalen Zwischenspeicher"
+msgstr "Verzeichnis für lokalen Zwischenspeicher angeben"
 
 #: init/completions/apt-listbugs.fish:19
 msgid "Specify the expire cache timer"
@@ -2111,11 +2169,11 @@ msgstr "Für alle Fragen nein annehmen"
 
 #: init/completions/apt-listbugs.fish:23
 msgid "List bugs from packages"
-msgstr "Fehler aus Paketen anzeigen"
+msgstr "Fehler aus Paketen auflisten"
 
 #: init/completions/apt-listbugs.fish:24
 msgid "List bugs in rss format"
-msgstr "Fehler (bugs) im rss-Format anzeigen"
+msgstr "Fehler im rss-Format auflisten"
 
 #: init/completions/apt-listchanges.fish:3
 msgid "Read filenames from pipe"
@@ -2127,7 +2185,7 @@ msgstr "Benutzerschnittstelle auswählen"
 
 #: init/completions/apt-listchanges.fish:6 init/completions/darcs.fish:178
 msgid "Specify email address"
-msgstr "Email-Adresse angeben"
+msgstr "E-Mail-Adresse angeben"
 
 #: init/completions/apt-listchanges.fish:7
 msgid "Ask confirmation"
@@ -2135,19 +2193,19 @@ msgstr "Bestätigung erfragen"
 
 #: init/completions/apt-listchanges.fish:8
 msgid "Display all changelogs"
-msgstr "Alle Änderungsdateien anzeigen"
+msgstr "Alle Änderungsprotokolle anzeigen"
 
 #: init/completions/apt-listchanges.fish:9
 msgid "Avoid changelogs from db in named file"
-msgstr ""
+msgstr "Änderungsprotokolle aus der Datenbank der benannten Datei vermeiden"
 
 #: init/completions/apt-listchanges.fish:10
 msgid "Select display"
-msgstr "Grafik-Anzeige auswählen"
+msgstr "Grafikanzeige auswählen"
 
 #: init/completions/apt-listchanges.fish:11
 msgid "Insert header"
-msgstr "Header einfügen"
+msgstr "Kopfzeile einfügen"
 
 #: init/completions/apt-listchanges.fish:12 init/completions/ps.fish:36
 msgid "Display debug info"
@@ -2155,7 +2213,7 @@ msgstr "Debug-Informationen anzeigen"
 
 #: init/completions/apt-listchanges.fish:13
 msgid "Select an option profile"
-msgstr "Options-Profil auswählen"
+msgstr "Optionsprofil auswählen"
 
 #: init/completions/apt-move.fish:2
 msgid "Generate master file"
@@ -2197,7 +2255,7 @@ msgstr "Alias für 'update'"
 
 #: init/completions/apt-move.fish:11
 msgid "Download package missing from mirror"
-msgstr "Fehlende Pakete vom Spiegelserver abrufen"
+msgstr "Fehlende Pakete vom Spiegelserver herunterladen"
 
 #: init/completions/apt-move.fish:12
 msgid "Sync packages installed"
@@ -2209,7 +2267,8 @@ msgstr "Die auf der Befehlszeile angegebene Datei verschieben"
 
 #: init/completions/apt-move.fish:15
 msgid "List packags that may serve as input to mirrorbin or mirrorsource"
-msgstr "Pakete anzeigen, die als Quelle für mirrorbin oder mirrorsource dienen können"
+msgstr ""
+"Pakete auflisten, die als Quelle für mirrorbin oder mirrorsource dienen können"
 
 #: init/completions/apt-move.fish:16
 msgid "Fetch package from STDIN"
@@ -2217,7 +2276,7 @@ msgstr "Paket über Standardeingabe lesen"
 
 #: init/completions/apt-move.fish:17
 msgid "Fetch source package from STDIN"
-msgstr "Quell-Paket über Standardeingabe lesen"
+msgstr "Quellpaket über Standardeingabe lesen"
 
 #: init/completions/apt-move.fish:18
 msgid "Process all packages"
@@ -2253,7 +2312,7 @@ msgstr "Zu importierendes Verzeichnis"
 
 #: init/completions/apt-proxy-import.fish:8
 msgid "Change to user"
-msgstr "Wechsel zu Anwender"
+msgstr "Wechsel zu Benutzer"
 
 #: init/completions/apt-proxy-import.fish:9
 msgid "Debug level[default 0]"
@@ -2261,7 +2320,7 @@ msgstr "Debug-Grad [Standard 0]"
 
 #: init/completions/apt-rdepends.fish:3
 msgid "Show bulid dependencies"
-msgstr "Erstellungs-Abhängigkeiten anzeigen"
+msgstr "Erstellungsabhängigkeiten anzeigen"
 
 #: init/completions/apt-rdepends.fish:4
 msgid "Generate a dotty graph"
@@ -2273,23 +2332,29 @@ msgstr "Status der Abhängigkeiten anzeigen"
 
 #: init/completions/apt-rdepends.fish:6
 msgid "List packages depending on"
-msgstr "Pakete anzeigen, die abhängen von "
+msgstr "Pakete auflisten, die abhängen von "
 
 #: init/completions/apt-rdepends.fish:7
 msgid "Comma-separated list of dependancy types to follow recursively"
-msgstr "Komma-getrennte Liste der Abhängigkeitstypen, die rekursiv abgearbeitet werden"
+msgstr ""
+"Komma-getrennte Liste der Abhängigkeitstypen, die rekursiv abgearbeitet werden"
 
 #: init/completions/apt-rdepends.fish:8
 msgid "Comma-separated list of dependancy types to show"
-msgstr "Komma-getrennte Liste zu zeigender Abhängigkeitstypen"
+msgstr "Komma-getrennte Liste anzuzeigender Abhängigkeitstypen"
 
 #: init/completions/apt-rdepends.fish:9
-msgid "Comma-separated list of package installation states to follow recursively"
-msgstr "Komma-getrennte Liste von Paket-Installations-Status, die rekursiv verarbeitet werden"
+msgid ""
+"Comma-separated list of package installation states to follow recursively"
+msgstr ""
+"Komma-getrennte Liste vom Paketinstallationsstatus, die rekursiv "
+"verarbeitet werden"
 
 #: init/completions/apt-rdepends.fish:10
 msgid "Comma-separated list of package installation states to show"
-msgstr "Komma-getrennte Liste von Paket-Installations-Status, die angezeigt werden sollen"
+msgstr ""
+"Komma-getrennte Liste vom Paketinstallationsstatus, die angezeigt werden "
+"sollen"
 
 #: init/completions/apt-rdepends.fish:11
 msgid "Display man page"
@@ -2319,15 +2384,15 @@ msgstr "APT-Listenverzeichnis angeben"
 
 #: init/completions/apt-show-source.fish:7
 msgid "List PKG info"
-msgstr "PKG-Information anzeigen"
+msgstr "PKG-Information auflisten"
 
 #: init/completions/apt-show-source.fish:9
 msgid "Print all source packages with version"
-msgstr "Alle Quell-Pakete mit Version anzeigen"
+msgstr "Alle Quellpakete mit Version ausgeben"
 
 #: init/completions/apt-show-versions.fish:3
 msgid "Print PKG versions"
-msgstr "PKG-Versionen anzeigen"
+msgstr "PKG-Versionen ausgeben"
 
 #: init/completions/apt-show-versions.fish:4
 msgid "Using regex"
@@ -2335,19 +2400,19 @@ msgstr "Regulären Ausdruck benutzen"
 
 #: init/completions/apt-show-versions.fish:5
 msgid "Print only upgradeable packages"
-msgstr "Nur aktualisierbare Pakete anzeigen"
+msgstr "Nur aktualisierbare Pakete ausgeben"
 
 #: init/completions/apt-show-versions.fish:6
 msgid "Print all versions"
-msgstr "Alle Versionen anzeigen"
+msgstr "Alle Versionen ausgeben"
 
 #: init/completions/apt-show-versions.fish:7
 msgid "Print package name/distro"
-msgstr "Paketname/Distribution anzeigen"
+msgstr "Paketname/Distribution ausgeben"
 
 #: init/completions/apt-show-versions.fish:8
 msgid "Print verbose info"
-msgstr "Ausführliche Informationen anzeigen"
+msgstr "Ausführliche Informationen ausgeben"
 
 #: init/completions/apt-show-versions.fish:9
 msgid "Init or update cache only"
@@ -2375,15 +2440,15 @@ msgstr "Konfigurationsdatei"
 
 #: init/completions/apt-spy.fish:6
 msgid "Finish after number of servers"
-msgstr "Nach Anzahl Server beenden"
+msgstr "Nach Anzahl der Server beenden"
 
 #: init/completions/apt-spy.fish:7
 msgid "File to grab servers"
-msgstr ""
+msgstr "Datei zum Zugriff auf Server"
 
 #: init/completions/apt-spy.fish:8
 msgid "File as input"
-msgstr "Datei als Eingabe verwenden"
+msgstr "Datei als Eingabe"
 
 #: init/completions/apt-spy.fish:9
 msgid "Mirror-list file"
@@ -2403,11 +2468,11 @@ msgstr "Komma-getrennte Länderliste"
 
 #: init/completions/apt-spy.fish:13
 msgid "How long in sec to download"
-msgstr "Dauer des Abrufs in Sekunden"
+msgstr "Dauer des Herunterladens in Sekunden"
 
 #: init/completions/apt-spy.fish:14
 msgid "Custom URL to get mirror list"
-msgstr "Angepasste URL zum Abruf der Spiegel-Liste"
+msgstr "Angepasste URL zum Abruf der Spiegelliste"
 
 #: init/completions/apt-spy.fish:15
 msgid "Write top servers to file"
@@ -2419,7 +2484,7 @@ msgstr "Anzahl der Top-Server"
 
 #: init/completions/apt-spy.fish:17
 msgid "Update mirror list"
-msgstr "Spiegel-Liste aktualisieren"
+msgstr "Spiegelliste aktualisieren"
 
 #: init/completions/apt-spy.fish:18
 msgid "Version number"
@@ -2427,23 +2492,23 @@ msgstr "Versionsnummer"
 
 #: init/completions/apt-src.fish:3
 msgid "Update list of source packages"
-msgstr "Liste der Quell-Pakete aktualisieren"
+msgstr "Liste der Quellpakete aktualisieren"
 
 #: init/completions/apt-src.fish:4
 msgid "Install source packages"
-msgstr "Quell-Pakete installieren"
+msgstr "Quellpakete installieren"
 
 #: init/completions/apt-src.fish:5
 msgid "Upgrade source packages"
-msgstr "Quell-Pakete aktualisieren"
+msgstr "Quellpakete aktualisieren"
 
 #: init/completions/apt-src.fish:6
 msgid "Remove source packages"
-msgstr "Quell-Pakete entfernen"
+msgstr "Quellpakete entfernen"
 
 #: init/completions/apt-src.fish:7 init/completions/apt-src.fish:14
 msgid "Build source packages"
-msgstr "Quell-Pakete erstellen"
+msgstr "Quellpakete erstellen"
 
 #: init/completions/apt-src.fish:8
 msgid "Clean source packages"
@@ -2455,7 +2520,7 @@ msgstr "Bekannte Quellbäume entdecken"
 
 #: init/completions/apt-src.fish:10
 msgid "List installed source package\\(s\\)"
-msgstr "Installierte(s) Quellpaket(e) anzeigen"
+msgstr "Installierte(s) Quellpaket(e) auflisten"
 
 #: init/completions/apt-src.fish:11
 msgid "Root source tree"
@@ -2463,11 +2528,11 @@ msgstr "Ursprung des Quellbaumes"
 
 #: init/completions/apt-src.fish:12
 msgid "Version of source package"
-msgstr "Version des Quell-Paketes"
+msgstr "Version des Quellpaketes"
 
 #: init/completions/apt-src.fish:13
 msgid "Name of the source package"
-msgstr "Name des Quell-Paketes"
+msgstr "Name des Quellpaketes"
 
 #: init/completions/apt-src.fish:15
 msgid "Install after build"
@@ -2507,7 +2572,7 @@ msgstr "Ausgabe nach /dev/null"
 
 #: init/completions/apt-src.fish:24
 msgid "Output trace"
-msgstr "Ausgabe-Verfolgung"
+msgstr "Ausgabeverfolgung"
 
 #: init/completions/apt-zip-inst.fish:4 init/completions/apt-zip-list.fish:4
 msgid "Removable medium"
@@ -2515,7 +2580,7 @@ msgstr "Wechselbares Medium"
 
 #: init/completions/apt-zip-inst.fish:5 init/completions/apt-zip-list.fish:5
 msgid "Select an action"
-msgstr "Eine Aktion wählen"
+msgstr "Eine Aktion auswählen"
 
 #: init/completions/apt-zip-inst.fish:6 init/completions/apt-zip-list.fish:6
 msgid "List of packages to install"
@@ -2527,7 +2592,7 @@ msgstr "Kaputte Option bereinigen"
 
 #: init/completions/apt-zip-inst.fish:8 init/completions/apt-zip-list.fish:8
 msgid "Specify a non-mountpoint dir"
-msgstr "Verzeichnis angeben, das kein Einhäng-Verzeichnis ist"
+msgstr "Verzeichnis angeben, das kein Einhängeverzeichnis ist"
 
 #: init/completions/apt-zip-list.fish:9
 msgid "Select a method"
@@ -2547,7 +2612,7 @@ msgstr "Numerische Adresse"
 
 #: init/completions/arp.fish:4
 msgid "Class of hw type"
-msgstr "Klasse des Hardware-Typs"
+msgstr "Klasse des Hardwaretyps"
 
 #: init/completions/arp.fish:5
 msgid "Show arp entries"
@@ -2559,11 +2624,11 @@ msgstr "Eintrag für Hostname entfernen"
 
 #: init/completions/arp.fish:7
 msgid "Use hardware address"
-msgstr "Hardware-Adresse verwenden"
+msgstr "Hardwareadresse verwenden"
 
 #: init/completions/arp.fish:8
 msgid "Select interface"
-msgstr "Schnittstelle wählen"
+msgstr "Schnittstelle auswählen"
 
 #: init/completions/arp.fish:9
 msgid "Manually create ARP address"
@@ -2575,11 +2640,11 @@ msgstr "Adresse aus Dateiname entnehmen, Standard /etc/ethers"
 
 #: init/completions/atd.fish:2
 msgid "Limiting load factor"
-msgstr ""
+msgstr "Auslastungsbegrenzung"
 
 #: init/completions/atd.fish:3
 msgid "Minimum interval in seconds"
-msgstr "Minimal-Intervall in Sekunden"
+msgstr "Minimalintervall in Sekunden"
 
 #: init/completions/atd.fish:4 init/completions/make.fish:11
 msgid "Debug mode"
@@ -2587,15 +2652,15 @@ msgstr "Debug-Modus"
 
 #: init/completions/atd.fish:5
 msgid "Process at queue only once"
-msgstr "at-Queue nur einmal verarbeiten"
+msgstr "at-Warteschlange nur einmal verarbeiten"
 
 #: init/completions/at.fish:3 init/completions/atq.fish:3
 msgid "Use specified queue"
-msgstr "Angegebene Queue benutzen"
+msgstr "Angegebene Warteschlange benutzen"
 
 #: init/completions/at.fish:4
 msgid "Send mail to user"
-msgstr "Mail an Anwender senden"
+msgstr "Mail an Benutzer senden"
 
 #: init/completions/at.fish:5
 msgid "Read job from file"
@@ -2615,7 +2680,7 @@ msgstr "Zeige Zeit"
 
 #: init/completions/at.fish:9
 msgid "Print the jobs listed"
-msgstr "Aufgelistete Jobs anzeigen"
+msgstr "Aufgelistete Jobs ausgeben"
 
 #: init/completions/bc.fish:3
 msgid "Force interactive mode"
@@ -2623,7 +2688,7 @@ msgstr "Interaktiven Modus erzwingen"
 
 #: init/completions/bc.fish:4
 msgid "Define math library"
-msgstr "Mathematik-Bibliothek definieren"
+msgstr "Mathematikbibliothek definieren"
 
 #: init/completions/bc.fish:5
 msgid "Give warnings for extensions to POSIX bc"
@@ -2631,11 +2696,11 @@ msgstr "Bei Erweiterungen zu POSIX bc Warnungen ausgeben"
 
 #: init/completions/bc.fish:6
 msgid "Process exactly POSIX bc"
-msgstr ""
+msgstr "POSIX bc genau verarbeiten"
 
 #: init/completions/bc.fish:7
 msgid "Do not print the GNU welcome"
-msgstr "GNU welcome-Meldung nicht anzeigen"
+msgstr "GNU welcome-Meldung nicht ausgeben"
 
 #: init/completions/btdownloadheadless.py.fish:4
 msgid "Maximum uploads at once"
@@ -2643,7 +2708,8 @@ msgstr "Maximale gleichzeitige Übertragungen"
 
 #: init/completions/btdownloadheadless.py.fish:5
 msgid "Number of seconds between keepalives"
-msgstr "Anzahl Sekunden zwischen Meldungen zur Aufrechterhaltung der Verbindung"
+msgstr ""
+"Anzahl Sekunden zwischen Meldungen zur Aufrechterhaltung der Verbindung"
 
 #: init/completions/btdownloadheadless.py.fish:6
 msgid "Bytes per request"
@@ -2655,7 +2721,7 @@ msgstr "Anforderungen per Pipe"
 
 #: init/completions/btdownloadheadless.py.fish:8
 msgid "Maximum length prefix encoding"
-msgstr ""
+msgstr "Maximallänge der Präfix-Kodierung"
 
 #: init/completions/btdownloadheadless.py.fish:9
 msgid "IP to report to the tracker"
@@ -2683,19 +2749,19 @@ msgstr "Target für lokale Datei"
 
 #: init/completions/btdownloadheadless.py.fish:15
 msgid "Time to close inactive socket"
-msgstr "Zeit zum Schliessen inaktiver Sockets"
+msgstr "Zeit zum Schließen inaktiver Sockets"
 
 #: init/completions/btdownloadheadless.py.fish:16
 msgid "Time between checking timeouts"
-msgstr "Zeit zwischen Zeitablauf-Überprüfung"
+msgstr "Zeit zwischen der Prüfung von Zeitüberschreitungen"
 
 #: init/completions/btdownloadheadless.py.fish:17
 msgid "Maximum outgoing slice length"
-msgstr ""
+msgstr "Maximale ausgehende Slice-Länge"
 
 #: init/completions/btdownloadheadless.py.fish:18
 msgid "Maximum time to guess rate"
-msgstr ""
+msgstr "Höchstdauer für die Ratequote"
 
 #: init/completions/btdownloadheadless.py.fish:19
 msgid "IP to bind to locally"
@@ -2707,19 +2773,20 @@ msgstr "Zeit zwischen Bildschirmaktualisierungen"
 
 #: init/completions/btdownloadheadless.py.fish:21
 msgid "Time to wait between requesting more peers"
-msgstr ""
+msgstr "Wartezeit zwischen den Anfragen weiterer Peers"
 
 #: init/completions/btdownloadheadless.py.fish:22
 msgid "Minimum number of peers to not do requesting"
-msgstr ""
+msgstr "Mindestanzahl an Peers, um keine Anfragen zu stellen"
 
 #: init/completions/btdownloadheadless.py.fish:23
 msgid "Number of seconds before assuming http timeout"
-msgstr "Anzahl Sekunden, bevor ein http-Zeitablauf vermutet wird"
+msgstr "Anzahl Sekunden, bevor eine http-Zeitüberschreitung vermutet wird"
 
 #: init/completions/btdownloadheadless.py.fish:24
 msgid "Number of peers at which to stop initiating new connections"
 msgstr ""
+"Anzahl an Peers bei denen die Initiierung von neuen Verbindungen gestoppt wird"
 
 #: init/completions/btdownloadheadless.py.fish:25
 msgid "Maximum number of connections to allow"
@@ -2731,11 +2798,13 @@ msgstr "Hashes auf der Platte prüfen"
 
 #: init/completions/btdownloadheadless.py.fish:27
 msgid "Maximum kB/s to upload at"
-msgstr "Maximale Upload-Geschwindigkeit in kB/s"
+msgstr "Maximale Hochladegeschwindigkeit in kB/s"
 
 #: init/completions/btdownloadheadless.py.fish:28
 msgid "Seconds to wait for data to come in before assuming choking"
 msgstr ""
+"Sekunden, in denen auf Daten gewartet werden soll, bevor eine Drosselung "
+"angenommen wird"
 
 #: init/completions/btdownloadheadless.py.fish:29
 msgid "Whether to display diagnostic info"
@@ -2744,18 +2813,20 @@ msgstr "Sollen diagnostische Informationen angezeigt werden"
 #: init/completions/btdownloadheadless.py.fish:30
 msgid "Number of downloads at which to switch from random to rarest first"
 msgstr ""
+"Anzahl an Herunterladevorgängen bei denen vom Zufälligen zuerst zum "
+"Seltensten zuerst umgeschaltet wird"
 
 #: init/completions/btdownloadheadless.py.fish:31
 msgid "Number of uploads to fill out to with optimistic unchokes"
-msgstr ""
+msgstr "Anzahl der Hochladevorgänge mit besonders optimistischen Unchokes"
 
 #: init/completions/btdownloadheadless.py.fish:32
 msgid "Whether to inform the user that hash failures occur"
-msgstr ""
+msgstr "Sollen die Benutzer informiert werden, wenn Hash-Fehler auftreten"
 
 #: init/completions/bunzip2.fish:9
 msgid "Decompress to stdout"
-msgstr "Auf Standardausgabe entkomprimieren"
+msgstr "Auf Standardausgabe dekomprimieren"
 
 #: init/completions/bunzip2.fish:10 init/completions/bzip2.fish:11
 #: init/completions/gunzip.fish:7 init/completions/gzip.fish:9
@@ -2774,7 +2845,7 @@ msgstr "Speicherbedarf reduzieren"
 
 #: init/completions/bunzip2.fish:13 init/completions/bzip2.fish:15
 msgid "Print compression ratios"
-msgstr "Komprimierungsratio anzeigen"
+msgstr "Kompressionsraten ausgeben"
 
 #: init/completions/bunzip2.fish:14 init/completions/bzip2.fish:16
 #: init/completions/gunzip.fish:10 init/completions/gzip.fish:12
@@ -2819,7 +2890,7 @@ msgstr "Nicht-leere Zeilen nummerieren"
 
 #: init/completions/cat.fish:3
 msgid "Escape non-printing characters except tab"
-msgstr "Nicht druckbare Zeichen ausser Tabulator maskieren"
+msgstr "Nicht druckbare Zeichen außer Tabulator maskieren"
 
 #: init/completions/cat.fish:4
 msgid "Display $ at end of line"
@@ -2835,7 +2906,7 @@ msgstr "Nicht mehr als eine leere Zeile"
 
 #: init/completions/cat.fish:7
 msgid "Escape non-printing characters except newline"
-msgstr "Nicht druckbare Zeichen ausser Neuer-Zeile maskieren"
+msgstr "Nicht druckbare Zeichen außer Neuer-Zeile maskieren"
 
 #: init/completions/cat.fish:8
 msgid "Escape tab"
@@ -2843,7 +2914,7 @@ msgstr "Tabulator maskieren"
 
 #: init/completions/cat.fish:9
 msgid "Escape non-printing except newline and tab"
-msgstr "Nicht druckbare Zeichen ausser Neuer-Zeile und Tabulator maskieren"
+msgstr "Nicht druckbare Zeichen außer Neuer-Zeile und Tabulator maskieren"
 
 #: init/completions/chgrp.fish:2 init/completions/chown.fish:1
 msgid "Output diagnostic for changed files"
@@ -2877,7 +2948,7 @@ msgstr "Informationen zu jeder Datei ausgeben"
 #: init/completions/chown.fish:11 init/completions/chown.fish:12
 #: init/completions/w.fish:6
 msgid "Username"
-msgstr "Anwendername"
+msgstr "Benutzername"
 
 #: init/completions/commandline.fish:1
 msgid "Add text to the end of the selected area"
@@ -2885,11 +2956,11 @@ msgstr "Text am Ende des selektierten Bereichs anfügen"
 
 #: init/completions/commandline.fish:2
 msgid "Add text at cursor"
-msgstr "Text an Cursor-Position hinzufügen"
+msgstr "Text an Cursorposition hinzufügen"
 
 #: init/completions/commandline.fish:3
 msgid "Replace selected part"
-msgstr "selektierten Bereich ersetzen"
+msgstr "Selektierten Bereich ersetzen"
 
 #: init/completions/commandline.fish:5
 msgid "Select job under cursor"
@@ -2913,7 +2984,7 @@ msgstr "Nur Teil der Befehlszeile vor dem Curser zurückgeben"
 
 #: init/completions/commandline.fish:11
 msgid "Inject readline functions to reader"
-msgstr ""
+msgstr "readline-Funktion zum reader injizieren"
 
 #: init/completions/complete.fish:1
 msgid "Command to add completion to"
@@ -2993,11 +3064,11 @@ msgstr "Konfiguration für das Erstellen auf BUILD"
 
 #: init/completions/configure.fish:11
 msgid "Cross-compile to build programs to run on HOST"
-msgstr "Cross-Compilierung zur Programmerstellung für RECHNER"
+msgstr "Cross-Kompilierung zur Programmerstellung auf RECHNER"
 
 #: init/completions/configure.fish:12
 msgid "Configure for building compilers for TARGET"
-msgstr "Konfiguration zur Compiler-Erstellung für TARGET"
+msgstr "Konfiguration zur Kompilererstellung für ZIEL"
 
 #: init/completions/cut.fish:1
 msgid "Ouput byte range"
@@ -3009,15 +3080,15 @@ msgstr "Zeichenbereich ausgeben"
 
 #: init/completions/cut.fish:3
 msgid "Select field delimiter"
-msgstr "Feldbegrenzer wählen"
+msgstr "Feldbegrenzer auswählen"
 
 #: init/completions/cut.fish:4
 msgid "Select fields"
-msgstr "Felder wählen"
+msgstr "Felder auswählen"
 
 #: init/completions/cut.fish:5
 msgid "Dont split mutibyte characters"
-msgstr "Multibyte-Zeichen nicht trennen"
+msgstr "Multibytezeichen nicht trennen"
 
 #: init/completions/cut.fish:6
 msgid "Do not print lines without delimiter"
@@ -3025,7 +3096,7 @@ msgstr "Zeilen nicht ohne Begrenzer ausgeben"
 
 #: init/completions/cut.fish:7
 msgid "Select output delimiter"
-msgstr "Ausgabebegrenzer setzen"
+msgstr "Ausgabebegrenzer festlegen"
 
 #: init/completions/cvs.fish:5
 msgid "Add a new file/directory to the repository"
@@ -3037,7 +3108,7 @@ msgstr "Administrationsoberfläche für rcs"
 
 #: init/completions/cvs.fish:7
 msgid "Show last revision where each line was modified"
-msgstr "Letzte Revision zeigen, bei der jede Zeile verändert wurde"
+msgstr "Letzte Revision anzeigen, bei der jede Zeile verändert wurde"
 
 #: init/completions/cvs.fish:8
 msgid "Checkout sources for editing"
@@ -3049,7 +3120,7 @@ msgstr "Dateien in das Paketdepot übertragen"
 
 #: init/completions/cvs.fish:10
 msgid "Show differences between revisions"
-msgstr "Unterschiede zwischen Revisionen zeigen"
+msgstr "Unterschiede zwischen Revisionen anzeigen"
 
 #: init/completions/cvs.fish:11
 msgid "Get ready to edit a watched file"
@@ -3065,11 +3136,11 @@ msgstr "Quellen aus CVS exportieren, ähnelt checkout"
 
 #: init/completions/cvs.fish:14
 msgid "Show repository access history"
-msgstr "Zugriffsverlauf des Paketdepots zeigen"
+msgstr "Zugriffsverlauf des Paketdepots anzeigen"
 
 #: init/completions/cvs.fish:15
 msgid "Import sources into CVS, using vendor branches"
-msgstr ""
+msgstr "Quellen in CVS importieren, verwende Herstellerzweige"
 
 #: init/completions/cvs.fish:16
 msgid "Create a CVS repository if it doesnt exist"
@@ -3113,7 +3184,7 @@ msgstr "Einen Eintrag aus dem Paketdepot entfernen"
 
 #: init/completions/cvs.fish:26
 msgid "Print out history information for a module"
-msgstr "Verlaufs-Informationen für ein Modul ausgeben"
+msgstr "Verlaufsinformationen für ein Modul ausgeben"
 
 #: init/completions/cvs.fish:27
 msgid "Add a symbolic tag to a module"
@@ -3129,11 +3200,12 @@ msgstr "Statusinformationen zu ausgecheckten Dateien anzeigen"
 
 #: init/completions/cvs.fish:30
 msgid "Add a symbolic tag to checked out version of files"
-msgstr "Der Version von ausgecheckten Dateien eine symbolische Markierung hinzufügen"
+msgstr ""
+"Der Version von ausgecheckten Dateien eine symbolische Markierung hinzufügen"
 
 #: init/completions/cvs.fish:31
 msgid "Undo an edit command"
-msgstr "Edit-Befehl rückgängig machen"
+msgstr "Bearbeiten-Befehl rückgängig machen"
 
 #: init/completions/cvs.fish:32
 msgid "Bring work tree in sync with repository"
@@ -3141,7 +3213,7 @@ msgstr "Arbeitsbaum mit Paketdepot synchronisieren"
 
 #: init/completions/cvs.fish:34
 msgid "Set watches"
-msgstr "Datei-Beobachtungen einstellen"
+msgstr "Dateibeobachtungen festlegen"
 
 #: init/completions/cvs.fish:35
 msgid "See who is watching a file"
@@ -3181,7 +3253,7 @@ msgstr "tmpdir für temporäre Dateien benutzen"
 
 #: init/completions/cvs.fish:46
 msgid "Use editor for editing log information"
-msgstr "Editor zum Editieren der Log-Information verwenden"
+msgstr "Editor zum Editieren der Loginformation verwenden"
 
 #: init/completions/cvs.fish:48
 msgid "Do not use the ~/.cvsrc file"
@@ -3201,7 +3273,7 @@ msgstr "Sämtlichen Netzverkehr authentifizieren"
 
 #: init/completions/cvs.fish:52
 msgid "Set CVS user variable"
-msgstr "user-Variable für CVS setzen"
+msgstr "CVS-Benutzervariable festlegen"
 
 #: init/completions/darcs.fish:28
 msgid "Create new project"
@@ -3237,11 +3309,11 @@ msgstr "Patches von einem anderen Paketdepot auf dieses kopieren und anwenden"
 
 #: init/completions/darcs.fish:36
 msgid "Send by email a bundle of one or more patches"
-msgstr "Zusammenfassung eines oder mehrerer Patche per E-Mail versenden"
+msgstr "Zusammenfassung eines oder mehrerer Patches per E-Mail versenden"
 
 #: init/completions/darcs.fish:37
 msgid "Apply patches (from an email bundle) to the repository"
-msgstr "Patches (aus einem Email-Paket) auf das Paketdepot anwenden"
+msgstr "Patches (aus einem E-Mail-Paket) auf das Paketdepot anwenden"
 
 #: init/completions/darcs.fish:38
 msgid "Copy and apply patches from this repository to another one"
@@ -3257,7 +3329,7 @@ msgstr "Gibt eine Zusammenfassung des Depotverlaufs ähnlich einem Changelog"
 
 #: init/completions/darcs.fish:41
 msgid "Remove recorded patches without changing the working copy"
-msgstr "Aufgezeichnete Patche entfernen, ohne die Arbeitskopie zu ändern"
+msgstr "Aufgezeichnete Patche ohne Änderung der Arbeitskopie entfernen"
 
 #: init/completions/darcs.fish:42
 msgid "Replace a recorded patch with a better version"
@@ -3269,15 +3341,19 @@ msgstr "Zur aufgezeichneten Version zurück (nur beim ersten Mal sicher)"
 
 #: init/completions/darcs.fish:44
 msgid "Undo the last revert (may fail if changes after the revert)"
-msgstr "Letzte Rücknahme rückgängig machen (kann versagen, falls nach der Rücknahme Änderungen vorgenommen wurden)"
+msgstr ""
+"Letzte Rücknahme rückgängig machen (kann versagen, falls nach der Rücknahme "
+"Änderungen vorgenommen wurden)"
 
 #: init/completions/darcs.fish:45
 msgid "Opposite of pull; unsafe if the patch is not in remote repo"
-msgstr "Gegenstück zu pull, unsicher, wenn der Patch nicht im entfernten Paketdepot ist"
+msgstr ""
+"Gegenstück zu pull, unsicher, wenn der Patch nicht im entfernten Paketdepot "
+"ist"
 
 #: init/completions/darcs.fish:46
 msgid "Record an inverse patch without changing the working copy"
-msgstr ""
+msgstr "Einen inversen Patch ohne Änderung der Arbeitskopie aufzeichnen"
 
 #: init/completions/darcs.fish:47
 msgid "Tag the contents of the repository with a version name"
@@ -3285,7 +3361,7 @@ msgstr "Inhalte des Paketdepots mit einem Versionsnamen markieren"
 
 #: init/completions/darcs.fish:48
 msgid "Set a value for a preference (test, predist, ...)"
-msgstr "Wert für eine Einstellung setzen (test, predist, ...)"
+msgstr "Wert für eine Einstellung (test, predist, ...) festlegen"
 
 #: init/completions/darcs.fish:49
 msgid "Create a diff between two versions of the repository"
@@ -3309,7 +3385,7 @@ msgstr "Alle Konflikte in der Arbeitskopie für manuelle Resolution markieren"
 
 #: init/completions/darcs.fish:54
 msgid "Create a distribution tarball"
-msgstr "Distributions-Tardatei erstellen"
+msgstr "Distributions-tarball erstellen"
 
 #: init/completions/darcs.fish:55
 msgid "Locate the most recent version lacking an error"
@@ -3329,7 +3405,7 @@ msgstr "Diesen Befehl deaktivieren"
 
 #: init/completions/darcs.fish:63
 msgid "Specify the repository directory in which to run"
-msgstr "Das Paketdepot-Verzeichnis angeben, in dem gearbeitet wird"
+msgstr "Das Paketdepotverzeichnis angeben, in dem gearbeitet wird"
 
 #: init/completions/darcs.fish:71
 msgid "Name of patch"
@@ -3337,7 +3413,7 @@ msgstr "Name des Patch"
 
 #: init/completions/darcs.fish:72 init/completions/darcs.fish:171
 msgid "Specify author id"
-msgstr "Autor-ID angeben"
+msgstr "Autorkennung angeben"
 
 #: init/completions/darcs.fish:73
 msgid "Give patch name and comment in file"
@@ -3349,8 +3425,12 @@ msgid "Answer yes to all patches"
 msgstr "Alle Patches mit ja beantworten"
 
 #: init/completions/darcs.fish:75
-msgid "In addition to modifications, look for files that are not boring, and thus are potentially pending addition"
+msgid ""
+"In addition to modifications, look for files that are not boring, and thus "
+"are potentially pending addition"
 msgstr ""
+"Neben Änderungen auch nach interessanten Dateien suchen, die möglicherweise "
+"hinzugefügt werden"
 
 #: init/completions/darcs.fish:76
 msgid "Delete the logfile when done"
@@ -3398,7 +3478,7 @@ msgstr "Die Eingabe aus einer Pipe erwarten"
 #: init/completions/darcs.fish:85 init/completions/darcs.fish:104
 #: init/completions/darcs.fish:134 init/completions/darcs.fish:177
 msgid "Prompt user interactively"
-msgstr "Anwender interaktiv fragen"
+msgstr "Benutzer interaktiv fragen"
 
 #: init/completions/darcs.fish:86
 msgid "Ask for extra dependencies"
@@ -3410,7 +3490,7 @@ msgstr "Nicht nach zusätzlichen Abhängigkeiten fragen"
 
 #: init/completions/darcs.fish:88
 msgid "Edit the long comment by default"
-msgstr "Fehlwertmäßig den langen Kommentar editieren"
+msgstr "Standardmäßig den langen Kommentar editieren"
 
 #: init/completions/darcs.fish:89
 msgid "Don't give a long comment"
@@ -3426,8 +3506,12 @@ msgid "Don't trust the file modification times"
 msgstr "Nicht auf die Veränderungszeiten der Dateien vertrauen"
 
 #: init/completions/darcs.fish:92
-msgid "Don't look for any files or directories that could be added, and don't add them automatically"
-msgstr "Nicht nach Dateien und Verzeichnissen suchen, die hinzugefügt werden sollen und diese nicht automatisch hinzufügen "
+msgid ""
+"Don't look for any files or directories that could be added, and don't add "
+"them automatically"
+msgstr ""
+"Nicht nach Dateien und Verzeichnissen suchen, die hinzugefügt werden sollen "
+"und diese nicht automatisch hinzufügen "
 
 #: init/completions/darcs.fish:97 init/completions/darcs.fish:168
 msgid "Select patches matching REGEXP"
@@ -3473,11 +3557,11 @@ msgstr "Nicht automatisch Abhängigkeiten erfüllen"
 
 #: init/completions/darcs.fish:114 init/completions/darcs.fish:189
 msgid "Set default repository [DEFAULT]"
-msgstr "Standard-Paketdepot [DEFAULT] setzen"
+msgstr "Standardpaketdepot [STANDARD] festlegen"
 
 #: init/completions/darcs.fish:115 init/completions/darcs.fish:190
 msgid "Don't set default repository"
-msgstr "Standard-Paketdepot nicht setzen"
+msgstr "Standardpaketdepot nicht festlegen"
 
 #: init/completions/darcs.fish:116 init/completions/darcs.fish:143
 msgid "Make scripts executable"
@@ -3489,19 +3573,21 @@ msgstr "Skripte nicht ausführbar machen"
 
 #: init/completions/darcs.fish:123
 msgid "Verify that the patch was signed by a key in PUBRING"
-msgstr "Überprüfen, das der Patch mit einem Schlüsel aus PUBRING signiert wurde"
+msgstr ""
+"Überprüfen, das der Patch mit einem Schlüssel aus PUBRING signiert wurde"
 
 #: init/completions/darcs.fish:124
 msgid "Verify using openSSL with authorized keys from file 'KEYS'"
-msgstr "Mittels openSSl mit autorisierten Schlüsseln aus Datei 'KEYS' überprüfen"
+msgstr ""
+"Mittels openSSL und autorisierten Schlüsseln aus der Datei 'KEYS' überprüfen"
 
 #: init/completions/darcs.fish:125 init/completions/darcs.fish:191
 msgid "Specify sendmail command"
-msgstr "sendmail-Befehl angegeben"
+msgstr "sendmail-Befehl angeben"
 
 #: init/completions/darcs.fish:126
 msgid "Reply to email-based patch using FROM address"
-msgstr "Auf Email-basierten Patch mittels FROM-Adresse antworten"
+msgstr "Auf E-Mail-basierten Patch mittels FROM-Adresse antworten"
 
 #: init/completions/darcs.fish:127 init/completions/darcs.fish:180
 msgid "Mail results to additional EMAIL(s). Requires --reply"
@@ -3525,7 +3611,7 @@ msgstr "Abbruch bei Patchen, die Konflikte erzeugen (Standard)"
 
 #: init/completions/darcs.fish:140
 msgid "Forward unsigned messages without extra header"
-msgstr "Unsignierte Nachrichten ohne zusätzliche Header-Zeile weiterleiten"
+msgstr "Unsignierte Nachrichten ohne zusätzliche Kopfzeile weiterleiten"
 
 #: init/completions/darcs.fish:150
 msgid "Check the entire repository"
@@ -3537,7 +3623,9 @@ msgstr "Patches seit letztem Prüfpunkt prüfen"
 
 #: init/completions/darcs.fish:161
 msgid "Don't refuse to add files differing only in case"
-msgstr "Hinzufügen von Dateien, die sich nur in Gross-/Kleinschreibung unterscheiden, nicht verweigern"
+msgstr ""
+"Hinzufügen von Dateien, die sich nur in Groß-/Kleinschreibung unterscheiden, "
+"nicht verweigern"
 
 #: init/completions/darcs.fish:172
 msgid "Specify output filename"
@@ -3545,11 +3633,12 @@ msgstr "Ausgabedateiname angeben"
 
 #: init/completions/darcs.fish:173
 msgid "Output patch in a darcs-specific format similar to diff -u"
-msgstr "Patch in einem darcs-spezifischen Format ausgeben, das diff -u entspricht"
+msgstr ""
+"Patch in einem darcs-spezifischen Format ausgeben, das diff -u entspricht"
 
 #: init/completions/darcs.fish:179
 msgid "Specify destination email"
-msgstr "Ziel-Email-Adresse angeben"
+msgstr "Ziel-E-Mail-Adresse angeben"
 
 #: init/completions/darcs.fish:181
 msgid "Sign the patch with your gpg key"
@@ -3557,11 +3646,12 @@ msgstr "Patch mit Ihrem gpg-Schlüssel signieren"
 
 #: init/completions/darcs.fish:182
 msgid "Sign the patch with a given keyid"
-msgstr "Den Patch mit einer angegebenen Schlüssel-ID signieren"
+msgstr "Den Patch mit einer angegebenen Schlüsselkennung signieren"
 
 #: init/completions/darcs.fish:183
 msgid "Sign the patch using openssl with a given private key"
-msgstr "Den Patch unter Benutzung von openssl mit einem privaten Schlüssel signieren"
+msgstr ""
+"Den Patch unter Benutzung von openssl mit einem privaten Schlüssel signieren"
 
 #: init/completions/darcs.fish:184
 msgid "Do not sign the patch"
@@ -3569,7 +3659,7 @@ msgstr "Patch nicht signieren"
 
 #: init/completions/darcs.fish:187
 msgid "Send to context stored in FILENAME"
-msgstr ""
+msgstr "Kontext im DATEINAMEN abgespeichert senden"
 
 #: init/completions/darcs.fish:188
 msgid "Edit the patch bundle description"
@@ -3585,7 +3675,7 @@ msgstr "Keinen unberührten Baum verwenden"
 
 #: init/completions/date.fish:1
 msgid "Display date described by string"
-msgstr "Datum gemäss Zeichenkette anzeigen"
+msgstr "Datum gemäß Zeichenkette anzeigen"
 
 #: init/completions/date.fish:2
 msgid "Display date for each line in file"
@@ -3597,7 +3687,7 @@ msgstr "Ausgabe im ISO 8601-Format"
 
 #: init/completions/date.fish:4 init/completions/touch.fish:9
 msgid "Set time"
-msgstr "Zeit setzen"
+msgstr "Zeit festlegen"
 
 #: init/completions/date.fish:5
 msgid "Output RFC-2822 compliant date string"
@@ -3609,7 +3699,7 @@ msgstr "Letzte Veränderungszeit der Datei anzeigen"
 
 #: init/completions/date.fish:7 init/completions/date.fish:8
 msgid "Print or set Coordinated Universal Time"
-msgstr "Koordinierte Universalzeit (CUT) anzeigen oder setzen"
+msgstr "Koordinierte Universalzeit (CUT) ausgeben oder festlegen"
 
 #: init/completions/df.fish:17 init/completions/du.fish:7
 #: init/completions/ls.fish:22
@@ -3618,7 +3708,7 @@ msgstr "Lesbare Grössen"
 
 #: init/completions/df.fish:18
 msgid "List inode information"
-msgstr "Inode-Information anzeigen"
+msgstr "Inode-Information auflisten"
 
 #: init/completions/df.fish:19 init/completions/du.fish:9
 msgid "Use 1kB block size"
@@ -3626,7 +3716,7 @@ msgstr "Blockgrösse von 1kB verwenden"
 
 #: init/completions/df.fish:20
 msgid "List only local filesystems"
-msgstr "Nur lokale Dateisysteme anzeigen"
+msgstr "Nur lokale Dateisysteme auflisten"
 
 #: init/completions/df.fish:21
 msgid "Use Posix format"
@@ -3660,7 +3750,7 @@ msgstr "Vor Belegungsabruf sync ausführen"
 
 #: init/completions/df.fish:31
 msgid "Print filesystem type"
-msgstr "Dateisystemtyp anzeigen"
+msgstr "Dateisystemtyp ausgeben"
 
 #: init/completions/df.fish:32
 msgid "Excluded filesystem type"
@@ -3672,11 +3762,11 @@ msgstr "Alle Dateisysteme anzeigen"
 
 #: init/completions/df.fish:39
 msgid "Show sizes in gigabytes"
-msgstr "Grösse in Gigabyte anzeigen"
+msgstr "Größe in Gigabyte anzeigen"
 
 #: init/completions/df.fish:40
 msgid "Show sizes in megabytes"
-msgstr "Grösse in Megabyte anzeigen"
+msgstr "Größe in Megabyte anzeigen"
 
 #: init/completions/df.fish:41
 msgid "Print out the previously obtained statistics from the file systems"
@@ -3684,19 +3774,19 @@ msgstr "Bisher erhaltene Statistiken über die Dateisysteme ausgeben"
 
 #: init/completions/diff.fish:2
 msgid "Ignore case differences"
-msgstr "Unterschiede bei Gross-/Kleinschreibung ignorieren"
+msgstr "Unterschiede bei Groß-/Kleinschreibung ignorieren"
 
 #: init/completions/diff.fish:3
 msgid "Ignore case when comparing file names"
-msgstr "Gross-/Kleinschreibung beim Dateinamen-Vergleich ignorieren"
+msgstr "Groß-/Kleinschreibung beim Dateinamenvergleich ignorieren"
 
 #: init/completions/diff.fish:4
 msgid "Consider case when comparing file names"
-msgstr "Gross-/Kleinschreibung beim Dateinamen-Vergleich beachten"
+msgstr "Groß-/Kleinschreibung beim Dateinamenvergleich beachten"
 
 #: init/completions/diff.fish:5
 msgid "Ignore changes due to tab expansion"
-msgstr "Änderungen aufgrund von Tab-Ausweitung ignorieren"
+msgstr "Änderungen aufgrund von Tabulatorausweitung ignorieren"
 
 #: init/completions/diff.fish:6
 msgid "Ignore changes in the amount of white space"
@@ -3756,7 +3846,7 @@ msgstr "Ausgabe in zwei Spalten"
 
 #: init/completions/diff.fish:20
 msgid "Output at most NUM print columns"
-msgstr "Gebe maximal NUM Druckspalten aus"
+msgstr "Gebe maximale NUM Druckspalten aus"
 
 #: init/completions/diff.fish:21
 msgid "Try to find a smaller set of changes"
@@ -3780,11 +3870,11 @@ msgstr "Größe für alle Dateien anzeigen"
 
 #: init/completions/du.fish:2
 msgid "Print file size, not disk usage"
-msgstr "Dateigröße statt Plattenbelegung anzeigen"
+msgstr "Dateigröße statt Plattenbelegung ausgeben"
 
 #: init/completions/du.fish:4
 msgid "Use 1B block size"
-msgstr "1B-Blockgrösse verwenden"
+msgstr "1B-Blockgröße verwenden"
 
 #: init/completions/du.fish:5
 msgid "Produce grand total"
@@ -3844,7 +3934,7 @@ msgstr "Keine Init-Dateien laden"
 
 #: init/completions/emacs.fish:5
 msgid "Load users init file"
-msgstr "Init-Datei des Anwenders laden"
+msgstr "Init-Datei des Benutzers laden"
 
 #: init/completions/emacs.fish:6
 msgid "Use file as terminal"
@@ -3876,11 +3966,11 @@ msgstr "Ausführung im interaktiven Modus"
 
 #: init/completions/fish.fish:5
 msgid "Output profiling information to specified file"
-msgstr "Profilierungs-Information in angegebene Datei ausgeben"
+msgstr "Profilierungsinformation in angegebene Datei ausgeben"
 
 #: init/completions/function.fish:1 init/completions/functions.fish:5
 msgid "Set function description"
-msgstr "Funktionsbeschreibung setzen"
+msgstr "Funktionsbeschreibung festlegen"
 
 #: init/completions/function.fish:4
 msgid "Make the function a job exit event handler"
@@ -3892,7 +3982,7 @@ msgstr "Funktion zur Ereignisbehandlung bei Prozessende verwenden"
 
 #: init/completions/function.fish:6
 msgid "Make the function a signal event handler"
-msgstr "Funktion zur Signal-Ereignisbehandlung verwenden"
+msgstr "Funktion zur Signalereignisbehandlung verwenden"
 
 #: init/completions/function.fish:7
 msgid "Make the function a variable update event handler"
@@ -3904,7 +3994,7 @@ msgstr "Funktion löschen"
 
 #: init/completions/functions.fish:3
 msgid "Show hidden functions"
-msgstr "Versteckte Funktionen zeigen"
+msgstr "Versteckte Funktionen anzeigen"
 
 #: init/completions/gcc.fish:5
 msgid "Language"
@@ -3912,7 +4002,7 @@ msgstr "Sprache"
 
 #: init/completions/gcc.fish:23
 msgid "Pass program exit codes"
-msgstr "Rückkehr-Codes des Programmes weiterreichen"
+msgstr "Rückkehrcodes des Programms weiterreichen"
 
 #: init/completions/gcc.fish:24
 msgid "Stop after assembler"
@@ -3932,11 +4022,11 @@ msgstr "Ausgabedatei"
 
 #: init/completions/gcc.fish:28
 msgid "Print commands to stderr"
-msgstr "Befehle auf Standardfehlerausgabe anzeigen"
+msgstr "Befehle auf Standardfehlerausgabe ausgeben"
 
 #: init/completions/gcc.fish:29
 msgid "Print quoted commands to stderr, do not run"
-msgstr "Maskierte Befehle auf Standardfehlerausgabe anzeigen, nicht ausführen"
+msgstr "Maskierte Befehle auf Standardfehlerausgabe ausgeben, nicht ausführen"
 
 #: init/completions/gcc.fish:30
 msgid "Use pipes"
@@ -3964,11 +4054,11 @@ msgstr "Keine eingebauten Funktionen verwenden"
 
 #: init/completions/gcc.fish:49
 msgid "Assert hosted environment"
-msgstr ""
+msgstr "Gehostete Umgebung bestätigen"
 
 #: init/completions/gcc.fish:50
 msgid "Assert freestanding environment"
-msgstr ""
+msgstr "Freistehende Umgebung bestätigen"
 
 #: init/completions/gcc.fish:51
 msgid "Use Microsoft extensions"
@@ -4008,7 +4098,7 @@ msgstr "Alle Bitfielder sind nicht vorzeichenbehaftet"
 
 #: init/completions/gcc.fish:60 init/completions/gcc.fish:65
 msgid "String constants are not const"
-msgstr "Zeichenketten-Konstanten sind nicht const"
+msgstr "Zeichenkettenkonstanten sind nicht const"
 
 #: init/completions/gcc.fish:61
 msgid "C++ ABI version"
@@ -4024,7 +4114,7 @@ msgstr "Durch new zurückgegebenen Zeiger prüfen"
 
 #: init/completions/gcc.fish:64
 msgid "Put globals in the common segment"
-msgstr "Global-Werte im Common-Segment einfügen"
+msgstr "Globalwerte im Common-Segment einfügen"
 
 #: init/completions/gcc.fish:66
 msgid "Accept $ in identifiers"
@@ -4036,11 +4126,11 @@ msgstr "In Bezeichnern $ nicht akzeptieren"
 
 #: init/completions/gcc.fish:68
 msgid "Do not omit unneeded temporarys"
-msgstr ""
+msgstr "Temporäre Dateien nicht auslassen"
 
 #: init/completions/gcc.fish:69
 msgid "Allow exception violations"
-msgstr "Erlaube Ausnahme-Verletzungen"
+msgstr "Erlaube Ausnahmeverletzungen"
 
 #: init/completions/gcc.fish:70
 msgid "Do not extend for-loop scope"
@@ -4056,15 +4146,15 @@ msgstr "typeof nicht als Schlüsselwort erkennen"
 
 #: init/completions/gcc.fish:73
 msgid "Do not emit code for implicit templates"
-msgstr ""
+msgstr "Keinen Code für implizite Vorlagen abgeben"
 
 #: init/completions/gcc.fish:74
 msgid "Do not emit code for implicit inline templates"
-msgstr ""
+msgstr "Keinen Code für implizite 'inline'-Vorlagen abgeben"
 
 #: init/completions/gcc.fish:75
 msgid "Do not emit out-of-line code for inline functions"
-msgstr ""
+msgstr "Keinen Code für abweichende 'inline'-Funktionen abgeben"
 
 #: init/completions/gcc.fish:76
 msgid "Disable warnings about MFC"
@@ -4088,19 +4178,21 @@ msgstr "Einge Fehler zu Warnungen herabstufen"
 
 #: init/completions/gcc.fish:81
 msgid "Enable automatic template instantiation at link time"
-msgstr "Automatische Template-Instanziierung zur Linkzeit aktivieren"
+msgstr "Automatische Vorlageninstanziierung zur Linkzeit aktivieren"
 
 #: init/completions/gcc.fish:82
 msgid "Disable generation of C++ runtime type information"
-msgstr "Genererierung von C++-Laufzeit-Typinformationen deaktivieren"
+msgstr "Generierung von C++-Laufzeit-Typinformationen deaktivieren"
 
 #: init/completions/gcc.fish:86
 msgid "Set maximum template depth to %s"
-msgstr "Maximale Mustertiefe auf %s setzen"
+msgstr "Maximale Mustertiefe auf %s festlegen"
 
 #: init/completions/gcc.fish:89
 msgid "Do not emit code for thread-safe initialization of local statics"
 msgstr ""
+"Keinen Code für die threadsichere Initialisierung lokaler statischer Objekte "
+"abgeben"
 
 #: init/completions/gcc.fish:90
 msgid "Use __cxa_atexit for destructors"
@@ -4120,7 +4212,7 @@ msgstr "Signatur erstellen"
 
 #: init/completions/gpg.fish:49
 msgid "Make a clear text signature"
-msgstr "Klartext-Signatur erstellen"
+msgstr "Klartextsignatur erstellen"
 
 #: init/completions/gpg.fish:50
 msgid "Make a detached signature"
@@ -4132,7 +4224,9 @@ msgstr "Daten verschlüsseln"
 
 #: init/completions/gpg.fish:52
 msgid "Encrypt with a symmetric cipher using a passphrase"
-msgstr "Verschlüsseln mit einer symmetrischen Chiffre mittels eines Passwortsatzes"
+msgstr ""
+"Verschlüsseln mit einem symmetrischen Verschlüsselungsverfahren mittels eines "
+"Passwortsatzes"
 
 #: init/completions/gpg.fish:53
 msgid "Store only (make a simple RFC1991 packet)"
@@ -4144,11 +4238,15 @@ msgstr "Angegebene Datei oder Standardeingabe entschlüsseln"
 
 #: init/completions/gpg.fish:55
 msgid "Assume specified file or stdin is sigfile and verify it"
-msgstr "Annehmen das die angegebene Datei oder Standardeingabe eine Signaturdatei ist und überprüfen"
+msgstr ""
+"Annehmen das die angegebene Datei oder Standardeingabe eine Signaturdatei ist "
+"und überprüfen"
 
 #: init/completions/gpg.fish:56
 msgid "Modify certain other commands to accept multiple files for processing"
 msgstr ""
+"Bestimmte andere Befehle ändern, um mehrere Dateien für die Verarbeitung zu "
+"akzeptieren"
 
 #: init/completions/gpg.fish:57
 msgid "Identical to '--multifile --verify'"
@@ -4163,12 +4261,20 @@ msgid "Identical to --multifile --decrypt"
 msgstr "Entspricht '--multifile --decrypt'"
 
 #: init/completions/gpg.fish:61 init/completions/gpg.fish:62
-msgid "List all keys from the public keyrings, or just the ones given on the command line"
-msgstr "Alle Schlüssel der öffentlichen Schlüsselringe anzeigen oder nur diejenigen, die auf der Befehlszeile angegeben wurden"
+msgid ""
+"List all keys from the public keyrings, or just the ones given on the command "
+"line"
+msgstr ""
+"Alle Schlüssel der öffentlichen Schlüsselringe auflisten oder nur diejenigen, "
+"die auf der Befehlszeile angegeben wurden"
 
 #: init/completions/gpg.fish:63
-msgid "List all keys from the secret keyrings, or just the ones given on the command line"
-msgstr "Alle Schlüssel der geheimen Schlüsselringe anzeigen oder nur diejenigen, die auf der Befehlszeilel angegeben wurden"
+msgid ""
+"List all keys from the secret keyrings, or just the ones given on the command "
+"line"
+msgstr ""
+"Alle Schlüssel der geheimen Schlüsselringe auflisten oder nur diejenigen, die "
+"auf der Befehlszeile angegeben wurden"
 
 #: init/completions/gpg.fish:64
 msgid "Same as --list-keys, but the signatures are listed too"
@@ -4176,11 +4282,12 @@ msgstr "Entspricht --list-keys, aber auch die Signaturen werden angezeigt"
 
 #: init/completions/gpg.fish:66
 msgid "Same as --list-keys, but the signatures are listed and verified"
-msgstr "Entspricht --list-keys, die Signaturen werden aber angezeigt und überprüft"
+msgstr ""
+"Entspricht --list-keys, die Signaturen werden aber angezeigt und überprüft"
 
 #: init/completions/gpg.fish:67
 msgid "List all keys with their fingerprints"
-msgstr "Alle Schlüssel mit ihren Fingerabdrücken anzeigen"
+msgstr "Alle Schlüssel mit ihren Fingerabdrücken ausgeben"
 
 #: init/completions/gpg.fish:68
 msgid "Generate a new key pair"
@@ -4188,7 +4295,9 @@ msgstr "Ein neues Schlüsselpaar erstellen"
 
 #: init/completions/gpg.fish:70
 msgid "Present a menu which enables you to do all key related tasks"
-msgstr "Bietet ein Menu, das Ihnen die Durchführung aller Schlüssel-relevanten Aufgaben ermöglicht"
+msgstr ""
+"Bietet ein Menü, das Ihnen die Durchführung aller Schlüssel-relevanten "
+"Aufgaben ermöglicht"
 
 #: init/completions/gpg.fish:72
 msgid "Sign a public key with your secret key"
@@ -4196,7 +4305,9 @@ msgstr "Einen öffentlichen Schlüssel mit Ihrem geheimen Schlüssel signieren"
 
 #: init/completions/gpg.fish:73
 msgid "Sign a public key with your secret key but mark it as non exportable"
-msgstr "Signiert einen öffentlichen Schlüssel mit Ihrem geheimen Schlüssel, aber markiert ihn als nicht exportierbar"
+msgstr ""
+"Signiert einen öffentlichen Schlüssel mit Ihrem geheimen Schlüssel, aber "
+"markiert ihn als nicht exportierbar"
 
 #: init/completions/gpg.fish:75
 msgid "Remove key from the public keyring"
@@ -4207,8 +4318,11 @@ msgid "Remove key from the secret and public keyring"
 msgstr "Entferne Schlüssel vom geheimen und öffentlichen Schlüsselring"
 
 #: init/completions/gpg.fish:77
-msgid "Same as --delete-key, but if a secret key exists, it will be removed first"
-msgstr "Entspricht --delete-key, aber falle ein geheimer Schlüssel existiert, wird dieser zuerst entfernt"
+msgid ""
+"Same as --delete-key, but if a secret key exists, it will be removed first"
+msgstr ""
+"Entspricht --delete-key, aber falls ein geheimer Schlüssel existiert, wird "
+"dieser zuerst entfernt"
 
 #: init/completions/gpg.fish:79
 msgid "Generate a revocation certificate for the complete key"
@@ -4224,11 +4338,13 @@ msgstr "Alle oder angegebene Schlüssel aus allen Schlüsselringen exportieren"
 
 #: init/completions/gpg.fish:83
 msgid "Same as --export but sends the keys to a keyserver"
-msgstr "Entspricht --export, aber sendet die Schlüssel an einen Schlüssel-Server"
+msgstr ""
+"Entspricht --export, aber sendet die Schlüssel an einen Schlüsselserver"
 
 #: init/completions/gpg.fish:84 init/completions/gpg.fish:85
 msgid "Same as --export, but exports the secret keys instead"
-msgstr "Entspricht --export, aber exportiert stattdessen die geheimen Schlüssel"
+msgstr ""
+"Entspricht --export, aber exportiert stattdessen die geheimen Schlüssel"
 
 #: init/completions/gpg.fish:87 init/completions/gpg.fish:88
 msgid "Import/merge keys"
@@ -4236,47 +4352,63 @@ msgstr "Schlüssel importieren/mischen"
 
 #: init/completions/gpg.fish:90
 msgid "Import the keys with the given key IDs from a keyserver"
-msgstr "Schlüssel mit den angegebenenn Schlüssel-IDs von einem Schlüssel-Server importieren"
+msgstr ""
+"Schlüssel mit den angegebenen Schlüsselkennungen von einem Schlüsselserver "
+"importieren"
 
 #: init/completions/gpg.fish:91
-msgid "Request updates from a keyserver for keys that already exist on the local keyring"
-msgstr "Aktualisierungen für Schlüssel von einem Schlüssel-Server abrufen, die bereits in einem lokalen Schlüsselring vorhanden sind"
+msgid ""
+"Request updates from a keyserver for keys that already exist on the local "
+"keyring"
+msgstr ""
+"Aktualisierungen für Schlüssel von einem Schlüsselserver abrufen, die "
+"bereits in einem lokalen Schlüsselring vorhanden sind"
 
 #: init/completions/gpg.fish:92
 msgid "Search the keyserver for the given names"
-msgstr "Schlüssel-Server nach den angegebenen Namen durchsuchen"
+msgstr "Schlüsselserver nach den angegebenen Namen durchsuchen"
 
 #: init/completions/gpg.fish:93
 msgid "Do trust database maintenance"
-msgstr "Wartung der Vertrauens-Datenbank durchführen"
+msgstr "Wartung der Vertrauensdatenbank durchführen"
 
 #: init/completions/gpg.fish:94
 msgid "Do trust database maintenance without user interaction"
-msgstr "Wartung der Vertrauens-Datenbank ohne Anwender-Beteiligung"
+msgstr "Wartung der Vertrauensdatenbank ohne Benutzerbeteiligung durchführen"
 
 #: init/completions/gpg.fish:96
 msgid "Send the ownertrust values to stdout"
-msgstr "Ownertrust-Werte auf Standardausgabe schicken"
+msgstr "Eigentümervertrauenswerte auf Standardausgabe schicken"
 
 #: init/completions/gpg.fish:97
-msgid "Update the trustdb with the ownertrust values stored in specified files or stdin"
-msgstr "trustdb mit den ownertrust-Werten der angegebenen Dateien oder Standardeingabe aktualisieren"
+msgid ""
+"Update the trustdb with the ownertrust values stored in specified files or "
+"stdin"
+msgstr ""
+"Vertrauensdatenbank mit den Eigentümervertrauenswerten der angegebenen "
+"Dateien oder Standardeingabe aktualisieren"
 
 #: init/completions/gpg.fish:99
 msgid "Create signature caches in the keyring"
-msgstr "Signatur-Cache im Schlüsselring erstellen"
+msgstr "Signaturcache im Schlüsselring erstellen"
 
 #: init/completions/gpg.fish:101
-msgid "Print message digest of specified algorithm for all given files or stdin"
-msgstr "Nachrichten-Extrakt des angegbenen Algorithmus für alle angegebenen Dateien oder Standardeingabe ausgeben"
+msgid ""
+"Print message digest of specified algorithm for all given files or stdin"
+msgstr ""
+"Nachrichtenextrakt des angegebenen Algorithmus für alle angegebenen Dateien "
+"oder Standardeingabe ausgeben"
 
 #: init/completions/gpg.fish:102
 msgid "Print message digest of all algorithms for all given files or stdin"
-msgstr "Nachrichten-Extrakt aller Algorithmen für alle angegebenen Dateien oder Standardeingabe ausgeben"
+msgstr ""
+"Nachrichtenextrakt aller Algorithmen für alle angegebenen Dateien oder "
+"Standardeingabe ausgeben"
 
 #: init/completions/gpg.fish:104
 msgid "Emit specified number of random bytes of the given quality level"
-msgstr "Angegebene Anzahl zufälliger Bytes des gegebenen Qualitätsgrades ausgeben"
+msgstr ""
+"Angegebene Anzahl zufälliger Bytes des gegebenen Qualitätsgrades ausgeben"
 
 #: init/completions/gpg.fish:106
 msgid "Display version and supported algorithms, and exit"
@@ -4295,8 +4427,11 @@ msgid "Write output to specified file"
 msgstr "Schreibe Ausgabe in die angegebene Datei"
 
 #: init/completions/gpg.fish:118
-msgid "Sets a limit on the number of bytes that will be generated when processing a file"
-msgstr "Begrenzt die Anzahl Bytes, die beim Verarbeiten einer Datei generiert werden"
+msgid ""
+"Sets a limit on the number of bytes that will be generated when processing a "
+"file"
+msgstr ""
+"Begrenzt die Anzahl Bytes, die beim Verarbeiten einer Datei generiert werden"
 
 #: init/completions/gpg.fish:120
 msgid "Use specified key as the key to sign with"
@@ -4308,19 +4443,21 @@ msgstr "Angegebenen Schlüssel als Standardschlüssel zum Signieren verwenden"
 
 #: init/completions/gpg.fish:123
 msgid "Encrypt for specified user id"
-msgstr "für angegebene Anwender-ID verschlüsseln"
+msgstr "Für angegebene Benutzerkennung verschlüsseln"
 
 #: init/completions/gpg.fish:124
 msgid "Encrypt for specified user id, but hide the keyid of the key"
-msgstr "für angegebene Anwender-ID verschlüsseln, Schlüssel-ID des Schlüssels aber verbergen"
+msgstr ""
+"Für angegebene Benutzerkennung verschlüsseln, aber"
+"die Schlüsselkennung des Schlüssels verbergen"
 
 #: init/completions/gpg.fish:125
 msgid "Use specified user id as default recipient"
-msgstr "Angegebene Anwender-ID als Standard-Empfänger benutzen"
+msgstr "Angegebene Benutzerkennung als Standardempfänger benutzen"
 
 #: init/completions/gpg.fish:126
 msgid "Use the default key as default recipient"
-msgstr "Standard-Schlüssel als Standard-Empfänger benutzen"
+msgstr "Standardschlüssel als Standardempfänger benutzen"
 
 #: init/completions/gpg.fish:127
 msgid "Reset --default-recipient and --default-recipient-self"
@@ -4337,15 +4474,24 @@ msgstr "Komprimierungsgrad"
 
 #: init/completions/gpg.fish:135
 msgid "Use a different decompression method for BZIP2 compressed files"
-msgstr "Eine andere Dekomprimierungsmethode für BZIP2-komprimierte Dateien verwenden"
+msgstr ""
+"Eine andere Dekomprimierungsmethode für BZIP2-komprimierte Dateien verwenden"
 
 #: init/completions/gpg.fish:137
-msgid "Treat input files as text and store them in the OpenPGP canonical text form with standard 'CRLF' line endings"
-msgstr "Behandle Eingabedateien als Text und speichere sie in der anerkannten OpenPGP-Textform mit Standard-Zeilenendungen CRLF"
+msgid ""
+"Treat input files as text and store them in the OpenPGP canonical text form "
+"with standard 'CRLF' line endings"
+msgstr ""
+"Behandle Eingabedateien als Text und speichere sie in der anerkannten "
+"OpenPGP-Textform mit Standardzeilenendungen CRLF"
 
 #: init/completions/gpg.fish:138
-msgid "Don't treat input files as text and store them in the OpenPGP canonical text form with standard 'CRLF' line endings"
-msgstr "Behandle Eingabedateien nicht als Text und speichere sie in der anerkannten OpenPGP-Textform mit Standard-Zeilenendungen CRLF"
+msgid ""
+"Don't treat input files as text and store them in the OpenPGP canonical text "
+"form with standard 'CRLF' line endings"
+msgstr ""
+"Behandle Eingabedateien nicht als Text und speichere sie in der anerkannten "
+"OpenPGP-Textform mit Standardzeilenendungen CRLF"
 
 #: init/completions/gpg.fish:140
 msgid "Don't make any changes (this is not completely implemented)"
@@ -4370,31 +4516,44 @@ msgstr "Niemals Ausgaben aufs Terminal schreiben"
 
 #: init/completions/gpg.fish:148
 msgid "Assume yes on most questions"
-msgstr "Ja als Standard-Antwort annehmen"
+msgstr "Ja als Standardantwort annehmen"
 
 #: init/completions/gpg.fish:149
 msgid "Assume no on most questions"
-msgstr "Nein als Standard-Antwort annehmen"
+msgstr "Nein als Standardantwort annehmen"
 
 #: init/completions/gpg.fish:151
 msgid "Prompt for a certification level when making a key signature"
-msgstr "Nach einem Zertifizierungs-Grad fragen, wenn eine Schlüssel-Signatur erstellt wird"
+msgstr ""
+"Nach einem Zertifizierungsgrad fragen, wenn eine Schlüsselsignatur erstellt "
+"wird"
 
 #: init/completions/gpg.fish:152
 msgid "Don't prompt for a certification level when making a key signature"
-msgstr "Nicht nach einem Zertifizierungs-Grad fragen, wenn eine Schlüssel-Signatur erstellt wird"
+msgstr ""
+"Nicht nach einem Zertifizierungsgrad fragen, wenn eine Schlüsselsignatur "
+"erstellt wird"
 
 #: init/completions/gpg.fish:153
-msgid "The default certification level to use for the level check when signing a key"
-msgstr "Standard-Zertifizierungsgrad für die Prüfung beim Signieren eines Schlüssels"
+msgid ""
+"The default certification level to use for the level check when signing a key"
+msgstr ""
+"Standardzertifizierungsgrad für die Prüfung beim Signieren eines Schlüssels"
 
 #: init/completions/gpg.fish:154
-msgid "Disregard any signatures with a certification level below specified level when building the trust database"
-msgstr "Beim Erstellen der Vertrauens-Datenbank alle Signaturen verwerfen, deren Zertifizierungs-Grad unter dem angegebenen liegt"
+msgid ""
+"Disregard any signatures with a certification level below specified level "
+"when building the trust database"
+msgstr ""
+"Beim Erstellen der Vertrauensdatenbank alle Signaturen verwerfen, deren "
+"Zertifizierungsgrad unter dem angegebenen liegt"
 
 #: init/completions/gpg.fish:156
-msgid "Assume that the specified key is as trustworthy as one of your own secret keys"
-msgstr "Voraussetzen, das der angegebene Schlüssel so vertrauenswürdig ist wie einer Ihrer eigenen geheimen Schlüssel"
+msgid ""
+"Assume that the specified key is as trustworthy as one of your own secret keys"
+msgstr ""
+"Voraussetzen, das der angegebene Schlüssel so vertrauenswürdig ist wie einer "
+"Ihrer eigenen geheimen Schlüssel"
 
 #: init/completions/gpg.fish:157
 msgid "Specify trust model"
@@ -4402,15 +4561,15 @@ msgstr "Vertrauensmodell angeben"
 
 #: init/completions/gpg.fish:159
 msgid "Select how to display key IDs"
-msgstr "Auswahl: Wie werden Schlüssel-IDs angezeigt"
+msgstr "Wählen Sie aus, wie Schlüsselkennungen angezeigt werden sollen"
 
 #: init/completions/gpg.fish:161
 msgid "Use specified keyserver"
-msgstr "Angegebenen Schlüssel-Server verwenden"
+msgstr "Angegebenen Schlüsselserver verwenden"
 
 #: init/completions/gpg.fish:162
 msgid "Options for the keyserver"
-msgstr "Optionen für den Schlüssel-Server"
+msgstr "Optionen für den Schlüsselserver"
 
 #: init/completions/gpg.fish:164
 msgid "Options for importing keys"
@@ -4422,7 +4581,7 @@ msgstr "Optionen zum Exportieren von Schlüsseln"
 
 #: init/completions/gpg.fish:166
 msgid "Options for listing keys and signatures"
-msgstr "Optionen zum Anzeigen von Schlüsseln und Signaturen"
+msgstr "Optionen zum Auflisten von Schlüsseln und Signaturen"
 
 #: init/completions/gpg.fish:167
 msgid "Options for verifying signatures"
@@ -4430,23 +4589,31 @@ msgstr "Optionen zum Überprüfen von Signaturen"
 
 #: init/completions/gpg.fish:169
 msgid "The command line that should be run to view a photo ID"
-msgstr "Befehlszeile, die zum Betrachten einer Foto-ID benutzt werden soll"
+msgstr "Befehlszeile, die zum Betrachten einer Fotokennung benutzt werden soll"
 
 #: init/completions/gpg.fish:170
-msgid "Sets a list of directories to search for photo viewers and keyserver helpers"
-msgstr "Setzt eine Liste von Verzeichnissen, die nach Bildbetrachtern und Keyserver-Hilfsprogrammen durchsucht werden"
+msgid ""
+"Sets a list of directories to search for photo viewers and keyserver helpers"
+msgstr ""
+"Legt eine Liste von Verzeichnissen fest, die nach Bildbetrachtern und "
+"Schlüsselserver-Hilfsprogrammen durchsucht werden"
 
 #: init/completions/gpg.fish:172
-msgid "Display the keyring name at the head of key listings to show which keyring a given key resides on"
-msgstr "Schlüsselringname zu Beginn der Schlüsselliste anzeigen, um zu zeigen, in welchen Schlüsselring sich ein gegebener Schlüssel befindet"
+msgid ""
+"Display the keyring name at the head of key listings to show which keyring a "
+"given key resides on"
+msgstr ""
+"Schlüsselringname zu Beginn der Schlüsselliste anzeigen, um zu zeigen, in "
+"welchem Schlüsselring sich ein gegebener Schlüssel befindet"
 
 #: init/completions/gpg.fish:173
 msgid "Add specified file to the current list of keyrings"
-msgstr "Angegebene Datei zur aktuellen Schlüsselring-Liste hinzufügen"
+msgstr "Angegebene Datei zur aktuellen Schlüsselringliste hinzufügen"
 
 #: init/completions/gpg.fish:175
 msgid "Add specified file to the current list of secret keyrings"
-msgstr "Angegebene Datei zur aktuellen Liste geheimer Schlüsselringe hinzufügen"
+msgstr ""
+"Angegebene Datei zur aktuellen Liste geheimer Schlüsselringe hinzufügen"
 
 #: init/completions/gpg.fish:176
 msgid "Designate specified file as the primary public keyring"
@@ -4454,27 +4621,32 @@ msgstr "Angegebene Datei als primären öffentlichen Schlüsselring bestimmen"
 
 #: init/completions/gpg.fish:178
 msgid "Use specified file instead of the default trustdb"
-msgstr "Angegebene Datei anstelle der Standard-trustdb nutzen"
+msgstr "Angegebene Datei anstelle der Standardvertrauensdatenbank nutzen"
 
 #: init/completions/gpg.fish:179
 msgid "Set the home directory"
-msgstr "Startverzeichnis setzen"
+msgstr "Startverzeichnis festlegen"
 
 #: init/completions/gpg.fish:180
 msgid "Set the native character set"
-msgstr "Standard-Zeichensatz setzen"
+msgstr "Standardzeichensatz festlegen"
 
 #: init/completions/gpg.fish:182
 msgid "Assume that following command line arguments are given in UTF8"
-msgstr "Annehmen, das die folgenden Befehlszeilenargumente in UTF8 kodiert sind"
+msgstr ""
+"Annehmen, das die folgenden Befehlszeilenargumente in UTF8 kodiert sind"
 
 #: init/completions/gpg.fish:183
-msgid "Assume that following arguments are encoded in the character set specified by --display-charset"
-msgstr "Annehmen, das die folgenden Argumente im durch --display-charset spezifizierten Zeichensatz kodiert sind"
+msgid ""
+"Assume that following arguments are encoded in the character set specified by "
+"--display-charset"
+msgstr ""
+"Annehmen, das die folgenden Argumente im durch --display-charset "
+"bestimmten Zeichensatz kodiert sind"
 
 #: init/completions/gpg.fish:184
 msgid "Read options from specified file, do not read the default options file"
-msgstr "Optionen aus angegebener Datei lesen, Standard-Optionsdatei nicht lesen"
+msgstr "Optionen aus angegebener Datei lesen, Standardoptionsdatei nicht lesen"
 
 #: init/completions/gpg.fish:185
 msgid "Shortcut for '--options /dev/null'"
@@ -4486,7 +4658,8 @@ msgstr "Erweiterungsmodul laden"
 
 #: init/completions/gpg.fish:188
 msgid "Write special status strings to the specified file descriptor"
-msgstr "Spezielle Statusmeldungen auf den angegebenen Dateideskriptor schreiben"
+msgstr ""
+"Spezielle Statusmeldungen auf den angegebenen Dateideskriptor schreiben"
 
 #: init/completions/gpg.fish:189
 msgid "Write log output to the specified file descriptor"
@@ -4498,11 +4671,14 @@ msgstr "Attribut-Unterpakete auf angegebenen Dateideskriptor schreiben"
 
 #: init/completions/gpg.fish:192
 msgid "Include secret key comment packets when exporting secret keys"
-msgstr "Kommentarpakete aus geheimen Schlüsseln bei deren Export einschliessen"
+msgstr ""
+"Kommentarpakete aus geheimen Schlüsseln bei deren Export mit einschließen"
 
 #: init/completions/gpg.fish:193
 msgid "Don't include secret key comment packets when exporting secret keys"
-msgstr "Kommentarpakete aus geheimen Schlüsseln bei deren Export nicht einschliessen"
+msgstr ""
+"Kommentarpakete aus geheimen Schlüsseln bei deren Export nicht mit "
+"einschließen"
 
 #: init/completions/gpg.fish:195
 msgid "Use specified string as comment string"
@@ -4522,27 +4698,30 @@ msgstr "Version nicht in ASCII-bewehrter Ausgabe einfügen"
 
 #: init/completions/gpg.fish:204
 msgid "Put the specified name value pair into the signature as notation data"
-msgstr "Setze das angegeben Wertepaar als Notationsdaten in die Signatur"
+msgstr "Das angegebene Wertepaar als Notationsdaten in die Signatur einfügen"
 
 #: init/completions/gpg.fish:205
 msgid "Set signature policy"
-msgstr "Signaturregeln einrichten"
+msgstr "Signaturregeln festlegen"
 
 #: init/completions/gpg.fish:206
 msgid "Set certificate policy"
-msgstr "Zertifikats-Regeln einrichten"
+msgstr "Zertifikatsregeln festlegen"
 
 #: init/completions/gpg.fish:207
 msgid "Set signature and certificate policy"
-msgstr "Signatur- und Zertifikats-Regeln einrichten"
+msgstr "Signatur- und Zertifikatsregeln festlegen"
 
 #: init/completions/gpg.fish:208
 msgid "Use specified URL as a preferred keyserver for data signatures"
-msgstr "Angegebene URL als bevorzugten Schlüssel-Server für Datensignaturen nutzen"
+msgstr ""
+"Angegebene URL als bevorzugten Schlüsselserver für Datensignaturen benutzen"
 
 #: init/completions/gpg.fish:210
 msgid "Use specified string as the filename which is stored inside messages"
-msgstr "Angegebene Zeichenkette als in den Nachrichten gespeicherten Dateinamen verwenden"
+msgstr ""
+"Angegebene Zeichenkette als in den Nachrichten gespeicherten Dateinamen "
+"verwenden"
 
 #: init/completions/gpg.fish:212
 msgid "Set the 'for your eyes only' flag in the message"
@@ -4561,12 +4740,20 @@ msgid "Don't create file with name as given in data"
 msgstr "Datei nicht mit in den Daten enthaltenem Namen erstellen"
 
 #: init/completions/gpg.fish:218
-msgid "Number of completely trusted users to introduce a new key signer (defaults to 1)"
+msgid ""
+"Number of completely trusted users to introduce a new key signer (defaults to "
+"1)"
 msgstr ""
+"Anzahl der vollständig vertrauenswürdigen Benutzer, um einen neuen "
+"Schlüsselunterzeichner einzuführen (Standard ist 1)"
 
 #: init/completions/gpg.fish:219
-msgid "Number of marginally trusted users to introduce a new key signer (defaults to 3)"
+msgid ""
+"Number of marginally trusted users to introduce a new key signer (defaults to "
+"3)"
 msgstr ""
+"Anzahl der beschränkt vertrauenswürdigen Benutzer, um einen neuen "
+"Schlüsselunterzeichner einzuführen (Standard ist 3)"
 
 #: init/completions/gpg.fish:221
 msgid "Maximum depth of a certification chain (default is 5)"
@@ -4574,7 +4761,7 @@ msgstr "Maximale Tiefe einer Zertifizierungskette (Standard 5)"
 
 #: init/completions/gpg.fish:223
 msgid "Use specified cipher algorithm"
-msgstr "Benutze angegebenen Chiffrier-Algorithmus"
+msgstr "Benutze angegebenen Verschlüsselungsalgorithmus"
 
 #: init/completions/gpg.fish:224
 msgid "Use specified message digest algorithm"
@@ -4582,23 +4769,26 @@ msgstr "Angegebenen Message-Digest-Algorithmus verwenden"
 
 #: init/completions/gpg.fish:225
 msgid "Use specified compression algorithm"
-msgstr "Benutze angegebenen Komprimierungs-Algorithmus"
+msgstr "Benutze angegebenen Kompressionsalgorithmus"
 
 #: init/completions/gpg.fish:226
 msgid "Use specified message digest algorithm when signing a key"
-msgstr "Benutze angegebenen Message-Digest-Algorithmus zum Signieren eines Schlüssels"
+msgstr ""
+"Benutze angegebenen Message-Digest-Algorithmus zum Signieren eines Schlüssels"
 
 #: init/completions/gpg.fish:227
 msgid "Use specified cipher algorithm to protect secret keys"
-msgstr "Benutze angegebenen Chiffrier-Algorithmus zum Schutz geheimer Schlüssel"
+msgstr ""
+"Benutze angegebenen Verschlüsselungsalgorithmus zum Schutz geheimer Schlüssel"
 
 #: init/completions/gpg.fish:228
 msgid "Use specified digest algorithm to mangle the passphrases"
-msgstr "Benutze angegebenen Digest-Algorithmus zum Verstümmeln der Passwortsätze"
+msgstr ""
+"Benutze angegebenen Digest-Algorithmus zum Verstümmeln der Passwortsätze"
 
 #: init/completions/gpg.fish:229
 msgid "Selects how passphrases are mangled"
-msgstr "Auswahl, wie Passwort-Sätze verstümmelt werden"
+msgstr "Auswahl, wie Passwortsätze verstümmelt werden"
 
 #: init/completions/gpg.fish:231
 msgid "Integrity protect secret keys by using a SHA-1 checksum"
@@ -4606,11 +4796,14 @@ msgstr "Integrität geheimer Schlüssel mittels SHA-1-Prüfsumme schützen"
 
 #: init/completions/gpg.fish:233
 msgid "Never allow the use of specified cipher algorithm"
-msgstr "Niemals die Benutzung des angegebenen Chiffrier-Algorithmus zulassen"
+msgstr ""
+"Niemals die Benutzung des angegebenen Verschlüsselungsalgorithmus zulassen"
 
 #: init/completions/gpg.fish:234
 msgid "Never allow the use of specified public key algorithm"
-msgstr "Niemals die Benutzung des angegebenen Algorithmus für öffentliche Schlüssel zulassen"
+msgstr ""
+"Niemals die Benutzung des angegebenen Algorithmus für öffentliche Schlüssel "
+"zulassen"
 
 #: init/completions/gpg.fish:236
 msgid "Do not cache the verification status of key signatures"
@@ -4622,7 +4815,8 @@ msgstr "Nicht jede Signatur direkt nach der Erstellung verifizieren"
 
 #: init/completions/gpg.fish:239
 msgid "Automatically run the --check-trustdb command internally when needed"
-msgstr "Den Befehl --check-trustdb automatisch intern starten, falls erforderlich"
+msgstr ""
+"Den Befehl --check-trustdb automatisch intern starten, falls erforderlich"
 
 #: init/completions/gpg.fish:240
 msgid "Never automatically run the --check-trustdb"
@@ -4630,31 +4824,35 @@ msgstr "--check-trustdb niemals automatisch ausführen"
 
 #: init/completions/gpg.fish:242
 msgid "Do not put the recipient keyid into encrypted packets"
-msgstr "Empfänger-Schlüssel-ID nicht in verschlüsselte Pakete einfügen"
+msgstr "Empfänger-Schlüsselkennung nicht in verschlüsselte Pakete einfügen"
 
 #: init/completions/gpg.fish:243
 msgid "Put the recipient keyid into encrypted packets"
-msgstr "Empfänger-Schlüssel-ID in verschlüsselte Pakete einfügen"
+msgstr "Empfänger-Schlüsselkennung in verschlüsselte Pakete einfügen"
 
 #: init/completions/gpg.fish:244
-msgid "Change the behavior of cleartext signatures so that they can be used for patch files"
-msgstr "Verhalten von Klartext-Signaturen ändern, damit sie für Patch-Dateien genutzt werden können"
+msgid ""
+"Change the behavior of cleartext signatures so that they can be used for "
+"patch files"
+msgstr ""
+"Verhalten von Klartextsignaturen ändern, damit sie für Patch-Dateien genutzt "
+"werden können"
 
 #: init/completions/gpg.fish:246
 msgid "Mangle From-field of email headers (default)"
-msgstr "From-Feld aus Email-Kopfzeilen verstümmeln (Standard)"
+msgstr "From-Feld aus E-Mail-Kopfzeilen verstümmeln (Standard)"
 
 #: init/completions/gpg.fish:247
 msgid "Do not mangle From-field of email headers"
-msgstr "From-Feld aus Email-Kopfzeilen nicht verstümmeln"
+msgstr "From-Feld aus E-Mail-Kopfzeilen nicht verstümmeln"
 
 #: init/completions/gpg.fish:249
 msgid "Read passphrase from specified file descriptor"
-msgstr "Passwort-Satz aus dem angegebenen Dateideskriptor lesen"
+msgstr "Passwortsatz aus dem angegebenen Dateideskriptor lesen"
 
 #: init/completions/gpg.fish:250
 msgid "Read user input from specified file descriptor"
-msgstr "Anwendereingaben aus dem angegebenen Dateideskriptor lesen"
+msgstr "Benutzereingaben aus dem angegebenen Dateideskriptor lesen"
 
 #: init/completions/gpg.fish:252
 msgid "Try to use the GnuPG-Agent"
@@ -4686,23 +4884,34 @@ msgstr "Keine v4-Schlüsselsignaturen mit v3-Schlüsseln verwenden"
 
 #: init/completions/gpg.fish:262
 msgid "Force the use of encryption with a modification detection code"
-msgstr "Verschlüsselungsbenutzung mit einem Veränderungs-Erkennungscode erzwingen"
+msgstr ""
+"Benutzung der Verschlüsselung mit einem Veränderungserkennungscode erzwingen"
 
 #: init/completions/gpg.fish:263
 msgid "Disable the use of the modification detection code"
-msgstr "Benutzung des Veränderungs-Erkennungscodes deaktivieren"
+msgstr "Benutzung des Veränderungserkennungscodes deaktivieren"
 
 #: init/completions/gpg.fish:265
-msgid "Allow the import and use of keys with user IDs which are not self-signed"
-msgstr "Import und Benutzung von Anwender-IDs zulassen, die nicht selbst-signiert sind"
+msgid ""
+"Allow the import and use of keys with user IDs which are not self-signed"
+msgstr ""
+"Import und Benutzung von Benutzerkennungen zulassen, die nicht selbst "
+"signiert sind"
 
 #: init/completions/gpg.fish:266
-msgid "Do not allow the import and use of keys with user IDs which are not self-signed"
-msgstr "Import und Benutzung von Anwender-IDs nicht zulassen, die nicht selbst-signiert sind"
+msgid ""
+"Do not allow the import and use of keys with user IDs which are not "
+"self-signed"
+msgstr ""
+"Import und Benutzung von Benutzerkennungen nicht zulassen, die nicht "
+"selbst signiert sind"
 
 #: init/completions/gpg.fish:268
-msgid "Disable all checks on the form of the user ID while generating a new one"
-msgstr "Alle Prüfungen des Anwender-ID-Formats deaktivieren, wenn ein neuer generiert wird"
+msgid ""
+"Disable all checks on the form of the user ID while generating a new one"
+msgstr ""
+"Alle Prüfungen des Benutzerkennungsformats deaktivieren, wenn ein neuer "
+"generiert wird"
 
 #: init/completions/gpg.fish:270
 msgid "Do not fail if signature is older than key"
@@ -4721,20 +4930,27 @@ msgid "Do not fail on MDC integrity protection failiure"
 msgstr "Kein Abbruch beim Versagen des MDC-Integritätsschutzes"
 
 #: init/completions/gpg.fish:275
-msgid "Lock the databases the first time a lock is requested and do not release the lock until the process terminates"
-msgstr "Datenbank sperren, sobald eine Sperre angefordert wird und nicht freigeben, bevor der Prozess beendet wird"
+msgid ""
+"Lock the databases the first time a lock is requested and do not release the "
+"lock until the process terminates"
+msgstr ""
+"Datenbank sperren, sobald eine Sperre angefordert wird und nicht freigeben, "
+"bevor der Prozess beendet wird"
 
 #: init/completions/gpg.fish:276
 msgid "Release the locks every time a lock is no longer needed"
 msgstr "Sperren freigeben, sobald eine Sperre nicht mehr benötigt wird"
 
 #: init/completions/gpg.fish:278
-msgid "Do not create an internal pool file for quicker generation of random numbers"
-msgstr "Keine interne Pooldatei für die schnelle Erstellung von Zufallszahlen erstellen"
+msgid ""
+"Do not create an internal pool file for quicker generation of random numbers"
+msgstr ""
+"Keine interne Pooldatei für die schnelle Erstellung von Zufallszahlen "
+"erstellen"
 
 #: init/completions/gpg.fish:279
 msgid "Reset verbose level to 0"
-msgstr "Geschwätzigkeits-Wert auf 0 zurücksetzen"
+msgstr "Ausführlichkeitswert auf 0 zurücksetzen"
 
 #: init/completions/gpg.fish:280
 msgid "Suppress the initial copyright message"
@@ -4745,8 +4961,12 @@ msgid "Suppress the warning about 'using insecure memory'"
 msgstr "Warnung über die Verwendung unsicheren Speichers unterdrücken"
 
 #: init/completions/gpg.fish:282
-msgid "Suppress the warning about unsafe file and home directory (--homedir) permissions"
-msgstr "Warnung über unsichere Datei- und Startverzeichnisberechtigungen (--homedir) unterdrücken"
+msgid ""
+"Suppress the warning about unsafe file and home directory (--homedir) "
+"permissions"
+msgstr ""
+"Warnung über unsichere Datei- und Startverzeichnisberechtigungen (--homedir) "
+"unterdrücken"
 
 #: init/completions/gpg.fish:283
 msgid "Suppress the warning about missing MDC integrity protection"
@@ -4758,15 +4978,17 @@ msgstr "Nicht starten, wenn GnuPG keinen sicheren Speicher benutzen kann"
 
 #: init/completions/gpg.fish:287
 msgid "Do not refuse to run if GnuPG cannot get secure memory (default)"
-msgstr "Starten, obwohl GnuPG nicht im sicheren Speicher laufen kann (Standard)"
+msgstr ""
+"Starten, obwohl GnuPG nicht im sicheren Speicher laufen kann (Standard)"
 
 #: init/completions/gpg.fish:288
 msgid "Assume the input data is not in ASCII armored format"
-msgstr "Voraussetzen, das die Eingabedaten nicht im ASCII-bewehrten Format vorliegen"
+msgstr ""
+"Voraussetzen, das die Eingabedaten nicht im ASCII-bewehrten Format vorliegen"
 
 #: init/completions/gpg.fish:290
 msgid "Do not add the default keyrings to the list of keyrings"
-msgstr "Standard-Schlüsselringe nicht der Keyring-Liste hinzufügen"
+msgstr "Standardschlüsselringe nicht der Schlüsselringliste hinzufügen"
 
 #: init/completions/gpg.fish:292
 msgid "Skip the signature verification step"
@@ -4774,27 +4996,41 @@ msgstr "Verifizierung der Signatur überspringen"
 
 #: init/completions/gpg.fish:294
 msgid "Print key listings delimited by colons"
-msgstr "Schlüsselauflistungen mit Doppelpunkt getrennt anzeigen"
+msgstr "Schlüsselauflistungen mit Doppelpunkt getrennt ausgeben"
 
 #: init/completions/gpg.fish:295
-msgid "Print key listings delimited by colons (like --with-colons) and print the public key data"
-msgstr "Begrenzt Schlüsselauflistungen mit Doppelpunkt (wie --with-colons) und gibt die Daten des öffentlichen Schlüssels aus"
+msgid ""
+"Print key listings delimited by colons (like --with-colons) and print the "
+"public key data"
+msgstr ""
+"Begrenzt Schlüsselauflistungen mit Doppelpunkt (wie --with-colons) und gibt "
+"die Daten des öffentlichen Schlüssels aus"
 
 #: init/completions/gpg.fish:296
-msgid "Same as the command --fingerprint but changes only the format of the output and may be used together with another command"
-msgstr "Entspricht dem Befehl --fingerprint, ändert aber nur das Ausgabeformat und kann mit anderen Befehlen zusammen genutzt werden"
+msgid ""
+"Same as the command --fingerprint but changes only the format of the output "
+"and may be used together with another command"
+msgstr ""
+"Entspricht dem Befehl --fingerprint, ändert aber nur das Ausgabeformat und "
+"kann mit anderen Befehlen zusammen genutzt werden"
 
 #: init/completions/gpg.fish:298
 msgid "Changes the output of the list commands to work faster"
 msgstr "Ändert die Ausgabe der List-Befehle für schnellere Abarbeitung"
 
 #: init/completions/gpg.fish:299
-msgid "Do not merge primary user ID and primary key in --with-colon listing mode and print all timestamps as UNIX timestamps"
-msgstr "Im Anzeigemodus --with-colon primäre Anwender-ID und primären Schlüssel nicht mischen und alle Zeitstempel als UNIX-Zeitstempel ausgeben"
+msgid ""
+"Do not merge primary user ID and primary key in --with-colon listing mode and "
+"print all timestamps as UNIX timestamps"
+msgstr ""
+"Im Anzeigemodus --with-colon primäre Benutzerkennung und primären Schlüssel "
+"nicht mischen und alle Zeitstempel als UNIX-Zeitstempel ausgeben"
 
 #: init/completions/gpg.fish:301
-msgid "Changes the behaviour of some commands. This is like --dry-run but different"
-msgstr "Ändert das Verhalten einiger Befehle. Ähnlich --dry-run, aber doch anders"
+msgid ""
+"Changes the behaviour of some commands. This is like --dry-run but different"
+msgstr ""
+"Ändert das Verhalten einiger Befehle. Ähnlich --dry-run, aber doch anders"
 
 #: init/completions/gpg.fish:303
 msgid "Display the session key used for one message"
@@ -4802,7 +5038,9 @@ msgstr "Zeige den für eine Nachricht benutzten Sitzungsschlüssel an"
 
 #: init/completions/gpg.fish:304
 msgid "Don't use the public key but the specified session key"
-msgstr "Nicht den öffentlichen Schlüssel, sondern den angegebenen Sitzungsschlüssel benutzen"
+msgstr ""
+"Nicht den öffentlichen Schlüssel, sondern den angegebenen Sitzungsschlüssel "
+"benutzen"
 
 #: init/completions/gpg.fish:306 init/completions/gpg.fish:309
 msgid "Prompt for an expiration time"
@@ -4813,16 +5051,30 @@ msgid "Do not prompt for an expiration time"
 msgstr "Nicht nach einer Ablaufzeit fragen"
 
 #: init/completions/gpg.fish:312
-msgid "Don't look at the key ID as stored in the message but try all secret keys in turn to find the right decryption key"
-msgstr "Die in der Nachricht gespeicherte Schlüssel-ID nicht beachten, sondern alle geheimen Schlüssel zum Finden des richtigen Entschlüsselungs-Schlüsseln versuchen"
+msgid ""
+"Don't look at the key ID as stored in the message but try all secret keys in "
+"turn to find the right decryption key"
+msgstr ""
+"Die in der Nachricht gespeicherte Schlüsselkennung nicht beachten, sondern "
+"alle geheimen Schlüssel zum Finden des richtigen Entschlüsselungsschlüssels "
+"versuchen"
 
 #: init/completions/gpg.fish:313
-msgid "Enable a mode in which filenames of the form -&n, where n is a non-negative decimal number, refer to the file descriptor n and not to a file with that name"
+msgid ""
+"Enable a mode in which filenames of the form -&n, where n is a non-negative "
+"decimal number, refer to the file descriptor n and not to a file with that "
+"name"
 msgstr ""
+"Einen Modus aktivieren, in dem Dateinamen der Form -&n, wobei n eine nicht "
+"negative Dezimalzahl ist, sich auf den Dateideskriptor n beziehen and nicht "
+"auf "
+"eine Datei mit diesem Namen"
 
 #: init/completions/gpg.fish:315
 msgid "Sets up a named group, which is similar to aliases in email programs"
-msgstr "Richtet eine benannte Gruppe ein, die einem alias in Email-Programmen entspricht"
+msgstr ""
+"Richtet eine benannte Gruppe ein, die Aliasnamen in E-Mail-Programmen "
+"entspricht"
 
 #: init/completions/gpg.fish:316
 msgid "Remove a given entry from the --group list"
@@ -4833,32 +5085,44 @@ msgid "Remove all entries from the --group list"
 msgstr "Alle Einträge aus der --group-Liste entfernen"
 
 #: init/completions/gpg.fish:319
-msgid "Don't change the permissions of a secret keyring back to user read/write only"
-msgstr "Berechtigungen eines geheimen Schlüsselrings nicht auf Lesen/Schreiben für den Eigentümer zurücksetzen"
+msgid ""
+"Don't change the permissions of a secret keyring back to user read/write only"
+msgstr ""
+"Berechtigungen eines geheimen Schlüsselrings nicht auf Lesen/Schreiben für "
+"den Eigentümer zurücksetzen"
 
 #: init/completions/gpg.fish:321
 msgid "Set the list of personal cipher preferences to the specified string"
-msgstr "Setze die Liste der persönlichen Chiffrier-Einstellungen gemäß der angegebenen Zeichenkette"
+msgstr ""
+"Die Liste der persönlichen Verschlüsselungseinstellungen gemäß der "
+"angegebenen Zeichenkette festlegen"
 
 #: init/completions/gpg.fish:322
 msgid "Set the list of personal digest preferences to the specified string"
-msgstr "Setze die Liste der persönlichen Übersichtseinstellungen gemäß der angegebenen Zeichenkette"
+msgstr ""
+"Die Liste der persönlichen Übersichtseinstellungen gemäß der "
+"angegebenen Zeichenkette festlegen"
 
 #: init/completions/gpg.fish:323
-msgid "Set the list of personal compression preferences to the specified string"
-msgstr "Setze die Liste der persönlichen Komprimierungseinstellungen gemäß der angegebenen Zeichenkette"
+msgid ""
+"Set the list of personal compression preferences to the specified string"
+msgstr ""
+"Die Liste der persönlichen Komprimierungseinstellungen gemäß der "
+"angegebenen Zeichenkette festlegen"
 
 #: init/completions/gpg.fish:324
 msgid "Set the list of default preferences to the specified string"
-msgstr "Setze die Liste der Standardeinstellungen gemäß der angegebenen Zeichenkette"
+msgstr ""
+"Die Liste der Standardeinstellungen gemäß der angegebenen Zeichenkette "
+"festlegen"
 
 #: init/completions/gprof.fish:1
 msgid "Print annotated source"
-msgstr "Kommentierte Quelle anzeigen"
+msgstr "Kommentierte Quelle ausgeben"
 
 #: init/completions/gprof.fish:2
 msgid "Do not print explanations"
-msgstr "Keine Erklärungen anzeigen"
+msgstr "Keine Erklärungen ausgeben"
 
 #: init/completions/gprof.fish:3
 msgid "Print tally"
@@ -4882,11 +5146,11 @@ msgstr "Vollständigen Quellpfad ausgeben"
 
 #: init/completions/gprof.fish:8
 msgid "Print flat profile"
-msgstr ""
+msgstr "Flaches Profil ausgeben"
 
 #: init/completions/gprof.fish:9
 msgid "No flat profile"
-msgstr ""
+msgstr "Kein flaches Profil"
 
 #: init/completions/gprof.fish:10
 msgid "Print call graph"
@@ -4918,7 +5182,7 @@ msgstr "Traditioneller Modus"
 
 #: init/completions/gprof.fish:17
 msgid "Set width of output"
-msgstr "Ausgabebreite setzen"
+msgstr "Ausgabebreite festlegen"
 
 #: init/completions/gprof.fish:18
 msgid "Anotate every line"
@@ -4926,7 +5190,7 @@ msgstr "Kommentiere jede Zeile"
 
 #: init/completions/gprof.fish:19
 msgid "Set demangling style"
-msgstr "Format für Entfernen der Zusatzinformation setzen"
+msgstr "Format für Entfernen der Zusatzinformation festlegen"
 
 #: init/completions/gprof.fish:20
 msgid "Turn of demangling"
@@ -4942,7 +5206,7 @@ msgstr "Ignoriere nicht als Funktionen bekannte Symbole"
 
 #: init/completions/gprof.fish:24
 msgid "Delete arcs from callgraph"
-msgstr ""
+msgstr "Bögen aus Aufrufgraph löschen"
 
 #: init/completions/gprof.fish:25
 msgid "Line by line profiling"
@@ -4966,19 +5230,19 @@ msgstr "Unbenutzte Funktionen im pauschalen Profil erwähnen"
 
 #: init/completions/gprof.fish:30
 msgid "Specify debugging options"
-msgstr "Debug-Optionen angegeben"
+msgstr "Debug-Optionen angeben"
 
 #: init/completions/gprof.fish:33
 msgid "Profile data format"
-msgstr ""
+msgstr "Profildatenformat"
 
 #: init/completions/gprof.fish:34
 msgid "Print summary"
-msgstr "Zusammenfassung anzeigen"
+msgstr "Zusammenfassung ausgeben"
 
 #: init/completions/grep.fish:5
 msgid "Print NUM lines of trailing context"
-msgstr "NUM folgende Kontext-Zeilen anzeigen"
+msgstr "NUM folgende Kontext-Zeilen ausgeben"
 
 #: init/completions/grep.fish:6
 msgid "Process binary file as text"
@@ -4986,15 +5250,15 @@ msgstr "Binärdateien als Text behandeln"
 
 #: init/completions/grep.fish:7
 msgid "Print NUM lines of leading context"
-msgstr "NUM führende Kontext-Zeilen anzeigen"
+msgstr "NUM führende Kontext-Zeilen ausgeben"
 
 #: init/completions/grep.fish:8
 msgid "Print NUM lines of context"
-msgstr "NUM Kontext-Zeilen anzeigen"
+msgstr "NUM Kontext-Zeilen ausgeben"
 
 #: init/completions/grep.fish:9
 msgid "Print byte offset of matches"
-msgstr "Byte-Offset von Treffern anzeigen"
+msgstr "Byte-Offset von Treffern ausgeben"
 
 #: init/completions/grep.fish:10
 msgid "Assume data type for binary files"
@@ -5002,7 +5266,7 @@ msgstr "Datentyp für Binärdateien unterstellen"
 
 #: init/completions/grep.fish:13
 msgid "Only print number of matches"
-msgstr "Nur Anzahl von Treffern anzeigen"
+msgstr "Nur Anzahl von Treffern ausgeben"
 
 #: init/completions/grep.fish:14
 msgid "Action for devices"
@@ -5034,11 +5298,11 @@ msgstr "Muster ist ein einfacher regulärer Ausdruck"
 
 #: init/completions/grep.fish:21
 msgid "Print filename"
-msgstr "Dateiname anzeigen"
+msgstr "Dateiname ausgeben"
 
 #: init/completions/grep.fish:22
 msgid "Supress printing filename"
-msgstr "Dateinamenanzeige unterdrücken"
+msgstr "Dateinamenausgabe unterdrücken"
 
 #: init/completions/grep.fish:24
 msgid "Skip binary files"
@@ -5050,11 +5314,11 @@ msgstr "Gross-/Kleinschreibung ignorieren"
 
 #: init/completions/grep.fish:26
 msgid "Print first non-matching file"
-msgstr "Erste nicht zutreffende Datei anzeigen"
+msgstr "Erste nicht zutreffende Datei ausgeben"
 
 #: init/completions/grep.fish:27
 msgid "Print first matching file"
-msgstr "Erste zutreffende Datei anzeigen"
+msgstr "Erste zutreffende Datei ausgeben"
 
 #: init/completions/grep.fish:28
 msgid "Stop reading after NUM matches"
@@ -5066,11 +5330,11 @@ msgstr "mmap-Systemaufruf zum Lesen der Eingabe nutzen"
 
 #: init/completions/grep.fish:30
 msgid "Print linenumber"
-msgstr "Zeilennummer anzeigen"
+msgstr "Zeilennummer ausgeben"
 
 #: init/completions/grep.fish:31
 msgid "Show only matching part"
-msgstr "Nur zutreffenden Teil zeigen"
+msgstr "Nur zutreffenden Teil anzeigen"
 
 #: init/completions/grep.fish:32
 msgid "Rename stdin"
@@ -5130,7 +5394,7 @@ msgstr "Ein Null-Byte nach dem Dateinamen ausgeben"
 
 #: init/completions/gunzip.fish:9 init/completions/gzip.fish:11
 msgid "List compression information"
-msgstr "Komprimierungsinformation anzeigen"
+msgstr "Komprimierungsinformation auflisten"
 
 #: init/completions/gunzip.fish:11 init/completions/gzip.fish:13
 msgid "Do not save/restore filename"
@@ -5154,7 +5418,7 @@ msgstr "Suffix"
 
 #: init/completions/gunzip.fish:17 init/completions/gzip.fish:19
 msgid "Display compression ratios"
-msgstr "Komprimierungsverhältnis anzeigen"
+msgstr "Kompressionsrate anzeigen"
 
 #: init/completions/gzip.fish:21
 msgid "Use fast setting"
@@ -5190,7 +5454,7 @@ msgstr "Zusammenfassung der Unterschiede zwischen fish und anderen shells"
 
 #: init/completions/help.fish:21
 msgid "Help on how to set the prompt"
-msgstr "Hilfe zum Setzen des Prompts"
+msgstr "Hilfe zum Festlegen des Prompts"
 
 #: init/completions/help.fish:22
 msgid "Help on how to set the titlebar message"
@@ -5247,23 +5511,23 @@ msgstr "Hilfe zur Prozess-Expansion %JOB"
 
 #: init/completions/id.fish:1
 msgid "Print effective group id"
-msgstr "Effektive Gruppen-ID anzeigen"
+msgstr "Effektive Gruppenkennung ausgeben"
 
 #: init/completions/id.fish:2
 msgid "Print all group ids"
-msgstr "Alle Gruppen-IDs anzeigen"
+msgstr "Alle Gruppenkennungen ausgeben"
 
 #: init/completions/id.fish:3
 msgid "Print name, not number"
-msgstr "Name, nicht Nummer, anzeigen"
+msgstr "Name statt Nummer ausgeben"
 
 #: init/completions/id.fish:4
 msgid "Print real ID, not effective"
-msgstr "Reale, nicht effektive ID anzeigen"
+msgstr "Reale, nicht effektive Kennung ausgeben"
 
 #: init/completions/id.fish:5
 msgid "Print effective user ID"
-msgstr "Effektive Anwender-ID anzeigen"
+msgstr "Effektive Benutzerkennung ausgeben"
 
 #: init/completions/ifconfig.fish:1
 msgid "Stop interface"
@@ -5279,23 +5543,23 @@ msgstr "Netzwerkschnittstelle"
 
 #: init/completions/jobs.fish:3
 msgid "Show the process id of each process in the job"
-msgstr "Prozess-ID jeden Prozesses im Job zeigen"
+msgstr "Prozesskennung jedes Prozesses im Job anzeigen"
 
 #: init/completions/jobs.fish:4
 msgid "Show group id of job"
-msgstr "Gruppen-ID des Jobs zeigen"
+msgstr "Gruppenkennung des Jobs anzeigen"
 
 #: init/completions/jobs.fish:5
 msgid "Show commandname of each job"
-msgstr "Befehlsnamen eines jeden Jobs zeigen"
+msgstr "Befehlsnamen eines jeden Jobs anzeigen"
 
 #: init/completions/jobs.fish:6
 msgid "Only show status for last job to be started"
-msgstr "Nur Status für zuletzt gestarteten Job zeigen"
+msgstr "Nur Status für zuletzt gestarteten Job anzeigen"
 
 #: init/completions/kill.fish:34
 msgid "List names of available signals"
-msgstr "Namen der verfügbaren Signale anzeigen"
+msgstr "Namen der verfügbaren Signale auflisten"
 
 #: init/completions/less.fish:2
 msgid "Search after end of screen"
@@ -5416,7 +5680,7 @@ msgstr "Steuerzeichen anzeigen"
 
 #: init/completions/less.fish:34
 msgid "Display control chars, guess screen appearance"
-msgstr "Steuerzeichen anzeigen, Anzeige erraten"
+msgstr "Steuerzeichen anzeigen, Bildschirmdarstellung erraten"
 
 #: init/completions/less.fish:35
 msgid "Multiple blank lines sqeezed"
@@ -5432,7 +5696,7 @@ msgstr "Kennzeichnung bearbeiten"
 
 #: init/completions/less.fish:38
 msgid "Set tag file"
-msgstr "Kennzeichnungsdatei setzen"
+msgstr "Kennzeichnungsdatei festlegen"
 
 #: init/completions/less.fish:39
 msgid "Allow backspace and carriage return"
@@ -5452,7 +5716,7 @@ msgstr "Erste ungelesene Zeile bei Verschiebung hervorheben"
 
 #: init/completions/less.fish:44
 msgid "Set tab stops"
-msgstr "Tab-Stopps setzen"
+msgstr "Tab-Stopps festlegen"
 
 #: init/completions/less.fish:45
 msgid "No termcap init"
@@ -5472,7 +5736,7 @@ msgstr "Maximale Fenstergrösse für Blättern"
 
 #: init/completions/less.fish:49
 msgid "Set quote char"
-msgstr "Markierungszeichen setzen"
+msgstr "Markierungszeichen festlegen"
 
 #: init/completions/less.fish:50
 msgid "Lines after EOF are blank"
@@ -5501,7 +5765,7 @@ msgstr "Symbolischen Links folgen"
 
 #: init/completions/ls.fish:19
 msgid "List subdirectory recursively"
-msgstr "Unterverzeichnisse rekursiv anzeigen"
+msgstr "Unterverzeichnisse rekursiv auflisten"
 
 #: init/completions/ls.fish:20 init/completions/ls.fish:95
 msgid "Octal escapes for non graphic characters"
@@ -5509,11 +5773,11 @@ msgstr "Oktaldarstellung für nichtgrafische Zeichen"
 
 #: init/completions/ls.fish:21
 msgid "List directories, not their content"
-msgstr "Verzeichnisse, aber nicht deren Inhalt anzeigen"
+msgstr "Verzeichnisse, aber nicht deren Inhalt auflisten"
 
 #: init/completions/ls.fish:23
 msgid "Print inode number of files"
-msgstr "Inode-Nummer der Dateien anzeigen"
+msgstr "Inode-Nummer der Dateien ausgeben"
 
 #: init/completions/ls.fish:24
 msgid "Long format, numeric IDs"
@@ -5521,7 +5785,7 @@ msgstr "Langformat, numerische IDs"
 
 #: init/completions/ls.fish:26
 msgid "Replace non-graphic characters with '?'"
-msgstr "nicht darstellbare Zeichen durch '?' ersetzen"
+msgstr "Nicht darstellbare Zeichen durch '?' ersetzen"
 
 #: init/completions/ls.fish:27
 msgid "Reverse sort order"
@@ -5529,11 +5793,11 @@ msgstr "Sortierreihenfolge umkehren"
 
 #: init/completions/ls.fish:28
 msgid "Print size of files"
-msgstr "Größe der Dateien anzeigen"
+msgstr "Größe der Dateien ausgeben"
 
 #: init/completions/ls.fish:30
 msgid "List by columns"
-msgstr "Nach Spalten anzeigen"
+msgstr "Nach Spalten auflisten"
 
 #: init/completions/ls.fish:31
 msgid "Sort by size"
@@ -5553,7 +5817,7 @@ msgstr "Langformat ohne Eigentümer"
 
 #: init/completions/ls.fish:35
 msgid "Set blocksize to 1kB"
-msgstr "Blockgrösse auf 1kB setzen"
+msgstr "Blockgröße auf 1kB festlegen"
 
 #: init/completions/ls.fish:36 init/completions/ps.fish:25
 msgid "Long format"
@@ -5569,15 +5833,15 @@ msgstr "Nach Veränderungsdatum sortieren"
 
 #: init/completions/ls.fish:39
 msgid "Show access time"
-msgstr "Zugriffszeit zeigen"
+msgstr "Zugriffszeit anzeigen"
 
 #: init/completions/ls.fish:40
 msgid "List entries by lines"
-msgstr ""
+msgstr "Einträge auflisten"
 
 #: init/completions/ls.fish:41
 msgid "List one file per line"
-msgstr "Eine Datei pro Zeile anzeigen"
+msgstr "Eine Datei pro Zeile auflisten"
 
 #: init/completions/ls.fish:47
 msgid "Print author"
@@ -5585,7 +5849,7 @@ msgstr "Autor ausgeben"
 
 #: init/completions/ls.fish:48
 msgid "Set block size"
-msgstr "Blockgrösse setzen"
+msgstr "Blockgröße festlegen"
 
 #: init/completions/ls.fish:49
 msgid "Ignore files ending with ~"
@@ -5609,7 +5873,7 @@ msgstr "Langformat, volle ISO-Zeit"
 
 #: init/completions/ls.fish:54
 msgid "Don't print group information"
-msgstr "Keine Gruppen-Information ausgeben"
+msgstr "Keine Gruppeninformation ausgeben"
 
 #: init/completions/ls.fish:58
 msgid "Skip entries matching pattern"
@@ -5617,7 +5881,7 @@ msgstr "Dem Muster entsprechende Einträge übergehen"
 
 #: init/completions/ls.fish:59 init/completions/ls.fish:103
 msgid "Print raw entry names"
-msgstr ""
+msgstr "Roheinträge ausgeben"
 
 #: init/completions/ls.fish:60
 msgid "Long format without groups"
@@ -5633,7 +5897,7 @@ msgstr "Eintrag in Markierungen einschliessen"
 
 #: init/completions/ls.fish:63
 msgid "Select quoting style"
-msgstr "Markierungsstil wählen"
+msgstr "Markierungsstil auswählen"
 
 #: init/completions/ls.fish:64
 msgid "Sort criteria"
@@ -5641,11 +5905,11 @@ msgstr "Sortier-Kriterien"
 
 #: init/completions/ls.fish:75
 msgid "Show time type"
-msgstr "Zeittyp zeigen"
+msgstr "Zeittyp anzeigen"
 
 #: init/completions/ls.fish:82
 msgid "Select time style"
-msgstr "Zeitformat wählen"
+msgstr "Zeitformat auswählen"
 
 #: init/completions/ls.fish:83
 msgid "Assume tab stops at each COLS"
@@ -5669,7 +5933,7 @@ msgstr "Sortierung nach Erweiterung"
 
 #: init/completions/ls.fish:97
 msgid "Prevent -A from being automatically set for root"
-msgstr "Für root nicht automatisch -A setzen"
+msgstr "Für root nicht automatisch -A festlegen"
 
 #: init/completions/ls.fish:98
 msgid "Don't follow symlinks"
@@ -5681,11 +5945,11 @@ msgstr "Änderungsdatum anzeigen"
 
 #: init/completions/ls.fish:100
 msgid "Show whiteouts when scanning directories"
-msgstr ""
+msgstr "Überblendungen beim Scannen von Verzeichnissen anzeigen"
 
 #: init/completions/ls.fish:101
 msgid "Display each file's MAC label"
-msgstr "MAC-Markierung jeder Datei zeigen"
+msgstr "MAC-Markierung jeder Datei anzeigen"
 
 #: init/completions/ls.fish:102
 msgid "Include the file flags in a long (-l) output"
@@ -5801,11 +6065,11 @@ msgstr "Dateien ändern, keine Befehle ausführen"
 
 #: init/completions/make.fish:27
 msgid "Print working directory"
-msgstr "Arbeitsverzeichnis anzeigen"
+msgstr "Arbeitsverzeichnis ausgeben"
 
 #: init/completions/make.fish:28
 msgid "Pretend file is modified"
-msgstr ""
+msgstr "Vorgegebene Datei wurde geändert"
 
 #: init/completions/man.fish:32
 msgid "Program section"
@@ -5878,7 +6142,7 @@ msgstr "Handbuch-Sektionen"
 
 #: init/completions/man.fish:50
 msgid "Display all matches"
-msgstr "Alle Übereinstimmungen zeigen"
+msgstr "Alle Übereinstimmungen anzeigen"
 
 #: init/completions/man.fish:51
 msgid "Always reformat"
@@ -5894,15 +6158,15 @@ msgstr "Debug und Ausführung"
 
 #: init/completions/man.fish:54
 msgid "Show whatis information"
-msgstr "whatis-Information zeigen"
+msgstr "whatis-Information anzeigen"
 
 #: init/completions/man.fish:55
 msgid "Format only"
-msgstr ""
+msgstr "Nur Format"
 
 #: init/completions/man.fish:57
 msgid "Show apropos information"
-msgstr "apropos-Information zeigen"
+msgstr "apropos-Information anzeigen"
 
 #: init/completions/man.fish:58
 msgid "Search in all man pages"
@@ -5910,7 +6174,7 @@ msgstr "In allen Handbuchseiten suchen"
 
 #: init/completions/man.fish:59
 msgid "Set system"
-msgstr "System setzen"
+msgstr "System festlegen"
 
 #: init/completions/man.fish:60
 msgid "Preprocessors"
@@ -5922,11 +6186,12 @@ msgstr "Druckformat"
 
 #: init/completions/man.fish:62 init/completions/man.fish:63
 msgid "Only print locations"
-msgstr "Nur Lokationen anzeigen"
+msgstr "Nur Lokationen ausgeben"
 
 #: init/completions/mimedb.fish:1
 msgid "Input is a file, use name and contents to determine mimetype"
-msgstr "Eingabe ist eine Datei, Namen und Inhalt zur mime-Typbestimmung benutzen"
+msgstr ""
+"Eingabe ist eine Datei, Namen und Inhalt zur mime-Typbestimmung benutzen"
 
 #: init/completions/mimedb.fish:2
 msgid "Input is a file, use name to determine mimetype"
@@ -5982,7 +6247,7 @@ msgstr "Sämtliche Versions-Informationen ignorieren"
 
 #: init/completions/modprobe.fish:16
 msgid "Ignore version magic information"
-msgstr ""
+msgstr "Magische Versionsinformation ignorieren"
 
 #: init/completions/modprobe.fish:17
 msgid "Ignore module interface version"
@@ -5990,7 +6255,7 @@ msgstr "Modulschnittstellenversion ignorieren"
 
 #: init/completions/modprobe.fish:18
 msgid "List all modules matching the given wildcard"
-msgstr "Alle Module anzeigen, die den angegebenen Mustern entsprechen"
+msgstr "Alle Module auflisten, die den angegebenen Mustern entsprechen"
 
 #: init/completions/modprobe.fish:19
 msgid "Insert modules matching the given wildcard"
@@ -6006,7 +6271,7 @@ msgstr "Fehlermeldungen per syslog senden"
 
 #: init/completions/modprobe.fish:22
 msgid "Specify kernel version"
-msgstr "Kernelversion angeben"
+msgstr "Kernel-Version angeben"
 
 #: init/completions/modprobe.fish:23
 msgid "List dependencies of module"
@@ -6066,7 +6331,7 @@ msgstr "Dateisysteme ausschliessen"
 
 #: init/completions/mount.fish:60
 msgid "Remount a subtree to a second position"
-msgstr ""
+msgstr "Teilbaum an einer zweiten Position erneut einhängen"
 
 #: init/completions/mount.fish:61
 msgid "Move a subtree to a new position"
@@ -6082,11 +6347,11 @@ msgstr "Einhäng-Option"
 
 #: init/completions/mplayer.fish:27
 msgid "Dynamically change postprocessing"
-msgstr ""
+msgstr "Nachverarbeitung dynamisch ändern"
 
 #: init/completions/mplayer.fish:28
 msgid "A/V sync speed"
-msgstr ""
+msgstr "A/V Sync-Geschwindigkeit"
 
 #: init/completions/mplayer.fish:29 init/completions/mplayer.fish:31
 msgid "Skip frames to maintain A/V sync"
@@ -6118,23 +6383,23 @@ msgstr "Audio aus Datei spielen"
 
 #: init/completions/mplayer.fish:40
 msgid "Set default CD-ROM drive"
-msgstr "Standard-CD-ROM-Gerät setzen"
+msgstr "Standard-CD-ROM-Gerät festlegen"
 
 #: init/completions/mplayer.fish:41
 msgid "Set number of audio channels"
-msgstr "Anzahl der Audio-Kanäle setzen"
+msgstr "Anzahl der Audiokanäle festlegen"
 
 #: init/completions/mplayer.fish:42
 msgid "Set start chapter"
-msgstr "Startkapitel setzen"
+msgstr "Startkapitel festlegen"
 
 #: init/completions/mplayer.fish:43
 msgid "Set default DVD-ROM drive"
-msgstr "Standard DVD-ROM-Gerät setzen"
+msgstr "Standard DVD-ROM-Gerät festlegen"
 
 #: init/completions/mplayer.fish:44
 msgid "Set dvd viewing angle"
-msgstr "DVD-Betrachtungswinkel setzen"
+msgstr "DVD-Betrachtungswinkel festlegen"
 
 #: init/completions/mplayer.fish:45
 msgid "Force rebuilding index"
@@ -6154,7 +6419,7 @@ msgstr "Index aus Datei laden"
 
 #: init/completions/mplayer.fish:49
 msgid "Force non-interleaved AVI parser"
-msgstr ""
+msgstr "Nicht verschachtelten AVI-Parser"
 
 #: init/completions/mplayer.fish:50
 msgid "Rebuild index and save to file"
@@ -6162,7 +6427,7 @@ msgstr "Index neu erstellen und in Datei speichern"
 
 #: init/completions/mplayer.fish:51
 msgid "Seek to give time position"
-msgstr ""
+msgstr "Zeitposition suchen"
 
 #: init/completions/mplayer.fish:52
 msgid "TV capture mode"
@@ -6222,7 +6487,7 @@ msgstr "Neuere Dateien nicht überschreiben"
 
 #: init/completions/nextd.fish:1 init/completions/prevd.fish:1
 msgid "Also print directory history"
-msgstr "Auch Verzeichnis-Verlauf anzeigen"
+msgstr "Auch Verzeichnisverlauf ausgeben"
 
 #: init/completions/nice.fish:2
 msgid "Increment priority by specified number first"
@@ -6230,7 +6495,7 @@ msgstr "Priorität zunächst um angegebene Zahl erhöhen"
 
 #: init/completions/perl.fish:1 init/completions/ruby.fish:2
 msgid "Specify record separator"
-msgstr "Satztrenner definieren"
+msgstr "Satztrenner angeben"
 
 #: init/completions/perl.fish:2 init/completions/ruby.fish:3
 msgid "Turn on autosplit mode"
@@ -6254,7 +6519,7 @@ msgstr "Befehl ausführen"
 
 #: init/completions/perl.fish:7 init/completions/ruby.fish:9
 msgid "Set regexp used to split input"
-msgstr "Zur Eingabetrennung benutzten regulären Ausdruck setzen"
+msgstr "Zur Eingabetrennung benutzten regulären Ausdruck festlegen"
 
 #: init/completions/perl.fish:8 init/completions/ruby.fish:10
 msgid "Edit files in-place"
@@ -6292,7 +6557,7 @@ msgstr "$PATH nach Skript durchsuchen"
 
 #: init/completions/perl.fish:16 init/completions/ruby.fish:18
 msgid "Taint checking"
-msgstr ""
+msgstr "Taintprüfung"
 
 #: init/completions/perl.fish:17
 msgid "Unsafe mode"
@@ -6324,7 +6589,7 @@ msgstr "Funktionstasten für Befehle nutzen"
 
 #: init/completions/pine.fish:7
 msgid "Expand collections in FOLDER LIST display"
-msgstr ""
+msgstr "Sammlungen bei der Anzeige der VERZEICHNISLISTE erweitern"
 
 #: init/completions/pine.fish:8
 msgid "Start with specified current message number"
@@ -6336,11 +6601,11 @@ msgstr "Ordner nur zum Lesen öffnen"
 
 #: init/completions/pine.fish:10
 msgid "Set configuration file"
-msgstr "Konfigurationsdatei setzen"
+msgstr "Konfigurationsdatei festlegen"
 
 #: init/completions/pine.fish:11
 msgid "Set global configuration file"
-msgstr "Globale Konfigurationsdatei setzen"
+msgstr "Globale Konfigurationsdatei festlegen"
 
 #: init/completions/pine.fish:12
 msgid "Restricted mode"
@@ -6360,7 +6625,7 @@ msgstr "Beispiel-Konfigurationsdatei erstellen"
 
 #: init/completions/pine.fish:16
 msgid "Set mail sort order"
-msgstr "Mail-Sortierordnung setzen"
+msgstr "Mail-Sortierordnung festlegen"
 
 #: init/completions/pine.fish:26
 msgid "Config option"
@@ -6388,11 +6653,11 @@ msgstr "Stoppe nach der angegebenen Anzahl von ECHO_REQUEST-Paketen"
 
 #: init/completions/ping.fish:7
 msgid "Set the SO_DEBUG option on the socket being used"
-msgstr "Setze die Option SO_DEBUG für den benutzten Socket"
+msgstr "Die Option SO_DEBUG für den benutzten Socket festlegen"
 
 #: init/completions/ping.fish:8
 msgid "Allocate and set 20 bit flow label on ECHO_REQUEST packets"
-msgstr "20-Bit-Fluss-Markierung für ECHO_REQUEST-Pakete zuweisen und setzen"
+msgstr "20-Bit-Fluss-Markierung für ECHO_REQUEST-Pakete zuweisen und festlegen"
 
 #: init/completions/ping.fish:9
 msgid "Flood ping"
@@ -6404,7 +6669,7 @@ msgstr "Warte angegebenes Sekundenintervall zwischen dem Senden der Pakete"
 
 #: init/completions/ping.fish:11
 msgid "Set source address to specified interface address"
-msgstr "Setze Quell-Adresse auf angegebene Schnittstellen-Adresse"
+msgstr "Quelladresse auf angegebene Schnittstellenadresse festlegen"
 
 #: init/completions/ping.fish:12
 msgid "Send the specified number of packets without waiting for reply"
@@ -6424,15 +6689,19 @@ msgstr "Packet mit leeren Bytes auffüllen"
 
 #: init/completions/ping.fish:16
 msgid "Set Quality of Service -related bits in ICMP datagrams"
-msgstr "Setze auf 'Quality of Service'-bezogene Bits in ICMP-Datagrammen"
+msgstr "Auf 'Quality of Service'-bezogene Bits in ICMP-Datagrammen festlegen"
 
 #: init/completions/ping.fish:18
 msgid "Record route"
 msgstr "Route aufzeichnen"
 
 #: init/completions/ping.fish:19
-msgid "Bypass the normal routing tables and send directly to a host on an attached interface"
-msgstr "Normale Routing-Tabellen umgehen und direkt zu einem Rechner an einer angeschlossenen Schnittstelle senden"
+msgid ""
+"Bypass the normal routing tables and send directly to a host on an attached "
+"interface"
+msgstr ""
+"Normale Routing-Tabellen umgehen und direkt zu einem Rechner an einer "
+"angeschlossenen Schnittstelle senden"
 
 #: init/completions/ping.fish:20
 msgid "Specifies the number of data bytes to be sent"
@@ -6440,15 +6709,15 @@ msgstr "Gibt die Anzahl zu sendender Bytes an"
 
 #: init/completions/ping.fish:21
 msgid "Set socket buffer size"
-msgstr "Setze Größe des Socketpuffers"
+msgstr "Socketpuffergröße festlegen"
 
 #: init/completions/ping.fish:22
 msgid "Set the IP Time to Live"
-msgstr "Setze die IP-Lebensdauer (TTL)"
+msgstr "IP-Lebensdauer (TTL) festlegen"
 
 #: init/completions/ping.fish:23
 msgid "Set special IP timestamp options"
-msgstr "Setze spezielle IP-Zeitstempeloptionen"
+msgstr "Spezielle IP-Zeitstempeloptionen festlegen"
 
 #: init/completions/ping.fish:24
 msgid "Select Path MTU Discovery strategy"
@@ -6456,11 +6725,15 @@ msgstr "Wähle Strategie zur Erkennung der Pfad-MTU"
 
 #: init/completions/ping.fish:25
 msgid "Print full user-to-user latency"
-msgstr "Volle Anwender-zu-Anwender-Latenz anzeigen"
+msgstr "Volle Benutzer-zu-Benutzer-Latenz ausgeben"
 
 #: init/completions/ping.fish:28
-msgid "Specify  a timeout, in seconds, before ping exits regardless of how many packets have been sent or received"
-msgstr "Zeitdauer in Sekunden angegben, nach der ping ohne Rücksicht auf die Anzahl gesendeter/empfangener Pakete abbricht"
+msgid ""
+"Specify  a timeout, in seconds, before ping exits regardless of how many "
+"packets have been sent or received"
+msgstr ""
+"Zeitdauer in Sekunden angeben, nach der ping ohne Rücksicht auf die Anzahl "
+"gesendeter/empfangener Pakete abbricht"
 
 #: init/completions/ping.fish:29
 msgid "Time to wait for a response, in seconds"
@@ -6477,10 +6750,11 @@ msgstr "Selektion umkehren"
 #: init/completions/ps.fish:5
 msgid "Select all processes except session leaders and terminal-less"
 msgstr ""
+"Alle Prozesse mit Ausnahme der Sitzungsführer und terminal-less auswählen"
 
 #: init/completions/ps.fish:6
 msgid "Select all processes except session leaders"
-msgstr ""
+msgstr "Alle Prozesse mit Ausnahme der Sitzungsführer auswählen"
 
 #: init/completions/ps.fish:8
 msgid "Deselect all processes that do not fulfill conditions"
@@ -6496,7 +6770,7 @@ msgstr "Auswahl per Gruppe"
 
 #: init/completions/ps.fish:13 init/completions/ps.fish:14
 msgid "Select by user"
-msgstr "Auswahl per Anwender"
+msgstr "Auswahl per Benutzer"
 
 #: init/completions/ps.fish:15
 msgid "Select by group/session"
@@ -6512,7 +6786,7 @@ msgstr "Auswahl per Eltern-PID"
 
 #: init/completions/ps.fish:18
 msgid "Select by session ID"
-msgstr "Auswahl per Sitzungs-ID"
+msgstr "Auswahl per Sitzungskennung"
 
 #: init/completions/ps.fish:19
 msgid "Select by tty"
@@ -6540,7 +6814,7 @@ msgstr "Job-Format"
 
 #: init/completions/ps.fish:27
 msgid "Do not show flags"
-msgstr "Keine Flags zeigen"
+msgstr "Keine Flags anzeigen"
 
 #: init/completions/ps.fish:29
 msgid "Show hierarchy"
@@ -6548,7 +6822,7 @@ msgstr "Hierarchie anzeigen"
 
 #: init/completions/ps.fish:30
 msgid "Set namelist file"
-msgstr "namelist-Datei setzen"
+msgstr "namelist-Datei festlegen"
 
 #: init/completions/ps.fish:31
 msgid "Wide output"
@@ -6580,11 +6854,11 @@ msgstr "Optimierungen aktivieren"
 
 #: init/completions/python.fish:7
 msgid "Division control"
-msgstr ""
+msgstr "Bereichskontrolle"
 
 #: init/completions/python.fish:8
 msgid "Disable import of site module"
-msgstr ""
+msgstr "Import des Seitenmoduls deaktivieren"
 
 #: init/completions/python.fish:9
 msgid "Warn on mixed tabs and spaces"
@@ -6604,7 +6878,7 @@ msgstr "Erste Zeile der Eingabe ignorieren"
 
 #: init/completions/read.fish:2
 msgid "Set prompt command"
-msgstr "Prompt-Befehl setzen"
+msgstr "Prompt-Befehl festlegen"
 
 #: init/completions/read.fish:3 init/completions/set.fish:62
 msgid "Export variable to subprocess"
@@ -6619,8 +6893,12 @@ msgid "Make variable scope local"
 msgstr "Geltungsbereich der Variablen lokal machen"
 
 #: init/completions/read.fish:6 init/completions/set.fish:66
-msgid "Make variable scope universal, i.e. share variable with all the users fish processes on this computer"
-msgstr "Variablengeltungsbereich allgemeingültig machen, d. h. die Variable ist für alle fish-Prozesse des Anwenders auf diesem Computer verfügbar"
+msgid ""
+"Make variable scope universal, i.e. share variable with all the users fish "
+"processes on this computer"
+msgstr ""
+"Variablengeltungsbereich allgemeingültig machen, d. h. die Variable ist für "
+"alle fish-Prozesse des Benutzers auf diesem Computer verfügbar"
 
 #: init/completions/read.fish:7 init/completions/set.fish:63
 msgid "Do not export variable to subprocess"
@@ -6628,11 +6906,15 @@ msgstr "Variable nicht an Unterprozess exportieren"
 
 #: init/completions/renice.fish:2
 msgid "Force following parameters to be process ID's (The default)"
-msgstr "Erzwinge die Interpretation der folgenden Parameter als Prozess-IDs (Standard)"
+msgstr ""
+"Erzwinge die Interpretation der folgenden Parameter als Prozesskennungen "
+"(Standard)"
 
 #: init/completions/renice.fish:3
 msgid "Force following parameters to be interpreted as process group ID's"
-msgstr "Erzwinge die Interpretation der folgenden Parameter als Prozessgruppen-IDs"
+msgstr ""
+"Erzwinge die Interpretation der folgenden Parameter als "
+"Prozessgruppenkennungen"
 
 #: init/completions/renice.fish:4
 msgid "Force following parameters to be interpreted as user names"
@@ -6684,19 +6966,30 @@ msgstr "root-Verzeichnis für rpm-Operationen angeben"
 
 #: init/completions/rpm.fish:22
 msgid "Add suggested packages to the transaction set when needed"
-msgstr "Füge der Transaktionsmenge die vorgeschlagenen Pakete hinzu, falls nötig"
+msgstr ""
+"Füge der Transaktionsmenge die vorgeschlagenen Pakete hinzu, falls nötig"
 
 #: init/completions/rpm.fish:23
-msgid "Installs or upgrades all the files in the package, even if they aren't needed (missingok) and don't exist"
-msgstr "Installiert oder aktualisiert alle Dateien im Paket, selbst wenn sie nicht erforderlich sind (missingok) und nicht existieren"
+msgid ""
+"Installs or upgrades all the files in the package, even if they aren't needed "
+"(missingok) and don't exist"
+msgstr ""
+"Installiert oder aktualisiert alle Dateien im Paket, selbst wenn sie nicht "
+"erforderlich sind (missingok) und nicht existieren"
 
 #: init/completions/rpm.fish:24
-msgid "Used with --relocate, permit relocations on all file paths, not just those OLD-PATH's included in the binary package relocation hint(s)"
+msgid ""
+"Used with --relocate, permit relocations on all file paths, not just those "
+"OLD-PATH's included in the binary package relocation hint(s)"
 msgstr ""
+"Benutzt mit --relocate, erlaubt es die Relozierung auf sämtliche Dateipfade "
+"und nicht nur auf die ALTENPFADE, die in dem/den "
+"Binärpaket-Relozierungshinweis(en) enthalten sind"
 
 #: init/completions/rpm.fish:25
 msgid "Don't install files whose name begins with specified path"
-msgstr "Keine Dateien installieren, deren Name mit dem angegebenen Pfad beginnen"
+msgstr ""
+"Keine Dateien installieren, deren Name mit dem angegebenen Pfad beginnen"
 
 #: init/completions/rpm.fish:26
 msgid "Don't install any files which are marked as documentation"
@@ -6704,23 +6997,32 @@ msgstr "Keine Dateien installieren, die als Dokumentation markiert sind"
 
 #: init/completions/rpm.fish:27
 msgid "Same as using --replacepkgs, --replacefiles, and --oldpackage"
-msgstr "Entspricht der Benutzung von --replacepkgs, --replacefiles und --oldpackage"
+msgstr ""
+"Entspricht der Benutzung von --replacepkgs, --replacefiles und --oldpackage"
 
 #: init/completions/rpm.fish:28
 msgid "Print 50 hash marks as the package archive is unpacked"
-msgstr "Zeige 50 Hash-Markierungen beim Auspackens des Paketarchivs"
+msgstr "Zeige 50 Hash-Markierungen beim Auspacken des Paketarchivs"
 
 #: init/completions/rpm.fish:29
 msgid "Don't check for sufficient disk space before installation"
 msgstr "Vor der Installation nicht auf ausreichenden Plattenplatz prüfen"
 
 #: init/completions/rpm.fish:30
-msgid "Allow installation or upgrading even if the architectures of the binary package and host don't match"
-msgstr "Installation und Aktualisierung auch dann ermöglichen, wenn die Architekturen des Binärpaketes und des Rechners nicht übereinstimmen"
+msgid ""
+"Allow installation or upgrading even if the architectures of the binary "
+"package and host don't match"
+msgstr ""
+"Installation und Aktualisierung auch dann ermöglichen, wenn die Architekturen "
+"des Binärpaketes und des Rechners nicht übereinstimmen"
 
 #: init/completions/rpm.fish:31
-msgid "Allow installation or upgrading even if the operating systems of the binary package and host don't match"
-msgstr "Installation und Aktualisierung auch dann ermöglichen, wenn die Betriebssysteme des Binärpaketes und des Rechners nicht übereinstimmen"
+msgid ""
+"Allow installation or upgrading even if the operating systems of the binary "
+"package and host don't match"
+msgstr ""
+"Installation und Aktualisierung auch dann ermöglichen, wenn die "
+"Betriebssysteme des Binärpaketes und des Rechners nicht übereinstimmen"
 
 #: init/completions/rpm.fish:32
 msgid "Install documentation files (default)"
@@ -6732,11 +7034,11 @@ msgstr "Nur die Datenbank, nicht das Dateisystem aktualisieren"
 
 #: init/completions/rpm.fish:34 init/completions/rpm.fish:94
 msgid "Don't verify package or header digests when reading"
-msgstr "Beim Lesen keine Paket- oder Header-Prüfsummen überprüfen"
+msgstr "Beim Lesen keine Paket- oder Kopfzeilen-Prüfsummen überprüfen"
 
 #: init/completions/rpm.fish:35 init/completions/rpm.fish:97
 msgid "Don't verify package or header signatures when reading"
-msgstr "Beim Lesen keine Paket- oder Header-Signaturen überprüfen"
+msgstr "Beim Lesen keine Paket- oder Kopfzeilen-Signaturen überprüfen"
 
 #: init/completions/rpm.fish:36
 msgid "Don't do a dependency check"
@@ -6788,35 +7090,59 @@ msgstr "Triggerpostun-Skripte nicht ausführen"
 
 #: init/completions/rpm.fish:48
 msgid "Allow an upgrade to replace a newer package with an older one"
-msgstr "Erlaube einer Aktualisierung das Ersetzen eines neueren Paketes durch ein älteres"
+msgstr ""
+"Erlaube einer Aktualisierung das Ersetzen eines neueren Paketes durch ein "
+"älteres"
 
 #: init/completions/rpm.fish:49
-msgid "Print percentages as files are unpacked from the package archive. This is intended to make rpm easy to run from other tools"
-msgstr "Prozentwert anzeigen, während Dateien aus dem Paketarchiv ausgepackt werden. Dies soll das Ausführen von rpm aus anderen Programmen heraus erleichtern"
+msgid ""
+"Print percentages as files are unpacked from the package archive. This is "
+"intended to make rpm easy to run from other tools"
+msgstr ""
+"Prozentwert ausgeben, während Dateien aus dem Paketarchiv ausgepackt werden. "
+"Dies soll das Ausführen von rpm aus anderen Programmen heraus erleichtern"
 
 #: init/completions/rpm.fish:50
-msgid "For relocatable binary packages, translate all file paths that start with the installation prefix in the package relocation hint(s) to NEWPATH"
+msgid ""
+"For relocatable binary packages, translate all file paths that start with the "
+"installation prefix in the package relocation hint(s) to NEWPATH"
 msgstr ""
+"Für relozierbare Binärpakete alle Dateipfade, die mit dem Installationspräfix "
+"im/in den Paket-Relozierungshinweis(en) beginnen, auf den NEUENPFAD "
+"konvertieren"
 
 #: init/completions/rpm.fish:51
-msgid "Translate all paths that start with first half of following parameter to second half of following parameter"
-msgstr "Übersetze alle Pfade, die mit der ersten Hälfte des folgenden Parameters beginnen, mit der zweiten Hälfte des folgenden Parameters"
+msgid ""
+"Translate all paths that start with first half of following parameter to "
+"second half of following parameter"
+msgstr ""
+"Übersetze alle Pfade, die mit der ersten Hälfte des folgenden Parameters "
+"beginnen, mit der zweiten Hälfte des folgenden Parameters"
 
 #: init/completions/rpm.fish:52 init/completions/rpm.fish:118
 msgid "Re-package the files before erasing"
 msgstr "Dateien vor dem Löschen umpacken"
 
 #: init/completions/rpm.fish:53
-msgid "Install the packages even if they replace files from other, already installed, packages"
-msgstr "Installiere diese Pakete, selbst wenn sie Dateien aus anderen, bereits installierten Paketen ersetzen"
+msgid ""
+"Install the packages even if they replace files from other, already "
+"installed, packages"
+msgstr ""
+"Installiere diese Pakete, selbst wenn sie Dateien aus anderen, bereits "
+"installierten Paketen ersetzen"
 
 #: init/completions/rpm.fish:54
-msgid "Install the packages even if some of them are already installed on this system"
-msgstr "Installiere diese Pakete, selbst wenn einige von ihnen auf diesem System bereits installiert sind"
+msgid ""
+"Install the packages even if some of them are already installed on this system"
+msgstr ""
+"Installiere diese Pakete, selbst wenn einige von ihnen auf diesem System "
+"bereits installiert sind"
 
 #: init/completions/rpm.fish:55
-msgid "Don't install the package, simply check for and report potential conflicts"
-msgstr "Paket nicht installieren, nur auf mögliche Konflikte testen und diese anzeigen"
+msgid ""
+"Don't install the package, simply check for and report potential conflicts"
+msgstr ""
+"Paket nicht installieren, nur auf mögliche Konflikte testen und diese anzeigen"
 
 #: init/completions/rpm.fish:59
 msgid "Display change information for the package"
@@ -6828,19 +7154,24 @@ msgstr "Zeigt nur Konfigurationsdateien (impliziert -l)"
 
 #: init/completions/rpm.fish:61
 msgid "List only documentation files (implies -l)"
-msgstr "Nur Dokumentationsdateien anzeigen (impliziert -l)"
+msgstr "Nur Dokumentationsdateien auflisten (impliziert -l)"
 
 #: init/completions/rpm.fish:62
 msgid "Dump file information. Must be used with at least one of -l, -c, -d"
-msgstr "Gibt Dateiinformationen aus. Muss mit einem von -l, -c, -d benutzt werden"
+msgstr ""
+"Gibt Dateiinformationen aus. Muss mit einem von -l, -c, -d benutzt werden"
 
 #: init/completions/rpm.fish:63
 msgid "List all the files in each selected package"
 msgstr "Zeigt alle Dateien in jedem gewählten Paket an"
 
 #: init/completions/rpm.fish:64
-msgid "Display package information, including name, version, and description. Uses --queryformat if specified"
-msgstr "Zeit Paketinformation einschließlich Name, Version und Beschreibung. Benutzt --queryformat falls angegeben"
+msgid ""
+"Display package information, including name, version, and description. Uses "
+"--queryformat if specified"
+msgstr ""
+"Zeit Paketinformation einschließlich Name, Version und Beschreibung. Benutzt "
+"--queryformat falls angegeben"
 
 #: init/completions/rpm.fish:65
 msgid "Orders the package listing by install time"
@@ -6848,23 +7179,27 @@ msgstr "Ordnet die angezeigten Paketen entsprechend der Installationszeit"
 
 #: init/completions/rpm.fish:66
 msgid "List files in package"
-msgstr "Dateien im Paket anzeigen"
+msgstr "Dateien im Paket auflisten"
 
 #: init/completions/rpm.fish:67
 msgid "List capabilities this package provides"
-msgstr "Eigenschaften anzeigen, die dieses Paket bereitstellt"
+msgstr "Eigenschaften auflisten, die dieses Paket bereitstellt"
 
 #: init/completions/rpm.fish:68
 msgid "List packages on which this package depends"
-msgstr "Pakete anzeigen, von denen dieses Paket abhängt"
+msgstr "Pakete auflisten, von denen dieses Paket abhängt"
 
 #: init/completions/rpm.fish:69
 msgid "List the package specific scriptlets"
-msgstr "Die Paket-spezifischen Skripte anzeigen"
+msgstr "Die Paket-spezifischen Skripte auflisten"
 
 #: init/completions/rpm.fish:70
-msgid "Display the states of files in the package. The state of each file is one of normal, not installed, or replaced"
-msgstr "Zeigt den Status der Dateien im Paket. Status einer jeden Datei ist entweder normal, nicht installiert oder ersetzt"
+msgid ""
+"Display the states of files in the package. The state of each file is one of "
+"normal, not installed, or replaced"
+msgstr ""
+"Zeigt den Status der Dateien im Paket. Status einer jeden Datei ist entweder "
+"normal, nicht installiert oder ersetzt"
 
 #: init/completions/rpm.fish:71 init/completions/rpm.fish:72
 msgid "Display the trigger scripts contained in the package"
@@ -6879,24 +7214,37 @@ msgid "Query package owning specified file"
 msgstr "Paket abfragen, zu dem die angegebene Datei gehört"
 
 #: init/completions/rpm.fish:80
-msgid "Query package that contains a given file identifier, i.e. the MD5 digest of the file contents"
-msgstr "Frage nach Paketen, die einen gegebenen Datei-Identifikator enthalten, z. B. den MD5-Digest der Dateiinhalte"
+msgid ""
+"Query package that contains a given file identifier, i.e. the MD5 digest of "
+"the file contents"
+msgstr ""
+"Frage nach Paketen, die einen gegebenen Datei-Identifikator enthalten, z. B. "
+"den MD5-Digest der Dateiinhalte"
 
 #: init/completions/rpm.fish:81
 msgid "Query packages with the specified group"
 msgstr "Pakete mit der angegebenen Gruppe abfragen"
 
 #: init/completions/rpm.fish:82
-msgid "Query package that contains a given header identifier, i.e. the SHA1 digest of the immutable header region"
-msgstr "Frage nach Paketen, die einen gegebenen Header-Bezeichner enthalten, z. B. den SHA1-Digest des unveränderlichen Header-Bereichs"
+msgid ""
+"Query package that contains a given header identifier, i.e. the SHA1 digest "
+"of the immutable header region"
+msgstr ""
+"Frage nach Paketen, die einen gegebenen Kopfzeilen-Bezeichner enthalten, z. "
+"B. "
+"den SHA1-Digest des unveränderlichen Kopfzeilenbereichs"
 
 #: init/completions/rpm.fish:83
 msgid "Query an (uninstalled) package in specified file"
 msgstr "Ein (deinstalliertes) Paket in der angegebenen Datei abfragen"
 
 #: init/completions/rpm.fish:84
-msgid "Query package that contains a given package identifier, i.e. the MD5 digest of the combined header and payload contents"
-msgstr "Paket abfragen, das einen gegebenen Paket-Bezeichner enthält, z. B. die MD5-Prüfsumme des kombinierten Headers und des Nutzdateninhaltes"
+msgid ""
+"Query package that contains a given package identifier, i.e. the MD5 digest "
+"of the combined header and payload contents"
+msgstr ""
+"Paket abfragen, das einen gegebenen Paket-Bezeichner enthält, z. B. die "
+"MD5-Prüfsumme der kombinierten Kopfzeile und des Nutzdateninhaltes"
 
 #: init/completions/rpm.fish:85
 msgid "Parse and query specified spec-file as if it were a package"
@@ -6904,7 +7252,8 @@ msgstr "Angegebene spec-Datei auswerten, als ob es ein Paket wäre"
 
 #: init/completions/rpm.fish:86
 msgid "Query package(s) that have the specified TID (transaction identifier)"
-msgstr "Paket(e) abfragen, die den angegebenen TID (Transaktions-Bezeichner) besitzen"
+msgstr ""
+"Paket(e) abfragen, die den angegebenen TID (Transaktions-Bezeichner) besitzen"
 
 #: init/completions/rpm.fish:87
 msgid "Query packages that are triggered by the specified packages"
@@ -6915,8 +7264,11 @@ msgid "Query all packages that provide the specified capability"
 msgstr "Alle Pakete abfragen, die die angegebene Eigenschaft bereitstellen"
 
 #: init/completions/rpm.fish:89
-msgid "Query all packages that requires the specified capability for functioning"
-msgstr "Alle Pakete abfragen, die die angegebene Eigenschaft für die Funktionsfähigkeit erfordern"
+msgid ""
+"Query all packages that requires the specified capability for functioning"
+msgstr ""
+"Alle Pakete abfragen, die die angegebene Eigenschaft für die "
+"Funktionsfähigkeit erfordern"
 
 #: init/completions/rpm.fish:93
 msgid "Don't verify dependencies of packages"
@@ -6944,7 +7296,7 @@ msgstr "Grössen-Attribute nicht prüfen"
 
 #: init/completions/rpm.fish:101
 msgid "Don't verify user attribute"
-msgstr "Anwender-Attribute nicht prüfen"
+msgstr "Benutzerattribute nicht überprüfen"
 
 #: init/completions/rpm.fish:102
 msgid "Don't verify group attribute"
@@ -7020,7 +7372,7 @@ msgstr "Datei erfordern"
 
 #: init/completions/ruby.fish:20
 msgid "Verbose mode without message"
-msgstr "Wortreicher Modus ohne Nachricht"
+msgstr "Ausführlicher Modus ohne Nachricht"
 
 #: init/completions/ruby.fish:24
 msgid "Compiler debug mode"
@@ -7035,7 +7387,8 @@ msgid "Port"
 msgstr "Port"
 
 #: init/completions/scp.fish:31
-msgid "Preserves modification times, access times, and modes from the original file"
+msgid ""
+"Preserves modification times, access times, and modes from the original file"
 msgstr "Erhält Modifizierungs- und Zugriffszeit und Modi der Originaldatei"
 
 #: init/completions/scp.fish:33
@@ -7048,7 +7401,7 @@ msgstr "Verschlüsselungsprogramm"
 
 #: init/completions/screen.fish:1
 msgid "Print a list of running screen sessions"
-msgstr "Liste laufender screen-Sitzungen anzeigen"
+msgstr "Liste laufender screen-Sitzungen ausgeben"
 
 #: init/completions/sed.fish:13
 msgid "Evaluate expression"
@@ -7083,8 +7436,12 @@ msgid "Use minimal IO buffers"
 msgstr "Minimale IO-Puffer benutzen"
 
 #: init/completions/sed.fish:35
-msgid "Delay opening files until a command containing the related 'w' function is applied"
-msgstr "Verzögere die Dateiöffnung, bis ein Befehl angewandt wird, der die entsprechende 'w'-Funktion enthält"
+msgid ""
+"Delay opening files until a command containing the related 'w' function is "
+"applied"
+msgstr ""
+"Verzögere die Dateiöffnung, bis ein Befehl angewandt wird, der die "
+"entsprechende 'w'-Funktion enthält"
 
 #: init/completions/service.fish:3
 msgid "Service name"
@@ -7164,7 +7521,7 @@ msgstr "Sort stabilisieren"
 
 #: init/completions/sort.fish:14
 msgid "Set memory buffer size"
-msgstr "Speicherpuffer-Grösse setzen"
+msgstr "Speicherpuffergröße festlegen"
 
 #: init/completions/sort.fish:15
 msgid "Field separator"
@@ -7172,7 +7529,7 @@ msgstr "Feldtrenner"
 
 #: init/completions/sort.fish:16
 msgid "Set temporary directory"
-msgstr "Temporäres Verzeichnis setzen"
+msgstr "Temporäres Verzeichnis festlegen"
 
 #: init/completions/sort.fish:17
 msgid "Output only first of equal lines"
@@ -7236,7 +7593,8 @@ msgstr "In Hintergrund verzweigen"
 
 #: init/completions/ssh.fish:90
 msgid "Allow remote host to connect to local forwarded ports"
-msgstr "Entfernten Rechnern Verbindung zu lokal weitergeleiteten Ports erlauben"
+msgstr ""
+"Entfernten Rechnern Verbindung zu lokal weitergeleiteten Ports erlauben"
 
 #: init/completions/ssh.fish:91
 msgid "Smartcard device"
@@ -7332,7 +7690,7 @@ msgstr "Dateien an Archiv anhängen"
 
 #: init/completions/tar.fish:8
 msgid "List archive"
-msgstr "Archiv anzeigen"
+msgstr "Archiv auflisten"
 
 #: init/completions/tar.fish:9
 msgid "Append new files"
@@ -7352,7 +7710,7 @@ msgstr "Während des Lesens umblocken"
 
 #: init/completions/tar.fish:16
 msgid "Print directory names"
-msgstr "Verzeichnis-Namen anzeigen"
+msgstr "Verzeichnisnamen ausgeben"
 
 #: init/completions/tar.fish:17
 msgid "Archive file"
@@ -7468,11 +7826,11 @@ msgstr "-T enthält null-terminierte Namen"
 
 #: init/completions/tar.fish:48
 msgid "Print total bytes written"
-msgstr "Gesamtzahl geschriebener Bytes anzeigen"
+msgstr "Gesamtzahl geschriebener Bytes ausgeben"
 
 #: init/completions/tar.fish:50
 msgid "Set volume name"
-msgstr "Volume-Namen setzen"
+msgstr "Volume-Namen festlegen"
 
 #: init/completions/tar.fish:52 init/completions/tar.fish:53
 msgid "Ask for confirmation"
@@ -7596,7 +7954,7 @@ msgstr "Datei ist symbolischer Link"
 
 #: init/completions/test.fish:27
 msgid "File owned by effective group ID"
-msgstr "Datei gehört effektiver Gruppen-ID"
+msgstr "Datei gehört effektiver Gruppenkennung"
 
 #: init/completions/test.fish:28
 msgid "File has sticky bit set"
@@ -7604,7 +7962,7 @@ msgstr "Sticky-Bit der Datei ist gesetzt"
 
 #: init/completions/test.fish:30
 msgid "File owned by effective user ID"
-msgstr "Datei gehört effektiver Anwender-ID"
+msgstr "Datei gehört zu effektiver Benutzerkennung"
 
 #: init/completions/test.fish:31
 msgid "File is named pipe"
@@ -7660,7 +8018,7 @@ msgstr "tatsächliche UID beobachten"
 
 #: init/completions/top.fish:9
 msgid "Monitor user"
-msgstr "Anwender beobachten"
+msgstr "Benutzer beobachten"
 
 #: init/completions/top.fish:10
 msgid "Monitor PID"
@@ -7688,11 +8046,11 @@ msgstr "Datei nicht erstellen"
 
 #: init/completions/touch.fish:4 init/completions/touch.fish:8
 msgid "Set date"
-msgstr "Datum setzen"
+msgstr "Datum festlegen"
 
 #: init/completions/touch.fish:5
 msgid "Set date forward"
-msgstr "Datum in Zukunft setzen"
+msgstr "Datum in Zukunft festlegen"
 
 #: init/completions/touch.fish:6
 msgid "Change modification time"
@@ -7700,7 +8058,7 @@ msgstr "Modifikationszeit ändern"
 
 #: init/completions/touch.fish:7
 msgid "Use this files times"
-msgstr ""
+msgstr "Diese Dateizeiten verwenden"
 
 #: init/completions/trap.fish:2
 msgid "Display names of all signals"
@@ -7712,7 +8070,7 @@ msgstr "Alle derzeit definierten Trap-Handler anzeigen"
 
 #: init/completions/type.fish:3
 msgid "Print all possible definitions of the specified name"
-msgstr "Alle möglichen Definitionen des angegebenen Namens anzeigen"
+msgstr "Alle möglichen Definitionen des angegebenen Namens ausgeben"
 
 #: init/completions/type.fish:4
 msgid "Supress function and builtin lookup"
@@ -7720,19 +8078,19 @@ msgstr "Unterdrücke Nachschlagen von Funktionen und eingebauten Befehlen"
 
 #: init/completions/type.fish:5
 msgid "Print command type"
-msgstr "Befehlstyp anzeigen"
+msgstr "Befehlstyp ausgeben"
 
 #: init/completions/type.fish:6
 msgid "Print path to command, or nothing if name is not a command"
-msgstr "Pfad zu Befehl anzeigen oder nichts, wenn es kein Befehl ist"
+msgstr "Pfad zu Befehl ausgeben oder nichts, wenn es kein Befehl ist"
 
 #: init/completions/type.fish:7
 msgid "Print path to command"
-msgstr "Pfad zu Befehl anzeigen"
+msgstr "Pfad zu Befehl ausgeben"
 
 #: init/completions/ulimit.fish:2
 msgid "Set or get all current limits"
-msgstr "Setzen/Anzeigen aller aktuellen Begrenzungen"
+msgstr "Festlegen/Anzeigen aller aktuellen Begrenzungen"
 
 #: init/completions/ulimit.fish:3
 msgid "Maximum size of core files created"
@@ -7748,11 +8106,11 @@ msgstr "Maximalgröße der von der Shell angelegten Dateien"
 
 #: init/completions/ulimit.fish:6
 msgid "Maximum size that may be locked into memory"
-msgstr ""
+msgstr "Maximalgröße, die im Speicher gesperrt werden kann"
 
 #: init/completions/ulimit.fish:7
 msgid "Maximum resident set size"
-msgstr ""
+msgstr "Maximale Größe des Programms im Arbeitsspeicher"
 
 #: init/completions/ulimit.fish:8
 msgid "Maximum number of open file descriptors"
@@ -7768,7 +8126,8 @@ msgstr "Maximalanzahl CPU-Zeit in Sekunden"
 
 #: init/completions/ulimit.fish:11
 msgid "Maximum number of processes available to a single user"
-msgstr "Maximale Anzahl an Prozessen, die für einen einzelnen Anwender verfügbar sind"
+msgstr ""
+"Maximale Anzahl an Prozessen, die für einen einzelnen Benutzer verfügbar sind"
 
 #: init/completions/ulimit.fish:12
 msgid "Maximum amount of virtual memory available to the shell"
@@ -7780,15 +8139,19 @@ msgstr "Aushängen ohne Aktualisierung von /etc/mtab"
 
 #: init/completions/umount.fish:19
 msgid "In case unmounting fails, try to remount read-only"
-msgstr "Wenn das Aushängen fehlschläft, erneutes Einhängen im Nur-Lese-Modus versuchen"
+msgstr ""
+"Wenn das Aushängen fehlschläft, erneutes Einhängen im Nur-Lese-Modus versuchen"
 
 #: init/completions/umount.fish:20
-msgid "In case the unmounted device was a loop device, also free this loop device"
-msgstr "Falls das ausgehängte Gerät ein Loop-Gerät war, auch das Loop-Gerät freigeben"
+msgid ""
+"In case the unmounted device was a loop device, also free this loop device"
+msgstr ""
+"Falls das ausgehängte Gerät ein Loop-Gerät war, auch das Loop-Gerät freigeben"
 
 #: init/completions/umount.fish:21
 msgid "Don't call the /sbin/umount.<filesystem> helper even if it exists"
-msgstr "/sbin/umount.<filesystem>-Hilfsprogramm nicht aufrufen, auch wenn es existiert"
+msgstr ""
+"/sbin/umount.<filesystem>-Hilfsprogramm nicht aufrufen, auch wenn es existiert"
 
 #: init/completions/umount.fish:22
 msgid "Unmount all of the file systems described in /etc/mtab"
@@ -7796,59 +8159,68 @@ msgstr "Alle in /etc/mtab definierten Dateisysteme aushängen"
 
 #: init/completions/umount.fish:23
 msgid "Actions should only be taken on file systems of the specified type"
-msgstr "Aktionen sollen nur auf Dateisysteme des angegebenen Typs angewendet werden"
+msgstr ""
+"Aktionen sollen nur auf Dateisysteme des angegebenen Typs angewendet werden"
 
 #: init/completions/umount.fish:24
-msgid "Actions should only be taken on file systems with the specified options in /etc/fstab"
-msgstr "Aktionen sollen nur auf Dateisysteme mit den angegebenen Optionen in /etc/fstab angewendet werden"
+msgid ""
+"Actions should only be taken on file systems with the specified options in "
+"/etc/fstab"
+msgstr ""
+"Aktionen sollen nur auf Dateisysteme mit den angegebenen Optionen in "
+"/etc/fstab angewendet werden"
 
 #: init/completions/umount.fish:25
 msgid "Force unmount (in case of an unreachable NFS system)"
 msgstr "unmount erzwingen (falls ein NFS-System nicht erreichbar ist)"
 
 #: init/completions/umount.fish:26
-msgid "Detach the filesystem from the filesystem hierarchy now, and cleanup all references to the filesystem as soon as it is not busy"
-msgstr "Das Dateisystem jetzt aus der Dateisystemhierarchie aushängen und alle Referenzen zum Dateisystem bereinigen, sobald es nicht mehr benutzt wird."
+msgid ""
+"Detach the filesystem from the filesystem hierarchy now, and cleanup all "
+"references to the filesystem as soon as it is not busy"
+msgstr ""
+"Das Dateisystem jetzt aus der Dateisystemhierarchie aushängen und alle "
+"Referenzen zum Dateisystem bereinigen, sobald es nicht mehr benutzt wird."
 
 #: init/completions/uname.fish:1
 msgid "Print all information"
-msgstr "Alle Informationen anzeigen"
+msgstr "Alle Informationen ausgeben"
 
 #: init/completions/uname.fish:2
 msgid "Print kernel name"
-msgstr "Kernel-Name anzeigen"
+msgstr "Kernel-Name ausgeben"
 
 #: init/completions/uname.fish:3
 msgid "Print network node hostname"
-msgstr "Rechnernamen des Netzwerkknotens anzeigen"
+msgstr "Rechnernamen des Netzwerkknotens ausgeben"
 
 #: init/completions/uname.fish:4
 msgid "Print kernel release"
-msgstr "Kernel-Release anzeigen"
+msgstr "Kernel-Release ausgeben"
 
 #: init/completions/uname.fish:5
 msgid "Print kernel version"
-msgstr "Kernel-Version anzeigen"
+msgstr "Kernel-Version ausgeben"
 
 #: init/completions/uname.fish:6
 msgid "Print machine name"
-msgstr "Maschinenname anzeigen"
+msgstr "Maschinenname ausgeben"
 
 #: init/completions/uname.fish:7
 msgid "Print processor"
-msgstr "Prozessor anzeigen"
+msgstr "Prozessor ausgeben"
 
 #: init/completions/uname.fish:8
 msgid "Print harware platform"
-msgstr "Hardware-Plattform anzeigen"
+msgstr "Hardware-Plattform ausgeben"
 
 #: init/completions/uname.fish:9
 msgid "Print operating system"
-msgstr "Betriebssystem anzeigen"
+msgstr "Betriebssystem ausgeben"
 
 #: init/completions/uniq.fish:1
 msgid "Print number of occurences"
-msgstr "Anzahl Vorkommen anzeigen"
+msgstr "Anzahl der Vorkommen ausgeben"
 
 #: init/completions/uniq.fish:2
 msgid "Only print duplicates"
@@ -7872,7 +8244,7 @@ msgstr "Erste N Zeichen nicht vergleichen"
 
 #: init/completions/uniq.fish:11
 msgid "Only print unique lines"
-msgstr "Nur einmalige Zeilen anzeigen"
+msgstr "Nur einmalige Zeilen ausgeben"
 
 #: init/completions/uniq.fish:12
 msgid "Compare only specified number of characters"
@@ -7888,7 +8260,7 @@ msgstr "Hilfe- und Debug-Optionen anzeigen"
 
 #: init/completions/valgrind.fish:29
 msgid "Valgrind-ise children"
-msgstr ""
+msgstr "Kinder Valgrind-isieren"
 
 #: init/completions/valgrind.fish:30
 msgid "Track file descriptors"
@@ -7908,7 +8280,7 @@ msgstr "Log auf Socket ausgeben"
 
 #: init/completions/valgrind.fish:35
 msgid "Callers in stack trace"
-msgstr ""
+msgstr "Aufrufe in der Stackverfolgung"
 
 #: init/completions/valgrind.fish:36
 msgid "Stop showing errors if too many"
@@ -7924,7 +8296,7 @@ msgstr "Fehler aus Datei unterdrücken"
 
 #: init/completions/valgrind.fish:39
 msgid "Print suppressions for detected errors"
-msgstr "Unterdrückungen für entdeckte Fehler anzeigen"
+msgstr "Unterdrückungen für entdeckte Fehler ausgeben"
 
 #: init/completions/valgrind.fish:40
 msgid "Start debugger on error"
@@ -7944,19 +8316,27 @@ msgstr "Test auf Speicher-Lecks"
 
 #: init/completions/valgrind.fish:47 init/completions/valgrind.fish:56
 msgid "Show reachable leaked memory"
-msgstr ""
+msgstr "Aufgetretenes Speicherleck anzeigen"
 
 #: init/completions/valgrind.fish:48
-msgid "Determines how willing Memcheck is to consider different backtraces to be the same"
+msgid ""
+"Determines how willing Memcheck is to consider different backtraces to be the "
+"same"
 msgstr ""
+"Legt fest, wie bereitwillig Memcheck verschiedene Ablaufverfolgungen als "
+"gleich erachtet"
 
 #: init/completions/valgrind.fish:49 init/completions/valgrind.fish:58
 msgid "Set size of freed memory pool"
-msgstr "Setze Grösse des freigegebenen Speicher-Pools"
+msgstr "Größe des freigegebenen Speicherpools festlegen"
 
 #: init/completions/valgrind.fish:57
-msgid "Determines how willing Addrcheck is to consider different backtraces to be the same"
+msgid ""
+"Determines how willing Addrcheck is to consider different backtraces to be "
+"the same"
 msgstr ""
+"Legt fest, wie bereitwillig Addrcheck verschiedene Ablaufverfolgungen als "
+"gleich erachtet"
 
 #: init/completions/valgrind.fish:63
 msgid "Type of L1 instruction cache"
@@ -7980,7 +8360,7 @@ msgstr "Anzahl Bytes als Heap-Mehrverbrauch pro Zuordnung "
 
 #: init/completions/valgrind.fish:72
 msgid "Profile stack usage"
-msgstr ""
+msgstr "Profilstackauslastung"
 
 #: init/completions/valgrind.fish:73
 msgid "Depth of call chain"
@@ -7992,31 +8372,31 @@ msgstr "Ausgabeformat für Profilierung"
 
 #: init/completions/wc.fish:1
 msgid "Print byte counts"
-msgstr "Anzahl Bytes anzeigen"
+msgstr "Anzahl Bytes ausgeben"
 
 #: init/completions/wc.fish:2
 msgid "Print character counts"
-msgstr "Anzahl Buchstaben anzeigen"
+msgstr "Anzahl Buchstaben ausgeben"
 
 #: init/completions/wc.fish:3
 msgid "Print newline counts"
-msgstr "Anzahl Zeilenendezeichen anzeigen"
+msgstr "Anzahl Zeilenendzeichen ausgeben"
 
 #: init/completions/wc.fish:4
 msgid "Print length of longest line"
-msgstr "Länge der längsten Zeile anzeigen"
+msgstr "Länge der längsten Zeile ausgeben"
 
 #: init/completions/wc.fish:5
 msgid "Print word counts"
-msgstr "Wortzählung anzeigen"
+msgstr "Wortzählung ausgeben"
 
 #: init/completions/w.fish:1
 msgid "Dont print header"
-msgstr "Header nicht anzeigen"
+msgstr "Kopfzeile nicht ausgeben"
 
 #: init/completions/w.fish:2
 msgid "Ignore username for time calculations"
-msgstr "Anwendername fün Zeitberechungen ignorieren"
+msgstr "Benutzername für Zeitberechnungen ignorieren"
 
 #: init/completions/w.fish:3
 msgid "Short format"
@@ -8048,7 +8428,7 @@ msgstr "Debug-Ausgabe aktivieren"
 
 #: init/completions/wget.fish:14 init/completions/wget.fish:15
 msgid "Turn off verbose without being completely quiet"
-msgstr "verbose-Modus abschalten, jedoch nicht vollkommen ruhig"
+msgstr "Ausführlichen Modus abschalten, jedoch nicht vollkommen ruhig"
 
 #: init/completions/wget.fish:16
 msgid "Read URLs from file"
@@ -8060,7 +8440,7 @@ msgstr "Erzwinge die Behandlung der Eingabe als HTML"
 
 #: init/completions/wget.fish:18
 msgid "Prepend string to relative links"
-msgstr "Zeichenkette vor relative Links setzen"
+msgstr "Zeichenkette vor relative Links stellen"
 
 #: init/completions/wget.fish:19
 msgid "Bind address on local machine"
@@ -8068,7 +8448,7 @@ msgstr "Adresse an lokale Maschine binden"
 
 #: init/completions/wget.fish:20
 msgid "Set number of retries to number"
-msgstr "Anzahl Versuche auf Anzahl setzen"
+msgstr "Anzahl der Versuche auf Anzahl festlegen"
 
 #: init/completions/wget.fish:21
 msgid "Concatenate output to file"
@@ -8080,11 +8460,11 @@ msgstr "Dateien gleichen Namens niemals überschreiben"
 
 #: init/completions/wget.fish:24
 msgid "Continue getting a partially-downloaded file"
-msgstr "Abruf einer teilweise übertragenen Datei fortsetzen"
+msgstr "Herunterladen einer teilweise übertragenen Datei fortsetzen"
 
 #: init/completions/wget.fish:25
 msgid "Select progress meter type"
-msgstr "Typ der Verlaufsanzeige wählen"
+msgstr "Fortschrittsanzeigentyp auswählen"
 
 #: init/completions/wget.fish:32
 msgid "Turn on time-stamping"
@@ -8092,31 +8472,31 @@ msgstr "Zeitstempel aktivieren"
 
 #: init/completions/wget.fish:33
 msgid "Print the headers/responses sent by servers"
-msgstr "Von Servern gesendete Kopfzeilen/Antworten anzeigen"
+msgstr "Von Servern gesendete Kopfzeilen/Antworten ausgeben"
 
 #: init/completions/wget.fish:34
 msgid "Do not download the pages, just check that they are there"
-msgstr "Seiten nicht abrufen, nur auf Verfügbarkeit testen"
+msgstr "Seiten nicht herunterladen, nur auf Verfügbarkeit testen"
 
 #: init/completions/wget.fish:35
 msgid "Set the network timeout"
-msgstr "Zeitablauf für Netzwerk setzen"
+msgstr "Zeitüberschreitung für Netzwerk festlegen"
 
 #: init/completions/wget.fish:36
 msgid "Set the DNS lookup timeout"
-msgstr "Zeitablauf für DNS-Abfragen setzen"
+msgstr "Zeitüberschreitung für DNS-Abfragen festlegen"
 
 #: init/completions/wget.fish:37
 msgid "Set the connect timeout"
-msgstr "Verbindungszeitablauf setzen"
+msgstr "Verbindungszeitüberschreitung festlegen"
 
 #: init/completions/wget.fish:38
 msgid "Set the read (and write) timeout"
-msgstr "Lese- (und Schreib-)Zeitablauf setzen"
+msgstr "Lese- (und Schreib-)Zeitüberschreitung festlegen"
 
 #: init/completions/wget.fish:39
 msgid "Limit the download speed"
-msgstr "Abruf-Geschwindigkeit begrenzen"
+msgstr "Herunterladegeschwindigkeit begrenzen"
 
 #: init/completions/wget.fish:40
 msgid "Wait the specified number of seconds between the retrievals"
@@ -8136,15 +8516,17 @@ msgstr "Proxy-Unterstützung ein/ausschalten"
 
 #: init/completions/wget.fish:44
 msgid "Specify download quota for automatic retrievals"
-msgstr "Abruf-Quote für automatische Abrufe festlegen"
+msgstr "Herunterladequote für automatische Abrufe festlegen"
 
 #: init/completions/wget.fish:45
 msgid "Turn off caching of DNS lookups"
 msgstr "Zwischenspeicherung von DNS-Abfragen abschalten"
 
 #: init/completions/wget.fish:46
-msgid "Change which characters found in remote URLs may show up in local file names"
-msgstr "Festlegung, welche Zeichen aus URLs in lokalen Dateinamen vorkommen dürfen"
+msgid ""
+"Change which characters found in remote URLs may show up in local file names"
+msgstr ""
+"Festlegung, welche Zeichen aus URLs in lokalen Dateinamen vorkommen dürfen"
 
 #: init/completions/wget.fish:53 init/completions/wget.fish:54
 msgid "Do not create a hierarchy of directories"
@@ -8168,7 +8550,7 @@ msgstr "Angegebene Anzahl von Verzeichniskomponenten ignorieren"
 
 #: init/completions/wget.fish:60
 msgid "Set directory prefix"
-msgstr "Verzeichnis-Prefix setzen"
+msgstr "Verzeichnis-Präfix festlegen"
 
 #: init/completions/wget.fish:61
 msgid "Force html files to have html extension"
@@ -8176,7 +8558,7 @@ msgstr "html-Erweiterung für html-Dateien erzwingen"
 
 #: init/completions/wget.fish:62
 msgid "Specify the http username"
-msgstr "http-Anwendername angeben"
+msgstr "http-Benutzername angeben"
 
 #: init/completions/wget.fish:63
 msgid "Specify the http password"
@@ -8204,15 +8586,15 @@ msgstr "Session-Cookies speichern"
 
 #: init/completions/wget.fish:69
 msgid "Ignore 'Content-Length' header"
-msgstr "Header für 'Content-Length' ignorieren"
+msgstr "Kopfzeile für 'Content-Length' ignorieren"
 
 #: init/completions/wget.fish:70
 msgid "Define an additional-header to be passed to the HTTP servers"
-msgstr "Zusätzliche Headerzeile definieren, die an HTTP-Server  geschickt wird"
+msgstr "Zusätzliche Kopfzeilen definieren, die an HTTP-Server geschickt werden"
 
 #: init/completions/wget.fish:71
 msgid "Specify the proxy username"
-msgstr "Proxy-Anwendername angeben"
+msgstr "Proxy-Benutzername angeben"
 
 #: init/completions/wget.fish:72
 msgid "Specify the proxy password"
@@ -8220,7 +8602,7 @@ msgstr "Proxy-Passwort angeben"
 
 #: init/completions/wget.fish:73
 msgid "Set referer URL"
-msgstr "Referer-URL setzen"
+msgstr "Referer-URL festlegen"
 
 #: init/completions/wget.fish:74
 msgid "Save the headers sent by the HTTP server"
@@ -8228,11 +8610,15 @@ msgstr "Vom HTTP-Server gesendete Kopfzeilen speichern"
 
 #: init/completions/wget.fish:75
 msgid "Identify as agent-string"
-msgstr "Zeichenkette für User-Agent setzen"
+msgstr "Zeichenkette für User-Agent festlegen"
 
 #: init/completions/wget.fish:76 init/completions/wget.fish:77
-msgid "Use POST as the method for all HTTP requests and send the specified data in the request body"
-msgstr "POST-Methode für alle HTTP-Anforderungen benutzen und die angebenen Daten im Anforderungsteil senden"
+msgid ""
+"Use POST as the method for all HTTP requests and send the specified data in "
+"the request body"
+msgstr ""
+"POST-Methode für alle HTTP-Anforderungen benutzen und die angebenen Daten im "
+"Anforderungsteil senden"
 
 #: init/completions/wget.fish:78
 msgid "Turn off keep-alive for http downloads"
@@ -8264,10 +8650,11 @@ msgstr "Maximale Rekursionstiefe angeben"
 
 #: init/completions/wget.fish:91
 msgid "Delete every single file downloaded"
-msgstr "Jede einzelne abgerufene Datei löschen"
+msgstr "Jede einzelne heruntergeladene Datei löschen"
 
 #: init/completions/wget.fish:92
-msgid "Convert the links in the document to make them suitable for local viewing"
+msgid ""
+"Convert the links in the document to make them suitable for local viewing"
 msgstr "Links im Dokument für die lokale Anzeige konvertieren"
 
 #: init/completions/wget.fish:93
@@ -8279,8 +8666,12 @@ msgid "Turn on options suitable for mirroring"
 msgstr "Optionen aktivieren, die zum Spiegeln geeignet sind"
 
 #: init/completions/wget.fish:95
-msgid "Download all the files that are necessary to properly display a given HTML page"
-msgstr "Abruf aller zur korrekten Anzeige einer HTML-Seite erforderlichen Dateien"
+msgid ""
+"Download all the files that are necessary to properly display a given HTML "
+"page"
+msgstr ""
+"Herunterladen aller zur korrekten Anzeige einer HTML-Seite erforderlichen "
+"Dateien"
 
 #: init/completions/wget.fish:96
 msgid "Turn on strict parsing of HTML comments"
@@ -8288,11 +8679,15 @@ msgstr "Strenge Auswertung von HTML-Kommentaren aktivieren"
 
 #: init/completions/wget.fish:100
 msgid "Comma-separated lists of file name suffixes or patterns to accept"
-msgstr "Komma-getrennte Liste von Dateinamen-Endungen oder Mustern, die akzeptiert werden"
+msgstr ""
+"Komma-getrennte Liste von Dateinamen-Endungen oder Mustern, die akzeptiert "
+"werden"
 
 #: init/completions/wget.fish:101
 msgid "Comma-separated lists of file name suffixes or patterns to reject"
-msgstr "Komma-getrennte Liste von Dateinamen-Endungen oder Mustern, die zurückgewiesen werden"
+msgstr ""
+"Komma-getrennte Liste von Dateinamen-Endungen oder Mustern, die "
+"zurückgewiesen werden"
 
 #: init/completions/wget.fish:102
 msgid "Set domains to be followed"
@@ -8316,7 +8711,7 @@ msgstr "zu ignorierenden HTML-Markierungen"
 
 #: init/completions/wget.fish:107
 msgid "Enable spanning across hosts"
-msgstr ""
+msgstr "Spannung Host-übergreifend aktivieren"
 
 #: init/completions/wget.fish:108
 msgid "Follow relative links only"
@@ -8324,11 +8719,15 @@ msgstr "Nur relativen Links folgen"
 
 #: init/completions/wget.fish:109
 msgid "Specify a comma-separated list of directories you wish to follow"
-msgstr "Geben Sie eine Komma-getrennte Liste von Verzeichnissen an, denen gefolgt werden soll"
+msgstr ""
+"Geben Sie eine Komma-getrennte Liste von Verzeichnissen an, denen gefolgt "
+"werden soll"
 
 #: init/completions/wget.fish:110
 msgid "Specify a comma-separated list of directories you wish to exclude"
-msgstr "Geben Sie eine Komma-getrennte Liste von Verzeichnissen an, die ausgeschlossen werden soll"
+msgstr ""
+"Geben Sie eine Komma-getrennte Liste von Verzeichnissen an, die "
+"ausgeschlossen werden soll"
 
 #: init/completions/wget.fish:111 init/completions/wget.fish:112
 msgid "Do not ever ascend to the parent directory"
@@ -8340,23 +8739,23 @@ msgstr "Entspricht -b -d --login -p -r -t -T -u"
 
 #: init/completions/who.fish:2
 msgid "Print time of last boot"
-msgstr "Zeit des letzten Neustarts zeigen"
+msgstr "Zeit des letzten Neustarts anzeigen"
 
 #: init/completions/who.fish:3
 msgid "Print dead processes"
-msgstr "Tote Prozesse anzeigen"
+msgstr "Tote Prozesse ausgeben"
 
 #: init/completions/who.fish:4
 msgid "Print line of headings"
-msgstr "Überschrift anzeigen"
+msgstr "Überschrift ausgeben"
 
 #: init/completions/who.fish:5
 msgid "Print idle time"
-msgstr "inaktiv-Zeit anzeigen"
+msgstr "Leerlaufzeit ausgeben"
 
 #: init/completions/who.fish:6
 msgid "Print login process"
-msgstr "Anmeldeprozess anzeigen"
+msgstr "Anmeldeprozess ausgeben"
 
 #: init/completions/who.fish:7
 msgid "Canonicalize hostnames via DNS"
@@ -8364,7 +8763,7 @@ msgstr "Rechnernamen per DNS auflösen"
 
 #: init/completions/who.fish:8
 msgid "Print hostname and user for stdin"
-msgstr "Hostname und Anwender für Standardeingabe anzeigen"
+msgstr "Hostname und Benutzer für Standardeingabe ausgeben"
 
 #: init/completions/who.fish:9
 msgid "Print active processes spawned by init"
@@ -8372,7 +8771,7 @@ msgstr "Zeige von init gestartete aktive Prozesse"
 
 #: init/completions/who.fish:10
 msgid "Print all login names and number of users logged on"
-msgstr "Zeige alle Anmelde-Namen und Anzahl angemeldeter Anwender"
+msgstr "Alle Anmeldenamen und Anzahl der angemeldeter Benutzer ausgeben"
 
 #: init/completions/who.fish:11
 msgid "Print current runlevel"
@@ -8384,16 +8783,16 @@ msgstr "Zeige Name, Zeile und Zeit"
 
 #: init/completions/who.fish:13
 msgid "Print last system clock change"
-msgstr ""
+msgstr "Letzte Systemzeitumstellung ausgeben"
 
 #: init/completions/who.fish:14 init/completions/who.fish:15
 #: init/completions/who.fish:16
 msgid "Print users message status as +, - or ?"
-msgstr "Nachrichtenstatus des Anwenders als +, - oder ?"
+msgstr "Nachrichtenstatus des Benutzers als +, - oder ?"
 
 #: init/completions/who.fish:17
 msgid "List users logged in"
-msgstr "Angemeldete Anwender anzeigen"
+msgstr "Angemeldete Benutzer auflisten"
 
 #: init/completions/xprop.fish:3
 msgid "Display grammar and exit"
@@ -8401,11 +8800,11 @@ msgstr "Grammatik anzeigen und beenden"
 
 #: init/completions/xprop.fish:4
 msgid "Select window by id"
-msgstr "Fenster über ID wählen"
+msgstr "Fenster über Kennung auswählen"
 
 #: init/completions/xprop.fish:5
 msgid "Select window by name"
-msgstr "Fenster über Name wählen"
+msgstr "Fenster über Name auswählen"
 
 #: init/completions/xprop.fish:6
 msgid "Display font properties"
@@ -8413,11 +8812,11 @@ msgstr "Zeichensatzeigenschaften anzeigen"
 
 #: init/completions/xprop.fish:7
 msgid "Select root window"
-msgstr "Root-Fenster wählen"
+msgstr "Root-Fenster auswählen"
 
 #: init/completions/xprop.fish:8
 msgid "Specify X server"
-msgstr "X Server angeben"
+msgstr "X-Server angeben"
 
 #: init/completions/xprop.fish:9
 msgid "Maximum display length"
@@ -8429,11 +8828,11 @@ msgstr "Eigenschaftstyp nicht anzeigen"
 
 #: init/completions/xprop.fish:11
 msgid "Set format file"
-msgstr "Formatdatei setzen"
+msgstr "Formatdatei festlegen"
 
 #: init/completions/xprop.fish:12
 msgid "Select a window by clicking on its frame"
-msgstr "Fenster durck Klicken auf den Rahmen wählen"
+msgstr "Fenster durch Klicken auf den Rahmen auswählen"
 
 #: init/completions/xprop.fish:13
 msgid "Remove property"
@@ -8441,15 +8840,15 @@ msgstr "Eigenschaft entfernen"
 
 #: init/completions/xprop.fish:19
 msgid "Set property"
-msgstr "Eigenschaft setzen"
+msgstr "Eigenschaft festlegen"
 
 #: init/completions/xprop.fish:25
 msgid "Examine property updates forever"
-msgstr ""
+msgstr "Eigenschaftsaktualisierungen andauernd überprüfen"
 
 #: init/completions/xprop.fish:26
 msgid "Set format"
-msgstr "Format setzen"
+msgstr "Format festlegen"
 
 #: init/completions/xsel.fish:1
 msgid "Append input to selection"
@@ -8501,7 +8900,7 @@ msgstr "X Server-Anzeige"
 
 #: init/completions/xsel.fish:13
 msgid "Timeout for retrieving selection"
-msgstr "Zeitablauf für Abruf der Auswahl"
+msgstr "Zeitüberschreitung für Abruf der Auswahl"
 
 #: init/completions/xsel.fish:14
 msgid "Error log"
@@ -8517,11 +8916,11 @@ msgstr "Informative Nachrichten ausgeben"
 
 #: init/completions/yum.fish:52
 msgid "Set debug level"
-msgstr "Debug-Grad setzen"
+msgstr "Debug-Grad festlegen"
 
 #: init/completions/yum.fish:53
 msgid "Set error level"
-msgstr "Fehler-Grad setzen"
+msgstr "Fehler-Grad festlegen"
 
 #: init/completions/yum.fish:54
 msgid "Be tolerant of errors in commandline"
@@ -8529,7 +8928,7 @@ msgstr "Fehler in der Befehlszeile tolerieren"
 
 #: init/completions/yum.fish:55
 msgid "Set maximum delay between commands"
-msgstr "Maximale Verzögerung zwischen Befehlen setzen"
+msgstr "Maximale Verzögerung zwischen Befehlen festlegen"
 
 #: init/completions/yum.fish:56
 msgid "Run commands from cache"
@@ -8585,11 +8984,11 @@ msgstr "Nicht komprimieren"
 
 #: init/completions/zip.fish:9
 msgid "Convert LF to CR LF"
-msgstr "LF nach LF/CR wandeln"
+msgstr "LF nach LF/CR umwandeln"
 
 #: init/completions/zip.fish:10
 msgid "Convert CR LF to LF"
-msgstr "CR/LF nach LF wandeln"
+msgstr "CR/LF nach LF umwandeln"
 
 #: init/completions/zip.fish:11
 msgid "Compress faster"
@@ -8662,4 +9061,5 @@ msgstr "Verschlüsseln"
 #: init/completions/zip.fish:30
 msgid "Don't compress files with these suffixes"
 msgstr "Dateien mit diesen Endungen nicht komprimieren"
+
 

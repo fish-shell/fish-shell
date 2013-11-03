@@ -100,7 +100,7 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind \cd delete-or-exit
 
 	# Allow reading manpages by pressing F1
-	bind -k f1 'man (commandline -po; echo)[1] ^/dev/null; or echo -n \a'
+	bind -k f1 'man (basename (commandline -po; echo))[1] ^/dev/null; or echo -n \a'
 
 	# This will make sure the output of the current command is paged using the less pager when you press Meta-p
 	bind \ep '__fish_paginate'

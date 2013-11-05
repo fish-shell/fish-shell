@@ -23,9 +23,9 @@ from deroff import Deroffer
 lzma_available = True
 try:
     try:
-        import backports.lzma as lzma
-    except ImportError:
         import lzma
+    except ImportError:
+        from backports import lzma
 except ImportError:
     lzma_available = False
 

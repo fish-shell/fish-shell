@@ -123,7 +123,7 @@ static void builtin_jobs_print(const job_t *j, int mode, int header)
                 /*
                   Print table header before first job
                 */
-                stdout_buffer.append(_(L"Procces\n"));
+                stdout_buffer.append(_(L"Process\n"));
             }
 
             for (p=j->first_process; p; p=p->next)

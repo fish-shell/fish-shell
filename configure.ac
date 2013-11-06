@@ -238,56 +238,24 @@ AS_IF([test "$use_doxygen" != "no"],
 
 CXXFLAGS="$CXXFLAGS -D_LARGEFILE_SOURCE=1 -D_FILE_OFFSET_BITS=64"
 
+
+# fish does not use exceptions
+# Disabling exceptions saves about 20% (!) of the compiled code size
+CXXFLAGS="$CXXFLAGS -fno-exceptions"
+
+
 #
-# If we are using gcc, set some flags that increase the odds of the
-# compiler producing a working binary...
+# -Wall is there to keep me on my toes
 #
 
-if test "$GCC" = yes; then
+CXXFLAGS="$CXXFLAGS -Wall"
 
-  #
-  # -fno-optimize-sibling-calls seems to work around a bug where
-  # sending a SIGWINCH to fish on NetBSD 3.0 causes fish to exit when
-  # compiled with GCC 3.3.3. This is probably either a compiler bug
-  # or a libc bug, but adding this flag seems to fix things for
-  # now. Long term, the real problem should be tracked down and
-  # truly fixed, at which point we can remove this silly flag. This
-  # bug has been verified to not exist on Linux using GCC 3.3.3.
-  #
+#
+# This is needed in order to get the really cool backtraces on Linux
+#
 
-  GCC_VERSION=$($CC -dumpversion)
-  GCC_VERSION_MAJOR=$(echo $GCC_VERSION | cut -d'.' -f1)
-  GCC_VERSION_MINOR=$(echo $GCC_VERSION | cut -d'.' -f2)
-  GCC_VERSION_PATCH=$(echo $GCC_VERSION | cut -d'.' -f3)
-
-  if test "$GCC_VERSION_MAJOR" -le 3; then
-    if test 0"$GCC_VERSION_MINOR" -le 3; then
-      if test 0"$GCC_VERSION_PATCH" -le 3; then
-        CXXFLAGS="$CXXFLAGS -fno-optimize-sibling-calls"
-      fi
-    fi
-  fi
-
-  # fish does not use exceptions
-  # Disabling exceptions saves about 20% (!) of the compiled code size
-  CXXFLAGS="$CXXFLAGS -fno-exceptions"
-
-
-  #
-  # -Wall is there to keep me on my toes
-  #
-
-  # Some day...
-  CXXFLAGS="$CXXFLAGS -Wall"
-
-  #
-  # This is needed in order to get the really cool backtraces on Linux
-  #
-
-  if test `uname` != "Darwin"; then
-    LDFLAGS_FISH="$LDFLAGS_FISH -rdynamic"
-  fi
-
+if test `uname` != "Darwin"; then
+   LDFLAGS_FISH="$LDFLAGS_FISH -rdynamic"
 fi
 
 

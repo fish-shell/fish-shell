@@ -50,7 +50,7 @@ on RedHat, CentOS, or Amazon EC2:
 
 ## Packages for Linux
 
-Nightly builds for several Linux distros can be downloaded from <http://download.opensuse.org/repositories/home:/siteshwar/>
+Instructions on how to find builds for several Linux distros are at <https://github.com/fish-shell/fish-shell/wiki/Nightly-builds>
 
 ## Switching to fish
 

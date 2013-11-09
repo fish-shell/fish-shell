@@ -1,17 +1,10 @@
 <div style="padding: 0 10px 15px;">
-    <div class="prompt_demo">
-        <div ng-bind-html-unsafe="selectedPrompt.demo"></div>
-        <span class="prompt_save_button" style="position: absolute; right: 2px; bottom: 2px;" ng-click="setNewPrompt(selectedPrompt)" ng-hide="selectedPrompt == samplePrompts[0]">Use</span>
-    </div>
-
-    <div class="prompt_function">
-        <div class="prompt_function_text">{{ selectedPrompt.function }}</div>
-    </div>
-
-    <div>
-        <div ng-repeat="prompt in samplePrompts" ng-click="selectPrompt(prompt)">
-            <div class="prompt_demo_choice_label">{{ prompt.name }}</div>
-            <div ng-bind-html-unsafe='prompt.demo'  ng-class="{'prompt_demo_tight': true, 'prompt_demo_tight_selected': prompt == selectedPrompt}"></div>
+    <div ng-repeat="prompt in samplePrompts">
+        <div class="prompt_demo_choice_label">{{ prompt.name }}</div>
+        <div ng-bind-html-unsafe='prompt.demo'  ng-class="{'prompt_demo': true, 'prompt_demo_selected': prompt == selectedPrompt}" ng-click="selectPrompt(prompt)"></div>
+        <div class="prompt_function" ng-show="selectedPrompt == prompt">
+            <div class="prompt_function_text">{{ prompt.function }}</div>
         </div>
+        <span class="prompt_save_button" ng-click="setNewPrompt(selectedPrompt)" ng-show="selectedPrompt == prompt && selectedPrompt != samplePrompts[0]">Use</span>
     </div>
 </div>

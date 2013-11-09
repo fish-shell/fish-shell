@@ -391,16 +391,6 @@ img.delete_icon {
 
 .prompt_demo {
 	font-size: 12pt;
-	padding: 25px;
-	margin: 5px 20px 25px 20px; /* top right bottom left */
-	cursor: pointer;
-	line-height: 1.8em;
-	border: solid #777 1px;
-	position: relative; /* so that our absolutely positioned elements work */
-}
-
-.prompt_demo_tight {
-	font-size: 10pt;
 	padding: 10px;
 	margin: 5px 20px 25px; /* top right bottom left */
 	cursor: pointer;
@@ -409,7 +399,7 @@ img.delete_icon {
 	position: relative; /* so that our absolutely positioned elements work */
 }
 
-.prompt_demo_tight_selected {
+.prompt_demo_selected {
 	border: solid #00ff00 1px;
 }
 
@@ -425,15 +415,16 @@ img.delete_icon {
 	cursor: pointer;
 }
 
-.prompt_save_button:hover {
+.prompt_save_button {
 	background-color: #333;
 	border: solid #525252 1px;
     color: #ffffff;
+	margin: 2px 20px 25px; /* top right bottom left */
+	font-size: 12pt;
 }
 
 .prompt_demo_choice_label {
-	margin: 5px 20px 5px;
-	cursor: pointer;
+	margin: 25px 20px 5px;
 	font-size: 12pt;
 	white-space: normal;
 }
@@ -454,7 +445,7 @@ img.delete_icon {
     display: block;
   	border: 1px solid #555;
   	background-color: #181818;
-    margin: 5px 20px 25px;
+    margin: 5px 20px 5px;
     border-radius: 5;
 }
 

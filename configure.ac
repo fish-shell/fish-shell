@@ -443,82 +443,58 @@ AC_DEFINE(
 #
 
 # Check for os dependant libraries for all binaries.
-LIBS_COMMON=$LIBS
-LIBS=""
 AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library, needed to build this package.] )] )
 AC_SEARCH_LIBS( nanosleep, rt, , [AC_MSG_ERROR([Cannot find the rt library, needed to build this package.] )] )
 AC_SEARCH_LIBS( pthread_create, pthread, , [AC_MSG_ERROR([Cannot find the pthread library, needed to build this package.] )] )
 AC_SEARCH_LIBS( setupterm, [ncurses curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish. If this is Linux, try running 'sudo apt-get install libncurses5-dev' or 'sudo yum install ncurses-devel'])] )
 AC_SEARCH_LIBS( [nan], [m], [AC_DEFINE( [HAVE_NAN], [1], [Define to 1 if you have the nan function])] )
+
+if test x$local_gettext != xno; then
+  AC_SEARCH_LIBS( gettext, intl,,)
+fi
+
 LIBS_SHARED=$LIBS
-LIBS=$LIBS_COMMON
 
 #
 # Check for libraries needed by fish.
 #
 
-LIBS_COMMON=$LIBS
 LIBS="$LIBS_SHARED"
-if test x$local_gettext != xno; then
-  AC_SEARCH_LIBS( gettext, intl,,)
-fi
-
 # Check for libiconv_open if we can't find iconv_open. Silly OS X does
 # weird macro magic for the sole purpose of amusing me.
 AC_SEARCH_LIBS( iconv_open, iconv, , [AC_SEARCH_LIBS( libiconv_open, iconv, , [AC_MSG_ERROR([Could not find an iconv implementation, needed to build fish])] )] )
 
 LIBS_FISH=$LIBS
-LIBS=$LIBS_COMMON
 
 #
 # Check for libraries needed by fish_indent.
 #
 
-LIBS_COMMON=$LIBS
 LIBS="$LIBS_SHARED"
-if test x$local_gettext != xno; then
-  AC_SEARCH_LIBS( gettext, intl,,)
-fi
 LIBS_FISH_INDENT=$LIBS
-LIBS=$LIBS_COMMON
 
 #
 # Check for libraries needed by fish_pager.
 #
 
-LIBS_COMMON=$LIBS
 LIBS="$LIBS_SHARED"
-if test x$local_gettext != xno; then
-  AC_SEARCH_LIBS( gettext, intl,,)
-fi
 AC_SEARCH_LIBS( iconv_open, iconv, , [AC_SEARCH_LIBS( libiconv_open, iconv, , [AC_MSG_ERROR([Could not find an iconv implementation, needed to build fish])] )] )
 LIBS_FISH_PAGER=$LIBS
-LIBS=$LIBS_COMMON
 
 #
 # Check for libraries needed by fishd.
 #
 
-LIBS_COMMON=$LIBS
 LIBS="$LIBS_SHARED"
-if test x$local_gettext != xno; then
-  AC_SEARCH_LIBS( gettext, intl,,)
-fi
 AC_SEARCH_LIBS( iconv_open, iconv, , [AC_SEARCH_LIBS( libiconv_open, iconv, , [AC_MSG_ERROR([Could not find an iconv implementation, needed to build fish])] )] )
 LIBS_FISHD=$LIBS
-LIBS=$LIBS_COMMON
 
 #
 # Check for libraries needed by mimedb.
 #
 
-LIBS_COMMON=$LIBS
 LIBS="$LIBS_SHARED"
-if test x$local_gettext != xno; then
-  AC_SEARCH_LIBS( gettext, intl,,)
-fi
 LIBS_MIMEDB=$LIBS
-LIBS=$LIBS_COMMON
 
 
 #

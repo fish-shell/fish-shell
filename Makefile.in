@@ -62,7 +62,7 @@ optbindirs = @optbindirs@
 
 MACROS = -DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\" -DBINDIR=L\"$(bindir)\" -DDOCDIR=L\"$(docdir)\"
 CXXFLAGS = @CXXFLAGS@ $(MACROS) $(EXTRA_CXXFLAGS)
-LDFLAGS = @LIBS@ @LDFLAGS@
+LDFLAGS = @LDFLAGS@
 LDFLAGS_FISH = ${LDFLAGS} @LIBS_FISH@ @LDFLAGS_FISH@
 LDFLAGS_FISH_INDENT = ${LDFLAGS} @LIBS_FISH_INDENT@
 LDFLAGS_FISH_PAGER = ${LDFLAGS} @LIBS_FISH_PAGER@
@@ -770,8 +770,6 @@ fish_tests: $(FISH_TESTS_OBJS)
 
 #
 # Build the mimedb program.
-#
-# mimedb does not need any libraries, so we don't use LDFLAGS here.
 #
 
 mimedb: $(MIME_OBJS)

@@ -399,10 +399,6 @@ img.delete_icon {
 	position: relative; /* so that our absolutely positioned elements work */
 }
 
-.prompt_demo_selected {
-	border: solid #00ff00 1px;
-}
-
 .save_button, .prompt_save_button {
 	border-radius: 5px;
 	border: solid rgba(71,71,71,0.5) 1px;

@@ -137,6 +137,12 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
 	end
 
+    if not test -d $configdir/fish/generated_completions
+        echo "Man page completions not found on your system. Running 'fish_update_completions' in background. You can continue to use fish while the process is being done."
+        #fish_update_completions is a function, so it can not be directly run in background.
+        fish -c 'fish_update_completions > /dev/null ^/dev/null' &
+    end
+
 	#
 	# Print a greeting
 	#

@@ -66,7 +66,6 @@ controllers.controller("colorsController", function($scope, $http) {
         for (name in settingNames) {
             var postData = "what=" + settingNames[name] + "&color=" + $scope.selectedColorScheme[settingNames[name]] + "&background_color=&bold=&underline=";
             $http.post("/set_color/", postData, { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config) {
-                console.log(data);
             })
         }
     };
@@ -77,40 +76,27 @@ controllers.controller("colorsController", function($scope, $http) {
 controllers.controller("promptController", function($scope, $http) {
     $scope.selectedPrompt = null;
 
-    $scope.fetchCurrentPrompt = function(currenttPrompt) {
-        $http.get("/current_prompt/").success(function(data, status, headers, config) {
-        currenttPrompt.function = data.function;
-    })};
-
     $scope.fetchSamplePrompts= function() {
         $http.get("/sample_prompts/").success(function(data, status, headers, config) {
             $scope.samplePrompts = data;
+            $scope.samplePromptsArrayArray = get_colors_as_nested_array($scope.samplePrompts, 1);
+
             if ($scope.selectedPrompt == null) {
                 $scope.selectPrompt($scope.samplePrompts[0]);
             }
         })};
 
-    $scope.fetchSamplePrompt = function(selectedPrompt) {
-        console.log("Fetcing sample prompt");
-         $http.post("/get_sample_prompt/","what=" + encodeURIComponent(selectedPrompt.function), { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config)   {
-            console.log("Data is " + JSON.stringify(data[0]));
-            $scope.demoText= data[0].demo;
-            $scope.demoTextFontSize = data[0].font_size;
-            console.log("Demo text is " + $scope.demoText);
-        })};
-
     $scope.selectPrompt = function(promptt) {
         $scope.selectedPrompt= promptt;
-        if ($scope.selectedPrompt.name == "Current") {
-            $scope.fetchCurrentPrompt($scope.selectedPrompt);
-        }
-        $scope.fetchSamplePrompt($scope.selectedPrompt);
     }
 
     $scope.setNewPrompt = function(selectedPrompt) {
-        console.log("Set new prompt" + selectedPrompt);
         $http.post("/set_prompt/","what=" + encodeURIComponent(selectedPrompt.function), { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config){
-            console.log("Data is " + JSON.stringify(data));
+
+            // Update attributes of current prompt
+            $scope.samplePrompts[0].demo = selectedPrompt.demo;
+            $scope.samplePrompts[0].function = selectedPrompt.function;
+            $scope.samplePrompts[0].font_size = selectedPrompt.font_size;
         })};
 
     $scope.fetchSamplePrompts();

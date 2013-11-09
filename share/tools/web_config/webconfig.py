@@ -118,7 +118,7 @@ def get_special_ansi_escapes():
         import curses
         g_special_escapes_dict = {}
         curses.setupterm()
-        
+
         # Helper function to get a value for a tparm
         def get_tparm(key):
             val = None
@@ -126,12 +126,12 @@ def get_special_ansi_escapes():
             if key: val = curses.tparm(key)
             if val: val = val.decode('utf-8')
             return val
-            
+
         # Just a few for now
         g_special_escapes_dict['exit_attribute_mode'] = get_tparm('sgr0')
         g_special_escapes_dict['bold'] = get_tparm('bold')
         g_special_escapes_dict['underline'] = get_tparm('smul')
-        
+
     return g_special_escapes_dict
 
 # Given a known ANSI escape sequence, convert it to HTML and append to the list
@@ -140,12 +140,12 @@ def append_html_for_ansi_escape(full_val, result, span_open):
 
     # Strip off the initial \x1b[ and terminating m
     val = full_val[2:-1]
-    
+
     # Helper function to close a span if it's open
     def close_span():
         if span_open:
             result.append('</span>')
-    
+
     # term256 foreground color
     match = re.match('38;5;(\d+)', val)
     if match is not None:
@@ -153,7 +153,7 @@ def append_html_for_ansi_escape(full_val, result, span_open):
         html_color =  html_color_for_ansi_color_index(int(match.group(1)))
         result.append('<span style="color: ' + html_color + '">')
         return True # span now open
-        
+
     # term8 foreground color
     if val in [str(x) for x in range(30, 38)]:
         close_span()
@@ -166,26 +166,26 @@ def append_html_for_ansi_escape(full_val, result, span_open):
     if full_val == special_escapes['exit_attribute_mode']:
         close_span()
         return False
-    
+
     # We don't handle bold or underline yet
-        
+
     # Do nothing on failure
     return span_open
-    
+
 def strip_ansi(val):
     # Make a half-assed effort to strip ANSI control sequences
     # We assume that all such sequences start with 0x1b and end with m,
     # which catches most cases
     return re.sub("\x1b[^m]*m", '', val)
-        
+
 def ansi_prompt_line_width(val):
     # Given an ANSI prompt, return the length of its longest line, as in the number of characters it takes up
     # Start by stripping off ANSI
     stripped_val = strip_ansi(val)
-    
+
     # Now count the longest line
     return max([len(x) for x in stripped_val.split('\n')])
-    
+
 
 def ansi_to_html(val):
     # Split us up by ANSI escape sequences
@@ -200,13 +200,13 @@ def ansi_to_html(val):
         )                        # End capture
         """, re.VERBOSE)
     separated = reg.split(val)
-    
+
     # We have to HTML escape the text and convert ANSI escapes into HTML
     # Collect it all into this array
     result = []
-    
+
     span_open = False
-    
+
     # Text is at even indexes, escape sequences at odd indexes
     for i in range(len(separated)):
         component = separated[i]
@@ -217,13 +217,13 @@ def ansi_to_html(val):
         else:
             # It's an escape sequence. Close the previous escape.
             span_open = append_html_for_ansi_escape(component, result, span_open)
-    
+
     # Close final escape
     if span_open: result.append('</span>')
-    
+
     # Remove empty elements
     result = [x for x in result if x]
-    
+
     # Clean up empty spans, the nasty way
     idx = len(result) - 1
     while idx >= 1:
@@ -268,13 +268,13 @@ class FishBinding:
 class BindingParser:
     """ Class to parse codes for bind command """
 
-    #TODO: What does snext and sprevious mean ? 
+    #TODO: What does snext and sprevious mean ?
     readable_keys=  { "dc":"Delete", "npage": "Page Up", "ppage":"Page Down",
                     "sdc": "Shift Delete", "shome": "Shift Home",
                     "left": "Left Arrow", "right": "Right Arrow",
                     "up": "Up Arrow", "down": "Down Arrow",
                     "sleft": "Shift Left", "sright": "Shift Right"
-                    } 
+                    }
 
     def set_buffer(self, buffer, is_key=False):
         """ Sets code to parse """
@@ -367,7 +367,7 @@ class BindingParser:
             c = self.get_char()
 
             if c == '\\':
-                c = self.get_char() 
+                c = self.get_char()
                 if c == 'e':
                     d = self.get_char()
                     if d == 'O':
@@ -392,10 +392,10 @@ class BindingParser:
                 elif c == 'b':
                     result += 'Backspace'
                 else:
-                    result += c 
+                    result += c
             else:
                 result += c
-        if ctrl: 
+        if ctrl:
             readable_command += 'CTRL - '
         if alt:
             readable_command += 'ALT - '
@@ -526,7 +526,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         out = out[len(greeting):]
 
         # Put all the bindings into a list
-        bindings = [] 
+        bindings = []
         binding_parser = BindingParser()
 
         for line in out.split('\n'):
@@ -534,7 +534,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             if len(comps) < 3:
                 continue
             if comps[1] == '-k':
-                key_name, command = comps[2].split(' ', 2)
+                key_name, command = comps[2].split(' ', 1)
                 binding_parser.set_buffer(key_name, True)
                 fish_binding = FishBinding(command=command, binding=key_name, readable_binding=binding_parser.get_readable_binding())
             else:
@@ -578,12 +578,12 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # It's really lame that we always return success here
         out, err = run_fish_cmd('builtin history --save --delete -- ' + escape_fish_cmd(history_item_text))
         return True
-    
+
     def do_set_prompt_function(self, prompt_func):
         cmd = prompt_func + '\n' + 'funcsave fish_prompt'
         out, err = run_fish_cmd(cmd)
         return len(err) == 0
-    
+
     def do_get_prompt(self, command_to_run, prompt_function_text):
         # Return the prompt output by the given command
         prompt_demo_ansi, err = run_fish_cmd(command_to_run)
@@ -595,7 +595,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # Return the current prompt
         prompt_func, err = run_fish_cmd('functions fish_prompt')
         return self.do_get_prompt('cd "' + initial_wd + '" ; fish_prompt', prompt_func.strip())
-        
+
     def do_get_sample_prompt(self, text):
         # Return the prompt you get from the given text
         cmd = text + "\n cd \"" + initial_wd + "\" \n fish_prompt\n"
@@ -605,7 +605,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         # Allow us to skip whitespace, etc.
         if not line: return True
         if line.isspace(): return True
-        
+
         # Parse a comment hash like '# name: Classic'
         match = re.match(r"#\s*(\w+?): (.+)", line, re.IGNORECASE)
         if match:
@@ -615,8 +615,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             return True
         # Skip other hash comments
         return line.startswith('#')
-        
-        
+
+
     def read_one_sample_prompt(self, fd):
         # Read one sample prompt from fd
         function_lines = []
@@ -629,14 +629,16 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             # Maybe not we're not parsing hashes, or maybe we already were not
             if not parsing_hashes:
                 function_lines.append(line)
-        result['function'] = ''.join(function_lines).strip()
-        return result        
-        
+        func = ''.join(function_lines).strip()
+        result.update(self.do_get_sample_prompt(func))
+        return result
+
     def do_get_sample_prompts_list(self):
         result = []
         # Start with the "Current" meta-sample
         result.append({'name': 'Current'})
-        
+        result[0].update(self.do_get_current_prompt())
+
         # Read all of the prompts in sample_prompts
         paths = glob.iglob('sample_prompts/*.fish')
         for path in paths:
@@ -648,7 +650,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 # Ignore unreadable files, etc
                 pass
         return result
-        
+
     def font_size_for_ansi_prompt(self, prompt_demo_ansi):
         width = ansi_prompt_line_width(prompt_demo_ansi)
         # Pick a font size
@@ -761,7 +763,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def log_request(self, code='-', size='-'):
         """ Disable request logging """
         pass
-        
+
 # find fish
 fish_bin_dir = os.environ.get('__fish_bin_dir')
 fish_bin_path = None
@@ -782,7 +784,7 @@ if not fish_bin_dir:
 
 else:
     fish_bin_path = os.path.join(fish_bin_dir, 'fish')
-        
+
 if not os.access(fish_bin_path, os.X_OK):
     print("fish could not be executed at path '%s'. Is fish installed correctly?" % fish_bin_path)
     sys.exit(-1)

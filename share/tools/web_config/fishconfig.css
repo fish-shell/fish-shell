@@ -390,18 +390,34 @@ img.delete_icon {
 }
 
 .prompt_demo {
-	/* This is the div that holds what the prompt looks like */
-	width: 100%;
-	background-color: black;
-	border-radius: 5px;
-	display: table;
+	font-size: 12pt;
+	padding: 25px;
+	margin: 5px 20px 25px 20px; /* top right bottom left */
+	cursor: pointer;
+	line-height: 1.8em;
+	border: solid #777 1px;
+	position: relative; /* so that our absolutely positioned elements work */
+}
+
+.prompt_demo_tight {
+	font-size: 10pt;
+	padding: 10px;
+	margin: 5px 20px 25px; /* top right bottom left */
+	cursor: pointer;
+	line-height: 1.8em;
+	border: solid #777 1px;
+	position: relative; /* so that our absolutely positioned elements work */
+}
+
+.prompt_demo_tight_selected {
+	border: solid #00ff00 1px;
 }
 
 .save_button, .prompt_save_button {
 	border-radius: 5px;
 	border: solid rgba(71,71,71,0.5) 1px;
 	padding: 5px 8px;
-	font-size: 12pt;
+	font-size: 10pt;
 	display: inline-block;
 	margin-top: 12px;
 	background-color: rgba(128,128,128,0.2);
@@ -412,7 +428,14 @@ img.delete_icon {
 .prompt_save_button:hover {
 	background-color: #333;
 	border: solid #525252 1px;
-	color: #EEE;
+    color: #ffffff;
+}
+
+.prompt_demo_choice_label {
+	margin: 5px 20px 5px;
+	cursor: pointer;
+	font-size: 12pt;
+	white-space: normal;
 }
 
 .prompt_demo_text {
@@ -428,15 +451,19 @@ img.delete_icon {
 }
 
 .prompt_function {
-	/* This is the div that holds the prompt function's definition */
-	width: 100%;
-	color: #BBB;
-	font-size: 10pt;
+    display: block;
+  	border: 1px solid #555;
+  	background-color: #181818;
+    margin: 5px 20px 25px;
+    border-radius: 5;
 }
 
 .prompt_function_text {
 	white-space: pre-wrap;
-	padding: 25px 3px;
+	padding: 15px 3px;
+    width: 100%;
+    height: 25%;
+    overflow: auto;
 }
 
 .external_link_img {

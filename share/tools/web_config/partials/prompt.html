@@ -1,25 +1,17 @@
-<div id="master_detail_table" style="display: table;">
-    <div id="master">
-        <div ng-repeat="prompt in samplePrompts">
-            <div id="master_{{prompt.name}}" ng-class="{'master_element': true, 'selected_master_elem': selectedPrompt == prompt}" ng-style="prompt.name=='Current' && {color: '#6666ff'} || {color: '#aaaaaa' }" ng-click="selectPrompt(prompt)">
-                <span ng-class="{master_element_text: selectedPrompt == prompt}" ng-style="prompt.name=='Current' && {'font-size': '13pt', 'border-bottom-color': rgb(0, 6, 111) } || {'font-size': '13pt'}">{{ prompt.name }}</span>
-            </div>
-        </div>
+<div style="padding: 0 10px 15px;">
+    <div class="prompt_demo">
+        <div ng-bind-html-unsafe="selectedPrompt.demo"></div>
+        <span class="prompt_save_button" style="position: absolute; right: 2px; bottom: 2px;" ng-click="setNewPrompt(selectedPrompt)" ng-hide="selectedPrompt == samplePrompts[0]">Use</span>
     </div>
-    <div id="detail">
-        <div id="detail_prompt" style="display: block;">
-            <div class="prompt_demo">
-                <div class="prompt_demo_text" style="font-size: {{ demoTextFontSize }};" ng-bind-html-unsafe="demoText">
-                </div>
-            </div>
-            <div style="text-align: right" ng-show="selectedPrompt.name != 'Current'">
-                <span class="prompt_save_button" ng-click="setNewPrompt(selectedPrompt)"> use prompt </span>
-            </div>
-            <div class="prompt_function">
-                <div class="prompt_function_text">
-                    {{ selectedPrompt.function }}
-                </div>
-            </div>
+
+    <div class="prompt_function">
+        <div class="prompt_function_text">{{ selectedPrompt.function }}</div>
+    </div>
+
+    <div>
+        <div ng-repeat="prompt in samplePrompts" ng-click="selectPrompt(prompt)">
+            <div class="prompt_demo_choice_label">{{ prompt.name }}</div>
+            <div ng-bind-html-unsafe='prompt.demo'  ng-class="{'prompt_demo_tight': true, 'prompt_demo_tight_selected': prompt == selectedPrompt}"></div>
         </div>
     </div>
 </div>

@@ -93,10 +93,11 @@ controllers.controller("promptController", function($scope, $http) {
     $scope.setNewPrompt = function(selectedPrompt) {
         $http.post("/set_prompt/","what=" + encodeURIComponent(selectedPrompt.function), { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config){
 
-            // Update attributes of current prompt
+            // Update attributes of current prompt and select it
             $scope.samplePrompts[0].demo = selectedPrompt.demo;
             $scope.samplePrompts[0].function = selectedPrompt.function;
             $scope.samplePrompts[0].font_size = selectedPrompt.font_size;
+            $scope.selectedPrompt = $scope.samplePrompts[0];
         })};
 
     $scope.fetchSamplePrompts();

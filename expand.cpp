@@ -924,7 +924,7 @@ static int parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &
 
     while (1)
     {
-        long tmp;
+        long tmp=1;
 
         while (iswspace(in[pos]) || (in[pos]==INTERNAL_SEPARATOR))
             pos++;
@@ -935,34 +935,62 @@ static int parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &
             break;
         }
 
+        bool sloppy = false;
+        long i1=1;
         errno=0;
-        tmp = wcstol(&in[pos], &end, 10);
-        if ((errno) || (end == &in[pos]))
-        {
-            return 1;
+        if ( in[pos]==L'.' && in[pos+1]==L'.' ){
+            // unbounded range $VAR[..n]
+            sloppy=true;
         }
-        //    debug( 0, L"Push idx %d", tmp );
-
-        long i1 = tmp>-1 ? tmp : (long)array_size+tmp+1;
-        pos = end-in;
-        while (in[pos]==INTERNAL_SEPARATOR)
-            pos++;
-        if (in[pos]==L'.' && in[pos+1]==L'.')
-        {
-            pos+=2;
-            while (in[pos]==INTERNAL_SEPARATOR)
-                pos++;
-            long tmp1 = wcstol(&in[pos], &end, 10);
+        else{
+            tmp = wcstol(&in[pos], &end, 10);
             if ((errno) || (end == &in[pos]))
             {
                 return 1;
             }
+            //    debug( 0, L"Push idx %d", tmp );
+
+            i1 = tmp>-1 ? tmp : (long)array_size+tmp+1;
             pos = end-in;
 
-            // debug( 0, L"Push range %d %d", tmp, tmp1 );
-            long i2 = tmp1>-1 ? tmp1 : size+tmp1+1;
-            // debug( 0, L"Push range idx %d %d", i1, i2 );
-            short direction = i2<i1 ? -1 : 1 ;
+            while (in[pos]==INTERNAL_SEPARATOR)
+                pos++;
+        }
+
+        if ( in[pos]==L'.' && in[pos+1]==L'.' )
+        {
+            pos+=2;
+            while (in[pos]==INTERNAL_SEPARATOR)
+                pos++;
+
+            long i2=array_size;
+            short direction=1;
+            switch ( in[pos] ){
+                case L' ': /// unbounded range $VAR[2.. 4 5]
+                    pos++;
+                case L']': /// unbounded range $VAR[2..]
+                    if( i1<1 ) continue; /// Produce empty list if i1 is out of bounds [negative]
+                    break; 
+                default:
+                    long tmp1 = wcstol(&in[pos], &end, 10);
+                    if ((errno) || (end == &in[pos]))
+                    {
+                        return 1;
+                    }
+                    pos = end-in;
+
+                    // debug( 0, L"Push range %d %d", tmp, tmp1 );
+                    i2 = tmp1>-1 ? tmp1 : size+tmp1+1;
+                    // debug( 0, L"Push range idx %d %d", i1, i2 );
+                    direction = i2<i1 ? -1 : 1 ;
+
+                    if ( sloppy && ( (size_t)i2 )>array_size) 
+                    {
+                        i2=array_size;
+                    }
+                    break;
+            }
+
             for (long jjj = i1; jjj*direction <= i2*direction; jjj+=direction)
             {
                 // debug(0, L"Expand range [subst]: %i\n", jjj);

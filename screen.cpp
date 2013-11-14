@@ -1215,7 +1215,11 @@ static screen_layout_t compute_layout(screen_t *s,
         result.left_prompt_space = left_prompt_width;
         // See remark about for why we can't use the right prompt here
         //result.right_prompt = right_prompt;
-        result.prompts_get_own_line = true;
+        const size_t prompt_line_count = calc_prompt_lines(s->actual_left_prompt);
+        if (prompt_line_count == 1)
+        {
+            result.prompts_get_own_line = true;
+        }
         done = true;
     }
 

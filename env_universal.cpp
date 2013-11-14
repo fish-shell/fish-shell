@@ -132,7 +132,12 @@ static int try_get_socket_once(void)
     if (connect(s, (struct sockaddr *)&local, sizeof local) == -1)
     {
         close(s);
-        wperror(L"connect");
+        
+        /* If it fails on first try, it's probably no serious error, but fishd hasn't been launched yet.
+         This happens (at least) on the first concurrent session. */
+        if (get_socket_count > 1)
+            wperror(L"connect");
+        
         return -1;
     }
 

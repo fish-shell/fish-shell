@@ -1215,11 +1215,15 @@ static screen_layout_t compute_layout(screen_t *s,
         result.left_prompt_space = left_prompt_width;
         // See remark about for why we can't use the right prompt here
         //result.right_prompt = right_prompt;
-        const size_t prompt_line_count = calc_prompt_lines(s->actual_left_prompt);
-        if (prompt_line_count == 1)
-        {
+
+        // If the command wraps, and the prompt is not short, place the command on its own line.
+        // A short prompt is 33% or less of the terminal's width
+        size_t prompt_percent_width = (100 * left_prompt_width) / screen_width;
+        if (commandline.size() + left_prompt_width + 1 > screen_width && prompt_percent_width > 33) {
+            // +1 for cursor width
             result.prompts_get_own_line = true;
         }
+
         done = true;
     }
 

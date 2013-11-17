@@ -490,8 +490,8 @@ You can also access ranges of elements, known as "slices:"
 <pre>
 > <b>echo</b> <i>$PATH[1..2]</i>
 /usr/bin /bin
-> <b>echo</b> <i>$PATH[-1..2]</i>
-/usr/local/bin /sbin /usr/sbin /bin
+> <b>echo</b> <i>$PATH[-2..-1]</i>
+/sbin /usr/local/bin
 </pre>
 
 You can iterate over a list (or a slice) with a <i>for loop</i>:

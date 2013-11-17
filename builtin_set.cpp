@@ -262,8 +262,11 @@ static int parse_index(std::vector<long> &indexes,
             {
                 l_ind2 = var_count+l_ind2+1;
             }
-            int direction = l_ind2<l_ind ? -1 : 1 ;
-            for (long jjj = l_ind; jjj*direction <= l_ind2*direction; jjj+=direction)
+            if (l_ind2<l_ind)
+            {
+                return 1;
+            }
+            for (long jjj = l_ind; jjj <= l_ind2; jjj+=1)
             {
                 // debug(0, L"Expand range [set]: %i\n", jjj);
                 indexes.push_back(jjj);

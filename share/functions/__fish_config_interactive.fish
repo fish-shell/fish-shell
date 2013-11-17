@@ -143,7 +143,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
     if not test -d $configdir/fish/generated_completions
         #fish_update_completions is a function, so it can not be directly run in background.
-        fish -c 'fish_update_completions > /dev/null ^/dev/null' &
+        eval "$__fish_bin_dir/fish -c 'fish_update_completions > /dev/null ^/dev/null' &"
     end
 
 	#

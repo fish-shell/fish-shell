@@ -537,10 +537,6 @@ static void s_desired_append_char(screen_t *s,
                 s->desired.add_line();
                 s->desired.cursor.y++;
                 s->desired.cursor.x=0;
-                for (size_t i=0; i < prompt_width; i++)
-                {
-                    s_desired_append_char(s, L' ', 0, indent, prompt_width);
-                }
             }
 
             line_t &line = s->desired.line(line_no);

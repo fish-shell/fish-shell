@@ -15,9 +15,17 @@ else:
     import http.server as SimpleHTTPServer
     import socketserver as SocketServer
     from urllib.parse import parse_qs
+
 import webbrowser
+cli_browsers = ['www-browser', 'links', 'elinks', 'lynx', 'w3m']
+for browser in cli_browsers:
+    try:
+        webbrowser._tryorder.remove(browser)
+    except ValueError as e:
+        pass
+
 import subprocess
-import re, socket, os, sys, cgi, select, time, glob
+import re, socket, cgi, select, time, glob
 try:
     import json
 except ImportError:
@@ -639,7 +647,9 @@ if len(sys.argv) > 1:
 
 url = 'http://localhost:%d/%s' % (PORT, initial_tab)
 print("Web config started at '%s'. Hit enter to stop." % url)
-webbrowser.open(url)
+opened = webbrowser.open(url)
+if not opened:
+    print("Open in a graphical browser.")
 
 # Select on stdin and httpd
 stdin_no = sys.stdin.fileno()

@@ -286,7 +286,7 @@ static void append_yaml_to_buffer(const wcstring &wcmd, time_t timestamp, const 
     buffer->append("- cmd: ", cmd.c_str(), "\n");
 
     char timestamp_str[96];
-    snprintf(timestamp_str, sizeof timestamp_str, "%ld", timestamp);
+    snprintf(timestamp_str, sizeof timestamp_str, "%ld", (long) timestamp);
     buffer->append("   when: ", timestamp_str, "\n");
 
     if (! required_paths.empty())

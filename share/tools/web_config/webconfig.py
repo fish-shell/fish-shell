@@ -16,13 +16,11 @@ else:
     import socketserver as SocketServer
     from urllib.parse import parse_qs
 
+# Disable CLI web browsers
+term = os.environ.pop('TERM', None)
 import webbrowser
-cli_browsers = ['www-browser', 'links', 'elinks', 'lynx', 'w3m']
-for browser in cli_browsers:
-    try:
-        webbrowser._tryorder.remove(browser)
-    except ValueError as e:
-        pass
+if term:
+    os.environ['TERM'] = term
 
 import subprocess
 import re, socket, cgi, select, time, glob
@@ -647,9 +645,7 @@ if len(sys.argv) > 1:
 
 url = 'http://localhost:%d/%s' % (PORT, initial_tab)
 print("Web config started at '%s'. Hit enter to stop." % url)
-opened = webbrowser.open(url)
-if not opened:
-    print("Open in a graphical browser.")
+webbrowser.open(url)
 
 # Select on stdin and httpd
 stdin_no = sys.stdin.fileno()

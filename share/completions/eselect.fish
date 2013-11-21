@@ -17,6 +17,11 @@ function __fish_complete_eselect_action_options
     set -l parseregexp 's/^    ([a-zA-Z0-9_-]*)[ ]*/\1\t/g'
     set -l cmdl (commandline -poc)
 
+    # Disable further php completion
+    if [ (__fish_print_cmd_args_without_options)[2] = 'php' ]
+        return
+    end
+
     switch $cmdl[-1]
         case -'*'
             return
@@ -31,6 +36,11 @@ end
 function __fish_complete_eselect_targets
     set -l sedregexp 's/^  \[([0-9]+)\][ ]*/\1\t/g'
     set -l cmdl (commandline -poc)
+
+    # Disable further php completion
+    if [ (__fish_print_cmd_args_without_options)[2] = 'php' ]
+        return
+    end
 
     switch $cmdl[-1]
         case -'*'

@@ -10,7 +10,7 @@ end
 function __fish_complete_eselect_actions
     set -l sedregexp 's/^  ([a-zA-Z0-9_-]*)[ ]*/\1\t/g'
     set -l cmdl (commandline -poc)
-    __fish_eselect_cmd $cmdl[2..-1] help | sgrep '^  [^ -]' | sed -r $sedregexp
+    __fish_eselect_cmd $cmdl[2..-1] usage | sgrep '^  [^ -]' | sed -r $sedregexp
 end
 
 function __fish_complete_eselect_action_options
@@ -29,7 +29,7 @@ function __fish_complete_eselect_action_options
 
     set -l findregexp '/^  '$cmdl[-1]'/,/^  [^ ]/p'
 
-    set cmdl[-1] help
+    set cmdl[-1] usage
     __fish_eselect_cmd $cmdl[2..-1] | sed -n -re $findregexp | sgrep '^    --' | sed -re $parseregexp
 end
 

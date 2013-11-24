@@ -346,13 +346,18 @@ int input_init()
 
     input_common_init(&interrupt_handler);
 
+    const env_var_t term = env_get_string(L"TERM");
     int errret;
     if (setupterm(0, STDOUT_FILENO, &errret) == ERR)
     {
         debug(0, _(L"Could not set up terminal"));
+        if (errret == 0)
+        {
+            debug(0, _(L"Check that your terminal type, '%ls', is supported on this system"),
+                  term.c_str());
+        }
         exit_without_destructors(1);
     }
-    const env_var_t term = env_get_string(L"TERM");
     assert(! term.missing());
     output_set_term(term);
 

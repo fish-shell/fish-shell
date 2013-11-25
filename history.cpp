@@ -1731,8 +1731,9 @@ void history_t::add_with_file_detection(const wcstring &str)
             const wchar_t *token_cstr = tok_last(&tokenizer);
             if (token_cstr)
             {
-                wcstring potential_path = token_cstr;
-                if (unescape_string(potential_path, false) && string_could_be_path(potential_path))
+                wcstring potential_path;
+                bool unescaped = unescape_string(token_cstr, &potential_path, UNESCAPE_DEFAULT);
+                if (unescaped && string_could_be_path(potential_path))
                 {
                     potential_paths.push_back(potential_path);
 

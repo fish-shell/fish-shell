@@ -2728,8 +2728,6 @@ const wchar_t *parser_get_block_command(int type)
 */
 int parser_t::parser_test_argument(const wchar_t *arg, wcstring *out, const wchar_t *prefix, int offset)
 {
-    wchar_t *unesc;
-    wchar_t *pos;
     int err=0;
 
     wchar_t *paran_begin, *paran_end;
@@ -2791,8 +2789,8 @@ int parser_t::parser_test_argument(const wchar_t *arg, wcstring *out, const wcha
         }
     }
 
-    unesc = unescape(arg_cpy, 1);
-    if (!unesc)
+    wcstring unesc;
+    if (! unescape_string(arg_cpy, &unesc, UNESCAPE_SPECIAL))
     {
         if (out)
         {
@@ -2805,26 +2803,25 @@ int parser_t::parser_test_argument(const wchar_t *arg, wcstring *out, const wcha
     }
     else
     {
-        /*
-          Check for invalid variable expansions
-        */
-        for (pos = unesc; *pos; pos++)
+        /* Check for invalid variable expansions */
+        const size_t unesc_size = unesc.size();
+        for (size_t idx = 0; idx < unesc_size; idx++)
         {
-            switch (*pos)
+            switch (unesc.at(idx))
             {
                 case VARIABLE_EXPAND:
                 case VARIABLE_EXPAND_SINGLE:
                 {
-                    wchar_t n = *(pos+1);
+                    wchar_t next_char = (idx + 1 < unesc_size ? unesc.at(idx + 1) : L'\0');
 
-                    if (n != VARIABLE_EXPAND &&
-                            n != VARIABLE_EXPAND_SINGLE &&
-                            !wcsvarchr(n))
+                    if (next_char != VARIABLE_EXPAND &&
+                            next_char != VARIABLE_EXPAND_SINGLE &&
+                            ! wcsvarchr(next_char))
                     {
                         err=1;
                         if (out)
                         {
-                            expand_variable_error(*this, unesc, pos-unesc, offset);
+                            expand_variable_error(*this, unesc, idx, offset);
                             print_errors(*out, prefix);
                         }
                     }
@@ -2837,7 +2834,6 @@ int parser_t::parser_test_argument(const wchar_t *arg, wcstring *out, const wcha
 
     free(arg_cpy);
 
-    free(unesc);
     return err;
 
 }

@@ -59,15 +59,19 @@ typedef std::vector<wcstring> wcstring_list_t;
 */
 #define BYTE_MAX 0xffu
 
-/**
-  Escape special fish syntax characters like the semicolon
- */
-#define UNESCAPE_SPECIAL 1
+/* Flags for unescape_string functions */
+enum
+{
+    /* Default behavior */
+    UNESCAPE_DEFAULT = 0,
 
-/**
-  Allow incomplete escape sequences
- */
-#define UNESCAPE_INCOMPLETE 2
+    /* Escape special fish syntax characters like the semicolon */
+    UNESCAPE_SPECIAL = 1 << 0,
+
+    /* Allow incomplete escape sequences */
+    UNESCAPE_INCOMPLETE = 1 << 1
+};
+typedef unsigned int unescape_flags_t;
 
 /* Flags for the escape() and escape_string() functions */
 enum
@@ -715,16 +719,14 @@ wcstring escape_string(const wcstring &in, escape_flags_t flags);
    character and a few more into constants which are defined in a
    private use area of Unicode. This assumes wchar_t is a unicode
    character set.
-
-   The result must be free()d. The original string is not modified. If
-   an invalid sequence is specified, 0 is returned.
-
 */
-wchar_t *unescape(const wchar_t * in,
-                  int escape_special);
 
-bool unescape_string(wcstring &str,
-                     int escape_special);
+/** Unescapes a string in-place. A true result indicates the string was unescaped, a false result indicates the string was unmodified. */
+bool unescape_string_in_place(wcstring *str, unescape_flags_t escape_special);
+
+/** Unescapes a string, returning the unescaped value by reference. On failure, the output is set to an empty string. */
+bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t escape_special);
+bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t escape_special);
 
 
 /**

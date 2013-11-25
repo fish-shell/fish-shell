@@ -72,6 +72,7 @@ parts of fish.
 #include "util.cpp"
 #include "fallback.cpp"
 
+#define NOT_A_WCHAR WEOF
 
 struct termios shell_modes;
 
@@ -1125,6 +1126,513 @@ wcstring escape_string(const wcstring &in, escape_flags_t flags)
     return result;
 }
 
+/* Helper to return the last character in a string, or NOT_A_WCHAR */
+static wint_t string_last_char(const wcstring &str)
+{
+    size_t len = str.size();
+    return len == 0 ? NOT_A_WCHAR : str.at(len - 1);
+}
+
+/* Given a null terminated string starting with a backslash, read the escape as if it is unquoted, appending to result. Return the number of characters consumed, or 0 on error */
+static size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_incomplete, bool unescape_special)
+{
+    if (input[0] != L'\\')
+    {
+        // not an escape
+        return 0;
+    }
+
+    /* Here's the character we'll ultimately append. Note that L'\0' is a valid thing to append. */
+    wchar_t result_char = NOT_A_WCHAR;
+
+    bool errored = false;
+    size_t in_pos = 1; //in_pos always tracks the next character to read (and therefore the number of characters read so far)
+    const wchar_t c = input[in_pos++];
+    switch (c)
+    {
+
+        /* A null character after a backslash is an error */
+        case L'\0':
+        {
+            /* Adjust in_pos to only include the backslash */
+            assert(in_pos > 0);
+            in_pos--;
+
+            /* It's an error, unless we're allowing incomplete escapes */
+            if (! allow_incomplete)
+                errored = true;
+            break;
+        }
+
+        /* Numeric escape sequences. No prefix means octal escape, otherwise hexadecimal. */
+        case L'0':
+        case L'1':
+        case L'2':
+        case L'3':
+        case L'4':
+        case L'5':
+        case L'6':
+        case L'7':
+        case L'u':
+        case L'U':
+        case L'x':
+        case L'X':
+        {
+            long long res=0;
+            size_t chars=2;
+            int base=16;
+
+            bool byte_literal = false;
+            wchar_t max_val = ASCII_MAX;
+
+            switch (c)
+            {
+                case L'u':
+                {
+                    chars=4;
+                    max_val = UCS2_MAX;
+                    break;
+                }
+
+                case L'U':
+                {
+                    chars=8;
+                    max_val = WCHAR_MAX;
+                    break;
+                }
+
+                case L'x':
+                {
+                    chars = 2;
+                    max_val = ASCII_MAX;
+                    break;
+                }
+
+                case L'X':
+                {
+                    byte_literal = true;
+                    max_val = BYTE_MAX;
+                    break;
+                }
+
+                default:
+                {
+                    base=8;
+                    chars=3;
+                    // note that in_pos currently is just after the first post-backslash character; we want to start our escape from there
+                    assert(in_pos > 0);
+                    in_pos--;
+                    break;
+                }
+            }
+
+            for (size_t i=0; i<chars; i++)
+            {
+                long d = convert_digit(input[in_pos],base);
+                if (d < 0)
+                {
+                    break;
+                }
+
+                res=(res*base)+d;
+                in_pos++;
+            }
+
+            if (res <= max_val)
+            {
+                result_char = (wchar_t)((byte_literal ? ENCODE_DIRECT_BASE : 0)+res);
+            }
+            else
+            {
+                errored = true;
+            }
+
+            break;
+        }
+
+        /* \a means bell (alert) */
+        case L'a':
+        {
+            result_char = L'\a';
+            break;
+        }
+
+        /* \b means backspace */
+        case L'b':
+        {
+            result_char = L'\b';
+            break;
+        }
+
+        /* \cX means control sequence X */
+        case L'c':
+        {
+            const wchar_t sequence_char = input[in_pos++];
+            if (sequence_char >= L'a' && sequence_char <= (L'a'+32))
+            {
+                result_char = sequence_char-L'a'+1;
+            }
+            else if (sequence_char >= L'A' && sequence_char <= (L'A'+32))
+            {
+                result_char = sequence_char-L'A'+1;
+            }
+            else
+            {
+                errored = true;
+            }
+            break;
+        }
+
+        /* \x1b means escape */
+        case L'e':
+        {
+            result_char = L'\x1b';
+            break;
+        }
+
+        /*
+          \f means form feed
+        */
+        case L'f':
+        {
+            result_char = L'\f';
+            break;
+        }
+
+        /*
+          \n means newline
+        */
+        case L'n':
+        {
+            result_char = L'\n';
+            break;
+        }
+
+        /*
+          \r means carriage return
+        */
+        case L'r':
+        {
+            result_char = L'\r';
+            break;
+        }
+
+        /*
+          \t means tab
+         */
+        case L't':
+        {
+            result_char = L'\t';
+            break;
+        }
+
+        /*
+          \v means vertical tab
+        */
+        case L'v':
+        {
+            result_char = L'\v';
+            break;
+        }
+
+        /* If a backslash is followed by an actual newline, swallow them both */
+        case L'\n':
+        {
+            result_char = NOT_A_WCHAR;
+            break;
+        }
+
+        default:
+        {
+            if (unescape_special)
+                result->push_back(INTERNAL_SEPARATOR);
+            result_char = c;
+            break;
+        }
+    }
+
+    if (! errored && result_char != NOT_A_WCHAR)
+    {
+        result->push_back(result_char);
+    }
+    return errored ? 0 : in_pos;
+}
+
+/* Returns the unescaped version of input_str into output_str (by reference). Returns true if successful. If false, the contents of output_str are undefined (!) */
+static bool unescape_string_internal(const wchar_t * const input, const size_t input_len, wcstring *output_str, unescape_flags_t flags)
+{
+    /* Set up result string, which we'll swap with the output on success */
+    wcstring result;
+    result.reserve(input_len);
+
+    const bool unescape_special = !!(flags & UNESCAPE_SPECIAL);
+    const bool allow_incomplete = !!(flags & UNESCAPE_INCOMPLETE);
+
+    int bracket_count = 0;
+
+    bool errored = false;
+    enum
+    {
+        mode_unquoted,
+        mode_single_quotes,
+        mode_double_quotes
+    } mode = mode_unquoted;
+
+    for (size_t input_position = 0; input_position < input_len && ! errored; input_position++)
+    {
+        const wchar_t c = input[input_position];
+        /* Here's the character we'll append to result, or NOT_A_WCHAR to suppress it */
+        wchar_t to_append = c;
+        if (mode == mode_unquoted)
+        {
+
+            switch (c)
+            {
+                case L'\\':
+                {
+                    /* Backslashes (escapes) are complicated and may result in errors, or appending INTERNAL_SEPARATORs, so we have to handle them specially */
+                    size_t escape_chars = read_unquoted_escape(input + input_position, &result, allow_incomplete, unescape_special);
+                    if (escape_chars == 0)
+                    {
+                        /* A 0 return indicates an error */
+                        errored = true;
+                    }
+                    else
+                    {
+                        /* Skip over the characters we read, minus one because the outer loop will increment it */
+                        assert(escape_chars > 0);
+                        input_position += escape_chars - 1;
+                    }
+                    /* We've already appended, don't append anything else */
+                    to_append = NOT_A_WCHAR;
+                    break;
+                }
+
+                case L'~':
+                {
+                    if (unescape_special && (input_position == 0))
+                    {
+                        to_append = HOME_DIRECTORY;
+                    }
+                    break;
+                }
+
+                case L'%':
+                {
+                    if (unescape_special && (input_position == 0))
+                    {
+                        to_append = PROCESS_EXPAND;
+                    }
+                    break;
+                }
+
+                case L'*':
+                {
+                    if (unescape_special)
+                    {
+                        /* In general, this is ANY_STRING. But as a hack, if the last appended char is ANY_STRING, delete the last char and store ANY_STRING_RECURSIVE to reflect the fact that ** is the recursive wildcard. */
+                        if (string_last_char(result) == ANY_STRING)
+                        {
+                            assert(result.size() > 0);
+                            result.resize(result.size() - 1);
+                            to_append = ANY_STRING_RECURSIVE;
+                        }
+                        else
+                        {
+                            to_append = ANY_STRING;
+                        }
+                    }
+                    break;
+                }
+
+                case L'?':
+                {
+                    if (unescape_special)
+                    {
+                        to_append = ANY_CHAR;
+                    }
+                    break;
+                }
+
+                case L'$':
+                {
+                    if (unescape_special)
+                    {
+                        to_append = VARIABLE_EXPAND;
+                    }
+                    break;
+                }
+
+                case L'{':
+                {
+                    if (unescape_special)
+                    {
+                        bracket_count++;
+                        to_append = BRACKET_BEGIN;
+                    }
+                    break;
+                }
+
+                case L'}':
+                {
+                    if (unescape_special)
+                    {
+                        bracket_count--;
+                        to_append = BRACKET_END;
+                    }
+                    break;
+                }
+
+                case L',':
+                {
+                    /* If the last character was a separator, then treat this as a literal comma */
+                    if (unescape_special && bracket_count > 0 && string_last_char(result) != BRACKET_SEP)
+                    {
+                        to_append = BRACKET_SEP;
+                    }
+                    break;
+                }
+
+                case L'\'':
+                {
+                    mode = mode_single_quotes;
+                    to_append = unescape_special ? INTERNAL_SEPARATOR : NOT_A_WCHAR;
+                    break;
+                }
+
+                case L'\"':
+                {
+                    mode = mode_double_quotes;
+                    to_append = unescape_special ? INTERNAL_SEPARATOR : NOT_A_WCHAR;
+                    break;
+                }
+            }
+        }
+        else if (mode == mode_single_quotes)
+        {
+            if (c == L'\\')
+            {
+                /* A backslash may or may not escape something in single quotes */
+                switch (input[input_position + 1])
+                {
+                    case '\\':
+                    case L'\'':
+                    {
+                        to_append = input[input_position + 1];
+                        input_position += 1; /* Skip over the backslash */
+                        break;
+                    }
+
+                    case L'\0':
+                    {
+                        if (!allow_incomplete)
+                        {
+                            errored = true;
+                        }
+                        else
+                        {
+                            // PCA this line had the following cryptic comment:
+                            // 'We may ever escape a NULL character, but still appending a \ in case I am wrong.'
+                            // Not sure what it means or the importance of this
+                            input_position += 1; /* Skip over the backslash */
+                            to_append = L'\\';
+                        }
+                    }
+                    break;
+
+                    default:
+                    {
+                        /* Literal backslash that doesn't escape anything! Leave things alone; we'll append the backslash itself */
+                        break;
+                    }
+                }
+            }
+            else if (c == L'\'')
+            {
+                to_append = unescape_special ? INTERNAL_SEPARATOR : NOT_A_WCHAR;
+                mode = mode_unquoted;
+            }
+        }
+        else if (mode == mode_double_quotes)
+        {
+            switch (c)
+            {
+                case L'"':
+                {
+                    mode = mode_unquoted;
+                    to_append = unescape_special ? INTERNAL_SEPARATOR : NOT_A_WCHAR;
+                    break;
+                }
+
+                case '\\':
+                {
+                    switch (input[input_position + 1])
+                    {
+                        case L'\0':
+                        {
+                            if (!allow_incomplete)
+                            {
+                                errored = true;
+                            }
+                            else
+                            {
+                                to_append = L'\0';
+                            }
+                        }
+                        break;
+
+                        case '\\':
+                        case L'$':
+                        case '"':
+                        {
+                            to_append = input[input_position + 1];
+                            input_position += 1; /* Skip over the backslash */
+                            break;
+                        }
+
+                        case '\n':
+                        {
+                            /* Swallow newline */
+                            to_append = NOT_A_WCHAR;
+                            break;
+                        }
+
+                        default:
+                        {
+                            /* Literal backslash that doesn't escape anything! Leave things alone; we'll append the backslash itself */
+                            break;
+                        }
+                    }
+                    break;
+                }
+
+                case '$':
+                {
+                    if (unescape_special)
+                    {
+                        to_append = VARIABLE_EXPAND_SINGLE;
+                    }
+                    break;
+                }
+
+            }
+        }
+
+        /* Now maybe append the char */
+        if (to_append != NOT_A_WCHAR)
+        {
+            result.push_back(to_append);
+        }
+    }
+
+    /* Return the string by reference, and then success */
+    if (! errored)
+    {
+        output_str->swap(result);
+    }
+    return ! errored;
+}
+
 wchar_t *unescape(const wchar_t * orig, int flags)
 {
     int out_pos;
@@ -1681,19 +2189,33 @@ wchar_t *unescape(const wchar_t * orig, int flags)
     return in;
 }
 
-bool unescape_string(wcstring &str, int escape_special)
+bool unescape_string_in_place(wcstring *str, unescape_flags_t escape_special)
 {
-    bool success = false;
-    wchar_t *result = unescape(str.c_str(), escape_special);
-    if (result)
+    assert(str != NULL);
+    wcstring output;
+    bool success = unescape_string_internal(str->c_str(), str->size(), &output, escape_special);
+    if (success)
     {
-        str.replace(str.begin(), str.end(), result);
-        free(result);
-        success = true;
+        str->swap(output);
     }
     return success;
 }
 
+bool unescape_string(const wchar_t *input, wcstring *output, unescape_flags_t escape_special)
+{
+    bool success = unescape_string_internal(input, wcslen(input), output, escape_special);
+    if (! success)
+        output->clear();
+    return success;
+}
+
+bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t escape_special)
+{
+    bool success = unescape_string_internal(input.c_str(), input.size(), output, escape_special);
+    if (! success)
+        output->clear();
+    return success;
+}
 
 
 void common_handle_winch(int signal)

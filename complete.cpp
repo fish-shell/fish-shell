@@ -1982,13 +1982,10 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, completion_
         {
             bool do_file = false;
 
-            wcstring current_command_unescape = current_command;
-            wcstring prev_token_unescape = prev_token;
-            wcstring current_token_unescape = current_token;
-
-            if (unescape_string(current_command_unescape, 0) &&
-                    unescape_string(prev_token_unescape, 0) &&
-                    unescape_string(current_token_unescape, UNESCAPE_INCOMPLETE))
+            wcstring current_command_unescape, prev_token_unescape, current_token_unescape;
+            if (unescape_string(current_command, &current_command_unescape, UNESCAPE_DEFAULT) &&
+                unescape_string(prev_token, &prev_token_unescape, UNESCAPE_DEFAULT) &&
+                unescape_string(current_token, &current_token_unescape, UNESCAPE_INCOMPLETE))
             {
                 do_file = completer.complete_param(current_command_unescape,
                                                    prev_token_unescape,

@@ -423,8 +423,8 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
             case 'p':
             case 'c':
             {
-                wcstring tmp = woptarg;
-                if (unescape_string(tmp, 1))
+                wcstring tmp;
+                if (unescape_string(woptarg, &tmp, UNESCAPE_SPECIAL))
                 {
                     if (opt=='p')
                         path.push_back(tmp);

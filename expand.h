@@ -199,7 +199,7 @@ int expand_is_clean(const wchar_t *in);
    \param token_pos The position where the expansion begins
    \param error_pos The position on the line to report to the error function.
 */
-void expand_variable_error(parser_t &parser, const wchar_t *token, size_t token_pos, int error_pos);
+void expand_variable_error(parser_t &parser, const wcstring &token, size_t token_pos, int error_pos);
 
 /**
    Testing function for getting all process names.

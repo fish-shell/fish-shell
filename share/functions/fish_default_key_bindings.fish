@@ -32,6 +32,12 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind \e\[H beginning-of-line
 	bind \e\[F end-of-line
 
+	# for PuTTY
+	# https://github.com/fish-shell/fish-shell/issues/180
+	bind \e\[1~ beginning-of-line
+	bind \e\[3~ delete-char
+	bind \e\[4~ end-of-line
+
 	# OS X SnowLeopard doesn't have these keys. Don't show an annoying error message.
 	bind -k home beginning-of-line 2> /dev/null
 	bind -k end end-of-line 2> /dev/null
@@ -79,8 +85,8 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind \ef forward-word
 	bind \e\[1\;5C forward-word
 	bind \e\[1\;5D backward-word
-        bind \e\[1\;9A history-token-search-backward # iTerm2
-        bind \e\[1\;9B history-token-search-forward # iTerm2
+	bind \e\[1\;9A history-token-search-backward # iTerm2
+	bind \e\[1\;9B history-token-search-forward # iTerm2
 	bind \e\[1\;9C forward-word #iTerm2
 	bind \e\[1\;9D backward-word #iTerm2
 	bind \ed forward-kill-word
@@ -98,6 +104,9 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind \cw backward-kill-path-component
 	bind \ed 'set -l cmd (commandline); if test -z "$cmd"; echo; dirh; commandline -f repaint; else; commandline -f kill-word; end'
 	bind \cd delete-or-exit
+
+	# Allow reading manpages by pressing F1
+	bind -k f1 'man (basename (commandline -po; echo))[1] ^/dev/null; or echo -n \a'
 
 	# This will make sure the output of the current command is paged using the less pager when you press Meta-p
 	bind \ep '__fish_paginate'

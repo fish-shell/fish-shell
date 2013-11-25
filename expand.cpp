@@ -828,7 +828,7 @@ static int expand_pid(const wcstring &instr_with_sep,
 }
 
 
-void expand_variable_error(parser_t &parser, const wchar_t *token, size_t token_pos, int error_pos)
+void expand_variable_error(parser_t &parser, const wcstring &token, size_t token_pos, int error_pos)
 {
     size_t stop_pos = token_pos+1;
 
@@ -836,7 +836,7 @@ void expand_variable_error(parser_t &parser, const wchar_t *token, size_t token_
     {
         case BRACKET_BEGIN:
         {
-            wchar_t *cpy = wcsdup(token);
+            wchar_t *cpy = wcsdup(token.c_str());
             *(cpy+token_pos)=0;
             wchar_t *name = &cpy[stop_pos+1];
             wchar_t *end = wcschr(name, BRACKET_END);
@@ -1465,26 +1465,6 @@ static int expand_cmdsubst(parser_t &parser, const wcstring &input, std::vector<
     return 1;
 }
 
-/**
-   Wrapper around unescape funtion. Issues an error() on failiure.
-*/
-__attribute__((unused))
-static wchar_t *expand_unescape(parser_t &parser, const wchar_t * in, int escape_special)
-{
-    wchar_t *res = unescape(in, escape_special);
-    if (!res)
-        parser.error(SYNTAX_ERROR, -1, L"Unexpected end of string");
-    return res;
-}
-
-static wcstring expand_unescape_string(const wcstring &in, int escape_special)
-{
-    wcstring tmp = in;
-    unescape_string(tmp, escape_special);
-    /* Need to detect error here */
-    return tmp;
-}
-
 /* Given that input[0] is HOME_DIRECTORY or tilde (ugh), return the user's name. Return the empty string if it is just a tilde. Also return by reference the index of the first character of the remaining part of the string (e.g. the subsequent slash) */
 static wcstring get_home_directory_name(const wcstring &input, size_t *out_tail_idx)
 {
@@ -1669,8 +1649,8 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
          expand_string to expand incomplete strings from the
          commandline.
          */
-        int unescape_flags = UNESCAPE_SPECIAL | UNESCAPE_INCOMPLETE;
-        wcstring next = expand_unescape_string(in->at(i).completion, unescape_flags);
+        wcstring next;
+        unescape_string(in->at(i).completion, &next, UNESCAPE_SPECIAL | UNESCAPE_INCOMPLETE);
 
         if (EXPAND_SKIP_VARIABLES & flags)
         {

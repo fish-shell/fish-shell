@@ -1803,32 +1803,32 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
     
     /* Make our completer */
     completer_t completer(cmd, flags);
-
+    
     wcstring current_command;
     const size_t pos = cmd.size();
     bool done=false;
     bool use_command = 1;
     bool use_function = 1;
     bool use_builtin = 1;
-
-//  debug( 1, L"Complete '%ls'", cmd );
-
+    
+    //  debug( 1, L"Complete '%ls'", cmd );
+    
     const wchar_t *cmd_cstr = cmd.c_str();
     const wchar_t *tok_begin = NULL, *prev_begin = NULL, *prev_end = NULL;
     parse_util_token_extent(cmd_cstr, cmd.size(), &tok_begin, NULL, &prev_begin, &prev_end);
-
+    
     /**
-       If we are completing a variable name or a tilde expansion user
-       name, we do that and return. No need for any other completions.
-    */
+     If we are completing a variable name or a tilde expansion user
+     name, we do that and return. No need for any other completions.
+     */
     
     const wcstring current_token = tok_begin;
-
+    
     if (!done)
     {
         done = completer.try_complete_variable(current_token) || completer.try_complete_user(current_token);
     }
-
+    
     if (!done)
     {
         //const size_t prev_token_len = (prev_begin ? prev_end - prev_begin : 0);
@@ -1864,7 +1864,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
                     use_function = false;
                     use_builtin = false;
                     break;
-                
+                    
                 case parse_statement_decoration_builtin:
                     use_command = false;
                     use_function = false;
@@ -1914,42 +1914,39 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
                         }
                     }
                 }
-
+                
                 bool do_file = false;
-
-                wcstring current_command_unescape = current_command;
-                wcstring previous_argument_unescape = previous_argument;
-                wcstring current_argument_unescape = current_argument;
-
-                if (unescape_string(current_command_unescape, 0) &&
-                        unescape_string(previous_argument_unescape, 0) &&
-                        unescape_string(current_argument_unescape, UNESCAPE_INCOMPLETE))
+                
+                wcstring current_command_unescape, previous_argument_unescape, current_argument_unescape;
+                if (unescape_string(current_command, &current_command_unescape, UNESCAPE_DEFAULT) &&
+                    unescape_string(previous_argument, &previous_argument_unescape, UNESCAPE_DEFAULT) &&
+                    unescape_string(current_argument, &current_argument_unescape, UNESCAPE_INCOMPLETE))
                 {
                     do_file = completer.complete_param(current_command_unescape,
                                                        previous_argument_unescape,
                                                        current_argument_unescape,
                                                        !had_ddash);
                 }
-
+                
                 /* If we have found no command specific completions at all, fall back to using file completions. */
                 if (completer.empty())
                     do_file = true;
-
+                
                 /* But if we are planning on loading commands, don't do file completions.
-                   See https://github.com/fish-shell/fish-shell/issues/378 */
+                 See https://github.com/fish-shell/fish-shell/issues/378 */
                 if (commands_to_load != NULL && completer.has_commands_to_load())
                     do_file = false;
-
+                
                 /* And if we're autosuggesting, and the token is empty, don't do file suggestions */
                 if ((flags & COMPLETION_REQUEST_AUTOSUGGESTION) && current_argument_unescape.empty())
                     do_file = false;
-
+                
                 /* This function wants the unescaped string */
                 completer.complete_param_expand(current_token, do_file);
             }
         }
     }
-
+    
     comps = completer.get_completions();
     completer.get_commands_to_load(commands_to_load);
 }

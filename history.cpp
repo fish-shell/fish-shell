@@ -413,6 +413,13 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
             bool has_timestamp = false;
             time_t timestamp;
             const char *interior_line;
+
+            /*
+             * Ensure the loop is processed at least once. Otherwise,
+             * timestamp is unitialized.
+             */
+            bool processed_once = false;
+
             for (interior_line = next_line(line_start, end - line_start);
                     interior_line != NULL && ! has_timestamp;
                     interior_line = next_line(interior_line, end - interior_line))
@@ -427,7 +434,11 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
 
                 /* Try parsing a timestamp from this line. If we succeed, the loop will break. */
                 has_timestamp = parse_timestamp(interior_line, &timestamp);
+
+                processed_once = true;
             }
+
+            assert(processed_once);
 
             /* Skip this item if the timestamp is past our cutoff. */
             if (has_timestamp && timestamp > cutoff_timestamp)

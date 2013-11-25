@@ -417,7 +417,7 @@ static void test_fork(void)
     size_t i, max = 100;
     for (i=0; i < 100; i++)
     {
-        printf("%lu / %lu\n", i+1, max);
+        printf("%lu / %lu\n", (unsigned long)(i+1), (unsigned long) max);
         /* Do something horrible to try to trigger an error */
 #define THREAD_COUNT 8
 #define FORK_COUNT 10

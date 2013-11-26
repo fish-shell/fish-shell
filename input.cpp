@@ -360,7 +360,7 @@ int input_init()
             debug(0, _(L"Attempting to use '%ls' instead"), DEFAULT_TERM);
             env_set(L"TERM", DEFAULT_TERM, ENV_GLOBAL | ENV_EXPORT);
             const std::string default_term = wcs2string(DEFAULT_TERM);
-            if (setupterm(default_term.c_str(), STDOUT_FILENO, &errret) == ERR)
+            if (setupterm(const_cast<char *>(default_term.c_str()), STDOUT_FILENO, &errret) == ERR)
             {
                 debug(0, _(L"Could not set up terminal"));
                 exit_without_destructors(1);

@@ -60,6 +60,8 @@
 #include "intern.h"
 #include <vector>
 
+#define DEFAULT_TERM L"ansi"
+
 /**
    Struct representing a keybinding. Returned by input_get_mappings.
  */
@@ -355,8 +357,19 @@ int input_init()
         {
             debug(0, _(L"Check that your terminal type, '%ls', is supported on this system"),
                   term.c_str());
+            debug(0, _(L"Attempting to use '%ls' instead"), DEFAULT_TERM);
+            env_set(L"TERM", DEFAULT_TERM, ENV_GLOBAL | ENV_EXPORT);
+            const std::string default_term = wcs2string(DEFAULT_TERM);
+            if (setupterm(default_term.c_str(), STDOUT_FILENO, &errret) == ERR)
+            {
+                debug(0, _(L"Could not set up terminal"));
+                exit_without_destructors(1);
+            }
         }
-        exit_without_destructors(1);
+        else
+        {
+            exit_without_destructors(1);
+        }
     }
     assert(! term.missing());
     output_set_term(term);

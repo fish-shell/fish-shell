@@ -144,6 +144,22 @@ static void test_unescape_sane()
             err(L"In unescaping '%ls', expected '%ls' but got '%ls'\n", tests[i].input, tests[i].expected, output.c_str());
         }
     }
+
+    // test for overflow
+    if (unescape_string(L"echo \\UFFFFFF", &output, UNESCAPE_DEFAULT))
+    {
+        err(L"Should not have been able to unescape \\UFFFFFF\n");
+    }
+    if (unescape_string(L"echo \\U110000", &output, UNESCAPE_DEFAULT))
+    {
+        err(L"Should not have been able to unescape \\U110000\n");
+    }
+    if (! unescape_string(L"echo \\U10FFFF", &output, UNESCAPE_DEFAULT))
+    {
+        err(L"Should have been able to unescape \\U10FFFF\n");
+    }
+
+
 }
 
 /**

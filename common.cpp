@@ -1594,6 +1594,7 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
                         {
                             /* Swallow newline */
                             to_append = NOT_A_WCHAR;
+                            input_position += 1; /* Skip over the backslash */
                             break;
                         }
 

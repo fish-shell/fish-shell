@@ -2002,11 +2002,13 @@ static void test_new_parser_fuzzing(void)
 {
     say(L"Fuzzing parser (node size: %lu)", sizeof(parse_node_t));
     double start = timef();
+    bool log_it = false;
     // ensure nothing crashes
-    size_t max = 5;
+    size_t max = 4;
     for (size_t len=1; len <= max; len++)
     {
-        fprintf(stderr, "%lu / %lu...", len, max);
+        if (log_it)
+            fprintf(stderr, "%lu / %lu...", len, max);
         std::vector<parser_fuzz_token_t> tokens(len);
         size_t count = 0;
         parse_t parser;
@@ -2025,10 +2027,12 @@ static void test_new_parser_fuzzing(void)
             // keep going until we wrap
         }
         while (! increment(tokens));
-        fprintf(stderr, "done (%lu)\n", count);
+        if (log_it)
+            fprintf(stderr, "done (%lu)\n", count);
     }
     double end = timef();
-    say(L"All fuzzed in %f seconds!", end - start);
+    if (log_it)
+        say(L"All fuzzed in %f seconds!", end - start);
 }
 
 // Parse a statement, returning the command, args (joined by spaces), and the decoration. Returns true if successful.
@@ -2267,6 +2271,9 @@ static void test_highlighting(void)
     const highlight_component_t components9[] =
     {
         {L"end", HIGHLIGHT_ERROR},
+        {L";", HIGHLIGHT_END},
+        {L"if", HIGHLIGHT_COMMAND},
+        {L"end", HIGHLIGHT_ERROR},
         {NULL, -1}
     };
 
@@ -2346,7 +2353,7 @@ int main(int argc, char **argv)
 
     if (should_test_function("highlighting")) test_highlighting();
     if (should_test_function("new_parser_ll2")) test_new_parser_ll2();
-    //if (should_test_function("new_parser_fuzzing")) test_new_parser_fuzzing(); //fuzzing is expensive
+    if (should_test_function("new_parser_fuzzing")) test_new_parser_fuzzing(); //fuzzing is expensive
     if (should_test_function("new_parser_correctness")) test_new_parser_correctness();
     if (should_test_function("new_parser")) test_new_parser();
     if (should_test_function("escape")) test_unescape_sane();

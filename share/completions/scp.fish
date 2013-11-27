@@ -31,7 +31,7 @@ complete -c scp -d "Remote Path" -n "commandline -ct|sgrep -o '.*:'" -a "
 	commandline -ct|sgrep -o '.*:'
 )(
 	#Get the list of remote files from the specified ssh server
-        ssh -o \"BatchMode yes\" (commandline -ct|sed -ne 's/\(.*\):.*/\1/p') ls\ -dp\ (commandline -ct|sed -ne 's/.*://p')\* 2> /dev/null
+        ssh (commandline -c|sgrep -o '\-P [0-9]*'|tr P p) -o \"BatchMode yes\" (commandline -ct|sed -ne 's/\(.*\):.*/\1/p') ls\ -dp\ (commandline -ct|sed -ne 's/.*://p')\* 2> /dev/null
 )
 
 "

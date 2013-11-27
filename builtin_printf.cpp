@@ -732,7 +732,7 @@ no_more_flag_characters:
 
                 {
                     wchar_t conversion = *f;
-                    if (! ok[conversion])
+                    if (conversion > 0xFF || ! ok[conversion])
                     {
                         this->fatal_error(_(L"%.*ls: invalid conversion specification"), (int)(f + 1 - direc_start), direc_start);
                         return 0;

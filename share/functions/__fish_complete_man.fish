@@ -21,7 +21,21 @@ function __fish_complete_man
 		set section $section"[^)]*"
 
 		# Do the actual search
-		apropos (commandline -ct) ^/dev/null | sgrep \^(commandline -ct) | sed -n -e 's/\([^ ]*\).*(\('$section'\)) *- */\1'\t'\2: /p'
+		switch (uname)
+		case Darwin
+			apropos (commandline -ct) ^/dev/null | awk -F " - " '
+{
+	split($1, a, ", ");
+	for (i in a) {
+		if (sub("\\\('$section'[^)]*\\\)", "\t&: ", a[i]) == 0) continue;
+		sub("\\\(", "", a[i]);
+		sub("\\\)", "", a[i]);
+		print a[i]$2
+	}
+}'
+		case '*'
+			apropos (commandline -ct) ^/dev/null | sgrep \^(commandline -ct) | sed -n -e 's/\([^ ]*\).*(\('$section'\)) *- */\1'\t'\2: /p'
+		end
 	end
 end
 

@@ -28,11 +28,22 @@ void iothread_service_completion(void);
 /** Waits for all iothreads to terminate. */
 void iothread_drain_all(void);
 
-/** Helper template */
+/** Performs a function on the main thread, blocking until it completes */
+int iothread_perform_on_main_base(int (*handler)(void *), void *context);
+
+/** Helper templates */
 template<typename T>
 int iothread_perform(int (*handler)(T *), void (*completionCallback)(T *, int), T *context)
 {
     return iothread_perform_base((int (*)(void *))handler, (void (*)(void *, int))completionCallback, static_cast<void *>(context));
 }
+
+/** Helper templates */
+template<typename T>
+int iothread_perform_on_main(int (*handler)(T *), T *context)
+{
+    return iothread_perform_on_main_base((int (*)(void *))handler, static_cast<void *>(context));
+}
+
 
 #endif

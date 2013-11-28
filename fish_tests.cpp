@@ -489,6 +489,50 @@ static void test_fork(void)
 #undef FORK_COUNT
 }
 
+// Little function that runs in the main thread
+static int test_iothread_main_call(int *addr)
+{
+    *addr += 1;
+    return *addr;
+}
+
+// Little function that runs in a background thread, bouncing to the main
+static int test_iothread_thread_call(int *addr)
+{
+    int before = *addr;
+    iothread_perform_on_main(test_iothread_main_call, addr);
+    int after = *addr;
+
+    // Must have incremented it at least once
+    if (before >= after)
+    {
+        err(L"Failed to increment from background thread");
+    }
+    return after;
+}
+
+static void test_iothread(void)
+{
+    say(L"Testing iothreads");
+    int *int_ptr = new int(0);
+    int iterations = 1000;
+    for (int i=0; i < iterations; i++)
+    {
+        iothread_perform(test_iothread_thread_call, (void (*)(int *, int))NULL, int_ptr);
+    }
+
+    // Now wait until we're done
+    iothread_drain_all();
+
+    // Should have incremented it once per thread
+    if (*int_ptr != iterations)
+    {
+        say(L"Expected int to be %d, but instead it was %d", iterations, *int_ptr);
+    }
+
+    delete int_ptr;
+}
+
 /**
    Test the parser
 */
@@ -1878,6 +1922,7 @@ int main(int argc, char **argv)
     test_convert_nulls();
     test_tok();
     test_fork();
+    test_iothread();
     test_parser();
     test_utils();
     test_escape_sequences();

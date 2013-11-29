@@ -430,7 +430,7 @@ public:
         /* Never do command substitution in autosuggestions. Sadly, we also can't yet do job expansion because it's not thread safe. */
         expand_flags_t result = 0;
         if (this->type() == COMPLETE_AUTOSUGGEST)
-            result |= EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_JOBS;
+            result |= EXPAND_SKIP_CMDSUBST;
 
         /* Allow fuzzy matching */
         if (this->fuzzy())

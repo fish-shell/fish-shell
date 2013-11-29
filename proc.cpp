@@ -106,6 +106,7 @@ job_iterator_t::job_iterator_t(job_list_t &jobs) : job_list(&jobs)
 
 job_iterator_t::job_iterator_t() : job_list(&parser_t::principal_parser().job_list())
 {
+    ASSERT_IS_MAIN_THREAD();
     this->reset();
 }
 

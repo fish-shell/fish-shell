@@ -305,7 +305,11 @@ static void iothread_service_main_thread_requests(void)
 
 int iothread_perform_on_main_base(int (*handler)(void *), void *context)
 {
-    ASSERT_IS_BACKGROUND_THREAD();
+    // If this is the main thread, just do it
+    if (is_main_thread())
+    {
+        return handler(context);
+    }
 
     // Make a new request. Note we are synchronous, so this can be stack allocated!
     MainThreadRequest_t req;

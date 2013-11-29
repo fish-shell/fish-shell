@@ -49,6 +49,7 @@ parameter expansion.
 #include "signal.h"
 #include "tokenizer.h"
 #include "complete.h"
+#include "iothread.h"
 
 #include "parse_util.h"
 
@@ -560,6 +561,166 @@ std::vector<wcstring> expand_get_all_process_names(void)
     return result;
 }
 
+/* Helper function to do a job search. */
+struct find_job_data_t
+{
+    const wchar_t *proc; /* The process to search for - possibly numeric, possibly a name */
+    expand_flags_t flags;
+    std::vector<completion_t> *completions;
+};
+
+/* The following function is invoked on the main thread, because the job list is not thread safe. It should search the job list for something matching the given proc, and then return 1 to stop the search, 0 to continue it  */
+static int find_job(const struct find_job_data_t *info)
+{
+    ASSERT_IS_MAIN_THREAD();
+
+    const wchar_t * const proc = info->proc;
+    const expand_flags_t flags = info->flags;
+    std::vector<completion_t> &completions = *info->completions;
+
+    const job_t *j;
+    int found = 0;
+    // do the empty param check first, because an empty string passes our 'numeric' check
+    if (wcslen(proc)==0)
+    {
+        /*
+          This is an empty job expansion: '%'
+          It expands to the last job backgrounded.
+        */
+        job_iterator_t jobs;
+        while ((j = jobs.next()))
+        {
+            if (!j->command_is_empty())
+            {
+                append_completion(completions, to_string<long>(j->pgid));
+                break;
+            }
+        }
+        /*
+          You don't *really* want to flip a coin between killing
+          the last process backgrounded and all processes, do you?
+          Let's not try other match methods with the solo '%' syntax.
+        */
+        found = 1;
+    }
+    else if (iswnumeric(proc))
+    {
+        /*
+          This is a numeric job string, like '%2'
+        */
+
+        if (flags & ACCEPT_INCOMPLETE)
+        {
+            job_iterator_t jobs;
+            while ((j = jobs.next()))
+            {
+                wchar_t jid[16];
+                if (j->command_is_empty())
+                    continue;
+
+                swprintf(jid, 16, L"%d", j->job_id);
+
+                if (wcsncmp(proc, jid, wcslen(proc))==0)
+                {
+                    wcstring desc_buff = format_string(COMPLETE_JOB_DESC_VAL, j->command_wcstr());
+                    append_completion(completions,
+                                      jid+wcslen(proc),
+                                      desc_buff,
+                                      0);
+                }
+            }
+        }
+        else
+        {
+            int jid;
+            wchar_t *end;
+
+            errno = 0;
+            jid = fish_wcstoi(proc, &end, 10);
+            if (jid > 0 && !errno && !*end)
+            {
+                j = job_get(jid);
+                if ((j != 0) && (j->command_wcstr() != 0) && (!j->command_is_empty()))
+                {
+                    append_completion(completions, to_string<long>(j->pgid));
+                }
+            }
+        }
+        /*
+           Stop here so you can't match a random process name
+           when you're just trying to use job control.
+        */
+        found = 1;
+    }
+
+    if (! found)
+    {
+        job_iterator_t jobs;
+        while ((j = jobs.next()))
+        {
+
+            if (j->command_is_empty())
+                continue;
+
+            size_t offset;
+            if (match_pid(j->command(), proc, flags, &offset))
+            {
+                if (flags & ACCEPT_INCOMPLETE)
+                {
+                    append_completion(completions,
+                                      j->command_wcstr() + offset + wcslen(proc),
+                                      COMPLETE_JOB_DESC,
+                                      0);
+                }
+                else
+                {
+                    append_completion(completions, to_string<long>(j->pgid));
+                    found = 1;
+                }
+            }
+        }
+
+        if (! found)
+        {
+            jobs.reset();
+            while ((j = jobs.next()))
+            {
+                process_t *p;
+                if (j->command_is_empty())
+                    continue;
+                for (p=j->first_process; p; p=p->next)
+                {
+                    if (p->actual_cmd.empty())
+                        continue;
+
+                    size_t offset;
+                    if (match_pid(p->actual_cmd, proc, flags, &offset))
+                    {
+                        if (flags & ACCEPT_INCOMPLETE)
+                        {
+                            append_completion(completions,
+                                              wcstring(p->actual_cmd, offset + wcslen(proc)),
+                                              COMPLETE_CHILD_PROCESS_DESC,
+                                              0);
+                        }
+                        else
+                        {
+                            append_completion(completions,
+                                              to_string<long>(p->pid),
+                                              L"",
+                                              0);
+                            found = 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return found;
+}
+
+
 /**
    Searches for a job with the specified job id, or a job or process
    which has the string \c proc as a prefix of its commandline.
@@ -582,146 +743,8 @@ static int find_process(const wchar_t *proc,
 
     if (!(flags & EXPAND_SKIP_JOBS))
     {
-        ASSERT_IS_MAIN_THREAD();
-        const job_t *j;
-
-        // do the empty param check first, because an empty string passes our 'numeric' check
-        if (wcslen(proc)==0)
-        {
-            /*
-              This is an empty job expansion: '%'
-              It expands to the last job backgrounded.
-            */
-            job_iterator_t jobs;
-            while ((j = jobs.next()))
-            {
-                if (!j->command_is_empty())
-                {
-                    append_completion(out, to_string<long>(j->pgid));
-                    break;
-                }
-            }
-            /*
-              You don't *really* want to flip a coin between killing
-              the last process backgrounded and all processes, do you?
-              Let's not try other match methods with the solo '%' syntax.
-            */
-            found = 1;
-        }
-        else if (iswnumeric(proc))
-        {
-            /*
-              This is a numeric job string, like '%2'
-            */
-
-            if (flags & ACCEPT_INCOMPLETE)
-            {
-                job_iterator_t jobs;
-                while ((j = jobs.next()))
-                {
-                    wchar_t jid[16];
-                    if (j->command_is_empty())
-                        continue;
-
-                    swprintf(jid, 16, L"%d", j->job_id);
-
-                    if (wcsncmp(proc, jid, wcslen(proc))==0)
-                    {
-                        wcstring desc_buff = format_string(COMPLETE_JOB_DESC_VAL, j->command_wcstr());
-                        append_completion(out,
-                                          jid+wcslen(proc),
-                                          desc_buff,
-                                          0);
-                    }
-                }
-            }
-            else
-            {
-                int jid;
-                wchar_t *end;
-
-                errno = 0;
-                jid = fish_wcstoi(proc, &end, 10);
-                if (jid > 0 && !errno && !*end)
-                {
-                    j = job_get(jid);
-                    if ((j != 0) && (j->command_wcstr() != 0) && (!j->command_is_empty()))
-                    {
-                        append_completion(out, to_string<long>(j->pgid));
-                    }
-                }
-            }
-            /*
-               Stop here so you can't match a random process name
-               when you're just trying to use job control.
-            */
-            found = 1;
-        }
-        if (found)
-            return 1;
-
-        job_iterator_t jobs;
-        while ((j = jobs.next()))
-        {
-
-            if (j->command_is_empty())
-                continue;
-
-            size_t offset;
-            if (match_pid(j->command(), proc, flags, &offset))
-            {
-                if (flags & ACCEPT_INCOMPLETE)
-                {
-                    append_completion(out,
-                                      j->command_wcstr() + offset + wcslen(proc),
-                                      COMPLETE_JOB_DESC,
-                                      0);
-                }
-                else
-                {
-                    append_completion(out, to_string<long>(j->pgid));
-                    found = 1;
-                }
-            }
-        }
-
-        if (found)
-        {
-            return 1;
-        }
-
-        jobs.reset();
-        while ((j = jobs.next()))
-        {
-            process_t *p;
-            if (j->command_is_empty())
-                continue;
-            for (p=j->first_process; p; p=p->next)
-            {
-                if (p->actual_cmd.empty())
-                    continue;
-
-                size_t offset;
-                if (match_pid(p->actual_cmd, proc, flags, &offset))
-                {
-                    if (flags & ACCEPT_INCOMPLETE)
-                    {
-                        append_completion(out,
-                                          wcstring(p->actual_cmd, offset + wcslen(proc)),
-                                          COMPLETE_CHILD_PROCESS_DESC,
-                                          0);
-                    }
-                    else
-                    {
-                        append_completion(out,
-                                          to_string<long>(p->pid),
-                                          L"",
-                                          0);
-                        found = 1;
-                    }
-                }
-            }
-        }
+        const struct find_job_data_t data = {proc, flags, &out};
+        found = iothread_perform_on_main(find_job, &data);
 
         if (found)
         {

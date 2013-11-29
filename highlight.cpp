@@ -873,7 +873,7 @@ bool autosuggest_validate_from_history(const history_item_t &item, file_detectio
     {
         /* We can possibly handle this specially */
         wcstring dir = parsed_arguments.back();
-        if (expand_one(dir, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_JOBS))
+        if (expand_one(dir, EXPAND_SKIP_CMDSUBST))
         {
             handled = true;
             bool is_help = string_prefixes_string(dir, L"--help") || string_prefixes_string(dir, L"-h");
@@ -997,7 +997,7 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
                     if (cmd == L"cd")
                     {
                         wcstring dir = tok_last(&tok);
-                        if (expand_one(dir, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_JOBS))
+                        if (expand_one(dir, EXPAND_SKIP_CMDSUBST))
                         {
                             int is_help = string_prefixes_string(dir, L"--help") || string_prefixes_string(dir, L"-h");
                             if (!is_help && ! is_potential_cd_path(dir, working_directory, PATH_EXPAND_TILDE, NULL))
@@ -1182,7 +1182,7 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
                     case TOK_STRING:
                     {
                         target_str = tok_last(&tok);
-                        if (expand_one(target_str, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_JOBS))
+                        if (expand_one(target_str, EXPAND_SKIP_CMDSUBST))
                         {
                             target = target_str.c_str();
                         }

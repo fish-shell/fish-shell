@@ -2,7 +2,7 @@
 #
 # Written by Kevin Ballard <kevin@sb.org>
 # Updated by Brian Gernhardt <brian@gernhardtsoftware.com>
-#
+#							
 # This is heavily based off of the git-prompt.bash script that ships with
 # git, which is Copyright (C) 2006,2007 Shawn O. Pearce <spearce@spearce.org>.
 # The act of porting the code, along with any new code, are Copyright (C) 2012
@@ -246,7 +246,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 			set -l cur_prefix
 			for i in (seq (count $svn_remote))
 				set -l remote $svn_remote[$i]
-				set -l mod_upstream (echo $svn_upstream | sed "s/$remote//")
+				set -l mod_upstream (echo $svn_upstream | sed "s|$remote||")
 				if test "$svn_upstream" != "$mod_upstream"
 					# we found a valid remote
 					set svn_upstream $mod_upstream

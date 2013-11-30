@@ -18,7 +18,6 @@ doc_src/commands.hdr
 doc_src/index.hdr
 po/*.gmo
 fish
-fish.spec
 fish_indent
 fish_pager
 fish_tests

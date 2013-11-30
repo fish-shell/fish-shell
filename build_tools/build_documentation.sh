@@ -86,7 +86,7 @@ done
 # Input is kept as . because we cd to the input directory beforehand
 # This prevents doxygen from generating "documentation" for intermediate directories
 DOXYPARAMS=$(cat <<EOF
-PROJECT_NUMBER=2.0.0
+PROJECT_NUMBER=$PROJECT_NUMBER
 INPUT=.
 OUTPUT_DIRECTORY=$OUTPUTDIR
 QUIET=YES

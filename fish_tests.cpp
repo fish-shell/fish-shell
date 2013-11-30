@@ -1358,7 +1358,7 @@ void perf_complete()
         str[0]=c;
         reader_set_buffer(str, 0);
 
-        complete(str, out, COMPLETION_REQUEST_DEFAULT, NULL);
+        complete(str, out, COMPLETION_REQUEST_DEFAULT);
 
         matches += out.size();
         out.clear();
@@ -1378,7 +1378,7 @@ void perf_complete()
 
         reader_set_buffer(str, 0);
 
-        complete(str, out, COMPLETION_REQUEST_DEFAULT, NULL);
+        complete(str, out, COMPLETION_REQUEST_DEFAULT);
 
         matches += out.size();
         out.clear();

@@ -459,7 +459,7 @@ share/man: $(HELP_SRC)
 	-mkdir share/man
 	touch share/man
 	-rm -Rf share/man/man1
-	./build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share
+	PROJECT_NUMBER=`echo $(FISH_BUILD_VERSION)| sed "s/-.*//"` ./build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share
 
 #
 # The build rules for installing/uninstalling fish

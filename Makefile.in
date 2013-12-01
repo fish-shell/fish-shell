@@ -160,11 +160,6 @@ HDR_FILES := $(HDR_FILES_SRC:.hdr.in=.hdr)
 # Use a pattern rule so that Make knows to only issue one invocation
 # per http://www.gnu.org/software/make/manual/make.html#Pattern-Intro
 
-# Internalized scripts are currently disabled.
-# For now, we just generate empty arrays.
-# To generate them again, you would run this:
-# ./internalize_scripts.py share/functions/*.fish share/completions/*.fish
-
 
 #
 # Files containing documentation for external commands.
@@ -775,7 +770,6 @@ distclean: clean
 
 clean:
 	rm -f *.o doc.h doc.tmp doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr
-	rm -f $(GENERATED_INTERN_SCRIPT_FILES)
 	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
 	rm -f $(PROGRAMS) fish_tests key_reader
 	rm -f command_list.txt command_list_toc.txt toc.txt

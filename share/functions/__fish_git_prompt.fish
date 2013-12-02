@@ -371,6 +371,7 @@ function __fish_git_prompt --description "Prompt function for Git"
 	set -l informative_status
 
 	__fish_git_prompt_validate_chars
+	__fish_git_prompt_validate_colors
 
 	if test "true" = $inside_worktree
 		if test -n "$__fish_git_prompt_show_informative_status"
@@ -402,8 +403,6 @@ function __fish_git_prompt --description "Prompt function for Git"
 			set p (__fish_git_prompt_show_upstream)
 		end
 	end
-
-	__fish_git_prompt_validate_colors
 
 	set -l branch_color $___fish_git_prompt_color_branch
 	set -l branch_done  $___fish_git_prompt_color_branch_done

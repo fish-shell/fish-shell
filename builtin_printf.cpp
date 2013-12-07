@@ -195,11 +195,6 @@ double C_STRTOD(wchar_t const *nptr, wchar_t **endptr)
     return r;
 }
 
-static inline unsigned wchar_t to_uwchar_t(wchar_t ch)
-{
-    return ch;
-}
-
 void builtin_printf_state_t::fatal_error(const wchar_t *fmt, ...)
 {
     // Don't error twice
@@ -292,7 +287,7 @@ static T string_to_scalar_type(const wchar_t *s, builtin_printf_state_t *state)
     T val;
     if (*s == L'\"' || *s == L'\'')
     {
-        unsigned wchar_t ch = *++s;
+        wchar_t ch = *++s;
         val = ch;
     }
     else
@@ -736,8 +731,8 @@ no_more_flag_characters:
                     ++f;
 
                 {
-                    unsigned wchar_t conversion = *f;
-                    if (! ok[conversion])
+                    wchar_t conversion = *f;
+                    if (conversion > 0xFF || ! ok[conversion])
                     {
                         this->fatal_error(_(L"%.*ls: invalid conversion specification"), (int)(f + 1 - direc_start), direc_start);
                         return 0;

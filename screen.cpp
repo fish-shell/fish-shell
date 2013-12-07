@@ -537,10 +537,6 @@ static void s_desired_append_char(screen_t *s,
                 s->desired.add_line();
                 s->desired.cursor.y++;
                 s->desired.cursor.x=0;
-                for (size_t i=0; i < prompt_width; i++)
-                {
-                    s_desired_append_char(s, L' ', 0, indent, prompt_width);
-                }
             }
 
             line_t &line = s->desired.line(line_no);
@@ -1215,7 +1211,14 @@ static screen_layout_t compute_layout(screen_t *s,
         result.left_prompt_space = left_prompt_width;
         // See remark about for why we can't use the right prompt here
         //result.right_prompt = right_prompt;
-        result.prompts_get_own_line = true;
+
+        // If the command wraps, and the prompt is not short, place the command on its own line.
+        // A short prompt is 33% or less of the terminal's width.
+        const size_t prompt_percent_width = (100 * left_prompt_width) / screen_width;
+        if (left_prompt_width + first_command_line_width + 1 > screen_width && prompt_percent_width > 33) {
+            result.prompts_get_own_line = true;
+        }
+
         done = true;
     }
 

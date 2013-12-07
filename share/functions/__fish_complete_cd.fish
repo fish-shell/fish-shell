@@ -30,9 +30,13 @@ function __fish_complete_cd -d "Completions for the cd command"
 		for i in $mycdpath
 			# Move to the initial directory first,
 			# in case the CDPATH directory is relative
-
-			builtin cd $wd
-			builtin cd $i
+			builtin cd $wd ^/dev/null
+			builtin cd $i ^/dev/null
+			
+			if test $status -ne 0
+				# directory does not exists or missing permission
+				continue
+			end
 
 			# What we would really like to do is skip descriptions if all
 			# valid paths are in the same directory, but we don't know how to
@@ -45,5 +49,5 @@ function __fish_complete_cd -d "Completions for the cd command"
 		end
 	end
 
-	builtin cd $wd
+	builtin cd $wd ^/dev/null
 end

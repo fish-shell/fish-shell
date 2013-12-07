@@ -165,6 +165,22 @@ static void test_unescape_sane()
             err(L"In unescaping '%ls', expected '%ls' but got '%ls'\n", tests[i].input, tests[i].expected, output.c_str());
         }
     }
+
+    // test for overflow
+    if (unescape_string(L"echo \\UFFFFFF", &output, UNESCAPE_DEFAULT))
+    {
+        err(L"Should not have been able to unescape \\UFFFFFF\n");
+    }
+    if (unescape_string(L"echo \\U110000", &output, UNESCAPE_DEFAULT))
+    {
+        err(L"Should not have been able to unescape \\U110000\n");
+    }
+    if (! unescape_string(L"echo \\U10FFFF", &output, UNESCAPE_DEFAULT))
+    {
+        err(L"Should have been able to unescape \\U10FFFF\n");
+    }
+
+
 }
 
 /**
@@ -450,7 +466,7 @@ static void test_fork(void)
     size_t i, max = 100;
     for (i=0; i < 100; i++)
     {
-        printf("%lu / %lu\n", i+1, max);
+        printf("%lu / %lu\n", (unsigned long)(i+1), (unsigned long) max);
         /* Do something horrible to try to trigger an error */
 #define THREAD_COUNT 8
 #define FORK_COUNT 10
@@ -504,6 +520,50 @@ static void test_fork(void)
         signal_unblock();
     }
 #undef FORK_COUNT
+}
+
+// Little function that runs in the main thread
+static int test_iothread_main_call(int *addr)
+{
+    *addr += 1;
+    return *addr;
+}
+
+// Little function that runs in a background thread, bouncing to the main
+static int test_iothread_thread_call(int *addr)
+{
+    int before = *addr;
+    iothread_perform_on_main(test_iothread_main_call, addr);
+    int after = *addr;
+
+    // Must have incremented it at least once
+    if (before >= after)
+    {
+        err(L"Failed to increment from background thread");
+    }
+    return after;
+}
+
+static void test_iothread(void)
+{
+    say(L"Testing iothreads");
+    int *int_ptr = new int(0);
+    int iterations = 1000;
+    for (int i=0; i < iterations; i++)
+    {
+        iothread_perform(test_iothread_thread_call, (void (*)(int *, int))NULL, int_ptr);
+    }
+
+    // Now wait until we're done
+    iothread_drain_all();
+
+    // Should have incremented it once per thread
+    if (*int_ptr != iterations)
+    {
+        say(L"Expected int to be %d, but instead it was %d", iterations, *int_ptr);
+    }
+
+    delete int_ptr;
 }
 
 /**
@@ -1372,7 +1432,7 @@ void perf_complete()
         str[0]=c;
         reader_set_buffer(str, 0);
 
-        complete(str, out, COMPLETION_REQUEST_DEFAULT, NULL);
+        complete(str, out, COMPLETION_REQUEST_DEFAULT);
 
         matches += out.size();
         out.clear();
@@ -1392,7 +1452,7 @@ void perf_complete()
 
         reader_set_buffer(str, 0);
 
-        complete(str, out, COMPLETION_REQUEST_DEFAULT, NULL);
+        complete(str, out, COMPLETION_REQUEST_DEFAULT);
 
         matches += out.size();
         out.clear();
@@ -2363,6 +2423,7 @@ int main(int argc, char **argv)
     if (should_test_function("convert_nulls")) test_convert_nulls();
     if (should_test_function("tok")) test_tok();
     if (should_test_function("fork")) test_fork();
+    if (should_test_function("iothread")) test_iothread();
     if (should_test_function("parser")) test_parser();
     if (should_test_function("utils")) test_utils();
     if (should_test_function("escape_sequences")) test_escape_sequences();

@@ -1198,6 +1198,11 @@ static size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool 
                 {
                     chars=8;
                     max_val = WCHAR_MAX;
+                    
+                    // Don't exceed the largest Unicode code point - see #1107
+                    if (0x10FFFF < max_val)
+                        max_val = (wchar_t)0x10FFFF;
+                    
                     break;
                 }
 
@@ -1594,6 +1599,7 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
                         {
                             /* Swallow newline */
                             to_append = NOT_A_WCHAR;
+                            input_position += 1; /* Skip over the backslash */
                             break;
                         }
 

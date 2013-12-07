@@ -20,14 +20,7 @@
 
 #
 # Makefile for the fish shell. Can build fish and associated
-# applications, install them, recalculate dependencies and also create
-# binary distributions in tar.bz2, tar.gz and rpm formats.
-#
-
-#
-# The fish buildprocess is quite complex. Do not stare directly into
-# the Makefile. Doing so may cause nausea, dizziness and
-# hallucinations.
+# applications, install them, and recalculate dependencies.
 #
 
 # Used by docdir
@@ -185,48 +178,6 @@ HELP_SRC := $(wildcard doc_src/*.txt)
 #
 
 TEST_IN := $(wildcard tests/test*.in)
-
-
-#
-# Files that should be added to the tar archives
-#
-
-#
-# Files in ./doc_src/
-#
-
-DOC_SRC_DIR_FILES := $(HDR_FILES_SRC) $(HELP_SRC)
-
-
-#
-# Files in ./
-#
-
-MAIN_DIR_FILES_UNSORTED := Doxyfile Doxyfile.user Doxyfile.help					\
-    Makefile.in configure configure.ac config.h.in install-sh					\
-    key_reader.cpp $(MIME_OBJS:.o=.h)											\
-    $(MIME_OBJS:.o=.cpp) $(FISH_OBJS:.o=.h) $(BUILTIN_FILES)					\
-    $(COMMON_FILES) $(COMMON_FILES:.cpp=.h) $(FISH_OBJS:.o=.cpp)				\
-    fish.spec.in INSTALL README user_doc.head.html								\
-    ChangeLog config.sub config.guess fish_tests.cpp fish.cpp fish_pager.cpp	\
-    fishd.cpp make_vcs_completions.fish $(FISH_INDENT_OBJS:.o=.cpp)
-
-#
-# The sorting is not meaningful in itself, but it has the side effect
-# of removing duplicates, which means there will be fewer warnings
-# during building.
-#
-
-MAIN_DIR_FILES := $(sort $(MAIN_DIR_FILES_UNSORTED))
-
-
-#
-# Files in ./tests/
-#
-
-TESTS_DIR_FILES := $(TEST_IN) $(TEST_IN:.in=.out) $(TEST_IN:.in=.err)	\
-	$(TEST_IN:.in=.status) tests/test.fish tests/gen_output.fish
-
 
 #
 # Files in ./share/completions/
@@ -449,7 +400,7 @@ doc.h: $(HDR_FILES)
 #
 
 %.po:messages.pot
-	if test $(HAVE_GETTEXT) = 1;then \
+	if test "$(HAVE_GETTEXT)" = 1;then \
 		if test -f $*.po; then \
 			msgmerge -U --backup=existing $*.po messages.pot;\
 		else \
@@ -463,7 +414,7 @@ doc.h: $(HDR_FILES)
 #
 
 messages.pot: *.cpp *.h share/completions/*.fish share/functions/*.fish
-	if test $(HAVE_GETTEXT) = 1;then \
+	if test "$(HAVE_GETTEXT)" = 1; then \
 		xgettext -k_ -kN_ *.cpp *.h -o messages.pot; \
 		if xgettext -j -k_ -kN_ -k--description -LShell share/completions/*.fish share/functions/*.fish -o messages.pot; then true; else \
 			echo "Your xgettext version is too old to build the messages.pot file"\
@@ -508,7 +459,7 @@ share/man: $(HELP_SRC)
 	-mkdir share/man
 	touch share/man
 	-rm -Rf share/man/man1
-	./build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share
+	PROJECT_NUMBER=`echo $(FISH_BUILD_VERSION)| sed "s/-.*//"` ./build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share
 
 #
 # The build rules for installing/uninstalling fish
@@ -714,7 +665,7 @@ uninstall-legacy: uninstall
 .PHONY: uninstall-legacy
 
 install-translations: $(TRANSLATIONS)
-	if test $(HAVE_GETTEXT) = 1; then \
+	if test "$(HAVE_GETTEXT)" = 1; then \
 		for i in $(TRANSLATIONS); do \
 			$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/locale/`basename $$i .gmo`/LC_MESSAGES; \
 			$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/locale/`basename $$i .gmo`/LC_MESSAGES/fish.mo; \
@@ -724,7 +675,7 @@ install-translations: $(TRANSLATIONS)
 .PHONY: install-translations
 
 uninstall-translations:
-	if test $(HAVE_GETTEXT) = 1; then \
+	if test "$(HAVE_GETTEXT)" = 1; then \
 		for i in $(TRANSLATIONS_SRC); do \
 			rm -f $(DESTDIR)$(datadir)/locale/*/LC_MESSAGES/fish.mo; \
 		done; \
@@ -801,13 +752,6 @@ depend:
 .PHONY: depend
 
 #
-# Build the RPM spec file.
-#
-
-fish.spec: fish.spec.in
-	./config.status
-
-#
 # Cleanup targets
 #
 
@@ -816,7 +760,6 @@ fish.spec: fish.spec.in
 #
 
 distclean: clean
-	rm -f fish.spec
 	rm -f config.status config.log config.h Makefile
 .PHONY: distclean
 

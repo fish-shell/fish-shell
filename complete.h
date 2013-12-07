@@ -216,14 +216,11 @@ void complete_remove(const wchar_t *cmd,
                      const wchar_t *long_opt);
 
 
-/** Find all completions of the command cmd, insert them into out. If to_load is
- * not NULL, append all commands that we would autoload, but did not (presumably
- * because this is not the main thread)
+/** Find all completions of the command cmd, insert them into out.
  */
 void complete(const wcstring &cmd,
               std::vector<completion_t> &comp,
-              completion_request_flags_t flags,
-              wcstring_list_t *to_load = NULL);
+              completion_request_flags_t flags);
 
 /**
    Print a list of all current completions into the string.

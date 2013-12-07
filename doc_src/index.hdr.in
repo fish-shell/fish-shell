@@ -1139,6 +1139,7 @@ Here are some of the commands available in the editor:
 - Alt-P adds the string <code>'| less;'</code> to the end of the job under the cursor. The result is that the output of the command will be paged.
 - Alt-C capitalizes the current word.
 - Alt-U makes the current word uppercase.
+- F1 shows the manual page for the current command, if one exists.
 
 You can change these key bindings using the
 <a href="commands.html#bind">bind</a> builtin command.

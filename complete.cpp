@@ -44,6 +44,7 @@
 #include "parser_keywords.h"
 #include "wutil.h"
 #include "path.h"
+#include "iothread.h"
 
 /*
   Completion description strings, mostly for different types of files, such as sockets, block devices, etc.
@@ -341,7 +342,6 @@ class completer_t
     const completion_request_flags_t flags;
     const wcstring initial_cmd;
     std::vector<completion_t> completions;
-    wcstring_list_t commands_to_load;
 
     /** Table of completions conditions that have already been tested and the corresponding test results */
     typedef std::map<wcstring, bool> condition_cache_t;
@@ -430,7 +430,7 @@ public:
         /* Never do command substitution in autosuggestions. Sadly, we also can't yet do job expansion because it's not thread safe. */
         expand_flags_t result = 0;
         if (this->type() == COMPLETE_AUTOSUGGEST)
-            result |= EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_JOBS;
+            result |= EXPAND_SKIP_CMDSUBST;
 
         /* Allow fuzzy matching */
         if (this->fuzzy())
@@ -438,18 +438,6 @@ public:
 
         return result;
     }
-
-    void get_commands_to_load(wcstring_list_t *lst)
-    {
-        if (lst)
-            lst->insert(lst->end(), commands_to_load.begin(), commands_to_load.end());
-    }
-
-    bool has_commands_to_load() const
-    {
-        return ! commands_to_load.empty();
-    }
-
 };
 
 /* Autoloader for completions */
@@ -1350,6 +1338,15 @@ void complete_load(const wcstring &name, bool reload)
     completion_autoloader.load(name, reload);
 }
 
+// Performed on main thread, from background thread. Return type is ignored.
+static int complete_load_no_reload(wcstring *name)
+{
+    assert(name != NULL);
+    ASSERT_IS_MAIN_THREAD();
+    complete_load(*name, false);
+    return 0;
+}
+
 /**
    Find completion for the argument str of command cmd_orig with
    previous option popt. Insert results into comp_out. Return 0 if file
@@ -1372,14 +1369,15 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
 
     if (this->type() == COMPLETE_DEFAULT)
     {
+        ASSERT_IS_MAIN_THREAD();
         complete_load(cmd, true);
     }
     else if (this->type() == COMPLETE_AUTOSUGGEST)
     {
-        /* Maybe indicate we should try loading this on the main thread */
-        if (! list_contains_string(this->commands_to_load, cmd) && ! completion_autoloader.has_tried_loading(cmd))
+        /* Maybe load this command (on the main thread) */
+        if (! completion_autoloader.has_tried_loading(cmd))
         {
-            this->commands_to_load.push_back(cmd);
+            iothread_perform_on_main(complete_load_no_reload, &cmd);
         }
     }
 
@@ -1627,7 +1625,7 @@ void completer_t::complete_param_expand(const wcstring &sstr, bool do_file)
 
     if (expand_string(comp_str,
                       this->completions,
-                      flags ) == EXPAND_ERROR)
+                      flags) == EXPAND_ERROR)
     {
         debug(3, L"Error while expanding string '%ls'", comp_str);
     }
@@ -1790,7 +1788,7 @@ bool completer_t::try_complete_user(const wcstring &str)
     return res;
 }
 
-void complete(const wcstring &cmd, std::vector<completion_t> &comps, completion_request_flags_t flags, wcstring_list_t *commands_to_load)
+void complete(const wcstring &cmd, std::vector<completion_t> &comps, completion_request_flags_t flags)
 {
     /* Make our completer */
     completer_t completer(cmd, flags);
@@ -1911,7 +1909,7 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, completion_
                     end_loop=1;
                     break;
                 }
-                
+
                 default:
                 {
                     break;
@@ -1982,13 +1980,10 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, completion_
         {
             bool do_file = false;
 
-            wcstring current_command_unescape = current_command;
-            wcstring prev_token_unescape = prev_token;
-            wcstring current_token_unescape = current_token;
-
-            if (unescape_string(current_command_unescape, 0) &&
-                    unescape_string(prev_token_unescape, 0) &&
-                    unescape_string(current_token_unescape, UNESCAPE_INCOMPLETE))
+            wcstring current_command_unescape, prev_token_unescape, current_token_unescape;
+            if (unescape_string(current_command, &current_command_unescape, UNESCAPE_DEFAULT) &&
+                unescape_string(prev_token, &prev_token_unescape, UNESCAPE_DEFAULT) &&
+                unescape_string(current_token, &current_token_unescape, UNESCAPE_INCOMPLETE))
             {
                 do_file = completer.complete_param(current_command_unescape,
                                                    prev_token_unescape,
@@ -2002,12 +1997,7 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, completion_
             if (completer.empty())
                 do_file = true;
 
-            /* But if we are planning on loading commands, don't do file completions.
-               See https://github.com/fish-shell/fish-shell/issues/378 */
-            if (commands_to_load != NULL && completer.has_commands_to_load())
-                do_file = false;
-
-            /* And if we're autosuggesting, and the token is empty, don't do file suggestions */
+            /* If we're autosuggesting, and the token is empty, don't do file suggestions */
             if ((flags & COMPLETION_REQUEST_AUTOSUGGESTION) && current_token_unescape.empty())
                 do_file = false;
 
@@ -2019,7 +2009,6 @@ void complete(const wcstring &cmd, std::vector<completion_t> &comps, completion_
     }
 
     comps = completer.get_completions();
-    completer.get_commands_to_load(commands_to_load);
 }
 
 

@@ -15,9 +15,15 @@ else:
     import http.server as SimpleHTTPServer
     import socketserver as SocketServer
     from urllib.parse import parse_qs
+
+# Disable CLI web browsers
+term = os.environ.pop('TERM', None)
 import webbrowser
+if term:
+    os.environ['TERM'] = term
+
 import subprocess
-import re, socket, os, sys, cgi, select, time, glob
+import re, socket, cgi, select, time, glob
 try:
     import json
 except ImportError:

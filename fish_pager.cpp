@@ -1146,7 +1146,7 @@ static void read_array(FILE* file, wcstring_list_t &comp)
         {
             buffer.push_back(0);
             wcstring wcs = str2wcstring(&buffer.at(0));
-            if (unescape_string(wcs, false))
+            if (unescape_string_in_place(&wcs, false))
             {
                 comp.push_back(wcs);
             }

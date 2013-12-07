@@ -1190,6 +1190,7 @@
 					"DATADIR=L\\\"/usr/local/share\\\"",
 					"SYSCONFDIR=L\\\"/usr/local/etc\\\"",
 					"BINDIR=L\\\"/usr/local/bin\\\"",
+					"DOCDIR=L\\\"/usr/local/share/doc\\\"",
 					"FISH_BUILD_VERSION=\\\"2.1.0\\\"",
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -1342,6 +1343,7 @@
 					"DATADIR=L\\\"/usr/local/share\\\"",
 					"SYSCONFDIR=L\\\"/usr/local/etc\\\"",
 					"BINDIR=L\\\"/usr/local/bin\\\"",
+					"DOCDIR=L\\\"/usr/local/share/doc\\\"",
 					"FISH_BUILD_VERSION=\\\"2.1.0\\\"",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
@@ -1370,6 +1372,7 @@
 					"DATADIR=L\\\"/usr/local/share\\\"",
 					"SYSCONFDIR=L\\\"/usr/local/etc\\\"",
 					"BINDIR=L\\\"/usr/local/bin\\\"",
+					"DOCDIR=L\\\"/usr/local/share/doc\\\"",
 					"FISH_BUILD_VERSION=\\\"2.1.0\\\"",
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;

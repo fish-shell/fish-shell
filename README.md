@@ -50,7 +50,7 @@ on RedHat, CentOS, or Amazon EC2:
 
 ## Packages for Linux
 
-Nightly builds for several Linux distros can be downloaded from <http://download.opensuse.org/repositories/home:/siteshwar/>
+Instructions on how to find builds for several Linux distros are at <https://github.com/fish-shell/fish-shell/wiki/Nightly-builds>
 
 ## Switching to fish
 
@@ -65,6 +65,12 @@ To switch your default shell back, you can run:
 	chsh -s /bin/bash
 
 Substitute /bin/bash with /bin/tcsh or /bin/zsh as appropriate.
+
+## Optional Dependencies
+
+In order to generate completions from man pages compressed with either lzma or xz, you may need to install an extra Python package.
+
+Python versions prior to 2.6 are not supported.  For Python versions 2.6 to 3.2 you need to install the module `backports.lzma`.  How to install it depends on your system and how you installed Python.  Most Linux distributions should include it as a package named `backports-lzma` (or similar).  From version 3.3 onwards, Python already includes the required module.
 
 ## Contact Us
 

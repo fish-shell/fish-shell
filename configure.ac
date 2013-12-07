@@ -238,56 +238,24 @@ AS_IF([test "$use_doxygen" != "no"],
 
 CXXFLAGS="$CXXFLAGS -D_LARGEFILE_SOURCE=1 -D_FILE_OFFSET_BITS=64"
 
+
+# fish does not use exceptions
+# Disabling exceptions saves about 20% (!) of the compiled code size
+CXXFLAGS="$CXXFLAGS -fno-exceptions"
+
+
 #
-# If we are using gcc, set some flags that increase the odds of the
-# compiler producing a working binary...
+# -Wall is there to keep me on my toes
 #
 
-if test "$GCC" = yes; then
+CXXFLAGS="$CXXFLAGS -Wall"
 
-  #
-  # -fno-optimize-sibling-calls seems to work around a bug where
-  # sending a SIGWINCH to fish on NetBSD 3.0 causes fish to exit when
-  # compiled with GCC 3.3.3. This is probably either a compiler bug
-  # or a libc bug, but adding this flag seems to fix things for
-  # now. Long term, the real problem should be tracked down and
-  # truly fixed, at which point we can remove this silly flag. This
-  # bug has been verified to not exist on Linux using GCC 3.3.3.
-  #
+#
+# This is needed in order to get the really cool backtraces on Linux
+#
 
-  GCC_VERSION=$($CC -dumpversion)
-  GCC_VERSION_MAJOR=$(echo $GCC_VERSION | cut -d'.' -f1)
-  GCC_VERSION_MINOR=$(echo $GCC_VERSION | cut -d'.' -f2)
-  GCC_VERSION_PATCH=$(echo $GCC_VERSION | cut -d'.' -f3)
-
-  if test "$GCC_VERSION_MAJOR" -le 3; then
-    if test 0"$GCC_VERSION_MINOR" -le 3; then
-      if test 0"$GCC_VERSION_PATCH" -le 3; then
-        CXXFLAGS="$CXXFLAGS -fno-optimize-sibling-calls"
-      fi
-    fi
-  fi
-
-  # fish does not use exceptions
-  # Disabling exceptions saves about 20% (!) of the compiled code size
-  CXXFLAGS="$CXXFLAGS -fno-exceptions"
-
-
-  #
-  # -Wall is there to keep me on my toes
-  #
-
-  # Some day...
-  CXXFLAGS="$CXXFLAGS -Wall"
-
-  #
-  # This is needed in order to get the really cool backtraces on Linux
-  #
-
-  if test `uname` != "Darwin"; then
-    LDFLAGS_FISH="$LDFLAGS_FISH -rdynamic"
-  fi
-
+if test `uname` != "Darwin"; then
+   LDFLAGS_FISH="$LDFLAGS_FISH -rdynamic"
 fi
 
 
@@ -475,82 +443,58 @@ AC_DEFINE(
 #
 
 # Check for os dependant libraries for all binaries.
-LIBS_COMMON=$LIBS
-LIBS=""
 AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library, needed to build this package.] )] )
 AC_SEARCH_LIBS( nanosleep, rt, , [AC_MSG_ERROR([Cannot find the rt library, needed to build this package.] )] )
 AC_SEARCH_LIBS( pthread_create, pthread, , [AC_MSG_ERROR([Cannot find the pthread library, needed to build this package.] )] )
 AC_SEARCH_LIBS( setupterm, [ncurses curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish. If this is Linux, try running 'sudo apt-get install libncurses5-dev' or 'sudo yum install ncurses-devel'])] )
 AC_SEARCH_LIBS( [nan], [m], [AC_DEFINE( [HAVE_NAN], [1], [Define to 1 if you have the nan function])] )
+
+if test x$local_gettext != xno; then
+  AC_SEARCH_LIBS( gettext, intl,,)
+fi
+
 LIBS_SHARED=$LIBS
-LIBS=$LIBS_COMMON
 
 #
 # Check for libraries needed by fish.
 #
 
-LIBS_COMMON=$LIBS
 LIBS="$LIBS_SHARED"
-if test x$local_gettext != xno; then
-  AC_SEARCH_LIBS( gettext, intl,,)
-fi
-
 # Check for libiconv_open if we can't find iconv_open. Silly OS X does
 # weird macro magic for the sole purpose of amusing me.
 AC_SEARCH_LIBS( iconv_open, iconv, , [AC_SEARCH_LIBS( libiconv_open, iconv, , [AC_MSG_ERROR([Could not find an iconv implementation, needed to build fish])] )] )
 
 LIBS_FISH=$LIBS
-LIBS=$LIBS_COMMON
 
 #
 # Check for libraries needed by fish_indent.
 #
 
-LIBS_COMMON=$LIBS
 LIBS="$LIBS_SHARED"
-if test x$local_gettext != xno; then
-  AC_SEARCH_LIBS( gettext, intl,,)
-fi
 LIBS_FISH_INDENT=$LIBS
-LIBS=$LIBS_COMMON
 
 #
 # Check for libraries needed by fish_pager.
 #
 
-LIBS_COMMON=$LIBS
 LIBS="$LIBS_SHARED"
-if test x$local_gettext != xno; then
-  AC_SEARCH_LIBS( gettext, intl,,)
-fi
 AC_SEARCH_LIBS( iconv_open, iconv, , [AC_SEARCH_LIBS( libiconv_open, iconv, , [AC_MSG_ERROR([Could not find an iconv implementation, needed to build fish])] )] )
 LIBS_FISH_PAGER=$LIBS
-LIBS=$LIBS_COMMON
 
 #
 # Check for libraries needed by fishd.
 #
 
-LIBS_COMMON=$LIBS
 LIBS="$LIBS_SHARED"
-if test x$local_gettext != xno; then
-  AC_SEARCH_LIBS( gettext, intl,,)
-fi
 AC_SEARCH_LIBS( iconv_open, iconv, , [AC_SEARCH_LIBS( libiconv_open, iconv, , [AC_MSG_ERROR([Could not find an iconv implementation, needed to build fish])] )] )
 LIBS_FISHD=$LIBS
-LIBS=$LIBS_COMMON
 
 #
 # Check for libraries needed by mimedb.
 #
 
-LIBS_COMMON=$LIBS
 LIBS="$LIBS_SHARED"
-if test x$local_gettext != xno; then
-  AC_SEARCH_LIBS( gettext, intl,,)
-fi
 LIBS_MIMEDB=$LIBS
-LIBS=$LIBS_COMMON
 
 
 #
@@ -929,7 +873,7 @@ case $target_os in
 esac
 
 # Tell the world what we know
-AC_CONFIG_FILES([Makefile fish.spec])
+AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
 
 if test ! x$local_found_posix_switch = xyes; then

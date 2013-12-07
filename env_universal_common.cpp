@@ -398,6 +398,9 @@ start_conversion:
     {
         debug(0, L"%d %d", in_len, out_len);
         debug(0, L"Error while converting from to string");
+
+        /* Terminate the output string.  */
+        free(out);
         return 0;
     }
 
@@ -598,16 +601,13 @@ static void parse_message(wchar_t *msg,
         tmp = wcschr(name, L':');
         if (tmp)
         {
-            wchar_t *val;
             const wcstring key(name, tmp - name);
 
-            val = tmp+1;
-            val = unescape(val, 0);
-
-            if (val != NULL)
-                env_universal_common_set(key.c_str(), val, exportv);
-
-            free(val);
+            wcstring val;
+            if (unescape_string(tmp + 1, &val, 0))
+            {
+                env_universal_common_set(key.c_str(), val.c_str(), exportv);
+            }
         }
         else
         {

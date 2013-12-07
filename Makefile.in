@@ -1,4 +1,3 @@
-
 # Copyright (C) 2005-2006 Axel Liljencrantz
 #
 # This program is free software; you can redistribute it and/or modify
@@ -21,14 +20,7 @@
 
 #
 # Makefile for the fish shell. Can build fish and associated
-# applications, install them, recalculate dependencies and also create
-# binary distributions in tar.bz2, tar.gz and rpm formats.
-#
-
-#
-# The fish buildprocess is quite complex. Do not stare directly into
-# the Makefile. Doing so may cause nausea, dizziness and
-# hallucinations.
+# applications, install them, and recalculate dependencies.
 #
 
 # Used by docdir
@@ -61,9 +53,9 @@ optbindirs = @optbindirs@
 # Various flags
 #
 
-MACROS = -DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\" -DBINDIR=L\"$(bindir)\"
+MACROS = -DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\" -DBINDIR=L\"$(bindir)\" -DDOCDIR=L\"$(docdir)\"
 CXXFLAGS = @CXXFLAGS@ $(MACROS) $(EXTRA_CXXFLAGS)
-LDFLAGS = @LIBS@ @LDFLAGS@
+LDFLAGS = @LDFLAGS@
 LDFLAGS_FISH = ${LDFLAGS} @LIBS_FISH@ @LDFLAGS_FISH@
 LDFLAGS_FISH_INDENT = ${LDFLAGS} @LIBS_FISH_INDENT@
 LDFLAGS_FISH_PAGER = ${LDFLAGS} @LIBS_FISH_PAGER@
@@ -168,11 +160,6 @@ HDR_FILES := $(HDR_FILES_SRC:.hdr.in=.hdr)
 # Use a pattern rule so that Make knows to only issue one invocation
 # per http://www.gnu.org/software/make/manual/make.html#Pattern-Intro
 
-# Internalized scripts are currently disabled.
-# For now, we just generate empty arrays.
-# To generate them again, you would run this:
-# ./internalize_scripts.py share/functions/*.fish share/completions/*.fish
-
 
 #
 # Files containing documentation for external commands.
@@ -187,53 +174,11 @@ HELP_SRC := $(wildcard doc_src/*.txt)
 
 TEST_IN := $(wildcard tests/test*.in)
 
-
-#
-# Files that should be added to the tar archives
-#
-
-#
-# Files in ./doc_src/
-#
-
-DOC_SRC_DIR_FILES := $(HDR_FILES_SRC) $(HELP_SRC)
-
-
-#
-# Files in ./
-#
-
-MAIN_DIR_FILES_UNSORTED := Doxyfile Doxyfile.user Doxyfile.help					\
-    Makefile.in configure configure.ac config.h.in install-sh					\
-    key_reader.cpp $(MIME_OBJS:.o=.h)											\
-    $(MIME_OBJS:.o=.cpp) $(FISH_OBJS:.o=.h) $(BUILTIN_FILES)					\
-    $(COMMON_FILES) $(COMMON_FILES:.cpp=.h) $(FISH_OBJS:.o=.cpp)				\
-    fish.spec.in INSTALL README user_doc.head.html								\
-    ChangeLog config.sub config.guess fish_tests.cpp fish.cpp fish_pager.cpp	\
-    fishd.cpp make_vcs_completions.fish $(FISH_INDENT_OBJS:.o=.cpp)
-
-#
-# The sorting is not meaningful in itself, but it has the side effect
-# of removing duplicates, which means there will be fewer warnings
-# during building.
-#
-
-MAIN_DIR_FILES := $(sort $(MAIN_DIR_FILES_UNSORTED))
-
-
-#
-# Files in ./tests/
-#
-
-TESTS_DIR_FILES := $(TEST_IN) $(TEST_IN:.in=.out) $(TEST_IN:.in=.err)	\
-	$(TEST_IN:.in=.status) tests/test.fish tests/gen_output.fish
-
-
 #
 # Files in ./share/completions/
 #
 
-COMPLETIONS_DIR_FILES := $(wildcard share/completions/*.fish)
+COMPLETIONS_DIR_FILES := $(wildcard share/completions/*.fish) share/completions/..fish
 
 
 #
@@ -450,7 +395,7 @@ doc.h: $(HDR_FILES)
 #
 
 %.po:messages.pot
-	if test $(HAVE_GETTEXT) = 1;then \
+	if test "$(HAVE_GETTEXT)" = 1;then \
 		if test -f $*.po; then \
 			msgmerge -U --backup=existing $*.po messages.pot;\
 		else \
@@ -464,7 +409,7 @@ doc.h: $(HDR_FILES)
 #
 
 messages.pot: *.cpp *.h share/completions/*.fish share/functions/*.fish
-	if test $(HAVE_GETTEXT) = 1;then \
+	if test "$(HAVE_GETTEXT)" = 1; then \
 		xgettext -k_ -kN_ *.cpp *.h -o messages.pot; \
 		if xgettext -j -k_ -kN_ -k--description -LShell share/completions/*.fish share/functions/*.fish -o messages.pot; then true; else \
 			echo "Your xgettext version is too old to build the messages.pot file"\
@@ -509,7 +454,7 @@ share/man: $(HELP_SRC)
 	-mkdir share/man
 	touch share/man
 	-rm -Rf share/man/man1
-	./build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share
+	PROJECT_NUMBER=`echo $(FISH_BUILD_VERSION)| sed "s/-.*//"` ./build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share
 
 #
 # The build rules for installing/uninstalling fish
@@ -715,7 +660,7 @@ uninstall-legacy: uninstall
 .PHONY: uninstall-legacy
 
 install-translations: $(TRANSLATIONS)
-	if test $(HAVE_GETTEXT) = 1; then \
+	if test "$(HAVE_GETTEXT)" = 1; then \
 		for i in $(TRANSLATIONS); do \
 			$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/locale/`basename $$i .gmo`/LC_MESSAGES; \
 			$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/locale/`basename $$i .gmo`/LC_MESSAGES/fish.mo; \
@@ -725,7 +670,7 @@ install-translations: $(TRANSLATIONS)
 .PHONY: install-translations
 
 uninstall-translations:
-	if test $(HAVE_GETTEXT) = 1; then \
+	if test "$(HAVE_GETTEXT)" = 1; then \
 		for i in $(TRANSLATIONS_SRC); do \
 			rm -f $(DESTDIR)$(datadir)/locale/*/LC_MESSAGES/fish.mo; \
 		done; \
@@ -742,7 +687,7 @@ uninstall-translations:
 #
 
 fish: $(FISH_OBJS) fish.o
-	$(CXX) $(FISH_OBJS) fish.o $(LDFLAGS_FISH) -o $@
+	$(CXX) $(CXXFLAGS) $(FISH_OBJS) fish.o $(LDFLAGS_FISH) -o $@
 
 
 #
@@ -750,7 +695,7 @@ fish: $(FISH_OBJS) fish.o
 #
 
 fish_pager: $(FISH_PAGER_OBJS)
-	$(CXX) $(FISH_PAGER_OBJS) $(LDFLAGS_FISH_PAGER) -o $@
+	$(CXX) $(CXXFLAGS) $(FISH_PAGER_OBJS) $(LDFLAGS_FISH_PAGER) -o $@
 
 
 #
@@ -758,7 +703,7 @@ fish_pager: $(FISH_PAGER_OBJS)
 #
 
 fishd: $(FISHD_OBJS)
-	$(CXX) $(FISHD_OBJS) $(LDFLAGS_FISHD) -o $@
+	$(CXX) $(CXXFLAGS) $(FISHD_OBJS) $(LDFLAGS_FISHD) -o $@
 
 
 #
@@ -766,17 +711,15 @@ fishd: $(FISHD_OBJS)
 #
 
 fish_tests: $(FISH_TESTS_OBJS)
-	$(CXX) $(FISH_TESTS_OBJS) $(LDFLAGS_FISH) -o $@
+	$(CXX) $(CXXFLAGS) $(FISH_TESTS_OBJS) $(LDFLAGS_FISH) -o $@
 
 
 #
 # Build the mimedb program.
 #
-# mimedb does not need any libraries, so we don't use LDFLAGS here.
-#
 
 mimedb: $(MIME_OBJS)
-	$(CXX) $(MIME_OBJS) $(LDFLAGS_MIMEDB) -o $@
+	$(CXX) $(CXXFLAGS) $(MIME_OBJS) $(LDFLAGS_MIMEDB) -o $@
 
 
 #
@@ -784,7 +727,7 @@ mimedb: $(MIME_OBJS)
 #
 
 fish_indent: $(FISH_INDENT_OBJS)
-	$(CXX) $(FISH_INDENT_OBJS) $(LDFLAGS_FISH_INDENT) -o $@
+	$(CXX) $(CXXFLAGS) $(FISH_INDENT_OBJS) $(LDFLAGS_FISH_INDENT) -o $@
 
 
 #
@@ -792,7 +735,7 @@ fish_indent: $(FISH_INDENT_OBJS)
 #
 
 key_reader: key_reader.o input_common.o common.o env_universal.o env_universal_common.o wutil.o iothread.o
-	$(CXX) key_reader.o input_common.o common.o env_universal.o env_universal_common.o wutil.o iothread.o $(LDFLAGS_FISH) -o $@
+	$(CXX) $(CXXFLAGS) key_reader.o input_common.o common.o env_universal.o env_universal_common.o wutil.o iothread.o $(LDFLAGS_FISH) -o $@
 
 
 #
@@ -804,13 +747,6 @@ depend:
 .PHONY: depend
 
 #
-# Build the RPM spec file.
-#
-
-fish.spec: fish.spec.in
-	./config.status
-
-#
 # Cleanup targets
 #
 
@@ -819,7 +755,6 @@ fish.spec: fish.spec.in
 #
 
 distclean: clean
-	rm -f fish.spec
 	rm -f config.status config.log config.h Makefile
 .PHONY: distclean
 
@@ -835,7 +770,6 @@ distclean: clean
 
 clean:
 	rm -f *.o doc.h doc.tmp doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr
-	rm -f $(GENERATED_INTERN_SCRIPT_FILES)
 	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
 	rm -f $(PROGRAMS) fish_tests key_reader
 	rm -f command_list.txt command_list_toc.txt toc.txt

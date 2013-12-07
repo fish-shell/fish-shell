@@ -65,8 +65,7 @@
 /**
    The number of tests to run
  */
-//#define ESCAPE_TEST_COUNT 1000000
-#define ESCAPE_TEST_COUNT 10000
+#define ESCAPE_TEST_COUNT 100000
 /**
    The average length of strings to unescape
  */
@@ -118,45 +117,81 @@ static void err(const wchar_t *blah, ...)
     wprintf(L"\n");
 }
 
+/* Test sane escapes */
+static void test_unescape_sane()
+{
+    const struct test_t {const wchar_t * input; const wchar_t * expected;} tests[] =
+    {
+        {L"abcd", L"abcd"},
+        {L"'abcd'", L"abcd"},
+        {L"'abcd\\n'", L"abcd\\n"},
+        {L"\"abcd\\n\"", L"abcd\\n"},
+        {L"\"abcd\\n\"", L"abcd\\n"},
+        {L"\\143", L"c"},
+        {L"'\\143'", L"\\143"},
+        {L"\\n", L"\n"} // \n normally becomes newline
+    };
+    wcstring output;
+    for (size_t i=0; i < sizeof tests / sizeof *tests; i++)
+    {
+        bool ret = unescape_string(tests[i].input, &output, UNESCAPE_DEFAULT);
+        if (! ret)
+        {
+            err(L"Failed to unescape '%ls'\n", tests[i].input);
+        }
+        else if (output != tests[i].expected)
+        {
+            err(L"In unescaping '%ls', expected '%ls' but got '%ls'\n", tests[i].input, tests[i].expected, output.c_str());
+        }
+    }
+
+    // test for overflow
+    if (unescape_string(L"echo \\UFFFFFF", &output, UNESCAPE_DEFAULT))
+    {
+        err(L"Should not have been able to unescape \\UFFFFFF\n");
+    }
+    if (unescape_string(L"echo \\U110000", &output, UNESCAPE_DEFAULT))
+    {
+        err(L"Should not have been able to unescape \\U110000\n");
+    }
+    if (! unescape_string(L"echo \\U10FFFF", &output, UNESCAPE_DEFAULT))
+    {
+        err(L"Should have been able to unescape \\U10FFFF\n");
+    }
+
+
+}
+
 /**
    Test the escaping/unescaping code by escaping/unescaping random
    strings and verifying that the original string comes back.
 */
-static void test_escape()
+
+static void test_escape_crazy()
 {
-    int i;
-    wcstring sb;
-
     say(L"Testing escaping and unescaping");
-
-    for (i=0; i<ESCAPE_TEST_COUNT; i++)
+    wcstring random_string;
+    wcstring escaped_string;
+    wcstring unescaped_string;
+    for (size_t i=0; i<ESCAPE_TEST_COUNT; i++)
     {
-        const wchar_t *o, *e, *u;
-
-        sb.clear();
+        random_string.clear();
         while (rand() % ESCAPE_TEST_LENGTH)
         {
-            sb.push_back((rand() %ESCAPE_TEST_CHAR) +1);
+            random_string.push_back((rand() % ESCAPE_TEST_CHAR) +1);
         }
-        o = (const wchar_t *)sb.c_str();
-        e = escape(o, 1);
-        u = unescape(e, 0);
-        if (!o || !e || !u)
+
+        escaped_string = escape_string(random_string, ESCAPE_ALL);
+        bool unescaped_success = unescape_string(escaped_string, &unescaped_string, UNESCAPE_DEFAULT);
+
+        if (! unescaped_success)
         {
-            err(L"Escaping cycle of string %ls produced null pointer on %ls", o, e?L"unescaping":L"escaping");
-
+            err(L"Failed to unescape string <%ls>", escaped_string.c_str());
         }
-
-
-        if (wcscmp(o, u))
+        else if (unescaped_string != random_string)
         {
-            err(L"Escaping cycle of string %ls produced different string %ls", o, u);
-
-
+            err(L"Escaped and then unescaped string '%ls', but got back a different string '%ls'", random_string.c_str(), unescaped_string.c_str());
         }
-        free((void *)e);
-        free((void *)u);
-
     }
 }
 
@@ -398,7 +433,7 @@ static void test_fork(void)
     size_t i, max = 100;
     for (i=0; i < 100; i++)
     {
-        printf("%lu / %lu\n", i+1, max);
+        printf("%lu / %lu\n", (unsigned long)(i+1), (unsigned long) max);
         /* Do something horrible to try to trigger an error */
 #define THREAD_COUNT 8
 #define FORK_COUNT 10
@@ -452,6 +487,50 @@ static void test_fork(void)
         signal_unblock();
     }
 #undef FORK_COUNT
+}
+
+// Little function that runs in the main thread
+static int test_iothread_main_call(int *addr)
+{
+    *addr += 1;
+    return *addr;
+}
+
+// Little function that runs in a background thread, bouncing to the main
+static int test_iothread_thread_call(int *addr)
+{
+    int before = *addr;
+    iothread_perform_on_main(test_iothread_main_call, addr);
+    int after = *addr;
+
+    // Must have incremented it at least once
+    if (before >= after)
+    {
+        err(L"Failed to increment from background thread");
+    }
+    return after;
+}
+
+static void test_iothread(void)
+{
+    say(L"Testing iothreads");
+    int *int_ptr = new int(0);
+    int iterations = 1000;
+    for (int i=0; i < iterations; i++)
+    {
+        iothread_perform(test_iothread_thread_call, (void (*)(int *, int))NULL, int_ptr);
+    }
+
+    // Now wait until we're done
+    iothread_drain_all();
+
+    // Should have incremented it once per thread
+    if (*int_ptr != iterations)
+    {
+        say(L"Expected int to be %d, but instead it was %d", iterations, *int_ptr);
+    }
+
+    delete int_ptr;
 }
 
 /**
@@ -532,7 +611,7 @@ static void test_utils()
 {
     say(L"Testing utils");
     const wchar_t *a = L"echo (echo (echo hi";
-    
+
     const wchar_t *begin = NULL, *end = NULL;
     parse_util_cmdsubst_extent(a, 0, &begin, &end);
     if (begin != a || end != begin + wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
@@ -542,7 +621,7 @@ static void test_utils()
     if (begin != a || end != begin + wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
     parse_util_cmdsubst_extent(a, 3, &begin, &end);
     if (begin != a || end != begin + wcslen(begin)) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
-    
+
     parse_util_cmdsubst_extent(a, 8, &begin, &end);
     if (begin != a + wcslen(L"echo (")) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
 
@@ -788,7 +867,7 @@ static void test_path()
     {
         err(L"Bug in canonical PATH code");
     }
-    
+
     if (paths_are_equivalent(L"/foo/bar/baz", L"foo/bar/baz")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
     if (! paths_are_equivalent(L"///foo///bar/baz", L"/foo/bar////baz//")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
     if (! paths_are_equivalent(L"/foo/bar/baz", L"/foo/bar/baz")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
@@ -1279,7 +1358,7 @@ void perf_complete()
         str[0]=c;
         reader_set_buffer(str, 0);
 
-        complete(str, out, COMPLETION_REQUEST_DEFAULT, NULL);
+        complete(str, out, COMPLETION_REQUEST_DEFAULT);
 
         matches += out.size();
         out.clear();
@@ -1299,7 +1378,7 @@ void perf_complete()
 
         reader_set_buffer(str, 0);
 
-        complete(str, out, COMPLETION_REQUEST_DEFAULT, NULL);
+        complete(str, out, COMPLETION_REQUEST_DEFAULT);
 
         matches += out.size();
         out.clear();
@@ -1836,12 +1915,14 @@ int main(int argc, char **argv)
     reader_init();
     env_init();
 
+    test_unescape_sane();
+    test_escape_crazy();
     test_format();
-    test_escape();
     test_convert();
     test_convert_nulls();
     test_tok();
     test_fork();
+    test_iothread();
     test_parser();
     test_utils();
     test_escape_sequences();

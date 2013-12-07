@@ -984,19 +984,27 @@ void reader_init()
     // PCA disable VDSUSP (typically control-Y), which is a funny job control
     // function available only on OS X and BSD systems
     // This lets us use control-Y for yank instead
-  #ifdef VDSUSP
+#ifdef VDSUSP
     shell_modes.c_cc[VDSUSP] = _POSIX_VDISABLE;
-  #endif
+#endif
 #endif
 }
 
 
 void reader_destroy()
 {
-    tcsetattr(0, TCSANOW, &terminal_mode_on_startup);
     pthread_key_delete(generation_count_key);
 }
 
+void restore_term_mode()
+{
+    // Restore the term mode if we own the terminal
+    // It's important we do this before restore_foreground_process_group, otherwise we won't think we own the terminal
+    if (getpid() == tcgetpgrp(STDIN_FILENO))
+    {
+        tcsetattr(STDIN_FILENO, TCSANOW, &terminal_mode_on_startup);
+    }
+}
 
 void reader_exit(int do_exit, int forced)
 {
@@ -1402,11 +1410,7 @@ struct autosuggestion_context_t
     file_detection_context_t detector;
     const wcstring working_directory;
     const env_vars_snapshot_t vars;
-    wcstring_list_t commands_to_load;
     const unsigned int generation_count;
-
-    // don't reload more than once
-    bool has_tried_reloading;
 
     autosuggestion_context_t(history_t *history, const wcstring &term, size_t pos) :
         search_string(term),
@@ -1415,8 +1419,7 @@ struct autosuggestion_context_t
         detector(history, term),
         working_directory(env_get_pwd_slash()),
         vars(env_vars_snapshot_t::highlighting_keys),
-        generation_count(s_generation_count),
-        has_tried_reloading(false)
+        generation_count(s_generation_count)
     {
     }
 
@@ -1486,7 +1489,7 @@ struct autosuggestion_context_t
 
         /* Try normal completions */
         std::vector<completion_t> completions;
-        complete(search_string, completions, COMPLETION_REQUEST_AUTOSUGGESTION, &this->commands_to_load);
+        complete(search_string, completions, COMPLETION_REQUEST_AUTOSUGGESTION);
         if (! completions.empty())
         {
             const completion_t &comp = completions.at(0);
@@ -1515,23 +1518,6 @@ static bool can_autosuggest(void)
 
 static void autosuggest_completed(autosuggestion_context_t *ctx, int result)
 {
-
-    /* Extract the commands to load */
-    wcstring_list_t commands_to_load;
-    ctx->commands_to_load.swap(commands_to_load);
-
-    /* If we have autosuggestions to load, load them and try again */
-    if (! result && ! commands_to_load.empty() && ! ctx->has_tried_reloading)
-    {
-        ctx->has_tried_reloading = true;
-        for (wcstring_list_t::const_iterator iter = commands_to_load.begin(); iter != commands_to_load.end(); ++iter)
-        {
-            complete_load(*iter, false);
-        }
-        iothread_perform(threaded_autosuggest, autosuggest_completed, ctx);
-        return;
-    }
-
     if (result &&
             can_autosuggest() &&
             ctx->search_string == data->command_line &&
@@ -1715,7 +1701,7 @@ static const completion_t *cycle_competions(const std::vector<completion_t> &com
     // note start_idx will be set to -1 initially, so that when it gets incremented we start at 0
     const size_t start_idx = *inout_idx;
     size_t idx = start_idx;
-    
+
     const completion_t *result = NULL;
     size_t remaining = comp.size();
     while (remaining--)
@@ -2332,7 +2318,7 @@ static void handle_token_history(int forward, int reset)
                         }
                     }
                     break;
-                    
+
                     default:
                     {
                         break;
@@ -3263,7 +3249,7 @@ const wchar_t *reader_readline(void)
                     const wcstring buffcpy = wcstring(cmdsub_begin, token_end);
 
                     //fprintf(stderr, "Complete (%ls)\n", buffcpy.c_str());
-                    data->complete_func(buffcpy, comp, COMPLETION_REQUEST_DEFAULT | COMPLETION_REQUEST_DESCRIPTIONS | COMPLETION_REQUEST_FUZZY_MATCH, NULL);
+                    data->complete_func(buffcpy, comp, COMPLETION_REQUEST_DEFAULT | COMPLETION_REQUEST_DESCRIPTIONS | COMPLETION_REQUEST_FUZZY_MATCH);
 
                     /* Munge our completions */
                     sort_and_make_unique(comp);
@@ -3806,34 +3792,34 @@ const wchar_t *reader_readline(void)
                 }
                 break;
             }
-                
+
             case R_UPCASE_WORD:
             case R_DOWNCASE_WORD:
             case R_CAPITALIZE_WORD:
             {
                 // For capitalize_word, whether we've capitalized a character so far
                 bool capitalized_first = false;
-                
+
                 // We apply the operation from the current location to the end of the word
                 size_t pos = data->buff_pos;
                 move_word(MOVE_DIR_RIGHT, false, move_word_style_punctuation, false);
                 for (; pos < data->buff_pos; pos++)
                 {
                     wchar_t chr = data->command_line.at(pos);
-                    
+
                     // We always change the case; this decides whether we go uppercase (true) or lowercase (false)
                     bool make_uppercase;
                     if (c == R_CAPITALIZE_WORD)
                         make_uppercase = ! capitalized_first && iswalnum(chr);
                     else
                         make_uppercase = (c == R_UPCASE_WORD);
-                    
+
                     // Apply the operation and then record what we did
                     if (make_uppercase)
                         chr = towupper(chr);
                     else
                         chr = towlower(chr);
-                    
+
                     data->command_line.at(pos) = chr;
                     capitalized_first = capitalized_first || make_uppercase;
                 }
@@ -3842,7 +3828,7 @@ const wchar_t *reader_readline(void)
                 reader_repaint();
                 break;
             }
-                
+
             /* Other, if a normal character, we add it to the command */
             default:
             {

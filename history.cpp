@@ -286,7 +286,7 @@ static void append_yaml_to_buffer(const wcstring &wcmd, time_t timestamp, const 
     buffer->append("- cmd: ", cmd.c_str(), "\n");
 
     char timestamp_str[96];
-    snprintf(timestamp_str, sizeof timestamp_str, "%ld", timestamp);
+    snprintf(timestamp_str, sizeof timestamp_str, "%ld", (long) timestamp);
     buffer->append("   when: ", timestamp_str, "\n");
 
     if (! required_paths.empty())
@@ -413,6 +413,13 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
             bool has_timestamp = false;
             time_t timestamp;
             const char *interior_line;
+
+            /*
+             * Ensure the loop is processed at least once. Otherwise,
+             * timestamp is unitialized.
+             */
+            bool processed_once = false;
+
             for (interior_line = next_line(line_start, end - line_start);
                     interior_line != NULL && ! has_timestamp;
                     interior_line = next_line(interior_line, end - interior_line))
@@ -427,7 +434,11 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
 
                 /* Try parsing a timestamp from this line. If we succeed, the loop will break. */
                 has_timestamp = parse_timestamp(interior_line, &timestamp);
+
+                processed_once = true;
             }
+
+            assert(processed_once);
 
             /* Skip this item if the timestamp is past our cutoff. */
             if (has_timestamp && timestamp > cutoff_timestamp)
@@ -629,7 +640,7 @@ void history_t::get_string_representation(wcstring &result, const wcstring &sepa
     scoped_lock locker(lock);
 
     bool first = true;
-    
+
     std::set<wcstring> seen;
 
     /* Append new items. Note that in principle we could use const_reverse_iterator, but we do not because reverse_iterator is not convertible to const_reverse_iterator ( http://github.com/fish-shell/fish-shell/issues/431 ) */
@@ -638,7 +649,7 @@ void history_t::get_string_representation(wcstring &result, const wcstring &sepa
         /* Skip duplicates */
         if (! seen.insert(iter->str()).second)
             continue;
-            
+
         if (! first)
             result.append(separator);
         result.append(iter->str());
@@ -651,11 +662,11 @@ void history_t::get_string_representation(wcstring &result, const wcstring &sepa
     {
         size_t offset = *iter;
         const history_item_t item = history_t::decode_item(mmap_start + offset, mmap_length - offset, mmap_type);
-        
+
         /* Skip duplicates */
         if (! seen.insert(item.str()).second)
             continue;
-        
+
         if (! first)
             result.append(separator);
         result.append(item.str());
@@ -1731,8 +1742,9 @@ void history_t::add_with_file_detection(const wcstring &str)
             const wchar_t *token_cstr = tok_last(&tokenizer);
             if (token_cstr)
             {
-                wcstring potential_path = token_cstr;
-                if (unescape_string(potential_path, false) && string_could_be_path(potential_path))
+                wcstring potential_path;
+                bool unescaped = unescape_string(token_cstr, &potential_path, UNESCAPE_DEFAULT);
+                if (unescaped && string_could_be_path(potential_path))
                 {
                     potential_paths.push_back(potential_path);
 

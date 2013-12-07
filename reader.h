@@ -46,6 +46,9 @@ void reader_init();
 */
 void reader_destroy();
 
+/** Restore the term mode at startup */
+void restore_term_mode();
+
 /**
    Returns the filename of the file currently read
 */
@@ -163,7 +166,7 @@ void reader_pop();
    - The command to be completed as a null terminated array of wchar_t
    - An array_list_t in which completions will be inserted.
 */
-typedef void (*complete_function_t)(const wcstring &, std::vector<completion_t> &, completion_request_flags_t, wcstring_list_t * lst);
+typedef void (*complete_function_t)(const wcstring &, std::vector<completion_t> &, completion_request_flags_t);
 void reader_set_complete_function(complete_function_t);
 
 /**

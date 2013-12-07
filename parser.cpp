@@ -2013,7 +2013,7 @@ int parser_t::parse_job(process_t *p,
                 {
 
                     const wchar_t *cmd = args.at(0).completion.c_str();
-                    
+
                     /*
                      We couldn't find the specified command.
 
@@ -2036,20 +2036,20 @@ int parser_t::parse_job(process_t *p,
                     if (equals_ptr != NULL)
                     {
                         /* Try to figure out if this is a pure variable assignment (foo=bar), or if this appears to be running a command (foo=bar ruby...) */
-                        
+
                         const wcstring name_str = wcstring(cmd, equals_ptr - cmd); //variable name, up to the =
                         const wcstring val_str = wcstring(equals_ptr + 1); //variable value, past the =
-                        
+
                         wcstring next_str;
                         if (tok_peek_next(tok, &next_str) == TOK_STRING && ! next_str.empty())
                         {
                             wcstring ellipsis_str = wcstring(1, ellipsis_char);
                             if (ellipsis_str == L"$")
                                 ellipsis_str = L"...";
-                            
+
                             /* Looks like a command */
                             debug(0,
-                                  _( L"Unknown command '%ls'. Did you mean to run %ls with a modified environment? Try 'env %ls=%ls %ls%ls'. See the help section on the set command by typing 'help set'."),
+                                  _(L"Unknown command '%ls'. Did you mean to run %ls with a modified environment? Try 'env %ls=%ls %ls%ls'. See the help section on the set command by typing 'help set'."),
                                   cmd,
                                   next_str.c_str(),
                                   name_str.c_str(),
@@ -2728,8 +2728,6 @@ const wchar_t *parser_get_block_command(int type)
 */
 int parser_t::parser_test_argument(const wchar_t *arg, wcstring *out, const wchar_t *prefix, int offset)
 {
-    wchar_t *unesc;
-    wchar_t *pos;
     int err=0;
 
     wchar_t *paran_begin, *paran_end;
@@ -2791,8 +2789,8 @@ int parser_t::parser_test_argument(const wchar_t *arg, wcstring *out, const wcha
         }
     }
 
-    unesc = unescape(arg_cpy, 1);
-    if (!unesc)
+    wcstring unesc;
+    if (! unescape_string(arg_cpy, &unesc, UNESCAPE_SPECIAL))
     {
         if (out)
         {
@@ -2805,26 +2803,25 @@ int parser_t::parser_test_argument(const wchar_t *arg, wcstring *out, const wcha
     }
     else
     {
-        /*
-          Check for invalid variable expansions
-        */
-        for (pos = unesc; *pos; pos++)
+        /* Check for invalid variable expansions */
+        const size_t unesc_size = unesc.size();
+        for (size_t idx = 0; idx < unesc_size; idx++)
         {
-            switch (*pos)
+            switch (unesc.at(idx))
             {
                 case VARIABLE_EXPAND:
                 case VARIABLE_EXPAND_SINGLE:
                 {
-                    wchar_t n = *(pos+1);
+                    wchar_t next_char = (idx + 1 < unesc_size ? unesc.at(idx + 1) : L'\0');
 
-                    if (n != VARIABLE_EXPAND &&
-                            n != VARIABLE_EXPAND_SINGLE &&
-                            !wcsvarchr(n))
+                    if (next_char != VARIABLE_EXPAND &&
+                            next_char != VARIABLE_EXPAND_SINGLE &&
+                            ! wcsvarchr(next_char))
                     {
                         err=1;
                         if (out)
                         {
-                            expand_variable_error(*this, unesc, pos-unesc, offset);
+                            expand_variable_error(*this, unesc, idx, offset);
                             print_errors(*out, prefix);
                         }
                     }
@@ -2837,7 +2834,6 @@ int parser_t::parser_test_argument(const wchar_t *arg, wcstring *out, const wcha
 
     free(arg_cpy);
 
-    free(unesc);
     return err;
 
 }

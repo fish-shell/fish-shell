@@ -317,7 +317,7 @@ static bool wildcard_complete_internal(const wcstring &orig,
             if (wildcard_complete_internal(orig, str + i, wc+1, false, desc, desc_func, out, expand_flags, flags))
             {
                 res = true;
-                
+
                 /* #929: if the recursive call gives us a prefix match, just stop. This is sloppy - what we really want to do is say, once we've seen a match of a particular type, ignore all matches of that type further down the string, such that the wildcard produces the "minimal match." */
                 bool has_prefix_match = false;
                 const size_t after_count = out.size();

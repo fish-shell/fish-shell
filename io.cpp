@@ -71,7 +71,7 @@ void io_pipe_t::print() const
 void io_buffer_t::print() const
 {
     fprintf(stderr, "buffer %p (input: %s, size %lu)\n", out_buffer_ptr(),
-            is_input ? "yes" : "no", out_buffer_size());
+            is_input ? "yes" : "no", (unsigned long) out_buffer_size());
 }
 
 void io_buffer_t::read()

@@ -19,7 +19,11 @@ function __fish_git_remotes
 end
 
 function __fish_git_modified_files
-    command git status -s | grep -e "^ M" | sed "s/^ M //"
+  command git ls-files -m --exclude-standard ^/dev/null
+end
+
+function __fish_git_add_files
+  command git ls-files -mo --exclude-standard ^/dev/null
 end
 
 function __fish_git_ranges
@@ -110,12 +114,14 @@ complete -c git -n '__fish_git_using_command add' -l refresh -d "Don't add the f
 complete -c git -n '__fish_git_using_command add' -l ignore-errors -d 'Ignore errors'
 complete -c git -n '__fish_git_using_command add' -l ignore-missing -d 'Check if any of the given files would be ignored'
 complete -f -c git -n '__fish_git_using_command add; and __fish_contains_opt -s p patch' -a '(__fish_git_modified_files)'
+complete -f -c git -n '__fish_git_using_command add' -a '(__fish_git_add_files)'
 # TODO options
 
 ### checkout
 complete -f -c git -n '__fish_git_needs_command'    -a checkout -d 'Checkout and switch to a branch'
 complete -f -c git -n '__fish_git_using_command checkout'  -a '(__fish_git_branches)' --description 'Branch'
 complete -f -c git -n '__fish_git_using_command checkout'  -a '(__fish_git_tags)' --description 'Tag'
+complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_modified_files)' --description 'File'
 complete -f -c git -n '__fish_git_using_command checkout' -s b -d 'Create a new branch'
 complete -f -c git -n '__fish_git_using_command checkout' -s t -l track -d 'Track a new branch'
 # TODO options

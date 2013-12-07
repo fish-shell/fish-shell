@@ -106,8 +106,8 @@ static int indent(wcstring &out, const wcstring &in, int flags)
                     int next_indent = indent;
                     is_command = 0;
 
-                    wcstring unesc = last;
-                    unescape_string(unesc, UNESCAPE_SPECIAL);
+                    wcstring unesc;
+                    unescape_string(last, &unesc, UNESCAPE_SPECIAL);
 
                     if (parser_keywords_is_block(unesc))
                     {

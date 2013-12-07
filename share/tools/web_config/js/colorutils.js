@@ -295,7 +295,7 @@ function adjust_lightness(color_str, func) {
 
 /* Given a color, compute a "border color" for it that can show it selected */
 function border_color_for_color(color_str) {
-    return $scope.adjust_lightness(color_str, function(lightness){
+    return adjust_lightness(color_str, function(lightness){
         var adjust = .5
         var new_lightness = lightness + adjust
         if (new_lightness > 1.0 || new_lightness < 0.0) {
@@ -315,7 +315,7 @@ function text_color_for_color(color_str) {
         }
         return new_lightness
     }
-    return $scope.adjust_lightness(color_str, compute_constrast);
+    return adjust_lightness(color_str, compute_constrast);
 }		
 
 function rgb_to_hsl(r, g, b){	

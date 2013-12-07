@@ -26,6 +26,10 @@ controllers.controller("colorsController", function($scope, $http) {
         $scope.terminalBackgroundColor = color;
     }
 
+    $scope.text_color_for_color = function(color) {
+        return text_color_for_color(color);
+    }
+
     $scope.getColorArraysArray = function() {
         var result = null;
         if ( $scope.selectedColorScheme.colors && $scope.selectedColorScheme.colors.length > 0)

@@ -1,7 +1,8 @@
 <div>
     <!-- ko with: color_picker -->
-    <span style="padding-left: 25px">Click to customize each color:</span><br>
+    <span style="padding-left: 25px">Click to customize each color: </span><br>
     <div class="colorpicker_text_sample" ng-style="{'background-color': terminalBackgroundColor}">
+        <span style="position: absolute; left: 10px; top: -6px;" data-ng-style="{'color': text_color_for_color(selectedColorScheme.preferred_background || 'white')}">{{ selectedColorScheme.name }}</span><br>
         <div class="color_picker_background_cells">
             <div ng-style="{'background-color': color}" ng-repeat="color in sampleTerminalBackgroundColors" ng-click="changeTerminalBackgroundColor(color)"></div>
         </div>
@@ -21,7 +22,7 @@
         <br>
         <span data-ng-style="{ 'color': selectedColorScheme.command}" ng-click="selectColorSetting('command')">Th</span><span data-ng-style="{ 'color': selectedColorScheme.autosuggestion }" ng-click="selectColorSetting('autosuggestion')"><span class="fake_cursor"><span style="visibility: hidden">i</span></span>s is an autosuggestion</span>
 
-        <span class="save_button" style="position: absolute; right: 5px; bottom: 5px;" data-ng-style="{'color': text_color_for_color(selectedColorScheme.preferred_background || 'white')}" ng-show="showSaveButton" ng-click="setTheme()">Apply</span>
+        <span class="save_button" style="position: absolute; right: 5px; bottom: 5px;" title="Terminal background color is not set automatically on Apply. See your terminal documentation to set its background color." data-ng-style="{'color': text_color_for_color(selectedColorScheme.preferred_background || 'white')}" ng-show="showSaveButton" ng-click="setTheme()">Apply</span>
 
     </div>
             

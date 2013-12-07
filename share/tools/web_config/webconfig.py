@@ -318,8 +318,9 @@ class BindingParser:
 
         # \[1\; is start of control sequence
         if c == '1':
-            self.get_char();self.get_char()
-            c = self.get_char()
+            self.get_char();c = self.get_char()
+            if c == ";":
+                c = self.get_char()
 
         # 3 is Alt
         if c == '3':

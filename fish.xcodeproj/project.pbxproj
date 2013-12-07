@@ -1083,7 +1083,6 @@
 				D0D02A86159839D5008E62BD /* postfork.cpp in Sources */,
 				D0D02A87159839D5008E62BD /* screen.cpp in Sources */,
 				D0D02A88159839D5008E62BD /* signal.cpp in Sources */,
-				D032388B1849D1980032CF2C /* pager.cpp in Sources */,
 				D0D2694A15983779005D9B9C /* builtin.cpp in Sources */,
 				D0D2694915983772005D9B9C /* function.cpp in Sources */,
 				D0D02A67159837AD008E62BD /* complete.cpp in Sources */,
@@ -1107,6 +1106,7 @@
 				D0D02A7915983888008E62BD /* intern.cpp in Sources */,
 				D0D02A7A15983916008E62BD /* env_universal.cpp in Sources */,
 				D0D02A7B15983928008E62BD /* env_universal_common.cpp in Sources */,
+				D032388B1849D1980032CF2C /* pager.cpp in Sources */,
 				D0D02A89159839DF008E62BD /* fish.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

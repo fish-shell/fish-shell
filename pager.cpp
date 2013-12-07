@@ -1,5 +1,7 @@
 #include "config.h"
 
+#include "pager.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>

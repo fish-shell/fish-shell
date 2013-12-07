@@ -13,6 +13,7 @@
 #define FISH_SCREEN_H
 
 #include <vector>
+#include <sys/stat.h>
 
 /**
    A class representing a single line of a screen.

@@ -64,23 +64,32 @@
 #include "parse_util.h"
 
 static const char * const * s_arguments;
+static int s_test_run_count = 0;
 
 /* Indicate if we should test the given function. Either we test everything (all arguments) or we run only tests that have a prefix in s_arguments */
 static bool should_test_function(const char *func_name)
 {
     /* No args, test everything */
+    bool result = false;
     if (! s_arguments || ! s_arguments[0])
-        return true;
-    
-    for (size_t i=0; s_arguments[i] != NULL; i++)
     {
-        if (! strncmp(func_name, s_arguments[i], strlen(s_arguments[i])))
+        result = true;
+    }
+    else
+    {
+        for (size_t i=0; s_arguments[i] != NULL; i++)
         {
-            /* Prefix match */
-            return true;
+            if (! strncmp(func_name, s_arguments[i], strlen(s_arguments[i])))
+            {
+                /* Prefix match */
+                result = true;
+                break;
+            }
         }
     }
-    return false;
+    if (result)
+        s_test_run_count++;
+    return result;
 }
 
 /**
@@ -637,6 +646,147 @@ static void test_parser()
     if (!parser.eval(L"ls", io_chain_t(), WHILE))
     {
         err(L"Invalid block mode when evaluating undetected");
+    }
+}
+
+static void test_indents()
+{
+    say(L"Testing indents");
+    
+    // Here are the components of our source and the indents we expect those to be
+    struct indent_component_t {
+        const wchar_t *txt;
+        int indent;
+    };
+    
+    const indent_component_t components1[] =
+    {
+        {L"if foo", 0},
+        {L"end", 0},
+        {NULL, -1}
+    };
+    
+    const indent_component_t components2[] =
+    {
+        {L"if foo", 0},
+        {L"", 1}, //trailing newline!
+        {NULL, -1}
+    };
+    
+    const indent_component_t components3[] =
+    {
+        {L"if foo", 0},
+        {L"foo", 1},
+        {L"end", 0}, //trailing newline!
+        {NULL, -1}
+    };
+    
+    const indent_component_t components4[] =
+    {
+        {L"if foo", 0},
+        {L"if bar", 1},
+        {L"end", 1},
+        {L"end", 0},
+        {L"", 0},
+        {NULL, -1}
+    };
+    
+    const indent_component_t components5[] =
+    {
+        {L"if foo", 0},
+        {L"if bar", 1},
+        {L"", 2},
+        {NULL, -1}
+    };
+    
+    const indent_component_t components6[] =
+    {
+        {L"begin", 0},
+        {L"foo", 1},
+        {L"", 1},
+        {NULL, -1}
+    };
+    
+    const indent_component_t components7[] =
+    {
+        {L"begin; end", 0},
+        {L"foo", 0},
+        {L"", 0},
+        {NULL, -1}
+    };
+    
+    const indent_component_t components8[] =
+    {
+        {L"if foo", 0},
+        {L"if bar", 1},
+        {L"baz", 2},
+        {L"end", 1},
+        {L"", 1},
+        {NULL, -1}
+    };
+
+    const indent_component_t components9[] =
+    {
+        {L"switch foo", 0},
+        {L"", 1},
+        {NULL, -1}
+    };
+    
+    const indent_component_t components10[] =
+    {
+        {L"switch foo", 0},
+        {L"case bar", 1},
+        {L"case baz", 1},
+        {L"quux", 2},
+        {L"", 2},
+        {NULL, -1}
+    };
+
+
+    
+    const indent_component_t *tests[] = {components1, components2, components3, components4, components5, components6, components7, components8, components9, components10};
+    for (size_t which = 0; which < sizeof tests / sizeof *tests; which++)
+    {
+        const indent_component_t *components = tests[which];
+        // Count how many we have
+        size_t component_count = 0;
+        while (components[component_count].txt != NULL)
+        {
+            component_count++;
+        }
+        
+        // Generate the expected indents
+        wcstring text;
+        std::vector<int> expected_indents;
+        for (size_t i=0; i < component_count; i++)
+        {
+            if (i > 0)
+            {
+                text.push_back(L'\n');
+                expected_indents.push_back(components[i].indent);
+            }
+            text.append(components[i].txt);
+            expected_indents.resize(text.size(), components[i].indent);
+        }
+        assert(expected_indents.size() == text.size());
+        
+        // Compute the indents
+        std::vector<int> indents = parse_util_compute_indents(text);
+        
+        if (expected_indents.size() != indents.size())
+        {
+            err(L"Indent vector has wrong size! Expected %lu, actual %lu", expected_indents.size(), indents.size());
+        }
+        assert(expected_indents.size() == indents.size());
+        for (size_t i=0; i < text.size(); i++)
+        {
+            if (expected_indents.at(i) != indents.at(i))
+            {
+                err(L"Wrong indent at index %lu in test #%lu (expected %d, actual %d):\n%ls\n", i, which + 1, expected_indents.at(i), indents.at(i), text.c_str());
+                break; //don't keep showing errors for the rest of the line
+            }
+        }
+
     }
 }
 
@@ -2176,25 +2326,26 @@ static void test_new_parser_ll2(void)
     }
 }
 
-__attribute__((unused))
-static void test_new_parser(void)
+static void test_new_parser_ad_hoc(void)
 {
-    say(L"Testing new parser");
-    const wcstring src = L"echo hello world";
+    /* Very ad-hoc tests for issues encountered */
+    say(L"Testing new parser ad hoc tests");
+    
+    /* Ensure that 'case' terminates a job list */
+    const wcstring src = L"switch foo ; case bar; case baz; end";
     parse_node_tree_t parse_tree;
     bool success = parse_t::parse(src, parse_flag_none, &parse_tree, NULL);
     if (! success)
     {
-        say(L"Parsing failed");
+        err(L"Parsing failed");
     }
-    else
+    
+    /* Expect three case_item_lists: one for each case, and a terminal one. The bug was that we'd try to run a command 'case' */
+    const parse_node_t &root = parse_tree.at(0);
+    const parse_node_tree_t::parse_node_list_t node_list = parse_tree.find_nodes(root, symbol_case_item_list);
+    if (node_list.size() != 3)
     {
-#if 0
-        parse_execution_context_t ctx(parse_tree, src);
-        say(L"Simulating execution:");
-        wcstring simulation = ctx.simulate();
-        say(simulation.c_str());
-#endif
+        err(L"Expected 3 case item nodes, found %lu", node_list.size());
     }
 }
 
@@ -2415,7 +2566,7 @@ int main(int argc, char **argv)
     if (should_test_function("new_parser_ll2")) test_new_parser_ll2();
     if (should_test_function("new_parser_fuzzing")) test_new_parser_fuzzing(); //fuzzing is expensive
     if (should_test_function("new_parser_correctness")) test_new_parser_correctness();
-    if (should_test_function("new_parser")) test_new_parser();
+    if (should_test_function("new_parser_ad_hoc")) test_new_parser_ad_hoc();
     if (should_test_function("escape")) test_unescape_sane();
     if (should_test_function("escape")) test_escape_crazy();
     if (should_test_function("format")) test_format();
@@ -2425,6 +2576,7 @@ int main(int argc, char **argv)
     if (should_test_function("fork")) test_fork();
     if (should_test_function("iothread")) test_iothread();
     if (should_test_function("parser")) test_parser();
+    if (should_test_function("indents")) test_indents();
     if (should_test_function("utils")) test_utils();
     if (should_test_function("escape_sequences")) test_escape_sequences();
     if (should_test_function("lru")) test_lru();
@@ -2447,6 +2599,8 @@ int main(int argc, char **argv)
     //history_tests_t::test_history_speed();
 
     say(L"Encountered %d errors in low-level tests", err_count);
+    if (s_test_run_count == 0)
+        say(L"*** No Tests Were Actually Run! ***");
 
     /*
       Skip performance tests for now, since they seem to hang when running from inside make (?)

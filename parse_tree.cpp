@@ -240,10 +240,10 @@ static inline parse_token_type_t parse_token_type_from_tokenizer_token(enum toke
 }
 
 /* Helper function for dump_tree */
-static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &src, size_t start, size_t indent, wcstring *result, size_t *line)
+static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &src, node_offset_t node_idx, size_t indent, wcstring *result, size_t *line)
 {
-    assert(start < nodes.size());
-    const parse_node_t &node = nodes.at(start);
+    assert(node_idx < nodes.size());
+    const parse_node_t &node = nodes.at(node_idx);
 
     const size_t spacesPerIndent = 2;
 
@@ -253,26 +253,33 @@ static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &
         if (indent > 0) indent -= 1;
     }
 
-    append_format(*result, L"%2lu - %l2u  ", *line, start);
+    append_format(*result, L"%2lu - %l2u  ", *line, node_idx);
     result->append(indent * spacesPerIndent, L' ');;
     result->append(node.describe());
     if (node.child_count > 0)
     {
         append_format(*result, L" <%lu children>", node.child_count);
     }
-    if (node.type == parse_token_type_string)
+    
+    if (node.has_source() && node.type == parse_token_type_string)
     {
-        if (node.source_start == -1)
+        result->append(L": \"");
+        result->append(src, node.source_start, node.source_length);
+        result->append(L"\"");
+    }
+    
+    if (node.type != parse_token_type_string)
+    {
+        if (node.has_source())
         {
-            append_format(*result, L" (no source)");
+            append_format(*result, L"  [%ld, %ld]", (long)node.source_start, (long)node.source_length);
         }
         else
         {
-            result->append(L": \"");
-            result->append(src, node.source_start, node.source_length);
-            result->append(L"\"");
+            append_format(*result, L"  [no src]", (long)node.source_start, (long)node.source_length);        
         }
     }
+    
     result->push_back(L'\n');
     ++*line;
     for (size_t child_idx = node.child_start; child_idx < node.child_start + node.child_count; child_idx++)
@@ -658,7 +665,8 @@ bool parse_ll_t::top_node_handle_terminal_types(parse_token_t token)
 
         if (matched)
         {
-            // Success. Tell the node that it matched this token
+            // Success. Tell the node that it matched this token, and what its source range is
+            // In the parse phase, we only set source ranges for terminal types. We propagate ranges to parent nodes afterwards.
             parse_node_t &node = node_for_top_symbol();
             node.source_start = token.source_start;
             node.source_length = token.source_length;

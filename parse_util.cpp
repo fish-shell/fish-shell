@@ -38,6 +38,7 @@
 #include "env.h"
 #include "signal.h"
 #include "wildcard.h"
+#include "parse_tree.h"
 
 /**
    Maximum number of autoloaded items opf a specific type to keep in
@@ -803,4 +804,118 @@ wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote)
         }
     }
     return result;
+}
+
+/* We are given a parse tree, the index of a node within the tree, its indent, and a vector of indents the same size as the original source string. Set the indent correspdonding to the node's source range, if appropriate.
+
+   trailing_indent is the indent for nodes with unrealized source, i.e. if I type 'if false <ret>' then we have an if node with an empty job list (without source) but we want the last line to be indented anyways.
+   
+   switch statements also indent.
+*/
+static void compute_indents_recursive(const parse_node_tree_t &tree, node_offset_t node_idx, int node_indent, parse_token_type_t parent_type, std::vector<int> *indents, int *trailing_indent)
+{
+    /* Guard against incomplete trees */
+    if (node_idx > tree.size())
+        return;
+
+    /* We could implement this by utilizing the fish grammar. But there's an easy trick instead: almost everything that wraps a job list should be indented by 1. So just find all of the job lists. One exception is switch; the other exception is job_list itself: a job_list is a job and a job_list, and we want that child list to be indented the same as the parent. So just find all job_lists whose parent is not a job_list, and increment their indent by 1. */
+    
+    const parse_node_t &node = tree.at(node_idx);
+    const parse_token_type_t node_type = node.type;
+    
+    /* Increment the indent if we are either a root job_list, or root case_item_list */
+    const bool is_root_job_list = (node_type == symbol_job_list && parent_type != symbol_job_list);
+    const bool is_root_case_item_list = (node_type == symbol_case_item_list && parent_type != symbol_case_item_list);
+    if (is_root_job_list || is_root_case_item_list)
+    {
+        node_indent += 1;
+    }
+    
+    /* If we have source, store the trailing indent unconditionally. If we do not have source, store the trailing indent only if ours is bigger; this prevents the trailing "run" of terminal job lists from affecting the trailing indent. For example, code like this:
+    
+            if foo
+     
+      will be parsed as this:
+     
+      job_list
+        job
+           if_statement
+               job [if]
+               job_list [empty]
+         job_list [empty]
+      
+      There's two "terminal" job lists, and we want the innermost one.
+      
+      Note we are relying on the fact that nodes are in the same order as the source, i.e. an in-order traversal of the node tree also traverses the source from beginning to end.
+    */
+    if (node.has_source() || node_indent > *trailing_indent)
+    {
+        *trailing_indent = node_indent;
+    }
+
+    
+    /* Store the indent into the indent array */
+    if (node.has_source())
+    {
+        assert(node.source_start < indents->size());
+        indents->at(node.source_start) = node_indent;
+    }
+
+    
+    /* Recursive to all our children */
+    for (node_offset_t idx = 0; idx < node.child_count; idx++)
+    {
+        /* Note we pass our type to our child, which becomes its parent node type */
+        compute_indents_recursive(tree, node.child_start + idx, node_indent, node_type, indents, trailing_indent);
+    }
+}
+
+std::vector<int> parse_util_compute_indents(const wcstring &src)
+{
+    /* Make a vector the same size as the input string, which contains the indents. Initialize them to -1. */
+    const size_t src_size = src.size();
+    std::vector<int> indents(src_size, -1);
+    
+    parse_node_tree_t tree;
+    parse_t::parse(src, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens, &tree, NULL /* errors */);
+    
+    /* The indent that we'll get for the last line */
+    int trailing_indent = 0;
+    
+    /* Invoke the recursive version. As a hack, pass job_list for the 'parent' token, which will prevent the really-root job list from indenting */
+    compute_indents_recursive(tree, 0 /* node index */, 0/* current indent */, symbol_job_list, &indents, &trailing_indent);
+    
+    int last_indent = 0;
+    for (size_t i=0; i<src_size; i++)
+    {
+        int this_indent = indents.at(i);
+        if (this_indent < 0)
+        {
+            indents.at(i) = last_indent;
+        }
+        else
+        {
+            /* New indent level */
+            last_indent = this_indent;
+            /* Make all whitespace before a token have the new level. This avoid using the wrong indentation level if a new line starts with whitespace. */
+            size_t prev_char_idx = i;
+            while (prev_char_idx--)
+            {
+                if (!wcschr(L" \n\t\r", src.at(prev_char_idx)))
+                    break;
+                indents.at(prev_char_idx) = last_indent;
+            }
+        }
+    }
+
+    /* Ensure trailing whitespace has the trailing indent. This makes sure a new line is correctly indented even if it is empty. */
+    size_t suffix_idx = src_size;
+    while (suffix_idx--)
+    {
+        if (!wcschr(L" \n\t\r", src.at(suffix_idx)))
+            break;
+        indents.at(suffix_idx) = trailing_indent;
+    }
+    
+    return indents;
 }

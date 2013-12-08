@@ -51,6 +51,7 @@ RESOLVE(job_list)
             {
                 case parse_keyword_end:
                 case parse_keyword_else:
+                case parse_keyword_case:
                     // End this job list
                     return 0;
 

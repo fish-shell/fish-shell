@@ -159,5 +159,7 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
 */
 wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote);
 
+/** Given a string, parse it as fish code and then return the indents. The return value has the same size as the string */
+std::vector<int> parse_util_compute_indents(const wcstring &src);
 
 #endif

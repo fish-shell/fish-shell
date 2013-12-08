@@ -2911,7 +2911,7 @@ struct block_info_t
     bool has_had_case; //if we are a switch, whether we've encountered a case
 };
 
-int parser_t::test(const wchar_t *buff, int *block_level, wcstring *out, const wchar_t *prefix)
+parser_test_error_bits_t parser_t::test(const wchar_t *buff, int *block_level, wcstring *out, const wchar_t *prefix)
 {
     ASSERT_IS_MAIN_THREAD();
 
@@ -2926,7 +2926,6 @@ int parser_t::test(const wchar_t *buff, int *block_level, wcstring *out, const w
     // These are very nearly stacks, but sometimes we have to inspect non-top elements (e.g. return)
     std::vector<struct block_info_t> block_infos;
     int indentation_sum = 0; //sum of indentation in block_infos
-    int res = 0;
 
     /*
       Set to 1 if the current command is inside a pipeline
@@ -3704,6 +3703,8 @@ int parser_t::test(const wchar_t *buff, int *block_level, wcstring *out, const w
     if (! block_infos.empty())
         unfinished = 1;
 
+    parser_test_error_bits_t res = 0;
+    
     if (err)
         res |= PARSER_TEST_ERROR;
 

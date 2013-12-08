@@ -253,7 +253,6 @@ public:
     /* Get the node corresponding to the parent of the given node, or NULL if there is no such child. If expected_type is provided, only returns the parent if it is of that type. Note the asymmetry: get_child asserts since the children are known, but get_parent does not, since the parent may not be known. */
     const parse_node_t *get_parent(const parse_node_t &node, parse_token_type_t expected_type = token_type_invalid) const;
 
-
     /* Find all the nodes of a given type underneath a given node */
     typedef std::vector<const parse_node_t *> parse_node_list_t;
     parse_node_list_t find_nodes(const parse_node_t &parent, parse_token_type_t type) const;

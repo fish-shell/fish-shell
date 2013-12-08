@@ -519,7 +519,14 @@ wcstring combine_command_and_autosuggestion(const wcstring &cmdline, const wcstr
 static void reader_repaint()
 {
     // Update the indentation
-    parser_t::principal_parser().test(data->command_line.c_str(), &data->indents[0]);
+    if (0)
+    {
+        parser_t::principal_parser().test(data->command_line.c_str(), &data->indents[0]);
+    }
+    else
+    {
+        data->indents = parse_util_compute_indents(data->command_line);
+    }
 
     // Combine the command and autosuggestion into one string
     wcstring full_line = combine_command_and_autosuggestion(data->command_line, data->autosuggestion);

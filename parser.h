@@ -13,8 +13,11 @@
 #include "function.h"
 #include <vector>
 
-#define PARSER_TEST_ERROR 1
-#define PARSER_TEST_INCOMPLETE 2
+enum {
+  PARSER_TEST_ERROR = 1,
+  PARSER_TEST_INCOMPLETE = 2
+};
+typedef unsigned int parser_test_error_bits_t;
 
 /**
    event_blockage_t represents a block on events of the specified type
@@ -484,7 +487,7 @@ public:
        \param out if non-null, any errors in the command will be filled out into this buffer
        \param prefix the prefix string to prepend to each error message written to the \c out buffer
     */
-    int test(const wchar_t * buff, int *block_level = NULL, wcstring *out = NULL, const wchar_t *prefix = NULL);
+    parser_test_error_bits_t test(const wchar_t * buff, int *block_level = NULL, wcstring *out = NULL, const wchar_t *prefix = NULL);
 
     /**
        Test if the specified string can be parsed as an argument list,

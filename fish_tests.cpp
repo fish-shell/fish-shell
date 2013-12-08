@@ -741,10 +741,17 @@ static void test_indents()
         {L"", 2},
         {NULL, -1}
     };
+    
+    const indent_component_t components11[] =
+    {
+        {L"switch foo", 0},
+        {L"cas", 1}, //parse error indentation handling
+        {NULL, -1}
+    };
 
 
     
-    const indent_component_t *tests[] = {components1, components2, components3, components4, components5, components6, components7, components8, components9, components10};
+    const indent_component_t *tests[] = {components1, components2, components3, components4, components5, components6, components7, components8, components9, components10, components11};
     for (size_t which = 0; which < sizeof tests / sizeof *tests; which++)
     {
         const indent_component_t *components = tests[which];

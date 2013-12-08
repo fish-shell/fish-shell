@@ -811,12 +811,18 @@ wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote)
    trailing_indent is the indent for nodes with unrealized source, i.e. if I type 'if false <ret>' then we have an if node with an empty job list (without source) but we want the last line to be indented anyways.
    
    switch statements also indent.
+   
+   max_visited_node_idx is the largest index we visited.
 */
-static void compute_indents_recursive(const parse_node_tree_t &tree, node_offset_t node_idx, int node_indent, parse_token_type_t parent_type, std::vector<int> *indents, int *trailing_indent)
+static void compute_indents_recursive(const parse_node_tree_t &tree, node_offset_t node_idx, int node_indent, parse_token_type_t parent_type, std::vector<int> *indents, int *trailing_indent, node_offset_t *max_visited_node_idx)
 {
     /* Guard against incomplete trees */
     if (node_idx > tree.size())
         return;
+    
+    /* Update max_visited_node_idx */
+    if (node_idx > *max_visited_node_idx)
+        *max_visited_node_idx = node_idx;
 
     /* We could implement this by utilizing the fish grammar. But there's an easy trick instead: almost everything that wraps a job list should be indented by 1. So just find all of the job lists. One exception is switch; the other exception is job_list itself: a job_list is a job and a job_list, and we want that child list to be indented the same as the parent. So just find all job_lists whose parent is not a job_list, and increment their indent by 1. */
     
@@ -866,7 +872,7 @@ static void compute_indents_recursive(const parse_node_tree_t &tree, node_offset
     for (node_offset_t idx = 0; idx < node.child_count; idx++)
     {
         /* Note we pass our type to our child, which becomes its parent node type */
-        compute_indents_recursive(tree, node.child_start + idx, node_indent, node_type, indents, trailing_indent);
+        compute_indents_recursive(tree, node.child_start + idx, node_indent, node_type, indents, trailing_indent, max_visited_node_idx);
     }
 }
 
@@ -876,14 +882,29 @@ std::vector<int> parse_util_compute_indents(const wcstring &src)
     const size_t src_size = src.size();
     std::vector<int> indents(src_size, -1);
     
+    /* Parse the string. We pass continue_after_error to produce a forest; the trailing indent of the last node we visited becomes the input indent of the next. I.e. in the case of 'switch foo ; cas', we get an invalid parse tree (since 'cas' is not valid) but we indent it as if it were a case item list */
     parse_node_tree_t tree;
     parse_t::parse(src, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens, &tree, NULL /* errors */);
     
-    /* The indent that we'll get for the last line */
-    int trailing_indent = 0;
+    /* Start indenting at the first node. If we have a parse error, we'll have to start indenting from the top again */
+    node_offset_t start_node_idx = 0;
+    int last_trailing_indent = 0;
     
-    /* Invoke the recursive version. As a hack, pass job_list for the 'parent' token, which will prevent the really-root job list from indenting */
-    compute_indents_recursive(tree, 0 /* node index */, 0/* current indent */, symbol_job_list, &indents, &trailing_indent);
+    while (start_node_idx < tree.size())
+    {
+        /* The indent that we'll get for the last line */
+        int trailing_indent = 0;
+    
+        /* Biggest offset we visited */
+        node_offset_t max_visited_node_idx = 0;
+        
+        /* Invoke the recursive version. As a hack, pass job_list for the 'parent' token type, which will prevent the really-root job list from indenting */
+        compute_indents_recursive(tree, start_node_idx, last_trailing_indent, symbol_job_list, &indents, &trailing_indent, &max_visited_node_idx);
+    
+        /* We may have more to indent. The trailing indent becomes our current indent. Start at the node after the last we visited. */
+        last_trailing_indent = trailing_indent;
+        start_node_idx = max_visited_node_idx + 1;
+    }
     
     int last_indent = 0;
     for (size_t i=0; i<src_size; i++)
@@ -914,7 +935,7 @@ std::vector<int> parse_util_compute_indents(const wcstring &src)
     {
         if (!wcschr(L" \n\t\r", src.at(suffix_idx)))
             break;
-        indents.at(suffix_idx) = trailing_indent;
+        indents.at(suffix_idx) = last_trailing_indent;
     }
     
     return indents;

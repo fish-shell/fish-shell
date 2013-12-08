@@ -3985,12 +3985,14 @@ int builtin_parse(parser_t &parser, wchar_t **argv)
                 stdout_buffer.append(errors.at(i).describe(src));
                 stdout_buffer.push_back(L'\n');
             }
+            
+            stdout_buffer.append(L"(Reparsed with continue after error)\n");
+            parse_tree.clear();
+            errors.clear();
+            parse_t::parse(src, parse_flag_continue_after_error, &parse_tree, &errors, true);
         }
-        else
-        {
-            const wcstring dump = parse_dump_tree(parse_tree, src);
-            fprintf(stderr, "%ls", dump.c_str());
-        }
+        const wcstring dump = parse_dump_tree(parse_tree, src);
+        fprintf(stderr, "%ls", dump.c_str());
     }
     return STATUS_BUILTIN_OK;
 }

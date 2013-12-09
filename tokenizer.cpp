@@ -64,7 +64,6 @@ static const wchar_t *tok_desc[] =
 {
     N_(L"Tokenizer not yet initialized"),
     N_(L"Tokenizer error"),
-    N_(L"Invalid token"),
     N_(L"String"),
     N_(L"Pipe"),
     N_(L"End of command"),
@@ -76,6 +75,8 @@ static const wchar_t *tok_desc[] =
     N_(L"Run job in background"),
     N_(L"Comment")
 };
+
+
 
 /**
    Set the latest tokens string to be the specified error message
@@ -559,7 +560,7 @@ static bool my_iswspace(wchar_t c)
 
 const wchar_t *tok_get_desc(int type)
 {
-    if (type < 0 || (size_t)type >= sizeof(tok_desc))
+    if (type < 0 || (size_t)type >= (sizeof tok_desc / sizeof *tok_desc))
     {
         return _(L"Invalid token type");
     }

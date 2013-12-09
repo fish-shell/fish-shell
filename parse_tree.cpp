@@ -608,7 +608,7 @@ void parse_ll_t::parse_error_unbalancing_token(parse_token_t token)
                 break;
 
             case parse_keyword_case:
-                this->parse_error(token, parse_error_unbalancing_case, L"'case' builtin not inside of if block");
+                this->parse_error(token, parse_error_unbalancing_case, L"'case' builtin not inside of switch block");
                 break;
             
             default:
@@ -712,20 +712,36 @@ bool parse_ll_t::top_node_handle_terminal_types(parse_token_t token)
             // Failure
             if (stack_top.type == parse_token_type_string && token.type == parse_token_type_string)
             {
-                // Must be different keywords. We should unify this with the 'matched' computation above.
+                // Keyword failure. We should unify this with the 'matched' computation above.
                 assert(stack_top.keyword != parse_keyword_none && stack_top.keyword != token.keyword);
-                const wcstring expected = keyword_description(stack_top.keyword);
-                wcstring actual;
-                if (token.keyword == parse_keyword_none)
+                
+                // Check to see which keyword we got which was considered wrong
+                switch (token.keyword)
                 {
-                    // This is a random other string (not a keyword)
-                    this->parse_error(token, parse_error_generic, L"Expected keyword '%ls'", expected.c_str());
-                }
-                else
-                {
-                    // Got a real keyword we can report
-                    const wcstring actual = (token.keyword == parse_keyword_none ? token.describe() : keyword_description(token.keyword));
-                    this->parse_error(token, parse_error_generic, L"Expected keyword '%ls', instead got keyword '%ls'", expected.c_str(), actual.c_str());
+                    // Some keywords are only valid in certain contexts. If this cascaded all the way down through the outermost job_list, it was not in a valid context.
+                    case parse_keyword_case:
+                    case parse_keyword_end:
+                    case parse_keyword_else:
+                        this->parse_error_unbalancing_token(token);
+                        break;
+                        
+                    case parse_keyword_none:
+                    {
+                        // This is a random other string (not a keyword)
+                        const wcstring expected = keyword_description(stack_top.keyword);
+                        this->parse_error(token, parse_error_generic, L"Expected keyword '%ls'", expected.c_str());
+                        break;
+                    }
+
+                    
+                    default:
+                    {
+                        // Got a real keyword we can report
+                        const wcstring actual = (token.keyword == parse_keyword_none ? token.describe() : keyword_description(token.keyword));
+                        const wcstring expected = keyword_description(stack_top.keyword);
+                        this->parse_error(token, parse_error_generic, L"Expected keyword '%ls', instead got keyword '%ls'", expected.c_str(), actual.c_str());
+                        break;
+                    }
                 }
             }
             else

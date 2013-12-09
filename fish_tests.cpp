@@ -585,52 +585,52 @@ static void test_parser()
     parser_t parser(PARSER_TYPE_GENERAL, true);
 
     say(L"Testing null input to parser");
-    if (!parser.test(NULL))
+    if (!parser.detect_errors(NULL))
     {
-        err(L"Null input to parser.test undetected");
+        err(L"Null input to parser.detect_errors undetected");
     }
 
     say(L"Testing block nesting");
-    if (!parser.test(L"if; end"))
+    if (!parser.detect_errors(L"if; end"))
     {
         err(L"Incomplete if statement undetected");
     }
-    if (!parser.test(L"if test; echo"))
+    if (!parser.detect_errors(L"if test; echo"))
     {
         err(L"Missing end undetected");
     }
-    if (!parser.test(L"if test; end; end"))
+    if (!parser.detect_errors(L"if test; end; end"))
     {
         err(L"Unbalanced end undetected");
     }
 
     say(L"Testing detection of invalid use of builtin commands");
-    if (!parser.test(L"case foo"))
+    if (!parser.detect_errors(L"case foo"))
     {
         err(L"'case' command outside of block context undetected");
     }
-    if (!parser.test(L"switch ggg; if true; case foo;end;end"))
+    if (!parser.detect_errors(L"switch ggg; if true; case foo;end;end"))
     {
         err(L"'case' command outside of switch block context undetected");
     }
-    if (!parser.test(L"else"))
+    if (!parser.detect_errors(L"else"))
     {
         err(L"'else' command outside of conditional block context undetected");
     }
-    if (!parser.test(L"else if"))
+    if (!parser.detect_errors(L"else if"))
     {
         err(L"'else if' command outside of conditional block context undetected");
     }
-    if (!parser.test(L"if false; else if; end"))
+    if (!parser.detect_errors(L"if false; else if; end"))
     {
         err(L"'else if' missing command undetected");
     }
 
-    if (!parser.test(L"break"))
+    if (!parser.detect_errors(L"break"))
     {
         err(L"'break' command outside of loop block context undetected");
     }
-    if (!parser.test(L"exec ls|less") || !parser.test(L"echo|return"))
+    if (!parser.detect_errors(L"exec ls|less") || !parser.detect_errors(L"echo|return"))
     {
         err(L"Invalid pipe command undetected");
     }

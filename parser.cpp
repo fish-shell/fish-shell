@@ -2771,7 +2771,7 @@ int parser_t::parser_test_argument(const wchar_t *arg, wcstring *out, const wcha
 
 //        debug( 1, L"%ls -> %ls %ls", arg_cpy, subst, tmp.buff );
 
-                err |= parser_t::test(subst, 0, out, prefix);
+                err |= parser_t::detect_errors(subst, out, prefix);
 
                 free(subst);
                 free(arg_cpy);
@@ -2906,12 +2906,9 @@ struct block_info_t
 {
     int position; //tokenizer position
     block_type_t type; //type of the block
-    int indentation; //indentation associated with the block
-
-    bool has_had_case; //if we are a switch, whether we've encountered a case
 };
 
-parser_test_error_bits_t parser_t::test(const wchar_t *buff, int *block_level, wcstring *out, const wchar_t *prefix)
+parser_test_error_bits_t parser_t::detect_errors(const wchar_t *buff, wcstring *out, const wchar_t *prefix)
 {
     ASSERT_IS_MAIN_THREAD();
 
@@ -2923,9 +2920,8 @@ parser_test_error_bits_t parser_t::test(const wchar_t *buff, int *block_level, w
     int err=0;
     int unfinished = 0;
 
-    // These are very nearly stacks, but sometimes we have to inspect non-top elements (e.g. return)
+    // This is very nearly a stack, but sometimes we have to inspect non-top elements (e.g. return)
     std::vector<struct block_info_t> block_infos;
-    int indentation_sum = 0; //sum of indentation in block_infos
 
     /*
       Set to 1 if the current command is inside a pipeline
@@ -2957,16 +2953,6 @@ parser_test_error_bits_t parser_t::test(const wchar_t *buff, int *block_level, w
     bool has_command = false;
 
     CHECK(buff, 1);
-
-    if (block_level)
-    {
-        size_t len = wcslen(buff);
-        for (size_t i=0; i<len; i++)
-        {
-            block_level[i] = -1;
-        }
-
-    }
 
     tokenizer_t tok(buff, 0);
 
@@ -3059,43 +3045,9 @@ parser_test_error_bits_t parser_t::test(const wchar_t *buff, int *block_level, w
                         }
                         else
                         {
-                            indentation_sum -= block_infos.back().indentation;
                             block_infos.pop_back();
 
                         }
-                    }
-
-                    /*
-                      Store the block level. This needs to be done
-                      _after_ checking for end commands, but _before_
-                      checking for block opening commands.
-                    */
-                    if (block_level != NULL)
-                    {
-                        int indentation_adjust = 0;
-                        if (command == L"else")
-                        {
-                            // if or else if goes back
-                            indentation_adjust = -1;
-                        }
-                        else if (command == L"case")
-                        {
-                            if (! block_infos.empty() && block_infos.back().type == SWITCH)
-                            {
-                                // mark that we've encountered a case, and increase the indentation
-                                // by doing this now, we avoid overly indenting the first case as the user types it
-                                if (! block_infos.back().has_had_case)
-                                {
-                                    block_infos.back().has_had_case = true;
-                                    block_infos.back().indentation += 1;
-                                    indentation_sum += 1;
-                                }
-                                // unindent this case
-                                indentation_adjust = -1;
-                            }
-                        }
-
-                        block_level[tok_get_pos(&tok)] = indentation_sum + indentation_adjust;
                     }
 
                     /*
@@ -3103,9 +3055,8 @@ parser_test_error_bits_t parser_t::test(const wchar_t *buff, int *block_level, w
                     */
                     if (parser_keywords_is_block(command))
                     {
-                        struct block_info_t info = {current_tokenizer_pos, parser_get_block_type(command), 1 /* indent */};
+                        struct block_info_t info = {current_tokenizer_pos, parser_get_block_type(command)};
                         block_infos.push_back(info);
-                        indentation_sum += info.indentation;
                         tok_next(&tok);
                         tok_set_pos(&tok, mark);
                     }
@@ -3649,52 +3600,6 @@ parser_test_error_bits_t parser_t::test(const wchar_t *buff, int *block_level, w
         }
 
 
-    }
-
-    /*
-      Fill in the unset block_level entries. Until now, only places
-      where the block level _changed_ have been filled out. This fills
-      in the rest.
-    */
-
-    if (block_level)
-    {
-        int last_level = 0;
-        size_t i, len = wcslen(buff);
-        for (i=0; i<len; i++)
-        {
-            if (block_level[i] >= 0)
-            {
-                last_level = block_level[i];
-                /*
-                  Make all whitespace before a token have the new
-                  level. This avoid using the wrong indentation level
-                  if a new line starts with whitespace.
-                */
-                size_t prev_char_idx = i;
-                while (prev_char_idx--)
-                {
-                    if (!wcschr(L" \n\t\r", buff[prev_char_idx]))
-                        break;
-                    block_level[prev_char_idx] = last_level;
-                }
-            }
-            block_level[i] = last_level;
-        }
-
-        /*
-          Make all trailing whitespace have the block level that the
-          validator had at exit. This makes sure a new line is
-          correctly indented even if it is empty.
-        */
-        int last_indent = block_infos.empty() ? 0 : block_infos.back().indentation;
-        size_t suffix_idx = len;
-        while (suffix_idx--)
-        {
-            if (!wcschr(L" \n\t\r", buff[suffix_idx]))
-                break;
-            block_level[suffix_idx] = last_indent;
-        }
     }
 
     /*

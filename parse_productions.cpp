@@ -46,7 +46,7 @@ RESOLVE(job_list)
     switch (token1.type)
     {
         case parse_token_type_string:
-            // 'end' is special
+            // some keywords are special
             switch (token1.keyword)
             {
                 case parse_keyword_end:

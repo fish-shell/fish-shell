@@ -513,6 +513,7 @@
 		D0D02AE415986537008E62BD /* fish_pager */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fish_pager; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0D02AFA159871B2008E62BD /* osx_fish_launcher.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = osx_fish_launcher.m; path = osx/osx_fish_launcher.m; sourceTree = "<group>"; };
 		D0D2693C159835CA005D9B9C /* fish */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fish; sourceTree = BUILT_PRODUCTS_DIR; };
+		D0D9B2B318555D92001AE279 /* parse_constants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = parse_constants.h; sourceTree = "<group>"; };
 		D0F3373A1506DE3C00ECEFC0 /* builtin_test.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = builtin_test.cpp; sourceTree = "<group>"; };
 		D0F5E28415A7A32D00315DFF /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
 		D0FE8EE6179CA8A5008C9F21 /* parse_productions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = parse_productions.h; sourceTree = "<group>"; };
@@ -659,6 +660,7 @@
 				D0A0853D13B3ACEE0099B651 /* expand.cpp */,
 				D0FE8EE6179CA8A5008C9F21 /* parse_productions.h */,
 				D0FE8EE7179FB75F008C9F21 /* parse_productions.cpp */,
+				D0D9B2B318555D92001AE279 /* parse_constants.h */,
 				D0C52F361765284C00BFAB82 /* parse_tree.h */,
 				D0C52F351765284C00BFAB82 /* parse_tree.cpp */,
 				D0A0850D13B3ACEE0099B651 /* fallback.h */,

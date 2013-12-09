@@ -87,11 +87,6 @@ The fish parser. Contains functions for parsing and evaluating code.
 #define BLOCK_END_ERR_MSG _( L"Could not locate end of block. The 'end' command is missing, misspelled or a ';' is missing.")
 
 /**
-   Error message on reaching maximum number of block calls
-*/
-#define BLOCK_ERR_MSG _( L"Maximum number of nested blocks reached.")
-
-/**
    Error message when a non-string token is found when expecting a command name
 */
 #define CMD_ERR_MSG _( L"Expected a command name, got token of type '%ls'")
@@ -2572,9 +2567,9 @@ void parser_t::eval_job(tokenizer_t *tok)
 
 }
 
-int parser_t::eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type_t block_type)
+int parser_t::eval(const wcstring &cmd_str, const io_chain_t &io, enum block_type_t block_type)
 {
-    const wchar_t * const cmd = cmdStr.c_str();
+    const wchar_t * const cmd = cmd_str.c_str();
     size_t forbid_count;
     int code;
     block_t *start_current_block = current_block;
@@ -2597,13 +2592,6 @@ int parser_t::eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type
 
     debug(4, L"eval: %ls", cmd);
 
-    if (!cmd)
-    {
-        debug(1,
-              EVAL_NULL_ERR_MSG);
-        bugreport();
-        return 1;
-    }
 
     if ((block_type != TOP) &&
             (block_type != SUBST))

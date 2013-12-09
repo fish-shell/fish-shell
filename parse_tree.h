@@ -12,11 +12,9 @@
 #include "util.h"
 #include "common.h"
 #include "tokenizer.h"
+#include "parse_constants.h"
 #include <vector>
 #include <inttypes.h>
-
-#define PARSE_ASSERT(a) assert(a)
-#define PARSER_DIE() do { fprintf(stderr, "Parser dying!\n"); exit_without_destructors(-1); } while (0)
 
 class parse_node_t;
 class parse_node_tree_t;
@@ -27,6 +25,9 @@ struct parse_error_t
 {
     /** Text of the error */
     wcstring text;
+    
+    /** Code for the error */
+    enum parse_error_code_t code;
 
     /** Offset and length of the token in the source code that triggered this error */
     size_t source_start;
@@ -36,87 +37,6 @@ struct parse_error_t
     wcstring describe(const wcstring &src) const;
 };
 typedef std::vector<parse_error_t> parse_error_list_t;
-
-enum parse_token_type_t
-{
-    token_type_invalid,
-
-    // Non-terminal tokens
-    symbol_job_list,
-    symbol_job,
-    symbol_job_continuation,
-    symbol_statement,
-    symbol_block_statement,
-    symbol_block_header,
-    symbol_for_header,
-    symbol_while_header,
-    symbol_begin_header,
-    symbol_function_header,
-
-    symbol_if_statement,
-    symbol_if_clause,
-    symbol_else_clause,
-    symbol_else_continuation,
-
-    symbol_switch_statement,
-    symbol_case_item_list,
-    symbol_case_item,
-
-    symbol_boolean_statement,
-    symbol_decorated_statement,
-    symbol_plain_statement,
-    symbol_arguments_or_redirections_list,
-    symbol_argument_or_redirection,
-
-    symbol_argument_list,
-
-    symbol_argument,
-    symbol_redirection,
-
-    symbol_optional_background,
-
-    // Terminal types
-    parse_token_type_string,
-    parse_token_type_pipe,
-    parse_token_type_redirection,
-    parse_token_type_background,
-    parse_token_type_end,
-    parse_token_type_terminate,
-
-    // Very special terminal types that don't appear in the production list
-    parse_special_type_parse_error,
-    parse_special_type_tokenizer_error,
-    parse_special_type_comment,
-
-    FIRST_TERMINAL_TYPE = parse_token_type_string,
-    LAST_TERMINAL_TYPE = parse_token_type_terminate,
-
-    LAST_TOKEN_OR_SYMBOL = parse_token_type_terminate,
-    FIRST_PARSE_TOKEN_TYPE = parse_token_type_string
-};
-
-enum parse_keyword_t
-{
-    parse_keyword_none,
-    parse_keyword_if,
-    parse_keyword_else,
-    parse_keyword_for,
-    parse_keyword_in,
-    parse_keyword_while,
-    parse_keyword_begin,
-    parse_keyword_function,
-    parse_keyword_switch,
-    parse_keyword_case,
-    parse_keyword_end,
-    parse_keyword_and,
-    parse_keyword_or,
-    parse_keyword_not,
-    parse_keyword_command,
-    parse_keyword_builtin,
-    
-    LAST_KEYWORD = parse_keyword_builtin
-};
-
 
 /** A struct representing the token type that we use internally */
 struct parse_token_t
@@ -231,14 +151,6 @@ public:
     {
         return has_source() && source_start <= loc && loc - source_start <= source_length;
     }
-};
-
-/* Statement decorations. This matches the order of productions in decorated_statement */
-enum parse_statement_decoration_t
-{
-    parse_statement_decoration_none,
-    parse_statement_decoration_command,
-    parse_statement_decoration_builtin
 };
 
 

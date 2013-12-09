@@ -4,6 +4,11 @@
 
 using namespace parse_productions;
 
+static bool production_is_empty(const production_t *production)
+{
+    return (*production)[0] == token_type_invalid;
+}
+
 /** Returns a string description of this parse error */
 wcstring parse_error_t::describe(const wcstring &src) const
 {
@@ -18,7 +23,7 @@ wcstring parse_error_t::describe(const wcstring &src) const
         //fprintf(stderr, "newline: %lu, source_start %lu, source_length %lu\n", newline, source_start, source_length);
         if (newline != wcstring::npos)
         {
-            line_start = newline;// + 1;
+            line_start = newline + 1;
         }
 
         size_t line_end = src.find(L'\n', source_start + source_length);
@@ -155,6 +160,8 @@ wcstring keyword_description(parse_keyword_t k)
             return L"function";
         case parse_keyword_switch:
             return L"switch";
+        case parse_keyword_case:
+            return L"case";
         case parse_keyword_end:
             return L"end";
         case parse_keyword_and:
@@ -167,9 +174,8 @@ wcstring keyword_description(parse_keyword_t k)
             return L"command";
         case parse_keyword_builtin:
             return L"builtin";
-        default:
-            return format_string(L"Unknown keyword type %ld", static_cast<long>(k));
     }
+    return format_string(L"Unknown keyword type %ld", static_cast<long>(k));
 }
 
 /** Returns a string description of the given parse node */
@@ -348,7 +354,8 @@ class parse_ll_t
     bool top_node_handle_terminal_types(parse_token_t token);
 
     void parse_error(const wchar_t *expected, parse_token_t token);
-    void parse_error(parse_token_t token, const wchar_t *format, ...);
+    void parse_error(parse_token_t token, parse_error_code_t code, const wchar_t *format, ...);
+    void parse_error_unbalancing_token(parse_token_t token);
     void append_error_callout(wcstring &error_message, parse_token_t token);
 
     void dump_stack(void) const;
@@ -449,6 +456,9 @@ class parse_ll_t
 
     /* Input */
     void accept_tokens(parse_token_t token1, parse_token_t token2);
+    
+    /* Report tokenizer errors */
+    void report_tokenizer_error(parse_token_t token, const wchar_t *tok_error);
     
     /* Indicate if we hit a fatal error */
     bool has_fatal_error(void) const
@@ -558,7 +568,7 @@ void parse_ll_t::acquire_output(parse_node_tree_t *output, parse_error_list_t *e
     this->symbol_stack.clear();
 }
 
-void parse_ll_t::parse_error(parse_token_t token, const wchar_t *fmt, ...)
+void parse_ll_t::parse_error(parse_token_t token, parse_error_code_t code, const wchar_t *fmt, ...)
 {
     this->fatal_errored = true;
     if (this->should_generate_error_messages)
@@ -569,6 +579,7 @@ void parse_ll_t::parse_error(parse_token_t token, const wchar_t *fmt, ...)
         va_list va;
         va_start(va, fmt);
         err.text = vformat_string(fmt, va);
+        err.code = code;
         va_end(va);
 
         err.source_start = token.source_start;
@@ -577,6 +588,42 @@ void parse_ll_t::parse_error(parse_token_t token, const wchar_t *fmt, ...)
     }
 }
 
+// Unbalancing token. This includes 'else' or 'case' or 'end' outside of the appropriate block
+// This essentially duplicates some logic from resolving the production for symbol_statement_list - yuck
+void parse_ll_t::parse_error_unbalancing_token(parse_token_t token)
+{
+    this->fatal_errored = true;
+    if (this->should_generate_error_messages)
+    {
+        assert(token.type == parse_token_type_string);
+        assert(token.keyword == parse_keyword_end || token.keyword == parse_keyword_else || token.keyword == parse_keyword_case);
+        switch (token.keyword)
+        {
+            case parse_keyword_end:
+                this->parse_error(token, parse_error_unbalancing_end, L"'end' outside of a block");
+                break;
+            
+            case parse_keyword_else:
+                this->parse_error(token, parse_error_unbalancing_else, L"'else' builtin not inside of if block");
+                break;
+
+            case parse_keyword_case:
+                this->parse_error(token, parse_error_unbalancing_case, L"'case' builtin not inside of if block");
+                break;
+            
+            default:
+                fprintf(stderr, "Unexpected token %ls passed to %s\n", token.describe().c_str(), __FUNCTION__);
+                PARSER_DIE();
+                break;
+        }
+    }
+}
+
+void parse_ll_t::report_tokenizer_error(parse_token_t token, const wchar_t *tok_error)
+{
+    assert(tok_error != NULL);
+    this->parse_error(token, parse_error_tokenizer, L"%ls", tok_error);
+}
 
 void parse_ll_t::parse_error(const wchar_t *expected, parse_token_t token)
 {
@@ -584,11 +631,7 @@ void parse_ll_t::parse_error(const wchar_t *expected, parse_token_t token)
     if (this->should_generate_error_messages)
     {
         wcstring desc = token_type_description(token.type);
-        parse_error_t error;
-        error.text = format_string(L"Expected a %ls, instead got a token of type %ls", expected, desc.c_str());
-        error.source_start = token.source_start;
-        error.source_start = token.source_length;
-        errors.push_back(error);
+        this->parse_error(token, parse_error_generic, L"Expected a %ls, instead got a token of type %ls", expected, desc.c_str());
     }
 }
 
@@ -629,13 +672,6 @@ static bool type_is_terminal_type(parse_token_type_t type)
 
 bool parse_ll_t::top_node_handle_terminal_types(parse_token_t token)
 {
-    if (symbol_stack.empty())
-    {
-        // This can come about with an unbalanced 'end' or 'else', which causes us to terminate the outermost job list.
-        this->fatal_errored = true;
-        return false;
-    }
-
     PARSE_ASSERT(! symbol_stack.empty());
     PARSE_ASSERT(token.type >= FIRST_PARSE_TOKEN_TYPE);
     bool handled = false;
@@ -674,7 +710,30 @@ bool parse_ll_t::top_node_handle_terminal_types(parse_token_t token)
         else
         {
             // Failure
-            this->fatal_errored = true;
+            if (stack_top.type == parse_token_type_string && token.type == parse_token_type_string)
+            {
+                // Must be different keywords. We should unify this with the 'matched' computation above.
+                assert(stack_top.keyword != parse_keyword_none && stack_top.keyword != token.keyword);
+                const wcstring expected = keyword_description(stack_top.keyword);
+                wcstring actual;
+                if (token.keyword == parse_keyword_none)
+                {
+                    // This is a random other string (not a keyword)
+                    this->parse_error(token, parse_error_generic, L"Expected keyword '%ls'", expected.c_str());
+                }
+                else
+                {
+                    // Got a real keyword we can report
+                    const wcstring actual = (token.keyword == parse_keyword_none ? token.describe() : keyword_description(token.keyword));
+                    this->parse_error(token, parse_error_generic, L"Expected keyword '%ls', instead got keyword '%ls'", expected.c_str(), actual.c_str());
+                }
+            }
+            else
+            {
+                const wcstring expected = token_type_description(stack_top.type);
+                const wcstring actual = token_type_description(token.type);
+                this->parse_error(expected.c_str(), token);
+            }
         }
 
         // We handled the token, so pop the symbol stack
@@ -734,25 +793,29 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2)
         {
             if (should_generate_error_messages)
             {
-                this->parse_error(token1, L"Unable to produce a '%ls' from input '%ls'", stack_elem.describe().c_str(), token1.describe().c_str());
+                this->parse_error(token1, parse_error_generic, L"Unable to produce a '%ls' from input '%ls'", stack_elem.describe().c_str(), token1.describe().c_str());
             }
             else
             {
-                this->parse_error(token1, NULL);
+                this->parse_error(token1, parse_error_generic, NULL);
             }
             // parse_error sets fatal_errored, which ends the loop
         }
         else
         {
+            // When a job_list encounters something like 'else', it returns an empty production to return control to the outer block. But if it's unbalanced, then we'll end up with an empty stack! So make sure that doesn't happen. This is the primary mechanism by which we detect e.g. unbalanced end.
+            if (symbol_stack.size() == 1 && production_is_empty(production))
+            {
+                this->parse_error_unbalancing_token(token1);
+                break;
+            }
+            
             // Manipulate the symbol stack.
             // Note that stack_elem is invalidated by popping the stack.
             symbol_stack_pop_push_production(production);
-
-            // If we end up with an empty stack, something bad happened, like an unbalanced end
-            if (symbol_stack.empty())
-            {
-                this->parse_error(token1, L"All symbols removed from symbol stack. Likely unbalanced else or end?");
-            }
+            
+            // Expect to not have an empty stack
+            assert(! symbol_stack.empty());
         }
     }
 }
@@ -842,12 +905,15 @@ bool parse_t::parse_internal(const wcstring &str, parse_tree_flags_t parse_flags
     this->parser->set_should_generate_error_messages(errors != NULL);
 
     /* Construct the tokenizer */
-    tok_flags_t tok_options = TOK_SQUASH_ERRORS;
+    tok_flags_t tok_options = 0;
     if (parse_flags & parse_flag_include_comments)
         tok_options |= TOK_SHOW_COMMENTS;
     
     if (parse_flags & parse_flag_accept_incomplete_tokens)
         tok_options |= TOK_ACCEPT_UNFINISHED;
+    
+    if (errors == NULL)
+        tok_options |= TOK_SQUASH_ERRORS;
     
     tokenizer_t tok = tokenizer_t(str.c_str(), tok_options);
     
@@ -863,6 +929,12 @@ bool parse_t::parse_internal(const wcstring &str, parse_tree_flags_t parse_flags
         
         /* Pass these two tokens. We know that queue[0] is valid; queue[1] may be invalid. */
         this->parser->accept_tokens(queue[0], queue[1]);
+        
+        /* Handle tokenizer errors. This is a hack because really the parser should report this for itself; but it has no way of getting the tokenizer message */
+        if (queue[1].type == parse_special_type_tokenizer_error)
+        {
+            this->parser->report_tokenizer_error(queue[1], tok_last(&tok));
+        }
         
         /* Handle errors */
         if (this->parser->has_fatal_error())

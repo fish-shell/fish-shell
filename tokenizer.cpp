@@ -96,15 +96,7 @@ int tok_get_error(tokenizer_t *tok)
 
 tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig_buff(NULL), last_type(TOK_NONE), last_pos(0), has_next(false), accept_unfinished(false), show_comments(false), last_quote(0), error(0), squash_errors(false), cached_lineno_offset(0), cached_lineno_count(0)
 {
-
-    /* We can only generate error messages on the main thread due to wgettext() thread safety issues. */
-    if (!(flags & TOK_SQUASH_ERRORS))
-    {
-        ASSERT_IS_MAIN_THREAD();
-    }
-
     CHECK(b,);
-
 
     this->accept_unfinished = !!(flags & TOK_ACCEPT_UNFINISHED);
     this->show_comments = !!(flags & TOK_SHOW_COMMENTS);

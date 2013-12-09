@@ -2333,7 +2333,7 @@ static void test_new_parser_ll2(void)
     }
 }
 
-static void test_new_parser_ad_hoc(void)
+static void test_new_parser_ad_hoc()
 {
     /* Very ad-hoc tests for issues encountered */
     say(L"Testing new parser ad hoc tests");
@@ -2354,6 +2354,58 @@ static void test_new_parser_ad_hoc(void)
     {
         err(L"Expected 3 case item nodes, found %lu", node_list.size());
     }
+}
+
+static void test_new_parser_errors(void)
+{
+    say(L"Testing new parser error reporting");
+    const struct
+    {
+        const wchar_t *src;
+        parse_error_code_t code;
+    }
+    tests[] =
+    {
+        {L"echo (abc", parse_error_tokenizer},
+        
+        {L"end", parse_error_unbalancing_end},
+        {L"echo hi ; end", parse_error_unbalancing_end},
+        
+        {L"else", parse_error_unbalancing_else},
+        {L"if true ; end ; else", parse_error_unbalancing_else},
+        
+        {L"case", parse_error_unbalancing_case},
+        {L"if true ; case ; end", parse_error_unbalancing_case}
+    };
+    
+    for (size_t i = 0; i < sizeof tests / sizeof *tests; i++)
+    {
+        const wcstring src = tests[i].src;
+        parse_error_code_t expected_code = tests[i].code;
+        
+        parse_error_list_t errors;
+        parse_node_tree_t parse_tree;
+        bool success = parse_t::parse(src, parse_flag_none, &parse_tree, &errors);
+        if (success)
+        {
+            err(L"Source '%ls' was expected to fail to parse, but succeeded", src.c_str());
+        }
+        
+        if (errors.size() != 1)
+        {
+            err(L"Source '%ls' was expected to produce 1 error, but instead produced %lu errors", src.c_str(), errors.size());
+        }
+        else if (errors.at(0).code != expected_code)
+        {
+            err(L"Source '%ls' was expected to produce error code %lu, but instead produced error code %lu", src.c_str(), expected_code, (unsigned long)errors.at(0).code);
+            for (size_t i=0; i < errors.size(); i++)
+            {
+                err(L"\t\t%ls", errors.at(i).describe(src).c_str());
+            }
+        }
+        
+    }
+    
 }
 
 static void test_highlighting(void)
@@ -2574,6 +2626,7 @@ int main(int argc, char **argv)
     if (should_test_function("new_parser_fuzzing")) test_new_parser_fuzzing(); //fuzzing is expensive
     if (should_test_function("new_parser_correctness")) test_new_parser_correctness();
     if (should_test_function("new_parser_ad_hoc")) test_new_parser_ad_hoc();
+    if (should_test_function("new_parser_errors")) test_new_parser_errors();
     if (should_test_function("escape")) test_unescape_sane();
     if (should_test_function("escape")) test_escape_crazy();
     if (should_test_function("format")) test_format();

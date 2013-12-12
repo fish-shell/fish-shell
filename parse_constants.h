@@ -47,6 +47,8 @@ enum parse_token_type_t
     symbol_redirection,
 
     symbol_optional_background,
+    
+    symbol_end_command,
 
     // Terminal types
     parse_token_type_string,

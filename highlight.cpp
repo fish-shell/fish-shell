@@ -2089,8 +2089,9 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
             case symbol_decorated_statement:
             case symbol_if_statement:
             {
-                // Color the 'end'
                 this->color_children(node, parse_token_type_string, HIGHLIGHT_COMMAND);
+                // Color the 'end'
+                this->color_children(node, symbol_end_command, HIGHLIGHT_COMMAND);
             }
             break;
 

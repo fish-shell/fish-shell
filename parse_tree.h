@@ -159,15 +159,19 @@ class parse_node_tree_t : public std::vector<parse_node_t>
 {
 public:
 
-    /* Get the node corresponding to a child of the given node, or NULL if there is no such child. If expected_type is provided, assert that the node has that type. */
-    const parse_node_t *get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type = token_type_invalid) const;    
+    /* Get the node corresponding to a child of the given node, or NULL if there is no such child. If expected_type is provided, assert that the node has that type.
+     */
+    const parse_node_t *get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type = token_type_invalid) const;
     
     /* Get the node corresponding to the parent of the given node, or NULL if there is no such child. If expected_type is provided, only returns the parent if it is of that type. Note the asymmetry: get_child asserts since the children are known, but get_parent does not, since the parent may not be known. */
     const parse_node_t *get_parent(const parse_node_t &node, parse_token_type_t expected_type = token_type_invalid) const;
+    
+    /* Returns the first ancestor of the given type, or NULL. */
+    const parse_node_t *get_first_ancestor_of_type(const parse_node_t &node, parse_token_type_t desired_type) const;
 
-    /* Find all the nodes of a given type underneath a given node */
+    /* Find all the nodes of a given type underneath a given node, up to max_count of them */
     typedef std::vector<const parse_node_t *> parse_node_list_t;
-    parse_node_list_t find_nodes(const parse_node_t &parent, parse_token_type_t type) const;
+    parse_node_list_t find_nodes(const parse_node_t &parent, parse_token_type_t type, size_t max_count = (size_t)(-1)) const;
     
     /* Finds the last node of a given type underneath a given node, or NULL if it could not be found. If parent is NULL, this finds the last node in the tree of that type. */
     const parse_node_t *find_last_node_of_type(parse_token_type_t type, const parse_node_t *parent = NULL) const;
@@ -186,8 +190,14 @@ public:
     /* Given a plain statement, get the command by reference (from the child node). Returns true if successful. Clears the command on failure. */
     bool command_for_plain_statement(const parse_node_t &node, const wcstring &src, wcstring *out_cmd) const;
     
+    /* Given a plain statement, return true if the statement is part of a pipeline. If include_first is set, the first command in a pipeline is considered part of it; otherwise only the second or additional commands are */
+    bool plain_statement_is_in_pipeline(const parse_node_t &node, bool include_first) const;
+    
     /* Given a redirection, get the redirection type (or TOK_NONE) and target (file path, or fd) */
     enum token_type type_for_redirection(const parse_node_t &node, const wcstring &src, wcstring *out_target) const;
+    
+    /* If the given node is a block statement, returns the header node (for_header, while_header, begin_header, or function_header). Otherwise returns NULL */
+    const parse_node_t *header_node_for_block_statement(const parse_node_t &node);
 };
 
 /* Fish grammar:
@@ -210,19 +220,19 @@ public:
 
 # A block is a conditional, loop, or begin/end
 
-    if_statement = if_clause else_clause <END> arguments_or_redirections_list
+    if_statement = if_clause else_clause end_command arguments_or_redirections_list
     if_clause = <IF> job STATEMENT_TERMINATOR job_list
     else_clause = <empty> |
                  <ELSE> else_continuation
     else_continuation = if_clause else_clause |
                         STATEMENT_TERMINATOR job_list
 
-    switch_statement = SWITCH <TOK_STRING> STATEMENT_TERMINATOR case_item_list <END>
+    switch_statement = SWITCH <TOK_STRING> STATEMENT_TERMINATOR case_item_list end_command
     case_item_list = <empty> |
                     case_item case_item_list
     case_item = CASE argument_list STATEMENT_TERMINATOR job_list
 
-    block_statement = block_header <TOK_END> job_list <END> arguments_or_redirections_list
+    block_statement = block_header <TOK_END> job_list end_command arguments_or_redirections_list
     block_header = for_header | while_header | function_header | begin_header
     for_header = FOR var_name IN arguments_or_redirections_list
     while_header = WHILE statement
@@ -252,6 +262,8 @@ public:
     terminator = <TOK_END> | <TOK_BACKGROUND>
 
     optional_background = <empty> | <TOK_BACKGROUND>
+    
+    end_command = END
 
 */
 

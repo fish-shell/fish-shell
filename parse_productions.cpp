@@ -187,7 +187,7 @@ RESOLVE(statement)
 
 PRODUCTIONS(if_statement) =
 {
-    {symbol_if_clause, symbol_else_clause, KEYWORD(parse_keyword_end), symbol_arguments_or_redirections_list}
+    {symbol_if_clause, symbol_else_clause, symbol_end_command, symbol_arguments_or_redirections_list}
 };
 RESOLVE_ONLY(if_statement)
 
@@ -231,7 +231,7 @@ RESOLVE(else_continuation)
 
 PRODUCTIONS(switch_statement) =
 {
-    { KEYWORD(parse_keyword_switch), parse_token_type_string, parse_token_type_end, symbol_case_item_list, KEYWORD(parse_keyword_end)}
+    { KEYWORD(parse_keyword_switch), parse_token_type_string, parse_token_type_end, symbol_case_item_list, symbol_end_command}
 };
 RESOLVE_ONLY(switch_statement)
 
@@ -272,7 +272,7 @@ RESOLVE(argument_list)
 
 PRODUCTIONS(block_statement) =
 {
-    {symbol_block_header, parse_token_type_end, symbol_job_list, KEYWORD(parse_keyword_end), symbol_arguments_or_redirections_list}
+    {symbol_block_header, parse_token_type_end, symbol_job_list, symbol_end_command, symbol_arguments_or_redirections_list}
 };
 RESOLVE_ONLY(block_statement)
 
@@ -287,8 +287,6 @@ RESOLVE(block_header)
 {
     switch (token1.keyword)
     {
-        case parse_keyword_else:
-            return NO_PRODUCTION;
         case parse_keyword_for:
             return 0;
         case parse_keyword_while:
@@ -443,6 +441,12 @@ RESOLVE(optional_background)
     }
 }
 
+PRODUCTIONS(end_command) =
+{
+    {KEYWORD(parse_keyword_end)}
+};
+RESOLVE_ONLY(end_command)
+
 #define TEST(sym) case (symbol_##sym): production_list = & productions_ ## sym ; resolver = resolve_ ## sym ; break;
 const production_t *parse_productions::production_for_token(parse_token_type_t node_type, const parse_token_t &input1, const parse_token_t &input2, production_option_idx_t *out_which_production, wcstring *out_error_text)
 {
@@ -483,6 +487,7 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
             TEST(argument)
             TEST(redirection)
             TEST(optional_background)
+            TEST(end_command)
 
         case parse_token_type_string:
         case parse_token_type_pipe:

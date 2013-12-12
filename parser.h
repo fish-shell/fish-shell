@@ -420,7 +420,7 @@ public:
        \param p The character offset at which the error occured
        \param str The printf-style error message filter
     */
-    void error(int ec, int p, const wchar_t *str, ...);
+    void error(int ec, size_t p, const wchar_t *str, ...);
 
     /**
        Returns a string describing the current parser pisition in the format 'FILENAME (line LINE_NUMBER): LINE'.
@@ -488,6 +488,7 @@ public:
        \param prefix the prefix string to prepend to each error message written to the \c out buffer
     */
     parser_test_error_bits_t detect_errors(const wchar_t * buff, wcstring *out = NULL, const wchar_t *prefix = NULL);
+    parser_test_error_bits_t detect_errors2(const wchar_t * buff, wcstring *out = NULL, const wchar_t *prefix = NULL);
 
     /**
        Test if the specified string can be parsed as an argument list,
@@ -524,7 +525,7 @@ public:
        \param s the string to test
        \param min_match is the minimum number of characters that must match in a long style option, i.e. the longest common prefix between --help and any other option. If less than 3, 3 will be assumed.
     */
-    int is_help(const wchar_t *s, int min_match) const;
+    static int is_help(const wchar_t *s, int min_match);
 
     /**
        Returns the file currently evaluated by the parser. This can be

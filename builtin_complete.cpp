@@ -497,15 +497,19 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
     {
         if (condition && wcslen(condition))
         {
-            if (parser.detect_errors(condition))
+            const wcstring condition_string = condition;
+            parse_error_list_t errors;
+            if (parser.detect_errors(condition_string, &errors))
             {
                 append_format(stderr_buffer,
-                              L"%ls: Condition '%ls' contained a syntax error\n",
+                              L"%ls: Condition '%ls' contained a syntax error",
                               argv[0],
                               condition);
-
-                parser.detect_errors(condition, &stderr_buffer, argv[0]);
-
+                for (size_t i=0; i < errors.size(); i++)
+                {
+                    append_format(stderr_buffer, L"\n%s: ", argv[0]);
+                    stderr_buffer.append(errors.at(i).describe(condition_string));
+                }
                 res = true;
             }
         }

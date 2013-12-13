@@ -38,6 +38,9 @@ struct parse_error_t
 };
 typedef std::vector<parse_error_t> parse_error_list_t;
 
+/* Returns a description of a list of parse errors */
+wcstring parse_errors_description(const parse_error_list_t &errors, const wcstring &src, const wchar_t *prefix = NULL);
+
 /** A struct representing the token type that we use internally */
 struct parse_token_t
 {

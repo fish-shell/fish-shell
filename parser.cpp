@@ -565,7 +565,6 @@ void parser_t::error(int ec, size_t p, const wchar_t *str, ...)
     va_start(va, str);
     err_buff = vformat_string(str, va);
     va_end(va);
-
 }
 
 /**
@@ -2753,7 +2752,7 @@ int parser_t::parser_test_argument(const wchar_t *arg, wcstring *out, const wcha
             case 1:
             {
 
-                wchar_t *subst = wcsndup(paran_begin+1, paran_end-paran_begin-1);
+                const wcstring subst(paran_begin + 1, paran_end);
                 wcstring tmp;
 
                 tmp.append(arg_cpy, paran_begin - arg_cpy);
@@ -2762,17 +2761,16 @@ int parser_t::parser_test_argument(const wchar_t *arg, wcstring *out, const wcha
 
 //        debug( 1, L"%ls -> %ls %ls", arg_cpy, subst, tmp.buff );
 
-                err |= parser_t::detect_errors(subst, out, prefix);
+                parse_error_list_t errors;
+                err |= parser_t::detect_errors(subst, &errors);
+                if (out && ! errors.empty())
+                {
+                    out->append(parse_errors_description(errors, subst, prefix));
+                }
 
-                free(subst);
                 free(arg_cpy);
                 arg_cpy = wcsdup(tmp.c_str());
 
-                /*
-                  Do _not_ call sb_destroy on this stringbuffer - it's
-                  buffer is used as the new 'arg_cpy'. It is free'd at
-                  the end of the loop.
-                */
                 break;
             }
         }
@@ -2914,39 +2912,43 @@ struct block_info_t
     block_type_t type; //type of the block
 };
 
-parser_test_error_bits_t parser_t::detect_errors(const wchar_t *buff, wcstring *out, const wchar_t *prefix)
+/* Append a syntax error to the given error list */
+static bool append_syntax_error(parse_error_list_t *errors, const parse_node_t &node, const wchar_t *fmt, ...)
+{
+    parse_error_t error;
+    error.source_start = node.source_start;
+    error.source_length = node.source_length;
+    error.code = parse_error_syntax;
+    
+    va_list va;
+    va_start(va, fmt);
+    error.text = vformat_string(fmt, va);
+    va_end(va);
+    
+    errors->push_back(error);
+    return true;
+}
+
+parser_test_error_bits_t parser_t::detect_errors(const wcstring &buff_src, parse_error_list_t *out_errors, const wchar_t *prefix)
 {
     ASSERT_IS_MAIN_THREAD();
     
-    if (! buff)
-        return PARSER_TEST_ERROR;
-    
-    const wcstring buff_src = buff;
     parse_node_tree_t node_tree;
     parse_error_list_t parse_errors;
     
     // Whether we encountered a parse error
     bool errored = false;
-    long error_line = -1;
     
     // Whether we encountered an unclosed block
     // We detect this via an 'end_command' block without source
     bool has_unclosed_block = false;
     
+    // Parse the input string into a parse tree
+    // Some errors are detected here
     bool parsed = parse_t::parse(buff_src, 0, &node_tree, &parse_errors);
     if (! parsed)
     {
-        // report errors
-        if (out)
-        {
-            for (size_t i=0; i < parse_errors.size(); i++)
-            {
-                const parse_error_t &error = parse_errors.at(i);
-                this->error(SYNTAX_ERROR, error.source_start, L"%ls", error.text.c_str());
-            }
-        }
         errored = true;
-        error_line = __LINE__;
     }
     
     // Expand all commands
@@ -2973,9 +2975,7 @@ parser_test_error_bits_t parser_t::detect_errors(const wchar_t *buff, wcstring *
                     // Check that we can expand the command
                     if (! expand_one(command, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS))
                     {
-                        error(SYNTAX_ERROR, node.source_start, ILLEGAL_CMD_ERR_MSG, command.c_str());
-                        errored = true;
-                                error_line = __LINE__;
+                        errored = append_syntax_error(&parse_errors, node, ILLEGAL_CMD_ERR_MSG, command.c_str());
                     }
                     
                     // Check that pipes are sound
@@ -2986,9 +2986,7 @@ parser_test_error_bits_t parser_t::detect_errors(const wchar_t *buff, wcstring *
                         // 'or' and 'and' can be first in the pipeline. forbidden commands cannot be in a pipeline at all
                         if (node_tree.plain_statement_is_in_pipeline(node, is_pipe_forbidden))
                         {
-                            error(SYNTAX_ERROR, node.source_start, EXEC_ERR_MSG);
-                            errored = true;
-                                    error_line = __LINE__;
+                            errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG);
                         }
                     }
                     
@@ -3011,9 +3009,7 @@ parser_test_error_bits_t parser_t::detect_errors(const wchar_t *buff, wcstring *
                         }
                         if (! found_function && ! first_argument_is_help(node_tree, node, buff_src))
                         {
-                            error(SYNTAX_ERROR, node.source_start, INVALID_RETURN_ERR_MSG);
-                            errored = true;
-                                    error_line = __LINE__;
+                            errored = append_syntax_error(&parse_errors, node, INVALID_RETURN_ERR_MSG);
                         }
                     }
                     
@@ -3026,7 +3022,6 @@ parser_test_error_bits_t parser_t::detect_errors(const wchar_t *buff, wcstring *
                         const parse_node_t *ancestor = &node;
                         while (ancestor != NULL && ! end_search)
                         {
-                            bool end_search = false;
                             const parse_node_t *loop_or_function_header = node_tree.header_node_for_block_statement(*ancestor);
                             if (loop_or_function_header != NULL)
                             {
@@ -3037,6 +3032,7 @@ parser_test_error_bits_t parser_t::detect_errors(const wchar_t *buff, wcstring *
                                         // this is a loop header, so we can break or continue
                                         found_loop = true;
                                         end_search = true;
+                                        break;
                                         
                                     case symbol_function_header:
                                         // this is a function header, so we cannot break or continue. We stop our search here.
@@ -3052,31 +3048,9 @@ parser_test_error_bits_t parser_t::detect_errors(const wchar_t *buff, wcstring *
                             ancestor = node_tree.get_parent(*ancestor);
                         }
                         
-                        
-                        
-                        const parse_node_t *function_node = node_tree.get_first_ancestor_of_type(node, symbol_function_header);
-                        if (function_node == NULL)
+                        if (! found_loop && ! first_argument_is_help(node_tree, node, buff_src))
                         {
-                            // Ok, this looks bad: return not in a function!
-                            // But we allow it if it's 'return --help'
-                            // Get the arguments
-                            bool is_help = false;
-                            const parse_node_tree_t::parse_node_list_t arg_nodes = node_tree.find_nodes(node, symbol_argument);
-                            if (! arg_nodes.empty())
-                            {
-                                // Check the first argument only
-                                const parse_node_t &arg = *arg_nodes.at(0);
-                                const wcstring first_arg_src = arg.get_source(buff_src);
-                                is_help = parser_t::is_help(first_arg_src.c_str(), 3);
-                            }
-                            
-                            // If it's not help, then it's an invalid return
-                            if (! is_help)
-                            {
-                                error(SYNTAX_ERROR, node.source_start, INVALID_RETURN_ERR_MSG);
-                                errored = true;
-                                        error_line = __LINE__;
-                            }
+                            errored = append_syntax_error(&parse_errors, node, INVALID_LOOP_ERR_MSG);
                         }
                     }
                 }
@@ -3091,6 +3065,11 @@ parser_test_error_bits_t parser_t::detect_errors(const wchar_t *buff, wcstring *
 
     if (has_unclosed_block)
         res |= PARSER_TEST_INCOMPLETE;
+    
+    if (out_errors)
+    {
+        out_errors->swap(parse_errors);
+    }
     
     error_code=0;
 

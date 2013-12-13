@@ -104,7 +104,13 @@ enum parse_statement_decoration_t
 enum parse_error_code_t
 {
     parse_error_none,
-    parse_error_generic, //unknown type
+    
+    /* matching values from enum parser_error */
+    parse_error_syntax,
+    parse_error_eval,
+    parse_error_cmdsubst,
+    
+    parse_error_generic, // unclassified error types
     
     parse_error_tokenizer, //tokenizer error
     

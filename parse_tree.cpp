@@ -1,6 +1,8 @@
 #include "parse_productions.h"
 #include "tokenizer.h"
+#include "fallback.h"
 #include <vector>
+#include <algorithm>
 
 using namespace parse_productions;
 
@@ -32,19 +34,56 @@ wcstring parse_error_t::describe(const wcstring &src) const
             line_end = src.size();
         }
         assert(line_end >= line_start);
-        //fprintf(stderr, "source start: %lu, line start %lu\n", source_start, line_start);
+        //fprintf(stderr, "source start: %lu, source_length %lu, line start %lu, line end %lu\n", source_start, source_length, line_start, line_end);
         assert(source_start >= line_start);
 
         // Append the line of text
         result.push_back(L'\n');
         result.append(src, line_start, line_end - line_start);
 
-        // Append the caret line
+        // Append the caret line. The input source may include tabs; for that reason we construct a "caret line" that has tabs in corresponding positions
+        wcstring caret_space_line;
+        caret_space_line.reserve(source_start - line_start);
+        for (size_t i=line_start; i < source_start; i++)
+        {
+            wchar_t wc = src.at(i);
+            if (wc == L'\t')
+            {
+                caret_space_line.push_back(L'\t');
+            }
+            else
+            {
+                int width = fish_wcwidth(wc);
+                if (width > 0)
+                {
+                    caret_space_line.append(static_cast<size_t>(width), L' ');
+                }
+            }
+        }
         result.push_back(L'\n');
-        result.append(source_start - line_start, L' ');
+        result.append(caret_space_line);
         result.push_back(L'^');
     }
     return result;
+}
+
+wcstring parse_errors_description(const parse_error_list_t &errors, const wcstring &src, const wchar_t *prefix)
+{
+    wcstring target;
+    for (size_t i=0; i < errors.size(); i++)
+    {
+        if (i > 0)
+        {
+            target.push_back(L'\n');
+        }
+        if (prefix != NULL)
+        {
+            target.append(prefix);
+            target.append(L": ");
+        }
+        target.append(errors.at(i).describe(src));
+    }
+    return target;
 }
 
 /** Returns a string description of the given token type */

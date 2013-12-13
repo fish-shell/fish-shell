@@ -584,12 +584,6 @@ static void test_parser()
 
     parser_t parser(PARSER_TYPE_GENERAL, true);
 
-    say(L"Testing null input to parser");
-    if (!parser.detect_errors(NULL))
-    {
-        err(L"Null input to parser.detect_errors undetected");
-    }
-
     say(L"Testing block nesting");
     if (!parser.detect_errors(L"if; end"))
     {
@@ -630,10 +624,28 @@ static void test_parser()
     {
         err(L"'break' command outside of loop block context undetected");
     }
+    
+    if (parser.detect_errors(L"break --help"))
+    {
+        err(L"'break --help' incorrectly marked as error");
+    }
+    
+    if (! parser.detect_errors(L"while false ; function foo ; break ; end ; end "))
+    {
+        err(L"'break' command inside function allowed to break from loop outside it");
+    }
+
+    
     if (!parser.detect_errors(L"exec ls|less") || !parser.detect_errors(L"echo|return"))
     {
         err(L"Invalid pipe command undetected");
     }
+    
+    if (parser.detect_errors(L"for i in foo ; switch $i ; case blah ; break; end; end "))
+    {
+        err(L"'break' command inside switch falsely reported as error");
+    }
+    
 
     say(L"Testing basic evaluation");
 #if 0

@@ -3992,7 +3992,7 @@ int builtin_parse(parser_t &parser, wchar_t **argv)
             parse_t::parse(src, parse_flag_continue_after_error, &parse_tree, &errors, true);
         }
         const wcstring dump = parse_dump_tree(parse_tree, src);
-        fprintf(stderr, "%ls", dump.c_str());
+        stdout_buffer.append(dump);
     }
     return STATUS_BUILTIN_OK;
 }

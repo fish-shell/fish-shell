@@ -7,7 +7,7 @@ function math --description "Perform math calculations in bc"
 				return 0
 		end
 
-		set -l out (echo $argv|bc)
+		set -l out (echo $argv|env BC_LINE_LENGTH=0 bc)
 		echo $out
 		switch $out
 			case 0

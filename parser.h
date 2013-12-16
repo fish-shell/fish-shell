@@ -14,12 +14,6 @@
 #include "parse_tree.h"
 #include <vector>
 
-enum {
-  PARSER_TEST_ERROR = 1,
-  PARSER_TEST_INCOMPLETE = 2
-};
-typedef unsigned int parser_test_error_bits_t;
-
 /**
    event_blockage_t represents a block on events of the specified type
 */
@@ -488,8 +482,8 @@ public:
        \param out if non-null, any errors in the command will be filled out into this buffer
        \param prefix the prefix string to prepend to each error message written to the \c out buffer
     */
-    parser_test_error_bits_t detect_errors(const wcstring &buff, parse_error_list_t *out_errors = NULL, const wchar_t *prefix = NULL);
-    parser_test_error_bits_t detect_errors2(const wchar_t * buff, wcstring *out = NULL, const wchar_t *prefix = NULL);
+    parser_test_error_bits_t detect_errors2(const wchar_t *buff, wcstring *out_error_desc, const wchar_t *prefix);
+    void get_backtrace(const wcstring &src, const parse_error_list_t &errors, wcstring *output) const;
 
     /**
        Test if the specified string can be parsed as an argument list,
@@ -538,7 +532,7 @@ public:
     /**
        Write a stack trace starting at the specified block to the specified wcstring
     */
-    void stack_trace(block_t *b, wcstring &buff);
+    void stack_trace(block_t *b, wcstring &buff) const;
 
     int get_block_type(const wchar_t *cmd) const;
     const wchar_t *get_block_command(int type) const;

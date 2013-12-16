@@ -119,6 +119,13 @@ enum parse_error_code_t
     parse_error_unbalancing_case, //case outside of switch
 };
 
+enum {
+  PARSER_TEST_ERROR = 1,
+  PARSER_TEST_INCOMPLETE = 2
+};
+typedef unsigned int parser_test_error_bits_t;
+
+
 
 /**
    Error message for tokenizer error. The tokenizer message is

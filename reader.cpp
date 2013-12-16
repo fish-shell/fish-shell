@@ -2473,7 +2473,8 @@ void reader_run_command(parser_t &parser, const wcstring &cmd)
 int reader_shell_test(const wchar_t *b)
 {
     wcstring bstr = b;
-    int res = parser_t::principal_parser().detect_errors(bstr);
+    parse_error_list_t errors;
+    int res = parse_util_detect_errors(bstr, &errors);
 
     if (res & PARSER_TEST_ERROR)
     {
@@ -2490,14 +2491,9 @@ int reader_shell_test(const wchar_t *b)
                 tmp2,
                 0);
         
-        parse_error_list_t errors;
-        parser_t::principal_parser().detect_errors(bstr, &errors, L"fish");
-        
-        if (! errors.empty())
-        {
-            const wcstring sb = parse_errors_description(errors, b, L"fish");
-            fwprintf(stderr, L"%ls", sb.c_str());
-        }
+        wcstring sb;
+        parser_t::principal_parser().get_backtrace(bstr, errors, &sb);
+        fwprintf(stderr, L"%ls", sb.c_str());
     }
     return res;
 }
@@ -3908,13 +3904,14 @@ static int read_ni(int fd, const io_chain_t &io)
         }
 
         parse_error_list_t errors;
-        if (! parser.detect_errors(str, &errors, L"fish"))
+        if (! parse_util_detect_errors(str, &errors))
         {
             parser.eval(str, io, TOP);
         }
         else
         {
-            const wcstring sb = parse_errors_description(errors, str);
+            wcstring sb;
+            parser.get_backtrace(str, errors, &sb);
             fwprintf(stderr, L"%ls", sb.c_str());
             res = 1;
         }

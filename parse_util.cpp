@@ -39,18 +39,12 @@
 #include "signal.h"
 #include "wildcard.h"
 #include "parse_tree.h"
+#include "parser.h"
 
 /**
-   Maximum number of autoloaded items opf a specific type to keep in
-   memory at a time.
+   Error message for improper use of the exec builtin
 */
-#define AUTOLOAD_MAX 10
-
-/**
-   Minimum time, in seconds, before an autoloaded item will be
-   unloaded
-*/
-#define AUTOLOAD_MIN_AGE 60
+#define EXEC_ERR_MSG _(L"This command can not be used in a pipeline")
 
 int parse_util_lineno(const wchar_t *str, size_t offset)
 {
@@ -939,4 +933,193 @@ std::vector<int> parse_util_compute_indents(const wcstring &src)
     }
     
     return indents;
+}
+
+/* Append a syntax error to the given error list */
+static bool append_syntax_error(parse_error_list_t *errors, const parse_node_t &node, const wchar_t *fmt, ...)
+{
+    parse_error_t error;
+    error.source_start = node.source_start;
+    error.source_length = node.source_length;
+    error.code = parse_error_syntax;
+    
+    va_list va;
+    va_start(va, fmt);
+    error.text = vformat_string(fmt, va);
+    va_end(va);
+    
+    errors->push_back(error);
+    return true;
+}
+
+/**
+   Returns 1 if the specified command is a builtin that may not be used in a pipeline
+*/
+static int parser_is_pipe_forbidden(const wcstring &word)
+{
+    return contains(word,
+                    L"exec",
+                    L"case",
+                    L"break",
+                    L"return",
+                    L"continue");
+}
+
+// Check if the first argument under the given node is --help
+static bool first_argument_is_help(const parse_node_tree_t &node_tree, const parse_node_t &node, const wcstring &src)
+{
+    bool is_help = false;
+    const parse_node_tree_t::parse_node_list_t arg_nodes = node_tree.find_nodes(node, symbol_argument, 1);
+    if (! arg_nodes.empty())
+    {
+        // Check the first argument only
+        const parse_node_t &arg = *arg_nodes.at(0);
+        const wcstring first_arg_src = arg.get_source(src);
+        is_help = parser_t::is_help(first_arg_src.c_str(), 3);
+    }
+    return is_help;
+}
+
+parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, parse_error_list_t *out_errors)
+{
+    parse_node_tree_t node_tree;
+    parse_error_list_t parse_errors;
+    
+    // Whether we encountered a parse error
+    bool errored = false;
+    
+    // Whether we encountered an unclosed block
+    // We detect this via an 'end_command' block without source
+    bool has_unclosed_block = false;
+    
+    // Parse the input string into a parse tree
+    // Some errors are detected here
+    bool parsed = parse_t::parse(buff_src, 0, &node_tree, &parse_errors);
+    if (! parsed)
+    {
+        errored = true;
+    }
+    
+    // Expand all commands
+    // Verify 'or' and 'and' not used inside pipelines
+    // Verify pipes via parser_is_pipe_forbidden
+    // Verify return only within a function
+    
+    if (! errored)
+    {
+        const size_t node_tree_size = node_tree.size();
+        for (size_t i=0; i < node_tree_size; i++)
+        {
+            const parse_node_t &node = node_tree.at(i);
+            if (node.type == symbol_end_command && ! node.has_source())
+            {
+                // an 'end' without source is an unclosed block
+                has_unclosed_block = true;
+            }
+            else if (node.type == symbol_plain_statement)
+            {
+                wcstring command;
+                if (node_tree.command_for_plain_statement(node, buff_src, &command))
+                {
+                    // Check that we can expand the command
+                    if (! expand_one(command, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS))
+                    {
+                        errored = append_syntax_error(&parse_errors, node, ILLEGAL_CMD_ERR_MSG, command.c_str());
+                    }
+                    
+                    // Check that pipes are sound
+                    bool is_boolean_command = contains(command, L"or", L"and");
+                    bool is_pipe_forbidden = parser_is_pipe_forbidden(command);
+                    if (! errored && (is_boolean_command || is_pipe_forbidden))
+                    {
+                        // 'or' and 'and' can be first in the pipeline. forbidden commands cannot be in a pipeline at all
+                        if (node_tree.plain_statement_is_in_pipeline(node, is_pipe_forbidden))
+                        {
+                            errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG);
+                        }
+                    }
+                    
+                    // Check that we don't return from outside a function
+                    // But we allow it if it's 'return --help'
+                    if (! errored && command == L"return")
+                    {
+                        const parse_node_t *ancestor = &node;
+                        bool found_function = false;
+                        while (ancestor != NULL)
+                        {
+                            const parse_node_t *possible_function_header = node_tree.header_node_for_block_statement(*ancestor);
+                            if (possible_function_header != NULL && possible_function_header->type == symbol_function_header)
+                            {
+                                found_function = true;
+                                break;
+                            }
+                            ancestor = node_tree.get_parent(*ancestor);
+
+                        }
+                        if (! found_function && ! first_argument_is_help(node_tree, node, buff_src))
+                        {
+                            errored = append_syntax_error(&parse_errors, node, INVALID_RETURN_ERR_MSG);
+                        }
+                    }
+                    
+                    // Check that we don't return from outside a function
+                    if (! errored && (command == L"break" || command == L"continue"))
+                    {
+                        // Walk up until we hit a 'for' or 'while' loop. If we hit a function first, stop the search; we can't break an outer loop from inside a function.
+                        // This is a little funny because we can't tell if it's a 'for' or 'while' loop from the ancestor alone; we need the header. That is, we hit a block_statement, and have to check its header.
+                        bool found_loop = false, end_search = false;
+                        const parse_node_t *ancestor = &node;
+                        while (ancestor != NULL && ! end_search)
+                        {
+                            const parse_node_t *loop_or_function_header = node_tree.header_node_for_block_statement(*ancestor);
+                            if (loop_or_function_header != NULL)
+                            {
+                                switch (loop_or_function_header->type)
+                                {
+                                    case symbol_while_header:
+                                    case symbol_for_header:
+                                        // this is a loop header, so we can break or continue
+                                        found_loop = true;
+                                        end_search = true;
+                                        break;
+                                        
+                                    case symbol_function_header:
+                                        // this is a function header, so we cannot break or continue. We stop our search here.
+                                        found_loop = false;
+                                        end_search = true;
+                                        break;
+                                        
+                                    default:
+                                        // most likely begin / end style block, which makes no difference
+                                        break;
+                                }
+                            }
+                            ancestor = node_tree.get_parent(*ancestor);
+                        }
+                        
+                        if (! found_loop && ! first_argument_is_help(node_tree, node, buff_src))
+                        {
+                            errored = append_syntax_error(&parse_errors, node, INVALID_LOOP_ERR_MSG);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    parser_test_error_bits_t res = 0;
+    
+    if (errored)
+        res |= PARSER_TEST_ERROR;
+
+    if (has_unclosed_block)
+        res |= PARSER_TEST_INCOMPLETE;
+    
+    if (out_errors)
+    {
+        out_errors->swap(parse_errors);
+    }
+
+    return res;
+
 }

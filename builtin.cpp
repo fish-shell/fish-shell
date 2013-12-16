@@ -3011,10 +3011,7 @@ static int builtin_source(parser_t &parser, wchar_t ** argv)
 
     argc = builtin_count_args(argv);
 
-    const wchar_t *fn;
-    const wchar_t *fn_intern;
-
-
+    const wchar_t *fn, *fn_intern;
 
     if (argc < 2 || (wcscmp(argv[1], L"-") == 0))
     {
@@ -3047,18 +3044,7 @@ static int builtin_source(parser_t &parser, wchar_t ** argv)
             return STATUS_BUILTIN_ERROR;
         }
 
-        fn = wrealpath(argv[1], NULL);
-
-        if (!fn)
-        {
-            fn_intern = intern(argv[1]);
-        }
-        else
-        {
-            fn_intern = intern(fn);
-            free((void *)fn);
-        }
-
+        fn_intern = intern(argv[1]);
     }
 
     parser.push_block(new source_block_t(fn_intern));

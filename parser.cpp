@@ -559,7 +559,7 @@ void parser_t::error(int ec, size_t p, const wchar_t *str, ...)
 
     error_code = ec;
     
-    assert(p <= INT_MAX);
+    // note : p may be -1
     err_pos = static_cast<int>(p);
 
     va_start(va, str);

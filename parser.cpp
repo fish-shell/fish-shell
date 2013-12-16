@@ -312,6 +312,13 @@ static const struct block_lookup_entry block_lookup[]=
 
 static bool job_should_skip_elseif(const job_t *job, const block_t *current_block);
 
+// Given a file path, return something nicer. Currently we just "unexpand" tildes.
+static wcstring user_presentable_path(const wcstring &path)
+{
+    return replace_home_directory_with_tilde(path);
+}
+
+
 parser_t::parser_t(enum parser_type_t type, bool errors) :
     parser_type(type),
     show_errors(errors),
@@ -324,7 +331,6 @@ parser_t::parser_t(enum parser_type_t type, bool errors) :
     current_block(NULL),
     block_io(shared_ptr<io_data_t>())
 {
-
 }
 
 /* A pointer to the principal parser (which is a static local) */
@@ -363,7 +369,7 @@ void parser_t::push_block(block_t *newv)
     const enum block_type_t type = newv->type();
     newv->src_lineno = parser_t::get_lineno();
     newv->src_filename = parser_t::current_filename()?intern(parser_t::current_filename()):0;
-
+    
     newv->outer = current_block;
     if (current_block && current_block->skip)
         newv->mark_as_fake();
@@ -844,13 +850,13 @@ void parser_t::stack_trace(block_t *b, wcstring &buff) const
             {
                 const source_block_t *sb = static_cast<const source_block_t*>(b);
                 const wchar_t *source_dest = sb->source_file;
-                append_format(buff, _(L"from sourcing file '%ls',\n"), source_dest);
+                append_format(buff, _(L"from sourcing file %ls\n"), user_presentable_path(source_dest).c_str());
                 break;
             }
             case FUNCTION_CALL:
             {
                 const function_block_t *fb = static_cast<const function_block_t*>(b);
-                append_format(buff, _(L"in function '%ls',\n"), fb->name.c_str());
+                append_format(buff, _(L"in function '%ls'\n"), fb->name.c_str());
                 break;
             }
             case SUBST:
@@ -868,14 +874,14 @@ void parser_t::stack_trace(block_t *b, wcstring &buff) const
         if (file)
         {
             append_format(buff,
-                          _(L"\tcalled on line %d of file '%ls',\n"),
+                          _(L"\tcalled on line %d of file %ls\n"),
                           b->src_lineno,
-                          file);
+                          user_presentable_path(file).c_str());
         }
         else
         {
             append_format(buff,
-                          _(L"\tcalled on standard input,\n"));
+                          _(L"\tcalled on standard input\n"));
         }
 
         if (b->type() == FUNCTION_CALL)
@@ -2611,6 +2617,7 @@ int parser_t::eval(const wcstring &cmd_str, const io_chain_t &io, enum block_typ
 
     tokenizer_t local_tokenizer(cmd, 0);
     scoped_push<tokenizer_t *> tokenizer_push(&current_tokenizer, &local_tokenizer);
+    scoped_push<int> tokenizer_pos_push(&current_tokenizer_pos, 0);
 
     error_code = 0;
 
@@ -2897,31 +2904,12 @@ struct block_info_t
     block_type_t type; //type of the block
 };
 
-/* Append a syntax error to the given error list */
-static bool append_syntax_error(parse_error_list_t *errors, const parse_node_t &node, const wchar_t *fmt, ...)
-{
-    parse_error_t error;
-    error.source_start = node.source_start;
-    error.source_length = node.source_length;
-    error.code = parse_error_syntax;
-    
-    va_list va;
-    va_start(va, fmt);
-    error.text = vformat_string(fmt, va);
-    va_end(va);
-    
-    errors->push_back(error);
-    return true;
-}
-
 void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &errors, wcstring *output) const
 {
     assert(output != NULL);
     if (! errors.empty())
     {
         const parse_error_t err = errors.at(0);
-        output->append(err.describe(src));
-        output->push_back(L'\n');
         
         // Determine which line we're on
         assert(err.source_start <= src.size());
@@ -2930,12 +2918,15 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
         const wchar_t *filename = this->current_filename();
         if (filename)
         {
-            append_format(*output, _(L"line %lu of '%ls'\n"), which_line, filename);
+            append_format(*output, _(L"fish: line %lu of %ls:\n"), which_line, user_presentable_path(filename).c_str());
         }
         else
         {
-            append_format(*output, L"%ls: ", _(L"Standard input"), which_line);
+            append_format(*output, L"fish: %ls:", _(L"Error:"));
         }
+        
+        output->append(err.describe(src));
+        output->push_back(L'\n');
         
         this->stack_trace(current_block, *output);
     }

@@ -1602,6 +1602,31 @@ static void unexpand_tildes(const wcstring &input, std::vector<completion_t> *co
     }
 }
 
+// If the given path contains the user's home directory, replace that with a tilde
+// We don't try to be smart about case insensitivity, etc.
+wcstring replace_home_directory_with_tilde(const wcstring &str)
+{
+    // only absolute paths get this treatment
+    wcstring result = str;
+    if (string_prefixes_string(L"/", result))
+    {
+        wcstring home_directory = L"~";
+        expand_tilde(home_directory);
+        if (! string_suffixes_string(L"/", home_directory))
+        {
+            home_directory.push_back(L'/');
+        }
+        
+        // Now check if the home_directory prefixes the string
+        if (string_prefixes_string(home_directory, result))
+        {
+            // Success
+            result.replace(0, home_directory.size(), L"~/");
+        }
+    }
+    return result;
+}
+
 /**
    Remove any internal separators. Also optionally convert wildcard characters to
    regular equivalents. This is done to support EXPAND_SKIP_WILDCARDS.

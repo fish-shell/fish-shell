@@ -2478,22 +2478,15 @@ int reader_shell_test(const wchar_t *b)
 
     if (res & PARSER_TEST_ERROR)
     {
-        const int tmp[1] = {0};
-        const int tmp2[1] = {0};
-        const wcstring empty;
-
-        s_write(&data->screen,
-                empty,
-                empty,
-                empty,
-                0,
-                tmp,
-                tmp2,
-                0);
-        
         wcstring sb;
         parser_t::principal_parser().get_backtrace(bstr, errors, &sb);
-        fwprintf(stderr, L"%ls", sb.c_str());
+        
+        // ensure we end with a newline. Also add an initial newline, because it's likely the user just hit enter and so there's junk on the current line
+        if (! string_suffixes_string(L"\n", sb))
+        {
+            sb.push_back(L'\n');
+        }
+        fwprintf(stderr, L"\n%ls", sb.c_str());
     }
     return res;
 }

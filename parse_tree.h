@@ -33,8 +33,8 @@ struct parse_error_t
     size_t source_start;
     size_t source_length;
 
-    /** Return a string describing the error, suitable for presentation to the user */
-    wcstring describe(const wcstring &src) const;
+    /** Return a string describing the error, suitable for presentation to the user. If skip_caret is false, the offending line with a caret is printed as well */
+    wcstring describe(const wcstring &src, bool skip_caret = false) const;
 };
 typedef std::vector<parse_error_t> parse_error_list_t;
 

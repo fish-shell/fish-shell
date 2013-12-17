@@ -12,10 +12,10 @@ static bool production_is_empty(const production_t *production)
 }
 
 /** Returns a string description of this parse error */
-wcstring parse_error_t::describe(const wcstring &src) const
+wcstring parse_error_t::describe(const wcstring &src, bool skip_caret) const
 {
     wcstring result = text;
-    if (source_start < src.size() && source_start + source_length <= src.size())
+    if (! skip_caret && source_start < src.size() && source_start + source_length <= src.size())
     {
         // Locate the beginning of this line of source
         size_t line_start = 0;

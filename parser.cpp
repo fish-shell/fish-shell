@@ -2922,10 +2922,13 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
         }
         else
         {
-            append_format(*output, L"fish: %ls:", _(L"Error:"));
+            output->append(L"fish: ");
         }
         
-        output->append(err.describe(src));
+        // Don't include the caret if we're interactive, this is the first line of text, and our source is at its beginning, because then it's obvious
+        bool skip_caret = (get_is_interactive() && which_line == 1 && err.source_start == 0);
+        
+        output->append(err.describe(src, skip_caret));
         output->push_back(L'\n');
         
         this->stack_trace(current_block, *output);

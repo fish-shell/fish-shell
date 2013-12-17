@@ -188,14 +188,13 @@ typedef unsigned int parser_test_error_bits_t;
 */
 #define INVALID_CASE_ERR_MSG _( L"'case' builtin not inside of switch block")
 
-/**
-   Error when using loop control builtins (break or continue) outside of loop
-*/
-#define INVALID_LOOP_ERR_MSG _( L"Loop control command while not inside of loop" )
+/** Error when using break outside of loop */
+#define INVALID_BREAK_ERR_MSG _( L"break command while not inside of loop" )
 
-/**
-   Error when using return builtin outside of function definition
-*/
+/** Error when using continue outside of loop */
+#define INVALID_CONTINUE_ERR_MSG _( L"continue command while not inside of loop" )
+
+/** Error when using return builtin outside of function definition */
 #define INVALID_RETURN_ERR_MSG _( L"'return' builtin command outside of function definition" )
 
 /**

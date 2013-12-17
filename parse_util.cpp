@@ -1099,7 +1099,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                         
                         if (! found_loop && ! first_argument_is_help(node_tree, node, buff_src))
                         {
-                            errored = append_syntax_error(&parse_errors, node, INVALID_LOOP_ERR_MSG);
+                            errored = append_syntax_error(&parse_errors, node, (command == L"break" ? INVALID_BREAK_ERR_MSG : INVALID_CONTINUE_ERR_MSG));
                         }
                     }
                 }

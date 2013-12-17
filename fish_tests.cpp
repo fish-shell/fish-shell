@@ -585,63 +585,63 @@ static void test_parser()
     parser_t parser(PARSER_TYPE_GENERAL, true);
 
     say(L"Testing block nesting");
-    if (!parser.detect_errors(L"if; end"))
+    if (!parse_util_detect_errors(L"if; end"))
     {
         err(L"Incomplete if statement undetected");
     }
-    if (!parser.detect_errors(L"if test; echo"))
+    if (!parse_util_detect_errors(L"if test; echo"))
     {
         err(L"Missing end undetected");
     }
-    if (!parser.detect_errors(L"if test; end; end"))
+    if (!parse_util_detect_errors(L"if test; end; end"))
     {
         err(L"Unbalanced end undetected");
     }
 
     say(L"Testing detection of invalid use of builtin commands");
-    if (!parser.detect_errors(L"case foo"))
+    if (!parse_util_detect_errors(L"case foo"))
     {
         err(L"'case' command outside of block context undetected");
     }
-    if (!parser.detect_errors(L"switch ggg; if true; case foo;end;end"))
+    if (!parse_util_detect_errors(L"switch ggg; if true; case foo;end;end"))
     {
         err(L"'case' command outside of switch block context undetected");
     }
-    if (!parser.detect_errors(L"else"))
+    if (!parse_util_detect_errors(L"else"))
     {
         err(L"'else' command outside of conditional block context undetected");
     }
-    if (!parser.detect_errors(L"else if"))
+    if (!parse_util_detect_errors(L"else if"))
     {
         err(L"'else if' command outside of conditional block context undetected");
     }
-    if (!parser.detect_errors(L"if false; else if; end"))
+    if (!parse_util_detect_errors(L"if false; else if; end"))
     {
         err(L"'else if' missing command undetected");
     }
 
-    if (!parser.detect_errors(L"break"))
+    if (!parse_util_detect_errors(L"break"))
     {
         err(L"'break' command outside of loop block context undetected");
     }
     
-    if (parser.detect_errors(L"break --help"))
+    if (parse_util_detect_errors(L"break --help"))
     {
         err(L"'break --help' incorrectly marked as error");
     }
     
-    if (! parser.detect_errors(L"while false ; function foo ; break ; end ; end "))
+    if (! parse_util_detect_errors(L"while false ; function foo ; break ; end ; end "))
     {
         err(L"'break' command inside function allowed to break from loop outside it");
     }
 
     
-    if (!parser.detect_errors(L"exec ls|less") || !parser.detect_errors(L"echo|return"))
+    if (!parse_util_detect_errors(L"exec ls|less") || !parse_util_detect_errors(L"echo|return"))
     {
         err(L"Invalid pipe command undetected");
     }
     
-    if (parser.detect_errors(L"for i in foo ; switch $i ; case blah ; break; end; end "))
+    if (parse_util_detect_errors(L"for i in foo ; switch $i ; case blah ; break; end; end "))
     {
         err(L"'break' command inside switch falsely reported as error");
     }

@@ -163,6 +163,6 @@ wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote)
 /** Given a string, parse it as fish code and then return the indents. The return value has the same size as the string */
 std::vector<int> parse_util_compute_indents(const wcstring &src);
 
-parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, parse_error_list_t *out_errors);
+parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, parse_error_list_t *out_errors = NULL);
 
 #endif

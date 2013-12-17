@@ -130,13 +130,3 @@ function . --description 'Evaluate contents of file (deprecated, see "source")' 
 		source $argv
 	end
 end
-
-# Fix lame terminals lying about their encoding (UTF-8 when it's not).
-function __fish_update_charset --on-variable LANG
-	switch $LANG
-		case \*.UTF-8
-			echo -n \e%G
-	end
-end
-
-__fish_update_charset

@@ -482,7 +482,6 @@ public:
        \param out if non-null, any errors in the command will be filled out into this buffer
        \param prefix the prefix string to prepend to each error message written to the \c out buffer
     */
-    parser_test_error_bits_t detect_errors2(const wchar_t *buff, wcstring *out_error_desc, const wchar_t *prefix);
     void get_backtrace(const wcstring &src, const parse_error_list_t &errors, wcstring *output) const;
 
     /**

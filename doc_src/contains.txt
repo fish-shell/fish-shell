@@ -13,6 +13,7 @@ The following options are available:
 
 - \c -i or \c --index print the word index
 - \c -h or \c --help display this message
+- \c -- ignore dashes in input
 
 \subsection contains-example Example
 <pre>
@@ -24,3 +25,9 @@ end
 </pre>
 
 The above code tests if \c ~/bin and \c /usr/local/bin are in the path and adds them if not.
+
+The following code will check if command line options include -a
+
+<pre>
+contains -- -a $argc
+</pre>

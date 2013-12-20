@@ -1633,6 +1633,110 @@ void parser_t::parse_job_argument_list(process_t *p,
   }
 */
 
+#if 0
+process_t *parser_t::create_boolean_process(job_t *job, const parse_node_t &bool_statement, const parser_context_t &ctx)
+{
+    // Handle a boolean statement
+    bool skip_job = false;
+    assert(bool_statement.type == symbol_boolean_statement);
+    switch (specific_statement.production_idx)
+    {
+        // These magic numbers correspond to productions for boolean_statement
+        case 0:
+            // AND. Skip if the last job failed.
+            skip_job = (proc_get_last_status() != 0);
+            break;
+            
+        case 1:
+            // OR. Skip if the last job succeeded.
+            skip_job = (proc_get_last_status() == 0);
+            break;
+
+        case 2:
+            // NOT. Negate it.
+            job_set_flag(job, JOB_NEGATE, !job_get_flag(job, JOB_NEGATE));
+            break;
+            
+        default:
+        {
+            fprintf(stderr, "Unexpected production in boolean statement\n");
+            PARSER_DIE();
+            break;
+        }
+    }
+    
+    process_t *result = NULL;
+    if (! skip_job)
+    {
+        const parse_node_t &subject = *ctx.tree.get_child(bool_statement, 1, symbol_statement);
+        result = this->create_job_process(job, subject, ctx);
+    }
+    return result;
+}
+
+/* Returns a process_t allocated with new. It's the caller's responsibility to delete it (!) */
+process_t *parser_t::create_job_process(job_t *job, const parse_node_t &statement_node, const parser_context_t &ctx)
+{
+    assert(statement_node.type == symbol_statement);
+    assert(statement_node.child_count == 1);
+    
+    // We may skip this job entirely, e.g. with an 'and' statement
+    bool skip_job = false;
+    
+    // Get the "specific statement" which is boolean / block / if / switch / decorated
+    const parse_node_t &specific_statement = *ctx.tree.get_child(statement_node, 0);
+    
+    process_t *result = NULL;
+    
+    switch (specific_statement.type)
+    {
+        case symbol_boolean_statement:
+        {
+            result = this->create_boolean_process(job, specific_statement, ctx);
+            break;
+        }
+        
+        case symbol_block_statement:
+        {
+            const parse_node_t &header = *ctx.tree.get_child(specific_statement, 0, symbol_block_header);
+            const parse_node_t &specific_header = *ctx.tree.get_child(header, 0);
+            switch (specific_header.type)
+            {
+                case symbol_for_header:
+                    result = this->create_for_process(job, specific_header, specific_statement, ctx);
+                    break;
+                    
+                case symbol_while_header:
+                    result = this->create_while_process(job, specific_header, specific_statement, ctx);
+                    break;
+                
+                case symbol_function_header:
+                    // No process is associated with creating a function
+                    // TODO: create the darn function!
+                    result = NULL;
+                    break;
+                    
+                case symbol_begin_header:
+                    
+                    break;
+                
+                default:
+                    fprintf(stderr, "Unexpected header type\n");
+                    PARSER_DIE();
+                    break;
+            }
+        }
+    }
+    
+    // expand_one command
+    // handle booleans (and, not, or)
+    // set INTERNAL_EXEC
+    // implicit CD
+    
+    return proc;
+}
+#endif
+
 /**
    Fully parse a single job. Does not call exec on it, but any command substitutions in the job will be executed.
 
@@ -1642,9 +1746,7 @@ void parser_t::parse_job_argument_list(process_t *p,
 f
    \return 1 on success, 0 on error
 */
-int parser_t::parse_job(process_t *p,
-                        job_t *j,
-                        tokenizer_t *tok)
+int parser_t::parse_job(process_t *p, job_t *j, tokenizer_t *tok)
 {
     std::vector<completion_t> args; // The list that will become the argv array for the program
     int use_function = 1;   // May functions be considered when checking what action this command represents
@@ -2336,6 +2438,206 @@ static bool job_should_skip_elseif(const job_t *job, const block_t *current_bloc
 }
 
 /**
+   Evaluates a job from a node tree.
+*/
+
+#if 0
+void parser_t::eval_job(const parse_node_t &job_node, const parser_context_t &ctx)
+{
+    assert(job_node.type == symbol_job);
+    this->job_start_pos = (int)job_node.source_start;
+    
+    // Get terminal modes
+    struct termios tmodes = {};
+    if (get_is_interactive())
+    {
+        if (tcgetattr(STDIN_FILENO, &tmodes))
+        {
+            // need real error handling here
+            wperror(L"tcgetattr");
+            return;
+        }
+    }
+    
+    /* Track whether we had an error */
+    bool process_errored = false;
+    
+    /* Profiling support */
+    long long t1 = 0, t2 = 0, t3 = 0;
+    const bool do_profile = profile;
+    profile_item_t *profile_item = NULL;
+    if (do_profile)
+    {
+        profile_item = new profile_item_t();
+        profile_item->skipped = 1;
+        profile_items.push_back(profile_item);
+        t1 = get_time();
+    }
+    
+    job_t *j = this->job_create();
+    job_set_flag(j, JOB_FOREGROUND, 1);
+    job_set_flag(j, JOB_TERMINAL, job_get_flag(j, JOB_CONTROL));
+    job_set_flag(j, JOB_TERMINAL, job_get_flag(j, JOB_CONTROL) \
+                 && (!is_subshell && !is_event));
+    job_set_flag(j, JOB_SKIP_NOTIFICATION, is_subshell \
+                 || is_block \
+                 || is_event \
+                 || (!get_is_interactive()));
+
+    current_block->job = j;
+    
+    /* Tell the job what its command is */
+    j->set_command(job_node.get_source(ctx.src));
+    
+    /* Construct process_t structures for every statement in the job */
+    const parse_node_t *statement_node = ctx.tree.get_child(job_node, 0, symbol_statement);
+    assert(statement_node != NULL);
+    
+    /* Create the process (may fail!) */
+    j->first_process = this->create_job_process(j, *statement_node, ctx);
+    if (j->first_process == NULL)
+        process_errored = true;
+    
+    /* Construct process_ts for job continuations (pipelines), by walking the list until we hit the terminal (empty) job continuationf */
+    const parse_node_t *job_cont = ctx.tree.get_child(job_node, 1, symbol_job_continuation);
+    process_t *last_process = j->first_process;
+    while (! process_errored && job_cont != NULL && job_cont->child_count > 0)
+    {
+        assert(job_cont->type == symbol_job_continuation);
+        
+        /* Get the statement node and make a process from it */
+        const parse_node_t *statement_node = ctx.tree.get_child(*job_cont, 1, symbol_statement);
+        assert(statement_node != NULL);
+        
+        /* Store the new process (and maybe with an error) */
+        last_process->next = this->create_job_process(j, *statement_node, ctx);
+        if (last_process->next == NULL)
+            process_errored = true;
+
+        /* Link the process and get the next continuation */
+        last_process = last_process->next;
+        job_cont = ctx.tree.get_child(*job_cont, 2, symbol_job_continuation);
+    }
+
+    bool skip = false;
+    if (this->parse_job(j->first_process, j, job_node, ctx) && j->first_process->get_argv())
+    {
+        if (do_profile)
+        {
+            t2 = get_time();
+            profile_item->cmd = j->command();
+            profile_item->skipped=current_block->skip;
+        }
+
+        /* If we're an ELSEIF, then we may want to unskip, if we're skipping because of an IF */
+        if (job_get_flag(j, JOB_ELSEIF))
+        {
+            bool skip_elseif = job_should_skip_elseif(j, current_block);
+
+            /* Record that we're entering an elseif */
+            if (! skip_elseif)
+            {
+                /* We must be an IF block here */
+                assert(current_block->type() == IF);
+                static_cast<if_block_t *>(current_block)->is_elseif_entry = true;
+            }
+
+            /* Record that in the block too. This is similar to what builtin_else does. */
+            current_block->skip = skip_elseif;
+        }
+
+        skip = skip || current_block->skip;
+        skip = skip || job_get_flag(j, JOB_WILDCARD_ERROR);
+        skip = skip || job_get_flag(j, JOB_SKIP);
+
+        if (!skip)
+        {
+            int was_builtin = 0;
+            if (j->first_process->type==INTERNAL_BUILTIN && !j->first_process->next)
+                was_builtin = 1;
+            scoped_push<int> tokenizer_pos_push(&current_tokenizer_pos, job_begin_pos);
+            exec_job(*this, j);
+
+            /* Only external commands require a new fishd barrier */
+            if (!was_builtin)
+                set_proc_had_barrier(false);
+        }
+        else
+        {
+            this->skipped_exec(j);
+        }
+
+        if (do_profile)
+        {
+            t3 = get_time();
+            profile_item->level=eval_level;
+            profile_item->parse = (int)(t2-t1);
+            profile_item->exec=(int)(t3-t2);
+        }
+
+        if (current_block->type() == WHILE)
+        {
+            while_block_t *wb = static_cast<while_block_t *>(current_block);
+            switch (wb->status)
+            {
+                case WHILE_TEST_FIRST:
+                {
+                    // PCA I added the 'wb->skip ||' part because we couldn't reliably
+                    // control-C out of loops like this: while test 1 -eq 1; end
+                    wb->skip = wb->skip || proc_get_last_status()!= 0;
+                    wb->status = WHILE_TESTED;
+                }
+                break;
+            }
+        }
+
+        if (current_block->type() == IF)
+        {
+            if_block_t *ib = static_cast<if_block_t *>(current_block);
+
+            if (ib->skip)
+            {
+                /* Nothing */
+            }
+            else if (! ib->if_expr_evaluated)
+            {
+                /* Execute the IF */
+                bool if_result = (proc_get_last_status() == 0);
+                ib->any_branch_taken = if_result;
+
+                /* Don't execute if the expression failed */
+                current_block->skip = ! if_result;
+                ib->if_expr_evaluated = true;
+            }
+            else if (ib->is_elseif_entry && ! ib->any_branch_taken)
+            {
+                /* Maybe mark an ELSEIF branch as taken */
+                bool elseif_taken = (proc_get_last_status() == 0);
+                ib->any_branch_taken = elseif_taken;
+                current_block->skip = ! elseif_taken;
+                ib->is_elseif_entry = false;
+            }
+        }
+
+    }
+    else
+    {
+        /*
+          This job could not be properly parsed. We free it
+          instead, and set the status to 1. This should be
+          rare, since most errors should be detected by the
+          ahead of time validator.
+        */
+        job_free(j);
+
+        proc_set_last_status(1);
+    }
+    current_block->job = 0;
+    break;
+}
+#endif
+
+/**
    Evaluates a job from the specified tokenizer. First calls
    parse_job to parse the job and then calls exec to execute it.
 
@@ -2575,12 +2877,144 @@ void parser_t::eval_job(tokenizer_t *tok)
 
 }
 
+#if 0
+int parser_t::eval2(const wcstring &cmd_str, const io_chain_t &io, enum block_type_t block_type)
+{
+    parser_context_t mut_ctx;
+    mut_ctx.src = cmd_str;
+    
+    /* Parse the tree */
+    if (! parse_t::parse(cmd_str, parse_flag_none, &mut_ctx.tree, NULL))
+    {
+        return 1;
+    }
+    
+    /* Make a const version for safety's sake */
+    const parser_context_t &ctx = mut_ctx;
+
+    CHECK_BLOCK(1);
+    
+    /* Record the current chain so we can put it back later */
+    scoped_push<io_chain_t> block_io_push(&block_io, io);
+    scoped_push<wcstring_list_t> forbidden_function_push(&forbidden_function);
+    const size_t forbid_count = forbidden_function.size();
+    const block_t *start_current_block = current_block;
+    
+    /* Do some stuff I haven't figured out yet */
+    job_reap(0);
+    
+    /* Only certain blocks are allowed */
+    if ((block_type != TOP) &&
+            (block_type != SUBST))
+    {
+        debug(1,
+              INVALID_SCOPE_ERR_MSG,
+              parser_t::get_block_desc(block_type));
+        bugreport();
+        return 1;
+    }
+
+    eval_level++;
+
+    this->push_block(new scope_block_t(block_type));
+
+    error_code = 0;
+
+    event_fire(NULL);
+
+    /* Execute the top job list */
+    assert(! ctx.tree.empty());
+    const parse_node_t *job_list = &ctx.tree.at(0);
+    assert(job_list->type == symbol_job_list);
+    while (job_list != NULL)
+    {
+        // These correspond to the three productions of job_list
+        // Try pulling out a job
+        const parse_node_t *job = NULL;
+        switch (job_list->production_idx)
+        {
+            case 0: // empty
+                job_list = NULL;
+                break;
+            
+            case 1: //job, job_list
+                job = ctx.tree.get_child(*job_list, 0, symbol_job);
+                job_list = ctx.tree.get_child(*job_list, 1, symbol_job_list);
+                break;
+            
+            case 2: //blank line, job_list
+                job = NULL;
+                job_list = ctx.tree.get_child(*job_list, 1, symbol_job_list);
+                break;
+                
+            default: //if we get here, it means more productions have been added to job_list, which is bad
+                PARSER_DIE();
+        }
+        
+        if (job != NULL)
+        {
+            this->eval_job(*job, ctx);
+        }
+    }
+
+    parser_t::pop_block();
+
+    while (start_current_block != current_block)
+    {
+        if (current_block == 0)
+        {
+            debug(0,
+                  _(L"End of block mismatch. Program terminating."));
+            bugreport();
+            FATAL_EXIT();
+            break;
+        }
+
+        if ((!error_code) && (!exit_status()) && (!proc_get_last_status()))
+        {
+
+            //debug( 2, L"Status %d\n", proc_get_last_status() );
+
+            debug(1,
+                  L"%ls", parser_t::get_block_desc(current_block->type()));
+            debug(1,
+                  BLOCK_END_ERR_MSG);
+            fwprintf(stderr, L"%ls", parser_t::current_line());
+
+            const wcstring h = builtin_help_get(*this, L"end");
+            if (h.size())
+                fwprintf(stderr, L"%ls", h.c_str());
+            break;
+
+        }
+        parser_t::pop_block();
+    }
+
+    this->print_errors_stderr();
+
+    while (forbidden_function.size() > forbid_count)
+        parser_t::allow_function();
+
+    /*
+      Restore previous eval state
+    */
+    eval_level--;
+
+    int code=error_code;
+    error_code=0;
+
+    job_reap(0);
+
+    return code;
+}
+#endif
+
 int parser_t::eval(const wcstring &cmd_str, const io_chain_t &io, enum block_type_t block_type)
 {
     const wchar_t * const cmd = cmd_str.c_str();
     size_t forbid_count;
     int code;
-    block_t *start_current_block = current_block;
+    const block_t *start_current_block = current_block;
 
     /* Record the current chain so we can put it back later */
     scoped_push<io_chain_t> block_io_push(&block_io, io);

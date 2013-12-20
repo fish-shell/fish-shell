@@ -295,6 +295,12 @@ struct profile_item_t
 
 struct tokenizer_t;
 
+struct parser_context_t
+{
+    parse_node_tree_t tree;
+    wcstring src;
+};
+
 class parser_t
 {
 private:
@@ -341,11 +347,15 @@ private:
     /* No copying allowed */
     parser_t(const parser_t&);
     parser_t& operator=(const parser_t&);
+    
+    process_t *create_job_process(job_t *job, const parse_node_t &statement_node, const parser_context_t &ctx);
+    process_t *create_boolean_process(job_t *job, const parse_node_t &bool_statement, const parser_context_t &ctx);
 
     void parse_job_argument_list(process_t *p, job_t *j, tokenizer_t *tok, std::vector<completion_t>&, bool);
     int parse_job(process_t *p, job_t *j, tokenizer_t *tok);
     void skipped_exec(job_t * j);
     void eval_job(tokenizer_t *tok);
+    void eval_job(const parse_node_t &job_node, const parser_context_t &ctx);
     int parser_test_argument(const wchar_t *arg, wcstring *out, const wchar_t *prefix, int offset);
     void print_errors(wcstring &target, const wchar_t *prefix);
     void print_errors_stderr();
@@ -394,6 +404,7 @@ public:
       \return 0 on success, 1 otherwise
     */
     int eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type_t block_type);
+    int eval2(const wcstring &cmd_str, const io_chain_t &io, enum block_type_t block_type);
 
     /**
       Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and cmdsubst execution on the tokens.

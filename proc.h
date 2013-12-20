@@ -54,7 +54,7 @@
 /**
    Types of processes
 */
-enum
+enum process_type_t
 {
     /**
        A regular external command
@@ -81,8 +81,7 @@ enum
     */
     INTERNAL_BUFFER,
 
-}
-;
+};
 
 enum
 {
@@ -151,7 +150,7 @@ public:
       INTERNAL_BUILTIN, \c INTERNAL_FUNCTION, \c INTERNAL_BLOCK,
       INTERNAL_EXEC, or INTERNAL_BUFFER
     */
-    int type;
+    enum process_type_t type;
 
 
     /** Sets argv */

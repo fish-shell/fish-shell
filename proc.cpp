@@ -515,7 +515,7 @@ static void handle_child_status(pid_t pid, int status)
 process_t::process_t() :
     argv_array(),
     argv0_narrow(),
-    type(0),
+    type(),
     actual_cmd(),
     pid(0),
     pipe_write_fd(0),

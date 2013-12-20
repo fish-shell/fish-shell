@@ -1240,7 +1240,7 @@ void completer_t::complete_from_args(const wcstring &str,
     if (! is_autosuggest)
         proc_pop_interactive();
 
-    this->complete_strings(str, desc.c_str(), 0, possible_comp, flags);
+    this->complete_strings(escape_string(str, ESCAPE_ALL), desc.c_str(), 0, possible_comp, flags);
 }
 
 /**

@@ -2755,14 +2755,11 @@ static void handle_end_loop()
     job_t *j;
     int stopped_jobs_count=0;
     int is_breakpoint=0;
-    block_t *b;
-    parser_t &parser = parser_t::principal_parser();
+    const parser_t &parser = parser_t::principal_parser();
 
-    for (b = parser.current_block;
-            b;
-            b = b->outer)
+    for (size_t i = 0; i < parser.block_count(); i++)
     {
-        if (b->type() == BREAKPOINT)
+        if (parser.block_at_index(i)->type() == BREAKPOINT)
         {
             is_breakpoint = 1;
             break;

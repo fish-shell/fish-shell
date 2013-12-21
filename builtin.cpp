@@ -832,7 +832,8 @@ static int builtin_block(parser_t &parser, wchar_t **argv)
     }
     else
     {
-        block_t *block=parser.current_block;
+        size_t block_idx = 0;
+        block_t *block = parser.block_at_index(block_idx);
 
         event_blockage_t eb = {};
         eb.typemask = type;
@@ -841,20 +842,24 @@ static int builtin_block(parser_t &parser, wchar_t **argv)
         {
             case LOCAL:
             {
-                if (!block->outer)
-                    block=0;
+                // If this is the outermost block, then we're global
+                if (block_idx + 1 >= parser.block_count())
+                {
+                    block = NULL;
+                }
                 break;
             }
             case GLOBAL:
             {
-                block=0;
+                block=NULL;
             }
             case UNSET:
             {
-                while (block &&
-                        block->type() != FUNCTION_CALL &&
-                        block->type() != FUNCTION_CALL_NO_SHADOW)
-                    block = block->outer;
+                while (block != NULL && block->type() != FUNCTION_CALL && block->type() != FUNCTION_CALL_NO_SHADOW)
+                {
+                    // Set it in function scope
+                    block = parser.block_at_index(++block_idx);
+                }
             }
         }
         if (block)
@@ -1864,18 +1869,21 @@ static int builtin_function(parser_t &parser, wchar_t **argv)
 
                     if (is_subshell)
                     {
-                        block_t *b = parser.current_block;
-
-                        while (b && (b->type() != SUBST))
-                            b = b->outer;
-
-                        if (b)
+                        size_t block_idx = 0;
+                        
+                        /* Find the outermost substitution block */
+                        for (block_idx = 0; ; block_idx++)
                         {
-                            b=b->outer;
+                            const block_t *b = parser.block_at_index(block_idx);
+                            if (b == NULL || b->type() == SUBST)
+                                break;
                         }
-                        if (b->job)
+                        
+                        /* Go one step beyond that, to get to the caller */
+                        const block_t *caller_block = parser.block_at_index(block_idx + 1);
+                        if (caller_block != NULL && caller_block->job != NULL)
                         {
-                            job_id = b->job->job_id;
+                            job_id = caller_block->job->job_id;
                         }
                     }
 
@@ -2059,8 +2067,8 @@ static int builtin_function(parser_t &parser, wchar_t **argv)
         }
     }
 
-    parser.current_block->tok_pos = parser.get_pos();
-    parser.current_block->skip = 1;
+    parser.current_block()->tok_pos = parser.get_pos();
+    parser.current_block()->skip = 1;
 
     return STATUS_BUILTIN_OK;
 }
@@ -2713,7 +2721,7 @@ static int builtin_status(parser_t &parser, wchar_t **argv)
 
             case STACK_TRACE:
             {
-                parser.stack_trace(parser.current_block, stdout_buffer);
+                parser.stack_trace(0, stdout_buffer);
                 break;
             }
 
@@ -2728,7 +2736,7 @@ static int builtin_status(parser_t &parser, wchar_t **argv)
                               job_control_mode==JOB_CONTROL_INTERACTIVE?_(L"Only on interactive jobs"):
                               (job_control_mode==JOB_CONTROL_NONE ? _(L"Never") : _(L"Always")));
 
-                parser.stack_trace(parser.current_block, stdout_buffer);
+                parser.stack_trace(0, stdout_buffer);
                 break;
             }
         }
@@ -3400,19 +3408,19 @@ static int builtin_for(parser_t &parser, wchar_t **argv)
         }
         else
         {
-            parser.current_block->skip=1;
+            parser.current_block()->skip=1;
         }
     }
     return res;
 }
 
 /**
-   The begin builtin. Creates a nex block.
+   The begin builtin. Creates a new block.
 */
 static int builtin_begin(parser_t &parser, wchar_t **argv)
 {
     parser.push_block(new scope_block_t(BEGIN));
-    parser.current_block->tok_pos = parser.get_pos();
+    parser.current_block()->tok_pos = parser.get_pos();
     return proc_get_last_status();
 }
 
@@ -3424,7 +3432,7 @@ static int builtin_begin(parser_t &parser, wchar_t **argv)
 */
 static int builtin_end(parser_t &parser, wchar_t **argv)
 {
-    if (!parser.current_block->outer)
+    if (! parser.block_at_index(1))
     {
         append_format(stderr_buffer,
                       _(L"%ls: Not inside of block\n"),
@@ -3442,7 +3450,8 @@ static int builtin_end(parser_t &parser, wchar_t **argv)
         */
         bool kill_block = true;
 
-        switch (parser.current_block->type())
+        block_t * const current_block = parser.current_block();
+        switch (current_block->type())
         {
             case WHILE:
             {
@@ -3450,13 +3459,13 @@ static int builtin_end(parser_t &parser, wchar_t **argv)
                   If this is a while loop, we rewind the loop unless
                   it's the last lap, in which case we continue.
                 */
-                if (!(parser.current_block->skip && (parser.current_block->loop_status != LOOP_CONTINUE)))
+                if (!(current_block->skip && (current_block->loop_status != LOOP_CONTINUE)))
                 {
-                    parser.current_block->loop_status = LOOP_NORMAL;
-                    parser.current_block->skip = 0;
+                    current_block->loop_status = LOOP_NORMAL;
+                    current_block->skip = 0;
                     kill_block = false;
-                    parser.set_pos(parser.current_block->tok_pos);
-                    while_block_t *blk = static_cast<while_block_t *>(parser.current_block);
+                    parser.set_pos(current_block->tok_pos);
+                    while_block_t *blk = static_cast<while_block_t *>(current_block);
                     blk->status = WHILE_TEST_AGAIN;
                 }
 
@@ -3479,9 +3488,9 @@ static int builtin_end(parser_t &parser, wchar_t **argv)
                 /*
                   set loop variable to next element, and rewind to the beginning of the block.
                 */
-                for_block_t *fb = static_cast<for_block_t *>(parser.current_block);
+                for_block_t *fb = static_cast<for_block_t *>(current_block);
                 wcstring_list_t &for_vars = fb->sequence;
-                if (parser.current_block->loop_status == LOOP_BREAK)
+                if (current_block->loop_status == LOOP_BREAK)
                 {
                     for_vars.clear();
                 }
@@ -3492,18 +3501,18 @@ static int builtin_end(parser_t &parser, wchar_t **argv)
                     for_vars.pop_back();
                     const wcstring &for_variable = fb->variable;
                     env_set(for_variable, val.c_str(),  ENV_LOCAL);
-                    parser.current_block->loop_status = LOOP_NORMAL;
-                    parser.current_block->skip = 0;
+                    current_block->loop_status = LOOP_NORMAL;
+                    current_block->skip = 0;
 
                     kill_block = false;
-                    parser.set_pos(parser.current_block->tok_pos);
+                    parser.set_pos(current_block->tok_pos);
                 }
                 break;
             }
 
             case FUNCTION_DEF:
             {
-                function_def_block_t *fdb = static_cast<function_def_block_t *>(parser.current_block);
+                function_def_block_t *fdb = static_cast<function_def_block_t *>(current_block);
                 function_data_t &d = fdb->function_data;
 
                 if (d.name.empty())
@@ -3522,8 +3531,8 @@ static int builtin_end(parser_t &parser, wchar_t **argv)
                        for the specified function
                     */
 
-                    wchar_t *def = wcsndup(parser.get_buffer()+parser.current_block->tok_pos,
-                                           parser.get_job_pos()-parser.current_block->tok_pos);
+                    wchar_t *def = wcsndup(parser.get_buffer()+current_block->tok_pos,
+                                           parser.get_job_pos()-current_block->tok_pos);
                     d.definition = def;
 
                     function_add(d, parser);
@@ -3556,9 +3565,9 @@ static int builtin_else(parser_t &parser, wchar_t **argv)
 {
     bool block_ok = false;
     if_block_t *if_block = NULL;
-    if (parser.current_block != NULL && parser.current_block->type() == IF)
+    if (parser.current_block() != NULL && parser.current_block()->type() == IF)
     {
-        if_block = static_cast<if_block_t *>(parser.current_block);
+        if_block = static_cast<if_block_t *>(parser.current_block());
         /* Ensure that we're past IF but not up to an ELSE */
         if (if_block->if_expr_evaluated && ! if_block->else_evaluated)
         {
@@ -3599,7 +3608,6 @@ static int builtin_break_continue(parser_t &parser, wchar_t **argv)
     int is_break = (wcscmp(argv[0],L"break")==0);
     int argc = builtin_count_args(argv);
 
-    block_t *b = parser.current_block;
 
     if (argc != 1)
     {
@@ -3612,15 +3620,16 @@ static int builtin_break_continue(parser_t &parser, wchar_t **argv)
         return STATUS_BUILTIN_ERROR;
     }
 
-
-    while ((b != 0) &&
-            (b->type() != WHILE) &&
-            (b->type() != FOR))
+    /* Find the index of the enclosing for or while loop. Recall that incrementing loop_idx goes 'up' to outer blocks */
+    size_t loop_idx;
+    for (loop_idx = 0; loop_idx < parser.block_count(); loop_idx++)
     {
-        b = b->outer;
+        const block_t *b = parser.block_at_index(loop_idx);
+        if (b->type() == WHILE || b->type() == FOR)
+            break;
     }
 
-    if (b == 0)
+    if (loop_idx >= parser.block_count())
     {
         append_format(stderr_buffer,
                       _(L"%ls: Not inside of loop\n"),
@@ -3629,15 +3638,17 @@ static int builtin_break_continue(parser_t &parser, wchar_t **argv)
         return STATUS_BUILTIN_ERROR;
     }
 
-    b = parser.current_block;
-    while ((b->type() != WHILE) &&
-            (b->type() != FOR))
+    /* Skip blocks interior to the loop  */
+    size_t block_idx = loop_idx;
+    while (block_idx--)
     {
-        b->skip=1;
-        b = b->outer;
+        parser.block_at_index(block_idx)->skip = true;
     }
-    b->skip=1;
-    b->loop_status = is_break?LOOP_BREAK:LOOP_CONTINUE;
+    
+    /* Skip the loop itself */
+    block_t *loop_block = parser.block_at_index(loop_idx);
+    loop_block->skip = true;
+    loop_block->loop_status = is_break ? LOOP_BREAK : LOOP_CONTINUE;
     return STATUS_BUILTIN_OK;
 }
 
@@ -3665,8 +3676,6 @@ static int builtin_return(parser_t &parser, wchar_t **argv)
 {
     int argc = builtin_count_args(argv);
     int status = proc_get_last_status();
-
-    block_t *b = parser.current_block;
 
     switch (argc)
     {
@@ -3696,15 +3705,16 @@ static int builtin_return(parser_t &parser, wchar_t **argv)
             return STATUS_BUILTIN_ERROR;
     }
 
-
-    while ((b != 0) &&
-            (b->type() != FUNCTION_CALL &&
-             b->type() != FUNCTION_CALL_NO_SHADOW))
+    /* Find the function block */
+    size_t function_block_idx;
+    for (function_block_idx = 0; function_block_idx < parser.block_count(); function_block_idx++)
     {
-        b = b->outer;
+        const block_t *b = parser.block_at_index(function_block_idx);
+        if (b->type() == FUNCTION_CALL || b->type() == FUNCTION_CALL_NO_SHADOW)
+            break;
     }
 
-    if (b == 0)
+    if (function_block_idx >= parser.block_count())
     {
         append_format(stderr_buffer,
                       _(L"%ls: Not inside of function\n"),
@@ -3712,17 +3722,15 @@ static int builtin_return(parser_t &parser, wchar_t **argv)
         builtin_print_help(parser, argv[0], stderr_buffer);
         return STATUS_BUILTIN_ERROR;
     }
-
-    b = parser.current_block;
-    while ((b->type() != FUNCTION_CALL &&
-            b->type() != FUNCTION_CALL_NO_SHADOW))
+    
+    /* Skip everything up to (and then including) the function block */
+    for (size_t i=0; i < function_block_idx; i++)
     {
+        block_t *b = parser.block_at_index(i);
         b->mark_as_fake();
-        b->skip=1;
-        b = b->outer;
+        b->skip = true;
     }
-    b->skip=1;
-
+    parser.block_at_index(function_block_idx)->skip = true;
     return status;
 }
 
@@ -3749,7 +3757,7 @@ static int builtin_switch(parser_t &parser, wchar_t **argv)
     else
     {
         parser.push_block(new switch_block_t(argv[1]));
-        parser.current_block->skip=1;
+        parser.current_block()->skip=1;
         res = proc_get_last_status();
     }
 
@@ -3766,7 +3774,7 @@ static int builtin_case(parser_t &parser, wchar_t **argv)
     int i;
     wchar_t *unescaped=0;
 
-    if (parser.current_block->type() != SWITCH)
+    if (parser.current_block()->type() != SWITCH)
     {
         append_format(stderr_buffer,
                       _(L"%ls: 'case' command while not in switch block\n"),
@@ -3775,8 +3783,8 @@ static int builtin_case(parser_t &parser, wchar_t **argv)
         return STATUS_BUILTIN_ERROR;
     }
 
-    parser.current_block->skip = 1;
-    switch_block_t *sb = static_cast<switch_block_t *>(parser.current_block);
+    parser.current_block()->skip = 1;
+    switch_block_t *sb = static_cast<switch_block_t *>(parser.current_block());
     if (sb->switch_taken)
     {
         return proc_get_last_status();
@@ -3793,7 +3801,7 @@ static int builtin_case(parser_t &parser, wchar_t **argv)
 
         if (match)
         {
-            parser.current_block->skip = 0;
+            parser.current_block()->skip = 0;
             sb->switch_taken = true;
             break;
         }

@@ -6,6 +6,7 @@ Makefile
 autom4te.cache/
 build/
 command_list.txt
+command_list_toc.txt
 confdefs.h
 config.h
 config.h.in

@@ -580,7 +580,8 @@ static void exec_no_exec(parser_t &parser, const job_t *job)
             }
             else if (builtin_name == L"end")
             {
-                if (parser.current_block == NULL || parser.current_block->type() == TOP)
+                const block_t *block = parser.current_block();
+                if (block == NULL || block->type() == TOP)
                 {
                     fprintf(stderr, "Warning: not popping the root block\n");
                 }

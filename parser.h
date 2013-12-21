@@ -137,11 +137,6 @@ public:
     /** List of event blocks. */
     event_blockage_list_t event_blocks;
 
-    /**
-     Next outer block
-    */
-    block_t *outer;
-
     /** Destructor */
     virtual ~block_t();
 };
@@ -301,7 +296,6 @@ class parser_t
 {
 private:
     enum parser_type_t parser_type;
-    std::vector<block_t> blocks;
 
     /** Whether or not we output errors */
     const bool show_errors;
@@ -332,6 +326,9 @@ private:
 
     /** The jobs associated with this parser */
     job_list_t my_job_list;
+    
+    /** The list of blocks, allocated with new. It's our responsibility to delete these */
+    std::vector<block_t *> block_stack;
 
     /**
        Keeps track of how many recursive eval calls have been made. Eval
@@ -376,9 +373,6 @@ public:
 
     /** Create a parser of the given type */
     parser_t(enum parser_type_t type, bool show_errors);
-
-    /** The current innermost block, allocated with new */
-    block_t *current_block;
 
     /** Global event blocks */
     event_blockage_list_t global_event_blocks;
@@ -441,6 +435,20 @@ public:
 
     /** Set the current position in the latest string of the tokenizer. */
     void set_pos(int p);
+    
+    /** Returns the block at the given index. 0 corresponds to the innermost block. Returns NULL when idx is at or equal to the number of blocks. */
+    const block_t *block_at_index(size_t idx) const;
+    block_t *block_at_index(size_t idx);
+    
+    /** Returns the current (innermost) block */
+    const block_t *current_block() const;
+    block_t *current_block();
+    
+    /** Count of blocks */
+    size_t block_count() const
+    {
+        return block_stack.size();
+    }
 
     /** Get the string currently parsed */
     const wchar_t *get_buffer() const;
@@ -533,7 +541,7 @@ public:
     /**
        Write a stack trace starting at the specified block to the specified wcstring
     */
-    void stack_trace(block_t *b, wcstring &buff);
+    void stack_trace(size_t block_idx, wcstring &buff);
 
     int get_block_type(const wchar_t *cmd) const;
     const wchar_t *get_block_command(int type) const;

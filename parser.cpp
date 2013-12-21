@@ -325,7 +325,6 @@ parser_t::parser_t(enum parser_type_t type, bool errors) :
     current_tokenizer_pos(0),
     job_start_pos(0),
     eval_level(-1),
-    current_block(NULL),
     block_io(shared_ptr<io_data_t>())
 {
 
@@ -352,39 +351,36 @@ void parser_t::skip_all_blocks(void)
     if (s_principal_parser)
     {
         //write(2, "Cancelling blocks\n", strlen("Cancelling blocks\n"));
-        block_t *c = s_principal_parser->current_block;
-        while (c)
+        for (size_t i=0; i < s_principal_parser->block_count(); i++)
         {
-            c->skip = true;
-            //fprintf(stderr, "   Cancelled %p\n", c);
-            c = c->outer;
+            s_principal_parser->block_at_index(i)->skip = true;
         }
     }
 }
 
-void parser_t::push_block(block_t *newv)
+void parser_t::push_block(block_t *new_current)
 {
-    const enum block_type_t type = newv->type();
-    newv->src_lineno = parser_t::get_lineno();
-    newv->src_filename = parser_t::current_filename()?intern(parser_t::current_filename()):0;
+    const enum block_type_t type = new_current->type();
+    new_current->src_lineno = parser_t::get_lineno();
+    new_current->src_filename = parser_t::current_filename()?intern(parser_t::current_filename()):0;
 
-    newv->outer = current_block;
-    if (current_block && current_block->skip)
-        newv->mark_as_fake();
+    const block_t *old_current = this->current_block();
+    if (old_current && old_current->skip)
+        new_current->mark_as_fake();
 
     /*
       New blocks should be skipped if the outer block is skipped,
       except TOP ans SUBST block, which open up new environments. Fake
       blocks should always be skipped. Rather complicated... :-(
     */
-    newv->skip=current_block?current_block->skip:0;
+    new_current->skip = old_current ? old_current->skip : 0;
 
     /*
       Type TOP and SUBST are never skipped
     */
     if (type == TOP || type == SUBST)
     {
-        newv->skip = 0;
+        new_current->skip = 0;
     }
 
     /*
@@ -392,27 +388,26 @@ void parser_t::push_block(block_t *newv)
     */
     if (type == FAKE || type == FUNCTION_DEF)
     {
-        newv->skip = 1;
+        new_current->skip = 1;
     }
 
-    newv->job = 0;
-    newv->loop_status=LOOP_NORMAL;
+    new_current->job = 0;
+    new_current->loop_status=LOOP_NORMAL;
+    
+    this->block_stack.push_back(new_current);
 
-    current_block = newv;
-
-    if ((newv->type() != FUNCTION_DEF) &&
-            (newv->type() != FAKE) &&
-            (newv->type() != TOP))
+    if ((new_current->type() != FUNCTION_DEF) &&
+            (new_current->type() != FAKE) &&
+            (new_current->type() != TOP))
     {
         env_push(type == FUNCTION_CALL);
-        newv->wants_pop_env = true;
+        new_current->wants_pop_env = true;
     }
 }
 
 void parser_t::pop_block()
 {
-    block_t *old = current_block;
-    if (!current_block)
+    if (block_stack.empty())
     {
         debug(1,
               L"function %s called on empty block stack.",
@@ -421,7 +416,8 @@ void parser_t::pop_block()
         return;
     }
 
-    current_block = current_block->outer;
+    block_t *old = block_stack.back();
+    block_stack.pop_back();
 
     if (old->wants_pop_env)
         env_pop();
@@ -440,6 +436,30 @@ const wchar_t *parser_t::get_block_desc(int block) const
     }
     return _(UNKNOWN_BLOCK);
 }
+
+const block_t *parser_t::block_at_index(size_t idx) const
+{
+    /* 0 corresponds to the last element in our vector */
+    size_t count = block_stack.size();
+    return idx < count ? block_stack.at(count - idx - 1) : NULL;
+}
+
+block_t *parser_t::block_at_index(size_t idx)
+{
+    size_t count = block_stack.size();
+    return idx < count ? block_stack.at(count - idx - 1) : NULL;
+}
+
+const block_t *parser_t::current_block() const
+{
+    return block_stack.empty() ? NULL : block_stack.back();
+}
+
+block_t *parser_t::current_block()
+{
+    return block_stack.empty() ? NULL : block_stack.back();
+}
+
 
 /**
    Returns 1 if the specified command is a builtin that may not be used in a pipeline
@@ -807,13 +827,15 @@ int parser_t::eval_args(const wchar_t *line, std::vector<completion_t> &args)
     return 1;
 }
 
-void parser_t::stack_trace(block_t *b, wcstring &buff)
+void parser_t::stack_trace(size_t block_idx, wcstring &buff)
 {
     /*
       Check if we should end the recursion
     */
-    if (!b)
+    if (block_idx >= this->block_count())
         return;
+    
+    const block_t *b = this->block_at_index(block_idx);
 
     if (b->type()==EVENT)
     {
@@ -908,7 +930,7 @@ void parser_t::stack_trace(block_t *b, wcstring &buff)
     /*
       Recursively print the next block
     */
-    parser_t::stack_trace(b->outer, buff);
+    parser_t::stack_trace(block_idx + 1, buff);
 }
 
 /**
@@ -921,22 +943,19 @@ const wchar_t *parser_t::is_function() const
 {
     // PCA: Have to make this a string somehow
     ASSERT_IS_MAIN_THREAD();
-    wcstring result;
 
-    block_t *b = current_block;
-    while (1)
+    const wchar_t *result = NULL;
+    for (size_t block_idx = 0; block_idx < this->block_count(); block_idx++)
     {
-        if (!b)
-        {
-            return NULL;
-        }
+        const block_t *b = this->block_at_index(block_idx);
         if (b->type() == FUNCTION_CALL)
         {
             const function_block_t *fb = static_cast<const function_block_t *>(b);
-            return fb->name.c_str();
+            result = fb->name.c_str();
+            break;
         }
-        b=b->outer;
     }
+    return result;
 }
 
 
@@ -974,21 +993,17 @@ const wchar_t *parser_t::current_filename() const
     ASSERT_IS_MAIN_THREAD();
     assert(this == &principal_parser());
 
-    block_t *b = current_block;
 
-    while (1)
+    for (size_t i=0; i < this->block_count(); i++)
     {
-        if (!b)
-        {
-            return reader_current_filename();
-        }
+        const block_t *b = this->block_at_index(i);
         if (b->type() == FUNCTION_CALL)
         {
             const function_block_t *fb = static_cast<const function_block_t *>(b);
             return function_get_definition_file(fb->name);
         }
-        b=b->outer;
     }
+    return reader_current_filename();
 }
 
 /**
@@ -1129,7 +1144,7 @@ const wchar_t *parser_t::current_line()
     }
 
     free((void *)line);
-    parser_t::stack_trace(current_block, lineinfo);
+    parser_t::stack_trace(0, lineinfo);
 
     return lineinfo.c_str();
 }
@@ -1239,7 +1254,7 @@ job_t *parser_t::job_get_from_pid(int pid)
    \param j the job to which the process belongs to
    \param tok the tokenizer to read options from
    \param args the argument list to insert options into
-   \param args unskip whether we should ignore current_block->skip. Big hack because of our dumb handling of if statements.
+   \param args unskip whether we should ignore current_block()->skip. Big hack because of our dumb handling of if statements.
 */
 void parser_t::parse_job_argument_list(process_t *p,
                                        job_t *j,
@@ -1336,7 +1351,7 @@ void parser_t::parse_job_argument_list(process_t *p,
                 {
                     skip = 1;
                 }
-                else if (current_block->skip && ! unskip)
+                else if (current_block()->skip && ! unskip)
                 {
                     /*
                       If this command should be skipped, we do not expand the arguments
@@ -1344,12 +1359,12 @@ void parser_t::parse_job_argument_list(process_t *p,
                     skip=1;
 
                     /* But if this is in fact a case statement or an elseif statement, then it should be evaluated */
-                    block_type_t type = current_block->type();
+                    block_type_t type = current_block()->type();
                     if (type == SWITCH && args.at(0).completion == L"case" && p->type == INTERNAL_BUILTIN)
                     {
                         skip=0;
                     }
-                    else if (job_get_flag(j, JOB_ELSEIF) && ! job_should_skip_elseif(j, current_block))
+                    else if (job_get_flag(j, JOB_ELSEIF) && ! job_should_skip_elseif(j, current_block()))
                     {
                         skip=0;
                     }
@@ -1357,7 +1372,7 @@ void parser_t::parse_job_argument_list(process_t *p,
                 else
                 {
                     /* If this is an else if, and we should skip it, then don't expand any arguments */
-                    if (job_get_flag(j, JOB_ELSEIF) && job_should_skip_elseif(j, current_block))
+                    if (job_get_flag(j, JOB_ELSEIF) && job_should_skip_elseif(j, current_block()))
                     {
                         skip = 1;
                     }
@@ -1440,7 +1455,7 @@ void parser_t::parse_job_argument_list(process_t *p,
                   Otherwise, bogus errors may be the result. (Do check
                   that token is string, though)
                 */
-                if (current_block->skip && ! unskip)
+                if (current_block()->skip && ! unskip)
                 {
                     tok_next(tok);
                     if (tok_last_type(tok) != TOK_STRING)
@@ -1653,7 +1668,7 @@ int parser_t::parse_job(process_t *p,
     bool unskip = false;    // Maybe we are an elseif inside an if block; if so we may want to evaluate this even if the if block is currently set to skip
     bool allow_bogus_command = false; // If we are an elseif that will not be executed, or an AND or OR that will have been short circuited, don't complain about non-existent commands
 
-    block_t *prev_block = current_block;
+    const block_t *prev_block = current_block();
     scoped_push<int> tokenizer_pos_push(&current_tokenizer_pos, tok_get_pos(tok));
 
     while (args.empty())
@@ -1806,11 +1821,11 @@ int parser_t::parse_job(process_t *p,
             tok_next(tok);
             while_block_t *wb = NULL;
 
-            if ((current_block->type() != WHILE))
+            if ((current_block()->type() != WHILE))
             {
                 new_block = true;
             }
-            else if ((wb = static_cast<while_block_t*>(current_block))->status == WHILE_TEST_AGAIN)
+            else if ((wb = static_cast<while_block_t*>(current_block()))->status == WHILE_TEST_AGAIN)
             {
                 wb->status = WHILE_TEST_FIRST;
             }
@@ -1848,9 +1863,9 @@ int parser_t::parse_job(process_t *p,
             const int else_pos = tok_get_pos(tok);
             /* See if we have any more arguments, that is, whether we're ELSE IF ... or just ELSE. */
             tok_next(tok);
-            if (tok_last_type(tok) == TOK_STRING && current_block->type() == IF)
+            if (tok_last_type(tok) == TOK_STRING && current_block()->type() == IF)
             {
-                const if_block_t *ib = static_cast<const if_block_t *>(current_block);
+                const if_block_t *ib = static_cast<const if_block_t *>(current_block());
 
                 /* If we've already encountered an else, complain */
                 if (ib->else_evaluated)
@@ -1891,7 +1906,7 @@ int parser_t::parse_job(process_t *p,
             continue;
         }
 
-        if (use_function && (unskip || ! current_block->skip))
+        if (use_function && (unskip || ! current_block()->skip))
         {
             bool nxt_forbidden=false;
             wcstring forbid;
@@ -1905,9 +1920,8 @@ int parser_t::parse_job(process_t *p,
               block scopes are pushed on function invocation changes,
               then this check will break.
             */
-            if ((current_block->type() == TOP) &&
-                    (current_block->outer) &&
-                    (current_block->outer->type() == FUNCTION_CALL))
+            const block_t *current = this->block_at_index(0), *parent = this->block_at_index(1);
+            if (current && parent && current->type() == TOP && parent->type() == FUNCTION_CALL)
                 is_function_call = 1;
 
             /*
@@ -1916,7 +1930,7 @@ int parser_t::parse_job(process_t *p,
               may not be called, since that would mean an infinite
               recursion.
             */
-            if (is_function_call && !current_block->had_command)
+            if (is_function_call && !current->had_command)
             {
                 forbid = forbidden_function.empty() ? wcstring(L"") : forbidden_function.back();
                 if (forbid == nxt)
@@ -1963,7 +1977,7 @@ int parser_t::parse_job(process_t *p,
               If we are not executing the current block, allow
               non-existent commands.
             */
-            if (current_block->skip && ! unskip)
+            if (current_block()->skip && ! unskip)
                 allow_bogus_command = true; //note this may already be true for other reasons
 
             if (allow_bogus_command)
@@ -2208,7 +2222,7 @@ int parser_t::parse_job(process_t *p,
 
                 tok_set_pos(tok, (int)end_pos);
 
-                while (prev_block != current_block)
+                while (prev_block != this->current_block())
                 {
                     parser_t::pop_block();
                 }
@@ -2237,7 +2251,7 @@ int parser_t::parse_job(process_t *p,
     {
         if (!is_new_block)
         {
-            current_block->had_command = true;
+            current_block()->had_command = true;
         }
     }
 
@@ -2246,7 +2260,7 @@ int parser_t::parse_job(process_t *p,
         /*
           Make sure the block stack is consistent
         */
-        while (prev_block != current_block)
+        while (prev_block != current_block())
         {
             parser_t::pop_block();
         }
@@ -2280,7 +2294,8 @@ void parser_t::skipped_exec(job_t * j)
             }
             else if (wcscmp(p->argv0(), L"end")==0)
             {
-                if (!current_block->outer->skip)
+                const block_t *parent = this->block_at_index(1);
+                if (parent && ! parent->skip)
                 {
                     exec_job(*this, j);
                     return;
@@ -2289,10 +2304,10 @@ void parser_t::skipped_exec(job_t * j)
             }
             else if (wcscmp(p->argv0(), L"else")==0)
             {
-                if (current_block->type() == IF)
+                if (current_block()->type() == IF)
                 {
                     /* Evaluate this ELSE if the IF expression failed, and so has every ELSEIF (if any) expression thus far */
-                    const if_block_t *ib = static_cast<const if_block_t*>(current_block);
+                    const if_block_t *ib = static_cast<const if_block_t*>(current_block());
                     if (ib->if_expr_evaluated && ! ib->any_branch_taken)
                     {
                         exec_job(*this, j);
@@ -2302,7 +2317,7 @@ void parser_t::skipped_exec(job_t * j)
             }
             else if (wcscmp(p->argv0(), L"case")==0)
             {
-                if (current_block->type() == SWITCH)
+                if (current_block()->type() == SWITCH)
                 {
                     exec_job(*this, j);
                     return;
@@ -2376,7 +2391,7 @@ void parser_t::eval_job(tokenizer_t *tok)
                          || is_event \
                          || (!get_is_interactive()));
 
-            current_block->job = j;
+            current_block()->job = j;
 
             if (get_is_interactive())
             {
@@ -2411,27 +2426,27 @@ void parser_t::eval_job(tokenizer_t *tok)
                 {
                     t2 = get_time();
                     profile_item->cmd = j->command();
-                    profile_item->skipped=current_block->skip;
+                    profile_item->skipped=current_block()->skip;
                 }
 
                 /* If we're an ELSEIF, then we may want to unskip, if we're skipping because of an IF */
                 if (job_get_flag(j, JOB_ELSEIF))
                 {
-                    bool skip_elseif = job_should_skip_elseif(j, current_block);
+                    bool skip_elseif = job_should_skip_elseif(j, current_block());
 
                     /* Record that we're entering an elseif */
                     if (! skip_elseif)
                     {
                         /* We must be an IF block here */
-                        assert(current_block->type() == IF);
-                        static_cast<if_block_t *>(current_block)->is_elseif_entry = true;
+                        assert(current_block()->type() == IF);
+                        static_cast<if_block_t *>(current_block())->is_elseif_entry = true;
                     }
 
                     /* Record that in the block too. This is similar to what builtin_else does. */
-                    current_block->skip = skip_elseif;
+                    current_block()->skip = skip_elseif;
                 }
 
-                skip = skip || current_block->skip;
+                skip = skip || current_block()->skip;
                 skip = skip || job_get_flag(j, JOB_WILDCARD_ERROR);
                 skip = skip || job_get_flag(j, JOB_SKIP);
 
@@ -2460,9 +2475,9 @@ void parser_t::eval_job(tokenizer_t *tok)
                     profile_item->exec=(int)(t3-t2);
                 }
 
-                if (current_block->type() == WHILE)
+                if (current_block()->type() == WHILE)
                 {
-                    while_block_t *wb = static_cast<while_block_t *>(current_block);
+                    while_block_t *wb = static_cast<while_block_t *>(current_block());
                     switch (wb->status)
                     {
                         case WHILE_TEST_FIRST:
@@ -2476,9 +2491,9 @@ void parser_t::eval_job(tokenizer_t *tok)
                     }
                 }
 
-                if (current_block->type() == IF)
+                if (current_block()->type() == IF)
                 {
-                    if_block_t *ib = static_cast<if_block_t *>(current_block);
+                    if_block_t *ib = static_cast<if_block_t *>(current_block());
 
                     if (ib->skip)
                     {
@@ -2491,7 +2506,7 @@ void parser_t::eval_job(tokenizer_t *tok)
                         ib->any_branch_taken = if_result;
 
                         /* Don't execute if the expression failed */
-                        current_block->skip = ! if_result;
+                        current_block()->skip = ! if_result;
                         ib->if_expr_evaluated = true;
                     }
                     else if (ib->is_elseif_entry && ! ib->any_branch_taken)
@@ -2499,7 +2514,7 @@ void parser_t::eval_job(tokenizer_t *tok)
                         /* Maybe mark an ELSEIF branch as taken */
                         bool elseif_taken = (proc_get_last_status() == 0);
                         ib->any_branch_taken = elseif_taken;
-                        current_block->skip = ! elseif_taken;
+                        current_block()->skip = ! elseif_taken;
                         ib->is_elseif_entry = false;
                     }
                 }
@@ -2517,7 +2532,7 @@ void parser_t::eval_job(tokenizer_t *tok)
 
                 proc_set_last_status(1);
             }
-            current_block->job = 0;
+            current_block()->job = 0;
             break;
         }
 
@@ -2579,7 +2594,7 @@ int parser_t::eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type
     const wchar_t * const cmd = cmdStr.c_str();
     size_t forbid_count;
     int code;
-    block_t *start_current_block = current_block;
+    const block_t *start_current_block = current_block();
 
     /* Record the current chain so we can put it back later */
     scoped_push<io_chain_t> block_io_push(&block_io, io);
@@ -2639,9 +2654,9 @@ int parser_t::eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type
 
     parser_t::pop_block();
 
-    while (start_current_block != current_block)
+    while (start_current_block != current_block())
     {
-        if (current_block == 0)
+        if (current_block() == NULL)
         {
             debug(0,
                   _(L"End of block mismatch. Program terminating."));
@@ -2656,7 +2671,7 @@ int parser_t::eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type
             //debug( 2, L"Status %d\n", proc_get_last_status() );
 
             debug(1,
-                  L"%ls", parser_t::get_block_desc(current_block->type()));
+                  L"%ls", parser_t::get_block_desc(current_block()->type()));
             debug(1,
                   BLOCK_END_ERR_MSG);
             fwprintf(stderr, L"%ls", parser_t::current_line());
@@ -3734,8 +3749,7 @@ block_t::block_t(block_type_t t) :
     src_filename(),
     src_lineno(),
     wants_pop_env(false),
-    event_blocks(),
-    outer(NULL)
+    event_blocks()
 {
 }
 

@@ -3380,7 +3380,7 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
         output->append(err.describe(src, skip_caret));
         output->push_back(L'\n');
         
-        this->stack_trace(current_block, *output);
+        this->stack_trace(0, *output);
     }
 }
 

@@ -187,8 +187,11 @@ const wchar_t *tok_get_desc(int type);
 */
 int tok_get_error(tokenizer_t *tok);
 
-/* Helper function to determine redirection type from a string, or TOK_NONE if the redirection is invalid */
-enum token_type redirection_type_for_string(const wcstring &str);
+/* Helper function to determine redirection type from a string, or TOK_NONE if the redirection is invalid. Also returns the fd by reference. */
+enum token_type redirection_type_for_string(const wcstring &str, int *out_fd = NULL);
+
+/* Helper function to return oflags (as in open(2)) for a redirection type */
+int oflags_for_redirection_type(enum token_type type);
 
 enum move_word_style_t
 {

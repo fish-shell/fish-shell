@@ -1648,13 +1648,12 @@ void parser_t::parse_job_argument_list(process_t *p,
   }
 */
 
-#if 0
 process_t *parser_t::create_boolean_process(job_t *job, const parse_node_t &bool_statement, const parser_context_t &ctx)
 {
     // Handle a boolean statement
     bool skip_job = false;
     assert(bool_statement.type == symbol_boolean_statement);
-    switch (specific_statement.production_idx)
+    switch (bool_statement.production_idx)
     {
         // These magic numbers correspond to productions for boolean_statement
         case 0:
@@ -1689,14 +1688,279 @@ process_t *parser_t::create_boolean_process(job_t *job, const parse_node_t &bool
     return result;
 }
 
+process_t *parser_t::create_for_process(job_t *job, const parse_node_t &header, const parse_node_t &statement, const parser_context_t &ctx)
+{
+    return NULL;
+}
+
+process_t *parser_t::create_while_process(job_t *job, const parse_node_t &header, const parse_node_t &statement, const parser_context_t &ctx)
+{
+    return NULL;
+}
+
+process_t *parser_t::create_begin_process(job_t *job, const parse_node_t &header, const parse_node_t &statement, const parser_context_t &ctx)
+{
+    return NULL;
+}
+
+process_t *parser_t::create_plain_process(job_t *job, const parse_node_t &statement, const parser_context_t &ctx)
+{
+    /* Get the decoration */
+    assert(statement.type == symbol_plain_statement);
+    
+    /* Get the command. We expect to always get it here. */
+    wcstring cmd;
+    bool got_cmd = ctx.tree.command_for_plain_statement(statement, ctx.src, &cmd);
+    assert(got_cmd);
+    
+    /* Expand it as a command */
+    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
+    if (! expanded)
+    {
+        error(SYNTAX_ERROR,
+              statement.source_start,
+              ILLEGAL_CMD_ERR_MSG,
+              cmd.c_str());
+        return 0;
+    }
+    
+    /* The list of arguments. The command is the first argument. TODO: count hack */
+    const parse_node_t *unmatched_wildcard = NULL;
+    wcstring_list_t argument_list = this->determine_arguments(statement, &unmatched_wildcard, ctx);
+    argument_list.insert(argument_list.begin(), cmd);
+    
+    /* We were not able to expand any wildcards. Here is the first one that failed */
+    if (unmatched_wildcard != NULL)
+    {
+        job_set_flag(job, JOB_WILDCARD_ERROR, 1);
+        proc_set_last_status(STATUS_UNMATCHED_WILDCARD);
+        error(EVAL_ERROR, unmatched_wildcard->source_start, WILDCARD_ERR_MSG, unmatched_wildcard->get_source(ctx.src).c_str());
+    }
+    
+    /* The set of IO redirections that we construct for the process */
+    const io_chain_t process_io_chain = this->determine_io_chain(statement, ctx);
+    
+    /* Determine the process type, which depends on the statement decoration (command, builtin, etc) */
+    enum parse_statement_decoration_t decoration = ctx.tree.decoration_for_plain_statement(statement);
+    enum process_type_t process_type = EXTERNAL;
+    
+    /* exec hack */
+    if (decoration != parse_statement_decoration_command && cmd == L"exec")
+    {
+        /* Either 'builtin exec' or just plain 'exec', and definitely not 'command exec'. Note we don't allow overriding exec with a function. */
+        process_type = INTERNAL_EXEC;
+    }
+    else if (decoration == parse_statement_decoration_command)
+    {
+        /* Always a command */
+        process_type = EXTERNAL;
+    }
+    else if (decoration == parse_statement_decoration_builtin)
+    {
+        /* What happens if this builtin is not valid? */
+        process_type = INTERNAL_BUILTIN;
+    }
+    else if (function_exists(cmd))
+    {
+        process_type = INTERNAL_FUNCTION;
+    }
+    else if (builtin_exists(cmd))
+    {
+        process_type = INTERNAL_BUILTIN;
+    }
+    else
+    {
+        process_type = EXTERNAL;
+    }
+    
+    wcstring actual_cmd;
+    if (process_type == EXTERNAL)
+    {
+        /* Determine the actual command. Need to support implicit cd here */
+        bool has_command = path_get_path(cmd, &actual_cmd);
+        
+        if (! has_command)
+        {
+            /* TODO: support fish_command_not_found, implicit cd, etc. here */
+        }
+        
+    }
+    
+    /* Return the process */
+    process_t *result = new process_t();
+    result->type = process_type;
+    result->set_argv(argument_list);
+    result->set_io_chain(process_io_chain);
+    result->actual_cmd = actual_cmd;
+    return result;
+}
+
+/* Determine the list of arguments, expanding stuff. If we have a wildcard and none could be expanded, return the unexpandable wildcard node by reference. */
+wcstring_list_t parser_t::determine_arguments(const parse_node_t &statement, const parse_node_t **out_unmatched_wildcard_node, const parser_context_t &ctx)
+{
+    wcstring_list_t argument_list;
+    
+    /* Whether we failed to match any wildcards, and succeeded in matching any wildcards */
+    bool unmatched_wildcard = false, matched_wildcard = false;
+    
+    /* First node that failed to expand as a wildcard (if any) */
+    const parse_node_t *unmatched_wildcard_node = NULL;
+    
+    /* Get all argument nodes underneath the statement */
+    const parse_node_tree_t::parse_node_list_t argument_nodes = ctx.tree.find_nodes(statement, symbol_argument);
+    argument_list.reserve(argument_nodes.size());
+    for (size_t i=0; i < argument_nodes.size(); i++)
+    {
+        const parse_node_t &arg_node = *argument_nodes.at(i);
+        
+        /* Expect all arguments to have source */
+        assert(arg_node.has_source());
+        const wcstring arg_str = arg_node.get_source(ctx.src);
+        
+        /* Expand this string */
+        std::vector<completion_t> arg_expanded;
+        int expand_ret = expand_string(arg_str, arg_expanded, 0);
+        switch (expand_ret)
+        {
+            case EXPAND_ERROR:
+            {
+                error(SYNTAX_ERROR,
+                      arg_node.source_start,
+                      _(L"Could not expand string '%ls'"),
+                      arg_str.c_str());
+                break;
+            }
+                
+            case EXPAND_WILDCARD_NO_MATCH:
+            {
+                /* Store the node that failed to expand */
+                unmatched_wildcard = true;
+                if (! unmatched_wildcard_node)
+                {
+                    unmatched_wildcard_node = &arg_node;
+                }
+                break;
+            }
+            
+            case EXPAND_WILDCARD_MATCH:
+            {
+                matched_wildcard = true;
+                break;
+            }
+            
+            case EXPAND_OK:
+            {
+                break;
+            }
+        }
+        
+        /* Now copy over any expanded arguments */
+        for (size_t i=0; i < arg_expanded.size(); i++)
+        {
+            argument_list.push_back(arg_expanded.at(i).completion);
+        }
+    }
+    
+    /* Return if we had a wildcard problem */
+    if (unmatched_wildcard && ! matched_wildcard)
+    {
+        *out_unmatched_wildcard_node = unmatched_wildcard_node;
+    }
+    
+    return argument_list;
+}
+
+io_chain_t parser_t::determine_io_chain(const parse_node_t &statement,const parser_context_t &ctx)
+{
+    io_chain_t result;
+    
+    /* Get all redirection nodes underneath the statement */
+    const parse_node_tree_t::parse_node_list_t redirect_nodes = ctx.tree.find_nodes(statement, symbol_redirection);
+    for (size_t i=0; i < redirect_nodes.size(); i++)
+    {
+        const parse_node_t &redirect_node = *redirect_nodes.at(i);
+        
+        int source_fd = -1; /* source fd */
+        wcstring target; /* file path or target fd */
+        enum token_type redirect_type = ctx.tree.type_for_redirection(redirect_node, ctx.src, &source_fd, &target);
+        
+        /* PCA: I can't justify this EXPAND_SKIP_VARIABLES flag. It was like this when I got here. */
+        bool target_expanded = expand_one(target, no_exec ? EXPAND_SKIP_VARIABLES : 0);
+        if (! target_expanded || target.empty())
+        {
+            /* Should improve this error message */
+            error(SYNTAX_ERROR,
+                  redirect_node.source_start,
+                  _(L"Invalid redirection target: %ls"),
+                  target.c_str());
+        }
+        
+        
+        /* Generate the actual IO redirection */
+        shared_ptr<io_data_t> new_io;
+        assert(redirect_type != TOK_NONE);
+        switch (redirect_type)
+        {
+            case TOK_REDIRECT_FD:
+            {
+                if (target == L"-")
+                {
+                    new_io.reset(new io_close_t(source_fd));
+                }
+                else
+                {
+                    wchar_t *end = NULL;
+                    errno = 0;
+                    int old_fd = fish_wcstoi(target.c_str(), &end, 10);
+                    if (old_fd < 0 || errno || *end)
+                    {
+                        error(SYNTAX_ERROR,
+                              redirect_node.source_start,
+                              _(L"Requested redirection to something that is not a file descriptor %ls"),
+                              target.c_str());
+                    }
+                    else
+                    {
+                        new_io.reset(new io_fd_t(source_fd, old_fd));
+                    }
+                }
+                break;
+            }
+            
+            case TOK_REDIRECT_OUT:
+            case TOK_REDIRECT_APPEND:
+            case TOK_REDIRECT_IN:
+            case TOK_REDIRECT_NOCLOB:
+            {
+                int oflags = oflags_for_redirection_type(redirect_type);
+                io_file_t *new_io_file = new io_file_t(source_fd, target, oflags);
+                new_io.reset(new_io_file);
+                break;
+            }
+            
+            default:
+            {
+                // Should be unreachable
+                fprintf(stderr, "Unexpected redirection type %ld. aborting.\n", (long)redirect_type);
+                PARSER_DIE();
+                break;
+            }
+        }
+        
+        /* Append the new_io if we got one */
+        if (new_io.get() != NULL)
+        {
+            result.push_back(new_io);
+        }
+    }
+    return result;
+}
+
 /* Returns a process_t allocated with new. It's the caller's responsibility to delete it (!) */
 process_t *parser_t::create_job_process(job_t *job, const parse_node_t &statement_node, const parser_context_t &ctx)
 {
     assert(statement_node.type == symbol_statement);
     assert(statement_node.child_count == 1);
-    
-    // We may skip this job entirely, e.g. with an 'and' statement
-    bool skip_job = false;
     
     // Get the "specific statement" which is boolean / block / if / switch / decorated
     const parse_node_t &specific_statement = *ctx.tree.get_child(statement_node, 0);
@@ -1732,7 +1996,7 @@ process_t *parser_t::create_job_process(job_t *job, const parse_node_t &statemen
                     break;
                     
                 case symbol_begin_header:
-                    
+                    result = this->create_begin_process(job, specific_header, specific_statement, ctx);
                     break;
                 
                 default:
@@ -1740,17 +2004,22 @@ process_t *parser_t::create_job_process(job_t *job, const parse_node_t &statemen
                     PARSER_DIE();
                     break;
             }
+            break;
         }
+        
+        case symbol_decorated_statement:
+        {
+            const parse_node_t &plain_statement = ctx.tree.find_child(specific_statement, symbol_plain_statement);
+            result = this->create_plain_process(job, plain_statement, ctx);
+            break;
+        }
+        
+        default:
+            fprintf(stderr, "'%ls' not handled by new parser yet\n", specific_statement.describe().c_str());
     }
     
-    // expand_one command
-    // handle booleans (and, not, or)
-    // set INTERNAL_EXEC
-    // implicit CD
-    
-    return proc;
+    return result;
 }
-#endif
 
 /**
    Fully parse a single job. Does not call exec on it, but any command substitutions in the job will be executed.
@@ -2456,7 +2725,6 @@ static bool job_should_skip_elseif(const job_t *job, const block_t *current_bloc
    Evaluates a job from a node tree.
 */
 
-#if 0
 void parser_t::eval_job(const parse_node_t &job_node, const parser_context_t &ctx)
 {
     assert(job_node.type == symbol_job);
@@ -2499,7 +2767,7 @@ void parser_t::eval_job(const parse_node_t &job_node, const parser_context_t &ct
                  || is_event \
                  || (!get_is_interactive()));
 
-    current_block->job = j;
+    current_block()->job = j;
     
     /* Tell the job what its command is */
     j->set_command(job_node.get_source(ctx.src));
@@ -2533,124 +2801,7 @@ void parser_t::eval_job(const parse_node_t &job_node, const parser_context_t &ct
         last_process = last_process->next;
         job_cont = ctx.tree.get_child(*job_cont, 2, symbol_job_continuation);
     }
-
-    bool skip = false;
-    if (this->parse_job(j->first_process, j, job_node, ctx) && j->first_process->get_argv())
-    {
-        if (do_profile)
-        {
-            t2 = get_time();
-            profile_item->cmd = j->command();
-            profile_item->skipped=current_block->skip;
-        }
-
-        /* If we're an ELSEIF, then we may want to unskip, if we're skipping because of an IF */
-        if (job_get_flag(j, JOB_ELSEIF))
-        {
-            bool skip_elseif = job_should_skip_elseif(j, current_block);
-
-            /* Record that we're entering an elseif */
-            if (! skip_elseif)
-            {
-                /* We must be an IF block here */
-                assert(current_block->type() == IF);
-                static_cast<if_block_t *>(current_block)->is_elseif_entry = true;
-            }
-
-            /* Record that in the block too. This is similar to what builtin_else does. */
-            current_block->skip = skip_elseif;
-        }
-
-        skip = skip || current_block->skip;
-        skip = skip || job_get_flag(j, JOB_WILDCARD_ERROR);
-        skip = skip || job_get_flag(j, JOB_SKIP);
-
-        if (!skip)
-        {
-            int was_builtin = 0;
-            if (j->first_process->type==INTERNAL_BUILTIN && !j->first_process->next)
-                was_builtin = 1;
-            scoped_push<int> tokenizer_pos_push(&current_tokenizer_pos, job_begin_pos);
-            exec_job(*this, j);
-
-            /* Only external commands require a new fishd barrier */
-            if (!was_builtin)
-                set_proc_had_barrier(false);
-        }
-        else
-        {
-            this->skipped_exec(j);
-        }
-
-        if (do_profile)
-        {
-            t3 = get_time();
-            profile_item->level=eval_level;
-            profile_item->parse = (int)(t2-t1);
-            profile_item->exec=(int)(t3-t2);
-        }
-
-        if (current_block->type() == WHILE)
-        {
-            while_block_t *wb = static_cast<while_block_t *>(current_block);
-            switch (wb->status)
-            {
-                case WHILE_TEST_FIRST:
-                {
-                    // PCA I added the 'wb->skip ||' part because we couldn't reliably
-                    // control-C out of loops like this: while test 1 -eq 1; end
-                    wb->skip = wb->skip || proc_get_last_status()!= 0;
-                    wb->status = WHILE_TESTED;
-                }
-                break;
-            }
-        }
-
-        if (current_block->type() == IF)
-        {
-            if_block_t *ib = static_cast<if_block_t *>(current_block);
-
-            if (ib->skip)
-            {
-                /* Nothing */
-            }
-            else if (! ib->if_expr_evaluated)
-            {
-                /* Execute the IF */
-                bool if_result = (proc_get_last_status() == 0);
-                ib->any_branch_taken = if_result;
-
-                /* Don't execute if the expression failed */
-                current_block->skip = ! if_result;
-                ib->if_expr_evaluated = true;
-            }
-            else if (ib->is_elseif_entry && ! ib->any_branch_taken)
-            {
-                /* Maybe mark an ELSEIF branch as taken */
-                bool elseif_taken = (proc_get_last_status() == 0);
-                ib->any_branch_taken = elseif_taken;
-                current_block->skip = ! elseif_taken;
-                ib->is_elseif_entry = false;
-            }
-        }
-
-    }
-    else
-    {
-        /*
-          This job could not be properly parsed. We free it
-          instead, and set the status to 1. This should be
-          rare, since most errors should be detected by the
-          ahead of time validator.
-        */
-        job_free(j);
-
-        proc_set_last_status(1);
-    }
-    current_block->job = 0;
-    break;
 }
-#endif
 
 /**
    Evaluates a job from the specified tokenizer. First calls
@@ -2889,57 +3040,85 @@ void parser_t::eval_job(tokenizer_t *tok)
     }
 
     job_reap(0);
-
 }
 
-#if 0
-int parser_t::eval2(const wcstring &cmd_str, const io_chain_t &io, enum block_type_t block_type)
+static void push_all_children(std::vector<node_offset_t> *execution_stack, const parse_node_t &node)
 {
-    parser_context_t mut_ctx;
-    mut_ctx.src = cmd_str;
-    
-    /* Parse the tree */
-    if (! parse_t::parse(cmd_str, parse_flag_none, &mut_ctx.tree, NULL))
+    // push nodes in reverse order, so the first node ends up on top
+    unsigned child_idx = node.child_count;
+    while (child_idx--)
     {
-        return 1;
+        execution_stack->push_back(node.child_offset(child_idx));
     }
-    
-    /* Make a const version for safety's sake */
-    const parser_context_t &ctx = mut_ctx;
+}
 
-    CHECK_BLOCK(1);
+void parser_t::execute_next(std::vector<node_offset_t> *execution_stack, const parser_context_t &ctx)
+{
+    assert(execution_stack != NULL);
+    assert(! execution_stack->empty());
     
-    /* Record the current chain so we can put it back later */
-    scoped_push<io_chain_t> block_io_push(&block_io, io);
-    scoped_push<wcstring_list_t> forbidden_function_push(&forbidden_function);
-    const size_t forbid_count = forbidden_function.size();
-    const block_t *start_current_block = current_block;
+    /* Get the offset of the next node and remove it from the stack */
+    node_offset_t next_offset = execution_stack->back();
+    execution_stack->pop_back();
     
-    /* Do some stuff I haven't figured out yet */
-    job_reap(0);
+    /* Get the node */
+    assert(next_offset < ctx.tree.size());
+    const parse_node_t &node = ctx.tree.at(next_offset);
     
-    /* Only certain blocks are allowed */
-    if ((block_type != TOP) &&
-            (block_type != SUBST))
+    /* Do something with it */
+    switch (node.type)
     {
-        debug(1,
-              INVALID_SCOPE_ERR_MSG,
-              parser_t::get_block_desc(block_type));
-        bugreport();
-        return 1;
+        case symbol_job_list:
+            // These correspond to the three productions of job_list
+            switch (node.production_idx)
+            {
+                case 0: // empty
+                    break;
+                
+                case 1: //job, job_list
+                    push_all_children(execution_stack, node);
+                    break;
+                
+                case 2: //blank line, job_list
+                    execution_stack->push_back(node.child_offset(1));
+                    break;
+                    
+                default: //if we get here, it means more productions have been added to job_list, which is bad
+                    PARSER_DIE();
+                    break;
+            }
+            break;
+        
+        case symbol_job: //statement, job_continuation
+            push_all_children(execution_stack, node);
+            break;
+            
+        case symbol_job_continuation:
+            switch (node.production_idx)
+            {
+                case 0: //empty
+                    break;
+                    
+                case 1: //pipe, statement, job_continuation
+                    execution_stack->push_back(node.child_offset(2));
+                    execution_stack->push_back(node.child_offset(1));
+                    break;
+                
+                default:
+                    PARSER_DIE();
+                    break;
+            }
+        break;
+            
     }
+}
 
-    eval_level++;
-
-    this->push_block(new scope_block_t(block_type));
-
-    error_code = 0;
-
-    event_fire(NULL);
-
-    /* Execute the top job list */
-    assert(! ctx.tree.empty());
-    const parse_node_t *job_list = &ctx.tree.at(0);
+/* Executes the job list at the given node offset */
+void parser_t::execute_job_list(node_offset_t idx, const parser_context_t &ctx)
+{
+    assert(idx < ctx.tree.size());
+    
+    const parse_node_t *job_list = &ctx.tree.at(idx);
     assert(job_list->type == symbol_job_list);
     while (job_list != NULL)
     {
@@ -2971,12 +3150,60 @@ int parser_t::eval2(const wcstring &cmd_str, const io_chain_t &io, enum block_ty
             this->eval_job(*job, ctx);
         }
     }
+}
+
+int parser_t::eval2(const wcstring &cmd_str, const io_chain_t &io, enum block_type_t block_type)
+{
+    parser_context_t mut_ctx;
+    mut_ctx.src = cmd_str;
+    
+    /* Parse the tree */
+    if (! parse_t::parse(cmd_str, parse_flag_none, &mut_ctx.tree, NULL))
+    {
+        return 1;
+    }
+    
+    /* Make a const version for safety's sake */
+    const parser_context_t &ctx = mut_ctx;
+
+    CHECK_BLOCK(1);
+    
+    /* Record the current chain so we can put it back later */
+    scoped_push<io_chain_t> block_io_push(&block_io, io);
+    scoped_push<wcstring_list_t> forbidden_function_push(&forbidden_function);
+    const size_t forbid_count = forbidden_function.size();
+    const block_t * const start_current_block = this->current_block();
+    
+    /* Do some stuff I haven't figured out yet */
+    job_reap(0);
+    
+    /* Only certain blocks are allowed */
+    if ((block_type != TOP) &&
+            (block_type != SUBST))
+    {
+        debug(1,
+              INVALID_SCOPE_ERR_MSG,
+              parser_t::get_block_desc(block_type));
+        bugreport();
+        return 1;
+    }
+
+    eval_level++;
+
+    this->push_block(new scope_block_t(block_type));
+
+    error_code = 0;
+
+    event_fire(NULL);
+    
+    /* Execute the top level job list */
+    execute_job_list(0, ctx);
 
     parser_t::pop_block();
 
-    while (start_current_block != current_block)
+    while (start_current_block != this->current_block())
     {
-        if (current_block == 0)
+        if (this->current_block() == NULL)
         {
             debug(0,
                   _(L"End of block mismatch. Program terminating."));
@@ -2991,7 +3218,7 @@ int parser_t::eval2(const wcstring &cmd_str, const io_chain_t &io, enum block_ty
             //debug( 2, L"Status %d\n", proc_get_last_status() );
 
             debug(1,
-                  L"%ls", parser_t::get_block_desc(current_block->type()));
+                  L"%ls", parser_t::get_block_desc(current_block()->type()));
             debug(1,
                   BLOCK_END_ERR_MSG);
             fwprintf(stderr, L"%ls", parser_t::current_line());
@@ -3022,7 +3249,6 @@ int parser_t::eval2(const wcstring &cmd_str, const io_chain_t &io, enum block_ty
 
     return code;
 }
-#endif
 
 int parser_t::eval(const wcstring &cmd_str, const io_chain_t &io, enum block_type_t block_type)
 {

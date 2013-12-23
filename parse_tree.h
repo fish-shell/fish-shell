@@ -166,6 +166,10 @@ public:
      */
     const parse_node_t *get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type = token_type_invalid) const;
     
+    /* Find the first direct child of the given node of the given type. asserts on failure
+     */
+    const parse_node_t &find_child(const parse_node_t &parent, parse_token_type_t type) const;
+    
     /* Get the node corresponding to the parent of the given node, or NULL if there is no such child. If expected_type is provided, only returns the parent if it is of that type. Note the asymmetry: get_child asserts since the children are known, but get_parent does not, since the parent may not be known. */
     const parse_node_t *get_parent(const parse_node_t &node, parse_token_type_t expected_type = token_type_invalid) const;
     
@@ -197,7 +201,7 @@ public:
     bool plain_statement_is_in_pipeline(const parse_node_t &node, bool include_first) const;
     
     /* Given a redirection, get the redirection type (or TOK_NONE) and target (file path, or fd) */
-    enum token_type type_for_redirection(const parse_node_t &node, const wcstring &src, wcstring *out_target) const;
+    enum token_type type_for_redirection(const parse_node_t &node, const wcstring &src, int *out_fd, wcstring *out_target) const;
     
     /* If the given node is a block statement, returns the header node (for_header, while_header, begin_header, or function_header). Otherwise returns NULL */
     const parse_node_t *header_node_for_block_statement(const parse_node_t &node);

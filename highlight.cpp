@@ -1862,7 +1862,7 @@ void highlighter_t::color_redirection(const parse_node_t &redirection_node)
     if (redirection_primitive != NULL)
     {
         wcstring target;
-        const enum token_type redirect_type = this->parse_tree.type_for_redirection(redirection_node, this->buff, &target);
+        const enum token_type redirect_type = this->parse_tree.type_for_redirection(redirection_node, this->buff, NULL, &target);
         
         /* We may get a TOK_NONE redirection type, e.g. if the redirection is invalid */
         this->color_node(*redirection_primitive, redirect_type == TOK_NONE ? HIGHLIGHT_ERROR : HIGHLIGHT_REDIRECTION);

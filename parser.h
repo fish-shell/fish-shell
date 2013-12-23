@@ -96,37 +96,16 @@ public:
     bool had_command; /**< Set to non-zero once a command has been executed in this block */
     int tok_pos; /**< The start index of the block */
 
-    /**
-       Status for the current loop block. Can be any of the values from the loop_status enum.
-    */
+    /** Status for the current loop block. Can be any of the values from the loop_status enum. */
     int loop_status;
 
-    /**
-       The job that is currently evaluated in the specified block.
-    */
+    /** The job that is currently evaluated in the specified block. */
     job_t *job;
 
-#if 0
-    union
-    {
-        int while_state;  /**< True if the loop condition has not yet been evaluated*/
-        wchar_t *for_variable; /**< Name of the variable to loop over */
-        int if_state; /**< The state of the if block, can be one of IF_STATE_UNTESTED, IF_STATE_FALSE, IF_STATE_TRUE */
-        wchar_t *switch_value; /**< The value to test in a switch block */
-        const wchar_t *source_dest; /**< The name of the file to source*/
-        event_t *event; /**<The event that triggered this block */
-        wchar_t *function_call_name;
-    } param1;
-#endif
-
-    /**
-       Name of file that created this block
-    */
+    /** Name of file that created this block */
     const wchar_t *src_filename;
 
-    /**
-       Line number where this block was created
-    */
+    /** Line number where this block was created */
     int src_lineno;
 
     /** Whether we should pop the environment variable stack when we're popped off of the block stack */
@@ -347,6 +326,14 @@ private:
     
     process_t *create_job_process(job_t *job, const parse_node_t &statement_node, const parser_context_t &ctx);
     process_t *create_boolean_process(job_t *job, const parse_node_t &bool_statement, const parser_context_t &ctx);
+    process_t *create_for_process(job_t *job, const parse_node_t &header, const parse_node_t &statement, const parser_context_t &ctx);
+    process_t *create_while_process(job_t *job, const parse_node_t &header, const parse_node_t &statement, const parser_context_t &ctx);
+    process_t *create_begin_process(job_t *job, const parse_node_t &header, const parse_node_t &statement, const parser_context_t &ctx);
+    process_t *create_plain_process(job_t *job, const parse_node_t &statement, const parser_context_t &ctx);
+    
+    wcstring_list_t determine_arguments(const parse_node_t &statement, const parse_node_t **out_unmatched_wildcard_node, const parser_context_t &ctx);
+    io_chain_t determine_io_chain(const parse_node_t &statement,const parser_context_t &ctx);
+    
 
     void parse_job_argument_list(process_t *p, job_t *j, tokenizer_t *tok, std::vector<completion_t>&, bool);
     int parse_job(process_t *p, job_t *j, tokenizer_t *tok);
@@ -399,6 +386,9 @@ public:
     */
     int eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type_t block_type);
     int eval2(const wcstring &cmd_str, const io_chain_t &io, enum block_type_t block_type);
+    
+    void execute_job_list(node_offset_t idx, const parser_context_t &ctx);
+    void execute_next(std::vector<node_offset_t> *execution_stack, const parser_context_t &ctx);
 
     /**
       Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and cmdsubst execution on the tokens.

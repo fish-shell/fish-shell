@@ -1083,6 +1083,20 @@ const parse_node_t *parse_node_tree_t::get_child(const parse_node_t &parent, nod
     return result;
 }
 
+const parse_node_t &parse_node_tree_t::find_child(const parse_node_t &parent, parse_token_type_t type) const
+{
+    for (size_t i=0; i < parent.child_count; i++)
+    {
+        const parse_node_t *child = this->get_child(parent, i);
+        if (child->type == type)
+        {
+            return *child;
+        }
+    }
+    PARSE_ASSERT(0);
+    return *(parse_node_t *)(NULL); //unreachable
+}
+
 const parse_node_t *parse_node_tree_t::get_parent(const parse_node_t &node, parse_token_type_t expected_type) const
 {
     const parse_node_t *result = NULL;
@@ -1277,7 +1291,7 @@ bool parse_node_tree_t::plain_statement_is_in_pipeline(const parse_node_t &node,
     return result;
 }
 
-enum token_type parse_node_tree_t::type_for_redirection(const parse_node_t &redirection_node, const wcstring &src, wcstring *out_target) const
+enum token_type parse_node_tree_t::type_for_redirection(const parse_node_t &redirection_node, const wcstring &src, int *out_fd, wcstring *out_target) const
 {
     assert(redirection_node.type == symbol_redirection);
     enum token_type result = TOK_NONE;
@@ -1286,7 +1300,7 @@ enum token_type parse_node_tree_t::type_for_redirection(const parse_node_t &redi
     
     if (redirection_primitive != NULL && redirection_primitive->has_source())
     {
-        result = redirection_type_for_string(redirection_primitive->get_source(src));
+        result = redirection_type_for_string(redirection_primitive->get_source(src), out_fd);
     }
     if (out_target != NULL)
     {

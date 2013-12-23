@@ -14,7 +14,7 @@ segments.
 #include <wctype.h>
 #include <string.h>
 #include <unistd.h>
-
+#include <fcntl.h>
 
 #include "fallback.h"
 #include "util.h"
@@ -522,7 +522,7 @@ static size_t read_redirection_or_fd_pipe(const wchar_t *buff, enum token_type *
     return idx;
 }
 
-enum token_type redirection_type_for_string(const wcstring &str)
+enum token_type redirection_type_for_string(const wcstring &str, int *out_fd)
 {
     enum token_type mode = TOK_NONE;
     int fd = 0;
@@ -530,7 +530,23 @@ enum token_type redirection_type_for_string(const wcstring &str)
     /* Redirections only, no pipes */
     if (mode == TOK_PIPE || fd < 0)
         mode = TOK_NONE;
+    if (out_fd != NULL)
+        *out_fd = fd;
     return mode;
+}
+
+int oflags_for_redirection_type(enum token_type type)
+{
+    switch (type)
+    {
+        case TOK_REDIRECT_APPEND: return O_CREAT | O_APPEND | O_WRONLY;
+        case TOK_REDIRECT_OUT: return O_CREAT | O_WRONLY | O_TRUNC;
+        case TOK_REDIRECT_NOCLOB: return O_CREAT | O_EXCL | O_WRONLY;
+        case TOK_REDIRECT_IN: return O_RDONLY;
+        
+        default:
+            return -1;
+    }
 }
 
 wchar_t tok_last_quote(tokenizer_t *tok)

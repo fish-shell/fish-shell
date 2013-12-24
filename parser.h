@@ -95,6 +95,8 @@ public:
     bool skip; /**< Whether execution of the commands in this block should be skipped */
     bool had_command; /**< Set to non-zero once a command has been executed in this block */
     int tok_pos; /**< The start index of the block */
+    
+    node_offset_t node_offset; /* Offset of the node */
 
     /** Status for the current loop block. Can be any of the values from the loop_status enum. */
     int loop_status;
@@ -277,6 +279,7 @@ struct parser_context_t
 
 class parser_t
 {
+    friend class parse_execution_context_t;
 private:
     enum parser_type_t parser_type;
 

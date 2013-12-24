@@ -302,13 +302,13 @@ RESOLVE(block_header)
 
 PRODUCTIONS(for_header) =
 {
-    {KEYWORD(parse_keyword_for), parse_token_type_string, KEYWORD(parse_keyword_in), symbol_arguments_or_redirections_list}
+    {KEYWORD(parse_keyword_for), parse_token_type_string, KEYWORD(parse_keyword_in), symbol_argument_list}
 };
 RESOLVE_ONLY(for_header)
 
 PRODUCTIONS(while_header) =
 {
-    {KEYWORD(parse_keyword_while), symbol_statement}
+    {KEYWORD(parse_keyword_while), symbol_job}
 };
 RESOLVE_ONLY(while_header)
 

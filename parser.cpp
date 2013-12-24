@@ -2772,7 +2772,7 @@ void parser_t::eval_job(const parse_node_t &job_node, const parser_context_t &ct
     /* Tell the job what its command is */
     j->set_command(job_node.get_source(ctx.src));
     
-    /* Construct process_t structures for every statement in the job */
+    /* We are going to construct process_t structures for every statement in the job. Get the first statement. */
     const parse_node_t *statement_node = ctx.tree.get_child(job_node, 0, symbol_statement);
     assert(statement_node != NULL);
     
@@ -3616,6 +3616,7 @@ block_t::block_t(block_type_t t) :
     skip(),
     had_command(),
     tok_pos(),
+    node_offset(NODE_OFFSET_INVALID),
     loop_status(),
     job(),
     src_filename(),

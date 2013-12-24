@@ -65,6 +65,7 @@
 		D033781115DC6D4C00A634BA /* completions in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02715D1FEA100B9DB63 /* completions */; };
 		D033781215DC6D5200A634BA /* functions in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02815D1FEA100B9DB63 /* functions */; };
 		D033781315DC6D5400A634BA /* tools in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02915D1FEA100B9DB63 /* tools */; };
+		D052D80B1868F7FC003ABCBD /* parse_execution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D052D8091868F7FC003ABCBD /* parse_execution.cpp */; };
 		D07B247315BCC15700D4ADB4 /* add-shell in Resources */ = {isa = PBXBuildFile; fileRef = D07B247215BCC15700D4ADB4 /* add-shell */; };
 		D07B247615BCC4BE00D4ADB4 /* install.sh in Resources */ = {isa = PBXBuildFile; fileRef = D07B247515BCC4BE00D4ADB4 /* install.sh */; };
 		D07D266A15E33B86009E43F6 /* config.fish in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0C4FD9415A7D7EE00212EF1 /* config.fish */; };
@@ -386,6 +387,8 @@
 		D025C02915D1FEA100B9DB63 /* tools */ = {isa = PBXFileReference; lastKnownFileType = folder; name = tools; path = share/tools; sourceTree = "<group>"; };
 		D031890915E36D9800D9CC39 /* base */ = {isa = PBXFileReference; lastKnownFileType = text; path = base; sourceTree = BUILT_PRODUCTS_DIR; };
 		D03EE83814DF88B200FC7150 /* lru.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lru.h; sourceTree = "<group>"; };
+		D052D8091868F7FC003ABCBD /* parse_execution.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = parse_execution.cpp; sourceTree = "<group>"; };
+		D052D80A1868F7FC003ABCBD /* parse_execution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = parse_execution.h; sourceTree = "<group>"; };
 		D07B247215BCC15700D4ADB4 /* add-shell */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = "add-shell"; path = "build_tools/osx_package_scripts/add-shell"; sourceTree = "<group>"; };
 		D07B247515BCC4BE00D4ADB4 /* install.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = install.sh; path = osx/install.sh; sourceTree = "<group>"; };
 		D0879AC616BF9A1A00E98E56 /* fish_term_icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = fish_term_icon.icns; path = osx/fish_term_icon.icns; sourceTree = "<group>"; };
@@ -658,11 +661,13 @@
 				D0A0853C13B3ACEE0099B651 /* exec.cpp */,
 				D0A0850C13B3ACEE0099B651 /* expand.h */,
 				D0A0853D13B3ACEE0099B651 /* expand.cpp */,
+				D0D9B2B318555D92001AE279 /* parse_constants.h */,
 				D0FE8EE6179CA8A5008C9F21 /* parse_productions.h */,
 				D0FE8EE7179FB75F008C9F21 /* parse_productions.cpp */,
-				D0D9B2B318555D92001AE279 /* parse_constants.h */,
 				D0C52F361765284C00BFAB82 /* parse_tree.h */,
 				D0C52F351765284C00BFAB82 /* parse_tree.cpp */,
+				D052D80A1868F7FC003ABCBD /* parse_execution.h */,
+				D052D8091868F7FC003ABCBD /* parse_execution.cpp */,
 				D0A0850D13B3ACEE0099B651 /* fallback.h */,
 				D0A0853E13B3ACEE0099B651 /* fallback.cpp */,
 				D0A0850E13B3ACEE0099B651 /* function.h */,
@@ -1222,6 +1227,7 @@
 				D0D02A83159839D5008E62BD /* iothread.cpp in Sources */,
 				D0D02A84159839D5008E62BD /* parse_util.cpp in Sources */,
 				D0D02A85159839D5008E62BD /* path.cpp in Sources */,
+				D052D80B1868F7FC003ABCBD /* parse_execution.cpp in Sources */,
 				D0D02A86159839D5008E62BD /* postfork.cpp in Sources */,
 				D0D02A87159839D5008E62BD /* screen.cpp in Sources */,
 				D0D02A88159839D5008E62BD /* signal.cpp in Sources */,

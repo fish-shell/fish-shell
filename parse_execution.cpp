@@ -545,6 +545,14 @@ int parse_execution_context_t::run_1_job(const parse_node_t &job_node)
     /* Populate the job. This may fail for reasons like command_not_found */
     bool process_errored = ! this->populate_job_from_job_node(j, job_node);
 
+    /* If we errored, we have to clean up the job */
+    if (process_errored)
+    {
+        assert(parser->current_block()->job == j);
+        parser->current_block()->job = NULL;
+        job_free(j);
+    }
+
     /* Store time it took to 'parse' the command */
     if (do_profile)
     {

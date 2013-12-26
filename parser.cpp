@@ -2615,12 +2615,29 @@ int parser_t::eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum bl
     execution_contexts.push_back(ctx);
     
     /* Start it up */
+    const block_t * const start_current_block = current_block();
+    this->push_block(new scope_block_t(block_type));
     int result = ctx->eval_top_level_job_list();
     
     /* Clean up the execution context stack */
     assert(! execution_contexts.empty() && execution_contexts.back() == ctx);
     execution_contexts.pop_back();
     delete ctx;
+    
+    /* Clean up the block stack */
+    this->pop_block();
+    while (start_current_block != current_block())
+    {
+        if (current_block() == NULL)
+        {
+            debug(0,
+                  _(L"End of block mismatch. Program terminating."));
+            bugreport();
+            FATAL_EXIT();
+            break;
+        }
+        this->pop_block();
+    }
     
     /* Reap again */
     job_reap(0);

@@ -56,6 +56,8 @@ enum parse_token_type_t
     parse_token_type_redirection,
     parse_token_type_background,
     parse_token_type_end,
+    
+    // Special terminal type that means no more tokens forthcoming
     parse_token_type_terminate,
 
     // Very special terminal types that don't appear in the production list

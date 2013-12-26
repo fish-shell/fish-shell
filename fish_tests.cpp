@@ -2212,6 +2212,12 @@ static bool increment(std::vector<parser_fuzz_token_t> &tokens)
         if (! incremented_in_keyword)
         {
             token.token_type++;
+            // Skip the very special parse_token_type_terminate, since that's always the last thing delivered
+            if (token.token_type == parse_token_type_terminate)
+            {
+                token.token_type++;
+            }
+            
             if (token.token_type > LAST_TERMINAL_TYPE)
             {
                 token.token_type = FIRST_TERMINAL_TYPE;

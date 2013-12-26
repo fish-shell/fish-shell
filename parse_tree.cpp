@@ -224,6 +224,7 @@ wcstring keyword_description(parse_keyword_t k)
 wcstring parse_node_t::describe(void) const
 {
     wcstring result = token_type_description(type);
+    append_format(result, L" (prod %d)", this->production_idx);
     return result;
 }
 
@@ -455,7 +456,7 @@ class parse_ll_t
             }
             else
             {
-                // Generate the parse node. Note that this push_back may invalidate node.
+                // Generate the parse node.
                 parse_token_type_t child_type = production_element_type(elem);
                 parse_node_t child = parse_node_t(child_type);
                 child.parent = parent_node_idx;
@@ -861,8 +862,10 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2)
         }
         else
         {
-            // When a job_list encounters something like 'else', it returns an empty production to return control to the outer block. But if it's unbalanced, then we'll end up with an empty stack! So make sure that doesn't happen. This is the primary mechanism by which we detect e.g. unbalanced end.
-            if (symbol_stack.size() == 1 && production_is_empty(production))
+            bool is_terminate = (token1.type == parse_token_type_terminate);
+            
+            // When a job_list encounters something like 'else', it returns an empty production to return control to the outer block. But if it's unbalanced, then we'll end up with an empty stack! So make sure that doesn't happen. This is the primary mechanism by which we detect e.g. unbalanced end. However, if we get a true terminate token, then we allow (expect) this to empty the stack
+            if (symbol_stack.size() == 1 && production_is_empty(production) && ! is_terminate)
             {
                 this->parse_error_unbalancing_token(token1);
                 break;
@@ -872,8 +875,14 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2)
             // Note that stack_elem is invalidated by popping the stack.
             symbol_stack_pop_push_production(production);
             
-            // Expect to not have an empty stack
-            assert(! symbol_stack.empty());
+            // Expect to not have an empty stack, unless this was the terminate type
+            // Note we may not have an empty stack with the terminate type (i.e. incomplete input)
+            assert(is_terminate || ! symbol_stack.empty());
+            
+            if (symbol_stack.empty())
+            {
+                break;
+            }
         }
     }
 }
@@ -931,12 +940,15 @@ static parse_keyword_t keyword_for_token(token_type tok, const wchar_t *tok_txt)
 /* Placeholder invalid token */
 static const parse_token_t kInvalidToken = {token_type_invalid, parse_keyword_none, false, -1, -1};
 
+/* Terminal token */
+static const parse_token_t kTerminalToken = {parse_token_type_terminate, parse_keyword_none, false, -1, -1};
+
 /* Return a new parse token, advancing the tokenizer */
 static inline parse_token_t next_parse_token(tokenizer_t *tok)
 {
     if (! tok_has_next(tok))
     {
-        return kInvalidToken;
+        return kTerminalToken;
     }
     
     token_type tok_type = static_cast<token_type>(tok_last_type(tok));
@@ -978,8 +990,8 @@ bool parse_t::parse_internal(const wcstring &str, parse_tree_flags_t parse_flags
     /* We are an LL(2) parser. We pass two tokens at a time. New tokens come in at index 1. Seed our queue with an initial token at index 1. */
     parse_token_t queue[2] = {kInvalidToken, next_parse_token(&tok)};
     
-    /* Go until the most recently added token is invalid. Note this may mean we don't process anything if there were no tokens. */
-    while (queue[1].type != token_type_invalid)
+    /* Loop until we get a terminal token */
+    do
     {
         /* Push a new token onto the queue */
         queue[0] = queue[1];
@@ -1010,7 +1022,9 @@ bool parse_t::parse_internal(const wcstring &str, parse_tree_flags_t parse_flags
                 break;
             }
         }
-    }
+        
+        /* If this was the last token, then stop the loop */
+    } while (queue[0].type != parse_token_type_terminate);
 
 
     // Teach each node where its source range is

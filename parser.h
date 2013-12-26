@@ -466,6 +466,9 @@ public:
 
     /** Remove the outermost block namespace */
     void pop_block();
+    
+    /** Remove the outermost block, asserting it's the given one */
+    void pop_block(const block_t *b);
 
     /** Return a description of the given blocktype */
     const wchar_t *get_block_desc(int block) const;

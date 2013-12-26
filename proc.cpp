@@ -516,6 +516,7 @@ process_t::process_t() :
     argv_array(),
     argv0_narrow(),
     type(),
+    internal_block_node(NODE_OFFSET_INVALID),
     actual_cmd(),
     pid(0),
     pipe_write_fd(0),

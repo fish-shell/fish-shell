@@ -13,7 +13,7 @@
 #include "path.h"
 
 
-parse_execution_context_t::parse_execution_context_t(const parse_node_tree_t &t, const wcstring s, parser_t *p) : tree(t), src(s), parser(p)
+parse_execution_context_t::parse_execution_context_t(const parse_node_tree_t &t, const wcstring s, parser_t *p) : tree(t), src(s), parser(p), eval_level(0)
 {
 }
 
@@ -31,53 +31,47 @@ const parse_node_t *parse_execution_context_t::get_child(const parse_node_t &par
 
 node_offset_t parse_execution_context_t::get_offset(const parse_node_t &node) const
 {
-    /* Pointer arithmetic, very hackish */
+    /* Get the offset of a node via pointer arithmetic, very hackish */
     const parse_node_t *addr = &node;
     const parse_node_t *base = &this->tree.at(0);
     assert(addr >= base);
     node_offset_t offset = addr - base;
     assert(offset < this->tree.size());
+    assert(&tree.at(offset) == &node);
     return offset;
 }
 
-/* Stack manipulation */
 
-void parse_execution_context_t::stack_push(const parse_node_t *job_or_job_list, statement_completion_handler_t completion_handler, const parse_node_t *node)
+bool parse_execution_context_t::should_cancel() const
 {
-    const struct parse_execution_stack_element_t elem = {job_or_job_list, completion_handler, node};
-    job_stack.push_back(elem);
+    return false;
 }
 
-process_t *parse_execution_context_t::create_for_process(job_t *job, const parse_node_t &header, const parse_node_t &statement)
-{
-    assert(header.type == symbol_for_header);
-    const wcstring for_variable = get_source(*get_child(header, 1, parse_token_type_string));
-    const parse_node_t &arg_list = *get_child(header, 3, symbol_argument_list);
-    
-    for_block_t *fb = new for_block_t(for_variable);
-    fb->sequence = this->determine_arguments(arg_list, NULL);
-    fb->node_offset = this->get_offset(statement);
-    parser->push_block(fb);
-    return NULL;
-}
-
-process_t *parse_execution_context_t::create_while_process(job_t *job, const parse_node_t &header, const parse_node_t &statement)
+void parse_execution_context_t::run_while_process(const parse_node_t &header, const parse_node_t &statement)
 {
     assert(header.type == symbol_while_header);
+    assert(statement.type == symbol_block_statement);
+    
     while_block_t *wb = new while_block_t();
     wb->status = WHILE_TEST_FIRST;
     wb->node_offset = this->get_offset(statement);
     parser->push_block(wb);
-    return NULL;
+    
+    // The condition of the while loop, as a job
+    const parse_node_t &while_condition = *get_child(header, 1, symbol_job);
+    
+    // The contents of the while loop, as a job list
+    const parse_node_t &block_contents = *get_child(statement, 2, symbol_job_list);
+    
+    // A while loop is a while loop!
+    while (! this->should_cancel() && this->run_1_job(while_condition) == EXIT_SUCCESS)
+    {
+        this->run_job_list(block_contents);
+    }
+    
+    parser->pop_block(wb);
 }
 
-process_t *parse_execution_context_t::create_begin_process(job_t *job, const parse_node_t &header, const parse_node_t &statement)
-{
-    assert(header.type == symbol_begin_header);
-    scope_block_t *bb = new scope_block_t(BEGIN);
-    parser->push_block(bb);
-    return NULL;
-}
 
 bool parse_execution_context_t::append_error(const parse_node_t &node, const wchar_t *fmt, ...)
 {
@@ -382,6 +376,16 @@ process_t *parse_execution_context_t::create_boolean_process(job_t *job, const p
     return result;
 }
 
+process_t *parse_execution_context_t::create_block_process(job_t *job, const parse_node_t &statement_node)
+{
+    /* We handle block statements by creating INTERNAL_BLOCKs, that will bounce back to us when it's time to execute them */
+    assert(statement_node.type == symbol_block_statement || statement_node.type == symbol_if_statement || statement_node.type == symbol_switch_statement);
+    process_t *result = new process_t();
+    result->type = INTERNAL_BLOCK;
+    result->internal_block_node = this->get_offset(statement_node);
+    return result;
+}
+
 
 /* Returns a process_t allocated with new. It's the caller's responsibility to delete it (!) */
 process_t *parse_execution_context_t::create_job_process(job_t *job, const parse_node_t &statement_node)
@@ -403,34 +407,10 @@ process_t *parse_execution_context_t::create_job_process(job_t *job, const parse
         }
         
         case symbol_block_statement:
+        case symbol_if_statement:
+        case symbol_switch_statement:
         {
-            const parse_node_t &header = *get_child(specific_statement, 0, symbol_block_header);
-            const parse_node_t &specific_header = *get_child(header, 0);
-            switch (specific_header.type)
-            {
-                case symbol_for_header:
-                    result = this->create_for_process(job, specific_header, specific_statement);
-                    break;
-                    
-                case symbol_while_header:
-                    result = this->create_while_process(job, specific_header, specific_statement);
-                    break;
-                
-                case symbol_function_header:
-                    // No process is associated with creating a function
-                    // TODO: create the darn function!
-                    result = NULL;
-                    break;
-                    
-                case symbol_begin_header:
-                    result = this->create_begin_process(job, specific_header, specific_statement);
-                    break;
-                
-                default:
-                    fprintf(stderr, "Unexpected header type\n");
-                    PARSER_DIE();
-                    break;
-            }
+            result = this->create_block_process(job, specific_statement);
             break;
         }
         
@@ -443,13 +423,15 @@ process_t *parse_execution_context_t::create_job_process(job_t *job, const parse
         
         default:
             fprintf(stderr, "'%ls' not handled by new parser yet\n", specific_statement.describe().c_str());
+            PARSER_DIE();
+            break;
     }
     
     return result;
 }
 
 
-void parse_execution_context_t::eval_job(job_t *j, const parse_node_t &job_node)
+void parse_execution_context_t::populate_job_from_job_node(job_t *j, const parse_node_t &job_node)
 {
     assert(job_node.type == symbol_job);
     
@@ -459,7 +441,7 @@ void parse_execution_context_t::eval_job(job_t *j, const parse_node_t &job_node)
     /* Tell the job what its command is */
     j->set_command(get_source(job_node));
     
-    /* We are going ot construct process_t structures for every statement in the job. Get the first statement. */
+    /* We are going to construct process_t structures for every statement in the job. Get the first statement. */
     const parse_node_t *statement_node = get_child(job_node, 0, symbol_statement);
     assert(statement_node != NULL);
     
@@ -468,7 +450,7 @@ void parse_execution_context_t::eval_job(job_t *j, const parse_node_t &job_node)
     if (j->first_process == NULL)
         process_errored = true;
     
-    /* Construct process_ts for job continuations (pipelines), by walking the list until we hit the terminal (empty) job continuationf */
+    /* Construct process_ts for job continuations (pipelines), by walking the list until we hit the terminal (empty) job continuation */
     const parse_node_t *job_cont = get_child(job_node, 1, symbol_job_continuation);
     process_t *last_process = j->first_process;
     while (! process_errored && job_cont != NULL && job_cont->child_count > 0)
@@ -490,7 +472,7 @@ void parse_execution_context_t::eval_job(job_t *j, const parse_node_t &job_node)
     }
 }
 
-void parse_execution_context_t::eval_1_job(const parse_node_t &job_node)
+int parse_execution_context_t::run_1_job(const parse_node_t &job_node)
 {
     // Get terminal modes
     struct termios tmodes = {};
@@ -500,12 +482,17 @@ void parse_execution_context_t::eval_1_job(const parse_node_t &job_node)
         {
             // need real error handling here
             wperror(L"tcgetattr");
-            return;
+            return EXIT_FAILURE;
         }
     }
     
+    /* Increment the eval_level for the duration of this command */
+    scoped_push<int> saved_eval_level(&eval_level, eval_level + 1);
+    
+    /* TODO: blocks-without-redirections optimization */
+    
     /* Profiling support */
-    long long t1 = 0, t2 = 0, t3 = 0;
+    long long start_time = 0, parse_time = 0, exec_time = 0;
     const bool do_profile = profile;
     profile_item_t *profile_item = NULL;
     if (do_profile)
@@ -513,7 +500,7 @@ void parse_execution_context_t::eval_1_job(const parse_node_t &job_node)
         profile_item = new profile_item_t();
         profile_item->skipped = 1;
         profile_items.push_back(profile_item);
-        t1 = get_time();
+        start_time = get_time();
     }
     
     job_t *j = parser->job_create();
@@ -528,74 +515,87 @@ void parse_execution_context_t::eval_1_job(const parse_node_t &job_node)
     
     parser->current_block()->job = j;
     
-    this->eval_job(j, job_node);
+    this->populate_job_from_job_node(j, job_node);
 
-}
-
-void parse_execution_context_t::eval_next_stack_elem()
-{
-    // Pop the next thing to do
-    assert(! job_stack.empty());
-    const parse_execution_stack_element_t elem = job_stack.back();
-    job_stack.pop_back();
-    
-    assert(elem.job_or_job_list->type == symbol_job || elem.job_or_job_list->type == symbol_job_list);
-    
-    if (elem.job_or_job_list->type == symbol_job)
+    if (do_profile)
     {
-        const parse_node_t *job = elem.job_or_job_list;
-        this->eval_1_job(*job);
+        parse_time = get_time();
+        profile_item->cmd = j->command();
+        profile_item->skipped=parser->current_block()->skip;
     }
-    else
+    
+    /* Check to see if this contained any external commands */
+    bool job_contained_external_command = false;
+    for (const process_t *proc = j->first_process; proc != NULL; proc = proc->next)
     {
-        const parse_node_t *job_list = elem.job_or_job_list;
-        while (job_list != NULL)
+        if (proc->type == EXTERNAL)
         {
-            assert(job_list->type == symbol_job_list);
-            
-            // These correspond to the three productions of job_list
-            // Try pulling out a job
-            const parse_node_t *job = NULL;
-            switch (job_list->production_idx)
-            {
-                case 0: // empty
-                    job_list = NULL;
-                    break;
-                
-                case 1: //job, job_list
-                    job = get_child(*job_list, 0, symbol_job);
-                    job_list = get_child(*job_list, 1, symbol_job_list);
-                    break;
-                
-                case 2: //blank line, job_list
-                    job = NULL;
-                    job_list = get_child(*job_list, 1, symbol_job_list);
-                    break;
-                    
-                default: //if we get here, it means more productions have been added to job_list, which is bad
-                    PARSER_DIE();
-            }
-            
-            if (job != NULL)
-            {
-                this->eval_1_job(*job);
-            }
+            job_contained_external_command = true;
+            break;
         }
     }
     
-    /* Invoke any completion handler */
-    if (elem.completion_handler)
+    /* Only external commands require a new fishd barrier */
+    if (!job_contained_external_command)
+        set_proc_had_barrier(false);
+
+    /* Need support for skipped_exec here */
+    
+    if (do_profile)
     {
-        assert(elem.node != NULL);
-        (this->*elem.completion_handler)(*elem.node);
+        exec_time = get_time();
+        profile_item->level=eval_level;
+        profile_item->parse = (int)(parse_time-start_time);
+        profile_item->exec=(int)(exec_time-parse_time);
     }
+    
+    job_reap(0);
+    
+    return proc_get_last_status();
 }
 
-void parse_execution_context_t::eval_job_list(const parse_node_t &job_node)
+void parse_execution_context_t::run_job_list(const parse_node_t &job_list_node)
 {
-    this->stack_push(&job_node, NULL, NULL);
-    while (! job_stack.empty())
+    assert(job_list_node.type == symbol_job_list);
+    
+    const parse_node_t *job_list = &job_list_node;
+    while (job_list != NULL)
     {
-        this->eval_next_stack_elem();
+        assert(job_list->type == symbol_job_list);
+        
+        // These correspond to the three productions of job_list
+        // Try pulling out a job
+        const parse_node_t *job = NULL;
+        switch (job_list->production_idx)
+        {
+            case 0: // empty
+                job_list = NULL;
+                break;
+            
+            case 1: //job, job_list
+                job = get_child(*job_list, 0, symbol_job);
+                job_list = get_child(*job_list, 1, symbol_job_list);
+                break;
+            
+            case 2: //blank line, job_list
+                job = NULL;
+                job_list = get_child(*job_list, 1, symbol_job_list);
+                break;
+                
+            default: //if we get here, it means more productions have been added to job_list, which is bad
+                PARSER_DIE();
+        }
+        
+        if (job != NULL)
+        {
+            this->run_1_job(*job);
+        }
     }
+    
+}
+
+
+void parse_execution_context_t::eval_job_list(const parse_node_t &job_list_node)
+{
+    this->run_job_list(job_list_node);
 }

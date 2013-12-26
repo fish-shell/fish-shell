@@ -427,6 +427,12 @@ void parser_t::pop_block()
     delete old;
 }
 
+void parser_t::pop_block(const block_t *expected)
+{
+    assert(expected == this->current_block());
+    this->pop_block();
+}
+
 const wchar_t *parser_t::get_block_desc(int block) const
 {
     for (size_t i=0; block_lookup[i].desc; i++)
@@ -2908,7 +2914,9 @@ void parser_t::eval_job(tokenizer_t *tok)
                 {
                     int was_builtin = 0;
                     if (j->first_process->type==INTERNAL_BUILTIN && !j->first_process->next)
+                    {
                         was_builtin = 1;
+                    }
                     scoped_push<int> tokenizer_pos_push(&current_tokenizer_pos, job_begin_pos);
                     exec_job(*this, j);
 

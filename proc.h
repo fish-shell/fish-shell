@@ -20,6 +20,7 @@
 #include "util.h"
 #include "io.h"
 #include "common.h"
+#include "parse_tree.h"
 
 /**
    The status code use when a command was not found
@@ -151,7 +152,9 @@ public:
       INTERNAL_EXEC, or INTERNAL_BUFFER
     */
     enum process_type_t type;
-
+    
+    /* For internal block processes only, the node offset of the block */
+    node_offset_t internal_block_node;
 
     /** Sets argv */
     void set_argv(const wcstring_list_t &argv)

@@ -19,6 +19,7 @@ class parse_execution_context_t
     private:
     const parse_node_tree_t tree;
     const wcstring src;
+    const io_chain_t block_io;
     parser_t * const parser;
     parse_error_list_t errors;
     
@@ -53,15 +54,16 @@ class parse_execution_context_t
     bool determine_io_chain(const parse_node_t &statement, io_chain_t *out_chain);
     
     int run_1_job(const parse_node_t &job_node);
-    void run_job_list(const parse_node_t &job_list_node);
+    int run_job_list(const parse_node_t &job_list_node);
     bool populate_job_from_job_node(job_t *j, const parse_node_t &job_node);
     
     void eval_next_stack_elem();
     
     public:
-    parse_execution_context_t(const parse_node_tree_t &t, const wcstring s, parser_t *p);
+    parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, const io_chain_t &io, parser_t *p);
     
-    void eval_job_list(const parse_node_t &job_node);
+    /* Actually execute the job list described by the tree */
+    int eval_top_level_job_list();
     
 };
 

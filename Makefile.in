@@ -92,7 +92,7 @@ FISH_OBJS := function.o builtin.o complete.o env.o exec.o expand.o		\
 	env_universal.o env_universal_common.o input_common.o event.o		\
 	signal.o io.o parse_util.o common.o screen.o path.o autoload.o		\
 	parser_keywords.o iothread.o color.o postfork.o	\
-	builtin_test.o parse_tree.o parse_productions.o 
+	builtin_test.o parse_tree.o parse_productions.o parse_execution.cpp
 
 FISH_INDENT_OBJS := fish_indent.o print_help.o common.o	\
 parser_keywords.o wutil.o tokenizer.o

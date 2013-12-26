@@ -45,6 +45,7 @@ The fish parser. Contains functions for parsing and evaluating code.
 #include "signal.h"
 #include "complete.h"
 #include "parse_tree.h"
+#include "parse_execution.h"
 
 /**
    Maximum number of function calls, i.e. recursion depth.
@@ -1189,9 +1190,9 @@ int parser_t::is_help(const wchar_t *s, int min_match)
            (len >= (size_t)min_match && (wcsncmp(L"--help", s, len) == 0));
 }
 
-job_t *parser_t::job_create()
+job_t *parser_t::job_create(const io_chain_t &io)
 {
-    job_t *res = new job_t(acquire_job_id(), this->block_io);
+    job_t *res = new job_t(acquire_job_id(), io);
     this->my_job_list.push_front(res);
 
     job_set_flag(res,
@@ -2375,7 +2376,7 @@ void parser_t::eval_job(tokenizer_t *tok)
     {
         case TOK_STRING:
         {
-            job_t *j = this->job_create();
+            job_t *j = this->job_create(this->block_io);
             job_set_flag(j, JOB_FOREGROUND, 1);
             job_set_flag(j, JOB_TERMINAL, job_get_flag(j, JOB_CONTROL));
             job_set_flag(j, JOB_TERMINAL, job_get_flag(j, JOB_CONTROL) \
@@ -2584,9 +2585,55 @@ void parser_t::eval_job(tokenizer_t *tok)
     job_reap(0);
 }
 
+int parser_t::eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type)
+{
+    CHECK_BLOCK(1);
+
+    /* Only certain blocks are allowed */
+    if ((block_type != TOP) &&
+            (block_type != SUBST))
+    {
+        debug(1,
+              INVALID_SCOPE_ERR_MSG,
+              parser_t::get_block_desc(block_type));
+        bugreport();
+        return 1;
+    }
+    
+    /* Parse the source into a tree, if we can */
+    parse_node_tree_t tree;
+    if (! parse_t::parse(cmd, parse_flag_none, &tree, NULL))
+    {
+        return 1;
+    }
+    
+    /* Not sure why we reap jobs here */
+    job_reap(0);
+    
+    /* Append to the execution context stack */
+    parse_execution_context_t *ctx = new parse_execution_context_t(tree, cmd, io, this);
+    execution_contexts.push_back(ctx);
+    
+    /* Start it up */
+    int result = ctx->eval_top_level_job_list();
+    
+    /* Clean up the execution context stack */
+    assert(! execution_contexts.empty() && execution_contexts.back() == ctx);
+    execution_contexts.pop_back();
+    delete ctx;
+    
+    /* Reap again */
+    job_reap(0);
+    
+    return result;
+}
 
 int parser_t::eval(const wcstring &cmd_str, const io_chain_t &io, enum block_type_t block_type)
 {
+
+    if (parser_use_ast())
+        return this->eval_new_parser(cmd_str, io, block_type);
+
     const wchar_t * const cmd = cmd_str.c_str();
     size_t forbid_count;
     int code;
@@ -3037,3 +3084,15 @@ breakpoint_block_t::breakpoint_block_t() :
 {
 }
 
+bool parser_use_ast(void)
+{
+    env_var_t var = env_get_string(L"fish_new_parser");
+    if (var.missing_or_empty())
+    {
+        return false;
+    }
+    else
+    {
+        return from_string<bool>(var);
+    }
+}

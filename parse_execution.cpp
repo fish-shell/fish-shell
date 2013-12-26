@@ -14,7 +14,7 @@
 #include "path.h"
 
 
-parse_execution_context_t::parse_execution_context_t(const parse_node_tree_t &t, const wcstring s, parser_t *p) : tree(t), src(s), parser(p), eval_level(0)
+parse_execution_context_t::parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, const io_chain_t &io, parser_t *p) : tree(t), src(s), block_io(io), parser(p), eval_level(0)
 {
 }
 
@@ -53,27 +53,27 @@ void parse_execution_context_t::run_while_process(const parse_node_t &header, co
     assert(header.type == symbol_while_header);
     assert(statement.type == symbol_block_statement);
     
+    /* Push a while block */
     while_block_t *wb = new while_block_t();
     wb->status = WHILE_TEST_FIRST;
     wb->node_offset = this->get_offset(statement);
     parser->push_block(wb);
     
-    // The condition of the while loop, as a job
+    /* The condition and contents of the while loop, as a job and job list respectively */
     const parse_node_t &while_condition = *get_child(header, 1, symbol_job);
-    
-    // The contents of the while loop, as a job list
     const parse_node_t &block_contents = *get_child(statement, 2, symbol_job_list);
     
-    // A while loop is a while loop!
+    /* A while loop is a while loop! */
     while (! this->should_cancel() && this->run_1_job(while_condition) == EXIT_SUCCESS)
     {
         this->run_job_list(block_contents);
     }
     
+    /* Done */
     parser->pop_block(wb);
 }
 
-
+/* Appends an error to the error list. Always returns true, so you can assign the result to an 'errored' variable */
 bool parse_execution_context_t::append_error(const parse_node_t &node, const wchar_t *fmt, ...)
 {
     parse_error_t error;
@@ -90,6 +90,7 @@ bool parse_execution_context_t::append_error(const parse_node_t &node, const wch
     return true;
 }
 
+/* Creates a 'normal' (non-block) process */
 process_t *parse_execution_context_t::create_plain_process(job_t *job, const parse_node_t &statement)
 {
     bool errored = false;
@@ -529,7 +530,7 @@ int parse_execution_context_t::run_1_job(const parse_node_t &job_node)
         start_time = get_time();
     }
     
-    job_t *j = parser->job_create();
+    job_t *j = parser->job_create(this->block_io);
     job_set_flag(j, JOB_FOREGROUND, 1);
     job_set_flag(j, JOB_TERMINAL, job_get_flag(j, JOB_CONTROL));
     job_set_flag(j, JOB_TERMINAL, job_get_flag(j, JOB_CONTROL) \
@@ -597,10 +598,11 @@ int parse_execution_context_t::run_1_job(const parse_node_t &job_node)
     return ret;
 }
 
-void parse_execution_context_t::run_job_list(const parse_node_t &job_list_node)
+int parse_execution_context_t::run_job_list(const parse_node_t &job_list_node)
 {
     assert(job_list_node.type == symbol_job_list);
     
+    int result = 1;
     const parse_node_t *job_list = &job_list_node;
     while (job_list != NULL)
     {
@@ -631,14 +633,21 @@ void parse_execution_context_t::run_job_list(const parse_node_t &job_list_node)
         
         if (job != NULL)
         {
-            this->run_1_job(*job);
+            result = this->run_1_job(*job);
         }
     }
     
+    /* Returns the last job executed */
+    return result;
 }
 
 
-void parse_execution_context_t::eval_job_list(const parse_node_t &job_list_node)
+int parse_execution_context_t::eval_top_level_job_list()
 {
-    this->run_job_list(job_list_node);
+    if (tree.empty())
+        return EXIT_FAILURE;
+    
+    const parse_node_t &job_list = tree.at(0);
+    assert(job_list.type == symbol_job_list);
+    return this->run_job_list(job_list);
 }

@@ -270,6 +270,7 @@ struct profile_item_t
 };
 
 struct tokenizer_t;
+class parse_execution_context_t;
 
 class parser_t
 {
@@ -285,6 +286,9 @@ private:
 
     /** Position of last error */
     int err_pos;
+    
+    /** Stack of execution contexts. We own these pointers and must delete them */
+    std::vector<parse_execution_context_t *> execution_contexts;
 
     /** Description of last error */
     wcstring err_buff;
@@ -331,7 +335,7 @@ private:
     void print_errors_stderr();
 
     /** Create a job */
-    job_t *job_create();
+    job_t *job_create(const io_chain_t &io);
 
 public:
     std::vector<profile_item_t*> profile_items;
@@ -370,7 +374,8 @@ public:
 
       \return 0 on success, 1 otherwise
     */
-    int eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type_t block_type);
+    int eval(const wcstring &cmd_str, const io_chain_t &io, enum block_type_t block_type);
+    int eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type);
     
     /**
       Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and cmdsubst execution on the tokens.
@@ -530,6 +535,9 @@ public:
     int get_block_type(const wchar_t *cmd) const;
     const wchar_t *get_block_command(int type) const;
 };
+
+/* Temporary */
+bool parser_use_ast(void);
 
 
 #endif

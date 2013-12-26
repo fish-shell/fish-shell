@@ -3398,12 +3398,9 @@ const wchar_t *reader_readline(void)
                     case 0:
                     {
                         /* Finished command, execute it. Don't add items that start with a leading space. */
-                        if (! data->command_line.empty() && data->command_line.at(0) != L' ')
+                        if (data->history != NULL && ! data->command_line.empty() && data->command_line.at(0) != L' ')
                         {
-                            if (data->history != NULL)
-                            {
-                                data->history->add_with_file_detection(data->command_line);
-                            }
+                            data->history->add_with_file_detection(data->command_line);
                         }
                         finished=1;
                         data->buff_pos=data->command_length();

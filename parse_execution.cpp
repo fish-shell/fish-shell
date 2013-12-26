@@ -10,6 +10,7 @@
 #include "parser.h"
 #include "expand.h"
 #include "wutil.h"
+#include "exec.h"
 #include "path.h"
 
 
@@ -24,7 +25,7 @@ wcstring parse_execution_context_t::get_source(const parse_node_t &node) const
     return node.get_source(this->src);
 }
 
-const parse_node_t *parse_execution_context_t::get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type)
+const parse_node_t *parse_execution_context_t::get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type) const
 {
     return this->tree.get_child(parent, which, expected_type);
 }
@@ -91,6 +92,8 @@ bool parse_execution_context_t::append_error(const parse_node_t &node, const wch
 
 process_t *parse_execution_context_t::create_plain_process(job_t *job, const parse_node_t &statement)
 {
+    bool errored = false;
+    
     /* Get the decoration */
     assert(statement.type == symbol_plain_statement);
     
@@ -99,29 +102,37 @@ process_t *parse_execution_context_t::create_plain_process(job_t *job, const par
     bool got_cmd = tree.command_for_plain_statement(statement, src, &cmd);
     assert(got_cmd);
     
-    /* Expand it as a command */
+    /* Expand it as a command. Return NULL on failure. */
     bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
     if (! expanded)
     {
-        append_error(statement, ILLEGAL_CMD_ERR_MSG, cmd.c_str());
-        return 0;
+        errored = append_error(statement, ILLEGAL_CMD_ERR_MSG, cmd.c_str());
     }
+    
+    if (errored)
+        return NULL;
     
     /* The list of arguments. The command is the first argument. TODO: count hack */
     const parse_node_t *unmatched_wildcard = NULL;
     wcstring_list_t argument_list = this->determine_arguments(statement, &unmatched_wildcard);
     argument_list.insert(argument_list.begin(), cmd);
     
-    /* We were not able to expand any wildcards. Here is the first one that failed */
+    /* If we were not able to expand any wildcards, here is the first one that failed */
     if (unmatched_wildcard != NULL)
     {
         job_set_flag(job, JOB_WILDCARD_ERROR, 1);
         proc_set_last_status(STATUS_UNMATCHED_WILDCARD);
-        append_error(*unmatched_wildcard, WILDCARD_ERR_MSG, unmatched_wildcard->get_source(src).c_str());
+        errored = append_error(*unmatched_wildcard, WILDCARD_ERR_MSG, unmatched_wildcard->get_source(src).c_str());
     }
     
+    if (errored)
+        return NULL;
+    
     /* The set of IO redirections that we construct for the process */
-    const io_chain_t process_io_chain = this->determine_io_chain(statement);
+    io_chain_t process_io_chain;
+    errored = ! this->determine_io_chain(statement, &process_io_chain);
+    if (errored)
+        return NULL;
     
     /* Determine the process type, which depends on the statement decoration (command, builtin, etc) */
     enum parse_statement_decoration_t decoration = tree.decoration_for_plain_statement(statement);
@@ -165,16 +176,21 @@ process_t *parse_execution_context_t::create_plain_process(job_t *job, const par
         if (! has_command)
         {
             /* TODO: support fish_command_not_found, implicit cd, etc. here */
+            errored = true;
         }
-        
+        return NULL;
     }
     
-    /* Return the process */
-    process_t *result = new process_t();
-    result->type = process_type;
-    result->set_argv(argument_list);
-    result->set_io_chain(process_io_chain);
-    result->actual_cmd = actual_cmd;
+    /* Return the process, or NULL on error */
+    process_t *result = NULL;
+    if (! errored)
+    {
+        result = new process_t();
+        result->type = process_type;
+        result->set_argv(argument_list);
+        result->set_io_chain(process_io_chain);
+        result->actual_cmd = actual_cmd;
+    }
     return result;
 }
 
@@ -252,9 +268,10 @@ wcstring_list_t parse_execution_context_t::determine_arguments(const parse_node_
     return argument_list;
 }
 
-io_chain_t parse_execution_context_t::determine_io_chain(const parse_node_t &statement)
+bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement, io_chain_t *out_chain)
 {
     io_chain_t result;
+    bool errored = false;
     
     /* Get all redirection nodes underneath the statement */
     const parse_node_tree_t::parse_node_list_t redirect_nodes = tree.find_nodes(statement, symbol_redirection);
@@ -271,7 +288,7 @@ io_chain_t parse_execution_context_t::determine_io_chain(const parse_node_t &sta
         if (! target_expanded || target.empty())
         {
             /* Should improve this error message */
-            this->append_error(redirect_node,
+            errored = append_error(redirect_node,
                   _(L"Invalid redirection target: %ls"),
                   target.c_str());
         }
@@ -295,7 +312,7 @@ io_chain_t parse_execution_context_t::determine_io_chain(const parse_node_t &sta
                     int old_fd = fish_wcstoi(target.c_str(), &end, 10);
                     if (old_fd < 0 || errno || *end)
                     {
-                        this->append_error(redirect_node,
+                        errored = append_error(redirect_node,
                               _(L"Requested redirection to something that is not a file descriptor %ls"),
                               target.c_str());
                     }
@@ -333,7 +350,12 @@ io_chain_t parse_execution_context_t::determine_io_chain(const parse_node_t &sta
             result.push_back(new_io);
         }
     }
-    return result;
+    
+    if (out_chain && ! errored)
+    {
+        std::swap(*out_chain, result);
+    }
+    return ! errored;
 }
 
 process_t *parse_execution_context_t::create_boolean_process(job_t *job, const parse_node_t &bool_statement)
@@ -416,6 +438,7 @@ process_t *parse_execution_context_t::create_job_process(job_t *job, const parse
         
         case symbol_decorated_statement:
         {
+            /* Get the plain statement. It will pull out the decoration itself */
             const parse_node_t &plain_statement = tree.find_child(specific_statement, symbol_plain_statement);
             result = this->create_plain_process(job, plain_statement);
             break;
@@ -431,7 +454,7 @@ process_t *parse_execution_context_t::create_job_process(job_t *job, const parse
 }
 
 
-void parse_execution_context_t::populate_job_from_job_node(job_t *j, const parse_node_t &job_node)
+bool parse_execution_context_t::populate_job_from_job_node(job_t *j, const parse_node_t &job_node)
 {
     assert(job_node.type == symbol_job);
     
@@ -470,6 +493,9 @@ void parse_execution_context_t::populate_job_from_job_node(job_t *j, const parse
         last_process = last_process->next;
         job_cont = get_child(*job_cont, 2, symbol_job_continuation);
     }
+    
+    /* Return success */
+    return ! process_errored;
 }
 
 int parse_execution_context_t::run_1_job(const parse_node_t &job_node)
@@ -515,8 +541,10 @@ int parse_execution_context_t::run_1_job(const parse_node_t &job_node)
     
     parser->current_block()->job = j;
     
-    this->populate_job_from_job_node(j, job_node);
+    /* Populate the job. This may fail for reasons like command_not_found */
+    bool process_errored = ! this->populate_job_from_job_node(j, job_node);
 
+    /* Store time it took to 'parse' the command */
     if (do_profile)
     {
         parse_time = get_time();
@@ -524,34 +552,49 @@ int parse_execution_context_t::run_1_job(const parse_node_t &job_node)
         profile_item->skipped=parser->current_block()->skip;
     }
     
-    /* Check to see if this contained any external commands */
-    bool job_contained_external_command = false;
-    for (const process_t *proc = j->first_process; proc != NULL; proc = proc->next)
+    if (! process_errored)
     {
-        if (proc->type == EXTERNAL)
+        /* Check to see if this contained any external commands */
+        bool job_contained_external_command = false;
+        for (const process_t *proc = j->first_process; proc != NULL; proc = proc->next)
         {
-            job_contained_external_command = true;
-            break;
+            if (proc->type == EXTERNAL)
+            {
+                job_contained_external_command = true;
+                break;
+            }
+        }
+        
+        /* Actually execute the job */
+        exec_job(*this->parser, j);
+        
+        /* Only external commands require a new fishd barrier */
+        if (!job_contained_external_command)
+        {
+            set_proc_had_barrier(false);
         }
     }
-    
-    /* Only external commands require a new fishd barrier */
-    if (!job_contained_external_command)
-        set_proc_had_barrier(false);
 
     /* Need support for skipped_exec here */
-    
     if (do_profile)
     {
         exec_time = get_time();
         profile_item->level=eval_level;
         profile_item->parse = (int)(parse_time-start_time);
         profile_item->exec=(int)(exec_time-parse_time);
+        profile_item->skipped = process_errored;
     }
+
+    /* Set the last status to 1 if the job could not be executed */
+    if (process_errored)
+        proc_set_last_status(1);
+    const int ret = proc_get_last_status();
     
+    /* Clean up jobs. Do this after we've determined the return value, since this may trigger event handlers */
     job_reap(0);
     
-    return proc_get_last_status();
+    /* All done */
+    return ret;
 }
 
 void parse_execution_context_t::run_job_list(const parse_node_t &job_list_node)

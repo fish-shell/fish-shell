@@ -35,9 +35,9 @@ class parse_execution_context_t
     /* Report an error. Always returns true. */
     bool append_error(const parse_node_t &node, const wchar_t *fmt, ...);
     
+    /* Utilities */
     wcstring get_source(const parse_node_t &node) const;
-    const parse_node_t *get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type = token_type_invalid);
-    
+    const parse_node_t *get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type = token_type_invalid) const;
     node_offset_t get_offset(const parse_node_t &node) const;
     
     process_t *create_job_process(job_t *job, const parse_node_t &statement_node);
@@ -48,11 +48,13 @@ class parse_execution_context_t
     void run_while_process(const parse_node_t &header, const parse_node_t &statement);
     
     wcstring_list_t determine_arguments(const parse_node_t &parent, const parse_node_t **out_unmatched_wildcard_node);
-    io_chain_t determine_io_chain(const parse_node_t &statement);
+    
+    /* Determines the IO chain. Returns true on success, false on error */
+    bool determine_io_chain(const parse_node_t &statement, io_chain_t *out_chain);
     
     int run_1_job(const parse_node_t &job_node);
     void run_job_list(const parse_node_t &job_list_node);
-    void populate_job_from_job_node(job_t *j, const parse_node_t &job_node);
+    bool populate_job_from_job_node(job_t *j, const parse_node_t &job_node);
     
     void eval_next_stack_elem();
     

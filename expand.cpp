@@ -1867,7 +1867,7 @@ bool expand_one(wcstring &string, expand_flags_t flags)
         return true;
     }
 
-    if (expand_string(string, completions, flags))
+    if (expand_string(string, completions, flags | EXPAND_NO_DESCRIPTIONS))
     {
         if (completions.size() == 1)
         {

@@ -1753,9 +1753,14 @@ static int builtin_pwd(parser_t &parser, wchar_t **argv)
 }
 
 /* This is nearly identical to builtin_function, and is intended to be the successor (with no block manipulation, no function/end split) */
-int define_function(parser_t &parser, const wcstring_list_t &args, const wcstring &contents, wcstring *out_err)
+int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstring &contents, wcstring *out_err)
 {
     assert(out_err != NULL);
+    
+    /* wgetopt expects 'function' as the first argument. Make a new wcstring_list with that property. */
+    wcstring_list_t args;
+    args.push_back(L"function");
+    args.insert(args.end(), c_args.begin(), c_args.end());
     
     /* Hackish const_cast matches the one in builtin_run */
     const null_terminated_array_t<wchar_t> argv_array(args);

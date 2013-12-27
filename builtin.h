@@ -178,7 +178,7 @@ const wchar_t *builtin_complete_get_temporary_buffer();
 */
 wcstring builtin_help_get(parser_t &parser, const wchar_t *cmd);
 
-/** Defines a function, like builtin_function. Returns 0 on success. */
+/** Defines a function, like builtin_function. Returns 0 on success. args should NOT contain 'function' as the first argument. */
 int define_function(parser_t &parser, const wcstring_list_t &args, const wcstring &contents, wcstring *out_err);
 
 

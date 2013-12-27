@@ -2990,6 +2990,7 @@ const wchar_t *reader_readline(void)
             is_interactive_read = 1;
             c=input_readch();
             is_interactive_read = was_interactive_read;
+            //fprintf(stderr, "C: %lx\n", (long)c);
 
             if (((!wchar_private(c))) && (c>31) && (c != 127))
             {

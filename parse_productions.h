@@ -13,7 +13,7 @@ namespace parse_productions
 {
 
 #define MAX_PRODUCTIONS 5
-#define MAX_SYMBOLS_PER_PRODUCTION 5
+#define MAX_SYMBOLS_PER_PRODUCTION 6
 
 typedef uint32_t production_tag_t;
 

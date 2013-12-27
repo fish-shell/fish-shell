@@ -5,7 +5,9 @@
 */
 
 #include "parse_execution.h"
+#include "parse_util.h"
 #include "complete.h"
+#include "wildcard.h"
 #include "builtin.h"
 #include "parser.h"
 #include "expand.h"
@@ -65,14 +67,13 @@ int parse_execution_context_t::run_if_statement(const parse_node_t &statement)
     {
         assert(if_clause != NULL && else_clause != NULL);
         const parse_node_t &condition = *get_child(*if_clause, 1, symbol_job);
-        fprintf(stderr, "run %ls\n", get_source(condition).c_str());
         if (run_1_job(condition) == EXIT_SUCCESS)
         {
             /* condition succeeded */
             job_list_to_execute = get_child(*if_clause, 3, symbol_job_list);
             break;
         }
-        else if (else_clause->child_count > 0)
+        else if (else_clause->child_count == 0)
         {
             /* 'if' condition failed, no else clause, we're done */
             job_list_to_execute = NULL;
@@ -119,7 +120,6 @@ int parse_execution_context_t::run_begin_statement(const parse_node_t &header, c
     /* Basic begin/end block. Push a scope block. */
     scope_block_t *sb = new scope_block_t(BEGIN);
     parser->push_block(sb);
-    parser->current_block()->tok_pos = parser->get_pos();
     
     /* Run the job list */
     run_job_list(contents);
@@ -138,7 +138,7 @@ int parse_execution_context_t::run_function_statement(const parse_node_t &header
     
     /* Get arguments */
     const parse_node_t *unmatched_wildcard = NULL;
-    const wcstring_list_t argument_list = this->determine_arguments(header, &unmatched_wildcard);
+    wcstring_list_t argument_list = this->determine_arguments(header, &unmatched_wildcard);
     
     bool errored = false;
     if (unmatched_wildcard != NULL)
@@ -152,6 +152,11 @@ int parse_execution_context_t::run_function_statement(const parse_node_t &header
         wcstring error_str;
         int err = define_function(*parser, argument_list, contents_str, &error_str);
         proc_set_last_status(err);
+        
+        if (! error_str.empty())
+        {
+            this->append_error(header, L"%ls", error_str.c_str());
+        }
     }
     return proc_get_last_status();
 }
@@ -197,19 +202,17 @@ int parse_execution_context_t::run_for_statement(const parse_node_t &header, con
     assert(header.type == symbol_for_header);
     assert(block_contents.type == symbol_job_list);
     
-    /* get the variable name: `for var_name in ...` */
+    /* Get the variable name: `for var_name in ...` */
     const parse_node_t &var_name_node = *get_child(header, 1, parse_token_type_string);
     const wcstring for_var_name = get_source(var_name_node);
     
-    /* get the contents to iterate over */
+    /* Get the contents to iterate over. Here we could do something with unmatched_wildcard. However it seems nicer to not make for loops complain about this, i.e. just iterate over a potentially empty list
+    */
     const parse_node_t *unmatched_wildcard = NULL;
-    wcstring_list_t argument_list = this->determine_arguments(header, &unmatched_wildcard);
-    
-    /* Here we could do something with unmatched_wildcard. However it seems nicer to not make for loops complain about this, i.e. just iterate over a potentially empty list */
+    wcstring_list_t argument_list = this->determine_arguments(header, NULL);
     
     for_block_t *fb = new for_block_t(for_var_name);
     parser->push_block(fb);
-    fb->tok_pos = parser->get_pos();
 
     /* Note that we store the sequence of values in opposite order */
     std::reverse(argument_list.begin(), argument_list.end());
@@ -234,6 +237,103 @@ int parse_execution_context_t::run_for_statement(const parse_node_t &header, con
 
 int parse_execution_context_t::run_switch_statement(const parse_node_t &statement)
 {
+    assert(statement.type == symbol_switch_statement);
+    bool errored = false;
+    const parse_node_t *matching_case_item = NULL;
+    
+    /* Get the switch variable */
+    const parse_node_t &switch_value_node = *get_child(statement, 1, parse_token_type_string);
+    const wcstring switch_value = get_source(switch_value_node);
+    
+    /* Expand it */
+    std::vector<completion_t> switch_values_expanded;
+    int expand_ret = expand_string(switch_value, switch_values_expanded, EXPAND_NO_DESCRIPTIONS);
+    switch (expand_ret)
+    {
+        case EXPAND_ERROR:
+        {
+            errored = append_error(switch_value_node,
+                  _(L"Could not expand string '%ls'"),
+                  switch_value.c_str());
+            break;
+        }
+            
+        case EXPAND_WILDCARD_NO_MATCH:
+        {
+            /* Store the node that failed to expand */
+            errored = append_error(switch_value_node, WILDCARD_ERR_MSG, switch_value.c_str());
+            break;
+        }
+        
+        case EXPAND_WILDCARD_MATCH:
+        case EXPAND_OK:
+        {
+            break;
+        }
+    }
+    
+    if (! errored && switch_values_expanded.size() != 1)
+    {
+            errored = append_error(switch_value_node,
+                _(L"switch: Expected exactly one argument, got %lu\n"),
+                switch_values_expanded.size());
+    }
+    const wcstring &switch_value_expanded = switch_values_expanded.at(0).completion;
+    
+    if (! errored)
+    {
+        /* Expand case statements */
+        const parse_node_t *case_item_list = get_child(statement, 3, symbol_case_item_list);
+        while (matching_case_item == NULL && case_item_list->child_count > 0)
+        {
+            if (case_item_list->production_idx == 2)
+            {
+                /* Hackish: blank line */
+                case_item_list = get_child(*case_item_list, 1, symbol_case_item_list);
+                continue;
+            }
+            
+            /* Pull out this case item and the rest of the list */
+            const parse_node_t &case_item = *get_child(*case_item_list, 0, symbol_case_item);
+            
+            /* Pull out the argument list */
+            const parse_node_t &arg_list = *get_child(case_item, 1, symbol_argument_list);
+            
+            /* Expand arguments. We explicitly ignore unmatched_wildcard. That is, a case item list may have a wildcard that fails to expand to anything. */
+            const wcstring_list_t case_args = this->determine_arguments(arg_list, NULL);
+            
+            for (size_t i=0; i < case_args.size(); i++)
+            {
+                const wcstring &arg = case_args.at(i);
+                
+                /* Unescape wildcards so they can be expanded again */
+                wchar_t *unescaped_arg = parse_util_unescape_wildcards(arg.c_str());
+                bool match = wildcard_match(switch_value_expanded, unescaped_arg);
+                free(unescaped_arg);
+                
+                /* If this matched, we're done */
+                if (match)
+                {
+                    matching_case_item = &case_item;
+                    break;
+                }
+            }
+            
+            /* Remainder of the list */
+            case_item_list = get_child(*case_item_list, 1, symbol_case_item_list);
+        }
+    }
+    
+    if (! errored && matching_case_item)
+    {
+        /* Success, evaluate the job list */
+        const parse_node_t *job_list = get_child(*matching_case_item, 3, symbol_job_list);
+        this->run_job_list(*job_list);
+    }
+
+    // Oops, this is stomping STATUS_WILDCARD_ERROR. TODO: Don't!
+    if (errored)
+        proc_set_last_status(STATUS_BUILTIN_ERROR);
     return proc_get_last_status();
 }
 
@@ -415,7 +515,7 @@ wcstring_list_t parse_execution_context_t::determine_arguments(const parse_node_
         
         /* Expand this string */
         std::vector<completion_t> arg_expanded;
-        int expand_ret = expand_string(arg_str, arg_expanded, 0);
+        int expand_ret = expand_string(arg_str, arg_expanded, EXPAND_NO_DESCRIPTIONS);
         switch (expand_ret)
         {
             case EXPAND_ERROR:
@@ -709,7 +809,7 @@ int parse_execution_context_t::run_1_job(const parse_node_t &job_node)
         }
     }
     
-        /* Increment the eval_level for the duration of this command */
+    /* Increment the eval_level for the duration of this command */
     scoped_push<int> saved_eval_level(&eval_level, eval_level + 1);
     
     /* TODO: blocks-without-redirections optimization */

@@ -238,9 +238,11 @@ public:
     else_continuation = if_clause else_clause |
                         STATEMENT_TERMINATOR job_list
 
-    switch_statement = SWITCH <TOK_STRING> STATEMENT_TERMINATOR case_item_list end_command
+    switch_statement = SWITCH <TOK_STRING> STATEMENT_TERMINATOR case_item_list end_command arguments_or_redirections_list
     case_item_list = <empty> |
-                    case_item case_item_list
+                    case_item case_item_list |
+                    <TOK_END> case_item_list
+ 
     case_item = CASE argument_list STATEMENT_TERMINATOR job_list
 
     block_statement = block_header <TOK_END> job_list end_command arguments_or_redirections_list

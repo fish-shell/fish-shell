@@ -1556,6 +1556,8 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, boo
     int prev_subshell = is_subshell;
     const int prev_status = proc_get_last_status();
     char sep=0;
+    
+    //fprintf(stderr, "subcmd %ls\n", cmd.c_str());
 
     const env_var_t ifs = env_get_string(L"IFS");
 

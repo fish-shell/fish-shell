@@ -186,7 +186,6 @@ void function_add(const function_data_t &data, const parser_t &parser)
     /* Remove the old function */
     function_remove(data.name);
 
-
     /* Create and store a new function */
     const wchar_t *filename = reader_current_filename();
 

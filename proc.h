@@ -73,6 +73,10 @@ enum process_type_t
        A block of commands
     */
     INTERNAL_BLOCK,
+    
+    /** A block of commands, represented as a node */
+    INTERNAL_BLOCK_NODE,
+    
     /**
        The exec builtin
     */

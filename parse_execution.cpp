@@ -48,7 +48,196 @@ bool parse_execution_context_t::should_cancel() const
     return false;
 }
 
-void parse_execution_context_t::run_while_process(const parse_node_t &header, const parse_node_t &statement)
+int parse_execution_context_t::run_if_statement(const parse_node_t &statement)
+{
+    assert(statement.type == symbol_if_statement);
+    
+    /* Push an if block */
+    if_block_t *ib = new if_block_t();
+    ib->node_offset = this->get_offset(statement);
+    parser->push_block(ib);
+
+    /* We have a sequence of if clauses, with a final else, resulting in a single job list that we execute */
+    const parse_node_t *job_list_to_execute = NULL;
+    const parse_node_t *if_clause = get_child(statement, 0, symbol_if_clause);
+    const parse_node_t *else_clause = get_child(statement, 1, symbol_else_clause);
+    for (;;)
+    {
+        assert(if_clause != NULL && else_clause != NULL);
+        const parse_node_t &condition = *get_child(*if_clause, 1, symbol_job);
+        fprintf(stderr, "run %ls\n", get_source(condition).c_str());
+        if (run_1_job(condition) == EXIT_SUCCESS)
+        {
+            /* condition succeeded */
+            job_list_to_execute = get_child(*if_clause, 3, symbol_job_list);
+            break;
+        }
+        else if (else_clause->child_count > 0)
+        {
+            /* 'if' condition failed, no else clause, we're done */
+            job_list_to_execute = NULL;
+            break;
+        }
+        else
+        {
+            /* We have an 'else continuation' (either else-if or else) */
+            const parse_node_t &else_cont = *get_child(*else_clause, 1, symbol_else_continuation);
+            assert(else_cont.production_idx < 2);
+            if (else_cont.production_idx == 0)
+            {
+                /* it's an 'else if', go to the next one */
+                if_clause = get_child(else_cont, 0, symbol_if_clause);
+                else_clause = get_child(else_cont, 1, symbol_else_clause);
+            }
+            else
+            {
+                /* it's the final 'else', we're done */
+                assert(else_cont.production_idx == 1);
+                job_list_to_execute = get_child(else_cont, 1, symbol_job_list);
+                break;
+            }
+        }
+    }
+    
+    /* Execute any job list we got */
+    if (job_list_to_execute != NULL)
+    {
+        run_job_list(*job_list_to_execute);
+    }
+
+    /* Done */
+    parser->pop_block(ib);
+    
+    return proc_get_last_status();
+}
+
+int parse_execution_context_t::run_begin_statement(const parse_node_t &header, const parse_node_t &contents)
+{
+    assert(header.type == symbol_begin_header);
+    assert(contents.type == symbol_job_list);
+    
+    /* Basic begin/end block. Push a scope block. */
+    scope_block_t *sb = new scope_block_t(BEGIN);
+    parser->push_block(sb);
+    parser->current_block()->tok_pos = parser->get_pos();
+    
+    /* Run the job list */
+    run_job_list(contents);
+    
+    /* Pop the block */
+    parser->pop_block(sb);
+    
+    return proc_get_last_status();
+}
+
+/* Define a function */
+int parse_execution_context_t::run_function_statement(const parse_node_t &header, const parse_node_t &contents)
+{
+    assert(header.type == symbol_function_header);
+    assert(contents.type == symbol_job_list);
+    
+    /* Get arguments */
+    const parse_node_t *unmatched_wildcard = NULL;
+    const wcstring_list_t argument_list = this->determine_arguments(header, &unmatched_wildcard);
+    
+    bool errored = false;
+    if (unmatched_wildcard != NULL)
+    {
+        errored = append_unmatched_wildcard_error(*unmatched_wildcard);
+    }
+    
+    if (! errored)
+    {
+        const wcstring contents_str = get_source(contents);
+        wcstring error_str;
+        int err = define_function(*parser, argument_list, contents_str, &error_str);
+        proc_set_last_status(err);
+    }
+    return proc_get_last_status();
+}
+
+int parse_execution_context_t::run_block_statement(const parse_node_t &statement)
+{
+    assert(statement.type == symbol_block_statement);
+    
+    const parse_node_t &block_header = *get_child(statement, 0, symbol_block_header); //block header
+    const parse_node_t &header = *get_child(block_header, 0); //specific header type (e.g. for loop)
+    const parse_node_t &contents = *get_child(statement, 2, symbol_job_list); //block contents
+    
+    int ret = 1;
+    switch (header.type)
+    {
+        case symbol_for_header:
+            ret = run_for_statement(header, contents);
+            break;
+            
+        case symbol_while_header:
+            ret = run_while_statement(header, contents);
+            break;
+            
+        case symbol_function_header:
+            ret = run_function_statement(header, contents);
+            break;
+            
+        case symbol_begin_header:
+            ret = run_begin_statement(header, contents);
+            break;
+        
+        default:
+            fprintf(stderr, "Unexpected block header: %ls\n", header.describe().c_str());
+            PARSER_DIE();
+            break;
+    }
+    
+    return proc_get_last_status();
+}
+
+int parse_execution_context_t::run_for_statement(const parse_node_t &header, const parse_node_t &block_contents)
+{
+    assert(header.type == symbol_for_header);
+    assert(block_contents.type == symbol_job_list);
+    
+    /* get the variable name: `for var_name in ...` */
+    const parse_node_t &var_name_node = *get_child(header, 1, parse_token_type_string);
+    const wcstring for_var_name = get_source(var_name_node);
+    
+    /* get the contents to iterate over */
+    const parse_node_t *unmatched_wildcard = NULL;
+    wcstring_list_t argument_list = this->determine_arguments(header, &unmatched_wildcard);
+    
+    /* Here we could do something with unmatched_wildcard. However it seems nicer to not make for loops complain about this, i.e. just iterate over a potentially empty list */
+    
+    for_block_t *fb = new for_block_t(for_var_name);
+    parser->push_block(fb);
+    fb->tok_pos = parser->get_pos();
+
+    /* Note that we store the sequence of values in opposite order */
+    std::reverse(argument_list.begin(), argument_list.end());
+    fb->sequence = argument_list;
+
+    /* Now drive the for loop. TODO: handle break, etc. */
+    while (! fb->sequence.empty())
+    {
+        const wcstring &for_variable = fb->variable;
+        const wcstring &val = fb->sequence.back();
+        env_set(for_variable, val.c_str(),  ENV_LOCAL);
+        fb->sequence.pop_back();
+        fb->loop_status = LOOP_NORMAL;
+        fb->skip = 0;
+        
+        this->run_job_list(block_contents);
+    }
+    
+    return proc_get_last_status();
+}
+
+
+int parse_execution_context_t::run_switch_statement(const parse_node_t &statement)
+{
+    return proc_get_last_status();
+}
+
+int parse_execution_context_t::run_while_statement(const parse_node_t &header, const parse_node_t &statement)
 {
     assert(header.type == symbol_while_header);
     assert(statement.type == symbol_block_statement);
@@ -71,6 +260,8 @@ void parse_execution_context_t::run_while_process(const parse_node_t &header, co
     
     /* Done */
     parser->pop_block(wb);
+    
+    return proc_get_last_status();
 }
 
 /* Appends an error to the error list. Always returns true, so you can assign the result to an 'errored' variable */
@@ -88,6 +279,13 @@ bool parse_execution_context_t::append_error(const parse_node_t &node, const wch
     
     this->errors.push_back(error);
     return true;
+}
+
+/* Appends an unmatched wildcard error to the error list, and returns true. */
+bool parse_execution_context_t::append_unmatched_wildcard_error(const parse_node_t &unmatched_wildcard)
+{
+    proc_set_last_status(STATUS_UNMATCHED_WILDCARD);
+    return append_error(unmatched_wildcard, WILDCARD_ERR_MSG, get_source(unmatched_wildcard).c_str());
 }
 
 /* Creates a 'normal' (non-block) process */
@@ -122,8 +320,7 @@ process_t *parse_execution_context_t::create_plain_process(job_t *job, const par
     if (unmatched_wildcard != NULL)
     {
         job_set_flag(job, JOB_WILDCARD_ERROR, 1);
-        proc_set_last_status(STATUS_UNMATCHED_WILDCARD);
-        errored = append_error(*unmatched_wildcard, WILDCARD_ERR_MSG, unmatched_wildcard->get_source(src).c_str());
+        errored = append_unmatched_wildcard_error(*unmatched_wildcard);
     }
     
     if (errored)
@@ -179,7 +376,6 @@ process_t *parse_execution_context_t::create_plain_process(job_t *job, const par
             /* TODO: support fish_command_not_found, implicit cd, etc. here */
             errored = true;
         }
-        return NULL;
     }
     
     /* Return the process, or NULL on error */
@@ -401,10 +597,10 @@ process_t *parse_execution_context_t::create_boolean_process(job_t *job, const p
 
 process_t *parse_execution_context_t::create_block_process(job_t *job, const parse_node_t &statement_node)
 {
-    /* We handle block statements by creating INTERNAL_BLOCKs, that will bounce back to us when it's time to execute them */
+    /* We handle block statements by creating INTERNAL_BLOCK_NODE, that will bounce back to us when it's time to execute them */
     assert(statement_node.type == symbol_block_statement || statement_node.type == symbol_if_statement || statement_node.type == symbol_switch_statement);
     process_t *result = new process_t();
-    result->type = INTERNAL_BLOCK;
+    result->type = INTERNAL_BLOCK_NODE;
     result->internal_block_node = this->get_offset(statement_node);
     return result;
 }
@@ -513,7 +709,7 @@ int parse_execution_context_t::run_1_job(const parse_node_t &job_node)
         }
     }
     
-    /* Increment the eval_level for the duration of this command */
+        /* Increment the eval_level for the duration of this command */
     scoped_push<int> saved_eval_level(&eval_level, eval_level + 1);
     
     /* TODO: blocks-without-redirections optimization */
@@ -530,7 +726,7 @@ int parse_execution_context_t::run_1_job(const parse_node_t &job_node)
         start_time = get_time();
     }
     
-    job_t *j = parser->job_create(this->block_io);
+    job_t *j = new job_t(acquire_job_id(), block_io);
     job_set_flag(j, JOB_FOREGROUND, 1);
     job_set_flag(j, JOB_TERMINAL, job_get_flag(j, JOB_CONTROL));
     job_set_flag(j, JOB_TERMINAL, job_get_flag(j, JOB_CONTROL) \
@@ -539,20 +735,20 @@ int parse_execution_context_t::run_1_job(const parse_node_t &job_node)
                  || is_block \
                  || is_event \
                  || (!get_is_interactive()));
-    
-    parser->current_block()->job = j;
+    job_set_flag(j, JOB_CONTROL,
+                 (job_control_mode==JOB_CONTROL_ALL) ||
+                 ((job_control_mode == JOB_CONTROL_INTERACTIVE) && (get_is_interactive())));
     
     /* Populate the job. This may fail for reasons like command_not_found */
     bool process_errored = ! this->populate_job_from_job_node(j, job_node);
-
-    /* If we errored, we have to clean up the job */
+    
+    /* Clean up the job on failure */
     if (process_errored)
     {
-        assert(parser->current_block()->job == j);
-        parser->current_block()->job = NULL;
-        job_free(j);
+        delete j;
+        j = NULL;
     }
-
+    
     /* Store time it took to 'parse' the command */
     if (do_profile)
     {
@@ -563,6 +759,10 @@ int parse_execution_context_t::run_1_job(const parse_node_t &job_node)
     
     if (! process_errored)
     {
+        /* Success. Give the job to the parser - it will clean it up. */
+        parser->job_add(j);
+        parser->current_block()->job = j;
+
         /* Check to see if this contained any external commands */
         bool job_contained_external_command = false;
         for (const process_t *proc = j->first_process; proc != NULL; proc = proc->next)
@@ -602,6 +802,13 @@ int parse_execution_context_t::run_1_job(const parse_node_t &job_node)
     /* Clean up jobs. Do this after we've determined the return value, since this may trigger event handlers */
     job_reap(0);
     
+    /* Output any errors (hack) */
+    if (! this->errors.empty())
+    {
+        fprintf(stderr, "%ls\n", parse_errors_description(this->errors, this->src).c_str());
+        this->errors.clear();
+    }
+    
     /* All done */
     return ret;
 }
@@ -636,6 +843,7 @@ int parse_execution_context_t::run_job_list(const parse_node_t &job_list_node)
                 break;
                 
             default: //if we get here, it means more productions have been added to job_list, which is bad
+                fprintf(stderr, "Unexpected production in job_list: %lu\n", (unsigned long)job_list->production_idx);
                 PARSER_DIE();
         }
         
@@ -649,13 +857,53 @@ int parse_execution_context_t::run_job_list(const parse_node_t &job_list_node)
     return result;
 }
 
-
-int parse_execution_context_t::eval_top_level_job_list()
+int parse_execution_context_t::eval_node_at_offset(node_offset_t offset)
 {
-    if (tree.empty())
-        return EXIT_FAILURE;
+    bool log_it = false;
     
-    const parse_node_t &job_list = tree.at(0);
-    assert(job_list.type == symbol_job_list);
-    return this->run_job_list(job_list);
+    /* Don't ever expect to have an empty tree if this is called */
+    assert(! tree.empty());
+    assert(offset < tree.size());
+    
+    const parse_node_t &node = tree.at(offset);
+    
+    if (log_it)
+    {
+        fprintf(stderr, "eval node: %ls\n", get_source(node).c_str());
+    }
+    
+    /* Currently, we only expect to execute the top level job list, or a block node. Assert that. */
+    assert(node.type == symbol_job_list ||
+        node.type == symbol_block_statement ||
+        node.type == symbol_if_statement ||
+        node.type == symbol_switch_statement);
+    
+    int ret = 1;
+    switch (node.type)
+    {
+        case symbol_job_list:
+            /* We should only get a job list if it's top level. This is because this is the entry point for both top-level execution (the first node) and INTERNAL_BLOCK_NODE execution (which does block statements, but never job lists) */
+            assert(offset == 0);
+            ret = this->run_job_list(node);
+            break;
+        
+        case symbol_block_statement:
+            ret = this->run_block_statement(node);
+            break;
+            
+        case symbol_if_statement:
+            ret = this->run_if_statement(node);
+            break;
+            
+        case symbol_switch_statement:
+            ret = this->run_switch_statement(node);
+            break;
+            
+        default:
+            /* In principle, we could support other node types. However we never expect to be passed them - see above. */
+            fprintf(stderr, "Unexpected node %ls found in %s\n", node.describe().c_str(), __FUNCTION__);
+            PARSER_DIE();
+            break;
+    }
+    return ret;
 }

@@ -598,6 +598,12 @@ void parser_t::error(int ec, size_t p, const wchar_t *str, ...)
     va_start(va, str);
     err_buff = vformat_string(str, va);
     va_end(va);
+    
+    if (parser_use_ast())
+    {
+        fprintf(stderr, "parser error: %ls\n", err_buff.c_str());
+        err_buff.clear();
+    }
 }
 
 /**
@@ -1188,6 +1194,13 @@ int parser_t::is_help(const wchar_t *s, int min_match)
 
     return (wcscmp(L"-h", s) == 0) ||
            (len >= (size_t)min_match && (wcsncmp(L"--help", s, len) == 0));
+}
+
+void parser_t::job_add(job_t *job)
+{
+    assert(job != NULL);
+    assert(job->first_process != NULL);
+    this->my_job_list.push_front(job);
 }
 
 job_t *parser_t::job_create(const io_chain_t &io)
@@ -2588,6 +2601,40 @@ void parser_t::eval_job(tokenizer_t *tok)
 int parser_t::eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type)
 {
     CHECK_BLOCK(1);
+    
+    /* Parse the source into a tree, if we can */
+    parse_node_tree_t tree;
+    if (! parse_t::parse(cmd, parse_flag_none, &tree, NULL))
+    {
+        return 1;
+    }
+    
+    /* Append to the execution context stack */
+    parse_execution_context_t *ctx = new parse_execution_context_t(tree, cmd, io, this);
+    execution_contexts.push_back(ctx);
+    
+    /* Execute the first node */
+    int result = 1;
+    if (! tree.empty())
+    {
+        result = this->eval_block_node(0, io_chain_t(), block_type);
+    }
+    
+    /* Clean up the execution context stack */
+    assert(! execution_contexts.empty() && execution_contexts.back() == ctx);
+    execution_contexts.pop_back();
+    delete ctx;
+
+    return result;
+}
+
+int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum block_type_t block_type)
+{
+    // Paranoia. It's a little frightening that we're given only a node_idx and we interpret this in the topmost execution context's tree. What happens if these were to be interleaved? Fortunately that cannot happen.
+    parse_execution_context_t *ctx = execution_contexts.back();
+    assert(ctx != NULL);
+    
+    CHECK_BLOCK(1);
 
     /* Only certain blocks are allowed */
     if ((block_type != TOP) &&
@@ -2600,29 +2647,13 @@ int parser_t::eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum bl
         return 1;
     }
     
-    /* Parse the source into a tree, if we can */
-    parse_node_tree_t tree;
-    if (! parse_t::parse(cmd, parse_flag_none, &tree, NULL))
-    {
-        return 1;
-    }
-    
     /* Not sure why we reap jobs here */
     job_reap(0);
-    
-    /* Append to the execution context stack */
-    parse_execution_context_t *ctx = new parse_execution_context_t(tree, cmd, io, this);
-    execution_contexts.push_back(ctx);
     
     /* Start it up */
     const block_t * const start_current_block = current_block();
     this->push_block(new scope_block_t(block_type));
-    int result = ctx->eval_top_level_job_list();
-    
-    /* Clean up the execution context stack */
-    assert(! execution_contexts.empty() && execution_contexts.back() == ctx);
-    execution_contexts.pop_back();
-    delete ctx;
+    int result = ctx->eval_node_at_offset(node_idx);
     
     /* Clean up the block stack */
     this->pop_block();
@@ -2643,6 +2674,7 @@ int parser_t::eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum bl
     job_reap(0);
     
     return result;
+
 }
 
 int parser_t::eval(const wcstring &cmd_str, const io_chain_t &io, enum block_type_t block_type)
@@ -2983,7 +3015,7 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
     assert(output != NULL);
     if (! errors.empty())
     {
-        const parse_error_t err = errors.at(0);
+        const parse_error_t &err = errors.at(0);
         
         // Determine which line we're on
         assert(err.source_start <= src.size());

@@ -994,7 +994,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
     
     // Parse the input string into a parse tree
     // Some errors are detected here
-    bool parsed = parse_t::parse(buff_src, 0, &node_tree, &parse_errors);
+    bool parsed = parse_t::parse(buff_src, parse_flag_leave_unterminated, &node_tree, &parse_errors);
     if (! parsed)
     {
         errored = true;

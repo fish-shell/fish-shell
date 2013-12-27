@@ -35,18 +35,28 @@ class parse_execution_context_t
     
     /* Report an error. Always returns true. */
     bool append_error(const parse_node_t &node, const wchar_t *fmt, ...);
+    /* Wildcard error helper */
+    bool append_unmatched_wildcard_error(const parse_node_t &unmatched_wildcard);
     
     /* Utilities */
     wcstring get_source(const parse_node_t &node) const;
     const parse_node_t *get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type = token_type_invalid) const;
     node_offset_t get_offset(const parse_node_t &node) const;
     
+    /* These create process_t structures from statements */
     process_t *create_job_process(job_t *job, const parse_node_t &statement_node);
     process_t *create_boolean_process(job_t *job, const parse_node_t &bool_statement);
     process_t *create_plain_process(job_t *job, const parse_node_t &statement);
     process_t *create_block_process(job_t *job, const parse_node_t &statement_node);
     
-    void run_while_process(const parse_node_t &header, const parse_node_t &statement);
+    /* These encapsulate the actual logic of various (block) statements. They just do what the statement says. */
+    int run_block_statement(const parse_node_t &statement);
+    int run_for_statement(const parse_node_t &header, const parse_node_t &contents);
+    int run_if_statement(const parse_node_t &statement);
+    int run_switch_statement(const parse_node_t &statement);
+    int run_while_statement(const parse_node_t &header, const parse_node_t &contents);
+    int run_function_statement(const parse_node_t &header, const parse_node_t &contents);
+    int run_begin_statement(const parse_node_t &header, const parse_node_t &contents);
     
     wcstring_list_t determine_arguments(const parse_node_t &parent, const parse_node_t **out_unmatched_wildcard_node);
     
@@ -57,13 +67,11 @@ class parse_execution_context_t
     int run_job_list(const parse_node_t &job_list_node);
     bool populate_job_from_job_node(job_t *j, const parse_node_t &job_node);
     
-    void eval_next_stack_elem();
-    
     public:
     parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, const io_chain_t &io, parser_t *p);
     
-    /* Actually execute the job list described by the tree */
-    int eval_top_level_job_list();
+    /* Start executing at the given node offset, returning the exit status of the last process. */
+    int eval_node_at_offset(node_offset_t offset);
     
 };
 

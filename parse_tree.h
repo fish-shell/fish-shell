@@ -65,7 +65,11 @@ enum
     parse_flag_include_comments = 1 << 1,
     
     /* Indicate that the tokenizer should accept incomplete tokens */
-    parse_flag_accept_incomplete_tokens = 1 << 2
+    parse_flag_accept_incomplete_tokens = 1 << 2,
+    
+    /* Indicate that the parser should not generate the terminate token, allowing an 'unfinished' tree where some nodes may have no productions. */
+    parse_flag_leave_unterminated = 1 << 3
+    
 };
 typedef unsigned int parse_tree_flags_t;
 
@@ -124,7 +128,7 @@ public:
     wcstring describe(void) const;
 
     /* Constructor */
-    explicit parse_node_t(parse_token_type_t ty) : type(ty), source_start(-1), source_length(0), parent(NODE_OFFSET_INVALID), child_start(0), child_count(0)
+    explicit parse_node_t(parse_token_type_t ty) : type(ty), source_start(-1), source_length(0), parent(NODE_OFFSET_INVALID), child_start(0), child_count(0), production_idx(-1)
     {
     }
 
@@ -244,7 +248,9 @@ public:
     for_header = FOR var_name IN argument_list
     while_header = WHILE job
     begin_header = BEGIN
-    function_header = FUNCTION function_name argument_list
+    
+# Functions take arguments, and require at least one (the name)    
+    function_header = FUNCTION argument argument_list
 
 # A boolean statement is AND or OR or NOT
 

@@ -997,6 +997,12 @@ bool parse_t::parse_internal(const wcstring &str, parse_tree_flags_t parse_flags
         queue[0] = queue[1];
         queue[1] = next_parse_token(&tok);
         
+        /* If we are leaving things unterminated, then don't pass parse_token_type_terminate */
+        if (queue[0].type == parse_token_type_terminate && (parse_flags & parse_flag_leave_unterminated))
+        {
+            break;
+        }
+        
         /* Pass these two tokens. We know that queue[0] is valid; queue[1] may be invalid. */
         this->parser->accept_tokens(queue[0], queue[1]);
         

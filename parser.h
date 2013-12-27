@@ -336,6 +336,9 @@ private:
 
     /** Create a job */
     job_t *job_create(const io_chain_t &io);
+    
+    /** Adds a job to the beginning of the job list. */
+    void job_add(job_t *job);
 
 public:
     std::vector<profile_item_t*> profile_items;
@@ -376,6 +379,9 @@ public:
     */
     int eval(const wcstring &cmd_str, const io_chain_t &io, enum block_type_t block_type);
     int eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type);
+    
+    /** Evaluates a block node at the given node offset in the topmost execution context */
+    int eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum block_type_t block_type);
     
     /**
       Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and cmdsubst execution on the tokens.

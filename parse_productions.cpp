@@ -320,7 +320,7 @@ RESOLVE_ONLY(begin_header)
 
 PRODUCTIONS(function_header) =
 {
-    {KEYWORD(parse_keyword_function), parse_token_type_string, symbol_argument_list}
+    {KEYWORD(parse_keyword_function), symbol_argument, symbol_argument_list}
 };
 RESOLVE_ONLY(function_header)
 

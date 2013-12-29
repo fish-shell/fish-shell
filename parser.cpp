@@ -2602,6 +2602,13 @@ int parser_t::eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum bl
 {
     CHECK_BLOCK(1);
     
+    if (block_type != TOP && block_type != SUBST)
+    {
+        debug(1, INVALID_SCOPE_ERR_MSG, parser_t::get_block_desc(block_type));
+        bugreport();
+        return 1;
+    }
+    
     /* Parse the source into a tree, if we can */
     parse_node_tree_t tree;
     if (! parse_t::parse(cmd, parse_flag_none, &tree, NULL))

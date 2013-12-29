@@ -47,7 +47,7 @@ node_offset_t parse_execution_context_t::get_offset(const parse_node_t &node) co
 
 bool parse_execution_context_t::should_cancel_execution(const block_t *block) const
 {
-    return block && block->skip;
+    return block && (block->skip || block->loop_status != LOOP_NORMAL);
 }
 
 int parse_execution_context_t::run_if_statement(const parse_node_t &statement)
@@ -228,6 +228,19 @@ int parse_execution_context_t::run_for_statement(const parse_node_t &header, con
         fb->skip = 0;
         
         this->run_job_list(block_contents, fb);
+        
+        /* Handle break or continue */
+        if (fb->loop_status == LOOP_CONTINUE)
+        {
+            /* Reset the loop state */
+            fb->loop_status = LOOP_NORMAL;
+            fb->skip = false;
+            continue;
+        }
+        else if (fb->loop_status == LOOP_BREAK)
+        {
+            break;
+        }
     }
     
     return proc_get_last_status();
@@ -358,7 +371,21 @@ int parse_execution_context_t::run_while_statement(const parse_node_t &header, c
     /* A while loop is a while loop! */
     while (! this->should_cancel_execution(wb) && this->run_1_job(while_condition, wb) == EXIT_SUCCESS)
     {
+        /* The block ought to go inside the loop (see #1212) */
         this->run_job_list(block_contents, wb);
+        
+        /* Handle break or continue */
+        if (wb->loop_status == LOOP_CONTINUE)
+        {
+            /* Reset the loop state */
+            wb->loop_status = LOOP_NORMAL;
+            wb->skip = false;
+            continue;
+        }
+        else if (wb->loop_status == LOOP_BREAK)
+        {
+            break;
+        }
     }
     
     /* Done */
@@ -562,7 +589,7 @@ wcstring_list_t parse_execution_context_t::determine_arguments(const parse_node_
     }
     
     /* Return if we had a wildcard problem */
-    if (unmatched_wildcard && ! matched_wildcard)
+    if (out_unmatched_wildcard_node != NULL && unmatched_wildcard && ! matched_wildcard)
     {
         *out_unmatched_wildcard_node = unmatched_wildcard_node;
     }

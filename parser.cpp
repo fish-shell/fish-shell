@@ -2625,7 +2625,7 @@ int parser_t::eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum bl
     execution_contexts.pop_back();
     delete ctx;
 
-    return result;
+    return 0;
 }
 
 int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum block_type_t block_type)

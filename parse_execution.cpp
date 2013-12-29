@@ -1013,25 +1013,25 @@ int parse_execution_context_t::eval_node_at_offset(node_offset_t offset, const b
         node.type == symbol_if_statement ||
         node.type == symbol_switch_statement);
     
-    int ret = 1;
+    int status = 1;
     switch (node.type)
     {
         case symbol_job_list:
             /* We should only get a job list if it's the very first node. This is because this is the entry point for both top-level execution (the first node) and INTERNAL_BLOCK_NODE execution (which does block statements, but never job lists) */
             assert(offset == 0);
-            ret = this->run_job_list(node, associated_block);
+            status = this->run_job_list(node, associated_block);
             break;
         
         case symbol_block_statement:
-            ret = this->run_block_statement(node);
+            status = this->run_block_statement(node);
             break;
             
         case symbol_if_statement:
-            ret = this->run_if_statement(node);
+            status = this->run_if_statement(node);
             break;
             
         case symbol_switch_statement:
-            ret = this->run_switch_statement(node);
+            status = this->run_switch_statement(node);
             break;
             
         default:
@@ -1040,5 +1040,11 @@ int parse_execution_context_t::eval_node_at_offset(node_offset_t offset, const b
             PARSER_DIE();
             break;
     }
+    
+    proc_set_last_status(status);
+    
+    /* Argh */
+    int ret = errors.empty() ? 0 : 1;
+    errors.clear();
     return ret;
 }

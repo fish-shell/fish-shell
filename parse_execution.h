@@ -71,7 +71,7 @@ class parse_execution_context_t
     public:
     parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, parser_t *p);
     
-    /* Start executing at the given node offset, returning the exit status of the last process. */
+    /* Start executing at the given node offset. Returns 0 if there was no error, 1 if there was an error */
     int eval_node_at_offset(node_offset_t offset, const block_t *associated_block, const io_chain_t &io);
     
 };

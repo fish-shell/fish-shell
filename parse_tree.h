@@ -259,7 +259,6 @@ public:
     boolean_statement = AND statement | OR statement | NOT statement
 
 # A decorated_statement is a command with a list of arguments_or_redirections, possibly with "builtin" or "command"
-# TODO: we should be able to construct plain_statements out of e.g. 'command --help' or even just 'command'
 
     decorated_statement = plain_statement | COMMAND plain_statement | BUILTIN plain_statement
     plain_statement = <TOK_STRING> arguments_or_redirections_list optional_background

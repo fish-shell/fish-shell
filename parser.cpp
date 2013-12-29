@@ -2610,14 +2610,14 @@ int parser_t::eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum bl
     }
     
     /* Append to the execution context stack */
-    parse_execution_context_t *ctx = new parse_execution_context_t(tree, cmd, io, this);
+    parse_execution_context_t *ctx = new parse_execution_context_t(tree, cmd, this);
     execution_contexts.push_back(ctx);
     
     /* Execute the first node */
     int result = 1;
     if (! tree.empty())
     {
-        result = this->eval_block_node(0, io_chain_t(), block_type);
+        result = this->eval_block_node(0, io, block_type);
     }
     
     /* Clean up the execution context stack */
@@ -2652,8 +2652,9 @@ int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum
     
     /* Start it up */
     const block_t * const start_current_block = current_block();
-    this->push_block(new scope_block_t(block_type));
-    int result = ctx->eval_node_at_offset(node_idx);
+    block_t *scope_block = new scope_block_t(block_type);
+    this->push_block(scope_block);
+    int result = ctx->eval_node_at_offset(node_idx, scope_block, io);
     
     /* Clean up the block stack */
     this->pop_block();
@@ -3138,7 +3139,7 @@ bool parser_use_ast(void)
     env_var_t var = env_get_string(L"fish_new_parser");
     if (var.missing_or_empty())
     {
-        return false;
+        return 10;
     }
     else
     {

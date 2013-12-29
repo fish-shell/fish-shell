@@ -16,7 +16,7 @@
 #include "path.h"
 
 
-parse_execution_context_t::parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, const io_chain_t &io, parser_t *p) : tree(t), src(s), block_io(io), parser(p), eval_level(0)
+parse_execution_context_t::parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, parser_t *p) : tree(t), src(s), parser(p), eval_level(0)
 {
 }
 
@@ -45,9 +45,9 @@ node_offset_t parse_execution_context_t::get_offset(const parse_node_t &node) co
 }
 
 
-bool parse_execution_context_t::should_cancel() const
+bool parse_execution_context_t::should_cancel_execution(const block_t *block) const
 {
-    return false;
+    return block && block->skip;
 }
 
 int parse_execution_context_t::run_if_statement(const parse_node_t &statement)
@@ -63,11 +63,11 @@ int parse_execution_context_t::run_if_statement(const parse_node_t &statement)
     const parse_node_t *job_list_to_execute = NULL;
     const parse_node_t *if_clause = get_child(statement, 0, symbol_if_clause);
     const parse_node_t *else_clause = get_child(statement, 1, symbol_else_clause);
-    for (;;)
+    while (! should_cancel_execution(ib))
     {
         assert(if_clause != NULL && else_clause != NULL);
         const parse_node_t &condition = *get_child(*if_clause, 1, symbol_job);
-        if (run_1_job(condition) == EXIT_SUCCESS)
+        if (run_1_job(condition, ib) == EXIT_SUCCESS)
         {
             /* condition succeeded */
             job_list_to_execute = get_child(*if_clause, 3, symbol_job_list);
@@ -103,7 +103,7 @@ int parse_execution_context_t::run_if_statement(const parse_node_t &statement)
     /* Execute any job list we got */
     if (job_list_to_execute != NULL)
     {
-        run_job_list(*job_list_to_execute);
+        run_job_list(*job_list_to_execute, ib);
     }
 
     /* Done */
@@ -122,7 +122,7 @@ int parse_execution_context_t::run_begin_statement(const parse_node_t &header, c
     parser->push_block(sb);
     
     /* Run the job list */
-    run_job_list(contents);
+    run_job_list(contents, sb);
     
     /* Pop the block */
     parser->pop_block(sb);
@@ -208,7 +208,6 @@ int parse_execution_context_t::run_for_statement(const parse_node_t &header, con
     
     /* Get the contents to iterate over. Here we could do something with unmatched_wildcard. However it seems nicer to not make for loops complain about this, i.e. just iterate over a potentially empty list
     */
-    const parse_node_t *unmatched_wildcard = NULL;
     wcstring_list_t argument_list = this->determine_arguments(header, NULL);
     
     for_block_t *fb = new for_block_t(for_var_name);
@@ -219,7 +218,7 @@ int parse_execution_context_t::run_for_statement(const parse_node_t &header, con
     fb->sequence = argument_list;
 
     /* Now drive the for loop. TODO: handle break, etc. */
-    while (! fb->sequence.empty())
+    while (! fb->sequence.empty() && ! should_cancel_execution(fb))
     {
         const wcstring &for_variable = fb->variable;
         const wcstring &val = fb->sequence.back();
@@ -228,7 +227,7 @@ int parse_execution_context_t::run_for_statement(const parse_node_t &header, con
         fb->loop_status = LOOP_NORMAL;
         fb->skip = 0;
         
-        this->run_job_list(block_contents);
+        this->run_job_list(block_contents, fb);
     }
     
     return proc_get_last_status();
@@ -280,11 +279,14 @@ int parse_execution_context_t::run_switch_statement(const parse_node_t &statemen
     }
     const wcstring &switch_value_expanded = switch_values_expanded.at(0).completion;
     
+    switch_block_t *sb = new switch_block_t(switch_value_expanded);
+    parser->push_block(sb);
+    
     if (! errored)
     {
         /* Expand case statements */
         const parse_node_t *case_item_list = get_child(statement, 3, symbol_case_item_list);
-        while (matching_case_item == NULL && case_item_list->child_count > 0)
+        while (matching_case_item == NULL && case_item_list->child_count > 0 && ! should_cancel_execution(sb))
         {
             if (case_item_list->production_idx == 2)
             {
@@ -328,8 +330,10 @@ int parse_execution_context_t::run_switch_statement(const parse_node_t &statemen
     {
         /* Success, evaluate the job list */
         const parse_node_t *job_list = get_child(*matching_case_item, 3, symbol_job_list);
-        this->run_job_list(*job_list);
+        this->run_job_list(*job_list, sb);
     }
+
+    parser->pop_block(sb);
 
     // Oops, this is stomping STATUS_WILDCARD_ERROR. TODO: Don't!
     if (errored)
@@ -337,25 +341,24 @@ int parse_execution_context_t::run_switch_statement(const parse_node_t &statemen
     return proc_get_last_status();
 }
 
-int parse_execution_context_t::run_while_statement(const parse_node_t &header, const parse_node_t &statement)
+int parse_execution_context_t::run_while_statement(const parse_node_t &header, const parse_node_t &block_contents)
 {
     assert(header.type == symbol_while_header);
-    assert(statement.type == symbol_block_statement);
+    assert(block_contents.type == symbol_job_list);
     
     /* Push a while block */
     while_block_t *wb = new while_block_t();
     wb->status = WHILE_TEST_FIRST;
-    wb->node_offset = this->get_offset(statement);
+    wb->node_offset = this->get_offset(header);
     parser->push_block(wb);
     
     /* The condition and contents of the while loop, as a job and job list respectively */
     const parse_node_t &while_condition = *get_child(header, 1, symbol_job);
-    const parse_node_t &block_contents = *get_child(statement, 2, symbol_job_list);
     
     /* A while loop is a while loop! */
-    while (! this->should_cancel() && this->run_1_job(while_condition) == EXIT_SUCCESS)
+    while (! this->should_cancel_execution(wb) && this->run_1_job(while_condition, wb) == EXIT_SUCCESS)
     {
-        this->run_job_list(block_contents);
+        this->run_job_list(block_contents, wb);
     }
     
     /* Done */
@@ -387,6 +390,8 @@ bool parse_execution_context_t::append_unmatched_wildcard_error(const parse_node
     proc_set_last_status(STATUS_UNMATCHED_WILDCARD);
     return append_error(unmatched_wildcard, WILDCARD_ERR_MSG, get_source(unmatched_wildcard).c_str());
 }
+
+
 
 /* Creates a 'normal' (non-block) process */
 process_t *parse_execution_context_t::create_plain_process(job_t *job, const parse_node_t &statement)
@@ -565,13 +570,16 @@ wcstring_list_t parse_execution_context_t::determine_arguments(const parse_node_
     return argument_list;
 }
 
-bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement, io_chain_t *out_chain)
+bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement_node, io_chain_t *out_chain)
 {
     io_chain_t result;
     bool errored = false;
     
+    /* We are called with a statement of varying types. We require that the statement have an arguments_or_redirections_list child. */
+    const parse_node_t &args_and_redirections_list = tree.find_child(statement_node, symbol_arguments_or_redirections_list);
+    
     /* Get all redirection nodes underneath the statement */
-    const parse_node_tree_t::parse_node_list_t redirect_nodes = tree.find_nodes(statement, symbol_redirection);
+    const parse_node_tree_t::parse_node_list_t redirect_nodes = tree.find_nodes(args_and_redirections_list, symbol_redirection);
     for (size_t i=0; i < redirect_nodes.size(); i++)
     {
         const parse_node_t &redirect_node = *redirect_nodes.at(i);
@@ -699,9 +707,17 @@ process_t *parse_execution_context_t::create_block_process(job_t *job, const par
 {
     /* We handle block statements by creating INTERNAL_BLOCK_NODE, that will bounce back to us when it's time to execute them */
     assert(statement_node.type == symbol_block_statement || statement_node.type == symbol_if_statement || statement_node.type == symbol_switch_statement);
+    
+    /* The set of IO redirections that we construct for the process */
+    io_chain_t process_io_chain;
+    bool errored = ! this->determine_io_chain(statement_node, &process_io_chain);
+    if (errored)
+        return NULL;
+
     process_t *result = new process_t();
     result->type = INTERNAL_BLOCK_NODE;
     result->internal_block_node = this->get_offset(statement_node);
+    result->set_io_chain(process_io_chain);
     return result;
 }
 
@@ -777,6 +793,10 @@ bool parse_execution_context_t::populate_job_from_job_node(job_t *j, const parse
     {
         assert(job_cont->type == symbol_job_continuation);
         
+        /* Handle the pipe */
+        const parse_node_t &pipe_node = *get_child(*job_cont, 0, parse_token_type_pipe);
+        last_process->pipe_write_fd = fd_redirected_by_pipe(get_source(pipe_node));
+        
         /* Get the statement node and make a process from it */
         const parse_node_t *statement_node = get_child(*job_cont, 1, symbol_statement);
         assert(statement_node != NULL);
@@ -795,8 +815,20 @@ bool parse_execution_context_t::populate_job_from_job_node(job_t *j, const parse
     return ! process_errored;
 }
 
-int parse_execution_context_t::run_1_job(const parse_node_t &job_node)
+int parse_execution_context_t::run_1_job(const parse_node_t &job_node, const block_t *associated_block)
 {
+    bool log_it = false;
+    if (log_it)
+    {
+        fprintf(stderr, "%s: %ls\n", __FUNCTION__, get_source(job_node).c_str());
+    }
+
+
+    if (should_cancel_execution(associated_block))
+    {
+        return 1;
+    }
+    
     // Get terminal modes
     struct termios tmodes = {};
     if (get_is_interactive())
@@ -913,13 +945,13 @@ int parse_execution_context_t::run_1_job(const parse_node_t &job_node)
     return ret;
 }
 
-int parse_execution_context_t::run_job_list(const parse_node_t &job_list_node)
+int parse_execution_context_t::run_job_list(const parse_node_t &job_list_node, const block_t *associated_block)
 {
     assert(job_list_node.type == symbol_job_list);
     
     int result = 1;
     const parse_node_t *job_list = &job_list_node;
-    while (job_list != NULL)
+    while (job_list != NULL && ! should_cancel_execution(associated_block))
     {
         assert(job_list->type == symbol_job_list);
         
@@ -949,7 +981,7 @@ int parse_execution_context_t::run_job_list(const parse_node_t &job_list_node)
         
         if (job != NULL)
         {
-            result = this->run_1_job(*job);
+            result = this->run_1_job(*job, associated_block);
         }
     }
     
@@ -957,13 +989,16 @@ int parse_execution_context_t::run_job_list(const parse_node_t &job_list_node)
     return result;
 }
 
-int parse_execution_context_t::eval_node_at_offset(node_offset_t offset)
+int parse_execution_context_t::eval_node_at_offset(node_offset_t offset, const block_t *associated_block, const io_chain_t &io)
 {
     bool log_it = false;
     
     /* Don't ever expect to have an empty tree if this is called */
     assert(! tree.empty());
     assert(offset < tree.size());
+    
+    /* Apply this block IO for the duration of this function */
+    scoped_push<io_chain_t> block_io_push(&block_io, io);
     
     const parse_node_t &node = tree.at(offset);
     
@@ -982,9 +1017,9 @@ int parse_execution_context_t::eval_node_at_offset(node_offset_t offset)
     switch (node.type)
     {
         case symbol_job_list:
-            /* We should only get a job list if it's top level. This is because this is the entry point for both top-level execution (the first node) and INTERNAL_BLOCK_NODE execution (which does block statements, but never job lists) */
+            /* We should only get a job list if it's the very first node. This is because this is the entry point for both top-level execution (the first node) and INTERNAL_BLOCK_NODE execution (which does block statements, but never job lists) */
             assert(offset == 0);
-            ret = this->run_job_list(node);
+            ret = this->run_job_list(node, associated_block);
             break;
         
         case symbol_block_statement:

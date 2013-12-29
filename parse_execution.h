@@ -13,13 +13,14 @@
 
 class job_t;
 struct profile_item_t;
+struct block_t;
 
 class parse_execution_context_t
 {
     private:
     const parse_node_tree_t tree;
     const wcstring src;
-    const io_chain_t block_io;
+    io_chain_t block_io;
     parser_t * const parser;
     parse_error_list_t errors;
     
@@ -30,8 +31,8 @@ class parse_execution_context_t
     parse_execution_context_t(const parse_execution_context_t&);
     parse_execution_context_t& operator=(const parse_execution_context_t&);
     
-    /* Should I cancel */
-    bool should_cancel() const;
+    /* Should I cancel? */
+    bool should_cancel_execution(const block_t *block) const;
     
     /* Report an error. Always returns true. */
     bool append_error(const parse_node_t &node, const wchar_t *fmt, ...);
@@ -63,15 +64,15 @@ class parse_execution_context_t
     /* Determines the IO chain. Returns true on success, false on error */
     bool determine_io_chain(const parse_node_t &statement, io_chain_t *out_chain);
     
-    int run_1_job(const parse_node_t &job_node);
-    int run_job_list(const parse_node_t &job_list_node);
+    int run_1_job(const parse_node_t &job_node, const block_t *associated_block);
+    int run_job_list(const parse_node_t &job_list_node, const block_t *associated_block);
     bool populate_job_from_job_node(job_t *j, const parse_node_t &job_node);
     
     public:
-    parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, const io_chain_t &io, parser_t *p);
+    parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, parser_t *p);
     
     /* Start executing at the given node offset, returning the exit status of the last process. */
-    int eval_node_at_offset(node_offset_t offset);
+    int eval_node_at_offset(node_offset_t offset, const block_t *associated_block, const io_chain_t &io);
     
 };
 

@@ -820,7 +820,6 @@ void exec_job(parser_t &parser, job_t *j)
         {
             pipe_write.reset(new io_pipe_t(p->pipe_write_fd, false));
             process_net_io_chain.push_back(pipe_write);
-
         }
 
         /* The explicit IO redirections associated with the process */
@@ -1156,7 +1155,7 @@ void exec_job(parser_t &parser, job_t *j)
                       No buffer, so we exit directly. This means we
                       have to manually set the exit status.
                     */
-                    if (p->next == 0)
+                    if (p->next == NULL)
                     {
                         proc_set_last_status(job_get_flag(j, JOB_NEGATE)?(!status):status);
                     }

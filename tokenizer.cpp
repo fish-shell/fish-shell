@@ -535,6 +535,23 @@ enum token_type redirection_type_for_string(const wcstring &str, int *out_fd)
     return mode;
 }
 
+int fd_redirected_by_pipe(const wcstring &str)
+{
+    /* Hack for the common case */
+    if (str == L"|")
+    {
+        return STDOUT_FILENO;
+    }
+    
+    enum token_type mode = TOK_NONE;
+    int fd = 0;
+    read_redirection_or_fd_pipe(str.c_str(), &mode, &fd);
+    /* Pipes only */
+    if (mode != TOK_PIPE || fd < 0)
+        fd = -1;
+    return fd;
+}
+
 int oflags_for_redirection_type(enum token_type type)
 {
     switch (type)

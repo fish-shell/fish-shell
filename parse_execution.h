@@ -34,11 +34,23 @@ class parse_execution_context_t
     /* Should I cancel? */
     bool should_cancel_execution(const block_t *block) const;
     
+    /* Ways that we can stop executing a block. These are in a sort of ascending order of importance, e.g. `exit` should trump `break` */
+    enum execution_cancellation_reason_t
+    {
+        execution_cancellation_none,
+        execution_cancellation_loop_control,
+        execution_cancellation_skip,
+        execution_cancellation_exit
+    };
+    execution_cancellation_reason_t cancellation_reason(const block_t *block) const;
+    
     /* Report an error. Always returns true. */
     bool append_error(const parse_node_t &node, const wchar_t *fmt, ...);
     /* Wildcard error helper */
     bool append_unmatched_wildcard_error(const parse_node_t &unmatched_wildcard);
     
+    void handle_command_not_found(const wcstring &cmd, const parse_node_t &statement_node, int err_code);
+        
     /* Utilities */
     wcstring get_source(const parse_node_t &node) const;
     const parse_node_t *get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type = token_type_invalid) const;

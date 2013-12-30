@@ -11,6 +11,7 @@
 #include "builtin.h"
 #include "parser.h"
 #include "expand.h"
+#include "reader.h"
 #include "wutil.h"
 #include "exec.h"
 #include "path.h"
@@ -47,7 +48,28 @@ node_offset_t parse_execution_context_t::get_offset(const parse_node_t &node) co
 
 bool parse_execution_context_t::should_cancel_execution(const block_t *block) const
 {
-    return block && (block->skip || block->loop_status != LOOP_NORMAL);
+    return cancellation_reason(block) != execution_cancellation_none;
+}
+
+parse_execution_context_t::execution_cancellation_reason_t parse_execution_context_t::cancellation_reason(const block_t *block) const
+{
+    if (shell_is_exiting())
+    {
+        return execution_cancellation_exit;
+    }
+    else if (block && block->loop_status != LOOP_NORMAL)
+    {
+        /* Nasty hack - break and continue set the 'skip' flag as well as the loop status flag. */
+        return execution_cancellation_loop_control;
+    }
+    else if (block && block->skip)
+    {
+        return execution_cancellation_skip;
+    }
+    else
+    {
+        return execution_cancellation_none;
+    }
 }
 
 int parse_execution_context_t::run_if_statement(const parse_node_t &statement)
@@ -229,17 +251,20 @@ int parse_execution_context_t::run_for_statement(const parse_node_t &header, con
         
         this->run_job_list(block_contents, fb);
         
-        /* Handle break or continue */
-        if (fb->loop_status == LOOP_CONTINUE)
+        if (this->cancellation_reason(fb) == execution_cancellation_loop_control)
         {
-            /* Reset the loop state */
-            fb->loop_status = LOOP_NORMAL;
-            fb->skip = false;
-            continue;
-        }
-        else if (fb->loop_status == LOOP_BREAK)
-        {
-            break;
+            /* Handle break or continue */
+            if (fb->loop_status == LOOP_CONTINUE)
+            {
+                /* Reset the loop state */
+                fb->loop_status = LOOP_NORMAL;
+                fb->skip = false;
+                continue;
+            }
+            else if (fb->loop_status == LOOP_BREAK)
+            {
+                break;
+            }
         }
     }
     
@@ -374,17 +399,20 @@ int parse_execution_context_t::run_while_statement(const parse_node_t &header, c
         /* The block ought to go inside the loop (see #1212) */
         this->run_job_list(block_contents, wb);
         
-        /* Handle break or continue */
-        if (wb->loop_status == LOOP_CONTINUE)
+        if (this->cancellation_reason(wb) == execution_cancellation_loop_control)
         {
-            /* Reset the loop state */
-            wb->loop_status = LOOP_NORMAL;
-            wb->skip = false;
-            continue;
-        }
-        else if (wb->loop_status == LOOP_BREAK)
-        {
-            break;
+            /* Handle break or continue */
+            if (wb->loop_status == LOOP_CONTINUE)
+            {
+                /* Reset the loop state */
+                wb->loop_status = LOOP_NORMAL;
+                wb->skip = false;
+                continue;
+            }
+            else if (wb->loop_status == LOOP_BREAK)
+            {
+                break;
+            }
         }
     }
     
@@ -418,15 +446,129 @@ bool parse_execution_context_t::append_unmatched_wildcard_error(const parse_node
     return append_error(unmatched_wildcard, WILDCARD_ERR_MSG, get_source(unmatched_wildcard).c_str());
 }
 
+/* Handle the case of command not found */
+void parse_execution_context_t::handle_command_not_found(const wcstring &cmd_str, const parse_node_t &statement_node, int err_code)
+{
+    assert(statement_node.type == symbol_plain_statement);
+    
+    /*
+     We couldn't find the specified command.
 
+     What we want to happen now is that the
+     specified job won't get executed, and an
+     error message is printed on-screen, but
+     otherwise, the parsing/execution of the
+     file continues. Because of this, we don't
+     want to call error(), since that would stop
+     execution of the file. Instead we let
+     p->actual_command be 0 (null), which will
+     cause the job to silently not execute. We
+     also print an error message and set the
+     status to 127 (This is the standard number
+     for this, used by other shells like bash
+     and zsh).
+     */
+
+    const wchar_t * const cmd = cmd_str.c_str();
+    const wchar_t * const equals_ptr = wcschr(cmd, L'=');
+    if (equals_ptr != NULL)
+    {
+        /* Try to figure out if this is a pure variable assignment (foo=bar), or if this appears to be running a command (foo=bar ruby...) */
+
+        const wcstring name_str = wcstring(cmd, equals_ptr - cmd); //variable name, up to the =
+        const wcstring val_str = wcstring(equals_ptr + 1); //variable value, past the =
+        
+        
+        const parse_node_tree_t::parse_node_list_t args = tree.find_nodes(statement_node, symbol_argument, 1);
+        
+        if (! args.empty())
+        {
+            const wcstring argument = get_source(*args.at(0));
+            
+            wcstring ellipsis_str = wcstring(1, ellipsis_char);
+            if (ellipsis_str == L"$")
+                ellipsis_str = L"...";
+
+            /* Looks like a command */
+            debug(0,
+                  _(L"Unknown command '%ls'. Did you mean to run %ls with a modified environment? Try 'env %ls=%ls %ls%ls'. See the help section on the set command by typing 'help set'."),
+                  cmd,
+                  argument.c_str(),
+                  name_str.c_str(),
+                  val_str.c_str(),
+                  argument.c_str(),
+                  ellipsis_str.c_str());
+        }
+        else
+        {
+            debug(0,
+                  COMMAND_ASSIGN_ERR_MSG,
+                  cmd,
+                  name_str.c_str(),
+                  val_str.c_str());
+        }
+    }
+    else if (cmd[0]==L'$' || cmd[0] == VARIABLE_EXPAND || cmd[0] == VARIABLE_EXPAND_SINGLE)
+    {
+
+        const env_var_t val_wstr = env_get_string(cmd+1);
+        const wchar_t *val = val_wstr.missing() ? NULL : val_wstr.c_str();
+        if (val)
+        {
+            debug(0,
+                  _(L"Variables may not be used as commands. Instead, define a function like 'function %ls; %ls $argv; end' or use the eval builtin instead, like 'eval %ls'. See the help section for the function command by typing 'help function'."),
+                  cmd+1,
+                  val,
+                  cmd,
+                  cmd);
+        }
+        else
+        {
+            debug(0,
+                  _(L"Variables may not be used as commands. Instead, define a function or use the eval builtin instead, like 'eval %ls'. See the help section for the function command by typing 'help function'."),
+                  cmd,
+                  cmd);
+        }
+    }
+    else if (wcschr(cmd, L'$'))
+    {
+        debug(0,
+              _(L"Commands may not contain variables. Use the eval builtin instead, like 'eval %ls'. See the help section for the eval command by typing 'help eval'."),
+              cmd,
+              cmd);
+    }
+    else if (err_code!=ENOENT)
+    {
+        debug(0,
+              _(L"The file '%ls' is not executable by this user"),
+              cmd?cmd:L"UNKNOWN");
+    }
+    else
+    {
+        /*
+         Handle unrecognized commands with standard
+         command not found handler that can make better
+         error messages
+         */
+
+        wcstring_list_t event_args;
+        event_args.push_back(cmd_str);
+        event_fire_generic(L"fish_command_not_found", &event_args);
+    }
+    
+    /* Set the last proc status appropriately */
+    proc_set_last_status(err_code==ENOENT?STATUS_UNKNOWN_COMMAND:STATUS_NOT_EXECUTABLE);
+}
 
 /* Creates a 'normal' (non-block) process */
 process_t *parse_execution_context_t::create_plain_process(job_t *job, const parse_node_t &statement)
 {
+    assert(statement.type == symbol_plain_statement);
+
     bool errored = false;
     
-    /* Get the decoration */
-    assert(statement.type == symbol_plain_statement);
+    /* We may decide that a command should be an implicit cd */
+    bool use_implicit_cd = false;
     
     /* Get the command. We expect to always get it here. */
     wcstring cmd;
@@ -442,28 +584,7 @@ process_t *parse_execution_context_t::create_plain_process(job_t *job, const par
     
     if (errored)
         return NULL;
-    
-    /* The list of arguments. The command is the first argument. TODO: count hack */
-    const parse_node_t *unmatched_wildcard = NULL;
-    wcstring_list_t argument_list = this->determine_arguments(statement, &unmatched_wildcard);
-    argument_list.insert(argument_list.begin(), cmd);
-    
-    /* If we were not able to expand any wildcards, here is the first one that failed */
-    if (unmatched_wildcard != NULL)
-    {
-        job_set_flag(job, JOB_WILDCARD_ERROR, 1);
-        errored = append_unmatched_wildcard_error(*unmatched_wildcard);
-    }
-    
-    if (errored)
-        return NULL;
-    
-    /* The set of IO redirections that we construct for the process */
-    io_chain_t process_io_chain;
-    errored = ! this->determine_io_chain(statement, &process_io_chain);
-    if (errored)
-        return NULL;
-    
+
     /* Determine the process type, which depends on the statement decoration (command, builtin, etc) */
     enum parse_statement_decoration_t decoration = tree.decoration_for_plain_statement(statement);
     enum process_type_t process_type = EXTERNAL;
@@ -500,15 +621,71 @@ process_t *parse_execution_context_t::create_plain_process(job_t *job, const par
     wcstring actual_cmd;
     if (process_type == EXTERNAL)
     {
-        /* Determine the actual command. Need to support implicit cd here */
+        /* Determine the actual command. This may be an implicit cd. */
         bool has_command = path_get_path(cmd, &actual_cmd);
         
-        if (! has_command)
+        /* If there was no command, then we care about the value of errno after checking for it, to distinguish between e.g. no file vs permissions problem */
+        const int no_cmd_err_code = errno;
+        
+        /* If the specified command does not exist, and is undecorated, try using an implicit cd. */
+        if (! has_command && decoration == parse_statement_decoration_none)
         {
-            /* TODO: support fish_command_not_found, implicit cd, etc. here */
+            /* Implicit cd requires an empty argument and redirection list */
+            const parse_node_t *args = get_child(statement, 1, symbol_arguments_or_redirections_list);
+            if (args->child_count == 0)
+            {
+                /* Ok, no arguments or redirections; check to see if the first argument is a directory */
+                wcstring implicit_cd_path;
+                use_implicit_cd = path_can_be_implicit_cd(cmd, &implicit_cd_path);
+            }
+        }
+        
+        if (! has_command && ! use_implicit_cd)
+        {
+            /* No command */
+            this->handle_command_not_found(cmd, statement, no_cmd_err_code);
             errored = true;
         }
     }
+    if (errored)
+        return NULL;
+    
+    /* The argument list and set of IO redirections that we will construct for the process */
+    wcstring_list_t argument_list;
+    io_chain_t process_io_chain;
+    if (use_implicit_cd)
+    {
+        /* Implicit cd is simple */
+        argument_list.push_back(L"cd");
+        argument_list.push_back(cmd);
+        actual_cmd.clear();
+        
+        /* If we have defined a wrapper around cd, use it, otherwise use the cd builtin */
+        process_type = function_exists(L"cd") ? INTERNAL_FUNCTION : INTERNAL_BUILTIN;
+    }
+    else
+    {
+        /* Form the list of arguments. The command is the first argument. TODO: count hack */
+        const parse_node_t *unmatched_wildcard = NULL;
+        argument_list = this->determine_arguments(statement, &unmatched_wildcard);
+        argument_list.insert(argument_list.begin(), cmd);
+        
+        /* If we were not able to expand any wildcards, here is the first one that failed */
+        if (unmatched_wildcard != NULL)
+        {
+            job_set_flag(job, JOB_WILDCARD_ERROR, 1);
+            errored = append_unmatched_wildcard_error(*unmatched_wildcard);
+        }
+        
+        if (errored)
+            return NULL;
+        
+        /* The set of IO redirections that we construct for the process */
+        errored = ! this->determine_io_chain(statement, &process_io_chain);
+        if (errored)
+            return NULL;
+    }
+
     
     /* Return the process, or NULL on error */
     process_t *result = NULL;
@@ -953,7 +1130,7 @@ int parse_execution_context_t::run_1_job(const parse_node_t &job_node, const blo
         profile_item->skipped = process_errored;
     }
 
-    /* Set the last status to 1 if the job could not be executed */
+    /* Set the last status to 1 if the job could not be executed. TODO: Don't stomp STATUS_UNKNOWN_COMMAND / STATUS_NOT_EXECUTABLE */
     if (process_errored)
         proc_set_last_status(1);
     const int ret = proc_get_last_status();

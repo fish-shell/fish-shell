@@ -2736,7 +2736,7 @@ static void reader_super_highlight_me_plenty(size_t match_highlight_pos)
 }
 
 
-int exit_status()
+bool shell_is_exiting()
 {
     if (get_is_interactive())
         return job_list_is_empty() && data->end_loop;

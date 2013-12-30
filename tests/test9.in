@@ -67,5 +67,7 @@ while contains $i a
     echo Darp
 end
 
+# Test implicit cd. This should do nothing.
+./
 
 false

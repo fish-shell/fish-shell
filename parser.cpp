@@ -2740,7 +2740,7 @@ int parser_t::eval(const wcstring &cmd_str, const io_chain_t &io, enum block_typ
     while (tok_has_next(current_tokenizer) &&
             !error_code &&
             !sanity_check() &&
-            !exit_status())
+            !shell_is_exiting())
     {
         this->eval_job(current_tokenizer);
         event_fire(NULL);
@@ -2759,7 +2759,7 @@ int parser_t::eval(const wcstring &cmd_str, const io_chain_t &io, enum block_typ
             break;
         }
 
-        if ((!error_code) && (!exit_status()) && (!proc_get_last_status()))
+        if ((!error_code) && (!shell_is_exiting()) && (!proc_get_last_status()))
         {
 
             //debug( 2, L"Status %d\n", proc_get_last_status() );

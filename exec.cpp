@@ -577,6 +577,12 @@ static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *proce
 /* What exec does if no_exec is set. This only has to handle block pushing and popping. See #624. */
 static void exec_no_exec(parser_t &parser, const job_t *job)
 {
+    if (parser_use_ast())
+    {
+        /* With the new parser, commands aren't responsible for pushing / popping blocks, so there's nothing to do */
+        return;
+    }
+    
     /* Hack hack hack. If this is an 'end' job, then trigger a pop. If this is a job that would create a block, trigger a push. See #624 */
     const process_t *p = job->first_process;
     if (p && p->type == INTERNAL_BUILTIN)

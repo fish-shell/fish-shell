@@ -271,10 +271,12 @@ bool input_set_bind_mode(const wchar_t *bm)
   int len = wcslen(bm) * sizeof(wchar_t);
   if(len >= MAX_BIND_MODE_NAME_SIZE)
   {
+    debug(0, L"Error: name for bind mode exceeds maximum size\n");
     return false;
   }
   memset(bind_mode, 0, MAX_BIND_MODE_NAME_SIZE);
   memcpy(bind_mode, bm, len);
+  //debug(0, L"Set bind mode to `%ls'", bind_mode);
 
   return true;
 }
@@ -513,18 +515,11 @@ static wint_t input_try_mapping(const input_mapping_t &m)
     }
     input_unreadch(c);
 
+    //debug(0, L"trying mapping %ls (%ls)\n", escape(m.seq.c_str(), 1), m.command.c_str());
     const wchar_t *str = m.seq.c_str();
     for (j=0; str[j] != L'\0'; j++)
     {
-        bool timed;
-        if(iswalnum(str[j]))
-        {
-          timed = false;
-        }
-        else
-        {
-          timed = (j > 0);
-        }
+        bool timed = (j > 0 && iswcntrl(str[0]));
 
         c = input_common_readch(timed);
         if (str[j] != c)
@@ -535,6 +530,7 @@ static wint_t input_try_mapping(const input_mapping_t &m)
 
     if (str[j] == L'\0')
     {
+        //debug(0, L"matched mapping %ls (%ls)\n", escape(m.seq.c_str(), 1), m.command.c_str());
         /* We matched the entire sequence */
         return input_exec_binding(m, m.seq);
     }
@@ -550,6 +546,7 @@ static wint_t input_try_mapping(const input_mapping_t &m)
             input_unreadch(m.seq[k]);
         }
     }
+
     return 0;
 
 }
@@ -581,12 +578,12 @@ wint_t input_readch()
         {
             const input_mapping_t &m = mapping_list.at(i);
 
-            // debug(0, L"trying mapping (%ls,%ls,%ls,%ls)\n", escape(m.seq.c_str(), 1),
-            //           m.command.c_str(), m.mode.c_str(), m.new_mode.c_str());
+             //debug(0, L"trying mapping (%ls,%ls,%ls,%ls)\n", escape(m.seq.c_str(), 1),
+             //          m.command.c_str(), m.mode.c_str(), m.new_mode.c_str());
             
             if(wcscmp(m.mode.c_str(), input_get_bind_mode()))
             {
-              // debug(0, L"skipping mapping because mode %ls != %ls\n", m.mode.c_str(), input_get_bind_mode());
+              //debug(0, L"skipping mapping because mode %ls != %ls\n", m.mode.c_str(), input_get_bind_mode());
               continue;
             }
 

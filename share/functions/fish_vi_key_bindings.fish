@@ -7,7 +7,7 @@ function fish_vi_key_bindings -d "vi-like key bindings for fish"
         #
 
 	      bind \cd exit
-	      bind : exit
+	      bind :q exit
 
         bind h backward-char
         bind l forward-char
@@ -59,8 +59,6 @@ function fish_vi_key_bindings -d "vi-like key bindings for fish"
 
 	      bind -M insert -k dc delete-char
 	      bind -M insert -k backspace backward-delete-char
-        bind -M insert -m default \e force-repaint
-        bind -M insert -m default q force-repaint
 	      bind -M insert \t complete
 
         bind -M insert \e\[A up-or-search
@@ -72,4 +70,5 @@ function fish_vi_key_bindings -d "vi-like key bindings for fish"
         bind -M insert \e\[D backward-char
         bind -M insert -k right forward-char
         bind -M insert -k left backward-char
+        bind -M insert -m default \e force-repaint
 end

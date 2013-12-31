@@ -15,6 +15,21 @@ class job_t;
 struct profile_item_t;
 struct block_t;
 
+enum parse_execution_result_t
+{
+    /* The job was successfully executed (though it have failed on its own). */
+    parse_execution_success,
+
+    /* The job did not execute due to some error (e.g. failed to wildcard expand). An error will have been printed and proc_last_status will have been set. */
+    parse_execution_errored,
+    
+    /* The job was cancelled (e.g. Ctrl-C) */
+    parse_execution_cancelled,
+    
+    /* The job was skipped (e.g. due to a not-taken 'and' command). This is a special return allowed only from the populate functions, not the run functions. */
+    parse_execution_skipped
+};
+
 class parse_execution_context_t
 {
     private:
@@ -22,7 +37,7 @@ class parse_execution_context_t
     const wcstring src;
     io_chain_t block_io;
     parser_t * const parser;
-    parse_error_list_t errors;
+    //parse_error_list_t errors;
     
     int eval_level;
     std::vector<profile_item_t*> profile_items;
@@ -45,9 +60,9 @@ class parse_execution_context_t
     execution_cancellation_reason_t cancellation_reason(const block_t *block) const;
     
     /* Report an error. Always returns true. */
-    bool append_error(const parse_node_t &node, const wchar_t *fmt, ...);
+    parse_execution_result_t append_error(const parse_node_t &node, const wchar_t *fmt, ...);
     /* Wildcard error helper */
-    bool append_unmatched_wildcard_error(const parse_node_t &unmatched_wildcard);
+    parse_execution_result_t append_unmatched_wildcard_error(const parse_node_t &unmatched_wildcard);
     
     void handle_command_not_found(const wcstring &cmd, const parse_node_t &statement_node, int err_code);
         
@@ -56,35 +71,37 @@ class parse_execution_context_t
     const parse_node_t *get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type = token_type_invalid) const;
     node_offset_t get_offset(const parse_node_t &node) const;
     
-    /* These create process_t structures from statements */
-    process_t *create_job_process(job_t *job, const parse_node_t &statement_node);
-    process_t *create_boolean_process(job_t *job, const parse_node_t &bool_statement);
-    process_t *create_plain_process(job_t *job, const parse_node_t &statement);
-    process_t *create_block_process(job_t *job, const parse_node_t &statement_node);
+    enum process_type_t process_type_for_command(const parse_node_t &plain_statement, const wcstring &cmd) const;
     
-    /* These encapsulate the actual logic of various (block) statements. They just do what the statement says. */
-    int run_block_statement(const parse_node_t &statement);
-    int run_for_statement(const parse_node_t &header, const parse_node_t &contents);
-    int run_if_statement(const parse_node_t &statement);
-    int run_switch_statement(const parse_node_t &statement);
-    int run_while_statement(const parse_node_t &header, const parse_node_t &contents);
-    int run_function_statement(const parse_node_t &header, const parse_node_t &contents);
-    int run_begin_statement(const parse_node_t &header, const parse_node_t &contents);
+    /* These create process_t structures from statements */
+    parse_execution_result_t populate_job_process(job_t *job, process_t *proc, const parse_node_t &statement_node);
+    parse_execution_result_t populate_boolean_process(job_t *job, process_t *proc, const parse_node_t &bool_statement);
+    parse_execution_result_t populate_plain_process(job_t *job, process_t *proc, const parse_node_t &statement);
+    parse_execution_result_t populate_block_process(job_t *job, process_t *proc, const parse_node_t &statement_node);
+    
+    /* These encapsulate the actual logic of various (block) statements. */
+    parse_execution_result_t run_block_statement(const parse_node_t &statement);
+    parse_execution_result_t run_for_statement(const parse_node_t &header, const parse_node_t &contents);
+    parse_execution_result_t run_if_statement(const parse_node_t &statement);
+    parse_execution_result_t run_switch_statement(const parse_node_t &statement);
+    parse_execution_result_t run_while_statement(const parse_node_t &header, const parse_node_t &contents);
+    parse_execution_result_t run_function_statement(const parse_node_t &header, const parse_node_t &contents);
+    parse_execution_result_t run_begin_statement(const parse_node_t &header, const parse_node_t &contents);
     
     wcstring_list_t determine_arguments(const parse_node_t &parent, const parse_node_t **out_unmatched_wildcard_node);
     
     /* Determines the IO chain. Returns true on success, false on error */
     bool determine_io_chain(const parse_node_t &statement, io_chain_t *out_chain);
     
-    int run_1_job(const parse_node_t &job_node, const block_t *associated_block);
-    int run_job_list(const parse_node_t &job_list_node, const block_t *associated_block);
-    bool populate_job_from_job_node(job_t *j, const parse_node_t &job_node);
+    parse_execution_result_t run_1_job(const parse_node_t &job_node, const block_t *associated_block);
+    parse_execution_result_t run_job_list(const parse_node_t &job_list_node, const block_t *associated_block);
+    parse_execution_result_t populate_job_from_job_node(job_t *j, const parse_node_t &job_node, const block_t *associated_block);
     
     public:
     parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, parser_t *p);
     
     /* Start executing at the given node offset. Returns 0 if there was no error, 1 if there was an error */
-    int eval_node_at_offset(node_offset_t offset, const block_t *associated_block, const io_chain_t &io);
+    parse_execution_result_t eval_node_at_offset(node_offset_t offset, const block_t *associated_block, const io_chain_t &io);
     
 };
 

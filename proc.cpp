@@ -638,6 +638,9 @@ int job_reap(bool interactive)
     static int locked = 0;
 
     locked++;
+    
+    /* Preserve the exit status */
+    const int saved_status = proc_get_last_status();
 
     /*
       job_read may fire an event handler, we do not want to call
@@ -752,6 +755,9 @@ int job_reap(bool interactive)
 
     if (found)
         fflush(stdout);
+
+    /* Restore the exit status. */
+    proc_set_last_status(saved_status);
 
     locked = 0;
 

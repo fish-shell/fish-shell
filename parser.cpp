@@ -469,20 +469,6 @@ block_t *parser_t::current_block()
     return block_stack.empty() ? NULL : block_stack.back();
 }
 
-
-/**
-   Returns 1 if the specified command is a builtin that may not be used in a pipeline
-*/
-static int parser_is_pipe_forbidden(const wcstring &word)
-{
-    return contains(word,
-                    L"exec",
-                    L"case",
-                    L"break",
-                    L"return",
-                    L"continue");
-}
-
 /**
    Search the text for the end of the current block
 */
@@ -2690,7 +2676,6 @@ int parser_t::eval(const wcstring &cmd_str, const io_chain_t &io, enum block_typ
 
     if (parser_use_ast())
         return this->eval_new_parser(cmd_str, io, block_type);
-
     const wchar_t * const cmd = cmd_str.c_str();
     size_t forbid_count;
     int code;

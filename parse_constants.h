@@ -107,7 +107,7 @@ enum parse_error_code_t
 {
     parse_error_none,
     
-    /* matching values from enum parser_error */
+    /* Matching values from enum parser_error */
     parse_error_syntax,
     parse_error_eval,
     parse_error_cmdsubst,

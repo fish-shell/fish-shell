@@ -3164,6 +3164,7 @@ const wchar_t *reader_readline(void)
                 break;
             }
 
+            case R_FORCE_REPAINT:
             case R_REPAINT:
             {
                 if (! coalescing_repaints)

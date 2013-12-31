@@ -129,6 +129,7 @@ static const wchar_t * const name_arr[] =
     L"beginning-of-buffer",
     L"end-of-buffer",
     L"repaint",
+    L"force-repaint",
     L"up-line",
     L"down-line",
     L"suppress-autosuggestion",
@@ -218,6 +219,7 @@ static const wchar_t code_arr[] =
     R_BEGINNING_OF_BUFFER,
     R_END_OF_BUFFER,
     R_REPAINT,
+    R_FORCE_REPAINT,
     R_UP_LINE,
     R_DOWN_LINE,
     R_SUPPRESS_AUTOSUGGESTION,
@@ -289,7 +291,7 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t *command,
     CHECK(mode,);
     CHECK(new_mode,);
 
-    //  debug( 0, L"Add mapping from %ls to %ls in mode %ls", escape(sequence, 1), escape(command, 1 ), mode);
+    // debug( 0, L"Add mapping from %ls to %ls in mode %ls", escape(sequence, 1), escape(command, 1 ), mode);
 
     for (size_t i=0; i<mapping_list.size(); i++)
     {
@@ -514,10 +516,21 @@ static wint_t input_try_mapping(const input_mapping_t &m)
     const wchar_t *str = m.seq.c_str();
     for (j=0; str[j] != L'\0'; j++)
     {
-        bool timed = (j > 0);
+        bool timed;
+        if(iswalnum(str[j]))
+        {
+          timed = false;
+        }
+        else
+        {
+          timed = (j > 0);
+        }
+
         c = input_common_readch(timed);
         if (str[j] != c)
+        {
             break;
+        }
     }
 
     if (str[j] == L'\0')
@@ -548,7 +561,6 @@ void input_unreadch(wint_t ch)
 
 wint_t input_readch()
 {
-
     size_t i;
 
     CHECK_BLOCK(R_NULL);
@@ -569,8 +581,12 @@ wint_t input_readch()
         {
             const input_mapping_t &m = mapping_list.at(i);
 
+            // debug(0, L"trying mapping (%ls,%ls,%ls,%ls)\n", escape(m.seq.c_str(), 1),
+            //           m.command.c_str(), m.mode.c_str(), m.new_mode.c_str());
+            
             if(wcscmp(m.mode.c_str(), input_get_bind_mode()))
             {
+              // debug(0, L"skipping mapping because mode %ls != %ls\n", m.mode.c_str(), input_get_bind_mode());
               continue;
             }
 
@@ -641,7 +657,7 @@ bool input_mapping_erase(const wchar_t *sequence, const wchar_t *mode)
     for (i=0; i<sz; i++)
     {
         const input_mapping_t &m = mapping_list.at(i);
-        if (sequence == m.seq && mode == m.mode)
+        if (sequence == m.seq && (mode == NULL || mode == m.mode))
         {
             if (i != (sz-1))
             {

@@ -403,7 +403,7 @@ int builtin_test(parser_t &parser, wchar_t **argv);
 /**
    List all current key bindings
  */
-static void builtin_bind_list()
+static void builtin_bind_list(const wchar_t *bind_mode)
 {
     size_t i;
     wcstring_list_t lst;
@@ -417,6 +417,12 @@ static void builtin_bind_list()
         wcstring mode;
 
         input_mapping_get(seq, ecmd, mode);
+
+        if(bind_mode != NULL && wcscmp(mode.c_str(), bind_mode))
+        {
+          continue;
+        }
+
         ecmd = escape_string(ecmd, 1);
 
         wcstring tname;
@@ -522,7 +528,7 @@ static int builtin_bind_add(const wchar_t *seq, const wchar_t *cmd, const wchar_
    \param seq an array of all key bindings to erase
    \param all if specified, _all_ key bindings will be erased
  */
-static void builtin_bind_erase(wchar_t **seq, int all)
+static void builtin_bind_erase(wchar_t **seq, int all, const wchar_t *mode)
 {
     if (all)
     {
@@ -532,7 +538,7 @@ static void builtin_bind_erase(wchar_t **seq, int all)
 
         for (i=0; i<lst.size(); i++)
         {
-            input_mapping_erase(lst.at(i).c_str());
+            input_mapping_erase(lst.at(i).c_str(), mode);
         }
 
     }
@@ -540,7 +546,7 @@ static void builtin_bind_erase(wchar_t **seq, int all)
     {
         while (*seq)
         {
-            input_mapping_erase(*seq++);
+            input_mapping_erase(*seq++, mode);
         }
 
     }
@@ -569,7 +575,9 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
     int all = 0;
 
     const wchar_t *bind_mode = DEFAULT_BIND_MODE;
+    bool bind_mode_given = false;
     const wchar_t *new_bind_mode = DEFAULT_BIND_MODE;
+    bool new_bind_mode_given = false;
 
     int use_terminfo = 0;
 
@@ -667,10 +675,12 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
 
             case 'M':
                 bind_mode = woptarg;
+                bind_mode_given = true;
                 break;
 
             case 'm':
                 new_bind_mode = woptarg;
+                new_bind_mode_given = true;
                 break;
 
             case '?':
@@ -679,7 +689,14 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
 
 
         }
+    }
 
+    /*
+     * if mode is given, but not new mode, default to new mode to mode 
+     */
+    if(bind_mode_given && !new_bind_mode_given)
+    {
+      new_bind_mode = bind_mode;
     }
 
     switch (mode)
@@ -687,7 +704,7 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
 
         case BIND_ERASE:
         {
-            builtin_bind_erase(&argv[woptind], all);
+            builtin_bind_erase(&argv[woptind], all, bind_mode_given ? bind_mode : NULL);
             break;
         }
 
@@ -697,7 +714,7 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
             {
                 case 0:
                 {
-                    builtin_bind_list();
+                    builtin_bind_list(bind_mode_given ? bind_mode : NULL);
                     break;
                 }
 

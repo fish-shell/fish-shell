@@ -61,7 +61,6 @@
 #include <vector>
 
 #define DEFAULT_TERM L"ansi"
-
 /**
    Struct representing a keybinding. Returned by input_get_mappings.
  */
@@ -69,9 +68,12 @@ struct input_mapping_t
 {
     wcstring seq; /**< Character sequence which generates this event */
     wcstring command; /**< command that should be evaluated by this mapping */
+    wcstring mode; /**< mode in which this command should be evaluated */
+    wcstring new_mode; /** new mode that should be switched to after command evaluation */
 
-
-    input_mapping_t(const wcstring &s, const wcstring &c) : seq(s), command(c) {}
+    input_mapping_t(const wcstring &s, const wcstring &c,
+                    const wcstring &m = DEFAULT_BIND_MODE,
+                    const wcstring &nm = DEFAULT_BIND_MODE) : seq(s), command(c), mode(m), new_mode(nm) {}
 };
 
 /**
@@ -226,6 +228,9 @@ static const wchar_t code_arr[] =
 /** Mappings for the current input mode */
 static std::vector<input_mapping_t> mapping_list;
 
+#define MAX_BIND_MODE_NAME_SIZE 512
+static wchar_t bind_mode[MAX_BIND_MODE_NAME_SIZE] = DEFAULT_BIND_MODE;
+
 /* Terminfo map list */
 static std::vector<terminfo_mapping_t> terminfo_mappings;
 
@@ -248,28 +253,55 @@ static bool is_init = false;
  */
 static void input_terminfo_init();
 
+/**
+    Return the current bind mode
+*/
+const wchar_t *input_get_bind_mode()
+{
+    return bind_mode;
+}
+
+/**
+    Set the current bind mode
+*/
+bool input_set_bind_mode(const wchar_t *bm)
+{
+  int len = wcslen(bm) * sizeof(wchar_t);
+  if(len >= MAX_BIND_MODE_NAME_SIZE)
+  {
+    return false;
+  }
+  memset(bind_mode, 0, MAX_BIND_MODE_NAME_SIZE);
+  memcpy(bind_mode, bm, len);
+
+  return true;
+}
 
 /**
    Returns the function description for the given function code.
 */
 
-void input_mapping_add(const wchar_t *sequence, const wchar_t *command)
+void input_mapping_add(const wchar_t *sequence, const wchar_t *command,
+                       const wchar_t *mode, const wchar_t *new_mode)
 {
     CHECK(sequence,);
     CHECK(command,);
+    CHECK(mode,);
+    CHECK(new_mode,);
 
-    //  debug( 0, L"Add mapping from %ls to %ls", escape(sequence, 1), escape(command, 1 ) );
+    //  debug( 0, L"Add mapping from %ls to %ls in mode %ls", escape(sequence, 1), escape(command, 1 ), mode);
 
     for (size_t i=0; i<mapping_list.size(); i++)
     {
         input_mapping_t &m = mapping_list.at(i);
-        if (m.seq == sequence)
+        if (m.seq == sequence && m.mode == mode)
         {
             m.command = command;
+            m.new_mode = new_mode;
             return;
         }
     }
-    mapping_list.push_back(input_mapping_t(sequence, command));
+    mapping_list.push_back(input_mapping_t(sequence, command, mode, new_mode));
 }
 
 /**
@@ -536,9 +568,18 @@ wint_t input_readch()
         for (i=0; i<mapping_list.size(); i++)
         {
             const input_mapping_t &m = mapping_list.at(i);
+
+            if(wcscmp(m.mode.c_str(), input_get_bind_mode()))
+            {
+              continue;
+            }
+
             wint_t res = input_try_mapping(m);
             if (res)
+            {
+                input_set_bind_mode(m.new_mode.c_str());
                 return res;
+            }
 
             if (m.seq.length() == 0)
             {
@@ -591,7 +632,7 @@ void input_mapping_get_names(wcstring_list_t &lst)
 }
 
 
-bool input_mapping_erase(const wchar_t *sequence)
+bool input_mapping_erase(const wchar_t *sequence, const wchar_t *mode)
 {
     ASSERT_IS_MAIN_THREAD();
     bool result = false;
@@ -600,7 +641,7 @@ bool input_mapping_erase(const wchar_t *sequence)
     for (i=0; i<sz; i++)
     {
         const input_mapping_t &m = mapping_list.at(i);
-        if (sequence == m.seq)
+        if (sequence == m.seq && mode == m.mode)
         {
             if (i != (sz-1))
             {
@@ -615,7 +656,7 @@ bool input_mapping_erase(const wchar_t *sequence)
     return result;
 }
 
-bool input_mapping_get(const wcstring &sequence, wcstring &cmd)
+bool input_mapping_get(const wcstring &sequence, wcstring &cmd, wcstring &mode)
 {
     size_t i, sz = mapping_list.size();
 
@@ -625,6 +666,7 @@ bool input_mapping_get(const wcstring &sequence, wcstring &cmd)
         if (sequence == m.seq)
         {
             cmd = m.command;
+            mode = m.mode;
             return true;
         }
     }

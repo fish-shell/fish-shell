@@ -11,6 +11,9 @@ inputrc information for key bindings.
 #include <wchar.h>
 #include "input_common.h"
 
+
+#define DEFAULT_BIND_MODE L"default"
+
 /**
    Key codes for inputrc-style keyboard functions that are passed on
    to the caller of input_read()
@@ -102,7 +105,9 @@ void input_unreadch(wint_t ch);
    \param sequence the sequence to bind
    \param command an input function that will be run whenever the key sequence occurs
 */
-void input_mapping_add(const wchar_t *sequence, const wchar_t *command);
+void input_mapping_add(const wchar_t *sequence, const wchar_t *command,
+                       const wchar_t *mode = DEFAULT_BIND_MODE,
+                       const wchar_t *new_mode = DEFAULT_BIND_MODE);
 
 /**
    Insert all mapping names into the specified wcstring_list_t
@@ -112,12 +117,22 @@ void input_mapping_get_names(wcstring_list_t &lst);
 /**
    Erase binding for specified key sequence
  */
-bool input_mapping_erase(const wchar_t *sequence);
+bool input_mapping_erase(const wchar_t *sequence, const wchar_t *mode = DEFAULT_BIND_MODE);
 
 /**
    Gets the command bound to the specified key sequence. Returns true if it exists, false if not.
  */
-bool input_mapping_get(const wcstring &sequence, wcstring &cmd);
+bool input_mapping_get(const wcstring &sequence, wcstring &cmd, wcstring &mode);
+
+/**
+    Return the current bind mode
+*/
+const wchar_t *input_get_bind_mode();
+
+/**
+    Set the current bind mode
+*/
+bool input_set_bind_mode(const wchar_t *bind_mode);
 
 /**
    Return the sequence for the terminfo variable of the specified name.

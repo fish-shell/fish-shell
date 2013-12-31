@@ -17,7 +17,7 @@ function fish_vi_key_bindings -d "vi-like key bindings for fish"
         bind -k left backward-char
 	      bind \n execute
         bind -m insert i force-repaint
-        bind -m insert a forward-char
+        bind -m insert a forward-char force-repaint
 
         bind \x24 end-of-line
         bind \x5e beginning-of-line

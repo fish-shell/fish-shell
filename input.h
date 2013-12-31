@@ -60,9 +60,12 @@ enum
     R_UP_LINE,
     R_DOWN_LINE,
     R_SUPPRESS_AUTOSUGGESTION,
-    R_ACCEPT_AUTOSUGGESTION
+    R_ACCEPT_AUTOSUGGESTION,
 }
 ;
+
+#define R_MIN R_NULL
+#define R_MAX R_ACCEPT_AUTOSUGGESTION
 
 /**
    Initialize the terminal by calling setupterm, and set up arrays
@@ -110,6 +113,9 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t *command,
                        const wchar_t *mode = DEFAULT_BIND_MODE,
                        const wchar_t *new_mode = DEFAULT_BIND_MODE);
 
+void input_mapping_add(const wchar_t *sequence, const wchar_t **commands, size_t commands_len,
+                       const wchar_t *mode = DEFAULT_BIND_MODE, const wchar_t *new_mode = DEFAULT_BIND_MODE);
+
 /**
    Insert all mapping names into the specified wcstring_list_t
  */
@@ -123,7 +129,7 @@ bool input_mapping_erase(const wchar_t *sequence, const wchar_t *mode = DEFAULT_
 /**
    Gets the command bound to the specified key sequence. Returns true if it exists, false if not.
  */
-bool input_mapping_get(const wcstring &sequence, wcstring &cmd, wcstring &mode);
+bool input_mapping_get(const wcstring &sequence, std::vector<wcstring> &cmds, wcstring &mode, wcstring &new_mode);
 
 /**
     Return the current bind mode

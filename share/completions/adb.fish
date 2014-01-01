@@ -98,6 +98,7 @@ complete -f -n '__fish_adb_no_subcommand' -c adb -a 'root' -d 'Restart the adbd 
 complete -f -n '__fish_adb_no_subcommand' -c adb -a 'usb' -d 'Restart the adbd daemon listening on USB'
 complete -f -n '__fish_adb_no_subcommand' -c adb -a 'tcpip' -d 'Restart the adbd daemon listening on TCP'
 complete -f -n '__fish_adb_no_subcommand' -c adb -a 'ppp' -d 'Run PPP over USB'
+complete -f -n '__fish_adb_no_subcommand' -c adb -a 'sideload' -d 'Install zip-file on device in sideload mode'
 
 # install options
 complete -n '__fish_seen_subcommand_from install' -c adb -s l -d 'Forward-lock the app'

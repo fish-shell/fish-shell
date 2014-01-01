@@ -398,7 +398,7 @@ fi
 # installed
 #
 
-AC_ARG_VAR( [docdir], [Documentation direcotry] )
+AC_ARG_VAR( [docdir], [Documentation directory] )
 
 if test -z $docdir; then
   docdir=$datadir/doc/fish

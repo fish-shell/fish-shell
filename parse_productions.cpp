@@ -128,7 +128,7 @@ RESOLVE(statement)
         
         // Likewise if the next token doesn't look like an argument at all. This corresponds to e.g. a "naked if".
         bool naked_invocation_invokes_help = (token1.keyword != parse_keyword_begin && token1.keyword != parse_keyword_end);
-        if (naked_invocation_invokes_help && token2.type != parse_token_type_string)
+        if (naked_invocation_invokes_help && (token2.type == parse_token_type_end || token2.type == parse_token_type_terminate))
         {
             return 4;
         }

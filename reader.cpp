@@ -3193,6 +3193,11 @@ const wchar_t *reader_readline(void)
 
                 if (! comp_empty && last_char == R_COMPLETE)
                 {
+                    // if `fish_complete_list is explicitly disabled, don't cycle through the completion list
+                    const env_var_t ENV_ZERO(L"0");
+                    if (env_get_string(L"fish_complete_list") == ENV_ZERO)
+                        break;
+
                     /* The user typed R_COMPLETE more than once in a row. Cycle through our available completions */
                     const completion_t *next_comp = cycle_competions(comp, cycle_command_line, &completion_cycle_idx);
                     if (next_comp != NULL)

@@ -51,6 +51,7 @@ struct parse_token_t
     size_t source_length;
 
     wcstring describe() const;
+    wcstring user_presentable_description() const;
 };
 
 

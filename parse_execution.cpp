@@ -219,7 +219,7 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(const
     
     if (unmatched_wildcard != NULL)
     {
-        append_unmatched_wildcard_error(*unmatched_wildcard);
+        report_unmatched_wildcard_error(*unmatched_wildcard);
         result = parse_execution_errored;
     }
     
@@ -232,7 +232,7 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(const
         
         if (! error_str.empty())
         {
-            this->append_error(header, L"%ls", error_str.c_str());
+            this->report_error(header, L"%ls", error_str.c_str());
             result = parse_execution_errored;
         }
     }
@@ -285,8 +285,13 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(const pars
     const parse_node_t &var_name_node = *get_child(header, 1, parse_token_type_string);
     const wcstring for_var_name = get_source(var_name_node);
     
-    /* Get the contents to iterate over. Here we could do something with unmatched_wildcard. However it seems nicer to not make for loops complain about this, i.e. just iterate over a potentially empty list */
-    wcstring_list_t argument_list = this->determine_arguments(header, NULL);
+    /* Get the contents to iterate over. */
+    const parse_node_t *unmatched_wildcard = NULL;
+    wcstring_list_t argument_list = this->determine_arguments(header, &unmatched_wildcard);
+    if (unmatched_wildcard != NULL)
+    {
+        return report_unmatched_wildcard_error(*unmatched_wildcard);
+    }
     
     parse_execution_result_t ret = parse_execution_success;
     
@@ -303,6 +308,7 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(const pars
         if (should_cancel_execution(fb))
         {
             ret = parse_execution_cancelled;
+            break;
         }
         
         const wcstring &for_variable = fb->variable;
@@ -353,7 +359,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
     {
         case EXPAND_ERROR:
         {
-            result = append_error(switch_value_node,
+            result = report_error(switch_value_node,
                   _(L"Could not expand string '%ls'"),
                   switch_value.c_str());
             break;
@@ -362,7 +368,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
         case EXPAND_WILDCARD_NO_MATCH:
         {
             /* Store the node that failed to expand */
-            append_error(switch_value_node, WILDCARD_ERR_MSG, switch_value.c_str());
+            report_error(switch_value_node, WILDCARD_ERR_MSG, switch_value.c_str());
             ret = parse_execution_errored;
             break;
         }
@@ -376,7 +382,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
     
     if (result == parse_execution_success && switch_values_expanded.size() != 1)
     {
-            result = append_error(switch_value_node,
+            result = report_error(switch_value_node,
                 _(L"switch: Expected exactly one argument, got %lu\n"),
                 switch_values_expanded.size());
     }
@@ -509,8 +515,8 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(const pa
     return ret;
 }
 
-/* Appends an error to the error list. Always returns parse_execution_errored, so you can assign the result to an 'errored' variable */
-parse_execution_result_t parse_execution_context_t::append_error(const parse_node_t &node, const wchar_t *fmt, ...)
+/* Reports an error. Always returns parse_execution_errored, so you can assign the result to an 'errored' variable */
+parse_execution_result_t parse_execution_context_t::report_error(const parse_node_t &node, const wchar_t *fmt, ...)
 {
     parse_error_t error;
     error.source_start = node.source_start;
@@ -522,19 +528,29 @@ parse_execution_result_t parse_execution_context_t::append_error(const parse_nod
     error.text = vformat_string(fmt, va);
     va_end(va);
     
-    //this->errors.push_back(error);
-    
     /* Output the error */
-    fprintf(stderr, "%ls\n", error.describe(this->src).c_str());
+    const wcstring desc = error.describe(this->src);
+    if (! desc.empty())
+    {
+        fprintf(stderr, "%ls\n", desc.c_str());
+    }
     
     return parse_execution_errored;
 }
 
-/* Appends an unmatched wildcard error to the error list, and returns true. */
-parse_execution_result_t parse_execution_context_t::append_unmatched_wildcard_error(const parse_node_t &unmatched_wildcard)
+/* Reoports an unmatched wildcard error and returns parse_execution_errored */
+parse_execution_result_t parse_execution_context_t::report_unmatched_wildcard_error(const parse_node_t &unmatched_wildcard)
 {
     proc_set_last_status(STATUS_UNMATCHED_WILDCARD);
-    return append_error(unmatched_wildcard, WILDCARD_ERR_MSG, get_source(unmatched_wildcard).c_str());
+    /* For reasons I cannot explain, unmatched wildcards are only reported in interactive use. */
+    if (get_is_interactive())
+    {
+        return report_error(unmatched_wildcard, WILDCARD_ERR_MSG, get_source(unmatched_wildcard).c_str());
+    }
+    else
+    {
+        return parse_execution_errored;
+    }
 }
 
 /* Handle the case of command not found */
@@ -565,7 +581,7 @@ void parse_execution_context_t::handle_command_not_found(const wcstring &cmd_str
                 ellipsis_str = L"...";
             
             /* Looks like a command */
-            this->append_error(statement_node,
+            this->report_error(statement_node,
                                _(L"Unknown command '%ls'. Did you mean to run %ls with a modified environment? Try 'env %ls=%ls %ls%ls'. See the help section on the set command by typing 'help set'."),
                                cmd,
                                argument.c_str(),
@@ -576,7 +592,7 @@ void parse_execution_context_t::handle_command_not_found(const wcstring &cmd_str
         }
         else
         {
-            this->append_error(statement_node,
+            this->report_error(statement_node,
                                COMMAND_ASSIGN_ERR_MSG,
                                cmd,
                                name_str.c_str(),
@@ -590,7 +606,7 @@ void parse_execution_context_t::handle_command_not_found(const wcstring &cmd_str
         const wchar_t *val = val_wstr.missing() ? NULL : val_wstr.c_str();
         if (val)
         {
-            this->append_error(statement_node,
+            this->report_error(statement_node,
                                _(L"Variables may not be used as commands. Instead, define a function like 'function %ls; %ls $argv; end' or use the eval builtin instead, like 'eval %ls'. See the help section for the function command by typing 'help function'."),
                                cmd+1,
                                val,
@@ -599,7 +615,7 @@ void parse_execution_context_t::handle_command_not_found(const wcstring &cmd_str
         }
         else
         {
-            this->append_error(statement_node,
+            this->report_error(statement_node,
                                _(L"Variables may not be used as commands. Instead, define a function or use the eval builtin instead, like 'eval %ls'. See the help section for the function command by typing 'help function'."),
                                cmd,
                                cmd);
@@ -607,14 +623,14 @@ void parse_execution_context_t::handle_command_not_found(const wcstring &cmd_str
     }
     else if (wcschr(cmd, L'$'))
     {
-        this->append_error(statement_node,
+        this->report_error(statement_node,
                            _(L"Commands may not contain variables. Use the eval builtin instead, like 'eval %ls'. See the help section for the eval command by typing 'help eval'."),
                            cmd,
                            cmd);
     }
     else if (err_code!=ENOENT)
     {
-        this->append_error(statement_node,
+        this->report_error(statement_node,
                            _(L"The file '%ls' is not executable by this user"),
                            cmd?cmd:L"UNKNOWN");
     }
@@ -631,7 +647,7 @@ void parse_execution_context_t::handle_command_not_found(const wcstring &cmd_str
         event_fire_generic(L"fish_command_not_found", &event_args);
         
         /* Here we want to report an error (so it shows a backtrace), but with no text */
-        this->append_error(statement_node, L"");
+        this->report_error(statement_node, L"");
     }
     
     /* Set the last proc status appropriately */
@@ -657,7 +673,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(job_t
     bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
     if (! expanded)
     {
-        append_error(statement, ILLEGAL_CMD_ERR_MSG, cmd.c_str());
+        report_error(statement, ILLEGAL_CMD_ERR_MSG, cmd.c_str());
         return parse_execution_errored;
     }
     
@@ -718,7 +734,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(job_t
         if (unmatched_wildcard != NULL)
         {
             job_set_flag(job, JOB_WILDCARD_ERROR, 1);
-            append_unmatched_wildcard_error(*unmatched_wildcard);
+            report_unmatched_wildcard_error(*unmatched_wildcard);
             return parse_execution_errored;
         }
         
@@ -770,7 +786,7 @@ wcstring_list_t parse_execution_context_t::determine_arguments(const parse_node_
         {
             case EXPAND_ERROR:
             {
-                this->append_error(arg_node,
+                this->report_error(arg_node,
                       _(L"Could not expand string '%ls'"),
                       arg_str.c_str());
                 break;
@@ -838,7 +854,7 @@ bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement
         if (! target_expanded || target.empty())
         {
             /* Should improve this error message */
-            errored = append_error(redirect_node,
+            errored = report_error(redirect_node,
                   _(L"Invalid redirection target: %ls"),
                   target.c_str());
         }
@@ -862,7 +878,7 @@ bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement
                     int old_fd = fish_wcstoi(target.c_str(), &end, 10);
                     if (old_fd < 0 || errno || *end)
                     {
-                        errored = append_error(redirect_node,
+                        errored = report_error(redirect_node,
                               _(L"Requested redirection to something that is not a file descriptor %ls"),
                               target.c_str());
                     }

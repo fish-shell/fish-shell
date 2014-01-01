@@ -1,6 +1,7 @@
 #include "parse_productions.h"
 #include "tokenizer.h"
 #include "fallback.h"
+#include "proc.h"
 #include <vector>
 #include <algorithm>
 
@@ -41,37 +42,47 @@ wcstring parse_error_t::describe(const wcstring &src, bool skip_caret) const
         assert(line_end >= line_start);
         assert(source_start >= line_start);
 
-        // Append the line of text.
-        result.push_back(L'\n');
-        result.append(src, line_start, line_end - line_start);
+        // Don't include the caret and line if we're interactive this is the first line, because then it's obvious
+        bool skip_caret = (get_is_interactive() && source_start == 0);
         
-        // Append the caret line. The input source may include tabs; for that reason we construct a "caret line" that has tabs in corresponding positions
-        wcstring caret_space_line;
-        caret_space_line.reserve(source_start - line_start);
-        for (size_t i=line_start; i < source_start; i++)
+        if (! skip_caret)
         {
-            wchar_t wc = src.at(i);
-            if (wc == L'\t')
+            // Append the line of text.
+            if (! result.empty())
             {
-                caret_space_line.push_back(L'\t');
+                result.push_back(L'\n');
             }
-            else if (wc == L'\n')
+            result.append(src, line_start, line_end - line_start);
+            
+        
+            // Append the caret line. The input source may include tabs; for that reason we construct a "caret line" that has tabs in corresponding positions
+            wcstring caret_space_line;
+            caret_space_line.reserve(source_start - line_start);
+            for (size_t i=line_start; i < source_start; i++)
             {
-                /* It's possible that the source_start points at a newline itself. In that case, pretend it's a space. We only expect this to be at the end of the string. */
-                caret_space_line.push_back(L' ');
-            }
-            else
-            {
-                int width = fish_wcwidth(wc);
-                if (width > 0)
+                wchar_t wc = src.at(i);
+                if (wc == L'\t')
                 {
-                    caret_space_line.append(static_cast<size_t>(width), L' ');
+                    caret_space_line.push_back(L'\t');
+                }
+                else if (wc == L'\n')
+                {
+                    /* It's possible that the source_start points at a newline itself. In that case, pretend it's a space. We only expect this to be at the end of the string. */
+                    caret_space_line.push_back(L' ');
+                }
+                else
+                {
+                    int width = fish_wcwidth(wc);
+                    if (width > 0)
+                    {
+                        caret_space_line.append(static_cast<size_t>(width), L' ');
+                    }
                 }
             }
+            result.push_back(L'\n');
+            result.append(caret_space_line);
+            result.push_back(L'^');
         }
-        result.push_back(L'\n');
-        result.append(caret_space_line);
-        result.push_back(L'^');
     }
     return result;
 }
@@ -249,6 +260,36 @@ wcstring parse_token_t::describe() const
     return result;
 }
 
+/** A string description appropriate for presentation to the user */
+wcstring parse_token_t::user_presentable_description() const
+{
+    if (keyword != parse_keyword_none)
+    {
+        return format_string(L"keyword %ls", keyword_description(keyword).c_str());
+    }
+    
+    switch (type)
+    {
+        /* Hackish. We only support the  */
+        case parse_token_type_string:
+            return L"a string";
+            
+        case parse_token_type_pipe:
+            return L"a pipe";
+            
+        case parse_token_type_redirection:
+            return L"a redirection";
+            
+        case parse_token_type_background:
+            return L"a '&'";
+            
+        case parse_token_type_end:
+            return L"statement terminator";
+            
+        default:
+            return format_string(L"a %ls", this->describe().c_str());
+    }
+}
 
 /* Convert from tokenizer_t's token type to a parse_token_t type */
 static inline parse_token_type_t parse_token_type_from_tokenizer_token(enum token_type tokenizer_token_type)
@@ -382,6 +423,25 @@ struct parse_stack_element_t
         }
         return result;
     }
+    
+    /* Returns a name that we can show to the user, e.g. "a command" */
+    wcstring user_presentable_description(void) const
+    {
+        if (keyword != parse_keyword_none)
+        {
+            return format_string(L"keyword %ls", keyword_description(keyword).c_str());
+        }
+        
+        switch (type)
+        {
+            /* Hackish, the only one we support now */
+            case symbol_statement:
+                return L"a command";
+                
+            default:
+                return format_string(L"a %ls", this->describe().c_str());
+        }
+    }
 };
 
 /* The parser itself, private implementation of class parse_t. This is a hand-coded table-driven LL parser. Most hand-coded LL parsers are recursive descent, but recursive descent parsers are difficult to "pause", unlike table-driven parsers. */
@@ -407,6 +467,7 @@ class parse_ll_t
 
     void parse_error(const wchar_t *expected, parse_token_t token);
     void parse_error(parse_token_t token, parse_error_code_t code, const wchar_t *format, ...);
+    void parse_error_failed_production(struct parse_stack_element_t &elem, parse_token_t token);
     void parse_error_unbalancing_token(parse_token_t token);
     void append_error_callout(wcstring &error_message, parse_token_t token);
 
@@ -671,6 +732,12 @@ void parse_ll_t::parse_error_unbalancing_token(parse_token_t token)
     }
 }
 
+// This is a 'generic' parse error when we can't match the top of the stack element
+void parse_ll_t::parse_error_failed_production(struct parse_stack_element_t &stack_elem, parse_token_t token)
+{
+    this->parse_error(token, parse_error_generic, L"Expected %ls, but instead found %ls", stack_elem.user_presentable_description().c_str(), token.user_presentable_description().c_str());
+}
+
 void parse_ll_t::report_tokenizer_error(parse_token_t token, const wchar_t *tok_error)
 {
     assert(tok_error != NULL);
@@ -861,7 +928,7 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2)
         {
             if (should_generate_error_messages)
             {
-                this->parse_error(token1, parse_error_generic, L"Unable to produce a '%ls' from input '%ls'", stack_elem.describe().c_str(), token1.describe().c_str());
+                parse_error_failed_production(stack_elem, token1);
             }
             else
             {

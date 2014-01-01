@@ -60,9 +60,9 @@ class parse_execution_context_t
     execution_cancellation_reason_t cancellation_reason(const block_t *block) const;
     
     /* Report an error. Always returns true. */
-    parse_execution_result_t append_error(const parse_node_t &node, const wchar_t *fmt, ...);
+    parse_execution_result_t report_error(const parse_node_t &node, const wchar_t *fmt, ...);
     /* Wildcard error helper */
-    parse_execution_result_t append_unmatched_wildcard_error(const parse_node_t &unmatched_wildcard);
+    parse_execution_result_t report_unmatched_wildcard_error(const parse_node_t &unmatched_wildcard);
     
     void handle_command_not_found(const wcstring &cmd, const parse_node_t &statement_node, int err_code);
         

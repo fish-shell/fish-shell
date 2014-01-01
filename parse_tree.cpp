@@ -20,27 +20,31 @@ wcstring parse_error_t::describe(const wcstring &src, bool skip_caret) const
         // Locate the beginning of this line of source
         size_t line_start = 0;
 
-        // Look for a newline prior to source_start. If we don't find one, start at the beginning of the string; otherwise start one past the newline
-        size_t newline = src.find_last_of(L'\n', source_start);
-        //fprintf(stderr, "newline: %lu, source_start %lu, source_length %lu\n", newline, source_start, source_length);
-        if (newline != wcstring::npos)
+        // Look for a newline prior to source_start. If we don't find one, start at the beginning of the string; otherwise start one past the newline. Note that source_start may itself point at a newline; we want to find the newline before it.
+        if (source_start > 0)
         {
-            line_start = newline + 1;
+            size_t newline = src.find_last_of(L'\n', source_start - 1);
+            if (newline != wcstring::npos)
+            {
+                line_start = newline + 1;
+            }
         }
 
-        size_t line_end = src.find(L'\n', source_start + source_length);
+        // Look for the newline after the source range. If the source range itself includes a newline, that's the one we want, so start just before the end of the range
+        size_t last_char_in_range = (source_length == 0 ? source_start : source_start + source_length - 1);
+        size_t line_end = src.find(L'\n', last_char_in_range);
         if (line_end == wcstring::npos)
         {
             line_end = src.size();
         }
+        
         assert(line_end >= line_start);
-        //fprintf(stderr, "source start: %lu, source_length %lu, line start %lu, line end %lu\n", source_start, source_length, line_start, line_end);
         assert(source_start >= line_start);
 
-        // Append the line of text
+        // Append the line of text.
         result.push_back(L'\n');
         result.append(src, line_start, line_end - line_start);
-
+        
         // Append the caret line. The input source may include tabs; for that reason we construct a "caret line" that has tabs in corresponding positions
         wcstring caret_space_line;
         caret_space_line.reserve(source_start - line_start);
@@ -50,6 +54,11 @@ wcstring parse_error_t::describe(const wcstring &src, bool skip_caret) const
             if (wc == L'\t')
             {
                 caret_space_line.push_back(L'\t');
+            }
+            else if (wc == L'\n')
+            {
+                /* It's possible that the source_start points at a newline itself. In that case, pretend it's a space. We only expect this to be at the end of the string. */
+                caret_space_line.push_back(L' ');
             }
             else
             {

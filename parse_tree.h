@@ -209,7 +209,13 @@ public:
     enum token_type type_for_redirection(const parse_node_t &node, const wcstring &src, int *out_fd, wcstring *out_target) const;
     
     /* If the given node is a block statement, returns the header node (for_header, while_header, begin_header, or function_header). Otherwise returns NULL */
-    const parse_node_t *header_node_for_block_statement(const parse_node_t &node);
+    const parse_node_t *header_node_for_block_statement(const parse_node_t &node) const;
+    
+    /* Given a job list, returns the next job (or NULL), and the tail of the job list. */
+    const parse_node_t *next_job_in_job_list(const parse_node_t &job_list, const parse_node_t **list_tail) const;
+    
+    /* Given a job, return all of its statements. These are 'specific statements' (e.g. symbol_decorated_statement, not symbol_statement) */
+    parse_node_list_t specific_statements_for_job(const parse_node_t &job) const;
 };
 
 /* Fish grammar:
@@ -252,7 +258,7 @@ public:
     while_header = WHILE job
     begin_header = BEGIN
     
-# Functions take arguments, and require at least one (the name)    
+# Functions take arguments, and require at least one (the name). No redirections allowed.
     function_header = FUNCTION argument argument_list
 
 # A boolean statement is AND or OR or NOT

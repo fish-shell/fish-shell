@@ -690,7 +690,7 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
                 default:
                 {
                     res = STATUS_BUILTIN_ERROR;
-                    append_format(stderr_buffer, _(L"%ls: Expected zero or two parameters, got %d"), argv[0], argc-woptind);
+                    append_format(stderr_buffer, _(L"%ls: Expected zero or two parameters, got %d\n"), argv[0], argc-woptind);
                     break;
                 }
             }

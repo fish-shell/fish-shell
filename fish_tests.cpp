@@ -659,6 +659,14 @@ static void test_parser()
     {
         err(L"Invalid block mode when evaluating undetected");
     }
+    
+    /* These are disabled since they produce a long backtrace. We should find a way to either visually compress the backtrace, or disable error spewing */
+#if 1
+    /* Ensure that we don't crash on infinite self recursion and mutual recursion. These must use the principal parser because we cannot yet execute jobs on other parsers (!) */
+    say(L"Testing recursion detection");
+    parser_t::principal_parser().eval(L"function recursive ; recursive ; end ; recursive; ", io_chain_t(), TOP);
+    parser_t::principal_parser().eval(L"function recursive1 ; recursive2 ; end ; function recursive2 ; recursive1 ; end ; recursive1; ", io_chain_t(), TOP);
+#endif
 }
 
 static void test_indents()

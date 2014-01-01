@@ -48,6 +48,81 @@ node_offset_t parse_execution_context_t::get_offset(const parse_node_t &node) co
     return offset;
 }
 
+const parse_node_t *parse_execution_context_t::infinite_recursive_statement_in_job_list(const parse_node_t &job_list, wcstring *out_func_name) const
+{
+    assert(job_list.type == symbol_job_list);
+    /*
+      This is a bit fragile. It is a test to see if we are
+      inside of function call, but not inside a block in that
+      function call. If, in the future, the rules for what
+      block scopes are pushed on function invocation changes,
+      then this check will break.
+    */
+    const block_t *current = parser->block_at_index(0), *parent = parser->block_at_index(1);
+    bool is_within_function_call = (current && parent && current->type() == TOP && parent->type() == FUNCTION_CALL);
+    if (! is_within_function_call)
+    {
+        return NULL;
+    }
+    
+    /* Check to see which function call is forbidden */
+    if (parser->forbidden_function.empty())
+    {
+        return NULL;
+    }
+    const wcstring &forbidden_function_name = parser->forbidden_function.back();
+    
+    /* Get the first job in the job list. */
+    const parse_node_t *first_job = tree.next_job_in_job_list(job_list, NULL);
+    if (first_job == NULL)
+    {
+        return NULL;
+    }
+
+    /* Here's the statement node we find that's infinite recursive */
+    const parse_node_t *infinite_recursive_statement = NULL;
+    
+    /* Get the list of statements */
+    const parse_node_tree_t::parse_node_list_t statements = tree.specific_statements_for_job(*first_job);
+    
+    /* Find all the decorated statements. We are interested in statements with no decoration (i.e. not command, not builtin) whose command expands to the forbidden function */
+    for (size_t i=0; i < statements.size(); i++)
+    {
+        /* We only care about decorated statements, not while statements, etc. */
+        const parse_node_t &statement = *statements.at(i);
+        if (statement.type != symbol_decorated_statement)
+        {
+            continue;
+        }
+        
+        const parse_node_t &plain_statement = tree.find_child(statement, symbol_plain_statement);
+        if (tree.decoration_for_plain_statement(plain_statement) != parse_statement_decoration_none)
+        {
+            /* This statement has a decoration like 'builtin' or 'command', and therefore is not infinite recursion. In particular this is what enables 'wrapper functions' */
+            continue;
+        }
+        
+        /* Ok, this is an undecorated plain statement. Get and expand its command */
+        wcstring cmd;
+        tree.command_for_plain_statement(plain_statement, src, &cmd);
+        expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
+        
+        if (cmd == forbidden_function_name)
+        {
+            /* This is it */
+            infinite_recursive_statement = &statement;
+            if (out_func_name != NULL)
+            {
+                *out_func_name = forbidden_function_name;
+            }
+            break;
+        }
+    }
+    
+    assert(infinite_recursive_statement == NULL || infinite_recursive_statement->type == symbol_decorated_statement);
+    return infinite_recursive_statement;
+}
+
 enum process_type_t parse_execution_context_t::process_type_for_command(const parse_node_t &plain_statement, const wcstring &cmd) const
 {
     assert(plain_statement.type == symbol_plain_statement);
@@ -528,12 +603,10 @@ parse_execution_result_t parse_execution_context_t::report_error(const parse_nod
     error.text = vformat_string(fmt, va);
     va_end(va);
     
-    /* Output the error */
-    const wcstring desc = error.describe(this->src);
-    if (! desc.empty())
-    {
-        fprintf(stderr, "%ls\n", desc.c_str());
-    }
+    /* Get a backtrace */
+    wcstring backtrace;
+    const parse_error_list_t error_list = parse_error_list_t(1, error);
+    parser->get_backtrace(src, error_list, &backtrace);
     
     return parse_execution_errored;
 }
@@ -669,7 +742,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(job_t
     bool got_cmd = tree.command_for_plain_statement(statement, src, &cmd);
     assert(got_cmd);
     
-    /* Expand it as a command. Return NULL on failure. */
+    /* Expand it as a command. Return an error on failure. */
     bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
     if (! expanded)
     {
@@ -679,6 +752,13 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(job_t
     
     /* Determine the process type */
     enum process_type_t process_type = process_type_for_command(statement, cmd);
+    
+    /* Check for stack overflow */
+    if (process_type == INTERNAL_FUNCTION && parser->forbidden_function.size() > FISH_MAX_STACK_DEPTH)
+    {
+        this->report_error(statement, CALL_STACK_LIMIT_EXCEEDED_ERR_MSG);
+        return parse_execution_errored;
+    }
     
     wcstring actual_cmd;
     if (process_type == EXTERNAL)
@@ -1296,10 +1376,24 @@ parse_execution_result_t parse_execution_context_t::eval_node_at_offset(node_off
     switch (node.type)
     {
         case symbol_job_list:
+        {
             /* We should only get a job list if it's the very first node. This is because this is the entry point for both top-level execution (the first node) and INTERNAL_BLOCK_NODE execution (which does block statements, but never job lists) */
             assert(offset == 0);
-            status = this->run_job_list(node, associated_block);
+            wcstring func_name;
+            const parse_node_t *infinite_recursive_node = this->infinite_recursive_statement_in_job_list(node, &func_name);
+            if (infinite_recursive_node != NULL)
+            {
+                /* We have an infinite recursion */
+                this->report_error(*infinite_recursive_node, INFINITE_FUNC_RECURSION_ERR_MSG, func_name.c_str());
+                status = parse_execution_errored;
+            }
+            else
+            {
+                /* No infinite recursion */
+                status = this->run_job_list(node, associated_block);
+            }
             break;
+        }
         
         case symbol_block_statement:
             status = this->run_block_statement(node);

@@ -1230,7 +1230,7 @@ void completer_t::complete_from_args(const wcstring &str,
     std::vector<completion_t> possible_comp;
 
     bool is_autosuggest = (this->type() == COMPLETE_AUTOSUGGEST);
-    parser_t parser(is_autosuggest ? PARSER_TYPE_COMPLETIONS_ONLY : PARSER_TYPE_GENERAL, false);
+    parser_t parser(is_autosuggest ? PARSER_TYPE_COMPLETIONS_ONLY : PARSER_TYPE_GENERAL, false /* don't show errors */);
 
     /* If type is COMPLETE_AUTOSUGGEST, it means we're on a background thread, so don't call proc_push_interactive */
     if (! is_autosuggest)

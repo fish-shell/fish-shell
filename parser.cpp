@@ -48,11 +48,6 @@ The fish parser. Contains functions for parsing and evaluating code.
 #include "parse_execution.h"
 
 /**
-   Maximum number of function calls, i.e. recursion depth.
-*/
-#define MAX_RECURSION_DEPTH 128
-
-/**
    Error message for unknown builtin
 */
 #define UNKNOWN_BUILTIN_ERR_MSG _(L"Unknown builtin '%ls'")
@@ -77,11 +72,6 @@ The fish parser. Contains functions for parsing and evaluating code.
    Error message on a function that calls itself immediately
 */
 #define INFINITE_RECURSION_ERR_MSG _( L"The function calls itself immediately, which would result in an infinite loop.")
-
-/**
-   Error message on reaching maximum recursion depth
-*/
-#define OVERFLOW_RECURSION_ERR_MSG _( L"Maximum recursion depth reached. Accidental infinite loop?")
 
 /**
    Error message used when the end of a block can't be located
@@ -584,12 +574,6 @@ void parser_t::error(int ec, size_t p, const wchar_t *str, ...)
     va_start(va, str);
     err_buff = vformat_string(str, va);
     va_end(va);
-    
-    if (parser_use_ast())
-    {
-        fprintf(stderr, "parser error: %ls\n", err_buff.c_str());
-        err_buff.clear();
-    }
 }
 
 /**
@@ -746,7 +730,6 @@ void parser_t::print_errors_stderr()
 
 void parser_t::eval_args(const wchar_t *line, std::vector<completion_t> &args)
 {
-
     expand_flags_t eflags = 0;
     if (! show_errors)
         eflags |= EXPAND_NO_DESCRIPTIONS;
@@ -757,7 +740,7 @@ void parser_t::eval_args(const wchar_t *line, std::vector<completion_t> &args)
 
     if (! line) return;
 
-    // PCA we need to suppress calling proc_push_interactive off of the main thread. I'm not sure exactly what it does.
+    // PCA we need to suppress calling proc_push_interactive off of the main thread.
     if (this->parser_type == PARSER_TYPE_GENERAL)
         proc_push_interactive(0);
 
@@ -988,10 +971,7 @@ int parser_t::line_number_of_character_at_offset(size_t idx) const
 
 const wchar_t *parser_t::current_filename() const
 {
-    /* We query a global array for the current file name, so it only makes sense to ask this on the principal parser. */
     ASSERT_IS_MAIN_THREAD();
-    assert(this == &principal_parser());
-
 
     for (size_t i=0; i < this->block_count(); i++)
     {
@@ -1002,7 +982,13 @@ const wchar_t *parser_t::current_filename() const
             return function_get_definition_file(fb->name);
         }
     }
-    return reader_current_filename();
+    
+    /* We query a global array for the current file name, but only do that if we are the principal parser */
+    if (this == &principal_parser())
+    {
+        return reader_current_filename();
+    }
+    return NULL;
 }
 
 /**
@@ -1221,7 +1207,7 @@ void parser_t::job_promote(job_t *job)
 {
     signal_block();
 
-    job_list_t::iterator loc = std::find(my_job_list.begin(), my_job_list.end(), job);
+    job_list_t::iterator loc = std::find(my_job_list.begin(), my_job_list.end(), job);    
     assert(loc != my_job_list.end());
 
     /* Move the job to the beginning */
@@ -1940,9 +1926,9 @@ int parser_t::parse_job(process_t *p, job_t *j, tokenizer_t *tok)
                 /*
                   Check if we have reached the maximum recursion depth
                 */
-                if (forbidden_function.size() > MAX_RECURSION_DEPTH)
+                if (forbidden_function.size() > FISH_MAX_STACK_DEPTH)
                 {
-                    error(SYNTAX_ERROR, tok_get_pos(tok), OVERFLOW_RECURSION_ERR_MSG);
+                    error(SYNTAX_ERROR, tok_get_pos(tok), CALL_STACK_LIMIT_EXCEEDED_ERR_MSG);
                 }
                 else
                 {

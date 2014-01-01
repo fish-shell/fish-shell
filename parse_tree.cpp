@@ -1405,7 +1405,7 @@ enum token_type parse_node_tree_t::type_for_redirection(const parse_node_t &redi
     return result;
 }
 
-const parse_node_t *parse_node_tree_t::header_node_for_block_statement(const parse_node_t &node)
+const parse_node_t *parse_node_tree_t::header_node_for_block_statement(const parse_node_t &node) const
 {
     const parse_node_t *result = NULL;
     if (node.type == symbol_block_statement)
@@ -1417,4 +1417,64 @@ const parse_node_t *parse_node_tree_t::header_node_for_block_statement(const par
         }
     }
     return result;
+}
+
+parse_node_tree_t::parse_node_list_t parse_node_tree_t::specific_statements_for_job(const parse_node_t &job) const
+{
+    assert(job.type == symbol_job);
+    parse_node_list_t result;
+    
+    /* Initial statement (non-specific) */
+    result.push_back(get_child(job, 0, symbol_statement));
+    
+    /* Our cursor variable. Walk over the list of continuations. */
+    const parse_node_t *continuation = get_child(job, 1, symbol_job_continuation);
+    while (continuation != NULL && continuation->child_count > 0)
+    {
+        result.push_back(get_child(*continuation, 1, symbol_statement));
+        continuation = get_child(*continuation, 2, symbol_job_continuation);
+    }
+    
+    /* Result now contains a list of statements. But we want a list of specific statements e.g. symbol_switch_statement. So replace them in-place in the vector. */
+    for (size_t i=0; i < result.size(); i++)
+    {
+        const parse_node_t *statement = result.at(i);
+        assert(statement->type == symbol_statement);
+        result.at(i) = this->get_child(*statement, 0);
+    }
+    
+    return result;
+}
+
+const parse_node_t *parse_node_tree_t::next_job_in_job_list(const parse_node_t &top_job_list, const parse_node_t **out_list_tail) const
+{
+    assert(top_job_list.type == symbol_job_list);
+    
+    /* Our cursor variable */
+    const parse_node_t *job_list = &top_job_list;
+    
+    /* Skip over a run of empty jobs */
+    assert(job_list->type == symbol_job_list);
+    while (job_list->production_idx == 2)
+    {
+        job_list = this->get_child(*job_list, 1, symbol_job_list);
+    }
+    
+    /* Should now be at production 0 or 1 */
+    assert(job_list->type == symbol_job_list);
+    assert(job_list->production_idx == 0 || job_list->production_idx == 1);
+    
+    /* Pull out the job */
+    const parse_node_t *job = NULL;
+    const parse_node_t *list_tail = NULL;
+    if (job_list->production_idx == 1)
+    {
+        job = this->get_child(*job_list, 0, symbol_job);
+        list_tail = this->get_child(*job_list, 1, symbol_job_list);
+    }
+    
+    /* Return them */
+    if (out_list_tail != NULL)
+        *out_list_tail = list_tail;
+    return job;
 }

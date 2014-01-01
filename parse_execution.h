@@ -70,6 +70,7 @@ class parse_execution_context_t
     wcstring get_source(const parse_node_t &node) const;
     const parse_node_t *get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type = token_type_invalid) const;
     node_offset_t get_offset(const parse_node_t &node) const;
+    const parse_node_t *infinite_recursive_statement_in_job_list(const parse_node_t &job_list, wcstring *out_func_name) const;
     
     enum process_type_t process_type_for_command(const parse_node_t &plain_statement, const wcstring &cmd) const;
     

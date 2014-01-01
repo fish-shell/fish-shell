@@ -701,7 +701,7 @@ void exec_job(parser_t &parser, job_t *j)
             j->first_process->completed=1;
             return;
         }
-
+        assert(0 && "This should be unreachable");
     }
 
     signal_block();
@@ -1133,6 +1133,20 @@ void exec_job(parser_t &parser, job_t *j)
                 }
                 break;
             }
+            
+            case EXTERNAL:
+                /* External commands are handled in the next switch statement below */
+                break;
+            
+            case INTERNAL_EXEC:
+                /* We should have handled exec up above */
+                assert(0 && "INTERNAL_EXEC process found in pipeline, where it should never be. Aborting.");
+                break;
+                
+            case INTERNAL_BUFFER:
+                /* Internal buffers are handled in the next switch statement below */
+                break;
+                
         }
 
         if (exec_error)
@@ -1493,7 +1507,13 @@ void exec_job(parser_t &parser, job_t *j)
 
                 break;
             }
-
+            
+            case INTERNAL_EXEC:
+            {
+                /* We should have handled exec up above */
+                assert(0 && "INTERNAL_EXEC process found in pipeline, where it should never be. Aborting.");
+                break;
+            }
         }
 
         if (p->type == INTERNAL_BUILTIN)

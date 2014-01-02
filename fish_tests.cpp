@@ -669,6 +669,66 @@ static void test_parser()
 #endif
 }
 
+/* Wait a while and then SIGINT the main thread */
+struct test_cancellation_info_t
+{
+    pthread_t thread;
+    double delay;
+};
+
+static int signal_main(test_cancellation_info_t *info)
+{
+    usleep(info->delay * 1E6);
+    pthread_kill(info->thread, SIGINT);
+    return 0;
+}
+
+static void test_1_cancellation(const wchar_t *src)
+{
+    shared_ptr<io_buffer_t> out_buff(io_buffer_t::create(false, STDOUT_FILENO));
+    const io_chain_t io_chain(out_buff);
+    test_cancellation_info_t ctx = {pthread_self(), 0.25 /* seconds */ };
+    iothread_perform(signal_main, (void (*)(test_cancellation_info_t *, int))NULL, &ctx);
+    parser_t::principal_parser().eval(src, io_chain, TOP);
+    out_buff->read();
+    if (out_buff->out_buffer_size() != 0)
+    {
+        err(L"Expected 0 bytes in out_buff, but instead found %lu bytes\n", out_buff->out_buffer_size());
+    }
+    iothread_drain_all();
+}
+
+static void test_cancellation()
+{
+    say(L"Testing Ctrl-C cancellation. If this hangs, that's a bug!");
+    
+    /* Enable fish's signal handling here. We need to make this interactive for fish to install its signal handlers */
+    proc_push_interactive(1);
+    signal_set_handlers();
+    
+    /* This tests that we can correctly ctrl-C out of certain loop constructs, and that nothing gets printed if we do */
+    
+    /* Here the command substitution is an infinite loop. echo never even gets its argument, so when we cancel we expect no output */
+    test_1_cancellation(L"echo (while true ; echo blah ; end)");
+    fprintf(stderr, ".");
+    
+    /* Nasty infinite loop that doesn't actually execute anything */
+    test_1_cancellation(L"echo (while true ; end) (while true ; end) (while true ; end)");
+    fprintf(stderr, ".");
+    
+    test_1_cancellation(L"while true ; end");
+    fprintf(stderr, ".");
+    
+    test_1_cancellation(L"for i in (whiel true ; end) ; end");
+    fprintf(stderr, ".");
+
+    
+    fprintf(stderr, "\n");
+    /* Restore signal handling */
+    proc_pop_interactive();
+    signal_reset_handlers();
+}
+
 static void test_indents()
 {
     say(L"Testing indents");
@@ -2640,12 +2700,15 @@ int main(int argc, char **argv)
     say(L"Testing low-level functionality");
     set_main_thread();
     setup_fork_guards();
-    //proc_init(); //disabling this prevents catching SIGINT
+    proc_init();
     event_init();
     function_init();
     builtin_init();
     reader_init();
     env_init();
+    
+    /* Set default signal handlers, so we can ctrl-C out of this */
+    signal_reset_handlers();
 
     if (should_test_function("highlighting")) test_highlighting();
     if (should_test_function("new_parser_ll2")) test_new_parser_ll2();
@@ -2662,6 +2725,7 @@ int main(int argc, char **argv)
     if (should_test_function("fork")) test_fork();
     if (should_test_function("iothread")) test_iothread();
     if (should_test_function("parser")) test_parser();
+    if (should_test_function("cancellation")) test_cancellation();
     if (should_test_function("indents")) test_indents();
     if (should_test_function("utils")) test_utils();
     if (should_test_function("escape_sequences")) test_escape_sequences();

@@ -287,6 +287,9 @@ private:
     /** Position of last error */
     int err_pos;
     
+    /** Indication that we should skip all blocks */
+    bool cancellation_requested;
+    
     /** Stack of execution contexts. We own these pointers and must delete them */
     std::vector<parse_execution_context_t *> execution_contexts;
 

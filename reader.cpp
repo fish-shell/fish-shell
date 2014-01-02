@@ -2068,11 +2068,9 @@ static void reader_interactive_destroy()
 
 void reader_sanity_check()
 {
-    if (get_is_interactive())
+    /* Note: 'data' is non-null if we are interactive, except in the testing environment */
+    if (get_is_interactive() && data != NULL)
     {
-        if (!data)
-            sanity_lose();
-
         if (!(data->buff_pos <= data->command_length()))
             sanity_lose();
 
@@ -2739,7 +2737,7 @@ static void reader_super_highlight_me_plenty(size_t match_highlight_pos)
 bool shell_is_exiting()
 {
     if (get_is_interactive())
-        return job_list_is_empty() && data->end_loop;
+        return job_list_is_empty() && data != NULL && data->end_loop;
     else
         return end_loop;
 }

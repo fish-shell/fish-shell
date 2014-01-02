@@ -315,6 +315,7 @@ parser_t::parser_t(enum parser_type_t type, bool errors) :
     show_errors(errors),
     error_code(0),
     err_pos(0),
+    cancellation_requested(false),
     current_tokenizer(NULL),
     current_tokenizer_pos(0),
     job_start_pos(0),
@@ -343,6 +344,8 @@ void parser_t::skip_all_blocks(void)
     /* Tell all blocks to skip */
     if (s_principal_parser)
     {
+        s_principal_parser->cancellation_requested = true;
+
         //write(2, "Cancelling blocks\n", strlen("Cancelling blocks\n"));
         for (size_t i=0; i < s_principal_parser->block_count(); i++)
         {
@@ -2614,7 +2617,20 @@ int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum
     assert(ctx != NULL);
     
     CHECK_BLOCK(1);
-
+    
+    /* Handle cancellation requests. If our block stack is currently empty, then we already did successfully cancel (or there was nothing to cancel); clear the flag. If our block stack is not empty, we are still in the process of cancelling; refuse to evaluate anything */
+    if (this->cancellation_requested)
+    {
+        if (! block_stack.empty())
+        {
+            return 1;
+        }
+        else
+        {
+            this->cancellation_requested = false;
+        }
+    }
+    
     /* Only certain blocks are allowed */
     if ((block_type != TOP) &&
             (block_type != SUBST))
@@ -2662,6 +2678,7 @@ int parser_t::eval(const wcstring &cmd_str, const io_chain_t &io, enum block_typ
 
     if (parser_use_ast())
         return this->eval_new_parser(cmd_str, io, block_type);
+    
     const wchar_t * const cmd = cmd_str.c_str();
     size_t forbid_count;
     int code;

@@ -136,7 +136,8 @@ static bool proc_had_barrier = false;
 int get_is_interactive(void)
 {
     ASSERT_IS_MAIN_THREAD();
-    // The tests leave is_interactive as -1, which is interpreted as true. So let's have them default to false.
+    /* is_interactive is initialized to -1; ensure someone has popped/pushed it before then */
+    assert(is_interactive >= 0);
     return is_interactive > 0;
 }
 

@@ -173,6 +173,10 @@ parse_execution_context_t::execution_cancellation_reason_t parse_execution_conte
     {
         return execution_cancellation_exit;
     }
+    else if (parser && parser->cancellation_requested)
+    {
+        return execution_cancellation_skip;
+    }
     else if (block && block->loop_status != LOOP_NORMAL)
     {
         /* Nasty hack - break and continue set the 'skip' flag as well as the loop status flag. */
@@ -1241,11 +1245,13 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
     
     /* Clean up the job on failure or cancellation */
     bool populated_job = (pop_result == parse_execution_success);
-    if (! populated_job)
+    if (! populated_job || this->should_cancel_execution(associated_block))
     {
         delete j;
         j = NULL;
+        populated_job = false;
     }
+    
     
     /* Store time it took to 'parse' the command */
     if (do_profile)

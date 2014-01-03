@@ -70,7 +70,10 @@ The following special input functions are available:
 - \c beginning-of-history, move to the beginning of the history
 - \c beginning-of-line, move to the beginning of the line
 - \c capitalize-word, make the current word begin with a capital letter
-- \c complete, guess the remainder of the current token
+- \c complete, guess the remainder of the current token and cycle through
+  possible options when pressed multiple times.
+- \c complete-until, guess the remainder of the current token, but dont
+  cycle through possible options when pressed again.
 - \c delete-char, delete one character to the right of the cursor
 - \c delete-line, delete the entire line
 - \c downcase-word, make the current word lowercase

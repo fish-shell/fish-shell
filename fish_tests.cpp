@@ -710,6 +710,7 @@ static void test_cancellation()
     
     /* Here the command substitution is an infinite loop. echo never even gets its argument, so when we cancel we expect no output */
     test_1_cancellation(L"echo (while true ; echo blah ; end)");
+    
     fprintf(stderr, ".");
     
     /* Nasty infinite loop that doesn't actually execute anything */
@@ -724,9 +725,13 @@ static void test_cancellation()
 
     
     fprintf(stderr, "\n");
+    
     /* Restore signal handling */
     proc_pop_interactive();
     signal_reset_handlers();
+    
+    /* Ensure that we don't think we should cancel */
+    reader_reset_interrupted();
 }
 
 static void test_indents()
@@ -970,13 +975,13 @@ static int expand_test(const wchar_t *in, int flags, ...)
     size_t i=0;
     int res=1;
     wchar_t *arg;
-
+    
     if (expand_string(in, output, flags))
     {
 
     }
-
 #if 0
+    printf("input: %ls\n", in);
     for (size_t idx=0; idx < output.size(); idx++)
     {
         printf("%ls\n", output.at(idx).completion.c_str());

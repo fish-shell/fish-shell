@@ -2638,8 +2638,15 @@ static void test_highlighting(void)
         {NULL, -1}
     };
 
+    const highlight_component_t components10[] =
+    {
+        {L"echo", HIGHLIGHT_COMMAND},
+        {L"'single_quote", HIGHLIGHT_ERROR},
+        {NULL, -1}
+    };
+
     
-    const highlight_component_t *tests[] = {components1, components2, components3, components4, components5, components6, components7, components8, components9};
+    const highlight_component_t *tests[] = {components1, components2, components3, components4, components5, components6, components7, components8, components9, components10};
     for (size_t which = 0; which < sizeof tests / sizeof *tests; which++)
     {
         const highlight_component_t *components = tests[which];

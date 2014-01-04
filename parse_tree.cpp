@@ -1109,8 +1109,11 @@ bool parse_t::parse_internal(const wcstring &str, parse_tree_flags_t parse_flags
         {
             if (parse_flags & parse_flag_continue_after_error)
             {
+                /* Hack hack hack. Typically the parse error is due to the first token. However, if it's a tokenizer error, then has_fatal_error was set due to the check above; in that case the second token is what matters. */
+                size_t error_token_idx = (queue[1].type == parse_special_type_tokenizer_error ? 1 : 0);
+
                 /* Mark a special error token, and then keep going */
-                const parse_token_t token = {parse_special_type_parse_error, parse_keyword_none, false, queue[0].source_start, queue[0].source_length};
+                const parse_token_t token = {parse_special_type_parse_error, parse_keyword_none, false, queue[error_token_idx].source_start, queue[error_token_idx].source_length};
                 this->parser->accept_tokens(token, kInvalidToken);
                 this->parser->reset_symbols();
             }

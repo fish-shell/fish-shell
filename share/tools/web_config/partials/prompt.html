@@ -1,0 +1,10 @@
+<div style="padding: 0 10px 15px;">
+    <div ng-repeat="prompt in samplePrompts">
+        <div class="prompt_demo_choice_label">{{ prompt.name }}</div>
+        <div ng-bind-html-unsafe='prompt.demo' class="prompt_demo" ng-click="selectPrompt(prompt)"></div>
+        <div class="prompt_function" ng-show="selectedPrompt == prompt">
+            <div class="prompt_function_text">{{ prompt.function }}</div>
+        </div>
+        <span class="prompt_save_button" ng-click="setNewPrompt(selectedPrompt)" ng-show="selectedPrompt == prompt && selectedPrompt != samplePrompts[0]">Use</span>
+    </div>
+</div>

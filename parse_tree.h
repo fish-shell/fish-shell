@@ -272,7 +272,6 @@ public:
 
     argument_list = <empty> | argument argument_list
 
-
     arguments_or_redirections_list = <empty> |
                                      argument_or_redirection arguments_or_redirections_list
     argument_or_redirection = argument | redirection

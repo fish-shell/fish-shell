@@ -339,9 +339,17 @@ static inline parse_token_type_t parse_token_type_from_tokenizer_token(enum toke
 }
 
 /* Helper function for dump_tree */
-static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &src, node_offset_t node_idx, size_t indent, wcstring *result, size_t *line)
+static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &src, node_offset_t node_idx, size_t indent, wcstring *result, size_t *line, node_offset_t *inout_first_node_not_dumped)
 {
     assert(node_idx < nodes.size());
+    
+    // Update first_node_not_dumped
+    // This takes a bit of explanation. While it's true that a parse tree may be a "forest",  its individual trees are "compact," meaning they are not interleaved. Thus we keep track of the largest node index as we descend a tree. One past the largest is the start of the next tree.
+    if (*inout_first_node_not_dumped <= node_idx)
+    {
+        *inout_first_node_not_dumped = node_idx + 1;
+    }
+    
     const parse_node_t &node = nodes.at(node_idx);
 
     const size_t spacesPerIndent = 2;
@@ -383,19 +391,27 @@ static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &
     ++*line;
     for (size_t child_idx = node.child_start; child_idx < node.child_start + node.child_count; child_idx++)
     {
-        dump_tree_recursive(nodes, src, child_idx, indent + 1, result, line);
+        dump_tree_recursive(nodes, src, child_idx, indent + 1, result, line, inout_first_node_not_dumped);
     }
 }
 
-/* Gives a debugging textual description of a parse tree */
+/* Gives a debugging textual description of a parse tree. Note that this supports "parse forests" too. That is, our tree may not really be a tree, but instead a collection of trees. */
 wcstring parse_dump_tree(const parse_node_tree_t &nodes, const wcstring &src)
 {
     if (nodes.empty())
         return L"(empty!)";
-
+    
+    node_offset_t first_node_not_dumped = 0;
     size_t line = 0;
     wcstring result;
-    dump_tree_recursive(nodes, src, 0, 0, &result, &line);
+    while (first_node_not_dumped < nodes.size())
+    {
+        if (first_node_not_dumped > 0)
+        {
+            result.append(L"---New Tree---\n");
+        }
+        dump_tree_recursive(nodes, src, first_node_not_dumped, 0, &result, &line, &first_node_not_dumped);
+    }
     return result;
 }
 

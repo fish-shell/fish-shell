@@ -1,0 +1,461 @@
+body {
+    background-color: #292939;
+    font-family: Courier, "Courier New", monospace;
+    color: white;
+}
+
+#ancestor {
+    width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 25px;
+}
+
+#parent {
+    width: 100%;
+    min-height: 480px;
+    margin-top: 12px;
+}
+
+#tab_parent {
+    display: table;
+    width: 100%;
+    height: 50px;;
+}
+
+.tab {
+	display: table-cell;
+    border: 1px solid #111;
+    border-right: none;
+    padding-bottom: 15px;
+    padding-top: 15px;
+    font-size: 17pt;
+    text-align: center;
+    width: 15%;
+    background-color: #292929;
+    cursor: pointer;
+}
+
+#tab_parent :first-child {
+	border-top-left-radius: 8px;
+}
+
+#tab_parent :last-child {
+	border-right: 1px solid #111;
+	border-top-right-radius: 8px;
+}
+
+.tab_first {
+	border-top-left-radius: 5px;
+	border-bottom-left-radius: 5px;
+}
+
+.tab_last {
+	border-top-right-radius: 5px;
+	border-bottom-right-radius: 5px;
+}
+
+.selected_tab {
+    background-color: black;
+    border-color: black;
+}
+
+#tab_contents {
+	padding-top: 35px;
+	width: 100%;
+	background-color: black;
+	border-bottom-left-radius: 8px;
+	border-bottom-right-radius: 8px;
+	margin-bottom: 20px;
+}
+
+.footer {
+    clear: both;
+    height: 30px;
+}
+
+.master_detail_table {
+	display: table;
+	margin-top: 10px;
+	margin-left: 12px;
+	margin-right: 12px;
+}
+
+.master {
+    display: table-cell;
+    text-align: right;
+    min-width: 200px;
+    font-size: 16pt;
+    padding-bottom: 20px;
+    padding-top: 35px;
+    vertical-align: top;
+}
+
+.detail {
+    display: table-cell;
+  	border: 1px solid #555;
+  	background-color: #181818;
+  	padding-top: 30px;
+  	padding-bottom: 20px;
+  	padding-left: 30px;
+  	padding-right: 30px;
+	border-radius: 5;
+	width: 100%;
+}
+
+.detail_function {
+	white-space: pre-wrap;
+	width: 100%;
+	font-size: 11pt;
+	color: #BBB;
+}
+
+.master_element {
+    padding-top: 6px;
+    padding-bottom: 11px;
+    padding-left: 5px;
+    padding-right: 22px;    
+    font-size: 12pt;
+	/* Make our border overlap the detail, even if we're unselected (so it doesn't jump when selected) */
+	position: relative;
+	left: 1px;
+	border-bottom-style: solid;
+	border-bottom-width: 0px;
+}
+
+.selected_master_elem {
+	border: 1px solid #555;
+	border-right: none;
+	background-color: #181818;
+	
+	border-top-left-radius: 5;
+	border-bottom-left-radius: 5;
+	
+	/* Pad one less than .master_element, to accomodate our border. */
+    padding-top: 5px;
+    padding-bottom: 10px;
+    padding-left: 4px;
+}
+
+.master_element_text {
+    text-decoration: none;
+    padding-bottom: 1px;
+    border-bottom-style: inherit;
+    border-bottom-color: inherit;
+    border-bottom-width: 1px;
+}
+
+.master_element_description {
+    text-decoration: none;
+    padding-top: 15px;
+    font-size: 10pt;
+    border-bottom-style: inherit;
+    border-bottom-color: inherit;
+    border-bottom-width: 1px;
+	display: none;
+}
+
+.selected_master_elem > .master_element_description {
+	display: inline;
+}
+
+/* We have a newline between the label and description; hide it initially, but show it when it's selected */
+.master_element > br { display: none; }
+.selected_master_elem > br { display: inherit; }
+
+/* Set this class to suppress the border bottom on master_element_texts with visible descriptions */
+.master_element_no_border { border-bottom-width: 0 }
+
+.colorpicker_term256 {
+	border: solid #444 1px;
+	border-collapse: collapse;
+}
+
+.colorpicker_modifiers {
+	margin-top: 10px;
+	display:inline-block;
+	margin-left: auto;
+	margin-right: auto;
+	color: #AAA;
+	font-size: smaller;
+}
+
+.colorpicker_modifier_cell {
+	cursor: pointer;
+	display:inline-block;
+	text-align: center;
+	border: groove #333 2px;
+	padding: 5px;
+	margin-top: 5px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.modifier_cell_selected {
+	color: #CCC;
+	border-color: #AAA;
+	background-color: #444;
+}
+
+.data_table {
+	table-layout:fixed;
+	color: #CCC;
+	width: 100%;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+.data_table_row {
+}
+
+.data_table_cell {
+	padding-top: 5px;
+	padding-bottom: 5px;
+	vertical-align: top;
+	overflow:hidden;
+	border-bottom: #444 dotted 1px;
+	word-wrap: break-word;
+}
+
+.history_text {
+	padding-top: 5px;
+	padding-bottom: 5px;
+	vertical-align: top;
+	overflow:hidden;
+	border-bottom: #444 dotted 1px;
+	word-wrap: break-word;	
+}
+
+.history_delete {
+	width: 20px;
+	border-bottom: #444 dotted 1px;
+}
+
+/* The CSS we apply when a table row is filtered */
+.data_table_row_filtered {
+	display: none;
+}
+
+.no_overflow {
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.colorpicker_target {
+	margin: 0 0 -50px 0;
+	position: relative;
+	bottom: 47px;
+	float: left; /* for some reason this makes the cells that it overlaps (before adjusting its bottom) clickable in Safari */
+}
+
+.colorpicker_target_tab {
+	cursor: pointer;
+	color: #555;
+	border: solid 1px #555;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	padding-left: 7px;
+	padding-right: 7px;
+	display: inline-block;
+	background-color: black;
+	margin-right: -2px;
+	min-width: 110px;
+	text-align: center;
+}
+
+.colorpicker_target_selected {
+	background-color: #181818; /* same as #detail */
+	color: white;
+}
+
+.colorpicker_term256_row {
+}
+
+.colorpicker_term256_cell {
+	width: 18px;
+	height: 18px;
+	border: solid black 1px;
+}
+
+.colorpicker_term256_selection_indicator {
+	width: 19px;
+	height: 16px;
+	margin: -2px;
+	border: solid white 3px;
+	position: relative;
+	z-index: 2;
+}
+
+.colorpicker_cell_selected {
+	 border: dashed white 3px;
+	 width: 12px;
+	 height: 12px;
+}
+
+.colorpicker_text_sample, .colorpicker_text_sample_tight {
+	font-size: 12pt;
+	padding: 25px;
+	margin: 5px 20px 25px 20px; /* top right bottom left */
+	cursor: pointer;
+	line-height: 1.8em;
+	border: solid #777 1px;
+	position: relative; /* so that our absolutely positioned elements work */
+}
+
+.colorpicker_text_sample_tight {
+	font-size: 10pt;
+	line-height: 1.2em;
+	margin: 0px 6px;
+	max-width: 220px;
+	padding: 5px;
+	white-space:nowrap;
+	overflow: hidden;
+	text-overflow: clip;
+}
+
+.color_picker_background_cells {
+	position: absolute;
+	right: 0px;
+	top: 0px;
+}
+
+.color_picker_background_cells div {
+	width: 14px;
+	height: 14px;
+	border-style: solid;
+	border-color: #777;
+	border-width: 0 0 1px 1px;  /* top right bottom left */
+	float: left;
+}
+
+.color_scheme_choice_label {
+	margin-left: 10px;
+	margin-bottom: 3px;
+	cursor: pointer;
+	font-size: 12pt;
+	white-space: normal;
+}
+
+.color_scheme_choices_list {
+	overflow-y: hidden; /* makes our height account for floats */
+	padding:  0 10px 15px 10px;  /* top right bottom left */
+}
+
+.color_scheme_choice_container {
+	float: left;
+	padding: 5px;
+}
+
+.fake_cursor {
+	background-color: #999;
+}
+
+.error_msg {
+	color: red;
+	font-size: 12pt;
+	margin-left: 24pt;
+	margin-top: 5pt;
+	margin-bottom: 5pt;
+}
+
+img.delete_icon {
+	width: 20px;
+	height: 20px;
+	cursor: pointer;
+	text-decoration: none;
+	border: none;
+}
+
+#table_filter_container {
+	/* top right bottom left*/
+	padding: 0 10 10 30;
+	text-align: right;
+	position: relative;
+	bottom: 10px;
+}
+
+.filter_text_box {
+	width: 250px;
+	padding: 5 10 5 10;
+	background-color: #888;
+	border: #222 solid 3px;
+	border-radius: 15px;
+	font-size: 12pt;
+	color: white;
+	font-weight: bold;
+}
+
+.text_box_transient {
+	color: #C8C8C8;
+}
+
+.prompt_demo {
+	font-size: 12pt;
+	padding: 10px;
+	margin: 5px 20px 25px; /* top right bottom left */
+	cursor: pointer;
+	line-height: 1.8em;
+	border: solid #777 1px;
+	position: relative; /* so that our absolutely positioned elements work */
+}
+
+.save_button, .prompt_save_button {
+	border-radius: 5px;
+	border: solid rgba(71,71,71,0.5) 1px;
+	padding: 5px 8px;
+	font-size: 10pt;
+	display: inline-block;
+	margin-top: 12px;
+	background-color: rgba(128,128,128,0.2);
+	color: #FFF;
+	cursor: pointer;
+}
+
+.prompt_save_button {
+	background-color: #333;
+	border: solid #525252 1px;
+    color: #ffffff;
+	margin: 2px 20px 25px; /* top right bottom left */
+	font-size: 12pt;
+}
+
+.prompt_demo_choice_label {
+	margin: 25px 20px 5px;
+	font-size: 12pt;
+	white-space: normal;
+}
+
+.prompt_demo_text {
+	white-space: pre;
+	line-height: 170%;
+	padding: 4px 12px;
+	font-size: 14pt;
+	top: 0px;
+	bottom: 0px;
+	vertical-align: middle;
+	display: table-cell;
+	height: 72px; /* this is really the min height */
+}
+
+.prompt_function {
+    display: block;
+  	border: 1px solid #555;
+  	background-color: #181818;
+    margin: 5px 20px 5px;
+    border-radius: 5;
+}
+
+.prompt_function_text {
+	white-space: pre-wrap;
+	padding: 15px 3px;
+    width: 100%;
+    height: 25%;
+    overflow: auto;
+}
+
+.external_link_img {
+	width: 16px;
+	height: 16px;
+	vertical-align: text-top;
+	margin-left: 10px;
+};

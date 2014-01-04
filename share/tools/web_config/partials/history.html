@@ -1,0 +1,16 @@
+<div id="table_filter_container">
+    <span ng-show="loadingText.length > 0"> {{ loadingText }} </span>
+    <input id="table_filter_text_box" class="filter_text_box text_box_transient" placeholder="Filter" ng-model="queryInput">
+</div>
+<table class="data_table">
+    <tbody>
+        <tr ng-repeat="item in historyItems | filter:query">
+            <td ng-class="{'history_text': true, 'no_overflow': selectedItems.indexOf(item) < 0}" ng-click="selectItem(item)">{{ item }}</td>
+            <td class="history_delete">
+                <a ng-click="deleteHistoryItem(item)">
+                    <img class="delete_icon" src="delete.png">
+                </a>
+            </td>
+        </tr>
+    </tbody>
+</table>

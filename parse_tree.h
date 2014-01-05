@@ -211,8 +211,8 @@ public:
     /* If the given node is a block statement, returns the header node (for_header, while_header, begin_header, or function_header). Otherwise returns NULL */
     const parse_node_t *header_node_for_block_statement(const parse_node_t &node) const;
     
-    /* Given a job list, returns the next job (or NULL), and the tail of the job list. */
-    const parse_node_t *next_job_in_job_list(const parse_node_t &job_list, const parse_node_t **list_tail) const;
+    /* Given a node list (e.g. of type symbol_job_list) and a node type (e.g. symbol_job), return the next element of the given type in that list, and the tail (by reference). Returns NULL if we've exhausted the list. */
+    const parse_node_t *next_node_in_node_list(const parse_node_t &node_list, parse_token_type_t item_type, const parse_node_t **list_tail) const;
     
     /* Given a job, return all of its statements. These are 'specific statements' (e.g. symbol_decorated_statement, not symbol_statement) */
     parse_node_list_t specific_statements_for_job(const parse_node_t &job) const;

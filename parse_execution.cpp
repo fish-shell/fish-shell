@@ -73,7 +73,7 @@ const parse_node_t *parse_execution_context_t::infinite_recursive_statement_in_j
     const wcstring &forbidden_function_name = parser->forbidden_function.back();
     
     /* Get the first job in the job list. */
-    const parse_node_t *first_job = tree.next_job_in_job_list(job_list, NULL);
+    const parse_node_t *first_job = tree.next_node_in_node_list(job_list, symbol_job, NULL);
     if (first_job == NULL)
     {
         return NULL;
@@ -474,26 +474,26 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
     {
         /* Expand case statements */
         const parse_node_t *case_item_list = get_child(statement, 3, symbol_case_item_list);
-        while (matching_case_item == NULL && case_item_list->child_count > 0)
+        
+        /* Loop while we don't have a match but do have more of the list */
+        while (matching_case_item == NULL && case_item_list != NULL)
         {
             if (should_cancel_execution(sb))
             {
                 result = parse_execution_cancelled;
                 break;
             }
-        
-            if (case_item_list->production_idx == 2)
+            
+            /* Get the next item and the remainder of the list */
+            const parse_node_t *case_item = tree.next_node_in_node_list(*case_item_list, symbol_case_item, &case_item_list);
+            if (case_item == NULL)
             {
-                /* Hackish: blank line */
-                case_item_list = get_child(*case_item_list, 1, symbol_case_item_list);
-                continue;
+                /* No more items */
+                break;
             }
             
-            /* Pull out this case item and the rest of the list */
-            const parse_node_t &case_item = *get_child(*case_item_list, 0, symbol_case_item);
-            
             /* Pull out the argument list */
-            const parse_node_t &arg_list = *get_child(case_item, 1, symbol_argument_list);
+            const parse_node_t &arg_list = *get_child(*case_item, 1, symbol_argument_list);
             
             /* Expand arguments. We explicitly ignore unmatched_wildcard. That is, a case item list may have a wildcard that fails to expand to anything. */
             const wcstring_list_t case_args = this->determine_arguments(arg_list, NULL);
@@ -510,17 +510,14 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
                 /* If this matched, we're done */
                 if (match)
                 {
-                    matching_case_item = &case_item;
+                    matching_case_item = case_item;
                     break;
                 }
             }
-            
-            /* Remainder of the list */
-            case_item_list = get_child(*case_item_list, 1, symbol_case_item_list);
         }
     }
     
-    if (result == parse_execution_success && matching_case_item)
+    if (result == parse_execution_success && matching_case_item != NULL)
     {
         /* Success, evaluate the job list */
         const parse_node_t *job_list = get_child(*matching_case_item, 3, symbol_job_list);
@@ -1319,30 +1316,9 @@ parse_execution_result_t parse_execution_context_t::run_job_list(const parse_nod
     while (job_list != NULL && ! should_cancel_execution(associated_block))
     {
         assert(job_list->type == symbol_job_list);
-        
-        // These correspond to the three productions of job_list
+
         // Try pulling out a job
-        const parse_node_t *job = NULL;
-        switch (job_list->production_idx)
-        {
-            case 0: // empty
-                job_list = NULL;
-                break;
-            
-            case 1: //job, job_list
-                job = get_child(*job_list, 0, symbol_job);
-                job_list = get_child(*job_list, 1, symbol_job_list);
-                break;
-            
-            case 2: //blank line, job_list
-                job = NULL;
-                job_list = get_child(*job_list, 1, symbol_job_list);
-                break;
-                
-            default: //if we get here, it means more productions have been added to job_list, which is bad
-                fprintf(stderr, "Unexpected production in job_list: %lu\n", (unsigned long)job_list->production_idx);
-                PARSER_DIE();
-        }
+        const parse_node_t *job = tree.next_node_in_node_list(*job_list, symbol_job, &job_list);
         
         if (job != NULL)
         {

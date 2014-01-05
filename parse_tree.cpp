@@ -1465,35 +1465,44 @@ parse_node_tree_t::parse_node_list_t parse_node_tree_t::specific_statements_for_
     return result;
 }
 
-const parse_node_t *parse_node_tree_t::next_job_in_job_list(const parse_node_t &top_job_list, const parse_node_t **out_list_tail) const
+const parse_node_t *parse_node_tree_t::next_node_in_node_list(const parse_node_t &node_list, parse_token_type_t entry_type, const parse_node_t **out_list_tail) const
 {
-    assert(top_job_list.type == symbol_job_list);
+    parse_token_type_t list_type = node_list.type;
     
-    /* Our cursor variable */
-    const parse_node_t *job_list = &top_job_list;
+    /* Paranoia - it doesn't make sense for a list type to contain itself */
+    assert(list_type != entry_type);
     
-    /* Skip over a run of empty jobs */
-    assert(job_list->type == symbol_job_list);
-    while (job_list->production_idx == 2)
+    const parse_node_t *list_cursor = &node_list;
+    const parse_node_t *list_entry = NULL;
+    
+    /* Loop while we don't have an item but do have a list. Note that not every node in the list may contain an in item that we care about - e.g. job_list contains blank lines as a production */
+    while (list_entry == NULL && list_cursor != NULL)
     {
-        job_list = this->get_child(*job_list, 1, symbol_job_list);
+        const parse_node_t *next_cursor = NULL;
+        
+        /* Walk through the children */
+        for (size_t i=0; i < list_cursor->child_count; i++)
+        {
+            const parse_node_t *child = this->get_child(*list_cursor, i);
+            if (child->type == entry_type)
+            {
+                /* This is the list entry */
+                list_entry = child;
+            }
+            else if (child->type == list_type)
+            {
+                /* This is the next in the list */
+                next_cursor = child;
+            }
+        }
+        /* Go to the next entry, even if it's NULL */
+        list_cursor = next_cursor;
     }
     
-    /* Should now be at production 0 or 1 */
-    assert(job_list->type == symbol_job_list);
-    assert(job_list->production_idx == 0 || job_list->production_idx == 1);
-    
-    /* Pull out the job */
-    const parse_node_t *job = NULL;
-    const parse_node_t *list_tail = NULL;
-    if (job_list->production_idx == 1)
-    {
-        job = this->get_child(*job_list, 0, symbol_job);
-        list_tail = this->get_child(*job_list, 1, symbol_job_list);
-    }
-    
-    /* Return them */
+    /* Return what we got */
+    assert(list_cursor == NULL || list_cursor->type == list_type);
+    assert(list_entry == NULL || list_entry->type == entry_type);
     if (out_list_tail != NULL)
-        *out_list_tail = list_tail;
-    return job;
+        *out_list_tail = list_cursor;
+    return list_entry;
 }

@@ -4460,7 +4460,7 @@ void builtin_get_names(std::vector<completion_t> &list)
 {
     for (size_t i=0; i < BUILTIN_COUNT; i++)
     {
-        list.push_back(completion_t(builtin_datas[i].name));
+        append_completion(list, builtin_datas[i].name);
     }
 }
 

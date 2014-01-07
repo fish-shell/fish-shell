@@ -466,7 +466,13 @@ void completion_autoload_t::command_removed(const wcstring &cmd)
 /** Create a new completion entry */
 void append_completion(std::vector<completion_t> &completions, const wcstring &comp, const wcstring &desc, complete_flags_t flags, string_fuzzy_match_t match)
 {
-    completions.push_back(completion_t(comp, desc, match, flags));
+    /* If we just constructed the completion and used push_back, we would get two string copies. Try to avoid that by making a stubby completion in the vector first, and then copying our string in. */
+    completions.push_back(completion_t(wcstring()));
+    completion_t *last = &completions.back();
+    last->completion = comp;
+    last->description = desc;
+    last->match = match;
+    last->flags = flags;
 }
 
 /**
@@ -1191,7 +1197,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
             wcstring_list_t names = function_get_names(str_cmd.at(0) == L'_');
             for (size_t i=0; i < names.size(); i++)
             {
-                possible_comp.push_back(completion_t(names.at(i)));
+                append_completion(possible_comp, names.at(i));
             }
 
             this->complete_strings(str_cmd, 0, &complete_function_desc, possible_comp, 0);

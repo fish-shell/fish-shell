@@ -785,7 +785,15 @@ static int expand_pid(const wcstring &instr_with_sep,
                       expand_flags_t flags,
                       std::vector<completion_t> &out)
 {
-
+    /* Hack. If there's no INTERNAL_SEP and no PROCESS_EXPAND, then there's nothing to do. Check out this "null terminated string." */
+    const wchar_t some_chars[] = {INTERNAL_SEPARATOR, PROCESS_EXPAND, L'\0'};
+    if (instr_with_sep.find_first_of(some_chars) == wcstring::npos)
+    {
+        /* Nothing to do */
+        append_completion(out, instr_with_sep);
+        return 1;
+    }
+    
     /* expand_string calls us with internal separators in instr...sigh */
     wcstring instr = instr_with_sep;
     remove_internal_separator(instr, false);
@@ -1372,7 +1380,7 @@ static int expand_brackets(parser_t &parser, const wcstring &instr, int flags, s
 /**
  Perform cmdsubst expansion
  */
-static int expand_cmdsubst(parser_t &parser, const wcstring &input, std::vector<completion_t> &outList)
+static int expand_cmdsubst(parser_t &parser, const wcstring &input, std::vector<completion_t> &out_list)
 {
     wchar_t *paran_begin=0, *paran_end=0;
     std::vector<wcstring> sub_res;
@@ -1390,7 +1398,7 @@ static int expand_cmdsubst(parser_t &parser, const wcstring &input, std::vector<
                          L"Mismatched parenthesis");
             return 0;
         case 0:
-            outList.push_back(completion_t(input));
+            append_completion(out_list, input);
             return 1;
         case 1:
 
@@ -1455,15 +1463,15 @@ static int expand_cmdsubst(parser_t &parser, const wcstring &input, std::vector<
        */
     for (i=0; i<sub_res.size(); i++)
     {
-        wcstring sub_item = sub_res.at(i);
-        wcstring sub_item2 = escape_string(sub_item, 1);
+        const wcstring &sub_item = sub_res.at(i);
+        const wcstring sub_item2 = escape_string(sub_item, 1);
+
+        wcstring whole_item;
 
         for (j=0; j < tail_expand.size(); j++)
         {
-
-            wcstring whole_item;
-
-            wcstring tail_item = tail_expand.at(j).completion;
+            whole_item.clear();
+            const wcstring &tail_item = tail_expand.at(j).completion;
 
             //sb_append_substring( &whole_item, in, len1 );
             whole_item.append(in, paran_begin-in);
@@ -1481,7 +1489,7 @@ static int expand_cmdsubst(parser_t &parser, const wcstring &input, std::vector<
             whole_item.append(tail_item);
 
             //al_push( out, whole_item.buff );
-            outList.push_back(completion_t(whole_item));
+            append_completion(out_list, whole_item);
         }
     }
 
@@ -1665,7 +1673,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
 
     if ((!(flags & ACCEPT_INCOMPLETE)) && expand_is_clean(input.c_str()))
     {
-        output.push_back(completion_t(input));
+        append_completion(output, input);
         return EXPAND_OK;
     }
 
@@ -1681,7 +1689,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
             parser.error(CMDSUBST_ERROR, -1, L"Command substitutions not allowed");
             return EXPAND_ERROR;
         }
-        in->push_back(completion_t(input));
+        append_completion(*in, input);
     }
     else
     {
@@ -1709,7 +1717,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
                     next[i] = L'$';
                 }
             }
-            out->push_back(completion_t(next));
+            append_completion(*out, next);
         }
         else
         {
@@ -1725,7 +1733,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
 
     for (i=0; i < in->size(); i++)
     {
-        wcstring next = in->at(i).completion;
+        const wcstring &next = in->at(i).completion;
 
         if (!expand_brackets(parser, next, flags, *out))
         {
@@ -1745,7 +1753,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
 
         if (flags & ACCEPT_INCOMPLETE)
         {
-            if (next[0] == PROCESS_EXPAND)
+            if (! next.empty() && next.at(0) == PROCESS_EXPAND)
             {
                 /*
                  If process expansion matches, we are not
@@ -1758,7 +1766,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
             }
             else
             {
-                out->push_back(completion_t(next));
+                append_completion(*out, next);
             }
         }
         else
@@ -1840,7 +1848,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
         {
             if (!(flags & ACCEPT_INCOMPLETE))
             {
-                out->push_back(completion_t(next_str));
+                append_completion(*out, next_str);
             }
         }
     }
@@ -1970,19 +1978,19 @@ bool fish_openSUSE_dbus_hack_hack_hack_hack(std::vector<completion_t> *args)
                         val.resize(last_good + 1);
 
                     args->clear();
-                    args->push_back(completion_t(L"set"));
+                    append_completion(*args, L"set");
                     if (key == L"DBUS_SESSION_BUS_ADDRESS")
-                        args->push_back(completion_t(L"-x"));
-                    args->push_back(completion_t(key));
-                    args->push_back(completion_t(val));
+                        append_completion(*args, L"-x");
+                    append_completion(*args, key);
+                    append_completion(*args, val);
                     result = true;
                 }
                 else if (string_prefixes_string(L"export DBUS_SESSION_BUS_ADDRESS;", cmd))
                 {
                     /* Nothing, we already exported it */
                     args->clear();
-                    args->push_back(completion_t(L"echo"));
-                    args->push_back(completion_t(L"-n"));
+                    append_completion(*args, L"echo");
+                    append_completion(*args, L"-n");
                     result = true;
                 }
             }

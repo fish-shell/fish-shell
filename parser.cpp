@@ -1939,7 +1939,7 @@ int parser_t::parse_job(process_t *p, job_t *j, tokenizer_t *tok)
                 }
             }
         }
-        args.push_back(completion_t(nxt));
+        append_completion(args, nxt);
     }
 
     if (error_code == 0)
@@ -1982,8 +1982,8 @@ int parser_t::parse_job(process_t *p, job_t *j, tokenizer_t *tok)
                     if (use_implicit_cd)
                     {
                         args.clear();
-                        args.push_back(completion_t(L"cd"));
-                        args.push_back(completion_t(implicit_cd_path));
+                        append_completion(args, L"cd");
+                        append_completion(args, implicit_cd_path);
 
                         /* If we have defined a wrapper around cd, use it, otherwise use the cd builtin */
                         if (use_function && function_exists(L"cd"))

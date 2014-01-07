@@ -892,6 +892,7 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
     if (!is_universal)
     {
         event_t ev = event_t::variable_event(key);
+        ev.arguments.reserve(3);
         ev.arguments.push_back(L"VARIABLE");
         ev.arguments.push_back(L"SET");
         ev.arguments.push_back(key);

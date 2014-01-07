@@ -805,11 +805,11 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(job_t
         return parse_execution_errored;
     }
     
-    wcstring actual_cmd;
+    wcstring path_to_external_command;
     if (process_type == EXTERNAL)
     {
         /* Determine the actual command. This may be an implicit cd. */
-        bool has_command = path_get_path(cmd, &actual_cmd);
+        bool has_command = path_get_path(cmd, &path_to_external_command);
         
         /* If there was no command, then we care about the value of errno after checking for it, to distinguish between e.g. no file vs permissions problem */
         const int no_cmd_err_code = errno;
@@ -843,7 +843,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(job_t
         /* Implicit cd is simple */
         argument_list.push_back(L"cd");
         argument_list.push_back(cmd);
-        actual_cmd.clear();
+        path_to_external_command.clear();
         
         /* If we have defined a wrapper around cd, use it, otherwise use the cd builtin */
         process_type = function_exists(L"cd") ? INTERNAL_FUNCTION : INTERNAL_BUILTIN;
@@ -878,7 +878,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(job_t
     proc->type = process_type;
     proc->set_argv(argument_list);
     proc->set_io_chain(process_io_chain);
-    proc->actual_cmd = actual_cmd;
+    proc->actual_cmd = path_to_external_command;
     return parse_execution_success;
 }
 

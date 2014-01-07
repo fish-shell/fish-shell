@@ -19,6 +19,12 @@
 #include "exec.h"
 #include "path.h"
 
+/* These are the specific statement types that support redirections */
+static bool specific_statement_type_is_redirectable_block(const parse_node_t &node)
+{
+    return node.type == symbol_block_statement || node.type == symbol_if_statement || node.type == symbol_switch_statement;
+
+}
 
 parse_execution_context_t::parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, parser_t *p) : tree(t), src(s), parser(p), eval_level(0)
 {
@@ -190,6 +196,41 @@ parse_execution_context_t::execution_cancellation_reason_t parse_execution_conte
     {
         return execution_cancellation_none;
     }
+}
+
+/* Return whether the job contains a single statement, of block type, with no redirections */
+bool parse_execution_context_t::job_is_simple_block(const parse_node_t &job_node) const
+{
+    assert(job_node.type == symbol_job);
+    
+    /* Must have one statement */
+    const parse_node_t &statement = *get_child(job_node, 0, symbol_statement);
+    const parse_node_t &specific_statement = *get_child(statement, 0);
+    if (! specific_statement_type_is_redirectable_block(specific_statement))
+    {
+        /* Not an appropriate block type */
+        return false;
+    }
+
+    
+    /* Must be no pipes */
+    const parse_node_t &continuation = *get_child(job_node, 1, symbol_job_continuation);
+    if (continuation.child_count > 0)
+    {
+        /* Multiple statements in this job, so there's pipes involved */
+        return false;
+    }
+    
+    /* Check for arguments and redirections. All of the above types have an arguments / redirections list. It must be empty. */
+    const parse_node_t &args_and_redirections = tree.find_child(specific_statement, symbol_arguments_or_redirections_list);
+    if (args_and_redirections.child_count > 0)
+    {
+        /* Non-empty, we have an argument or redirection */
+        return false;
+    }
+    
+    /* Ok, we are a simple block! */
+    return true;
 }
 
 parse_execution_result_t parse_execution_context_t::run_if_statement(const parse_node_t &statement)
@@ -415,6 +456,9 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(const pars
             }
         }
     }
+    
+    parser->pop_block(fb);
+    
     return ret;
 }
 
@@ -1207,7 +1251,29 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
     /* Increment the eval_level for the duration of this command */
     scoped_push<int> saved_eval_level(&eval_level, eval_level + 1);
     
-    /* TODO: blocks-without-redirections optimization */
+    /* When we encounter a block construct (e.g. while loop) in the general case, we create a "block process" that has a pointer to its source. This allows us to handle block-level redirections. However, if there are no redirections, then we can just jump into the block directly, which is significantly faster. */
+    if (job_is_simple_block(job_node))
+    {
+        const parse_node_t &statement = *get_child(job_node, 0, symbol_statement);
+        const parse_node_t &specific_statement = *get_child(statement, 0);
+        assert(specific_statement_type_is_redirectable_block(specific_statement));
+        switch (specific_statement.type)
+        {
+            case symbol_block_statement:
+                return this->run_block_statement(specific_statement);
+                
+            case symbol_if_statement:
+                return this->run_if_statement(specific_statement);
+                
+            case symbol_switch_statement:
+                return this->run_switch_statement(specific_statement);
+            
+            default:
+                /* Other types should be impossible due to the specific_statement_type_is_redirectable_block check */
+                PARSER_DIE();
+                break;
+        }
+    }
     
     /* Profiling support */
     long long start_time = 0, parse_time = 0, exec_time = 0;
@@ -1349,10 +1415,7 @@ parse_execution_result_t parse_execution_context_t::eval_node_at_offset(node_off
     }
     
     /* Currently, we only expect to execute the top level job list, or a block node. Assert that. */
-    assert(node.type == symbol_job_list ||
-        node.type == symbol_block_statement ||
-        node.type == symbol_if_statement ||
-        node.type == symbol_switch_statement);
+    assert(node.type == symbol_job_list || specific_statement_type_is_redirectable_block(node));
     
     enum parse_execution_result_t status = parse_execution_success;
     switch (node.type)

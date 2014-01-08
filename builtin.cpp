@@ -4315,6 +4315,7 @@ int builtin_parse(parser_t &parser, wchar_t **argv)
 static const builtin_data_t builtin_datas[]=
 {
     { 		L"[",  &builtin_test, N_(L"Test a condition")   },
+    { 		L"__fish_parse",  &builtin_parse, N_(L"Try out the new parser")  },
     { 		L"and",  &builtin_generic, N_(L"Execute command if previous command suceeded")  },
     { 		L"begin",  &builtin_begin, N_(L"Create a block of code")   },
     { 		L"bg",  &builtin_bg, N_(L"Send job to background")   },
@@ -4346,7 +4347,6 @@ static const builtin_data_t builtin_datas[]=
     { 		L"jobs",  &builtin_jobs, N_(L"Print currently running jobs")   },
     { 		L"not",  &builtin_generic, N_(L"Negate exit status of job")  },
     { 		L"or",  &builtin_generic, N_(L"Execute command if previous command failed")  },
-    { 		L"parse",  &builtin_parse, N_(L"Try out the new parser")  },
     { 		L"printf",  &builtin_printf, N_(L"Prints formatted text")  },
     { 		L"pwd",  &builtin_pwd, N_(L"Print the working directory")  },
     { 		L"random",  &builtin_random, N_(L"Generate random number")  },

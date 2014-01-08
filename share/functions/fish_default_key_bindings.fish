@@ -89,6 +89,9 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind \e\[1\;9B history-token-search-forward # iTerm2
 	bind \e\[1\;9C forward-word #iTerm2
 	bind \e\[1\;9D backward-word #iTerm2
+	# Bash compatibility
+	# https://github.com/fish-shell/fish-shell/issues/89
+	bind \e. history-token-search-backward
 	bind \ed forward-kill-word
 	bind -k ppage beginning-of-history
 	bind -k npage end-of-history

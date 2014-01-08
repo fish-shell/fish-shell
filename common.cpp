@@ -917,60 +917,27 @@ void write_screen(const wcstring &msg, wcstring &buff)
     buff.push_back(L'\n');
 }
 
-/**
-   Perform string escaping of a strinng by only quoting it. Assumes
-   the string has already been checked for characters that can not be
-   escaped this way.
- */
-static wchar_t *escape_simple(const wchar_t *in)
+/* Escape a string, storing the result in out_str */
+static void escape_string_internal(const wchar_t *orig_in, size_t in_len, wcstring *out_str, escape_flags_t flags)
 {
-    wchar_t *out;
-    size_t len = wcslen(in);
-    out = (wchar_t *)malloc(sizeof(wchar_t)*(len+3));
-    if (!out)
-        DIE_MEM();
+    assert(orig_in != NULL);
 
-    out[0] = L'\'';
-    wcscpy(&out[1], in);
-    out[len+1]=L'\'';
-    out[len+2]=0;
-    return out;
-}
-
-wchar_t *escape(const wchar_t *in_orig, escape_flags_t flags)
-{
-    const wchar_t *in = in_orig;
-
+    const wchar_t *in = orig_in;
     bool escape_all = !!(flags & ESCAPE_ALL);
     bool no_quoted  = !!(flags & ESCAPE_NO_QUOTED);
     bool no_tilde = !!(flags & ESCAPE_NO_TILDE);
 
-    wchar_t *out;
-    wchar_t *pos;
-
     int need_escape=0;
     int need_complex_escape=0;
 
-    if (!in)
+    /* Avoid dereferencing all over the place */
+    wcstring &out = *out_str;
+
+    if (!no_quoted && in_len == 0)
     {
-        debug(0, L"%s called with null input", __func__);
-        FATAL_EXIT();
+        out.assign(L"''");
+        return;
     }
-
-    if (!no_quoted && (wcslen(in) == 0))
-    {
-        out = wcsdup(L"''");
-        if (!out)
-            DIE_MEM();
-        return out;
-    }
-
-
-    out = (wchar_t *)malloc(sizeof(wchar_t)*(wcslen(in)*4 + 1));
-    pos = out;
-
-    if (!out)
-        DIE_MEM();
 
     while (*in != 0)
     {
@@ -981,14 +948,14 @@ wchar_t *escape(const wchar_t *in_orig, escape_flags_t flags)
             int val = *in - ENCODE_DIRECT_BASE;
             int tmp;
 
-            *(pos++) = L'\\';
-            *(pos++) = L'X';
+            out += L'\\';
+            out += L'X';
 
             tmp = val/16;
-            *pos++ = tmp > 9? L'a'+(tmp-10):L'0'+tmp;
+            out += tmp > 9? L'a'+(tmp-10):L'0'+tmp;
 
             tmp = val%16;
-            *pos++ = tmp > 9? L'a'+(tmp-10):L'0'+tmp;
+            out += tmp > 9? L'a'+(tmp-10):L'0'+tmp;
             need_escape=need_complex_escape=1;
 
         }
@@ -998,32 +965,32 @@ wchar_t *escape(const wchar_t *in_orig, escape_flags_t flags)
             switch (c)
             {
                 case L'\t':
-                    *(pos++) = L'\\';
-                    *(pos++) = L't';
+                    out += L'\\';
+                    out += L't';
                     need_escape=need_complex_escape=1;
                     break;
 
                 case L'\n':
-                    *(pos++) = L'\\';
-                    *(pos++) = L'n';
+                    out += L'\\';
+                    out += L'n';
                     need_escape=need_complex_escape=1;
                     break;
 
                 case L'\b':
-                    *(pos++) = L'\\';
-                    *(pos++) = L'b';
+                    out += L'\\';
+                    out += L'b';
                     need_escape=need_complex_escape=1;
                     break;
 
                 case L'\r':
-                    *(pos++) = L'\\';
-                    *(pos++) = L'r';
+                    out += L'\\';
+                    out += L'r';
                     need_escape=need_complex_escape=1;
                     break;
 
                 case L'\x1b':
-                    *(pos++) = L'\\';
-                    *(pos++) = L'e';
+                    out += L'\\';
+                    out += L'e';
                     need_escape=need_complex_escape=1;
                     break;
 
@@ -1033,8 +1000,8 @@ wchar_t *escape(const wchar_t *in_orig, escape_flags_t flags)
                 {
                     need_escape=need_complex_escape=1;
                     if (escape_all)
-                        *pos++ = L'\\';
-                    *pos++ = *in;
+                        out += L'\\';
+                    out += *in;
                     break;
                 }
 
@@ -1063,9 +1030,9 @@ wchar_t *escape(const wchar_t *in_orig, escape_flags_t flags)
                     {
                         need_escape=1;
                         if (escape_all)
-                            *pos++ = L'\\';
+                            out += L'\\';
                     }
-                    *pos++ = *in;
+                    out += *in;
                     break;
                 }
 
@@ -1075,9 +1042,9 @@ wchar_t *escape(const wchar_t *in_orig, escape_flags_t flags)
                     {
                         if (*in <27 && *in > 0)
                         {
-                            *(pos++) = L'\\';
-                            *(pos++) = L'c';
-                            *(pos++) = L'a' + *in -1;
+                            out += L'\\';
+                            out += L'c';
+                            out += L'a' + *in -1;
 
                             need_escape=need_complex_escape=1;
                             break;
@@ -1086,15 +1053,15 @@ wchar_t *escape(const wchar_t *in_orig, escape_flags_t flags)
 
 
                         int tmp = (*in)%16;
-                        *pos++ = L'\\';
-                        *pos++ = L'x';
-                        *pos++ = ((*in>15)? L'1' : L'0');
-                        *pos++ = tmp > 9? L'a'+(tmp-10):L'0'+tmp;
+                        out += L'\\';
+                        out += L'x';
+                        out += ((*in>15)? L'1' : L'0');
+                        out += tmp > 9? L'a'+(tmp-10):L'0'+tmp;
                         need_escape=need_complex_escape=1;
                     }
                     else
                     {
-                        *pos++ = *in;
+                        out += *in;
                     }
                     break;
                 }
@@ -1103,7 +1070,6 @@ wchar_t *escape(const wchar_t *in_orig, escape_flags_t flags)
 
         in++;
     }
-    *pos = 0;
 
     /*
       Use quoted escaping if possible, since most people find it
@@ -1111,18 +1077,32 @@ wchar_t *escape(const wchar_t *in_orig, escape_flags_t flags)
      */
     if (!no_quoted && need_escape && !need_complex_escape && escape_all)
     {
-        free(out);
-        out = escape_simple(in_orig);
+        wchar_t single_quote = L'\'';
+        out.clear();
+        out.reserve(2 + in_len);
+        out.push_back(single_quote);
+        out.append(orig_in, in_len);
+        out.push_back(single_quote);
+    }
+}
+
+wchar_t *escape(const wchar_t *in, escape_flags_t flags)
+{
+    if (!in)
+    {
+        debug(0, L"%s called with null input", __func__);
+        FATAL_EXIT();
     }
 
-    return out;
+    wcstring tmp;
+    escape_string_internal(in, wcslen(in), &tmp, flags);
+    return wcsdup(tmp.c_str());
 }
 
 wcstring escape_string(const wcstring &in, escape_flags_t flags)
 {
-    wchar_t *tmp = escape(in.c_str(), flags);
-    wcstring result(tmp);
-    free(tmp);
+    wcstring result;
+    escape_string_internal(in.c_str(), in.size(), &result, flags);
     return result;
 }
 

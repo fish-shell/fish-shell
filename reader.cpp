@@ -2470,21 +2470,26 @@ void reader_run_command(parser_t &parser, const wcstring &cmd)
 
 int reader_shell_test(const wchar_t *b)
 {
+    assert(b != NULL);
     wcstring bstr = b;
+    
+    /* Append a newline, to act as a statement terminator */
+    bstr.push_back(L'\n');
+    
     parse_error_list_t errors;
     int res = parse_util_detect_errors(bstr, &errors);
 
     if (res & PARSER_TEST_ERROR)
     {
-        wcstring sb;
-        parser_t::principal_parser().get_backtrace(bstr, errors, &sb);
+        wcstring error_desc;
+        parser_t::principal_parser().get_backtrace(bstr, errors, &error_desc);
         
         // ensure we end with a newline. Also add an initial newline, because it's likely the user just hit enter and so there's junk on the current line
-        if (! string_suffixes_string(L"\n", sb))
+        if (! string_suffixes_string(L"\n", error_desc))
         {
-            sb.push_back(L'\n');
+            error_desc.push_back(L'\n');
         }
-        fwprintf(stderr, L"\n%ls", sb.c_str());
+        fwprintf(stderr, L"\n%ls", error_desc.c_str());
     }
     return res;
 }

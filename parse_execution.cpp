@@ -638,20 +638,26 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(const pa
 /* Reports an error. Always returns parse_execution_errored, so you can assign the result to an 'errored' variable */
 parse_execution_result_t parse_execution_context_t::report_error(const parse_node_t &node, const wchar_t *fmt, ...)
 {
-    parse_error_t error;
-    error.source_start = node.source_start;
-    error.source_length = node.source_length;
-    error.code = parse_error_syntax; //hackish
-    
-    va_list va;
-    va_start(va, fmt);
-    error.text = vformat_string(fmt, va);
-    va_end(va);
-    
-    /* Get a backtrace */
-    wcstring backtrace;
-    const parse_error_list_t error_list = parse_error_list_t(1, error);
-    parser->get_backtrace(src, error_list, &backtrace);
+    if (parser->show_errors)
+    {
+        /* Create an error */
+        parse_error_t error;
+        error.source_start = node.source_start;
+        error.source_length = node.source_length;
+        error.code = parse_error_syntax; //hackish
+        
+        va_list va;
+        va_start(va, fmt);
+        error.text = vformat_string(fmt, va);
+        va_end(va);
+        
+        /* Get a backtrace */
+        wcstring backtrace_and_desc;
+        const parse_error_list_t error_list = parse_error_list_t(1, error);
+        parser->get_backtrace(src, error_list, &backtrace_and_desc);
+        
+        fprintf(stderr, "%ls", backtrace_and_desc.c_str());
+    }
     
     return parse_execution_errored;
 }

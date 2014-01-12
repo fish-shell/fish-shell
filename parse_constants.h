@@ -131,20 +131,6 @@ typedef unsigned int parser_test_error_bits_t;
 /** Maximum number of function calls. */
 #define FISH_MAX_STACK_DEPTH 128
 
-/**
-   Error message for tokenizer error. The tokenizer message is
-   appended to this message.
-*/
-#define TOK_ERR_MSG _( L"Tokenizer error: '%ls'")
-
-/**
-   Error message for short circuit command error.
-*/
-#define COND_ERR_MSG _( L"An additional command is required" )
-
-/** Error message on a function that calls itself immediately */
-#define INFINITE_RECURSION_ERR_MSG _( L"The function calls itself immediately, which would result in an infinite loop.")
-
 /** Error message on a function that calls itself immediately */
 #define INFINITE_FUNC_RECURSION_ERR_MSG _( L"The function '%ls' calls itself immediately, which would result in an infinite loop.")
 
@@ -152,14 +138,7 @@ typedef unsigned int parser_test_error_bits_t;
 /** Error message on reaching maximum call stack depth */
 #define CALL_STACK_LIMIT_EXCEEDED_ERR_MSG _( L"The function call stack limit has been exceeded. Do you have an accidental infinite loop?")
 
-/**
-   Error message used when the end of a block can't be located
-*/
-#define BLOCK_END_ERR_MSG _( L"Could not locate end of block. The 'end' command is missing, misspelled or a ';' is missing.")
-
-/**
-   Error message when a non-string token is found when expecting a command name
-*/
+/** Error message when a non-string token is found when expecting a command name */
 #define CMD_ERR_MSG _( L"Expected a command name, got token of type '%ls'")
 
 /**

@@ -81,11 +81,6 @@ The fish parser. Contains functions for parsing and evaluating code.
 /**
    Error message when a non-string token is found when expecting a command name
 */
-#define CMD_ERR_MSG _( L"Expected a command name, got token of type '%ls'")
-
-/**
-   Error message when a non-string token is found when expecting a command name
-*/
 #define CMD_OR_ERR_MSG _( L"Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; or COMMAND'? See the help section for the 'or' builtin command by typing 'help or'.")
 
 /**

@@ -761,7 +761,7 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
     errno = errno_old;
 }
 
-void format_long_safe(char buff[128], long val)
+void format_long_safe(char buff[64], long val)
 {
     if (val == 0)
     {
@@ -795,7 +795,7 @@ void format_long_safe(char buff[128], long val)
     }
 }
 
-void format_long_safe(wchar_t buff[128], long val)
+void format_long_safe(wchar_t buff[64], long val)
 {
     if (val == 0)
     {

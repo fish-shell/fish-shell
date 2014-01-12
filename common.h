@@ -348,8 +348,8 @@ void format_size_safe(char buff[128], unsigned long long sz);
 void debug_safe(int level, const char *msg, const char *param1 = NULL, const char *param2 = NULL, const char *param3 = NULL, const char *param4 = NULL, const char *param5 = NULL, const char *param6 = NULL, const char *param7 = NULL, const char *param8 = NULL, const char *param9 = NULL, const char *param10 = NULL, const char *param11 = NULL, const char *param12 = NULL);
 
 /** Writes out a long safely */
-void format_long_safe(char buff[128], long val);
-void format_long_safe(wchar_t buff[128], long val);
+void format_long_safe(char buff[64], long val);
+void format_long_safe(wchar_t buff[64], long val);
 
 
 template<typename T>

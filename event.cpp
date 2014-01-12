@@ -568,9 +568,6 @@ static void event_fire_internal(const event_t &event)
 */
 static void event_fire_delayed()
 {
-
-    size_t i;
-
     /*
       If is_event is one, we are running the event-handler non-recursively.
 
@@ -582,7 +579,7 @@ static void event_fire_delayed()
     {
         event_list_t new_blocked;
 
-        for (i=0; i<blocked.size(); i++)
+        for (size_t i=0; i<blocked.size(); i++)
         {
             event_t *e = blocked.at(i);
             if (event_is_blocked(*e))

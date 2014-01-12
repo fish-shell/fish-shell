@@ -1433,7 +1433,7 @@ struct autosuggestion_context_t
         {
             const completion_t &comp = completions.at(0);
             size_t cursor = this->cursor_pos;
-            this->autosuggestion = completion_apply_to_command_line(comp.completion.c_str(), comp.flags, this->search_string, &cursor, true /* append only */);
+            this->autosuggestion = completion_apply_to_command_line(comp.completion, comp.flags, this->search_string, &cursor, true /* append only */);
             return 1;
         }
 
@@ -2200,7 +2200,6 @@ static void handle_token_history(int forward, int reset)
             */
             if (data->history_search.go_backwards())
             {
-                wcstring item = data->history_search.current_string();
                 data->token_history_buff = data->history_search.current_string();
             }
             current_pos = data->token_history_buff.size();
@@ -3325,7 +3324,7 @@ const wchar_t *reader_readline(void)
                     {
                         //history_reset();
                         data->history_search.go_to_end();
-                        reader_set_buffer(data->search_buff.c_str(), data->search_buff.size());
+                        reader_set_buffer(data->search_buff, data->search_buff.size());
                     }
                     else
                     {

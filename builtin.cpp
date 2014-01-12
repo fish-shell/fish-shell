@@ -1038,20 +1038,22 @@ static int builtin_emit(parser_t &parser, wchar_t **argv)
 static int builtin_generic(parser_t &parser, wchar_t **argv)
 {
     int argc=builtin_count_args(argv);
+    
+    /* Hackish - if we have no arguments other than the command, we are a "naked invocation" and we just print help */
+    if (argc == 1)
+    {
+        builtin_print_help(parser, argv[0], stdout_buffer);
+        return STATUS_BUILTIN_ERROR;
+    }
+    
     woptind=0;
 
     static const struct woption
             long_options[] =
     {
-        {
-            L"help", no_argument, 0, 'h'
-        }
-        ,
-        {
-            0, 0, 0, 0
-        }
-    }
-    ;
+        { L"help", no_argument, 0, 'h' },
+        { 0, 0, 0, 0 }
+    };
 
     while (1)
     {
@@ -2060,6 +2062,13 @@ int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstr
 */
 static int builtin_function(parser_t &parser, wchar_t **argv)
 {
+    /* Hack hack hack - with the new parser, this is only invoked for help */
+    if (parser_use_ast())
+    {
+        builtin_print_help(parser, argv[0], stdout_buffer);
+        return STATUS_BUILTIN_OK;
+    }
+    
     int argc = builtin_count_args(argv);
     int res=STATUS_BUILTIN_OK;
     wchar_t *desc=0;
@@ -3662,6 +3671,12 @@ static int builtin_for(parser_t &parser, wchar_t **argv)
     int argc = builtin_count_args(argv);
     int res=STATUS_BUILTIN_ERROR;
 
+    /* Hackish - if we have no arguments other than the command, we are a "naked invocation" and we just print help */
+    if (argc == 1)
+    {
+        builtin_print_help(parser, argv[0], stdout_buffer);
+        return STATUS_BUILTIN_ERROR;
+    }
 
     if (argc < 3)
     {
@@ -4048,6 +4063,13 @@ static int builtin_switch(parser_t &parser, wchar_t **argv)
 {
     int res=STATUS_BUILTIN_OK;
     int argc = builtin_count_args(argv);
+    
+   /* Hackish - if we have no arguments other than the command, we are a "naked invocation" and we just print help */
+    if (argc == 1)
+    {
+        builtin_print_help(parser, argv[0], stdout_buffer);
+        return STATUS_BUILTIN_ERROR;
+    }
 
     if (argc != 2)
     {

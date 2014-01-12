@@ -240,6 +240,39 @@ wcstring keyword_description(parse_keyword_t k)
     return format_string(L"Unknown keyword type %ld", static_cast<long>(k));
 }
 
+static wcstring token_type_user_presentable_description(parse_token_type_t type, parse_keyword_t keyword)
+{
+    if (keyword != parse_keyword_none)
+    {
+        return format_string(L"keyword '%ls'", keyword_description(keyword).c_str());
+    }
+    
+    switch (type)
+    {
+        /* Hackish. We only support the following types. */
+        case symbol_statement:
+            return L"a command";
+        
+        case parse_token_type_string:
+            return L"a string";
+            
+        case parse_token_type_pipe:
+            return L"a pipe";
+            
+        case parse_token_type_redirection:
+            return L"a redirection";
+            
+        case parse_token_type_background:
+            return L"a '&'";
+            
+        case parse_token_type_end:
+            return L"end of the statement";
+            
+        default:
+            return format_string(L"a %ls", token_type_description(type).c_str());
+    }
+}
+
 /** Returns a string description of the given parse node */
 wcstring parse_node_t::describe(void) const
 {
@@ -263,32 +296,7 @@ wcstring parse_token_t::describe() const
 /** A string description appropriate for presentation to the user */
 wcstring parse_token_t::user_presentable_description() const
 {
-    if (keyword != parse_keyword_none)
-    {
-        return format_string(L"keyword %ls", keyword_description(keyword).c_str());
-    }
-    
-    switch (type)
-    {
-        /* Hackish. We only support the  */
-        case parse_token_type_string:
-            return L"a string";
-            
-        case parse_token_type_pipe:
-            return L"a pipe";
-            
-        case parse_token_type_redirection:
-            return L"a redirection";
-            
-        case parse_token_type_background:
-            return L"a '&'";
-            
-        case parse_token_type_end:
-            return L"statement terminator";
-            
-        default:
-            return format_string(L"a %ls", this->describe().c_str());
-    }
+    return token_type_user_presentable_description(type, keyword);
 }
 
 /* Convert from tokenizer_t's token type to a parse_token_t type */
@@ -443,20 +451,7 @@ struct parse_stack_element_t
     /* Returns a name that we can show to the user, e.g. "a command" */
     wcstring user_presentable_description(void) const
     {
-        if (keyword != parse_keyword_none)
-        {
-            return format_string(L"keyword %ls", keyword_description(keyword).c_str());
-        }
-        
-        switch (type)
-        {
-            /* Hackish, the only one we support now */
-            case symbol_statement:
-                return L"a command";
-                
-            default:
-                return format_string(L"a %ls", this->describe().c_str());
-        }
+        return token_type_user_presentable_description(type, keyword);
     }
 };
 
@@ -751,7 +746,8 @@ void parse_ll_t::parse_error_unbalancing_token(parse_token_t token)
 // This is a 'generic' parse error when we can't match the top of the stack element
 void parse_ll_t::parse_error_failed_production(struct parse_stack_element_t &stack_elem, parse_token_t token)
 {
-    this->parse_error(token, parse_error_generic, L"Expected %ls, but instead found %ls", stack_elem.user_presentable_description().c_str(), token.user_presentable_description().c_str());
+    const wcstring expected = stack_elem.user_presentable_description();
+    this->parse_error(expected.c_str(), token);
 }
 
 void parse_ll_t::report_tokenizer_error(parse_token_t token, const wchar_t *tok_error)
@@ -765,8 +761,7 @@ void parse_ll_t::parse_error(const wchar_t *expected, parse_token_t token)
     fatal_errored = true;
     if (this->should_generate_error_messages)
     {
-        wcstring desc = token.user_presentable_description();
-        this->parse_error(token, parse_error_generic, L"Expected a %ls, instead got a token of type %ls", expected, desc.c_str());
+        this->parse_error(token, parse_error_generic, L"Expected %ls, but instead found %ls", expected, token.user_presentable_description().c_str());
     }
 }
 

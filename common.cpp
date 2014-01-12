@@ -105,7 +105,7 @@ void show_stackframe()
         return;
 
     void *trace[32];
-    int i, trace_size = 0;
+    int trace_size = 0;
 
     trace_size = backtrace(trace, 32);
     char **messages = backtrace_symbols(trace, trace_size);
@@ -113,7 +113,7 @@ void show_stackframe()
     if (messages)
     {
         debug(0, L"Backtrace:");
-        for (i=0; i<trace_size; i++)
+        for (int i=0; i<trace_size; i++)
         {
             fwprintf(stderr, L"%s\n", messages[i]);
         }
@@ -830,19 +830,18 @@ void format_long_safe(wchar_t buff[128], long val)
 
 void write_screen(const wcstring &msg, wcstring &buff)
 {
-    const wchar_t *start, *pos;
     int line_width = 0;
-    int tok_width = 0;
     int screen_width = common_get_width();
 
     if (screen_width)
     {
-        start = pos = msg.c_str();
+        const wchar_t *start = msg.c_str();
+        const wchar_t *pos = start;
         while (1)
         {
             int overflow = 0;
 
-            tok_width=0;
+            int tok_width=0;
 
             /*
               Tokenize on whitespace, and also calculate the width of the token

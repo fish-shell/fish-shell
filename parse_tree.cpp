@@ -765,7 +765,7 @@ void parse_ll_t::parse_error(const wchar_t *expected, parse_token_t token)
     fatal_errored = true;
     if (this->should_generate_error_messages)
     {
-        wcstring desc = token_type_description(token.type);
+        wcstring desc = token.user_presentable_description();
         this->parse_error(token, parse_error_generic, L"Expected a %ls, instead got a token of type %ls", expected, desc.c_str());
     }
 }
@@ -881,8 +881,7 @@ bool parse_ll_t::top_node_handle_terminal_types(parse_token_t token)
             }
             else
             {
-                const wcstring expected = token_type_description(stack_top.type);
-                const wcstring actual = token_type_description(token.type);
+                const wcstring expected = stack_top.user_presentable_description();
                 this->parse_error(expected.c_str(), token);
             }
         }

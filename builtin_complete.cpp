@@ -290,7 +290,6 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
     int result_mode=SHARED;
     int remove = 0;
     int authoritative = -1;
-    int flags = COMPLETE_AUTO_SPACE;
 
     wcstring short_opt;
     wcstring_list_t gnu_opt, old_opt;
@@ -600,6 +599,8 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
         }
         else
         {
+            int flags = COMPLETE_AUTO_SPACE;
+
             if (remove)
             {
                 builtin_complete_remove(cmd,

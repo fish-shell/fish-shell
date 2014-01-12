@@ -1484,7 +1484,7 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
                         {
                             if (o->result_mode & NO_COMMON) use_common = false;
                             if (o->result_mode & NO_FILES) use_files = false;
-                            complete_from_args(str, o->comp.c_str(), o->localized_desc(), o->flags);
+                            complete_from_args(str, o->comp, o->localized_desc(), o->flags);
 
                         }
                     }
@@ -1697,7 +1697,7 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset)
                 desc = format_string(COMPLETE_VAR_DESC_VAL, value.c_str());
         }
 
-        append_completion(this->completions,  comp.c_str(), desc.c_str(), flags, match);
+        append_completion(this->completions,  comp, desc, flags, match);
 
         res = true;
     }

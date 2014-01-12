@@ -244,9 +244,6 @@ wcstring builtin_help_get(parser_t &parser, const wchar_t *name)
 
 static void builtin_print_help(parser_t &parser, const wchar_t *cmd, wcstring &b)
 {
-
-    int is_short = 0;
-
     if (&b == &stderr_buffer)
     {
         stderr_buffer.append(parser.current_line());
@@ -260,7 +257,7 @@ static void builtin_print_help(parser_t &parser, const wchar_t *cmd, wcstring &b
     wchar_t *str = wcsdup(h.c_str());
     if (str)
     {
-
+        bool is_short = false;
         if (&b == &stderr_buffer)
         {
 
@@ -279,7 +276,7 @@ static void builtin_print_help(parser_t &parser, const wchar_t *cmd, wcstring &b
                 int cut=0;
                 int i;
 
-                is_short = 1;
+                is_short = true;
 
                 /*
                   First move down 4 lines
@@ -738,7 +735,6 @@ static int builtin_block(parser_t &parser, wchar_t **argv)
     int scope=UNSET;
     int erase = 0;
     int argc=builtin_count_args(argv);
-    int type = (1<<EVENT_ANY);
 
     woptind=0;
 
@@ -836,7 +832,7 @@ static int builtin_block(parser_t &parser, wchar_t **argv)
         block_t *block = parser.block_at_index(block_idx);
 
         event_blockage_t eb = {};
-        eb.typemask = type;
+        eb.typemask = (1<<EVENT_ANY);
 
         switch (scope)
         {

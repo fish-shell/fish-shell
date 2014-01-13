@@ -2815,4 +2815,7 @@ int main(int argc, char **argv)
     event_destroy();
     proc_destroy();
 
+    if(err_count != 0) {
+        return(1);
+    }
 }

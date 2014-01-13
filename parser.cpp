@@ -3129,7 +3129,7 @@ bool parser_use_ast(void)
     env_var_t var = env_get_string(L"fish_new_parser");
     if (var.missing_or_empty())
     {
-        return 10;
+        return 0;
     }
     else
     {

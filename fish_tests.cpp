@@ -645,6 +645,23 @@ static void test_parser()
         err(L"'break' command inside switch falsely reported as error");
     }
     
+    if (parse_util_detect_errors(L"or cat | cat") || parse_util_detect_errors(L"and cat | cat"))
+    {
+        err(L"boolean command at beginning of pipeline falsely reported as error");
+    }
+    
+    if (! parse_util_detect_errors(L"cat | and cat"))
+    {
+        err(L"'and' command in pipeline not reported as error");
+    }
+    
+    if (! parse_util_detect_errors(L"cat | exec") || ! parse_util_detect_errors(L"exec | cat"))
+    {
+        err(L"'exec' command in pipeline not reported as error");
+    }
+
+
+    
 
     say(L"Testing basic evaluation");
 #if 0

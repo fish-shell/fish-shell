@@ -1357,13 +1357,15 @@ bool parse_node_tree_t::command_for_plain_statement(const parse_node_t &node, co
     return result;
 }
 
-bool parse_node_tree_t::plain_statement_is_in_pipeline(const parse_node_t &node, bool include_first) const
+bool parse_node_tree_t::statement_is_in_pipeline(const parse_node_t &node, bool include_first) const
 {
     // Moderately nasty hack! Walk up our ancestor chain and see if we are in a job_continuation. This checks if we are in the second or greater element in a pipeline; if we are the first element we treat this as false
+    // This accepts a few statement types
     bool result = false;
     const parse_node_t *ancestor = &node;
     
-    if (ancestor)
+    // If we're given a plain statement, try to get its decorated statement parent
+    if (ancestor && ancestor->type == symbol_plain_statement)
         ancestor = this->get_parent(*ancestor, symbol_decorated_statement);
     if (ancestor)
         ancestor = this->get_parent(*ancestor, symbol_statement);

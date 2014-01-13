@@ -181,7 +181,7 @@ public:
     bool command_for_plain_statement(const parse_node_t &node, const wcstring &src, wcstring *out_cmd) const;
     
     /* Given a plain statement, return true if the statement is part of a pipeline. If include_first is set, the first command in a pipeline is considered part of it; otherwise only the second or additional commands are */
-    bool plain_statement_is_in_pipeline(const parse_node_t &node, bool include_first) const;
+    bool statement_is_in_pipeline(const parse_node_t &node, bool include_first) const;
     
     /* Given a redirection, get the redirection type (or TOK_NONE) and target (file path, or fd) */
     enum token_type type_for_redirection(const parse_node_t &node, const wcstring &src, int *out_fd, wcstring *out_target) const;

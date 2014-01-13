@@ -1016,6 +1016,16 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                 // an 'end' without source is an unclosed block
                 has_unclosed_block = true;
             }
+            else if (node.type == symbol_boolean_statement)
+            {
+                // 'or' and 'and' can be in a pipeline, as long as they're first
+                // These numbers 0 and 1 correspond to productions for boolean_statement. This should be cleaned up.
+                bool is_and = (node.production_idx == 0), is_or = (node.production_idx == 1);
+                if ((is_and || is_or) && node_tree.statement_is_in_pipeline(node, false /* don't count first */))
+                {
+                    errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG, is_and ? L"and" : L"or");
+                }
+            }
             else if (node.type == symbol_plain_statement)
             {
                 wcstring command;
@@ -1028,12 +1038,10 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                     }
                     
                     // Check that pipes are sound
-                    bool is_boolean_command = contains(command, L"or", L"and");
-                    bool is_pipe_forbidden = parser_is_pipe_forbidden(command);
-                    if (! errored && (is_boolean_command || is_pipe_forbidden))
+                    if (! errored && parser_is_pipe_forbidden(command))
                     {
-                        // 'or' and 'and' can be first in the pipeline. forbidden commands cannot be in a pipeline at all
-                        if (node_tree.plain_statement_is_in_pipeline(node, is_pipe_forbidden))
+                        // forbidden commands cannot be in a pipeline at all
+                        if (node_tree.statement_is_in_pipeline(node, true /* count first */))
                         {
                             errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG, command.c_str());
                         }
@@ -1062,7 +1070,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                         }
                     }
                     
-                    // Check that we don't return from outside a function
+                    // Check that we don't break or continue from outside a loop
                     if (! errored && (command == L"break" || command == L"continue"))
                     {
                         // Walk up until we hit a 'for' or 'while' loop. If we hit a function first, stop the search; we can't break an outer loop from inside a function.

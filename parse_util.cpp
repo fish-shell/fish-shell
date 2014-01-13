@@ -44,7 +44,7 @@
 /**
    Error message for improper use of the exec builtin
 */
-#define EXEC_ERR_MSG _(L"This command can not be used in a pipeline")
+#define EXEC_ERR_MSG _(L"The '%ls' command can not be used in a pipeline")
 
 int parse_util_lineno(const wchar_t *str, size_t offset)
 {
@@ -1035,7 +1035,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                         // 'or' and 'and' can be first in the pipeline. forbidden commands cannot be in a pipeline at all
                         if (node_tree.plain_statement_is_in_pipeline(node, is_pipe_forbidden))
                         {
-                            errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG);
+                            errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG, command.c_str());
                         }
                     }
                     

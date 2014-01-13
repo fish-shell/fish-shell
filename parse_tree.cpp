@@ -973,15 +973,6 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2)
     }
 }
 
-parse_t::parse_t() : parser(new parse_ll_t())
-{
-}
-
-parse_t::~parse_t()
-{
-    delete parser;
-}
-
 static parse_keyword_t keyword_for_token(token_type tok, const wchar_t *tok_txt)
 {
     parse_keyword_t result = parse_keyword_none;
@@ -1056,9 +1047,10 @@ static inline parse_token_t next_parse_token(tokenizer_t *tok)
     return result;
 }
 
-bool parse_t::parse_internal(const wcstring &str, parse_tree_flags_t parse_flags, parse_node_tree_t *output, parse_error_list_t *errors, bool log_it)
+bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags, parse_node_tree_t *output, parse_error_list_t *errors, bool log_it)
 {
-    this->parser->set_should_generate_error_messages(errors != NULL);
+    parse_ll_t parser;
+    parser.set_should_generate_error_messages(errors != NULL);
 
     /* Construct the tokenizer */
     tok_flags_t tok_options = 0;
@@ -1090,16 +1082,16 @@ bool parse_t::parse_internal(const wcstring &str, parse_tree_flags_t parse_flags
         }
         
         /* Pass these two tokens. We know that queue[0] is valid; queue[1] may be invalid. */
-        this->parser->accept_tokens(queue[0], queue[1]);
+        parser.accept_tokens(queue[0], queue[1]);
         
         /* Handle tokenizer errors. This is a hack because really the parser should report this for itself; but it has no way of getting the tokenizer message */
         if (queue[1].type == parse_special_type_tokenizer_error)
         {
-            this->parser->report_tokenizer_error(queue[1], tok_last(&tok));
+            parser.report_tokenizer_error(queue[1], tok_last(&tok));
         }
         
         /* Handle errors */
-        if (this->parser->has_fatal_error())
+        if (parser.has_fatal_error())
         {
             if (parse_flags & parse_flag_continue_after_error)
             {
@@ -1108,8 +1100,8 @@ bool parse_t::parse_internal(const wcstring &str, parse_tree_flags_t parse_flags
 
                 /* Mark a special error token, and then keep going */
                 const parse_token_t token = {parse_special_type_parse_error, parse_keyword_none, false, queue[error_token_idx].source_start, queue[error_token_idx].source_length};
-                this->parser->accept_tokens(token, kInvalidToken);
-                this->parser->reset_symbols();
+                parser.accept_tokens(token, kInvalidToken);
+                parser.reset_symbols();
             }
             else
             {
@@ -1123,10 +1115,10 @@ bool parse_t::parse_internal(const wcstring &str, parse_tree_flags_t parse_flags
 
 
     // Teach each node where its source range is
-    this->parser->determine_node_ranges();
+    parser.determine_node_ranges();
     
     // Acquire the output from the parser
-    this->parser->acquire_output(output, errors);
+    parser.acquire_output(output, errors);
 
 #if 0
     //wcstring result = dump_tree(this->parser->nodes, str);
@@ -1135,40 +1127,7 @@ bool parse_t::parse_internal(const wcstring &str, parse_tree_flags_t parse_flags
 #endif
     
     // Indicate if we had a fatal error
-    return ! this->parser->has_fatal_error();
-}
-
-bool parse_t::parse(const wcstring &str, parse_tree_flags_t flags, parse_node_tree_t *output, parse_error_list_t *errors, bool log_it)
-{
-    parse_t parse;
-    return parse.parse_internal(str, flags, output, errors, log_it);
-}
-
-bool parse_t::parse_1_token(parse_token_type_t token_type, parse_keyword_t keyword, parse_node_tree_t *output, parse_error_list_t *errors)
-{
-    const parse_token_t invalid_token = {token_type_invalid, parse_keyword_none, -1, -1};
-    
-    // Only strings can have keywords. So if we have a keyword, the type must be a string
-    assert(keyword == parse_keyword_none || token_type == parse_token_type_string);
-
-    parse_token_t token;
-    token.type = token_type;
-    token.keyword = keyword;
-    token.source_start = -1;
-    token.source_length = 0;
-    
-    bool wants_errors = (errors != NULL);
-    this->parser->set_should_generate_error_messages(wants_errors);
-
-    /* Passing invalid_token here is totally wrong. This code is only used in testing however. */
-    this->parser->accept_tokens(token, invalid_token);
-
-    return ! this->parser->has_fatal_error();
-}
-
-void parse_t::clear()
-{
-    this->parser->reset_symbols_and_nodes();
+    return ! parser.has_fatal_error();
 }
 
 const parse_node_t *parse_node_tree_t::get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type) const

@@ -660,11 +660,11 @@ static void test_parser()
         err(L"Invalid block mode when evaluating undetected");
     }
     
-    /* These are disabled since they produce a long backtrace. We should find a way to either visually compress the backtrace, or disable error spewing */
-#if 1
     /* Ensure that we don't crash on infinite self recursion and mutual recursion. These must use the principal parser because we cannot yet execute jobs on other parsers (!) */
     say(L"Testing recursion detection");
     parser_t::principal_parser().eval(L"function recursive ; recursive ; end ; recursive; ", io_chain_t(), TOP);
+#if 0
+    /* This is disabled since it produces a long backtrace. We should find a way to either visually compress the backtrace, or disable error spewing */
     parser_t::principal_parser().eval(L"function recursive1 ; recursive2 ; end ; function recursive2 ; recursive1 ; end ; recursive1; ", io_chain_t(), TOP);
 #endif
 }
@@ -720,10 +720,9 @@ static void test_cancellation()
     test_1_cancellation(L"while true ; end");
     fprintf(stderr, ".");
     
-    test_1_cancellation(L"for i in (whiel true ; end) ; end");
+    test_1_cancellation(L"for i in (while true ; end) ; end");
     fprintf(stderr, ".");
 
-    
     fprintf(stderr, "\n");
     
     /* Restore signal handling */
@@ -2234,7 +2233,7 @@ static void test_new_parser_correctness(void)
         const parser_test_t *test = &parser_tests[i];
 
         parse_node_tree_t parse_tree;
-        bool success = parse_t::parse(test->src, parse_flag_none, &parse_tree, NULL);
+        bool success = parse_tree_from_string(test->src, parse_flag_none, &parse_tree, NULL);
         say(L"%lu / %lu: Parse \"%ls\": %s", i+1, sizeof parser_tests / sizeof *parser_tests, test->src, success ? "yes" : "no");
         if (success && ! test->ok)
         {
@@ -2248,95 +2247,75 @@ static void test_new_parser_correctness(void)
     say(L"Parse tests complete");
 }
 
-struct parser_fuzz_token_t
+/* Given that we have an array of 'fuzz_count' strings, we wish to enumerate all permutations of 'len' values. We do this by incrementing an integer, interpreting it as "base fuzz_count". */
+static inline bool string_for_permutation(const wcstring *fuzzes, size_t fuzz_count, size_t len, size_t permutation, wcstring *out_str)
 {
-    parse_token_type_t token_type;
-    parse_keyword_t keyword;
-
-    parser_fuzz_token_t() : token_type(FIRST_TERMINAL_TYPE), keyword(parse_keyword_none)
+    out_str->clear();
+    
+    size_t remaining_permutation = permutation;
+    for (size_t i=0; i < len; i++)
     {
+        size_t idx = remaining_permutation % fuzz_count;
+        remaining_permutation /= fuzz_count;
+        
+        out_str->append(fuzzes[idx]);
+        out_str->push_back(L' ');
     }
-};
-
-static bool increment(std::vector<parser_fuzz_token_t> &tokens)
-{
-    size_t i, end = tokens.size();
-    for (i=0; i < end; i++)
-    {
-        bool wrapped = false;
-
-        struct parser_fuzz_token_t &token = tokens[i];
-        bool incremented_in_keyword = false;
-        if (token.token_type == parse_token_type_string)
-        {
-            // try incrementing the keyword
-            token.keyword++;
-            if (token.keyword <= LAST_KEYWORD)
-            {
-                incremented_in_keyword = true;
-            }
-            else
-            {
-                token.keyword = parse_keyword_none;
-                incremented_in_keyword = false;
-            }
-        }
-
-        if (! incremented_in_keyword)
-        {
-            token.token_type++;
-            // Skip the very special parse_token_type_terminate, since that's always the last thing delivered
-            if (token.token_type == parse_token_type_terminate)
-            {
-                token.token_type++;
-            }
-            
-            if (token.token_type > LAST_TERMINAL_TYPE)
-            {
-                token.token_type = FIRST_TERMINAL_TYPE;
-                wrapped = true;
-            }
-        }
-
-        if (! wrapped)
-        {
-            break;
-        }
-    }
-    return i == end;
+    // Return false if we wrapped
+    return remaining_permutation == 0;
 }
 
 static void test_new_parser_fuzzing(void)
 {
     say(L"Fuzzing parser (node size: %lu)", sizeof(parse_node_t));
+    const wcstring fuzzes[] =
+    {
+        L"if",
+        L"else",
+        L"for",
+        L"in",
+        L"while",
+        L"begin",
+        L"function",
+        L"switch",
+        L"case",
+        L"end",
+        L"and",
+        L"or",
+        L"not",
+        L"command",
+        L"builtin",
+        L"foo",
+        L"|",
+        L"^",
+        L"&",
+        L";",
+    };
+    
+    /* Generate a list of strings of all keyword / token combinations. */
+    wcstring src;
+    src.reserve(128);
+    
+    parse_node_tree_t node_tree;
+    parse_error_list_t errors;
+
     double start = timef();
-    bool log_it = false;
-    // ensure nothing crashes
-    size_t max = 4;
-    for (size_t len=1; len <= max; len++)
+    bool log_it = true;
+    size_t max_len = 5;
+    for (size_t len = 0; len < max_len; len++)
     {
         if (log_it)
-            fprintf(stderr, "%lu / %lu...", len, max);
-        std::vector<parser_fuzz_token_t> tokens(len);
-        size_t count = 0;
-        parse_t parser;
-        parse_node_tree_t parse_tree;
-        do
-        {
-            parser.clear();
-            parse_tree.clear();
-            count++;
-            for (size_t i=0; i < len; i++)
-            {
-                const parser_fuzz_token_t &token = tokens[i];
-                parser.parse_1_token(token.token_type, token.keyword, &parse_tree, NULL);
-            }
+            fprintf(stderr, "%lu / %lu...", len, max_len);
 
-            // keep going until we wrap
+        /* We wish to look at all permutations of 4 elements of 'fuzzes' (with replacement). Construct an int and keep incrementing it. */
+        size_t permutation = 0;
+        while (string_for_permutation(fuzzes, sizeof fuzzes / sizeof *fuzzes, len, permutation++, &src))
+        {
+            parse_tree_from_string(src, parse_flag_continue_after_error, &node_tree, &errors);
         }
-        while (! increment(tokens));
         if (log_it)
-            fprintf(stderr, "done (%lu)\n", count);
+            fprintf(stderr, "done (%lu)\n", permutation);
+        
     }
     double end = timef();
     if (log_it)
@@ -2352,7 +2331,7 @@ static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *o
     
     bool result = false;
     parse_node_tree_t tree;
-    if (parse_t::parse(src, parse_flag_none, &tree, NULL))
+    if (parse_tree_from_string(src, parse_flag_none, &tree, NULL))
     {
         /* Get the statement. Should only have one */
         const parse_node_tree_t::parse_node_list_t stmt_nodes = tree.find_nodes(tree.at(0), symbol_plain_statement);
@@ -2432,7 +2411,7 @@ static void test_new_parser_ad_hoc()
     /* Ensure that 'case' terminates a job list */
     const wcstring src = L"switch foo ; case bar; case baz; end";
     parse_node_tree_t parse_tree;
-    bool success = parse_t::parse(src, parse_flag_none, &parse_tree, NULL);
+    bool success = parse_tree_from_string(src, parse_flag_none, &parse_tree, NULL);
     if (! success)
     {
         err(L"Parsing failed");
@@ -2476,7 +2455,7 @@ static void test_new_parser_errors(void)
         
         parse_error_list_t errors;
         parse_node_tree_t parse_tree;
-        bool success = parse_t::parse(src, parse_flag_none, &parse_tree, &errors);
+        bool success = parse_tree_from_string(src, parse_flag_none, &parse_tree, &errors);
         if (success)
         {
             err(L"Source '%ls' was expected to fail to parse, but succeeded", src.c_str());

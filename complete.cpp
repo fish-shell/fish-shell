@@ -1839,7 +1839,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
         //const wcstring prev_token(prev_begin, prev_token_len);
         
         parse_node_tree_t tree;
-        parse_t::parse(cmd, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens, &tree, NULL);
+        parse_tree_from_string(cmd, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens, &tree, NULL);
         
         /* Find the plain statement that contains the position */
         const parse_node_t *plain_statement = tree.find_node_matching_source_location(symbol_plain_statement, pos, NULL);

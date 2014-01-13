@@ -74,28 +74,6 @@ enum
 };
 typedef unsigned int parse_tree_flags_t;
 
-class parse_ll_t;
-class parse_t
-{
-    parse_ll_t * const parser;
-
-    bool parse_internal(const wcstring &str, parse_tree_flags_t flags, parse_node_tree_t *output, parse_error_list_t *errors, bool log_it = false);
-
-public:
-    parse_t();
-    ~parse_t();
-
-    /* Parse a string all at once */
-    static bool parse(const wcstring &str, parse_tree_flags_t flags, parse_node_tree_t *output, parse_error_list_t *errors, bool log_it = false);
-
-    /* Parse a single token */
-    bool parse_1_token(parse_token_type_t token, parse_keyword_t keyword, parse_node_tree_t *output, parse_error_list_t *errors);
-    
-    /* Reset, ready to parse something else */
-    void clear();
-
-};
-
 wcstring parse_dump_tree(const parse_node_tree_t &tree, const wcstring &src);
 
 wcstring token_type_description(parse_token_type_t type);
@@ -217,6 +195,9 @@ public:
     /* Given a job, return all of its statements. These are 'specific statements' (e.g. symbol_decorated_statement, not symbol_statement) */
     parse_node_list_t specific_statements_for_job(const parse_node_t &job) const;
 };
+
+/* The big entry point. Parse a string! */
+bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags, parse_node_tree_t *output, parse_error_list_t *errors, bool log_it = false);
 
 /* Fish grammar:
 

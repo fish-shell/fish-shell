@@ -878,7 +878,7 @@ std::vector<int> parse_util_compute_indents(const wcstring &src)
     
     /* Parse the string. We pass continue_after_error to produce a forest; the trailing indent of the last node we visited becomes the input indent of the next. I.e. in the case of 'switch foo ; cas', we get an invalid parse tree (since 'cas' is not valid) but we indent it as if it were a case item list */
     parse_node_tree_t tree;
-    parse_t::parse(src, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens, &tree, NULL /* errors */);
+    parse_tree_from_string(src, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens, &tree, NULL /* errors */);
     
     /* Start indenting at the first node. If we have a parse error, we'll have to start indenting from the top again */
     node_offset_t start_node_idx = 0;
@@ -994,7 +994,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
     
     // Parse the input string into a parse tree
     // Some errors are detected here
-    bool parsed = parse_t::parse(buff_src, parse_flag_leave_unterminated, &node_tree, &parse_errors);
+    bool parsed = parse_tree_from_string(buff_src, parse_flag_leave_unterminated, &node_tree, &parse_errors);
     if (! parsed)
     {
         errored = true;

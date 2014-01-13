@@ -2581,7 +2581,7 @@ int parser_t::eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum bl
     
     /* Parse the source into a tree, if we can */
     parse_node_tree_t tree;
-    if (! parse_t::parse(cmd, parse_flag_none, &tree, NULL))
+    if (! parse_tree_from_string(cmd, parse_flag_none, &tree, NULL))
     {
         return 1;
     }

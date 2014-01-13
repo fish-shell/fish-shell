@@ -217,7 +217,7 @@ void reader_set_exit_on_interrupt(bool flag);
 /**
    Returns true if the shell is exiting, 0 otherwise.
 */
-int exit_status();
+bool shell_is_exiting();
 
 /**
    The readers interrupt signal handler. Cancels all currently running blocks.

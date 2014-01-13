@@ -35,3 +35,39 @@ emit test3 foo bar
 
 # test empty argument
 emit
+
+echo "Test break and continue"
+# This should output Ping once
+for i in a b c
+    if not contains $i c ; continue ; end
+    echo Ping
+end
+
+# This should output Pong not at all
+for i in a b c
+    if not contains $i c ; break ; end
+    echo Pong
+end
+
+# This should output Foop three times, and Boop not at all
+set i a a a
+while contains $i a
+    set -e i[-1]
+    echo Foop
+    continue
+    echo Boop
+end
+
+# This should output Doop once
+set i a a a
+while contains $i a
+    set -e i[-1]
+    echo Doop
+    break
+    echo Darp
+end
+
+# Test implicit cd. This should do nothing.
+./
+
+false

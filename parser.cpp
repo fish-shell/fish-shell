@@ -44,11 +44,8 @@ The fish parser. Contains functions for parsing and evaluating code.
 #include "path.h"
 #include "signal.h"
 #include "complete.h"
-
-/**
-   Maximum number of function calls, i.e. recursion depth.
-*/
-#define MAX_RECURSION_DEPTH 128
+#include "parse_tree.h"
+#include "parse_execution.h"
 
 /**
    Error message for unknown builtin
@@ -77,34 +74,12 @@ The fish parser. Contains functions for parsing and evaluating code.
 #define INFINITE_RECURSION_ERR_MSG _( L"The function calls itself immediately, which would result in an infinite loop.")
 
 /**
-   Error message on reaching maximum recursion depth
-*/
-#define OVERFLOW_RECURSION_ERR_MSG _( L"Maximum recursion depth reached. Accidental infinite loop?")
-
-/**
    Error message used when the end of a block can't be located
 */
 #define BLOCK_END_ERR_MSG _( L"Could not locate end of block. The 'end' command is missing, misspelled or a ';' is missing.")
 
-/**
-   Error message on reaching maximum number of block calls
-*/
-#define BLOCK_ERR_MSG _( L"Maximum number of nested blocks reached.")
-
-/**
-   Error message when a non-string token is found when expecting a command name
-*/
+/** Error message when a non-string token is found when expecting a command name */
 #define CMD_ERR_MSG _( L"Expected a command name, got token of type '%ls'")
-
-/**
-   Error message when a non-string token is found when expecting a command name
-*/
-#define CMD_OR_ERR_MSG _( L"Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; or COMMAND'? See the help section for the 'or' builtin command by typing 'help or'.")
-
-/**
-   Error message when a non-string token is found when expecting a command name
-*/
-#define CMD_AND_ERR_MSG _( L"Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; and COMMAND'? See the help section for the 'and' builtin command by typing 'help and'.")
 
 /**
    Error message when encountering an illegal command name
@@ -114,7 +89,7 @@ The fish parser. Contains functions for parsing and evaluating code.
 /**
    Error message when encountering an illegal file descriptor
 */
-#define ILLEGAL_FD_ERR_MSG _( L"Illegal file descriptor '%ls'")
+#define ILLEGAL_FD_ERR_MSG _( L"Illegal file descriptor in redirection '%ls'")
 
 /**
    Error message for wildcards with no matches
@@ -165,11 +140,6 @@ The fish parser. Contains functions for parsing and evaluating code.
    Error when encountering redirection without a command
 */
 #define INVALID_REDIRECTION_ERR_MSG _( L"Encountered redirection when expecting a command name. Fish does not allow a redirection operation before a command.")
-
-/**
-   Error for evaluating null pointer
-*/
-#define EVAL_NULL_ERR_MSG _( L"Tried to evaluate null pointer." )
 
 /**
    Error for evaluating in illegal scope
@@ -316,19 +286,25 @@ static const struct block_lookup_entry block_lookup[]=
 
 static bool job_should_skip_elseif(const job_t *job, const block_t *current_block);
 
+// Given a file path, return something nicer. Currently we just "unexpand" tildes.
+static wcstring user_presentable_path(const wcstring &path)
+{
+    return replace_home_directory_with_tilde(path);
+}
+
+
 parser_t::parser_t(enum parser_type_t type, bool errors) :
     parser_type(type),
     show_errors(errors),
     error_code(0),
     err_pos(0),
+    cancellation_requested(false),
     current_tokenizer(NULL),
     current_tokenizer_pos(0),
     job_start_pos(0),
     eval_level(-1),
-    current_block(NULL),
     block_io(shared_ptr<io_data_t>())
 {
-
 }
 
 /* A pointer to the principal parser (which is a static local) */
@@ -351,40 +327,39 @@ void parser_t::skip_all_blocks(void)
     /* Tell all blocks to skip */
     if (s_principal_parser)
     {
+        s_principal_parser->cancellation_requested = true;
+
         //write(2, "Cancelling blocks\n", strlen("Cancelling blocks\n"));
-        block_t *c = s_principal_parser->current_block;
-        while (c)
+        for (size_t i=0; i < s_principal_parser->block_count(); i++)
         {
-            c->skip = true;
-            //fprintf(stderr, "   Cancelled %p\n", c);
-            c = c->outer;
+            s_principal_parser->block_at_index(i)->skip = true;
         }
     }
 }
 
-void parser_t::push_block(block_t *newv)
+void parser_t::push_block(block_t *new_current)
 {
-    const enum block_type_t type = newv->type();
-    newv->src_lineno = parser_t::get_lineno();
-    newv->src_filename = parser_t::current_filename()?intern(parser_t::current_filename()):0;
+    const enum block_type_t type = new_current->type();
+    new_current->src_lineno = parser_t::get_lineno();
+    new_current->src_filename = parser_t::current_filename()?intern(parser_t::current_filename()):0;
 
-    newv->outer = current_block;
-    if (current_block && current_block->skip)
-        newv->mark_as_fake();
+    const block_t *old_current = this->current_block();
+    if (old_current && old_current->skip)
+        new_current->mark_as_fake();
 
     /*
       New blocks should be skipped if the outer block is skipped,
       except TOP ans SUBST block, which open up new environments. Fake
       blocks should always be skipped. Rather complicated... :-(
     */
-    newv->skip=current_block?current_block->skip:0;
+    new_current->skip = old_current ? old_current->skip : 0;
 
     /*
       Type TOP and SUBST are never skipped
     */
     if (type == TOP || type == SUBST)
     {
-        newv->skip = 0;
+        new_current->skip = 0;
     }
 
     /*
@@ -392,27 +367,26 @@ void parser_t::push_block(block_t *newv)
     */
     if (type == FAKE || type == FUNCTION_DEF)
     {
-        newv->skip = 1;
+        new_current->skip = 1;
     }
 
-    newv->job = 0;
-    newv->loop_status=LOOP_NORMAL;
+    new_current->job = 0;
+    new_current->loop_status=LOOP_NORMAL;
+    
+    this->block_stack.push_back(new_current);
 
-    current_block = newv;
-
-    if ((newv->type() != FUNCTION_DEF) &&
-            (newv->type() != FAKE) &&
-            (newv->type() != TOP))
+    if ((new_current->type() != FUNCTION_DEF) &&
+            (new_current->type() != FAKE) &&
+            (new_current->type() != TOP))
     {
         env_push(type == FUNCTION_CALL);
-        newv->wants_pop_env = true;
+        new_current->wants_pop_env = true;
     }
 }
 
 void parser_t::pop_block()
 {
-    block_t *old = current_block;
-    if (!current_block)
+    if (block_stack.empty())
     {
         debug(1,
               L"function %s called on empty block stack.",
@@ -421,12 +395,19 @@ void parser_t::pop_block()
         return;
     }
 
-    current_block = current_block->outer;
+    block_t *old = block_stack.back();
+    block_stack.pop_back();
 
     if (old->wants_pop_env)
         env_pop();
 
     delete old;
+}
+
+void parser_t::pop_block(const block_t *expected)
+{
+    assert(expected == this->current_block());
+    this->pop_block();
 }
 
 const wchar_t *parser_t::get_block_desc(int block) const
@@ -441,17 +422,27 @@ const wchar_t *parser_t::get_block_desc(int block) const
     return _(UNKNOWN_BLOCK);
 }
 
-/**
-   Returns 1 if the specified command is a builtin that may not be used in a pipeline
-*/
-static int parser_is_pipe_forbidden(const wcstring &word)
+const block_t *parser_t::block_at_index(size_t idx) const
 {
-    return contains(word,
-                    L"exec",
-                    L"case",
-                    L"break",
-                    L"return",
-                    L"continue");
+    /* 0 corresponds to the last element in our vector */
+    size_t count = block_stack.size();
+    return idx < count ? block_stack.at(count - idx - 1) : NULL;
+}
+
+block_t *parser_t::block_at_index(size_t idx)
+{
+    size_t count = block_stack.size();
+    return idx < count ? block_stack.at(count - idx - 1) : NULL;
+}
+
+const block_t *parser_t::current_block() const
+{
+    return block_stack.empty() ? NULL : block_stack.back();
+}
+
+block_t *parser_t::current_block()
+{
+    return block_stack.empty() ? NULL : block_stack.back();
 }
 
 /**
@@ -555,19 +546,20 @@ void parser_t::allow_function()
     forbidden_function.pop_back();
 }
 
-void parser_t::error(int ec, int p, const wchar_t *str, ...)
+void parser_t::error(int ec, size_t p, const wchar_t *str, ...)
 {
     va_list va;
 
     CHECK(str,);
 
     error_code = ec;
-    err_pos = p;
+    
+    // note : p may be -1
+    err_pos = static_cast<int>(p);
 
     va_start(va, str);
     err_buff = vformat_string(str, va);
     va_end(va);
-
 }
 
 /**
@@ -722,21 +714,19 @@ void parser_t::print_errors_stderr()
 
 }
 
-int parser_t::eval_args(const wchar_t *line, std::vector<completion_t> &args)
+void parser_t::eval_args(const wchar_t *line, std::vector<completion_t> &args)
 {
-
     expand_flags_t eflags = 0;
     if (! show_errors)
         eflags |= EXPAND_NO_DESCRIPTIONS;
     if (this->parser_type != PARSER_TYPE_GENERAL)
         eflags |= EXPAND_SKIP_CMDSUBST;
 
-    int do_loop=1;
+    bool do_loop=1;
 
-    CHECK(line, 1);
-//  CHECK( args, 1 );
+    if (! line) return;
 
-    // PCA we need to suppress calling proc_push_interactive off of the main thread. I'm not sure exactly what it does.
+    // PCA we need to suppress calling proc_push_interactive off of the main thread.
     if (this->parser_type == PARSER_TYPE_GENERAL)
         proc_push_interactive(0);
 
@@ -803,17 +793,17 @@ int parser_t::eval_args(const wchar_t *line, std::vector<completion_t> &args)
 
     if (this->parser_type == PARSER_TYPE_GENERAL)
         proc_pop_interactive();
-
-    return 1;
 }
 
-void parser_t::stack_trace(block_t *b, wcstring &buff)
+void parser_t::stack_trace(size_t block_idx, wcstring &buff) const
 {
     /*
       Check if we should end the recursion
     */
-    if (!b)
+    if (block_idx >= this->block_count())
         return;
+    
+    const block_t *b = this->block_at_index(block_idx);
 
     if (b->type()==EVENT)
     {
@@ -850,13 +840,13 @@ void parser_t::stack_trace(block_t *b, wcstring &buff)
             {
                 const source_block_t *sb = static_cast<const source_block_t*>(b);
                 const wchar_t *source_dest = sb->source_file;
-                append_format(buff, _(L"in . (source) call of file '%ls',\n"), source_dest);
+                append_format(buff, _(L"from sourcing file %ls\n"), user_presentable_path(source_dest).c_str());
                 break;
             }
             case FUNCTION_CALL:
             {
                 const function_block_t *fb = static_cast<const function_block_t*>(b);
-                append_format(buff, _(L"in function '%ls',\n"), fb->name.c_str());
+                append_format(buff, _(L"in function '%ls'\n"), fb->name.c_str());
                 break;
             }
             case SUBST:
@@ -874,14 +864,14 @@ void parser_t::stack_trace(block_t *b, wcstring &buff)
         if (file)
         {
             append_format(buff,
-                          _(L"\tcalled on line %d of file '%ls',\n"),
+                          _(L"\tcalled on line %d of file %ls\n"),
                           b->src_lineno,
-                          file);
+                          user_presentable_path(file).c_str());
         }
         else
         {
             append_format(buff,
-                          _(L"\tcalled on standard input,\n"));
+                          _(L"\tcalled on standard input\n"));
         }
 
         if (b->type() == FUNCTION_CALL)
@@ -908,7 +898,7 @@ void parser_t::stack_trace(block_t *b, wcstring &buff)
     /*
       Recursively print the next block
     */
-    parser_t::stack_trace(b->outer, buff);
+    parser_t::stack_trace(block_idx + 1, buff);
 }
 
 /**
@@ -921,22 +911,19 @@ const wchar_t *parser_t::is_function() const
 {
     // PCA: Have to make this a string somehow
     ASSERT_IS_MAIN_THREAD();
-    wcstring result;
 
-    block_t *b = current_block;
-    while (1)
+    const wchar_t *result = NULL;
+    for (size_t block_idx = 0; block_idx < this->block_count(); block_idx++)
     {
-        if (!b)
-        {
-            return NULL;
-        }
+        const block_t *b = this->block_at_index(block_idx);
         if (b->type() == FUNCTION_CALL)
         {
             const function_block_t *fb = static_cast<const function_block_t *>(b);
-            return fb->name.c_str();
+            result = fb->name.c_str();
+            break;
         }
-        b=b->outer;
     }
+    return result;
 }
 
 
@@ -970,25 +957,24 @@ int parser_t::line_number_of_character_at_offset(size_t idx) const
 
 const wchar_t *parser_t::current_filename() const
 {
-    /* We query a global array for the current file name, so it only makes sense to ask this on the principal parser. */
     ASSERT_IS_MAIN_THREAD();
-    assert(this == &principal_parser());
 
-    block_t *b = current_block;
-
-    while (1)
+    for (size_t i=0; i < this->block_count(); i++)
     {
-        if (!b)
-        {
-            return reader_current_filename();
-        }
+        const block_t *b = this->block_at_index(i);
         if (b->type() == FUNCTION_CALL)
         {
             const function_block_t *fb = static_cast<const function_block_t *>(b);
             return function_get_definition_file(fb->name);
         }
-        b=b->outer;
     }
+    
+    /* We query a global array for the current file name, but only do that if we are the principal parser */
+    if (this == &principal_parser())
+    {
+        return reader_current_filename();
+    }
+    return NULL;
 }
 
 /**
@@ -1129,7 +1115,7 @@ const wchar_t *parser_t::current_line()
     }
 
     free((void *)line);
-    parser_t::stack_trace(current_block, lineinfo);
+    parser_t::stack_trace(0, lineinfo);
 
     return lineinfo.c_str();
 }
@@ -1156,7 +1142,7 @@ const wchar_t *parser_t::get_buffer() const
 }
 
 
-int parser_t::is_help(const wchar_t *s, int min_match) const
+int parser_t::is_help(const wchar_t *s, int min_match)
 {
     CHECK(s, 0);
 
@@ -1168,9 +1154,16 @@ int parser_t::is_help(const wchar_t *s, int min_match) const
            (len >= (size_t)min_match && (wcsncmp(L"--help", s, len) == 0));
 }
 
-job_t *parser_t::job_create()
+void parser_t::job_add(job_t *job)
 {
-    job_t *res = new job_t(acquire_job_id(), this->block_io);
+    assert(job != NULL);
+    assert(job->first_process != NULL);
+    this->my_job_list.push_front(job);
+}
+
+job_t *parser_t::job_create(const io_chain_t &io)
+{
+    job_t *res = new job_t(acquire_job_id(), io);
     this->my_job_list.push_front(res);
 
     job_set_flag(res,
@@ -1200,7 +1193,7 @@ void parser_t::job_promote(job_t *job)
 {
     signal_block();
 
-    job_list_t::iterator loc = std::find(my_job_list.begin(), my_job_list.end(), job);
+    job_list_t::iterator loc = std::find(my_job_list.begin(), my_job_list.end(), job);    
     assert(loc != my_job_list.end());
 
     /* Move the job to the beginning */
@@ -1239,7 +1232,7 @@ job_t *parser_t::job_get_from_pid(int pid)
    \param j the job to which the process belongs to
    \param tok the tokenizer to read options from
    \param args the argument list to insert options into
-   \param args unskip whether we should ignore current_block->skip. Big hack because of our dumb handling of if statements.
+   \param args unskip whether we should ignore current_block()->skip. Big hack because of our dumb handling of if statements.
 */
 void parser_t::parse_job_argument_list(process_t *p,
                                        job_t *j,
@@ -1314,6 +1307,7 @@ void parser_t::parse_job_argument_list(process_t *p,
             case TOK_BACKGROUND:
             {
                 job_set_flag(j, JOB_FOREGROUND, 0);
+                // PCA note fall through, this is deliberate. The background modifier & terminates a command
             }
 
             case TOK_END:
@@ -1336,7 +1330,7 @@ void parser_t::parse_job_argument_list(process_t *p,
                 {
                     skip = 1;
                 }
-                else if (current_block->skip && ! unskip)
+                else if (current_block()->skip && ! unskip)
                 {
                     /*
                       If this command should be skipped, we do not expand the arguments
@@ -1344,12 +1338,12 @@ void parser_t::parse_job_argument_list(process_t *p,
                     skip=1;
 
                     /* But if this is in fact a case statement or an elseif statement, then it should be evaluated */
-                    block_type_t type = current_block->type();
+                    block_type_t type = current_block()->type();
                     if (type == SWITCH && args.at(0).completion == L"case" && p->type == INTERNAL_BUILTIN)
                     {
                         skip=0;
                     }
-                    else if (job_get_flag(j, JOB_ELSEIF) && ! job_should_skip_elseif(j, current_block))
+                    else if (job_get_flag(j, JOB_ELSEIF) && ! job_should_skip_elseif(j, current_block()))
                     {
                         skip=0;
                     }
@@ -1357,7 +1351,7 @@ void parser_t::parse_job_argument_list(process_t *p,
                 else
                 {
                     /* If this is an else if, and we should skip it, then don't expand any arguments */
-                    if (job_get_flag(j, JOB_ELSEIF) && job_should_skip_elseif(j, current_block))
+                    if (job_get_flag(j, JOB_ELSEIF) && job_should_skip_elseif(j, current_block()))
                     {
                         skip = 1;
                     }
@@ -1440,7 +1434,7 @@ void parser_t::parse_job_argument_list(process_t *p,
                   Otherwise, bogus errors may be the result. (Do check
                   that token is string, though)
                 */
-                if (current_block->skip && ! unskip)
+                if (current_block()->skip && ! unskip)
                 {
                     tok_next(tok);
                     if (tok_last_type(tok) != TOK_STRING)
@@ -1621,17 +1615,6 @@ void parser_t::parse_job_argument_list(process_t *p,
     p->set_io_chain(process_io_chain);
 }
 
-/*
-  static void print_block_stack( block_t *b )
-  {
-  if( !b )
-  return;
-  print_block_stack( b->outer );
-
-  debug( 0, L"Block type %ls, skip: %d", parser_get_block_desc( b->type ), b->skip );
-  }
-*/
-
 /**
    Fully parse a single job. Does not call exec on it, but any command substitutions in the job will be executed.
 
@@ -1641,9 +1624,7 @@ void parser_t::parse_job_argument_list(process_t *p,
 f
    \return 1 on success, 0 on error
 */
-int parser_t::parse_job(process_t *p,
-                        job_t *j,
-                        tokenizer_t *tok)
+int parser_t::parse_job(process_t *p, job_t *j, tokenizer_t *tok)
 {
     std::vector<completion_t> args; // The list that will become the argv array for the program
     int use_function = 1;   // May functions be considered when checking what action this command represents
@@ -1653,7 +1634,7 @@ int parser_t::parse_job(process_t *p,
     bool unskip = false;    // Maybe we are an elseif inside an if block; if so we may want to evaluate this even if the if block is currently set to skip
     bool allow_bogus_command = false; // If we are an elseif that will not be executed, or an AND or OR that will have been short circuited, don't complain about non-existent commands
 
-    block_t *prev_block = current_block;
+    const block_t *prev_block = current_block();
     scoped_push<int> tokenizer_pos_push(&current_tokenizer_pos, tok_get_pos(tok));
 
     while (args.empty())
@@ -1699,8 +1680,7 @@ int parser_t::parse_job(process_t *p,
                 {
                     error(SYNTAX_ERROR,
                           tok_get_pos(tok),
-                          CMD_OR_ERR_MSG,
-                          tok_get_desc(tok_last_type(tok)));
+                          CMD_OR_ERR_MSG);
                 }
                 else
                 {
@@ -1806,11 +1786,11 @@ int parser_t::parse_job(process_t *p,
             tok_next(tok);
             while_block_t *wb = NULL;
 
-            if ((current_block->type() != WHILE))
+            if ((current_block()->type() != WHILE))
             {
                 new_block = true;
             }
-            else if ((wb = static_cast<while_block_t*>(current_block))->status == WHILE_TEST_AGAIN)
+            else if ((wb = static_cast<while_block_t*>(current_block()))->status == WHILE_TEST_AGAIN)
             {
                 wb->status = WHILE_TEST_FIRST;
             }
@@ -1848,9 +1828,9 @@ int parser_t::parse_job(process_t *p,
             const int else_pos = tok_get_pos(tok);
             /* See if we have any more arguments, that is, whether we're ELSE IF ... or just ELSE. */
             tok_next(tok);
-            if (tok_last_type(tok) == TOK_STRING && current_block->type() == IF)
+            if (tok_last_type(tok) == TOK_STRING && current_block()->type() == IF)
             {
-                const if_block_t *ib = static_cast<const if_block_t *>(current_block);
+                const if_block_t *ib = static_cast<const if_block_t *>(current_block());
 
                 /* If we've already encountered an else, complain */
                 if (ib->else_evaluated)
@@ -1891,7 +1871,7 @@ int parser_t::parse_job(process_t *p,
             continue;
         }
 
-        if (use_function && (unskip || ! current_block->skip))
+        if (use_function && (unskip || ! current_block()->skip))
         {
             bool nxt_forbidden=false;
             wcstring forbid;
@@ -1905,9 +1885,8 @@ int parser_t::parse_job(process_t *p,
               block scopes are pushed on function invocation changes,
               then this check will break.
             */
-            if ((current_block->type() == TOP) &&
-                    (current_block->outer) &&
-                    (current_block->outer->type() == FUNCTION_CALL))
+            const block_t *current = this->block_at_index(0), *parent = this->block_at_index(1);
+            if (current && parent && current->type() == TOP && parent->type() == FUNCTION_CALL)
                 is_function_call = 1;
 
             /*
@@ -1916,7 +1895,7 @@ int parser_t::parse_job(process_t *p,
               may not be called, since that would mean an infinite
               recursion.
             */
-            if (is_function_call && !current_block->had_command)
+            if (is_function_call && !current->had_command)
             {
                 forbid = forbidden_function.empty() ? wcstring(L"") : forbidden_function.back();
                 if (forbid == nxt)
@@ -1932,9 +1911,9 @@ int parser_t::parse_job(process_t *p,
                 /*
                   Check if we have reached the maximum recursion depth
                 */
-                if (forbidden_function.size() > MAX_RECURSION_DEPTH)
+                if (forbidden_function.size() > FISH_MAX_STACK_DEPTH)
                 {
-                    error(SYNTAX_ERROR, tok_get_pos(tok), OVERFLOW_RECURSION_ERR_MSG);
+                    error(SYNTAX_ERROR, tok_get_pos(tok), CALL_STACK_LIMIT_EXCEEDED_ERR_MSG);
                 }
                 else
                 {
@@ -1942,7 +1921,7 @@ int parser_t::parse_job(process_t *p,
                 }
             }
         }
-        args.push_back(completion_t(nxt));
+        append_completion(args, nxt);
     }
 
     if (error_code == 0)
@@ -1963,7 +1942,7 @@ int parser_t::parse_job(process_t *p,
               If we are not executing the current block, allow
               non-existent commands.
             */
-            if (current_block->skip && ! unskip)
+            if (current_block()->skip && ! unskip)
                 allow_bogus_command = true; //note this may already be true for other reasons
 
             if (allow_bogus_command)
@@ -1985,8 +1964,8 @@ int parser_t::parse_job(process_t *p,
                     if (use_implicit_cd)
                     {
                         args.clear();
-                        args.push_back(completion_t(L"cd"));
-                        args.push_back(completion_t(implicit_cd_path));
+                        append_completion(args, L"cd");
+                        append_completion(args, implicit_cd_path);
 
                         /* If we have defined a wrapper around cd, use it, otherwise use the cd builtin */
                         if (use_function && function_exists(L"cd"))
@@ -2208,7 +2187,7 @@ int parser_t::parse_job(process_t *p,
 
                 tok_set_pos(tok, (int)end_pos);
 
-                while (prev_block != current_block)
+                while (prev_block != this->current_block())
                 {
                     parser_t::pop_block();
                 }
@@ -2237,7 +2216,7 @@ int parser_t::parse_job(process_t *p,
     {
         if (!is_new_block)
         {
-            current_block->had_command = true;
+            current_block()->had_command = true;
         }
     }
 
@@ -2246,7 +2225,7 @@ int parser_t::parse_job(process_t *p,
         /*
           Make sure the block stack is consistent
         */
-        while (prev_block != current_block)
+        while (prev_block != current_block())
         {
             parser_t::pop_block();
         }
@@ -2280,7 +2259,8 @@ void parser_t::skipped_exec(job_t * j)
             }
             else if (wcscmp(p->argv0(), L"end")==0)
             {
-                if (!current_block->outer->skip)
+                const block_t *parent = this->block_at_index(1);
+                if (parent && ! parent->skip)
                 {
                     exec_job(*this, j);
                     return;
@@ -2289,10 +2269,10 @@ void parser_t::skipped_exec(job_t * j)
             }
             else if (wcscmp(p->argv0(), L"else")==0)
             {
-                if (current_block->type() == IF)
+                if (current_block()->type() == IF)
                 {
                     /* Evaluate this ELSE if the IF expression failed, and so has every ELSEIF (if any) expression thus far */
-                    const if_block_t *ib = static_cast<const if_block_t*>(current_block);
+                    const if_block_t *ib = static_cast<const if_block_t*>(current_block());
                     if (ib->if_expr_evaluated && ! ib->any_branch_taken)
                     {
                         exec_job(*this, j);
@@ -2302,7 +2282,7 @@ void parser_t::skipped_exec(job_t * j)
             }
             else if (wcscmp(p->argv0(), L"case")==0)
             {
-                if (current_block->type() == SWITCH)
+                if (current_block()->type() == SWITCH)
                 {
                     exec_job(*this, j);
                     return;
@@ -2366,7 +2346,7 @@ void parser_t::eval_job(tokenizer_t *tok)
     {
         case TOK_STRING:
         {
-            job_t *j = this->job_create();
+            job_t *j = this->job_create(this->block_io);
             job_set_flag(j, JOB_FOREGROUND, 1);
             job_set_flag(j, JOB_TERMINAL, job_get_flag(j, JOB_CONTROL));
             job_set_flag(j, JOB_TERMINAL, job_get_flag(j, JOB_CONTROL) \
@@ -2376,7 +2356,7 @@ void parser_t::eval_job(tokenizer_t *tok)
                          || is_event \
                          || (!get_is_interactive()));
 
-            current_block->job = j;
+            current_block()->job = j;
 
             if (get_is_interactive())
             {
@@ -2411,27 +2391,27 @@ void parser_t::eval_job(tokenizer_t *tok)
                 {
                     t2 = get_time();
                     profile_item->cmd = j->command();
-                    profile_item->skipped=current_block->skip;
+                    profile_item->skipped=current_block()->skip;
                 }
 
                 /* If we're an ELSEIF, then we may want to unskip, if we're skipping because of an IF */
                 if (job_get_flag(j, JOB_ELSEIF))
                 {
-                    bool skip_elseif = job_should_skip_elseif(j, current_block);
+                    bool skip_elseif = job_should_skip_elseif(j, current_block());
 
                     /* Record that we're entering an elseif */
                     if (! skip_elseif)
                     {
                         /* We must be an IF block here */
-                        assert(current_block->type() == IF);
-                        static_cast<if_block_t *>(current_block)->is_elseif_entry = true;
+                        assert(current_block()->type() == IF);
+                        static_cast<if_block_t *>(current_block())->is_elseif_entry = true;
                     }
 
                     /* Record that in the block too. This is similar to what builtin_else does. */
-                    current_block->skip = skip_elseif;
+                    current_block()->skip = skip_elseif;
                 }
 
-                skip = skip || current_block->skip;
+                skip = skip || current_block()->skip;
                 skip = skip || job_get_flag(j, JOB_WILDCARD_ERROR);
                 skip = skip || job_get_flag(j, JOB_SKIP);
 
@@ -2439,7 +2419,9 @@ void parser_t::eval_job(tokenizer_t *tok)
                 {
                     int was_builtin = 0;
                     if (j->first_process->type==INTERNAL_BUILTIN && !j->first_process->next)
+                    {
                         was_builtin = 1;
+                    }
                     scoped_push<int> tokenizer_pos_push(&current_tokenizer_pos, job_begin_pos);
                     exec_job(*this, j);
 
@@ -2460,9 +2442,9 @@ void parser_t::eval_job(tokenizer_t *tok)
                     profile_item->exec=(int)(t3-t2);
                 }
 
-                if (current_block->type() == WHILE)
+                if (current_block()->type() == WHILE)
                 {
-                    while_block_t *wb = static_cast<while_block_t *>(current_block);
+                    while_block_t *wb = static_cast<while_block_t *>(current_block());
                     switch (wb->status)
                     {
                         case WHILE_TEST_FIRST:
@@ -2476,9 +2458,9 @@ void parser_t::eval_job(tokenizer_t *tok)
                     }
                 }
 
-                if (current_block->type() == IF)
+                if (current_block()->type() == IF)
                 {
-                    if_block_t *ib = static_cast<if_block_t *>(current_block);
+                    if_block_t *ib = static_cast<if_block_t *>(current_block());
 
                     if (ib->skip)
                     {
@@ -2491,7 +2473,7 @@ void parser_t::eval_job(tokenizer_t *tok)
                         ib->any_branch_taken = if_result;
 
                         /* Don't execute if the expression failed */
-                        current_block->skip = ! if_result;
+                        current_block()->skip = ! if_result;
                         ib->if_expr_evaluated = true;
                     }
                     else if (ib->is_elseif_entry && ! ib->any_branch_taken)
@@ -2499,7 +2481,7 @@ void parser_t::eval_job(tokenizer_t *tok)
                         /* Maybe mark an ELSEIF branch as taken */
                         bool elseif_taken = (proc_get_last_status() == 0);
                         ib->any_branch_taken = elseif_taken;
-                        current_block->skip = ! elseif_taken;
+                        current_block()->skip = ! elseif_taken;
                         ib->is_elseif_entry = false;
                     }
                 }
@@ -2517,7 +2499,7 @@ void parser_t::eval_job(tokenizer_t *tok)
 
                 proc_set_last_status(1);
             }
-            current_block->job = 0;
+            current_block()->job = 0;
             break;
         }
 
@@ -2535,8 +2517,7 @@ void parser_t::eval_job(tokenizer_t *tok)
             {
                 error(SYNTAX_ERROR,
                       tok_get_pos(tok),
-                      CMD_AND_ERR_MSG,
-                      tok_get_desc(tok_last_type(tok)));
+                      CMD_AND_ERR_MSG);
             }
             else
             {
@@ -2571,15 +2552,118 @@ void parser_t::eval_job(tokenizer_t *tok)
     }
 
     job_reap(0);
+}
+
+int parser_t::eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type)
+{
+    CHECK_BLOCK(1);
+    
+    if (block_type != TOP && block_type != SUBST)
+    {
+        debug(1, INVALID_SCOPE_ERR_MSG, parser_t::get_block_desc(block_type));
+        bugreport();
+        return 1;
+    }
+    
+    /* Parse the source into a tree, if we can */
+    parse_node_tree_t tree;
+    if (! parse_tree_from_string(cmd, parse_flag_none, &tree, NULL))
+    {
+        return 1;
+    }
+    
+    /* Append to the execution context stack */
+    parse_execution_context_t *ctx = new parse_execution_context_t(tree, cmd, this);
+    execution_contexts.push_back(ctx);
+    
+    /* Execute the first node */
+    int result = 1;
+    if (! tree.empty())
+    {
+        result = this->eval_block_node(0, io, block_type);
+    }
+    
+    /* Clean up the execution context stack */
+    assert(! execution_contexts.empty() && execution_contexts.back() == ctx);
+    execution_contexts.pop_back();
+    delete ctx;
+
+    return 0;
+}
+
+int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum block_type_t block_type)
+{
+    // Paranoia. It's a little frightening that we're given only a node_idx and we interpret this in the topmost execution context's tree. What happens if these were to be interleaved? Fortunately that cannot happen.
+    parse_execution_context_t *ctx = execution_contexts.back();
+    assert(ctx != NULL);
+    
+    CHECK_BLOCK(1);
+    
+    /* Handle cancellation requests. If our block stack is currently empty, then we already did successfully cancel (or there was nothing to cancel); clear the flag. If our block stack is not empty, we are still in the process of cancelling; refuse to evaluate anything */
+    if (this->cancellation_requested)
+    {
+        if (! block_stack.empty())
+        {
+            return 1;
+        }
+        else
+        {
+            this->cancellation_requested = false;
+        }
+    }
+    
+    /* Only certain blocks are allowed */
+    if ((block_type != TOP) &&
+            (block_type != SUBST))
+    {
+        debug(1,
+              INVALID_SCOPE_ERR_MSG,
+              parser_t::get_block_desc(block_type));
+        bugreport();
+        return 1;
+    }
+    
+    /* Not sure why we reap jobs here */
+    job_reap(0);
+    
+    /* Start it up */
+    const block_t * const start_current_block = current_block();
+    block_t *scope_block = new scope_block_t(block_type);
+    this->push_block(scope_block);
+    int result = ctx->eval_node_at_offset(node_idx, scope_block, io);
+    
+    /* Clean up the block stack */
+    this->pop_block();
+    while (start_current_block != current_block())
+    {
+        if (current_block() == NULL)
+        {
+            debug(0,
+                  _(L"End of block mismatch. Program terminating."));
+            bugreport();
+            FATAL_EXIT();
+            break;
+        }
+        this->pop_block();
+    }
+    
+    /* Reap again */
+    job_reap(0);
+    
+    return result;
 
 }
 
-int parser_t::eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type_t block_type)
+int parser_t::eval(const wcstring &cmd_str, const io_chain_t &io, enum block_type_t block_type)
 {
-    const wchar_t * const cmd = cmdStr.c_str();
+
+    if (parser_use_ast())
+        return this->eval_new_parser(cmd_str, io, block_type);
+    
+    const wchar_t * const cmd = cmd_str.c_str();
     size_t forbid_count;
     int code;
-    block_t *start_current_block = current_block;
+    const block_t *start_current_block = current_block();
 
     /* Record the current chain so we can put it back later */
     scoped_push<io_chain_t> block_io_push(&block_io, io);
@@ -2599,13 +2683,6 @@ int parser_t::eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type
 
     debug(4, L"eval: %ls", cmd);
 
-    if (!cmd)
-    {
-        debug(1,
-              EVAL_NULL_ERR_MSG);
-        bugreport();
-        return 1;
-    }
 
     if ((block_type != TOP) &&
             (block_type != SUBST))
@@ -2623,6 +2700,7 @@ int parser_t::eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type
 
     tokenizer_t local_tokenizer(cmd, 0);
     scoped_push<tokenizer_t *> tokenizer_push(&current_tokenizer, &local_tokenizer);
+    scoped_push<int> tokenizer_pos_push(&current_tokenizer_pos, 0);
 
     error_code = 0;
 
@@ -2631,7 +2709,7 @@ int parser_t::eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type
     while (tok_has_next(current_tokenizer) &&
             !error_code &&
             !sanity_check() &&
-            !exit_status())
+            !shell_is_exiting())
     {
         this->eval_job(current_tokenizer);
         event_fire(NULL);
@@ -2639,9 +2717,9 @@ int parser_t::eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type
 
     parser_t::pop_block();
 
-    while (start_current_block != current_block)
+    while (start_current_block != current_block())
     {
-        if (current_block == 0)
+        if (current_block() == NULL)
         {
             debug(0,
                   _(L"End of block mismatch. Program terminating."));
@@ -2650,13 +2728,13 @@ int parser_t::eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type
             break;
         }
 
-        if ((!error_code) && (!exit_status()) && (!proc_get_last_status()))
+        if ((!error_code) && (!shell_is_exiting()) && (!proc_get_last_status()))
         {
 
             //debug( 2, L"Status %d\n", proc_get_last_status() );
 
             debug(1,
-                  L"%ls", parser_t::get_block_desc(current_block->type()));
+                  L"%ls", parser_t::get_block_desc(current_block()->type()));
             debug(1,
                   BLOCK_END_ERR_MSG);
             fwprintf(stderr, L"%ls", parser_t::current_line());
@@ -2764,7 +2842,7 @@ int parser_t::parser_test_argument(const wchar_t *arg, wcstring *out, const wcha
             case 1:
             {
 
-                wchar_t *subst = wcsndup(paran_begin+1, paran_end-paran_begin-1);
+                const wcstring subst(paran_begin + 1, paran_end);
                 wcstring tmp;
 
                 tmp.append(arg_cpy, paran_begin - arg_cpy);
@@ -2773,17 +2851,16 @@ int parser_t::parser_test_argument(const wchar_t *arg, wcstring *out, const wcha
 
 //        debug( 1, L"%ls -> %ls %ls", arg_cpy, subst, tmp.buff );
 
-                err |= parser_t::test(subst, 0, out, prefix);
+                parse_error_list_t errors;
+                err |= parse_util_detect_errors(subst, &errors);
+                if (out && ! errors.empty())
+                {
+                    out->append(parse_errors_description(errors, subst, prefix));
+                }
 
-                free(subst);
                 free(arg_cpy);
                 arg_cpy = wcsdup(tmp.c_str());
 
-                /*
-                  Do _not_ call sb_destroy on this stringbuffer - it's
-                  buffer is used as the new 'arg_cpy'. It is free'd at
-                  the end of the loop.
-                */
                 break;
             }
         }
@@ -2908,819 +2985,37 @@ struct block_info_t
 {
     int position; //tokenizer position
     block_type_t type; //type of the block
-    int indentation; //indentation associated with the block
-
-    bool has_had_case; //if we are a switch, whether we've encountered a case
 };
 
-int parser_t::test(const wchar_t *buff, int *block_level, wcstring *out, const wchar_t *prefix)
+void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &errors, wcstring *output) const
 {
-    ASSERT_IS_MAIN_THREAD();
-
-    /*
-       Set to one if a command name has been given for the currently
-       parsed process specification
-    */
-    int had_cmd=0;
-    int err=0;
-    int unfinished = 0;
-
-    // These are very nearly stacks, but sometimes we have to inspect non-top elements (e.g. return)
-    std::vector<struct block_info_t> block_infos;
-    int indentation_sum = 0; //sum of indentation in block_infos
-    int res = 0;
-
-    /*
-      Set to 1 if the current command is inside a pipeline
-    */
-    int is_pipeline = 0;
-
-    /*
-      Set to one if the currently specified process can not be used inside a pipeline
-    */
-    int forbid_pipeline = 0;
-
-    /*
-       Set to one if an additional process specification is needed
-    */
-    bool needs_cmd = false;
-
-    /*
-      Counter on the number of arguments this function has encountered
-      so far. Is set to -1 when the count is unknown, i.e. after
-      encountering an argument that contains substitutions that can
-      expand to more/less arguemtns then 1.
-    */
-    int arg_count=0;
-
-    /*
-      The currently validated command.
-    */
-    wcstring command;
-    bool has_command = false;
-
-    CHECK(buff, 1);
-
-    if (block_level)
+    assert(output != NULL);
+    if (! errors.empty())
     {
-        size_t len = wcslen(buff);
-        for (size_t i=0; i<len; i++)
+        const parse_error_t &err = errors.at(0);
+        
+        // Determine which line we're on
+        assert(err.source_start <= src.size());
+        size_t which_line = 1 + std::count(src.begin(), src.begin() + err.source_start, L'\n');
+        
+        const wchar_t *filename = this->current_filename();
+        if (filename)
         {
-            block_level[i] = -1;
+            append_format(*output, _(L"fish: line %lu of %ls:\n"), which_line, user_presentable_path(filename).c_str());
         }
-
+        else
+        {
+            output->append(L"fish: ");
+        }
+        
+        // Don't include the caret if we're interactive, this is the first line of text, and our source is at its beginning, because then it's obvious
+        bool skip_caret = (get_is_interactive() && which_line == 1 && err.source_start == 0);
+        
+        output->append(err.describe(src, skip_caret));
+        output->push_back(L'\n');
+        
+        this->stack_trace(0, *output);
     }
-
-    tokenizer_t tok(buff, 0);
-
-    scoped_push<tokenizer_t*> tokenizer_push(&current_tokenizer, &tok);
-    scoped_push<int> tokenizer_pos_push(&current_tokenizer_pos);
-
-    for (;; tok_next(&tok))
-    {
-        current_tokenizer_pos = tok_get_pos(&tok);
-
-        int last_type = tok_last_type(&tok);
-        int end_of_cmd = 0;
-
-        switch (last_type)
-        {
-            case TOK_STRING:
-            {
-                if (!had_cmd)
-                {
-                    int mark = tok_get_pos(&tok);
-                    had_cmd = 1;
-                    arg_count=0;
-
-                    command = tok_last(&tok);
-
-                    // Pass SKIP_HOME_DIRECTORIES for https://github.com/fish-shell/fish-shell/issues/512
-                    has_command = expand_one(command, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_HOME_DIRECTORIES);
-                    if (! has_command)
-                    {
-                        command = L"";
-                        err=1;
-                        if (out)
-                        {
-                            error(SYNTAX_ERROR,
-                                  tok_get_pos(&tok),
-                                  ILLEGAL_CMD_ERR_MSG,
-                                  tok_last(&tok));
-
-                            print_errors(*out, prefix);
-                        }
-                        break;
-                    }
-
-                    if (needs_cmd)
-                    {
-                        /*
-                          end is not a valid command when a followup
-                          command is needed, such as after 'and' or
-                          'while'
-                        */
-                        if (contains(command,
-                                     L"end"))
-                        {
-                            err=1;
-                            if (out)
-                            {
-                                error(SYNTAX_ERROR,
-                                      tok_get_pos(&tok),
-                                      COND_ERR_MSG);
-
-                                print_errors(*out, prefix);
-                            }
-                        }
-
-                        needs_cmd = false;
-                    }
-
-                    /*
-                      Decrement block count on end command
-                    */
-                    if (command == L"end")
-                    {
-                        tok_next(&tok);
-                        tok_set_pos(&tok, mark);
-
-                        /* Test that end is not used when not inside any block */
-                        if (block_infos.empty())
-                        {
-                            err = 1;
-                            if (out)
-                            {
-                                error(SYNTAX_ERROR,
-                                      tok_get_pos(&tok),
-                                      INVALID_END_ERR_MSG);
-                                print_errors(*out, prefix);
-                                const wcstring h = builtin_help_get(*this, L"end");
-                                if (! h.empty())
-                                    append_format(*out, L"%ls", h.c_str());
-                            }
-                        }
-                        else
-                        {
-                            indentation_sum -= block_infos.back().indentation;
-                            block_infos.pop_back();
-
-                        }
-                    }
-
-                    /*
-                      Store the block level. This needs to be done
-                      _after_ checking for end commands, but _before_
-                      checking for block opening commands.
-                    */
-                    if (block_level != NULL)
-                    {
-                        int indentation_adjust = 0;
-                        if (command == L"else")
-                        {
-                            // if or else if goes back
-                            indentation_adjust = -1;
-                        }
-                        else if (command == L"case")
-                        {
-                            if (! block_infos.empty() && block_infos.back().type == SWITCH)
-                            {
-                                // mark that we've encountered a case, and increase the indentation
-                                // by doing this now, we avoid overly indenting the first case as the user types it
-                                if (! block_infos.back().has_had_case)
-                                {
-                                    block_infos.back().has_had_case = true;
-                                    block_infos.back().indentation += 1;
-                                    indentation_sum += 1;
-                                }
-                                // unindent this case
-                                indentation_adjust = -1;
-                            }
-                        }
-
-                        block_level[tok_get_pos(&tok)] = indentation_sum + indentation_adjust;
-                    }
-
-                    /*
-                      Handle block commands
-                    */
-                    if (parser_keywords_is_block(command))
-                    {
-                        struct block_info_t info = {current_tokenizer_pos, parser_get_block_type(command), 1 /* indent */};
-                        block_infos.push_back(info);
-                        indentation_sum += info.indentation;
-                        tok_next(&tok);
-                        tok_set_pos(&tok, mark);
-                    }
-
-                    /*
-                      If parser_keywords_is_subcommand is true, the command
-                      accepts a second command as it's first
-                      argument. If parser_skip_arguments is true, the
-                      second argument is optional.
-                    */
-                    if (parser_keywords_is_subcommand(command) && !parser_keywords_skip_arguments(command))
-                    {
-                        needs_cmd = true;
-                        had_cmd = 0;
-                    }
-
-                    if (contains(command,
-                                 L"or",
-                                 L"and"))
-                    {
-                        /*
-                          'or' and 'and' can not be used inside pipelines
-                        */
-                        if (is_pipeline)
-                        {
-                            err=1;
-                            if (out)
-                            {
-                                error(SYNTAX_ERROR,
-                                      tok_get_pos(&tok),
-                                      EXEC_ERR_MSG);
-
-                                print_errors(*out, prefix);
-
-                            }
-                        }
-                    }
-
-                    /*
-                      There are a lot of situations where pipelines
-                      are forbidden, including when using the exec
-                      builtin.
-                    */
-                    if (parser_is_pipe_forbidden(command))
-                    {
-                        if (is_pipeline)
-                        {
-                            err=1;
-                            if (out)
-                            {
-                                error(SYNTAX_ERROR,
-                                      tok_get_pos(&tok),
-                                      EXEC_ERR_MSG);
-
-                                print_errors(*out, prefix);
-
-                            }
-                        }
-                        forbid_pipeline = 1;
-                    }
-
-                    /*
-                      Test that the case builtin is only used directly in a switch block
-                    */
-                    if (command == L"case")
-                    {
-                        if (block_infos.empty() || block_infos.back().type != SWITCH)
-                        {
-                            err=1;
-
-                            if (out)
-                            {
-                                error(SYNTAX_ERROR,
-                                      tok_get_pos(&tok),
-                                      INVALID_CASE_ERR_MSG);
-
-                                print_errors(*out, prefix);
-                                const wcstring h = builtin_help_get(*this, L"case");
-                                if (h.size())
-                                    append_format(*out, L"%ls", h.c_str());
-                            }
-                        }
-                    }
-
-                    /*
-                      Test that the return bultin is only used within function definitions
-                    */
-                    if (command == L"return")
-                    {
-                        bool found_func = false;
-                        size_t block_idx = block_infos.size();
-                        while (block_idx--)
-                        {
-                            if (block_infos.at(block_idx).type == FUNCTION_DEF)
-                            {
-                                found_func = true;
-                                break;
-                            }
-                        }
-
-                        if (!found_func)
-                        {
-                            /*
-                              Peek to see if the next argument is
-                              --help, in which case we'll allow it to
-                              show the help.
-                            */
-
-                            int old_pos = tok_get_pos(&tok);
-                            int is_help = 0;
-
-                            tok_next(&tok);
-                            if (tok_last_type(&tok) == TOK_STRING)
-                            {
-                                wcstring first_arg = tok_last(&tok);
-                                if (expand_one(first_arg, EXPAND_SKIP_CMDSUBST) && parser_t::is_help(first_arg.c_str(), 3))
-                                {
-                                    is_help = 1;
-                                }
-                            }
-
-                            tok_set_pos(&tok, old_pos);
-
-                            if (!is_help)
-                            {
-                                err=1;
-
-                                if (out)
-                                {
-                                    error(SYNTAX_ERROR,
-                                          tok_get_pos(&tok),
-                                          INVALID_RETURN_ERR_MSG);
-                                    print_errors(*out, prefix);
-                                }
-                            }
-                        }
-                    }
-
-
-                    /*
-                      Test that break and continue are only used within loop blocks
-                    */
-                    if (contains(command, L"break", L"continue"))
-                    {
-                        bool found_loop = false;
-                        size_t block_idx = block_infos.size();
-                        while (block_idx--)
-                        {
-                            block_type_t type = block_infos.at(block_idx).type;
-                            if (type == WHILE || type == FOR)
-                            {
-                                found_loop = true;
-                                break;
-                            }
-                        }
-
-                        if (!found_loop)
-                        {
-                            /*
-                              Peek to see if the next argument is
-                              --help, in which case we'll allow it to
-                              show the help.
-                            */
-
-                            int old_pos = tok_get_pos(&tok);
-                            int is_help = 0;
-
-                            tok_next(&tok);
-                            if (tok_last_type(&tok) == TOK_STRING)
-                            {
-                                wcstring first_arg = tok_last(&tok);
-                                if (expand_one(first_arg, EXPAND_SKIP_CMDSUBST) && parser_t::is_help(first_arg.c_str(), 3))
-                                {
-                                    is_help = 1;
-                                }
-                            }
-
-                            tok_set_pos(&tok, old_pos);
-
-                            if (!is_help)
-                            {
-                                err=1;
-
-                                if (out)
-                                {
-                                    error(SYNTAX_ERROR,
-                                          tok_get_pos(&tok),
-                                          INVALID_LOOP_ERR_MSG);
-                                    print_errors(*out, prefix);
-                                }
-                            }
-                        }
-                    }
-
-                    /*
-                      Test that else and else-if are only used directly in an if-block
-                    */
-                    if (command == L"else")
-                    {
-                        if (block_infos.empty() || block_infos.back().type != IF)
-                        {
-                            err=1;
-                            if (out)
-                            {
-                                error(SYNTAX_ERROR,
-                                      tok_get_pos(&tok),
-                                      INVALID_ELSE_ERR_MSG,
-                                      command.c_str());
-
-                                print_errors(*out, prefix);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    err |= parser_test_argument(tok_last(&tok), out, prefix, tok_get_pos(&tok));
-
-                    /* If possible, keep track of number of supplied arguments */
-                    if (arg_count >= 0 && expand_is_clean(tok_last(&tok)))
-                    {
-                        arg_count++;
-                    }
-                    else
-                    {
-                        arg_count = -1;
-                    }
-
-                    if (has_command)
-                    {
-
-                        /*
-                          Try to make sure the second argument to 'for' is 'in'
-                        */
-                        if (command == L"for")
-                        {
-                            if (arg_count == 1)
-                            {
-
-                                if (wcsvarname(tok_last(&tok)))
-                                {
-
-                                    err = 1;
-
-                                    if (out)
-                                    {
-                                        error(SYNTAX_ERROR,
-                                              tok_get_pos(&tok),
-                                              BUILTIN_FOR_ERR_NAME,
-                                              L"for",
-                                              tok_last(&tok));
-
-                                        print_errors(*out, prefix);
-                                    }
-                                }
-
-                            }
-                            else if (arg_count == 2)
-                            {
-                                if (wcscmp(tok_last(&tok), L"in") != 0)
-                                {
-                                    err = 1;
-
-                                    if (out)
-                                    {
-                                        error(SYNTAX_ERROR,
-                                              tok_get_pos(&tok),
-                                              BUILTIN_FOR_ERR_IN,
-                                              L"for");
-
-                                        print_errors(*out, prefix);
-                                    }
-                                }
-                            }
-                        }
-                        else if (command == L"else")
-                        {
-                            if (arg_count == 1)
-                            {
-                                /* Any second argument must be "if" */
-                                if (wcscmp(tok_last(&tok), L"if") != 0)
-                                {
-                                    err = 1;
-
-                                    if (out)
-                                    {
-                                        error(SYNTAX_ERROR,
-                                              tok_get_pos(&tok),
-                                              BUILTIN_ELSEIF_ERR_ARGUMENT,
-                                              L"else");
-                                        print_errors(*out, prefix);
-                                    }
-                                }
-                                else
-                                {
-                                    /* Successfully detected "else if". Now we need a new command. */
-                                    needs_cmd = true;
-                                    had_cmd = false;
-                                }
-                            }
-                        }
-                    }
-
-                }
-
-                break;
-            }
-
-            case TOK_REDIRECT_OUT:
-            case TOK_REDIRECT_IN:
-            case TOK_REDIRECT_APPEND:
-            case TOK_REDIRECT_FD:
-            case TOK_REDIRECT_NOCLOB:
-            {
-                if (!had_cmd)
-                {
-                    err = 1;
-                    if (out)
-                    {
-                        error(SYNTAX_ERROR,
-                              tok_get_pos(&tok),
-                              INVALID_REDIRECTION_ERR_MSG);
-                        print_errors(*out, prefix);
-                    }
-                }
-                break;
-            }
-
-            case TOK_END:
-            {
-                if (needs_cmd && !had_cmd)
-                {
-                    err = 1;
-                    if (out)
-                    {
-                        error(SYNTAX_ERROR,
-                              tok_get_pos(&tok),
-                              CMD_ERR_MSG,
-                              tok_get_desc(tok_last_type(&tok)));
-                        print_errors(*out, prefix);
-                    }
-                }
-                needs_cmd = false;
-                had_cmd = 0;
-                is_pipeline=0;
-                forbid_pipeline=0;
-                end_of_cmd = 1;
-
-                break;
-            }
-
-            case TOK_PIPE:
-            {
-                if (!had_cmd)
-                {
-                    err=1;
-                    if (out)
-                    {
-                        if (tok_get_pos(&tok)>0 && buff[tok_get_pos(&tok)-1] == L'|')
-                        {
-                            error(SYNTAX_ERROR,
-                                  tok_get_pos(&tok),
-                                  CMD_OR_ERR_MSG,
-                                  tok_get_desc(tok_last_type(&tok)));
-
-                        }
-                        else
-                        {
-                            error(SYNTAX_ERROR,
-                                  tok_get_pos(&tok),
-                                  CMD_ERR_MSG,
-                                  tok_get_desc(tok_last_type(&tok)));
-                        }
-
-                        print_errors(*out, prefix);
-                    }
-                }
-                else if (forbid_pipeline)
-                {
-                    err=1;
-                    if (out)
-                    {
-                        error(SYNTAX_ERROR,
-                              tok_get_pos(&tok),
-                              EXEC_ERR_MSG);
-
-                        print_errors(*out, prefix);
-                    }
-                }
-                else
-                {
-                    needs_cmd = true;
-                    is_pipeline=1;
-                    had_cmd=0;
-                    end_of_cmd = 1;
-
-                }
-                break;
-            }
-
-            case TOK_BACKGROUND:
-            {
-                if (!had_cmd)
-                {
-                    err = 1;
-                    if (out)
-                    {
-                        if (tok_get_pos(&tok)>0 && buff[tok_get_pos(&tok)-1] == L'&')
-                        {
-                            error(SYNTAX_ERROR,
-                                  tok_get_pos(&tok),
-                                  CMD_AND_ERR_MSG,
-                                  tok_get_desc(tok_last_type(&tok)));
-
-                        }
-                        else
-                        {
-                            error(SYNTAX_ERROR,
-                                  tok_get_pos(&tok),
-                                  CMD_ERR_MSG,
-                                  tok_get_desc(tok_last_type(&tok)));
-                        }
-
-                        print_errors(*out, prefix);
-                    }
-                }
-
-                had_cmd = 0;
-                end_of_cmd = 1;
-
-                break;
-            }
-
-            case TOK_ERROR:
-            default:
-                if (tok_get_error(&tok) == TOK_UNTERMINATED_QUOTE)
-                {
-                    unfinished = 1;
-                }
-                else
-                {
-                    // Only print errors once
-                    if (out && ! err)
-                    {
-                        error(SYNTAX_ERROR,
-                              tok_get_pos(&tok),
-                              TOK_ERR_MSG,
-                              tok_last(&tok));
-
-
-                        print_errors(*out, prefix);
-                    }
-                    err = 1;
-                }
-
-                break;
-        }
-
-        if (end_of_cmd)
-        {
-            if (has_command && command == L"for")
-            {
-                if (arg_count >= 0 && arg_count < 2)
-                {
-                    /*
-                      Not enough arguments to the for builtin
-                    */
-                    err = 1;
-
-                    if (out)
-                    {
-                        error(SYNTAX_ERROR,
-                              tok_get_pos(&tok),
-                              BUILTIN_FOR_ERR_COUNT,
-                              L"for",
-                              arg_count);
-
-                        print_errors(*out, prefix);
-                    }
-                }
-            }
-            else if (has_command && command == L"else")
-            {
-                if (arg_count == 1)
-                {
-                    /* If we have any arguments, we must have at least two...either "else" or "else if foo..." */
-                    err = true;
-                    if (out)
-                    {
-                        error(SYNTAX_ERROR,
-                              tok_get_pos(&tok),
-                              BUILTIN_ELSEIF_ERR_COUNT,
-                              L"else",
-                              arg_count);
-
-                        print_errors(*out, prefix);
-
-                    }
-                }
-            }
-
-        }
-
-        if (!tok_has_next(&tok))
-            break;
-
-    }
-
-    if (needs_cmd)
-    {
-        err=1;
-        if (out)
-        {
-            error(SYNTAX_ERROR,
-                  tok_get_pos(&tok),
-                  COND_ERR_MSG);
-
-            print_errors(*out, prefix);
-        }
-    }
-
-
-    if (out != NULL && ! block_infos.empty())
-    {
-        const wchar_t *cmd;
-        int bad_pos = block_infos.back().position;
-        block_type_t bad_type = block_infos.back().type;
-
-        error(SYNTAX_ERROR, bad_pos, BLOCK_END_ERR_MSG);
-
-        print_errors(*out, prefix);
-
-        cmd = parser_get_block_command(bad_type);
-        if (cmd)
-        {
-            const wcstring h = builtin_help_get(*this, cmd);
-            if (h.size())
-            {
-                append_format(*out, L"%ls", h.c_str());
-            }
-        }
-
-
-    }
-
-    /*
-      Fill in the unset block_level entries. Until now, only places
-      where the block level _changed_ have been filled out. This fills
-      in the rest.
-    */
-
-    if (block_level)
-    {
-        int last_level = 0;
-        size_t i, len = wcslen(buff);
-        for (i=0; i<len; i++)
-        {
-            if (block_level[i] >= 0)
-            {
-                last_level = block_level[i];
-                /*
-                  Make all whitespace before a token have the new
-                  level. This avoid using the wrong indentation level
-                  if a new line starts with whitespace.
-                */
-                size_t prev_char_idx = i;
-                while (prev_char_idx--)
-                {
-                    if (!wcschr(L" \n\t\r", buff[prev_char_idx]))
-                        break;
-                    block_level[prev_char_idx] = last_level;
-                }
-            }
-            block_level[i] = last_level;
-        }
-
-        /*
-          Make all trailing whitespace have the block level that the
-          validator had at exit. This makes sure a new line is
-          correctly indented even if it is empty.
-        */
-        int last_indent = block_infos.empty() ? 0 : block_infos.back().indentation;
-        size_t suffix_idx = len;
-        while (suffix_idx--)
-        {
-            if (!wcschr(L" \n\t\r", buff[suffix_idx]))
-                break;
-            block_level[suffix_idx] = last_indent;
-        }
-    }
-
-    /*
-      Calculate exit status
-    */
-    if (! block_infos.empty())
-        unfinished = 1;
-
-    if (err)
-        res |= PARSER_TEST_ERROR;
-
-    if (unfinished)
-        res |= PARSER_TEST_INCOMPLETE;
-
-    /*
-      Cleanup
-    */
-
-    error_code=0;
-
-
-    return res;
-
 }
 
 block_t::block_t(block_type_t t) :
@@ -3729,13 +3024,13 @@ block_t::block_t(block_type_t t) :
     skip(),
     had_command(),
     tok_pos(),
+    node_offset(NODE_OFFSET_INVALID),
     loop_status(),
     job(),
     src_filename(),
     src_lineno(),
     wants_pop_env(false),
-    event_blocks(),
-    outer(NULL)
+    event_blocks()
 {
 }
 
@@ -3815,3 +3110,15 @@ breakpoint_block_t::breakpoint_block_t() :
 {
 }
 
+bool parser_use_ast(void)
+{
+    env_var_t var = env_get_string(L"fish_new_parser");
+    if (var.missing_or_empty())
+    {
+        return 0;
+    }
+    else
+    {
+        return from_string<bool>(var);
+    }
+}

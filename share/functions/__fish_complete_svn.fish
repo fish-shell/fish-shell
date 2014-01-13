@@ -298,12 +298,12 @@ function __fish_complete_svn -d 'Complete svn and its wrappers' --argument-names
     #
     # Completions for the 'relocate' subcommand
     #
-    _svn_cmpl_ $relocate -xa '( svn info | grep URL: | cut --delimiter " " --fields 2 ) http:// ftp:// svn+ssh:// svn+ssh://(__fish_print_hostnames)'
+    _svn_cmpl_ $relocate -xa '( svn info | grep URL: | cut -d " " -f 2 ) http:// ftp:// svn+ssh:// svn+ssh://(__fish_print_hostnames)'
 
     #
     # Completions for the 'switch', 'sw' subcommands
     #
-    _svn_cmpl_ $switch -l relocate --description 'Relocate via URL-rewriting' -xa '( svn info | grep URL: | cut --delimiter " " --fields 2 ) http:// ftp:// svn+ssh:// svn+ssh://(__fish_print_hostnames)'
+    _svn_cmpl_ $switch -l relocate --description 'Relocate via URL-rewriting' -xa '( svn info | grep URL: | cut -d " " -f 2 ) http:// ftp:// svn+ssh:// svn+ssh://(__fish_print_hostnames)'
 
     #
     # Completions for the 'status', 'st' subcommands

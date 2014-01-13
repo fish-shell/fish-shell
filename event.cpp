@@ -144,12 +144,15 @@ static int event_match(const event_t &classv, const event_t &instance)
 */
 static int event_is_blocked(const event_t &e)
 {
-    block_t *block;
+    const block_t *block;
     parser_t &parser = parser_t::principal_parser();
-    for (block = parser.current_block; block; block = block->outer)
+    
+    size_t idx = 0;
+    while ((block = parser.block_at_index(idx++)))
     {
         if (event_block_list_blocks_type(block->event_blocks, e.type))
             return true;
+        
     }
     return event_block_list_blocks_type(parser.global_event_blocks, e.type);
 }
@@ -565,9 +568,6 @@ static void event_fire_internal(const event_t &event)
 */
 static void event_fire_delayed()
 {
-
-    size_t i;
-
     /*
       If is_event is one, we are running the event-handler non-recursively.
 
@@ -579,7 +579,7 @@ static void event_fire_delayed()
     {
         event_list_t new_blocked;
 
-        for (i=0; i<blocked.size(); i++)
+        for (size_t i=0; i<blocked.size(); i++)
         {
             event_t *e = blocked.at(i);
             if (event_is_blocked(*e))

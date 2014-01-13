@@ -18,6 +18,7 @@
 #include "wutil.h"
 #include "exec.h"
 #include "path.h"
+#include <algorithm>
 
 /* These are the specific statement types that support redirections */
 static bool specific_statement_type_is_redirectable_block(const parse_node_t &node)

@@ -166,7 +166,7 @@ public:
     /* Finds the last node of a given type underneath a given node, or NULL if it could not be found. If parent is NULL, this finds the last node in the tree of that type. */
     const parse_node_t *find_last_node_of_type(parse_token_type_t type, const parse_node_t *parent = NULL) const;
     
-    /* Finds a node containing the given source location */
+    /* Finds a node containing the given source location. If 'parent' is not NULL, it must be an ancestor. */
     const parse_node_t *find_node_matching_source_location(parse_token_type_t type, size_t source_loc, const parse_node_t *parent) const;
     
     /* Indicate if the given argument_list or arguments_or_redirections_list is a root list, or has a parent */

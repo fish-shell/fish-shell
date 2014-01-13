@@ -119,6 +119,9 @@ enum parse_error_code_t
     parse_error_unbalancing_end, //end outside of block
     parse_error_unbalancing_else, //else outside of if
     parse_error_unbalancing_case, //case outside of switch
+    
+    parse_error_double_pipe, // foo || bar, has special error message
+    parse_error_double_background // foo && bar, has special error message
 };
 
 enum {
@@ -138,18 +141,15 @@ typedef unsigned int parser_test_error_bits_t;
 /** Error message on reaching maximum call stack depth */
 #define CALL_STACK_LIMIT_EXCEEDED_ERR_MSG _( L"The function call stack limit has been exceeded. Do you have an accidental infinite loop?")
 
-/** Error message when a non-string token is found when expecting a command name */
-#define CMD_ERR_MSG _( L"Expected a command name, got token of type '%ls'")
+/**
+   Error message when a non-string token is found when expecting a command name
+*/
+#define CMD_OR_ERR_MSG _( L"Expected a command, but instead found a pipe. Did you mean 'COMMAND; or COMMAND'? See the help section for the 'or' builtin command by typing 'help or'.")
 
 /**
    Error message when a non-string token is found when expecting a command name
 */
-#define CMD_OR_ERR_MSG _( L"Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; or COMMAND'? See the help section for the 'or' builtin command by typing 'help or'.")
-
-/**
-   Error message when a non-string token is found when expecting a command name
-*/
-#define CMD_AND_ERR_MSG _( L"Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; and COMMAND'? See the help section for the 'and' builtin command by typing 'help and'.")
+#define CMD_AND_ERR_MSG _( L"Expected a command, but instead found a '&'. Did you mean 'COMMAND; and COMMAND'? See the help section for the 'and' builtin command by typing 'help and'.")
 
 /**
    Error message when encountering an illegal command name

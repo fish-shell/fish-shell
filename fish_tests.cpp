@@ -2444,7 +2444,10 @@ static void test_new_parser_errors(void)
         {L"if true ; end ; else", parse_error_unbalancing_else},
         
         {L"case", parse_error_unbalancing_case},
-        {L"if true ; case ; end", parse_error_unbalancing_case}
+        {L"if true ; case ; end", parse_error_unbalancing_case},
+        
+        {L"foo || bar", parse_error_double_pipe},
+        {L"foo && bar", parse_error_double_background},
     };
     
     for (size_t i = 0; i < sizeof tests / sizeof *tests; i++)

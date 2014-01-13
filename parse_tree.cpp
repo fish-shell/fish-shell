@@ -1,6 +1,7 @@
 #include "parse_productions.h"
 #include "tokenizer.h"
 #include "fallback.h"
+#include "wutil.h"
 #include "proc.h"
 #include <vector>
 #include <algorithm>
@@ -746,8 +747,43 @@ void parse_ll_t::parse_error_unbalancing_token(parse_token_t token)
 // This is a 'generic' parse error when we can't match the top of the stack element
 void parse_ll_t::parse_error_failed_production(struct parse_stack_element_t &stack_elem, parse_token_t token)
 {
-    const wcstring expected = stack_elem.user_presentable_description();
-    this->parse_error(expected.c_str(), token);
+    fatal_errored = true;
+    if (this->should_generate_error_messages)
+    {
+        bool done = false;
+        
+        /* Check for || */
+        if (token.type == parse_token_type_pipe && token.source_start > 0)
+        {
+            /* Here we wanted a statement and instead got a pipe. See if this is a double pipe: foo || bar. If so, we have a special error message. */
+            const parse_node_t *prev_pipe = nodes.find_node_matching_source_location(parse_token_type_pipe, token.source_start - 1, NULL);
+            if (prev_pipe != NULL)
+            {
+                /* The pipe of the previous job abuts our current token. So we have ||. */
+                this->parse_error(token, parse_error_double_pipe, CMD_OR_ERR_MSG);
+                done = true;
+            }
+        }
+        
+        /* Check for && */
+        if (! done && token.type == parse_token_type_background && token.source_start > 0)
+        {
+            /* Check to see if there was a previous token_background */
+            const parse_node_t *prev_background = nodes.find_node_matching_source_location(parse_token_type_background, token.source_start - 1, NULL);
+            if (prev_background != NULL)
+            {
+                /* We have &&. */
+                this->parse_error(token, parse_error_double_background, CMD_AND_ERR_MSG);
+                done = true;
+            }
+        }
+        
+        if (! done)
+        {
+            const wcstring expected = stack_elem.user_presentable_description();
+            this->parse_error(expected.c_str(), token);
+        }
+    }
 }
 
 void parse_ll_t::report_tokenizer_error(parse_token_t token, const wchar_t *tok_error)
@@ -936,15 +972,8 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2)
         const production_t *production = production_for_token(stack_elem.type, token1, token2, &node.production_idx, NULL /* error text */);
         if (production == NULL)
         {
-            if (should_generate_error_messages)
-            {
-                parse_error_failed_production(stack_elem, token1);
-            }
-            else
-            {
-                this->parse_error(token1, parse_error_generic, NULL);
-            }
-            // parse_error sets fatal_errored, which ends the loop
+            parse_error_failed_production(stack_elem, token1);
+            // the above sets fatal_errored, which ends the loop
         }
         else
         {

@@ -78,15 +78,8 @@ The fish parser. Contains functions for parsing and evaluating code.
 */
 #define BLOCK_END_ERR_MSG _( L"Could not locate end of block. The 'end' command is missing, misspelled or a ';' is missing.")
 
-/**
-   Error message when a non-string token is found when expecting a command name
-*/
-#define CMD_OR_ERR_MSG _( L"Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; or COMMAND'? See the help section for the 'or' builtin command by typing 'help or'.")
-
-/**
-   Error message when a non-string token is found when expecting a command name
-*/
-#define CMD_AND_ERR_MSG _( L"Expected a command name, got token of type '%ls'. Did you mean 'COMMAND; and COMMAND'? See the help section for the 'and' builtin command by typing 'help and'.")
+/** Error message when a non-string token is found when expecting a command name */
+#define CMD_ERR_MSG _( L"Expected a command name, got token of type '%ls'")
 
 /**
    Error message when encountering an illegal command name
@@ -1692,8 +1685,7 @@ int parser_t::parse_job(process_t *p, job_t *j, tokenizer_t *tok)
                 {
                     error(SYNTAX_ERROR,
                           tok_get_pos(tok),
-                          CMD_OR_ERR_MSG,
-                          tok_get_desc(tok_last_type(tok)));
+                          CMD_OR_ERR_MSG);
                 }
                 else
                 {
@@ -2530,8 +2522,7 @@ void parser_t::eval_job(tokenizer_t *tok)
             {
                 error(SYNTAX_ERROR,
                       tok_get_pos(tok),
-                      CMD_AND_ERR_MSG,
-                      tok_get_desc(tok_last_type(tok)));
+                      CMD_AND_ERR_MSG);
             }
             else
             {

@@ -299,7 +299,6 @@ static bool var_is_locale(const wcstring &key)
 static void handle_locale()
 {
     const env_var_t lc_all = env_get_string(L"LC_ALL");
-    int i;
     const wcstring old_locale = wsetlocale(LC_MESSAGES, NULL);
 
     /*
@@ -330,7 +329,7 @@ static void handle_locale()
             wsetlocale(LC_ALL, lang.c_str());
         }
 
-        for (i=2; locale_variable[i]; i++)
+        for (int i=2; locale_variable[i]; i++)
         {
             const env_var_t val = env_get_string(locale_variable[i]);
 
@@ -479,7 +478,7 @@ static void env_set_defaults()
         if (pw->pw_name != NULL)
         {
             const wcstring wide_name = str2wcstring(pw->pw_name);
-            env_set(L"USER", NULL, ENV_GLOBAL);
+            env_set(L"USER", wide_name.c_str(), ENV_GLOBAL);
         }
     }
 
@@ -892,6 +891,7 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
     if (!is_universal)
     {
         event_t ev = event_t::variable_event(key);
+        ev.arguments.reserve(3);
         ev.arguments.push_back(L"VARIABLE");
         ev.arguments.push_back(L"SET");
         ev.arguments.push_back(key);

@@ -64,6 +64,7 @@
 #include "expand.h"
 #include "path.h"
 #include "history.h"
+#include "parse_tree.h"
 
 /**
    The default prompt for the read command
@@ -164,7 +165,7 @@ static const io_chain_t *real_io;
 /**
    Counts the number of non null pointers in the specified array
 */
-static int builtin_count_args(wchar_t **argv)
+static int builtin_count_args(const wchar_t * const * argv)
 {
     int argc = 1;
     while (argv[argc] != NULL)
@@ -243,9 +244,6 @@ wcstring builtin_help_get(parser_t &parser, const wchar_t *name)
 
 static void builtin_print_help(parser_t &parser, const wchar_t *cmd, wcstring &b)
 {
-
-    int is_short = 0;
-
     if (&b == &stderr_buffer)
     {
         stderr_buffer.append(parser.current_line());
@@ -259,7 +257,7 @@ static void builtin_print_help(parser_t &parser, const wchar_t *cmd, wcstring &b
     wchar_t *str = wcsdup(h.c_str());
     if (str)
     {
-
+        bool is_short = false;
         if (&b == &stderr_buffer)
         {
 
@@ -278,7 +276,7 @@ static void builtin_print_help(parser_t &parser, const wchar_t *cmd, wcstring &b
                 int cut=0;
                 int i;
 
-                is_short = 1;
+                is_short = true;
 
                 /*
                   First move down 4 lines
@@ -689,7 +687,7 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
                 default:
                 {
                     res = STATUS_BUILTIN_ERROR;
-                    append_format(stderr_buffer, _(L"%ls: Expected zero or two parameters, got %d"), argv[0], argc-woptind);
+                    append_format(stderr_buffer, _(L"%ls: Expected zero or two parameters, got %d\n"), argv[0], argc-woptind);
                     break;
                 }
             }
@@ -737,7 +735,6 @@ static int builtin_block(parser_t &parser, wchar_t **argv)
     int scope=UNSET;
     int erase = 0;
     int argc=builtin_count_args(argv);
-    int type = (1<<EVENT_ANY);
 
     woptind=0;
 
@@ -835,7 +832,7 @@ static int builtin_block(parser_t &parser, wchar_t **argv)
         block_t *block = parser.block_at_index(block_idx);
 
         event_blockage_t eb = {};
-        eb.typemask = type;
+        eb.typemask = (1<<EVENT_ANY);
 
         switch (scope)
         {
@@ -1041,20 +1038,22 @@ static int builtin_emit(parser_t &parser, wchar_t **argv)
 static int builtin_generic(parser_t &parser, wchar_t **argv)
 {
     int argc=builtin_count_args(argv);
+    
+    /* Hackish - if we have no arguments other than the command, we are a "naked invocation" and we just print help */
+    if (argc == 1)
+    {
+        builtin_print_help(parser, argv[0], stdout_buffer);
+        return STATUS_BUILTIN_ERROR;
+    }
+    
     woptind=0;
 
     static const struct woption
             long_options[] =
     {
-        {
-            L"help", no_argument, 0, 'h'
-        }
-        ,
-        {
-            0, 0, 0, 0
-        }
-    }
-    ;
+        { L"help", no_argument, 0, 'h' },
+        { 0, 0, 0, 0 }
+    };
 
     while (1)
     {
@@ -1751,12 +1750,325 @@ static int builtin_pwd(parser_t &parser, wchar_t **argv)
     }
 }
 
+/* This is nearly identical to builtin_function, and is intended to be the successor (with no block manipulation, no function/end split) */
+int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstring &contents, wcstring *out_err)
+{
+    assert(out_err != NULL);
+    
+    /* wgetopt expects 'function' as the first argument. Make a new wcstring_list with that property. */
+    wcstring_list_t args;
+    args.push_back(L"function");
+    args.insert(args.end(), c_args.begin(), c_args.end());
+    
+    /* Hackish const_cast matches the one in builtin_run */
+    const null_terminated_array_t<wchar_t> argv_array(args);
+    wchar_t **argv = const_cast<wchar_t **>(argv_array.get());
+    
+    int argc = builtin_count_args(argv);
+    int res=STATUS_BUILTIN_OK;
+    wchar_t *desc=0;
+    std::vector<event_t> events;
+    std::auto_ptr<wcstring_list_t> named_arguments(NULL);
+
+    wchar_t *name = 0;
+    bool shadows = true;
+
+    woptind=0;
+
+    const struct woption long_options[] =
+    {
+        { L"description", required_argument, 0, 'd' },
+        { L"on-signal", required_argument, 0, 's' },
+        { L"on-job-exit", required_argument, 0, 'j' },
+        { L"on-process-exit", required_argument, 0, 'p' },
+        { L"on-variable", required_argument, 0, 'v' },
+        { L"on-event", required_argument, 0, 'e' },
+        { L"help", no_argument, 0, 'h' },
+        { L"argument-names", no_argument, 0, 'a' },
+        { L"no-scope-shadowing", no_argument, 0, 'S' },
+        { 0, 0, 0, 0 }
+    };
+
+    while (1 && (!res))
+    {
+        int opt_index = 0;
+
+        int opt = wgetopt_long(argc,
+                               argv,
+                               L"d:s:j:p:v:e:haS",
+                               long_options,
+                               &opt_index);
+        if (opt == -1)
+            break;
+
+        switch (opt)
+        {
+            case 0:
+                if (long_options[opt_index].flag != 0)
+                    break;
+                
+                
+                
+                append_format(*out_err,
+                              BUILTIN_ERR_UNKNOWN,
+                              argv[0],
+                              long_options[opt_index].name);
+
+                res = 1;
+                break;
+
+            case 'd':
+                desc=woptarg;
+                break;
+
+            case 's':
+            {
+                int sig = wcs2sig(woptarg);
+
+                if (sig < 0)
+                {
+                    append_format(*out_err,
+                                  _(L"%ls: Unknown signal '%ls'\n"),
+                                  argv[0],
+                                  woptarg);
+                    res=1;
+                    break;
+                }
+                events.push_back(event_t::signal_event(sig));
+                break;
+            }
+
+            case 'v':
+            {
+                if (wcsvarname(woptarg))
+                {
+                    append_format(*out_err,
+                                  _(L"%ls: Invalid variable name '%ls'\n"),
+                                  argv[0],
+                                  woptarg);
+                    res=STATUS_BUILTIN_ERROR;
+                    break;
+                }
+
+                events.push_back(event_t::variable_event(woptarg));
+                break;
+            }
+
+
+            case 'e':
+            {
+                events.push_back(event_t::generic_event(woptarg));
+                break;
+            }
+
+            case 'j':
+            case 'p':
+            {
+                pid_t pid;
+                wchar_t *end;
+                event_t e(EVENT_ANY);
+
+                if ((opt == 'j') &&
+                        (wcscasecmp(woptarg, L"caller") == 0))
+                {
+                    int job_id = -1;
+
+                    if (is_subshell)
+                    {
+                        size_t block_idx = 0;
+                        
+                        /* Find the outermost substitution block */
+                        for (block_idx = 0; ; block_idx++)
+                        {
+                            const block_t *b = parser.block_at_index(block_idx);
+                            if (b == NULL || b->type() == SUBST)
+                                break;
+                        }
+                        
+                        /* Go one step beyond that, to get to the caller */
+                        const block_t *caller_block = parser.block_at_index(block_idx + 1);
+                        if (caller_block != NULL && caller_block->job != NULL)
+                        {
+                            job_id = caller_block->job->job_id;
+                        }
+                    }
+
+                    if (job_id == -1)
+                    {
+                        append_format(*out_err,
+                                      _(L"%ls: Cannot find calling job for event handler\n"),
+                                      argv[0]);
+                        res=1;
+                    }
+                    else
+                    {
+                        e.type = EVENT_JOB_ID;
+                        e.param1.job_id = job_id;
+                    }
+
+                }
+                else
+                {
+                    errno = 0;
+                    pid = fish_wcstoi(woptarg, &end, 10);
+                    if (errno || !end || *end)
+                    {
+                        append_format(*out_err,
+                                      _(L"%ls: Invalid process id %ls\n"),
+                                      argv[0],
+                                      woptarg);
+                        res=1;
+                        break;
+                    }
+
+
+                    e.type = EVENT_EXIT;
+                    e.param1.pid = (opt=='j'?-1:1)*abs(pid);
+                }
+                if (res)
+                {
+                    /* nothing */
+                }
+                else
+                {
+                    events.push_back(e);
+                }
+                break;
+            }
+
+            case 'a':
+                if (named_arguments.get() == NULL)
+                    named_arguments.reset(new wcstring_list_t);
+                break;
+
+            case 'S':
+                shadows = 0;
+                break;
+
+            case 'h':
+                builtin_print_help(parser, argv[0], stdout_buffer);
+                return STATUS_BUILTIN_OK;
+
+            case '?':
+                builtin_unknown_option(parser, argv[0], argv[woptind-1]);
+                res = 1;
+                break;
+
+        }
+
+    }
+
+    if (!res)
+    {
+
+        if (argc == woptind)
+        {
+            append_format(*out_err,
+                          _(L"%ls: Expected function name\n"),
+                          argv[0]);
+            res=1;
+        }
+        else if (wcsfuncname(argv[woptind]))
+        {
+            append_format(*out_err,
+                          _(L"%ls: Illegal function name '%ls'\n"),
+                          argv[0],
+                          argv[woptind]);
+
+            res=1;
+        }
+        else if (parser_keywords_is_reserved(argv[woptind]))
+        {
+
+            append_format(*out_err,
+                          _(L"%ls: The name '%ls' is reserved,\nand can not be used as a function name\n"),
+                          argv[0],
+                          argv[woptind]);
+
+            res=1;
+        }
+        else if (! wcslen(argv[woptind]))
+        {
+            append_format(*out_err, _(L"%ls: No function name given\n"), argv[0]);
+        }
+        else
+        {
+
+            name = argv[woptind++];
+
+            if (named_arguments.get())
+            {
+                while (woptind < argc)
+                {
+                    if (wcsvarname(argv[woptind]))
+                    {
+                        append_format(*out_err,
+                                      _(L"%ls: Invalid variable name '%ls'\n"),
+                                      argv[0],
+                                      argv[woptind]);
+                        res = STATUS_BUILTIN_ERROR;
+                        break;
+                    }
+
+                    named_arguments->push_back(argv[woptind++]);
+                }
+            }
+            else if (woptind != argc)
+            {
+                append_format(*out_err,
+                              _(L"%ls: Expected one argument, got %d\n"),
+                              argv[0],
+                              argc);
+                res=1;
+
+            }
+        }
+    }
+
+    if (res)
+    {
+        builtin_print_help(parser, argv[0], *out_err);
+    }
+    else
+    {
+        function_data_t d;
+
+        d.name = name;
+        if (desc)
+            d.description = desc;
+        d.events.swap(events);
+        d.shadows = shadows;
+        if (named_arguments.get())
+            d.named_arguments.swap(*named_arguments);
+
+        for (size_t i=0; i<d.events.size(); i++)
+        {
+            event_t &e = d.events.at(i);
+            e.function_name = d.name;
+        }
+        
+        d.definition = contents.c_str();
+        
+        // TODO: fix def_offset inside function_add
+        function_add(d, parser);
+    }
+
+    return res;
+}
+
 /**
    The function builtin, used for providing subroutines.
    It calls various functions from function.c to perform any heavy lifting.
 */
 static int builtin_function(parser_t &parser, wchar_t **argv)
 {
+    /* Hack hack hack - with the new parser, this is only invoked for help */
+    if (parser_use_ast())
+    {
+        builtin_print_help(parser, argv[0], stdout_buffer);
+        return STATUS_BUILTIN_OK;
+    }
+    
     int argc = builtin_count_args(argv);
     int res=STATUS_BUILTIN_OK;
     wchar_t *desc=0;
@@ -1981,6 +2293,10 @@ static int builtin_function(parser_t &parser, wchar_t **argv)
                           argv[woptind]);
 
             res=1;
+        }
+        else if (! wcslen(argv[woptind]))
+        {
+            append_format(stderr_buffer, _(L"%ls: No function name given\n"), argv[0]);
         }
         else
         {
@@ -3018,10 +3334,7 @@ static int builtin_source(parser_t &parser, wchar_t ** argv)
 
     argc = builtin_count_args(argv);
 
-    const wchar_t *fn;
-    const wchar_t *fn_intern;
-
-
+    const wchar_t *fn, *fn_intern;
 
     if (argc < 2 || (wcscmp(argv[1], L"-") == 0))
     {
@@ -3054,18 +3367,7 @@ static int builtin_source(parser_t &parser, wchar_t ** argv)
             return STATUS_BUILTIN_ERROR;
         }
 
-        fn = wrealpath(argv[1], NULL);
-
-        if (!fn)
-        {
-            fn_intern = intern(argv[1]);
-        }
-        else
-        {
-            fn_intern = intern(fn);
-            free((void *)fn);
-        }
-
+        fn_intern = intern(argv[1]);
     }
 
     parser.push_block(new source_block_t(fn_intern));
@@ -3369,6 +3671,12 @@ static int builtin_for(parser_t &parser, wchar_t **argv)
     int argc = builtin_count_args(argv);
     int res=STATUS_BUILTIN_ERROR;
 
+    /* Hackish - if we have no arguments other than the command, we are a "naked invocation" and we just print help */
+    if (argc == 1)
+    {
+        builtin_print_help(parser, argv[0], stdout_buffer);
+        return STATUS_BUILTIN_ERROR;
+    }
 
     if (argc < 3)
     {
@@ -3755,6 +4063,13 @@ static int builtin_switch(parser_t &parser, wchar_t **argv)
 {
     int res=STATUS_BUILTIN_OK;
     int argc = builtin_count_args(argv);
+    
+   /* Hackish - if we have no arguments other than the command, we are a "naked invocation" and we just print help */
+    if (argc == 1)
+    {
+        builtin_print_help(parser, argv[0], stdout_buffer);
+        return STATUS_BUILTIN_ERROR;
+    }
 
     if (argc != 2)
     {
@@ -3960,6 +4275,49 @@ static int builtin_history(parser_t &parser, wchar_t **argv)
     return STATUS_BUILTIN_ERROR;
 }
 
+#pragma mark Simulator
+
+int builtin_parse(parser_t &parser, wchar_t **argv)
+{
+    struct sigaction act;
+    sigemptyset(& act.sa_mask);
+    act.sa_flags=0;
+    act.sa_handler=SIG_DFL;
+    sigaction(SIGINT, &act, 0);
+
+    std::vector<char> txt;
+    for (;;)
+    {
+        char buff[256];
+        ssize_t amt = read_loop(builtin_stdin, buff, sizeof buff);
+        if (amt <= 0) break;
+        txt.insert(txt.end(), buff, buff + amt);
+    }
+    if (! txt.empty())
+    {
+        const wcstring src = str2wcstring(&txt.at(0), txt.size());
+        parse_node_tree_t parse_tree;
+        parse_error_list_t errors;
+        bool success = parse_tree_from_string(src, parse_flag_none, &parse_tree, &errors, true);
+        if (! success)
+        {
+            stdout_buffer.append(L"Parsing failed:\n");
+            for (size_t i=0; i < errors.size(); i++)
+            {
+                stdout_buffer.append(errors.at(i).describe(src));
+                stdout_buffer.push_back(L'\n');
+            }
+            
+            stdout_buffer.append(L"(Reparsed with continue after error)\n");
+            parse_tree.clear();
+            errors.clear();
+            parse_tree_from_string(src, parse_flag_continue_after_error, &parse_tree, &errors, true);
+        }
+        const wcstring dump = parse_dump_tree(parse_tree, src);
+        stdout_buffer.append(dump);
+    }
+    return STATUS_BUILTIN_OK;
+}
 
 /*
   END OF BUILTIN COMMANDS
@@ -3975,6 +4333,7 @@ static int builtin_history(parser_t &parser, wchar_t **argv)
 static const builtin_data_t builtin_datas[]=
 {
     { 		L"[",  &builtin_test, N_(L"Test a condition")   },
+    { 		L"__fish_parse",  &builtin_parse, N_(L"Try out the new parser")  },
     { 		L"and",  &builtin_generic, N_(L"Execute command if previous command suceeded")  },
     { 		L"begin",  &builtin_begin, N_(L"Create a block of code")   },
     { 		L"bg",  &builtin_bg, N_(L"Send job to background")   },
@@ -4119,7 +4478,7 @@ void builtin_get_names(std::vector<completion_t> &list)
 {
     for (size_t i=0; i < BUILTIN_COUNT; i++)
     {
-        list.push_back(completion_t(builtin_datas[i].name));
+        append_completion(list, builtin_datas[i].name);
     }
 }
 
@@ -4166,4 +4525,3 @@ void builtin_pop_io(parser_t &parser)
         builtin_stdin = 0;
     }
 }
-

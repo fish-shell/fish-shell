@@ -11,10 +11,8 @@
 #include "util.h"
 #include "event.h"
 #include "function.h"
+#include "parse_tree.h"
 #include <vector>
-
-#define PARSER_TEST_ERROR 1
-#define PARSER_TEST_INCOMPLETE 2
 
 /**
    event_blockage_t represents a block on events of the specified type
@@ -97,38 +95,19 @@ public:
     bool skip; /**< Whether execution of the commands in this block should be skipped */
     bool had_command; /**< Set to non-zero once a command has been executed in this block */
     int tok_pos; /**< The start index of the block */
+    
+    node_offset_t node_offset; /* Offset of the node */
 
-    /**
-       Status for the current loop block. Can be any of the values from the loop_status enum.
-    */
+    /** Status for the current loop block. Can be any of the values from the loop_status enum. */
     int loop_status;
 
-    /**
-       The job that is currently evaluated in the specified block.
-    */
+    /** The job that is currently evaluated in the specified block. */
     job_t *job;
 
-#if 0
-    union
-    {
-        int while_state;  /**< True if the loop condition has not yet been evaluated*/
-        wchar_t *for_variable; /**< Name of the variable to loop over */
-        int if_state; /**< The state of the if block, can be one of IF_STATE_UNTESTED, IF_STATE_FALSE, IF_STATE_TRUE */
-        wchar_t *switch_value; /**< The value to test in a switch block */
-        const wchar_t *source_dest; /**< The name of the file to source*/
-        event_t *event; /**<The event that triggered this block */
-        wchar_t *function_call_name;
-    } param1;
-#endif
-
-    /**
-       Name of file that created this block
-    */
+    /** Name of file that created this block */
     const wchar_t *src_filename;
 
-    /**
-       Line number where this block was created
-    */
+    /** Line number where this block was created */
     int src_lineno;
 
     /** Whether we should pop the environment variable stack when we're popped off of the block stack */
@@ -291,9 +270,11 @@ struct profile_item_t
 };
 
 struct tokenizer_t;
+class parse_execution_context_t;
 
 class parser_t
 {
+    friend class parse_execution_context_t;
 private:
     enum parser_type_t parser_type;
 
@@ -305,6 +286,12 @@ private:
 
     /** Position of last error */
     int err_pos;
+    
+    /** Indication that we should skip all blocks */
+    bool cancellation_requested;
+    
+    /** Stack of execution contexts. We own these pointers and must delete them */
+    std::vector<parse_execution_context_t *> execution_contexts;
 
     /** Description of last error */
     wcstring err_buff;
@@ -340,6 +327,7 @@ private:
     /* No copying allowed */
     parser_t(const parser_t&);
     parser_t& operator=(const parser_t&);
+    
 
     void parse_job_argument_list(process_t *p, job_t *j, tokenizer_t *tok, std::vector<completion_t>&, bool);
     int parse_job(process_t *p, job_t *j, tokenizer_t *tok);
@@ -350,7 +338,10 @@ private:
     void print_errors_stderr();
 
     /** Create a job */
-    job_t *job_create();
+    job_t *job_create(const io_chain_t &io);
+    
+    /** Adds a job to the beginning of the job list. */
+    void job_add(job_t *job);
 
 public:
     std::vector<profile_item_t*> profile_items;
@@ -389,11 +380,15 @@ public:
 
       \return 0 on success, 1 otherwise
     */
-    int eval(const wcstring &cmdStr, const io_chain_t &io, enum block_type_t block_type);
-
+    int eval(const wcstring &cmd_str, const io_chain_t &io, enum block_type_t block_type);
+    int eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type);
+    
+    /** Evaluates a block node at the given node offset in the topmost execution context */
+    int eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum block_type_t block_type);
+    
     /**
       Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and cmdsubst execution on the tokens.
-      The output is inserted into output, and should be freed by the caller.
+      The output is inserted into output.
 
       \param line Line to evaluate
       \param output List to insert output to
@@ -402,7 +397,7 @@ public:
       \param line Line to evaluate
       \param output List to insert output to
     */
-    int eval_args(const wchar_t *line, std::vector<completion_t> &output);
+    void eval_args(const wchar_t *line, std::vector<completion_t> &output);
 
     /**
        Sets the current evaluation error. This function should only be used by libraries that are called by
@@ -411,7 +406,7 @@ public:
        \param p The character offset at which the error occured
        \param str The printf-style error message filter
     */
-    void error(int ec, int p, const wchar_t *str, ...);
+    void error(int ec, size_t p, const wchar_t *str, ...);
 
     /**
        Returns a string describing the current parser pisition in the format 'FILENAME (line LINE_NUMBER): LINE'.
@@ -464,6 +459,9 @@ public:
 
     /** Remove the outermost block namespace */
     void pop_block();
+    
+    /** Remove the outermost block, asserting it's the given one */
+    void pop_block(const block_t *b);
 
     /** Return a description of the given blocktype */
     const wchar_t *get_block_desc(int block) const;
@@ -492,7 +490,7 @@ public:
        \param out if non-null, any errors in the command will be filled out into this buffer
        \param prefix the prefix string to prepend to each error message written to the \c out buffer
     */
-    int test(const wchar_t * buff, int *block_level = NULL, wcstring *out = NULL, const wchar_t *prefix = NULL);
+    void get_backtrace(const wcstring &src, const parse_error_list_t &errors, wcstring *output) const;
 
     /**
        Test if the specified string can be parsed as an argument list,
@@ -529,7 +527,7 @@ public:
        \param s the string to test
        \param min_match is the minimum number of characters that must match in a long style option, i.e. the longest common prefix between --help and any other option. If less than 3, 3 will be assumed.
     */
-    int is_help(const wchar_t *s, int min_match) const;
+    static int is_help(const wchar_t *s, int min_match);
 
     /**
        Returns the file currently evaluated by the parser. This can be
@@ -541,11 +539,14 @@ public:
     /**
        Write a stack trace starting at the specified block to the specified wcstring
     */
-    void stack_trace(size_t block_idx, wcstring &buff);
+    void stack_trace(size_t block_idx, wcstring &buff) const;
 
     int get_block_type(const wchar_t *cmd) const;
     const wchar_t *get_block_command(int type) const;
 };
+
+/* Temporary */
+bool parser_use_ast(void);
 
 
 #endif

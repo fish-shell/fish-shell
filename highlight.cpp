@@ -1245,7 +1245,7 @@ void highlight_shell(const wcstring &buff, std::vector<int> &color, size_t pos, 
 {
     if (1)
     {
-        highlight_shell_magic(buff, color, pos, error, vars);
+        highlight_shell_new_parser(buff, color, pos, error, vars);
     }
     else
     {
@@ -2186,7 +2186,7 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
     return color_array;
 }
 
-void highlight_shell_magic(const wcstring &buff, std::vector<int> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars)
+void highlight_shell_new_parser(const wcstring &buff, std::vector<int> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars)
 {
     /* Do something sucky and get the current working directory on this background thread. This should really be passed in. */
     const wcstring working_directory = env_get_pwd_slash();

@@ -1011,7 +1011,7 @@ bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement
                     if (old_fd < 0 || errno || *end)
                     {
                         errored = report_error(redirect_node,
-                              _(L"Requested redirection to something that is not a file descriptor %ls"),
+                              _(L"Requested redirection to '%ls', which is not a valid file descriptor"),
                               target.c_str());
                     }
                     else
@@ -1186,7 +1186,7 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(j
     {
         assert(job_cont->type == symbol_job_continuation);
         
-        /* Handle the pipe, whose fd may not be the obvious stdoud */
+        /* Handle the pipe, whose fd may not be the obvious stdout */
         const parse_node_t &pipe_node = *get_child(*job_cont, 0, parse_token_type_pipe);
         processes.back()->pipe_write_fd = fd_redirected_by_pipe(get_source(pipe_node));
         

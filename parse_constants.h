@@ -141,35 +141,20 @@ typedef unsigned int parser_test_error_bits_t;
 /** Error message on reaching maximum call stack depth */
 #define CALL_STACK_LIMIT_EXCEEDED_ERR_MSG _( L"The function call stack limit has been exceeded. Do you have an accidental infinite loop?")
 
-/**
-   Error message when a non-string token is found when expecting a command name
-*/
+/** Error message when a non-string token is found when expecting a command name */
 #define CMD_OR_ERR_MSG _( L"Expected a command, but instead found a pipe. Did you mean 'COMMAND; or COMMAND'? See the help section for the 'or' builtin command by typing 'help or'.")
 
-/**
-   Error message when a non-string token is found when expecting a command name
-*/
+/** Error message when a non-string token is found when expecting a command name */
 #define CMD_AND_ERR_MSG _( L"Expected a command, but instead found a '&'. Did you mean 'COMMAND; and COMMAND'? See the help section for the 'and' builtin command by typing 'help and'.")
 
-/**
-   Error message when encountering an illegal command name
-*/
+/** Error message when encountering an illegal command name */
 #define ILLEGAL_CMD_ERR_MSG _( L"Illegal command name '%ls'")
 
-/**
-   Error message when encountering an illegal file descriptor
-*/
-#define ILLEGAL_FD_ERR_MSG _( L"Illegal file descriptor '%ls'")
+/** Error message when encountering an illegal file descriptor */
+#define ILLEGAL_FD_ERR_MSG _( L"Illegal file descriptor in redirection '%ls'")
 
-/**
-   Error message for wildcards with no matches
-*/
+/** Error message for wildcards with no matches */
 #define WILDCARD_ERR_MSG _( L"No matches for wildcard '%ls'.")
-
-/**
-   Error when using case builtin outside of switch block
-*/
-#define INVALID_CASE_ERR_MSG _( L"'case' builtin not inside of switch block")
 
 /** Error when using break outside of loop */
 #define INVALID_BREAK_ERR_MSG _( L"break command while not inside of loop" )
@@ -180,51 +165,8 @@ typedef unsigned int parser_test_error_bits_t;
 /** Error when using return builtin outside of function definition */
 #define INVALID_RETURN_ERR_MSG _( L"'return' builtin command outside of function definition" )
 
-/**
-   Error when using else builtin outside of if block
-*/
-#define INVALID_ELSE_ERR_MSG _( L"'%ls' builtin not inside of if block" )
-
-/**
-   Error when using 'else if' past a naked 'else'
-*/
-#define INVALID_ELSEIF_PAST_ELSE_ERR_MSG _( L"'%ls' used past terminating 'else'" )
-
-/**
-   Error when using end builtin outside of block
-*/
-#define INVALID_END_ERR_MSG _( L"'end' command outside of block")
-
-/**
-   Error message for Posix-style assignment: foo=bar
-*/
+/** Error message for Posix-style assignment: foo=bar */
 #define COMMAND_ASSIGN_ERR_MSG _( L"Unknown command '%ls'. Did you mean 'set %ls %ls'? See the help section on the set command by typing 'help set'.")
-
-/**
-   Error for invalid redirection token
-*/
-#define REDIRECT_TOKEN_ERR_MSG _( L"Expected redirection specification, got token of type '%ls'")
-
-/**
-   Error when encountering redirection without a command
-*/
-#define INVALID_REDIRECTION_ERR_MSG _( L"Encountered redirection when expecting a command name. Fish does not allow a redirection operation before a command.")
-
-/**
-   Error for evaluating null pointer
-*/
-#define EVAL_NULL_ERR_MSG _( L"Tried to evaluate null pointer." )
-
-/**
-   Error for evaluating in illegal scope
-*/
-#define INVALID_SCOPE_ERR_MSG _( L"Tried to evaluate commands using invalid block type '%ls'" )
-
-
-/**
-   Error for wrong token type
-*/
-#define UNEXPECTED_TOKEN_ERR_MSG _( L"Unexpected token of type '%ls'")
 
 /**
    While block description

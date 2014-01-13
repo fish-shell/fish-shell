@@ -1188,7 +1188,13 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(j
         
         /* Handle the pipe, whose fd may not be the obvious stdout */
         const parse_node_t &pipe_node = *get_child(*job_cont, 0, parse_token_type_pipe);
-        processes.back()->pipe_write_fd = fd_redirected_by_pipe(get_source(pipe_node));
+        int pipe_write_fd = fd_redirected_by_pipe(get_source(pipe_node));
+        if (pipe_write_fd == -1)
+        {
+            result = report_error(pipe_node, ILLEGAL_FD_ERR_MSG, get_source(pipe_node).c_str());
+            break;
+        }
+        processes.back()->pipe_write_fd = pipe_write_fd;
         
         /* Get the statement node and make a process from it */
         const parse_node_t *statement_node = get_child(*job_cont, 1, symbol_statement);

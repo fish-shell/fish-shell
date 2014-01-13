@@ -89,7 +89,7 @@ The fish parser. Contains functions for parsing and evaluating code.
 /**
    Error message when encountering an illegal file descriptor
 */
-#define ILLEGAL_FD_ERR_MSG _( L"Illegal file descriptor '%ls'")
+#define ILLEGAL_FD_ERR_MSG _( L"Illegal file descriptor in redirection '%ls'")
 
 /**
    Error message for wildcards with no matches
@@ -140,11 +140,6 @@ The fish parser. Contains functions for parsing and evaluating code.
    Error when encountering redirection without a command
 */
 #define INVALID_REDIRECTION_ERR_MSG _( L"Encountered redirection when expecting a command name. Fish does not allow a redirection operation before a command.")
-
-/**
-   Error for evaluating null pointer
-*/
-#define EVAL_NULL_ERR_MSG _( L"Tried to evaluate null pointer." )
 
 /**
    Error for evaluating in illegal scope

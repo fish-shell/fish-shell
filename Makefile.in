@@ -302,7 +302,8 @@ doc/refman.pdf: doc
 #
 
 test: $(PROGRAMS) fish_tests
-	./fish_tests; cd tests; ../fish <test.fish;
+	./fish_tests
+	cd tests; ../fish <test.fish;
 .PHONY: test
 
 

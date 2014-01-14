@@ -4298,7 +4298,7 @@ int builtin_parse(parser_t &parser, wchar_t **argv)
         const wcstring src = str2wcstring(&txt.at(0), txt.size());
         parse_node_tree_t parse_tree;
         parse_error_list_t errors;
-        bool success = parse_tree_from_string(src, parse_flag_none, &parse_tree, &errors, true);
+        bool success = parse_tree_from_string(src, parse_flag_none, &parse_tree, &errors);
         if (! success)
         {
             stdout_buffer.append(L"Parsing failed:\n");
@@ -4311,7 +4311,7 @@ int builtin_parse(parser_t &parser, wchar_t **argv)
             stdout_buffer.append(L"(Reparsed with continue after error)\n");
             parse_tree.clear();
             errors.clear();
-            parse_tree_from_string(src, parse_flag_continue_after_error, &parse_tree, &errors, true);
+            parse_tree_from_string(src, parse_flag_continue_after_error, &parse_tree, &errors);
         }
         const wcstring dump = parse_dump_tree(parse_tree, src);
         stdout_buffer.append(dump);

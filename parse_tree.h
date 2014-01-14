@@ -197,7 +197,7 @@ public:
 };
 
 /* The big entry point. Parse a string! */
-bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags, parse_node_tree_t *output, parse_error_list_t *errors, bool log_it = false);
+bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags, parse_node_tree_t *output, parse_error_list_t *errors);
 
 /* Fish grammar:
 

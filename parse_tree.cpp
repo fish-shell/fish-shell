@@ -583,7 +583,7 @@ class parse_ll_t
     void accept_tokens(parse_token_t token1, parse_token_t token2);
     
     /* Report tokenizer errors */
-    void report_tokenizer_error(parse_token_t token, const wchar_t *tok_error);
+    void report_tokenizer_error(parse_token_t token, int tok_err, const wchar_t *tok_error);
     
     /* Indicate if we hit a fatal error */
     bool has_fatal_error(void) const
@@ -786,10 +786,31 @@ void parse_ll_t::parse_error_failed_production(struct parse_stack_element_t &sta
     }
 }
 
-void parse_ll_t::report_tokenizer_error(parse_token_t token, const wchar_t *tok_error)
+void parse_ll_t::report_tokenizer_error(parse_token_t token, int tok_err_code, const wchar_t *tok_error)
 {
     assert(tok_error != NULL);
-    this->parse_error(token, parse_error_tokenizer, L"%ls", tok_error);
+    parse_error_code_t parse_error_code;
+    switch (tok_err_code)
+    {
+        case TOK_UNTERMINATED_QUOTE:
+            parse_error_code = parse_error_tokenizer_unterminated_quote;
+            break;
+
+        case TOK_UNTERMINATED_SUBSHELL:
+            parse_error_code = parse_error_tokenizer_unterminated_subshell;
+            break;
+
+        case TOK_UNTERMINATED_ESCAPE:
+            parse_error_code = parse_error_tokenizer_unterminated_escape;
+            break;
+
+        case TOK_OTHER:
+        default:
+            parse_error_code = parse_error_tokenizer_other;
+            break;
+
+    }
+    this->parse_error(token, parse_error_code, L"%ls", tok_error);
 }
 
 void parse_ll_t::parse_error(const wchar_t *expected, parse_token_t token)
@@ -1076,7 +1097,7 @@ static inline parse_token_t next_parse_token(tokenizer_t *tok)
     return result;
 }
 
-bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags, parse_node_tree_t *output, parse_error_list_t *errors, bool log_it)
+bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags, parse_node_tree_t *output, parse_error_list_t *errors)
 {
     parse_ll_t parser;
     parser.set_should_generate_error_messages(errors != NULL);
@@ -1116,7 +1137,7 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
         /* Handle tokenizer errors. This is a hack because really the parser should report this for itself; but it has no way of getting the tokenizer message */
         if (queue[1].type == parse_special_type_tokenizer_error)
         {
-            parser.report_tokenizer_error(queue[1], tok_last(&tok));
+            parser.report_tokenizer_error(queue[1], tok_get_error(&tok), tok_last(&tok));
         }
         
         /* Handle errors */

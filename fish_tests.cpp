@@ -2452,7 +2452,8 @@ static void test_new_parser_errors(void)
     }
     tests[] =
     {
-        {L"echo (abc", parse_error_tokenizer},
+        {L"echo 'abc", parse_error_tokenizer_unterminated_quote},
+        {L"echo (abc", parse_error_tokenizer_unterminated_subshell},
         
         {L"end", parse_error_unbalancing_end},
         {L"echo hi ; end", parse_error_unbalancing_end},

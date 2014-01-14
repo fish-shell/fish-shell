@@ -992,9 +992,27 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
     // We detect this via an 'end_command' block without source
     bool has_unclosed_block = false;
     
+    // Whether there's an unclosed quote, and therefore unfinished
+    bool has_unclosed_quote = false;
+
     // Parse the input string into a parse tree
     // Some errors are detected here
     bool parsed = parse_tree_from_string(buff_src, parse_flag_leave_unterminated, &node_tree, &parse_errors);
+
+    for (size_t i=0; i < parse_errors.size(); i++)
+    {
+        if (parse_errors.at(i).code == parse_error_tokenizer_unterminated_quote)
+        {
+            // Remove this error, since we don't consider it a real error
+            has_unclosed_quote = true;
+            parse_errors.erase(parse_errors.begin() + i);
+            i--;
+        }
+    }
+    // #1238: If the only error was unterminated quote, then consider this to have parsed successfully. A better fix would be to have parse_tree_from_string return this information directly (but it would be a shame to munge up its nice bool return).
+    if (parse_errors.empty() && has_unclosed_quote)
+        parsed = true;
+
     if (! parsed)
     {
         errored = true;
@@ -1120,7 +1138,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
     if (errored)
         res |= PARSER_TEST_ERROR;
 
-    if (has_unclosed_block)
+    if (has_unclosed_block || has_unclosed_quote)
         res |= PARSER_TEST_INCOMPLETE;
     
     if (out_errors)

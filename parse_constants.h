@@ -114,7 +114,11 @@ enum parse_error_code_t
     
     parse_error_generic, // unclassified error types
     
-    parse_error_tokenizer, //tokenizer error
+    //tokenizer errors
+    parse_error_tokenizer_unterminated_quote,
+    parse_error_tokenizer_unterminated_subshell,
+    parse_error_tokenizer_unterminated_escape,
+    parse_error_tokenizer_other,
     
     parse_error_unbalancing_end, //end outside of block
     parse_error_unbalancing_else, //else outside of if

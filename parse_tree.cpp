@@ -583,7 +583,7 @@ class parse_ll_t
     void accept_tokens(parse_token_t token1, parse_token_t token2);
     
     /* Report tokenizer errors */
-    void report_tokenizer_error(parse_token_t token, const wchar_t *tok_error);
+    void report_tokenizer_error(parse_token_t token, int tok_err, const wchar_t *tok_error);
     
     /* Indicate if we hit a fatal error */
     bool has_fatal_error(void) const
@@ -786,10 +786,31 @@ void parse_ll_t::parse_error_failed_production(struct parse_stack_element_t &sta
     }
 }
 
-void parse_ll_t::report_tokenizer_error(parse_token_t token, const wchar_t *tok_error)
+void parse_ll_t::report_tokenizer_error(parse_token_t token, int tok_err_code, const wchar_t *tok_error)
 {
     assert(tok_error != NULL);
-    this->parse_error(token, parse_error_tokenizer, L"%ls", tok_error);
+    parse_error_code_t parse_error_code;
+    switch (tok_err_code)
+    {
+        case TOK_UNTERMINATED_QUOTE:
+            parse_error_code = parse_error_tokenizer_unterminated_quote;
+            break;
+
+        case TOK_UNTERMINATED_SUBSHELL:
+            parse_error_code = parse_error_tokenizer_unterminated_subshell;
+            break;
+
+        case TOK_UNTERMINATED_ESCAPE:
+            parse_error_code = parse_error_tokenizer_unterminated_escape;
+            break;
+
+        case TOK_OTHER:
+        default:
+            parse_error_code = parse_error_tokenizer_other;
+            break;
+
+    }
+    this->parse_error(token, parse_error_code, L"%ls", tok_error);
 }
 
 void parse_ll_t::parse_error(const wchar_t *expected, parse_token_t token)
@@ -1049,6 +1070,11 @@ static const parse_token_t kInvalidToken = {token_type_invalid, parse_keyword_no
 /* Terminal token */
 static const parse_token_t kTerminalToken = {parse_token_type_terminate, parse_keyword_none, false, -1, -1};
 
+static inline bool is_help_argument(const wchar_t *txt)
+{
+    return ! wcscmp(txt, L"-h") || ! wcscmp(txt, L"--help");
+}
+
 /* Return a new parse token, advancing the tokenizer */
 static inline parse_token_t next_parse_token(tokenizer_t *tok)
 {
@@ -1069,6 +1095,7 @@ static inline parse_token_t next_parse_token(tokenizer_t *tok)
     result.type = parse_token_type_from_tokenizer_token(tok_type);
     result.keyword = keyword_for_token(tok_type, tok_txt);
     result.has_dash_prefix = (tok_txt[0] == L'-');
+    result.is_help_argument = result.has_dash_prefix && is_help_argument(tok_txt);
     result.source_start = (size_t)tok_start;
     result.source_length = tok_extent;
     
@@ -1076,7 +1103,7 @@ static inline parse_token_t next_parse_token(tokenizer_t *tok)
     return result;
 }
 
-bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags, parse_node_tree_t *output, parse_error_list_t *errors, bool log_it)
+bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags, parse_node_tree_t *output, parse_error_list_t *errors)
 {
     parse_ll_t parser;
     parser.set_should_generate_error_messages(errors != NULL);
@@ -1095,10 +1122,10 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
     tokenizer_t tok = tokenizer_t(str.c_str(), tok_options);
     
     /* We are an LL(2) parser. We pass two tokens at a time. New tokens come in at index 1. Seed our queue with an initial token at index 1. */
-    parse_token_t queue[2] = {kInvalidToken, next_parse_token(&tok)};
-    
-    /* Loop until we get a terminal token */
-    do
+    parse_token_t queue[2] = {kInvalidToken, kInvalidToken};
+
+    /* Loop until we have a terminal token. */
+    for (size_t token_count = 0; queue[0].type != parse_token_type_terminate; token_count++)
     {
         /* Push a new token onto the queue */
         queue[0] = queue[1];
@@ -1110,13 +1137,16 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
             break;
         }
         
-        /* Pass these two tokens. We know that queue[0] is valid; queue[1] may be invalid. */
-        parser.accept_tokens(queue[0], queue[1]);
+        /* Pass these two tokens, unless we're still loading the queue. We know that queue[0] is valid; queue[1] may be invalid. */
+        if (token_count > 0)
+        {
+            parser.accept_tokens(queue[0], queue[1]);
+        }
         
         /* Handle tokenizer errors. This is a hack because really the parser should report this for itself; but it has no way of getting the tokenizer message */
         if (queue[1].type == parse_special_type_tokenizer_error)
         {
-            parser.report_tokenizer_error(queue[1], tok_last(&tok));
+            parser.report_tokenizer_error(queue[1], tok_get_error(&tok), tok_last(&tok));
         }
         
         /* Handle errors */
@@ -1138,10 +1168,7 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
                 break;
             }
         }
-        
-        /* If this was the last token, then stop the loop */
-    } while (queue[0].type != parse_token_type_terminate);
-
+    }
 
     // Teach each node where its source range is
     parser.determine_node_ranges();

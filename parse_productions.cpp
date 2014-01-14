@@ -116,12 +116,22 @@ PRODUCTIONS(statement) =
 };
 RESOLVE(statement)
 {
-    // Go to decorated statements if the subsequent token looks like '--'
-    // If we are 'begin', then we expect to be invoked with no arguments. But if we are anything else, we require an argument, so do the same thing if the subsequent token is a line end.
+    /* The only block-like builtin that takes any parameters is 'function' So go to decorated statements if the subsequent token looks like '--'.
+        The logic here is subtle:
+            If we are 'begin', then we expect to be invoked with no arguments.
+            If we are 'function', then we are a non-block if we are invoked with -h or --help
+            If we are anything else, we require an argument, so do the same thing if the subsequent token is a statement terminator.
+    */
+     
     if (token1.type == parse_token_type_string)
     {
-        // If the next token looks like an option (starts with a dash), then parse it as a decorated statement
-        if (token2.has_dash_prefix)
+        // If we are a function, then look for help arguments
+        // Othewrise, if the next token looks like an option (starts with a dash), then parse it as a decorated statement
+        if (token1.keyword == parse_keyword_function && token2.is_help_argument)
+        {
+            return 4;
+        }
+        else if (token1.keyword != parse_keyword_function && token2.has_dash_prefix)
         {
             return 4;
         }

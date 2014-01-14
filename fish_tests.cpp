@@ -2417,6 +2417,38 @@ static void test_new_parser_ll2(void)
         if (deco != tests[i].deco)
             err(L"When parsing '%ls', expected decoration %d but got %d on line %ld", tests[i].src.c_str(), (int)tests[i].deco, (int)deco, (long)__LINE__);
     }
+    
+    /* Verify that 'function -h' and 'function --help' are plain statements but 'function --foo' is not (#1240) */
+    const struct
+    {
+        wcstring src;
+        parse_token_type_t type;
+    }
+    tests2[] =
+    {
+        {L"function -h", symbol_plain_statement},
+        {L"function --help", symbol_plain_statement},
+        {L"function --foo ; end", symbol_function_header},
+        {L"function foo ; end", symbol_function_header},
+    };
+    for (size_t i=0; i < sizeof tests2 / sizeof *tests2; i++)
+    {
+        parse_node_tree_t tree;
+        if (! parse_tree_from_string(tests2[i].src, parse_flag_none, &tree, NULL))
+        {
+            err(L"Failed to parse '%ls'", tests2[i].src.c_str());
+        }
+        
+        const parse_node_tree_t::parse_node_list_t node_list = tree.find_nodes(tree.at(0), tests2[i].type);
+        if (node_list.size() == 0)
+        {
+            err(L"Failed to find node of type '%ls'", token_type_description(tests2[i].type).c_str());
+        }
+        else if (node_list.size() > 1)
+        {
+            err(L"Found too many nodes of type '%ls'", token_type_description(tests2[i].type).c_str());
+        }
+    }
 }
 
 static void test_new_parser_ad_hoc()
@@ -2452,7 +2484,9 @@ static void test_new_parser_errors(void)
     }
     tests[] =
     {
-        {L"echo (abc", parse_error_tokenizer},
+        {L"echo 'abc", parse_error_tokenizer_unterminated_quote},
+        {L"'", parse_error_tokenizer_unterminated_quote},
+        {L"echo (abc", parse_error_tokenizer_unterminated_subshell},
         
         {L"end", parse_error_unbalancing_end},
         {L"echo hi ; end", parse_error_unbalancing_end},

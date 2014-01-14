@@ -1234,7 +1234,8 @@ void s_write(screen_t *s,
              size_t explicit_len,
              const int *colors,
              const int *indent,
-             size_t cursor_pos)
+             size_t cursor_pos,
+             const screen_data_t *pager_data)
 {
     screen_data_t::cursor_t cursor_arr;
 
@@ -1321,6 +1322,13 @@ void s_write(screen_t *s,
     }
 
     s->desired.cursor = cursor_arr;
+    
+    /* append pager_data */
+    if (pager_data != NULL)
+    {
+        s->desired.append_lines(*pager_data);
+    }
+    
     s_update(s, layout.left_prompt.c_str(), layout.right_prompt.c_str());
     s_save_status(s);
 }

@@ -416,6 +416,7 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
             written += print_max(L" ", 0, 1, false, &line_data);
         }
     }
+
     return line_data;
 }
 
@@ -436,6 +437,8 @@ void pager_t::completion_print(int cols, int *width_per_column, int row_start, i
 
     size_t rows = (lst.size()-1)/cols+1;
 
+    fprintf(stderr, "prefix: %ls\n", prefix.c_str());
+
     for (size_t row = row_start; row < row_stop; row++)
     {
         for (size_t col = 0; col < cols; col++)
@@ -449,6 +452,13 @@ void pager_t::completion_print(int cols, int *width_per_column, int row_start, i
 
             /* Print this completion on its own "line" */
             line_t line = completion_print_item(prefix, el, row, col, width_per_column[col] - (is_last?0:2), row%2, rendering);
+            
+            /* If there's more to come, append two spaces */
+            if (col + 1 < cols)
+            {
+                line.append(L' ', 0);
+                line.append(L' ', 0);
+            }
             
             /* Append this to the real line */
             rendering->screen_data.create_line(row).append_line(line);

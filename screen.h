@@ -109,6 +109,11 @@ public:
     {
         return line_datas.size();
     }
+    
+    void append_lines(const screen_data_t &d)
+    {
+        this->line_datas.insert(this->line_datas.end(), d.line_datas.begin(), d.line_datas.end());
+    }
 };
 
 /**
@@ -196,7 +201,8 @@ void s_write(screen_t *s,
              size_t explicit_len,
              const int *colors,
              const int *indent,
-             size_t cursor_pos);
+             size_t cursor_pos,
+             const screen_data_t *pager_data);
 
 /**
     This function resets the screen buffers internal knowledge about

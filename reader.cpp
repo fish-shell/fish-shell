@@ -100,6 +100,7 @@ commence.
 #include "parse_util.h"
 #include "parser_keywords.h"
 #include "parse_tree.h"
+#include "pager.h"
 
 /**
    Maximum length of prefix string when printing completion
@@ -199,6 +200,9 @@ public:
 
     /** String containing the autosuggestion */
     wcstring autosuggestion;
+    
+    /** Current completions */
+    page_rendering_t completion_page_rendering;
 
     /** Whether autosuggesting is allowed at all */
     bool allow_autosuggestion;
@@ -541,7 +545,8 @@ static void reader_repaint()
             data->command_length(),
             &colors[0],
             &indents[0],
-            data->buff_pos);
+            data->buff_pos,
+            &data->completion_page_rendering.screen_data);
 
     data->repaint_needed = false;
 }
@@ -1852,14 +1857,25 @@ static bool handle_completions(const std::vector<completion_t> &comp)
                 wchar_t quote;
                 parse_util_get_parameter_info(data->command_line, data->buff_pos, &quote, NULL, NULL);
                 is_quoted = (quote != L'\0');
+                
+                if (1)
+                {
+                    pager_t pager;
+                    pager.set_term_size(common_get_width(), common_get_height());
+                    pager.prefix = prefix;
+                    pager.set_completions(surviving_completions);
+                    data->completion_page_rendering = pager.render();
+                }
+                else
+                {
+                    /* Clear the autosuggestion from the old commandline before abandoning it (see #561) */
+                    if (! data->autosuggestion.empty())
+                        reader_repaint_without_autosuggestion();
 
-                /* Clear the autosuggestion from the old commandline before abandoning it (see #561) */
-                if (! data->autosuggestion.empty())
-                    reader_repaint_without_autosuggestion();
+                    write_loop(1, "\n", 1);
 
-                write_loop(1, "\n", 1);
-
-                run_pager(prefix, is_quoted, surviving_completions);
+                    run_pager(prefix, is_quoted, surviving_completions);
+                }
             }
             s_reset(&data->screen, screen_reset_abandon_line);
             reader_repaint();
@@ -3189,7 +3205,7 @@ const wchar_t *reader_readline(void)
                     /* Munge our completions */
                     sort_and_make_unique(comp);
                     prioritize_completions(comp);
-
+                    
                     /* Record our cycle_command_line */
                     cycle_command_line = data->command_line;
                     cycle_cursor_pos = data->buff_pos;

@@ -281,21 +281,26 @@ completion_t::~completion_t()
 {
 }
 
-/* completion_t functions */
-completion_t::completion_t(const wcstring &comp, const wcstring &desc, string_fuzzy_match_t mat, int flags_val) :
-    completion(comp),
-    description(desc),
-    match(mat),
-    flags(flags_val)
+/* Clear the COMPLETE_AUTO_SPACE flag, and set COMPLETE_NO_SPACE appropriately depending on the suffix of the string */
+static complete_flags_t resolve_auto_space(const wcstring &comp, complete_flags_t flags)
 {
     if (flags & COMPLETE_AUTO_SPACE)
     {
         flags = flags & ~COMPLETE_AUTO_SPACE;
-        size_t len = completion.size();
+        size_t len = comp.size();
         if (len > 0  && (wcschr(L"/=@:", comp.at(len-1)) != 0))
             flags |= COMPLETE_NO_SPACE;
     }
+    return flags;
+}
 
+/* completion_t functions. Note that the constructor resolves flags! */
+completion_t::completion_t(const wcstring &comp, const wcstring &desc, string_fuzzy_match_t mat, complete_flags_t flags_val) :
+    completion(comp),
+    description(desc),
+    match(mat),
+    flags(resolve_auto_space(comp, flags_val))
+{
 }
 
 completion_t::completion_t(const completion_t &him) : completion(him.completion), description(him.description), match(him.match), flags(him.flags)
@@ -463,16 +468,18 @@ void completion_autoload_t::command_removed(const wcstring &cmd)
 }
 
 
-/** Create a new completion entry */
+/** Create a new completion entry. */
 void append_completion(std::vector<completion_t> &completions, const wcstring &comp, const wcstring &desc, complete_flags_t flags, string_fuzzy_match_t match)
 {
-    /* If we just constructed the completion and used push_back, we would get two string copies. Try to avoid that by making a stubby completion in the vector first, and then copying our string in. */
-    completions.push_back(completion_t(wcstring()));
+    /* If we just constructed the completion and used push_back, we would get two string copies. Try to avoid that by making a stubby completion in the vector first, and then copying our string in. Note that completion_t's constructor will munge 'flags' so it's important that we pass those to the constructor.
+    
+       Nasty hack for #1241 - since the constructor needs the completion string to resolve AUTO_SPACE, and we aren't providing it with the completion, we have to do the resolution ourselves. We should get this resolving out of the constructor.
+    */
+    const wcstring empty;
+    completions.push_back(completion_t(empty, empty, match, resolve_auto_space(comp, flags)));
     completion_t *last = &completions.back();
     last->completion = comp;
     last->description = desc;
-    last->match = match;
-    last->flags = flags;
 }
 
 /**

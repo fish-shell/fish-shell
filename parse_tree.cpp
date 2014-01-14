@@ -1116,10 +1116,10 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
     tokenizer_t tok = tokenizer_t(str.c_str(), tok_options);
     
     /* We are an LL(2) parser. We pass two tokens at a time. New tokens come in at index 1. Seed our queue with an initial token at index 1. */
-    parse_token_t queue[2] = {kInvalidToken, next_parse_token(&tok)};
-    
-    /* Loop until we get a terminal token */
-    do
+    parse_token_t queue[2] = {kInvalidToken, kInvalidToken};
+
+    /* Loop until we have a terminal token. */
+    for (size_t token_count = 0; queue[0].type != parse_token_type_terminate; token_count++)
     {
         /* Push a new token onto the queue */
         queue[0] = queue[1];
@@ -1131,8 +1131,11 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
             break;
         }
         
-        /* Pass these two tokens. We know that queue[0] is valid; queue[1] may be invalid. */
-        parser.accept_tokens(queue[0], queue[1]);
+        /* Pass these two tokens, unless we're still loading the queue. We know that queue[0] is valid; queue[1] may be invalid. */
+        if (token_count > 0)
+        {
+            parser.accept_tokens(queue[0], queue[1]);
+        }
         
         /* Handle tokenizer errors. This is a hack because really the parser should report this for itself; but it has no way of getting the tokenizer message */
         if (queue[1].type == parse_special_type_tokenizer_error)
@@ -1159,10 +1162,7 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
                 break;
             }
         }
-        
-        /* If this was the last token, then stop the loop */
-    } while (queue[0].type != parse_token_type_terminate);
-
+    }
 
     // Teach each node where its source range is
     parser.determine_node_ranges();

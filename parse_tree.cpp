@@ -1070,6 +1070,11 @@ static const parse_token_t kInvalidToken = {token_type_invalid, parse_keyword_no
 /* Terminal token */
 static const parse_token_t kTerminalToken = {parse_token_type_terminate, parse_keyword_none, false, -1, -1};
 
+static inline bool is_help_argument(const wchar_t *txt)
+{
+    return ! wcscmp(txt, L"-h") || ! wcscmp(txt, L"--help");
+}
+
 /* Return a new parse token, advancing the tokenizer */
 static inline parse_token_t next_parse_token(tokenizer_t *tok)
 {
@@ -1090,6 +1095,7 @@ static inline parse_token_t next_parse_token(tokenizer_t *tok)
     result.type = parse_token_type_from_tokenizer_token(tok_type);
     result.keyword = keyword_for_token(tok_type, tok_txt);
     result.has_dash_prefix = (tok_txt[0] == L'-');
+    result.is_help_argument = result.has_dash_prefix && is_help_argument(tok_txt);
     result.source_start = (size_t)tok_start;
     result.source_length = tok_extent;
     

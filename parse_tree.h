@@ -47,6 +47,7 @@ struct parse_token_t
     enum parse_token_type_t type; // The type of the token as represented by the parser
     enum parse_keyword_t keyword; // Any keyword represented by this token
     bool has_dash_prefix; // Hackish: whether the source contains a dash prefix
+    bool is_help_argument; // Hackish: whether the source looks like '-h' or '--help'
     size_t source_start;
     size_t source_length;
 

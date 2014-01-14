@@ -1,6 +1,7 @@
 #include "config.h"
 
 #include "pager.h"
+#include "highlight.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -57,7 +58,7 @@
 #include "env_universal.h"
 #include "print_help.h"
 
-struct comp_t;
+typedef pager_t::comp_t comp_t;
 typedef std::vector<completion_t> completion_list_t;
 typedef std::vector<comp_t> comp_info_list_t;
 
@@ -119,24 +120,6 @@ enum
 #define ERR_NOT_FD _( L"%ls: Argument '%s' is not a valid file descriptor\n" )
 
 /**
-   This struct should be continually updated by signals as the term
-   resizes, and as such always contain the correct current size.
-*/
-static struct winsize termsize;
-
-/**
-   The termios modes the terminal had when the program started. These
-   should be restored on exit
-*/
-static struct termios saved_modes;
-
-/**
-   This flag is set to 1 of we have sent the enter_ca_mode terminfo
-   sequence to save the previous terminal contents.
-*/
-static int is_ca_mode = 0;
-
-/**
    This buffer is used to buffer the output of the pager to improve
    screen redraw performance bu cutting down the number of write()
    calls to only one.
@@ -161,45 +144,7 @@ static const wchar_t *hightlight_var[] =
    This string contains the text that should be sent back to the calling program
 */
 static wcstring out_buff;
-/**
-   This is the file to which the output text should be sent. It is really a pipe.
-*/
-static FILE *out_file;
 
-/**
-   Data structure describing one or a group of related completions
-*/
-struct comp_t
-{
-    /**
-       The list of all completin strings this entry applies to
-    */
-    wcstring_list_t comp;
-    /**
-       The description
-    */
-    wcstring desc;
-    /**
-       On-screen width of the completion string
-    */
-    int comp_width;
-    /**
-       On-screen width of the description information
-    */
-    int desc_width;
-    /**
-       Preffered total width
-    */
-    int pref_width;
-    /**
-       Minimum acceptable width
-    */
-    int min_width;
-    
-    comp_t() : comp(), desc(), comp_width(0), desc_width(0), pref_width(0), min_width(0)
-    {
-    }
-};
 
 /**
    This function translates from a highlight code to a specific color
@@ -235,14 +180,14 @@ static rgb_color_t get_color(int highlight)
    terminal size, so this function should be called when the terminal
    changes size.
 */
-static void recalc_min_widths(std::vector<comp_t> *lst)
+void pager_t::recalc_min_widths(comp_info_list_t * lst) const
 {
     for (size_t i=0; i<lst->size(); i++)
     {
         comp_t *c = &lst->at(i);
 
-        c->min_width = mini(c->desc_width, maxi(0,termsize.ws_col/3 - 2)) +
-                       mini(c->desc_width, maxi(0,termsize.ws_col/5 - 4)) +4;
+        c->min_width = mini(c->desc_width, maxi(0, term_width/3 - 2)) +
+                       mini(c->desc_width, maxi(0, term_width/5 - 4)) +4;
     }
 
 }
@@ -351,18 +296,6 @@ static int pager_buffered_writer(char c)
 }
 
 /**
-   Flush \c pager_buffer to stdout
-*/
-static void pager_flush()
-{
-    if (! pager_buffer.empty())
-    {
-        write_loop(1, & pager_buffer.at(0), pager_buffer.size() * sizeof(char));
-        pager_buffer.clear();
-    }
-}
-
-/**
    Print the specified string, but use at most the specified amount of
    space. If the whole string can't be fitted, ellipsize it.
 
@@ -370,7 +303,7 @@ static void pager_flush()
    \param max the maximum space that may be used for printing
    \param has_more if this flag is true, this is not the entire string, and the string should be ellisiszed even if the string fits but takes up the whole space.
 */
-static int print_max(const wcstring &str, int max, int has_more)
+static int print_max(const wcstring &str, int max, bool has_more)
 {
     int written = 0;
     for (size_t i=0; i < str.size(); i++)
@@ -392,13 +325,38 @@ static int print_max(const wcstring &str, int max, int has_more)
     return written;
 }
 
+static int print_max(const wcstring &str, int color, int max, bool has_more, line_t *line)
+{
+    int written = 0;
+    for (size_t i=0; i < str.size(); i++)
+    {
+        wchar_t c = str.at(i);
+
+        if (written + wcwidth(c) > max)
+            break;
+        if ((written + wcwidth(c) == max) && (has_more || i + 1 < str.size()))
+        {
+            line->append(ellipsis_char, color);
+            written += wcwidth(ellipsis_char);
+            break;
+        }
+        
+        line->append(c, color);
+        written += wcwidth(c);
+    }
+    return written;
+}
+
+
 /**
    Print the specified item using at the specified amount of space
 */
-static void completion_print_item(const wcstring &prefix, const comp_t *c, int width, bool secondary)
+line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, size_t row, size_t column, int width, bool secondary, page_rendering_t *rendering) const
 {
     int comp_width=0, desc_width=0;
     int written=0;
+    
+    line_t line_data;
 
     if (c->pref_width <= width)
     {
@@ -423,42 +381,42 @@ static void completion_print_item(const wcstring &prefix, const comp_t *c, int w
             desc_width = width-comp_width-4;
 
     }
-
-    rgb_color_t bg = secondary ? get_color(HIGHLIGHT_PAGER_SECONDARY) : rgb_color_t::normal();
+    
+    int bg_color = secondary ? HIGHLIGHT_PAGER_SECONDARY : HIGHLIGHT_NORMAL;
+    
     for (size_t i=0; i<c->comp.size(); i++)
     {
         const wcstring &comp = c->comp.at(i);
-        if (i != 0)
-            written += print_max(L"  ", comp_width - written, 2);
-        set_color(get_color(HIGHLIGHT_PAGER_PREFIX), bg);
-        written += print_max(prefix, comp_width - written, comp.empty()?0:1);
-        set_color(get_color(HIGHLIGHT_PAGER_COMPLETION), bg);
-        written += print_max(comp.c_str(), comp_width - written, i!=(c->comp.size()-1));
-    }
 
+        if (i != 0)
+            written += print_max(L"  ", 0 /* default color */, comp_width - written, true /* has_more */, &line_data);
+        
+        int packed_color = HIGHLIGHT_PAGER_PREFIX | (bg_color << 16);
+        written += print_max(prefix, packed_color, comp_width - written, ! comp.empty(), &line_data);
+        
+        packed_color = HIGHLIGHT_PAGER_COMPLETION | (bg_color << 16);
+        written += print_max(comp, packed_color, comp_width - written, i + 1 < c->comp.size(), &line_data);
+    }
 
     if (desc_width)
     {
+        int packed_color = HIGHLIGHT_PAGER_DESCRIPTION | (bg_color << 16);
         while (written < (width-desc_width-2))
         {
-            written++;
-            writech(L' ');
+            written += print_max(L" ", packed_color, 1, false, &line_data);
         }
-        set_color(get_color(HIGHLIGHT_PAGER_DESCRIPTION), bg);
-        written += print_max(L"(", 1, 0);
-        written += print_max(c->desc.c_str(), desc_width, 0);
-        written += print_max(L")", 1, 0);
+        written += print_max(L"(", packed_color, 1, false, &line_data);
+        written += print_max(c->desc, packed_color, desc_width, false, &line_data);
+        written += print_max(L")", packed_color, 1, false, &line_data);
     }
     else
     {
         while (written < width)
         {
-            written++;
-            writech(L' ');
+            written += print_max(L" ", 0, 1, false, &line_data);
         }
     }
-    if (secondary)
-        set_color(rgb_color_t::normal(), rgb_color_t::normal());
+    return line_data;
 }
 
 /**
@@ -473,343 +431,31 @@ static void completion_print_item(const wcstring &prefix, const comp_t *c, int w
    \param prefix The string to print before each completion
 */
 
-static void completion_print(int cols,
-                             int *width,
-                             int row_start,
-                             int row_stop,
-                             const wcstring &prefix,
-                             const std::vector<comp_t> &lst)
+void pager_t::completion_print(int cols, int *width_per_column, int row_start, int row_stop, const wcstring &prefix, const comp_info_list_t &lst, page_rendering_t *rendering) const
 {
 
     size_t rows = (lst.size()-1)/cols+1;
-    size_t i, j;
 
-    for (i = row_start; i<row_stop; i++)
+    for (size_t row = row_start; row < row_stop; row++)
     {
-        for (j = 0; j < cols; j++)
+        for (size_t col = 0; col < cols; col++)
         {
-            int is_last = (j==(cols-1));
+            int is_last = (col==(cols-1));
 
-            if (lst.size() <= j*rows + i)
+            if (lst.size() <= col * rows + row)
                 continue;
 
-            const comp_t *el = &lst.at(j*rows + i);
+            const comp_t *el = &lst.at(col * rows + row);
 
-            completion_print_item(prefix, el, width[j] - (is_last?0:2), i%2);
-
-            if (!is_last)
-                writestr(L"  ");
+            /* Print this completion on its own "line" */
+            line_t line = completion_print_item(prefix, el, row, col, width_per_column[col] - (is_last?0:2), row%2, rendering);
+            
+            /* Append this to the real line */
+            rendering->screen_data.create_line(row).append_line(line);
         }
-        writech(L'\n');
     }
 }
 
-
-/**
-   Try to print the list of completions l with the prefix prefix using
-   cols as the number of columns. Return 1 if the completion list was
-   printed, 0 if the terminal is to narrow for the specified number of
-   columns. Always succeeds if cols is 1.
-
-   If all the elements do not fit on the screen at once, make the list
-   scrollable using the up, down and space keys to move. The list will
-   exit when any other key is pressed.
-
-   \param cols the number of columns to try to fit onto the screen
-   \param prefix the character string to prefix each completion with
-   \param l the list of completions
-
-   \return one of PAGER_RETRY, PAGER_DONE and PAGER_RESIZE
-*/
-
-static int completion_try_print(int cols,
-                                const wcstring &prefix,
-                                const std::vector<comp_t> &lst)
-{
-    /*
-      The calculated preferred width of each column
-    */
-    int pref_width[PAGER_MAX_COLS] = {0};
-    /*
-      The calculated minimum width of each column
-    */
-    int min_width[PAGER_MAX_COLS] = {0};
-    /*
-      If the list can be printed with this width, width will contain the width of each column
-    */
-    int *width=pref_width;
-    /*
-      Set to one if the list should be printed at this width
-    */
-    int print=0;
-
-    long i, j;
-
-    int rows = (int)((lst.size()-1)/cols+1);
-
-    int pref_tot_width=0;
-    int min_tot_width = 0;
-    int res=PAGER_RETRY;
-    /*
-      Skip completions on tiny terminals
-    */
-
-    if (termsize.ws_col < PAGER_MIN_WIDTH)
-        return PAGER_DONE;
-
-    /* Calculate how wide the list would be */
-    for (j = 0; j < cols; j++)
-    {
-        for (i = 0; i<rows; i++)
-        {
-            int pref,min;
-            const comp_t *c;
-            if (lst.size() <= j*rows + i)
-                continue;
-
-            c = &lst.at(j*rows + i);
-            pref = c->pref_width;
-            min = c->min_width;
-
-            if (j != cols-1)
-            {
-                pref += 2;
-                min += 2;
-            }
-            min_width[j] = maxi(min_width[j],
-                                min);
-            pref_width[j] = maxi(pref_width[j],
-                                 pref);
-        }
-        min_tot_width += min_width[j];
-        pref_tot_width += pref_width[j];
-    }
-    /*
-      Force fit if one column
-    */
-    if (cols == 1)
-    {
-        if (pref_tot_width > termsize.ws_col)
-        {
-            pref_width[0] = termsize.ws_col;
-        }
-        width = pref_width;
-        print=1;
-    }
-    else if (pref_tot_width <= termsize.ws_col)
-    {
-        /* Terminal is wide enough. Print the list! */
-        width = pref_width;
-        print=1;
-    }
-    else
-    {
-        long next_rows = (lst.size()-1)/(cols-1)+1;
-        /*    fwprintf( stderr,
-          L"cols %d, min_tot %d, term %d, rows=%d, nextrows %d, termrows %d, diff %d\n",
-          cols,
-          min_tot_width, termsize.ws_col,
-          rows, next_rows, termsize.ws_row,
-          pref_tot_width-termsize.ws_col );
-        */
-        if (min_tot_width < termsize.ws_col &&
-                (((rows < termsize.ws_row) && (next_rows >= termsize.ws_row)) ||
-                 (pref_tot_width-termsize.ws_col< 4 && cols < 3)))
-        {
-            /*
-              Terminal almost wide enough, or squeezing makes the
-              whole list fit on-screen.
-
-              This part of the code is really important. People hate
-              having to scroll through the completion list. In cases
-              where there are a huge number of completions, it can't
-              be helped, but it is not uncommon for the completions to
-              _almost_ fit on one screen. In those cases, it is almost
-              always desirable to 'squeeze' the completions into a
-              single page.
-
-              If we are using N columns and can get everything to
-              fit using squeezing, but everything would also fit
-              using N-1 columns, don't try.
-            */
-
-            int tot_width = min_tot_width;
-            width = min_width;
-
-            while (tot_width < termsize.ws_col)
-            {
-                for (i=0; (i<cols) && (tot_width < termsize.ws_col); i++)
-                {
-                    if (width[i] < pref_width[i])
-                    {
-                        width[i]++;
-                        tot_width++;
-                    }
-                }
-            }
-            print=1;
-        }
-    }
-
-    if (print)
-    {
-        res=PAGER_DONE;
-        if (rows < termsize.ws_row)
-        {
-            /* List fits on screen. Print it and leave */
-            if (is_ca_mode)
-            {
-                is_ca_mode = 0;
-                writembs(exit_ca_mode);
-            }
-
-            completion_print(cols, width, 0, rows, prefix, lst);
-            pager_flush();
-        }
-        else
-        {
-            int npos, pos = 0;
-            int do_loop = 1;
-
-            /*
-              Enter ca_mode, which means that the terminal
-              content will be restored to the current
-              state on exit.
-            */
-            if (enter_ca_mode && exit_ca_mode)
-            {
-                is_ca_mode=1;
-                writembs(enter_ca_mode);
-            }
-
-
-            completion_print(cols,
-                             width,
-                             0,
-                             termsize.ws_row-1,
-                             prefix,
-                             lst);
-            /*
-              List does not fit on screen. Print one screenfull and
-              leave a scrollable interface
-            */
-            while (do_loop)
-            {
-                set_color(rgb_color_t::black(), get_color(HIGHLIGHT_PAGER_PROGRESS));
-                wcstring msg = format_string(_(L" %d to %d of %d"), pos, pos+termsize.ws_row-1, rows);
-                msg.append(L"   \r");
-
-                writestr(msg.c_str());
-                set_color(rgb_color_t::normal(), rgb_color_t::normal());
-                pager_flush();
-                int c = readch();
-
-                switch (c)
-                {
-                    case LINE_UP:
-                    {
-                        if (pos > 0)
-                        {
-                            pos--;
-                            writembs(tparm(cursor_address, 0, 0));
-                            writembs(scroll_reverse);
-                            completion_print(cols,
-                                             width,
-                                             pos,
-                                             pos+1,
-                                             prefix,
-                                             lst);
-                            writembs(tparm(cursor_address,
-                                           termsize.ws_row-1, 0));
-                            writembs(clr_eol);
-
-                        }
-
-                        break;
-                    }
-
-                    case LINE_DOWN:
-                    {
-                        if (pos <= (rows - termsize.ws_row))
-                        {
-                            pos++;
-                            completion_print(cols,
-                                             width,
-                                             pos+termsize.ws_row-2,
-                                             pos+termsize.ws_row-1,
-                                             prefix,
-                                             lst);
-                        }
-                        break;
-                    }
-
-                    case PAGE_DOWN:
-                    {
-
-                        npos = mini((int)(rows - termsize.ws_row+1), (int)(pos + termsize.ws_row-1));
-                        if (npos != pos)
-                        {
-                            pos = npos;
-                            completion_print(cols,
-                                             width,
-                                             pos,
-                                             pos+termsize.ws_row-1,
-                                             prefix,
-                                             lst);
-                        }
-                        else
-                        {
-                            if (flash_screen)
-                                writembs(flash_screen);
-                        }
-
-                        break;
-                    }
-
-                    case PAGE_UP:
-                    {
-                        npos = maxi(0,
-                                    pos - termsize.ws_row+1);
-
-                        if (npos != pos)
-                        {
-                            pos = npos;
-                            completion_print(cols,
-                                             width,
-                                             pos,
-                                             pos+termsize.ws_row-1,
-                                             prefix,
-                                             lst);
-                        }
-                        else
-                        {
-                            if (flash_screen)
-                                writembs(flash_screen);
-                        }
-                        break;
-                    }
-
-                    case R_NULL:
-                    {
-                        do_loop=0;
-                        res=PAGER_RESIZE;
-                        break;
-
-                    }
-
-                    default:
-                    {
-                        out_buff.push_back(c);
-                        do_loop = 0;
-                        break;
-                    }
-                }
-            }
-            writembs(clr_eol);
-        }
-    }
-    return res;
-}
 
 /* Trim leading and trailing whitespace, and compress other whitespace runs into a single space. */
 static void mangle_1_completion_description(wcstring *str)
@@ -891,12 +537,12 @@ static void join_completions(comp_info_list_t *comps)
 }
 
 /** Generate a list of comp_t structures from a list of completions */
-static std::vector<comp_t> process_completions_into_infos(const completion_list_t &lst, const wcstring &prefix)
+static comp_info_list_t process_completions_into_infos(const completion_list_t &lst, const wcstring &prefix)
 {
     const size_t lst_size = lst.size();
     
     // Make the list of the correct size up-front
-    std::vector<comp_t> result(lst_size);
+    comp_info_list_t result(lst_size);
     for (size_t i=0; i<lst_size; i++)
     {
         const completion_t &comp = lst.at(i);
@@ -912,7 +558,7 @@ static std::vector<comp_t> process_completions_into_infos(const completion_list_
     return result;
 }
 
-static void measure_completion_infos(std::vector<comp_t> *infos, const wcstring &prefix)
+void pager_t::measure_completion_infos(comp_info_list_t *infos, const wcstring &prefix) const
 {
     size_t prefix_len = my_wcswidth(prefix.c_str());
     for (size_t i=0; i < infos->size(); i++)
@@ -941,17 +587,6 @@ static void measure_completion_infos(std::vector<comp_t> *infos, const wcstring 
 }
 
 /**
-   Respond to a winch signal by checking the terminal size
-*/
-static void handle_winch(int sig)
-{
-    if (ioctl(1,TIOCGWINSZ,&termsize)!=0)
-    {
-        return;
-    }
-}
-
-/**
    The callback function that the keyboard reading function calls when
    an interrupt occurs. This makes sure that R_NULL is returned at
    once when an interrupt has occured.
@@ -961,132 +596,15 @@ static int interrupt_handler()
     return R_NULL;
 }
 
-/**
-   Initialize various subsystems. This also closes stdin and replaces
-   it with a copy of stderr, so the reading of completion strings must
-   be done before init is called.
-*/
-static void init(int mangle_descriptors, int out)
-{
-    struct sigaction act;
-
-    static struct termios pager_modes;
-    char *term;
-
-    if (mangle_descriptors)
-    {
-
-        /*
-          Make fd 1 output to screen, and use some other fd for writing
-          the resulting output back to the caller
-        */
-        int in;
-        out = dup(1);
-        close(1);
-        close(0);
-
-        /* OK to not use CLO_EXEC here because fish_pager is single threaded */
-        if ((in = open(ttyname(2), O_RDWR)) != -1)
-        {
-            if (dup2(2, 1) == -1)
-            {
-                debug(0, _(L"Could not set up output file descriptors for pager"));
-                exit(1);
-            }
-
-            if (dup2(in, 0) == -1)
-            {
-                debug(0, _(L"Could not set up input file descriptors for pager"));
-                exit(1);
-            }
-        }
-        else
-        {
-            debug(0, _(L"Could not open tty for pager"));
-            exit(1);
-        }
-    }
-
-    if (!(out_file = fdopen(out, "w")))
-    {
-        debug(0, _(L"Could not initialize result pipe"));
-        exit(1);
-    }
-
-
-    env_universal_init(0, 0, 0, 0);
-    input_common_init(&interrupt_handler);
-    output_set_writer(&pager_buffered_writer);
-
-    sigemptyset(& act.sa_mask);
-    act.sa_flags=0;
-    act.sa_handler=SIG_DFL;
-    act.sa_flags = 0;
-    act.sa_handler= &handle_winch;
-    if (sigaction(SIGWINCH, &act, 0))
-    {
-        wperror(L"sigaction");
-        exit(1);
-    }
-
-    handle_winch(0);                  /* Set handler for window change events */
-
-    tcgetattr(0,&pager_modes);        /* get the current terminal modes */
-    memcpy(&saved_modes,
-           &pager_modes,
-           sizeof(saved_modes));     /* save a copy so we can reset the terminal later */
-
-    pager_modes.c_lflag &= ~ICANON;   /* turn off canonical mode */
-    pager_modes.c_lflag &= ~ECHO;     /* turn off echo mode */
-    pager_modes.c_cc[VMIN]=1;
-    pager_modes.c_cc[VTIME]=0;
-
-    /*
-
-    */
-    if (tcsetattr(0,TCSANOW,&pager_modes))      /* set the new modes */
-    {
-        wperror(L"tcsetattr");
-        exit(1);
-    }
-
-    int errret;
-    if (setupterm(0, STDOUT_FILENO, &errret) == ERR)
-    {
-        debug(0, _(L"Could not set up terminal"));
-        exit(1);
-    }
-
-    term = getenv("TERM");
-    if (term)
-    {
-        wcstring wterm = str2wcstring(term);
-        output_set_term(wterm);
-    }
-
-    /* Infer term256 support */
-    char *fish_term256 = getenv("fish_term256");
-    bool support_term256;
-    if (fish_term256)
-    {
-        support_term256 = from_string<bool>(fish_term256);
-    }
-    else
-    {
-        support_term256 = term && strstr(term, "256color");
-    }
-    output_set_supports_term256(support_term256);
-}
-
-
-void run_pager(const completion_list_t &raw_completions, const wcstring &prefix)
+#if 0
+page_rendering_t render_completions(const completion_list_t &raw_completions, const wcstring &prefix)
 {
     // Save old output function so we can restore it
     int (* const saved_writer_func)(char) = output_get_writer();
     output_set_writer(&pager_buffered_writer);
 
     // Get completion infos out of it
-    std::vector<comp_t> completion_infos = process_completions_into_infos(raw_completions, prefix.c_str());
+    comp_info_list_t completion_infos = process_completions_into_infos(raw_completions, prefix.c_str());
  
     // Maybe join them
     if (prefix == L"-")
@@ -1127,16 +645,321 @@ void run_pager(const completion_list_t &raw_completions, const wcstring &prefix)
     }
 
     fwprintf(out_file, L"%ls", out_buff.c_str());
-    if (is_ca_mode)
-    {
-        writembs(exit_ca_mode);
-        pager_flush();
-        is_ca_mode = 0;
-    }
     
     // Restore saved writer function
     pager_buffer.clear();
     output_set_writer(saved_writer_func);
 }
+#endif
+
+void pager_t::set_completions(const completion_list_t &raw_completions)
+{
+    completions = raw_completions;
+    
+    // Get completion infos out of it
+    completion_infos = process_completions_into_infos(raw_completions, prefix.c_str());
+ 
+    // Maybe join them
+    if (prefix == L"-")
+        join_completions(&completion_infos);
+    
+    // Compute their various widths
+    measure_completion_infos(&completion_infos, prefix);
+}
+
+void pager_t::set_term_size(int w, int h)
+{
+    assert(w > 0);
+    assert(h > 0);
+    term_width = w;
+    term_height = h;
+}
+
+/**
+   Try to print the list of completions l with the prefix prefix using
+   cols as the number of columns. Return 1 if the completion list was
+   printed, 0 if the terminal is to narrow for the specified number of
+   columns. Always succeeds if cols is 1.
+
+   If all the elements do not fit on the screen at once, make the list
+   scrollable using the up, down and space keys to move. The list will
+   exit when any other key is pressed.
+
+   \param cols the number of columns to try to fit onto the screen
+   \param prefix the character string to prefix each completion with
+   \param l the list of completions
+
+   \return one of PAGER_RETRY, PAGER_DONE and PAGER_RESIZE
+*/
+
+int pager_t::completion_try_print(int cols, const wcstring &prefix, const comp_info_list_t &lst, page_rendering_t *rendering) const
+{
+    /*
+      The calculated preferred width of each column
+    */
+    int pref_width[PAGER_MAX_COLS] = {0};
+    /*
+      The calculated minimum width of each column
+    */
+    int min_width[PAGER_MAX_COLS] = {0};
+    /*
+      If the list can be printed with this width, width will contain the width of each column
+    */
+    int *width=pref_width;
+    /*
+      Set to one if the list should be printed at this width
+    */
+    int print=0;
+
+    int rows = (int)((lst.size()-1)/cols+1);
+
+    int pref_tot_width=0;
+    int min_tot_width = 0;
+    int res=PAGER_RETRY;
+    
+    /* Skip completions on tiny terminals */
+    if (term_width < PAGER_MIN_WIDTH)
+        return PAGER_DONE;
+
+    /* Calculate how wide the list would be */
+    for (long j = 0; j < cols; j++)
+    {
+        for (long i = 0; i<rows; i++)
+        {
+            int pref,min;
+            const comp_t *c;
+            if (lst.size() <= j*rows + i)
+                continue;
+
+            c = &lst.at(j*rows + i);
+            pref = c->pref_width;
+            min = c->min_width;
+
+            if (j != cols-1)
+            {
+                pref += 2;
+                min += 2;
+            }
+            min_width[j] = maxi(min_width[j],
+                                min);
+            pref_width[j] = maxi(pref_width[j],
+                                 pref);
+        }
+        min_tot_width += min_width[j];
+        pref_tot_width += pref_width[j];
+    }
+    /*
+      Force fit if one column
+    */
+    if (cols == 1)
+    {
+        if (pref_tot_width > term_width)
+        {
+            pref_width[0] = term_width;
+        }
+        width = pref_width;
+        print=1;
+    }
+    else if (pref_tot_width <= term_width)
+    {
+        /* Terminal is wide enough. Print the list! */
+        width = pref_width;
+        print=1;
+    }
+    else
+    {
+        long next_rows = (lst.size()-1)/(cols-1)+1;
+        /*    fwprintf( stderr,
+          L"cols %d, min_tot %d, term %d, rows=%d, nextrows %d, termrows %d, diff %d\n",
+          cols,
+          min_tot_width, term_width,
+          rows, next_rows, term_height,
+          pref_tot_width-term_width );
+        */
+        if (min_tot_width < term_width &&
+                (((rows < term_height) && (next_rows >= term_height)) ||
+                 (pref_tot_width-term_width< 4 && cols < 3)))
+        {
+            /*
+              Terminal almost wide enough, or squeezing makes the
+              whole list fit on-screen.
+
+              This part of the code is really important. People hate
+              having to scroll through the completion list. In cases
+              where there are a huge number of completions, it can't
+              be helped, but it is not uncommon for the completions to
+              _almost_ fit on one screen. In those cases, it is almost
+              always desirable to 'squeeze' the completions into a
+              single page.
+
+              If we are using N columns and can get everything to
+              fit using squeezing, but everything would also fit
+              using N-1 columns, don't try.
+            */
+
+            int tot_width = min_tot_width;
+            width = min_width;
+
+            while (tot_width < term_width)
+            {
+                for (long i=0; (i<cols) && (tot_width < term_width); i++)
+                {
+                    if (width[i] < pref_width[i])
+                    {
+                        width[i]++;
+                        tot_width++;
+                    }
+                }
+            }
+            print=1;
+        }
+    }
+
+    if (print)
+    {
+        res=PAGER_DONE;
+        if (rows < term_height)
+        {
+            completion_print(cols, width, 0, rows, prefix, lst, rendering);
+        }
+        else
+        {
+            assert(0);
+            int npos, pos = 0;
+            int do_loop = 1;
+
+            completion_print(cols, width, 0, term_height-1, prefix, lst, rendering);
+            
+            /* List does not fit on screen. Print one screenful and leave a scrollable interface */
+            while (do_loop)
+            {
+                set_color(rgb_color_t::black(), get_color(HIGHLIGHT_PAGER_PROGRESS));
+                wcstring msg = format_string(_(L" %d to %d of %d"), pos, pos+term_height-1, rows);
+                msg.append(L"   \r");
+
+                writestr(msg.c_str());
+                set_color(rgb_color_t::normal(), rgb_color_t::normal());
+                int c = readch();
+
+                switch (c)
+                {
+                    case LINE_UP:
+                    {
+                        if (pos > 0)
+                        {
+                            pos--;
+                            writembs(tparm(cursor_address, 0, 0));
+                            writembs(scroll_reverse);
+                            completion_print(cols, width, pos, pos+1, prefix, lst, rendering);
+                            writembs(tparm(cursor_address, term_height-1, 0));
+                            writembs(clr_eol);
+
+                        }
+
+                        break;
+                    }
+
+                    case LINE_DOWN:
+                    {
+                        if (pos <= (rows - term_height))
+                        {
+                            pos++;
+                            completion_print(cols, width, pos+term_height-2, pos+term_height-1, prefix, lst, rendering);
+                        }
+                        break;
+                    }
+
+                    case PAGE_DOWN:
+                    {
+
+                        npos = mini((int)(rows - term_height+1), (int)(pos + term_height-1));
+                        if (npos != pos)
+                        {
+                            pos = npos;
+                            completion_print(cols, width, pos, pos+term_height-1, prefix, lst, rendering);
+                        }
+                        else
+                        {
+                            if (flash_screen)
+                                writembs(flash_screen);
+                        }
+
+                        break;
+                    }
+
+                    case PAGE_UP:
+                    {
+                        npos = maxi(0, pos - term_height+1);
+
+                        if (npos != pos)
+                        {
+                            pos = npos;
+                            completion_print(cols, width, pos, pos+term_height-1, prefix, lst, rendering);
+                        }
+                        else
+                        {
+                            if (flash_screen)
+                                writembs(flash_screen);
+                        }
+                        break;
+                    }
+
+                    case R_NULL:
+                    {
+                        do_loop=0;
+                        res=PAGER_RESIZE;
+                        break;
+
+                    }
+
+                    default:
+                    {
+                        out_buff.push_back(c);
+                        do_loop = 0;
+                        break;
+                    }
+                }
+            }
+            writembs(clr_eol);
+        }
+    }
+    return res;
+}
 
 
+page_rendering_t pager_t::render() const
+{
+    /**
+       Try to print the completions. Start by trying to print the
+       list in PAGER_MAX_COLS columns, if the completions won't
+       fit, reduce the number of columns by one. Printing a single
+       column never fails.
+    */
+    page_rendering_t rendering;
+    for (int i = PAGER_MAX_COLS; i>0; i--)
+    {
+        /* Initially empty rendering */
+        rendering.screen_data.resize(0);
+        
+        switch (completion_try_print(i, prefix, completion_infos, &rendering))
+        {
+            case PAGER_RETRY:
+                break;
+
+            case PAGER_DONE:
+                i=0;
+                break;
+
+            case PAGER_RESIZE:
+                /*
+                  This means we got a resize event, so we start
+                  over from the beginning. Since it the screen got
+                  bigger, we might be able to fit all completions
+                  on-screen.
+                */
+                i=PAGER_MAX_COLS+1;
+                break;
+        }
+    }
+    return rendering;
+}

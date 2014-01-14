@@ -54,6 +54,12 @@ struct line_t
     {
         return colors.at(idx);
     }
+    
+    void append_line(const line_t &line)
+    {
+        text.insert(text.end(), line.text.begin(), line.text.end());
+        colors.insert(colors.end(), line.colors.begin(), line.colors.end());
+    }
 
 };
 

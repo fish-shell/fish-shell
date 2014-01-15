@@ -82,10 +82,10 @@ function fish_vi_key_bindings -d "vi-like key bindings for fish"
         bind d\x5e backward-kill-line
         bind dw kill-word
         bind dW kill-word
-        bind diw backward-word kill-word
-        bind diW backward-word kill-word
-        bind daw backward-word kill-word
-        bind daW backward-word kill-word
+        bind diw forward-char forward-char backward-word kill-word
+        bind diW forward-char forward-char backward-word kill-word
+        bind daw forward-char forward-char backward-word kill-word
+        bind daW forward-char forward-char backward-word kill-word
         bind de kill-word
         bind dE kill-word
         bind db backward-kill-word
@@ -101,10 +101,10 @@ function fish_vi_key_bindings -d "vi-like key bindings for fish"
         bind -m insert c\x5e backward-kill-line force-repaint
         bind -m insert cw kill-word force-repaint
         bind -m insert cW kill-word force-repaint
-        bind -m insert ciw backward-word kill-word force-repaint
-        bind -m insert ciW backward-word kill-word force-repaint
-        bind -m insert caw backward-word kill-word force-repaint
-        bind -m insert caW backward-word kill-word force-repaint
+        bind -m insert ciw forward-char forward-char backward-word kill-word force-repaint
+        bind -m insert ciW forward-char forward-char backward-word kill-word force-repaint
+        bind -m insert caw forward-char forward-char backward-word kill-word force-repaint
+        bind -m insert caW forward-char forward-char backward-word kill-word force-repaint
         bind -m insert ce kill-word force-repaint
         bind -m insert cE kill-word force-repaint
         bind -m insert cb backward-kill-word force-repaint
@@ -125,10 +125,10 @@ function fish_vi_key_bindings -d "vi-like key bindings for fish"
         bind y\x5e backward-kill-line yank
         bind yw kill-word yank
         bind yW kill-word yank
-        bind yiw backward-word kill-word yank
-        bind yiW backward-word kill-word yank
-        bind yaw backward-word kill-word yank
-        bind yaW backward-word kill-word yank
+        bind yiw forward-char forward-char backward-word kill-word yank
+        bind yiW forward-char forward-char backward-word kill-word yank
+        bind yaw forward-char forward-char backward-word kill-word yank
+        bind yaW forward-char forward-char backward-word kill-word yank
         bind ye kill-word yank
         bind yE kill-word yank
         bind yb backward-kill-word yank

@@ -2546,134 +2546,134 @@ static void test_highlighting(void)
     
     const highlight_component_t components1[] =
     {
-        {L"echo", HIGHLIGHT_COMMAND},
-        {L"/tmp/fish_highlight_test/foo", HIGHLIGHT_PARAM | HIGHLIGHT_VALID_PATH},
-        {L"&", HIGHLIGHT_END},
+        {L"echo", highlight_spec_command},
+        {L"/tmp/fish_highlight_test/foo", highlight_spec_param | highlight_modifier_valid_path},
+        {L"&", highlight_spec_statement_terminator},
         {NULL, -1}
     };
     
     const highlight_component_t components2[] =
     {
-        {L"command", HIGHLIGHT_COMMAND},
-        {L"echo", HIGHLIGHT_COMMAND},
-        {L"abc", HIGHLIGHT_PARAM},
-        {L"/tmp/fish_highlight_test/foo", HIGHLIGHT_PARAM | HIGHLIGHT_VALID_PATH},
-        {L"&", HIGHLIGHT_END},
+        {L"command", highlight_spec_command},
+        {L"echo", highlight_spec_command},
+        {L"abc", highlight_spec_param},
+        {L"/tmp/fish_highlight_test/foo", highlight_spec_param | highlight_modifier_valid_path},
+        {L"&", highlight_spec_statement_terminator},
         {NULL, -1}
     };
     
     const highlight_component_t components3[] =
     {
-        {L"if command ls", HIGHLIGHT_COMMAND},
-        {L"; ", HIGHLIGHT_END},
-        {L"echo", HIGHLIGHT_COMMAND},
-        {L"abc", HIGHLIGHT_PARAM},
-        {L"; ", HIGHLIGHT_END},
-        {L"/bin/definitely_not_a_command", HIGHLIGHT_ERROR},
-        {L"; ", HIGHLIGHT_END},
-        {L"end", HIGHLIGHT_COMMAND},
+        {L"if command ls", highlight_spec_command},
+        {L"; ", highlight_spec_statement_terminator},
+        {L"echo", highlight_spec_command},
+        {L"abc", highlight_spec_param},
+        {L"; ", highlight_spec_statement_terminator},
+        {L"/bin/definitely_not_a_command", highlight_spec_error},
+        {L"; ", highlight_spec_statement_terminator},
+        {L"end", highlight_spec_command},
         {NULL, -1}
     };
     
     /* Verify that cd shows errors for non-directories */
     const highlight_component_t components4[] =
     {
-        {L"cd", HIGHLIGHT_COMMAND},
-        {L"/tmp/fish_highlight_test", HIGHLIGHT_PARAM | HIGHLIGHT_VALID_PATH},
+        {L"cd", highlight_spec_command},
+        {L"/tmp/fish_highlight_test", highlight_spec_param | highlight_modifier_valid_path},
         {NULL, -1}
     };
     
     const highlight_component_t components5[] =
     {
-        {L"cd", HIGHLIGHT_COMMAND},
-        {L"/tmp/fish_highlight_test/foo", HIGHLIGHT_ERROR},
+        {L"cd", highlight_spec_command},
+        {L"/tmp/fish_highlight_test/foo", highlight_spec_error},
         {NULL, -1}
     };
     
     const highlight_component_t components6[] =
     {
-        {L"cd", HIGHLIGHT_COMMAND},
-        {L"--help", HIGHLIGHT_PARAM},
-        {L"-h", HIGHLIGHT_PARAM},
-        {L"definitely_not_a_directory", HIGHLIGHT_ERROR},
+        {L"cd", highlight_spec_command},
+        {L"--help", highlight_spec_param},
+        {L"-h", highlight_spec_param},
+        {L"definitely_not_a_directory", highlight_spec_error},
         {NULL, -1}
     };
     
     // Command substitutions
     const highlight_component_t components7[] =
     {
-        {L"echo", HIGHLIGHT_COMMAND},
-        {L"param1", HIGHLIGHT_PARAM},
-        {L"(", HIGHLIGHT_OPERATOR},
-        {L"ls", HIGHLIGHT_COMMAND},
-        {L"param2", HIGHLIGHT_PARAM},
-        {L")", HIGHLIGHT_OPERATOR},
+        {L"echo", highlight_spec_command},
+        {L"param1", highlight_spec_param},
+        {L"(", highlight_spec_operator},
+        {L"ls", highlight_spec_command},
+        {L"param2", highlight_spec_param},
+        {L")", highlight_spec_operator},
         {NULL, -1}
     };
     
     // Redirections substitutions
     const highlight_component_t components8[] =
     {
-        {L"echo", HIGHLIGHT_COMMAND},
-        {L"param1", HIGHLIGHT_PARAM},
+        {L"echo", highlight_spec_command},
+        {L"param1", highlight_spec_param},
         
         /* Input redirection */
-        {L"<", HIGHLIGHT_REDIRECTION},
-        {L"/bin/echo", HIGHLIGHT_REDIRECTION},
+        {L"<", highlight_spec_redirection},
+        {L"/bin/echo", highlight_spec_redirection},
         
         /* Output redirection to a valid fd */
-        {L"1>&2", HIGHLIGHT_REDIRECTION},
+        {L"1>&2", highlight_spec_redirection},
         
         /* Output redirection to an invalid fd */
-        {L"2>&", HIGHLIGHT_REDIRECTION},
-        {L"LOL", HIGHLIGHT_ERROR},
+        {L"2>&", highlight_spec_redirection},
+        {L"LOL", highlight_spec_error},
 
         /* Just a param, not a redirection */
-        {L"/tmp/blah", HIGHLIGHT_PARAM},
+        {L"/tmp/blah", highlight_spec_param},
         
         /* Input redirection from directory */
-        {L"<", HIGHLIGHT_REDIRECTION},
-        {L"/tmp/", HIGHLIGHT_ERROR},
+        {L"<", highlight_spec_redirection},
+        {L"/tmp/", highlight_spec_error},
         
         /* Output redirection to an invalid path */
-        {L"3>", HIGHLIGHT_REDIRECTION},
-        {L"/not/a/valid/path/nope", HIGHLIGHT_ERROR},
+        {L"3>", highlight_spec_redirection},
+        {L"/not/a/valid/path/nope", highlight_spec_error},
         
         /* Output redirection to directory */
-        {L"3>", HIGHLIGHT_REDIRECTION},
-        {L"/tmp/nope/", HIGHLIGHT_ERROR},
+        {L"3>", highlight_spec_redirection},
+        {L"/tmp/nope/", highlight_spec_error},
 
         
         /* Redirections to overflow fd */
-        {L"99999999999999999999>&2", HIGHLIGHT_ERROR},
-        {L"2>&", HIGHLIGHT_REDIRECTION},
-        {L"99999999999999999999", HIGHLIGHT_ERROR},
+        {L"99999999999999999999>&2", highlight_spec_error},
+        {L"2>&", highlight_spec_redirection},
+        {L"99999999999999999999", highlight_spec_error},
         
         /* Output redirection containing a command substitution */
-        {L"4>", HIGHLIGHT_REDIRECTION},
-        {L"(", HIGHLIGHT_OPERATOR},
-        {L"echo", HIGHLIGHT_COMMAND},
-        {L"/tmp/somewhere", HIGHLIGHT_PARAM},
-        {L")", HIGHLIGHT_OPERATOR},
+        {L"4>", highlight_spec_redirection},
+        {L"(", highlight_spec_operator},
+        {L"echo", highlight_spec_command},
+        {L"/tmp/somewhere", highlight_spec_param},
+        {L")", highlight_spec_operator},
         
         /* Just another param */
-        {L"param2", HIGHLIGHT_PARAM},
+        {L"param2", highlight_spec_param},
         {NULL, -1}
     };
     
     const highlight_component_t components9[] =
     {
-        {L"end", HIGHLIGHT_ERROR},
-        {L";", HIGHLIGHT_END},
-        {L"if", HIGHLIGHT_COMMAND},
-        {L"end", HIGHLIGHT_ERROR},
+        {L"end", highlight_spec_error},
+        {L";", highlight_spec_statement_terminator},
+        {L"if", highlight_spec_command},
+        {L"end", highlight_spec_error},
         {NULL, -1}
     };
 
     const highlight_component_t components10[] =
     {
-        {L"echo", HIGHLIGHT_COMMAND},
-        {L"'single_quote", HIGHLIGHT_ERROR},
+        {L"echo", highlight_spec_command},
+        {L"'single_quote", highlight_spec_error},
         {NULL, -1}
     };
 
@@ -2704,7 +2704,7 @@ static void test_highlighting(void)
         }
         assert(expected_colors.size() == text.size());
         
-        std::vector<int> colors(text.size());
+        std::vector<highlight_spec_t> colors(text.size());
         highlight_shell(text, colors, 20, NULL, env_vars_snapshot_t());
         
         if (expected_colors.size() != colors.size())

@@ -61,7 +61,14 @@ static const wchar_t * const highlight_var[] =
     L"fish_color_escape",
     L"fish_color_quote",
     L"fish_color_redirection",
-    L"fish_color_autosuggestion"
+    L"fish_color_autosuggestion",
+    
+    L"fish_pager_color_prefix",
+    L"fish_pager_color_completion",
+    L"fish_pager_color_description",
+    L"fish_pager_color_progress",
+    L"fish_pager_color_secondary"
+
 };
 
 /* If the given path looks like it's relative to the working directory, then prepend that working directory. */

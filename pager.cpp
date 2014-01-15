@@ -57,6 +57,7 @@
 #include "input_common.h"
 #include "env_universal.h"
 #include "print_help.h"
+#include "highlight.h"
 
 typedef pager_t::comp_t comp_t;
 typedef std::vector<completion_t> completion_list_t;
@@ -71,16 +72,6 @@ enum
 }
 ;
 
-
-enum
-{
-    HIGHLIGHT_PAGER_PREFIX,
-    HIGHLIGHT_PAGER_COMPLETION,
-    HIGHLIGHT_PAGER_DESCRIPTION,
-    HIGHLIGHT_PAGER_PROGRESS,
-    HIGHLIGHT_PAGER_SECONDARY
-}
-;
 
 enum
 {
@@ -127,52 +118,9 @@ enum
 static std::vector<char> pager_buffer;
 
 /**
-   The environment variables used to specify the color of different
-   tokens.
-*/
-static const wchar_t *hightlight_var[] =
-{
-    L"fish_pager_color_prefix",
-    L"fish_pager_color_completion",
-    L"fish_pager_color_description",
-    L"fish_pager_color_progress",
-    L"fish_pager_color_secondary"
-}
-;
-
-/**
    This string contains the text that should be sent back to the calling program
 */
 static wcstring out_buff;
-
-
-/**
-   This function translates from a highlight code to a specific color
-   by check invironement variables
-*/
-static rgb_color_t get_color(int highlight)
-{
-    const wchar_t *val;
-
-    if (highlight < 0)
-        return rgb_color_t::normal();
-    if (highlight >= (5))
-        return rgb_color_t::normal();
-
-    val = wgetenv(hightlight_var[highlight]);
-
-    if (!val)
-    {
-        val = env_universal_get(hightlight_var[highlight]);
-    }
-
-    if (!val)
-    {
-        return rgb_color_t::normal();
-    }
-
-    return parse_color(val, false);
-}
 
 /**
    This function calculates the minimum width for each completion
@@ -287,45 +235,16 @@ static wint_t readch()
 }
 
 /**
-   Write specified character to the output buffer \c pager_buffer
-*/
-static int pager_buffered_writer(char c)
-{
-    pager_buffer.push_back(c);
-    return 0;
-}
-
-/**
    Print the specified string, but use at most the specified amount of
    space. If the whole string can't be fitted, ellipsize it.
 
    \param str the string to print
+   \param color the color to apply to every printed character
    \param max the maximum space that may be used for printing
    \param has_more if this flag is true, this is not the entire string, and the string should be ellisiszed even if the string fits but takes up the whole space.
 */
-static int print_max(const wcstring &str, int max, bool has_more)
-{
-    int written = 0;
-    for (size_t i=0; i < str.size(); i++)
-    {
-        wchar_t c = str.at(i);
 
-        if (written + wcwidth(c) > max)
-            break;
-        if ((written + wcwidth(c) == max) && (has_more || i + 1 < str.size()))
-        {
-            writech(ellipsis_char);
-            written += wcwidth(ellipsis_char);
-            break;
-        }
-
-        writech(c);
-        written+= wcwidth(c);
-    }
-    return written;
-}
-
-static int print_max(const wcstring &str, int color, int max, bool has_more, line_t *line)
+static int print_max(const wcstring &str, highlight_spec_t color, int max, bool has_more, line_t *line)
 {
     int written = 0;
     for (size_t i=0; i < str.size(); i++)
@@ -382,25 +301,25 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
 
     }
     
-    int bg_color = secondary ? HIGHLIGHT_PAGER_SECONDARY : HIGHLIGHT_NORMAL;
+    int bg_color = secondary ? highlight_spec_pager_secondary : highlight_spec_normal;
     
     for (size_t i=0; i<c->comp.size(); i++)
     {
         const wcstring &comp = c->comp.at(i);
 
         if (i != 0)
-            written += print_max(L"  ", 0 /* default color */, comp_width - written, true /* has_more */, &line_data);
+            written += print_max(L"  ", highlight_spec_normal, comp_width - written, true /* has_more */, &line_data);
         
-        int packed_color = HIGHLIGHT_PAGER_PREFIX | (bg_color << 16);
+        int packed_color = highlight_spec_pager_prefix | highlight_make_background(bg_color);
         written += print_max(prefix, packed_color, comp_width - written, ! comp.empty(), &line_data);
         
-        packed_color = HIGHLIGHT_PAGER_COMPLETION | (bg_color << 16);
+        packed_color = highlight_spec_pager_completion | highlight_make_background(bg_color);
         written += print_max(comp, packed_color, comp_width - written, i + 1 < c->comp.size(), &line_data);
     }
 
     if (desc_width)
     {
-        int packed_color = HIGHLIGHT_PAGER_DESCRIPTION | (bg_color << 16);
+        int packed_color = highlight_spec_pager_description | highlight_make_background(bg_color);
         while (written < (width-desc_width-2))
         {
             written += print_max(L" ", packed_color, 1, false, &line_data);
@@ -594,16 +513,6 @@ void pager_t::measure_completion_infos(comp_info_list_t *infos, const wcstring &
     }
     
     recalc_min_widths(infos);
-}
-
-/**
-   The callback function that the keyboard reading function calls when
-   an interrupt occurs. This makes sure that R_NULL is returned at
-   once when an interrupt has occured.
-*/
-static int interrupt_handler()
-{
-    return R_NULL;
 }
 
 #if 0
@@ -843,7 +752,7 @@ int pager_t::completion_try_print(int cols, const wcstring &prefix, const comp_i
             /* List does not fit on screen. Print one screenful and leave a scrollable interface */
             while (do_loop)
             {
-                set_color(rgb_color_t::black(), get_color(HIGHLIGHT_PAGER_PROGRESS));
+                set_color(rgb_color_t::black(), highlight_get_color(highlight_spec_pager_progress, true));
                 wcstring msg = format_string(_(L" %d to %d of %d"), pos, pos+term_height-1, rows);
                 msg.append(L"   \r");
 

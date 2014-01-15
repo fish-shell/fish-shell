@@ -29,6 +29,14 @@ enum
     highlight_spec_redirection, //redirection
     highlight_spec_autosuggestion, //autosuggestion
     
+    // Pager support
+    highlight_spec_pager_prefix,
+    highlight_spec_pager_completion,
+    highlight_spec_pager_description,
+    highlight_spec_pager_progress,
+    highlight_spec_pager_secondary,
+    
+    
     HIGHLIGHT_SPEC_PRIMARY_MASK = 0xFF,
     
     /* The following values are modifiers */
@@ -47,6 +55,7 @@ inline highlight_spec_t highlight_get_primary(highlight_spec_t val)
 
 inline highlight_spec_t highlight_make_background(highlight_spec_t val)
 {
+    assert(val >> 16 == 0);
     return val << 16;
 }
 

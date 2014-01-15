@@ -173,13 +173,6 @@ commence.
    History search mode. This value means we are searching forwards.
  */
 #define SEARCH_FORWARD 1
-/**
-   The color used to display an active selection
- */
-#define FISH_SELECTION_COLOR_VAR L"fish-selection-color"
-
-/** The color used if the variable above is not set */
-#define DEFAULT_SELECTION_COLOR L"gray"
 
 /* Any time the contents of a buffer changes, we update the generation count. This allows for our background highlighting thread to notice it and skip doing work that it would otherwise have to do. This variable should really be of some kind of interlocked or atomic type that guarantees we're not reading stale cache values. With C++11 we should use atomics, but until then volatile should work as well, at least on x86.*/
 static volatile unsigned int s_generation_count;

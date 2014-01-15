@@ -70,11 +70,11 @@ struct input_mapping_t
     wcstring seq; /**< Character sequence which generates this event */
     std::vector<wcstring> commands; /**< commands that should be evaluated by this mapping */
     wcstring mode; /**< mode in which this command should be evaluated */
-    wcstring new_mode; /** new mode that should be switched to after command evaluation */
+    wcstring sets_mode; /** new mode that should be switched to after command evaluation */
 
     input_mapping_t(const wcstring &s, const std::vector<wcstring> &c,
                     const wcstring &m = DEFAULT_BIND_MODE,
-                    const wcstring &nm = DEFAULT_BIND_MODE) : seq(s), commands(c), mode(m), new_mode(nm) {}
+                    const wcstring &sm = DEFAULT_BIND_MODE) : seq(s), commands(c), mode(m), sets_mode(sm) {}
 };
 
 /**
@@ -287,12 +287,12 @@ bool input_set_bind_mode(const wchar_t *bm)
 */
 
 void input_mapping_add(const wchar_t *sequence, const wchar_t **commands, size_t commands_len,
-                       const wchar_t *mode, const wchar_t *new_mode)
+                       const wchar_t *mode, const wchar_t *sets_mode)
 {
     CHECK(sequence,);
     CHECK(commands,);
     CHECK(mode,);
-    CHECK(new_mode,);
+    CHECK(sets_mode,);
 
     // debug( 0, L"Add mapping from %ls to %ls in mode %ls", escape(sequence, 1), escape(command, 1 ), mode);
 
@@ -304,17 +304,17 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t **commands, size_t
         if (m.seq == sequence && m.mode == mode)
         {
             m.commands = commands_vector;
-            m.new_mode = new_mode;
+            m.sets_mode = sets_mode;
             return;
         }
     }
-    mapping_list.push_back(input_mapping_t(sequence, commands_vector, mode, new_mode));
+    mapping_list.push_back(input_mapping_t(sequence, commands_vector, mode, sets_mode));
 }
 
 void input_mapping_add(const wchar_t *sequence, const wchar_t *command,
-                       const wchar_t *mode, const wchar_t *new_mode)
+                       const wchar_t *mode, const wchar_t *sets_mode)
 {
-    input_mapping_add(sequence, &command, 1, mode, new_mode);
+    input_mapping_add(sequence, &command, 1, mode, sets_mode);
 }
 
 /**
@@ -483,7 +483,7 @@ static void input_mapping_execute(const input_mapping_t &m)
         }
     }
 
-    input_set_bind_mode(m.new_mode.c_str());
+    input_set_bind_mode(m.sets_mode.c_str());
 }
 
 
@@ -546,7 +546,7 @@ static void input_mapping_execute_matching_or_generic()
         const input_mapping_t &m = mapping_list.at(i);
 
         //debug(0, L"trying mapping (%ls,%ls,%ls)\n", escape(m.seq.c_str(), 1),
-        //           m.mode.c_str(), m.new_mode.c_str());
+        //           m.mode.c_str(), m.sets_mode.c_str());
         
         if(wcscmp(m.mode.c_str(), input_get_bind_mode()))
         {
@@ -661,7 +661,7 @@ bool input_mapping_erase(const wchar_t *sequence, const wchar_t *mode)
     return result;
 }
 
-bool input_mapping_get(const wcstring &sequence, std::vector<wcstring> &cmds, wcstring &mode, wcstring &new_mode)
+bool input_mapping_get(const wcstring &sequence, std::vector<wcstring> &cmds, wcstring &mode, wcstring &sets_mode)
 {
     size_t i, sz = mapping_list.size();
 
@@ -672,7 +672,7 @@ bool input_mapping_get(const wcstring &sequence, std::vector<wcstring> &cmds, wc
         {
             cmds = m.commands;
             mode = m.mode;
-            new_mode = m.new_mode;
+            sets_mode = m.sets_mode;
             return true;
         }
     }

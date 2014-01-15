@@ -415,9 +415,9 @@ static void builtin_bind_list(const wchar_t *bind_mode)
 
         std::vector<wcstring> ecmds;
         wcstring mode;
-        wcstring new_mode;
+        wcstring sets_mode;
 
-        input_mapping_get(seq, ecmds, mode, new_mode);
+        input_mapping_get(seq, ecmds, mode, sets_mode);
 
         if(bind_mode != NULL && wcscmp(mode.c_str(), bind_mode))
         {
@@ -427,7 +427,7 @@ static void builtin_bind_list(const wchar_t *bind_mode)
         wcstring tname;
         if (input_terminfo_get_name(seq, tname))
         {
-            append_format(stdout_buffer, L"bind -k %ls -M %ls -m %ls", tname.c_str(), mode.c_str(), new_mode.c_str());
+            append_format(stdout_buffer, L"bind -k %ls -M %ls -m %ls", tname.c_str(), mode.c_str(), sets_mode.c_str());
             for(int i = 0; i < ecmds.size(); i++)
             {
               wcstring ecmd = ecmds.at(i);
@@ -438,7 +438,7 @@ static void builtin_bind_list(const wchar_t *bind_mode)
         else
         {
             const wcstring eseq = escape_string(seq, 1);
-            append_format(stdout_buffer, L"bind -k %ls -M %ls -m %ls", eseq.c_str(), mode.c_str(), new_mode.c_str());
+            append_format(stdout_buffer, L"bind -k %ls -M %ls -m %ls", eseq.c_str(), mode.c_str(), sets_mode.c_str());
             for(int i = 0; i < ecmds.size(); i++)
             {
               wcstring ecmd = ecmds.at(i);
@@ -486,7 +486,7 @@ static void builtin_bind_function_names()
    Add specified key binding.
  */
 static int builtin_bind_add(const wchar_t *seq, const wchar_t **cmds, size_t cmds_len,
-                            const wchar_t *mode, const wchar_t *new_mode, int terminfo)
+                            const wchar_t *mode, const wchar_t *sets_mode, int terminfo)
 {
 
     if (terminfo)
@@ -494,7 +494,7 @@ static int builtin_bind_add(const wchar_t *seq, const wchar_t **cmds, size_t cmd
         wcstring seq2;
         if (input_terminfo_get_sequence(seq, &seq2))
         {
-            input_mapping_add(seq2.c_str(), cmds, cmds_len, mode, new_mode);
+            input_mapping_add(seq2.c_str(), cmds, cmds_len, mode, sets_mode);
         }
         else
         {
@@ -527,7 +527,7 @@ static int builtin_bind_add(const wchar_t *seq, const wchar_t **cmds, size_t cmd
     }
     else
     {
-        input_mapping_add(seq, cmds, cmds_len, mode, new_mode);
+        input_mapping_add(seq, cmds, cmds_len, mode, sets_mode);
     }
 
     return 0;
@@ -627,7 +627,7 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
         }
         ,
         {
-            L"new-mode", required_argument, 0, 'm'
+            L"sets-mode", required_argument, 0, 'm'
         }
         ,
         {

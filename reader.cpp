@@ -255,6 +255,15 @@ public:
     /** The current position of the cursor in buff. */
     size_t buff_pos;
 
+    /** Indicates whether a selection is currently active */
+    bool sel_active;
+
+    /** The start position of the current selection, if one. */
+    size_t sel_start_pos;
+
+    /** The stop position of the current selection, if one. */
+    size_t sel_stop_pos;
+
     /** Name of the current application */
     wcstring app_name;
 
@@ -339,6 +348,9 @@ public:
         token_history_pos(0),
         search_pos(0),
         buff_pos(0),
+        sel_active(0),
+        sel_start_pos(0),
+        sel_stop_pos(0),
         complete_func(0),
         highlight_function(0),
         test_func(0),
@@ -431,6 +443,16 @@ static void term_donate()
 
 
 }
+
+
+/**
+   Update the cursor position
+*/
+static void update_buff_pos(int buff_pos)
+{
+    data->buff_pos = buff_pos;
+}
+
 
 /**
    Grab control of terminal
@@ -792,7 +814,7 @@ bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack)
             size_t new_buff_pos = this->buff_pos + new_cmdline.size() - this->command_line.size();
 
             this->command_line.swap(new_cmdline);
-            data->buff_pos = new_buff_pos;
+            update_buff_pos(new_buff_pos);
             data->command_line_changed();
             result = true;
         }
@@ -1566,7 +1588,7 @@ static void accept_autosuggestion(bool full)
                 data->command_line.push_back(wc);
             }
         }
-        data->buff_pos = data->command_line.size();
+        update_buff_pos(data->command_line.size());
         data->command_line_changed();
         reader_super_highlight_me_plenty(data->buff_pos);
         reader_repaint();
@@ -2153,7 +2175,7 @@ static void set_command_line_and_position(const wcstring &new_str, size_t pos)
 {
     data->command_line = new_str;
     data->command_line_changed();
-    data->buff_pos = pos;
+    update_buff_pos(pos);
     reader_super_highlight_me_plenty(data->buff_pos);
     reader_repaint();
 }
@@ -2402,7 +2424,7 @@ static void move_word(bool move_right, bool erase, enum move_word_style_t style,
     }
     else
     {
-        data->buff_pos = buff_pos;
+        update_buff_pos(buff_pos);
         reader_repaint();
     }
 
@@ -2434,7 +2456,7 @@ void reader_set_buffer(const wcstring &b, size_t pos)
     if (pos > command_line_len)
         pos = command_line_len;
 
-    data->buff_pos = pos;
+    update_buff_pos(pos);
 
     data->search_mode = NO_SEARCH;
     data->search_buff.clear();
@@ -3143,7 +3165,7 @@ const wchar_t *reader_readline(void)
 
             case R_BEGINNING_OF_BUFFER:
             {
-                data->buff_pos = 0;
+                update_buff_pos(0);
 
                 reader_repaint();
                 break;
@@ -3153,6 +3175,8 @@ const wchar_t *reader_readline(void)
             case R_END_OF_BUFFER:
             {
                 data->buff_pos = data->command_length();
+
+                update_buff_pos(data->command_length());
 
                 reader_repaint();
                 break;
@@ -3239,7 +3263,7 @@ const wchar_t *reader_readline(void)
                     /* Move the cursor to the end */
                     if (data->buff_pos != end_of_token_offset)
                     {
-                        data->buff_pos = end_of_token_offset;
+                        update_buff_pos(end_of_token_offset);
                         reader_repaint();
                     }
 
@@ -3704,7 +3728,8 @@ const wchar_t *reader_readline(void)
 
                     line_offset_old = data->buff_pos - parse_util_get_offset_from_line(data->command_line, line_old);
                     total_offset_new = parse_util_get_offset(data->command_line, line_new, line_offset_old - 4*(indent_new-indent_old));
-                    data->buff_pos = total_offset_new;
+
+                    update_buff_pos(total_offset_new);
                     reader_repaint();
                 }
 

@@ -181,6 +181,8 @@ public:
     \param colors the colors to use for the comand line
     \param indent the indent to use for the command line
     \param cursor_pos where the cursor is
+    \param sel_start_pos where the selections starts (inclusive)
+    \param sel_stop_pos where the selections ends (inclusive)
 */
 void s_write(screen_t *s,
              const wcstring &left_prompt,
@@ -189,7 +191,9 @@ void s_write(screen_t *s,
              size_t explicit_len,
              const int *colors,
              const int *indent,
-             size_t cursor_pos);
+             size_t cursor_pos,
+             size_t sel_start_pos,
+             size_t sel_stop_pos);
 
 /**
     This function resets the screen buffers internal knowledge about

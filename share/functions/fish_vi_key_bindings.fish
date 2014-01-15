@@ -28,6 +28,7 @@ function fish_vi_key_bindings -d "vi-like key bindings for fish"
         bind -m insert I beginning-of-line force-repaint
         bind -m insert a forward-char force-repaint
         bind -m insert A end-of-line force-repaint
+        bind -m visual v begin-selection force-repaint
 
         bind -m insert o "commandline -a \n" down-line force-repaint
         #bind -m insert O beginning-of-line "commandline -i \n" up-line force-repaint # doesn't work
@@ -148,4 +149,20 @@ function fish_vi_key_bindings -d "vi-like key bindings for fish"
 	    bind -M insert \cd exit
 
         bind -M insert \ef forward-word
+
+
+
+      #
+      # visual mode
+      #
+
+      bind -M visual \e\[C forward-char
+      bind -M visual \e\[D backward-char
+      bind -M visual -k right forward-char
+      bind -M visual -k left backward-char
+      bind -M visual h backward-char
+      bind -M visual l forward-char
+
+      bind -M visual -m default \cc end-selection force-repaint
+      bind -M visual -m default \e  end-selection force-repaint
 end

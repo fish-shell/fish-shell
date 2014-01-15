@@ -61,11 +61,13 @@ enum
     R_DOWN_LINE,
     R_SUPPRESS_AUTOSUGGESTION,
     R_ACCEPT_AUTOSUGGESTION,
+    R_BEGIN_SELECTION,
+    R_END_SELECTION
 }
 ;
 
 #define R_MIN R_NULL
-#define R_MAX R_ACCEPT_AUTOSUGGESTION
+#define R_MAX R_END_SELECTION
 
 /**
    Initialize the terminal by calling setupterm, and set up arrays

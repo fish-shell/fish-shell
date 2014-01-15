@@ -7,6 +7,9 @@ function fish_vi_prompt_cm --description "Displays the current mode"
     case insert
       set_color --bold --background red white
       echo "[I]"
+    case visual
+      set_color --bold --background magenta white
+      echo "[V]"
   end
   set_color normal
 end

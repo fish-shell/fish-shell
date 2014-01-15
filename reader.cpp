@@ -172,6 +172,13 @@ commence.
    History search mode. This value means we are searching forwards.
  */
 #define SEARCH_FORWARD 1
+/**
+   The color used to display an active selection
+ */
+#define FISH_SELECTION_COLOR_VAR L"fish-selection-color"
+
+/** The color used if the variable above is not set */
+#define DEFAULT_SELECTION_COLOR L"gray"
 
 /* Any time the contents of a buffer changes, we update the generation count. This allows for our background highlighting thread to notice it and skip doing work that it would otherwise have to do. This variable should really be of some kind of interlocked or atomic type that guarantees we're not reading stale cache values. With C++11 we should use atomics, but until then volatile should work as well, at least on x86.*/
 static volatile unsigned int s_generation_count;
@@ -257,6 +264,9 @@ public:
 
     /** Indicates whether a selection is currently active */
     bool sel_active;
+
+    /** The position of the cursor, when selection was initiated. */
+    size_t sel_begin_pos;
 
     /** The start position of the current selection, if one. */
     size_t sel_start_pos;
@@ -349,6 +359,7 @@ public:
         search_pos(0),
         buff_pos(0),
         sel_active(0),
+        sel_begin_pos(0),
         sel_start_pos(0),
         sel_stop_pos(0),
         complete_func(0),
@@ -448,9 +459,22 @@ static void term_donate()
 /**
    Update the cursor position
 */
-static void update_buff_pos(int buff_pos)
+static void update_buff_pos(size_t buff_pos)
 {
     data->buff_pos = buff_pos;
+    if(data->sel_active)
+    {
+      if(data->sel_begin_pos <= buff_pos)
+      {
+        data->sel_start_pos = data->sel_begin_pos;
+        data->sel_stop_pos = buff_pos;
+      }
+      else
+      {
+        data->sel_start_pos = buff_pos;
+        data->sel_stop_pos = data->sel_begin_pos;
+      }
+    }
 }
 
 
@@ -536,7 +560,6 @@ wcstring combine_command_and_autosuggestion(const wcstring &cmdline, const wcstr
    commandline, write the prompt, perform syntax highlighting, write
    the commandline and move the cursor.
 */
-
 static void reader_repaint()
 {
     // Update the indentation
@@ -552,6 +575,15 @@ static void reader_repaint()
     std::vector<color_t> colors = data->colors;
     colors.resize(len, HIGHLIGHT_AUTOSUGGESTION);
 
+    if(data->sel_active)
+    {
+      int selection_color = HIGHLIGHT_SELECTION << 16;
+      for(int i = data->sel_start_pos; i <= std::min(len - 1, data->sel_stop_pos); i++)
+      {
+        colors[i] = selection_color;
+      }
+    }
+
     std::vector<int> indents = data->indents;
     indents.resize(len);
 
@@ -562,10 +594,13 @@ static void reader_repaint()
             data->command_length(),
             &colors[0],
             &indents[0],
-            data->buff_pos);
+            data->buff_pos,
+            data->sel_start_pos,
+            data->sel_stop_pos);
 
     data->repaint_needed = false;
 }
+
 
 static void reader_repaint_without_autosuggestion()
 {
@@ -606,7 +641,7 @@ static void reader_kill(size_t begin_idx, size_t length, int mode, int newv)
     {
         /* Move the buff position back by the number of characters we deleted, but don't go past buff_pos */
         size_t backtrack = mini(data->buff_pos - begin_idx, length);
-        data->buff_pos -= backtrack;
+        update_buff_pos(data->buff_pos - backtrack);
     }
 
     data->command_line.erase(begin_idx, length);
@@ -1101,7 +1136,7 @@ static void remove_backward()
     int width;
     do
     {
-        data->buff_pos -= 1;
+        update_buff_pos(data->buff_pos - 1);
         width = fish_wcwidth(data->command_line.at(data->buff_pos));
         data->command_line.erase(data->buff_pos, 1);
     }
@@ -1129,7 +1164,7 @@ static bool insert_string(const wcstring &str, bool should_expand_abbreviations 
         return false;
 
     data->command_line.insert(data->buff_pos, str);
-    data->buff_pos += len;
+    update_buff_pos(data->buff_pos + len);
     data->command_line_changed();
     data->suppress_autosuggestion = false;
 
@@ -2475,6 +2510,26 @@ size_t reader_get_cursor_pos()
     return data->buff_pos;
 }
 
+bool reader_get_selection_pos(size_t &start, size_t &stop)
+{
+    if (!data)
+    {
+        return false;
+    }
+    else
+    {
+      if(!data->sel_active)
+          return false;
+      else
+      {
+          start = data->sel_start_pos;
+          stop = data->sel_stop_pos;
+          return true;
+      }
+    }
+}
+
+
 #define ENV_CMD_DURATION L"CMD_DURATION"
 
 void set_env_cmd_duration(struct timeval *after, struct timeval *before)
@@ -2572,6 +2627,8 @@ int reader_shell_test(const wchar_t *b)
                 0,
                 tmp,
                 tmp2,
+                0,
+                0,
                 0);
 
 
@@ -2945,7 +3002,7 @@ static int read_i(void)
         else if (tmp)
         {
             wcstring command = tmp;
-            data->buff_pos=0;
+            update_buff_pos(0);
             data->command_line.clear();
             data->command_line_changed();
             reader_run_command(parser, command);
@@ -3136,7 +3193,7 @@ const wchar_t *reader_readline(void)
                 while ((data->buff_pos>0) &&
                         (buff[data->buff_pos-1] != L'\n'))
                 {
-                    data->buff_pos--;
+                    update_buff_pos(data->buff_pos - 1);
                 }
 
                 reader_repaint();
@@ -3150,7 +3207,7 @@ const wchar_t *reader_readline(void)
                     while (buff[data->buff_pos] &&
                             buff[data->buff_pos] != L'\n')
                     {
-                        data->buff_pos++;
+                        update_buff_pos(data->buff_pos + 1);
                     }
                 }
                 else
@@ -3174,8 +3231,6 @@ const wchar_t *reader_readline(void)
             /* go to EOL*/
             case R_END_OF_BUFFER:
             {
-                data->buff_pos = data->command_length();
-
                 update_buff_pos(data->command_length());
 
                 reader_repaint();
@@ -3442,7 +3497,7 @@ const wchar_t *reader_readline(void)
                  */
                 if (data->buff_pos < data->command_length())
                 {
-                    data->buff_pos++;
+                    update_buff_pos(data->buff_pos + 1);
                     remove_backward();
                 }
                 break;
@@ -3496,7 +3551,7 @@ const wchar_t *reader_readline(void)
                             }
                         }
                         finished=1;
-                        data->buff_pos=data->command_length();
+                        update_buff_pos(data->command_length());
                         reader_repaint();
                         break;
                     }
@@ -3617,7 +3672,7 @@ const wchar_t *reader_readline(void)
             {
                 if (data->buff_pos > 0)
                 {
-                    data->buff_pos--;
+                    update_buff_pos(data->buff_pos - 1);
                     reader_repaint();
                 }
                 break;
@@ -3628,7 +3683,7 @@ const wchar_t *reader_readline(void)
             {
                 if (data->buff_pos < data->command_length())
                 {
-                    data->buff_pos++;
+                    update_buff_pos(data->buff_pos + 1);
                     reader_repaint();
                 }
                 else
@@ -3760,7 +3815,7 @@ const wchar_t *reader_readline(void)
                 /* If the cursor is at the end, transpose the last two characters of the line */
                 if (data->buff_pos == data->command_length())
                 {
-                    data->buff_pos--;
+                    update_buff_pos(data->buff_pos - 1);
                 }
 
                 /*
@@ -3783,8 +3838,11 @@ const wchar_t *reader_readline(void)
                 const wchar_t *tok_begin, *tok_end, *prev_begin, *prev_end;
 
                 /* If we are not in a token, look for one ahead */
-                while (data->buff_pos != len && !iswalnum(buff[data->buff_pos]))
-                    data->buff_pos++;
+                size_t buff_pos = data->buff_pos;
+                while (buff_pos != len && !iswalnum(buff[buff_pos]))
+                    buff_pos++;
+
+                update_buff_pos(buff_pos);
 
                 parse_util_token_extent(buff, data->buff_pos, &tok_begin, &tok_end, &prev_begin, &prev_end);
 
@@ -3850,6 +3908,23 @@ const wchar_t *reader_readline(void)
                 reader_super_highlight_me_plenty(data->buff_pos);
                 reader_repaint();
                 break;
+            }
+
+            case R_BEGIN_SELECTION:
+            {
+              data->sel_active = true;
+              data->sel_begin_pos = data->buff_pos;
+              data->sel_start_pos = data->buff_pos;
+              data->sel_stop_pos = data->buff_pos;
+              break;
+            }
+
+            case R_END_SELECTION:
+            {
+              data->sel_active = false;
+              data->sel_start_pos = data->buff_pos;
+              data->sel_stop_pos = data->buff_pos;
+              break;
             }
 
             /* Other, if a normal character, we add it to the command */

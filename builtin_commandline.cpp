@@ -211,6 +211,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
     int append_mode=0;
 
     int function_mode = 0;
+    int selection_mode = 0;
 
     int tokenize = 0;
 
@@ -316,6 +317,10 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
             }
             ,
             {
+                L"selection", no_argument, 0, 's'
+            }
+            ,
+            {
                 0, 0, 0, 0
             }
         }
@@ -402,6 +407,10 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
                 search_mode = 1;
                 break;
 
+            case 's':
+                selection_mode = 1;
+                break;
+
             case 'h':
                 builtin_print_help(parser, argv[0], stdout_buffer);
                 return 0;
@@ -462,6 +471,26 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
             }
         }
 
+        return 0;
+    }
+
+    if (selection_mode)
+    {
+        size_t sel_start, sel_stop;
+        const wchar_t *buffer = reader_get_buffer();
+        if(reader_get_selection_pos(sel_start, sel_stop))
+        {
+          size_t len = std::min(sel_stop - sel_start + 1, wcslen(buffer));
+          wchar_t *selection = new wchar_t[len];
+          selection = wcsncpy(selection, current_buffer + sel_start, len);
+
+          append_format(stdout_buffer, selection);
+          delete selection;
+        }
+        else
+        {
+          append_format(stdout_buffer, L"");
+        }
         return 0;
     }
 

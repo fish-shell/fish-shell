@@ -70,6 +70,11 @@
 */
 #define HIGHLIGHT_AUTOSUGGESTION 0x2000
 
+/**
+   Internal value representing highlighting an active selection
+*/
+#define HIGHLIGHT_SELECTION 0x80
+
 class history_item_t;
 struct file_detection_context_t;
 

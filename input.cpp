@@ -137,7 +137,9 @@ static const wchar_t * const name_arr[] =
     L"up-line",
     L"down-line",
     L"suppress-autosuggestion",
-    L"accept-autosuggestion"
+    L"accept-autosuggestion",
+    L"begin-selection",
+    L"end-selection",
 }
 ;
 
@@ -227,7 +229,9 @@ static const wchar_t code_arr[] =
     R_UP_LINE,
     R_DOWN_LINE,
     R_SUPPRESS_AUTOSUGGESTION,
-    R_ACCEPT_AUTOSUGGESTION
+    R_ACCEPT_AUTOSUGGESTION,
+    R_BEGIN_SELECTION,
+    R_END_SELECTION
 }
 ;
 
@@ -265,7 +269,7 @@ const wchar_t *input_get_bind_mode()
     const env_var_t bind_mode_var = env_get_string(FISH_BIND_MODE_VAR);
     if(!bind_mode_var.missing())
     {
-      bind_mode = bind_mode_var.c_str();
+        bind_mode = bind_mode_var.c_str();
     }
     return bind_mode;
 }

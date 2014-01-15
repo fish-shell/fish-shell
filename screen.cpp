@@ -1234,7 +1234,9 @@ void s_write(screen_t *s,
              size_t explicit_len,
              const int *colors,
              const int *indent,
-             size_t cursor_pos)
+             size_t cursor_pos,
+             size_t sel_start_pos,
+             size_t sel_stop_pos)
 {
     screen_data_t::cursor_t cursor_arr;
 

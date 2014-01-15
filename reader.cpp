@@ -181,9 +181,6 @@ static volatile unsigned int s_generation_count;
 /* This pthreads generation count is set when an autosuggestion background thread starts up, so it can easily check if the work it is doing is no longer useful. */
 static pthread_key_t generation_count_key;
 
-/* A color is an int */
-typedef int color_t;
-
 static void set_command_line_and_position(const wcstring &new_str, size_t pos);
 
 /**
@@ -278,7 +275,7 @@ public:
        color[i] is the classification (according to the enum in
        highlight.h) of buff[i].
     */
-    std::vector<color_t> colors;
+    std::vector<highlight_spec_t> colors;
 
     /** An array defining the block level at each character. */
     std::vector<int> indents;
@@ -532,8 +529,8 @@ static void reader_repaint()
     if (len < 1)
         len = 1;
 
-    std::vector<color_t> colors = data->colors;
-    colors.resize(len, HIGHLIGHT_AUTOSUGGESTION);
+    std::vector<highlight_spec_t> colors = data->colors;
+    colors.resize(len, highlight_spec_autosuggestion);
 
     std::vector<int> indents = data->indents;
     indents.resize(len);
@@ -642,7 +639,7 @@ void reader_data_t::command_line_changed()
     size_t len = command_length();
 
     /* When we grow colors, propagate the last color (if any), under the assumption that usually it will be correct. If it is, it avoids a repaint. */
-    color_t last_color = colors.empty() ? color_t() : colors.back();
+    highlight_spec_t last_color = colors.empty() ? highlight_spec_t() : colors.back();
     colors.resize(len, last_color);
 
     indents.resize(len);
@@ -1528,7 +1525,7 @@ static void reader_flash()
 
     for (size_t i=0; i<data->buff_pos; i++)
     {
-        data->colors.at(i) = HIGHLIGHT_SEARCH_MATCH<<16;
+        data->colors.at(i) = highlight_spec_search_match<<16;
     }
 
     reader_repaint();
@@ -2637,7 +2634,7 @@ public:
     const wcstring string_to_highlight;
 
     /** Color buffer */
-    std::vector<color_t> colors;
+    std::vector<highlight_spec_t> colors;
 
     /** The position to use for bracket matching */
     const size_t match_highlight_pos;
@@ -2692,7 +2689,7 @@ static void highlight_search(void)
             size_t end = match_pos + needle.size();
             for (size_t i=match_pos; i < end; i++)
             {
-                data->colors.at(i) |= (HIGHLIGHT_SEARCH_MATCH<<16);
+                data->colors.at(i) |= (highlight_spec_search_match<<16);
             }
         }
     }

@@ -14,6 +14,7 @@
 
 #include <vector>
 #include <sys/stat.h>
+#include "highlight.h"
 
 /**
    A class representing a single line of a screen.
@@ -21,7 +22,7 @@
 struct line_t
 {
     std::vector<wchar_t> text;
-    std::vector<int> colors;
+    std::vector<highlight_spec_t> colors;
     bool is_soft_wrapped;
 
     line_t() : text(), colors(), is_soft_wrapped(false)
@@ -34,7 +35,7 @@ struct line_t
         colors.clear();
     }
 
-    void append(wchar_t txt, int color)
+    void append(wchar_t txt, highlight_spec_t color)
     {
         text.push_back(txt);
         colors.push_back(color);
@@ -50,7 +51,7 @@ struct line_t
         return text.at(idx);
     }
 
-    int color_at(size_t idx) const
+    highlight_spec_t color_at(size_t idx) const
     {
         return colors.at(idx);
     }
@@ -199,7 +200,7 @@ void s_write(screen_t *s,
              const wcstring &right_prompt,
              const wcstring &commandline,
              size_t explicit_len,
-             const int *colors,
+             const highlight_spec_t *colors,
              const int *indent,
              size_t cursor_pos,
              const screen_data_t *pager_data);

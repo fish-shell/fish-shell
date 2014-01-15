@@ -44,11 +44,9 @@
 */
 #define VAR_COUNT ( sizeof(highlight_var)/sizeof(wchar_t *) )
 
-static void highlight_universal_internal(const wcstring &buff, std::vector<int> &color, size_t pos);
+static void highlight_universal_internal(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos);
 
-/**
-   The environment variables used to specify the color of different tokens.
-*/
+/** The environment variables used to specify the color of different tokens. This matchest the order in highlight_spec_t */
 static const wchar_t * const highlight_var[] =
 {
     L"fish_color_normal",
@@ -63,7 +61,6 @@ static const wchar_t * const highlight_var[] =
     L"fish_color_escape",
     L"fish_color_quote",
     L"fish_color_redirection",
-    L"fish_color_valid_path",
     L"fish_color_autosuggestion"
 };
 
@@ -354,22 +351,15 @@ bool plain_statement_get_expanded_command(const wcstring &src, const parse_node_
 }
 
 
-rgb_color_t highlight_get_color(int highlight, bool is_background)
+rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background)
 {
-    size_t idx=0;
-    rgb_color_t result;
+    rgb_color_t result = rgb_color_t::normal();
 
-    if (highlight < 0)
-        return rgb_color_t::normal();
-    if (highlight > (1<<VAR_COUNT))
-        return rgb_color_t::normal();
-    for (size_t i=0; i<VAR_COUNT; i++)
+    /* Get the primary variable */
+    size_t idx = highlight_get_primary(highlight);
+    if (idx >= VAR_COUNT)
     {
-        if (highlight & (1<<i))
-        {
-            idx = i;
-            break;
-        }
+        idx = 0;
     }
 
     env_var_t val_wstr = env_get_string(highlight_var[idx]);
@@ -382,7 +372,8 @@ rgb_color_t highlight_get_color(int highlight, bool is_background)
     if (! val_wstr.missing())
         result = parse_color(val_wstr, is_background);
 
-    if (highlight & HIGHLIGHT_VALID_PATH)
+    /* Handle modifiers. Just one for now */
+    if (highlight & highlight_modifier_valid_path)
     {
         env_var_t val2_wstr =  env_get_string(L"fish_color_valid_path");
         const wcstring val2 = val2_wstr.missing() ? L"" : val2_wstr.c_str();
@@ -405,7 +396,7 @@ rgb_color_t highlight_get_color(int highlight, bool is_background)
 /**
    Highlight operators (such as $, ~, %, as well as escaped characters.
 */
-static void highlight_param(const wcstring &buffstr, std::vector<int> &colors, wcstring_list_t *error)
+static void highlight_parameter(const wcstring &buffstr, std::vector<highlight_spec_t> &colors, wcstring_list_t *error)
 {
     const wchar_t * const buff = buffstr.c_str();
     enum {e_unquoted, e_single_quoted, e_double_quoted} mode = e_unquoted;
@@ -432,7 +423,7 @@ static void highlight_param(const wcstring &buffstr, std::vector<int> &colors, w
                     {
                         if (in_pos == 1)
                         {
-                            colors.at(start_pos) = HIGHLIGHT_ESCAPE;
+                            colors.at(start_pos) = highlight_spec_escape;
                             colors.at(in_pos+1) = normal_status;
                         }
                     }
@@ -440,18 +431,18 @@ static void highlight_param(const wcstring &buffstr, std::vector<int> &colors, w
                     {
                         if (bracket_count)
                         {
-                            colors.at(start_pos) = HIGHLIGHT_ESCAPE;
+                            colors.at(start_pos) = highlight_spec_escape;
                             colors.at(in_pos+1) = normal_status;
                         }
                     }
                     else if (wcschr(L"abefnrtv*?$(){}[]'\"<>^ \\#;|&", buff[in_pos]))
                     {
-                        colors.at(start_pos)=HIGHLIGHT_ESCAPE;
+                        colors.at(start_pos)= highlight_spec_escape;
                         colors.at(in_pos+1)=normal_status;
                     }
                     else if (wcschr(L"c", buff[in_pos]))
                     {
-                        colors.at(start_pos)=HIGHLIGHT_ESCAPE;
+                        colors.at(start_pos) = highlight_spec_escape;
                         if (in_pos+2 < colors.size())
                             colors.at(in_pos+2)=normal_status;
                     }
@@ -515,12 +506,12 @@ static void highlight_param(const wcstring &buffstr, std::vector<int> &colors, w
 
                         if ((res <= max_val))
                         {
-                            colors.at(start_pos) = HIGHLIGHT_ESCAPE;
+                            colors.at(start_pos) = highlight_spec_escape;
                             colors.at(in_pos+1) = normal_status;
                         }
                         else
                         {
-                            colors.at(start_pos) = HIGHLIGHT_ERROR;
+                            colors.at(start_pos) = highlight_spec_error;
                             colors.at(in_pos+1) = normal_status;
                         }
                     }
@@ -535,7 +526,7 @@ static void highlight_param(const wcstring &buffstr, std::vector<int> &colors, w
                         {
                             if (in_pos == 0)
                             {
-                                colors.at(in_pos) = HIGHLIGHT_OPERATOR;
+                                colors.at(in_pos) = highlight_spec_operator;
                                 colors.at(in_pos+1) = normal_status;
                             }
                             break;
@@ -544,7 +535,7 @@ static void highlight_param(const wcstring &buffstr, std::vector<int> &colors, w
                         case L'$':
                         {
                             wchar_t n = buff[in_pos+1];
-                            colors.at(in_pos) = (n==L'$'||wcsvarchr(n))? HIGHLIGHT_OPERATOR:HIGHLIGHT_ERROR;
+                            colors.at(in_pos) = (n==L'$'||wcsvarchr(n))? highlight_spec_operator:highlight_spec_error;
                             colors.at(in_pos+1) = normal_status;
                             break;
                         }
@@ -555,14 +546,14 @@ static void highlight_param(const wcstring &buffstr, std::vector<int> &colors, w
                         case L'(':
                         case L')':
                         {
-                            colors.at(in_pos) = HIGHLIGHT_OPERATOR;
+                            colors.at(in_pos) = highlight_spec_operator;
                             colors.at(in_pos+1) = normal_status;
                             break;
                         }
 
                         case L'{':
                         {
-                            colors.at(in_pos) = HIGHLIGHT_OPERATOR;
+                            colors.at(in_pos) = highlight_spec_operator;
                             colors.at(in_pos+1) = normal_status;
                             bracket_count++;
                             break;
@@ -570,7 +561,7 @@ static void highlight_param(const wcstring &buffstr, std::vector<int> &colors, w
 
                         case L'}':
                         {
-                            colors.at(in_pos) = HIGHLIGHT_OPERATOR;
+                            colors.at(in_pos) = highlight_spec_operator;
                             colors.at(in_pos+1) = normal_status;
                             bracket_count--;
                             break;
@@ -580,7 +571,7 @@ static void highlight_param(const wcstring &buffstr, std::vector<int> &colors, w
                         {
                             if (bracket_count)
                             {
-                                colors.at(in_pos) = HIGHLIGHT_OPERATOR;
+                                colors.at(in_pos) = highlight_spec_operator;
                                 colors.at(in_pos+1) = normal_status;
                             }
 
@@ -589,14 +580,14 @@ static void highlight_param(const wcstring &buffstr, std::vector<int> &colors, w
 
                         case L'\'':
                         {
-                            colors.at(in_pos) = HIGHLIGHT_QUOTE;
+                            colors.at(in_pos) = highlight_spec_quote;
                             mode = e_single_quoted;
                             break;
                         }
 
                         case L'\"':
                         {
-                            colors.at(in_pos) = HIGHLIGHT_QUOTE;
+                            colors.at(in_pos) = highlight_spec_quote;
                             mode = e_double_quoted;
                             break;
                         }
@@ -619,8 +610,8 @@ static void highlight_param(const wcstring &buffstr, std::vector<int> &colors, w
                         case '\\':
                         case L'\'':
                         {
-                            colors.at(start_pos) = HIGHLIGHT_ESCAPE;
-                            colors.at(in_pos+1) = HIGHLIGHT_QUOTE;
+                            colors.at(start_pos) = highlight_spec_escape;
+                            colors.at(in_pos+1) = highlight_spec_quote;
                             break;
                         }
 
@@ -669,8 +660,8 @@ static void highlight_param(const wcstring &buffstr, std::vector<int> &colors, w
                             case L'$':
                             case '"':
                             {
-                                colors.at(start_pos) = HIGHLIGHT_ESCAPE;
-                                colors.at(in_pos+1) = HIGHLIGHT_QUOTE;
+                                colors.at(start_pos) = highlight_spec_escape;
+                                colors.at(in_pos+1) = highlight_spec_quote;
                                 break;
                             }
                         }
@@ -680,8 +671,8 @@ static void highlight_param(const wcstring &buffstr, std::vector<int> &colors, w
                     case '$':
                     {
                         wchar_t n = buff[in_pos+1];
-                        colors.at(in_pos) = (n==L'$'||wcsvarchr(n))? HIGHLIGHT_OPERATOR:HIGHLIGHT_ERROR;
-                        colors.at(in_pos+1) = HIGHLIGHT_QUOTE;
+                        colors.at(in_pos) = (n==L'$'||wcsvarchr(n))? highlight_spec_operator:highlight_spec_error;
+                        colors.at(in_pos+1) = highlight_spec_quote;
                         break;
                     }
 
@@ -869,7 +860,7 @@ bool autosuggest_validate_from_history(const history_item_t &item, file_detectio
 }
 
 // This function does I/O
-static void tokenize(const wchar_t * const buff, std::vector<int> &color, const size_t pos, wcstring_list_t *error, const wcstring &working_directory, const env_vars_snapshot_t &vars)
+static void tokenize(const wchar_t * const buff, std::vector<highlight_spec_t> &color, const size_t pos, wcstring_list_t *error, const wcstring &working_directory, const env_vars_snapshot_t &vars)
 {
     ASSERT_IS_BACKGROUND_THREAD();
 
@@ -888,7 +879,7 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
     if (buff[0] == L'\0')
         return;
 
-    std::fill(color.begin(), color.end(), -1);
+    std::fill(color.begin(), color.end(), (highlight_spec_t)highlight_spec_invalid);
 
     tokenizer_t tok(buff, TOK_SHOW_COMMENTS | TOK_SQUASH_ERRORS);
     for (; tok_has_next(&tok); tok_next(&tok))
@@ -909,23 +900,23 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
                         if (wcscmp(param, L"--") == 0)
                         {
                             accept_switches = 0;
-                            color.at(tok_get_pos(&tok)) = HIGHLIGHT_PARAM;
+                            color.at(tok_get_pos(&tok)) = highlight_spec_param;
                         }
                         else if (accept_switches)
                         {
                             if (complete_is_valid_option(last_cmd, param, error, false /* no autoload */))
-                                color.at(tok_get_pos(&tok)) = HIGHLIGHT_PARAM;
+                                color.at(tok_get_pos(&tok)) = highlight_spec_param;
                             else
-                                color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+                                color.at(tok_get_pos(&tok)) = highlight_spec_error;
                         }
                         else
                         {
-                            color.at(tok_get_pos(&tok)) = HIGHLIGHT_PARAM;
+                            color.at(tok_get_pos(&tok)) = highlight_spec_param;
                         }
                     }
                     else
                     {
-                        color.at(tok_get_pos(&tok)) = HIGHLIGHT_PARAM;
+                        color.at(tok_get_pos(&tok)) = highlight_spec_param;
                     }
 
                     if (cmd == L"cd")
@@ -936,19 +927,19 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
                             int is_help = string_prefixes_string(dir, L"--help") || string_prefixes_string(dir, L"-h");
                             if (!is_help && ! is_potential_cd_path(dir, working_directory, PATH_EXPAND_TILDE, NULL))
                             {
-                                color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+                                color.at(tok_get_pos(&tok)) = highlight_spec_error;
                             }
                         }
                     }
 
-                    /* Highlight the parameter. highlight_param wants to write one more color than we have characters (hysterical raisins) so allocate one more in the vector. But don't copy it back. */
+                    /* Highlight the parameter. highlight_parameter wants to write one more color than we have characters (hysterical raisins) so allocate one more in the vector. But don't copy it back. */
                     const wcstring param_str = param;
                     size_t tok_pos = tok_get_pos(&tok);
 
-                    std::vector<int>::const_iterator where = color.begin() + tok_pos;
-                    std::vector<int> subcolors(where, where + param_str.size());
-                    subcolors.push_back(-1);
-                    highlight_param(param_str, subcolors, error);
+                    std::vector<highlight_spec_t>::const_iterator where = color.begin() + tok_pos;
+                    std::vector<highlight_spec_t> subcolors(where, where + param_str.size());
+                    subcolors.push_back(highlight_spec_invalid);
+                    highlight_parameter(param_str, subcolors, error);
 
                     /* Copy the subcolors back into our colors array */
                     std::copy(subcolors.begin(), subcolors.begin() + param_str.size(), color.begin() + tok_pos);
@@ -962,14 +953,14 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
                     bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS);
                     if (! expanded || has_expand_reserved(cmd))
                     {
-                        color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+                        color.at(tok_get_pos(&tok)) = highlight_spec_error;
                     }
                     else
                     {
                         bool is_cmd = false;
                         int is_subcommand = 0;
                         int mark = tok_get_pos(&tok);
-                        color.at(tok_get_pos(&tok)) = use_builtin ? HIGHLIGHT_COMMAND : HIGHLIGHT_ERROR;
+                        color.at(tok_get_pos(&tok)) = use_builtin ? highlight_spec_command : highlight_spec_error;
 
                         if (parser_keywords_is_subcommand(cmd))
                         {
@@ -1011,7 +1002,7 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
                             {
                                 if (sw == ARG_SKIP)
                                 {
-                                    color.at(tok_get_pos(&tok)) = HIGHLIGHT_PARAM;
+                                    color.at(tok_get_pos(&tok)) = highlight_spec_param;
                                     mark = tok_get_pos(&tok);
                                 }
 
@@ -1064,7 +1055,7 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
 
                             if (is_cmd)
                             {
-                                color.at(tok_get_pos(&tok)) = HIGHLIGHT_COMMAND;
+                                color.at(tok_get_pos(&tok)) = highlight_spec_command;
                             }
                             else
                             {
@@ -1072,7 +1063,7 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
                                 {
                                     error->push_back(format_string(L"Unknown command \'%ls\'", cmd.c_str()));
                                 }
-                                color.at(tok_get_pos(&tok)) = (HIGHLIGHT_ERROR);
+                                color.at(tok_get_pos(&tok)) = (highlight_spec_error);
                             }
                             had_cmd = 1;
                         }
@@ -1095,7 +1086,7 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
             {
                 if (!had_cmd)
                 {
-                    color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+                    color.at(tok_get_pos(&tok)) = highlight_spec_error;
                     if (error)
                         error->push_back(L"Redirection without a command");
                     break;
@@ -1104,7 +1095,7 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
                 wcstring target_str;
                 const wchar_t *target=NULL;
 
-                color.at(tok_get_pos(&tok)) = HIGHLIGHT_REDIRECTION;
+                color.at(tok_get_pos(&tok)) = highlight_spec_redirection;
                 tok_next(&tok);
 
                 /*
@@ -1131,7 +1122,7 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
                         size_t pos = tok_get_pos(&tok);
                         if (pos < color.size())
                         {
-                            color.at(pos) = HIGHLIGHT_ERROR;
+                            color.at(pos) = highlight_spec_error;
                         }
                         if (error)
                             error->push_back(L"Invalid redirection");
@@ -1153,7 +1144,7 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
                         dir.resize(slash_idx);
                         if (wstat(dir, &buff) == -1)
                         {
-                            color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+                            color.at(tok_get_pos(&tok)) = highlight_spec_error;
                             if (error)
                                 error->push_back(format_string(L"Directory \'%ls\' does not exist", dir.c_str()));
 
@@ -1169,7 +1160,7 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
                     {
                         if (wstat(target, &buff) == -1)
                         {
-                            color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+                            color.at(tok_get_pos(&tok)) = highlight_spec_error;
                             if (error)
                                 error->push_back(format_string(L"File \'%ls\' does not exist", target));
                         }
@@ -1178,7 +1169,7 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
                     {
                         if (wstat(target, &buff) != -1)
                         {
-                            color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+                            color.at(tok_get_pos(&tok)) = highlight_spec_error;
                             if (error)
                                 error->push_back(format_string(L"File \'%ls\' exists", target));
                         }
@@ -1192,7 +1183,7 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
             {
                 if (had_cmd)
                 {
-                    color.at(tok_get_pos(&tok)) = HIGHLIGHT_END;
+                    color.at(tok_get_pos(&tok)) = highlight_spec_statement_terminator;
                     had_cmd = 0;
                     use_command  = 1;
                     use_function = 1;
@@ -1201,7 +1192,7 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
                 }
                 else
                 {
-                    color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+                    color.at(tok_get_pos(&tok)) = highlight_spec_error;
                     if (error)
                         error->push_back(L"No job to put in background");
                 }
@@ -1211,7 +1202,7 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
 
             case TOK_END:
             {
-                color.at(tok_get_pos(&tok)) = HIGHLIGHT_END;
+                color.at(tok_get_pos(&tok)) = highlight_spec_statement_terminator;
                 had_cmd = 0;
                 use_command  = 1;
                 use_function = 1;
@@ -1222,7 +1213,7 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
 
             case TOK_COMMENT:
             {
-                color.at(tok_get_pos(&tok)) = HIGHLIGHT_COMMENT;
+                color.at(tok_get_pos(&tok)) = highlight_spec_comment;
                 break;
             }
 
@@ -1234,14 +1225,14 @@ static void tokenize(const wchar_t * const buff, std::vector<int> &color, const 
                  */
                 if (error)
                     error->push_back(tok_last(&tok));
-                color.at(tok_get_pos(&tok)) = HIGHLIGHT_ERROR;
+                color.at(tok_get_pos(&tok)) = highlight_spec_error;
                 break;
             }
         }
     }
 }
 
-void highlight_shell(const wcstring &buff, std::vector<int> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars)
+void highlight_shell(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars)
 {
     if (1)
     {
@@ -1254,7 +1245,7 @@ void highlight_shell(const wcstring &buff, std::vector<int> &color, size_t pos, 
 }
 
 // PCA This function does I/O, (calls is_potential_path, path_get_path, maybe others) and so ought to only run on a background thread
-void highlight_shell_classic(const wcstring &buff, std::vector<int> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars)
+void highlight_shell_classic(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars)
 {
     ASSERT_IS_BACKGROUND_THREAD();
 
@@ -1265,7 +1256,7 @@ void highlight_shell_classic(const wcstring &buff, std::vector<int> &color, size
     if (length == 0)
         return;
 
-    std::fill(color.begin(), color.end(), -1);
+    std::fill(color.begin(), color.end(), (highlight_spec_t)highlight_spec_invalid);
 
     /* Do something sucky and get the current working directory on this background thread. This should really be passed in. */
     const wcstring working_directory = env_get_pwd_slash();
@@ -1296,7 +1287,7 @@ void highlight_shell_classic(const wcstring &buff, std::vector<int> &color, size
 
         //our subcolors start at color + (begin-subbuff)+1
         size_t start = begin - subbuff + 1, len = wcslen(begin + 1);
-        std::vector<int> subcolors(len, -1);
+        std::vector<highlight_spec_t> subcolors(len, highlight_spec_invalid);
 
         highlight_shell(begin+1, subcolors, -1, error, vars);
 
@@ -1307,7 +1298,7 @@ void highlight_shell_classic(const wcstring &buff, std::vector<int> &color, size
         assert(end >= subbuff);
         if ((size_t)(end - subbuff) < length)
         {
-            color.at(end-subbuff)=HIGHLIGHT_OPERATOR;
+            color.at(end-subbuff)=highlight_spec_operator;
         }
 
         if (done)
@@ -1324,8 +1315,8 @@ void highlight_shell_classic(const wcstring &buff, std::vector<int> &color, size
     int last_val=0;
     for (size_t i=0; i < buff.size(); i++)
     {
-        int &current_val = color.at(i);
-        if (current_val >= 0)
+        highlight_spec_t &current_val = color.at(i);
+        if (current_val != highlight_spec_invalid)
         {
             last_val = current_val;
         }
@@ -1360,10 +1351,10 @@ void highlight_shell_classic(const wcstring &buff, std::vector<int> &color, size
                 {
                     for (ptrdiff_t i=tok_begin-cbuff; i < (tok_end-cbuff); i++)
                     {
-                        // Don't color HIGHLIGHT_ERROR because it looks dorky. For example, trying to cd into a non-directory would show an underline and also red.
-                        if (!(color.at(i) & HIGHLIGHT_ERROR))
+                        // Don't color highlight_spec_error because it looks dorky. For example, trying to cd into a non-directory would show an underline and also red.
+                        if (highlight_get_primary(color.at(i)) != highlight_spec_error)
                         {
-                            color.at(i) |= HIGHLIGHT_VALID_PATH;
+                            color.at(i) |= highlight_modifier_valid_path;
                         }
                     }
                 }
@@ -1387,10 +1378,10 @@ void highlight_shell_classic(const wcstring &buff, std::vector<int> &color, size
 }
 
 /* This function is a disaster badly in need of refactoring. */
-static void color_argument_internal(const wcstring &buffstr, std::vector<int>::iterator colors)
+static void color_argument_internal(const wcstring &buffstr, std::vector<highlight_spec_t>::iterator colors)
 {
     const size_t buff_len = buffstr.size();
-    std::fill(colors, colors + buff_len, HIGHLIGHT_PARAM);
+    std::fill(colors, colors + buff_len, (highlight_spec_t)highlight_spec_param);
 
     enum {e_unquoted, e_single_quoted, e_double_quoted} mode = e_unquoted;
     int bracket_count=0;
@@ -1403,7 +1394,7 @@ static void color_argument_internal(const wcstring &buffstr, std::vector<int>::i
             {
                 if (c == L'\\')
                 {
-                    int fill_color = HIGHLIGHT_ESCAPE; //may be set to HIGHLIGHT_ERROR
+                    int fill_color = highlight_spec_escape; //may be set to highlight_error
                     const size_t backslash_pos = in_pos;
                     size_t fill_end = backslash_pos;
 
@@ -1414,7 +1405,7 @@ static void color_argument_internal(const wcstring &buffstr, std::vector<int>::i
                     if (escaped_char == L'\0')
                     {
                         fill_end = in_pos;
-                        fill_color = HIGHLIGHT_ERROR;
+                        fill_color = highlight_spec_error;
                     }
                     else if (wcschr(L"~%", escaped_char))
                     {
@@ -1502,7 +1493,7 @@ static void color_argument_internal(const wcstring &buffstr, std::vector<int>::i
 
                         // It's an error if we exceeded the max value
                         if (res > max_val)
-                            fill_color = HIGHLIGHT_ERROR;
+                            fill_color = highlight_spec_error;
 
                         // Subtract one from in_pos, so that the increment in the loop will move to the next character
                         in_pos--;
@@ -1520,7 +1511,7 @@ static void color_argument_internal(const wcstring &buffstr, std::vector<int>::i
                         {
                             if (in_pos == 0)
                             {
-                                colors[in_pos] = HIGHLIGHT_OPERATOR;
+                                colors[in_pos] = highlight_spec_operator;
                             }
                             break;
                         }
@@ -1528,12 +1519,12 @@ static void color_argument_internal(const wcstring &buffstr, std::vector<int>::i
                         case L'$':
                         {
                             assert(in_pos < buff_len);
-                            int dollar_color = HIGHLIGHT_ERROR;
+                            int dollar_color = highlight_spec_error;
                             if (in_pos + 1 < buff_len)
                             {
                                 wchar_t next = buffstr.at(in_pos + 1);
                                 if (next == L'$' || wcsvarchr(next))
-                                    dollar_color = HIGHLIGHT_OPERATOR;
+                                    dollar_color = highlight_spec_operator;
                             }
                             colors[in_pos] = dollar_color;
                             break;
@@ -1545,20 +1536,20 @@ static void color_argument_internal(const wcstring &buffstr, std::vector<int>::i
                         case L'(':
                         case L')':
                         {
-                            colors[in_pos] = HIGHLIGHT_OPERATOR;
+                            colors[in_pos] = highlight_spec_operator;
                             break;
                         }
 
                         case L'{':
                         {
-                            colors[in_pos] = HIGHLIGHT_OPERATOR;
+                            colors[in_pos] = highlight_spec_operator;
                             bracket_count++;
                             break;
                         }
 
                         case L'}':
                         {
-                            colors[in_pos] = HIGHLIGHT_OPERATOR;
+                            colors[in_pos] = highlight_spec_operator;
                             bracket_count--;
                             break;
                         }
@@ -1567,7 +1558,7 @@ static void color_argument_internal(const wcstring &buffstr, std::vector<int>::i
                         {
                             if (bracket_count > 0)
                             {
-                                colors[in_pos] = HIGHLIGHT_OPERATOR;
+                                colors[in_pos] = highlight_spec_operator;
                             }
 
                             break;
@@ -1575,14 +1566,14 @@ static void color_argument_internal(const wcstring &buffstr, std::vector<int>::i
 
                         case L'\'':
                         {
-                            colors[in_pos] = HIGHLIGHT_QUOTE;
+                            colors[in_pos] = highlight_spec_quote;
                             mode = e_single_quoted;
                             break;
                         }
 
                         case L'\"':
                         {
-                            colors[in_pos] = HIGHLIGHT_QUOTE;
+                            colors[in_pos] = highlight_spec_quote;
                             mode = e_double_quoted;
                             break;
                         }
@@ -1597,7 +1588,7 @@ static void color_argument_internal(const wcstring &buffstr, std::vector<int>::i
              */
             case e_single_quoted:
             {
-                colors[in_pos] = HIGHLIGHT_QUOTE;
+                colors[in_pos] = highlight_spec_quote;
                 if (c == L'\\')
                 {
                     // backslash
@@ -1606,8 +1597,8 @@ static void color_argument_internal(const wcstring &buffstr, std::vector<int>::i
                         const wchar_t escaped_char = buffstr.at(in_pos + 1);
                         if (escaped_char == L'\\' || escaped_char == L'\'')
                         {
-                            colors[in_pos] = HIGHLIGHT_ESCAPE; //backslash
-                            colors[in_pos + 1] = HIGHLIGHT_ESCAPE; //escaped char
+                            colors[in_pos] = highlight_spec_escape; //backslash
+                            colors[in_pos + 1] = highlight_spec_escape; //escaped char
                             in_pos += 1; //skip over backslash
                         }
                     }
@@ -1624,7 +1615,7 @@ static void color_argument_internal(const wcstring &buffstr, std::vector<int>::i
              */
             case e_double_quoted:
             {
-                colors[in_pos] = HIGHLIGHT_QUOTE;
+                colors[in_pos] = highlight_spec_quote;
                 switch (c)
                 {
                     case L'"':
@@ -1641,8 +1632,8 @@ static void color_argument_internal(const wcstring &buffstr, std::vector<int>::i
                             const wchar_t escaped_char = buffstr.at(in_pos + 1);
                             if (escaped_char == L'\\' || escaped_char == L'\'' || escaped_char == L'$')
                             {
-                                colors[in_pos] = HIGHLIGHT_ESCAPE; //backslash
-                                colors[in_pos + 1] = HIGHLIGHT_ESCAPE; //escaped char
+                                colors[in_pos] = highlight_spec_escape; //backslash
+                                colors[in_pos + 1] = highlight_spec_escape; //escaped char
                                 in_pos += 1; //skip over backslash
                             }
                         }
@@ -1651,12 +1642,12 @@ static void color_argument_internal(const wcstring &buffstr, std::vector<int>::i
 
                     case L'$':
                     {
-                        int dollar_color = HIGHLIGHT_ERROR;
+                        int dollar_color = highlight_spec_error;
                         if (in_pos + 1 < buff_len)
                         {
                             wchar_t next = buffstr.at(in_pos + 1);
                             if (next == L'$' || wcsvarchr(next))
-                                dollar_color = HIGHLIGHT_OPERATOR;
+                                dollar_color = highlight_spec_operator;
                         }
                         colors[in_pos] = dollar_color;
                         break;
@@ -1685,7 +1676,7 @@ class highlighter_t
     const wcstring working_directory;
     
     /* The resulting colors */
-    typedef std::vector<int> color_array_t;
+    typedef std::vector<highlight_spec_t> color_array_t;
     color_array_t color_array;
     
     /* The parse tree of the buff */
@@ -1766,9 +1757,9 @@ void highlighter_t::color_argument(const parse_node_t &node)
         
         /* Highlight the parens. The open paren must exist; the closed paren may not if it was incomplete. */
         assert(cmdsub_start < arg_str.size());
-        this->color_array.at(arg_subcmd_start) = HIGHLIGHT_OPERATOR;
+        this->color_array.at(arg_subcmd_start) = highlight_spec_operator;
         if (arg_subcmd_end < this->buff.size())
-            this->color_array.at(arg_subcmd_end) = HIGHLIGHT_OPERATOR;
+            this->color_array.at(arg_subcmd_end) = highlight_spec_operator;
         
         /* Compute the cursor's position within the cmdsub. We must be past the open paren (hence >) but can be at the end of the string or closed paren (hence <=) */
         size_t cursor_subpos = CURSOR_POSITION_INVALID;
@@ -1843,7 +1834,7 @@ void highlighter_t::color_arguments(const parse_node_t &list_node)
                 bool is_help = string_prefixes_string(param, L"--help") || string_prefixes_string(param, L"-h");
                 if (!is_help && ! is_potential_cd_path(param, working_directory, PATH_EXPAND_TILDE, NULL))
                 {
-                    this->color_node(*child, HIGHLIGHT_ERROR);
+                    this->color_node(*child, highlight_spec_error);
                 }
             }
         }
@@ -1865,7 +1856,7 @@ void highlighter_t::color_redirection(const parse_node_t &redirection_node)
         const enum token_type redirect_type = this->parse_tree.type_for_redirection(redirection_node, this->buff, NULL, &target);
         
         /* We may get a TOK_NONE redirection type, e.g. if the redirection is invalid */
-        this->color_node(*redirection_primitive, redirect_type == TOK_NONE ? HIGHLIGHT_ERROR : HIGHLIGHT_REDIRECTION);
+        this->color_node(*redirection_primitive, redirect_type == TOK_NONE ? highlight_spec_error : highlight_spec_redirection);
         
         /* Check if the argument contains a command substitution. If so, highlight it as a param even though it's a command redirection, and don't try to do any other validation. */
         if (parse_util_locate_cmdsubst(target.c_str(), NULL, NULL, true) != 0)
@@ -1969,7 +1960,7 @@ void highlighter_t::color_redirection(const parse_node_t &redirection_node)
             
             if (redirection_target != NULL)
             {
-                this->color_node(*redirection_target, target_is_valid ? HIGHLIGHT_REDIRECTION : HIGHLIGHT_ERROR);
+                this->color_node(*redirection_target, target_is_valid ? highlight_spec_redirection : highlight_spec_error);
             }
         }
     }
@@ -2089,16 +2080,16 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
             case symbol_decorated_statement:
             case symbol_if_statement:
             {
-                this->color_children(node, parse_token_type_string, HIGHLIGHT_COMMAND);
+                this->color_children(node, parse_token_type_string, highlight_spec_command);
                 // Color the 'end'
-                this->color_children(node, symbol_end_command, HIGHLIGHT_COMMAND);
+                this->color_children(node, symbol_end_command, highlight_spec_command);
             }
             break;
 
             case parse_token_type_background:
             case parse_token_type_end:
             {
-                this->color_node(node, HIGHLIGHT_END);
+                this->color_node(node, highlight_spec_statement_terminator);
             }
             break;
 
@@ -2120,7 +2111,7 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
                     {
                         is_valid_cmd = command_is_valid(cmd, decoration, working_directory, vars);
                     }
-                    this->color_node(*cmd_node, is_valid_cmd ? HIGHLIGHT_COMMAND : HIGHLIGHT_ERROR);
+                    this->color_node(*cmd_node, is_valid_cmd ? highlight_spec_command : highlight_spec_error);
                 }
             }
             break;
@@ -2140,11 +2131,11 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
 
             case parse_special_type_parse_error:
             case parse_special_type_tokenizer_error:
-                this->color_node(node, HIGHLIGHT_ERROR);
+                this->color_node(node, highlight_spec_error);
                 break;
 
             case parse_special_type_comment:
-                this->color_node(node, HIGHLIGHT_COMMENT);
+                this->color_node(node, highlight_spec_comment);
                 break;
 
             default:
@@ -2172,10 +2163,10 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
                     /* It is, underline it. */
                     for (size_t i=node.source_start; i < node.source_start + node.source_length; i++)
                     {
-                        /* Don't color HIGHLIGHT_ERROR because it looks dorky. For example, trying to cd into a non-directory would show an underline and also red. */
-                        if (! (this->color_array.at(i) & HIGHLIGHT_ERROR))
+                        /* Don't color highlight_spec_error because it looks dorky. For example, trying to cd into a non-directory would show an underline and also red. */
+                        if (highlight_get_primary(this->color_array.at(i)) != highlight_spec_error)
                         {
-                            this->color_array.at(i) |= HIGHLIGHT_VALID_PATH;
+                            this->color_array.at(i) |= highlight_modifier_valid_path;
                         }
                     }
                 }
@@ -2186,7 +2177,7 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
     return color_array;
 }
 
-void highlight_shell_new_parser(const wcstring &buff, std::vector<int> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars)
+void highlight_shell_new_parser(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars)
 {
     /* Do something sucky and get the current working directory on this background thread. This should really be passed in. */
     const wcstring working_directory = env_get_pwd_slash();
@@ -2199,7 +2190,7 @@ void highlight_shell_new_parser(const wcstring &buff, std::vector<int> &color, s
 /**
    Perform quote and parenthesis highlighting on the specified string.
 */
-static void highlight_universal_internal(const wcstring &buffstr, std::vector<int> &color, size_t pos)
+static void highlight_universal_internal(const wcstring &buffstr, std::vector<highlight_spec_t> &color, size_t pos)
 {
     assert(buffstr.size() == color.size());
     if (pos < buffstr.size())
@@ -2246,8 +2237,8 @@ static void highlight_universal_internal(const wcstring &buffstr, std::vector<in
                                 pos2 = str-buff;
                                 if (pos1==pos || pos2==pos)
                                 {
-                                    color.at(pos1)|=HIGHLIGHT_MATCH<<16;
-                                    color.at(pos2)|=HIGHLIGHT_MATCH<<16;
+                                    color.at(pos1)|=highlight_make_background(highlight_spec_match);
+                                    color.at(pos2)|=highlight_make_background(highlight_spec_match);
                                     match_found = 1;
 
                                 }
@@ -2270,7 +2261,7 @@ static void highlight_universal_internal(const wcstring &buffstr, std::vector<in
             }
 
             if (!match_found)
-                color.at(pos) = HIGHLIGHT_ERROR<<16;
+                color.at(pos) = highlight_make_background(highlight_spec_error);
         }
 
         /*
@@ -2294,20 +2285,20 @@ static void highlight_universal_internal(const wcstring &buffstr, std::vector<in
                 if (level == 0)
                 {
                     long pos2 = i;
-                    color.at(pos)|=HIGHLIGHT_MATCH<<16;
-                    color.at(pos2)|=HIGHLIGHT_MATCH<<16;
+                    color.at(pos)|=highlight_spec_match<<16;
+                    color.at(pos2)|=highlight_spec_match<<16;
                     match_found=1;
                     break;
                 }
             }
 
             if (!match_found)
-                color[pos] = HIGHLIGHT_ERROR<<16;
+                color[pos] = highlight_make_background(highlight_spec_error);
         }
     }
 }
 
-void highlight_universal(const wcstring &buff, std::vector<int> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars)
+void highlight_universal(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars)
 {
     assert(buff.size() == color.size());
     std::fill(color.begin(), color.end(), 0);

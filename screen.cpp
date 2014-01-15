@@ -668,7 +668,7 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y)
 /**
    Set the pen color for the terminal
 */
-static void s_set_color(screen_t *s, data_buffer_t *b, int c)
+static void s_set_color(screen_t *s, data_buffer_t *b, highlight_spec_t c)
 {
     scoped_buffer_t scoped_buffer(b);
 
@@ -1232,7 +1232,7 @@ void s_write(screen_t *s,
              const wcstring &right_prompt,
              const wcstring &commandline,
              size_t explicit_len,
-             const int *colors,
+             const highlight_spec_t *colors,
              const int *indent,
              size_t cursor_pos,
              const screen_data_t *pager_data)

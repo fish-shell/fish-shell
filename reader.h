@@ -16,6 +16,7 @@
 #include "io.h"
 #include "common.h"
 #include "complete.h"
+#include "highlight.h"
 
 class parser_t;
 class completion_t;
@@ -173,7 +174,7 @@ void reader_set_complete_function(complete_function_t);
  The type of a highlight function.
  */
 class env_vars_snapshot_t;
-typedef void (*highlight_function_t)(const wcstring &, std::vector<int> &, size_t, wcstring_list_t *, const env_vars_snapshot_t &vars);
+typedef void (*highlight_function_t)(const wcstring &, std::vector<highlight_spec_t> &, size_t, wcstring_list_t *, const env_vars_snapshot_t &vars);
 
 /**
  Specify function for syntax highlighting. The function must take these arguments:

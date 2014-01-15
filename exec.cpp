@@ -582,7 +582,7 @@ static void exec_no_exec(parser_t &parser, const job_t *job)
         /* With the new parser, commands aren't responsible for pushing / popping blocks, so there's nothing to do */
         return;
     }
-    
+
     /* Hack hack hack. If this is an 'end' job, then trigger a pop. If this is a job that would create a block, trigger a push. See #624 */
     const process_t *p = job->first_process;
     if (p && p->type == INTERNAL_BUILTIN)
@@ -988,7 +988,7 @@ void exec_job(parser_t &parser, job_t *j)
                 }
                 break;
             }
-            
+
             case INTERNAL_BUILTIN:
             {
                 int builtin_stdin=0;
@@ -1133,20 +1133,20 @@ void exec_job(parser_t &parser, job_t *j)
                 }
                 break;
             }
-            
+
             case EXTERNAL:
                 /* External commands are handled in the next switch statement below */
                 break;
-            
+
             case INTERNAL_EXEC:
                 /* We should have handled exec up above */
                 assert(0 && "INTERNAL_EXEC process found in pipeline, where it should never be. Aborting.");
                 break;
-                
+
             case INTERNAL_BUFFER:
                 /* Internal buffers are handled in the next switch statement below */
                 break;
-                
+
         }
 
         if (exec_error)
@@ -1507,7 +1507,7 @@ void exec_job(parser_t &parser, job_t *j)
 
                 break;
             }
-            
+
             case INTERNAL_EXEC:
             {
                 /* We should have handled exec up above */
@@ -1581,7 +1581,7 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, boo
     int prev_subshell = is_subshell;
     const int prev_status = proc_get_last_status();
     char sep=0;
-    
+
     //fprintf(stderr, "subcmd %ls\n", cmd.c_str());
 
     const env_var_t ifs = env_get_string(L"IFS");

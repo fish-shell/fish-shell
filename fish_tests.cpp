@@ -149,7 +149,11 @@ static void err(const wchar_t *blah, ...)
 /* Test sane escapes */
 static void test_unescape_sane()
 {
-    const struct test_t {const wchar_t * input; const wchar_t * expected;} tests[] =
+    const struct test_t
+    {
+        const wchar_t * input;
+        const wchar_t * expected;
+    } tests[] =
     {
         {L"abcd", L"abcd"},
         {L"'abcd'", L"abcd"},
@@ -439,7 +443,7 @@ static void test_tok()
             }
         }
     }
-    
+
     /* Test redirection_type_for_string */
     if (redirection_type_for_string(L"<") != TOK_REDIRECT_IN) err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
     if (redirection_type_for_string(L"^") != TOK_REDIRECT_OUT) err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
@@ -623,45 +627,45 @@ static void test_parser()
     {
         err(L"'break' command outside of loop block context undetected");
     }
-    
+
     if (parse_util_detect_errors(L"break --help"))
     {
         err(L"'break --help' incorrectly marked as error");
     }
-    
+
     if (! parse_util_detect_errors(L"while false ; function foo ; break ; end ; end "))
     {
         err(L"'break' command inside function allowed to break from loop outside it");
     }
 
-    
+
     if (!parse_util_detect_errors(L"exec ls|less") || !parse_util_detect_errors(L"echo|return"))
     {
         err(L"Invalid pipe command undetected");
     }
-    
+
     if (parse_util_detect_errors(L"for i in foo ; switch $i ; case blah ; break; end; end "))
     {
         err(L"'break' command inside switch falsely reported as error");
     }
-    
+
     if (parse_util_detect_errors(L"or cat | cat") || parse_util_detect_errors(L"and cat | cat"))
     {
         err(L"boolean command at beginning of pipeline falsely reported as error");
     }
-    
+
     if (! parse_util_detect_errors(L"cat | and cat"))
     {
         err(L"'and' command in pipeline not reported as error");
     }
-    
+
     if (! parse_util_detect_errors(L"cat | exec") || ! parse_util_detect_errors(L"exec | cat"))
     {
         err(L"'exec' command in pipeline not reported as error");
     }
 
 
-    
+
 
     say(L"Testing basic evaluation");
 #if 0
@@ -675,7 +679,7 @@ static void test_parser()
     {
         err(L"Invalid block mode when evaluating undetected");
     }
-    
+
     /* Ensure that we don't crash on infinite self recursion and mutual recursion. These must use the principal parser because we cannot yet execute jobs on other parsers (!) */
     say(L"Testing recursion detection");
     parser_t::principal_parser().eval(L"function recursive ; recursive ; end ; recursive; ", io_chain_t(), TOP);
@@ -717,34 +721,34 @@ static void test_1_cancellation(const wchar_t *src)
 static void test_cancellation()
 {
     say(L"Testing Ctrl-C cancellation. If this hangs, that's a bug!");
-    
+
     /* Enable fish's signal handling here. We need to make this interactive for fish to install its signal handlers */
     proc_push_interactive(1);
     signal_set_handlers();
-    
+
     /* This tests that we can correctly ctrl-C out of certain loop constructs, and that nothing gets printed if we do */
-    
+
     /* Here the command substitution is an infinite loop. echo never even gets its argument, so when we cancel we expect no output */
     test_1_cancellation(L"echo (while true ; echo blah ; end)");
-    
+
     fprintf(stderr, ".");
-    
+
     /* Nasty infinite loop that doesn't actually execute anything */
     test_1_cancellation(L"echo (while true ; end) (while true ; end) (while true ; end)");
     fprintf(stderr, ".");
-    
+
     test_1_cancellation(L"while true ; end");
     fprintf(stderr, ".");
-    
+
     test_1_cancellation(L"for i in (while true ; end) ; end");
     fprintf(stderr, ".");
 
     fprintf(stderr, "\n");
-    
+
     /* Restore signal handling */
     proc_pop_interactive();
     signal_reset_handlers();
-    
+
     /* Ensure that we don't think we should cancel */
     reader_reset_interrupted();
 }
@@ -752,27 +756,28 @@ static void test_cancellation()
 static void test_indents()
 {
     say(L"Testing indents");
-    
+
     // Here are the components of our source and the indents we expect those to be
-    struct indent_component_t {
+    struct indent_component_t
+    {
         const wchar_t *txt;
         int indent;
     };
-    
+
     const indent_component_t components1[] =
     {
         {L"if foo", 0},
         {L"end", 0},
         {NULL, -1}
     };
-    
+
     const indent_component_t components2[] =
     {
         {L"if foo", 0},
         {L"", 1}, //trailing newline!
         {NULL, -1}
     };
-    
+
     const indent_component_t components3[] =
     {
         {L"if foo", 0},
@@ -780,7 +785,7 @@ static void test_indents()
         {L"end", 0}, //trailing newline!
         {NULL, -1}
     };
-    
+
     const indent_component_t components4[] =
     {
         {L"if foo", 0},
@@ -790,7 +795,7 @@ static void test_indents()
         {L"", 0},
         {NULL, -1}
     };
-    
+
     const indent_component_t components5[] =
     {
         {L"if foo", 0},
@@ -798,7 +803,7 @@ static void test_indents()
         {L"", 2},
         {NULL, -1}
     };
-    
+
     const indent_component_t components6[] =
     {
         {L"begin", 0},
@@ -806,7 +811,7 @@ static void test_indents()
         {L"", 1},
         {NULL, -1}
     };
-    
+
     const indent_component_t components7[] =
     {
         {L"begin; end", 0},
@@ -814,7 +819,7 @@ static void test_indents()
         {L"", 0},
         {NULL, -1}
     };
-    
+
     const indent_component_t components8[] =
     {
         {L"if foo", 0},
@@ -831,7 +836,7 @@ static void test_indents()
         {L"", 1},
         {NULL, -1}
     };
-    
+
     const indent_component_t components10[] =
     {
         {L"switch foo", 0},
@@ -841,7 +846,7 @@ static void test_indents()
         {L"", 2},
         {NULL, -1}
     };
-    
+
     const indent_component_t components11[] =
     {
         {L"switch foo", 0},
@@ -850,7 +855,7 @@ static void test_indents()
     };
 
 
-    
+
     const indent_component_t *tests[] = {components1, components2, components3, components4, components5, components6, components7, components8, components9, components10, components11};
     for (size_t which = 0; which < sizeof tests / sizeof *tests; which++)
     {
@@ -861,7 +866,7 @@ static void test_indents()
         {
             component_count++;
         }
-        
+
         // Generate the expected indents
         wcstring text;
         std::vector<int> expected_indents;
@@ -876,10 +881,10 @@ static void test_indents()
             expected_indents.resize(text.size(), components[i].indent);
         }
         assert(expected_indents.size() == text.size());
-        
+
         // Compute the indents
         std::vector<int> indents = parse_util_compute_indents(text);
-        
+
         if (expected_indents.size() != indents.size())
         {
             err(L"Indent vector has wrong size! Expected %lu, actual %lu", expected_indents.size(), indents.size());
@@ -990,7 +995,7 @@ static int expand_test(const wchar_t *in, int flags, ...)
     size_t i=0;
     int res=1;
     wchar_t *arg;
-    
+
     if (expand_string(in, output, flags))
     {
 
@@ -1468,22 +1473,22 @@ static void test_complete(void)
     assert(completions.size() == 2);
     assert(completions.at(0).completion == L"$Foo1");
     assert(completions.at(1).completion == L"$Bar1");
-    
+
     completions.clear();
     complete(L"echo (/bin/mkdi", completions, COMPLETION_REQUEST_DEFAULT);
     assert(completions.size() == 1);
     assert(completions.at(0).completion == L"r");
-    
+
     completions.clear();
     complete(L"echo (ls /bin/mkdi", completions, COMPLETION_REQUEST_DEFAULT);
     assert(completions.size() == 1);
     assert(completions.at(0).completion == L"r");
-    
+
     completions.clear();
     complete(L"echo (command ls /bin/mkdi", completions, COMPLETION_REQUEST_DEFAULT);
     assert(completions.size() == 1);
     assert(completions.at(0).completion == L"r");
-    
+
     /* Add a function and test completing it in various ways */
     struct function_data_t func_data;
     func_data.name = L"scuttlebutt";
@@ -1505,7 +1510,7 @@ static void test_complete(void)
     completions.clear();
     complete(L"echo (builtin scuttlebut", completions, COMPLETION_REQUEST_DEFAULT);
     assert(completions.size() == 0);
-    
+
     complete_set_variable_names(NULL);
 }
 
@@ -2267,13 +2272,13 @@ static void test_new_parser_correctness(void)
 static inline bool string_for_permutation(const wcstring *fuzzes, size_t fuzz_count, size_t len, size_t permutation, wcstring *out_str)
 {
     out_str->clear();
-    
+
     size_t remaining_permutation = permutation;
     for (size_t i=0; i < len; i++)
     {
         size_t idx = remaining_permutation % fuzz_count;
         remaining_permutation /= fuzz_count;
-        
+
         out_str->append(fuzzes[idx]);
         out_str->push_back(L' ');
     }
@@ -2307,11 +2312,11 @@ static void test_new_parser_fuzzing(void)
         L"&",
         L";",
     };
-    
+
     /* Generate a list of strings of all keyword / token combinations. */
     wcstring src;
     src.reserve(128);
-    
+
     parse_node_tree_t node_tree;
     parse_error_list_t errors;
 
@@ -2331,7 +2336,7 @@ static void test_new_parser_fuzzing(void)
         }
         if (log_it)
             fprintf(stderr, "done (%lu)\n", permutation);
-        
+
     }
     double end = timef();
     if (log_it)
@@ -2344,7 +2349,7 @@ static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *o
     out_cmd->clear();
     out_joined_args->clear();
     *out_deco = parse_statement_decoration_none;
-    
+
     bool result = false;
     parse_node_tree_t tree;
     if (parse_tree_from_string(src, parse_flag_none, &tree, NULL))
@@ -2357,13 +2362,13 @@ static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *o
             return false;
         }
         const parse_node_t &stmt = *stmt_nodes.at(0);
-        
+
         /* Return its decoration */
         *out_deco = tree.decoration_for_plain_statement(stmt);
-        
+
         /* Return its command */
         tree.command_for_plain_statement(stmt, src, out_cmd);
-        
+
         /* Return arguments separated by spaces */
         const parse_node_tree_t::parse_node_list_t arg_nodes = tree.find_nodes(stmt, symbol_argument);
         for (size_t i=0; i < arg_nodes.size(); i++)
@@ -2380,7 +2385,7 @@ static bool test_1_parse_ll2(const wcstring &src, wcstring *out_cmd, wcstring *o
 static void test_new_parser_ll2(void)
 {
     say(L"Testing parser two-token lookahead");
-    
+
     const struct
     {
         wcstring src;
@@ -2402,7 +2407,7 @@ static void test_new_parser_ll2(void)
         {L"function", L"function", L"", parse_statement_decoration_none},
         {L"function --help", L"function", L"--help", parse_statement_decoration_none}
     };
-    
+
     for (size_t i=0; i < sizeof tests / sizeof *tests; i++)
     {
         wcstring cmd, args;
@@ -2417,7 +2422,7 @@ static void test_new_parser_ll2(void)
         if (deco != tests[i].deco)
             err(L"When parsing '%ls', expected decoration %d but got %d on line %ld", tests[i].src.c_str(), (int)tests[i].deco, (int)deco, (long)__LINE__);
     }
-    
+
     /* Verify that 'function -h' and 'function --help' are plain statements but 'function --foo' is not (#1240) */
     const struct
     {
@@ -2438,7 +2443,7 @@ static void test_new_parser_ll2(void)
         {
             err(L"Failed to parse '%ls'", tests2[i].src.c_str());
         }
-        
+
         const parse_node_tree_t::parse_node_list_t node_list = tree.find_nodes(tree.at(0), tests2[i].type);
         if (node_list.size() == 0)
         {
@@ -2455,7 +2460,7 @@ static void test_new_parser_ad_hoc()
 {
     /* Very ad-hoc tests for issues encountered */
     say(L"Testing new parser ad hoc tests");
-    
+
     /* Ensure that 'case' terminates a job list */
     const wcstring src = L"switch foo ; case bar; case baz; end";
     parse_node_tree_t parse_tree;
@@ -2464,7 +2469,7 @@ static void test_new_parser_ad_hoc()
     {
         err(L"Parsing failed");
     }
-    
+
     /* Expect three case_item_lists: one for each case, and a terminal one. The bug was that we'd try to run a command 'case' */
     const parse_node_t &root = parse_tree.at(0);
     const parse_node_tree_t::parse_node_list_t node_list = parse_tree.find_nodes(root, symbol_case_item_list);
@@ -2487,25 +2492,25 @@ static void test_new_parser_errors(void)
         {L"echo 'abc", parse_error_tokenizer_unterminated_quote},
         {L"'", parse_error_tokenizer_unterminated_quote},
         {L"echo (abc", parse_error_tokenizer_unterminated_subshell},
-        
+
         {L"end", parse_error_unbalancing_end},
         {L"echo hi ; end", parse_error_unbalancing_end},
-        
+
         {L"else", parse_error_unbalancing_else},
         {L"if true ; end ; else", parse_error_unbalancing_else},
-        
+
         {L"case", parse_error_unbalancing_case},
         {L"if true ; case ; end", parse_error_unbalancing_case},
-        
+
         {L"foo || bar", parse_error_double_pipe},
         {L"foo && bar", parse_error_double_background},
     };
-    
+
     for (size_t i = 0; i < sizeof tests / sizeof *tests; i++)
     {
         const wcstring src = tests[i].src;
         parse_error_code_t expected_code = tests[i].code;
-        
+
         parse_error_list_t errors;
         parse_node_tree_t parse_tree;
         bool success = parse_tree_from_string(src, parse_flag_none, &parse_tree, &errors);
@@ -2513,7 +2518,7 @@ static void test_new_parser_errors(void)
         {
             err(L"Source '%ls' was expected to fail to parse, but succeeded", src.c_str());
         }
-        
+
         if (errors.size() != 1)
         {
             err(L"Source '%ls' was expected to produce 1 error, but instead produced %lu errors", src.c_str(), errors.size());
@@ -2526,9 +2531,9 @@ static void test_new_parser_errors(void)
                 err(L"\t\t%ls", errors.at(i).describe(src).c_str());
             }
         }
-        
+
     }
-    
+
 }
 
 static void test_highlighting(void)
@@ -2537,13 +2542,14 @@ static void test_highlighting(void)
     if (system("mkdir -p /tmp/fish_highlight_test/")) err(L"mkdir failed");
     if (system("touch /tmp/fish_highlight_test/foo")) err(L"touch failed");
     if (system("touch /tmp/fish_highlight_test/bar")) err(L"touch failed");
-    
+
     // Here are the components of our source and the colors we expect those to be
-    struct highlight_component_t {
+    struct highlight_component_t
+    {
         const wchar_t *txt;
         int color;
     };
-    
+
     const highlight_component_t components1[] =
     {
         {L"echo", highlight_spec_command},
@@ -2551,7 +2557,7 @@ static void test_highlighting(void)
         {L"&", highlight_spec_statement_terminator},
         {NULL, -1}
     };
-    
+
     const highlight_component_t components2[] =
     {
         {L"command", highlight_spec_command},
@@ -2561,7 +2567,7 @@ static void test_highlighting(void)
         {L"&", highlight_spec_statement_terminator},
         {NULL, -1}
     };
-    
+
     const highlight_component_t components3[] =
     {
         {L"if command ls", highlight_spec_command},
@@ -2574,7 +2580,7 @@ static void test_highlighting(void)
         {L"end", highlight_spec_command},
         {NULL, -1}
     };
-    
+
     /* Verify that cd shows errors for non-directories */
     const highlight_component_t components4[] =
     {
@@ -2582,14 +2588,14 @@ static void test_highlighting(void)
         {L"/tmp/fish_highlight_test", highlight_spec_param | highlight_modifier_valid_path},
         {NULL, -1}
     };
-    
+
     const highlight_component_t components5[] =
     {
         {L"cd", highlight_spec_command},
         {L"/tmp/fish_highlight_test/foo", highlight_spec_error},
         {NULL, -1}
     };
-    
+
     const highlight_component_t components6[] =
     {
         {L"cd", highlight_spec_command},
@@ -2598,7 +2604,7 @@ static void test_highlighting(void)
         {L"definitely_not_a_directory", highlight_spec_error},
         {NULL, -1}
     };
-    
+
     // Command substitutions
     const highlight_component_t components7[] =
     {
@@ -2610,57 +2616,57 @@ static void test_highlighting(void)
         {L")", highlight_spec_operator},
         {NULL, -1}
     };
-    
+
     // Redirections substitutions
     const highlight_component_t components8[] =
     {
         {L"echo", highlight_spec_command},
         {L"param1", highlight_spec_param},
-        
+
         /* Input redirection */
         {L"<", highlight_spec_redirection},
         {L"/bin/echo", highlight_spec_redirection},
-        
+
         /* Output redirection to a valid fd */
         {L"1>&2", highlight_spec_redirection},
-        
+
         /* Output redirection to an invalid fd */
         {L"2>&", highlight_spec_redirection},
         {L"LOL", highlight_spec_error},
 
         /* Just a param, not a redirection */
         {L"/tmp/blah", highlight_spec_param},
-        
+
         /* Input redirection from directory */
         {L"<", highlight_spec_redirection},
         {L"/tmp/", highlight_spec_error},
-        
+
         /* Output redirection to an invalid path */
         {L"3>", highlight_spec_redirection},
         {L"/not/a/valid/path/nope", highlight_spec_error},
-        
+
         /* Output redirection to directory */
         {L"3>", highlight_spec_redirection},
         {L"/tmp/nope/", highlight_spec_error},
 
-        
+
         /* Redirections to overflow fd */
         {L"99999999999999999999>&2", highlight_spec_error},
         {L"2>&", highlight_spec_redirection},
         {L"99999999999999999999", highlight_spec_error},
-        
+
         /* Output redirection containing a command substitution */
         {L"4>", highlight_spec_redirection},
         {L"(", highlight_spec_operator},
         {L"echo", highlight_spec_command},
         {L"/tmp/somewhere", highlight_spec_param},
         {L")", highlight_spec_operator},
-        
+
         /* Just another param */
         {L"param2", highlight_spec_param},
         {NULL, -1}
     };
-    
+
     const highlight_component_t components9[] =
     {
         {L"end", highlight_spec_error},
@@ -2677,7 +2683,7 @@ static void test_highlighting(void)
         {NULL, -1}
     };
 
-    
+
     const highlight_component_t *tests[] = {components1, components2, components3, components4, components5, components6, components7, components8, components9, components10};
     for (size_t which = 0; which < sizeof tests / sizeof *tests; which++)
     {
@@ -2688,7 +2694,7 @@ static void test_highlighting(void)
         {
             component_count++;
         }
-        
+
         // Generate the text
         wcstring text;
         std::vector<int> expected_colors;
@@ -2703,10 +2709,10 @@ static void test_highlighting(void)
             expected_colors.resize(text.size(), components[i].color);
         }
         assert(expected_colors.size() == text.size());
-        
+
         std::vector<highlight_spec_t> colors(text.size());
         highlight_shell(text, colors, 20, NULL, env_vars_snapshot_t());
-        
+
         if (expected_colors.size() != colors.size())
         {
             err(L"Color vector has wrong size! Expected %lu, actual %lu", expected_colors.size(), colors.size());
@@ -2717,7 +2723,7 @@ static void test_highlighting(void)
             // Hackish space handling. We don't care about the colors in spaces.
             if (text.at(i) == L' ')
                 continue;
-            
+
             if (expected_colors.at(i) != colors.at(i))
             {
                 const wcstring spaces(i, L' ');
@@ -2725,7 +2731,7 @@ static void test_highlighting(void)
             }
         }
     }
-    
+
     system("rm -Rf /tmp/fish_highlight_test");
 }
 
@@ -2750,7 +2756,7 @@ int main(int argc, char **argv)
     builtin_init();
     reader_init();
     env_init();
-    
+
     /* Set default signal handlers, so we can ctrl-C out of this */
     signal_reset_handlers();
 

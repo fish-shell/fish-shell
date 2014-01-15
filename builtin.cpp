@@ -1038,14 +1038,14 @@ static int builtin_emit(parser_t &parser, wchar_t **argv)
 static int builtin_generic(parser_t &parser, wchar_t **argv)
 {
     int argc=builtin_count_args(argv);
-    
+
     /* Hackish - if we have no arguments other than the command, we are a "naked invocation" and we just print help */
     if (argc == 1)
     {
         builtin_print_help(parser, argv[0], stdout_buffer);
         return STATUS_BUILTIN_ERROR;
     }
-    
+
     woptind=0;
 
     static const struct woption
@@ -1754,16 +1754,16 @@ static int builtin_pwd(parser_t &parser, wchar_t **argv)
 int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstring &contents, wcstring *out_err)
 {
     assert(out_err != NULL);
-    
+
     /* wgetopt expects 'function' as the first argument. Make a new wcstring_list with that property. */
     wcstring_list_t args;
     args.push_back(L"function");
     args.insert(args.end(), c_args.begin(), c_args.end());
-    
+
     /* Hackish const_cast matches the one in builtin_run */
     const null_terminated_array_t<wchar_t> argv_array(args);
     wchar_t **argv = const_cast<wchar_t **>(argv_array.get());
-    
+
     int argc = builtin_count_args(argv);
     int res=STATUS_BUILTIN_OK;
     wchar_t *desc=0;
@@ -1806,9 +1806,9 @@ int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstr
             case 0:
                 if (long_options[opt_index].flag != 0)
                     break;
-                
-                
-                
+
+
+
                 append_format(*out_err,
                               BUILTIN_ERR_UNKNOWN,
                               argv[0],
@@ -1876,7 +1876,7 @@ int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstr
                     if (is_subshell)
                     {
                         size_t block_idx = 0;
-                        
+
                         /* Find the outermost substitution block */
                         for (block_idx = 0; ; block_idx++)
                         {
@@ -1884,7 +1884,7 @@ int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstr
                             if (b == NULL || b->type() == SUBST)
                                 break;
                         }
-                        
+
                         /* Go one step beyond that, to get to the caller */
                         const block_t *caller_block = parser.block_at_index(block_idx + 1);
                         if (caller_block != NULL && caller_block->job != NULL)
@@ -2046,9 +2046,9 @@ int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstr
             event_t &e = d.events.at(i);
             e.function_name = d.name;
         }
-        
+
         d.definition = contents.c_str();
-        
+
         // TODO: fix def_offset inside function_add
         function_add(d, parser);
     }
@@ -2068,7 +2068,7 @@ static int builtin_function(parser_t &parser, wchar_t **argv)
         builtin_print_help(parser, argv[0], stdout_buffer);
         return STATUS_BUILTIN_OK;
     }
-    
+
     int argc = builtin_count_args(argv);
     int res=STATUS_BUILTIN_OK;
     wchar_t *desc=0;
@@ -2181,7 +2181,7 @@ static int builtin_function(parser_t &parser, wchar_t **argv)
                     if (is_subshell)
                     {
                         size_t block_idx = 0;
-                        
+
                         /* Find the outermost substitution block */
                         for (block_idx = 0; ; block_idx++)
                         {
@@ -2189,7 +2189,7 @@ static int builtin_function(parser_t &parser, wchar_t **argv)
                             if (b == NULL || b->type() == SUBST)
                                 break;
                         }
-                        
+
                         /* Go one step beyond that, to get to the caller */
                         const block_t *caller_block = parser.block_at_index(block_idx + 1);
                         if (caller_block != NULL && caller_block->job != NULL)
@@ -3965,7 +3965,7 @@ static int builtin_break_continue(parser_t &parser, wchar_t **argv)
     {
         parser.block_at_index(block_idx)->skip = true;
     }
-    
+
     /* Skip the loop itself */
     block_t *loop_block = parser.block_at_index(loop_idx);
     loop_block->skip = true;
@@ -4043,7 +4043,7 @@ static int builtin_return(parser_t &parser, wchar_t **argv)
         builtin_print_help(parser, argv[0], stderr_buffer);
         return STATUS_BUILTIN_ERROR;
     }
-    
+
     /* Skip everything up to (and then including) the function block */
     for (size_t i=0; i < function_block_idx; i++)
     {
@@ -4063,8 +4063,8 @@ static int builtin_switch(parser_t &parser, wchar_t **argv)
 {
     int res=STATUS_BUILTIN_OK;
     int argc = builtin_count_args(argv);
-    
-   /* Hackish - if we have no arguments other than the command, we are a "naked invocation" and we just print help */
+
+    /* Hackish - if we have no arguments other than the command, we are a "naked invocation" and we just print help */
     if (argc == 1)
     {
         builtin_print_help(parser, argv[0], stdout_buffer);
@@ -4307,7 +4307,7 @@ int builtin_parse(parser_t &parser, wchar_t **argv)
                 stdout_buffer.append(errors.at(i).describe(src));
                 stdout_buffer.push_back(L'\n');
             }
-            
+
             stdout_buffer.append(L"(Reparsed with continue after error)\n");
             parse_tree.clear();
             errors.clear();

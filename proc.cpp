@@ -640,7 +640,7 @@ int job_reap(bool interactive)
     static int locked = 0;
 
     locked++;
-    
+
     /* Preserve the exit status */
     const int saved_status = proc_get_last_status();
 

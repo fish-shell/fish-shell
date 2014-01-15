@@ -441,7 +441,7 @@ static size_t read_redirection_or_fd_pipe(const wchar_t *buff, enum token_type *
     enum token_type redirection_mode = TOK_NONE;
 
     size_t idx = 0;
-    
+
     /* Determine the fd. This may be specified as a prefix like '2>...' or it may be implicit like '>' or '^'. Try parsing out a number; if we did not get any digits then infer it from the first character. Watch out for overflow. */
     long long big_fd = 0;
     for (; iswdigit(buff[idx]); idx++)
@@ -450,21 +450,29 @@ static size_t read_redirection_or_fd_pipe(const wchar_t *buff, enum token_type *
         if (big_fd <= INT_MAX)
             big_fd = big_fd * 10 + (buff[idx] - L'0');
     }
-    
+
     fd = (big_fd > INT_MAX ? -1 : static_cast<int>(big_fd));
-    
+
     if (idx == 0)
     {
         /* We did not find a leading digit, so there's no explicit fd. Infer it from the type */
         switch (buff[idx])
         {
-            case L'>': fd = STDOUT_FILENO; break;
-            case L'<': fd = STDIN_FILENO; break;
-            case L'^': fd = STDERR_FILENO; break;
-            default: errored = true; break;
+            case L'>':
+                fd = STDOUT_FILENO;
+                break;
+            case L'<':
+                fd = STDIN_FILENO;
+                break;
+            case L'^':
+                fd = STDERR_FILENO;
+                break;
+            default:
+                errored = true;
+                break;
         }
     }
-    
+
     /* Either way we should have ended on the redirection character itself like '>' */
     wchar_t redirect_char = buff[idx++]; //note increment of idx
     if (redirect_char == L'>' || redirect_char == L'^')
@@ -486,7 +494,7 @@ static size_t read_redirection_or_fd_pipe(const wchar_t *buff, enum token_type *
         /* Something else */
         errored = true;
     }
-    
+
     /* Optional characters like & or ?, or the pipe char | */
     wchar_t opt_char = buff[idx];
     if (opt_char == L'&')
@@ -505,20 +513,20 @@ static size_t read_redirection_or_fd_pipe(const wchar_t *buff, enum token_type *
         redirection_mode = TOK_PIPE;
         idx++;
     }
-    
+
     /* Don't return valid-looking stuff on error */
     if (errored)
     {
         idx = 0;
         redirection_mode = TOK_NONE;
     }
-    
+
     /* Return stuff */
     if (out_redirection_mode != NULL)
         *out_redirection_mode = redirection_mode;
     if (out_fd != NULL)
         *out_fd = fd;
-    
+
     return idx;
 }
 
@@ -542,7 +550,7 @@ int fd_redirected_by_pipe(const wcstring &str)
     {
         return STDOUT_FILENO;
     }
-    
+
     enum token_type mode = TOK_NONE;
     int fd = 0;
     read_redirection_or_fd_pipe(str.c_str(), &mode, &fd);
@@ -556,11 +564,15 @@ int oflags_for_redirection_type(enum token_type type)
 {
     switch (type)
     {
-        case TOK_REDIRECT_APPEND: return O_CREAT | O_APPEND | O_WRONLY;
-        case TOK_REDIRECT_OUT: return O_CREAT | O_WRONLY | O_TRUNC;
-        case TOK_REDIRECT_NOCLOB: return O_CREAT | O_EXCL | O_WRONLY;
-        case TOK_REDIRECT_IN: return O_RDONLY;
-        
+        case TOK_REDIRECT_APPEND:
+            return O_CREAT | O_APPEND | O_WRONLY;
+        case TOK_REDIRECT_OUT:
+            return O_CREAT | O_WRONLY | O_TRUNC;
+        case TOK_REDIRECT_NOCLOB:
+            return O_CREAT | O_EXCL | O_WRONLY;
+        case TOK_REDIRECT_IN:
+            return O_RDONLY;
+
         default:
             return -1;
     }
@@ -703,7 +715,7 @@ void tok_next(tokenizer_t *tok)
             int fd = -1;
             if (iswdigit(*tok->buff))
                 consumed = read_redirection_or_fd_pipe(tok->buff, &mode, &fd);
-            
+
             if (consumed > 0)
             {
                 /* It looks like a redirection or a pipe. But we don't support piping fd 0. Note that fd 0 may be -1, indicating overflow; but we don't treat that as a tokenizer error. */

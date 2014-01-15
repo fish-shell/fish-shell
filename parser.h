@@ -95,7 +95,7 @@ public:
     bool skip; /**< Whether execution of the commands in this block should be skipped */
     bool had_command; /**< Set to non-zero once a command has been executed in this block */
     int tok_pos; /**< The start index of the block */
-    
+
     node_offset_t node_offset; /* Offset of the node */
 
     /** Status for the current loop block. Can be any of the values from the loop_status enum. */
@@ -286,10 +286,10 @@ private:
 
     /** Position of last error */
     int err_pos;
-    
+
     /** Indication that we should skip all blocks */
     bool cancellation_requested;
-    
+
     /** Stack of execution contexts. We own these pointers and must delete them */
     std::vector<parse_execution_context_t *> execution_contexts;
 
@@ -313,7 +313,7 @@ private:
 
     /** The jobs associated with this parser */
     job_list_t my_job_list;
-    
+
     /** The list of blocks, allocated with new. It's our responsibility to delete these */
     std::vector<block_t *> block_stack;
 
@@ -327,7 +327,7 @@ private:
     /* No copying allowed */
     parser_t(const parser_t&);
     parser_t& operator=(const parser_t&);
-    
+
 
     void parse_job_argument_list(process_t *p, job_t *j, tokenizer_t *tok, std::vector<completion_t>&, bool);
     int parse_job(process_t *p, job_t *j, tokenizer_t *tok);
@@ -339,7 +339,7 @@ private:
 
     /** Create a job */
     job_t *job_create(const io_chain_t &io);
-    
+
     /** Adds a job to the beginning of the job list. */
     void job_add(job_t *job);
 
@@ -382,10 +382,10 @@ public:
     */
     int eval(const wcstring &cmd_str, const io_chain_t &io, enum block_type_t block_type);
     int eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type);
-    
+
     /** Evaluates a block node at the given node offset in the topmost execution context */
     int eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum block_type_t block_type);
-    
+
     /**
       Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and cmdsubst execution on the tokens.
       The output is inserted into output.
@@ -430,15 +430,15 @@ public:
 
     /** Set the current position in the latest string of the tokenizer. */
     void set_pos(int p);
-    
+
     /** Returns the block at the given index. 0 corresponds to the innermost block. Returns NULL when idx is at or equal to the number of blocks. */
     const block_t *block_at_index(size_t idx) const;
     block_t *block_at_index(size_t idx);
-    
+
     /** Returns the current (innermost) block */
     const block_t *current_block() const;
     block_t *current_block();
-    
+
     /** Count of blocks */
     size_t block_count() const
     {
@@ -459,7 +459,7 @@ public:
 
     /** Remove the outermost block namespace */
     void pop_block();
-    
+
     /** Remove the outermost block, asserting it's the given one */
     void pop_block(const block_t *b);
 

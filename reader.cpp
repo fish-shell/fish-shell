@@ -658,31 +658,31 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
 
     const wcstring subcmd = wcstring(cmdsub_begin, cmdsub_end - cmdsub_begin);
     const size_t subcmd_cursor_pos = cursor_pos - subcmd_offset;
-    
+
     /* Parse this subcmd */
     parse_node_tree_t parse_tree;
     parse_tree_from_string(subcmd, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens, &parse_tree, NULL);
-    
+
     /* Look for plain statements where the cursor is at the end of the command */
     const parse_node_t *matching_cmd_node = NULL;
     const size_t len = parse_tree.size();
     for (size_t i=0; i < len; i++)
     {
         const parse_node_t &node = parse_tree.at(i);
-        
+
         /* Only interested in plain statements with source */
         if (node.type != symbol_plain_statement || ! node.has_source())
             continue;
-        
+
         /* Skip decorated statements */
         if (parse_tree.decoration_for_plain_statement(node) != parse_statement_decoration_none)
             continue;
-        
+
         /* Get the command node. Skip it if we can't or it has no source */
         const parse_node_t *cmd_node = parse_tree.get_child(node, 0, parse_token_type_string);
         if (cmd_node == NULL || ! cmd_node->has_source())
             continue;
-        
+
         /* Now see if its source range contains our cursor, including at the end */
         if (subcmd_cursor_pos >= cmd_node->source_start && subcmd_cursor_pos <= cmd_node->source_start + cmd_node->source_length)
         {
@@ -691,7 +691,7 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
             break;
         }
     }
-    
+
     /* Now if we found a command node, expand it */
     bool result = false;
     if (matching_cmd_node != NULL)
@@ -2468,10 +2468,10 @@ int reader_shell_test(const wchar_t *b)
 {
     assert(b != NULL);
     wcstring bstr = b;
-    
+
     /* Append a newline, to act as a statement terminator */
     bstr.push_back(L'\n');
-    
+
     parse_error_list_t errors;
     int res = parse_util_detect_errors(bstr, &errors);
 
@@ -2479,7 +2479,7 @@ int reader_shell_test(const wchar_t *b)
     {
         wcstring error_desc;
         parser_t::principal_parser().get_backtrace(bstr, errors, &error_desc);
-        
+
         // ensure we end with a newline. Also add an initial newline, because it's likely the user just hit enter and so there's junk on the current line
         if (! string_suffixes_string(L"\n", error_desc))
         {
@@ -3163,7 +3163,7 @@ const wchar_t *reader_readline(void)
                     /* Figure out the extent of the token within the command substitution. Note we pass cmdsub_begin here, not buff */
                     const wchar_t *token_begin, *token_end;
                     parse_util_token_extent(cmdsub_begin, data->buff_pos - (cmdsub_begin-buff), &token_begin, &token_end, 0, 0);
-                    
+
                     /* Hack: the token may extend past the end of the command substitution, e.g. in (echo foo) the last token is 'foo)'. Don't let that happen. */
                     if (token_end > cmdsub_end) token_end = cmdsub_end;
 

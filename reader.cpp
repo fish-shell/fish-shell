@@ -575,7 +575,7 @@ static void reader_repaint()
 
     if(data->sel_active)
     {
-      int selection_color = HIGHLIGHT_SELECTION << 16;
+      highlight_spec_t selection_color = highlight_make_background(highlight_spec_selection);
       for(int i = data->sel_start_pos; i <= std::min(len - 1, data->sel_stop_pos); i++)
       {
         colors[i] = selection_color;

@@ -28,6 +28,7 @@ enum
     highlight_spec_quote, //quoted string
     highlight_spec_redirection, //redirection
     highlight_spec_autosuggestion, //autosuggestion
+    highlight_spec_selection,
 
     HIGHLIGHT_SPEC_PRIMARY_MASK = 0xFF,
 
@@ -49,12 +50,6 @@ inline highlight_spec_t highlight_make_background(highlight_spec_t val)
 {
     return val << 16;
 }
-
-
-/**
-   Internal value representing highlighting an active selection
-*/
-#define HIGHLIGHT_SELECTION 0x80
 
 class history_item_t;
 struct file_detection_context_t;

@@ -173,12 +173,8 @@ RESOLVE(statement)
                 case parse_keyword_end:
                     return NO_PRODUCTION;
 
-                    // 'in' is only special within a for_header
-                case parse_keyword_in:
-                case parse_keyword_none:
-                case parse_keyword_command:
-                case parse_keyword_builtin:
-                case parse_keyword_case:
+                // All other keywords fall through to decorated statement
+                default:
                     return 4;
             }
             break;

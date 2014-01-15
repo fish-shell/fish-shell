@@ -476,7 +476,7 @@ const wchar_t *wgettext(const wchar_t *in)
     {
         cstring mbs_in = wcs2string(key);
         char *out = fish_gettext(mbs_in.c_str());
-        val = new wcstring(format_string(L"%s", out));
+        val = new wcstring(format_string(L"%s", out)); //note that this writes into the map!
     }
     errno = err;
     return val->c_str();

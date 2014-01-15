@@ -78,6 +78,7 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind $argv \ct transpose-chars
 	bind $argv \et transpose-words
 	bind $argv \eu upcase-word
+
 	# This clashes with __fish_list_current_token
 	# bind $argv \el downcase-word
 	bind $argv \ec capitalize-word
@@ -106,6 +107,9 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind $argv \cw backward-kill-path-component
 	bind $argv \ed 'set -l cmd (commandline); if test -z "$cmd"; echo; dirh; commandline -f repaint; else; commandline -f kill-word; end'
 	bind $argv \cd delete-or-exit
+
+	bind \ed forward-kill-word
+	bind \ed kill-word
 
 	# Allow reading manpages by pressing F1
 	bind $argv -k f1 'man (basename (commandline -po; echo))[1] ^/dev/null; or echo -n \a'

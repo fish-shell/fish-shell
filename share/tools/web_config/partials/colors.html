@@ -1,0 +1,65 @@
+<div>
+    <!-- ko with: color_picker -->
+    <span style="padding-left: 25px">Click to customize each color: </span><br>
+    <div class="colorpicker_text_sample" ng-style="{'background-color': terminalBackgroundColor}">
+        <span style="position: absolute; left: 10px; top: -6px;" data-ng-style="{'color': text_color_for_color(selectedColorScheme.preferred_background || 'white')}">{{ selectedColorScheme.name }}</span><br>
+        <div class="color_picker_background_cells">
+            <div ng-style="{'background-color': color}" ng-repeat="color in sampleTerminalBackgroundColors" ng-click="changeTerminalBackgroundColor(color)"></div>
+        </div>
+        <!-- This is the sample text -->
+        <span data-ng-style="{ 'color': selectedColorScheme.command}" ng-click="selectColorSetting('command')">/bright/vixens</span>
+        <span data-ng-style="{ 'color': selectedColorScheme.param}" ng-click="selectColorSetting('param')">jump</span>
+        <span data-ng-style="{ 'color': selectedColorScheme.end}" ng-click="selectColorSetting('end')">|</span>
+        <span data-ng-style="{ 'color': selectedColorScheme.command}" ng-click="selectColorSetting('command')">dozy</span>
+        <span data-ng-style="{ 'color': selectedColorScheme.quote}" ng-click="selectColorSetting('quote')"> "fowl" </span>
+        <span data-ng-style="{ 'color': selectedColorScheme.redirection}" ng-click="selectColorSetting('redirection')">&gt; quack</span>
+        <span data-ng-style="{ 'color': selectedColorScheme.end}" ng-click="selectColorSetting('end')">&</span>
+        <br>
+        <span data-ng-style="{ 'color': selectedColorScheme.command}" ng-click="selectColorSetting('command')">echo</span>
+        <span data-ng-style="{ 'color': selectedColorScheme.error}" ng-click="selectColorSetting('error')">'Errors are the portals to discovery</span>
+        <br>
+        <span data-ng-style="{ 'color': selectedColorScheme.comment}" ng-click="selectColorSetting('comment')"># This is a comment</span>
+        <br>
+        <span data-ng-style="{ 'color': selectedColorScheme.command}" ng-click="selectColorSetting('command')">Th</span><span data-ng-style="{ 'color': selectedColorScheme.autosuggestion }" ng-click="selectColorSetting('autosuggestion')"><span class="fake_cursor"><span style="visibility: hidden">i</span></span>s is an autosuggestion</span>
+
+        <span class="save_button" style="position: absolute; right: 5px; bottom: 5px;" title="Terminal background color is not set automatically on Apply. See your terminal documentation to set its background color." data-ng-style="{'color': text_color_for_color(selectedColorScheme.preferred_background || 'white')}" ng-show="showSaveButton" ng-click="setTheme()">Apply</span>
+
+    </div>
+            
+    <table class="colorpicker_term256" style="margin: 0px 20px;">
+        <tbody>
+            <tr class="colorpicker_term256_row" data-ng-repeat="color_array in colorArraysArray"> 
+                <td class="colorpicker_term256_cell" data-ng-style="{'background-color': color, 'color': color}" ng-click="changeSelectedTextColor(color)" ng-repeat="color in color_array">
+                                <div class="colorpicker_term256_selection_indicator" ng-show="selectedColorScheme[selectedColorSetting] == color" ng-style="{'border-color': border_color_for_color(color)}"</div>
+                </td>
+            </tr>
+        </tbody>
+        <!-- /ko -->
+    </table>
+    
+    <div class="color_scheme_choices_list">
+        <div class="color_scheme_choice_container" data-ng-repeat="colorScheme in colorSchemes" ng-click="changeSelectedColorScheme(colorScheme)">
+            <div class="color_scheme_choice_label">
+                <!-- This click/clickBubble nonsense is so that we can have a separate URL inside a parent with an onClick handler -->
+                <span>{{colorScheme.name }}</span><!--a data-bind="if: $data.url, click: function(){return true;}, clickBubble: false, attr: { href: $data.url}"><img class="external_link_img" src="external_link.png"></a-->
+            </div>
+            <div class="colorpicker_text_sample_tight" data-ng-style="{'background-color': colorScheme.preferred_background}">
+                <span data-ng-style="{'color': colorScheme.command}">/bright/vixens</span>
+                <span data-ng-style="{'color': colorScheme.param}">jump</span>
+                <span data-ng-style="{'color': colorScheme.end}">|</span>
+                <span data-ng-style="{'color': colorScheme.command}">dozy</span>
+                <span data-ng-style="{'color': colorScheme.quote}"> "fowl" </span>
+                <span data-ng-style="{'color': colorScheme.redirection}">&gt; quack</span>
+                <span data-ng-style="{'color': colorScheme.end}">&</span>
+                <br>
+                <span data-ng-style="{'color': colorScheme.command}">echo</span>
+                <span data-ng-style="{'color': colorScheme.error}">'Errors are the portals to discovery</span>
+                <br>
+                <span data-ng-style="{ 'color': colorScheme.comment}"># This is a comment</span>
+                <br>
+                <span data-ng-style="{ 'color': colorScheme.command}">Th</span><span data-ng-style="{ 'color': colorScheme.autosuggestion}"><span class="fake_cursor"><span style="visibility: hidden">i</span></span>s is an autosuggestion</span>
+            </div>
+        </div>
+    </div>
+    <!-- /ko -->
+</div>

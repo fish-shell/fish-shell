@@ -394,12 +394,13 @@ static void io_cleanup_fds(const std::vector<int> &opened_fds)
    repeatedly reopened for every command in the block, which would
    reset the cursor position.
 
-   \return the transmogrified chain on sucess, or 0 on failiure
+   \return true on success, false on failure. Returns the output chain and opened_fds by reference
 */
-static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t &out_chain, std::vector<int> &out_opened_fds)
+static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t *out_chain, std::vector<int> *out_opened_fds)
 {
     ASSERT_IS_MAIN_THREAD();
-    assert(out_chain.empty());
+    assert(out_chain != NULL && out_opened_fds != NULL);
+    assert(out_chain->empty());
 
     /* Just to be clear what we do for an empty chain */
     if (in_chain.empty())
@@ -479,8 +480,8 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t &out_chain, s
     if (success)
     {
         /* Yay */
-        out_chain.swap(result_chain);
-        out_opened_fds.swap(opened_fds);
+        out_chain->swap(result_chain);
+        out_opened_fds->swap(opened_fds);
     }
     else
     {
@@ -496,19 +497,24 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t &out_chain, s
    Morph an io redirection chain into redirections suitable for
    passing to eval, call eval, and clean up morphed redirections.
 
-   \param def the code to evaluate
+   \param def the code to evaluate, or the empty string if none
+   \param node_offset the offset of the node to evalute, or NODE_OFFSET_INVALID
    \param block_type the type of block to push on evaluation
    \param io the io redirections to be performed on this block
 */
 
 static void internal_exec_helper(parser_t &parser,
-                                 const wchar_t *def,
+                                 const wcstring &def,
+                                 node_offset_t node_offset,
                                  enum block_type_t block_type,
                                  const io_chain_t &ios)
 {
+    // If we have a valid node offset, then we must not have a string to execute
+    assert(node_offset == NODE_OFFSET_INVALID || def.empty());
+
     io_chain_t morphed_chain;
     std::vector<int> opened_fds;
-    bool transmorgrified = io_transmogrify(ios, morphed_chain, opened_fds);
+    bool transmorgrified = io_transmogrify(ios, &morphed_chain, &opened_fds);
 
     int is_block_old=is_block;
     is_block=1;
@@ -524,7 +530,14 @@ static void internal_exec_helper(parser_t &parser,
 
     signal_unblock();
 
-    parser.eval(def, morphed_chain, block_type);
+    if (node_offset == NODE_OFFSET_INVALID)
+    {
+        parser.eval(def, morphed_chain, block_type);
+    }
+    else
+    {
+        parser.eval_block_node(node_offset, morphed_chain, block_type);
+    }
 
     signal_block();
 
@@ -564,6 +577,12 @@ static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *proce
 /* What exec does if no_exec is set. This only has to handle block pushing and popping. See #624. */
 static void exec_no_exec(parser_t &parser, const job_t *job)
 {
+    if (parser_use_ast())
+    {
+        /* With the new parser, commands aren't responsible for pushing / popping blocks, so there's nothing to do */
+        return;
+    }
+
     /* Hack hack hack. If this is an 'end' job, then trigger a pop. If this is a job that would create a block, trigger a push. See #624 */
     const process_t *p = job->first_process;
     if (p && p->type == INTERNAL_BUILTIN)
@@ -682,7 +701,7 @@ void exec_job(parser_t &parser, job_t *j)
             j->first_process->completed=1;
             return;
         }
-
+        assert(0 && "This should be unreachable");
     }
 
     signal_block();
@@ -807,7 +826,6 @@ void exec_job(parser_t &parser, job_t *j)
         {
             pipe_write.reset(new io_pipe_t(p->pipe_write_fd, false));
             process_net_io_chain.push_back(pipe_write);
-
         }
 
         /* The explicit IO redirections associated with the process */
@@ -926,7 +944,7 @@ void exec_job(parser_t &parser, job_t *j)
 
                 if (! exec_error)
                 {
-                    internal_exec_helper(parser, def.c_str(), TOP, process_net_io_chain);
+                    internal_exec_helper(parser, def, NODE_OFFSET_INVALID, TOP, process_net_io_chain);
                 }
 
                 parser.allow_function();
@@ -936,12 +954,14 @@ void exec_job(parser_t &parser, job_t *j)
             }
 
             case INTERNAL_BLOCK:
+            case INTERNAL_BLOCK_NODE:
             {
                 if (p->next)
                 {
                     block_output_io_buffer.reset(io_buffer_t::create(0));
                     if (block_output_io_buffer.get() == NULL)
                     {
+                        /* We failed (e.g. no more fds could be created). */
                         exec_error = true;
                         job_mark_process_as_failed(j, p);
                     }
@@ -954,10 +974,19 @@ void exec_job(parser_t &parser, job_t *j)
 
                 if (! exec_error)
                 {
-                    internal_exec_helper(parser, p->argv0(), TOP, process_net_io_chain);
+                    if (p->type == INTERNAL_BLOCK)
+                    {
+                        /* The block contents (as in, fish code) are stored in argv0 (ugh) */
+                        assert(p->argv0() != NULL);
+                        internal_exec_helper(parser, p->argv0(), NODE_OFFSET_INVALID, TOP, process_net_io_chain);
+                    }
+                    else
+                    {
+                        assert(p->type == INTERNAL_BLOCK_NODE);
+                        internal_exec_helper(parser, wcstring(), p->internal_block_node, TOP, process_net_io_chain);
+                    }
                 }
                 break;
-
             }
 
             case INTERNAL_BUILTIN:
@@ -1104,6 +1133,20 @@ void exec_job(parser_t &parser, job_t *j)
                 }
                 break;
             }
+
+            case EXTERNAL:
+                /* External commands are handled in the next switch statement below */
+                break;
+
+            case INTERNAL_EXEC:
+                /* We should have handled exec up above */
+                assert(0 && "INTERNAL_EXEC process found in pipeline, where it should never be. Aborting.");
+                break;
+
+            case INTERNAL_BUFFER:
+                /* Internal buffers are handled in the next switch statement below */
+                break;
+
         }
 
         if (exec_error)
@@ -1115,6 +1158,7 @@ void exec_job(parser_t &parser, job_t *j)
         {
 
             case INTERNAL_BLOCK:
+            case INTERNAL_BLOCK_NODE:
             case INTERNAL_FUNCTION:
             {
                 int status = proc_get_last_status();
@@ -1131,7 +1175,7 @@ void exec_job(parser_t &parser, job_t *j)
                       No buffer, so we exit directly. This means we
                       have to manually set the exit status.
                     */
-                    if (p->next == 0)
+                    if (p->next == NULL)
                     {
                         proc_set_last_status(job_get_flag(j, JOB_NEGATE)?(!status):status);
                     }
@@ -1464,6 +1508,12 @@ void exec_job(parser_t &parser, job_t *j)
                 break;
             }
 
+            case INTERNAL_EXEC:
+            {
+                /* We should have handled exec up above */
+                assert(0 && "INTERNAL_EXEC process found in pipeline, where it should never be. Aborting.");
+                break;
+            }
         }
 
         if (p->type == INTERNAL_BUILTIN)
@@ -1531,6 +1581,8 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, boo
     int prev_subshell = is_subshell;
     const int prev_status = proc_get_last_status();
     char sep=0;
+
+    //fprintf(stderr, "subcmd %ls\n", cmd.c_str());
 
     const env_var_t ifs = env_get_string(L"IFS");
 

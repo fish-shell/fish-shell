@@ -132,12 +132,12 @@ static int try_get_socket_once(void)
     if (connect(s, (struct sockaddr *)&local, sizeof local) == -1)
     {
         close(s);
-        
+
         /* If it fails on first try, it's probably no serious error, but fishd hasn't been launched yet.
          This happens (at least) on the first concurrent session. */
         if (get_socket_count > 1)
             wperror(L"connect");
-        
+
         return -1;
     }
 
@@ -426,8 +426,6 @@ void env_universal_barrier()
 
 void env_universal_set(const wcstring &name, const wcstring &value, bool exportv)
 {
-    message_t *msg;
-
     if (!s_env_univeral_inited)
         return;
 
@@ -439,9 +437,9 @@ void env_universal_set(const wcstring &name, const wcstring &value, bool exportv
     }
     else
     {
-        msg = create_message(exportv?SET_EXPORT:SET,
-                             name.c_str(),
-                             value.c_str());
+        message_t *msg = create_message(exportv?SET_EXPORT:SET,
+                                        name.c_str(),
+                                        value.c_str());
 
         if (!msg)
         {
@@ -459,7 +457,6 @@ int env_universal_remove(const wchar_t *name)
 {
     int res;
 
-    message_t *msg;
     if (!s_env_univeral_inited)
         return 1;
 
@@ -476,7 +473,7 @@ int env_universal_remove(const wchar_t *name)
     }
     else
     {
-        msg= create_message(ERASE, name, 0);
+        message_t *msg = create_message(ERASE, name, 0);
         msg->count=1;
         env_universal_server.unsent.push(msg);
         env_universal_barrier();

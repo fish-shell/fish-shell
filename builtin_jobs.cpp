@@ -164,7 +164,6 @@ static int builtin_jobs(parser_t &parser, wchar_t **argv)
     int found=0;
     int mode=JOBS_DEFAULT;
     int print_last = 0;
-    const job_t *j;
 
     argc = builtin_count_args(argv);
     woptind=0;
@@ -305,7 +304,7 @@ static int builtin_jobs(parser_t &parser, wchar_t **argv)
                     return 1;
                 }
 
-                j = job_get_from_pid(pid);
+                const job_t *j = job_get_from_pid(pid);
 
                 if (j && !job_is_completed(j))
                 {

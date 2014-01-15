@@ -117,6 +117,9 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		# Background color for search matches
 		set_default fish_color_search_match --background=purple
 
+		# Background color for selections
+		set_default fish_color_selection --background=purple
+
 		# Pager colors
 		set_default fish_pager_color_prefix cyan
 		set_default fish_pager_color_completion normal

@@ -588,8 +588,8 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
 
     const wchar_t *bind_mode = DEFAULT_BIND_MODE;
     bool bind_mode_given = false;
-    const wchar_t *new_bind_mode = DEFAULT_BIND_MODE;
-    bool new_bind_mode_given = false;
+    const wchar_t *sets_bind_mode = DEFAULT_BIND_MODE;
+    bool sets_bind_mode_given = false;
 
     int use_terminfo = 0;
 
@@ -691,8 +691,8 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
                 break;
 
             case 'm':
-                new_bind_mode = woptarg;
-                new_bind_mode_given = true;
+                sets_bind_mode = woptarg;
+                sets_bind_mode_given = true;
                 break;
 
             case '?':
@@ -706,9 +706,9 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
     /*
      * if mode is given, but not new mode, default to new mode to mode 
      */
-    if(bind_mode_given && !new_bind_mode_given)
+    if(bind_mode_given && !sets_bind_mode_given)
     {
-      new_bind_mode = bind_mode;
+      sets_bind_mode = bind_mode;
     }
 
     switch (mode)
@@ -739,7 +739,7 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
 
                 default:
                 {
-                    builtin_bind_add(argv[woptind], (const wchar_t **)argv + (woptind + 1), argc - (woptind + 1), bind_mode, new_bind_mode, use_terminfo);
+                    builtin_bind_add(argv[woptind], (const wchar_t **)argv + (woptind + 1), argc - (woptind + 1), bind_mode, sets_bind_mode, use_terminfo);
                     break;
                 }
 
@@ -769,33 +769,6 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
         }
     }
 
-    return res;
-}
-
-
-/**
-   The bind mode builtin
-*/
-static int builtin_bind_mode(parser_t &parser, wchar_t **argv)
-{
-    int res = STATUS_BUILTIN_OK;
-    int argc = builtin_count_args(argv);
-
-    switch (argc)
-    {
-        case 1:
-        {
-          append_format(stdout_buffer, L"%ls\n", input_get_bind_mode());
-          break;
-        }
-
-        default:
-        {
-            res = STATUS_BUILTIN_ERROR;
-            append_format(stderr_buffer, _(L"%ls: Expected no parameters, got %d"), argv[0], argc);
-            break;
-        }
-    }
     return res;
 }
 
@@ -4058,7 +4031,6 @@ static const builtin_data_t builtin_datas[]=
     { 		L"begin",  &builtin_begin, N_(L"Create a block of code")   },
     { 		L"bg",  &builtin_bg, N_(L"Send job to background")   },
     { 		L"bind",  &builtin_bind, N_(L"Handle fish key bindings")  },
-    { 		L"bind_mode",  &builtin_bind_mode, N_(L"Set or get the current bind mode")  },
     { 		L"block",  &builtin_block, N_(L"Temporarily block delivery of events") },
     { 		L"break",  &builtin_break_continue, N_(L"Stop the innermost loop")   },
     { 		L"breakpoint",  &builtin_breakpoint, N_(L"Temporarily halt execution of a script and launch an interactive debug prompt")   },

@@ -1,9 +1,9 @@
 function fish_vi_prompt_cm --description "Displays the current mode"
   echo -n " "
-  switch (bind_mode)
+  switch $fish_bind_mode
     case default
       set_color --bold --background green white
-      echo "[C]"
+      echo "[N]"
     case insert
       set_color --bold --background red white
       echo "[I]"

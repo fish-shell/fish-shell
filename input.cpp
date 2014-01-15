@@ -61,6 +61,9 @@
 #include <vector>
 
 #define DEFAULT_TERM L"ansi"
+
+#define FISH_BIND_MODE_VAR L"fish_bind_mode"
+
 /**
    Struct representing a keybinding. Returned by input_get_mappings.
  */
@@ -231,9 +234,6 @@ static const wchar_t code_arr[] =
 /** Mappings for the current input mode */
 static std::vector<input_mapping_t> mapping_list;
 
-#define MAX_BIND_MODE_NAME_SIZE 512
-static wchar_t bind_mode[MAX_BIND_MODE_NAME_SIZE] = DEFAULT_BIND_MODE;
-
 /* Terminfo map list */
 static std::vector<terminfo_mapping_t> terminfo_mappings;
 
@@ -261,6 +261,12 @@ static void input_terminfo_init();
 */
 const wchar_t *input_get_bind_mode()
 {
+    const wchar_t *bind_mode = DEFAULT_BIND_MODE;
+    const env_var_t bind_mode_var = env_get_string(FISH_BIND_MODE_VAR);
+    if(!bind_mode_var.missing())
+    {
+      bind_mode = bind_mode_var.c_str();
+    }
     return bind_mode;
 }
 
@@ -269,16 +275,7 @@ const wchar_t *input_get_bind_mode()
 */
 bool input_set_bind_mode(const wchar_t *bm)
 {
-  int len = wcslen(bm) * sizeof(wchar_t);
-  if(len >= MAX_BIND_MODE_NAME_SIZE)
-  {
-    debug(0, L"Error: name for bind mode exceeds maximum size\n");
-    return false;
-  }
-  memset(bind_mode, 0, MAX_BIND_MODE_NAME_SIZE);
-  memcpy(bind_mode, bm, len);
-  //debug(0, L"Set bind mode to `%ls'", bind_mode);
-
+  env_set(FISH_BIND_MODE_VAR, bm, ENV_GLOBAL);
   return true;
 }
 
@@ -541,6 +538,8 @@ static void input_mapping_execute_matching_or_generic()
 {
     const input_mapping_t *generic = NULL;
 
+    const wchar_t *bind_mode = input_get_bind_mode();
+
     for (int i = 0; i < mapping_list.size(); i++)
     {
         const input_mapping_t &m = mapping_list.at(i);
@@ -548,7 +547,7 @@ static void input_mapping_execute_matching_or_generic()
         //debug(0, L"trying mapping (%ls,%ls,%ls)\n", escape(m.seq.c_str(), 1),
         //           m.mode.c_str(), m.sets_mode.c_str());
         
-        if(wcscmp(m.mode.c_str(), input_get_bind_mode()))
+        if(wcscmp(m.mode.c_str(), bind_mode))
         {
             //debug(0, L"skipping mapping because mode %ls != %ls\n", m.mode.c_str(), input_get_bind_mode());
             continue;
@@ -581,8 +580,6 @@ static void input_mapping_execute_matching_or_generic()
 
 wint_t input_readch()
 {
-    size_t i;
-
     CHECK_BLOCK(R_NULL);
 
     /*

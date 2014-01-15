@@ -122,7 +122,7 @@ RESOLVE(statement)
             If we are 'function', then we are a non-block if we are invoked with -h or --help
             If we are anything else, we require an argument, so do the same thing if the subsequent token is a statement terminator.
     */
-     
+
     if (token1.type == parse_token_type_string)
     {
         // If we are a function, then look for help arguments
@@ -135,14 +135,14 @@ RESOLVE(statement)
         {
             return 4;
         }
-        
+
         // Likewise if the next token doesn't look like an argument at all. This corresponds to e.g. a "naked if".
         bool naked_invocation_invokes_help = (token1.keyword != parse_keyword_begin && token1.keyword != parse_keyword_end);
         if (naked_invocation_invokes_help && (token2.type == parse_token_type_end || token2.type == parse_token_type_terminate))
         {
             return 4;
         }
-        
+
     }
 
     switch (token1.type)
@@ -173,12 +173,8 @@ RESOLVE(statement)
                 case parse_keyword_end:
                     return NO_PRODUCTION;
 
-                    // 'in' is only special within a for_header
-                case parse_keyword_in:
-                case parse_keyword_none:
-                case parse_keyword_command:
-                case parse_keyword_builtin:
-                case parse_keyword_case:
+                // All other keywords fall through to decorated statement
+                default:
                     return 4;
             }
             break;
@@ -369,7 +365,7 @@ RESOLVE(decorated_statement)
     {
         return 0;
     }
-    
+
     switch (token1.keyword)
     {
         default:

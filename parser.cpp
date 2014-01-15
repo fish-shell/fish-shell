@@ -372,7 +372,7 @@ void parser_t::push_block(block_t *new_current)
 
     new_current->job = 0;
     new_current->loop_status=LOOP_NORMAL;
-    
+
     this->block_stack.push_back(new_current);
 
     if ((new_current->type() != FUNCTION_DEF) &&
@@ -553,7 +553,7 @@ void parser_t::error(int ec, size_t p, const wchar_t *str, ...)
     CHECK(str,);
 
     error_code = ec;
-    
+
     // note : p may be -1
     err_pos = static_cast<int>(p);
 
@@ -802,7 +802,7 @@ void parser_t::stack_trace(size_t block_idx, wcstring &buff) const
     */
     if (block_idx >= this->block_count())
         return;
-    
+
     const block_t *b = this->block_at_index(block_idx);
 
     if (b->type()==EVENT)
@@ -968,7 +968,7 @@ const wchar_t *parser_t::current_filename() const
             return function_get_definition_file(fb->name);
         }
     }
-    
+
     /* We query a global array for the current file name, but only do that if we are the principal parser */
     if (this == &principal_parser())
     {
@@ -1193,7 +1193,7 @@ void parser_t::job_promote(job_t *job)
 {
     signal_block();
 
-    job_list_t::iterator loc = std::find(my_job_list.begin(), my_job_list.end(), job);    
+    job_list_t::iterator loc = std::find(my_job_list.begin(), my_job_list.end(), job);
     assert(loc != my_job_list.end());
 
     /* Move the job to the beginning */
@@ -2557,32 +2557,32 @@ void parser_t::eval_job(tokenizer_t *tok)
 int parser_t::eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type)
 {
     CHECK_BLOCK(1);
-    
+
     if (block_type != TOP && block_type != SUBST)
     {
         debug(1, INVALID_SCOPE_ERR_MSG, parser_t::get_block_desc(block_type));
         bugreport();
         return 1;
     }
-    
+
     /* Parse the source into a tree, if we can */
     parse_node_tree_t tree;
     if (! parse_tree_from_string(cmd, parse_flag_none, &tree, NULL))
     {
         return 1;
     }
-    
+
     /* Append to the execution context stack */
     parse_execution_context_t *ctx = new parse_execution_context_t(tree, cmd, this);
     execution_contexts.push_back(ctx);
-    
+
     /* Execute the first node */
     int result = 1;
     if (! tree.empty())
     {
         result = this->eval_block_node(0, io, block_type);
     }
-    
+
     /* Clean up the execution context stack */
     assert(! execution_contexts.empty() && execution_contexts.back() == ctx);
     execution_contexts.pop_back();
@@ -2596,9 +2596,9 @@ int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum
     // Paranoia. It's a little frightening that we're given only a node_idx and we interpret this in the topmost execution context's tree. What happens if these were to be interleaved? Fortunately that cannot happen.
     parse_execution_context_t *ctx = execution_contexts.back();
     assert(ctx != NULL);
-    
+
     CHECK_BLOCK(1);
-    
+
     /* Handle cancellation requests. If our block stack is currently empty, then we already did successfully cancel (or there was nothing to cancel); clear the flag. If our block stack is not empty, we are still in the process of cancelling; refuse to evaluate anything */
     if (this->cancellation_requested)
     {
@@ -2611,7 +2611,7 @@ int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum
             this->cancellation_requested = false;
         }
     }
-    
+
     /* Only certain blocks are allowed */
     if ((block_type != TOP) &&
             (block_type != SUBST))
@@ -2622,16 +2622,16 @@ int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum
         bugreport();
         return 1;
     }
-    
+
     /* Not sure why we reap jobs here */
     job_reap(0);
-    
+
     /* Start it up */
     const block_t * const start_current_block = current_block();
     block_t *scope_block = new scope_block_t(block_type);
     this->push_block(scope_block);
     int result = ctx->eval_node_at_offset(node_idx, scope_block, io);
-    
+
     /* Clean up the block stack */
     this->pop_block();
     while (start_current_block != current_block())
@@ -2646,10 +2646,10 @@ int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum
         }
         this->pop_block();
     }
-    
+
     /* Reap again */
     job_reap(0);
-    
+
     return result;
 
 }
@@ -2659,7 +2659,7 @@ int parser_t::eval(const wcstring &cmd_str, const io_chain_t &io, enum block_typ
 
     if (parser_use_ast())
         return this->eval_new_parser(cmd_str, io, block_type);
-    
+
     const wchar_t * const cmd = cmd_str.c_str();
     size_t forbid_count;
     int code;
@@ -2993,11 +2993,11 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
     if (! errors.empty())
     {
         const parse_error_t &err = errors.at(0);
-        
+
         // Determine which line we're on
         assert(err.source_start <= src.size());
         size_t which_line = 1 + std::count(src.begin(), src.begin() + err.source_start, L'\n');
-        
+
         const wchar_t *filename = this->current_filename();
         if (filename)
         {
@@ -3007,13 +3007,13 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
         {
             output->append(L"fish: ");
         }
-        
+
         // Don't include the caret if we're interactive, this is the first line of text, and our source is at its beginning, because then it's obvious
         bool skip_caret = (get_is_interactive() && which_line == 1 && err.source_start == 0);
-        
+
         output->append(err.describe(src, skip_caret));
         output->push_back(L'\n');
-        
+
         this->stack_trace(0, *output);
     }
 }

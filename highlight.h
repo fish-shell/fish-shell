@@ -28,23 +28,22 @@ enum
     highlight_spec_quote, //quoted string
     highlight_spec_redirection, //redirection
     highlight_spec_autosuggestion, //autosuggestion
-    
+
     // Pager support
     highlight_spec_pager_prefix,
     highlight_spec_pager_completion,
     highlight_spec_pager_description,
     highlight_spec_pager_progress,
     highlight_spec_pager_secondary,
-    
-    
+
     HIGHLIGHT_SPEC_PRIMARY_MASK = 0xFF,
-    
+
     /* The following values are modifiers */
     highlight_modifier_valid_path = 0x100,
-    
+
     /* Very special value */
     highlight_spec_invalid = 0xFFFF
-    
+
 };
 typedef uint32_t highlight_spec_t;
 

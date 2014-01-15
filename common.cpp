@@ -1130,7 +1130,7 @@ static size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool 
     switch (c)
     {
 
-        /* A null character after a backslash is an error */
+            /* A null character after a backslash is an error */
         case L'\0':
         {
             /* Adjust in_pos to only include the backslash */
@@ -1177,11 +1177,11 @@ static size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool 
                 {
                     chars=8;
                     max_val = WCHAR_MAX;
-                    
+
                     // Don't exceed the largest Unicode code point - see #1107
                     if (0x10FFFF < max_val)
                         max_val = (wchar_t)0x10FFFF;
-                    
+
                     break;
                 }
 

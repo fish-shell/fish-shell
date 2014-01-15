@@ -241,11 +241,11 @@ int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_o
     out_contents->clear();
     *out_start = 0;
     *out_end = str.size();
-    
+
     /* Nothing to do if the offset is at or past the end of the string. */
     if (*inout_cursor_offset >= str.size())
         return 0;
-    
+
     /* Defer to the wonky version */
     const wchar_t * const buff = str.c_str();
     const wchar_t * const valid_range_start = buff + *inout_cursor_offset, *valid_range_end = buff + str.size();
@@ -256,15 +256,15 @@ int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_o
         /* The command substitutions must not be NULL and must be in the valid pointer range, and the end must be bigger than the beginning */
         assert(cmdsub_begin != NULL && cmdsub_begin >= valid_range_start && cmdsub_begin <= valid_range_end);
         assert(cmdsub_end != NULL && cmdsub_end > cmdsub_begin && cmdsub_end >= valid_range_start && cmdsub_end <= valid_range_end);
-        
+
         /* Assign the substring to the out_contents */
         const wchar_t *interior_begin = cmdsub_begin + 1;
         out_contents->assign(interior_begin, cmdsub_end - interior_begin);
-        
+
         /* Return the start and end */
         *out_start = cmdsub_begin - buff;
         *out_end = cmdsub_end - buff;
-        
+
         /* Update the inout_cursor_offset. Note this may cause it to exceed str.size(), though overflow is not likely */
         *inout_cursor_offset = 1 + *out_end;
     }
@@ -803,9 +803,9 @@ wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote)
 /* We are given a parse tree, the index of a node within the tree, its indent, and a vector of indents the same size as the original source string. Set the indent correspdonding to the node's source range, if appropriate.
 
    trailing_indent is the indent for nodes with unrealized source, i.e. if I type 'if false <ret>' then we have an if node with an empty job list (without source) but we want the last line to be indented anyways.
-   
+
    switch statements also indent.
-   
+
    max_visited_node_idx is the largest index we visited.
 */
 static void compute_indents_recursive(const parse_node_tree_t &tree, node_offset_t node_idx, int node_indent, parse_token_type_t parent_type, std::vector<int> *indents, int *trailing_indent, node_offset_t *max_visited_node_idx)
@@ -813,16 +813,16 @@ static void compute_indents_recursive(const parse_node_tree_t &tree, node_offset
     /* Guard against incomplete trees */
     if (node_idx > tree.size())
         return;
-    
+
     /* Update max_visited_node_idx */
     if (node_idx > *max_visited_node_idx)
         *max_visited_node_idx = node_idx;
 
     /* We could implement this by utilizing the fish grammar. But there's an easy trick instead: almost everything that wraps a job list should be indented by 1. So just find all of the job lists. One exception is switch; the other exception is job_list itself: a job_list is a job and a job_list, and we want that child list to be indented the same as the parent. So just find all job_lists whose parent is not a job_list, and increment their indent by 1. */
-    
+
     const parse_node_t &node = tree.at(node_idx);
     const parse_token_type_t node_type = node.type;
-    
+
     /* Increment the indent if we are either a root job_list, or root case_item_list */
     const bool is_root_job_list = (node_type == symbol_job_list && parent_type != symbol_job_list);
     const bool is_root_case_item_list = (node_type == symbol_case_item_list && parent_type != symbol_case_item_list);
@@ -830,22 +830,22 @@ static void compute_indents_recursive(const parse_node_tree_t &tree, node_offset
     {
         node_indent += 1;
     }
-    
+
     /* If we have source, store the trailing indent unconditionally. If we do not have source, store the trailing indent only if ours is bigger; this prevents the trailing "run" of terminal job lists from affecting the trailing indent. For example, code like this:
-    
+
             if foo
-     
+
       will be parsed as this:
-     
+
       job_list
         job
            if_statement
                job [if]
                job_list [empty]
          job_list [empty]
-      
+
       There's two "terminal" job lists, and we want the innermost one.
-      
+
       Note we are relying on the fact that nodes are in the same order as the source, i.e. an in-order traversal of the node tree also traverses the source from beginning to end.
     */
     if (node.has_source() || node_indent > *trailing_indent)
@@ -853,7 +853,7 @@ static void compute_indents_recursive(const parse_node_tree_t &tree, node_offset
         *trailing_indent = node_indent;
     }
 
-    
+
     /* Store the indent into the indent array */
     if (node.has_source())
     {
@@ -861,7 +861,7 @@ static void compute_indents_recursive(const parse_node_tree_t &tree, node_offset
         indents->at(node.source_start) = node_indent;
     }
 
-    
+
     /* Recursive to all our children */
     for (node_offset_t idx = 0; idx < node.child_count; idx++)
     {
@@ -875,31 +875,31 @@ std::vector<int> parse_util_compute_indents(const wcstring &src)
     /* Make a vector the same size as the input string, which contains the indents. Initialize them to -1. */
     const size_t src_size = src.size();
     std::vector<int> indents(src_size, -1);
-    
+
     /* Parse the string. We pass continue_after_error to produce a forest; the trailing indent of the last node we visited becomes the input indent of the next. I.e. in the case of 'switch foo ; cas', we get an invalid parse tree (since 'cas' is not valid) but we indent it as if it were a case item list */
     parse_node_tree_t tree;
     parse_tree_from_string(src, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens, &tree, NULL /* errors */);
-    
+
     /* Start indenting at the first node. If we have a parse error, we'll have to start indenting from the top again */
     node_offset_t start_node_idx = 0;
     int last_trailing_indent = 0;
-    
+
     while (start_node_idx < tree.size())
     {
         /* The indent that we'll get for the last line */
         int trailing_indent = 0;
-    
+
         /* Biggest offset we visited */
         node_offset_t max_visited_node_idx = 0;
-        
+
         /* Invoke the recursive version. As a hack, pass job_list for the 'parent' token type, which will prevent the really-root job list from indenting */
         compute_indents_recursive(tree, start_node_idx, last_trailing_indent, symbol_job_list, &indents, &trailing_indent, &max_visited_node_idx);
-    
+
         /* We may have more to indent. The trailing indent becomes our current indent. Start at the node after the last we visited. */
         last_trailing_indent = trailing_indent;
         start_node_idx = max_visited_node_idx + 1;
     }
-    
+
     int last_indent = 0;
     for (size_t i=0; i<src_size; i++)
     {
@@ -931,7 +931,7 @@ std::vector<int> parse_util_compute_indents(const wcstring &src)
             break;
         indents.at(suffix_idx) = last_trailing_indent;
     }
-    
+
     return indents;
 }
 
@@ -942,12 +942,12 @@ static bool append_syntax_error(parse_error_list_t *errors, const parse_node_t &
     error.source_start = node.source_start;
     error.source_length = node.source_length;
     error.code = parse_error_syntax;
-    
+
     va_list va;
     va_start(va, fmt);
     error.text = vformat_string(fmt, va);
     va_end(va);
-    
+
     errors->push_back(error);
     return true;
 }
@@ -984,14 +984,14 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
 {
     parse_node_tree_t node_tree;
     parse_error_list_t parse_errors;
-    
+
     // Whether we encountered a parse error
     bool errored = false;
-    
+
     // Whether we encountered an unclosed block
     // We detect this via an 'end_command' block without source
     bool has_unclosed_block = false;
-    
+
     // Whether there's an unclosed quote, and therefore unfinished
     bool has_unclosed_quote = false;
 
@@ -1017,12 +1017,12 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
     {
         errored = true;
     }
-    
+
     // Expand all commands
     // Verify 'or' and 'and' not used inside pipelines
     // Verify pipes via parser_is_pipe_forbidden
     // Verify return only within a function
-    
+
     if (! errored)
     {
         const size_t node_tree_size = node_tree.size();
@@ -1054,7 +1054,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                     {
                         errored = append_syntax_error(&parse_errors, node, ILLEGAL_CMD_ERR_MSG, command.c_str());
                     }
-                    
+
                     // Check that pipes are sound
                     if (! errored && parser_is_pipe_forbidden(command))
                     {
@@ -1064,7 +1064,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                             errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG, command.c_str());
                         }
                     }
-                    
+
                     // Check that we don't return from outside a function
                     // But we allow it if it's 'return --help'
                     if (! errored && command == L"return")
@@ -1087,7 +1087,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                             errored = append_syntax_error(&parse_errors, node, INVALID_RETURN_ERR_MSG);
                         }
                     }
-                    
+
                     // Check that we don't break or continue from outside a loop
                     if (! errored && (command == L"break" || command == L"continue"))
                     {
@@ -1108,13 +1108,13 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                                         found_loop = true;
                                         end_search = true;
                                         break;
-                                        
+
                                     case symbol_function_header:
                                         // this is a function header, so we cannot break or continue. We stop our search here.
                                         found_loop = false;
                                         end_search = true;
                                         break;
-                                        
+
                                     default:
                                         // most likely begin / end style block, which makes no difference
                                         break;
@@ -1122,7 +1122,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                             }
                             ancestor = node_tree.get_parent(*ancestor);
                         }
-                        
+
                         if (! found_loop && ! first_argument_is_help(node_tree, node, buff_src))
                         {
                             errored = append_syntax_error(&parse_errors, node, (command == L"break" ? INVALID_BREAK_ERR_MSG : INVALID_CONTINUE_ERR_MSG));
@@ -1134,13 +1134,13 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
     }
 
     parser_test_error_bits_t res = 0;
-    
+
     if (errored)
         res |= PARSER_TEST_ERROR;
 
     if (has_unclosed_block || has_unclosed_quote)
         res |= PARSER_TEST_INCOMPLETE;
-    
+
     if (out_errors)
     {
         out_errors->swap(parse_errors);

@@ -47,7 +47,7 @@ enum parse_token_type_t
     symbol_redirection,
 
     symbol_optional_background,
-    
+
     symbol_end_command,
 
     // Terminal types
@@ -56,7 +56,7 @@ enum parse_token_type_t
     parse_token_type_redirection,
     parse_token_type_background,
     parse_token_type_end,
-    
+
     // Special terminal type that means no more tokens forthcoming
     parse_token_type_terminate,
 
@@ -90,7 +90,7 @@ enum parse_keyword_t
     parse_keyword_not,
     parse_keyword_command,
     parse_keyword_builtin,
-    
+
     LAST_KEYWORD = parse_keyword_builtin
 };
 
@@ -106,31 +106,32 @@ enum parse_statement_decoration_t
 enum parse_error_code_t
 {
     parse_error_none,
-    
+
     /* Matching values from enum parser_error */
     parse_error_syntax,
     parse_error_eval,
     parse_error_cmdsubst,
-    
+
     parse_error_generic, // unclassified error types
-    
+
     //tokenizer errors
     parse_error_tokenizer_unterminated_quote,
     parse_error_tokenizer_unterminated_subshell,
     parse_error_tokenizer_unterminated_escape,
     parse_error_tokenizer_other,
-    
+
     parse_error_unbalancing_end, //end outside of block
     parse_error_unbalancing_else, //else outside of if
     parse_error_unbalancing_case, //case outside of switch
-    
+
     parse_error_double_pipe, // foo || bar, has special error message
     parse_error_double_background // foo && bar, has special error message
 };
 
-enum {
-  PARSER_TEST_ERROR = 1,
-  PARSER_TEST_INCOMPLETE = 2
+enum
+{
+    PARSER_TEST_ERROR = 1,
+    PARSER_TEST_INCOMPLETE = 2
 };
 typedef unsigned int parser_test_error_bits_t;
 

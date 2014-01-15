@@ -712,7 +712,7 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
                 retcode = 1;
                 break;
             }
-            
+
             size_t idx_count = indexes.size();
             size_t val_count = argc-woptind-1;
 

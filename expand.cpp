@@ -793,7 +793,7 @@ static int expand_pid(const wcstring &instr_with_sep,
         append_completion(out, instr_with_sep);
         return 1;
     }
-    
+
     /* expand_string calls us with internal separators in instr...sigh */
     wcstring instr = instr_with_sep;
     remove_internal_separator(instr, false);
@@ -1624,7 +1624,7 @@ wcstring replace_home_directory_with_tilde(const wcstring &str)
         {
             home_directory.push_back(L'/');
         }
-        
+
         // Now check if the home_directory prefixes the string
         if (string_prefixes_string(home_directory, result))
         {

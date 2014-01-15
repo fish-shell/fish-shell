@@ -41,11 +41,11 @@ int parse_util_locate_cmdsubst(const wchar_t *in,
 */
 
 int parse_util_locate_cmdsubst_range(const wcstring &str,
-                                    size_t *inout_cursor_offset,
-                                    wcstring *out_contents,
-                                    size_t *out_start,
-                                    size_t *out_end,
-                                    bool accept_incomplete);
+                                     size_t *inout_cursor_offset,
+                                     wcstring *out_contents,
+                                     size_t *out_start,
+                                     size_t *out_end,
+                                     bool accept_incomplete);
 
 /**
    Find the beginning and end of the command substitution under the

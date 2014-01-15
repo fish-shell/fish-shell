@@ -146,13 +146,13 @@ static int event_is_blocked(const event_t &e)
 {
     const block_t *block;
     parser_t &parser = parser_t::principal_parser();
-    
+
     size_t idx = 0;
     while ((block = parser.block_at_index(idx++)))
     {
         if (event_block_list_blocks_type(block->event_blocks, e.type))
             return true;
-        
+
     }
     return event_block_list_blocks_type(parser.global_event_blocks, e.type);
 }

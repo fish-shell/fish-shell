@@ -1,5 +1,4 @@
 function fish_vi_key_bindings -d "vi-like key bindings for fish"
-
         bind --erase --all
 
         ##
@@ -61,10 +60,12 @@ function fish_vi_key_bindings -d "vi-like key bindings for fish"
 
         bind b backward-word
         bind B backward-word
+        bind gE backward-word
+        bind gE backward-word
         bind w forward-word
-        bind W backward-word
+        bind W forward-word
         bind e forward-word
-        bind E backward-word
+        bind E forward-word
 
         bind x delete-char
         bind X backward-delete-char
@@ -80,11 +81,17 @@ function fish_vi_key_bindings -d "vi-like key bindings for fish"
         bind d\x24 kill-line
         bind d\x5e backward-kill-line
         bind dw kill-word
-        bind dW backward-kill-word
+        bind dW kill-word
+        bind diw backward-word kill-word
+        bind diW backward-word kill-word
+        bind daw backward-word kill-word
+        bind daW backward-word kill-word
         bind de kill-word
-        bind dE backward-kill-word
+        bind dE kill-word
         bind db backward-kill-word
-        bind dB kill-word
+        bind dB backward-kill-word
+        bind dgE backward-kill-word
+        bind dgE backward-kill-word
 
         bind -m insert s delete-char force-repaint
         bind -m insert S kill-whole-line force-repaint
@@ -93,26 +100,41 @@ function fish_vi_key_bindings -d "vi-like key bindings for fish"
         bind -m insert c\x24 kill-line force-repaint
         bind -m insert c\x5e backward-kill-line force-repaint
         bind -m insert cw kill-word force-repaint
+        bind -m insert cW kill-word force-repaint
+        bind -m insert ciw backward-word kill-word force-repaint
+        bind -m insert ciW backward-word kill-word force-repaint
+        bind -m insert caw backward-word kill-word force-repaint
+        bind -m insert caW backward-word kill-word force-repaint
         bind -m insert ce kill-word force-repaint
+        bind -m insert cE kill-word force-repaint
         bind -m insert cb backward-kill-word force-repaint
+        bind -m insert cB backward-kill-word force-repaint
+        bind -m insert cgE backward-kill-word force-repaint
+        bind -m insert cgE backward-kill-word force-repaint
 
         bind '~' capitalize-word 
         bind gu downcase-word 
         bind gU upcase-word 
 
         bind J end-of-line delete-char
-        bind K 'man (basename (commandline -po; echo))[1] ^/dev/null; or echo -n \a'
+        bind K 'man (commandline -t) ^/dev/null; or echo -n \a'
 
         bind yy kill-whole-line yank
         bind Y  kill-whole-line yank
         bind y\x24 kill-line yank
         bind y\x5e backward-kill-line yank
         bind yw kill-word yank
-        bind yW backward-kill-word yank
+        bind yW kill-word yank
+        bind yiw backward-word kill-word yank
+        bind yiW backward-word kill-word yank
+        bind yaw backward-word kill-word yank
+        bind yaW backward-word kill-word yank
         bind ye kill-word yank
-        bind yE backward-kill-word yank
+        bind yE kill-word yank
         bind yb backward-kill-word yank
-        bind yB kill-word yank
+        bind yB backward-kill-word yank
+        bind ygE backward-kill-word yank
+        bind ygE backward-kill-word yank
 
         bind p yank
         bind P backward-char yank-pop

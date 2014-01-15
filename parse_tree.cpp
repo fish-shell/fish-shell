@@ -1065,10 +1065,10 @@ static parse_keyword_t keyword_for_token(token_type tok, const wchar_t *tok_txt)
 }
 
 /* Placeholder invalid token */
-static const parse_token_t kInvalidToken = {token_type_invalid, parse_keyword_none, false, -1, -1};
+static const parse_token_t kInvalidToken = {token_type_invalid, parse_keyword_none, false, false, -1, -1};
 
 /* Terminal token */
-static const parse_token_t kTerminalToken = {parse_token_type_terminate, parse_keyword_none, false, -1, -1};
+static const parse_token_t kTerminalToken = {parse_token_type_terminate, parse_keyword_none, false, false, -1, -1};
 
 static inline bool is_help_argument(const wchar_t *txt)
 {
@@ -1158,7 +1158,7 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
                 size_t error_token_idx = (queue[1].type == parse_special_type_tokenizer_error ? 1 : 0);
 
                 /* Mark a special error token, and then keep going */
-                const parse_token_t token = {parse_special_type_parse_error, parse_keyword_none, false, queue[error_token_idx].source_start, queue[error_token_idx].source_length};
+                const parse_token_t token = {parse_special_type_parse_error, parse_keyword_none, false, false, queue[error_token_idx].source_start, queue[error_token_idx].source_length};
                 parser.accept_tokens(token, kInvalidToken);
                 parser.reset_symbols();
             }

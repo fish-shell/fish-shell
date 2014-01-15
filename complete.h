@@ -121,10 +121,10 @@ public:
        The COMPLETE_NO_CASE can be used to signal that this completion
        is case insensitive.
     */
-    int flags;
+    complete_flags_t flags;
 
     /* Construction. Note: defining these so that they are not inlined reduces the executable size. */
-    completion_t(const wcstring &comp, const wcstring &desc = wcstring(), string_fuzzy_match_t match = string_fuzzy_match_t(fuzzy_match_exact), int flags_val = 0);
+    completion_t(const wcstring &comp, const wcstring &desc = wcstring(), string_fuzzy_match_t match = string_fuzzy_match_t(fuzzy_match_exact), complete_flags_t flags_val = 0);
     completion_t(const completion_t &);
     completion_t &operator=(const completion_t &);
 

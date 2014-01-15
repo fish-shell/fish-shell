@@ -21,7 +21,6 @@ conf_arg=$@
 # List of output variables produced by this configure script
 #
 
-AC_SUBST(docdir)
 AC_SUBST(HAVE_GETTEXT)
 AC_SUBST(HAVE_DOXYGEN)
 AC_SUBST(LDFLAGS_FISH)
@@ -30,9 +29,6 @@ AC_SUBST(LIBS_FISH_INDENT)
 AC_SUBST(LIBS_FISH_PAGER)
 AC_SUBST(LIBS_FISHD)
 AC_SUBST(LIBS_MIMEDB)
-AC_SUBST(localedir)
-AC_SUBST(optbindirs)
-AC_SUBST(prefix)
 
 
 #
@@ -379,40 +375,6 @@ case $target_os in
     AC_MSG_RESULT(no)
     ;;
 esac
-
-
-#
-# Set up PREFIX and related preprocessor symbols. Fish needs to know
-# where it will be installed. One of the reasons for this is so that
-# it can make sure the fish installation directory is in the path
-# during startup.
-#
-
-if [[ "$prefix" = NONE ]]; then
-  prefix=/usr/local
-fi
-
-
-#
-# Set up the directory where the documentation files should be
-# installed
-#
-
-AC_ARG_VAR( [docdir], [Documentation directory] )
-
-if test -z $docdir; then
-  docdir=$datadir/doc/fish
-else
-  docdir=$docdir
-fi
-
-
-#
-# Set up locale directory. This is where the .po files will be
-# installed.
-#
-
-localedir=$datadir/locale
 
 
 #

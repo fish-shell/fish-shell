@@ -47,7 +47,6 @@ mandir = @mandir@
 sysconfdir = @sysconfdir@
 docdir = @docdir@
 localedir = @localedir@
-optbindirs = @optbindirs@
 
 #
 # Various flags
@@ -377,8 +376,6 @@ doc.h: $(HDR_FILES)
 		-e "s,@docdir\@,$(docdir),g" \
 		-e "s|@configure_input\@|$@, generated from $@.in by the Makefile. DO NOT MANUALLY EDIT THIS FILE!|g" \
 		-e "s,@prefix\@,$(prefix),g" \
-		-e "s,@optbindirs\@,$(optbindirs),g"
-#-e "s,@\@,$(),"
 
 
 #

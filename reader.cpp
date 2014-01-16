@@ -198,8 +198,11 @@ public:
     /** String containing the autosuggestion */
     wcstring autosuggestion;
     
-    /** Current completions */
-    page_rendering_t completion_page_rendering;
+    /** Current pager */
+    pager_t current_pager;
+    
+    /** Whether we are navigating the pager */
+    bool is_navigating_pager;
 
     /** Whether autosuggesting is allowed at all */
     bool allow_autosuggestion;
@@ -334,6 +337,7 @@ public:
 
     /** Constructor */
     reader_data_t() :
+        is_navigating_pager(0),
         allow_autosuggestion(0),
         suppress_autosuggestion(0),
         expand_abbreviations(0),
@@ -543,7 +547,7 @@ static void reader_repaint()
             &colors[0],
             &indents[0],
             data->buff_pos,
-            &data->completion_page_rendering.screen_data);
+            data->current_pager);
 
     data->repaint_needed = false;
 }
@@ -1859,9 +1863,9 @@ static bool handle_completions(const std::vector<completion_t> &comp)
                 {
                     pager_t pager;
                     pager.set_term_size(common_get_width(), common_get_height());
-                    pager.prefix = prefix;
+                    pager.set_prefix(prefix);
                     pager.set_completions(surviving_completions);
-                    data->completion_page_rendering = pager.render();
+                    data->current_pager = pager;
                 }
                 else
                 {
@@ -3143,6 +3147,9 @@ const wchar_t *reader_readline(void)
                 {
                     /* The user typed R_COMPLETE more than once in a row. Cycle through our available completions */
                     const completion_t *next_comp = cycle_competions(comp, cycle_command_line, &completion_cycle_idx);
+                    
+                    data->current_pager.set_selected_completion(completion_cycle_idx);
+                    
                     if (next_comp != NULL)
                     {
                         size_t cursor_pos = cycle_cursor_pos;
@@ -3815,6 +3822,14 @@ const wchar_t *reader_readline(void)
     }
 
     writestr(L"\n");
+    
+    /* Ensure we have no pager contents when we exit */
+    if (! data->current_pager.empty())
+    {
+        /* Clear to end of screen to erase the pager contents. TODO: this may fail if eos doesn't exist, in which case we should emit newlines */
+        screen_force_clear_to_end();
+        data->current_pager.clear();
+    }
 
     if (!reader_exit_forced())
     {

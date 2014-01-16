@@ -270,7 +270,7 @@ static int print_max(const wcstring &str, highlight_spec_t color, int max, bool 
 /**
    Print the specified item using at the specified amount of space
 */
-line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, size_t row, size_t column, int width, bool secondary, page_rendering_t *rendering) const
+line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, size_t row, size_t column, int width, bool secondary, bool selected, page_rendering_t *rendering) const
 {
     int comp_width=0, desc_width=0;
     int written=0;
@@ -302,6 +302,10 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
     }
     
     int bg_color = secondary ? highlight_spec_pager_secondary : highlight_spec_normal;
+    if (selected)
+    {
+        bg_color = highlight_spec_search_match;
+    }
     
     for (size_t i=0; i<c->comp.size(); i++)
     {
@@ -356,8 +360,6 @@ void pager_t::completion_print(int cols, int *width_per_column, int row_start, i
 
     size_t rows = (lst.size()-1)/cols+1;
 
-    fprintf(stderr, "prefix: %ls\n", prefix.c_str());
-
     for (size_t row = row_start; row < row_stop; row++)
     {
         for (size_t col = 0; col < cols; col++)
@@ -367,10 +369,12 @@ void pager_t::completion_print(int cols, int *width_per_column, int row_start, i
             if (lst.size() <= col * rows + row)
                 continue;
 
-            const comp_t *el = &lst.at(col * rows + row);
+            size_t idx = col * rows + row;
+            const comp_t *el = &lst.at(idx);
+            bool is_selected = (idx == this->selected_completion_idx);
 
             /* Print this completion on its own "line" */
-            line_t line = completion_print_item(prefix, el, row, col, width_per_column[col] - (is_last?0:2), row%2, rendering);
+            line_t line = completion_print_item(prefix, el, row, col, width_per_column[col] - (is_last?0:2), row%2, is_selected, rendering);
             
             /* If there's more to come, append two spaces */
             if (col + 1 < cols)
@@ -584,6 +588,11 @@ void pager_t::set_completions(const completion_list_t &raw_completions)
     
     // Compute their various widths
     measure_completion_infos(&completion_infos, prefix);
+}
+
+void pager_t::set_prefix(const wcstring &pref)
+{
+    prefix = pref;
 }
 
 void pager_t::set_term_size(int w, int h)
@@ -881,4 +890,26 @@ page_rendering_t pager_t::render() const
         }
     }
     return rendering;
+}
+
+pager_t::pager_t() : term_width(0), term_height(0), selected_completion_idx(-1)
+{
+}
+
+bool pager_t::empty() const
+{
+    return completions.empty();
+}
+
+void pager_t::set_selected_completion(size_t idx)
+{
+    this->selected_completion_idx = idx;
+}
+
+
+void pager_t::clear()
+{
+    completions.clear();
+    completion_infos.clear();
+    prefix.clear();
 }

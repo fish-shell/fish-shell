@@ -16,6 +16,8 @@
 #include <sys/stat.h>
 #include "highlight.h"
 
+class pager_t;
+
 /**
    A class representing a single line of a screen.
 */
@@ -203,7 +205,7 @@ void s_write(screen_t *s,
              const highlight_spec_t *colors,
              const int *indent,
              size_t cursor_pos,
-             const screen_data_t *pager_data);
+             const pager_t &pager_data);
 
 /**
     This function resets the screen buffers internal knowledge about
@@ -240,6 +242,9 @@ enum screen_reset_mode_t
 };
 
 void s_reset(screen_t *s, screen_reset_mode_t mode);
+
+/* Issues an immediate clr_eos, returning if it existed */
+bool screen_force_clear_to_end();
 
 /* Returns the length of an escape code. Exposed for testing purposes only. */
 size_t escape_code_length(const wchar_t *code);

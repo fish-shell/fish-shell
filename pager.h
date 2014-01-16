@@ -21,6 +21,8 @@ class pager_t
     
     completion_list_t completions;
     
+    size_t selected_completion_idx;
+    
     /** Data structure describing one or a group of related completions */
     public:
     struct comp_t
@@ -52,19 +54,40 @@ class pager_t
     typedef std::vector<comp_t> comp_info_list_t;
     comp_info_list_t completion_infos;
     
+    wcstring prefix;
+    
     int completion_try_print(int cols, const wcstring &prefix, const comp_info_list_t &lst, page_rendering_t *rendering) const;
     
     void recalc_min_widths(comp_info_list_t * lst) const;
     void measure_completion_infos(std::vector<comp_t> *infos, const wcstring &prefix) const;
     
     void completion_print(int cols, int *width_per_column, int row_start, int row_stop, const wcstring &prefix, const comp_info_list_t &lst, page_rendering_t *rendering) const;
-    line_t completion_print_item(const wcstring &prefix, const comp_t *c, size_t row, size_t column, int width, bool secondary, page_rendering_t *rendering) const;
+    line_t completion_print_item(const wcstring &prefix, const comp_t *c, size_t row, size_t column, int width, bool secondary, bool selected, page_rendering_t *rendering) const;
 
     
     public:
-    void set_completions(const completion_list_t &comp);
-    void set_term_size(int w, int h);
-    wcstring prefix;
     
+    /* Sets the set of completions */
+    void set_completions(const completion_list_t &comp);
+    
+    /* Sets the prefix */
+    void set_prefix(const wcstring &pref);
+    
+    /* Sets the terminal width and height */
+    void set_term_size(int w, int h);
+    
+    /* Sets the index of the selected completion */
+    void set_selected_completion(size_t completion_idx);
+    
+    /* Produces a rendering of the completions, at the given term size */
     page_rendering_t render() const;
+    
+    /* Indicates if there are no completions, and therefore nothing to render */
+    bool empty() const;
+    
+    /* Clears all completions and the prefix */
+    void clear();
+    
+    /* Constructor */
+    pager_t();
 };

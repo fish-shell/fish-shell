@@ -40,11 +40,11 @@ if [ "$argv" != '-n' ]
 
   if test $res = ok;
 	echo File test.fish tested ok
+        exit 0
   else
 	echo File test.fish failed tests
+        exit 1
   end;
-
-  exit
 end
 
 echo Testing high level script functionality

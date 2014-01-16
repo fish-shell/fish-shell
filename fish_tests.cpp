@@ -2322,14 +2322,14 @@ static void test_new_parser_fuzzing(void)
 
     double start = timef();
     bool log_it = true;
-    size_t max_len = 5;
-    for (size_t len = 0; len < max_len; len++)
+    unsigned long max_len = 5;
+    for (unsigned long len = 0; len < max_len; len++)
     {
         if (log_it)
             fprintf(stderr, "%lu / %lu...", len, max_len);
 
         /* We wish to look at all permutations of 4 elements of 'fuzzes' (with replacement). Construct an int and keep incrementing it. */
-        size_t permutation = 0;
+        unsigned long permutation = 0;
         while (string_for_permutation(fuzzes, sizeof fuzzes / sizeof *fuzzes, len, permutation++, &src))
         {
             parse_tree_from_string(src, parse_flag_continue_after_error, &node_tree, &errors);
@@ -2815,4 +2815,7 @@ int main(int argc, char **argv)
     event_destroy();
     proc_destroy();
 
+    if(err_count != 0) {
+        return(1);
+    }
 }

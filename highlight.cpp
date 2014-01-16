@@ -366,7 +366,7 @@ rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background)
     size_t idx = highlight_get_primary(highlight);
     if (idx >= VAR_COUNT)
     {
-        idx = 0;
+        return rgb_color_t::normal();
     }
 
     env_var_t val_wstr = env_get_string(highlight_var[idx]);

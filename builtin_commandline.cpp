@@ -326,7 +326,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
 
         int opt = wgetopt_long(argc,
                                argv,
-                               L"abijpctwforhI:CLS",
+                               L"abijpctwforhI:CLSs",
                                long_options,
                                &opt_index);
         if (opt == -1)
@@ -477,8 +477,9 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
         if(reader_get_selection_pos(sel_start, sel_stop))
         {
           size_t len = std::min(sel_stop - sel_start + 1, wcslen(buffer));
-          wchar_t *selection = new wchar_t[len];
-          selection = wcsncpy(selection, current_buffer + sel_start, len);
+          wchar_t *selection = new wchar_t[len + 1];
+          selection[len] = L'\0';
+          selection = wcsncpy(selection, buffer + sel_start, len);
 
           append_format(stdout_buffer, selection);
           delete selection;

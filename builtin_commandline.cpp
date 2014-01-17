@@ -213,6 +213,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
     int cursor_mode = 0;
     int line_mode = 0;
     int search_mode = 0;
+    int paging_mode = 0;
     const wchar_t *begin, *end;
 
     current_buffer = (wchar_t *)builtin_complete_get_temporary_buffer();
@@ -251,71 +252,24 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
         static const struct woption
                 long_options[] =
         {
-            {
-                L"append", no_argument, 0, 'a'
-            }
-            ,
-            {
-                L"insert", no_argument, 0, 'i'
-            }
-            ,
-            {
-                L"replace", no_argument, 0, 'r'
-            }
-            ,
-            {
-                L"current-job", no_argument, 0, 'j'
-            }
-            ,
-            {
-                L"current-process", no_argument, 0, 'p'
-            }
-            ,
-            {
-                L"current-token", no_argument, 0, 't'
-            }
-            ,
-            {
-                L"current-buffer", no_argument, 0, 'b'
-            }
-            ,
-            {
-                L"cut-at-cursor", no_argument, 0, 'c'
-            }
-            ,
-            {
-                L"function", no_argument, 0, 'f'
-            }
-            ,
-            {
-                L"tokenize", no_argument, 0, 'o'
-            }
-            ,
-            {
-                L"help", no_argument, 0, 'h'
-            }
-            ,
-            {
-                L"input", required_argument, 0, 'I'
-            }
-            ,
-            {
-                L"cursor", no_argument, 0, 'C'
-            }
-            ,
-            {
-                L"line", no_argument, 0, 'L'
-            }
-            ,
-            {
-                L"search-mode", no_argument, 0, 'S'
-            }
-            ,
-            {
-                0, 0, 0, 0
-            }
-        }
-        ;
+            { L"append", no_argument, 0, 'a' },
+            { L"insert", no_argument, 0, 'i' },
+            { L"replace", no_argument, 0, 'r' },
+            { L"current-job", no_argument, 0, 'j' },
+            { L"current-process", no_argument, 0, 'p' },
+            { L"current-token", no_argument, 0, 't' },
+            { L"current-buffer", no_argument, 0, 'b' },
+            { L"cut-at-cursor", no_argument, 0, 'c' },
+            { L"function", no_argument, 0, 'f' },
+            { L"tokenize", no_argument, 0, 'o' },
+            { L"help", no_argument, 0, 'h' },
+            { L"input", required_argument, 0, 'I' },
+            { L"cursor", no_argument, 0, 'C' },
+            { L"line", no_argument, 0, 'L' },
+            { L"search-mode", no_argument, 0, 'S' },
+            { L"paging-mode", no_argument, 0, 'P' },
+            { 0, 0, 0, 0 }
+        };
 
         int opt_index = 0;
 
@@ -397,6 +351,10 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
             case 'S':
                 search_mode = 1;
                 break;
+                
+            case 'P':
+                paging_mode = 1;
+                break;
 
             case 'h':
                 builtin_print_help(parser, argv[0], stdout_buffer);
@@ -415,7 +373,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
         /*
           Check for invalid switch combinations
         */
-        if (buffer_part || cut_at_cursor || append_mode || tokenize || cursor_mode || line_mode || search_mode)
+        if (buffer_part || cut_at_cursor || append_mode || tokenize || cursor_mode || line_mode || search_mode || paging_mode)
         {
             append_format(stderr_buffer,
                           BUILTIN_ERR_COMBO,
@@ -464,7 +422,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
     /*
       Check for invalid switch combinations
     */
-    if ((search_mode || line_mode || cursor_mode) && (argc-woptind > 1))
+    if ((search_mode || line_mode || cursor_mode || paging_mode) && (argc-woptind > 1))
     {
 
         append_format(stderr_buffer,
@@ -475,7 +433,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
         return 1;
     }
 
-    if ((buffer_part || tokenize || cut_at_cursor) && (cursor_mode || line_mode || search_mode))
+    if ((buffer_part || tokenize || cut_at_cursor) && (cursor_mode || line_mode || search_mode || paging_mode))
     {
         append_format(stderr_buffer,
                       BUILTIN_ERR_COMBO,
@@ -564,7 +522,12 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
 
     if (search_mode)
     {
-        return !reader_search_mode();
+        return ! reader_search_mode();
+    }
+    
+    if (paging_mode)
+    {
+        return ! reader_has_pager_contents();
     }
 
 

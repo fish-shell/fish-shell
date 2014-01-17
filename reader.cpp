@@ -3872,7 +3872,17 @@ int reader_search_mode()
         return -1;
     }
 
-    return !!data->search_mode;
+    return !! data->search_mode;
+}
+
+int reader_has_pager_contents()
+{
+    if (!data)
+    {
+        return -1;
+    }
+
+    return data->current_page_rendering.screen_data.empty() ? 1 : 0;
 }
 
 

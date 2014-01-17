@@ -29,7 +29,7 @@ function fish_vi_key_bindings -d "vi-like key bindings for fish"
         bind -m insert A end-of-line force-repaint
         bind -m visual v begin-selection force-repaint
 
-        bind -m insert o "commandline -a \n" down-line force-repaint
+        #bind -m insert o "commandline -a \n" down-line force-repaint
         #bind -m insert O beginning-of-line "commandline -i \n" up-line force-repaint # doesn't work
 
         bind gg beginning-of-buffer
@@ -50,6 +50,9 @@ function fish_vi_key_bindings -d "vi-like key bindings for fish"
 
         bind u history-search-backward
         bind \cr history-search-forward
+
+        bind [ history-token-search-backward
+        bind ] history-token-search-forward
 
         bind k up-or-search
         bind j down-or-search
@@ -136,8 +139,13 @@ function fish_vi_key_bindings -d "vi-like key bindings for fish"
         bind ygE backward-kill-word yank
         bind ygE backward-kill-word yank
 
+        # in emacs yank means paste
         bind p yank
-        bind P backward-char yank-pop
+        bind P backward-char yank
+        bind gp yank-pop
+
+        bind '"*p' "commandline -i ( xsel -p; echo )[1]"
+        bind '"*P' backward-char "commandline -i ( xsel -p; echo )[1]"
 
         #
         # insert mode

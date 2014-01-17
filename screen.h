@@ -16,7 +16,7 @@
 #include <sys/stat.h>
 #include "highlight.h"
 
-class pager_t;
+class page_rendering_t;
 
 /**
    A class representing a single line of a screen.
@@ -117,6 +117,11 @@ public:
     {
         this->line_datas.insert(this->line_datas.end(), d.line_datas.begin(), d.line_datas.end());
     }
+    
+    bool empty() const
+    {
+        return line_datas.empty();
+    }
 };
 
 /**
@@ -205,7 +210,7 @@ void s_write(screen_t *s,
              const highlight_spec_t *colors,
              const int *indent,
              size_t cursor_pos,
-             const pager_t &pager_data);
+             const page_rendering_t &pager_data);
 
 /**
     This function resets the screen buffers internal knowledge about

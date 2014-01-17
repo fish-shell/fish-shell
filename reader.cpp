@@ -201,6 +201,9 @@ public:
     /** Current pager */
     pager_t current_pager;
     
+    /** Current page rendering */
+    page_rendering_t current_page_rendering;
+    
     /** Whether we are navigating the pager */
     bool is_navigating_pager;
 
@@ -538,6 +541,10 @@ static void reader_repaint()
 
     std::vector<int> indents = data->indents;
     indents.resize(len);
+    
+    // Re-render our completions page if necessary
+    data->current_pager.set_term_size(common_get_width(), common_get_height());
+    data->current_pager.update_rendering(&data->current_page_rendering);
 
     s_write(&data->screen,
             data->left_prompt_buff,
@@ -547,7 +554,7 @@ static void reader_repaint()
             &colors[0],
             &indents[0],
             data->buff_pos,
-            data->current_pager);
+            data->current_page_rendering);
 
     data->repaint_needed = false;
 }
@@ -1852,33 +1859,31 @@ static bool handle_completions(const std::vector<completion_t> &comp)
                 prefix.append(data->command_line, prefix_start + len - PREFIX_MAX_LEN, PREFIX_MAX_LEN);
             }
 
+            wchar_t quote;
+            parse_util_get_parameter_info(data->command_line, data->buff_pos, &quote, NULL, NULL);
+            bool is_quoted = (quote != L'\0');
+            
+            if (1)
             {
-                int is_quoted;
-
-                wchar_t quote;
-                parse_util_get_parameter_info(data->command_line, data->buff_pos, &quote, NULL, NULL);
-                is_quoted = (quote != L'\0');
+                data->current_pager.set_prefix(prefix);
+                data->current_pager.set_completions(surviving_completions);
                 
-                if (1)
-                {
-                    pager_t pager;
-                    pager.set_term_size(common_get_width(), common_get_height());
-                    pager.set_prefix(prefix);
-                    pager.set_completions(surviving_completions);
-                    data->current_pager = pager;
-                }
-                else
-                {
-                    /* Clear the autosuggestion from the old commandline before abandoning it (see #561) */
-                    if (! data->autosuggestion.empty())
-                        reader_repaint_without_autosuggestion();
-
-                    write_loop(1, "\n", 1);
-
-                    run_pager(prefix, is_quoted, surviving_completions);
-                }
+                /* Invalidate our rendering */
+                data->current_page_rendering = page_rendering_t();
             }
-            s_reset(&data->screen, screen_reset_abandon_line);
+            else
+            {
+                /* Clear the autosuggestion from the old commandline before abandoning it (see #561) */
+                if (! data->autosuggestion.empty())
+                    reader_repaint_without_autosuggestion();
+
+                write_loop(1, "\n", 1);
+
+                run_pager(prefix, is_quoted, surviving_completions);
+                
+                s_reset(&data->screen, screen_reset_abandon_line);
+
+            }
             reader_repaint();
             success = false;
         }
@@ -2970,6 +2975,9 @@ const wchar_t *reader_readline(void)
 
     /* The cycle index in our completion list */
     size_t completion_cycle_idx = (size_t)(-1);
+    
+    /* Indicates if we are currently navigating pager contents */
+    bool is_navigating_pager_contents = false;
 
     /* The command line before completion */
     wcstring cycle_command_line;
@@ -3152,6 +3160,8 @@ const wchar_t *reader_readline(void)
                     
                     if (next_comp != NULL)
                     {
+                        is_navigating_pager_contents = true;
+                    
                         size_t cursor_pos = cycle_cursor_pos;
                         const wcstring new_cmd_line = completion_apply_to_command_line(next_comp->completion, next_comp->flags, cycle_command_line, &cursor_pos, false);
                         reader_set_buffer(new_cmd_line, cursor_pos);
@@ -3628,38 +3638,49 @@ const wchar_t *reader_readline(void)
             case R_UP_LINE:
             case R_DOWN_LINE:
             {
-                int line_old = parse_util_get_line_from_offset(data->command_line, data->buff_pos);
-                int line_new;
-
-                if (c == R_UP_LINE)
-                    line_new = line_old-1;
-                else
-                    line_new = line_old+1;
-
-                int line_count = parse_util_lineno(data->command_line.c_str(), data->command_length())-1;
-
-                if (line_new >= 0 && line_new <= line_count)
+                if (is_navigating_pager_contents)
                 {
-                    size_t base_pos_new;
-                    size_t base_pos_old;
+                    if (data->current_pager.select_next_completion_in_direction(c == R_UP_LINE ? direction_north : direction_south, data->current_page_rendering))
+                    {
+                        reader_repaint();
+                    }
+                }
+                else
+                {
+                    /* Not navigating the pager contents */
+                    int line_old = parse_util_get_line_from_offset(data->command_line, data->buff_pos);
+                    int line_new;
 
-                    int indent_old;
-                    int indent_new;
-                    size_t line_offset_old;
-                    size_t total_offset_new;
+                    if (c == R_UP_LINE)
+                        line_new = line_old-1;
+                    else
+                        line_new = line_old+1;
 
-                    base_pos_new = parse_util_get_offset_from_line(data->command_line, line_new);
+                    int line_count = parse_util_lineno(data->command_line.c_str(), data->command_length())-1;
 
-                    base_pos_old = parse_util_get_offset_from_line(data->command_line,  line_old);
+                    if (line_new >= 0 && line_new <= line_count)
+                    {
+                        size_t base_pos_new;
+                        size_t base_pos_old;
 
-                    assert(base_pos_new != (size_t)(-1) && base_pos_old != (size_t)(-1));
-                    indent_old = data->indents.at(base_pos_old);
-                    indent_new = data->indents.at(base_pos_new);
+                        int indent_old;
+                        int indent_new;
+                        size_t line_offset_old;
+                        size_t total_offset_new;
 
-                    line_offset_old = data->buff_pos - parse_util_get_offset_from_line(data->command_line, line_old);
-                    total_offset_new = parse_util_get_offset(data->command_line, line_new, line_offset_old - 4*(indent_new-indent_old));
-                    data->buff_pos = total_offset_new;
-                    reader_repaint();
+                        base_pos_new = parse_util_get_offset_from_line(data->command_line, line_new);
+
+                        base_pos_old = parse_util_get_offset_from_line(data->command_line,  line_old);
+
+                        assert(base_pos_new != (size_t)(-1) && base_pos_old != (size_t)(-1));
+                        indent_old = data->indents.at(base_pos_old);
+                        indent_new = data->indents.at(base_pos_new);
+
+                        line_offset_old = data->buff_pos - parse_util_get_offset_from_line(data->command_line, line_old);
+                        total_offset_new = parse_util_get_offset(data->command_line, line_new, line_offset_old - 4*(indent_new-indent_old));
+                        data->buff_pos = total_offset_new;
+                        reader_repaint();
+                    }
                 }
 
                 break;

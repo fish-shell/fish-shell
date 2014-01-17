@@ -6,9 +6,18 @@
 #include "screen.h"
 
 /* Represents rendering from the pager */
-struct page_rendering_t
+class page_rendering_t
 {
+    public:
+    int term_width;
+    int term_height;
+    size_t rows;
+    size_t cols;
+    size_t selected_completion_idx;
     screen_data_t screen_data;
+    
+    /* Returns a rendering with invalid data, useful to indicate "no rendering" */
+    page_rendering_t();
 };
 
 typedef std::vector<completion_t> completion_list_t;
@@ -79,8 +88,14 @@ class pager_t
     /* Sets the index of the selected completion */
     void set_selected_completion(size_t completion_idx);
     
+    /* Changes the selected completion in the given direction according to the layout of the given rendering. Returns true if the values changed. */
+    bool select_next_completion_in_direction(cardinal_direction_t direction, const page_rendering_t &rendering);
+    
     /* Produces a rendering of the completions, at the given term size */
     page_rendering_t render() const;
+    
+    /* Updates the rendering if it's stale */
+    void update_rendering(page_rendering_t *rendering) const;
     
     /* Indicates if there are no completions, and therefore nothing to render */
     bool empty() const;

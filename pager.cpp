@@ -122,6 +122,12 @@ static std::vector<char> pager_buffer;
 */
 static wcstring out_buff;
 
+/* Returns numer / denom, rounding up */
+static size_t divide_round_up(size_t numer, size_t denom)
+{
+    return numer / denom + (numer % denom ? 1 : 0);
+}
+
 /**
    This function calculates the minimum width for each completion
    entry in the specified array_list. This width depends on the
@@ -639,7 +645,7 @@ int pager_t::completion_try_print(int cols, const wcstring &prefix, const comp_i
     */
     int print=0;
 
-    int rows = (int)((lst.size()-1)/cols+1);
+    int rows = (int)divide_round_up(lst.size(), cols);
 
     int pref_tot_width=0;
     int min_tot_width = 0;
@@ -857,6 +863,7 @@ int pager_t::completion_try_print(int cols, const wcstring &prefix, const comp_i
 
 page_rendering_t pager_t::render() const
 {
+    
     /**
        Try to print the completions. Start by trying to print the
        list in PAGER_MAX_COLS columns, if the completions won't
@@ -864,32 +871,52 @@ page_rendering_t pager_t::render() const
        column never fails.
     */
     page_rendering_t rendering;
-    for (int i = PAGER_MAX_COLS; i>0; i--)
+    rendering.term_width = this->term_width;
+    rendering.term_height = this->term_height;
+    rendering.selected_completion_idx = this->selected_completion_idx;
+    
+    if (! this->empty())
     {
-        /* Initially empty rendering */
-        rendering.screen_data.resize(0);
-        
-        switch (completion_try_print(i, prefix, completion_infos, &rendering))
+        int cols;
+        bool done = false;
+        for (cols = PAGER_MAX_COLS; cols > 0 && ! done; cols--)
         {
-            case PAGER_RETRY:
-                break;
+            /* Initially empty rendering */
+            rendering.screen_data.resize(0);
+            
+            switch (completion_try_print(cols, prefix, completion_infos, &rendering))
+            {
+                case PAGER_RETRY:
+                    break;
 
-            case PAGER_DONE:
-                i=0;
-                break;
+                case PAGER_DONE:
+                    done = true;
+                    break;
 
-            case PAGER_RESIZE:
-                /*
-                  This means we got a resize event, so we start
-                  over from the beginning. Since it the screen got
-                  bigger, we might be able to fit all completions
-                  on-screen.
-                */
-                i=PAGER_MAX_COLS+1;
-                break;
+                case PAGER_RESIZE:
+                    /*
+                      This means we got a resize event, so we start
+                      over from the beginning. Since it the screen got
+                      bigger, we might be able to fit all completions
+                      on-screen.
+                    */
+                    cols=PAGER_MAX_COLS+1;
+                    break;
+            }
         }
+        assert(cols >= 0);
+        rendering.cols = (size_t)cols;
+        rendering.rows = divide_round_up(completion_infos.size(), rendering.cols);
     }
     return rendering;
+}
+
+void pager_t::update_rendering(page_rendering_t *rendering) const
+{
+    if (rendering->term_width != this->term_width || rendering->term_height != this->term_height || rendering->selected_completion_idx != this->selected_completion_idx)
+    {
+        *rendering = this->render();
+    }
 }
 
 pager_t::pager_t() : term_width(0), term_height(0), selected_completion_idx(-1)
@@ -906,10 +933,70 @@ void pager_t::set_selected_completion(size_t idx)
     this->selected_completion_idx = idx;
 }
 
+bool pager_t::select_next_completion_in_direction(cardinal_direction_t direction, const page_rendering_t &rendering)
+{
+    /* Handle the case of nothing selected yet */
+    if (selected_completion_idx == (size_t)(-1))
+    {
+        return false;
+    }
+ 
+    /* We have a completion index; we wish to compute its row and column. Completions are rendered column first, i.e. we go south before we go west. */
+    size_t current_row = selected_completion_idx % rendering.rows;
+    size_t current_col = selected_completion_idx / rendering.rows;
+    
+    switch (direction)
+    {
+        case direction_north:
+        {
+            /* Go up a whole row */
+            if (current_row > 0)
+                current_row--;
+            break;
+        }
+            
+        case direction_south:
+        {
+            /* Go down, unless we are in the last row. Note that this means that we may set selected_completion_idx to an out-of-bounds value if the last row is incomplete; this is a feature (it allows "last column memory"). */
+            if (current_row + 1 < rendering.rows)
+                current_row++;
+            break;
+        }
+        
+        case direction_east:
+        {
+            if (current_col + 1 < rendering.cols)
+                current_col++;
+            break;
+        }
+        
+        case direction_west:
+        {
+            if (current_col > 0)
+                current_col--;
+            break;
+        }
+    }
+    
+    size_t new_selected_completion_idx = current_col * rendering.rows + current_row;
+    if (new_selected_completion_idx != selected_completion_idx)
+    {
+        selected_completion_idx = new_selected_completion_idx;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
 
 void pager_t::clear()
 {
     completions.clear();
     completion_infos.clear();
     prefix.clear();
+}
+
+page_rendering_t::page_rendering_t() : term_width(-1), term_height(-1), rows(0), cols(0), selected_completion_idx(-1)
+{
 }

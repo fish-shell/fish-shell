@@ -149,7 +149,7 @@ static void write_part(const wchar_t *begin,
     {
         wchar_t *buff = wcsndup(begin, end-begin);
 //    fwprintf( stderr, L"Subshell: %ls, end char %lc\n", buff, *end );
-        wcstring out;
+            wcstring out;
         tokenizer_t tok(buff, TOK_ACCEPT_UNFINISHED);
         for (; tok_has_next(&tok); tok_next(&tok))
         {

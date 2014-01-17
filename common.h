@@ -87,6 +87,15 @@ enum
 };
 typedef unsigned int escape_flags_t;
 
+/* Directions */
+enum cardinal_direction_t
+{
+    direction_north,
+    direction_east,
+    direction_south,
+    direction_west
+};
+
 /**
  Helper macro for errors
  */

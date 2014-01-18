@@ -2436,7 +2436,7 @@ size_t reader_get_cursor_pos()
     return data->buff_pos;
 }
 
-bool reader_get_selection_pos(size_t &start, size_t &stop)
+bool reader_get_selection(size_t &start, size_t &len)
 {
     if (!data)
     {
@@ -2449,7 +2449,7 @@ bool reader_get_selection_pos(size_t &start, size_t &stop)
       else
       {
           start = data->sel_start_pos;
-          stop = data->sel_stop_pos;
+          len = std::min(data->sel_stop_pos - data->sel_start_pos + 1, data->command_length());
           return true;
       }
     }
@@ -3848,6 +3848,17 @@ const wchar_t *reader_readline(void)
               data->sel_start_pos = data->buff_pos;
               data->sel_stop_pos = data->buff_pos;
               break;
+            }
+
+            case R_KILL_SELECTION:
+            {
+                bool newv = (last_char != R_KILL_SELECTION);
+                size_t start, len;
+                if(reader_get_selection(start, len))
+                {
+                    reader_kill(start, len, KILL_APPEND, newv);
+                }
+                break;
             }
 
             /* Other, if a normal character, we add it to the command */

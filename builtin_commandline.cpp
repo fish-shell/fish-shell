@@ -472,14 +472,13 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
 
     if (selection_mode)
     {
-        size_t sel_start, sel_stop;
+        size_t start, len;
         const wchar_t *buffer = reader_get_buffer();
-        if(reader_get_selection_pos(sel_start, sel_stop))
+        if(reader_get_selection(start, len))
         {
-          size_t len = std::min(sel_stop - sel_start + 1, wcslen(buffer));
           wchar_t *selection = new wchar_t[len + 1];
           selection[len] = L'\0';
-          selection = wcsncpy(selection, buffer + sel_start, len);
+          selection = wcsncpy(selection, buffer + start, len);
 
           append_format(stdout_buffer, selection);
           delete selection;

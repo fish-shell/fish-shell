@@ -140,6 +140,7 @@ static const wchar_t * const name_arr[] =
     L"accept-autosuggestion",
     L"begin-selection",
     L"end-selection",
+    L"kill-selection"
 }
 ;
 
@@ -231,7 +232,8 @@ static const wchar_t code_arr[] =
     R_SUPPRESS_AUTOSUGGESTION,
     R_ACCEPT_AUTOSUGGESTION,
     R_BEGIN_SELECTION,
-    R_END_SELECTION
+    R_END_SELECTION,
+    R_KILL_SELECTION
 }
 ;
 

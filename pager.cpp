@@ -59,6 +59,8 @@
 #include "print_help.h"
 #include "highlight.h"
 
+#define PAGER_SELECTION_NONE ((size_t)(-1))
+
 typedef pager_t::comp_t comp_t;
 typedef std::vector<completion_t> completion_list_t;
 typedef std::vector<comp_t> comp_info_list_t;
@@ -365,7 +367,9 @@ void pager_t::completion_print(int cols, int *width_per_column, int row_start, i
 {
 
     size_t rows = (lst.size()-1)/cols+1;
-
+    
+    size_t effective_selected_idx = this->saturated_selected_completion_index();
+    
     for (size_t row = row_start; row < row_stop; row++)
     {
         for (size_t col = 0; col < cols; col++)
@@ -377,7 +381,7 @@ void pager_t::completion_print(int cols, int *width_per_column, int row_start, i
 
             size_t idx = col * rows + row;
             const comp_t *el = &lst.at(idx);
-            bool is_selected = (idx == this->selected_completion_idx);
+            bool is_selected = (idx == effective_selected_idx);
 
             /* Print this completion on its own "line" */
             line_t line = completion_print_item(prefix, el, row, col, width_per_column[col] - (is_last?0:2), row%2, is_selected, rendering);
@@ -873,7 +877,7 @@ page_rendering_t pager_t::render() const
     page_rendering_t rendering;
     rendering.term_width = this->term_width;
     rendering.term_height = this->term_height;
-    rendering.selected_completion_idx = this->selected_completion_idx;
+    rendering.selected_completion_idx = this->saturated_selected_completion_index();
     
     if (! this->empty())
     {
@@ -913,7 +917,7 @@ page_rendering_t pager_t::render() const
 
 void pager_t::update_rendering(page_rendering_t *rendering) const
 {
-    if (rendering->term_width != this->term_width || rendering->term_height != this->term_height || rendering->selected_completion_idx != this->selected_completion_idx)
+    if (rendering->term_width != this->term_width || rendering->term_height != this->term_height || rendering->selected_completion_idx != this->saturated_selected_completion_index())
     {
         *rendering = this->render();
     }
@@ -928,66 +932,177 @@ bool pager_t::empty() const
     return completions.empty();
 }
 
-void pager_t::set_selected_completion(size_t idx)
+const completion_t *pager_t::select_next_completion_in_direction(selection_direction_t direction, const page_rendering_t &rendering)
 {
-    this->selected_completion_idx = idx;
-}
-
-bool pager_t::select_next_completion_in_direction(cardinal_direction_t direction, const page_rendering_t &rendering)
-{
+    /* Must have something to select */
+    if (completions.empty())
+    {
+        return NULL;
+    }
+    
     /* Handle the case of nothing selected yet */
-    if (selected_completion_idx == (size_t)(-1))
+    if (selected_completion_idx == PAGER_SELECTION_NONE)
     {
-        return false;
-    }
- 
-    /* We have a completion index; we wish to compute its row and column. Completions are rendered column first, i.e. we go south before we go west. */
-    size_t current_row = selected_completion_idx % rendering.rows;
-    size_t current_col = selected_completion_idx / rendering.rows;
-    
-    switch (direction)
-    {
-        case direction_north:
+        if (selection_direction_is_cardinal(direction))
         {
-            /* Go up a whole row */
-            if (current_row > 0)
-                current_row--;
-            break;
+            /* Cardinal directions do nothing unless something is selected */
+            return NULL;
         }
-            
-        case direction_south:
+        else
         {
-            /* Go down, unless we are in the last row. Note that this means that we may set selected_completion_idx to an out-of-bounds value if the last row is incomplete; this is a feature (it allows "last column memory"). */
-            if (current_row + 1 < rendering.rows)
-                current_row++;
-            break;
-        }
-        
-        case direction_east:
-        {
-            if (current_col + 1 < rendering.cols)
-                current_col++;
-            break;
-        }
-        
-        case direction_west:
-        {
-            if (current_col > 0)
-                current_col--;
-            break;
+            /* Forward/backward do something sane */
+            selected_completion_idx = (direction == direction_next ? 0 : completions.size() - 1);
+            return selected_completion();
         }
     }
     
-    size_t new_selected_completion_idx = current_col * rendering.rows + current_row;
-    if (new_selected_completion_idx != selected_completion_idx)
+    /* Ok, we had something selected already. Select something different. */
+    size_t new_selected_completion_idx = selected_completion_idx;
+    if (! selection_direction_is_cardinal(direction))
     {
-        selected_completion_idx = new_selected_completion_idx;
-        return true;
+        /* Next / previous, easy */
+        if (direction == direction_next)
+        {
+            new_selected_completion_idx = selected_completion_idx + 1;
+            if (new_selected_completion_idx > completion_infos.size())
+            {
+                new_selected_completion_idx = 0;
+            }
+        }
+        else if (direction == direction_prev)
+        {
+            if (selected_completion_idx == 0)
+            {
+                new_selected_completion_idx = completion_infos.size() - 1;
+            }
+            else
+            {
+                new_selected_completion_idx = selected_completion_idx - 1;
+            }
+        }
+        else
+        {
+            assert(0 && "Unknown non-cardinal direction");
+        }
     }
     else
     {
-        return false;
+        /* Cardinal directions. We have a completion index; we wish to compute its row and column. Completions are rendered column first, i.e. we go south before we go west. */
+        size_t current_row = selected_completion_idx % rendering.rows;
+        size_t current_col = selected_completion_idx / rendering.rows;
+        
+        switch (direction)
+        {
+            case direction_north:
+            {
+                /* Go up a whole row. If we cycle, go to the previous column. */
+                if (current_row > 0)
+                {
+                    current_row--;
+                }
+                else
+                {
+                    current_row = rendering.rows - 1;
+                    if (current_col > 0)
+                        current_col--;
+                }
+                break;
+            }
+                
+            case direction_south:
+            {
+                /* Go down, unless we are in the last row. Note that this means that we may set selected_completion_idx to an out-of-bounds value if the last row is incomplete; this is a feature (it allows "last column memory"). */
+                if (current_row + 1 < rendering.rows)
+                {
+                    current_row++;
+                }
+                else
+                {
+                    current_row = 0;
+                    if (current_col + 1 < rendering.cols)
+                        current_col++;
+                    
+                }
+                break;
+            }
+            
+            case direction_east:
+            {
+                /* Go east, wrapping to the next row */
+                if (current_col + 1 < rendering.cols)
+                {
+                    current_col++;
+                }
+                else
+                {
+                    current_col = 0;
+                    if (current_row + 1 < rendering.rows)
+                        current_row++;
+                }
+                break;
+            }
+            
+            case direction_west:
+            {
+                /* Go west, wrapping to the previous row */
+                if (current_col > 0)
+                {
+                    current_col--;
+                }
+                else
+                {
+                    current_col = rendering.cols - 1;
+                    if (current_row > 0)
+                        current_row--;
+                }
+                break;
+            }
+            
+            default:
+                assert(0 && "Unknown cardinal direction");
+                break;
+        }
+        
+        /* Compute the new index based on the changed row */
+        new_selected_completion_idx = current_col * rendering.rows + current_row;
     }
+    
+    if (new_selected_completion_idx != selected_completion_idx)
+    {
+        selected_completion_idx = new_selected_completion_idx;
+        return selected_completion();
+    }
+    else
+    {
+        return NULL;
+    }
+}
+
+size_t pager_t::saturated_selected_completion_index() const
+{
+    size_t result = selected_completion_idx;
+    if (result != PAGER_SELECTION_NONE && result >= completions.size())
+    {
+        result = completions.size() - 1;
+    }
+    assert(result == PAGER_SELECTION_NONE || result < completions.size());
+    return result;
+}
+
+void pager_t::set_selected_completion_index(size_t completion_idx)
+{
+    selected_completion_idx = completion_idx;
+}
+
+const completion_t *pager_t::selected_completion() const
+{
+    const completion_t * result = NULL;
+    size_t idx = saturated_selected_completion_index();
+    if (idx != PAGER_SELECTION_NONE)
+    {
+        result = &completions.at(idx);
+    }
+    return result;
 }
 
 void pager_t::clear()

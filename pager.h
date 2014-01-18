@@ -32,6 +32,9 @@ class pager_t
     
     size_t selected_completion_idx;
     
+    /* Returns the selected completion index, but not to exceed completions.size() */
+    size_t saturated_selected_completion_index() const;
+    
     /** Data structure describing one or a group of related completions */
     public:
     struct comp_t
@@ -86,10 +89,13 @@ class pager_t
     void set_term_size(int w, int h);
     
     /* Sets the index of the selected completion */
-    void set_selected_completion(size_t completion_idx);
+    void set_selected_completion_index(size_t completion_idx);
     
     /* Changes the selected completion in the given direction according to the layout of the given rendering. Returns true if the values changed. */
-    bool select_next_completion_in_direction(cardinal_direction_t direction, const page_rendering_t &rendering);
+    const completion_t *select_next_completion_in_direction(selection_direction_t direction, const page_rendering_t &rendering);
+    
+    /* Returns the currently selected completion */
+    const completion_t *selected_completion() const;
     
     /* Produces a rendering of the completions, at the given term size */
     page_rendering_t render() const;

@@ -1525,6 +1525,28 @@ static void accept_autosuggestion(bool full)
     }
 }
 
+static bool is_navigating_pager_contents()
+{
+    return data && data->current_pager.selected_completion() != NULL;
+}
+
+static void select_completion_in_direction(enum selection_direction_t dir, const wcstring &cycle_command_line, size_t cycle_cursor_pos)
+{
+    const completion_t *next_comp = data->current_pager.select_next_completion_in_direction(dir, data->current_page_rendering);
+    if (next_comp != NULL)
+    {
+        size_t cursor_pos = cycle_cursor_pos;
+        const wcstring new_cmd_line = completion_apply_to_command_line(next_comp->completion, next_comp->flags, cycle_command_line, &cursor_pos, false);
+        reader_set_buffer(new_cmd_line, cursor_pos);
+
+        /* Since we just inserted a completion, don't immediately do a new autosuggestion */
+        data->suppress_autosuggestion = true;
+
+        /* Trigger repaint (see #765) */
+        reader_repaint();
+    }
+}
+
 /**
   Flash the screen. This function only changed the color of the
   current line, since the flash_screen sequnce is rather painful to
@@ -2975,9 +2997,6 @@ const wchar_t *reader_readline(void)
 
     /* The cycle index in our completion list */
     size_t completion_cycle_idx = (size_t)(-1);
-    
-    /* Indicates if we are currently navigating pager contents */
-    bool is_navigating_pager_contents = false;
 
     /* The command line before completion */
     wcstring cycle_command_line;
@@ -3153,25 +3172,8 @@ const wchar_t *reader_readline(void)
 
                 if (! comp_empty && last_char == R_COMPLETE)
                 {
-                    /* The user typed R_COMPLETE more than once in a row. Cycle through our available completions */
-                    const completion_t *next_comp = cycle_competions(comp, cycle_command_line, &completion_cycle_idx);
-                    
-                    data->current_pager.set_selected_completion(completion_cycle_idx);
-                    
-                    if (next_comp != NULL)
-                    {
-                        is_navigating_pager_contents = true;
-                    
-                        size_t cursor_pos = cycle_cursor_pos;
-                        const wcstring new_cmd_line = completion_apply_to_command_line(next_comp->completion, next_comp->flags, cycle_command_line, &cursor_pos, false);
-                        reader_set_buffer(new_cmd_line, cursor_pos);
-
-                        /* Since we just inserted a completion, don't immediately do a new autosuggestion */
-                        data->suppress_autosuggestion = true;
-
-                        /* Trigger repaint (see #765) */
-                        reader_repaint_if_needed();
-                    }
+                    /* The user typed R_COMPLETE more than once in a row. Cycle through our available completions. */
+                    select_completion_in_direction(direction_next, cycle_command_line, cycle_cursor_pos);
                 }
                 else
                 {
@@ -3555,7 +3557,11 @@ const wchar_t *reader_readline(void)
             /* Move left*/
             case R_BACKWARD_CHAR:
             {
-                if (data->buff_pos > 0)
+                if (is_navigating_pager_contents())
+                {
+                    select_completion_in_direction(direction_west, cycle_command_line, cycle_cursor_pos);
+                }
+                else if (data->buff_pos > 0)
                 {
                     data->buff_pos--;
                     reader_repaint();
@@ -3566,7 +3572,11 @@ const wchar_t *reader_readline(void)
             /* Move right*/
             case R_FORWARD_CHAR:
             {
-                if (data->buff_pos < data->command_length())
+                if (is_navigating_pager_contents())
+                {
+                    select_completion_in_direction(direction_east, cycle_command_line, cycle_cursor_pos);
+                }
+                else if (data->buff_pos < data->command_length())
                 {
                     data->buff_pos++;
                     reader_repaint();
@@ -3638,12 +3648,9 @@ const wchar_t *reader_readline(void)
             case R_UP_LINE:
             case R_DOWN_LINE:
             {
-                if (is_navigating_pager_contents)
+                if (is_navigating_pager_contents())
                 {
-                    if (data->current_pager.select_next_completion_in_direction(c == R_UP_LINE ? direction_north : direction_south, data->current_page_rendering))
-                    {
-                        reader_repaint();
-                    }
+                    select_completion_in_direction(c == R_UP_LINE ? direction_north : direction_south, cycle_command_line, cycle_cursor_pos);
                 }
                 else
                 {
@@ -3882,7 +3889,7 @@ int reader_has_pager_contents()
         return -1;
     }
 
-    return data->current_page_rendering.screen_data.empty() ? 1 : 0;
+    return ! data->current_page_rendering.screen_data.empty();
 }
 
 

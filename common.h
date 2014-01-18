@@ -88,13 +88,32 @@ enum
 typedef unsigned int escape_flags_t;
 
 /* Directions */
-enum cardinal_direction_t
+enum selection_direction_t
 {
+    /* visual directions */
     direction_north,
     direction_east,
     direction_south,
-    direction_west
+    direction_west,
+    
+    /* logical directions */
+    direction_next,
+    direction_prev
 };
+
+inline bool selection_direction_is_cardinal(selection_direction_t dir)
+{
+    switch (dir)
+    {
+        case direction_north:
+        case direction_east:
+        case direction_south:
+        case direction_west:
+            return true;
+        default:
+            return false;
+    }
+}
 
 /**
  Helper macro for errors

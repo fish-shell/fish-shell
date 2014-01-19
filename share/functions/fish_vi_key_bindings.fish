@@ -203,6 +203,7 @@ function fish_vi_key_bindings -d "vi-like key bindings for fish"
       bind E forward-word
 
       bind -M visual -m default d kill-selection end-selection force-repaint
+      bind -M visual -m default x kill-selection end-selection force-repaint
       bind -M visual -m default y kill-selection yank end-selection force-repaint
       bind -M visual -m default '"*y' "commandline -s | xsel -p" end-selection force-repaint
 

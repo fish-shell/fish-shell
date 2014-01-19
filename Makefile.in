@@ -47,7 +47,6 @@ mandir = @mandir@
 sysconfdir = @sysconfdir@
 docdir = @docdir@
 localedir = @localedir@
-optbindirs = @optbindirs@
 
 #
 # Various flags
@@ -302,7 +301,8 @@ doc/refman.pdf: doc
 #
 
 test: $(PROGRAMS) fish_tests
-	./fish_tests; cd tests; ../fish <test.fish;
+	./fish_tests
+	cd tests; ../fish <test.fish;
 .PHONY: test
 
 
@@ -376,8 +376,6 @@ doc.h: $(HDR_FILES)
 		-e "s,@docdir\@,$(docdir),g" \
 		-e "s|@configure_input\@|$@, generated from $@.in by the Makefile. DO NOT MANUALLY EDIT THIS FILE!|g" \
 		-e "s,@prefix\@,$(prefix),g" \
-		-e "s,@optbindirs\@,$(optbindirs),g"
-#-e "s,@\@,$(),"
 
 
 #

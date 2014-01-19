@@ -652,6 +652,9 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     /* Set g_use_posix_spawn. Default to true. */
     env_var_t use_posix_spawn = env_get_string(L"fish_use_posix_spawn");
     g_use_posix_spawn = (use_posix_spawn.missing_or_empty() ? true : from_string<bool>(use_posix_spawn));
+
+    /* Set fish_bind_mode to "default" */
+    env_set(FISH_BIND_MODE_VAR, DEFAULT_BIND_MODE, ENV_GLOBAL);
 }
 
 void env_destroy()

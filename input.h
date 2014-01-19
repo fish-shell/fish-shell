@@ -13,6 +13,7 @@ inputrc information for key bindings.
 
 
 #define DEFAULT_BIND_MODE L"default"
+#define FISH_BIND_MODE_VAR L"fish_bind_mode"
 
 /**
    Key codes for inputrc-style keyboard functions that are passed on

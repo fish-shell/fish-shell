@@ -61,9 +61,6 @@
 #include <vector>
 
 #define DEFAULT_TERM L"ansi"
-
-#define FISH_BIND_MODE_VAR L"fish_bind_mode"
-
 /**
    Struct representing a keybinding. Returned by input_get_mappings.
  */

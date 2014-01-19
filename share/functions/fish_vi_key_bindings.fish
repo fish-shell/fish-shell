@@ -193,6 +193,15 @@ function fish_vi_key_bindings -d "vi-like key bindings for fish"
       bind -M visual h backward-char
       bind -M visual l forward-char
 
+      bind -M visual b backward-word
+      bind B backward-word
+      bind gE backward-word
+      bind gE backward-word
+      bind w forward-word
+      bind W forward-word
+      bind e forward-word
+      bind E forward-word
+
       bind -M visual -m default d kill-selection end-selection force-repaint
       bind -M visual -m default y kill-selection yank end-selection force-repaint
       bind -M visual -m default '"*y' "commandline -s | xsel -p" end-selection force-repaint

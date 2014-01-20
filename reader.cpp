@@ -362,6 +362,9 @@ public:
     }
 };
 
+/* Sets the command line contents, without clearing the pager */
+static void reader_set_buffer_maintaining_pager(const wcstring &b, size_t pos);
+
 /**
    The current interactive reading context
 */
@@ -1211,7 +1214,7 @@ static void completion_insert(const wchar_t *val, complete_flags_t flags)
 {
     size_t cursor = data->buff_pos;
     wcstring new_command_line = completion_apply_to_command_line(val, flags, data->command_line, &cursor, false /* not append only */);
-    reader_set_buffer(new_command_line, cursor);
+    reader_set_buffer_maintaining_pager(new_command_line, cursor);
 
     /* Since we just inserted a completion, don't immediately do a new autosuggestion */
     data->suppress_autosuggestion = true;
@@ -1547,7 +1550,7 @@ static void select_completion_in_direction(enum selection_direction_t dir, const
     {
         size_t cursor_pos = cycle_cursor_pos;
         const wcstring new_cmd_line = completion_apply_to_command_line(next_comp->completion, next_comp->flags, cycle_command_line, &cursor_pos, false);
-        reader_set_buffer(new_cmd_line, cursor_pos);
+        reader_set_buffer_maintaining_pager(new_cmd_line, cursor_pos);
 
         /* Since we just inserted a completion, don't immediately do a new autosuggestion */
         data->suppress_autosuggestion = true;
@@ -2376,11 +2379,9 @@ history_t *reader_get_history(void)
     return data ? data->history : NULL;
 }
 
-void reader_set_buffer(const wcstring &b, size_t pos)
+/* Sets the command line contents, without clearing the pager */
+static void reader_set_buffer_maintaining_pager(const wcstring &b, size_t pos)
 {
-    if (!data)
-        return;
-
     /* Callers like to pass us pointers into ourselves, so be careful! I don't know if we can use operator= with a pointer to our interior, so use an intermediate. */
     size_t command_line_len = b.size();
     data->command_line = b;
@@ -2391,13 +2392,24 @@ void reader_set_buffer(const wcstring &b, size_t pos)
         pos = command_line_len;
 
     data->buff_pos = pos;
-
+    
+    /* Clear history search and pager contents */
     data->search_mode = NO_SEARCH;
     data->search_buff.clear();
     data->history_search.go_to_end();
-
+    
     reader_super_highlight_me_plenty(data->buff_pos);
     reader_repaint_needed();
+}
+
+/* Sets the command line contents, clearing the pager */
+void reader_set_buffer(const wcstring &b, size_t pos)
+{
+    if (!data)
+        return;
+    
+    clear_pager();
+    reader_set_buffer_maintaining_pager(b, pos);
 }
 
 

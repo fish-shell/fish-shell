@@ -278,7 +278,8 @@ const wchar_t *input_get_bind_mode()
 */
 bool input_set_bind_mode(const wchar_t *bm)
 {
-  env_set(FISH_BIND_MODE_VAR, bm, ENV_GLOBAL);
+  if(wcscmp(bm, input_get_bind_mode()))
+    env_set(FISH_BIND_MODE_VAR, bm, ENV_GLOBAL);
   return true;
 }
 

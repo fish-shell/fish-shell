@@ -20,6 +20,10 @@ class page_rendering_t
     page_rendering_t();
 };
 
+/* The space between adjacent completions */
+#define PAGER_SPACER_STRING L"  "
+#define PAGER_SPACER_STRING_WIDTH 2
+
 typedef std::vector<completion_t> completion_list_t;
 page_rendering_t render_completions(const completion_list_t &raw_completions, const wcstring &prefix);
 
@@ -32,8 +36,8 @@ class pager_t
     
     size_t selected_completion_idx;
     
-    /* Returns the selected completion index, but not to exceed completions.size() */
-    size_t saturated_selected_completion_index() const;
+    /* Returns the index of the completion that should draw selected, using the given number of columns */
+    size_t visual_selected_completion_index(size_t rows, size_t cols) const;
     
     /** Data structure describing one or a group of related completions */
     public:
@@ -94,8 +98,8 @@ class pager_t
     /* Changes the selected completion in the given direction according to the layout of the given rendering. Returns true if the values changed. */
     const completion_t *select_next_completion_in_direction(selection_direction_t direction, const page_rendering_t &rendering);
     
-    /* Returns the currently selected completion */
-    const completion_t *selected_completion() const;
+    /* Returns the currently selected completion for the given rendering */
+    const completion_t *selected_completion(const page_rendering_t &rendering) const;
     
     /* Produces a rendering of the completions, at the given term size */
     page_rendering_t render() const;

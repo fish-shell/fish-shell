@@ -320,7 +320,7 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
         const wcstring &comp = c->comp.at(i);
 
         if (i != 0)
-            written += print_max(L"  ", highlight_spec_normal, comp_width - written, true /* has_more */, &line_data);
+            written += print_max(PAGER_SPACER_STRING, highlight_spec_normal, comp_width - written, true /* has_more */, &line_data);
         
         int packed_color = highlight_spec_pager_prefix | highlight_make_background(bg_color);
         written += print_max(prefix, packed_color, comp_width - written, ! comp.empty(), &line_data);
@@ -332,7 +332,7 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
     if (desc_width)
     {
         int packed_color = highlight_spec_pager_description | highlight_make_background(bg_color);
-        while (written < (width-desc_width-2))
+        while (written < (width-desc_width-2)) //the 2 here refers to the parenthesis below
         {
             written += print_max(L" ", packed_color, 1, false, &line_data);
         }
@@ -368,7 +368,7 @@ void pager_t::completion_print(int cols, int *width_per_column, int row_start, i
 
     size_t rows = (lst.size()-1)/cols+1;
     
-    size_t effective_selected_idx = this->saturated_selected_completion_index();
+    size_t effective_selected_idx = this->visual_selected_completion_index(rows, cols);
     
     for (size_t row = row_start; row < row_stop; row++)
     {
@@ -384,13 +384,12 @@ void pager_t::completion_print(int cols, int *width_per_column, int row_start, i
             bool is_selected = (idx == effective_selected_idx);
 
             /* Print this completion on its own "line" */
-            line_t line = completion_print_item(prefix, el, row, col, width_per_column[col] - (is_last?0:2), row%2, is_selected, rendering);
+            line_t line = completion_print_item(prefix, el, row, col, width_per_column[col] - (is_last ? 0 : PAGER_SPACER_STRING_WIDTH), row%2, is_selected, rendering);
             
             /* If there's more to come, append two spaces */
             if (col + 1 < cols)
             {
-                line.append(L' ', 0);
-                line.append(L' ', 0);
+                line.append(PAGER_SPACER_STRING, 0);
             }
             
             /* Append this to the real line */
@@ -660,31 +659,31 @@ int pager_t::completion_try_print(int cols, const wcstring &prefix, const comp_i
         return PAGER_DONE;
 
     /* Calculate how wide the list would be */
-    for (long j = 0; j < cols; j++)
+    for (long col = 0; col < cols; col++)
     {
-        for (long i = 0; i<rows; i++)
+        for (long row = 0; row<rows; row++)
         {
             int pref,min;
             const comp_t *c;
-            if (lst.size() <= j*rows + i)
+            if (lst.size() <= col*rows + row)
                 continue;
 
-            c = &lst.at(j*rows + i);
+            c = &lst.at(col*rows + row);
             pref = c->pref_width;
             min = c->min_width;
 
-            if (j != cols-1)
+            if (col != cols-1)
             {
                 pref += 2;
                 min += 2;
             }
-            min_width[j] = maxi(min_width[j],
+            min_width[col] = maxi(min_width[col],
                                 min);
-            pref_width[j] = maxi(pref_width[j],
+            pref_width[col] = maxi(pref_width[col],
                                  pref);
         }
-        min_tot_width += min_width[j];
-        pref_tot_width += pref_width[j];
+        min_tot_width += min_width[col];
+        pref_tot_width += pref_width[col];
     }
     /*
       Force fit if one column
@@ -877,17 +876,32 @@ page_rendering_t pager_t::render() const
     page_rendering_t rendering;
     rendering.term_width = this->term_width;
     rendering.term_height = this->term_height;
-    rendering.selected_completion_idx = this->saturated_selected_completion_index();
     
     if (! this->empty())
     {
         int cols;
-        bool done = false;
-        for (cols = PAGER_MAX_COLS; cols > 0 && ! done; cols--)
+        for (cols = PAGER_MAX_COLS; cols > 0; cols--)
         {
             /* Initially empty rendering */
             rendering.screen_data.resize(0);
             
+            /* Determine how many rows we would need if we had 'cols' columns. Then determine how many columns we want from that. For example, say we had 19 completions. We can fit them into 6 columns, 4 rows, with the last row containing only 1 entry. Or we can fit them into 5 columns, 4 rows, the last row containing 4 entries. Since fewer columns with the same number of rows is better, skip cases where we know we can do better. */
+            size_t min_rows_required_for_cols = divide_round_up(completion_infos.size(), cols);
+            size_t min_cols_required_for_rows = divide_round_up(completion_infos.size(), min_rows_required_for_cols);
+            
+            assert(min_cols_required_for_rows <= cols);
+            if (min_cols_required_for_rows < cols)
+            {
+                /* Next iteration will be better, so skip this one */
+                continue;
+            }
+
+            
+            rendering.cols = (size_t)cols;
+            rendering.rows = divide_round_up(completion_infos.size(), rendering.cols);
+            rendering.selected_completion_idx = this->visual_selected_completion_index(rendering.rows, rendering.cols);
+            
+            bool done = false;
             switch (completion_try_print(cols, prefix, completion_infos, &rendering))
             {
                 case PAGER_RETRY:
@@ -907,17 +921,17 @@ page_rendering_t pager_t::render() const
                     cols=PAGER_MAX_COLS+1;
                     break;
             }
+            if (done)
+                break;
         }
         assert(cols >= 0);
-        rendering.cols = (size_t)cols;
-        rendering.rows = divide_round_up(completion_infos.size(), rendering.cols);
     }
     return rendering;
 }
 
 void pager_t::update_rendering(page_rendering_t *rendering) const
 {
-    if (rendering->term_width != this->term_width || rendering->term_height != this->term_height || rendering->selected_completion_idx != this->saturated_selected_completion_index())
+    if (rendering->term_width != this->term_width || rendering->term_height != this->term_height || rendering->selected_completion_idx != this->visual_selected_completion_index(rendering->rows, rendering->cols))
     {
         *rendering = this->render();
     }
@@ -952,7 +966,7 @@ const completion_t *pager_t::select_next_completion_in_direction(selection_direc
         {
             /* Forward/backward do something sane */
             selected_completion_idx = (direction == direction_next ? 0 : completions.size() - 1);
-            return selected_completion();
+            return selected_completion(rendering);
         }
     }
     
@@ -1028,8 +1042,8 @@ const completion_t *pager_t::select_next_completion_in_direction(selection_direc
             
             case direction_east:
             {
-                /* Go east, wrapping to the next row */
-                if (current_col + 1 < rendering.cols)
+                /* Go east, wrapping to the next row. There is no "row memory," so if we run off the end, wrap. */
+                if (current_col + 1 < rendering.cols && (current_col + 1) * rendering.rows + current_row < completion_infos.size())
                 {
                     current_col++;
                 }
@@ -1070,7 +1084,7 @@ const completion_t *pager_t::select_next_completion_in_direction(selection_direc
     if (new_selected_completion_idx != selected_completion_idx)
     {
         selected_completion_idx = new_selected_completion_idx;
-        return selected_completion();
+        return selected_completion(rendering);
     }
     else
     {
@@ -1078,12 +1092,16 @@ const completion_t *pager_t::select_next_completion_in_direction(selection_direc
     }
 }
 
-size_t pager_t::saturated_selected_completion_index() const
+size_t pager_t::visual_selected_completion_index(size_t rows, size_t cols) const
 {
     size_t result = selected_completion_idx;
-    if (result != PAGER_SELECTION_NONE && result >= completions.size())
+    if (result != PAGER_SELECTION_NONE)
     {
-        result = completions.size() - 1;
+        /* If the selected completion is beyond the last selection, go left by columns until it's within it. This is how we implement "column memory." */
+        while (result >= completions.size() && result >= rows)
+        {
+            result -= rows;
+        }
     }
     assert(result == PAGER_SELECTION_NONE || result < completions.size());
     return result;
@@ -1094,10 +1112,10 @@ void pager_t::set_selected_completion_index(size_t completion_idx)
     selected_completion_idx = completion_idx;
 }
 
-const completion_t *pager_t::selected_completion() const
+const completion_t *pager_t::selected_completion(const page_rendering_t &rendering) const
 {
     const completion_t * result = NULL;
-    size_t idx = saturated_selected_completion_index();
+    size_t idx = visual_selected_completion_index(rendering.rows, rendering.cols);
     if (idx != PAGER_SELECTION_NONE)
     {
         result = &completions.at(idx);

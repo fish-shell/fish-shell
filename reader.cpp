@@ -1527,7 +1527,7 @@ static void accept_autosuggestion(bool full)
 
 static bool is_navigating_pager_contents()
 {
-    return data && data->current_pager.selected_completion() != NULL;
+    return data && data->current_pager.selected_completion(data->current_page_rendering) != NULL;
 }
 
 static void select_completion_in_direction(enum selection_direction_t dir, const wcstring &cycle_command_line, size_t cycle_cursor_pos)

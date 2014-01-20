@@ -42,6 +42,17 @@ struct line_t
         text.push_back(txt);
         colors.push_back(color);
     }
+    
+    void append(const wchar_t *txt, highlight_spec_t color)
+    {
+        for (size_t i=0; txt[i]; i++)
+        {
+            text.push_back(txt[i]);
+            colors.push_back(color);
+        }
+    }
+    
+    
 
     size_t size(void) const
     {

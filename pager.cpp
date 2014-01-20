@@ -937,7 +937,7 @@ void pager_t::update_rendering(page_rendering_t *rendering) const
     }
 }
 
-pager_t::pager_t() : term_width(0), term_height(0), selected_completion_idx(-1)
+pager_t::pager_t() : term_width(0), term_height(0), selected_completion_idx(PAGER_SELECTION_NONE)
 {
 }
 
@@ -978,7 +978,7 @@ const completion_t *pager_t::select_next_completion_in_direction(selection_direc
         if (direction == direction_next)
         {
             new_selected_completion_idx = selected_completion_idx + 1;
-            if (new_selected_completion_idx > completion_infos.size())
+            if (new_selected_completion_idx >= completion_infos.size())
             {
                 new_selected_completion_idx = 0;
             }
@@ -1128,6 +1128,7 @@ void pager_t::clear()
     completions.clear();
     completion_infos.clear();
     prefix.clear();
+    selected_completion_idx = PAGER_SELECTION_NONE;
 }
 
 page_rendering_t::page_rendering_t() : term_width(-1), term_height(-1), rows(0), cols(0), selected_completion_idx(-1)

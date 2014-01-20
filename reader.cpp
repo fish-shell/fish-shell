@@ -199,7 +199,7 @@ public:
     wcstring autosuggestion;
     
     /** Current pager */
-    pager_t current_pager;
+    pager_t pager;
     
     /** Current page rendering */
     page_rendering_t current_page_rendering;
@@ -543,8 +543,8 @@ static void reader_repaint()
     indents.resize(len);
     
     // Re-render our completions page if necessary
-    data->current_pager.set_term_size(common_get_width(), common_get_height());
-    data->current_pager.update_rendering(&data->current_page_rendering);
+    data->pager.set_term_size(common_get_width(), common_get_height());
+    data->pager.update_rendering(&data->current_page_rendering);
 
     s_write(&data->screen,
             data->left_prompt_buff,
@@ -1527,12 +1527,22 @@ static void accept_autosuggestion(bool full)
 
 static bool is_navigating_pager_contents()
 {
-    return data && data->current_pager.selected_completion(data->current_page_rendering) != NULL;
+    return data && data->pager.selected_completion(data->current_page_rendering) != NULL;
+}
+
+/* Ensure we have no pager contents */
+static void clear_pager()
+{
+    if (data)
+    {
+        data->pager.clear();
+        data->current_page_rendering = page_rendering_t();
+    }
 }
 
 static void select_completion_in_direction(enum selection_direction_t dir, const wcstring &cycle_command_line, size_t cycle_cursor_pos)
 {
-    const completion_t *next_comp = data->current_pager.select_next_completion_in_direction(dir, data->current_page_rendering);
+    const completion_t *next_comp = data->pager.select_next_completion_in_direction(dir, data->current_page_rendering);
     if (next_comp != NULL)
     {
         size_t cursor_pos = cycle_cursor_pos;
@@ -1663,40 +1673,6 @@ static void prioritize_completions(std::vector<completion_t> &comp)
 
     /* Sort the remainder */
     sort(comp.begin(), comp.end(), compare_completions_by_match_type);
-}
-
-/* Given a list of completions, get the completion at an index past *inout_idx, and then increment it. inout_idx should be initialized to (size_t)(-1) for the first call. */
-static const completion_t *cycle_competions(const std::vector<completion_t> &comp, const wcstring &command_line, size_t *inout_idx)
-{
-    const size_t size = comp.size();
-    if (size == 0)
-        return NULL;
-
-    // note start_idx will be set to -1 initially, so that when it gets incremented we start at 0
-    const size_t start_idx = *inout_idx;
-    size_t idx = start_idx;
-
-    const completion_t *result = NULL;
-    size_t remaining = comp.size();
-    while (remaining--)
-    {
-        /* Bump the index */
-        idx = (idx + 1) % size;
-
-        /* Get the completion */
-        const completion_t &c = comp.at(idx);
-
-        /* Try this completion */
-        if (!(c.flags & COMPLETE_REPLACES_TOKEN) || reader_can_replace(command_line, c.flags))
-        {
-            /* Success */
-            result = &c;
-            break;
-        }
-    }
-
-    *inout_idx = idx;
-    return result;
 }
 
 /**
@@ -1887,8 +1863,8 @@ static bool handle_completions(const std::vector<completion_t> &comp)
             
             if (1)
             {
-                data->current_pager.set_prefix(prefix);
-                data->current_pager.set_completions(surviving_completions);
+                data->pager.set_prefix(prefix);
+                data->pager.set_completions(surviving_completions);
                 
                 /* Invalidate our rendering */
                 data->current_page_rendering = page_rendering_t();
@@ -3082,8 +3058,26 @@ const wchar_t *reader_readline(void)
 
         if (last_char != R_YANK && last_char != R_YANK_POP)
             yank_len=0;
+        
+        /* We clear pager contents for most events, except for a few */
+        switch (c)
+        {
+            case R_COMPLETE:
+            case R_BACKWARD_CHAR:
+            case R_FORWARD_CHAR:
+            case R_UP_LINE:
+            case R_DOWN_LINE:
+            case R_NULL:
+            case R_REPAINT:
+            case R_SUPPRESS_AUTOSUGGESTION:
+                break;
+                
+            default:
+                clear_pager();
+                break;
+        }
 
-        const wchar_t *buff = data->command_line.c_str();
+        const wchar_t * const buff = data->command_line.c_str();
         switch (c)
         {
 
@@ -3170,7 +3164,7 @@ const wchar_t *reader_readline(void)
                 if (!data->complete_func)
                     break;
 
-                if (! comp_empty && last_char == R_COMPLETE)
+                if (is_navigating_pager_contents() || (! comp_empty && last_char == R_COMPLETE))
                 {
                     /* The user typed R_COMPLETE more than once in a row. Cycle through our available completions. */
                     select_completion_in_direction(direction_next, cycle_command_line, cycle_cursor_pos);
@@ -3852,11 +3846,11 @@ const wchar_t *reader_readline(void)
     writestr(L"\n");
     
     /* Ensure we have no pager contents when we exit */
-    if (! data->current_pager.empty())
+    if (! data->pager.empty())
     {
         /* Clear to end of screen to erase the pager contents. TODO: this may fail if eos doesn't exist, in which case we should emit newlines */
         screen_force_clear_to_end();
-        data->current_pager.clear();
+        data->pager.clear();
     }
 
     if (!reader_exit_forced())

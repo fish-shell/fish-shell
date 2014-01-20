@@ -401,7 +401,7 @@ int builtin_test(parser_t &parser, wchar_t **argv);
 /**
    List all current key bindings
  */
-static void builtin_bind_list()
+static void builtin_bind_list(const wchar_t *bind_mode)
 {
     size_t i;
     wcstring_list_t lst;
@@ -411,19 +411,38 @@ static void builtin_bind_list()
     {
         wcstring seq = lst.at(i);
 
-        wcstring ecmd;
-        input_mapping_get(seq, ecmd);
-        ecmd = escape_string(ecmd, 1);
+        std::vector<wcstring> ecmds;
+        wcstring mode;
+        wcstring sets_mode;
+
+        input_mapping_get(seq, ecmds, mode, sets_mode);
+
+        if(bind_mode != NULL && wcscmp(mode.c_str(), bind_mode))
+        {
+          continue;
+        }
 
         wcstring tname;
         if (input_terminfo_get_name(seq, tname))
         {
-            append_format(stdout_buffer, L"bind -k %ls %ls\n", tname.c_str(), ecmd.c_str());
+            append_format(stdout_buffer, L"bind -k %ls -M %ls -m %ls", tname.c_str(), mode.c_str(), sets_mode.c_str());
+            for(int i = 0; i < ecmds.size(); i++)
+            {
+              wcstring ecmd = ecmds.at(i);
+              append_format(stdout_buffer, L" %ls", escape(ecmd.c_str(), 1));
+            }
+            append_format(stdout_buffer, L"\n");
         }
         else
         {
             const wcstring eseq = escape_string(seq, 1);
-            append_format(stdout_buffer, L"bind %ls %ls\n", eseq.c_str(), ecmd.c_str());
+            append_format(stdout_buffer, L"bind -k %ls -M %ls -m %ls", eseq.c_str(), mode.c_str(), sets_mode.c_str());
+            for(int i = 0; i < ecmds.size(); i++)
+            {
+              wcstring ecmd = ecmds.at(i);
+              append_format(stdout_buffer, L" %ls", escape(ecmd.c_str(), 1));
+            }
+            append_format(stdout_buffer, L"\n");
         }
     }
 }
@@ -464,7 +483,8 @@ static void builtin_bind_function_names()
 /**
    Add specified key binding.
  */
-static int builtin_bind_add(const wchar_t *seq, const wchar_t *cmd, int terminfo)
+static int builtin_bind_add(const wchar_t *seq, const wchar_t **cmds, size_t cmds_len,
+                            const wchar_t *mode, const wchar_t *sets_mode, int terminfo)
 {
 
     if (terminfo)
@@ -472,7 +492,7 @@ static int builtin_bind_add(const wchar_t *seq, const wchar_t *cmd, int terminfo
         wcstring seq2;
         if (input_terminfo_get_sequence(seq, &seq2))
         {
-            input_mapping_add(seq2.c_str(), cmd);
+            input_mapping_add(seq2.c_str(), cmds, cmds_len, mode, sets_mode);
         }
         else
         {
@@ -505,7 +525,7 @@ static int builtin_bind_add(const wchar_t *seq, const wchar_t *cmd, int terminfo
     }
     else
     {
-        input_mapping_add(seq, cmd);
+        input_mapping_add(seq, cmds, cmds_len, mode, sets_mode);
     }
 
     return 0;
@@ -518,7 +538,7 @@ static int builtin_bind_add(const wchar_t *seq, const wchar_t *cmd, int terminfo
    \param seq an array of all key bindings to erase
    \param all if specified, _all_ key bindings will be erased
  */
-static void builtin_bind_erase(wchar_t **seq, int all)
+static void builtin_bind_erase(wchar_t **seq, int all, const wchar_t *mode)
 {
     if (all)
     {
@@ -528,7 +548,7 @@ static void builtin_bind_erase(wchar_t **seq, int all)
 
         for (i=0; i<lst.size(); i++)
         {
-            input_mapping_erase(lst.at(i).c_str());
+            input_mapping_erase(lst.at(i).c_str(), mode);
         }
 
     }
@@ -536,7 +556,7 @@ static void builtin_bind_erase(wchar_t **seq, int all)
     {
         while (*seq)
         {
-            input_mapping_erase(*seq++);
+            input_mapping_erase(*seq++, mode);
         }
 
     }
@@ -563,6 +583,11 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
     int mode = BIND_INSERT;
     int res = STATUS_BUILTIN_OK;
     int all = 0;
+
+    const wchar_t *bind_mode = DEFAULT_BIND_MODE;
+    bool bind_mode_given = false;
+    const wchar_t *sets_bind_mode = DEFAULT_BIND_MODE;
+    bool sets_bind_mode_given = false;
 
     int use_terminfo = 0;
 
@@ -596,6 +621,14 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
         }
         ,
         {
+            L"mode", required_argument, 0, 'M'
+        }
+        ,
+        {
+            L"sets-mode", required_argument, 0, 'm'
+        }
+        ,
+        {
             0, 0, 0, 0
         }
     }
@@ -606,7 +639,7 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
         int opt_index = 0;
         int opt = wgetopt_long(argc,
                                argv,
-                               L"aehkKf",
+                               L"aehkKfM:m:",
                                long_options,
                                &opt_index);
 
@@ -634,7 +667,6 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
                 mode = BIND_ERASE;
                 break;
 
-
             case 'h':
                 builtin_print_help(parser, argv[0], stdout_buffer);
                 return STATUS_BUILTIN_OK;
@@ -651,12 +683,30 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
                 mode = BIND_FUNCTION_NAMES;
                 break;
 
+            case 'M':
+                bind_mode = woptarg;
+                bind_mode_given = true;
+                break;
+
+            case 'm':
+                sets_bind_mode = woptarg;
+                sets_bind_mode_given = true;
+                break;
+
             case '?':
                 builtin_unknown_option(parser, argv[0], argv[woptind-1]);
                 return STATUS_BUILTIN_ERROR;
 
-        }
 
+        }
+    }
+
+    /*
+     * if mode is given, but not new mode, default to new mode to mode 
+     */
+    if(bind_mode_given && !sets_bind_mode_given)
+    {
+      sets_bind_mode = bind_mode;
     }
 
     switch (mode)
@@ -664,7 +714,7 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
 
         case BIND_ERASE:
         {
-            builtin_bind_erase(&argv[woptind], all);
+            builtin_bind_erase(&argv[woptind], all, bind_mode_given ? bind_mode : NULL);
             break;
         }
 
@@ -674,22 +724,23 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
             {
                 case 0:
                 {
-                    builtin_bind_list();
+                    builtin_bind_list(bind_mode_given ? bind_mode : NULL);
                     break;
                 }
 
-                case 2:
+                case 1:
                 {
-                    builtin_bind_add(argv[woptind], argv[woptind+1], use_terminfo);
+                    res = STATUS_BUILTIN_ERROR;
+                    append_format(stderr_buffer, _(L"%ls: Expected zero or at least two parameters, got %d"), argv[0], argc-woptind);
                     break;
                 }
 
                 default:
                 {
-                    res = STATUS_BUILTIN_ERROR;
-                    append_format(stderr_buffer, _(L"%ls: Expected zero or two parameters, got %d\n"), argv[0], argc-woptind);
+                    builtin_bind_add(argv[woptind], (const wchar_t **)argv + (woptind + 1), argc - (woptind + 1), bind_mode, sets_bind_mode, use_terminfo);
                     break;
                 }
+
             }
             break;
         }
@@ -718,6 +769,7 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
 
     return res;
 }
+
 
 /**
    The block builtin, used for temporarily blocking events

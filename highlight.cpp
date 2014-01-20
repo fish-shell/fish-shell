@@ -61,7 +61,8 @@ static const wchar_t * const highlight_var[] =
     L"fish_color_escape",
     L"fish_color_quote",
     L"fish_color_redirection",
-    L"fish_color_autosuggestion"
+    L"fish_color_autosuggestion",
+    L"fish_color_selection"
 };
 
 /* If the given path looks like it's relative to the working directory, then prepend that working directory. */
@@ -366,6 +367,8 @@ rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background)
 
 //  debug( 1, L"%d -> %d -> %ls", highlight, idx, val );
 
+
+
     if (val_wstr.missing())
         val_wstr = env_get_string(highlight_var[0]);
 
@@ -389,6 +392,7 @@ rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background)
                 result.set_underline(true);
         }
     }
+
     return result;
 }
 

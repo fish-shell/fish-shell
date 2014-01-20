@@ -115,6 +115,13 @@ void reader_set_buffer(const wcstring &b, size_t p);
 */
 size_t reader_get_cursor_pos();
 
+
+/**
+   Get the current selection range in the command line.
+   Returns false if there is no active selection, true otherwise.
+*/
+bool reader_get_selection(size_t &start, size_t &len);
+
 /**
    Return the value of the interrupted flag, which is set by the sigint
    handler, and clear it if it was set.

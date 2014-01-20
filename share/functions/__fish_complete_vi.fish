@@ -3,8 +3,8 @@
 function __fish_complete_vi -d "Compleletions for vi and its aliases" --argument-names cmd
 	set -l is_vim
 	if type $cmd > /dev/null
-        eval command $cmd --version >/dev/null ^/dev/null; and set -l is_vim vim
-    end
+		eval command $cmd --version >/dev/null ^/dev/null; and set -l is_vim vim
+	end
 
 	# vim
 	set -l cmds -c $cmd
@@ -24,11 +24,11 @@ function __fish_complete_vi -d "Compleletions for vi and its aliases" --argument
 		complete $cmds -s o -r --description 'Open stacked windows for each file'
 		complete $cmds -s O -r --description 'Open side by side windows for each file'
 		complete $cmds -s p -r --description 'Open tab pages for each file'
-                complete $cmds -s q -r --description 'Start in quickFix mode'
+		complete $cmds -s q -r --description 'Start in quickFix mode'
 		complete $cmds -s r -r --description 'Use swap files for recovery'
 		complete $cmds -s s -r --description 'Source and execute script file'
 		complete $cmds -s t -r --description 'Set the cursor to tag'
-                complete $cmds -s T -r --description 'Terminal name'
+		complete $cmds -s T -r --description 'Terminal name'
 		complete $cmds -s u -r --description 'Use alternative vimrc'
 		complete $cmds -s U -r --description 'Use alternative vimrc in GUI mode'
 		complete $cmds -s w -r --description 'Record all typed characters'

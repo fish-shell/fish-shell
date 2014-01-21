@@ -546,7 +546,7 @@ static void reader_repaint()
     indents.resize(len);
     
     // Re-render our completions page if necessary
-    data->pager.set_term_size(common_get_width(), common_get_height());
+    data->pager.set_term_size(common_get_width(), 8 /* common_get_height() */);
     data->pager.update_rendering(&data->current_page_rendering);
 
     s_write(&data->screen,

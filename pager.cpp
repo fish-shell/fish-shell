@@ -363,8 +363,13 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
    \param prefix The string to print before each completion
 */
 
-void pager_t::completion_print(int cols, int *width_per_column, int row_start, int row_stop, const wcstring &prefix, const comp_info_list_t &lst, page_rendering_t *rendering) const
+void pager_t::completion_print(size_t cols, int *width_per_column, size_t row_start, size_t row_stop, const wcstring &prefix, const comp_info_list_t &lst, page_rendering_t *rendering) const
 {
+    /* Teach the rendering about the rows it printed */
+    assert(row_start >= 0);
+    assert(row_stop >= row_start);
+    rendering->row_start = row_start;
+    rendering->row_end = row_stop;
 
     size_t rows = (lst.size()-1)/cols+1;
     
@@ -393,7 +398,7 @@ void pager_t::completion_print(int cols, int *width_per_column, int row_start, i
             }
             
             /* Append this to the real line */
-            rendering->screen_data.create_line(row).append_line(line);
+            rendering->screen_data.create_line(row - row_start).append_line(line);
         }
     }
 }
@@ -629,7 +634,7 @@ void pager_t::set_term_size(int w, int h)
    \return one of PAGER_RETRY, PAGER_DONE and PAGER_RESIZE
 */
 
-int pager_t::completion_try_print(int cols, const wcstring &prefix, const comp_info_list_t &lst, page_rendering_t *rendering) const
+int pager_t::completion_try_print(size_t cols, const wcstring &prefix, const comp_info_list_t &lst, page_rendering_t *rendering, size_t suggested_start_row) const
 {
     /*
       The calculated preferred width of each column
@@ -648,7 +653,7 @@ int pager_t::completion_try_print(int cols, const wcstring &prefix, const comp_i
     */
     int print=0;
 
-    int rows = (int)divide_round_up(lst.size(), cols);
+    size_t row_count = divide_round_up(lst.size(), cols);
 
     int pref_tot_width=0;
     int min_tot_width = 0;
@@ -661,14 +666,14 @@ int pager_t::completion_try_print(int cols, const wcstring &prefix, const comp_i
     /* Calculate how wide the list would be */
     for (long col = 0; col < cols; col++)
     {
-        for (long row = 0; row<rows; row++)
+        for (long row = 0; row<row_count; row++)
         {
             int pref,min;
             const comp_t *c;
-            if (lst.size() <= col*rows + row)
+            if (lst.size() <= col*row_count + row)
                 continue;
 
-            c = &lst.at(col*rows + row);
+            c = &lst.at(col*row_count + row);
             pref = c->pref_width;
             min = c->min_width;
 
@@ -714,7 +719,7 @@ int pager_t::completion_try_print(int cols, const wcstring &prefix, const comp_i
           pref_tot_width-term_width );
         */
         if (min_tot_width < term_width &&
-                (((rows < term_height) && (next_rows >= term_height)) ||
+                (((row_count < term_height) && (next_rows >= term_height)) ||
                  (pref_tot_width-term_width< 4 && cols < 3)))
         {
             /*
@@ -754,13 +759,39 @@ int pager_t::completion_try_print(int cols, const wcstring &prefix, const comp_i
 
     if (print)
     {
-        res=PAGER_DONE;
-        if (rows < term_height)
+        /* Determine the starting and stop row */
+        size_t start_row = 0, stop_row = 0;
+        if (row_count <= term_height)
         {
-            completion_print(cols, width, 0, rows, prefix, lst, rendering);
+            /* Easy, we can show everything */
+            start_row = 0;
+            stop_row = row_count;
         }
         else
         {
+            /* We can only show part of the full list. Determine which part based on the suggested_start_row */
+            assert(row_count > term_height);
+            size_t last_starting_row = row_count - term_height;
+            start_row = mini(suggested_start_row, last_starting_row);
+            stop_row = start_row + term_height;
+            assert(start_row >= 0 && start_row <= last_starting_row);
+        }
+        
+        assert(stop_row >= start_row);
+        assert(stop_row <= row_count);
+        assert(stop_row - start_row <= term_height);
+        completion_print(cols, width, start_row, stop_row, prefix, lst, rendering);
+        return PAGER_DONE;
+        
+        res=PAGER_DONE;
+        if (row_count < term_height)
+        {
+            completion_print(cols, width, 0, row_count, prefix, lst, rendering);
+        }
+        else
+        {
+            completion_print(cols, width, 0, term_height - 1, prefix, lst, rendering);
+            
             assert(0);
             int npos, pos = 0;
             int do_loop = 1;
@@ -771,7 +802,7 @@ int pager_t::completion_try_print(int cols, const wcstring &prefix, const comp_i
             while (do_loop)
             {
                 set_color(rgb_color_t::black(), highlight_get_color(highlight_spec_pager_progress, true));
-                wcstring msg = format_string(_(L" %d to %d of %d"), pos, pos+term_height-1, rows);
+                wcstring msg = format_string(_(L" %d to %d of %d"), pos, pos+term_height-1, row_count);
                 msg.append(L"   \r");
 
                 writestr(msg.c_str());
@@ -798,7 +829,7 @@ int pager_t::completion_try_print(int cols, const wcstring &prefix, const comp_i
 
                     case LINE_DOWN:
                     {
-                        if (pos <= (rows - term_height))
+                        if (pos <= (row_count - term_height))
                         {
                             pos++;
                             completion_print(cols, width, pos+term_height-2, pos+term_height-1, prefix, lst, rendering);
@@ -809,7 +840,7 @@ int pager_t::completion_try_print(int cols, const wcstring &prefix, const comp_i
                     case PAGE_DOWN:
                     {
 
-                        npos = mini((int)(rows - term_height+1), (int)(pos + term_height-1));
+                        npos = mini((int)(row_count - term_height+1), (int)(pos + term_height-1));
                         if (npos != pos)
                         {
                             pos = npos;
@@ -902,7 +933,7 @@ page_rendering_t pager_t::render() const
             rendering.selected_completion_idx = this->visual_selected_completion_index(rendering.rows, rendering.cols);
             
             bool done = false;
-            switch (completion_try_print(cols, prefix, completion_infos, &rendering))
+            switch (completion_try_print(cols, prefix, completion_infos, &rendering, suggested_row_start))
             {
                 case PAGER_RETRY:
                     break;
@@ -937,7 +968,7 @@ void pager_t::update_rendering(page_rendering_t *rendering) const
     }
 }
 
-pager_t::pager_t() : term_width(0), term_height(0), selected_completion_idx(PAGER_SELECTION_NONE)
+pager_t::pager_t() : term_width(0), term_height(0), selected_completion_idx(PAGER_SELECTION_NONE), suggested_row_start(0)
 {
 }
 
@@ -1001,7 +1032,7 @@ const completion_t *pager_t::select_next_completion_in_direction(selection_direc
     }
     else
     {
-        /* Cardinal directions. We have a completion index; we wish to compute its row and column. Completions are rendered column first, i.e. we go south before we go west. */
+        /* Cardinal directions. We have a completion index; we wish to compute its row and column. Completions are rendered column first, i.e. we go south before we go west. So if we have N rows, and our selected index is N + 2, then our row is 2 (mod by N) and our column is 1 (divide by N) */
         size_t current_row = selected_completion_idx % rendering.rows;
         size_t current_col = selected_completion_idx / rendering.rows;
         
@@ -1084,6 +1115,28 @@ const completion_t *pager_t::select_next_completion_in_direction(selection_direc
     if (new_selected_completion_idx != selected_completion_idx)
     {
         selected_completion_idx = new_selected_completion_idx;
+        
+        /* Update suggested_row_start to ensure the selection is visible. suggested_row_start * rendering.cols is the first suggested visible completion; add the visible completion count to that to get the last one */
+        size_t visible_row_count = rendering.row_end - rendering.row_start;
+        
+        if (visible_row_count > 0 && selected_completion_idx != PAGER_SELECTION_NONE) //paranoia
+        {
+            size_t row_containing_selection = selected_completion_idx % rendering.rows;
+            
+            /* Ensure our suggested row start is not past the selected row */
+            if (suggested_row_start > row_containing_selection)
+            {
+                suggested_row_start = row_containing_selection;
+            }
+            
+            /* Ensure our suggested row start is not too early before it */
+            if (suggested_row_start + visible_row_count <= row_containing_selection)
+            {
+                suggested_row_start = row_containing_selection - visible_row_count + 1;
+            }
+        }
+        
+        
         return selected_completion(rendering);
     }
     else
@@ -1131,6 +1184,6 @@ void pager_t::clear()
     selected_completion_idx = PAGER_SELECTION_NONE;
 }
 
-page_rendering_t::page_rendering_t() : term_width(-1), term_height(-1), rows(0), cols(0), selected_completion_idx(-1)
+page_rendering_t::page_rendering_t() : term_width(-1), term_height(-1), rows(0), cols(0), row_start(0), row_end(0), selected_completion_idx(-1)
 {
 }

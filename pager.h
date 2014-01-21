@@ -13,6 +13,8 @@ class page_rendering_t
     int term_height;
     size_t rows;
     size_t cols;
+    size_t row_start;
+    size_t row_end;
     size_t selected_completion_idx;
     screen_data_t screen_data;
     
@@ -35,6 +37,7 @@ class pager_t
     completion_list_t completions;
     
     size_t selected_completion_idx;
+    size_t suggested_row_start;
     
     /* Returns the index of the completion that should draw selected, using the given number of columns */
     size_t visual_selected_completion_index(size_t rows, size_t cols) const;
@@ -72,12 +75,12 @@ class pager_t
     
     wcstring prefix;
     
-    int completion_try_print(int cols, const wcstring &prefix, const comp_info_list_t &lst, page_rendering_t *rendering) const;
+    int completion_try_print(size_t cols, const wcstring &prefix, const comp_info_list_t &lst, page_rendering_t *rendering, size_t suggested_start_row) const;
     
     void recalc_min_widths(comp_info_list_t * lst) const;
     void measure_completion_infos(std::vector<comp_t> *infos, const wcstring &prefix) const;
     
-    void completion_print(int cols, int *width_per_column, int row_start, int row_stop, const wcstring &prefix, const comp_info_list_t &lst, page_rendering_t *rendering) const;
+    void completion_print(size_t cols, int *width_per_column, size_t row_start, size_t row_stop, const wcstring &prefix, const comp_info_list_t &lst, page_rendering_t *rendering) const;
     line_t completion_print_item(const wcstring &prefix, const comp_t *c, size_t row, size_t column, int width, bool secondary, bool selected, page_rendering_t *rendering) const;
 
     
@@ -95,7 +98,7 @@ class pager_t
     /* Sets the index of the selected completion */
     void set_selected_completion_index(size_t completion_idx);
     
-    /* Changes the selected completion in the given direction according to the layout of the given rendering. Returns true if the values changed. */
+    /* Changes the selected completion in the given direction according to the layout of the given rendering. Returns the newly selected completion if it changed, NULL if nothing was selected or it did not change. */
     const completion_t *select_next_completion_in_direction(selection_direction_t direction, const page_rendering_t &rendering);
     
     /* Returns the currently selected completion for the given rendering */

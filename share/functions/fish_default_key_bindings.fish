@@ -1,9 +1,9 @@
 
 function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fish" -a mode
-    if not set -q mode[1]
-        # Clear earlier bindings, if any
-        bind --erase --all
-    end
+	if not set -q mode[1]
+		# Clear earlier bindings, if any
+		bind --erase --all
+	end
 
 	# This is the default binding, i.e. the one used if no other binding matches
 	bind $argv "" self-insert

@@ -64,12 +64,14 @@ enum
     R_ACCEPT_AUTOSUGGESTION,
     R_BEGIN_SELECTION,
     R_END_SELECTION,
-    R_KILL_SELECTION
+    R_KILL_SELECTION,
+    R_FORWARD_JUMP,
+    R_BACKWARD_JUMP
 }
 ;
 
 #define R_MIN R_NULL
-#define R_MAX R_KILL_SELECTION
+#define R_MAX R_BACKWARD_JUMP
 
 /**
    Initialize the terminal by calling setupterm, and set up arrays
@@ -144,6 +146,9 @@ const wchar_t *input_get_bind_mode();
     Set the current bind mode
 */
 bool input_set_bind_mode(const wchar_t *bind_mode);
+
+
+wchar_t input_function_pop_arg();
 
 /**
    Return the sequence for the terminfo variable of the specified name.

@@ -3861,6 +3861,40 @@ const wchar_t *reader_readline(void)
                 break;
             }
 
+            case R_FORWARD_JUMP:
+            {
+                wchar_t target = input_function_pop_arg();
+                size_t len = data->command_length();
+
+                for(int i = data->buff_pos + 1; i < len; i++)
+                {
+                    if(buff[i] == target)
+                    {
+                        update_buff_pos(i);
+                        break;
+                    }
+                }
+                reader_repaint();
+                break;
+            }
+
+            case R_BACKWARD_JUMP:
+            {
+                wchar_t target = input_function_pop_arg();
+                size_t len = data->command_length();
+
+                for(int i = data->buff_pos - 1; i >= 0; i--)
+                {
+                    if(buff[i] == target)
+                    {
+                        update_buff_pos(i);
+                        break;
+                    }
+                }
+                reader_repaint();
+                break;
+            }
+
             /* Other, if a normal character, we add it to the command */
             default:
             {

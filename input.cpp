@@ -61,6 +61,8 @@
 #include <vector>
 
 #define DEFAULT_TERM L"ansi"
+#define MAX_INPUT_FUNCTION_ARGS 20
+
 /**
    Struct representing a keybinding. Returned by input_get_mappings.
  */
@@ -137,7 +139,9 @@ static const wchar_t * const name_arr[] =
     L"accept-autosuggestion",
     L"begin-selection",
     L"end-selection",
-    L"kill-selection"
+    L"kill-selection",
+    L"forward-jump",
+    L"backward-jump"
 }
 ;
 
@@ -230,7 +234,9 @@ static const wchar_t code_arr[] =
     R_ACCEPT_AUTOSUGGESTION,
     R_BEGIN_SELECTION,
     R_END_SELECTION,
-    R_KILL_SELECTION
+    R_KILL_SELECTION,
+    R_FORWARD_JUMP,
+    R_BACKWARD_JUMP
 }
 ;
 
@@ -259,6 +265,9 @@ static bool is_init = false;
  */
 static void input_terminfo_init();
 
+wchar_t input_function_args[MAX_INPUT_FUNCTION_ARGS];
+int input_function_args_index = 0;
+
 /**
     Return the current bind mode
 */
@@ -281,6 +290,30 @@ bool input_set_bind_mode(const wchar_t *bm)
   if(wcscmp(bm, input_get_bind_mode()))
     env_set(FISH_BIND_MODE_VAR, bm, ENV_GLOBAL);
   return true;
+}
+
+
+/** 
+    Returns the arity of a given input function
+*/
+int input_function_arity(int function)
+{
+    switch(function)
+    {
+        case R_FORWARD_JUMP:
+        case R_BACKWARD_JUMP:
+          return 1;
+        default:
+          return 0;
+    }
+}
+
+/**
+    Returns the nth argument for a given input function
+*/
+wchar_t input_function_get_arg(int index)
+{
+    return input_function_args[index];
 }
 
 /**
@@ -454,13 +487,40 @@ void input_destroy()
     }
 }
 
+void input_function_push_arg(wchar_t arg)
+{
+    input_function_args[input_function_args_index++] = arg;
+}
 
+wchar_t input_function_pop_arg()
+{
+    return input_function_args[--input_function_args_index];
+}
+
+void input_function_push_args(int code)
+{
+    int arity = input_function_arity(code);
+    for(int i = 0; i < arity; i++)
+    {
+      input_function_push_arg(input_common_readch(0));
+    }
+}
 
 /**
    Perform the action of the specified binding
 */
 static void input_mapping_execute(const input_mapping_t &m)
 {
+    for(int i = m.commands.size() - 1; i >= 0; i--)
+    {
+      wcstring command = m.commands.at(i);
+      wchar_t code = input_function_get_code(command);
+      if (code != (wchar_t)-1)
+      {
+          input_function_push_args(code);
+      }
+    }
+
     for(int i = m.commands.size() - 1; i >= 0; i--)
     {
       wcstring command = m.commands.at(i);
@@ -580,7 +640,6 @@ static void input_mapping_execute_matching_or_generic()
             input_common_unreadch(c);
     }
 }
-
 
 wint_t input_readch()
 {

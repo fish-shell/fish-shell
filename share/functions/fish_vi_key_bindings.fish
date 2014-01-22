@@ -129,6 +129,11 @@ function fish_vi_key_bindings -d "vi-like key bindings for fish"
   bind ygE backward-kill-word yank
   bind ygE backward-kill-word yank
 
+  bind f forward-jump
+  bind F backward-jump
+  bind t forward-jump backward-char
+  bind T backward-jump forward-char
+
   # in emacs yank means paste
   bind p yank
   bind P backward-char yank

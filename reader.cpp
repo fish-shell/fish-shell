@@ -1540,6 +1540,7 @@ static void clear_pager()
     {
         data->pager.clear();
         data->current_page_rendering = page_rendering_t();
+        reader_repaint_needed();
     }
 }
 
@@ -3088,6 +3089,8 @@ const wchar_t *reader_readline(void)
                 clear_pager();
                 break;
         }
+        
+        //fprintf(stderr, "\n\nchar: %ls\n\n", describe_char(c).c_str());
 
         const wchar_t * const buff = data->command_line.c_str();
         switch (c)
@@ -3102,7 +3105,7 @@ const wchar_t *reader_readline(void)
                     data->buff_pos--;
                 }
 
-                reader_repaint();
+                reader_repaint_needed();
                 break;
             }
 
@@ -3121,7 +3124,7 @@ const wchar_t *reader_readline(void)
                     accept_autosuggestion(true);
                 }
 
-                reader_repaint();
+                reader_repaint_needed();
                 break;
             }
 
@@ -3130,7 +3133,7 @@ const wchar_t *reader_readline(void)
             {
                 data->buff_pos = 0;
 
-                reader_repaint();
+                reader_repaint_needed();
                 break;
             }
 
@@ -3139,13 +3142,12 @@ const wchar_t *reader_readline(void)
             {
                 data->buff_pos = data->command_length();
 
-                reader_repaint();
+                reader_repaint_needed();
                 break;
             }
 
             case R_NULL:
             {
-                reader_repaint_if_needed();
                 break;
             }
 
@@ -3236,9 +3238,6 @@ const wchar_t *reader_readline(void)
 
                     /* Start the cycle at the beginning */
                     completion_cycle_idx = (size_t)(-1);
-
-                    /* Repaint */
-                    reader_repaint_if_needed();
                 }
 
                 break;
@@ -3370,8 +3369,7 @@ const wchar_t *reader_readline(void)
                     }
                     data->search_buff.clear();
                     reader_super_highlight_me_plenty(data->buff_pos);
-                    reader_repaint();
-
+                    reader_repaint_needed();
                 }
 
                 break;
@@ -3445,7 +3443,7 @@ const wchar_t *reader_readline(void)
                         }
                         finished=1;
                         data->buff_pos=data->command_length();
-                        reader_repaint();
+                        reader_repaint_needed();
                         break;
                     }
 
@@ -3466,7 +3464,7 @@ const wchar_t *reader_readline(void)
                     default:
                     {
                         s_reset(&data->screen, screen_reset_abandon_line);
-                        reader_repaint();
+                        reader_repaint_needed();
                         break;
                     }
 
@@ -3570,7 +3568,7 @@ const wchar_t *reader_readline(void)
                 else if (data->buff_pos > 0)
                 {
                     data->buff_pos--;
-                    reader_repaint();
+                    reader_repaint_needed();
                 }
                 break;
             }
@@ -3585,7 +3583,7 @@ const wchar_t *reader_readline(void)
                 else if (data->buff_pos < data->command_length())
                 {
                     data->buff_pos++;
-                    reader_repaint();
+                    reader_repaint_needed();
                 }
                 else
                 {
@@ -3654,7 +3652,8 @@ const wchar_t *reader_readline(void)
             case R_UP_LINE:
             case R_DOWN_LINE:
             {
-                if (is_navigating_pager_contents())
+                /* If we are already navigating the pager, or if we pressed down with non-empty pager contents, begin navigation */
+                if (is_navigating_pager_contents() || (c == R_DOWN_LINE && ! data->pager.empty()))
                 {
                     select_completion_in_direction(c == R_UP_LINE ? direction_north : direction_south, cycle_command_line, cycle_cursor_pos);
                 }
@@ -3692,7 +3691,7 @@ const wchar_t *reader_readline(void)
                         line_offset_old = data->buff_pos - parse_util_get_offset_from_line(data->command_line, line_old);
                         total_offset_new = parse_util_get_offset(data->command_line, line_new, line_offset_old - 4*(indent_new-indent_old));
                         data->buff_pos = total_offset_new;
-                        reader_repaint();
+                        reader_repaint_needed();
                     }
                 }
 
@@ -3703,7 +3702,7 @@ const wchar_t *reader_readline(void)
             {
                 data->suppress_autosuggestion = true;
                 data->autosuggestion.clear();
-                reader_repaint();
+                reader_repaint_needed();
                 break;
             }
 
@@ -3811,7 +3810,7 @@ const wchar_t *reader_readline(void)
                 }
                 data->command_line_changed();
                 reader_super_highlight_me_plenty(data->buff_pos);
-                reader_repaint();
+                reader_repaint_needed();
                 break;
             }
 
@@ -3853,6 +3852,8 @@ const wchar_t *reader_readline(void)
         }
 
         last_char = c;
+        
+        reader_repaint_if_needed();
     }
 
     writestr(L"\n");

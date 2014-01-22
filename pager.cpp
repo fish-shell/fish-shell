@@ -988,16 +988,28 @@ const completion_t *pager_t::select_next_completion_in_direction(selection_direc
     /* Handle the case of nothing selected yet */
     if (selected_completion_idx == PAGER_SELECTION_NONE)
     {
-        if (selection_direction_is_cardinal(direction))
+        switch (direction)
         {
-            /* Cardinal directions do nothing unless something is selected */
-            return NULL;
-        }
-        else
-        {
-            /* Forward/backward do something sane */
-            selected_completion_idx = (direction == direction_next ? 0 : completions.size() - 1);
-            return selected_completion(rendering);
+            /* These directions do something sane */
+            case direction_south:
+            case direction_next:
+            case direction_prev:
+                if (direction == direction_prev)
+                {
+                    selected_completion_idx = completions.size() - 1;
+                }
+                else
+                {
+                    selected_completion_idx = 0;
+                }
+                return selected_completion(rendering);
+
+            /* These do nothing */
+            case direction_north:
+            case direction_east:
+            case direction_west:
+            default:
+                return NULL;
         }
     }
     

@@ -2,10 +2,10 @@ function fish_vi_prompt_cm --description "Displays the current mode"
   echo -n " "
   switch $fish_bind_mode
     case default
-      set_color --bold --background green white
+      set_color --bold --background red white
       echo "[N]"
     case insert
-      set_color --bold --background red white
+      set_color --bold --background green white
       echo "[I]"
     case visual
       set_color --bold --background magenta white

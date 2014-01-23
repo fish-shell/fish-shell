@@ -66,12 +66,13 @@ enum
     R_END_SELECTION,
     R_KILL_SELECTION,
     R_FORWARD_JUMP,
-    R_BACKWARD_JUMP
+    R_BACKWARD_JUMP,
+    R_AND
 }
 ;
 
 #define R_MIN R_NULL
-#define R_MAX R_BACKWARD_JUMP
+#define R_MAX R_AND
 
 /**
    Initialize the terminal by calling setupterm, and set up arrays
@@ -149,6 +150,12 @@ bool input_set_bind_mode(const wchar_t *bind_mode);
 
 
 wchar_t input_function_pop_arg();
+
+
+/** 
+    Sets the return status of the most recently executed input function
+*/
+void input_function_set_status(bool status);
 
 /**
    Return the sequence for the terminfo variable of the specified name.

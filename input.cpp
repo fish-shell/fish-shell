@@ -141,7 +141,8 @@ static const wchar_t * const name_arr[] =
     L"end-selection",
     L"kill-selection",
     L"forward-jump",
-    L"backward-jump"
+    L"backward-jump",
+    L"and"
 }
 ;
 
@@ -236,7 +237,8 @@ static const wchar_t code_arr[] =
     R_END_SELECTION,
     R_KILL_SELECTION,
     R_FORWARD_JUMP,
-    R_BACKWARD_JUMP
+    R_BACKWARD_JUMP,
+    R_AND
 }
 ;
 
@@ -266,6 +268,7 @@ static bool is_init = false;
 static void input_terminfo_init();
 
 wchar_t input_function_args[MAX_INPUT_FUNCTION_ARGS];
+bool input_function_status;
 int input_function_args_index = 0;
 
 /**
@@ -306,6 +309,14 @@ int input_function_arity(int function)
         default:
           return 0;
     }
+}
+
+/** 
+    Sets the return status of the most recently executed input function
+*/
+void input_function_set_status(bool status)
+{
+    input_function_status = status;
 }
 
 /**
@@ -511,6 +522,9 @@ void input_function_push_args(int code)
 */
 static void input_mapping_execute(const input_mapping_t &m)
 {
+    /* By default input functions always succeed */
+    input_function_status = true;
+
     for(int i = m.commands.size() - 1; i >= 0; i--)
     {
       wcstring command = m.commands.at(i);
@@ -647,12 +661,12 @@ wint_t input_readch()
 
     /*
        Clear the interrupted flag
-       */
+    */
     reader_reset_interrupted();
 
     /*
        Search for sequence in mapping tables
-       */
+    */
 
     while (1)
     {
@@ -669,6 +683,19 @@ wint_t input_readch()
               case R_SELF_INSERT:
               {
                   return input_common_readch(0);
+              }
+              case R_AND:
+              {
+                  if(input_function_status)
+                  {
+                      return input_readch();
+                  }
+                  else
+                  {
+                      while((c = input_common_readch(0)) && c >= R_MIN && c <= R_MAX);
+                      input_unreadch(c);
+                      return input_readch();
+                  }
               }
               default:
               {

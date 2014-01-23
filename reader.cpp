@@ -3865,15 +3865,18 @@ const wchar_t *reader_readline(void)
             {
                 wchar_t target = input_function_pop_arg();
                 size_t len = data->command_length();
+                bool status = false;
 
                 for(int i = data->buff_pos + 1; i < len; i++)
                 {
                     if(buff[i] == target)
                     {
                         update_buff_pos(i);
+                        status = true;
                         break;
                     }
                 }
+                input_function_set_status(status);
                 reader_repaint();
                 break;
             }
@@ -3882,15 +3885,18 @@ const wchar_t *reader_readline(void)
             {
                 wchar_t target = input_function_pop_arg();
                 size_t len = data->command_length();
+                bool status = false;
 
                 for(int i = data->buff_pos - 1; i >= 0; i--)
                 {
                     if(buff[i] == target)
                     {
                         update_buff_pos(i);
+                        status = true;
                         break;
                     }
                 }
+                input_function_set_status(status);
                 reader_repaint();
                 break;
             }

@@ -312,7 +312,7 @@ lesson.pdf
 /var/run/sntp.log
 </pre>
 
-<p>If that directory traversal is taking a long time, you can control-C out of it.
+<p>If that directory traversal is taking a long time, you can Control-C out of it.
 
 <h2 id="tut_pipes_and_redirections">Pipes and Redirections</h2>
 
@@ -500,7 +500,7 @@ You can iterate over a list (or a slice) with a <i>for loop</i>:
 > <b>for</b> <i>val</i> <b>in</b> <i>$PATH</i>
         <b>echo</b> <i>"entry: $val"</i>
   <b>end</b>
-entry: usr/bin/
+entry: /usr/bin/
 entry: /bin
 entry: /usr/sbin
 entry: /sbin

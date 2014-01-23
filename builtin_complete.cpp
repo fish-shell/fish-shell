@@ -290,7 +290,6 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
     int result_mode=SHARED;
     int remove = 0;
     int authoritative = -1;
-    int flags = COMPLETE_AUTO_SPACE;
 
     wcstring short_opt;
     wcstring_list_t gnu_opt, old_opt;
@@ -497,15 +496,19 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
     {
         if (condition && wcslen(condition))
         {
-            if (parser.test(condition))
+            const wcstring condition_string = condition;
+            parse_error_list_t errors;
+            if (parse_util_detect_errors(condition_string, &errors))
             {
                 append_format(stderr_buffer,
-                              L"%ls: Condition '%ls' contained a syntax error\n",
+                              L"%ls: Condition '%ls' contained a syntax error",
                               argv[0],
                               condition);
-
-                parser.test(condition, NULL, &stderr_buffer, argv[0]);
-
+                for (size_t i=0; i < errors.size(); i++)
+                {
+                    append_format(stderr_buffer, L"\n%s: ", argv[0]);
+                    stderr_buffer.append(errors.at(i).describe(condition_string));
+                }
                 res = true;
             }
         }
@@ -596,6 +599,8 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
         }
         else
         {
+            int flags = COMPLETE_AUTO_SPACE;
+
             if (remove)
             {
                 builtin_complete_remove(cmd,

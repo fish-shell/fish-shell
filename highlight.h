@@ -9,66 +9,47 @@
 
 #include "env.h"
 #include "util.h"
-#include "screen.h"
 #include "color.h"
 
-/**
-   Internal value representing highlighting of normal text
-*/
-#define HIGHLIGHT_NORMAL 0x1
-/**
-   Internal value representing highlighting of an error
-*/
-#define HIGHLIGHT_ERROR 0x2
-/**
-   Internal value representing highlighting of a command
-*/
-#define HIGHLIGHT_COMMAND 0x4
-/**
-   Internal value representing highlighting of a process separator
-*/
-#define HIGHLIGHT_END 0x8
-/**
-   Internal value representing highlighting of a regular command parameter
-*/
-#define HIGHLIGHT_PARAM 0x10
-/**
-   Internal value representing highlighting of a comment
-*/
-#define HIGHLIGHT_COMMENT 0x20
-/**
-   Internal value representing highlighting of a matching parenteses, etc.
-*/
-#define HIGHLIGHT_MATCH 0x40
-/**
-   Internal value representing highlighting of a search match
-*/
-#define HIGHLIGHT_SEARCH_MATCH 0x80
-/**
-   Internal value representing highlighting of an operator
-*/
-#define HIGHLIGHT_OPERATOR 0x100
-/**
-   Internal value representing highlighting of an escape sequence
-*/
-#define HIGHLIGHT_ESCAPE 0x200
-/**
-   Internal value representing highlighting of a quoted string
-*/
-#define HIGHLIGHT_QUOTE 0x400
-/**
-   Internal value representing highlighting of an IO redirection
-*/
-#define HIGHLIGHT_REDIRECTION 0x800
-/**
-   Internal value representing highlighting a potentially valid path
-*/
-#define HIGHLIGHT_VALID_PATH 0x1000
+/* Internally, we specify highlight colors using a set of bits. Each highlight_spec is a 32 bit uint. We divide this into low 16 (foreground) and high 16 (background). Each half we further subdivide into low 8 (primary) and high 8 (modifiers). The primary is not a bitmask; specify exactly one. The modifiers are a bitmask; specify any number */
+enum
+{
+    /* The following values are mutually exclusive; specify at most one */
+    highlight_spec_normal = 0, // normal text
+    highlight_spec_error, // error
+    highlight_spec_command, //command
+    highlight_spec_statement_terminator, //process separator
+    highlight_spec_param, //command parameter (argument)
+    highlight_spec_comment, //comment
+    highlight_spec_match, //matching parenthesis, etc.
+    highlight_spec_search_match, //search match
+    highlight_spec_operator, //operator
+    highlight_spec_escape, //escape sequences
+    highlight_spec_quote, //quoted string
+    highlight_spec_redirection, //redirection
+    highlight_spec_autosuggestion, //autosuggestion
 
-/**
-   Internal value representing highlighting an autosuggestion
-*/
-#define HIGHLIGHT_AUTOSUGGESTION 0x2000
+    HIGHLIGHT_SPEC_PRIMARY_MASK = 0xFF,
+
+    /* The following values are modifiers */
+    highlight_modifier_valid_path = 0x100,
+
+    /* Very special value */
+    highlight_spec_invalid = 0xFFFF
+
+};
+typedef uint32_t highlight_spec_t;
+
+inline highlight_spec_t highlight_get_primary(highlight_spec_t val)
+{
+    return val & HIGHLIGHT_SPEC_PRIMARY_MASK;
+}
+
+inline highlight_spec_t highlight_make_background(highlight_spec_t val)
+{
+    return val << 16;
+}
+
 
 class history_item_t;
 struct file_detection_context_t;
@@ -83,7 +64,8 @@ struct file_detection_context_t;
    \param pos the cursor position. Used for quote matching, etc.
    \param error a list in which a description of each error will be inserted. May be 0, in whcich case no error descriptions will be generated.
 */
-void highlight_shell(const wcstring &buffstr, std::vector<int> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
+void highlight_shell(const wcstring &buffstr, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
+void highlight_shell_new_parser(const wcstring &buffstr, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
 
 /**
    Perform syntax highlighting for the text in buff. Matching quotes and paranthesis are highlighted. The result is
@@ -95,7 +77,7 @@ void highlight_shell(const wcstring &buffstr, std::vector<int> &color, size_t po
    \param pos the cursor position. Used for quote matching, etc.
    \param error a list in which a description of each error will be inserted. May be 0, in whcich case no error descriptions will be generated.
 */
-void highlight_universal(const wcstring &buffstr, std::vector<int> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
+void highlight_universal(const wcstring &buffstr, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
 
 /**
    Translate from HIGHLIGHT_* to FISH_COLOR_* according to environment
@@ -104,10 +86,10 @@ void highlight_universal(const wcstring &buffstr, std::vector<int> &color, size_
    Example:
 
    If the environment variable FISH_FISH_COLOR_ERROR is set to 'red', a
-   call to highlight_get_color( HIGHLIGHT_ERROR) will return
+   call to highlight_get_color( highlight_error) will return
    FISH_COLOR_RED.
 */
-rgb_color_t highlight_get_color(int highlight, bool is_background);
+rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background);
 
 /** Given a command 'str' from the history, try to determine whether we ought to suggest it by specially recognizing the command.
     Returns true if we validated the command. If so, returns by reference whether the suggestion is valid or not.
@@ -132,6 +114,10 @@ enum
 };
 typedef unsigned int path_flags_t;
 bool is_potential_path(const wcstring &const_path, const wcstring_list_t &directories, path_flags_t flags, wcstring *out_path = NULL);
+
+/* For testing */
+void highlight_shell_classic(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
+void highlight_shell_new_parser(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
 
 #endif
 

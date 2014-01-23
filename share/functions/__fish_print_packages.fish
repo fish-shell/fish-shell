@@ -67,7 +67,7 @@ function __fish_print_packages
 		end
 
 		# Remove package version information from output and pipe into cache file
-		rpm -qa >$cache_file |sed -e 's/-[^-]*-[^-]*$//' | sed -e 's/$/'\t$package'/' &
+		rpm -qa | sed -e 's/-[^-]*-[^-]*$//' | sed -e 's/$/'\t$package'/' >$cache_file &
 	end
 
 	# This completes the package name from the portage tree.

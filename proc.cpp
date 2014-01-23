@@ -136,7 +136,9 @@ static bool proc_had_barrier = false;
 int get_is_interactive(void)
 {
     ASSERT_IS_MAIN_THREAD();
-    return is_interactive;
+    /* is_interactive is initialized to -1; ensure someone has popped/pushed it before then */
+    assert(is_interactive >= 0);
+    return is_interactive > 0;
 }
 
 bool get_proc_had_barrier()
@@ -515,7 +517,8 @@ static void handle_child_status(pid_t pid, int status)
 process_t::process_t() :
     argv_array(),
     argv0_narrow(),
-    type(0),
+    type(),
+    internal_block_node(NODE_OFFSET_INVALID),
     actual_cmd(),
     pid(0),
     pipe_write_fd(0),
@@ -638,6 +641,9 @@ int job_reap(bool interactive)
 
     locked++;
 
+    /* Preserve the exit status */
+    const int saved_status = proc_get_last_status();
+
     /*
       job_read may fire an event handler, we do not want to call
       ourselves recursively (to avoid infinite recursion).
@@ -751,6 +757,9 @@ int job_reap(bool interactive)
 
     if (found)
         fflush(stdout);
+
+    /* Restore the exit status. */
+    proc_set_last_status(saved_status);
 
     locked = 0;
 

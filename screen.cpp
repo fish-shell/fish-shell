@@ -668,7 +668,7 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y)
 /**
    Set the pen color for the terminal
 */
-static void s_set_color(screen_t *s, data_buffer_t *b, int c)
+static void s_set_color(screen_t *s, data_buffer_t *b, highlight_spec_t c)
 {
     scoped_buffer_t scoped_buffer(b);
 
@@ -1215,7 +1215,8 @@ static screen_layout_t compute_layout(screen_t *s,
         // If the command wraps, and the prompt is not short, place the command on its own line.
         // A short prompt is 33% or less of the terminal's width.
         const size_t prompt_percent_width = (100 * left_prompt_width) / screen_width;
-        if (left_prompt_width + first_command_line_width + 1 > screen_width && prompt_percent_width > 33) {
+        if (left_prompt_width + first_command_line_width + 1 > screen_width && prompt_percent_width > 33)
+        {
             result.prompts_get_own_line = true;
         }
 
@@ -1232,7 +1233,7 @@ void s_write(screen_t *s,
              const wcstring &right_prompt,
              const wcstring &commandline,
              size_t explicit_len,
-             const int *colors,
+             const highlight_spec_t *colors,
              const int *indent,
              size_t cursor_pos)
 {

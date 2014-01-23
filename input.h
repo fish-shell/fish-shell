@@ -14,6 +14,8 @@ inputrc information for key bindings.
 /**
    Key codes for inputrc-style keyboard functions that are passed on
    to the caller of input_read()
+   
+   NOTE: IF YOU MODIFY THIS YOU MUST UPDATE THE name_arr AND code_arr VARIABLES TO MATCH!
 */
 enum
 {
@@ -38,7 +40,6 @@ enum
     R_KILL_WORD,
     R_BACKWARD_KILL_WORD,
     R_BACKWARD_KILL_PATH_COMPONENT,
-    R_DUMP_FUNCTIONS,
     R_HISTORY_TOKEN_SEARCH_BACKWARD,
     R_HISTORY_TOKEN_SEARCH_FORWARD,
     R_SELF_INSERT,
@@ -57,8 +58,9 @@ enum
     R_DOWN_LINE,
     R_SUPPRESS_AUTOSUGGESTION,
     R_ACCEPT_AUTOSUGGESTION
-}
-;
+};
+
+wcstring describe_char(wchar_t c);
 
 /**
    Initialize the terminal by calling setupterm, and set up arrays

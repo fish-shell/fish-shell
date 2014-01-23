@@ -111,7 +111,6 @@ static const wchar_t * const name_arr[] =
     L"kill-word",
     L"backward-kill-word",
     L"backward-kill-path-component",
-    L"dump-functions",
     L"history-token-search-backward",
     L"history-token-search-forward",
     L"self-insert",
@@ -120,9 +119,8 @@ static const wchar_t * const name_arr[] =
     L"upcase-word",
     L"downcase-word",
     L"capitalize-word",
-    L"null",
-    L"eof",
     L"vi-arg-digit",
+    L"vi-delete-to",
     L"execute",
     L"beginning-of-buffer",
     L"end-of-buffer",
@@ -131,8 +129,18 @@ static const wchar_t * const name_arr[] =
     L"down-line",
     L"suppress-autosuggestion",
     L"accept-autosuggestion"
+};
+
+wcstring describe_char(wchar_t c)
+{
+    wchar_t initial_cmd_char = R_BEGINNING_OF_LINE;
+    size_t name_count = sizeof name_arr / sizeof *name_arr;
+    if (c >= initial_cmd_char && c < initial_cmd_char + name_count)
+    {
+        return format_string(L"%02x (%ls)", c, name_arr[c - initial_cmd_char]);
+    }
+    return format_string(L"%02x", c);
 }
-;
 
 /**
    Description of each supported input function
@@ -200,7 +208,6 @@ static const wchar_t code_arr[] =
     R_KILL_WORD,
     R_BACKWARD_KILL_WORD,
     R_BACKWARD_KILL_PATH_COMPONENT,
-    R_DUMP_FUNCTIONS,
     R_HISTORY_TOKEN_SEARCH_BACKWARD,
     R_HISTORY_TOKEN_SEARCH_FORWARD,
     R_SELF_INSERT,
@@ -209,9 +216,8 @@ static const wchar_t code_arr[] =
     R_UPCASE_WORD,
     R_DOWNCASE_WORD,
     R_CAPITALIZE_WORD,
-    R_NULL,
-    R_EOF,
     R_VI_ARG_DIGIT,
+    R_VI_DELETE_TO,
     R_EXECUTE,
     R_BEGINNING_OF_BUFFER,
     R_END_OF_BUFFER,
@@ -220,8 +226,7 @@ static const wchar_t code_arr[] =
     R_DOWN_LINE,
     R_SUPPRESS_AUTOSUGGESTION,
     R_ACCEPT_AUTOSUGGESTION
-}
-;
+};
 
 /** Mappings for the current input mode */
 static std::vector<input_mapping_t> mapping_list;

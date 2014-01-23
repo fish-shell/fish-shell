@@ -47,7 +47,6 @@ mandir = @mandir@
 sysconfdir = @sysconfdir@
 docdir = @docdir@
 localedir = @localedir@
-optbindirs = @optbindirs@
 
 #
 # Various flags
@@ -92,7 +91,7 @@ FISH_OBJS := function.o builtin.o complete.o env.o exec.o expand.o		\
 	env_universal.o env_universal_common.o input_common.o event.o		\
 	signal.o io.o parse_util.o common.o screen.o path.o autoload.o		\
 	parser_keywords.o iothread.o color.o postfork.o	\
-	builtin_test.o
+	builtin_test.o parse_tree.o parse_productions.o parse_execution.cpp
 
 FISH_INDENT_OBJS := fish_indent.o print_help.o common.o	\
 parser_keywords.o wutil.o tokenizer.o
@@ -302,7 +301,8 @@ doc/refman.pdf: doc
 #
 
 test: $(PROGRAMS) fish_tests
-	./fish_tests; cd tests; ../fish <test.fish;
+	./fish_tests
+	cd tests; ../fish <test.fish;
 .PHONY: test
 
 
@@ -376,8 +376,6 @@ doc.h: $(HDR_FILES)
 		-e "s,@docdir\@,$(docdir),g" \
 		-e "s|@configure_input\@|$@, generated from $@.in by the Makefile. DO NOT MANUALLY EDIT THIS FILE!|g" \
 		-e "s,@prefix\@,$(prefix),g" \
-		-e "s,@optbindirs\@,$(optbindirs),g"
-#-e "s,@\@,$(),"
 
 
 #

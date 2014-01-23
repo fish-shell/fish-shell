@@ -8,6 +8,7 @@
 #define FISH_PARSE_UTIL_H
 
 #include "autoload.h"
+#include "parse_tree.h"
 #include <wchar.h>
 #include <map>
 #include <set>
@@ -26,6 +27,25 @@ int parse_util_locate_cmdsubst(const wchar_t *in,
                                wchar_t **begin,
                                wchar_t **end,
                                bool accept_incomplete);
+
+/**
+   Alternative API. Iterate over command substitutions.
+
+   \param str the string to search for subshells
+   \param inout_cursor_offset On input, the location to begin the search. On output, either the end of the string, or just after the closed-paren.
+   \param out_contents On output, the contents of the command substitution
+   \param out_start On output, the offset of the start of the command substitution (open paren)
+   \param out_end On output, the offset of the end of the command substitution (close paren), or the end of the string if it was incomplete
+   \param accept_incomplete whether to permit missing closing parenthesis
+   \return -1 on syntax error, 0 if no subshells exist and 1 on sucess
+*/
+
+int parse_util_locate_cmdsubst_range(const wcstring &str,
+                                     size_t *inout_cursor_offset,
+                                     wcstring *out_contents,
+                                     size_t *out_start,
+                                     size_t *out_end,
+                                     bool accept_incomplete);
 
 /**
    Find the beginning and end of the command substitution under the
@@ -140,5 +160,9 @@ void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_
 */
 wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote);
 
+/** Given a string, parse it as fish code and then return the indents. The return value has the same size as the string */
+std::vector<int> parse_util_compute_indents(const wcstring &src);
+
+parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, parse_error_list_t *out_errors = NULL);
 
 #endif

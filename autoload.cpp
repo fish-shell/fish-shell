@@ -195,7 +195,6 @@ autoload_function_t *autoload_t::get_autoloaded_function_with_creation(const wcs
 bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_load, bool reload, const wcstring_list_t &path_list)
 {
     /* Note that we are NOT locked in this function! */
-    size_t i;
     bool reloaded = 0;
 
     /* Try using a cached function. If we really want the function to be loaded, require that it be really loaded. If we're not reloading, allow stale functions. */
@@ -276,7 +275,7 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
     if (! has_script_source)
     {
         /* Iterate over path searching for suitable completion files */
-        for (i=0; i<path_list.size(); i++)
+        for (size_t i=0; i<path_list.size(); i++)
         {
             wcstring next = path_list.at(i);
             wcstring path = next + L"/" + cmd + L".fish";

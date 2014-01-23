@@ -176,6 +176,9 @@ wcstring expand_escape_variable(const wcstring &in);
 */
 void expand_tilde(wcstring &input);
 
+/** Perform the opposite of tilde expansion on the string, which is modified in place */
+wcstring replace_home_directory_with_tilde(const wcstring &str);
+
 /**
    Test if the specified argument is clean, i.e. it does not contain
    any tokens which need to be expanded or otherwise altered. Clean

@@ -20,6 +20,7 @@
 #include "util.h"
 #include "io.h"
 #include "common.h"
+#include "parse_tree.h"
 
 /**
    The status code use when a command was not found
@@ -54,7 +55,7 @@
 /**
    Types of processes
 */
-enum
+enum process_type_t
 {
     /**
        A regular external command
@@ -72,6 +73,10 @@ enum
        A block of commands
     */
     INTERNAL_BLOCK,
+
+    /** A block of commands, represented as a node */
+    INTERNAL_BLOCK_NODE,
+
     /**
        The exec builtin
     */
@@ -81,8 +86,7 @@ enum
     */
     INTERNAL_BUFFER,
 
-}
-;
+};
 
 enum
 {
@@ -151,8 +155,10 @@ public:
       INTERNAL_BUILTIN, \c INTERNAL_FUNCTION, \c INTERNAL_BLOCK,
       INTERNAL_EXEC, or INTERNAL_BUFFER
     */
-    int type;
+    enum process_type_t type;
 
+    /* For internal block processes only, the node offset of the block */
+    node_offset_t internal_block_node;
 
     /** Sets argv */
     void set_argv(const wcstring_list_t &argv)
@@ -506,16 +512,10 @@ void job_free(job_t* j);
 void job_promote(job_t *job);
 
 /**
-   Create a new job.
-*/
-job_t *job_create();
-
-/**
   Return the job with the specified job id.
   If id is 0 or less, return the last job used.
 */
 job_t *job_get(job_id_t id);
-
 
 /**
   Return the job with the specified pid.

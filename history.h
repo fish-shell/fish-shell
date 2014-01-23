@@ -61,6 +61,7 @@ public:
     {
         return contents;
     }
+
     bool empty() const
     {
         return contents.empty();

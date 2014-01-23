@@ -15,7 +15,7 @@ echo x-{1}
 echo x-{1,2}
 echo foo-{1,2{3,4}}
 
-# Escpaed newlines
+# Escaped newlines
 echo foo\ bar
 echo foo\
 bar
@@ -98,6 +98,12 @@ echo Test 5 $sta
 # Note that the order here seems unspecified - 'errput' appears before 'output', why?
 echo Test redirections
 begin ; echo output ; echo errput 1>&2  ; end 2>&1 | tee /tmp/tee_test.txt ; cat /tmp/tee_test.txt
+
+# Verify that we can pipe something other than stdout
+# The first line should be printed, since we output to stdout but pipe stderr to /dev/null
+# The second line should not be printed, since we output to stderr and pipe it to /dev/null
+begin ; echo is_stdout ; end 2>| cat > /dev/null
+begin ; echo is_stderr 1>&2 ; end 2>| cat > /dev/null
 
 # echo tests
 

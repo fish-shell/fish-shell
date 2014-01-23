@@ -798,16 +798,19 @@ int pager_t::completion_try_print(size_t cols, const wcstring &prefix, const com
         assert(stop_row - start_row <= term_height);
         completion_print(cols, width, start_row, stop_row, prefix, lst, rendering);
         
+        /* Ellipsis helper string. Either empty or containing the ellipsis char */
+        const wchar_t ellipsis_string[] = {ellipsis_char == L'\x2026' ? L'\x2026' : L'\0', L'\0'};
+        
         /* Add the progress line. It's a "more to disclose" line if necessary. */
         wcstring progress_text;
         if (rendering->remaining_to_disclose == 1)
         {
             /* I don't expect this case to ever happen */
-            progress_text = L"and 1 more row";
+            progress_text = format_string(L"%lsand 1 more row", ellipsis_string);
         }
         else if (rendering->remaining_to_disclose > 1)
         {
-            progress_text = format_string(L"and %lu more rows", (unsigned long)rendering->remaining_to_disclose);
+            progress_text = format_string(L"%lsand %lu more rows", ellipsis_string, (unsigned long)rendering->remaining_to_disclose);
         }
         else
         {

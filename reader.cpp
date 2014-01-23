@@ -546,7 +546,8 @@ static void reader_repaint()
     indents.resize(len);
     
     // Re-render our completions page if necessary
-    data->pager.set_term_size(common_get_width(), 8 /* common_get_height() */);
+    // We set the term size to 1 less than the true term height. This means we will always show the (bottom) line of the prompt.
+    data->pager.set_term_size(maxi(1, common_get_width()), maxi(1, common_get_height() - 1));
     data->pager.update_rendering(&data->current_page_rendering);
 
     s_write(&data->screen,

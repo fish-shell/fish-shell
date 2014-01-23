@@ -18,6 +18,8 @@ class page_rendering_t
     size_t selected_completion_idx;
     screen_data_t screen_data;
     
+    size_t remaining_to_disclose;
+    
     /* Returns a rendering with invalid data, useful to indicate "no rendering" */
     page_rendering_t();
 };
@@ -26,18 +28,24 @@ class page_rendering_t
 #define PAGER_SPACER_STRING L"  "
 #define PAGER_SPACER_STRING_WIDTH 2
 
+/* How many rows we will show in the "initial" pager */
+#define PAGER_UNDISCLOSED_MAX_ROWS 4
+
 typedef std::vector<completion_t> completion_list_t;
 page_rendering_t render_completions(const completion_list_t &raw_completions, const wcstring &prefix);
 
 class pager_t
 {
-    int term_width;
-    int term_height;
+    int available_term_width;
+    int available_term_height;
     
     completion_list_t completions;
     
     size_t selected_completion_idx;
     size_t suggested_row_start;
+    
+    /* Fully disclosed means that we show all completions */
+    bool fully_disclosed;
     
     /* Returns the index of the completion that should draw selected, using the given number of columns */
     size_t visual_selected_completion_index(size_t rows, size_t cols) const;

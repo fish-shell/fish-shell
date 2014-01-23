@@ -142,8 +142,8 @@ void pager_t::recalc_min_widths(comp_info_list_t * lst) const
     {
         comp_t *c = &lst->at(i);
 
-        c->min_width = mini(c->desc_width, maxi(0, term_width/3 - 2)) +
-                       mini(c->desc_width, maxi(0, term_width/5 - 4)) +4;
+        c->min_width = mini(c->desc_width, maxi(0, available_term_width/3 - 2)) +
+                       mini(c->desc_width, maxi(0, available_term_width/5 - 4)) +4;
     }
 
 }
@@ -613,8 +613,8 @@ void pager_t::set_term_size(int w, int h)
 {
     assert(w > 0);
     assert(h > 0);
-    term_width = w;
-    term_height = h;
+    available_term_width = w;
+    available_term_height = h;
 }
 
 /**
@@ -652,8 +652,24 @@ int pager_t::completion_try_print(size_t cols, const wcstring &prefix, const com
       Set to one if the list should be printed at this width
     */
     int print=0;
+    
+    /* Compute the effective term width and term height, accounting for disclosure */
+    int term_width = this->available_term_width;
+    int term_height = this->available_term_height - 1; // we always subtract 1 to make room for a comment row
+    if (! this->fully_disclosed)
+        term_height = mini(term_height, PAGER_UNDISCLOSED_MAX_ROWS);
 
     size_t row_count = divide_round_up(lst.size(), cols);
+    
+    /* We have more to disclose if we are not fully disclosed and there's more rows than we have in our term height */
+    if (! this->fully_disclosed && row_count > term_height)
+    {
+        rendering->remaining_to_disclose = row_count - term_height;
+    }
+    else
+    {
+        rendering->remaining_to_disclose = 0;
+    }
 
     int pref_tot_width=0;
     int min_tot_width = 0;
@@ -781,6 +797,26 @@ int pager_t::completion_try_print(size_t cols, const wcstring &prefix, const com
         assert(stop_row <= row_count);
         assert(stop_row - start_row <= term_height);
         completion_print(cols, width, start_row, stop_row, prefix, lst, rendering);
+        
+        /* Add the progress line. It's a "more to disclose" line if necessary. */
+        wcstring progress_text;
+        if (rendering->remaining_to_disclose == 1)
+        {
+            /* I don't expect this case to ever happen */
+            progress_text = L"and 1 more row";
+        }
+        else if (rendering->remaining_to_disclose > 1)
+        {
+            progress_text = format_string(L"and %lu more rows", (unsigned long)rendering->remaining_to_disclose);
+        }
+        else
+        {
+            /* The +1 here is because we are zero indexed, but want to present things as 1-indexed. We do not add 1 to stop_row or row_count because these are the "past the last value" */
+            progress_text = format_string(L"rows %lu to %lu of %lu", start_row + 1, stop_row, row_count);
+        }
+        line_t &line = rendering->screen_data.add_line();
+        print_max(progress_text.c_str(), highlight_spec_pager_progress | highlight_make_background(highlight_spec_pager_progress), term_width, true /* has_more */, &line);
+        
         return PAGER_DONE;
         
         res=PAGER_DONE;
@@ -905,8 +941,8 @@ page_rendering_t pager_t::render() const
        column never fails.
     */
     page_rendering_t rendering;
-    rendering.term_width = this->term_width;
-    rendering.term_height = this->term_height;
+    rendering.term_width = this->available_term_width;
+    rendering.term_height = this->available_term_height;
     
     if (! this->empty())
     {
@@ -926,10 +962,9 @@ page_rendering_t pager_t::render() const
                 /* Next iteration will be better, so skip this one */
                 continue;
             }
-
             
             rendering.cols = (size_t)cols;
-            rendering.rows = divide_round_up(completion_infos.size(), rendering.cols);
+            rendering.rows = min_rows_required_for_cols;
             rendering.selected_completion_idx = this->visual_selected_completion_index(rendering.rows, rendering.cols);
             
             bool done = false;
@@ -962,13 +997,13 @@ page_rendering_t pager_t::render() const
 
 void pager_t::update_rendering(page_rendering_t *rendering) const
 {
-    if (rendering->term_width != this->term_width || rendering->term_height != this->term_height || rendering->selected_completion_idx != this->visual_selected_completion_index(rendering->rows, rendering->cols))
+    if (rendering->term_width != this->available_term_width || rendering->term_height != this->available_term_height || rendering->selected_completion_idx != this->visual_selected_completion_index(rendering->rows, rendering->cols))
     {
         *rendering = this->render();
     }
 }
 
-pager_t::pager_t() : term_width(0), term_height(0), selected_completion_idx(PAGER_SELECTION_NONE), suggested_row_start(0)
+pager_t::pager_t() : available_term_width(0), available_term_height(0), selected_completion_idx(PAGER_SELECTION_NONE), suggested_row_start(0), fully_disclosed(false)
 {
 }
 
@@ -1135,6 +1170,7 @@ const completion_t *pager_t::select_next_completion_in_direction(selection_direc
         {
             size_t row_containing_selection = selected_completion_idx % rendering.rows;
             
+            
             /* Ensure our suggested row start is not past the selected row */
             if (suggested_row_start > row_containing_selection)
             {
@@ -1144,7 +1180,20 @@ const completion_t *pager_t::select_next_completion_in_direction(selection_direc
             /* Ensure our suggested row start is not too early before it */
             if (suggested_row_start + visible_row_count <= row_containing_selection)
             {
-                suggested_row_start = row_containing_selection - visible_row_count + 1;
+                /* The user moved south past the bottom completion */
+                if (! fully_disclosed && rendering.remaining_to_disclose > 0)
+                {
+                    /* Perform disclosure */
+                    fully_disclosed = true;
+                }
+                else
+                {
+                    /* Scroll */
+                    suggested_row_start = row_containing_selection - visible_row_count + 1;
+                    
+                    /* Ensure fully_disclosed is set. I think we can hit this case if the user resizes the window - we don't want to drop back to the disclosed style */
+                    fully_disclosed = true;
+                }
             }
         }
         
@@ -1194,8 +1243,9 @@ void pager_t::clear()
     completion_infos.clear();
     prefix.clear();
     selected_completion_idx = PAGER_SELECTION_NONE;
+    fully_disclosed = false;
 }
 
-page_rendering_t::page_rendering_t() : term_width(-1), term_height(-1), rows(0), cols(0), row_start(0), row_end(0), selected_completion_idx(-1)
+page_rendering_t::page_rendering_t() : term_width(-1), term_height(-1), rows(0), cols(0), row_start(0), row_end(0), selected_completion_idx(-1), remaining_to_disclose(0)
 {
 }

@@ -1548,17 +1548,27 @@ static void clear_pager()
 static void select_completion_in_direction(enum selection_direction_t dir, const wcstring &cycle_command_line, size_t cycle_cursor_pos)
 {
     const completion_t *next_comp = data->pager.select_next_completion_in_direction(dir, data->current_page_rendering);
-    if (next_comp != NULL)
+    if (next_comp != NULL || dir == direction_deselect)
     {
+        /* Update the cursor and command line */
         size_t cursor_pos = cycle_cursor_pos;
-        const wcstring new_cmd_line = completion_apply_to_command_line(next_comp->completion, next_comp->flags, cycle_command_line, &cursor_pos, false);
+        wcstring new_cmd_line;
+        if (dir == direction_deselect)
+        {
+            new_cmd_line = cycle_command_line;
+        }
+        else
+        {
+            new_cmd_line = completion_apply_to_command_line(next_comp->completion, next_comp->flags, cycle_command_line, &cursor_pos, false);
+        }
         reader_set_buffer_maintaining_pager(new_cmd_line, cursor_pos);
+
 
         /* Since we just inserted a completion, don't immediately do a new autosuggestion */
         data->suppress_autosuggestion = true;
 
         /* Trigger repaint (see #765) */
-        reader_repaint();
+        reader_repaint_needed();
     }
 }
 
@@ -3653,10 +3663,33 @@ const wchar_t *reader_readline(void)
             case R_UP_LINE:
             case R_DOWN_LINE:
             {
-                /* If we are already navigating the pager, or if we pressed down with non-empty pager contents, begin navigation */
-                if (is_navigating_pager_contents() || (c == R_DOWN_LINE && ! data->pager.empty()))
+                if (is_navigating_pager_contents())
                 {
-                    select_completion_in_direction(c == R_UP_LINE ? direction_north : direction_south, cycle_command_line, cycle_cursor_pos);
+                    /* We are already navigating pager contents. */
+                    selection_direction_t direction;
+                    if (c == R_DOWN_LINE)
+                    {
+                        /* Down arrow is always south */
+                        direction = direction_south;
+                    }
+                    else if (data->pager.get_selected_row(data->current_page_rendering) == 0 && data->pager.get_selected_column(data->current_page_rendering) == 0)
+                    {
+                        /* Up arrow, but we are in the first column and first row. End navigation */
+                        direction = direction_deselect;
+                    }
+                    else
+                    {
+                        /* Up arrow, go north */
+                        direction = direction_north;
+                    }
+                    
+                    /* Now do the selection */
+                    select_completion_in_direction(direction, cycle_command_line, cycle_cursor_pos);
+                }
+                else if (c == R_DOWN_LINE && ! data->pager.empty())
+                {
+                    /* We pressed down with a non-empty pager contents, begin navigation */
+                    select_completion_in_direction(direction_south, cycle_command_line, cycle_cursor_pos);
                 }
                 else
                 {

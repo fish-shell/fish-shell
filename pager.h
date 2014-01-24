@@ -39,8 +39,6 @@ class pager_t
     int available_term_width;
     int available_term_height;
     
-    completion_list_t completions;
-    
     size_t selected_completion_idx;
     size_t suggested_row_start;
     
@@ -60,19 +58,22 @@ class pager_t
         /** The description */
         wcstring desc;
         
+        /** The representative completion */
+        completion_t representative;
+        
         /** On-screen width of the completion string */
         int comp_width;
         
         /** On-screen width of the description information */
         int desc_width;
         
-        /** Preffered total width */
+        /** Preferred total width */
         int pref_width;
         
         /** Minimum acceptable width */
         int min_width;
         
-        comp_t() : comp(), desc(), comp_width(0), desc_width(0), pref_width(0), min_width(0)
+        comp_t() : comp(), desc(), representative(L""), comp_width(0), desc_width(0), pref_width(0), min_width(0)
         {
         }
     };
@@ -103,14 +104,15 @@ class pager_t
     /* Sets the terminal width and height */
     void set_term_size(int w, int h);
     
-    /* Sets the index of the selected completion */
-    void set_selected_completion_index(size_t completion_idx);
-    
     /* Changes the selected completion in the given direction according to the layout of the given rendering. Returns the newly selected completion if it changed, NULL if nothing was selected or it did not change. */
     const completion_t *select_next_completion_in_direction(selection_direction_t direction, const page_rendering_t &rendering);
     
     /* Returns the currently selected completion for the given rendering */
     const completion_t *selected_completion(const page_rendering_t &rendering) const;
+    
+    /* Indicates the row and column for the given rendering. Returns -1 if no selection. */
+    size_t get_selected_row(const page_rendering_t &rendering) const;
+    size_t get_selected_column(const page_rendering_t &rendering) const;
     
     /* Produces a rendering of the completions, at the given term size */
     page_rendering_t render() const;

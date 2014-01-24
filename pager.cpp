@@ -501,6 +501,9 @@ static comp_info_list_t process_completions_into_infos(const completion_list_t &
         // Append the mangled description
         comp_info->desc = comp.description;
         mangle_1_completion_description(&comp_info->desc);
+        
+        // Set the representative completion
+        comp_info->representative = comp;
     }
     return result;
 }
@@ -591,8 +594,6 @@ page_rendering_t render_completions(const completion_list_t &raw_completions, co
 
 void pager_t::set_completions(const completion_list_t &raw_completions)
 {
-    completions = raw_completions;
-    
     // Get completion infos out of it
     completion_infos = process_completions_into_infos(raw_completions, prefix.c_str());
  
@@ -1012,13 +1013,13 @@ pager_t::pager_t() : available_term_width(0), available_term_height(0), selected
 
 bool pager_t::empty() const
 {
-    return completions.empty();
+    return completion_infos.empty();
 }
 
 const completion_t *pager_t::select_next_completion_in_direction(selection_direction_t direction, const page_rendering_t &rendering)
 {
     /* Must have something to select */
-    if (completions.empty())
+    if (this->empty())
     {
         return NULL;
     }
@@ -1034,7 +1035,7 @@ const completion_t *pager_t::select_next_completion_in_direction(selection_direc
             case direction_prev:
                 if (direction == direction_prev)
                 {
-                    selected_completion_idx = completions.size() - 1;
+                    selected_completion_idx = completion_infos.size() - 1;
                 }
                 else
                 {
@@ -1046,6 +1047,7 @@ const completion_t *pager_t::select_next_completion_in_direction(selection_direc
             case direction_north:
             case direction_east:
             case direction_west:
+            case direction_deselect:
             default:
                 return NULL;
         }
@@ -1055,8 +1057,12 @@ const completion_t *pager_t::select_next_completion_in_direction(selection_direc
     size_t new_selected_completion_idx = selected_completion_idx;
     if (! selection_direction_is_cardinal(direction))
     {
-        /* Next / previous, easy */
-        if (direction == direction_next)
+        /* Next, previous, or deselect, all easy */
+        if (direction == direction_deselect)
+        {
+            new_selected_completion_idx = PAGER_SELECTION_NONE;
+        }
+        else if (direction == direction_next)
         {
             new_selected_completion_idx = selected_completion_idx + 1;
             if (new_selected_completion_idx >= completion_infos.size())
@@ -1082,9 +1088,9 @@ const completion_t *pager_t::select_next_completion_in_direction(selection_direc
     }
     else
     {
-        /* Cardinal directions. We have a completion index; we wish to compute its row and column. Completions are rendered column first, i.e. we go south before we go west. So if we have N rows, and our selected index is N + 2, then our row is 2 (mod by N) and our column is 1 (divide by N) */
-        size_t current_row = selected_completion_idx % rendering.rows;
-        size_t current_col = selected_completion_idx / rendering.rows;
+        /* Cardinal directions. We have a completion index; we wish to compute its row and column. */
+        size_t current_row = this->get_selected_row(rendering);
+        size_t current_col = this->get_selected_column(rendering);
         
         switch (direction)
         {
@@ -1171,8 +1177,7 @@ const completion_t *pager_t::select_next_completion_in_direction(selection_direc
         
         if (visible_row_count > 0 && selected_completion_idx != PAGER_SELECTION_NONE) //paranoia
         {
-            size_t row_containing_selection = selected_completion_idx % rendering.rows;
-            
+            size_t row_containing_selection = this->get_selected_row(rendering);
             
             /* Ensure our suggested row start is not past the selected row */
             if (suggested_row_start > row_containing_selection)
@@ -1215,18 +1220,13 @@ size_t pager_t::visual_selected_completion_index(size_t rows, size_t cols) const
     if (result != PAGER_SELECTION_NONE)
     {
         /* If the selected completion is beyond the last selection, go left by columns until it's within it. This is how we implement "column memory." */
-        while (result >= completions.size() && result >= rows)
+        while (result >= completion_infos.size() && result >= rows)
         {
             result -= rows;
         }
     }
-    assert(result == PAGER_SELECTION_NONE || result < completions.size());
+    assert(result == PAGER_SELECTION_NONE || result < completion_infos.size());
     return result;
-}
-
-void pager_t::set_selected_completion_index(size_t completion_idx)
-{
-    selected_completion_idx = completion_idx;
 }
 
 const completion_t *pager_t::selected_completion(const page_rendering_t &rendering) const
@@ -1235,14 +1235,25 @@ const completion_t *pager_t::selected_completion(const page_rendering_t &renderi
     size_t idx = visual_selected_completion_index(rendering.rows, rendering.cols);
     if (idx != PAGER_SELECTION_NONE)
     {
-        result = &completions.at(idx);
+        result = &completion_infos.at(idx).representative;
     }
     return result;
 }
 
+/* Completions are rendered column first, i.e. we go south before we go west. So if we have N rows, and our selected index is N + 2, then our row is 2 (mod by N) and our column is 1 (divide by N) */
+
+size_t pager_t::get_selected_row(const page_rendering_t &rendering) const
+{
+    return selected_completion_idx == PAGER_SELECTION_NONE ? PAGER_SELECTION_NONE : selected_completion_idx % rendering.rows;
+}
+
+size_t pager_t::get_selected_column(const page_rendering_t &rendering) const
+{
+    return selected_completion_idx == PAGER_SELECTION_NONE ? PAGER_SELECTION_NONE : selected_completion_idx / rendering.rows;
+}
+
 void pager_t::clear()
 {
-    completions.clear();
     completion_infos.clear();
     prefix.clear();
     selected_completion_idx = PAGER_SELECTION_NONE;

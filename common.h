@@ -98,7 +98,10 @@ enum selection_direction_t
     
     /* logical directions */
     direction_next,
-    direction_prev
+    direction_prev,
+    
+    /* special value that means deselect */
+    direction_deselect
 };
 
 inline bool selection_direction_is_cardinal(selection_direction_t dir)

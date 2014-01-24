@@ -20,7 +20,7 @@ wd="$PWD"
 prefix="fish"
 
 # Get the version from git-describe
-VERSION=`git describe --tags --dirty 2>/dev/null`
+VERSION=`git describe --dirty 2>/dev/null`
 prefix="$prefix-$VERSION"
 
 # The path where we will output the tar file

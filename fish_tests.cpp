@@ -1510,6 +1510,14 @@ static void test_complete(void)
     completions.clear();
     complete(L"echo (builtin scuttlebut", completions, COMPLETION_REQUEST_DEFAULT);
     assert(completions.size() == 0);
+    
+    /* Trailing spaces (#1261) */
+    complete_add(L"foobarbaz", false, 0, NULL, 0, NO_FILES, NULL, L"qux", NULL, COMPLETE_AUTO_SPACE);
+    completions.clear();
+    complete(L"foobarbaz ", completions, COMPLETION_REQUEST_DEFAULT);
+    assert(completions.size() == 1);
+    assert(completions.at(0).completion == L"qux");
+
 
     complete_set_variable_names(NULL);
 }

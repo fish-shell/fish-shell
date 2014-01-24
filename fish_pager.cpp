@@ -864,13 +864,13 @@ static void mangle_descriptions(wcstring_list_t &lst)
 /**
    Merge multiple completions with the same description to the same line
 */
-static void join_completions(wcstring_list_t lst)
+static void join_completions(wcstring_list_t *lst)
 {
     std::map<wcstring, long> desc_table;
 
-    for (size_t i=0; i<lst.size(); i++)
+    for (size_t i=0; i<lst->size(); i++)
     {
-        const wchar_t *item = lst.at(i).c_str();
+        const wchar_t *item = lst->at(i).c_str();
         const wchar_t *desc = wcschr(item, COMPLETE_SEP);
         long prev_idx;
 
@@ -884,7 +884,7 @@ static void join_completions(wcstring_list_t lst)
         }
         else
         {
-            const wchar_t *old = lst.at(i).c_str();
+            const wchar_t *old = lst->at(prev_idx).c_str();
             const wchar_t *old_end = wcschr(old, COMPLETE_SEP);
 
             if (old_end)
@@ -895,8 +895,8 @@ static void join_completions(wcstring_list_t lst)
                 foo.push_back(COMPLETE_ITEM_SEP);
                 foo.append(item);
 
-                lst.at(prev_idx) = foo;
-                lst.at(i).clear();
+                lst->at(prev_idx) = foo;
+                lst->at(i).clear();
             }
 
         }
@@ -904,7 +904,7 @@ static void join_completions(wcstring_list_t lst)
     }
 
     /* Remove empty strings */
-    lst.erase(remove(lst.begin(), lst.end(), wcstring()), lst.end());
+    lst->erase(remove(lst->begin(), lst->end(), wcstring()), lst->end());
 }
 
 /**
@@ -1380,7 +1380,7 @@ int main(int argc, char **argv)
     mangle_descriptions(comp);
 
     if (prefix == L"-")
-        join_completions(comp);
+        join_completions(&comp);
 
     std::vector<comp_t *> completions = mangle_completions(comp, prefix.c_str());
 

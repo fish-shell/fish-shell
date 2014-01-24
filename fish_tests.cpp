@@ -18,7 +18,6 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <stdarg.h>
-#include <assert.h>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -147,6 +146,8 @@ static void err(const wchar_t *blah, ...)
     wprintf(L"\n");
 }
 
+#define do_test(e) do { if (! (e)) err(L"Test failed on line %lu: %s", __LINE__, #e); } while (0)
+
 /* Test sane escapes */
 static void test_unescape_sane()
 {
@@ -250,7 +251,7 @@ static void test_format(void)
     {
         char buff[128];
         format_size_safe(buff, tests[i].val);
-        assert(! strcmp(buff, tests[i].expected));
+        do_test(! strcmp(buff, tests[i].expected));
     }
 
     for (int j=-129; j <= 129; j++)
@@ -258,14 +259,14 @@ static void test_format(void)
         char buff1[128], buff2[128];
         format_long_safe(buff1, j);
         sprintf(buff2, "%d", j);
-        assert(! strcmp(buff1, buff2));
+        do_test(! strcmp(buff1, buff2));
     }
 
     long q = LONG_MIN;
     char buff1[128], buff2[128];
     format_long_safe(buff1, q);
     sprintf(buff2, "%ld", q);
-    assert(! strcmp(buff1, buff2));
+    do_test(! strcmp(buff1, buff2));
 
 }
 
@@ -456,83 +457,6 @@ static void test_tok()
     if (redirection_type_for_string(L"9999999999999999>?") != TOK_NONE) err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
     if (redirection_type_for_string(L"2>&3") != TOK_REDIRECT_FD) err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
     if (redirection_type_for_string(L"2>|") != TOK_NONE) err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
-}
-
-static int test_fork_helper(void *unused)
-{
-    size_t i;
-    for (i=0; i < 1000; i++)
-    {
-        //delete [](new char[4 * 1024 * 1024]);
-        for (int j=0; j < 1024; j++)
-        {
-            strerror(j);
-        }
-    }
-    return 0;
-}
-
-static void test_fork(void)
-{
-    return;
-    say(L"Testing fork");
-    size_t i, max = 100;
-    for (i=0; i < 100; i++)
-    {
-        printf("%lu / %lu\n", (unsigned long)(i+1), (unsigned long) max);
-        /* Do something horrible to try to trigger an error */
-#define THREAD_COUNT 8
-#define FORK_COUNT 10
-#define FORK_LOOP_COUNT 16
-        signal_block();
-        for (size_t i=0; i < THREAD_COUNT; i++)
-        {
-            iothread_perform<void>(test_fork_helper, NULL, NULL);
-        }
-        for (size_t q = 0; q < FORK_LOOP_COUNT; q++)
-        {
-            pid_t pids[FORK_COUNT];
-            for (size_t i=0; i < FORK_COUNT; i++)
-            {
-                pid_t pid = execute_fork(false);
-                if (pid > 0)
-                {
-                    /* Parent */
-                    pids[i] = pid;
-                }
-                else if (pid == 0)
-                {
-                    /* Child */
-                    //new char[4 * 1024 * 1024];
-                    for (size_t i=0; i < 1024 * 16; i++)
-                    {
-                        for (int j=0; j < 256; j++)
-                        {
-                            strerror(j);
-                        }
-                    }
-                    exit_without_destructors(0);
-                }
-                else
-                {
-                    perror("fork");
-                }
-            }
-            for (size_t i=0; i < FORK_COUNT; i++)
-            {
-                int status = 0;
-                if (pids[i] != waitpid(pids[i], &status, 0))
-                {
-                    perror("waitpid");
-                    assert(0);
-                }
-                assert(WIFEXITED(status) && 0 == WEXITSTATUS(status));
-            }
-        }
-        iothread_drain_all();
-        signal_unblock();
-    }
-#undef FORK_COUNT
 }
 
 // Little function that runs in the main thread
@@ -881,7 +805,7 @@ static void test_indents()
             text.append(components[i].txt);
             expected_indents.resize(text.size(), components[i].indent);
         }
-        assert(expected_indents.size() == text.size());
+        do_test(expected_indents.size() == text.size());
 
         // Compute the indents
         std::vector<int> indents = parse_util_compute_indents(text);
@@ -890,7 +814,7 @@ static void test_indents()
         {
             err(L"Indent vector has wrong size! Expected %lu, actual %lu", expected_indents.size(), indents.size());
         }
-        assert(expected_indents.size() == indents.size());
+        do_test(expected_indents.size() == indents.size());
         for (size_t i=0; i < text.size(); i++)
         {
             if (expected_indents.at(i) != indents.at(i))
@@ -950,7 +874,7 @@ public:
 
     virtual void node_was_evicted(lru_node_test_t *node)
     {
-        assert(find(evicted_nodes.begin(), evicted_nodes.end(), node) == evicted_nodes.end());
+        do_test(find(evicted_nodes.begin(), evicted_nodes.end(), node) == evicted_nodes.end());
         evicted_nodes.push_back(node);
     }
 };
@@ -964,16 +888,16 @@ static void test_lru(void)
     size_t total_nodes = 20;
     for (size_t i=0; i < total_nodes; i++)
     {
-        assert(cache.size() == std::min(i, (size_t)16));
+        do_test(cache.size() == std::min(i, (size_t)16));
         lru_node_test_t *node = new lru_node_test_t(to_string(i));
         if (i < 4) expected_evicted.push_back(node);
         // Adding the node the first time should work, and subsequent times should fail
-        assert(cache.add_node(node));
-        assert(! cache.add_node(node));
+        do_test(cache.add_node(node));
+        do_test(! cache.add_node(node));
     }
-    assert(cache.evicted_nodes == expected_evicted);
+    do_test(cache.evicted_nodes == expected_evicted);
     cache.evict_all_nodes();
-    assert(cache.evicted_nodes.size() == total_nodes);
+    do_test(cache.evicted_nodes.size() == total_nodes);
     while (! cache.evicted_nodes.empty())
     {
         lru_node_t *node = cache.evicted_nodes.back();
@@ -1380,24 +1304,24 @@ static void test_is_potential_path()
     const wcstring_list_t wds(1, wd);
 
     wcstring tmp;
-    assert(is_potential_path(L"al", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"alpha/");
-    assert(is_potential_path(L"alpha/", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"alpha/");
-    assert(is_potential_path(L"aard", wds, 0, &tmp) && tmp == L"aardvark");
+    do_test(is_potential_path(L"al", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"alpha/");
+    do_test(is_potential_path(L"alpha/", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"alpha/");
+    do_test(is_potential_path(L"aard", wds, 0, &tmp) && tmp == L"aardvark");
 
-    assert(! is_potential_path(L"balpha/", wds, PATH_REQUIRE_DIR, &tmp));
-    assert(! is_potential_path(L"aard", wds, PATH_REQUIRE_DIR, &tmp));
-    assert(! is_potential_path(L"aarde", wds, PATH_REQUIRE_DIR, &tmp));
-    assert(! is_potential_path(L"aarde", wds, 0, &tmp));
+    do_test(! is_potential_path(L"balpha/", wds, PATH_REQUIRE_DIR, &tmp));
+    do_test(! is_potential_path(L"aard", wds, PATH_REQUIRE_DIR, &tmp));
+    do_test(! is_potential_path(L"aarde", wds, PATH_REQUIRE_DIR, &tmp));
+    do_test(! is_potential_path(L"aarde", wds, 0, &tmp));
 
-    assert(is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, 0, &tmp) && tmp == L"/tmp/is_potential_path_test/aardvark");
-    assert(is_potential_path(L"/tmp/is_potential_path_test/al", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"/tmp/is_potential_path_test/alpha/");
-    assert(is_potential_path(L"/tmp/is_potential_path_test/aardv", wds, 0, &tmp) && tmp == L"/tmp/is_potential_path_test/aardvark");
+    do_test(is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, 0, &tmp) && tmp == L"/tmp/is_potential_path_test/aardvark");
+    do_test(is_potential_path(L"/tmp/is_potential_path_test/al", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"/tmp/is_potential_path_test/alpha/");
+    do_test(is_potential_path(L"/tmp/is_potential_path_test/aardv", wds, 0, &tmp) && tmp == L"/tmp/is_potential_path_test/aardvark");
 
-    assert(! is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, PATH_REQUIRE_DIR, &tmp));
-    assert(! is_potential_path(L"/tmp/is_potential_path_test/al/", wds, 0, &tmp));
-    assert(! is_potential_path(L"/tmp/is_potential_path_test/ar", wds, 0, &tmp));
+    do_test(! is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, PATH_REQUIRE_DIR, &tmp));
+    do_test(! is_potential_path(L"/tmp/is_potential_path_test/al/", wds, 0, &tmp));
+    do_test(! is_potential_path(L"/tmp/is_potential_path_test/ar", wds, 0, &tmp));
 
-    assert(is_potential_path(L"/usr", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"/usr/");
+    do_test(is_potential_path(L"/usr", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"/usr/");
 
 }
 
@@ -1436,7 +1360,7 @@ static bool run_test_test(int expected, const wcstring &str)
 
     bool bracket = run_one_test_test(expected, lst, true);
     bool nonbracket = run_one_test_test(expected, lst, false);
-    assert(bracket == nonbracket);
+    do_test(bracket == nonbracket);
     return nonbracket;
 }
 
@@ -1446,13 +1370,13 @@ static void test_test_brackets()
     parser_t parser(PARSER_TYPE_GENERAL, true);
 
     const wchar_t *argv1[] = {L"[", L"foo", NULL};
-    assert(builtin_test(parser, (wchar_t **)argv1) != 0);
+    do_test(builtin_test(parser, (wchar_t **)argv1) != 0);
 
     const wchar_t *argv2[] = {L"[", L"foo", L"]", NULL};
-    assert(builtin_test(parser, (wchar_t **)argv2) == 0);
+    do_test(builtin_test(parser, (wchar_t **)argv2) == 0);
 
     const wchar_t *argv3[] = {L"[", L"foo", L"]", L"bar", NULL};
-    assert(builtin_test(parser, (wchar_t **)argv3) != 0);
+    do_test(builtin_test(parser, (wchar_t **)argv3) != 0);
 
 }
 
@@ -1461,28 +1385,28 @@ static void test_test()
     say(L"Testing test builtin");
     test_test_brackets();
 
-    assert(run_test_test(0, L"5 -ne 6"));
-    assert(run_test_test(0, L"5 -eq 5"));
-    assert(run_test_test(0, L"0 -eq 0"));
-    assert(run_test_test(0, L"-1 -eq -1"));
-    assert(run_test_test(0, L"1 -ne -1"));
-    assert(run_test_test(1, L"-1 -ne -1"));
-    assert(run_test_test(0, L"abc != def"));
-    assert(run_test_test(1, L"abc = def"));
-    assert(run_test_test(0, L"5 -le 10"));
-    assert(run_test_test(0, L"10 -le 10"));
-    assert(run_test_test(1, L"20 -le 10"));
-    assert(run_test_test(0, L"-1 -le 0"));
-    assert(run_test_test(1, L"0 -le -1"));
-    assert(run_test_test(0, L"15 -ge 10"));
-    assert(run_test_test(0, L"15 -ge 10"));
-    assert(run_test_test(1, L"! 15 -ge 10"));
-    assert(run_test_test(0, L"! ! 15 -ge 10"));
+    do_test(run_test_test(0, L"5 -ne 6"));
+    do_test(run_test_test(0, L"5 -eq 5"));
+    do_test(run_test_test(0, L"0 -eq 0"));
+    do_test(run_test_test(0, L"-1 -eq -1"));
+    do_test(run_test_test(0, L"1 -ne -1"));
+    do_test(run_test_test(1, L"-1 -ne -1"));
+    do_test(run_test_test(0, L"abc != def"));
+    do_test(run_test_test(1, L"abc = def"));
+    do_test(run_test_test(0, L"5 -le 10"));
+    do_test(run_test_test(0, L"10 -le 10"));
+    do_test(run_test_test(1, L"20 -le 10"));
+    do_test(run_test_test(0, L"-1 -le 0"));
+    do_test(run_test_test(1, L"0 -le -1"));
+    do_test(run_test_test(0, L"15 -ge 10"));
+    do_test(run_test_test(0, L"15 -ge 10"));
+    do_test(run_test_test(1, L"! 15 -ge 10"));
+    do_test(run_test_test(0, L"! ! 15 -ge 10"));
 
-    assert(run_test_test(0, L"0 -ne 1 -a 0 -eq 0"));
-    assert(run_test_test(0, L"0 -ne 1 -a -n 5"));
-    assert(run_test_test(0, L"-n 5 -a 10 -gt 5"));
-    assert(run_test_test(0, L"-n 3 -a -n 5"));
+    do_test(run_test_test(0, L"0 -ne 1 -a 0 -eq 0"));
+    do_test(run_test_test(0, L"0 -ne 1 -a -n 5"));
+    do_test(run_test_test(0, L"-n 5 -a 10 -gt 5"));
+    do_test(run_test_test(0, L"-n 3 -a -n 5"));
 
     /* test precedence:
             '0 == 0 || 0 == 1 && 0 == 2'
@@ -1491,55 +1415,55 @@ static void test_test()
         and therefore true. If it were
             '(0 == 0 || 0 == 1) && 0 == 2'
         it would be false. */
-    assert(run_test_test(0, L"0 = 0 -o 0 = 1 -a 0 = 2"));
-    assert(run_test_test(0, L"-n 5 -o 0 = 1 -a 0 = 2"));
-    assert(run_test_test(1, L"( 0 = 0 -o  0 = 1 ) -a 0 = 2"));
-    assert(run_test_test(0, L"0 = 0 -o ( 0 = 1 -a 0 = 2 )"));
+    do_test(run_test_test(0, L"0 = 0 -o 0 = 1 -a 0 = 2"));
+    do_test(run_test_test(0, L"-n 5 -o 0 = 1 -a 0 = 2"));
+    do_test(run_test_test(1, L"( 0 = 0 -o  0 = 1 ) -a 0 = 2"));
+    do_test(run_test_test(0, L"0 = 0 -o ( 0 = 1 -a 0 = 2 )"));
 
     /* A few lame tests for permissions; these need to be a lot more complete. */
-    assert(run_test_test(0, L"-e /bin/ls"));
-    assert(run_test_test(1, L"-e /bin/ls_not_a_path"));
-    assert(run_test_test(0, L"-x /bin/ls"));
-    assert(run_test_test(1, L"-x /bin/ls_not_a_path"));
-    assert(run_test_test(0, L"-d /bin/"));
-    assert(run_test_test(1, L"-d /bin/ls"));
+    do_test(run_test_test(0, L"-e /bin/ls"));
+    do_test(run_test_test(1, L"-e /bin/ls_not_a_path"));
+    do_test(run_test_test(0, L"-x /bin/ls"));
+    do_test(run_test_test(1, L"-x /bin/ls_not_a_path"));
+    do_test(run_test_test(0, L"-d /bin/"));
+    do_test(run_test_test(1, L"-d /bin/ls"));
 
     /* This failed at one point */
-    assert(run_test_test(1, L"-d /bin -a 5 -eq 3"));
-    assert(run_test_test(0, L"-d /bin -o 5 -eq 3"));
-    assert(run_test_test(0, L"-d /bin -a ! 5 -eq 3"));
+    do_test(run_test_test(1, L"-d /bin -a 5 -eq 3"));
+    do_test(run_test_test(0, L"-d /bin -o 5 -eq 3"));
+    do_test(run_test_test(0, L"-d /bin -a ! 5 -eq 3"));
 
     /* We didn't properly handle multiple "just strings" either */
-    assert(run_test_test(0, L"foo"));
-    assert(run_test_test(0, L"foo -a bar"));
+    do_test(run_test_test(0, L"foo"));
+    do_test(run_test_test(0, L"foo -a bar"));
 
     /* These should be errors */
-    assert(run_test_test(1, L"foo bar"));
-    assert(run_test_test(1, L"foo bar baz"));
+    do_test(run_test_test(1, L"foo bar"));
+    do_test(run_test_test(1, L"foo bar baz"));
 
     /* This crashed */
-    assert(run_test_test(1, L"1 = 1 -a = 1"));
+    do_test(run_test_test(1, L"1 = 1 -a = 1"));
 
     /* Make sure we can treat -S as a parameter instead of an operator. https://github.com/fish-shell/fish-shell/issues/601 */
-    assert(run_test_test(0, L"-S = -S"));
-    assert(run_test_test(1, L"! ! ! A"));
+    do_test(run_test_test(0, L"-S = -S"));
+    do_test(run_test_test(1, L"! ! ! A"));
 }
 
 /** Testing colors */
 static void test_colors()
 {
     say(L"Testing colors");
-    assert(rgb_color_t(L"#FF00A0").is_rgb());
-    assert(rgb_color_t(L"FF00A0").is_rgb());
-    assert(rgb_color_t(L"#F30").is_rgb());
-    assert(rgb_color_t(L"F30").is_rgb());
-    assert(rgb_color_t(L"f30").is_rgb());
-    assert(rgb_color_t(L"#FF30a5").is_rgb());
-    assert(rgb_color_t(L"3f30").is_none());
-    assert(rgb_color_t(L"##f30").is_none());
-    assert(rgb_color_t(L"magenta").is_named());
-    assert(rgb_color_t(L"MaGeNTa").is_named());
-    assert(rgb_color_t(L"mooganta").is_none());
+    do_test(rgb_color_t(L"#FF00A0").is_rgb());
+    do_test(rgb_color_t(L"FF00A0").is_rgb());
+    do_test(rgb_color_t(L"#F30").is_rgb());
+    do_test(rgb_color_t(L"F30").is_rgb());
+    do_test(rgb_color_t(L"f30").is_rgb());
+    do_test(rgb_color_t(L"#FF30a5").is_rgb());
+    do_test(rgb_color_t(L"3f30").is_none());
+    do_test(rgb_color_t(L"##f30").is_none());
+    do_test(rgb_color_t(L"magenta").is_named());
+    do_test(rgb_color_t(L"MaGeNTa").is_named());
+    do_test(rgb_color_t(L"mooganta").is_none());
 }
 
 static void test_complete(void)
@@ -1553,35 +1477,35 @@ static void test_complete(void)
 
     std::vector<completion_t> completions;
     complete(L"$F", completions, COMPLETION_REQUEST_DEFAULT);
-    assert(completions.size() == 3);
-    assert(completions.at(0).completion == L"oo1");
-    assert(completions.at(1).completion == L"oo2");
-    assert(completions.at(2).completion == L"oo3");
+    do_test(completions.size() == 3);
+    do_test(completions.at(0).completion == L"oo1");
+    do_test(completions.at(1).completion == L"oo2");
+    do_test(completions.at(2).completion == L"oo3");
 
     completions.clear();
     complete(L"$1", completions, COMPLETION_REQUEST_DEFAULT);
-    assert(completions.empty());
+    do_test(completions.empty());
 
     completions.clear();
     complete(L"$1", completions, COMPLETION_REQUEST_DEFAULT | COMPLETION_REQUEST_FUZZY_MATCH);
-    assert(completions.size() == 2);
-    assert(completions.at(0).completion == L"$Foo1");
-    assert(completions.at(1).completion == L"$Bar1");
+    do_test(completions.size() == 2);
+    do_test(completions.at(0).completion == L"$Foo1");
+    do_test(completions.at(1).completion == L"$Bar1");
 
     completions.clear();
     complete(L"echo (/bin/mkdi", completions, COMPLETION_REQUEST_DEFAULT);
-    assert(completions.size() == 1);
-    assert(completions.at(0).completion == L"r");
+    do_test(completions.size() == 1);
+    do_test(completions.at(0).completion == L"r");
 
     completions.clear();
     complete(L"echo (ls /bin/mkdi", completions, COMPLETION_REQUEST_DEFAULT);
-    assert(completions.size() == 1);
-    assert(completions.at(0).completion == L"r");
+    do_test(completions.size() == 1);
+    do_test(completions.at(0).completion == L"r");
 
     completions.clear();
     complete(L"echo (command ls /bin/mkdi", completions, COMPLETION_REQUEST_DEFAULT);
-    assert(completions.size() == 1);
-    assert(completions.at(0).completion == L"r");
+    do_test(completions.size() == 1);
+    do_test(completions.at(0).completion == L"r");
 
     /* Add a function and test completing it in various ways */
     struct function_data_t func_data;
@@ -1592,18 +1516,26 @@ static void test_complete(void)
     /* Complete a function name */
     completions.clear();
     complete(L"echo (scuttlebut", completions, COMPLETION_REQUEST_DEFAULT);
-    assert(completions.size() == 1);
-    assert(completions.at(0).completion == L"t");
+    do_test(completions.size() == 1);
+    do_test(completions.at(0).completion == L"t");
 
     /* But not with the command prefix */
     completions.clear();
     complete(L"echo (command scuttlebut", completions, COMPLETION_REQUEST_DEFAULT);
-    assert(completions.size() == 0);
+    do_test(completions.size() == 0);
 
     /* Not with the builtin prefix */
     completions.clear();
     complete(L"echo (builtin scuttlebut", completions, COMPLETION_REQUEST_DEFAULT);
-    assert(completions.size() == 0);
+    do_test(completions.size() == 0);
+    
+    /* Trailing spaces (#1261) */
+    complete_add(L"foobarbaz", false, 0, NULL, 0, NO_FILES, NULL, L"qux", NULL, COMPLETE_AUTO_SPACE);
+    completions.clear();
+    complete(L"foobarbaz ", completions, COMPLETION_REQUEST_DEFAULT);
+    do_test(completions.size() == 1);
+    do_test(completions.at(0).completion == L"qux");
+
 
     complete_set_variable_names(NULL);
 }
@@ -1613,11 +1545,11 @@ static void test_1_completion(wcstring line, const wcstring &completion, complet
     // str is given with a caret, which we use to represent the cursor position
     // find it
     const size_t in_cursor_pos = line.find(L'^');
-    assert(in_cursor_pos != wcstring::npos);
+    do_test(in_cursor_pos != wcstring::npos);
     line.erase(in_cursor_pos, 1);
 
     const size_t out_cursor_pos = expected.find(L'^');
-    assert(out_cursor_pos != wcstring::npos);
+    do_test(out_cursor_pos != wcstring::npos);
     expected.erase(out_cursor_pos, 1);
 
     size_t cursor_pos = in_cursor_pos;
@@ -1626,8 +1558,8 @@ static void test_1_completion(wcstring line, const wcstring &completion, complet
     {
         fprintf(stderr, "line %ld: %ls + %ls -> [%ls], expected [%ls]\n", source_line, line.c_str(), completion.c_str(), result.c_str(), expected.c_str());
     }
-    assert(result == expected);
-    assert(cursor_pos == out_cursor_pos);
+    do_test(result == expected);
+    do_test(cursor_pos == out_cursor_pos);
 }
 
 static void test_completion_insertions()
@@ -1666,14 +1598,14 @@ static void perform_one_autosuggestion_test(const wcstring &command, const wcstr
     if (! success)
     {
         printf("line %ld: autosuggest_suggest_special() failed for command %ls\n", line, command.c_str());
-        assert(success);
+        do_test(success);
     }
     if (suggestion != expected)
     {
         printf("line %ld: autosuggest_suggest_special() returned the wrong expected string for command %ls\n", line, command.c_str());
         printf("  actual: %ls\n", suggestion.c_str());
         printf("expected: %ls\n", expected.c_str());
-        assert(suggestion == expected);
+        do_test(suggestion == expected);
     }
 }
 
@@ -1743,17 +1675,17 @@ static void test_autosuggest_suggest_special()
 static void test_autosuggestion_combining()
 {
     say(L"Testing autosuggestion combining");
-    assert(combine_command_and_autosuggestion(L"alpha", L"alphabeta") == L"alphabeta");
+    do_test(combine_command_and_autosuggestion(L"alpha", L"alphabeta") == L"alphabeta");
 
     // when the last token contains no capital letters, we use the case of the autosuggestion
-    assert(combine_command_and_autosuggestion(L"alpha", L"ALPHABETA") == L"ALPHABETA");
+    do_test(combine_command_and_autosuggestion(L"alpha", L"ALPHABETA") == L"ALPHABETA");
 
     // when the last token contains capital letters, we use its case
-    assert(combine_command_and_autosuggestion(L"alPha", L"alphabeTa") == L"alPhabeTa");
+    do_test(combine_command_and_autosuggestion(L"alPha", L"alphabeTa") == L"alPhabeTa");
 
     // if autosuggestion is not longer than input, use the input's case
-    assert(combine_command_and_autosuggestion(L"alpha", L"ALPHAA") == L"ALPHAA");
-    assert(combine_command_and_autosuggestion(L"alpha", L"ALPHA") == L"alpha");
+    do_test(combine_command_and_autosuggestion(L"alpha", L"ALPHAA") == L"ALPHAA");
+    do_test(combine_command_and_autosuggestion(L"alpha", L"ALPHA") == L"alpha");
 }
 
 
@@ -1828,16 +1760,16 @@ static void test_history_matches(history_search_t &search, size_t matches)
     size_t i;
     for (i=0; i < matches; i++)
     {
-        assert(search.go_backwards());
+        do_test(search.go_backwards());
         wcstring item = search.current_string();
     }
-    assert(! search.go_backwards());
+    do_test(! search.go_backwards());
 
     for (i=1; i < matches; i++)
     {
-        assert(search.go_forwards());
+        do_test(search.go_forwards());
     }
-    assert(! search.go_forwards());
+    do_test(! search.go_forwards());
 }
 
 static bool history_contains(history_t *history, const wcstring &txt)
@@ -1896,12 +1828,12 @@ void history_tests_t::test_history(void)
     /* All three items match "a" */
     history_search_t search1(history, L"a");
     test_history_matches(search1, 3);
-    assert(search1.current_string() == L"Alpha");
+    do_test(search1.current_string() == L"Alpha");
 
     /* One item matches "et" */
     history_search_t search2(history, L"et");
     test_history_matches(search2, 1);
-    assert(search2.current_string() == L"Beta");
+    do_test(search2.current_string() == L"Beta");
 
     /* Test item removal */
     history.remove(L"Alpha");
@@ -1941,16 +1873,16 @@ void history_tests_t::test_history(void)
     for (i=100; i >= 1; i--)
     {
         history_item_t item = history.item_at_index(i);
-        assert(! item.empty());
+        do_test(! item.empty());
         after.push_back(item);
     }
-    assert(before.size() == after.size());
+    do_test(before.size() == after.size());
     for (size_t i=0; i < before.size(); i++)
     {
         const history_item_t &bef = before.at(i), &aft = after.at(i);
-        assert(bef.contents == aft.contents);
-        assert(bef.creation_timestamp == aft.creation_timestamp);
-        assert(bef.required_paths == aft.required_paths);
+        do_test(bef.contents == aft.contents);
+        do_test(bef.creation_timestamp == aft.creation_timestamp);
+        do_test(bef.required_paths == aft.required_paths);
     }
 
     /* Clean up after our tests */
@@ -2080,7 +2012,7 @@ void history_tests_t::test_history_races(void)
         }
     }
     // every write should add at least one item
-    assert(hist_idx >= RACE_COUNT);
+    do_test(hist_idx >= RACE_COUNT);
 
     //hist->clear();
     delete hist;
@@ -2126,7 +2058,7 @@ void history_tests_t::test_history_merge(void)
         {
             bool does_contain = history_contains(hists[i], texts[j]);
             bool should_contain = (i == j);
-            assert(should_contain == does_contain);
+            do_test(should_contain == does_contain);
         }
     }
 
@@ -2135,7 +2067,7 @@ void history_tests_t::test_history_merge(void)
     history_t *everything = new history_t(name);
     for (size_t i=0; i < count; i++)
     {
-        assert(history_contains(everything, texts[i]));
+        do_test(history_contains(everything, texts[i]));
     }
 
     /* Clean up */
@@ -2802,7 +2734,7 @@ static void test_highlighting(void)
             text.append(components[i].txt);
             expected_colors.resize(text.size(), components[i].color);
         }
-        assert(expected_colors.size() == text.size());
+        do_test(expected_colors.size() == text.size());
 
         std::vector<highlight_spec_t> colors(text.size());
         highlight_shell(text, colors, 20, NULL, env_vars_snapshot_t());
@@ -2811,7 +2743,7 @@ static void test_highlighting(void)
         {
             err(L"Color vector has wrong size! Expected %lu, actual %lu", expected_colors.size(), colors.size());
         }
-        assert(expected_colors.size() == colors.size());
+        do_test(expected_colors.size() == colors.size());
         for (size_t i=0; i < text.size(); i++)
         {
             // Hackish space handling. We don't care about the colors in spaces.
@@ -2866,7 +2798,6 @@ int main(int argc, char **argv)
     if (should_test_function("convert")) test_convert();
     if (should_test_function("convert_nulls")) test_convert_nulls();
     if (should_test_function("tok")) test_tok();
-    if (should_test_function("fork")) test_fork();
     if (should_test_function("iothread")) test_iothread();
     if (should_test_function("parser")) test_parser();
     if (should_test_function("cancellation")) test_cancellation();

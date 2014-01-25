@@ -360,6 +360,7 @@ void pager_t::set_term_size(int w, int h)
     assert(h > 0);
     available_term_width = w;
     available_term_height = h;
+    recalc_min_widths(&completion_infos);
 }
 
 /**
@@ -534,7 +535,7 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
         /* Ellipsis helper string. Either empty or containing the ellipsis char */
         const wchar_t ellipsis_string[] = {ellipsis_char == L'\x2026' ? L'\x2026' : L'\0', L'\0'};
         
-        /* Add the progress line. It's a "more to disclose" line if necessary. */
+        /* Add the progress line. It's a "more to disclose" line if necessary, or a row listing if it's scrollable; otherwise ignore it */
         wcstring progress_text;
         if (rendering->remaining_to_disclose == 1)
         {
@@ -545,13 +546,17 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
         {
             progress_text = format_string(L"%lsand %lu more rows", ellipsis_string, (unsigned long)rendering->remaining_to_disclose);
         }
-        else
+        else if (start_row > 0 || stop_row < row_count)
         {
-            /* The +1 here is because we are zero indexed, but want to present things as 1-indexed. We do not add 1 to stop_row or row_count because these are the "past the last value" */
+            /* We have a scrollable interface. The +1 here is because we are zero indexed, but want to present things as 1-indexed. We do not add 1 to stop_row or row_count because these are the "past the last value" */
             progress_text = format_string(L"rows %lu to %lu of %lu", start_row + 1, stop_row, row_count);
         }
-        line_t &line = rendering->screen_data.add_line();
-        print_max(progress_text.c_str(), highlight_spec_pager_progress | highlight_make_background(highlight_spec_pager_progress), term_width, true /* has_more */, &line);
+        
+        if (! progress_text.empty())
+        {
+            line_t &line = rendering->screen_data.add_line();
+            print_max(progress_text.c_str(), highlight_spec_pager_progress | highlight_make_background(highlight_spec_pager_progress), term_width, true /* has_more */, &line);
+        }
     }
     return print;
 }

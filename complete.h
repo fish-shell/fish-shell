@@ -14,6 +14,7 @@
 
 
 #include <wchar.h>
+#include <stdint.h>
 
 #include "util.h"
 #include "common.h"

@@ -84,7 +84,7 @@ class pager_t
     
     wcstring prefix;
     
-    int completion_try_print(size_t cols, const wcstring &prefix, const comp_info_list_t &lst, page_rendering_t *rendering, size_t suggested_start_row) const;
+    bool completion_try_print(size_t cols, const wcstring &prefix, const comp_info_list_t &lst, page_rendering_t *rendering, size_t suggested_start_row) const;
     
     void recalc_min_widths(comp_info_list_t * lst) const;
     void measure_completion_infos(std::vector<comp_t> *infos, const wcstring &prefix) const;

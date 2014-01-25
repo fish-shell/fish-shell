@@ -1876,8 +1876,9 @@ static bool handle_completions(const std::vector<completion_t> &comp)
             parse_util_get_parameter_info(data->command_line, data->buff_pos, &quote, NULL, NULL);
             bool is_quoted = (quote != L'\0');
             
-            if (1)
+            if (pager_use_inline())
             {
+                /* Inline pager */
                 data->pager.set_prefix(prefix);
                 data->pager.set_completions(surviving_completions);
                 
@@ -1886,7 +1887,7 @@ static bool handle_completions(const std::vector<completion_t> &comp)
             }
             else
             {
-                /* Clear the autosuggestion from the old commandline before abandoning it (see #561) */
+                /* Classic pager. Clear the autosuggestion from the old commandline before abandoning it (see #561) */
                 if (! data->autosuggestion.empty())
                     reader_repaint_without_autosuggestion();
 

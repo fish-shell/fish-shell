@@ -126,7 +126,7 @@ RESOLVE(statement)
     if (token1.type == parse_token_type_string)
     {
         // If we are a function, then look for help arguments
-        // Othewrise, if the next token looks like an option (starts with a dash), then parse it as a decorated statement
+        // Otherwise, if the next token looks like an option (starts with a dash), then parse it as a decorated statement
         if (token1.keyword == parse_keyword_function && token2.is_help_argument)
         {
             return 4;

@@ -61,7 +61,14 @@ static const wchar_t * const highlight_var[] =
     L"fish_color_escape",
     L"fish_color_quote",
     L"fish_color_redirection",
-    L"fish_color_autosuggestion"
+    L"fish_color_autosuggestion",
+    
+    L"fish_pager_color_prefix",
+    L"fish_pager_color_completion",
+    L"fish_pager_color_description",
+    L"fish_pager_color_progress",
+    L"fish_pager_color_secondary"
+
 };
 
 /* If the given path looks like it's relative to the working directory, then prepend that working directory. */
@@ -354,7 +361,10 @@ bool plain_statement_get_expanded_command(const wcstring &src, const parse_node_
 rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background)
 {
     rgb_color_t result = rgb_color_t::normal();
-
+    
+    /* If sloppy_background is set, then we look at the foreground color even if is_background is set */
+    bool treat_as_background = is_background && ! (highlight & highlight_modifier_sloppy_background);
+    
     /* Get the primary variable */
     size_t idx = highlight_get_primary(highlight);
     if (idx >= VAR_COUNT)
@@ -370,9 +380,9 @@ rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background)
         val_wstr = env_get_string(highlight_var[0]);
 
     if (! val_wstr.missing())
-        result = parse_color(val_wstr, is_background);
+        result = parse_color(val_wstr, treat_as_background);
 
-    /* Handle modifiers. Just one for now */
+    /* Handle modifiers. */
     if (highlight & highlight_modifier_valid_path)
     {
         env_var_t val2_wstr =  env_get_string(L"fish_color_valid_path");

@@ -29,10 +29,18 @@ enum
     highlight_spec_redirection, //redirection
     highlight_spec_autosuggestion, //autosuggestion
 
+    // Pager support
+    highlight_spec_pager_prefix,
+    highlight_spec_pager_completion,
+    highlight_spec_pager_description,
+    highlight_spec_pager_progress,
+    highlight_spec_pager_secondary,
+
     HIGHLIGHT_SPEC_PRIMARY_MASK = 0xFF,
 
     /* The following values are modifiers */
     highlight_modifier_valid_path = 0x100,
+    highlight_modifier_sloppy_background = 0x200, //hackish, indicates that we should treat a foreground color as background, per certain historical behavior
 
     /* Very special value */
     highlight_spec_invalid = 0xFFFF
@@ -47,6 +55,7 @@ inline highlight_spec_t highlight_get_primary(highlight_spec_t val)
 
 inline highlight_spec_t highlight_make_background(highlight_spec_t val)
 {
+    assert(val >> 16 == 0); //should have nothing in upper bits, otherwise this is already a background
     return val << 16;
 }
 

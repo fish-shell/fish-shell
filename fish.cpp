@@ -182,7 +182,7 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
             {
                 wcstring base_path = str2wcstring(exec_path);
                 base_path.resize(base_path.size() - strlen(suffix));
-
+                
                 paths.data = base_path + L"/share/fish";
                 paths.sysconf = base_path + L"/etc/fish";
                 paths.doc = base_path + L"/share/doc/fish";

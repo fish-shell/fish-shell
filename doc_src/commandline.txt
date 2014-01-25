@@ -57,6 +57,16 @@ If \c commandline is called during a call to complete a given string
 using <code>complete -C STRING</code>, \c commandline will consider the
 specified string to be the current contents of the command line.
 
+The following options output metadata about the commandline state:
+
+- \c -L or \c --line print the line that the cursor is on, with the topmost
+line starting at 1
+- \c -S or \c --search-mode evaluates to true if the commandline is performing
+a history search
+- \c -P or \c --paging-mode evaluates to true if the commandline is showing
+pager contents, such as tab completions
+
+
 \subsection commandline-example Example
 
 <tt>commandline -j $history[3]</tt> replaces the job under the cursor with the

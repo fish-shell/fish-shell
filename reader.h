@@ -239,9 +239,17 @@ int reader_shell_test(const wchar_t *b);
 /**
    Test whether the interactive reader is in search mode.
 
-   \return o if not in search mode, 1 if in search mode and -1 if not in interactive mode
+   \return 0 if not in search mode, 1 if in search mode and -1 if not in interactive mode
  */
 int reader_search_mode();
+
+/**
+   Test whether the interactive reader has visible pager contents.
+
+   \return 0 if it has pager contents, 1 if it does not have pager contents, and -1 if not in interactive mode
+ */
+int reader_has_pager_contents();
+
 
 /* Given a command line and an autosuggestion, return the string that gets shown to the user. Exposed for testing purposes only. */
 wcstring combine_command_and_autosuggestion(const wcstring &cmdline, const wcstring &autosuggestion);

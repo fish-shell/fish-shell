@@ -60,6 +60,7 @@
 #include "signal.h"
 #include "parse_tree.h"
 #include "parse_util.h"
+#include "pager.h"
 
 static const char * const * s_arguments;
 static int s_test_run_count = 0;
@@ -1096,6 +1097,99 @@ static void test_path()
     if (! paths_are_equivalent(L"///foo///bar/baz", L"/foo/bar////baz//")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
     if (! paths_are_equivalent(L"/foo/bar/baz", L"/foo/bar/baz")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
     if (! paths_are_equivalent(L"/", L"/")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
+}
+
+static void test_pager_navigation()
+{
+    say(L"Testing pager navigation");
+    
+    /* Generate 19 strings of width 10. There's 2 spaces between completions, and our term size is 80; these can therefore fit into 6 columns (6 * 12 - 2 = 70) or 5 columns (58) but not 7 columns (7 * 12 - 2 = 82).
+    
+       You can simulate this test by creating 19 files named "file00.txt" through "file_18.txt".
+    */
+    completion_list_t completions;
+    for (size_t i=0; i < 19; i++)
+    {
+        append_completion(completions, L"abcdefghij");
+    }
+    
+    pager_t pager;
+    pager.set_completions(completions);
+    pager.set_term_size(80, 24);
+    page_rendering_t render = pager.render();
+    
+    if (render.term_width != 80)
+        err(L"Wrong term width");
+    if (render.term_height != 24)
+        err(L"Wrong term height");
+    
+    size_t rows = 4, cols = 5;
+    
+    /* We have 19 completions. We can fit into 6 columns with 4 rows or 5 columns with 4 rows; the second one is better and so is what we ought to have picked. */
+    if (render.rows != rows)
+        err(L"Wrong row count");
+    if (render.cols != cols)
+        err(L"Wrong column count");
+    
+    /* Initially expect to have no completion index */
+    if (render.selected_completion_idx != (size_t)(-1))
+    {
+        err(L"Wrong initial selection");
+    }
+    
+    /* Here are navigation directions and where we expect the selection to be */
+    const struct
+    {
+        selection_direction_t dir;
+        size_t sel;
+    }
+    cmds[] =
+    {
+        /* Tab completion to get into the list */
+        {direction_next, 0},
+        
+        /* Westward motion in upper left wraps along the top row */
+        {direction_west, 16},
+        {direction_east, 1},
+        
+        /* "Next" motion goes down the column */
+        {direction_next, 2},
+        {direction_next, 3},
+        
+        {direction_west, 18},
+        {direction_east, 3},
+        {direction_east, 7},
+        {direction_east, 11},
+        {direction_east, 15},
+        {direction_east, 3},
+        
+        {direction_west, 18},
+        {direction_east, 3},
+        
+        /* Eastward motion wraps along the bottom, westward goes to the prior column */
+        {direction_east, 7},
+        {direction_east, 11},
+        {direction_east, 15},
+        {direction_east, 3},
+        
+        /* Column memory */
+        {direction_west, 18},
+        {direction_south, 15},
+        {direction_north, 18},
+        {direction_west, 14},
+        {direction_south, 15},
+        {direction_north, 14}
+    };
+    for (size_t i=0; i < sizeof cmds / sizeof *cmds; i++)
+    {
+        pager.select_next_completion_in_direction(cmds[i].dir, render);
+        pager.update_rendering(&render);
+        if (cmds[i].sel != render.selected_completion_idx)
+        {
+            err(L"For command %lu, expected selection %lu, but found instead %lu\n", i, cmds[i].sel, render.selected_completion_idx);
+        }
+    }
+    
 }
 
 enum word_motion_t
@@ -2716,6 +2810,7 @@ int main(int argc, char **argv)
     if (should_test_function("abbreviations")) test_abbreviations();
     if (should_test_function("test")) test_test();
     if (should_test_function("path")) test_path();
+    if (should_test_function("pager_navigation")) test_pager_navigation();
     if (should_test_function("word_motion")) test_word_motion();
     if (should_test_function("is_potential_path")) test_is_potential_path();
     if (should_test_function("colors")) test_colors();

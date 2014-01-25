@@ -62,6 +62,7 @@
 		D01A2D24169B736200767098 /* man1 in Copy Files */ = {isa = PBXBuildFile; fileRef = D01A2D23169B730A00767098 /* man1 */; };
 		D01A2D25169B737700767098 /* man1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D01A2D23169B730A00767098 /* man1 */; };
 		D031890C15E36E4600D9CC39 /* base in Resources */ = {isa = PBXBuildFile; fileRef = D031890915E36D9800D9CC39 /* base */; };
+		D032388B1849D1980032CF2C /* pager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D03238891849D1980032CF2C /* pager.cpp */; };
 		D033781115DC6D4C00A634BA /* completions in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02715D1FEA100B9DB63 /* completions */; };
 		D033781215DC6D5200A634BA /* functions in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02815D1FEA100B9DB63 /* functions */; };
 		D033781315DC6D5400A634BA /* tools in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02915D1FEA100B9DB63 /* tools */; };
@@ -386,6 +387,8 @@
 		D025C02815D1FEA100B9DB63 /* functions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = functions; path = share/functions; sourceTree = "<group>"; };
 		D025C02915D1FEA100B9DB63 /* tools */ = {isa = PBXFileReference; lastKnownFileType = folder; name = tools; path = share/tools; sourceTree = "<group>"; };
 		D031890915E36D9800D9CC39 /* base */ = {isa = PBXFileReference; lastKnownFileType = text; path = base; sourceTree = BUILT_PRODUCTS_DIR; };
+		D03238891849D1980032CF2C /* pager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pager.cpp; sourceTree = "<group>"; };
+		D032388A1849D1980032CF2C /* pager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pager.h; sourceTree = "<group>"; };
 		D03EE83814DF88B200FC7150 /* lru.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lru.h; sourceTree = "<group>"; };
 		D052D8091868F7FC003ABCBD /* parse_execution.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = parse_execution.cpp; sourceTree = "<group>"; };
 		D052D80A1868F7FC003ABCBD /* parse_execution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = parse_execution.h; sourceTree = "<group>"; };
@@ -699,6 +702,8 @@
 				D0A0855013B3ACEE0099B651 /* mimedb.cpp */,
 				D0A0851A13B3ACEE0099B651 /* output.h */,
 				D0A0855113B3ACEE0099B651 /* output.cpp */,
+				D032388A1849D1980032CF2C /* pager.h */,
+				D03238891849D1980032CF2C /* pager.cpp */,
 				D0A0851B13B3ACEE0099B651 /* parse_util.h */,
 				D0A0855213B3ACEE0099B651 /* parse_util.cpp */,
 				D0A0851C13B3ACEE0099B651 /* parser_keywords.h */,
@@ -1254,6 +1259,7 @@
 				D0D02A7915983888008E62BD /* intern.cpp in Sources */,
 				D0D02A7A15983916008E62BD /* env_universal.cpp in Sources */,
 				D0D02A7B15983928008E62BD /* env_universal_common.cpp in Sources */,
+				D032388B1849D1980032CF2C /* pager.cpp in Sources */,
 				D0D02A89159839DF008E62BD /* fish.cpp in Sources */,
 				D0C52F371765284C00BFAB82 /* parse_tree.cpp in Sources */,
 				D0FE8EE8179FB760008C9F21 /* parse_productions.cpp in Sources */,

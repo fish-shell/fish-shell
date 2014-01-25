@@ -3,82 +3,14 @@
 #include "pager.h"
 #include "highlight.h"
 #include "input_common.h"
-
-
-#if 1
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <wchar.h>
-#include <unistd.h>
-#include <termios.h>
-#include <string.h>
-#include <map>
-#include <algorithm>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-
-#ifdef HAVE_SYS_IOCTL_H
-#include <sys/ioctl.h>
-#endif
-
-#include <sys/time.h>
-#include <sys/wait.h>
-#include <dirent.h>
-#include <fcntl.h>
-
-#include <locale.h>
-
-#if HAVE_NCURSES_H
-#include <ncurses.h>
-#else
-#include <curses.h>
-#endif
-
-#if HAVE_TERM_H
-#include <term.h>
-#elif HAVE_NCURSES_TERM_H
-#include <ncurses/term.h>
-#endif
-
-#include <signal.h>
-
-#ifdef HAVE_GETOPT_H
-#include <getopt.h>
-#endif
-
-#include <errno.h>
 #include <vector>
-
-#include "fallback.h"
-#include "util.h"
-
-#include "wutil.h"
-#include "common.h"
-#include "complete.h"
-#include "output.h"
-#include "input_common.h"
-#include "env_universal.h"
-#include "print_help.h"
-#include "highlight.h"
-#endif
+#include <map>
 
 #define PAGER_SELECTION_NONE ((size_t)(-1))
 
 typedef pager_t::comp_t comp_t;
 typedef std::vector<completion_t> completion_list_t;
 typedef std::vector<comp_t> comp_info_list_t;
-
-enum
-{
-    LINE_UP = R_NULL+1,
-    LINE_DOWN,
-    PAGE_UP,
-    PAGE_DOWN
-}
-;
-
 
 /** The minimum width (in characters) the terminal may have for fish_pager to not refuse showing the completions */
 #define PAGER_MIN_WIDTH 16

@@ -53,9 +53,8 @@ class editable_line_t
     {
     }
     
-    /* Internal */
-    void kill(size_t begin_idx, size_t length, int mode, int newv);
-
+    /* Inserts the string at the cursor position */
+    void insert_string(const wcstring &str);
 };
 
 /**

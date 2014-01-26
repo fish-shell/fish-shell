@@ -253,12 +253,6 @@ public:
 
     /** The current position in search_prev */
     size_t search_pos;
-
-    /** Length of the command */
-    size_t command_length() const
-    {
-        return command_line.size();
-    }
     
     /* The line that is currently being edited. Typically the command line, but may be the search field */
     editable_line_t *active_edit_line()
@@ -563,7 +557,7 @@ static void reader_repaint()
             data->left_prompt_buff,
             data->right_prompt_buff,
             full_line,
-            data->command_length(),
+            el->size(),
             &colors[0],
             &indents[0],
             el->position,
@@ -582,9 +576,8 @@ static void reader_repaint_without_autosuggestion()
 }
 
 /** Internal helper function for handling killing parts of text. */
-static void reader_kill(size_t begin_idx, size_t length, int mode, int newv)
+static void reader_kill(editable_line_t *el, size_t begin_idx, size_t length, int mode, int newv)
 {
-    editable_line_t *el = data->active_edit_line();
     const wchar_t *begin = el->text.c_str() + begin_idx;
     if (newv)
     {
@@ -660,7 +653,7 @@ void reader_pop_current_filename()
 void reader_data_t::command_line_changed()
 {
     ASSERT_IS_MAIN_THREAD();
-    size_t len = command_length();
+    size_t len = this->command_line.size();
 
     /* When we grow colors, propagate the last color (if any), under the assumption that usually it will be correct. If it is, it avoids a repaint. */
     highlight_spec_t last_color = colors.empty() ? highlight_spec_t() : colors.back();
@@ -2134,10 +2127,10 @@ void reader_sanity_check()
         if (data->command_line.position > data->command_line.size())
             sanity_lose();
 
-        if (data->colors.size() != data->command_length())
+        if (data->colors.size() != data->command_line.size())
             sanity_lose();
 
-        if (data->indents.size() != data->command_length())
+        if (data->indents.size() != data->command_line.size())
             sanity_lose();
 
     }
@@ -2360,7 +2353,7 @@ enum move_word_dir_t
 static void move_word(editable_line_t *el, bool move_right, bool erase, enum move_word_style_t style, bool newv)
 {
     /* Return if we are already at the edge */
-    const size_t boundary = move_right ? data->command_length() : 0;
+    const size_t boundary = move_right ? el->size() : 0;
     if (el->position == boundary)
         return;
 
@@ -2383,24 +2376,27 @@ static void move_word(editable_line_t *el, bool move_right, bool erase, enum mov
     if (buff_pos == start_buff_pos)
         buff_pos = (move_right ? buff_pos + 1 : buff_pos - 1);
 
-    /* If we are moving left, buff_pos-1 is the index of the first character we do not delete (possibly -1). If we are moving right, then buff_pos is that index - possibly data->command_length(). */
+    /* If we are moving left, buff_pos-1 is the index of the first character we do not delete (possibly -1). If we are moving right, then buff_pos is that index - possibly el->size(). */
     if (erase)
     {
         /* Don't autosuggest after a kill */
-        data->suppress_autosuggestion = true;
+        if (el == &data->command_line)
+        {
+            data->suppress_autosuggestion = true;
+        }
 
         if (move_right)
         {
-            reader_kill(start_buff_pos, buff_pos - start_buff_pos, KILL_APPEND, newv);
+            reader_kill(el, start_buff_pos, buff_pos - start_buff_pos, KILL_APPEND, newv);
         }
         else
         {
-            reader_kill(buff_pos, start_buff_pos - buff_pos, KILL_PREPEND, newv);
+            reader_kill(el, buff_pos, start_buff_pos - buff_pos, KILL_PREPEND, newv);
         }
     }
     else
     {
-        data->command_line.position = buff_pos;
+        el->position = buff_pos;
         reader_repaint();
     }
 
@@ -2760,7 +2756,7 @@ static void highlight_complete(background_highlight_context_t *ctx, int result)
     if (ctx->string_to_highlight == data->command_line.text)
     {
         /* The data hasn't changed, so swap in our colors. The colors may not have changed, so do nothing if they have not. */
-        assert(ctx->colors.size() == data->command_length());
+        assert(ctx->colors.size() == data->command_line.size());
         if (data->colors != ctx->colors)
         {
             data->colors.swap(ctx->colors);
@@ -3184,7 +3180,7 @@ const wchar_t *reader_readline(void)
             /* go to EOL*/
             case R_END_OF_BUFFER:
             {
-                data->command_line.position = data->command_length();
+                data->command_line.position = data->command_line.size();
 
                 reader_repaint_needed();
                 break;
@@ -3292,7 +3288,7 @@ const wchar_t *reader_readline(void)
             /* kill */
             case R_KILL_LINE:
             {
-                const editable_line_t *el = data->active_edit_line();
+                editable_line_t *el = data->active_edit_line();
                 const wchar_t *buff = el->text.c_str();
                 const wchar_t *begin = &buff[el->position];
                 const wchar_t *end = begin;
@@ -3306,7 +3302,7 @@ const wchar_t *reader_readline(void)
                 size_t len = end-begin;
                 if (len)
                 {
-                    reader_kill(begin - buff, len, KILL_APPEND, last_char!=R_KILL_LINE);
+                    reader_kill(el, begin - buff, len, KILL_APPEND, last_char!=R_KILL_LINE);
                 }
 
                 break;
@@ -3314,7 +3310,7 @@ const wchar_t *reader_readline(void)
 
             case R_BACKWARD_KILL_LINE:
             {
-                const editable_line_t *el = data->active_edit_line();
+                editable_line_t *el = data->active_edit_line();
                 if (el->position > 0)
                 {
                     const wchar_t *buff = el->text.c_str();
@@ -3336,7 +3332,7 @@ const wchar_t *reader_readline(void)
                     size_t len = maxi<size_t>(end-begin, 1);
                     begin = end - len;
 
-                    reader_kill(begin - buff, len, KILL_PREPEND, last_char!=R_BACKWARD_KILL_LINE);
+                    reader_kill(el, begin - buff, len, KILL_PREPEND, last_char!=R_BACKWARD_KILL_LINE);
                 }
                 break;
 
@@ -3344,7 +3340,7 @@ const wchar_t *reader_readline(void)
 
             case R_KILL_WHOLE_LINE:
             {
-                const editable_line_t *el = data->active_edit_line();
+                editable_line_t *el = data->active_edit_line();
                 const wchar_t *buff = el->text.c_str();
                 const wchar_t *end = &buff[el->position];
                 const wchar_t *begin = end;
@@ -3369,7 +3365,7 @@ const wchar_t *reader_readline(void)
 
                 if (len)
                 {
-                    reader_kill(begin - buff, len, KILL_APPEND, last_char!=R_KILL_WHOLE_LINE);
+                    reader_kill(el, begin - buff, len, KILL_APPEND, last_char!=R_KILL_WHOLE_LINE);
                 }
 
                 break;
@@ -3496,7 +3492,7 @@ const wchar_t *reader_readline(void)
                             data->history->add_with_file_detection(el->text);
                         }
                         finished=1;
-                        data->command_line.position = data->command_length();
+                        data->command_line.position = data->command_line.size();
                         reader_repaint_needed();
                         break;
                     }
@@ -3561,7 +3557,6 @@ const wchar_t *reader_readline(void)
 
                 switch (data->search_mode)
                 {
-
                     case LINE_SEARCH:
                     {
                         if ((c == R_HISTORY_SEARCH_BACKWARD) ||
@@ -3615,13 +3610,14 @@ const wchar_t *reader_readline(void)
             /* Move left*/
             case R_BACKWARD_CHAR:
             {
+                editable_line_t *el = data->active_edit_line();
                 if (is_navigating_pager_contents())
                 {
                     select_completion_in_direction(direction_west, cycle_command_line, cycle_cursor_pos);
                 }
-                else if (data->command_line.position > 0)
+                else if (el->position > 0)
                 {
-                    data->command_line.position--;
+                    el->position--;
                     reader_repaint_needed();
                 }
                 break;
@@ -3630,13 +3626,14 @@ const wchar_t *reader_readline(void)
             /* Move right*/
             case R_FORWARD_CHAR:
             {
+                editable_line_t *el = data->active_edit_line();
                 if (is_navigating_pager_contents())
                 {
                     select_completion_in_direction(direction_east, cycle_command_line, cycle_cursor_pos);
                 }
-                else if (data->command_line.position < data->command_length())
+                else if (el->position < el->size())
                 {
-                    data->command_line.position++;
+                    el->position++;
                     reader_repaint_needed();
                 }
                 else

@@ -113,6 +113,12 @@ public:
         }
         return line_datas.at(idx);
     }
+    
+    line_t &insert_line_at_index(size_t idx)
+    {
+        assert(idx <= line_datas.size());
+        return *line_datas.insert(line_datas.begin() + idx, line_t());
+    }
 
     line_t &line(size_t idx)
     {

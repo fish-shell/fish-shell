@@ -22,6 +22,42 @@ class parser_t;
 class completion_t;
 class history_t;
 
+/* Helper class for storing a command line */
+class editable_line_t
+{
+    public:
+    
+    /** The command line */
+    wcstring text;
+    
+    /** The current position of the cursor in the command line */
+    size_t position;
+    
+    const wcstring &get_text() const
+    {
+        return text;
+    }
+    
+    /* Gets the length of the text */
+    size_t size() const
+    {
+        return text.size();
+    }
+    
+    bool empty() const
+    {
+        return text.empty();
+    }
+    
+    editable_line_t() : text(), position(0)
+    {
+    }
+    
+    /* Internal */
+    void kill(size_t begin_idx, size_t length, int mode, int newv);
+
+};
+
 /**
   Read commands from \c fd until encountering EOF
 */

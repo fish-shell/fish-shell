@@ -557,6 +557,17 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
             line_t &line = rendering->screen_data.add_line();
             print_max(progress_text.c_str(), highlight_spec_pager_progress | highlight_make_background(highlight_spec_pager_progress), term_width, true /* has_more */, &line);
         }
+        
+        if (search_field_shown)
+        {
+            /* Add the search field */
+            wcstring spaces(8, L' ');
+            spaces.insert(spaces.begin(), 1, L'h');
+            line_t *search_field = &rendering->screen_data.insert_line_at_index(0);
+            int search_field_written = print_max(L"filter: ", highlight_spec_normal, term_width, false, search_field);
+            search_field_written += print_max(spaces, highlight_modifier_force_underline, term_width - search_field_written, false, search_field);
+        }
+        
     }
     return print;
 }
@@ -864,6 +875,8 @@ void pager_t::clear()
     prefix.clear();
     selected_completion_idx = PAGER_SELECTION_NONE;
     fully_disclosed = false;
+    search_field_shown = false;
+    search_field_string.clear();
 }
 
 /* Constructor */

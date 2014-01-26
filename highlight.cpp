@@ -399,6 +399,12 @@ rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background)
                 result.set_underline(true);
         }
     }
+    
+    if (highlight & highlight_modifier_force_underline)
+    {
+        result.set_underline(true);
+    }
+    
     return result;
 }
 

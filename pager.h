@@ -45,6 +45,10 @@ class pager_t
     /* Fully disclosed means that we show all completions */
     bool fully_disclosed;
     
+    /* Whether we show the search field */
+    bool search_field_shown;
+    wcstring search_field_string;
+    
     /* Returns the index of the completion that should draw selected, using the given number of columns */
     size_t visual_selected_completion_index(size_t rows, size_t cols) const;
     

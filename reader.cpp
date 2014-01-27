@@ -3683,7 +3683,7 @@ const wchar_t *reader_readline(void)
             case R_BACKWARD_CHAR:
             {
                 editable_line_t *el = data->active_edit_line();
-                if (data->is_navigating_pager_contents() && ! data->pager.is_search_field_shown())
+                if (data->is_navigating_pager_contents())
                 {
                     select_completion_in_direction(direction_west);
                 }
@@ -3699,7 +3699,7 @@ const wchar_t *reader_readline(void)
             case R_FORWARD_CHAR:
             {
                 editable_line_t *el = data->active_edit_line();
-                if (data->is_navigating_pager_contents() && ! data->pager.is_search_field_shown())
+                if (data->is_navigating_pager_contents())
                 {
                     select_completion_in_direction(direction_east);
                 }

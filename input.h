@@ -58,7 +58,8 @@ enum
     R_UP_LINE,
     R_DOWN_LINE,
     R_SUPPRESS_AUTOSUGGESTION,
-    R_ACCEPT_AUTOSUGGESTION
+    R_ACCEPT_AUTOSUGGESTION,
+    R_CANCEL
 };
 
 wcstring describe_char(wchar_t c);

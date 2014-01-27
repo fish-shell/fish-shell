@@ -6,6 +6,8 @@
 #include "screen.h"
 #include "reader.h"
 
+#define PAGER_SELECTION_NONE ((size_t)(-1))
+
 /* Represents rendering from the pager */
 class page_rendering_t
 {
@@ -123,8 +125,8 @@ class pager_t
     /* Sets the terminal width and height */
     void set_term_size(int w, int h);
     
-    /* Changes the selected completion in the given direction according to the layout of the given rendering. Returns the newly selected completion if it changed, NULL if nothing was selected or it did not change. */
-    const completion_t *select_next_completion_in_direction(selection_direction_t direction, const page_rendering_t &rendering);
+    /* Changes the selected completion in the given direction according to the layout of the given rendering. Returns true if the selection changed. */
+    bool select_next_completion_in_direction(selection_direction_t direction, const page_rendering_t &rendering);
     
     /* Returns the currently selected completion for the given rendering */
     const completion_t *selected_completion(const page_rendering_t &rendering) const;

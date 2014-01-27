@@ -7,8 +7,6 @@
 #include <vector>
 #include <map>
 
-#define PAGER_SELECTION_NONE ((size_t)(-1))
-
 typedef pager_t::comp_t comp_t;
 typedef std::vector<completion_t> completion_list_t;
 typedef std::vector<comp_t> comp_info_list_t;
@@ -709,7 +707,7 @@ bool pager_t::empty() const
     return unfiltered_completion_infos.empty();
 }
 
-const completion_t *pager_t::select_next_completion_in_direction(selection_direction_t direction, const page_rendering_t &rendering)
+bool pager_t::select_next_completion_in_direction(selection_direction_t direction, const page_rendering_t &rendering)
 {
     /* Must have something to select */
     if (this->completion_infos.empty())
@@ -734,7 +732,8 @@ const completion_t *pager_t::select_next_completion_in_direction(selection_direc
                 {
                     selected_completion_idx = 0;
                 }
-                return selected_completion(rendering);
+                note_selection_changed();
+                return true;
 
             /* These do nothing */
             case direction_north:
@@ -742,7 +741,7 @@ const completion_t *pager_t::select_next_completion_in_direction(selection_direc
             case direction_west:
             case direction_deselect:
             default:
-                return NULL;
+                return false;
         }
     }
     
@@ -898,12 +897,12 @@ const completion_t *pager_t::select_next_completion_in_direction(selection_direc
             }
         }
         
-        
-        return selected_completion(rendering);
+        this->note_selection_changed();
+        return true;
     }
     else
     {
-        return NULL;
+        return false;
     }
 }
 

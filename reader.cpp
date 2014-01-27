@@ -1062,6 +1062,7 @@ static bool command_ends_paging(wchar_t c, bool focused_on_search_field)
         case R_HISTORY_TOKEN_SEARCH_FORWARD:
         case R_EXECUTE:
         case R_ACCEPT_AUTOSUGGESTION:
+        case R_CANCEL:
             return true;
         
         /* These commands never do */
@@ -1636,31 +1637,11 @@ static void clear_pager()
     }
 }
 
-static void select_completion_in_direction(enum selection_direction_t dir, const wcstring &cycle_command_line, size_t cycle_cursor_pos)
+static void select_completion_in_direction(enum selection_direction_t dir)
 {
-    const completion_t *next_comp = data->pager.select_next_completion_in_direction(dir, data->current_page_rendering);
-    if (next_comp != NULL || dir == direction_deselect)
-    {
-        /* Update the cursor and command line */
-        size_t cursor_pos = cycle_cursor_pos;
-        wcstring new_cmd_line;
-        if (dir == direction_deselect)
-        {
-            new_cmd_line = cycle_command_line;
-        }
-        else
-        {
-            new_cmd_line = completion_apply_to_command_line(next_comp->completion, next_comp->flags, cycle_command_line, &cursor_pos, false);
-        }
-        reader_set_buffer_maintaining_pager(new_cmd_line, cursor_pos);
-
-
-        /* Since we just inserted a completion, don't immediately do a new autosuggestion */
-        data->suppress_autosuggestion = true;
-
-        /* Trigger repaint (see #765) */
-        reader_repaint_needed();
-    }
+    assert(data != NULL);
+    /* Note: this will probably trigger reader_selected_completion_changed, which will cause us to update stuff */
+    data->pager.select_next_completion_in_direction(dir, data->current_page_rendering);
 }
 
 /**
@@ -2960,6 +2941,21 @@ static void handle_end_loop()
     }
 }
 
+static bool selection_is_at_top()
+{
+    const pager_t *pager = &data->pager;
+    size_t row = pager->get_selected_row(data->current_page_rendering);
+    if (row != 0 && row != PAGER_SELECTION_NONE)
+        return false;
+    
+    size_t col = pager->get_selected_column(data->current_page_rendering);
+    if (col != 0 && col != PAGER_SELECTION_NONE)
+        return false;
+
+    return true;
+}
+
+
 /**
    Read interactively. Read input from stdin while providing editing
    facilities.
@@ -3253,6 +3249,12 @@ const wchar_t *reader_readline(void)
             {
                 break;
             }
+            
+            case R_CANCEL:
+            {
+                // The only thing we can cancel right now is paging, which we handled up above
+                break;
+            }
 
             case R_REPAINT:
             {
@@ -3287,7 +3289,7 @@ const wchar_t *reader_readline(void)
                 if (data->is_navigating_pager_contents() || (! comp_empty && last_char == R_COMPLETE))
                 {
                     /* The user typed R_COMPLETE more than once in a row. Cycle through our available completions. */
-                    select_completion_in_direction(c == R_COMPLETE ? direction_next : direction_prev, data->cycle_command_line, data->cycle_cursor_pos);
+                    select_completion_in_direction(c == R_COMPLETE ? direction_next : direction_prev);
                 }
                 else
                 {
@@ -3346,7 +3348,7 @@ const wchar_t *reader_readline(void)
                     if (c == R_COMPLETE_AND_SEARCH && ! comp_empty && ! data->pager.empty())
                     {
                         data->pager.set_search_field_shown(true);
-                        select_completion_in_direction(direction_next, data->cycle_command_line, data->cycle_cursor_pos);
+                        select_completion_in_direction(direction_next);
                         reader_repaint_needed();
                     }
 
@@ -3683,7 +3685,7 @@ const wchar_t *reader_readline(void)
                 editable_line_t *el = data->active_edit_line();
                 if (data->is_navigating_pager_contents() && ! data->pager.is_search_field_shown())
                 {
-                    select_completion_in_direction(direction_west, data->cycle_command_line, data->cycle_cursor_pos);
+                    select_completion_in_direction(direction_west);
                 }
                 else if (el->position > 0)
                 {
@@ -3699,7 +3701,7 @@ const wchar_t *reader_readline(void)
                 editable_line_t *el = data->active_edit_line();
                 if (data->is_navigating_pager_contents() && ! data->pager.is_search_field_shown())
                 {
-                    select_completion_in_direction(direction_east, data->cycle_command_line, data->cycle_cursor_pos);
+                    select_completion_in_direction(direction_east);
                 }
                 else if (el->position < el->size())
                 {
@@ -3784,7 +3786,7 @@ const wchar_t *reader_readline(void)
                         /* Down arrow is always south */
                         direction = direction_south;
                     }
-                    else if (data->pager.get_selected_row(data->current_page_rendering) == 0 && data->pager.get_selected_column(data->current_page_rendering) == 0)
+                    else if (selection_is_at_top())
                     {
                         /* Up arrow, but we are in the first column and first row. End navigation */
                         direction = direction_deselect;
@@ -3792,6 +3794,7 @@ const wchar_t *reader_readline(void)
                         /* Also hide the search field */
                         data->pager.search_field_line.clear();
                         data->pager.set_search_field_shown(false);
+                        data->pager.refilter_completions();
                     }
                     else
                     {
@@ -3800,12 +3803,12 @@ const wchar_t *reader_readline(void)
                     }
                     
                     /* Now do the selection */
-                    select_completion_in_direction(direction, data->cycle_command_line, data->cycle_cursor_pos);
+                    select_completion_in_direction(direction);
                 }
                 else if (c == R_DOWN_LINE && ! data->pager.empty())
                 {
                     /* We pressed down with a non-empty pager contents, begin navigation */
-                    select_completion_in_direction(direction_south, data->cycle_command_line, data->cycle_cursor_pos);
+                    select_completion_in_direction(direction_south);
                 }
                 else
                 {

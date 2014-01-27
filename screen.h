@@ -218,6 +218,8 @@ public:
     \param colors the colors to use for the comand line
     \param indent the indent to use for the command line
     \param cursor_pos where the cursor is
+    \param pager_data any pager data, to append to the screen
+    \param position_is_within_pager whether the position is within the pager line (first line)
 */
 void s_write(screen_t *s,
              const wcstring &left_prompt,
@@ -227,7 +229,8 @@ void s_write(screen_t *s,
              const highlight_spec_t *colors,
              const int *indent,
              size_t cursor_pos,
-             const page_rendering_t &pager_data);
+             const page_rendering_t &pager_data,
+             bool position_is_within_pager);
 
 /**
     This function resets the screen buffers internal knowledge about

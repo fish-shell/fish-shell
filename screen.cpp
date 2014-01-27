@@ -1237,7 +1237,8 @@ void s_write(screen_t *s,
              const highlight_spec_t *colors,
              const int *indent,
              size_t cursor_pos,
-             const page_rendering_t &pager)
+             const page_rendering_t &pager,
+             bool cursor_position_is_within_pager)
 {
     screen_data_t::cursor_t cursor_arr;
 
@@ -1306,24 +1307,26 @@ void s_write(screen_t *s,
     {
         int color = colors[i];
 
-        if (i == cursor_pos)
+        if (! cursor_position_is_within_pager && i == cursor_pos)
         {
             color = 0;
-        }
-
-        if (i == cursor_pos)
-        {
             cursor_arr = s->desired.cursor;
         }
 
         s_desired_append_char(s, effective_commandline.at(i), color, indent[i], first_line_prompt_space);
     }
-    if (i == cursor_pos)
+    if (! cursor_position_is_within_pager && i == cursor_pos)
     {
         cursor_arr = s->desired.cursor;
     }
 
     s->desired.cursor = cursor_arr;
+    
+    if (cursor_position_is_within_pager)
+    {
+        s->desired.cursor.x = (int)cursor_pos;
+        s->desired.cursor.y = (int)s->desired.line_count();
+    }
     
     /* Append pager_data (none if empty) */
     s->desired.append_lines(pager.screen_data);

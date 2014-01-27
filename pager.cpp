@@ -3,6 +3,7 @@
 #include "pager.h"
 #include "highlight.h"
 #include "input_common.h"
+#include "wutil.h"
 #include <vector>
 #include <map>
 
@@ -18,9 +19,19 @@ typedef std::vector<comp_t> comp_info_list_t;
 /** The maximum number of columns of completion to attempt to fit onto the screen */
 #define PAGER_MAX_COLS 6
 
-/* Returns numer / denom, rounding up */
+/** Width of the search field */
+#define PAGER_SEARCH_FIELD_WIDTH 12
+
+/** Text we use for the search field */
+#define SEARCH_FIELD_PROMPT _(L"search: ")
+
+/* Returns numer / denom, rounding up. As a "courtesy" 0/0 is 0. */
 static size_t divide_round_up(size_t numer, size_t denom)
 {
+    if (numer == 0)
+        return 0;
+    
+    assert(denom > 0);
     return numer / denom + (numer % denom ? 1 : 0);
 }
 
@@ -336,17 +347,66 @@ void pager_t::measure_completion_infos(comp_info_list_t *infos, const wcstring &
     recalc_min_widths(infos);
 }
 
+/* Indicates if the given completion info passes any filtering we have */
+bool pager_t::completion_info_passes_filter(const comp_t &info) const
+{
+    /* If we have no filter, everything passes */
+    if (! search_field_shown || this->search_field_line.empty())
+        return true;
+
+    const wcstring &needle = this->search_field_line.text;
+    
+    /* We do substring matching */
+    const fuzzy_match_type_t limit = fuzzy_match_substring;
+    
+    /* Match against the description */
+    if (string_fuzzy_match_string(needle, info.desc, limit).type != fuzzy_match_none)
+    {
+        return true;
+    }
+    
+    /* Match against the completion strings */
+    for (size_t i=0; i < info.comp.size(); i++)
+    {
+        if (string_fuzzy_match_string(needle, info.comp.at(i), limit).type != fuzzy_match_none)
+        {
+            return true;
+        }
+    }
+    
+    /* No match */
+    return false;
+}
+
+/* Update completion_infos from unfiltered_completion_infos, to reflect the filter */
+void pager_t::refilter_completions()
+{
+    this->completion_infos.clear();
+    for (size_t i=0; i < this->unfiltered_completion_infos.size(); i++)
+    {
+        const comp_t &info = this->unfiltered_completion_infos.at(i);
+        if (this->completion_info_passes_filter(info))
+        {
+            this->completion_infos.push_back(info);
+        }
+    }
+    note_selection_changed();
+}
+
 void pager_t::set_completions(const completion_list_t &raw_completions)
 {
     // Get completion infos out of it
-    completion_infos = process_completions_into_infos(raw_completions, prefix.c_str());
+    unfiltered_completion_infos = process_completions_into_infos(raw_completions, prefix.c_str());
  
     // Maybe join them
     if (prefix == L"-")
-        join_completions(&completion_infos);
+        join_completions(&unfiltered_completion_infos);
     
     // Compute their various widths
-    measure_completion_infos(&completion_infos, prefix);
+    measure_completion_infos(&unfiltered_completion_infos, prefix);
+    
+    // Refilter them
+    this->refilter_completions();
 }
 
 void pager_t::set_prefix(const wcstring &pref)
@@ -390,7 +450,7 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
     
     /* Compute the effective term width and term height, accounting for disclosure */
     int term_width = this->available_term_width;
-    int term_height = this->available_term_height - 1; // we always subtract 1 to make room for a comment row
+    int term_height = this->available_term_height - 1 - (search_field_shown ? 1 : 0); // we always subtract 1 to make room for a comment row
     if (! this->fully_disclosed)
         term_height = mini(term_height, PAGER_UNDISCLOSED_MAX_ROWS);
 
@@ -551,6 +611,11 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
             /* We have a scrollable interface. The +1 here is because we are zero indexed, but want to present things as 1-indexed. We do not add 1 to stop_row or row_count because these are the "past the last value" */
             progress_text = format_string(L"rows %lu to %lu of %lu", start_row + 1, stop_row, row_count);
         }
+        else if (completion_infos.empty() && ! unfiltered_completion_infos.empty())
+        {
+            /* Everything is filtered */
+            progress_text = L"(no matches)";
+        }
         
         if (! progress_text.empty())
         {
@@ -561,11 +626,17 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
         if (search_field_shown)
         {
             /* Add the search field */
-            wcstring spaces(8, L' ');
-            spaces.insert(spaces.begin(), 1, L'h');
+            wcstring search_field_text = search_field_line.text;
+            /* Append spaces to make it at least the required width */
+            if (search_field_text.size() < PAGER_SEARCH_FIELD_WIDTH)
+            {
+                search_field_text.append(PAGER_SEARCH_FIELD_WIDTH - search_field_text.size(), L' ');
+            }
             line_t *search_field = &rendering->screen_data.insert_line_at_index(0);
-            int search_field_written = print_max(L"filter: ", highlight_spec_normal, term_width, false, search_field);
-            search_field_written += print_max(spaces, highlight_modifier_force_underline, term_width - search_field_written, false, search_field);
+            
+            /* We limit the width to term_width - 1 */
+            int search_field_written = print_max(SEARCH_FIELD_PROMPT, highlight_spec_normal, term_width - 1, false, search_field);
+            search_field_written += print_max(search_field_text, highlight_modifier_force_underline, term_width - search_field_written - 1, false, search_field);
         }
         
     }
@@ -585,33 +656,32 @@ page_rendering_t pager_t::render() const
     page_rendering_t rendering;
     rendering.term_width = this->available_term_width;
     rendering.term_height = this->available_term_height;
+    rendering.search_field_shown = this->search_field_shown;
+    rendering.search_field_line = this->search_field_line;
     
-    if (! this->empty())
+    for (int cols = PAGER_MAX_COLS; cols > 0; cols--)
     {
-        for (int cols = PAGER_MAX_COLS; cols > 0; cols--)
+        /* Initially empty rendering */
+        rendering.screen_data.resize(0);
+        
+        /* Determine how many rows we would need if we had 'cols' columns. Then determine how many columns we want from that. For example, say we had 19 completions. We can fit them into 6 columns, 4 rows, with the last row containing only 1 entry. Or we can fit them into 5 columns, 4 rows, the last row containing 4 entries. Since fewer columns with the same number of rows is better, skip cases where we know we can do better. */
+        size_t min_rows_required_for_cols = divide_round_up(completion_infos.size(), cols);
+        size_t min_cols_required_for_rows = divide_round_up(completion_infos.size(), min_rows_required_for_cols);
+        
+        assert(min_cols_required_for_rows <= cols);
+        if (cols > 1 && min_cols_required_for_rows < cols)
         {
-            /* Initially empty rendering */
-            rendering.screen_data.resize(0);
-            
-            /* Determine how many rows we would need if we had 'cols' columns. Then determine how many columns we want from that. For example, say we had 19 completions. We can fit them into 6 columns, 4 rows, with the last row containing only 1 entry. Or we can fit them into 5 columns, 4 rows, the last row containing 4 entries. Since fewer columns with the same number of rows is better, skip cases where we know we can do better. */
-            size_t min_rows_required_for_cols = divide_round_up(completion_infos.size(), cols);
-            size_t min_cols_required_for_rows = divide_round_up(completion_infos.size(), min_rows_required_for_cols);
-            
-            assert(min_cols_required_for_rows <= cols);
-            if (min_cols_required_for_rows < cols)
-            {
-                /* Next iteration will be better, so skip this one */
-                continue;
-            }
-            
-            rendering.cols = (size_t)cols;
-            rendering.rows = min_rows_required_for_cols;
-            rendering.selected_completion_idx = this->visual_selected_completion_index(rendering.rows, rendering.cols);
-            
-            if (completion_try_print(cols, prefix, completion_infos, &rendering, suggested_row_start))
-            {
-                break;
-            }
+            /* Next iteration will be better, so skip this one */
+            continue;
+        }
+        
+        rendering.cols = (size_t)cols;
+        rendering.rows = min_rows_required_for_cols;
+        rendering.selected_completion_idx = this->visual_selected_completion_index(rendering.rows, rendering.cols);
+        
+        if (completion_try_print(cols, prefix, completion_infos, &rendering, suggested_row_start))
+        {
+            break;
         }
     }
     return rendering;
@@ -619,7 +689,12 @@ page_rendering_t pager_t::render() const
 
 void pager_t::update_rendering(page_rendering_t *rendering) const
 {
-    if (rendering->term_width != this->available_term_width || rendering->term_height != this->available_term_height || rendering->selected_completion_idx != this->visual_selected_completion_index(rendering->rows, rendering->cols))
+    if (rendering->term_width != this->available_term_width ||
+    rendering->term_height != this->available_term_height ||
+    rendering->selected_completion_idx != this->visual_selected_completion_index(rendering->rows, rendering->cols) ||
+    rendering->search_field_shown != this->search_field_shown ||
+    rendering->search_field_line.text != this->search_field_line.text ||
+    rendering->search_field_line.position != this->search_field_line.position)
     {
         *rendering = this->render();
     }
@@ -631,13 +706,13 @@ pager_t::pager_t() : available_term_width(0), available_term_height(0), selected
 
 bool pager_t::empty() const
 {
-    return completion_infos.empty();
+    return unfiltered_completion_infos.empty();
 }
 
 const completion_t *pager_t::select_next_completion_in_direction(selection_direction_t direction, const page_rendering_t &rendering)
 {
     /* Must have something to select */
-    if (this->empty())
+    if (this->completion_infos.empty())
     {
         return NULL;
     }
@@ -834,6 +909,12 @@ const completion_t *pager_t::select_next_completion_in_direction(selection_direc
 
 size_t pager_t::visual_selected_completion_index(size_t rows, size_t cols) const
 {
+    /* No completions -> no selection */
+    if (completion_infos.empty())
+    {
+        return PAGER_SELECTION_NONE;
+    }
+    
     size_t result = selected_completion_idx;
     if (result != PAGER_SELECTION_NONE)
     {
@@ -842,9 +923,19 @@ size_t pager_t::visual_selected_completion_index(size_t rows, size_t cols) const
         {
             result -= rows;
         }
+        
+        /* If we are still beyond the last selection, clamp it */
+        if (result >= completion_infos.size())
+            result = completion_infos.size() - 1;
     }
     assert(result == PAGER_SELECTION_NONE || result < completion_infos.size());
     return result;
+}
+
+/* It's possible we have no visual selection but are still navigating the contents, e.g. every completion is filtered */
+bool pager_t::is_navigating_contents() const
+{
+    return selected_completion_idx != PAGER_SELECTION_NONE;
 }
 
 const completion_t *pager_t::selected_completion(const page_rendering_t &rendering) const
@@ -861,25 +952,58 @@ const completion_t *pager_t::selected_completion(const page_rendering_t &renderi
 /* Get the selected row and column. Completions are rendered column first, i.e. we go south before we go west. So if we have N rows, and our selected index is N + 2, then our row is 2 (mod by N) and our column is 1 (divide by N) */
 size_t pager_t::get_selected_row(const page_rendering_t &rendering) const
 {
+    if (rendering.rows == 0)
+        return PAGER_SELECTION_NONE;
+    
     return selected_completion_idx == PAGER_SELECTION_NONE ? PAGER_SELECTION_NONE : selected_completion_idx % rendering.rows;
 }
 
 size_t pager_t::get_selected_column(const page_rendering_t &rendering) const
 {
+    if (rendering.rows == 0)
+        return PAGER_SELECTION_NONE;
+    
     return selected_completion_idx == PAGER_SELECTION_NONE ? PAGER_SELECTION_NONE : selected_completion_idx / rendering.rows;
 }
 
 void pager_t::clear()
 {
+    unfiltered_completion_infos.clear();
     completion_infos.clear();
     prefix.clear();
     selected_completion_idx = PAGER_SELECTION_NONE;
     fully_disclosed = false;
     search_field_shown = false;
-    search_field_string.clear();
+    search_field_line.clear();
+}
+
+void pager_t::set_search_field_shown(bool flag)
+{
+    this->search_field_shown = flag;
+}
+
+bool pager_t::is_search_field_shown() const
+{
+    return this->search_field_shown;
+}
+
+size_t pager_t::cursor_position() const
+{
+    size_t result = wcslen(SEARCH_FIELD_PROMPT) + this->search_field_line.position;
+    /* Clamp it to the right edge */
+    if (available_term_width > 0 && result + 1 > available_term_width)
+    {
+        result = available_term_width - 1;
+    }
+    return result;
+}
+
+void pager_t::note_selection_changed()
+{
+    reader_selected_completion_changed(this);
 }
 
 /* Constructor */
-page_rendering_t::page_rendering_t() : term_width(-1), term_height(-1), rows(0), cols(0), row_start(0), row_end(0), selected_completion_idx(-1), remaining_to_disclose(0)
+page_rendering_t::page_rendering_t() : term_width(-1), term_height(-1), rows(0), cols(0), row_start(0), row_end(0), selected_completion_idx(-1), remaining_to_disclose(0), search_field_shown(false)
 {
 }

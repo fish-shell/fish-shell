@@ -210,9 +210,6 @@ public:
     /** Current page rendering */
     page_rendering_t current_page_rendering;
     
-    /** Whether we are navigating the pager */
-    bool is_navigating_pager;
-
     /** Whether autosuggesting is allowed at all */
     bool allow_autosuggestion;
 
@@ -254,14 +251,26 @@ public:
     /** The current position in search_prev */
     size_t search_pos;
     
+    bool is_navigating_pager_contents() const
+    {
+        return this->pager.is_navigating_contents();
+    }
+    
     /* The line that is currently being edited. Typically the command line, but may be the search field */
     editable_line_t *active_edit_line()
     {
-        return &command_line;
+        if (this->is_navigating_pager_contents() && this->pager.is_search_field_shown())
+        {
+            return &this->pager.search_field_line;
+        }
+        else
+        {
+            return &this->command_line;
+        }
     }
 
     /** Do what we need to do whenever our command line changes */
-    void command_line_changed(void);
+    void command_line_changed(const editable_line_t *el);
 
     /** Expand abbreviations at the current cursor position, minus backtrack_amt. */
     bool expand_abbreviation_as_necessary(size_t cursor_backtrack);
@@ -278,6 +287,10 @@ public:
 
     /** The output of the last evaluation of the right prompt command */
     wcstring right_prompt_buff;
+    
+    /* Completion support */
+    wcstring cycle_command_line;
+    size_t cycle_cursor_pos;
 
     /**
        Color is the syntax highlighting for buff.  The format is that
@@ -343,13 +356,13 @@ public:
 
     /** Constructor */
     reader_data_t() :
-        is_navigating_pager(0),
         allow_autosuggestion(0),
         suppress_autosuggestion(0),
         expand_abbreviations(0),
         history(0),
         token_history_pos(0),
         search_pos(0),
+        cycle_cursor_pos(0),
         complete_func(0),
         highlight_function(0),
         test_func(0),
@@ -531,12 +544,12 @@ wcstring combine_command_and_autosuggestion(const wcstring &cmdline, const wcstr
 
 static void reader_repaint()
 {
-    editable_line_t *el = &data->command_line;
+    editable_line_t *cmd_line = &data->command_line;
     // Update the indentation
-    data->indents = parse_util_compute_indents(el->text);
+    data->indents = parse_util_compute_indents(cmd_line->text);
 
     // Combine the command and autosuggestion into one string
-    wcstring full_line = combine_command_and_autosuggestion(el->text, data->autosuggestion);
+    wcstring full_line = combine_command_and_autosuggestion(cmd_line->text, data->autosuggestion);
 
     size_t len = full_line.size();
     if (len < 1)
@@ -552,16 +565,20 @@ static void reader_repaint()
     // We set the term size to 1 less than the true term height. This means we will always show the (bottom) line of the prompt.
     data->pager.set_term_size(maxi(1, common_get_width()), maxi(1, common_get_height() - 1));
     data->pager.update_rendering(&data->current_page_rendering);
+    
+    bool focused_on_pager = data->active_edit_line() == &data->pager.search_field_line;
+    size_t cursor_position = focused_on_pager ? data->pager.cursor_position() : cmd_line->position;
 
     s_write(&data->screen,
             data->left_prompt_buff,
             data->right_prompt_buff,
             full_line,
-            el->size(),
+            cmd_line->size(),
             &colors[0],
             &indents[0],
-            el->position,
-            data->current_page_rendering);
+            cursor_position,
+            data->current_page_rendering,
+            focused_on_pager);
 
     data->repaint_needed = false;
 }
@@ -609,7 +626,7 @@ static void reader_kill(editable_line_t *el, size_t begin_idx, size_t length, in
     }
 
     el->text.erase(begin_idx, length);
-    data->command_line_changed();
+    data->command_line_changed(el);
 
     reader_super_highlight_me_plenty();
     reader_repaint();
@@ -650,19 +667,26 @@ void reader_pop_current_filename()
 
 
 /** Make sure buffers are large enough to hold the current string length */
-void reader_data_t::command_line_changed()
+void reader_data_t::command_line_changed(const editable_line_t *el)
 {
     ASSERT_IS_MAIN_THREAD();
-    size_t len = this->command_line.size();
+    if (el == &this->command_line)
+    {
+        size_t len = this->command_line.size();
 
-    /* When we grow colors, propagate the last color (if any), under the assumption that usually it will be correct. If it is, it avoids a repaint. */
-    highlight_spec_t last_color = colors.empty() ? highlight_spec_t() : colors.back();
-    colors.resize(len, last_color);
+        /* When we grow colors, propagate the last color (if any), under the assumption that usually it will be correct. If it is, it avoids a repaint. */
+        highlight_spec_t last_color = colors.empty() ? highlight_spec_t() : colors.back();
+        colors.resize(len, last_color);
 
-    indents.resize(len);
+        indents.resize(len);
 
-    /* Update the gen count */
-    s_generation_count++;
+        /* Update the gen count */
+        s_generation_count++;
+    }
+    else if (el == &this->pager.search_field_line)
+    {
+        this->pager.refilter_completions();
+    }
 }
 
 /* Expand abbreviations at the given cursor position. Does NOT inspect 'data'. */
@@ -752,7 +776,7 @@ bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack)
 
             el->text.swap(new_cmdline);
             el->position = new_buff_pos;
-            data->command_line_changed();
+            data->command_line_changed(el);
             result = true;
         }
     }
@@ -1024,6 +1048,64 @@ void reader_react_to_color_change()
 }
 
 
+/* Indicates if the given command char ends paging */
+static bool command_ends_paging(wchar_t c, bool focused_on_search_field)
+{
+    switch (c)
+    {
+        /* These commands always end paging */
+        case R_HISTORY_SEARCH_BACKWARD:
+        case R_HISTORY_SEARCH_FORWARD:
+        case R_BEGINNING_OF_HISTORY:
+        case R_END_OF_HISTORY:
+        case R_HISTORY_TOKEN_SEARCH_BACKWARD:
+        case R_HISTORY_TOKEN_SEARCH_FORWARD:
+        case R_EXECUTE:
+        case R_ACCEPT_AUTOSUGGESTION:
+            return true;
+        
+        /* These commands never do */
+        case R_COMPLETE:
+        case R_COMPLETE_AND_SEARCH:
+        case R_BACKWARD_CHAR:
+        case R_FORWARD_CHAR:
+        case R_UP_LINE:
+        case R_DOWN_LINE:
+        case R_NULL:
+        case R_REPAINT:
+        case R_SUPPRESS_AUTOSUGGESTION:
+        default:
+            return false;
+        
+        /* These commands operate on the search field if that's where the focus is */
+        case R_BEGINNING_OF_LINE:
+        case R_END_OF_LINE:
+        case R_FORWARD_WORD:
+        case R_BACKWARD_WORD:
+        case R_DELETE_CHAR:
+        case R_BACKWARD_DELETE_CHAR:
+        case R_KILL_LINE:
+        case R_YANK:
+        case R_YANK_POP:
+        case R_BACKWARD_KILL_LINE:
+        case R_KILL_WHOLE_LINE:
+        case R_KILL_WORD:
+        case R_BACKWARD_KILL_WORD:
+        case R_BACKWARD_KILL_PATH_COMPONENT:
+        case R_SELF_INSERT:
+        case R_TRANSPOSE_CHARS:
+        case R_TRANSPOSE_WORDS:
+        case R_UPCASE_WORD:
+        case R_DOWNCASE_WORD:
+        case R_CAPITALIZE_WORD:
+        case R_VI_ARG_DIGIT:
+        case R_VI_DELETE_TO:
+        case R_BEGINNING_OF_BUFFER:
+        case R_END_OF_BUFFER:
+            return ! focused_on_search_field;
+    }
+}
+
 /**
    Remove the previous character in the character buffer and on the
    screen using syntax highlighting, etc.
@@ -1044,7 +1126,7 @@ static void remove_backward()
         el->text.erase(el->position, 1);
     }
     while (width == 0 && el->position > 0);
-    data->command_line_changed();
+    data->command_line_changed(el);
     data->suppress_autosuggestion = true;
 
     reader_super_highlight_me_plenty();
@@ -1060,16 +1142,15 @@ static void remove_backward()
    Optionally also expand abbreviations.
    Returns true if the string changed.
 */
-static bool insert_string(const wcstring &str, bool should_expand_abbreviations = false)
+static bool insert_string(editable_line_t *el, const wcstring &str, bool should_expand_abbreviations = false)
 {
     size_t len = str.size();
     if (len == 0)
         return false;
  
-    editable_line_t *el = data->active_edit_line();
     el->insert_string(str);
     
-    data->command_line_changed();
+    data->command_line_changed(el);
     
     if (el == &data->command_line)
     {
@@ -1091,9 +1172,9 @@ static bool insert_string(const wcstring &str, bool should_expand_abbreviations 
    Insert the character into the command line buffer and print it to
    the screen using syntax highlighting, etc.
 */
-static bool insert_char(wchar_t c, bool should_expand_abbreviations = false)
+static bool insert_char(editable_line_t *el, wchar_t c, bool should_expand_abbreviations = false)
 {
-    return insert_string(wcstring(1, c), should_expand_abbreviations);
+    return insert_string(el, wcstring(1, c), should_expand_abbreviations);
 }
 
 
@@ -1538,15 +1619,10 @@ static void accept_autosuggestion(bool full)
             }
         }
         data->command_line.position = data->command_line.size();
-        data->command_line_changed();
+        data->command_line_changed(&data->command_line);
         reader_super_highlight_me_plenty();
         reader_repaint();
     }
-}
-
-static bool is_navigating_pager_contents()
-{
-    return data && data->pager.selected_completion(data->current_page_rendering) != NULL;
 }
 
 /* Ensure we have no pager contents */
@@ -1901,6 +1977,7 @@ static bool handle_completions(const std::vector<completion_t> &comp)
                 
                 /* Invalidate our rendering */
                 data->current_page_rendering = page_rendering_t();
+                
             }
             else
             {
@@ -1913,9 +1990,10 @@ static bool handle_completions(const std::vector<completion_t> &comp)
                 run_pager(prefix, is_quoted, surviving_completions);
                 
                 s_reset(&data->screen, screen_reset_abandon_line);
-
             }
-            reader_repaint();
+            
+            reader_repaint_needed();
+            
             success = false;
         }
     }
@@ -2143,7 +2221,7 @@ static void set_command_line_and_position(editable_line_t *el, const wcstring &n
 {
     el->text = new_str;
     el->position = pos;
-    data->command_line_changed();
+    data->command_line_changed(el);
     reader_super_highlight_me_plenty();
     reader_repaint();
 }
@@ -2420,7 +2498,7 @@ static void reader_set_buffer_maintaining_pager(const wcstring &b, size_t pos)
     /* Callers like to pass us pointers into ourselves, so be careful! I don't know if we can use operator= with a pointer to our interior, so use an intermediate. */
     size_t command_line_len = b.size();
     data->command_line.text = b;
-    data->command_line_changed();
+    data->command_line_changed(&data->command_line);
 
     /* Don't set a position past the command line length */
     if (pos > command_line_len)
@@ -2580,7 +2658,7 @@ void reader_push(const wchar_t *name)
 
     data=n;
 
-    data->command_line_changed();
+    data->command_line_changed(&data->command_line);
 
     if (data->next == 0)
     {
@@ -2931,7 +3009,7 @@ static int read_i(void)
             wcstring command = tmp;
             data->command_line.position=0;
             data->command_line.text.clear();
-            data->command_line_changed();
+            data->command_line_changed(&data->command_line);
             reader_run_command(parser, command);
             if (data->end_loop)
             {
@@ -3023,12 +3101,9 @@ const wchar_t *reader_readline(void)
     /* Coalesce redundant repaints. When we get a repaint, we set this to true, and skip repaints until we get something else. */
     bool coalescing_repaints = false;
 
-    /* The cycle index in our completion list */
-    size_t completion_cycle_idx = (size_t)(-1);
-
     /* The command line before completion */
-    wcstring cycle_command_line;
-    size_t cycle_cursor_pos = 0;
+    data->cycle_command_line.clear();
+    data->cycle_cursor_pos = 0;
 
     data->search_buff.clear();
     data->search_mode = NO_SEARCH;
@@ -3095,7 +3170,7 @@ const wchar_t *reader_readline(void)
                             break;
                     }
 
-                    insert_string(arr);
+                    insert_string(&data->command_line, arr);
 
                 }
             }
@@ -3111,30 +3186,18 @@ const wchar_t *reader_readline(void)
         if (last_char != R_YANK && last_char != R_YANK_POP)
             yank_len=0;
         
-        /* We clear pager contents for most events, except for a few */
-        switch (c)
+        /* Clear the pager if necessary */
+        bool focused_on_search_field = (data->active_edit_line() == &data->pager.search_field_line);
+        if (command_ends_paging(c, focused_on_search_field))
         {
-            case R_COMPLETE:
-            case R_BACKWARD_CHAR:
-            case R_FORWARD_CHAR:
-            case R_UP_LINE:
-            case R_DOWN_LINE:
-            case R_NULL:
-            case R_REPAINT:
-            case R_SUPPRESS_AUTOSUGGESTION:
-                break;
-                
-            default:
-                clear_pager();
-                break;
+            clear_pager();
         }
         
         //fprintf(stderr, "\n\nchar: %ls\n\n", describe_char(c).c_str());
 
         switch (c)
         {
-
-                /* go to beginning of line*/
+            /* go to beginning of line*/
             case R_BEGINNING_OF_LINE:
             {
                 editable_line_t *el = data->active_edit_line();
@@ -3213,6 +3276,7 @@ const wchar_t *reader_readline(void)
 
             /* complete */
             case R_COMPLETE:
+            case R_COMPLETE_AND_SEARCH:
             {
 
                 if (!data->complete_func)
@@ -3220,10 +3284,10 @@ const wchar_t *reader_readline(void)
                 
                 /* Use the command line only; it doesn't make sense to complete in any other line */
                 editable_line_t *el = &data->command_line;
-                if (is_navigating_pager_contents() || (! comp_empty && last_char == R_COMPLETE))
+                if (data->is_navigating_pager_contents() || (! comp_empty && last_char == R_COMPLETE))
                 {
                     /* The user typed R_COMPLETE more than once in a row. Cycle through our available completions. */
-                    select_completion_in_direction(direction_next, cycle_command_line, cycle_cursor_pos);
+                    select_completion_in_direction(c == R_COMPLETE ? direction_next : direction_prev, data->cycle_command_line, data->cycle_cursor_pos);
                 }
                 else
                 {
@@ -3273,13 +3337,19 @@ const wchar_t *reader_readline(void)
                     prioritize_completions(comp);
                     
                     /* Record our cycle_command_line */
-                    cycle_command_line = el->text;
-                    cycle_cursor_pos = el->position;
-
+                    data->cycle_command_line = el->text;
+                    data->cycle_cursor_pos = el->position;
+                    
                     comp_empty = handle_completions(comp);
+                    
+                    /* Show the search field if requested and if we printed a list of completions */
+                    if (c == R_COMPLETE_AND_SEARCH && ! comp_empty && ! data->pager.empty())
+                    {
+                        data->pager.set_search_field_shown(true);
+                        select_completion_in_direction(direction_next, data->cycle_command_line, data->cycle_cursor_pos);
+                        reader_repaint_needed();
+                    }
 
-                    /* Start the cycle at the beginning */
-                    completion_cycle_idx = (size_t)(-1);
                 }
 
                 break;
@@ -3375,7 +3445,7 @@ const wchar_t *reader_readline(void)
             case R_YANK:
             {
                 yank_str = kill_yank();
-                insert_string(yank_str);
+                insert_string(data->active_edit_line(), yank_str);
                 yank_len = wcslen(yank_str);
                 break;
             }
@@ -3389,7 +3459,7 @@ const wchar_t *reader_readline(void)
                         remove_backward();
 
                     yank_str = kill_yank_rotate();
-                    insert_string(yank_str);
+                    insert_string(data->active_edit_line(), yank_str);
                     yank_len = wcslen(yank_str);
                 }
                 break;
@@ -3454,14 +3524,14 @@ const wchar_t *reader_readline(void)
                 data->autosuggestion.clear();
                 
                 /* We only execute the command line */
-                const editable_line_t *el = &data->command_line;
+                editable_line_t *el = &data->command_line;
 
                 /* Allow backslash-escaped newlines, but only if the following character is whitespace, or we're at the end of the text (see issue #163) */
                 if (is_backslashed(el->text, el->position))
                 {
                     if (el->position >= el->size() || iswspace(el->text.at(el->position)))
                     {
-                        insert_char('\n');
+                        insert_char(el, '\n');
                         break;
                     }
                 }
@@ -3502,7 +3572,7 @@ const wchar_t *reader_readline(void)
                      */
                     case PARSER_TEST_INCOMPLETE:
                     {
-                        insert_char('\n');
+                        insert_char(el, '\n');
                         break;
                     }
 
@@ -3611,9 +3681,9 @@ const wchar_t *reader_readline(void)
             case R_BACKWARD_CHAR:
             {
                 editable_line_t *el = data->active_edit_line();
-                if (is_navigating_pager_contents())
+                if (data->is_navigating_pager_contents() && ! data->pager.is_search_field_shown())
                 {
-                    select_completion_in_direction(direction_west, cycle_command_line, cycle_cursor_pos);
+                    select_completion_in_direction(direction_west, data->cycle_command_line, data->cycle_cursor_pos);
                 }
                 else if (el->position > 0)
                 {
@@ -3627,9 +3697,9 @@ const wchar_t *reader_readline(void)
             case R_FORWARD_CHAR:
             {
                 editable_line_t *el = data->active_edit_line();
-                if (is_navigating_pager_contents())
+                if (data->is_navigating_pager_contents() && ! data->pager.is_search_field_shown())
                 {
-                    select_completion_in_direction(direction_east, cycle_command_line, cycle_cursor_pos);
+                    select_completion_in_direction(direction_east, data->cycle_command_line, data->cycle_cursor_pos);
                 }
                 else if (el->position < el->size())
                 {
@@ -3705,7 +3775,7 @@ const wchar_t *reader_readline(void)
             case R_UP_LINE:
             case R_DOWN_LINE:
             {
-                if (is_navigating_pager_contents())
+                if (data->is_navigating_pager_contents())
                 {
                     /* We are already navigating pager contents. */
                     selection_direction_t direction;
@@ -3718,6 +3788,10 @@ const wchar_t *reader_readline(void)
                     {
                         /* Up arrow, but we are in the first column and first row. End navigation */
                         direction = direction_deselect;
+                        
+                        /* Also hide the search field */
+                        data->pager.search_field_line.clear();
+                        data->pager.set_search_field_shown(false);
                     }
                     else
                     {
@@ -3726,12 +3800,12 @@ const wchar_t *reader_readline(void)
                     }
                     
                     /* Now do the selection */
-                    select_completion_in_direction(direction, cycle_command_line, cycle_cursor_pos);
+                    select_completion_in_direction(direction, data->cycle_command_line, data->cycle_cursor_pos);
                 }
                 else if (c == R_DOWN_LINE && ! data->pager.empty())
                 {
                     /* We pressed down with a non-empty pager contents, begin navigation */
-                    select_completion_in_direction(direction_south, cycle_command_line, cycle_cursor_pos);
+                    select_completion_in_direction(direction_south, data->cycle_command_line, data->cycle_cursor_pos);
                 }
                 else
                 {
@@ -3888,7 +3962,7 @@ const wchar_t *reader_readline(void)
                     data->command_line.text.at(pos) = chr;
                     capitalized_first = capitalized_first || make_uppercase;
                 }
-                data->command_line_changed();
+                data->command_line_changed(el);
                 reader_super_highlight_me_plenty();
                 reader_repaint_needed();
                 break;
@@ -3899,19 +3973,20 @@ const wchar_t *reader_readline(void)
             {
                 if ((!wchar_private(c)) && (((c>31) || (c==L'\n'))&& (c != 127)))
                 {
-                    
-                    if (is_navigating_pager_contents())
+                    bool should_expand_abbreviations = false;
+                    if (data->is_navigating_pager_contents())
                     {
-
+                        data->pager.set_search_field_shown(true);
                     }
                     else
                     {
                         /* Expand abbreviations after space */
-                        bool should_expand_abbreviations = (c == L' ');
-
-                        /* Regular character */
-                        insert_char(c, should_expand_abbreviations);
+                        should_expand_abbreviations = (c == L' ');
                     }
+                    
+                    /* Regular character */
+                    insert_char(data->active_edit_line(), c, should_expand_abbreviations);
+
                 }
                 else
                 {
@@ -3985,6 +4060,35 @@ int reader_has_pager_contents()
     }
 
     return ! data->current_page_rendering.screen_data.empty();
+}
+
+void reader_selected_completion_changed(pager_t *pager)
+{
+    /* Only interested in the top level pager */
+    if (data == NULL || pager != &data->pager)
+        return;
+    
+    const completion_t *completion = pager->selected_completion(data->current_page_rendering);
+    
+    /* Update the cursor and command line */
+    size_t cursor_pos = data->cycle_cursor_pos;
+    wcstring new_cmd_line;
+    
+    if (completion == NULL)
+    {
+        new_cmd_line = data->cycle_command_line;
+    }
+    else
+    {
+        new_cmd_line = completion_apply_to_command_line(completion->completion, completion->flags, data->cycle_command_line, &cursor_pos, false);
+    }
+    reader_set_buffer_maintaining_pager(new_cmd_line, cursor_pos);
+
+    /* Since we just inserted a completion, don't immediately do a new autosuggestion */
+    data->suppress_autosuggestion = true;
+
+    /* Trigger repaint (see #765) */
+    reader_repaint_needed();
 }
 
 

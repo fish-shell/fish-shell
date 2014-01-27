@@ -4,6 +4,7 @@
 
 #include "complete.h"
 #include "screen.h"
+#include "reader.h"
 
 /* Represents rendering from the pager */
 class page_rendering_t
@@ -19,6 +20,9 @@ class page_rendering_t
     screen_data_t screen_data;
     
     size_t remaining_to_disclose;
+    
+    bool search_field_shown;
+    editable_line_t search_field_line;
     
     /* Returns a rendering with invalid data, useful to indicate "no rendering" */
     page_rendering_t();
@@ -47,7 +51,6 @@ class pager_t
     
     /* Whether we show the search field */
     bool search_field_shown;
-    wcstring search_field_string;
     
     /* Returns the index of the completion that should draw selected, using the given number of columns */
     size_t visual_selected_completion_index(size_t rows, size_t cols) const;
@@ -84,20 +87,32 @@ class pager_t
     
     private:
     typedef std::vector<comp_t> comp_info_list_t;
+    
+    /* The filtered list of completion infos */
     comp_info_list_t completion_infos;
     
+    /* The unfiltered list. Note there's a lot of duplication here. */
+    comp_info_list_t unfiltered_completion_infos;
+    
     wcstring prefix;
+    
+    void note_selection_changed();
     
     bool completion_try_print(size_t cols, const wcstring &prefix, const comp_info_list_t &lst, page_rendering_t *rendering, size_t suggested_start_row) const;
     
     void recalc_min_widths(comp_info_list_t * lst) const;
     void measure_completion_infos(std::vector<comp_t> *infos, const wcstring &prefix) const;
     
+    bool completion_info_passes_filter(const comp_t &info) const;
+    
     void completion_print(size_t cols, int *width_per_column, size_t row_start, size_t row_stop, const wcstring &prefix, const comp_info_list_t &lst, page_rendering_t *rendering) const;
     line_t completion_print_item(const wcstring &prefix, const comp_t *c, size_t row, size_t column, int width, bool secondary, bool selected, page_rendering_t *rendering) const;
 
     
     public:
+    
+    /* The text of the search field */
+    editable_line_t search_field_line;
     
     /* Sets the set of completions */
     void set_completions(const completion_list_t &comp);
@@ -129,6 +144,21 @@ class pager_t
     
     /* Clears all completions and the prefix */
     void clear();
+    
+    /* Updates the completions list per the filter */
+    void refilter_completions();
+    
+    /* Sets whether the search field is shown */
+    void set_search_field_shown(bool flag);
+
+    /* Gets whether the search field shown */
+    bool is_search_field_shown() const;
+    
+    /* Indicates if we are navigating our contents */
+    bool is_navigating_contents() const;
+    
+    /* Position of the cursor */
+    size_t cursor_position() const;
     
     /* Constructor */
     pager_t();

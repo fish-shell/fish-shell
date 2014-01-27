@@ -75,8 +75,8 @@ function __fish_git_stash_using_command
   return 1
 end
 
-function __fish_git_stashs
-   command git stash list --format=format:"%gd"
+function __fish_git_stashs_and_desc
+   command git stash list --format=format:"%gd:%gs" | sed 's/:/\t/'
 end
 
 # general options
@@ -351,11 +351,11 @@ complete -f -c git -n '__fish_git_using_command stash' -a create -d 'Create a st
 complete -f -c git -n '__fish_git_using_command stash' -a save -d 'Save a new stash'
 complete -f -c git -n '__fish_git_using_command stash' -a branch -d 'Create a new branch from a stash'
 
-complete -f -c git -n '__fish_git_stash_using_command apply' -a '(__fish_git_stashs)' -d 'Stash'
-complete -f -c git -n '__fish_git_stash_using_command branch' -a '(__fish_git_stashs)' -d 'Stash'
-complete -f -c git -n '__fish_git_stash_using_command drop' -a '(__fish_git_stashs)' -d 'Stash'
-complete -f -c git -n '__fish_git_stash_using_command pop' -a '(__fish_git_stashs)' -d 'Stash'
-complete -f -c git -n '__fish_git_stash_using_command show' -a '(__fish_git_stashs)' -d 'Stash'
+complete -f -c git -n '__fish_git_stash_using_command apply' -a '(__fish_git_stashs_and_desc)'
+complete -f -c git -n '__fish_git_stash_using_command branch' -a '(__fish_git_stashs_and_desc)'
+complete -f -c git -n '__fish_git_stash_using_command drop' -a '(__fish_git_stashs_and_desc)'
+complete -f -c git -n '__fish_git_stash_using_command pop' -a '(__fish_git_stashs_and_desc)'
+complete -f -c git -n '__fish_git_stash_using_command show' -a '(__fish_git_stashs_and_desc)'
 
 ### config
 complete -f -c git -n '__fish_git_needs_command' -a config -d 'Set and read git configuration variables'

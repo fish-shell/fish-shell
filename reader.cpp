@@ -2204,7 +2204,7 @@ static void set_command_line_and_position(editable_line_t *el, const wcstring &n
     el->position = pos;
     data->command_line_changed(el);
     reader_super_highlight_me_plenty();
-    reader_repaint();
+    reader_repaint_needed();
 }
 
 static void reader_replace_current_token(const wchar_t *new_token)
@@ -3181,6 +3181,13 @@ const wchar_t *reader_readline(void)
 
         if (last_char != R_YANK && last_char != R_YANK_POP)
             yank_len=0;
+        
+        /* Restore the text */
+        if (c == R_CANCEL && data->is_navigating_pager_contents())
+        {
+            set_command_line_and_position(&data->command_line, data->cycle_command_line, data->cycle_cursor_pos);
+        }
+
         
         /* Clear the pager if necessary */
         bool focused_on_search_field = (data->active_edit_line() == &data->pager.search_field_line);

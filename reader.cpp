@@ -1782,11 +1782,12 @@ static void prioritize_completions(std::vector<completion_t> &comp)
    completions.
 
    \param comp the list of completion strings
+   \param continue_after_prefix_insertion If we have a shared prefix, whether to print the list of completions after inserting it.
 
    Return true if we inserted text into the command line, false if we did not.
 */
 
-static bool handle_completions(const std::vector<completion_t> &comp)
+static bool handle_completions(const std::vector<completion_t> &comp, bool continue_after_prefix_insertion)
 {
     bool done = false;
     bool success = false;
@@ -1923,9 +1924,10 @@ static bool handle_completions(const std::vector<completion_t> &comp)
             completion_insert(common_prefix.c_str(), flags);
             success = true;
         }
-        else
+        
+        if (continue_after_prefix_insertion || common_prefix.empty())
         {
-            /* We didn't get a common prefix. Print the list. */
+            /* We didn't get a common prefix, or we want to print the list anyways. */
             size_t len, prefix_start = 0;
             wcstring prefix;
             parse_util_get_parameter_info(el->text, el->position, NULL, &prefix_start, NULL);
@@ -3352,7 +3354,8 @@ const wchar_t *reader_readline(void)
                     data->cycle_command_line = el->text;
                     data->cycle_cursor_pos = el->position;
                     
-                    comp_empty = handle_completions(comp);
+                    bool continue_after_prefix_insertion = (c == R_COMPLETE_AND_SEARCH);
+                    comp_empty = handle_completions(comp, continue_after_prefix_insertion);
                     
                     /* Show the search field if requested and if we printed a list of completions */
                     if (c == R_COMPLETE_AND_SEARCH && ! comp_empty && ! data->pager.empty())
@@ -3807,11 +3810,6 @@ const wchar_t *reader_readline(void)
                     {
                         /* Up arrow, but we are in the first column and first row. End navigation */
                         direction = direction_deselect;
-                        
-                        /* Also hide the search field */
-                        data->pager.search_field_line.clear();
-                        data->pager.set_search_field_shown(false);
-                        data->pager.refilter_completions();
                     }
                     else
                     {
@@ -4005,7 +4003,15 @@ const wchar_t *reader_readline(void)
                     }
                     
                     /* Regular character */
+                    editable_line_t *el = data->active_edit_line();
                     insert_char(data->active_edit_line(), c, should_expand_abbreviations);
+                    
+                    /* End paging upon inserting into the normal command line */
+                    if (el == &data->command_line)
+                    {
+                        clear_pager();
+                    }
+                    
 
                 }
                 else

@@ -712,7 +712,7 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
     /* Must have something to select */
     if (this->completion_infos.empty())
     {
-        return NULL;
+        return false;
     }
     
     /* Handle the case of nothing selected yet */

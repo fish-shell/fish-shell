@@ -1060,7 +1060,6 @@ static bool command_ends_paging(wchar_t c, bool focused_on_search_field)
         case R_END_OF_HISTORY:
         case R_HISTORY_TOKEN_SEARCH_BACKWARD:
         case R_HISTORY_TOKEN_SEARCH_FORWARD:
-        case R_EXECUTE:
         case R_ACCEPT_AUTOSUGGESTION:
         case R_CANCEL:
             return true;
@@ -1076,6 +1075,10 @@ static bool command_ends_paging(wchar_t c, bool focused_on_search_field)
         case R_REPAINT:
         case R_SUPPRESS_AUTOSUGGESTION:
         default:
+            return false;
+            
+        /* R_EXECUTE does end paging, but only executes if it was not paging. So it's handled specially */
+        case R_EXECUTE:
             return false;
         
         /* These commands operate on the search field if that's where the focus is */
@@ -3531,6 +3534,13 @@ const wchar_t *reader_readline(void)
             {
                 /* Delete any autosuggestion */
                 data->autosuggestion.clear();
+                
+                /* If the user hits return while navigating the pager, it only clears the pager */
+                if (data->is_navigating_pager_contents())
+                {
+                    clear_pager();
+                    break;
+                }
                 
                 /* We only execute the command line */
                 editable_line_t *el = &data->command_line;

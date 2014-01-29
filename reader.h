@@ -22,6 +22,47 @@ class parser_t;
 class completion_t;
 class history_t;
 
+/* Helper class for storing a command line */
+class editable_line_t
+{
+    public:
+    
+    /** The command line */
+    wcstring text;
+    
+    /** The current position of the cursor in the command line */
+    size_t position;
+    
+    const wcstring &get_text() const
+    {
+        return text;
+    }
+    
+    /* Gets the length of the text */
+    size_t size() const
+    {
+        return text.size();
+    }
+    
+    bool empty() const
+    {
+        return text.empty();
+    }
+    
+    void clear()
+    {
+        text.clear();
+        position = 0;
+    }
+    
+    editable_line_t() : text(), position(0)
+    {
+    }
+    
+    /* Inserts the string at the cursor position */
+    void insert_string(const wcstring &str);
+};
+
 /**
   Read commands from \c fd until encountering EOF
 */
@@ -239,9 +280,17 @@ int reader_shell_test(const wchar_t *b);
 /**
    Test whether the interactive reader is in search mode.
 
-   \return o if not in search mode, 1 if in search mode and -1 if not in interactive mode
+   \return 0 if not in search mode, 1 if in search mode and -1 if not in interactive mode
  */
 int reader_search_mode();
+
+/**
+   Test whether the interactive reader has visible pager contents.
+
+   \return 0 if it has pager contents, 1 if it does not have pager contents, and -1 if not in interactive mode
+ */
+int reader_has_pager_contents();
+
 
 /* Given a command line and an autosuggestion, return the string that gets shown to the user. Exposed for testing purposes only. */
 wcstring combine_command_and_autosuggestion(const wcstring &cmdline, const wcstring &autosuggestion);
@@ -252,5 +301,8 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
 /* Apply a completion string. Exposed for testing only. */
 wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flags_t flags, const wcstring &command_line, size_t *inout_cursor_pos, bool append_only);
 
+/* Called by pager */
+class pager_t;
+void reader_selected_completion_changed(pager_t *pager);
 
 #endif

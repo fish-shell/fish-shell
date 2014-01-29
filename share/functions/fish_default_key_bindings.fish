@@ -114,6 +114,12 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	# This will make sure the output of the current command is paged using the less pager when you press Meta-p
 	bind \ep '__fish_paginate'
 	
+	# shift-tab does a tab complete followed by a search
+	bind --key btab complete-and-search
+
+	# escape cancels stuff	
+	bind \e cancel
+
 	# term-specific special bindings
 	switch "$TERM"
 		case 'rxvt*'
@@ -122,3 +128,4 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 			bind \eOd backward-word
 	end
 end
+

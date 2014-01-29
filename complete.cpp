@@ -1847,9 +1847,13 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
 
         parse_node_tree_t tree;
         parse_tree_from_string(cmd, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens, &tree, NULL);
+        
+        /* Find the plain statement that contains the position. We have to backtrack past spaces (#1261). So this will be at either the last space character, or after the end of the string */
+        size_t adjusted_pos = pos;
+        while (adjusted_pos > 0 && cmd.at(adjusted_pos - 1) == L' ')
+            adjusted_pos--;
 
-        /* Find the plain statement that contains the position */
-        const parse_node_t *plain_statement = tree.find_node_matching_source_location(symbol_plain_statement, pos, NULL);
+        const parse_node_t *plain_statement = tree.find_node_matching_source_location(symbol_plain_statement, adjusted_pos, NULL);
         if (plain_statement != NULL)
         {
             assert(plain_statement->has_source() && plain_statement->type == symbol_plain_statement);

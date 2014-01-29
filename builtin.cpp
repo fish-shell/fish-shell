@@ -571,35 +571,14 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
     static const struct woption
             long_options[] =
     {
-        {
-            L"all", no_argument, 0, 'a'
-        }
-        ,
-        {
-            L"erase", no_argument, 0, 'e'
-        }
-        ,
-        {
-            L"function-names", no_argument, 0, 'f'
-        }
-        ,
-        {
-            L"help", no_argument, 0, 'h'
-        }
-        ,
-        {
-            L"key", no_argument, 0, 'k'
-        }
-        ,
-        {
-            L"key-names", no_argument, 0, 'K'
-        }
-        ,
-        {
-            0, 0, 0, 0
-        }
-    }
-    ;
+        { L"all", no_argument, 0, 'a' },
+        { L"erase", no_argument, 0, 'e' },
+        { L"function-names", no_argument, 0, 'f' },
+        { L"help", no_argument, 0, 'h' },
+        { L"key", no_argument, 0, 'k' },
+        { L"key-names", no_argument, 0, 'K' },
+        { 0, 0, 0, 0 }
+    };
 
     while (1)
     {

@@ -251,7 +251,6 @@ wchar_t input_common_readch(int timed)
                 case 0:
                     return 0;
                 default:
-
                     return res;
             }
         }

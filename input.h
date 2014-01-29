@@ -33,6 +33,7 @@ enum
     R_YANK,
     R_YANK_POP,
     R_COMPLETE,
+    R_COMPLETE_AND_SEARCH,
     R_BEGINNING_OF_HISTORY,
     R_END_OF_HISTORY,
     R_BACKWARD_KILL_LINE,
@@ -57,7 +58,8 @@ enum
     R_UP_LINE,
     R_DOWN_LINE,
     R_SUPPRESS_AUTOSUGGESTION,
-    R_ACCEPT_AUTOSUGGESTION
+    R_ACCEPT_AUTOSUGGESTION,
+    R_CANCEL
 };
 
 wcstring describe_char(wchar_t c);

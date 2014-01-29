@@ -5,6 +5,12 @@ function up-or-search -d "Depending on cursor position and current mode, either 
 		return
 	end
 
+	# If we are navigating the pager, then up always navigates
+	if commandline --paging-mode
+		commandline -f up-line
+		return
+	end
+
 	# We are not already in search mode.
 	# If we are on the top line, start search mode,
 	# otherwise move up

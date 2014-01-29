@@ -104,6 +104,7 @@ static const wchar_t * const name_arr[] =
     L"yank",
     L"yank-pop",
     L"complete",
+    L"complete-and-search",
     L"beginning-of-history",
     L"end-of-history",
     L"backward-kill-line",
@@ -128,7 +129,8 @@ static const wchar_t * const name_arr[] =
     L"up-line",
     L"down-line",
     L"suppress-autosuggestion",
-    L"accept-autosuggestion"
+    L"accept-autosuggestion",
+    L"cancel"
 };
 
 wcstring describe_char(wchar_t c)
@@ -201,6 +203,7 @@ static const wchar_t code_arr[] =
     R_YANK,
     R_YANK_POP,
     R_COMPLETE,
+    R_COMPLETE_AND_SEARCH,
     R_BEGINNING_OF_HISTORY,
     R_END_OF_HISTORY,
     R_BACKWARD_KILL_LINE,
@@ -225,7 +228,8 @@ static const wchar_t code_arr[] =
     R_UP_LINE,
     R_DOWN_LINE,
     R_SUPPRESS_AUTOSUGGESTION,
-    R_ACCEPT_AUTOSUGGESTION
+    R_ACCEPT_AUTOSUGGESTION,
+    R_CANCEL
 };
 
 /** Mappings for the current input mode */

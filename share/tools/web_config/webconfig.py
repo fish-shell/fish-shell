@@ -830,7 +830,7 @@ if PORT > 9000:
 # Just look at the first letter
 initial_tab = ''
 if len(sys.argv) > 1:
-    for tab in ['functions', 'prompt', 'colors', 'variables', 'history']:
+    for tab in ['functions', 'prompt', 'colors', 'variables', 'history', 'bindings']:
         if tab.startswith(sys.argv[1]):
             initial_tab = '#' + tab
             break

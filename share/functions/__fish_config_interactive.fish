@@ -239,7 +239,8 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
 		# First check if we are on OpenSUSE since SUSE's handler has no options
 		# and expects first argument to be a command and second database
-		if test -f /etc/SuSE-release
+		# also check if there is command-not-found command.
+		if begin; test -f /etc/SuSE-release; and test -f /usr/bin/command-not-found; end
 			function __fish_command_not_found_handler --on-event fish_command_not_found
 				/usr/bin/command-not-found $argv
 			end

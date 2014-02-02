@@ -349,7 +349,7 @@ And history too. Type a command once, and you can re-summon it by just typing a 
 > <b>r</b><span class="suggest"><u>s</u>ync -avze ssh . myname@somelonghost.com:/some/long/path/doo/dee/doo/dee/doo</span>
 </pre>
 
-To accept the autosuggestion, hit right arrow or Control-F. If the autosuggestion is not what you want, just ignore it.
+To accept the autosuggestion, hit right arrow or Control-F. To accept a single word of the autosuggestion, hit Alt+right arrow. If the autosuggestion is not what you want, just ignore it.
 
 <h2 id="tut_tab_completions">Tab Completions</h2>
 

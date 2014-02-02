@@ -387,8 +387,9 @@ cursor, in a muted gray color (which can be changed with the
 <code>fish_color_autosuggestion</code> variable).
 
 To accept the autosuggestion (replacing the command line contents),
-hit right arrow or Control-F. If the autosuggestion is not what you want,
-just ignore it: it won't execute unless you accept it.
+press right arrow or Control-F. To accept the first suggested word, press
+Alt-Right. If the autosuggestion is not what you want, just ignore it: it won't
+execute unless you accept it.
 
 Autosuggestions are a powerful way to quickly summon frequently entered commands, by
 typing the first few characters. They are also an efficient technique for navigating
@@ -1123,7 +1124,7 @@ Here are some of the commands available in the editor:
 - Home or Ctrl-A moves the cursor to the beginning of the line.
 - End or Ctrl-E moves to the end of line. If the cursor is already at the end of the line, and an autosuggestion is available, End or Ctrl-E accepts the autosuggestion.
 - Left (or Ctrl-B) and Right (or Ctrl-F) move the cursor left or right by one character. If the cursor is already at the end of the line, and an autosuggestion is available, the Right key and the Ctrl-F combination accept the suggestion.
-- Alt-Left and Alt-Right move the cursor one word left or right, or moves forward/backward in the directory history if the command line is empty.
+- Alt-Left and Alt-Right move the cursor one word left or right, or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, Alt-Right accept the first word in the suggestion.
 - Up and Down search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the <a href='#history'>history </a>section for more information on history searching.
 - Alt-Up and Alt-Down search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the <a href='#history'>history </a>section for more information on history searching.
 - Delete and Backspace removes one character forwards or backwards respectively.

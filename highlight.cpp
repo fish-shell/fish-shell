@@ -46,7 +46,7 @@
 
 static void highlight_universal_internal(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos);
 
-/** The environment variables used to specify the color of different tokens. This matchest the order in highlight_spec_t */
+/** The environment variables used to specify the color of different tokens. This matches the order in highlight_spec_t */
 static const wchar_t * const highlight_var[] =
 {
     L"fish_color_normal",
@@ -1393,7 +1393,51 @@ void highlight_shell_classic(const wcstring &buff, std::vector<highlight_spec_t>
     }
 }
 
-/* This function is a disaster badly in need of refactoring. */
+/* Highlights the variable starting with 'in', setting colors within the 'colors' array. Returns the number of characters consumed. */
+static size_t color_variable(const wchar_t *in, size_t in_len, std::vector<highlight_spec_t>::iterator colors)
+{
+    assert(in_len > 0);
+    assert(in[0] == L'$');
+    
+    // Handle an initial run of $s.
+    size_t idx = 0;
+    while (in[idx] == '$')
+    {
+        // Our color depends on the next char
+        wchar_t next = in[idx + 1];
+        if (next == L'$' || wcsvarchr(next))
+        {
+            colors[idx] = highlight_spec_operator;
+        }
+        else
+        {
+            colors[idx] = highlight_spec_error;
+        }
+        idx++;
+    }
+    
+    // Handle a sequence of variable characters
+    while (wcsvarchr(in[idx]))
+    {
+        colors[idx++] = highlight_spec_operator;
+    }
+    
+    // Handle a slice. Note that we currently don't do any validation of the slice's contents, e.g. $foo[blah] will not show an error even though it's invalid.
+    if (in[idx] == L'[')
+    {
+        wchar_t *slice_begin = NULL, *slice_end = NULL;
+        if (1 == parse_util_locate_slice(in, &slice_begin, &slice_end, false))
+        {
+            size_t slice_begin_idx = slice_begin - in, slice_end_idx = slice_end - in;
+            assert(slice_end_idx > slice_begin_idx);
+            colors[slice_begin_idx] = highlight_spec_operator;
+            colors[slice_end_idx] = highlight_spec_operator;
+        }
+    }
+    return idx;
+}
+
+/* This function is a disaster badly in need of refactoring. It colors an argument, without regard to command substitutions. */
 static void color_argument_internal(const wcstring &buffstr, std::vector<highlight_spec_t>::iterator colors)
 {
     const size_t buff_len = buffstr.size();
@@ -1535,14 +1579,7 @@ static void color_argument_internal(const wcstring &buffstr, std::vector<highlig
                         case L'$':
                         {
                             assert(in_pos < buff_len);
-                            int dollar_color = highlight_spec_error;
-                            if (in_pos + 1 < buff_len)
-                            {
-                                wchar_t next = buffstr.at(in_pos + 1);
-                                if (next == L'$' || wcsvarchr(next))
-                                    dollar_color = highlight_spec_operator;
-                            }
-                            colors[in_pos] = dollar_color;
+                            in_pos += color_variable(buffstr.c_str() + in_pos, buff_len - in_pos, colors + in_pos);
                             break;
                         }
 
@@ -1658,14 +1695,7 @@ static void color_argument_internal(const wcstring &buffstr, std::vector<highlig
 
                     case L'$':
                     {
-                        int dollar_color = highlight_spec_error;
-                        if (in_pos + 1 < buff_len)
-                        {
-                            wchar_t next = buffstr.at(in_pos + 1);
-                            if (next == L'$' || wcsvarchr(next))
-                                dollar_color = highlight_spec_operator;
-                        }
-                        colors[in_pos] = dollar_color;
+                        in_pos += color_variable(buffstr.c_str() + in_pos, buff_len - in_pos, colors + in_pos);
                         break;
                     }
 

@@ -144,21 +144,20 @@ size_t parse_util_get_offset(const wcstring &str, int line, long line_offset)
     }
 
     return off + line_offset2;
-
 }
 
-
-int parse_util_locate_cmdsubst(const wchar_t *in, wchar_t **begin, wchar_t **end, bool allow_incomplete)
+static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin, wchar_t **end, bool allow_incomplete, wchar_t open_type, wchar_t close_type)
 {
+    /* open_type is typically ( or [, and close type is the corresponding value */
     wchar_t *pos;
     wchar_t prev=0;
     int syntax_error=0;
     int paran_count=0;
-
+    
     wchar_t *paran_begin=0, *paran_end=0;
-
+    
     CHECK(in, 0);
-
+    
     for (pos = const_cast<wchar_t *>(in); *pos; pos++)
     {
         if (prev != '\\')
@@ -177,26 +176,26 @@ int parse_util_locate_cmdsubst(const wchar_t *in, wchar_t **begin, wchar_t **end
             }
             else
             {
-                if (*pos == '(')
+                if (*pos == open_type)
                 {
                     if ((paran_count == 0)&&(paran_begin==0))
                     {
                         paran_begin = pos;
                     }
-
+                    
                     paran_count++;
                 }
-                else if (*pos == ')')
+                else if (*pos == close_type)
                 {
-
+                    
                     paran_count--;
-
+                    
                     if ((paran_count == 0) && (paran_end == 0))
                     {
                         paran_end = pos;
                         break;
                     }
-
+                    
                     if (paran_count < 0)
                     {
                         syntax_error = 1;
@@ -204,38 +203,50 @@ int parse_util_locate_cmdsubst(const wchar_t *in, wchar_t **begin, wchar_t **end
                     }
                 }
             }
-
+            
         }
         prev = *pos;
     }
-
+    
     syntax_error |= (paran_count < 0);
     syntax_error |= ((paran_count>0)&&(!allow_incomplete));
-
+    
     if (syntax_error)
     {
         return -1;
     }
-
+    
     if (paran_begin == 0)
     {
         return 0;
     }
-
+    
     if (begin)
     {
         *begin = paran_begin;
     }
-
+    
     if (end)
     {
         *end = paran_count?(wchar_t *)in+wcslen(in):paran_end;
     }
-
+    
     return 1;
 }
 
-int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_offset, wcstring *out_contents, size_t *out_start, size_t *out_end, bool accept_incomplete)
+
+int parse_util_locate_cmdsubst(const wchar_t *in, wchar_t **begin, wchar_t **end, bool accept_incomplete)
+{
+    return parse_util_locate_brackets_of_type(in, begin, end, accept_incomplete, L'(', L')');
+}
+
+int parse_util_locate_slice(const wchar_t *in, wchar_t **begin, wchar_t **end, bool accept_incomplete)
+{
+    return parse_util_locate_brackets_of_type(in, begin, end, accept_incomplete, L'[', L']');
+}
+
+
+static int parse_util_locate_brackets_range(const wcstring &str, size_t *inout_cursor_offset, wcstring *out_contents, size_t *out_start, size_t *out_end, bool accept_incomplete, wchar_t open_type, wchar_t close_type)
 {
     /* Clear the return values */
     out_contents->clear();
@@ -249,26 +260,36 @@ int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_o
     /* Defer to the wonky version */
     const wchar_t * const buff = str.c_str();
     const wchar_t * const valid_range_start = buff + *inout_cursor_offset, *valid_range_end = buff + str.size();
-    wchar_t *cmdsub_begin = NULL, *cmdsub_end = NULL;
-    int ret = parse_util_locate_cmdsubst(valid_range_start, &cmdsub_begin, &cmdsub_end, accept_incomplete);
+    wchar_t *bracket_range_begin = NULL, *bracket_range_end = NULL;
+    int ret = parse_util_locate_brackets_of_type(valid_range_start, &bracket_range_begin, &bracket_range_end, accept_incomplete, open_type, close_type);
     if (ret > 0)
     {
         /* The command substitutions must not be NULL and must be in the valid pointer range, and the end must be bigger than the beginning */
-        assert(cmdsub_begin != NULL && cmdsub_begin >= valid_range_start && cmdsub_begin <= valid_range_end);
-        assert(cmdsub_end != NULL && cmdsub_end > cmdsub_begin && cmdsub_end >= valid_range_start && cmdsub_end <= valid_range_end);
+        assert(bracket_range_begin != NULL && bracket_range_begin >= valid_range_start && bracket_range_begin <= valid_range_end);
+        assert(bracket_range_end != NULL && bracket_range_end > bracket_range_begin && bracket_range_end >= valid_range_start && bracket_range_end <= valid_range_end);
 
         /* Assign the substring to the out_contents */
-        const wchar_t *interior_begin = cmdsub_begin + 1;
-        out_contents->assign(interior_begin, cmdsub_end - interior_begin);
+        const wchar_t *interior_begin = bracket_range_begin + 1;
+        out_contents->assign(interior_begin, bracket_range_end - interior_begin);
 
         /* Return the start and end */
-        *out_start = cmdsub_begin - buff;
-        *out_end = cmdsub_end - buff;
+        *out_start = bracket_range_begin - buff;
+        *out_end = bracket_range_end - buff;
 
         /* Update the inout_cursor_offset. Note this may cause it to exceed str.size(), though overflow is not likely */
         *inout_cursor_offset = 1 + *out_end;
     }
     return ret;
+}
+
+int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_offset, wcstring *out_contents, size_t *out_start, size_t *out_end, bool accept_incomplete)
+{
+    return parse_util_locate_brackets_range(str, inout_cursor_offset, out_contents, out_start, out_end, accept_incomplete, L'(', L')');
+}
+
+int parse_util_locate_slice_range(const wcstring &str, size_t *inout_cursor_offset, wcstring *out_contents, size_t *out_start, size_t *out_end, bool accept_incomplete)
+{
+    return parse_util_locate_brackets_range(str, inout_cursor_offset, out_contents, out_start, out_end, accept_incomplete, L'[', L']');
 }
 
 void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **a, const wchar_t **b)

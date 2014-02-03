@@ -1,0 +1,20 @@
+source ../share/functions/__fish_print_make_targets.fish
+
+# Setup
+set workdir (mktemp -d)
+cd $workdir
+echo "
+some\:target: # some:target
+	echo "some:target"
+
+some\:other\:target: ;
+
+schmall: ; # schmall
+" > Makefile
+
+
+# Exercise
+__fish_print_make_targets
+
+# Teardown
+rm -rf $workdir

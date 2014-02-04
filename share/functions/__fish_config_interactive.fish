@@ -214,8 +214,8 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		end
 	end
 
-	# Load key bindings
-	__fish_reload_key_bindings
+	# Load key bindings. Redirect stderr per #1155
+	__fish_reload_key_bindings ^ /dev/null
 
 	# Repaint screen when window changes size
 	function __fish_winch_handler --on-signal winch

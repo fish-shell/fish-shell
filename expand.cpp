@@ -955,7 +955,7 @@ static int parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &
 
     while (1)
     {
-        long tmp;
+        long tmp=1;
 
         while (iswspace(in[pos]) || (in[pos]==INTERNAL_SEPARATOR))
             pos++;
@@ -966,35 +966,84 @@ static int parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &
             break;
         }
 
+        bool sloppy = false;
+        long i1=1;
         errno=0;
-        tmp = wcstol(&in[pos], &end, 10);
-        if ((errno) || (end == &in[pos]))
+        if (in[pos]==L'.' && in[pos+1]==L'.')
         {
-            return 1;
+            // unbounded range $VAR[..n]
+            sloppy=true;
         }
-        //    debug( 0, L"Push idx %d", tmp );
+        else
+        {
+            tmp = wcstol(&in[pos], &end, 10);
+            if ((errno) || (end == &in[pos]))
+            {
+                return 1;
+            }
+            //    debug(0, L"Push idx %d", tmp);
 
-        long i1 = tmp>-1 ? tmp : (long)array_size+tmp+1;
-        pos = end-in;
-        while (in[pos]==INTERNAL_SEPARATOR)
-            pos++;
+            i1 = tmp>-1 ? tmp : (long)array_size+tmp+1;
+            pos = end-in;
+
+            while (in[pos]==INTERNAL_SEPARATOR)
+                pos++;
+        }
+
         if (in[pos]==L'.' && in[pos+1]==L'.')
         {
             pos+=2;
             while (in[pos]==INTERNAL_SEPARATOR)
                 pos++;
-            long tmp1 = wcstol(&in[pos], &end, 10);
-            if ((errno) || (end == &in[pos]))
-            {
-                return 1;
-            }
-            pos = end-in;
 
-            // debug( 0, L"Push range %d %d", tmp, tmp1 );
-            long i2 = tmp1>-1 ? tmp1 : size+tmp1+1;
-            // debug( 0, L"Push range idx %d %d", i1, i2 );
-            short direction = i2<i1 ? -1 : 1 ;
-            for (long jjj = i1; jjj*direction <= i2*direction; jjj+=direction)
+            long i2=array_size;
+            switch (in[pos]){
+                case L' ': 
+                    // Unbounded range $VAR[2.. <something>]
+                    pos++;
+                case L']': 
+                    // Unbounded range $VAR[2..]
+                    if(((size_t)i1)>array_size) 
+                    {
+                        // Produce empty list
+                        continue; 
+                    }
+                    if (i1<1){
+                        i1=1;
+                    }
+                    break; 
+                default:
+                    long tmp1 = wcstol(&in[pos], &end, 10);
+                    if ((errno) || (end == &in[pos]))
+                    {
+                        return 1;
+                    }
+                    pos = end-in;
+
+                    // debug(0, L"Push range %d %d", tmp, tmp1);
+                    i2 = tmp1>-1 ? tmp1 : size+tmp1+1;
+                    // debug(0, L"Push range idx %d %d", i1, i2);
+
+                    if (sloppy) 
+                    {
+                      if ( ((size_t)i2)>array_size )
+                      {
+                          i2=array_size;
+                      }
+                      else if (i2<1)
+                      {
+                          // Produce empty list
+                          continue;
+                      }
+                    }
+                    if (i2<i1)
+                    {
+                        return 1;
+                    }
+                    break;
+            }
+
+            for (long jjj = i1; jjj<=i2; jjj+=1)
             {
                 // debug(0, L"Expand range [subst]: %i\n", jjj);
                 idx.push_back(jjj);
@@ -1002,7 +1051,7 @@ static int parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &
             continue;
         }
 
-        // debug( 0, L"Push idx %d", tmp );
+        // debug(0, L"Push idx %d", tmp);
         idx.push_back(i1);
     }
 

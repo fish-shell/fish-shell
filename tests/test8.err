@@ -1,0 +1,3 @@
+fish: Could not expand string “$test[..-11]”
+/data/programs/fish-shell/tests/test8.in (line 32): count $test[..-11]
+                                                          ^

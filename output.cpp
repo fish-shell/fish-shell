@@ -52,7 +52,7 @@
 /**
  Number of color names in the col array
  */
-#define COLORS (sizeof(col)/sizeof(wchar_t *))
+#define FISH_COLORS (sizeof(col)/sizeof(wchar_t *))
 
 static int writeb_internal(char c);
 
@@ -622,7 +622,7 @@ int output_color_code(const wcstring &val, bool is_background)
 
         if (! color_name.empty())
         {
-            for (i=0; i<COLORS; i++)
+            for (i=0; i<FISH_COLORS; i++)
             {
                 if (wcscasecmp(col[i], color_name.c_str()) == 0)
                 {

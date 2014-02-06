@@ -1065,10 +1065,14 @@ static parse_keyword_t keyword_for_token(token_type tok, const wchar_t *tok_txt)
 }
 
 /* Placeholder invalid token */
-static const parse_token_t kInvalidToken = {token_type_invalid, parse_keyword_none, false, false, -1, -1};
+static const parse_token_t kInvalidToken = {token_type_invalid,
+parse_keyword_none, false, false, static_cast<size_t>(-1),
+                                  static_cast<size_t>(-1)};
 
 /* Terminal token */
-static const parse_token_t kTerminalToken = {parse_token_type_terminate, parse_keyword_none, false, false, -1, -1};
+static const parse_token_t kTerminalToken = {parse_token_type_terminate,
+parse_keyword_none, false, false, static_cast<size_t>(-1),
+                                  static_cast<size_t>(-1)};
 
 static inline bool is_help_argument(const wchar_t *txt)
 {

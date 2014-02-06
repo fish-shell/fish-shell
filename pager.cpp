@@ -698,7 +698,7 @@ void pager_t::update_rendering(page_rendering_t *rendering) const
     }
 }
 
-pager_t::pager_t() : available_term_width(0), available_term_height(0), selected_completion_idx(PAGER_SELECTION_NONE), suggested_row_start(0), fully_disclosed(false)
+pager_t::pager_t() : available_term_width(0), available_term_height(0), selected_completion_idx(PAGER_SELECTION_NONE), suggested_row_start(0), fully_disclosed(false), search_field_shown(false)
 {
 }
 

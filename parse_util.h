@@ -28,6 +28,12 @@ int parse_util_locate_cmdsubst(const wchar_t *in,
                                wchar_t **end,
                                bool accept_incomplete);
 
+/** Same as parse_util_locate_cmdsubst, but handles square brackets [ ] */
+int parse_util_locate_slice(const wchar_t *in,
+                            wchar_t **begin,
+                            wchar_t **end,
+                            bool accept_incomplete);
+
 /**
    Alternative API. Iterate over command substitutions.
 

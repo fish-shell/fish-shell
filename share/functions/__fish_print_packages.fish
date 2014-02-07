@@ -70,6 +70,12 @@ function __fish_print_packages
 		rpm -qa |sed -e 's/-[^-]*-[^-]*$/\t'$package'/' >$cache_file &
 	end
 
+    # This completes pacman package names from pacman's cache
+	if type -f pacman >/dev/null
+		pacman -Sl | cut -d ' ' -f 2- | tr ' ' \t
+		return
+	end
+
 	# This completes the package name from the portage tree.
 	# True for installing new packages. Function for printing
 	# installed on the system packages is in completions/emerge.fish

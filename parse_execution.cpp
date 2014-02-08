@@ -306,6 +306,12 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(const parse
     /* Done */
     parser->pop_block(ib);
 
+    /* Issue 1061: If we executed, then always report success, instead of letting the exit status of the last command linger */
+    if (result == parse_execution_success)
+    {
+        proc_set_last_status(STATUS_BUILTIN_OK);
+    }
+
     return result;
 }
 

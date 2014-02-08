@@ -3773,6 +3773,10 @@ static int builtin_end(parser_t &parser, wchar_t **argv)
             }
 
             case IF:
+                /* Always return success (#1061) */
+                proc_set_last_status(0);
+                break;
+
             case SUBST:
             case BEGIN:
             case SWITCH:

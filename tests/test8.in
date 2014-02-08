@@ -23,3 +23,7 @@ echo (seq $n)[3..5 -2..2]
 echo Test more
 echo $test[(count $test)..1]
 echo $test[1..(count $test)]
+
+# See issue 1061
+echo "Verify that if statements swallow failure"
+if false ; end ; echo $status

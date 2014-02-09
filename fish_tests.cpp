@@ -1535,7 +1535,14 @@ static void test_complete(void)
     complete(L"foobarbaz ", completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"qux");
-
+    
+    /* Don't complete variable names in single quotes (#1023) */
+    completions.clear();
+    complete(L"echo '$Foo", completions, COMPLETION_REQUEST_DEFAULT);
+    do_test(completions.empty());
+    completions.clear();
+    complete(L"echo \\$Foo", completions, COMPLETION_REQUEST_DEFAULT);
+    do_test(completions.empty());
 
     complete_set_variable_names(NULL);
 }

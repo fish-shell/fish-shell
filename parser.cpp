@@ -568,8 +568,7 @@ void parser_t::error(int ec, size_t p, const wchar_t *str, ...)
 static void print_profile(const std::vector<profile_item_t*> &items,
                           FILE *out)
 {
-    size_t pos;
-    for (pos = 0; pos < items.size(); pos++)
+    for (size_t pos = 0; pos < items.size(); pos++)
     {
         const profile_item_t *me, *prev;
         size_t i;
@@ -626,47 +625,38 @@ static void print_profile(const std::vector<profile_item_t*> &items,
                 }
 
             }
-            delete me;
         }
     }
 }
 
-void parser_t::destroy()
+void parser_t::emit_profiling(const char *path) const
 {
-    if (profile)
+    /* Save profiling information. OK to not use CLO_EXEC here because this is called while fish is dying (and hence will not fork) */
+    FILE *f = fopen(path, "w");
+    if (!f)
     {
-        /* Save profiling information. OK to not use CLO_EXEC here because this is called while fish is dying (and hence will not fork) */
-        FILE *f = fopen(profile, "w");
-        if (!f)
+        debug(1,
+              _(L"Could not write profiling information to file '%s'"),
+              path);
+    }
+    else
+    {
+        if (fwprintf(f,
+                     _(L"Time\tSum\tCommand\n"),
+                     profile_items.size()) < 0)
         {
-            debug(1,
-                  _(L"Could not write profiling information to file '%s'"),
-                  profile);
+            wperror(L"fwprintf");
         }
         else
         {
-            if (fwprintf(f,
-                         _(L"Time\tSum\tCommand\n"),
-                         profile_items.size()) < 0)
-            {
-                wperror(L"fwprintf");
-            }
-            else
-            {
-                print_profile(profile_items, f);
-            }
+            print_profile(profile_items, f);
+        }
 
-            if (fclose(f))
-            {
-                wperror(L"fclose");
-            }
+        if (fclose(f))
+        {
+            wperror(L"fclose");
         }
     }
-
-    lineinfo.clear();
-
-    forbidden_function.clear();
-
 }
 
 /**
@@ -1223,6 +1213,17 @@ job_t *parser_t::job_get_from_pid(int pid)
             return job;
     }
     return 0;
+}
+
+profile_item_t *parser_t::create_profile_item()
+{
+    profile_item_t *result = NULL;
+    if (g_profiling_active)
+    {
+        result = new profile_item_t();
+        profile_items.push_back(result);
+    }
+    return result;
 }
 
 /**
@@ -2329,16 +2330,14 @@ void parser_t::eval_job(tokenizer_t *tok)
     long long t1=0, t2=0, t3=0;
 
 
-    profile_item_t *profile_item = NULL;
     bool skip = false;
     int job_begin_pos;
-    const bool do_profile = profile;
 
+    profile_item_t *profile_item = create_profile_item();
+    const bool do_profile = (profile_item != NULL);
     if (do_profile)
     {
-        profile_item = new profile_item_t();
         profile_item->skipped = 1;
-        profile_items.push_back(profile_item);
         t1 = get_time();
     }
 
@@ -2572,8 +2571,12 @@ int parser_t::eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum bl
         return 1;
     }
 
+
+    /* Determine the initial eval level. If this is the first context, it's -1; otherwise it's the eval level of the top context. This is sort of wonky because we're stitching together a global notion of eval level from these separate objects. A better approach would be some profile object that all contexts share, and that tracks the eval levels on its own. */
+    int exec_eval_level = (execution_contexts.empty() ? -1 : execution_contexts.back()->current_eval_level());
+
     /* Append to the execution context stack */
-    parse_execution_context_t *ctx = new parse_execution_context_t(tree, cmd, this);
+    parse_execution_context_t *ctx = new parse_execution_context_t(tree, cmd, this, exec_eval_level);
     execution_contexts.push_back(ctx);
 
     /* Execute the first node */
@@ -2593,7 +2596,8 @@ int parser_t::eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum bl
 
 int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum block_type_t block_type)
 {
-    // Paranoia. It's a little frightening that we're given only a node_idx and we interpret this in the topmost execution context's tree. What happens if these were to be interleaved? Fortunately that cannot happen.
+    /* Paranoia. It's a little frightening that we're given only a node_idx and we interpret this in the topmost execution context's tree. What happens if two trees were to be interleaved? Fortunately that cannot happen (yet); in the future we probably want some sort of reference counted trees.
+    */
     parse_execution_context_t *ctx = execution_contexts.back();
     assert(ctx != NULL);
 

@@ -12,7 +12,6 @@
 #include "proc.h"
 
 class job_t;
-struct profile_item_t;
 struct block_t;
 
 enum parse_execution_result_t
@@ -40,7 +39,6 @@ private:
     //parse_error_list_t errors;
 
     int eval_level;
-    std::vector<profile_item_t*> profile_items;
 
     /* No copying allowed */
     parse_execution_context_t(const parse_execution_context_t&);
@@ -66,7 +64,7 @@ private:
 
     /* Command not found support */
     void handle_command_not_found(const wcstring &cmd, const parse_node_t &statement_node, int err_code);
-
+    
     /* Utilities */
     wcstring get_source(const parse_node_t &node) const;
     const parse_node_t *get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type = token_type_invalid) const;
@@ -103,7 +101,10 @@ private:
     parse_execution_result_t populate_job_from_job_node(job_t *j, const parse_node_t &job_node, const block_t *associated_block);
 
 public:
-    parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, parser_t *p);
+    parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, parser_t *p, int initial_eval_level);
+
+    /* Returns the current eval level */
+    int current_eval_level() const { return eval_level; }
 
     /* Start executing at the given node offset. Returns 0 if there was no error, 1 if there was an error */
     parse_execution_result_t eval_node_at_offset(node_offset_t offset, const block_t *associated_block, const io_chain_t &io);

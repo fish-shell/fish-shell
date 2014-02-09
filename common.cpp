@@ -83,7 +83,7 @@ static bool thread_assertions_configured_for_testing = false;
 wchar_t ellipsis_char;
 wchar_t omitted_newline_char;
 
-char *profile=0;
+bool g_profiling_active = false;
 
 const wchar_t *program_name;
 

@@ -247,25 +247,19 @@ enum parser_type_t
 
 struct profile_item_t
 {
-    /**
-       Time spent executing the specified command, including parse time for nested blocks.
-    */
+    /** Time spent executing the specified command, including parse time for nested blocks. */
     int exec;
-    /**
-       Time spent parsing the specified command, including execution time for command substitutions.
-    */
+    
+    /** Time spent parsing the specified command, including execution time for command substitutions. */
     int parse;
-    /**
-       The block level of the specified command. nested blocks and command substitutions both increase the block level.
-    */
+    
+    /** The block level of the specified command. nested blocks and command substitutions both increase the block level. */
     size_t level;
-    /**
-       If the execution of this command was skipped.
-    */
-    int skipped;
-    /**
-       The command string.
-    */
+    
+    /** If the execution of this command was skipped. */
+    bool skipped;
+
+    /** The command string. */
     wcstring cmd;
 };
 
@@ -477,6 +471,9 @@ public:
 
     /** Returns the job with the given pid */
     job_t *job_get_from_pid(int pid);
+    
+    /* Returns a new profile item if profiling is active. The caller should fill it in. The parser_t will clean it up. */
+    profile_item_t *create_profile_item();
 
     /**
        Test if the specified string can be parsed, or if more bytes need
@@ -517,9 +514,9 @@ public:
     void init();
 
     /**
-       Destroy static parser data
+       Output profiling data to the given filename
     */
-    void destroy();
+    void emit_profiling(const char *path) const;
 
     /**
        This function checks if the specified string is a help option.

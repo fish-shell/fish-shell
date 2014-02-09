@@ -149,7 +149,7 @@ extern int debug_level;
 /**
    Profiling flag. True if commands should be profiled.
 */
-extern char *profile;
+extern bool g_profiling_active;
 
 /**
    Name of the current program. Should be set at startup. Used by the

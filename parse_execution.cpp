@@ -27,7 +27,30 @@ static bool specific_statement_type_is_redirectable_block(const parse_node_t &no
 
 }
 
-parse_execution_context_t::parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, parser_t *p) : tree(t), src(s), parser(p), eval_level(0)
+/* Get the name of a redirectable block, for profiling purposes */
+static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &node, const parse_node_tree_t &tree, const wcstring &src)
+{
+    assert(specific_statement_type_is_redirectable_block(node));
+    assert(node.has_source());
+    
+    /* Get the source for the block, and cut it at the next statement terminator. */
+    const size_t src_start = node.source_start;
+    size_t src_len = node.source_length;
+
+    const parse_node_tree_t::parse_node_list_t statement_terminator_nodes = tree.find_nodes(node, parse_token_type_end, 1);
+    if (! statement_terminator_nodes.empty())
+    {
+        const parse_node_t *term = statement_terminator_nodes.at(0);
+        assert(term->source_start >= src_start);
+        src_len = term->source_start - src_start;
+    }
+    
+    wcstring result = wcstring(src, src_start, src_len);
+    result.append(L"...");
+    return result;
+}
+
+parse_execution_context_t::parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, parser_t *p, int initial_eval_level) : tree(t), src(s), parser(p), eval_level(initial_eval_level)
 {
 }
 
@@ -1270,6 +1293,14 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
     /* Increment the eval_level for the duration of this command */
     scoped_push<int> saved_eval_level(&eval_level, eval_level + 1);
 
+    /* Profiling support */
+    long long start_time = 0, parse_time = 0, exec_time = 0;
+    profile_item_t *profile_item = this->parser->create_profile_item();
+    if (profile_item != NULL)
+    {
+        start_time = get_time();
+    }
+
     /* When we encounter a block construct (e.g. while loop) in the general case, we create a "block process" that has a pointer to its source. This allows us to handle block-level redirections. However, if there are no redirections, then we can just jump into the block directly, which is significantly faster. */
     if (job_is_simple_block(job_node))
     {
@@ -1279,31 +1310,35 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
         switch (specific_statement.type)
         {
             case symbol_block_statement:
-                return this->run_block_statement(specific_statement);
+                result = this->run_block_statement(specific_statement);
+                break;
 
             case symbol_if_statement:
-                return this->run_if_statement(specific_statement);
+                result = this->run_if_statement(specific_statement);
+                break;
 
             case symbol_switch_statement:
-                return this->run_switch_statement(specific_statement);
+                result = this->run_switch_statement(specific_statement);
+                break;
 
             default:
                 /* Other types should be impossible due to the specific_statement_type_is_redirectable_block check */
                 PARSER_DIE();
                 break;
         }
-    }
-
-    /* Profiling support */
-    long long start_time = 0, parse_time = 0, exec_time = 0;
-    const bool do_profile = profile;
-    profile_item_t *profile_item = NULL;
-    if (do_profile)
-    {
-        profile_item = new profile_item_t();
-        profile_item->skipped = 1;
-        profile_items.push_back(profile_item);
-        start_time = get_time();
+        
+        if (profile_item != NULL)
+        {
+            /* Block-types profile a little weird. They have no 'parse' time, and their command is just the block type */
+            exec_time = get_time();
+            profile_item->level=eval_level;
+            profile_item->parse = 0;
+            profile_item->exec=(int)(exec_time-start_time);
+            profile_item->cmd = profiling_cmd_name_for_redirectable_block(specific_statement, this->tree, this->src);
+            profile_item->skipped = result != parse_execution_success;
+        }
+        
+        return result;
     }
 
     job_t *j = new job_t(acquire_job_id(), block_io);
@@ -1336,11 +1371,9 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
 
 
     /* Store time it took to 'parse' the command */
-    if (do_profile)
+    if (profile_item != NULL)
     {
         parse_time = get_time();
-        profile_item->cmd = j->command();
-        profile_item->skipped=parser->current_block()->skip;
     }
 
     if (populated_job)
@@ -1370,20 +1403,22 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
         }
     }
 
+    if (profile_item != NULL)
+    {
+        exec_time = get_time();
+        profile_item->level=eval_level;
+        profile_item->parse = (int)(parse_time-start_time);
+        profile_item->exec=(int)(exec_time-parse_time);
+        profile_item->cmd = j ? j->command() : wcstring();
+        profile_item->skipped = ! populated_job || result != parse_execution_success;
+    }
+
     /* If the job was skipped, we pretend it ran anyways */
     if (result == parse_execution_skipped)
     {
         result = parse_execution_success;
     }
 
-    if (do_profile)
-    {
-        exec_time = get_time();
-        profile_item->level=eval_level;
-        profile_item->parse = (int)(parse_time-start_time);
-        profile_item->exec=(int)(exec_time-parse_time);
-        profile_item->skipped = ! populated_job;
-    }
 
     /* Clean up jobs. */
     job_reap(0);

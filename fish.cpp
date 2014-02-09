@@ -73,6 +73,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 #define GETOPT_STRING "+hilnvc:p:d:"
 
+/* If we are doing profiling, the filename to output to */
+static const char *s_profiling_output_filename = NULL;
+
 static bool has_suffix(const std::string &path, const char *suffix, bool ignore_case)
 {
     size_t pathlen = path.size(), suffixlen = strlen(suffix);
@@ -245,7 +248,6 @@ static int read_init(const struct config_paths_t &paths)
     return 1;
 }
 
-
 /**
   Parse the argument list, return the index of the first non-switch
   arguments.
@@ -346,7 +348,8 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *out_c
 
             case 'p':
             {
-                profile = optarg;
+                s_profiling_output_filename = optarg;
+                g_profiling_active = true;
                 break;
             }
 
@@ -521,11 +524,16 @@ int main(int argc, char **argv)
 
     restore_term_mode();
     restore_term_foreground_process_group();
+    
+    if (g_profiling_active)
+    {
+        parser.emit_profiling(s_profiling_output_filename);
+    }
+    
     history_destroy();
     proc_destroy();
     builtin_destroy();
     reader_destroy();
-    parser.destroy();
     wutil_destroy();
     event_destroy();
 

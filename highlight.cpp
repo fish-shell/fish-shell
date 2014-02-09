@@ -1580,6 +1580,8 @@ static void color_argument_internal(const wcstring &buffstr, std::vector<highlig
                         {
                             assert(in_pos < buff_len);
                             in_pos += color_variable(buffstr.c_str() + in_pos, buff_len - in_pos, colors + in_pos);
+                            /* subtract one to account for the upcoming loop increment */
+                            in_pos -= 1;
                             break;
                         }
 
@@ -1696,6 +1698,8 @@ static void color_argument_internal(const wcstring &buffstr, std::vector<highlig
                     case L'$':
                     {
                         in_pos += color_variable(buffstr.c_str() + in_pos, buff_len - in_pos, colors + in_pos);
+                        /* subtract one to account for the upcoming increment in the loop */
+                        in_pos -= 1;
                         break;
                     }
 

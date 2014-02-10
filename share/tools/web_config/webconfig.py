@@ -291,7 +291,8 @@ class BindingParser:
 
     def get_char(self):
         """ Gets next character from buffer """
-
+        if self.index >= len(self.buffer):
+            return '\0'
         c = self.buffer[self.index]
         self.index += 1
         return c

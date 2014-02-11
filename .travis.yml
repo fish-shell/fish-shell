@@ -16,3 +16,7 @@ notifications:
   irc:
     channels:
       - "irc.oftc.net#fish"
+    template:
+      - "%{repository}#%{build_number} (%{commit} on %{branch} by %{author}): %{message} Details at %{build_url}"
+    use_notice: true
+    skip_join: true

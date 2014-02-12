@@ -556,8 +556,7 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
         BIND_ERASE,
         BIND_KEY_NAMES,
         BIND_FUNCTION_NAMES
-    }
-    ;
+    };
 
     int argc=builtin_count_args(argv);
     int mode = BIND_INSERT;

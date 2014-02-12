@@ -62,16 +62,20 @@
 
 #define DEFAULT_TERM L"ansi"
 
-/**
-   Struct representing a keybinding. Returned by input_get_mappings.
- */
+/** Struct representing a keybinding. Returned by input_get_mappings. */
 struct input_mapping_t
 {
     wcstring seq; /**< Character sequence which generates this event */
     wcstring command; /**< command that should be evaluated by this mapping */
+    
+    /* We wish to preserve the user-specified order. This is just an incrementing value. */
+    unsigned int specification_order;
 
-
-    input_mapping_t(const wcstring &s, const wcstring &c) : seq(s), command(c) {}
+    input_mapping_t(const wcstring &s, const wcstring &c) : seq(s), command(c)
+    {
+        static unsigned int s_last_input_mapping_specification_order = 0;
+        specification_order = ++s_last_input_mapping_specification_order;
+    }
 };
 
 /**
@@ -81,7 +85,6 @@ struct terminfo_mapping_t
 {
     const wchar_t *name; /**< Name of key */
     const char *seq; /**< Character sequence generated on keypress. Constant string. */
-
 };
 
 
@@ -133,7 +136,7 @@ static const wchar_t * const name_arr[] =
     L"cancel"
 };
 
-wcstring describe_char(wchar_t c)
+wcstring describe_char(wint_t c)
 {
     wchar_t initial_cmd_char = R_BEGINNING_OF_LINE;
     size_t name_count = sizeof name_arr / sizeof *name_arr;
@@ -257,28 +260,44 @@ static bool is_init = false;
  */
 static void input_terminfo_init();
 
+/* Helper function to compare the lengths of sequences */
+static bool length_is_greater_than(const input_mapping_t &m1, const input_mapping_t &m2)
+{
+    return m1.seq.size() > m2.seq.size();
+}
 
-/**
-   Returns the function description for the given function code.
-*/
+static bool specification_order_is_less_than(const input_mapping_t &m1, const input_mapping_t &m2)
+{
+    return m1.specification_order < m2.specification_order;
+}
 
+
+/* Inserts an input mapping at the correct position. We sort them in descending order by length, so that we test longer sequences first. */
+static void input_mapping_insert_sorted(const input_mapping_t &new_mapping)
+{
+    std::vector<input_mapping_t>::iterator loc = std::lower_bound(mapping_list.begin(), mapping_list.end(), new_mapping, length_is_greater_than);
+    mapping_list.insert(loc, new_mapping);
+}
+
+/* Adds an input mapping */
 void input_mapping_add(const wchar_t *sequence, const wchar_t *command)
 {
     CHECK(sequence,);
     CHECK(command,);
-
-    //  debug( 0, L"Add mapping from %ls to %ls", escape(sequence, 1), escape(command, 1 ) );
-
-    for (size_t i=0; i<mapping_list.size(); i++)
+    
+    // remove existing mappings with this sequence
+    size_t idx = mapping_list.size();
+    while (idx--)
     {
-        input_mapping_t &m = mapping_list.at(i);
-        if (m.seq == sequence)
+        if (mapping_list.at(idx).seq == sequence)
         {
-            m.command = command;
-            return;
+            mapping_list.erase(mapping_list.begin() + idx);
         }
     }
-    mapping_list.push_back(input_mapping_t(sequence, command));
+    
+    // add a new mapping, using the next order
+    const input_mapping_t new_mapping = input_mapping_t(sequence, command);
+    input_mapping_insert_sorted(new_mapping);
 }
 
 /**
@@ -530,15 +549,10 @@ wint_t input_readch()
 
     CHECK_BLOCK(R_NULL);
 
-    /*
-       Clear the interrupted flag
-       */
+    /* Clear the interrupted flag */
     reader_reset_interrupted();
 
-    /*
-       Search for sequence in mapping tables
-       */
-
+    /* Search for sequence in mapping tables */
     while (1)
     {
         const input_mapping_t *generic = 0;
@@ -556,18 +570,11 @@ wint_t input_readch()
 
         }
 
-        /*
-             No matching exact mapping, try to find generic mapping.
-             */
+        /* No matching exact mapping, try to find generic mapping. */
 
         if (generic)
         {
-            wchar_t arr[2]=
-            {
-                0,
-                0
-            }
-            ;
+            wchar_t arr[2]= { 0, 0 } ;
             arr[0] = input_common_readch(0);
 
             return input_exec_binding(*generic, arr);
@@ -589,11 +596,13 @@ wint_t input_readch()
 
 void input_mapping_get_names(wcstring_list_t &lst)
 {
-    size_t i;
-
-    for (i=0; i<mapping_list.size(); i++)
+    // Sort the mappings by the user specification order, so we can return them in the same order that the user specified them in
+    std::vector<input_mapping_t> local_list = mapping_list;
+    std::sort(local_list.begin(), local_list.end(), specification_order_is_less_than);
+    
+    for (size_t i=0; i<local_list.size(); i++)
     {
-        const input_mapping_t &m = mapping_list.at(i);
+        const input_mapping_t &m = local_list.at(i);
         lst.push_back(wcstring(m.seq));
     }
 

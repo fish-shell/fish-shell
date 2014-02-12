@@ -61,6 +61,7 @@
 #include "parse_tree.h"
 #include "parse_util.h"
 #include "pager.h"
+#include "input.h"
 
 static const char * const * s_arguments;
 static int s_test_run_count = 0;
@@ -1798,6 +1799,30 @@ static bool history_contains(history_t *history, const wcstring &txt)
     return result;
 }
 
+static void test_input()
+{
+    say(L"Testing input");
+    /* Ensure sequences are order independent. Here we add two bindings where the first is a prefix of the second, and then emit the second key list. The second binding should be invoked, not the first! */
+    wcstring prefix_binding = L"qqqqqqqa";
+    wcstring desired_binding = prefix_binding + L'a';
+    input_mapping_add(prefix_binding.c_str(), L"up-line");
+    input_mapping_add(desired_binding.c_str(), L"down-line");
+    
+    /* Push the desired binding on the stack (backwards!) */
+    size_t idx = desired_binding.size();
+    while (idx--)
+    {
+        input_unreadch(desired_binding.at(idx));
+    }
+    
+    /* Now test */
+    wint_t c = input_readch();
+    if (c != R_DOWN_LINE)
+    {
+        err(L"Expected to read char R_DOWN_LINE, but instead got %ls\n", describe_char(c).c_str());
+    }
+}
+
 class history_tests_t
 {
 public:
@@ -2836,6 +2861,7 @@ int main(int argc, char **argv)
     if (should_test_function("is_potential_path")) test_is_potential_path();
     if (should_test_function("colors")) test_colors();
     if (should_test_function("complete")) test_complete();
+    if (should_test_function("input")) test_input();
     if (should_test_function("completion_insertions")) test_completion_insertions();
     if (should_test_function("autosuggestion_combining")) test_autosuggestion_combining();
     if (should_test_function("autosuggest_suggest_special")) test_autosuggest_suggest_special();

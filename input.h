@@ -62,7 +62,7 @@ enum
     R_CANCEL
 };
 
-wcstring describe_char(wchar_t c);
+wcstring describe_char(wint_t c);
 
 /**
    Initialize the terminal by calling setupterm, and set up arrays

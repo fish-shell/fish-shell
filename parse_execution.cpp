@@ -325,6 +325,12 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(const parse
     {
         run_job_list(*job_list_to_execute, ib);
     }
+    
+    /* It's possible there's a last-minute cancellation, in which case we should not stomp the exit status (#1297) */
+    if (should_cancel_execution(ib))
+    {
+        result = parse_execution_cancelled;
+    }
 
     /* Done */
     parser->pop_block(ib);

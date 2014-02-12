@@ -77,13 +77,13 @@ end
 
 function __fish_git_stash_not_using_subcommand
   set cmd (commandline -opc)
-  if [ (count $cmd) -eq 3  -a $cmd[2] = 'stash' ]
+  if [ (count $cmd) -gt 2 -a $cmd[2] = 'stash' ]
     return 1
   end
   return 0
 end
 
-function __fish_git_stashs_and_desc
+function __fish_git_complete_stashes
    command git stash list --format=format:"%gd:%gs" | sed 's/:/\t/'
 end
 
@@ -359,11 +359,11 @@ complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_
 complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_using_subcommand' -a save -d 'Save a new stash'
 complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_using_subcommand' -a branch -d 'Create a new branch from a stash'
 
-complete -f -c git -n '__fish_git_stash_using_command apply' -a '(__fish_git_stashs_and_desc)'
-complete -f -c git -n '__fish_git_stash_using_command branch' -a '(__fish_git_stashs_and_desc)'
-complete -f -c git -n '__fish_git_stash_using_command drop' -a '(__fish_git_stashs_and_desc)'
-complete -f -c git -n '__fish_git_stash_using_command pop' -a '(__fish_git_stashs_and_desc)'
-complete -f -c git -n '__fish_git_stash_using_command show' -a '(__fish_git_stashs_and_desc)'
+complete -f -c git -n '__fish_git_stash_using_command apply' -a '(__fish_git_complete_stashes)'
+complete -f -c git -n '__fish_git_stash_using_command branch' -a '(__fish_git_complete_stashes)'
+complete -f -c git -n '__fish_git_stash_using_command drop' -a '(__fish_git_complete_stashes)'
+complete -f -c git -n '__fish_git_stash_using_command pop' -a '(__fish_git_complete_stashes)'
+complete -f -c git -n '__fish_git_stash_using_command show' -a '(__fish_git_complete_stashes)'
 
 ### config
 complete -f -c git -n '__fish_git_needs_command' -a config -d 'Set and read git configuration variables'

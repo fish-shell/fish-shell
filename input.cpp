@@ -59,6 +59,7 @@
 #include "output.h"
 #include "intern.h"
 #include <vector>
+#include <algorithm>
 
 #define DEFAULT_TERM L"ansi"
 

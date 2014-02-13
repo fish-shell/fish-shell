@@ -90,6 +90,7 @@ enum parse_keyword_t
     parse_keyword_not,
     parse_keyword_command,
     parse_keyword_builtin,
+    parse_keyword_exec,
 
     LAST_KEYWORD = parse_keyword_builtin
 };
@@ -99,7 +100,8 @@ enum parse_statement_decoration_t
 {
     parse_statement_decoration_none,
     parse_statement_decoration_command,
-    parse_statement_decoration_builtin
+    parse_statement_decoration_builtin,
+    parse_statement_decoration_exec
 };
 
 /* Parse error code list */

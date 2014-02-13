@@ -237,6 +237,8 @@ wcstring keyword_description(parse_keyword_t k)
             return L"command";
         case parse_keyword_builtin:
             return L"builtin";
+        case parse_keyword_exec:
+            return L"exec";
     }
     return format_string(L"Unknown keyword type %ld", static_cast<long>(k));
 }
@@ -1049,7 +1051,8 @@ static parse_keyword_t keyword_for_token(token_type tok, const wchar_t *tok_txt)
             {L"or", parse_keyword_or},
             {L"not", parse_keyword_not},
             {L"command", parse_keyword_command},
-            {L"builtin", parse_keyword_builtin}
+            {L"builtin", parse_keyword_builtin},
+            {L"exec", parse_keyword_exec}
         };
 
         for (size_t i=0; i < sizeof keywords / sizeof *keywords; i++)

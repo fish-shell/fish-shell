@@ -1067,6 +1067,15 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
             }
             else if (node.type == symbol_plain_statement)
             {
+                // In a few places below, we want to know if we are in a pipeline
+                const bool is_in_pipeline = node_tree.statement_is_in_pipeline(node, true /* count first */);
+                
+                // Check that we don't try to pipe through exec
+                if (is_in_pipeline && node_tree.decoration_for_plain_statement(node) == parse_statement_decoration_exec)
+                {
+                    errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG, L"exec");
+                }
+                
                 wcstring command;
                 if (node_tree.command_for_plain_statement(node, buff_src, &command))
                 {
@@ -1077,13 +1086,9 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                     }
 
                     // Check that pipes are sound
-                    if (! errored && parser_is_pipe_forbidden(command))
+                    if (! errored && parser_is_pipe_forbidden(command) && is_in_pipeline)
                     {
-                        // forbidden commands cannot be in a pipeline at all
-                        if (node_tree.statement_is_in_pipeline(node, true /* count first */))
-                        {
-                            errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG, command.c_str());
-                        }
+                        errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG, command.c_str());
                     }
 
                     // Check that we don't return from outside a function

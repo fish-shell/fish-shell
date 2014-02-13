@@ -140,10 +140,17 @@ static void err(const wchar_t *blah, ...)
     va_list va;
     va_start(va, blah);
     err_count++;
+    
+    // show errors in red
+    fputs("\x1b[31m", stdout);
 
     wprintf(L"Error: ");
     vwprintf(blah, va);
     va_end(va);
+    
+    // return to normal color
+    fputs("\x1b[0m", stdout);
+    
     wprintf(L"\n");
 }
 
@@ -2454,6 +2461,7 @@ static void test_new_parser_ll2(void)
     {
         {L"echo hello", L"echo", L"hello", parse_statement_decoration_none},
         {L"command echo hello", L"echo", L"hello", parse_statement_decoration_command},
+        {L"exec echo hello", L"echo", L"hello", parse_statement_decoration_exec},
         {L"command command hello", L"command", L"hello", parse_statement_decoration_command},
         {L"builtin command hello", L"command", L"hello", parse_statement_decoration_builtin},
         {L"command --help", L"command", L"--help", parse_statement_decoration_none},

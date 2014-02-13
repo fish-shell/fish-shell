@@ -357,6 +357,7 @@ PRODUCTIONS(decorated_statement) =
     {symbol_plain_statement},
     {KEYWORD(parse_keyword_command), symbol_plain_statement},
     {KEYWORD(parse_keyword_builtin), symbol_plain_statement},
+    {KEYWORD(parse_keyword_exec), symbol_plain_statement}
 };
 RESOLVE(decorated_statement)
 {
@@ -374,6 +375,8 @@ RESOLVE(decorated_statement)
             return 1;
         case parse_keyword_builtin:
             return 2;
+        case parse_keyword_exec:
+            return 3;
     }
 }
 

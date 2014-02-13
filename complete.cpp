@@ -1915,6 +1915,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
                     break;
 
                 case parse_statement_decoration_command:
+                case parse_statement_decoration_exec:
                     use_command = true;
                     use_function = false;
                     use_builtin = false;

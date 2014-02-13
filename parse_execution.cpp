@@ -161,10 +161,9 @@ enum process_type_t parse_execution_context_t::process_type_for_command(const pa
     /* Determine the process type, which depends on the statement decoration (command, builtin, etc) */
     enum parse_statement_decoration_t decoration = tree.decoration_for_plain_statement(plain_statement);
 
-    /* Do the "exec hack" */
-    if (decoration != parse_statement_decoration_command && cmd == L"exec")
+    if (decoration == parse_statement_decoration_exec)
     {
-        /* Either 'builtin exec' or just plain 'exec', and definitely not 'command exec'. Note we don't allow overriding exec with a function. */
+        /* Always exec */
         process_type = INTERNAL_EXEC;
     }
     else if (decoration == parse_statement_decoration_command)
@@ -848,7 +847,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(job_t
     }
 
     wcstring path_to_external_command;
-    if (process_type == EXTERNAL)
+    if (process_type == EXTERNAL || process_type == INTERNAL_EXEC)
     {
         /* Determine the actual command. This may be an implicit cd. */
         bool has_command = path_get_path(cmd, &path_to_external_command);

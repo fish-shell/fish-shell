@@ -247,9 +247,9 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags, parse
 
     boolean_statement = AND statement | OR statement | NOT statement
 
-# A decorated_statement is a command with a list of arguments_or_redirections, possibly with "builtin" or "command"
+# A decorated_statement is a command with a list of arguments_or_redirections, possibly with "builtin" or "command" or "exec"
 
-    decorated_statement = plain_statement | COMMAND plain_statement | BUILTIN plain_statement
+    decorated_statement = plain_statement | COMMAND plain_statement | BUILTIN plain_statement | EXEC plain_statement
     plain_statement = <TOK_STRING> arguments_or_redirections_list optional_background
 
     argument_list = <empty> | argument argument_list

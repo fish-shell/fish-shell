@@ -667,13 +667,14 @@ static void daemonize()
             setup_fork_guards();
 
             /*
-              Make fishd ignore the HUP signal.
+              Make fishd ignore the HUP and PIPE signals.
             */
             struct sigaction act;
             sigemptyset(& act.sa_mask);
             act.sa_flags=0;
             act.sa_handler=SIG_IGN;
             sigaction(SIGHUP, &act, 0);
+            sigaction(SIGPIPE, &act, 0);
 
             /*
               Make fishd save and exit on the TERM signal.

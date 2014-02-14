@@ -29,6 +29,22 @@ function __fish_print_packages
 		return
 	end
 
+    # Caches for 5 minutes
+	if type -f pacman >/dev/null
+		set cache_file /tmp/.pac-cache.$USER
+		if test -f $cache_file
+			cat $cache_file
+			set age (math (date +%s) - (stat -c '%Y' $cache_file))
+			set max_age 250
+			if test $age -lt $max_age
+				return
+			end
+		end
+
+		# prints: <package name>	Package
+		pacman -Ssq | sed -e 's/$/\t'$package'/' >$cache_file &
+		return
+	end
 
 	# yum is slow, just like rpm, so go to the background
 	if type -f /usr/share/yum-cli/completion-helper.py >/dev/null
@@ -47,6 +63,7 @@ function __fish_print_packages
 
 		# Remove package version information from output and pipe into cache file
 		/usr/share/yum-cli/completion-helper.py list all -d 0 -C | sed "s/\..*/\t$package/" >$cache_file &
+		return
 	end
 
 	# Rpm is too slow for this job, so we set it up to do completions
@@ -68,11 +85,6 @@ function __fish_print_packages
 
 		# Remove package version information from output and pipe into cache file
 		rpm -qa |sed -e 's/-[^-]*-[^-]*$/\t'$package'/' >$cache_file &
-	end
-
-    # This completes pacman package names from pacman's cache
-	if type -f pacman >/dev/null
-		pacman -Sl | cut -d ' ' -f 2- | tr ' ' \t
 		return
 	end
 

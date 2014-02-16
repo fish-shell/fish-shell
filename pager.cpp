@@ -366,7 +366,7 @@ bool pager_t::completion_info_passes_filter(const comp_t &info) const
     /* Match against the completion strings */
     for (size_t i=0; i < info.comp.size(); i++)
     {
-        if (string_fuzzy_match_string(needle, info.comp.at(i), limit).type != fuzzy_match_none)
+        if (string_fuzzy_match_string(needle, prefix + info.comp.at(i), limit).type != fuzzy_match_none)
         {
             return true;
         }

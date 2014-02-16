@@ -65,6 +65,28 @@ function __fish_git_using_command
   return 1
 end
 
+function __fish_git_stash_using_command
+  set cmd (commandline -opc)
+  if [ (count $cmd) -gt 2 ]
+    if [ $cmd[2] = 'stash' -a $argv[1] = $cmd[3] ]
+      return 0
+    end
+  end
+  return 1
+end
+
+function __fish_git_stash_not_using_subcommand
+  set cmd (commandline -opc)
+  if [ (count $cmd) -gt 2 -a $cmd[2] = 'stash' ]
+    return 1
+  end
+  return 0
+end
+
+function __fish_git_complete_stashes
+   command git stash list --format=format:"%gd:%gs" | sed 's/:/\t/'
+end
+
 # general options
 complete -f -c git -n 'not __fish_git_needs_command' -l help -d 'Display the manual of a git command'
 
@@ -327,16 +349,21 @@ complete -f -c git -n '__fish_contains_opt -s v' -a '(__fish_git_tags)' -d 'Tag'
 
 ### stash
 complete -c git -n '__fish_git_needs_command' -a stash -d 'Stash away changes'
-complete -f -c git -n '__fish_git_using_command stash' -a list -d 'List stashes'
-complete -f -c git -n '__fish_git_using_command stash' -a show -d 'Show the changes recorded in the stash'
-complete -f -c git -n '__fish_git_using_command stash' -a pop -d 'Apply and remove a single stashed state'
-complete -f -c git -n '__fish_git_using_command stash' -a apply -d 'Apply a single stashed state'
-complete -f -c git -n '__fish_git_using_command stash' -a clear -d 'Remove all stashed states'
-complete -f -c git -n '__fish_git_using_command stash' -a drop -d 'Remove a single stashed state from the stash list'
-complete -f -c git -n '__fish_git_using_command stash' -a create -d 'Create a stash'
-complete -f -c git -n '__fish_git_using_command stash' -a save -d 'Save a new stash'
-complete -f -c git -n '__fish_git_using_command stash' -a branch -d 'Create a new branch from a stash'
-# TODO other options
+complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_using_subcommand' -a list -d 'List stashes'
+complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_using_subcommand' -a show -d 'Show the changes recorded in the stash'
+complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_using_subcommand' -a pop -d 'Apply and remove a single stashed state'
+complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_using_subcommand' -a apply -d 'Apply a single stashed state'
+complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_using_subcommand' -a clear -d 'Remove all stashed states'
+complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_using_subcommand' -a drop -d 'Remove a single stashed state from the stash list'
+complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_using_subcommand' -a create -d 'Create a stash'
+complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_using_subcommand' -a save -d 'Save a new stash'
+complete -f -c git -n '__fish_git_using_command stash; and __fish_git_stash_not_using_subcommand' -a branch -d 'Create a new branch from a stash'
+
+complete -f -c git -n '__fish_git_stash_using_command apply' -a '(__fish_git_complete_stashes)'
+complete -f -c git -n '__fish_git_stash_using_command branch' -a '(__fish_git_complete_stashes)'
+complete -f -c git -n '__fish_git_stash_using_command drop' -a '(__fish_git_complete_stashes)'
+complete -f -c git -n '__fish_git_stash_using_command pop' -a '(__fish_git_complete_stashes)'
+complete -f -c git -n '__fish_git_stash_using_command show' -a '(__fish_git_complete_stashes)'
 
 ### config
 complete -f -c git -n '__fish_git_needs_command' -a config -d 'Set and read git configuration variables'

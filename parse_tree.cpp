@@ -14,7 +14,7 @@ static bool production_is_empty(const production_t *production)
 }
 
 /** Returns a string description of this parse error */
-wcstring parse_error_t::describe(const wcstring &src, bool skip_caret) const
+wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring &prefix, bool skip_caret) const
 {
     wcstring result = text;
     if (! skip_caret && source_start < src.size() && source_start + source_length <= src.size())
@@ -53,15 +53,16 @@ wcstring parse_error_t::describe(const wcstring &src, bool skip_caret) const
             {
                 result.push_back(L'\n');
             }
+            result.append(prefix);
             result.append(src, line_start, line_end - line_start);
 
-
             // Append the caret line. The input source may include tabs; for that reason we construct a "caret line" that has tabs in corresponding positions
+            const wcstring line_to_measure = prefix + wcstring(src, line_start, source_start - line_start);
             wcstring caret_space_line;
             caret_space_line.reserve(source_start - line_start);
-            for (size_t i=line_start; i < source_start; i++)
+            for (size_t i=0; i < line_to_measure.size(); i++)
             {
-                wchar_t wc = src.at(i);
+                wchar_t wc = line_to_measure.at(i);
                 if (wc == L'\t')
                 {
                     caret_space_line.push_back(L'\t');
@@ -86,6 +87,11 @@ wcstring parse_error_t::describe(const wcstring &src, bool skip_caret) const
         }
     }
     return result;
+}
+
+wcstring parse_error_t::describe(const wcstring &src) const
+{
+    return this->describe_with_prefix(src, wcstring(), false);
 }
 
 wcstring parse_errors_description(const parse_error_list_t &errors, const wcstring &src, const wchar_t *prefix)

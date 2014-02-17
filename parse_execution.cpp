@@ -691,7 +691,7 @@ parse_execution_result_t parse_execution_context_t::report_error(const parse_nod
         const parse_error_list_t error_list = parse_error_list_t(1, error);
         parser->get_backtrace(src, error_list, &backtrace_and_desc);
 
-        fprintf(stderr, "<%ls>", backtrace_and_desc.c_str());
+        fprintf(stderr, "%ls", backtrace_and_desc.c_str());
     }
 
     return parse_execution_errored;

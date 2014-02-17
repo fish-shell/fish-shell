@@ -3002,20 +3002,24 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
         assert(err.source_start <= src.size());
         size_t which_line = 1 + std::count(src.begin(), src.begin() + err.source_start, L'\n');
 
+        // Don't include the caret if we're interactive, this is the first line of text, and our source is at its beginning, because then it's obvious
+        bool skip_caret = (get_is_interactive() && which_line == 1 && err.source_start == 0);
+        
+        wcstring prefix;
+        
         const wchar_t *filename = this->current_filename();
         if (filename)
         {
-            append_format(*output, _(L"fish: line %lu of %ls:\n"), which_line, user_presentable_path(filename).c_str());
+            prefix = format_string(_(L"%ls (line %lu): "), user_presentable_path(filename).c_str(), which_line);
+            //append_format(*output, _(L"%ls (line %lu):\n"), user_presentable_path(filename).c_str(), which_line);
         }
         else
         {
-            output->append(L"fish: ");
+            prefix = L"fish: ";
+            //output->append(L"fish: ");
         }
 
-        // Don't include the caret if we're interactive, this is the first line of text, and our source is at its beginning, because then it's obvious
-        bool skip_caret = (get_is_interactive() && which_line == 1 && err.source_start == 0);
-
-        output->append(err.describe(src, skip_caret));
+        output->append(err.describe_with_prefix(src, prefix, skip_caret));
         output->push_back(L'\n');
 
         this->stack_trace(0, *output);

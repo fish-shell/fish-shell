@@ -272,6 +272,9 @@ public:
     /** Do what we need to do whenever our command line changes */
     void command_line_changed(const editable_line_t *el);
 
+    /** Do what we need to do whenever our pager selection */
+    void pager_selection_changed();
+
     /** Expand abbreviations at the current cursor position, minus backtrack_amt. */
     bool expand_abbreviation_as_necessary(size_t cursor_backtrack);
 
@@ -686,7 +689,35 @@ void reader_data_t::command_line_changed(const editable_line_t *el)
     else if (el == &this->pager.search_field_line)
     {
         this->pager.refilter_completions();
+        this->pager_selection_changed();
     }
+}
+
+void reader_data_t::pager_selection_changed()
+{
+    ASSERT_IS_MAIN_THREAD();
+
+    const completion_t *completion = this->pager.selected_completion(this->current_page_rendering);
+
+    /* Update the cursor and command line */
+    size_t cursor_pos = this->cycle_cursor_pos;
+    wcstring new_cmd_line;
+
+    if (completion == NULL)
+    {
+        new_cmd_line = this->cycle_command_line;
+    }
+    else
+    {
+        new_cmd_line = completion_apply_to_command_line(completion->completion, completion->flags, this->cycle_command_line, &cursor_pos, false);
+    }
+    reader_set_buffer_maintaining_pager(new_cmd_line, cursor_pos);
+
+    /* Since we just inserted a completion, don't immediately do a new autosuggestion */
+    this->suppress_autosuggestion = true;
+
+    /* Trigger repaint (see #765) */
+    reader_repaint_needed();
 }
 
 /* Expand abbreviations at the given cursor position. Does NOT inspect 'data'. */
@@ -1644,7 +1675,11 @@ static void select_completion_in_direction(enum selection_direction_t dir)
 {
     assert(data != NULL);
     /* Note: this will probably trigger reader_selected_completion_changed, which will cause us to update stuff */
-    data->pager.select_next_completion_in_direction(dir, data->current_page_rendering);
+    bool selection_changed = data->pager.select_next_completion_in_direction(dir, data->current_page_rendering);
+    if (selection_changed)
+    {
+        data->pager_selection_changed();
+    }
 }
 
 /**
@@ -1964,6 +1999,8 @@ static bool handle_completions(const std::vector<completion_t> &comp, bool conti
                 /* Invalidate our rendering */
                 data->current_page_rendering = page_rendering_t();
                 
+                /* Modify the command line to reflect the new pager */
+                data->pager_selection_changed();
             }
             else
             {

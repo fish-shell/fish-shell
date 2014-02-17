@@ -388,7 +388,6 @@ void pager_t::refilter_completions()
             this->completion_infos.push_back(info);
         }
     }
-    note_selection_changed();
 }
 
 void pager_t::set_completions(const completion_list_t &raw_completions)
@@ -732,7 +731,6 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
                 {
                     selected_completion_idx = 0;
                 }
-                note_selection_changed();
                 return true;
 
             /* These do nothing */
@@ -897,7 +895,6 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
             }
         }
         
-        this->note_selection_changed();
         return true;
     }
     else
@@ -909,7 +906,7 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
 size_t pager_t::visual_selected_completion_index(size_t rows, size_t cols) const
 {
     /* No completions -> no selection */
-    if (completion_infos.empty())
+    if (completion_infos.empty() || rows == 0 || cols == 0)
     {
         return PAGER_SELECTION_NONE;
     }
@@ -997,10 +994,6 @@ size_t pager_t::cursor_position() const
     return result;
 }
 
-void pager_t::note_selection_changed()
-{
-    reader_selected_completion_changed(this);
-}
 
 /* Constructor */
 page_rendering_t::page_rendering_t() : term_width(-1), term_height(-1), rows(0), cols(0), row_start(0), row_end(0), selected_completion_idx(-1), remaining_to_disclose(0), search_field_shown(false)

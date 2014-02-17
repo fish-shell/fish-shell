@@ -301,8 +301,4 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
 /* Apply a completion string. Exposed for testing only. */
 wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flags_t flags, const wcstring &command_line, size_t *inout_cursor_pos, bool append_only);
 
-/* Called by pager */
-class pager_t;
-void reader_selected_completion_changed(pager_t *pager);
-
 #endif

@@ -159,6 +159,9 @@ class pager_t
     /* Indicates if we are navigating our contents */
     bool is_navigating_contents() const;
     
+    /* Become fully disclosed */
+    void set_fully_disclosed(bool flag);
+    
     /* Position of the cursor */
     size_t cursor_position() const;
     

@@ -3337,8 +3337,16 @@ const wchar_t *reader_readline(void)
                 editable_line_t *el = &data->command_line;
                 if (data->is_navigating_pager_contents() || (! comp_empty && last_char == R_COMPLETE))
                 {
-                    /* The user typed R_COMPLETE more than once in a row. Cycle through our available completions. */
-                    select_completion_in_direction(c == R_COMPLETE ? direction_next : direction_prev);
+                    /* The user typed R_COMPLETE more than once in a row. If we are not yet fully disclosed, then become so; otherwise cycle through our available completions. */
+                    if (data->current_page_rendering.remaining_to_disclose > 0)
+                    {
+                        data->pager.set_fully_disclosed(true);
+                        reader_repaint_needed();
+                    }
+                    else
+                    {
+                        select_completion_in_direction(c == R_COMPLETE ? direction_next : direction_prev);
+                    }
                 }
                 else
                 {

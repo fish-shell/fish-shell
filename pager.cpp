@@ -449,7 +449,9 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
     int term_width = this->available_term_width;
     int term_height = this->available_term_height - 1 - (search_field_shown ? 1 : 0); // we always subtract 1 to make room for a comment row
     if (! this->fully_disclosed)
+    {
         term_height = mini(term_height, PAGER_UNDISCLOSED_MAX_ROWS);
+    }
 
     size_t row_count = divide_round_up(lst.size(), cols);
     
@@ -691,7 +693,8 @@ void pager_t::update_rendering(page_rendering_t *rendering) const
     rendering->selected_completion_idx != this->visual_selected_completion_index(rendering->rows, rendering->cols) ||
     rendering->search_field_shown != this->search_field_shown ||
     rendering->search_field_line.text != this->search_field_line.text ||
-    rendering->search_field_line.position != this->search_field_line.position)
+    rendering->search_field_line.position != this->search_field_line.position ||
+    (rendering->remaining_to_disclose > 0 && this->fully_disclosed))
     {
         *rendering = this->render();
     }
@@ -932,6 +935,11 @@ size_t pager_t::visual_selected_completion_index(size_t rows, size_t cols) const
 bool pager_t::is_navigating_contents() const
 {
     return selected_completion_idx != PAGER_SELECTION_NONE;
+}
+
+void pager_t::set_fully_disclosed(bool flag)
+{
+    fully_disclosed = flag;
 }
 
 const completion_t *pager_t::selected_completion(const page_rendering_t &rendering) const

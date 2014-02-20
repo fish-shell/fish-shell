@@ -283,6 +283,9 @@ private:
 
     /** Indication that we should skip all blocks */
     bool cancellation_requested;
+    
+    /** Indicates that we are within the process of initializing fish */
+    bool is_within_fish_initialization;
 
     /** Stack of execution contexts. We own these pointers and must delete them */
     std::vector<parse_execution_context_t *> execution_contexts;
@@ -447,6 +450,9 @@ public:
     {
         return my_job_list;
     }
+    
+    /* Hackish. In order to correctly report the origin of code with no associated file, we need to know whether it's run during initialization or not. */
+    void set_is_within_fish_initialization(bool flag);
 
     /** Pushes the block. pop_block will call delete on it. */
     void push_block(block_t *newv);

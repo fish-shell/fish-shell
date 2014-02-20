@@ -299,6 +299,7 @@ parser_t::parser_t(enum parser_type_t type, bool errors) :
     error_code(0),
     err_pos(0),
     cancellation_requested(false),
+    is_within_fish_initialization(false),
     current_tokenizer(NULL),
     current_tokenizer_pos(0),
     job_start_pos(0),
@@ -320,6 +321,11 @@ parser_t &parser_t::principal_parser(void)
         s_principal_parser = &parser;
     }
     return parser;
+}
+
+void parser_t::set_is_within_fish_initialization(bool flag)
+{
+    is_within_fish_initialization = flag;
 }
 
 void parser_t::skip_all_blocks(void)
@@ -858,10 +864,13 @@ void parser_t::stack_trace(size_t block_idx, wcstring &buff) const
                           b->src_lineno,
                           user_presentable_path(file).c_str());
         }
+        else if (is_within_fish_initialization)
+        {
+            append_format(buff, _(L"\tcalled during startup\n"));
+        }
         else
         {
-            append_format(buff,
-                          _(L"\tcalled on standard input\n"));
+            append_format(buff, _(L"\tcalled on standard input\n"));
         }
 
         if (b->type() == FUNCTION_CALL)
@@ -1064,15 +1073,17 @@ const wchar_t *parser_t::current_line()
     {
         int prev_width = my_wcswidth(lineinfo.c_str());
         if (file)
-            append_format(lineinfo,
-                          _(L"%ls (line %d): "),
-                          file,
-                          lineno);
+        {
+            append_format(lineinfo, _(L"%ls (line %d): "), file, lineno);
+        }
+        else if (is_within_fish_initialization)
+        {
+            append_format(lineinfo, L"%ls: ", _(L"Startup"), lineno);
+        }
         else
-            append_format(lineinfo,
-                          L"%ls: ",
-                          _(L"Standard input"),
-                          lineno);
+        {
+            append_format(lineinfo, L"%ls: ", _(L"Standard input"), lineno);
+        }
         offset = my_wcswidth(lineinfo.c_str()) - prev_width;
     }
     else

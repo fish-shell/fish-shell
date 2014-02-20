@@ -227,7 +227,9 @@ static void source_config_in_directory(const wcstring &dir)
     const wcstring escaped_dir = escape_string(dir, ESCAPE_ALL);
     const wcstring cmd = L"builtin source " + escaped_dir + L"/config.fish 2>/dev/null";
     parser_t &parser = parser_t::principal_parser();
+    parser.set_is_within_fish_initialization(true);
     parser.eval(cmd, io_chain_t(), TOP);
+    parser.set_is_within_fish_initialization(false);
 }
 
 /**

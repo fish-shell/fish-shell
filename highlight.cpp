@@ -1333,19 +1333,9 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
                 this->color_node(*literal_for_node, highlight_spec_command);
                 this->color_node(*literal_in_node, highlight_spec_command);
                 
-                // Color the variable name appropriately
-                // We don't expand this during execution, so just look for invalid chars
+                // Color the variable name as a parameter
                 const parse_node_t *var_name_node = this->parse_tree.get_child(node, 1, parse_token_type_string);
-                if (var_name_node->has_source())
-                {
-                    size_t source_end = var_name_node->source_start + var_name_node->source_length;
-                    for (size_t i = var_name_node->source_start; i < source_end; i++)
-                    {
-                        wchar_t wc = buff.at(i);
-                        highlight_spec_t color = wcsvarchr(wc) ? highlight_spec_param : highlight_spec_error;
-                        color_array.at(i) = color;
-                    }
-                }
+                this->color_argument(*var_name_node);
             }
             break;
 

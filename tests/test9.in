@@ -70,4 +70,13 @@ end
 # Test implicit cd. This should do nothing.
 ./
 
+# Test special for loop expansion
+# Here we the name of the variable is derived from another variable
+echo "Testing for loop"
+set var1 var2
+for $var1 in 1 2 3
+    echo -n $var2
+end
+echo
+
 false

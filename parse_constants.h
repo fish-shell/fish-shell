@@ -157,6 +157,9 @@ typedef unsigned int parser_test_error_bits_t;
 /** Error message when encountering an illegal command name */
 #define ILLEGAL_CMD_ERR_MSG _( L"Illegal command name '%ls'")
 
+/** Error message when encountering a failed expansion, e.g. for the variable name in for loops */
+#define FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG _( L"Unable to expand variable name '%ls'")
+
 /** Error message when encountering an illegal file descriptor */
 #define ILLEGAL_FD_ERR_MSG _( L"Illegal file descriptor in redirection '%ls'")
 

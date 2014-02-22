@@ -436,9 +436,14 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(const pars
     assert(header.type == symbol_for_header);
     assert(block_contents.type == symbol_job_list);
 
-    /* Get the variable name: `for var_name in ...` */
+    /* Get the variable name: `for var_name in ...`. We expand the variable name. It better result in just one. */
     const parse_node_t &var_name_node = *get_child(header, 1, parse_token_type_string);
-    const wcstring for_var_name = get_source(var_name_node);
+    wcstring for_var_name = get_source(var_name_node);
+    if (! expand_one(for_var_name, 0))
+    {
+        report_error(var_name_node, FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG, for_var_name.c_str());
+        return parse_execution_errored;
+    }
 
     /* Get the contents to iterate over. */
     const parse_node_t *unmatched_wildcard = NULL;

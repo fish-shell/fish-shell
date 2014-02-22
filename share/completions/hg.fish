@@ -238,7 +238,7 @@ function __hg_merge_tools
     for tool in internal:dump internal:fail internal:local internal:merge internal:other internal:prompt
         printf "$tool\tmerge tool\n"
     end
-    __hg showconfig merge-tools | cut -d . -f 2 | uniq | xargs printf "%s\tmerge tool\n"
+    __hg showconfig merge-tools | cut -d . -f 2 | xargs printf "%s\tmerge tool\n"
 end
 
 function __hg_sources

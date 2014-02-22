@@ -1,5 +1,5 @@
 function __hg
-    set -x HGPLAIN 1
+    set -lx HGPLAIN 1
     command hg $argv ^ /dev/null
 end
 
@@ -245,7 +245,7 @@ function __hg_sources
 end
 
 function __hg_mq_enabled
-    set val (__hg showconfig extensions.hgext.mq)
+    set -l val (__hg showconfig extensions.hgext.mq)
     if test -z $val
         return 1
     end

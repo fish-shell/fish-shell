@@ -1872,9 +1872,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
      */
     const wcstring current_token = tok_begin;
 
-    /* Get the quote type of the current token */
-    
-
+    /* Unconditionally complete variables and processes. This is a little weird since we will happily complete variables even in e.g. command position, despite the fact that they are invalid there. */
     if (!done)
     {
         done = completer.try_complete_variable(current_token) || completer.try_complete_user(current_token);
@@ -1888,13 +1886,21 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
         parse_node_tree_t tree;
         parse_tree_from_string(cmd, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens, &tree, NULL);
         
-        /* Find the plain statement that contains the position. We have to backtrack past spaces (#1261). So this will be at either the last space character, or after the end of the string */
+        /* Find any plain statement that contains the position. We have to backtrack past spaces (#1261). So this will be at either the last space character, or after the end of the string */
         size_t adjusted_pos = pos;
         while (adjusted_pos > 0 && cmd.at(adjusted_pos - 1) == L' ')
+        {
             adjusted_pos--;
-
+        }
+        
         const parse_node_t *plain_statement = tree.find_node_matching_source_location(symbol_plain_statement, adjusted_pos, NULL);
-        if (plain_statement != NULL)
+        if (plain_statement == NULL)
+        {
+            /* Not part of a plain statement. This could be e.g. a for loop header, case expression, etc. Do generic file completions (#1309). If we had to backtrack, it means there was whitespace; don't do an autosuggestion in that case. */
+            bool no_file = (flags & COMPLETION_REQUEST_AUTOSUGGESTION) && (adjusted_pos < pos);
+            completer.complete_param_expand(current_token, ! no_file);
+        }
+        else
         {
             assert(plain_statement->has_source() && plain_statement->type == symbol_plain_statement);
 
@@ -1990,7 +1996,9 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
 
                 /* And if we're autosuggesting, and the token is empty, don't do file suggestions */
                 if ((flags & COMPLETION_REQUEST_AUTOSUGGESTION) && current_argument_unescape.empty())
+                {
                     do_file = false;
+                }
 
                 /* This function wants the unescaped string */
                 completer.complete_param_expand(current_token, do_file);

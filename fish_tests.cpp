@@ -2761,10 +2761,20 @@ static void test_highlighting(void)
         {L"]", highlight_spec_operator},
         {NULL, -1}
     };
+    
+    const highlight_component_t components12[] =
+    {
+        {L"for", highlight_spec_command},
+        {L"i", highlight_spec_param},
+        {L"in", highlight_spec_command},
+        {L"1 2 3", highlight_spec_param},
+        {L";", highlight_spec_statement_terminator},
+        {L"end", highlight_spec_command},
+        {NULL, -1}
+    };
 
 
-
-    const highlight_component_t *tests[] = {components1, components2, components3, components4, components5, components6, components7, components8, components9, components10, components11};
+    const highlight_component_t *tests[] = {components1, components2, components3, components4, components5, components6, components7, components8, components9, components10, components11, components12};
     for (size_t which = 0; which < sizeof tests / sizeof *tests; which++)
     {
         const highlight_component_t *components = tests[which];

@@ -937,10 +937,10 @@ class highlighter_t
     void color_redirections(const parse_node_t &list_node);
 
     /* Color all the children of the command with the given type */
-    void color_children(const parse_node_t &parent, parse_token_type_t type, int color);
+    void color_children(const parse_node_t &parent, parse_token_type_t type, highlight_spec_t color);
 
     /* Colors the source range of a node with a given color */
-    void color_node(const parse_node_t &node, int color);
+    void color_node(const parse_node_t &node, highlight_spec_t color);
 
 public:
 
@@ -956,7 +956,7 @@ public:
     const color_array_t &highlight();
 };
 
-void highlighter_t::color_node(const parse_node_t &node, int color)
+void highlighter_t::color_node(const parse_node_t &node, highlight_spec_t color)
 {
     // Can only color nodes with valid source ranges
     if (! node.has_source())
@@ -1219,7 +1219,7 @@ void highlighter_t::color_redirections(const parse_node_t &list_node)
 }
 
 /* Color all the children of the command with the given type */
-void highlighter_t::color_children(const parse_node_t &parent, parse_token_type_t type, int color)
+void highlighter_t::color_children(const parse_node_t &parent, parse_token_type_t type, highlight_spec_t color)
 {
     for (node_offset_t idx=0; idx < parent.child_count; idx++)
     {
@@ -1310,7 +1310,6 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
         switch (node.type)
         {
                 // Color direct string descendants, e.g. 'for' and 'in'.
-            case symbol_for_header:
             case symbol_while_header:
             case symbol_begin_header:
             case symbol_function_header:
@@ -1323,8 +1322,30 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
             case symbol_if_statement:
             {
                 this->color_children(node, parse_token_type_string, highlight_spec_command);
-                // Color the 'end'
-                this->color_children(node, symbol_end_command, highlight_spec_command);
+            }
+            break;
+                
+            case symbol_for_header:
+            {
+                // Color the 'for' and 'in' as commands
+                const parse_node_t *literal_for_node = this->parse_tree.get_child(node, 0, parse_token_type_string);
+                const parse_node_t *literal_in_node = this->parse_tree.get_child(node, 2, parse_token_type_string);
+                this->color_node(*literal_for_node, highlight_spec_command);
+                this->color_node(*literal_in_node, highlight_spec_command);
+                
+                // Color the variable name appropriately
+                // We don't expand this during execution, so just look for invalid chars
+                const parse_node_t *var_name_node = this->parse_tree.get_child(node, 1, parse_token_type_string);
+                if (var_name_node->has_source())
+                {
+                    size_t source_end = var_name_node->source_start + var_name_node->source_length;
+                    for (size_t i = var_name_node->source_start; i < source_end; i++)
+                    {
+                        wchar_t wc = buff.at(i);
+                        highlight_spec_t color = wcsvarchr(wc) ? highlight_spec_param : highlight_spec_error;
+                        color_array.at(i) = color;
+                    }
+                }
             }
             break;
 
@@ -1370,6 +1391,10 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
                 }
             }
             break;
+                
+            case symbol_end_command:
+                this->color_node(node, highlight_spec_command);
+                break;
 
             case parse_special_type_parse_error:
             case parse_special_type_tokenizer_error:

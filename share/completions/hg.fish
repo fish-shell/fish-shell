@@ -215,6 +215,7 @@ function __hg_patch_queues
 end
 
 function __hg_status
+    set -l token (commandline -ct)
     __hg status -n $argv "glob:$token**"
 end
 

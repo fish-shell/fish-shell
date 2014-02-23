@@ -3147,7 +3147,7 @@ bool pager_use_inline(void)
     env_var_t var = env_get_string(L"fish_new_pager");
     if (var.missing_or_empty())
     {
-        return 0;
+        return 1;
     }
     else
     {

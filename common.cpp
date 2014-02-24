@@ -1674,14 +1674,17 @@ int common_get_height()
 void tokenize_variable_array(const wcstring &val, std::vector<wcstring> &out)
 {
     size_t pos = 0, end = val.size();
-    while (pos < end)
+    while (pos <= end)
     {
         size_t next_pos = val.find(ARRAY_SEP, pos);
-        if (next_pos == wcstring::npos) break;
-        out.push_back(val.substr(pos, next_pos - pos));
-        pos = next_pos + 1; //skip the separator
+        if (next_pos == wcstring::npos)
+        {
+            next_pos = end;
+        }
+        out.resize(out.size() + 1);
+        out.back().assign(val, pos, next_pos - pos);
+        pos = next_pos + 1; //skip the separator, or skip past the end
     }
-    out.push_back(val.substr(pos, end - pos));
 }
 
 bool string_prefixes_string(const wchar_t *proposed_prefix, const wcstring &value)

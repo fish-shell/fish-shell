@@ -1,5 +1,5 @@
 body {
-    background-color: #292939;
+    background-color: #292929;
     font-family: Courier, "Courier New", monospace;
     color: white;
 }
@@ -20,7 +20,7 @@ body {
 #tab_parent {
     display: table;
     width: 100%;
-    height: 50px;;
+    height: 50px;
 }
 
 .tab {
@@ -269,25 +269,26 @@ body {
 }
 
 .colorpicker_term256_row {
+	padding: 0;
 }
 
 .colorpicker_term256_cell {
 	width: 18px;
 	height: 18px;
 	border: solid black 1px;
+	padding: 0;
 }
 
 .colorpicker_term256_selection_indicator {
-	width: 19px;
+	width: 18px;
 	height: 16px;
-	margin: -2px;
-	border: solid white 3px;
+	margin: -4px;
+	border: solid white 4px;
 	position: relative;
 	z-index: 2;
 }
 
 .colorpicker_cell_selected {
-	 border: dashed white 3px;
 	 width: 12px;
 	 height: 12px;
 }
@@ -300,6 +301,18 @@ body {
 	line-height: 1.8em;
 	border: solid #777 1px;
 	position: relative; /* so that our absolutely positioned elements work */
+}
+
+.cs_clickable {
+	border: dotted 1px #777;
+	padding: 4px;
+	margin: -5px;
+}
+
+.cs_editing {
+	border: solid 3px #3399FF;
+	padding: 4px;
+	margin: -7px;
 }
 
 .colorpicker_text_sample_tight {
@@ -320,12 +333,20 @@ body {
 }
 
 .color_picker_background_cells div {
-	width: 14px;
-	height: 14px;
+	width: 24px;
+	height: 24px;
 	border-style: solid;
 	border-color: #777;
 	border-width: 0 0 1px 1px;  /* top right bottom left */
 	float: left;
+}
+
+.color_picker_background_cells span {
+	float: left;
+	font-size: 12pt;
+	padding-top: 2px;
+	padding-right: 8px;
+	cursor: pointer;
 }
 
 .color_scheme_choice_label {
@@ -336,9 +357,17 @@ body {
 	white-space: normal;
 }
 
+.color_scheme_choices_scrollview {
+	 border-top: 1px solid #333;
+	 padding-top: 5px;
+	 overflow: scroll;
+	 max-height: 18em; /* about two and a half boxes */
+}
+
 .color_scheme_choices_list {
 	overflow-y: hidden; /* makes our height account for floats */
 	padding:  0 10px 15px 10px;  /* top right bottom left */
+	bottom: 0px;
 }
 
 .color_scheme_choice_container {
@@ -399,16 +428,24 @@ img.delete_icon {
 	position: relative; /* so that our absolutely positioned elements work */
 }
 
-.save_button, .prompt_save_button {
+.save_button, .prompt_save_button, .colors_close_button, .customize_theme_button {
 	border-radius: 5px;
 	border: solid rgba(71,71,71,0.5) 1px;
 	padding: 5px 8px;
-	font-size: 10pt;
+	font-size: 13pt;
 	display: inline-block;
 	margin-top: 12px;
 	background-color: rgba(128,128,128,0.2);
 	color: #FFF;
 	cursor: pointer;
+}
+
+.save_button:hover, .customize_theme_button:hover {
+	border-color: rgba(71,71,71,0.9);
+}
+
+.button_highlight {
+	background-color: rgba(128,128,128,0.6)
 }
 
 .prompt_save_button {

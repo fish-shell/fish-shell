@@ -12,23 +12,27 @@ controllers.controller("main", function($scope, $location) {
 
 controllers.controller("colorsController", function($scope, $http) {
     $scope.changeSelectedColorScheme= function(newScheme) {
-        $scope.selectedColorScheme = newScheme;
+        $scope.selectedColorScheme = angular.copy(newScheme);
         if ($scope.selectedColorScheme.preferred_background) {
             $scope.terminalBackgroundColor = $scope.selectedColorScheme.preferred_background;
         }
-        $scope.selectedColorSetting = 'command';
+        $scope.selectedColorSetting = false;
+		$scope.customizationActive = false;
+		$scope.csEditingType = false;
         $scope.colorArraysArray = $scope.getColorArraysArray();
         //TODO: Save button should be shown only when colors are changed
         $scope.showSaveButton = true;
+        
+        $scope.noteThemeChanged();
     }
 
     $scope.changeTerminalBackgroundColor = function(color) {
         $scope.terminalBackgroundColor = color;
     }
 
-    $scope.text_color_for_color = function(color) {
-        return text_color_for_color(color);
-    }
+    $scope.text_color_for_color = text_color_for_color;
+    
+    $scope.border_color_for_color = border_color_for_color;
 
     $scope.getColorArraysArray = function() {
         var result = null;
@@ -38,13 +42,36 @@ controllers.controller("colorsController", function($scope, $http) {
             result =  get_colors_as_nested_array(term_256_colors, 32);
         return result;
     }
-
+    
+    $scope.beginCustomizationWithSetting = function(setting) {
+    	if (! $scope.customizationActive) {
+	    	$scope.customizationActive = true;
+			$scope.selectedColorSetting = setting;
+			$scope.csEditingType = setting;
+			$scope.csUserVisibleTitle = user_visible_title_for_setting_name(setting);
+    	}
+    }
+        
     $scope.selectColorSetting = function(name) {
-        $scope.selectedColorSetting = name;
+    	$scope.selectedColorSetting = name;
+    	$scope.csEditingType = $scope.customizationActive ? name : '';
+    	$scope.csUserVisibleTitle = user_visible_title_for_setting_name(name);
+    	$scope.beginCustomizationWithSetting(name);
+    }
+    
+    $scope.toggleCustomizationActive = function() {
+	    if (! $scope.customizationActive) {
+	    	$scope.beginCustomizationWithSetting($scope.selectedColorSetting || 'command');
+	    } else {
+	    	$scope.customizationActive = false;
+			$scope.selectedColorSetting = '';
+			$scope.csEditingType = '';
+	    }
     }
 
     $scope.changeSelectedTextColor = function(color) {
         $scope.selectedColorScheme[$scope.selectedColorSetting] = color;
+        $scope.noteThemeChanged();
     }
 
     $scope.sampleTerminalBackgroundColors = ['white', '#' + solarized.base3, '#300', '#003', '#' + solarized.base03, '#232323', 'black'];
@@ -65,11 +92,25 @@ controllers.controller("colorsController", function($scope, $http) {
             $scope.changeSelectedColorScheme(currentScheme);
      })};
 
+	$scope.saveThemeButtonTitle = "Set Theme";
+	
+	$scope.noteThemeChanged = function() {
+		$scope.saveThemeButtonTitle = "Set Theme";
+	}
+
     $scope.setTheme = function() {
         var settingNames = ["autosuggestion", "command", "param", "redirection", "comment", "error", "quote", "end"];
+        var remaining = settingNames.length;
         for (name in settingNames) {
             var postData = "what=" + settingNames[name] + "&color=" + $scope.selectedColorScheme[settingNames[name]] + "&background_color=&bold=&underline=";
             $http.post("/set_color/", postData, { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config) {
+            	if (status == 200) {
+            		remaining -= 1;
+            		if (remaining == 0) {
+            			/* All styles set! */
+            			$scope.saveThemeButtonTitle = "Theme Set!";
+            		}
+            	}
             })
         }
     };

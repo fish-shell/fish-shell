@@ -243,6 +243,17 @@ term_256_colors = [ //247
 "ffffff",
 ]
 
+/* Given a color setting name like 'autosuggestion', return the user visible name we present */
+function user_visible_title_for_setting_name(name) {
+	if (! name) return '';
+	switch (name) {
+		case 'param': return 'parameters';
+		case 'escape': return 'escape sequences';
+		case 'end': return 'statement terminators';
+		default: return name + 's';
+	}
+}
+
 /* Returns array of values from a dictionary (or any object) */
 function dict_values(dict) {
     var result = [];
@@ -265,6 +276,11 @@ function get_colors_as_nested_array(colors, items_per_row) {
 
 /* Given an RGB color as a hex string, like FF0033, convert to HSL, apply the function to adjust its lightness, then return the new color as an RGB string */
 function adjust_lightness(color_str, func) {
+	/* Strip off hash prefix */
+	if (color_str[0] == '#') {
+		color_str = color_str.substring(1);
+	}
+	
     /* Hack to handle for example F00 */
     if (color_str.length == 3) {
         color_str = color_str[0] + color_str[0] + color_str[1] + color_str[1] + color_str[2] + color_str[2]

@@ -190,10 +190,12 @@ function __fish_hg_commands
 end
 
 function __fish_hg_labels
-    if contains -- --mq (commandline -poc)
-        printf "%s\tlabel\n" (__fish_hg debuglabelcomplete --mq)
+    if set -l labels (__fish_hg debuglabelcomplete ^ /dev/null)
+        printf "%s\tlabel\n" $labels
     else
-        printf "%s\tlabel\n" (__fish_hg debuglabelcomplete)
+        __fish_hg_branches
+        __fish_hg_bookmarks
+        printf "%s\ttag\n" (__fish_hg tags | cut -d " " -f 1)
     end
 end
 

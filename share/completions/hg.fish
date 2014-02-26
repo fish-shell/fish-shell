@@ -191,27 +191,27 @@ end
 
 function __fish_hg_labels
     if contains -- --mq (commandline -poc)
-        __fish_hg debuglabelcomplete --mq | xargs printf "%s\tlabel\n"
+        printf "%s\tlabel\n" (__fish_hg debuglabelcomplete --mq)
     else
-        __fish_hg debuglabelcomplete | xargs printf "%s\tlabel\n"
+        printf "%s\tlabel\n" (__fish_hg debuglabelcomplete)
     end
 end
 
 function __fish_hg_help_topics
-    __fish_hg debugcomplete | xargs printf "%s\tcommand\n"
-    __fish_hg help | grep "^ [a-zA-Z]" | cut -d " " -f 2 | xargs printf "%s\thelp topic\n"
+    printf "%s\tcommand\n" (__fish_hg debugcomplete)
+    printf "%s\thelp topic\n" (__fish_hg help | grep "^ [a-zA-Z]" | cut -d " " -f 2)
 end
 
 function __fish_hg_config_entries
-    __fish_hg showconfig | cut -d = -f 1 | xargs printf "%s\tconfig entry\n"
+    printf "%s\tconfig entry\n" (__fish_hg showconfig | cut -d = -f 1)
 end
 
 function __fish_hg_patches
-    __fish_hg qseries | xargs printf "%s\tpatch\n"
+    printf "%s\tpatch\n" (__fish_hg qseries)
 end
 
 function __fish_hg_patch_queues
-    __fish_hg qqueue -l | cut -d " " -f 1 | xargs printf "%s\tpatch queue\n"
+    printf "%s\tpatch queue\n" (__fish_hg qqueue -l | cut -d " " -f 1)
 end
 
 function __fish_hg_status
@@ -226,23 +226,23 @@ end
 function __fish_hg_bookmarks
     set -l bookmarks (__fish_hg bookmarks)
     if test (count $bookmarks) -gt 1; or test $bookmarks != "no bookmarks set"
-        printf "%s\n" $bookmarks | cut -c 4- | cut -d " " -f 1 | xargs printf "%s\tbookmark\n"
+        printf "%s\tbookmark\n" (printf "%s\n" $bookmarks | cut -c 4- | cut -d " " -f 1)
     end
 end
 
 function __fish_hg_branches
-    __fish_hg branches | cut -d " " -f 1 | xargs printf "%s\tbranch\n"
+    printf "%s\tbranch\n" (__fish_hg branches | cut -d " " -f 1)
 end
 
 function __fish_hg_merge_tools
     for tool in internal:dump internal:fail internal:local internal:merge internal:other internal:prompt
         printf "$tool\tmerge tool\n"
     end
-    __fish_hg showconfig merge-tools | cut -d . -f 2 | xargs printf "%s\tmerge tool\n"
+    printf "%s\tmerge tool\n" (__fish_hg showconfig merge-tools | cut -d . -f 2)
 end
 
 function __fish_hg_sources
-    __fish_hg paths | cut -d = -f 1 | xargs printf "%s\tsource\n"
+    printf "%s\tsource\n" (__fish_hg paths | cut -d = -f 1)
 end
 
 function __fish_hg_mq_enabled

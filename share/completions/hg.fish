@@ -248,10 +248,11 @@ function __fish_hg_sources
 end
 
 function __fish_hg_mq_enabled
-    set -l val (__fish_hg showconfig extensions.hgext.mq)
+    set -l val (__fish_hg showconfig | grep extensions.hgext.mq)
     if test -z $val
         return 1
     end
+    set -l val (echo $val | cut -d = -f 2)
     switch $val
         case "!*"
             return 1

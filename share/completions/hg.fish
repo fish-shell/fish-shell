@@ -227,7 +227,7 @@ end
 
 function __fish_hg_bookmarks
     set -l bookmarks (__fish_hg bookmarks)
-    if test (count $bookmarks) -gt 1; or test $bookmarks != "no bookmarks set"
+    if begin; test (count $bookmarks) -gt 1; or test $bookmarks != "no bookmarks set"; end
         printf "%s\tbookmark\n" (printf "%s\n" $bookmarks | cut -c 4- | cut -d " " -f 1)
     end
 end

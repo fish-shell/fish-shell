@@ -1,3 +1,6 @@
+/** \file parse_tree.cpp
+*/
+
 #include "parse_productions.h"
 #include "tokenizer.h"
 #include "fallback.h"

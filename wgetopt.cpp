@@ -1,4 +1,4 @@
-/** \file wgetopt.c
+/** \file wgetopt.cpp
   A version of the getopt library for use with wide character strings.
 
   This is simply the gnu getopt library, but converted for use with

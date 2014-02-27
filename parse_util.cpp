@@ -1,4 +1,4 @@
-/** \file parse_util.c
+/** \file parse_util.cpp
 
     Various mostly unrelated utility functions related to parsing,
     loading and evaluating fish code.

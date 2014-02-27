@@ -1,4 +1,4 @@
-/** \file parser.c
+/** \file parser.cpp
 
 The fish parser. Contains functions for parsing and evaluating code.
 
@@ -2589,9 +2589,6 @@ int parser_t::eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum bl
     /* Append to the execution context stack */
     parse_execution_context_t *ctx = new parse_execution_context_t(tree, cmd, this, exec_eval_level);
     execution_contexts.push_back(ctx);
-
-    /* Execute the first node */
-    int result = 1;
 
     /* Clean up the execution context stack */
     assert(! execution_contexts.empty() && execution_contexts.back() == ctx);

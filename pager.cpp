@@ -1,3 +1,7 @@
+/** \file pager.cpp
+*/
+
+
 #include "config.h"
 
 #include "pager.h"
@@ -145,8 +149,6 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
         {
             written += print_max(L" ", packed_color, 1, false, &line_data);
         }
-        written += print_max(L"(", packed_color, 1, false, &line_data);
-        written += print_max(c->desc, packed_color, desc_width, false, &line_data);
     }
     else
     {
@@ -630,10 +632,6 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
             {
                 search_field_text.append(PAGER_SEARCH_FIELD_WIDTH - search_field_text.size(), L' ');
             }
-            line_t *search_field = &rendering->screen_data.insert_line_at_index(0);
-            
-            /* We limit the width to term_width - 1 */
-            int search_field_written = print_max(SEARCH_FIELD_PROMPT, highlight_spec_normal, term_width - 1, false, search_field);
         }
         
     }

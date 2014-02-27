@@ -1,4 +1,4 @@
-/** \file wutil.c
+/** \file wutil.cpp
   Wide character equivalents of various standard unix
   functions.
 */

@@ -646,7 +646,6 @@ expression *test_parser::parse_args(const wcstring_list_t &args, wcstring &err)
     expression *result = parser.parse_expression(0, (unsigned int)args.size());
 
     /* Handle errors */
-    bool errored = false;
     for (size_t i = 0; i < parser.errors.size(); i++)
     {
         err.append(L"test: ");

@@ -1,4 +1,4 @@
-/** \file fishd.c
+/** \file fishd.cpp
 
 The universal variable server. fishd is automatically started by fish
 if a fishd server isn't already running. fishd reads any saved

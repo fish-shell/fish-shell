@@ -1,5 +1,4 @@
-/**
-   \file env_universal_common.c
+/** \file env_universal_common.cpp
 
    The utility library for universal variables. Used both by the
    client library and by the daemon.

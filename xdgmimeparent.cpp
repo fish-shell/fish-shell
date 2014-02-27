@@ -1,3 +1,5 @@
+/** \file xdgmimeparent.cpp
+*/
 /* -*- mode: C; c-file-style: "gnu" -*- */
 /* xdgmimealias.c: Private file.  Datastructure for storing the hierarchy.
  *

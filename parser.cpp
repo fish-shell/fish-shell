@@ -2592,10 +2592,6 @@ int parser_t::eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum bl
 
     /* Execute the first node */
     int result = 1;
-    if (! tree.empty())
-    {
-        result = this->eval_block_node(0, io, block_type);
-    }
 
     /* Clean up the execution context stack */
     assert(! execution_contexts.empty() && execution_contexts.back() == ctx);

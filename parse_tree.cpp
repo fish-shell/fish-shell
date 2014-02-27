@@ -987,7 +987,6 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2)
             {
                 fprintf(stderr, "Consumed token %ls\n", token1.describe().c_str());
             }
-            consumed = true;
             break;
         }
 

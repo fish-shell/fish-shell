@@ -532,7 +532,6 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
         {
             /* Store the node that failed to expand */
             report_error(switch_value_node, WILDCARD_ERR_MSG, switch_value.c_str());
-            ret = parse_execution_errored;
             break;
         }
 

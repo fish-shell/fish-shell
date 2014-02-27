@@ -1338,7 +1338,7 @@ bool history_t::save_internal_via_rewrite()
         for (size_t attempt = 0; attempt < 10 && out_fd == -1; attempt++)
         {
             char *narrow_str = wcs2str(tmp_name_template.c_str());
-            if (narrow_str && mktemp(narrow_str))
+            if (narrow_str && mkstemp(narrow_str))
             {
                 /* It was successfully templated; try opening it atomically */
                 tmp_name = str2wcstring(narrow_str);
@@ -1506,11 +1506,6 @@ void history_t::save_internal(bool vacuum)
     {
         /* Try doing a fast append */
         ok = save_internal_via_appending();
-    }
-    if (! ok)
-    {
-        /* We did not or could not append; rewrite the file ("vacuum" it) */
-        ok = this->save_internal_via_rewrite();
     }
 }
 

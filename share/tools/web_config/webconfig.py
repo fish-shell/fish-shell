@@ -812,7 +812,7 @@ PORT = 8000
 while PORT <= 9000:
     try:
         Handler = FishConfigHTTPRequestHandler
-        httpd = SocketServer.TCPServer(("", PORT), Handler)
+        httpd = SocketServer.TCPServer(("127.0.0.1", PORT), Handler)
         # Success
         break
     except socket.error:

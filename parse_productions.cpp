@@ -1,3 +1,7 @@
+/** \file parse_productions.cpp
+*/
+
+
 #include "parse_productions.h"
 
 using namespace parse_productions;

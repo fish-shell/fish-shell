@@ -1,4 +1,4 @@
-/** \file io.c
+/** \file io.cpp
 
 Utilities for io redirection.
 

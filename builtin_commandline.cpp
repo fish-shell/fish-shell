@@ -1,4 +1,4 @@
-/** \file builtin_commandline.c Functions defining the commandline builtin
+/** \file builtin_commandline.cpp Functions defining the commandline builtin
 
 Functions used for implementing the commandline builtin.
 

@@ -1,4 +1,4 @@
-/** \file kill.c
+/** \file kill.cpp
   The killring.
 
   Works like the killring in emacs and readline. The killring is cut

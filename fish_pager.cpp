@@ -1,3 +1,7 @@
+/** \file fish_pager.cpp
+*/
+
+
 #include "config.h"
 
 #include <stdlib.h>
@@ -439,9 +443,6 @@ static void completion_print_item(const wchar_t *prefix, comp_t *c, int width, b
             writech(L' ');
         }
         set_color(get_color(HIGHLIGHT_PAGER_DESCRIPTION), bg);
-        written += print_max(L"(", 1, 0);
-        written += print_max(c->desc.c_str(), desc_width, 0);
-        written += print_max(L")", 1, 0);
     }
     else
     {

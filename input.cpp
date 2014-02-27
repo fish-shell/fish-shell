@@ -1,4 +1,4 @@
-/** \file input.c
+/** \file input.cpp
 
     Functions for reading a character of input from stdin.
 

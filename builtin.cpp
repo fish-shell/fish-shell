@@ -1,4 +1,4 @@
-/** \file builtin.c
+/** \file builtin.cpp
 	Functions for executing builtin functions.
 
 	How to add a new builtin function:

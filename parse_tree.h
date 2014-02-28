@@ -224,18 +224,18 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags, parse
 # A block is a conditional, loop, or begin/end
 
     if_statement = if_clause else_clause end_command arguments_or_redirections_list
-    if_clause = <IF> job STATEMENT_TERMINATOR job_list
+    if_clause = <IF> job <TOK_END> job_list
     else_clause = <empty> |
                  <ELSE> else_continuation
     else_continuation = if_clause else_clause |
-                        STATEMENT_TERMINATOR job_list
+                        <TOK_END> job_list
 
-    switch_statement = SWITCH <TOK_STRING> STATEMENT_TERMINATOR case_item_list end_command arguments_or_redirections_list
+    switch_statement = SWITCH <TOK_STRING> <TOK_END> case_item_list end_command arguments_or_redirections_list
     case_item_list = <empty> |
                     case_item case_item_list |
                     <TOK_END> case_item_list
 
-    case_item = CASE argument_list STATEMENT_TERMINATOR job_list
+    case_item = CASE argument_list <TOK_END> job_list
 
     block_statement = block_header <TOK_END> job_list end_command arguments_or_redirections_list
     block_header = for_header | while_header | function_header | begin_header
@@ -263,8 +263,6 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags, parse
     argument = <TOK_STRING>
 
     redirection = <TOK_REDIRECTION> <TOK_STRING>
-
-    terminator = <TOK_END> | <TOK_BACKGROUND>
 
     optional_background = <empty> | <TOK_BACKGROUND>
 

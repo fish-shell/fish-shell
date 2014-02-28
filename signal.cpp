@@ -1,4 +1,4 @@
-/** \file signal.cpp
+/** \file signal.c
 
 The library for various signal related issues
 
@@ -477,7 +477,7 @@ static void handle_int(int sig, siginfo_t *info, void *context)
 }
 
 /**
-   sigchld handler. Does notification and calls the handler in proc.cpp
+   sigchld handler. Does notification and calls the handler in proc.c
 */
 static void handle_chld(int sig, siginfo_t *info, void *context)
 {

@@ -1,4 +1,4 @@
-/** \file mimedb.cpp
+/** \file mimedb.c
 
 mimedb is a program for checking the mimetype, description and
 default action associated with a file or mimetype.  It uses the

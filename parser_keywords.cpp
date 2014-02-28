@@ -1,4 +1,4 @@
-/** \file parser_keywords.cpp
+/** \file parser_keywords.c
 
 Functions having to do with parser keywords, like testing if a function is a block command.
 */

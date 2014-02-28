@@ -1,4 +1,4 @@
-/** \file fish_tests.cpp
+/** \file fish_tests.c
   Various bug and feature tests. Compiled and run by make test.
 */
 

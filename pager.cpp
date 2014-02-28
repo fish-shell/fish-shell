@@ -1,7 +1,3 @@
-/** \file pager.cpp
-*/
-
-
 #include "config.h"
 
 #include "pager.h"
@@ -149,6 +145,9 @@ line_t pager_t::completion_print_item(const wcstring &prefix, const comp_t *c, s
         {
             written += print_max(L" ", packed_color, 1, false, &line_data);
         }
+        written += print_max(L"(", packed_color, 1, false, &line_data);
+        written += print_max(c->desc, packed_color, desc_width, false, &line_data);
+        written += print_max(L")", packed_color, 1, false, &line_data);
     }
     else
     {
@@ -632,6 +631,11 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
             {
                 search_field_text.append(PAGER_SEARCH_FIELD_WIDTH - search_field_text.size(), L' ');
             }
+            line_t *search_field = &rendering->screen_data.insert_line_at_index(0);
+            
+            /* We limit the width to term_width - 1 */
+            int search_field_written = print_max(SEARCH_FIELD_PROMPT, highlight_spec_normal, term_width - 1, false, search_field);
+            search_field_written += print_max(search_field_text, highlight_modifier_force_underline, term_width - search_field_written - 1, false, search_field);
         }
         
     }
@@ -743,7 +747,7 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
     }
     
     /* Ok, we had something selected already. Select something different. */
-    size_t new_selected_completion_idx;
+    size_t new_selected_completion_idx = selected_completion_idx;
     if (! selection_direction_is_cardinal(direction))
     {
         /* Next, previous, or deselect, all easy */

@@ -1,6 +1,3 @@
-/** \file xdgmimemagic.cpp
-*/
-
 /* -*- mode: C; c-file-style: "gnu" -*- */
 /* xdgmimemagic.: Private file.  Datastructure for storing magic files.
  *

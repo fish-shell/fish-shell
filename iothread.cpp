@@ -1,6 +1,3 @@
-/** \file iothread.cpp
-*/
-
 #include "config.h"
 #include "iothread.h"
 #include "common.h"

@@ -506,6 +506,7 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(const pars
 parse_execution_result_t parse_execution_context_t::run_switch_statement(const parse_node_t &statement)
 {
     assert(statement.type == symbol_switch_statement);
+    parse_execution_result_t ret = parse_execution_success;
     const parse_node_t *matching_case_item = NULL;
 
     parse_execution_result_t result = parse_execution_success;
@@ -531,6 +532,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
         {
             /* Store the node that failed to expand */
             report_error(switch_value_node, WILDCARD_ERR_MSG, switch_value.c_str());
+            ret = parse_execution_errored;
             break;
         }
 

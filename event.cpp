@@ -1,4 +1,4 @@
-/** \file event.cpp
+/** \file event.c
 
   Functions for handling event triggers
 

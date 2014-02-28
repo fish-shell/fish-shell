@@ -1,4 +1,4 @@
-/** \file common.cpp
+/** \file common.c
 
 Various functions, mostly string utilities, that are used by most
 parts of fish.
@@ -866,7 +866,11 @@ void write_screen(const wcstring &msg, wcstring &buff)
             /*
               If token is zero character long, we don't do anything
             */
-            if (overflow)
+            if (pos == start)
+            {
+                start = pos = pos+1;
+            }
+            else if (overflow)
             {
                 /*
                   In case of overflow, we print a newline, except if we already are at position 0

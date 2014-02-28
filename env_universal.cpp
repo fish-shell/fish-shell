@@ -1,9 +1,3 @@
-/** \file env_universal.cpp
-
-Various functions, mostly string utilities, that are used by most
-parts of fish.
-*/
-
 #include "config.h"
 
 

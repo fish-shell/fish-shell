@@ -1,5 +1,4 @@
-/** \file fallback.cpp
-
+/**
    This file only contains fallback implementations of functions which
    have been found to be missing or broken by the configuration
    scripts.

@@ -1,4 +1,4 @@
-/** \file function.cpp
+/** \file function.c
 
     Prototypes for functions for storing and retrieving function
   information. These functions also take care of autoloading

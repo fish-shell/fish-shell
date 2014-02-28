@@ -1,4 +1,4 @@
-/** \file proc.cpp
+/** \file proc.c
 
 Utilities for keeping track of jobs, processes and subshells, as
 well as signal handling functions for tracking children. These
@@ -383,6 +383,8 @@ static void mark_process_status(const job_t *j, process_t *p, int status)
     }
     else
     {
+        ssize_t ignore;
+
         /* This should never be reached */
         p->completed = 1;
 
@@ -396,6 +398,7 @@ static void mark_process_status(const job_t *j, process_t *p, int status)
           handler. If things aren't working properly, it's safer to
           give up.
          */
+        ignore = write(2, mess, strlen(mess));
     }
 }
 

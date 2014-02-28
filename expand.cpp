@@ -1,4 +1,4 @@
-/**\file expand.cpp
+/**\file expand.c
 
 String expansion functions. These functions perform several kinds of
 parameter expansion.

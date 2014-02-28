@@ -1,8 +1,5 @@
-/** \file xdgmimeint.cpp
-*/
-
 /* -*- mode: C; c-file-style: "gnu" -*- */
-/* xdgmimeint.cpp: Internal defines and functions.
+/* xdgmimeint.c: Internal defines and functions.
  *
  * More info can be found at http://www.freedesktop.org/standards/
  *

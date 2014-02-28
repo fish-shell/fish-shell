@@ -1,4 +1,4 @@
-/** \file screen.cpp High level library for handling the terminal screen
+/** \file screen.c High level library for handling the terminal screen
 
 The screen library allows the interactive reader to write its
 output to screen efficiently by keeping an internal representation
@@ -298,6 +298,7 @@ size_t escape_code_length(const wchar_t *code)
         if (code[1] >= L'@' && code[1] <= L'_')
         {
             resulting_length = 2;
+            found = true;
         }
     }
 

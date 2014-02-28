@@ -1,4 +1,4 @@
-/** \file highlight.cpp
+/** \file highlight.c
   Functions for syntax highlighting
 */
 #include "config.h"

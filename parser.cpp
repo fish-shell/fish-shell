@@ -928,6 +928,16 @@ const wchar_t *parser_t::is_function() const
 
 int parser_t::get_lineno() const
 {
+    if (parser_use_ast())
+    {
+        int lineno = -1;
+        if (! execution_contexts.empty())
+        {
+            lineno = execution_contexts.back()->get_current_line_number();
+        }
+        return lineno;
+    }
+    
     int lineno;
 
     if (! current_tokenizer || ! tok_string(current_tokenizer))

@@ -50,7 +50,7 @@ static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &no
     return result;
 }
 
-parse_execution_context_t::parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, parser_t *p, int initial_eval_level) : tree(t), src(s), parser(p), eval_level(initial_eval_level)
+parse_execution_context_t::parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, parser_t *p, int initial_eval_level) : tree(t), src(s), parser(p), eval_level(initial_eval_level), executing_node_idx(NODE_OFFSET_INVALID), cached_lineno_offset(0), cached_lineno_count(0)
 {
 }
 
@@ -1302,6 +1302,9 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
 
     /* Increment the eval_level for the duration of this command */
     scoped_push<int> saved_eval_level(&eval_level, eval_level + 1);
+    
+    /* Save the node index */
+    scoped_push<node_offset_t> saved_node_offset(&executing_node_idx, this->get_offset(job_node));
 
     /* Profiling support */
     long long start_time = 0, parse_time = 0, exec_time = 0;
@@ -1524,4 +1527,59 @@ parse_execution_result_t parse_execution_context_t::eval_node_at_offset(node_off
     }
 
     return status;
+}
+
+int parse_execution_context_t::get_current_line_number()
+{
+    /* If we're not executing anything, return -1 */
+    if (this->executing_node_idx == NODE_OFFSET_INVALID)
+    {
+        return -1;
+    }
+
+    /* If for some reason we're executing a node without source, return -1 */
+    const parse_node_t &node = tree.at(this->executing_node_idx);
+    if (! node.has_source())
+    {
+        return -1;
+    }
+    
+    /* Count the number of newlines, leveraging our cache */
+    const size_t offset = tree.at(this->executing_node_idx).source_start;
+    assert(offset <= src.size());
+
+    /* Easy hack to handle 0 */
+    if (offset == 0)
+    {
+        return 1;
+    }
+    
+    /* We want to return (one plus) the number of newlines at offsets less than the given offset. cached_lineno_count is the number of newlines at indexes less than cached_lineno_offset. */
+    const wchar_t *str = src.c_str();
+    if (offset > cached_lineno_offset)
+    {
+        size_t i;
+        for (i = cached_lineno_offset; str[i] != L'\0' && i < offset; i++)
+        {
+            /* Add one for every newline we find in the range [cached_lineno_offset, offset) */
+            if (str[i] == L'\n')
+            {
+                cached_lineno_count++;
+            }
+        }
+        cached_lineno_offset = i; //note: i, not offset, in case offset is beyond the length of the string
+    }
+    else if (offset < cached_lineno_offset)
+    {
+        /* Subtract one for every newline we find in the range [offset, cached_lineno_offset) */
+        for (size_t i = offset; i < cached_lineno_offset; i++)
+        {
+            if (str[i] == L'\n')
+            {
+                cached_lineno_count--;
+            }
+        }
+        cached_lineno_offset = offset;
+    }
+    return cached_lineno_count + 1;
 }

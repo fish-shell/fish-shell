@@ -1,5 +1,4 @@
-/** \file key_reader.cpp
-
+/*
     A small utility to print the resulting key codes from pressing a
   key. Servers the same function as hitting ^V in bash, but I prefer
   the way key_reader works.

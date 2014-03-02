@@ -1,4 +1,4 @@
-/** \file intern.cpp
+/** \file intern.c
 
     Library for pooling common strings
 

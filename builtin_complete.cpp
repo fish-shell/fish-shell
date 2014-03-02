@@ -1,4 +1,4 @@
-/** \file builtin_complete.cpp Functions defining the complete builtin
+/** \file builtin_complete.c Functions defining the complete builtin
 
 Functions used for implementing the complete builtin.
 
@@ -279,8 +279,8 @@ const wchar_t *builtin_complete_get_temporary_buffer()
 
 /**
    The complete builtin. Used for specifying programmable
-   tab-completions. Calls the functions in complete.cpp for any heavy
-   lifting. Defined in builtin_complete.cpp
+   tab-completions. Calls the functions in complete.c for any heavy
+   lifting. Defined in builtin_complete.c
 */
 static int builtin_complete(parser_t &parser, wchar_t **argv)
 {

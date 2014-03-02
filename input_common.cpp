@@ -1,4 +1,4 @@
-/** \file input_common.cpp
+/** \file input_common.c
 
 Implementation file for the low level input library
 

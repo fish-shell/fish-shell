@@ -1,4 +1,4 @@
-/** \file parser.cpp
+/** \file parser.c
 
 The fish parser. Contains functions for parsing and evaluating code.
 
@@ -826,6 +826,16 @@ const wchar_t *parser_t::is_function() const
 
 int parser_t::get_lineno() const
 {
+    if (parser_use_ast())
+    {
+        int lineno = -1;
+        if (! execution_contexts.empty())
+        {
+            lineno = execution_contexts.back()->get_current_line_number();
+        }
+        return lineno;
+    }
+    
     int lineno;
 
     if (! current_tokenizer || ! tok_string(current_tokenizer))
@@ -1161,6 +1171,13 @@ int parser_t::eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum bl
     /* Append to the execution context stack */
     parse_execution_context_t *ctx = new parse_execution_context_t(tree, cmd, this, exec_eval_level);
     execution_contexts.push_back(ctx);
+
+    /* Execute the first node */
+    int result = 1;
+    if (! tree.empty())
+    {
+        result = this->eval_block_node(0, io, block_type);
+    }
 
     /* Clean up the execution context stack */
     assert(! execution_contexts.empty() && execution_contexts.back() == ctx);

@@ -1,4 +1,4 @@
-/** \file builtin_set.cpp Functions defining the set builtin
+/** \file builtin_set.c Functions defining the set builtin
 
 Functions used for implementing the set builtin.
 

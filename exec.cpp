@@ -1,4 +1,4 @@
-/** \file exec.cpp
+/** \file exec.c
   Functions for executing a program.
 
   Some of the code in this file is based on code from the Glibc

@@ -1,4 +1,4 @@
-/** \file sanity.cpp
+/** \file sanity.c
   Functions for performing sanity checks on the program state
 */
 #include "config.h"

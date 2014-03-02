@@ -1,4 +1,4 @@
-/** \file output.cpp
+/** \file output.c
  Generic output functions
  */
 

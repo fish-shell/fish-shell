@@ -1,4 +1,4 @@
-/** \file util.cpp
+/** \file util.c
   Generic utilities library.
 
   Contains datastructures such as automatically growing array lists, priority queues, etc.

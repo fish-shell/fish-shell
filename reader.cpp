@@ -1,4 +1,4 @@
-/** \file reader.cpp
+/** \file reader.c
 
 Functions for reading data from stdin and passing to the
 parser. If stdin is a keyboard, it supplies a killring, history,

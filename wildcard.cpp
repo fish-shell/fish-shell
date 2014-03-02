@@ -1,4 +1,4 @@
-/** \file wildcard.cpp
+/** \file wildcard.c
 
 Fish needs it's own globbing implementation to support
 tab-expansion of globbed parameters. Also provides recursive

@@ -79,4 +79,9 @@ for $var1 in 1 2 3
 end
 echo
 
+# Test status -n
+eval 'status -n
+status -n
+status -n'
+
 false

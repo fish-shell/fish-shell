@@ -39,6 +39,13 @@ private:
     //parse_error_list_t errors;
 
     int eval_level;
+    
+    /* The currently executing node index, used to indicate the line number */
+    node_offset_t executing_node_idx;
+    
+    /* Cached line number information */
+    size_t cached_lineno_offset;
+    int cached_lineno_count;
 
     /* No copying allowed */
     parse_execution_context_t(const parse_execution_context_t&);
@@ -105,6 +112,9 @@ public:
 
     /* Returns the current eval level */
     int current_eval_level() const { return eval_level; }
+    
+    /* Returns the current line number. Not const since it touches cached_lineno_offset */
+    int get_current_line_number();
 
     /* Start executing at the given node offset. Returns 0 if there was no error, 1 if there was an error */
     parse_execution_result_t eval_node_at_offset(node_offset_t offset, const block_t *associated_block, const io_chain_t &io);

@@ -349,93 +349,6 @@ block_t *parser_t::current_block()
     return block_stack.empty() ? NULL : block_stack.back();
 }
 
-/**
-   Search the text for the end of the current block
-*/
-static const wchar_t *parser_find_end(const wchar_t * buff)
-{
-    int had_cmd=0;
-    int count = 0;
-    int error=0;
-    int mark=0;
-
-    CHECK(buff, 0);
-
-    tokenizer_t tok(buff, 0);
-    for (; tok_has_next(&tok) && !error; tok_next(&tok))
-    {
-        int last_type = tok_last_type(&tok);
-        switch (last_type)
-        {
-            case TOK_STRING:
-            {
-                if (!had_cmd)
-                {
-                    if (wcscmp(tok_last(&tok), L"end")==0)
-                    {
-                        count--;
-                    }
-                    else if (parser_keywords_is_block(tok_last(&tok)))
-                    {
-                        count++;
-                    }
-
-                    if (count < 0)
-                    {
-                        error = 1;
-                    }
-                    had_cmd = 1;
-                }
-                break;
-            }
-
-            case TOK_END:
-            {
-                had_cmd = 0;
-                break;
-            }
-
-            case TOK_PIPE:
-            case TOK_BACKGROUND:
-            {
-                if (had_cmd)
-                {
-                    had_cmd = 0;
-                }
-                else
-                {
-                    error = 1;
-                }
-                break;
-
-            }
-
-            case TOK_ERROR:
-                error = 1;
-                break;
-
-            default:
-                break;
-
-        }
-        if (!count)
-        {
-            tok_next(&tok);
-            mark = tok_get_pos(&tok);
-            break;
-        }
-
-    }
-    if (!count && !error)
-    {
-
-        return buff+mark;
-    }
-    return 0;
-
-}
-
-
 void parser_t::forbid_function(const wcstring &function)
 {
     forbidden_function.push_back(function);
@@ -826,29 +739,11 @@ const wchar_t *parser_t::is_function() const
 
 int parser_t::get_lineno() const
 {
-    if (parser_use_ast())
+    int lineno = -1;
+    if (! execution_contexts.empty())
     {
-        int lineno = -1;
-        if (! execution_contexts.empty())
-        {
-            lineno = execution_contexts.back()->get_current_line_number();
-        }
-        return lineno;
+        lineno = execution_contexts.back()->get_current_line_number();
     }
-    
-    int lineno;
-
-    if (! current_tokenizer || ! tok_string(current_tokenizer))
-        return -1;
-
-    lineno = current_tokenizer->line_number_of_character_at_offset(current_tokenizer_pos);
-
-    const wchar_t *function_name;
-    if ((function_name = is_function()))
-    {
-        lineno += function_get_definition_offset(function_name);
-    }
-
     return lineno;
 }
 

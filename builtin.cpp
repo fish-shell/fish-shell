@@ -3310,78 +3310,6 @@ static int builtin_bg(parser_t &parser, wchar_t **argv)
 
 
 /**
-   Builtin for looping over a list
-*/
-static int builtin_for(parser_t &parser, wchar_t **argv)
-{
-    int argc = builtin_count_args(argv);
-    int res=STATUS_BUILTIN_ERROR;
-
-    /* Hackish - if we have no arguments other than the command, we are a "naked invocation" and we just print help */
-    if (argc == 1)
-    {
-        builtin_print_help(parser, argv[0], stdout_buffer);
-        return STATUS_BUILTIN_ERROR;
-    }
-
-    if (argc < 3)
-    {
-        append_format(stderr_buffer,
-                      BUILTIN_FOR_ERR_COUNT,
-                      argv[0] ,
-                      argc);
-        builtin_print_help(parser, argv[0], stderr_buffer);
-    }
-    else if (wcsvarname(argv[1]))
-    {
-        append_format(stderr_buffer,
-                      BUILTIN_FOR_ERR_NAME,
-                      argv[0],
-                      argv[1]);
-        builtin_print_help(parser, argv[0], stderr_buffer);
-    }
-    else if (wcscmp(argv[2], L"in") != 0)
-    {
-        append_format(stderr_buffer,
-                      BUILTIN_FOR_ERR_IN,
-                      argv[0]);
-        builtin_print_help(parser, argv[0], stderr_buffer);
-    }
-    else
-    {
-        res=0;
-    }
-
-
-    if (res)
-    {
-        parser.push_block(new fake_block_t());
-    }
-    else
-    {
-        const wchar_t *for_variable = argv[1];
-        for_block_t *fb = new for_block_t(for_variable);
-        parser.push_block(fb);
-        fb->tok_pos = parser.get_pos();
-
-        /* Note that we store the sequence of values in opposite order */
-        wcstring_list_t &for_vars = fb->sequence;
-        for (int i=argc-1; i>3; i--)
-            for_vars.push_back(argv[i]);
-
-        if (argc > 3)
-        {
-            env_set(for_variable, argv[3], ENV_LOCAL);
-        }
-        else
-        {
-            parser.current_block()->skip=1;
-        }
-    }
-    return res;
-}
-
-/**
    This function handles both the 'continue' and the 'break' builtins
    that are used for loop control.
 */
@@ -3509,7 +3437,6 @@ static int builtin_return(parser_t &parser, wchar_t **argv)
     for (size_t i=0; i < function_block_idx; i++)
     {
         block_t *b = parser.block_at_index(i);
-        b->mark_as_fake();
         b->skip = true;
     }
     parser.block_at_index(function_block_idx)->skip = true;
@@ -3734,7 +3661,7 @@ static const builtin_data_t builtin_datas[]=
     { 		L"exec",  &builtin_generic, N_(L"Run command in current process")  },
     { 		L"exit",  &builtin_exit, N_(L"Exit the shell") },
     { 		L"fg",  &builtin_fg, N_(L"Send job to foreground")   },
-    { 		L"for",  &builtin_for, N_(L"Perform a set of commands multiple times")   },
+    { 		L"for",  &builtin_generic, N_(L"Perform a set of commands multiple times")   },
     { 		L"function",  &builtin_generic, N_(L"Define a new function")   },
     { 		L"functions",  &builtin_functions, N_(L"List or remove functions")   },
     { 		L"history",  &builtin_history, N_(L"History of commands executed by user")   },

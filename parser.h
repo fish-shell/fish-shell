@@ -64,8 +64,7 @@ enum block_type_t
     SOURCE, /**< Block created by the . (source) builtin */
     EVENT, /**< Block created on event notifier invocation */
     BREAKPOINT, /**< Breakpoint block */
-}
-;
+};
 
 /**
    block_t represents a block of commands.
@@ -78,18 +77,11 @@ protected:
 
 private:
     const block_type_t block_type; /**< Type of block. */
-    bool made_fake;
 
 public:
     block_type_t type() const
     {
-        return this->made_fake ? FAKE : this->block_type;
-    }
-
-    /** Mark a block as fake; this is used by the return statement. */
-    void mark_as_fake()
-    {
-        this->made_fake = true;
+        return this->block_type;
     }
 
     bool skip; /**< Whether execution of the commands in this block should be skipped */
@@ -122,11 +114,6 @@ public:
 
 struct if_block_t : public block_t
 {
-    bool if_expr_evaluated; // whether we've evaluated the if expression
-    bool is_elseif_entry; // whether we're at the beginning of an ELSEIF branch
-    bool any_branch_taken; // whether the clause of the if statement or any elseif has been found to be true
-    bool else_evaluated; // whether we've encountered a terminal else block
-
     if_block_t();
 };
 
@@ -151,33 +138,22 @@ struct source_block_t : public block_t
 
 struct for_block_t : public block_t
 {
-    wcstring variable; // the variable that will be assigned each value in the sequence
-    wcstring_list_t sequence; // the sequence of values
-    for_block_t(const wcstring &var);
+    for_block_t();
 };
 
 struct while_block_t : public block_t
 {
-    int status;
     while_block_t();
 };
 
 struct switch_block_t : public block_t
 {
-    bool switch_taken;
-    const wcstring switch_value;
-    switch_block_t(const wcstring &sv);
+    switch_block_t();
 };
 
 struct fake_block_t : public block_t
 {
     fake_block_t();
-};
-
-struct function_def_block_t : public block_t
-{
-    function_data_t function_data;
-    function_def_block_t();
 };
 
 struct scope_block_t : public block_t
@@ -199,18 +175,6 @@ enum loop_status
     LOOP_BREAK, /**< Current loop block should be removed */
     LOOP_CONTINUE, /**< Current loop block should be skipped */
 };
-
-
-/**
-   Possible states for a while block
-*/
-enum while_status
-{
-    WHILE_TEST_FIRST, /**< This is the first command of the first lap of a while loop */
-    WHILE_TEST_AGAIN, /**< This is not the first lap of the while loop, but it is the first command of the loop */
-    WHILE_TESTED, /**< This is not the first command in the loop */
-}
-;
 
 
 /**

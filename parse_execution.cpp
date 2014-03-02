@@ -447,7 +447,7 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(const pars
 
     /* Get the contents to iterate over. */
     const parse_node_t *unmatched_wildcard = NULL;
-    wcstring_list_t argument_list = this->determine_arguments(header, &unmatched_wildcard);
+    wcstring_list_t argument_sequence = this->determine_arguments(header, &unmatched_wildcard);
     if (unmatched_wildcard != NULL)
     {
         return report_unmatched_wildcard_error(*unmatched_wildcard);
@@ -455,15 +455,12 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(const pars
 
     parse_execution_result_t ret = parse_execution_success;
 
-    for_block_t *fb = new for_block_t(for_var_name);
+    for_block_t *fb = new for_block_t();
     parser->push_block(fb);
 
-    /* Note that we store the sequence of values in opposite order */
-    std::reverse(argument_list.begin(), argument_list.end());
-    fb->sequence = argument_list;
-
     /* Now drive the for loop. */
-    while (! fb->sequence.empty())
+    const size_t arg_count = argument_sequence.size();
+    for (size_t i=0; i < arg_count; i++)
     {
         if (should_cancel_execution(fb))
         {
@@ -471,10 +468,8 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(const pars
             break;
         }
 
-        const wcstring &for_variable = fb->variable;
-        const wcstring &val = fb->sequence.back();
-        env_set(for_variable, val.c_str(),  ENV_LOCAL);
-        fb->sequence.pop_back();
+        const wcstring &val = argument_sequence.at(i);
+        env_set(for_var_name, val.c_str(),  ENV_LOCAL);
         fb->loop_status = LOOP_NORMAL;
         fb->skip = 0;
 
@@ -551,7 +546,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
     }
     const wcstring &switch_value_expanded = switch_values_expanded.at(0).completion;
 
-    switch_block_t *sb = new switch_block_t(switch_value_expanded);
+    switch_block_t *sb = new switch_block_t();
     parser->push_block(sb);
 
     if (result == parse_execution_success)
@@ -620,7 +615,6 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(const pa
 
     /* Push a while block */
     while_block_t *wb = new while_block_t();
-    wb->status = WHILE_TEST_FIRST;
     wb->node_offset = this->get_offset(header);
     parser->push_block(wb);
 

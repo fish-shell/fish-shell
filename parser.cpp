@@ -249,7 +249,9 @@ void parser_t::push_block(block_t *new_current)
 
     const block_t *old_current = this->current_block();
     if (old_current && old_current->skip)
-        new_current->mark_as_fake();
+    {
+        new_current->skip = true;
+    }
 
     /*
       New blocks should be skipped if the outer block is skipped,
@@ -1407,7 +1409,6 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
 
 block_t::block_t(block_type_t t) :
     block_type(t),
-    made_fake(false),
     skip(),
     had_command(),
     tok_pos(),
@@ -1427,12 +1428,7 @@ block_t::~block_t()
 
 /* Various block constructors */
 
-if_block_t::if_block_t() :
-    block_t(IF),
-    if_expr_evaluated(false),
-    is_elseif_entry(false),
-    any_branch_taken(false),
-    else_evaluated(false)
+if_block_t::if_block_t() : block_t(IF)
 {
 }
 
@@ -1455,45 +1451,28 @@ source_block_t::source_block_t(const wchar_t *src) :
 {
 }
 
-for_block_t::for_block_t(const wcstring &var) :
-    block_t(FOR),
-    variable(var),
-    sequence()
+for_block_t::for_block_t() : block_t(FOR)
 {
 }
 
-while_block_t::while_block_t() :
-    block_t(WHILE),
-    status(0)
+while_block_t::while_block_t() : block_t(WHILE)
 {
 }
 
-switch_block_t::switch_block_t(const wcstring &sv) :
-    block_t(SWITCH),
-    switch_taken(false),
-    switch_value(sv)
+switch_block_t::switch_block_t() : block_t(SWITCH)
 {
 }
 
-fake_block_t::fake_block_t() :
-    block_t(FAKE)
+fake_block_t::fake_block_t() : block_t(FAKE)
 {
 }
 
-function_def_block_t::function_def_block_t() :
-    block_t(FUNCTION_DEF),
-    function_data()
-{
-}
-
-scope_block_t::scope_block_t(block_type_t type) :
-    block_t(type)
+scope_block_t::scope_block_t(block_type_t type) : block_t(type)
 {
     assert(type == BEGIN || type == TOP || type == SUBST);
 }
 
-breakpoint_block_t::breakpoint_block_t() :
-    block_t(BREAKPOINT)
+breakpoint_block_t::breakpoint_block_t() : block_t(BREAKPOINT)
 {
 }
 

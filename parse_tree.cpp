@@ -580,11 +580,11 @@ class parse_ll_t
 public:
 
     /* Constructor */
-    parse_ll_t() : fatal_errored(false), should_generate_error_messages(true)
+    parse_ll_t(enum parse_token_type_t goal) : fatal_errored(false), should_generate_error_messages(true)
     {
         this->symbol_stack.reserve(16);
         this->nodes.reserve(64);
-        this->reset_symbols_and_nodes();
+        this->reset_symbols_and_nodes(goal);
     }
 
     /* Input */
@@ -605,11 +605,11 @@ public:
         this->should_generate_error_messages = flag;
     }
 
-    /* Clear the parse symbol stack (but not the node tree). Add a new job_list_t goal node. This is called from the constructor */
-    void reset_symbols(void);
+    /* Clear the parse symbol stack (but not the node tree). Add a node of the given type as the goal node. This is called from the constructor */
+    void reset_symbols(enum parse_token_type_t goal);
 
-    /* Clear the parse symbol stack and the node tree. Add a new job_list_t goal node. This is called from the constructor. */
-    void reset_symbols_and_nodes(void);
+    /* Clear the parse symbol stack and the node tree. Add a node of the given type as the goal node. This is called from the constructor. */
+    void reset_symbols_and_nodes(enum parse_token_type_t goal);
 
     /* Once parsing is complete, determine the ranges of intermediate nodes */
     void determine_node_ranges();
@@ -830,22 +830,22 @@ void parse_ll_t::parse_error(const wchar_t *expected, parse_token_t token)
     }
 }
 
-void parse_ll_t::reset_symbols(void)
+void parse_ll_t::reset_symbols(enum parse_token_type_t goal)
 {
-    /* Add a new job_list node, and then reset our symbol list to point at it */
+    /* Add a new goal node, and then reset our symbol list to point at it */
     node_offset_t where = nodes.size();
-    nodes.push_back(parse_node_t(symbol_job_list));
+    nodes.push_back(parse_node_t(goal));
 
     symbol_stack.clear();
-    symbol_stack.push_back(parse_stack_element_t(symbol_job_list, where)); // goal token
+    symbol_stack.push_back(parse_stack_element_t(goal, where)); // goal token
     this->fatal_errored = false;
 }
 
 /* Reset both symbols and nodes */
-void parse_ll_t::reset_symbols_and_nodes(void)
+void parse_ll_t::reset_symbols_and_nodes(enum parse_token_type_t goal)
 {
     nodes.clear();
-    this->reset_symbols();
+    this->reset_symbols(goal);
 }
 
 static bool type_is_terminal_type(parse_token_type_t type)
@@ -1116,9 +1116,9 @@ static inline parse_token_t next_parse_token(tokenizer_t *tok)
     return result;
 }
 
-bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags, parse_node_tree_t *output, parse_error_list_t *errors)
+bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags, parse_node_tree_t *output, parse_error_list_t *errors, parse_token_type_t goal)
 {
-    parse_ll_t parser;
+    parse_ll_t parser(goal);
     parser.set_should_generate_error_messages(errors != NULL);
 
     /* Construct the tokenizer */
@@ -1173,7 +1173,7 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
                 /* Mark a special error token, and then keep going */
                 const parse_token_t token = {parse_special_type_parse_error, parse_keyword_none, false, false, queue[error_token_idx].source_start, queue[error_token_idx].source_length};
                 parser.accept_tokens(token, kInvalidToken);
-                parser.reset_symbols();
+                parser.reset_symbols(goal);
             }
             else
             {
@@ -1499,7 +1499,7 @@ const parse_node_t *parse_node_tree_t::next_node_in_node_list(const parse_node_t
     const parse_node_t *list_cursor = &node_list;
     const parse_node_t *list_entry = NULL;
 
-    /* Loop while we don't have an item but do have a list. Note that not every node in the list may contain an in item that we care about - e.g. job_list contains blank lines as a production */
+    /* Loop while we don't have an item but do have a list. Note that some nodes may contain nothing - e.g. job_list contains blank lines as a production */
     while (list_entry == NULL && list_cursor != NULL)
     {
         const parse_node_t *next_cursor = NULL;

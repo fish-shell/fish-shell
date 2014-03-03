@@ -200,8 +200,8 @@ public:
     parse_node_list_t specific_statements_for_job(const parse_node_t &job) const;
 };
 
-/* The big entry point. Parse a string! */
-bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags, parse_node_tree_t *output, parse_error_list_t *errors);
+/* The big entry point. Parse a string, attempting to produce a tree for the given goal type */
+bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags, parse_node_tree_t *output, parse_error_list_t *errors, parse_token_type_t goal = symbol_job_list);
 
 /* Fish grammar:
 

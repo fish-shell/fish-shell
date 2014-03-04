@@ -250,6 +250,16 @@ class FishVar:
         if self.exported: flags.append('exported')
         return [self.name, self.value, ', '.join(flags)]
 
+class FishConfigTCPServer(SocketServer.TCPServer):
+    """TCPServer that only accepts connections from localhost (IPv4/IPv6)."""
+    WHITELIST = set(['::1', '::ffff:127.0.0.1', '127.0.0.1'])
+
+    address_family = socket.AF_INET6
+
+    def verify_request(self, request, client_address):
+        return client_address[0] in FishConfigTCPServer.WHITELIST
+
+
 class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def write_to_wfile(self, txt):
@@ -613,7 +623,7 @@ PORT = 8000
 while PORT <= 9000:
     try:
         Handler = FishConfigHTTPRequestHandler
-        httpd = SocketServer.TCPServer(("", PORT), Handler)
+        httpd = FishConfigTCPServer(("::", PORT), Handler)
         # Success
         break
     except socket.error:

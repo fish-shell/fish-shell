@@ -1001,10 +1001,204 @@ static bool first_argument_is_help(const parse_node_tree_t &node_tree, const par
     return is_help;
 }
 
+void parse_util_expand_variable_error(const parse_node_t &node, const wcstring &token, size_t token_pos, size_t error_pos, parse_error_list_t *out_errors)
+{
+    size_t stop_pos = token_pos+1;
+
+    switch (token[stop_pos])
+    {
+        case BRACKET_BEGIN:
+        {
+            wchar_t *cpy = wcsdup(token.c_str());
+            *(cpy+token_pos)=0;
+            wchar_t *name = &cpy[stop_pos+1];
+            wchar_t *end = wcschr(name, BRACKET_END);
+            wchar_t *post;
+            int is_var=0;
+            if (end)
+            {
+                post = end+1;
+                *end = 0;
+
+                if (!wcsvarname(name))
+                {
+                    is_var = 1;
+                }
+            }
+
+            if (is_var)
+            {
+                append_syntax_error(out_errors,
+                                    node,
+                                    COMPLETE_VAR_BRACKET_DESC,
+                                    cpy,
+                                    name,
+                                    post);
+            }
+            else
+            {
+                append_syntax_error(out_errors,
+                                    node,
+                                    COMPLETE_VAR_BRACKET_DESC,
+                                    L"",
+                                    L"VARIABLE",
+                                    L"");
+            }
+            free(cpy);
+
+            break;
+        }
+
+        case INTERNAL_SEPARATOR:
+        {
+            append_syntax_error(out_errors,
+                                node,
+                                COMPLETE_VAR_PARAN_DESC);
+            break;
+        }
+
+        case 0:
+        {
+            append_syntax_error(out_errors,
+                                node,
+                                COMPLETE_VAR_NULL_DESC);
+            break;
+        }
+
+        default:
+        {
+            wchar_t token_stop_char = token[stop_pos];
+            // Unescape (see http://github.com/fish-shell/fish-shell/issues/50)
+            if (token_stop_char == ANY_CHAR)
+                token_stop_char = L'?';
+            else if (token_stop_char == ANY_STRING || token_stop_char == ANY_STRING_RECURSIVE)
+                token_stop_char = L'*';
+
+            append_syntax_error(out_errors,
+                                node,
+                                (token_stop_char == L'?' ? COMPLETE_YOU_WANT_STATUS : COMPLETE_VAR_DESC),
+                                token_stop_char);
+            break;
+        }
+    }
+}
+
+
+/**
+   Test if this argument contains any errors. Detected errors include
+   syntax errors in command substitutions, improperly escaped
+   characters and improper use of the variable expansion operator.
+*/
+parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t &node, const wcstring &arg_src, parse_error_list_t *out_errors)
+{
+    int err=0;
+
+    wchar_t *paran_begin, *paran_end;
+    wchar_t *arg_cpy;
+    int do_loop = 1;
+
+    arg_cpy = wcsdup(arg_src.c_str());
+
+    while (do_loop)
+    {
+        switch (parse_util_locate_cmdsubst(arg_cpy,
+                                           &paran_begin,
+                                           &paran_end,
+                                           false))
+        {
+            case -1:
+            {
+                err=1;
+                if (out_errors)
+                {
+                    append_syntax_error(out_errors, node, L"Mismatched parenthesis");
+                }
+                free(arg_cpy);
+                return err;
+            }
+
+            case 0:
+            {
+                do_loop = 0;
+                break;
+            }
+
+            case 1:
+            {
+
+                const wcstring subst(paran_begin + 1, paran_end);
+                wcstring tmp;
+
+                tmp.append(arg_cpy, paran_begin - arg_cpy);
+                tmp.push_back(INTERNAL_SEPARATOR);
+                tmp.append(paran_end+1);
+
+                parse_error_list_t errors;
+                err |= parse_util_detect_errors(subst, &errors);
+                if (out_errors != NULL)
+                {
+                    /* Todo: have to tweak the offsets of the errors in the command substitution */
+                    out_errors->insert(out_errors->end(), errors.begin(), errors.end());
+                }
+
+                free(arg_cpy);
+                arg_cpy = wcsdup(tmp.c_str());
+
+                break;
+            }
+        }
+    }
+
+    wcstring unesc;
+    if (! unescape_string(arg_cpy, &unesc, UNESCAPE_SPECIAL))
+    {
+        if (out_errors)
+        {
+            append_syntax_error(out_errors, node, L"Invalid token '%ls'", arg_cpy);
+        }
+        return 1;
+    }
+    else
+    {
+        /* Check for invalid variable expansions */
+        const size_t unesc_size = unesc.size();
+        for (size_t idx = 0; idx < unesc_size; idx++)
+        {
+            switch (unesc.at(idx))
+            {
+                case VARIABLE_EXPAND:
+                case VARIABLE_EXPAND_SINGLE:
+                {
+                    wchar_t next_char = (idx + 1 < unesc_size ? unesc.at(idx + 1) : L'\0');
+
+                    if (next_char != VARIABLE_EXPAND &&
+                            next_char != VARIABLE_EXPAND_SINGLE &&
+                            ! wcsvarchr(next_char))
+                    {
+                        err=1;
+                        if (out_errors)
+                        {
+                            parse_util_expand_variable_error(node, unesc, idx, node.source_start, out_errors);
+                        }
+                    }
+
+                    break;
+                }
+            }
+        }
+    }
+
+    free(arg_cpy);
+
+    return err;
+}
+
 parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, parse_error_list_t *out_errors)
 {
     parse_node_tree_t node_tree;
     parse_error_list_t parse_errors;
+
+    parser_test_error_bits_t res = 0;
 
     // Whether we encountered a parse error
     bool errored = false;
@@ -1064,6 +1258,11 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                 {
                     errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG, is_and ? L"and" : L"or");
                 }
+            }
+            else if (node.type == symbol_argument)
+            {
+                const wcstring arg_src = node.get_source(buff_src);
+                res |= parse_util_detect_errors_in_argument(node, arg_src, &parse_errors);
             }
             else if (node.type == symbol_plain_statement)
             {
@@ -1158,8 +1357,6 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
             }
         }
     }
-
-    parser_test_error_bits_t res = 0;
 
     if (errored)
         res |= PARSER_TEST_ERROR;

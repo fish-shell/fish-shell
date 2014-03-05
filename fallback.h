@@ -1,3 +1,6 @@
+/** \file fallback.h
+    Fallback function prototypes.
+*/
 
 #ifndef FISH_FALLBACK_H
 #define FISH_FALLBACK_H

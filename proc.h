@@ -1,11 +1,12 @@
 /** \file proc.h
+    Prototypes job tracking facilities, processes and subshells, signals.
+*/
 
-    Prototypes for utilities for keeping track of jobs, processes and subshells, as
-  well as signal handling functions for tracking children. These
+/**
+  Also, signal handling functions for tracking children. These
   functions do not themselves launch new processes, the exec library
   will call proc to create representations of the running jobs as
   needed.
-
 */
 
 #ifndef FISH_PROC_H

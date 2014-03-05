@@ -1,5 +1,8 @@
-/** \file screen.h High level library for handling the terminal screen
+/** \file screen.h
+    High level library for handling terminal (emulator) handling.
+*/
 
+/**
   The screen library allows the interactive reader to write its
   output to screen efficiently by keeping an internal representation
   of the current screen contents and trying to find a reasonably

@@ -1,5 +1,8 @@
-/** \file reader.c
+/** \file reader.cpp
+    Functions for reading data from stdin and passing to the parser.
+*/
 
+/**
 Functions for reading data from stdin and passing to the
 parser. If stdin is a keyboard, it supplies a killring, history,
 syntax highlighting, tab-completion and various other interactive features.
@@ -16,7 +19,6 @@ the list is consulted for previous search result, and subsequent
 backwards searches are also handled by consulting the list up until
 the end of the list is reached, at which point regular searching will
 commence.
-
 */
 
 #include "config.h"

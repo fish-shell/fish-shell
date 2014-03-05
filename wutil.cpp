@@ -1,7 +1,7 @@
-/** \file wutil.c
-  Wide character equivalents of various standard unix
-  functions.
+/** \file wutil.cpp
+    Wide character equivalents of various standard POSIX functions.
 */
+
 #include "config.h"
 
 #include <stdlib.h>

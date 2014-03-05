@@ -1,10 +1,8 @@
-/** \file intern.c
-
-    Library for pooling common strings
-
+/** \file intern.cpp
+    Library for pooling common strings.
 */
-#include "config.h"
 
+#include "config.h"
 
 #include <stdlib.h>
 #include <stdio.h>

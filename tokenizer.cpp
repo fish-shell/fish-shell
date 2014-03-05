@@ -1,5 +1,8 @@
-/** \file tokenizer.c
+/** \file tokenizer.cpp
+    A specialized tokenizer for tokenizing the fish language.
+*/
 
+/**
 A specialized tokenizer for tokenizing the fish language. In the
 future, the tokenizer should be extended to support marks,
 tokenizing multiple strings and disposing of unused string

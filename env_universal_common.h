@@ -1,3 +1,7 @@
+/** \file env_universal_common.h
+   Common definitions for universal variables. Used by client library, daemon.
+*/
+
 #ifndef FISH_ENV_UNIVERSAL_COMMON_H
 #define FISH_ENV_UNIVERSAL_COMMON_H
 

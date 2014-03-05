@@ -1,8 +1,7 @@
-/** \file builtin_ulimit.c Functions defining the ulimit builtin
-
-Functions used for implementing the ulimit builtin.
-
+/** \file builtin_ulimit.cpp
+    Functions used for implementing the ulimit builtin.
 */
+
 #include "config.h"
 
 #include <stdlib.h>

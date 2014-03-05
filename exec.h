@@ -1,11 +1,8 @@
 /** \file exec.h
-  Prototypes for functions for executing a program
+    Prototypes for functions for executing a program.
 */
 
 #ifndef FISH_EXEC_H
-/**
-   Header guard
-*/
 #define FISH_EXEC_H
 
 #include <wchar.h>

@@ -1,6 +1,5 @@
-/** \file parser_keywords.c
-
-Functions having to do with parser keywords, like testing if a function is a block command.
+/** \file parser_keywords.cpp
+    Parser keyword functions, like testing if a function is a block command.
 */
 
 #include "config.h"

@@ -1,8 +1,5 @@
-/**\file expand.c
-
-String expansion functions. These functions perform several kinds of
-parameter expansion.
-
+/** \file expand.cpp
+    String expansion functions, performs several kinds of parameter expansion.
 */
 
 #include "config.h"

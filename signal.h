@@ -1,8 +1,7 @@
 /** \file signal.h
-
-The library for various signal related issues
-
+    Prototypes for library for various signal related issues.
 */
+
 #ifndef FISH_SIGNALH
 #define FISH_SIGNALH
 

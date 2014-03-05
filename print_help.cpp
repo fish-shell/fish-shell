@@ -1,6 +1,5 @@
-
-/** \file print_help.c
-  Print help message for the specified command
+/** \file print_help.cpp
+    Print help message for the specified command.
 */
 
 #include <stdlib.h>

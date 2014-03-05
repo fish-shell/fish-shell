@@ -1,19 +1,21 @@
-/** \file builtin.c
-	Functions for executing builtin functions.
+/** \file builtin.cpp
+    Functions for executing builtin functions.
+*/
 
-	How to add a new builtin function:
+/**
+    How to add a new builtin function:
 
-	1). Create a function in builtin.c with the following signature:
+    1). Create a function in builtin.cpp with the following signature:
 
-	<tt>static int builtin_NAME( parser_t &parser, wchar_t ** args )</tt>
+    <tt>static int builtin_NAME( parser_t &parser, wchar_t ** args )</tt>
 
-	where NAME is the name of the builtin, and args is a zero-terminated list of arguments.
+    where NAME is the name of the builtin, and args is a zero-terminated list of arguments.
 
-	2). Add a line like { L"NAME", &builtin_NAME, N_(L"Bla bla bla") }, to the builtin_data_t variable. The description is used by the completion system. Note that this array is sorted!
+    2). Add a line like { L"NAME", &builtin_NAME, N_(L"Bla bla bla") }, to the builtin_data_t variable. The description is used by the completion system. Note that this array is sorted!
 
-	3). Create a file doc_src/NAME.txt, containing the manual for the builtin in Doxygen-format. Check the other builtin manuals for proper syntax.
+    3). Create a file doc_src/NAME.txt, containing the manual for the builtin in Doxygen-format. Check the other builtin manuals for proper syntax.
 
-	4). Use 'git add doc_src/NAME.txt' to start tracking changes to the documentation file.
+    4). Use 'git add doc_src/NAME.txt' to start tracking changes to the documentation file.
 
 */
 
@@ -176,9 +178,9 @@ static int builtin_count_args(const wchar_t * const * argv)
 }
 
 /**
-	This function works like wperror, but it prints its result into
-	the sb_err string instead of to stderr. Used by the builtin
-	commands.
+    This function works like wperror, but it prints its result into
+    the sb_err string instead of to stderr. Used by the builtin
+    commands.
 */
 
 static void builtin_wperror(const wchar_t *s)

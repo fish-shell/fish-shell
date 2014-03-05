@@ -1,6 +1,7 @@
-/** \file history.c
-  History functions, part of the user interface.
+/** \file history.cpp
+    History functions, part of the user interface.
 */
+
 #include "config.h"
 
 #include <stdlib.h>
@@ -457,7 +458,7 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
 
 
 // Same as offset_of_next_item_fish_2_0, but for fish 1.x (pre fishfish)
-// Adapted from history_populate_from_mmap in history.c
+// Adapted from history_populate_from_mmap in history.cpp
 static size_t offset_of_next_item_fish_1_x(const char *begin, size_t mmap_length, size_t *inout_cursor, time_t cutoff_timestamp)
 {
     if (mmap_length == 0 || *inout_cursor >= mmap_length)

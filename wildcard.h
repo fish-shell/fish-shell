@@ -1,15 +1,14 @@
 /** \file wildcard.h
+    Globbing.
+*/
 
+/**
     My own globbing implementation. Needed to implement this instead
     of using libs globbing to support tab-expansion of globbed
     paramaters.
-
 */
 
 #ifndef FISH_WILDCARD_H
-/**
-   Header guard
-*/
 #define FISH_WILDCARD_H
 
 #include <wchar.h>

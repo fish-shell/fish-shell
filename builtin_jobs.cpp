@@ -1,6 +1,7 @@
-/** \file builtin_jobs.c
-  Functions for executing the jobs builtin.
+/** \file builtin_jobs.cpp
+    Functions for executing the jobs builtin.
 */
+
 #include "config.h"
 
 #include <stdlib.h>

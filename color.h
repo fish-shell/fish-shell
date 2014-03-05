@@ -1,5 +1,7 @@
-/** \file color.h Color class.
-  */
+/** \file color.h
+    Color class.
+*/
+
 #ifndef FISH_COLOR_H
 #define FISH_COLOR_H
 

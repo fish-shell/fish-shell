@@ -1,6 +1,9 @@
 /** \file path.h
+    Directory utilities.
+*/
 
-  Directory utilities. This library contains functions for locating
+/**
+  This library contains functions for locating
   configuration directories, for testing if a command with a given
   name can be found in the PATH, and various other path-related
   issues.

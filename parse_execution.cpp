@@ -1,5 +1,8 @@
-/**\file parse_execution.cpp
+/** \file parse_execution.cpp
+    Provides linkage between parse_node_tree_t and executions (job_t, etc.).
+*/
 
+/**
    Provides the "linkage" between a parse_node_tree_t and actual execution structures (job_t, etc.)
 
    A note on error handling: fish has two kind of errors, fatal parse errors non-fatal runtime errors. A fatal error prevents execution of the entire file, while a non-fatal error skips that job.
@@ -32,7 +35,7 @@ static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &no
 {
     assert(specific_statement_type_is_redirectable_block(node));
     assert(node.has_source());
-    
+
     /* Get the source for the block, and cut it at the next statement terminator. */
     const size_t src_start = node.source_start;
     size_t src_len = node.source_length;
@@ -44,7 +47,7 @@ static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &no
         assert(term->source_start >= src_start);
         src_len = term->source_start - src_start;
     }
-    
+
     wcstring result = wcstring(src, src_start, src_len);
     result.append(L"...");
     return result;
@@ -324,7 +327,7 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(const parse
     {
         run_job_list(*job_list_to_execute, ib);
     }
-    
+
     /* It's possible there's a last-minute cancellation, in which case we should not stomp the exit status (#1297) */
     if (should_cancel_execution(ib))
     {
@@ -1302,7 +1305,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
 
     /* Increment the eval_level for the duration of this command */
     scoped_push<int> saved_eval_level(&eval_level, eval_level + 1);
-    
+
     /* Save the node index */
     scoped_push<node_offset_t> saved_node_offset(&executing_node_idx, this->get_offset(job_node));
 
@@ -1339,7 +1342,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
                 PARSER_DIE();
                 break;
         }
-        
+
         if (profile_item != NULL)
         {
             /* Block-types profile a little weird. They have no 'parse' time, and their command is just the block type */
@@ -1350,7 +1353,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
             profile_item->cmd = profiling_cmd_name_for_redirectable_block(specific_statement, this->tree, this->src);
             profile_item->skipped = result != parse_execution_success;
         }
-        
+
         return result;
     }
 
@@ -1543,7 +1546,7 @@ int parse_execution_context_t::get_current_line_number()
     {
         return -1;
     }
-    
+
     /* Count the number of newlines, leveraging our cache */
     const size_t offset = tree.at(this->executing_node_idx).source_start;
     assert(offset <= src.size());
@@ -1553,7 +1556,7 @@ int parse_execution_context_t::get_current_line_number()
     {
         return 1;
     }
-    
+
     /* We want to return (one plus) the number of newlines at offsets less than the given offset. cached_lineno_count is the number of newlines at indexes less than cached_lineno_offset. */
     const wchar_t *str = src.c_str();
     if (offset > cached_lineno_offset)

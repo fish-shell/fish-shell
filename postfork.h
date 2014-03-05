@@ -1,6 +1,10 @@
 /** \file postfork.h
+    Prototypes for functions that we may safely call after fork(). Rare.
+*/
 
-  Functions that we may safely call after fork(), of which there are very few. In particular we cannot allocate memory, since we're insane enough to call fork from a multithreaded process.
+/**
+    In particular we cannot allocate memory, since we're insane enough to call
+    fork from a multithreaded process.
 */
 
 #ifndef FISH_POSTFORK_H

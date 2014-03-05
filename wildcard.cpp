@@ -1,5 +1,9 @@
-/** \file wildcard.c
+/** \file wildcard.cpp
+    Globbing implementation to support tab-expansion of globbed parameters.
+*/
 
+/**
+Also provides recursive wildcards using **.
 Fish needs it's own globbing implementation to support
 tab-expansion of globbed parameters. Also provides recursive
 wildcards using **.

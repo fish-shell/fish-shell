@@ -1,5 +1,8 @@
-/* -*- mode: C; c-file-style: "gnu" -*- */
-/* xdgmimemagic.: Private file.  Datastructure for storing magic files.
+/** \file xdgmimemagic.cpp
+    X Desktop Group Multipurpose Internet Mail Extensions magic (5) handling.
+*/
+
+/* xdgmimemagic.cpp: Private file.  Datastructure for storing magic files.
  *
  * More info can be found at http://www.freedesktop.org/standards/
  *

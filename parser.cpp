@@ -1,7 +1,5 @@
-/** \file parser.c
-
-The fish parser. Contains functions for parsing and evaluating code.
-
+/** \file parser.cpp
+    The "old" fish parser. Contains functions for parsing and evaluating code.
 */
 
 #include "config.h"

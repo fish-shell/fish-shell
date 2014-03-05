@@ -1,7 +1,5 @@
 /** \file parse_util.h
-
-    Various mostly unrelated utility functions related to parsing,
-    loading and evaluating fish code.
+    Various utility functions related to parsing and evaluating fish code.
 */
 
 #ifndef FISH_PARSE_UTIL_H

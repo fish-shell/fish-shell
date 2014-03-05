@@ -1,6 +1,5 @@
-/**\file parse_tree.h
-
-    Programmatic representation of fish code.
+/** \file parse_productions.h
+    Functions for generating the programmatic representation in "new" parser.
 */
 
 #ifndef FISH_PARSE_TREE_CONSTRUCTION_H

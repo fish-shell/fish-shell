@@ -1,3 +1,7 @@
+/** \file io.h
+    Prototypes for io redirection.
+*/
+
 #ifndef FISH_IO_H
 #define FISH_IO_H
 

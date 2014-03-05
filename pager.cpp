@@ -1,3 +1,7 @@
+/** \file pager.cpp
+    The "old" pager.
+*/
+
 #include "config.h"
 
 #include "pager.h"

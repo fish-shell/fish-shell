@@ -1,8 +1,7 @@
-/** \file event.c
-
-  Functions for handling event triggers
-
+/** \file event.cpp
+    Functions for handling event triggers.
 */
+
 #include "config.h"
 
 #include <stdlib.h>

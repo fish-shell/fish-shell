@@ -1,8 +1,9 @@
-/** \file builtin_test.cpp Functions defining the test builtin
+/** \file builtin_test.cpp
+    Functions used for implementing the test builtin.
+*/
 
-Functions used for implementing the test builtin.
+/**
 Implemented from scratch (yes, really) by way of IEEE 1003.1 as reference.
-
 */
 
 #include "config.h"

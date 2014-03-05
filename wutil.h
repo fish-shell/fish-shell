@@ -1,8 +1,7 @@
 /** \file wutil.h
-
-  Prototypes for wide character equivalents of various standard unix
-  functions.
+    Prototypes for wide character equivalents of various POSIX functions.
 */
+
 #ifndef FISH_WUTIL_H
 #define FISH_WUTIL_H
 

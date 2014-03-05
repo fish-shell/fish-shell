@@ -1,4 +1,7 @@
-/* -*- mode: C; c-file-style: "gnu" -*- */
+/** \file xdgmimeint.h
+    X Desktop Group Multipurpose Internet Mail Extensions int header.
+*/
+
 /* xdgmimeint.h: Internal defines and functions.
  *
  * More info can be found at http://www.freedesktop.org/standards/

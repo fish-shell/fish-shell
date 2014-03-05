@@ -1,5 +1,4 @@
-/**\file parse_constants.h
-
+/** \file parse_constants.h
     Constants used in the programmatic representation of fish code.
 */
 

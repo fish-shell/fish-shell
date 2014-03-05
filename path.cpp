@@ -1,3 +1,7 @@
+/** \file path.cpp
+    Filepath utities.
+*/
+
 #include "config.h"
 
 #include <stdlib.h>

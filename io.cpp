@@ -1,10 +1,8 @@
-/** \file io.c
-
-Utilities for io redirection.
-
+/** \file io.cpp
+    Utilities for io redirection.
 */
-#include "config.h"
 
+#include "config.h"
 
 #include <stdlib.h>
 #include <stdio.h>

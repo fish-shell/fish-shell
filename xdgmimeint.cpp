@@ -1,5 +1,8 @@
-/* -*- mode: C; c-file-style: "gnu" -*- */
-/* xdgmimeint.c: Internal defines and functions.
+/** \file xdgmimeint.cpp
+    X Desktop Group Multipurpose Internet Mail Extensions int[ernal|ergers].
+*/
+
+/* xdgmimeint.cpp: Internal defines and functions.
  *
  * More info can be found at http://www.freedesktop.org/standards/
  *

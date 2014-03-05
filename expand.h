@@ -1,18 +1,17 @@
-/**\file expand.h
+/** \file expand.h
+    Prototypes for string expansion functions.
+*/
 
-   Prototypes for string expansion functions. These functions perform
-   several kinds of parameter expansion. There are a lot of issues
-   with regards to memory allocation. Overall, these functions would
-   benefit from using a more clever memory allocation scheme, perhaps
-   an evil combination of talloc, string buffers and reference
-   counting.
-
+/**
+   These functions perform several kinds of parameter expansion.
+   There are a lot of issues with regards to memory allocation.
+   
+   Overall, these functions would benefit from using a more clever memory
+   allocation scheme, perhaps an evil combination of talloc, string buffers
+   and reference counting.
 */
 
 #ifndef FISH_EXPAND_H
-/**
-   Header guard
-*/
 #define FISH_EXPAND_H
 
 #include <wchar.h>

@@ -1,5 +1,5 @@
 /** \file parser.h
-  The fish parser.
+    The fish parser.
 */
 
 #ifndef FISH_PARSER_H

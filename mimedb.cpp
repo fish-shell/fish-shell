@@ -1,5 +1,8 @@
-/** \file mimedb.c
+/** \file mimedb.cpp
+    Multipurpose Internet Mail Extensions database program.
+*/
 
+/**
 mimedb is a program for checking the mimetype, description and
 default action associated with a file or mimetype.  It uses the
 xdgmime library written by the fine folks at freedesktop.org. There does

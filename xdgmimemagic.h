@@ -1,4 +1,7 @@
-/* -*- mode: C; c-file-style: "gnu" -*- */
+/** \file xdgmimemagic.h
+    X Desktop Group Multipurpose Internet Mail Extensions magic (5) header.
+*/
+
 /* xdgmimemagic.h: Private file.  Datastructure for storing the magic files.
  *
  * More info can be found at http://www.freedesktop.org/standards/

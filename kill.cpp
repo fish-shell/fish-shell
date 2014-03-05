@@ -1,9 +1,5 @@
-/** \file kill.c
-  The killring.
-
-  Works like the killring in emacs and readline. The killring is cut
-  and paste with a memory of previous cuts. It supports integration
-  with the X clipboard.
+/** \file kill.cpp
+    The killring (emacs/readline) style pasteboard functionality.
 */
 
 #include "config.h"

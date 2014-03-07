@@ -846,7 +846,7 @@ void expand_variable_error(parser_t &parser, const wcstring &token, size_t token
             *(cpy+token_pos)=0;
             wchar_t *name = &cpy[stop_pos+1];
             wchar_t *end = wcschr(name, BRACKET_END);
-            wchar_t *post;
+            wchar_t *post = NULL;
             int is_var=0;
             if (end)
             {

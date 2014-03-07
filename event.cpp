@@ -58,7 +58,7 @@ signal_list_t;
   active, which is the one that new events is written to. The inactive
   one contains the events that are currently beeing performed.
 */
-static signal_list_t sig_list[]= {{0,0},{0,0}};
+static signal_list_t sig_list[]= {{},{}};
 
 /**
    The index of sig_list that is the list of signals currently written to

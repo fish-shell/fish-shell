@@ -599,7 +599,7 @@ bool contains_internal(const wchar_t *a, ...)
 }
 
 /* wcstring variant of contains_internal. The first parameter is a wcstring, the rest are const wchar_t* */
-__sentinel bool contains_internal(const wcstring &needle, ...)
+__sentinel bool contains_internal(const wcstring needle, ...)
 {
     const wchar_t *arg;
     va_list va;

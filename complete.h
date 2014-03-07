@@ -170,7 +170,7 @@ wcstring_list_t completions_to_wcstring_list(const std::vector<completion_t> &co
 
 
   \param cmd Command to complete.
-  \param cmd_type If cmd_type is PATH, cmd will be interpreted as the absolute
+  \param cmd_is_path If cmd_is_path is true, cmd will be interpreted as the absolute
       path of the program (optionally containing wildcards), otherwise it
       will be interpreted as the command name.
   \param short_opt The single character name of an option. (-a is a short option,

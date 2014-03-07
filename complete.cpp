@@ -1127,9 +1127,7 @@ static wcstring complete_function_desc(const wcstring &fn)
    path, executables defined using an absolute path, functions,
    builtins and directories for implicit cd commands.
 
-   \param cmd the command string to find completions for
-
-   \param comp the list to add all completions to
+   \param str_cmd the command string to find completions for
 */
 void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool use_builtin, bool use_command)
 {
@@ -1231,8 +1229,8 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
 
    \param str The string to complete.
    \param args The list of option arguments to be evaluated.
-   \param desc Description of the completion
-   \param comp_out The list into which the results will be inserted
+   \param desc Description of the completion.
+   \param flags Completion flags.
 */
 void completer_t::complete_from_args(const wcstring &str,
                                      const wcstring &args,

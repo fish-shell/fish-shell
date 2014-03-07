@@ -69,7 +69,7 @@ struct file_detection_context_t;
    stored in the color array as a color_code from the HIGHLIGHT_ enum
    for each character in buff.
 
-   \param buff The buffer on which to perform syntax highlighting
+   \param buffstr The buffer on which to perform syntax highlighting
    \param color The array in wchich to store the color codes. The first 8 bits are used for fg color, the next 8 bits for bg color.
    \param pos the cursor position. Used for quote matching, etc.
    \param error a list in which a description of each error will be inserted. May be 0, in whcich case no error descriptions will be generated.
@@ -82,7 +82,7 @@ void highlight_shell_new_parser(const wcstring &buffstr, std::vector<highlight_s
    stored in the color array as a color_code from the HIGHLIGHT_ enum
    for each character in buff.
 
-   \param buff The buffer on which to perform syntax highlighting
+   \param buffstr The buffer on which to perform syntax highlighting
    \param color The array in wchich to store the color codes. The first 8 bits are used for fg color, the next 8 bits for bg color.
    \param pos the cursor position. Used for quote matching, etc.
    \param error a list in which a description of each error will be inserted. May be 0, in whcich case no error descriptions will be generated.

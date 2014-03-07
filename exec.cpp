@@ -500,7 +500,7 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t *out_chain, s
    \param def the code to evaluate, or the empty string if none
    \param node_offset the offset of the node to evalute, or NODE_OFFSET_INVALID
    \param block_type the type of block to push on evaluation
-   \param io the io redirections to be performed on this block
+   \param ios the io redirections to be performed on this block
 */
 
 static void internal_exec_helper(parser_t &parser,

@@ -371,7 +371,7 @@ public:
     /**
       Evaluate the expressions contained in cmd.
 
-      \param cmd the string to evaluate
+      \param cmd_str the string to evaluate
       \param io io redirections to perform on all started jobs
       \param block_type The type of block to push on the block stack
 
@@ -387,10 +387,6 @@ public:
       Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and cmdsubst execution on the tokens.
       The output is inserted into output.
 
-      \param line Line to evaluate
-      \param output List to insert output to
-    */
-    /**
       \param line Line to evaluate
       \param output List to insert output to
     */

@@ -56,7 +56,7 @@ int env_universal_read_all();
 /**
    Get the names of all universal variables
 
-   \param l the list to insert the names into
+   \param list the list to insert the names into
    \param show_exported whether exported variables should be shown
    \param show_unexported whether unexported variables should be shown
 */

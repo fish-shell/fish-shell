@@ -105,7 +105,6 @@ public:
        Autoloading one file may unload another.
 
        \param cmd the filename to search for. The suffix '.fish' is always added to this name
-       \param on_unload a callback function to run if a suitable file is found, which has not already been run. unload will also be called for old files which are unloaded.
        \param reload wheter to recheck file timestamps on already loaded files
     */
     int load(const wcstring &cmd, bool reload);
@@ -118,7 +117,6 @@ public:
        is no longer loaded.
 
        \param cmd the filename to search for. The suffix '.fish' is always added to this name
-       \param on_unload a callback function which will be called before (re)loading a file, may be used to unload the previous file.
        \return non-zero if the file was removed, zero if the file had not yet been loaded
     */
     int unload(const wcstring &cmd);

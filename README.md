@@ -7,7 +7,7 @@ For more on fish's design philosophy, see the [design document](http://fishshell
 
 ## Quick Start
 
-fish generally works like other shells, like bash or zsh. A few important differences can be found at <http://fishshell.com/tutorial.html> by searching for magic phrase 'unlike other shells'.
+fish generally works like other shells, like bash or zsh. A few important differences can be found at <http://fishshell.com/tutorial.html> by searching for the magic phrase 'unlike other shells'.
 
 Detailed user documentation is available by running `help` within fish, and also at <http://fishshell.com/docs/2.0/index.html>
 
@@ -17,7 +17,11 @@ fish is written in a sane subset of C++98, with a few components from C++TR1. It
 
 fish can be built using autotools or Xcode. autoconf 2.60 or later is required.
 
+fish depends on a curses implementation, such as ncurses. The headers and libraries are required for building.
+
 fish requires gettext for translation support.
+
+Building the documentation requires Doxygen 1.5 or newer.
 
 ### Autotools Build
 
@@ -36,7 +40,7 @@ fish requires gettext for translation support.
     xcodebuild install
     sudo ditto /tmp/fish.dst /
 
-## Build Dependencies (or, Help, it didn't build!)
+## Help, it didn't build!
 
 If fish reports that it could not find curses, try installing a curses development package and build again.
 
@@ -44,23 +48,21 @@ On Debian or Ubuntu you want:
 
     sudo apt-get install libncurses5-dev
 
-on RedHat, CentOS, or Amazon EC2:
+On RedHat, CentOS, or Amazon EC2:
 
     sudo yum install ncurses-devel
 
-To build with translation support, make sure you have a gettext package installed.
-
-To build the documentation, make sure you have Doxygen installed.
-
 ## Runtime Dependencies
 
-fish requires a number of utilities to operate, which should be present on any Unix, GNU/Linux or OS X system. These include (but are not limited to) grep, awk, sed, which, and getopt. The bc program is also required.
+fish requires a curses implementation, such as ncurses, to run.
+
+fish requires a number of utilities to operate, which should be present on any Unix, GNU/Linux or OS X system. These include (but are not limited to) hostname, grep, awk, sed, which, and getopt. fish also requires the bc program.
+
+Translation support requires the gettext program.
 
 Some optional features of fish, such as the manual page completion parser and the web configuration tool, require Python.
 
-In order to generate completions from man pages compressed with either lzma or xz, you may need to install an extra Python package.
-
-Python versions prior to 2.6 are not supported.  For Python versions 2.6 to 3.2 you need to install the module `backports.lzma`.  How to install it depends on your system and how you installed Python.  Most Linux distributions should include it as a package named `backports-lzma` (or similar).  From version 3.3 onwards, Python already includes the required module.
+In order to generate completions from man pages compressed with either lzma or xz, you may need to install an extra Python package. Python versions prior to 2.6 are not supported.  For Python versions 2.6 to 3.2 you need to install the module `backports.lzma`.  How to install it depends on your system and how you installed Python.  Most Linux distributions should include it as a package named `backports-lzma` (or similar).  From version 3.3 onwards, Python already includes the required module.
 
 ## Packages for Linux
 

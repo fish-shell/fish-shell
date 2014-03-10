@@ -576,7 +576,7 @@ wcstring wsetlocale(int category, const wchar_t *locale)
         return format_string(L"%s", res);
 }
 
-bool contains_internal(const wchar_t *a, ...)
+bool contains_internal(const wchar_t *a, int vararg_handle, ...)
 {
     const wchar_t *arg;
     va_list va;
@@ -584,7 +584,7 @@ bool contains_internal(const wchar_t *a, ...)
 
     CHECK(a, 0);
 
-    va_start(va, a);
+    va_start(va, vararg_handle);
     while ((arg=va_arg(va, const wchar_t *))!= 0)
     {
         if (wcscmp(a,arg) == 0)
@@ -598,17 +598,19 @@ bool contains_internal(const wchar_t *a, ...)
     return res;
 }
 
-/* wcstring variant of contains_internal. The first parameter is a wcstring, the rest are const wchar_t* */
-__sentinel bool contains_internal(const wcstring needle, ...)
+/* wcstring variant of contains_internal. The first parameter is a wcstring, the rest are const wchar_t *. vararg_handle exists only to give us a POD-value to apss to va_start */
+__sentinel bool contains_internal(const wcstring &needle, int vararg_handle, ...)
 {
     const wchar_t *arg;
     va_list va;
     int res = 0;
 
-    va_start(va, needle);
+    const wchar_t *needle_cstr = needle.c_str();
+    va_start(va, vararg_handle);
     while ((arg=va_arg(va, const wchar_t *))!= 0)
     {
-        if (needle == arg)
+        /* libc++ has an unfortunate implementation of operator== that unconditonally wcslen's the wchar_t* parameter, so prefer wcscmp directly */
+        if (! wcscmp(needle_cstr, arg))
         {
             res=1;
             break;

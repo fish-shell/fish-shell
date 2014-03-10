@@ -1,5 +1,8 @@
-/** \file proc.c
+/** \file proc.cpp
+    Utilities for keeping track of jobs, processes and subshells.
+*/
 
+/**
 Utilities for keeping track of jobs, processes and subshells, as
 well as signal handling functions for tracking children. These
 functions do not themselves launch new processes, the exec library
@@ -7,7 +10,6 @@ will call proc to create representations of the running jobs as
 needed.
 
 Some of the code in this file is based on code from the Glibc manual.
-
 */
 #include "config.h"
 

@@ -1,12 +1,8 @@
-/**
-   \file env_universal_common.c
-
-   The utility library for universal variables. Used both by the
-   client library and by the daemon.
-
+/** \file env_universal_common.cpp
+    Utility library for universal variables. Used by client library, daemon.
 */
-#include "config.h"
 
+#include "config.h"
 
 #include <stdlib.h>
 #include <stdio.h>

@@ -1,5 +1,5 @@
 /** \file history.h
-  Prototypes for history functions, part of the user interface.
+    Prototypes for history functions, part of the user interface.
 */
 
 #ifndef FISH_HISTORY_H

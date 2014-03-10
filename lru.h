@@ -1,6 +1,5 @@
 /** \file lru.h
-
-    Least-recently-used cache implementation
+    Least-recently-used cache implementation.
 */
 
 #ifndef FISH_LRU_H

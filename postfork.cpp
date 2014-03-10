@@ -1,6 +1,5 @@
 /** \file postfork.cpp
-
-  Functions that we may safely call after fork().
+    Functions that we may safely call after fork(). Rare.
 */
 
 #include <fcntl.h>

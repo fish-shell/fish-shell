@@ -1,6 +1,7 @@
-/** \file highlight.c
-  Functions for syntax highlighting
+/** \file highlight.cpp
+    Functions for syntax highlighting.
 */
+
 #include "config.h"
 
 #include <stdlib.h>

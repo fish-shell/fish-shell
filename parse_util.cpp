@@ -1,5 +1,8 @@
-/** \file parse_util.c
+/** \file parse_util.cpp
+    Various utility functions related to parsing with the "new" parser.
+*/
 
+/**
     Various mostly unrelated utility functions related to parsing,
     loading and evaluating fish code.
 

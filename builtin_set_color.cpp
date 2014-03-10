@@ -1,8 +1,7 @@
-/** \file builtin_set_color.cpp Functions defining the set_color builtin
-
-Functions used for implementing the set_color builtin.
-
+/** \file builtin_set_color.cpp
+    Functions used for implementing the set_color builtin.
 */
+
 #include "config.h"
 
 #include "builtin.h"

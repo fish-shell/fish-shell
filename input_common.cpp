@@ -1,10 +1,8 @@
-/** \file input_common.c
-
-Implementation file for the low level input library
-
+/** \file input_common.cpp
+    Implementation file for the low level input library.
 */
-#include "config.h"
 
+#include "config.h"
 
 #include <stdlib.h>
 #include <stdio.h>

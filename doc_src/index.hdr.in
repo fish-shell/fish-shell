@@ -627,10 +627,10 @@ expanded so each element of the list becomes a new parameter.
 
 Example:
 
-<code>echo input.{c,h,txt}</code> outputs 'input.c input.h input.txt'
+<code>echo input.{cpp,h,txt}</code> outputs 'input.cpp input.h input.txt'
 
-The command <code>mv *.{c,h} src/</code> moves all files with the suffix
-'.c' or '.h' to the subdirectory src.
+The command <code>mv *.{cpp,h} src/</code> moves all files with the suffix
+'.cpp' or '.h' to the subdirectory src.
 
 \subsection expand-variable Variable expansion
 

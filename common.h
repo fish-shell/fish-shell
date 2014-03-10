@@ -1,11 +1,8 @@
 /** \file common.h
-	Prototypes for various functions, mostly string utilities, that are used by most parts of fish.
+    Prototypes for various functions, used by most parts of fish.
 */
 
 #ifndef FISH_COMMON_H
-/**
-   Header guard
-*/
 #define FISH_COMMON_H
 
 #include <stdlib.h>

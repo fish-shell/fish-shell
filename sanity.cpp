@@ -1,6 +1,7 @@
-/** \file sanity.c
-  Functions for performing sanity checks on the program state
+/** \file sanity.cpp
+    Functions for performing sanity checks on the program state.
 */
+
 #include "config.h"
 
 #include <stdlib.h>

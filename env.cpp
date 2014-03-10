@@ -1,6 +1,7 @@
-/** \file env.c
-  Functions for setting and getting environment variables.
+/** \file env.cpp
+    Functions for setting and getting environment variables.
 */
+
 #include "config.h"
 
 #include <stdlib.h>

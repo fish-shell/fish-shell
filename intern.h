@@ -1,7 +1,5 @@
 /** \file intern.h
-
-    Library for pooling common strings
-
+    Library for pooling common strings.
 */
 
 #ifndef FISH_INTERN_H

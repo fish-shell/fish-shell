@@ -1,3 +1,7 @@
+/** \file fallback.cpp
+    Fallback implementations of missing, broken functions found in configure.
+*/
+
 /**
    This file only contains fallback implementations of functions which
    have been found to be missing or broken by the configuration

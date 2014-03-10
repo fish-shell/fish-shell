@@ -1,5 +1,5 @@
 /** \file pager.h
-  Pager support
+    Pager support.
 */
 
 #include "complete.h"

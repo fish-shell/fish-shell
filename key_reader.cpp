@@ -1,10 +1,7 @@
-/*
-    A small utility to print the resulting key codes from pressing a
-  key. Servers the same function as hitting ^V in bash, but I prefer
-  the way key_reader works.
-
-  Type ^C to exit the program.
+/** key_reader.cpp
+    A small utility to print the resulting key codes from pressing a key.
 */
+
 #include "config.h"
 
 #include <stdlib.h>

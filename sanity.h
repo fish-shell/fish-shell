@@ -1,5 +1,5 @@
 /** \file sanity.h
-  Prototypes for functions for performing sanity checks on the program state
+    Prototypes for functions for performing sanity checks on program state.
 */
 
 #ifndef FISH_SANITY_H

@@ -1,11 +1,8 @@
-/** \file common.c
-
-Various functions, mostly string utilities, that are used by most
-parts of fish.
+/** \file common.cpp
+    Various functions, mostly string utilities, used by most parts of fish.
 */
 
 #include "config.h"
-
 
 #include <unistd.h>
 

@@ -1,8 +1,10 @@
 /** \file output.h
-  Generic output functions
+    Generic output functions.
 */
+
 /**
-   Constants for various character classifications. Each character of a command string can be classified as one of the following types.
+   Constants for various character classifications. Each character of a
+   command string can be classified as one of the following types.
 */
 
 #ifndef FISH_OUTPUT_H

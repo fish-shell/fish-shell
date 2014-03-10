@@ -1,14 +1,14 @@
 /** \file event.h
+    Functions for handling event triggers.
+*/
 
-  Functions for handling event triggers
-
+/**
   Because most of these functions can be called by signal
   handler, it is important to make it well defined when these
   functions produce output or perform memory allocations, since
   such functions may not be safely called by signal handlers.
-
-
 */
+
 #ifndef FISH_EVENT_H
 #define FISH_EVENT_H
 

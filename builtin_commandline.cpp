@@ -1,8 +1,7 @@
-/** \file builtin_commandline.c Functions defining the commandline builtin
-
-Functions used for implementing the commandline builtin.
-
+/** \file builtin_commandline.cpp
+    Functions used for implementing the commandline builtin.
 */
+
 #include "config.h"
 
 #include <stdlib.h>

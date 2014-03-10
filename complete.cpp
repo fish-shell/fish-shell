@@ -1,7 +1,7 @@
-/** \file complete.c Functions related to tab-completion.
-
-  These functions are used for storing and retrieving tab-completion data, as well as for performing tab-completion.
+/** \file complete.cpp
+    Functions related to storing and retrieving tab-completion.
 */
+
 #include "config.h"
 
 #include <stdlib.h>

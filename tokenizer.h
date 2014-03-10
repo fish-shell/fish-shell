@@ -1,9 +1,10 @@
 /** \file tokenizer.h
+    A specialized tokenizer for tokenizing the fish language.
+*/
 
-    A specialized tokenizer for tokenizing the fish language. In the
-    future, the tokenizer should be extended to support marks,
-    tokenizing multiple strings and disposing of unused string
-    segments.
+/**
+    In the future, the tokenizer should be extended to support marks,
+    tokenizing multiple strings and disposing of unused string segments.
 */
 
 #ifndef FISH_TOKENIZER_H

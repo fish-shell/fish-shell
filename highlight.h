@@ -1,5 +1,5 @@
 /** \file highlight.h
-  Prototypes for functions for syntax highlighting
+    Prototypes for functions for syntax highlighting.
 */
 
 #ifndef FISH_HIGHLIGHT_H

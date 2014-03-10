@@ -1,3 +1,7 @@
+/** \file iothread.cpp
+    Support for io threading.
+*/
+
 #include "config.h"
 #include "iothread.h"
 #include "common.h"

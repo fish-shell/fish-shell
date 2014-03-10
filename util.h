@@ -1,5 +1,5 @@
 /** \file util.h
-  Generic utilities library.
+    Generic utilities library.
 */
 
 #ifndef FISH_UTIL_H

@@ -1,5 +1,8 @@
-/* -*- mode: C; c-file-style: "gnu" -*- */
-/* xdgmimeglob.c: Private file.  Datastructure for storing the globs.
+/** \file xdgmimeglob.cpp
+    X Desktop Group Multipurpose Internet Mail Extensions glob storage.
+*/
+
+/* xdgmimeglob.cpp: Private file.  Datastructure for storing the globs.
  *
  * More info can be found at http://www.freedesktop.org/standards/
  *

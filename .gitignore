@@ -1,7 +1,7 @@
 *.o
 *~
 *.exe
-
+share/doxygen_sqlite3.db
 Makefile
 autom4te.cache/
 build/

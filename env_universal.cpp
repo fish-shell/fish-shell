@@ -1,5 +1,8 @@
-#include "config.h"
+/** \file env_universal.cpp
+    Universal variable client library.
+*/
 
+#include "config.h"
 
 #include <stdlib.h>
 #include <stdio.h>

@@ -1,6 +1,5 @@
 /** \file parser_keywords.h
-
-Functions having to do with parser keywords, like testing if a function is a block command.
+    Parser keyword functions, like testing if a function is a block command.
 */
 
 #ifndef FISH_PARSER_KEYWORD_H

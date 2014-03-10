@@ -1,5 +1,4 @@
-/**\file parse_tree.h
-
+/** \file parse_tree.h
     Programmatic representation of fish code.
 */
 

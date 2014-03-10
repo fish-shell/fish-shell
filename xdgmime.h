@@ -1,4 +1,7 @@
-/* -*- mode: C; c-file-style: "gnu" -*- */
+/** \file xdgmime.h
+    X Desktop Group Multipurpose Internet Mail Extensions resolver header.
+*/
+
 /* xdgmime.h: XDG Mime Spec mime resolver.  Based on version 0.11 of the spec.
  *
  * More info can be found at http://www.freedesktop.org/standards/

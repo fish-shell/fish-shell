@@ -1,4 +1,7 @@
-/* -*- mode: C; c-file-style: "gnu" -*- */
+/** \file xdgmimealias.h
+    X Desktop Group Multipurpose Internet Mail Extensions alias prototypes.
+*/
+
 /* xdgmimealias.h: Private file.  Datastructure for storing the aliases.
  *
  * More info can be found at http://www.freedesktop.org/standards/

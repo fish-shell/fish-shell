@@ -1,3 +1,7 @@
+/** \file fish_pager.cpp
+    The fish_pager program.
+*/
+
 #include "config.h"
 
 #include <stdlib.h>

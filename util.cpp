@@ -1,11 +1,8 @@
-/** \file util.c
-  Generic utilities library.
-
-  Contains datastructures such as automatically growing array lists, priority queues, etc.
+/** \file util.cpp
+    Utilities library for automatically growing arrays, priority queues, etc.
 */
 
 #include "config.h"
-
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,8 +1,5 @@
 /** \file input.h
-
-Functions for reading a character of input from stdin, using the
-inputrc information for key bindings.
-
+    Functions for reading a character from stdin, using inputrc key bindings.
 */
 
 #ifndef FISH_INPUT_H

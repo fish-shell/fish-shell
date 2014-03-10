@@ -1,17 +1,9 @@
 /** \file complete.h
-  Prototypes for functions related to tab-completion.
-
-  These functions are used for storing and retrieving tab-completion
-  data, as well as for performing tab-completion.
+    Prototypes for functions related to storing and performing tab completion.
 */
 
 #ifndef FISH_COMPLETE_H
-
-/**
-   Header guard
-*/
 #define FISH_COMPLETE_H
-
 
 #include <wchar.h>
 #include <stdint.h>

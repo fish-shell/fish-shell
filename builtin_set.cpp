@@ -1,8 +1,7 @@
-/** \file builtin_set.c Functions defining the set builtin
-
-Functions used for implementing the set builtin.
-
+/** \file builtin_set.cpp
+    Functions used for implementing the set builtin.
 */
+
 #include "config.h"
 
 #include <stdlib.h>

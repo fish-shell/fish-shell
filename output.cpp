@@ -1,6 +1,6 @@
-/** \file output.c
- Generic output functions
- */
+/** \file output.cpp
+    Generic output functions.
+*/
 
 #include "config.h"
 

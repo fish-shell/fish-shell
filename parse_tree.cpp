@@ -1,3 +1,7 @@
+/** \file parse_tree.cpp
+    Syntax tree for the "new" parser.
+*/
+
 #include "parse_productions.h"
 #include "tokenizer.h"
 #include "fallback.h"

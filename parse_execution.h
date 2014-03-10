@@ -1,6 +1,5 @@
-/**\file parse_execution.h
-
-   Provides the "linkage" between a parse_node_tree_t and actual execution structures (job_t, etc.).
+/** \file parse_execution.h
+   The linkage between parse_node_tree_t and actual executions (job_t, etc.).
 */
 
 #ifndef FISH_PARSE_EXECUTION_H

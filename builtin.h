@@ -1,5 +1,5 @@
 /** \file builtin.h
-  Prototypes for functions for executing builtin functions.
+    Prototypes for functions for executing builtin functions.
 */
 
 #ifndef FISH_BUILTIN_H

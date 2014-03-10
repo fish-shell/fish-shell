@@ -1,6 +1,8 @@
-/** \file wgetopt.c
-  A version of the getopt library for use with wide character strings.
+/** \file wgetopt.cpp
+    A version of the getopt library for use with wide character strings.
+*/
 
+/**
   This is simply the gnu getopt library, but converted for use with
   wchar_t instead of char. This is not usually useful since the argv
   array is always defined to be of type char**, but in fish, all
@@ -10,7 +12,7 @@
   If you want to use this version of getopt in your program,
   download the fish sourcecode, available at <a
   href='http://fishshell.com'>the fish homepage</a>. Extract
-  the sourcode, copy wgetopt.c and wgetopt.h into your program
+  the sourcode, copy wgetopt.cpp and wgetopt.h into your program
   directory, include wgetopt.h in your program, and use all the
   regular getopt functions, prefixing every function, global
   variable and structure with a 'w', and use only wide character
@@ -18,7 +20,7 @@
   getopt besides using wide character strings.
 
   For examples of how to use wgetopt, see the fish builtin
-  functions, many of which are defined in builtin.c.
+  functions, many of which are defined in builtin.cpp.
 
 */
 

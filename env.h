@@ -1,5 +1,5 @@
 /** \file env.h
-  Prototypes for functions for setting and getting environment variables.
+    Prototypes for functions for setting and getting environment variables.
 */
 
 #ifndef FISH_ENV_H

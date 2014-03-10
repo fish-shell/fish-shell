@@ -1,5 +1,4 @@
 /** \file autoload.h
-
     The classes responsible for autoloading functions and completions.
 */
 

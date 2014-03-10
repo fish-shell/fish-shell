@@ -1,4 +1,5 @@
-/** \file color.cpp Color class implementation
+/** \file color.cpp
+    Color class implementation
 */
 
 #include "color.h"

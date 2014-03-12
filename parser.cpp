@@ -669,7 +669,7 @@ void parser_t::emit_profiling(const char *path) const
    Print error message to string if an error has occured while parsing
 
    \param target the buffer to write to
-   \param prefix: The string token to prefix the each line with. Usually the name of the command trying to parse something.
+   \param prefix The string token to prefix the each line with. Usually the name of the command trying to parse something.
 */
 void parser_t::print_errors(wcstring &target, const wchar_t *prefix)
 {
@@ -1254,7 +1254,7 @@ profile_item_t *parser_t::create_profile_item()
    \param j the job to which the process belongs to
    \param tok the tokenizer to read options from
    \param args the argument list to insert options into
-   \param args unskip whether we should ignore current_block()->skip. Big hack because of our dumb handling of if statements.
+   \param unskip whether we should ignore current_block()->skip. Big hack because of our dumb handling of if statements.
 */
 void parser_t::parse_job_argument_list(process_t *p,
                                        job_t *j,

@@ -609,7 +609,7 @@ static wcstring file_get_desc(const wcstring &filename,
    \param fullname the full filename of the file
    \param completion the completion part of the file name
    \param wc the wildcard to match against
-   \param is_cmd whether we are performing command completion
+   \param expand_flags expansion flags
 */
 static void wildcard_completion_allocate(std::vector<completion_t> &list,
         const wcstring &fullname,

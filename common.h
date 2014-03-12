@@ -737,7 +737,7 @@ void debug(int level, const wchar_t *msg, ...);
    replaced with \n, etc.
 
    \param in The string to be escaped
-   \param escape_all Whether all characters wich hold special meaning in fish (Pipe, semicolon, etc,) should be escaped, or only unprintable characters
+   \param flags Whether all characters wich hold special meaning in fish (Pipe, semicolon, etc,) should be escaped, or only unprintable characters
    \return The escaped string, or 0 if there is not enough memory
 */
 

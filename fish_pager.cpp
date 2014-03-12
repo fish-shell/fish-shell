@@ -459,7 +459,7 @@ static void completion_print_item(const wchar_t *prefix, comp_t *c, int width, b
    Print the specified part of the completion list, using the
    specified column offsets and quoting style.
 
-   \param l The list of completions to print
+   \param lst The list of completions to print
    \param cols number of columns to print in
    \param width An array specifying the width of each column
    \param row_start The first row to print
@@ -516,7 +516,7 @@ static void completion_print(int cols,
    \param cols the number of columns to try to fit onto the screen
    \param prefix the character string to prefix each completion with
    \param is_quoted whether the completions should be quoted
-   \param l the list of completions
+   \param lst the list of completions
 
    \return one of PAGER_RETRY, PAGER_DONE and PAGER_RESIZE
 */

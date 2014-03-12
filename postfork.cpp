@@ -162,7 +162,7 @@ static void free_redirected_fds_from_pipes(const io_chain_t &io_chain)
    server file descriptor. It then goes on to perform all the
    redirections described by \c io.
 
-   \param io the list of IO redirections for the child
+   \param io_chain the list of IO redirections for the child
 
    \return 0 on sucess, -1 on failiure
 */

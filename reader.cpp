@@ -1217,7 +1217,7 @@ static bool insert_char(editable_line_t *el, wchar_t c, bool should_expand_abbre
    Insert the string in the given command line at the given cursor
    position. The function checks if the string is quoted or not and
    correctly escapes the string.
-   \param val the string to insert
+   \param val_str the string to insert
    \param flags A union of all flags describing the completion to insert. See the completion_t struct for more information on possible values.
    \param command_line The command line into which we will insert
    \param inout_cursor_pos On input, the location of the cursor within the command line. On output, the new desired position.
@@ -2884,7 +2884,6 @@ static int threaded_highlight(background_highlight_context_t *ctx)
    maykes characters under the sursor unreadable.
 
    \param match_highlight_pos_adjust the adjustment to the position to use for bracket matching. This is added to the current cursor position and may be negative.
-   \param error if non-null, any possible errors in the buffer are further descibed by the strings inserted into the specified arraylist
 */
 static void reader_super_highlight_me_plenty(int match_highlight_pos_adjust)
 {

@@ -411,9 +411,9 @@ messages.pot: *.cpp *.h share/completions/*.fish share/functions/*.fish
 	if test "$(HAVE_GETTEXT)" = 1; then \
 		xgettext -k_ -kN_ *.cpp *.h -o messages.pot; \
 		if xgettext -j -k_ -kN_ -k--description -LShell share/completions/*.fish share/functions/*.fish -o messages.pot; then true; else \
-			echo "Your xgettext version is too old to build the messages.pot file"\
-			rm messages.pot\
-			false;\
+			echo "Your xgettext version is too old to build the messages.pot file"; \
+			rm messages.pot; \
+			false; \
 		fi; \
 	fi
 

@@ -1576,12 +1576,12 @@ msgid "Did you mean (COMMAND)? In fish, the '$' character is only used for acces
 msgstr "Vouliez-vous dire (COMMANDE)? Dans fish, le caractère '$' est seulement utilisé pour accéder à des variables. Pour en apprendre plus sur la substitution de commande dans fish, tapez 'help expand-command-substitution'."
 
 #: etc/fish_interactive.fish.in:14
-msgid "Welcome to fish, the friendly interactive shell\\n"
-msgstr "Bienvenue dans fish, le shell amical et interactif\\n"
+msgid "Welcome to fish, the friendly interactive shell"
+msgstr "Bienvenue dans fish, le shell amical et interactif"
 
 #: etc/fish_interactive.fish.in:15
-msgid "Type %shelp%s for instructions on how to use fish\\n"
-msgstr "Tappez %shelp%s pour des instructions sur l'utilisation de fish\\n"
+msgid "Type %shelp%s for instructions on how to use fish"
+msgstr "Tappez %shelp%s pour des instructions sur l'utilisation de fish"
 
 #: etc/fish_interactive.fish.in:21
 msgid "Commands to execute when fish exits"

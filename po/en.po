@@ -6772,12 +6772,12 @@ msgstr ""
 #: share/functions/__fish_config_interactive.fish:81
 #, fuzzy
 msgid "Welcome to fish, the friendly interactive shell"
-msgstr "Welcome to fish, the friendly interactive shell\\n"
+msgstr "Welcome to fish, the friendly interactive shell"
 
 #: share/functions/__fish_config_interactive.fish:82
 #, fuzzy
 msgid "Type %shelp%s for instructions on how to use fish"
-msgstr "Type %shelp%s for instructions on how to use fish\\n"
+msgstr "Type %shelp%s for instructions on how to use fish"
 
 #: share/functions/__fish_config_interactive.fish:98
 msgid "Commands to execute when fish exits"

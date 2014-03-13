@@ -505,8 +505,8 @@ msgid "Could not get user information"
 msgstr "Kann Benutzerinformation nicht abrufen"
 
 #: env.c:291
-msgid "Changing language to english"
-msgstr "Sprachwechsel zu Englisch"
+msgid "Changing language to English"
+msgstr "Sprachwechsel zu Deutsch"
 
 #: env.c:849
 #, c-format
@@ -1344,12 +1344,12 @@ msgid "fish"
 msgstr "fish"
 
 #: init/fish_interactive.fish.in:13 init/fish_interactive.fish:13
-msgid "Welcome to fish, the friendly interactive shell\\n"
-msgstr "Willkommen zu fish, der freundlichen interaktiven Shell\\n"
+msgid "Welcome to fish, the friendly interactive shell"
+msgstr "Willkommen zu fish, der freundlichen interaktiven Shell"
 
 #: init/fish_interactive.fish.in:14 init/fish_interactive.fish:14
-msgid "Type %shelp%s for instructions on how to use fish\\n"
-msgstr "Anweisungen zur fish-Benutzung erhalten Sie über %shelp%s\\n"
+msgid "Type %shelp%s for instructions on how to use fish"
+msgstr "Anweisungen zur fish-Benutzung erhalten Sie über %shelp%s"
 
 #: init/fish_interactive.fish.in:20 init/fish_interactive.fish:20
 msgid "Commands to execute when fish exits"

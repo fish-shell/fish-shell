@@ -26,7 +26,6 @@ AC_SUBST(HAVE_DOXYGEN)
 AC_SUBST(LDFLAGS_FISH)
 AC_SUBST(LIBS_FISH)
 AC_SUBST(LIBS_FISH_INDENT)
-AC_SUBST(LIBS_FISH_PAGER)
 AC_SUBST(LIBS_FISHD)
 AC_SUBST(LIBS_MIMEDB)
 
@@ -434,14 +433,6 @@ LIBS_FISH=$LIBS
 
 LIBS="$LIBS_SHARED"
 LIBS_FISH_INDENT=$LIBS
-
-#
-# Check for libraries needed by fish_pager.
-#
-
-LIBS="$LIBS_SHARED"
-AC_SEARCH_LIBS( iconv_open, iconv, , [AC_SEARCH_LIBS( libiconv_open, iconv, , [AC_MSG_ERROR([Could not find an iconv implementation, needed to build fish])] )] )
-LIBS_FISH_PAGER=$LIBS
 
 #
 # Check for libraries needed by fishd.

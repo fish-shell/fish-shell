@@ -20,7 +20,6 @@ doc_src/index.hdr
 po/*.gmo
 fish
 fish_indent
-fish_pager
 fish_tests
 fishd
 mimedb

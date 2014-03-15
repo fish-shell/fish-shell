@@ -11,7 +11,7 @@ typedef pager_t::comp_t comp_t;
 typedef std::vector<completion_t> completion_list_t;
 typedef std::vector<comp_t> comp_info_list_t;
 
-/** The minimum width (in characters) the terminal may have for fish_pager to not refuse showing the completions */
+/** The minimum width (in characters) the terminal must to show completions at all */
 #define PAGER_MIN_WIDTH 16
 
 /** The maximum number of columns of completion to attempt to fit onto the screen */

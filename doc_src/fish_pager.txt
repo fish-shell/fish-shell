@@ -1,7 +1,0 @@
-\section fish_pager fish_pager - internal command used by fish
-
-\subsection fish_pager-description Description
-
-\c fish_pager is used internally by fish. It should not be used by other
-commands, as its interface is liable to change in the future.
-

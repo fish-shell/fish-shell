@@ -3152,16 +3152,3 @@ bool parser_use_ast(void)
         return from_string<bool>(var);
     }
 }
-
-bool pager_use_inline(void)
-{
-    env_var_t var = env_get_string(L"fish_new_pager");
-    if (var.missing_or_empty())
-    {
-        return 1;
-    }
-    else
-    {
-        return from_string<bool>(var);
-    }
-}

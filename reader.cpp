@@ -1988,32 +1988,16 @@ static bool handle_completions(const std::vector<completion_t> &comp, bool conti
 
             wchar_t quote;
             parse_util_get_parameter_info(el->text, el->position, &quote, NULL, NULL);
-            bool is_quoted = (quote != L'\0');
             
-            if (pager_use_inline())
-            {
-                /* Inline pager */
-                data->pager.set_prefix(prefix);
-                data->pager.set_completions(surviving_completions);
-                
-                /* Invalidate our rendering */
-                data->current_page_rendering = page_rendering_t();
-                
-                /* Modify the command line to reflect the new pager */
-                data->pager_selection_changed();
-            }
-            else
-            {
-                /* Classic pager. Clear the autosuggestion from the old commandline before abandoning it (see #561) */
-                if (! data->autosuggestion.empty())
-                    reader_repaint_without_autosuggestion();
-
-                write_loop(1, "\n", 1);
-
-                run_pager(prefix, is_quoted, surviving_completions);
-                
-                s_reset(&data->screen, screen_reset_abandon_line);
-            }
+            /* Update the pager data */
+            data->pager.set_prefix(prefix);
+            data->pager.set_completions(surviving_completions);
+            
+            /* Invalidate our rendering */
+            data->current_page_rendering = page_rendering_t();
+            
+            /* Modify the command line to reflect the new pager */
+            data->pager_selection_changed();
             
             reader_repaint_needed();
             

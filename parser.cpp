@@ -3032,17 +3032,18 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
         if (filename)
         {
             prefix = format_string(_(L"%ls (line %lu): "), user_presentable_path(filename).c_str(), which_line);
-            //append_format(*output, _(L"%ls (line %lu):\n"), user_presentable_path(filename).c_str(), which_line);
         }
         else
         {
             prefix = L"fish: ";
-            //output->append(L"fish: ");
         }
 
-        output->append(err.describe_with_prefix(src, prefix, skip_caret));
-        output->push_back(L'\n');
-
+        const wcstring description = err.describe_with_prefix(src, prefix, skip_caret);
+        if (! description.empty())
+        {
+            output->append(description);
+            output->push_back(L'\n');
+        }
         this->stack_trace(0, *output);
     }
 }

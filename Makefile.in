@@ -57,7 +57,6 @@ CXXFLAGS = @CXXFLAGS@ $(MACROS) $(EXTRA_CXXFLAGS)
 LDFLAGS = @LDFLAGS@
 LDFLAGS_FISH = ${LDFLAGS} @LIBS_FISH@ @LDFLAGS_FISH@
 LDFLAGS_FISH_INDENT = ${LDFLAGS} @LIBS_FISH_INDENT@
-LDFLAGS_FISH_PAGER = ${LDFLAGS} @LIBS_FISH_PAGER@
 LDFLAGS_FISHD = ${LDFLAGS} @LIBS_FISHD@
 LDFLAGS_MIMEDB = ${LDFLAGS} @LIBS_MIMEDB@
 
@@ -104,15 +103,6 @@ parser_keywords.o wutil.o tokenizer.o
 BUILTIN_FILES := builtin_set.cpp builtin_commandline.cpp	\
 	builtin_ulimit.cpp builtin_complete.cpp builtin_jobs.cpp	\
 	builtin_set_color.cpp builtin_printf.cpp
-
-
-#
-# All objects that the system needs to build fish_pager
-#
-
-FISH_PAGER_OBJS := fish_pager.o output.o wutil.o 		\
-	input_common.o env_universal.o env_universal_common.o common.o	\
-	print_help.o iothread.o color.o
 
 
 #
@@ -192,7 +182,7 @@ FUNCTIONS_DIR_FILES := $(wildcard share/functions/*.fish)
 # Programs to install
 #
 
-PROGRAMS := fish mimedb fish_pager fishd fish_indent
+PROGRAMS := fish mimedb fishd fish_indent
 
 #
 # Manual pages to install
@@ -239,7 +229,7 @@ FISH-BUILD-VERSION-FILE: FORCE
 -include FISH-BUILD-VERSION-FILE
 CPPFLAGS += -DFISH_BUILD_VERSION=\"$(FISH_BUILD_VERSION)\"
 .PHONY: FORCE
-env.o fish.o fish_indent.o fish_pager.o fishd.o mimedb.o: FISH-BUILD-VERSION-FILE
+env.o fish.o fish_indent.o fishd.o mimedb.o: FISH-BUILD-VERSION-FILE
 
 
 #
@@ -700,14 +690,6 @@ fish: $(FISH_OBJS) fish.o
 
 
 #
-# Build the fish_pager program.
-#
-
-fish_pager: $(FISH_PAGER_OBJS)
-	$(CXX) $(CXXFLAGS) $(FISH_PAGER_OBJS) $(LDFLAGS_FISH_PAGER) -o $@
-
-
-#
 # Build the fishd program.
 #
 
@@ -863,9 +845,6 @@ fish.o: expand.h intern.h exec.h output.h screen.h history.h path.h input.h
 fish.o: input_common.h
 fish_indent.o: config.h fallback.h signal.h util.h common.h wutil.h
 fish_indent.o: tokenizer.h print_help.h parser_keywords.h
-fish_pager.o: config.h signal.h fallback.h util.h wutil.h common.h complete.h
-fish_pager.o: output.h screen.h highlight.h env.h color.h input_common.h
-fish_pager.o: env_universal.h env_universal_common.h print_help.h
 fish_tests.o: config.h signal.h fallback.h util.h common.h proc.h io.h
 fish_tests.o: parse_tree.h tokenizer.h parse_constants.h reader.h complete.h
 fish_tests.o: highlight.h env.h color.h builtin.h function.h event.h

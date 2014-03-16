@@ -207,46 +207,44 @@ wcstring token_type_description(parse_token_type_t type)
     return format_string(L"Unknown token type %ld", static_cast<long>(type));
 }
 
+#define LONGIFY(x) L ## x
+#define KEYWORD_MAP(x) { parse_keyword_ ## x , LONGIFY(#x) }
+static const struct
+{
+    const parse_keyword_t keyword;
+    const wchar_t * const name;
+}
+keyword_map[] =
+{
+    KEYWORD_MAP(none),
+    KEYWORD_MAP(if),
+    KEYWORD_MAP(else),
+    KEYWORD_MAP(for),
+    KEYWORD_MAP(in),
+    KEYWORD_MAP(while),
+    KEYWORD_MAP(begin),
+    KEYWORD_MAP(function),
+    KEYWORD_MAP(switch),
+    KEYWORD_MAP(case),
+    KEYWORD_MAP(end),
+    KEYWORD_MAP(and),
+    KEYWORD_MAP(or),
+    KEYWORD_MAP(not),
+    KEYWORD_MAP(command),
+    KEYWORD_MAP(builtin),
+    KEYWORD_MAP(exec)
+};
+
 wcstring keyword_description(parse_keyword_t k)
 {
-    switch (k)
+    if (k >= 0 && k <= LAST_KEYWORD)
     {
-        case parse_keyword_none:
-            return L"none";
-        case parse_keyword_if:
-            return L"if";
-        case parse_keyword_else:
-            return L"else";
-        case parse_keyword_for:
-            return L"for";
-        case parse_keyword_in:
-            return L"in";
-        case parse_keyword_while:
-            return L"while";
-        case parse_keyword_begin:
-            return L"begin";
-        case parse_keyword_function:
-            return L"function";
-        case parse_keyword_switch:
-            return L"switch";
-        case parse_keyword_case:
-            return L"case";
-        case parse_keyword_end:
-            return L"end";
-        case parse_keyword_and:
-            return L"and";
-        case parse_keyword_or:
-            return L"or";
-        case parse_keyword_not:
-            return L"not";
-        case parse_keyword_command:
-            return L"command";
-        case parse_keyword_builtin:
-            return L"builtin";
-        case parse_keyword_exec:
-            return L"exec";
+        return keyword_map[k].name;
     }
-    return format_string(L"Unknown keyword type %ld", static_cast<long>(k));
+    else
+    {
+        return format_string(L"Unknown keyword type %ld", static_cast<long>(k));
+    }
 }
 
 static wcstring token_type_user_presentable_description(parse_token_type_t type, parse_keyword_t keyword)
@@ -1036,36 +1034,11 @@ static parse_keyword_t keyword_for_token(token_type tok, const wchar_t *tok_txt)
     parse_keyword_t result = parse_keyword_none;
     if (tok == TOK_STRING)
     {
-
-        const struct
+        for (size_t i=0; i < sizeof keyword_map / sizeof *keyword_map; i++)
         {
-            const wchar_t *txt;
-            parse_keyword_t keyword;
-        } keywords[] =
-        {
-            {L"if", parse_keyword_if},
-            {L"else", parse_keyword_else},
-            {L"for", parse_keyword_for},
-            {L"in", parse_keyword_in},
-            {L"while", parse_keyword_while},
-            {L"begin", parse_keyword_begin},
-            {L"function", parse_keyword_function},
-            {L"switch", parse_keyword_switch},
-            {L"case", parse_keyword_case},
-            {L"end", parse_keyword_end},
-            {L"and", parse_keyword_and},
-            {L"or", parse_keyword_or},
-            {L"not", parse_keyword_not},
-            {L"command", parse_keyword_command},
-            {L"builtin", parse_keyword_builtin},
-            {L"exec", parse_keyword_exec}
-        };
-
-        for (size_t i=0; i < sizeof keywords / sizeof *keywords; i++)
-        {
-            if (! wcscmp(keywords[i].txt, tok_txt))
+            if (! wcscmp(keyword_map[i].name, tok_txt))
             {
-                result = keywords[i].keyword;
+                result = keyword_map[i].keyword;
                 break;
             }
         }

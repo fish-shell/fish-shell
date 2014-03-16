@@ -214,7 +214,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
     int line_mode = 0;
     int search_mode = 0;
     int paging_mode = 0;
-    const wchar_t *begin, *end;
+    const wchar_t *begin = NULL, *end = NULL;
 
     current_buffer = (wchar_t *)builtin_complete_get_temporary_buffer();
     if (current_buffer)

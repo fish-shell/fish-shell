@@ -1392,17 +1392,18 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
         if (filename)
         {
             prefix = format_string(_(L"%ls (line %lu): "), user_presentable_path(filename).c_str(), which_line);
-            //append_format(*output, _(L"%ls (line %lu):\n"), user_presentable_path(filename).c_str(), which_line);
         }
         else
         {
             prefix = L"fish: ";
-            //output->append(L"fish: ");
         }
 
-        output->append(err.describe_with_prefix(src, prefix, skip_caret));
-        output->push_back(L'\n');
-
+        const wcstring description = err.describe_with_prefix(src, prefix, skip_caret);
+        if (! description.empty())
+        {
+            output->append(description);
+            output->push_back(L'\n');
+        }
         this->stack_trace(0, *output);
     }
 }
@@ -1479,19 +1480,6 @@ breakpoint_block_t::breakpoint_block_t() : block_t(BREAKPOINT)
 bool parser_use_ast(void)
 {
     env_var_t var = env_get_string(L"fish_new_parser");
-    if (var.missing_or_empty())
-    {
-        return 1;
-    }
-    else
-    {
-        return from_string<bool>(var);
-    }
-}
-
-bool pager_use_inline(void)
-{
-    env_var_t var = env_get_string(L"fish_new_pager");
     if (var.missing_or_empty())
     {
         return 1;

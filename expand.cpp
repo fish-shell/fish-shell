@@ -54,31 +54,6 @@ parameter expansion.
 #include "parse_util.h"
 
 /**
-   Error issued on invalid variable name
-*/
-#define COMPLETE_VAR_DESC _( L"The '$' character begins a variable name. The character '%lc', which directly followed a '$', is not allowed as a part of a variable name, and variable names may not be zero characters long. To learn more about variable expansion in fish, type 'help expand-variable'.")
-
-/**
-   Error issued on $?
-*/
-#define COMPLETE_YOU_WANT_STATUS _( L"$? is not a valid variable in fish. If you want the exit status of the last command, try $status.")
-
-/**
-   Error issued on invalid variable name
-*/
-#define COMPLETE_VAR_NULL_DESC _( L"The '$' begins a variable name. It was given at the end of an argument. Variable names may not be zero characters long. To learn more about variable expansion in fish, type 'help expand-variable'.")
-
-/**
-   Error issued on invalid variable name
-*/
-#define COMPLETE_VAR_BRACKET_DESC _( L"Did you mean %ls{$%ls}%ls? The '$' character begins a variable name. A bracket, which directly followed a '$', is not allowed as a part of a variable name, and variable names may not be zero characters long. To learn more about variable expansion in fish, type 'help expand-variable'." )
-
-/**
-   Error issued on invalid variable name
-*/
-#define COMPLETE_VAR_PARAN_DESC _( L"Did you mean (COMMAND)? In fish, the '$' character is only used for accessing variables. To learn more about command substitution in fish, type 'help expand-command-substitution'.")
-
-/**
    Description for child process
 */
 #define COMPLETE_CHILD_PROCESS_DESC _( L"Child process")
@@ -871,7 +846,7 @@ void expand_variable_error(parser_t &parser, const wcstring &token, size_t token
             *(cpy+token_pos)=0;
             wchar_t *name = &cpy[stop_pos+1];
             wchar_t *end = wcschr(name, BRACKET_END);
-            wchar_t *post;
+            wchar_t *post = NULL;
             int is_var=0;
             if (end)
             {

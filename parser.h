@@ -510,7 +510,6 @@ public:
 
 /* Temporary */
 bool parser_use_ast(void);
-bool pager_use_inline(void);
 
 
 #endif

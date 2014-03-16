@@ -929,7 +929,7 @@ void exec_job(parser_t &parser, job_t *j)
                 if (p->next)
                 {
                     // Be careful to handle failure, e.g. too many open fds
-                    block_output_io_buffer.reset(io_buffer_t::create(false /* = not input */, STDOUT_FILENO));
+                    block_output_io_buffer.reset(io_buffer_t::create(STDOUT_FILENO));
                     if (block_output_io_buffer.get() == NULL)
                     {
                         exec_error = true;
@@ -958,7 +958,7 @@ void exec_job(parser_t &parser, job_t *j)
             {
                 if (p->next)
                 {
-                    block_output_io_buffer.reset(io_buffer_t::create(0));
+                    block_output_io_buffer.reset(io_buffer_t::create(STDOUT_FILENO));
                     if (block_output_io_buffer.get() == NULL)
                     {
                         /* We failed (e.g. no more fds could be created). */
@@ -1606,7 +1606,7 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, boo
     int subcommand_status = -1; //assume the worst
 
     // IO buffer creation may fail (e.g. if we have too many open files to make a pipe), so this may be null
-    const shared_ptr<io_buffer_t> io_buffer(io_buffer_t::create(0));
+    const shared_ptr<io_buffer_t> io_buffer(io_buffer_t::create(STDOUT_FILENO));
     if (io_buffer.get() != NULL)
     {
         parser_t &parser = parser_t::principal_parser();

@@ -586,15 +586,6 @@ static void reader_repaint()
     data->repaint_needed = false;
 }
 
-static void reader_repaint_without_autosuggestion()
-{
-    // Swap in an empty autosuggestion, repaint, then swap it out
-    wcstring saved_autosuggestion;
-    data->autosuggestion.swap(saved_autosuggestion);
-    reader_repaint();
-    data->autosuggestion.swap(saved_autosuggestion);
-}
-
 /** Internal helper function for handling killing parts of text. */
 static void reader_kill(editable_line_t *el, size_t begin_idx, size_t length, int mode, int newv)
 {

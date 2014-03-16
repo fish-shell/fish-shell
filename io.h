@@ -131,8 +131,8 @@ private:
     /** buffer to save output in */
     std::vector<char> out_buffer;
 
-    io_buffer_t(int f, bool i):
-        io_pipe_t(IO_BUFFER, f, i),
+    io_buffer_t(int f):
+        io_pipe_t(IO_BUFFER, f, false /* not input */),
         out_buffer()
     {
     }
@@ -172,16 +172,12 @@ public:
 
     /**
        Create a IO_BUFFER type io redirection, complete with a pipe and a
-       vector<char> for output. The default file descriptor used is 1 for
-       output buffering and 0 for input buffering.
+       vector<char> for output. The default file descriptor used is STDOUT_FILENO
+       for buffering
 
-       \param is_input set this parameter to zero if the buffer should be
-       used to buffer the output of a command, or non-zero to buffer the
-       input to a command.
-
-       \param fd when -1, determined from is_input.
+       \param fd the fd that will be mapped in the child process, typically STDOUT_FILENO
     */
-    static io_buffer_t *create(bool is_input, int fd = -1);
+    static io_buffer_t *create(int fd);
 };
 
 class io_chain_t : public std::vector<shared_ptr<io_data_t> >

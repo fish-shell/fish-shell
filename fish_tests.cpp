@@ -638,7 +638,7 @@ static int signal_main(test_cancellation_info_t *info)
 
 static void test_1_cancellation(const wchar_t *src)
 {
-    shared_ptr<io_buffer_t> out_buff(io_buffer_t::create(false, STDOUT_FILENO));
+    shared_ptr<io_buffer_t> out_buff(io_buffer_t::create(STDOUT_FILENO));
     const io_chain_t io_chain(out_buff);
     test_cancellation_info_t ctx = {pthread_self(), 0.25 /* seconds */ };
     iothread_perform(signal_main, (void (*)(test_cancellation_info_t *, int))NULL, &ctx);

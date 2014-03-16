@@ -123,14 +123,11 @@ void io_buffer_t::read()
 }
 
 
-io_buffer_t *io_buffer_t::create(bool is_input, int fd)
+io_buffer_t *io_buffer_t::create(int fd)
 {
     bool success = true;
-    if (fd == -1)
-    {
-        fd = is_input ? STDIN_FILENO : STDOUT_FILENO;
-    }
-    io_buffer_t *buffer_redirect = new io_buffer_t(fd, is_input);
+    assert(fd >= 0);
+    io_buffer_t *buffer_redirect = new io_buffer_t(fd);
 
     if (exec_pipe(buffer_redirect->pipe_fd) == -1)
     {

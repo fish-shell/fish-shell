@@ -199,10 +199,7 @@ parser_t::parser_t(enum parser_type_t type, bool errors) :
     cancellation_requested(false),
     is_within_fish_initialization(false),
     current_tokenizer(NULL),
-    current_tokenizer_pos(0),
-    job_start_pos(0),
-    eval_level(-1),
-    block_io(shared_ptr<io_data_t>())
+    current_tokenizer_pos(0)
 {
 }
 
@@ -497,7 +494,7 @@ void parser_t::print_errors(wcstring &target, const wchar_t *prefix)
         tmp = current_tokenizer_pos;
         current_tokenizer_pos = err_pos;
 
-        append_format(target, L"%ls", this->current_line());
+        target.append(this->current_line());
 
         current_tokenizer_pos=tmp;
     }
@@ -516,11 +513,11 @@ void parser_t::print_errors_stderr()
         tmp = current_tokenizer_pos;
         current_tokenizer_pos = err_pos;
 
-        fwprintf(stderr, L"%ls", this->current_line());
+        wcstring current_line = this->current_line();
+        fwprintf(stderr, L"%ls", current_line.c_str());
 
         current_tokenizer_pos=tmp;
     }
-
 }
 
 void parser_t::eval_args(const wchar_t *line, std::vector<completion_t> &args)
@@ -635,7 +632,7 @@ void parser_t::stack_trace(size_t block_idx, wcstring &buff) const
         return;
     }
 
-    if (b->type() == FUNCTION_CALL || b->type()==SOURCE || b->type()==SUBST)
+    if (b->type() == FUNCTION_CALL || b->type() == FUNCTION_CALL_NO_SHADOW || b->type()==SOURCE || b->type()==SUBST)
     {
         /*
           These types of blocks should be printed
@@ -653,6 +650,7 @@ void parser_t::stack_trace(size_t block_idx, wcstring &buff) const
                 break;
             }
             case FUNCTION_CALL:
+            case FUNCTION_CALL_NO_SHADOW:
             {
                 const function_block_t *fb = static_cast<const function_block_t*>(b);
                 append_format(buff, _(L"in function '%ls'\n"), fb->name.c_str());
@@ -728,7 +726,7 @@ const wchar_t *parser_t::is_function() const
     for (size_t block_idx = 0; block_idx < this->block_count(); block_idx++)
     {
         const block_t *b = this->block_at_index(block_idx);
-        if (b->type() == FUNCTION_CALL)
+        if (b->type() == FUNCTION_CALL || b->type() == FUNCTION_CALL_NO_SHADOW)
         {
             const function_block_t *fb = static_cast<const function_block_t *>(b);
             result = fb->name.c_str();
@@ -766,6 +764,7 @@ const wchar_t *parser_t::current_filename() const
     for (size_t i=0; i < this->block_count(); i++)
     {
         const block_t *b = this->block_at_index(i);
+        /* Note that we deliberately skip FUNCTION_CALL_NO_SHADOW here, because the only such functions in wide use are '.' and eval, and we don't want to report those */
         if (b->type() == FUNCTION_CALL)
         {
             const function_block_t *fb = static_cast<const function_block_t *>(b);
@@ -809,8 +808,10 @@ static int printed_width(const wchar_t *str, int len)
 }
 
 
-const wchar_t *parser_t::current_line()
+wcstring parser_t::current_line()
 {
+    wcstring lineinfo;
+
     int lineno=1;
 
     const wchar_t *file;
@@ -835,8 +836,6 @@ const wchar_t *parser_t::current_line()
     if (!line)
         return L"";
 
-
-    lineinfo.clear();
 
     /*
       Calculate line number, line offset, etc.
@@ -923,24 +922,9 @@ const wchar_t *parser_t::current_line()
     free((void *)line);
     parser_t::stack_trace(0, lineinfo);
 
-    return lineinfo.c_str();
+    return lineinfo;
 }
 
-int parser_t::get_pos() const
-{
-    return tok_get_pos(current_tokenizer);
-}
-
-int parser_t::get_job_pos() const
-{
-    return job_start_pos;
-}
-
-
-void parser_t::set_pos(int p)
-{
-    tok_set_pos(current_tokenizer, p);
-}
 
 const wchar_t *parser_t::get_buffer() const
 {

@@ -260,30 +260,17 @@ private:
     /** Pointer to the current tokenizer */
     tokenizer_t *current_tokenizer;
 
-    /** String for representing the current line */
-    wcstring lineinfo;
-
     /** This is the position of the beginning of the currently parsed command */
     int current_tokenizer_pos;
 
     /** List of called functions, used to help prevent infinite recursion */
     wcstring_list_t forbidden_function;
 
-    /** String index where the current job started. */
-    int job_start_pos;
-
     /** The jobs associated with this parser */
     job_list_t my_job_list;
 
     /** The list of blocks, allocated with new. It's our responsibility to delete these */
     std::vector<block_t *> block_stack;
-
-    /**
-       Keeps track of how many recursive eval calls have been made. Eval
-       doesn't call itself directly, recursion happens on blocks and on
-       command substitutions.
-    */
-    int eval_level;
 
     /* No copying allowed */
     parser_t(const parser_t&);
@@ -371,22 +358,13 @@ public:
 
        init.fish (line 127): ls|grep pancake
     */
-    const wchar_t *current_line();
+    wcstring current_line();
 
     /** Returns the current line number */
     int get_lineno() const;
 
     /** Returns the line number for the character at the given index */
     int line_number_of_character_at_offset(size_t idx) const;
-
-    /** Returns the current position in the latest string of the tokenizer. */
-    int get_pos() const;
-
-    /** Returns the position where the current job started in the latest string of the tokenizer. */
-    int get_job_pos() const;
-
-    /** Set the current position in the latest string of the tokenizer. */
-    void set_pos(int p);
 
     /** Returns the block at the given index. 0 corresponds to the innermost block. Returns NULL when idx is at or equal to the number of blocks. */
     const block_t *block_at_index(size_t idx) const;

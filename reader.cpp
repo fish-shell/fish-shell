@@ -3427,6 +3427,9 @@ const wchar_t *reader_readline(void)
                     break;
                 }
                 
+                /* The user may have hit return with pager contents, but while not navigating them. Clear the pager in that event. */
+                clear_pager();
+
                 /* We only execute the command line */
                 editable_line_t *el = &data->command_line;
 

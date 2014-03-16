@@ -381,8 +381,9 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(const
     if (result == parse_execution_success)
     {
         const wcstring contents_str = get_source(contents);
+        int definition_line_offset = this->line_offset_of_node_at_offset(this->get_offset(contents));
         wcstring error_str;
-        int err = define_function(*parser, argument_list, contents_str, &error_str);
+        int err = define_function(*parser, argument_list, contents_str, definition_line_offset, &error_str);
         proc_set_last_status(err);
 
         if (! error_str.empty())
@@ -1523,29 +1524,29 @@ parse_execution_result_t parse_execution_context_t::eval_node_at_offset(node_off
     return status;
 }
 
-int parse_execution_context_t::get_current_line_number()
+int parse_execution_context_t::line_offset_of_node_at_offset(node_offset_t requested_index)
 {
     /* If we're not executing anything, return -1 */
-    if (this->executing_node_idx == NODE_OFFSET_INVALID)
+    if (requested_index == NODE_OFFSET_INVALID)
     {
         return -1;
     }
 
     /* If for some reason we're executing a node without source, return -1 */
-    const parse_node_t &node = tree.at(this->executing_node_idx);
+    const parse_node_t &node = tree.at(requested_index);
     if (! node.has_source())
     {
         return -1;
     }
     
     /* Count the number of newlines, leveraging our cache */
-    const size_t offset = tree.at(this->executing_node_idx).source_start;
+    const size_t offset = tree.at(requested_index).source_start;
     assert(offset <= src.size());
 
     /* Easy hack to handle 0 */
     if (offset == 0)
     {
-        return 1;
+        return 0;
     }
     
     /* We want to return (one plus) the number of newlines at offsets less than the given offset. cached_lineno_count is the number of newlines at indexes less than cached_lineno_offset. */
@@ -1575,5 +1576,17 @@ int parse_execution_context_t::get_current_line_number()
         }
         cached_lineno_offset = offset;
     }
-    return cached_lineno_count + 1;
+    return cached_lineno_count;
+}
+
+int parse_execution_context_t::get_current_line_number()
+{
+    int line_number = -1;
+    int line_offset = this->line_offset_of_node_at_offset(this->executing_node_idx);
+    if (line_offset >= 0)
+    {
+        /* The offset is 0 based; the number is 1 based */
+        line_number = line_offset + 1;
+    }
+    return line_number;
 }

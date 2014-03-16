@@ -175,7 +175,7 @@ function_info_t::function_info_t(const function_info_t &data, const wchar_t *fil
 {
 }
 
-void function_add(const function_data_t &data, const parser_t &parser)
+void function_add(const function_data_t &data, const parser_t &parser, int definition_line_offset)
 {
     ASSERT_IS_MAIN_THREAD();
 
@@ -189,13 +189,7 @@ void function_add(const function_data_t &data, const parser_t &parser)
     /* Create and store a new function */
     const wchar_t *filename = reader_current_filename();
 
-    int def_offset = -1;
-    if (parser.current_block() != NULL)
-    {
-        def_offset = parser.line_number_of_character_at_offset(parser.current_block()->tok_pos);
-    }
-
-    const function_map_t::value_type new_pair(data.name, function_info_t(data, filename, def_offset, is_autoload));
+    const function_map_t::value_type new_pair(data.name, function_info_t(data, filename, definition_line_offset, is_autoload));
     loaded_functions.insert(new_pair);
 
     /* Add event handlers */

@@ -1430,8 +1430,7 @@ void exec_job(parser_t &parser, job_t *j)
                 if (g_log_forks)
                 {
                     const wchar_t *file = reader_current_filename();
-                    const wchar_t *func = parser_t::principal_parser().is_function();
-                    printf("fork #%d: forking for '%s' in '%ls:%ls'\n", g_fork_count, actual_cmd, file ? file : L"", func ? func : L"?");
+                    printf("fork #%d: forking for '%s' in '%ls'\n", g_fork_count, actual_cmd, file ? file : L"");
 
                     fprintf(stderr, "IO chain for %s:\n", actual_cmd);
                     io_print(process_net_io_chain);

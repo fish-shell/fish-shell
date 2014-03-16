@@ -242,7 +242,12 @@ void parser_t::push_block(block_t *new_current)
 {
     const enum block_type_t type = new_current->type();
     new_current->src_lineno = parser_t::get_lineno();
-    new_current->src_filename = parser_t::current_filename()?intern(parser_t::current_filename()):0;
+
+    const wchar_t *filename = parser_t::current_filename();
+    if (filename != NULL)
+    {
+        new_current->src_filename = intern(filename);
+    }
 
     const block_t *old_current = this->current_block();
     if (old_current && old_current->skip)
@@ -323,6 +328,27 @@ const wchar_t *parser_t::get_block_desc(int block) const
         }
     }
     return _(UNKNOWN_BLOCK);
+}
+
+wcstring parser_t::block_stack_description() const
+{
+    wcstring result;
+    size_t idx = this->block_count();
+    size_t spaces = 0;
+    while (idx--)
+    {
+        if (spaces > 0)
+        {
+            result.push_back(L'\n');
+        }
+        for (size_t j=0; j < spaces; j++)
+        {
+            result.push_back(L' ');
+        }
+        result.append(this->block_at_index(idx)->description());
+        spaces++;
+    }
+    return result;
 }
 
 const block_t *parser_t::block_at_index(size_t idx) const
@@ -732,6 +758,11 @@ const wchar_t *parser_t::is_function() const
             result = fb->name.c_str();
             break;
         }
+        else if (b->type() == SOURCE)
+        {
+            /* If a function sources a file, obviously that function's offset doesn't contribute */
+            break;
+        }
     }
     return result;
 }
@@ -743,6 +774,14 @@ int parser_t::get_lineno() const
     if (! execution_contexts.empty())
     {
         lineno = execution_contexts.back()->get_current_line_number();
+
+        /* If we are executing a function, we have to add in its offset */
+        const wchar_t *function_name = is_function();
+        if (function_name != NULL)
+        {
+            lineno += function_get_definition_offset(function_name);
+        }
+
     }
     return lineno;
 }
@@ -764,11 +803,15 @@ const wchar_t *parser_t::current_filename() const
     for (size_t i=0; i < this->block_count(); i++)
     {
         const block_t *b = this->block_at_index(i);
-        /* Note that we deliberately skip FUNCTION_CALL_NO_SHADOW here, because the only such functions in wide use are '.' and eval, and we don't want to report those */
-        if (b->type() == FUNCTION_CALL)
+        if (b->type() == FUNCTION_CALL || b->type() == FUNCTION_CALL_NO_SHADOW)
         {
             const function_block_t *fb = static_cast<const function_block_t *>(b);
             return function_get_definition_file(fb->name);
+        }
+        else if (b->type() == SOURCE)
+        {
+            const source_block_t *sb = static_cast<const source_block_t *>(b);
+            return sb->source_file;
         }
     }
 
@@ -1044,6 +1087,8 @@ int parser_t::eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum bl
     {
         return 1;
     }
+
+    //print_stderr(block_stack_description());
 
 
     /* Determine the initial eval level. If this is the first context, it's -1; otherwise it's the eval level of the top context. This is sort of wonky because we're stitching together a global notion of eval level from these separate objects. A better approach would be some profile object that all contexts share, and that tracks the eval levels on its own. */
@@ -1395,7 +1440,6 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
 block_t::block_t(block_type_t t) :
     block_type(t),
     skip(),
-    had_command(),
     tok_pos(),
     node_offset(NODE_OFFSET_INVALID),
     loop_status(),
@@ -1409,6 +1453,83 @@ block_t::block_t(block_type_t t) :
 
 block_t::~block_t()
 {
+}
+
+wcstring block_t::description() const
+{
+    wcstring result;
+    switch (this->type())
+    {
+        case WHILE:
+            result.append(L"while");
+            break;
+
+        case FOR:
+            result.append(L"for");
+            break;
+
+        case IF:
+            result.append(L"if");
+            break;
+
+        case FUNCTION_DEF:
+            result.append(L"function_def");
+            break;
+
+        case FUNCTION_CALL:
+            result.append(L"function_call");
+            break;
+
+        case FUNCTION_CALL_NO_SHADOW:
+            result.append(L"function_call_no_shadow");
+            break;
+
+        case SWITCH:
+            result.append(L"switch");
+            break;
+
+        case FAKE:
+            result.append(L"fake");
+            break;
+
+        case SUBST:
+            result.append(L"substitution");
+            break;
+
+        case TOP:
+            result.append(L"top");
+            break;
+
+        case BEGIN:
+            result.append(L"begin");
+            break;
+
+        case SOURCE:
+            result.append(L"source");
+            break;
+
+        case EVENT:
+            result.append(L"event");
+            break;
+
+        case BREAKPOINT:
+            result.append(L"breakpoint");
+            break;
+
+        default:
+            append_format(result, L"unknown type %ld", (long)this->type());
+            break;
+    }
+
+    if (this->src_lineno >= 0)
+    {
+        append_format(result, L" (line %d)", this->src_lineno);
+    }
+    if (this->src_filename != NULL)
+    {
+        append_format(result, L" (file %ls)", this->src_filename);
+    }
+    return result;
 }
 
 /* Various block constructors */

@@ -84,8 +84,10 @@ public:
         return this->block_type;
     }
 
+    /** Description of the block, for debugging */
+    wcstring description() const;
+
     bool skip; /**< Whether execution of the commands in this block should be skipped */
-    bool had_command; /**< Set to non-zero once a command has been executed in this block */
     int tok_pos; /**< The start index of the block */
 
     node_offset_t node_offset; /* Offset of the node */
@@ -96,7 +98,7 @@ public:
     /** The job that is currently evaluated in the specified block. */
     job_t *job;
 
-    /** Name of file that created this block */
+    /** Name of file that created this block. This string is intern'd. */
     const wchar_t *src_filename;
 
     /** Line number where this block was created */
@@ -272,6 +274,12 @@ private:
     /** The list of blocks, allocated with new. It's our responsibility to delete these */
     std::vector<block_t *> block_stack;
 
+    /** Gets a description of the block stack, for debugging */
+    wcstring block_stack_description() const;
+
+    /** List of profile items, allocated with new */
+    std::vector<profile_item_t*> profile_items;
+
     /* No copying allowed */
     parser_t(const parser_t&);
     parser_t& operator=(const parser_t&);
@@ -287,9 +295,6 @@ private:
     /** Adds a job to the beginning of the job list. */
     void job_add(job_t *job);
 
-public:
-    std::vector<profile_item_t*> profile_items;
-
     /**
        Returns the name of the currently evaluated function if we are
        currently evaluating a function, null otherwise. This is tested by
@@ -297,6 +302,8 @@ public:
        type FUNCTION_CALL.
     */
     const wchar_t *is_function() const;
+
+public:
 
     /** Get the "principal" parser, whatever that is */
     static parser_t &principal_parser();

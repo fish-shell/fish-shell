@@ -107,13 +107,16 @@ private:
     parse_execution_result_t run_job_list(const parse_node_t &job_list_node, const block_t *associated_block);
     parse_execution_result_t populate_job_from_job_node(job_t *j, const parse_node_t &job_node, const block_t *associated_block);
 
+    /* Returns the line number of the node at the given index, indexed from 0. Not const since it touches cached_lineno_offset */
+    int line_offset_of_node_at_offset(node_offset_t idx);
+
 public:
     parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, parser_t *p, int initial_eval_level);
 
     /* Returns the current eval level */
     int current_eval_level() const { return eval_level; }
     
-    /* Returns the current line number. Not const since it touches cached_lineno_offset */
+    /* Returns the current line number, indexed from 1. Not const since it touches cached_lineno_offset */
     int get_current_line_number();
 
     /* Start executing at the given node offset. Returns 0 if there was no error, 1 if there was an error */

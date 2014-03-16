@@ -713,6 +713,11 @@ void debug(int level, const char *msg, ...)
     errno = errno_old;
 }
 
+void print_stderr(const wcstring &str)
+{
+    fprintf(stderr, "%ls\n", str.c_str());
+}
+
 
 void debug_safe(int level, const char *msg, const char *param1, const char *param2, const char *param3, const char *param4, const char *param5, const char *param6, const char *param7, const char *param8, const char *param9, const char *param10, const char *param11, const char *param12)
 {

@@ -1729,7 +1729,7 @@ static int builtin_pwd(parser_t &parser, wchar_t **argv)
 }
 
 /** Adds a function to the function set. It calls into function.cpp to perform any heavy lifting. */
-int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstring &contents, wcstring *out_err)
+int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstring &contents, int definition_line_offset, wcstring *out_err)
 {
     assert(out_err != NULL);
 
@@ -2027,8 +2027,7 @@ int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstr
 
         d.definition = contents.c_str();
 
-        // TODO: fix def_offset inside function_add
-        function_add(d, parser);
+        function_add(d, parser, definition_line_offset);
     }
 
     return res;

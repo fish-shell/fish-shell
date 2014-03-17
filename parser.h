@@ -340,15 +340,12 @@ public:
     /**
       Evaluate line as a list of parameters, i.e. tokenize it and perform parameter expansion and cmdsubst execution on the tokens.
       The output is inserted into output.
+      Errors are ignored.
 
-      \param line Line to evaluate
-      \param output List to insert output to
+      \param arg_src String to evaluate as an argument list
+      \param output List to insert output into
     */
-    /**
-      \param line Line to evaluate
-      \param output List to insert output to
-    */
-    void eval_args(const wchar_t *line, std::vector<completion_t> &output);
+    void eval_args(const wcstring &arg_src, std::vector<completion_t> &output);
 
     /**
        Sets the current evaluation error. This function should only be used by libraries that are called by

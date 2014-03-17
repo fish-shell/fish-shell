@@ -546,7 +546,8 @@ void parser_t::print_errors_stderr()
     }
 }
 
-void parser_t::eval_args(const wchar_t *line, std::vector<completion_t> &args)
+
+void parser_t::eval_args(const wcstring &arg_list_src, std::vector<completion_t> &output_arg_list)
 {
     expand_flags_t eflags = 0;
     if (! show_errors)
@@ -554,77 +555,44 @@ void parser_t::eval_args(const wchar_t *line, std::vector<completion_t> &args)
     if (this->parser_type != PARSER_TYPE_GENERAL)
         eflags |= EXPAND_SKIP_CMDSUBST;
 
-    bool do_loop=1;
-
-    if (! line) return;
-
-    // PCA we need to suppress calling proc_push_interactive off of the main thread.
+    /* Suppress calling proc_push_interactive off of the main thread. */
     if (this->parser_type == PARSER_TYPE_GENERAL)
-        proc_push_interactive(0);
-
-    tokenizer_t tok(line, (show_errors ? 0 : TOK_SQUASH_ERRORS));
-
-    /*
-      eval_args may be called while evaulating another command, so we
-      save the previous tokenizer and restore it on exit
-    */
-    scoped_push<tokenizer_t*> tokenizer_push(&current_tokenizer, &tok);
-    scoped_push<int> tokenizer_pos_push(&current_tokenizer_pos, 0);
-
-    error_code=0;
-
-    for (; do_loop && tok_has_next(&tok) ; tok_next(&tok))
     {
-        current_tokenizer_pos = tok_get_pos(&tok);
-        switch (tok_last_type(&tok))
+        proc_push_interactive(0);
+    }
+
+    /* Parse the string as an argument list */
+    parse_node_tree_t tree;
+    if (! parse_tree_from_string(arg_list_src, parse_flag_none, &tree, NULL /* errors */, symbol_argument_list))
+    {
+        /* Failed to parse. Here we expect to have reported any errors in test_args */
+        return;
+    }
+
+    /* Get the root argument list */
+    assert(! tree.empty());
+    const parse_node_t *arg_list = &tree.at(0);
+    assert(arg_list->type == symbol_argument_list);
+
+    /* Extract arguments from it */
+    while (arg_list != NULL)
+    {
+        const parse_node_t *arg_node = tree.next_node_in_node_list(*arg_list, symbol_argument, &arg_list);
+        if (arg_node != NULL)
         {
-            case TOK_STRING:
+            const wcstring arg_src = arg_node->get_source(arg_list_src);
+            if (expand_string(arg_src, output_arg_list, eflags) == EXPAND_ERROR)
             {
-                const wcstring tmp = tok_last(&tok);
-                if (expand_string(tmp, args, eflags) == EXPAND_ERROR)
-                {
-                    err_pos=tok_get_pos(&tok);
-                    do_loop=0;
-                }
-                break;
-            }
-
-            case TOK_END:
-            {
-                break;
-            }
-
-            case TOK_ERROR:
-            {
-                if (show_errors)
-                    error(SYNTAX_ERROR,
-                          tok_get_pos(&tok),
-                          TOK_ERR_MSG,
-                          tok_last(&tok));
-
-                do_loop=0;
-                break;
-            }
-
-            default:
-            {
-                if (show_errors)
-                    error(SYNTAX_ERROR,
-                          tok_get_pos(&tok),
-                          UNEXPECTED_TOKEN_ERR_MSG,
-                          tok_get_desc(tok_last_type(&tok)));
-
-                do_loop=0;
+                /* Failed to expand a string */
                 break;
             }
         }
     }
 
-    if (show_errors)
-        this->print_errors_stderr();
-
     if (this->parser_type == PARSER_TYPE_GENERAL)
+    {
         proc_pop_interactive();
+    }
 }
 
 void parser_t::stack_trace(size_t block_idx, wcstring &buff) const

@@ -620,6 +620,15 @@ static void test_parser()
     /* This is disabled since it produces a long backtrace. We should find a way to either visually compress the backtrace, or disable error spewing */
     parser_t::principal_parser().eval(L"function recursive1 ; recursive2 ; end ; function recursive2 ; recursive1 ; end ; recursive1; ", io_chain_t(), TOP);
 #endif
+
+    say(L"Testing eval_args");
+    completion_list_t comps;
+    parser_t::principal_parser().eval_args(L"alpha 'beta gamma' delta", comps);
+    do_test(comps.size() == 3);
+    do_test(comps.at(0).completion == L"alpha");
+    do_test(comps.at(1).completion == L"beta gamma");
+    do_test(comps.at(2).completion == L"delta");
+
 }
 
 /* Wait a while and then SIGINT the main thread */

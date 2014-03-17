@@ -62,7 +62,8 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind \eO3B history-token-search-forward
 	bind \e\[3A history-token-search-backward
 	bind \e\[3B history-token-search-forward
-	bind \e\[1\;3A history-token-search-backward
+	#for https://github.com/fish-shell/fish-shell/issues/1048
+	bind \e\[1\;3A upd#prevd-or-backward-word#history-token-search-backward
 	bind \e\[1\;3B history-token-search-forward
 
 	bind \ca beginning-of-line

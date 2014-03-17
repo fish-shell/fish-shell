@@ -96,6 +96,19 @@ AC_PROG_CXX([g++ c++])
 AC_PROG_INSTALL
 AC_LANG(C++)
 
+AC_ARG_WITH(
+  builtin-terminfo,
+  AS_HELP_STRING(
+    [--with-builtin-terminfo],
+    [Experimental: build/link static ncurses and terminfo]
+  ),
+  $(dirname "$0")/build_tools/build_new_ncurses.sh
+  AC_DEFINE( [HAVE_BROKEN_DEL_CURTERM], [1], , )
+  LDFLAGS="$LDFLAGS -L$PWD/lib"
+  CPPFLAGS="$CPPFLAGS -I$PWD/include"
+  CXXFLAGS="$CXXFLAGS -I$PWD/include"
+)
+
 echo "CXXFLAGS: $CXXFLAGS"
 
 #
@@ -407,7 +420,7 @@ AC_DEFINE(
 AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library, needed to build this package.] )] )
 AC_SEARCH_LIBS( nanosleep, rt, , [AC_MSG_ERROR([Cannot find the rt library, needed to build this package.] )] )
 AC_SEARCH_LIBS( pthread_create, pthread, , [AC_MSG_ERROR([Cannot find the pthread library, needed to build this package.] )] )
-AC_SEARCH_LIBS( setupterm, [ncurses curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish. If this is Linux, try running 'sudo apt-get install libncurses5-dev' or 'sudo yum install ncurses-devel'])] )
+AC_SEARCH_LIBS( setupterm, [ncursesw ncurses curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish. If this is Linux, try running 'sudo apt-get install libncurses5-dev' or 'sudo yum install ncurses-devel'])] )
 AC_SEARCH_LIBS( [nan], [m], [AC_DEFINE( [HAVE_NAN], [1], [Define to 1 if you have the nan function])] )
 
 if test x$local_gettext != xno; then

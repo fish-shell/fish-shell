@@ -823,149 +823,58 @@ const wchar_t *parser_t::current_filename() const
     return NULL;
 }
 
-/**
-   Calculates the on-screen width of the specified substring of the
-   specified string. This function takes into account the width and
-   alignment of the tab character, but other wise behaves like
-   repeatedly calling wcwidth.
-*/
-static int printed_width(const wchar_t *str, int len)
-{
-    int res=0;
-    int i;
-
-    CHECK(str, 0);
-
-    for (i=0; str[i] && i<len; i++)
-    {
-        if (str[i] == L'\t')
-        {
-            res=(res+8)&~7;
-        }
-        else
-        {
-            res += fish_wcwidth(str[i]);
-        }
-    }
-    return res;
-}
-
-
 wcstring parser_t::current_line()
 {
-    wcstring lineinfo;
-
-    int lineno=1;
-
-    const wchar_t *file;
-    const wchar_t *whole_str;
-    const wchar_t *line;
-    const wchar_t *line_end;
-    int i;
-    int offset;
-    int current_line_width;
-    const wchar_t *function_name=0;
-    int current_line_start=0;
-
-    if (!current_tokenizer)
+    if (execution_contexts.empty())
     {
-        return L"";
+        return wcstring();
+    }
+    const parse_execution_context_t *context = execution_contexts.back();
+    assert(context != NULL);
+
+    int source_offset = context->get_current_source_offset();
+    if (source_offset < 0)
+    {
+        return wcstring();
     }
 
-    file = parser_t::current_filename();
-    whole_str = tok_string(current_tokenizer);
-    line = whole_str;
+    const int lineno = this->get_lineno();
+    const wchar_t *file = this->current_filename();
 
-    if (!line)
-        return L"";
+    wcstring prefix;
 
-
-    /*
-      Calculate line number, line offset, etc.
-    */
-    for (i=0; i<current_tokenizer_pos && whole_str[i]; i++)
-    {
-        if (whole_str[i] == L'\n')
-        {
-            lineno++;
-            current_line_start=i+1;
-            line = &whole_str[i+1];
-        }
-    }
-
-//  lineno = current_tokenizer_pos;
-
-
-    current_line_width=printed_width(whole_str+current_line_start,
-                                     current_tokenizer_pos-current_line_start);
-
-    if ((function_name = is_function()))
-    {
-        lineno += function_get_definition_offset(function_name);
-    }
-
-    /*
-      Copy current line from whole string
-    */
-    line_end = wcschr(line, L'\n');
-    if (!line_end)
-        line_end = line+wcslen(line);
-
-    line = wcsndup(line, line_end-line);
-
-    /**
-       If we are not going to print a stack trace, at least print the line number and filename
-    */
+    /* If we are not going to print a stack trace, at least print the line number and filename */
     if (!get_is_interactive() || is_function())
     {
-        int prev_width = my_wcswidth(lineinfo.c_str());
         if (file)
         {
-            append_format(lineinfo, _(L"%ls (line %d): "), file, lineno);
+            append_format(prefix, _(L"%ls (line %d): "), user_presentable_path(file).c_str(), lineno);
         }
         else if (is_within_fish_initialization)
         {
-            append_format(lineinfo, L"%ls: ", _(L"Startup"), lineno);
+            append_format(prefix, L"%ls: ", _(L"Startup"), lineno);
         }
         else
         {
-            append_format(lineinfo, L"%ls: ", _(L"Standard input"), lineno);
+            append_format(prefix, L"%ls: ", _(L"Standard input"), lineno);
         }
-        offset = my_wcswidth(lineinfo.c_str()) - prev_width;
     }
-    else
+
+    bool skip_caret = get_is_interactive() && ! is_function();
+
+    /* Use an error with empty text */
+    assert(source_offset >= 0);
+    parse_error_t empty_error = {};
+    empty_error.source_start = source_offset;
+
+    wcstring line_info = empty_error.describe_with_prefix(context->get_source(), prefix, skip_caret);
+    if (! line_info.empty())
     {
-        offset=0;
+        line_info.push_back(L'\n');
     }
 
-//  debug( 1, L"Current pos %d, line pos %d, file_length %d, is_interactive %d, offset %d\n", current_tokenizer_pos,  current_line_pos, wcslen(whole_str), is_interactive, offset);
-    /*
-      Skip printing character position if we are in interactive mode
-      and the error was on the first character of the line.
-    */
-    if (!get_is_interactive() || is_function() || (current_line_width!=0))
-    {
-        // Workaround since it seems impossible to print 0 copies of a character using %*lc
-        if (offset+current_line_width)
-        {
-            append_format(lineinfo,
-                          L"%ls\n%*lc^\n",
-                          line,
-                          offset+current_line_width,
-                          L' ');
-        }
-        else
-        {
-            append_format(lineinfo,
-                          L"%ls\n^\n",
-                          line);
-        }
-    }
-
-    free((void *)line);
-    parser_t::stack_trace(0, lineinfo);
-
-    return lineinfo;
+    parser_t::stack_trace(0, line_info);
+    return line_info;
 }
 
 

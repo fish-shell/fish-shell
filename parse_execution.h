@@ -119,6 +119,12 @@ public:
     /* Returns the current line number, indexed from 1. Not const since it touches cached_lineno_offset */
     int get_current_line_number();
 
+    /* Returns the source offset, or -1 */
+    int get_current_source_offset() const;
+
+    /* Returns the source string */
+    const wcstring &get_source() const { return src; }
+
     /* Start executing at the given node offset. Returns 0 if there was no error, 1 if there was an error */
     parse_execution_result_t eval_node_at_offset(node_offset_t offset, const block_t *associated_block, const io_chain_t &io);
 

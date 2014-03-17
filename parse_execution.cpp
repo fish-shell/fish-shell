@@ -1590,3 +1590,17 @@ int parse_execution_context_t::get_current_line_number()
     }
     return line_number;
 }
+
+int parse_execution_context_t::get_current_source_offset() const
+{
+    int result = -1;
+    if (executing_node_idx != NODE_OFFSET_INVALID)
+    {
+        const parse_node_t &node = tree.at(executing_node_idx);
+        if (node.has_source())
+        {
+            result = static_cast<int>(node.source_start);
+        }
+    }
+    return result;
+}

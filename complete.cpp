@@ -1249,7 +1249,7 @@ void completer_t::complete_from_args(const wcstring &str,
     if (! is_autosuggest)
         proc_push_interactive(0);
 
-    parser.eval_args(args, possible_comp);
+    parser.expand_argument_list(args, possible_comp);
 
     if (! is_autosuggest)
         proc_pop_interactive();

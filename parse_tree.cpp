@@ -14,7 +14,7 @@ static bool production_is_empty(const production_t *production)
 }
 
 /** Returns a string description of this parse error */
-wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring &prefix, bool skip_caret) const
+wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring &prefix, bool is_interactive, bool skip_caret) const
 {
     wcstring result = text;
     if (! skip_caret && source_start < src.size() && source_start + source_length <= src.size())
@@ -44,7 +44,7 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
         assert(source_start >= line_start);
 
         // Don't include the caret and line if we're interactive this is the first line, because then it's obvious
-        bool skip_caret = (get_is_interactive() && source_start == 0);
+        bool skip_caret = (is_interactive && source_start == 0);
 
         if (! skip_caret)
         {
@@ -91,7 +91,7 @@ wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring
 
 wcstring parse_error_t::describe(const wcstring &src) const
 {
-    return this->describe_with_prefix(src, wcstring(), false);
+    return this->describe_with_prefix(src, wcstring(), get_is_interactive(), false);
 }
 
 wcstring parse_errors_description(const parse_error_list_t &errors, const wcstring &src, const wchar_t *prefix)

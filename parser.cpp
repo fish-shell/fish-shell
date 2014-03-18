@@ -547,7 +547,7 @@ void parser_t::print_errors_stderr()
 }
 
 
-void parser_t::eval_args(const wcstring &arg_list_src, std::vector<completion_t> &output_arg_list)
+void parser_t::expand_argument_list(const wcstring &arg_list_src, std::vector<completion_t> &output_arg_list)
 {
     expand_flags_t eflags = 0;
     if (! show_errors)
@@ -828,14 +828,15 @@ wcstring parser_t::current_line()
         }
     }
 
-    bool skip_caret = get_is_interactive() && ! is_function();
+    bool is_interactive = get_is_interactive();
+    bool skip_caret = is_interactive && ! is_function();
 
     /* Use an error with empty text */
     assert(source_offset >= 0);
     parse_error_t empty_error = {};
     empty_error.source_start = source_offset;
 
-    wcstring line_info = empty_error.describe_with_prefix(context->get_source(), prefix, skip_caret);
+    wcstring line_info = empty_error.describe_with_prefix(context->get_source(), prefix, is_interactive, skip_caret);
     if (! line_info.empty())
     {
         line_info.push_back(L'\n');
@@ -1206,69 +1207,52 @@ int parser_t::parser_test_argument(const wchar_t *arg, wcstring *out, const wcha
 
 }
 
-int parser_t::test_args(const  wchar_t * buff, wcstring *out, const wchar_t *prefix)
+bool parser_t::detect_errors_in_argument_list(const wcstring &arg_list_src, wcstring *out, const wchar_t *prefix)
 {
-    int do_loop = 1;
-    int err = 0;
+    bool errored = false;
+    parse_error_list_t errors;
 
-    CHECK(buff, 1);
-
-    tokenizer_t tok(buff, 0);
-    scoped_push<tokenizer_t*> tokenizer_push(&current_tokenizer, &tok);
-    scoped_push<int> tokenizer_pos_push(&current_tokenizer_pos);
-
-    for (; do_loop && tok_has_next(&tok); tok_next(&tok))
+    /* Use empty string for the prefix if it's NULL */
+    if (prefix == NULL)
     {
-        current_tokenizer_pos = tok_get_pos(&tok);
-        switch (tok_last_type(&tok))
+        prefix = L"";
+    }
+
+    /* Parse the string as an argument list */
+    parse_node_tree_t tree;
+    if (! parse_tree_from_string(arg_list_src, parse_flag_none, &tree, &errors, symbol_argument_list))
+    {
+        /* Failed to parse. */
+        errored = true;
+    }
+
+    if (! errored)
+    {
+        /* Get the root argument list */
+        assert(! tree.empty());
+        const parse_node_t *arg_list = &tree.at(0);
+        assert(arg_list->type == symbol_argument_list);
+
+        /* Extract arguments from it */
+        while (arg_list != NULL && ! errored)
         {
-
-            case TOK_STRING:
+            const parse_node_t *arg_node = tree.next_node_in_node_list(*arg_list, symbol_argument, &arg_list);
+            if (arg_node != NULL)
             {
-                err |= parser_test_argument(tok_last(&tok), out, prefix, tok_get_pos(&tok));
-                break;
-            }
-
-            case TOK_END:
-            {
-                break;
-            }
-
-            case TOK_ERROR:
-            {
-                if (out)
+                const wcstring arg_src = arg_node->get_source(arg_list_src);
+                if (parse_util_detect_errors_in_argument(*arg_node, arg_src, &errors))
                 {
-                    error(SYNTAX_ERROR,
-                          tok_get_pos(&tok),
-                          TOK_ERR_MSG,
-                          tok_last(&tok));
-                    print_errors(*out, prefix);
+                    errored = true;
                 }
-                err=1;
-                do_loop=0;
-                break;
-            }
-
-            default:
-            {
-                if (out)
-                {
-                    error(SYNTAX_ERROR,
-                          tok_get_pos(&tok),
-                          UNEXPECTED_TOKEN_ERR_MSG,
-                          tok_get_desc(tok_last_type(&tok)));
-                    print_errors(*out, prefix);
-                }
-                err=1;
-                do_loop=0;
-                break;
             }
         }
     }
 
-    error_code=0;
-
-    return err;
+    if (! errors.empty() && out != NULL)
+    {
+        out->assign(errors.at(0).describe_with_prefix(arg_list_src, prefix, false /* not interactive */, false /* don't skip caret */));
+    }
+    return errored;
 }
 
 // helper type used in parser::test below
@@ -1290,7 +1274,8 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
         size_t which_line = 1 + std::count(src.begin(), src.begin() + err.source_start, L'\n');
 
         // Don't include the caret if we're interactive, this is the first line of text, and our source is at its beginning, because then it's obvious
-        bool skip_caret = (get_is_interactive() && which_line == 1 && err.source_start == 0);
+        bool is_interactive = get_is_interactive();
+        bool skip_caret = (is_interactive && which_line == 1 && err.source_start == 0);
         
         wcstring prefix;
         
@@ -1304,7 +1289,7 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
             prefix = L"fish: ";
         }
 
-        const wcstring description = err.describe_with_prefix(src, prefix, skip_caret);
+        const wcstring description = err.describe_with_prefix(src, prefix, is_interactive, skip_caret);
         if (! description.empty())
         {
             output->append(description);

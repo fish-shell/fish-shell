@@ -467,15 +467,22 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
     {
         if (comp && wcslen(comp))
         {
-            if (parser.test_args(comp, 0, 0))
+            wcstring prefix;
+            if (argv[0])
+            {
+                prefix.append(argv[0]);
+                prefix.append(L": ");
+            }
+
+            wcstring err_text;
+            if (parser.detect_errors_in_argument_list(comp, &err_text, prefix.c_str()))
             {
                 append_format(stderr_buffer,
                               L"%ls: Completion '%ls' contained a syntax error\n",
                               argv[0],
                               comp);
-
-                parser.test_args(comp, &stderr_buffer, argv[0]);
-
+                stderr_buffer.append(err_text);
+                stderr_buffer.push_back(L'\n');
                 res = true;
             }
         }

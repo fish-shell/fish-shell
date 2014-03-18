@@ -682,7 +682,7 @@ static void test_parser()
 
     say(L"Testing eval_args");
     completion_list_t comps;
-    parser_t::principal_parser().eval_args(L"alpha 'beta gamma' delta", comps);
+    parser_t::principal_parser().expand_argument_list(L"alpha 'beta gamma' delta", comps);
     do_test(comps.size() == 3);
     do_test(comps.at(0).completion == L"alpha");
     do_test(comps.at(1).completion == L"beta gamma");

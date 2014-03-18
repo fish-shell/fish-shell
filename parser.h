@@ -345,7 +345,7 @@ public:
       \param arg_src String to evaluate as an argument list
       \param output List to insert output into
     */
-    void eval_args(const wcstring &arg_src, std::vector<completion_t> &output);
+    void expand_argument_list(const wcstring &arg_src, std::vector<completion_t> &output);
 
     /**
        Sets the current evaluation error. This function should only be used by libraries that are called by
@@ -438,12 +438,9 @@ public:
     void get_backtrace(const wcstring &src, const parse_error_list_t &errors, wcstring *output) const;
 
     /**
-       Test if the specified string can be parsed as an argument list,
-       e.g. sent to eval_args.  The result has the first bit set if the
-       string contains errors, and the second bit is set if the string
-       contains an unclosed block.
+       Detect errors in the specified string when parsed as an argument list. Returns true if an error occurred.
     */
-    int test_args(const wchar_t * buff, wcstring *out, const wchar_t *prefix);
+    bool detect_errors_in_argument_list(const wcstring &arg_list_src, wcstring *out_err, const wchar_t *prefix);
 
     /**
        Tell the parser that the specified function may not be run if not

@@ -1135,12 +1135,19 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
                 tmp.push_back(INTERNAL_SEPARATOR);
                 tmp.append(paran_end+1);
 
-                parse_error_list_t errors;
-                err |= parse_util_detect_errors(subst, &errors);
+                parse_error_list_t subst_errors;
+                err |= parse_util_detect_errors(subst, &subst_errors);
+
+                /* Our command substitution produced error offsets relative to its source. Tweak the offsets of the errors in the command substitution to account for both its offset within the string, and the offset of the node */
+                size_t error_offset = (paran_begin + 1 - arg_cpy) + node.source_start;
+                for (size_t i=0; i < subst_errors.size(); i++)
+                {
+                    subst_errors.at(i).source_start += error_offset;
+                }
+
                 if (out_errors != NULL)
                 {
-                    /* Todo: have to tweak the offsets of the errors in the command substitution */
-                    out_errors->insert(out_errors->end(), errors.begin(), errors.end());
+                    out_errors->insert(out_errors->end(), subst_errors.begin(), subst_errors.end());
                 }
 
                 free(arg_cpy);
@@ -1239,6 +1246,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
     // Verify 'or' and 'and' not used inside pipelines
     // Verify pipes via parser_is_pipe_forbidden
     // Verify return only within a function
+    // Verify no variable expansions
 
     if (! errored)
     {
@@ -1282,6 +1290,13 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                 {
                     // Check that we can expand the command
                     if (! expand_one(command, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS))
+                    {
+                        errored = append_syntax_error(&parse_errors, node, ILLEGAL_CMD_ERR_MSG, command.c_str());
+                    }
+
+                    // Check that it doesn't contain a variable
+                    // Note this check is clumsy (it doesn't allow for escaping) but it matches what we do in parse_execution
+                    if (command.find(L'$') != wcstring::npos)
                     {
                         errored = append_syntax_error(&parse_errors, node, ILLEGAL_CMD_ERR_MSG, command.c_str());
                     }

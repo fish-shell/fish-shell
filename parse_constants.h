@@ -92,7 +92,7 @@ enum parse_keyword_t
     parse_keyword_builtin,
     parse_keyword_exec,
 
-    LAST_KEYWORD = parse_keyword_builtin
+    LAST_KEYWORD = parse_keyword_exec
 };
 
 /* Statement decorations. This matches the order of productions in decorated_statement */

@@ -381,10 +381,6 @@ void parser_t::forbid_function(const wcstring &function)
 
 void parser_t::allow_function()
 {
-    /*
-      if( al_peek( &forbidden_function) )
-      debug( 2, L"Allow %ls\n", al_peek( &forbidden_function)  );
-    */
     forbidden_function.pop_back();
 }
 
@@ -846,25 +842,6 @@ wcstring parser_t::current_line()
     return line_info;
 }
 
-
-const wchar_t *parser_t::get_buffer() const
-{
-    return tok_string(current_tokenizer);
-}
-
-
-int parser_t::is_help(const wchar_t *s, int min_match)
-{
-    CHECK(s, 0);
-
-    size_t len = wcslen(s);
-
-    min_match = maxi(min_match, 3);
-
-    return (wcscmp(L"-h", s) == 0) ||
-           (len >= (size_t)min_match && (wcsncmp(L"--help", s, len) == 0));
-}
-
 void parser_t::job_add(job_t *job)
 {
     assert(job != NULL);
@@ -948,7 +925,7 @@ profile_item_t *parser_t::create_profile_item()
 }
 
 
-int parser_t::eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type)
+int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type)
 {
     CHECK_BLOCK(1);
 
@@ -1053,42 +1030,6 @@ int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum
 
     return result;
 
-}
-
-int parser_t::eval(const wcstring &cmd_str, const io_chain_t &io, enum block_type_t block_type)
-{
-    return this->eval_new_parser(cmd_str, io, block_type);
-}
-
-
-/**
-   \return the block type created by the specified builtin, or -1 on error.
-*/
-block_type_t parser_get_block_type(const wcstring &cmd)
-{
-    for (size_t i=0; block_lookup[i].desc; i++)
-    {
-        if (block_lookup[i].name && cmd == block_lookup[i].name)
-        {
-            return block_lookup[i].type;
-        }
-    }
-    return (block_type_t)-1;
-}
-
-/**
-   \return the block command that createa the specified block type, or null on error.
-*/
-const wchar_t *parser_get_block_command(int type)
-{
-    for (size_t i=0; block_lookup[i].desc; i++)
-    {
-        if (block_lookup[i].type == type)
-        {
-            return block_lookup[i].name;
-        }
-    }
-    return NULL;
 }
 
 /**

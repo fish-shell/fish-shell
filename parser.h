@@ -278,7 +278,7 @@ private:
     wcstring block_stack_description() const;
 
     /** List of profile items, allocated with new */
-    std::vector<profile_item_t*> profile_items;
+    std::vector<profile_item_t *> profile_items;
 
     /* No copying allowed */
     parser_t(const parser_t&);
@@ -319,9 +319,6 @@ public:
     /** Global event blocks */
     event_blockage_list_t global_event_blocks;
 
-    /** Current block level io redirections  */
-    io_chain_t block_io;
-
     /**
       Evaluate the expressions contained in cmd.
 
@@ -332,7 +329,6 @@ public:
       \return 0 on success, 1 otherwise
     */
     int eval(const wcstring &cmd_str, const io_chain_t &io, enum block_type_t block_type);
-    int eval_new_parser(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type);
 
     /** Evaluates a block node at the given node offset in the topmost execution context */
     int eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum block_type_t block_type);
@@ -383,9 +379,6 @@ public:
     {
         return block_stack.size();
     }
-
-    /** Get the string currently parsed */
-    const wchar_t *get_buffer() const;
 
     /** Get the list of jobs */
     job_list_t &job_list()
@@ -448,28 +441,16 @@ public:
        of infinite recursion.
     */
     void forbid_function(const wcstring &function);
+
     /**
        Undo last call to parser_forbid_function().
     */
     void allow_function();
 
     /**
-       Initialize static parser data
-    */
-    void init();
-
-    /**
        Output profiling data to the given filename
     */
     void emit_profiling(const char *path) const;
-
-    /**
-       This function checks if the specified string is a help option.
-
-       \param s the string to test
-       \param min_match is the minimum number of characters that must match in a long style option, i.e. the longest common prefix between --help and any other option. If less than 3, 3 will be assumed.
-    */
-    static int is_help(const wchar_t *s, int min_match);
 
     /**
        Returns the file currently evaluated by the parser. This can be
@@ -482,9 +463,6 @@ public:
        Write a stack trace starting at the specified block to the specified wcstring
     */
     void stack_trace(size_t block_idx, wcstring &buff) const;
-
-    int get_block_type(const wchar_t *cmd) const;
-    const wchar_t *get_block_command(int type) const;
 };
 
 /* Temporary */

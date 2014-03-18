@@ -986,6 +986,18 @@ static int parser_is_pipe_forbidden(const wcstring &word)
                     L"continue");
 }
 
+bool parse_util_argument_is_help(const wchar_t *s, int min_match)
+{
+    CHECK(s, 0);
+
+    size_t len = wcslen(s);
+
+    min_match = maxi(min_match, 3);
+
+    return (wcscmp(L"-h", s) == 0) ||
+           (len >= (size_t)min_match && (wcsncmp(L"--help", s, len) == 0));
+}
+
 // Check if the first argument under the given node is --help
 static bool first_argument_is_help(const parse_node_tree_t &node_tree, const parse_node_t &node, const wcstring &src)
 {
@@ -996,7 +1008,7 @@ static bool first_argument_is_help(const parse_node_tree_t &node_tree, const par
         // Check the first argument only
         const parse_node_t &arg = *arg_nodes.at(0);
         const wcstring first_arg_src = arg.get_source(src);
-        is_help = parser_t::is_help(first_arg_src.c_str(), 3);
+        is_help = parse_util_argument_is_help(first_arg_src.c_str(), 3);
     }
     return is_help;
 }

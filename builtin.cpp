@@ -3743,7 +3743,7 @@ int builtin_run(parser_t &parser, const wchar_t * const *argv, const io_chain_t 
 
     if (argv[1] != 0 && !internal_help(argv[0]))
     {
-        if (argv[2] == 0 && (parser.is_help(argv[1], 0)))
+        if (argv[2] == 0 && (parse_util_argument_is_help(argv[1], 0)))
         {
             builtin_print_help(parser, argv[0], stdout_buffer);
             return STATUS_BUILTIN_OK;

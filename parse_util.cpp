@@ -1091,6 +1091,8 @@ void parse_util_expand_variable_error(const parse_node_t &node, const wcstring &
 */
 parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t &node, const wcstring &arg_src, parse_error_list_t *out_errors)
 {
+    assert(node.type == symbol_argument);
+
     int err=0;
 
     wchar_t *paran_begin, *paran_end;

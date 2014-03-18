@@ -511,6 +511,20 @@ static void test_iothread(void)
     delete int_ptr;
 }
 
+static parser_test_error_bits_t detect_argument_errors(const wcstring &src)
+{
+    parse_node_tree_t tree;
+    if (! parse_tree_from_string(src, parse_flag_none, &tree, NULL, symbol_argument_list))
+    {
+        return PARSER_TEST_ERROR;
+    }
+
+    assert(! tree.empty());
+    const parse_node_t *first_arg = tree.next_node_in_node_list(tree.at(0), symbol_argument, NULL);
+    assert(first_arg != NULL);
+    return parse_util_detect_errors_in_argument(*first_arg, first_arg->get_source(src));
+}
+
 /**
    Test the parser
 */
@@ -592,12 +606,57 @@ static void test_parser()
         err(L"'and' command in pipeline not reported as error");
     }
 
+    if (! parse_util_detect_errors(L"cat | or cat"))
+    {
+        err(L"'or' command in pipeline not reported as error");
+    }
+
     if (! parse_util_detect_errors(L"cat | exec") || ! parse_util_detect_errors(L"exec | cat"))
     {
         err(L"'exec' command in pipeline not reported as error");
     }
 
+    if (detect_argument_errors(L"foo"))
+    {
+        err(L"simple argument reported as error");
+    }
 
+    if (detect_argument_errors(L"''"))
+    {
+        err(L"Empty string reported as error");
+    }
+
+
+    if (! (detect_argument_errors(L"foo$$") & PARSER_TEST_ERROR))
+    {
+        err(L"Bad variable expansion not reported as error");
+    }
+
+    if (! (detect_argument_errors(L"foo$@") & PARSER_TEST_ERROR))
+    {
+        err(L"Bad variable expansion not reported as error");
+    }
+
+    /* Within command substitutions, we should be able to detect everything that parse_util_detect_errors can detect */
+    if (! (detect_argument_errors(L"foo(cat | or cat)") & PARSER_TEST_ERROR))
+    {
+        err(L"Bad command substitution not reported as error");
+    }
+
+    if (! (detect_argument_errors(L"foo\\xFF9") & PARSER_TEST_ERROR))
+    {
+        err(L"Bad escape not reported as error");
+    }
+
+    if (! (detect_argument_errors(L"foo(echo \\xFF9)") & PARSER_TEST_ERROR))
+    {
+        err(L"Bad escape in command substitution not reported as error");
+    }
+
+    if (! (detect_argument_errors(L"foo(echo (echo (echo \\xFF9)))") & PARSER_TEST_ERROR))
+    {
+        err(L"Bad escape in nested command substitution not reported as error");
+    }
 
 
     say(L"Testing basic evaluation");

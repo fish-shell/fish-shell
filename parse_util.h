@@ -171,6 +171,11 @@ std::vector<int> parse_util_compute_indents(const wcstring &src);
 
 parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, parse_error_list_t *out_errors = NULL);
 
+/**
+   Test if this argument contains any errors. Detected errors include syntax errors in command substitutions, improperly escaped characters and improper use of the variable expansion operator.
+
+   This does NOT currently detect unterminated quotes.
+*/
 parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t &node, const wcstring &arg_src, parse_error_list_t *out_errors = NULL);
 
 #endif

@@ -197,9 +197,7 @@ parser_t::parser_t(enum parser_type_t type, bool errors) :
     error_code(0),
     err_pos(0),
     cancellation_requested(false),
-    is_within_fish_initialization(false),
-    current_tokenizer(NULL),
-    current_tokenizer_pos(0)
+    is_within_fish_initialization(false)
 {
 }
 
@@ -497,52 +495,6 @@ void parser_t::emit_profiling(const char *path) const
     }
 }
 
-/**
-   Print error message to string if an error has occured while parsing
-
-   \param target the buffer to write to
-   \param prefix: The string token to prefix the each line with. Usually the name of the command trying to parse something.
-*/
-void parser_t::print_errors(wcstring &target, const wchar_t *prefix)
-{
-    CHECK(prefix,);
-
-    if (error_code && ! err_buff.empty())
-    {
-        int tmp;
-
-        append_format(target, L"%ls: %ls\n", prefix, err_buff.c_str());
-
-        tmp = current_tokenizer_pos;
-        current_tokenizer_pos = err_pos;
-
-        target.append(this->current_line());
-
-        current_tokenizer_pos=tmp;
-    }
-}
-
-/**
-   Print error message to stderr if an error has occured while parsing
-*/
-void parser_t::print_errors_stderr()
-{
-    if (error_code && ! err_buff.empty())
-    {
-        debug(0, L"%ls", err_buff.c_str());
-        int tmp;
-
-        tmp = current_tokenizer_pos;
-        current_tokenizer_pos = err_pos;
-
-        wcstring current_line = this->current_line();
-        fwprintf(stderr, L"%ls", current_line.c_str());
-
-        current_tokenizer_pos=tmp;
-    }
-}
-
-
 void parser_t::expand_argument_list(const wcstring &arg_list_src, std::vector<completion_t> &output_arg_list)
 {
     expand_flags_t eflags = 0;
@@ -748,16 +700,6 @@ int parser_t::get_lineno() const
 
     }
     return lineno;
-}
-
-int parser_t::line_number_of_character_at_offset(size_t idx) const
-{
-    if (! current_tokenizer)
-        return -1;
-
-    int result = current_tokenizer->line_number_of_character_at_offset(idx);
-    //assert(result == parse_util_lineno(tok_string( current_tokenizer ), idx));
-    return result;
 }
 
 const wchar_t *parser_t::current_filename() const
@@ -1029,123 +971,6 @@ int parser_t::eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum
     job_reap(0);
 
     return result;
-
-}
-
-/**
-   Test if this argument contains any errors. Detected errors include
-   syntax errors in command substitutions, improperly escaped
-   characters and improper use of the variable expansion operator.
-*/
-int parser_t::parser_test_argument(const wchar_t *arg, wcstring *out, const wchar_t *prefix, int offset)
-{
-    int err=0;
-
-    wchar_t *paran_begin, *paran_end;
-    wchar_t *arg_cpy;
-    int do_loop = 1;
-
-    CHECK(arg, 1);
-
-    arg_cpy = wcsdup(arg);
-
-    while (do_loop)
-    {
-        switch (parse_util_locate_cmdsubst(arg_cpy,
-                                           &paran_begin,
-                                           &paran_end,
-                                           false))
-        {
-            case -1:
-                err=1;
-                if (out)
-                {
-                    error(SYNTAX_ERROR,
-                          offset,
-                          L"Mismatched parenthesis");
-                    this->print_errors(*out, prefix);
-                }
-                free(arg_cpy);
-                return err;
-
-            case 0:
-                do_loop = 0;
-                break;
-
-            case 1:
-            {
-
-                const wcstring subst(paran_begin + 1, paran_end);
-                wcstring tmp;
-
-                tmp.append(arg_cpy, paran_begin - arg_cpy);
-                tmp.push_back(INTERNAL_SEPARATOR);
-                tmp.append(paran_end+1);
-
-//        debug( 1, L"%ls -> %ls %ls", arg_cpy, subst, tmp.buff );
-
-                parse_error_list_t errors;
-                err |= parse_util_detect_errors(subst, &errors);
-                if (out && ! errors.empty())
-                {
-                    out->append(parse_errors_description(errors, subst, prefix));
-                }
-
-                free(arg_cpy);
-                arg_cpy = wcsdup(tmp.c_str());
-
-                break;
-            }
-        }
-    }
-
-    wcstring unesc;
-    if (! unescape_string(arg_cpy, &unesc, UNESCAPE_SPECIAL))
-    {
-        if (out)
-        {
-            error(SYNTAX_ERROR,
-                  offset,
-                  L"Invalid token '%ls'", arg_cpy);
-            print_errors(*out, prefix);
-        }
-        return 1;
-    }
-    else
-    {
-        /* Check for invalid variable expansions */
-        const size_t unesc_size = unesc.size();
-        for (size_t idx = 0; idx < unesc_size; idx++)
-        {
-            switch (unesc.at(idx))
-            {
-                case VARIABLE_EXPAND:
-                case VARIABLE_EXPAND_SINGLE:
-                {
-                    wchar_t next_char = (idx + 1 < unesc_size ? unesc.at(idx + 1) : L'\0');
-
-                    if (next_char != VARIABLE_EXPAND &&
-                            next_char != VARIABLE_EXPAND_SINGLE &&
-                            ! wcsvarchr(next_char))
-                    {
-                        err=1;
-                        if (out)
-                        {
-                            expand_variable_error(*this, unesc, idx, offset);
-                            print_errors(*out, prefix);
-                        }
-                    }
-
-                    break;
-                }
-            }
-        }
-    }
-
-    free(arg_cpy);
-
-    return err;
-
 }
 
 bool parser_t::detect_errors_in_argument_list(const wcstring &arg_list_src, wcstring *out, const wchar_t *prefix)

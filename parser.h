@@ -259,12 +259,6 @@ private:
     /** Description of last error */
     wcstring err_buff;
 
-    /** Pointer to the current tokenizer */
-    tokenizer_t *current_tokenizer;
-
-    /** This is the position of the beginning of the currently parsed command */
-    int current_tokenizer_pos;
-
     /** List of called functions, used to help prevent infinite recursion */
     wcstring_list_t forbidden_function;
 
@@ -283,11 +277,6 @@ private:
     /* No copying allowed */
     parser_t(const parser_t&);
     parser_t& operator=(const parser_t&);
-
-    void skipped_exec(job_t * j);
-    int parser_test_argument(const wchar_t *arg, wcstring *out, const wchar_t *prefix, int offset);
-    void print_errors(wcstring &target, const wchar_t *prefix);
-    void print_errors_stderr();
 
     /** Create a job */
     job_t *job_create(const io_chain_t &io);
@@ -362,9 +351,6 @@ public:
 
     /** Returns the current line number */
     int get_lineno() const;
-
-    /** Returns the line number for the character at the given index */
-    int line_number_of_character_at_offset(size_t idx) const;
 
     /** Returns the block at the given index. 0 corresponds to the innermost block. Returns NULL when idx is at or equal to the number of blocks. */
     const block_t *block_at_index(size_t idx) const;

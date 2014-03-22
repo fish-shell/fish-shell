@@ -21,26 +21,6 @@ class parse_node_tree_t;
 typedef size_t node_offset_t;
 #define NODE_OFFSET_INVALID (static_cast<node_offset_t>(-1))
 
-struct parse_error_t
-{
-    /** Text of the error */
-    wcstring text;
-
-    /** Code for the error */
-    enum parse_error_code_t code;
-
-    /** Offset and length of the token in the source code that triggered this error */
-    size_t source_start;
-    size_t source_length;
-
-    /** Return a string describing the error, suitable for presentation to the user. If skip_caret is false, the offending line with a caret is printed as well */
-    wcstring describe(const wcstring &src) const;
-    
-    /** Return a string describing the error, suitable for presentation to the user, with the given prefix. If skip_caret is false, the offending line with a caret is printed as well */
-    wcstring describe_with_prefix(const wcstring &src, const wcstring &prefix, bool is_interactive, bool skip_caret) const;
-};
-typedef std::vector<parse_error_t> parse_error_list_t;
-
 /* Returns a description of a list of parse errors */
 wcstring parse_errors_description(const parse_error_list_t &errors, const wcstring &src, const wchar_t *prefix = NULL);
 

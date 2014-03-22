@@ -241,12 +241,6 @@ private:
     /** Whether or not we output errors */
     const bool show_errors;
 
-    /** Last error code */
-    int error_code;
-
-    /** Position of last error */
-    int err_pos;
-
     /** Indication that we should skip all blocks */
     bool cancellation_requested;
     
@@ -317,7 +311,7 @@ public:
 
       \return 0 on success, 1 otherwise
     */
-    int eval(const wcstring &cmd_str, const io_chain_t &io, enum block_type_t block_type);
+    int eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type);
 
     /** Evaluates a block node at the given node offset in the topmost execution context */
     int eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum block_type_t block_type);
@@ -331,15 +325,6 @@ public:
       \param output List to insert output into
     */
     void expand_argument_list(const wcstring &arg_src, std::vector<completion_t> &output);
-
-    /**
-       Sets the current evaluation error. This function should only be used by libraries that are called by
-
-       \param ec The new error code
-       \param p The character offset at which the error occured
-       \param str The printf-style error message filter
-    */
-    void error(int ec, size_t p, const wchar_t *str, ...);
 
     /**
        Returns a string describing the current parser pisition in the format 'FILENAME (line LINE_NUMBER): LINE'.

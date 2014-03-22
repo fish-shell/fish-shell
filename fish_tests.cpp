@@ -997,7 +997,7 @@ static int expand_test(const wchar_t *in, int flags, ...)
     int res=1;
     wchar_t *arg;
 
-    if (expand_string(in, output, flags))
+    if (expand_string(in, output, flags, NULL))
     {
 
     }

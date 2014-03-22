@@ -137,6 +137,31 @@ enum
 };
 typedef unsigned int parser_test_error_bits_t;
 
+struct parse_error_t
+{
+    /** Text of the error */
+    wcstring text;
+
+    /** Code for the error */
+    enum parse_error_code_t code;
+
+    /** Offset and length of the token in the source code that triggered this error */
+    size_t source_start;
+    size_t source_length;
+
+    /** Return a string describing the error, suitable for presentation to the user. If skip_caret is false, the offending line with a caret is printed as well */
+    wcstring describe(const wcstring &src) const;
+    
+    /** Return a string describing the error, suitable for presentation to the user, with the given prefix. If skip_caret is false, the offending line with a caret is printed as well */
+    wcstring describe_with_prefix(const wcstring &src, const wcstring &prefix, bool is_interactive, bool skip_caret) const;
+};
+typedef std::vector<parse_error_t> parse_error_list_t;
+
+/* Special source_start value that means unknown */
+#define SOURCE_LOCATION_UNKNOWN (static_cast<size_t>(-1))
+
+/* Helper function to offset error positions by the given amount. This is used when determining errors in a substring of a larger source buffer. */
+void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt);
 
 /** Maximum number of function calls. */
 #define FISH_MAX_STACK_DEPTH 128

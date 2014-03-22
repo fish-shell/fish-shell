@@ -194,8 +194,6 @@ static wcstring user_presentable_path(const wcstring &path)
 parser_t::parser_t(enum parser_type_t type, bool errors) :
     parser_type(type),
     show_errors(errors),
-    error_code(0),
-    err_pos(0),
     cancellation_requested(false),
     is_within_fish_initialization(false)
 {
@@ -382,22 +380,6 @@ void parser_t::allow_function()
     forbidden_function.pop_back();
 }
 
-void parser_t::error(int ec, size_t p, const wchar_t *str, ...)
-{
-    va_list va;
-
-    CHECK(str,);
-
-    error_code = ec;
-
-    // note : p may be -1
-    err_pos = static_cast<int>(p);
-
-    va_start(va, str);
-    err_buff = vformat_string(str, va);
-    va_end(va);
-}
-
 /**
    Print profiling information to the specified stream
 */
@@ -529,7 +511,7 @@ void parser_t::expand_argument_list(const wcstring &arg_list_src, std::vector<co
         if (arg_node != NULL)
         {
             const wcstring arg_src = arg_node->get_source(arg_list_src);
-            if (expand_string(arg_src, output_arg_list, eflags) == EXPAND_ERROR)
+            if (expand_string(arg_src, output_arg_list, eflags, NULL) == EXPAND_ERROR)
             {
                 /* Failed to expand a string */
                 break;
@@ -1034,21 +1016,35 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
     if (! errors.empty())
     {
         const parse_error_t &err = errors.at(0);
-
-        // Determine which line we're on
-        assert(err.source_start <= src.size());
-        size_t which_line = 1 + std::count(src.begin(), src.begin() + err.source_start, L'\n');
-
-        // Don't include the caret if we're interactive, this is the first line of text, and our source is at its beginning, because then it's obvious
-        bool is_interactive = get_is_interactive();
-        bool skip_caret = (is_interactive && which_line == 1 && err.source_start == 0);
+        
+        const bool is_interactive = get_is_interactive();
+        
+        // Determine if we want to try to print a caret to point at the source error
+        // The err.source_start <= src.size() check is due to the nasty way that slices work,
+        // which is by rewriting the source (!)
+        size_t which_line = 0;
+        bool skip_caret = true;
+        if (err.source_start != SOURCE_LOCATION_UNKNOWN && err.source_start <= src.size())
+        {
+            // Determine which line we're on
+            which_line = 1 + std::count(src.begin(), src.begin() + err.source_start, L'\n');
+            
+            // Don't include the caret if we're interactive, this is the first line of text, and our source is at its beginning, because then it's obvious
+            skip_caret = (is_interactive && which_line == 1 && err.source_start == 0);
+        }
         
         wcstring prefix;
-        
         const wchar_t *filename = this->current_filename();
         if (filename)
         {
-            prefix = format_string(_(L"%ls (line %lu): "), user_presentable_path(filename).c_str(), which_line);
+            if (which_line > 0)
+            {
+                prefix = format_string(_(L"%ls (line %lu): "), user_presentable_path(filename).c_str(), which_line);
+            }
+            else
+            {
+                prefix = format_string(_(L"%ls: "), user_presentable_path(filename).c_str());
+            }
         }
         else
         {

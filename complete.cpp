@@ -967,7 +967,7 @@ void completer_t::complete_strings(const wcstring &wc_escaped,
                                    complete_flags_t flags)
 {
     wcstring tmp = wc_escaped;
-    if (! expand_one(tmp, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_WILDCARDS | this->expand_flags()))
+    if (! expand_one(tmp, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_WILDCARDS | this->expand_flags(), NULL))
         return;
 
     const wchar_t *wc = parse_util_unescape_wildcards(tmp.c_str());
@@ -1146,7 +1146,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
     if (use_command)
     {
 
-        if (expand_string(str_cmd, this->completions, ACCEPT_INCOMPLETE | EXECUTABLES_ONLY | this->expand_flags()) != EXPAND_ERROR)
+        if (expand_string(str_cmd, this->completions, ACCEPT_INCOMPLETE | EXECUTABLES_ONLY | this->expand_flags(), NULL) != EXPAND_ERROR)
         {
             if (this->wants_descriptions())
             {
@@ -1179,7 +1179,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
                     size_t prev_count =  this->completions.size();
                     if (expand_string(nxt_completion,
                                       this->completions,
-                                      ACCEPT_INCOMPLETE | EXECUTABLES_ONLY | this->expand_flags()) != EXPAND_ERROR)
+                                      ACCEPT_INCOMPLETE | EXECUTABLES_ONLY | this->expand_flags(), NULL) != EXPAND_ERROR)
                     {
                         /* For all new completions, if COMPLETE_NO_CASE is set, then use only the last path component */
                         for (size_t i=prev_count; i< this->completions.size(); i++)
@@ -1641,7 +1641,7 @@ void completer_t::complete_param_expand(const wcstring &sstr, bool do_file)
 
     if (expand_string(comp_str,
                       this->completions,
-                      flags) == EXPAND_ERROR)
+                      flags, NULL) == EXPAND_ERROR)
     {
         debug(3, L"Error while expanding string '%ls'", comp_str);
     }

@@ -113,6 +113,24 @@ wcstring parse_errors_description(const parse_error_list_t &errors, const wcstri
     return target;
 }
 
+void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt)
+{
+    assert(errors != NULL);
+    if (amt > 0)
+    {
+        size_t i, max = errors->size();
+        for (i=0; i < max; i++)
+        {
+            parse_error_t *error = &errors->at(i);
+            /* preserve the special meaning of -1 as 'unknown' */
+            if (error->source_start != SOURCE_LOCATION_UNKNOWN)
+            {
+                error->source_start += amt;
+            }
+        }
+    }
+}
+
 /** Returns a string description of the given token type */
 wcstring token_type_description(parse_token_type_t type)
 {
@@ -487,7 +505,6 @@ class parse_ll_t
     void parse_error(parse_token_t token, parse_error_code_t code, const wchar_t *format, ...);
     void parse_error_failed_production(struct parse_stack_element_t &elem, parse_token_t token);
     void parse_error_unbalancing_token(parse_token_t token);
-    void append_error_callout(wcstring &error_message, parse_token_t token);
 
     void dump_stack(void) const;
 

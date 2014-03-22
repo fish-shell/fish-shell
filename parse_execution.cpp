@@ -135,7 +135,7 @@ const parse_node_t *parse_execution_context_t::infinite_recursive_statement_in_j
         /* Ok, this is an undecorated plain statement. Get and expand its command */
         wcstring cmd;
         tree.command_for_plain_statement(plain_statement, src, &cmd);
-        expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
+        expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES, NULL);
 
         if (cmd == forbidden_function_name)
         {
@@ -440,7 +440,7 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(const pars
     /* Get the variable name: `for var_name in ...`. We expand the variable name. It better result in just one. */
     const parse_node_t &var_name_node = *get_child(header, 1, parse_token_type_string);
     wcstring for_var_name = get_source(var_name_node);
-    if (! expand_one(for_var_name, 0))
+    if (! expand_one(for_var_name, 0, NULL))
     {
         report_error(var_name_node, FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG, for_var_name.c_str());
         return parse_execution_errored;
@@ -511,16 +511,17 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
     const parse_node_t &switch_value_node = *get_child(statement, 1, parse_token_type_string);
     const wcstring switch_value = get_source(switch_value_node);
 
-    /* Expand it */
+    /* Expand it. We need to offset any errors by the position of the string */
     std::vector<completion_t> switch_values_expanded;
-    int expand_ret = expand_string(switch_value, switch_values_expanded, EXPAND_NO_DESCRIPTIONS);
+    parse_error_list_t errors;
+    int expand_ret = expand_string(switch_value, switch_values_expanded, EXPAND_NO_DESCRIPTIONS, &errors);
+    parse_error_offset_source_start(&errors, switch_value_node.source_start);
+    
     switch (expand_ret)
     {
         case EXPAND_ERROR:
         {
-            result = report_error(switch_value_node,
-                                  _(L"Could not expand string '%ls'"),
-                                  switch_value.c_str());
+            result = report_errors(errors);
             break;
         }
 
@@ -671,29 +672,43 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(const pa
 }
 
 /* Reports an error. Always returns parse_execution_errored, so you can assign the result to an 'errored' variable */
-parse_execution_result_t parse_execution_context_t::report_error(const parse_node_t &node, const wchar_t *fmt, ...)
+parse_execution_result_t parse_execution_context_t::report_error(const parse_node_t &node, const wchar_t *fmt, ...) const
 {
     if (parser->show_errors)
     {
         /* Create an error */
-        parse_error_t error;
-        error.source_start = node.source_start;
-        error.source_length = node.source_length;
-        error.code = parse_error_syntax; //hackish
+        parse_error_list_t error_list = parse_error_list_t(1);
+        parse_error_t *error = &error_list.at(0);
+        error->source_start = node.source_start;
+        error->source_length = node.source_length;
+        error->code = parse_error_syntax; //hackish
 
         va_list va;
         va_start(va, fmt);
-        error.text = vformat_string(fmt, va);
+        error->text = vformat_string(fmt, va);
         va_end(va);
+        
+        this->report_errors(error_list);
+    }
+    return parse_execution_errored;
+}
 
+parse_execution_result_t parse_execution_context_t::report_errors(const parse_error_list_t &error_list) const
+{
+    if (parser->show_errors)
+    {
+        if (error_list.empty())
+        {
+            fprintf(stderr, "Bug: Error reported but no error text found.");
+        }
+    
         /* Get a backtrace */
         wcstring backtrace_and_desc;
-        const parse_error_list_t error_list = parse_error_list_t(1, error);
         parser->get_backtrace(src, error_list, &backtrace_and_desc);
-
+        
+        /* Print it */
         fprintf(stderr, "%ls", backtrace_and_desc.c_str());
     }
-
     return parse_execution_errored;
 }
 
@@ -829,7 +844,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(job_t
     assert(got_cmd);
 
     /* Expand it as a command. Return an error on failure. */
-    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
+    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES, NULL);
     if (! expanded)
     {
         report_error(statement, ILLEGAL_CMD_ERR_MSG, cmd.c_str());
@@ -947,14 +962,14 @@ wcstring_list_t parse_execution_context_t::determine_arguments(const parse_node_
 
         /* Expand this string */
         std::vector<completion_t> arg_expanded;
-        int expand_ret = expand_string(arg_str, arg_expanded, EXPAND_NO_DESCRIPTIONS);
+        parse_error_list_t errors;
+        int expand_ret = expand_string(arg_str, arg_expanded, EXPAND_NO_DESCRIPTIONS, &errors);
+        parse_error_offset_source_start(&errors, arg_node.source_start);
         switch (expand_ret)
         {
             case EXPAND_ERROR:
             {
-                this->report_error(arg_node,
-                                   _(L"Could not expand string '%ls'"),
-                                   arg_str.c_str());
+                this->report_errors(errors);
                 break;
             }
 
@@ -1016,7 +1031,7 @@ bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement
         enum token_type redirect_type = tree.type_for_redirection(redirect_node, src, &source_fd, &target);
 
         /* PCA: I can't justify this EXPAND_SKIP_VARIABLES flag. It was like this when I got here. */
-        bool target_expanded = expand_one(target, no_exec ? EXPAND_SKIP_VARIABLES : 0);
+        bool target_expanded = expand_one(target, no_exec ? EXPAND_SKIP_VARIABLES : 0, NULL);
         if (! target_expanded || target.empty())
         {
             /* Should improve this error message */

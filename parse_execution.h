@@ -65,7 +65,9 @@ private:
     execution_cancellation_reason_t cancellation_reason(const block_t *block) const;
 
     /* Report an error. Always returns true. */
-    parse_execution_result_t report_error(const parse_node_t &node, const wchar_t *fmt, ...);
+    parse_execution_result_t report_error(const parse_node_t &node, const wchar_t *fmt, ...) const;
+    parse_execution_result_t report_errors(const parse_error_list_t &errors) const;
+    
     /* Wildcard error helper */
     parse_execution_result_t report_unmatched_wildcard_error(const parse_node_t &unmatched_wildcard);
 

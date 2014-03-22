@@ -1152,10 +1152,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
 
                 /* Our command substitution produced error offsets relative to its source. Tweak the offsets of the errors in the command substitution to account for both its offset within the string, and the offset of the node */
                 size_t error_offset = (paran_begin + 1 - arg_cpy) + node.source_start;
-                for (size_t i=0; i < subst_errors.size(); i++)
-                {
-                    subst_errors.at(i).source_start += error_offset;
-                }
+                parse_error_offset_source_start(&subst_errors, error_offset);
 
                 if (out_errors != NULL)
                 {
@@ -1301,8 +1298,9 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                 if (node_tree.command_for_plain_statement(node, buff_src, &command))
                 {
                     // Check that we can expand the command
-                    if (! expand_one(command, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS))
+                    if (! expand_one(command, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS, NULL))
                     {
+                        // TODO: leverage the resulting errors
                         errored = append_syntax_error(&parse_errors, node, ILLEGAL_CMD_ERR_MSG, command.c_str());
                     }
 

@@ -250,9 +250,6 @@ private:
     /** Stack of execution contexts. We own these pointers and must delete them */
     std::vector<parse_execution_context_t *> execution_contexts;
 
-    /** Description of last error */
-    wcstring err_buff;
-
     /** List of called functions, used to help prevent infinite recursion */
     wcstring_list_t forbidden_function;
 

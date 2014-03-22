@@ -143,7 +143,7 @@ these characters, so called escape sequences are provided. These are:
 - <code>'\\;'</code> escapes the semicolon character
 - <code>'\\"'</code> escapes the quote character
 - <code>'\\''</code> escapes the apostrophe character
-- <code>'\\x<i>xx</i>'</code>, where <code><i>xx</i></code> is a hexadecimal number, escapes the ascii character with the specified value. For example, \\x9 is the tab character.
+- <code>'\\x<i>xx</i>'</code>, where <code><i>xx</i></code> is a hexadecimal number, escapes a byte with the specified value. For example, \\x9 is the tab character.
 - <code>'\\X<i>xx</i>'</code>, where <code><i>xx</i></code> is a hexadecimal number, escapes a byte of data with the specified value. If you are using a mutibyte encoding, this can be used to enter invalid strings. Only use this if you know what you are doing.
 - <code>'\\<i>ooo</i>'</code>, where <code><i>ooo</i></code> is an octal number, escapes the ascii character with the specified value. For example, \\011 is the tab character.
 - <code>'\\u<i>xxxx</i>'</code>, where <code><i>xxxx</i></code> is a hexadecimal number, escapes the 16-bit Unicode character with the specified value. For example, \\u9 is the tab character.

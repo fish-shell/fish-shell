@@ -1190,7 +1190,7 @@ static size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool 
                 case L'x':
                 {
                     chars = 2;
-                    max_val = ASCII_MAX;
+                    max_val = BYTE_MAX;
                     break;
                 }
 

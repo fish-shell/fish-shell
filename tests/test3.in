@@ -217,4 +217,16 @@ end
 
 # clear foo for other shells
 set -eU foo
+
+# Check if setting unicode universal variables work
+set -U foo_utf8 äﺱɯόڑस
+
+if test $foo_utf8 = äﺱɯόڑस
+  echo Test 17 pass
+else
+  echo Test 17 fail
+end
+
+set -eU foo_utf8
+
 true

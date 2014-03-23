@@ -113,7 +113,6 @@
 		D08A32B917B446B100F3A533 /* parse_productions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0FE8EE7179FB75F008C9F21 /* parse_productions.cpp */; };
 		D08A32BA17B446B100F3A533 /* parse_tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0C52F351765284C00BFAB82 /* parse_tree.cpp */; };
 		D08A32BC17B4473B00F3A533 /* libncurses.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D02A8C15983CFA008E62BD /* libncurses.dylib */; };
-		D08A32BD17B4474000F3A533 /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D02A8A15983CDF008E62BD /* libiconv.dylib */; };
 		D0A564FE168D23D800AF6161 /* man in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0A564F1168D0BAB00AF6161 /* man */; };
 		D0A56501168D258300AF6161 /* man in Copy Files */ = {isa = PBXBuildFile; fileRef = D0A564F1168D0BAB00AF6161 /* man */; };
 		D0C52F371765284C00BFAB82 /* parse_tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0C52F351765284C00BFAB82 /* parse_tree.cpp */; };
@@ -154,7 +153,6 @@
 		D0D02A87159839D5008E62BD /* screen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855A13B3ACEE0099B651 /* screen.cpp */; };
 		D0D02A88159839D5008E62BD /* signal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855C13B3ACEE0099B651 /* signal.cpp */; };
 		D0D02A89159839DF008E62BD /* fish.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0854213B3ACEE0099B651 /* fish.cpp */; };
-		D0D02A8B15983CDF008E62BD /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D02A8A15983CDF008E62BD /* libiconv.dylib */; };
 		D0D02A8D15983CFA008E62BD /* libncurses.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D02A8C15983CFA008E62BD /* libncurses.dylib */; };
 		D0D02A8F15983D8F008E62BD /* parser_keywords.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855313B3ACEE0099B651 /* parser_keywords.cpp */; };
 		D0D02AC215985F3F008E62BD /* fishd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0854313B3ACEE0099B651 /* fishd.cpp */; };
@@ -163,7 +161,6 @@
 		D0D02AC515985F5B008E62BD /* print_help.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855613B3ACEE0099B651 /* print_help.cpp */; };
 		D0D02AC615985F65008E62BD /* common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853613B3ACEE0099B651 /* common.cpp */; };
 		D0D02AC715985F9D008E62BD /* libncurses.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D02A8C15983CFA008E62BD /* libncurses.dylib */; };
-		D0D02AC815985F9F008E62BD /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D02A8A15983CDF008E62BD /* libiconv.dylib */; };
 		D0D02AD615986492008E62BD /* fish_indent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853F13B3ACEE0099B651 /* fish_indent.cpp */; };
 		D0D02AD715986498008E62BD /* print_help.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855613B3ACEE0099B651 /* print_help.cpp */; };
 		D0D02AD81598649E008E62BD /* common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853613B3ACEE0099B651 /* common.cpp */; };
@@ -171,7 +168,6 @@
 		D0D02ADA159864AB008E62BD /* wutil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0856113B3ACEE0099B651 /* wutil.cpp */; };
 		D0D02ADB159864C2008E62BD /* tokenizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855D13B3ACEE0099B651 /* tokenizer.cpp */; };
 		D0D02ADC159864D5008E62BD /* libncurses.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D02A8C15983CFA008E62BD /* libncurses.dylib */; };
-		D0D02ADD159864D7008E62BD /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D02A8A15983CDF008E62BD /* libiconv.dylib */; };
 		D0D2694915983772005D9B9C /* function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0854413B3ACEE0099B651 /* function.cpp */; };
 		D0D2694A15983779005D9B9C /* builtin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853513B3ACEE0099B651 /* builtin.cpp */; };
 		D0F019F115A977140034B3B1 /* fish in CopyFiles */ = {isa = PBXBuildFile; fileRef = D0D2693C159835CA005D9B9C /* fish */; };
@@ -483,7 +479,6 @@
 		D0CBD580159EE48F0024809C /* config.fish */ = {isa = PBXFileReference; lastKnownFileType = text; name = config.fish; path = share/config.fish; sourceTree = "<group>"; };
 		D0CBD583159EEE010024809C /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		D0CBD586159EF0E10024809C /* launch_fish.scpt */ = {isa = PBXFileReference; lastKnownFileType = file; name = launch_fish.scpt; path = osx/launch_fish.scpt; sourceTree = "<group>"; };
-		D0D02A8A15983CDF008E62BD /* libiconv.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libiconv.dylib; path = usr/lib/libiconv.dylib; sourceTree = SDKROOT; };
 		D0D02A8C15983CFA008E62BD /* libncurses.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libncurses.dylib; path = usr/lib/libncurses.dylib; sourceTree = SDKROOT; };
 		D0D02A9A15985A75008E62BD /* fish.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = fish.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D0D02AA915985C0C008E62BD /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = osx/Info.plist; sourceTree = "<group>"; };
@@ -503,7 +498,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D08A32BD17B4474000F3A533 /* libiconv.dylib in Frameworks */,
 				D08A32BC17B4473B00F3A533 /* libncurses.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -513,7 +507,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				D0D02AC715985F9D008E62BD /* libncurses.dylib in Frameworks */,
-				D0D02AC815985F9F008E62BD /* libiconv.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -522,7 +515,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				D0D02ADC159864D5008E62BD /* libncurses.dylib in Frameworks */,
-				D0D02ADD159864D7008E62BD /* libiconv.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -531,7 +523,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				D0D02A8D15983CFA008E62BD /* libncurses.dylib in Frameworks */,
-				D0D02A8B15983CDF008E62BD /* libiconv.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -587,7 +578,6 @@
 			isa = PBXGroup;
 			children = (
 				D0D02A8C15983CFA008E62BD /* libncurses.dylib */,
-				D0D02A8A15983CDF008E62BD /* libiconv.dylib */,
 				D0CBD583159EEE010024809C /* Foundation.framework */,
 			);
 			name = Libraries;

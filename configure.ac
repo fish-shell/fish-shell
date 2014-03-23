@@ -105,8 +105,6 @@ echo "CXXFLAGS: $CXXFLAGS"
 #
 # This mostly helps OS X users, since fink usually installs out of
 # tree and doesn't update CXXFLAGS.
-#
-# It also helps FreeBSD which puts libiconv in /usr/local/lib
 
 for i in /usr/pkg /sw /opt /opt/local /usr/local; do
 
@@ -421,10 +419,6 @@ LIBS_SHARED=$LIBS
 #
 
 LIBS="$LIBS_SHARED"
-# Check for libiconv_open if we can't find iconv_open. Silly OS X does
-# weird macro magic for the sole purpose of amusing me.
-AC_SEARCH_LIBS( iconv_open, iconv, , [AC_SEARCH_LIBS( libiconv_open, iconv, , [AC_MSG_ERROR([Could not find an iconv implementation, needed to build fish])] )] )
-
 LIBS_FISH=$LIBS
 
 #
@@ -439,7 +433,6 @@ LIBS_FISH_INDENT=$LIBS
 #
 
 LIBS="$LIBS_SHARED"
-AC_SEARCH_LIBS( iconv_open, iconv, , [AC_SEARCH_LIBS( libiconv_open, iconv, , [AC_MSG_ERROR([Could not find an iconv implementation, needed to build fish])] )] )
 LIBS_FISHD=$LIBS
 
 #

@@ -1090,7 +1090,7 @@ bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement
 
     if (out_chain && ! errored)
     {
-        std::swap(*out_chain, result);
+        out_chain->swap(result);
     }
     return ! errored;
 }

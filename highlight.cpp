@@ -350,7 +350,7 @@ bool plain_statement_get_expanded_command(const wcstring &src, const parse_node_
         if (expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS))
         {
             /* Success, return the expanded string by reference */
-            std::swap(cmd, *out_cmd);
+            out_cmd->swap(cmd);
             result = true;
         }
     }

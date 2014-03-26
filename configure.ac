@@ -105,8 +105,6 @@ echo "CXXFLAGS: $CXXFLAGS"
 #
 # This mostly helps OS X users, since fink usually installs out of
 # tree and doesn't update CXXFLAGS.
-#
-# It also helps FreeBSD which puts libiconv in /usr/local/lib
 
 for i in /usr/pkg /sw /opt /opt/local /usr/local; do
 
@@ -151,9 +149,11 @@ AC_CONFIG_HEADERS(config.h)
 AH_BOTTOM([#if __GNUC__ >= 3
 #define __warn_unused __attribute__ ((warn_unused_result))
 #define __sentinel __attribute__ ((sentinel))
+#define __packed __attribute__ ((packed))
 #else
 #define __warn_unused
 #define __sentinel
+#define __packed
 #endif])
 
 
@@ -407,7 +407,7 @@ AC_DEFINE(
 AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library, needed to build this package.] )] )
 AC_SEARCH_LIBS( nanosleep, rt, , [AC_MSG_ERROR([Cannot find the rt library, needed to build this package.] )] )
 AC_SEARCH_LIBS( pthread_create, pthread, , [AC_MSG_ERROR([Cannot find the pthread library, needed to build this package.] )] )
-AC_SEARCH_LIBS( setupterm, [ncurses curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish. If this is Linux, try running 'sudo apt-get install libncurses5-dev' or 'sudo yum install ncurses-devel'])] )
+AC_SEARCH_LIBS( setupterm, [ncurses tinfo curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish. If this is Linux, try running 'sudo apt-get install libncurses5-dev' or 'sudo yum install ncurses-devel'])] )
 AC_SEARCH_LIBS( [nan], [m], [AC_DEFINE( [HAVE_NAN], [1], [Define to 1 if you have the nan function])] )
 
 if test x$local_gettext != xno; then
@@ -421,10 +421,6 @@ LIBS_SHARED=$LIBS
 #
 
 LIBS="$LIBS_SHARED"
-# Check for libiconv_open if we can't find iconv_open. Silly OS X does
-# weird macro magic for the sole purpose of amusing me.
-AC_SEARCH_LIBS( iconv_open, iconv, , [AC_SEARCH_LIBS( libiconv_open, iconv, , [AC_MSG_ERROR([Could not find an iconv implementation, needed to build fish])] )] )
-
 LIBS_FISH=$LIBS
 
 #
@@ -439,7 +435,6 @@ LIBS_FISH_INDENT=$LIBS
 #
 
 LIBS="$LIBS_SHARED"
-AC_SEARCH_LIBS( iconv_open, iconv, , [AC_SEARCH_LIBS( libiconv_open, iconv, , [AC_MSG_ERROR([Could not find an iconv implementation, needed to build fish])] )] )
 LIBS_FISHD=$LIBS
 
 #

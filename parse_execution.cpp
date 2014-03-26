@@ -72,7 +72,8 @@ node_offset_t parse_execution_context_t::get_offset(const parse_node_t &node) co
     const parse_node_t *addr = &node;
     const parse_node_t *base = &this->tree.at(0);
     assert(addr >= base);
-    node_offset_t offset = addr - base;
+    assert(addr - base < SOURCE_OFFSET_INVALID);
+    node_offset_t offset = static_cast<node_offset_t>(addr - base);
     assert(offset < this->tree.size());
     assert(&tree.at(offset) == &node);
     return offset;
@@ -1100,7 +1101,7 @@ bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement
 
     if (out_chain && ! errored)
     {
-        std::swap(*out_chain, result);
+        out_chain->swap(result);
     }
     return ! errored;
 }

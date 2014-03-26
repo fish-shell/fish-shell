@@ -91,7 +91,7 @@ FISH_OBJS := function.o builtin.o complete.o env.o exec.o expand.o		\
 	signal.o io.o parse_util.o common.o screen.o path.o autoload.o		\
 	parser_keywords.o iothread.o color.o postfork.o	\
 	builtin_test.o parse_tree.o parse_productions.o parse_execution.cpp \
-	pager.cpp
+	pager.cpp utf8.o
 
 FISH_INDENT_OBJS := fish_indent.o print_help.o common.o	\
 parser_keywords.o wutil.o tokenizer.o
@@ -117,7 +117,7 @@ FISH_TESTS_OBJS := $(FISH_OBJS) fish_tests.o
 #
 
 FISHD_OBJS := fishd.o env_universal_common.o wutil.o print_help.o	\
-	common.o
+	common.o utf8.o
 
 
 #

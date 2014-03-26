@@ -62,6 +62,7 @@
 #include "parse_util.h"
 #include "pager.h"
 #include "input.h"
+#include "utf8.h"
 
 static const char * const * s_arguments;
 static int s_test_run_count = 0;
@@ -140,17 +141,17 @@ static void err(const wchar_t *blah, ...)
     va_list va;
     va_start(va, blah);
     err_count++;
-    
+
     // show errors in red
     fputs("\x1b[31m", stdout);
 
     wprintf(L"Error: ");
     vwprintf(blah, va);
     va_end(va);
-    
+
     // return to normal color
     fputs("\x1b[0m", stdout);
-    
+
     wprintf(L"\n");
 }
 
@@ -925,6 +926,260 @@ static void test_utils()
     if (begin != a + wcslen(L"echo (echo (")) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
 }
 
+/* UTF8 tests taken from Alexey Vatchenko's utf8 library. See http://www.bsdua.org/libbsdua.html */
+
+static void test_utf82wchar(const char *src, size_t slen, const wchar_t *dst, size_t dlen,
+                            int flags, size_t res, const char *descr)
+{
+    size_t size;
+    wchar_t *mem = NULL;
+
+    /* Hack: if wchar is only UCS-2, and the UTF-8 input string contains astral characters, then tweak the expected size to 0 */
+    if (src != NULL && is_wchar_ucs2())
+    {
+        /* A UTF-8 code unit may represent an astral code point if it has 4 or more leading 1s */
+        const unsigned char astral_mask = 0xF0;
+        for (size_t i=0; i < slen; i++)
+        {
+            if ((src[i] & astral_mask) == astral_mask)
+            {
+                /* Astral char. We expect this conversion to just fail. */
+                res = 0;
+                break;
+            }
+        }
+    }
+
+    if (dst != NULL)
+    {
+        mem = (wchar_t *)malloc(dlen * sizeof(*mem));
+        if (mem == NULL)
+        {
+            err(L"u2w: %s: MALLOC FAILED\n", descr);
+            return;
+        }
+    }
+
+    do
+    {
+        size = utf8_to_wchar(src, slen, mem, dlen, flags);
+        if (res != size)
+        {
+            err(L"u2w: %s: FAILED (rv: %lu, must be %lu)", descr, size, res);
+            break;
+        }
+
+        if (mem == NULL)
+            break;		/* OK */
+
+        if (memcmp(mem, dst, size * sizeof(*mem)) != 0)
+        {
+            err(L"u2w: %s: BROKEN", descr);
+            break;
+        }
+
+    }
+    while (0);
+
+    free(mem);
+}
+
+static void test_wchar2utf8(const wchar_t *src, size_t slen, const char *dst, size_t dlen,
+                            int flags, size_t res, const char *descr)
+{
+    size_t size;
+    char *mem = NULL;
+
+    /* Hack: if wchar is simulating UCS-2, and the wchar_t input string contains astral characters, then tweak the expected size to 0 */
+    if (src != NULL && is_wchar_ucs2())
+    {
+        const uint32_t astral_mask = 0xFFFF0000U;
+        for (size_t i=0; i < slen; i++)
+        {
+            if ((src[i] & astral_mask) != 0)
+            {
+                /* astral char */
+                res = 0;
+                break;
+            }
+        }
+    }
+
+    if (dst != NULL)
+    {
+        mem = (char *)malloc(dlen);
+        if (mem == NULL)
+        {
+            err(L"w2u: %s: MALLOC FAILED", descr);
+            return;
+        }
+    }
+
+    do
+    {
+        size = wchar_to_utf8(src, slen, mem, dlen, flags);
+        if (res != size)
+        {
+            err(L"w2u: %s: FAILED (rv: %lu, must be %lu)", descr, size, res);
+            break;
+        }
+
+        if (mem == NULL)
+            break;		/* OK */
+
+        if (memcmp(mem, dst, size) != 0)
+        {
+            err(L"w2u: %s: BROKEN", descr);
+            break;
+        }
+
+    }
+    while (0);
+
+    if (mem != NULL);
+    free(mem);
+}
+
+static void test_utf8()
+{
+    wchar_t w1[] = {0x54, 0x65, 0x73, 0x74};
+    wchar_t w2[] = {0x0422, 0x0435, 0x0441, 0x0442};
+    wchar_t w3[] = {0x800, 0x1e80, 0x98c4, 0x9910, 0xff00};
+    wchar_t w4[] = {0x15555, 0xf7777, 0xa};
+    wchar_t w5[] = {0x255555, 0x1fa04ff, 0xddfd04, 0xa};
+    wchar_t w6[] = {0xf255555, 0x1dfa04ff, 0x7fddfd04, 0xa};
+    wchar_t wb[] = {-2, 0xa, 0xffffffff, 0x0441};
+    wchar_t wm[] = {0x41, 0x0441, 0x3042, 0xff67, 0x9b0d, 0x2e05da67};
+    wchar_t wb1[] = {0xa, 0x0422};
+    wchar_t wb2[] = {0xd800, 0xda00, 0x41, 0xdfff, 0xa};
+    wchar_t wbom[] = {0xfeff, 0x41, 0xa};
+    wchar_t wbom2[] = {0x41, 0xa};
+    wchar_t wbom22[] = {0xfeff, 0x41, 0xa};
+    char u1[] = {0x54, 0x65, 0x73, 0x74};
+    char u2[] = {0xd0, 0xa2, 0xd0, 0xb5, 0xd1, 0x81, 0xd1, 0x82};
+    char u3[] = {0xe0, 0xa0, 0x80, 0xe1, 0xba, 0x80, 0xe9, 0xa3, 0x84,
+                 0xe9, 0xa4, 0x90, 0xef, 0xbc, 0x80
+                };
+    char u4[] = {0xf0, 0x95, 0x95, 0x95, 0xf3, 0xb7, 0x9d, 0xb7, 0xa};
+    char u5[] = {0xf8, 0x89, 0x95, 0x95, 0x95, 0xf9, 0xbe, 0xa0, 0x93,
+                 0xbf, 0xf8, 0xb7, 0x9f, 0xb4, 0x84, 0x0a
+                };
+    char u6[] = {0xfc, 0x8f, 0x89, 0x95, 0x95, 0x95, 0xfc, 0x9d, 0xbe,
+                 0xa0, 0x93, 0xbf, 0xfd, 0xbf, 0xb7, 0x9f, 0xb4, 0x84, 0x0a
+                };
+    char ub[] = {0xa, 0xd1, 0x81};
+    char um[] = {0x41, 0xd1, 0x81, 0xe3, 0x81, 0x82, 0xef, 0xbd, 0xa7,
+                 0xe9, 0xac, 0x8d, 0xfc, 0xae, 0x81, 0x9d, 0xa9, 0xa7
+                };
+    char ub1[] = {0xa, 0xff, 0xd0, 0xa2, 0xfe, 0x8f, 0xe0, 0x80};
+    char uc080[] = {0xc0, 0x80};
+    char ub2[] = {0xed, 0xa1, 0x8c, 0xed, 0xbe, 0xb4, 0xa};
+    char ubom[] = {0x41, 0xa};
+    char ubom2[] = {0xef, 0xbb, 0xbf, 0x41, 0xa};
+
+    /*
+     * UTF-8 -> UCS-4 string.
+     */
+    test_utf82wchar(ubom2, sizeof(ubom2), wbom2,
+                    sizeof(wbom2) / sizeof(*wbom2), UTF8_SKIP_BOM,
+                    sizeof(wbom2) / sizeof(*wbom2), "skip BOM");
+    test_utf82wchar(ubom2, sizeof(ubom2), wbom22,
+                    sizeof(wbom22) / sizeof(*wbom22), 0,
+                    sizeof(wbom22) / sizeof(*wbom22), "BOM");
+    test_utf82wchar(uc080, sizeof(uc080), NULL, 0, 0, 0,
+                    "c0 80 - forbitten by rfc3629");
+    test_utf82wchar(ub2, sizeof(ub2), NULL, 0, 0, is_wchar_ucs2() ? 0 : 3,
+                    "resulted in forbitten wchars (len)");
+    test_utf82wchar(ub2, sizeof(ub2), wb2, sizeof(wb2) / sizeof(*wb2), 0, 0,
+                    "resulted in forbitten wchars");
+    test_utf82wchar(ub2, sizeof(ub2), L"\x0a", 1, UTF8_IGNORE_ERROR,
+                    1, "resulted in ignored forbitten wchars");
+    test_utf82wchar(u1, sizeof(u1), w1, sizeof(w1) / sizeof(*w1), 0,
+                    sizeof(w1) / sizeof(*w1), "1 octet chars");
+    test_utf82wchar(u2, sizeof(u2), w2, sizeof(w2) / sizeof(*w2), 0,
+                    sizeof(w2) / sizeof(*w2), "2 octets chars");
+    test_utf82wchar(u3, sizeof(u3), w3, sizeof(w3) / sizeof(*w3), 0,
+                    sizeof(w3) / sizeof(*w3), "3 octets chars");
+    test_utf82wchar(u4, sizeof(u4), w4, sizeof(w4) / sizeof(*w4), 0,
+                    sizeof(w4) / sizeof(*w4), "4 octets chars");
+    test_utf82wchar(u5, sizeof(u5), w5, sizeof(w5) / sizeof(*w5), 0,
+                    sizeof(w5) / sizeof(*w5), "5 octets chars");
+    test_utf82wchar(u6, sizeof(u6), w6, sizeof(w6) / sizeof(*w6), 0,
+                    sizeof(w6) / sizeof(*w6), "6 octets chars");
+    test_utf82wchar("\xff", 1, NULL, 0, 0, 0, "broken utf-8 0xff symbol");
+    test_utf82wchar("\xfe", 1, NULL, 0, 0, 0, "broken utf-8 0xfe symbol");
+    test_utf82wchar("\x8f", 1, NULL, 0, 0, 0,
+                    "broken utf-8, start from 10 higher bits");
+    if (! is_wchar_ucs2()) test_utf82wchar(ub1, sizeof(ub1), wb1, sizeof(wb1) / sizeof(*wb1),
+                                               UTF8_IGNORE_ERROR, sizeof(wb1) / sizeof(*wb1), "ignore bad chars");
+    test_utf82wchar(um, sizeof(um), wm, sizeof(wm) / sizeof(*wm), 0,
+                    sizeof(wm) / sizeof(*wm), "mixed languages");
+    test_utf82wchar(um, sizeof(um), wm, sizeof(wm) / sizeof(*wm) - 1, 0,
+                    0, "boundaries -1");
+    test_utf82wchar(um, sizeof(um), wm, sizeof(wm) / sizeof(*wm) + 1, 0,
+                    sizeof(wm) / sizeof(*wm), "boundaries +1");
+    test_utf82wchar(um, sizeof(um), NULL, 0, 0,
+                    sizeof(wm) / sizeof(*wm), "calculate length");
+    test_utf82wchar(ub1, sizeof(ub1), NULL, 0, 0,
+                    0, "calculate length of bad chars");
+    test_utf82wchar(ub1, sizeof(ub1), NULL, 0,
+                    UTF8_IGNORE_ERROR, sizeof(wb1) / sizeof(*wb1),
+                    "calculate length, ignore bad chars");
+    test_utf82wchar(NULL, 0, NULL, 0, 0, 0, "invalid params, all 0");
+    test_utf82wchar(u1, 0, NULL, 0, 0, 0,
+                    "invalid params, src buf not NULL");
+    test_utf82wchar(NULL, 10, NULL, 0, 0, 0,
+                    "invalid params, src length is not 0");
+    test_utf82wchar(u1, sizeof(u1), w1, 0, 0, 0,
+                    "invalid params, dst is not NULL");
+
+    /*
+     * UCS-4 -> UTF-8 string.
+     */
+    test_wchar2utf8(wbom, sizeof(wbom) / sizeof(*wbom), ubom, sizeof(ubom),
+                    UTF8_SKIP_BOM, sizeof(ubom), "BOM");
+    test_wchar2utf8(wb2, sizeof(wb2) / sizeof(*wb2), NULL, 0, 0,
+                    0, "prohibited wchars");
+    test_wchar2utf8(wb2, sizeof(wb2) / sizeof(*wb2), NULL, 0,
+                    UTF8_IGNORE_ERROR, 2, "ignore prohibited wchars");
+    test_wchar2utf8(w1, sizeof(w1) / sizeof(*w1), u1, sizeof(u1), 0,
+                    sizeof(u1), "1 octet chars");
+    test_wchar2utf8(w2, sizeof(w2) / sizeof(*w2), u2, sizeof(u2), 0,
+                    sizeof(u2), "2 octets chars");
+    test_wchar2utf8(w3, sizeof(w3) / sizeof(*w3), u3, sizeof(u3), 0,
+                    sizeof(u3), "3 octets chars");
+    test_wchar2utf8(w4, sizeof(w4) / sizeof(*w4), u4, sizeof(u4), 0,
+                    sizeof(u4), "4 octets chars");
+    test_wchar2utf8(w5, sizeof(w5) / sizeof(*w5), u5, sizeof(u5), 0,
+                    sizeof(u5), "5 octets chars");
+    test_wchar2utf8(w6, sizeof(w6) / sizeof(*w6), u6, sizeof(u6), 0,
+                    sizeof(u6), "6 octets chars");
+    test_wchar2utf8(wb, sizeof(wb) / sizeof(*wb), ub, sizeof(ub), 0,
+                    0, "bad chars");
+    test_wchar2utf8(wb, sizeof(wb) / sizeof(*wb), ub, sizeof(ub),
+                    UTF8_IGNORE_ERROR, sizeof(ub), "ignore bad chars");
+    test_wchar2utf8(wm, sizeof(wm) / sizeof(*wm), um, sizeof(um), 0,
+                    sizeof(um), "mixed languages");
+    test_wchar2utf8(wm, sizeof(wm) / sizeof(*wm), um, sizeof(um) - 1, 0,
+                    0, "boundaries -1");
+    test_wchar2utf8(wm, sizeof(wm) / sizeof(*wm), um, sizeof(um) + 1, 0,
+                    sizeof(um), "boundaries +1");
+    test_wchar2utf8(wm, sizeof(wm) / sizeof(*wm), NULL, 0, 0,
+                    sizeof(um), "calculate length");
+    test_wchar2utf8(wb, sizeof(wb) / sizeof(*wb), NULL, 0, 0,
+                    0, "calculate length of bad chars");
+    test_wchar2utf8(wb, sizeof(wb) / sizeof(*wb), NULL, 0,
+                    UTF8_IGNORE_ERROR, sizeof(ub),
+                    "calculate length, ignore bad chars");
+    test_wchar2utf8(NULL, 0, NULL, 0, 0, 0, "invalid params, all 0");
+    test_wchar2utf8(w1, 0, NULL, 0, 0, 0,
+                    "invalid params, src buf not NULL");
+    test_wchar2utf8(NULL, 10, NULL, 0, 0, 0,
+                    "invalid params, src length is not 0");
+    test_wchar2utf8(w1, sizeof(w1) / sizeof(*w1), u1, 0, 0, 0,
+                    "invalid params, dst is not NULL");
+}
+
 static void test_escape_sequences(void)
 {
     say(L"Testing escape codes");
@@ -1178,9 +1433,9 @@ static void test_path()
 static void test_pager_navigation()
 {
     say(L"Testing pager navigation");
-    
+
     /* Generate 19 strings of width 10. There's 2 spaces between completions, and our term size is 80; these can therefore fit into 6 columns (6 * 12 - 2 = 70) or 5 columns (58) but not 7 columns (7 * 12 - 2 = 82).
-    
+
        You can simulate this test by creating 19 files named "file00.txt" through "file_18.txt".
     */
     completion_list_t completions;
@@ -1188,31 +1443,31 @@ static void test_pager_navigation()
     {
         append_completion(completions, L"abcdefghij");
     }
-    
+
     pager_t pager;
     pager.set_completions(completions);
     pager.set_term_size(80, 24);
     page_rendering_t render = pager.render();
-    
+
     if (render.term_width != 80)
         err(L"Wrong term width");
     if (render.term_height != 24)
         err(L"Wrong term height");
-    
+
     size_t rows = 4, cols = 5;
-    
+
     /* We have 19 completions. We can fit into 6 columns with 4 rows or 5 columns with 4 rows; the second one is better and so is what we ought to have picked. */
     if (render.rows != rows)
         err(L"Wrong row count");
     if (render.cols != cols)
         err(L"Wrong column count");
-    
+
     /* Initially expect to have no completion index */
     if (render.selected_completion_idx != (size_t)(-1))
     {
         err(L"Wrong initial selection");
     }
-    
+
     /* Here are navigation directions and where we expect the selection to be */
     const struct
     {
@@ -1223,31 +1478,31 @@ static void test_pager_navigation()
     {
         /* Tab completion to get into the list */
         {direction_next, 0},
-        
+
         /* Westward motion in upper left wraps along the top row */
         {direction_west, 16},
         {direction_east, 1},
-        
+
         /* "Next" motion goes down the column */
         {direction_next, 2},
         {direction_next, 3},
-        
+
         {direction_west, 18},
         {direction_east, 3},
         {direction_east, 7},
         {direction_east, 11},
         {direction_east, 15},
         {direction_east, 3},
-        
+
         {direction_west, 18},
         {direction_east, 3},
-        
+
         /* Eastward motion wraps along the bottom, westward goes to the prior column */
         {direction_east, 7},
         {direction_east, 11},
         {direction_east, 15},
         {direction_east, 3},
-        
+
         /* Column memory */
         {direction_west, 18},
         {direction_south, 15},
@@ -1265,7 +1520,7 @@ static void test_pager_navigation()
             err(L"For command %lu, expected selection %lu, but found instead %lu\n", i, cmds[i].sel, render.selected_completion_idx);
         }
     }
-    
+
 }
 
 enum word_motion_t
@@ -1604,14 +1859,14 @@ static void test_complete(void)
     completions.clear();
     complete(L"echo (builtin scuttlebut", completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 0);
-    
+
     /* Trailing spaces (#1261) */
     complete_add(L"foobarbaz", false, 0, NULL, 0, NO_FILES, NULL, L"qux", NULL, COMPLETE_AUTO_SPACE);
     completions.clear();
     complete(L"foobarbaz ", completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"qux");
-    
+
     /* Don't complete variable names in single quotes (#1023) */
     completions.clear();
     complete(L"echo '$Foo", completions, COMPLETION_REQUEST_DEFAULT);
@@ -1882,14 +2137,14 @@ static void test_input()
     wcstring desired_binding = prefix_binding + L'a';
     input_mapping_add(prefix_binding.c_str(), L"up-line");
     input_mapping_add(desired_binding.c_str(), L"down-line");
-    
+
     /* Push the desired binding on the stack (backwards!) */
     size_t idx = desired_binding.size();
     while (idx--)
     {
         input_unreadch(desired_binding.at(idx));
     }
-    
+
     /* Now test */
     wint_t c = input_readch();
     if (c != R_DOWN_LINE)
@@ -2816,7 +3071,7 @@ static void test_highlighting(void)
         {L"'single_quote", highlight_spec_error},
         {NULL, -1}
     };
-    
+
     const highlight_component_t components11[] =
     {
         {L"echo", highlight_spec_command},
@@ -2829,7 +3084,7 @@ static void test_highlighting(void)
         {L"]", highlight_spec_operator},
         {NULL, -1}
     };
-    
+
     const highlight_component_t components12[] =
     {
         {L"for", highlight_spec_command},
@@ -2935,6 +3190,7 @@ int main(int argc, char **argv)
     if (should_test_function("cancellation")) test_cancellation();
     if (should_test_function("indents")) test_indents();
     if (should_test_function("utils")) test_utils();
+    if (should_test_function("utf8")) test_utf8();
     if (should_test_function("escape_sequences")) test_escape_sequences();
     if (should_test_function("lru")) test_lru();
     if (should_test_function("expand")) test_expand();
@@ -2974,7 +3230,8 @@ int main(int argc, char **argv)
     event_destroy();
     proc_destroy();
 
-    if(err_count != 0) {
+    if (err_count != 0)
+    {
         return(1);
     }
 }

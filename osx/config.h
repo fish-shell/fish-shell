@@ -218,7 +218,9 @@
 #if __GNUC__ >= 3
 #define __warn_unused __attribute__ ((warn_unused_result))
 #define __sentinel __attribute__ ((sentinel))
+#define __packed __attribute__ ((packed))
 #else
 #define __warn_unused
 #define __sentinel
+#define __packed
 #endif

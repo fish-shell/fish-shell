@@ -13,6 +13,13 @@ static bool production_is_empty(const production_t *production)
     return (*production)[0] == token_type_invalid;
 }
 
+void swap2(parse_node_tree_t &a, parse_node_tree_t &b)
+{
+    fprintf(stderr, "Swapping!\n");
+    // This uses the base vector implementation
+    a.swap(b);
+}
+
 /** Returns a string description of this parse error */
 wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring &prefix, bool is_interactive, bool skip_caret) const
 {
@@ -422,7 +429,7 @@ static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &
 
     result->push_back(L'\n');
     ++*line;
-    for (size_t child_idx = node.child_start; child_idx < node.child_start + node.child_count; child_idx++)
+    for (node_offset_t child_idx = node.child_start; child_idx < node.child_start + node.child_count; child_idx++)
     {
         dump_tree_recursive(nodes, src, child_idx, indent + 1, result, line, inout_first_node_not_dumped);
     }
@@ -546,28 +553,31 @@ class parse_ll_t
         }
 
         // Get the parent index. But we can't get the parent parse node yet, since it may be made invalid by adding children
-        const size_t parent_node_idx = symbol_stack.back().node_idx;
+        const node_offset_t parent_node_idx = symbol_stack.back().node_idx;
 
         // Add the children. Confusingly, we want our nodes to be in forwards order (last token last, so dumps look nice), but the symbols should be reverse order (last token first, so it's lowest on the stack)
-        const size_t child_start = nodes.size();
-        size_t child_count = 0;
+        const size_t child_start_big = nodes.size();
+        assert(child_start_big < NODE_OFFSET_INVALID);
+        node_offset_t child_start = static_cast<node_offset_t>(child_start_big);
+        
+        // To avoid constructing multiple nodes, we push_back a single one that we modify
+        parse_node_t representative_child(token_type_invalid);
+        representative_child.parent = parent_node_idx;
+        
+        node_offset_t child_count = 0;
         for (size_t i=0; i < MAX_SYMBOLS_PER_PRODUCTION; i++)
         {
             production_element_t elem = (*production)[i];
-            if (!production_element_is_valid(elem))
+            if (! production_element_is_valid(elem))
             {
                 // All done, bail out
                 break;
             }
-            else
-            {
-                // Generate the parse node.
-                parse_token_type_t child_type = production_element_type(elem);
-                parse_node_t child = parse_node_t(child_type);
-                child.parent = parent_node_idx;
-                nodes.push_back(child);
-                child_count++;
-            }
+
+            // Append the parse node.
+            representative_child.type = production_element_type(elem);
+            nodes.push_back(representative_child);
+            child_count++;
         }
 
         // Update the parent
@@ -583,7 +593,7 @@ class parse_ll_t
         // Replace the top of the stack with new stack elements corresponding to our new nodes. Note that these go in reverse order.
         symbol_stack.pop_back();
         symbol_stack.reserve(symbol_stack.size() + child_count);
-        size_t idx = child_count;
+        node_offset_t idx = child_count;
         while (idx--)
         {
             production_element_t elem = (*production)[idx];
@@ -669,18 +679,17 @@ void parse_ll_t::dump_stack(void) const
 // Since children always appear after their parents, we can implement this very simply by walking backwards
 void parse_ll_t::determine_node_ranges(void)
 {
-    const size_t source_start_invalid = -1;
     size_t idx = nodes.size();
     while (idx--)
     {
-        parse_node_t *parent = &nodes.at(idx);
+        parse_node_t *parent = &nodes[idx];
 
         // Skip nodes that already have a source range. These are terminal nodes.
-        if (parent->source_start != source_start_invalid)
+        if (parent->source_start != SOURCE_OFFSET_INVALID)
             continue;
 
         // Ok, this node needs a source range. Get all of its children, and then set its range.
-        size_t min_start = source_start_invalid, max_end = 0; //note source_start_invalid is huge
+        source_offset_t min_start = SOURCE_OFFSET_INVALID, max_end = 0; //note SOURCE_OFFSET_INVALID is huge
         for (node_offset_t i=0; i < parent->child_count; i++)
         {
             const parse_node_t &child = nodes.at(parent->child_offset(i));
@@ -691,7 +700,7 @@ void parse_ll_t::determine_node_ranges(void)
             }
         }
 
-        if (min_start != source_start_invalid)
+        if (min_start != SOURCE_OFFSET_INVALID)
         {
             assert(max_end >= min_start);
             parent->source_start = min_start;
@@ -704,13 +713,13 @@ void parse_ll_t::acquire_output(parse_node_tree_t *output, parse_error_list_t *e
 {
     if (output != NULL)
     {
-        std::swap(*output, this->nodes);
+        output->swap(this->nodes);
     }
     this->nodes.clear();
 
     if (errors != NULL)
     {
-        std::swap(*errors, this->errors);
+        errors->swap(this->errors);
     }
     this->errors.clear();
     this->symbol_stack.clear();
@@ -848,7 +857,7 @@ void parse_ll_t::parse_error(const wchar_t *expected, parse_token_t token)
 void parse_ll_t::reset_symbols(enum parse_token_type_t goal)
 {
     /* Add a new goal node, and then reset our symbol list to point at it */
-    node_offset_t where = nodes.size();
+    node_offset_t where = static_cast<node_offset_t>(nodes.size());
     nodes.push_back(parse_node_t(goal));
 
     symbol_stack.clear();
@@ -1064,14 +1073,10 @@ static parse_keyword_t keyword_for_token(token_type tok, const wchar_t *tok_txt)
 }
 
 /* Placeholder invalid token */
-static const parse_token_t kInvalidToken = {token_type_invalid,
-parse_keyword_none, false, false, static_cast<size_t>(-1),
-                                  static_cast<size_t>(-1)};
+static const parse_token_t kInvalidToken = {token_type_invalid, parse_keyword_none, false, false, SOURCE_OFFSET_INVALID, 0};
 
 /* Terminal token */
-static const parse_token_t kTerminalToken = {parse_token_type_terminate,
-parse_keyword_none, false, false, static_cast<size_t>(-1),
-                                  static_cast<size_t>(-1)};
+static const parse_token_t kTerminalToken = {parse_token_type_terminate, parse_keyword_none, false, false, SOURCE_OFFSET_INVALID, 0};
 
 static inline bool is_help_argument(const wchar_t *txt)
 {
@@ -1099,8 +1104,8 @@ static inline parse_token_t next_parse_token(tokenizer_t *tok)
     result.keyword = keyword_for_token(tok_type, tok_txt);
     result.has_dash_prefix = (tok_txt[0] == L'-');
     result.is_help_argument = result.has_dash_prefix && is_help_argument(tok_txt);
-    result.source_start = (size_t)tok_start;
-    result.source_length = tok_extent;
+    result.source_start = (source_offset_t)tok_start;
+    result.source_length = (source_offset_t)tok_extent;
 
     tok_next(tok);
     return result;
@@ -1212,7 +1217,7 @@ const parse_node_t *parse_node_tree_t::get_child(const parse_node_t &parent, nod
 
 const parse_node_t &parse_node_tree_t::find_child(const parse_node_t &parent, parse_token_type_t type) const
 {
-    for (size_t i=0; i < parent.child_count; i++)
+    for (node_offset_t i=0; i < parent.child_count; i++)
     {
         const parse_node_t *child = this->get_child(parent, i);
         if (child->type == type)
@@ -1258,7 +1263,7 @@ static void find_nodes_recursive(const parse_node_tree_t &tree, const parse_node
     if (result->size() < max_count)
     {
         if (parent.type == type) result->push_back(&parent);
-        for (size_t i=0; i < parent.child_count; i++)
+        for (node_offset_t i=0; i < parent.child_count; i++)
         {
             const parse_node_t *child = tree.get_child(parent, i);
             assert(child != NULL);
@@ -1495,7 +1500,7 @@ const parse_node_t *parse_node_tree_t::next_node_in_node_list(const parse_node_t
         const parse_node_t *next_cursor = NULL;
 
         /* Walk through the children */
-        for (size_t i=0; i < list_cursor->child_count; i++)
+        for (node_offset_t i=0; i < list_cursor->child_count; i++)
         {
             const parse_node_t *child = this->get_child(*list_cursor, i);
             if (child->type == entry_type)

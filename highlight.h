@@ -75,7 +75,6 @@ struct file_detection_context_t;
    \param error a list in which a description of each error will be inserted. May be 0, in whcich case no error descriptions will be generated.
 */
 void highlight_shell(const wcstring &buffstr, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
-void highlight_shell_new_parser(const wcstring &buffstr, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
 
 /**
    Perform syntax highlighting for the text in buff. Matching quotes and paranthesis are highlighted. The result is
@@ -124,10 +123,6 @@ enum
 };
 typedef unsigned int path_flags_t;
 bool is_potential_path(const wcstring &const_path, const wcstring_list_t &directories, path_flags_t flags, wcstring *out_path = NULL);
-
-/* For testing */
-void highlight_shell_classic(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
-void highlight_shell_new_parser(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
 
 #endif
 

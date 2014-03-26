@@ -336,11 +336,11 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 		case "0	0" # equal to upstream
 			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_equal"
 		case "0	*" # ahead of upstream
-			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead$ahead"
+                        echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_ahead"
 		case "*	0" # behind upstream
-			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind$behind"
+                        echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_behind"
 		case '*' # diverged from upstream
-			echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_diverged$ahead-$behind"
+                        echo "$___fish_git_prompt_char_upstream_prefix$___fish_git_prompt_char_upstream_diverged"
 		end
 	end
 end

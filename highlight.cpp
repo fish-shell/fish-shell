@@ -44,8 +44,6 @@
 */
 #define VAR_COUNT ( sizeof(highlight_var)/sizeof(wchar_t *) )
 
-static void highlight_universal_internal(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos);
-
 /** The environment variables used to specify the color of different tokens. This matches the order in highlight_spec_t */
 static const wchar_t * const highlight_var[] =
 {

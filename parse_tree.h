@@ -18,8 +18,14 @@
 
 class parse_node_t;
 class parse_node_tree_t;
-typedef size_t node_offset_t;
+
+typedef uint32_t node_offset_t;
+
 #define NODE_OFFSET_INVALID (static_cast<node_offset_t>(-1))
+
+typedef uint32_t source_offset_t;
+
+#define SOURCE_OFFSET_INVALID (static_cast<source_offset_t>(-1))
 
 struct parse_error_t
 {
@@ -51,8 +57,8 @@ struct parse_token_t
     enum parse_keyword_t keyword; // Any keyword represented by this token
     bool has_dash_prefix; // Hackish: whether the source contains a dash prefix
     bool is_help_argument; // Hackish: whether the source looks like '-h' or '--help'
-    size_t source_start;
-    size_t source_length;
+    source_offset_t source_start;
+    source_offset_t source_length;
 
     wcstring describe() const;
     wcstring user_presentable_description() const;
@@ -83,35 +89,36 @@ wcstring parse_dump_tree(const parse_node_tree_t &tree, const wcstring &src);
 wcstring token_type_description(parse_token_type_t type);
 wcstring keyword_description(parse_keyword_t type);
 
-/** Class for nodes of a parse tree */
+/** Class for nodes of a parse tree. Since there's a lot of these, the size and order of the fields is important. */
 class parse_node_t
 {
 public:
-
-    /* Type of the node */
-    enum parse_token_type_t type;
-
     /* Start in the source code */
-    size_t source_start;
+    source_offset_t source_start;
 
     /* Length of our range in the source code */
-    size_t source_length;
+    source_offset_t source_length;
 
     /* Parent */
     node_offset_t parent;
 
     /* Children */
     node_offset_t child_start;
+    
+    /* Number of children */
     uint8_t child_count;
 
     /* Which production was used */
     uint8_t production_idx;
+    
+    /* Type of the node */
+    enum parse_token_type_t type;
 
     /* Description */
     wcstring describe(void) const;
 
     /* Constructor */
-    explicit parse_node_t(parse_token_type_t ty) : type(ty), source_start(-1), source_length(0), parent(NODE_OFFSET_INVALID), child_start(0), child_count(0), production_idx(-1)
+    explicit parse_node_t(parse_token_type_t ty) : source_start(SOURCE_OFFSET_INVALID), source_length(0), parent(NODE_OFFSET_INVALID), child_start(0), child_count(0), production_idx(-1), type(ty)
     {
     }
 
@@ -124,7 +131,7 @@ public:
     /* Indicate if this node has a range of source code associated with it */
     bool has_source() const
     {
-        return source_start != (size_t)(-1);
+        return source_start != SOURCE_OFFSET_INVALID;
     }
 
     /* Gets source for the node, or the empty string if it has no source */
@@ -142,7 +149,6 @@ public:
         return has_source() && source_start <= loc && loc - source_start <= source_length;
     }
 };
-
 
 /* The parse tree itself */
 class parse_node_tree_t : public std::vector<parse_node_t>
@@ -199,6 +205,7 @@ public:
     /* Given a job, return all of its statements. These are 'specific statements' (e.g. symbol_decorated_statement, not symbol_statement) */
     parse_node_list_t specific_statements_for_job(const parse_node_t &job) const;
 };
+
 
 /* The big entry point. Parse a string, attempting to produce a tree for the given goal type */
 bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags, parse_node_tree_t *output, parse_error_list_t *errors, parse_token_type_t goal = symbol_job_list);

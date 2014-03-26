@@ -70,7 +70,7 @@ enum parse_token_type_t
 
     LAST_TOKEN_OR_SYMBOL = parse_token_type_terminate,
     FIRST_PARSE_TOKEN_TYPE = parse_token_type_string
-};
+} __packed;
 
 enum parse_keyword_t
 {
@@ -93,7 +93,7 @@ enum parse_keyword_t
     parse_keyword_exec,
 
     LAST_KEYWORD = parse_keyword_builtin
-};
+} __packed;
 
 /* Statement decorations. This matches the order of productions in decorated_statement */
 enum parse_statement_decoration_t

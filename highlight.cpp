@@ -911,6 +911,9 @@ class highlighter_t
 
     /* Environment variables. Again, a reference member variable! */
     const env_vars_snapshot_t &vars;
+    
+    /* Whether it's OK to do I/O */
+    const bool io_ok;
 
     /* Working directory */
     const wcstring working_directory;
@@ -943,7 +946,7 @@ class highlighter_t
 public:
 
     /* Constructor */
-    highlighter_t(const wcstring &str, size_t pos, const env_vars_snapshot_t &ev, const wcstring &wd) : buff(str), cursor_pos(pos), vars(ev), working_directory(wd), color_array(str.size())
+    highlighter_t(const wcstring &str, size_t pos, const env_vars_snapshot_t &ev, const wcstring &wd, bool can_do_io) : buff(str), cursor_pos(pos), vars(ev), io_ok(can_do_io), working_directory(wd), color_array(str.size())
     {
         /* Parse the tree */
         this->parse_tree.clear();
@@ -1010,7 +1013,7 @@ void highlighter_t::color_argument(const parse_node_t &node)
         }
 
         /* Highlight it recursively. */
-        highlighter_t cmdsub_highlighter(cmdsub_contents, cursor_subpos, this->vars, this->working_directory);
+        highlighter_t cmdsub_highlighter(cmdsub_contents, cursor_subpos, this->vars, this->working_directory, this->io_ok);
         const color_array_t &subcolors = cmdsub_highlighter.highlight();
 
         /* Copy out the subcolors back into our array */
@@ -1046,13 +1049,16 @@ void highlighter_t::color_arguments(const parse_node_t &list_node)
 {
     /* Hack: determine whether the parent is the cd command, so we can show errors for non-directories */
     bool cmd_is_cd = false;
-    const parse_node_t *parent = this->parse_tree.get_parent(list_node, symbol_plain_statement);
-    if (parent != NULL)
+    if (this->io_ok)
     {
-        wcstring cmd_str;
-        if (plain_statement_get_expanded_command(this->buff, this->parse_tree, *parent, &cmd_str))
+        const parse_node_t *parent = this->parse_tree.get_parent(list_node, symbol_plain_statement);
+        if (parent != NULL)
         {
-            cmd_is_cd = (cmd_str == L"cd");
+            wcstring cmd_str;
+            if (plain_statement_get_expanded_command(this->buff, this->parse_tree, *parent, &cmd_str))
+            {
+                cmd_is_cd = (cmd_str == L"cd");
+            }
         }
     }
 
@@ -1072,7 +1078,7 @@ void highlighter_t::color_arguments(const parse_node_t &list_node)
             if (expand_one(param, EXPAND_SKIP_CMDSUBST))
             {
                 bool is_help = string_prefixes_string(param, L"--help") || string_prefixes_string(param, L"-h");
-                if (!is_help && ! is_potential_cd_path(param, working_directory, PATH_EXPAND_TILDE, NULL))
+                if (! is_help && this->io_ok && ! is_potential_cd_path(param, working_directory, PATH_EXPAND_TILDE, NULL))
                 {
                     this->color_node(*child, highlight_spec_error);
                 }
@@ -1102,14 +1108,21 @@ void highlighter_t::color_redirection(const parse_node_t &redirection_node)
         if (parse_util_locate_cmdsubst(target.c_str(), NULL, NULL, true) != 0)
         {
             if (redirection_target != NULL)
+            {
                 this->color_argument(*redirection_target);
+            }
         }
         else
         {
             /* No command substitution, so we can highlight the target file or fd. For example, disallow redirections into a non-existent directory */
             bool target_is_valid = true;
 
-            if (! expand_one(target, EXPAND_SKIP_CMDSUBST))
+            if (! this->io_ok)
+            {
+                /* I/O is disallowed, so we don't have much hope of catching anything but gross errors. Assume it's valid. */
+                target_is_valid = true;
+            }
+            else if (! expand_one(target, EXPAND_SKIP_CMDSUBST))
             {
                 /* Could not be expanded */
                 target_is_valid = false;
@@ -1280,7 +1293,11 @@ static bool command_is_valid(const wcstring &cmd, enum parse_statement_decoratio
 
 const highlighter_t::color_array_t & highlighter_t::highlight()
 {
-    ASSERT_IS_BACKGROUND_THREAD();
+    // If we are doing I/O, we must be in a background thread
+    if (io_ok)
+    {
+        ASSERT_IS_BACKGROUND_THREAD();
+    }
 
     const size_t length = buff.size();
     assert(this->buff.size() == this->color_array.size());
@@ -1307,7 +1324,7 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
 
         switch (node.type)
         {
-                // Color direct string descendants, e.g. 'for' and 'in'.
+            // Color direct string descendants, e.g. 'for' and 'in'.
             case symbol_while_header:
             case symbol_begin_header:
             case symbol_function_header:
@@ -1346,7 +1363,7 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
 
             case symbol_plain_statement:
             {
-                // Get the decoration from the parent
+                /* Get the decoration from the parent */
                 enum parse_statement_decoration_t decoration = parse_tree.decoration_for_plain_statement(node);
 
                 /* Color the command */
@@ -1354,13 +1371,22 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
                 if (cmd_node != NULL && cmd_node->has_source())
                 {
                     bool is_valid_cmd = false;
-                    wcstring cmd(buff, cmd_node->source_start, cmd_node->source_length);
-
-                    /* Try expanding it. If we cannot, it's an error. */
-                    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS);
-                    if (expanded && ! has_expand_reserved(cmd))
+                    if (! this->io_ok)
                     {
-                        is_valid_cmd = command_is_valid(cmd, decoration, working_directory, vars);
+                        /* We cannot check if the command is invalid, so just assume it's valid */
+                        is_valid_cmd = true;
+                    }
+                    else
+                    {
+                        /* Check to see if the command is valid */
+                        wcstring cmd(buff, cmd_node->source_start, cmd_node->source_length);
+
+                        /* Try expanding it. If we cannot, it's an error. */
+                        bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS);
+                        if (expanded && ! has_expand_reserved(cmd))
+                        {
+                            is_valid_cmd = command_is_valid(cmd, decoration, working_directory, vars);
+                        }
                     }
                     this->color_node(*cmd_node, is_valid_cmd ? highlight_spec_command : highlight_spec_error);
                 }
@@ -1398,7 +1424,7 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
         }
     }
 
-    if (this->cursor_pos <= this->buff.size())
+    if (this->io_ok && this->cursor_pos <= this->buff.size())
     {
         /* If the cursor is over an argument, and that argument is a valid path, underline it */
         for (parse_node_tree_t::const_iterator iter = parse_tree.begin(); iter != parse_tree.end(); ++iter)
@@ -1438,7 +1464,17 @@ void highlight_shell(const wcstring &buff, std::vector<highlight_spec_t> &color,
     const wcstring working_directory = env_get_pwd_slash();
 
     /* Highlight it! */
-    highlighter_t highlighter(buff, pos, vars, working_directory);
+    highlighter_t highlighter(buff, pos, vars, working_directory, true /* can do IO */);
+    color = highlighter.highlight();
+}
+
+void highlight_shell_no_io(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars)
+{
+    /* Do something sucky and get the current working directory on this background thread. This should really be passed in. */
+    const wcstring working_directory = env_get_pwd_slash();
+
+    /* Highlight it! */
+    highlighter_t highlighter(buff, pos, vars, working_directory, false /* no IO allowed */);
     color = highlighter.highlight();
 }
 

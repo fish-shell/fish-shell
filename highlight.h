@@ -77,6 +77,11 @@ struct file_detection_context_t;
 void highlight_shell(const wcstring &buffstr, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
 
 /**
+   Perform a non-blocking shell highlighting. The function will not do any I/O that may block. As a result, invalid commands may not be detected, etc.
+*/
+void highlight_shell_no_io(const wcstring &buffstr, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
+
+/**
    Perform syntax highlighting for the text in buff. Matching quotes and paranthesis are highlighted. The result is
    stored in the color array as a color_code from the HIGHLIGHT_ enum
    for each character in buff.

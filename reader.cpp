@@ -429,7 +429,7 @@ static struct termios terminal_mode_on_startup;
 static struct termios terminal_mode_for_executing_programs;
 
 
-static void reader_super_highlight_me_plenty(int highlight_pos_adjust = 0);
+static void reader_super_highlight_me_plenty(int highlight_pos_adjust = 0, bool no_io = false);
 
 /**
    Variable to keep track of forced exits - see \c reader_exit_forced();
@@ -781,7 +781,7 @@ bool reader_expand_abbreviation_in_command(const wcstring &cmdline, size_t curso
     return result;
 }
 
-/* Expand abbreviations at the current cursor position, minus the given  cursor backtrack. This may change the command line but does NOT repaint it. This is to allow the caller to coalesce repaints. */
+/* Expand abbreviations at the current cursor position, minus the given cursor backtrack. This may change the command line but does NOT repaint it. This is to allow the caller to coalesce repaints. */
 bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack)
 {
     bool result = false;
@@ -2654,7 +2654,7 @@ public:
     {
     }
 
-    int threaded_highlight()
+    int perform_highlight()
     {
         if (generation_count != s_generation_count)
         {
@@ -2710,7 +2710,7 @@ static void highlight_complete(background_highlight_context_t *ctx, int result)
 
 static int threaded_highlight(background_highlight_context_t *ctx)
 {
-    return ctx->threaded_highlight();
+    return ctx->perform_highlight();
 }
 
 
@@ -2722,17 +2722,30 @@ static int threaded_highlight(background_highlight_context_t *ctx)
 
    \param match_highlight_pos_adjust the adjustment to the position to use for bracket matching. This is added to the current cursor position and may be negative.
    \param error if non-null, any possible errors in the buffer are further descibed by the strings inserted into the specified arraylist
+    \param no_io if true, do a highlight that does not perform I/O, synchronously. If false, perform an asynchronous highlight in the background, which may perform disk I/O.
 */
-static void reader_super_highlight_me_plenty(int match_highlight_pos_adjust)
+static void reader_super_highlight_me_plenty(int match_highlight_pos_adjust, bool no_io)
 {
     const editable_line_t *el = &data->command_line;
     long match_highlight_pos = (long)el->position + match_highlight_pos_adjust;
     assert(match_highlight_pos >= 0);
     
     reader_sanity_check();
-
-    background_highlight_context_t *ctx = new background_highlight_context_t(el->text, match_highlight_pos, data->highlight_function);
-    iothread_perform(threaded_highlight, highlight_complete, ctx);
+    
+    highlight_function_t highlight_func = no_io ? highlight_shell_no_io : data->highlight_function;
+    background_highlight_context_t *ctx = new background_highlight_context_t(el->text, match_highlight_pos, highlight_func);
+    if (no_io)
+    {
+        // Highlighting without IO, we just do it
+        // Note that highlight_complete deletes ctx.
+        int result = ctx->perform_highlight();
+        highlight_complete(ctx, result);
+    }
+    else
+    {
+        // Highlighting including I/O proceeds in the background
+        iothread_perform(threaded_highlight, highlight_complete, ctx);
+    }
     highlight_search();
 
     /* Here's a hack. Check to see if our autosuggestion still applies; if so, don't recompute it. Since the autosuggestion computation is asynchronous, this avoids "flashing" as you type into the autosuggestion. */
@@ -3452,8 +3465,11 @@ const wchar_t *reader_readline(void)
                     if (abbreviation_expanded)
                     {
                         /* It's our reponsibility to rehighlight and repaint. But everything we do below triggers a repaint. */
-                        reader_super_highlight_me_plenty();
                         command_test_result = data->test_func(el->text.c_str());
+                        
+                        /* If the command is OK, then we're going to execute it. We still want to do syntax highlighting, but a synchronous variant that performs no I/O, so as not to block the user */
+                        bool skip_io = (command_test_result == 0);
+                        reader_super_highlight_me_plenty(0, skip_io);
                     }
                 }
 

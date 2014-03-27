@@ -40,6 +40,7 @@
 #include "wildcard.h"
 #include "parse_tree.h"
 #include "parser.h"
+#include "builtin.h"
 
 /**
    Error message for improper use of the exec builtin
@@ -1288,8 +1289,11 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                 // In a few places below, we want to know if we are in a pipeline
                 const bool is_in_pipeline = node_tree.statement_is_in_pipeline(node, true /* count first */);
                 
+                // We need to know the decoration
+                const enum parse_statement_decoration_t decoration = node_tree.decoration_for_plain_statement(node);
+                
                 // Check that we don't try to pipe through exec
-                if (is_in_pipeline && node_tree.decoration_for_plain_statement(node) == parse_statement_decoration_exec)
+                if (is_in_pipeline && decoration == parse_statement_decoration_exec)
                 {
                     errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG, L"exec");
                 }
@@ -1380,6 +1384,13 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                             errored = append_syntax_error(&parse_errors, node, (command == L"break" ? INVALID_BREAK_ERR_MSG : INVALID_CONTINUE_ERR_MSG));
                         }
                     }
+                    
+                    // Check that we don't do an invalid builtin (#1252)
+                    if (! errored && decoration == parse_statement_decoration_builtin && ! builtin_exists(command))
+                    {
+                        errored = append_syntax_error(&parse_errors, node, UNKNOWN_BUILTIN_ERR_MSG, command.c_str());
+                    }
+
                 }
             }
         }

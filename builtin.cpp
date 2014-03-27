@@ -3760,7 +3760,7 @@ int builtin_run(parser_t &parser, const wchar_t * const *argv, const io_chain_t 
     }
     else
     {
-        debug(0, _(L"Unknown builtin '%ls'"), argv[0]);
+        debug(0, UNKNOWN_BUILTIN_ERR_MSG, argv[0]);
     }
     return STATUS_BUILTIN_ERROR;
 }

@@ -183,6 +183,9 @@ void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt);
 /** Error message when encountering an illegal command name */
 #define ILLEGAL_CMD_ERR_MSG _( L"Illegal command name '%ls'")
 
+/** Error message when encountering an unknown builtin name */
+#define UNKNOWN_BUILTIN_ERR_MSG _( L"Unknown builtin '%ls'")
+
 /** Error message when encountering a failed expansion, e.g. for the variable name in for loops */
 #define FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG _( L"Unable to expand variable name '%ls'")
 

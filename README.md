@@ -76,6 +76,8 @@ If you wish to use fish as your default shell, use the following command:
 
 chsh will prompt you for your password, and change your default shell.
 
+Note: If you've used linux package managers for installation, run this one: `chsh -s /usr/bin/fish`
+
 To switch your default shell back, you can run:
 
 	chsh -s /bin/bash

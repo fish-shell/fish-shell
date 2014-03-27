@@ -254,7 +254,12 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags, parse
     optional_background = <empty> | <TOK_BACKGROUND>
 
     end_command = END
-
+ 
+ # A freestanding_argument_list is equivalent to a normal argument list, except it may contain TOK_END (newlines, and even semicolons, for historical reasons:
+ 
+     freestanding_argument_list = <empty> |
+                                  argument freestanding_argument_list |
+                                  <TOK_END> freestanding_argument_list
 */
 
 #endif

@@ -276,6 +276,26 @@ RESOLVE(argument_list)
     }
 }
 
+PRODUCTIONS(freestanding_argument_list) =
+{
+    {},
+    {symbol_argument, symbol_freestanding_argument_list},
+    {parse_token_type_end, symbol_freestanding_argument_list},
+};
+RESOLVE(freestanding_argument_list)
+{
+    switch (token1.type)
+    {
+        case parse_token_type_string:
+            return 1;
+        case parse_token_type_end:
+            return 2;
+        default:
+            return 0;
+    }
+}
+
+
 PRODUCTIONS(block_statement) =
 {
     {symbol_block_header, parse_token_type_end, symbol_job_list, symbol_end_command, symbol_arguments_or_redirections_list}
@@ -485,6 +505,7 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
             TEST(case_item_list)
             TEST(case_item)
             TEST(argument_list)
+            TEST(freestanding_argument_list)
             TEST(block_header)
             TEST(for_header)
             TEST(while_header)

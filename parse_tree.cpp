@@ -186,6 +186,8 @@ wcstring token_type_description(parse_token_type_t type)
 
         case symbol_argument_list:
             return L"argument_list";
+        case symbol_freestanding_argument_list:
+            return L"freestanding_argument_list";
 
         case symbol_boolean_statement:
             return L"boolean_statement";

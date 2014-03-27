@@ -493,7 +493,7 @@ void parser_t::expand_argument_list(const wcstring &arg_list_src, std::vector<co
 
     /* Parse the string as an argument list */
     parse_node_tree_t tree;
-    if (! parse_tree_from_string(arg_list_src, parse_flag_none, &tree, NULL /* errors */, symbol_argument_list))
+    if (! parse_tree_from_string(arg_list_src, parse_flag_none, &tree, NULL /* errors */, symbol_freestanding_argument_list))
     {
         /* Failed to parse. Here we expect to have reported any errors in test_args */
         return;
@@ -502,7 +502,7 @@ void parser_t::expand_argument_list(const wcstring &arg_list_src, std::vector<co
     /* Get the root argument list */
     assert(! tree.empty());
     const parse_node_t *arg_list = &tree.at(0);
-    assert(arg_list->type == symbol_argument_list);
+    assert(arg_list->type == symbol_freestanding_argument_list);
 
     /* Extract arguments from it */
     while (arg_list != NULL)
@@ -968,18 +968,18 @@ bool parser_t::detect_errors_in_argument_list(const wcstring &arg_list_src, wcst
 
     /* Parse the string as an argument list */
     parse_node_tree_t tree;
-    if (! parse_tree_from_string(arg_list_src, parse_flag_none, &tree, &errors, symbol_argument_list))
+    if (! parse_tree_from_string(arg_list_src, parse_flag_none, &tree, &errors, symbol_freestanding_argument_list))
     {
         /* Failed to parse. */
         errored = true;
     }
-
+    
     if (! errored)
     {
         /* Get the root argument list */
         assert(! tree.empty());
         const parse_node_t *arg_list = &tree.at(0);
-        assert(arg_list->type == symbol_argument_list);
+        assert(arg_list->type == symbol_freestanding_argument_list);
 
         /* Extract arguments from it */
         while (arg_list != NULL && ! errored)

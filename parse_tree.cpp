@@ -274,7 +274,7 @@ wcstring keyword_description(parse_keyword_t k)
     }
 }
 
-static wcstring token_type_user_presentable_description(parse_token_type_t type, parse_keyword_t keyword)
+static wcstring token_type_user_presentable_description(parse_token_type_t type, parse_keyword_t keyword = parse_keyword_none)
 {
     if (keyword != parse_keyword_none)
     {
@@ -286,6 +286,9 @@ static wcstring token_type_user_presentable_description(parse_token_type_t type,
             /* Hackish. We only support the following types. */
         case symbol_statement:
             return L"a command";
+
+        case symbol_argument:
+            return L"an argument";
 
         case parse_token_type_string:
             return L"a string";
@@ -301,7 +304,7 @@ static wcstring token_type_user_presentable_description(parse_token_type_t type,
 
         case parse_token_type_end:
             return L"end of the statement";
-
+            
         default:
             return format_string(L"a %ls", token_type_description(type).c_str());
     }
@@ -754,8 +757,6 @@ void parse_ll_t::parse_error_unbalancing_token(parse_token_t token)
     this->fatal_errored = true;
     if (this->should_generate_error_messages)
     {
-        assert(token.type == parse_token_type_string);
-        assert(token.keyword == parse_keyword_end || token.keyword == parse_keyword_else || token.keyword == parse_keyword_case);
         switch (token.keyword)
         {
             case parse_keyword_end:
@@ -771,8 +772,17 @@ void parse_ll_t::parse_error_unbalancing_token(parse_token_t token)
                 break;
 
             default:
-                fprintf(stderr, "Unexpected token %ls passed to %s\n", token.describe().c_str(), __FUNCTION__);
-                PARSER_DIE();
+                // At the moment, this case should only be hit if you parse a freestanding_argument_list
+                // For example, 'complete -c foo -a 'one & three'
+                // Hackish error message for that case
+                if (! symbol_stack.empty() && symbol_stack.back().type == symbol_freestanding_argument_list)
+                {
+                    this->parse_error(token, parse_error_generic, L"Expected %ls, but found %ls", token_type_user_presentable_description(symbol_argument).c_str(), token.user_presentable_description().c_str());
+                }
+                else
+                {
+                    this->parse_error(token, parse_error_generic, L"Did not expect %ls", token.user_presentable_description().c_str());
+                }
                 break;
         }
     }

@@ -1371,7 +1371,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
                  (job_control_mode==JOB_CONTROL_ALL) ||
                  ((job_control_mode == JOB_CONTROL_INTERACTIVE) && (get_is_interactive())));
 
-    job_set_flag(j, JOB_FOREGROUND, 1);
+    job_set_flag(j, JOB_FOREGROUND, ! tree.job_should_be_backgrounded(job_node));
 
     job_set_flag(j, JOB_TERMINAL, job_get_flag(j, JOB_CONTROL) \
                  && (!is_subshell && !is_event));

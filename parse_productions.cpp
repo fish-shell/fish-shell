@@ -82,7 +82,7 @@ RESOLVE(job_list)
 
 PRODUCTIONS(job) =
 {
-    {symbol_statement, symbol_job_continuation}
+    {symbol_statement, symbol_job_continuation, symbol_optional_background}
 };
 RESOLVE_ONLY(job)
 
@@ -402,7 +402,7 @@ RESOLVE(decorated_statement)
 
 PRODUCTIONS(plain_statement) =
 {
-    {parse_token_type_string, symbol_arguments_or_redirections_list, symbol_optional_background}
+    {parse_token_type_string, symbol_arguments_or_redirections_list}
 };
 RESOLVE_ONLY(plain_statement)
 

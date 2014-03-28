@@ -960,7 +960,7 @@ public:
 void highlighter_t::color_node(const parse_node_t &node, highlight_spec_t color)
 {
     // Can only color nodes with valid source ranges
-    if (! node.has_source())
+    if (! node.has_source() || node.source_length == 0)
         return;
 
     // Fill the color array with our color in the corresponding range
@@ -1356,6 +1356,7 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
 
             case parse_token_type_background:
             case parse_token_type_end:
+            case symbol_optional_background:
             {
                 this->color_node(node, highlight_spec_statement_terminator);
             }

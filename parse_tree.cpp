@@ -1496,6 +1496,19 @@ parse_node_tree_t::parse_node_list_t parse_node_tree_t::specific_statements_for_
     return result;
 }
 
+bool parse_node_tree_t::job_should_be_backgrounded(const parse_node_t &job) const
+{
+    assert(job.type == symbol_job);
+    assert(job.production_idx == 0);
+    bool result = false;
+    const parse_node_t *opt_background = get_child(job, 2, symbol_optional_background);
+    if (opt_background != NULL) {
+        assert(opt_background->production_idx <= 1);
+        result = (opt_background->production_idx == 1);
+    }
+    return result;
+}
+
 const parse_node_t *parse_node_tree_t::next_node_in_node_list(const parse_node_t &node_list, parse_token_type_t entry_type, const parse_node_t **out_list_tail) const
 {
     parse_token_type_t list_type = node_list.type;

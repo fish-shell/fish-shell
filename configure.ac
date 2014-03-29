@@ -24,10 +24,6 @@ conf_arg=$@
 AC_SUBST(HAVE_GETTEXT)
 AC_SUBST(HAVE_DOXYGEN)
 AC_SUBST(LDFLAGS_FISH)
-AC_SUBST(LIBS_FISH)
-AC_SUBST(LIBS_FISH_INDENT)
-AC_SUBST(LIBS_FISHD)
-AC_SUBST(LIBS_MIMEDB)
 
 
 #
@@ -413,37 +409,6 @@ AC_SEARCH_LIBS( [nan], [m], [AC_DEFINE( [HAVE_NAN], [1], [Define to 1 if you hav
 if test x$local_gettext != xno; then
   AC_SEARCH_LIBS( gettext, intl,,)
 fi
-
-LIBS_SHARED=$LIBS
-
-#
-# Check for libraries needed by fish.
-#
-
-LIBS="$LIBS_SHARED"
-LIBS_FISH=$LIBS
-
-#
-# Check for libraries needed by fish_indent.
-#
-
-LIBS="$LIBS_SHARED"
-LIBS_FISH_INDENT=$LIBS
-
-#
-# Check for libraries needed by fishd.
-#
-
-LIBS="$LIBS_SHARED"
-LIBS_FISHD=$LIBS
-
-#
-# Check for libraries needed by mimedb.
-#
-
-LIBS="$LIBS_SHARED"
-LIBS_MIMEDB=$LIBS
-
 
 #
 # Check presense of various header files

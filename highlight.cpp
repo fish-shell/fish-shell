@@ -1331,12 +1331,20 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
             case symbol_if_clause:
             case symbol_else_clause:
             case symbol_case_item:
-            case symbol_switch_statement:
             case symbol_boolean_statement:
             case symbol_decorated_statement:
             case symbol_if_statement:
             {
                 this->color_children(node, parse_token_type_string, highlight_spec_command);
+            }
+            break;
+                
+            case symbol_switch_statement:
+            {
+                const parse_node_t *literal_switch = this->parse_tree.get_child(node, 0, parse_token_type_string);
+                const parse_node_t *switch_arg = this->parse_tree.get_child(node, 1, symbol_argument);
+                this->color_node(*literal_switch, highlight_spec_command);
+                this->color_node(*switch_arg, highlight_spec_param);
             }
             break;
                 

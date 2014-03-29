@@ -509,7 +509,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
     parse_execution_result_t result = parse_execution_success;
 
     /* Get the switch variable */
-    const parse_node_t &switch_value_node = *get_child(statement, 1, parse_token_type_string);
+    const parse_node_t &switch_value_node = *get_child(statement, 1, symbol_argument);
     const wcstring switch_value = get_source(switch_value_node);
 
     /* Expand it. We need to offset any errors by the position of the string */

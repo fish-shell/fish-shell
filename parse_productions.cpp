@@ -237,7 +237,7 @@ RESOLVE(else_continuation)
 
 PRODUCTIONS(switch_statement) =
 {
-    { KEYWORD(parse_keyword_switch), parse_token_type_string, parse_token_type_end, symbol_case_item_list, symbol_end_command, symbol_arguments_or_redirections_list}
+    { KEYWORD(parse_keyword_switch), symbol_argument, parse_token_type_end, symbol_case_item_list, symbol_end_command, symbol_arguments_or_redirections_list}
 };
 RESOLVE_ONLY(switch_statement)
 

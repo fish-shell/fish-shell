@@ -220,7 +220,7 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags, parse
     else_continuation = if_clause else_clause |
                         <TOK_END> job_list
 
-    switch_statement = SWITCH <TOK_STRING> <TOK_END> case_item_list end_command arguments_or_redirections_list
+    switch_statement = SWITCH argument <TOK_END> case_item_list end_command arguments_or_redirections_list
     case_item_list = <empty> |
                     case_item case_item_list |
                     <TOK_END> case_item_list

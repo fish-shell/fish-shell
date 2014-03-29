@@ -106,7 +106,24 @@ echo "CXXFLAGS: $CXXFLAGS"
 # This mostly helps OS X users, since fink usually installs out of
 # tree and doesn't update CXXFLAGS.
 
-for i in /usr/pkg /sw /opt /opt/local /usr/local; do
+AC_ARG_WITH(
+  [local-prefixes],
+  AS_HELP_STRING(
+    [--without-local-prefixes],
+    [do not automatically check /usr/local, etc.]
+  ),
+  []
+  [])
+
+AS_IF(
+  [test "x$with_local_prefixes" = "xyes" || test "x$with_local_prefixes" = "x"],
+  [local_prefix_dirs="/usr/pkg /sw /opt /opt/local /usr/local"],
+  [test "x$with_local_prefixes" = "xno"],
+  [local_prefix_dirs=],
+  [local_prefix_dirs="$with_local_prefixes"]
+)
+
+for i in $local_prefix_dirs; do
 
   AC_MSG_CHECKING([for $i/include include directory])
   if test -d $i/include; then

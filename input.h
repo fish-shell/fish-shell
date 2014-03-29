@@ -18,6 +18,8 @@ inputrc information for key bindings.
 /**
    Key codes for inputrc-style keyboard functions that are passed on
    to the caller of input_read()
+   
+   NOTE: IF YOU MODIFY THIS YOU MUST UPDATE THE name_arr AND code_arr VARIABLES TO MATCH!
 */
 enum
 {
@@ -35,6 +37,7 @@ enum
     R_YANK,
     R_YANK_POP,
     R_COMPLETE,
+    R_COMPLETE_AND_SEARCH,
     R_BEGINNING_OF_HISTORY,
     R_END_OF_HISTORY,
     R_BACKWARD_KILL_LINE,
@@ -42,7 +45,6 @@ enum
     R_KILL_WORD,
     R_BACKWARD_KILL_WORD,
     R_BACKWARD_KILL_PATH_COMPONENT,
-    R_DUMP_FUNCTIONS,
     R_HISTORY_TOKEN_SEARCH_BACKWARD,
     R_HISTORY_TOKEN_SEARCH_FORWARD,
     R_SELF_INSERT,
@@ -67,9 +69,11 @@ enum
     R_KILL_SELECTION,
     R_FORWARD_JUMP,
     R_BACKWARD_JUMP,
-    R_AND
-}
-;
+    R_AND,
+    R_CANCEL
+};
+
+wcstring describe_char(wint_t c);
 
 #define R_MIN R_NULL
 #define R_MAX R_AND

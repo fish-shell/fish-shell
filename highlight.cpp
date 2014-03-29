@@ -44,9 +44,7 @@
 */
 #define VAR_COUNT ( sizeof(highlight_var)/sizeof(wchar_t *) )
 
-static void highlight_universal_internal(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos);
-
-/** The environment variables used to specify the color of different tokens. This matchest the order in highlight_spec_t */
+/** The environment variables used to specify the color of different tokens. This matches the order in highlight_spec_t */
 static const wchar_t * const highlight_var[] =
 {
     L"fish_color_normal",
@@ -62,7 +60,14 @@ static const wchar_t * const highlight_var[] =
     L"fish_color_quote",
     L"fish_color_redirection",
     L"fish_color_autosuggestion",
-    L"fish_color_selection"
+    L"fish_color_selection",
+    
+    L"fish_pager_color_prefix",
+    L"fish_pager_color_completion",
+    L"fish_pager_color_description",
+    L"fish_pager_color_progress",
+    L"fish_pager_color_secondary"
+
 };
 
 /* If the given path looks like it's relative to the working directory, then prepend that working directory. */
@@ -344,7 +349,7 @@ bool plain_statement_get_expanded_command(const wcstring &src, const parse_node_
         if (expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS))
         {
             /* Success, return the expanded string by reference */
-            std::swap(cmd, *out_cmd);
+            out_cmd->swap(cmd);
             result = true;
         }
     }
@@ -355,7 +360,10 @@ bool plain_statement_get_expanded_command(const wcstring &src, const parse_node_
 rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background)
 {
     rgb_color_t result = rgb_color_t::normal();
-
+    
+    /* If sloppy_background is set, then we look at the foreground color even if is_background is set */
+    bool treat_as_background = is_background && ! (highlight & highlight_modifier_sloppy_background);
+    
     /* Get the primary variable */
     size_t idx = highlight_get_primary(highlight);
     if (idx >= VAR_COUNT)
@@ -367,15 +375,13 @@ rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background)
 
 //  debug( 1, L"%d -> %d -> %ls", highlight, idx, val );
 
-
-
     if (val_wstr.missing())
         val_wstr = env_get_string(highlight_var[0]);
 
     if (! val_wstr.missing())
-        result = parse_color(val_wstr, is_background);
+        result = parse_color(val_wstr, treat_as_background);
 
-    /* Handle modifiers. Just one for now */
+    /* Handle modifiers. */
     if (highlight & highlight_modifier_valid_path)
     {
         env_var_t val2_wstr =  env_get_string(L"fish_color_valid_path");
@@ -392,300 +398,15 @@ rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background)
                 result.set_underline(true);
         }
     }
-
+    
+    if (highlight & highlight_modifier_force_underline)
+    {
+        result.set_underline(true);
+    }
+    
     return result;
 }
 
-
-/**
-   Highlight operators (such as $, ~, %, as well as escaped characters.
-*/
-static void highlight_parameter(const wcstring &buffstr, std::vector<highlight_spec_t> &colors, wcstring_list_t *error)
-{
-    const wchar_t * const buff = buffstr.c_str();
-    enum {e_unquoted, e_single_quoted, e_double_quoted} mode = e_unquoted;
-    size_t in_pos, len = buffstr.size();
-    int bracket_count=0;
-    int normal_status = colors.at(0);
-
-    for (in_pos=0; in_pos<len; in_pos++)
-    {
-        wchar_t c = buffstr.at(in_pos);
-        switch (mode)
-        {
-                /*
-                 Mode 0 means unquoted string
-                 */
-            case e_unquoted:
-            {
-                if (c == L'\\')
-                {
-                    size_t start_pos = in_pos;
-                    in_pos++;
-
-                    if (wcschr(L"~%", buff[in_pos]))
-                    {
-                        if (in_pos == 1)
-                        {
-                            colors.at(start_pos) = highlight_spec_escape;
-                            colors.at(in_pos+1) = normal_status;
-                        }
-                    }
-                    else if (buff[in_pos]==L',')
-                    {
-                        if (bracket_count)
-                        {
-                            colors.at(start_pos) = highlight_spec_escape;
-                            colors.at(in_pos+1) = normal_status;
-                        }
-                    }
-                    else if (wcschr(L"abefnrtv*?$(){}[]'\"<>^ \\#;|&", buff[in_pos]))
-                    {
-                        colors.at(start_pos)= highlight_spec_escape;
-                        colors.at(in_pos+1)=normal_status;
-                    }
-                    else if (wcschr(L"c", buff[in_pos]))
-                    {
-                        colors.at(start_pos) = highlight_spec_escape;
-                        if (in_pos+2 < colors.size())
-                            colors.at(in_pos+2)=normal_status;
-                    }
-                    else if (wcschr(L"uUxX01234567", buff[in_pos]))
-                    {
-                        int i;
-                        long long res=0;
-                        int chars=2;
-                        int base=16;
-
-                        wchar_t max_val = ASCII_MAX;
-
-                        switch (buff[in_pos])
-                        {
-                            case L'u':
-                            {
-                                chars=4;
-                                max_val = UCS2_MAX;
-                                break;
-                            }
-
-                            case L'U':
-                            {
-                                chars=8;
-                                max_val = WCHAR_MAX;
-                                break;
-                            }
-
-                            case L'x':
-                            {
-                                break;
-                            }
-
-                            case L'X':
-                            {
-                                max_val = BYTE_MAX;
-                                break;
-                            }
-
-                            default:
-                            {
-                                base=8;
-                                chars=3;
-                                in_pos--;
-                                break;
-                            }
-                        }
-
-                        for (i=0; i<chars; i++)
-                        {
-                            long d = convert_digit(buff[++in_pos],base);
-
-                            if (d < 0)
-                            {
-                                in_pos--;
-                                break;
-                            }
-
-                            res=(res*base)|d;
-                        }
-
-                        if ((res <= max_val))
-                        {
-                            colors.at(start_pos) = highlight_spec_escape;
-                            colors.at(in_pos+1) = normal_status;
-                        }
-                        else
-                        {
-                            colors.at(start_pos) = highlight_spec_error;
-                            colors.at(in_pos+1) = normal_status;
-                        }
-                    }
-
-                }
-                else
-                {
-                    switch (buff[in_pos])
-                    {
-                        case L'~':
-                        case L'%':
-                        {
-                            if (in_pos == 0)
-                            {
-                                colors.at(in_pos) = highlight_spec_operator;
-                                colors.at(in_pos+1) = normal_status;
-                            }
-                            break;
-                        }
-
-                        case L'$':
-                        {
-                            wchar_t n = buff[in_pos+1];
-                            colors.at(in_pos) = (n==L'$'||wcsvarchr(n))? highlight_spec_operator:highlight_spec_error;
-                            colors.at(in_pos+1) = normal_status;
-                            break;
-                        }
-
-
-                        case L'*':
-                        case L'?':
-                        case L'(':
-                        case L')':
-                        {
-                            colors.at(in_pos) = highlight_spec_operator;
-                            colors.at(in_pos+1) = normal_status;
-                            break;
-                        }
-
-                        case L'{':
-                        {
-                            colors.at(in_pos) = highlight_spec_operator;
-                            colors.at(in_pos+1) = normal_status;
-                            bracket_count++;
-                            break;
-                        }
-
-                        case L'}':
-                        {
-                            colors.at(in_pos) = highlight_spec_operator;
-                            colors.at(in_pos+1) = normal_status;
-                            bracket_count--;
-                            break;
-                        }
-
-                        case L',':
-                        {
-                            if (bracket_count)
-                            {
-                                colors.at(in_pos) = highlight_spec_operator;
-                                colors.at(in_pos+1) = normal_status;
-                            }
-
-                            break;
-                        }
-
-                        case L'\'':
-                        {
-                            colors.at(in_pos) = highlight_spec_quote;
-                            mode = e_single_quoted;
-                            break;
-                        }
-
-                        case L'\"':
-                        {
-                            colors.at(in_pos) = highlight_spec_quote;
-                            mode = e_double_quoted;
-                            break;
-                        }
-
-                    }
-                }
-                break;
-            }
-
-            /*
-             Mode 1 means single quoted string, i.e 'foo'
-             */
-            case e_single_quoted:
-            {
-                if (c == L'\\')
-                {
-                    size_t start_pos = in_pos;
-                    switch (buff[++in_pos])
-                    {
-                        case '\\':
-                        case L'\'':
-                        {
-                            colors.at(start_pos) = highlight_spec_escape;
-                            colors.at(in_pos+1) = highlight_spec_quote;
-                            break;
-                        }
-
-                        case 0:
-                        {
-                            return;
-                        }
-
-                    }
-
-                }
-                if (c == L'\'')
-                {
-                    mode = e_unquoted;
-                    colors.at(in_pos+1) = normal_status;
-                }
-
-                break;
-            }
-
-            /*
-             Mode 2 means double quoted string, i.e. "foo"
-             */
-            case e_double_quoted:
-            {
-                switch (c)
-                {
-                    case '"':
-                    {
-                        mode = e_unquoted;
-                        colors.at(in_pos+1) = normal_status;
-                        break;
-                    }
-
-                    case '\\':
-                    {
-                        size_t start_pos = in_pos;
-                        switch (buff[++in_pos])
-                        {
-                            case L'\0':
-                            {
-                                return;
-                            }
-
-                            case '\\':
-                            case L'$':
-                            case '"':
-                            {
-                                colors.at(start_pos) = highlight_spec_escape;
-                                colors.at(in_pos+1) = highlight_spec_quote;
-                                break;
-                            }
-                        }
-                        break;
-                    }
-
-                    case '$':
-                    {
-                        wchar_t n = buff[in_pos+1];
-                        colors.at(in_pos) = (n==L'$'||wcsvarchr(n))? highlight_spec_operator:highlight_spec_error;
-                        colors.at(in_pos+1) = highlight_spec_quote;
-                        break;
-                    }
-
-                }
-                break;
-            }
-        }
-    }
-}
 
 static bool has_expand_reserved(const wcstring &str)
 {
@@ -863,525 +584,51 @@ bool autosuggest_validate_from_history(const history_item_t &item, file_detectio
     return suggestionOK;
 }
 
-// This function does I/O
-static void tokenize(const wchar_t * const buff, std::vector<highlight_spec_t> &color, const size_t pos, wcstring_list_t *error, const wcstring &working_directory, const env_vars_snapshot_t &vars)
+/* Highlights the variable starting with 'in', setting colors within the 'colors' array. Returns the number of characters consumed. */
+static size_t color_variable(const wchar_t *in, size_t in_len, std::vector<highlight_spec_t>::iterator colors)
 {
-    ASSERT_IS_BACKGROUND_THREAD();
-
-    wcstring cmd;
-    int had_cmd=0;
-    wcstring last_cmd;
-
-    int accept_switches = 1;
-
-    int use_function = 1;
-    int use_command = 1;
-    int use_builtin = 1;
-
-    CHECK(buff,);
-
-    if (buff[0] == L'\0')
-        return;
-
-    std::fill(color.begin(), color.end(), (highlight_spec_t)highlight_spec_invalid);
-
-    tokenizer_t tok(buff, TOK_SHOW_COMMENTS | TOK_SQUASH_ERRORS);
-    for (; tok_has_next(&tok); tok_next(&tok))
+    assert(in_len > 0);
+    assert(in[0] == L'$');
+    
+    // Handle an initial run of $s.
+    size_t idx = 0;
+    while (in[idx] == '$')
     {
-        int last_type = tok_last_type(&tok);
-
-        switch (last_type)
+        // Our color depends on the next char
+        wchar_t next = in[idx + 1];
+        if (next == L'$' || wcsvarchr(next))
         {
-            case TOK_STRING:
-            {
-                if (had_cmd)
-                {
-
-                    /*Parameter */
-                    const wchar_t *param = tok_last(&tok);
-                    if (param[0] == L'-')
-                    {
-                        if (wcscmp(param, L"--") == 0)
-                        {
-                            accept_switches = 0;
-                            color.at(tok_get_pos(&tok)) = highlight_spec_param;
-                        }
-                        else if (accept_switches)
-                        {
-                            if (complete_is_valid_option(last_cmd, param, error, false /* no autoload */))
-                                color.at(tok_get_pos(&tok)) = highlight_spec_param;
-                            else
-                                color.at(tok_get_pos(&tok)) = highlight_spec_error;
-                        }
-                        else
-                        {
-                            color.at(tok_get_pos(&tok)) = highlight_spec_param;
-                        }
-                    }
-                    else
-                    {
-                        color.at(tok_get_pos(&tok)) = highlight_spec_param;
-                    }
-
-                    if (cmd == L"cd")
-                    {
-                        wcstring dir = tok_last(&tok);
-                        if (expand_one(dir, EXPAND_SKIP_CMDSUBST))
-                        {
-                            int is_help = string_prefixes_string(dir, L"--help") || string_prefixes_string(dir, L"-h");
-                            if (!is_help && ! is_potential_cd_path(dir, working_directory, PATH_EXPAND_TILDE, NULL))
-                            {
-                                color.at(tok_get_pos(&tok)) = highlight_spec_error;
-                            }
-                        }
-                    }
-
-                    /* Highlight the parameter. highlight_parameter wants to write one more color than we have characters (hysterical raisins) so allocate one more in the vector. But don't copy it back. */
-                    const wcstring param_str = param;
-                    size_t tok_pos = tok_get_pos(&tok);
-
-                    std::vector<highlight_spec_t>::const_iterator where = color.begin() + tok_pos;
-                    std::vector<highlight_spec_t> subcolors(where, where + param_str.size());
-                    subcolors.push_back(highlight_spec_invalid);
-                    highlight_parameter(param_str, subcolors, error);
-
-                    /* Copy the subcolors back into our colors array */
-                    std::copy(subcolors.begin(), subcolors.begin() + param_str.size(), color.begin() + tok_pos);
-                }
-                else
-                {
-                    /*
-                     Command. First check that the command actually exists.
-                     */
-                    cmd = tok_last(&tok);
-                    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS);
-                    if (! expanded || has_expand_reserved(cmd))
-                    {
-                        color.at(tok_get_pos(&tok)) = highlight_spec_error;
-                    }
-                    else
-                    {
-                        bool is_cmd = false;
-                        int is_subcommand = 0;
-                        int mark = tok_get_pos(&tok);
-                        color.at(tok_get_pos(&tok)) = use_builtin ? highlight_spec_command : highlight_spec_error;
-
-                        if (parser_keywords_is_subcommand(cmd))
-                        {
-
-                            int sw;
-
-                            if (cmd == L"builtin")
-                            {
-                                use_function = 0;
-                                use_command  = 0;
-                                use_builtin  = 1;
-                            }
-                            else if (cmd == L"command" || cmd == L"exec")
-                            {
-                                use_command  = 1;
-                                use_function = 0;
-                                use_builtin  = 0;
-                            }
-
-                            tok_next(&tok);
-
-                            sw = parser_keywords_is_switch(tok_last(&tok));
-
-                            if (!parser_keywords_is_block(cmd) &&
-                                    sw == ARG_SWITCH)
-                            {
-                                /*
-                                 The 'builtin' and 'command' builtins
-                                 are normally followed by another
-                                 command, but if they are invoked
-                                 with a switch, they aren't.
-
-                                 */
-                                use_command  = 1;
-                                use_function = 1;
-                                use_builtin  = 2;
-                            }
-                            else
-                            {
-                                if (sw == ARG_SKIP)
-                                {
-                                    color.at(tok_get_pos(&tok)) = highlight_spec_param;
-                                    mark = tok_get_pos(&tok);
-                                }
-
-                                is_subcommand = 1;
-                            }
-                            tok_set_pos(&tok, mark);
-                        }
-
-                        if (!is_subcommand)
-                        {
-                            /*
-                             OK, this is a command, it has been
-                             successfully expanded and everything
-                             looks ok. Lets check if the command
-                             exists.
-                             */
-
-                            /*
-                             First check if it is a builtin or
-                             function, since we don't have to stat
-                             any files for that
-                             */
-                            if (! is_cmd && use_builtin)
-                                is_cmd = builtin_exists(cmd);
-
-                            if (! is_cmd && use_function)
-                                is_cmd = function_exists_no_autoload(cmd, vars);
-
-                            if (! is_cmd)
-                                is_cmd = expand_abbreviation(cmd, NULL);
-
-                            /*
-                             Moving on to expensive tests
-                             */
-
-                            /*
-                             Check if this is a regular command
-                             */
-                            if (! is_cmd && use_command)
-                            {
-                                is_cmd = path_get_path(cmd, NULL, vars);
-                            }
-
-                            /* Maybe it is a path for a implicit cd command. */
-                            if (! is_cmd)
-                            {
-                                if (use_builtin || (use_function && function_exists_no_autoload(L"cd", vars)))
-                                    is_cmd = path_can_be_implicit_cd(cmd, NULL, working_directory.c_str(), vars);
-                            }
-
-                            if (is_cmd)
-                            {
-                                color.at(tok_get_pos(&tok)) = highlight_spec_command;
-                            }
-                            else
-                            {
-                                if (error)
-                                {
-                                    error->push_back(format_string(L"Unknown command \'%ls\'", cmd.c_str()));
-                                }
-                                color.at(tok_get_pos(&tok)) = (highlight_spec_error);
-                            }
-                            had_cmd = 1;
-                        }
-
-                        if (had_cmd)
-                        {
-                            last_cmd = tok_last(&tok);
-                        }
-                    }
-
-                }
-                break;
-            }
-
-            case TOK_REDIRECT_NOCLOB:
-            case TOK_REDIRECT_OUT:
-            case TOK_REDIRECT_IN:
-            case TOK_REDIRECT_APPEND:
-            case TOK_REDIRECT_FD:
-            {
-                if (!had_cmd)
-                {
-                    color.at(tok_get_pos(&tok)) = highlight_spec_error;
-                    if (error)
-                        error->push_back(L"Redirection without a command");
-                    break;
-                }
-
-                wcstring target_str;
-                const wchar_t *target=NULL;
-
-                color.at(tok_get_pos(&tok)) = highlight_spec_redirection;
-                tok_next(&tok);
-
-                /*
-                 Check that we are redirecting into a file
-                 */
-
-                switch (tok_last_type(&tok))
-                {
-                    case TOK_STRING:
-                    {
-                        target_str = tok_last(&tok);
-                        if (expand_one(target_str, EXPAND_SKIP_CMDSUBST))
-                        {
-                            target = target_str.c_str();
-                        }
-                        /*
-                         Redirect filename may contain a cmdsubst.
-                         If so, it will be ignored/not flagged.
-                         */
-                    }
-                    break;
-                    default:
-                    {
-                        size_t pos = tok_get_pos(&tok);
-                        if (pos < color.size())
-                        {
-                            color.at(pos) = highlight_spec_error;
-                        }
-                        if (error)
-                            error->push_back(L"Invalid redirection");
-                    }
-
-                }
-
-                if (target != 0)
-                {
-                    wcstring dir = target;
-                    size_t slash_idx = dir.find_last_of(L'/');
-                    struct stat buff;
-                    /*
-                     If file is in directory other than '.', check
-                     that the directory exists.
-                     */
-                    if (slash_idx != wcstring::npos)
-                    {
-                        dir.resize(slash_idx);
-                        if (wstat(dir, &buff) == -1)
-                        {
-                            color.at(tok_get_pos(&tok)) = highlight_spec_error;
-                            if (error)
-                                error->push_back(format_string(L"Directory \'%ls\' does not exist", dir.c_str()));
-
-                        }
-                    }
-
-                    /*
-                     If the file is read from or appended to, check
-                     if it exists.
-                     */
-                    if (last_type == TOK_REDIRECT_IN ||
-                            last_type == TOK_REDIRECT_APPEND)
-                    {
-                        if (wstat(target, &buff) == -1)
-                        {
-                            color.at(tok_get_pos(&tok)) = highlight_spec_error;
-                            if (error)
-                                error->push_back(format_string(L"File \'%ls\' does not exist", target));
-                        }
-                    }
-                    if (last_type == TOK_REDIRECT_NOCLOB)
-                    {
-                        if (wstat(target, &buff) != -1)
-                        {
-                            color.at(tok_get_pos(&tok)) = highlight_spec_error;
-                            if (error)
-                                error->push_back(format_string(L"File \'%ls\' exists", target));
-                        }
-                    }
-                }
-                break;
-            }
-
-            case TOK_PIPE:
-            case TOK_BACKGROUND:
-            {
-                if (had_cmd)
-                {
-                    color.at(tok_get_pos(&tok)) = highlight_spec_statement_terminator;
-                    had_cmd = 0;
-                    use_command  = 1;
-                    use_function = 1;
-                    use_builtin  = 1;
-                    accept_switches = 1;
-                }
-                else
-                {
-                    color.at(tok_get_pos(&tok)) = highlight_spec_error;
-                    if (error)
-                        error->push_back(L"No job to put in background");
-                }
-
-                break;
-            }
-
-            case TOK_END:
-            {
-                color.at(tok_get_pos(&tok)) = highlight_spec_statement_terminator;
-                had_cmd = 0;
-                use_command  = 1;
-                use_function = 1;
-                use_builtin  = 1;
-                accept_switches = 1;
-                break;
-            }
-
-            case TOK_COMMENT:
-            {
-                color.at(tok_get_pos(&tok)) = highlight_spec_comment;
-                break;
-            }
-
-            case TOK_ERROR:
-            default:
-            {
-                /*
-                 If the tokenizer reports an error, highlight it as such.
-                 */
-                if (error)
-                    error->push_back(tok_last(&tok));
-                color.at(tok_get_pos(&tok)) = highlight_spec_error;
-                break;
-            }
-        }
-    }
-}
-
-void highlight_shell(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars)
-{
-    if (1)
-    {
-        highlight_shell_new_parser(buff, color, pos, error, vars);
-    }
-    else
-    {
-        highlight_shell_classic(buff, color, pos, error, vars);
-    }
-}
-
-// PCA This function does I/O, (calls is_potential_path, path_get_path, maybe others) and so ought to only run on a background thread
-void highlight_shell_classic(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars)
-{
-    ASSERT_IS_BACKGROUND_THREAD();
-
-    const size_t length = buff.size();
-    assert(buff.size() == color.size());
-
-
-    if (length == 0)
-        return;
-
-    std::fill(color.begin(), color.end(), (highlight_spec_t)highlight_spec_invalid);
-
-    /* Do something sucky and get the current working directory on this background thread. This should really be passed in. */
-    const wcstring working_directory = env_get_pwd_slash();
-
-    /* Tokenize the string */
-    tokenize(buff.c_str(), color, pos, error, working_directory, vars);
-
-    /* Locate and syntax highlight cmdsubsts recursively */
-
-    wchar_t * const subbuff = wcsdup(buff.c_str());
-    wchar_t * subpos = subbuff;
-    bool done = false;
-
-    while (1)
-    {
-        wchar_t *begin, *end;
-
-        if (parse_util_locate_cmdsubst(subpos, &begin, &end, true) <= 0)
-        {
-            break;
-        }
-
-        /* Note: This *end = 0 writes into subbuff! */
-        if (!*end)
-            done = true;
-        else
-            *end = 0;
-
-        //our subcolors start at color + (begin-subbuff)+1
-        size_t start = begin - subbuff + 1, len = wcslen(begin + 1);
-        std::vector<highlight_spec_t> subcolors(len, highlight_spec_invalid);
-
-        highlight_shell(begin+1, subcolors, -1, error, vars);
-
-        // insert subcolors
-        std::copy(subcolors.begin(), subcolors.end(), color.begin() + start);
-
-        // highlight the end of the subcommand
-        assert(end >= subbuff);
-        if ((size_t)(end - subbuff) < length)
-        {
-            color.at(end-subbuff)=highlight_spec_operator;
-        }
-
-        if (done)
-            break;
-
-        subpos = end+1;
-    }
-    free(subbuff);
-
-    /*
-      The highlighting code only changes the first element when the
-      color changes. This fills in the rest.
-    */
-    int last_val=0;
-    for (size_t i=0; i < buff.size(); i++)
-    {
-        highlight_spec_t &current_val = color.at(i);
-        if (current_val != highlight_spec_invalid)
-        {
-            last_val = current_val;
+            colors[idx] = highlight_spec_operator;
         }
         else
         {
-            current_val = last_val; //note - this writes into the vector
+            colors[idx] = highlight_spec_error;
         }
+        idx++;
     }
-
-    /*
-      Color potentially valid paths in a special path color if they
-      are the current token.
-        For reasons that I don't yet understand, it's required that pos be allowed to be length (e.g. when backspacing).
-    */
-    if (pos <= length)
+    
+    // Handle a sequence of variable characters
+    while (wcsvarchr(in[idx]))
     {
-
-        const wchar_t *cbuff = buff.c_str();
-        const wchar_t *tok_begin, *tok_end;
-        parse_util_token_extent(cbuff, pos, &tok_begin, &tok_end, 0, 0);
-        if (tok_begin && tok_end)
-        {
-            wcstring token(tok_begin, tok_end-tok_begin);
-            if (unescape_string_in_place(&token, UNESCAPE_SPECIAL))
-            {
-                /* Big hack: is_potential_path expects a tilde, but unescape_string gives us HOME_DIRECTORY. Put it back. */
-                if (! token.empty() && token.at(0) == HOME_DIRECTORY)
-                    token.at(0) = L'~';
-
-                const wcstring_list_t working_directory_list(1, working_directory);
-                if (is_potential_path(token, working_directory_list, PATH_EXPAND_TILDE))
-                {
-                    for (ptrdiff_t i=tok_begin-cbuff; i < (tok_end-cbuff); i++)
-                    {
-                        // Don't color highlight_spec_error because it looks dorky. For example, trying to cd into a non-directory would show an underline and also red.
-                        if (highlight_get_primary(color.at(i)) != highlight_spec_error)
-                        {
-                            color.at(i) |= highlight_modifier_valid_path;
-                        }
-                    }
-                }
-            }
-        }
+        colors[idx++] = highlight_spec_operator;
     }
-
-
-    highlight_universal_internal(buff, color, pos);
-
-    /*
-      Spaces should not be highlighted at all, since it makes cursor look funky in some terminals
-    */
-    for (size_t i=0; i < buff.size(); i++)
+    
+    // Handle a slice. Note that we currently don't do any validation of the slice's contents, e.g. $foo[blah] will not show an error even though it's invalid.
+    if (in[idx] == L'[')
     {
-        if (iswspace(buff.at(i)))
+        wchar_t *slice_begin = NULL, *slice_end = NULL;
+        if (1 == parse_util_locate_slice(in, &slice_begin, &slice_end, false))
         {
-            color.at(i)=0;
+            size_t slice_begin_idx = slice_begin - in, slice_end_idx = slice_end - in;
+            assert(slice_end_idx > slice_begin_idx);
+            colors[slice_begin_idx] = highlight_spec_operator;
+            colors[slice_end_idx] = highlight_spec_operator;
         }
     }
+    return idx;
 }
 
-/* This function is a disaster badly in need of refactoring. */
+/* This function is a disaster badly in need of refactoring. It colors an argument, without regard to command substitutions. */
 static void color_argument_internal(const wcstring &buffstr, std::vector<highlight_spec_t>::iterator colors)
 {
     const size_t buff_len = buffstr.size();
@@ -1523,14 +770,9 @@ static void color_argument_internal(const wcstring &buffstr, std::vector<highlig
                         case L'$':
                         {
                             assert(in_pos < buff_len);
-                            int dollar_color = highlight_spec_error;
-                            if (in_pos + 1 < buff_len)
-                            {
-                                wchar_t next = buffstr.at(in_pos + 1);
-                                if (next == L'$' || wcsvarchr(next))
-                                    dollar_color = highlight_spec_operator;
-                            }
-                            colors[in_pos] = dollar_color;
+                            in_pos += color_variable(buffstr.c_str() + in_pos, buff_len - in_pos, colors + in_pos);
+                            /* subtract one to account for the upcoming loop increment */
+                            in_pos -= 1;
                             break;
                         }
 
@@ -1646,14 +888,9 @@ static void color_argument_internal(const wcstring &buffstr, std::vector<highlig
 
                     case L'$':
                     {
-                        int dollar_color = highlight_spec_error;
-                        if (in_pos + 1 < buff_len)
-                        {
-                            wchar_t next = buffstr.at(in_pos + 1);
-                            if (next == L'$' || wcsvarchr(next))
-                                dollar_color = highlight_spec_operator;
-                        }
-                        colors[in_pos] = dollar_color;
+                        in_pos += color_variable(buffstr.c_str() + in_pos, buff_len - in_pos, colors + in_pos);
+                        /* subtract one to account for the upcoming increment in the loop */
+                        in_pos -= 1;
                         break;
                     }
 
@@ -1675,6 +912,9 @@ class highlighter_t
 
     /* Environment variables. Again, a reference member variable! */
     const env_vars_snapshot_t &vars;
+    
+    /* Whether it's OK to do I/O */
+    const bool io_ok;
 
     /* Working directory */
     const wcstring working_directory;
@@ -1699,15 +939,15 @@ class highlighter_t
     void color_redirections(const parse_node_t &list_node);
 
     /* Color all the children of the command with the given type */
-    void color_children(const parse_node_t &parent, parse_token_type_t type, int color);
+    void color_children(const parse_node_t &parent, parse_token_type_t type, highlight_spec_t color);
 
     /* Colors the source range of a node with a given color */
-    void color_node(const parse_node_t &node, int color);
+    void color_node(const parse_node_t &node, highlight_spec_t color);
 
 public:
 
     /* Constructor */
-    highlighter_t(const wcstring &str, size_t pos, const env_vars_snapshot_t &ev, const wcstring &wd) : buff(str), cursor_pos(pos), vars(ev), working_directory(wd), color_array(str.size())
+    highlighter_t(const wcstring &str, size_t pos, const env_vars_snapshot_t &ev, const wcstring &wd, bool can_do_io) : buff(str), cursor_pos(pos), vars(ev), io_ok(can_do_io), working_directory(wd), color_array(str.size())
     {
         /* Parse the tree */
         this->parse_tree.clear();
@@ -1718,7 +958,7 @@ public:
     const color_array_t &highlight();
 };
 
-void highlighter_t::color_node(const parse_node_t &node, int color)
+void highlighter_t::color_node(const parse_node_t &node, highlight_spec_t color)
 {
     // Can only color nodes with valid source ranges
     if (! node.has_source())
@@ -1774,7 +1014,7 @@ void highlighter_t::color_argument(const parse_node_t &node)
         }
 
         /* Highlight it recursively. */
-        highlighter_t cmdsub_highlighter(cmdsub_contents, cursor_subpos, this->vars, this->working_directory);
+        highlighter_t cmdsub_highlighter(cmdsub_contents, cursor_subpos, this->vars, this->working_directory, this->io_ok);
         const color_array_t &subcolors = cmdsub_highlighter.highlight();
 
         /* Copy out the subcolors back into our array */
@@ -1810,13 +1050,16 @@ void highlighter_t::color_arguments(const parse_node_t &list_node)
 {
     /* Hack: determine whether the parent is the cd command, so we can show errors for non-directories */
     bool cmd_is_cd = false;
-    const parse_node_t *parent = this->parse_tree.get_parent(list_node, symbol_plain_statement);
-    if (parent != NULL)
+    if (this->io_ok)
     {
-        wcstring cmd_str;
-        if (plain_statement_get_expanded_command(this->buff, this->parse_tree, *parent, &cmd_str))
+        const parse_node_t *parent = this->parse_tree.get_parent(list_node, symbol_plain_statement);
+        if (parent != NULL)
         {
-            cmd_is_cd = (cmd_str == L"cd");
+            wcstring cmd_str;
+            if (plain_statement_get_expanded_command(this->buff, this->parse_tree, *parent, &cmd_str))
+            {
+                cmd_is_cd = (cmd_str == L"cd");
+            }
         }
     }
 
@@ -1836,7 +1079,7 @@ void highlighter_t::color_arguments(const parse_node_t &list_node)
             if (expand_one(param, EXPAND_SKIP_CMDSUBST))
             {
                 bool is_help = string_prefixes_string(param, L"--help") || string_prefixes_string(param, L"-h");
-                if (!is_help && ! is_potential_cd_path(param, working_directory, PATH_EXPAND_TILDE, NULL))
+                if (! is_help && this->io_ok && ! is_potential_cd_path(param, working_directory, PATH_EXPAND_TILDE, NULL))
                 {
                     this->color_node(*child, highlight_spec_error);
                 }
@@ -1866,14 +1109,21 @@ void highlighter_t::color_redirection(const parse_node_t &redirection_node)
         if (parse_util_locate_cmdsubst(target.c_str(), NULL, NULL, true) != 0)
         {
             if (redirection_target != NULL)
+            {
                 this->color_argument(*redirection_target);
+            }
         }
         else
         {
             /* No command substitution, so we can highlight the target file or fd. For example, disallow redirections into a non-existent directory */
             bool target_is_valid = true;
 
-            if (! expand_one(target, EXPAND_SKIP_CMDSUBST))
+            if (! this->io_ok)
+            {
+                /* I/O is disallowed, so we don't have much hope of catching anything but gross errors. Assume it's valid. */
+                target_is_valid = true;
+            }
+            else if (! expand_one(target, EXPAND_SKIP_CMDSUBST))
             {
                 /* Could not be expanded */
                 target_is_valid = false;
@@ -1981,7 +1231,7 @@ void highlighter_t::color_redirections(const parse_node_t &list_node)
 }
 
 /* Color all the children of the command with the given type */
-void highlighter_t::color_children(const parse_node_t &parent, parse_token_type_t type, int color)
+void highlighter_t::color_children(const parse_node_t &parent, parse_token_type_t type, highlight_spec_t color)
 {
     for (node_offset_t idx=0; idx < parent.child_count; idx++)
     {
@@ -1998,7 +1248,7 @@ static bool command_is_valid(const wcstring &cmd, enum parse_statement_decoratio
 {
     /* Determine which types we check, based on the decoration */
     bool builtin_ok = true, function_ok = true, abbreviation_ok = true, command_ok = true, implicit_cd_ok = true;
-    if (decoration == parse_statement_decoration_command)
+    if (decoration == parse_statement_decoration_command || decoration == parse_statement_decoration_exec)
     {
         builtin_ok = false;
         function_ok = false;
@@ -2044,7 +1294,11 @@ static bool command_is_valid(const wcstring &cmd, enum parse_statement_decoratio
 
 const highlighter_t::color_array_t & highlighter_t::highlight()
 {
-    ASSERT_IS_BACKGROUND_THREAD();
+    // If we are doing I/O, we must be in a background thread
+    if (io_ok)
+    {
+        ASSERT_IS_BACKGROUND_THREAD();
+    }
 
     const size_t length = buff.size();
     assert(this->buff.size() == this->color_array.size());
@@ -2071,8 +1325,7 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
 
         switch (node.type)
         {
-                // Color direct string descendants, e.g. 'for' and 'in'.
-            case symbol_for_header:
+            // Color direct string descendants, e.g. 'for' and 'in'.
             case symbol_while_header:
             case symbol_begin_header:
             case symbol_function_header:
@@ -2085,8 +1338,20 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
             case symbol_if_statement:
             {
                 this->color_children(node, parse_token_type_string, highlight_spec_command);
-                // Color the 'end'
-                this->color_children(node, symbol_end_command, highlight_spec_command);
+            }
+            break;
+                
+            case symbol_for_header:
+            {
+                // Color the 'for' and 'in' as commands
+                const parse_node_t *literal_for_node = this->parse_tree.get_child(node, 0, parse_token_type_string);
+                const parse_node_t *literal_in_node = this->parse_tree.get_child(node, 2, parse_token_type_string);
+                this->color_node(*literal_for_node, highlight_spec_command);
+                this->color_node(*literal_in_node, highlight_spec_command);
+                
+                // Color the variable name as a parameter
+                const parse_node_t *var_name_node = this->parse_tree.get_child(node, 1, parse_token_type_string);
+                this->color_argument(*var_name_node);
             }
             break;
 
@@ -2099,7 +1364,7 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
 
             case symbol_plain_statement:
             {
-                // Get the decoration from the parent
+                /* Get the decoration from the parent */
                 enum parse_statement_decoration_t decoration = parse_tree.decoration_for_plain_statement(node);
 
                 /* Color the command */
@@ -2107,13 +1372,22 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
                 if (cmd_node != NULL && cmd_node->has_source())
                 {
                     bool is_valid_cmd = false;
-                    wcstring cmd(buff, cmd_node->source_start, cmd_node->source_length);
-
-                    /* Try expanding it. If we cannot, it's an error. */
-                    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS);
-                    if (expanded && ! has_expand_reserved(cmd))
+                    if (! this->io_ok)
                     {
-                        is_valid_cmd = command_is_valid(cmd, decoration, working_directory, vars);
+                        /* We cannot check if the command is invalid, so just assume it's valid */
+                        is_valid_cmd = true;
+                    }
+                    else
+                    {
+                        /* Check to see if the command is valid */
+                        wcstring cmd(buff, cmd_node->source_start, cmd_node->source_length);
+
+                        /* Try expanding it. If we cannot, it's an error. */
+                        bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS);
+                        if (expanded && ! has_expand_reserved(cmd))
+                        {
+                            is_valid_cmd = command_is_valid(cmd, decoration, working_directory, vars);
+                        }
                     }
                     this->color_node(*cmd_node, is_valid_cmd ? highlight_spec_command : highlight_spec_error);
                 }
@@ -2132,6 +1406,10 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
                 }
             }
             break;
+                
+            case symbol_end_command:
+                this->color_node(node, highlight_spec_command);
+                break;
 
             case parse_special_type_parse_error:
             case parse_special_type_tokenizer_error:
@@ -2147,7 +1425,7 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
         }
     }
 
-    if (this->cursor_pos <= this->buff.size())
+    if (this->io_ok && this->cursor_pos <= this->buff.size())
     {
         /* If the cursor is over an argument, and that argument is a valid path, underline it */
         for (parse_node_tree_t::const_iterator iter = parse_tree.begin(); iter != parse_tree.end(); ++iter)
@@ -2181,13 +1459,23 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
     return color_array;
 }
 
-void highlight_shell_new_parser(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars)
+void highlight_shell(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars)
 {
     /* Do something sucky and get the current working directory on this background thread. This should really be passed in. */
     const wcstring working_directory = env_get_pwd_slash();
 
     /* Highlight it! */
-    highlighter_t highlighter(buff, pos, vars, working_directory);
+    highlighter_t highlighter(buff, pos, vars, working_directory, true /* can do IO */);
+    color = highlighter.highlight();
+}
+
+void highlight_shell_no_io(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars)
+{
+    /* Do something sucky and get the current working directory on this background thread. This should really be passed in. */
+    const wcstring working_directory = env_get_pwd_slash();
+
+    /* Highlight it! */
+    highlighter_t highlighter(buff, pos, vars, working_directory, false /* no IO allowed */);
     color = highlighter.highlight();
 }
 

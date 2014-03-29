@@ -64,17 +64,15 @@ private:
 
     /** The path from which we most recently autoloaded */
     wcstring last_path;
+    
+    /** That path, tokenized (split on separators) */
+    wcstring_list_t last_path_tokenized;
 
     /**
        A table containing all the files that are currently being
        loaded. This is here to help prevent recursion.
     */
     std::set<wcstring> is_loading_set;
-
-    bool is_loading(const wcstring &name) const
-    {
-        return is_loading_set.find(name) != is_loading_set.end();
-    }
 
     void remove_all_functions(void)
     {

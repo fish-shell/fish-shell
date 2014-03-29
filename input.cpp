@@ -59,6 +59,7 @@
 #include "output.h"
 #include "intern.h"
 #include <vector>
+#include <algorithm>
 
 #define DEFAULT_TERM L"ansi"
 #define MAX_INPUT_FUNCTION_ARGS 20
@@ -71,12 +72,21 @@ struct input_mapping_t
 {
     wcstring seq; /**< Character sequence which generates this event */
     std::vector<wcstring> commands; /**< commands that should be evaluated by this mapping */
+    
+    /* We wish to preserve the user-specified order. This is just an incrementing value. */
+    unsigned int specification_order;
+    
     wcstring mode; /**< mode in which this command should be evaluated */
     wcstring sets_mode; /** new mode that should be switched to after command evaluation */
-
+    
     input_mapping_t(const wcstring &s, const std::vector<wcstring> &c,
                     const wcstring &m = DEFAULT_BIND_MODE,
-                    const wcstring &sm = DEFAULT_BIND_MODE) : seq(s), commands(c), mode(m), sets_mode(sm) {}
+                    const wcstring &sm = DEFAULT_BIND_MODE) : seq(s), commands(c), mode(m), sets_mode(sm)
+    {
+        static unsigned int s_last_input_mapping_specification_order = 0;
+        specification_order = ++s_last_input_mapping_specification_order;
+        
+    }
 };
 
 /**
@@ -86,7 +96,6 @@ struct terminfo_mapping_t
 {
     const wchar_t *name; /**< Name of key */
     const char *seq; /**< Character sequence generated on keypress. Constant string. */
-
 };
 
 
@@ -109,6 +118,7 @@ static const wchar_t * const name_arr[] =
     L"yank",
     L"yank-pop",
     L"complete",
+    L"complete-and-search",
     L"beginning-of-history",
     L"end-of-history",
     L"backward-kill-line",
@@ -116,7 +126,6 @@ static const wchar_t * const name_arr[] =
     L"kill-word",
     L"backward-kill-word",
     L"backward-kill-path-component",
-    L"dump-functions",
     L"history-token-search-backward",
     L"history-token-search-forward",
     L"self-insert",
@@ -125,9 +134,8 @@ static const wchar_t * const name_arr[] =
     L"upcase-word",
     L"downcase-word",
     L"capitalize-word",
-    L"null",
-    L"eof",
     L"vi-arg-digit",
+    L"vi-delete-to",
     L"execute",
     L"beginning-of-buffer",
     L"end-of-buffer",
@@ -142,9 +150,20 @@ static const wchar_t * const name_arr[] =
     L"kill-selection",
     L"forward-jump",
     L"backward-jump",
-    L"and"
+    L"and",
+    L"cancel"
+};
+
+wcstring describe_char(wint_t c)
+{
+    wchar_t initial_cmd_char = R_BEGINNING_OF_LINE;
+    size_t name_count = sizeof name_arr / sizeof *name_arr;
+    if (c >= initial_cmd_char && c < initial_cmd_char + name_count)
+    {
+        return format_string(L"%02x (%ls)", c, name_arr[c - initial_cmd_char]);
+    }
+    return format_string(L"%02x", c);
 }
-;
 
 /**
    Description of each supported input function
@@ -205,6 +224,7 @@ static const wchar_t code_arr[] =
     R_YANK,
     R_YANK_POP,
     R_COMPLETE,
+    R_COMPLETE_AND_SEARCH,
     R_BEGINNING_OF_HISTORY,
     R_END_OF_HISTORY,
     R_BACKWARD_KILL_LINE,
@@ -212,7 +232,6 @@ static const wchar_t code_arr[] =
     R_KILL_WORD,
     R_BACKWARD_KILL_WORD,
     R_BACKWARD_KILL_PATH_COMPONENT,
-    R_DUMP_FUNCTIONS,
     R_HISTORY_TOKEN_SEARCH_BACKWARD,
     R_HISTORY_TOKEN_SEARCH_FORWARD,
     R_SELF_INSERT,
@@ -221,9 +240,8 @@ static const wchar_t code_arr[] =
     R_UPCASE_WORD,
     R_DOWNCASE_WORD,
     R_CAPITALIZE_WORD,
-    R_NULL,
-    R_EOF,
     R_VI_ARG_DIGIT,
+    R_VI_DELETE_TO,
     R_EXECUTE,
     R_BEGINNING_OF_BUFFER,
     R_END_OF_BUFFER,
@@ -238,9 +256,9 @@ static const wchar_t code_arr[] =
     R_KILL_SELECTION,
     R_FORWARD_JUMP,
     R_BACKWARD_JUMP,
-    R_AND
-}
-;
+    R_AND,
+    R_CANCEL
+};
 
 /** Mappings for the current input mode */
 static std::vector<input_mapping_t> mapping_list;
@@ -327,10 +345,25 @@ wchar_t input_function_get_arg(int index)
     return input_function_args[index];
 }
 
-/**
-   Returns the function description for the given function code.
-*/
+/* Helper function to compare the lengths of sequences */
+static bool length_is_greater_than(const input_mapping_t &m1, const input_mapping_t &m2)
+{
+    return m1.seq.size() > m2.seq.size();
+}
 
+static bool specification_order_is_less_than(const input_mapping_t &m1, const input_mapping_t &m2)
+{
+    return m1.specification_order < m2.specification_order;
+}
+
+/* Inserts an input mapping at the correct position. We sort them in descending order by length, so that we test longer sequences first. */
+static void input_mapping_insert_sorted(const input_mapping_t &new_mapping)
+{
+    std::vector<input_mapping_t>::iterator loc = std::lower_bound(mapping_list.begin(), mapping_list.end(), new_mapping, length_is_greater_than);
+    mapping_list.insert(loc, new_mapping);
+}
+
+/* Adds an input mapping */
 void input_mapping_add(const wchar_t *sequence, const wchar_t **commands, size_t commands_len,
                        const wchar_t *mode, const wchar_t *sets_mode)
 {
@@ -341,6 +374,7 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t **commands, size_t
 
     // debug( 0, L"Add mapping from %ls to %ls in mode %ls", escape(sequence, 1), escape(command, 1 ), mode);
 
+    // remove existing mappings with this sequence
     std::vector<wcstring> commands_vector(commands, commands + commands_len);
 
     for (size_t i=0; i<mapping_list.size(); i++)
@@ -713,11 +747,13 @@ wint_t input_readch()
 
 void input_mapping_get_names(wcstring_list_t &lst)
 {
-    size_t i;
+    // Sort the mappings by the user specification order, so we can return them in the same order that the user specified them in
+    std::vector<input_mapping_t> local_list = mapping_list;
+    std::sort(local_list.begin(), local_list.end(), specification_order_is_less_than);
 
-    for (i=0; i<mapping_list.size(); i++)
+    for (size_t i=0; i<local_list.size(); i++)
     {
-        const input_mapping_t &m = mapping_list.at(i);
+        const input_mapping_t &m = local_list.at(i);
         lst.push_back(wcstring(m.seq));
     }
 

@@ -15,9 +15,9 @@ complete -x -c sshfs -d Hostname -a "
 (__fish_print_users)@
 "
 #
-# Mount Points, for neatness, I am only mounting under ~/mnt/
+# Mount Points
 #
-complete -c sshfs --description "Mount point" -x -a '(find ~/mnt -type d)'
+complete -c sshfs -x -a '(__fish_complete_directories (commandline -ct) "Mount point")'
 #
 # Command options
 #

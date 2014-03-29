@@ -40,6 +40,7 @@
 #include "wildcard.h"
 #include "parse_tree.h"
 #include "parser.h"
+#include "builtin.h"
 
 /**
    Error message for improper use of the exec builtin
@@ -144,21 +145,20 @@ size_t parse_util_get_offset(const wcstring &str, int line, long line_offset)
     }
 
     return off + line_offset2;
-
 }
 
-
-int parse_util_locate_cmdsubst(const wchar_t *in, wchar_t **begin, wchar_t **end, bool allow_incomplete)
+static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin, wchar_t **end, bool allow_incomplete, wchar_t open_type, wchar_t close_type)
 {
+    /* open_type is typically ( or [, and close type is the corresponding value */
     wchar_t *pos;
     wchar_t prev=0;
     int syntax_error=0;
     int paran_count=0;
-
+    
     wchar_t *paran_begin=0, *paran_end=0;
-
+    
     CHECK(in, 0);
-
+    
     for (pos = const_cast<wchar_t *>(in); *pos; pos++)
     {
         if (prev != '\\')
@@ -177,26 +177,26 @@ int parse_util_locate_cmdsubst(const wchar_t *in, wchar_t **begin, wchar_t **end
             }
             else
             {
-                if (*pos == '(')
+                if (*pos == open_type)
                 {
                     if ((paran_count == 0)&&(paran_begin==0))
                     {
                         paran_begin = pos;
                     }
-
+                    
                     paran_count++;
                 }
-                else if (*pos == ')')
+                else if (*pos == close_type)
                 {
-
+                    
                     paran_count--;
-
+                    
                     if ((paran_count == 0) && (paran_end == 0))
                     {
                         paran_end = pos;
                         break;
                     }
-
+                    
                     if (paran_count < 0)
                     {
                         syntax_error = 1;
@@ -204,38 +204,50 @@ int parse_util_locate_cmdsubst(const wchar_t *in, wchar_t **begin, wchar_t **end
                     }
                 }
             }
-
+            
         }
         prev = *pos;
     }
-
+    
     syntax_error |= (paran_count < 0);
     syntax_error |= ((paran_count>0)&&(!allow_incomplete));
-
+    
     if (syntax_error)
     {
         return -1;
     }
-
+    
     if (paran_begin == 0)
     {
         return 0;
     }
-
+    
     if (begin)
     {
         *begin = paran_begin;
     }
-
+    
     if (end)
     {
         *end = paran_count?(wchar_t *)in+wcslen(in):paran_end;
     }
-
+    
     return 1;
 }
 
-int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_offset, wcstring *out_contents, size_t *out_start, size_t *out_end, bool accept_incomplete)
+
+int parse_util_locate_cmdsubst(const wchar_t *in, wchar_t **begin, wchar_t **end, bool accept_incomplete)
+{
+    return parse_util_locate_brackets_of_type(in, begin, end, accept_incomplete, L'(', L')');
+}
+
+int parse_util_locate_slice(const wchar_t *in, wchar_t **begin, wchar_t **end, bool accept_incomplete)
+{
+    return parse_util_locate_brackets_of_type(in, begin, end, accept_incomplete, L'[', L']');
+}
+
+
+static int parse_util_locate_brackets_range(const wcstring &str, size_t *inout_cursor_offset, wcstring *out_contents, size_t *out_start, size_t *out_end, bool accept_incomplete, wchar_t open_type, wchar_t close_type)
 {
     /* Clear the return values */
     out_contents->clear();
@@ -249,26 +261,36 @@ int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_o
     /* Defer to the wonky version */
     const wchar_t * const buff = str.c_str();
     const wchar_t * const valid_range_start = buff + *inout_cursor_offset, *valid_range_end = buff + str.size();
-    wchar_t *cmdsub_begin = NULL, *cmdsub_end = NULL;
-    int ret = parse_util_locate_cmdsubst(valid_range_start, &cmdsub_begin, &cmdsub_end, accept_incomplete);
+    wchar_t *bracket_range_begin = NULL, *bracket_range_end = NULL;
+    int ret = parse_util_locate_brackets_of_type(valid_range_start, &bracket_range_begin, &bracket_range_end, accept_incomplete, open_type, close_type);
     if (ret > 0)
     {
         /* The command substitutions must not be NULL and must be in the valid pointer range, and the end must be bigger than the beginning */
-        assert(cmdsub_begin != NULL && cmdsub_begin >= valid_range_start && cmdsub_begin <= valid_range_end);
-        assert(cmdsub_end != NULL && cmdsub_end > cmdsub_begin && cmdsub_end >= valid_range_start && cmdsub_end <= valid_range_end);
+        assert(bracket_range_begin != NULL && bracket_range_begin >= valid_range_start && bracket_range_begin <= valid_range_end);
+        assert(bracket_range_end != NULL && bracket_range_end > bracket_range_begin && bracket_range_end >= valid_range_start && bracket_range_end <= valid_range_end);
 
         /* Assign the substring to the out_contents */
-        const wchar_t *interior_begin = cmdsub_begin + 1;
-        out_contents->assign(interior_begin, cmdsub_end - interior_begin);
+        const wchar_t *interior_begin = bracket_range_begin + 1;
+        out_contents->assign(interior_begin, bracket_range_end - interior_begin);
 
         /* Return the start and end */
-        *out_start = cmdsub_begin - buff;
-        *out_end = cmdsub_end - buff;
+        *out_start = bracket_range_begin - buff;
+        *out_end = bracket_range_end - buff;
 
         /* Update the inout_cursor_offset. Note this may cause it to exceed str.size(), though overflow is not likely */
         *inout_cursor_offset = 1 + *out_end;
     }
     return ret;
+}
+
+int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_offset, wcstring *out_contents, size_t *out_start, size_t *out_end, bool accept_incomplete)
+{
+    return parse_util_locate_brackets_range(str, inout_cursor_offset, out_contents, out_start, out_end, accept_incomplete, L'(', L')');
+}
+
+int parse_util_locate_slice_range(const wcstring &str, size_t *inout_cursor_offset, wcstring *out_contents, size_t *out_start, size_t *out_end, bool accept_incomplete)
+{
+    return parse_util_locate_brackets_range(str, inout_cursor_offset, out_contents, out_start, out_end, accept_incomplete, L'[', L']');
 }
 
 void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **a, const wchar_t **b)
@@ -965,6 +987,18 @@ static int parser_is_pipe_forbidden(const wcstring &word)
                     L"continue");
 }
 
+bool parse_util_argument_is_help(const wchar_t *s, int min_match)
+{
+    CHECK(s, 0);
+
+    size_t len = wcslen(s);
+
+    min_match = maxi(min_match, 3);
+
+    return (wcscmp(L"-h", s) == 0) ||
+           (len >= (size_t)min_match && (wcsncmp(L"--help", s, len) == 0));
+}
+
 // Check if the first argument under the given node is --help
 static bool first_argument_is_help(const parse_node_tree_t &node_tree, const parse_node_t &node, const wcstring &src)
 {
@@ -975,15 +1009,215 @@ static bool first_argument_is_help(const parse_node_tree_t &node_tree, const par
         // Check the first argument only
         const parse_node_t &arg = *arg_nodes.at(0);
         const wcstring first_arg_src = arg.get_source(src);
-        is_help = parser_t::is_help(first_arg_src.c_str(), 3);
+        is_help = parse_util_argument_is_help(first_arg_src.c_str(), 3);
     }
     return is_help;
+}
+
+void parse_util_expand_variable_error(const parse_node_t &node, const wcstring &token, size_t token_pos, size_t error_pos, parse_error_list_t *out_errors)
+{
+    size_t stop_pos = token_pos+1;
+
+    switch (token[stop_pos])
+    {
+        case BRACKET_BEGIN:
+        {
+            wchar_t *cpy = wcsdup(token.c_str());
+            *(cpy+token_pos)=0;
+            wchar_t *name = &cpy[stop_pos+1];
+            wchar_t *end = wcschr(name, BRACKET_END);
+            wchar_t *post = NULL;
+            int is_var=0;
+            if (end)
+            {
+                post = end+1;
+                *end = 0;
+
+                if (!wcsvarname(name))
+                {
+                    is_var = 1;
+                }
+            }
+
+            if (is_var)
+            {
+                append_syntax_error(out_errors,
+                                    node,
+                                    COMPLETE_VAR_BRACKET_DESC,
+                                    cpy,
+                                    name,
+                                    post);
+            }
+            else
+            {
+                append_syntax_error(out_errors,
+                                    node,
+                                    COMPLETE_VAR_BRACKET_DESC,
+                                    L"",
+                                    L"VARIABLE",
+                                    L"");
+            }
+            free(cpy);
+
+            break;
+        }
+
+        case INTERNAL_SEPARATOR:
+        {
+            append_syntax_error(out_errors,
+                                node,
+                                COMPLETE_VAR_PARAN_DESC);
+            break;
+        }
+
+        case 0:
+        {
+            append_syntax_error(out_errors,
+                                node,
+                                COMPLETE_VAR_NULL_DESC);
+            break;
+        }
+
+        default:
+        {
+            wchar_t token_stop_char = token[stop_pos];
+            // Unescape (see http://github.com/fish-shell/fish-shell/issues/50)
+            if (token_stop_char == ANY_CHAR)
+                token_stop_char = L'?';
+            else if (token_stop_char == ANY_STRING || token_stop_char == ANY_STRING_RECURSIVE)
+                token_stop_char = L'*';
+
+            append_syntax_error(out_errors,
+                                node,
+                                (token_stop_char == L'?' ? COMPLETE_YOU_WANT_STATUS : COMPLETE_VAR_DESC),
+                                token_stop_char);
+            break;
+        }
+    }
+}
+
+
+/**
+   Test if this argument contains any errors. Detected errors include
+   syntax errors in command substitutions, improperly escaped
+   characters and improper use of the variable expansion operator.
+*/
+parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t &node, const wcstring &arg_src, parse_error_list_t *out_errors)
+{
+    assert(node.type == symbol_argument);
+
+    int err=0;
+
+    wchar_t *paran_begin, *paran_end;
+    wchar_t *arg_cpy;
+    int do_loop = 1;
+
+    arg_cpy = wcsdup(arg_src.c_str());
+
+    while (do_loop)
+    {
+        switch (parse_util_locate_cmdsubst(arg_cpy,
+                                           &paran_begin,
+                                           &paran_end,
+                                           false))
+        {
+            case -1:
+            {
+                err=1;
+                if (out_errors)
+                {
+                    append_syntax_error(out_errors, node, L"Mismatched parenthesis");
+                }
+                free(arg_cpy);
+                return err;
+            }
+
+            case 0:
+            {
+                do_loop = 0;
+                break;
+            }
+
+            case 1:
+            {
+
+                const wcstring subst(paran_begin + 1, paran_end);
+                wcstring tmp;
+
+                tmp.append(arg_cpy, paran_begin - arg_cpy);
+                tmp.push_back(INTERNAL_SEPARATOR);
+                tmp.append(paran_end+1);
+
+                parse_error_list_t subst_errors;
+                err |= parse_util_detect_errors(subst, &subst_errors);
+
+                /* Our command substitution produced error offsets relative to its source. Tweak the offsets of the errors in the command substitution to account for both its offset within the string, and the offset of the node */
+                size_t error_offset = (paran_begin + 1 - arg_cpy) + node.source_start;
+                parse_error_offset_source_start(&subst_errors, error_offset);
+
+                if (out_errors != NULL)
+                {
+                    out_errors->insert(out_errors->end(), subst_errors.begin(), subst_errors.end());
+                }
+
+                free(arg_cpy);
+                arg_cpy = wcsdup(tmp.c_str());
+
+                break;
+            }
+        }
+    }
+
+    wcstring unesc;
+    if (! unescape_string(arg_cpy, &unesc, UNESCAPE_SPECIAL))
+    {
+        if (out_errors)
+        {
+            append_syntax_error(out_errors, node, L"Invalid token '%ls'", arg_cpy);
+        }
+        return 1;
+    }
+    else
+    {
+        /* Check for invalid variable expansions */
+        const size_t unesc_size = unesc.size();
+        for (size_t idx = 0; idx < unesc_size; idx++)
+        {
+            switch (unesc.at(idx))
+            {
+                case VARIABLE_EXPAND:
+                case VARIABLE_EXPAND_SINGLE:
+                {
+                    wchar_t next_char = (idx + 1 < unesc_size ? unesc.at(idx + 1) : L'\0');
+
+                    if (next_char != VARIABLE_EXPAND &&
+                            next_char != VARIABLE_EXPAND_SINGLE &&
+                            ! wcsvarchr(next_char))
+                    {
+                        err=1;
+                        if (out_errors)
+                        {
+                            parse_util_expand_variable_error(node, unesc, idx, node.source_start, out_errors);
+                        }
+                    }
+
+                    break;
+                }
+            }
+        }
+    }
+
+    free(arg_cpy);
+
+    return err;
 }
 
 parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, parse_error_list_t *out_errors)
 {
     parse_node_tree_t node_tree;
     parse_error_list_t parse_errors;
+
+    parser_test_error_bits_t res = 0;
 
     // Whether we encountered a parse error
     bool errored = false;
@@ -1022,6 +1256,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
     // Verify 'or' and 'and' not used inside pipelines
     // Verify pipes via parser_is_pipe_forbidden
     // Verify return only within a function
+    // Verify no variable expansions
 
     if (! errored)
     {
@@ -1044,25 +1279,46 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                     errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG, is_and ? L"and" : L"or");
                 }
             }
+            else if (node.type == symbol_argument)
+            {
+                const wcstring arg_src = node.get_source(buff_src);
+                res |= parse_util_detect_errors_in_argument(node, arg_src, &parse_errors);
+            }
             else if (node.type == symbol_plain_statement)
             {
+                // In a few places below, we want to know if we are in a pipeline
+                const bool is_in_pipeline = node_tree.statement_is_in_pipeline(node, true /* count first */);
+                
+                // We need to know the decoration
+                const enum parse_statement_decoration_t decoration = node_tree.decoration_for_plain_statement(node);
+                
+                // Check that we don't try to pipe through exec
+                if (is_in_pipeline && decoration == parse_statement_decoration_exec)
+                {
+                    errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG, L"exec");
+                }
+                
                 wcstring command;
                 if (node_tree.command_for_plain_statement(node, buff_src, &command))
                 {
                     // Check that we can expand the command
-                    if (! expand_one(command, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS))
+                    if (! expand_one(command, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS, NULL))
+                    {
+                        // TODO: leverage the resulting errors
+                        errored = append_syntax_error(&parse_errors, node, ILLEGAL_CMD_ERR_MSG, command.c_str());
+                    }
+
+                    // Check that it doesn't contain a variable
+                    // Note this check is clumsy (it doesn't allow for escaping) but it matches what we do in parse_execution
+                    if (command.find(L'$') != wcstring::npos)
                     {
                         errored = append_syntax_error(&parse_errors, node, ILLEGAL_CMD_ERR_MSG, command.c_str());
                     }
 
                     // Check that pipes are sound
-                    if (! errored && parser_is_pipe_forbidden(command))
+                    if (! errored && parser_is_pipe_forbidden(command) && is_in_pipeline)
                     {
-                        // forbidden commands cannot be in a pipeline at all
-                        if (node_tree.statement_is_in_pipeline(node, true /* count first */))
-                        {
-                            errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG, command.c_str());
-                        }
+                        errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG, command.c_str());
                     }
 
                     // Check that we don't return from outside a function
@@ -1128,12 +1384,17 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                             errored = append_syntax_error(&parse_errors, node, (command == L"break" ? INVALID_BREAK_ERR_MSG : INVALID_CONTINUE_ERR_MSG));
                         }
                     }
+                    
+                    // Check that we don't do an invalid builtin (#1252)
+                    if (! errored && decoration == parse_statement_decoration_builtin && ! builtin_exists(command))
+                    {
+                        errored = append_syntax_error(&parse_errors, node, UNKNOWN_BUILTIN_ERR_MSG, command.c_str());
+                    }
+
                 }
             }
         }
     }
-
-    parser_test_error_bits_t res = 0;
 
     if (errored)
         res |= PARSER_TEST_ERROR;

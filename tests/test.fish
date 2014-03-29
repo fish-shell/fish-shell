@@ -60,13 +60,15 @@ for i in *.in
   if diff tmp.out $template_out >/dev/null
   else
 	set res fail
-	echo Output differs for file $i
+	echo Output differs for file $i. Diff follows:
+	diff tmp.out $template_out
   end
 
   if diff tmp.err $template_err >/dev/null
   else
 	set res fail
-	echo Error output differs for file $i
+	echo Error output differs for file $i. Diff follows:
+	diff tmp.err $template_err
   end
 
   if test (cat tmp.status) = (cat $template_status)

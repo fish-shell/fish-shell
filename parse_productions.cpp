@@ -126,7 +126,7 @@ RESOLVE(statement)
     if (token1.type == parse_token_type_string)
     {
         // If we are a function, then look for help arguments
-        // Othewrise, if the next token looks like an option (starts with a dash), then parse it as a decorated statement
+        // Otherwise, if the next token looks like an option (starts with a dash), then parse it as a decorated statement
         if (token1.keyword == parse_keyword_function && token2.is_help_argument)
         {
             return 4;
@@ -357,6 +357,7 @@ PRODUCTIONS(decorated_statement) =
     {symbol_plain_statement},
     {KEYWORD(parse_keyword_command), symbol_plain_statement},
     {KEYWORD(parse_keyword_builtin), symbol_plain_statement},
+    {KEYWORD(parse_keyword_exec), symbol_plain_statement}
 };
 RESOLVE(decorated_statement)
 {
@@ -374,6 +375,8 @@ RESOLVE(decorated_statement)
             return 1;
         case parse_keyword_builtin:
             return 2;
+        case parse_keyword_exec:
+            return 3;
     }
 }
 

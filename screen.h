@@ -13,7 +13,10 @@
 #define FISH_SCREEN_H
 
 #include <vector>
+#include <sys/stat.h>
 #include "highlight.h"
+
+class page_rendering_t;
 
 /**
    A class representing a single line of a screen.
@@ -40,6 +43,17 @@ struct line_t
         colors.push_back(color);
     }
 
+    void append(const wchar_t *txt, highlight_spec_t color)
+    {
+        for (size_t i=0; txt[i]; i++)
+        {
+            text.push_back(txt[i]);
+            colors.push_back(color);
+        }
+    }
+    
+    
+
     size_t size(void) const
     {
         return text.size();
@@ -53,6 +67,12 @@ struct line_t
     highlight_spec_t color_at(size_t idx) const
     {
         return colors.at(idx);
+    }
+
+    void append_line(const line_t &line)
+    {
+        text.insert(text.end(), line.text.begin(), line.text.end());
+        colors.insert(colors.end(), line.colors.begin(), line.colors.end());
     }
 
 };
@@ -94,6 +114,12 @@ public:
         return line_datas.at(idx);
     }
 
+    line_t &insert_line_at_index(size_t idx)
+    {
+        assert(idx <= line_datas.size());
+        return *line_datas.insert(line_datas.begin() + idx, line_t());
+    }
+
     line_t &line(size_t idx)
     {
         return line_datas.at(idx);
@@ -102,6 +128,16 @@ public:
     size_t line_count(void)
     {
         return line_datas.size();
+    }
+    
+    void append_lines(const screen_data_t &d)
+    {
+        this->line_datas.insert(this->line_datas.end(), d.line_datas.begin(), d.line_datas.end());
+    }
+    
+    bool empty() const
+    {
+        return line_datas.empty();
     }
 };
 
@@ -184,6 +220,8 @@ public:
     \param cursor_pos where the cursor is
     \param sel_start_pos where the selections starts (inclusive)
     \param sel_stop_pos where the selections ends (inclusive)
+    \param pager_data any pager data, to append to the screen
+    \param position_is_within_pager whether the position is within the pager line (first line)
 */
 void s_write(screen_t *s,
              const wcstring &left_prompt,
@@ -194,7 +232,9 @@ void s_write(screen_t *s,
              const int *indent,
              size_t cursor_pos,
              size_t sel_start_pos,
-             size_t sel_stop_pos);
+             size_t sel_stop_pos,
+             const page_rendering_t &pager_data,
+             bool position_is_within_pager);
 
 /**
     This function resets the screen buffers internal knowledge about
@@ -231,6 +271,9 @@ enum screen_reset_mode_t
 };
 
 void s_reset(screen_t *s, screen_reset_mode_t mode);
+
+/* Issues an immediate clr_eos, returning if it existed */
+bool screen_force_clear_to_end();
 
 /* Returns the length of an escape code. Exposed for testing purposes only. */
 size_t escape_code_length(const wchar_t *code);

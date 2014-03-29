@@ -291,7 +291,8 @@ class BindingParser:
 
     def get_char(self):
         """ Gets next character from buffer """
-
+        if self.index >= len(self.buffer):
+            return '\0'
         c = self.buffer[self.index]
         self.index += 1
         return c
@@ -811,7 +812,7 @@ PORT = 8000
 while PORT <= 9000:
     try:
         Handler = FishConfigHTTPRequestHandler
-        httpd = SocketServer.TCPServer(("", PORT), Handler)
+        httpd = SocketServer.TCPServer(("127.0.0.1", PORT), Handler)
         # Success
         break
     except socket.error:
@@ -830,7 +831,7 @@ if PORT > 9000:
 # Just look at the first letter
 initial_tab = ''
 if len(sys.argv) > 1:
-    for tab in ['functions', 'prompt', 'colors', 'variables', 'history']:
+    for tab in ['functions', 'prompt', 'colors', 'variables', 'history', 'bindings']:
         if tab.startswith(sys.argv[1]):
             initial_tab = '#' + tab
             break

@@ -19,6 +19,7 @@
 
 #include "util.h"
 #include "common.h"
+#include "parse_constants.h"
 #include <list>
 
 enum
@@ -146,9 +147,10 @@ class parser_t;
    \param input The parameter to expand
    \param output The list to which the result will be appended.
    \param flag Specifies if any expansion pass should be skipped. Legal values are any combination of EXPAND_SKIP_CMDSUBST EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
+   \param errors Resulting errors, or NULL to ignore
    \return One of EXPAND_OK, EXPAND_ERROR, EXPAND_WILDCARD_MATCH and EXPAND_WILDCARD_NO_MATCH. EXPAND_WILDCARD_NO_MATCH and EXPAND_WILDCARD_MATCH are normal exit conditions used only on strings containing wildcards to tell if the wildcard produced any matches.
 */
-__warn_unused int expand_string(const wcstring &input, std::vector<completion_t> &output, expand_flags_t flags);
+__warn_unused int expand_string(const wcstring &input, std::vector<completion_t> &output, expand_flags_t flags, parse_error_list_t *errors);
 
 
 /**
@@ -158,9 +160,10 @@ __warn_unused int expand_string(const wcstring &input, std::vector<completion_t>
 
    \param inout_str The parameter to expand in-place
    \param flag Specifies if any expansion pass should be skipped. Legal values are any combination of EXPAND_SKIP_CMDSUBST EXPAND_SKIP_VARIABLES and EXPAND_SKIP_WILDCARDS
+   \param errors Resulting errors, or NULL to ignore
    \return Whether expansion succeded
 */
-bool expand_one(wcstring &inout_str, expand_flags_t flags);
+bool expand_one(wcstring &inout_str, expand_flags_t flags, parse_error_list_t *errors = NULL);
 
 /**
    Convert the variable value to a human readable form, i.e. escape things, handle arrays, etc. Suitable for pretty-printing. The result must be free'd!

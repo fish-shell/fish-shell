@@ -6,7 +6,7 @@ function __fish_complete_pacman -d 'Complete pacman (ARCH package manager)' --ar
     set -q progname[1]; or set -l progname pacman
 
     set -l listinstalled "(pacman -Q | tr ' ' \t)"
-    set -l listall       "(pacman -Sl | cut --delim ' ' --fields 2- | tr ' ' \t)"
+    set -l listall       "(__fish_print_packages)"
     set -l listrepos     "(cat /etc/pacman.conf | grep '^\[.\+\]' | sed 's/[]\[]//g')"
     set -l listgroups    "(pacman -Sg | sed 's/\(.*\)/\1\tPackage group/g')"
 
@@ -88,14 +88,14 @@ function __fish_complete_pacman -d 'Complete pacman (ARCH package manager)' --ar
     complete -c $progname -n $query -s p -l file       -d 'Apply the query to a package file, not package' -xa ''
     complete -c $progname -n $query -s t -l unrequired -d 'List only unrequired packages'
     complete -c $progname -n $query -s u -l upgrades   -d 'List only out-of-date packages'
-    complete -c $progname -n "$query; and $argument" -xa $listinstalled -d 'Installed package'
+    complete -c $progname -n "$query; and $argument"   -d 'Installed package' -xa $listinstalled
 
     # Remove options
     complete -c $progname -n $remove -s c -l cascade   -d 'Also remove packages depending on PACKAGE'
     complete -c $progname -n $remove -s n -l nosave    -d 'Ignore file backup designations'
     complete -c $progname -n $remove -s s -l recursive -d 'Also remove dependencies of PACKAGE'
     complete -c $progname -n $remove -s u -l unneeded  -d 'Only remove targets not required by PACKAGE'
-    complete -c $progname -n "$remove; and $argument" -xa $listinstalled -d 'Installed package'
+    complete -c $progname -n "$remove; and $argument" -d 'Installed package' -xa $listinstalled
 
     # Sync options
     complete -c $progname -n $sync -s c -l clean        -d 'Remove [all] packages from cache'

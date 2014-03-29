@@ -312,75 +312,24 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
         static const struct woption
                 long_options[] =
         {
-            {
-                L"exclusive", no_argument, 0, 'x'
-            }
-            ,
-            {
-                L"no-files", no_argument, 0, 'f'
-            }
-            ,
-            {
-                L"require-parameter", no_argument, 0, 'r'
-            }
-            ,
-            {
-                L"path", required_argument, 0, 'p'
-            }
-            ,
-            {
-                L"command", required_argument, 0, 'c'
-            }
-            ,
-            {
-                L"short-option", required_argument, 0, 's'
-            }
-            ,
-            {
-                L"long-option", required_argument, 0, 'l'
-            }
-            ,
-            {
-                L"old-option", required_argument, 0, 'o'
-            }
-            ,
-            {
-                L"description", required_argument, 0, 'd'
-            }
-            ,
-            {
-                L"arguments", required_argument, 0, 'a'
-            }
-            ,
-            {
-                L"erase", no_argument, 0, 'e'
-            }
-            ,
-            {
-                L"unauthoritative", no_argument, 0, 'u'
-            }
-            ,
-            {
-                L"authoritative", no_argument, 0, 'A'
-            }
-            ,
-            {
-                L"condition", required_argument, 0, 'n'
-            }
-            ,
-            {
-                L"do-complete", optional_argument, 0, 'C'
-            }
-            ,
-            {
-                L"help", no_argument, 0, 'h'
-            }
-            ,
-            {
-                0, 0, 0, 0
-            }
-        }
-        ;
+            { L"exclusive", no_argument, 0, 'x' },
+            { L"no-files", no_argument, 0, 'f' },
+            { L"require-parameter", no_argument, 0, 'r' },
+            { L"path", required_argument, 0, 'p' },
+            { L"command", required_argument, 0, 'c' },
+            { L"short-option", required_argument, 0, 's' },
+            { L"long-option", required_argument, 0, 'l' },
+            { L"old-option", required_argument, 0, 'o' },
+            { L"description", required_argument, 0, 'd' },
+            { L"arguments", required_argument, 0, 'a' },
+            { L"erase", no_argument, 0, 'e' },
+            { L"unauthoritative", no_argument, 0, 'u' },
+            { L"authoritative", no_argument, 0, 'A' },
+            { L"condition", required_argument, 0, 'n' },
+            { L"do-complete", optional_argument, 0, 'C' },
+            { L"help", no_argument, 0, 'h' },
+            { 0, 0, 0, 0 }
+        };
 
         int opt_index = 0;
 
@@ -518,15 +467,22 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
     {
         if (comp && wcslen(comp))
         {
-            if (parser.test_args(comp, 0, 0))
+            wcstring prefix;
+            if (argv[0])
+            {
+                prefix.append(argv[0]);
+                prefix.append(L": ");
+            }
+
+            wcstring err_text;
+            if (parser.detect_errors_in_argument_list(comp, &err_text, prefix.c_str()))
             {
                 append_format(stderr_buffer,
                               L"%ls: Completion '%ls' contained a syntax error\n",
                               argv[0],
                               comp);
-
-                parser.test_args(comp, &stderr_buffer, argv[0]);
-
+                stderr_buffer.append(err_text);
+                stderr_buffer.push_back(L'\n');
                 res = true;
             }
         }
@@ -553,27 +509,29 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
                 for (size_t i=0; i< comp.size() ; i++)
                 {
                     const completion_t &next =  comp.at(i);
-
-                    const wchar_t *prepend;
-
-                    if (next.flags & COMPLETE_REPLACES_TOKEN)
+                    
+                    /* Make a fake commandline, and then apply the completion to it.  */
+                    const wcstring faux_cmdline = token;
+                    size_t tmp_cursor = faux_cmdline.size();
+                    wcstring faux_cmdline_with_completion = completion_apply_to_command_line(next.completion, next.flags, faux_cmdline, &tmp_cursor, false);
+                    
+                    /* completion_apply_to_command_line will append a space unless COMPLETE_NO_SPACE is set. We don't want to set COMPLETE_NO_SPACE because that won't close quotes. What we want is to close the quote, but not append the space. So we just look for the space and clear it. */
+                    if (! (next.flags & COMPLETE_NO_SPACE) && string_suffixes_string(L" ", faux_cmdline_with_completion))
                     {
-                        prepend = L"";
+                        faux_cmdline_with_completion.resize(faux_cmdline_with_completion.size() - 1);
                     }
-                    else
+                    
+                    /* The input data is meant to be something like you would have on the command line, e.g. includes backslashes. The output should be raw, i.e. unescaped. So we need to unescape the command line. See #1127 */
+                    unescape_string_in_place(&faux_cmdline_with_completion, UNESCAPE_DEFAULT);
+                    stdout_buffer.append(faux_cmdline_with_completion);
+                    
+                    /* Append any description */
+                    if (! next.description.empty())
                     {
-                        prepend = token;
+                        stdout_buffer.push_back(L'\t');
+                        stdout_buffer.append(next.description);
                     }
-
-
-                    if (!(next.description).empty())
-                    {
-                        append_format(stdout_buffer, L"%ls%ls\t%ls\n", prepend, next.completion.c_str(), next.description.c_str());
-                    }
-                    else
-                    {
-                        append_format(stdout_buffer, L"%ls%ls\n", prepend, next.completion.c_str());
-                    }
+                    stdout_buffer.push_back(L'\n');
                 }
 
                 recursion_level--;

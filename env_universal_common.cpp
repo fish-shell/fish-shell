@@ -21,7 +21,6 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <wctype.h>
-#include <iconv.h>
 
 #include <errno.h>
 #include <locale.h>
@@ -39,6 +38,7 @@
 
 #include "common.h"
 #include "wutil.h"
+#include "utf8.h"
 #include "env_universal_common.h"
 
 /**
@@ -116,303 +116,28 @@ static void (*callback)(fish_message_type_t type,
                         const wchar_t *key,
                         const wchar_t *val);
 
-/**
-   List of names for the UTF-8 character set.
- */
-static const char *iconv_utf8_names[]=
+/* UTF <-> wchar conversions. These return a string allocated with malloc. These call sites could be cleaned up substantially to eliminate the dependence on malloc. */
+static wchar_t *utf2wcs(const char *input)
 {
-    "utf-8", "UTF-8",
-    "utf8", "UTF8",
-    0
-}
-;
-
-/**
-    List of wide character names, undefined byte length.
- */
-static const char *iconv_wide_names_unknown[]=
-{
-    "wchar_t", "WCHAR_T",
-    "wchar", "WCHAR",
-    0
-}
-;
-
-/**
-   List of wide character names, 4 bytes long.
- */
-static const char *iconv_wide_names_4[]=
-{
-    "wchar_t", "WCHAR_T",
-    "wchar", "WCHAR",
-    "ucs-4", "UCS-4",
-    "ucs4", "UCS4",
-    "utf-32", "UTF-32",
-    "utf32", "UTF32",
-    0
-}
-;
-
-/**
-   List of wide character names, 2 bytes long.
- */
-static const char *iconv_wide_names_2[]=
-{
-    "wchar_t", "WCHAR_T",
-    "wchar", "WCHAR",
-    "ucs-2", "UCS-2",
-    "ucs2", "UCS2",
-    "utf-16", "UTF-16",
-    "utf16", "UTF16",
-    0
-}
-;
-
-template<class T>
-class sloppy {};
-
-static size_t hack_iconv(iconv_t cd, const char * const* inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
-{
-    /* FreeBSD has this prototype: size_t iconv (iconv_t, const char **...)
-       OS X and Linux this one: size_t iconv (iconv_t, char **...)
-       AFAIK there's no single type that can be passed as both char ** and const char **.
-       Therefore, we let C++ figure it out, by providing a struct with an implicit conversion to both char** and const char **.
-    */
-    struct sloppy_char
+    wchar_t *result = NULL;
+    wcstring converted;
+    if (utf8_to_wchar_string(input, &converted))
     {
-        const char * const * t;
-        operator char** () const
-        {
-            return (char **)t;
-        }
-        operator const char** () const
-        {
-            return (const char**)t;
-        }
-    } slop_inbuf = {inbuf};
-
-    return iconv(cd, slop_inbuf, inbytesleft, outbuf, outbytesleft);
+        result = wcsdup(converted.c_str());
+    }
+    return result;
 }
 
-/**
-   Convert utf-8 string to wide string
- */
-static wchar_t *utf2wcs(const char *in)
+static char *wcs2utf(const wchar_t *input)
 {
-    iconv_t cd=(iconv_t) -1;
-    int i,j;
-
-    wchar_t *out;
-
-    /*
-      Try to convert to wchar_t. If that is not a valid character set,
-      try various names for ucs-4. We can't be sure that ucs-4 is
-      really the character set used by wchar_t, but it is the best
-      assumption we can make.
-    */
-    const char **to_name=0;
-
-    switch (sizeof(wchar_t))
+    char *result = NULL;
+    std::string converted;
+    if (wchar_to_utf8_string(input, &converted))
     {
-
-        case 2:
-            to_name = iconv_wide_names_2;
-            break;
-
-        case 4:
-            to_name = iconv_wide_names_4;
-            break;
-
-        default:
-            to_name = iconv_wide_names_unknown;
-            break;
+        result = strdup(converted.c_str());
     }
-
-
-    /*
-      The line protocol fish uses is always utf-8.
-    */
-    const char **from_name = iconv_utf8_names;
-
-    size_t in_len = strlen(in);
-    size_t out_len =  sizeof(wchar_t)*(in_len+2);
-    size_t nconv;
-    char *nout;
-
-    out = (wchar_t *)malloc(out_len);
-    nout = (char *)out;
-
-    if (!out)
-        return 0;
-
-    for (i=0; to_name[i]; i++)
-    {
-        for (j=0; from_name[j]; j++)
-        {
-            cd = iconv_open(to_name[i], from_name[j]);
-
-            if (cd != (iconv_t) -1)
-            {
-                goto start_conversion;
-
-            }
-        }
-    }
-
-start_conversion:
-
-    if (cd == (iconv_t) -1)
-    {
-        /* Something went wrong.  */
-        debug(0, L"Could not perform utf-8 conversion");
-        if (errno != EINVAL)
-            wperror(L"iconv_open");
-
-        /* Terminate the output string.  */
-        free(out);
-        return 0;
-    }
-
-    /* FreeBSD has this prototype: size_t iconv (iconv_t, const char **...)
-       OS X and Linux this one: size_t iconv (iconv_t, char **...)
-       AFAIK there's no single type that can be passed as both char ** and const char **.
-       Hence this hack.
-    */
-    nconv = hack_iconv(cd, &in, &in_len, &nout, &out_len);
-
-    if (nconv == (size_t) -1)
-    {
-        debug(0, L"Error while converting from utf string");
-        return 0;
-    }
-
-    *((wchar_t *) nout) = L'\0';
-
-    /*
-      Check for silly iconv behaviour inserting an bytemark in the output
-      string.
-     */
-    if (*out == L'\xfeff' || *out == L'\xffef' || *out == L'\xefbbbf')
-    {
-        wchar_t *out_old = out;
-        out = wcsdup(out+1);
-        if (! out)
-        {
-            debug(0, L"FNORD!!!!");
-            free(out_old);
-            return 0;
-        }
-        free(out_old);
-    }
-
-
-    if (iconv_close(cd) != 0)
-        wperror(L"iconv_close");
-
-    return out;
+    return result;
 }
-
-
-
-/**
-   Convert wide string to utf-8
- */
-static char *wcs2utf(const wchar_t *in)
-{
-    iconv_t cd=(iconv_t) -1;
-    int i,j;
-
-    char *char_in = (char *)in;
-    char *out;
-
-    /*
-      Try to convert to wchar_t. If that is not a valid character set,
-      try various names for ucs-4. We can't be sure that ucs-4 is
-      really the character set used by wchar_t, but it is the best
-      assumption we can make.
-    */
-    const char **from_name=0;
-
-    switch (sizeof(wchar_t))
-    {
-
-        case 2:
-            from_name = iconv_wide_names_2;
-            break;
-
-        case 4:
-            from_name = iconv_wide_names_4;
-            break;
-
-        default:
-            from_name = iconv_wide_names_unknown;
-            break;
-    }
-
-    const char **to_name = iconv_utf8_names;
-
-    size_t in_len = wcslen(in);
-    size_t out_len =  sizeof(char)*((MAX_UTF8_BYTES*in_len)+1);
-    size_t nconv;
-    char *nout;
-
-    out = (char *)malloc(out_len);
-    nout = (char *)out;
-    in_len *= sizeof(wchar_t);
-
-    if (!out)
-        return 0;
-
-    for (i=0; to_name[i]; i++)
-    {
-        for (j=0; from_name[j]; j++)
-        {
-            cd = iconv_open(to_name[i], from_name[j]);
-
-            if (cd != (iconv_t) -1)
-            {
-                goto start_conversion;
-
-            }
-        }
-    }
-
-start_conversion:
-
-    if (cd == (iconv_t) -1)
-    {
-        /* Something went wrong.  */
-        debug(0, L"Could not perform utf-8 conversion");
-        if (errno != EINVAL)
-            wperror(L"iconv_open");
-
-        /* Terminate the output string.  */
-        free(out);
-        return 0;
-    }
-
-    nconv = hack_iconv(cd, &char_in, &in_len, &nout, &out_len);
-
-
-    if (nconv == (size_t) -1)
-    {
-        debug(0, L"%d %d", in_len, out_len);
-        debug(0, L"Error while converting from to string");
-
-        /* Terminate the output string.  */
-        free(out);
-        return 0;
-    }
-
-    *nout = '\0';
-
-    if (iconv_close(cd) != 0)
-        wperror(L"iconv_close");
-
-    return out;
-}
-
-
 
 void env_universal_common_init(void (*cb)(fish_message_type_t type, const wchar_t *key, const wchar_t *val))
 {
@@ -756,8 +481,9 @@ static wcstring full_escape(const wchar_t *in)
         {
             out.push_back(c);
         }
-        else if (c < 256)
+        else if (c <= ASCII_MAX)
         {
+            // See #1225 for discussion of use of ASCII_MAX here
             append_format(out, L"\\x%.2x", c);
         }
         else if (c < 65536)

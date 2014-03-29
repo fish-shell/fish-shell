@@ -121,3 +121,12 @@ echo -e Catch your breath
 
 echo -e 'abc\x21def'
 echo -e 'abc\x211def'
+
+function always_fails
+    if true
+        return 1
+    end
+end
+
+always_fails ; echo $status
+

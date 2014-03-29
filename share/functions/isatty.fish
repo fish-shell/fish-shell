@@ -1,28 +1,27 @@
+function isatty -d "Test if a file or file descriptor is a tty."
 
-function isatty -d "Tests if a file descriptor is a tty"
-	set -l fd 0
-	if count $argv >/dev/null
-		switch $argv[1]
+# Use `command test` because `builtin test` doesn't open the regular fd's.
 
-			case -h --h --he --hel --help
-				__fish_print_help isatty
-				return 0
+  switch "$argv"
 
-			case stdin
-				set fd 0
+    case '-h*' '--h*'
+      __fish_print_help isatty
 
-			case stdout
-				set fd 1
+    case ''
+      command test -c /dev/stdin
 
-			case stderr
-				set fd 2
+    case '*'
+      if test -e "$argv" # The eval here is needed for symlinks. Unsure why.
+        command test -c "$argv"; and eval tty 0>"$argv" >/dev/null
 
-			case '*'
-				set fd $argv[1]
+      else if test -e /dev/"$argv"
+         command test -c /dev/"$argv"; and tty 0>/dev/"$argv" >/dev/null
 
-		end
-	end
+      else if test -e /dev/fd/"$argv"
+         command test -c /dev/fd/"$argv"; and tty 0>/dev/fd/"$argv" >/dev/null
 
-	eval "tty 0>&$fd >/dev/null"
-
+      else
+         return 1
+    end
+  end
 end

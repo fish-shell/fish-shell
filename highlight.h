@@ -30,10 +30,19 @@ enum
     highlight_spec_autosuggestion, //autosuggestion
     highlight_spec_selection,
 
+    // Pager support
+    highlight_spec_pager_prefix,
+    highlight_spec_pager_completion,
+    highlight_spec_pager_description,
+    highlight_spec_pager_progress,
+    highlight_spec_pager_secondary,
+
     HIGHLIGHT_SPEC_PRIMARY_MASK = 0xFF,
 
     /* The following values are modifiers */
     highlight_modifier_valid_path = 0x100,
+    highlight_modifier_force_underline = 0x200,
+    highlight_modifier_sloppy_background = 0x300, //hackish, indicates that we should treat a foreground color as background, per certain historical behavior
 
     /* Very special value */
     highlight_spec_invalid = 0xFFFF
@@ -48,6 +57,7 @@ inline highlight_spec_t highlight_get_primary(highlight_spec_t val)
 
 inline highlight_spec_t highlight_make_background(highlight_spec_t val)
 {
+    assert(val >> 16 == 0); //should have nothing in upper bits, otherwise this is already a background
     return val << 16;
 }
 
@@ -65,7 +75,11 @@ struct file_detection_context_t;
    \param error a list in which a description of each error will be inserted. May be 0, in whcich case no error descriptions will be generated.
 */
 void highlight_shell(const wcstring &buffstr, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
-void highlight_shell_new_parser(const wcstring &buffstr, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
+
+/**
+   Perform a non-blocking shell highlighting. The function will not do any I/O that may block. As a result, invalid commands may not be detected, etc.
+*/
+void highlight_shell_no_io(const wcstring &buffstr, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
 
 /**
    Perform syntax highlighting for the text in buff. Matching quotes and paranthesis are highlighted. The result is
@@ -114,10 +128,6 @@ enum
 };
 typedef unsigned int path_flags_t;
 bool is_potential_path(const wcstring &const_path, const wcstring_list_t &directories, path_flags_t flags, wcstring *out_path = NULL);
-
-/* For testing */
-void highlight_shell_classic(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
-void highlight_shell_new_parser(const wcstring &buff, std::vector<highlight_spec_t> &color, size_t pos, wcstring_list_t *error, const env_vars_snapshot_t &vars);
 
 #endif
 

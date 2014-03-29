@@ -967,7 +967,7 @@ void completer_t::complete_strings(const wcstring &wc_escaped,
                                    complete_flags_t flags)
 {
     wcstring tmp = wc_escaped;
-    if (! expand_one(tmp, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_WILDCARDS | this->expand_flags()))
+    if (! expand_one(tmp, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_WILDCARDS | this->expand_flags(), NULL))
         return;
 
     const wchar_t *wc = parse_util_unescape_wildcards(tmp.c_str());
@@ -1146,7 +1146,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
     if (use_command)
     {
 
-        if (expand_string(str_cmd, this->completions, ACCEPT_INCOMPLETE | EXECUTABLES_ONLY | this->expand_flags()) != EXPAND_ERROR)
+        if (expand_string(str_cmd, this->completions, ACCEPT_INCOMPLETE | EXECUTABLES_ONLY | this->expand_flags(), NULL) != EXPAND_ERROR)
         {
             if (this->wants_descriptions())
             {
@@ -1179,7 +1179,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
                     size_t prev_count =  this->completions.size();
                     if (expand_string(nxt_completion,
                                       this->completions,
-                                      ACCEPT_INCOMPLETE | EXECUTABLES_ONLY | this->expand_flags()) != EXPAND_ERROR)
+                                      ACCEPT_INCOMPLETE | EXECUTABLES_ONLY | this->expand_flags(), NULL) != EXPAND_ERROR)
                     {
                         /* For all new completions, if COMPLETE_NO_CASE is set, then use only the last path component */
                         for (size_t i=prev_count; i< this->completions.size(); i++)
@@ -1249,7 +1249,7 @@ void completer_t::complete_from_args(const wcstring &str,
     if (! is_autosuggest)
         proc_push_interactive(0);
 
-    parser.eval_args(args.c_str(), possible_comp);
+    parser.expand_argument_list(args, possible_comp);
 
     if (! is_autosuggest)
         proc_pop_interactive();
@@ -1641,7 +1641,7 @@ void completer_t::complete_param_expand(const wcstring &sstr, bool do_file)
 
     if (expand_string(comp_str,
                       this->completions,
-                      flags) == EXPAND_ERROR)
+                      flags, NULL) == EXPAND_ERROR)
     {
         debug(3, L"Error while expanding string '%ls'", comp_str);
     }
@@ -1712,29 +1712,67 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset)
     return res;
 }
 
-/**
-   Search the specified string for the \$ sign. If found, try to
-   complete as an environment variable.
-
-   \return 0 if unable to complete, 1 otherwise
-*/
 bool completer_t::try_complete_variable(const wcstring &str)
 {
-    size_t i = str.size();
-    while (i--)
+    enum {e_unquoted, e_single_quoted, e_double_quoted} mode = e_unquoted;
+    const size_t len = str.size();
+    
+    /* Get the position of the dollar heading a run of valid variable characters. -1 means none. */
+    size_t variable_start = -1;
+    
+    for (size_t in_pos=0; in_pos<len; in_pos++)
     {
-        wchar_t c = str.at(i);
-        if (c == L'$')
+        wchar_t c = str.at(in_pos);
+        if (! wcsvarchr(c))
         {
-            /*      wprintf( L"Var prefix \'%ls\'\n", &cmd[i+1] );*/
-            return this->complete_variable(str, i+1);
+            /* This character cannot be in a variable, reset the dollar */
+            variable_start = -1;
         }
-        if (!isalnum(c) && c != L'_')
+        
+        switch (c)
         {
-            return false;
+            case L'\\':
+                in_pos++;
+                break;
+            
+            case L'$':
+                if (mode == e_unquoted || mode == e_double_quoted)
+                {
+                    variable_start = in_pos;
+                }
+                break;
+            
+            case L'\'':
+                if (mode == e_single_quoted)
+                {
+                    mode = e_unquoted;
+                }
+                else if (mode == e_unquoted)
+                {
+                    mode = e_single_quoted;
+                }
+                break;
+            
+            case L'"':
+                if (mode == e_double_quoted)
+                {
+                    mode = e_unquoted;
+                }
+                else if (mode == e_unquoted)
+                {
+                    mode = e_double_quoted;
+                }
+                break;
         }
     }
-    return false;
+    
+    /* Now complete if we have a variable start that's also not the last character */
+    bool result = false;
+    if (variable_start != static_cast<size_t>(-1) && variable_start + 1 < len)
+    {
+        result = this->complete_variable(str, variable_start + 1);
+    }
+    return result;
 }
 
 /**
@@ -1822,7 +1860,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
     bool use_function = 1;
     bool use_builtin = 1;
 
-    //  debug( 1, L"Complete '%ls'", cmd );
+      //debug( 1, L"Complete '%ls'", cmd.c_str() );
 
     const wchar_t *cmd_cstr = cmd.c_str();
     const wchar_t *tok_begin = NULL, *prev_begin = NULL, *prev_end = NULL;
@@ -1832,9 +1870,9 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
      If we are completing a variable name or a tilde expansion user
      name, we do that and return. No need for any other completions.
      */
-
     const wcstring current_token = tok_begin;
 
+    /* Unconditionally complete variables and processes. This is a little weird since we will happily complete variables even in e.g. command position, despite the fact that they are invalid there. */
     if (!done)
     {
         done = completer.try_complete_variable(current_token) || completer.try_complete_user(current_token);
@@ -1847,10 +1885,22 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
 
         parse_node_tree_t tree;
         parse_tree_from_string(cmd, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens, &tree, NULL);
-
-        /* Find the plain statement that contains the position */
-        const parse_node_t *plain_statement = tree.find_node_matching_source_location(symbol_plain_statement, pos, NULL);
-        if (plain_statement != NULL)
+        
+        /* Find any plain statement that contains the position. We have to backtrack past spaces (#1261). So this will be at either the last space character, or after the end of the string */
+        size_t adjusted_pos = pos;
+        while (adjusted_pos > 0 && cmd.at(adjusted_pos - 1) == L' ')
+        {
+            adjusted_pos--;
+        }
+        
+        const parse_node_t *plain_statement = tree.find_node_matching_source_location(symbol_plain_statement, adjusted_pos, NULL);
+        if (plain_statement == NULL)
+        {
+            /* Not part of a plain statement. This could be e.g. a for loop header, case expression, etc. Do generic file completions (#1309). If we had to backtrack, it means there was whitespace; don't do an autosuggestion in that case. */
+            bool no_file = (flags & COMPLETION_REQUEST_AUTOSUGGESTION) && (adjusted_pos < pos);
+            completer.complete_param_expand(current_token, ! no_file);
+        }
+        else
         {
             assert(plain_statement->has_source() && plain_statement->type == symbol_plain_statement);
 
@@ -1871,6 +1921,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
                     break;
 
                 case parse_statement_decoration_command:
+                case parse_statement_decoration_exec:
                     use_command = true;
                     use_function = false;
                     use_builtin = false;
@@ -1945,7 +1996,9 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
 
                 /* And if we're autosuggesting, and the token is empty, don't do file suggestions */
                 if ((flags & COMPLETION_REQUEST_AUTOSUGGESTION) && current_argument_unescape.empty())
+                {
                     do_file = false;
+                }
 
                 /* This function wants the unescaped string */
                 completer.complete_param_expand(current_token, do_file);

@@ -29,14 +29,14 @@ if begin ; not test -x /usr/bin/seq ; and not type -f seq > /dev/null; end
 		
 			case '*'
 				printf (_ "%s: Expected 1, 2 or 3 arguments, got %d\n") seq (count $argv)
-				exit 1
+				return 1
 		
 		end
 		
 		for i in $from $step $to
 			if not echo $i | grep -E '^-?[0-9]*([0-9]*|\.[0-9]+)$' >/dev/null
 				printf (_ "%s: '%s' is not a number\n") seq $i
-				exit 1
+				return 1
 			end
 		end
 		

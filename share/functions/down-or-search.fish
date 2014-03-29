@@ -5,11 +5,18 @@ function down-or-search -d "Depending on cursor position and current mode, eithe
 		return
 	end
 
+	# If we are navigating the pager, then up always navigates
+	if commandline --paging-mode
+		commandline -f down-line
+		return
+	end
+
+
 	# We are not already in search mode.
 	# If we are on the bottom line, start search mode,
 	# otherwise move down
 	set lineno (commandline -L)
-	set line_count (commandline|wc -l)
+	set line_count (commandline | wc -l | tr -d ' ')
 
 	switch $lineno
 		case $line_count

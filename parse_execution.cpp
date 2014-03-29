@@ -27,7 +27,30 @@ static bool specific_statement_type_is_redirectable_block(const parse_node_t &no
 
 }
 
-parse_execution_context_t::parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, parser_t *p) : tree(t), src(s), parser(p), eval_level(0)
+/* Get the name of a redirectable block, for profiling purposes */
+static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &node, const parse_node_tree_t &tree, const wcstring &src)
+{
+    assert(specific_statement_type_is_redirectable_block(node));
+    assert(node.has_source());
+    
+    /* Get the source for the block, and cut it at the next statement terminator. */
+    const size_t src_start = node.source_start;
+    size_t src_len = node.source_length;
+
+    const parse_node_tree_t::parse_node_list_t statement_terminator_nodes = tree.find_nodes(node, parse_token_type_end, 1);
+    if (! statement_terminator_nodes.empty())
+    {
+        const parse_node_t *term = statement_terminator_nodes.at(0);
+        assert(term->source_start >= src_start);
+        src_len = term->source_start - src_start;
+    }
+    
+    wcstring result = wcstring(src, src_start, src_len);
+    result.append(L"...");
+    return result;
+}
+
+parse_execution_context_t::parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, parser_t *p, int initial_eval_level) : tree(t), src(s), parser(p), eval_level(initial_eval_level), executing_node_idx(NODE_OFFSET_INVALID), cached_lineno_offset(0), cached_lineno_count(0)
 {
 }
 
@@ -49,7 +72,8 @@ node_offset_t parse_execution_context_t::get_offset(const parse_node_t &node) co
     const parse_node_t *addr = &node;
     const parse_node_t *base = &this->tree.at(0);
     assert(addr >= base);
-    node_offset_t offset = addr - base;
+    assert(addr - base < SOURCE_OFFSET_INVALID);
+    node_offset_t offset = static_cast<node_offset_t>(addr - base);
     assert(offset < this->tree.size());
     assert(&tree.at(offset) == &node);
     return offset;
@@ -112,7 +136,7 @@ const parse_node_t *parse_execution_context_t::infinite_recursive_statement_in_j
         /* Ok, this is an undecorated plain statement. Get and expand its command */
         wcstring cmd;
         tree.command_for_plain_statement(plain_statement, src, &cmd);
-        expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
+        expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES, NULL);
 
         if (cmd == forbidden_function_name)
         {
@@ -138,10 +162,9 @@ enum process_type_t parse_execution_context_t::process_type_for_command(const pa
     /* Determine the process type, which depends on the statement decoration (command, builtin, etc) */
     enum parse_statement_decoration_t decoration = tree.decoration_for_plain_statement(plain_statement);
 
-    /* Do the "exec hack" */
-    if (decoration != parse_statement_decoration_command && cmd == L"exec")
+    if (decoration == parse_statement_decoration_exec)
     {
-        /* Either 'builtin exec' or just plain 'exec', and definitely not 'command exec'. Note we don't allow overriding exec with a function. */
+        /* Always exec */
         process_type = INTERNAL_EXEC;
     }
     else if (decoration == parse_statement_decoration_command)
@@ -302,9 +325,21 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(const parse
     {
         run_job_list(*job_list_to_execute, ib);
     }
+    
+    /* It's possible there's a last-minute cancellation, in which case we should not stomp the exit status (#1297) */
+    if (should_cancel_execution(ib))
+    {
+        result = parse_execution_cancelled;
+    }
 
     /* Done */
     parser->pop_block(ib);
+
+    /* Issue 1061: If we executed, then always report success, instead of letting the exit status of the last command linger */
+    if (result == parse_execution_success)
+    {
+        proc_set_last_status(STATUS_BUILTIN_OK);
+    }
 
     return result;
 }
@@ -347,8 +382,9 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(const
     if (result == parse_execution_success)
     {
         const wcstring contents_str = get_source(contents);
+        int definition_line_offset = this->line_offset_of_node_at_offset(this->get_offset(contents));
         wcstring error_str;
-        int err = define_function(*parser, argument_list, contents_str, &error_str);
+        int err = define_function(*parser, argument_list, contents_str, definition_line_offset, &error_str);
         proc_set_last_status(err);
 
         if (! error_str.empty())
@@ -402,13 +438,18 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(const pars
     assert(header.type == symbol_for_header);
     assert(block_contents.type == symbol_job_list);
 
-    /* Get the variable name: `for var_name in ...` */
+    /* Get the variable name: `for var_name in ...`. We expand the variable name. It better result in just one. */
     const parse_node_t &var_name_node = *get_child(header, 1, parse_token_type_string);
-    const wcstring for_var_name = get_source(var_name_node);
+    wcstring for_var_name = get_source(var_name_node);
+    if (! expand_one(for_var_name, 0, NULL))
+    {
+        report_error(var_name_node, FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG, for_var_name.c_str());
+        return parse_execution_errored;
+    }
 
     /* Get the contents to iterate over. */
     const parse_node_t *unmatched_wildcard = NULL;
-    wcstring_list_t argument_list = this->determine_arguments(header, &unmatched_wildcard);
+    wcstring_list_t argument_sequence = this->determine_arguments(header, &unmatched_wildcard);
     if (unmatched_wildcard != NULL)
     {
         return report_unmatched_wildcard_error(*unmatched_wildcard);
@@ -416,15 +457,12 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(const pars
 
     parse_execution_result_t ret = parse_execution_success;
 
-    for_block_t *fb = new for_block_t(for_var_name);
+    for_block_t *fb = new for_block_t();
     parser->push_block(fb);
 
-    /* Note that we store the sequence of values in opposite order */
-    std::reverse(argument_list.begin(), argument_list.end());
-    fb->sequence = argument_list;
-
     /* Now drive the for loop. */
-    while (! fb->sequence.empty())
+    const size_t arg_count = argument_sequence.size();
+    for (size_t i=0; i < arg_count; i++)
     {
         if (should_cancel_execution(fb))
         {
@@ -432,10 +470,8 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(const pars
             break;
         }
 
-        const wcstring &for_variable = fb->variable;
-        const wcstring &val = fb->sequence.back();
-        env_set(for_variable, val.c_str(),  ENV_LOCAL);
-        fb->sequence.pop_back();
+        const wcstring &val = argument_sequence.at(i);
+        env_set(for_var_name, val.c_str(),  ENV_LOCAL);
         fb->loop_status = LOOP_NORMAL;
         fb->skip = 0;
 
@@ -476,16 +512,17 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
     const parse_node_t &switch_value_node = *get_child(statement, 1, parse_token_type_string);
     const wcstring switch_value = get_source(switch_value_node);
 
-    /* Expand it */
+    /* Expand it. We need to offset any errors by the position of the string */
     std::vector<completion_t> switch_values_expanded;
-    int expand_ret = expand_string(switch_value, switch_values_expanded, EXPAND_NO_DESCRIPTIONS);
+    parse_error_list_t errors;
+    int expand_ret = expand_string(switch_value, switch_values_expanded, EXPAND_NO_DESCRIPTIONS, &errors);
+    parse_error_offset_source_start(&errors, switch_value_node.source_start);
+    
     switch (expand_ret)
     {
         case EXPAND_ERROR:
         {
-            result = report_error(switch_value_node,
-                                  _(L"Could not expand string '%ls'"),
-                                  switch_value.c_str());
+            result = report_errors(errors);
             break;
         }
 
@@ -512,7 +549,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
     }
     const wcstring &switch_value_expanded = switch_values_expanded.at(0).completion;
 
-    switch_block_t *sb = new switch_block_t(switch_value_expanded);
+    switch_block_t *sb = new switch_block_t();
     parser->push_block(sb);
 
     if (result == parse_execution_success)
@@ -581,7 +618,6 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(const pa
 
     /* Push a while block */
     while_block_t *wb = new while_block_t();
-    wb->status = WHILE_TEST_FIRST;
     wb->node_offset = this->get_offset(header);
     parser->push_block(wb);
 
@@ -637,29 +673,43 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(const pa
 }
 
 /* Reports an error. Always returns parse_execution_errored, so you can assign the result to an 'errored' variable */
-parse_execution_result_t parse_execution_context_t::report_error(const parse_node_t &node, const wchar_t *fmt, ...)
+parse_execution_result_t parse_execution_context_t::report_error(const parse_node_t &node, const wchar_t *fmt, ...) const
 {
     if (parser->show_errors)
     {
         /* Create an error */
-        parse_error_t error;
-        error.source_start = node.source_start;
-        error.source_length = node.source_length;
-        error.code = parse_error_syntax; //hackish
+        parse_error_list_t error_list = parse_error_list_t(1);
+        parse_error_t *error = &error_list.at(0);
+        error->source_start = node.source_start;
+        error->source_length = node.source_length;
+        error->code = parse_error_syntax; //hackish
 
         va_list va;
         va_start(va, fmt);
-        error.text = vformat_string(fmt, va);
+        error->text = vformat_string(fmt, va);
         va_end(va);
+        
+        this->report_errors(error_list);
+    }
+    return parse_execution_errored;
+}
 
+parse_execution_result_t parse_execution_context_t::report_errors(const parse_error_list_t &error_list) const
+{
+    if (parser->show_errors)
+    {
+        if (error_list.empty())
+        {
+            fprintf(stderr, "Bug: Error reported but no error text found.");
+        }
+    
         /* Get a backtrace */
         wcstring backtrace_and_desc;
-        const parse_error_list_t error_list = parse_error_list_t(1, error);
         parser->get_backtrace(src, error_list, &backtrace_and_desc);
-
+        
+        /* Print it */
         fprintf(stderr, "%ls", backtrace_and_desc.c_str());
     }
-
     return parse_execution_errored;
 }
 
@@ -795,7 +845,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(job_t
     assert(got_cmd);
 
     /* Expand it as a command. Return an error on failure. */
-    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES);
+    bool expanded = expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES, NULL);
     if (! expanded)
     {
         report_error(statement, ILLEGAL_CMD_ERR_MSG, cmd.c_str());
@@ -813,7 +863,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(job_t
     }
 
     wcstring path_to_external_command;
-    if (process_type == EXTERNAL)
+    if (process_type == EXTERNAL || process_type == INTERNAL_EXEC)
     {
         /* Determine the actual command. This may be an implicit cd. */
         bool has_command = path_get_path(cmd, &path_to_external_command);
@@ -913,14 +963,14 @@ wcstring_list_t parse_execution_context_t::determine_arguments(const parse_node_
 
         /* Expand this string */
         std::vector<completion_t> arg_expanded;
-        int expand_ret = expand_string(arg_str, arg_expanded, EXPAND_NO_DESCRIPTIONS);
+        parse_error_list_t errors;
+        int expand_ret = expand_string(arg_str, arg_expanded, EXPAND_NO_DESCRIPTIONS, &errors);
+        parse_error_offset_source_start(&errors, arg_node.source_start);
         switch (expand_ret)
         {
             case EXPAND_ERROR:
             {
-                this->report_error(arg_node,
-                                   _(L"Could not expand string '%ls'"),
-                                   arg_str.c_str());
+                this->report_errors(errors);
                 break;
             }
 
@@ -982,7 +1032,7 @@ bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement
         enum token_type redirect_type = tree.type_for_redirection(redirect_node, src, &source_fd, &target);
 
         /* PCA: I can't justify this EXPAND_SKIP_VARIABLES flag. It was like this when I got here. */
-        bool target_expanded = expand_one(target, no_exec ? EXPAND_SKIP_VARIABLES : 0);
+        bool target_expanded = expand_one(target, no_exec ? EXPAND_SKIP_VARIABLES : 0, NULL);
         if (! target_expanded || target.empty())
         {
             /* Should improve this error message */
@@ -1051,7 +1101,7 @@ bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement
 
     if (out_chain && ! errored)
     {
-        std::swap(*out_chain, result);
+        out_chain->swap(result);
     }
     return ! errored;
 }
@@ -1263,6 +1313,17 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
 
     /* Increment the eval_level for the duration of this command */
     scoped_push<int> saved_eval_level(&eval_level, eval_level + 1);
+    
+    /* Save the node index */
+    scoped_push<node_offset_t> saved_node_offset(&executing_node_idx, this->get_offset(job_node));
+
+    /* Profiling support */
+    long long start_time = 0, parse_time = 0, exec_time = 0;
+    profile_item_t *profile_item = this->parser->create_profile_item();
+    if (profile_item != NULL)
+    {
+        start_time = get_time();
+    }
 
     /* When we encounter a block construct (e.g. while loop) in the general case, we create a "block process" that has a pointer to its source. This allows us to handle block-level redirections. However, if there are no redirections, then we can just jump into the block directly, which is significantly faster. */
     if (job_is_simple_block(job_node))
@@ -1273,31 +1334,35 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
         switch (specific_statement.type)
         {
             case symbol_block_statement:
-                return this->run_block_statement(specific_statement);
+                result = this->run_block_statement(specific_statement);
+                break;
 
             case symbol_if_statement:
-                return this->run_if_statement(specific_statement);
+                result = this->run_if_statement(specific_statement);
+                break;
 
             case symbol_switch_statement:
-                return this->run_switch_statement(specific_statement);
+                result = this->run_switch_statement(specific_statement);
+                break;
 
             default:
                 /* Other types should be impossible due to the specific_statement_type_is_redirectable_block check */
                 PARSER_DIE();
                 break;
         }
-    }
-
-    /* Profiling support */
-    long long start_time = 0, parse_time = 0, exec_time = 0;
-    const bool do_profile = profile;
-    profile_item_t *profile_item = NULL;
-    if (do_profile)
-    {
-        profile_item = new profile_item_t();
-        profile_item->skipped = 1;
-        profile_items.push_back(profile_item);
-        start_time = get_time();
+        
+        if (profile_item != NULL)
+        {
+            /* Block-types profile a little weird. They have no 'parse' time, and their command is just the block type */
+            exec_time = get_time();
+            profile_item->level=eval_level;
+            profile_item->parse = 0;
+            profile_item->exec=(int)(exec_time-start_time);
+            profile_item->cmd = profiling_cmd_name_for_redirectable_block(specific_statement, this->tree, this->src);
+            profile_item->skipped = result != parse_execution_success;
+        }
+        
+        return result;
     }
 
     job_t *j = new job_t(acquire_job_id(), block_io);
@@ -1330,11 +1395,9 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
 
 
     /* Store time it took to 'parse' the command */
-    if (do_profile)
+    if (profile_item != NULL)
     {
         parse_time = get_time();
-        profile_item->cmd = j->command();
-        profile_item->skipped=parser->current_block()->skip;
     }
 
     if (populated_job)
@@ -1364,20 +1427,22 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
         }
     }
 
+    if (profile_item != NULL)
+    {
+        exec_time = get_time();
+        profile_item->level=eval_level;
+        profile_item->parse = (int)(parse_time-start_time);
+        profile_item->exec=(int)(exec_time-parse_time);
+        profile_item->cmd = j ? j->command() : wcstring();
+        profile_item->skipped = ! populated_job || result != parse_execution_success;
+    }
+
     /* If the job was skipped, we pretend it ran anyways */
     if (result == parse_execution_skipped)
     {
         result = parse_execution_success;
     }
 
-    if (do_profile)
-    {
-        exec_time = get_time();
-        profile_item->level=eval_level;
-        profile_item->parse = (int)(parse_time-start_time);
-        profile_item->exec=(int)(exec_time-parse_time);
-        profile_item->skipped = ! populated_job;
-    }
 
     /* Clean up jobs. */
     job_reap(0);
@@ -1473,4 +1538,85 @@ parse_execution_result_t parse_execution_context_t::eval_node_at_offset(node_off
     }
 
     return status;
+}
+
+int parse_execution_context_t::line_offset_of_node_at_offset(node_offset_t requested_index)
+{
+    /* If we're not executing anything, return -1 */
+    if (requested_index == NODE_OFFSET_INVALID)
+    {
+        return -1;
+    }
+
+    /* If for some reason we're executing a node without source, return -1 */
+    const parse_node_t &node = tree.at(requested_index);
+    if (! node.has_source())
+    {
+        return -1;
+    }
+    
+    /* Count the number of newlines, leveraging our cache */
+    const size_t offset = tree.at(requested_index).source_start;
+    assert(offset <= src.size());
+
+    /* Easy hack to handle 0 */
+    if (offset == 0)
+    {
+        return 0;
+    }
+    
+    /* We want to return (one plus) the number of newlines at offsets less than the given offset. cached_lineno_count is the number of newlines at indexes less than cached_lineno_offset. */
+    const wchar_t *str = src.c_str();
+    if (offset > cached_lineno_offset)
+    {
+        size_t i;
+        for (i = cached_lineno_offset; str[i] != L'\0' && i < offset; i++)
+        {
+            /* Add one for every newline we find in the range [cached_lineno_offset, offset) */
+            if (str[i] == L'\n')
+            {
+                cached_lineno_count++;
+            }
+        }
+        cached_lineno_offset = i; //note: i, not offset, in case offset is beyond the length of the string
+    }
+    else if (offset < cached_lineno_offset)
+    {
+        /* Subtract one for every newline we find in the range [offset, cached_lineno_offset) */
+        for (size_t i = offset; i < cached_lineno_offset; i++)
+        {
+            if (str[i] == L'\n')
+            {
+                cached_lineno_count--;
+            }
+        }
+        cached_lineno_offset = offset;
+    }
+    return cached_lineno_count;
+}
+
+int parse_execution_context_t::get_current_line_number()
+{
+    int line_number = -1;
+    int line_offset = this->line_offset_of_node_at_offset(this->executing_node_idx);
+    if (line_offset >= 0)
+    {
+        /* The offset is 0 based; the number is 1 based */
+        line_number = line_offset + 1;
+    }
+    return line_number;
+}
+
+int parse_execution_context_t::get_current_source_offset() const
+{
+    int result = -1;
+    if (executing_node_idx != NODE_OFFSET_INVALID)
+    {
+        const parse_node_t &node = tree.at(executing_node_idx);
+        if (node.has_source())
+        {
+            result = static_cast<int>(node.source_start);
+        }
+    }
+    return result;
 }

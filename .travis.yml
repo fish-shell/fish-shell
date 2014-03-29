@@ -1,0 +1,22 @@
+language: cpp
+compiler:
+  - gcc
+  - clang
+before_install:
+  - sudo apt-get update
+install:
+  - sudo apt-get install --no-install-recommends libncurses5-dev gettext doxygen
+script:
+  - autoreconf
+  - ./configure
+  - make
+  - sudo make install
+  - make test
+notifications:
+  irc:
+    channels:
+      - "irc.oftc.net#fish"
+    template:
+      - "%{repository}#%{build_number} (%{commit} on %{branch} by %{author}): %{message} Details at %{build_url}"
+    use_notice: true
+    skip_join: true

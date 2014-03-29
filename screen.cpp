@@ -45,6 +45,7 @@ efficient way for transforming that to the desired screen content.
 #include "highlight.h"
 #include "screen.h"
 #include "env.h"
+#include "pager.h"
 
 /** The number of characters to indent new blocks */
 #define INDENT_STEP 4
@@ -1027,7 +1028,7 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
 
     if (! output.empty())
     {
-        write_loop(1, &output.at(0), output.size());
+        write_loop(STDOUT_FILENO, &output.at(0), output.size());
     }
 
     /* We have now synced our actual screen against our desired screen. Note that this is a big assignment! */
@@ -1237,7 +1238,9 @@ void s_write(screen_t *s,
              const int *indent,
              size_t cursor_pos,
              size_t sel_start_pos,
-             size_t sel_stop_pos)
+             size_t sel_stop_pos,
+             const page_rendering_t &pager,
+             bool cursor_position_is_within_pager)
 {
     screen_data_t::cursor_t cursor_arr;
 
@@ -1306,24 +1309,30 @@ void s_write(screen_t *s,
     {
         int color = colors[i];
 
-        if (i == cursor_pos)
+        if (! cursor_position_is_within_pager && i == cursor_pos)
         {
             color = 0;
-        }
-
-        if (i == cursor_pos)
-        {
             cursor_arr = s->desired.cursor;
         }
 
         s_desired_append_char(s, effective_commandline.at(i), color, indent[i], first_line_prompt_space);
     }
-    if (i == cursor_pos)
+    if (! cursor_position_is_within_pager && i == cursor_pos)
     {
         cursor_arr = s->desired.cursor;
     }
 
     s->desired.cursor = cursor_arr;
+    
+    if (cursor_position_is_within_pager)
+    {
+        s->desired.cursor.x = (int)cursor_pos;
+        s->desired.cursor.y = (int)s->desired.line_count();
+    }
+    
+    /* Append pager_data (none if empty) */
+    s->desired.append_lines(pager.screen_data);
+    
     s_update(s, layout.left_prompt.c_str(), layout.right_prompt.c_str());
     s_save_status(s);
 }
@@ -1427,6 +1436,22 @@ void s_reset(screen_t *s, screen_reset_mode_t mode)
 
     fstat(1, &s->prev_buff_1);
     fstat(2, &s->prev_buff_2);
+}
+
+bool screen_force_clear_to_end()
+{
+    bool result = false;
+    if (clr_eos)
+    {
+        data_buffer_t output;
+        s_write_mbs(&output, clr_eos);
+        if (! output.empty())
+        {
+            write_loop(STDOUT_FILENO, &output.at(0), output.size());
+            result = true;
+        }
+    }
+    return result;
 }
 
 screen_t::screen_t() :

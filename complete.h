@@ -14,6 +14,7 @@
 
 
 #include <wchar.h>
+#include <stdint.h>
 
 #include "util.h"
 #include "common.h"
@@ -53,13 +54,6 @@
  * Separator between completion and description
  */
 #define COMPLETE_SEP_STR L"\004"
-
-/**
- * Separator between completion items in fish_pager. This is used for
- * completion grouping, e.g. when putting completions with the same
- * descriptions on the same line.
- */
-#define COMPLETE_ITEM_SEP L'\uf500'
 
 /**
  * Character that separates the completion and description on

@@ -235,9 +235,8 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
     output_set_writer(saved_writer_func);
 
     /* Output the collected string */
-    std::string local_output;
-    std::swap(builtin_set_color_output, local_output);
-    stdout_buffer.append(str2wcstring(local_output));
+    stdout_buffer.append(str2wcstring(builtin_set_color_output));
+    builtin_set_color_output.clear();
 
     return STATUS_BUILTIN_OK;
 }

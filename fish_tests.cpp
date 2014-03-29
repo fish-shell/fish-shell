@@ -18,7 +18,6 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <stdarg.h>
-#include <assert.h>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -61,6 +60,9 @@
 #include "signal.h"
 #include "parse_tree.h"
 #include "parse_util.h"
+#include "pager.h"
+#include "input.h"
+#include "utf8.h"
 
 static const char * const * s_arguments;
 static int s_test_run_count = 0;
@@ -140,11 +142,20 @@ static void err(const wchar_t *blah, ...)
     va_start(va, blah);
     err_count++;
 
+    // show errors in red
+    fputs("\x1b[31m", stdout);
+
     wprintf(L"Error: ");
     vwprintf(blah, va);
     va_end(va);
+
+    // return to normal color
+    fputs("\x1b[0m", stdout);
+
     wprintf(L"\n");
 }
+
+#define do_test(e) do { if (! (e)) err(L"Test failed on line %lu: %s", __LINE__, #e); } while (0)
 
 /* Test sane escapes */
 static void test_unescape_sane()
@@ -249,7 +260,7 @@ static void test_format(void)
     {
         char buff[128];
         format_size_safe(buff, tests[i].val);
-        assert(! strcmp(buff, tests[i].expected));
+        do_test(! strcmp(buff, tests[i].expected));
     }
 
     for (int j=-129; j <= 129; j++)
@@ -257,14 +268,14 @@ static void test_format(void)
         char buff1[128], buff2[128];
         format_long_safe(buff1, j);
         sprintf(buff2, "%d", j);
-        assert(! strcmp(buff1, buff2));
+        do_test(! strcmp(buff1, buff2));
     }
 
     long q = LONG_MIN;
     char buff1[128], buff2[128];
     format_long_safe(buff1, q);
     sprintf(buff2, "%ld", q);
-    assert(! strcmp(buff1, buff2));
+    do_test(! strcmp(buff1, buff2));
 
 }
 
@@ -457,83 +468,6 @@ static void test_tok()
     if (redirection_type_for_string(L"2>|") != TOK_NONE) err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);
 }
 
-static int test_fork_helper(void *unused)
-{
-    size_t i;
-    for (i=0; i < 1000; i++)
-    {
-        //delete [](new char[4 * 1024 * 1024]);
-        for (int j=0; j < 1024; j++)
-        {
-            strerror(j);
-        }
-    }
-    return 0;
-}
-
-static void test_fork(void)
-{
-    return;
-    say(L"Testing fork");
-    size_t i, max = 100;
-    for (i=0; i < 100; i++)
-    {
-        printf("%lu / %lu\n", (unsigned long)(i+1), (unsigned long) max);
-        /* Do something horrible to try to trigger an error */
-#define THREAD_COUNT 8
-#define FORK_COUNT 10
-#define FORK_LOOP_COUNT 16
-        signal_block();
-        for (size_t i=0; i < THREAD_COUNT; i++)
-        {
-            iothread_perform<void>(test_fork_helper, NULL, NULL);
-        }
-        for (size_t q = 0; q < FORK_LOOP_COUNT; q++)
-        {
-            pid_t pids[FORK_COUNT];
-            for (size_t i=0; i < FORK_COUNT; i++)
-            {
-                pid_t pid = execute_fork(false);
-                if (pid > 0)
-                {
-                    /* Parent */
-                    pids[i] = pid;
-                }
-                else if (pid == 0)
-                {
-                    /* Child */
-                    //new char[4 * 1024 * 1024];
-                    for (size_t i=0; i < 1024 * 16; i++)
-                    {
-                        for (int j=0; j < 256; j++)
-                        {
-                            strerror(j);
-                        }
-                    }
-                    exit_without_destructors(0);
-                }
-                else
-                {
-                    perror("fork");
-                }
-            }
-            for (size_t i=0; i < FORK_COUNT; i++)
-            {
-                int status = 0;
-                if (pids[i] != waitpid(pids[i], &status, 0))
-                {
-                    perror("waitpid");
-                    assert(0);
-                }
-                assert(WIFEXITED(status) && 0 == WEXITSTATUS(status));
-            }
-        }
-        iothread_drain_all();
-        signal_unblock();
-    }
-#undef FORK_COUNT
-}
-
 // Little function that runs in the main thread
 static int test_iothread_main_call(int *addr)
 {
@@ -576,6 +510,20 @@ static void test_iothread(void)
     }
 
     delete int_ptr;
+}
+
+static parser_test_error_bits_t detect_argument_errors(const wcstring &src)
+{
+    parse_node_tree_t tree;
+    if (! parse_tree_from_string(src, parse_flag_none, &tree, NULL, symbol_argument_list))
+    {
+        return PARSER_TEST_ERROR;
+    }
+
+    assert(! tree.empty());
+    const parse_node_t *first_arg = tree.next_node_in_node_list(tree.at(0), symbol_argument, NULL);
+    assert(first_arg != NULL);
+    return parse_util_detect_errors_in_argument(*first_arg, first_arg->get_source(src));
 }
 
 /**
@@ -659,12 +607,57 @@ static void test_parser()
         err(L"'and' command in pipeline not reported as error");
     }
 
+    if (! parse_util_detect_errors(L"cat | or cat"))
+    {
+        err(L"'or' command in pipeline not reported as error");
+    }
+
     if (! parse_util_detect_errors(L"cat | exec") || ! parse_util_detect_errors(L"exec | cat"))
     {
         err(L"'exec' command in pipeline not reported as error");
     }
 
+    if (detect_argument_errors(L"foo"))
+    {
+        err(L"simple argument reported as error");
+    }
 
+    if (detect_argument_errors(L"''"))
+    {
+        err(L"Empty string reported as error");
+    }
+
+
+    if (! (detect_argument_errors(L"foo$$") & PARSER_TEST_ERROR))
+    {
+        err(L"Bad variable expansion not reported as error");
+    }
+
+    if (! (detect_argument_errors(L"foo$@") & PARSER_TEST_ERROR))
+    {
+        err(L"Bad variable expansion not reported as error");
+    }
+
+    /* Within command substitutions, we should be able to detect everything that parse_util_detect_errors can detect */
+    if (! (detect_argument_errors(L"foo(cat | or cat)") & PARSER_TEST_ERROR))
+    {
+        err(L"Bad command substitution not reported as error");
+    }
+
+    if (! (detect_argument_errors(L"foo\\xFF9") & PARSER_TEST_ERROR))
+    {
+        err(L"Bad escape not reported as error");
+    }
+
+    if (! (detect_argument_errors(L"foo(echo \\xFF9)") & PARSER_TEST_ERROR))
+    {
+        err(L"Bad escape in command substitution not reported as error");
+    }
+
+    if (! (detect_argument_errors(L"foo(echo (echo (echo \\xFF9)))") & PARSER_TEST_ERROR))
+    {
+        err(L"Bad escape in nested command substitution not reported as error");
+    }
 
 
     say(L"Testing basic evaluation");
@@ -687,6 +680,15 @@ static void test_parser()
     /* This is disabled since it produces a long backtrace. We should find a way to either visually compress the backtrace, or disable error spewing */
     parser_t::principal_parser().eval(L"function recursive1 ; recursive2 ; end ; function recursive2 ; recursive1 ; end ; recursive1; ", io_chain_t(), TOP);
 #endif
+
+    say(L"Testing eval_args");
+    completion_list_t comps;
+    parser_t::principal_parser().expand_argument_list(L"alpha 'beta gamma' delta", comps);
+    do_test(comps.size() == 3);
+    do_test(comps.at(0).completion == L"alpha");
+    do_test(comps.at(1).completion == L"beta gamma");
+    do_test(comps.at(2).completion == L"delta");
+
 }
 
 /* Wait a while and then SIGINT the main thread */
@@ -705,7 +707,7 @@ static int signal_main(test_cancellation_info_t *info)
 
 static void test_1_cancellation(const wchar_t *src)
 {
-    shared_ptr<io_buffer_t> out_buff(io_buffer_t::create(false, STDOUT_FILENO));
+    shared_ptr<io_buffer_t> out_buff(io_buffer_t::create(STDOUT_FILENO));
     const io_chain_t io_chain(out_buff);
     test_cancellation_info_t ctx = {pthread_self(), 0.25 /* seconds */ };
     iothread_perform(signal_main, (void (*)(test_cancellation_info_t *, int))NULL, &ctx);
@@ -880,7 +882,7 @@ static void test_indents()
             text.append(components[i].txt);
             expected_indents.resize(text.size(), components[i].indent);
         }
-        assert(expected_indents.size() == text.size());
+        do_test(expected_indents.size() == text.size());
 
         // Compute the indents
         std::vector<int> indents = parse_util_compute_indents(text);
@@ -889,7 +891,7 @@ static void test_indents()
         {
             err(L"Indent vector has wrong size! Expected %lu, actual %lu", expected_indents.size(), indents.size());
         }
-        assert(expected_indents.size() == indents.size());
+        do_test(expected_indents.size() == indents.size());
         for (size_t i=0; i < text.size(); i++)
         {
             if (expected_indents.at(i) != indents.at(i))
@@ -924,6 +926,260 @@ static void test_utils()
     if (begin != a + wcslen(L"echo (echo (")) err(L"parse_util_cmdsubst_extent failed on line %ld", (long)__LINE__);
 }
 
+/* UTF8 tests taken from Alexey Vatchenko's utf8 library. See http://www.bsdua.org/libbsdua.html */
+
+static void test_utf82wchar(const char *src, size_t slen, const wchar_t *dst, size_t dlen,
+                            int flags, size_t res, const char *descr)
+{
+    size_t size;
+    wchar_t *mem = NULL;
+
+    /* Hack: if wchar is only UCS-2, and the UTF-8 input string contains astral characters, then tweak the expected size to 0 */
+    if (src != NULL && is_wchar_ucs2())
+    {
+        /* A UTF-8 code unit may represent an astral code point if it has 4 or more leading 1s */
+        const unsigned char astral_mask = 0xF0;
+        for (size_t i=0; i < slen; i++)
+        {
+            if ((src[i] & astral_mask) == astral_mask)
+            {
+                /* Astral char. We expect this conversion to just fail. */
+                res = 0;
+                break;
+            }
+        }
+    }
+
+    if (dst != NULL)
+    {
+        mem = (wchar_t *)malloc(dlen * sizeof(*mem));
+        if (mem == NULL)
+        {
+            err(L"u2w: %s: MALLOC FAILED\n", descr);
+            return;
+        }
+    }
+
+    do
+    {
+        size = utf8_to_wchar(src, slen, mem, dlen, flags);
+        if (res != size)
+        {
+            err(L"u2w: %s: FAILED (rv: %lu, must be %lu)", descr, size, res);
+            break;
+        }
+
+        if (mem == NULL)
+            break;		/* OK */
+
+        if (memcmp(mem, dst, size * sizeof(*mem)) != 0)
+        {
+            err(L"u2w: %s: BROKEN", descr);
+            break;
+        }
+
+    }
+    while (0);
+
+    free(mem);
+}
+
+static void test_wchar2utf8(const wchar_t *src, size_t slen, const char *dst, size_t dlen,
+                            int flags, size_t res, const char *descr)
+{
+    size_t size;
+    char *mem = NULL;
+
+    /* Hack: if wchar is simulating UCS-2, and the wchar_t input string contains astral characters, then tweak the expected size to 0 */
+    if (src != NULL && is_wchar_ucs2())
+    {
+        const uint32_t astral_mask = 0xFFFF0000U;
+        for (size_t i=0; i < slen; i++)
+        {
+            if ((src[i] & astral_mask) != 0)
+            {
+                /* astral char */
+                res = 0;
+                break;
+            }
+        }
+    }
+
+    if (dst != NULL)
+    {
+        mem = (char *)malloc(dlen);
+        if (mem == NULL)
+        {
+            err(L"w2u: %s: MALLOC FAILED", descr);
+            return;
+        }
+    }
+
+    do
+    {
+        size = wchar_to_utf8(src, slen, mem, dlen, flags);
+        if (res != size)
+        {
+            err(L"w2u: %s: FAILED (rv: %lu, must be %lu)", descr, size, res);
+            break;
+        }
+
+        if (mem == NULL)
+            break;		/* OK */
+
+        if (memcmp(mem, dst, size) != 0)
+        {
+            err(L"w2u: %s: BROKEN", descr);
+            break;
+        }
+
+    }
+    while (0);
+
+    if (mem != NULL);
+    free(mem);
+}
+
+static void test_utf8()
+{
+    wchar_t w1[] = {0x54, 0x65, 0x73, 0x74};
+    wchar_t w2[] = {0x0422, 0x0435, 0x0441, 0x0442};
+    wchar_t w3[] = {0x800, 0x1e80, 0x98c4, 0x9910, 0xff00};
+    wchar_t w4[] = {0x15555, 0xf7777, 0xa};
+    wchar_t w5[] = {0x255555, 0x1fa04ff, 0xddfd04, 0xa};
+    wchar_t w6[] = {0xf255555, 0x1dfa04ff, 0x7fddfd04, 0xa};
+    wchar_t wb[] = {-2, 0xa, 0xffffffff, 0x0441};
+    wchar_t wm[] = {0x41, 0x0441, 0x3042, 0xff67, 0x9b0d, 0x2e05da67};
+    wchar_t wb1[] = {0xa, 0x0422};
+    wchar_t wb2[] = {0xd800, 0xda00, 0x41, 0xdfff, 0xa};
+    wchar_t wbom[] = {0xfeff, 0x41, 0xa};
+    wchar_t wbom2[] = {0x41, 0xa};
+    wchar_t wbom22[] = {0xfeff, 0x41, 0xa};
+    char u1[] = {0x54, 0x65, 0x73, 0x74};
+    char u2[] = {0xd0, 0xa2, 0xd0, 0xb5, 0xd1, 0x81, 0xd1, 0x82};
+    char u3[] = {0xe0, 0xa0, 0x80, 0xe1, 0xba, 0x80, 0xe9, 0xa3, 0x84,
+                 0xe9, 0xa4, 0x90, 0xef, 0xbc, 0x80
+                };
+    char u4[] = {0xf0, 0x95, 0x95, 0x95, 0xf3, 0xb7, 0x9d, 0xb7, 0xa};
+    char u5[] = {0xf8, 0x89, 0x95, 0x95, 0x95, 0xf9, 0xbe, 0xa0, 0x93,
+                 0xbf, 0xf8, 0xb7, 0x9f, 0xb4, 0x84, 0x0a
+                };
+    char u6[] = {0xfc, 0x8f, 0x89, 0x95, 0x95, 0x95, 0xfc, 0x9d, 0xbe,
+                 0xa0, 0x93, 0xbf, 0xfd, 0xbf, 0xb7, 0x9f, 0xb4, 0x84, 0x0a
+                };
+    char ub[] = {0xa, 0xd1, 0x81};
+    char um[] = {0x41, 0xd1, 0x81, 0xe3, 0x81, 0x82, 0xef, 0xbd, 0xa7,
+                 0xe9, 0xac, 0x8d, 0xfc, 0xae, 0x81, 0x9d, 0xa9, 0xa7
+                };
+    char ub1[] = {0xa, 0xff, 0xd0, 0xa2, 0xfe, 0x8f, 0xe0, 0x80};
+    char uc080[] = {0xc0, 0x80};
+    char ub2[] = {0xed, 0xa1, 0x8c, 0xed, 0xbe, 0xb4, 0xa};
+    char ubom[] = {0x41, 0xa};
+    char ubom2[] = {0xef, 0xbb, 0xbf, 0x41, 0xa};
+
+    /*
+     * UTF-8 -> UCS-4 string.
+     */
+    test_utf82wchar(ubom2, sizeof(ubom2), wbom2,
+                    sizeof(wbom2) / sizeof(*wbom2), UTF8_SKIP_BOM,
+                    sizeof(wbom2) / sizeof(*wbom2), "skip BOM");
+    test_utf82wchar(ubom2, sizeof(ubom2), wbom22,
+                    sizeof(wbom22) / sizeof(*wbom22), 0,
+                    sizeof(wbom22) / sizeof(*wbom22), "BOM");
+    test_utf82wchar(uc080, sizeof(uc080), NULL, 0, 0, 0,
+                    "c0 80 - forbitten by rfc3629");
+    test_utf82wchar(ub2, sizeof(ub2), NULL, 0, 0, is_wchar_ucs2() ? 0 : 3,
+                    "resulted in forbitten wchars (len)");
+    test_utf82wchar(ub2, sizeof(ub2), wb2, sizeof(wb2) / sizeof(*wb2), 0, 0,
+                    "resulted in forbitten wchars");
+    test_utf82wchar(ub2, sizeof(ub2), L"\x0a", 1, UTF8_IGNORE_ERROR,
+                    1, "resulted in ignored forbitten wchars");
+    test_utf82wchar(u1, sizeof(u1), w1, sizeof(w1) / sizeof(*w1), 0,
+                    sizeof(w1) / sizeof(*w1), "1 octet chars");
+    test_utf82wchar(u2, sizeof(u2), w2, sizeof(w2) / sizeof(*w2), 0,
+                    sizeof(w2) / sizeof(*w2), "2 octets chars");
+    test_utf82wchar(u3, sizeof(u3), w3, sizeof(w3) / sizeof(*w3), 0,
+                    sizeof(w3) / sizeof(*w3), "3 octets chars");
+    test_utf82wchar(u4, sizeof(u4), w4, sizeof(w4) / sizeof(*w4), 0,
+                    sizeof(w4) / sizeof(*w4), "4 octets chars");
+    test_utf82wchar(u5, sizeof(u5), w5, sizeof(w5) / sizeof(*w5), 0,
+                    sizeof(w5) / sizeof(*w5), "5 octets chars");
+    test_utf82wchar(u6, sizeof(u6), w6, sizeof(w6) / sizeof(*w6), 0,
+                    sizeof(w6) / sizeof(*w6), "6 octets chars");
+    test_utf82wchar("\xff", 1, NULL, 0, 0, 0, "broken utf-8 0xff symbol");
+    test_utf82wchar("\xfe", 1, NULL, 0, 0, 0, "broken utf-8 0xfe symbol");
+    test_utf82wchar("\x8f", 1, NULL, 0, 0, 0,
+                    "broken utf-8, start from 10 higher bits");
+    if (! is_wchar_ucs2()) test_utf82wchar(ub1, sizeof(ub1), wb1, sizeof(wb1) / sizeof(*wb1),
+                                               UTF8_IGNORE_ERROR, sizeof(wb1) / sizeof(*wb1), "ignore bad chars");
+    test_utf82wchar(um, sizeof(um), wm, sizeof(wm) / sizeof(*wm), 0,
+                    sizeof(wm) / sizeof(*wm), "mixed languages");
+    test_utf82wchar(um, sizeof(um), wm, sizeof(wm) / sizeof(*wm) - 1, 0,
+                    0, "boundaries -1");
+    test_utf82wchar(um, sizeof(um), wm, sizeof(wm) / sizeof(*wm) + 1, 0,
+                    sizeof(wm) / sizeof(*wm), "boundaries +1");
+    test_utf82wchar(um, sizeof(um), NULL, 0, 0,
+                    sizeof(wm) / sizeof(*wm), "calculate length");
+    test_utf82wchar(ub1, sizeof(ub1), NULL, 0, 0,
+                    0, "calculate length of bad chars");
+    test_utf82wchar(ub1, sizeof(ub1), NULL, 0,
+                    UTF8_IGNORE_ERROR, sizeof(wb1) / sizeof(*wb1),
+                    "calculate length, ignore bad chars");
+    test_utf82wchar(NULL, 0, NULL, 0, 0, 0, "invalid params, all 0");
+    test_utf82wchar(u1, 0, NULL, 0, 0, 0,
+                    "invalid params, src buf not NULL");
+    test_utf82wchar(NULL, 10, NULL, 0, 0, 0,
+                    "invalid params, src length is not 0");
+    test_utf82wchar(u1, sizeof(u1), w1, 0, 0, 0,
+                    "invalid params, dst is not NULL");
+
+    /*
+     * UCS-4 -> UTF-8 string.
+     */
+    test_wchar2utf8(wbom, sizeof(wbom) / sizeof(*wbom), ubom, sizeof(ubom),
+                    UTF8_SKIP_BOM, sizeof(ubom), "BOM");
+    test_wchar2utf8(wb2, sizeof(wb2) / sizeof(*wb2), NULL, 0, 0,
+                    0, "prohibited wchars");
+    test_wchar2utf8(wb2, sizeof(wb2) / sizeof(*wb2), NULL, 0,
+                    UTF8_IGNORE_ERROR, 2, "ignore prohibited wchars");
+    test_wchar2utf8(w1, sizeof(w1) / sizeof(*w1), u1, sizeof(u1), 0,
+                    sizeof(u1), "1 octet chars");
+    test_wchar2utf8(w2, sizeof(w2) / sizeof(*w2), u2, sizeof(u2), 0,
+                    sizeof(u2), "2 octets chars");
+    test_wchar2utf8(w3, sizeof(w3) / sizeof(*w3), u3, sizeof(u3), 0,
+                    sizeof(u3), "3 octets chars");
+    test_wchar2utf8(w4, sizeof(w4) / sizeof(*w4), u4, sizeof(u4), 0,
+                    sizeof(u4), "4 octets chars");
+    test_wchar2utf8(w5, sizeof(w5) / sizeof(*w5), u5, sizeof(u5), 0,
+                    sizeof(u5), "5 octets chars");
+    test_wchar2utf8(w6, sizeof(w6) / sizeof(*w6), u6, sizeof(u6), 0,
+                    sizeof(u6), "6 octets chars");
+    test_wchar2utf8(wb, sizeof(wb) / sizeof(*wb), ub, sizeof(ub), 0,
+                    0, "bad chars");
+    test_wchar2utf8(wb, sizeof(wb) / sizeof(*wb), ub, sizeof(ub),
+                    UTF8_IGNORE_ERROR, sizeof(ub), "ignore bad chars");
+    test_wchar2utf8(wm, sizeof(wm) / sizeof(*wm), um, sizeof(um), 0,
+                    sizeof(um), "mixed languages");
+    test_wchar2utf8(wm, sizeof(wm) / sizeof(*wm), um, sizeof(um) - 1, 0,
+                    0, "boundaries -1");
+    test_wchar2utf8(wm, sizeof(wm) / sizeof(*wm), um, sizeof(um) + 1, 0,
+                    sizeof(um), "boundaries +1");
+    test_wchar2utf8(wm, sizeof(wm) / sizeof(*wm), NULL, 0, 0,
+                    sizeof(um), "calculate length");
+    test_wchar2utf8(wb, sizeof(wb) / sizeof(*wb), NULL, 0, 0,
+                    0, "calculate length of bad chars");
+    test_wchar2utf8(wb, sizeof(wb) / sizeof(*wb), NULL, 0,
+                    UTF8_IGNORE_ERROR, sizeof(ub),
+                    "calculate length, ignore bad chars");
+    test_wchar2utf8(NULL, 0, NULL, 0, 0, 0, "invalid params, all 0");
+    test_wchar2utf8(w1, 0, NULL, 0, 0, 0,
+                    "invalid params, src buf not NULL");
+    test_wchar2utf8(NULL, 10, NULL, 0, 0, 0,
+                    "invalid params, src length is not 0");
+    test_wchar2utf8(w1, sizeof(w1) / sizeof(*w1), u1, 0, 0, 0,
+                    "invalid params, dst is not NULL");
+}
+
 static void test_escape_sequences(void)
 {
     say(L"Testing escape codes");
@@ -949,7 +1205,7 @@ public:
 
     virtual void node_was_evicted(lru_node_test_t *node)
     {
-        assert(find(evicted_nodes.begin(), evicted_nodes.end(), node) == evicted_nodes.end());
+        do_test(find(evicted_nodes.begin(), evicted_nodes.end(), node) == evicted_nodes.end());
         evicted_nodes.push_back(node);
     }
 };
@@ -963,16 +1219,16 @@ static void test_lru(void)
     size_t total_nodes = 20;
     for (size_t i=0; i < total_nodes; i++)
     {
-        assert(cache.size() == std::min(i, (size_t)16));
+        do_test(cache.size() == std::min(i, (size_t)16));
         lru_node_test_t *node = new lru_node_test_t(to_string(i));
         if (i < 4) expected_evicted.push_back(node);
         // Adding the node the first time should work, and subsequent times should fail
-        assert(cache.add_node(node));
-        assert(! cache.add_node(node));
+        do_test(cache.add_node(node));
+        do_test(! cache.add_node(node));
     }
-    assert(cache.evicted_nodes == expected_evicted);
+    do_test(cache.evicted_nodes == expected_evicted);
     cache.evict_all_nodes();
-    assert(cache.evicted_nodes.size() == total_nodes);
+    do_test(cache.evicted_nodes.size() == total_nodes);
     while (! cache.evicted_nodes.empty())
     {
         lru_node_t *node = cache.evicted_nodes.back();
@@ -996,7 +1252,7 @@ static int expand_test(const wchar_t *in, int flags, ...)
     int res=1;
     wchar_t *arg;
 
-    if (expand_string(in, output, flags))
+    if (expand_string(in, output, flags, NULL))
     {
 
     }
@@ -1174,6 +1430,99 @@ static void test_path()
     if (! paths_are_equivalent(L"/", L"/")) err(L"Bug in canonical PATH code on line %ld", (long)__LINE__);
 }
 
+static void test_pager_navigation()
+{
+    say(L"Testing pager navigation");
+
+    /* Generate 19 strings of width 10. There's 2 spaces between completions, and our term size is 80; these can therefore fit into 6 columns (6 * 12 - 2 = 70) or 5 columns (58) but not 7 columns (7 * 12 - 2 = 82).
+
+       You can simulate this test by creating 19 files named "file00.txt" through "file_18.txt".
+    */
+    completion_list_t completions;
+    for (size_t i=0; i < 19; i++)
+    {
+        append_completion(completions, L"abcdefghij");
+    }
+
+    pager_t pager;
+    pager.set_completions(completions);
+    pager.set_term_size(80, 24);
+    page_rendering_t render = pager.render();
+
+    if (render.term_width != 80)
+        err(L"Wrong term width");
+    if (render.term_height != 24)
+        err(L"Wrong term height");
+
+    size_t rows = 4, cols = 5;
+
+    /* We have 19 completions. We can fit into 6 columns with 4 rows or 5 columns with 4 rows; the second one is better and so is what we ought to have picked. */
+    if (render.rows != rows)
+        err(L"Wrong row count");
+    if (render.cols != cols)
+        err(L"Wrong column count");
+
+    /* Initially expect to have no completion index */
+    if (render.selected_completion_idx != (size_t)(-1))
+    {
+        err(L"Wrong initial selection");
+    }
+
+    /* Here are navigation directions and where we expect the selection to be */
+    const struct
+    {
+        selection_direction_t dir;
+        size_t sel;
+    }
+    cmds[] =
+    {
+        /* Tab completion to get into the list */
+        {direction_next, 0},
+
+        /* Westward motion in upper left wraps along the top row */
+        {direction_west, 16},
+        {direction_east, 1},
+
+        /* "Next" motion goes down the column */
+        {direction_next, 2},
+        {direction_next, 3},
+
+        {direction_west, 18},
+        {direction_east, 3},
+        {direction_east, 7},
+        {direction_east, 11},
+        {direction_east, 15},
+        {direction_east, 3},
+
+        {direction_west, 18},
+        {direction_east, 3},
+
+        /* Eastward motion wraps along the bottom, westward goes to the prior column */
+        {direction_east, 7},
+        {direction_east, 11},
+        {direction_east, 15},
+        {direction_east, 3},
+
+        /* Column memory */
+        {direction_west, 18},
+        {direction_south, 15},
+        {direction_north, 18},
+        {direction_west, 14},
+        {direction_south, 15},
+        {direction_north, 14}
+    };
+    for (size_t i=0; i < sizeof cmds / sizeof *cmds; i++)
+    {
+        pager.select_next_completion_in_direction(cmds[i].dir, render);
+        pager.update_rendering(&render);
+        if (cmds[i].sel != render.selected_completion_idx)
+        {
+            err(L"For command %lu, expected selection %lu, but found instead %lu\n", i, cmds[i].sel, render.selected_completion_idx);
+        }
+    }
+
+}
+
 enum word_motion_t
 {
     word_motion_left,
@@ -1286,24 +1635,24 @@ static void test_is_potential_path()
     const wcstring_list_t wds(1, wd);
 
     wcstring tmp;
-    assert(is_potential_path(L"al", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"alpha/");
-    assert(is_potential_path(L"alpha/", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"alpha/");
-    assert(is_potential_path(L"aard", wds, 0, &tmp) && tmp == L"aardvark");
+    do_test(is_potential_path(L"al", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"alpha/");
+    do_test(is_potential_path(L"alpha/", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"alpha/");
+    do_test(is_potential_path(L"aard", wds, 0, &tmp) && tmp == L"aardvark");
 
-    assert(! is_potential_path(L"balpha/", wds, PATH_REQUIRE_DIR, &tmp));
-    assert(! is_potential_path(L"aard", wds, PATH_REQUIRE_DIR, &tmp));
-    assert(! is_potential_path(L"aarde", wds, PATH_REQUIRE_DIR, &tmp));
-    assert(! is_potential_path(L"aarde", wds, 0, &tmp));
+    do_test(! is_potential_path(L"balpha/", wds, PATH_REQUIRE_DIR, &tmp));
+    do_test(! is_potential_path(L"aard", wds, PATH_REQUIRE_DIR, &tmp));
+    do_test(! is_potential_path(L"aarde", wds, PATH_REQUIRE_DIR, &tmp));
+    do_test(! is_potential_path(L"aarde", wds, 0, &tmp));
 
-    assert(is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, 0, &tmp) && tmp == L"/tmp/is_potential_path_test/aardvark");
-    assert(is_potential_path(L"/tmp/is_potential_path_test/al", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"/tmp/is_potential_path_test/alpha/");
-    assert(is_potential_path(L"/tmp/is_potential_path_test/aardv", wds, 0, &tmp) && tmp == L"/tmp/is_potential_path_test/aardvark");
+    do_test(is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, 0, &tmp) && tmp == L"/tmp/is_potential_path_test/aardvark");
+    do_test(is_potential_path(L"/tmp/is_potential_path_test/al", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"/tmp/is_potential_path_test/alpha/");
+    do_test(is_potential_path(L"/tmp/is_potential_path_test/aardv", wds, 0, &tmp) && tmp == L"/tmp/is_potential_path_test/aardvark");
 
-    assert(! is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, PATH_REQUIRE_DIR, &tmp));
-    assert(! is_potential_path(L"/tmp/is_potential_path_test/al/", wds, 0, &tmp));
-    assert(! is_potential_path(L"/tmp/is_potential_path_test/ar", wds, 0, &tmp));
+    do_test(! is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, PATH_REQUIRE_DIR, &tmp));
+    do_test(! is_potential_path(L"/tmp/is_potential_path_test/al/", wds, 0, &tmp));
+    do_test(! is_potential_path(L"/tmp/is_potential_path_test/ar", wds, 0, &tmp));
 
-    assert(is_potential_path(L"/usr", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"/usr/");
+    do_test(is_potential_path(L"/usr", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"/usr/");
 
 }
 
@@ -1342,7 +1691,7 @@ static bool run_test_test(int expected, const wcstring &str)
 
     bool bracket = run_one_test_test(expected, lst, true);
     bool nonbracket = run_one_test_test(expected, lst, false);
-    assert(bracket == nonbracket);
+    do_test(bracket == nonbracket);
     return nonbracket;
 }
 
@@ -1352,13 +1701,13 @@ static void test_test_brackets()
     parser_t parser(PARSER_TYPE_GENERAL, true);
 
     const wchar_t *argv1[] = {L"[", L"foo", NULL};
-    assert(builtin_test(parser, (wchar_t **)argv1) != 0);
+    do_test(builtin_test(parser, (wchar_t **)argv1) != 0);
 
     const wchar_t *argv2[] = {L"[", L"foo", L"]", NULL};
-    assert(builtin_test(parser, (wchar_t **)argv2) == 0);
+    do_test(builtin_test(parser, (wchar_t **)argv2) == 0);
 
     const wchar_t *argv3[] = {L"[", L"foo", L"]", L"bar", NULL};
-    assert(builtin_test(parser, (wchar_t **)argv3) != 0);
+    do_test(builtin_test(parser, (wchar_t **)argv3) != 0);
 
 }
 
@@ -1367,28 +1716,28 @@ static void test_test()
     say(L"Testing test builtin");
     test_test_brackets();
 
-    assert(run_test_test(0, L"5 -ne 6"));
-    assert(run_test_test(0, L"5 -eq 5"));
-    assert(run_test_test(0, L"0 -eq 0"));
-    assert(run_test_test(0, L"-1 -eq -1"));
-    assert(run_test_test(0, L"1 -ne -1"));
-    assert(run_test_test(1, L"-1 -ne -1"));
-    assert(run_test_test(0, L"abc != def"));
-    assert(run_test_test(1, L"abc = def"));
-    assert(run_test_test(0, L"5 -le 10"));
-    assert(run_test_test(0, L"10 -le 10"));
-    assert(run_test_test(1, L"20 -le 10"));
-    assert(run_test_test(0, L"-1 -le 0"));
-    assert(run_test_test(1, L"0 -le -1"));
-    assert(run_test_test(0, L"15 -ge 10"));
-    assert(run_test_test(0, L"15 -ge 10"));
-    assert(run_test_test(1, L"! 15 -ge 10"));
-    assert(run_test_test(0, L"! ! 15 -ge 10"));
+    do_test(run_test_test(0, L"5 -ne 6"));
+    do_test(run_test_test(0, L"5 -eq 5"));
+    do_test(run_test_test(0, L"0 -eq 0"));
+    do_test(run_test_test(0, L"-1 -eq -1"));
+    do_test(run_test_test(0, L"1 -ne -1"));
+    do_test(run_test_test(1, L"-1 -ne -1"));
+    do_test(run_test_test(0, L"abc != def"));
+    do_test(run_test_test(1, L"abc = def"));
+    do_test(run_test_test(0, L"5 -le 10"));
+    do_test(run_test_test(0, L"10 -le 10"));
+    do_test(run_test_test(1, L"20 -le 10"));
+    do_test(run_test_test(0, L"-1 -le 0"));
+    do_test(run_test_test(1, L"0 -le -1"));
+    do_test(run_test_test(0, L"15 -ge 10"));
+    do_test(run_test_test(0, L"15 -ge 10"));
+    do_test(run_test_test(1, L"! 15 -ge 10"));
+    do_test(run_test_test(0, L"! ! 15 -ge 10"));
 
-    assert(run_test_test(0, L"0 -ne 1 -a 0 -eq 0"));
-    assert(run_test_test(0, L"0 -ne 1 -a -n 5"));
-    assert(run_test_test(0, L"-n 5 -a 10 -gt 5"));
-    assert(run_test_test(0, L"-n 3 -a -n 5"));
+    do_test(run_test_test(0, L"0 -ne 1 -a 0 -eq 0"));
+    do_test(run_test_test(0, L"0 -ne 1 -a -n 5"));
+    do_test(run_test_test(0, L"-n 5 -a 10 -gt 5"));
+    do_test(run_test_test(0, L"-n 3 -a -n 5"));
 
     /* test precedence:
             '0 == 0 || 0 == 1 && 0 == 2'
@@ -1397,55 +1746,55 @@ static void test_test()
         and therefore true. If it were
             '(0 == 0 || 0 == 1) && 0 == 2'
         it would be false. */
-    assert(run_test_test(0, L"0 = 0 -o 0 = 1 -a 0 = 2"));
-    assert(run_test_test(0, L"-n 5 -o 0 = 1 -a 0 = 2"));
-    assert(run_test_test(1, L"( 0 = 0 -o  0 = 1 ) -a 0 = 2"));
-    assert(run_test_test(0, L"0 = 0 -o ( 0 = 1 -a 0 = 2 )"));
+    do_test(run_test_test(0, L"0 = 0 -o 0 = 1 -a 0 = 2"));
+    do_test(run_test_test(0, L"-n 5 -o 0 = 1 -a 0 = 2"));
+    do_test(run_test_test(1, L"( 0 = 0 -o  0 = 1 ) -a 0 = 2"));
+    do_test(run_test_test(0, L"0 = 0 -o ( 0 = 1 -a 0 = 2 )"));
 
     /* A few lame tests for permissions; these need to be a lot more complete. */
-    assert(run_test_test(0, L"-e /bin/ls"));
-    assert(run_test_test(1, L"-e /bin/ls_not_a_path"));
-    assert(run_test_test(0, L"-x /bin/ls"));
-    assert(run_test_test(1, L"-x /bin/ls_not_a_path"));
-    assert(run_test_test(0, L"-d /bin/"));
-    assert(run_test_test(1, L"-d /bin/ls"));
+    do_test(run_test_test(0, L"-e /bin/ls"));
+    do_test(run_test_test(1, L"-e /bin/ls_not_a_path"));
+    do_test(run_test_test(0, L"-x /bin/ls"));
+    do_test(run_test_test(1, L"-x /bin/ls_not_a_path"));
+    do_test(run_test_test(0, L"-d /bin/"));
+    do_test(run_test_test(1, L"-d /bin/ls"));
 
     /* This failed at one point */
-    assert(run_test_test(1, L"-d /bin -a 5 -eq 3"));
-    assert(run_test_test(0, L"-d /bin -o 5 -eq 3"));
-    assert(run_test_test(0, L"-d /bin -a ! 5 -eq 3"));
+    do_test(run_test_test(1, L"-d /bin -a 5 -eq 3"));
+    do_test(run_test_test(0, L"-d /bin -o 5 -eq 3"));
+    do_test(run_test_test(0, L"-d /bin -a ! 5 -eq 3"));
 
     /* We didn't properly handle multiple "just strings" either */
-    assert(run_test_test(0, L"foo"));
-    assert(run_test_test(0, L"foo -a bar"));
+    do_test(run_test_test(0, L"foo"));
+    do_test(run_test_test(0, L"foo -a bar"));
 
     /* These should be errors */
-    assert(run_test_test(1, L"foo bar"));
-    assert(run_test_test(1, L"foo bar baz"));
+    do_test(run_test_test(1, L"foo bar"));
+    do_test(run_test_test(1, L"foo bar baz"));
 
     /* This crashed */
-    assert(run_test_test(1, L"1 = 1 -a = 1"));
+    do_test(run_test_test(1, L"1 = 1 -a = 1"));
 
     /* Make sure we can treat -S as a parameter instead of an operator. https://github.com/fish-shell/fish-shell/issues/601 */
-    assert(run_test_test(0, L"-S = -S"));
-    assert(run_test_test(1, L"! ! ! A"));
+    do_test(run_test_test(0, L"-S = -S"));
+    do_test(run_test_test(1, L"! ! ! A"));
 }
 
 /** Testing colors */
 static void test_colors()
 {
     say(L"Testing colors");
-    assert(rgb_color_t(L"#FF00A0").is_rgb());
-    assert(rgb_color_t(L"FF00A0").is_rgb());
-    assert(rgb_color_t(L"#F30").is_rgb());
-    assert(rgb_color_t(L"F30").is_rgb());
-    assert(rgb_color_t(L"f30").is_rgb());
-    assert(rgb_color_t(L"#FF30a5").is_rgb());
-    assert(rgb_color_t(L"3f30").is_none());
-    assert(rgb_color_t(L"##f30").is_none());
-    assert(rgb_color_t(L"magenta").is_named());
-    assert(rgb_color_t(L"MaGeNTa").is_named());
-    assert(rgb_color_t(L"mooganta").is_none());
+    do_test(rgb_color_t(L"#FF00A0").is_rgb());
+    do_test(rgb_color_t(L"FF00A0").is_rgb());
+    do_test(rgb_color_t(L"#F30").is_rgb());
+    do_test(rgb_color_t(L"F30").is_rgb());
+    do_test(rgb_color_t(L"f30").is_rgb());
+    do_test(rgb_color_t(L"#FF30a5").is_rgb());
+    do_test(rgb_color_t(L"3f30").is_none());
+    do_test(rgb_color_t(L"##f30").is_none());
+    do_test(rgb_color_t(L"magenta").is_named());
+    do_test(rgb_color_t(L"MaGeNTa").is_named());
+    do_test(rgb_color_t(L"mooganta").is_none());
 }
 
 static void test_complete(void)
@@ -1459,35 +1808,35 @@ static void test_complete(void)
 
     std::vector<completion_t> completions;
     complete(L"$F", completions, COMPLETION_REQUEST_DEFAULT);
-    assert(completions.size() == 3);
-    assert(completions.at(0).completion == L"oo1");
-    assert(completions.at(1).completion == L"oo2");
-    assert(completions.at(2).completion == L"oo3");
+    do_test(completions.size() == 3);
+    do_test(completions.at(0).completion == L"oo1");
+    do_test(completions.at(1).completion == L"oo2");
+    do_test(completions.at(2).completion == L"oo3");
 
     completions.clear();
     complete(L"$1", completions, COMPLETION_REQUEST_DEFAULT);
-    assert(completions.empty());
+    do_test(completions.empty());
 
     completions.clear();
     complete(L"$1", completions, COMPLETION_REQUEST_DEFAULT | COMPLETION_REQUEST_FUZZY_MATCH);
-    assert(completions.size() == 2);
-    assert(completions.at(0).completion == L"$Foo1");
-    assert(completions.at(1).completion == L"$Bar1");
+    do_test(completions.size() == 2);
+    do_test(completions.at(0).completion == L"$Foo1");
+    do_test(completions.at(1).completion == L"$Bar1");
 
     completions.clear();
     complete(L"echo (/bin/mkdi", completions, COMPLETION_REQUEST_DEFAULT);
-    assert(completions.size() == 1);
-    assert(completions.at(0).completion == L"r");
+    do_test(completions.size() == 1);
+    do_test(completions.at(0).completion == L"r");
 
     completions.clear();
     complete(L"echo (ls /bin/mkdi", completions, COMPLETION_REQUEST_DEFAULT);
-    assert(completions.size() == 1);
-    assert(completions.at(0).completion == L"r");
+    do_test(completions.size() == 1);
+    do_test(completions.at(0).completion == L"r");
 
     completions.clear();
     complete(L"echo (command ls /bin/mkdi", completions, COMPLETION_REQUEST_DEFAULT);
-    assert(completions.size() == 1);
-    assert(completions.at(0).completion == L"r");
+    do_test(completions.size() == 1);
+    do_test(completions.at(0).completion == L"r");
 
     /* Add a function and test completing it in various ways */
     struct function_data_t func_data;
@@ -1498,18 +1847,33 @@ static void test_complete(void)
     /* Complete a function name */
     completions.clear();
     complete(L"echo (scuttlebut", completions, COMPLETION_REQUEST_DEFAULT);
-    assert(completions.size() == 1);
-    assert(completions.at(0).completion == L"t");
+    do_test(completions.size() == 1);
+    do_test(completions.at(0).completion == L"t");
 
     /* But not with the command prefix */
     completions.clear();
     complete(L"echo (command scuttlebut", completions, COMPLETION_REQUEST_DEFAULT);
-    assert(completions.size() == 0);
+    do_test(completions.size() == 0);
 
     /* Not with the builtin prefix */
     completions.clear();
     complete(L"echo (builtin scuttlebut", completions, COMPLETION_REQUEST_DEFAULT);
-    assert(completions.size() == 0);
+    do_test(completions.size() == 0);
+
+    /* Trailing spaces (#1261) */
+    complete_add(L"foobarbaz", false, 0, NULL, 0, NO_FILES, NULL, L"qux", NULL, COMPLETE_AUTO_SPACE);
+    completions.clear();
+    complete(L"foobarbaz ", completions, COMPLETION_REQUEST_DEFAULT);
+    do_test(completions.size() == 1);
+    do_test(completions.at(0).completion == L"qux");
+
+    /* Don't complete variable names in single quotes (#1023) */
+    completions.clear();
+    complete(L"echo '$Foo", completions, COMPLETION_REQUEST_DEFAULT);
+    do_test(completions.empty());
+    completions.clear();
+    complete(L"echo \\$Foo", completions, COMPLETION_REQUEST_DEFAULT);
+    do_test(completions.empty());
 
     complete_set_variable_names(NULL);
 }
@@ -1519,11 +1883,11 @@ static void test_1_completion(wcstring line, const wcstring &completion, complet
     // str is given with a caret, which we use to represent the cursor position
     // find it
     const size_t in_cursor_pos = line.find(L'^');
-    assert(in_cursor_pos != wcstring::npos);
+    do_test(in_cursor_pos != wcstring::npos);
     line.erase(in_cursor_pos, 1);
 
     const size_t out_cursor_pos = expected.find(L'^');
-    assert(out_cursor_pos != wcstring::npos);
+    do_test(out_cursor_pos != wcstring::npos);
     expected.erase(out_cursor_pos, 1);
 
     size_t cursor_pos = in_cursor_pos;
@@ -1532,8 +1896,8 @@ static void test_1_completion(wcstring line, const wcstring &completion, complet
     {
         fprintf(stderr, "line %ld: %ls + %ls -> [%ls], expected [%ls]\n", source_line, line.c_str(), completion.c_str(), result.c_str(), expected.c_str());
     }
-    assert(result == expected);
-    assert(cursor_pos == out_cursor_pos);
+    do_test(result == expected);
+    do_test(cursor_pos == out_cursor_pos);
 }
 
 static void test_completion_insertions()
@@ -1572,14 +1936,14 @@ static void perform_one_autosuggestion_test(const wcstring &command, const wcstr
     if (! success)
     {
         printf("line %ld: autosuggest_suggest_special() failed for command %ls\n", line, command.c_str());
-        assert(success);
+        do_test(success);
     }
     if (suggestion != expected)
     {
         printf("line %ld: autosuggest_suggest_special() returned the wrong expected string for command %ls\n", line, command.c_str());
         printf("  actual: %ls\n", suggestion.c_str());
         printf("expected: %ls\n", expected.c_str());
-        assert(suggestion == expected);
+        do_test(suggestion == expected);
     }
 }
 
@@ -1649,17 +2013,17 @@ static void test_autosuggest_suggest_special()
 static void test_autosuggestion_combining()
 {
     say(L"Testing autosuggestion combining");
-    assert(combine_command_and_autosuggestion(L"alpha", L"alphabeta") == L"alphabeta");
+    do_test(combine_command_and_autosuggestion(L"alpha", L"alphabeta") == L"alphabeta");
 
     // when the last token contains no capital letters, we use the case of the autosuggestion
-    assert(combine_command_and_autosuggestion(L"alpha", L"ALPHABETA") == L"ALPHABETA");
+    do_test(combine_command_and_autosuggestion(L"alpha", L"ALPHABETA") == L"ALPHABETA");
 
     // when the last token contains capital letters, we use its case
-    assert(combine_command_and_autosuggestion(L"alPha", L"alphabeTa") == L"alPhabeTa");
+    do_test(combine_command_and_autosuggestion(L"alPha", L"alphabeTa") == L"alPhabeTa");
 
     // if autosuggestion is not longer than input, use the input's case
-    assert(combine_command_and_autosuggestion(L"alpha", L"ALPHAA") == L"ALPHAA");
-    assert(combine_command_and_autosuggestion(L"alpha", L"ALPHA") == L"alpha");
+    do_test(combine_command_and_autosuggestion(L"alpha", L"ALPHAA") == L"ALPHAA");
+    do_test(combine_command_and_autosuggestion(L"alpha", L"ALPHA") == L"alpha");
 }
 
 
@@ -1734,16 +2098,16 @@ static void test_history_matches(history_search_t &search, size_t matches)
     size_t i;
     for (i=0; i < matches; i++)
     {
-        assert(search.go_backwards());
+        do_test(search.go_backwards());
         wcstring item = search.current_string();
     }
-    assert(! search.go_backwards());
+    do_test(! search.go_backwards());
 
     for (i=1; i < matches; i++)
     {
-        assert(search.go_forwards());
+        do_test(search.go_forwards());
     }
-    assert(! search.go_forwards());
+    do_test(! search.go_forwards());
 }
 
 static bool history_contains(history_t *history, const wcstring &txt)
@@ -1763,6 +2127,30 @@ static bool history_contains(history_t *history, const wcstring &txt)
         }
     }
     return result;
+}
+
+static void test_input()
+{
+    say(L"Testing input");
+    /* Ensure sequences are order independent. Here we add two bindings where the first is a prefix of the second, and then emit the second key list. The second binding should be invoked, not the first! */
+    wcstring prefix_binding = L"qqqqqqqa";
+    wcstring desired_binding = prefix_binding + L'a';
+    input_mapping_add(prefix_binding.c_str(), L"up-line");
+    input_mapping_add(desired_binding.c_str(), L"down-line");
+
+    /* Push the desired binding on the stack (backwards!) */
+    size_t idx = desired_binding.size();
+    while (idx--)
+    {
+        input_unreadch(desired_binding.at(idx));
+    }
+
+    /* Now test */
+    wint_t c = input_readch();
+    if (c != R_DOWN_LINE)
+    {
+        err(L"Expected to read char R_DOWN_LINE, but instead got %ls\n", describe_char(c).c_str());
+    }
 }
 
 class history_tests_t
@@ -1802,12 +2190,12 @@ void history_tests_t::test_history(void)
     /* All three items match "a" */
     history_search_t search1(history, L"a");
     test_history_matches(search1, 3);
-    assert(search1.current_string() == L"Alpha");
+    do_test(search1.current_string() == L"Alpha");
 
     /* One item matches "et" */
     history_search_t search2(history, L"et");
     test_history_matches(search2, 1);
-    assert(search2.current_string() == L"Beta");
+    do_test(search2.current_string() == L"Beta");
 
     /* Test item removal */
     history.remove(L"Alpha");
@@ -1847,16 +2235,16 @@ void history_tests_t::test_history(void)
     for (i=100; i >= 1; i--)
     {
         history_item_t item = history.item_at_index(i);
-        assert(! item.empty());
+        do_test(! item.empty());
         after.push_back(item);
     }
-    assert(before.size() == after.size());
+    do_test(before.size() == after.size());
     for (size_t i=0; i < before.size(); i++)
     {
         const history_item_t &bef = before.at(i), &aft = after.at(i);
-        assert(bef.contents == aft.contents);
-        assert(bef.creation_timestamp == aft.creation_timestamp);
-        assert(bef.required_paths == aft.required_paths);
+        do_test(bef.contents == aft.contents);
+        do_test(bef.creation_timestamp == aft.creation_timestamp);
+        do_test(bef.required_paths == aft.required_paths);
     }
 
     /* Clean up after our tests */
@@ -1986,7 +2374,7 @@ void history_tests_t::test_history_races(void)
         }
     }
     // every write should add at least one item
-    assert(hist_idx >= RACE_COUNT);
+    do_test(hist_idx >= RACE_COUNT);
 
     //hist->clear();
     delete hist;
@@ -2032,7 +2420,7 @@ void history_tests_t::test_history_merge(void)
         {
             bool does_contain = history_contains(hists[i], texts[j]);
             bool should_contain = (i == j);
-            assert(should_contain == does_contain);
+            do_test(should_contain == does_contain);
         }
     }
 
@@ -2041,7 +2429,7 @@ void history_tests_t::test_history_merge(void)
     history_t *everything = new history_t(name);
     for (size_t i=0; i < count; i++)
     {
-        assert(history_contains(everything, texts[i]));
+        do_test(history_contains(everything, texts[i]));
     }
 
     /* Clean up */
@@ -2396,6 +2784,7 @@ static void test_new_parser_ll2(void)
     {
         {L"echo hello", L"echo", L"hello", parse_statement_decoration_none},
         {L"command echo hello", L"echo", L"hello", parse_statement_decoration_command},
+        {L"exec echo hello", L"echo", L"hello", parse_statement_decoration_exec},
         {L"command command hello", L"command", L"hello", parse_statement_decoration_command},
         {L"builtin command hello", L"command", L"hello", parse_statement_decoration_builtin},
         {L"command --help", L"command", L"--help", parse_statement_decoration_none},
@@ -2683,8 +3072,32 @@ static void test_highlighting(void)
         {NULL, -1}
     };
 
+    const highlight_component_t components11[] =
+    {
+        {L"echo", highlight_spec_command},
+        {L"$foo", highlight_spec_operator},
+        {L"\"", highlight_spec_quote},
+        {L"$bar", highlight_spec_operator},
+        {L"\"", highlight_spec_quote},
+        {L"$baz[", highlight_spec_operator},
+        {L"1 2..3", highlight_spec_param},
+        {L"]", highlight_spec_operator},
+        {NULL, -1}
+    };
 
-    const highlight_component_t *tests[] = {components1, components2, components3, components4, components5, components6, components7, components8, components9, components10};
+    const highlight_component_t components12[] =
+    {
+        {L"for", highlight_spec_command},
+        {L"i", highlight_spec_param},
+        {L"in", highlight_spec_command},
+        {L"1 2 3", highlight_spec_param},
+        {L";", highlight_spec_statement_terminator},
+        {L"end", highlight_spec_command},
+        {NULL, -1}
+    };
+
+
+    const highlight_component_t *tests[] = {components1, components2, components3, components4, components5, components6, components7, components8, components9, components10, components11, components12};
     for (size_t which = 0; which < sizeof tests / sizeof *tests; which++)
     {
         const highlight_component_t *components = tests[which];
@@ -2708,7 +3121,7 @@ static void test_highlighting(void)
             text.append(components[i].txt);
             expected_colors.resize(text.size(), components[i].color);
         }
-        assert(expected_colors.size() == text.size());
+        do_test(expected_colors.size() == text.size());
 
         std::vector<highlight_spec_t> colors(text.size());
         highlight_shell(text, colors, 20, NULL, env_vars_snapshot_t());
@@ -2717,7 +3130,7 @@ static void test_highlighting(void)
         {
             err(L"Color vector has wrong size! Expected %lu, actual %lu", expected_colors.size(), colors.size());
         }
-        assert(expected_colors.size() == colors.size());
+        do_test(expected_colors.size() == colors.size());
         for (size_t i=0; i < text.size(); i++)
         {
             // Hackish space handling. We don't care about the colors in spaces.
@@ -2772,12 +3185,12 @@ int main(int argc, char **argv)
     if (should_test_function("convert")) test_convert();
     if (should_test_function("convert_nulls")) test_convert_nulls();
     if (should_test_function("tok")) test_tok();
-    if (should_test_function("fork")) test_fork();
     if (should_test_function("iothread")) test_iothread();
     if (should_test_function("parser")) test_parser();
     if (should_test_function("cancellation")) test_cancellation();
     if (should_test_function("indents")) test_indents();
     if (should_test_function("utils")) test_utils();
+    if (should_test_function("utf8")) test_utf8();
     if (should_test_function("escape_sequences")) test_escape_sequences();
     if (should_test_function("lru")) test_lru();
     if (should_test_function("expand")) test_expand();
@@ -2785,10 +3198,12 @@ int main(int argc, char **argv)
     if (should_test_function("abbreviations")) test_abbreviations();
     if (should_test_function("test")) test_test();
     if (should_test_function("path")) test_path();
+    if (should_test_function("pager_navigation")) test_pager_navigation();
     if (should_test_function("word_motion")) test_word_motion();
     if (should_test_function("is_potential_path")) test_is_potential_path();
     if (should_test_function("colors")) test_colors();
     if (should_test_function("complete")) test_complete();
+    if (should_test_function("input")) test_input();
     if (should_test_function("completion_insertions")) test_completion_insertions();
     if (should_test_function("autosuggestion_combining")) test_autosuggestion_combining();
     if (should_test_function("autosuggest_suggest_special")) test_autosuggest_suggest_special();
@@ -2815,7 +3230,8 @@ int main(int argc, char **argv)
     event_destroy();
     proc_destroy();
 
-    if(err_count != 0) {
+    if (err_count != 0)
+    {
         return(1);
     }
 }

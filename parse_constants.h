@@ -6,9 +6,10 @@
 #ifndef fish_parse_constants_h
 #define fish_parse_constants_h
 
+#include "config.h"
+
 #define PARSE_ASSERT(a) assert(a)
 #define PARSER_DIE() do { fprintf(stderr, "Parser dying!\n"); exit_without_destructors(-1); } while (0)
-
 
 enum parse_token_type_t
 {
@@ -70,7 +71,7 @@ enum parse_token_type_t
 
     LAST_TOKEN_OR_SYMBOL = parse_token_type_terminate,
     FIRST_PARSE_TOKEN_TYPE = parse_token_type_string
-};
+} __packed;
 
 enum parse_keyword_t
 {
@@ -90,16 +91,18 @@ enum parse_keyword_t
     parse_keyword_not,
     parse_keyword_command,
     parse_keyword_builtin,
+    parse_keyword_exec,
 
-    LAST_KEYWORD = parse_keyword_builtin
-};
+    LAST_KEYWORD = parse_keyword_exec
+} __packed;
 
 /* Statement decorations. This matches the order of productions in decorated_statement */
 enum parse_statement_decoration_t
 {
     parse_statement_decoration_none,
     parse_statement_decoration_command,
-    parse_statement_decoration_builtin
+    parse_statement_decoration_builtin,
+    parse_statement_decoration_exec
 };
 
 /* Parse error code list */
@@ -135,6 +138,31 @@ enum
 };
 typedef unsigned int parser_test_error_bits_t;
 
+struct parse_error_t
+{
+    /** Text of the error */
+    wcstring text;
+
+    /** Code for the error */
+    enum parse_error_code_t code;
+
+    /** Offset and length of the token in the source code that triggered this error */
+    size_t source_start;
+    size_t source_length;
+
+    /** Return a string describing the error, suitable for presentation to the user. If skip_caret is false, the offending line with a caret is printed as well */
+    wcstring describe(const wcstring &src) const;
+    
+    /** Return a string describing the error, suitable for presentation to the user, with the given prefix. If skip_caret is false, the offending line with a caret is printed as well */
+    wcstring describe_with_prefix(const wcstring &src, const wcstring &prefix, bool is_interactive, bool skip_caret) const;
+};
+typedef std::vector<parse_error_t> parse_error_list_t;
+
+/* Special source_start value that means unknown */
+#define SOURCE_LOCATION_UNKNOWN (static_cast<size_t>(-1))
+
+/* Helper function to offset error positions by the given amount. This is used when determining errors in a substring of a larger source buffer. */
+void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt);
 
 /** Maximum number of function calls. */
 #define FISH_MAX_STACK_DEPTH 128
@@ -155,6 +183,12 @@ typedef unsigned int parser_test_error_bits_t;
 /** Error message when encountering an illegal command name */
 #define ILLEGAL_CMD_ERR_MSG _( L"Illegal command name '%ls'")
 
+/** Error message when encountering an unknown builtin name */
+#define UNKNOWN_BUILTIN_ERR_MSG _( L"Unknown builtin '%ls'")
+
+/** Error message when encountering a failed expansion, e.g. for the variable name in for loops */
+#define FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG _( L"Unable to expand variable name '%ls'")
+
 /** Error message when encountering an illegal file descriptor */
 #define ILLEGAL_FD_ERR_MSG _( L"Illegal file descriptor in redirection '%ls'")
 
@@ -172,6 +206,31 @@ typedef unsigned int parser_test_error_bits_t;
 
 /** Error message for Posix-style assignment: foo=bar */
 #define COMMAND_ASSIGN_ERR_MSG _( L"Unknown command '%ls'. Did you mean 'set %ls %ls'? See the help section on the set command by typing 'help set'.")
+
+/**
+   Error issued on invalid variable name
+*/
+#define COMPLETE_VAR_DESC _( L"The '$' character begins a variable name. The character '%lc', which directly followed a '$', is not allowed as a part of a variable name, and variable names may not be zero characters long. To learn more about variable expansion in fish, type 'help expand-variable'.")
+
+/**
+   Error issued on $?
+*/
+#define COMPLETE_YOU_WANT_STATUS _( L"$? is not a valid variable in fish. If you want the exit status of the last command, try $status.")
+
+/**
+   Error issued on invalid variable name
+*/
+#define COMPLETE_VAR_NULL_DESC _( L"The '$' begins a variable name. It was given at the end of an argument. Variable names may not be zero characters long. To learn more about variable expansion in fish, type 'help expand-variable'.")
+
+/**
+   Error issued on invalid variable name
+*/
+#define COMPLETE_VAR_BRACKET_DESC _( L"Did you mean %ls{$%ls}%ls? The '$' character begins a variable name. A bracket, which directly followed a '$', is not allowed as a part of a variable name, and variable names may not be zero characters long. To learn more about variable expansion in fish, type 'help expand-variable'." )
+
+/**
+   Error issued on invalid variable name
+*/
+#define COMPLETE_VAR_PARAN_DESC _( L"Did you mean (COMMAND)? In fish, the '$' character is only used for accessing variables. To learn more about command substitution in fish, type 'help expand-command-substitution'.")
 
 /**
    While block description

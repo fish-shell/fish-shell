@@ -14,7 +14,7 @@ then
 	VN=$(cat version) || VN="$DEF_VER"
 elif test -d .git -o -f .git && type git >/dev/null
 then
-	VN=$(git describe --tags --dirty 2>/dev/null)
+	VN=$(git describe --always --dirty 2>/dev/null)
 else
 	VN="$DEF_VER"
 fi

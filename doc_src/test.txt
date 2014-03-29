@@ -97,4 +97,11 @@ end.
 <a href="http://www.unix.com/man-page/POSIX/1/test/">IEEE Std 1003.1-2008
 (POSIX.1) standard</a>. The following exceptions apply:
 - The \c < and \c > operators for comparing strings are not implemented.
+- Because this test is a shell builtin and not a standalone utility, using
+ the -c flag on a special file descriptors like standard input and output
+ may not return the same result when invoked from within a pipe as one
+ would expect when invoking the \c test utility in another shell.
+ 
+ In cases such as this, one can use \c command \c test to explicitly
+ use the system's standalone \c test rather than this \c builtin \c test.
 

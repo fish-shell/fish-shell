@@ -22,6 +22,7 @@
 #include "sanity.h"
 #include "tokenizer.h"
 #include "reader.h"
+#include "parse_tree.h"
 
 #include "wutil.h"
 #include "history.h"
@@ -235,7 +236,7 @@ static void escape_yaml(std::string &str);
 /** Undoes escape_yaml */
 static void unescape_yaml(std::string &str);
 
-/* We can merge two items if they are the same command. We use the more recent timestamp and the longer list of required paths. */
+/* We can merge two items if they are the same command. We use the more recent timestamp, more recent identifier, and the longer list of required paths. */
 bool history_item_t::merge(const history_item_t &item)
 {
     bool result = false;
@@ -246,16 +247,20 @@ bool history_item_t::merge(const history_item_t &item)
         {
             this->required_paths = item.required_paths;
         }
+        if (this->identifier < item.identifier)
+        {
+            this->identifier = item.identifier;
+        }
         result = true;
     }
     return result;
 }
 
-history_item_t::history_item_t(const wcstring &str) : contents(str), creation_timestamp(time(NULL))
+history_item_t::history_item_t(const wcstring &str) : contents(str), creation_timestamp(time(NULL)), identifier(0)
 {
 }
 
-history_item_t::history_item_t(const wcstring &str, time_t when, const path_list_t &paths) : contents(str), creation_timestamp(when), required_paths(paths)
+history_item_t::history_item_t(const wcstring &str, time_t when, history_identifier_t ident) : contents(str), creation_timestamp(when), identifier(ident)
 {
 }
 
@@ -543,6 +548,7 @@ history_t & history_t::history_with_name(const wcstring &name)
 history_t::history_t(const wcstring &pname) :
     name(pname),
     first_unwritten_new_item_index(0),
+    disable_automatic_save_counter(0),
     mmap_start(NULL),
     mmap_length(0),
     mmap_file_id(kInvalidFileID),
@@ -572,8 +578,21 @@ void history_t::add(const history_item_t &item)
     {
         /* We have to add a new item */
         new_items.push_back(item);
+        save_internal_unless_disabled();
     }
+}
 
+void history_t::save_internal_unless_disabled()
+{
+    /* This must be called while locked */
+    ASSERT_IS_LOCKED(lock);
+    
+    /* Respect disable_automatic_save_counter */
+    if (disable_automatic_save_counter > 0)
+    {
+        return;
+    }
+    
     /* We may or may not vacuum. We try to vacuum every kVacuumFrequency items, but start the countdown at a random number so that even if the user never runs more than 25 commands, we'll eventually vacuum.  If countdown_to_vacuum is -1, it means we haven't yet picked a value for the counter. */
     const int kVacuumFrequency = 25;
     if (countdown_to_vacuum < 0)
@@ -582,7 +601,7 @@ void history_t::add(const history_item_t &item)
         /* Generate a number in the range [0, kVacuumFrequency) */
         countdown_to_vacuum = rand_r(&seed) / (RAND_MAX / kVacuumFrequency + 1);
     }
-
+    
     /* Determine if we're going to vacuum */
     bool vacuum = false;
     if (countdown_to_vacuum == 0)
@@ -590,18 +609,17 @@ void history_t::add(const history_item_t &item)
         countdown_to_vacuum = kVacuumFrequency;
         vacuum = true;
     }
-
+    
     /* This might be a good candidate for moving to a background thread */
     time_profiler_t profiler(vacuum ? "save_internal vacuum" : "save_internal no vacuum");
     this->save_internal(vacuum);
-
+    
     /* Update our countdown */
     assert(countdown_to_vacuum > 0);
     countdown_to_vacuum--;
-
 }
 
-void history_t::add(const wcstring &str, const path_list_t &valid_paths)
+void history_t::add(const wcstring &str, history_identifier_t ident)
 {
     time_t when = time(NULL);
     /* Big hack: do not allow timestamps equal to our birthdate. This is because we include items whose timestamps are equal to our birthdate when reading old history, so we can catch "just closed" items. But this means that we may interpret our own items, that we just wrote, as old items, if we wrote them in the same second as our birthdate.
@@ -609,7 +627,7 @@ void history_t::add(const wcstring &str, const path_list_t &valid_paths)
     if (when == this->birth_timestamp)
         when++;
 
-    this->add(history_item_t(str, when, valid_paths));
+    this->add(history_item_t(str, when, ident));
 }
 
 void history_t::remove(const wcstring &str)
@@ -621,7 +639,7 @@ void history_t::remove(const wcstring &str)
     size_t idx = new_items.size();
     while (idx--)
     {
-        if (new_items[idx].str() == str)
+        if (new_items.at(idx).str() == str)
         {
             new_items.erase(new_items.begin() + idx);
 
@@ -635,6 +653,28 @@ void history_t::remove(const wcstring &str)
     assert(first_unwritten_new_item_index <= new_items.size());
 }
 
+void history_t::set_valid_file_paths(const wcstring_list_t &valid_file_paths, history_identifier_t ident)
+{
+    /* 0 identifier is used to mean "not necessary" */
+    if (ident == 0)
+    {
+        return;
+    }
+    
+    scoped_lock locker(lock);
+    
+    /* Look for an item with the given identifier. It is likely to be at the end of new_items */
+    for (history_item_list_t::reverse_iterator iter = new_items.rbegin(); iter != new_items.rend(); iter++)
+    {
+        if (iter->identifier == ident)
+        {
+            /* Found it */
+            iter->required_paths = valid_file_paths;
+            break;
+        }
+    }
+}
+
 void history_t::get_string_representation(wcstring &result, const wcstring &separator)
 {
     scoped_lock locker(lock);
@@ -644,7 +684,7 @@ void history_t::get_string_representation(wcstring &result, const wcstring &sepa
     std::set<wcstring> seen;
 
     /* Append new items. Note that in principle we could use const_reverse_iterator, but we do not because reverse_iterator is not convertible to const_reverse_iterator ( http://github.com/fish-shell/fish-shell/issues/431 ) */
-    for (std::vector<history_item_t>::reverse_iterator iter=new_items.rbegin(); iter < new_items.rend(); ++iter)
+    for (history_item_list_t::reverse_iterator iter=new_items.rbegin(); iter < new_items.rend(); ++iter)
     {
         /* Skip duplicates */
         if (! seen.insert(iter->str()).second)
@@ -658,7 +698,7 @@ void history_t::get_string_representation(wcstring &result, const wcstring &sepa
 
     /* Append old items */
     load_old_if_needed();
-    for (std::vector<size_t>::reverse_iterator iter = old_item_offsets.rbegin(); iter != old_item_offsets.rend(); ++iter)
+    for (std::deque<size_t>::reverse_iterator iter = old_item_offsets.rbegin(); iter != old_item_offsets.rend(); ++iter)
     {
         size_t offset = *iter;
         const history_item_t item = history_t::decode_item(mmap_start + offset, mmap_length - offset, mmap_type);
@@ -825,7 +865,9 @@ history_item_t history_t::decode_item_fish_2_0(const char *base, size_t len)
         }
     }
 done:
-    return history_item_t(cmd, when, paths);
+    history_item_t result(cmd, when);
+    result.required_paths.swap(paths);
+    return result;
 }
 
 history_item_t history_t::decode_item(const char *base, size_t len, history_file_type_t type)
@@ -1280,7 +1322,7 @@ bool history_t::save_internal_via_rewrite()
         history_lru_cache_t lru(HISTORY_SAVE_MAX);
 
         /* Insert old items in, from old to new. Merge them with our new items, inserting items with earlier timestamps first. */
-        std::vector<history_item_t>::const_iterator new_item_iter = new_items.begin();
+        history_item_list_t::const_iterator new_item_iter = new_items.begin();
 
         /* Map in existing items (which may have changed out from underneath us, so don't trust our old mmap'd data) */
         const char *local_mmap_start = NULL;
@@ -1526,6 +1568,22 @@ void history_t::save_and_vacuum(void)
     this->save_internal(true);
 }
 
+void history_t::disable_automatic_saving()
+{
+    scoped_lock locker(lock);
+    disable_automatic_save_counter++;
+    assert(disable_automatic_save_counter != 0); // overflow!
+}
+
+void history_t::enable_automatic_saving()
+{
+    scoped_lock locker(lock);
+    assert(disable_automatic_save_counter > 0); //underflow
+    disable_automatic_save_counter--;
+    save_internal_unless_disabled();
+}
+
+
 void history_t::clear(void)
 {
     scoped_lock locker(lock);
@@ -1693,11 +1751,10 @@ bool file_detection_context_t::paths_are_valid(const path_list_t &paths)
     return perform_file_detection(false) > 0;
 }
 
-file_detection_context_t::file_detection_context_t(history_t *hist, const wcstring &cmd) :
+file_detection_context_t::file_detection_context_t(history_t *hist, history_identifier_t ident) :
     history(hist),
-    command(cmd),
-    when(time(NULL)),
-    working_directory(env_get_pwd_slash())
+    working_directory(env_get_pwd_slash()),
+    history_item_identifier(ident)
 {
 }
 
@@ -1710,8 +1767,13 @@ static int threaded_perform_file_detection(file_detection_context_t *ctx)
 
 static void perform_file_detection_done(file_detection_context_t *ctx, int success)
 {
-    /* Now that file detection is done, create the history item */
-    ctx->history->add(ctx->command, ctx->valid_paths);
+    ASSERT_IS_MAIN_THREAD();
+    
+    /* Now that file detection is done, update the history item with the valid file paths */
+    ctx->history->set_valid_file_paths(ctx->valid_paths, ctx->history_item_identifier);
+    
+    /* Allow saving again */
+    ctx->history->enable_automatic_saving();
 
     /* Done with the context. */
     delete ctx;
@@ -1721,7 +1783,9 @@ static bool string_could_be_path(const wcstring &potential_path)
 {
     // Assume that things with leading dashes aren't paths
     if (potential_path.empty() || potential_path.at(0) == L'-')
+    {
         return false;
+    }
     return true;
 }
 
@@ -1729,44 +1793,73 @@ void history_t::add_with_file_detection(const wcstring &str)
 {
     ASSERT_IS_MAIN_THREAD();
     path_list_t potential_paths;
-
-    /* Hack hack hack - if the command is likely to trigger an exit, then don't do background file detection, because we won't be able to write it to our history file before we exit. */
+    
+    /* Find all arguments that look like they could be file paths */
     bool impending_exit = false;
-
-    tokenizer_t tokenizer(str.c_str(), TOK_SQUASH_ERRORS);
-    for (; tok_has_next(&tokenizer); tok_next(&tokenizer))
+    parse_node_tree_t tree;
+    parse_tree_from_string(str, parse_flag_none, &tree, NULL);
+    size_t count = tree.size();
+    
+    for (size_t i=0; i < count; i++)
     {
-        int type = tok_last_type(&tokenizer);
-        if (type == TOK_STRING)
+        const parse_node_t &node = tree.at(i);
+        if (! node.has_source())
         {
-            const wchar_t *token_cstr = tok_last(&tokenizer);
-            if (token_cstr)
+            continue;
+        }
+        
+        if (node.type == symbol_argument)
+        {
+            wcstring potential_path = node.get_source(str);
+            bool unescaped = unescape_string_in_place(&potential_path, UNESCAPE_DEFAULT);
+            if (unescaped && string_could_be_path(potential_path))
             {
-                wcstring potential_path;
-                bool unescaped = unescape_string(token_cstr, &potential_path, UNESCAPE_DEFAULT);
-                if (unescaped && string_could_be_path(potential_path))
-                {
-                    potential_paths.push_back(potential_path);
-
-                    /* What a hack! */
-                    impending_exit = impending_exit || contains(potential_path, L"exec", L"exit", L"reboot");
-                }
+                potential_paths.push_back(potential_path);
+            }
+        }
+        else if (node.type == symbol_plain_statement)
+        {
+            /* Hack hack hack - if the command is likely to trigger an exit, then don't do background file detection, because we won't be able to write it to our history file before we exit. */
+            if (tree.decoration_for_plain_statement(node) == parse_statement_decoration_exec)
+            {
+                impending_exit = true;
+            }
+            
+            wcstring command;
+            tree.command_for_plain_statement(node, str, &command);
+            unescape_string_in_place(&command, UNESCAPE_DEFAULT);
+            if (contains(command, L"exit", L"reboot"))
+            {
+                impending_exit = true;
             }
         }
     }
 
-    if (potential_paths.empty() || impending_exit)
+    /* If we got a path, we'll perform file detection for autosuggestion hinting */
+    history_identifier_t identifier = 0;
+    if (! potential_paths.empty() && ! impending_exit)
     {
-        this->add(str);
-    }
-    else
-    {
-        /* We have some paths. Make a context. */
-        file_detection_context_t *context = new file_detection_context_t(this, str);
-
-        /* Store the potential paths. Reverse them to put them in the same order as in the command. */
+        /* Grab the next identifier */
+        static history_identifier_t sLastIdentifier = 0;
+        identifier = ++sLastIdentifier;
+        
+        /* Create a new detection context */
+        file_detection_context_t *context = new file_detection_context_t(this, identifier);
         context->potential_paths.swap(potential_paths);
+        
+        /* Prevent saving until we're done, so we have time to get the paths */
+        this->disable_automatic_saving();
+        
+        /* Kick it off. Even though we haven't added the item yet, it updates the item on the main thread, so we can't race */
         iothread_perform(threaded_perform_file_detection, perform_file_detection_done, context);
     }
-}
 
+    /* Actually add the item to the history */
+    this->add(str, identifier);
+    
+    /* If we think we're about to exit, save immediately, regardless of any disabling. This may cause us to lose file hinting for some commands, but it beats losing history items */
+    if (impending_exit)
+    {
+        this->save();
+    }
+}

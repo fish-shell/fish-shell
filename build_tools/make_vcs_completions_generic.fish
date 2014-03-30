@@ -58,16 +58,16 @@ function complete_from_list
 			case '=DIRECTORY' ' dir'
 				set str $str -x -a "'(__fish_complete_directories (commandline -ct))'"
 
-			case '=COMMAND'
+			case '=COMMAND' ' CMD'
 				set str $str -x -a "'(__fish_complete_command)'"
 
-			case '=USERNAME' ' <user>'
+			case '=USERNAME' ' USER' ' <user>'
 				set str $str -x -a "'(__fish_complete_users)'"
 
-			case '=FILENAME' '=FILE' ' <file>'
+			case '=FILENAME' '=FILE' ' FILE' ' <file>'
 				set str $str -r
 
-			case ' arg'
+			case ' arg' ' ARG'
 				set str $str -x
 
 			case ' (*):'
@@ -187,20 +187,20 @@ function write_completions
 		case '*'
 
 		function list_subcommand
-			cmd help | sed -n -e 's/^  *\([^ ][^ ]*\) .*$/\1/p'
+			cmd help | sed -n -e '0,/^additional help topics:$/s/^  *\([^ ][^ ]*\) .*$/\1/p'
 		end
 
 		function list_subcommand_help
 			set -l short_exp '\(-.\|\)\( [^ -][^ ]*\|\)'
-			set -l long_exp '\(--[^ =,]*\)'
-			set -l arg_exp '\(\|[= ][^ ][^ ]*\)'
+			set -l long_exp '\(--[^ =,"]*\)'
+			set -l arg_exp '\(\|[= ][^ ][^ a-z]*\)'
 			set -l desc_exp '\([\t ]*:[\t ]*\|\)\([^ ].*[^.]\)'
 			set -l re "^ *$short_exp  *$long_exp$arg_exp  *$desc_exp\(\|\\.\)\$"
 
 			cmd help $argv | sed -n -e 's/'$re'/\1\t\3\t\4\t\6/p'
 		end
 
-		set cmd_str (cmd help | sed -n -e 's/^  *\([^ ][^ ]*\)[\t ]*\([^ ].*[^.]\)\(\|\\.\)$/-a \1 --description \'\2\'/p')
+		set cmd_str (cmd help | sed -n -e 's/\'/\\\\\'/g' -e 's/^  *\([^ ][^ ]*\)[\t ]*\([^ ].*[^.]\)\(\|\\.\)$/-a \1 --description \'\2\'/p')
 
 	end
 

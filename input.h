@@ -128,9 +128,9 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t **commands, size_t
                        const wchar_t *mode = DEFAULT_BIND_MODE, const wchar_t *new_mode = DEFAULT_BIND_MODE);
 
 /**
-   Insert all mapping names into the specified wcstring_list_t
+   Returns all mapping names
  */
-void input_mapping_get_names(wcstring_list_t &lst);
+wcstring_list_t input_mapping_get_names();
 
 /**
    Erase binding for specified key sequence
@@ -140,17 +140,17 @@ bool input_mapping_erase(const wchar_t *sequence, const wchar_t *mode = DEFAULT_
 /**
    Gets the command bound to the specified key sequence. Returns true if it exists, false if not.
  */
-bool input_mapping_get(const wcstring &sequence, std::vector<wcstring> &cmds, wcstring &mode, wcstring &new_mode);
+bool input_mapping_get(const wcstring &sequence, wcstring_list_t *out_cmds, wcstring *out_mode, wcstring *out_new_mode);
 
 /**
     Return the current bind mode
 */
-const wchar_t *input_get_bind_mode();
+wcstring input_get_bind_mode();
 
 /**
     Set the current bind mode
 */
-bool input_set_bind_mode(const wchar_t *bind_mode);
+void input_set_bind_mode(const wcstring &bind_mode);
 
 
 wchar_t input_function_pop_arg();

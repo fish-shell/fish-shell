@@ -548,7 +548,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
 
     if (search_mode)
     {
-        return !reader_search_mode();
+        return ! reader_search_mode();
     }
 
     if (paging_mode)

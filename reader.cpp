@@ -626,9 +626,9 @@ static void reader_repaint()
             cmd_line->size(),
             &colors[0],
             &indents[0],
+            cursor_position,
             data->sel_start_pos,
             data->sel_stop_pos,
-            cursor_position,
             data->current_page_rendering,
             focused_on_pager);
 
@@ -2446,23 +2446,14 @@ size_t reader_get_cursor_pos()
 
 bool reader_get_selection(size_t *start, size_t *len)
 {
-    if (!data)
+    bool result = false;
+    if (data != NULL && data->sel_active)
     {
-        return false;
+        *start = data->sel_start_pos;
+        *len = std::min(data->sel_stop_pos - data->sel_start_pos + 1, data->command_line.size());
+        result = true;
     }
-    else
-    {
-        if (! data->sel_active)
-        {
-            return false;
-        }
-        else
-        {
-            *start = data->sel_start_pos;
-            *len = std::min(data->sel_stop_pos - data->sel_start_pos + 1, data->command_line.size());
-            return true;
-        }
-    }
+    return result;
 }
 
 
@@ -3833,7 +3824,6 @@ const wchar_t *reader_readline(void)
                         line_offset_old = el->position - parse_util_get_offset_from_line(el->text, line_old);
                         total_offset_new = parse_util_get_offset(el->text, line_new, line_offset_old - 4*(indent_new-indent_old));
                         update_buff_pos(el, total_offset_new);
-                        el->position = total_offset_new;
                         reader_repaint_needed();
                     }
                 }

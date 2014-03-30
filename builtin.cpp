@@ -404,8 +404,7 @@ int builtin_test(parser_t &parser, wchar_t **argv);
 static void builtin_bind_list(const wchar_t *bind_mode)
 {
     size_t i;
-    wcstring_list_t lst;
-    input_mapping_get_names(lst);
+    const wcstring_list_t lst = input_mapping_get_names();
 
     for (i=0; i<lst.size(); i++)
     {
@@ -415,9 +414,12 @@ static void builtin_bind_list(const wchar_t *bind_mode)
         wcstring mode;
         wcstring sets_mode;
 
-        input_mapping_get(seq, ecmds, mode, sets_mode);
-
-        if(bind_mode != NULL && wcscmp(mode.c_str(), bind_mode))
+        if (! input_mapping_get(seq, &ecmds, &mode, &sets_mode))
+        {
+            continue;
+        }
+        
+        if (bind_mode != NULL && bind_mode != mode)
         {
           continue;
         }
@@ -542,11 +544,8 @@ static void builtin_bind_erase(wchar_t **seq, int all, const wchar_t *mode)
 {
     if (all)
     {
-        size_t i;
-        wcstring_list_t lst;
-        input_mapping_get_names(lst);
-
-        for (i=0; i<lst.size(); i++)
+        const wcstring_list_t lst = input_mapping_get_names();
+        for (size_t i=0; i<lst.size(); i++)
         {
             input_mapping_erase(lst.at(i).c_str(), mode);
         }

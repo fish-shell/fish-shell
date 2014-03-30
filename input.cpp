@@ -71,7 +71,7 @@
 struct input_mapping_t
 {
     wcstring seq; /**< Character sequence which generates this event */
-    std::vector<wcstring> commands; /**< commands that should be evaluated by this mapping */
+    wcstring_list_t commands; /**< commands that should be evaluated by this mapping */
     
     /* We wish to preserve the user-specified order. This is just an incrementing value. */
     unsigned int specification_order;
@@ -285,32 +285,25 @@ static bool is_init = false;
  */
 static void input_terminfo_init();
 
-wchar_t input_function_args[MAX_INPUT_FUNCTION_ARGS];
-bool input_function_status;
-int input_function_args_index = 0;
+static wchar_t input_function_args[MAX_INPUT_FUNCTION_ARGS];
+static bool input_function_status;
+static int input_function_args_index = 0;
 
 /**
     Return the current bind mode
 */
-const wchar_t *input_get_bind_mode()
+wcstring input_get_bind_mode()
 {
-    const wchar_t *bind_mode = DEFAULT_BIND_MODE;
-    const env_var_t bind_mode_var = env_get_string(FISH_BIND_MODE_VAR);
-    if(!bind_mode_var.missing())
-    {
-        bind_mode = bind_mode_var.c_str();
-    }
-    return bind_mode;
+    env_var_t mode = env_get_string(FISH_BIND_MODE_VAR);
+    return mode.missing() ? DEFAULT_BIND_MODE : mode;
 }
 
 /**
     Set the current bind mode
 */
-bool input_set_bind_mode(const wchar_t *bm)
+void input_set_bind_mode(const wcstring &bm)
 {
-  if(wcscmp(bm, input_get_bind_mode()))
-    env_set(FISH_BIND_MODE_VAR, bm, ENV_GLOBAL);
-  return true;
+    env_set(FISH_BIND_MODE_VAR, bm.c_str(), ENV_GLOBAL);
 }
 
 
@@ -323,9 +316,9 @@ int input_function_arity(int function)
     {
         case R_FORWARD_JUMP:
         case R_BACKWARD_JUMP:
-          return 1;
+            return 1;
         default:
-          return 0;
+            return 0;
     }
 }
 
@@ -375,7 +368,7 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t **commands, size_t
     // debug( 0, L"Add mapping from %ls to %ls in mode %ls", escape(sequence, 1), escape(command, 1 ), mode);
 
     // remove existing mappings with this sequence
-    std::vector<wcstring> commands_vector(commands, commands + commands_len);
+    const wcstring_list_t commands_vector(commands, commands + commands_len);
 
     for (size_t i=0; i<mapping_list.size(); i++)
     {
@@ -387,7 +380,10 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t **commands, size_t
             return;
         }
     }
-    mapping_list.push_back(input_mapping_t(sequence, commands_vector, mode, sets_mode));
+    
+    // add a new mapping, using the next order
+    const input_mapping_t new_mapping = input_mapping_t(sequence, commands_vector, mode, sets_mode);
+    input_mapping_insert_sorted(new_mapping);
 }
 
 void input_mapping_add(const wchar_t *sequence, const wchar_t *command,
@@ -558,40 +554,42 @@ static void input_mapping_execute(const input_mapping_t &m)
 {
     /* By default input functions always succeed */
     input_function_status = true;
-
-    for(int i = m.commands.size() - 1; i >= 0; i--)
+    
+    size_t idx = m.commands.size();
+    while (idx--)
     {
-      wcstring command = m.commands.at(i);
-      wchar_t code = input_function_get_code(command);
-      if (code != (wchar_t)-1)
-      {
-          input_function_push_args(code);
-      }
-    }
-
-    for(int i = m.commands.size() - 1; i >= 0; i--)
-    {
-      wcstring command = m.commands.at(i);
-      wchar_t code = input_function_get_code(command);
-      if (code != (wchar_t)-1)
-      {
-          input_unreadch(code);
-      }
-      else
-      {
-          /*
-              This key sequence is bound to a command, which
-              is sent to the parser for evaluation.
-          */
-          int last_status = proc_get_last_status();
-          parser_t::principal_parser().eval(command.c_str(), io_chain_t(), TOP);
-
-          proc_set_last_status(last_status);
-
-          input_unreadch(R_NULL);
+        wcstring command = m.commands.at(idx);
+        wchar_t code = input_function_get_code(command);
+        if (code != (wchar_t)-1)
+        {
+            input_function_push_args(code);
         }
     }
-
+    
+    idx = m.commands.size();
+    while (idx--)
+    {
+        wcstring command = m.commands.at(idx);
+        wchar_t code = input_function_get_code(command);
+        if (code != (wchar_t)-1)
+        {
+            input_unreadch(code);
+        }
+        else
+        {
+            /*
+             This key sequence is bound to a command, which
+             is sent to the parser for evaluation.
+             */
+            int last_status = proc_get_last_status();
+            parser_t::principal_parser().eval(command.c_str(), io_chain_t(), TOP);
+            
+            proc_set_last_status(last_status);
+            
+            input_unreadch(R_NULL);
+        }
+    }
+    
     input_set_bind_mode(m.sets_mode.c_str());
 }
 
@@ -650,7 +648,7 @@ static void input_mapping_execute_matching_or_generic()
 {
     const input_mapping_t *generic = NULL;
 
-    const wchar_t *bind_mode = input_get_bind_mode();
+    const wcstring bind_mode = input_get_bind_mode();
 
     for (int i = 0; i < mapping_list.size(); i++)
     {
@@ -659,7 +657,7 @@ static void input_mapping_execute_matching_or_generic()
         //debug(0, L"trying mapping (%ls,%ls,%ls)\n", escape(m.seq.c_str(), 1),
         //           m.mode.c_str(), m.sets_mode.c_str());
         
-        if(wcscmp(m.mode.c_str(), bind_mode))
+        if (m.mode != bind_mode)
         {
             //debug(0, L"skipping mapping because mode %ls != %ls\n", m.mode.c_str(), input_get_bind_mode());
             continue;
@@ -745,18 +743,20 @@ wint_t input_readch()
     }
 }
 
-void input_mapping_get_names(wcstring_list_t &lst)
+wcstring_list_t input_mapping_get_names()
 {
     // Sort the mappings by the user specification order, so we can return them in the same order that the user specified them in
     std::vector<input_mapping_t> local_list = mapping_list;
     std::sort(local_list.begin(), local_list.end(), specification_order_is_less_than);
+    wcstring_list_t result;
+    result.reserve(local_list.size());
 
     for (size_t i=0; i<local_list.size(); i++)
     {
         const input_mapping_t &m = local_list.at(i);
-        lst.push_back(wcstring(m.seq));
+        result.push_back(m.seq);
     }
-
+    return result;
 }
 
 
@@ -784,22 +784,23 @@ bool input_mapping_erase(const wchar_t *sequence, const wchar_t *mode)
     return result;
 }
 
-bool input_mapping_get(const wcstring &sequence, std::vector<wcstring> &cmds, wcstring &mode, wcstring &sets_mode)
+bool input_mapping_get(const wcstring &sequence, wcstring_list_t *out_cmds, wcstring *out_mode, wcstring *out_sets_mode)
 {
-    size_t i, sz = mapping_list.size();
-
-    for (i=0; i<sz; i++)
+    bool result = false;
+    size_t sz = mapping_list.size();
+    for (size_t i=0; i<sz; i++)
     {
         const input_mapping_t &m = mapping_list.at(i);
         if (sequence == m.seq)
         {
-            cmds = m.commands;
-            mode = m.mode;
-            sets_mode = m.sets_mode;
-            return true;
+            *out_cmds = m.commands;
+            *out_mode = m.mode;
+            *out_sets_mode = m.sets_mode;
+            result = true;
+            break;
         }
     }
-    return false;
+    return result;
 }
 
 /**

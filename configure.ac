@@ -95,43 +95,6 @@ AC_LANG(C++)
 echo "CXXFLAGS: $CXXFLAGS"
 
 #
-# Detect directories which may contain additional headers, libraries
-# and commands. This needs to be done early - before Autoconf starts
-# to mess with CXXFLAGS and all the other environemnt variables.
-#
-# This mostly helps OS X users, since fink usually installs out of
-# tree and doesn't update CXXFLAGS.
-
-for i in /usr/pkg /sw /opt /opt/local /usr/local; do
-
-  AC_MSG_CHECKING([for $i/include include directory])
-  if test -d $i/include; then
-    AC_MSG_RESULT(yes)
-    CXXFLAGS="$CXXFLAGS -I$i/include/"
-  else
-  AC_MSG_RESULT(no)
-  fi
-
-  AC_MSG_CHECKING([for $i/lib library directory])
-  if test -d $i/lib; then
-    AC_MSG_RESULT(yes)
-    LDFLAGS="$LDFLAGS -L$i/lib/"
-  else
-    AC_MSG_RESULT(no)
-  fi
-
-  AC_MSG_CHECKING([for $i/bin command directory])
-  if test -d $i/bin; then
-    AC_MSG_RESULT(yes)
-    optbindirs="$optbindirs $i/bin"
-  else
-    AC_MSG_RESULT(no)
-  fi
-
-done
-
-
-#
 # Tell autoconf to create config.h header
 #
 AC_CONFIG_HEADERS(config.h)

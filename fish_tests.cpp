@@ -628,33 +628,33 @@ static void test_parser()
     }
 
 
-    if (! (detect_argument_errors(L"foo$$") & PARSER_TEST_ERROR))
+    if (!(detect_argument_errors(L"foo$$") & PARSER_TEST_ERROR))
     {
         err(L"Bad variable expansion not reported as error");
     }
 
-    if (! (detect_argument_errors(L"foo$@") & PARSER_TEST_ERROR))
+    if (!(detect_argument_errors(L"foo$@") & PARSER_TEST_ERROR))
     {
         err(L"Bad variable expansion not reported as error");
     }
 
     /* Within command substitutions, we should be able to detect everything that parse_util_detect_errors can detect */
-    if (! (detect_argument_errors(L"foo(cat | or cat)") & PARSER_TEST_ERROR))
+    if (!(detect_argument_errors(L"foo(cat | or cat)") & PARSER_TEST_ERROR))
     {
         err(L"Bad command substitution not reported as error");
     }
 
-    if (! (detect_argument_errors(L"foo\\xFF9") & PARSER_TEST_ERROR))
+    if (!(detect_argument_errors(L"foo\\xFF9") & PARSER_TEST_ERROR))
     {
         err(L"Bad escape not reported as error");
     }
 
-    if (! (detect_argument_errors(L"foo(echo \\xFF9)") & PARSER_TEST_ERROR))
+    if (!(detect_argument_errors(L"foo(echo \\xFF9)") & PARSER_TEST_ERROR))
     {
         err(L"Bad escape in command substitution not reported as error");
     }
 
-    if (! (detect_argument_errors(L"foo(echo (echo (echo \\xFF9)))") & PARSER_TEST_ERROR))
+    if (!(detect_argument_errors(L"foo(echo (echo (echo \\xFF9)))") & PARSER_TEST_ERROR))
     {
         err(L"Bad escape in nested command substitution not reported as error");
     }

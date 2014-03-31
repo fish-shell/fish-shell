@@ -973,7 +973,7 @@ bool parser_t::detect_errors_in_argument_list(const wcstring &arg_list_src, wcst
         /* Failed to parse. */
         errored = true;
     }
-    
+
     if (! errored)
     {
         /* Get the root argument list */
@@ -1016,9 +1016,9 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
     if (! errors.empty())
     {
         const parse_error_t &err = errors.at(0);
-        
+
         const bool is_interactive = get_is_interactive();
-        
+
         // Determine if we want to try to print a caret to point at the source error
         // The err.source_start <= src.size() check is due to the nasty way that slices work,
         // which is by rewriting the source (!)
@@ -1028,11 +1028,11 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
         {
             // Determine which line we're on
             which_line = 1 + std::count(src.begin(), src.begin() + err.source_start, L'\n');
-            
+
             // Don't include the caret if we're interactive, this is the first line of text, and our source is at its beginning, because then it's obvious
             skip_caret = (is_interactive && which_line == 1 && err.source_start == 0);
         }
-        
+
         wcstring prefix;
         const wchar_t *filename = this->current_filename();
         if (filename)

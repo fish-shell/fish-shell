@@ -1323,16 +1323,16 @@ void s_write(screen_t *s,
     }
 
     s->desired.cursor = cursor_arr;
-    
+
     if (cursor_position_is_within_pager)
     {
         s->desired.cursor.x = (int)cursor_pos;
         s->desired.cursor.y = (int)s->desired.line_count();
     }
-    
+
     /* Append pager_data (none if empty) */
     s->desired.append_lines(pager.screen_data);
-    
+
     s_update(s, layout.left_prompt.c_str(), layout.right_prompt.c_str());
     s_save_status(s);
 }

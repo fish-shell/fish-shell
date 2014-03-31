@@ -95,11 +95,11 @@ enum selection_direction_t
     direction_east,
     direction_south,
     direction_west,
-    
+
     /* logical directions */
     direction_next,
     direction_prev,
-    
+
     /* special value that means deselect */
     direction_deselect
 };

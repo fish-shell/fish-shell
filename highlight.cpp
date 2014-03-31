@@ -61,7 +61,7 @@ static const wchar_t * const highlight_var[] =
     L"fish_color_redirection",
     L"fish_color_autosuggestion",
     L"fish_color_selection",
-    
+
     L"fish_pager_color_prefix",
     L"fish_pager_color_completion",
     L"fish_pager_color_description",
@@ -360,10 +360,10 @@ bool plain_statement_get_expanded_command(const wcstring &src, const parse_node_
 rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background)
 {
     rgb_color_t result = rgb_color_t::normal();
-    
+
     /* If sloppy_background is set, then we look at the foreground color even if is_background is set */
-    bool treat_as_background = is_background && ! (highlight & highlight_modifier_sloppy_background);
-    
+    bool treat_as_background = is_background && !(highlight & highlight_modifier_sloppy_background);
+
     /* Get the primary variable */
     size_t idx = highlight_get_primary(highlight);
     if (idx >= VAR_COUNT)
@@ -398,12 +398,12 @@ rgb_color_t highlight_get_color(highlight_spec_t highlight, bool is_background)
                 result.set_underline(true);
         }
     }
-    
+
     if (highlight & highlight_modifier_force_underline)
     {
         result.set_underline(true);
     }
-    
+
     return result;
 }
 
@@ -589,7 +589,7 @@ static size_t color_variable(const wchar_t *in, size_t in_len, std::vector<highl
 {
     assert(in_len > 0);
     assert(in[0] == L'$');
-    
+
     // Handle an initial run of $s.
     size_t idx = 0;
     while (in[idx] == '$')
@@ -606,13 +606,13 @@ static size_t color_variable(const wchar_t *in, size_t in_len, std::vector<highl
         }
         idx++;
     }
-    
+
     // Handle a sequence of variable characters
     while (wcsvarchr(in[idx]))
     {
         colors[idx++] = highlight_spec_operator;
     }
-    
+
     // Handle a slice. Note that we currently don't do any validation of the slice's contents, e.g. $foo[blah] will not show an error even though it's invalid.
     if (in[idx] == L'[')
     {
@@ -912,7 +912,7 @@ class highlighter_t
 
     /* Environment variables. Again, a reference member variable! */
     const env_vars_snapshot_t &vars;
-    
+
     /* Whether it's OK to do I/O */
     const bool io_ok;
 
@@ -1325,7 +1325,7 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
 
         switch (node.type)
         {
-            // Color direct string descendants, e.g. 'for' and 'in'.
+                // Color direct string descendants, e.g. 'for' and 'in'.
             case symbol_while_header:
             case symbol_begin_header:
             case symbol_function_header:
@@ -1339,7 +1339,7 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
                 this->color_children(node, parse_token_type_string, highlight_spec_command);
             }
             break;
-                
+
             case symbol_switch_statement:
             {
                 const parse_node_t *literal_switch = this->parse_tree.get_child(node, 0, parse_token_type_string);
@@ -1348,7 +1348,7 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
                 this->color_node(*switch_arg, highlight_spec_param);
             }
             break;
-                
+
             case symbol_for_header:
             {
                 // Color the 'for' and 'in' as commands
@@ -1356,7 +1356,7 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
                 const parse_node_t *literal_in_node = this->parse_tree.get_child(node, 2, parse_token_type_string);
                 this->color_node(*literal_for_node, highlight_spec_command);
                 this->color_node(*literal_in_node, highlight_spec_command);
-                
+
                 // Color the variable name as a parameter
                 const parse_node_t *var_name_node = this->parse_tree.get_child(node, 1, parse_token_type_string);
                 this->color_argument(*var_name_node);
@@ -1415,7 +1415,7 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
                 }
             }
             break;
-                
+
             case symbol_end_command:
                 this->color_node(node, highlight_spec_command);
                 break;

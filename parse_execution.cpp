@@ -32,7 +32,7 @@ static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &no
 {
     assert(specific_statement_type_is_redirectable_block(node));
     assert(node.has_source());
-    
+
     /* Get the source for the block, and cut it at the next statement terminator. */
     const size_t src_start = node.source_start;
     size_t src_len = node.source_length;
@@ -44,7 +44,7 @@ static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &no
         assert(term->source_start >= src_start);
         src_len = term->source_start - src_start;
     }
-    
+
     wcstring result = wcstring(src, src_start, src_len);
     result.append(L"...");
     return result;
@@ -325,7 +325,7 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(const parse
     {
         run_job_list(*job_list_to_execute, ib);
     }
-    
+
     /* It's possible there's a last-minute cancellation, in which case we should not stomp the exit status (#1297) */
     if (should_cancel_execution(ib))
     {
@@ -517,7 +517,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
     parse_error_list_t errors;
     int expand_ret = expand_string(switch_value, switch_values_expanded, EXPAND_NO_DESCRIPTIONS, &errors);
     parse_error_offset_source_start(&errors, switch_value_node.source_start);
-    
+
     switch (expand_ret)
     {
         case EXPAND_ERROR:
@@ -547,15 +547,15 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
                               _(L"switch: Expected exactly one argument, got %lu\n"),
                               switch_values_expanded.size());
     }
-    
+
     if (result == parse_execution_success)
     {
         const wcstring &switch_value_expanded = switch_values_expanded.at(0).completion;
-        
+
         switch_block_t *sb = new switch_block_t();
         parser->push_block(sb);
 
-        
+
         /* Expand case statements */
         const parse_node_t *case_item_list = get_child(statement, 3, symbol_case_item_list);
 
@@ -690,7 +690,7 @@ parse_execution_result_t parse_execution_context_t::report_error(const parse_nod
         va_start(va, fmt);
         error->text = vformat_string(fmt, va);
         va_end(va);
-        
+
         this->report_errors(error_list);
     }
     return parse_execution_errored;
@@ -704,11 +704,11 @@ parse_execution_result_t parse_execution_context_t::report_errors(const parse_er
         {
             fprintf(stderr, "Bug: Error reported but no error text found.");
         }
-    
+
         /* Get a backtrace */
         wcstring backtrace_and_desc;
         parser->get_backtrace(src, error_list, &backtrace_and_desc);
-        
+
         /* Print it */
         fprintf(stderr, "%ls", backtrace_and_desc.c_str());
     }
@@ -1315,7 +1315,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
 
     /* Increment the eval_level for the duration of this command */
     scoped_push<int> saved_eval_level(&eval_level, eval_level + 1);
-    
+
     /* Save the node index */
     scoped_push<node_offset_t> saved_node_offset(&executing_node_idx, this->get_offset(job_node));
 
@@ -1352,7 +1352,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
                 PARSER_DIE();
                 break;
         }
-        
+
         if (profile_item != NULL)
         {
             /* Block-types profile a little weird. They have no 'parse' time, and their command is just the block type */
@@ -1363,7 +1363,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
             profile_item->cmd = profiling_cmd_name_for_redirectable_block(specific_statement, this->tree, this->src);
             profile_item->skipped = result != parse_execution_success;
         }
-        
+
         return result;
     }
 
@@ -1556,7 +1556,7 @@ int parse_execution_context_t::line_offset_of_node_at_offset(node_offset_t reque
     {
         return -1;
     }
-    
+
     /* Count the number of newlines, leveraging our cache */
     const size_t offset = tree.at(requested_index).source_start;
     assert(offset <= src.size());
@@ -1566,7 +1566,7 @@ int parse_execution_context_t::line_offset_of_node_at_offset(node_offset_t reque
     {
         return 0;
     }
-    
+
     /* We want to return (one plus) the number of newlines at offsets less than the given offset. cached_lineno_count is the number of newlines at indexes less than cached_lineno_offset. */
     const wchar_t *str = src.c_str();
     if (offset > cached_lineno_offset)

@@ -1716,10 +1716,10 @@ bool completer_t::try_complete_variable(const wcstring &str)
 {
     enum {e_unquoted, e_single_quoted, e_double_quoted} mode = e_unquoted;
     const size_t len = str.size();
-    
+
     /* Get the position of the dollar heading a run of valid variable characters. -1 means none. */
     size_t variable_start = -1;
-    
+
     for (size_t in_pos=0; in_pos<len; in_pos++)
     {
         wchar_t c = str.at(in_pos);
@@ -1728,20 +1728,20 @@ bool completer_t::try_complete_variable(const wcstring &str)
             /* This character cannot be in a variable, reset the dollar */
             variable_start = -1;
         }
-        
+
         switch (c)
         {
             case L'\\':
                 in_pos++;
                 break;
-            
+
             case L'$':
                 if (mode == e_unquoted || mode == e_double_quoted)
                 {
                     variable_start = in_pos;
                 }
                 break;
-            
+
             case L'\'':
                 if (mode == e_single_quoted)
                 {
@@ -1752,7 +1752,7 @@ bool completer_t::try_complete_variable(const wcstring &str)
                     mode = e_single_quoted;
                 }
                 break;
-            
+
             case L'"':
                 if (mode == e_double_quoted)
                 {
@@ -1765,7 +1765,7 @@ bool completer_t::try_complete_variable(const wcstring &str)
                 break;
         }
     }
-    
+
     /* Now complete if we have a variable start that's also not the last character */
     bool result = false;
     if (variable_start != static_cast<size_t>(-1) && variable_start + 1 < len)
@@ -1860,7 +1860,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
     bool use_function = 1;
     bool use_builtin = 1;
 
-      //debug( 1, L"Complete '%ls'", cmd.c_str() );
+    //debug( 1, L"Complete '%ls'", cmd.c_str() );
 
     const wchar_t *cmd_cstr = cmd.c_str();
     const wchar_t *tok_begin = NULL, *prev_begin = NULL, *prev_end = NULL;
@@ -1885,14 +1885,14 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
 
         parse_node_tree_t tree;
         parse_tree_from_string(cmd, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens, &tree, NULL);
-        
+
         /* Find any plain statement that contains the position. We have to backtrack past spaces (#1261). So this will be at either the last space character, or after the end of the string */
         size_t adjusted_pos = pos;
         while (adjusted_pos > 0 && cmd.at(adjusted_pos - 1) == L' ')
         {
             adjusted_pos--;
         }
-        
+
         const parse_node_t *plain_statement = tree.find_node_matching_source_location(symbol_plain_statement, adjusted_pos, NULL);
         if (plain_statement == NULL)
         {

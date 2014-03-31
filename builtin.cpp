@@ -418,20 +418,20 @@ static void builtin_bind_list(const wchar_t *bind_mode)
         {
             continue;
         }
-        
+
         if (bind_mode != NULL && bind_mode != mode)
         {
-          continue;
+            continue;
         }
 
         wcstring tname;
         if (input_terminfo_get_name(seq, tname))
         {
             append_format(stdout_buffer, L"bind -k %ls -M %ls -m %ls", tname.c_str(), mode.c_str(), sets_mode.c_str());
-            for(int i = 0; i < ecmds.size(); i++)
+            for (int i = 0; i < ecmds.size(); i++)
             {
-              wcstring ecmd = ecmds.at(i);
-              append_format(stdout_buffer, L" %ls", escape(ecmd.c_str(), 1));
+                wcstring ecmd = ecmds.at(i);
+                append_format(stdout_buffer, L" %ls", escape(ecmd.c_str(), 1));
             }
             append_format(stdout_buffer, L"\n");
         }
@@ -439,10 +439,10 @@ static void builtin_bind_list(const wchar_t *bind_mode)
         {
             const wcstring eseq = escape_string(seq, 1);
             append_format(stdout_buffer, L"bind -k %ls -M %ls -m %ls", eseq.c_str(), mode.c_str(), sets_mode.c_str());
-            for(int i = 0; i < ecmds.size(); i++)
+            for (int i = 0; i < ecmds.size(); i++)
             {
-              wcstring ecmd = ecmds.at(i);
-              append_format(stdout_buffer, L" %ls", escape(ecmd.c_str(), 1));
+                wcstring ecmd = ecmds.at(i);
+                append_format(stdout_buffer, L" %ls", escape(ecmd.c_str(), 1));
             }
             append_format(stdout_buffer, L"\n");
         }
@@ -672,11 +672,11 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
     }
 
     /*
-     * if mode is given, but not new mode, default to new mode to mode 
+     * if mode is given, but not new mode, default to new mode to mode
      */
-    if(bind_mode_given && !sets_bind_mode_given)
+    if (bind_mode_given && !sets_bind_mode_given)
     {
-      sets_bind_mode = bind_mode;
+        sets_bind_mode = bind_mode;
     }
 
     switch (mode)

@@ -509,22 +509,22 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
                 for (size_t i=0; i< comp.size() ; i++)
                 {
                     const completion_t &next =  comp.at(i);
-                    
+
                     /* Make a fake commandline, and then apply the completion to it.  */
                     const wcstring faux_cmdline = token;
                     size_t tmp_cursor = faux_cmdline.size();
                     wcstring faux_cmdline_with_completion = completion_apply_to_command_line(next.completion, next.flags, faux_cmdline, &tmp_cursor, false);
-                    
+
                     /* completion_apply_to_command_line will append a space unless COMPLETE_NO_SPACE is set. We don't want to set COMPLETE_NO_SPACE because that won't close quotes. What we want is to close the quote, but not append the space. So we just look for the space and clear it. */
-                    if (! (next.flags & COMPLETE_NO_SPACE) && string_suffixes_string(L" ", faux_cmdline_with_completion))
+                    if (!(next.flags & COMPLETE_NO_SPACE) && string_suffixes_string(L" ", faux_cmdline_with_completion))
                     {
                         faux_cmdline_with_completion.resize(faux_cmdline_with_completion.size() - 1);
                     }
-                    
+
                     /* The input data is meant to be something like you would have on the command line, e.g. includes backslashes. The output should be raw, i.e. unescaped. So we need to unescape the command line. See #1127 */
                     unescape_string_in_place(&faux_cmdline_with_completion, UNESCAPE_DEFAULT);
                     stdout_buffer.append(faux_cmdline_with_completion);
-                    
+
                     /* Append any description */
                     if (! next.description.empty())
                     {

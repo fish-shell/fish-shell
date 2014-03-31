@@ -215,13 +215,13 @@ struct profile_item_t
 {
     /** Time spent executing the specified command, including parse time for nested blocks. */
     int exec;
-    
+
     /** Time spent parsing the specified command, including execution time for command substitutions. */
     int parse;
-    
+
     /** The block level of the specified command. nested blocks and command substitutions both increase the block level. */
     size_t level;
-    
+
     /** If the execution of this command was skipped. */
     bool skipped;
 
@@ -243,7 +243,7 @@ private:
 
     /** Indication that we should skip all blocks */
     bool cancellation_requested;
-    
+
     /** Indicates that we are within the process of initializing fish */
     bool is_within_fish_initialization;
 
@@ -353,7 +353,7 @@ public:
     {
         return my_job_list;
     }
-    
+
     /* Hackish. In order to correctly report the origin of code with no associated file, we need to know whether it's run during initialization or not. */
     void set_is_within_fish_initialization(bool flag);
 
@@ -380,7 +380,7 @@ public:
 
     /** Returns the job with the given pid */
     job_t *job_get_from_pid(int pid);
-    
+
     /* Returns a new profile item if profiling is active. The caller should fill it in. The parser_t will clean it up. */
     profile_item_t *create_profile_item();
 

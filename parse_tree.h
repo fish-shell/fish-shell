@@ -84,13 +84,13 @@ public:
 
     /* Children */
     node_offset_t child_start;
-    
+
     /* Number of children */
     uint8_t child_count;
 
     /* Which production was used */
     uint8_t production_idx;
-    
+
     /* Type of the node */
     enum parse_token_type_t type;
 
@@ -184,7 +184,7 @@ public:
 
     /* Given a job, return all of its statements. These are 'specific statements' (e.g. symbol_decorated_statement, not symbol_statement) */
     parse_node_list_t specific_statements_for_job(const parse_node_t &job) const;
-    
+
     /* Given a job, return whether it should be backgrounded, because it has a & specifier */
     bool job_should_be_backgrounded(const parse_node_t &job) const;
 };
@@ -257,9 +257,9 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags, parse
     optional_background = <empty> | <TOK_BACKGROUND>
 
     end_command = END
- 
+
  # A freestanding_argument_list is equivalent to a normal argument list, except it may contain TOK_END (newlines, and even semicolons, for historical reasons
- 
+
      freestanding_argument_list = <empty> |
                                   argument freestanding_argument_list |
                                   <TOK_END> freestanding_argument_list

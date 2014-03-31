@@ -173,7 +173,7 @@ RESOLVE(statement)
                 case parse_keyword_end:
                     return NO_PRODUCTION;
 
-                // All other keywords fall through to decorated statement
+                    // All other keywords fall through to decorated statement
                 default:
                     return 4;
             }

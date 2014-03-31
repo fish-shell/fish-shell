@@ -185,12 +185,12 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
             {
                 wcstring base_path = str2wcstring(exec_path);
                 base_path.resize(base_path.size() - strlen(suffix));
-                
+
                 paths.data = base_path + L"/share/fish";
                 paths.sysconf = base_path + L"/etc/fish";
                 paths.doc = base_path + L"/share/doc/fish";
                 paths.bin = base_path + L"/bin";
-                
+
                 /* Check only that the data and sysconf directories exist. Handle the doc directories separately */
                 struct stat buf;
                 if (0 == wstat(paths.data, &buf) && 0 == wstat(paths.sysconf, &buf))
@@ -526,12 +526,12 @@ int main(int argc, char **argv)
 
     restore_term_mode();
     restore_term_foreground_process_group();
-    
+
     if (g_profiling_active)
     {
         parser.emit_profiling(s_profiling_output_filename);
     }
-    
+
     history_destroy();
     proc_destroy();
     builtin_destroy();

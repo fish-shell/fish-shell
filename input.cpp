@@ -72,20 +72,20 @@ struct input_mapping_t
 {
     wcstring seq; /**< Character sequence which generates this event */
     wcstring_list_t commands; /**< commands that should be evaluated by this mapping */
-    
+
     /* We wish to preserve the user-specified order. This is just an incrementing value. */
     unsigned int specification_order;
-    
+
     wcstring mode; /**< mode in which this command should be evaluated */
     wcstring sets_mode; /** new mode that should be switched to after command evaluation */
-    
+
     input_mapping_t(const wcstring &s, const std::vector<wcstring> &c,
                     const wcstring &m = DEFAULT_BIND_MODE,
                     const wcstring &sm = DEFAULT_BIND_MODE) : seq(s), commands(c), mode(m), sets_mode(sm)
     {
         static unsigned int s_last_input_mapping_specification_order = 0;
         specification_order = ++s_last_input_mapping_specification_order;
-        
+
     }
 };
 
@@ -307,12 +307,12 @@ void input_set_bind_mode(const wcstring &bm)
 }
 
 
-/** 
+/**
     Returns the arity of a given input function
 */
 int input_function_arity(int function)
 {
-    switch(function)
+    switch (function)
     {
         case R_FORWARD_JUMP:
         case R_BACKWARD_JUMP:
@@ -322,7 +322,7 @@ int input_function_arity(int function)
     }
 }
 
-/** 
+/**
     Sets the return status of the most recently executed input function
 */
 void input_function_set_status(bool status)
@@ -380,7 +380,7 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t **commands, size_t
             return;
         }
     }
-    
+
     // add a new mapping, using the next order
     const input_mapping_t new_mapping = input_mapping_t(sequence, commands_vector, mode, sets_mode);
     input_mapping_insert_sorted(new_mapping);
@@ -541,9 +541,9 @@ wchar_t input_function_pop_arg()
 void input_function_push_args(int code)
 {
     int arity = input_function_arity(code);
-    for(int i = 0; i < arity; i++)
+    for (int i = 0; i < arity; i++)
     {
-      input_function_push_arg(input_common_readch(0));
+        input_function_push_arg(input_common_readch(0));
     }
 }
 
@@ -554,7 +554,7 @@ static void input_mapping_execute(const input_mapping_t &m)
 {
     /* By default input functions always succeed */
     input_function_status = true;
-    
+
     size_t idx = m.commands.size();
     while (idx--)
     {
@@ -565,7 +565,7 @@ static void input_mapping_execute(const input_mapping_t &m)
             input_function_push_args(code);
         }
     }
-    
+
     idx = m.commands.size();
     while (idx--)
     {
@@ -583,13 +583,13 @@ static void input_mapping_execute(const input_mapping_t &m)
              */
             int last_status = proc_get_last_status();
             parser_t::principal_parser().eval(command.c_str(), io_chain_t(), TOP);
-            
+
             proc_set_last_status(last_status);
-            
+
             input_unreadch(R_NULL);
         }
     }
-    
+
     input_set_bind_mode(m.sets_mode.c_str());
 }
 
@@ -656,7 +656,7 @@ static void input_mapping_execute_matching_or_generic()
 
         //debug(0, L"trying mapping (%ls,%ls,%ls)\n", escape(m.seq.c_str(), 1),
         //           m.mode.c_str(), m.sets_mode.c_str());
-        
+
         if (m.mode != bind_mode)
         {
             //debug(0, L"skipping mapping because mode %ls != %ls\n", m.mode.c_str(), input_get_bind_mode());
@@ -667,7 +667,7 @@ static void input_mapping_execute_matching_or_generic()
         {
             generic = &m;
         }
-        else if(input_mapping_is_match(m))
+        else if (input_mapping_is_match(m))
         {
             input_mapping_execute(m);
             return;
@@ -706,39 +706,39 @@ wint_t input_readch()
 
         if (c >= R_MIN && c <= R_MAX)
         {
-          switch (c)
-          {
-              case R_EOF: /* If it's closed, then just return */
-              {
-                  return WEOF;
-              }
-              case R_SELF_INSERT:
-              {
-                  return input_common_readch(0);
-              }
-              case R_AND:
-              {
-                  if(input_function_status)
-                  {
-                      return input_readch();
-                  }
-                  else
-                  {
-                      while((c = input_common_readch(0)) && c >= R_MIN && c <= R_MAX);
-                      input_unreadch(c);
-                      return input_readch();
-                  }
-              }
-              default:
-              {
-                  return c;
-              }
-          }
+            switch (c)
+            {
+                case R_EOF: /* If it's closed, then just return */
+                {
+                    return WEOF;
+                }
+                case R_SELF_INSERT:
+                {
+                    return input_common_readch(0);
+                }
+                case R_AND:
+                {
+                    if (input_function_status)
+                    {
+                        return input_readch();
+                    }
+                    else
+                    {
+                        while ((c = input_common_readch(0)) && c >= R_MIN && c <= R_MAX);
+                        input_unreadch(c);
+                        return input_readch();
+                    }
+                }
+                default:
+                {
+                    return c;
+                }
+            }
         }
         else
         {
-          input_unreadch(c);
-          input_mapping_execute_matching_or_generic();
+            input_unreadch(c);
+            input_mapping_execute_matching_or_generic();
         }
     }
 }

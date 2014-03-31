@@ -25,45 +25,45 @@ class history_t;
 /* Helper class for storing a command line */
 class editable_line_t
 {
-    public:
-    
+public:
+
     /** The command line */
     wcstring text;
-    
+
     /** The current position of the cursor in the command line */
     size_t position;
-    
+
     const wcstring &get_text() const
     {
         return text;
     }
-    
+
     /* Gets the length of the text */
     size_t size() const
     {
         return text.size();
     }
-    
+
     bool empty() const
     {
         return text.empty();
     }
-    
+
     void clear()
     {
         text.clear();
         position = 0;
     }
-    
+
     wchar_t at(size_t idx)
     {
         return text.at(idx);
     }
-    
+
     editable_line_t() : text(), position(0)
     {
     }
-    
+
     /* Inserts the string at the cursor position */
     void insert_string(const wcstring &str);
 };

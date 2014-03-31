@@ -304,7 +304,7 @@ static wcstring token_type_user_presentable_description(parse_token_type_t type,
 
         case parse_token_type_end:
             return L"end of the statement";
-            
+
         default:
             return format_string(L"a %ls", token_type_description(type).c_str());
     }
@@ -564,11 +564,11 @@ class parse_ll_t
         const size_t child_start_big = nodes.size();
         assert(child_start_big < NODE_OFFSET_INVALID);
         node_offset_t child_start = static_cast<node_offset_t>(child_start_big);
-        
+
         // To avoid constructing multiple nodes, we push_back a single one that we modify
         parse_node_t representative_child(token_type_invalid);
         representative_child.parent = parent_node_idx;
-        
+
         node_offset_t child_count = 0;
         for (size_t i=0; i < MAX_SYMBOLS_PER_PRODUCTION; i++)
         {
@@ -1502,7 +1502,8 @@ bool parse_node_tree_t::job_should_be_backgrounded(const parse_node_t &job) cons
     assert(job.production_idx == 0);
     bool result = false;
     const parse_node_t *opt_background = get_child(job, 2, symbol_optional_background);
-    if (opt_background != NULL) {
+    if (opt_background != NULL)
+    {
         assert(opt_background->production_idx <= 1);
         result = (opt_background->production_idx == 1);
     }

@@ -64,7 +64,7 @@ private:
 
     /** The path from which we most recently autoloaded */
     wcstring last_path;
-    
+
     /** That path, tokenized (split on separators) */
     wcstring_list_t last_path_tokenized;
 

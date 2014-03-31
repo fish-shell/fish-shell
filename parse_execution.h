@@ -39,10 +39,10 @@ private:
     //parse_error_list_t errors;
 
     int eval_level;
-    
+
     /* The currently executing node index, used to indicate the line number */
     node_offset_t executing_node_idx;
-    
+
     /* Cached line number information */
     size_t cached_lineno_offset;
     int cached_lineno_count;
@@ -67,13 +67,13 @@ private:
     /* Report an error. Always returns true. */
     parse_execution_result_t report_error(const parse_node_t &node, const wchar_t *fmt, ...) const;
     parse_execution_result_t report_errors(const parse_error_list_t &errors) const;
-    
+
     /* Wildcard error helper */
     parse_execution_result_t report_unmatched_wildcard_error(const parse_node_t &unmatched_wildcard);
 
     /* Command not found support */
     void handle_command_not_found(const wcstring &cmd, const parse_node_t &statement_node, int err_code);
-    
+
     /* Utilities */
     wcstring get_source(const parse_node_t &node) const;
     const parse_node_t *get_child(const parse_node_t &parent, node_offset_t which, parse_token_type_t expected_type = token_type_invalid) const;
@@ -116,8 +116,11 @@ public:
     parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, parser_t *p, int initial_eval_level);
 
     /* Returns the current eval level */
-    int current_eval_level() const { return eval_level; }
-    
+    int current_eval_level() const
+    {
+        return eval_level;
+    }
+
     /* Returns the current line number, indexed from 1. Not const since it touches cached_lineno_offset */
     int get_current_line_number();
 
@@ -125,7 +128,10 @@ public:
     int get_current_source_offset() const;
 
     /* Returns the source string */
-    const wcstring &get_source() const { return src; }
+    const wcstring &get_source() const
+    {
+        return src;
+    }
 
     /* Start executing at the given node offset. Returns 0 if there was no error, 1 if there was an error */
     parse_execution_result_t eval_node_at_offset(node_offset_t offset, const block_t *associated_block, const io_chain_t &io);

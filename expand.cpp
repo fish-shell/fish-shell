@@ -902,20 +902,20 @@ void expand_variable_error(parser_t &parser, const wcstring &token, size_t token
             if (is_var)
             {
                 append_syntax_error(errors,
-                             error_pos,
-                             COMPLETE_VAR_BRACKET_DESC,
-                             cpy,
-                             name,
-                             post);
+                                    error_pos,
+                                    COMPLETE_VAR_BRACKET_DESC,
+                                    cpy,
+                                    name,
+                                    post);
             }
             else
             {
                 append_syntax_error(errors,
-                             error_pos,
-                             COMPLETE_VAR_BRACKET_DESC,
-                             L"",
-                             L"VARIABLE",
-                             L"");
+                                    error_pos,
+                                    COMPLETE_VAR_BRACKET_DESC,
+                                    L"",
+                                    L"VARIABLE",
+                                    L"");
             }
             free(cpy);
 
@@ -925,16 +925,16 @@ void expand_variable_error(parser_t &parser, const wcstring &token, size_t token
         case INTERNAL_SEPARATOR:
         {
             append_syntax_error(errors,
-                         error_pos,
-                         COMPLETE_VAR_PARAN_DESC);
+                                error_pos,
+                                COMPLETE_VAR_PARAN_DESC);
             break;
         }
 
         case 0:
         {
             append_syntax_error(errors,
-                         error_pos,
-                         COMPLETE_VAR_NULL_DESC);
+                                error_pos,
+                                COMPLETE_VAR_NULL_DESC);
             break;
         }
 
@@ -948,9 +948,9 @@ void expand_variable_error(parser_t &parser, const wcstring &token, size_t token
                 token_stop_char = L'*';
 
             append_syntax_error(errors,
-                         error_pos,
-                         (token_stop_char == L'?' ? COMPLETE_YOU_WANT_STATUS : COMPLETE_VAR_DESC),
-                         token_stop_char);
+                                error_pos,
+                                (token_stop_char == L'?' ? COMPLETE_YOU_WANT_STATUS : COMPLETE_VAR_DESC),
+                                token_stop_char);
             break;
         }
     }
@@ -999,7 +999,7 @@ static int parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &
             pos+=2;
             while (in[pos]==INTERNAL_SEPARATOR)
                 pos++;
-            
+
             const size_t number_start = pos;
             long tmp1 = wcstol(&in[pos], &end, 10);
             if ((errno) || (end == &in[pos]))
@@ -1068,10 +1068,10 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
     int empty=0;
 
     wcstring var_tmp;
-    
+
     // list of indexes
     std::vector<long> var_idx_list;
-    
+
     // parallel array of source positions of each index in the variable list
     std::vector<size_t> var_pos_list;
 
@@ -1123,7 +1123,7 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
                 if (is_ok)
                 {
                     tokenize_variable_array(var_val.c_str(), var_item_list);
-                    
+
                     const size_t slice_start = stop_pos;
                     if (in[slice_start] == L'[')
                     {
@@ -1133,8 +1133,8 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
                         if (parse_slice(in + slice_start, &slice_end, var_idx_list, var_pos_list, var_item_list.size()))
                         {
                             append_syntax_error(errors,
-                                         stop_pos,
-                                         L"Invalid index value");
+                                                stop_pos,
+                                                L"Invalid index value");
                             is_ok = 0;
                             break;
                         }
@@ -1153,8 +1153,8 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
                             {
                                 /* The slice was parsed starting at stop_pos, so we have to add that to the error position */
                                 append_syntax_error(errors,
-                                             slice_start + var_src_pos,
-                                             ARRAY_BOUNDS_ERR);
+                                                    slice_start + var_src_pos,
+                                                    ARRAY_BOUNDS_ERR);
                                 is_ok=0;
                                 var_idx_list.resize(j);
                                 break;
@@ -1349,8 +1349,8 @@ static int expand_brackets(parser_t &parser, const wcstring &instr, int flags, s
     if (syntax_error)
     {
         append_syntax_error(errors,
-                     SOURCE_LOCATION_UNKNOWN,
-                     _(L"Mismatched brackets"));
+                            SOURCE_LOCATION_UNKNOWN,
+                            _(L"Mismatched brackets"));
         return 0;
     }
 
@@ -1416,8 +1416,8 @@ static int expand_cmdsubst(parser_t &parser, const wcstring &input, std::vector<
     {
         case -1:
             append_syntax_error(errors,
-                         SOURCE_LOCATION_UNKNOWN,
-                         L"Mismatched parenthesis");
+                                SOURCE_LOCATION_UNKNOWN,
+                                L"Mismatched parenthesis");
             return 0;
         case 0:
             append_completion(out_list, input);
@@ -1457,8 +1457,8 @@ static int expand_cmdsubst(parser_t &parser, const wcstring &input, std::vector<
                 if (idx < 1 || (size_t)idx > sub_res.size())
                 {
                     append_syntax_error(errors,
-                                 SOURCE_LOCATION_UNKNOWN,
-                                 ARRAY_BOUNDS_ERR);
+                                        SOURCE_LOCATION_UNKNOWN,
+                                        ARRAY_BOUNDS_ERR);
                     return 0;
                 }
                 idx = idx-1;

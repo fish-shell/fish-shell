@@ -586,13 +586,13 @@ void history_t::save_internal_unless_disabled()
 {
     /* This must be called while locked */
     ASSERT_IS_LOCKED(lock);
-    
+
     /* Respect disable_automatic_save_counter */
     if (disable_automatic_save_counter > 0)
     {
         return;
     }
-    
+
     /* We may or may not vacuum. We try to vacuum every kVacuumFrequency items, but start the countdown at a random number so that even if the user never runs more than 25 commands, we'll eventually vacuum.  If countdown_to_vacuum is -1, it means we haven't yet picked a value for the counter. */
     const int kVacuumFrequency = 25;
     if (countdown_to_vacuum < 0)
@@ -601,7 +601,7 @@ void history_t::save_internal_unless_disabled()
         /* Generate a number in the range [0, kVacuumFrequency) */
         countdown_to_vacuum = rand_r(&seed) / (RAND_MAX / kVacuumFrequency + 1);
     }
-    
+
     /* Determine if we're going to vacuum */
     bool vacuum = false;
     if (countdown_to_vacuum == 0)
@@ -609,11 +609,11 @@ void history_t::save_internal_unless_disabled()
         countdown_to_vacuum = kVacuumFrequency;
         vacuum = true;
     }
-    
+
     /* This might be a good candidate for moving to a background thread */
     time_profiler_t profiler(vacuum ? "save_internal vacuum" : "save_internal no vacuum");
     this->save_internal(vacuum);
-    
+
     /* Update our countdown */
     assert(countdown_to_vacuum > 0);
     countdown_to_vacuum--;
@@ -660,9 +660,9 @@ void history_t::set_valid_file_paths(const wcstring_list_t &valid_file_paths, hi
     {
         return;
     }
-    
+
     scoped_lock locker(lock);
-    
+
     /* Look for an item with the given identifier. It is likely to be at the end of new_items */
     for (history_item_list_t::reverse_iterator iter = new_items.rbegin(); iter != new_items.rend(); iter++)
     {
@@ -1768,10 +1768,10 @@ static int threaded_perform_file_detection(file_detection_context_t *ctx)
 static void perform_file_detection_done(file_detection_context_t *ctx, int success)
 {
     ASSERT_IS_MAIN_THREAD();
-    
+
     /* Now that file detection is done, update the history item with the valid file paths */
     ctx->history->set_valid_file_paths(ctx->valid_paths, ctx->history_item_identifier);
-    
+
     /* Allow saving again */
     ctx->history->enable_automatic_saving();
 
@@ -1793,13 +1793,13 @@ void history_t::add_with_file_detection(const wcstring &str)
 {
     ASSERT_IS_MAIN_THREAD();
     path_list_t potential_paths;
-    
+
     /* Find all arguments that look like they could be file paths */
     bool impending_exit = false;
     parse_node_tree_t tree;
     parse_tree_from_string(str, parse_flag_none, &tree, NULL);
     size_t count = tree.size();
-    
+
     for (size_t i=0; i < count; i++)
     {
         const parse_node_t &node = tree.at(i);
@@ -1807,7 +1807,7 @@ void history_t::add_with_file_detection(const wcstring &str)
         {
             continue;
         }
-        
+
         if (node.type == symbol_argument)
         {
             wcstring potential_path = node.get_source(str);
@@ -1824,7 +1824,7 @@ void history_t::add_with_file_detection(const wcstring &str)
             {
                 impending_exit = true;
             }
-            
+
             wcstring command;
             tree.command_for_plain_statement(node, str, &command);
             unescape_string_in_place(&command, UNESCAPE_DEFAULT);
@@ -1842,21 +1842,21 @@ void history_t::add_with_file_detection(const wcstring &str)
         /* Grab the next identifier */
         static history_identifier_t sLastIdentifier = 0;
         identifier = ++sLastIdentifier;
-        
+
         /* Create a new detection context */
         file_detection_context_t *context = new file_detection_context_t(this, identifier);
         context->potential_paths.swap(potential_paths);
-        
+
         /* Prevent saving until we're done, so we have time to get the paths */
         this->disable_automatic_saving();
-        
+
         /* Kick it off. Even though we haven't added the item yet, it updates the item on the main thread, so we can't race */
         iothread_perform(threaded_perform_file_detection, perform_file_detection_done, context);
     }
 
     /* Actually add the item to the history */
     this->add(str, identifier);
-    
+
     /* If we think we're about to exit, save immediately, regardless of any disabling. This may cause us to lose file hinting for some commands, but it beats losing history items */
     if (impending_exit)
     {

@@ -51,8 +51,8 @@ struct line_t
             colors.push_back(color);
         }
     }
-    
-    
+
+
 
     size_t size(void) const
     {
@@ -129,12 +129,12 @@ public:
     {
         return line_datas.size();
     }
-    
+
     void append_lines(const screen_data_t &d)
     {
         this->line_datas.insert(this->line_datas.end(), d.line_datas.begin(), d.line_datas.end());
     }
-    
+
     bool empty() const
     {
         return line_datas.empty();

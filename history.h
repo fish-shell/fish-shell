@@ -61,7 +61,7 @@ private:
 
     /** Paths that we require to be valid for this item to be autosuggested */
     path_list_t required_paths;
-    
+
 public:
     const wcstring &str() const
     {
@@ -135,7 +135,7 @@ private:
 
     /** The index of the first new item that we have not yet written. */
     size_t first_unwritten_new_item_index;
-    
+
     /** Whether we should disable saving to the file for a time */
     uint32_t disable_automatic_save_counter;
 
@@ -186,7 +186,7 @@ private:
 
     /** Saves history */
     void save_internal(bool vacuum);
-    
+
     /** Saves history, maybe */
     void save_internal_unless_disabled();
 
@@ -219,10 +219,10 @@ public:
 
     /** Saves history */
     void save();
-    
+
     /** Performs a full (non-incremental) save */
     void save_and_vacuum();
-    
+
     /** Enable / disable automatic saving. Main thread only! */
     void disable_automatic_saving();
     void enable_automatic_saving();
@@ -235,7 +235,7 @@ public:
 
     /* Gets all the history into a string with ARRAY_SEP_STR. This is intended for the $history environment variable. This may be long! */
     void get_string_representation(wcstring &str, const wcstring &separator);
-    
+
     /** Sets the valid file paths for the history item with the given identifier */
     void set_valid_file_paths(const wcstring_list_t &valid_file_paths, history_identifier_t ident);
 
@@ -352,7 +352,7 @@ struct file_detection_context_t
 
     /* Paths that were found to be valid */
     path_list_t valid_paths;
-    
+
     /* Identifier of the history item to which we are associated */
     const history_identifier_t history_item_identifier;
 

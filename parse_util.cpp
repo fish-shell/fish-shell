@@ -154,11 +154,11 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
     wchar_t prev=0;
     int syntax_error=0;
     int paran_count=0;
-    
+
     wchar_t *paran_begin=0, *paran_end=0;
-    
+
     CHECK(in, 0);
-    
+
     for (pos = const_cast<wchar_t *>(in); *pos; pos++)
     {
         if (prev != '\\')
@@ -183,20 +183,20 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
                     {
                         paran_begin = pos;
                     }
-                    
+
                     paran_count++;
                 }
                 else if (*pos == close_type)
                 {
-                    
+
                     paran_count--;
-                    
+
                     if ((paran_count == 0) && (paran_end == 0))
                     {
                         paran_end = pos;
                         break;
                     }
-                    
+
                     if (paran_count < 0)
                     {
                         syntax_error = 1;
@@ -204,34 +204,34 @@ static int parse_util_locate_brackets_of_type(const wchar_t *in, wchar_t **begin
                     }
                 }
             }
-            
+
         }
         prev = *pos;
     }
-    
+
     syntax_error |= (paran_count < 0);
     syntax_error |= ((paran_count>0)&&(!allow_incomplete));
-    
+
     if (syntax_error)
     {
         return -1;
     }
-    
+
     if (paran_begin == 0)
     {
         return 0;
     }
-    
+
     if (begin)
     {
         *begin = paran_begin;
     }
-    
+
     if (end)
     {
         *end = paran_count?(wchar_t *)in+wcslen(in):paran_end;
     }
-    
+
     return 1;
 }
 
@@ -1288,16 +1288,16 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
             {
                 // In a few places below, we want to know if we are in a pipeline
                 const bool is_in_pipeline = node_tree.statement_is_in_pipeline(node, true /* count first */);
-                
+
                 // We need to know the decoration
                 const enum parse_statement_decoration_t decoration = node_tree.decoration_for_plain_statement(node);
-                
+
                 // Check that we don't try to pipe through exec
                 if (is_in_pipeline && decoration == parse_statement_decoration_exec)
                 {
                     errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG, L"exec");
                 }
-                
+
                 wcstring command;
                 if (node_tree.command_for_plain_statement(node, buff_src, &command))
                 {
@@ -1384,7 +1384,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                             errored = append_syntax_error(&parse_errors, node, (command == L"break" ? INVALID_BREAK_ERR_MSG : INVALID_CONTINUE_ERR_MSG));
                         }
                     }
-                    
+
                     // Check that we don't do an invalid builtin (#1252)
                     if (! errored && decoration == parse_statement_decoration_builtin && ! builtin_exists(command))
                     {

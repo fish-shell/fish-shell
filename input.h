@@ -18,7 +18,7 @@ inputrc information for key bindings.
 /**
    Key codes for inputrc-style keyboard functions that are passed on
    to the caller of input_read()
-   
+
    NOTE: IF YOU MODIFY THIS YOU MUST UPDATE THE name_arr AND code_arr VARIABLES TO MATCH!
 */
 enum
@@ -156,7 +156,7 @@ void input_set_bind_mode(const wcstring &bind_mode);
 wchar_t input_function_pop_arg();
 
 
-/** 
+/**
     Sets the return status of the most recently executed input function
 */
 void input_function_set_status(bool status);

@@ -1403,7 +1403,7 @@ struct autosuggestion_context_t
         search_string(term),
         cursor_pos(pos),
         searcher(*history, term, HISTORY_SEARCH_TYPE_PREFIX),
-        detector(history, term),
+        detector(history),
         working_directory(env_get_pwd_slash()),
         vars(env_vars_snapshot_t::highlighting_keys),
         generation_count(s_generation_count)

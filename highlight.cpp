@@ -961,7 +961,7 @@ public:
 void highlighter_t::color_node(const parse_node_t &node, highlight_spec_t color)
 {
     // Can only color nodes with valid source ranges
-    if (! node.has_source())
+    if (! node.has_source() || node.source_length == 0)
         return;
 
     // Fill the color array with our color in the corresponding range
@@ -1332,12 +1332,20 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
             case symbol_if_clause:
             case symbol_else_clause:
             case symbol_case_item:
-            case symbol_switch_statement:
             case symbol_boolean_statement:
             case symbol_decorated_statement:
             case symbol_if_statement:
             {
                 this->color_children(node, parse_token_type_string, highlight_spec_command);
+            }
+            break;
+                
+            case symbol_switch_statement:
+            {
+                const parse_node_t *literal_switch = this->parse_tree.get_child(node, 0, parse_token_type_string);
+                const parse_node_t *switch_arg = this->parse_tree.get_child(node, 1, symbol_argument);
+                this->color_node(*literal_switch, highlight_spec_command);
+                this->color_node(*switch_arg, highlight_spec_param);
             }
             break;
                 
@@ -1357,6 +1365,7 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
 
             case parse_token_type_background:
             case parse_token_type_end:
+            case symbol_optional_background:
             {
                 this->color_node(node, highlight_spec_statement_terminator);
             }

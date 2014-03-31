@@ -9,6 +9,7 @@
 #include "common.h"
 #include "pthread.h"
 #include "wutil.h"
+#include <deque>
 #include <vector>
 #include <utility>
 #include <list>
@@ -34,6 +35,8 @@ enum history_search_type_t
     HISTORY_SEARCH_TYPE_PREFIX
 };
 
+typedef uint32_t history_identifier_t;
+
 class history_item_t
 {
     friend class history_t;
@@ -41,8 +44,8 @@ class history_item_t
     friend class history_tests_t;
 
 private:
-    explicit history_item_t(const wcstring &);
-    explicit history_item_t(const wcstring &, time_t, const path_list_t &paths = path_list_t());
+    explicit history_item_t(const wcstring &str);
+    explicit history_item_t(const wcstring &, time_t, history_identifier_t ident = 0);
 
     /** Attempts to merge two compatible history items together */
     bool merge(const history_item_t &item);
@@ -53,9 +56,12 @@ private:
     /** Original creation time for the entry */
     time_t creation_timestamp;
 
+    /** Sometimes unique identifier used for hinting */
+    history_identifier_t identifier;
+
     /** Paths that we require to be valid for this item to be autosuggested */
     path_list_t required_paths;
-
+    
 public:
     const wcstring &str() const
     {
@@ -87,6 +93,8 @@ public:
                required_paths == other.required_paths;
     }
 };
+
+typedef std::deque<history_item_t> history_item_list_t;
 
 /* The type of file that we mmap'd */
 enum history_file_type_t
@@ -123,10 +131,13 @@ private:
     const wcstring name;
 
     /** New items. Note that these are NOT discarded on save. We need to keep these around so we can distinguish between items in our history and items in the history of other shells that were started after we were started. */
-    std::vector<history_item_t> new_items;
+    history_item_list_t new_items;
 
     /** The index of the first new item that we have not yet written. */
     size_t first_unwritten_new_item_index;
+    
+    /** Whether we should disable saving to the file for a time */
+    uint32_t disable_automatic_save_counter;
 
     /** Deleted item contents. */
     std::set<wcstring> deleted_items;
@@ -153,7 +164,7 @@ private:
     void populate_from_mmap(void);
 
     /** List of old items, as offsets into out mmap data */
-    std::vector<size_t> old_item_offsets;
+    std::deque<size_t> old_item_offsets;
 
     /** Whether we've loaded old items */
     bool loaded_old;
@@ -175,6 +186,9 @@ private:
 
     /** Saves history */
     void save_internal(bool vacuum);
+    
+    /** Saves history, maybe */
+    void save_internal_unless_disabled();
 
     /* Do a private, read-only map of the entirety of a history file with the given name. Returns true if successful. Returns the mapped memory region by reference. */
     bool map_file(const wcstring &name, const char **out_map_start, size_t *out_map_len, file_id_t *file_id);
@@ -195,7 +209,7 @@ public:
     bool is_empty(void);
 
     /** Add a new history item to the end */
-    void add(const wcstring &str, const path_list_t &valid_paths = path_list_t());
+    void add(const wcstring &str, history_identifier_t ident = 0);
 
     /** Remove a history item */
     void remove(const wcstring &str);
@@ -205,9 +219,13 @@ public:
 
     /** Saves history */
     void save();
-
+    
     /** Performs a full (non-incremental) save */
     void save_and_vacuum();
+    
+    /** Enable / disable automatic saving. Main thread only! */
+    void disable_automatic_saving();
+    void enable_automatic_saving();
 
     /** Irreversibly clears history */
     void clear();
@@ -217,6 +235,9 @@ public:
 
     /* Gets all the history into a string with ARRAY_SEP_STR. This is intended for the $history environment variable. This may be long! */
     void get_string_representation(wcstring &str, const wcstring &separator);
+    
+    /** Sets the valid file paths for the history item with the given identifier */
+    void set_valid_file_paths(const wcstring_list_t &valid_file_paths, history_identifier_t ident);
 
     /** Return the specified history at the specified index. 0 is the index of the current commandline. (So the most recent item is at index 1.) */
     history_item_t item_at_index(size_t idx);
@@ -295,8 +316,6 @@ public:
 
 };
 
-
-
 /**
    Init history library. The history file won't actually be loaded
    until the first time a history search is performed.
@@ -316,21 +335,14 @@ void history_sanity_check();
 /* A helper class for threaded detection of paths */
 struct file_detection_context_t
 {
-
     /* Constructor */
-    file_detection_context_t(history_t *hist, const wcstring &cmd);
+    file_detection_context_t(history_t *hist, history_identifier_t ident = 0);
 
     /* Determine which of potential_paths are valid, and put them in valid_paths */
     int perform_file_detection();
 
     /* The history associated with this context */
-    history_t *history;
-
-    /* The command */
-    wcstring command;
-
-    /* When the command was issued */
-    time_t when;
+    history_t * const history;
 
     /* The working directory at the time the command was issued */
     wcstring working_directory;
@@ -340,6 +352,9 @@ struct file_detection_context_t
 
     /* Paths that were found to be valid */
     path_list_t valid_paths;
+    
+    /* Identifier of the history item to which we are associated */
+    const history_identifier_t history_item_identifier;
 
     /* Performs file detection. Returns 1 if every path in potential_paths is valid, 0 otherwise. If test_all is true, tests every path; otherwise stops as soon as it reaches an invalid path. */
     int perform_file_detection(bool test_all);

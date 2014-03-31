@@ -81,6 +81,12 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
 
     int argc = builtin_count_args(argv);
 
+    /* Some code passes variables to set_color that don't exist, like $fish_user_whatever. As a hack, quietly return failure. */
+    if (argc <= 1)
+    {
+        return EXIT_FAILURE;
+    }
+
     const wchar_t *bgcolor = NULL;
     bool bold = false, underline=false;
     int errret;

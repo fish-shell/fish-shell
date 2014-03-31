@@ -509,7 +509,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
     parse_execution_result_t result = parse_execution_success;
 
     /* Get the switch variable */
-    const parse_node_t &switch_value_node = *get_child(statement, 1, parse_token_type_string);
+    const parse_node_t &switch_value_node = *get_child(statement, 1, symbol_argument);
     const wcstring switch_value = get_source(switch_value_node);
 
     /* Expand it. We need to offset any errors by the position of the string */
@@ -547,13 +547,15 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
                               _(L"switch: Expected exactly one argument, got %lu\n"),
                               switch_values_expanded.size());
     }
-    const wcstring &switch_value_expanded = switch_values_expanded.at(0).completion;
-
-    switch_block_t *sb = new switch_block_t();
-    parser->push_block(sb);
-
+    
     if (result == parse_execution_success)
     {
+        const wcstring &switch_value_expanded = switch_values_expanded.at(0).completion;
+        
+        switch_block_t *sb = new switch_block_t();
+        parser->push_block(sb);
+
+        
         /* Expand case statements */
         const parse_node_t *case_item_list = get_child(statement, 3, symbol_case_item_list);
 
@@ -597,16 +599,16 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
                 }
             }
         }
-    }
 
-    if (result == parse_execution_success && matching_case_item != NULL)
-    {
-        /* Success, evaluate the job list */
-        const parse_node_t *job_list = get_child(*matching_case_item, 3, symbol_job_list);
-        result = this->run_job_list(*job_list, sb);
-    }
+        if (result == parse_execution_success && matching_case_item != NULL)
+        {
+            /* Success, evaluate the job list */
+            const parse_node_t *job_list = get_child(*matching_case_item, 3, symbol_job_list);
+            result = this->run_job_list(*job_list, sb);
+        }
 
-    parser->pop_block(sb);
+        parser->pop_block(sb);
+    }
 
     return result;
 }
@@ -1371,7 +1373,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
                  (job_control_mode==JOB_CONTROL_ALL) ||
                  ((job_control_mode == JOB_CONTROL_INTERACTIVE) && (get_is_interactive())));
 
-    job_set_flag(j, JOB_FOREGROUND, 1);
+    job_set_flag(j, JOB_FOREGROUND, ! tree.job_should_be_backgrounded(job_node));
 
     job_set_flag(j, JOB_TERMINAL, job_get_flag(j, JOB_CONTROL) \
                  && (!is_subshell && !is_event));

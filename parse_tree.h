@@ -184,6 +184,9 @@ public:
 
     /* Given a job, return all of its statements. These are 'specific statements' (e.g. symbol_decorated_statement, not symbol_statement) */
     parse_node_list_t specific_statements_for_job(const parse_node_t &job) const;
+    
+    /* Given a job, return whether it should be backgrounded, because it has a & specifier */
+    bool job_should_be_backgrounded(const parse_node_t &job) const;
 };
 
 
@@ -198,9 +201,9 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags, parse
                 job job_list
                 <TOK_END> job_list
 
-# A job is a non-empty list of statements, separated by pipes. (Non-empty is useful for cases like if statements, where we require a command). To represent "non-empty", we require a statement, followed by a possibly empty job_continuation
+# A job is a non-empty list of statements, separated by pipes. (Non-empty is useful for cases like if statements, where we require a command). To represent "non-empty", we require a statement, followed by a possibly empty job_continuation, and then optionally a background specifier '&'
 
-    job = statement job_continuation
+    job = statement job_continuation optional_background
     job_continuation = <empty> |
                        <TOK_PIPE> statement job_continuation
 
@@ -217,7 +220,7 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags, parse
     else_continuation = if_clause else_clause |
                         <TOK_END> job_list
 
-    switch_statement = SWITCH <TOK_STRING> <TOK_END> case_item_list end_command arguments_or_redirections_list
+    switch_statement = SWITCH argument <TOK_END> case_item_list end_command arguments_or_redirections_list
     case_item_list = <empty> |
                     case_item case_item_list |
                     <TOK_END> case_item_list
@@ -240,7 +243,7 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags, parse
 # A decorated_statement is a command with a list of arguments_or_redirections, possibly with "builtin" or "command" or "exec"
 
     decorated_statement = plain_statement | COMMAND plain_statement | BUILTIN plain_statement | EXEC plain_statement
-    plain_statement = <TOK_STRING> arguments_or_redirections_list optional_background
+    plain_statement = <TOK_STRING> arguments_or_redirections_list
 
     argument_list = <empty> | argument argument_list
 
@@ -254,7 +257,12 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags, parse
     optional_background = <empty> | <TOK_BACKGROUND>
 
     end_command = END
-
+ 
+ # A freestanding_argument_list is equivalent to a normal argument list, except it may contain TOK_END (newlines, and even semicolons, for historical reasons
+ 
+     freestanding_argument_list = <empty> |
+                                  argument freestanding_argument_list |
+                                  <TOK_END> freestanding_argument_list
 */
 
 #endif

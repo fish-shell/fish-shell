@@ -54,11 +54,10 @@ localedir = @localedir@
 
 MACROS = -DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\" -DBINDIR=L\"$(bindir)\" -DDOCDIR=L\"$(docdir)\"
 CXXFLAGS = @CXXFLAGS@ $(MACROS) $(EXTRA_CXXFLAGS)
+CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
-LDFLAGS_FISH = ${LDFLAGS} @LIBS_FISH@ @LDFLAGS_FISH@
-LDFLAGS_FISH_INDENT = ${LDFLAGS} @LIBS_FISH_INDENT@
-LDFLAGS_FISHD = ${LDFLAGS} @LIBS_FISHD@
-LDFLAGS_MIMEDB = ${LDFLAGS} @LIBS_MIMEDB@
+LIBS = @LIBS@
+LDFLAGS_FISH = ${LDFLAGS} @LDFLAGS_FISH@
 
 #
 # Set to 1 if we have gettext
@@ -686,7 +685,7 @@ uninstall-translations:
 #
 
 fish: $(FISH_OBJS) fish.o
-	$(CXX) $(CXXFLAGS) $(FISH_OBJS) fish.o $(LDFLAGS_FISH) -o $@
+	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_OBJS) fish.o $(LIBS) -o $@
 
 
 #
@@ -694,7 +693,7 @@ fish: $(FISH_OBJS) fish.o
 #
 
 fishd: $(FISHD_OBJS)
-	$(CXX) $(CXXFLAGS) $(FISHD_OBJS) $(LDFLAGS_FISHD) -o $@
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(FISHD_OBJS) $(LIBS) -o $@
 
 
 #
@@ -702,7 +701,7 @@ fishd: $(FISHD_OBJS)
 #
 
 fish_tests: $(FISH_TESTS_OBJS)
-	$(CXX) $(CXXFLAGS) $(FISH_TESTS_OBJS) $(LDFLAGS_FISH) -o $@
+	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_TESTS_OBJS) $(LIBS) -o $@
 
 
 #
@@ -710,7 +709,7 @@ fish_tests: $(FISH_TESTS_OBJS)
 #
 
 mimedb: $(MIME_OBJS)
-	$(CXX) $(CXXFLAGS) $(MIME_OBJS) $(LDFLAGS_MIMEDB) -o $@
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(MIME_OBJS) $(LIBS) -o $@
 
 
 #
@@ -718,7 +717,7 @@ mimedb: $(MIME_OBJS)
 #
 
 fish_indent: $(FISH_INDENT_OBJS)
-	$(CXX) $(CXXFLAGS) $(FISH_INDENT_OBJS) $(LDFLAGS_FISH_INDENT) -o $@
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(FISH_INDENT_OBJS) $(LIBS) -o $@
 
 
 #
@@ -726,7 +725,7 @@ fish_indent: $(FISH_INDENT_OBJS)
 #
 
 key_reader: key_reader.o input_common.o common.o env_universal.o env_universal_common.o wutil.o iothread.o
-	$(CXX) $(CXXFLAGS) key_reader.o input_common.o common.o env_universal.o env_universal_common.o wutil.o iothread.o $(LDFLAGS_FISH) -o $@
+	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) key_reader.o input_common.o common.o env_universal.o env_universal_common.o wutil.o iothread.o $(LIBS) -o $@
 
 
 #

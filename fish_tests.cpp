@@ -2203,7 +2203,7 @@ void history_tests_t::test_history(void)
     test_history_matches(search3, 0);
 
     /* Test history escaping and unescaping, yaml, etc. */
-    std::vector<history_item_t> before, after;
+    history_item_list_t before, after;
     history.clear();
     size_t i, max = 100;
     for (i=1; i <= max; i++)
@@ -2225,7 +2225,8 @@ void history_tests_t::test_history(void)
         }
 
         /* Record this item */
-        history_item_t item(value, time(NULL), paths);
+        history_item_t item(value, time(NULL));
+        item.required_paths = paths;
         before.push_back(item);
         history.add(item);
     }

@@ -24,10 +24,6 @@ conf_arg=$@
 AC_SUBST(HAVE_GETTEXT)
 AC_SUBST(HAVE_DOXYGEN)
 AC_SUBST(LDFLAGS_FISH)
-AC_SUBST(LIBS_FISH)
-AC_SUBST(LIBS_FISH_INDENT)
-AC_SUBST(LIBS_FISHD)
-AC_SUBST(LIBS_MIMEDB)
 
 
 #
@@ -97,43 +93,6 @@ AC_PROG_INSTALL
 AC_LANG(C++)
 
 echo "CXXFLAGS: $CXXFLAGS"
-
-#
-# Detect directories which may contain additional headers, libraries
-# and commands. This needs to be done early - before Autoconf starts
-# to mess with CXXFLAGS and all the other environemnt variables.
-#
-# This mostly helps OS X users, since fink usually installs out of
-# tree and doesn't update CXXFLAGS.
-
-for i in /usr/pkg /sw /opt /opt/local /usr/local; do
-
-  AC_MSG_CHECKING([for $i/include include directory])
-  if test -d $i/include; then
-    AC_MSG_RESULT(yes)
-    CXXFLAGS="$CXXFLAGS -I$i/include/"
-  else
-  AC_MSG_RESULT(no)
-  fi
-
-  AC_MSG_CHECKING([for $i/lib library directory])
-  if test -d $i/lib; then
-    AC_MSG_RESULT(yes)
-    LDFLAGS="$LDFLAGS -L$i/lib/"
-  else
-    AC_MSG_RESULT(no)
-  fi
-
-  AC_MSG_CHECKING([for $i/bin command directory])
-  if test -d $i/bin; then
-    AC_MSG_RESULT(yes)
-    optbindirs="$optbindirs $i/bin"
-  else
-    AC_MSG_RESULT(no)
-  fi
-
-done
-
 
 #
 # Tell autoconf to create config.h header
@@ -413,37 +372,6 @@ AC_SEARCH_LIBS( [nan], [m], [AC_DEFINE( [HAVE_NAN], [1], [Define to 1 if you hav
 if test x$local_gettext != xno; then
   AC_SEARCH_LIBS( gettext, intl,,)
 fi
-
-LIBS_SHARED=$LIBS
-
-#
-# Check for libraries needed by fish.
-#
-
-LIBS="$LIBS_SHARED"
-LIBS_FISH=$LIBS
-
-#
-# Check for libraries needed by fish_indent.
-#
-
-LIBS="$LIBS_SHARED"
-LIBS_FISH_INDENT=$LIBS
-
-#
-# Check for libraries needed by fishd.
-#
-
-LIBS="$LIBS_SHARED"
-LIBS_FISHD=$LIBS
-
-#
-# Check for libraries needed by mimedb.
-#
-
-LIBS="$LIBS_SHARED"
-LIBS_MIMEDB=$LIBS
-
 
 #
 # Check presense of various header files

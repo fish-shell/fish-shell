@@ -82,7 +82,7 @@ RESOLVE(job_list)
 
 PRODUCTIONS(job) =
 {
-    {symbol_statement, symbol_job_continuation}
+    {symbol_statement, symbol_job_continuation, symbol_optional_background}
 };
 RESOLVE_ONLY(job)
 
@@ -237,7 +237,7 @@ RESOLVE(else_continuation)
 
 PRODUCTIONS(switch_statement) =
 {
-    { KEYWORD(parse_keyword_switch), parse_token_type_string, parse_token_type_end, symbol_case_item_list, symbol_end_command, symbol_arguments_or_redirections_list}
+    { KEYWORD(parse_keyword_switch), symbol_argument, parse_token_type_end, symbol_case_item_list, symbol_end_command, symbol_arguments_or_redirections_list}
 };
 RESOLVE_ONLY(switch_statement)
 
@@ -275,6 +275,26 @@ RESOLVE(argument_list)
             return 0;
     }
 }
+
+PRODUCTIONS(freestanding_argument_list) =
+{
+    {},
+    {symbol_argument, symbol_freestanding_argument_list},
+    {parse_token_type_end, symbol_freestanding_argument_list},
+};
+RESOLVE(freestanding_argument_list)
+{
+    switch (token1.type)
+    {
+        case parse_token_type_string:
+            return 1;
+        case parse_token_type_end:
+            return 2;
+        default:
+            return 0;
+    }
+}
+
 
 PRODUCTIONS(block_statement) =
 {
@@ -382,7 +402,7 @@ RESOLVE(decorated_statement)
 
 PRODUCTIONS(plain_statement) =
 {
-    {parse_token_type_string, symbol_arguments_or_redirections_list, symbol_optional_background}
+    {parse_token_type_string, symbol_arguments_or_redirections_list}
 };
 RESOLVE_ONLY(plain_statement)
 
@@ -485,6 +505,7 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
             TEST(case_item_list)
             TEST(case_item)
             TEST(argument_list)
+            TEST(freestanding_argument_list)
             TEST(block_header)
             TEST(for_header)
             TEST(while_header)

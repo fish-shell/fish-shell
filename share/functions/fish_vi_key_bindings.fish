@@ -33,6 +33,7 @@ function fish_vi_key_bindings -d "vi-like key bindings for fish"
 
   bind \x24 end-of-line
   bind \x5e beginning-of-line
+  bind 0 beginning-of-line
   bind g\x24 end-of-line
   bind g\x5e beginning-of-line
   bind \e\[H beginning-of-line

@@ -175,8 +175,8 @@ function fish_vi_key_bindings -d "vi-like key bindings for fish"
   bind -M insert -k right forward-char
   bind -M insert -k left backward-char
 
-  bind -M insert -m default \cc force-repaint
-  bind -M insert -m default \e force-repaint
+  bind -M insert -m default \cc backward-char force-repaint
+  bind -M insert -m default \e backward-char force-repaint
 
   bind -M insert \cd exit
 

@@ -1383,6 +1383,9 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
                  || is_event \
                  || (!get_is_interactive()));
 
+    /* Tell the current block what its job is. This has to happen before we populate it (#1394) */
+    parser->current_block()->job = j;
+
     /* Populate the job. This may fail for reasons like command_not_found. If this fails, an error will have been printed */
     parse_execution_result_t pop_result = this->populate_job_from_job_node(j, job_node, associated_block);
 
@@ -1390,6 +1393,8 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
     bool populated_job = (pop_result == parse_execution_success);
     if (! populated_job || this->should_cancel_execution(associated_block))
     {
+        assert(parser->current_block()->job == j);
+        parser->current_block()->job = NULL;
         delete j;
         j = NULL;
         populated_job = false;
@@ -1406,7 +1411,6 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
     {
         /* Success. Give the job to the parser - it will clean it up. */
         parser->job_add(j);
-        parser->current_block()->job = j;
 
         /* Check to see if this contained any external commands */
         bool job_contained_external_command = false;

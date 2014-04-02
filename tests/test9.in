@@ -84,4 +84,9 @@ eval 'status -n
 status -n
 status -n'
 
+# Test psub
+cat (echo foo | psub)
+cat (echo bar | psub)
+cat (echo baz | psub)
+
 false

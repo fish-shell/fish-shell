@@ -4,8 +4,8 @@
 
 #####
 # Global options
-complete -c gem -n 'not __fish_use_subcommand' -s h -l help -d "Print usage informations and quit"
-complete -c gem -n 'not __fish_use_subcommand' -s v -l version -d "Print the version and quit"
+complete -c gem -n '__fish_use_subcommand' -s h -l help -d "Print usage informations and quit"
+complete -c gem -n '__fish_use_subcommand' -s v -l version -d "Print the version and quit"
 
 #####
 # Subcommands

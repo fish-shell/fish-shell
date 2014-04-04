@@ -296,7 +296,7 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
 
                     /* Generate the script source */
                     wcstring esc = escape_string(path, 1);
-                    script_source = L". " + esc;
+                    script_source = L"source " + esc;
                     has_script_source = true;
 
                     /* Remove any loaded command because we are going to reload it. Note that this will deadlock if command_removed calls back into us. */

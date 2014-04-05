@@ -950,7 +950,6 @@ public:
     highlighter_t(const wcstring &str, size_t pos, const env_vars_snapshot_t &ev, const wcstring &wd, bool can_do_io) : buff(str), cursor_pos(pos), vars(ev), io_ok(can_do_io), working_directory(wd), color_array(str.size())
     {
         /* Parse the tree */
-        this->parse_tree.clear();
         parse_tree_from_string(buff, parse_flag_continue_after_error | parse_flag_include_comments, &this->parse_tree, NULL);
     }
 
@@ -1308,10 +1307,6 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
 
     /* Start out at zero */
     std::fill(this->color_array.begin(), this->color_array.end(), 0);
-
-    /* Parse the buffer */
-    parse_node_tree_t parse_tree;
-    parse_tree_from_string(buff, parse_flag_continue_after_error | parse_flag_include_comments, &parse_tree, NULL);
 
 #if 0
     const wcstring dump = parse_dump_tree(parse_tree, buff);

@@ -1,5 +1,3 @@
-# Completions for pdftotext
-# Author: SanskritFritz (gmail)
 
 complete -c pdftotext -s f -d "First page to convert"
 complete -c pdftotext -s l -d "Last page to convert"

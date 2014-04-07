@@ -1,5 +1,3 @@
-# Fish shell completions for transmission-remote
-# Written by SanskritFritz (gmail)
 
 complete -c transmission-remote -s a -l add --description 'Add torrents to transmission'
 complete -c transmission-remote -s b -l debug --description 'Enable debugging mode'

@@ -1,5 +1,3 @@
-# Completions for mc
-# Author: SanskritFritz (gmail)
 
 complete -c mc -s a -l stickchars        -d 'No graphic chars for line drawing'
 complete -c mc -s b -l nocolor           -d 'Force black and white display'

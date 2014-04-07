@@ -1,5 +1,3 @@
-# Completions for cp
-# SanskritFritz (gmail)
 
 complete -c cp -s a -l archive --description "Same as -dpR"
 complete -c cp -s b -l backup --description "Make backup of each existing destination file" -a "none off numbered t existing nil simple never"

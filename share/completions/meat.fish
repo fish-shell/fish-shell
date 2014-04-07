@@ -1,5 +1,4 @@
 # Command specific completions for meat (an Archlinux AUR helper).
-# Written by SanskritFritz (gmail)
 
 set -l listinstalled "(pacman -Qm | tr ' ' \t)"
 set -l listall       "(pacman -Sl | cut --delim ' ' --fields 2- | tr ' ' \t)"

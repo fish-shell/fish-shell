@@ -1,7 +1,3 @@
-#
-# Command specific completions for the burp command.
-# SanskritFritz (gmail)
-#
 
 complete -c burp -s u -l user --description 'AUR login username'
 complete -c burp -s p -l password --description 'AUR login password'

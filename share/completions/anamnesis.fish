@@ -1,5 +1,3 @@
-# Completions for anamnesis
-# Author: SanskritFritz (gmail)
 
 complete -c anamnesis -l version -d "Show program's version number and exit"
 complete -c anamnesis -s h -l help -d "Show a help message and exit"

@@ -1,5 +1,3 @@
-# Completions for obnam
-# Author: SanskritFritz (gmail)
 
 set -l nocommand 'commandline | not sgrep -qe "add-key\|backup\|client-keys\|clients\|diff\|dump-repo\|force-lock\|forget\|fsck\|generations\|genids\|list-keys\|list-toplevels\|ls\|mount\|nagios-last-backup-age\|remove-client\|remove-key\|restore\|verify"'
 

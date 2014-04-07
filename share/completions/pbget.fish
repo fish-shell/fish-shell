@@ -1,5 +1,3 @@
-# Completions for the pbget command.
-# Author: SanskritFritz (gmail)
 
 complete -c pbget -l abs --description 'Use the ABS tree'
 complete -c pbget -l arch --description 'Set the desired package architecture'

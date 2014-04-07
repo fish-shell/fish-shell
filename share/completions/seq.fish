@@ -1,5 +1,3 @@
-# Completions for seq.
-# Author: SanskritFritz (gmail)
 
 complete -c seq -s f -l format -d 'Use printf style floating-point FORMAT'
 complete -c seq -s s -l separator -d 'Use STRING to separate numbers'

@@ -1,5 +1,3 @@
-# Completions for ln
-# Author: SanskritFritz (gmail)
 
 complete -c ln -f -s s -l symbolic                   -d 'Make symbolic links instead of hard links'
 complete -c ln -f      -l backup -a "none off numbered t existing nil simple never" -d 'Make a backup of each existing destination file'

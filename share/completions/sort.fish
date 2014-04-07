@@ -1,5 +1,3 @@
-# Completions for sort
-# SanskritFritz (gmail)
 
 complete -c sort -s b -l ignore-leading-blanks --description "Ignore leading blanks"
 complete -c sort -s d -l dictionary-order --description "Consider only blanks and alphanumerics"

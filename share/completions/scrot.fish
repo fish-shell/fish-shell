@@ -1,5 +1,3 @@
-# Command specific completions for the scrot command.
-# Author: SanskritFritz (gmail)
 
 complete -c scrot -s h -l help --description 'Display help and exit'
 complete -c scrot -s v -l version --description 'Display version information and exit'

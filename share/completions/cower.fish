@@ -1,5 +1,3 @@
-# Command specific completions for cower (an Archlinux AUR helper).
-# Written by SanskritFritz (gmail)
 
 complete -c cower -f -s b -l 'brief'            -d 'Show output in a more script friendly format'
 complete -c cower -f -s d -l 'download'         -d 'Download [twice to fetch dependencies]'

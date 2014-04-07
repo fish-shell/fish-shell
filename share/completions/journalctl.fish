@@ -1,5 +1,3 @@
-# Completions for journalctl
-# Author: SanskritFritz (gmail)
 
 set -l all_units '(systemctl list-unit-files --no-pager --no-legend | while read -l unit_name unit_state; echo -e $unit_name\t$unit_state;end | sed "s/ //g")'
 

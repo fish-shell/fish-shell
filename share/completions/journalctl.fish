@@ -26,5 +26,3 @@ complete -c journalctl -f      -l setup-keys -d 'Generate Forward Secure Sealing
 complete -c journalctl -f      -l interval -d 'Change interval for the sealing'
 complete -c journalctl -f      -l verify -d 'Check journal for internal consistency'
 complete -c journalctl -f      -l verify-key -d 'Specifies FSS key for --verify'
-ctl -f      -l verify -d 'Check journal for internal consistency'
-complete -c journalctl -f      -l verify-key -d 'Specifies FSS key for --verify'

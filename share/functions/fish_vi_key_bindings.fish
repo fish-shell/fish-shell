@@ -1,5 +1,10 @@
-function fish_vi_key_bindings -d "vi-like key bindings for fish"
+function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind --erase --all
+  set -l init_mode insert
+  if set -q argv[1]
+    set init_mode $argv[1]
+  end
+
 
   ##
   ## command mode
@@ -214,4 +219,5 @@ function fish_vi_key_bindings -d "vi-like key bindings for fish"
   bind -M visual -m default \cc end-selection force-repaint
   bind -M visual -m default \e  end-selection force-repaint
 
+  set fish_bind_mode $init_mode
 end

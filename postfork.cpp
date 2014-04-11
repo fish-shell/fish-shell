@@ -173,10 +173,10 @@ static int handle_child_io(const io_chain_t &io_chain)
     free_redirected_fds_from_pipes(io_chain);
     for (size_t idx = 0; idx < io_chain.size(); idx++)
     {
-        io_data_t *io = io_chain.at(idx).get();
+        const io_data_t *io = io_chain.at(idx).get();
         int tmp;
 
-        if (io->io_mode == IO_FD && io->fd == static_cast<io_fd_t*>(io)->old_fd)
+        if (io->io_mode == IO_FD && io->fd == static_cast<const io_fd_t*>(io)->old_fd)
         {
             continue;
         }
@@ -197,7 +197,7 @@ static int handle_child_io(const io_chain_t &io_chain)
             case IO_FILE:
             {
                 // Here we definitely do not want to set CLO_EXEC because our child needs access
-                CAST_INIT(io_file_t *, io_file, io);
+                CAST_INIT(const io_file_t *, io_file, io);
                 if ((tmp=open(io_file->filename_cstr,
                               io_file->flags, OPEN_MASK))==-1)
                 {
@@ -257,7 +257,7 @@ static int handle_child_io(const io_chain_t &io_chain)
             case IO_BUFFER:
             case IO_PIPE:
             {
-                CAST_INIT(io_pipe_t *, io_pipe, io);
+                CAST_INIT(const io_pipe_t *, io_pipe, io);
                 /* If write_pipe_idx is 0, it means we're connecting to the read end (first pipe fd). If it's 1, we're connecting to the write end (second pipe fd). */
                 unsigned int write_pipe_idx = (io_pipe->is_input ? 0 : 1);
                 /*

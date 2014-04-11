@@ -63,8 +63,9 @@ public:
 class io_fd_t : public io_data_t
 {
 public:
-    /** fd to redirect specified fd to */
+    /** fd to redirect specified fd to. For example, in 2>&1, old_fd is 1, and io_data_t::fd is 2 */
     const int old_fd;
+    
     /** Whether to close old_fd */
     const bool close_old;
 
@@ -195,13 +196,6 @@ public:
     shared_ptr<io_data_t> get_io_for_fd(int fd);
 };
 
-/**
-   Remove the specified io redirection from the chain
-*/
-void io_remove(io_chain_t &list, const shared_ptr<const io_data_t> &element);
-
-/** Destroys an io_chain */
-void io_chain_destroy(io_chain_t &chain);
 
 /**
    Return the last io redirection in the chain for the specified file descriptor.

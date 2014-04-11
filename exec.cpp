@@ -1185,7 +1185,7 @@ void exec_job(parser_t &parser, job_t *j)
 
                 // Here we must have a non-NULL block_output_io_buffer
                 assert(block_output_io_buffer.get() != NULL);
-                io_remove(process_net_io_chain, block_output_io_buffer);
+                process_net_io_chain.remove(block_output_io_buffer);
 
                 block_output_io_buffer->read();
 

@@ -210,11 +210,6 @@ void io_chain_t::append(const io_chain_t &chain)
     this->insert(this->end(), chain.begin(), chain.end());
 }
 
-void io_remove(io_chain_t &list, const shared_ptr<const io_data_t> &element)
-{
-    list.remove(element);
-}
-
 void io_print(const io_chain_t &chain)
 {
     if (chain.empty())
@@ -288,3 +283,4 @@ io_chain_t::io_chain_t(const shared_ptr<io_data_t> &data) :
 io_chain_t::io_chain_t() : std::vector<shared_ptr<io_data_t> >()
 {
 }
+

@@ -66,15 +66,11 @@ public:
     /** fd to redirect specified fd to. For example, in 2>&1, old_fd is 1, and io_data_t::fd is 2 */
     const int old_fd;
     
-    /** Whether to close old_fd */
-    const bool close_old;
-
     virtual void print() const;
 
-    io_fd_t(int f, int old, bool close = false) :
+    io_fd_t(int f, int old) :
         io_data_t(IO_FD, f),
-        old_fd(old),
-        close_old(close)
+        old_fd(old)
     {
     }
 };

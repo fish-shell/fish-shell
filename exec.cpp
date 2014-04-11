@@ -460,7 +460,7 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t *out_chain, s
                 }
 
                 opened_fds.push_back(fd);
-                out.reset(new io_fd_t(in->fd, fd, true));
+                out.reset(new io_fd_t(in->fd, fd));
 
                 break;
             }

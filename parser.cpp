@@ -773,18 +773,6 @@ void parser_t::job_add(job_t *job)
     this->my_job_list.push_front(job);
 }
 
-job_t *parser_t::job_create(const io_chain_t &io)
-{
-    job_t *res = new job_t(acquire_job_id(), io);
-    this->my_job_list.push_front(res);
-
-    job_set_flag(res,
-                 JOB_CONTROL,
-                 (job_control_mode==JOB_CONTROL_ALL) ||
-                 ((job_control_mode == JOB_CONTROL_INTERACTIVE) && (get_is_interactive())));
-    return res;
-}
-
 bool parser_t::job_remove(job_t *j)
 {
     job_list_t::iterator iter = std::find(my_job_list.begin(), my_job_list.end(), j);

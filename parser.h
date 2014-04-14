@@ -269,9 +269,6 @@ private:
     parser_t(const parser_t&);
     parser_t& operator=(const parser_t&);
 
-    /** Create a job */
-    job_t *job_create(const io_chain_t &io);
-
     /** Adds a job to the beginning of the job list. */
     void job_add(job_t *job);
 

@@ -433,8 +433,4 @@ public:
     void stack_trace(size_t block_idx, wcstring &buff) const;
 };
 
-/* Temporary */
-bool parser_use_ast(void);
-
-
 #endif

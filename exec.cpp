@@ -574,45 +574,6 @@ static bool can_use_posix_spawn_for_job(const job_t *job, const process_t *proce
     return result;
 }
 
-/* What exec does if no_exec is set. This only has to handle block pushing and popping. See #624. */
-static void exec_no_exec(parser_t &parser, const job_t *job)
-{
-    if (parser_use_ast())
-    {
-        /* With the new parser, commands aren't responsible for pushing / popping blocks, so there's nothing to do */
-        return;
-    }
-
-    /* Hack hack hack. If this is an 'end' job, then trigger a pop. If this is a job that would create a block, trigger a push. See #624 */
-    const process_t *p = job->first_process;
-    if (p && p->type == INTERNAL_BUILTIN)
-    {
-        const wchar_t *builtin_name_cstr = p->argv0();
-        if (builtin_name_cstr != NULL)
-        {
-            const wcstring builtin_name = builtin_name_cstr;
-            if (contains(builtin_name, L"for", L"function", L"begin", L"switch"))
-            {
-                // The above builtins are the ones that produce an unbalanced block from within their function implementation
-                // This list should be maintained somewhere else
-                parser.push_block(new fake_block_t());
-            }
-            else if (builtin_name == L"end")
-            {
-                const block_t *block = parser.current_block();
-                if (block == NULL || block->type() == TOP)
-                {
-                    fprintf(stderr, "Warning: not popping the root block\n");
-                }
-                else
-                {
-                    parser.pop_block();
-                }
-            }
-        }
-    }
-}
-
 void exec_job(parser_t &parser, job_t *j)
 {
     pid_t pid = 0;
@@ -633,7 +594,6 @@ void exec_job(parser_t &parser, job_t *j)
 
     if (no_exec)
     {
-        exec_no_exec(parser, j);
         return;
     }
 

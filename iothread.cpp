@@ -137,7 +137,6 @@ static void *iothread_worker(void *unused)
         {
             /* Enqueue the result, and tell the main thread about it */
             enqueue_thread_result(req);
-            fprintf(stderr, "write to %d\n", s_write_pipe);
             const char wakeup_byte = IO_SERVICE_RESULT_QUEUE;
             VOMIT_ON_FAILURE(! write_loop(s_write_pipe, &wakeup_byte, sizeof wakeup_byte));
         }

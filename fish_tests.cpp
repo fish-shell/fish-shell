@@ -494,20 +494,26 @@ static void test_iothread(void)
 {
     say(L"Testing iothreads");
     int *int_ptr = new int(0);
-    int iterations = 1000;
+    int iterations = 5000000;
+    int max_achieved_thread_count = 0;
+    double start = timef();
     for (int i=0; i < iterations; i++)
     {
-        iothread_perform(test_iothread_thread_call, (void (*)(int *, int))NULL, int_ptr);
+        int thread_count = iothread_perform(test_iothread_thread_call, (void (*)(int *, int))NULL, int_ptr);
+        max_achieved_thread_count = std::max(max_achieved_thread_count, thread_count);
     }
 
     // Now wait until we're done
     iothread_drain_all();
+    double end = timef();
 
     // Should have incremented it once per thread
     if (*int_ptr != iterations)
     {
         say(L"Expected int to be %d, but instead it was %d", iterations, *int_ptr);
     }
+    
+    say(L"    (%.02f msec, with max of %d threads)", (end - start) * 1000.0, max_achieved_thread_count);
 
     delete int_ptr;
 }

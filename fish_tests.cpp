@@ -494,7 +494,7 @@ static void test_iothread(void)
 {
     say(L"Testing iothreads");
     int *int_ptr = new int(0);
-    int iterations = 5000000;
+    int iterations = 50000;
     int max_achieved_thread_count = 0;
     double start = timef();
     for (int i=0; i < iterations; i++)

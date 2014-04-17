@@ -303,7 +303,6 @@ static void iothread_service_main_thread_requests(void)
     {
         // Perform each of the functions
         // Note we are NOT responsible for deleting these. They are stack allocated in their respective threads!
-        scoped_lock cond_lock(s_main_thread_performer_lock);
         while (! request_queue.empty())
         {
             MainThreadRequest_t *req = request_queue.front();

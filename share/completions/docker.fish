@@ -2,6 +2,33 @@
 # Completions for the docker command
 #
 
+#
+# Functions
+#
+
+function __fish_docker_using_command
+  set cmd (commandline -opc)
+  if [ (count $cmd) -gt 1 ]
+    if [ $argv[1] = $cmd[2] ]
+      return 0
+    end
+  end
+  return 1
+end
+
+function __fish_docker_all_containers --description "Show all containers"
+  command docker ps -q -a
+end
+
+
+function __fish_docker_start_containers --description "Show the running containers"
+  command docker ps -q
+end
+
+function __fish_docker_stop_containers --description "Show the exited containers"
+  command docker ps -a | grep "Exit" | awk '{ print $1 }'
+end
+
 # All docker commands
 complete -c docker -n '__fish_use_subcommand' -xa attach --description "Attach to a running container"
 complete -c docker -n '__fish_use_subcommand' -xa build --description "Build a container from a Dockerfile"
@@ -36,29 +63,6 @@ complete -c docker -n '__fish_use_subcommand' -xa tag --description "Tag an imag
 complete -c docker -n '__fish_use_subcommand' -xa top --description "Lookup the running processes of a container"
 complete -c docker -n '__fish_use_subcommand' -xa version --description "Show the docker version information"
 complete -c docker -n '__fish_use_subcommand' -xa wait --description "Block until a container stops, then print its exit code"
-
-function __fish_docker_using_command
-  set cmd (commandline -opc)
-  if [ (count $cmd) -gt 1 ]
-    if [ $argv[1] = $cmd[2] ]
-      return 0
-    end
-  end
-  return 1
-end
-
-function __fish_docker_all_containers --description "Show all containers"
-  command docker ps -q -a
-end
-
-
-function __fish_docker_start_containers --description "Show the running containers"
-  command docker ps -q
-end
-
-function __fish_docker_stop_containers --description "Show the exited containers"
-  command docker ps -a | grep "Exit" | awk '{ print $1 }'
-end
 
 #
 # docker ps

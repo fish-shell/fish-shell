@@ -9,7 +9,7 @@
 shell. This is different from starting a new process to perform the
 commands (i.e. <tt>fish < FILENAME</tt>) since the commands will be
 evaluated by the current shell, which means that changes in
-environment variables affect the current shell. If additional arguments are
+shell variables will affect the current shell. If additional arguments are
 specified after the file name, they will be inserted into the $argv
 variable.
 

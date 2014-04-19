@@ -1,4 +1,4 @@
-\section set set - display and change environment variables.
+\section set set - display and change shell variables.
 
 \subsection set-synopsis Synopsis
 <pre>
@@ -12,11 +12,11 @@ set (-e | --erase) [SCOPE_OPTIONS] VARIABLE_NAME[INDICES]...
 
 \subsection set-description Description
 
-<code>set</code> manipulates <a href="index.html#variables">environment
+<code>set</code> manipulates <a href="index.html#variables">shell
 variables</a>.
 
 If set is called with no arguments, the names and values of all
-environment variables are printed. If some of the scope or export
+shell variables are printed. If some of the scope or export
 flags have been given, only the variables matching the specified scope
 are printed.
 
@@ -24,15 +24,15 @@ With both variable names and values provided, \c set assigns the variable
 <code>VARIABLE_NAME</code> the values <code>VALUES...</code>.
 
 The following options control variable scope:
-- <code>-l</code> or <code>--local</code> forces the specified environment variable to be given a scope that is local to the current block, even if a variable with the given name exists and is non-local
-- <code>-g</code> or <code>--global</code> causes the specified environment variable to be given a global scope. Non-global variables disappear when the block they belong to ends
-- <code>-U</code> or <code>--universal</code> causes the specified environment variable to be given a universal scope. If this option is supplied, the variable will be shared between all the current users fish instances on the current computer, and will be preserved across restarts of the shell.
+- <code>-l</code> or <code>--local</code> forces the specified shell variable to be given a scope that is local to the current block, even if a variable with the given name exists and is non-local
+- <code>-g</code> or <code>--global</code> causes the specified shell variable to be given a global scope. Non-global variables disappear when the block they belong to ends
+- <code>-U</code> or <code>--universal</code> causes the specified shell variable to be given a universal scope. If this option is supplied, the variable will be shared between all the current users fish instances on the current computer, and will be preserved across restarts of the shell.
 - <code>-n</code> or <code>--names</code> List only the names of all defined variables, not their value
-- <code>-u</code> or <code>--unexport</code> causes the specified environment not to be exported to child processes
-- <code>-x</code> or <code>--export</code> causes the specified environment variable to be exported to child processes
+- <code>-x</code> or <code>--export</code> causes the specified shell variable to be exported to child processes (making it an "environment variable")
+- <code>-u</code> or <code>--unexport</code> causes the specified shell variable to NOT be exported to child processes
 
 The following options are available:
-- <code>-e</code> or <code>--erase</code> causes the specified environment variable to be erased
+- <code>-e</code> or <code>--erase</code> causes the specified shell variable to be erased
 - <code>-q</code> or <code>--query</code> test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that were not defined.
 - <code>-L</code> or <code>--long</code> do not abbreviate long values when printing set variables
 

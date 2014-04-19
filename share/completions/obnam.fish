@@ -1,26 +1,31 @@
 
-set -l nocommand 'commandline | not sgrep -qe "add-key\|backup\|client-keys\|clients\|diff\|dump-repo\|force-lock\|forget\|fsck\|generations\|genids\|list-keys\|list-toplevels\|ls\|mount\|nagios-last-backup-age\|remove-client\|remove-key\|restore\|verify"'
+function nocommand
+        if commandline | sgrep -qe "add-key\|backup\|client-keys\|clients\|diff\|dump-repo\|force-lock\|forget\|fsck\|generations\|genids\|list-keys\|list-toplevels\|ls\|mount\|nagios-last-backup-age\|remove-client\|remove-key\|restore\|verify"
+                return 1
+        end
+        return 0
+end
 
-complete --command obnam --no-files --condition $nocommand --arguments 'add-key' --description 'Adds an encryption key to the repository'
-complete --command obnam            --condition $nocommand --arguments 'backup' --description 'Makes a new backup'
-complete --command obnam --no-files --condition $nocommand --arguments 'client-keys' --description 'Lists the keys associated with each client'
-complete --command obnam --no-files --condition $nocommand --arguments 'clients' --description 'Lists the clients in the repository'
-complete --command obnam --no-files --condition $nocommand --arguments 'diff' --description 'Compares two generations'
-complete --command obnam --no-files --condition $nocommand --arguments 'dump-repo' --description 'Dumps the repository'
-complete --command obnam --no-files --condition $nocommand --arguments 'force-lock' --description 'Removes a lock file for a client'
-complete --command obnam --no-files --condition $nocommand --arguments 'forget' --description 'Removes backup generations'
-complete --command obnam --no-files --condition $nocommand --arguments 'fsck' --description 'Checks the consistency of the repository'
-complete --command obnam --no-files --condition $nocommand --arguments 'generations' --description 'Lists every backup generation'
-complete --command obnam --no-files --condition $nocommand --arguments 'genids' --description 'Lists the identifier for every generation'
-complete --command obnam --no-files --condition $nocommand --arguments 'list-keys' --description 'Lists the keys'
-complete --command obnam --no-files --condition $nocommand --arguments 'list-toplevels' --description 'Lists the toplevel keys'
-complete --command obnam --no-files --condition $nocommand --arguments 'ls' --description 'Lists the contents of a given generation'
-complete --command obnam --no-files --condition $nocommand --arguments 'mount' --description 'Makes the repository available via FUSE'
-complete --command obnam --no-files --condition $nocommand --arguments 'nagios-last-backup-age' --description 'Check if a backup age exceeds a threshold'
-complete --command obnam --no-files --condition $nocommand --arguments 'remove-client' --description 'Removes a client from the repository'
-complete --command obnam --no-files --condition $nocommand --arguments 'remove-key' --description 'Removes a key from the repository'
-complete --command obnam --no-files --condition $nocommand --arguments 'restore' --description 'Restore files from the repository'
-complete --command obnam --no-files --condition $nocommand --arguments 'verify' --description 'Verifies files in the repository'
+complete --command obnam --no-files --condition nocommand --arguments 'add-key' --description 'Adds an encryption key to the repository'
+complete --command obnam            --condition nocommand --arguments 'backup' --description 'Makes a new backup'
+complete --command obnam --no-files --condition nocommand --arguments 'client-keys' --description 'Lists the keys associated with each client'
+complete --command obnam --no-files --condition nocommand --arguments 'clients' --description 'Lists the clients in the repository'
+complete --command obnam --no-files --condition nocommand --arguments 'diff' --description 'Compares two generations'
+complete --command obnam --no-files --condition nocommand --arguments 'dump-repo' --description 'Dumps the repository'
+complete --command obnam --no-files --condition nocommand --arguments 'force-lock' --description 'Removes a lock file for a client'
+complete --command obnam --no-files --condition nocommand --arguments 'forget' --description 'Removes backup generations'
+complete --command obnam --no-files --condition nocommand --arguments 'fsck' --description 'Checks the consistency of the repository'
+complete --command obnam --no-files --condition nocommand --arguments 'generations' --description 'Lists every backup generation'
+complete --command obnam --no-files --condition nocommand --arguments 'genids' --description 'Lists the identifier for every generation'
+complete --command obnam --no-files --condition nocommand --arguments 'list-keys' --description 'Lists the keys'
+complete --command obnam --no-files --condition nocommand --arguments 'list-toplevels' --description 'Lists the toplevel keys'
+complete --command obnam --no-files --condition nocommand --arguments 'ls' --description 'Lists the contents of a given generation'
+complete --command obnam --no-files --condition nocommand --arguments 'mount' --description 'Makes the repository available via FUSE'
+complete --command obnam --no-files --condition nocommand --arguments 'nagios-last-backup-age' --description 'Check if a backup age exceeds a threshold'
+complete --command obnam --no-files --condition nocommand --arguments 'remove-client' --description 'Removes a client from the repository'
+complete --command obnam --no-files --condition nocommand --arguments 'remove-key' --description 'Removes a key from the repository'
+complete --command obnam --no-files --condition nocommand --arguments 'restore' --description 'Restore files from the repository'
+complete --command obnam --no-files --condition nocommand --arguments 'verify' --description 'Verifies files in the repository'
 
 complete --command obnam --no-files --long-option always-restore-setuid --description 'Restore setuid/setgid bits in restored files'
 complete --command obnam --no-files --long-option no-always-restore-setuid --description 'Do not restore setuid/setgid bits in restored files'

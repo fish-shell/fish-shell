@@ -6,7 +6,7 @@
 \subsection read-description Description
 
 <tt>read</tt> reads one line from standard
-input and stores the result in one or more environment variables.
+input and stores the result in one or more shell variables.
 
 The following options are available:
 
@@ -17,17 +17,17 @@ The following options are available:
 - <tt>-p PROMPT_CMD</tt> or <tt>--prompt=PROMPT_CMD</tt> uses the output of the shell command \c PROMPT_CMD as the prompt for the interactive mode. The default prompt command is <tt>set_color green; echo read; set_color normal; echo "> "</tt>.
 - <code>-s</code> or <code>--shell</code> enables syntax highlighting, tab completions and command termination suitable for entering shellscript code in the interactive mode.
 - <code>-u</code> or <code>--unexport</code> prevents the variables from being exported to child processes (default behaviour).
-- <code>-U</code> or <code>--universal</code> causes the specified environment variable to be made universal.
+- <code>-U</code> or <code>--universal</code> causes the specified shell variable to be made universal.
 - <code>-x</code> or <code>--export</code> exports the variables to child processes.
 
 \c read reads a single line of input from stdin, breaks it into tokens
-based on the <tt>IFS</tt> environment variable, and then assigns one
+based on the <tt>IFS</tt> shell variable, and then assigns one
 token to each variable specified in <tt>VARIABLES</tt>. If there are more
 tokens than variables, the complete remainder is assigned to the last variable.
 
 \subsection read-example Example
 
-The following code stores the value 'hello' in the environment variable
+The following code stores the value 'hello' in the shell variable
 <tt>$foo</tt>.
 
 <tt>echo hello|read foo</tt>

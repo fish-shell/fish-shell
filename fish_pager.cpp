@@ -1033,7 +1033,7 @@ static void init(int mangle_descriptors, int out)
     }
 
 
-    env_universal_init(0, 0, 0, 0);
+    env_universal_init("", 0, 0, 0);
     input_common_init(&interrupt_handler);
     output_set_writer(&pager_buffered_writer);
 

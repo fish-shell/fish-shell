@@ -61,7 +61,7 @@ static int get_socket_count = 0;
 #define DEFAULT_RETRY_COUNT 15
 #define DEFAULT_RETRY_DELAY 0.2
 
-static wchar_t * path;
+static const char * path;
 static wchar_t *user;
 static void (*start_fishd)();
 static void (*external_callback)(fish_message_type_t type, const wchar_t *name, const wchar_t *val);
@@ -82,48 +82,19 @@ static int try_get_socket_once(void)
 {
     int s;
 
-    wchar_t *wdir;
-    wchar_t *wuname;
-    char *dir = 0;
-
-    wdir = path;
-    wuname = user;
-
     if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
     {
         wperror(L"socket");
         return -1;
     }
 
-    if (wdir)
-        dir = wcs2str(wdir);
-    else
-        dir = strdup("/tmp");
-
-    std::string uname;
-    if (wuname)
-    {
-        uname = wcs2string(wuname);
-    }
-    else
-    {
-        struct passwd *pw = getpwuid(getuid());
-        if (pw && pw->pw_name)
-        {
-            uname = pw->pw_name;
-        }
-    }
-
     std::string name;
-    name.reserve(strlen(dir) + uname.size() + strlen(SOCK_FILENAME) + 2);
-    name.append(dir);
-    name.append("/");
+    name.reserve(strlen(path) + strlen(SOCK_FILENAME) + 1);
+    name.append(path);
+    name.push_back('/');
     name.append(SOCK_FILENAME);
-    name.append(uname);
 
-    free(dir);
-
-    debug(3, L"Connect to socket %s at fd %2", name.c_str(), s);
+    debug(3, L"Connect to socket %s at fd %d", name.c_str(), s);
 
     struct sockaddr_un local = {};
     local.sun_family = AF_UNIX;
@@ -271,7 +242,7 @@ static void reconnect()
 }
 
 
-void env_universal_init(wchar_t * p,
+void env_universal_init(const char * p,
                         wchar_t *u,
                         void (*sf)(),
                         void (*cb)(fish_message_type_t type, const wchar_t *name, const wchar_t *val))

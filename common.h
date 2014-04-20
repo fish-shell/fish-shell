@@ -742,5 +742,7 @@ extern "C" {
     __attribute__((noinline)) void debug_thread_error(void);
 }
 
+/** Return the path of an appropriate runtime data directory */
+const char* common_get_runtime_path(void);
 
 #endif

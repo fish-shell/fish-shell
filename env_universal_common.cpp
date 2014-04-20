@@ -27,7 +27,6 @@
 #include <locale.h>
 #include <dirent.h>
 #include <signal.h>
-#include <sys/stat.h>
 #include <map>
 
 #ifdef HAVE_SYS_SELECT_H
@@ -85,6 +84,13 @@
    EOF string for internal buffered reader
 */
 #define ENV_UNIVERSAL_EOF   0x102
+
+/**
+   Maximum length of socket filename
+*/
+#ifndef UNIX_PATH_MAX
+#define UNIX_PATH_MAX 100
+#endif
 
 /**
    A variable entry. Stores the value of a variable and whether it
@@ -417,7 +423,7 @@ void env_universal_common_init(void (*cb)(fish_message_type_t type, const wchar_
 }
 
 /**
-   Read one byte of date form the specified connection
+   Read one byte of date from the specified connection
  */
 static int read_byte(connection_t *src)
 {

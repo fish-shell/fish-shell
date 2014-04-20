@@ -57,7 +57,7 @@
 #include "complete.h"
 
 /** Command used to start fishd */
-#define FISHD_CMD L"fishd ^ /tmp/fishd.log.%s"
+#define FISHD_CMD L"fishd ^ $__fish_runtime_dir/fishd.log.%s"
 
 // Version for easier debugging
 //#define FISHD_CMD L"fishd"
@@ -672,10 +672,11 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     env_set(L"version", version.c_str(), ENV_GLOBAL);
     env_set(L"FISH_VERSION", version.c_str(), ENV_GLOBAL);
 
-    const env_var_t fishd_dir_wstr = env_get_string(L"FISHD_SOCKET_DIR");
     const env_var_t user_dir_wstr = env_get_string(L"USER");
 
-    wchar_t * fishd_dir = fishd_dir_wstr.missing()?NULL:const_cast<wchar_t*>(fishd_dir_wstr.c_str());
+    const char * fishd_dir = common_get_runtime_path();
+    env_set(L"__fish_runtime_dir", str2wcstring(fishd_dir).c_str(), ENV_GLOBAL);
+
     wchar_t * user_dir = user_dir_wstr.missing()?NULL:const_cast<wchar_t*>(user_dir_wstr.c_str());
 
     env_universal_init(fishd_dir , user_dir ,

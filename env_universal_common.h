@@ -33,9 +33,9 @@
 
 
 /**
-   The filename to use for univeral variables. The username is appended
+   The filename to use for univeral variables.
 */
-#define SOCK_FILENAME "fishd.socket."
+#define SOCK_FILENAME "fishd.socket"
 
 /**
    The different types of commands that can be sent between client/server
@@ -132,6 +132,11 @@ void try_send_all(connection_t *c);
    Create a messge with the specified properties
 */
 message_t *create_message(fish_message_type_t type, const wchar_t *key, const wchar_t *val);
+
+/**
+   Constructs the fish socket filename
+*/
+std::string env_universal_common_get_socket_filename(void);
 
 /**
    Init the library

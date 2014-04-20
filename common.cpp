@@ -24,6 +24,7 @@ parts of fish.
 #include <stdio.h>
 #include <dirent.h>
 #include <sys/types.h>
+#include <pwd.h>
 
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
@@ -2228,4 +2229,73 @@ wchar_t **make_null_terminated_array(const wcstring_list_t &lst)
 char **make_null_terminated_array(const std::vector<std::string> &lst)
 {
     return make_null_terminated_array_helper(lst);
+}
+
+/**
+   Check, and create if necessary, a secure runtime path
+   Derived from tmux.c in tmux (http://tmux.sourceforge.net/)
+*/
+static int check_runtime_path(const char * path)
+{
+    /*
+     * Copyright (c) 2007 Nicholas Marriott <nicm@users.sourceforge.net>
+     *
+     * Permission to use, copy, modify, and distribute this software for any
+     * purpose with or without fee is hereby granted, provided that the above
+     * copyright notice and this permission notice appear in all copies.
+     *
+     * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+     * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+     * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+     * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+     * WHATSOEVER RESULTING FROM LOSS OF MIND, USE, DATA OR PROFITS, WHETHER
+     * IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
+     * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+     */
+
+    struct stat statpath;
+    u_int uid = geteuid();
+
+    if (mkdir(path, S_IRWXU) != 0 && errno != EEXIST)
+        return errno;
+    if (lstat(path, &statpath) != 0)
+        return errno;
+    if (!S_ISDIR(statpath.st_mode)
+            || statpath.st_uid != uid
+            || (statpath.st_mode & (S_IRWXG|S_IRWXO)) != 0)
+        return EACCES;
+    return 0;
+}
+
+/** Return the path of an appropriate runtime data directory */
+const char* common_get_runtime_path(void)
+{
+    const char *dir = getenv("XDG_RUNTIME_DIR");
+    const char *uname = getenv("USER");
+
+    if (uname == NULL)
+    {
+        const struct passwd *pw = getpwuid(getuid());
+        uname = pw->pw_name;
+    }
+
+    if (dir == NULL)
+    {
+        // /tmp/fish.user
+        dir = "/tmp/fish.";
+        std::string path;
+        path.reserve(strlen(dir) + strlen(uname));
+        path.append(dir);
+        path.append(uname);
+        if (check_runtime_path(path.c_str()) != 0)
+        {
+            debug(0, L"Couldn't create secure runtime path: '%s'", path.c_str());
+            exit(EXIT_FAILURE);
+        }
+        return strdup(path.c_str());
+    }
+    else
+    {
+        return dir;
+    }
 }

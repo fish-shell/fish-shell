@@ -45,21 +45,16 @@ function psub --description "Read from stdin into a file and output the filename
 		return
 	end
 
-	# Find unique file name for writing output to
-	while true
-		set filename /tmp/.psub.(echo %self).(random);
-		if not test -e $filename
-			break;
-		end
-	end
-
 	if test use_fifo = 1
 		# Write output to pipe. This needs to be done in the background so
 		# that the command substitution exits without needing to wait for
 		# all the commands to exit
+                set dir (mktemp -d /tmp/.psub.XXXXXXXXXX); or return
+                set filename $dir/psub.fifo
 		mkfifo $filename
 		cat >$filename &
 	else
+                set filename (mktemp /tmp/.psub.XXXXXXXXXX)
 		cat >$filename
 	end
 

@@ -81,11 +81,7 @@ function funced --description 'Edit function definition'
         return 0
     end
 
-    set -q TMPDIR; or set -l TMPDIR /tmp
-    set -l tmpname (printf "$TMPDIR/fish_funced_%d_%d.fish" %self (random))
-    while test -f $tmpname
-        set tmpname (printf "$TMPDIR/fish_funced_%d_%d.fish" %self (random))
-    end
+    set tmpname (mktemp -t fish_funced.XXXXXXXXXX)
 
     if functions -q -- $funcname
         functions -- $funcname > $tmpname

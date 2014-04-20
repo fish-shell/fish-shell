@@ -557,7 +557,7 @@ LIBS=$LIBS_COMMON
 # Check presense of various header files
 #
 
-AC_CHECK_HEADERS([getopt.h termios.h sys/resource.h term.h ncurses/term.h ncurses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h execinfo.h spawn.h sys/sysctl.h])
+AC_CHECK_HEADERS([getopt.h termios.h sys/resource.h term.h ncurses/term.h ncurses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h execinfo.h spawn.h sys/sysctl.h sys/un.h sys/ucred.h ucred.h ])
 
 if test x$local_gettext != xno; then
   AC_CHECK_HEADERS([libintl.h])
@@ -698,7 +698,7 @@ fi
 AC_CHECK_FUNCS( wcsdup wcsndup wcslen wcscasecmp wcsncasecmp fwprintf )
 AC_CHECK_FUNCS( futimes wcwidth wcswidth wcstok fputwc fgetwc )
 AC_CHECK_FUNCS( wcstol wcslcat wcslcpy lrand48_r killpg )
-AC_CHECK_FUNCS( backtrace backtrace_symbols sysconf getifaddrs )
+AC_CHECK_FUNCS( backtrace backtrace_symbols sysconf getifaddrs getpeerucred getpeereid )
 
 if test x$local_gettext != xno; then
   AC_CHECK_FUNCS( gettext dcgettext )

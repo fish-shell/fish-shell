@@ -88,6 +88,8 @@ static int try_get_socket_once(void)
 
     wdir = path;
     wuname = user;
+    uid_t seuid;
+    gid_t segid;
 
     if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
     {
@@ -131,6 +133,13 @@ static int try_get_socket_once(void)
 
     if (connect(s, (struct sockaddr *)&local, sizeof local) == -1)
     {
+        close(s);
+        return -1;
+    }
+
+    if ((getpeereid(s, &seuid, &segid) != 0) || seuid != geteuid())
+    {
+        debug(1, L"Wrong credentials for socket %s at fd %d", name.c_str(), s);
         close(s);
         return -1;
     }

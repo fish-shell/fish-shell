@@ -281,8 +281,6 @@ char *wcs2str(const wchar_t *in)
         }
         return wcs2str_internal(in, out);
     }
-
-    return wcs2str_internal(in, out);
 }
 
 char *wcs2str(const wcstring &in)

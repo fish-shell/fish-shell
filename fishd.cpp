@@ -720,8 +720,7 @@ static env_var_t fishd_env_get(const char *key)
     else
     {
         const wcstring wkey = str2wcstring(key);
-        const wchar_t *tmp = env_universal_common_get(wkey);
-        return tmp ? env_var_t(tmp) : env_var_t::missing_var();
+        return env_universal_common_get(wkey);
     }
 }
 

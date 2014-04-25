@@ -86,28 +86,13 @@
 */
 #define ENV_UNIVERSAL_EOF   0x102
 
-/**
-   A variable entry. Stores the value of a variable and whether it
-   should be exported. Obviously, it needs to be allocated large
-   enough to fit the value string.
-*/
-typedef struct var_uni_entry
-{
-    bool exportv; /**< Whether the variable should be exported */
-    wcstring val; /**< The value of the variable */
-    var_uni_entry():exportv(false), val() { }
-}
-var_uni_entry_t;
-
-
 static void parse_message(wchar_t *msg,
                           connection_t *src);
 
 /**
    The table of all universal variables
 */
-typedef std::map<wcstring, var_uni_entry_t> env_var_table_t;
-env_var_table_t env_universal_var;
+static env_universal_t s_env_universal_var;
 
 /**
    Callback function, should be called on all events
@@ -269,7 +254,7 @@ void read_message(connection_t *src)
 */
 void env_universal_common_remove(const wcstring &name)
 {
-    env_universal_var.erase(name);
+    s_env_universal_var.remove(name);
 }
 
 /**
@@ -291,10 +276,8 @@ void env_universal_common_set(const wchar_t *key, const wchar_t *val, bool expor
 {
     CHECK(key,);
     CHECK(val,);
-
-    var_uni_entry_t &entry = env_universal_var[key];
-    entry.exportv=exportv;
-    entry.val = val;
+    
+    s_env_universal_var.set(key, val, exportv);
 
     if (callback)
     {
@@ -601,60 +584,26 @@ message_t *create_message(fish_message_type_t type,
 /**
   Put exported or unexported variables in a string list
 */
-void env_universal_common_get_names(wcstring_list_t &lst,
-                                    bool show_exported,
-                                    bool show_unexported)
+void env_universal_common_get_names(wcstring_list_t &lst, bool show_exported, bool show_unexported)
 {
-    env_var_table_t::const_iterator iter;
-    for (iter = env_universal_var.begin(); iter != env_universal_var.end(); ++iter)
-    {
-        const wcstring &key = iter->first;
-        const var_uni_entry_t &e = iter->second;
-        if ((e.exportv && show_exported) || (! e.exportv && show_unexported))
-        {
-            lst.push_back(key);
-        }
-    }
-
+    wcstring_list_t names = s_env_universal_var.get_names(show_exported, show_unexported);
+    lst.insert(lst.end(), names.begin(), names.end());
 }
 
 
-const wchar_t *env_universal_common_get(const wcstring &name)
+env_var_t env_universal_common_get(const wcstring &name)
 {
-    env_var_table_t::const_iterator result = env_universal_var.find(name);
-    if (result != env_universal_var.end())
-    {
-        const var_uni_entry_t &e = result->second;
-        return const_cast<wchar_t*>(e.val.c_str());
-    }
-
-    return NULL;
+    return s_env_universal_var.get(name);
 }
 
 bool env_universal_common_get_export(const wcstring &name)
 {
-    env_var_table_t::const_iterator result = env_universal_var.find(name);
-    if (result != env_universal_var.end())
-    {
-        const var_uni_entry_t &e = result->second;
-        return e.exportv;
-    }
-    return false;
+    return s_env_universal_var.get_export(name);
 }
 
 void enqueue_all(connection_t *c)
 {
-    env_var_table_t::const_iterator iter;
-    for (iter = env_universal_var.begin(); iter != env_universal_var.end(); ++iter)
-    {
-        const wcstring &key = iter->first;
-        const var_uni_entry_t &entry = iter->second;
-
-        message_t *msg = create_message(entry.exportv ? SET_EXPORT : SET, key.c_str(), entry.val.c_str());
-        msg->count=1;
-        c->unsent.push(msg);
-    }
-
+    s_env_universal_var.enqueue_all(c);
     try_send_all(c);
 }
 
@@ -677,5 +626,83 @@ void connection_destroy(connection_t *c)
         {
             wperror(L"close");
         }
+    }
+}
+
+env_universal_t::env_universal_t()
+{
+    VOMIT_ON_FAILURE(pthread_mutex_init(&lock, NULL));
+}
+
+env_universal_t::~env_universal_t()
+{
+    pthread_mutex_destroy(&lock);
+}
+
+env_var_t env_universal_t::get(const wcstring &name) const
+{
+    env_var_t result = env_var_t::missing_var();
+    var_table_t::const_iterator where = vars.find(name);
+    if (where != vars.end())
+    {
+        result = where->second.val;
+    }
+    return result;
+}
+
+bool env_universal_t::get_export(const wcstring &name) const
+{
+    bool result = false;
+    var_table_t::const_iterator where = vars.find(name);
+    if (where != vars.end())
+    {
+        result = where->second.exportv;
+    }
+    return result;
+}
+
+void env_universal_t::set(const wcstring &key, const wcstring &val, bool exportv)
+{
+    scoped_lock locker(lock);
+    var_entry_t *entry = &vars[key];
+    entry->val = val;
+    entry->exportv = exportv;
+}
+
+void env_universal_t::remove(const wcstring &key)
+{
+    scoped_lock locker(lock);
+    vars.erase(key);
+}
+
+wcstring_list_t env_universal_t::get_names(bool show_exported, bool show_unexported) const
+{
+    wcstring_list_t result;
+    scoped_lock locker(lock);
+    var_table_t::const_iterator iter;
+    for (iter = vars.begin(); iter != vars.end(); ++iter)
+    {
+        const wcstring &key = iter->first;
+        const var_entry_t &e = iter->second;
+        if ((e.exportv && show_exported) || (! e.exportv && show_unexported))
+        {
+            result.push_back(key);
+        }
+    }
+    return result;
+}
+
+void env_universal_t::enqueue_all(connection_t *c) const
+{
+    scoped_lock locker(lock);
+    var_table_t::const_iterator iter;
+    for (iter = vars.begin(); iter != vars.end(); ++iter)
+    {
+        const wcstring &key = iter->first;
+        const var_entry_t &entry = iter->second;
+        
+        message_t *msg = create_message(entry.exportv ? SET_EXPORT : SET, key.c_str(), entry.val.c_str());
+        msg->count=1;
+        c->unsent.push(msg);
     }
 }

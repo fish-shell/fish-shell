@@ -38,6 +38,7 @@
 #include "wutil.h"
 #include "env_universal_common.h"
 #include "env_universal.h"
+#include "env.h"
 
 /**
    Maximum number of times to try to get a new fishd socket
@@ -345,10 +346,10 @@ int env_universal_read_all()
     }
 }
 
-const wchar_t *env_universal_get(const wcstring &name)
+env_var_t env_universal_get(const wcstring &name)
 {
     if (!s_env_univeral_inited)
-        return NULL;
+        return env_var_t::missing_var();
 
     return env_universal_common_get(name);
 }
@@ -462,14 +463,15 @@ int env_universal_remove(const wchar_t *name)
 
     CHECK(name, 1);
 
-    res = !env_universal_common_get(name);
+    wcstring name_str = name;
+    res = env_universal_common_get(name_str).missing();
     debug(3,
           L"env_universal_remove( \"%ls\" )",
           name);
 
     if (is_dead())
     {
-        env_universal_common_remove(wcstring(name));
+        env_universal_common_remove(name_str);
     }
     else
     {

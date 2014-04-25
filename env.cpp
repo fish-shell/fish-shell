@@ -80,20 +80,6 @@ extern char **environ;
 */
 extern char **__environ;
 
-/**
-   A variable entry. Stores the value of a variable and whether it
-   should be exported. Obviously, it needs to be allocated large
-   enough to fit the value string.
-*/
-struct var_entry_t
-{
-    wcstring val; /**< The value of the variable */
-    bool exportv; /**< Whether the variable should be exported */
-
-    var_entry_t() : exportv(false) { }
-};
-
-typedef std::map<wcstring, var_entry_t> var_table_t;
 
 bool g_log_forks = false;
 bool g_use_posix_spawn = false; //will usually be set to true
@@ -824,7 +810,7 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
                 env_universal_barrier();
             }
 
-            if (env_universal_get(key))
+            if (! env_universal_get(key).missing())
             {
                 bool exportv;
                 if (var_mode & ENV_EXPORT)
@@ -1071,9 +1057,9 @@ env_var_t env_get_string(const wcstring &key)
             env_universal_barrier();
         }
 
-        const wchar_t *item = env_universal_get(key);
+        env_var_t item = env_universal_get(key);
 
-        if (!item || (wcscmp(item, ENV_NULL)==0))
+        if (item.missing() || (wcscmp(item.c_str(), ENV_NULL)==0))
         {
             return env_var_t::missing_var();
         }
@@ -1087,7 +1073,6 @@ env_var_t env_get_string(const wcstring &key)
 bool env_exist(const wchar_t *key, int mode)
 {
     env_node_t *env;
-    const wchar_t *item = NULL;
 
     CHECK(key, false);
 
@@ -1151,9 +1136,7 @@ bool env_exist(const wchar_t *key, int mode)
             env_universal_barrier();
         }
 
-        item = env_universal_get(key);
-
-        if (item != NULL)
+        if (! env_universal_get(key).missing())
         {
             if (mode & ENV_EXPORT)
             {
@@ -1419,9 +1402,9 @@ static void update_export_array_if_necessary(bool recalc)
         for (i=0; i<uni.size(); i++)
         {
             const wcstring &key = uni.at(i);
-            const wchar_t *val = env_universal_get(key);
+            const env_var_t val = env_universal_get(key);
 
-            if (wcscmp(val, ENV_NULL))
+            if (! val.missing() && wcscmp(val.c_str(), ENV_NULL))
             {
                 // Note that std::map::insert does NOT overwrite a value already in the map,
                 // which we depend on here

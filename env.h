@@ -242,5 +242,18 @@ extern int g_fork_count;
 
 extern bool g_use_posix_spawn;
 
+/**
+ A variable entry. Stores the value of a variable and whether it
+ should be exported.
+ */
+struct var_entry_t
+{
+    wcstring val; /**< The value of the variable */
+    bool exportv; /**< Whether the variable should be exported */
+    
+    var_entry_t() : exportv(false) { }
+};
+
+typedef std::map<wcstring, var_entry_t> var_table_t;
 
 #endif

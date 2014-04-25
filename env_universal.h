@@ -8,6 +8,7 @@
 #include <wchar.h>
 
 #include "env_universal_common.h"
+#include "env.h"
 
 /**
    Data about the universal variable server.
@@ -29,7 +30,7 @@ void env_universal_destroy();
 /**
    Get the value of a universal variable
 */
-const wchar_t *env_universal_get(const wcstring &name);
+env_var_t env_universal_get(const wcstring &name);
 
 /**
    Get the export flag of the variable with the specified

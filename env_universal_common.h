@@ -5,6 +5,7 @@
 #include <queue>
 #include <string>
 #include "util.h"
+#include "env.h"
 
 /**
    The set command
@@ -176,7 +177,7 @@ void env_universal_common_remove(const wcstring &key);
    This function operate agains the local copy of all universal
    variables, it does not communicate with any other process.
 */
-const wchar_t *env_universal_common_get(const wcstring &name);
+env_var_t env_universal_common_get(const wcstring &name);
 
 /**
    Get the export flag of the variable with the specified
@@ -198,5 +199,33 @@ void enqueue_all(connection_t *c);
    messages.
 */
 void connection_destroy(connection_t *c);
+
+/** Class representing universal variables */
+class env_universal_t
+{
+    var_table_t vars;
+    mutable pthread_mutex_t lock;
+public:
+    env_universal_t();
+    ~env_universal_t();
+    
+    /* Get the value of the variable with the specified name */
+    env_var_t get(const wcstring &name) const;
+    
+    /* Returns whether the variable with the given name is exported, or false if it does not exist */
+    bool get_export(const wcstring &name) const;
+    
+    /* Sets a variable */
+    void set(const wcstring &key, const wcstring &val, bool exportv);
+    
+    /* Removes a variable */
+    void remove(const wcstring &name);
+    
+    /* Gets variable names */
+    wcstring_list_t get_names(bool show_exported, bool show_unexported) const;
+    
+    /* Writes variables to the connection */
+    void enqueue_all(connection_t *c) const;
+};
 
 #endif

@@ -205,6 +205,15 @@ class env_universal_t
 {
     var_table_t vars;
     mutable pthread_mutex_t lock;
+    bool tried_renaming;
+    bool load_from_path(const wcstring &path);
+    bool save_to_path(const wcstring &path);
+    
+    void parse_message_internal(wchar_t *msg, connection_t *src);
+    
+    void set_internal(const wcstring &key, const wcstring &val, bool exportv);
+    void remove_internal(const wcstring &name);
+    
 public:
     env_universal_t();
     ~env_universal_t();
@@ -226,6 +235,15 @@ public:
     
     /* Writes variables to the connection */
     void enqueue_all(connection_t *c) const;
+    
+    /** Loads variables at the correct path */
+    bool load();
+
+    /** Writes variables at the correct path */
+    bool save();
+    
+    /* Internal use */
+    void read_message(connection_t *src);
 };
 
 std::string get_machine_identifier();

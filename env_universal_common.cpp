@@ -26,6 +26,7 @@
 #include <locale.h>
 #include <dirent.h>
 #include <signal.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <map>
@@ -41,6 +42,7 @@
 #include "wutil.h"
 #include "utf8.h"
 #include "env_universal_common.h"
+#include "path.h"
 
 /**
    Non-wide version of the set command
@@ -87,9 +89,6 @@
 */
 #define ENV_UNIVERSAL_EOF   0x102
 
-static void parse_message(wchar_t *msg,
-                          connection_t *src);
-
 /**
    The table of all universal variables
 */
@@ -128,6 +127,11 @@ static char *wcs2utf(const wchar_t *input)
 void env_universal_common_init(void (*cb)(fish_message_type_t type, const wchar_t *key, const wchar_t *val))
 {
     callback = cb;
+}
+
+void read_message(connection_t *conn)
+{
+    return s_env_universal_var.read_message(conn);
 }
 
 /**
@@ -172,84 +176,6 @@ static int read_byte(connection_t *src)
 
 }
 
-
-void read_message(connection_t *src)
-{
-    while (1)
-    {
-
-        int ib = read_byte(src);
-        char b;
-
-        switch (ib)
-        {
-            case ENV_UNIVERSAL_AGAIN:
-            {
-                return;
-            }
-
-            case ENV_UNIVERSAL_ERROR:
-            {
-                debug(2, L"Read error on fd %d, set killme flag", src->fd);
-                if (debug_level > 2)
-                    wperror(L"read");
-                src->killme = 1;
-                return;
-            }
-
-            case ENV_UNIVERSAL_EOF:
-            {
-                src->killme = 1;
-                debug(3, L"Fd %d has reached eof, set killme flag", src->fd);
-                if (! src->input.empty())
-                {
-                    char c = 0;
-                    src->input.push_back(c);
-                    debug(1,
-                          L"Universal variable connection closed while reading command. Partial command recieved: '%s'",
-                          &src->input.at(0));
-                }
-                return;
-            }
-        }
-
-        b = (char)ib;
-
-        if (b == '\n')
-        {
-            wchar_t *msg;
-
-            b = 0;
-            src->input.push_back(b);
-
-            msg = utf2wcs(&src->input.at(0));
-
-            /*
-              Before calling parse_message, we must empty reset
-              everything, since the callback function could
-              potentially call read_message.
-            */
-            src->input.clear();
-
-            if (msg)
-            {
-                parse_message(msg, src);
-            }
-            else
-            {
-                debug(0, _(L"Could not convert message '%s' to wide character string"), &src->input.at(0));
-            }
-
-            free(msg);
-
-        }
-        else
-        {
-            src->input.push_back(b);
-        }
-    }
-}
-
 /**
    Remove variable with specified name
 */
@@ -283,89 +209,6 @@ void env_universal_common_set(const wchar_t *key, const wchar_t *val, bool expor
     if (callback)
     {
         callback(exportv?SET_EXPORT:SET, key, val);
-    }
-}
-
-
-/**
-   Parse message msg
-*/
-static void parse_message(wchar_t *msg,
-                          connection_t *src)
-{
-//  debug( 3, L"parse_message( %ls );", msg );
-
-    if (msg[0] == L'#')
-        return;
-
-    if (match(msg, SET_STR) || match(msg, SET_EXPORT_STR))
-    {
-        wchar_t *name, *tmp;
-        bool exportv = match(msg, SET_EXPORT_STR);
-
-        name = msg+(exportv?wcslen(SET_EXPORT_STR):wcslen(SET_STR));
-        while (wcschr(L"\t ", *name))
-            name++;
-
-        tmp = wcschr(name, L':');
-        if (tmp)
-        {
-            const wcstring key(name, tmp - name);
-
-            wcstring val;
-            if (unescape_string(tmp + 1, &val, 0))
-            {
-                env_universal_common_set(key.c_str(), val.c_str(), exportv);
-            }
-        }
-        else
-        {
-            debug(1, PARSE_ERR, msg);
-        }
-    }
-    else if (match(msg, ERASE_STR))
-    {
-        wchar_t *name, *tmp;
-
-        name = msg+wcslen(ERASE_STR);
-        while (wcschr(L"\t ", *name))
-            name++;
-
-        tmp = name;
-        while (iswalnum(*tmp) || *tmp == L'_')
-            tmp++;
-
-        *tmp = 0;
-
-        if (!wcslen(name))
-        {
-            debug(1, PARSE_ERR, msg);
-        }
-
-        env_universal_common_remove(name);
-
-        if (callback)
-        {
-            callback(ERASE, name, 0);
-        }
-    }
-    else if (match(msg, BARRIER_STR))
-    {
-        message_t *msg = create_message(BARRIER_REPLY, 0, 0);
-        msg->count = 1;
-        src->unsent.push(msg);
-        try_send_all(src);
-    }
-    else if (match(msg, BARRIER_REPLY_STR))
-    {
-        if (callback)
-        {
-            callback(BARRIER_REPLY, 0, 0);
-        }
-    }
-    else
-    {
-        debug(1, PARSE_ERR, msg);
     }
 }
 
@@ -630,7 +473,7 @@ void connection_destroy(connection_t *c)
     }
 }
 
-env_universal_t::env_universal_t()
+env_universal_t::env_universal_t() : tried_renaming(false)
 {
     VOMIT_ON_FAILURE(pthread_mutex_init(&lock, NULL));
 }
@@ -662,18 +505,31 @@ bool env_universal_t::get_export(const wcstring &name) const
     return result;
 }
 
-void env_universal_t::set(const wcstring &key, const wcstring &val, bool exportv)
+
+void env_universal_t::set_internal(const wcstring &key, const wcstring &val, bool exportv)
 {
-    scoped_lock locker(lock);
+    ASSERT_IS_LOCKED(lock);
     var_entry_t *entry = &vars[key];
     entry->val = val;
     entry->exportv = exportv;
 }
 
-void env_universal_t::remove(const wcstring &key)
+void env_universal_t::set(const wcstring &key, const wcstring &val, bool exportv)
+{
+    scoped_lock locker(lock);
+    this->set_internal(key, val, exportv);
+}
+
+void env_universal_t::remove_internal(const wcstring &key)
 {
     scoped_lock locker(lock);
     vars.erase(key);
+}
+
+void env_universal_t::remove(const wcstring &key)
+{
+    ASSERT_IS_LOCKED(lock);
+    this->remove(key);
 }
 
 wcstring_list_t env_universal_t::get_names(bool show_exported, bool show_unexported) const
@@ -708,6 +564,341 @@ void env_universal_t::enqueue_all(connection_t *c) const
     }
 }
 
+bool env_universal_t::load_from_path(const wcstring &path)
+{
+    ASSERT_IS_LOCKED(lock);
+    /* OK to not use CLO_EXEC here because fishd is single threaded */
+    bool result = false;
+    int fd = wopen_cloexec(path, O_RDONLY | O_CLOEXEC, 0600);
+    if (fd >= 0)
+    {
+        /* Success */
+        result = true;
+        connection_t c(fd);
+        /* Read from the file */
+        this->read_message(&c);
+        connection_destroy(&c);
+    }
+    return result;
+
+}
+
+/**
+ Get environment variable value.
+ */
+static env_var_t fishd_env_get(const char *key)
+{
+    const char *env = getenv(key);
+    if (env != NULL)
+    {
+        return env_var_t(str2wcstring(env));
+    }
+    else
+    {
+        const wcstring wkey = str2wcstring(key);
+        return env_universal_common_get(wkey);
+    }
+}
+
+static wcstring fishd_get_config()
+{
+    bool done = false;
+    wcstring result;
+    
+    env_var_t xdg_dir = fishd_env_get("XDG_CONFIG_HOME");
+    if (! xdg_dir.missing_or_empty())
+    {
+        result = xdg_dir;
+        append_path_component(result, L"/fish");
+        if (!create_directory(result))
+        {
+            done = true;
+        }
+    }
+    else
+    {
+        env_var_t home = fishd_env_get("HOME");
+        if (! home.missing_or_empty())
+        {
+            result = home;
+            append_path_component(result, L"/.config/fish");
+            if (!create_directory(result))
+            {
+                done = 1;
+            }
+        }
+    }
+    
+    if (! done)
+    {
+        /* Bad juju */
+        debug(0, _(L"Unable to create a configuration directory for fish. Your personal settings will not be saved. Please set the $XDG_CONFIG_HOME variable to a directory where the current user has write access."));
+        result.clear();
+    }
+    
+    return result;
+}
+
+static std::string get_variables_file_path(const std::string &dir, const std::string &identifier);
+bool env_universal_t::load()
+{
+    scoped_lock locker(lock);
+    wcstring wdir = fishd_get_config();
+    const std::string dir = wcs2string(wdir);
+    if (dir.empty())
+        return false;
+    
+    const std::string machine_id = get_machine_identifier();
+    const std::string machine_id_path = get_variables_file_path(dir, machine_id);
+    
+    const wcstring path = str2wcstring(machine_id_path);
+    bool success = load_from_path(path);
+    if (! success && ! tried_renaming && errno == ENOENT)
+    {
+        /* We failed to load, because the file was not found. Older fish used the hostname only. Try *moving* the filename based on the hostname into place; if that succeeds try again. Silently "upgraded." */
+        tried_renaming = true;
+        std::string hostname_id;
+        if (get_hostname_identifier(&hostname_id) && hostname_id != machine_id)
+        {
+            std::string hostname_path = get_variables_file_path(dir, hostname_id);
+            if (0 == rename(hostname_path.c_str(), machine_id_path.c_str()))
+            {
+                /* We renamed - try again */
+                success = load_from_path(path);
+            }
+        }
+    }
+    return success;
+}
+
+bool env_universal_t::save()
+{
+    /* Writes variables */
+    scoped_lock locker(lock);
+    wcstring wdir = fishd_get_config();
+    const std::string dir = wcs2string(wdir);
+    if (dir.empty())
+        return false;
+    
+    const std::string machine_id = get_machine_identifier();
+    const std::string machine_id_path = get_variables_file_path(dir, machine_id);
+    
+    const wcstring path = str2wcstring(machine_id_path);
+    return save_to_path(path);
+}
+
+bool env_universal_t::save_to_path(const wcstring &path)
+{
+    return false;
+}
+
+void env_universal_t::read_message(connection_t *src)
+{
+    scoped_lock locker(lock);
+    while (1)
+    {
+        
+        int ib = read_byte(src);
+        char b;
+        
+        switch (ib)
+        {
+            case ENV_UNIVERSAL_AGAIN:
+            {
+                return;
+            }
+                
+            case ENV_UNIVERSAL_ERROR:
+            {
+                debug(2, L"Read error on fd %d, set killme flag", src->fd);
+                if (debug_level > 2)
+                    wperror(L"read");
+                src->killme = 1;
+                return;
+            }
+                
+            case ENV_UNIVERSAL_EOF:
+            {
+                src->killme = 1;
+                debug(3, L"Fd %d has reached eof, set killme flag", src->fd);
+                if (! src->input.empty())
+                {
+                    char c = 0;
+                    src->input.push_back(c);
+                    debug(1,
+                          L"Universal variable connection closed while reading command. Partial command recieved: '%s'",
+                          &src->input.at(0));
+                }
+                return;
+            }
+        }
+        
+        b = (char)ib;
+        
+        if (b == '\n')
+        {
+            wchar_t *msg;
+            
+            b = 0;
+            src->input.push_back(b);
+            
+            msg = utf2wcs(&src->input.at(0));
+            
+            /*
+             Before calling parse_message, we must empty reset
+             everything, since the callback function could
+             potentially call read_message.
+             */
+            src->input.clear();
+            
+            if (msg)
+            {
+                this->parse_message_internal(msg, src);
+            }
+            else
+            {
+                debug(0, _(L"Could not convert message '%s' to wide character string"), &src->input.at(0));
+            }
+            
+            free(msg);
+            
+        }
+        else
+        {
+            src->input.push_back(b);
+        }
+    }
+}
+
+/**
+ Parse message msg
+ */
+void env_universal_t::parse_message_internal(wchar_t *msg, connection_t *src)
+{
+    ASSERT_IS_LOCKED(lock);
+    
+    //  debug( 3, L"parse_message( %ls );", msg );
+    
+    if (msg[0] == L'#')
+        return;
+    
+    if (match(msg, SET_STR) || match(msg, SET_EXPORT_STR))
+    {
+        wchar_t *name, *tmp;
+        bool exportv = match(msg, SET_EXPORT_STR);
+        
+        name = msg+(exportv?wcslen(SET_EXPORT_STR):wcslen(SET_STR));
+        while (wcschr(L"\t ", *name))
+            name++;
+        
+        tmp = wcschr(name, L':');
+        if (tmp)
+        {
+            const wcstring key(name, tmp - name);
+            
+            wcstring val;
+            if (unescape_string(tmp + 1, &val, 0))
+            {
+                this->set_internal(key, val, exportv);
+            }
+        }
+        else
+        {
+            debug(1, PARSE_ERR, msg);
+        }
+    }
+    else if (match(msg, ERASE_STR))
+    {
+        wchar_t *name, *tmp;
+        
+        name = msg+wcslen(ERASE_STR);
+        while (wcschr(L"\t ", *name))
+            name++;
+        
+        tmp = name;
+        while (iswalnum(*tmp) || *tmp == L'_')
+            tmp++;
+        
+        *tmp = 0;
+        
+        if (!wcslen(name))
+        {
+            debug(1, PARSE_ERR, msg);
+        }
+        
+        this->remove_internal(name);
+        
+#warning We're locked when this is invoked - bad news!
+        if (callback)
+        {
+            callback(ERASE, name, 0);
+        }
+    }
+    else if (match(msg, BARRIER_STR))
+    {
+        message_t *msg = create_message(BARRIER_REPLY, 0, 0);
+        msg->count = 1;
+        src->unsent.push(msg);
+        try_send_all(src);
+    }
+    else if (match(msg, BARRIER_REPLY_STR))
+    {
+        if (callback)
+        {
+            callback(BARRIER_REPLY, 0, 0);
+        }
+    }
+    else
+    {
+        debug(1, PARSE_ERR, msg);
+    }
+}
+
+
+
+static std::string get_variables_file_path(const std::string &dir, const std::string &identifier)
+{
+    std::string name;
+    name.append(dir);
+    name.append("/");
+    name.append("fishd.");
+    name.append(identifier);
+    return name;
+}
+
+/**
+ Small not about not editing ~/.fishd manually. Inserted at the top of all .fishd files.
+ */
+#define SAVE_MSG "# This file is automatically generated by the fish.\n# Do NOT edit it directly, your changes will be overwritten.\n"
+
+static bool load_or_save_variables_at_path(bool save, const std::string &path)
+{
+    bool result = false;
+    
+    /* OK to not use CLO_EXEC here because fishd is single threaded */
+    int fd = open(path.c_str(), save?(O_CREAT | O_TRUNC | O_WRONLY):O_RDONLY, 0600);
+    if (fd >= 0)
+    {
+        /* Success */
+        result = true;
+        connection_t c(fd);
+        
+        if (save)
+        {
+            /* Save to the file */
+            write_loop(c.fd, SAVE_MSG, strlen(SAVE_MSG));
+            enqueue_all(&c);
+        }
+        else
+        {
+            /* Read from the file */
+            read_message(&c);
+        }
+        
+        connection_destroy(&c);
+    }
+    return result;
+}
 
 
 /**

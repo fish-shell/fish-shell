@@ -700,6 +700,7 @@ static std::string get_variables_file_path(const std::string &dir, const std::st
     return name;
 }
 
+
 static bool load_or_save_variables(bool save)
 {
     const wcstring wdir = fishd_get_config();

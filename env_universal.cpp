@@ -277,24 +277,35 @@ static void reconnect()
     }
 }
 
+void env_universal_read_from_file()
+{
+    
+}
 
 void env_universal_init(wchar_t * p,
                         wchar_t *u,
                         void (*sf)(),
                         void (*cb)(fish_message_type_t type, const wchar_t *name, const wchar_t *val))
 {
-    path=p;
-    user=u;
-    start_fishd=sf;
-    external_callback = cb;
-
-    env_universal_server.fd = get_socket();
-    env_universal_common_init(&callback);
-    env_universal_read_all();
-    s_env_univeral_inited = true;
-    if (env_universal_server.fd >= 0)
+    if (! synchronizes_via_fishd())
     {
-        env_universal_barrier();
+        env_universal_read_from_file();
+    }
+    else
+    {
+        path=p;
+        user=u;
+        start_fishd=sf;
+        external_callback = cb;
+
+        env_universal_server.fd = get_socket();
+        env_universal_common_init(&callback);
+        env_universal_read_all();
+        s_env_univeral_inited = true;
+        if (env_universal_server.fd >= 0)
+        {
+            env_universal_barrier();
+        }
     }
 }
 

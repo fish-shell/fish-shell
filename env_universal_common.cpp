@@ -27,6 +27,7 @@
 #include <dirent.h>
 #include <signal.h>
 #include <sys/stat.h>
+#include <sys/ioctl.h>
 #include <map>
 
 #ifdef HAVE_SYS_SELECT_H
@@ -705,4 +706,127 @@ void env_universal_t::enqueue_all(connection_t *c) const
         msg->count=1;
         c->unsent.push(msg);
     }
+}
+
+
+
+/**
+ Maximum length of hostname. Longer hostnames are truncated
+ */
+#define HOSTNAME_LEN 32
+
+/* Length of a MAC address */
+#define MAC_ADDRESS_MAX_LEN 6
+
+
+/* Thanks to Jan Brittenson
+ http://lists.apple.com/archives/xcode-users/2009/May/msg00062.html
+ */
+#ifdef SIOCGIFHWADDR
+
+/* Linux */
+#include <net/if.h>
+static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN], const char *interface = "eth0")
+{
+    bool result = false;
+    const int dummy = socket(AF_INET, SOCK_STREAM, 0);
+    if (dummy >= 0)
+    {
+        struct ifreq r;
+        strncpy((char *)r.ifr_name, interface, sizeof r.ifr_name - 1);
+        r.ifr_name[sizeof r.ifr_name - 1] = 0;
+        if (ioctl(dummy, SIOCGIFHWADDR, &r) >= 0)
+        {
+            memcpy(macaddr, r.ifr_hwaddr.sa_data, MAC_ADDRESS_MAX_LEN);
+            result = true;
+        }
+        close(dummy);
+    }
+    return result;
+}
+
+#elif defined(HAVE_GETIFADDRS)
+
+/* OS X and BSD */
+#include <ifaddrs.h>
+#include <net/if_dl.h>
+static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN], const char *interface = "en0")
+{
+    // BSD, Mac OS X
+    struct ifaddrs *ifap;
+    bool ok = false;
+    
+    if (getifaddrs(&ifap) == 0)
+    {
+        for (const ifaddrs *p = ifap; p; p = p->ifa_next)
+        {
+            if (p->ifa_addr->sa_family == AF_LINK)
+            {
+                if (p->ifa_name && p->ifa_name[0] &&
+                    ! strcmp((const char*)p->ifa_name, interface))
+                {
+                    
+                    const sockaddr_dl& sdl = *(sockaddr_dl*)p->ifa_addr;
+                    
+                    size_t alen = sdl.sdl_alen;
+                    if (alen > MAC_ADDRESS_MAX_LEN) alen = MAC_ADDRESS_MAX_LEN;
+                    memcpy(macaddr, sdl.sdl_data + sdl.sdl_nlen, alen);
+                    ok = true;
+                    break;
+                }
+            }
+        }
+        freeifaddrs(ifap);
+    }
+    return ok;
+}
+
+#else
+
+/* Unsupported */
+static bool get_mac_address(unsigned char macaddr[MAC_ADDRESS_MAX_LEN])
+{
+    return false;
+}
+
+#endif
+
+/* Function to get an identifier based on the hostname */
+bool get_hostname_identifier(std::string *result)
+{
+    bool success = false;
+    char hostname[HOSTNAME_LEN + 1] = {};
+    if (gethostname(hostname, HOSTNAME_LEN) == 0)
+    {
+        result->assign(hostname);
+        success = true;
+    }
+    return success;
+}
+
+/* Get a sort of unique machine identifier. Prefer the MAC address; if that fails, fall back to the hostname; if that fails, pick something. */
+std::string get_machine_identifier(void)
+{
+    std::string result;
+    unsigned char mac_addr[MAC_ADDRESS_MAX_LEN] = {};
+    if (get_mac_address(mac_addr))
+    {
+        result.reserve(2 * MAC_ADDRESS_MAX_LEN);
+        for (size_t i=0; i < MAC_ADDRESS_MAX_LEN; i++)
+        {
+            char buff[3];
+            snprintf(buff, sizeof buff, "%02x", mac_addr[i]);
+            result.append(buff);
+        }
+    }
+    else if (get_hostname_identifier(&result))
+    {
+        /* Hooray */
+    }
+    else
+    {
+        /* Fallback */
+        result.assign("nohost");
+    }
+    return result;
 }

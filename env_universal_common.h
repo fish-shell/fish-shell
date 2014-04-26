@@ -228,4 +228,7 @@ public:
     void enqueue_all(connection_t *c) const;
 };
 
+std::string get_machine_identifier();
+bool get_hostname_identifier(std::string *result);
+
 #endif

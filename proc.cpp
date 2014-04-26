@@ -845,15 +845,16 @@ unsigned long proc_get_jiffies(process_t *p)
                        &cnswap, &exit_signal, &processor
                       );
 
+    /*
+      Don't need to check exit status of fclose on read-only streams
+    */
+    fclose(f);
+    
     if (count < 17)
     {
         return 0;
     }
 
-    /*
-      Don't need to check exit status of fclose on read-only streams
-    */
-    fclose(f);
     return utime+stime+cutime+cstime;
 
 }

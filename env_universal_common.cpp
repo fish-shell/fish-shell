@@ -234,6 +234,11 @@ void env_universal_common_set(const wchar_t *key, const wchar_t *val, bool expor
     }
 }
 
+void env_universal_common_sync()
+{
+    default_universal_vars().sync();
+}
+
 /**
    Attempt to send the specified message to the specified file descriptor
 
@@ -859,7 +864,7 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd)
     return result_fd >= 0;
 }
 
-bool env_universal_t::save()
+bool env_universal_t::sync()
 {
     scoped_lock locker(lock);
     /* Our saving strategy:
@@ -884,6 +889,13 @@ bool env_universal_t::save()
        Permission denied / other errors: log to the console (once) and then give up
     */
     const wcstring vars_path = explicit_vars_path.empty() ? default_vars_path() : explicit_vars_path;
+    
+    /* If we have no changes, just load */
+    if (modified.empty())
+    {
+        return this->load_from_path(vars_path);
+    }
+    
     const wcstring directory = wdirname(vars_path);
     bool success = false;
     int vars_fd = -1;

@@ -2160,7 +2160,7 @@ static void test_input()
     }
 }
 
-#define UVARS_PER_THREAD 100
+#define UVARS_PER_THREAD 8
 
 static int test_universal_helper(int *x)
 {
@@ -2170,10 +2170,10 @@ static int test_universal_helper(int *x)
         const wcstring key = format_string(L"key_%d_%d", *x, j);
         const wcstring val = format_string(L"val_%d_%d", *x, j);
         uvars.set(key, val, false);
-        bool saved = uvars.save();
-        if (! saved)
+        bool synced = uvars.sync();
+        if (! synced)
         {
-            err(L"Failed to save universal variables");
+            err(L"Failed to sync universal variables");
         }
         fputc('.', stderr);
         fflush(stderr);
@@ -2186,7 +2186,7 @@ static void test_universal()
     say(L"Testing universal variables");
     if (system("mkdir -p /tmp/fish_uvars_test/")) err(L"mkdir failed");
     
-    const int threads = 32;
+    const int threads = 16;
     for (int i=0; i < threads; i++)
     {
         iothread_perform(test_universal_helper, (void (*)(int *, int))NULL, new int(i));
@@ -2214,6 +2214,7 @@ static void test_universal()
     }
     
     system("rm -Rf /tmp/fish_uvars_test");
+    putc('\n', stderr);
 }
 
 class history_tests_t

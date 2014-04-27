@@ -189,6 +189,9 @@ env_var_t env_universal_common_get(const wcstring &name);
 */
 bool env_universal_common_get_export(const wcstring &name);
 
+/** Synchronizes all changse: writes everything out, reads stuff in */
+void env_universal_common_sync();
+
 /**
    Add messages about all existing variables to the specified connection
 */
@@ -260,8 +263,8 @@ public:
     /** Loads variables at the correct path */
     bool load();
 
-    /** Writes variables at the correct path */
-    bool save();
+    /** Reads and writes variables at the correct path */
+    bool sync();
     
     /* Internal use */
     void read_message(connection_t *src);

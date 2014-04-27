@@ -35,6 +35,8 @@
 
 typedef std::string cstring;
 
+const file_id_t kInvalidFileID = file_id_t((dev_t)(-1), (ino_t)(-1));
+
 /**
    Minimum length of the internal covnersion buffers
 */
@@ -246,46 +248,46 @@ int wopen_cloexec(const wcstring &pathname, int flags, mode_t mode)
 
 int wcreat(const wcstring &pathname, mode_t mode)
 {
-    cstring tmp = wcs2string(pathname);
+    const cstring tmp = wcs2string(pathname);
     return creat(tmp.c_str(), mode);
 }
 
 DIR *wopendir(const wcstring &name)
 {
-    cstring tmp = wcs2string(name);
+    const cstring tmp = wcs2string(name);
     return opendir(tmp.c_str());
 }
 
 int wstat(const wcstring &file_name, struct stat *buf)
 {
-    cstring tmp = wcs2string(file_name);
+    const cstring tmp = wcs2string(file_name);
     return stat(tmp.c_str(), buf);
 }
 
 int lwstat(const wcstring &file_name, struct stat *buf)
 {
-    cstring tmp = wcs2string(file_name);
+    const cstring tmp = wcs2string(file_name);
     return lstat(tmp.c_str(), buf);
 }
 
 int waccess(const wcstring &file_name, int mode)
 {
-    cstring tmp = wcs2string(file_name);
+    const cstring tmp = wcs2string(file_name);
     return access(tmp.c_str(), mode);
 }
 
 int wunlink(const wcstring &file_name)
 {
-    cstring tmp = wcs2string(file_name);
+    const cstring tmp = wcs2string(file_name);
     return unlink(tmp.c_str());
 }
 
-void wperror(const wcstring &s)
+void wperror(const wchar_t *s)
 {
     int e = errno;
-    if (!s.empty())
+    if (s[0] != L'\0')
     {
-        fwprintf(stderr, L"%ls: ", s.c_str());
+        fwprintf(stderr, L"%ls: ", s);
     }
     fwprintf(stderr, L"%s\n", strerror(e));
 }
@@ -524,4 +526,29 @@ int fish_wcstoi(const wchar_t *str, wchar_t ** endptr, int base)
         errno = ERANGE;
     }
     return (int)ret;
+}
+
+file_id_t file_id_for_fd(int fd)
+{
+    file_id_t result = kInvalidFileID;
+    struct stat buf = {};
+    if (0 == fstat(fd, &buf))
+    {
+        result.first = buf.st_dev;
+        result.second = buf.st_ino;
+    }
+    return result;
+}
+
+file_id_t file_id_for_path(const wcstring &path)
+{
+    file_id_t result = kInvalidFileID;
+    struct stat buf = {};
+    if (0 == wstat(path, &buf))
+    {
+        result.first = buf.st_dev;
+        result.second = buf.st_ino;
+    }
+    return result;
+
 }

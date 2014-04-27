@@ -149,8 +149,6 @@ public:
     }
 };
 
-static const file_id_t kInvalidFileID((dev_t)(-1), (ino_t)(-1));
-
 /* Lock a file via fcntl; returns true on success, false on failure. */
 static bool history_file_lock(int fd, short type)
 {
@@ -161,20 +159,6 @@ static bool history_file_lock(int fd, short type)
     int ret = fcntl(fd, F_SETLKW, (void *)&flk);
     return ret != -1;
 }
-
-/* Get a file_id_t corresponding to the given fd */
-static file_id_t history_file_identify(int fd)
-{
-    file_id_t result = kInvalidFileID;
-    struct stat buf = {};
-    if (0 == fstat(fd, &buf))
-    {
-        result.first = buf.st_dev;
-        result.second = buf.st_ino;
-    }
-    return result;
-}
-
 
 /* Our LRU cache is used for restricting the amount of history we have, and limiting how long we order it. */
 class history_lru_node_t : public lru_node_t
@@ -1047,7 +1031,7 @@ bool history_t::map_file(const wcstring &name, const char **out_map_start, size_
 
             /* Get the file ID if requested */
             if (file_id != NULL)
-                *file_id = history_file_identify(fd);
+                *file_id = file_id_for_fd(fd);
 
             /* Take a read lock to guard against someone else appending. This is released when the file is closed (below). We will read the file after releasing the lock, but that's not a problem, because we never modify already written data. In short, the purpose of this lock is to ensure we don't see the file size change mid-update.
 
@@ -1471,7 +1455,7 @@ bool history_t::save_internal_via_appending()
     if (out_fd >= 0)
     {
         /* Check to see if the file changed */
-        if (history_file_identify(out_fd) != mmap_file_id)
+        if (file_id_for_fd(out_fd) != mmap_file_id)
             file_changed = true;
 
         /* Exclusive lock on the entire file. This is released when we close the file (below). This may fail on (e.g.) lockless NFS. If so, proceed as if it did not fail; the risk is that we may get interleaved history items, which is considered better than no history, or forcing everything through the slow copy-move mode. We try to minimize this possibility by writing with O_APPEND.

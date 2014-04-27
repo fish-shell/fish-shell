@@ -84,7 +84,7 @@ int wunlink(const wcstring &pathname);
 /**
    Wide character version of perror().
 */
-void wperror(const wcstring &s);
+void wperror(const wchar_t *s);
 
 /**
   Async-safe version of perror().
@@ -160,6 +160,11 @@ int fish_wcstoi(const wchar_t *str, wchar_t ** endptr, int base);
 
 /** Class for representing a file's inode. We use this to detect and avoid symlink loops, among other things. */
 typedef std::pair<dev_t, ino_t> file_id_t;
+
+file_id_t file_id_for_fd(int fd);
+file_id_t file_id_for_path(const wcstring &path);
+
+extern const file_id_t kInvalidFileID;
 
 
 #endif

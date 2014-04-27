@@ -63,6 +63,7 @@
 #include "pager.h"
 #include "input.h"
 #include "utf8.h"
+#include "env_universal_common.h"
 
 static const char * const * s_arguments;
 static int s_test_run_count = 0;
@@ -2159,6 +2160,62 @@ static void test_input()
     }
 }
 
+#define UVARS_PER_THREAD 100
+
+static int test_universal_helper(int *x)
+{
+    env_universal_t uvars(L"/tmp/fish_uvars_test/varsfile.txt");
+    for (int j=0; j < UVARS_PER_THREAD; j++)
+    {
+        const wcstring key = format_string(L"key_%d_%d", *x, j);
+        const wcstring val = format_string(L"val_%d_%d", *x, j);
+        uvars.set(key, val, false);
+        bool saved = uvars.save();
+        if (! saved)
+        {
+            err(L"Failed to save universal variables");
+        }
+        fputc('.', stderr);
+        fflush(stderr);
+    }
+    return 0;
+}
+
+static void test_universal()
+{
+    say(L"Testing universal variables");
+    if (system("mkdir -p /tmp/fish_uvars_test/")) err(L"mkdir failed");
+    
+    const int threads = 32;
+    for (int i=0; i < threads; i++)
+    {
+        iothread_perform(test_universal_helper, (void (*)(int *, int))NULL, new int(i));
+    }
+    iothread_drain_all();
+    
+    env_universal_t uvars(L"/tmp/fish_uvars_test/varsfile.txt");
+    bool loaded = uvars.load();
+    if (! loaded)
+    {
+        err(L"Failed to load universal variables");
+    }
+    for (int i=0; i < threads; i++)
+    {
+        for (int j=0; j < UVARS_PER_THREAD; j++)
+        {
+            const wcstring key = format_string(L"key_%d_%d", i, j);
+            const wcstring val = format_string(L"val_%d_%d", i, j);
+            const env_var_t var = uvars.get(key);
+            if (var != val)
+            {
+                err(L"Wrong value for key %ls: %ls vs %ls\n", key.c_str(), val.c_str(), var.missing() ? L"<missing>" : var.c_str());
+            }
+        }
+    }
+    
+    system("rm -Rf /tmp/fish_uvars_test");
+}
+
 class history_tests_t
 {
 public:
@@ -3211,6 +3268,7 @@ int main(int argc, char **argv)
     if (should_test_function("colors")) test_colors();
     if (should_test_function("complete")) test_complete();
     if (should_test_function("input")) test_input();
+    if (should_test_function("universal")) test_universal();
     if (should_test_function("completion_insertions")) test_completion_insertions();
     if (should_test_function("autosuggestion_combining")) test_autosuggestion_combining();
     if (should_test_function("autosuggest_suggest_special")) test_autosuggest_suggest_special();

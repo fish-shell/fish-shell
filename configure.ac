@@ -200,9 +200,10 @@ CXXFLAGS="$CXXFLAGS -fno-exceptions"
 
 #
 # -Wall is there to keep me on my toes
+# But signed comparison warnings are way too aggressive
 #
 
-CXXFLAGS="$CXXFLAGS -Wall"
+CXXFLAGS="$CXXFLAGS -Wall -Wno-sign-compare"
 
 #
 # This is needed in order to get the really cool backtraces on Linux

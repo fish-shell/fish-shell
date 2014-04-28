@@ -383,8 +383,6 @@ static void mark_process_status(const job_t *j, process_t *p, int status)
     }
     else
     {
-        ssize_t ignore __attribute__((unused));
-
         /* This should never be reached */
         p->completed = 1;
 
@@ -398,7 +396,7 @@ static void mark_process_status(const job_t *j, process_t *p, int status)
           handler. If things aren't working properly, it's safer to
           give up.
          */
-        ignore = write(2, mess, strlen(mess));
+        write_ignore(2, mess, strlen(mess));
     }
 }
 

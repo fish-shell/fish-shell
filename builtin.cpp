@@ -3622,8 +3622,6 @@ static int builtin_history(parser_t &parser, wchar_t **argv)
     return STATUS_BUILTIN_ERROR;
 }
 
-#pragma mark Simulator
-
 int builtin_parse(parser_t &parser, wchar_t **argv)
 {
     struct sigaction act;

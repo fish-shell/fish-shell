@@ -1330,7 +1330,7 @@ static void test_expand()
         err(L"Expansion not correctly handling literal path components in dotfiles");
     }
 
-    system("rm -Rf /tmp/fish_expand_test");
+    if (system("rm -Rf /tmp/fish_expand_test")) err(L"rm failed");
 }
 
 static void test_fuzzy_match(void)
@@ -3117,7 +3117,7 @@ static void test_highlighting(void)
 
         // Generate the text
         wcstring text;
-        std::vector<int> expected_colors;
+        std::vector<highlight_spec_t> expected_colors;
         for (size_t i=0; i < component_count; i++)
         {
             if (i > 0)

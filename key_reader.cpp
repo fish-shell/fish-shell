@@ -22,7 +22,7 @@
 
 int writestr(char *str)
 {
-    write(1, str, strlen(str));
+    write_ignore(1, str, strlen(str));
     return 0;
 }
 

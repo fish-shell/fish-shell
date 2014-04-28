@@ -48,7 +48,7 @@ efficient way for transforming that to the desired screen content.
 #include "pager.h"
 
 /** The number of characters to indent new blocks */
-#define INDENT_STEP 4
+#define INDENT_STEP 4u
 
 /** The initial screen width */
 #define SCREEN_WIDTH_UNINITIALIZED -1

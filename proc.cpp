@@ -383,7 +383,7 @@ static void mark_process_status(const job_t *j, process_t *p, int status)
     }
     else
     {
-        ssize_t ignore;
+        ssize_t ignore __attribute__((unused));
 
         /* This should never be reached */
         p->completed = 1;

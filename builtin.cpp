@@ -428,7 +428,7 @@ static void builtin_bind_list(const wchar_t *bind_mode)
         if (input_terminfo_get_name(seq, tname))
         {
             append_format(stdout_buffer, L"bind -k %ls -M %ls -m %ls", tname.c_str(), mode.c_str(), sets_mode.c_str());
-            for (int i = 0; i < ecmds.size(); i++)
+            for (size_t i = 0; i < ecmds.size(); i++)
             {
                 wcstring ecmd = ecmds.at(i);
                 append_format(stdout_buffer, L" %ls", escape(ecmd.c_str(), 1));
@@ -439,7 +439,7 @@ static void builtin_bind_list(const wchar_t *bind_mode)
         {
             const wcstring eseq = escape_string(seq, 1);
             append_format(stdout_buffer, L"bind -k %ls -M %ls -m %ls", eseq.c_str(), mode.c_str(), sets_mode.c_str());
-            for (int i = 0; i < ecmds.size(); i++)
+            for (size_t i = 0; i < ecmds.size(); i++)
             {
                 wcstring ecmd = ecmds.at(i);
                 append_format(stdout_buffer, L" %ls", escape(ecmd.c_str(), 1));

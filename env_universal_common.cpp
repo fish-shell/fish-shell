@@ -624,7 +624,7 @@ void env_universal_t::load_from_fd(int fd)
     ASSERT_IS_LOCKED(lock);
     assert(fd >= 0);
     /* Get the dev / inode */
-    file_id_t current_file = file_id_for_fd(fd);
+    const file_id_t current_file = file_id_for_fd(fd);
     if (current_file != last_read_file)
     {
         connection_t c(fd);

@@ -2012,8 +2012,8 @@ static void test_autosuggest_suggest_special()
     // A single quote should defeat tilde expansion
     perform_one_autosuggestion_test(L"cd '~/test_autosuggest_suggest_specia'", wd, L"", __LINE__);
 
-    system("rm -Rf '/tmp/autosuggest_test/'");
-    system("rm -Rf ~/test_autosuggest_suggest_special/");
+    if (system("rm -Rf '/tmp/autosuggest_test/'")) err(L"rm failed");
+    if (system("rm -Rf ~/test_autosuggest_suggest_special/")) err(L"rm failed");
 }
 
 static void test_autosuggestion_combining()

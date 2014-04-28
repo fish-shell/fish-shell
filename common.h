@@ -180,10 +180,11 @@ extern const wchar_t *program_name;
 */
 #define FATAL_EXIT()											\
 	{															\
-		char exit_read_buff;			\
+		char exit_read_buff;                                    \
 		show_stackframe();										\
-		read( 0, &exit_read_buff, 1 );			\
-		exit_without_destructors( 1 );												\
+        int ignore __attribute__((unused));                     \
+		ignore = read( 0, &exit_read_buff, 1 );                 \
+		exit_without_destructors( 1 );                          \
 	}															\
  
 

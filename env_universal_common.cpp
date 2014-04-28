@@ -29,6 +29,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
+#include <sys/file.h>
 #include <map>
 
 #ifdef HAVE_SYS_SELECT_H

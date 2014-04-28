@@ -411,14 +411,9 @@ class BindingParser:
         return readable_command + result
 
 
-class FishConfigTCPServer(SocketServer.TCPServer):
-    """TCPServer that only accepts connections from localhost (IPv4/IPv6)."""
-    WHITELIST = set(['::1', '::ffff:127.0.0.1', '127.0.0.1'])
-
+class TCP6Server(SocketServer.TCPServer):
+    """TCPServer that uses IPv6 instead of IPv4"""
     address_family = socket.AF_INET6
-
-    def verify_request(self, request, client_address):
-        return client_address[0] in FishConfigTCPServer.WHITELIST
 
 
 class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
@@ -818,24 +813,9 @@ where = os.path.dirname(sys.argv[0])
 os.chdir(where)
 
 # Try to find a suitable port
-PORT = 8000
-while PORT <= 9000:
-    try:
-        Handler = FishConfigHTTPRequestHandler
-        httpd = FishConfigTCPServer(("::", PORT), Handler)
-        # Success
-        break
-    except socket.error:
-        err_type, err_value = sys.exc_info()[:2]
-        # str(err_value) handles Python3 correctly
-        if 'Address already in use' not in str(err_value):
-            break
-    PORT += 1
-
-if PORT > 9000:
-    # Nobody say it
-    print("Unable to find an open port between 8000 and 9000")
-    sys.exit(-1)
+Handler = FishConfigHTTPRequestHandler
+httpd = TCP6Server(("::1", 0), Handler)
+PORT = httpd.socket.getsockname()[1]
 
 # Get any initial tab (functions, colors, etc)
 # Just look at the first letter
@@ -846,7 +826,7 @@ if len(sys.argv) > 1:
             initial_tab = '#' + tab
             break
 
-url = 'http://localhost:%d/%s' % (PORT, initial_tab)
+url = 'http://localhost6:%d/%s' % (PORT, initial_tab)
 print("Web config started at '%s'. Hit enter to stop." % url)
 webbrowser.open(url)
 

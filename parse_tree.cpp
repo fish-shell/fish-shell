@@ -525,7 +525,7 @@ class parse_ll_t
     {
         PARSE_ASSERT(! symbol_stack.empty());
         const parse_stack_element_t &top_symbol = symbol_stack.back();
-        PARSE_ASSERT(top_symbol.node_idx != -1);
+        PARSE_ASSERT(top_symbol.node_idx != NODE_OFFSET_INVALID);
         PARSE_ASSERT(top_symbol.node_idx < nodes.size());
         return nodes.at(top_symbol.node_idx);
     }

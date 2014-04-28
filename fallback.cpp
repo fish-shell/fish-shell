@@ -802,6 +802,7 @@ wchar_t *wcstok(wchar_t *wcs, const wchar_t *delim, wchar_t **save_ptr)
 
 /* Fallback implementations of wcsdup and wcscasecmp. On systems where these are not needed (e.g. building on Linux) these should end up just being stripped, as they are static functions that are not referenced in this file.
 */
+__attribute__((unused))
 static wchar_t *wcsdup_fallback(const wchar_t *in)
 {
     size_t len=wcslen(in);

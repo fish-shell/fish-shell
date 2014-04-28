@@ -114,6 +114,11 @@ static void enqueue_thread_result(SpawnRequest_t *req)
     s_result_queue.push(req);
 }
 
+static void *this_thread()
+{
+    return (void *)(intptr_t)pthread_self();
+}
+
 /* The function that does thread work. */
 static void *iothread_worker(void *unused)
 {
@@ -121,7 +126,7 @@ static void *iothread_worker(void *unused)
     struct SpawnRequest_t *req;
     while ((req = dequeue_spawn_request()) != NULL)
     {
-        IOTHREAD_LOG fprintf(stderr, "pthread %p dequeued %p\n", pthread_self(), req);
+        IOTHREAD_LOG fprintf(stderr, "pthread %p dequeued %p\n", this_thread(), req);
         /* Unlock the queue while we execute the request */
         locker.unlock();
         
@@ -150,7 +155,7 @@ static void *iothread_worker(void *unused)
     assert(s_active_thread_count > 0);
     s_active_thread_count -= 1;
     
-    IOTHREAD_LOG fprintf(stderr, "pthread %p exiting\n", pthread_self());
+    IOTHREAD_LOG fprintf(stderr, "pthread %p exiting\n", this_thread());
 
     /* We're done */
     return NULL;
@@ -165,13 +170,13 @@ static void iothread_spawn()
     VOMIT_ON_FAILURE(pthread_sigmask(SIG_BLOCK, &new_set, &saved_set));
 
     /* Spawn a thread. If this fails, it means there's already a bunch of threads; it is very unlikely that they are all on the verge of exiting, so one is likely to be ready to handle extant requests. So we can ignore failure with some confidence. */
-    pthread_t thread = NULL;
+    pthread_t thread = 0;
     pthread_create(&thread, NULL, iothread_worker, NULL);
     
     /* We will never join this thread */
     VOMIT_ON_FAILURE(pthread_detach(thread));
     
-    IOTHREAD_LOG fprintf(stderr, "pthread %p spawned\n", thread);
+    IOTHREAD_LOG fprintf(stderr, "pthread %p spawned\n", (void *)(intptr_t)thread);
     
     /* Restore our sigmask */
     VOMIT_ON_FAILURE(pthread_sigmask(SIG_SETMASK, &saved_set, NULL));

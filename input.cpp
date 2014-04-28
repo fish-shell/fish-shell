@@ -156,7 +156,7 @@ static const wchar_t * const name_arr[] =
 
 wcstring describe_char(wint_t c)
 {
-    wchar_t initial_cmd_char = R_BEGINNING_OF_LINE;
+    wint_t initial_cmd_char = R_BEGINNING_OF_LINE;
     size_t name_count = sizeof name_arr / sizeof *name_arr;
     if (c >= initial_cmd_char && c < initial_cmd_char + name_count)
     {

@@ -716,6 +716,18 @@ void print_stderr(const wcstring &str)
     fprintf(stderr, "%ls\n", str.c_str());
 }
 
+void read_ignore(int fd, void *buff, size_t count)
+{
+    size_t ignore __attribute__((unused));
+    ignore = read(fd, buff, count);
+}
+
+void write_ignore(int fd, const void *buff, size_t count)
+{
+    size_t ignore __attribute__((unused));
+    ignore = write(fd, buff, count);
+}
+
 
 void debug_safe(int level, const char *msg, const char *param1, const char *param2, const char *param3, const char *param4, const char *param5, const char *param6, const char *param7, const char *param8, const char *param9, const char *param10, const char *param11, const char *param12)
 {
@@ -736,7 +748,7 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
         if (end == NULL)
             end = cursor + strlen(cursor);
 
-        write(STDERR_FILENO, cursor, end - cursor);
+        write_ignore(STDERR_FILENO, cursor, end - cursor);
 
         if (end[0] == '%' && end[1] == 's')
         {
@@ -745,7 +757,7 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
             const char *format = params[param_idx++];
             if (! format)
                 format = "(null)";
-            write(STDERR_FILENO, format, strlen(format));
+            write_ignore(STDERR_FILENO, format, strlen(format));
             cursor = end + 2;
         }
         else if (end[0] == '\0')
@@ -761,7 +773,7 @@ void debug_safe(int level, const char *msg, const char *param1, const char *para
     }
 
     // We always append a newline
-    write(STDERR_FILENO, "\n", 1);
+    write_ignore(STDERR_FILENO, "\n", 1);
 
     errno = errno_old;
 }

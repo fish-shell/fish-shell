@@ -335,7 +335,7 @@ static wcstring full_escape(const wchar_t *in)
         {
             out.push_back(c);
         }
-        else if (c <= ASCII_MAX)
+        else if (c <= (wchar_t)ASCII_MAX)
         {
             // See #1225 for discussion of use of ASCII_MAX here
             append_format(out, L"\\x%.2x", c);

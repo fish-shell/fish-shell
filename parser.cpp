@@ -866,10 +866,9 @@ int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t 
     execution_contexts.push_back(ctx);
 
     /* Execute the first node */
-    int result = 1;
     if (! tree.empty())
     {
-        result = this->eval_block_node(0, io, block_type);
+        this->eval_block_node(0, io, block_type);
     }
 
     /* Clean up the execution context stack */

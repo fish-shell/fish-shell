@@ -157,6 +157,10 @@ extern bool g_profiling_active;
 */
 extern const wchar_t *program_name;
 
+/* Variants of read() and write() that ignores return values, defeating a warning */
+void read_ignore(int fd, void *buff, size_t count);
+void write_ignore(int fd, const void *buff, size_t count);
+
 /**
    This macro is used to check that an input argument is not null. It
    is a bit lika a non-fatal form of assert. Instead of exit-ing on
@@ -180,10 +184,10 @@ extern const wchar_t *program_name;
 */
 #define FATAL_EXIT()											\
 	{															\
-		char exit_read_buff;			\
-		show_stackframe();										\
-		read( 0, &exit_read_buff, 1 );			\
-		exit_without_destructors( 1 );												\
+        char exit_read_buff;                                    \
+        show_stackframe();										\
+        read_ignore( 0, &exit_read_buff, 1 );                   \
+        exit_without_destructors( 1 );                          \
 	}															\
  
 

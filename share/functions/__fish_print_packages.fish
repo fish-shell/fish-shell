@@ -12,6 +12,12 @@ function __fish_print_packages
 	#Get the word 'Package' in the current language
 	set -l package (_ Package)
 
+	# Set up cache directory
+	if test -z "$XDG_CACHE_HOME"
+		set XDG_CACHE_HOME $HOME/.cache
+	end
+	mkdir -m 700 -p $XDG_CACHE_HOME
+
 	if type -f apt-cache >/dev/null
 		# Do not generate the cache as apparently sometimes this is slow.
 		# http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=547550
@@ -35,7 +41,7 @@ function __fish_print_packages
 
 		# If the cache is less than six hours old, we do not recalculate it
 
-		set cache_file /tmp/.yum-cache.$USER
+		set cache_file $XDG_CACHE_HOME/.yum-cache.$USER
 			if test -f $cache_file
 			cat $cache_file
 			set age (math (date +%s) - (stat -c '%Y' $cache_file))
@@ -56,7 +62,7 @@ function __fish_print_packages
 
 		# If the cache is less than five minutes old, we do not recalculate it
 
-		set cache_file /tmp/.rpm-cache.$USER
+		set cache_file $XDG_CACHE_HOME/.rpm-cache.$USER
 			if test -f $cache_file
 			cat $cache_file
 			set age (math (date +%s) - (stat -c '%Y' $cache_file))

@@ -30,6 +30,7 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/file.h>
+#include <sys/mman.h>
 #include <map>
 
 #ifdef HAVE_SYS_SELECT_H
@@ -1287,4 +1288,206 @@ std::string get_machine_identifier(void)
         result.assign("nohost");
     }
     return result;
+}
+
+class universal_notifier_shmem_poller_t : public universal_notifier_t
+{
+    /* This is what our shared memory looks like. Everything here is stored in network byte order (big-endian) */
+    struct universal_notifier_shmem_t
+    {
+        uint32_t magic;
+        uint32_t version;
+        uint32_t universal_variable_seed;
+    };
+    
+#define SHMEM_MAGIC_NUMBER 0xF154
+#define SHMEM_VERSION_CURRENT 1000
+
+    private:
+    uint32_t last_seed;
+    volatile universal_notifier_shmem_t *region;
+    
+    void open_shmem()
+    {
+        assert(region == NULL);
+        
+        // Use a path based on our uid to avoid collisions
+        char path[NAME_MAX];
+        snprintf(path, sizeof path, "/%ls_shmem_%d", program_name ? program_name : L"fish", getuid());
+        
+        bool errored = false;
+        int fd = shm_open(path, O_RDWR | O_CREAT, 0600);
+        if (fd < 0)
+        {
+            wperror(L"shm_open");
+            errored = true;
+        }
+
+        /* Get the size */
+        size_t size = 0;
+        if (! errored)
+        {
+            struct stat buf = {};
+            if (fstat(fd, &buf) < 0)
+            {
+                wperror(L"fstat");
+                errored = true;
+            }
+            size = buf.st_size;
+        }
+        
+        /* Set the size, if it's too small */
+        if (! errored && size < sizeof(universal_notifier_shmem_t))
+        {
+            if (ftruncate(fd, sizeof(universal_notifier_shmem_t)) < 0)
+            {
+                wperror(L"ftruncate");
+                errored = true;
+            }
+        }
+        
+        /* Memory map the region */
+        if (! errored)
+        {
+            void *addr = mmap(NULL, sizeof(universal_notifier_shmem_t), PROT_READ | PROT_WRITE, MAP_FILE | MAP_SHARED, fd, 0);
+            if (addr == MAP_FAILED)
+            {
+                wperror(L"mmap");
+                region = NULL;
+            }
+            else
+            {
+                region = static_cast<universal_notifier_shmem_t*>(addr);
+            }
+        }
+        
+        /* Close the fd, even if the mapping succeeded */
+        if (fd >= 0)
+        {
+            close(fd);
+        }
+        
+        /* Read the current seed */
+        this->poll();
+    }
+    
+    public:
+    
+    /* Our notification involves changing the value in our shared memory. In practice, all clients will be in separate processes, so it suffices to set the value to a pid. For testing purposes, however, it's useful to keep them in the same process, so we increment the value. This isn't "safe" in the sense that  */
+    void post_notification()
+    {
+        if (region != NULL)
+        {
+            /* Read off the seed */
+            uint32_t seed = ntohl(region->universal_variable_seed);
+            
+            /* Increment it. Don't let it wrap to zero. */
+            do
+            {
+                seed++;
+            }
+            while (seed == 0);
+            last_seed = seed;
+            
+            /* Write out our data */
+            region->magic = htonl(SHMEM_MAGIC_NUMBER);
+            region->version = htonl(SHMEM_VERSION_CURRENT);
+            region->universal_variable_seed = htonl(seed);
+        }
+    }
+    
+    universal_notifier_shmem_poller_t() : last_seed(0), region(NULL)
+    {
+        open_shmem();
+    }
+    
+    ~universal_notifier_shmem_poller_t()
+    {
+        if (region != NULL)
+        {
+            // Behold: C++ in all its glory!
+            void *address = const_cast<void *>(static_cast<volatile void *>(region));
+            if (munmap(address, sizeof(universal_notifier_shmem_t)) < 0)
+            {
+                wperror(L"munmap");
+            }
+        }
+    }
+    
+    bool needs_polling() const
+    {
+        return true;
+    }
+    
+    bool poll()
+    {
+        bool result = false;
+        if (region != NULL)
+        {
+            uint32_t seed = ntohl(region->universal_variable_seed);
+            if (seed != last_seed)
+            {
+                result = true;
+                last_seed = seed;
+            }
+        }
+        return result;
+    }
+    
+};
+
+universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_strategy()
+{
+    return strategy_shmem_polling;
+}
+
+universal_notifier_t &universal_notifier_t::default_notifier()
+{
+    static universal_notifier_t *result = new_notifier_for_strategy(strategy_default);
+    return *result;
+}
+
+universal_notifier_t *universal_notifier_t::new_notifier_for_strategy(universal_notifier_t::notifier_strategy_t strat)
+{
+    if (strat == strategy_default)
+    {
+        strat = resolve_default_strategy();
+    }
+    switch (strat)
+    {
+        case strategy_shmem_polling:
+            return new universal_notifier_shmem_poller_t();
+            
+        default:
+            fprintf(stderr, "Unsupported strategy %d\n", strat);
+            return NULL;
+    }
+}
+
+/* Default implementations. */
+universal_notifier_t::universal_notifier_t()
+{
+}
+
+universal_notifier_t::~universal_notifier_t()
+{
+}
+
+int universal_notifier_t::notification_fd()
+{
+    return -1;
+}
+
+void universal_notifier_t::post_notification()
+{
+}
+
+bool universal_notifier_t::poll()
+{
+    return false;
+}
+
+bool universal_notifier_t::needs_polling() const
+{
+    return false;
 }

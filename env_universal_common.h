@@ -272,6 +272,49 @@ public:
     void read_message(connection_t *src, callback_data_list_t *callbacks);
 };
 
+class universal_notifier_t
+{
+public:
+    enum notifier_strategy_t
+    {
+        strategy_default,
+        strategy_shmem_polling,
+        strategy_notifyd
+    };
+
+    protected:
+    universal_notifier_t();
+    
+    private:
+    /* No copying */
+    universal_notifier_t &operator=(const universal_notifier_t &);
+    universal_notifier_t(const universal_notifier_t &x);
+    
+    static notifier_strategy_t resolve_default_strategy();
+    
+    public:
+    
+    virtual ~universal_notifier_t();
+    
+    /* Factory constructor. Free with delete */
+    static universal_notifier_t *new_notifier_for_strategy(notifier_strategy_t strat);
+    
+    /* Default instance. Other instances are possible for testing */
+    static universal_notifier_t &default_notifier();
+    
+    /* Returns the fd from which to watch for events, or -1 if none */
+    virtual int notification_fd();
+    
+    /* Does a fast poll(). Returns true if changed. */
+    virtual bool poll();
+    
+    /* Indicates whether this notifier requires polling. */
+    virtual bool needs_polling() const;
+    
+    /* Triggers a notification */
+    virtual void post_notification();
+};
+
 std::string get_machine_identifier();
 bool get_hostname_identifier(std::string *result);
 

@@ -2217,6 +2217,71 @@ static void test_universal()
     putc('\n', stderr);
 }
 
+static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy_t strategy)
+{
+    say(L"Testing universal notifiers with strategy", (int)strategy);
+    universal_notifier_t *notifiers[16];
+    size_t notifier_count = sizeof notifiers / sizeof *notifiers;
+    
+    // Populate array of notifiers
+    for (size_t i=0; i < notifier_count; i++)
+    {
+        notifiers[i] = universal_notifier_t::new_notifier_for_strategy(strategy);
+    }
+    
+    // Nobody should poll yet
+    for (size_t i=0; i < notifier_count; i++)
+    {
+        if (notifiers[i]->poll())
+        {
+            err(L"Universal varibale notifier poll() returned true before any changes, with strategy %d", (int)strategy);
+        }
+    }
+
+    // Tweak each notifier. Verify that others see it.
+    for (size_t post_idx=0; post_idx < notifier_count; post_idx++)
+    {
+        notifiers[post_idx]->post_notification();
+        for (size_t i=0; i < notifier_count; i++)
+        {
+            // Skip the one who posted
+            if (i == post_idx)
+            {
+                continue;
+            }
+            
+            if (notifiers[i]->needs_polling())
+            {
+                if (! notifiers[i]->poll())
+                {
+                    err(L"Universal varibale notifier poll() failed to notice changes, with strategy %d", (int)strategy);
+                }
+            }
+        }
+    }
+    
+    // Nobody should poll now
+    for (size_t i=0; i < notifier_count; i++)
+    {
+        if (notifiers[i]->poll())
+        {
+            err(L"Universal varibale notifier poll() returned true after all changes, with strategy %d", (int)strategy);
+        }
+    }
+    
+    // Clean up
+    for (size_t i=0; i < notifier_count; i++)
+    {
+        delete notifiers[i];
+    }
+
+}
+
+static void test_universal_notifiers()
+{
+    test_notifiers_with_strategy(universal_notifier_t::strategy_shmem_polling);
+}
+
 class history_tests_t
 {
 public:
@@ -3270,6 +3335,7 @@ int main(int argc, char **argv)
     if (should_test_function("complete")) test_complete();
     if (should_test_function("input")) test_input();
     if (should_test_function("universal")) test_universal();
+    if (should_test_function("universal_notifiers")) test_universal_notifiers();
     if (should_test_function("completion_insertions")) test_completion_insertions();
     if (should_test_function("autosuggestion_combining")) test_autosuggestion_combining();
     if (should_test_function("autosuggest_suggest_special")) test_autosuggest_suggest_special();

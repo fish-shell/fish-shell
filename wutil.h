@@ -16,6 +16,7 @@
 #include <stdarg.h>
 #include <string>
 #include <utility>
+#include <stdint.h>
 #include "common.h"
 
 /**

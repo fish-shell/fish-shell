@@ -120,9 +120,33 @@ static env_universal_t &default_universal_vars()
 /**
    Callback function, should be called on all events
 */
+struct callback_data_t
+{
+    fish_message_type_t type;
+    wcstring key;
+    wcstring val;
+    
+    callback_data_t(fish_message_type_t t, const wcstring &k, const wcstring &v) : type(t), key(k), val(v)
+    {
+    }
+};
+
 static void (*callback)(fish_message_type_t type,
                         const wchar_t *key,
                         const wchar_t *val);
+
+/* Post callbacks that we have determined in this list. We do this here, instead of at the point where we determined that the values changed, because we determine those under a lock, and reentrancy would cause a deadlock */
+static void post_callbacks(const callback_data_list_t &callbacks)
+{
+    if (callback != NULL)
+    {
+        for (size_t i=0; i < callbacks.size(); i++)
+        {
+            const callback_data_t &data = callbacks.at(i);
+            callback(data.type, data.key.c_str(), data.val.c_str());
+        }
+    }
+}
 
 /* UTF <-> wchar conversions. These return a string allocated with malloc. These call sites could be cleaned up substantially to eliminate the dependence on malloc. */
 static wchar_t *utf2wcs(const char *input)
@@ -154,7 +178,9 @@ void env_universal_common_init(void (*cb)(fish_message_type_t type, const wchar_
 
 void read_message(connection_t *conn)
 {
-    return default_universal_vars().read_message(conn);
+    callback_data_list_t callbacks;
+    default_universal_vars().read_message(conn, &callbacks);
+    post_callbacks(callbacks);
 }
 
 /**
@@ -237,7 +263,9 @@ void env_universal_common_set(const wchar_t *key, const wchar_t *val, bool expor
 
 void env_universal_common_sync()
 {
-    default_universal_vars().sync();
+    callback_data_list_t callbacks;
+    default_universal_vars().sync(&callbacks);
+    post_callbacks(callbacks);
 }
 
 /**
@@ -619,7 +647,7 @@ void env_universal_t::enqueue_all(connection_t *c) const
     enqueue_all_internal(c);
 }
 
-void env_universal_t::load_from_fd(int fd)
+void env_universal_t::load_from_fd(int fd, callback_data_list_t *callbacks)
 {
     ASSERT_IS_LOCKED(lock);
     assert(fd >= 0);
@@ -629,12 +657,12 @@ void env_universal_t::load_from_fd(int fd)
     {
         connection_t c(fd);
         /* Read from the file. Do not destroy the connection; the caller is responsible for closing the fd. */
-        this->read_message_internal(&c);
+        this->read_message_internal(&c, callbacks);
         last_read_file = current_file;
     }
 }
 
-bool env_universal_t::load_from_path(const wcstring &path)
+bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t *callbacks)
 {
     ASSERT_IS_LOCKED(lock);
     /* OK to not use CLO_EXEC here because fishd is single threaded */
@@ -642,7 +670,7 @@ bool env_universal_t::load_from_path(const wcstring &path)
     int fd = wopen_cloexec(path, O_RDONLY);
     if (fd >= 0)
     {
-        this->load_from_fd(fd);
+        this->load_from_fd(fd, callbacks);
         close(fd);
         result = true;
     }
@@ -732,8 +760,9 @@ static wcstring fishd_get_config()
 bool env_universal_t::load()
 {
     scoped_lock locker(lock);
+    callback_data_list_t callbacks;
     const wcstring vars_path = explicit_vars_path.empty() ? default_vars_path() : explicit_vars_path;
-    bool success = load_from_path(vars_path);
+    bool success = load_from_path(vars_path, &callbacks);
     if (! success && ! tried_renaming && errno == ENOENT)
     {
         /* We failed to load, because the file was not found. Older fish used the hostname only. Try *moving* the filename based on the hostname into place; if that succeeds try again. Silently "upgraded." */
@@ -865,7 +894,7 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd)
     return result_fd >= 0;
 }
 
-bool env_universal_t::sync()
+bool env_universal_t::sync(callback_data_list_t *callbacks)
 {
     scoped_lock locker(lock);
     /* Our saving strategy:
@@ -894,7 +923,7 @@ bool env_universal_t::sync()
     /* If we have no changes, just load */
     if (modified.empty())
     {
-        return this->load_from_path(vars_path);
+        return this->load_from_path(vars_path, callbacks);
     }
     
     const wcstring directory = wdirname(vars_path);
@@ -912,7 +941,7 @@ bool env_universal_t::sync()
         
         /* Read from it */
         assert(vars_fd >= 0);
-        this->load_from_fd(vars_fd);
+        this->load_from_fd(vars_fd, callbacks);
         
         /* Open adjacent temporary file */
         if (! this->open_temporary_file(directory, &private_file_path, &private_fd))
@@ -959,7 +988,7 @@ bool env_universal_t::sync()
     return success;
 }
 
-void env_universal_t::read_message_internal(connection_t *src)
+void env_universal_t::read_message_internal(connection_t *src, callback_data_list_t *callbacks)
 {
     ASSERT_IS_LOCKED(lock);
     while (1)
@@ -1020,7 +1049,7 @@ void env_universal_t::read_message_internal(connection_t *src)
             
             if (msg)
             {
-                this->parse_message_internal(msg, src);
+                this->parse_message_internal(msg, src, callbacks);
             }
             else
             {
@@ -1037,16 +1066,16 @@ void env_universal_t::read_message_internal(connection_t *src)
     }
 }
 
-void env_universal_t::read_message(connection_t *src)
+void env_universal_t::read_message(connection_t *src, callback_data_list_t *callbacks)
 {
     scoped_lock locker(lock);
-    return read_message_internal(src);
+    return read_message_internal(src, callbacks);
 }
 
 /**
  Parse message msg
  */
-void env_universal_t::parse_message_internal(wchar_t *msg, connection_t *src)
+void env_universal_t::parse_message_internal(wchar_t *msg, connection_t *src, callback_data_list_t *callbacks)
 {
     ASSERT_IS_LOCKED(lock);
     
@@ -1073,6 +1102,10 @@ void env_universal_t::parse_message_internal(wchar_t *msg, connection_t *src)
             if (unescape_string(tmp + 1, &val, 0))
             {
                 this->set_internal(key, val, exportv, false);
+                if (callbacks != NULL)
+                {
+                    callbacks->push_back(callback_data_t(exportv ? SET_EXPORT:SET, key, val));
+                }
             }
         }
         else
@@ -1100,11 +1133,9 @@ void env_universal_t::parse_message_internal(wchar_t *msg, connection_t *src)
         }
         
         this->remove_internal(name, false);
-        
-#warning We're locked when this is invoked - bad news!
-        if (callback)
+        if (callbacks != NULL)
         {
-            callback(ERASE, name, 0);
+            callbacks->push_back(callback_data_t(ERASE, name, wcstring()));
         }
     }
     else if (match(msg, BARRIER_STR))
@@ -1116,9 +1147,9 @@ void env_universal_t::parse_message_internal(wchar_t *msg, connection_t *src)
     }
     else if (match(msg, BARRIER_REPLY_STR))
     {
-        if (callback)
+        if (callbacks != NULL)
         {
-            callback(BARRIER_REPLY, 0, 0);
+            callbacks->push_back(callback_data_t(BARRIER_REPLY, wcstring(), wcstring()));
         }
     }
     else
@@ -1126,8 +1157,6 @@ void env_universal_t::parse_message_internal(wchar_t *msg, connection_t *src)
         debug(1, PARSE_ERR, msg);
     }
 }
-
-
 
 static std::string get_variables_file_path(const std::string &dir, const std::string &identifier)
 {
@@ -1138,36 +1167,6 @@ static std::string get_variables_file_path(const std::string &dir, const std::st
     name.append(identifier);
     return name;
 }
-
-static bool load_or_save_variables_at_path(bool save, const std::string &path)
-{
-    bool result = false;
-    
-    /* OK to not use CLO_EXEC here because fishd is single threaded */
-    int fd = open(path.c_str(), save?(O_CREAT | O_TRUNC | O_WRONLY):O_RDONLY, 0600);
-    if (fd >= 0)
-    {
-        /* Success */
-        result = true;
-        connection_t c(fd);
-        
-        if (save)
-        {
-            /* Save to the file */
-            write_loop(c.fd, SAVE_MSG, strlen(SAVE_MSG));
-            enqueue_all(&c);
-        }
-        else
-        {
-            /* Read from the file */
-            read_message(&c);
-        }
-        
-        connection_destroy(&c);
-    }
-    return result;
-}
-
 
 /**
  Maximum length of hostname. Longer hostnames are truncated

@@ -2170,7 +2170,7 @@ static int test_universal_helper(int *x)
         const wcstring key = format_string(L"key_%d_%d", *x, j);
         const wcstring val = format_string(L"val_%d_%d", *x, j);
         uvars.set(key, val, false);
-        bool synced = uvars.sync();
+        bool synced = uvars.sync(NULL);
         if (! synced)
         {
             err(L"Failed to sync universal variables");

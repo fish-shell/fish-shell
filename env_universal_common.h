@@ -204,6 +204,8 @@ void enqueue_all(connection_t *c);
 */
 void connection_destroy(connection_t *c);
 
+typedef std::vector<struct callback_data_t> callback_data_list_t;
+
 /** Class representing universal variables */
 class env_universal_t
 {
@@ -218,10 +220,10 @@ class env_universal_t
     
     mutable pthread_mutex_t lock;
     bool tried_renaming;
-    bool load_from_path(const wcstring &path);
-    void load_from_fd(int fd);
+    bool load_from_path(const wcstring &path, callback_data_list_t *callbacks);
+    void load_from_fd(int fd, callback_data_list_t *callbacks);
     
-    void parse_message_internal(wchar_t *msg, connection_t *src);
+    void parse_message_internal(wchar_t *msg, connection_t *src, callback_data_list_t *callbacks);
     
     void set_internal(const wcstring &key, const wcstring &val, bool exportv, bool overwrite);
     void remove_internal(const wcstring &name, bool overwrite);
@@ -235,7 +237,7 @@ class env_universal_t
     /* File id from which we last read */
     file_id_t last_read_file;
     
-    void read_message_internal(connection_t *src);
+    void read_message_internal(connection_t *src, callback_data_list_t *callbacks);
     void enqueue_all_internal(connection_t *c) const;
     
 public:
@@ -264,10 +266,10 @@ public:
     bool load();
 
     /** Reads and writes variables at the correct path */
-    bool sync();
+    bool sync(callback_data_list_t *callbacks);
     
     /* Internal use */
-    void read_message(connection_t *src);
+    void read_message(connection_t *src, callback_data_list_t *callbacks);
 };
 
 std::string get_machine_identifier();

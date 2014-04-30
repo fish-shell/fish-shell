@@ -2160,7 +2160,7 @@ static void test_input()
     }
 }
 
-#define UVARS_PER_THREAD 8
+#define UVARS_PER_THREAD 16
 
 static int test_universal_helper(int *x)
 {
@@ -2176,8 +2176,14 @@ static int test_universal_helper(int *x)
             err(L"Failed to sync universal variables");
         }
         fputc('.', stderr);
-        fflush(stderr);
     }
+    
+    /* Delete the first key */
+    const wcstring key = format_string(L"key_%d_%d", *x, 0);
+    uvars.remove(key);
+    uvars.sync(NULL);
+    fputc('.', stderr);
+    
     return 0;
 }
 
@@ -2204,11 +2210,21 @@ static void test_universal()
         for (int j=0; j < UVARS_PER_THREAD; j++)
         {
             const wcstring key = format_string(L"key_%d_%d", i, j);
-            const wcstring val = format_string(L"val_%d_%d", i, j);
-            const env_var_t var = uvars.get(key);
-            if (var != val)
+            env_var_t expected_val;
+            if (j == 0)
             {
-                err(L"Wrong value for key %ls: %ls vs %ls\n", key.c_str(), val.c_str(), var.missing() ? L"<missing>" : var.c_str());
+                expected_val = env_var_t::missing_var();
+            }
+            else
+            {
+                expected_val = format_string(L"val_%d_%d", i, j);
+            }
+            const env_var_t var = uvars.get(key);
+            if (var != expected_val)
+            {
+                const wchar_t *missing = L"<missing>";
+                
+                err(L"Wrong value for key %ls: expected %ls, got %ls\n", key.c_str(), expected_val.missing() ? missing : expected_val.c_str(), var.missing() ? missing : var.c_str());
             }
         }
     }

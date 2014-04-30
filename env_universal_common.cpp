@@ -647,6 +647,33 @@ void env_universal_t::enqueue_all(connection_t *c) const
     enqueue_all_internal(c);
 }
 
+void env_universal_t::clear_values_for_unmodified_keys()
+{
+    // Little optimization
+    if (modified.empty())
+    {
+        // Nothing modified, clear all values
+        vars.clear();
+        return;
+    }
+    
+    var_table_t::iterator iter = vars.begin();
+    while (iter != vars.end())
+    {
+        const wcstring &key = iter->first;
+        if (modified.find(key) != modified.end())
+        {
+            // It's modified, don't erase the value
+            ++iter;
+        }
+        else
+        {
+            // Unmodified, clear the value from the map
+            vars.erase(iter++);
+        }
+    }
+}
+
 void env_universal_t::load_from_fd(int fd, callback_data_list_t *callbacks)
 {
     ASSERT_IS_LOCKED(lock);
@@ -655,6 +682,9 @@ void env_universal_t::load_from_fd(int fd, callback_data_list_t *callbacks)
     const file_id_t current_file = file_id_for_fd(fd);
     if (current_file != last_read_file)
     {
+        /* Erase all non-modified keys. Some of these may have been deleted in the file, and the only way we can tell is by their absence in the file. */
+        this->clear_values_for_unmodified_keys();
+        
         connection_t c(fd);
         /* Read from the file. Do not destroy the connection; the caller is responsible for closing the fd. */
         this->read_message_internal(&c, callbacks);
@@ -665,14 +695,18 @@ void env_universal_t::load_from_fd(int fd, callback_data_list_t *callbacks)
 bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t *callbacks)
 {
     ASSERT_IS_LOCKED(lock);
-    /* OK to not use CLO_EXEC here because fishd is single threaded */
     bool result = false;
-    int fd = wopen_cloexec(path, O_RDONLY);
-    if (fd >= 0)
+    /* Skip the file if it has not changed. This is the primary mechanism by which we elide expensive re-syncing. */
+    const file_id_t current_file = file_id_for_path(path);
+    if (current_file != last_read_file)
     {
-        this->load_from_fd(fd, callbacks);
-        close(fd);
-        result = true;
+        int fd = wopen_cloexec(path, O_RDONLY);
+        if (fd >= 0)
+        {
+            this->load_from_fd(fd, callbacks);
+            close(fd);
+            result = true;
+        }
     }
     return result;
 }

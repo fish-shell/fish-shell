@@ -227,6 +227,7 @@ class env_universal_t
     
     void set_internal(const wcstring &key, const wcstring &val, bool exportv, bool overwrite);
     void remove_internal(const wcstring &name, bool overwrite);
+    void clear_values_for_unmodified_keys();
     
     /* Functions concerned with saving */
     bool open_and_acquire_lock(const wcstring &path, int *out_fd);

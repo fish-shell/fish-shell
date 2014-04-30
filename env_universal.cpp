@@ -277,11 +277,6 @@ static void reconnect()
     }
 }
 
-void env_universal_read_from_file()
-{
-    
-}
-
 void env_universal_init(wchar_t * p,
                         wchar_t *u,
                         void (*sf)(),
@@ -291,8 +286,8 @@ void env_universal_init(wchar_t * p,
     {
         external_callback = cb;
         env_universal_common_init(&callback);
-        env_universal_read_from_file();
         s_env_univeral_inited = true;
+        env_universal_common_sync();
     }
     else
     {

@@ -222,6 +222,7 @@ class env_universal_t
     bool tried_renaming;
     bool load_from_path(const wcstring &path, callback_data_list_t *callbacks);
     void load_from_fd(int fd, callback_data_list_t *callbacks);
+    void erase_unmodified_values();
     
     void parse_message_internal(wchar_t *msg, connection_t *src, callback_data_list_t *callbacks);
     
@@ -265,7 +266,7 @@ public:
     /** Loads variables at the correct path */
     bool load();
 
-    /** Reads and writes variables at the correct path */
+    /** Reads and writes variables at the correct path. Returns true if modified variables were written. */
     bool sync(callback_data_list_t *callbacks);
     
     /* Internal use */
@@ -289,7 +290,6 @@ public:
     /* No copying */
     universal_notifier_t &operator=(const universal_notifier_t &);
     universal_notifier_t(const universal_notifier_t &x);
-    
     static notifier_strategy_t resolve_default_strategy();
     
     public:
@@ -299,7 +299,7 @@ public:
     /* Factory constructor. Free with delete */
     static universal_notifier_t *new_notifier_for_strategy(notifier_strategy_t strat);
     
-    /* Default instance. Other instances are possible for testing */
+    /* Default instance. Other instances are possible for testing. */
     static universal_notifier_t &default_notifier();
     
     /* Returns the fd from which to watch for events, or -1 if none */
@@ -313,6 +313,9 @@ public:
     
     /* Triggers a notification */
     virtual void post_notification();
+    
+    /* Recommended delay between polls. A value of 0 means no polling required (so no timeout) */
+    virtual unsigned long usec_delay_between_polls() const;
 };
 
 std::string get_machine_identifier();

@@ -2161,10 +2161,11 @@ static void test_input()
 }
 
 #define UVARS_PER_THREAD 8
+#define UVARS_TEST_PATH L"/tmp/fish_uvars_test/varsfile.txt"
 
 static int test_universal_helper(int *x)
 {
-    env_universal_t uvars(L"/tmp/fish_uvars_test/varsfile.txt");
+    env_universal_t uvars(UVARS_TEST_PATH);
     for (int j=0; j < UVARS_PER_THREAD; j++)
     {
         const wcstring key = format_string(L"key_%d_%d", *x, j);
@@ -2176,8 +2177,17 @@ static int test_universal_helper(int *x)
             err(L"Failed to sync universal variables");
         }
         fputc('.', stderr);
-        fflush(stderr);
     }
+    
+    /* Last step is to delete the first key */
+    uvars.remove(format_string(L"key_%d_%d", *x, 0));
+    bool synced = uvars.sync(NULL);
+    if (! synced)
+    {
+        err(L"Failed to sync universal variables");
+    }
+    fputc('.', stderr);
+    
     return 0;
 }
 
@@ -2193,7 +2203,7 @@ static void test_universal()
     }
     iothread_drain_all();
     
-    env_universal_t uvars(L"/tmp/fish_uvars_test/varsfile.txt");
+    env_universal_t uvars(UVARS_TEST_PATH);
     bool loaded = uvars.load();
     if (! loaded)
     {
@@ -2204,22 +2214,35 @@ static void test_universal()
         for (int j=0; j < UVARS_PER_THREAD; j++)
         {
             const wcstring key = format_string(L"key_%d_%d", i, j);
-            const wcstring val = format_string(L"val_%d_%d", i, j);
-            const env_var_t var = uvars.get(key);
-            if (var != val)
+            env_var_t expected_val;
+            if (j == 0)
             {
-                err(L"Wrong value for key %ls: %ls vs %ls\n", key.c_str(), val.c_str(), var.missing() ? L"<missing>" : var.c_str());
+                expected_val = env_var_t::missing_var();
+            }
+            else
+            {
+                expected_val = format_string(L"val_%d_%d", i, j);
+            }
+            const env_var_t var = uvars.get(key);
+            if (j == 0)
+            {
+                assert(expected_val.missing());
+            }
+            if (var != expected_val)
+            {
+                const wchar_t *missing_desc = L"<missing>";
+                err(L"Wrong value for key %ls: expected %ls, got %ls\n", key.c_str(), (expected_val.missing() ? missing_desc : expected_val.c_str()), (var.missing() ? missing_desc : var.c_str()));
             }
         }
     }
     
-    system("rm -Rf /tmp/fish_uvars_test");
+    if (system("rm -Rf /tmp/fish_uvars_test")) err(L"rrm failed");
     putc('\n', stderr);
 }
 
 static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy_t strategy)
 {
-    say(L"Testing universal notifiers with strategy", (int)strategy);
+    say(L"Testing universal notifiers with strategy %d", (int)strategy);
     universal_notifier_t *notifiers[16];
     size_t notifier_count = sizeof notifiers / sizeof *notifiers;
     

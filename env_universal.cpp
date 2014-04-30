@@ -455,6 +455,7 @@ void env_universal_set(const wcstring &name, const wcstring &value, bool exportv
     if (! synchronizes_via_fishd() || is_dead())
     {
         env_universal_common_set(name.c_str(), value.c_str(), exportv);
+        env_universal_barrier();
     }
     else
     {

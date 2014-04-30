@@ -265,7 +265,11 @@ void env_universal_common_set(const wchar_t *key, const wchar_t *val, bool expor
 void env_universal_common_sync()
 {
     callback_data_list_t callbacks;
-    default_universal_vars().sync(&callbacks);
+    bool changed = default_universal_vars().sync(&callbacks);
+    if (changed)
+    {
+        universal_notifier_t::default_notifier().post_notification();
+    }
     post_callbacks(callbacks);
 }
 
@@ -572,13 +576,16 @@ void env_universal_t::set_internal(const wcstring &key, const wcstring &val, boo
     }
     
     var_entry_t *entry = &vars[key];
-    entry->val = val;
-    entry->exportv = exportv;
-    
-    /* If we are overwriting, then this is now modified */
-    if (overwrite)
+    if (entry->exportv != exportv || entry->val != val)
     {
-        this->modified.insert(key);
+        entry->val = val;
+        entry->exportv = exportv;
+        
+        /* If we are overwriting, then this is now modified */
+        if (overwrite)
+        {
+            this->modified.insert(key);
+        }
     }
 }
 
@@ -596,8 +603,8 @@ void env_universal_t::remove_internal(const wcstring &key, bool overwrite)
         /* This value has been modified and we're not overwriting it. Skip it. */
         return;
     }
-    this->vars.erase(key);
-    if (overwrite)
+    size_t erased = this->vars.erase(key);
+    if (erased > 0 && overwrite)
     {
         this->modified.insert(key);
     }
@@ -648,6 +655,26 @@ void env_universal_t::enqueue_all(connection_t *c) const
     enqueue_all_internal(c);
 }
 
+void env_universal_t::erase_unmodified_values()
+{
+    /* Delete all non-modified keys. */
+    var_table_t::iterator iter = vars.begin();
+    while (iter != vars.end())
+    {
+        const wcstring &key = iter->first;
+        if (modified.find(key) == modified.end())
+        {
+            // Unmodified key. Erase the old value.
+            vars.erase(iter++);
+        }
+        else
+        {
+            // Modified key, retain the value.
+            ++iter;
+        }
+    }
+}
+
 void env_universal_t::load_from_fd(int fd, callback_data_list_t *callbacks)
 {
     ASSERT_IS_LOCKED(lock);
@@ -656,6 +683,8 @@ void env_universal_t::load_from_fd(int fd, callback_data_list_t *callbacks)
     const file_id_t current_file = file_id_for_fd(fd);
     if (current_file != last_read_file)
     {
+        /* Unmodified values are sourced from the file. Since we are about to read a different file, erase them */
+        this->erase_unmodified_values();
         connection_t c(fd);
         /* Read from the file. Do not destroy the connection; the caller is responsible for closing the fd. */
         this->read_message_internal(&c, callbacks);
@@ -666,6 +695,13 @@ void env_universal_t::load_from_fd(int fd, callback_data_list_t *callbacks)
 bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t *callbacks)
 {
     ASSERT_IS_LOCKED(lock);
+    
+    /* Check to see if the file is unchanged. We do this again in load_from_fd, but this avoids opening the file unnecessarily. */
+    if (last_read_file != kInvalidFileID && file_id_for_path(path) == last_read_file)
+    {
+        return true;
+    }
+    
     /* OK to not use CLO_EXEC here because fishd is single threaded */
     bool result = false;
     int fd = wopen_cloexec(path, O_RDONLY);
@@ -895,6 +931,7 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd)
     return result_fd >= 0;
 }
 
+/* Returns true if modified variables were written, false if not. (There may still be variable changes due to other processes on a false return). */
 bool env_universal_t::sync(callback_data_list_t *callbacks)
 {
     scoped_lock locker(lock);
@@ -924,8 +961,16 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
     /* If we have no changes, just load */
     if (modified.empty())
     {
-        return this->load_from_path(vars_path, callbacks);
+        this->load_from_path(vars_path, callbacks);
+        return false;
     }
+    
+#if 0
+    for (std::set<wcstring>::iterator iter = modified.begin(); iter != modified.end(); ++iter)
+    {
+        fprintf(stderr, "Modified %ls\n", iter->c_str());
+    }
+#endif
     
     const wcstring directory = wdirname(vars_path);
     bool success = false;
@@ -1304,6 +1349,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t
 #define SHMEM_VERSION_CURRENT 1000
 
     private:
+    long long last_change_time;
     uint32_t last_seed;
     volatile universal_notifier_shmem_t *region;
     
@@ -1396,7 +1442,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t
         }
     }
     
-    universal_notifier_shmem_poller_t() : last_seed(0), region(NULL)
+    universal_notifier_shmem_poller_t() : last_change_time(0), last_seed(0), region(NULL)
     {
         open_shmem();
     }
@@ -1429,9 +1475,27 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t
             {
                 result = true;
                 last_seed = seed;
+                last_change_time = get_time();
             }
         }
         return result;
+    }
+    
+    unsigned long usec_delay_between_polls() const
+    {
+        // If it's been less than five seconds since the last change, we poll quickly
+        // Otherwise we poll more slowly
+        // Note that a poll is a very cheap shmem read. The bad part about making this high
+        // is the process scheduling/wakeups it produces
+        unsigned long usec_per_sec = 1000000;
+        if (get_time() - last_change_time < 5LL * usec_per_sec)
+        {
+            return usec_per_sec / 25; //10 times a second
+        }
+        else
+        {
+            return usec_per_sec / 3; //3 times a second
+        }
     }
     
 };
@@ -1491,3 +1555,9 @@ bool universal_notifier_t::needs_polling() const
 {
     return false;
 }
+
+unsigned long universal_notifier_t::usec_delay_between_polls() const
+{
+    return 0;
+}
+

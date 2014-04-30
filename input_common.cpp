@@ -116,7 +116,15 @@ static wint_t readb()
         /* Get our uvar notifier */
         universal_notifier_t &notifier = universal_notifier_t::default_notifier();
         
-        /* Get the suggested delay */
+        /* Get the notification fd (possibly none) */
+        int notifier_fd = notifier.notification_fd();
+        if (notifier_fd > 0)
+        {
+            FD_SET(notifier_fd, &fdset);
+            fd_max = maxi(fd_max, notifier_fd);
+        }
+        
+        /* Get the suggested delay (possibly none) */
         struct timeval tv = {};
         const unsigned long usecs_delay = notifier.usec_delay_between_polls();
         if (usecs_delay > 0)
@@ -180,9 +188,15 @@ static wint_t readb()
                 }
             }
             
+            /* Notifiers either poll or have an fd, not both. So at most one of these branches will be taken. */
             if (notifier.poll())
             {
-                fprintf(stderr, "Change note\n");
+                env_universal_barrier();
+            }
+            
+            if (notifier_fd > 0 && FD_ISSET(notifier_fd, &fdset))
+            {
+                notifier.drain_notification_fd(notifier_fd);
                 env_universal_barrier();
             }
 

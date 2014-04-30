@@ -46,6 +46,11 @@
 #include "env_universal_common.h"
 #include "path.h"
 
+#if __APPLE__
+#define FISH_NOTIFYD_AVAILABLE 1
+#include <notify.h>
+#endif
+
 /**
    Non-wide version of the set command
 */
@@ -1497,12 +1502,87 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t
             return usec_per_sec / 3; //3 times a second
         }
     }
+};
+
+class universal_notifier_notifyd_t : public universal_notifier_t
+{
+    int notify_fd;
+    int token;
+    std::string name;
     
+    void setup_notifyd()
+    {
+#if FISH_NOTIFYD_AVAILABLE
+        // per notify(3), the user.uid.%d style is only accessible to processes with that uid
+        char local_name[256];
+        snprintf(local_name, sizeof local_name, "user.uid.%d.%ls.uvars",  getuid(), program_name ? program_name : L"fish");
+        name.assign(local_name);
+        
+        uint32_t status = notify_register_file_descriptor(name.c_str(), &this->notify_fd, 0, &this->token);
+        if (status != NOTIFY_STATUS_OK)
+        {
+            fprintf(stderr, "Warning: notify_register_file_descriptor() failed with status %u. Universal variable notifications may not be received.", status);
+        }
+        if (this->notify_fd >= 0)
+        {
+            // Mark us for non-blocking reads, with CLO_EXEC
+            int flags = fcntl(this->notify_fd, F_GETFL, 0);
+            fcntl(this->notify_fd, F_SETFL, flags | O_NONBLOCK | FD_CLOEXEC);
+        }
+#endif
+    }
+    
+public:
+    universal_notifier_notifyd_t() : notify_fd(-1), token(0)
+    {
+        setup_notifyd();
+    }
+    
+    ~universal_notifier_notifyd_t()
+    {
+        if (token != 0)
+        {
+            notify_cancel(token);
+        }
+    }
+    
+    int notification_fd()
+    {
+        return notify_fd;
+    }
+    
+    void drain_notification_fd(int fd)
+    {
+        /* notifyd notifications come in as 32 bit values. We don't care about the value. We set ourselves as non-blocking, so just read until we can't read any more. */
+        assert(fd == notify_fd);
+        unsigned char buff[64];
+        ssize_t amt_read;
+        do
+        {
+            amt_read = read(notify_fd, buff, sizeof buff);
+
+        } while (amt_read == sizeof buff);
+    }
+    
+    void post_notification()
+    {
+#if FISH_NOTIFYD_AVAILABLE
+        uint32_t status = notify_post(name.c_str());
+        if (status != NOTIFY_STATUS_OK)
+        {
+            fprintf(stderr, "Warning: notify_post() failed with status %u. Universal variable notifications may not be sent.", status);
+        }
+#endif
+    }
 };
 
 universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_strategy()
 {
+#if FISH_NOTIFYD_AVAILABLE
+    return strategy_notifyd;
+#else
     return strategy_shmem_polling;
+#endif
 }
 
 universal_notifier_t &universal_notifier_t::default_notifier()
@@ -1521,6 +1601,9 @@ universal_notifier_t *universal_notifier_t::new_notifier_for_strategy(universal_
     {
         case strategy_shmem_polling:
             return new universal_notifier_shmem_poller_t();
+            
+        case strategy_notifyd:
+            return new universal_notifier_notifyd_t();
             
         default:
             fprintf(stderr, "Unsupported strategy %d\n", strat);
@@ -1561,3 +1644,6 @@ unsigned long universal_notifier_t::usec_delay_between_polls() const
     return 0;
 }
 
+void universal_notifier_t::drain_notification_fd(int fd)
+{
+}

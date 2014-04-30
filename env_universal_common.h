@@ -316,6 +316,9 @@ public:
     
     /* Recommended delay between polls. A value of 0 means no polling required (so no timeout) */
     virtual unsigned long usec_delay_between_polls() const;
+    
+    /* The notification_fd is readable; drain it */
+    virtual void drain_notification_fd(int fd);
 };
 
 std::string get_machine_identifier();

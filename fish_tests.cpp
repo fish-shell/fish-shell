@@ -2240,8 +2240,35 @@ static void test_universal()
     putc('\n', stderr);
 }
 
+bool poll_notifier(universal_notifier_t *note)
+{
+    bool result = false;
+    if (note->needs_polling())
+    {
+        result = note->poll();
+    }
+    else
+    {
+        int fd = note->notification_fd();
+        if (fd > 0)
+        {
+            fd_set fds;
+            FD_ZERO(&fds);
+            FD_SET(fd, &fds);
+            struct timeval tv = {0, 0};
+            if (select(fd + 1, &fds, NULL, NULL, &tv) > 0 && FD_ISSET(fd, &fds))
+            {
+                note->drain_notification_fd(fd);
+                result = true;
+            }
+        }
+    }
+    return result;
+}
+
 static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy_t strategy)
 {
+    assert(strategy != universal_notifier_t::strategy_default);
     say(L"Testing universal notifiers with strategy %d", (int)strategy);
     universal_notifier_t *notifiers[16];
     size_t notifier_count = sizeof notifiers / sizeof *notifiers;
@@ -2255,9 +2282,9 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
     // Nobody should poll yet
     for (size_t i=0; i < notifier_count; i++)
     {
-        if (notifiers[i]->poll())
+        if (poll_notifier(notifiers[i]))
         {
-            err(L"Universal varibale notifier poll() returned true before any changes, with strategy %d", (int)strategy);
+            err(L"Universal variable notifier polled true before any changes, with strategy %d", (int)strategy);
         }
     }
 
@@ -2265,20 +2292,26 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
     for (size_t post_idx=0; post_idx < notifier_count; post_idx++)
     {
         notifiers[post_idx]->post_notification();
+        
+        // notifyd requires a round trip to the notifyd server, which means we have to wait a little bit to receive it
+        // In practice, this seems to be enough
+        if (strategy != universal_notifier_t::strategy_shmem_polling)
+        {
+            usleep(1000000 / 25);
+        }
         for (size_t i=0; i < notifier_count; i++)
         {
-            // Skip the one who posted
+            // We aren't concerned with the one who posted
+            // Poll from it (to drain it), and then skip it
             if (i == post_idx)
             {
+                poll_notifier(notifiers[i]);
                 continue;
             }
             
-            if (notifiers[i]->needs_polling())
+            if (! poll_notifier(notifiers[i]))
             {
-                if (! notifiers[i]->poll())
-                {
-                    err(L"Universal varibale notifier poll() failed to notice changes, with strategy %d", (int)strategy);
-                }
+                err(L"Universal variable notifier polled failed to notice changes, with strategy %d", (int)strategy);
             }
         }
     }
@@ -2286,9 +2319,9 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
     // Nobody should poll now
     for (size_t i=0; i < notifier_count; i++)
     {
-        if (notifiers[i]->poll())
+        if (poll_notifier(notifiers[i]))
         {
-            err(L"Universal varibale notifier poll() returned true after all changes, with strategy %d", (int)strategy);
+            err(L"Universal variable notifier polled true after all changes, with strategy %d", (int)strategy);
         }
     }
     
@@ -2303,6 +2336,9 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
 static void test_universal_notifiers()
 {
     test_notifiers_with_strategy(universal_notifier_t::strategy_shmem_polling);
+#if __APPLE__
+    test_notifiers_with_strategy(universal_notifier_t::strategy_notifyd);
+#endif
 }
 
 class history_tests_t

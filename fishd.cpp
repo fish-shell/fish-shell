@@ -74,6 +74,7 @@ time the original barrier request was sent have been received.
 #include "env_universal_common.h"
 #include "path.h"
 #include "print_help.h"
+#include "fish_version.cpp"
 
 #ifndef HOST_NAME_MAX
 /**
@@ -936,7 +937,7 @@ int main(int argc, char ** argv)
                 exit(0);
 
             case 'v':
-                debug(0, L"%ls, version %s\n", program_name, FISH_BUILD_VERSION);
+                debug(0, L"%ls, version %s\n", program_name, get_fish_version());
                 exit(0);
 
             case '?':

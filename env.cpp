@@ -55,6 +55,7 @@
 #include "path.h"
 
 #include "complete.h"
+#include "fish_version.h"
 
 /** Command used to start fishd */
 #define FISHD_CMD L"fishd ^ /tmp/fishd.log.%s"
@@ -599,7 +600,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     /*
       Set up the version variables
     */
-    wcstring version = str2wcstring(FISH_BUILD_VERSION);
+    wcstring version = str2wcstring(get_fish_version());
     env_set(L"version", version.c_str(), ENV_GLOBAL);
     env_set(L"FISH_VERSION", version.c_str(), ENV_GLOBAL);
 

@@ -51,6 +51,7 @@ license. Read the source code of the library for more information.
 #include "fallback.h"
 #include "util.h"
 #include "print_help.h"
+#include "fish_version.h"
 
 typedef std::vector<std::string> string_list_t;
 
@@ -1332,7 +1333,7 @@ int main(int argc, char *argv[])
                 exit(0);
 
             case 'v':
-                printf(_("%s, version %s\n"), MIMEDB, FISH_BUILD_VERSION);
+                printf(_("%s, version %s\n"), MIMEDB, get_fish_version());
                 exit(0);
 
             case '?':

@@ -280,6 +280,7 @@ public:
     {
         strategy_default,
         strategy_shmem_polling,
+        strategy_inotify,
         strategy_notifyd
     };
 
@@ -297,7 +298,7 @@ public:
     virtual ~universal_notifier_t();
     
     /* Factory constructor. Free with delete */
-    static universal_notifier_t *new_notifier_for_strategy(notifier_strategy_t strat);
+    static universal_notifier_t *new_notifier_for_strategy(notifier_strategy_t strat, const wchar_t *test_path = NULL);
     
     /* Default instance. Other instances are possible for testing. */
     static universal_notifier_t &default_notifier();
@@ -317,8 +318,8 @@ public:
     /* Recommended delay between polls. A value of 0 means no polling required (so no timeout) */
     virtual unsigned long usec_delay_between_polls() const;
     
-    /* The notification_fd is readable; drain it */
-    virtual void drain_notification_fd(int fd);
+    /* The notification_fd is readable; drain it. Returns true if a notification is considered to have been posted. */
+    virtual bool drain_notification_fd(int fd);
 };
 
 std::string get_machine_identifier();

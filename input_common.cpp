@@ -135,10 +135,6 @@ static wint_t readb()
         }
         
         res = select(fd_max + 1, &fdset, 0, 0, usecs_delay > 0 ? &tv : NULL);
-        if (res == 0)
-        {
-            fprintf(stderr, "ping\n");
-        }
         if (res==-1)
         {
             switch (errno)
@@ -196,8 +192,11 @@ static wint_t readb()
             
             if (notifier_fd > 0 && FD_ISSET(notifier_fd, &fdset))
             {
-                notifier.drain_notification_fd(notifier_fd);
-                env_universal_barrier();
+                bool notified = notifier.drain_notification_fd(notifier_fd);
+                if (notified)
+                {
+                    env_universal_barrier();
+                }
             }
 
             if (ioport > 0 && FD_ISSET(ioport, &fdset))

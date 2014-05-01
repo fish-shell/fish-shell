@@ -16,6 +16,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <arpa/inet.h>
 #include <pwd.h>
 #include <errno.h>
 #include <sys/stat.h>
@@ -49,6 +50,11 @@
 #if __APPLE__
 #define FISH_NOTIFYD_AVAILABLE 1
 #include <notify.h>
+#endif
+
+#if HAVE_INOTIFY_INIT || HAVE_INOTIFY_INIT1
+#define FISH_INOTIFY_AVAILABLE 1
+#include <sys/inotify.h>
 #endif
 
 /**
@@ -1542,7 +1548,9 @@ public:
     {
         if (token != 0)
         {
+#if FISH_NOTIFYD_AVAILABLE
             notify_cancel(token);
+#endif
         }
     }
     
@@ -1551,17 +1559,19 @@ public:
         return notify_fd;
     }
     
-    void drain_notification_fd(int fd)
+    bool drain_notification_fd(int fd)
     {
         /* notifyd notifications come in as 32 bit values. We don't care about the value. We set ourselves as non-blocking, so just read until we can't read any more. */
         assert(fd == notify_fd);
+        bool read_something = false;
         unsigned char buff[64];
         ssize_t amt_read;
         do
         {
             amt_read = read(notify_fd, buff, sizeof buff);
-
+            read_something = (read_something || amt_read > 0);
         } while (amt_read == sizeof buff);
+        return read_something;
     }
     
     void post_notification()
@@ -1576,10 +1586,85 @@ public:
     }
 };
 
+class universal_notifier_inotify_t : public universal_notifier_t
+{
+    int watch_fd;
+    int watch_descriptor;
+    
+    void setup_inotify(const wchar_t *test_path)
+    {
+#if FISH_INOTIFY_AVAILABLE
+        
+        const wcstring path = test_path ? test_path : default_vars_path();
+        
+        // Construct the watchfd
+#if HAVE_INOTIFY_INIT1
+        this->watch_fd = inotify_init1(IN_NONBLOCK | IN_CLOEXEC);
+#else
+        this->watch_fd = inotify_init();
+        if (this->watch_fd >= 0)
+        {
+            int flags = fcntl(this->watch_fd, F_GETFL, 0);
+            fcntl(this->watch_fd, F_SETFL, flags | O_NONBLOCK | FD_CLOEXEC);
+        }
+#endif
+        if (this->watch_fd < 0)
+        {
+            wperror(L"inotify_init");
+        }
+        else
+        {
+            std::string narrow_path = wcs2string(path);
+            this->watch_descriptor = inotify_add_watch(this->watch_fd, narrow_path.c_str(), IN_MODIFY | IN_EXCL_UNLINK);
+            if (this->watch_descriptor < 0)
+            {
+                wperror(L"inotify_add_watch");
+            }
+        }
+#endif
+    }
+    
+public:
+    
+    universal_notifier_inotify_t(const wchar_t *test_path) : watch_fd(-1), watch_descriptor(-1)
+    {
+        setup_inotify(test_path);
+    }
+    
+    ~universal_notifier_inotify_t()
+    {
+        if (watch_fd >= 0)
+        {
+            close(watch_fd);
+        }
+        USE(watch_descriptor);
+    }
+    
+    int notification_fd()
+    {
+        return watch_fd;
+    }
+    
+    bool drain_notification_fd(int fd)
+    {
+        assert(fd == watch_fd);
+        bool result = false;
+        
+#if FISH_INOTIFY_AVAILABLE
+        struct inotify_event evt = {};
+        ssize_t read_amt = read(watch_fd, &evt, sizeof evt);
+        result = (read_amt > 0);
+#endif
+        return result;
+    }
+};
+
 universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_strategy()
 {
 #if FISH_NOTIFYD_AVAILABLE
     return strategy_notifyd;
+#elif FISH_INOTIFY_AVAILABLE
+    return strategy_inotify;
 #else
     return strategy_shmem_polling;
 #endif
@@ -1591,7 +1676,7 @@ universal_notifier_t &universal_notifier_t::default_notifier()
     return *result;
 }
 
-universal_notifier_t *universal_notifier_t::new_notifier_for_strategy(universal_notifier_t::notifier_strategy_t strat)
+universal_notifier_t *universal_notifier_t::new_notifier_for_strategy(universal_notifier_t::notifier_strategy_t strat, const wchar_t *test_path)
 {
     if (strat == strategy_default)
     {
@@ -1604,6 +1689,10 @@ universal_notifier_t *universal_notifier_t::new_notifier_for_strategy(universal_
             
         case strategy_notifyd:
             return new universal_notifier_notifyd_t();
+            
+        case strategy_inotify:
+            return new universal_notifier_inotify_t(test_path);
+
             
         default:
             fprintf(stderr, "Unsupported strategy %d\n", strat);
@@ -1644,6 +1733,7 @@ unsigned long universal_notifier_t::usec_delay_between_polls() const
     return 0;
 }
 
-void universal_notifier_t::drain_notification_fd(int fd)
+bool universal_notifier_t::drain_notification_fd(int fd)
 {
+    return false;
 }

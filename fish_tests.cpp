@@ -2258,12 +2258,41 @@ bool poll_notifier(universal_notifier_t *note)
             struct timeval tv = {0, 0};
             if (select(fd + 1, &fds, NULL, NULL, &tv) > 0 && FD_ISSET(fd, &fds))
             {
-                note->drain_notification_fd(fd);
-                result = true;
+                result = note->drain_notification_fd(fd);
             }
         }
     }
     return result;
+}
+
+static void trigger_or_wait_for_notification(universal_notifier_t *notifier, universal_notifier_t::notifier_strategy_t strategy)
+{
+    switch (strategy)
+    {
+        case universal_notifier_t::strategy_default:
+            assert(0 && "strategy_default should be passed");
+            break;
+            
+        case universal_notifier_t::strategy_shmem_polling:
+            // nothing required
+            break;
+            
+        case universal_notifier_t::strategy_notifyd:
+            // notifyd requires a round trip to the notifyd server, which means we have to wait a little bit to receive it
+            // In practice, this seems to be enough
+            usleep(1000000 / 25);
+            break;
+            
+        case universal_notifier_t::strategy_inotify:
+        {
+            // Hacktastic. Replace the file, then wait
+            char cmd[512];
+            sprintf(cmd, "cp %ls %ls ; mv %ls %ls", UVARS_TEST_PATH, UVARS_TEST_PATH L".tmp", UVARS_TEST_PATH ".tmp", UVARS_TEST_PATH);
+            if (system(cmd)) err(L"Command failed: %s", cmd);
+            usleep(1000000 / 25);
+            break;
+        }
+    }
 }
 
 static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy_t strategy)
@@ -2276,7 +2305,7 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
     // Populate array of notifiers
     for (size_t i=0; i < notifier_count; i++)
     {
-        notifiers[i] = universal_notifier_t::new_notifier_for_strategy(strategy);
+        notifiers[i] = universal_notifier_t::new_notifier_for_strategy(strategy, UVARS_TEST_PATH);
     }
     
     // Nobody should poll yet
@@ -2293,12 +2322,9 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
     {
         notifiers[post_idx]->post_notification();
         
-        // notifyd requires a round trip to the notifyd server, which means we have to wait a little bit to receive it
-        // In practice, this seems to be enough
-        if (strategy != universal_notifier_t::strategy_shmem_polling)
-        {
-            usleep(1000000 / 25);
-        }
+        // Do special stuff to "trigger" a notification for testing
+        trigger_or_wait_for_notification(notifiers[post_idx], strategy);
+        
         for (size_t i=0; i < notifier_count; i++)
         {
             // We aren't concerned with the one who posted
@@ -2338,6 +2364,11 @@ static void test_universal_notifiers()
     test_notifiers_with_strategy(universal_notifier_t::strategy_shmem_polling);
 #if __APPLE__
     test_notifiers_with_strategy(universal_notifier_t::strategy_notifyd);
+#endif
+#if __linux || linux
+    if (system("mkdir -p /tmp/fish_uvars_test/ && touch /tmp/fish_uvars_test/varsfile.txt")) err(L"mkdir failed");
+    
+    test_notifiers_with_strategy(universal_notifier_t::strategy_inotify);
 #endif
 }
 

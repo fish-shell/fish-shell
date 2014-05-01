@@ -396,6 +396,11 @@ AC_CHECK_HEADER(
   [AC_MSG_ERROR([Could not find the header regex.h, needed to build fish])]
 )
 
+#
+# Detect nanoseconds fields in struct stat
+#
+AC_CHECK_MEMBERS([struct stat.st_mtimespec.tv_nsec])
+AC_CHECK_MEMBERS([struct stat.st_mtim.tv_nsec])
 
 #
 # On some platforms (Solaris 10) adding -std=c99 in turn requires that

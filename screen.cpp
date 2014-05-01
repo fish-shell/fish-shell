@@ -379,17 +379,6 @@ static size_t calc_prompt_lines(const wcstring &prompt)
     }
     return result;
 }
-/**
-   Test if there is space between the time fields of struct stat to
-   use for sub second information. If so, we assume this space
-   contains the desired information.
-*/
-static int room_for_usec(struct stat *st)
-{
-    int res = ((&(st->st_atime) + 2) == &(st->st_mtime) &&
-               (&(st->st_atime) + 4) == &(st->st_ctime));
-    return res;
-}
 
 /**
    Stat stdout and stderr and save result.
@@ -456,11 +445,13 @@ static void s_check_status(screen_t *s)
     int changed = (s->prev_buff_1.st_mtime != s->post_buff_1.st_mtime) ||
                   (s->prev_buff_2.st_mtime != s->post_buff_2.st_mtime);
 
-    if (room_for_usec(&s->post_buff_1))
-    {
-        changed = changed || ((&s->prev_buff_1.st_mtime)[1] != (&s->post_buff_1.st_mtime)[1]) ||
-                  ((&s->prev_buff_2.st_mtime)[1] != (&s->post_buff_2.st_mtime)[1]);
-    }
+    #if defined HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC
+        changed = changed || s->prev_buff_1.st_mtimespec.tv_nsec != s->post_buff_1.st_mtimespec.tv_nsec ||
+                    s->prev_buff_2.st_mtimespec.tv_nsec != s->post_buff_2.st_mtimespec.tv_nsec;
+    #elif defined HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC
+        changed = changed || s->prev_buff_1.st_mtim.tv_nsec != s->post_buff_1.st_mtim.tv_nsec ||
+                    s->prev_buff_2.st_mtim.tv_nsec != s->post_buff_2.st_mtim.tv_nsec;
+    #endif
 
     if (changed)
     {

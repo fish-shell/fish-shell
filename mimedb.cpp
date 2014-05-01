@@ -620,6 +620,7 @@ static char *get_description(const char *mimetype)
         perror("read");
         error=1;
         free((void *)contents);
+        close(fd);
         return 0;
     }
 

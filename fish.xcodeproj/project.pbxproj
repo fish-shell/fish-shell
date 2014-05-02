@@ -57,6 +57,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		D00F63F119137E9D00FCCDEC /* fish_version.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00F63F019137E9D00FCCDEC /* fish_version.cpp */; };
+		D00F63F219137E9D00FCCDEC /* fish_version.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00F63F019137E9D00FCCDEC /* fish_version.cpp */; };
 		D01A2D24169B736200767098 /* man1 in Copy Files */ = {isa = PBXBuildFile; fileRef = D01A2D23169B730A00767098 /* man1 */; };
 		D01A2D25169B737700767098 /* man1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D01A2D23169B730A00767098 /* man1 */; };
 		D031890C15E36E4600D9CC39 /* base in Resources */ = {isa = PBXBuildFile; fileRef = D031890915E36D9800D9CC39 /* base */; };
@@ -350,6 +352,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D00F63F019137E9D00FCCDEC /* fish_version.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fish_version.cpp; sourceTree = "<group>"; };
 		D01A2D23169B730A00767098 /* man1 */ = {isa = PBXFileReference; lastKnownFileType = text; name = man1; path = pages_for_manpath/man1; sourceTree = BUILT_PRODUCTS_DIR; };
 		D025C02715D1FEA100B9DB63 /* completions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = completions; path = share/completions; sourceTree = "<group>"; };
 		D025C02815D1FEA100B9DB63 /* functions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = functions; path = share/functions; sourceTree = "<group>"; };
@@ -690,6 +693,7 @@
 				D0A0856013B3ACEE0099B651 /* wildcard.cpp */,
 				D0A0852913B3ACEE0099B651 /* wutil.h */,
 				D0A0856113B3ACEE0099B651 /* wutil.cpp */,
+				D00F63F019137E9D00FCCDEC /* fish_version.cpp */,
 				D0A0852A13B3ACEE0099B651 /* xdgmime.h */,
 				D0A0856213B3ACEE0099B651 /* xdgmime.cpp */,
 				D0A0852B13B3ACEE0099B651 /* xdgmimealias.h */,
@@ -1130,6 +1134,7 @@
 				D0D02AD615986492008E62BD /* fish_indent.cpp in Sources */,
 				D0D02AD715986498008E62BD /* print_help.cpp in Sources */,
 				D0D02AD81598649E008E62BD /* common.cpp in Sources */,
+				D00F63F219137E9D00FCCDEC /* fish_version.cpp in Sources */,
 				D0D02AD9159864A6008E62BD /* parser_keywords.cpp in Sources */,
 				D0D02ADA159864AB008E62BD /* wutil.cpp in Sources */,
 				D0D02ADB159864C2008E62BD /* tokenizer.cpp in Sources */,
@@ -1161,6 +1166,7 @@
 				D0D02A69159837B2008E62BD /* env.cpp in Sources */,
 				D0D02A6A1598381A008E62BD /* exec.cpp in Sources */,
 				D0D02A6B1598381F008E62BD /* expand.cpp in Sources */,
+				D00F63F119137E9D00FCCDEC /* fish_version.cpp in Sources */,
 				D0D02A6C15983829008E62BD /* highlight.cpp in Sources */,
 				D0D02A6D1598382C008E62BD /* history.cpp in Sources */,
 				D0D02A6E15983838008E62BD /* kill.cpp in Sources */,

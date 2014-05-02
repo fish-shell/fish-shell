@@ -116,7 +116,7 @@ FISH_TESTS_OBJS := $(FISH_OBJS) fish_tests.o
 #
 
 FISHD_OBJS := fishd.o env_universal_common.o wutil.o print_help.o	\
-	common.o utf8.o
+	common.o utf8.o fish_version.o
 
 
 #

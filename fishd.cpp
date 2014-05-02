@@ -74,7 +74,7 @@ time the original barrier request was sent have been received.
 #include "env_universal_common.h"
 #include "path.h"
 #include "print_help.h"
-#include "fish_version.cpp"
+#include "fish_version.h"
 
 #ifndef HOST_NAME_MAX
 /**

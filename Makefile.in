@@ -843,8 +843,7 @@ fish.o: sanity.h proc.h parse_tree.h tokenizer.h parse_constants.h parser.h
 fish.o: expand.h intern.h exec.h output.h screen.h history.h path.h input.h
 fish.o: input_common.h fish_version.h
 fishd.o: config.h signal.h fallback.h util.h common.h wutil.h
-fishd.o: env_universal_common.h env.h path.h print_help.h fish_version.cpp
-fishd.o: fish_version.h
+fishd.o: env_universal_common.h env.h path.h print_help.h fish_version.h
 fish_indent.o: config.h fallback.h signal.h util.h common.h wutil.h
 fish_indent.o: tokenizer.h print_help.h parser_keywords.h fish_version.h
 fish_tests.o: config.h signal.h fallback.h util.h common.h proc.h io.h

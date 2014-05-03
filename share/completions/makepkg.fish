@@ -1,6 +1,3 @@
-# Completions for makepkg 4, the Archlinux utility to build packages from source
-# Author: Giorgio Lando <patroclo7@gmail.com>
-#         SanskritFritz (gmail)
 
 complete -c makepkg      -l 'asroot'        -d 'Allow makepkg to run as root'
 complete -c makepkg -s A -l 'ignorearch'    -d 'Ignore missing or incomplete arch field'

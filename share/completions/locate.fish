@@ -1,5 +1,3 @@
-# Completions for locate
-# Author SanskritFritz (gmail)
 
 complete -c locate -s A -l 'all'          -d 'Match all non-option arguments'
 complete -c locate -s b -l 'basename'     -d 'Match against the base name of the file'

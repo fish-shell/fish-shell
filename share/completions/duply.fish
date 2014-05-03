@@ -1,5 +1,3 @@
-# Completions for duply
-# Author: SanskritFritz (gmail)
 
 # First parameter is the profile name, or 'usage'
 complete --command duply --no-files --condition '__fish_is_first_token' --arguments '(/bin/ls /etc/duply ^/dev/null) (/bin/ls ~/.duply ^/dev/null)' --description 'Profile'

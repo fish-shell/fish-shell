@@ -1,7 +1,3 @@
-#
-# Completions for the readlink command.
-# SanskritFritz (gmail)
-#
 
 complete -c readlink -s f -l canonicalize          --description 'Canonicalize, follow symlinks, last can be missing'
 complete -c readlink -s e -l canonicalize-existing --description 'Canonicalize, follow symlinks, none can be missing'

@@ -1981,7 +1981,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
                 bool in_redirection = false;
                 if (matching_arg_index == (size_t)(-1))
                 {
-                    const parse_node_t *redirection = tree.find_node_matching_source_location(symbol_redirection, pos, plain_statement);
+                    const parse_node_t *redirection = tree.find_node_matching_source_location(symbol_redirection, adjusted_pos, plain_statement);
                     in_redirection = (redirection != NULL);
                 }
                 

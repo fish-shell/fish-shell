@@ -59,6 +59,7 @@
 /* Begin PBXBuildFile section */
 		D00F63F119137E9D00FCCDEC /* fish_version.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00F63F019137E9D00FCCDEC /* fish_version.cpp */; };
 		D00F63F219137E9D00FCCDEC /* fish_version.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00F63F019137E9D00FCCDEC /* fish_version.cpp */; };
+		D00F63F31914C5F800FCCDEC /* fish_version.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00F63F019137E9D00FCCDEC /* fish_version.cpp */; };
 		D01A2D24169B736200767098 /* man1 in Copy Files */ = {isa = PBXBuildFile; fileRef = D01A2D23169B730A00767098 /* man1 */; };
 		D01A2D25169B737700767098 /* man1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D01A2D23169B730A00767098 /* man1 */; };
 		D031890C15E36E4600D9CC39 /* base in Resources */ = {isa = PBXBuildFile; fileRef = D031890915E36D9800D9CC39 /* base */; };
@@ -635,6 +636,7 @@
 				D0A0854113B3ACEE0099B651 /* fish_tests.cpp */,
 				D0A0854213B3ACEE0099B651 /* fish.cpp */,
 				D0A0854313B3ACEE0099B651 /* fishd.cpp */,
+				D00F63F019137E9D00FCCDEC /* fish_version.cpp */,
 				D0A0851113B3ACEE0099B651 /* highlight.h */,
 				D0A0854713B3ACEE0099B651 /* highlight.cpp */,
 				D0A0851213B3ACEE0099B651 /* history.h */,
@@ -693,7 +695,6 @@
 				D0A0856013B3ACEE0099B651 /* wildcard.cpp */,
 				D0A0852913B3ACEE0099B651 /* wutil.h */,
 				D0A0856113B3ACEE0099B651 /* wutil.cpp */,
-				D00F63F019137E9D00FCCDEC /* fish_version.cpp */,
 				D0A0852A13B3ACEE0099B651 /* xdgmime.h */,
 				D0A0856213B3ACEE0099B651 /* xdgmime.cpp */,
 				D0A0852B13B3ACEE0099B651 /* xdgmimealias.h */,
@@ -1118,6 +1119,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D00F63F31914C5F800FCCDEC /* fish_version.cpp in Sources */,
 				D0D02AC215985F3F008E62BD /* fishd.cpp in Sources */,
 				D0D02AC315985F43008E62BD /* env_universal_common.cpp in Sources */,
 				D0C9733918DE5449002D7C81 /* utf8.cpp in Sources */,

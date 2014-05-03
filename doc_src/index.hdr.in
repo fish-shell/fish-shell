@@ -413,7 +413,7 @@ command line.
 These are the general purpose tab completions that \c fish provides:
 
 - Completion of commands (builtins, functions and regular programs).
-- Completion of environment variable names.
+- Completion of shell variable names.
 - Completion of usernames for tilde expansion.
 - Completion of filenames, even on strings with wildcards such as '*', '**' and '?'.
 - Completion of job ID, job name and process names for <a href="#expand-process">process expansion</a>.
@@ -559,7 +559,7 @@ undergoes the process of parameter expansion before it is sent on to
 the command. Parameter expansion is a powerful mechanism that
 allows you to expand the parameter in various ways, including
 performing wildcard matching on files, inserting the value of
-environment variables into the parameter or even using the output of
+a shell variable into the parameter or even using the output of
 another command as a parameter list.
 
 \subsection expand-wildcard Wildcards
@@ -634,10 +634,10 @@ The command <code>mv *.{c,h} src/</code> moves all files with the suffix
 
 \subsection expand-variable Variable expansion
 
-A dollar sign followed by a string of characters is expanded into the
-value of the environment variable with the same name. For an
-introduction to the concept of environment variables, read the <a
-href="#variables">Environment variables</a> section.
+A dollar sign followed by a string of characters is expanded into the 
+value of the shell variable with the same name. For an 
+introduction to the concept of shell variables, read the 
+<a href="#variables">Shell variables</a> section.
 
 Undefined and empty variables expand to nothing.
 
@@ -699,7 +699,7 @@ instead be expressed as <code>$$foo[1][5]</code>.
 
 \subsection expand-index-range Index range expansion
 
-Both command substitution and environment variables support accessing only 
+Both command substitution and shell variable expansion support accessing only 
 specific items by providing a set of indices in square brackets. It's 
 often needed to access a sequence of elements. To do this, use the range
 operator '..' for this. A range <code>'a..b'</code>, where range limits 'a'
@@ -799,10 +799,12 @@ If the current directory contains the files 'foo' and 'bar', the command
 will output 'abar1 abar2 abar3 afoo1 afoo2 afoo3'.
 
 
-\section variables Environment variables
+\section variables Shell variables
 
-Environment variables are named pieces of data, which can be created, deleted
-and their values changed and used by the user.
+Shell variables are named pieces of data, which can be created, deleted
+and their values changed and used by the user.  Variables may optionally be "exported", so
+that a copy of the variable is available to any subprocesses the shell creates. An
+exported variable is referred to as an "environment variable".
 
 To set a variable value, use the <a href="commands.html#set"> \c set
 command</a>.

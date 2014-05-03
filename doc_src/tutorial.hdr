@@ -193,7 +193,7 @@ h3 { font-size: 110%; }
                 <li><a href="#tut_tab_completions"><span class="chevron">&rsaquo;</span> Tab Completions</a></li>
                 <li><a href="#tut_variables"><span class="chevron">&rsaquo;</span> Variables</a></li>
                 <li><a href="#tut_exit_status"><span class="chevron">&rsaquo;</span> Exit Status</a></li>
-                <li><a href="#tut_exports"><span class="chevron">&rsaquo;</span> Environment Variables</a></li>
+                <li><a href="#tut_exports"><span class="chevron">&rsaquo;</span> Shell Variables</a></li>
                 <li><a href="#tut_lists"><span class="chevron">&rsaquo;</span> Lists</a></li>
                 <li><a href="#tut_command_substitutions"><span class="chevron">&rsaquo;</span> Command Substitutions</a></li>
                 <li><a href="#tut_combiners"><span class="chevron">&rsaquo;</span> Combiners (And, Or, Not)</a></li>
@@ -258,7 +258,7 @@ fish has excellent help and man pages. Run <tt>help</tt> to open help in a web b
 
 <pre>
 > <b>man</b> <i>set</i>
-set - handle environment variables
+set - handle shell variables
   Synopsis...
 </pre>
 
@@ -429,7 +429,7 @@ Unlike other shells, fish stores the exit status of the last command in <tt>$sta
 
 Zero is considered success, and non-zero is failure.
 
-<h2 id="tut_exports">Exports (Environment Variables)</h2>
+<h2 id="tut_exports">Exports (Shell Variables)</h2>
 
 Unlike other shells, fish does not have an export command. Instead, a variable is exported via an option to <tt>set</tt>, either <tt>--export</tt> or just <tt>-x</tt>.
 

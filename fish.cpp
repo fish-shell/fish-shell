@@ -62,6 +62,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "history.h"
 #include "path.h"
 #include "input.h"
+#include "fish_version.h"
 
 /* PATH_MAX may not exist */
 #ifndef PATH_MAX
@@ -360,7 +361,7 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *out_c
                 fwprintf(stderr,
                          _(L"%s, version %s\n"),
                          PACKAGE_NAME,
-                         FISH_BUILD_VERSION);
+                         get_fish_version());
                 exit_without_destructors(0);
             }
 

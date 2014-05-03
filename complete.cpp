@@ -1976,28 +1976,42 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
                         }
                     }
                 }
-
-                bool do_file = false;
-
-                wcstring current_command_unescape, previous_argument_unescape, current_argument_unescape;
-                if (unescape_string(current_command, &current_command_unescape, UNESCAPE_DEFAULT) &&
-                        unescape_string(previous_argument, &previous_argument_unescape, UNESCAPE_DEFAULT) &&
-                        unescape_string(current_argument, &current_argument_unescape, UNESCAPE_INCOMPLETE))
+                
+                /* If we are not in an argument, we may be in a redirection */
+                bool in_redirection = false;
+                if (matching_arg_index == (size_t)(-1))
                 {
-                    do_file = completer.complete_param(current_command_unescape,
-                                                       previous_argument_unescape,
-                                                       current_argument_unescape,
-                                                       !had_ddash);
+                    const parse_node_t *redirection = tree.find_node_matching_source_location(symbol_redirection, adjusted_pos, plain_statement);
+                    in_redirection = (redirection != NULL);
                 }
-
-                /* If we have found no command specific completions at all, fall back to using file completions. */
-                if (completer.empty())
-                    do_file = true;
-
-                /* And if we're autosuggesting, and the token is empty, don't do file suggestions */
-                if ((flags & COMPLETION_REQUEST_AUTOSUGGESTION) && current_argument_unescape.empty())
+                
+                bool do_file = false;
+                if (in_redirection)
                 {
-                    do_file = false;
+                    do_file = true;
+                }
+                else
+                {
+                    wcstring current_command_unescape, previous_argument_unescape, current_argument_unescape;
+                    if (unescape_string(current_command, &current_command_unescape, UNESCAPE_DEFAULT) &&
+                            unescape_string(previous_argument, &previous_argument_unescape, UNESCAPE_DEFAULT) &&
+                            unescape_string(current_argument, &current_argument_unescape, UNESCAPE_INCOMPLETE))
+                    {
+                        do_file = completer.complete_param(current_command_unescape,
+                                                           previous_argument_unescape,
+                                                           current_argument_unescape,
+                                                           !had_ddash);
+                    }
+
+                    /* If we have found no command specific completions at all, fall back to using file completions. */
+                    if (completer.empty())
+                        do_file = true;
+
+                    /* And if we're autosuggesting, and the token is empty, don't do file suggestions */
+                    if ((flags & COMPLETION_REQUEST_AUTOSUGGESTION) && current_argument_unescape.empty())
+                    {
+                        do_file = false;
+                    }
                 }
 
                 /* This function wants the unescaped string */

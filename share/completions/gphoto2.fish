@@ -1,5 +1,3 @@
-# Command specific completions for gphoto2
-# Written by SanskritFritz (gmail)
 
 #Common options
 complete -c gphoto2    -s '?'-l 'help'                             -d 'Print complete help message on program usage'

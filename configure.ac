@@ -379,7 +379,7 @@ fi
 # Check presense of various header files
 #
 
-AC_CHECK_HEADERS([getopt.h termios.h sys/resource.h term.h ncurses/term.h ncurses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h execinfo.h spawn.h sys/sysctl.h])
+AC_CHECK_HEADERS([getopt.h termios.h sys/resource.h term.h ncurses/term.h ncurses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h execinfo.h spawn.h sys/sysctl.h sys/un.h sys/ucred.h ucred.h ])
 
 if test x$local_gettext != xno; then
   AC_CHECK_HEADERS([libintl.h])
@@ -397,6 +397,11 @@ AC_CHECK_HEADER(
   [AC_MSG_ERROR([Could not find the header regex.h, needed to build fish])]
 )
 
+#
+# Detect nanoseconds fields in struct stat
+#
+AC_CHECK_MEMBERS([struct stat.st_mtimespec.tv_nsec])
+AC_CHECK_MEMBERS([struct stat.st_mtim.tv_nsec])
 
 #
 # On some platforms (Solaris 10) adding -std=c99 in turn requires that
@@ -519,8 +524,8 @@ fi
 
 AC_CHECK_FUNCS( wcsdup wcsndup wcslen wcscasecmp wcsncasecmp fwprintf )
 AC_CHECK_FUNCS( futimes wcwidth wcswidth wcstok fputwc fgetwc )
-AC_CHECK_FUNCS( wcstol wcslcat wcslcpy lrand48_r killpg )
-AC_CHECK_FUNCS( backtrace backtrace_symbols sysconf getifaddrs )
+AC_CHECK_FUNCS( wcstol wcslcat wcslcpy lrand48_r killpg mkostemp )
+AC_CHECK_FUNCS( backtrace backtrace_symbols sysconf getifaddrs getpeerucred getpeereid )
 AC_CHECK_FUNCS( inotify_init inotify_init1 )
 
 if test x$local_gettext != xno; then

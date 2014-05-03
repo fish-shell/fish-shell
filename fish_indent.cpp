@@ -40,6 +40,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "tokenizer.h"
 #include "print_help.h"
 #include "parser_keywords.h"
+#include "fish_version.h"
 
 /**
    The string describing the single-character options accepted by the main fish binary
@@ -344,7 +345,7 @@ int main(int argc, char **argv)
                 fwprintf(stderr,
                          _(L"%ls, version %s\n"),
                          program_name,
-                         FISH_BUILD_VERSION);
+                         get_fish_version());
                 exit(0);
             }
 

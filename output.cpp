@@ -70,7 +70,7 @@ static const wchar_t *col[]=
     L"magenta",
     L"purple",
     L"cyan",
-    L"white"
+    L"white",
     L"normal"
 }
 ;

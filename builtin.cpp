@@ -425,27 +425,17 @@ static void builtin_bind_list(const wchar_t *bind_mode)
         }
 
         wcstring tname;
-        if (input_terminfo_get_name(seq, tname))
+
+        const wcstring eseq = input_terminfo_get_name(seq, tname) ? tname : escape_string(seq, 1);
+        append_format(stdout_buffer, L"bind -k %ls -M %ls -m %ls", eseq.c_str(), mode.c_str(), sets_mode.c_str());
+        for (size_t i = 0; i < ecmds.size(); i++)
         {
-            append_format(stdout_buffer, L"bind -k %ls -M %ls -m %ls", tname.c_str(), mode.c_str(), sets_mode.c_str());
-            for (size_t i = 0; i < ecmds.size(); i++)
-            {
-                wcstring ecmd = ecmds.at(i);
-                append_format(stdout_buffer, L" %ls", escape(ecmd.c_str(), 1));
-            }
-            append_format(stdout_buffer, L"\n");
+            wcstring ecmd = ecmds.at(i);
+            wchar_t *escaped = escape(ecmd.c_str(), 1);
+            append_format(stdout_buffer, L" %ls", escaped);
+            free(escaped);
         }
-        else
-        {
-            const wcstring eseq = escape_string(seq, 1);
-            append_format(stdout_buffer, L"bind -k %ls -M %ls -m %ls", eseq.c_str(), mode.c_str(), sets_mode.c_str());
-            for (size_t i = 0; i < ecmds.size(); i++)
-            {
-                wcstring ecmd = ecmds.at(i);
-                append_format(stdout_buffer, L" %ls", escape(ecmd.c_str(), 1));
-            }
-            append_format(stdout_buffer, L"\n");
-        }
+        append_format(stdout_buffer, L"\n");
     }
 }
 

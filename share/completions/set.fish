@@ -60,7 +60,7 @@ complete -c set -n '__fish_is_first_token' -s x -l export --description "Export 
 complete -c set -n '__fish_is_first_token' -s u -l unexport --description "Do not export variable to subprocess"
 complete -c set -n '__fish_is_first_token' -s g -l global --description "Make variable scope global"
 complete -c set -n '__fish_is_first_token' -s l -l local --description "Make variable scope local"
-complete -c set -n '__fish_is_first_token' -s U -l universal --description "Make variable scope universal, i.e. share variable with all the users fish processes on this computer"
+complete -c set -n '__fish_is_first_token' -s U -l universal --description "Share variable persistently across sessions"
 complete -c set -n '__fish_is_first_token' -s q -l query --description "Test if variable is defined"
 complete -c set -n '__fish_is_first_token' -s h -l help --description "Display help and exit"
 complete -c set -n '__fish_is_first_token' -s n -l names --description "List the names of the variables, but not their value"

@@ -1351,7 +1351,7 @@ const parse_node_t *parse_node_tree_t::find_node_matching_source_location(parse_
             continue;
 
         /* If a parent is given, it must be an ancestor */
-        if (parent != NULL && node_has_ancestor(*this, node, *parent))
+        if (parent != NULL && ! node_has_ancestor(*this, node, *parent))
             continue;
 
         /* Found it */

@@ -1364,12 +1364,20 @@ bool history_t::save_internal_via_rewrite()
         for (size_t attempt = 0; attempt < 10 && out_fd == -1; attempt++)
         {
             char *narrow_str = wcs2str(tmp_name_template.c_str());
+#if HAVE_MKOSTEMP
+            out_fd = mkostemp(narrow_str, O_WRONLY | O_CREAT | O_EXCL | O_TRUNC | O_CLOEXEC);
+            if (out_fd >= 0)
+            {
+                tmp_name = str2wcstring(narrow_str);
+            }
+#else
             if (narrow_str && mktemp(narrow_str))
             {
                 /* It was successfully templated; try opening it atomically */
                 tmp_name = str2wcstring(narrow_str);
                 out_fd = wopen_cloexec(tmp_name, O_WRONLY | O_CREAT | O_EXCL | O_TRUNC, 0644);
             }
+#endif
             free(narrow_str);
         }
 

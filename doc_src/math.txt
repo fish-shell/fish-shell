@@ -14,7 +14,7 @@ or a pipeline.
 For a description of the syntax supported by math, see the manual for
 the bc program. Keep in mind that parameter expansion takes place on
 any expressions before they are evaluated. This can be very useful in
-order to perform calculations involving environment variables or the
+order to perform calculations involving shell variables or the
 output of command substitutions, but it also means that parenthesis
 have to be escaped.
 

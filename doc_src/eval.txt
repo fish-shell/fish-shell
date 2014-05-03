@@ -9,7 +9,7 @@
 \subsection eval-example Example
 
 The following code will call the ls command. Note that \c fish does not
-support the use of environment variables as direct commands; \c eval can
+support the use of shell variables as direct commands; \c eval can
 be used to work around this.
 
 <pre>

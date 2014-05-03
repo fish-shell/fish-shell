@@ -74,6 +74,7 @@ time the original barrier request was sent have been received.
 #include "env_universal_common.h"
 #include "path.h"
 #include "print_help.h"
+#include "fish_version.h"
 
 #ifndef HOST_NAME_MAX
 /**
@@ -765,6 +766,8 @@ int main(int argc, char ** argv)
     int child_socket;
     struct sockaddr_un remote;
     socklen_t t;
+    uid_t sock_euid;
+    gid_t sock_egid;
     int max_fd;
     int update_count=0;
 
@@ -819,7 +822,7 @@ int main(int argc, char ** argv)
                 exit(0);
 
             case 'v':
-                debug(0, L"%ls, version %s\n", program_name, FISH_BUILD_VERSION);
+                debug(0, L"%ls, version %s\n", program_name, get_fish_version());
                 exit(0);
 
             case '?':
@@ -885,7 +888,12 @@ int main(int argc, char ** argv)
             {
                 debug(4, L"Connected with new child on fd %d", child_socket);
 
-                if (make_fd_nonblocking(child_socket) != 0)
+                if (((getpeereid(child_socket, &sock_euid, &sock_egid) != 0) || sock_euid != geteuid()))
+                {
+                    debug(1, L"Wrong credentials for child on fd %d", child_socket);
+                    close(child_socket);
+                }
+                else if (make_fd_nonblocking(child_socket) != 0)
                 {
                     wperror(L"fcntl");
                     close(child_socket);

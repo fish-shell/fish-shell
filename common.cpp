@@ -410,7 +410,7 @@ wcstring format_string(const wchar_t *format, ...)
     return result;
 }
 
-wcstring vformat_string(const wchar_t *format, va_list va_orig)
+void append_formatv(wcstring &target, const wchar_t *format, va_list va_orig)
 {
     const int saved_err = errno;
     /*
@@ -461,22 +461,21 @@ wcstring vformat_string(const wchar_t *format, va_list va_orig)
         va_end(va);
     }
 
-    wcstring result = wcstring(buff);
+    target.append(buff);
 
     if (buff != static_buff)
+    {
         free(buff);
+    }
 
     errno = saved_err;
-    return result;
 }
 
-void append_formatv(wcstring &str, const wchar_t *format, va_list ap)
+wcstring vformat_string(const wchar_t *format, va_list va_orig)
 {
-    /* Preserve errno across this call since it likes to stomp on it */
-    int err = errno;
-    str.append(vformat_string(format, ap));
-    errno = err;
-
+    wcstring result;
+    append_formatv(result, format, va_orig);
+    return result;
 }
 
 void append_format(wcstring &str, const wchar_t *format, ...)

@@ -1,5 +1,3 @@
-# Completions for the logkeys command.
-# Author: SanskritFritz (gmail)
 
 complete -c logkeys -s s -l start -d 'Starts the keylogging daemon'
 complete -c logkeys -s k -l kill -d 'Terminates the logkeys daemon'

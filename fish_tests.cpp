@@ -2371,7 +2371,9 @@ static void test_universal_notifiers()
     test_notifiers_with_strategy(universal_notifier_t::strategy_notifyd);
 #endif
 #if __linux || linux
+    if (system("mkdir -p /tmp/fish_uvars_test/ && touch /tmp/fish_uvars_test/varsfile.txt")) err(L"mkdir failed");
     test_notifiers_with_strategy(universal_notifier_t::strategy_inotify);
+    if (system("rm -Rf /tmp/fish_uvars_test/")) err(L"rm failed");
 #endif
 }
 

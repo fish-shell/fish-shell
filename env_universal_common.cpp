@@ -1665,7 +1665,7 @@ public:
         {
             struct inotify_event evt = {};
             ssize_t read_amt = read(watch_fd, &evt, sizeof evt);
-            if (read_amt >= sizeof evt)
+            if (read_amt >= (ssize_t)sizeof evt)
             {
                 if (evt.mask & (IN_DELETE_SELF | IN_MOVE_SELF))
                 {

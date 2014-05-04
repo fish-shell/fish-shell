@@ -1021,28 +1021,23 @@ static void test_wchar2utf8(const wchar_t *src, size_t slen, const char *dst, si
         }
     }
 
-    do
+    size = wchar_to_utf8(src, slen, mem, dlen, flags);
+    if (res != size)
     {
-        size = wchar_to_utf8(src, slen, mem, dlen, flags);
-        if (res != size)
-        {
-            err(L"w2u: %s: FAILED (rv: %lu, must be %lu)", descr, size, res);
-            break;
-        }
-
-        if (mem == NULL)
-            break;		/* OK */
-
-        if (memcmp(mem, dst, size) != 0)
-        {
-            err(L"w2u: %s: BROKEN", descr);
-            break;
-        }
-
+        err(L"w2u: %s: FAILED (rv: %lu, must be %lu)", descr, size, res);
+        goto finish;
     }
-    while (0);
 
-    if (mem != NULL);
+    if (mem == NULL)
+        goto finish;		/* OK */
+
+    if (memcmp(mem, dst, size) != 0)
+    {
+        err(L"w2u: %s: BROKEN", descr);
+        goto finish;
+    }
+
+    finish:
     free(mem);
 }
 

@@ -46,6 +46,7 @@
 #include "utf8.h"
 #include "env_universal_common.h"
 #include "path.h"
+#include "iothread.h"
 
 #if __APPLE__
 #define FISH_NOTIFYD_AVAILABLE 1
@@ -1688,14 +1689,143 @@ public:
     }
 };
 
+class universal_notifier_named_pipe_t : public universal_notifier_t
+{
+    int pipe_fd;
+    
+    // Remaining variables are protected by this lock
+    lock_t lock;
+    unsigned notification_seed;
+    bool notifier_thread_running;
+    
+    void make_pipe(const wchar_t *test_path)
+    {
+        wcstring vars_path = test_path ? wcstring(test_path) : default_vars_path();
+        vars_path.append(L".notifier");
+        const std::string narrow_path = wcs2string(vars_path);
+        
+        int fd = wopen_cloexec(vars_path, O_RDWR | O_NONBLOCK, 0600);
+        if (fd < 0 && errno == ENOENT)
+        {
+            /* File doesn't exist, try creating it */
+            if (mkfifo(narrow_path.c_str(), 0600) >= 0)
+            {
+                fd = wopen_cloexec(vars_path, O_RDWR | O_NONBLOCK, 0600);
+            }
+        }
+        if (fd < 0)
+        {
+            // Maybe open failed, maybe mkfifo failed
+            const int tmp_err = errno;
+            const wcstring err_msg = L"Unable to make or open a FIFO at " + vars_path;
+            errno = tmp_err;
+            wperror(err_msg.c_str());
+        }
+        else
+        {
+            pipe_fd = fd;
+        }
+    }
+    
+    static int notify_in_background(universal_notifier_named_pipe_t *self)
+    {
+        // We need to write some data (any data) to the pipe, then sleep for a while, then read it back.
+        // Nobody is expected to read it except us.
+        // For debugging, we write our pid.
+        // Because we are in a background thread with all signals masked, we do not expect to get EINTR
+        const int pid_nbo = htonl(getpid());
+        scoped_lock locker(self->lock);
+        assert(self->notifier_thread_running);
+        for (;;)
+        {
+            // Determine the seed at the time we post our request
+            const unsigned initial_seed = self->notification_seed;
+            
+            // Perform a notification for that seed
+            locker.unlock();
+            errno = 0;
+            ssize_t amt_written = write(self->pipe_fd, &pid_nbo, sizeof pid_nbo);
+            bool wrote_all = (amt_written == sizeof pid_nbo);
+            int err = errno;
+            
+            if (! wrote_all)
+            {
+                // Paranoia. If for some reason our pipe is filled up, then we drain it.
+                // This might happen if there's a bug, or if the user manually redirects something into our pipe
+                bool wrote_partial = (amt_written >= 0 && amt_written < sizeof pid_nbo);
+                bool pipe_full = (wrote_partial || err == EWOULDBLOCK || err == EAGAIN);
+                if (pipe_full)
+                {
+                    // Drain the pipe
+                    unsigned char buff[256];
+                    while (read(pid_nbo, buff, sizeof buff) > 0)
+                    {
+                        // Keep reading
+                    }
+                }
+            }
+            
+            // Now sleep a little
+            const long useconds_per_second = 1000000;
+            usleep(useconds_per_second / 25);
+            
+            // Read back what we we wrote
+            int read_back;
+            read_ignore(self->pipe_fd, &read_back, sizeof read_back);
+            
+            // See if we need to go around again
+            locker.lock();
+            if (initial_seed == self->notification_seed)
+            {
+                // No more notifications came in, we're done
+                break;
+            }
+        }
+        // Now we're done
+        // Note that we're still locked, so it's safe to manipulate this variable
+        self->notifier_thread_running = false;
+        return 0;
+    }
+    
+    public:
+    universal_notifier_named_pipe_t(const wchar_t *test_path) : pipe_fd(-1), notification_seed(0), notifier_thread_running(false)
+    {
+        make_pipe(test_path);
+    }
+    
+    int notification_fd()
+    {
+        return pipe_fd;
+    }
+    
+    bool drain_notification_fd(int fd)
+    {
+        // We deliberately do nothing here
+        return false;
+    }
+    
+    void post_notification()
+    {
+        if (pipe_fd >= 0)
+        {
+            scoped_lock locker(lock);
+            notification_seed++;
+            if (! notifier_thread_running)
+            {
+                // Need to kick it off
+                notifier_thread_running = true;
+                iothread_perform(notify_in_background, this);
+            }
+        }
+    }
+};
+
 universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_strategy()
 {
 #if FISH_NOTIFYD_AVAILABLE
     return strategy_notifyd;
-#elif FISH_INOTIFY_AVAILABLE
-    return strategy_inotify;
 #else
-    return strategy_shmem_polling;
+    return strategy_named_pipe;
 #endif
 }
 
@@ -1721,8 +1851,10 @@ universal_notifier_t *universal_notifier_t::new_notifier_for_strategy(universal_
             
         case strategy_inotify:
             return new universal_notifier_inotify_t(test_path);
-
             
+        case strategy_named_pipe:
+            return new universal_notifier_named_pipe_t(test_path);
+        
         default:
             fprintf(stderr, "Unsupported strategy %d\n", strat);
             return NULL;

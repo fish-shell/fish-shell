@@ -280,6 +280,7 @@ public:
     {
         strategy_default,
         strategy_shmem_polling,
+        strategy_named_pipe,
         strategy_inotify,
         strategy_notifyd
     };
@@ -303,9 +304,6 @@ public:
     /* Default instance. Other instances are possible for testing. */
     static universal_notifier_t &default_notifier();
     
-    /* Returns the fd from which to watch for events, or -1 if none */
-    virtual int notification_fd();
-    
     /* Does a fast poll(). Returns true if changed. */
     virtual bool poll();
     
@@ -317,6 +315,9 @@ public:
     
     /* Recommended delay between polls. A value of 0 means no polling required (so no timeout) */
     virtual unsigned long usec_delay_between_polls() const;
+    
+    /* Returns the fd from which to watch for events, or -1 if none */
+    virtual int notification_fd();
     
     /* The notification_fd is readable; drain it. Returns true if a notification is considered to have been posted. */
     virtual bool drain_notification_fd(int fd);

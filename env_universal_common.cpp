@@ -1590,32 +1590,18 @@ class universal_notifier_inotify_t : public universal_notifier_t
 {
     int watch_fd;
     int watch_descriptor;
+    const std::string narrow_path;
     
-    void setup_inotify(const wchar_t *test_path)
+    void reestablish_watch()
     {
 #if FISH_INOTIFY_AVAILABLE
-        
-        const wcstring path = test_path ? test_path : default_vars_path();
-        
-        // Construct the watchfd
-#if HAVE_INOTIFY_INIT1
-        this->watch_fd = inotify_init1(IN_NONBLOCK | IN_CLOEXEC);
-#else
-        this->watch_fd = inotify_init();
         if (this->watch_fd >= 0)
         {
-            int flags = fcntl(this->watch_fd, F_GETFL, 0);
-            fcntl(this->watch_fd, F_SETFL, flags | O_NONBLOCK | FD_CLOEXEC);
-        }
-#endif
-        if (this->watch_fd < 0)
-        {
-            wperror(L"inotify_init");
-        }
-        else
-        {
-            std::string narrow_path = wcs2string(path);
-            this->watch_descriptor = inotify_add_watch(this->watch_fd, narrow_path.c_str(), IN_MODIFY | IN_EXCL_UNLINK);
+            if (this->watch_descriptor >= 0)
+            {
+                inotify_rm_watch(this->watch_fd, this->watch_descriptor);
+            }
+            this->watch_descriptor = inotify_add_watch(this->watch_fd, narrow_path.c_str(), IN_MODIFY | IN_MOVE_SELF | IN_DELETE_SELF | IN_EXCL_UNLINK);
             if (this->watch_descriptor < 0)
             {
                 wperror(L"inotify_add_watch");
@@ -1624,9 +1610,33 @@ class universal_notifier_inotify_t : public universal_notifier_t
 #endif
     }
     
+    void setup_inotify(const wchar_t *test_path)
+    {
+#if FISH_INOTIFY_AVAILABLE
+        // Construct the watchfd
+        
+#if HAVE_INOTIFY_INIT1
+        this->watch_fd = inotify_init1(IN_NONBLOCK | IN_CLOEXEC);
+#else
+        this->watch_fd = inotify_init();
+#endif
+        
+        if (this->watch_fd < 0)
+        {
+            wperror(L"inotify_init");
+        }
+        else
+        {
+            int flags = fcntl(this->watch_fd, F_GETFL, 0);
+            fcntl(this->watch_fd, F_SETFL, flags | O_NONBLOCK | FD_CLOEXEC);
+        }
+        reestablish_watch();
+#endif
+    }
+    
 public:
     
-    universal_notifier_inotify_t(const wchar_t *test_path) : watch_fd(-1), watch_descriptor(-1)
+    universal_notifier_inotify_t(const wchar_t *test_path) : watch_fd(-1), watch_descriptor(-1), narrow_path(wcs2string(test_path ? test_path : default_vars_path()))
     {
         setup_inotify(test_path);
     }
@@ -1651,9 +1661,28 @@ public:
         bool result = false;
         
 #if FISH_INOTIFY_AVAILABLE
-        struct inotify_event evt = {};
-        ssize_t read_amt = read(watch_fd, &evt, sizeof evt);
-        result = (read_amt > 0);
+        for (;;)
+        {
+            struct inotify_event evt = {};
+            ssize_t read_amt = read(watch_fd, &evt, sizeof evt);
+            if (read_amt >= sizeof evt)
+            {
+                if (evt.mask & (IN_DELETE_SELF | IN_MOVE_SELF))
+                {
+                    // When a file is deleted, the watch is lost. Recreate it.
+                    reestablish_watch();
+                    result = true;
+                }
+                if (evt.mask & IN_MODIFY)
+                {
+                    result = true;
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
 #endif
         return result;
     }

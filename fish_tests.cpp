@@ -2292,7 +2292,7 @@ static void trigger_or_wait_for_notification(universal_notifier_t *notifier, uni
         {
             // Hacktastic. Replace the file, then wait
             char cmd[512];
-            sprintf(cmd, "cp %ls %ls ; mv %ls %ls", UVARS_TEST_PATH, UVARS_TEST_PATH L".tmp", UVARS_TEST_PATH ".tmp", UVARS_TEST_PATH);
+            sprintf(cmd, "touch %ls ; mv %ls %ls", UVARS_TEST_PATH L".tmp", UVARS_TEST_PATH ".tmp", UVARS_TEST_PATH);
             if (system(cmd)) err(L"Command failed: %s", cmd);
             usleep(1000000 / 25);
             break;
@@ -2371,8 +2371,6 @@ static void test_universal_notifiers()
     test_notifiers_with_strategy(universal_notifier_t::strategy_notifyd);
 #endif
 #if __linux || linux
-    if (system("mkdir -p /tmp/fish_uvars_test/ && touch /tmp/fish_uvars_test/varsfile.txt")) err(L"mkdir failed");
-    
     test_notifiers_with_strategy(universal_notifier_t::strategy_inotify);
 #endif
 }

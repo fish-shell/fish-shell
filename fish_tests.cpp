@@ -687,6 +687,9 @@ static void test_parser()
     parser_t::principal_parser().eval(L"function recursive1 ; recursive2 ; end ; function recursive2 ; recursive1 ; end ; recursive1; ", io_chain_t(), TOP);
 #endif
 
+    say(L"Testing empty function name");
+    parser_t::principal_parser().eval(L"function '' ; echo fail; exit 42 ; end ; ''", io_chain_t(), TOP);
+
     say(L"Testing eval_args");
     completion_list_t comps;
     parser_t::principal_parser().expand_argument_list(L"alpha 'beta gamma' delta", comps);

@@ -1694,7 +1694,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t
     long long readback_time_usec;
     size_t readback_amount;
     
-    bool is_readable;
+    bool polling_due_to_readable_fd;
     long long drain_if_still_readable_time_usec;
     
     void make_pipe(const wchar_t *test_path)
@@ -1738,7 +1738,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t
     }
     
     public:
-    universal_notifier_named_pipe_t(const wchar_t *test_path) : pipe_fd(-1), readback_time_usec(0), readback_amount(0), is_readable(false), drain_if_still_readable_time_usec(0)
+    universal_notifier_named_pipe_t(const wchar_t *test_path) : pipe_fd(-1), readback_time_usec(0), readback_amount(0), polling_due_to_readable_fd(false), drain_if_still_readable_time_usec(0)
     {
         make_pipe(test_path);
     }
@@ -1753,25 +1753,34 @@ class universal_notifier_named_pipe_t : public universal_notifier_t
     
     int notification_fd()
     {
-        int result = -1;
-        if (! is_readable)
+        if (polling_due_to_readable_fd)
         {
-            result = pipe_fd;
+            // We are in polling mode because we think our fd is readable
+            // This means that, if we return it to be select()'d on, we'll be called back immediately
+            // So don't return it
+            return -1;
         }
-        return result;
+        else
+        {
+            // We are not in polling mode
+            // Return the fd so it can be watched
+            return pipe_fd;
+        }
     }
     
     bool notification_fd_became_readable(int fd)
     {
         // Our fd is readable. We deliberately do not read anything out of it: if we did, other sessions may miss the notification.
-        // Instead, we go into "polling mode:" we do not select() on our fd for a while, and then sync in the future.
-        // However, if we remain readable for too long, we'll read out data
-        if (readback_time_usec > 0)
+        // Instead, we go into "polling mode:" we do not select() on our fd for a while, and sync periodically until the fd is no longer readable.
+        // However, if we are the one who posted the notification, we don't sync (until we clean up!)
+        bool should_sync = false;
+        if (readback_time_usec == 0)
         {
-            is_readable = true;
+            polling_due_to_readable_fd = true;
             drain_if_still_readable_time_usec = get_time() + SUSTAINED_READABILITY_CLEANUP_DURATION_USEC;
+            should_sync = true;
         }
-        return true;
+        return should_sync;
     }
     
     void post_notification()
@@ -1792,14 +1801,14 @@ class universal_notifier_named_pipe_t : public universal_notifier_t
             }
             
             // Now schedule a read for some time in the future
-            readback_time_usec = get_time() + NAMED_PIPE_FLASH_DURATION_USEC;
-            readback_amount += sizeof pid_nbo;
+            this->readback_time_usec = get_time() + NAMED_PIPE_FLASH_DURATION_USEC;
+            this->readback_amount += sizeof pid_nbo;
         }
     }
     
     unsigned long usec_delay_between_polls() const
     {
-        unsigned long result = 0;
+        unsigned long readback_delay = ULONG_MAX;
         if (this->readback_time_usec > 0)
         {
             // How long until the readback?
@@ -1807,24 +1816,29 @@ class universal_notifier_named_pipe_t : public universal_notifier_t
             if (now >= this->readback_time_usec)
             {
                 // Oops, it already passed! Return something tiny.
-                result = 1000;
+                readback_delay = 1000;
             }
             else
             {
-                result = (unsigned long)(this->readback_time_usec - now);
+                readback_delay = (unsigned long)(this->readback_time_usec - now);
             }
         }
         
-        if (is_readable)
+        unsigned long polling_delay = ULONG_MAX;
+        if (polling_due_to_readable_fd)
         {
             // We're in polling mode
             // Don't return a value less than our polling interval
-            if (result == 0 || result > NAMED_PIPE_FLASH_DURATION_USEC)
-            {
-                result = NAMED_PIPE_FLASH_DURATION_USEC;
-            }
+            polling_delay = NAMED_PIPE_FLASH_DURATION_USEC;
         }
         
+        // Now return the smaller of the two values
+        // If we get ULONG_MAX, it means there's no more need to poll; in that case return 0
+        unsigned long result = mini(readback_delay, polling_delay);
+        if (result == ULLONG_MAX)
+        {
+            result = 0;
+        }
         return result;
     }
     
@@ -1848,8 +1862,11 @@ class universal_notifier_named_pipe_t : public universal_notifier_t
         }
         
         // Check to see if we are doing readability polling
-        if (is_readable && pipe_fd >= 0)
+        if (polling_due_to_readable_fd && pipe_fd >= 0)
         {
+            // We are polling, so we are definitely going to sync
+            result = true;
+            
             // See if this is still readable
             fd_set fds;
             FD_ZERO(&fds);
@@ -1858,11 +1875,9 @@ class universal_notifier_named_pipe_t : public universal_notifier_t
             select(this->pipe_fd + 1, &fds, NULL, NULL, &timeout);
             if (! FD_ISSET(this->pipe_fd, &fds))
             {
-                // No longer readable
-                is_readable = false;
+                // No longer readable, no longer polling
+                polling_due_to_readable_fd = false;
                 drain_if_still_readable_time_usec = 0;
-                // Sync with the file to pick up any changes
-                result = true;
             }
             else
             {
@@ -1874,8 +1889,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t
             }
         }
         
-        // We use poll() as just a way to clean up our own messes. The real magic happens in notification_fd_became_readable
-        return false;
+        return result;
     }
 };
 

@@ -2254,7 +2254,7 @@ bool poll_notifier(universal_notifier_t *note)
     }
     
     int fd = note->notification_fd();
-    if (fd >= 0)
+    if (! result && fd >= 0)
     {
         fd_set fds;
         FD_ZERO(&fds);
@@ -2350,7 +2350,9 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
         // Named pipes have special cleanup requirements
         if (strategy == universal_notifier_t::strategy_named_pipe)
         {
-            usleep(1000000 / 10);
+            usleep(1000000 / 10); //corresponds to NAMED_PIPE_FLASH_DURATION_USEC
+            // Have to clean up the posted one first, so that the others see the pipe become no longer readable
+            poll_notifier(notifiers[post_idx]);
             for (size_t i=0; i < notifier_count; i++)
             {
                 poll_notifier(notifiers[i]);

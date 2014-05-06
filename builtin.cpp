@@ -2002,6 +2002,7 @@ int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstr
         else if (! wcslen(argv[woptind]))
         {
             append_format(*out_err, _(L"%ls: No function name given\n"), argv[0]);
+            res=1;
         }
         else
         {

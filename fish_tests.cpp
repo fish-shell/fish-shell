@@ -2252,19 +2252,17 @@ bool poll_notifier(universal_notifier_t *note)
     {
         result = note->poll();
     }
-    else
+    
+    int fd = note->notification_fd();
+    if (fd >= 0)
     {
-        int fd = note->notification_fd();
-        if (fd > 0)
+        fd_set fds;
+        FD_ZERO(&fds);
+        FD_SET(fd, &fds);
+        struct timeval tv = {0, 0};
+        if (select(fd + 1, &fds, NULL, NULL, &tv) > 0 && FD_ISSET(fd, &fds))
         {
-            fd_set fds;
-            FD_ZERO(&fds);
-            FD_SET(fd, &fds);
-            struct timeval tv = {0, 0};
-            if (select(fd + 1, &fds, NULL, NULL, &tv) > 0 && FD_ISSET(fd, &fds))
-            {
-                result = note->drain_notification_fd(fd);
-            }
+            result = note->notification_fd_became_readable(fd);
         }
     }
     return result;
@@ -2286,6 +2284,9 @@ static void trigger_or_wait_for_notification(universal_notifier_t *notifier, uni
             // notifyd requires a round trip to the notifyd server, which means we have to wait a little bit to receive it
             // In practice, this seems to be enough
             usleep(1000000 / 25);
+            break;
+            
+        case universal_notifier_t::strategy_named_pipe:
             break;
             
         case universal_notifier_t::strategy_inotify:
@@ -2342,7 +2343,17 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
             
             if (! poll_notifier(notifiers[i]))
             {
-                err(L"Universal variable notifier polled failed to notice changes, with strategy %d", (int)strategy);
+                err(L"Universal variable notifier (%lu) %p polled failed to notice changes, with strategy %d", i, notifiers[i], (int)strategy);
+            }
+        }
+        
+        // Named pipes have special cleanup requirements
+        if (strategy == universal_notifier_t::strategy_named_pipe)
+        {
+            usleep(1000000 / 10);
+            for (size_t i=0; i < notifier_count; i++)
+            {
+                poll_notifier(notifiers[i]);
             }
         }
     }
@@ -2361,20 +2372,20 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
     {
         delete notifiers[i];
     }
-
 }
 
 static void test_universal_notifiers()
 {
+    if (system("mkdir -p /tmp/fish_uvars_test/ && touch /tmp/fish_uvars_test/varsfile.txt")) err(L"mkdir failed");
     test_notifiers_with_strategy(universal_notifier_t::strategy_shmem_polling);
+    test_notifiers_with_strategy(universal_notifier_t::strategy_named_pipe);
 #if __APPLE__
     test_notifiers_with_strategy(universal_notifier_t::strategy_notifyd);
 #endif
 #if __linux || linux
-    if (system("mkdir -p /tmp/fish_uvars_test/ && touch /tmp/fish_uvars_test/varsfile.txt")) err(L"mkdir failed");
     test_notifiers_with_strategy(universal_notifier_t::strategy_inotify);
-    if (system("rm -Rf /tmp/fish_uvars_test/")) err(L"rm failed");
 #endif
+    if (system("rm -Rf /tmp/fish_uvars_test/")) err(L"rm failed");
 }
 
 class history_tests_t

@@ -192,7 +192,7 @@ static wint_t readb()
             
             if (notifier_fd > 0 && FD_ISSET(notifier_fd, &fdset))
             {
-                bool notified = notifier.drain_notification_fd(notifier_fd);
+                bool notified = notifier.notification_fd_became_readable(notifier_fd);
                 if (notified)
                 {
                     env_universal_barrier();

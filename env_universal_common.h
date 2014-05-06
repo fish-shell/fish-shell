@@ -308,7 +308,7 @@ public:
     virtual bool poll();
     
     /* Indicates whether this notifier requires polling. */
-    virtual bool needs_polling() const;
+    bool needs_polling() const;
     
     /* Triggers a notification */
     virtual void post_notification();
@@ -320,7 +320,7 @@ public:
     virtual int notification_fd();
     
     /* The notification_fd is readable; drain it. Returns true if a notification is considered to have been posted. */
-    virtual bool drain_notification_fd(int fd);
+    virtual bool notification_fd_became_readable(int fd);
 };
 
 std::string get_machine_identifier();

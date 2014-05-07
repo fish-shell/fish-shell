@@ -273,15 +273,35 @@ public:
     void read_message(connection_t *src, callback_data_list_t *callbacks);
 };
 
+/** The "universal notifier" is an object responsible for broadcasting and receiving universal variable change notifications. These notifications do not contain the change, but merely indicate that the uvar file has changed. It is up to the uvar subsystem to re-read the file.
+
+   We support a few notificatins strategies. Not all strategies are supported on all platforms.
+   
+   Notifiers may request polling, and/or provide a file descriptor to be watched for readability in select().
+   
+   To request polling, the notifier overrides usec_delay_between_polls() to return a positive value. That value will be used as the timeout in select(). When select returns, the loop invokes poll(). poll() should return true to indicate that the file may have changed.
+    
+   To provide a file descriptor, the notifier overrides notification_fd() to return a non-negative fd. This will be added to the "read" file descriptor list in select(). If the fd is readable, notification_fd_became_readable() will be called; that function should be overridden to return true if the file may have changed.
+
+*/
 class universal_notifier_t
 {
 public:
     enum notifier_strategy_t
     {
+        // Default meta-strategy to use the 'best' notifier for the system
         strategy_default,
+        
+        // Use a value in shared memory. Simple, but requires polling and therefore semi-frequent wakeups.
         strategy_shmem_polling,
+        
+        // Strategy that uses a named pipe. Somewhat complex, but portable and doesn't require polling most of the time.
         strategy_named_pipe,
+        
+        // Strategy that attempts to detect file changes directly via inotify. Doesn't handle certain edge cases (like the file missing); not yet recommended. Linux only.
         strategy_inotify,
+        
+        // Strategy that uses notify(3). Simple and efficient, but OS X only.
         strategy_notifyd
     };
 
@@ -307,9 +327,6 @@ public:
     /* Does a fast poll(). Returns true if changed. */
     virtual bool poll();
     
-    /* Indicates whether this notifier requires polling. */
-    bool needs_polling() const;
-    
     /* Triggers a notification */
     virtual void post_notification();
     
@@ -325,5 +342,8 @@ public:
 
 std::string get_machine_identifier();
 bool get_hostname_identifier(std::string *result);
+
+/* Environment variable for requesting a particular universal notifier. See fetch_default_strategy_from_environment for names. */
+#define UNIVERSAL_NOTIFIER_ENV_NAME "fish_universal_notifier"
 
 #endif

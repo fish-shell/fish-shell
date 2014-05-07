@@ -1431,7 +1431,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t
     
     public:
     
-    /* Our notification involves changing the value in our shared memory. In practice, all clients will be in separate processes, so it suffices to set the value to a pid. For testing purposes, however, it's useful to keep them in the same process, so we increment the value. This isn't "safe" in the sense that  */
+    /* Our notification involves changing the value in our shared memory. In practice, all clients will be in separate processes, so it suffices to set the value to a pid. For testing purposes, however, it's useful to keep them in the same process, so we increment the value. This isn't "safe" in the sense that multiple simultaneous increments may result in one being lost, but it should always result in the value being changed, which is sufficient. */
     void post_notification()
     {
         if (region != NULL)
@@ -1506,6 +1506,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t
     }
 };
 
+/* A notifyd-based notifier. Very straightforward. */
 class universal_notifier_notifyd_t : public universal_notifier_t
 {
     int notify_fd;
@@ -1582,6 +1583,7 @@ public:
     }
 };
 
+/* inotify-based notifier. This attempts to watch the uvars file directly. Since the file is never modified (only replaced), it has to watch for deletions. If the file is not present, this will probably break horribly. Needs love before it can be competitive. */
 class universal_notifier_inotify_t : public universal_notifier_t
 {
     int watch_fd;
@@ -1685,9 +1687,14 @@ public:
 };
 
 #define NAMED_PIPE_FLASH_DURATION_USEC (1000000 / 10)
-
 #define SUSTAINED_READABILITY_CLEANUP_DURATION_USEC (1000000 * 5)
 
+/* Named-pipe based notifier. All clients open the same named pipe for reading and writing. The pipe's readability status is a trigger to enter polling mode.
+
+  To post a notification, write some data to the pipe, wait a little while, and then read it back.
+  
+  To receive a notification, watch for the pipe to become readable. When it does, enter a polling mode until the pipe is no longer readable. To guard against the possibility of a shell exiting when there is data remaining in the pipe, if the pipe is kept readable too long, clients will attempt to read data out of it (to render it no longer readable).
+*/
 class universal_notifier_named_pipe_t : public universal_notifier_t
 {
     int pipe_fd;
@@ -1893,9 +1900,57 @@ class universal_notifier_named_pipe_t : public universal_notifier_t
     }
 };
 
+static universal_notifier_t::notifier_strategy_t fetch_default_strategy_from_environment()
+{
+    universal_notifier_t::notifier_strategy_t result = universal_notifier_t::strategy_default;
+
+    const struct
+    {
+        const char *name;
+        universal_notifier_t::notifier_strategy_t strat;
+    } options[] =
+    {
+        {"default", universal_notifier_t::strategy_default},
+        {"shmem", universal_notifier_t::strategy_shmem_polling},
+        {"pipe", universal_notifier_t::strategy_named_pipe},
+        {"inotify", universal_notifier_t::strategy_inotify},
+        {"notifyd", universal_notifier_t::strategy_notifyd}
+    };
+    const size_t opt_count = sizeof options / sizeof *options;
+
+    const char *var = getenv(UNIVERSAL_NOTIFIER_ENV_NAME);
+    if (var != NULL && var[0] != '\0')
+    {
+        size_t i;
+        for (i=0; i < opt_count; i++)
+        {
+            if (! strcmp(var, options[i].name))
+            {
+                result = options[i].strat;
+                break;
+            }
+        }
+        if (i >= opt_count)
+        {
+            fprintf(stderr, "Warning: unrecognized value for %s: '%s'\n", UNIVERSAL_NOTIFIER_ENV_NAME, var);
+            fprintf(stderr, "Warning: valid values are ");
+            for (size_t j=0; j < opt_count; j++)
+            {
+                fprintf(stderr, "%s%s", j > 0 ? ", " : "", options[j].name);
+            }
+            fputc('\n', stderr);
+        }
+    }
+    return result;
+}
+
 universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_strategy()
 {
-    return strategy_named_pipe;
+    static universal_notifier_t::notifier_strategy_t s_explicit_strategy = fetch_default_strategy_from_environment();
+    if (s_explicit_strategy != strategy_default)
+    {
+        return s_explicit_strategy;
+    }
 #if FISH_NOTIFYD_AVAILABLE
     return strategy_notifyd;
 #else
@@ -1956,11 +2011,6 @@ void universal_notifier_t::post_notification()
 bool universal_notifier_t::poll()
 {
     return false;
-}
-
-bool universal_notifier_t::needs_polling() const
-{
-    return this->usec_delay_between_polls() > 0;
 }
 
 unsigned long universal_notifier_t::usec_delay_between_polls() const

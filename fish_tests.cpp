@@ -2248,7 +2248,7 @@ static void test_universal()
 bool poll_notifier(universal_notifier_t *note)
 {
     bool result = false;
-    if (note->needs_polling())
+    if (note->usec_delay_between_polls() > 0)
     {
         result = note->poll();
     }

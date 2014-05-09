@@ -638,18 +638,32 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y)
         x_steps = 0;
     }
 
+    char *multi_str = NULL;
     if (x_steps < 0)
     {
         str = cursor_left;
+        multi_str = parm_left_cursor;
     }
     else
     {
         str = cursor_right;
+        multi_str = parm_right_cursor;
     }
-
-    for (i=0; i<abs(x_steps); i++)
+    
+    // Use the bulk ('multi') output for cursor movement if it is supported and it would be shorter
+    // Note that this is required to avoid some visual glitches in iTerm (#1448)
+    bool use_multi = (multi_str != NULL && multi_str[0] != '\0' && abs(x_steps) * strlen(str) > strlen(multi_str));
+    if (use_multi)
     {
-        writembs(str);
+        char *multi_param = tparm(multi_str, abs(x_steps));
+        writembs(multi_param);
+    }
+    else
+    {
+        for (i=0; i<abs(x_steps); i++)
+        {
+            writembs(str);
+        }
     }
 
 

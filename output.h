@@ -78,33 +78,8 @@ void set_color(rgb_color_t c, rgb_color_t c2);
 /**
    Write specified multibyte string
  */
-#define writembs( mbs )                         \
-        {                                       \
-                char *tmp = mbs;                \
-                if( tmp )        \
-                {          \
-                        writembs_internal( tmp );      \
-                }              \
-                else              \
-                {              \
-                        debug( 0,          \
-             _(L"Tried to use terminfo string %s on line %d of %s, which is undefined in terminal of type \"%ls\". Please report this error to %s"), \
-             #mbs,          \
-             __LINE__,        \
-             __FILE__,        \
-             output_get_term(),      \
-             PACKAGE_BUGREPORT);      \
-    }                                                       \
-  }
-
-
-/**
-   Write a char * narrow string to FD 1, needed for the terminfo
-   strings. This is usually just a wrapper aound tputs, using writeb
-   as the sending function. But a weird bug on PPC Linux means that on
-   this platform, write is instead used directly.
-*/
-int writembs_internal(char *str);
+void writembs_check(char *mbs, const char *mbs_name, const char *file, long line);
+#define writembs(mbs) writembs_check((mbs), #mbs, __FILE__, __LINE__)
 
 /**
    Write a wide character using the output method specified using output_set_writer().

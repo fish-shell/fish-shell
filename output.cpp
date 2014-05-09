@@ -418,13 +418,6 @@ int writeb(tputs_arg_t b)
     return 0;
 }
 
-int writembs_internal(char *str)
-{
-    CHECK(str, 1);
-
-    return tputs(str,1,&writeb)==ERR?1:0;
-}
-
 int writech(wint_t ch)
 {
     mbstate_t state;
@@ -724,4 +717,21 @@ void output_set_term(const wcstring &term)
 const wchar_t *output_get_term()
 {
     return current_term.empty() ? L"<unknown>" : current_term.c_str();
+}
+
+void writembs_check(char *mbs, const char *mbs_name, const char *file, long line)
+{
+    if (mbs != NULL)
+    {
+        tputs(mbs, 1, &writeb);
+    }
+    else
+    {
+        debug( 0, _(L"Tried to use terminfo string %s on line %ld of %s, which is undefined in terminal of type \"%ls\". Please report this error to %s"),
+              mbs_name,
+              line,
+              file,
+              output_get_term(),
+              PACKAGE_BUGREPORT);
+    }
 }

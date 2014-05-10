@@ -1190,6 +1190,12 @@ static void launch(char *filter, const string_list_t &files, size_t fileno)
             writer('&');
             writer('\0');
 
+            /*
+              Calling writer might fail in which case launch_buff gets freed.
+            */
+            if (error)
+                return;
+
             if (system(launch_buff) == -1)
             {
                 fprintf(stderr, _(ERROR_SYSTEM), MIMEDB, launch_buff);

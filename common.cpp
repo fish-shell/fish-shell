@@ -1619,8 +1619,9 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
             }
         }
 
+        wchar_t not_a_wchar = NOT_A_WCHAR;
         /* Now maybe append the char */
-        if (to_append != NOT_A_WCHAR)
+        if (to_append != not_a_wchar)
         {
             result.push_back(to_append);
         }

@@ -58,7 +58,7 @@
 #include "fish_version.h"
 
 /** Command used to start fishd */
-#define FISHD_CMD L"fishd ^ /tmp/fishd.log.%s"
+#define FISHD_CMD L"fishd ^ /dev/null"
 
 // Version for easier debugging
 //#define FISHD_CMD L"fishd"

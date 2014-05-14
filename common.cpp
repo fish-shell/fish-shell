@@ -72,7 +72,7 @@ parts of fish.
 #include "util.cpp"
 #include "fallback.cpp"
 
-#define NOT_A_WCHAR WEOF
+#define NOT_A_WCHAR (static_cast<wint_t>(WEOF))
 
 struct termios shell_modes;
 
@@ -1137,8 +1137,8 @@ static size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool 
         return 0;
     }
 
-    /* Here's the character we'll ultimately append. Note that L'\0' is a valid thing to append. */
-    wchar_t result_char = NOT_A_WCHAR;
+    /* Here's the character we'll ultimately append, or NOT_A_WCHAR for none. Note that L'\0' is a valid thing to append. */
+    wint_t result_char_or_none = NOT_A_WCHAR;
 
     bool errored = false;
     size_t in_pos = 1; //in_pos always tracks the next character to read (and therefore the number of characters read so far)
@@ -1240,7 +1240,7 @@ static size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool 
 
             if (res <= max_val)
             {
-                result_char = (wchar_t)((byte_literal ? ENCODE_DIRECT_BASE : 0)+res);
+                result_char_or_none = (wchar_t)((byte_literal ? ENCODE_DIRECT_BASE : 0)+res);
             }
             else
             {
@@ -1253,14 +1253,14 @@ static size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool 
         /* \a means bell (alert) */
         case L'a':
         {
-            result_char = L'\a';
+            result_char_or_none = L'\a';
             break;
         }
 
         /* \b means backspace */
         case L'b':
         {
-            result_char = L'\b';
+            result_char_or_none = L'\b';
             break;
         }
 
@@ -1270,11 +1270,11 @@ static size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool 
             const wchar_t sequence_char = input[in_pos++];
             if (sequence_char >= L'a' && sequence_char <= (L'a'+32))
             {
-                result_char = sequence_char-L'a'+1;
+                result_char_or_none = sequence_char-L'a'+1;
             }
             else if (sequence_char >= L'A' && sequence_char <= (L'A'+32))
             {
-                result_char = sequence_char-L'A'+1;
+                result_char_or_none = sequence_char-L'A'+1;
             }
             else
             {
@@ -1286,7 +1286,7 @@ static size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool 
         /* \x1b means escape */
         case L'e':
         {
-            result_char = L'\x1b';
+            result_char_or_none = L'\x1b';
             break;
         }
 
@@ -1295,7 +1295,7 @@ static size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool 
         */
         case L'f':
         {
-            result_char = L'\f';
+            result_char_or_none = L'\f';
             break;
         }
 
@@ -1304,7 +1304,7 @@ static size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool 
         */
         case L'n':
         {
-            result_char = L'\n';
+            result_char_or_none = L'\n';
             break;
         }
 
@@ -1313,7 +1313,7 @@ static size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool 
         */
         case L'r':
         {
-            result_char = L'\r';
+            result_char_or_none = L'\r';
             break;
         }
 
@@ -1322,7 +1322,7 @@ static size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool 
          */
         case L't':
         {
-            result_char = L'\t';
+            result_char_or_none = L'\t';
             break;
         }
 
@@ -1331,14 +1331,14 @@ static size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool 
         */
         case L'v':
         {
-            result_char = L'\v';
+            result_char_or_none = L'\v';
             break;
         }
 
         /* If a backslash is followed by an actual newline, swallow them both */
         case L'\n':
         {
-            result_char = NOT_A_WCHAR;
+            result_char_or_none = NOT_A_WCHAR;
             break;
         }
 
@@ -1346,13 +1346,16 @@ static size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool 
         {
             if (unescape_special)
                 result->push_back(INTERNAL_SEPARATOR);
-            result_char = c;
+            result_char_or_none = c;
             break;
         }
     }
 
-    if (! errored && result_char != NOT_A_WCHAR)
+    if (! errored && result_char_or_none != NOT_A_WCHAR)
     {
+        wchar_t result_char = static_cast<wchar_t>(result_char_or_none);
+        // if result_char is not NOT_A_WCHAR, it must be a valid wchar
+        assert((wint_t)result_char == result_char_or_none);
         result->push_back(result_char);
     }
     return errored ? 0 : in_pos;
@@ -1382,7 +1385,7 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
     {
         const wchar_t c = input[input_position];
         /* Here's the character we'll append to result, or NOT_A_WCHAR to suppress it */
-        wchar_t to_append = c;
+        wint_t to_append_or_none = c;
         if (mode == mode_unquoted)
         {
 
@@ -1404,7 +1407,7 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
                         input_position += escape_chars - 1;
                     }
                     /* We've already appended, don't append anything else */
-                    to_append = NOT_A_WCHAR;
+                    to_append_or_none = NOT_A_WCHAR;
                     break;
                 }
 
@@ -1412,7 +1415,7 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
                 {
                     if (unescape_special && (input_position == 0))
                     {
-                        to_append = HOME_DIRECTORY;
+                        to_append_or_none = HOME_DIRECTORY;
                     }
                     break;
                 }
@@ -1421,7 +1424,7 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
                 {
                     if (unescape_special && (input_position == 0))
                     {
-                        to_append = PROCESS_EXPAND;
+                        to_append_or_none = PROCESS_EXPAND;
                     }
                     break;
                 }
@@ -1435,11 +1438,11 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
                         {
                             assert(result.size() > 0);
                             result.resize(result.size() - 1);
-                            to_append = ANY_STRING_RECURSIVE;
+                            to_append_or_none = ANY_STRING_RECURSIVE;
                         }
                         else
                         {
-                            to_append = ANY_STRING;
+                            to_append_or_none = ANY_STRING;
                         }
                     }
                     break;
@@ -1449,7 +1452,7 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
                 {
                     if (unescape_special)
                     {
-                        to_append = ANY_CHAR;
+                        to_append_or_none = ANY_CHAR;
                     }
                     break;
                 }
@@ -1458,7 +1461,7 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
                 {
                     if (unescape_special)
                     {
-                        to_append = VARIABLE_EXPAND;
+                        to_append_or_none = VARIABLE_EXPAND;
                     }
                     break;
                 }
@@ -1468,7 +1471,7 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
                     if (unescape_special)
                     {
                         bracket_count++;
-                        to_append = BRACKET_BEGIN;
+                        to_append_or_none = BRACKET_BEGIN;
                     }
                     break;
                 }
@@ -1478,7 +1481,7 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
                     if (unescape_special)
                     {
                         bracket_count--;
-                        to_append = BRACKET_END;
+                        to_append_or_none = BRACKET_END;
                     }
                     break;
                 }
@@ -1488,7 +1491,7 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
                     /* If the last character was a separator, then treat this as a literal comma */
                     if (unescape_special && bracket_count > 0 && string_last_char(result) != BRACKET_SEP)
                     {
-                        to_append = BRACKET_SEP;
+                        to_append_or_none = BRACKET_SEP;
                     }
                     break;
                 }
@@ -1496,14 +1499,14 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
                 case L'\'':
                 {
                     mode = mode_single_quotes;
-                    to_append = unescape_special ? INTERNAL_SEPARATOR : NOT_A_WCHAR;
+                    to_append_or_none = unescape_special ? INTERNAL_SEPARATOR : NOT_A_WCHAR;
                     break;
                 }
 
                 case L'\"':
                 {
                     mode = mode_double_quotes;
-                    to_append = unescape_special ? INTERNAL_SEPARATOR : NOT_A_WCHAR;
+                    to_append_or_none = unescape_special ? INTERNAL_SEPARATOR : NOT_A_WCHAR;
                     break;
                 }
             }
@@ -1518,7 +1521,7 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
                     case '\\':
                     case L'\'':
                     {
-                        to_append = input[input_position + 1];
+                        to_append_or_none = input[input_position + 1];
                         input_position += 1; /* Skip over the backslash */
                         break;
                     }
@@ -1535,7 +1538,7 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
                             // 'We may ever escape a NULL character, but still appending a \ in case I am wrong.'
                             // Not sure what it means or the importance of this
                             input_position += 1; /* Skip over the backslash */
-                            to_append = L'\\';
+                            to_append_or_none = L'\\';
                         }
                     }
                     break;
@@ -1549,7 +1552,7 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
             }
             else if (c == L'\'')
             {
-                to_append = unescape_special ? INTERNAL_SEPARATOR : NOT_A_WCHAR;
+                to_append_or_none = unescape_special ? INTERNAL_SEPARATOR : NOT_A_WCHAR;
                 mode = mode_unquoted;
             }
         }
@@ -1560,7 +1563,7 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
                 case L'"':
                 {
                     mode = mode_unquoted;
-                    to_append = unescape_special ? INTERNAL_SEPARATOR : NOT_A_WCHAR;
+                    to_append_or_none = unescape_special ? INTERNAL_SEPARATOR : NOT_A_WCHAR;
                     break;
                 }
 
@@ -1576,7 +1579,7 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
                             }
                             else
                             {
-                                to_append = L'\0';
+                                to_append_or_none = L'\0';
                             }
                         }
                         break;
@@ -1585,7 +1588,7 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
                         case L'$':
                         case '"':
                         {
-                            to_append = input[input_position + 1];
+                            to_append_or_none = input[input_position + 1];
                             input_position += 1; /* Skip over the backslash */
                             break;
                         }
@@ -1593,7 +1596,7 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
                         case '\n':
                         {
                             /* Swallow newline */
-                            to_append = NOT_A_WCHAR;
+                            to_append_or_none = NOT_A_WCHAR;
                             input_position += 1; /* Skip over the backslash */
                             break;
                         }
@@ -1611,7 +1614,7 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
                 {
                     if (unescape_special)
                     {
-                        to_append = VARIABLE_EXPAND_SINGLE;
+                        to_append_or_none = VARIABLE_EXPAND_SINGLE;
                     }
                     break;
                 }
@@ -1620,9 +1623,12 @@ static bool unescape_string_internal(const wchar_t * const input, const size_t i
         }
 
         /* Now maybe append the char */
-        if (to_append != NOT_A_WCHAR)
+        if (to_append_or_none != NOT_A_WCHAR)
         {
-            result.push_back(to_append);
+            wchar_t to_append_char = static_cast<wchar_t>(to_append_or_none);
+            // if result_char is not NOT_A_WCHAR, it must be a valid wchar
+            assert((wint_t)to_append_char == to_append_or_none);
+            result.push_back(to_append_char);
         }
     }
 

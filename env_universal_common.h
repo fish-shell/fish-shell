@@ -302,7 +302,10 @@ public:
         strategy_inotify,
         
         // Strategy that uses notify(3). Simple and efficient, but OS X only.
-        strategy_notifyd
+        strategy_notifyd,
+        
+        // Null notifier, does nothing
+        strategy_null
     };
 
     protected:
@@ -342,6 +345,9 @@ public:
 
 std::string get_machine_identifier();
 bool get_hostname_identifier(std::string *result);
+
+/* Temporary */
+bool synchronizes_via_fishd();
 
 /* Environment variable for requesting a particular universal notifier. See fetch_default_strategy_from_environment for names. */
 #define UNIVERSAL_NOTIFIER_ENV_NAME "fish_universal_notifier"

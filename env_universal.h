@@ -70,7 +70,4 @@ void env_universal_get_names(wcstring_list_t &list,
 */
 void env_universal_barrier();
 
-/* Temporary */
-bool synchronizes_via_fishd();
-
 #endif

@@ -1900,8 +1900,18 @@ class universal_notifier_named_pipe_t : public universal_notifier_t
     }
 };
 
+class universal_notifier_null_t : public universal_notifier_t
+{
+    /* Does nothing! */
+};
+
 static universal_notifier_t::notifier_strategy_t fetch_default_strategy_from_environment()
 {
+    if (! synchronizes_via_fishd())
+    {
+        return universal_notifier_t::strategy_null;
+    }
+    
     universal_notifier_t::notifier_strategy_t result = universal_notifier_t::strategy_default;
 
     const struct
@@ -1983,6 +1993,9 @@ universal_notifier_t *universal_notifier_t::new_notifier_for_strategy(universal_
             
         case strategy_named_pipe:
             return new universal_notifier_named_pipe_t(test_path);
+            
+        case strategy_null:
+            return new universal_notifier_null_t();
         
         default:
             fprintf(stderr, "Unsupported strategy %d\n", strat);
@@ -2022,3 +2035,23 @@ bool universal_notifier_t::notification_fd_became_readable(int fd)
 {
     return false;
 }
+
+static bool initialize_synchronizes_via_fishd()
+{
+    const char *tmp = getenv("fish_use_fishd");
+    return tmp != NULL && from_string<bool>(tmp);
+}
+
+bool synchronizes_via_fishd()
+{
+    if (program_name && ! wcscmp(program_name, L"fishd"))
+    {
+        /* fishd always wants to use fishd */
+        return true;
+    }
+    
+    /* Note that in general we can't change this once it's been set, so we only load it once */
+    static bool result = initialize_synchronizes_via_fishd();
+    return result;
+}
+

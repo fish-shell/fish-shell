@@ -526,13 +526,3 @@ void env_universal_get_names(wcstring_list_t &lst,
                                    show_unexported);
 }
 
-
-bool synchronizes_via_fishd()
-{
-    if (program_name && ! wcscmp(program_name, L"fishd"))
-    {
-        /* fishd always wants to use fishd */
-        return true;
-    }
-    return false;
-}

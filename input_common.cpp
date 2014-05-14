@@ -124,7 +124,7 @@ static wint_t readb()
             fd_max = maxi(fd_max, notifier_fd);
         }
         
-        /* Get the suggested delay (possibly none) */
+        /* Get its suggested delay (possibly none) */
         struct timeval tv = {};
         const unsigned long usecs_delay = notifier.usec_delay_between_polls();
         if (usecs_delay > 0)

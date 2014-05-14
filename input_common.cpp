@@ -184,19 +184,16 @@ static wint_t readb()
                 }
             }
             
-            /* Notifiers either poll or have an fd, not both. So at most one of these branches will be taken. */
-            if (notifier.poll())
-            {
-                env_universal_barrier();
-            }
-            
+            /* Check to see if we want a barrier */
+            bool barrier_from_poll = notifier.poll();
+            bool barrier_from_readability = false;
             if (notifier_fd > 0 && FD_ISSET(notifier_fd, &fdset))
             {
-                bool notified = notifier.notification_fd_became_readable(notifier_fd);
-                if (notified)
-                {
-                    env_universal_barrier();
-                }
+                barrier_from_readability = notifier.notification_fd_became_readable(notifier_fd);
+            }
+            if (barrier_from_poll || barrier_from_readability)
+            {
+                env_universal_barrier();
             }
 
             if (ioport > 0 && FD_ISSET(ioport, &fdset))

@@ -286,6 +286,20 @@ void env_universal_common_sync()
     post_callbacks(callbacks);
 }
 
+static void report_error(int err_code, const wchar_t *err_format, ...)
+{
+    va_list va;
+    va_start(va, err_format);
+    const wcstring err_text = vformat_string(err_format, va);
+    va_end(va);
+    
+    if (! err_text.empty())
+    {
+        fwprintf(stderr, L"%ls: ", err_text.c_str());
+    }
+    fwprintf(stderr, L"%s\n", strerror(err_code));
+}
+
 /**
    Attempt to send the specified message to the specified file descriptor
 
@@ -752,7 +766,8 @@ bool env_universal_t::move_new_vars_file_into_place(const wcstring &src, const w
     int ret = wrename(src, dst);
     if (ret != 0)
     {
-        wperror(L"rename");
+        int err = errno;
+        report_error(err, L"Unable to rename file from '%ls' to '%ls'", src.c_str(), dst.c_str());
     }
     return ret == 0;
 }
@@ -868,7 +883,8 @@ bool env_universal_t::open_temporary_file(const wcstring &directory, wcstring *o
     }
     if (! success)
     {
-        wperror(L"open");
+        int err = errno;
+        report_error(err, L"Unable to open file '%ls'", tmp_name.c_str());
     }
     return success;
 }
@@ -908,7 +924,7 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd)
 #endif
             else
             {
-                wperror(L"open");
+                report_error(err, L"Unable to open universal variable file '%ls'", path.c_str());
                 break;
             }
         }
@@ -924,7 +940,8 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd)
                 /* error */
                 if (errno != EINTR)
                 {
-                    wperror(L"flock");
+                    int err = errno;
+                    report_error(err, L"Unable to lock universal variable file '%ls'", path.c_str());
                     break;
                 }
             }
@@ -970,10 +987,6 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
     It's possible that the underlying filesystem does not support locks (lockless NFS). In this case, we risk data loss if two shells try to write their universal variables simultaneously. In practice this is unlikely, since uvars are usually written interactively.
     
     Prior versions of fish used a hard link scheme to support file locking on lockless NFS. The risk here is that if the process crashes or is killed while holding the lock, future instances of fish will not be able to obtain it. This seems to be a greater risk than that of data loss on lockless NFS. Users who put their home directory on lockless NFS are playing with fire anyways.
-    
-    It's worth discussing error handling on the initial open (#1):
-       File doesn't exist: attempt to create an empty file, then repeat
-       Permission denied / other errors: log to the console (once) and then give up
     */
     const wcstring vars_path = explicit_vars_path.empty() ? default_vars_path() : explicit_vars_path;
     
@@ -1391,7 +1404,8 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t
         int fd = shm_open(path, O_RDWR | O_CREAT, 0600);
         if (fd < 0)
         {
-            wperror(L"shm_open");
+            int err = errno;
+            report_error(err, L"Unable to open shared memory with path '%s'", path);
             errored = true;
         }
 
@@ -1402,7 +1416,8 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t
             struct stat buf = {};
             if (fstat(fd, &buf) < 0)
             {
-                wperror(L"fstat");
+                int err = errno;
+                report_error(err, L"Unable to fstat shared memory object with path '%s'", path);
                 errored = true;
             }
             size = buf.st_size;
@@ -1413,7 +1428,8 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t
         {
             if (ftruncate(fd, sizeof(universal_notifier_shmem_t)) < 0)
             {
-                wperror(L"ftruncate");
+                int err = errno;
+                report_error(err, L"Unable to truncate shared memory object with path '%s'", path);
                 errored = true;
             }
         }
@@ -1424,7 +1440,8 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t
             void *addr = mmap(NULL, sizeof(universal_notifier_shmem_t), PROT_READ | PROT_WRITE, MAP_FILE | MAP_SHARED, fd, 0);
             if (addr == MAP_FAILED)
             {
-                wperror(L"mmap");
+                int err = errno;
+                report_error(err, L"Unable to memory map shared memory object with path '%s'", path);
                 region = NULL;
             }
             else
@@ -1736,10 +1753,8 @@ class universal_notifier_named_pipe_t : public universal_notifier_t
         if (fd < 0)
         {
             // Maybe open failed, maybe mkfifo failed
-            const int tmp_err = errno;
-            const wcstring err_msg = L"Unable to make or open a FIFO at " + vars_path;
-            errno = tmp_err;
-            wperror(err_msg.c_str());
+            int err = errno;
+            report_error(err, L"Unable to make or open a FIFO for universal variables with path '%ls'", vars_path.c_str());
         }
         else
         {

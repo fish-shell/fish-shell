@@ -248,11 +248,8 @@ static void check_connection(void)
 static void env_universal_remove_all()
 {
     size_t i;
-
     wcstring_list_t lst;
-    env_universal_common_get_names(lst,
-                                   1,
-                                   1);
+    env_universal_common_get_names(lst, true, true);
     for (i=0; i<lst.size(); i++)
     {
         const wcstring &key = lst.at(i);

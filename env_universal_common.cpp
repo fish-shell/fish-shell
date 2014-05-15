@@ -518,7 +518,7 @@ message_t *create_message(fish_message_type_t type,
 */
 void env_universal_common_get_names(wcstring_list_t &lst, bool show_exported, bool show_unexported)
 {
-    wcstring_list_t names = default_universal_vars().get_names(show_exported, show_unexported);
+    const wcstring_list_t names = default_universal_vars().get_names(show_exported, show_unexported);
     lst.insert(lst.end(), names.begin(), names.end());
 }
 

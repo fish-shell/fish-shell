@@ -865,12 +865,20 @@ bool env_universal_t::open_temporary_file(const wcstring &directory, wcstring *o
     {
         int result_fd = -1;
         char *narrow_str = wcs2str(tmp_name_template.c_str());
-        if (narrow_str && mktemp(narrow_str))
+#if HAVE_MKOSTEMP
+        result_fd = mkostemp(narrow_str, O_WRONLY | O_CREAT | O_EXCL | O_TRUNC | O_CLOEXEC);
+        if (result_fd >= 0)
+        {
+            tmp_name = str2wcstring(narrow_str);
+        }
+#else
+        if (mktemp(narrow_str))
         {
             /* It was successfully templated; try opening it atomically */
             tmp_name = str2wcstring(narrow_str);
             result_fd = wopen_cloexec(tmp_name, O_WRONLY | O_CREAT | O_EXCL | O_TRUNC, 0644);
         }
+#endif
         
         if (result_fd >= 0)
         {

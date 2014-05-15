@@ -2383,7 +2383,7 @@ static void test_universal_notifiers()
 #if __APPLE__
     test_notifiers_with_strategy(universal_notifier_t::strategy_notifyd);
 #endif
-#if __linux || linux
+#if HAVE_INOTIFY_INIT || HAVE_INOTIFY_INIT1
     test_notifiers_with_strategy(universal_notifier_t::strategy_inotify);
 #endif
     if (system("rm -Rf /tmp/fish_uvars_test/")) err(L"rm failed");

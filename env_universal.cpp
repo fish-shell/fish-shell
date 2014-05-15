@@ -269,6 +269,8 @@ static void env_universal_remove_all()
 */
 static void reconnect()
 {
+    assert(synchronizes_via_fishd());
+    
     if (get_socket_count >= RECONNECT_COUNT)
         return;
 
@@ -388,6 +390,7 @@ bool env_universal_get_export(const wcstring &name)
 void env_universal_barrier()
 {
     ASSERT_IS_MAIN_THREAD();
+    UNIVERSAL_LOG("BARRIER");
     message_t *msg;
     fd_set fds;
     

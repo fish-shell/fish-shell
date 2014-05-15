@@ -276,6 +276,7 @@ void env_universal_common_set(const wchar_t *key, const wchar_t *val, bool expor
 
 void env_universal_common_sync()
 {
+    assert(! synchronizes_via_fishd());
     callback_data_list_t callbacks;
     bool changed = default_universal_vars().sync(&callbacks);
     if (changed)
@@ -693,7 +694,11 @@ void env_universal_t::load_from_fd(int fd, callback_data_list_t *callbacks)
     assert(fd >= 0);
     /* Get the dev / inode */
     const file_id_t current_file = file_id_for_fd(fd);
-    if (current_file != last_read_file)
+    if (current_file == last_read_file)
+    {
+        UNIVERSAL_LOG("Sync elided based on fstat()");
+    }
+    else
     {
         /* Unmodified values are sourced from the file. Since we are about to read a different file, erase them */
         this->erase_unmodified_values();
@@ -711,6 +716,7 @@ bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t 
     /* Check to see if the file is unchanged. We do this again in load_from_fd, but this avoids opening the file unnecessarily. */
     if (last_read_file != kInvalidFileID && file_id_for_path(path) == last_read_file)
     {
+        UNIVERSAL_LOG("Sync elided based on fast stat()");
         return true;
     }
     
@@ -719,6 +725,7 @@ bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t 
     int fd = wopen_cloexec(path, O_RDONLY);
     if (fd >= 0)
     {
+        UNIVERSAL_LOG("Reading from file");
         this->load_from_fd(fd, callbacks);
         close(fd);
         result = true;
@@ -985,43 +992,50 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
 #endif
     
     const wcstring directory = wdirname(vars_path);
-    bool success = false;
+    bool success = true;
     int vars_fd = -1;
     int private_fd = -1;
     wcstring private_file_path;
-    do
+    
+    UNIVERSAL_LOG("Performing full sync");
+    
+    /* Open the file */
+    if (success)
     {
-        /* Open the file */
-        if (! this->open_and_acquire_lock(vars_path, &vars_fd))
-        {
-            break;
-        }
-        
-        /* Read from it */
+        success = this->open_and_acquire_lock(vars_path, &vars_fd);
+    }
+
+    /* Read from it */
+    if (success)
+    {
         assert(vars_fd >= 0);
         this->load_from_fd(vars_fd, callbacks);
-        
-        /* Open adjacent temporary file */
-        if (! this->open_temporary_file(directory, &private_file_path, &private_fd))
-        {
-            break;
-        }
-        
-        /* Write to it */
+    }
+
+    /* Open adjacent temporary file */
+    if (success)
+    {
+        success = this->open_temporary_file(directory, &private_file_path, &private_fd);
+    }
+    
+    /* Write to it */
+    if (success)
+    {
         assert(private_fd >= 0);
         this->write_to_fd(private_fd);
-        
+    }
+    
+    if (success)
+    {
         /* Apply new file */
-        if (! this->move_new_vars_file_into_place(private_file_path, vars_path))
-        {
-            break;
-        }
-        
+        success = this->move_new_vars_file_into_place(private_file_path, vars_path);
+    }
+    
+    if (success)
+    {
         /* Since we moved the new file into place, clear the path so we don't try to unlink it */
-        private_file_path.clear();
-        success = true;
-        break;
-    } while (false);
+         private_file_path.clear();
+    }
     
     /* Clean up */
     if (vars_fd >= 0)
@@ -1907,7 +1921,7 @@ class universal_notifier_null_t : public universal_notifier_t
 
 static universal_notifier_t::notifier_strategy_t fetch_default_strategy_from_environment()
 {
-    if (! synchronizes_via_fishd())
+    if (synchronizes_via_fishd())
     {
         return universal_notifier_t::strategy_null;
     }
@@ -2036,13 +2050,13 @@ bool universal_notifier_t::notification_fd_became_readable(int fd)
     return false;
 }
 
-static bool initialize_synchronizes_via_fishd()
+static bool bool_from_env_var(const char *name, bool default_value)
 {
-    const char *tmp = getenv("fish_use_fishd");
-    return tmp != NULL && from_string<bool>(tmp);
+    const char *var = getenv(name);
+    return var ? from_string<bool>(var) : default_value;
 }
 
-bool synchronizes_via_fishd()
+static bool initialize_synchronizes_via_fishd()
 {
     if (program_name && ! wcscmp(program_name, L"fishd"))
     {
@@ -2050,8 +2064,18 @@ bool synchronizes_via_fishd()
         return true;
     }
     
+    return bool_from_env_var(UNIVERSAL_USE_FISHD, true);
+}
+
+bool synchronizes_via_fishd()
+{
     /* Note that in general we can't change this once it's been set, so we only load it once */
     static bool result = initialize_synchronizes_via_fishd();
     return result;
+}
+
+bool universal_log_enabled()
+{
+    return bool_from_env_var(UNIVERSAL_LOGGING_ENV_NAME, false);
 }
 

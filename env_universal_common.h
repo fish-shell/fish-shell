@@ -349,7 +349,16 @@ bool get_hostname_identifier(std::string *result);
 /* Temporary */
 bool synchronizes_via_fishd();
 
+bool universal_log_enabled();
+#define UNIVERSAL_LOG(x) if (universal_log_enabled()) fprintf(stderr, "UNIVERSAL LOG: %s\n", x)
+
 /* Environment variable for requesting a particular universal notifier. See fetch_default_strategy_from_environment for names. */
 #define UNIVERSAL_NOTIFIER_ENV_NAME "fish_universal_notifier"
+
+/* Environment variable for enabling universal variable logging (to stderr) */
+#define UNIVERSAL_LOGGING_ENV_NAME "fish_universal_log"
+
+/* Environment variable for enabling fishd */
+#define UNIVERSAL_USE_FISHD "fish_use_fishd"
 
 #endif

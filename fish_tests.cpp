@@ -2409,7 +2409,7 @@ static bool test_basic_inotify_support()
     }
     
     /* Add file to watch list */
-    int wd = inotify_add_watch(fd, INOTIFY_TEST_PATH, IN_DELETE);
+    int wd = inotify_add_watch(fd, INOTIFY_TEST_PATH, IN_DELETE | IN_DELETE_SELF);
     if (wd < 0)
     {
         err(L"inotify_add_watch failed: %s", strerror(errno));
@@ -2437,7 +2437,6 @@ static bool test_basic_inotify_support()
     if (count == 0 || ! FD_ISSET(fd, &fds))
     {
         inotify_works = false;
-        
         err(L"inotify file descriptor not readable. Is inotify busted?");
         struct utsname version = {};
         uname(&version);

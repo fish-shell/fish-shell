@@ -116,6 +116,7 @@ echo -e 'abc\121def'
 echo -e 'abc\1212def'
 echo -e 'abc\cdef' # won't output a newline!
 echo ''
+echo -
 
 echo -e Catch your breath
 

@@ -1610,62 +1610,70 @@ static int builtin_echo(parser_t &parser, wchar_t **argv)
     if (! *argv++)
         return STATUS_BUILTIN_ERROR;
 
-    /* Process options */
+    /* Process options. Options must come at the beginning - the first non-option kicks us out. */
     bool print_newline = true, print_spaces = true, interpret_special_chars = false;
-    while (*argv)
+    size_t option_idx = 0;
+    for (option_idx = 0; argv[option_idx] != NULL; option_idx++)
     {
-        wchar_t *s = *argv, c = *s;
-        if (c == L'-')
+        const wchar_t *arg = argv[option_idx];
+        assert(arg != NULL);
+        bool arg_is_valid_option = false;
+        if (arg[0] == L'-')
         {
-            /* Ensure that option is valid */
-            for (++s, c = *s; c != L'\0'; c = *(++s))
+            // We have a leading dash. Ensure that every subseqnent character is a valid option.
+            size_t i = 1;
+            while (arg[i] != L'\0' && wcschr(L"nesE", arg[i]) != NULL)
             {
-                if (c != L'n' && c != L'e' && c != L's' && c != L'E')
-                {
-                    goto invalid_echo_option;
-                }
+                i++;
             }
-
-            /* Parse option */
-            for (s = *argv, ++s, c = *s; c != L'\0'; c = *(++s))
-            {
-                switch (c)
-                {
-                    case L'n':
-                        print_newline = false;
-                        break;
-                    case L'e':
-                        interpret_special_chars = true;
-                        break;
-                    case L's':
-                        // fish-specific extension,
-                        // which we should try to nix
-                        print_spaces = false;
-                        break;
-                    case L'E':
-                        interpret_special_chars = false;
-                        break;
-                }
-            }
+            // We must have at least two characters to be a valid option, and have consumed the whole string
+            arg_is_valid_option = (i >= 2 && arg[i] == L'\0');
         }
-        else
+        
+        if (! arg_is_valid_option)
         {
-invalid_echo_option:
+            // This argument is not an option, so there are no more options
             break;
         }
-        argv++;
+        
+        // Ok, we are sure the argument is an option. Parse it.
+        assert(arg_is_valid_option);
+        for (size_t i=1; arg[i] != L'\0'; i++)
+        {
+            switch (arg[i])
+            {
+                case L'n':
+                    print_newline = false;
+                    break;
+                case L'e':
+                    interpret_special_chars = true;
+                    break;
+                case L's':
+                    print_spaces = false;
+                    break;
+                case L'E':
+                    interpret_special_chars = false;
+                    break;
+                default:
+                    assert(0 && "Unexpected character in builtin_echo argument");
+                    break;
+            }
+        }
     }
 
     /* The special character \c can be used to indicate no more output */
     bool continue_output = true;
-
-    for (size_t idx = 0; continue_output && argv[idx] != NULL; idx++)
+    
+    /* Skip over the options */
+    const wchar_t * const *args_to_echo = argv + option_idx;
+    for (size_t idx = 0; continue_output && args_to_echo[idx] != NULL; idx++)
     {
-
         if (print_spaces && idx > 0)
+        {
             stdout_buffer.push_back(' ');
+        }
 
-        const wchar_t *str = argv[idx];
+        const wchar_t *str = args_to_echo[idx];
         for (size_t j=0; continue_output && str[j]; j++)
         {
             if (! interpret_special_chars || str[j] != L'\\')
@@ -1736,12 +1744,16 @@ invalid_echo_option:
                 j += consumed;
 
                 if (continue_output)
+                {
                     stdout_buffer.push_back(wc);
+                }
             }
         }
     }
     if (print_newline && continue_output)
+    {
         stdout_buffer.push_back('\n');
+    }
     return STATUS_BUILTIN_OK;
 }
 

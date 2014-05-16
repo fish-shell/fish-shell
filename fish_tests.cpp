@@ -2407,8 +2407,12 @@ static bool test_basic_inotify_support()
         err(L"touch failed");
     }
     
-    /* add file to watch list */
+    /* Add file to watch list */
     int wd = inotify_add_watch(fd, INOTIFY_TEST_PATH, IN_DELETE);
+    if (wd < 0)
+    {
+        err(L"inotify_add_watch failed: %s", strerror(errno));
+    }
     
     /* Delete file */
     if (system("rm " INOTIFY_TEST_PATH))

@@ -67,6 +67,7 @@
 
 #if HAVE_INOTIFY_INIT || HAVE_INOTIFY_INIT1
 #include <sys/inotify.h>
+#include <sys/utsname.h>
 #endif
 
 
@@ -2435,8 +2436,12 @@ static bool test_basic_inotify_support()
     int count = select(fd + 1, &fds, NULL, NULL, &tv);
     if (count == 0 || ! FD_ISSET(fd, &fds))
     {
-        err(L"inotify file descriptor not readable. Is inotify busted?");
         inotify_works = false;
+        
+        err(L"inotify file descriptor not readable. Is inotify busted?");
+        struct utsname version = {};
+        uname(&version);
+        fprintf(stderr, "kernel version %s - %s\n", version.release, version.version);
     }
     else
     {
@@ -2457,6 +2462,7 @@ static void test_universal_notifiers()
     if (system("mkdir -p /tmp/fish_uvars_test/ && touch /tmp/fish_uvars_test/varsfile.txt")) err(L"mkdir failed");
     test_notifiers_with_strategy(universal_notifier_t::strategy_shmem_polling);
     test_notifiers_with_strategy(universal_notifier_t::strategy_named_pipe);
+    system("ls");
 #if __APPLE__
     test_notifiers_with_strategy(universal_notifier_t::strategy_notifyd);
 #endif

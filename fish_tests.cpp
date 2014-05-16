@@ -65,6 +65,11 @@
 #include "utf8.h"
 #include "env_universal_common.h"
 
+#if HAVE_INOTIFY_INIT || HAVE_INOTIFY_INIT1
+#include <sys/inotify.h>
+#endif
+
+
 static const char * const * s_arguments;
 static int s_test_run_count = 0;
 
@@ -2375,6 +2380,67 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
     }
 }
 
+#if HAVE_INOTIFY_INIT
+#define INOTIFY_TEST_PATH "/tmp/inotify_test.tmp"
+static bool test_basic_inotify_support()
+{
+    bool inotify_works = true;
+    int fd = inotify_init();
+    if (fd < 0)
+    {
+        err(L"inotify_init failed");
+    }
+    
+    /* Mark fd as nonblocking */
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags == -1)
+    {
+        err(L"fcntl GETFL failed");
+    }
+    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
+    {
+        err(L"fcntl SETFL failed");
+    }
+    
+    if (system("touch " INOTIFY_TEST_PATH))
+    {
+        err(L"touch failed");
+    }
+    
+    /* add file to watch list */
+    int wd = inotify_add_watch(fd, INOTIFY_TEST_PATH, IN_DELETE);
+    
+    /* Delete file */
+    if (system("rm " INOTIFY_TEST_PATH))
+    {
+        err(L"rm failed");
+    }
+    
+    /* The fd should be readable now or very shortly */
+    struct timeval tv = {1, 0};
+    fd_set fds;
+    FD_ZERO(&fds);
+    FD_SET(fd, &fds);
+    int count = select(fd + 1, &fds, NULL, NULL, &tv);
+    if (count == 0 || ! FD_ISSET(fd, &fds))
+    {
+        err(L"inotify file descriptor not readable. Is inotify busted?");
+        inotify_works = false;
+    }
+    else
+    {
+        fprintf(stderr, "inotify seems OK\n");
+    }
+    
+    if (fd >= 0)
+    {
+        close(fd);
+    }
+    
+    return inotify_works;
+}
+#endif
+
 static void test_universal_notifiers()
 {
     if (system("mkdir -p /tmp/fish_uvars_test/ && touch /tmp/fish_uvars_test/varsfile.txt")) err(L"mkdir failed");
@@ -2383,7 +2449,8 @@ static void test_universal_notifiers()
 #if __APPLE__
     test_notifiers_with_strategy(universal_notifier_t::strategy_notifyd);
 #endif
-#if HAVE_INOTIFY_INIT || HAVE_INOTIFY_INIT1
+#if HAVE_INOTIFY_INIT
+    test_basic_inotify_support();
     test_notifiers_with_strategy(universal_notifier_t::strategy_inotify);
 #endif
     if (system("rm -Rf /tmp/fish_uvars_test/")) err(L"rm failed");

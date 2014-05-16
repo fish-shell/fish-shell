@@ -2416,6 +2416,13 @@ static bool test_basic_inotify_support()
         err(L"rm failed");
     }
     
+    /* Verify that file is deleted */
+    struct stat statbuf;
+    if (stat(INOTIFY_TEST_PATH, &statbuf) != -1 || errno != ENOENT)
+    {
+        err(L"File at path " INOTIFY_TEST_PATH " still exists after deleting it");
+    }
+    
     /* The fd should be readable now or very shortly */
     struct timeval tv = {1, 0};
     fd_set fds;

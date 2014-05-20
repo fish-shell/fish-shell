@@ -81,17 +81,17 @@ function funced --description 'Edit function definition'
         return 0
     end
 
-    set tmpname (mktemp -t fish_funced.XXXXXXXXXX)
+    set -q TMPDIR; or set -l TMPDIR /tmp
+    set -l tmpname (printf "$TMPDIR/fish_funced_%d_%s.fish" %self $funcname)
+    if not test -f $tmpname
+        if functions -q -- $funcname
+            functions -- $funcname > $tmpname
+        else
+            echo $init > $tmpname
+        end
+    end
 
-    if functions -q -- $funcname
-        functions -- $funcname > $tmpname
-    else
-        echo $init > $tmpname
-    end
     if eval $editor $tmpname
-        . $tmpname
+        . $tmpname; and rm -f $tmpname >/dev/null
     end
-    set -l stat $status
-    rm -f $tmpname >/dev/null
-    return $stat
 end

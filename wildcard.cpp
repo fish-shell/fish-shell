@@ -971,7 +971,7 @@ static int wildcard_expand_internal(const wchar_t *wc,
                     // Insert a "file ID" into visited_files
                     // If the insertion fails, we've already visited this file (i.e. a symlink loop)
                     // If we're not recursive, insert anyways (in case we loop back around in a future recursive segment), but continue on; the idea being that literal path components should still work
-                    const file_id_t file_id(buf.st_dev, buf.st_ino);
+                    const file_id_t file_id = file_id_t::file_id_from_stat(&buf);
                     if (S_ISDIR(buf.st_mode) && (visited_files.insert(file_id).second || ! is_recursive))
                     {
                         new_dir.push_back(L'/');

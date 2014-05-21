@@ -35,6 +35,8 @@
 
 typedef std::string cstring;
 
+const file_id_t kInvalidFileID = {-1, -1, -1, -1, -1, -1};
+
 /**
    Minimum length of the internal covnersion buffers
 */
@@ -246,46 +248,46 @@ int wopen_cloexec(const wcstring &pathname, int flags, mode_t mode)
 
 int wcreat(const wcstring &pathname, mode_t mode)
 {
-    cstring tmp = wcs2string(pathname);
+    const cstring tmp = wcs2string(pathname);
     return creat(tmp.c_str(), mode);
 }
 
 DIR *wopendir(const wcstring &name)
 {
-    cstring tmp = wcs2string(name);
+    const cstring tmp = wcs2string(name);
     return opendir(tmp.c_str());
 }
 
 int wstat(const wcstring &file_name, struct stat *buf)
 {
-    cstring tmp = wcs2string(file_name);
+    const cstring tmp = wcs2string(file_name);
     return stat(tmp.c_str(), buf);
 }
 
 int lwstat(const wcstring &file_name, struct stat *buf)
 {
-    cstring tmp = wcs2string(file_name);
+    const cstring tmp = wcs2string(file_name);
     return lstat(tmp.c_str(), buf);
 }
 
 int waccess(const wcstring &file_name, int mode)
 {
-    cstring tmp = wcs2string(file_name);
+    const cstring tmp = wcs2string(file_name);
     return access(tmp.c_str(), mode);
 }
 
 int wunlink(const wcstring &file_name)
 {
-    cstring tmp = wcs2string(file_name);
+    const cstring tmp = wcs2string(file_name);
     return unlink(tmp.c_str());
 }
 
-void wperror(const wcstring &s)
+void wperror(const wchar_t *s)
 {
     int e = errno;
-    if (!s.empty())
+    if (s[0] != L'\0')
     {
-        fwprintf(stderr, L"%ls: ", s.c_str());
+        fwprintf(stderr, L"%ls: ", s);
     }
     fwprintf(stderr, L"%s\n", strerror(e));
 }
@@ -524,4 +526,98 @@ int fish_wcstoi(const wchar_t *str, wchar_t ** endptr, int base)
         errno = ERANGE;
     }
     return (int)ret;
+}
+
+file_id_t file_id_t::file_id_from_stat(const struct stat *buf)
+{
+    assert(buf != NULL);
+    
+    file_id_t result = {};
+    result.device = buf->st_dev;
+    result.inode = buf->st_ino;
+    result.size = buf->st_size;
+    result.change_seconds = buf->st_ctime;
+    
+#if STAT_HAVE_NSEC
+    result.change_nanoseconds = buf->st_ctime_nsec;
+#elif defined(__APPLE__)
+    result.change_nanoseconds = buf->st_ctimespec.tv_nsec;
+#elif defined(_BSD_SOURCE) || defined(_SVID_SOURCE) || defined(_XOPEN_SOURCE)
+    result.change_nanoseconds = buf->st_ctim.tv_nsec;
+#else
+    result.change_nanoseconds = 0;
+#endif
+
+#if defined(__APPLE__) || defined(__DragonFly__) || defined(__FreeBSD__) ||  defined(__OpenBSD__) || defined(__NetBSD__)
+    result.generation = buf->st_gen;
+#else
+    result.generation = 0;
+#endif
+    return result;
+}
+
+
+file_id_t file_id_for_fd(int fd)
+{
+    file_id_t result = kInvalidFileID;
+    struct stat buf = {};
+    if (0 == fstat(fd, &buf))
+    {
+        result = file_id_t::file_id_from_stat(&buf);
+    }
+    return result;
+}
+
+file_id_t file_id_for_path(const wcstring &path)
+{
+    file_id_t result = kInvalidFileID;
+    struct stat buf = {};
+    if (0 == wstat(path, &buf))
+    {
+        result = file_id_t::file_id_from_stat(&buf);
+    }
+    return result;
+
+}
+
+bool file_id_t::operator==(const file_id_t &rhs) const
+{
+    return device == rhs.device &&
+           inode == rhs.inode &&
+           size == rhs.size &&
+           change_seconds == rhs.change_seconds &&
+           change_nanoseconds == rhs.change_nanoseconds &&
+           generation == rhs.generation;
+}
+
+bool file_id_t::operator!=(const file_id_t &rhs) const
+{
+    return ! (*this == rhs);
+}
+
+template<typename T>
+int compare(T a, T b)
+{
+    if (a < b)
+    {
+        return -1;
+    }
+    else if (a > b)
+    {
+        return 1;
+    }
+    return 0;
+}
+
+bool file_id_t::operator<(const file_id_t &rhs) const
+{
+    /* Compare each field, stopping when we get to a non-equal field */
+    int ret = 0;
+    if (! ret) ret = compare(device, rhs.device);
+    if (! ret) ret = compare(inode, rhs.inode);
+    if (! ret) ret = compare(size, rhs.size);
+    if (! ret) ret = compare(generation, rhs.generation);
+    if (! ret) ret = compare(change_seconds, rhs.change_seconds);
+    if (! ret) ret = compare(change_nanoseconds, rhs.change_nanoseconds);
+    return ret < 0;
 }

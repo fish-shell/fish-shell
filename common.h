@@ -537,6 +537,22 @@ public:
 
 bool is_forked_child();
 
+
+class lock_t
+{
+    public:
+    pthread_mutex_t mutex;
+    lock_t()
+    {
+        pthread_mutex_init(&mutex, NULL);
+    }
+    
+    ~lock_t()
+    {
+        pthread_mutex_destroy(&mutex);
+    }
+};
+
 /* Basic scoped lock class */
 class scoped_lock
 {
@@ -551,6 +567,7 @@ public:
     void lock(void);
     void unlock(void);
     scoped_lock(pthread_mutex_t &mutex);
+    scoped_lock(lock_t &lock);
     ~scoped_lock();
 };
 
@@ -848,6 +865,9 @@ bool is_forked_child(void);
 void assert_is_not_forked_child(const char *who);
 #define ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(x) assert_is_not_forked_child(x)
 #define ASSERT_IS_NOT_FORKED_CHILD() ASSERT_IS_NOT_FORKED_CHILD_TRAMPOLINE(__FUNCTION__)
+
+/** Macro to help suppress potentially unused variable warnings */
+#define USE(var) (void)(var)
 
 extern "C" {
     __attribute__((noinline)) void debug_thread_error(void);

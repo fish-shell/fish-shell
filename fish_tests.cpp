@@ -63,6 +63,13 @@
 #include "pager.h"
 #include "input.h"
 #include "utf8.h"
+#include "env_universal_common.h"
+
+#if HAVE_INOTIFY_INIT || HAVE_INOTIFY_INIT1
+#include <sys/inotify.h>
+#include <sys/utsname.h>
+#endif
+
 
 static const char * const * s_arguments;
 static int s_test_run_count = 0;
@@ -2162,6 +2169,313 @@ static void test_input()
     }
 }
 
+#define UVARS_PER_THREAD 8
+#define UVARS_TEST_PATH L"/tmp/fish_uvars_test/varsfile.txt"
+
+static int test_universal_helper(int *x)
+{
+    env_universal_t uvars(UVARS_TEST_PATH);
+    for (int j=0; j < UVARS_PER_THREAD; j++)
+    {
+        const wcstring key = format_string(L"key_%d_%d", *x, j);
+        const wcstring val = format_string(L"val_%d_%d", *x, j);
+        uvars.set(key, val, false);
+        bool synced = uvars.sync(NULL);
+        if (! synced)
+        {
+            err(L"Failed to sync universal variables");
+        }
+        fputc('.', stderr);
+    }
+    
+    /* Last step is to delete the first key */
+    uvars.remove(format_string(L"key_%d_%d", *x, 0));
+    bool synced = uvars.sync(NULL);
+    if (! synced)
+    {
+        err(L"Failed to sync universal variables");
+    }
+    fputc('.', stderr);
+    
+    return 0;
+}
+
+static void test_universal()
+{
+    say(L"Testing universal variables");
+    if (system("mkdir -p /tmp/fish_uvars_test/")) err(L"mkdir failed");
+    
+    const int threads = 16;
+    for (int i=0; i < threads; i++)
+    {
+        iothread_perform(test_universal_helper, (void (*)(int *, int))NULL, new int(i));
+    }
+    iothread_drain_all();
+    
+    env_universal_t uvars(UVARS_TEST_PATH);
+    bool loaded = uvars.load();
+    if (! loaded)
+    {
+        err(L"Failed to load universal variables");
+    }
+    for (int i=0; i < threads; i++)
+    {
+        for (int j=0; j < UVARS_PER_THREAD; j++)
+        {
+            const wcstring key = format_string(L"key_%d_%d", i, j);
+            env_var_t expected_val;
+            if (j == 0)
+            {
+                expected_val = env_var_t::missing_var();
+            }
+            else
+            {
+                expected_val = format_string(L"val_%d_%d", i, j);
+            }
+            const env_var_t var = uvars.get(key);
+            if (j == 0)
+            {
+                assert(expected_val.missing());
+            }
+            if (var != expected_val)
+            {
+                const wchar_t *missing_desc = L"<missing>";
+                err(L"Wrong value for key %ls: expected %ls, got %ls\n", key.c_str(), (expected_val.missing() ? missing_desc : expected_val.c_str()), (var.missing() ? missing_desc : var.c_str()));
+            }
+        }
+    }
+    
+    if (system("rm -Rf /tmp/fish_uvars_test")) err(L"rrm failed");
+    putc('\n', stderr);
+}
+
+bool poll_notifier(universal_notifier_t *note)
+{
+    bool result = false;
+    if (note->usec_delay_between_polls() > 0)
+    {
+        result = note->poll();
+    }
+    
+    int fd = note->notification_fd();
+    if (! result && fd >= 0)
+    {
+        fd_set fds;
+        FD_ZERO(&fds);
+        FD_SET(fd, &fds);
+        struct timeval tv = {0, 0};
+        if (select(fd + 1, &fds, NULL, NULL, &tv) > 0 && FD_ISSET(fd, &fds))
+        {
+            result = note->notification_fd_became_readable(fd);
+        }
+    }
+    return result;
+}
+
+static void trigger_or_wait_for_notification(universal_notifier_t *notifier, universal_notifier_t::notifier_strategy_t strategy)
+{
+    switch (strategy)
+    {
+        case universal_notifier_t::strategy_default:
+            assert(0 && "strategy_default should be passed");
+            break;
+            
+        case universal_notifier_t::strategy_shmem_polling:
+            // nothing required
+            break;
+            
+        case universal_notifier_t::strategy_notifyd:
+            // notifyd requires a round trip to the notifyd server, which means we have to wait a little bit to receive it
+            // In practice, this seems to be enough
+            usleep(1000000 / 25);
+            break;
+            
+        case universal_notifier_t::strategy_named_pipe:
+        case universal_notifier_t::strategy_null:
+            break;
+            
+        case universal_notifier_t::strategy_inotify:
+        {
+            // Hacktastic. Replace the file, then wait
+            char cmd[512];
+            sprintf(cmd, "touch %ls ; mv %ls %ls", UVARS_TEST_PATH L".tmp", UVARS_TEST_PATH ".tmp", UVARS_TEST_PATH);
+            if (system(cmd)) err(L"Command failed: %s", cmd);
+            usleep(1000000 / 25);
+            break;
+        }
+    }
+}
+
+static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy_t strategy)
+{
+    assert(strategy != universal_notifier_t::strategy_default);
+    say(L"Testing universal notifiers with strategy %d", (int)strategy);
+    universal_notifier_t *notifiers[16];
+    size_t notifier_count = sizeof notifiers / sizeof *notifiers;
+    
+    // Populate array of notifiers
+    for (size_t i=0; i < notifier_count; i++)
+    {
+        notifiers[i] = universal_notifier_t::new_notifier_for_strategy(strategy, UVARS_TEST_PATH);
+    }
+    
+    // Nobody should poll yet
+    for (size_t i=0; i < notifier_count; i++)
+    {
+        if (poll_notifier(notifiers[i]))
+        {
+            err(L"Universal variable notifier polled true before any changes, with strategy %d", (int)strategy);
+        }
+    }
+
+    // Tweak each notifier. Verify that others see it.
+    for (size_t post_idx=0; post_idx < notifier_count; post_idx++)
+    {
+        notifiers[post_idx]->post_notification();
+        
+        // Do special stuff to "trigger" a notification for testing
+        trigger_or_wait_for_notification(notifiers[post_idx], strategy);
+        
+        for (size_t i=0; i < notifier_count; i++)
+        {
+            // We aren't concerned with the one who posted
+            // Poll from it (to drain it), and then skip it
+            if (i == post_idx)
+            {
+                poll_notifier(notifiers[i]);
+                continue;
+            }
+            
+            if (! poll_notifier(notifiers[i]))
+            {
+                err(L"Universal variable notifier (%lu) %p polled failed to notice changes, with strategy %d", i, notifiers[i], (int)strategy);
+            }
+        }
+        
+        // Named pipes have special cleanup requirements
+        if (strategy == universal_notifier_t::strategy_named_pipe)
+        {
+            usleep(1000000 / 10); //corresponds to NAMED_PIPE_FLASH_DURATION_USEC
+            // Have to clean up the posted one first, so that the others see the pipe become no longer readable
+            poll_notifier(notifiers[post_idx]);
+            for (size_t i=0; i < notifier_count; i++)
+            {
+                poll_notifier(notifiers[i]);
+            }
+        }
+    }
+    
+    // Nobody should poll now
+    for (size_t i=0; i < notifier_count; i++)
+    {
+        if (poll_notifier(notifiers[i]))
+        {
+            err(L"Universal variable notifier polled true after all changes, with strategy %d", (int)strategy);
+        }
+    }
+    
+    // Clean up
+    for (size_t i=0; i < notifier_count; i++)
+    {
+        delete notifiers[i];
+    }
+}
+
+#if HAVE_INOTIFY_INIT
+#define INOTIFY_TEST_PATH "/tmp/inotify_test.tmp"
+static bool test_basic_inotify_support()
+{
+    bool inotify_works = true;
+    int fd = inotify_init();
+    if (fd < 0)
+    {
+        err(L"inotify_init failed");
+    }
+    
+    /* Mark fd as nonblocking */
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags == -1)
+    {
+        err(L"fcntl GETFL failed");
+    }
+    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
+    {
+        err(L"fcntl SETFL failed");
+    }
+    
+    if (system("touch " INOTIFY_TEST_PATH))
+    {
+        err(L"touch failed");
+    }
+    
+    /* Add file to watch list */
+    int wd = inotify_add_watch(fd, INOTIFY_TEST_PATH, IN_DELETE | IN_DELETE_SELF);
+    if (wd < 0)
+    {
+        err(L"inotify_add_watch failed: %s", strerror(errno));
+    }
+    
+    /* Delete file */
+    if (system("rm " INOTIFY_TEST_PATH))
+    {
+        err(L"rm failed");
+    }
+    
+    /* Verify that file is deleted */
+    struct stat statbuf;
+    if (stat(INOTIFY_TEST_PATH, &statbuf) != -1 || errno != ENOENT)
+    {
+        err(L"File at path " INOTIFY_TEST_PATH " still exists after deleting it");
+    }
+    
+    /* The fd should be readable now or very shortly */
+    struct timeval tv = {1, 0};
+    fd_set fds;
+    FD_ZERO(&fds);
+    FD_SET(fd, &fds);
+    int count = select(fd + 1, &fds, NULL, NULL, &tv);
+    if (count == 0 || ! FD_ISSET(fd, &fds))
+    {
+        inotify_works = false;
+        err(L"inotify file descriptor not readable. Is inotify busted?");
+        struct utsname version = {};
+        uname(&version);
+        fprintf(stderr, "kernel version %s - %s\n", version.release, version.version);
+    }
+    else
+    {
+        fprintf(stderr, "inotify seems OK\n");
+    }
+    
+    if (fd >= 0)
+    {
+        close(fd);
+    }
+    
+    return inotify_works;
+}
+#endif
+
+static void test_universal_notifiers()
+{
+    if (system("mkdir -p /tmp/fish_uvars_test/ && touch /tmp/fish_uvars_test/varsfile.txt")) err(L"mkdir failed");
+    test_notifiers_with_strategy(universal_notifier_t::strategy_shmem_polling);
+    test_notifiers_with_strategy(universal_notifier_t::strategy_named_pipe);
+#if __APPLE__
+    test_notifiers_with_strategy(universal_notifier_t::strategy_notifyd);
+#endif
+    
+    // inotify test disabled pending investigation into why this fails on travis-ci
+    // https://github.com/travis-ci/travis-ci/issues/2342
+#if 0
+#if HAVE_INOTIFY_INIT
+    test_basic_inotify_support();
+    test_notifiers_with_strategy(universal_notifier_t::strategy_inotify);
+#endif
+#endif
+    if (system("rm -Rf /tmp/fish_uvars_test/")) err(L"rm failed");
+}
+
 class history_tests_t
 {
 public:
@@ -3214,6 +3528,8 @@ int main(int argc, char **argv)
     if (should_test_function("colors")) test_colors();
     if (should_test_function("complete")) test_complete();
     if (should_test_function("input")) test_input();
+    if (should_test_function("universal")) test_universal();
+    if (should_test_function("universal_notifiers")) test_universal_notifiers();
     if (should_test_function("completion_insertions")) test_completion_insertions();
     if (should_test_function("autosuggestion_combining")) test_autosuggestion_combining();
     if (should_test_function("autosuggest_suggest_special")) test_autosuggest_suggest_special();

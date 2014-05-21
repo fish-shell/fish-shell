@@ -248,11 +248,8 @@ static void check_connection(void)
 static void env_universal_remove_all()
 {
     size_t i;
-
     wcstring_list_t lst;
-    env_universal_common_get_names(lst,
-                                   1,
-                                   1);
+    env_universal_common_get_names(lst, true, true);
     for (i=0; i<lst.size(); i++)
     {
         const wcstring &key = lst.at(i);
@@ -269,6 +266,8 @@ static void env_universal_remove_all()
 */
 static void reconnect()
 {
+    assert(synchronizes_via_fishd());
+    
     if (get_socket_count >= RECONNECT_COUNT)
         return;
 
@@ -286,24 +285,38 @@ static void reconnect()
     }
 }
 
+void env_universal_read_from_file()
+{
+    
+}
 
 void env_universal_init(wchar_t * p,
                         wchar_t *u,
                         void (*sf)(),
                         void (*cb)(fish_message_type_t type, const wchar_t *name, const wchar_t *val))
 {
-    path=p;
-    user=u;
-    start_fishd=sf;
-    external_callback = cb;
-
-    env_universal_server.fd = get_socket();
-    env_universal_common_init(&callback);
-    env_universal_read_all();
-    s_env_univeral_inited = true;
-    if (env_universal_server.fd >= 0)
+    if (! synchronizes_via_fishd())
     {
-        env_universal_barrier();
+        external_callback = cb;
+        env_universal_common_init(&callback);
+        env_universal_read_from_file();
+        s_env_univeral_inited = true;
+    }
+    else
+    {
+        path=p;
+        user=u;
+        start_fishd=sf;
+        external_callback = cb;
+
+        env_universal_server.fd = get_socket();
+        env_universal_common_init(&callback);
+        env_universal_read_all();
+        s_env_univeral_inited = true;
+        if (env_universal_server.fd >= 0)
+        {
+            env_universal_barrier();
+        }
     }
 }
 
@@ -374,8 +387,15 @@ bool env_universal_get_export(const wcstring &name)
 void env_universal_barrier()
 {
     ASSERT_IS_MAIN_THREAD();
+    UNIVERSAL_LOG("BARRIER");
     message_t *msg;
     fd_set fds;
+    
+    if (! synchronizes_via_fishd())
+    {
+        env_universal_common_sync();
+        return;
+    }
 
     if (!s_env_univeral_inited || is_dead())
         return;
@@ -441,9 +461,10 @@ void env_universal_set(const wcstring &name, const wcstring &value, bool exportv
 
     debug(3, L"env_universal_set( \"%ls\", \"%ls\" )", name.c_str(), value.c_str());
 
-    if (is_dead())
+    if (! synchronizes_via_fishd() || is_dead())
     {
         env_universal_common_set(name.c_str(), value.c_str(), exportv);
+        env_universal_barrier();
     }
     else
     {
@@ -478,7 +499,7 @@ int env_universal_remove(const wchar_t *name)
           L"env_universal_remove( \"%ls\" )",
           name);
 
-    if (is_dead())
+    if (! synchronizes_via_fishd() || is_dead())
     {
         env_universal_common_remove(name_str);
     }
@@ -504,3 +525,4 @@ void env_universal_get_names(wcstring_list_t &lst,
                                    show_exported,
                                    show_unexported);
 }
+

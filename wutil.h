@@ -16,6 +16,7 @@
 #include <stdarg.h>
 #include <string>
 #include <utility>
+#include <stdint.h>
 #include "common.h"
 
 /**
@@ -84,7 +85,7 @@ int wunlink(const wcstring &pathname);
 /**
    Wide character version of perror().
 */
-void wperror(const wcstring &s);
+void wperror(const wchar_t *s);
 
 /**
   Async-safe version of perror().
@@ -158,8 +159,29 @@ int wrename(const wcstring &oldName, const wcstring &newName);
 /** Like wcstol(), but fails on a value outside the range of an int */
 int fish_wcstoi(const wchar_t *str, wchar_t ** endptr, int base);
 
-/** Class for representing a file's inode. We use this to detect and avoid symlink loops, among other things. */
-typedef std::pair<dev_t, ino_t> file_id_t;
+/** Class for representing a file's inode. We use this to detect and avoid symlink loops, among other things. While an inode / dev pair is sufficient to distinguish co-existing files, Linux seems to aggressively re-use inodes, so it cannot determine if a file has been deleted (ABA problem). Therefore we include richer information. */
+struct file_id_t
+{
+    dev_t device;
+    ino_t inode;
+    uint64_t size;
+    time_t change_seconds;
+    long change_nanoseconds;
+    uint32_t generation;
+    
+    bool operator==(const file_id_t &rhs) const;
+    bool operator!=(const file_id_t &rhs) const;
+    
+    // Used to permit these as keys in std::map
+    bool operator<(const file_id_t &rhs) const;
+    
+    static file_id_t file_id_from_stat(const struct stat *buf);
+};
+
+file_id_t file_id_for_fd(int fd);
+file_id_t file_id_for_path(const wcstring &path);
+
+extern const file_id_t kInvalidFileID;
 
 
 #endif

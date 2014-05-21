@@ -38,7 +38,12 @@ int iothread_perform(int (*handler)(T *), void (*completionCallback)(T *, int), 
     return iothread_perform_base((int (*)(void *))handler, (void (*)(void *, int))completionCallback, static_cast<void *>(context));
 }
 
-/** Helper templates */
+template<typename T>
+int iothread_perform(int (*handler)(T *), T *context)
+{
+    return iothread_perform_base((int (*)(void *))handler, (void (*)(void *, int))0, static_cast<void *>(context));
+}
+
 template<typename T>
 int iothread_perform_on_main(int (*handler)(T *), T *context)
 {

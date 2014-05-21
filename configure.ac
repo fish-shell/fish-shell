@@ -376,6 +376,7 @@ AC_DEFINE(
 # Check for os dependant libraries for all binaries.
 AC_SEARCH_LIBS( connect, socket, , [AC_MSG_ERROR([Cannot find the socket library, needed to build this package.] )] )
 AC_SEARCH_LIBS( nanosleep, rt, , [AC_MSG_ERROR([Cannot find the rt library, needed to build this package.] )] )
+AC_SEARCH_LIBS( shm_open, rt, , [AC_MSG_ERROR([Cannot find the rt library, needed to build this package.] )] )
 AC_SEARCH_LIBS( pthread_create, pthread, , [AC_MSG_ERROR([Cannot find the pthread library, needed to build this package.] )] )
 AC_SEARCH_LIBS( setupterm, [ncurses tinfo curses], , [AC_MSG_ERROR([Could not find a curses implementation, needed to build fish. If this is Linux, try running 'sudo apt-get install libncurses5-dev' or 'sudo yum install ncurses-devel'])] )
 AC_SEARCH_LIBS( [nan], [m], [AC_DEFINE( [HAVE_NAN], [1], [Define to 1 if you have the nan function])] )
@@ -535,6 +536,7 @@ AC_CHECK_FUNCS( wcsdup wcsndup wcslen wcscasecmp wcsncasecmp fwprintf )
 AC_CHECK_FUNCS( futimes wcwidth wcswidth wcstok fputwc fgetwc )
 AC_CHECK_FUNCS( wcstol wcslcat wcslcpy lrand48_r killpg mkostemp )
 AC_CHECK_FUNCS( backtrace backtrace_symbols sysconf getifaddrs getpeerucred getpeereid )
+AC_CHECK_FUNCS( inotify_init inotify_init1 )
 
 if test x$local_gettext != xno; then
   AC_CHECK_FUNCS( gettext dcgettext )
@@ -763,6 +765,7 @@ case $target_os in
     AC_MSG_RESULT(no)
     ;;
 esac
+
 
 # Tell the world what we know
 AC_CONFIG_FILES([Makefile])

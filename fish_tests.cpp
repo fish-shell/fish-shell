@@ -2461,7 +2461,6 @@ static void test_universal_notifiers()
     if (system("mkdir -p /tmp/fish_uvars_test/ && touch /tmp/fish_uvars_test/varsfile.txt")) err(L"mkdir failed");
     test_notifiers_with_strategy(universal_notifier_t::strategy_shmem_polling);
     test_notifiers_with_strategy(universal_notifier_t::strategy_named_pipe);
-    system("ls");
 #if __APPLE__
     test_notifiers_with_strategy(universal_notifier_t::strategy_notifyd);
 #endif

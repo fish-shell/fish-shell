@@ -1000,6 +1000,13 @@ static void test_utf82wchar(const char *src, size_t slen, const wchar_t *dst, si
     free(mem);
 }
 
+// Annoying variant to handle uchar to avoid narrowing conversion warnings
+static void test_utf82wchar(const unsigned char *usrc, size_t slen, const wchar_t *dst, size_t dlen,
+                            int flags, size_t res, const char *descr) {
+    const char *src = reinterpret_cast<const char *>(usrc);
+    return test_utf82wchar(src, slen, dst, dlen, flags, res, descr);
+}
+
 static void test_wchar2utf8(const wchar_t *src, size_t slen, const char *dst, size_t dlen,
                             int flags, size_t res, const char *descr)
 {
@@ -1051,6 +1058,14 @@ static void test_wchar2utf8(const wchar_t *src, size_t slen, const char *dst, si
     free(mem);
 }
 
+// Annoying variant to handle uchar to avoid narrowing conversion warnings
+static void test_wchar2utf8(const wchar_t *src, size_t slen, const unsigned char *udst, size_t dlen,
+                            int flags, size_t res, const char *descr)
+{
+    const char *dst = reinterpret_cast<const char *>(udst);
+    return test_wchar2utf8(src, slen, dst, dlen, flags, res, descr);
+}
+
 static void test_utf8()
 {
     wchar_t w1[] = {0x54, 0x65, 0x73, 0x74};
@@ -1059,34 +1074,34 @@ static void test_utf8()
     wchar_t w4[] = {0x15555, 0xf7777, 0xa};
     wchar_t w5[] = {0x255555, 0x1fa04ff, 0xddfd04, 0xa};
     wchar_t w6[] = {0xf255555, 0x1dfa04ff, 0x7fddfd04, 0xa};
-    wchar_t wb[] = {-2, 0xa, 0xffffffff, 0x0441};
+    wchar_t wb[] = {-2, 0xa, (wchar_t)0xffffffff, 0x0441};
     wchar_t wm[] = {0x41, 0x0441, 0x3042, 0xff67, 0x9b0d, 0x2e05da67};
     wchar_t wb1[] = {0xa, 0x0422};
     wchar_t wb2[] = {0xd800, 0xda00, 0x41, 0xdfff, 0xa};
     wchar_t wbom[] = {0xfeff, 0x41, 0xa};
     wchar_t wbom2[] = {0x41, 0xa};
     wchar_t wbom22[] = {0xfeff, 0x41, 0xa};
-    char u1[] = {0x54, 0x65, 0x73, 0x74};
-    char u2[] = {0xd0, 0xa2, 0xd0, 0xb5, 0xd1, 0x81, 0xd1, 0x82};
-    char u3[] = {0xe0, 0xa0, 0x80, 0xe1, 0xba, 0x80, 0xe9, 0xa3, 0x84,
+    unsigned char u1[] = {0x54, 0x65, 0x73, 0x74};
+    unsigned char u2[] = {0xd0, 0xa2, 0xd0, 0xb5, 0xd1, 0x81, 0xd1, 0x82};
+    unsigned char u3[] = {0xe0, 0xa0, 0x80, 0xe1, 0xba, 0x80, 0xe9, 0xa3, 0x84,
                  0xe9, 0xa4, 0x90, 0xef, 0xbc, 0x80
                 };
-    char u4[] = {0xf0, 0x95, 0x95, 0x95, 0xf3, 0xb7, 0x9d, 0xb7, 0xa};
-    char u5[] = {0xf8, 0x89, 0x95, 0x95, 0x95, 0xf9, 0xbe, 0xa0, 0x93,
+    unsigned char u4[] = {0xf0, 0x95, 0x95, 0x95, 0xf3, 0xb7, 0x9d, 0xb7, 0xa};
+    unsigned char u5[] = {0xf8, 0x89, 0x95, 0x95, 0x95, 0xf9, 0xbe, 0xa0, 0x93,
                  0xbf, 0xf8, 0xb7, 0x9f, 0xb4, 0x84, 0x0a
                 };
-    char u6[] = {0xfc, 0x8f, 0x89, 0x95, 0x95, 0x95, 0xfc, 0x9d, 0xbe,
+    unsigned char u6[] = {0xfc, 0x8f, 0x89, 0x95, 0x95, 0x95, 0xfc, 0x9d, 0xbe,
                  0xa0, 0x93, 0xbf, 0xfd, 0xbf, 0xb7, 0x9f, 0xb4, 0x84, 0x0a
                 };
-    char ub[] = {0xa, 0xd1, 0x81};
-    char um[] = {0x41, 0xd1, 0x81, 0xe3, 0x81, 0x82, 0xef, 0xbd, 0xa7,
+    unsigned char ub[] = {0xa, 0xd1, 0x81};
+    unsigned char um[] = {0x41, 0xd1, 0x81, 0xe3, 0x81, 0x82, 0xef, 0xbd, 0xa7,
                  0xe9, 0xac, 0x8d, 0xfc, 0xae, 0x81, 0x9d, 0xa9, 0xa7
                 };
-    char ub1[] = {0xa, 0xff, 0xd0, 0xa2, 0xfe, 0x8f, 0xe0, 0x80};
-    char uc080[] = {0xc0, 0x80};
-    char ub2[] = {0xed, 0xa1, 0x8c, 0xed, 0xbe, 0xb4, 0xa};
-    char ubom[] = {0x41, 0xa};
-    char ubom2[] = {0xef, 0xbb, 0xbf, 0x41, 0xa};
+    unsigned char ub1[] = {0xa, 0xff, 0xd0, 0xa2, 0xfe, 0x8f, 0xe0, 0x80};
+    unsigned char uc080[] = {0xc0, 0x80};
+    unsigned char ub2[] = {0xed, 0xa1, 0x8c, 0xed, 0xbe, 0xb4, 0xa};
+    unsigned char ubom[] = {0x41, 0xa};
+    unsigned char ubom2[] = {0xef, 0xbb, 0xbf, 0x41, 0xa};
 
     /*
      * UTF-8 -> UCS-4 string.
@@ -1136,10 +1151,10 @@ static void test_utf8()
     test_utf82wchar(ub1, sizeof(ub1), NULL, 0,
                     UTF8_IGNORE_ERROR, sizeof(wb1) / sizeof(*wb1),
                     "calculate length, ignore bad chars");
-    test_utf82wchar(NULL, 0, NULL, 0, 0, 0, "invalid params, all 0");
+    test_utf82wchar((const char *)NULL, 0, NULL, 0, 0, 0, "invalid params, all 0");
     test_utf82wchar(u1, 0, NULL, 0, 0, 0,
                     "invalid params, src buf not NULL");
-    test_utf82wchar(NULL, 10, NULL, 0, 0, 0,
+    test_utf82wchar((const char *)NULL, 10, NULL, 0, 0, 0,
                     "invalid params, src length is not 0");
     test_utf82wchar(u1, sizeof(u1), w1, 0, 0, 0,
                     "invalid params, dst is not NULL");
@@ -1147,11 +1162,12 @@ static void test_utf8()
     /*
      * UCS-4 -> UTF-8 string.
      */
+    const char * const nullc = NULL;
     test_wchar2utf8(wbom, sizeof(wbom) / sizeof(*wbom), ubom, sizeof(ubom),
                     UTF8_SKIP_BOM, sizeof(ubom), "BOM");
-    test_wchar2utf8(wb2, sizeof(wb2) / sizeof(*wb2), NULL, 0, 0,
+    test_wchar2utf8(wb2, sizeof(wb2) / sizeof(*wb2), nullc, 0, 0,
                     0, "prohibited wchars");
-    test_wchar2utf8(wb2, sizeof(wb2) / sizeof(*wb2), NULL, 0,
+    test_wchar2utf8(wb2, sizeof(wb2) / sizeof(*wb2), nullc, 0,
                     UTF8_IGNORE_ERROR, 2, "ignore prohibited wchars");
     test_wchar2utf8(w1, sizeof(w1) / sizeof(*w1), u1, sizeof(u1), 0,
                     sizeof(u1), "1 octet chars");
@@ -1175,17 +1191,17 @@ static void test_utf8()
                     0, "boundaries -1");
     test_wchar2utf8(wm, sizeof(wm) / sizeof(*wm), um, sizeof(um) + 1, 0,
                     sizeof(um), "boundaries +1");
-    test_wchar2utf8(wm, sizeof(wm) / sizeof(*wm), NULL, 0, 0,
+    test_wchar2utf8(wm, sizeof(wm) / sizeof(*wm), nullc, 0, 0,
                     sizeof(um), "calculate length");
-    test_wchar2utf8(wb, sizeof(wb) / sizeof(*wb), NULL, 0, 0,
+    test_wchar2utf8(wb, sizeof(wb) / sizeof(*wb), nullc, 0, 0,
                     0, "calculate length of bad chars");
-    test_wchar2utf8(wb, sizeof(wb) / sizeof(*wb), NULL, 0,
+    test_wchar2utf8(wb, sizeof(wb) / sizeof(*wb), nullc, 0,
                     UTF8_IGNORE_ERROR, sizeof(ub),
                     "calculate length, ignore bad chars");
-    test_wchar2utf8(NULL, 0, NULL, 0, 0, 0, "invalid params, all 0");
-    test_wchar2utf8(w1, 0, NULL, 0, 0, 0,
+    test_wchar2utf8(NULL, 0, nullc, 0, 0, 0, "invalid params, all 0");
+    test_wchar2utf8(w1, 0, nullc, 0, 0, 0,
                     "invalid params, src buf not NULL");
-    test_wchar2utf8(NULL, 10, NULL, 0, 0, 0,
+    test_wchar2utf8(NULL, 10, nullc, 0, 0, 0,
                     "invalid params, src length is not 0");
     test_wchar2utf8(w1, sizeof(w1) / sizeof(*w1), u1, 0, 0, 0,
                     "invalid params, dst is not NULL");
@@ -2383,6 +2399,7 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
 
 #if HAVE_INOTIFY_INIT
 #define INOTIFY_TEST_PATH "/tmp/inotify_test.tmp"
+__attribute__((unused))
 static bool test_basic_inotify_support()
 {
     bool inotify_works = true;
@@ -3469,7 +3486,10 @@ static void test_highlighting(void)
         }
     }
 
-    system("rm -Rf /tmp/fish_highlight_test");
+    if (system("rm -Rf /tmp/fish_highlight_test"))
+    {
+        err(L"rm failed");
+    }
 }
 
 /**

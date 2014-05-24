@@ -3,13 +3,13 @@
 
 fish is a smart and user-friendly command line shell for OS X, Linux, and the rest of the family. fish includes features like syntax highlighting, autosuggest-as-you-type, and fancy tab completions that just work, with no configuration required.
 
-For more on fish's design philosophy, see the [design document](http://fishshell.com/docs/2.0/design.html).
+For more on fish's design philosophy, see the [design document](http://fishshell.com/docs/current/design.html).
 
 ## Quick Start
 
-fish generally works like other shells, like bash or zsh. A few important differences can be found at <http://fishshell.com/tutorial.html> by searching for the magic phrase 'unlike other shells'.
+fish generally works like other shells, like bash or zsh. A few important differences can be found at <http://fishshell.com/docs/current/tutorial.html> by searching for the magic phrase 'unlike other shells'.
 
-Detailed user documentation is available by running `help` within fish, and also at <http://fishshell.com/docs/2.0/index.html>
+Detailed user documentation is available by running `help` within fish, and also at <http://fishshell.com/docs/current/index.html>
 
 ## Building
 

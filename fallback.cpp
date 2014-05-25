@@ -817,6 +817,7 @@ static wchar_t *wcsdup_fallback(const wchar_t *in)
     return out;
 }
 
+__attribute__((unused))
 static int wcscasecmp_fallback(const wchar_t *a, const wchar_t *b)
 {
     if (*a == 0)
@@ -834,6 +835,7 @@ static int wcscasecmp_fallback(const wchar_t *a, const wchar_t *b)
         return wcscasecmp_fallback(a+1,b+1);
 }
 
+__attribute__((unused))
 static int wcsncasecmp_fallback(const wchar_t *a, const wchar_t *b, size_t count)
 {
     if (count == 0)

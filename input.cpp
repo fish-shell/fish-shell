@@ -710,7 +710,7 @@ wint_t input_readch()
             {
                 case R_EOF: /* If it's closed, then just return */
                 {
-                    return WEOF;
+                    return R_EOF;
                 }
                 case R_SELF_INSERT:
                 {

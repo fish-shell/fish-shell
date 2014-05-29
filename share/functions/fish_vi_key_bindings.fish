@@ -187,6 +187,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind -M insert \cu backward-kill-line
   bind -M insert \cp history-search-backward
   bind -M insert \cn history-search-forward
+  bind -M insert \cb backward-word
+  bind -M insert \cf forward-word
 
   bind -M insert -m default \cc backward-char force-repaint
   bind -M insert -m default \e backward-char force-repaint

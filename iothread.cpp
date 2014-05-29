@@ -315,7 +315,13 @@ static void iothread_service_main_thread_requests(void)
             req->done = true;
         }
 
-        // Ok, we've handled everybody. Announce the good news, and allow ourselves to be unlocked
+        /* Ok, we've handled everybody. Announce the good news, and allow ourselves to be unlocked. Note we must do this while holding the lock. Otherwise we race with the waiting threads:
+         1. waiting thread checks for done, sees false
+         2. main thread performs request, sets done to true, posts to condition
+         3. waiting thread unlocks lock, waits on condition (forever)
+         Because the waiting thread performs step 1 under the lock, if we take the lock, we avoid posting before the waiting thread is waiting.
+        */
+        scoped_lock broadcast_lock(s_main_thread_performer_lock);
         VOMIT_ON_FAILURE(pthread_cond_broadcast(&s_main_thread_performer_condition));
     }
 }

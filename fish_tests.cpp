@@ -65,12 +65,6 @@
 #include "utf8.h"
 #include "env_universal_common.h"
 
-#if HAVE_INOTIFY_INIT || HAVE_INOTIFY_INIT1
-#include <sys/inotify.h>
-#include <sys/utsname.h>
-#endif
-
-
 static const char * const * s_arguments;
 static int s_test_run_count = 0;
 
@@ -2309,16 +2303,6 @@ static void trigger_or_wait_for_notification(universal_notifier_t *notifier, uni
         case universal_notifier_t::strategy_named_pipe:
         case universal_notifier_t::strategy_null:
             break;
-            
-        case universal_notifier_t::strategy_inotify:
-        {
-            // Hacktastic. Replace the file, then wait
-            char cmd[512];
-            sprintf(cmd, "touch %ls ; mv %ls %ls", UVARS_TEST_PATH L".tmp", UVARS_TEST_PATH ".tmp", UVARS_TEST_PATH);
-            if (system(cmd)) err(L"Command failed: %s", cmd);
-            usleep(1000000 / 25);
-            break;
-        }
     }
 }
 
@@ -2397,82 +2381,6 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
     }
 }
 
-#if HAVE_INOTIFY_INIT
-#define INOTIFY_TEST_PATH "/tmp/inotify_test.tmp"
-__attribute__((unused))
-static bool test_basic_inotify_support()
-{
-    bool inotify_works = true;
-    int fd = inotify_init();
-    if (fd < 0)
-    {
-        err(L"inotify_init failed");
-    }
-    
-    /* Mark fd as nonblocking */
-    int flags = fcntl(fd, F_GETFL, 0);
-    if (flags == -1)
-    {
-        err(L"fcntl GETFL failed");
-    }
-    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1)
-    {
-        err(L"fcntl SETFL failed");
-    }
-    
-    if (system("touch " INOTIFY_TEST_PATH))
-    {
-        err(L"touch failed");
-    }
-    
-    /* Add file to watch list */
-    int wd = inotify_add_watch(fd, INOTIFY_TEST_PATH, IN_DELETE | IN_DELETE_SELF);
-    if (wd < 0)
-    {
-        err(L"inotify_add_watch failed: %s", strerror(errno));
-    }
-    
-    /* Delete file */
-    if (system("rm " INOTIFY_TEST_PATH))
-    {
-        err(L"rm failed");
-    }
-    
-    /* Verify that file is deleted */
-    struct stat statbuf;
-    if (stat(INOTIFY_TEST_PATH, &statbuf) != -1 || errno != ENOENT)
-    {
-        err(L"File at path " INOTIFY_TEST_PATH " still exists after deleting it");
-    }
-    
-    /* The fd should be readable now or very shortly */
-    struct timeval tv = {1, 0};
-    fd_set fds;
-    FD_ZERO(&fds);
-    FD_SET(fd, &fds);
-    int count = select(fd + 1, &fds, NULL, NULL, &tv);
-    if (count == 0 || ! FD_ISSET(fd, &fds))
-    {
-        inotify_works = false;
-        err(L"inotify file descriptor not readable. Is inotify busted?");
-        struct utsname version = {};
-        uname(&version);
-        fprintf(stderr, "kernel version %s - %s\n", version.release, version.version);
-    }
-    else
-    {
-        fprintf(stderr, "inotify seems OK\n");
-    }
-    
-    if (fd >= 0)
-    {
-        close(fd);
-    }
-    
-    return inotify_works;
-}
-#endif
-
 static void test_universal_notifiers()
 {
     if (system("mkdir -p /tmp/fish_uvars_test/ && touch /tmp/fish_uvars_test/varsfile.txt")) err(L"mkdir failed");
@@ -2482,14 +2390,6 @@ static void test_universal_notifiers()
     test_notifiers_with_strategy(universal_notifier_t::strategy_notifyd);
 #endif
     
-    // inotify test disabled pending investigation into why this fails on travis-ci
-    // https://github.com/travis-ci/travis-ci/issues/2342
-#if 0
-#if HAVE_INOTIFY_INIT
-    test_basic_inotify_support();
-    test_notifiers_with_strategy(universal_notifier_t::strategy_inotify);
-#endif
-#endif
     if (system("rm -Rf /tmp/fish_uvars_test/")) err(L"rm failed");
 }
 

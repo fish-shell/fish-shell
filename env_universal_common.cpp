@@ -53,11 +53,6 @@
 #include <notify.h>
 #endif
 
-#if HAVE_INOTIFY_INIT || HAVE_INOTIFY_INIT1
-#define FISH_INOTIFY_AVAILABLE 1
-#include <sys/inotify.h>
-#endif
-
 /**
    Non-wide version of the set command
 */
@@ -1622,109 +1617,6 @@ public:
     }
 };
 
-/* inotify-based notifier. This attempts to watch the uvars file directly. Since the file is never modified (only replaced), it has to watch for deletions. If the file is not present, this will probably break horribly. Needs love before it can be competitive. */
-class universal_notifier_inotify_t : public universal_notifier_t
-{
-    int watch_fd;
-    int watch_descriptor;
-    const std::string narrow_path;
-    
-    void reestablish_watch()
-    {
-#if FISH_INOTIFY_AVAILABLE
-        if (this->watch_fd >= 0)
-        {
-            if (this->watch_descriptor >= 0)
-            {
-                inotify_rm_watch(this->watch_fd, this->watch_descriptor);
-            }
-            this->watch_descriptor = inotify_add_watch(this->watch_fd, narrow_path.c_str(), IN_MODIFY | IN_MOVE_SELF | IN_DELETE_SELF | IN_EXCL_UNLINK);
-            if (this->watch_descriptor < 0)
-            {
-                wperror(L"inotify_add_watch");
-            }
-        }
-#endif
-    }
-    
-    void setup_inotify(const wchar_t *test_path)
-    {
-#if FISH_INOTIFY_AVAILABLE
-        // Construct the watchfd
-        
-#if HAVE_INOTIFY_INIT1
-        this->watch_fd = inotify_init1(IN_NONBLOCK | IN_CLOEXEC);
-#else
-        this->watch_fd = inotify_init();
-#endif
-        
-        if (this->watch_fd < 0)
-        {
-            wperror(L"inotify_init");
-        }
-        else
-        {
-            int flags = fcntl(this->watch_fd, F_GETFL, 0);
-            fcntl(this->watch_fd, F_SETFL, flags | O_NONBLOCK | FD_CLOEXEC);
-        }
-        reestablish_watch();
-#endif
-    }
-    
-public:
-    
-    universal_notifier_inotify_t(const wchar_t *test_path) : watch_fd(-1), watch_descriptor(-1), narrow_path(wcs2string(test_path ? test_path : default_vars_path()))
-    {
-        setup_inotify(test_path);
-    }
-    
-    ~universal_notifier_inotify_t()
-    {
-        if (watch_fd >= 0)
-        {
-            close(watch_fd);
-        }
-        USE(watch_descriptor);
-    }
-    
-    int notification_fd()
-    {
-        return watch_fd;
-    }
-    
-    bool notification_fd_became_readable(int fd)
-    {
-        assert(fd == watch_fd);
-        bool result = false;
-        
-#if FISH_INOTIFY_AVAILABLE
-        for (;;)
-        {
-            struct inotify_event evt = {};
-            ssize_t read_amt = read(watch_fd, &evt, sizeof evt);
-            if (read_amt >= (ssize_t)sizeof evt)
-            {
-                if (evt.mask & (IN_DELETE_SELF | IN_MOVE_SELF))
-                {
-                    // When a file is deleted, the watch is lost. Recreate it.
-                    reestablish_watch();
-                    result = true;
-                }
-                if (evt.mask & IN_MODIFY)
-                {
-                    result = true;
-                }
-            }
-            else
-            {
-                break;
-            }
-        }
-#endif
-        return result;
-    }
-};
-
 #define NAMED_PIPE_FLASH_DURATION_USEC (1000000 / 10)
 #define SUSTAINED_READABILITY_CLEANUP_DURATION_USEC (1000000 * 5)
 
@@ -1960,7 +1852,6 @@ static universal_notifier_t::notifier_strategy_t fetch_default_strategy_from_env
         {"default", universal_notifier_t::strategy_default},
         {"shmem", universal_notifier_t::strategy_shmem_polling},
         {"pipe", universal_notifier_t::strategy_named_pipe},
-        {"inotify", universal_notifier_t::strategy_inotify},
         {"notifyd", universal_notifier_t::strategy_notifyd}
     };
     const size_t opt_count = sizeof options / sizeof *options;
@@ -2024,9 +1915,6 @@ universal_notifier_t *universal_notifier_t::new_notifier_for_strategy(universal_
             
         case strategy_notifyd:
             return new universal_notifier_notifyd_t();
-            
-        case strategy_inotify:
-            return new universal_notifier_inotify_t(test_path);
             
         case strategy_named_pipe:
             return new universal_notifier_named_pipe_t(test_path);

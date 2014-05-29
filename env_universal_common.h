@@ -297,10 +297,7 @@ public:
         
         // Strategy that uses a named pipe. Somewhat complex, but portable and doesn't require polling most of the time.
         strategy_named_pipe,
-        
-        // Strategy that attempts to detect file changes directly via inotify. Doesn't handle certain edge cases (like the file missing); not yet recommended. Linux only.
-        strategy_inotify,
-        
+                
         // Strategy that uses notify(3). Simple and efficient, but OS X only.
         strategy_notifyd,
         

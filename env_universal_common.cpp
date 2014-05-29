@@ -1975,7 +1975,7 @@ static bool initialize_synchronizes_via_fishd()
         return true;
     }
     
-    return bool_from_env_var(UNIVERSAL_USE_FISHD, true);
+    return bool_from_env_var(UNIVERSAL_USE_FISHD, false);
 }
 
 bool synchronizes_via_fishd()

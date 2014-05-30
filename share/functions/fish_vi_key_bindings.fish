@@ -182,8 +182,6 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind -M insert -k left backward-char
   
   # useful insert mode mappings
-  bind -M insert \ca beginning-of-line
-  bind -M insert \ce end-of-line
   bind -M insert \ch backward-delete-char
   bind -M insert \cw backward-kill-word
   bind -M insert \cu backward-kill-line

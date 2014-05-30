@@ -738,7 +738,8 @@ static int find_job(const struct find_job_data_t *info)
 
 /**
    Searches for a job with the specified job id, or a job or process
-   which has the string \c proc as a prefix of its commandline.
+   which has the string \c proc as a prefix of its commandline. Appends
+   the name of the process as a completion in 'out'.f
 
    If the ACCEPT_INCOMPLETE flag is set, the remaining string for any matches
    are inserted.
@@ -749,21 +750,15 @@ static int find_job(const struct find_job_data_t *info)
    understand the contents of the /proc filesystem, all the users
    processes are searched for matches.
 */
-
-static int find_process(const wchar_t *proc,
-                        expand_flags_t flags,
-                        std::vector<completion_t> &out)
+static void find_process(const wchar_t *proc, expand_flags_t flags, std::vector<completion_t> &out)
 {
-    int found = 0;
-
     if (!(flags & EXPAND_SKIP_JOBS))
     {
         const struct find_job_data_t data = {proc, flags, &out};
-        found = iothread_perform_on_main(find_job, &data);
-
+        int found = iothread_perform_on_main(find_job, &data);
         if (found)
         {
-            return 1;
+            return;
         }
     }
 
@@ -789,16 +784,12 @@ static int find_process(const wchar_t *proc,
             }
         }
     }
-
-    return 1;
 }
 
 /**
    Process id expansion
 */
-static int expand_pid(const wcstring &instr_with_sep,
-                      expand_flags_t flags,
-                      std::vector<completion_t> &out)
+static bool expand_pid(const wcstring &instr_with_sep, expand_flags_t flags, std::vector<completion_t> &out, parse_error_list_t *errors)
 {
     /* Hack. If there's no INTERNAL_SEP and no PROCESS_EXPAND, then there's nothing to do. Check out this "null terminated string." */
     const wchar_t some_chars[] = {INTERNAL_SEPARATOR, PROCESS_EXPAND, L'\0'};
@@ -806,7 +797,7 @@ static int expand_pid(const wcstring &instr_with_sep,
     {
         /* Nothing to do */
         append_completion(out, instr_with_sep);
-        return 1;
+        return true;
     }
 
     /* expand_string calls us with internal separators in instr...sigh */
@@ -815,11 +806,15 @@ static int expand_pid(const wcstring &instr_with_sep,
 
     if (instr.empty() || instr.at(0) != PROCESS_EXPAND)
     {
+        /* Not a process expansion */
         append_completion(out, instr);
-        return 1;
+        return true;
     }
 
     const wchar_t * const in = instr.c_str();
+
+    /* We know we are a process expansion now */
+    assert(in[0] == PROCESS_EXPAND);
 
     if (flags & ACCEPT_INCOMPLETE)
     {
@@ -844,8 +839,7 @@ static int expand_pid(const wcstring &instr_with_sep,
         {
 
             append_completion(out, to_string<long>(getpid()));
-
-            return 1;
+            return true;
         }
         if (wcscmp((in+1), LAST_STR)==0)
         {
@@ -853,24 +847,25 @@ static int expand_pid(const wcstring &instr_with_sep,
             {
                 append_completion(out, to_string<long>(proc_last_bg_pid));
             }
-
-            return 1;
+            return true;
         }
     }
 
-    size_t prev = out.size();
-    if (!find_process(in+1, flags, out))
-        return 0;
+    /* This is sort of crummy - find_process doesn't return any indication of success, so instead we check to see if it inserted any completions */
+    const size_t prev_count = out.size();
+    find_process(in+1, flags, out);
 
-    if (prev ==  out.size())
+    if (prev_count == out.size())
     {
         if (!(flags & ACCEPT_INCOMPLETE))
         {
-            return 0;
+            /* We failed to find anything */
+            append_syntax_error(errors, 1, FAILED_EXPANSION_PROCESS_ERR_MSG, in+1);
+            return false;
         }
     }
 
-    return 1;
+    return true;
 }
 
 
@@ -1784,7 +1779,9 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
                  short-circuit and return
                  */
                 if (!(flags & EXPAND_SKIP_PROCESS))
-                    expand_pid(next, flags, output);
+                {
+                    expand_pid(next, flags, output, NULL);
+                }
                 return EXPAND_OK;
             }
             else
@@ -1794,7 +1791,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
         }
         else
         {
-            if (!(flags & EXPAND_SKIP_PROCESS) && ! expand_pid(next, flags, *out))
+            if (!(flags & EXPAND_SKIP_PROCESS) && ! expand_pid(next, flags, *out, errors))
             {
                 return EXPAND_ERROR;
             }

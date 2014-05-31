@@ -367,13 +367,14 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(const
 {
     assert(header.type == symbol_function_header);
     assert(contents.type == symbol_job_list);
-    parse_execution_result_t result = parse_execution_success;
 
     /* Get arguments */
     const parse_node_t *unmatched_wildcard = NULL;
-    wcstring_list_t argument_list = this->determine_arguments(header, &unmatched_wildcard);
+    wcstring_list_t argument_list;
+    parse_execution_result_t result = this->determine_arguments(header, &argument_list, &unmatched_wildcard);
 
-    if (unmatched_wildcard != NULL)
+    /* Handle unmatched wildcards */
+    if (result == parse_execution_success && unmatched_wildcard != NULL)
     {
         report_unmatched_wildcard_error(*unmatched_wildcard);
         result = parse_execution_errored;
@@ -449,13 +450,17 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(const pars
 
     /* Get the contents to iterate over. */
     const parse_node_t *unmatched_wildcard = NULL;
-    wcstring_list_t argument_sequence = this->determine_arguments(header, &unmatched_wildcard);
+    wcstring_list_t argument_sequence;
+    parse_execution_result_t ret = this->determine_arguments(header, &argument_sequence, &unmatched_wildcard);
+    if (ret != parse_execution_success)
+    {
+        return ret;
+    }
+    
     if (unmatched_wildcard != NULL)
     {
         return report_unmatched_wildcard_error(*unmatched_wildcard);
     }
-
-    parse_execution_result_t ret = parse_execution_success;
 
     for_block_t *fb = new for_block_t();
     parser->push_block(fb);
@@ -578,23 +583,26 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
             /* Pull out the argument list */
             const parse_node_t &arg_list = *get_child(*case_item, 1, symbol_argument_list);
 
-            /* Expand arguments. We explicitly ignore unmatched_wildcard. That is, a case item list may have a wildcard that fails to expand to anything. */
-            const wcstring_list_t case_args = this->determine_arguments(arg_list, NULL);
-
-            for (size_t i=0; i < case_args.size(); i++)
+            /* Expand arguments. We explicitly ignore unmatched_wildcard. That is, a case item list may have a wildcard that fails to expand to anything. We also report case errors, but don't stop execution; i.e. a case item that contains an unexpandable process will report and then fail to match. */
+            wcstring_list_t case_args;
+            parse_execution_result_t case_result = this->determine_arguments(arg_list, &case_args, NULL);
+            if (case_result == parse_execution_success)
             {
-                const wcstring &arg = case_args.at(i);
-
-                /* Unescape wildcards so they can be expanded again */
-                wchar_t *unescaped_arg = parse_util_unescape_wildcards(arg.c_str());
-                bool match = wildcard_match(switch_value_expanded, unescaped_arg);
-                free(unescaped_arg);
-
-                /* If this matched, we're done */
-                if (match)
+                for (size_t i=0; i < case_args.size(); i++)
                 {
-                    matching_case_item = case_item;
-                    break;
+                    const wcstring &arg = case_args.at(i);
+
+                    /* Unescape wildcards so they can be expanded again */
+                    wchar_t *unescaped_arg = parse_util_unescape_wildcards(arg.c_str());
+                    bool match = wildcard_match(switch_value_expanded, unescaped_arg);
+                    free(unescaped_arg);
+
+                    /* If this matched, we're done */
+                    if (match)
+                    {
+                        matching_case_item = case_item;
+                        break;
+                    }
                 }
             }
         }
@@ -721,12 +729,9 @@ parse_execution_result_t parse_execution_context_t::report_unmatched_wildcard_er
     /* For reasons I cannot explain, unmatched wildcards are only reported in interactive use. */
     if (get_is_interactive())
     {
-        return report_error(unmatched_wildcard, WILDCARD_ERR_MSG, get_source(unmatched_wildcard).c_str());
+        report_error(unmatched_wildcard, WILDCARD_ERR_MSG, get_source(unmatched_wildcard).c_str());
     }
-    else
-    {
-        return parse_execution_errored;
-    }
+    return parse_execution_errored;
 }
 
 /* Handle the case of command not found */
@@ -910,15 +915,18 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(job_t
     {
         /* Form the list of arguments. The command is the first argument. TODO: count hack, where we treat 'count --help' as different from 'count $foo' that expands to 'count --help'. fish 1.x never successfully did this, but it tried to! */
         const parse_node_t *unmatched_wildcard = NULL;
-        argument_list = this->determine_arguments(statement, &unmatched_wildcard);
+        parse_execution_result_t arg_result = this->determine_arguments(statement, &argument_list, &unmatched_wildcard);
+        if (arg_result != parse_execution_success)
+        {
+            return arg_result;
+        }
         argument_list.insert(argument_list.begin(), cmd);
 
         /* If we were not able to expand any wildcards, here is the first one that failed */
         if (unmatched_wildcard != NULL)
         {
             job_set_flag(job, JOB_WILDCARD_ERROR, 1);
-            report_unmatched_wildcard_error(*unmatched_wildcard);
-            return parse_execution_errored;
+            return report_unmatched_wildcard_error(*unmatched_wildcard);
         }
 
         /* The set of IO redirections that we construct for the process */
@@ -940,20 +948,21 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(job_t
     return parse_execution_success;
 }
 
-/* Determine the list of arguments, expanding stuff. If we have a wildcard and none could be expanded, return the unexpandable wildcard node by reference. */
-wcstring_list_t parse_execution_context_t::determine_arguments(const parse_node_t &parent, const parse_node_t **out_unmatched_wildcard_node)
+/* Determine the list of arguments, expanding stuff. Reports any errors caused by expansion. If we have a wildcard and none could be expanded, return the unexpandable wildcard node by reference. */
+parse_execution_result_t parse_execution_context_t::determine_arguments(const parse_node_t &parent, wcstring_list_t *out_arguments, const parse_node_t **out_unmatched_wildcard_node)
 {
-    wcstring_list_t argument_list;
-
     /* Whether we failed to match any wildcards, and succeeded in matching any wildcards */
     bool unmatched_wildcard = false, matched_wildcard = false;
+    
+    /* The ultimate result */
+    enum parse_execution_result_t result = parse_execution_success;
 
     /* First node that failed to expand as a wildcard (if any) */
     const parse_node_t *unmatched_wildcard_node = NULL;
 
-    /* Get all argument nodes underneath the statement */
+    /* Get all argument nodes underneath the statement. We guess we'll have that many arguments (but may have more or fewer, if there are wildcards involved) */
     const parse_node_tree_t::parse_node_list_t argument_nodes = tree.find_nodes(parent, symbol_argument);
-    argument_list.reserve(argument_nodes.size());
+    out_arguments->reserve(out_arguments->size() + argument_nodes.size());
     for (size_t i=0; i < argument_nodes.size(); i++)
     {
         const parse_node_t &arg_node = *argument_nodes.at(i);
@@ -972,6 +981,7 @@ wcstring_list_t parse_execution_context_t::determine_arguments(const parse_node_
             case EXPAND_ERROR:
             {
                 this->report_errors(errors);
+                result = parse_execution_errored;
                 break;
             }
 
@@ -1001,7 +1011,7 @@ wcstring_list_t parse_execution_context_t::determine_arguments(const parse_node_
         /* Now copy over any expanded arguments */
         for (size_t i=0; i < arg_expanded.size(); i++)
         {
-            argument_list.push_back(arg_expanded.at(i).completion);
+            out_arguments->push_back(arg_expanded.at(i).completion);
         }
     }
 
@@ -1011,7 +1021,7 @@ wcstring_list_t parse_execution_context_t::determine_arguments(const parse_node_
         *out_unmatched_wildcard_node = unmatched_wildcard_node;
     }
 
-    return argument_list;
+    return result;
 }
 
 bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement_node, io_chain_t *out_chain)

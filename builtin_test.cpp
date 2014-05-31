@@ -646,13 +646,11 @@ expression *test_parser::parse_args(const wcstring_list_t &args, wcstring &err)
     expression *result = parser.parse_expression(0, (unsigned int)args.size());
 
     /* Handle errors */
-    bool errored = false;
     for (size_t i = 0; i < parser.errors.size(); i++)
     {
         err.append(L"test: ");
         err.append(parser.errors.at(i));
         err.push_back(L'\n');
-        errored = true;
         // For now we only show the first error
         break;
     }
@@ -667,13 +665,11 @@ expression *test_parser::parse_args(const wcstring_list_t &args, wcstring &err)
             {
                 append_format(err, L"test: unexpected argument at index %lu: '%ls'\n", (unsigned long)result->range.end, args.at(result->range.end).c_str());
             }
-            errored = true;
 
             delete result;
             result = NULL;
         }
     }
-
 
     return result;
 }

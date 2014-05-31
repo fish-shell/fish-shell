@@ -35,7 +35,7 @@
 
 typedef std::string cstring;
 
-const file_id_t kInvalidFileID = {-1, -1, -1, -1, -1, -1};
+const file_id_t kInvalidFileID = {(dev_t)-1LL, (ino_t)-1LL, (uint64_t)-1LL, -1, -1, (uint32_t)-1};
 
 /**
    Minimum length of the internal covnersion buffers
@@ -319,6 +319,10 @@ static inline void safe_append(char *buffer, const char *s, size_t buffsize)
     strncat(buffer, s, buffsize - strlen(buffer) - 1);
 }
 
+// In general, strerror is not async-safe, and therefore we cannot use it directly
+// So instead we have to grub through sys_nerr and sys_errlist directly
+// On GNU toolchain, this will produce a deprecation warning from the linker (!!),
+// which appears impossible to suppress!
 const char *safe_strerror(int err)
 {
 #if defined(__UCLIBC__)

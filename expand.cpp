@@ -739,7 +739,7 @@ static int find_job(const struct find_job_data_t *info)
 /**
    Searches for a job with the specified job id, or a job or process
    which has the string \c proc as a prefix of its commandline. Appends
-   the name of the process as a completion in 'out'.f
+   the name of the process as a completion in 'out'.
 
    If the ACCEPT_INCOMPLETE flag is set, the remaining string for any matches
    are inserted.

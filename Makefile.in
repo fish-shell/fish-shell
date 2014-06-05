@@ -112,14 +112,6 @@ FISH_TESTS_OBJS := $(FISH_OBJS) fish_tests.o
 
 
 #
-# All objects that the system needs to build fishd
-#
-
-FISHD_OBJS := fishd.o env_universal_common.o wutil.o print_help.o	\
-	common.o utf8.o fish_version.o
-
-
-#
 # All objects needed to build mimedb
 #
 
@@ -181,7 +173,7 @@ FUNCTIONS_DIR_FILES := $(wildcard share/functions/*.fish)
 # Programs to install
 #
 
-PROGRAMS := fish mimedb fishd fish_indent
+PROGRAMS := fish mimedb fish_indent
 
 #
 # Manual pages to install
@@ -689,14 +681,6 @@ fish: $(FISH_OBJS) fish.o
 
 
 #
-# Build the fishd program.
-#
-
-fishd: $(FISHD_OBJS)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(FISHD_OBJS) $(LIBS) -o $@
-
-
-#
 # Build the fish_tests program.
 #
 
@@ -842,8 +826,6 @@ fish.o: highlight.h env.h color.h builtin.h function.h event.h wutil.h
 fish.o: sanity.h proc.h parse_tree.h tokenizer.h parse_constants.h parser.h
 fish.o: expand.h intern.h exec.h output.h screen.h history.h path.h input.h
 fish.o: input_common.h fish_version.h
-fishd.o: config.h signal.h fallback.h util.h common.h wutil.h
-fishd.o: env_universal_common.h env.h path.h print_help.h fish_version.h
 fish_indent.o: config.h fallback.h signal.h util.h common.h wutil.h
 fish_indent.o: tokenizer.h print_help.h parser_keywords.h fish_version.h
 fish_tests.o: config.h signal.h fallback.h util.h common.h proc.h io.h

@@ -57,12 +57,6 @@
 #include "complete.h"
 #include "fish_version.h"
 
-/** Command used to start fishd */
-#define FISHD_CMD L"fishd ^ /dev/null"
-
-// Version for easier debugging
-//#define FISHD_CMD L"fishd"
-
 /** Value denoting a null string */
 #define ENV_NULL L"\x1d"
 
@@ -217,43 +211,6 @@ const var_entry_t *env_node_t::find_entry(const wcstring &key)
 env_node_t *env_node_t::next_scope_to_search(void)
 {
     return this->new_scope ? global_env : this->next;
-}
-
-
-/**
-   When fishd isn't started, this function is provided to
-   env_universal as a callback, it tries to start up fishd. It's
-   implementation is a bit of a hack, since it evaluates a bit of
-   shellscript, and it might be used at times when that might not be
-   the best idea.
-*/
-static void start_fishd()
-{
-    struct passwd *pw = getpwuid(getuid());
-
-    debug(3, L"Spawning new copy of fishd");
-
-    if (!pw)
-    {
-        debug(0, _(L"Could not get user information"));
-        return;
-    }
-
-    wcstring cmd = format_string(FISHD_CMD, pw->pw_name);
-
-    /* Prefer the fishd in __fish_bin_dir, if exists */
-    const env_var_t bin_dir = env_get_string(L"__fish_bin_dir");
-    if (! bin_dir.missing_or_empty())
-    {
-        wcstring path = bin_dir + L"/fishd";
-        if (waccess(path, X_OK) == 0)
-        {
-            /* The path command just looks like 'fishd', so insert the bin path to make it absolute */
-            cmd.insert(0, bin_dir + L"/");
-        }
-    }
-    parser_t &parser = parser_t::principal_parser();
-    parser.eval(cmd, io_chain_t(), TOP);
 }
 
 /**
@@ -604,15 +561,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     env_set(L"version", version.c_str(), ENV_GLOBAL);
     env_set(L"FISH_VERSION", version.c_str(), ENV_GLOBAL);
 
-    const env_var_t fishd_dir_wstr = env_get_string(L"FISHD_SOCKET_DIR");
-    const env_var_t user_dir_wstr = env_get_string(L"USER");
-
-    wchar_t * fishd_dir = fishd_dir_wstr.missing()?NULL:const_cast<wchar_t*>(fishd_dir_wstr.c_str());
-    wchar_t * user_dir = user_dir_wstr.missing()?NULL:const_cast<wchar_t*>(user_dir_wstr.c_str());
-
-    env_universal_init(fishd_dir , user_dir ,
-                       &start_fishd,
-                       &universal_callback);
+    env_universal_init(universal_callback);
 
     /*
       Set up SHLVL variable

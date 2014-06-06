@@ -102,11 +102,6 @@ static wint_t readb()
 
         FD_ZERO(&fdset);
         FD_SET(0, &fdset);
-        if (env_universal_server.fd > 0)
-        {
-            FD_SET(env_universal_server.fd, &fdset);
-            fd_max = maxi(fd_max, env_universal_server.fd);
-        }
         if (ioport > 0)
         {
             FD_SET(ioport, &fdset);
@@ -174,17 +169,7 @@ static wint_t readb()
             /* Assume we loop unless we see a character in stdin */
             do_loop = true;
 
-            if (env_universal_server.fd > 0 && FD_ISSET(env_universal_server.fd, &fdset))
-            {
-                debug(3, L"Wake up on universal variable event");
-                env_universal_read_all();
-                if (has_lookahead())
-                {
-                    return lookahead_pop();
-                }
-            }
-            
-            /* Check to see if we want a barrier */
+            /* Check to see if we want a universal variable barrier */
             bool barrier_from_poll = notifier.poll();
             bool barrier_from_readability = false;
             if (notifier_fd > 0 && FD_ISSET(notifier_fd, &fdset))

@@ -18,10 +18,7 @@ extern connection_t env_universal_server;
 /**
    Initialize the envuni library
 */
-void env_universal_init(wchar_t * p,
-                        wchar_t *u,
-                        void (*sf)(),
-                        void (*cb)(fish_message_type_t type, const wchar_t *name, const wchar_t *val));
+void env_universal_init(void (*cb)(fish_message_type_t type, const wchar_t *name, const wchar_t *val));
 /**
   Free memory used by envuni
 */

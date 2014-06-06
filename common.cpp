@@ -2129,7 +2129,7 @@ static pid_t initial_foreground_process_group = -1;
 
 bool is_forked_child(void)
 {
-    /* Just bail if nobody's called setup_fork_guards - e.g. fishd */
+    /* Just bail if nobody's called setup_fork_guards, e.g. some of our tools */
     if (! initial_pid) return false;
 
     bool is_child_of_fork = (getpid() != initial_pid);

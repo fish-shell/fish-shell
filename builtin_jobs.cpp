@@ -343,6 +343,7 @@ static int builtin_jobs(parser_t &parser, wchar_t **argv)
         append_format(stdout_buffer,
                       _(L"%ls: There are no jobs\n"),
                       argv[0]);
+	return 1;
     }
 
     return 0;

@@ -29,6 +29,8 @@ try:
 except ImportError:
     import simplejson as json
 
+from optparse import OptionParser
+
 FISH_BIN_PATH = False # will be set later
 def run_fish_cmd(text):
     from subprocess import PIPE
@@ -282,11 +284,10 @@ class BindingParser:
                     "sleft": "Shift Left", "sright": "Shift Right"
                     }
 
-    def set_buffer(self, buffer, is_key=False):
+    def set_buffer(self, buffer):
         """ Sets code to parse """
 
         self.buffer = buffer
-        self.is_key = is_key
         self.index = 0
 
     def get_char(self):
@@ -356,12 +357,9 @@ class BindingParser:
     def get_readable_binding(self):
         """ Gets a readable representation of binding """
 
-        if self.is_key:
-            try:
-                result = BindingParser.readable_keys[self.buffer]
-            except KeyError:
-                result = self.buffer.title()
-        else:
+        try:
+            result = BindingParser.readable_keys[self.buffer]
+        except KeyError:
             result = self.parse_binding()
 
         return result
@@ -547,18 +545,29 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         bindings = []
         binding_parser = BindingParser()
 
-        for line in out.split('\n'):
-            comps = line.split(' ', 2)
-            if len(comps) < 3:
-                continue
-            if comps[1] == '-k':
-                key_name, command = comps[2].split(' ', 1)
-                binding_parser.set_buffer(key_name, True)
-                fish_binding = FishBinding(command=command, binding=key_name, readable_binding=binding_parser.get_readable_binding())
-            else:
-                binding_parser.set_buffer(comps[1])
-                fish_binding = FishBinding(command=comps[2], binding=comps[1], readable_binding=binding_parser.get_readable_binding())
+        parser = OptionParser()
+        parser.add_option("-k")
+        parser.add_option("-M")
+        parser.add_option("-m")
 
+        # Ignore any parsing errors
+        parser.error = lambda x: None
+
+        for line in out.split('\n'):
+            comps = line.split(' ', 1)
+
+            if len(comps) < 2:
+                continue
+
+            # parse arguments passed to bind command
+            bind_args_list = comps[1].split(' ', 6)
+            (options, args) = parser.parse_args(bind_args_list)
+
+            key_name= options.k
+            command = args[0]
+
+            binding_parser.set_buffer(key_name)
+            fish_binding = FishBinding(command=command, binding=key_name, readable_binding=binding_parser.get_readable_binding())
             bindings.append(fish_binding)
 
         return [ binding.get_json_obj() for binding in bindings ]

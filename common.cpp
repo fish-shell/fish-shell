@@ -486,17 +486,17 @@ void append_format(wcstring &str, const wchar_t *format, ...)
     va_end(va);
 }
 
-wchar_t *wcsvarname(const wchar_t *str)
+const wchar_t *wcsvarname(const wchar_t *str)
 {
     while (*str)
     {
         if ((!iswalnum(*str)) && (*str != L'_'))
         {
-            return (wchar_t *)str;
+            return str;
         }
         str++;
     }
-    return 0;
+    return NULL;
 }
 
 const wchar_t *wcsfuncname(const wchar_t *str)

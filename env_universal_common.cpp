@@ -43,21 +43,6 @@
 #define SET_EXPORT_MBS "SET_EXPORT"
 
 /**
-   Non-wide version of the erase command
-*/
-#define ERASE_MBS "ERASE"
-
-/**
-   Non-wide version of the barrier command
-*/
-#define BARRIER_MBS "BARRIER"
-
-/**
-   Non-wide version of the barrier_reply command
-*/
-#define BARRIER_REPLY_MBS "BARRIER_REPLY"
-
-/**
    Error message
 */
 #define PARSE_ERR L"Unable to parse universal variable message: '%ls'"
@@ -409,6 +394,72 @@ void set_body(message_t *msg, ...)
     va_end(arg_list);
 }
 
+/* Converts input to UTF-8 and appends it to receiver, using storage as temp storage */
+static bool append_utf8(const wcstring &input, std::string *receiver, std::string *storage)
+{
+    bool result = false;
+    if (wchar_to_utf8_string(input, storage))
+    {
+        receiver->append(*storage);
+        result = true;
+    }
+    return result;
+}
+
+/* Creates a file entry like "SET fish_color_cwd:FF0". Appends the result to *result (as UTF8). Returns true on success. storage may be used for temporary storage, to avoid allocations */
+static bool append_file_entry(fish_message_type_t type, const wcstring &key_in, const wcstring &val_in, std::string *result, std::string *storage)
+{
+    assert(storage != NULL);
+    assert(result != NULL);
+    
+    // Record the length on entry, in case we need to back up
+    bool success = true;
+    const size_t result_length_on_entry = result->size();
+    
+    // Append header like "SET "
+    result->append(type==SET ? SET_MBS : SET_EXPORT_MBS);
+    result->push_back(' ');
+
+    // Append variable name like "fish_color_cwd"
+    if (wcsvarname(key_in.c_str()))
+    {
+        debug(0, L"Illegal variable name: '%ls'", key_in.c_str());
+        success = false;
+    }
+    if (success && ! append_utf8(key_in, result, storage))
+    {
+        debug(0, L"Could not convert %ls to narrow character string", key_in.c_str());
+        success = false;
+    }
+    
+    // Append ":"
+    if (success)
+    {
+        result->push_back(':');
+    }
+    
+    // Append value
+    if (success && ! append_utf8(full_escape(val_in.c_str()), result, storage))
+    {
+        debug(0, L"Could not convert %ls to narrow character string", val_in.c_str());
+        success = false;
+    }
+    
+    // Append newline
+    if (success)
+    {
+        result->push_back('\n');
+    }
+    
+    // Don't modify result on failure. It's sufficient to simply resize it since all we ever did was append to it.
+    if (! success)
+    {
+        result->resize(result_length_on_entry);
+    }
+    
+    return success;
+}
+
 /* Returns an instance of message_t allocated via new */
 message_t *create_message(fish_message_type_t type,
                           const wchar_t *key_in,
@@ -614,6 +665,7 @@ void env_universal_t::enqueue_all_internal(connection_t *c) const
         message_t *msg = create_message(entry.exportv ? SET_EXPORT : SET, key.c_str(), entry.val.c_str());
         msg->count=1;
         c->unsent.push(msg);
+        fprintf(stderr, "%s", msg->body.c_str());
     }
     try_send_all(c);
 }
@@ -689,18 +741,52 @@ bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t 
     return result;
 }
 
-void env_universal_t::write_to_fd(int fd)
+/* Writes our state to the fd. path is provided only for error reporting */
+bool env_universal_t::write_to_fd(int fd, const wcstring &path)
 {
     ASSERT_IS_LOCKED(lock);
     assert(fd >= 0);
-    connection_t conn(fd);
+    bool success = true;
+
+    // Stuff we output to fd
+    std::string contents;
+    
+    // Temporary storage
+    std::string storage;
+    
+    // Write the save message. If this fails, we don't bother complaining.
     write_loop(fd, SAVE_MSG, strlen(SAVE_MSG));
-    this->enqueue_all_internal(&conn);
+    
+    var_table_t::const_iterator iter = vars.begin();
+    while (iter != vars.end())
+    {
+        // Append the entry. Note that append_file_entry may fail, but that only affects one variable; soldier on.
+        const wcstring &key = iter->first;
+        const var_entry_t &entry = iter->second;
+        append_file_entry(entry.exportv ? SET_EXPORT : SET, key, entry.val, &contents, &storage);
+        
+        // Go to next
+        ++iter;
+        
+        // Flush if this is the last iteration or we exceed a page
+        if (iter == vars.end() || contents.size() >= 4096)
+        {
+            if (write_loop(fd, contents.data(), contents.size()) < 0)
+            {
+                int err = errno;
+                report_error(err, L"Unable to write to universal variables file '%ls'", path.c_str());
+                success = false;
+                break;
+            }
+            contents.clear();
+        }
+    }
     
     /* Since we just wrote out this file, it matches our internal state; pretend we read from it */
     this->last_read_file = file_id_for_fd(fd);
     
-    /* Do not destroy the connection; we don't close the file */
+    /* We don't close the file */
+    return success;
 }
 
 bool env_universal_t::move_new_vars_file_into_place(const wcstring &src, const wcstring &dst)
@@ -985,7 +1071,7 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
     if (success)
     {
         assert(private_fd >= 0);
-        this->write_to_fd(private_fd);
+        success = this->write_to_fd(private_fd, private_file_path);
     }
     
     if (success)

@@ -209,7 +209,7 @@ class env_universal_t
     /* Functions concerned with saving */
     bool open_and_acquire_lock(const wcstring &path, int *out_fd);
     bool open_temporary_file(const wcstring &directory, wcstring *out_path, int *out_fd);
-    void write_to_fd(int fd);
+    bool write_to_fd(int fd, const wcstring &path);
     bool move_new_vars_file_into_place(const wcstring &src, const wcstring &dst);
     
     /* File id from which we last read */

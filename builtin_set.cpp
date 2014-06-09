@@ -428,7 +428,7 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
     int slice=0;
     int i;
 
-    wchar_t *bad_char;
+    const wchar_t *bad_char = NULL;
 
 
     /* Parse options to obtain the requested operation and the modifiers */

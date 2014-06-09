@@ -650,7 +650,7 @@ char **wcsv2strv(const wchar_t * const *in);
    \return null if this is a valid name, and a pointer to the first invalid character otherwise
 */
 
-wchar_t *wcsvarname(const wchar_t *str);
+const wchar_t *wcsvarname(const wchar_t *str);
 
 
 /**

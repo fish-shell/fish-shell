@@ -34,85 +34,6 @@ typedef enum
 #define ENV_UNIVERSAL_BUFFER_SIZE 1024
 
 /**
-   A struct representing a message to be sent between client and server
-*/
-typedef struct
-{
-    /**
-       Number of queues that contain this message. Once this reaches zero, the message should be deleted
-    */
-    int count;
-
-    /**
-       Message body.
-    */
-    std::string body;
-
-} message_t;
-
-typedef std::queue<message_t *> message_queue_t;
-
-/**
-   This struct represents a connection between a universal variable server/client
-*/
-class connection_t
-{
-private:
-    /* No assignment */
-    connection_t &operator=(const connection_t &);
-
-public:
-
-    /**
-       The file descriptor this socket lives on
-    */
-    int fd;
-
-    /**
-       Queue of unsent messages
-    */
-    std::queue<message_t *> unsent;
-
-    /**
-       Set to one when this connection should be killed
-    */
-    bool killme;
-    /**
-       The input string. Input from the socket goes here. When a
-       newline is encountered, the buffer is parsed and cleared.
-    */
-    std::vector<char> input;
-
-    /**
-       The read buffer.
-    */
-    std::vector<char> read_buffer;
-
-    /**
-       Number of bytes that have already been consumed.
-    */
-    size_t buffer_consumed;
-
-    /* Constructor */
-    connection_t(int input_fd);
-};
-
-/**
-   Read all available messages on this connection
-*/
-void read_message(connection_t *);
-
-/**
-   Send as many messages as possible without blocking to the connection
-*/
-void try_send_all(connection_t *c);
-
-/**
-   Create a messge with the specified properties
-*/
-message_t *create_message(fish_message_type_t type, const wchar_t *key, const wchar_t *val);
-
-/**
    Init the library
 */
 void env_universal_common_init(void (*cb)(fish_message_type_t type, const wchar_t *key, const wchar_t *val));
@@ -169,18 +90,6 @@ bool env_universal_common_get_export(const wcstring &name);
 /** Synchronizes all changse: writes everything out, reads stuff in */
 void env_universal_common_sync();
 
-/**
-   Add messages about all existing variables to the specified connection
-*/
-void enqueue_all(connection_t *c);
-
-/**
-   Close and destroy the specified connection struct. This frees
-   allstructures allocated by the connection, such as ques of unsent
-   messages.
-*/
-void connection_destroy(connection_t *c);
-
 typedef std::vector<struct callback_data_t> callback_data_list_t;
 
 /** Class representing universal variables */
@@ -201,7 +110,7 @@ class env_universal_t
     void load_from_fd(int fd, callback_data_list_t *callbacks);
     void erase_unmodified_values();
     
-    void parse_message_internal(wchar_t *msg, connection_t *src, callback_data_list_t *callbacks);
+    void parse_message_internal(wchar_t *msg, callback_data_list_t *callbacks);
     
     void set_internal(const wcstring &key, const wcstring &val, bool exportv, bool overwrite);
     void remove_internal(const wcstring &name, bool overwrite);
@@ -215,8 +124,7 @@ class env_universal_t
     /* File id from which we last read */
     file_id_t last_read_file;
     
-    void read_message_internal(connection_t *src, callback_data_list_t *callbacks);
-    void enqueue_all_internal(connection_t *c) const;
+    void read_message_internal(int fd, callback_data_list_t *callbacks);
     
 public:
     env_universal_t(const wcstring &path);
@@ -237,17 +145,11 @@ public:
     /* Gets variable names */
     wcstring_list_t get_names(bool show_exported, bool show_unexported) const;
     
-    /* Writes variables to the connection */
-    void enqueue_all(connection_t *c) const;
-    
     /** Loads variables at the correct path */
     bool load();
 
     /** Reads and writes variables at the correct path. Returns true if modified variables were written. */
     bool sync(callback_data_list_t *callbacks);
-    
-    /* Internal use */
-    void read_message(connection_t *src, callback_data_list_t *callbacks);
 };
 
 /** The "universal notifier" is an object responsible for broadcasting and receiving universal variable change notifications. These notifications do not contain the change, but merely indicate that the uvar file has changed. It is up to the uvar subsystem to re-read the file.

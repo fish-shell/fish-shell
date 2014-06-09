@@ -11,11 +11,6 @@
 #include "env.h"
 
 /**
-   Data about the universal variable server.
-*/
-extern connection_t env_universal_server;
-
-/**
    Initialize the envuni library
 */
 void env_universal_init(void (*cb)(fish_message_type_t type, const wchar_t *name, const wchar_t *val));

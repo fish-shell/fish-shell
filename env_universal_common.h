@@ -5,6 +5,7 @@
 #include <queue>
 #include <string>
 #include <set>
+#include "wutil.h"
 #include "util.h"
 #include "env.h"
 
@@ -19,40 +20,16 @@
 #define SET_EXPORT_STR L"SET_EXPORT"
 
 /**
-   The erase command
-*/
-#define ERASE_STR L"ERASE"
-
-/**
-   The barrier command
-*/
-#define BARRIER_STR L"BARRIER"
-
-/**
-   The barrier_reply command
-*/
-#define BARRIER_REPLY_STR L"BARRIER_REPLY"
-
-
-/**
-   The filename to use for univeral variables. The username is appended
-*/
-#define SOCK_FILENAME "fishd.socket."
-
-/**
-   The different types of commands that can be sent between client/server
+   The different types of messages found in the fishd file
 */
 typedef enum
 {
     SET,
-    SET_EXPORT,
-    ERASE,
-    BARRIER,
-    BARRIER_REPLY,
+    SET_EXPORT
 } fish_message_type_t;
 
 /**
-   The size of the buffer used for reading from the socket
+   The size of the buffer used for reading from the file
 */
 #define ENV_UNIVERSAL_BUFFER_SIZE 1024
 
@@ -67,7 +44,7 @@ typedef struct
     int count;
 
     /**
-       Message body. The message must be allocated using enough memory to actually contain the message.
+       Message body.
     */
     std::string body;
 

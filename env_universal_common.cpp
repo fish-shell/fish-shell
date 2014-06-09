@@ -7,32 +7,12 @@
 */
 #include "config.h"
 
+#include "env_universal_common.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <wchar.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <sys/un.h>
 #include <arpa/inet.h>
-#include <pwd.h>
-#include <errno.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <wctype.h>
 
-#include <errno.h>
-#include <locale.h>
-#include <dirent.h>
-#include <signal.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <sys/file.h>
 #include <sys/mman.h>
-#include <map>
 
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
@@ -44,7 +24,6 @@
 #include "common.h"
 #include "wutil.h"
 #include "utf8.h"
-#include "env_universal_common.h"
 #include "path.h"
 #include "iothread.h"
 
@@ -477,24 +456,6 @@ message_t *create_message(fish_message_type_t type,
             break;
         }
 
-        case ERASE:
-        {
-            set_body(msg, ERASE_MBS, " ", key, "\n", NULL);
-            break;
-        }
-
-        case BARRIER:
-        {
-            set_body(msg, BARRIER_MBS, "\n", NULL);
-            break;
-        }
-
-        case BARRIER_REPLY:
-        {
-            set_body(msg, BARRIER_REPLY_MBS, "\n", NULL);
-            break;
-        }
-
         default:
         {
             debug(0, L"create_message: Unknown message type");
@@ -540,20 +501,6 @@ connection_t::connection_t(int input_fd) :
 {
 }
 
-void connection_destroy(connection_t *c)
-{
-    /*
-      A connection need not always be open - we only try to close it
-      if it is open.
-    */
-    if (c->fd >= 0)
-    {
-        if (close(c->fd))
-        {
-            wperror(L"close");
-        }
-    }
-}
 
 env_universal_t::env_universal_t(const wcstring &path) : explicit_vars_path(path), tried_renaming(false), last_read_file(kInvalidFileID)
 {
@@ -1199,45 +1146,6 @@ void env_universal_t::parse_message_internal(wchar_t *msg, connection_t *src, ca
         else
         {
             debug(1, PARSE_ERR, msg);
-        }
-    }
-    else if (match(msg, ERASE_STR))
-    {
-        wchar_t *name, *tmp;
-        
-        name = msg+wcslen(ERASE_STR);
-        while (wcschr(L"\t ", *name))
-            name++;
-        
-        tmp = name;
-        while (iswalnum(*tmp) || *tmp == L'_')
-            tmp++;
-        
-        *tmp = 0;
-        
-        if (!wcslen(name))
-        {
-            debug(1, PARSE_ERR, msg);
-        }
-        
-        this->remove_internal(name, false);
-        if (callbacks != NULL)
-        {
-            callbacks->push_back(callback_data_t(ERASE, name, wcstring()));
-        }
-    }
-    else if (match(msg, BARRIER_STR))
-    {
-        message_t *msg = create_message(BARRIER_REPLY, 0, 0);
-        msg->count = 1;
-        src->unsent.push(msg);
-        try_send_all(src);
-    }
-    else if (match(msg, BARRIER_REPLY_STR))
-    {
-        if (callbacks != NULL)
-        {
-            callbacks->push_back(callback_data_t(BARRIER_REPLY, wcstring(), wcstring()));
         }
     }
     else

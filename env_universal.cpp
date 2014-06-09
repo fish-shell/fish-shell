@@ -46,11 +46,6 @@
 static bool s_env_univeral_inited = false;
 static void (*external_callback)(fish_message_type_t type, const wchar_t *name, const wchar_t *val);
 
-/**
-   Flag set to 1 when a barrier reply is recieved
-*/
-static int barrier_reply = 0;
-
 void env_universal_barrier();
 
 /**
@@ -58,15 +53,8 @@ void env_universal_barrier();
 */
 static void callback(fish_message_type_t type, const wchar_t *name, const wchar_t *val)
 {
-    if (type == BARRIER_REPLY)
-    {
-        barrier_reply = 1;
-    }
-    else
-    {
-        if (external_callback)
-            external_callback(type, name, val);
-    }
+    if (external_callback)
+        external_callback(type, name, val);
 }
 
 void env_universal_init(void (*cb)(fish_message_type_t type, const wchar_t *name, const wchar_t *val))

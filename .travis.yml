@@ -20,3 +20,5 @@ notifications:
       - "%{repository}#%{build_number} (%{commit} on %{branch} by %{author}): %{message} Details at %{build_url}"
     use_notice: true
     skip_join: true
+matrix:
+  fast_finish: true

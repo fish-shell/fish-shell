@@ -917,7 +917,7 @@ int env_remove(const wcstring &key, int var_mode)
             !(var_mode & ENV_GLOBAL) &&
             !(var_mode & ENV_LOCAL))
     {
-        erased = ! env_universal_remove(key.c_str());
+        erased = env_universal_remove(key);
     }
 
     react_to_variable_change(key);

@@ -105,20 +105,12 @@ void env_universal_set(const wcstring &name, const wcstring &value, bool exportv
     env_universal_barrier();
 }
 
-int env_universal_remove(const wchar_t *name)
+bool env_universal_remove(const wcstring &name)
 {
-    int res;
-
     if (!s_env_univeral_inited)
-        return 1;
+        return false;
 
-    CHECK(name, 1);
-
-    const wcstring name_str = name;
-    // TODO: shouldn't have to call get() here, should just have remove return success
-    res = env_universal_common_get(name_str).missing();
-    env_universal_common_remove(name_str);
-    return res;
+    return env_universal_common_remove(name);
 }
 
 void env_universal_get_names(wcstring_list_t &lst,

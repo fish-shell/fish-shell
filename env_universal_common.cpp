@@ -113,9 +113,9 @@ void env_universal_common_init(void (*cb)(fish_message_type_t type, const wchar_
 /**
    Remove variable with specified name
 */
-void env_universal_common_remove(const wcstring &name)
+bool env_universal_common_remove(const wcstring &name)
 {
-    default_universal_vars().remove(name);
+    return default_universal_vars().remove(name);
 }
 
 /**
@@ -359,25 +359,21 @@ void env_universal_t::set(const wcstring &key, const wcstring &val, bool exportv
     this->set_internal(key, val, exportv, true /* overwrite */);
 }
 
-void env_universal_t::remove_internal(const wcstring &key, bool overwrite)
+bool env_universal_t::remove_internal(const wcstring &key)
 {
     ASSERT_IS_LOCKED(lock);
-    if (! overwrite && this->modified.find(key) != modified.end())
-    {
-        /* This value has been modified and we're not overwriting it. Skip it. */
-        return;
-    }
     size_t erased = this->vars.erase(key);
-    if (erased > 0 && overwrite)
+    if (erased > 0)
     {
         this->modified.insert(key);
     }
+    return erased > 0;
 }
 
-void env_universal_t::remove(const wcstring &key)
+bool env_universal_t::remove(const wcstring &key)
 {
     scoped_lock locker(lock);
-    this->remove_internal(key, true);
+    return this->remove_internal(key);
 }
 
 wcstring_list_t env_universal_t::get_names(bool show_exported, bool show_unexported) const

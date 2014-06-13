@@ -60,15 +60,9 @@ void env_universal_common_get_names(wcstring_list_t &lst,
 void env_universal_common_set(const wchar_t *key, const wchar_t *val, bool exportv);
 
 /**
-   Remove the specified variable.
-
-   This function operate agains the local copy of all universal
-   variables, it does not communicate with any other process.
-
-   Do not call this function. Create a message to do it. This function
-   is only to be used when fishd is dead.
+   Remove the specified variable. Returns true if it was removed, false if it was not found.
 */
-void env_universal_common_remove(const wcstring &key);
+bool env_universal_common_remove(const wcstring &key);
 
 /**
    Get the value of the variable with the specified name
@@ -113,7 +107,7 @@ class env_universal_t
     void parse_message_internal(wchar_t *msg, callback_data_list_t *callbacks);
     
     void set_internal(const wcstring &key, const wcstring &val, bool exportv, bool overwrite);
-    void remove_internal(const wcstring &name, bool overwrite);
+    bool remove_internal(const wcstring &name);
     
     /* Functions concerned with saving */
     bool open_and_acquire_lock(const wcstring &path, int *out_fd);
@@ -139,8 +133,8 @@ public:
     /* Sets a variable */
     void set(const wcstring &key, const wcstring &val, bool exportv);
     
-    /* Removes a variable */
-    void remove(const wcstring &name);
+    /* Removes a variable. Returns true if it was found, false if not. */
+    bool remove(const wcstring &name);
     
     /* Gets variable names */
     wcstring_list_t get_names(bool show_exported, bool show_unexported) const;

@@ -37,9 +37,9 @@ void env_universal_set(const wcstring &name, const wcstring &val, bool exportv);
 /**
    Erase a universal variable
 
-   \return zero if the variable existed, and non-zero if the variable did not exist
+   \return true if the variable existed, and false if the variable did not exist
 */
-int env_universal_remove(const wchar_t *name);
+bool env_universal_remove(const wcstring &name);
 
 /**
    Read all available messages from the server.

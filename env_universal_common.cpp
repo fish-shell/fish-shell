@@ -9,10 +9,12 @@
 
 #include "env_universal_common.h"
 
+#include <fcntl.h>
 #include <sys/un.h>
-#include <arpa/inet.h>
-
+#include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <sys/file.h>
+#include <arpa/inet.h>
 
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>

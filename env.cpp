@@ -351,6 +351,13 @@ static void universal_callback(fish_message_type_t type, const wchar_t *name, co
             str=L"SET";
             break;
         }
+        
+        case ERASE:
+        {
+            str=L"ERASE";
+            break;
+        }
+        
         default:
             break;
     }

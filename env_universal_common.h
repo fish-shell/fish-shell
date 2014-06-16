@@ -15,7 +15,8 @@
 typedef enum
 {
     SET,
-    SET_EXPORT
+    SET_EXPORT,
+    ERASE
 } fish_message_type_t;
 
 /**
@@ -55,9 +56,6 @@ class env_universal_t
     bool tried_renaming;
     bool load_from_path(const wcstring &path, callback_data_list_t *callbacks);
     void load_from_fd(int fd, callback_data_list_t *callbacks);
-    void erase_unmodified_values();
-    
-    void parse_message_internal(const wcstring &msg, callback_data_list_t *callbacks);
     
     void set_internal(const wcstring &key, const wcstring &val, bool exportv, bool overwrite);
     bool remove_internal(const wcstring &name);
@@ -71,7 +69,14 @@ class env_universal_t
     /* File id from which we last read */
     file_id_t last_read_file;
     
-    void read_message_internal(int fd, callback_data_list_t *callbacks);
+    /* Given a variable table, generate callbacks representing the difference between our vars and the new vars */
+    void generate_callbacks(const var_table_t &new_vars, callback_data_list_t *callbacks) const;
+    
+    /* Given a variable table, copy unmodified values into self. May destructively modified vars_to_acquire. */
+    void acquire_variables(var_table_t *vars_to_acquire);
+    
+    static void parse_message_internal(const wcstring &msg, var_table_t *vars, wcstring *storage);
+    static var_table_t read_message_internal(int fd);
     
 public:
     env_universal_t(const wcstring &path);

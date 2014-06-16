@@ -364,25 +364,76 @@ wcstring_list_t env_universal_t::get_names(bool show_exported, bool show_unexpor
     return result;
 }
 
-
-void env_universal_t::erase_unmodified_values()
+/* Given a variable table, generate callbacks representing the difference between our vars and the new vars */
+void env_universal_t::generate_callbacks(const var_table_t &new_vars, callback_data_list_t *callbacks) const
 {
-    /* Delete all non-modified keys. */
-    var_table_t::iterator iter = vars.begin();
-    while (iter != vars.end())
+    assert(callbacks != NULL);
+    
+    /* Construct callbacks for erased values */
+    for (var_table_t::const_iterator iter = this->vars.begin(); iter != this->vars.end(); ++iter)
     {
         const wcstring &key = iter->first;
-        if (modified.find(key) == modified.end())
+        
+        /* Skip modified values */
+        if (this->modified.find(key) != this->modified.end())
         {
-            // Unmodified key. Erase the old value.
-            vars.erase(iter++);
+            continue;
+        }
+        
+        /* If the value is not present in new_vars, it has been erased */
+        if (new_vars.find(key) == new_vars.end())
+        {
+            callbacks->push_back(callback_data_t(ERASE, key, L""));
+        }
+    }
+    
+    /* Construct callbacks for newly inserted or changed values */
+    for (var_table_t::const_iterator iter = new_vars.begin(); iter != new_vars.end(); ++iter)
+    {
+        const wcstring &key = iter->first;
+        
+        /* Skip modified values */
+        if (this->modified.find(key) != this->modified.end())
+        {
+            continue;
+        }
+        
+        /* See if the value has changed */
+        const var_entry_t &new_entry = iter->second;
+        var_table_t::const_iterator existing = this->vars.find(key);
+        if (existing == this->vars.end() || existing->second.exportv != new_entry.exportv || existing->second.val != new_entry.val)
+        {
+            /* Value has changed */
+            callbacks->push_back(callback_data_t(new_entry.exportv ? SET_EXPORT : SET, key, new_entry.val));
+        }
+    }
+}
+
+
+void env_universal_t::acquire_variables(var_table_t *vars_to_acquire)
+{
+    /* Copy modified values from existing vars to vars_to_acquire */
+    for (std::set<wcstring>::iterator iter = this->modified.begin(); iter != this->modified.end(); ++iter)
+    {
+        const wcstring &key = *iter;
+        var_table_t::iterator src_iter = this->vars.find(key);
+        if (src_iter == this->vars.end())
+        {
+            /* The value has been deleted. */
+            vars_to_acquire->erase(key);
         }
         else
         {
-            // Modified key, retain the value.
-            ++iter;
+            /* The value has been modified. Copy it over. Note we can destructively modify the source entry in vars since we are about to get rid of this->vars entirely. */
+            var_entry_t &src = src_iter->second;
+            var_entry_t &dst = (*vars_to_acquire)[key];
+            dst.val.swap(src.val);
+            dst.exportv = src.exportv;
         }
     }
+    
+    /* We have constructed all the callbacks and updated vars_to_acquire. Acquire it! */
+    this->vars.swap(*vars_to_acquire);
 }
 
 void env_universal_t::load_from_fd(int fd, callback_data_list_t *callbacks)
@@ -397,10 +448,18 @@ void env_universal_t::load_from_fd(int fd, callback_data_list_t *callbacks)
     }
     else
     {
-        /* Unmodified values are sourced from the file. Since we are about to read a different file, erase them */
-        this->erase_unmodified_values();
-        /* Read from the file. */
-        this->read_message_internal(fd, callbacks);
+        /* Read a variables table from the file. */
+        var_table_t new_vars = this->read_message_internal(fd);
+        
+        /* Announce changes */
+        if (callbacks != NULL)
+        {
+            this->generate_callbacks(new_vars, callbacks);
+        }
+        
+        /* Acquire the new variables */
+        this->acquire_variables(&new_vars);
+        
         last_read_file = current_file;
     }
 }
@@ -416,7 +475,6 @@ bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t 
         return true;
     }
     
-    /* OK to not use CLO_EXEC here because fishd is single threaded */
     bool result = false;
     int fd = wopen_cloexec(path, O_RDONLY);
     if (fd >= 0)
@@ -721,13 +779,6 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
         return false;
     }
     
-#if 0
-    for (std::set<wcstring>::iterator iter = modified.begin(); iter != modified.end(); ++iter)
-    {
-        fprintf(stderr, "Modified %ls\n", iter->c_str());
-    }
-#endif
-    
     const wcstring directory = wdirname(vars_path);
     bool success = true;
     int vars_fd = -1;
@@ -797,9 +848,12 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
     return success;
 }
 
-void env_universal_t::read_message_internal(int fd, callback_data_list_t *callbacks)
+var_table_t env_universal_t::read_message_internal(int fd)
 {
-    ASSERT_IS_LOCKED(lock);
+    var_table_t result;
+    
+    // Temp value used to avoid repeated allocations
+    wcstring storage;
     
     // The line we construct (and then parse)
     std::string line;
@@ -834,7 +888,7 @@ void env_universal_t::read_message_internal(int fd, callback_data_list_t *callba
             {
                 if (utf8_to_wchar_string(line, &wide_line))
                 {
-                    this->parse_message_internal(wide_line, callbacks);
+                    env_universal_t::parse_message_internal(wide_line, &result, &storage);
                 }
                 line.clear();
             }
@@ -845,14 +899,14 @@ void env_universal_t::read_message_internal(int fd, callback_data_list_t *callba
     }
     
     // We make no effort to handle an unterminated last line
+    return result;
 }
 
 /**
  Parse message msg
  */
-void env_universal_t::parse_message_internal(const wcstring &msgstr, callback_data_list_t *callbacks)
+void env_universal_t::parse_message_internal(const wcstring &msgstr, var_table_t *vars, wcstring *storage)
 {
-    ASSERT_IS_LOCKED(lock);
     const wchar_t *msg = msgstr.c_str();
     
     //  debug( 3, L"parse_message( %ls );", msg );
@@ -860,10 +914,12 @@ void env_universal_t::parse_message_internal(const wcstring &msgstr, callback_da
     if (msg[0] == L'#')
         return;
     
-    if (match(msg, SET_STR) || match(msg, SET_EXPORT_STR))
+    bool is_set_export = match(msg, SET_EXPORT_STR);
+    bool is_set = ! is_set_export && match(msg, SET_STR);
+    if (is_set || is_set_export)
     {
         const wchar_t *name, *tmp;
-        bool exportv = match(msg, SET_EXPORT_STR);
+        const bool exportv = is_set_export;
         
         name = msg+(exportv?wcslen(SET_EXPORT_STR):wcslen(SET_STR));
         while (name[0] == L'\t' || name[0] == L' ')
@@ -872,16 +928,16 @@ void env_universal_t::parse_message_internal(const wcstring &msgstr, callback_da
         tmp = wcschr(name, L':');
         if (tmp)
         {
-            const wcstring key(name, tmp - name);
+            /* Use 'storage' to hold our key to avoid allocations */
+            storage->assign(name, tmp - name);
+            const wcstring &key = *storage;
             
             wcstring val;
             if (unescape_string(tmp + 1, &val, 0))
             {
-                this->set_internal(key, val, exportv, false);
-                if (callbacks != NULL)
-                {
-                    callbacks->push_back(callback_data_t(exportv ? SET_EXPORT:SET, key, val));
-                }
+                var_entry_t &entry = (*vars)[key];
+                entry.exportv = exportv;
+                entry.val.swap(val); //acquire the value
             }
         }
         else

@@ -2255,8 +2255,65 @@ static void test_universal()
         }
     }
     
-    if (system("rm -Rf /tmp/fish_uvars_test")) err(L"rrm failed");
+    if (system("rm -Rf /tmp/fish_uvars_test")) err(L"rm failed");
     putc('\n', stderr);
+}
+
+static bool callback_data_less_than(const callback_data_t &a, const callback_data_t &b) {
+    return a.key < b.key;
+}
+
+static void test_universal_callbacks()
+{
+    say(L"Testing universal callbacks");
+    if (system("mkdir -p /tmp/fish_uvars_test/")) err(L"mkdir failed");
+    env_universal_t uvars1(UVARS_TEST_PATH);
+    env_universal_t uvars2(UVARS_TEST_PATH);
+    
+    /* Put some variables into both */
+    uvars1.set(L"alpha", L"1", false);
+    uvars1.set(L"beta", L"1", false);
+    uvars1.set(L"delta", L"1", false);
+    uvars1.set(L"epsilon", L"1", false);
+    uvars1.set(L"lambda", L"1", false);
+    uvars1.set(L"kappa", L"1", false);
+    uvars1.set(L"omicron", L"1", false);
+    
+    uvars1.sync(NULL);
+    uvars2.sync(NULL);
+    
+    /* Change uvars1 */
+    uvars1.set(L"alpha", L"2", false); //changes value
+    uvars1.set(L"beta", L"1", true); //changes export
+    uvars1.remove(L"delta"); //erases value
+    uvars1.set(L"epsilon", L"1", false); //changes nothing
+    uvars1.sync(NULL);
+    
+    /* Change uvars2. It should treat its value as correct and ignore changes from uvars1. */
+    uvars2.set(L"lambda", L"1", false); //same value
+    uvars2.set(L"kappa", L"2", false); //different value
+
+    /* Now see what uvars2 sees */
+    callback_data_list_t callbacks;
+    uvars2.sync(&callbacks);
+    
+    /* Sort them to get them in a predictable order */
+    std::sort(callbacks.begin(), callbacks.end(), callback_data_less_than);
+    
+    /* Should see exactly two changes */
+    do_test(callbacks.size() == 3);
+    do_test(callbacks.at(0).type == SET);
+    do_test(callbacks.at(0).key == L"alpha");
+    do_test(callbacks.at(0).val == L"2");
+    do_test(callbacks.at(1).type == SET_EXPORT);
+    do_test(callbacks.at(1).key == L"beta");
+    do_test(callbacks.at(1).val == L"1");
+    do_test(callbacks.at(2).type == ERASE);
+    do_test(callbacks.at(2).key == L"delta");
+    do_test(callbacks.at(2).val == L"");
+
+    
+    if (system("rm -Rf /tmp/fish_uvars_test")) err(L"rm failed");
 }
 
 bool poll_notifier(universal_notifier_t *note)
@@ -3449,7 +3506,8 @@ int main(int argc, char **argv)
     if (should_test_function("complete")) test_complete();
     if (should_test_function("input")) test_input();
     if (should_test_function("universal")) test_universal();
-    if (should_test_function("universal_notifiers")) test_universal_notifiers();
+    if (should_test_function("universal")) test_universal_callbacks();
+    if (should_test_function("notifiers")) test_universal_notifiers();
     if (should_test_function("completion_insertions")) test_completion_insertions();
     if (should_test_function("autosuggestion_combining")) test_autosuggestion_combining();
     if (should_test_function("autosuggest_suggest_special")) test_autosuggest_suggest_special();

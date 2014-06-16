@@ -35,6 +35,17 @@
 #endif
 
 /**
+   The set command
+*/
+#define SET_STR L"SET"
+
+/**
+   The set_export command
+*/
+#define SET_EXPORT_STR L"SET_EXPORT"
+
+
+/**
    Non-wide version of the set command
 */
 #define SET_MBS "SET"
@@ -76,36 +87,9 @@ static env_universal_t &default_universal_vars()
     return s_default_vars;
 }
 
-/**
-   Callback function, should be called on all events
-*/
-struct callback_data_t
-{
-    fish_message_type_t type;
-    wcstring key;
-    wcstring val;
-    
-    callback_data_t(fish_message_type_t t, const wcstring &k, const wcstring &v) : type(t), key(k), val(v)
-    {
-    }
-};
-
 static void (*callback)(fish_message_type_t type,
                         const wchar_t *key,
                         const wchar_t *val);
-
-/* Post callbacks that we have determined in this list. We do this here, instead of at the point where we determined that the values changed, because we determine those under a lock, and reentrancy would cause a deadlock */
-static void post_callbacks(const callback_data_list_t &callbacks)
-{
-    if (callback != NULL)
-    {
-        for (size_t i=0; i < callbacks.size(); i++)
-        {
-            const callback_data_t &data = callbacks.at(i);
-            callback(data.type, data.key.c_str(), data.val.c_str());
-        }
-    }
-}
 
 void env_universal_common_init(void (*cb)(fish_message_type_t type, const wchar_t *key, const wchar_t *val))
 {
@@ -146,18 +130,6 @@ void env_universal_common_set(const wchar_t *key, const wchar_t *val, bool expor
     {
         callback(exportv?SET_EXPORT:SET, key, val);
     }
-}
-
-void env_universal_common_sync()
-{
-    assert(! synchronizes_via_fishd());
-    callback_data_list_t callbacks;
-    bool changed = default_universal_vars().sync(&callbacks);
-    if (changed)
-    {
-        universal_notifier_t::default_notifier().post_notification();
-    }
-    post_callbacks(callbacks);
 }
 
 static void report_error(int err_code, const wchar_t *err_format, ...)
@@ -279,17 +251,14 @@ static bool append_file_entry(fish_message_type_t type, const wcstring &key_in, 
     return success;
 }
 
-/**
-  Put exported or unexported variables in a string list
-*/
-void env_universal_common_get_names(wcstring_list_t &lst, bool show_exported, bool show_unexported)
+wcstring_list_t env_universal_get_names(bool show_exported, bool show_unexported)
 {
-    const wcstring_list_t names = default_universal_vars().get_names(show_exported, show_unexported);
-    lst.insert(lst.end(), names.begin(), names.end());
+    return default_universal_vars().get_names(show_exported, show_unexported);
+    
 }
 
 
-env_var_t env_universal_common_get(const wcstring &name)
+env_var_t env_universal_get(const wcstring &name)
 {
     return default_universal_vars().get(name);
 }
@@ -531,8 +500,7 @@ static env_var_t fishd_env_get(const char *key)
     }
     else
     {
-        const wcstring wkey = str2wcstring(key);
-        return env_universal_common_get(wkey);
+        return env_var_t::missing_var();
     }
 }
 
@@ -725,6 +693,7 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd)
 /* Returns true if modified variables were written, false if not. (There may still be variable changes due to other processes on a false return). */
 bool env_universal_t::sync(callback_data_list_t *callbacks)
 {
+    UNIVERSAL_LOG("sync");
     scoped_lock locker(lock);
     /* Our saving strategy:
     
@@ -844,14 +813,15 @@ void env_universal_t::read_message_internal(int fd, callback_data_list_t *callba
         {
             break;
         }
+        const size_t bufflen = (size_t)amt;
         
         // Walk over it by lines. The contents of an unterminated line will be left in 'line' for the next iteration.
         size_t line_start = 0;
-        while (line_start < sizeof buffer)
+        while (line_start < amt)
         {
             // Run until we hit a newline
             size_t cursor = line_start;
-            while (cursor < sizeof buffer && buffer[cursor] != '\n')
+            while (cursor < bufflen && buffer[cursor] != '\n')
             {
                 cursor++;
             }
@@ -860,13 +830,11 @@ void env_universal_t::read_message_internal(int fd, callback_data_list_t *callba
             line.append(buffer + line_start, cursor - line_start);
             
             // Process it if it's a newline (which is true if we are before the end of the buffer)
-            if (cursor < sizeof buffer && ! line.empty())
+            if (cursor < bufflen && ! line.empty())
             {
                 if (utf8_to_wchar_string(line, &wide_line))
                 {
-                    wchar_t *tmp = wcsdup(wide_line.c_str());
-                    this->parse_message_internal(tmp, callbacks);
-                    free(tmp);
+                    this->parse_message_internal(wide_line, callbacks);
                 }
                 line.clear();
             }
@@ -882,9 +850,10 @@ void env_universal_t::read_message_internal(int fd, callback_data_list_t *callba
 /**
  Parse message msg
  */
-void env_universal_t::parse_message_internal(wchar_t *msg, callback_data_list_t *callbacks)
+void env_universal_t::parse_message_internal(const wcstring &msgstr, callback_data_list_t *callbacks)
 {
     ASSERT_IS_LOCKED(lock);
+    const wchar_t *msg = msgstr.c_str();
     
     //  debug( 3, L"parse_message( %ls );", msg );
     
@@ -893,11 +862,11 @@ void env_universal_t::parse_message_internal(wchar_t *msg, callback_data_list_t 
     
     if (match(msg, SET_STR) || match(msg, SET_EXPORT_STR))
     {
-        wchar_t *name, *tmp;
+        const wchar_t *name, *tmp;
         bool exportv = match(msg, SET_EXPORT_STR);
         
         name = msg+(exportv?wcslen(SET_EXPORT_STR):wcslen(SET_STR));
-        while (wcschr(L"\t ", *name))
+        while (name[0] == L'\t' || name[0] == L' ')
             name++;
         
         tmp = wcschr(name, L':');
@@ -1516,11 +1485,6 @@ class universal_notifier_null_t : public universal_notifier_t
 
 static universal_notifier_t::notifier_strategy_t fetch_default_strategy_from_environment()
 {
-    if (synchronizes_via_fishd())
-    {
-        return universal_notifier_t::strategy_null;
-    }
-    
     universal_notifier_t::notifier_strategy_t result = universal_notifier_t::strategy_default;
 
     const struct

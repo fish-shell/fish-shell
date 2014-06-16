@@ -10,16 +10,6 @@
 #include "env.h"
 
 /**
-   The set command
-*/
-#define SET_STR L"SET"
-
-/**
-   The set_export command
-*/
-#define SET_EXPORT_STR L"SET_EXPORT"
-
-/**
    The different types of messages found in the fishd file
 */
 typedef enum
@@ -33,58 +23,21 @@ typedef enum
 */
 #define ENV_UNIVERSAL_BUFFER_SIZE 1024
 
-/**
-   Init the library
-*/
-void env_universal_common_init(void (*cb)(fish_message_type_t type, const wchar_t *key, const wchar_t *val));
-
-/**
-   Add all variable names to the specified list
-
-   This function operate agains the local copy of all universal
-   variables, it does not communicate with any other process.
-*/
-void env_universal_common_get_names(wcstring_list_t &lst,
-                                    bool show_exported,
-                                    bool show_unexported);
-
-/**
-   Perform the specified variable assignment.
-
-   This function operate agains the local copy of all universal
-   variables, it does not communicate with any other process.
-
-   Do not call this function. Create a message to do it. This function
-   is only to be used when fishd is dead.
-*/
-void env_universal_common_set(const wchar_t *key, const wchar_t *val, bool exportv);
-
-/**
-   Remove the specified variable. Returns true if it was removed, false if it was not found.
-*/
-bool env_universal_common_remove(const wcstring &key);
-
-/**
-   Get the value of the variable with the specified name
-
-   This function operate agains the local copy of all universal
-   variables, it does not communicate with any other process.
-*/
-env_var_t env_universal_common_get(const wcstring &name);
-
-/**
-   Get the export flag of the variable with the specified
-   name. Returns false if the variable doesn't exist.
-
-   This function operate agains the local copy of all universal
-   variables, it does not communicate with any other process.
-*/
-bool env_universal_common_get_export(const wcstring &name);
-
-/** Synchronizes all changse: writes everything out, reads stuff in */
-void env_universal_common_sync();
-
 typedef std::vector<struct callback_data_t> callback_data_list_t;
+
+/**
+   Callback data, reflecting a change in universal variables
+*/
+struct callback_data_t
+{
+    fish_message_type_t type;
+    wcstring key;
+    wcstring val;
+    
+    callback_data_t(fish_message_type_t t, const wcstring &k, const wcstring &v) : type(t), key(k), val(v)
+    {
+    }
+};
 
 /** Class representing universal variables */
 class env_universal_t
@@ -104,7 +57,7 @@ class env_universal_t
     void load_from_fd(int fd, callback_data_list_t *callbacks);
     void erase_unmodified_values();
     
-    void parse_message_internal(wchar_t *msg, callback_data_list_t *callbacks);
+    void parse_message_internal(const wcstring &msg, callback_data_list_t *callbacks);
     
     void set_internal(const wcstring &key, const wcstring &val, bool exportv, bool overwrite);
     bool remove_internal(const wcstring &name);
@@ -216,8 +169,6 @@ public:
 std::string get_machine_identifier();
 bool get_hostname_identifier(std::string *result);
 
-/* Temporary */
-bool synchronizes_via_fishd();
 
 bool universal_log_enabled();
 #define UNIVERSAL_LOG(x) if (universal_log_enabled()) fprintf(stderr, "UNIVERSAL LOG: %s\n", x)

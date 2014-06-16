@@ -3469,7 +3469,6 @@ int main(int argc, char **argv)
 //  say( L"Testing performance" );
 //  perf_complete();
 
-    env_destroy();
     reader_destroy();
     builtin_destroy();
     wutil_destroy();

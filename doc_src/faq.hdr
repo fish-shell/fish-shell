@@ -226,8 +226,8 @@ fish_title function will not work.
 
 \section faq-greeting How do I change the greeting message?
 
-Change the value of the variable fish_greeting. For example, to remove
-the greeting use:
+Change the value of the variable \c fish_greeting or create a \c fish_greeting
+function. For example, to remove the greeting use:
 
 <pre>
 set fish_greeting

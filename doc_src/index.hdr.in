@@ -1320,9 +1320,9 @@ end
 
 \subsection greeting Configurable greeting
 
-If a function named fish_greeting exists after initialization, it will
-be run when entering interactive mode. Otherwise,if an environment
-variable named fish_greeting exists, it will be printed.
+If a function named \c fish_greeting exists, it will be run when entering
+interactive mode. Otherwise, if an environment variable named \c fish_greeting
+exists, it will be printed.
 
 \subsection event Event handlers
 

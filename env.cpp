@@ -49,7 +49,6 @@
 #include "history.h"
 #include "reader.h"
 #include "parser.h"
-#include "env_universal.h"
 #include "env_universal_common.h"
 #include "input.h"
 #include "event.h"

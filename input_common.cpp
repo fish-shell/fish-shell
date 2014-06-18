@@ -16,6 +16,7 @@ Implementation file for the low level input library
 #include <wchar.h>
 #include <stack>
 #include <list>
+#include <queue>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
@@ -26,7 +27,7 @@ Implementation file for the low level input library
 #include "common.h"
 #include "wutil.h"
 #include "input_common.h"
-#include "env_universal.h"
+#include "env_universal_common.h"
 #include "iothread.h"
 
 /**
@@ -37,9 +38,9 @@ Implementation file for the low level input library
 #define WAIT_ON_ESCAPE 10
 
 /** Characters that have been read and returned by the sequence matching code */
-static std::stack<wint_t, std::list<wint_t> > lookahead_list;
+static std::stack<wint_t, std::vector<wint_t> > lookahead_list;
 
-/* Queue of pairs of (function pointer, argument) to be invoked */
+/* Queue of pairs of (function pointer, argument) to be invoked. Expected to be mostly empty. */
 typedef std::pair<void (*)(void *), void *> callback_info_t;
 typedef std::queue<callback_info_t, std::list<callback_info_t> > callback_queue_t;
 static callback_queue_t callback_queue;

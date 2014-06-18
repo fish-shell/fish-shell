@@ -49,19 +49,13 @@
 #include "history.h"
 #include "reader.h"
 #include "parser.h"
-#include "env_universal.h"
+#include "env_universal_common.h"
 #include "input.h"
 #include "event.h"
 #include "path.h"
 
 #include "complete.h"
 #include "fish_version.h"
-
-/** Command used to start fishd */
-#define FISHD_CMD L"fishd ^ /dev/null"
-
-// Version for easier debugging
-//#define FISHD_CMD L"fishd"
 
 /** Value denoting a null string */
 #define ENV_NULL L"\x1d"
@@ -135,6 +129,13 @@ static env_node_t *top = NULL;
 /** Bottom node on the function stack */
 static env_node_t *global_env = NULL;
 
+/** Universal variables global instance. Initialized in env_init. */
+static env_universal_t *s_universal_variables = NULL;
+
+/* Getter for universal variables */
+static env_universal_t *uvars() {
+    return s_universal_variables;
+}
 
 /**
    Table for global variables
@@ -217,43 +218,6 @@ const var_entry_t *env_node_t::find_entry(const wcstring &key)
 env_node_t *env_node_t::next_scope_to_search(void)
 {
     return this->new_scope ? global_env : this->next;
-}
-
-
-/**
-   When fishd isn't started, this function is provided to
-   env_universal as a callback, it tries to start up fishd. It's
-   implementation is a bit of a hack, since it evaluates a bit of
-   shellscript, and it might be used at times when that might not be
-   the best idea.
-*/
-static void start_fishd()
-{
-    struct passwd *pw = getpwuid(getuid());
-
-    debug(3, L"Spawning new copy of fishd");
-
-    if (!pw)
-    {
-        debug(0, _(L"Could not get user information"));
-        return;
-    }
-
-    wcstring cmd = format_string(FISHD_CMD, pw->pw_name);
-
-    /* Prefer the fishd in __fish_bin_dir, if exists */
-    const env_var_t bin_dir = env_get_string(L"__fish_bin_dir");
-    if (! bin_dir.missing_or_empty())
-    {
-        wcstring path = bin_dir + L"/fishd";
-        if (waccess(path, X_OK) == 0)
-        {
-            /* The path command just looks like 'fishd', so insert the bin path to make it absolute */
-            cmd.insert(0, bin_dir + L"/");
-        }
-    }
-    parser_t &parser = parser_t::principal_parser();
-    parser.eval(cmd, io_chain_t(), TOP);
 }
 
 /**
@@ -374,9 +338,7 @@ static void react_to_variable_change(const wcstring &key)
    Universal variable callback function. This function makes sure the
    proper events are triggered when an event occurs.
 */
-static void universal_callback(fish_message_type_t type,
-                               const wchar_t *name,
-                               const wchar_t *val)
+static void universal_callback(fish_message_type_t type, const wchar_t *name, const wchar_t *val)
 {
     const wchar_t *str = NULL;
 
@@ -388,13 +350,13 @@ static void universal_callback(fish_message_type_t type,
             str=L"SET";
             break;
         }
-
+        
         case ERASE:
         {
             str=L"ERASE";
             break;
         }
-
+        
         default:
             break;
     }
@@ -604,15 +566,9 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     env_set(L"version", version.c_str(), ENV_GLOBAL);
     env_set(L"FISH_VERSION", version.c_str(), ENV_GLOBAL);
 
-    const env_var_t fishd_dir_wstr = env_get_string(L"FISHD_SOCKET_DIR");
-    const env_var_t user_dir_wstr = env_get_string(L"USER");
-
-    wchar_t * fishd_dir = fishd_dir_wstr.missing()?NULL:const_cast<wchar_t*>(fishd_dir_wstr.c_str());
-    wchar_t * user_dir = user_dir_wstr.missing()?NULL:const_cast<wchar_t*>(user_dir_wstr.c_str());
-
-    env_universal_init(fishd_dir , user_dir ,
-                       &start_fishd,
-                       &universal_callback);
+    /* Set up universal variables. The empty string means to use the deafult path. */
+    assert(s_universal_variables == NULL);
+    s_universal_variables = new env_universal_t(L"");
 
     /*
       Set up SHLVL variable
@@ -642,32 +598,6 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
 
     /* Set fish_bind_mode to "default" */
     env_set(FISH_BIND_MODE_VAR, DEFAULT_BIND_MODE, ENV_GLOBAL);
-}
-
-void env_destroy()
-{
-    env_universal_destroy();
-
-    while (&top->env != global)
-    {
-        env_pop();
-    }
-
-    env_read_only.clear();
-    env_electric.clear();
-
-    var_table_t::iterator iter;
-    for (iter = global->begin(); iter != global->end(); ++iter)
-    {
-        const var_entry_t &entry = iter->second;
-        if (entry.exportv)
-        {
-            mark_changed_exported();
-            break;
-        }
-    }
-
-    delete top;
 }
 
 /**
@@ -746,23 +676,32 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
 
     if (var_mode & ENV_UNIVERSAL)
     {
-        bool exportv;
+        const bool old_export = uvars() && uvars()->get_export(key);
+        bool new_export;
         if (var_mode & ENV_EXPORT)
         {
             // export
-            exportv = true;
+            new_export = true;
         }
         else if (var_mode & ENV_UNEXPORT)
         {
             // unexport
-            exportv = false;
+            new_export = false;
         }
         else
         {
             // not changing the export
-            exportv = env_universal_get_export(key);
+            new_export = old_export;
         }
-        env_universal_set(key, val, exportv);
+        if (uvars())
+        {
+            uvars()->set(key, val, new_export);
+            env_universal_barrier();
+            if (old_export || new_export)
+            {
+                mark_changed_exported();
+            }
+        }
         is_universal = 1;
 
     }
@@ -811,7 +750,7 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
                 env_universal_barrier();
             }
 
-            if (! env_universal_get(key).missing())
+            if (uvars() && ! uvars()->get(key).missing())
             {
                 bool exportv;
                 if (var_mode & ENV_EXPORT)
@@ -824,10 +763,11 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
                 }
                 else
                 {
-                    exportv = env_universal_get_export(key);
+                    exportv = uvars()->get_export(key);
                 }
 
-                env_universal_set(key, val, exportv);
+                uvars()->set(key, val, exportv);
+                env_universal_barrier();
                 is_universal = 1;
 
                 done = 1;
@@ -875,7 +815,6 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
             if (has_changed_old || has_changed_new)
                 mark_changed_exported();
         }
-
     }
 
     if (!is_universal)
@@ -975,7 +914,7 @@ int env_remove(const wcstring &key, int var_mode)
             !(var_mode & ENV_GLOBAL) &&
             !(var_mode & ENV_LOCAL))
     {
-        erased = ! env_universal_remove(key.c_str());
+        erased = uvars() && uvars()->remove(key);
     }
 
     react_to_variable_change(key);
@@ -1058,16 +997,12 @@ env_var_t env_get_string(const wcstring &key)
             env_universal_barrier();
         }
 
-        env_var_t item = env_universal_get(key);
-
-        if (item.missing() || (wcscmp(item.c_str(), ENV_NULL)==0))
+        env_var_t env_var = uvars() ?  uvars()->get(key) : env_var_t::missing_var();
+        if (env_var == ENV_NULL)
         {
-            return env_var_t::missing_var();
+            env_var = env_var_t::missing_var();
         }
-        else
-        {
-            return item;
-        }
+        return env_var;
     }
 }
 
@@ -1137,15 +1072,15 @@ bool env_exist(const wchar_t *key, int mode)
             env_universal_barrier();
         }
 
-        if (! env_universal_get(key).missing())
+        if (uvars() && ! uvars()->get(key).missing())
         {
             if (mode & ENV_EXPORT)
             {
-                return env_universal_get_export(key) == 1;
+                return uvars()->get_export(key);
             }
             else if (mode & ENV_UNEXPORT)
             {
-                return env_universal_get_export(key) == 0;
+                return ! uvars()->get_export(key);
             }
 
             return 1;
@@ -1312,13 +1247,9 @@ wcstring_list_t env_get_names(int flags)
 
     }
 
-    if (show_universal)
+    if (show_universal && uvars())
     {
-
-        wcstring_list_t uni_list;
-        env_universal_get_names(uni_list,
-                                show_exported,
-                                show_unexported);
+        const wcstring_list_t uni_list = uvars()->get_names(show_exported, show_unexported);
         names.insert(uni_list.begin(), uni_list.end());
     }
 
@@ -1398,18 +1329,20 @@ static void update_export_array_if_necessary(bool recalc)
 
         get_exported(top, vals);
 
-        wcstring_list_t uni;
-        env_universal_get_names(uni, 1, 0);
-        for (i=0; i<uni.size(); i++)
+        if (uvars())
         {
-            const wcstring &key = uni.at(i);
-            const env_var_t val = env_universal_get(key);
-
-            if (! val.missing() && wcscmp(val.c_str(), ENV_NULL))
+            const wcstring_list_t uni = uvars()->get_names(true, false);
+            for (i=0; i<uni.size(); i++)
             {
-                // Note that std::map::insert does NOT overwrite a value already in the map,
-                // which we depend on here
-                vals.insert(std::pair<wcstring, wcstring>(key, val));
+                const wcstring &key = uni.at(i);
+                const env_var_t val = uvars()->get(key);
+
+                if (! val.missing() && val != ENV_NULL)
+                {
+                    // Note that std::map::insert does NOT overwrite a value already in the map,
+                    // which we depend on here
+                    vals.insert(std::pair<wcstring, wcstring>(key, val));
+                }
             }
         }
 
@@ -1439,6 +1372,28 @@ env_vars_snapshot_t::env_vars_snapshot_t(const wchar_t * const *keys)
         if (! val.missing())
         {
             vars[key] = val;
+        }
+    }
+}
+
+
+void env_universal_barrier()
+{
+    ASSERT_IS_MAIN_THREAD();
+    if (uvars())
+    {
+        callback_data_list_t changes;
+        bool changed = uvars()->sync(&changes);
+        if (changed)
+        {
+            universal_notifier_t::default_notifier().post_notification();
+        }
+        
+        /* Post callbacks */
+        for (size_t i=0; i < changes.size(); i++)
+        {
+            const callback_data_t &data = changes.at(i);
+            universal_callback(data.type, data.key.c_str(), data.val.c_str());
         }
     }
 }

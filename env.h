@@ -69,12 +69,6 @@ struct config_paths_t
 void env_init(const struct config_paths_t *paths = NULL);
 
 /**
-   Destroy environment variable data
-*/
-void env_destroy();
-
-
-/**
    Set the value of the environment variable whose name matches key to val.
 
    Memory policy: All keys and values are copied, the parameters can and should be freed by the caller afterwards
@@ -204,6 +198,9 @@ void env_push(bool new_scope);
   Pop the variable stack. Used for implementing local variables for functions and for-loops.
 */
 void env_pop();
+
+/** Synchronizes all universal variable changes: writes everything out, reads stuff in */
+void env_universal_barrier();
 
 /** Returns an array containing all exported variables in a format suitable for execv. */
 const char * const * env_export_arr(bool recalc);

@@ -16,6 +16,7 @@ Implementation file for the low level input library
 #include <wchar.h>
 #include <stack>
 #include <list>
+#include <queue>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
@@ -26,7 +27,7 @@ Implementation file for the low level input library
 #include "common.h"
 #include "wutil.h"
 #include "input_common.h"
-#include "env_universal.h"
+#include "env_universal_common.h"
 #include "iothread.h"
 
 /**
@@ -37,9 +38,9 @@ Implementation file for the low level input library
 #define WAIT_ON_ESCAPE 10
 
 /** Characters that have been read and returned by the sequence matching code */
-static std::stack<wint_t, std::list<wint_t> > lookahead_list;
+static std::stack<wint_t, std::vector<wint_t> > lookahead_list;
 
-/* Queue of pairs of (function pointer, argument) to be invoked */
+/* Queue of pairs of (function pointer, argument) to be invoked. Expected to be mostly empty. */
 typedef std::pair<void (*)(void *), void *> callback_info_t;
 typedef std::queue<callback_info_t, std::list<callback_info_t> > callback_queue_t;
 static callback_queue_t callback_queue;
@@ -102,11 +103,6 @@ static wint_t readb()
 
         FD_ZERO(&fdset);
         FD_SET(0, &fdset);
-        if (env_universal_server.fd > 0)
-        {
-            FD_SET(env_universal_server.fd, &fdset);
-            fd_max = maxi(fd_max, env_universal_server.fd);
-        }
         if (ioport > 0)
         {
             FD_SET(ioport, &fdset);
@@ -174,17 +170,7 @@ static wint_t readb()
             /* Assume we loop unless we see a character in stdin */
             do_loop = true;
 
-            if (env_universal_server.fd > 0 && FD_ISSET(env_universal_server.fd, &fdset))
-            {
-                debug(3, L"Wake up on universal variable event");
-                env_universal_read_all();
-                if (has_lookahead())
-                {
-                    return lookahead_pop();
-                }
-            }
-            
-            /* Check to see if we want a barrier */
+            /* Check to see if we want a universal variable barrier */
             bool barrier_from_poll = notifier.poll();
             bool barrier_from_readability = false;
             if (notifier_fd > 0 && FD_ISSET(notifier_fd, &fdset))

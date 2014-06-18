@@ -540,8 +540,6 @@ int main(int argc, char **argv)
     wutil_destroy();
     event_destroy();
 
-    env_destroy();
-
     if (g_log_forks)
         printf("%d: g_fork_count: %d\n", __LINE__, g_fork_count);
 

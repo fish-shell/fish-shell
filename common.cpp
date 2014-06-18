@@ -486,17 +486,17 @@ void append_format(wcstring &str, const wchar_t *format, ...)
     va_end(va);
 }
 
-wchar_t *wcsvarname(const wchar_t *str)
+const wchar_t *wcsvarname(const wchar_t *str)
 {
     while (*str)
     {
         if ((!iswalnum(*str)) && (*str != L'_'))
         {
-            return (wchar_t *)str;
+            return str;
         }
         str++;
     }
-    return 0;
+    return NULL;
 }
 
 const wchar_t *wcsfuncname(const wchar_t *str)
@@ -2129,7 +2129,7 @@ static pid_t initial_foreground_process_group = -1;
 
 bool is_forked_child(void)
 {
-    /* Just bail if nobody's called setup_fork_guards - e.g. fishd */
+    /* Just bail if nobody's called setup_fork_guards, e.g. some of our tools */
     if (! initial_pid) return false;
 
     bool is_child_of_fork = (getpid() != initial_pid);

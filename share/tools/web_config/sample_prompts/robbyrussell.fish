@@ -30,12 +30,10 @@ function fish_prompt
     end
 
     function _repo_branch_name
-      set -l repo_type $argv[1]
       eval "_$argv[1]_branch_name"
     end
 
     function _is_repo_dirty 
-      set -l repo_type $argv[1]
       eval "_is_$argv[1]_dirty"
     end
 

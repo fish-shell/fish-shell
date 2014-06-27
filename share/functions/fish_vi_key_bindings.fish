@@ -180,6 +180,15 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind -M insert \e\[D backward-char
   bind -M insert -k right forward-char
   bind -M insert -k left backward-char
+  
+  # useful insert mode mappings
+  bind -M insert \ch backward-delete-char
+  bind -M insert \cw backward-kill-word
+  bind -M insert \cu backward-kill-line
+  bind -M insert \cp history-search-backward
+  bind -M insert \cn history-search-forward
+  bind -M insert \cb backward-word
+  bind -M insert \cf forward-word
 
   # useful insert mode mappings
   bind -M insert \ch backward-delete-char

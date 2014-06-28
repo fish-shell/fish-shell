@@ -485,16 +485,6 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     }
 
     /*
-      HOME and USER should be writeable by root, since this can be a
-      convenient way to install software.
-    */
-    if (getuid() != 0)
-    {
-        env_read_only.insert(L"HOME");
-        env_read_only.insert(L"USER");
-    }
-
-    /*
        Names of all dynamically calculated variables
        */
     env_electric.insert(L"history");

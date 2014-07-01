@@ -46,7 +46,7 @@ If fish reports that it could not find curses, try installing a curses developme
 
 On Debian or Ubuntu you want:
 
-    sudo apt-get install libncurses5-dev
+    sudo apt-get install build-essential ncurses-dev libncurses5-dev gettext
 
 On RedHat, CentOS, or Amazon EC2:
 

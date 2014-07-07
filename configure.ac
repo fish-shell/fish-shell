@@ -337,6 +337,9 @@ AC_DEFINE(
   [Define to 1 if the wgettext function should be used for translating strings.]
 )
 
+# Disable curses macros that conflict with the STL
+AC_DEFINE([NCURSES_NOMACROS], [1], [Define to 1 to disable ncurses macros that conflict with the STL])
+AC_DEFINE([NOMACROS], [1], [Define to 1 to disable curses macros that conflict with the STL])
 
 #
 # Check presense of various libraries. This is done on a per-binary

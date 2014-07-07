@@ -77,14 +77,32 @@ bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &ou
     if (out_is_dir)
     {
         /* The caller cares if this is a directory, so check */
-        bool is_dir;
+        bool is_dir = false;
+        
+        /* We may be able to skip stat, if the readdir can tell us the file type directly */
+        bool check_with_stat = true;
+#if defined(_DIRENT_HAVE_D_TYPE) || __APPLE__
         if (d->d_type == DT_DIR)
         {
+            /* Known directory */
             is_dir = true;
+            check_with_stat = false;
         }
         else if (d->d_type == DT_LNK || d->d_type == DT_UNKNOWN)
         {
             /* We want to treat symlinks to directories as directories. Use stat to resolve it. */
+            check_with_stat = true;
+        }
+        else
+        {
+            /* Regular file */
+            is_dir = false;
+            check_with_stat = false;
+        }
+#endif
+        if (check_with_stat)
+        {
+            /* We couldn't determine the file type from the dirent; check by stat'ing it */
             cstring fullpath = wcs2string(dir_path);
             fullpath.push_back('/');
             fullpath.append(d->d_name);
@@ -97,10 +115,6 @@ bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &ou
             {
                 is_dir = !!(S_ISDIR(buf.st_mode));
             }
-        }
-        else
-        {
-            is_dir = false;
         }
         *out_is_dir = is_dir;
     }

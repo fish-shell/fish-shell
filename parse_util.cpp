@@ -1197,7 +1197,6 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
                         err=1;
                         if (out_errors)
                         {
-                            fprintf(stderr, "HELLO!\n");
                             parse_util_expand_variable_error(node, unesc, idx, node.source_start, out_errors);
                         }
                     }

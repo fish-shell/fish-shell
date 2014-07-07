@@ -217,4 +217,20 @@ end
 
 # clear foo for other shells
 set -eU foo
+
+# Test behavior of universals on startup (#1526)
+echo Testing Universal Startup
+set -U testu 0
+../fish -c 'set -U testu 1'
+echo $testu
+../fish -c 'echo $testu'
+
+../fish -c 'set -U testu 2'
+echo $testu
+../fish -c 'echo $testu'
+
+../fish -c 'set -e testu';
+echo Missing: $testu
+../fish -c 'echo Missing: $testu'
+
 true

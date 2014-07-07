@@ -559,6 +559,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     /* Set up universal variables. The empty string means to use the deafult path. */
     assert(s_universal_variables == NULL);
     s_universal_variables = new env_universal_t(L"");
+    s_universal_variables->load();
 
     /*
       Set up SHLVL variable
@@ -905,6 +906,10 @@ int env_remove(const wcstring &key, int var_mode)
             !(var_mode & ENV_LOCAL))
     {
         erased = uvars() && uvars()->remove(key);
+        if (erased)
+        {
+            env_universal_barrier();
+        }
     }
 
     react_to_variable_change(key);

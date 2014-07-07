@@ -113,23 +113,23 @@ end
 
 # Test erasing variables in specific scope
 
-set -eU foo
-set -g foo bar
+set -eU __fish_test_universal_variables_variable_foo
+set -g __fish_test_universal_variables_variable_foo bar
 begin
-	set -l foo baz
-	set -eg foo
+	set -l __fish_test_universal_variables_variable_foo baz
+	set -eg __fish_test_universal_variables_variable_foo
 end
 
-if set -q foo
+if set -q __fish_test_universal_variables_variable_foo
 	echo Test 10 fail
 else
 	echo Test 10 pass
 end
 
 
-set foo abc def
-set -e foo[1]
-if test $foo '=' def
+set __fish_test_universal_variables_variable_foo abc def
+set -e __fish_test_universal_variables_variable_foo[1]
+if test $__fish_test_universal_variables_variable_foo '=' def
 	echo Test 11 pass
 else
 	echo Test 11 fail
@@ -137,74 +137,74 @@ end
 
 # Test combinations of export and scope
 
-set -ge foo
+set -ge __fish_test_universal_variables_variable_foo
 
-set -Ue foo
-set -Ux foo bar
-set foo baz
-if test (/bin/sh -c 'echo $foo') = baz -a (../fish -c 'echo $foo') = baz
+set -Ue __fish_test_universal_variables_variable_foo
+set -Ux __fish_test_universal_variables_variable_foo bar
+set __fish_test_universal_variables_variable_foo baz
+if test (/bin/sh -c 'echo $__fish_test_universal_variables_variable_foo') = baz -a (../fish -c 'echo $__fish_test_universal_variables_variable_foo') = baz
   echo Test 12 pass
 else
   echo Test 12 fail
 end
 
-set -Ue foo
-set -Ux foo bar
-set -U foo baz
-if test (/bin/sh -c 'echo $foo') = baz -a (../fish -c 'echo $foo') = baz
+set -Ue __fish_test_universal_variables_variable_foo
+set -Ux __fish_test_universal_variables_variable_foo bar
+set -U __fish_test_universal_variables_variable_foo baz
+if test (/bin/sh -c 'echo $__fish_test_universal_variables_variable_foo') = baz -a (../fish -c 'echo $__fish_test_universal_variables_variable_foo') = baz
   echo Test 13 pass
 else
   echo Test 13 fail
 end
 
-set -Ux foo bar
-set -u foo bar
-if test (/bin/sh -c 'echo $foo') = '' -a (../fish -c 'echo $foo') = bar
+set -Ux __fish_test_universal_variables_variable_foo bar
+set -u __fish_test_universal_variables_variable_foo bar
+if test (/bin/sh -c 'echo $__fish_test_universal_variables_variable_foo') = '' -a (../fish -c 'echo $__fish_test_universal_variables_variable_foo') = bar
   echo Test 14 pass
 else
   echo Test 14 fail
 end
 
-set -Ux foo bar
-set -Uu foo baz
-if test (/bin/sh -c 'echo $foo') = '' -a (../fish -c 'echo $foo') = baz
+set -Ux __fish_test_universal_variables_variable_foo bar
+set -Uu __fish_test_universal_variables_variable_foo baz
+if test (/bin/sh -c 'echo $__fish_test_universal_variables_variable_foo') = '' -a (../fish -c 'echo $__fish_test_universal_variables_variable_foo') = baz
   echo Test 15 pass
 else
   echo Test 15 fail
 end
 
-set -eU foo
+set -eU __fish_test_universal_variables_variable_foo
 
 # test erasing variables without a specified scope
 
 set -g test16res
 
-set -U foo universal
-set -g foo global
+set -U __fish_test_universal_variables_variable_foo universal
+set -g __fish_test_universal_variables_variable_foo global
 begin
-  set -l foo blocklocal
+  set -l __fish_test_universal_variables_variable_foo blocklocal
   function test16
-    set -l foo function
+    set -l __fish_test_universal_variables_variable_foo function
     begin
-      set -l foo functionblock
+      set -l __fish_test_universal_variables_variable_foo functionblock
 
-      set test16res $test16res (echo $foo)
-      set -e foo
-      set test16res $test16res (echo $foo)
-      set -e foo
-      set test16res $test16res (echo $foo)
-      set -e foo
-      set test16res $test16res (echo $foo)
-      set -e foo
-      set test16res $test16res (echo $foo)
+      set test16res $test16res (echo $__fish_test_universal_variables_variable_foo)
+      set -e __fish_test_universal_variables_variable_foo
+      set test16res $test16res (echo $__fish_test_universal_variables_variable_foo)
+      set -e __fish_test_universal_variables_variable_foo
+      set test16res $test16res (echo $__fish_test_universal_variables_variable_foo)
+      set -e __fish_test_universal_variables_variable_foo
+      set test16res $test16res (echo $__fish_test_universal_variables_variable_foo)
+      set -e __fish_test_universal_variables_variable_foo
+      set test16res $test16res (echo $__fish_test_universal_variables_variable_foo)
     end
-    set test16res $test16res (echo $foo)
-    set -e foo
+    set test16res $test16res (echo $__fish_test_universal_variables_variable_foo)
+    set -e __fish_test_universal_variables_variable_foo
   end
   test16
-  set test16res $test16res (echo $foo)
+  set test16res $test16res (echo $__fish_test_universal_variables_variable_foo)
 end
-set test16res $test16res (echo $foo)
+set test16res $test16res (echo $__fish_test_universal_variables_variable_food)
 
 #echo count: (count $test16res) "content:[$test16res]"
 
@@ -215,8 +215,8 @@ else
 end
 
 
-# clear foo for other shells
-set -eU foo
+# clear for other shells
+set -eU __fish_test_universal_variables_variable_foo
 
 # Test behavior of universals on startup (#1526)
 echo Testing Universal Startup

@@ -2225,7 +2225,7 @@ scoped_lock::scoped_lock(pthread_mutex_t &mutex) : lock_obj(&mutex), locked(fals
     this->lock();
 }
 
-scoped_lock::scoped_lock(lock_t &lock) : lock_obj(&lock.mutex), locked(false)
+scoped_lock::scoped_lock(mutex_lock_t &lock) : lock_obj(&lock.mutex), locked(false)
 {
     this->lock();
 }

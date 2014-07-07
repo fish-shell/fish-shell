@@ -538,16 +538,16 @@ public:
 bool is_forked_child();
 
 
-class lock_t
+class mutex_lock_t
 {
     public:
     pthread_mutex_t mutex;
-    lock_t()
+    mutex_lock_t()
     {
         pthread_mutex_init(&mutex, NULL);
     }
     
-    ~lock_t()
+    ~mutex_lock_t()
     {
         pthread_mutex_destroy(&mutex);
     }
@@ -567,7 +567,7 @@ public:
     void lock(void);
     void unlock(void);
     scoped_lock(pthread_mutex_t &mutex);
-    scoped_lock(lock_t &lock);
+    scoped_lock(mutex_lock_t &lock);
     ~scoped_lock();
 };
 

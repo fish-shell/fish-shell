@@ -1004,7 +1004,7 @@ bool input_terminfo_get_sequence(const wchar_t *name, wcstring *out_seq)
 
 }
 
-bool input_terminfo_get_name(const wcstring &seq, wcstring &name)
+bool input_terminfo_get_name(const wcstring &seq, wcstring *out_name)
 {
     input_init();
 
@@ -1020,7 +1020,7 @@ bool input_terminfo_get_name(const wcstring &seq, wcstring &name)
         const wcstring map_buf = format_string(L"%s",  m.seq);
         if (map_buf == seq)
         {
-            name = m.name;
+            out_name->assign(m.name);
             return true;
         }
     }

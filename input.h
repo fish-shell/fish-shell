@@ -169,8 +169,8 @@ void input_function_set_status(bool status);
  */
 bool input_terminfo_get_sequence(const wchar_t *name, wcstring *out_seq);
 
-/** Return the name of the terminfo variable with the specified sequence */
-bool input_terminfo_get_name(const wcstring &seq, wcstring &name);
+/** Return the name of the terminfo variable with the specified sequence, in out_name. Returns true if found, false if not found. */
+bool input_terminfo_get_name(const wcstring &seq, wcstring *out_name);
 
 /** Return a list of all known terminfo names */
 wcstring_list_t input_terminfo_get_names(bool skip_null);

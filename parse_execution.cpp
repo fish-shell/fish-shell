@@ -1436,7 +1436,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
         exec_job(*this->parser, j);
 
         /* Only external commands require a new fishd barrier */
-        if (!job_contained_external_command)
+        if (job_contained_external_command)
         {
             set_proc_had_barrier(false);
         }

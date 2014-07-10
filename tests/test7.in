@@ -110,6 +110,6 @@ function fish_test_type_zzz
 	true
 end
 # Should succeed
-type fish_test_type_zzz >/dev/null ; echo $status
+type -q fish_test_type_zzz ; echo $status
 # Should fail
-type -f fish_test_type_zzz >/dev/null ; echo $status
+type -q -f fish_test_type_zzz ; echo $status

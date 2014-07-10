@@ -14,7 +14,7 @@ The following options are available:
 - \c -f or \c --no-functions suppresses function and builtin lookup.
 - \c -t or \c --type prints <tt>keyword</tt>, <tt>function</tt>, <tt>builtin</tt>, or <tt>file</tt> if \c NAME is a shell reserved word, function, builtin, or disk file, respectively.
 - \c -p or \c --path returns the name of the disk file that would be executed, or nothing if 'type  -t  name' would not return 'file'.
-- \c -P or \c --force-path returns the name of the disk file that would be executed, or nothing no file with the specified name could be found in the <tt>$PATH</tt>.
+- \c -P or \c --force-path returns the name of the disk file that would be executed, or nothing if no file with the specified name could be found in the <tt>$PATH</tt>.
 
 \c type sets the exit status to 0 if the specified command was found,
 and 1 if it could not be found.

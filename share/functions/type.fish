@@ -5,74 +5,48 @@ function type --description "Print the type of a command"
 	set -l res 1
 	set -l mode normal
 	set -l selection all
-		
-	#
-	# Get options
-	#
-	set -l options
-	set -l shortopt tpPafh
-	if not getopt -T > /dev/null
-		# GNU getopt
-		set -l longopt type,path,force-path,all,no-functions,help
-		set options -o $shortopt -l $longopt --
-		# Verify options
-		if not getopt -n type $options $argv >/dev/null
-			return 1
-		end
-	else
-		# Old getopt, used on OS X
-		set options $shortopt
-		# Verify options
-		if not getopt $options $argv >/dev/null
-			return 1
-		end
-	end
 
-	# Do the real getopt invocation
-	set -l tmp (getopt $options $argv)
+	# Parse options
+	set -l names
+	if test (count $argv) -gt 0
+		for i in (seq (count $argv))
+			switch $argv[$i]
+				case -t --type
+					set mode type
 
-	# Break tmp up into an array
-	set -l opt
-	eval set opt $tmp
-	
-	for i in $opt
-		switch $i
-			case -t --type
-				set mode type
+				case -p --path
+					set mode path
 
-			case -p --path
-				set mode path
+				case -P --force-path
+					set mode path
+					set selection files
 
-			case -P --force-path
-				set mode path
-				set selection files
+				case -a --all
+					set selection multi
 
-			case -a --all
-				set selection multi
+				case -f --no-functions
+					set selection files
 
-			case -f --no-functions
-				set selection files
+				case -h --help
+					__fish_print_help type
+					return 0
 
-			case -h --help
-				 __fish_print_help type
-				 return 0
+				case --
+					set names $argv[$i..-1]
+					set -e names[1]
+					break
 
-			case --
-				 break
-
+				case '*'
+					set names $argv[$i..-1]
+					break
+			end
 		end
 	end
 
 	# Check all possible types for the remaining arguments
-	for i in $argv
-
-		switch $i
-			case '-*'
-				 continue
-		end
-
+	for i in $names
 		# Found will be set to 1 if a match is found
-		set found 0
+		set -l found 0
 
 		if test $selection != files
 
@@ -119,32 +93,30 @@ function type --description "Print the type of a command"
 
 		set -l paths
 		if test $selection != multi
-			set paths (which $i ^/dev/null)
+			set paths (command -p $i)
 		else
 			set paths (which -a $i ^/dev/null)
 		end
 		for path in $paths
-			if test -x (echo $path)
-				set res 0
-				set found 1
-				switch $mode
-					case normal
-						printf (_ '%s is %s\n') $i $path
+			set res 0
+			set found 1
+			switch $mode
+				case normal
+					printf (_ '%s is %s\n') $i $path
 
-					case type
-						echo (_ 'file')
+				case type
+					echo (_ 'file')
 
-					case path
-						echo $path
-				end
-				if test $selection != multi
-					continue
-				end
+				case path
+					echo $path
+			end
+			if test $selection != multi
+				continue
 			end
 		end
 
 		if test $found = 0
-			printf (_ "%s: Could not find '%s'\n") type $i
+			printf (_ "%s: Could not find '%s'\n") type $i >&2
 		end
 
 	end

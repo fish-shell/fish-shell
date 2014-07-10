@@ -4,6 +4,7 @@ function type --description "Print the type of a command"
 	# Initialize
 	set -l res 1
 	set -l mode normal
+	set -l multi no
 	set -l selection all
 
 	# Parse options
@@ -22,7 +23,7 @@ function type --description "Print the type of a command"
 					set selection files
 
 				case -a --all
-					set selection multi
+					set multi yes
 
 				case -f --no-functions
 					set selection files
@@ -65,7 +66,7 @@ function type --description "Print the type of a command"
 						echo
 
 				end
-				if test $selection != multi
+				if test $multi != yes
 					continue
 				end
 			end
@@ -84,7 +85,7 @@ function type --description "Print the type of a command"
 					case path
 						echo
 				end
-				if test $selection != multi
+				if test $multi != yes
 					continue
 				end
 			end
@@ -92,7 +93,7 @@ function type --description "Print the type of a command"
 		end
 
 		set -l paths
-		if test $selection != multi
+		if test $multi != yes
 			set paths (command -p $i)
 		else
 			set paths (which -a $i ^/dev/null)
@@ -110,7 +111,7 @@ function type --description "Print the type of a command"
 				case path
 					echo $path
 			end
-			if test $selection != multi
+			if test $multi != yes
 				continue
 			end
 		end

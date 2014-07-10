@@ -1054,6 +1054,86 @@ static int builtin_emit(parser_t &parser, wchar_t **argv)
 
 
 /**
+   Implementation of the builtin 'command'. Actual command running is handled by
+   the parser, this just processes the flags.
+*/
+static int builtin_command(parser_t &parser, wchar_t **argv)
+{
+    int argc=builtin_count_args(argv);
+    int print_path=0;
+
+    woptind=0;
+
+    static const struct woption
+            long_options[] =
+    {
+        { L"path", no_argument, 0, 'p' },
+        { L"help", no_argument, 0, 'h' },
+        { 0, 0, 0, 0 }
+    };
+
+    while (1)
+    {
+        int opt_index = 0;
+
+        int opt = wgetopt_long(argc,
+                               argv,
+                               L"ph",
+                               long_options,
+                               &opt_index);
+        if (opt == -1)
+            break;
+
+        switch (opt)
+        {
+            case 0:
+                if (long_options[opt_index].flag != 0)
+                    break;
+                append_format(stderr_buffer,
+                              BUILTIN_ERR_UNKNOWN,
+                              argv[0],
+                              long_options[opt_index].name);
+                builtin_print_help(parser, argv[0], stderr_buffer);
+                return STATUS_BUILTIN_ERROR;
+
+            case 'h':
+                builtin_print_help(parser, argv[0], stdout_buffer);
+                return STATUS_BUILTIN_OK;
+
+            case 'p':
+                print_path=1;
+                break;
+
+            case '?':
+                builtin_unknown_option(parser, argv[0], argv[woptind-1]);
+                return STATUS_BUILTIN_ERROR;
+
+        }
+
+    }
+
+    if (!print_path)
+    {
+        builtin_print_help(parser, argv[0], stdout_buffer);
+        return STATUS_BUILTIN_ERROR;
+    }
+
+    int found=0;
+
+    for (int idx = woptind; argv[idx]; ++idx)
+    {
+        const wchar_t *command_name = argv[idx];
+        wcstring path;
+        if (path_get_path(command_name, &path))
+        {
+            append_format(stdout_buffer, L"%ls\n", path.c_str());
+            ++found;
+        }
+    }
+    return found ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
+}
+
+/**
    A generic bultin that only supports showing a help message. This is
    only a placeholder that prints the help message. Useful for
    commands that live in the parser.
@@ -3703,7 +3783,7 @@ static const builtin_data_t builtin_datas[]=
     { 		L"builtin",  &builtin_builtin, N_(L"Run a builtin command instead of a function") },
     { 		L"case",  &builtin_generic, N_(L"Conditionally execute a block of commands")   },
     { 		L"cd",  &builtin_cd, N_(L"Change working directory")   },
-    { 		L"command",   &builtin_generic, N_(L"Run a program instead of a function or builtin")   },
+    { 		L"command",   &builtin_command, N_(L"Run a program instead of a function or builtin")   },
     { 		L"commandline",  &builtin_commandline, N_(L"Set or get the commandline")   },
     { 		L"complete",  &builtin_complete, N_(L"Edit command specific completions")   },
     { 		L"contains",  &builtin_contains, N_(L"Search for a specified string in a list")   },

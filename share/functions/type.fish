@@ -60,7 +60,7 @@ function type --description "Print the type of a command"
 
 		if test $selection != files
 
-			if contains -- $i (functions -na)
+			if functions -q -- $i
 				set res 0
 				set found 1
 				switch $mode

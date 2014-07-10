@@ -13,13 +13,19 @@ function type --description "Print the type of a command"
 		for i in (seq (count $argv))
 			switch $argv[$i]
 				case -t --type
-					set mode type
+					if test $mode != quiet
+						set mode type
+					end
 
 				case -p --path
-					set mode path
+					if test $mode != quiet
+						set mode path
+					end
 
 				case -P --force-path
-					set mode path
+					if test $mode != quiet
+						set mode path
+					end
 					set selection files
 
 				case -a --all
@@ -27,6 +33,9 @@ function type --description "Print the type of a command"
 
 				case -f --no-functions
 					set selection files
+
+				case -q --quiet
+					set mode quiet
 
 				case -h --help
 					__fish_print_help type
@@ -61,10 +70,6 @@ function type --description "Print the type of a command"
 
 					case type
 						echo (_ 'function')
-
-					case path
-						echo
-
 				end
 				if test $multi != yes
 					continue
@@ -81,9 +86,6 @@ function type --description "Print the type of a command"
 
 					case type
 						echo (_ 'builtin')
-
-					case path
-						echo
 				end
 				if test $multi != yes
 					continue
@@ -116,7 +118,7 @@ function type --description "Print the type of a command"
 			end
 		end
 
-		if test $found = 0
+		if begin; test $found = 0; and test $mode != quiet; end
 			printf (_ "%s: Could not find '%s'\n") type $i >&2
 		end
 

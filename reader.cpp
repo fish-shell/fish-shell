@@ -2093,6 +2093,7 @@ static void reader_interactive_init()
     original_pid = getpid();
 
     env_set(L"_", L"fish", ENV_GLOBAL);
+    env_set(L"CMD", L"fish", ENV_GLOBAL);
 }
 
 /**
@@ -2508,8 +2509,10 @@ void reader_run_command(parser_t &parser, const wcstring &cmd)
 
     wcstring ft = tok_first(cmd.c_str());
 
-    if (! ft.empty())
+    if (! ft.empty()) {
         env_set(L"_", ft.c_str(), ENV_GLOBAL);
+        env_set(L"CMD", cmd.c_str(), ENV_GLOBAL);
+    }
 
     reader_write_title();
 
@@ -2526,6 +2529,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd)
     term_steal();
 
     env_set(L"_", program_name, ENV_GLOBAL);
+    env_set(L"CMD", program_name, ENV_GLOBAL);
 
 #ifdef HAVE__PROC_SELF_STAT
     proc_update_jiffies();

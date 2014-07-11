@@ -96,7 +96,7 @@ function type --description "Print the type of a command"
 
 		set -l paths
 		if test $multi != yes
-			set paths (command -p $i)
+			set paths (command -s $i)
 		else
 			set paths (which -a $i ^/dev/null)
 		end

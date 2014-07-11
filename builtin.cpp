@@ -1067,7 +1067,7 @@ static int builtin_command(parser_t &parser, wchar_t **argv)
     static const struct woption
             long_options[] =
     {
-        { L"path", no_argument, 0, 'p' },
+        { L"search", no_argument, 0, 's' },
         { L"help", no_argument, 0, 'h' },
         { 0, 0, 0, 0 }
     };
@@ -1078,7 +1078,7 @@ static int builtin_command(parser_t &parser, wchar_t **argv)
 
         int opt = wgetopt_long(argc,
                                argv,
-                               L"ph",
+                               L"svh",
                                long_options,
                                &opt_index);
         if (opt == -1)
@@ -1100,7 +1100,8 @@ static int builtin_command(parser_t &parser, wchar_t **argv)
                 builtin_print_help(parser, argv[0], stdout_buffer);
                 return STATUS_BUILTIN_OK;
 
-            case 'p':
+            case 's':
+            case 'v':
                 print_path=1;
                 break;
 

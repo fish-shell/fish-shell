@@ -592,6 +592,7 @@ void exec_job(parser_t &parser, job_t *j)
     CHECK(j,);
     CHECK_BLOCK();
 
+    /* If fish was invoked with -n or --no-execute, then no_exec will be set and we do nothing. */
     if (no_exec)
     {
         return;

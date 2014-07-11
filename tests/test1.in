@@ -123,6 +123,10 @@ echo -e Catch your breath
 echo -e 'abc\x21def'
 echo -e 'abc\x211def'
 
+# Make sure while loops don't run forever with no-exec (#1543)
+echo "Checking for infinite loops in no-execute"
+echo "while true; end" | ../fish --no-execute
+
 function always_fails
     if true
         return 1

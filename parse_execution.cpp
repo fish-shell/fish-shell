@@ -673,6 +673,12 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(const pa
                 break;
             }
         }
+        
+        /* no_exec means that fish was invoked with -n or --no-execute. If set, we allow the loop to not-execute once so its contents can be checked, and then break */
+        if (no_exec)
+        {
+            break;
+        }
     }
 
     /* Done */

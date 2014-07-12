@@ -69,7 +69,7 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope)
 
         /* Don't bother validating (or complaining about) values that are already present */
         wcstring_list_t existing_values;
-        const env_var_t existing_variable = env_get_string(key);
+        const env_var_t existing_variable = env_get_string(key, scope);
         if (! existing_variable.missing_or_empty())
             tokenize_variable_array(existing_variable, existing_values);
 
@@ -360,7 +360,7 @@ static void print_variables(int include_values, int esc, bool shorten_ok, int sc
 
         if (include_values)
         {
-            env_var_t value = env_get_string(key);
+            env_var_t value = env_get_string(key, scope);
             if (!value.missing())
             {
                 int shorten = 0;
@@ -606,7 +606,7 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
                 wcstring_list_t result;
                 size_t j;
 
-                env_var_t dest_str = env_get_string(dest);
+                env_var_t dest_str = env_get_string(dest, scope);
                 if (! dest_str.missing())
                     tokenize_variable_array(dest_str, result);
 
@@ -696,14 +696,6 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
         return 1;
     }
 
-    if (slice && erase && (scope != ENV_USER))
-    {
-        free(dest);
-        append_format(stderr_buffer, _(L"%ls: Can not specify scope when erasing array slice\n"), argv[0]);
-        builtin_print_help(parser, argv[0], stderr_buffer);
-        return 1;
-    }
-
     /*
       set assignment can work in two modes, either using slices or
       using the whole array. We detect which mode is used here.
@@ -718,7 +710,7 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
         std::vector<long> indexes;
         wcstring_list_t result;
 
-        const env_var_t dest_str = env_get_string(dest);
+        const env_var_t dest_str = env_get_string(dest, scope);
         if (! dest_str.missing())
             tokenize_variable_array(dest_str, result);
 

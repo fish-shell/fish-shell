@@ -936,82 +936,107 @@ const wchar_t *env_var_t::c_str(void) const
     return wcstring::c_str();
 }
 
-env_var_t env_get_string(const wcstring &key)
+env_var_t env_get_string(const wcstring &key, int mode)
 {
-    /* Big hack...we only allow getting the history on the main thread. Note that history_t may ask for an environment variable, so don't take the lock here (we don't need it) */
-    const bool is_main = is_main_thread();
-    if (key == L"history" && is_main)
-    {
-        env_var_t result;
+    const bool has_scope = mode & (ENV_LOCAL | ENV_GLOBAL | ENV_UNIVERSAL);
+    const bool search_local = !has_scope || (mode & ENV_LOCAL);
+    const bool search_global = !has_scope || (mode & ENV_GLOBAL);
+    const bool search_universal = !has_scope || (mode & ENV_UNIVERSAL);
 
-        history_t *history = reader_get_history();
-        if (! history)
+    const bool search_exported = (mode & ENV_EXPORT) || !(mode & ENV_UNEXPORT);
+    const bool search_unexported = (mode & ENV_UNEXPORT) || !(mode & ENV_EXPORT);
+
+    /* Make the assumption that electric keys can't be shadowed elsewhere, since we currently block that in env_set() */
+    if (is_electric(key))
+    {
+        if (!search_global) return env_var_t::missing_var();
+        /* Big hack...we only allow getting the history on the main thread. Note that history_t may ask for an environment variable, so don't take the lock here (we don't need it) */
+        if (key == L"history" && is_main_thread())
         {
-            history = &history_t::history_with_name(L"fish");
-        }
-        if (history)
-            history->get_string_representation(result, ARRAY_SEP_STR);
-        return result;
-    }
-    else if (key == L"COLUMNS")
-    {
-        return to_string(common_get_width());
-    }
-    else if (key == L"LINES")
-    {
-        return to_string(common_get_height());
-    }
-    else if (key == L"status")
-    {
-        return to_string(proc_get_last_status());
-    }
-    else if (key == L"umask")
-    {
-        return format_string(L"0%0.3o", get_umask());
-    }
-    else
-    {
-        {
-            /* Lock around a local region */
-            scoped_lock lock(env_lock);
+            env_var_t result;
 
-            env_node_t *env = top;
-            wcstring result;
-
-            while (env != NULL)
+            history_t *history = reader_get_history();
+            if (! history)
             {
-                const var_entry_t *entry = env->find_entry(key);
-                if (entry != NULL)
-                {
-                    if (entry->val == ENV_NULL)
-                    {
-                        return env_var_t::missing_var();
-                    }
-                    else
-                    {
-                        return entry->val;
-                    }
-                }
+                history = &history_t::history_with_name(L"fish");
+            }
+            if (history)
+                history->get_string_representation(result, ARRAY_SEP_STR);
+            return result;
+        }
+        else if (key == L"COLUMNS")
+        {
+            return to_string(common_get_width());
+        }
+        else if (key == L"LINES")
+        {
+            return to_string(common_get_height());
+        }
+        else if (key == L"status")
+        {
+            return to_string(proc_get_last_status());
+        }
+        else if (key == L"umask")
+        {
+            return format_string(L"0%0.3o", get_umask());
+        }
+        // we should never get here unless the electric var list is out of sync
+    }
 
+    if (search_local || search_global) {
+        /* Lock around a local region */
+        scoped_lock lock(env_lock);
+
+        env_node_t *env = search_local ? top : global_env;
+        wcstring result;
+
+        while (env != NULL)
+        {
+            const var_entry_t *entry = env->find_entry(key);
+            if (entry != NULL && (entry->exportv ? search_exported : search_unexported))
+            {
+                if (entry->val == ENV_NULL)
+                {
+                    return env_var_t::missing_var();
+                }
+                else
+                {
+                    return entry->val;
+                }
+            }
+
+            if (has_scope)
+            {
+                if (!search_global || env == global_env) break;
+                env = global_env;
+            }
+            else
+            {
                 env = env->next_scope_to_search();
             }
         }
+    }
 
-        /* Another big hack - only do a universal barrier on the main thread (since it can change variable values)
-           Make sure we do this outside the env_lock because it may itself call env_get_string */
-        if (is_main && ! get_proc_had_barrier())
-        {
-            set_proc_had_barrier(true);
-            env_universal_barrier();
-        }
+    if (!search_universal) return env_var_t::missing_var();
 
-        env_var_t env_var = uvars() ?  uvars()->get(key) : env_var_t::missing_var();
-        if (env_var == ENV_NULL)
+    /* Another big hack - only do a universal barrier on the main thread (since it can change variable values)
+        Make sure we do this outside the env_lock because it may itself call env_get_string */
+    if (is_main_thread() && ! get_proc_had_barrier())
+    {
+        set_proc_had_barrier(true);
+        env_universal_barrier();
+    }
+
+    if (uvars())
+    {
+        env_var_t env_var = uvars()->get(key);
+        if (env_var == ENV_NULL || !(uvars()->get_export(key) ? search_exported : search_unexported))
         {
             env_var = env_var_t::missing_var();
         }
         return env_var;
     }
+    return env_var_t::missing_var();
 }
 
 bool env_exist(const wchar_t *key, int mode)

@@ -169,8 +169,13 @@ public:
 
 };
 
-/** Gets the variable with the specified name, or env_var_t::missing_var if it does not exist. */
-env_var_t env_get_string(const wcstring &key);
+/**
+   Gets the variable with the specified name, or env_var_t::missing_var if it does not exist.
+
+   \param key The name of the variable to get
+   \param mode An optional scope to search in. All scopes are searched if unset
+*/
+env_var_t env_get_string(const wcstring &key, int mode = 0);
 
 /**
    Returns true if the specified key exists. This can't be reliably done

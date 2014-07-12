@@ -65,11 +65,7 @@ to the scoping rules for variables:
 In query mode, the scope to be examined can be specified.
 
 In erase mode, if variable indices are specified, only the specified
-slices of the array variable will be erased. When erasing an entire
-variable (i.e. no slicing), the scope of the variable to be erased can
-be specified. That way, a global variable can be erased even if a
-local variable with the same name exists. Scope can not be specified
-when erasing a slice of an array. The innermost scope is always used.
+slices of the array variable will be erased.
 
 \c set requires all options to come before any
 other arguments. For example, <code>set flags -l</code> will have

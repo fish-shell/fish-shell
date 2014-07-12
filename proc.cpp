@@ -1298,9 +1298,11 @@ void proc_sanity_check()
         p = j->first_process;
         while (p)
         {
-            validate_pointer(p->get_argv(), _(L"Process argument list"), 0);
-            validate_pointer(p->argv0(), _(L"Process name"), 0);
-            validate_pointer(p->next, _(L"Process list pointer"), 1);
+            /* Internal block nodes do not have argv - see #1545 */
+            bool null_ok = (p->type == INTERNAL_BLOCK_NODE);
+            validate_pointer(p->get_argv(), _(L"Process argument list"), null_ok);
+            validate_pointer(p->argv0(), _(L"Process name"), null_ok);
+            validate_pointer(p->next, _(L"Process list pointer"), true);
 
             if ((p->stopped & (~0x00000001)) != 0)
             {

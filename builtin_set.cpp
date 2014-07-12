@@ -559,6 +559,17 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
     */
     scope = (local ? ENV_LOCAL : 0) | (global ? ENV_GLOBAL : 0) | (exportv ? ENV_EXPORT : 0) | (unexport ? ENV_UNEXPORT : 0) | (universal ? ENV_UNIVERSAL:0) | ENV_USER;
 
+    /*
+      If we're interacting with the local scope at all, ensure we actually have
+      one that's distinct from the global scope. If we don't have one yet,
+      create one and modify the current block to pop it.
+    */
+    if ((scope & ENV_LOCAL) && env_ensure_local_scope())
+    {
+        block_t *block = parser.current_block();
+        block->wants_pop_env = true;
+    }
+
     if (query)
     {
         /*

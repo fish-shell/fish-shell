@@ -1159,6 +1159,16 @@ void env_pop()
     }
 }
 
+bool env_ensure_local_scope()
+{
+    if (top == global_env)
+    {
+        env_push(false);
+        return true;
+    }
+    return false;
+}
+
 /**
    Function used with to insert keys of one table into a set::set<wcstring>
 */

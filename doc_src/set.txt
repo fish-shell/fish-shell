@@ -27,13 +27,13 @@ The following options control variable scope:
 - <code>-l</code> or <code>--local</code> forces the specified shell variable to be given a scope that is local to the current block, even if a variable with the given name exists and is non-local
 - <code>-g</code> or <code>--global</code> causes the specified shell variable to be given a global scope. Non-global variables disappear when the block they belong to ends
 - <code>-U</code> or <code>--universal</code> causes the specified shell variable to be given a universal scope. If this option is supplied, the variable will be shared between all the current users fish instances on the current computer, and will be preserved across restarts of the shell.
-- <code>-n</code> or <code>--names</code> List only the names of all defined variables, not their value
 - <code>-x</code> or <code>--export</code> causes the specified shell variable to be exported to child processes (making it an "environment variable")
 - <code>-u</code> or <code>--unexport</code> causes the specified shell variable to NOT be exported to child processes
 
 The following options are available:
 - <code>-e</code> or <code>--erase</code> causes the specified shell variable to be erased
 - <code>-q</code> or <code>--query</code> test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that were not defined.
+- <code>-n</code> or <code>--names</code> List only the names of all defined variables, not their value
 - <code>-L</code> or <code>--long</code> do not abbreviate long values when printing set variables
 
 If a variable is set to more than one value, the variable will be an

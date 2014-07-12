@@ -519,7 +519,7 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
     }
 
 
-    /* We can't both list and erase varaibles */
+    /* We can't both list and erase variables */
     if (erase && list)
     {
         append_format(stderr_buffer,

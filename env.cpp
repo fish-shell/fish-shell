@@ -490,6 +490,8 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     env_electric.insert(L"history");
     env_electric.insert(L"status");
     env_electric.insert(L"umask");
+    env_electric.insert(L"COLUMNS");
+    env_electric.insert(L"LINES");
 
     top = new env_node_t;
     global_env = top;
@@ -1231,13 +1233,6 @@ wcstring_list_t env_get_names(int flags)
         {
             result.insert(result.end(), env_electric.begin(), env_electric.end());
         }
-
-        if (show_exported)
-        {
-            result.push_back(L"COLUMNS");
-            result.push_back(L"LINES");
-        }
-
     }
 
     if (show_universal && uvars())

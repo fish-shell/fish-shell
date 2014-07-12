@@ -49,6 +49,7 @@
 enum
 {
     ENV_PERM = 1,
+    ENV_SCOPE,
     ENV_INVALID
 }
 ;
@@ -82,6 +83,7 @@ void env_init(const struct config_paths_t *paths = NULL);
    The current error codes are:
 
    * ENV_PERM, can only be returned when setting as a user, e.g. ENV_USER is set. This means that the user tried to change a read-only variable.
+   * ENV_SCOPE, the variable cannot be set in the given scope. This applies to readonly/electric variables set from the local or universal scopes, or set as exported.
    * ENV_INVALID, the variable name or mode was invalid
 */
 

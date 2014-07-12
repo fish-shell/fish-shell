@@ -157,6 +157,13 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope)
             break;
         }
 
+        case ENV_SCOPE:
+        {
+            append_format(stderr_buffer, _(L"%ls: Tried to set the special variable '%ls' with the wrong scope\n"), L"set", key);
+            retcode=1;
+            break;
+        }
+
         case ENV_INVALID:
         {
             append_format(stderr_buffer, _(L"%ls: Unknown error"), L"set");

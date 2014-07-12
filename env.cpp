@@ -634,6 +634,15 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
         }
     }
 
+    if ((var_mode & (ENV_LOCAL | ENV_UNIVERSAL)) && (is_read_only(key) || is_electric(key)))
+    {
+        return ENV_SCOPE;
+    }
+    if ((var_mode & ENV_EXPORT) && is_electric(key))
+    {
+        return ENV_SCOPE;
+    }
+
     if ((var_mode & ENV_USER) && is_read_only(key))
     {
         return ENV_PERM;

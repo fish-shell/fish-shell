@@ -1009,59 +1009,54 @@ bool env_exist(const wchar_t *key, int mode)
 
     CHECK(key, false);
 
-    /*
-      Read only variables all exist, and they are all global. A local
-      version can not exist.
-    */
-    if (!(mode & ENV_LOCAL) && !(mode & ENV_UNIVERSAL))
+    const bool has_scope = mode & (ENV_LOCAL | ENV_GLOBAL | ENV_UNIVERSAL);
+    const bool test_local = !has_scope || (mode & ENV_LOCAL);
+    const bool test_global = !has_scope || (mode & ENV_GLOBAL);
+    const bool test_universal = !has_scope || (mode & ENV_UNIVERSAL);
+
+    const bool test_exported = (mode & ENV_EXPORT) || !(mode & ENV_UNEXPORT);
+    const bool test_unexported = (mode & ENV_UNEXPORT) || !(mode & ENV_EXPORT);
+
+    if (is_electric(key))
     {
-        if (is_read_only(key) || is_electric(key))
+        /*
+        Electric variables all exist, and they are all global. A local or
+        universal version can not exist. They are also never exported.
+        */
+        if (test_global && test_unexported)
         {
-            //Such variables are never exported
-            if (mode & ENV_EXPORT)
-            {
-                return false;
-            }
-            else if (mode & ENV_UNEXPORT)
-            {
-                return true;
-            }
             return true;
         }
+        return false;
     }
 
-    if (!(mode & ENV_UNIVERSAL))
+    if (test_local || test_global)
     {
-        env = (mode & ENV_GLOBAL)?global_env:top;
+        env = test_local ? top : global_env;
 
-        while (env != 0)
+        while (env)
         {
             var_table_t::iterator result = env->env.find(key);
 
             if (result != env->env.end())
             {
                 const var_entry_t &res = result->second;
-
-                if (mode & ENV_EXPORT)
-                {
-                    return res.exportv;
-                }
-                else if (mode & ENV_UNEXPORT)
-                {
-                    return ! res.exportv;
-                }
-
-                return true;
+                return res.exportv ? test_exported : test_unexported;
             }
 
-            if (mode & ENV_LOCAL)
-                break;
-
-            env = env->next_scope_to_search();
+            if (has_scope)
+            {
+                if (!test_global || env == global_env) break;
+                env = global_env;
+            }
+            else
+            {
+                env = env->next_scope_to_search();
+            }
         }
     }
 
-    if (!(mode & ENV_LOCAL) && !(mode & ENV_GLOBAL))
+    if (test_universal)
     {
         if (! get_proc_had_barrier())
         {
@@ -1071,16 +1066,7 @@ bool env_exist(const wchar_t *key, int mode)
 
         if (uvars() && ! uvars()->get(key).missing())
         {
-            if (mode & ENV_EXPORT)
-            {
-                return uvars()->get_export(key);
-            }
-            else if (mode & ENV_UNEXPORT)
-            {
-                return ! uvars()->get_export(key);
-            }
-
-            return 1;
+            return uvars()->get_export(key) ? test_exported : test_unexported;
         }
     }
 

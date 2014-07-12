@@ -510,11 +510,13 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
         if (eql == wcstring::npos)
         {
             // no equals found
-            env_set(key_and_val, L"", ENV_EXPORT);
+            if (is_read_only(key_and_val) || is_electric(key_and_val)) continue;
+            env_set(key_and_val, L"", ENV_EXPORT | ENV_GLOBAL);
         }
         else
         {
             wcstring key = key_and_val.substr(0, eql);
+            if (is_read_only(key) || is_electric(key)) continue;
             wcstring val = key_and_val.substr(eql + 1);
             if (variable_can_be_array(val))
             {

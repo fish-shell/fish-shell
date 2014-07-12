@@ -712,33 +712,42 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
 
         const env_var_t dest_str = env_get_string(dest, scope);
         if (! dest_str.missing())
-            tokenize_variable_array(dest_str, result);
-
-        for (; woptind<argc; woptind++)
         {
-            if (!parse_index(indexes, argv[woptind], dest, result.size()))
-            {
-                builtin_print_help(parser, argv[0], stderr_buffer);
-                retcode = 1;
-                break;
-            }
+            tokenize_variable_array(dest_str, result);
+        }
+        else if (erase)
+        {
+            retcode = 1;
+        }
 
-            size_t idx_count = indexes.size();
-            size_t val_count = argc-woptind-1;
-
-            if (!erase)
+        if (!retcode)
+        {
+            for (; woptind<argc; woptind++)
             {
-                if (val_count < idx_count)
+                if (!parse_index(indexes, argv[woptind], dest, result.size()))
                 {
-                    append_format(stderr_buffer, _(BUILTIN_SET_ARG_COUNT), argv[0]);
                     builtin_print_help(parser, argv[0], stderr_buffer);
-                    retcode=1;
+                    retcode = 1;
                     break;
                 }
-                if (val_count == idx_count)
+
+                size_t idx_count = indexes.size();
+                size_t val_count = argc-woptind-1;
+
+                if (!erase)
                 {
-                    woptind++;
-                    break;
+                    if (val_count < idx_count)
+                    {
+                        append_format(stderr_buffer, _(BUILTIN_SET_ARG_COUNT), argv[0]);
+                        builtin_print_help(parser, argv[0], stderr_buffer);
+                        retcode=1;
+                        break;
+                    }
+                    if (val_count == idx_count)
+                    {
+                        woptind++;
+                        break;
+                    }
                 }
             }
         }

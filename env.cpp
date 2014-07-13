@@ -490,6 +490,8 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     env_electric.insert(L"history");
     env_electric.insert(L"status");
     env_electric.insert(L"umask");
+    env_electric.insert(L"COLUMNS");
+    env_electric.insert(L"LINES");
 
     top = new env_node_t;
     global_env = top;
@@ -510,11 +512,13 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
         if (eql == wcstring::npos)
         {
             // no equals found
-            env_set(key_and_val, L"", ENV_EXPORT);
+            if (is_read_only(key_and_val) || is_electric(key_and_val)) continue;
+            env_set(key_and_val, L"", ENV_EXPORT | ENV_GLOBAL);
         }
         else
         {
             wcstring key = key_and_val.substr(0, eql);
+            if (is_read_only(key) || is_electric(key)) continue;
             wcstring val = key_and_val.substr(eql + 1);
             if (variable_can_be_array(val))
             {
@@ -589,6 +593,14 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
 
     /* Set fish_bind_mode to "default" */
     env_set(FISH_BIND_MODE_VAR, DEFAULT_BIND_MODE, ENV_GLOBAL);
+
+    /*
+      Now that the global scope is fully initialized, add a toplevel local
+      scope. This same local scope will persist throughout the lifetime of the
+      fish process, and it will ensure that `set -l` commands run at the
+      command-line don't affect the global scope.
+    */
+    env_push(false);
 }
 
 /**
@@ -628,6 +640,15 @@ int env_set(const wcstring &key, const wchar_t *val, int var_mode)
         {
             return env_set(key, val_canonical.c_str(), var_mode);
         }
+    }
+
+    if ((var_mode & (ENV_LOCAL | ENV_UNIVERSAL)) && (is_read_only(key) || is_electric(key)))
+    {
+        return ENV_SCOPE;
+    }
+    if ((var_mode & ENV_EXPORT) && is_electric(key))
+    {
+        return ENV_SCOPE;
     }
 
     if ((var_mode & ENV_USER) && is_read_only(key))
@@ -923,82 +944,107 @@ const wchar_t *env_var_t::c_str(void) const
     return wcstring::c_str();
 }
 
-env_var_t env_get_string(const wcstring &key)
+env_var_t env_get_string(const wcstring &key, int mode)
 {
-    /* Big hack...we only allow getting the history on the main thread. Note that history_t may ask for an environment variable, so don't take the lock here (we don't need it) */
-    const bool is_main = is_main_thread();
-    if (key == L"history" && is_main)
-    {
-        env_var_t result;
+    const bool has_scope = mode & (ENV_LOCAL | ENV_GLOBAL | ENV_UNIVERSAL);
+    const bool search_local = !has_scope || (mode & ENV_LOCAL);
+    const bool search_global = !has_scope || (mode & ENV_GLOBAL);
+    const bool search_universal = !has_scope || (mode & ENV_UNIVERSAL);
 
-        history_t *history = reader_get_history();
-        if (! history)
+    const bool search_exported = (mode & ENV_EXPORT) || !(mode & ENV_UNEXPORT);
+    const bool search_unexported = (mode & ENV_UNEXPORT) || !(mode & ENV_EXPORT);
+
+    /* Make the assumption that electric keys can't be shadowed elsewhere, since we currently block that in env_set() */
+    if (is_electric(key))
+    {
+        if (!search_global) return env_var_t::missing_var();
+        /* Big hack...we only allow getting the history on the main thread. Note that history_t may ask for an environment variable, so don't take the lock here (we don't need it) */
+        if (key == L"history" && is_main_thread())
         {
-            history = &history_t::history_with_name(L"fish");
-        }
-        if (history)
-            history->get_string_representation(result, ARRAY_SEP_STR);
-        return result;
-    }
-    else if (key == L"COLUMNS")
-    {
-        return to_string(common_get_width());
-    }
-    else if (key == L"LINES")
-    {
-        return to_string(common_get_height());
-    }
-    else if (key == L"status")
-    {
-        return to_string(proc_get_last_status());
-    }
-    else if (key == L"umask")
-    {
-        return format_string(L"0%0.3o", get_umask());
-    }
-    else
-    {
-        {
-            /* Lock around a local region */
-            scoped_lock lock(env_lock);
+            env_var_t result;
 
-            env_node_t *env = top;
-            wcstring result;
-
-            while (env != NULL)
+            history_t *history = reader_get_history();
+            if (! history)
             {
-                const var_entry_t *entry = env->find_entry(key);
-                if (entry != NULL)
-                {
-                    if (entry->val == ENV_NULL)
-                    {
-                        return env_var_t::missing_var();
-                    }
-                    else
-                    {
-                        return entry->val;
-                    }
-                }
+                history = &history_t::history_with_name(L"fish");
+            }
+            if (history)
+                history->get_string_representation(result, ARRAY_SEP_STR);
+            return result;
+        }
+        else if (key == L"COLUMNS")
+        {
+            return to_string(common_get_width());
+        }
+        else if (key == L"LINES")
+        {
+            return to_string(common_get_height());
+        }
+        else if (key == L"status")
+        {
+            return to_string(proc_get_last_status());
+        }
+        else if (key == L"umask")
+        {
+            return format_string(L"0%0.3o", get_umask());
+        }
+        // we should never get here unless the electric var list is out of sync
+    }
 
+    if (search_local || search_global) {
+        /* Lock around a local region */
+        scoped_lock lock(env_lock);
+
+        env_node_t *env = search_local ? top : global_env;
+        wcstring result;
+
+        while (env != NULL)
+        {
+            const var_entry_t *entry = env->find_entry(key);
+            if (entry != NULL && (entry->exportv ? search_exported : search_unexported))
+            {
+                if (entry->val == ENV_NULL)
+                {
+                    return env_var_t::missing_var();
+                }
+                else
+                {
+                    return entry->val;
+                }
+            }
+
+            if (has_scope)
+            {
+                if (!search_global || env == global_env) break;
+                env = global_env;
+            }
+            else
+            {
                 env = env->next_scope_to_search();
             }
         }
+    }
 
-        /* Another big hack - only do a universal barrier on the main thread (since it can change variable values)
-           Make sure we do this outside the env_lock because it may itself call env_get_string */
-        if (is_main && ! get_proc_had_barrier())
-        {
-            set_proc_had_barrier(true);
-            env_universal_barrier();
-        }
+    if (!search_universal) return env_var_t::missing_var();
 
-        env_var_t env_var = uvars() ?  uvars()->get(key) : env_var_t::missing_var();
-        if (env_var == ENV_NULL)
+    /* Another big hack - only do a universal barrier on the main thread (since it can change variable values)
+        Make sure we do this outside the env_lock because it may itself call env_get_string */
+    if (is_main_thread() && ! get_proc_had_barrier())
+    {
+        set_proc_had_barrier(true);
+        env_universal_barrier();
+    }
+
+    if (uvars())
+    {
+        env_var_t env_var = uvars()->get(key);
+        if (env_var == ENV_NULL || !(uvars()->get_export(key) ? search_exported : search_unexported))
         {
             env_var = env_var_t::missing_var();
         }
         return env_var;
     }
+    return env_var_t::missing_var();
 }
 
 bool env_exist(const wchar_t *key, int mode)
@@ -1007,59 +1053,54 @@ bool env_exist(const wchar_t *key, int mode)
 
     CHECK(key, false);
 
-    /*
-      Read only variables all exist, and they are all global. A local
-      version can not exist.
-    */
-    if (!(mode & ENV_LOCAL) && !(mode & ENV_UNIVERSAL))
+    const bool has_scope = mode & (ENV_LOCAL | ENV_GLOBAL | ENV_UNIVERSAL);
+    const bool test_local = !has_scope || (mode & ENV_LOCAL);
+    const bool test_global = !has_scope || (mode & ENV_GLOBAL);
+    const bool test_universal = !has_scope || (mode & ENV_UNIVERSAL);
+
+    const bool test_exported = (mode & ENV_EXPORT) || !(mode & ENV_UNEXPORT);
+    const bool test_unexported = (mode & ENV_UNEXPORT) || !(mode & ENV_EXPORT);
+
+    if (is_electric(key))
     {
-        if (is_read_only(key) || is_electric(key))
+        /*
+        Electric variables all exist, and they are all global. A local or
+        universal version can not exist. They are also never exported.
+        */
+        if (test_global && test_unexported)
         {
-            //Such variables are never exported
-            if (mode & ENV_EXPORT)
-            {
-                return false;
-            }
-            else if (mode & ENV_UNEXPORT)
-            {
-                return true;
-            }
             return true;
         }
+        return false;
     }
 
-    if (!(mode & ENV_UNIVERSAL))
+    if (test_local || test_global)
     {
-        env = (mode & ENV_GLOBAL)?global_env:top;
+        env = test_local ? top : global_env;
 
-        while (env != 0)
+        while (env)
         {
             var_table_t::iterator result = env->env.find(key);
 
             if (result != env->env.end())
             {
                 const var_entry_t &res = result->second;
-
-                if (mode & ENV_EXPORT)
-                {
-                    return res.exportv;
-                }
-                else if (mode & ENV_UNEXPORT)
-                {
-                    return ! res.exportv;
-                }
-
-                return true;
+                return res.exportv ? test_exported : test_unexported;
             }
 
-            if (mode & ENV_LOCAL)
-                break;
-
-            env = env->next_scope_to_search();
+            if (has_scope)
+            {
+                if (!test_global || env == global_env) break;
+                env = global_env;
+            }
+            else
+            {
+                env = env->next_scope_to_search();
+            }
         }
     }
 
-    if (!(mode & ENV_LOCAL) && !(mode & ENV_GLOBAL))
+    if (test_universal)
     {
         if (! get_proc_had_barrier())
         {
@@ -1069,16 +1110,7 @@ bool env_exist(const wchar_t *key, int mode)
 
         if (uvars() && ! uvars()->get(key).missing())
         {
-            if (mode & ENV_EXPORT)
-            {
-                return uvars()->get_export(key);
-            }
-            else if (mode & ENV_UNEXPORT)
-            {
-                return ! uvars()->get_export(key);
-            }
-
-            return 1;
+            return uvars()->get_export(key) ? test_exported : test_unexported;
         }
     }
 
@@ -1233,13 +1265,6 @@ wcstring_list_t env_get_names(int flags)
         {
             result.insert(result.end(), env_electric.begin(), env_electric.end());
         }
-
-        if (show_exported)
-        {
-            result.push_back(L"COLUMNS");
-            result.push_back(L"LINES");
-        }
-
     }
 
     if (show_universal && uvars())

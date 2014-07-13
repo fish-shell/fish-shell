@@ -3383,34 +3383,33 @@ const wchar_t *reader_readline(void)
 
             case R_KILL_WHOLE_LINE:
             {
+                /* We match the emacs behavior here: "kills the entire line including the following newline" */
                 editable_line_t *el = data->active_edit_line();
                 const wchar_t *buff = el->text.c_str();
-                const wchar_t *end = &buff[el->position];
-                const wchar_t *begin = end;
-                size_t len;
 
-                while (begin > buff  && *begin != L'\n')
-                    begin--;
-
-                if (*begin == L'\n')
-                    begin++;
-
-                len = maxi<size_t>(end-begin, 0);
-                begin = end - len;
-
-                while (*end && *end != L'\n')
-                    end++;
-
-                if (begin == end && *end)
-                    end++;
-
-                len = end-begin;
-
-                if (len)
+                /* Back up to the character just past the previous newline, or go to the beginning of the command line. Note that if the position is on a newline, visually this looks like the cursor is at the end of a line. Therefore that newline is NOT the beginning of a line; this justifies the -1 check. */
+                size_t begin = el->position;
+                while (begin > 0  && buff[begin-1] != L'\n')
                 {
-                    reader_kill(el, begin - buff, len, KILL_APPEND, last_char!=R_KILL_WHOLE_LINE);
+                    begin--;
                 }
+                
+                /* Push end forwards to just past the next newline, or just past the last char. */
+                size_t end = el->position;
+                while (buff[end] != L'\0')
+                {
+                    end++;
+                    if (buff[end-1] == L'\n')
+                    {
+                        break;
+                    }
+                }
+                assert(end >= begin);
 
+                if (end > begin)
+                {
+                    reader_kill(el, begin, end - begin, KILL_APPEND, last_char!=R_KILL_WHOLE_LINE);
+                }
                 break;
             }
 

@@ -125,6 +125,10 @@ commence.
  */
 #define RIGHT_PROMPT_FUNCTION_NAME L"fish_right_prompt"
 
+/**
+   The name of the function that will be executed before executing a command
+ */
+#define PREEXEC_FUNCTION_NAME L"fish_preexec"
 
 /**
    The default title for the reader. This is used by reader_readline.
@@ -2961,6 +2965,15 @@ static int read_i(void)
             update_buff_pos(&data->command_line, 0);
             data->command_line.text.clear();
             data->command_line_changed(&data->command_line);
+            if (function_exists(PREEXEC_FUNCTION_NAME)) {
+              editable_line_t el;
+              el.insert_string(PREEXEC_FUNCTION_NAME);
+              el.insert_string(L" '");
+              el.insert_string(command);
+              el.insert_string(L"'");
+              bool apply_exit_status = false;
+              exec_subshell(el.get_text(), apply_exit_status);
+            }
             reader_run_command(parser, command);
             if (data->end_loop)
             {

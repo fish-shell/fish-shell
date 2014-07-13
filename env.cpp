@@ -593,6 +593,14 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
 
     /* Set fish_bind_mode to "default" */
     env_set(FISH_BIND_MODE_VAR, DEFAULT_BIND_MODE, ENV_GLOBAL);
+
+    /*
+      Now that the global scope is fully initialized, add a toplevel local
+      scope. This same local scope will persist throughout the lifetime of the
+      fish process, and it will ensure that `set -l` commands run at the
+      command-line don't affect the global scope.
+    */
+    env_push(false);
 }
 
 /**
@@ -1193,16 +1201,6 @@ void env_pop()
               _(L"Tried to pop empty environment stack."));
         sanity_lose();
     }
-}
-
-bool env_ensure_local_scope()
-{
-    if (top == global_env)
-    {
-        env_push(false);
-        return true;
-    }
-    return false;
 }
 
 /**

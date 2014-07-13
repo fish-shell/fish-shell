@@ -206,12 +206,6 @@ void env_push(bool new_scope);
 */
 void env_pop();
 
-/**
-  Push the variable stack if the current scope is the global scope. Returns
-  whether it pushed a scope.
-*/
-bool env_ensure_local_scope();
-
 /** Synchronizes all universal variable changes: writes everything out, reads stuff in */
 void env_universal_barrier();
 

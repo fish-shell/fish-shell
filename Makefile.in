@@ -708,8 +708,8 @@ fish_indent: $(FISH_INDENT_OBJS)
 # Neat little program to show output from terminal
 #
 
-key_reader: key_reader.o input_common.o common.o env_universal_common.o wutil.o iothread.o utf8.o
-	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) key_reader.o input_common.o common.o env_universal_common.o wutil.o iothread.o utf8.o $(LIBS) -o $@
+key_reader: $(FISH_OBJS) key_reader.o
+	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $^ $(LIBS) -o $@
 
 
 #

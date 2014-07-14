@@ -1413,9 +1413,9 @@ directory, or install them in /etc.
 If you have a question not answered by this documentation, there are
 several avenues for help:
 
--# The official mailing list at <a href='fish-users@lists.sf.net'>fish-users@lists.sf.net</a>
+-# The official mailing list at <a href='https://lists.sf.net/lists/listinfo/fish-users'>fish-users@lists.sf.net</a>
 -# The Internet Relay Chat channel, \c #fish on \c irc.oftc.net
--# The <a href="http://github.com/fish-shell/fish-shell/">project GitHub page</a>
+-# The <a href="https://github.com/fish-shell/fish-shell/">project GitHub page</a>
 
 If you have an improvement for fish, you can submit it via the mailing list
 or the GitHub page.

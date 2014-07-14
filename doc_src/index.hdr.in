@@ -603,7 +603,7 @@ command. If a parameter contains a set of parenthesis, the text enclosed by the
 parenthesis will be interpreted as a list of commands. On expansion,
 this list is executed, and substituted by the output. If the output is
 more than one line long, each line will be expanded to a new
-parameter.
+parameter. Setting \c IFS to the empty string will disable line splitting.
 
 The exit status of the last run command substitution is available in the <a
 href='#variables-status'>status</a> variable.
@@ -620,6 +620,9 @@ The command <code>for i in *.jpg; convert $i (basename $i .jpg).png;
 end</code> will convert all JPEG files in the current directory to the
 PNG format using the \c convert program.
 
+The command <code>begin; set -l IFS; set data (cat data.txt); end</code>
+will set the \c data variable to the contents of 'data.txt' without
+splitting it into an array.
 
 \subsection expand-brace Brace expansion
 
@@ -1006,6 +1009,7 @@ values of most of these variables.
 - \c argv, an array of arguments to the shell or function. \c argv is only defined when inside a function call, or if fish was invoked with a list of arguments, like 'fish myscript.fish foo bar'. This variable can be changed by the user.
 - \c history, an array containing the last commands that were entered.
 - \c HOME, the user's home directory. This variable can be changed by the user.
+- \c IFS, the internal field separator that is used for word splitting with the <a href="commands.html#read">read builtin</a>. Setting this to the empty string will also disable line splitting in <a href="#expand-command-substitution">command substitution</a>. This variable can be changed by the user.
 - \c PWD, the current working directory.
 - \c status, the <a href="#variables-status">exit status</a> of the last foreground job to exit. If the job was terminated through a signal, the exit status will be 128 plus the signal number.
 - \c USER, the current username. This variable can be changed by the user.

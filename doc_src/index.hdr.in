@@ -1005,10 +1005,10 @@ values of most of these variables.
 - \c _, the name of the currently running command.
 - \c argv, an array of arguments to the shell or function. \c argv is only defined when inside a function call, or if fish was invoked with a list of arguments, like 'fish myscript.fish foo bar'. This variable can be changed by the user.
 - \c history, an array containing the last commands that were entered.
-- \c HOME, the user's home directory. This variable can only be changed by the root user.
+- \c HOME, the user's home directory. This variable can be changed by the user.
 - \c PWD, the current working directory.
 - \c status, the <a href="#variables-status">exit status</a> of the last foreground job to exit. If the job was terminated through a signal, the exit status will be 128 plus the signal number.
-- \c USER, the current username. This variable can only be changed by the root user.
+- \c USER, the current username. This variable can be changed by the user.
 - \c CMD_DURATION, the runtime of the last command in milliseconds.
 
 The names of these variables are mostly derived from the csh family of

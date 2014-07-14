@@ -902,7 +902,7 @@ bool reader_thread_job_is_stale()
     return (void*)(uintptr_t) s_generation_count != pthread_getspecific(generation_count_key);
 }
 
-void reader_write_title()
+void reader_write_title(const wchar_t *cmd)
 {
     const wchar_t *title;
     const env_var_t term_str = env_get_string(L"TERM");
@@ -946,7 +946,12 @@ void reader_write_title()
 
     }
 
-    title = function_exists(L"fish_title")?L"fish_title":DEFAULT_TITLE;
+    wcstring fish_title = L"fish_title";
+    if (cmd) {
+        fish_title.append(L" ");
+        fish_title.append(parse_util_escape_string_with_quote(cmd, L'\0'));
+    }
+    title = function_exists(L"fish_title")?fish_title.c_str():DEFAULT_TITLE;
 
     if (wcslen(title) ==0)
         return;
@@ -1015,7 +1020,7 @@ static void exec_prompt()
     }
 
     /* Write the screen title */
-    reader_write_title();
+    reader_write_title(0);
 }
 
 void reader_init()
@@ -2535,7 +2540,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd)
     if (! ft.empty())
         env_set(L"_", ft.c_str(), ENV_GLOBAL);
 
-    reader_write_title();
+    reader_write_title(cmd.c_str());
 
     term_donate();
 

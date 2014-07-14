@@ -3251,7 +3251,7 @@ static int builtin_fg(parser_t &parser, wchar_t **argv)
         const wcstring ft = tok_first(j->command_wcstr());
         if (! ft.empty())
             env_set(L"_", ft.c_str(), ENV_EXPORT);
-        reader_write_title();
+        reader_write_title(j->command_wcstr());
 
         make_first(j);
         job_set_flag(j, JOB_FOREGROUND, 1);

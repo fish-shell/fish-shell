@@ -655,10 +655,12 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode)
             if (!errno && (!*end) && (mask <= 0777) && (mask >= 0))
             {
                 umask(mask);
+                /* Do not actually create a umask variable, on env_get, it will be calculated dynamically */
+                return 0;
             }
         }
-        /* Do not actually create a umask variable, on env_get, it will be calculated dynamically */
-        return 0;
+
+        return ENV_INVALID;
     }
 
     /*

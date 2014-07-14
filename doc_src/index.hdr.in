@@ -1304,8 +1304,6 @@ executed or put into the foreground and the output is used as a
 titlebar message. The $_ environment variable will always contain the
 name of the job to be put into the foreground (Or 'fish' if control is
 returning to the shell) when the \c fish_prompt function is called.
-Instead of the job name, the $CMD environment variable will always be the
-entire command line string.
 
 Example:
 <p>

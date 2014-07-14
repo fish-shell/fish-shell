@@ -473,7 +473,6 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
         L"history",
         L"version",
         L"_",
-        L"CMD",
         L"LINES",
         L"COLUMNS",
         L"PWD",

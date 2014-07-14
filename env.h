@@ -11,37 +11,33 @@
 #include "util.h"
 #include "common.h"
 
-/**
-   Flag for local (to the current block) variable
-*/
-#define ENV_LOCAL 1
-
-/**
-   Flag for exported (to commands) variable
-*/
-#define ENV_EXPORT 2
-
-/**
-   Flag for unexported variable
-*/
-#define ENV_UNEXPORT 16
-
-/**
-   Flag for global variable
-*/
-#define ENV_GLOBAL 4
-
-/**
-   Flag for variable update request from the user. All variable
-   changes that are made directly by the user, such as those from the
-   'set' builtin must have this flag set.
-*/
-#define ENV_USER 8
-
-/**
-   Flag for universal variable
-*/
-#define ENV_UNIVERSAL 32
+/* Flags that may be passed as the 'mode' in env_set / env_get_string */
+enum
+{
+    /* Default mode */
+    ENV_DEFAULT = 0,
+    
+    /** Flag for local (to the current block) variable */
+    ENV_LOCAL = 1,
+    
+    /** Flag for exported (to commands) variable */
+    ENV_EXPORT = 2,
+    
+    /** Flag for unexported variable */
+    ENV_UNEXPORT = 16,
+    
+    /** Flag for global variable */
+    ENV_GLOBAL = 4,
+    
+    /** Flag for variable update request from the user. All variable
+       changes that are made directly by the user, such as those from the
+       'set' builtin must have this flag set. */
+    ENV_USER = 8,
+    
+    /** Flag for universal variable */
+    ENV_UNIVERSAL = 32
+};
+typedef uint32_t env_mode_flags_t;
 
 /**
    Error code for trying to alter read-only variable
@@ -49,6 +45,7 @@
 enum
 {
     ENV_PERM = 1,
+    ENV_SCOPE,
     ENV_INVALID
 }
 ;
@@ -82,10 +79,11 @@ void env_init(const struct config_paths_t *paths = NULL);
    The current error codes are:
 
    * ENV_PERM, can only be returned when setting as a user, e.g. ENV_USER is set. This means that the user tried to change a read-only variable.
+   * ENV_SCOPE, the variable cannot be set in the given scope. This applies to readonly/electric variables set from the local or universal scopes, or set as exported.
    * ENV_INVALID, the variable name or mode was invalid
 */
 
-int env_set(const wcstring &key, const wchar_t *val, int mode);
+int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t mode);
 
 
 /**
@@ -167,17 +165,22 @@ public:
 
 };
 
-/** Gets the variable with the specified name, or env_var_t::missing_var if it does not exist. */
-env_var_t env_get_string(const wcstring &key);
+/**
+   Gets the variable with the specified name, or env_var_t::missing_var if it does not exist.
+
+   \param key The name of the variable to get
+   \param mode An optional scope to search in. All scopes are searched if unset
+*/
+env_var_t env_get_string(const wcstring &key, env_mode_flags_t mode = ENV_DEFAULT);
 
 /**
    Returns true if the specified key exists. This can't be reliably done
    using env_get, since env_get returns null for 0-element arrays
 
    \param key The name of the variable to remove
-   \param mode the scope to search in. All scopes are searched if unset
+   \param mode the scope to search in. All scopes are searched if set to default
 */
-bool env_exist(const wchar_t *key, int mode);
+bool env_exist(const wchar_t *key, env_mode_flags_t mode);
 
 /**
    Remove environemnt variable

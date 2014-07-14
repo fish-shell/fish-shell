@@ -2670,7 +2670,7 @@ static int builtin_status(parser_t &parser, wchar_t **argv)
                 {
                     append_format(stderr_buffer,
                                   L"%ls: Invalid job control mode '%ls'\n",
-                                  woptarg);
+                                  L"status", woptarg);
                     res = 1;
                 }
                 mode = DONE;
@@ -3251,7 +3251,7 @@ static int builtin_fg(parser_t &parser, wchar_t **argv)
         const wcstring ft = tok_first(j->command_wcstr());
         if (! ft.empty())
             env_set(L"_", ft.c_str(), ENV_EXPORT);
-        reader_write_title();
+        reader_write_title(j->command_wcstr());
 
         make_first(j);
         job_set_flag(j, JOB_FOREGROUND, 1);

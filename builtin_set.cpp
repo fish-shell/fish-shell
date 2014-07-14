@@ -69,7 +69,7 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope)
 
         /* Don't bother validating (or complaining about) values that are already present */
         wcstring_list_t existing_values;
-        const env_var_t existing_variable = env_get_string(key);
+        const env_var_t existing_variable = env_get_string(key, scope);
         if (! existing_variable.missing_or_empty())
             tokenize_variable_array(existing_variable, existing_values);
 
@@ -153,6 +153,13 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope)
         case ENV_PERM:
         {
             append_format(stderr_buffer, _(L"%ls: Tried to change the read-only variable '%ls'\n"), L"set", key);
+            retcode=1;
+            break;
+        }
+
+        case ENV_SCOPE:
+        {
+            append_format(stderr_buffer, _(L"%ls: Tried to set the special variable '%ls' with the wrong scope\n"), L"set", key);
             retcode=1;
             break;
         }
@@ -353,7 +360,7 @@ static void print_variables(int include_values, int esc, bool shorten_ok, int sc
 
         if (include_values)
         {
-            env_var_t value = env_get_string(key);
+            env_var_t value = env_get_string(key, scope);
             if (!value.missing())
             {
                 int shorten = 0;
@@ -519,7 +526,7 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
     }
 
 
-    /* We can't both list and erase varaibles */
+    /* We can't both list and erase variables */
     if (erase && list)
     {
         append_format(stderr_buffer,
@@ -588,7 +595,7 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
                 wcstring_list_t result;
                 size_t j;
 
-                env_var_t dest_str = env_get_string(dest);
+                env_var_t dest_str = env_get_string(dest, scope);
                 if (! dest_str.missing())
                     tokenize_variable_array(dest_str, result);
 
@@ -678,14 +685,6 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
         return 1;
     }
 
-    if (slice && erase && (scope != ENV_USER))
-    {
-        free(dest);
-        append_format(stderr_buffer, _(L"%ls: Can not specify scope when erasing array slice\n"), argv[0]);
-        builtin_print_help(parser, argv[0], stderr_buffer);
-        return 1;
-    }
-
     /*
       set assignment can work in two modes, either using slices or
       using the whole array. We detect which mode is used here.
@@ -700,35 +699,44 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
         std::vector<long> indexes;
         wcstring_list_t result;
 
-        const env_var_t dest_str = env_get_string(dest);
+        const env_var_t dest_str = env_get_string(dest, scope);
         if (! dest_str.missing())
-            tokenize_variable_array(dest_str, result);
-
-        for (; woptind<argc; woptind++)
         {
-            if (!parse_index(indexes, argv[woptind], dest, result.size()))
-            {
-                builtin_print_help(parser, argv[0], stderr_buffer);
-                retcode = 1;
-                break;
-            }
+            tokenize_variable_array(dest_str, result);
+        }
+        else if (erase)
+        {
+            retcode = 1;
+        }
 
-            size_t idx_count = indexes.size();
-            size_t val_count = argc-woptind-1;
-
-            if (!erase)
+        if (!retcode)
+        {
+            for (; woptind<argc; woptind++)
             {
-                if (val_count < idx_count)
+                if (!parse_index(indexes, argv[woptind], dest, result.size()))
                 {
-                    append_format(stderr_buffer, _(BUILTIN_SET_ARG_COUNT), argv[0]);
                     builtin_print_help(parser, argv[0], stderr_buffer);
-                    retcode=1;
+                    retcode = 1;
                     break;
                 }
-                if (val_count == idx_count)
+
+                size_t idx_count = indexes.size();
+                size_t val_count = argc-woptind-1;
+
+                if (!erase)
                 {
-                    woptind++;
-                    break;
+                    if (val_count < idx_count)
+                    {
+                        append_format(stderr_buffer, _(BUILTIN_SET_ARG_COUNT), argv[0]);
+                        builtin_print_help(parser, argv[0], stderr_buffer);
+                        retcode=1;
+                        break;
+                    }
+                    if (val_count == idx_count)
+                    {
+                        woptind++;
+                        break;
+                    }
                 }
             }
         }

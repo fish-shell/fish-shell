@@ -622,7 +622,7 @@ static env_node_t *env_get_node(const wcstring &key)
     return env;
 }
 
-int env_set(const wcstring &key, const wchar_t *val, int var_mode)
+int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode)
 {
     ASSERT_IS_MAIN_THREAD();
     bool has_changed_old = has_changed_exported;
@@ -944,7 +944,7 @@ const wchar_t *env_var_t::c_str(void) const
     return wcstring::c_str();
 }
 
-env_var_t env_get_string(const wcstring &key, int mode)
+env_var_t env_get_string(const wcstring &key, env_mode_flags_t mode)
 {
     const bool has_scope = mode & (ENV_LOCAL | ENV_GLOBAL | ENV_UNIVERSAL);
     const bool search_local = !has_scope || (mode & ENV_LOCAL);
@@ -1047,7 +1047,7 @@ env_var_t env_get_string(const wcstring &key, int mode)
     return env_var_t::missing_var();
 }
 
-bool env_exist(const wchar_t *key, int mode)
+bool env_exist(const wchar_t *key, env_mode_flags_t mode)
 {
     env_node_t *env;
 

@@ -11,44 +11,65 @@ function type --description "Print the type of a command"
 	set -l names
 	if test (count $argv) -gt 0
 		for i in (seq (count $argv))
-			switch $argv[$i]
-				case -t --type
-					if test $mode != quiet
-						set mode type
-					end
+			set -l arg $argv[$i]
+			set -l needbreak 0
+			while test -n $arg
+				set -l flag $arg
+				set arg ''
+				switch $flag
+					case '--*'
+						# do nothing; this just prevents it matching the next case
+					case '-??*'
+						# combined flags
+						set -l IFS
+						echo -n $flag | read _ flag arg
+						set flag -$flag
+						set arg -$arg
+				end
+				switch $flag
+					case -t --type
+						if test $mode != quiet
+							set mode type
+						end
 
-				case -p --path
-					if test $mode != quiet
-						set mode path
-					end
+					case -p --path
+						if test $mode != quiet
+							set mode path
+						end
 
-				case -P --force-path
-					if test $mode != quiet
-						set mode path
-					end
-					set selection files
+					case -P --force-path
+						if test $mode != quiet
+							set mode path
+						end
+						set selection files
 
-				case -a --all
-					set multi yes
+					case -a --all
+						set multi yes
 
-				case -f --no-functions
-					set selection files
+					case -f --no-functions
+						set selection files
 
-				case -q --quiet
-					set mode quiet
+					case -q --quiet
+						set mode quiet
 
-				case -h --help
-					__fish_print_help type
-					return 0
+					case -h --help
+						__fish_print_help type
+						return 0
 
-				case --
-					set names $argv[$i..-1]
-					set -e names[1]
-					break
+					case --
+						set names $argv[$i..-1]
+						set -e names[1]
+						set needbreak 1
+						break
 
-				case '*'
-					set names $argv[$i..-1]
-					break
+					case '*'
+						set names $argv[$i..-1]
+						set needbreak 1
+						break
+				end
+			end
+			if test $needbreak -eq 1
+				break
 			end
 		end
 	end
@@ -96,9 +117,9 @@ function type --description "Print the type of a command"
 
 		set -l paths
 		if test $multi != yes
-			set paths (command -s $i)
+			set paths (command -s -- $i)
 		else
-			set paths (which -a $i ^/dev/null)
+			set paths (which -a -- $i ^/dev/null)
 		end
 		for path in $paths
 			set res 0

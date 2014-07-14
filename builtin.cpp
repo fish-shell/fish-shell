@@ -2301,6 +2301,7 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
     int exit_res=STATUS_BUILTIN_OK;
     const wchar_t *mode_name = READ_MODE_NAME;
     int shell = 0;
+    int array = 0;
 
     woptind=0;
 
@@ -2346,6 +2347,10 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
             }
             ,
             {
+                L"array", no_argument, 0, 'a'
+            }
+            ,
+            {
                 L"help", no_argument, 0, 'h'
             }
             ,
@@ -2359,7 +2364,7 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
 
         int opt = wgetopt_long(argc,
                                argv,
-                               L"xglUup:c:hm:s",
+                               L"xglUup:c:hm:sa",
                                long_options,
                                &opt_index);
         if (opt == -1)
@@ -2414,6 +2419,10 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
                 shell = 1;
                 break;
 
+            case 'a':
+                array = 1;
+                break;
+
             case 'h':
                 builtin_print_help(parser, argv[0], stdout_buffer);
                 return STATUS_BUILTIN_OK;
@@ -2441,6 +2450,14 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
         append_format(stderr_buffer,
                       BUILTIN_ERR_GLOCAL,
                       argv[0]);
+        builtin_print_help(parser, argv[0], stderr_buffer);
+
+        return STATUS_BUILTIN_ERROR;
+    }
+
+    if (array && woptind+1 != argc)
+    {
+        append_format(stderr_buffer, _(L"%ls: --array option requires a single variable name.\n"), argv[0]);
         builtin_print_help(parser, argv[0], stderr_buffer);
 
         return STATUS_BUILTIN_ERROR;
@@ -2580,18 +2597,64 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
         wchar_t *state;
 
         env_var_t ifs = env_get_string(L"IFS");
-        if (ifs.missing())
-            ifs = L"";
 
-        nxt = wcstok(buff, (i<argc-1)?ifs.c_str():L"", &state);
-
-        while (i<argc)
+        if (ifs.missing_or_empty())
         {
-            env_set(argv[i], nxt != 0 ? nxt: L"", place);
+            /* Every character is a separate token */
+            size_t bufflen = wcslen(buff);
+            if (array)
+            {
+                if (bufflen > 0)
+                {
+                    wcstring chars(bufflen+(bufflen-1), ARRAY_SEP);
+                    for (size_t j=0; j<bufflen; ++j)
+                    {
+                        chars[j*2] = buff[j];
+                    }
+                    env_set(argv[i], chars.c_str(), place);
+                }
+                else
+                {
+                    env_set(argv[i], NULL, place);
+                }
+            }
+            else
+            {
+                size_t j = 0;
+                for (; i+1 < argc; ++i)
+                {
+                    env_set(argv[i], j < bufflen ? (wchar_t[2]){buff[j], 0} : L"", place);
+                    if (j < bufflen) ++j;
+                }
+                if (i < argc) env_set(argv[i], &buff[j], place);
+            }
+        }
+        else if (array)
+        {
+            wcstring tokens;
+            tokens.reserve(wcslen(buff));
+            bool empty = true;
 
-            i++;
-            if (nxt != 0)
-                nxt = wcstok(0, (i<argc-1)?ifs.c_str():L"", &state);
+            for (nxt = wcstok(buff, ifs.c_str(), &state); nxt != 0; nxt = wcstok(0, ifs.c_str(), &state))
+            {
+                if (! tokens.empty()) tokens.push_back(ARRAY_SEP);
+                tokens.append(nxt);
+                empty = false;
+            }
+            env_set(argv[i], empty ? NULL : tokens.c_str(), place);
+        }
+        else
+        {
+            nxt = wcstok(buff, (i<argc-1)?ifs.c_str():L"", &state);
+
+            while (i<argc)
+            {
+                env_set(argv[i], nxt != 0 ? nxt: L"", place);
+
+                i++;
+                if (nxt != 0)
+                    nxt = wcstok(0, (i<argc-1)?ifs.c_str():L"", &state);
+            }
         }
     }
 

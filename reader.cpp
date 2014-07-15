@@ -2966,13 +2966,10 @@ static int read_i(void)
             data->command_line.text.clear();
             data->command_line_changed(&data->command_line);
             if (function_exists(PREEXEC_FUNCTION_NAME)) {
-              editable_line_t el;
-              el.insert_string(PREEXEC_FUNCTION_NAME);
-              el.insert_string(L" '");
-              el.insert_string(command);
-              el.insert_string(L"'");
+              wcstring preexec_cmd = format_string(L"%ls %ls", PREEXEC_FUNCTION_NAME,
+                                         escape_string(command, ESCAPE_ALL).c_str());
               bool apply_exit_status = false;
-              exec_subshell(el.get_text(), apply_exit_status);
+              exec_subshell(preexec_cmd, apply_exit_status);
             }
             reader_run_command(parser, command);
             if (data->end_loop)

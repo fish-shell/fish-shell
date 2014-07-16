@@ -8,8 +8,8 @@
 # https://github.com/gruntjs/grunt/blob/master/LICENSE-MIT
 
 function __grunt_print_tasks
-	set -l info (grunt --version --verbose ^/dev/null | tail -n2 | head -n1)
-	set -l tasks (echo $info | sed -e 's/Available tasks: //' | tr ' ' '\n')
+	set -l info (grunt --version --verbose ^/dev/null)
+	set -l tasks (echo $info[4] | sed -e 's/Available tasks: //' | tr ' ' '\n')
 	for t in $tasks
 		echo $t
 	end

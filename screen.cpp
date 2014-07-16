@@ -317,7 +317,42 @@ size_t escape_code_length(const wchar_t *code)
             resulting_length = cursor;
         }
     }
+    if (! found)
+    {
+        /* OSC code, terminated by <esc>\ or <bel> */
+        if (code[1] == L']')
+        {
+            // Start at 2 to skip over <esc>]
+            size_t cursor = 2;
+            bool backslash_ends = false;
+            for (; code[cursor] != L'\0'; cursor++)
+            {
+                /* Consume a sequence of characters up to <esc>\ or <bel> */
+                wchar_t c = code[cursor];
+                if (c == L'\x1b') {
+                    backslash_ends = true;
+                }
+                else if (c == L'\\' && backslash_ends)
+                {
+                    found = true;
+                    break;
+                }
+                else
+                {
+                    backslash_ends = false;
+                }
 
+                if (c == L'\x07') {
+                    found = true;
+                    break;
+                }
+            }
+            if (found)
+            {
+                resulting_length = cursor + 1;
+            }
+        }
+    }
     if (! found)
     {
         /* Generic VT100 two byte sequence: <esc> followed by something in the range @ through _ */

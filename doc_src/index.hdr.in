@@ -1120,7 +1120,11 @@ The \c fish editor features copy and paste, a searchable history and
 many editor functions that can be bound to special keyboard
 shortcuts.
 
-Here are some of the commands available in the editor:
+Similar to bash, fish has Emacs and vi editing modes. The default
+editing mode is Emacs. You can switch to vi mode with \c fish_vi_key_bindings
+and switch back with \c fish_default_key_bindings.
+
+\subsection Emacs mode commands
 
 - Tab <a href="#completion">completes</a> the current token.
 - Home or Ctrl-A moves the cursor to the beginning of the line.
@@ -1146,6 +1150,24 @@ Here are some of the commands available in the editor:
 
 You can change these key bindings using the
 <a href="commands.html#bind">bind</a> builtin command.
+
+\subsection Vi mode commands
+
+Vi mode allows for the use of Vi-like commands when at the bash prompt.
+You'll initially be in insert mode. Hitting the escape key takes you
+into command mode where you can use, but aren't limited to, the following.
+
+- h moves cursor left
+- l moves cursor right
+- A moves cursor to end of line and put in insert mode
+- 0 (zero) Move cursor to beginning of line (doesn't put in insert mode)
+- i put into insert mode at current position
+- a put into insert mode after current position
+- dd Delete line (saved for pasting)
+- D delete text after current cursor position (saved for pasting)
+- p paste text that was deleted
+- u undo
+- etc for many of the other Vi commands
 
 \subsection killring Copy and paste (Kill Ring)
 

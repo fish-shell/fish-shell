@@ -39,6 +39,14 @@ By using one of the event handler switches, a function can be made to run automa
 
 - `fish_command_not_found`, which is emitted whenever a command lookup failed.
 
+- `fish_preexec`, which is emitted right before executing an interactive command. The commandline is passed as the first parameter.
+
+  Note: This event will be emitted even if the command is invalid. The commandline parameter includes the entire commandline verbatim, and may potentially include newlines.
+
+- `fish_postexec`, which is emitted right after executing an interactive command. The commandline is passed as the first parameter.
+
+  Note: This event will be emitted even if the command is invalid. The commandline parameter includes the entire commandline verbatim, and may potentially include newlines.
+
 
 \subsection function-example Example
 

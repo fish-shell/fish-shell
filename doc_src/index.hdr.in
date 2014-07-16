@@ -1120,11 +1120,11 @@ The \c fish editor features copy and paste, a searchable history and
 many editor functions that can be bound to special keyboard
 shortcuts.
 
-Similar to bash, fish has Emacs and vi editing modes. The default
-editing mode is Emacs. You can switch to vi mode with \c fish_vi_key_bindings
+Similar to bash, fish has Emacs and Vi editing modes. The default
+editing mode is Emacs. You can switch to Vi mode with \c fish_vi_key_bindings
 and switch back with \c fish_default_key_bindings.
 
-\subsection Emacs mode commands
+\subsection emacs-mode Emacs mode commands
 
 - Tab <a href="#completion">completes</a> the current token.
 - Home or Ctrl-A moves the cursor to the beginning of the line.
@@ -1151,7 +1151,7 @@ and switch back with \c fish_default_key_bindings.
 You can change these key bindings using the
 <a href="commands.html#bind">bind</a> builtin command.
 
-\subsection Vi mode commands
+\subsection vi-mode Vi mode commands
 
 Vi mode allows for the use of Vi-like commands when at the bash prompt.
 You'll initially be in insert mode. Hitting the escape key takes you

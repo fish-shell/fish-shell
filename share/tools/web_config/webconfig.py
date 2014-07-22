@@ -287,7 +287,7 @@ class BindingParser:
     def set_buffer(self, buffer):
         """ Sets code to parse """
 
-        self.buffer = buffer
+        self.buffer = buffer or b''
         self.index = 0
 
     def get_char(self):

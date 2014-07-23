@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 # Whether we're Python 2
-import sys, os
+import sys
+import os
+import operator
 IS_PY2 = sys.version_info[0] == 2
 
 if IS_PY2:
@@ -487,7 +489,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             result.append([color_name, color_desc, parse_color('')])
 
         # Sort our result (by their keys)
-        result.sort()
+        result.sort(key=operator.itemgetter('name'))
 
         return result
 

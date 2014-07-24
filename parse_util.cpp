@@ -1149,7 +1149,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
                 tmp.append(paran_end+1);
 
                 parse_error_list_t subst_errors;
-                err |= parse_util_detect_errors(subst, &subst_errors);
+                err |= parse_util_detect_errors(subst, &subst_errors, false /* do not accept incomplete */);
 
                 /* Our command substitution produced error offsets relative to its source. Tweak the offsets of the errors in the command substitution to account for both its offset within the string, and the offset of the node */
                 size_t error_offset = (paran_begin + 1 - arg_cpy) + node.source_start;
@@ -1212,7 +1212,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
     return err;
 }
 
-parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, parse_error_list_t *out_errors)
+parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, parse_error_list_t *out_errors, bool allow_incomplete)
 {
     parse_node_tree_t node_tree;
     parse_error_list_t parse_errors;
@@ -1227,31 +1227,41 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
     bool has_unclosed_block = false;
 
     // Whether there's an unclosed quote, and therefore unfinished
+    // This is only set if allow_incomplete is set
     bool has_unclosed_quote = false;
 
     // Parse the input string into a parse tree
     // Some errors are detected here
     bool parsed = parse_tree_from_string(buff_src, parse_flag_leave_unterminated, &node_tree, &parse_errors);
 
-    for (size_t i=0; i < parse_errors.size(); i++)
+    if (allow_incomplete)
     {
-        if (parse_errors.at(i).code == parse_error_tokenizer_unterminated_quote)
+        for (size_t i=0; i < parse_errors.size(); i++)
         {
-            // Remove this error, since we don't consider it a real error
-            has_unclosed_quote = true;
-            parse_errors.erase(parse_errors.begin() + i);
-            i--;
+            if (parse_errors.at(i).code == parse_error_tokenizer_unterminated_quote)
+            {
+                // Remove this error, since we don't consider it a real error
+                has_unclosed_quote = true;
+                parse_errors.erase(parse_errors.begin() + i);
+                i--;
+            }
         }
     }
+    
     // #1238: If the only error was unterminated quote, then consider this to have parsed successfully. A better fix would be to have parse_tree_from_string return this information directly (but it would be a shame to munge up its nice bool return).
     if (parse_errors.empty() && has_unclosed_quote)
+    {
         parsed = true;
+    }
 
     if (! parsed)
     {
         errored = true;
     }
 
+    // has_unclosed_quote may only be set if allow_incomplete is true
+    assert(! has_unclosed_quote || allow_incomplete);
+    
     // Expand all commands
     // Verify 'or' and 'and' not used inside pipelines
     // Verify pipes via parser_is_pipe_forbidden

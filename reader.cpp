@@ -2544,7 +2544,7 @@ int reader_shell_test(const wchar_t *b)
     bstr.push_back(L'\n');
 
     parse_error_list_t errors;
-    int res = parse_util_detect_errors(bstr, &errors);
+    int res = parse_util_detect_errors(bstr, &errors, true /* do accept incomplete */);
 
     if (res & PARSER_TEST_ERROR)
     {
@@ -4220,7 +4220,7 @@ static int read_ni(int fd, const io_chain_t &io)
         }
 
         parse_error_list_t errors;
-        if (! parse_util_detect_errors(str, &errors))
+        if (! parse_util_detect_errors(str, &errors, false /* do not accept incomplete */))
         {
             parser.eval(str, io, TOP);
         }

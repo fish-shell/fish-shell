@@ -563,11 +563,17 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             bind_args_list = comps[1].split(' ', 6)
             (options, args) = parser.parse_args(bind_args_list)
 
-            key_name= options.k
-            command = args[0]
+            if options.k:
+                key_name= options.k
+                command = ' '.join(args)
+                binding_parser.set_buffer(key_name)
+            else:
+                key_name = None
+                command = ' '.join(args[1:])
+                binding_parser.set_buffer(args[0])
 
-            binding_parser.set_buffer(key_name)
-            fish_binding = FishBinding(command=command, binding=key_name, readable_binding=binding_parser.get_readable_binding())
+            readable_binding = binding_parser.get_readable_binding()
+            fish_binding = FishBinding(command, key_name, readable_binding)
             bindings.append(fish_binding)
 
         return [ binding.get_json_obj() for binding in bindings ]

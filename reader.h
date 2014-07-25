@@ -64,8 +64,8 @@ public:
     {
     }
 
-    /* Inserts the string at the cursor position */
-    void insert_string(const wcstring &str);
+    /* Inserts a substring of str given by start, len at the cursor position */
+    void insert_string(const wcstring &str, size_t start = 0, size_t len = wcstring::npos);
 };
 
 /**

@@ -34,11 +34,13 @@ msgid ""
 "%ls: Type 'help %ls' for related documentation\n"
 "\n"
 msgstr ""
+"%ls: Geben Sie 'help %ls' für die dazugehörige Dokumentation ein\n"
+"\n"
 
 #: builtin.cpp:484
 #, c-format
 msgid "%ls: No key with name '%ls' found\n"
-msgstr ""
+msgstr "%ls: Keine Funktion '%ls' gefunden\n"
 
 #: builtin.cpp:490
 #, fuzzy, c-format
@@ -187,11 +189,11 @@ msgstr "Ausführung im interaktiven Modus"
 
 #: builtin.cpp:3030
 msgid "Never"
-msgstr ""
+msgstr "Nie"
 
 #: builtin.cpp:3030
 msgid "Always"
-msgstr ""
+msgstr "Immer"
 
 #: builtin.cpp:3066 builtin.cpp:3995
 #, c-format
@@ -278,7 +280,6 @@ msgstr "%ls: Kein passender Job: %d\n"
 msgid ""
 "%ls: Can't put job %d, '%ls' to foreground because it is not under job "
 "control\n"
-msgstr ""
 
 #: builtin.cpp:3547
 #, c-format
@@ -344,7 +345,7 @@ msgstr "Konfigurationsoption festlegen"
 
 #: builtin.cpp:4318
 msgid "Try out the new parser"
-msgstr ""
+msgstr "Versuchen Sie den neuen Parser"
 
 #: builtin.cpp:4319
 msgid "Execute command if previous command suceeded"
@@ -374,6 +375,7 @@ msgstr "Innerste Schleife beenden"
 msgid ""
 "Temporarily halt execution of a script and launch an interactive debug prompt"
 msgstr ""
+"Halte die Ausführung eines Skripts vorübergehend an und starte interaktive Debug-Eingabe"
 
 #: builtin.cpp:4326
 msgid "Run a builtin command instead of a function"
@@ -401,7 +403,7 @@ msgstr "Befehlsspezifische Erweiterungen bearbeiten"
 
 #: builtin.cpp:4332
 msgid "Search for a specified string in a list"
-msgstr ""
+msgstr "Suche nach gegeben Text in einer Liste"
 
 #: builtin.cpp:4333
 msgid "Skip the rest of the current lap of the innermost loop"
@@ -456,7 +458,7 @@ msgstr "Funktionen auflisten oder entfernen"
 
 #: builtin.cpp:4345
 msgid "History of commands executed by user"
-msgstr ""
+msgstr "Verlauf der vom Benutzer ausgeführten Befehle"
 
 #: builtin.cpp:4346
 msgid "Evaluate block if condition is true"
@@ -502,7 +504,7 @@ msgstr "Behandlung von Umgebungsvariablen"
 
 #: builtin.cpp:4356
 msgid "Set the terminal color"
-msgstr ""
+msgstr "Farbe des Terminals festlegen"
 
 #: builtin.cpp:4357
 msgid "Evaluate contents of file"
@@ -582,7 +584,7 @@ msgstr "%ls: Argument erwartet\n"
 #: builtin_printf.cpp:258
 #, c-format
 msgid "%ls: value not completely converted"
-msgstr ""
+msgstr "%ls: Wert nicht komplett konvertiert"
 
 #: builtin_printf.cpp:359
 msgid "missing hexadecimal number in escape"
@@ -595,12 +597,12 @@ msgstr ""
 #: builtin_printf.cpp:401
 #, c-format
 msgid "Unicode character out of range: \\%c%0*x"
-msgstr ""
+msgstr "Unicode Zeichen außerhalb des Bereichs: \\%c%0*x"
 
 #: builtin_printf.cpp:668
 #, c-format
 msgid "invalid field width: %ls"
-msgstr ""
+msgstr "Ungültige Feldbreite: %ls"
 
 #: builtin_printf.cpp:706
 #, fuzzy, c-format
@@ -630,7 +632,7 @@ msgstr "%ls: Unbekannter Job '%ls'\n"
 #: builtin_set.cpp:214
 #, c-format
 msgid "%ls: Multiple variable names specified in single call (%ls and %.*ls)\n"
-msgstr ""
+msgstr "%ls: Mehrere Variablennamen in einem Aufruf gegeben (%ls and %.*ls)\n"
 
 #: builtin_set.cpp:241
 #, c-format
@@ -712,7 +714,7 @@ msgstr "Versuchte, einen leeren Umgebungsstack zu poppen."
 #: env_universal_common.cpp:529
 #, c-format
 msgid "Could not convert message '%s' to wide character string"
-msgstr ""
+msgstr "Konnte Nachricht '%s' nicht konvertieren"
 
 #: event.cpp:168
 #, c-format
@@ -795,12 +797,12 @@ msgstr "Prozess\n"
 
 #: expand.cpp:69
 msgid "Job"
-msgstr ""
+msgstr "Job"
 
 #: expand.cpp:74
 #, c-format
 msgid "Job: %ls"
-msgstr ""
+msgstr "Job: %ls"
 
 #: expand.cpp:79
 #, fuzzy
@@ -820,12 +822,12 @@ msgstr "Unpassendes Anführungszeichen"
 #: fish.cpp:320
 #, c-format
 msgid "Invalid value '%s' for debug level switch"
-msgstr ""
+msgstr "Ungültiger Wert '%s'"
 
 #: fish.cpp:361 mimedb.cpp:1335
 #, c-format
 msgid "%s, version %s\n"
-msgstr ""
+msgstr "%s, Version %s\n"
 
 #: fish.cpp:416
 msgid "Can not use the no-execute mode when running an interactive session"
@@ -839,7 +841,7 @@ msgstr "%ls: Fehler beim Lesen der Datei '%ls'\n"
 #: fish_indent.cpp:345
 #, c-format
 msgid "%ls, version %s\n"
-msgstr ""
+msgstr "%ls, Version %s\n"
 
 #: fish_pager.cpp:113
 #, fuzzy, c-format
@@ -849,7 +851,7 @@ msgstr "%ls: '%ls' ist kein gültiger Variablenname\n"
 #: fish_pager.cpp:703
 #, c-format
 msgid " %d to %d of %d"
-msgstr ""
+msgstr " %d zu %d von %d"
 
 #: fish_pager.cpp:1012
 msgid "Could not set up output file descriptors for pager"
@@ -867,7 +869,7 @@ msgstr "Konnte Shell nicht wieder in Vordergrund zurückholen"
 
 #: fish_pager.cpp:1031
 msgid "Could not initialize result pipe"
-msgstr ""
+msgstr "Konnte Ergebnis-Pipe nicht initialisieren"
 
 #: fish_pager.cpp:1075 input.cpp:384 input.cpp:394
 msgid "Could not set up terminal"
@@ -894,16 +896,19 @@ msgid ""
 "will not be saved. Please set the $XDG_CONFIG_HOME variable to a directory "
 "where the current user has write access."
 msgstr ""
+"Fehler beim Erstellen des Konfigurations-Ordner für Fish. Ihre persönlichen Einstellungen "
+"werden nicht gespeichert. Setzen sie die Variable $XDG_CONFIG_HOME auf ein Verzeichnis, "
+"bei dem der aktuelle Benutzer Schreibrechte besitzt"
 
 #: input.cpp:387
 #, c-format
 msgid "Check that your terminal type, '%ls', is supported on this system"
-msgstr ""
+msgstr "Überprüfen Sie ihren Terminal-Typ, '%ls' ist auf diesem System nicht unterstützt."
 
 #: input.cpp:389
 #, c-format
 msgid "Attempting to use '%ls' instead"
-msgstr ""
+msgstr "Versuch '%ls' stattdessen zu verwenden"
 
 #: io.cpp:110
 #, c-format
@@ -914,7 +919,7 @@ msgstr "Fehler beim Lesen der Ausgabe des Codeblocks auf Dateideskriptor %d"
 #: mimedb.cpp:173 mimedb.cpp:187 mimedb.cpp:1177
 #, c-format
 msgid "%s: Out of memory\n"
-msgstr ""
+msgstr "%s: Nicht genügend Speicherplatz\n"
 
 #: mimedb.cpp:462
 #, fuzzy, c-format
@@ -929,7 +934,7 @@ msgstr "%ls: Parameter '%ls' ist zu lang\n"
 #: mimedb.cpp:550 mimedb.cpp:558
 #, c-format
 msgid "%s: Could not compile regular expressions %s with error %s\n"
-msgstr ""
+msgstr "%s: Konnte Reguläre Ausdrücke %s nicht verarbeiten. (%s)\n"
 
 #: mimedb.cpp:674
 #, fuzzy, c-format
@@ -1000,6 +1005,10 @@ msgid ""
 "%ls'. See the help section for the function command by typing 'help "
 "function'."
 msgstr ""
+"Variablen können nicht als Befehle benutzt werden. Definieren Sie stattdessen eine Funktion "
+"'function %ls; %ls $argv; end' oder benützen Sie den Befehl 'eval "
+"%ls'. Für die Verwendung des 'function'-Befehls geben Sie 'help "
+"function' ein."
 
 #: parse_execution.cpp:783 parser.cpp:2087
 #, c-format
@@ -1008,6 +1017,10 @@ msgid ""
 "eval builtin instead, like 'eval %ls'. See the help section for the function "
 "command by typing 'help function'."
 msgstr ""
+"Variablen können nicht als Befehle benutzt werden. Definieren Sie stattdessen eine Funktion "
+"oder benützen Sie den Befehl 'eval %ls'. Für die Verwendung des 'function'-Befehls geben Sie 'help "
+"function' ein."
+
 
 #: parse_execution.cpp:791 parser.cpp:2095
 #, fuzzy, c-format
@@ -1022,7 +1035,7 @@ msgstr ""
 #: parse_execution.cpp:798 parser.cpp:2102
 #, c-format
 msgid "The file '%ls' is not executable by this user"
-msgstr ""
+msgstr "Die Datei '%ls' kann von diesem Benutzer nicht ausgeführt werden"
 
 #: parse_execution.cpp:1029
 #, fuzzy, c-format
@@ -1050,13 +1063,15 @@ msgstr "Tokenizer-Fehler: '%ls'"
 
 #: parser.cpp:69
 msgid "An additional command is required"
-msgstr ""
+msgstr "Ein weiterer Befehl ist erforderlich"
 
 #: parser.cpp:74
 msgid ""
 "The function calls itself immediately, which would result in an infinite "
 "loop."
 msgstr ""
+"Die Funktion ruft sich selbst sofort wieder auf, was in einer "
+"Endlosschleife resultieren würde"
 
 #: parser.cpp:79
 msgid ""
@@ -1084,7 +1099,7 @@ msgstr ""
 #: parser.cpp:97 parse_constants.h:167
 #, c-format
 msgid "No matches for wildcard '%ls'."
-msgstr ""
+msgstr "Keine Treffer für Wildcard '%ls'."
 
 #: parser.cpp:102
 msgid "'case' builtin not inside of switch block"
@@ -1156,7 +1171,7 @@ msgstr "'for'-Block"
 
 #: parser.cpp:168 parse_constants.h:219
 msgid "Block created by breakpoint"
-msgstr ""
+msgstr "Block von Haltepunkt erstellt"
 
 #: parser.cpp:175 parse_constants.h:226
 msgid "'if' conditional block"
@@ -1197,7 +1212,7 @@ msgstr "'begin' unbedingter Block"
 
 #: parser.cpp:228 parse_constants.h:279
 msgid "Block created by the . builtin"
-msgstr ""
+msgstr "Block erstellt vom . builtin"
 
 #: parser.cpp:233 parse_constants.h:284
 #, fuzzy
@@ -1262,7 +1277,7 @@ msgstr "%ls (Zeile %d): "
 
 #: parser.cpp:1091
 msgid "Startup"
-msgstr ""
+msgstr "Starte..."
 
 #: parser.cpp:1197
 msgid "Job inconsistency"
@@ -1369,6 +1384,7 @@ msgstr ""
 msgid ""
 "I appear to be an orphaned process, so I am quitting politely. My pid is %d."
 msgstr ""
+"Ich scheine ein verwaister Prozess zu sein, deshalb beende ich mich höflichst. Meine PID ist %d"
 
 #: reader.cpp:2179
 msgid "Couldn't put the shell in its own process group"
@@ -1386,7 +1402,8 @@ msgstr ""
 msgid ""
 "There are stopped jobs. A second attempt to exit will enforce their "
 "termination.\n"
-msgstr ""
+msgstr "Es existieren angehaltene Prozesse. Ein zweiter Versuch zu beenden wird ihre "
+"Beendung erzwingen"
 
 #: reader.cpp:4069
 #, c-format
@@ -1543,7 +1560,7 @@ msgstr "Fehlerhafter Systemaufruf"
 
 #: signal.cpp:316
 msgid "Information request"
-msgstr ""
+msgstr "Informationsanforderung"
 
 #: signal.cpp:324
 msgid "Stack fault"
@@ -1569,15 +1586,15 @@ msgstr ""
 #: tokenizer.cpp:32
 #, fuzzy
 msgid "Unexpected end of string, quotes are not balanced"
-msgstr "Unerwartetes Zeichenende"
+msgstr "Unerwartetes Zeichenende. Zuwenige Anführungszeichen"
 
 #: tokenizer.cpp:37
 msgid "Unexpected end of string, parenthesis do not match"
-msgstr ""
+msgstr "Unerwartetes Zeichenende. Zuwenige Klammern"
 
 #: tokenizer.cpp:42
 msgid "Unexpected end of string, square brackets do not match"
-msgstr ""
+msgstr "Unerwartetes Zeichenende. Zuwenige eckige Klammern"
 
 #: tokenizer.cpp:48
 #, fuzzy
@@ -1803,7 +1820,7 @@ msgstr "%ls: '%ls' ist kein gültiger Variablenname\n"
 #: builtin.h:77
 #, c-format
 msgid "%ls: can only take 'if' and then another command as an argument\n"
-msgstr ""
+msgstr "%ls: Kann nur 'if' und einen anderen Befehl als Argument haben"
 
 #: builtin.h:78
 #, fuzzy, c-format
@@ -1813,7 +1830,7 @@ msgstr "%ls: Zweites Argument muss 'in' sein'\n"
 #: builtin.h:88
 #, c-format
 msgid "%ls: Block mismatch: '%ls' vs. '%ls'\n"
-msgstr ""
+msgstr "%ls: Blöcke stimmen nicht überein: '%ls' vs. '%ls'\n"
 
 #: builtin.h:93
 #, fuzzy, c-format
@@ -1831,7 +1848,7 @@ msgstr "Fehler beim Einrichten der Pipe aufgetreten"
 
 #: expand.h:132
 msgid "Array index out of bounds"
-msgstr ""
+msgstr "Arraygrenze überschritten"
 
 #: output.h:91
 #, c-format
@@ -1846,12 +1863,15 @@ msgid ""
 "The function '%ls' calls itself immediately, which would result in an "
 "infinite loop."
 msgstr ""
+"Die Funktion '%ls' ruft sich selbst sofort wieder auf, was in einer "
+"Endlosschleife resultieren würde"
 
 #: parse_constants.h:149
 msgid ""
 "The function call stack limit has been exceeded. Do you have an accidental "
 "infinite loop?"
-msgstr ""
+msgstr "Der Aufrufstapel wurde überschritten. Ist irgendwo eine Endlosschleife "
+"versteckt?"
 
 #: parse_constants.h:152
 #, fuzzy
@@ -1898,12 +1918,18 @@ msgid ""
 "variable names may not be zero characters long. To learn more about variable "
 "expansion in fish, type 'help expand-variable'."
 msgstr ""
+"Das Zeichen '$' leitet einen Variablennamen ein. Das Zeichen '%lc', das "
+"direkt auf das '$' folgte, ist nicht für Variablennamen erlaubt. Außerdem dürfen "
+"Variablennamen nicht leer sein. Um mehr über Variablen in Fish zu erfahren "
+"geben Sie 'help expand-variable' ein."
 
 #: parse_constants.h:189
 msgid ""
 "$? is not a valid variable in fish. If you want the exit status of the last "
 "command, try $status."
 msgstr ""
+"$? ist keine gültige Variable in Fish. Wenn sie den Status des letzten Befehls "
+"bekommen wollen versuchen Sie $status"
 
 #: parse_constants.h:194
 msgid ""
@@ -1911,6 +1937,9 @@ msgid ""
 "Variable names may not be zero characters long. To learn more about variable "
 "expansion in fish, type 'help expand-variable'."
 msgstr ""
+"Das Zeichen '$' leitet eine Variable ein. Es wurde am Ende des Arguments gegeben. "
+"Variablennamen dürfen außerdem nicht leer sein. Um mehr über Variablen in Fish zu erfahren "
+"geben Sie 'help expand-variable' ein."
 
 #: parse_constants.h:199
 #, c-format
@@ -1920,6 +1949,10 @@ msgid ""
 "variable name, and variable names may not be zero characters long. To learn "
 "more about variable expansion in fish, type 'help expand-variable'."
 msgstr ""
+"Meinten Sie %ls{$%ls}%ls? Das Zeichen '$' leitet eine Variable ein. Eine "
+"Klammer, die direkt von einem '$' gefolgt wird, ist nicht als Teil eines "
+"Variablennamens erlaubt. Außerdem dürfen Variablennamen nicht leer sein. Um mehr "
+"über Variablen in Fish zu erfahren geben Sie 'help expand-variable' ein."
 
 #: parse_constants.h:204
 msgid ""
@@ -1927,6 +1960,9 @@ msgid ""
 "accessing variables. To learn more about command substitution in fish, type "
 "'help expand-command-substitution'."
 msgstr ""
+"Meinten Sie (BEFEHL)? Das '$' Zeichen ist in Fish für den Zugriff "
+"auf Variablen reserviert. Um mehr darüber zu erfahren geben Sie "
+"'help expand-command-substitution' ein."
 
 #: share/completions/adb.fish:3
 #, fuzzy
@@ -1935,11 +1971,11 @@ msgstr "Test, ob an apt noch ein Unterbefehl gegeben werden muss"
 
 #: share/completions/adb.fish:12
 msgid "Run adb devices and parse output"
-msgstr ""
+msgstr "Führe adb Geräte aus und interpretiere Ausgabe"
 
 #: share/completions/adb.fish:24
 msgid "Runs adb with any -s parameters already given on the command line"
-msgstr ""
+msgstr "Führt adb mit dem -s Parameter, der in der Kommandozeile gegeben wurde, aus"
 
 #: share/completions/apm.fish:2 share/completions/apropos.fish:20
 #: share/completions/apt-build.fish:29 share/completions/apt-cache.fish:28
@@ -2887,19 +2923,19 @@ msgstr "Pakete, die nicht länger heruntergeladen werden, bereinigen"
 
 #: share/completions/aptitude.fish:25
 msgid "Remove all downloaded .deb files from the package cache directory"
-msgstr ""
+msgstr "Entferne alle heruntergeladenen .deb Dateien vom Packet Cache"
 
 #: share/completions/aptitude.fish:26
 msgid "Forget all internal information about what packages are \\new"
-msgstr ""
+msgstr "Lösche jegliche Information darüber, welche Packete \\neu sind."
 
 #: share/completions/aptitude.fish:27
 msgid "Cancel all scheduled actions on all packages"
-msgstr ""
+msgstr "Breche alle geplanten Aufgaben bei allen Packeten ab"
 
 #: share/completions/aptitude.fish:28
 msgid "Update the list of available packages from the apt sources"
-msgstr ""
+msgstr "Aktualisiere die Liste der verfügabren Packete anhand von apt"
 
 #: share/completions/aptitude.fish:29
 #, fuzzy
@@ -2923,7 +2959,7 @@ msgstr "Nie ins übergeordnete Verzeichnis wechseln"
 
 #: share/completions/aptitude.fish:33
 msgid "Forbid the upgrade to a particular version"
-msgstr ""
+msgstr "Upgrades zu einer bestimmten Version verhindern"
 
 #: share/completions/aptitude.fish:34
 msgid "Ignore the packages by future upgrade commands"
@@ -2946,7 +2982,7 @@ msgstr "Paket aktualisieren, wenn es bereits installiert ist"
 
 #: share/completions/aptitude.fish:38
 msgid "Remove and delete all associated configuration and data files"
-msgstr ""
+msgstr "Lösche alle Konfigurationsdateien"
 
 #: share/completions/aptitude.fish:39
 #, fuzzy
@@ -2979,7 +3015,7 @@ msgstr "Paket entsprechend Muster suchen"
 
 #: share/completions/aptitude.fish:45
 msgid "Display brief summary of the available commands and options"
-msgstr ""
+msgstr "Zeige Zusammenfassung der verfügbaren Befehle und Optionen"
 
 #: share/completions/arp.fish:4
 msgid "Class of hw type"
@@ -3082,7 +3118,7 @@ msgstr ""
 
 #: share/completions/bundle.fish:42
 msgid "A space-separated list of groups to skip installing."
-msgstr ""
+msgstr "Eine mit Leerzeichen getrennte Liste, die nicht installiert werden soll."
 
 #: share/completions/bundle.fish:43
 msgid "Use cached gems instead of connecting to rubygems.org."
@@ -3140,7 +3176,7 @@ msgstr ""
 
 #: share/completions/bundle.fish:64
 msgid "Describe available tasks or one specific task"
-msgstr ""
+msgstr "Beschreibe verfügbare Aufgaben oder einen bestimmte Aufgabe"
 
 #: share/completions/bundle.fish:67
 #, fuzzy
@@ -3228,7 +3264,7 @@ msgstr ""
 
 #: share/completions/bundle.fish:115
 msgid "The name to use for the generated file (see format option)"
-msgstr ""
+msgstr "Der Dateiname für die generierte Datei (Siehe format Option"
 
 #: share/completions/bundle.fish:116
 #, fuzzy
@@ -3237,11 +3273,11 @@ msgstr "Version des Quellenbaumes"
 
 #: share/completions/bundle.fish:117
 msgid "Show the version of each required dependency"
-msgstr ""
+msgstr "Zeige die Version jeder benötigten Abhängigkeit"
 
 #: share/completions/bundle.fish:118
 msgid "Output a specific format (png, jpg, svg, dot, ...)"
-msgstr ""
+msgstr "Ein bestimmtes Format ausgeben (png, jpg, svg, dot, ...)"
 
 #: share/completions/bundle.fish:121
 #, fuzzy
@@ -3262,7 +3298,7 @@ msgstr ""
 
 #: share/completions/bundle.fish:128
 msgid "Path to your editor"
-msgstr ""
+msgstr "Pfad zu ihrem Textbearbeitungsprogramm"
 
 #: share/completions/bundle.fish:132
 msgid "Only display Ruby directive information"
@@ -3336,7 +3372,7 @@ msgstr "Editor zum Editieren der Loginformation verwenden"
 #: share/completions/cvs.fish:28
 #, sh-format
 msgid "Overrides $CVSROOT as the root of the CVS tree."
-msgstr ""
+msgstr "Überschreibt den aktuellen Stamm des CVS-Baums mit $CVSROOT"
 
 #: share/completions/cvs.fish:30
 #, fuzzy
@@ -3437,7 +3473,7 @@ msgstr "Paket aus Datei lesen"
 
 #: share/completions/cvs.fish:151
 msgid "Log message."
-msgstr ""
+msgstr "Nachricht protokollieren"
 
 #: share/completions/cvs.fish:152
 msgid "Commit to this branch or trunk revision."
@@ -3541,7 +3577,7 @@ msgstr ""
 
 #: share/completions/cvs.fish:255
 msgid "Output for time zone <tz> (e.g. -z -0700)"
-msgstr ""
+msgstr "Format der Zeitzone (z.b. -z -0700)"
 
 #: share/completions/darcs.fish:19
 #, fuzzy
@@ -3564,7 +3600,7 @@ msgstr "Datei nicht erstellen"
 
 #: share/completions/darcs.fish:23
 msgid "Substitute one word for another"
-msgstr ""
+msgstr "Ersetzen..."
 
 #: share/completions/darcs.fish:24
 #, fuzzy
@@ -3633,7 +3669,7 @@ msgstr "Die aktuellste Version ohne Fehler suchen"
 
 #: share/completions/darcs.fish:38
 msgid "Show information which is stored by darcs"
-msgstr ""
+msgstr "Zeige Daten, die von darcs gespeichert wurden"
 
 #: share/completions/darcs.fish:39
 msgid "Copy and apply patches from another repository to this one"
@@ -3670,7 +3706,7 @@ msgstr ""
 #: share/completions/darcs.fish:1095 share/completions/darcs.fish:1122
 #: share/completions/darcs.fish:1155
 msgid "Specify command to run before this darcs command"
-msgstr ""
+msgstr "Bestimme Befehl, der vor diesem darcs Befehl ausgeführt wird"
 
 #: share/completions/darcs.fish:101 share/completions/darcs.fish:127
 #: share/completions/darcs.fish:156 share/completions/darcs.fish:186
@@ -3680,7 +3716,7 @@ msgstr ""
 #: share/completions/darcs.fish:840 share/completions/darcs.fish:1004
 #: share/completions/darcs.fish:1207
 msgid "Specify umask to use when writing"
-msgstr ""
+msgstr "Bestimme verwendete umask beim Schreiben"
 
 #: share/completions/darcs.fish:102 share/completions/darcs.fish:128
 #: share/completions/darcs.fish:157 share/completions/darcs.fish:187
@@ -3692,7 +3728,7 @@ msgstr ""
 #: share/completions/darcs.fish:1183 share/completions/darcs.fish:1208
 #: share/completions/darcs.fish:1239
 msgid "Specify command to run after this darcs command"
-msgstr ""
+msgstr "Bestimme Befehl, der nach diesem darcs Befehl ausgeführt wird"
 
 #: share/completions/darcs.fish:116 share/completions/darcs.fish:146
 #: share/completions/darcs.fish:203 share/completions/darcs.fish:234
@@ -3807,7 +3843,7 @@ msgstr "Schnittstelle auswählen"
 
 #: share/completions/darcs.fish:562
 msgid "Return only NUMBER results"
-msgstr ""
+msgstr "Nur ZAHL Ergebnisse liefern"
 
 #: share/completions/darcs.fish:713 share/completions/darcs.fish:980
 msgid "Use external tool to merge conflicts"
@@ -3816,7 +3852,7 @@ msgstr "Externes Programm zum Mischen der Konflikte nutzen"
 #: share/completions/darcs.fish:752 share/completions/darcs.fish:892
 #: share/completions/darcs.fish:1238
 msgid "Name of the darcs executable on the remote server"
-msgstr ""
+msgstr "darcs Programm auf dem entfernten Computer"
 
 #: share/completions/darcs.fish:864 share/completions/darcs.fish:923
 msgid "Sign the patch with a given keyid"
@@ -3879,11 +3915,11 @@ msgstr "Kontext im DATEINAMEN abgespeichert senden"
 
 #: share/completions/darcs.fish:1083
 msgid "Apply patch as another user using sudo"
-msgstr ""
+msgstr "Patch als anderen Benutzer mit sudo anwenden"
 
 #: share/completions/darcs.fish:1222
 msgid "--repodir=DIRECTORY"
-msgstr ""
+msgstr "--repodir=VERZEICHNIS"
 
 #: share/completions/dcop.fish:34
 #, fuzzy
@@ -3900,11 +3936,11 @@ msgstr ""
 
 #: share/completions/dcop.fish:37
 msgid "List all active KDE session for a user or all users"
-msgstr ""
+msgstr "Zeige alle aktiven KDE-Sitzungen für einen oder alle Benutzer"
 
 #: share/completions/dcop.fish:38
 msgid "Send to the given KDE session"
-msgstr ""
+msgstr "Sende an bestimmte KDE-Sitzung"
 
 #: share/completions/dcop.fish:39
 msgid "Don't update the user activity timestamp in the called application"
@@ -3949,7 +3985,7 @@ msgstr "Datei"
 
 #: share/completions/duply.fish:6
 msgid "Get usage help text"
-msgstr ""
+msgstr "Zeige Hilfe zur Verwendung an"
 
 #: share/completions/duply.fish:9
 #, fuzzy
@@ -3977,7 +4013,7 @@ msgstr "Keine post-Skripte ausführen"
 
 #: share/completions/duply.fish:14
 msgid "Force full backup"
-msgstr ""
+msgstr "Erzwinge vollständiges Backup"
 
 #: share/completions/duply.fish:15
 msgid "Force incremental backup"
@@ -3993,7 +4029,7 @@ msgstr ""
 
 #: share/completions/duply.fish:18
 msgid "List files changed since latest backup"
-msgstr ""
+msgstr "Zeige Dateien, die seit dem neuestem Backup geändert wurden"
 
 #: share/completions/duply.fish:19
 msgid "Shows outdated backup archives [--force, delete these files]"
@@ -4040,11 +4076,13 @@ msgstr "Ausführlichkeitswert auf 0 zurücksetzen"
 msgid ""
 "Prints completions for installed packages on the system from /var/db/pkg"
 msgstr ""
+"Gibt Vervollständigungen für installierte Packete unter /var/db/pkg aus"
 
 #: share/completions/emerge.fish:12 share/completions/equery.fish:12
 msgid ""
 "Prints completions for all available packages on the system from /usr/portage"
 msgstr ""
+"Gibt Vervollständigungen für alle verfügbaren Packete unter /usr/portage aus"
 
 #: share/completions/emerge.fish:19
 #, fuzzy
@@ -4120,7 +4158,8 @@ msgstr "Variable löschen"
 msgid ""
 "Prints completions for all available categories on the system from /usr/"
 "portage"
-msgstr ""
+msgstr "Gibt Vervollständigungen für alle verfügbaren Kategrien aus /usr/"
+"portage"
 
 #: share/completions/equery.fish:38
 #, fuzzy
@@ -4129,7 +4168,7 @@ msgstr "Pakete auflisten, die abhängen von "
 
 #: share/completions/equery.fish:39
 msgid "check MD5sums and timestamps of package"
-msgstr ""
+msgstr "überprüfe MD5-Summe und Zeitstempel eines Packets"
 
 #: share/completions/equery.fish:40
 #, fuzzy

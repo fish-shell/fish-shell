@@ -415,39 +415,6 @@ wcstring env_get_pwd_slash(void)
     return pwd;
 }
 
-/**
-   Set up default values for various variables if not defined.
- */
-static void env_set_defaults()
-{
-
-    if (env_get_string(L"USER").missing())
-    {
-        struct passwd *pw = getpwuid(getuid());
-        if (pw->pw_name != NULL)
-        {
-            const wcstring wide_name = str2wcstring(pw->pw_name);
-            env_set(L"USER", wide_name.c_str(), ENV_GLOBAL);
-        }
-    }
-
-    if (env_get_string(L"HOME").missing())
-    {
-        const env_var_t unam = env_get_string(L"USER");
-        char *unam_narrow = wcs2str(unam.c_str());
-        struct passwd *pw = getpwnam(unam_narrow);
-        if (pw->pw_dir != NULL)
-        {
-            const wcstring dir = str2wcstring(pw->pw_dir);
-            env_set(L"HOME", dir.c_str(), ENV_GLOBAL);
-        }
-        free(unam_narrow);
-    }
-
-    env_set_pwd();
-
-}
-
 // Some variables should not be arrays. This used to be handled by a startup script, but we'd like to get down to 0 forks for startup, so handle it here.
 static bool variable_can_be_array(const wcstring &key)
 {
@@ -546,11 +513,14 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     /*
       Set up the USER variable
     */
-    const struct passwd *pw = getpwuid(getuid());
-    if (pw && pw->pw_name)
+    if (env_get_string(L"USER").missing_or_empty())
     {
-        const wcstring uname = str2wcstring(pw->pw_name);
-        env_set(L"USER", uname.c_str(), ENV_GLOBAL | ENV_EXPORT);
+        const struct passwd *pw = getpwuid(getuid());
+        if (pw && pw->pw_name)
+        {
+            const wcstring uname = str2wcstring(pw->pw_name);
+            env_set(L"USER", uname.c_str(), ENV_GLOBAL | ENV_EXPORT);
+        }
     }
 
     /*
@@ -580,8 +550,22 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     }
     env_set(L"SHLVL", nshlvl_str.c_str(), ENV_GLOBAL | ENV_EXPORT);
 
-    /* Set correct defaults for e.g. USER and HOME variables */
-    env_set_defaults();
+    /* Set up the HOME variable */
+    if (env_get_string(L"HOME").missing_or_empty())
+    {
+        const env_var_t unam = env_get_string(L"USER");
+        char *unam_narrow = wcs2str(unam.c_str());
+        struct passwd *pw = getpwnam(unam_narrow);
+        if (pw->pw_dir != NULL)
+        {
+            const wcstring dir = str2wcstring(pw->pw_dir);
+            env_set(L"HOME", dir.c_str(), ENV_GLOBAL);
+        }
+        free(unam_narrow);
+    }
+
+    /* Set PWD */
+    env_set_pwd();
 
     /* Set g_log_forks */
     env_var_t log_forks = env_get_string(L"fish_log_forks");

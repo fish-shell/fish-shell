@@ -29,8 +29,6 @@ try:
 except ImportError:
     import simplejson as json
 
-from optparse import OptionParser
-
 FISH_BIN_PATH = False # will be set later
 def run_fish_cmd(text):
     from subprocess import PIPE
@@ -545,32 +543,19 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         bindings = []
         binding_parser = BindingParser()
 
-        parser = OptionParser()
-        parser.add_option("-k")
-        parser.add_option("-M")
-        parser.add_option("-m")
-
-        # Ignore any parsing errors
-        parser.error = lambda x: None
-
         for line in out.split('\n'):
-            comps = line.split(' ', 1)
+            comps = line.split(' ', 2)
 
-            if len(comps) < 2:
+            if len(comps) < 3:
                 continue
 
-            # parse arguments passed to bind command
-            bind_args_list = comps[1].split(' ', 6)
-            (options, args) = parser.parse_args(bind_args_list)
-
-            if options.k:
-                key_name= options.k
-                command = ' '.join(args)
+            if comps[1] == '-k':
+                key_name, command = comps[2].split(' ', 1)
                 binding_parser.set_buffer(key_name)
             else:
                 key_name = None
-                command = ' '.join(args[1:])
-                binding_parser.set_buffer(args[0])
+                command = comps[2]
+                binding_parser.set_buffer(comps[1])
 
             readable_binding = binding_parser.get_readable_binding()
             fish_binding = FishBinding(command, key_name, readable_binding)

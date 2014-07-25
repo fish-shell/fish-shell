@@ -3512,6 +3512,7 @@ static int builtin_history(parser_t &parser, wchar_t **argv)
     bool search_prefix = false;
     bool save_history = false;
     bool clear_history = false;
+    bool merge_history = false;
 
     static const struct woption long_options[] =
     {
@@ -3521,6 +3522,7 @@ static int builtin_history(parser_t &parser, wchar_t **argv)
         { L"contains", no_argument, 0, 'c' },
         { L"save", no_argument, 0, 'v' },
         { L"clear", no_argument, 0, 'l' },
+        { L"merge", no_argument, 0, 'm' },
         { L"help", no_argument, 0, 'h' },
         { 0, 0, 0, 0 }
     };
@@ -3555,6 +3557,9 @@ static int builtin_history(parser_t &parser, wchar_t **argv)
             case 'l':
                 clear_history = true;
                 break;
+            case 'm':
+                merge_history = true;
+                break;
             case 'h':
                 builtin_print_help(parser, argv[0], stdout_buffer);
                 return STATUS_BUILTIN_OK;
@@ -3582,6 +3587,11 @@ static int builtin_history(parser_t &parser, wchar_t **argv)
         stdout_buffer.append(full_history);
         stdout_buffer.push_back('\n');
         return STATUS_BUILTIN_OK;
+    }
+
+    if (merge_history)
+    {
+        history->incorporate_external_changes();
     }
 
     if (search_history)

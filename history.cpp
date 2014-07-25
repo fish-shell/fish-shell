@@ -536,7 +536,7 @@ history_t::history_t(const wcstring &pname) :
     mmap_start(NULL),
     mmap_length(0),
     mmap_file_id(kInvalidFileID),
-    birth_timestamp(time(NULL)),
+    boundary_timestamp(time(NULL)),
     countdown_to_vacuum(-1),
     loaded_old(false),
     chaos_mode(false)
@@ -606,10 +606,12 @@ void history_t::save_internal_unless_disabled()
 void history_t::add(const wcstring &str, history_identifier_t ident)
 {
     time_t when = time(NULL);
-    /* Big hack: do not allow timestamps equal to our birthdate. This is because we include items whose timestamps are equal to our birthdate when reading old history, so we can catch "just closed" items. But this means that we may interpret our own items, that we just wrote, as old items, if we wrote them in the same second as our birthdate.
+    /* Big hack: do not allow timestamps equal to our boundary date. This is because we include items whose timestamps are equal to our boundary when reading old history, so we can catch "just closed" items. But this means that we may interpret our own items, that we just wrote, as old items, if we wrote them in the same second as our birthdate.
     */
-    if (when == this->birth_timestamp)
+    if (when == this->boundary_timestamp)
+    {
         when++;
+    }
 
     this->add(history_item_t(str, when, ident));
 }
@@ -1008,7 +1010,7 @@ void history_t::populate_from_mmap(void)
     size_t cursor = 0;
     for (;;)
     {
-        size_t offset = offset_of_next_item(mmap_start, mmap_length, mmap_type, &cursor, birth_timestamp);
+        size_t offset = offset_of_next_item(mmap_start, mmap_length, mmap_type, &cursor, boundary_timestamp);
         // If we get back -1, we're done
         if (offset == (size_t)(-1))
             break;
@@ -1259,6 +1261,7 @@ static wcstring history_filename(const wcstring &name, const wcstring &suffix)
 
 void history_t::clear_file_state()
 {
+    ASSERT_IS_LOCKED(lock);
     /* Erase everything we know about our file */
     if (mmap_start != NULL && mmap_start != MAP_FAILED)
     {
@@ -1689,6 +1692,20 @@ void history_t::populate_from_bash(FILE *stream)
 
         if (line.empty())
             break;
+    }
+}
+
+void history_t::incorporate_external_changes()
+{
+    /* To incorporate new items, we simply update our timestamp to now, so that items from previous instances get added. We then clear the file state so that we remap the file. Note that this is somehwhat expensive because we will be going back over old items. An optimization would be to preserve old_item_offsets so that they don't have to be recomputed. (However, then items *deleted* in other instances would not show up here). */
+    time_t new_timestamp = time(NULL);
+    scoped_lock locker(lock);
+
+    /* If for some reason the clock went backwards, we don't want to start dropping items; therefore we only do work if time has progressed. This also makes multiple calls cheap. */
+    if (new_timestamp > this->boundary_timestamp)
+    {
+        this->boundary_timestamp = new_timestamp;
+        this->clear_file_state();
     }
 }
 

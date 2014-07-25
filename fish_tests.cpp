@@ -2688,7 +2688,8 @@ void history_tests_t::test_history_merge(void)
     const size_t count = 3;
     const wcstring name = L"merge_test";
     history_t *hists[count] = {new history_t(name), new history_t(name), new history_t(name)};
-    wcstring texts[count] = {L"History 1", L"History 2", L"History 3"};
+    const wcstring texts[count] = {L"History 1", L"History 2", L"History 3"};
+    const wcstring alt_texts[count] = {L"History Alt 1", L"History Alt 2", L"History Alt 3"};
 
     /* Make sure history is clear */
     for (size_t i=0; i < count; i++)
@@ -2729,6 +2730,32 @@ void history_tests_t::test_history_merge(void)
     {
         do_test(history_contains(everything, texts[i]));
     }
+
+    /* Tell all histories to merge. Now everybody should have everything. */
+    for (size_t i=0; i < count; i++)
+    {
+        hists[i]->incorporate_external_changes();
+    }
+    /* Add some more per-history items */
+    for (size_t i=0; i < count; i++)
+    {
+        hists[i]->add(alt_texts[i]);
+    }
+    /* Everybody should have old items, but only one history should have each new item */
+    for (size_t i = 0; i < count; i++)
+    {
+        for (size_t j=0; j < count; j++)
+        {
+            /* Old item */
+            do_test(history_contains(hists[i], texts[j]));
+
+            /* New item */
+            bool does_contain = history_contains(hists[i], alt_texts[j]);
+            bool should_contain = (i == j);
+            do_test(should_contain == does_contain);
+        }
+    }
+
 
     /* Clean up */
     for (size_t i=0; i < 3; i++)

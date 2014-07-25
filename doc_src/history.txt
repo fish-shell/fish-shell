@@ -2,7 +2,7 @@
 
 \subsection history-synopsis Synopsis
 <pre>
-history (--save | --clear)
+history (--save | --clear | --merge)
 history (--search | --delete ) (--prefix "prefix string" | --contains "search string")
 </pre>
 
@@ -16,6 +16,9 @@ The following options are available:
 saves the history file; this option is provided for internal use.
 - \c --clear clears the history file. A prompt is displayed before the history
 is erased.
+- \c --merge immediately incorporates history changes from other sessions. Ordinarily
+fish ignores history changes from sessions started after the current one. This command
+applies those changes immediately.
 - \c --search returns history items in keeping with the \c --prefix or
 \c --contains options.
 - \c --delete deletes history items.

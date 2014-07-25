@@ -447,7 +447,7 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
         {
             const wcstring condition_string = condition;
             parse_error_list_t errors;
-            if (parse_util_detect_errors(condition_string, &errors))
+            if (parse_util_detect_errors(condition_string, &errors, false /* do not accept incomplete */))
             {
                 append_format(stderr_buffer,
                               L"%ls: Condition '%ls' contained a syntax error",

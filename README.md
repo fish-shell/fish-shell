@@ -13,6 +13,8 @@ Detailed user documentation is available by running `help` within fish, and also
 
 ## Building
 
+### Build Dependencies
+
 fish is written in a sane subset of C++98, with a few components from C++TR1. It builds successfully with g++ 4.2 or later, and with clang. It also will build as C++11.
 
 fish can be built using autotools or Xcode. autoconf 2.60 or later is required.
@@ -21,7 +23,8 @@ fish depends on a curses implementation, such as ncurses. The headers and librar
 
 fish requires gettext for translation support.
 
-Building the documentation requires Doxygen 1.5 or newer.
+Building the documentation requires Doxygen 1.5 or newer and graphviz. On Mac, you can install
+these with `brew install doxygen graphviz`. Then `sudo make install`.
 
 ### Autotools Build
 

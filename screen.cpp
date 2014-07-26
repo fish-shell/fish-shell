@@ -252,6 +252,32 @@ size_t escape_code_length(const wchar_t *code)
             }
         }
     }
+    
+    if (! found)
+    {
+        /* iTerm2 escape codes: CSI followed by ], terminated by either BEL or  - see https://code.google.com/p/iterm2/wiki/ProprietaryEscapeCodes */
+        if (code[1] == ']')
+        {
+            /* A sequence of characters terminated by either 'ESC backslash' or BEL */
+            const wchar_t * const end1_sentinel = L"\x1b\\";
+            const wchar_t * const end2_sentinel = L"\a";
+            const wchar_t *end1 = wcsstr(&code[2], end1_sentinel);
+            const wchar_t *end2 = wcsstr(&code[2], end2_sentinel);
+            
+            // Use the non-null end, or if both are null, use the earlier end
+            const wchar_t *end = end1;
+            if (end == NULL || (end2 != NULL && end2 < end))
+            {
+                end = end2;
+            }
+            if (end != NULL)
+            {
+                assert(end > code);
+                resulting_length = (end - code);
+                found = true;
+            }
+        }
+    }
 
     if (! found)
     {

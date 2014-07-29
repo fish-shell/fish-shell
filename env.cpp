@@ -953,7 +953,7 @@ env_var_t env_get_string(const wcstring &key, env_mode_flags_t mode)
                 history = &history_t::history_with_name(L"fish");
             }
             if (history)
-                history->get_string_representation(result, ARRAY_SEP_STR);
+                history->get_string_representation(&result, ARRAY_SEP_STR);
             return result;
         }
         else if (key == L"COLUMNS")

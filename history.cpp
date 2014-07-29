@@ -215,10 +215,10 @@ static std::map<wcstring, history_t *> histories;
 static wcstring history_filename(const wcstring &name, const wcstring &suffix);
 
 /** Replaces newlines with a literal backslash followed by an n, and replaces backslashes with two backslashes. */
-static void escape_yaml(std::string &str);
+static void escape_yaml(std::string *str);
 
 /** Undoes escape_yaml */
-static void unescape_yaml(std::string &str);
+static void unescape_yaml(std::string *str);
 
 /* We can merge two items if they are the same command. We use the more recent timestamp, more recent identifier, and the longer list of required paths. */
 bool history_item_t::merge(const history_item_t &item)
@@ -271,7 +271,7 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
 static void append_yaml_to_buffer(const wcstring &wcmd, time_t timestamp, const path_list_t &required_paths, history_output_buffer_t *buffer)
 {
     std::string cmd = wcs2string(wcmd);
-    escape_yaml(cmd);
+    escape_yaml(&cmd);
     buffer->append("- cmd: ", cmd.c_str(), "\n");
 
     char timestamp_str[96];
@@ -285,7 +285,7 @@ static void append_yaml_to_buffer(const wcstring &wcmd, time_t timestamp, const 
         for (path_list_t::const_iterator iter = required_paths.begin(); iter != required_paths.end(); ++iter)
         {
             std::string path = wcs2string(*iter);
-            escape_yaml(path);
+            escape_yaml(&path);
             buffer->append("    - ", path.c_str(), "\n");
         }
     }
@@ -366,7 +366,7 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
     size_t result = (size_t)(-1);
     while (cursor < mmap_length)
     {
-        const char * const line_start = begin + cursor;
+        const char *line_start = begin + cursor;
 
         /* Advance the cursor to the next line */
         const char *newline = (const char *)memchr(line_start, '\n', mmap_length - cursor);
@@ -374,15 +374,14 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
             break;
 
         /* Advance the cursor past this line. +1 is for the newline */
-        size_t line_len = newline - line_start;
-        cursor += line_len + 1;
+        cursor = newline - begin + 1;
 
         /* Skip lines with a leading space, since these are in the interior of one of our items */
         if (line_start[0] == ' ')
             continue;
 
         /* Skip very short lines to make one of the checks below easier */
-        if (line_len < 3)
+        if (newline - line_start < 3)
             continue;
 
         /* Try to be a little YAML compatible. Skip lines with leading %, ---, or ... */
@@ -390,6 +389,23 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
                 ! memcmp(line_start, "---", 3) ||
                 ! memcmp(line_start, "...", 3))
             continue;
+        
+        
+        /* Hackish: fish 1.x rewriting a fish 2.0 history file can produce lines with lots of leading "- cmd: - cmd: - cmd:". Trim all but one leading "- cmd:". */
+        const char *double_cmd = "- cmd: - cmd: ";
+        const size_t double_cmd_len = strlen(double_cmd);
+        while (newline - line_start > double_cmd_len && ! memcmp(line_start, double_cmd, double_cmd_len))
+        {
+            /* Skip over just one of the - cmd. In the end there will be just one left. */
+            line_start += strlen("- cmd: ");
+        }
+        
+        /* Hackish: fish 1.x rewriting a fish 2.0 history file can produce commands like "when: 123456". Ignore those. */
+        const char *cmd_when = "- cmd:    when:";
+        const size_t cmd_when_len = strlen(cmd_when);
+        if (newline - line_start >= cmd_when_len && ! memcmp(line_start, cmd_when, cmd_when_len))
+            continue;
+        
 
         /* At this point, we know line_start is at the beginning of an item. But maybe we want to skip this item because of timestamps. A 0 cutoff means we don't care; if we do care, then try parsing out a timestamp. */
         if (cutoff_timestamp != 0)
@@ -400,14 +416,8 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
 
             /* Walk over lines that we think are interior. These lines are not null terminated, but are guaranteed to contain a newline. */
             bool has_timestamp = false;
-            time_t timestamp;
+            time_t timestamp = 0;
             const char *interior_line;
-
-            /*
-             * Ensure the loop is processed at least once. Otherwise,
-             * timestamp is unitialized.
-             */
-            bool processed_once = false;
 
             for (interior_line = next_line(line_start, end - line_start);
                     interior_line != NULL && ! has_timestamp;
@@ -423,11 +433,7 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
 
                 /* Try parsing a timestamp from this line. If we succeed, the loop will break. */
                 has_timestamp = parse_timestamp(interior_line, &timestamp);
-
-                processed_once = true;
             }
-
-            assert(processed_once);
 
             /* Skip this item if the timestamp is past our cutoff. */
             if (has_timestamp && timestamp > cutoff_timestamp)
@@ -661,7 +667,7 @@ void history_t::set_valid_file_paths(const wcstring_list_t &valid_file_paths, hi
     }
 }
 
-void history_t::get_string_representation(wcstring &result, const wcstring &separator)
+void history_t::get_string_representation(wcstring *result, const wcstring &separator)
 {
     scoped_lock locker(lock);
 
@@ -677,8 +683,8 @@ void history_t::get_string_representation(wcstring &result, const wcstring &sepa
             continue;
 
         if (! first)
-            result.append(separator);
-        result.append(iter->str());
+            result->append(separator);
+        result->append(iter->str());
         first = false;
     }
 
@@ -694,8 +700,8 @@ void history_t::get_string_representation(wcstring &result, const wcstring &sepa
             continue;
 
         if (! first)
-            result.append(separator);
-        result.append(item.str());
+            result->append(separator);
+        result->append(item.str());
         first = false;
     }
 }
@@ -763,18 +769,18 @@ static size_t trim_leading_spaces(std::string &str)
     return i;
 }
 
-static bool extract_prefix_and_unescape_yaml(std::string &key, std::string &value, const std::string &line)
+static bool extract_prefix_and_unescape_yaml(std::string *key, std::string *value, const std::string &line)
 {
     size_t where = line.find(":");
     if (where != std::string::npos)
     {
-        key.assign(line, 0, where);
+        key->assign(line, 0, where);
 
         // skip a space after the : if necessary
         size_t val_start = where + 1;
         if (val_start < line.size() && line.at(val_start) == ' ')
             val_start++;
-        value.assign(line, val_start, line.size() - val_start);
+        value->assign(line, val_start, line.size() - val_start);
 
         unescape_yaml(key);
         unescape_yaml(value);
@@ -791,13 +797,15 @@ history_item_t history_t::decode_item_fish_2_0(const char *base, size_t len)
 
     size_t indent = 0, cursor = 0;
     std::string key, value, line;
-
+    
     /* Read the "- cmd:" line */
     size_t advance = read_line(base, cursor, len, line);
     trim_leading_spaces(line);
-    if (! extract_prefix_and_unescape_yaml(key, value, line) || key != "- cmd")
+    if (! extract_prefix_and_unescape_yaml(&key, &value, line) || key != "- cmd")
+    {
         goto done;
-
+    }
+    
     cursor += advance;
     cmd = str2wcstring(value);
 
@@ -815,7 +823,7 @@ history_item_t history_t::decode_item_fish_2_0(const char *base, size_t len)
         if (this_indent == 0 || indent != this_indent)
             break;
 
-        if (! extract_prefix_and_unescape_yaml(key, value, line))
+        if (! extract_prefix_and_unescape_yaml(&key, &value, line))
             break;
 
         /* We are definitely going to consume this line */
@@ -845,7 +853,7 @@ history_item_t history_t::decode_item_fish_2_0(const char *base, size_t len)
 
                 /* Skip the leading dash-space and then store this path it */
                 line.erase(0, 2);
-                unescape_yaml(line);
+                unescape_yaml(&line);
                 paths.push_back(str2wcstring(line));
             }
         }
@@ -1190,31 +1198,31 @@ bool history_search_t::match_already_made(const wcstring &match) const
     return false;
 }
 
-static void replace_all(std::string &str, const char *needle, const char *replacement)
+static void replace_all(std::string *str, const char *needle, const char *replacement)
 {
     size_t needle_len = strlen(needle), replacement_len = strlen(replacement);
     size_t offset = 0;
-    while ((offset = str.find(needle, offset)) != std::string::npos)
+    while ((offset = str->find(needle, offset)) != std::string::npos)
     {
-        str.replace(offset, needle_len, replacement);
+        str->replace(offset, needle_len, replacement);
         offset += replacement_len;
     }
 }
 
-static void escape_yaml(std::string &str)
+static void escape_yaml(std::string *str)
 {
     replace_all(str, "\\", "\\\\"); //replace one backslash with two
     replace_all(str, "\n", "\\n"); //replace newline with backslash + literal n
 }
 
 /* This function is called frequently, so it ought to be fast. */
-static void unescape_yaml(std::string &str)
+static void unescape_yaml(std::string *str)
 {
-    size_t cursor = 0, size = str.size();
+    size_t cursor = 0, size = str->size();
     while (cursor < size)
     {
         // Operate on a const version of str, to avoid needless COWs that at() does.
-        const std::string &const_str = str;
+        const std::string &const_str = *str;
 
         // Look for a backslash
         size_t backslash = const_str.find('\\', cursor);
@@ -1230,13 +1238,13 @@ static void unescape_yaml(std::string &str)
             if (escaped_char == '\\')
             {
                 // Two backslashes in a row. Delete the second one.
-                str.erase(backslash + 1, 1);
+                str->erase(backslash + 1, 1);
                 size--;
             }
             else if (escaped_char == 'n')
             {
                 // Backslash + n. Replace with a newline.
-                str.replace(backslash, 2, "\n");
+                str->replace(backslash, 2, "\n");
                 size--;
             }
             // The character at index backslash has now been made whole; start at the next character

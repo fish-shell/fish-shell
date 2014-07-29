@@ -237,7 +237,7 @@ public:
     void incorporate_external_changes();
 
     /* Gets all the history into a string with ARRAY_SEP_STR. This is intended for the $history environment variable. This may be long! */
-    void get_string_representation(wcstring &str, const wcstring &separator);
+    void get_string_representation(wcstring *result, const wcstring &separator);
 
     /** Sets the valid file paths for the history item with the given identifier */
     void set_valid_file_paths(const wcstring_list_t &valid_file_paths, history_identifier_t ident);

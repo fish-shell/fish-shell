@@ -2827,7 +2827,7 @@ static bool history_equals(history_t &hist, const wchar_t * const *strings)
 void history_tests_t::test_history_formats(void)
 {
     const wchar_t *name;
-
+    
     // Test inferring and reading legacy and bash history formats
     name = L"history_sample_fish_1_x";
     say(L"Testing %ls", name);
@@ -2919,6 +2919,33 @@ void history_tests_t::test_history_formats(void)
         }
         test_history.clear();
         fclose(f);
+    }
+    
+    name = L"history_sample_corrupt1";
+    say(L"Testing %ls", name);
+    if (! install_sample_history(name))
+    {
+        err(L"Couldn't open file tests/%ls", name);
+    }
+    else
+    {
+        /* We simply invoke get_string_representation. If we don't die, the test is a success. */
+        history_t &test_history = history_t::history_with_name(name);
+        const wchar_t *expected[] =
+        {
+            L"no_newline_at_end_of_file",
+            
+            L"corrupt_prefix",
+            
+            L"this_command_is_ok",
+            
+            NULL
+        };
+        if (! history_equals(test_history, expected))
+        {
+            err(L"test_history_formats failed for %ls\n", name);
+        }
+        test_history.clear();
     }
 }
 

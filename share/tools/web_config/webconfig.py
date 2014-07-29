@@ -2,6 +2,7 @@
 
 # Whether we're Python 2
 import sys
+import multiprocessing.pool
 import os
 import operator
 IS_PY2 = sys.version_info[0] == 2
@@ -604,22 +605,27 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         out, err = run_fish_cmd(cmd)
         return len(err) == 0
 
-    def do_get_prompt(self, command_to_run, prompt_function_text):
+    def do_get_prompt(self, command_to_run, prompt_function_text, extras_dict):
         # Return the prompt output by the given command
         prompt_demo_ansi, err = run_fish_cmd(command_to_run)
         prompt_demo_html = ansi_to_html(prompt_demo_ansi)
         prompt_demo_font_size = self.font_size_for_ansi_prompt(prompt_demo_ansi)
-        return {'function': prompt_function_text, 'demo': prompt_demo_html, 'font_size': prompt_demo_font_size }
+        result = {'function': prompt_function_text, 'demo': prompt_demo_html, 'font_size': prompt_demo_font_size }
+        if extras_dict:
+            result.update(extras_dict)
+        return result
 
     def do_get_current_prompt(self):
         # Return the current prompt
         prompt_func, err = run_fish_cmd('functions fish_prompt')
-        return self.do_get_prompt('cd "' + initial_wd + '" ; fish_prompt', prompt_func.strip())
+        result = self.do_get_prompt('builtin cd "' + initial_wd + '" ; fish_prompt', prompt_func.strip(), {'name': 'Current'})
+        return result
 
-    def do_get_sample_prompt(self, text):
+    def do_get_sample_prompt(self, text, extras_dict):
         # Return the prompt you get from the given text
+        # extras_dict is a dictionary whose values get merged in
         cmd = text + "\n cd \"" + initial_wd + "\" \n fish_prompt\n"
-        return self.do_get_prompt(cmd, text.strip())
+        return self.do_get_prompt(cmd, text.strip(), extras_dict)
 
     def parse_one_sample_prompt_hash(self, line, result_dict):
         # Allow us to skip whitespace, etc.
@@ -637,38 +643,41 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return line.startswith('#')
 
 
-    def read_one_sample_prompt(self, fd):
-        # Read one sample prompt from fd
-        function_lines = []
-        result = {}
-        parsing_hashes = True
-        for line in fd:
-            # Parse hashes until parse_one_sample_prompt_hash return False
-            if parsing_hashes:
-                parsing_hashes = self.parse_one_sample_prompt_hash(line, result)
-            # Maybe not we're not parsing hashes, or maybe we already were not
-            if not parsing_hashes:
-                function_lines.append(line)
-        func = ''.join(function_lines).strip()
-        result.update(self.do_get_sample_prompt(func))
-        return result
+    def read_one_sample_prompt(self, path):
+        try:
+            with open(path) as fd:
+                extras_dict = {}
+                # Read one sample prompt from fd
+                function_lines = []
+                parsing_hashes = True
+                for line in fd:
+                    # Parse hashes until parse_one_sample_prompt_hash return False
+                    if parsing_hashes:
+                        parsing_hashes = self.parse_one_sample_prompt_hash(line, extras_dict)
+                    # Maybe not we're not parsing hashes, or maybe we already were not
+                    if not parsing_hashes:
+                        function_lines.append(line)
+                func = ''.join(function_lines).strip()
+                result = self.do_get_sample_prompt(func, extras_dict)
+                return result
+        except IOError:
+            # Ignore unreadable files, etc.
+            return None
 
     def do_get_sample_prompts_list(self):
-        result = []
-        # Start with the "Current" meta-sample
-        result.append({'name': 'Current'})
-        result[0].update(self.do_get_current_prompt())
+        pool = multiprocessing.pool.ThreadPool(processes=8)
+
+        # Kick off the "Current" meta-sample
+        current_metasample_async = pool.apply_async(self.do_get_current_prompt)
 
         # Read all of the prompts in sample_prompts
         paths = glob.iglob('sample_prompts/*.fish')
-        for path in paths:
-            try:
-                fd = open(path)
-                result.append(self.read_one_sample_prompt(fd))
-                fd.close()
-            except IOError:
-                # Ignore unreadable files, etc
-                pass
+        sample_results = pool.map(self.read_one_sample_prompt, paths, 1)
+
+        # Finish up
+        result = []
+        result.append(current_metasample_async.get())
+        result.extend([r for r in sample_results if r])
         return result
 
     def font_size_for_ansi_prompt(self, prompt_demo_ansi):
@@ -698,8 +707,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             output = self.do_get_history()
             # end = time.time()
             # print "History: ", end - start
-        elif p == '/current_prompt/':
-            output = self.do_get_current_prompt()
         elif p == '/sample_prompts/':
             output = self.do_get_sample_prompts_list()
         elif re.match(r"/color/(\w+)/", p):
@@ -754,9 +761,6 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         elif p == '/get_function/':
             what = postvars.get('what')
             output = [self.do_get_function(what[0])]
-        elif p == '/get_sample_prompt/':
-            what = postvars.get('what')
-            output = [self.do_get_sample_prompt(what[0])]
         elif p == '/delete_history_item/':
             what = postvars.get('what')
             if self.do_delete_history_item(what[0]):

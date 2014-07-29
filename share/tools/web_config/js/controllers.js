@@ -120,6 +120,8 @@ controllers.controller("colorsController", function($scope, $http) {
 
 controllers.controller("promptController", function($scope, $http) {
     $scope.selectedPrompt = null;
+    $scope.showSaveButton = true;
+    $scope.savePromptButtonTitle = "Set Prompt";
 
     $scope.fetchSamplePrompts= function() {
         $http.get("/sample_prompts/").success(function(data, status, headers, config) {
@@ -131,8 +133,10 @@ controllers.controller("promptController", function($scope, $http) {
             }
         })};
 
-    $scope.selectPrompt = function(promptt) {
-        $scope.selectedPrompt= promptt;
+    $scope.selectPrompt = function(prompt) {
+        $scope.selectedPrompt= prompt;
+        
+        $scope.savePromptButtonTitle = "Set Prompt";
     }
 
     $scope.setNewPrompt = function(selectedPrompt) {
@@ -143,9 +147,18 @@ controllers.controller("promptController", function($scope, $http) {
             $scope.samplePrompts[0].function = selectedPrompt.function;
             $scope.samplePrompts[0].font_size = selectedPrompt.font_size;
             $scope.selectedPrompt = $scope.samplePrompts[0];
+
+            // Note that we set it
+            $scope.savePromptButtonTitle = "Prompt Set!";
         })};
 
     $scope.fetchSamplePrompts();
+
+    $scope.setPrompt = function() {
+        if ($scope.selectedPrompt) {
+            $scope.setNewPrompt($scope.selectedPrompt);
+        }
+    }
 });
 
 controllers.controller("functionsController", function($scope, $http) {

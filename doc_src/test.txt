@@ -73,10 +73,12 @@ if test -d /tmp
 end
 </pre>
 
-If the variable \c MANPATH is defined and not empty, print the contents:
+If the variable \c MANPATH is defined and not empty, print the contents.
+(If \c MANPATH is not defined, then it will expand to zero arguments, unless
+quoted.)
 
 <pre>
-if test -n $MANPATH
+if test -n "$MANPATH"
     echo $MANPATH
 end
 </pre>

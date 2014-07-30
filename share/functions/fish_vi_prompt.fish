@@ -27,7 +27,7 @@ function fish_vi_prompt --description "Simple vi prompt"
 
 	switch $USER
 
-		case root
+		case root toor
 
 		if not set -q __fish_prompt_cwd
 			if set -q fish_color_cwd_root

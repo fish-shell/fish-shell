@@ -13,7 +13,7 @@ function fish_prompt
     end
     set_color -o green
     echo -n [
-    if [ $USER = root ]
+    if test $USER = root -o $USER = toor
         set_color -o red
     else
         set_color -o yellow

@@ -1211,12 +1211,10 @@ static void test_escape_sequences(void)
     if (escape_code_length(L"\x1b@") != 2) err(L"test_escape_sequences failed on line %d\n", __LINE__);
     
     // iTerm2 escape sequences
-    if (escape_code_length(L"\x1b]50;CurrentDir=/tmp/foo\x07NOT_PART_OF_SEQUENCE") != 24) err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (escape_code_length(L"\x1b]50;SetMark\x07NOT_PART_OF_SEQUENCE") != 12) err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (escape_code_length(L"\x1b" L"]6;1;bg;red;brightness;255\x07NOT_PART_OF_SEQUENCE") != 27) err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    if (escape_code_length(L"\x1b]Pg4040ff\x1b\\NOT_PART_OF_SEQUENCE") != 10) err(L"test_escape_sequences failed on line %d\n", __LINE__);
-
-    // OSC codes
+    if (escape_code_length(L"\x1b]50;CurrentDir=/tmp/foo\x07NOT_PART_OF_SEQUENCE") != 25) err(L"test_escape_sequences failed on line %d\n", __LINE__);
+    if (escape_code_length(L"\x1b]50;SetMark\x07NOT_PART_OF_SEQUENCE") != 13) err(L"test_escape_sequences failed on line %d\n", __LINE__);
+    if (escape_code_length(L"\x1b" L"]6;1;bg;red;brightness;255\x07NOT_PART_OF_SEQUENCE") != 28) err(L"test_escape_sequences failed on line %d\n", __LINE__);
+    if (escape_code_length(L"\x1b]Pg4040ff\x1b\\NOT_PART_OF_SEQUENCE") != 12) err(L"test_escape_sequences failed on line %d\n", __LINE__);
     if (escape_code_length(L"\x1b]blahblahblah\x1b\\") != 16) err(L"test_escape_sequences failed on line %d\n", __LINE__);
     if (escape_code_length(L"\x1b]blahblahblah\x07") != 15) err(L"test_escape_sequences failed on line %d\n", __LINE__);
 }

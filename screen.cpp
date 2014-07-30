@@ -255,26 +255,23 @@ size_t escape_code_length(const wchar_t *code)
     
     if (! found)
     {
-        /* iTerm2 escape codes: CSI followed by ], terminated by either BEL or  - see https://code.google.com/p/iterm2/wiki/ProprietaryEscapeCodes */
+        /* iTerm2 escape codes: CSI followed by ], terminated by either BEL or escape + backslash. See https://code.google.com/p/iterm2/wiki/ProprietaryEscapeCodes */
         if (code[1] == ']')
         {
-            /* A sequence of characters terminated by either 'ESC backslash' or BEL */
-            const wchar_t * const end1_sentinel = L"\x1b\\";
-            const wchar_t * const end2_sentinel = L"\a";
-            const wchar_t *end1 = wcsstr(&code[2], end1_sentinel);
-            const wchar_t *end2 = wcsstr(&code[2], end2_sentinel);
-            
-            // Use the non-null end, or if both are null, use the earlier end
-            const wchar_t *end = end1;
-            if (end == NULL || (end2 != NULL && end2 < end))
+            // Start at 2 to skip over <esc>]
+            size_t cursor = 2;
+            for (; code[cursor] != L'\0'; cursor++)
             {
-                end = end2;
+                /* Consume a sequence of characters up to <esc>\ or <bel> */
+                if (code[cursor] == '\x07' || (code[cursor] == '\\' && code[cursor - 1] == '\x1b'))
+                {
+                    found = true;
+                    break;
+                }
             }
-            if (end != NULL)
+            if (found)
             {
-                assert(end > code);
-                resulting_length = (end - code);
-                found = true;
+                resulting_length = cursor + 1;
             }
         }
     }
@@ -315,42 +312,6 @@ size_t escape_code_length(const wchar_t *code)
             /* curs now indexes just beyond the end of the sequence (or at the terminating zero) */
             found = true;
             resulting_length = cursor;
-        }
-    }
-    if (! found)
-    {
-        /* OSC code, terminated by <esc>\ or <bel> */
-        if (code[1] == L']')
-        {
-            // Start at 2 to skip over <esc>]
-            size_t cursor = 2;
-            bool backslash_ends = false;
-            for (; code[cursor] != L'\0'; cursor++)
-            {
-                /* Consume a sequence of characters up to <esc>\ or <bel> */
-                wchar_t c = code[cursor];
-                if (c == L'\x1b') {
-                    backslash_ends = true;
-                }
-                else if (c == L'\\' && backslash_ends)
-                {
-                    found = true;
-                    break;
-                }
-                else
-                {
-                    backslash_ends = false;
-                }
-
-                if (c == L'\x07') {
-                    found = true;
-                    break;
-                }
-            }
-            if (found)
-            {
-                resulting_length = cursor + 1;
-            }
         }
     }
     if (! found)

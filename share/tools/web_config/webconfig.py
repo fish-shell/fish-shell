@@ -14,10 +14,12 @@ if IS_PY2:
         from urllib.parse import parse_qs
     except ImportError:
         from cgi import parse_qs
+    import Cookie
 else:
     import http.server as SimpleHTTPServer
     import socketserver as SocketServer
     from urllib.parse import parse_qs
+    import http.cookies as Cookie
 
 # Disable CLI web browsers
 term = os.environ.pop('TERM', None)
@@ -26,7 +28,7 @@ if term:
     os.environ['TERM'] = term
 
 import subprocess
-import re, socket, cgi, select, time, glob
+import re, socket, cgi, select, time, glob, random, string
 try:
     import json
 except ImportError:
@@ -693,9 +695,26 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         else: font_size = '18pt'
         return font_size
 
-
     def do_GET(self):
         p = self.path
+
+        if p.startswith('/start/' + authkey):
+            initial_tab = p.split('/')[3]
+            cookies = Cookie.SimpleCookie()
+            cookies['com.fishshell.auth'] = authkey
+            cookies['com.fishshell.auth']['path'] = '/'
+            self.send_response(302)
+            self.send_header('Set-Cookie', cookies.output(header=''))
+            self.send_header('Location', '/#' + initial_tab)
+            self.end_headers()
+            return
+        else:
+            if 'cookie' not in self.headers:
+                return self.send_error(403)
+            cookies = Cookie.SimpleCookie(self.headers['cookie'])
+            if 'com.fishshell.auth' not in cookies.keys() or cookies['com.fishshell.auth'].value != authkey:
+                return self.send_error(403)
+
         if p == '/colors/':
             output = self.do_get_colors()
         elif p == '/functions/':
@@ -726,6 +745,12 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.write_to_wfile(json.dumps(output))
 
     def do_POST(self):
+        if 'cookie' not in self.headers:
+            return self.send_error(403)
+        cookies = Cookie.SimpleCookie(self.headers['cookie'])
+        if 'com.fishshell.auth' not in cookies.keys() or cookies['com.fishshell.auth'].value != authkey:
+            return self.send_error(403)
+
         p = self.path
         if IS_PY2:
             ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
@@ -788,6 +813,18 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         """ Disable request logging """
         pass
 
+redirect_template_html = """
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta http-equiv="refresh" content="0;URL='%s'" />
+ </head>
+ <body>
+  <p><a href="%s">Start the Fish Web config</a></p>
+ </body>
+</html>
+"""
+
 # find fish
 fish_bin_dir = os.environ.get('__fish_bin_dir')
 fish_bin_path = None
@@ -823,6 +860,9 @@ initial_wd = os.getcwd()
 where = os.path.dirname(sys.argv[0])
 os.chdir(where)
 
+# Generate a 16-byte random key as a hexadecimal string
+authkey = hex(random.getrandbits(16*4))[2:]
+
 # Try to find a suitable port
 PORT = 8000
 while PORT <= 9000:
@@ -849,12 +889,39 @@ initial_tab = ''
 if len(sys.argv) > 1:
     for tab in ['functions', 'prompt', 'colors', 'variables', 'history', 'bindings']:
         if tab.startswith(sys.argv[1]):
-            initial_tab = '#' + tab
+            initial_tab = tab
             break
 
-url = 'http://localhost:%d/%s' % (PORT, initial_tab)
-print("Web config started at '%s'. Hit enter to stop." % url)
-webbrowser.open(url)
+url = 'http://localhost:%d/start/%s/%s' % (PORT, authkey, initial_tab)
+
+# Create temporary file to hold redirect to real server
+# This prevents exposing the URL containing the authentication key on the command line
+# (see CVE-2014-2914 or https://github.com/fish-shell/fish-shell/issues/1438)
+if 'XDG_CACHE_HOME' in os.environ:
+    dirname = os.path.expanduser(os.path.expandvars('$XDG_CACHE_HOME/fish/'))
+else:
+    dirname = os.path.expanduser('~/.cache/fish/')
+
+os.umask(0o0077)
+try:
+    os.makedirs(dirname, 0o0700)
+except OSError as e:
+    if e.errno == 17:
+       pass
+    else:
+       raise e
+
+randtoken = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+filename = dirname + 'web_config-%s.html' % randtoken
+
+f = open(filename, 'w')
+f.write(redirect_template_html % (url, url))
+f.close()
+
+# Open temporary file as URL
+fileurl = 'file://' + filename
+print("Web config started at '%s'. Hit enter to stop." % fileurl)
+webbrowser.open(fileurl)
 
 # Select on stdin and httpd
 stdin_no = sys.stdin.fileno()
@@ -870,4 +937,10 @@ try:
             httpd.handle_request()
 except KeyboardInterrupt:
     print("\nShutting down.")
+
+# Clean up, doesn't matter if this fails
+try:
+    os.remove(filename)
+except:
+    pass
 

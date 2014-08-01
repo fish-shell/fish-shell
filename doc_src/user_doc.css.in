@@ -1,0 +1,261 @@
+* {
+    margin: 0;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+html { font-size: 62.5%; }
+html, body {
+    min-height: 100%;
+    background: #fff;
+    color: #111;
+}
+body {
+    text-rendering: optimizeLegibility;
+    overflow: hidden;
+}
+.logo {
+    position: absolute;
+    width: 200px;
+    height: 135px;
+    background-image: url(ascii_fish.png);
+}
+/*Top site index*/
+.qindex {
+    font: 500 1.4rem/3.6rem "DejaVuSansCondensed", Roboto, Verdana, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    border: none;
+    color: white;
+    background-color: #1f2d53;
+    text-align: center;
+    position: relative;
+    width: 100%;
+    height: 3.6rem;
+    overflow: hidden;
+}
+/* Don't show the header */
+.header { display: none; }
+/*Substructure*/
+.contents {
+    margin: 0;
+    min-width: 570px;
+}
+.fish_left_bar, .fish_right_bar, .fish_only_bar {
+    position: absolute;
+    top: 3.6rem;
+    bottom: 0;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch; /* necessary for momentum scrolling */
+    font: 400 1.4rem/2.3rem "DejaVuSans", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+.fish_left_bar {
+    width: 250px;
+    color: white;
+    font-family: "DejaVuSansCondensed", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background-color: #1f2d53;
+}
+.fish_left_little { width: 200px; }
+.fish_left_big { width: 380px; }
+.fish_right_bar {
+    margin-left: 250px;
+    margin-right: 0;
+    padding: 0 3rem;
+    -moz-box-shadow: -6px 0 6px 4px black;
+    -webkit-box-shadow: -6px 0 6px 4px black;
+    box-shadow: -0.6rem 0 0.6rem 0.4rem rgba(0,0,0,0.4);
+}
+.fish_right_little { margin-left: 380px; }
+.fish_right_big { margin-left: 200px; }
+.fish_only_bar {
+    width: 100%;
+}
+hr {
+    height: 0;
+    border: none;
+    border-top: 1px solid #AAA;
+}
+/*Ineraction*/
+a { color: #3d5cb3; }
+.qindex a {
+    color: white;
+    text-decoration: none;
+}
+.qindex a:hover { text-decoration: underline; }
+.fish_left_bar a {
+    color: white;
+    text-decoration: none;
+}
+.fish_left_bar a:visited { color: inherit; }
+.fish_left_bar a:hover { color: #88aaff; }
+.fish_right_bar a { text-decoration: none; }
+.fish_right_bar a:hover { text-decoration: underline; }
+/* Adjust lists */
+.fish_left_bar ul {
+    padding-left: 2rem;
+    padding-right: 1rem;
+}
+.fish_right_bar ul {
+    list-style-type: circle;
+    padding-left: 2.4rem;
+    margin: 1.4rem 0;
+}
+.fish_right_bar ul li {
+    margin-bottom: 0.6rem;
+}
+.fish_right_bar p > code {
+    display: inline-block;
+}
+/* Typography */
+p { margin: 1rem 0; }
+h1, h2, h3, h4, h5, h6 {
+    color: #1f2d53;
+    font-family: Roboto, "DejaVuSansCondensed-Bold", "DejaVuSans-Bold", Verdana, sans-serif;
+}
+h1 {
+    margin: 2rem 0 1.4rem 0;
+    font-weight: 700;
+    font-size: 2rem;
+}
+h2 {
+    margin: 1.6rem 0 1rem 0;
+    font-weight: 600;
+    font-size: 1.7rem;
+}
+h3 {
+    margin: 1rem 0 0.4rem 0;
+    font-weight: 500;
+    font-size: 1.6rem;
+}
+.interior_title {
+    font-size: 2rem;
+    color: #414141;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #AAA;
+}
+/*Special Formmating for Code and keys*/
+.key span {
+    display:none;
+}
+.key em {
+    margin-right: 2px;
+    font-style: normal;
+}
+.key em, .key b {
+    padding: 0 4px;
+    background-color: #fafafa;
+    border: 1px solid #aaa;
+    border-radius: 3px;
+    font-weight: normal;
+    white-space: nowrap;
+}
+tt, code, pre, .fish {
+    font-family: "DejaVu Sans Mono", Menlo, Monaco, "Source Code Pro", "Ubuntu Mono", "Consolas", "Lucida Console", monospace, fixed;
+    font-weight: 500;
+    text-shadow: 0 0 0 rgba(0,0,0,1); /* Stronger anti-aliasing */
+}
+tt {
+    color: red; /*REMOVE THIS*/
+}
+code, pre, .line {
+    white-space: -moz-pre-wrap;
+    white-space: -pre-wrap;
+    white-space: -o-pre-wrap;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+h1 > code, h2 > code, h3 > code {
+    font-family: "DejaVu Sans Mono", Menlo, "Source Code Pro", "Consolas", "Lucida Console", Roboto, Verdana, sans-serif;
+    font-weight: 700;
+}
+.fish {
+    margin: 1rem;
+    padding: 0.4rem 1rem;
+    line-height: 1.9rem;
+    background-color: #fafafa;
+    border: 1px solid #f0f0f0;
+    border-radius: 0.4rem;
+}
+
+.comment { color: #777; }
+.command { color: #0A0; }
+.function { color: #0A0; }
+.binary { color: #060; }
+.argument { color: #906; }
+.variable { color: #339; }
+.redirect { color: #F00; }
+.operator { color: #990; }
+.file { color: #c97922; }
+.path { color: #c97922; }
+.string { color: #770; }
+.prompt { color: #03C; }
+.suggest { color: cyan ; }
+.error { color: red; font-weight: bold; }
+.cursor { border-bottom: 2px solid green; }
+
+
+/*.keyword, .keywordflow { color: #050; }*/
+/*.stringliteral, .charliteral { color: #226; }*/
+/*.preprocessor, .comment { color: #555; text-shadow: none; }*/
+
+.cli-dark {
+    background-color: #111;
+    color: #ddd;
+    padding: 0.4rem 2rem;
+    border-radius: 0.4rem;
+}
+/*
+.cli .command {
+    color: #0E0;
+    font-weight: bold;
+}
+.cli .function {
+    color: #0C0;
+}*/
+/*Menus*/
+.menu { margin: 1.4rem 0; line-height: 2.2rem; }
+.menu ul { list-style-type: none; }
+.menu > ul li { position: relative; }
+.menu > ul li:before {
+    content: "›";
+    color: #88aaff;
+    font-size: 1.6rem;
+    position: absolute;
+    left: -1rem;
+    top: -1px;
+}
+/*Page overrides*/
+/*Documentation*/
+.docs_menu { line-height: 2rem }
+.docs_menu > ul > li { position: static; }
+.docs_menu > ul ul { margin: 0.6rem 0; }
+.docs_menu > ul ul > li { margin-bottom: 0.2rem; }
+/*Tutorial*/
+
+/*Design*/
+.design {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 0 4rem;
+}
+/*Commands*/
+.commands_menu { line-height: 2rem }
+/*FAQ*/
+.faq_menu { line-height: 2rem }
+.faq_menu > ul li { margin-bottom: 0.6rem; }
+/*Licenses*/
+.license {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 0 4rem;
+}
+.license li { margin: 1rem 0; }
+.license ul li:first-child {
+    list-style-type: none;
+    position: relative;
+}
+.license ul li:first-child:before {
+    content: "0.";
+    position: absolute;
+    left: -2rem;
+}
+
+

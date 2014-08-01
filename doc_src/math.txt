@@ -2,11 +2,13 @@
 \section math math - Perform mathematics calculations
 
 \subsection math-synopsis Synopsis
- <tt>math EXPRESSION</tt>
+\fish{syn}
+math EXPRESSION
+\endfish
 
 \subsection math-description Description
 
-\c math is used to perform mathematical calculations. It is a very
+`math` is used to perform mathematical calculations. It is a very
 thin wrapper for the bc program, which makes it possible to specify an
 expression from the command line without using non-standard extensions
 or a pipeline.
@@ -20,7 +22,7 @@ have to be escaped.
 
 \subsection math-example Examples
 
-<code>math 1+1</code> outputs 2.
+`math 1+1` outputs 2.
 
-<code>math $status-128</code> outputs the numerical exit status of the
+`math $status-128` outputs the numerical exit status of the
 last command minus 128.

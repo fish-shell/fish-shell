@@ -1,20 +1,23 @@
 \section emit emit - Emit a generic event
 
-\subsection block-synopsis Synopsis
- <tt>emit EVENT_NAME [ARGUMENTS...]</tt>
+\subsection emit-synopsis Synopsis
+\fish{syn}
+emit EVENT_NAME [ARGUMENTS...]
+\endfish
 
 \subsection emit-description Description
 
-\c emit emits, or fires, an event. Events are delivered to, or caught by, special functions called event handlers. The arguments are passed to the event handlers as function arguments.
+`emit` emits, or fires, an event. Events are delivered to, or caught by, special functions called event handlers. The arguments are passed to the event handlers as function arguments.
 
 \subsection emit-example Example
 
 The following code first defines an event handler for the generic
 event named 'test_event', and then emits an event of that type.
 
-<pre>function event_test --on-event test_event
+\fish
+function event_test --on-event test_event
     echo event test: $argv
 end
 
 emit test_event something
-</pre>
+\endfish

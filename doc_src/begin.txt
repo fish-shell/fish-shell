@@ -1,22 +1,23 @@
 \section begin begin - start a new block of code
 
 \subsection begin-synopsis Synopsis
- <tt>begin; [COMMANDS...;] end</tt>
+\fish{syn}
+begin; [COMMANDS...;] end
+\endfish
 
 \subsection begin-description Description
 
-\c begin is used to create a new block of code.
+`begin` is used to create a new block of code.
 
-The block
-is unconditionally executed. <code>begin; ...; end</tt> is equivalent
-to <tt>if true; ...; end</tt>.
+The block is unconditionally executed. `begin; ...; end` is equivalent
+to `if true; ...; end`.
 
-\c begin is used to group a number of commands into a block.
+`begin` is used to group a number of commands into a block.
 This allows the introduction of a new variable scope, redirection of the input or
 output of a set of commands as a group, or to specify precedence when
-using the conditional commands like \c and.
+using the conditional commands like `and`.
 
-\c begin does not change the current exit status.
+`begin` does not change the current exit status.
 
 \subsection begin-example Example
 
@@ -24,26 +25,26 @@ The following code sets a number of variables inside of a block
 scope. Since the variables are set inside the block and have local
 scope, they will be automatically deleted when the block ends.
 
-<pre>
+\fish
 begin
-	set -l PIRATE Yarrr
-	...
+    set -l PIRATE Yarrr
+    ...
 end
+
+echo $PIRATE
 # This will not output anything, since the PIRATE variable went out
 # of scope at the end of the block
-echo $PIRATE
-</pre>
+\endfish
 
 In the following code, all output is redirected to the file out.html.
 
-<pre>
+\fish
 begin
-	echo $xml_header
-	echo $html_header
-	if test -e $file
-		...
-	end
-	...
-
-end &gt; out.html
-</pre>
+    echo $xml_header
+    echo $html_header
+    if test -e $file
+        ...
+    end
+    ...
+end > out.html
+\endfish

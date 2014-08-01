@@ -1,19 +1,21 @@
 \section jobs jobs - print currently running jobs
 
 \subsection jobs-synopsis Synopsis
-<code>jobs [OPTIONS] [PID]</code>
+\fish{syn}
+jobs [OPTIONS] [PID]
+\endfish
 
 \subsection jobs-description Description
-<code>jobs</code> prints a list of the currently
+`jobs` prints a list of the currently
 running <a href="index.html#syntax-job-control">jobs</a> and their status.
 
 jobs accepts the following switches:
 
-- <code>-c</code> or <code>--command</code> prints the command name for each process in jobs.
-- <code>-g</code> or <code>--group</code> only prints the group ID of each job.
-- <code>-h</code> or <code>--help</code> displays a help message and exits.
-- <code>-l</code> or <code>--last</code> prints only the last job to be started.
-- <code>-p</code> or <code>--pid</code> prints the process ID for each process in all jobs.
+- `-c` or `--command` prints the command name for each process in jobs.
+- `-g` or `--group` only prints the group ID of each job.
+- `-h` or `--help` displays a help message and exits.
+- `-l` or `--last` prints only the last job to be started.
+- `-p` or `--pid` prints the process ID for each process in all jobs.
 
 On systems that supports this feature, jobs will print the CPU usage
 of each job since the last command was executed. The CPU usage is
@@ -22,4 +24,4 @@ multiprocessor systems, the total activity may be more than 100\%.
 
 \subsection jobs-example Example
 
-<code>jobs</code> outputs a summary of the current jobs.
+`jobs` outputs a summary of the current jobs.

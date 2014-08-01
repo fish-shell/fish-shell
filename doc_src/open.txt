@@ -1,12 +1,14 @@
 \section open open - open file in its default application
 
 \subsection open-synopsis Synopsis
- <tt>open FILES...</tt>
+\fish{syn}
+open FILES...
+\endfish
 
 \subsection open-description Description
 
-\c open opens a file in its default application, using the \c xdg-open command if it exists, or else the <a href="commands.html#mimedb">mimedb</a> command.
+`open` opens a file in its default application, using the `xdg-open` command if it exists, or else the <a href="commands.html#mimedb">mimedb</a> command.
 
 \subsection open-example Example
 
-<tt>open *.txt</tt> opens all the text files in the current directory using your system's default text editor.
+`open *.txt` opens all the text files in the current directory using your system's default text editor.

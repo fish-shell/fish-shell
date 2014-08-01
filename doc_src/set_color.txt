@@ -1,44 +1,48 @@
 \section set_color set_color - set the terminal color
 
 \subsection set_color-synopsis Synopsis
- <tt>set_color [-h --help] [-b --background COLOR] [COLOR]</tt>
+\fish{syn}
+set_color [-h|--help] [-b|--background COLOR] [COLOR]
+\endfish
 
 \subsection set_color-description Description
 
-\c set_color changes the foreground and/or background color of the terminal.
-\c COLOR is one of black, red, green, brown, yellow, blue, magenta,
+`set_color` changes the foreground and/or background color of the terminal.
+`COLOR` is one of black, red, green, brown, yellow, blue, magenta,
 purple, cyan, white and normal.
 
 If your terminal supports term256 (modern xterms and OS X Lion),
 you can specify an RGB value with three or six hex digits, such
-as A0FF33 or f2f. \c fish will choose the closest supported color.
+as A0FF33 or f2f. `fish` will choose the closest supported color.
 
 The following options are available:
 
-- \c -b, \c --background \c COLOR sets the background color.
-- \c -c, \c --print-colors prints a list of all valid color names.
-- \c -h, \c --help displays a help message and exit.
-- \c -o, \c --bold sets bold or extra bright mode.
-- \c -u, \c --underline sets underlined mode.
+- `-b`, `--background` `COLOR` sets the background color.
+- `-c`, `--print-colors` prints a list of all valid color names.
+- `-h`, `--help` displays a help message and exit.
+- `-o`, `--bold` sets bold or extra bright mode.
+- `-u`, `--underline` sets underlined mode.
 
-Calling <tt>set_color normal</tt> will set the terminal color to
+Calling `set_color normal` will set the terminal color to
 the default color of the terminal.
 
-Some terminals use the --bold escape sequence to switch to a brighter
-color set. On such terminals, <code>set_color white</code> will result
-in a grey font color, while <code>set_color --bold white</code> will
+Some terminals use the `--bold` escape sequence to switch to a brighter
+color set. On such terminals, `set_color white` will result
+in a grey font color, while `set_color --bold white` will
 result in a white font color.
 
 Not all terminal emulators support all these features.
 
-\c set_color uses the terminfo database to look up how to change terminal
+`set_color` uses the terminfo database to look up how to change terminal
 colors on whatever terminal is in use. Some systems have old and
 incomplete terminfo databases, and may lack color information for
 terminals that support it.
 
 \subsection set_color-example Examples
-<pre>set_color red; echo "Roses are red"
+
+\fish
+set_color red; echo "Roses are red"
 set_color blue; echo "Violets are blue"
 set_color 62A ; echo "Eggplants are dark purple"
 set_color normal; echo "Normal is nice too"
-</pre>
+\endfish

@@ -1,13 +1,15 @@
 \section random random - generate random number
 
 \subsection random-synopsis Synopsis
- <tt>random [SEED]</tt>
+\fish{syn}
+random [SEED]
+\endfish
 
 \subsection random-description Description
 
-\c random outputs a random number from 0 to 32766, inclusive.
+`random` outputs a random number from 0 to 32766, inclusive.
 
-If a \c SEED value is provided, it is used to seed the random number
+If a `SEED` value is provided, it is used to seed the random number
 generator, and no output will be produced. This can be useful for debugging
 purposes, where it can be desirable to get the same random number sequence
 multiple times. If the random number generator is called without first
@@ -17,9 +19,9 @@ seeding it, the current time will be used as the seed.
 
 The following code will count down from a random number to 1:
 
-<pre>
+\fish
 for i in (seq (random) -1 1)
-	echo $i
-	sleep
+    echo $i
+    sleep
 end
-</pre>
+\endfish

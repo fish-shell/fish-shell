@@ -1,25 +1,23 @@
 \section for for - perform a set of commands multiple times.
 
 \subsection for-synopsis Synopsis
-<tt>for VARNAME in [VALUES...]; COMMANDS...; end</tt>
+\fish{syn}
+for VARNAME in [VALUES...]; COMMANDS...; end
+\endfish
 
 \subsection for-description Description
-<tt>for</tt> is a loop construct. It will perform the commands specified by
-\c COMMANDS multiple times. On each iteration, the environment variable specified by
-\c VARNAME is assigned a new value from \c VALUES. If \c VALUES is empty, \c COMMANDS will
+`for` is a loop construct. It will perform the commands specified by
+`COMMANDS` multiple times. On each iteration, the environment variable specified by
+`VARNAME` is assigned a new value from `VALUES`. If `VALUES` is empty, `COMMANDS` will
 not be executed at all.
 
 \subsection for-example Example
+\fish
+for i in foo bar baz; echo $i; end
 
-The command
-
-<tt>for i in foo bar baz; echo $i; end</tt>
-
-would output:
-
-<pre>
+# would output:
 foo
 bar
 baz
-</pre>
+\endfish
 

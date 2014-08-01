@@ -1,29 +1,33 @@
 \section isatty isatty - test if a file or file descriptor is a tty.
 
 \subsection isatty-synopsis Synopsis
-<tt>isatty [FILE | DEVICE | FILE DESCRIPTOR NUMBER]</tt>
+\fish{syn}
+isatty [FILE | DEVICE | FILE DESCRIPTOR NUMBER]
+\endfish
 
 \subsection isatty-description Description
-<tt>isatty</tt> tests if a file or file descriptor is a tty.
+`isatty` tests if a file or file descriptor is a tty.
 The argument may be in the form of a file path, device, or file descriptor
-number. Without an argument, <tt>standard input</tt> is implied.
+number. Without an argument, `standard input` is implied.
 
 If the resolved file descriptor is a tty, the command returns zero. Otherwise, the command exits one. No messages are printed to standard error.
 
 \subsection isatty-examples Examples
 
 From an interactive shell, the commands below exit with a return value of zero:
-<pre>
+
+\fish
 isatty
 isatty stdout
 isatty 2
 echo | isatty /dev/fd/1
-</pre>
+\endfish
 
 And these will exit non-zero:
-<pre>
+
+\fish
 echo | isatty
 isatty /dev/fd/9
 isatty stdout > file
 isatty 2 2> file
-</pre>
+\endfish

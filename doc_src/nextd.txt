@@ -1,24 +1,29 @@
 \section nextd nextd - move forward through directory history
 
 \subsection nextd-synopsis Synopsis
-<tt>nextd [-l | --list] [POS]</tt>
+\fish{syn}
+nextd [ -l | --list ] [POS]
+\endfish
 
 \subsection nextd-description Description
-<tt>nextd</tt> moves forwards <tt>POS</tt> positions in the history of visited
+`nextd` moves forwards `POS` positions in the history of visited
 directories; if the end of the history has been hit, a warning is printed.
 
-If the <code>-l></code> or <code>--list</code> flag is specified, the current
+If the `-l` or `--list` flag is specified, the current
 directory history is also displayed.
 
 \subsection nextd-example Example
 
-\code
+\fish
 cd /usr/src
 # Working directory is now /usr/src
+
 cd /usr/src/fish-shell
 # Working directory is now /usr/src/fish-shell
+
 prevd
 # Working directory is now /usr/src
+
 nextd
-# Working directory is now /usr/src/fish-shell</pre>
-\endcode
+# Working directory is now /usr/src/fish-shell
+\endfish

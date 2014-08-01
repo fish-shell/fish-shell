@@ -1,26 +1,29 @@
 \section contains contains - test if a word is present in a list
 
 \subsection contains-synopsis Synopsis
-<code>contains [OPTIONS] KEY [VALUES...]</code>
+\fish{syn}
+contains [OPTIONS] KEY [VALUES...]
+\endfish
 
 \subsection contains-description Description
 
-\c contains tests whether the set \c VALUES contains the string
-<code>KEY</code>. If so, \c contains exits with status 0; if not, it exits
+`contains` tests whether the set `VALUES` contains the string
+`KEY`. If so, `contains` exits with status 0; if not, it exits
 with status 1.
 
 The following options are available:
 
-- \c -i or \c --index print the word index
-- \c -h or \c --help display this message
+- `-i` or `--index` print the word index
+- `-h` or `--help` display this message
 
 \subsection contains-example Example
-<pre>
-for i in ~/bin /usr/local/bin
-	if not contains \$i \$PATH
-		set PATH \$PATH \$i
-	end
-end
-</pre>
 
-The above code tests if \c ~/bin and \c /usr/local/bin are in the path and adds them if not.
+\fish
+for i in ~/bin /usr/local/bin
+    if not contains $i $PATH
+        set PATH $PATH $i
+    end
+end
+\endfish
+
+The above code tests if `~/bin` and `/usr/local/bin` are in the path and adds them if not.

@@ -1,21 +1,23 @@
 \section funced funced - edit a function interactively
 
 \subsection funced-synopsis Synopsis
- <code>funced [OPTIONS] NAME</code>
+\fish{syn}
+funced [OPTIONS] NAME
+\endfish
 
 \subsection funced-description Description
 
-\c funced provides an interface to edit the definition of the function
-<code>NAME</code>.
+`funced` provides an interface to edit the definition of the function
+`NAME`.
 
-If the \c $EDITOR environment variable is set, it will be used as the program
+If the `$EDITOR` environment variable is set, it will be used as the program
 to edit the function. Otherwise, a built-in editor will be used.
 
-If there is no function called \c NAME a new function will be created with
+If there is no function called `NAME` a new function will be created with
 the specified name
 
-- <code>-e command</code> or <code>--editor command</code> Open the function
+- `-e command` or `--editor command` Open the function
   body inside the text editor given by the command (for example, "vi"). The
   command 'fish' will use the built-in editor.
-- <code>-i</code> or <code>--interactive</code> Open function body in the
+- `-i` or `--interactive` Open function body in the
   built-in editor.

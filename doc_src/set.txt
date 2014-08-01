@@ -1,18 +1,18 @@
 \section set set - display and change shell variables.
 
 \subsection set-synopsis Synopsis
-<pre>
+\fish{syn}
 set [SCOPE_OPTIONS]
 set [OPTIONS] VARIABLE_NAME VALUES...
 set [OPTIONS] VARIABLE_NAME[INDICES]... VALUES...
-set (-q | --query) [SCOPE_OPTIONS] VARIABLE_NAMES...
-set (-e | --erase) [SCOPE_OPTIONS] VARIABLE_NAME
-set (-e | --erase) [SCOPE_OPTIONS] VARIABLE_NAME[INDICES]...
-</pre>
+set (-q | \--query) [SCOPE_OPTIONS] VARIABLE_NAMES...
+set (-e | \--erase) [SCOPE_OPTIONS] VARIABLE_NAME
+set (-e | \--erase) [SCOPE_OPTIONS] VARIABLE_NAME[INDICES]...
+\endfish
 
 \subsection set-description Description
 
-<code>set</code> manipulates <a href="index.html#variables">shell
+`set` manipulates <a href="index.html#variables">shell
 variables</a>.
 
 If set is called with no arguments, the names and values of all
@@ -20,31 +20,31 @@ shell variables are printed. If some of the scope or export
 flags have been given, only the variables matching the specified scope
 are printed.
 
-With both variable names and values provided, \c set assigns the variable
-<code>VARIABLE_NAME</code> the values <code>VALUES...</code>.
+With both variable names and values provided, `set` assigns the variable
+`VARIABLE_NAME` the values `VALUES...`.
 
 The following options control variable scope:
-- <code>-l</code> or <code>--local</code> forces the specified shell variable to be given a scope that is local to the current block, even if a variable with the given name exists and is non-local
-- <code>-g</code> or <code>--global</code> causes the specified shell variable to be given a global scope. Non-global variables disappear when the block they belong to ends
-- <code>-U</code> or <code>--universal</code> causes the specified shell variable to be given a universal scope. If this option is supplied, the variable will be shared between all the current users fish instances on the current computer, and will be preserved across restarts of the shell.
-- <code>-x</code> or <code>--export</code> causes the specified shell variable to be exported to child processes (making it an "environment variable")
-- <code>-u</code> or <code>--unexport</code> causes the specified shell variable to NOT be exported to child processes
+- `-l` or `--local` forces the specified shell variable to be given a scope that is local to the current block, even if a variable with the given name exists and is non-local
+- `-g` or `--global` causes the specified shell variable to be given a global scope. Non-global variables disappear when the block they belong to ends
+- `-U` or `--universal` causes the specified shell variable to be given a universal scope. If this option is supplied, the variable will be shared between all the current users fish instances on the current computer, and will be preserved across restarts of the shell.
+- `-x` or `--export` causes the specified shell variable to be exported to child processes (making it an "environment variable")
+- `-u` or `--unexport` causes the specified shell variable to NOT be exported to child processes
 
 The following options are available:
-- <code>-e</code> or <code>--erase</code> causes the specified shell variable to be erased
-- <code>-q</code> or <code>--query</code> test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that were not defined.
-- <code>-n</code> or <code>--names</code> List only the names of all defined variables, not their value
-- <code>-L</code> or <code>--long</code> do not abbreviate long values when printing set variables
+- `-e` or `--erase` causes the specified shell variable to be erased
+- `-q` or `--query` test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that were not defined.
+- `-n` or `--names` List only the names of all defined variables, not their value
+- `-L` or `--long` do not abbreviate long values when printing set variables
 
 If a variable is set to more than one value, the variable will be an
 array with the specified elements. If a variable is set to zero
 elements, it will become an array with zero elements.
 
 If the variable name is one or more array elements, such as
-<code>PATH[1 3 7]</code>, only those array elements specified will be
-changed. When array indices are specified to \c set, multiple arguments
-may be used to specify additional indexes, e.g. <code>set PATH[1]
-PATH[4] /bin /sbin</code>. If you specify a negative index when
+`PATH[1 3 7]`, only those array elements specified will be
+changed. When array indices are specified to `set`, multiple arguments
+may be used to specify additional indexes, e.g. `set PATH[1]
+PATH[4] /bin /sbin`. If you specify a negative index when
 expanding or assigning to an array variable, the index will be
 calculated from the end of the array. For example, the index -1 means
 the last index of an array.
@@ -53,7 +53,7 @@ The scoping rules when creating or updating a variable are:
 
 -# If a variable is explicitly set to either universal, global or local, that setting will be honored. If a variable of the same name exists in a different scope, that variable will not be changed.
 -# If a variable is not explicitly set to be either universal, global or local, but has been previously defined, the previous variable scope is used.
--# If a variable is not explicitly set to be either universal, global or local and has never before been defined, the variable will be local to the currently executing function. Note that this is different from using the \c -l or \c --local flag. If one of those flags is used, the variable will be local to the most inner currently executing block, while without these the variable will be local to the function. If no function is executing, the variable will be global.
+-# If a variable is not explicitly set to be either universal, global or local and has never before been defined, the variable will be local to the currently executing function. Note that this is different from using the `-l` or `--local` flag. If one of those flags is used, the variable will be local to the most inner currently executing block, while without these the variable will be local to the function. If no function is executing, the variable will be global.
 
 The exporting rules when creating or updating a variable are identical
 to the scoping rules for variables:
@@ -67,32 +67,34 @@ In query mode, the scope to be examined can be specified.
 In erase mode, if variable indices are specified, only the specified
 slices of the array variable will be erased.
 
-\c set requires all options to come before any
-other arguments. For example, <code>set flags -l</code> will have
-the effect of setting the value of the variable <code>flags</code> to
+`set` requires all options to come before any
+other arguments. For example, `set flags -l` will have
+the effect of setting the value of the variable `flags` to
 '-l', not making the variable local.
 
-In assignment mode, \c set exits with a non-zero exit status if variable
+In assignment mode, `set` exits with a non-zero exit status if variable
 assignments could not be successfully performed. If the variable assignments
 were performed, the exit status is unchanged. This allows simultaneous capture
-of the output and exit status of a subcommand, e.g. <code>if set output
-(command)</code>. In query mode, the exit status is the number of variables that
-were not found. In erase mode, \c set exits with a zero exit status in case of
+of the output and exit status of a subcommand, e.g. `if set output
+(command)`. In query mode, the exit status is the number of variables that
+were not found. In erase mode, `set` exits with a zero exit status in case of
 success, with a non-zero exit status if the commandline was invalid, if the
 variable was write-protected or if the variable did not exist.
 
 \subsection set-example Example
 
-<code>set -xg</code> will print all global, exported variables.
+`set -xg` will print all global, exported variables.
 
-<code>set foo hi</code> sets the value of the variable foo to be hi.
+`set foo hi` sets the value of the variable foo to be hi.
 
-<code>set -e smurf</code> removes the variable \c smurf.
+`set -e smurf` removes the variable `smurf`.
 
-<code>set PATH[4] ~/bin</code> changes the fourth element of the \c PATH array to \c ~/bin
+`set PATH[4] ~/bin` changes the fourth element of the `PATH` array to `~/bin`
 
-<pre>if set python_path (which python)
+\fish
+if set python_path (which python)
     echo "Python is at $python_path"
-end</pre>
+end
+\endfish
 
-The above outputs the path to Python if \c which returns true.
+The above outputs the path to Python if `which` returns true.

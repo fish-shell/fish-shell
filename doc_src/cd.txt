@@ -1,25 +1,27 @@
 \section cd cd - change directory
 
 \subsection cd-synopsis Synopsis
-<tt>cd [DIRECTORY]</tt>
+\fish{syn}
+cd [DIRECTORY]
+\endfish
 
 \subsection cd-description Description
-\c cd changes the current working directory.
+`cd` changes the current working directory.
 
-If \c DIRECTORY is supplied, it will become the new directory. If no parameter
-is given, the contents of the \c HOME environment variable will be used.
+If `DIRECTORY` is supplied, it will become the new directory. If no parameter
+is given, the contents of the `HOME` environment variable will be used.
 
-If \c DIRECTORY is a relative path, the paths found in the
-\c CDPATH environment variable array will be tried as prefixes for the specified
+If `DIRECTORY` is a relative path, the paths found in the
+`CDPATH` environment variable array will be tried as prefixes for the specified
 path.
 
-Note that the shell will attempt to change directory without requiring \c cd
-if the name of a directory is provided (starting with '.', '/' or '~', or ending
-with '/').
+Note that the shell will attempt to change directory without requiring `cd`
+if the name of a directory is provided (starting with '`.`', '`/`' or `~`', or ending
+with '`/`').
 
 \subsection cd-example Examples
 
-\c cd changes the working directory to your home directory.
+`cd` changes the working directory to your home directory.
 
-<code>cd /usr/src/fish-shell</code> changes the working directory to
-<code>/usr/src/fish-shell</code>.
+`cd /usr/src/fish-shell` changes the working directory to
+`/usr/src/fish-shell`.

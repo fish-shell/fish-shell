@@ -1,17 +1,19 @@
 \section fish_indent fish_indent - indenter and prettifier
 
 \subsection fish_indent-synopsis Synopsis
- <tt>fish_indent [options]</tt>
+\fish{syn}
+fish_indent [options]
+\endfish
 
 \subsection fish_indent-description Description
 
-\c fish_indent is used to indent a piece of fish
-code. \c fish_indent reads commands from standard input and outputs
+`fish_indent` is used to indent a piece of fish
+code. `fish_indent` reads commands from standard input and outputs
 them to standard output.
 
 The following options are available:
 
-- <tt>-h</tt> or <tt>--help</tt> displays this help message and then exits
-- <tt>-i</tt> or <tt>--no-indent</tt> do not indent commands
-- <tt>-v</tt> or <tt>--version</tt> displays the current fish version and then exits
+- `-h` or `--help` displays this help message and then exits
+- `-i` or `--no-indent` do not indent commands
+- `-v` or `--version` displays the current fish version and then exits
 

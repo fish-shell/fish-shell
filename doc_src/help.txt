@@ -1,20 +1,22 @@
 \section help help - display fish documentation
 
 \subsection help-synopsis Synopsis
- <tt>help [SECTION]</tt>
+\fish{syn}
+help [SECTION]
+\endfish
 
 \subsection help-description Description
 
-\c help displays the fish help documentation.
+`help` displays the fish help documentation.
 
-If a \c SECTION is specified, the help for that command is shown.
+If a `SECTION` is specified, the help for that command is shown.
 
 If the BROWSER environment variable is set, it will be used to display the
 documentation. Otherwise, fish will search for a suitable browser.
 
 Note that most builtin commands display their help in the terminal when
-given the <tt>--help</tt> option.
+given the `--help` option.
 
 \subsection help-example Example
 
-<tt>help fg</tt> shows the documentation for the \c fg builtin.
+`help fg` shows the documentation for the `fg` builtin.

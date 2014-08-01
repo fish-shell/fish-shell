@@ -1,6 +1,10 @@
 /** \page design Design document
 
-\htmlonly <div class="fish_only_bar"> \endhtmlonly
+\htmlonly[block]
+<div class="fish_only_bar">
+<div class="design">
+<h1 class="interior_title">Design documentation</h1>
+\endhtmlonly
 
 \section design-overview Overview
 
@@ -35,8 +39,8 @@ program harder to maintain and update.
 Examples:
 
 - Here documents are too similar to using echo inside of a pipeline.
-- Subshells, command substitution and process substitution are strongly related. \c fish only supports command substitution, the others can be achieved either using a block or the psub shellscript function.
-- Having both aliases and functions is confusing, especially since both of them have limitations and problems. \c fish functions have none of the drawbacks of either syntax.
+- Subshells, command substitution and process substitution are strongly related. `fish` only supports command substitution, the others can be achieved either using a block or the psub shellscript function.
+- Having both aliases and functions is confusing, especially since both of them have limitations and problems. `fish` functions have none of the drawbacks of either syntax.
 - The many Posix quoting styles are silly, especially \$''.
 
 \section sep The law of responsiveness
@@ -104,7 +108,7 @@ Examples:
 - There should only be one type of input to the shell, lists of commands. Loops, conditionals and variable assignments are all performed through regular commands.
 - The differences between builtin commands and shellscript functions should be made as small as possible. Builtins and shellscript functions should have exactly the same types of argument expansion as other commands, should be possible to use in any position in a pipeline, and should support any io redirection.
 - Instead of forking when performing command substitution to provide a fake variable scope, all fish commands are performed from the same process, and fish instead supports true scoping.
-- All blocks end with the \c end builtin.
+- All blocks end with the `end` builtin.
 
 \section disc The law of discoverability
 
@@ -133,6 +137,9 @@ Examples:
 - The help manual should be easy to read, easily available from the shell, complete and contain many examples
 - The language should be uniform, so that once the user understands the command/argument syntax, he will know the whole language, and be able to use tab-completion to discover new featues.
 
-*/
+\htmlonly[block]
+</div>
+</div>
+\endhtmlonly
 
-\htmlonly </div> \endhtmlonly
+*/

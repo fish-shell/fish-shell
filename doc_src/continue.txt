@@ -1,19 +1,21 @@
 \section continue continue - skip the remainder of the current iteration of the current inner loop
 
 \subsection continue-synopsis Synopsis
-<tt>LOOP_CONSTRUCT; [COMMANDS...;] continue; [COMMANDS...;] end</tt>
+\fish{syn}
+LOOP_CONSTRUCT; [COMMANDS...;] continue; [COMMANDS...;] end
+\endfish
 
 \subsection continue-description Description
-\c continue skips the remainder of the current iteration of the current inner loop, such as a <a href="#for">for</a> loop or a <a href="#while">while</a> loop. It is usually added inside of a conditional block such as an <a href="#if">if</a> statement or a <a href="#switch">switch</a> statement.
+`continue` skips the remainder of the current iteration of the current inner loop, such as a <a href="#for">for</a> loop or a <a href="#while">while</a> loop. It is usually added inside of a conditional block such as an <a href="#if">if</a> statement or a <a href="#switch">switch</a> statement.
 
 \subsection continue-example Example
 The following code removes all tmp files that do not contain the word smurf.
 
-<pre>
+\fish
 for i in *.tmp
     if grep smurf $i
         continue
     end
     rm $i
 end
-</pre>
+\endfish

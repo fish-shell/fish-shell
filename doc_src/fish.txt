@@ -1,24 +1,26 @@
 \section fish fish - the friendly interactive shell
 
 \subsection fish-synopsis Synopsis
+\fish{syn}
 fish [-h] [-v] [-c command] [FILE [ARGUMENTS...]]
+\endfish
 
 \subsection fish-description Description
 
-\c fish is a command-line shell written mainly with interactive use in mind. The
+`fish` is a command-line shell written mainly with interactive use in mind. The
 full manual is available <a href='index.html'>in HTML</a> by using the
 <a href='#help'>help</a> command from inside fish.
 
 The following options are available:
 
-- <code>-c</code> or <code>--command=COMMANDS</code> evaluate the specified commands instead of reading from the commandline
-- <code>-d</code> or <code>--debug-level=DEBUG_LEVEL</code> specify the verbosity level of fish. A higher number means higher verbosity. The default level is 1.
-- <code>-h</code> or <code>--help</code> display help and exit
-- <code>-i</code> or <code>--interactive</code> specify that fish is to run in interactive mode
-- <code>-l</code> or <code>--login</code> specify that fish is to run as a login shell
-- <code>-n</code> or <code>--no-execute</code> do not execute any commands, only perform syntax checking
-- <code>-p</code> or <code>--profile=PROFILE_FILE</code> when fish exits, output timing information on all executed commands to the specified file
-- <code>-v</code> or <code>--version</code> display version and exit
+- `-c` or `--command=COMMANDS` evaluate the specified commands instead of reading from the commandline
+- `-d` or `--debug-level=DEBUG_LEVEL` specify the verbosity level of fish. A higher number means higher verbosity. The default level is 1.
+- `-h` or `--help` display help and exit
+- `-i` or `--interactive` specify that fish is to run in interactive mode
+- `-l` or `--login` specify that fish is to run as a login shell
+- `-n` or `--no-execute` do not execute any commands, only perform syntax checking
+- `-p` or `--profile=PROFILE_FILE` when fish exits, output timing information on all executed commands to the specified file
+- `-v` or `--version` display version and exit
 
 The fish exit status is generally the exit status of the last
 foreground command. If fish is exiting because of a parse error, the

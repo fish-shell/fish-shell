@@ -1,12 +1,14 @@
 \section command command - run a program
 
 \subsection command-synopsis Synopsis
-<tt>command COMMANDNAME [OPTIONS...]</tt>
+\fish{syn}
+command COMMANDNAME [OPTIONS...]
+\endfish
 
 \subsection command-description Description
 
-\c command forces the shell to execute the program \c COMMANDNAME and ignore any functions or builtins with the same name.
+`command` forces the shell to execute the program `COMMANDNAME` and ignore any functions or builtins with the same name.
 
 \subsection command-example Example
 
-<tt>command ls</tt> causes fish to execute the \c ls program, even if an 'ls' function exists.
+`command ls` causes fish to execute the `ls` program, even if an 'ls' function exists.

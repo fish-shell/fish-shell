@@ -1,7 +1,7 @@
 \section not not - negate the exit status of a job
 
 \subsection not-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 not COMMAND [OPTIONS...]
 \endfish
 

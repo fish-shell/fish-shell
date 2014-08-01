@@ -1,7 +1,7 @@
 \section builtin builtin - run a builtin command
 
 \subsection builtin-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 builtin BUILTINNAME [OPTIONS...]
 \endfish
 

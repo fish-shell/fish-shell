@@ -1,7 +1,7 @@
 \section block block - temporarily block delivery of events
 
 \subsection block-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 block [OPTIONS...]
 \endfish
 

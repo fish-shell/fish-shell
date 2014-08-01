@@ -1,7 +1,7 @@
 \section trap trap - perform an action when the shell receives a signal
 
 \subsection trap-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 trap [OPTIONS] [[ARG] SIGSPEC ... ]
 \endfish
 

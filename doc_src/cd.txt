@@ -1,7 +1,7 @@
 \section cd cd - change directory
 
 \subsection cd-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 cd [DIRECTORY]
 \endfish
 

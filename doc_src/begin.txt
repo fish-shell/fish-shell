@@ -1,7 +1,7 @@
 \section begin begin - start a new block of code
 
 \subsection begin-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 begin; [COMMANDS...;] end
 \endfish
 

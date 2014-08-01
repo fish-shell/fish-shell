@@ -1,7 +1,7 @@
 \section vared vared - interactively edit the value of an environment variable
 
 \subsection vared-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 vared VARIABLE_NAME
 \endfish
 

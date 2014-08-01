@@ -2,7 +2,7 @@
 \section math math - Perform mathematics calculations
 
 \subsection math-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 math EXPRESSION
 \endfish
 

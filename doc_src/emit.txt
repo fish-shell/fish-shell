@@ -1,7 +1,7 @@
 \section emit emit - Emit a generic event
 
 \subsection emit-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 emit EVENT_NAME [ARGUMENTS...]
 \endfish
 

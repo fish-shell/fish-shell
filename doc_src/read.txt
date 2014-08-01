@@ -1,7 +1,7 @@
 \section read read - read line of input into variables
 
 \subsection read-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 read [OPTIONS] [VARIABLES...]
 \endfish
 

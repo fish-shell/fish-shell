@@ -1,7 +1,7 @@
 \section bg bg - send jobs to background
 
 \subsection bg-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 bg [PID...]
 \endfish
 

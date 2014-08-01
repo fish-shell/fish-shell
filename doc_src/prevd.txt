@@ -1,7 +1,7 @@
 \section prevd prevd - move backward through directory history
 
 \subsection prevd-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 prevd [ -l | --list ] [POS]
 \endfish
 

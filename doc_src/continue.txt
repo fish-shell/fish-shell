@@ -1,7 +1,7 @@
 \section continue continue - skip the remainder of the current iteration of the current inner loop
 
 \subsection continue-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 LOOP_CONSTRUCT; [COMMANDS...;] continue; [COMMANDS...;] end
 \endfish
 

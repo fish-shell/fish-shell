@@ -188,7 +188,7 @@ When you start a job in `fish`, `fish` itself will pause, and give control of th
 Example:
 
 \fish
-emacs &
+emacs &amp;
 \endfish
 
 will start the emacs text editor in the background.
@@ -316,21 +316,20 @@ Specifying your own completions is not difficult. To specify a completion, use t
 
 To provide a list of possible completions for myprog, use the `-a` switch. If `myprog` accepts the arguments start and stop, this can be specified as `complete -c myprog -a 'start stop'`. The argument to the `-a` switch is always a single string. At completion time, it will be tokenized on spaces and tabs, and variable expansion, command substitution and other forms of parameter expansion will take place.
 
-Fish has a special syntax to support specifying switches accepted by a command. The switches `-s`, `-l` and `-o` are used to specify a short switch (single character, such as -l), a gnu style long switch (such as '`--color`') and an old-style long switch (like '`-shuffle`'), respectively. If the command 'myprog' has an option '-o' which can also be written as '`--output`', and which can take an additional value of either 'yes' or 'no', this can be specified by writing:
-
+`fish` has a special syntax to support specifying switches accepted by a command. The switches `-s`, `-l` and `-o` are used to specify a short switch (single character, such as `-l`), a gnu style long switch (such as '`--color`') and an old-style long switch (like '`-shuffle`'), respectively. If the command 'myprog' has an option '-o' which can also be written as '`--output`', and which can take an additional value of either 'yes' or 'no', this can be specified by writing:
 
 \fish
 complete -c myprog -s o -l output -a "yes no"
 \endfish
 
-There are also special switches for specifying that a switch requires an argument, to disable filename completion, to create completions that are only available in some combinations, etc..  For a complete description of the various switches accepted by the `complete` command, see the documentation for the <a href="commands.html#complete">complete</a> builtin, or write `complete --help` inside the `fish` shell.
+There are also special switches for specifying that a switch requires an argument, to disable filename completion, to create completions that are only available in some combinations, etc..  For a complete description of the various switches accepted by the `complete` command, see the documentationfor the <a href="commands.html#complete">complete</a> builtin, or write `complete --help` inside the `fish` shell.
 
 For examples of how to write your own complex completions, study the completions in `/usr/share/fish/completions`. (The exact path depends on your chosen installation prefix and may be slightly different)
 
 
 \subsection completion-func Useful functions for writing completions
 
-Fish ships with several functions that are very useful when writing command specific completions. Most of these functions name begins with the string '`__fish_`'. Such functions are internal to fish and their name and interface may change in future fish versions. Still, some of them may be very useful when writing completions. A few of these functions are described here. Be aware that they may be removed or changed in future versions of fish.
+`fish` ships with several functions that are very useful when writing command specific completions. Most of these functions name begins with the string '`__fish_`'. Such functions are internal to `fish` and their name and interface may change in future fish versions. Still, some of them may be very useful when writing completions. A few of these functions are described here. Be aware that they may be removed or changed in future versions of fish.
 
 Functions beginning with the string `__fish_print_` print a newline- separated list of strings. For example, `__fish_print_filesystems` prints a list of all known file systems. Functions beginning with `__fish_complete_` print out a newline separated list of completions with descriptions. The description is separated from the completion by a tab character.
 
@@ -349,7 +348,7 @@ Functions beginning with the string `__fish_print_` print a newline- separated l
 
 Completions can be defined on the commandline or in a configuration file, but they can also be automatically loaded. Fish automatically searches through any directories in the array variable `$fish_complete_path`, and any completions defined are automatically loaded when needed. A completion file must have a filename consisting of the name of the command to complete and the suffix '`.fish`'.
 
-The default value for `$fish`_complete_path is `~/.config/fish/completions` `/etc/fish/completions` `/usr/share/fish/completions`. The exact path to the last two of these may be slightly different depending on what install path prefix was chosen at configuration time. If a suitable file is found in one of these directories, it will be automatically loaded and the search will be stopped. The rationale behind having three different directories is that the first one is for user specific completions, the second one is for system-wide completions and the last one is for default fish completions.
+The default value for `$fish_complete_path` is `~/.config/fish/completions` `/etc/fish/completions` `/usr/share/fish/completions`. The exact path to the last two of these may be slightly different depending on what install path prefix was chosen at configuration time. If a suitable file is found in one of these directories, it will be automatically loaded and the search will be stopped. The rationale behind having three different directories is that the first one is for user specific completions, the second one is for system-wide completions and the last one is for default fish completions.
 
 If you have written new completions for a common Unix command, please consider sharing your work by submitting it via the instructions in <a href="#more-help">Further help and development</a>.
 

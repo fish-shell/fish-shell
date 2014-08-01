@@ -1,7 +1,7 @@
 \section exec exec - execute command in current process
 
 \subsection exec-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 exec COMMAND [OPTIONS...]
 \endfish
 

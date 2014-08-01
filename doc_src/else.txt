@@ -1,7 +1,7 @@
 \section else else - execute command if a condition is not met
 
 \subsection else-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 if CONDITION; COMMANDS_TRUE...; [else; COMMANDS_FALSE...;] end
 \endfish
 

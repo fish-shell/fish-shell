@@ -1,7 +1,7 @@
 \section return return - stop the current inner function
 
 \subsection return-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 function NAME; [COMMANDS...;] return [STATUS]; [COMMANDS...;] end
 \endfish
 

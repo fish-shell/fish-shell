@@ -1,7 +1,7 @@
 \section test test - perform tests on files and text
 
 \subsection test-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 test [EXPRESSION]
 \endfish
 

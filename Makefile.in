@@ -367,14 +367,7 @@ lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES
 		-e 'w lexicon_catalog.tmp' \
 		-e "s|'\(.*\)'|func \1|p"; \
 	sed <share/functions/__fish_config_interactive.fish >>lexicon.tmp -n \
-		-e '/set_default/s/.*\(fish_[a-z][a-z_]*\).*$$/clrv \1/p' \
-		-e '$$G;s/.*\n/==end==/p'; \
-	sed <share/functions/__fish_config_interactive.fish >>lexicon.tmp -n \
-		-e '1G;s/.*\n/==styles==/p' \
-		-e '/set_default/s/.*fish_color\(_[a-z][a-z_]*\)/style\1/' \
-		-e '/^style_/s/_\([^ ]*\) --\([^ ]*\).*$$/ \1 \2/p' \
-		-e '/^style_/s/_\([^ ]* [^- ]*\) --\([^ ]*\).*$$/ \1 \2/p' \
-		-e '/^style_/s/_\([^ ]* [^- ]*\).*$$/ \1/p'; \
+		-e '/set_default/s/.*\(fish_[a-z][a-z_]*\).*$$/clrv \1/p'; \
 	mv lexicon.tmp lexicon.txt; rm -f lexicon_catalog.tmp lexicon_catalog.txt;
 
 #
@@ -395,11 +388,7 @@ doc_src/fish_lexicon_filter: lexicon.txt doc_src/fish_lexicon_filter.in
 	sed <$@.in >$@.tmp -e 's|@sed@|'"`command -v sed`"'|' -e '/^[ ]*#[^!]/d'
 	# Scan through the lexicon, transforming each line to something usefue to Doxygen.
 	sed <lexicon.txt >>$@.tmp -n \
-		-e 's|^\([a-z][a-z][a-z][a-z]\) \([a-z_-]*\)$$|s,[[:<:]]\2[[:>:]],@\1{\2},g|p' \
-		-e '/==end==/G;s/.*\n/b tidy/p' \
-		-e '/==styles==/G;s/.*\n/:styles/p' \
-		-e 's|^\(style [^ ]*\) \(.*\)$$|s,\1,\2,|p' \
-		-e '$$G;s/.*\n/b processstyle/p'; \
+		-e 's|^\([a-z][a-z][a-z][a-z]\) \([a-z_-]*\)$$|s,[[:<:]]\2[[:>:]],@\1{\2},g|p';
 	mv $@.tmp $@; if test -x $@; then true; else chmod a+x $@; fi
 
 #
@@ -821,7 +810,7 @@ clean:
 	rm -f $(PROGRAMS) fish_tests key_reader
 	rm -f command_list.txt command_list_toc.txt toc.txt
 	rm -f doc_src/index.hdr doc_src/commands.hdr
-	rm -f doc_src/fish_lexicon_filter lexicon.txt doc_src/user_doc.css
+	rm -f doc_src/fish_lexicon_filter lexicon.txt
 	rm -f FISH-BUILD-VERSION-FILE
 	if test "$(HAVE_DOXYGEN)" = 1; then \
 		rm -rf doc user_doc share/man; \

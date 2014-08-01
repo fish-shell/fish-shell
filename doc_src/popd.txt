@@ -1,7 +1,7 @@
 \section popd popd - move through directory stack
 
 \subsection popd-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 popd
 \endfish
 

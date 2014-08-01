@@ -1,7 +1,7 @@
 \section ulimit ulimit - set or get resource usage limits
 
 \subsection ulimit-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 ulimit [OPTIONS] [LIMIT]
 \endfish
 

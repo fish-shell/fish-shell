@@ -1,7 +1,7 @@
 \section jobs jobs - print currently running jobs
 
 \subsection jobs-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 jobs [OPTIONS] [PID]
 \endfish
 

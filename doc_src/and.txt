@@ -1,7 +1,7 @@
 \section and and - conditionally execute a command
 
 \subsection and-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 COMMAND1; and COMMAND2
 \endfish
 

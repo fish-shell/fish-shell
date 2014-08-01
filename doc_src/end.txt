@@ -1,7 +1,7 @@
 \section end end - end a block of commands.
 
 \subsection end-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 begin; [COMMANDS...] end
 if CONDITION; COMMANDS_TRUE...; [else; COMMANDS_FALSE...;] end
 while CONDITION; COMMANDS...; end

@@ -1,7 +1,7 @@
 \section random random - generate random number
 
 \subsection random-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 random [SEED]
 \endfish
 

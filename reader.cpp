@@ -2497,34 +2497,8 @@ void set_env_cmd_duration(struct timeval *after, struct timeval *before)
         secs -= 1;
     }
 
-    if (secs < 1)
-    {
-        env_remove(ENV_CMD_DURATION, 0);
-    }
-    else
-    {
-        if (secs < 10)   // 10 secs
-        {
-            swprintf(buf, 16, L"%lu.%02us", secs, usecs / 10000);
-        }
-        else if (secs < 60)     // 1 min
-        {
-            swprintf(buf, 16, L"%lu.%01us", secs, usecs / 100000);
-        }
-        else if (secs < 600)     // 10 mins
-        {
-            swprintf(buf, 16, L"%lum %lu.%01us", secs / 60, secs % 60, usecs / 100000);
-        }
-        else if (secs < 5400)     // 1.5 hours
-        {
-            swprintf(buf, 16, L"%lum %lus", secs / 60, secs % 60);
-        }
-        else
-        {
-            swprintf(buf, 16, L"%.1fh", secs / 3600.0);
-        }
-        env_set(ENV_CMD_DURATION, buf, ENV_EXPORT);
-    }
+    swprintf(buf, 16, L"%d", (secs * 1000) + (usecs / 1000));
+    env_set(ENV_CMD_DURATION, buf, ENV_EXPORT);
 }
 
 void reader_run_command(parser_t &parser, const wcstring &cmd)

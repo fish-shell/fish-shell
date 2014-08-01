@@ -1,12 +1,14 @@
 \section dirh dirh - print directory history
 
 \subsection dirh-synopsis Synopsis
-<tt>dirh</tt>
+\fish{syn}
+dirh
+\endfish
 
 \subsection dirh-description Description
 
-<tt>dirh</tt> prints the current directory history. The current position in the
+`dirh` prints the current directory history. The current position in the
 history is highlighted using the color defined in the
-<tt>fish_color_history_current</tt> environment variable.
+`fish_color_history_current` environment variable.
 
-\c dirh does not accept any parameters.
+`dirh` does not accept any parameters.

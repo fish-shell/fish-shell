@@ -1,0 +1,367 @@
+#! @sed@ -f
+#.
+# A Doxygen filter for building Fish's lexicon, for documentation bling.
+#.
+# Written specially for Fish, the shell for the 90's, in sed, the state of the
+# art text processor from the 70's. Who's sed? sed's dead, baby, sed's dead.*
+# by Mark Griffiths <mark@thebespokepixel.com>             *but quite portable
+#.
+# Finds /fish../endfish blocks in documentation source files and enhances
+# markup. Requires that the short tags declared here are added to Doxyfiles as
+# aliases i.e.:
+#.
+# Enhance for HTML Help pages (Doxyfile.user)…
+# ALIASES   = "fish=\htmlonly[block] \n<pre class=\"fish\">"
+# ALIASES  += "fish{1}=\htmlonly[block] \n<pre class=\"fish \1\">"
+# ALIASES  += "endfish=</pre>\endhtmlonly \n"
+#.
+# ALIASES  += "blah{1}=<span class=\"comment\">\1</span>"
+# ALIASES  += "cmnd{1}=<span class=\"command\">\1</span>" and so on...
+#.
+# And simplify for man pages (Doxyfile.help)…
+# ALIASES   = "fish=<pre>"
+# ALIASES  += "fish{1}=<pre>"
+# ALIASES  += "endfish=</pre>"
+#.
+# ALIASES  += "blah{1}=\1"
+# ALIASES  += "cmnd{1}=<em>\1</em>"...
+#.
+# Licensed under whatever terms are most compatible with Fish's GPLv2 license,
+# bascially free to use/reuse/redistribute/laugh at/be inspired by. Don't
+# pretend it's your code unless you've spent more late nights on it than me but
+# if it saves you a late night, do what you can to help rebalance karma. If it
+# doesn't work or breaks something, it's your fault for using it: if it seems
+# to work it's more likely a hallucination than anything based in reality.
+#.
+# Pattern flow control for scanning doc.h
+/\\fish/,/\\endfish/ {
+    # Open \fish block
+    /^\\fish$/b
+    /^\\fish{[^}]*}$/b
+    /^\\fish.*$/ {
+        s/^\\fish//
+        s/\\endfish//
+        b process
+    }
+    # Output blank lines
+    /^$/b
+    # Inside \fish block. Process...
+    /\\endfish/!{
+        # Preprocess HTML and HTML-like formatting
+        /<[^>]*>/ {
+            b html
+        }
+        # Process the rest
+        b process
+    }
+    # End block
+    /\\endfish/b
+}
+/style/b styles
+#.
+# This is not the pattern we're looking for
+b
+#.
+# Sets CSS styles according to fish defaults.
+#.
+# Used for building the documentation's CSS file
+#.
+:processstyle
+#. Make Hex uniform
+s/0x//g
+/[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]*/ {
+    y/ABCDEF/abcdef/
+    s/^[0-9a-f]/#&/
+}
+#.
+# Set simple styles
+#.
+s/bold/font-weight:bold;/
+#.
+# Replace named colours (taken from color.cpp)
+#.
+s/black/#000/
+s/red/#f00/
+s/green/#0f0/
+s/brown/#725000/
+s/yellow/#ff0/
+s/blue/#00f/
+s/magenta/#f0f/
+s/purple/#f0f/
+s/cyan/#0ff/
+s/white/#fff/
+s/normal/#fff text-decoration:none; border-bottom:none; font-weight:normal;/
+#.
+/background/ {
+    s/background=\(#[0-9a-f][0-9a-f][0-9a-f][0-9a-f]*\)/background-color: \1;/
+}
+/underline/ {
+    s/^\(#[0-9a-f][0-9a-f][0-9a-f][0-9a-f]*\).*$/\1 border-bottom: 2px solid \1;/
+    s/^underline$/text-decoration: underline;/
+}
+# If we start with just a colour, make it explicit.
+s/^#[0-9a-f][0-9a-f]*/color: &;/
+#.
+# All done, return CSS style content
+b
+# Process any HTML tags.
+# Structured to reduce sed's greediness.
+:html
+# Spans
+s|<span style=['"]\([^'"][^'"]*\)">|@span{\1,|
+s|<span class=['"]\([^'"][^'"]*\)">|@spcl{\1,|
+s|</span>|}|
+t html
+#.
+# Bold
+s|<b>|@bold{|
+s|<b [^>]*>|@bold{|
+s|</b>|}|
+#.
+# Strong
+s|<strong>|@bold{|
+s|<strong [^>]*>|@bold{|
+s|</strong>|}|
+#.
+# Italic
+s|<i>|@emph{|
+s|<i [^>]*>|@emph{|
+s|</i>|}|
+#.
+# Emphasis
+s|<em>|@emph{|
+s|<em [^>]*>|@emph{|
+s|</em>|}|
+#.
+# Underline
+s|<u>|@undr{|
+s|<u [^>]*>|@undr{|
+s|</u>|}|
+t html
+#.
+# Some handy non-standard extensions
+# Autosuggestion
+s|<s>|@sgst{|
+s|<s [^>]*>|@sgst{|
+s|</s>|}|
+#.
+# Error
+s|<error>|@eror{|
+s|<error [^>]*>|@eror{|
+s|</error>|}|
+#.
+# File declaration
+s|<file>|@fsfo{|
+s|<file [^>]*>|@fsfo{|
+s|</file>|}|
+#.
+# AsIs - protect from auto-formatting
+s|<asis>|@asis{|
+s|</asis>|}|
+t html
+#.
+# Clean other unhandled html
+s|<\([A-Za-z][A-Za-z]*\)[^>]*>\([^<]*\)</\1>|\2|
+t html
+#.
+# Start processing entities
+:process
+#.
+# Comments:
+# Capture full line comments
+/^#.*$/ {
+    # Assume any line starting with a # is complete
+    s//@blah{&}/
+    t
+}
+# Match sub-line comments
+/#[^0-9A-Za-z][ ]*.*$/ {
+    # Assume comment finishes a line
+    s//@blah{&}/
+    t
+}
+#.
+# Protected entities These shouldn't allow nested structure, so we move them
+# to a marked, new line for a future extract/process/insert action.
+#.
+# AsIs block - resists formatting.
+s/@asis{\(.*\)}/\\\
+<@asis{\1}\
+/g
+#.
+# String Literals
+s/"\([^"]*\)"/\\\
+<@dblq{\1}\
+/g
+s/'\([^']*\)'/\\\
+<@sglq{\1}\
+/g
+#.
+# Command/Function options
+# Short options
+s/-\([A-Za-z]\)\([^A-Za-z}]\)/\\\
+<@opts{-\1}\
+\2/g
+#.
+# Long options
+s/--\([A-Za-z][A-Za-z0-9=_-]*\)\([^A-Za-z0-9]\)/\\\
+<@opts{--\1}\
+\2/g
+#.
+# Paths
+# Normal Directory
+s|\([^/~A-Za-z0-9]\)\([~/][/]*\)\([A-Za-z_0-9./-]*\)|\1\\\
+<@path{\2\3}\
+|g
+#.
+b protect
+# Tidy up. Merge back 'pure' entities from hold space.
+:tidy
+#.
+# Uncomment the following 2 lines (ss) to log the pattern buffer.
+# s/^.*$/PATT: &/w debug-lexicon.log
+# s/^PATT: //
+#.
+# Uncomment the following 4 lines (xssx) to log the hold buffer.
+# x
+# s/^.*$/HOLD: &/w debug-lexicon.log
+# s/^HOLD: //
+# x
+#.
+# Tack the hold space to the end of the pattern buffer.
+G
+#.
+# Uncomment the folowing two lines (ss) to log the buffer join.
+s/^.*$/JOIN: &/w debug-lexicon.log
+s/^JOIN: //
+#.
+# Iterate over alternate lines, matching '<' to '\'
+:join
+s,\([^\\ ]*\)\\\n\([^<]*\)<\(@[^}]*[}\\]\)[\n]*,\1\3\2,
+t join
+# Clean up stray new lines
+s/\n//g
+#.
+# Clean up special cases
+#.
+/@redr/{
+    :cleanredr
+    s/\(redr{[^@]*\)@cmnd{\([^}]*\)}/\1\2/
+    s/\(redr{[^@]*\)@func{\([^}]*\)}/\1\2/
+    s/\(redr{[^@]*\)@sbin{\([^}]*\)}/\1\2/
+    s/\(redr{[^@]*\)@fsfo{\([^}]*\)}/\1\2/
+    t cleanredr
+}
+/@fsfo/{
+    :cleanfsfo
+    s/\(fsfo{[^@]*\)@cmnd{\([^}]*\)}/\1\2/
+    s/\(fsfo{[^@]*\)@func{\([^}]*\)}/\1\2/
+    s/\(fsfo{[^@]*\)@sbin{\([^}]*\)}/\1\2/
+    t cleanfsfo
+}
+# Character Entities
+#.
+# Mark up a few sesitive characters.
+#.
+s/</\&lt;/g
+s/>/\&gt;/g
+#.
+# Uncomment the folowing two lines (ss) to log the final output, sent to Doxygen.
+# s/^.*$/OUT : &/w debug-lexicon.log
+# s/^OUT : //
+#.
+# Lines are reassembled, so branch to end
+b
+#.
+# Move protected content to hold space and mark up other entities.
+:protect
+h
+# Clear out any content that has already been marked up, to prevent futher
+# markup on words that should be left alone.
+#.
+:patternflush
+s/\n<@[^}]*}//
+s/\n[}]//
+t patternflush
+s/\n$//
+#.
+# Swap the pattern and hold buffers and remove unmarked lines and extra
+# characters. Basically the inverse of the 'patternflush' action, with
+# additional trailing characters stripped.
+x
+s/^[ ]*[^<][^@][^}]*$//
+s/^[ ]*[^<][^@][^\\]*[\\ ()]*\n//
+:holdflush
+s/}[)(\\ ][)(\\ ]*/}/
+s/\n[];)|* ][^\\]*[\\]*//
+t holdflush
+s/\n$//
+#.
+# Swap the buffers back.
+x
+#.
+# A special case. Tidy up after commands.
+# Redirectors
+s/\([^{|] *\)|/\1@redr{|}/g
+s/\([^{<>^] *\)\([0-9]* *[<>^][<>^]*[a-zA-z0-9._-]*\)/\1@redr{\2}/g
+s/\\}/}\\/g
+#.
+# Now we can add in 'unsafe' entities that would be too greedy.
+# Declared Variables
+#:vars
+s/\([$%][$%]*\)\([A-Za-z_0-9][A-Za-z_0-9]*\)/@vars{@optr{\1}\2}/g
+#.
+# Files
+s/\([A-Za-z*][A-Za-z]*\.[a-z0-9][a-z0-9]*\)/@fsfo{\1}/g
+#.
+# Operators
+# s/\([^^=|+*&%<>{-]\)\([=|+*&%<>^-][|+*&%<>^-]*\)\([^0-9A-Za-z]\)/\1@optr{\2}\3/g
+#.
+:commands
+#.
+# Manually add a few commands not harvested from source.
+#.
+s,[[:<:]]in[[:>:]],@cmnd{in},g
+s,[[:<:]]whoami[[:>:]],@sbin{whoami},g
+s,[[:<:]]fishd[[:>:]],@sbin{fishd},g
+#.
+#### This section is built in the Makefile. Just some formatting examples. #####
+#.
+#   fish commands (cmnd) <- 4 character code that has a Doxygen alias counterpart
+#   template : s/[[:<:]]function[[:>:]]/@cmnd{&}/
+#.
+#   s,[[:<:]]function[[:>:]],@cmnd{function},g
+#   s,[[:<:]]begin[[:>:]],@cmnd{begin},g
+#   ...
+#.
+#   fish functions (func)
+#   Populated by 'public' functions' filename.
+#.
+#   s,[[:<:]]fish_pwd[[:>:]],@func{fish_pwd},g
+#   s,[[:<:]]fish_prompt[[:>:]],@func{fish_prompt},g
+#   ...
+#.
+#   Shell Binary (sbin)
+#   Populated from completion filenames
+#.
+#   s,[[:<:]]seq[[:>:]],@sbin{seq},g
+#   s,[[:<:]]rm[[:>:]],@sbin{rm},g
+#   ...
+#.
+#   Color Variable (clrv)
+#   Populated from __fish_config_interactive.fish
+#   Allows fish's 'special' color variables to be identified
+#.
+#   s,[[:<:]]fish_color_normal[[:>:]],@clrv{fish_color_normal},g
+#   s,[[:<:]]fish_color_command[[:>:]],@clrv{fish_color_command},g
+#.
+# Once all of the commands/functions/variables/special's have been marked up,
+# branch back to tidy up and collapse the pattern/hold buffers back to a
+# single line.
+#.
+# b tidy
+#.
+# Colour lookup functions
+#.
+# The Makefile will add a table of colour names and values, possibly with
+# extra style information, that are used to set defaults in the CSS file.

@@ -5,7 +5,7 @@
 
 \subsection command-description Description
 
-\c command forces the shell to execute the program \c COMMANDNAME and ignore any functions or builtins with the same name.
+`command` forces the shell to execute the program `COMMANDNAME` and ignore any functions or builtins with the same name.
 
 The following options are available:
 - \c -h or \c --help prints help and then exits.

@@ -1,11 +1,13 @@
 \section read read - read line of input into variables
 
 \subsection read-synopsis Synopsis
-<tt>read [OPTIONS] [VARIABLES...]</tt>
+\fish{syn}
+read [OPTIONS] [VARIABLES...]
+\endfish
 
 \subsection read-description Description
 
-<tt>read</tt> reads one line from standard
+`read` reads one line from standard
 input and stores the result in one or more shell variables.
 
 The following options are available:
@@ -31,12 +33,12 @@ input is considered a separate token.
 If \c -a or \c --array is provided, only one variable name is allowed and the
 tokens are stored as an array in this variable.
 
-See the documentation for \c set for more details on the scoping rules for
+See the documentation for `set` for more details on the scoping rules for
 variables.
 
 \subsection read-example Example
 
 The following code stores the value 'hello' in the shell variable
-<tt>$foo</tt>.
+`$foo`.
 
-<tt>echo hello|read foo</tt>
+`echo hello|read foo`

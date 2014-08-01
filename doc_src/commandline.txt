@@ -1,73 +1,75 @@
 \section commandline commandline - set or get the current command line buffer
 
 \subsection commandline-synopsis Synopsis
-<tt>commandline [OPTIONS] [CMD]</tt>
+\fish{syn}
+commandline [OPTIONS] [CMD]
+\endfish
 
 \subsection commandline-description Description
 
-\c commandline can be used to set or get the current contents of the command
+`commandline` can be used to set or get the current contents of the command
 line buffer.
 
-With no parameters, \c commandline returns the current value of the command
+With no parameters, `commandline` returns the current value of the command
 line.
 
-With \c CMD specified, the command line buffer is erased and replaced with
-the contents of \c CMD.
+With `CMD` specified, the command line buffer is erased and replaced with
+the contents of `CMD`.
 
 The following options are available:
 
-- \c -C or \c --cursor set or get the current cursor position, not
+- `-C` or `--cursor` set or get the current cursor position, not
   the contents of the buffer. If no argument is given, the current
   cursor position is printed, otherwise the argument is interpreted
   as the new cursor position.
-- \c -f or \c --function inject readline functions into the
+- `-f` or `--function` inject readline functions into the
   reader. This option cannot be combined with any other option. It
   will cause any additional arguments to be interpreted as readline
   functions, and these functions will be injected into the reader, so
   that they will be returned to the reader before any additional
   actual key presses are read.
 
-The following options change the way \c commandline updates the
+The following options change the way `commandline` updates the
 command line buffer:
 
-- \c -a or \c --append do not remove the current commandline, append
+- `-a` or `--append` do not remove the current commandline, append
   the specified string at the end of it
-- \c -i or \c --insert do not remove the current commandline, insert
+- `-i` or `--insert` do not remove the current commandline, insert
   the specified string at the current cursor position
-- \c -r or \c --replace remove the current commandline and replace it
+- `-r` or `--replace` remove the current commandline and replace it
   with the specified string (default)
 
 The following options change what part of the commandline is printed
 or updated:
 
-- \c -b or \c --current-buffer select the entire buffer (default)
-- \c -j or \c --current-job select the current job
-- \c -p or \c --current-process select the current process
-- \c -t or \c --current-token select the current token.
+- `-b` or `--current-buffer` select the entire buffer (default)
+- `-j` or `--current-job` select the current job
+- `-p` or `--current-process` select the current process
+- `-t` or `--current-token` select the current token.
 
-The following options change the way \c commandline prints the current
+The following options change the way `commandline` prints the current
 commandline buffer:
 
-- \c -c or \c --cut-at-cursor only print selection up until the
+- `-c` or `--cut-at-cursor` only print selection up until the
   current cursor position
-- \c -o or \c --tokenize tokenize the selection and print one string-type token per line
+- `-o` or `--tokenize` tokenize the selection and print one string-type token per line
 
 
-If \c commandline is called during a call to complete a given string
-using <code>complete -C STRING</code>, \c commandline will consider the
+If `commandline` is called during a call to complete a given string
+using `complete -C STRING`, `commandline` will consider the
 specified string to be the current contents of the command line.
 
 The following options output metadata about the commandline state:
 
-- \c -L or \c --line print the line that the cursor is on, with the topmost
+- `-L` or `--line` print the line that the cursor is on, with the topmost
 line starting at 1
-- \c -S or \c --search-mode evaluates to true if the commandline is performing
+- `-S` or `--search-mode` evaluates to true if the commandline is performing
 a history search
-- \c -P or \c --paging-mode evaluates to true if the commandline is showing
+- `-P` or `--paging-mode` evaluates to true if the commandline is showing
 pager contents, such as tab completions
 
 
 \subsection commandline-example Example
 
-<tt>commandline -j $history[3]</tt> replaces the job under the cursor with the
+`commandline -j $history[3]` replaces the job under the cursor with the
 third item from the command line history.

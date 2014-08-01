@@ -1,34 +1,34 @@
 \section alias alias - create a function
 
 \subsection alias-synopsis Synopsis
-<pre>alias NAME DEFINITION
-alias NAME=DEFINITION</pre>
+\fish{syn}
+alias NAME DEFINITION
+alias NAME=DEFINITION
+\endfish
 
 \subsection alias-description Description
 
-\c alias is a simple wrapper for the \c function builtin.
-It exists for backwards compatibility with Posix
-shells. For other uses, it is recommended to define a <a
-href='#function'>function</a>.
+`alias` is a simple wrapper for the `function` builtin. It exists for backwards compatibility with Posix shells. For other uses, it is recommended to define a <a href='#function'>function</a>.
 
-\c fish does not keep track of which functions have been defined using
-\c alias. They must be erased using <code>functions -e</code>.
+`fish` does not keep track of which functions have been defined using `alias`. They must be erased using `functions -e`.
 
-- NAME is the name of the alias
-- DEFINITION is the actual command to execute. The string " $argv" will be appended.
+- `NAME` is the name of the alias
+- `DEFINITION` is the actual command to execute. The string `$argv` will be appended.
 
 You cannot create an alias to a function with the same name.
 
 \subsection alias-example Example
 
-The following code will create \c rmi, which runs \c rm with additional
-arguments on every invocation.
+The following code will create `rmi`, which runs `rm` with additional arguments on every invocation.
 
-<code>alias rmi "rm -i"</code>
+\fish
+alias rmi "rm -i"
+\endfish
 
 This is equivalent to entering the following function:
 
-<pre>function rmi
+\fish
+function rmi
     rm -i $argv
-end</pre>
-
+end
+\endfish

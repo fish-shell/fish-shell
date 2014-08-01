@@ -1,14 +1,16 @@
 \section vared vared - interactively edit the value of an environment variable
 
 \subsection vared-synopsis Synopsis
- <tt>vared VARIABLE_NAME</tt>
+\fish{syn}
+vared VARIABLE_NAME
+\endfish
 
 \subsection vared-description Description
 
-\c vared is used to interactively edit the value of an environment
-variable. Array variables as a whole can not be edited using \c vared,
+`vared` is used to interactively edit the value of an environment
+variable. Array variables as a whole can not be edited using `vared`,
 but individual array elements can.
 
 \subsection vared-example Example
 
-<code>vared PATH[3]</code> edits the third element of the PATH array
+`vared PATH[3]` edits the third element of the PATH array

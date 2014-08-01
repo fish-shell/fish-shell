@@ -1,11 +1,13 @@
 \section function function - create a function
 
 \subsection function-synopsis Synopsis
- <code>function [OPTIONS] NAME; BODY; end </code>
+\fish{syn}
+function [OPTIONS] NAME; BODY; end
+\endfish
 
 \subsection function-description Description
 
-\c function creates a new function \c NAME with the body <code>BODY</code>.
+`function` creates a new function `NAME` with the body `BODY`.
 
 A function is a list of commands that will be executed when the name of the
 function is given as a command.
@@ -24,38 +26,38 @@ The following options are available:
 
 If the user enters any additional arguments after the function, they
 are inserted into the environment <a href="index.html#variables-arrays">variable array</a>
-<code>$argv</code>. If the \c --argument-names option is provided, the arguments are
+`$argv`. If the `--argument-names` option is provided, the arguments are
 also assigned to names specified in that option.
 
 By using one of the event handler switches, a function can be made to run automatically at specific events. The user may generate new events using the <a href="#emit">emit</a> builtin. Fish generates the following named events:
 
-- \c fish_prompt, which is emitted whenever a new fish prompt is about to be displayed.
-- \c fish_command_not_found, which is emitted whenever a command lookup failed.
+- `fish_prompt`, which is emitted whenever a new fish prompt is about to be displayed.
+- `fish_command_not_found`, which is emitted whenever a command lookup failed.
 
 \subsection function-example Example
 
-<pre>
+\fish
 function ll
-	ls -l $argv
+    ls -l $argv
 end
-</pre>
+\endfish
 
-will run the \c ls command, using the \c -l option, while passing on any additional files and switches to \c ls.
+will run the `ls` command, using the `-l` option, while passing on any additional files and switches to `ls`.
 
-<pre>
+\fish
 function mkdir -d "Create a directory and set CWD"
-	command mkdir $argv
-	if test $status = 0
-		switch $argv[(count $argv)]
-			case '-*'
+    command mkdir $argv
+    if test $status = 0
+        switch $argv[(count $argv)]
+            case '-*'
 
-			case '*'
-				cd $argv[(count $argv)]
-				return
-		end
-	end
+            case '*'
+                cd $argv[(count $argv)]
+                return
+        end
+    end
 end
-</pre>
+\endfish
 
 will run the mkdir command, and if it is successful, change the
 current working directory to the one just created.

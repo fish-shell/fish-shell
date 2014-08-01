@@ -1,10 +1,12 @@
 \section eval eval - evaluate the specified commands
 
 \subsection eval-synopsis Synopsis
-<tt>eval [COMMANDS...]</tt>
+\fish{syn}
+eval [COMMANDS...]
+\endfish
 
 \subsection eval-description Description
-<tt>eval</tt> evaluates the specified parameters as a command. If more than one parameter is specified, all parameters will be joined using a space character as a separator.
+`eval` evaluates the specified parameters as a command. If more than one parameter is specified, all parameters will be joined using a space character as a separator.
 
 \subsection eval-example Example
 
@@ -12,8 +14,8 @@ The following code will call the ls command. Note that \c fish does not
 support the use of shell variables as direct commands; \c eval can
 be used to work around this.
 
-<pre>
+\fish
 set cmd ls
 eval $cmd
-</pre>
+\endfish
 

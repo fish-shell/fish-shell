@@ -1,11 +1,13 @@
 \section type type - indicate how a command would be interpreted
 
 \subsection type-synopsis Synopsis
- <tt>type [OPTIONS] NAME [NAME ...]</tt>
+\fish{syn}
+type [OPTIONS] NAME [NAME ...]
+\endfish
 
 \subsection type-description Description
 
-With no options, \c type indicates how each \c NAME would be interpreted if used as a command name.
+With no options, `type` indicates how each `NAME` would be interpreted if used as a command name.
 
 The following options are available:
 
@@ -17,9 +19,9 @@ The following options are available:
 - \c -P or \c --force-path returns the name of the disk file that would be executed, or nothing if no file with the specified name could be found in the <tt>$PATH</tt>.
 - \c -q or \c --quiet suppresses all output; this is useful when testing the exit status.
 
-\c type sets the exit status to 0 if the specified command was found,
+`type` sets the exit status to 0 if the specified command was found,
 and 1 if it could not be found.
 
 \subsection type-example Example
 
-<tt>type fg</tt> outputs the string 'fg is a shell builtin'.
+`type fg` outputs the string '`fg is a shell builtin`'.

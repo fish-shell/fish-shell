@@ -1,30 +1,32 @@
 \section source source - evaluate contents of file.
 
 \subsection source-synopsis Synopsis
-<tt>source FILENAME [ARGUMENTS...]</tt>
+\fish{syn}
+source FILENAME [ARGUMENTS...]
+\endfish
 
 \subsection source-description Description
 
-\c source evaluates the commands of the specified file in the current
+`source` evaluates the commands of the specified file in the current
 shell. This is different from starting a new process to perform the
-commands (i.e. <tt>fish < FILENAME</tt>) since the commands will be
+commands (i.e. `fish < FILENAME`) since the commands will be
 evaluated by the current shell, which means that changes in
 shell variables will affect the current shell. If additional arguments are
 specified after the file name, they will be inserted into the $argv
 variable.
 
-If no file is specified, or if the file name '-' is used, stdin will
+If no file is specified, or if the file name '`-`' is used, stdin will
 be read.
 
-The return status of \c source is the return status of the last job to
+The return status of `source` is the return status of the last job to
 execute. If something goes wrong while opening or reading the file,
-\c source exits with a non-zero status.
+`source` exits with a non-zero status.
 
-\c . (a single period) is an alias for the \c source command. The use of \c .
-is deprecated in favour of \c source, and \c . will be removed in a future
+`.` (a single period) is an alias for the `source` command. The use of `.`
+is deprecated in favour of `source`, and `.` will be removed in a future
 version of fish.
 
 \subsection source-example Example
 
-<tt>source ~/.config/fish/config.fish</tt> causes fish to re-read its initialization file.
+`source ~/.config/fish/config.fish` causes fish to re-read its initialization file.
 

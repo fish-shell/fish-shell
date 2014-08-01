@@ -8,13 +8,13 @@ history (--search | --delete ) (--prefix "prefix string" | --contains "search st
 
 \subsection history-description Description
 
-\c history is used to list, search and delete the history of commands used.
+`history` is used to list, search and delete the history of commands used.
 
 The following options are available:
 
-- \c --save saves all changes in the history file. The shell automatically
+- `--save` saves all changes in the history file. The shell automatically
 saves the history file; this option is provided for internal use.
-- \c --clear clears the history file. A prompt is displayed before the history
+- `--clear` clears the history file. A prompt is displayed before the history
 is erased.
 - \c --merge immediately incorporates history changes from other sessions. Ordinarily
 fish ignores history changes from sessions started after the current one. This command
@@ -24,24 +24,24 @@ applies those changes immediately.
 - \c --delete deletes history items.
 - \c --prefix searches or deletes items in the history that begin with the
 specified text string.
-- \c --contains searches or deletes items in the history that contain the
+- `--contains` searches or deletes items in the history that contain the
 specified text string.
 
-If \c --search is specified without \c --contains or <code>--prefix</code>,
-\c --contains will be assumed.
+If `--search` is specified without `--contains` or `--prefix`,
+`--contains` will be assumed.
 
-If \c --delete is specified without \c --contains or <code>--prefix</code>,
+If `--delete` is specified without `--contains` or `--prefix`,
 only a history item which exactly matches the parameter will be erased. No
-prompt will be given. If \c --delete is specified with either of these
+prompt will be given. If `--delete` is specified with either of these
 parameters, an interactive prompt will be displayed before any items are
 deleted.
 
 \subsection history-examples Example
 
-<code>history --clear</code> deletes all history items
+`history --clear` deletes all history items
 
-<code>history --search --contains "foo"</code> outputs a list of all previous
+`history --search --contains "foo"` outputs a list of all previous
 commands containing the string "foo".
 
-<code>history --delete --prefix "foo"</code> interactively deletes the record
+`history --delete --prefix "foo"` interactively deletes the record
 of previous commands which start with "foo".

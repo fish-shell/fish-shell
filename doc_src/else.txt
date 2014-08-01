@@ -1,21 +1,23 @@
 \section else else - execute command if a condition is not met
 
 \subsection else-synopsis Synopsis
-<tt>if CONDITION; COMMANDS_TRUE...; [else; COMMANDS_FALSE...;] end</tt>
+\fish{syn}
+if CONDITION; COMMANDS_TRUE...; [else; COMMANDS_FALSE...;] end
+\endfish
 
 \subsection else-description Description
-<tt>if</tt> will execute the command \c CONDITION. If the condition's exit
-status is 0, the commands \c COMMANDS_TRUE will execute. If it is not 0 and
-<tt>else</tt> is given, \c COMMANDS_FALSE will be executed.
+`if` will execute the command `CONDITION`. If the condition's exit
+status is 0, the commands `COMMANDS_TRUE` will execute. If it is not 0 and
+`else` is given, `COMMANDS_FALSE` will be executed.
 
 \subsection else-example Example
 
-The following code tests whether a file \c foo.txt exists as a regular file.
+The following code tests whether a file `foo`.txt exists as a regular file.
 
-<pre>
+\fish
 if test -f foo.txt
     echo foo.txt exists
 else
     echo foo.txt does not exist
 end
-</pre>
+\endfish

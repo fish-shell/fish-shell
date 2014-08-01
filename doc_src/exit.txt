@@ -1,11 +1,13 @@
 \section exit exit - exit the shell
 
 \subsection exit-synopsis Synopsis
-<tt>exit [STATUS]</tt>
+\fish{syn}
+exit [STATUS]
+\endfish
 
 \subsection exit-description Description
 
-\c exit causes fish to exit. If <tt>STATUS</tt> is
+`exit` causes fish to exit. If `STATUS` is
 supplied, it will be converted to an integer and used as the exit
 code. Otherwise, the exit code will be that of the last command executed.
 

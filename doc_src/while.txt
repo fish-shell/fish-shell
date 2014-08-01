@@ -1,21 +1,23 @@
 \section while while - perform a command multiple times
 
 \subsection while-synopsis Synopsis
-<tt>while CONDITION; COMMANDS...; end</tt>
+\fish{syn}
+while CONDITION; COMMANDS...; end
+\endfish
 
 \subsection while-description Description
-<tt>while</tt> repeatedly executes <tt>CONDITION</tt>, and if the exit status
-is 0, then executes <tt>COMMANDS</tt>.
+`while` repeatedly executes `CONDITION`, and if the exit status
+is 0, then executes `COMMANDS`.
 
-If the exit status of \c CONDITION is non-zero on the first iteration,
-\c COMMANDS will not be executed at all.
+If the exit status of `CONDITION` is non-zero on the first iteration,
+`COMMANDS` will not be executed at all.
 
-Use <a href="#begin"><tt>begin; ...; end</tt></a> for complex conditions; more
-complex control can be achieved with <tt>while true</tt> containing a
+Use <a href="#begin">`begin; ...; end`</a> for complex conditions; more
+complex control can be achieved with `while true` containing a
 <a href="#break">break</a>.
 
 \subsection while-example Example
 
-<tt>while test -f foo.txt; echo file exists; sleep 10; end</tt>
+`while test -f foo.txt; echo file exists; sleep 10; end`
 outputs 'file exists' at 10 second intervals as long as
 the file foo.txt exists.

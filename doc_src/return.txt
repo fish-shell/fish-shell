@@ -1,12 +1,14 @@
 \section return return - stop the current inner function
 
 \subsection return-synopsis Synopsis
-<tt>function NAME; [COMMANDS...;] return [STATUS]; [COMMANDS...;] end</tt>
+\fish{syn}
+function NAME; [COMMANDS...;] return [STATUS]; [COMMANDS...;] end
+\endfish
 
 \subsection return-description Description
 
-\c return halts a currently running function. The exit status is set
-to \c STATUS if it is given.
+`return` halts a currently running function. The exit status is set
+to `STATUS` if it is given.
 
 It is usually added inside of a conditional block such as an <a
 href="#if">if</a> statement or a <a href="#switch">switch</a>
@@ -17,10 +19,10 @@ function.
 \subsection return-example Example
 The following code is an implementation of the false command as a fish function
 
-<pre>
+\fish
 function false
-	return 1
+    return 1
 end
-</pre>
+\endfish
 
 

@@ -28,14 +28,14 @@ the fish manual.
 
 Command specific tab-completions in \c fish are based on the notion
 of options and arguments. An option is a parameter which begins with a
-hyphen, such as '-h', '-help' or '--help'. Arguments are parameters
+hyphen, such as '`-h`', '`-help`' or '`--help`'. Arguments are parameters
 that do not begin with a hyphen. Fish recognizes three styles of
 options, the same styles as the GNU version of the getopt
 library. These styles are:
 
-- Short options, like '-a'. Short options are a single character long, are preceded by a single hyphen and may be grouped together (like '-la', which is equivalent to '-l -a'). Option arguments may be specified in the following parameter ('-w 32') or by appending the option with the value ('-w32').
-- Old style long options, like '-Wall'. Old style long options can be more than one character long, are preceded by a single hyphen and may not be grouped together. Option arguments are specified in the following parameter ('-ao null').
-- GNU style long options, like '--colors'. GNU style long options can be more than one character long, are preceded by two hyphens, and may not be grouped together. Option arguments may be specified in the following parameter ('--quoting-style shell') or by appending the option with a '=' and the value ('--quoting-style=shell'). GNU style long options may be abbreviated so long as the abbreviation is unique ('--h' is equivalent to '--help' if help is the only long option beginning with an 'h').
+- Short options, like '`-a`'. Short options are a single character long, are preceded by a single hyphen and may be grouped together (like '`-la`', which is equivalent to '`-l -a`'). Option arguments may be specified in the following parameter ('`-w 32`') or by appending the option with the value ('`-w32`').
+- Old style long options, like '`-Wall`'. Old style long options can be more than one character long, are preceded by a single hyphen and may not be grouped together. Option arguments are specified in the following parameter ('`-ao null`').
+- GNU style long options, like '`--colors`'. GNU style long options can be more than one character long, are preceded by two hyphens, and may not be grouped together. Option arguments may be specified in the following parameter ('`--quoting-style`') or by appending the option with a '`=`' and the value ('`--quoting-style=shell`'). GNU style long options may be abbreviated so long as the abbreviation is unique ('`--h`') is equivalent to '`--help`' if help is the only long option beginning with an 'h').
 
 The options for specifying command name, command path, or command
 switches may all be used multiple times to specify multiple commands
@@ -51,37 +51,39 @@ then A automatically inherits all of C's completions. Wrapping can
 be removed using the \c -e or \c --erase options.
 
 When erasing completions, it is possible to either erase all
-completions for a specific command by specifying <tt>complete -e -c
-COMMAND</tt>, or by specifying a specific completion option to delete
+completions for a specific command by specifying `complete -e -c
+COMMAND`, or by specifying a specific completion option to delete
 by specifying either a long, short or old style option.
 
 \subsection complete-example Example
 
-The short style option <tt>-o</tt> for the \c gcc command requires
-that a file follows it.  This can be done using writing <tt>complete
--c gcc -s o -r</tt>.
+The short style option `-o` for the `gcc` command requires
+that a file follows it.  This can be done using writing:
 
-The short style option <tt>-d</tt> for the \c grep command requires
-that one of the strings 'read', 'skip' or 'recurse' is used.  This can
-be specified writing <tt>complete -c grep -s d -x -a "read skip
-recurse"</tt>.
+`complete -c gcc -s o -r`
 
-The \c su command takes any username as an argument. Usernames are
+The short style option `-d` for the `grep` command requires
+that one of the strings '`read`', '`skip`' or '`recurse`' is used.  This can
+be specified writing:
+
+`complete -c grep -s d -x -a "read skip recurse"`
+
+The `su` command takes any username as an argument. Usernames are
 given as the first colon-separated field in the file /etc/passwd. This
-can be specified as: <tt>complete -x -c su -d "Username" -a "(cat
-/etc/passwd|cut -d : -f 1)" </tt>.
+can be specified as:
 
-The \c rpm command has several different modes. If the \c -e or \c
---erase flag has been specified, \c rpm should delete one or more
-packages, in which case several switches related to deleting packages
-are valid, like the \c nodeps switch.
+`complete -x -c su -d "Username" `
+`-a "(cat /etc/passwd | cut -d : -f 1)"`
+
+The `rpm` command has several different modes. If the `-e` or `--erase` flag has been specified, `rpm` should delete one or more
+packages, in which case several switches related to deleting packages are valid, like the `nodeps` switch.
 
 This can be written as:
 
-<tt>complete -c rpm -n "__fish_contains_opt -s e erase" -l nodeps -d
-"Don't check dependencies"</tt>
+`complete -c rpm -n "__fish_contains_opt -s e erase"`
+`-l nodeps -d "Don't check dependencies"`
 
-where \c __fish_contains_opt is a function that checks the commandline
+where `__fish_contains_opt` is a function that checks the commandline
 buffer for the presence of a specified set of options.
 
 To implement an alias, use the \c -w or \c --wraps option:

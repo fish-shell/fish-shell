@@ -1,43 +1,45 @@
 \section trap trap - perform an action when the shell receives a signal
 
 \subsection trap-synopsis Synopsis
-<tt>trap [OPTIONS] [[ARG] SIGSPEC ... ]</tt>
+\fish{syn}
+trap [OPTIONS] [[ARG] SIGSPEC ... ]
+\endfish
 
 \subsection trap-description Description
 
-\c trap is a wrapper around the fish event delivery
+`trap` is a wrapper around the fish event delivery
 framework. It exists for backwards compatibility with POSIX
 shells. For other uses, it is recommended to define an <a
 href='index.html#event'>event handler</a>.
 
 The following parameters are available:
 
-- \c ARG is the command to be executed on signal delivery.
-- \c SIGSPEC is the name of the signal to trap.
-- \c -h or \c --help displays help and exits.
-- \c -l or \c --list-signals prints a list of signal names.
-- \c -p or \c --print prints all defined signal handlers.
+- `ARG` is the command to be executed on signal delivery.
+- `SIGSPEC` is the name of the signal to trap.
+- `-h` or `--help` displays help and exits.
+- `-l` or `--list-signals` prints a list of signal names.
+- `-p` or `--print` prints all defined signal handlers.
 
-If \c ARG and \c SIGSPEC are both specified, \c ARG is the command to be
-executed when the signal specified by \c SIGSPEC is delivered.
+If `ARG` and `SIGSPEC` are both specified, `ARG` is the command to be
+executed when the signal specified by `SIGSPEC` is delivered.
 
-If \c ARG is absent (and there is a single SIGSPEC) or -, each specified
+If `ARG` is absent (and there is a single SIGSPEC) or -, each specified
 signal is reset to its original disposition (the value it had upon
-entrance to the shell).  If \c ARG is the null string the signal
-specified by each \c SIGSPEC is ignored by the shell and by the commands
+entrance to the shell).  If `ARG` is the null string the signal
+specified by each `SIGSPEC` is ignored by the shell and by the commands
 it invokes.
 
-If \c ARG is not present and \c -p has been supplied, then the trap commands
-associated with each \c SIGSPEC are displayed. If no arguments are
-supplied or if only \c -p is given, \c trap prints the list of commands
+If `ARG` is not present and `-p` has been supplied, then the trap commands
+associated with each `SIGSPEC` are displayed. If no arguments are
+supplied or if only `-p` is given, `trap` prints the list of commands
 associated with each signal.
 
-Signal names are case insensitive and the \c SIG prefix is optional.
+Signal names are case insensitive and the `SIG` prefix is optional.
 
-The return status is 1 if any \c SIGSPEC is invalid; otherwise trap
+The return status is 1 if any `SIGSPEC` is invalid; otherwise trap
 returns 0.
 
 \subsection trap-example Example
 
-<code>trap "status --print-stack-trace" SIGUSR1</code> prints a stack trace
-each time the \c SIGUSR1 signal is sent to the shell.
+`trap "status --print-stack-trace" SIGUSR1` prints a stack trace
+each time the `SIGUSR1` signal is sent to the shell.

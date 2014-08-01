@@ -1,14 +1,16 @@
 \section fg fg - bring job to foreground
 
 \subsection fg-synopsis Synopsis
-<tt>fg [PID]</tt>
+\fish{syn}
+fg [PID]
+\endfish
 
 \subsection fg-description Description
-\c fg brings the specified <a href="index.html#syntax-job-control">job</a> to the foreground, resuming it if it is stopped. While a foreground job is
+`fg` brings the specified <a href="index.html#syntax-job-control">job</a> to the foreground, resuming it if it is stopped. While a foreground job is
 executed, fish is suspended. If no job is specified, the last job to be used is put in the foreground. If PID is specified, the job with the specified group ID is put in the foreground.
 
 The PID of the desired process is usually found by using <a href="index.html#expand-process">process expansion</a>.
 
 \subsection fg-example Example
 
-<tt>fg \%1</tt> will put the job with job ID 1 in the foreground.
+`fg %1` will put the job with job ID 1 in the foreground.

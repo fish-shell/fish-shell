@@ -1,16 +1,18 @@
 \section builtin builtin - run a builtin command
 
 \subsection builtin-synopsis Synopsis
- <tt>builtin BUILTINNAME [OPTIONS...]</tt>
+\fish{syn}
+builtin BUILTINNAME [OPTIONS...]
+\endfish
 
 \subsection builtin-description Description
 
-\c builtin forces the shell to use a builtin command, rather than a function or program.
+`builtin` forces the shell to use a builtin command, rather than a function or program.
 
 The following parameters are available:
 
-- <tt>-n</tt> or <tt>--names</tt> List the names of all defined builtins
+- `-n` or `--names` List the names of all defined builtins
 
 \subsection builtin-example Example
 
-<tt>builtin jobs</tt> executes the jobs builtin, even if a function named jobs exists.
+`builtin jobs` executes the jobs builtin, even if a function named jobs exists.

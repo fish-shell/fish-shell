@@ -35,3 +35,13 @@ tests/foo.txt
 FISH-BUILD-VERSION-FILE
 version
 messages.pot
+
+.editorconfig
+Fish-Shell.sublime-workspace
+Fish-Shell.sublime-project
+
+doc_src/fish_lexicon_filter
+
+lexicon.txt
+
+debug-lexicon.log

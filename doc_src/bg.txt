@@ -1,11 +1,13 @@
 \section bg bg - send jobs to background
 
 \subsection bg-synopsis Synopsis
-<tt>bg [PID...]</tt>
+\fish{syn}
+bg [PID...]
+\endfish
 
 \subsection bg-description Description
 
-\c bg sends <a href="index.html#syntax-job-control">jobs</a> to the background, resuming them if they are stopped. A background job is
+`bg` sends <a href="index.html#syntax-job-control">jobs</a> to the background, resuming them if they are stopped. A background job is
 executed simultaneously with fish, and does not have access to the
 keyboard. If no job is specified, the last job to be used is put in the background. If PID is specified, the jobs with the specified process group IDs are put in the background.
 
@@ -13,5 +15,5 @@ The PID of the desired process is usually found by using <a href="index.html#exp
 
 \subsection bg-example Example
 
-<tt>bg \%1</tt> will put the job with job ID 1 in the background.
+`bg %1` will put the job with job ID 1 in the background.
 

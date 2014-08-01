@@ -1,10 +1,12 @@
 \section pwd pwd - output the current working directory
 
 \subsection pwd-synopsis Synopsis
- <tt>pwd</tt>
+\fish{syn}
+pwd
+\endfish
 
 \subsection pwd-description Description
 
-\c pwd outputs (prints) the current working directory.
+`pwd` outputs (prints) the current working directory.
 
-Note that \c fish always resolves symbolic links in the current directory path.
+Note that `fish` always resolves symbolic links in the current directory path.

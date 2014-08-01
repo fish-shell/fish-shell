@@ -12,16 +12,16 @@ the specified limit is set to the new value.
 
 Use one of the following switches to specify which resource limit to set or report:
 
-- <code>-c</code> or <code>--core-size</code>: the maximum size of core files created. By setting this limit to zero, core dumps can be disabled.
-- <code>-d</code> or <code>--data-size</code>: the maximum size of a process' data segment.
-- <code>-f</code> or <code>--file-size</code>: the maximum size of files created by the shell.
-- <code>-l</code> or <code>--lock-size</code>: the maximum size that may be locked into memory.
-- <code>-m</code> or <code>--resident-set-size</code>: the maximum resident set size.
-- <code>-n</code> or <code>--file-descriptor-count</code>: the maximum number of open file descriptors (most systems do not allow this value to be set).
-- <code>-s</code> or <code>--stack-size</code>: the maximum stack size.
-- <code>-t</code> or <code>--cpu-time</code>: the maximum amount of CPU time in seconds.
-- <code>-u</code> or <code>--process-count</code>: the maximum number of processes available to a single user.
-- <code>-v</code> or <code>--virtual-memory-size</code> The maximum amount of virtual memory available to the shell.
+- <code>-c</code> or `--core-size`: the maximum size of core files created. By setting this limit to zero, core dumps can be disabled.
+- <code>-d</code> or `--data-size`: the maximum size of a process' data segment.
+- <code>-f</code> or `--file-size`: the maximum size of files created by the shell.
+- <code>-l</code> or `--lock-size`: the maximum size that may be locked into memory.
+- <code>-m</code> or `--resident-set-size`: the maximum resident set size.
+- <code>-n</code> or `--file-descriptor-count`: the maximum number of open file descriptors (most systems do not allow this value to be set).
+- <code>-s</code> or `--stack-size`: the maximum stack size.
+- <code>-t</code> or `--cpu-time`: the maximum amount of CPU time in seconds.
+- <code>-u</code> or `--process-count`: the maximum number of processes available to a single user.
+- <code>-v</code> or `--virtual-memory-size` The maximum amount of virtual memory available to the shell.
 
 Note that not all these limits are available in all operating systems.
 
@@ -39,8 +39,8 @@ supplied, or an error occurs while setting a new limit.
 \c ulimit also accepts the following switches that determine what type of
 limit to set:
 
-- <code>-H</code> or <code>--hard</code> sets hard resource limit
-- <code>-S</code> or <code>--soft</code> sets soft resource limit
+- <code>-H</code> or `--hard` sets hard resource limit
+- <code>-S</code> or `--soft` sets soft resource limit
 
 A hard limit can only be decreased. Once it is set it cannot be
 increased; a soft limit may be increased up to the value of the hard
@@ -50,8 +50,8 @@ limit is used when reporting the current value.
 
 The following additional options are also understood by <tt>ulimit</tt>:
 
-- <code>-a</code> or <code>--all</code> prints all current limits
-- <code>-h</code> or <code>--help</code> displays help and exits.
+- <code>-a</code> or `--all` prints all current limits
+- <code>-h</code> or `--help` displays help and exits.
 
 The \c fish implementation of \c ulimit should behave identically to the
 implementation in bash, except for these differences:

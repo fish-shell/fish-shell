@@ -15,11 +15,11 @@ as A0FF33 or f2f. \c fish will choose the closest supported color.
 
 The following options are available:
 
-- \c -b, \c --background \c COLOR sets the background color.
-- \c -c, \c --print-colors prints a list of all valid color names.
-- \c -h, \c --help displays a help message and exit.
-- \c -o, \c --bold sets bold or extra bright mode.
-- \c -u, \c --underline sets underlined mode.
+- \c -b, \c `--background` \c COLOR sets the background color.
+- \c -c, \c `--print-colors` prints a list of all valid color names.
+- \c -h, \c `--help` displays a help message and exit.
+- \c -o, \c `--bold` sets bold or extra bright mode.
+- \c -u, \c `--underline` sets underlined mode.
 
 Calling <tt>set_color normal</tt> will set the terminal color to
 the default color of the terminal.

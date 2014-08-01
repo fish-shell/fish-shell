@@ -14,13 +14,13 @@ be used to launch the default action for this file.
 
 The following options are available:
 
-- \c -t, \c --input-file-data determines the files' type both by their filename and by their contents (default behaviour).
-- \c -f, \c --input-filename determines the files' type by their filename.
-- \c -i, \c --input-mime specifies that the arguments are not files, but MIME types.
-- \c -m, \c --output-mime outputs the MIME type of each file (default behaviour).
-- \c -f, \c --output-description outputs the description of each MIME type.
-- \c -a, \c --output-action outputs the default action of each MIME type.
-- \c -l, \c --launch launches the default action for the specified files.
-- \c -h, \c --help displays a help message and exit.
-- \c -v, \c --version displays the version number and exits.
+- \c -t, \c `--input-file-data` determines the files' type both by their filename and by their contents (default behaviour).
+- \c -f, \c `--input-filename` determines the files' type by their filename.
+- \c -i, \c `--input-mime` specifies that the arguments are not files, but MIME types.
+- \c -m, \c `--output-mime` outputs the MIME type of each file (default behaviour).
+- \c -f, \c `--output-description` outputs the description of each MIME type.
+- \c -a, \c `--output-action` outputs the default action of each MIME type.
+- \c -l, \c `--launch` launches the default action for the specified files.
+- \c -h, \c `--help` displays a help message and exit.
+- \c -v, \c `--version` displays the version number and exits.
 

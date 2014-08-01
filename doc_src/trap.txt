@@ -14,9 +14,9 @@ The following parameters are available:
 
 - \c ARG is the command to be executed on signal delivery.
 - \c SIGSPEC is the name of the signal to trap.
-- \c -h or \c --help displays help and exits.
-- \c -l or \c --list-signals prints a list of signal names.
-- \c -p or \c --print prints all defined signal handlers.
+- \c -h or \c `--help` displays help and exits.
+- \c -l or \c `--list-signals` prints a list of signal names.
+- \c -p or \c `--print` prints all defined signal handlers.
 
 If \c ARG and \c SIGSPEC are both specified, \c ARG is the command to be
 executed when the signal specified by \c SIGSPEC is delivered.

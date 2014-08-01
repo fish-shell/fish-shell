@@ -11,8 +11,8 @@ with status 1.
 
 The following options are available:
 
-- \c -i or \c --index print the word index
-- \c -h or \c --help display this message
+- \c -i or \c `--index` print the word index
+- \c -h or \c `--help` display this message
 
 \subsection contains-example Example
 <pre>

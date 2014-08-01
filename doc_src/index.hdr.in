@@ -841,13 +841,13 @@ end. The user can specify that a variable should have either global
 or local scope using the \c -g/--global or \c -l/--local switches.
 
 Variables can be explicitly set to be universal with the \c -U or \c
---universal switch, global with the \c -g or \c --global switch, or
-local with the \c -l or \c --local switch.  The scoping rules when
+--universal switch, global with the \c -g or \c `--global` switch, or
+local with the \c -l or \c `--local` switch.  The scoping rules when
 creating or updating a variable are:
 
 -# If a variable is explicitly set to either universal, global or local, that setting will be honored. If a variable of the same name exists in a different scope, that variable will not be changed.
 -# If a variable is not explicitly set to be either universal, global or local, but has been previously defined, the variable scope is not changed.
--# If a variable is not explicitly set to be either universal, global or local and has never before been defined, the variable will be local to the currently executing function. Note that this is different from using the \c -l or \c --local flag. If one of those flags is used, the variable will be local to the most inner currently executing block, while without these the variable will be local to the function. If no function is executing, the variable will be global.
+-# If a variable is not explicitly set to be either universal, global or local and has never before been defined, the variable will be local to the currently executing function. Note that this is different from using the \c -l or \c `--local` flag. If one of those flags is used, the variable will be local to the most inner currently executing block, while without these the variable will be local to the function. If no function is executing, the variable will be global.
 
 There may be many variables with the same name, but different scopes.
 When using a variable, the variable scope will be searched from the
@@ -918,7 +918,7 @@ exported variables are in uppercase and unexported variables are in
 lowercase.
 
 Variables can be explicitly set to be exported with the \c -x or \c
---export switch, or not exported with the \c -u or \c --unexport
+--export switch, or not exported with the \c -u or \c `--unexport`
 switch.  The exporting rules when creating or updating a variable are
 identical to the scoping rules for variables:
 
@@ -1049,7 +1049,7 @@ If a process exits through a signal, the exit status will be 128 plus the number
 The colors used by fish for syntax highlighting can be configured by
 changing the values of a various variables. The value of these
 variables can be one of the colors accepted by the <a
-href='commands.html#set_color'>set_color</a> command. The \c --bold
+href='commands.html#set_color'>set_color</a> command. The \c `--bold`
 or \c -b switches accepted by \c set_color are also accepted.
 
 The following variables are available to change the highlighting colors
@@ -1111,7 +1111,7 @@ actions which cannot be performed by a regular command.
 
 For a list of all builtins, functions and commands shipped with fish,
 see the <a href="#toc-commands">table of contents</a>. The
-documentation is also available by using the <code>--help</code>
+documentation is also available by using the `--help`
 switch of the command.
 
 \section editor Command line editor

@@ -14,8 +14,8 @@ to edit the function. Otherwise, a built-in editor will be used.
 If there is no function called \c NAME a new function will be created with
 the specified name
 
-- <code>-e command</code> or <code>--editor command</code> Open the function
+- <code>-e command</code> or `--editor command` Open the function
   body inside the text editor given by the command (for example, "vi"). The
   command 'fish' will use the built-in editor.
-- <code>-i</code> or <code>--interactive</code> Open function body in the
+- <code>-i</code> or `--interactive` Open function body in the
   built-in editor.

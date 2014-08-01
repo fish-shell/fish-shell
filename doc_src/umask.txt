@@ -17,9 +17,9 @@ Access rights are explained in the manual page for the \c chmod(1) program.
 With no parameters, the current file creation mode mask is printed as
 an octal number.
 
-- <code>-h</code> or <code>--help</code> prints this message.
-- <code>-S</code> or <code>--symbolic</code> prints the umask in symbolic form instead of octal form.
-- <code>-p</code> or <code>--as-command</code> outputs the umask in a form that may be reused as input
+- <code>-h</code> or `--help` prints this message.
+- <code>-S</code> or `--symbolic` prints the umask in symbolic form instead of octal form.
+- <code>-p</code> or `--as-command` outputs the umask in a form that may be reused as input
 
 If a numeric mask is specified as a parameter, the current shell's umask
 will be set to that value, and the rights specified by that mask will be

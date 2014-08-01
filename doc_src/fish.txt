@@ -1,7 +1,7 @@
 \section fish fish - the friendly interactive shell
 
 \subsection fish-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 fish [-h] [-v] [-c command] [FILE [ARGUMENTS...]]
 \endfish
 

@@ -1,7 +1,7 @@
 \section set set - display and change shell variables.
 
 \subsection set-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 set [SCOPE_OPTIONS]
 set [OPTIONS] VARIABLE_NAME VALUES...
 set [OPTIONS] VARIABLE_NAME[INDICES]... VALUES...

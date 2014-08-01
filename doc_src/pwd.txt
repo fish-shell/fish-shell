@@ -1,7 +1,7 @@
 \section pwd pwd - output the current working directory
 
 \subsection pwd-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 pwd
 \endfish
 

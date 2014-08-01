@@ -1,7 +1,7 @@
 \section breakpoint breakpoint - Launch debug mode
 
 \subsection breakpoint-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 breakpoint
 \endfish
 

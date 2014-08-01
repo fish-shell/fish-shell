@@ -1,7 +1,7 @@
 \section help help - display fish documentation
 
 \subsection help-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 help [SECTION]
 \endfish
 

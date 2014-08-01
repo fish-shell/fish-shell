@@ -1,7 +1,7 @@
 \section or or - conditionally execute a command
 
 \subsection or-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 COMMAND1; or COMMAND2
 \endfish
 

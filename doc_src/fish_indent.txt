@@ -1,7 +1,7 @@
 \section fish_indent fish_indent - indenter and prettifier
 
 \subsection fish_indent-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 fish_indent [options]
 \endfish
 

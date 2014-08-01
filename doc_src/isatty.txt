@@ -1,7 +1,7 @@
 \section isatty isatty - test if a file or file descriptor is a tty.
 
 \subsection isatty-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 isatty [FILE | DEVICE | FILE DESCRIPTOR NUMBER]
 \endfish
 

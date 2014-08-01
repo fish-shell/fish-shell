@@ -1,7 +1,7 @@
 \section open open - open file in its default application
 
 \subsection open-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 open FILES...
 \endfish
 

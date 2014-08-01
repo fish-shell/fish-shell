@@ -1,7 +1,7 @@
 \section function function - create a function
 
 \subsection function-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 function [OPTIONS] NAME; BODY; end
 \endfish
 

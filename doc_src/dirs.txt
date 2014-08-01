@@ -1,7 +1,7 @@
 \section dirs dirs - print directory stack
 
 \subsection dirs-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 dirs
 \endfish
 

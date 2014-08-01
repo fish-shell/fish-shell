@@ -1,7 +1,7 @@
 \section set_color set_color - set the terminal color
 
 \subsection set_color-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 set_color [-h|--help] [-b|--background COLOR] [COLOR]
 \endfish
 

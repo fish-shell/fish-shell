@@ -1,7 +1,7 @@
 \section status status - query fish runtime information
 
 \subsection status-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 status [OPTION]
 \endfish
 

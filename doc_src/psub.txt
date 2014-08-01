@@ -1,7 +1,7 @@
 \section psub psub - perform process substitution
 
 \subsection psub-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 COMMAND1 (COMMAND2|psub [-f])
 \endfish
 

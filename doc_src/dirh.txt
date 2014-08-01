@@ -1,7 +1,7 @@
 \section dirh dirh - print directory history
 
 \subsection dirh-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 dirh
 \endfish
 

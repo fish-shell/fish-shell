@@ -1,7 +1,7 @@
 \section switch switch - conditionally execute a block of commands
 
 \subsection switch-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 switch VALUE; [case [WILDCARD...]; [COMMANDS...]; ...] end
 \endfish
 

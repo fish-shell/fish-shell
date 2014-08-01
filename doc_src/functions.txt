@@ -1,7 +1,7 @@
 \section functions functions - print or erase functions
 
 \subsection functions-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 functions [-a|--all] [-n|--names]
 functions -c OLDNAME NEWNAME
 functions -d DESCRIPTION FUNCTION

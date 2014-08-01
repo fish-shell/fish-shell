@@ -1,7 +1,7 @@
 \section echo echo - display a line of text
 
 \subsection echo-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 echo [STRING]
 \endfish
 

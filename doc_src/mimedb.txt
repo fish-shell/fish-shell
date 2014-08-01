@@ -1,7 +1,7 @@
 \section mimedb mimedb - lookup file information via the mime database
 
 \subsection mimedb-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 mimedb [OPTIONS] FILES...
 \endfish
 

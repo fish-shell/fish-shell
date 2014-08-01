@@ -1,7 +1,7 @@
 \section source source - evaluate contents of file.
 
 \subsection source-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 source FILENAME [ARGUMENTS...]
 \endfish
 

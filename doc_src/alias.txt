@@ -1,7 +1,7 @@
 \section alias alias - create a function
 
 \subsection alias-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 alias NAME DEFINITION
 alias NAME=DEFINITION
 \endfish

@@ -1,7 +1,7 @@
 \section command command - run a program
 
 \subsection command-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 command COMMANDNAME [OPTIONS...]
 \endfish
 

@@ -1,7 +1,7 @@
 \section history history - Show and manipulate command history
 
 \subsection history-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 history [--save|--clear|--merge]
 history [--search|--delete] [--prefix "prefix string"|--contains "search string"]
 \endfish
@@ -13,7 +13,7 @@ history [--search|--delete] [--prefix "prefix string"|--contains "search string"
 The following options are available:
 - `--save` saves all changes in the history file. The shell automatically saves the history file; this option is provided for internal use.
 - `--clear` clears the history file. A prompt is displayed before the history is erased.
-- `--merge` immediately incorporates history changes from other sessions. Ordinarily fish ignores history changes from sessions started after the current one. This command applies those changes immediately.
+- `--merge` immediately incorporates history changes from other sessions. Ordinarily `fish` ignores history changes from sessions started after the current one. This command applies those changes immediately.
 - `--search` returns history items in keeping with the `--prefix` or `--contains` options.
 - `--delete` deletes history items.
 - `--prefix` searches or deletes items in the history that begin with the specified text string.

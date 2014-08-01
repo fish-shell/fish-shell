@@ -1,7 +1,7 @@
 \section for for - perform a set of commands multiple times.
 
 \subsection for-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 for VARNAME in [VALUES...]; COMMANDS...; end
 \endfish
 

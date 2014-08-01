@@ -1,7 +1,7 @@
 \section bind bind - handle fish key bindings
 
 \subsection bind-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 bind [OPTIONS] SEQUENCE COMMAND
 \endfish
 

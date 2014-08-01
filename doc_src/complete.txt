@@ -1,7 +1,7 @@
 \section complete complete - edit command specific tab-completions
 
 \subsection complete-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 complete ( -c | --command | -p | --path) COMMAND
         [( -s | --short-option) SHORT_OPTION]
         [( -l | --long-option | -o | --old-option) LONG_OPTION]

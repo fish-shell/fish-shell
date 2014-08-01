@@ -170,10 +170,10 @@ h1 > code, h2 > code, h3 > code {
     margin: 1rem;
     padding: 0.4rem 1rem;
     line-height: 1.9rem;
-    color: #222;
-    background-color: #fafafa;
-    border: 1px solid #f0f0f0;
-    border-radius: 0.4rem;
+color: #00afff;
+    background-color: #111;
+    border: 1px solid #666;
+    border-radius: 0.6rem;
 }
 .cli-dark {
     background-color: #111;
@@ -181,28 +181,73 @@ h1 > code, h2 > code, h3 > code {
     padding: 0.4rem 1rem;
     border-radius: 0.4rem;
 }
-.normal { @normal@; }
-.comment { @comment@; }
-.command { @command@; }
-.function { @command@; }
-.binary { @command@; }
-.argument { @param@ }
-.variable { @param@ }
-.redirect { @redirection@ }
-.operator { @operator@ }
-.file { @valid_path@ }
-.path { @valid_path@ }
-.string { @quote@ }
-.suggest { @autosuggestion@ }
-.error { @error@ }
-.match { @match@ }
-.search_match { @search_match@ }
-.user { @user@ }
-.cwd { @cwd@ }
-.history { @history_current@ }
-.prompt { color: #222; }
-.cursor { border-bottom: 2px solid green; }
-.underline { text-decoration: underline; }
+.synopsis {
+    background-color: #fafafa;
+    color: #333;
+}
+.normal {
+color: #fff; text-decoration:none; border-bottom:none; font-weight:normal;
+}
+.comment {
+color: #f22;
+}
+.command {
+color: #005fd7;
+}
+.function {
+color: #005fd7;
+}
+.binary {
+color: #005fd7;
+}
+.argument {
+color: #00afff;
+}
+.variable {
+color: #00afff;
+}
+.redirect {
+color: #fff; text-decoration:none; border-bottom:none; font-weight:normal;
+}
+.operator {
+color: #2ff;
+}
+.file {
+text-decoration: underline;
+}
+.path {
+text-decoration: underline;
+}
+.string {
+color: #725022;
+}
+.suggest {
+color: #555;
+}
+.error {
+color: #f22; font-weight:bold;
+}
+.match {
+color: #2ff;
+}
+.search_match {
+backkground-color: #f2f;
+}
+.cwd {
+color: #2f2;
+}
+.history {
+color: #2ff;
+}
+.prompt {
+    color: #222;
+}
+.cursor {
+    border-bottom: 2px solid green;
+}
+.underline {
+    text-decoration: underline;
+}
 /* Console variants */
 .cli-dark {
     background-color: #111;

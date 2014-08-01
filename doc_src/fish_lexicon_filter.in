@@ -57,53 +57,10 @@
     # End block
     /\\endfish/b
 }
-/style/b styles
 #.
 # This is not the pattern we're looking for
 b
 #.
-# Sets CSS styles according to fish defaults.
-#.
-# Used for building the documentation's CSS file
-#.
-:processstyle
-#. Make Hex uniform
-s/0x//g
-/[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]*/ {
-    y/ABCDEF/abcdef/
-    s/^[0-9a-f]/#&/
-}
-#.
-# Set simple styles
-#.
-s/bold/font-weight:bold;/
-#.
-# Replace named colours (taken from color.cpp)
-#.
-s/black/#000/
-s/red/#f00/
-s/green/#0f0/
-s/brown/#725000/
-s/yellow/#ff0/
-s/blue/#00f/
-s/magenta/#f0f/
-s/purple/#f0f/
-s/cyan/#0ff/
-s/white/#fff/
-s/normal/#fff text-decoration:none; border-bottom:none; font-weight:normal;/
-#.
-/background/ {
-    s/background=\(#[0-9a-f][0-9a-f][0-9a-f][0-9a-f]*\)/background-color: \1;/
-}
-/underline/ {
-    s/^\(#[0-9a-f][0-9a-f][0-9a-f][0-9a-f]*\).*$/\1 border-bottom: 2px solid \1;/
-    s/^underline$/text-decoration: underline;/
-}
-# If we start with just a colour, make it explicit.
-s/^#[0-9a-f][0-9a-f]*/color: &;/
-#.
-# All done, return CSS style content
-b
 # Process any HTML tags.
 # Structured to reduce sed's greediness.
 :html
@@ -204,7 +161,7 @@ s/-\([A-Za-z]\)\([^A-Za-z}]\)/\\\
 \2/g
 #.
 # Long options
-s/--\([A-Za-z][A-Za-z0-9=_-]*\)\([^A-Za-z0-9]\)/\\\
+s/--\([A-Za-z][A-Za-z0-9=_-]*\)\([^A-Za-z0-9=_-]*\)/\\\
 <@opts{--\1}\
 \2/g
 #.
@@ -259,6 +216,9 @@ s/\n//g
     s/\(fsfo{[^@]*\)@sbin{\([^}]*\)}/\1\2/
     t cleanfsfo
 }
+# Convert 2nd order commands/functions and binaries to arguments
+s/@cmnd/@args/g
+s/@args/@cmnd/1
 # Character Entities
 #.
 # Mark up a few sesitive characters.
@@ -293,7 +253,7 @@ s/^[ ]*[^<][^@][^}]*$//
 s/^[ ]*[^<][^@][^\\]*[\\ ()]*\n//
 :holdflush
 s/}[)(\\ ][)(\\ ]*/}/
-s/\n[];)|* ][^\\]*[\\]*//
+s/\n[];)|* -][^\\]*[\\]*//
 t holdflush
 s/\n$//
 #.
@@ -321,7 +281,7 @@ s/\([A-Za-z*][A-Za-z]*\.[a-z0-9][a-z0-9]*\)/@fsfo{\1}/g
 #.
 # Manually add a few commands not harvested from source.
 #.
-s,[[:<:]]in[[:>:]],@cmnd{in},g
+s,[[:<:]]in[[:>:]],@args{in},g
 s,[[:<:]]whoami[[:>:]],@sbin{whoami},g
 s,[[:<:]]fishd[[:>:]],@sbin{fishd},g
 #.
@@ -360,8 +320,3 @@ s,[[:<:]]fishd[[:>:]],@sbin{fishd},g
 # single line.
 #.
 # b tidy
-#.
-# Colour lookup functions
-#.
-# The Makefile will add a table of colour names and values, possibly with
-# extra style information, that are used to set defaults in the CSS file.

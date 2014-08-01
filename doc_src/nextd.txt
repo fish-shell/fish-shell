@@ -1,7 +1,7 @@
 \section nextd nextd - move forward through directory history
 
 \subsection nextd-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 nextd [ -l | --list ] [POS]
 \endfish
 

@@ -1,7 +1,7 @@
 \section commandline commandline - set or get the current command line buffer
 
 \subsection commandline-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 commandline [OPTIONS] [CMD]
 \endfish
 

@@ -1,7 +1,7 @@
 \section count count - count the number of elements of an array
 
 \subsection count-synopsis Synopsis
-\fish{syn}
+\fish{synopsis}
 count $VARIABLE
 \endfish
 

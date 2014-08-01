@@ -31,7 +31,7 @@ function fish_prompt --description 'Write out the prompt, prepending the Debian 
 
         switch $USER
 
-                case root
+                case root toor
 
                 if not set -q __fish_prompt_cwd
                         if set -q fish_color_cwd_root

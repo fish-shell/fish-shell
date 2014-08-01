@@ -183,10 +183,14 @@ static pthread_key_t generation_count_key;
 
 static void set_command_line_and_position(editable_line_t *el, const wcstring &new_str, size_t pos);
 
-void editable_line_t::insert_string(const wcstring &str)
+void editable_line_t::insert_string(const wcstring &str, size_t start, size_t len)
 {
-    this->text.insert(this->position, str);
-    this->position += str.size();
+    // Clamp the range to something valid
+    size_t string_length = str.size();
+    start = mini(start, string_length);
+    len = mini(len, string_length - start);
+    this->text.insert(this->position, str, start, len);
+    this->position += len;
 }
 
 /**
@@ -1215,30 +1219,50 @@ static void remove_backward()
 /**
    Insert the characters of the string into the command line buffer
    and print them to the screen using syntax highlighting, etc.
-   Optionally also expand abbreviations.
+   Optionally also expand abbreviations, after space characters.
    Returns true if the string changed.
 */
-static bool insert_string(editable_line_t *el, const wcstring &str, bool should_expand_abbreviations = false)
+static bool insert_string(editable_line_t *el, const wcstring &str, bool allow_expand_abbreviations = false)
 {
     size_t len = str.size();
     if (len == 0)
         return false;
-
-    el->insert_string(str);
-    update_buff_pos(el, el->position);
-    data->command_line_changed(el);
-
+    
+    /* Start inserting. If we are expanding abbreviations, we have to do this after every space (see #1434), so look for spaces. We try to do this efficiently (rather than the simpler character at a time) to avoid expensive work in command_line_changed() */
+    size_t cursor = 0;
+    while (cursor < len)
+    {
+        /* Determine the position of the next space (possibly none), and the end of the range we wish to insert */
+        size_t space_triggering_expansion_pos = allow_expand_abbreviations ? str.find(L' ', cursor) : wcstring::npos;
+        bool has_space_triggering_expansion = (space_triggering_expansion_pos != wcstring::npos);
+        size_t range_end = (has_space_triggering_expansion ? space_triggering_expansion_pos + 1 : len);
+        
+        /* Insert from the cursor up to but not including the range end */
+        assert(range_end > cursor);
+        el->insert_string(str, cursor, range_end - cursor);
+        
+        update_buff_pos(el, el->position);
+        data->command_line_changed(el);
+        
+        /* If we got a space, then the last character we inserted was that space. Expand abbreviations. */
+        if (has_space_triggering_expansion && allow_expand_abbreviations)
+        {
+            assert(range_end > 0);
+            assert(str.at(range_end - 1) == L' ');
+            data->expand_abbreviation_as_necessary(1);
+        }
+        cursor = range_end;
+    }
+    
     if (el == &data->command_line)
     {
         data->suppress_autosuggestion = false;
-
-        if (should_expand_abbreviations)
-            data->expand_abbreviation_as_necessary(1);
-
+        
         /* Syntax highlight. Note we must have that buff_pos > 0 because we just added something nonzero to its length  */
         assert(el->position > 0);
         reader_super_highlight_me_plenty(-1);
     }
+    
     reader_repaint();
 
     return true;
@@ -1248,9 +1272,9 @@ static bool insert_string(editable_line_t *el, const wcstring &str, bool should_
    Insert the character into the command line buffer and print it to
    the screen using syntax highlighting, etc.
 */
-static bool insert_char(editable_line_t *el, wchar_t c, bool should_expand_abbreviations = false)
+static bool insert_char(editable_line_t *el, wchar_t c, bool allow_expand_abbreviations = false)
 {
-    return insert_string(el, wcstring(1, c), should_expand_abbreviations);
+    return insert_string(el, wcstring(1, c), allow_expand_abbreviations);
 }
 
 
@@ -2544,7 +2568,7 @@ int reader_shell_test(const wchar_t *b)
     bstr.push_back(L'\n');
 
     parse_error_list_t errors;
-    int res = parse_util_detect_errors(bstr, &errors);
+    int res = parse_util_detect_errors(bstr, &errors, true /* do accept incomplete */);
 
     if (res & PARSER_TEST_ERROR)
     {
@@ -3121,7 +3145,7 @@ const wchar_t *reader_readline(void)
                             break;
                     }
 
-                    insert_string(&data->command_line, arr);
+                    insert_string(&data->command_line, arr, true);
 
                 }
             }
@@ -4026,20 +4050,19 @@ const wchar_t *reader_readline(void)
             {
                 if ((!wchar_private(c)) && (((c>31) || (c==L'\n'))&& (c != 127)))
                 {
-                    bool should_expand_abbreviations = false;
+                    bool allow_expand_abbreviations = false;
                     if (data->is_navigating_pager_contents())
                     {
                         data->pager.set_search_field_shown(true);
                     }
                     else
                     {
-                        /* Expand abbreviations after space */
-                        should_expand_abbreviations = (c == L' ');
+                        allow_expand_abbreviations = true;
                     }
 
                     /* Regular character */
                     editable_line_t *el = data->active_edit_line();
-                    insert_char(data->active_edit_line(), c, should_expand_abbreviations);
+                    insert_char(data->active_edit_line(), c, allow_expand_abbreviations);
 
                     /* End paging upon inserting into the normal command line */
                     if (el == &data->command_line)
@@ -4220,7 +4243,7 @@ static int read_ni(int fd, const io_chain_t &io)
         }
 
         parse_error_list_t errors;
-        if (! parse_util_detect_errors(str, &errors))
+        if (! parse_util_detect_errors(str, &errors, false /* do not accept incomplete */))
         {
             parser.eval(str, io, TOP);
         }

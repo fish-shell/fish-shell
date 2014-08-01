@@ -154,8 +154,8 @@ private:
     /** The file ID of the file we mmap'd */
     file_id_t mmap_file_id;
 
-    /** Timestamp of when this history was created */
-    const time_t birth_timestamp;
+    /** The boundary timestamp distinguishes old items from new items. Items whose timestamps are <= the boundary are considered "old". Items whose timestemps are > the boundary are new, and are ignored by this instance (unless they came from this instance). The timestamp may be adjusted by incorporate_external_changes() */
+    time_t boundary_timestamp;
 
     /** How many items we add until the next vacuum. Initially a random value. */
     int countdown_to_vacuum;
@@ -233,8 +233,11 @@ public:
     /** Populates from a bash history file */
     void populate_from_bash(FILE *f);
 
+    /** Incorporates the history of other shells into this history */
+    void incorporate_external_changes();
+
     /* Gets all the history into a string with ARRAY_SEP_STR. This is intended for the $history environment variable. This may be long! */
-    void get_string_representation(wcstring &str, const wcstring &separator);
+    void get_string_representation(wcstring *result, const wcstring &separator);
 
     /** Sets the valid file paths for the history item with the given identifier */
     void set_valid_file_paths(const wcstring_list_t &valid_file_paths, history_identifier_t ident);

@@ -1,7 +1,7 @@
 
 function __fish_umask_parse -d "Internal umask function"
 	# Test if already a valid octal mask, and pad it with zeros
-	if echo $argv | sgrep -E '^(0|)[0-7]{1,3}$' >/dev/null
+	if echo $argv | sgrep -E '^0?[0-7]{1,3}$' >/dev/null
 		set -l char_count (echo $argv| wc -c)
 		for i in (seq (math 5 - $char_count)); set argv 0$argv; end
 		echo $argv

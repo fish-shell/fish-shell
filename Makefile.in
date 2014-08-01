@@ -270,7 +270,26 @@ user_doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FIL
 doc_src/user_doc.css: doc_src/user_doc.css.in doc_src/fish_lexicon_filter
 	-rm $@
 	cd doc_src; \
-	cat user_doc.css.in >> user_doc.css
+	cat $@.in | awk '{if ($$0 ~ /@normal@/) { system("echo style normal | ./fish_lexicon_filter"); } \
+				else if ($$0 ~ /@autosuggestion@/) { system("echo style autosuggestion | ./fish_lexicon_filter"); } \
+				else{ print $$0;}}' >$@
+
+
+# @autosuggestion@
+# @command@
+# @comment@
+# @cwd@
+# @error@
+# @history_current@
+# @match@
+# @normal@
+# @operator@
+# @param@
+# @quote@
+# @redirection@
+# @search_match@
+# @user@
+# @valid_path@
 
 #
 # Source code documentation. Also includes user documentation.

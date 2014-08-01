@@ -1,0 +1,5 @@
+- cmd: this_command_is_ok
+- cmd: - cmd: - cmd: - cmd: - cmd: - cmd: - cmd: - cmd: - cmd: - cmd: - cmd: - cmd: - cmd: - cmd: - cmd:    when: 1396531614
+- cmd: - cmd: - cmd: - cmd: - cmd: - cmd: - cmd: - cmd: - cmd: - cmd: - cmd: - cmd: - cmd: - cmd: - cmd: - cmd: corrupt_prefix
+- cmd: no_newline_at_end_of_file
+   when: 1403531898

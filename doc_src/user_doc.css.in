@@ -131,7 +131,8 @@ h3 {
     padding-bottom: 10px;
     border-bottom: 1px solid #AAA;
 }
-/*Special Formmating for Code and keys*/
+/* Special Formmating */
+/* Keyboard */
 .key span {
     display:none;
 }
@@ -147,13 +148,11 @@ h3 {
     font-weight: normal;
     white-space: nowrap;
 }
+/* Console display */
 tt, code, pre, .fish {
     font-family: "DejaVu Sans Mono", Menlo, Monaco, "Source Code Pro", "Ubuntu Mono", "Consolas", "Lucida Console", monospace, fixed;
     font-weight: 500;
     text-shadow: 0 0 0 rgba(0,0,0,1); /* Stronger anti-aliasing */
-}
-tt {
-    color: red; /*REMOVE THIS*/
 }
 code, pre, .line {
     white-space: -moz-pre-wrap;
@@ -166,50 +165,51 @@ h1 > code, h2 > code, h3 > code {
     font-family: "DejaVu Sans Mono", Menlo, "Source Code Pro", "Consolas", "Lucida Console", Roboto, Verdana, sans-serif;
     font-weight: 700;
 }
+/*Default 'light' console*/
 .fish {
     margin: 1rem;
     padding: 0.4rem 1rem;
     line-height: 1.9rem;
+    color: #222;
     background-color: #fafafa;
     border: 1px solid #f0f0f0;
     border-radius: 0.4rem;
 }
-
-.comment { color: #777; }
-.command { color: #0A0; }
-.function { color: #0A0; }
-.binary { color: #060; }
-.argument { color: #906; }
-.variable { color: #339; }
-.redirect { color: #F00; }
-.operator { color: #990; }
-.file { color: #c97922; }
-.path { color: #c97922; }
-.string { color: #770; }
-.prompt { color: #03C; }
-.suggest { color: cyan ; }
-.error { color: red; font-weight: bold; }
-.cursor { border-bottom: 2px solid green; }
-
-
-/*.keyword, .keywordflow { color: #050; }*/
-/*.stringliteral, .charliteral { color: #226; }*/
-/*.preprocessor, .comment { color: #555; text-shadow: none; }*/
-
 .cli-dark {
     background-color: #111;
     color: #ddd;
-    padding: 0.4rem 2rem;
+    padding: 0.4rem 1rem;
     border-radius: 0.4rem;
 }
-/*
-.cli .command {
-    color: #0E0;
-    font-weight: bold;
+.normal { @normal@; }
+.comment { @comment@; }
+.command { @command@; }
+.function { @command@; }
+.binary { @command@; }
+.argument { @param@ }
+.variable { @param@ }
+.redirect { @redirection@ }
+.operator { @operator@ }
+.file { @valid_path@ }
+.path { @valid_path@ }
+.string { @quote@ }
+.suggest { @autosuggestion@ }
+.error { @error@ }
+.match { @match@ }
+.search_match { @search_match@ }
+.user { @user@ }
+.cwd { @cwd@ }
+.history { @history_current@ }
+.prompt { color: #222; }
+.cursor { border-bottom: 2px solid green; }
+.underline { text-decoration: underline; }
+/* Console variants */
+.cli-dark {
+    background-color: #111;
+    color: #ddd;
+    padding: 0.4rem 1rem;
+    border-radius: 0.4rem;
 }
-.cli .function {
-    color: #0C0;
-}*/
 /*Menus*/
 .menu { margin: 1.4rem 0; line-height: 2.2rem; }
 .menu ul { list-style-type: none; }

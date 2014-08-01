@@ -232,8 +232,8 @@ b protect
 G
 #.
 # Uncomment the folowing two lines (ss) to log the buffer join.
-s/^.*$/JOIN: &/w debug-lexicon.log
-s/^JOIN: //
+# s/^.*$/JOIN: &/w debug-lexicon.log
+# s/^JOIN: //
 #.
 # Iterate over alternate lines, matching '<' to '\'
 :join

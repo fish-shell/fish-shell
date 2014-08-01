@@ -252,6 +252,29 @@ size_t escape_code_length(const wchar_t *code)
             }
         }
     }
+    
+    if (! found)
+    {
+        /* iTerm2 escape codes: CSI followed by ], terminated by either BEL or escape + backslash. See https://code.google.com/p/iterm2/wiki/ProprietaryEscapeCodes */
+        if (code[1] == ']')
+        {
+            // Start at 2 to skip over <esc>]
+            size_t cursor = 2;
+            for (; code[cursor] != L'\0'; cursor++)
+            {
+                /* Consume a sequence of characters up to <esc>\ or <bel> */
+                if (code[cursor] == '\x07' || (code[cursor] == '\\' && code[cursor - 1] == '\x1b'))
+                {
+                    found = true;
+                    break;
+                }
+            }
+            if (found)
+            {
+                resulting_length = cursor + 1;
+            }
+        }
+    }
 
     if (! found)
     {
@@ -291,7 +314,6 @@ size_t escape_code_length(const wchar_t *code)
             resulting_length = cursor;
         }
     }
-
     if (! found)
     {
         /* Generic VT100 two byte sequence: <esc> followed by something in the range @ through _ */

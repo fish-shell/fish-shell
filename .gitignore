@@ -35,7 +35,9 @@ tests/foo.txt
 FISH-BUILD-VERSION-FILE
 version
 messages.pot
+
 lexicon.txt
+doc_src/user_doc.css
 doc_src/fish_lexicon_filter
 debug-lexicon.log
 
@@ -43,4 +45,6 @@ Fish-Shell.sublime-workspace
 Fish-Shell.sublime-project
 .editorconfig
 doc_src/.editorconfig
+
+
 

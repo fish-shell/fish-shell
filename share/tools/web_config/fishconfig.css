@@ -349,22 +349,23 @@ body {
 	cursor: pointer;
 }
 
-.color_scheme_choice_label {
+.color_scheme_choice_label, .prompt_demo_choice_label {
 	margin-left: 10px;
 	margin-bottom: 3px;
 	cursor: pointer;
 	font-size: 12pt;
 	white-space: normal;
+	color: #AAA;
 }
 
-.color_scheme_choices_scrollview {
+.color_scheme_choices_scrollview, .prompt_choices_scrollview {
 	 border-top: 1px solid #333;
 	 padding-top: 5px;
 	 overflow: scroll;
-	 max-height: 18em; /* about two and a half boxes */
+	 max-height: 30em; /* about two and a half boxes */
 }
 
-.color_scheme_choices_list {
+.color_scheme_choices_list, .prompt_choices_list {
 	overflow-y: hidden; /* makes our height account for floats */
 	padding:  0 10px 15px 10px;  /* top right bottom left */
 	bottom: 0px;
@@ -418,17 +419,26 @@ img.delete_icon {
 	color: #C8C8C8;
 }
 
-.prompt_demo {
+.prompt_demo, .current_prompt {
 	font-size: 12pt;
 	padding: 10px;
-	margin: 5px 20px 25px; /* top right bottom left */
+	margin: 5px 5px 25px 5px; /* top right bottom left */
 	cursor: pointer;
 	line-height: 1.8em;
-	border: solid #777 1px;
+	border: solid #333 1px;
 	position: relative; /* so that our absolutely positioned elements work */
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
-.save_button, .prompt_save_button, .colors_close_button, .customize_theme_button {
+.unbordered {
+	border: none;
+	padding-top: 0;
+	padding-bottom: 0;
+}
+
+.save_button, .prompt_save_button, .colors_close_button, .customize_theme_button, .generic_button {
 	border-radius: 5px;
 	border: solid rgba(71,71,71,0.5) 1px;
 	padding: 5px 8px;
@@ -440,7 +450,7 @@ img.delete_icon {
 	cursor: pointer;
 }
 
-.save_button:hover, .customize_theme_button:hover {
+.save_button:hover, .customize_theme_button:hover, .generic_button:hover {
 	border-color: rgba(71,71,71,0.9);
 }
 
@@ -454,12 +464,6 @@ img.delete_icon {
     color: #ffffff;
 	margin: 2px 20px 25px; /* top right bottom left */
 	font-size: 12pt;
-}
-
-.prompt_demo_choice_label {
-	margin: 25px 20px 5px;
-	font-size: 12pt;
-	white-space: normal;
 }
 
 .prompt_demo_text {

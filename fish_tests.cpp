@@ -1209,6 +1209,14 @@ static void test_escape_sequences(void)
     if (escape_code_length(L"\x1b[2J") != 4) err(L"test_escape_sequences failed on line %d\n", __LINE__);
     if (escape_code_length(L"\x1b[38;5;123mABC") != strlen("\x1b[38;5;123m")) err(L"test_escape_sequences failed on line %d\n", __LINE__);
     if (escape_code_length(L"\x1b@") != 2) err(L"test_escape_sequences failed on line %d\n", __LINE__);
+    
+    // iTerm2 escape sequences
+    if (escape_code_length(L"\x1b]50;CurrentDir=/tmp/foo\x07NOT_PART_OF_SEQUENCE") != 25) err(L"test_escape_sequences failed on line %d\n", __LINE__);
+    if (escape_code_length(L"\x1b]50;SetMark\x07NOT_PART_OF_SEQUENCE") != 13) err(L"test_escape_sequences failed on line %d\n", __LINE__);
+    if (escape_code_length(L"\x1b" L"]6;1;bg;red;brightness;255\x07NOT_PART_OF_SEQUENCE") != 28) err(L"test_escape_sequences failed on line %d\n", __LINE__);
+    if (escape_code_length(L"\x1b]Pg4040ff\x1b\\NOT_PART_OF_SEQUENCE") != 12) err(L"test_escape_sequences failed on line %d\n", __LINE__);
+    if (escape_code_length(L"\x1b]blahblahblah\x1b\\") != 16) err(L"test_escape_sequences failed on line %d\n", __LINE__);
+    if (escape_code_length(L"\x1b]blahblahblah\x07") != 15) err(L"test_escape_sequences failed on line %d\n", __LINE__);
 }
 
 class lru_node_test_t : public lru_node_t
@@ -2688,7 +2696,8 @@ void history_tests_t::test_history_merge(void)
     const size_t count = 3;
     const wcstring name = L"merge_test";
     history_t *hists[count] = {new history_t(name), new history_t(name), new history_t(name)};
-    wcstring texts[count] = {L"History 1", L"History 2", L"History 3"};
+    const wcstring texts[count] = {L"History 1", L"History 2", L"History 3"};
+    const wcstring alt_texts[count] = {L"History Alt 1", L"History Alt 2", L"History Alt 3"};
 
     /* Make sure history is clear */
     for (size_t i=0; i < count; i++)
@@ -2729,6 +2738,32 @@ void history_tests_t::test_history_merge(void)
     {
         do_test(history_contains(everything, texts[i]));
     }
+
+    /* Tell all histories to merge. Now everybody should have everything. */
+    for (size_t i=0; i < count; i++)
+    {
+        hists[i]->incorporate_external_changes();
+    }
+    /* Add some more per-history items */
+    for (size_t i=0; i < count; i++)
+    {
+        hists[i]->add(alt_texts[i]);
+    }
+    /* Everybody should have old items, but only one history should have each new item */
+    for (size_t i = 0; i < count; i++)
+    {
+        for (size_t j=0; j < count; j++)
+        {
+            /* Old item */
+            do_test(history_contains(hists[i], texts[j]));
+
+            /* New item */
+            bool does_contain = history_contains(hists[i], alt_texts[j]);
+            bool should_contain = (i == j);
+            do_test(should_contain == does_contain);
+        }
+    }
+
 
     /* Clean up */
     for (size_t i=0; i < 3; i++)
@@ -2793,7 +2828,7 @@ static bool history_equals(history_t &hist, const wchar_t * const *strings)
 void history_tests_t::test_history_formats(void)
 {
     const wchar_t *name;
-
+    
     // Test inferring and reading legacy and bash history formats
     name = L"history_sample_fish_1_x";
     say(L"Testing %ls", name);
@@ -2885,6 +2920,33 @@ void history_tests_t::test_history_formats(void)
         }
         test_history.clear();
         fclose(f);
+    }
+    
+    name = L"history_sample_corrupt1";
+    say(L"Testing %ls", name);
+    if (! install_sample_history(name))
+    {
+        err(L"Couldn't open file tests/%ls", name);
+    }
+    else
+    {
+        /* We simply invoke get_string_representation. If we don't die, the test is a success. */
+        history_t &test_history = history_t::history_with_name(name);
+        const wchar_t *expected[] =
+        {
+            L"no_newline_at_end_of_file",
+            
+            L"corrupt_prefix",
+            
+            L"this_command_is_ok",
+            
+            NULL
+        };
+        if (! history_equals(test_history, expected))
+        {
+            err(L"test_history_formats failed for %ls\n", name);
+        }
+        test_history.clear();
     }
 }
 

@@ -2,7 +2,7 @@
 
 \subsection history-synopsis Synopsis
 \fish{syn}
-history [--save|--clear]
+history [--save|--clear|--merge]
 history [--search|--delete] [--prefix "prefix string"|--contains "search string"]
 \endfish
 
@@ -11,27 +11,17 @@ history [--search|--delete] [--prefix "prefix string"|--contains "search string"
 `history` is used to list, search and delete the history of commands used.
 
 The following options are available:
-
-- `--save` saves all changes in the history file. The shell automatically
-saves the history file; this option is provided for internal use.
-- `--clear` clears the history file. A prompt is displayed before the history
-is erased.
-- `--search` returns history items in keeping with the `--prefix` or
-`--contains` options.
+- `--save` saves all changes in the history file. The shell automatically saves the history file; this option is provided for internal use.
+- `--clear` clears the history file. A prompt is displayed before the history is erased.
+- `--merge` immediately incorporates history changes from other sessions. Ordinarily fish ignores history changes from sessions started after the current one. This command applies those changes immediately.
+- `--search` returns history items in keeping with the `--prefix` or `--contains` options.
 - `--delete` deletes history items.
-- `--prefix` searches or deletes items in the history that begin with the
-specified text string.
-- `--contains` searches or deletes items in the history that contain the
-specified text string.
+- `--prefix` searches or deletes items in the history that begin with the specified text string.
+- `--contains` searches or deletes items in the history that contain the specified text string.
 
-If `--search` is specified without `--contains` or `--prefix`,
-`--contains` will be assumed.
+If `--search` is specified without `--contains` or `--prefix`, `--contains` will be assumed.
 
-If `--delete` is specified without `--contains` or `--prefix`,
-only a history item which exactly matches the parameter will be erased. No
-prompt will be given. If `--delete` is specified with either of these
-parameters, an interactive prompt will be displayed before any items are
-deleted.
+If `--delete` is specified without `--contains` or `--prefix`, only a history item which exactly matches the parameter will be erased. No prompt will be given. If `--delete` is specified with either of these parameters, an interactive prompt will be displayed before any items are deleted.
 
 \subsection history-examples Example
 

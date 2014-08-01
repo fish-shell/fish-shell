@@ -22,7 +22,7 @@ function fish_prompt --description 'Write out the prompt'
     set -l user_prompt '>'
     switch $USER
         # Set our root colors, if we're root :)
-        case root
+        case root toor
             set user_prompt '#'
             if not set -q __fish_prompt_cwd
                 if set -q fish_color_cwd_root

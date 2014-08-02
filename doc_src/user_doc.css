@@ -87,7 +87,7 @@ a { color: #3d5cb3; }
 .fish_right_bar a:hover { text-decoration: underline; }
 /* Adjust lists */
 .fish_left_bar ul {
-    padding-left: 1.4rem;
+    padding-left: 2rem;
     padding-right: 1rem;
 }
 .fish_right_bar ul {
@@ -171,10 +171,30 @@ h1 > code, h2 > code, h3 > code {
     line-height: 1.9rem;
     color: #333;
     background-color: #fafafa;
+    /*color: #00afff;*/
+    /*background-color: #111;*/
     border: 1px solid #eee;
     border-radius: 0.6rem;
 }
+
 .comment { color: #555; }
+.command, .function, .binary { color: #23326b; }
+.string { color: #725000; }
+
+/*.comment { color: #c33; }
+.command, .function, .binary { color: #2568e2; }
+.argument, .variable, .path, .file { color: #00afff; }
+.redirect { color: #fff; }
+.operator, .match, .history { color: #2ff; }
+.string { color: #c07d2f; }
+.suggest { color: #555; }
+.error { color: #f33; font-weight: bold; }
+.match { color: #2ff; }
+.search_match { background-color: #f2f; }
+.cwd { color: #2f2; }
+.prompt { color: #fff; }
+.cursor { border-bottom: 2px solid #ccc; }
+.underline { text-decoration: underline; }*/
 
 .synopsis {
     background-color: #fafafa;

@@ -87,7 +87,7 @@ a { color: #3d5cb3; }
 .fish_right_bar a:hover { text-decoration: underline; }
 /* Adjust lists */
 .fish_left_bar ul {
-    padding-left: 1.4rem;
+    padding-left: 2rem;
     padding-right: 1rem;
 }
 .fish_right_bar ul {

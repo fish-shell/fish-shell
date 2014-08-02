@@ -409,7 +409,7 @@ A comma separated list of characters enclosed in curly braces will be expanded s
 Example:
 
 \fish
-echo input.{c,h,txt} outputs 'input.c input.h input.txt'
+echo input.{c,h,txt} # Outputs 'input.c input.h input.txt'
 \endfish
 
 The command `mv *.{c,h} src/` moves all files with the suffix '.c' or '.h' to the subdirectory src.

@@ -7,8 +7,8 @@
 # by Mark Griffiths <mark@thebespokepixel.com>             *but quite portable
 #.
 # Finds /fish../endfish blocks in documentation source files and enhances
-# markup. Requires that the short tags declared here are added to Doxyfiles as
-# aliases i.e.:
+# markup. Requires that the four character word 'classes' declared here are
+# added to Doxyfiles as aliases i.e.:
 #.
 # Enhance for HTML Help pages (Doxyfile.user)…
 # ALIASES   = "fish=\htmlonly[block] \n<pre class=\"fish\">"
@@ -26,6 +26,16 @@
 # ALIASES  += "blah{1}=\1"
 # ALIASES  += "cmnd{1}=<em>\1</em>"...
 #.
+# It's meant to only ever be run once, during make, as Doxygen's 'INPUT
+# FILTER', though can be run interactively by passing a file in via stdin. It
+# wont respond to arguments.
+#.
+# It's most easily tested by passing test strings into the compiled script:
+#.
+# echo "Line to test" | ./fish_lexicon_filter
+#.
+# The, at times, archiac looking regex is down to ensuring portable sed BREs
+#.
 # Licensed under whatever terms are most compatible with Fish's GPLv2 license,
 # bascially free to use/reuse/redistribute/laugh at/be inspired by. Don't
 # pretend it's your code unless you've spent more late nights on it than me but
@@ -35,9 +45,10 @@
 #.
 # Pattern flow control for scanning doc.h
 /\\fish/,/\\endfish/ {
-    # Open \fish block
+    # Open \fish block, firstly it it's on it's own line
     /^\\fish$/b
     /^\\fish{[^}]*}$/b
+    # Then if it's inline. Remove and process immediately...
     /^\\fish.*$/ {
         s/^\\fish//
         s/\\endfish//
@@ -172,6 +183,7 @@ s|\([^/~A-Za-z0-9]\)\([~/][/]*\)\([A-Za-z_0-9./-]*\)|\1\\\
 |g
 #.
 b protect
+#.
 # Tidy up. Merge back 'pure' entities from hold space.
 :tidy
 #.
@@ -207,6 +219,7 @@ s/\n//g
     s/\(redr{[^@]*\)@func{\([^}]*\)}/\1\2/
     s/\(redr{[^@]*\)@sbin{\([^}]*\)}/\1\2/
     s/\(redr{[^@]*\)@fsfo{\([^}]*\)}/\1\2/
+    s/\(redr{[^}]*\)}\( *\)@path{\([^}]*\)/\1\2\3/
     t cleanredr
 }
 /@fsfo/{
@@ -216,13 +229,44 @@ s/\n//g
     s/\(fsfo{[^@]*\)@sbin{\([^}]*\)}/\1\2/
     t cleanfsfo
 }
-# Convert 2nd order commands/functions and binaries to arguments
-s/@cmnd/@args/g
-s/@args/@cmnd/1
+#.
+# Finally, restructure to follow Fish's command [arguments] semantics.
+# Find the initial command, and change any others to arguments, up to a ( or ;
+# Assumes that a valid line will start with either a builtin, a function or a binary.
+#.
+:nextcmnd
+s/@cmnd\(.*\)$/@xcmd\
+\1/
+t castargs
+s/@func\(.*\)$/@xfnc\
+\1/
+t castargs
+s/@sbin\(.*\)$/@xbin\
+\1/
+t castargs
+b cleancmd
+:castargs
+s/\n\([^;(]*[;(]\)/\1/
+t nextcmnd
+s/\n\([^@]*\)@cmnd\(.*\)/\1@args\
+\2/
+t castargs
+s/\n\([^@]*\)@func\(.*\)/\1@args\
+\2/
+t castargs
+s/\n\([^@]*\)@sbin\(.*\)/\1@args\
+\2/
+t castargs
+:cleancmd
+s/xcmd/cmnd/g
+s/xfnc/func/g
+s/xbin/sbin/g
+s/\n//g
 # Character Entities
 #.
 # Mark up a few sesitive characters.
 #.
+:entities
 s/</\&lt;/g
 s/>/\&gt;/g
 #.
@@ -274,12 +318,9 @@ s/\([$%][$%]*\)\([A-Za-z_0-9][A-Za-z_0-9]*\)/@vars{@optr{\1}\2}/g
 # Files
 s/\([A-Za-z*][A-Za-z]*\.[a-z0-9][a-z0-9]*\)/@fsfo{\1}/g
 #.
-# Operators
-# s/\([^^=|+*&%<>{-]\)\([=|+*&%<>^-][|+*&%<>^-]*\)\([^0-9A-Za-z]\)/\1@optr{\2}\3/g
-#.
 :commands
 #.
-# Manually add a few commands not harvested from source.
+# Manually add a few commands not harvested from source files.
 #.
 s,[[:<:]]in[[:>:]],@args{in},g
 s,[[:<:]]whoami[[:>:]],@sbin{whoami},g

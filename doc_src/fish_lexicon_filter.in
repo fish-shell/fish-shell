@@ -137,17 +137,15 @@ t html
 #.
 # Comments:
 # Capture full line comments
-/^#.*$/ {
+/^[ ]*#.*$/ {
     # Assume any line starting with a # is complete
     s//@blah{&}/
     t
 }
 # Match sub-line comments
-/#[^0-9A-Za-z][ ]*.*$/ {
-    # Assume comment finishes a line
-    s//@blah{&}/
-    t
-}
+s/#\(.*$\)/\\\
+<@blah{#\1}\
+/
 #.
 # Protected entities These shouldn't allow nested structure, so we move them
 # to a marked, new line for a future extract/process/insert action.
@@ -213,27 +211,41 @@ s/\n//g
 #.
 # Clean up special cases
 #.
+/@blah/{
+    s/\(blah{[^@]*\)@sglq{\([^}]*\)}/\1'\2'/
+    s/\(blah{[^@]*\)@dblq{\([^}]*\)}/\1"\2"/
+    s/\(blah{[^@]*\)@....{\([^}]*\)}/\1\2/
+}
 /@redr/{
     :cleanredr
-    s/\(redr{[^@]*\)@cmnd{\([^}]*\)}/\1\2/
-    s/\(redr{[^@]*\)@func{\([^}]*\)}/\1\2/
-    s/\(redr{[^@]*\)@sbin{\([^}]*\)}/\1\2/
-    s/\(redr{[^@]*\)@fsfo{\([^}]*\)}/\1\2/
+    s/\(redr{[^@}]*\)@cmnd{\([^}]*\)}/\1\2/
+    s/\(redr{[^@}]*\)@func{\([^}]*\)}/\1\2/
+    s/\(redr{[^@}]*\)@sbin{\([^}]*\)}/\1\2/
+    s/\(redr{[^@}]*\)@fsfo{\([^}]*\)}/\1\2/
     s/\(redr{[^}]*\)}\( *\)@path{\([^}]*\)/\1\2\3/
     t cleanredr
 }
 /@fsfo/{
     :cleanfsfo
-    s/\(fsfo{[^@]*\)@cmnd{\([^}]*\)}/\1\2/
-    s/\(fsfo{[^@]*\)@func{\([^}]*\)}/\1\2/
-    s/\(fsfo{[^@]*\)@sbin{\([^}]*\)}/\1\2/
+    s/\(fsfo{[^@}]*\)@cmnd{\([^}]*\)}/\1\2/
+    s/\(fsfo{[^@}]*\)@func{\([^}]*\)}/\1\2/
+    s/\(fsfo{[^@}]*\)@sbin{\([^}]*\)}/\1\2/
     t cleanfsfo
 }
 #.
 # Finally, restructure to follow Fish's command [arguments] semantics.
-# Find the initial command, and change any others to arguments, up to a ( or ;
+# Find the initial command, and change any others to arguments, up to a |, ( or ;
 # Assumes that a valid line will start with either a builtin, a function or a binary.
 #.
+s/^\([ ]*\)@cmnd\(.*\)/\1@xcmd\
+\2/
+t castargs
+s/^\([ ]*\)@func\(.*\)/\1@xfnc\
+\2/
+t castargs
+s/^\([ ]*\)@sbin\(.*\)/\1@xbin\
+\2/
+t castargs
 :nextcmnd
 s/@cmnd\(.*\)$/@xcmd\
 \1/
@@ -247,6 +259,7 @@ t castargs
 b cleancmd
 :castargs
 s/\n\([^;(]*[;(]\)/\1/
+s/\n\([^@]*@redr{|}\)/\1/
 t nextcmnd
 s/\n\([^@]*\)@cmnd\(.*\)/\1@args\
 \2/
@@ -271,8 +284,8 @@ s/</\&lt;/g
 s/>/\&gt;/g
 #.
 # Uncomment the folowing two lines (ss) to log the final output, sent to Doxygen.
-# s/^.*$/OUT : &/w debug-lexicon.log
-# s/^OUT : //
+s/^.*$/OUT : &/w debug-lexicon.log
+s/^OUT : //
 #.
 # Lines are reassembled, so branch to end
 b

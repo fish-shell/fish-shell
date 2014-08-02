@@ -388,7 +388,8 @@ doc_src/fish_lexicon_filter: lexicon.txt doc_src/fish_lexicon_filter.in
 	sed <$@.in >$@.tmp -e 's|@sed@|'"`command -v sed`"'|' -e '/^[ ]*#[^!]/d'
 	# Scan through the lexicon, transforming each line to something usefue to Doxygen.
 	sed <lexicon.txt >>$@.tmp -n \
-		-e 's|^\([a-z][a-z][a-z][a-z]\) \([a-z_-]*\)$$|s,[[:<:]]\2[[:>:]],@\1{\2},g|p';
+		-e 's|^\([a-z][a-z][a-z][a-z]\) \([a-z_-]*\)$$|s,[[:<:]]\2[[:>:]],@\1{\2},g|p' \
+		-e '$$G;s/.*\n/b tidy/p'; \
 	mv $@.tmp $@; if test -x $@; then true; else chmod a+x $@; fi
 
 #

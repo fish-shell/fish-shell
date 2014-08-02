@@ -605,8 +605,8 @@ end
 function avast
     set phrase 'Avast, mateys'
 
-    # Calling the shiver function here can not change any variables
-    # in the local scope
+    # Calling the shiver function here can not
+    # change any variables in the local scope
     shiver
 
     echo $phrase

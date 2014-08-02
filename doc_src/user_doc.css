@@ -30,7 +30,6 @@ body {
     position: relative;
     width: 100%;
     height: 3.6rem;
-    overflow: hidden;
 }
 /* Don't show the header */
 .header { display: none; }
@@ -45,7 +44,7 @@ body {
     bottom: 0;
     overflow-y: scroll;
     -webkit-overflow-scrolling: touch; /* necessary for momentum scrolling */
-    font: 400 1.4rem/2.3rem "DejaVuSans", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font: 400 1.3rem/2.1rem "DejaVuSans", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 .fish_left_bar {
     width: 250px;
@@ -54,16 +53,14 @@ body {
     background-color: #1f2d53;
 }
 .fish_left_little { width: 200px; }
-.fish_left_big { width: 380px; }
 .fish_right_bar {
     margin-left: 250px;
     margin-right: 0;
     padding: 0 3rem;
     -moz-box-shadow: -6px 0 6px 4px black;
     -webkit-box-shadow: -6px 0 6px 4px black;
-    box-shadow: -0.6rem 0 0.6rem 0.4rem rgba(0,0,0,0.4);
+    box-shadow: -0.3rem 0.3rem 1rem #000818;
 }
-.fish_right_little { margin-left: 380px; }
 .fish_right_big { margin-left: 200px; }
 .fish_only_bar {
     width: 100%;
@@ -90,7 +87,7 @@ a { color: #3d5cb3; }
 .fish_right_bar a:hover { text-decoration: underline; }
 /* Adjust lists */
 .fish_left_bar ul {
-    padding-left: 2rem;
+    padding-left: 1.4rem;
     padding-right: 1rem;
 }
 .fish_right_bar ul {
@@ -111,22 +108,23 @@ h1, h2, h3, h4, h5, h6 {
     font-family: Roboto, "DejaVuSansCondensed-Bold", "DejaVuSans-Bold", Verdana, sans-serif;
 }
 h1 {
-    margin: 2rem 0 1.4rem 0;
+    margin: 1.6rem 0 1rem 0;
     font-weight: 700;
-    font-size: 2rem;
+    font-size: 1.7rem;
 }
 h2 {
     margin: 1.6rem 0 1rem 0;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 1.7rem;
 }
 h3 {
     margin: 1rem 0 0.4rem 0;
     font-weight: 500;
-    font-size: 1.6rem;
+    font-size: 1.5rem;
 }
 .interior_title {
     font-size: 2rem;
+    margin: 2rem 0 1.4rem 0;
     color: #414141;
     padding-bottom: 10px;
     border-bottom: 1px solid #AAA;
@@ -167,8 +165,9 @@ h1 > code, h2 > code, h3 > code {
     font-weight: 700;
 }
 .fish {
-    margin: 1rem;
-    padding: 0.4rem 1rem;
+    margin: 1rem 0;
+    padding: 0.6rem 1rem;
+    font-size: 1.3rem;
     line-height: 1.9rem;
     background-color: #fafafa;
     border: 1px solid #f0f0f0;

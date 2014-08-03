@@ -37,10 +37,12 @@ resolve_path()
 # Expand relative paths
 DOXYFILE=`resolve_path "$DOXYFILE"`
 INPUTDIR=`resolve_path "$INPUTDIR"`
+INPUTFILTER=`resolve_path "$INPUT_FILTER"`
 OUTPUTDIR=`resolve_path "$OUTPUTDIR"`
 
 echo "      doxygen file: $DOXYFILE"
 echo "   input directory: $INPUTDIR"
+echo "      input filter: $INPUTFILTER"
 echo "  output directory: $OUTPUTDIR"
 echo "          skipping: $CONDEMNED_PAGES"
 
@@ -87,6 +89,7 @@ done
 # This prevents doxygen from generating "documentation" for intermediate directories
 DOXYPARAMS=$(cat <<EOF
 PROJECT_NUMBER=$PROJECT_NUMBER
+INPUT_FILTER=$INPUTFILTER
 INPUT=.
 OUTPUT_DIRECTORY=$OUTPUTDIR
 QUIET=YES
@@ -100,7 +103,7 @@ find "${OUTPUTDIR}" -name "*.1" -delete
 
 # Run doxygen
 cd "$TMPLOC"
-(cat "${DOXYFILE}" ; echo "$DOXYPARAMS";) | "$DOXYGENPATH" - 
+(cat "${DOXYFILE}" ; echo "$DOXYPARAMS";) | "$DOXYGENPATH" -
 
 # Remember errors
 RESULT=$?
@@ -110,15 +113,16 @@ if test "$RESULT" = 0 ; then
 
 	# Postprocess the files
 	for i in "$INPUTDIR"/*.txt; do
-		# It would be nice to use -i here for edit in place, but that is not portable 
+		# It would be nice to use -i here for edit in place, but that is not portable
 		CMD_NAME=`basename "$i" .txt`;
-		sed -e "s/\(.\)\\.SH/\1/" -e "s/$CMD_NAME *\\\\- *\"\(.*\)\"/\1/" "${CMD_NAME}.1" > "${CMD_NAME}.1.tmp"
+		sed < ${CMD_NAME}.1 > ${CMD_NAME}.1.tmp \
+            -e "/.SH \"$CMD_NAME/d" \
+            -e "s/^$CMD_NAME * \\\- \([^ ]*\) /\\\fB\1\\\fP -/"
 		mv "${CMD_NAME}.1.tmp" "${CMD_NAME}.1"
 	done
-	
+
 	# Erase condemned pages
 	rm -f $CONDEMNED_PAGES
-	
 fi
 
 # Destroy TMPLOC

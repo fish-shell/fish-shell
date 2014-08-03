@@ -277,7 +277,7 @@ doc_src/user_doc.css: doc_src/user_doc.css.in doc_src/fish_lexicon_filter
 #
 
 doc: *.h *.cpp doc.h Doxyfile
-	(cat Doxyfile ; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION)) | doxygen - ;
+	(cat Doxyfile; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION)) | doxygen - ;
 
 
 #
@@ -386,7 +386,7 @@ doc_src/fish_lexicon_filter: lexicon.txt doc_src/fish_lexicon_filter.in
 	# Clean the filter input comments and set the shebang as sed can reside in
 	# /bin or /usr/bin and some versions dont allow more than one comment!.
 	sed <$@.in >$@.tmp -e 's|@sed@|'"`command -v sed`"'|' -e '/^[ ]*#[^!]/d'
-	# Scan through the lexicon, transforming each line to something usefue to Doxygen.
+	# Scan through the lexicon, transforming each line to something useful to Doxygen.
 	sed <lexicon.txt >>$@.tmp -n \
 		-e 's|^\([a-z][a-z][a-z][a-z]\) \([a-z_-]*\)$$|s,[[:<:]]\2[[:>:]],@\1{\2},g|p' \
 		-e '$$G;s/.*\n/b tidy/p'; \
@@ -493,11 +493,12 @@ common.o: $(COMMON_FILES)
 # There ought to be something simpler.
 #
 
-share/man: $(HELP_SRC)
+share/man: $(HELP_SRC) doc_src/fish_lexicon_filter
 	-mkdir share/man
 	touch share/man
 	-rm -Rf share/man/man1
-	PROJECT_NUMBER=`echo $(FISH_BUILD_VERSION)| sed "s/-.*//"` ./build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share
+	PROJECT_NUMBER=`echo $(FISH_BUILD_VERSION)| sed "s/-.*//"` INPUT_FILTER=doc_src/fish_lexicon_filter \
+	./build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share
 
 #
 # The build rules for installing/uninstalling fish
@@ -811,7 +812,7 @@ clean:
 	rm -f $(PROGRAMS) fish_tests key_reader
 	rm -f command_list.txt command_list_toc.txt toc.txt
 	rm -f doc_src/index.hdr doc_src/commands.hdr
-	rm -f doc_src/fish_lexicon_filter lexicon.txt
+	rm -f doc_src/fish_lexicon_filter lexicon.txt debug-lexicon.log
 	rm -f FISH-BUILD-VERSION-FILE
 	if test "$(HAVE_DOXYGEN)" = 1; then \
 		rm -rf doc user_doc share/man; \

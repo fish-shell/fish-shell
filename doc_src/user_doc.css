@@ -197,9 +197,11 @@ h1 > code, h2 > code, h3 > code {
 .underline { text-decoration: underline; }*/
 
 .synopsis {
-    background-color: #fafafa;
     border: none;
     color: #333;
+    background-color: #fafafa;
+    /*color: #00afff;*/
+    /*background-color: #111;*/
 }
 /* Console variants */
 .cli-dark {

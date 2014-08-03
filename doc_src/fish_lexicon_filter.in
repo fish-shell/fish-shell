@@ -32,7 +32,7 @@
 #.
 # It's most easily tested by passing test strings into the compiled script:
 #.
-# echo "Line to test" | ./fish_lexicon_filter
+# echo "/fish Line to test" | ./fish_lexicon_filter
 #.
 # The, at times, archiac looking regex is down to ensuring portable sed BREs
 #.
@@ -137,7 +137,7 @@ t html
 #.
 # Comments:
 # Capture full line comments
-/^[ ]*#.*$/ {
+/^ *#.*$/ {
     # Assume any line starting with a # is complete
     s//@blah{&}/
     t
@@ -237,13 +237,34 @@ s/\n//g
 # Find the initial command, and change any others to arguments, up to a |, ( or ;
 # Assumes that a valid line will start with either a builtin, a function or a binary.
 #.
-s/^\([ ]*\)@cmnd\(.*\)/\1@xcmd\
+# 'if' and 'for' seem to be special cases
+/@cmnd{if}/ {
+s//@xcmd\
+{if}/
+s/@cmnd{else}/@xcmd\
+{else}/
+s/@cmnd{not}/@xcmd\
+{not}/
+s/$}@cmnd{status}/$}status/
+b nextcmnd
+}
+/@cmnd{for}/ {
+s/@cmnd{for}/@xcmd\
+{for}/
+s/[[:<:]]in[[:>:]]/@args{in}/
+b castargs
+}
+
+#.
+# Find initial command
+#.
+s/^\( *\)@cmnd\(.*\)/\1@xcmd\
 \2/
 t castargs
-s/^\([ ]*\)@func\(.*\)/\1@xfnc\
+s/^\( *\)@func\(.*\)/\1@xfnc\
 \2/
 t castargs
-s/^\([ ]*\)@sbin\(.*\)/\1@xbin\
+s/^\( *\)@sbin\(.*\)/\1@xbin\
 \2/
 t castargs
 :nextcmnd
@@ -270,22 +291,37 @@ t castargs
 s/\n\([^@]*\)@sbin\(.*\)/\1@args\
 \2/
 t castargs
+s/\n\([^@]*\)@\(....\)\(.*\)/\1@\2\
+\3/
+t castargs
 :cleancmd
 s/xcmd/cmnd/g
 s/xfnc/func/g
 s/xbin/sbin/g
 s/\n//g
-# Character Entities
 #.
-# Mark up a few sesitive characters.
+# Remove any args after echo
+#.
+/@cmnd{echo}/ {
+s//\
+&\
+/
+:cleanecho
+s/\n\([^@]*\)@args{\([^}]*\)}/\1\2/
+t cleanecho
+s/\n//g
+w debug-lexicon.log
+}
+#.
+# Mark up sesitive character entities.
 #.
 :entities
 s/</\&lt;/g
 s/>/\&gt;/g
 #.
 # Uncomment the folowing two lines (ss) to log the final output, sent to Doxygen.
-s/^.*$/OUT : &/w debug-lexicon.log
-s/^OUT : //
+# s/^.*$/OUT : &/w debug-lexicon.log
+# s/^OUT : //
 #.
 # Lines are reassembled, so branch to end
 b
@@ -306,8 +342,8 @@ s/\n$//
 # characters. Basically the inverse of the 'patternflush' action, with
 # additional trailing characters stripped.
 x
-s/^[ ]*[^<][^@][^}]*$//
-s/^[ ]*[^<][^@][^\\]*[\\ ()]*\n//
+s/^ *[^<][^@][^}]*$//
+s/^ *[^<][^@][^\\]*[\\ ()]*\n//
 :holdflush
 s/}[)(\\ ][)(\\ ]*/}/
 s/\n[];)|* -][^\\]*[\\]*//
@@ -335,7 +371,6 @@ s/\([A-Za-z*][A-Za-z]*\.[a-z0-9][a-z0-9]*\)/@fsfo{\1}/g
 #.
 # Manually add a few commands not harvested from source files.
 #.
-s,[[:<:]]in[[:>:]],@args{in},g
 s,[[:<:]]whoami[[:>:]],@sbin{whoami},g
 s,[[:<:]]fishd[[:>:]],@sbin{fishd},g
 #.

@@ -168,16 +168,16 @@ default through a simple mechanism called a redirection.
 An example of a file redirection is <code> echo hello \>output.txt</code>,
 which directs the output of the echo command to the file output.txt.
 
-- To redirect standard input, write <code>\<SOURCE_FILE</code>
-- To redirect standard output, write <code>\>DESTINATION</code>
-- To redirect standard error, write <code>^DESTINATION</code>
-- To redirect standard output to a file which will be appended, write <code>\>\>DESTINATION_FILE</code>
-- To redirect standard error to a file which will be appended, write <code>^^DESTINATION_FILE</code>
+- To read standard input from a file, write <code>\<SOURCE_FILE</code>
+- To write standard output to a file, write <code>\>DESTINATION</code>
+- To write standard error to a file, write <code>^DESTINATION</code>
+- To append standard output to a file, write <code>\>\>DESTINATION_FILE</code>
+- To append standard error to a file, write <code>^^DESTINATION_FILE</code>
 
 <code>DESTINATION</code> can be one of the following:
 
 - A filename. The output will be written to the specified file.
-- An ampersand (\&) followed by the number of another file descriptor. The file descriptor will be a duplicate of the specified file descriptor.
+- An ampersand (\&) followed by the number of another file descriptor. The output will be written to that file descriptor instead.
 - An ampersand followed by a minus sign (\&-). The file descriptor will be closed.
 
 Example:
@@ -186,15 +186,16 @@ To redirect both standard output and standard error to the file
 all_output.txt, you can write <code>echo Hello \>all_output.txt
 ^\&1</code>.
 
-Any FD can be redirected in an arbitrary way by prefixing the
-redirection with the number of the FD.
+Any file descriptor can be redirected in an arbitrary way by prefixing the
+redirection with the file descriptor.
 
-- To redirect input of FD number N, write <code>N\<DESTINATION</code>
-- To redirect output of FD number N, write <code>N\>DESTINATION</code>
-- To redirect output of FD number N to a file which will be appended, write <code>N\>\>DESTINATION_FILE</code>
+- To redirect input of FD N, write <code>N\<DESTINATION</code>
+- To redirect output of FD N, write <code>N\>DESTINATION</code>
+- To append the output of FD N to a file, write <code>N\>\>DESTINATION_FILE</code>
 
-Example: <code>echo Hello 2\>-</code> and <code>echo Hello ^-</code> are
-equivalent.
+Example: <code>echo Hello 2\>output.stderr</code> and <code>echo Hello
+^output.stderr</code> are equivalent, and write the standard error (file
+descriptor 2) of the target program to <code>output.stderr</code>.
 
 \subsection piping Piping
 

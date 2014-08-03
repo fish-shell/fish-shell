@@ -119,7 +119,7 @@ void reader_pop_current_filename();
 
    \param cmd Command line string passed to \c fish_title if is defined.
 */
-void reader_write_title(const wchar_t *cmd);
+void reader_write_title(const wcstring &cmd);
 
 /**
    Call this function to tell the reader that a repaint is needed, and

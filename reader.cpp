@@ -902,9 +902,8 @@ bool reader_thread_job_is_stale()
     return (void*)(uintptr_t) s_generation_count != pthread_getspecific(generation_count_key);
 }
 
-void reader_write_title(const wchar_t *cmd)
+void reader_write_title(const wcstring &cmd)
 {
-    const wchar_t *title;
     const env_var_t term_str = env_get_string(L"TERM");
 
     /*
@@ -934,7 +933,6 @@ void reader_write_title(const wchar_t *cmd)
     {
         char *n = ttyname(STDIN_FILENO);
 
-
         if (contains(term, L"linux"))
         {
             return;
@@ -942,24 +940,23 @@ void reader_write_title(const wchar_t *cmd)
 
         if (strstr(n, "tty") || strstr(n, "/vc/"))
             return;
-
-
     }
 
-    wcstring fish_title = L"fish_title";
-    if (cmd) {
-        fish_title.append(L" ");
-        fish_title.append(parse_util_escape_string_with_quote(cmd, L'\0'));
+    wcstring fish_title_command = DEFAULT_TITLE;
+    if (function_exists(L"fish_title"))
+    {
+        fish_title_command = L"fish_title";
+        if (! cmd.empty())
+        {
+            fish_title_command.append(L" ");
+            fish_title_command.append(parse_util_escape_string_with_quote(cmd, L'\0'));
+        }
     }
-    title = function_exists(L"fish_title")?fish_title.c_str():DEFAULT_TITLE;
-
-    if (wcslen(title) ==0)
-        return;
 
     wcstring_list_t lst;
 
     proc_push_interactive(0);
-    if (exec_subshell(title, lst, false /* do not apply exit status */) != -1)
+    if (exec_subshell(fish_title_command, lst, false /* do not apply exit status */) != -1)
     {
         if (! lst.empty())
         {
@@ -1020,7 +1017,7 @@ static void exec_prompt()
     }
 
     /* Write the screen title */
-    reader_write_title(0);
+    reader_write_title(L"");
 }
 
 void reader_init()
@@ -2540,7 +2537,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd)
     if (! ft.empty())
         env_set(L"_", ft.c_str(), ENV_GLOBAL);
 
-    reader_write_title(cmd.c_str());
+    reader_write_title(cmd);
 
     term_donate();
 

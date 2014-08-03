@@ -14,12 +14,10 @@ if IS_PY2:
         from urllib.parse import parse_qs
     except ImportError:
         from cgi import parse_qs
-    import Cookie
 else:
     import http.server as SimpleHTTPServer
     import socketserver as SocketServer
     from urllib.parse import parse_qs
-    import http.cookies as Cookie
 
 # Disable CLI web browsers
 term = os.environ.pop('TERM', None)
@@ -698,22 +696,12 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_GET(self):
         p = self.path
 
-        if p.startswith('/start/' + authkey):
-            initial_tab = p.split('/')[3]
-            cookies = Cookie.SimpleCookie()
-            cookies['com.fishshell.auth'] = authkey
-            cookies['com.fishshell.auth']['path'] = '/'
-            self.send_response(302)
-            self.send_header('Set-Cookie', cookies.output(header=''))
-            self.send_header('Location', '/#' + initial_tab)
-            self.end_headers()
-            return
+        authpath = '/' + authkey
+        if p.startswith(authpath):
+            p = p[len(authpath):]
         else:
-            if 'cookie' not in self.headers:
-                return self.send_error(403)
-            cookies = Cookie.SimpleCookie(self.headers['cookie'])
-            if 'com.fishshell.auth' not in cookies.keys() or cookies['com.fishshell.auth'].value != authkey:
-                return self.send_error(403)
+            return self.send_error(403)
+        self.path = p
 
         if p == '/colors/':
             output = self.do_get_colors()
@@ -745,13 +733,15 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.write_to_wfile(json.dumps(output))
 
     def do_POST(self):
-        if 'cookie' not in self.headers:
-            return self.send_error(403)
-        cookies = Cookie.SimpleCookie(self.headers['cookie'])
-        if 'com.fishshell.auth' not in cookies.keys() or cookies['com.fishshell.auth'].value != authkey:
-            return self.send_error(403)
-
         p = self.path
+
+        authpath = '/' + authkey
+        if p.startswith(authpath):
+            p = p[len(authpath):]
+        else:
+            return self.send_error(403)
+        self.path = p
+
         if IS_PY2:
             ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
         else: # Python 3
@@ -889,10 +879,10 @@ initial_tab = ''
 if len(sys.argv) > 1:
     for tab in ['functions', 'prompt', 'colors', 'variables', 'history', 'bindings']:
         if tab.startswith(sys.argv[1]):
-            initial_tab = tab
+            initial_tab = '#' + tab
             break
 
-url = 'http://localhost:%d/start/%s/%s' % (PORT, authkey, initial_tab)
+url = 'http://localhost:%d/%s/%s' % (PORT, authkey, initial_tab)
 
 # Create temporary file to hold redirect to real server
 # This prevents exposing the URL containing the authentication key on the command line
@@ -938,9 +928,5 @@ try:
 except KeyboardInterrupt:
     print("\nShutting down.")
 
-# Clean up, doesn't matter if this fails
-try:
-    os.remove(filename)
-except:
-    pass
-
+# Clean up temporary file
+os.remove(filename)

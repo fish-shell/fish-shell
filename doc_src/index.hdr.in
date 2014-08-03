@@ -1326,16 +1326,29 @@ executed or put into the foreground and the output is used as a
 titlebar message. The $_ environment variable will always contain the
 name of the job to be put into the foreground (Or 'fish' if control is
 returning to the shell) when the \c fish_prompt function is called.
+The first argument to fish_title will contain the most
+recently executed foreground command as a string, starting with fish 2.2.
 
-Example:
+Examples:
 <p>
 The default \c fish title is
 </p>
 <p>
 <pre>
 function fish_title
-	echo $_ ' '
-	pwd
+    echo $_ ' '
+    pwd
+end
+</pre>
+</p>
+
+<p>
+To show the last command in the title:
+</p>
+<p>
+<pre>
+function fish_title
+    echo $argv[1]
 end
 </pre>
 </p>

@@ -17,7 +17,7 @@ extern connection_t env_universal_server;
 /**
    Initialize the envuni library
 */
-void env_universal_init(const char * p,
+void env_universal_init(std::string p,
                         wchar_t *u,
                         void (*sf)(),
                         void (*cb)(fish_message_type_t type, const wchar_t *name, const wchar_t *val));

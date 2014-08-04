@@ -620,8 +620,8 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
 
     const env_var_t user_dir_wstr = env_get_string(L"USER");
 
-    const char * fishd_dir = common_get_runtime_path();
-    env_set(L"__fish_runtime_dir", str2wcstring(fishd_dir).c_str(), ENV_GLOBAL);
+    std::string fishd_dir = common_get_runtime_path();
+    env_set(L"__fish_runtime_dir", str2wcstring(fishd_dir).c_str(), ENV_GLOBAL | ENV_EXPORT);
 
     wchar_t * user_dir = user_dir_wstr.missing()?NULL:const_cast<wchar_t*>(user_dir_wstr.c_str());
 

@@ -159,10 +159,15 @@ static int quit=0;
 */
 static std::string get_socket_filename(void)
 {
-    const char *dir = common_get_runtime_path();
+    std::string dir = common_get_runtime_path();
+
+    if (dir == "") {
+        debug(0, L"Cannot access desired socket path.");
+        exit(EXIT_FAILURE);
+    }
 
     std::string name;
-    name.reserve(strlen(dir) + strlen(SOCK_FILENAME) + 1);
+    name.reserve(dir.length() + strlen(SOCK_FILENAME) + 1);
     name.append(dir);
     name.push_back('/');
     name.append(SOCK_FILENAME);

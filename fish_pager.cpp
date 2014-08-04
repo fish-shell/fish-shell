@@ -1032,8 +1032,8 @@ static void init(int mangle_descriptors, int out)
         exit(1);
     }
 
-
-    env_universal_init("", 0, 0, 0);
+    std::string dir = common_get_runtime_path();
+    env_universal_init(dir, 0, 0, 0);
     input_common_init(&interrupt_handler);
     output_set_writer(&pager_buffered_writer);
 

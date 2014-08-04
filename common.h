@@ -743,6 +743,6 @@ extern "C" {
 }
 
 /** Return the path of an appropriate runtime data directory */
-const char* common_get_runtime_path(void);
+std::string common_get_runtime_path();
 
 #endif

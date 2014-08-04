@@ -2268,10 +2268,11 @@ static int check_runtime_path(const char * path)
 }
 
 /** Return the path of an appropriate runtime data directory */
-const char* common_get_runtime_path(void)
+std::string common_get_runtime_path()
 {
     const char *dir = getenv("XDG_RUNTIME_DIR");
     const char *uname = getenv("USER");
+    std::string path;
 
     if (uname == NULL)
     {
@@ -2283,19 +2284,19 @@ const char* common_get_runtime_path(void)
     {
         // /tmp/fish.user
         dir = "/tmp/fish.";
-        std::string path;
         path.reserve(strlen(dir) + strlen(uname));
         path.append(dir);
         path.append(uname);
         if (check_runtime_path(path.c_str()) != 0)
         {
-            debug(0, L"Couldn't create secure runtime path: '%s'", path.c_str());
-            exit(EXIT_FAILURE);
+            debug(0, L"Runtime path not available. Try deleting the directory %s and restarting fish.", path.c_str());
+            path.clear();
         }
-        return strdup(path.c_str());
     }
     else
     {
-        return dir;
+        path.reserve(strlen(dir));
+        path.append(dir);
     }
+    return path;
 }

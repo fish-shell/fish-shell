@@ -242,23 +242,29 @@ static void reconnect()
 }
 
 
-void env_universal_init(const char * p,
+void env_universal_init(std::string p,
                         wchar_t *u,
                         void (*sf)(),
                         void (*cb)(fish_message_type_t type, const wchar_t *name, const wchar_t *val))
 {
-    path=p;
+    path=p.c_str();
     user=u;
     start_fishd=sf;
     external_callback = cb;
 
-    env_universal_server.fd = get_socket();
-    env_universal_common_init(&callback);
-    env_universal_read_all();
-    s_env_univeral_inited = true;
-    if (env_universal_server.fd >= 0)
+    if (p == "") {
+        debug(1, L"Could not connect to universal variable server. You will not be able to share variable values between fish sessions.");
+    }
+    else
     {
-        env_universal_barrier();
+        env_universal_server.fd = get_socket();
+        env_universal_common_init(&callback);
+        env_universal_read_all();
+        s_env_univeral_inited = true;
+        if (env_universal_server.fd >= 0)
+        {
+            env_universal_barrier();
+        }
     }
 }
 

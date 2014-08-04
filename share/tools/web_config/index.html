@@ -556,7 +556,7 @@ function switch_tab(new_tab) {
 	if (new_tab == 'tab_colors') {
 		/* Keep track of whether this is the first element */
 		var first = true
-		run_get_request('/colors/', function(key_and_values){
+		run_get_request('colors/', function(key_and_values){
 			/* Result is name, description, value */
 			var key = key_and_values[0]
 			var description = key_and_values[1]
@@ -577,7 +577,7 @@ function switch_tab(new_tab) {
 		sample_prompts.length = 0
 		/* Color the first one blue */
 		var first = true;
-		run_get_request('/sample_prompts/', function(sample_prompt){
+		run_get_request('sample_prompts/', function(sample_prompt){
 			var name = sample_prompt['name']
 			sample_prompts[name] = sample_prompt
 			var color = first ? '66F' : 'AAA'
@@ -594,7 +594,7 @@ function switch_tab(new_tab) {
 	} else if (new_tab == 'tab_functions') {
 		/* Keep track of whether this is the first element */
 		var first = true
-		run_get_request('/functions/', function(contents){
+		run_get_request('functions/', function(contents){
 			var elem = create_master_element(contents, false/* description */, 'AAAAAA', '11pt', select_function_master_element)
 			if (first) {
 				/* It's the first element, so select it, so something gets selected */
@@ -606,7 +606,7 @@ function switch_tab(new_tab) {
 		$('#master_detail_table').show()
 		wants_data_table = false
 	} else if (new_tab == 'tab_variables') {
-		run_get_request_with_bulk_handler('/variables/', function(json_contents){
+		run_get_request_with_bulk_handler('variables/', function(json_contents){
 			var rows = new Array()
 			for (var i = 0; i < json_contents.length; i++) {
 				var contents = json_contents[i]
@@ -622,7 +622,7 @@ function switch_tab(new_tab) {
 	} else if (new_tab == 'tab_history') {
 		// Clear the history map
 		history_element_map.length = 0
-		run_get_request_with_bulk_handler('/history/', function(json_contents){
+		run_get_request_with_bulk_handler('history/', function(json_contents){
 			start = new Date().getTime()
 			var rows = new Array()
 			for (var i = 0; i < json_contents.length; i++) {
@@ -757,7 +757,7 @@ function select_color_master_element(elem) {
 function select_function_master_element(elem) {
 	select_master_element(elem)
 	
-	run_post_request('/get_function/', {
+	run_post_request('get_function/', {
 		what: current_master_element_name()
 	}, function(contents){
 		/* Replace leading tabs and groups of four spaces at the beginning of a line with two spaces. */
@@ -773,7 +773,7 @@ function select_sample_prompt_master_element(elem) {
 	select_master_element(elem)
 	var name = current_master_element_name()
 	sample_prompt = sample_prompts[name]
-	run_post_request('/get_sample_prompt/', {
+	run_post_request('get_sample_prompt/', {
 		what: sample_prompt['function']
 	}, function(keys_and_values){
 		var prompt_func = keys_and_values['function']
@@ -788,7 +788,7 @@ function select_sample_prompt_master_element(elem) {
 function select_current_prompt_master_element(elem) {
 	$('.prompt_save_button').hide()
 	select_master_element(elem)
-	run_get_request_with_bulk_handler('/current_prompt/', function(keys_and_values){
+	run_get_request_with_bulk_handler('current_prompt/', function(keys_and_values){
 		var prompt_func = keys_and_values['function']
 		var prompt_demo = keys_and_values['demo']
 		var prompt_font_size = keys_and_values['font_size']
@@ -801,7 +801,7 @@ function select_current_prompt_master_element(elem) {
 function save_current_prompt() {
 	var name = current_master_element_name()
 	var sample_prompt = sample_prompts[name]
-	run_post_request('/set_prompt/', {
+	run_post_request('set_prompt/', {
 		what: sample_prompt['function']
 	}, function(contents){
 		if (contents == "OK") {
@@ -817,7 +817,7 @@ function post_style_to_server() {
 	if (! style)
 		return
 	
-	run_post_request('/set_color/', {
+	run_post_request('set_color/', {
 		what: current_master_element_name(),
 		color: style.color,
 		background_color: style.background_color,
@@ -1221,7 +1221,7 @@ function escape_HTML(foo) {
 function tell_fish_to_delete_element(idx) {
 	var row_elem = $('#data_table_row_' + idx)
 	var txt = history_element_map[idx]
-	run_post_request('/delete_history_item/', {
+	run_post_request('delete_history_item/', {
 		what: txt
 	}, function(contents){
 		if (contents == "OK") {

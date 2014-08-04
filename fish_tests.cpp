@@ -143,16 +143,25 @@ static void err(const wchar_t *blah, ...)
     va_list va;
     va_start(va, blah);
     err_count++;
+    
+    // Xcode's term doesn't support color (even though TERM claims it does)
+    bool colorize = ! getenv("RUNNING_IN_XCODE");
 
     // show errors in red
-    fputs("\x1b[31m", stdout);
+    if (colorize)
+    {
+        fputs("\x1b[31m", stdout);
+    }
 
     wprintf(L"Error: ");
     vwprintf(blah, va);
     va_end(va);
 
     // return to normal color
-    fputs("\x1b[0m", stdout);
+    if (colorize)
+    {
+        fputs("\x1b[0m", stdout);
+    }
 
     wprintf(L"\n");
 }

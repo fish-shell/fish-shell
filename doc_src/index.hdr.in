@@ -128,33 +128,34 @@ separation of errors and warnings from regular program output.
 
 Any file descriptor can be directed to a different output than its default through a simple mechanism called a redirection.
 
-
 An example of a file redirection is `echo hello > output.txt`, which directs the output of the echo command to the file output.txt.
 
-- To redirect standard input, write `<SOURCE_FILE`
-- To redirect standard output, write `>DESTINATION`
-- To redirect standard error, write `^DESTINATION`
-- To redirect standard output to a file which will be appended, write `>>DESTINATION_FILE`
-- To redirect standard error to a file which will be appended, write `^^DESTINATION_FILE`
-
+- To read standard input from a file, write `<SOURCE_FILE`
+- To write standard output to a file, write `DESTINATION`
+- To write standard error to a file, write `^DESTINATION`
+- To append standard output to a file, write `>>DESTINATION_FILE`
+- To append standard error to a file, write `^^DESTINATION_FILE`
 
 `DESTINATION` can be one of the following:
 
-- A filename. The output will be written to the specified file. An ampersand '`&`' followed by the number of another file descriptor. The file descriptor will be a duplicate of the specified file descriptor.
-- An ampersand followed by a minus sign '`&-`'. The file descriptor will be closed.
+- A filename. The output will be written to the specified file.
+- An ampersand (`&`) followed by the number of another file descriptor. The output will be written to that file descriptor instead.
+- An ampersand followed by a minus sign (`&-`). The file descriptor will be closed.
 
 Example:
 
 To redirect both standard output and standard error to the file 'all_output.txt', you can write `echo Hello > all_output.txt ^&1`.
 
-Any FD can be redirected in an arbitrary way by prefixing the redirection with the number of the FD.
+Any file descriptor can be redirected in an arbitrary way by prefixing the
+redirection with the file descriptor.
 
-- To redirect input of FD number N, write `N<DESTINATION`
-- To redirect output of FD number N, write `N>DESTINATION`
-- To redirect output of FD number N to a file which will be appended, write `N>>DESTINATION_FILE`
+- To redirect input of FD N, write `N<DESTINATION`
+- To redirect output of FD N, write `N>DESTINATION`
+- To append the output of FD N to a file, write `N>>DESTINATION_FILE`
 
-Example: `echo Hello 2>-` and `echo Hello ^-` are equivalent.
-
+Example: `echo Hello 2>output.stderr` and `echo Hello
+^output.stderr` are equivalent, and write the standard error (file
+descriptor 2) of the target program to `output.stderr`.
 
 \subsection piping Piping
 
@@ -658,7 +659,8 @@ All arrays are one-dimensional and cannot contain other arrays, although it is p
 
 \subsection variables-special Special variables
 
-The user can change the settings of `fish` by changing the values of certain environment variables.
+The user can change the settings of `fish` by changing the values of
+certain environment variables.
 
 - `BROWSER`, the user's preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
 - `CDPATH`, an array of directories in which to search for the new directory for the `cd` builtin. By default, the fish configuration defines `CDPATH` to be a universal variable with the values `.` and `~`.
@@ -669,7 +671,9 @@ The user can change the settings of `fish` by changing the values of certain env
 - `PATH`, an array of directories in which to search for commands
 - `umask`, the current file creation mask. The preferred way to change the umask variable is through the <a href="commands.html#umask">umask function</a>. An attempt to set umask to an invalid value will always fail.
 
-`fish` also sends additional information to the user through the values of certain environment variables. The user cannot change the values of most of these variables.
+`fish` also sends additional information to the user through the
+values of certain environment variables. The user cannot change the
+values of most of these variables.
 
 - `_`, the name of the currently running command.
 - `argv`, an array of arguments to the shell or function. `argv` is only defined when inside a function call, or if fish was invoked with a list of arguments, like 'fish myscript.fish foo bar'. This variable can be changed by the user.
@@ -678,9 +682,19 @@ The user can change the settings of `fish` by changing the values of certain env
 - `PWD`, the current working directory.
 - `status`, the <a href="#variables-status">exit status</a> of the last foreground job to exit. If the job was terminated through a signal, the exit status will be 128 plus the signal number.
 - `USER`, the current username. This variable can only be changed by the root user.
+- `CMD_DURATION`, the runtime of the last command in milliseconds.
 
-The names of these variables are mostly derived from the csh family of shells and differ from the ones used by Bourne style shells such as bash.
-Variables whose name are in uppercase are exported to the commands started by fish, while those in lowercase are not exported. This rule is not enforced by fish, but it is good coding practice to use casing to distinguish between exported and unexported variables. `fish` also uses several variables internally. Such variables are prefixed with the string `__FISH` or `__fish`. These should never be used by the user. Changing their value may break fish.
+The names of these variables are mostly derived from the csh family of
+shells and differ from the ones used by Bourne style shells such as
+bash.
+
+Variables whose name are in uppercase are exported to the commands
+started by fish, while those in lowercase are not exported. This rule is not
+enforced by fish, but it is good coding practice to use casing to
+distinguish between exported and unexported variables. `fish` also
+uses several variables internally. Such variables are prefixed with
+the string `__FISH` or `__fish`. These should never be used by the
+user. Changing their value may break fish.
 
 \subsection variables-status The status variable
 
@@ -904,16 +918,23 @@ Issuing `set fish_color_error black --background=red --bold` will make all comma
 
 \subsection title Programmable title
 
-When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in `fish` by defining the `fish_title` function. The `fish_title` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The `$_` environment variable will always contain the name of the job to be put into the foreground (Or `fish` if control is returning to the shell) when the `fish_prompt` function is called.
+When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in fish by defining the `fish_title` function. The `fish_title` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The $_ environment variable will always contain the name of the job to be put into the foreground (Or 'fish' if control is returning to the shell) when the `fish_prompt` function is called. The first argument to fish_title will contain the most recently executed foreground command as a string, starting with fish 2.2.
 
-Example:
-
+Examples:
 The default `fish` title is
 
 \fish
 function fish_title
     echo $_ ' '
     pwd
+end
+\endfish
+
+To show the last command in the title:
+
+\fish
+function fish_title
+    echo $argv[1]
 end
 \endfish
 

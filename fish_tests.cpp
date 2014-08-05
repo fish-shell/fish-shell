@@ -18,6 +18,7 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <stdarg.h>
+#include <libgen.h>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -732,6 +733,10 @@ static void test_1_cancellation(const wchar_t *src)
 
 static void test_cancellation()
 {
+    if (getenv("RUNNING_IN_XCODE")) {
+        say(L"Skipping Ctrl-C cancellation test because we are running in Xcode debugger");
+        return;
+    }
     say(L"Testing Ctrl-C cancellation. If this hangs, that's a bug!");
 
     /* Enable fish's signal handling here. We need to make this interactive for fish to install its signal handlers */
@@ -3516,6 +3521,23 @@ static void test_highlighting(void)
 */
 int main(int argc, char **argv)
 {
+    // Look for the file tests/test.fish. We expect to run in a directory containing that file.
+    // If we don't find it, walk up the directory hierarchy until we do, or error
+    while (access("./tests/test.fish", F_OK) != 0)
+    {
+        char wd[PATH_MAX + 1] = {};
+        getcwd(wd, sizeof wd);
+        if (! strcmp(wd, "/"))
+        {
+            fprintf(stderr, "Unable to find 'tests' directory, which should contain file test.fish\n");
+            exit(EXIT_FAILURE);
+        }
+        if (chdir(dirname(wd)) < 0)
+        {
+            perror("chdir");
+        }
+    }
+    
     setlocale(LC_ALL, "");
     //srand(time(0));
     configure_thread_assertions_for_testing();

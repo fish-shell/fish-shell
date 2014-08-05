@@ -68,6 +68,12 @@ if test -z "$DOXYGENPATH"; then
     exit 0
 fi
 
+# Check we have the lexicon filter
+if test -z "$INPUT_FILTER"; then
+    echo >&2 "Lexicon filter is not available. Continuing without."
+    INPUTFILTER=''
+fi
+
 # Determine where our output should go
 if ! mkdir -p "${OUTPUTDIR}" ; then
     echo "Could not create output directory '${OUTPUTDIR}'"

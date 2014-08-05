@@ -27,6 +27,7 @@
 			isa = PBXAggregateTarget;
 			buildConfigurationList = D0A564E9168CFDD800AF6161 /* Build configuration list for PBXAggregateTarget "man_pages" */;
 			buildPhases = (
+				4D24F68719913A8B000A121E /* ShellScript */,
 				D0A564EB168CFDDE00AF6161 /* ShellScript */,
 			);
 			dependencies = (
@@ -844,158 +845,31 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		4D24F68719913A8B000A121E /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cd \"${SRCROOT}\";\nmake doc_src/fish_lexicon_filter";
+		};
 		D0A564EB168CFDDE00AF6161 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/doc_src/alias.txt",
-				"$(SRCROOT)/doc_src/and.txt",
-				"$(SRCROOT)/doc_src/begin.txt",
-				"$(SRCROOT)/doc_src/bg.txt",
-				"$(SRCROOT)/doc_src/bind.txt",
-				"$(SRCROOT)/doc_src/block.txt",
-				"$(SRCROOT)/doc_src/break.txt",
-				"$(SRCROOT)/doc_src/breakpoint.txt",
-				"$(SRCROOT)/doc_src/builtin.txt",
-				"$(SRCROOT)/doc_src/case.txt",
-				"$(SRCROOT)/doc_src/cd.txt",
-				"$(SRCROOT)/doc_src/command.txt",
-				"$(SRCROOT)/doc_src/commandline.txt",
-				"$(SRCROOT)/doc_src/complete.txt",
-				"$(SRCROOT)/doc_src/contains.txt",
-				"$(SRCROOT)/doc_src/continue.txt",
-				"$(SRCROOT)/doc_src/count.txt",
-				"$(SRCROOT)/doc_src/dirh.txt",
-				"$(SRCROOT)/doc_src/dirs.txt",
-				"$(SRCROOT)/doc_src/echo.txt",
-				"$(SRCROOT)/doc_src/else.txt",
-				"$(SRCROOT)/doc_src/emit.txt",
-				"$(SRCROOT)/doc_src/end.txt",
-				"$(SRCROOT)/doc_src/eval.txt",
-				"$(SRCROOT)/doc_src/exec.txt",
-				"$(SRCROOT)/doc_src/exit.txt",
-				"$(SRCROOT)/doc_src/fg.txt",
-				"$(SRCROOT)/doc_src/fish.txt",
-				"$(SRCROOT)/doc_src/fish_config.txt",
-				"$(SRCROOT)/doc_src/fish_indent.txt",
-				"$(SRCROOT)/doc_src/fish_prompt.txt",
-				"$(SRCROOT)/doc_src/fish_right_prompt.txt",
-				"$(SRCROOT)/doc_src/fish_update_completions.txt",
-				"$(SRCROOT)/doc_src/fishd.txt",
-				"$(SRCROOT)/doc_src/for.txt",
-				"$(SRCROOT)/doc_src/funced.txt",
-				"$(SRCROOT)/doc_src/funcsave.txt",
-				"$(SRCROOT)/doc_src/function.txt",
-				"$(SRCROOT)/doc_src/functions.txt",
-				"$(SRCROOT)/doc_src/help.txt",
-				"$(SRCROOT)/doc_src/history.txt",
-				"$(SRCROOT)/doc_src/if.txt",
-				"$(SRCROOT)/doc_src/isatty.txt",
-				"$(SRCROOT)/doc_src/jobs.txt",
-				"$(SRCROOT)/doc_src/math.txt",
-				"$(SRCROOT)/doc_src/mimedb.txt",
-				"$(SRCROOT)/doc_src/nextd.txt",
-				"$(SRCROOT)/doc_src/not.txt",
-				"$(SRCROOT)/doc_src/open.txt",
-				"$(SRCROOT)/doc_src/or.txt",
-				"$(SRCROOT)/doc_src/popd.txt",
-				"$(SRCROOT)/doc_src/prevd.txt",
-				"$(SRCROOT)/doc_src/psub.txt",
-				"$(SRCROOT)/doc_src/pushd.txt",
-				"$(SRCROOT)/doc_src/pwd.txt",
-				"$(SRCROOT)/doc_src/random.txt",
-				"$(SRCROOT)/doc_src/read.txt",
-				"$(SRCROOT)/doc_src/return.txt",
-				"$(SRCROOT)/doc_src/set.txt",
-				"$(SRCROOT)/doc_src/set_color.txt",
-				"$(SRCROOT)/doc_src/source.txt",
-				"$(SRCROOT)/doc_src/status.txt",
-				"$(SRCROOT)/doc_src/switch.txt",
-				"$(SRCROOT)/doc_src/test.txt",
-				"$(SRCROOT)/doc_src/trap.txt",
-				"$(SRCROOT)/doc_src/type.txt",
-				"$(SRCROOT)/doc_src/ulimit.txt",
-				"$(SRCROOT)/doc_src/umask.txt",
-				"$(SRCROOT)/doc_src/vared.txt",
-				"$(SRCROOT)/doc_src/while.txt",
 			);
 			outputPaths = (
-				"$(BUILT_PRODUCTS_DIR)/man/man1/alias.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/and.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/begin.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/bg.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/bind.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/block.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/break.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/breakpoint.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/builtin.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/case.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/cd.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/command.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/commandline.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/complete.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/contains.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/continue.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/count.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/dirh.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/dirs.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/echo.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/else.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/emit.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/end.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/eval.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/exec.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/exit.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/fg.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/fish.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/fish_config.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/fish_indent.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/fish_prompt.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/fish_right_prompt.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/fish_update_completions.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/fishd.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/for.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/funced.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/funcsave.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/function.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/functions.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/help.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/history.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/if.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/isatty.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/jobs.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/math.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/mimedb.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/nextd.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/not.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/open.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/or.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/popd.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/prevd.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/psub.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/pushd.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/pwd.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/random.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/read.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/return.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/set.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/set_color.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/source.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/status.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/switch.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/test.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/trap.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/type.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/ulimit.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/umask.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/vared.1",
-				"$(BUILT_PRODUCTS_DIR)/man/man1/while.1",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd \"${SRCROOT}\" ;\n# Run build_documentation.sh\n# Do this in a subshell so that we keep going even if it calls exit\n( . \"./build_tools/build_documentation.sh\" \"./Doxyfile.help\" \"./doc_src\" \"$BUILT_PRODUCTS_DIR\" )\n\n# Copy certain files into man1, destined for share/man/man1 (instead of share/fish/man/man1)\n# These copies will fail of the documentation did not build; that's OK\n# We want to create the directory even if the documentation did not build, so that the Xcode build can still succeed\nmanpathdir=\"${BUILT_PRODUCTS_DIR}/pages_for_manpath/man1\"\necho \"Copying pages destined for manpath into $manpathdir\"\nrm -Rf \"$manpathdir\"\nmkdir -p \"$manpathdir\"\nfor manpage in fish.1 set_color.1 fishd.1 fish_indent.1; do\n  manpagepath=\"${BUILT_PRODUCTS_DIR}/man/man1/${manpage}\"\n  test -f \"$manpagepath\" && cp \"$manpagepath\" \"${BUILT_PRODUCTS_DIR}/pages_for_manpath/man1/\"\ndone\n\n# Always succeed\ntrue\n";
+			shellScript = "cd \"${SRCROOT}\" ;\n# Run build_documentation.sh\n# Do this in a subshell so that we keep going even if it calls exit\n( . \"./build_tools/build_documentation.sh\" \"./Doxyfile.help\" \"./doc_src\" \"$BUILT_PRODUCTS_DIR\" )\n\n# Copy certain files into man1, destined for share/man/man1 (instead of share/fish/man/man1)\n# These copies will fail if the documentation did not build; that's OK\n# We want to create the directory even if the documentation did not build, so that the Xcode build can still succeed\nmanpathdir=\"${BUILT_PRODUCTS_DIR}/pages_for_manpath/man1\"\necho \"Copying pages destined for manpath into $manpathdir\"\nrm -Rf \"$manpathdir\"\nmkdir -p \"$manpathdir\"\nfor manpage in fish.1 set_color.1 fish_indent.1; do\n  manpagepath=\"${BUILT_PRODUCTS_DIR}/man/man1/${manpage}\"\n  test -f \"$manpagepath\" && cp \"$manpagepath\" \"${BUILT_PRODUCTS_DIR}/pages_for_manpath/man1/\"\ndone\n\n# Always succeed\ntrue\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -1296,7 +1170,7 @@
 		D007FDE317136EAA00A52BE6 /* Release_C++11 */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -1384,7 +1258,7 @@
 		D0A084FB13B3AC130099B651 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUGGING_SYMBOLS = YES;
@@ -1401,7 +1275,7 @@
 		D0A084FC13B3AC130099B651 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";

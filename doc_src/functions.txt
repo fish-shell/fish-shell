@@ -12,13 +12,13 @@ functions [-eq] FUNCTIONS...</pre>
 
 The following options are available:
 
-- <code>-a</code> or <code>--all</code> lists all functions, even those whose name start with an underscore.
-- <code>-c OLDNAME NEWNAME</code> or <code>--copy OLDNAME NEWNAME</code> creates a new function named NEWNAME, using the definition of the OLDNAME function.
-- <code>-d DESCRIPTION</code> or <code>--description=DESCRIPTION</code> changes the description of this function.
-- <code>-e</code> or <code>--erase</code> causes the specified functions to be erased.
-- <code>-h</code> or <code>--help</code> displays a help message and exits.
-- <code>-n</code> or <code>--names</code> lists the names of all defined functions.
-- <code>-q</code> or <code>--query</code> tests if the specified functions exist.
+- <code>-a</code> or `--all` lists all functions, even those whose name start with an underscore.
+- <code>-c OLDNAME NEWNAME</code> or `--copy OLDNAME NEWNAME` creates a new function named NEWNAME, using the definition of the OLDNAME function.
+- <code>-d DESCRIPTION</code> or `--description=DESCRIPTION` changes the description of this function.
+- <code>-e</code> or `--erase` causes the specified functions to be erased.
+- <code>-h</code> or `--help` displays a help message and exits.
+- <code>-n</code> or `--names` lists the names of all defined functions.
+- <code>-q</code> or `--query` tests if the specified functions exist.
 
 The default behavior of <code>functions</code>, when called with no arguments,
 is to print the names of all defined functions. Unless the \c -a option is

@@ -24,17 +24,17 @@ With both variable names and values provided, \c set assigns the variable
 <code>VARIABLE_NAME</code> the values <code>VALUES...</code>.
 
 The following options control variable scope:
-- <code>-l</code> or <code>--local</code> forces the specified shell variable to be given a scope that is local to the current block, even if a variable with the given name exists and is non-local
-- <code>-g</code> or <code>--global</code> causes the specified shell variable to be given a global scope. Non-global variables disappear when the block they belong to ends
-- <code>-U</code> or <code>--universal</code> causes the specified shell variable to be given a universal scope. If this option is supplied, the variable will be shared between all the current users fish instances on the current computer, and will be preserved across restarts of the shell.
-- <code>-x</code> or <code>--export</code> causes the specified shell variable to be exported to child processes (making it an "environment variable")
-- <code>-u</code> or <code>--unexport</code> causes the specified shell variable to NOT be exported to child processes
+- <code>-l</code> or `--local` forces the specified shell variable to be given a scope that is local to the current block, even if a variable with the given name exists and is non-local
+- <code>-g</code> or `--global` causes the specified shell variable to be given a global scope. Non-global variables disappear when the block they belong to ends
+- <code>-U</code> or `--universal` causes the specified shell variable to be given a universal scope. If this option is supplied, the variable will be shared between all the current users fish instances on the current computer, and will be preserved across restarts of the shell.
+- <code>-x</code> or `--export` causes the specified shell variable to be exported to child processes (making it an "environment variable")
+- <code>-u</code> or `--unexport` causes the specified shell variable to NOT be exported to child processes
 
 The following options are available:
-- <code>-e</code> or <code>--erase</code> causes the specified shell variable to be erased
-- <code>-q</code> or <code>--query</code> test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that were not defined.
-- <code>-n</code> or <code>--names</code> List only the names of all defined variables, not their value
-- <code>-L</code> or <code>--long</code> do not abbreviate long values when printing set variables
+- <code>-e</code> or `--erase` causes the specified shell variable to be erased
+- <code>-q</code> or `--query` test if the specified variable names are defined. Does not output anything, but the builtins exit status is the number of variables specified that were not defined.
+- <code>-n</code> or `--names` List only the names of all defined variables, not their value
+- <code>-L</code> or `--long` do not abbreviate long values when printing set variables
 
 If a variable is set to more than one value, the variable will be an
 array with the specified elements. If a variable is set to zero
@@ -53,7 +53,7 @@ The scoping rules when creating or updating a variable are:
 
 -# If a variable is explicitly set to either universal, global or local, that setting will be honored. If a variable of the same name exists in a different scope, that variable will not be changed.
 -# If a variable is not explicitly set to be either universal, global or local, but has been previously defined, the previous variable scope is used.
--# If a variable is not explicitly set to be either universal, global or local and has never before been defined, the variable will be local to the currently executing function. Note that this is different from using the \c -l or \c --local flag. If one of those flags is used, the variable will be local to the most inner currently executing block, while without these the variable will be local to the function. If no function is executing, the variable will be global.
+-# If a variable is not explicitly set to be either universal, global or local and has never before been defined, the variable will be local to the currently executing function. Note that this is different from using the \c -l or \c `--local` flag. If one of those flags is used, the variable will be local to the most inner currently executing block, while without these the variable will be local to the function. If no function is executing, the variable will be global.
 
 The exporting rules when creating or updating a variable are identical
 to the scoping rules for variables:

@@ -9,11 +9,11 @@ running <a href="index.html#syntax-job-control">jobs</a> and their status.
 
 jobs accepts the following switches:
 
-- <code>-c</code> or <code>--command</code> prints the command name for each process in jobs.
-- <code>-g</code> or <code>--group</code> only prints the group ID of each job.
-- <code>-h</code> or <code>--help</code> displays a help message and exits.
-- <code>-l</code> or <code>--last</code> prints only the last job to be started.
-- <code>-p</code> or <code>--pid</code> prints the process ID for each process in all jobs.
+- <code>-c</code> or `--command` prints the command name for each process in jobs.
+- <code>-g</code> or `--group` only prints the group ID of each job.
+- <code>-h</code> or `--help` displays a help message and exits.
+- <code>-l</code> or `--last` prints only the last job to be started.
+- <code>-p</code> or `--pid` prints the process ID for each process in all jobs.
 
 On systems that supports this feature, jobs will print the CPU usage
 of each job since the last command was executed. The CPU usage is

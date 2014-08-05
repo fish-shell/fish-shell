@@ -14,7 +14,7 @@ filename of the named pipe sent as an argument to the calling
 program. \c psub combined with a
 regular command substitution provides the same functionality.
 
-If the \c -f or \c --file switch is given to <tt>psub</tt>, \c psub will use a
+If the \c -f or \c `--file` switch is given to <tt>psub</tt>, \c psub will use a
 regular file instead of a named pipe to communicate with the calling
 process. This will cause \c psub to be significantly slower when large
 amounts of data are involved, but has the advantage that the reading

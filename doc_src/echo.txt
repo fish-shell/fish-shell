@@ -13,7 +13,7 @@ The following options are available:
 - \c -s, \c Do not separate arguments with spaces
 - \c -E, \c Disable interpretation of backslash escapes (default)
 - \c -e, \c Enable interpretation of backslash escapes
-- \c -h, \c --help Display this help
+- \c -h, \c `--help` Display this help
 
 \subsection echo-escapes Escape Sequences
 

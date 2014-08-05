@@ -69,6 +69,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 
   bind x delete-char
   bind X backward-delete-char
+  bind r replace-char
 
   bind -k dc delete-char
 

@@ -1173,6 +1173,7 @@ static bool command_ends_paging(wchar_t c, bool focused_on_search_field)
         case R_FORWARD_WORD:
         case R_BACKWARD_WORD:
         case R_DELETE_CHAR:
+        case R_REPLACE_CHAR:
         case R_BACKWARD_DELETE_CHAR:
         case R_KILL_LINE:
         case R_YANK:
@@ -3088,6 +3089,7 @@ const wchar_t *reader_readline(int nchars)
     std::vector<completion_t> comp;
     int finished=0;
     struct termios old_modes;
+    bool replace = false;
 
     /* Coalesce redundant repaints. When we get a repaint, we set this to true, and skip repaints until we get something else. */
     bool coalescing_repaints = false;
@@ -3217,6 +3219,20 @@ const wchar_t *reader_readline(int nchars)
         }
 
         //fprintf(stderr, "\n\nchar: %ls\n\n", describe_char(c).c_str());
+
+        if (replace)
+        {
+            editable_line_t *el = data->active_edit_line();
+            if (el->position < el->size())
+            {
+                update_buff_pos(el, el->position + 1);
+                remove_backward();
+            }
+
+            replace = false;
+            env_set(FISH_BIND_MODE_VAR, L"default", ENV_GLOBAL);
+        }
+
 
         switch (c)
         {
@@ -3547,6 +3563,14 @@ const wchar_t *reader_readline(int nchars)
                     update_buff_pos(el, el->position + 1);
                     remove_backward();
                 }
+                break;
+            }
+
+            case R_REPLACE_CHAR:
+            {
+                replace = true;
+                env_set(FISH_BIND_MODE_VAR, L"insert", ENV_GLOBAL);
+
                 break;
             }
 

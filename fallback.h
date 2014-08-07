@@ -482,7 +482,3 @@ double nan(char *tagp);
 
 
 #endif
-
-#ifndef HAVE_GETPEEREID
-int getpeereid(int sock, uid_t *uid, gid_t *gid);
-#endif

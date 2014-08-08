@@ -18,6 +18,7 @@ complex control can be achieved with `while true` containing a
 
 \subsection while-example Example
 
-`while test -f foo.txt; echo file exists; sleep 10; end`
-outputs 'file exists' at 10 second intervals as long as
-the file foo.txt exists.
+\fish
+while test -f foo.txt; echo file exists; sleep 10; end
+# outputs 'file exists' at 10 second intervals as long as the file foo.txt exists.
+\endfish

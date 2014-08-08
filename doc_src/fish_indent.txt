@@ -2,7 +2,7 @@
 
 \subsection fish_indent-synopsis Synopsis
 \fish{synopsis}
-fish_indent [options]
+fish_indent [OPTIONS]
 \endfish
 
 \subsection fish_indent-description Description

@@ -135,7 +135,6 @@ h3 {
 }
 .key em {
     margin-right: 2px;
-    font-style: normal;
 }
 .key em, .key b {
     padding: 0 4px;
@@ -148,7 +147,7 @@ h3 {
 tt, code, pre, .fish {
     font-family: "DejaVu Sans Mono", Menlo, Monaco, "Source Code Pro", "Ubuntu Mono", "Consolas", "Lucida Console", monospace, fixed;
     font-weight: 500;
-    text-shadow: 0 0 0 rgba(0,0,0,1); /* Stronger anti-aliasing */
+    text-shadow: 0 0 0 rgba(0,0,0,0.2);
 }
 tt {
     color: red; /*REMOVE THIS*/

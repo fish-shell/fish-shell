@@ -23,11 +23,9 @@ The following code will create `rmi`, which runs `rm` with additional arguments 
 
 \fish
 alias rmi "rm -i"
-\endfish
 
-This is equivalent to entering the following function:
+# This is equivalent to entering the following function:
 
-\fish
 function rmi
     rm -i $argv
 end

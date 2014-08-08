@@ -82,19 +82,21 @@ success, with a non-zero exit status if the commandline was invalid, if the
 variable was write-protected or if the variable did not exist.
 
 \subsection set-example Example
-
-`set -xg` will print all global, exported variables.
-
-`set foo hi` sets the value of the variable foo to be hi.
-
-`set -e smurf` removes the variable `smurf`.
-
-`set PATH[4] ~/bin` changes the fourth element of the `PATH` array to `~/bin`
-
 \fish
+set -xg
+# Prints all global, exported variables.
+
+set foo hi
+# Sets the value of the variable $foo to be 'hi'.
+
+set -e smurf
+# Removes the variable $smurf
+
+set PATH[4] ~/bin
+# Changes the fourth element of the $PATH array to ~/bin
+
 if set python_path (which python)
     echo "Python is at $python_path"
 end
+# Outputs the path to Python if `which` returns true.
 \endfish
-
-The above outputs the path to Python if `which` returns true.

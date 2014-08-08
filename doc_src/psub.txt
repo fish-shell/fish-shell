@@ -2,7 +2,7 @@
 
 \subsection psub-synopsis Synopsis
 \fish{synopsis}
-COMMAND1 (COMMAND2|psub [-f])
+COMMAND1 (COMMAND2 | psub [-f])
 \endfish
 
 \subsection psub-description Description
@@ -24,5 +24,7 @@ process can seek in the stream.
 
 \subsection psub-example Example
 
-`diff (sort a.txt|psub) (sort b.txt|psub)` shows the difference
-between the sorted versions of files a.txt and b.txt.
+\fish
+diff (sort a.txt | psub) (sort b.txt | psub)
+# shows the difference between the sorted versions of files `a.txt` and `b.txt`.
+\endfish

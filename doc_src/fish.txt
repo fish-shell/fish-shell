@@ -2,7 +2,7 @@
 
 \subsection fish-synopsis Synopsis
 \fish{synopsis}
-fish [-h] [-v] [-c command] [FILE [ARGUMENTS...]]
+fish [OPTIONS] [-c command] [FILE [ARGUMENTS...]]
 \endfish
 
 \subsection fish-description Description

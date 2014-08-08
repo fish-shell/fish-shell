@@ -2,7 +2,7 @@
 
 \subsection set_color-synopsis Synopsis
 \fish{synopsis}
-set_color [-h|--help] [-b|--background COLOR] [COLOR]
+set_color [OPTIONS] [COLOR]
 \endfish
 
 \subsection set_color-description Description

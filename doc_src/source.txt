@@ -27,6 +27,7 @@ is deprecated in favour of `source`, and `.` will be removed in a future
 version of fish.
 
 \subsection source-example Example
-
-`source ~/.config/fish/config.fish` causes fish to re-read its initialization file.
-
+\fish
+source ~/.config/fish/config.fish
+# Causes fish to re-read its initialization file.
+\endfish

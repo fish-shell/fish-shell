@@ -30,14 +30,15 @@ share/man/
 toc.txt
 user_doc/
 xcuserdata
+fish.xccheckout
 tests/*tmp.*
 tests/foo.txt
 FISH-BUILD-VERSION-FILE
 version
 messages.pot
 lexicon.txt
-doc_src/fish_lexicon_filter
-debug-lexicon.log
+lexicon_filter
+lexicon-debug.log
 
 Fish-Shell.sublime-workspace
 Fish-Shell.sublime-project

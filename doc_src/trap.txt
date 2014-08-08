@@ -40,6 +40,7 @@ The return status is 1 if any `SIGSPEC` is invalid; otherwise trap
 returns 0.
 
 \subsection trap-example Example
-
-`trap "status --print-stack-trace" SIGUSR1` prints a stack trace
-each time the `SIGUSR1` signal is sent to the shell.
+\fish
+trap "status --print-stack-trace" SIGUSR1
+# Prints a stack trace each time the SIGUSR1 signal is sent to the shell.
+\endfish

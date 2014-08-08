@@ -129,6 +129,9 @@ h3 {
     padding-bottom: 10px;
     border-bottom: 1px solid #AAA;
 }
+em {
+    font-style: normal;
+}
 /* Special Formmating */
 /* Keyboard */
 .key span {
@@ -136,7 +139,6 @@ h3 {
 }
 .key em {
     margin-right: 2px;
-    font-style: normal;
 }
 .key em, .key b {
     padding: 0 4px;
@@ -150,7 +152,7 @@ h3 {
 tt, code, pre, .fish {
     font-family: "DejaVu Sans Mono", Menlo, Monaco, "Source Code Pro", "Ubuntu Mono", "Consolas", "Lucida Console", monospace, fixed;
     font-weight: 500;
-    text-shadow: 0 0 0 rgba(0,0,0,1); /* Stronger anti-aliasing */
+    text-shadow: 0 0 0 rgba(0,0,0,0.2);
 }
 code, pre, .line {
     white-space: -moz-pre-wrap;
@@ -167,19 +169,26 @@ h1 > code, h2 > code, h3 > code {
 .fish {
     margin: 1rem 0;
     padding: 0.6rem 1rem;
-    font-size: 1.3rem;
-    line-height: 1.9rem;
-    color: #333;
+    font-size: 1.2rem;
+    line-height: 1.8rem;
+    color: #111;
+    text-shadow: 0 0 0 #000; /* Stronger anti-aliasing */
     background-color: #fafafa;
-    /*color: #00afff;*/
-    /*background-color: #111;*/
     border: 1px solid #eee;
     border-radius: 0.6rem;
 }
 
+
 .comment { color: #555; }
 .command, .function, .binary { color: #23326b; }
+/*.command { color: #00F; }*/
+/*.binary { color: #F0F; }*/
+/*.function { color: #0FF; }*/
 .string { color: #725000; }
+.variable { color: #741ba3; }
+/*.path { color: #F00; }*/
+/*.file { color: #0F0; }*/
+/*.argument { color: #19c9ff; }*/
 
 /*.comment { color: #c33; }
 .command, .function, .binary { color: #2568e2; }
@@ -199,32 +208,38 @@ h1 > code, h2 > code, h3 > code {
 .synopsis {
     border: none;
     color: #333;
-    background-color: #fafafa;
-    /*color: #00afff;*/
-    /*background-color: #111;*/
+    text-shadow: 0 0 0 rgba(0,0,0,0.2);
+    background: none;
+    font-size: 1.3rem;
+    padding: 0;
 }
 /* Console variants */
 .cli-dark {
-    background-color: #111;
-    color: #00afff;
-    padding: 0.4rem 1rem;
-    border-radius: 0.4rem;
+    background-color: #222;
+    color: #ccc;
+    text-shadow: 0 0 0 #222;
+    padding: 0.6rem 1.2rem;
+    border-radius: 0.6rem;
 }
 .cli-dark .comment { color: #c33; }
-.cli-dark .command, .cli-dark .function, .cli-dark .binary { color: #2568e2; }
+.cli-dark .command, .cli-dark .function, .cli-dark .binary { color: #2d5ddb; }
 .cli-dark .argument, .cli-dark .variable, .cli-dark .path, .cli-dark .file { color: #00afff; }
 .cli-dark .redirect { color: #fff; }
 .cli-dark .operator, .cli-dark .match, .cli-dark .history { color: #2ff; }
 .cli-dark .string { color: #c07d2f; }
-.cli-dark .suggest { color: #555; }
-.cli-dark .error { color: #f33; font-weight: bold; }
+.cli-dark .suggest, .cli-dark em { color: #777; }
 .cli-dark .match { color: #2ff; }
-.cli-dark .search_match { background-color: #f2f; }
-.cli-dark .cwd { color: #2f2; }
-.cli-dark .prompt { color: #fff; }
-.cli-dark .cursor { border-bottom: 2px solid #ccc; }
-.cli-dark .underline { text-decoration: underline; }
-
+.cli-dark .search_match { background-color: #a100a3; }
+.cli-dark .cwd, .cli-dark .prompt .path { color: #2f2; }
+.cli-dark .prompt { color: #999; }
+.cli-dark .cursor { border-bottom: 2px solid #3F3; }
+.cli-dark .underline { color: #00afff; text-decoration: underline; }
+.cli-dark .error, .cli-dark .error .path { color: #f33; font-weight: bold; }
+.cli-dark .key em, .cli-dark .key b {
+    background-color: #ccc;
+    border: 1px solid #333;
+    color: #000;
+}
 
 /*Menus*/
 .menu { margin: 1.4rem 0; line-height: 2.2rem; }

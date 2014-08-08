@@ -22,5 +22,7 @@ The following options are available:
 and 1 if it could not be found.
 
 \subsection type-example Example
-
-`type fg` outputs the string '`fg is a shell builtin`'.
+\fish
+type fg
+# Outputs the string 'fg is a shell builtin'.
+\endfish

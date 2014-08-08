@@ -1,4 +1,5 @@
-/** \mainpage Documentation
+/**
+\mainpage Documentation
 \htmlonly[block]
 <div class="fish_left_bar">
 <div class="menu docs_menu">
@@ -183,7 +184,7 @@ When you start a job in `fish`, `fish` itself will pause, and give control of th
 Example:
 
 \fish
-emacs &amp;
+emacs &
 \endfish
 
 will start the emacs text editor in the background.
@@ -255,14 +256,14 @@ The other conditionals use the <a href='#variables-status'>exit status</a> of a 
 
 This is a short explanation of some of the commonly used words in fish.
 
-- <b>argument</b>, a parameter given to a command
-- <b>builtin</b>, a command that is implemented in the shell. Builtins are commands that are so closely tied to the shell that it is impossible to implement them as external commands.
-- <b>command</b>, a program that the shell can run.
-- <b>function</b>, a block of commands that can be called as if they where a single command. By using functions, it is possible to string together multiple smaller commands into one more advanced command.
-- <b>job</b>, a running pipeline or command
-- <b>pipeline</b>, a set of commands stringed together so that the output of one command is the input of the next command
-- <b>redirection</b>, a operation that changes one of the input/output streams associated with a job
-- <b>switch</b>, a special flag sent as an argument to a command that will alter the behavior of the command. A switch almost always begins with one or two hyphens.
+- <b>argument</b> a parameter given to a command
+- <b>builtin</b> a command that is implemented in the shell. Builtins are commands that are so closely tied to the shell that it is impossible to implement them as external commands.
+- <b>command</b> a program that the shell can run.
+- <b>function</b> a block of commands that can be called as if they where a single command. By using functions, it is possible to string together multiple smaller commands into one more advanced command.
+- <b>job</b> a running pipeline or command
+- <b>pipeline</b> a set of commands stringed together so that the output of one command is the input of the next command
+- <b>redirection</b> a operation that changes one of the input/output streams associated with a job
+- <b>switch</b> a special flag sent as an argument to a command that will alter the behavior of the command. A switch almost always begins with one or two hyphens.
 
 
 \section docs Help
@@ -383,23 +384,27 @@ The exit status of the last run command substitution is available in the <a href
 Only part of the output can be used, see <a href='#expand-index-range'>index range expansion</a> for details.
 
 Examples:
+\fish
+echo (basename image.jpg .jpg).png
+# Outputs 'image.png'.
 
-The command `echo (basename image.jpg .jpg).png` will output 'image.png'.
-
-The command `for i in *.jpg; convert $i (basename $i .jpg).png; end` will convert all JPEG files in the current directory to the PNG format using the `convert` program.
-
+for i in *.jpg; convert $i (basename $i .jpg).png; end
+# Convert all JPEG files in the current directory to the
+# PNG format using the 'convert' program.
+\endfish
 
 \subsection expand-brace Brace expansion
 
 A comma separated list of characters enclosed in curly braces will be expanded so each element of the list becomes a new parameter.
 
-Example:
-
+Examples:
 \fish
-echo input.{c,h,txt} # Outputs 'input.c input.h input.txt'
-\endfish
+echo input.{c,h,txt}
+# Outputs 'input.c input.h input.txt'
 
-The command `mv *.{c,h} src/` moves all files with the suffix '.c' or '.h' to the subdirectory src.
+mv *.{c,h} src/
+# Moves all files with the suffix '.c' or '.h' to the subdirectory src.
+\endfish
 
 \subsection expand-variable Variable expansion
 
@@ -410,12 +415,18 @@ Undefined and empty variables expand to nothing.
 To separate a variable name from text it should immediately be followed by, encase the variable within braces.
 
 Examples:
+\fish
+echo $HOME
+# Prints the home directory of the current user.
 
-`echo $HOME` prints the home directory of the current user.
+echo $nonexistentvariable
+# Prints no output.
 
-`echo $nonexistentvariable` prints no output.
+echo The plural of $WORD is {$WORD}s
+# Prints "The plural of cat is cats" when $WORD is set to cat.
+\endfish
 
-`echo The plural of $WORD is {$WORD}s` prints "The plural of cat is cats" when `$WORD` is set to cat. Note that without the braces, fish will try to expand a variable called `$WORDs`, which may not exist.
+Note that without the braces, fish will try to expand a variable called `$WORDs`, which may not exist.
 
 The latter syntax works by exploiting <a href="#expand-brace">brace expansion</a>; care should be taken with array variables and undefined variables, as these behave very differently to POSIX shells.
 
@@ -448,24 +459,19 @@ Some examples:
 \fish
 # Limit the command substitution output
 echo (seq 10)[2..5]
-# will use elements from 2 to 5
-
-# Output is:
-# 2 3 4 5
+# Uses elements from 2 to 5
+# Output is: 2 3 4 5
 
 # Use overlapping ranges:
 echo (seq 10)[2..5 1..3]
-# will take elements from 2 to 5 and then elements from 1 to 3
-
-# Output is:
-# 2 3 4 5 1 2 3
+# Takes elements from 2 to 5 and then elements from 1 to 3
+# Output is: 2 3 4 5 1 2 3
 
 # Reverse output
 echo (seq 10)[-1..1]
-# will use elements from the last output line to the first one in reverse direction
-
-# Output is:
-# 10 9 8 7 6 5 4 3 2 1
+# Uses elements from the last output line to
+# the first one in reverse direction
+# Output is: 10 9 8 7 6 5 4 3 2 1
 \endfish
 
 The same works when setting or expanding variables:
@@ -591,14 +597,11 @@ end
 
 function avast
     set phrase 'Avast, mateys'
-
     # Calling the shiver function here can not
     # change any variables in the local scope
     shiver
-
     echo $phrase
 end
-
 avast
 \endfish
 

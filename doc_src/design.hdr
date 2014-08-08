@@ -1,5 +1,5 @@
-/** \page design Design document
-
+/**
+\page design Design document
 \htmlonly[block]
 <div class="fish_only_bar">
 <div class="design">
@@ -41,7 +41,7 @@ Examples:
 - Here documents are too similar to using echo inside of a pipeline.
 - Subshells, command substitution and process substitution are strongly related. `fish` only supports command substitution, the others can be achieved either using a block or the psub shellscript function.
 - Having both aliases and functions is confusing, especially since both of them have limitations and problems. `fish` functions have none of the drawbacks of either syntax.
-- The many Posix quoting styles are silly, especially \$''.
+- The many Posix quoting styles are silly, especially $''.
 
 \section sep The law of responsiveness
 

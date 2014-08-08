@@ -2,7 +2,7 @@
 
 \subsection echo-synopsis Synopsis
 \fish{synopsis}
-echo [STRING]
+echo [OPTIONS] [STRING]
 \endfish
 
 \subsection echo-description Description

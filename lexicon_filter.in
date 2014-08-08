@@ -50,14 +50,18 @@
     /^\\fish{[^}]*}$/b
     # Then if it's inline. Remove and process immediately...
     /^\\fish.*$/ {
+        # Catch @ symbol
+        s/@/(at)/
         s/^\\fish//
         s/\\endfish//
-        b process
+        b html
     }
     # Output blank lines
     /^$/b
     # Inside \fish block. Process...
     /\\endfish/!{
+        # Catch @ symbol
+        s/@/((d))/
         # Preprocess HTML and HTML-like formatting
         /<[^>]*>/ {
             b html
@@ -79,53 +83,61 @@ b
 s|<span style=['"]\([^'"][^'"]*\)">|@span{\1,|
 s|<span class=['"]\([^'"][^'"]*\)">|@spcl{\1,|
 s|</span>|}|
-t html
 #.
 # Bold
 s|<b>|@bold{|
 s|<b [^>]*>|@bold{|
 s|</b>|}|
 #.
-# Strong
+# Strong (synonimous with emphasis)
 s|<strong>|@bold{|
 s|<strong [^>]*>|@bold{|
 s|</strong>|}|
 #.
-# Italic
-s|<i>|@emph{|
-s|<i [^>]*>|@emph{|
-s|</i>|}|
-#.
-# Emphasis
+# EMPHasis
 s|<em>|@emph{|
 s|<em [^>]*>|@emph{|
 s|</em>|}|
 #.
-# Underline
+# Italic (synonimous with emphasis)
+s|<i>|@emph{|
+s|<i [^>]*>|@emph{|
+s|</i>|}|
+#.
+# UNDeRline
 s|<u>|@undr{|
 s|<u [^>]*>|@undr{|
 s|</u>|}|
 t html
 #.
 # Some handy non-standard extensions
-# Autosuggestion
+# autoSuGgeSTion
 s|<s>|@sgst{|
 s|<s [^>]*>|@sgst{|
 s|</s>|}|
 #.
-# Error
+# MaTCH
+s|<m>|@mtch{|
+s|<m [^>]*>|@mtch{|
+s|</m>|}|
+#.
+# SearchMaTCh
+s|<sm>|@smtc{|
+s|<sm [^>]*>|@smtc{|
+s|</sm>|}|
+#.
+# ERrOR
 s|<error>|@eror{|
 s|<error [^>]*>|@eror{|
 s|</error>|}|
 #.
-# File declaration
-s|<file>|@fsfo{|
-s|<file [^>]*>|@fsfo{|
-s|</file>|}|
-#.
 # AsIs - protect from auto-formatting
 s|<asis>|@asis{|
 s|</asis>|}|
+#.
+# OUTPut - protect from auto-formatting
+s|<outp>|@outp{|
+s|</outp>|}|
 t html
 #.
 # Clean other unhandled html
@@ -134,18 +146,24 @@ t html
 #.
 # Start processing entities
 :process
-#.
+# Output:
+# Line marked as output pass through
+/@outp/ {
+    b
+}
 # Comments:
 # Capture full line comments
-/^ *#.*$/ {
+/^\( *\)#\(.*\)$/ {
     # Assume any line starting with a # is complete
-    s//@blah{&}/
+    s//\1@blah{\2}/
     t
 }
 # Match sub-line comments
-s/#\(.*$\)/\\\
+/#[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]/ ! {
+    s/#\(.*$\)/\\\
 <@blah{#\1}\
 /
+}
 #.
 # Protected entities These shouldn't allow nested structure, so we move them
 # to a marked, new line for a future extract/process/insert action.
@@ -155,6 +173,11 @@ s/@asis{\(.*\)}/\\\
 <@asis{\1}\
 /g
 #.
+# Manual <span>
+s/@span{\(.*\)}/\\\
+<@span{\1}\
+/g
+#.
 # String Literals
 s/"\([^"]*\)"/\\\
 <@dblq{\1}\
@@ -162,6 +185,11 @@ s/"\([^"]*\)"/\\\
 s/'\([^']*\)'/\\\
 <@sglq{\1}\
 /g
+#.
+# AutoSuggestions.
+s/@sgst{\([^}]*\)}/\\\
+<@sgst{\1}\
+/
 #.
 # Command/Function options
 # Short options
@@ -174,41 +202,72 @@ s/--\([A-Za-z][A-Za-z0-9=_-]*\)\([^A-Za-z0-9=_-]*\)/\\\
 <@opts{--\1}\
 \2/g
 #.
-# Paths
-# Normal Directory
-s|\([^/~A-Za-z0-9]\)\([~/][/]*\)\([A-Za-z_0-9./-]*\)|\1\\\
-<@path{\2\3}\
-|g
+# Prompt
+s/~>_/\\\
+<@prmt{~}\
+/
+s/^>_/@prmt/
 #.
+# Cursor
+#.
+s/__$/@curs/
+s/__\(.\)/\\\
+<@curs{\1}\
+/
+#.
+# Paths
+/\n<@dblq[^}]*[~/]/b protect
+/\n<@sglq[^}]*[~/]/b protect
+/\n<@span[^}]*[~/]/b protect
+#.
+# Normal Directory
+s|mkdir |mkdir :|
+s|\([~/:][/]*[.A-Za-z_0-9/-]*\)\\ |\1=|g
+s|\([~/][/]*[.A-Za-z_0-9/=-]*\)|\\\
+<@path{\1}\
+|g
+t protect
+s| \(:[/]*[.A-Za-z_0-9/=-]*\)|\\\
+<@path{\1}\
+|g
+t protect
+#.
+# Dot Relative Directory (no spaces in path)
+s| *\(./[A-Za-z_0-9/-]*\)| \\\
+<@path{\1}\
+|g
 b protect
 #.
 # Tidy up. Merge back 'pure' entities from hold space.
 :tidy
 #.
 # Uncomment the following 2 lines (ss) to log the pattern buffer.
-# s/^.*$/PATT: &/w debug-lexicon.log
-# s/^PATT: //
+s/^.*$/PATT: &/w lexicon.log
+s/^PATT: //
 #.
 # Uncomment the following 4 lines (xssx) to log the hold buffer.
-# x
-# s/^.*$/HOLD: &/w debug-lexicon.log
-# s/^HOLD: //
-# x
+x
+s/^.*$/HOLD: &/w lexicon.log
+s/^HOLD: //
+x
 #.
 # Tack the hold space to the end of the pattern buffer.
 G
 #.
 # Uncomment the folowing two lines (ss) to log the buffer join.
-# s/^.*$/JOIN: &/w debug-lexicon.log
-# s/^JOIN: //
+s/^.*$/JOIN: &/w lexicon.log
+s/^JOIN: //
 #.
 # Iterate over alternate lines, matching '<' to '\'
 :join
-s,\([^\\ ]*\)\\\n\([^<]*\)<\(@[^}]*[}\\]\)[\n]*,\1\3\2,
+s,\([^\\ ]*\)\\\n\([^<]*\)<\(@[^}]*[}\\]\),\1\3\2,
 t join
 # Clean up stray new lines
 s/\n//g
 #.
+# Uncomment the folowing two lines (ss) to log the buffer join.
+s/^.*$/PCLN: &/w lexicon.log
+s/^PCLN: //
 # Clean up special cases
 #.
 /@blah/{
@@ -225,6 +284,13 @@ s/\n//g
     s/\(redr{[^}]*\)}\( *\)@path{\([^}]*\)/\1\2\3/
     t cleanredr
 }
+/@sgst/ {
+    :cleansgst
+    s/\(sgst{@curs{.}[^@]*\)@cmnd{\([^}]*\)}/\1\2/
+    s/\(sgst{@curs{.}[^@]*\)@sbin{\([^}]*\)}/\1\2/
+    s/\(sgst{@curs{.}[^@]*\)@path{\([^}]*\)}/\1\2/
+    t cleansgst
+}
 /@fsfo/{
     :cleanfsfo
     s/\(fsfo{[^@}]*\)@cmnd{\([^}]*\)}/\1\2/
@@ -233,84 +299,66 @@ s/\n//g
     t cleanfsfo
 }
 #.
+# Restore Paths
+/@fsfo/ {
+    s/\(@fsfo{[^=]*\)=/\1 /
+}
+/@path/ {
+    :cleanpath
+    s/\(@path{[^:]*\):/\1/
+    s/\(@path{[^=]*\)=/\1\\ /
+    t cleanpath
+    s/@path{}//
+}
+#.
 # Finally, restructure to follow Fish's command [arguments] semantics.
 # Find the initial command, and change any others to arguments, up to a |, ( or ;
 # Assumes that a valid line will start with either a builtin, a function or a binary.
 #.
 # 'if' and 'for' seem to be special cases
-/@cmnd{if}/ {
-s//@xcmd\
-{if}/
-s/@cmnd{else}/@xcmd\
-{else}/
-s/@cmnd{not}/@xcmd\
-{not}/
-s/$}@cmnd{status}/$}status/
-b nextcmnd
+#.
+# Uncomment the folowing two lines (ss) to log the buffer join.
+s/^.*$/PREQ: &/w lexicon.log
+s/^PREQ: //
+#.
+# Find initial commands/functions/binaries
+#.
+# Store prmt, if present
+#.
+/@prmt/ {
+h
+s/^\(@prmt *\).*$/\1/
+x
+s/^@prmt *//
 }
-/@cmnd{for}/ {
-s/@cmnd{for}/@xcmd\
-{for}/
-s/[[:<:]]in[[:>:]]/@args{in}/
-b castargs
-}
+#.
+s/^\( *\)@sbin/\1@xbin/
+s/\( *[;()] *\)@sbin/\1@xbin/
+s/\( *@redr{|} *\)@sbin/\1@xbin/
+s/^\( *\)@cmnd/\1@xcmd/
+s/\( *[;()] *\)@cmnd/\1@xcmd/
+s/\( *@redr{|} *\)@cmnd/\1@xcmd/
+s/^\( *\)@func/\1@xfnc/
+s/\( *[;()] *\)@func/\1@xfnc/
+s/\( *@redr{|} *\)@func/\1@xfnc/
 
+s/@cmnd/@args/g
+s/@func/@args/g
+s/@sbin/@args/g
+
+s/^.*$/PSTQ: &/w lexicon.log
+s/^PSTQ: //
 #.
-# Find initial command
-#.
-s/^\( *\)@cmnd\(.*\)/\1@xcmd\
-\2/
-t castargs
-s/^\( *\)@func\(.*\)/\1@xfnc\
-\2/
-t castargs
-s/^\( *\)@sbin\(.*\)/\1@xbin\
-\2/
-t castargs
-:nextcmnd
-s/@cmnd\(.*\)$/@xcmd\
-\1/
-t castargs
-s/@func\(.*\)$/@xfnc\
-\1/
-t castargs
-s/@sbin\(.*\)$/@xbin\
-\1/
-t castargs
-b cleancmd
-:castargs
-s/\n\([^;(]*[;(]\)/\1/
-s/\n\([^@]*@redr{|}\)/\1/
-t nextcmnd
-s/\n\([^@]*\)@cmnd\(.*\)/\1@args\
-\2/
-t castargs
-s/\n\([^@]*\)@func\(.*\)/\1@args\
-\2/
-t castargs
-s/\n\([^@]*\)@sbin\(.*\)/\1@args\
-\2/
-t castargs
-s/\n\([^@]*\)@\(....\)\(.*\)/\1@\2\
-\3/
-t castargs
-:cleancmd
 s/xcmd/cmnd/g
 s/xfnc/func/g
 s/xbin/sbin/g
-s/\n//g
-#.
-# Remove any args after echo
-#.
-/@cmnd{echo}/ {
-s//\
-&\
-/
-:cleanecho
-s/\n\([^@]*\)@args{\([^}]*\)}/\1\2/
-t cleanecho
-s/\n//g
-w debug-lexicon.log
+x
+/^@prmt/ {
+G
+s/^@prmt \n/@prmt /
+}
+/^@prmt/ ! {
+x
 }
 #.
 # Mark up sesitive character entities.
@@ -318,13 +366,19 @@ w debug-lexicon.log
 :entities
 s/</\&lt;/g
 s/>/\&gt;/g
+s/((d))/@/g
 #.
 # Uncomment the folowing two lines (ss) to log the final output, sent to Doxygen.
-# s/^.*$/OUT : &/w debug-lexicon.log
-# s/^OUT : //
+s/^.*$/OUT : &/w lexicon.log
+s/^OUT : //
 #.
 # Lines are reassembled, so branch to end
 b
+# === Main End ===
+#.
+#.
+# === Subroutines ===
+# Branched to when content requires.
 #.
 # Move protected content to hold space and mark up other entities.
 :protect
@@ -333,22 +387,34 @@ h
 # markup on words that should be left alone.
 #.
 :patternflush
-s/\n<@[^}]*}//
-s/\n[}]//
+s/\n<@[^}]*[}\\]//
+s/\\ [^\\]*$/\\/
 t patternflush
-s/\n$//
+s/\n$//g
 #.
 # Swap the pattern and hold buffers and remove unmarked lines and extra
 # characters. Basically the inverse of the 'patternflush' action, with
 # additional trailing characters stripped.
 x
-s/^ *[^<][^@][^}]*$//
-s/^ *[^<][^@][^\\]*[\\ ()]*\n//
-:holdflush
-s/}[)(\\ ][)(\\ ]*/}/
-s/\n[];)|* -][^\\]*[\\]*//
-t holdflush
-s/\n$//
+/^\<@[^}]*$/ ! {
+s/[^\<]*//
+s/^ *\\\n//
+s/[()] \\//
+s/\n *\\//
+s/^[^\<][^@][^\\]*//
+s/\n[]|;) ][^\\]*\\//
+s/\n[]|;) a-zA-z0-9-][^\\]*$//
+s/\n[]|;)}]\\//
+s/\n[]|;)}]\n//
+s/\n[]|;)}]$//
+s/[()]$//
+s/}@curs/}/
+s/\n@curs$//
+s/\n[^\<@][^\\]*\\//
+s/\n[^\<@][^\\]*//
+s/^\\//
+s/\n$//g
+}
 #.
 # Swap the buffers back.
 x
@@ -356,23 +422,21 @@ x
 # A special case. Tidy up after commands.
 # Redirectors
 s/\([^{|] *\)|/\1@redr{|}/g
-s/\([^{<>^] *\)\([0-9]* *[<>^][<>^]*[a-zA-z0-9._-]*\)/\1@redr{\2}/g
+s/\([^{&] *\)&[^a-z]/\1@redr{\&amp;}/g
+s/\([^{<>^] *\)\([0-9]* *[<>^][<>^]*[^@][a-zA-Z0-9._-]*\)/\1@redr{\2}/g
 s/\\}/}\\/g
 #.
 # Now we can add in 'unsafe' entities that would be too greedy.
 # Declared Variables
-#:vars
 s/\([$%][$%]*\)\([A-Za-z_0-9][A-Za-z_0-9]*\)/@vars{@optr{\1}\2}/g
 #.
 # Files
-s/\([A-Za-z*][A-Za-z]*\.[a-z0-9][a-z0-9]*\)/@fsfo{\1}/g
+s/\([^@]\)\([A-Za-z0-9_-][A-Za-z0-9_-]*\.[a-z0-9*][a-z0-9*]*\)/\1@fsfo{\2}/g
+#.
+# Fold Files into Paths
+s/\(@path{[^}]*\)}@fsfo/\1}@fsfo/
 #.
 :commands
-#.
-# Manually add a few commands not harvested from source files.
-#.
-s,[[:<:]]whoami[[:>:]],@sbin{whoami},g
-s,[[:<:]]fishd[[:>:]],@sbin{fishd},g
 #.
 #### This section is built in the Makefile. Just some formatting examples. #####
 #.

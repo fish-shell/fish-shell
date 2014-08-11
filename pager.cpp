@@ -464,6 +464,13 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
     {
         rendering->remaining_to_disclose = 0;
     }
+    
+    /* If we have only one row remaining to disclose, then squelch the comment row. This prevents us from consuming a line to show "...and 1 more row" */
+    if (! this->fully_disclosed && rendering->remaining_to_disclose == 1)
+    {
+        term_height += 1;
+        rendering->remaining_to_disclose = 0;
+    }
 
     int pref_tot_width=0;
     int min_tot_width = 0;

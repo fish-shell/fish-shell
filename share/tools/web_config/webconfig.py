@@ -471,6 +471,14 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 # Ignore unreadable files, etc
                 pass
         return result
+
+    def secure_startswith(self, haystack, needle):
+        if len(haystack) < len(needle):
+            return False
+        bits = 0
+        for x,y in zip(haystack, needle):
+            bits |= ord(x) ^ ord(y)
+        return bits == 0
         
     def font_size_for_ansi_prompt(self, prompt_demo_ansi):
         width = ansi_prompt_line_width(prompt_demo_ansi)
@@ -489,7 +497,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         p = self.path
 
         authpath = '/' + authkey
-        if p.startswith(authpath):
+        if self.secure_startswith(p, authpath):
             p = p[len(authpath):]
         else:
             return self.send_error(403)
@@ -528,7 +536,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         p = self.path
 
         authpath = '/' + authkey
-        if p.startswith(authpath):
+        if self.secure_startswith(p, authpath):
             p = p[len(authpath):]
         else:
             return self.send_error(403)

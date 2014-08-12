@@ -654,7 +654,7 @@ where = os.path.dirname(sys.argv[0])
 os.chdir(where)
 
 # Generate a 16-byte random key as a hexadecimal string
-authkey = hex(random.getrandbits(16*4))[2:]
+authkey = hex(random.getrandbits(16*8))[2:]
 
 # Try to find a suitable port
 PORT = 8000

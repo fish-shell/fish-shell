@@ -26,7 +26,7 @@ if term:
     os.environ['TERM'] = term
 
 import subprocess
-import re, socket, cgi, select, time, glob, random, string
+import re, socket, cgi, select, time, glob, random, string, binascii
 try:
     import json
 except ImportError:
@@ -859,7 +859,7 @@ where = os.path.dirname(sys.argv[0])
 os.chdir(where)
 
 # Generate a 16-byte random key as a hexadecimal string
-authkey = hex(random.getrandbits(16*4))[2:]
+authkey = binascii.b2a_hex(os.urandom(16))
 
 # Try to find a suitable port
 PORT = 8000

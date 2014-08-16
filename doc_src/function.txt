@@ -14,6 +14,7 @@ The following options are available:
 
 - <code>-a NAMES</code> or <code>--argument-names NAMES</code> assigns the value of successive command-line arguments to the names given in NAMES.
 - <code>-d DESCRIPTION</code> or \c --description=DESCRIPTION is a description of what the function does, suitable as a completion description.
+- <code>-w WRAPPED_COMMAND</code> or \c --wraps=WRAPPED_COMMAND causes the function to inherit completions from the given wrapped command. See the documentation for \c complete for more information.
 - <code>-e</code> or <code>--on-event EVENT_NAME</code> tells fish to run this function when the specified named event is emitted. Fish internally generates named events e.g. when showing the prompt.
 - <code>-j PID</code> or <code> --on-job-exit PID</code> tells fish to run this function when the job with group ID PID exits. Instead of PID, the string 'caller' can be specified. This is only legal when in a command substitution, and will result in the handler being triggered by the exit of the job which created this command substitution.
 - <code>-p PID</code> or <code> --on-process-exit PID</code> tells fish to run this function when the fish child process with process ID PID exits.

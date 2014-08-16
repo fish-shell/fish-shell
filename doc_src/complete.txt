@@ -1,7 +1,7 @@
 \section complete complete - edit command specific tab-completions
 
 \subsection complete-synopsis Synopsis
-<tt>complete (-c|--command|-p|--path) COMMAND [(-s|--short-option) SHORT_OPTION] [(-l|--long-option|-o|--old-option) LONG_OPTION [(-a||--arguments) OPTION_ARGUMENTS] [(-d|--description) DESCRIPTION] </tt>
+<tt>complete (-c|--command|-p|--path) COMMAND [(-s|--short-option) SHORT_OPTION] [(-l|--long-option|-o|--old-option) LONG_OPTION [(-a||--arguments) OPTION_ARGUMENTS] [(-w|--wraps) WRAPPED_COMMAND] [(-d|--description) DESCRIPTION] </tt>
 
 \subsection complete-description Description
 
@@ -24,6 +24,7 @@ the fish manual.
 - <tt>-u</tt> or <tt>--unauthoritative</tt> implies that there may be more options than the ones specified, and that fish should not assume that options not listed are spelling errors
 - <tt>-A</tt> or <tt>--authoritative</tt> implies that there may be no more options than the ones specified, and that fish should assume that options not listed are spelling errors
 - <tt>-x</tt> or <tt>--exclusive</tt> implies both <tt>-r</tt> and <tt>-f</tt>
+- <tt>-w WRAPPED_COMMAND</tt> or <tt>--wraps=WRAPPED_COMMAND</tt> causes the specified command to inherit completions from the wrapped comamnd.
 
 Command specific tab-completions in \c fish are based on the notion
 of options and arguments. An option is a parameter which begins with a
@@ -40,6 +41,14 @@ The options for specifying command name, command path, or command
 switches may all be used multiple times to specify multiple commands
 which have the same completion or multiple switches accepted by a
 command.
+
+The \c -w or \c --wraps options causes the specified command to inherit
+completions from another command. The inheriting command is said to
+"wrap" the inherited command. The wrapping command may have its own
+completions in addition to inherited ones. A command may wrap multiple
+commands, and wrapping is transitive: if A wraps B, and B wraps C,
+then A automatically inherits all of C's completions. Wrapping can
+be removed using the \c -e or \c --erase options.
 
 When erasing completions, it is possible to either erase all
 completions for a specific command by specifying <tt>complete -e -c
@@ -74,4 +83,11 @@ This can be written as:
 
 where \c __fish_contains_opt is a function that checks the commandline
 buffer for the presence of a specified set of options.
+
+To implement an alias, use the \c -w or \c --wraps option:
+
+<tt>complete -c hub -w git</tt>
+
+Now hub inherits all of the completions from git. Note this can
+also be specified in a function declaration.
 

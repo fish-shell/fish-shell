@@ -164,12 +164,25 @@ void builtin_pop_io(parser_t &parser);
 wcstring builtin_get_desc(const wcstring &b);
 
 
-/**
-   Slightly kludgy function used with 'complete -C' in order to make
-   the commandline builtin operate on the string to complete instead
-   of operating on whatever is to be completed.
+
+/** Support for setting and removing transient command lines.
+    This is used by 'complete -C' in order to make
+    the commandline builtin operate on the string to complete instead
+    of operating on whatever is to be completed. It's also used by
+    completion wrappers, to allow a command to appear as the command
+    being wrapped for the purposes of completion.
+    
+    Instantiating an instance of builtin_commandline_scoped_transient_t
+    pushes the command as the new transient commandline. The destructor removes it.
+    It will assert if construction/destruction does not happen in a stack-like (LIFO) order.
 */
-const wchar_t *builtin_complete_get_temporary_buffer();
+class builtin_commandline_scoped_transient_t
+{
+    size_t token;
+    public:
+    builtin_commandline_scoped_transient_t(const wcstring &cmd);
+    ~builtin_commandline_scoped_transient_t();
+};
 
 
 /**

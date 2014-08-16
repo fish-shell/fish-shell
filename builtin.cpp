@@ -1809,6 +1809,8 @@ int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstr
     bool shadows = true;
 
     woptind=0;
+    
+    wcstring_list_t wrap_targets;
 
     const struct woption long_options[] =
     {
@@ -1818,6 +1820,7 @@ int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstr
         { L"on-process-exit", required_argument, 0, 'p' },
         { L"on-variable", required_argument, 0, 'v' },
         { L"on-event", required_argument, 0, 'e' },
+        { L"wraps", required_argument, 0, 'w' },
         { L"help", no_argument, 0, 'h' },
         { L"argument-names", no_argument, 0, 'a' },
         { L"no-scope-shadowing", no_argument, 0, 'S' },
@@ -1979,6 +1982,10 @@ int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstr
             case 'S':
                 shadows = 0;
                 break;
+                
+            case 'w':
+                wrap_targets.push_back(woptarg);
+                break;
 
             case 'h':
                 builtin_print_help(parser, argv[0], stdout_buffer);
@@ -2086,6 +2093,12 @@ int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstr
         d.definition = contents.c_str();
 
         function_add(d, parser, definition_line_offset);
+        
+        // Handle wrap targets
+        for (size_t w=0; w < wrap_targets.size(); w++)
+        {
+            complete_add_wrapper(name, wrap_targets.at(w));
+        }
     }
 
     return res;

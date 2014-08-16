@@ -79,6 +79,51 @@ static size_t get_cursor_pos()
     return current_cursor_pos;
 }
 
+static pthread_mutex_t transient_commandline_lock = PTHREAD_MUTEX_INITIALIZER;
+static wcstring_list_t *get_transient_stack()
+{
+    ASSERT_IS_MAIN_THREAD();
+    ASSERT_IS_LOCKED(transient_commandline_lock);
+    // A pointer is a little more efficient than an object as a static because we can elide the thread-safe initialization
+    static wcstring_list_t *result = NULL;
+    if (! result)
+    {
+        result = new wcstring_list_t();
+    }
+    return result;
+}
+
+static bool get_top_transient(wcstring *out_result)
+{
+    ASSERT_IS_MAIN_THREAD();
+    bool result = false;
+    scoped_lock locker(transient_commandline_lock);
+    const wcstring_list_t *stack = get_transient_stack();
+    if (! stack->empty())
+    {
+        out_result->assign(stack->back());
+        result = true;
+    }
+    return result;
+}
+
+builtin_commandline_scoped_transient_t::builtin_commandline_scoped_transient_t(const wcstring &cmd)
+{
+    ASSERT_IS_MAIN_THREAD();
+    scoped_lock locker(transient_commandline_lock);
+    wcstring_list_t *stack = get_transient_stack();
+    stack->push_back(cmd);
+    this->token = stack->size();
+}
+
+builtin_commandline_scoped_transient_t::~builtin_commandline_scoped_transient_t()
+{
+    ASSERT_IS_MAIN_THREAD();
+    scoped_lock locker(transient_commandline_lock);
+    wcstring_list_t *stack = get_transient_stack();
+    assert(this->token == stack->size());
+    stack->pop_back();
+}
 
 /**
    Replace/append/insert the selection with/at/after the specified string.
@@ -216,11 +261,15 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
     int search_mode = 0;
     int paging_mode = 0;
     const wchar_t *begin = NULL, *end = NULL;
-
-    current_buffer = (wchar_t *)builtin_complete_get_temporary_buffer();
-    if (current_buffer)
+    
+    scoped_push<const wchar_t *> saved_current_buffer(&current_buffer);
+    scoped_push<size_t> saved_current_cursor_pos(&current_cursor_pos);
+    
+    wcstring transient_commandline;
+    if (get_top_transient(&transient_commandline))
     {
-        current_cursor_pos = wcslen(current_buffer);
+        current_buffer = transient_commandline.c_str();
+        current_cursor_pos = transient_commandline.size();
     }
     else
     {

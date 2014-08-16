@@ -166,6 +166,21 @@ static void err(const wchar_t *blah, ...)
     wprintf(L"\n");
 }
 
+// Joins a wcstring_list_t via commas
+static wcstring comma_join(const wcstring_list_t &lst)
+{
+    wcstring result;
+    for (size_t i=0; i < lst.size(); i++)
+    {
+        if (i > 0)
+        {
+            result.push_back(L',');
+        }
+        result.append(lst.at(i));
+    }
+    return result;
+}
+
 #define do_test(e) do { if (! (e)) err(L"Test failed on line %lu: %s", __LINE__, #e); } while (0)
 
 /* Test sane escapes */
@@ -1924,6 +1939,18 @@ static void test_complete(void)
     do_test(completions.empty());
 
     complete_set_variable_names(NULL);
+    
+    /* Test wraps */
+    do_test(comma_join(complete_get_wrap_chain(L"wrapper1")) == L"wrapper1");
+    complete_add_wrapper(L"wrapper1", L"wrapper2");
+    do_test(comma_join(complete_get_wrap_chain(L"wrapper1")) == L"wrapper1,wrapper2");
+    complete_add_wrapper(L"wrapper2", L"wrapper3");
+    do_test(comma_join(complete_get_wrap_chain(L"wrapper1")) == L"wrapper1,wrapper2,wrapper3");
+    complete_add_wrapper(L"wrapper3", L"wrapper1"); //loop!
+    do_test(comma_join(complete_get_wrap_chain(L"wrapper1")) == L"wrapper1,wrapper2,wrapper3");
+    complete_remove_wrapper(L"wrapper1", L"wrapper2");
+    do_test(comma_join(complete_get_wrap_chain(L"wrapper1")) == L"wrapper1");
+    do_test(comma_join(complete_get_wrap_chain(L"wrapper2")) == L"wrapper2,wrapper3,wrapper1");
 }
 
 static void test_1_completion(wcstring line, const wcstring &completion, complete_flags_t flags, bool append_only, wcstring expected, long source_line)

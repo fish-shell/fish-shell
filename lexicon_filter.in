@@ -414,6 +414,8 @@ s/\n[^\<@][^\\]*\\//
 s/\n[^\<@][^\\]*//
 s/^\\//
 s/\n$//g
+s/\\\n/\
+/
 }
 #.
 # Swap the buffers back.
@@ -425,7 +427,7 @@ s/\([^{|] *\)|/\1@redr{|}/g
 s/&$/@redr{\&amp;}/
 s/\([^{&] *\)&[^a-z]/\1@redr{\&amp;}/g
 s/\([^{<>^] *\)\([0-9]* *[<>^][<>^]*[^@][a-zA-Z0-9._-]*\)/\1@redr{\2}/g
-#s/\\}/}\\/g
+s/\\}/}\\/g
 #.
 # Now we can add in 'unsafe' entities that would be too greedy.
 # Declared Variables

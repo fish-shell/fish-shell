@@ -2096,7 +2096,7 @@ void complete_print(wcstring &out)
 
             append_switch(out,
                           e->cmd_is_path ? L"path" : L"command",
-                          e->cmd);
+                          escape_string(e->cmd, ESCAPE_ALL));
 
 
             if (o->short_opt != 0)

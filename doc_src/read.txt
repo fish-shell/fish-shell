@@ -14,6 +14,7 @@ The following options are available:
 - <tt>-g</tt> or <tt>--global</tt> makes the variables global.
 - <tt>-l</tt> or <tt>--local</tt> makes the variables local.
 - <tt>-m NAME</tt> or <tt>--mode-name=NAME</tt> specifies that the name NAME should be used to save/load the history file. If NAME is fish, the regular fish history will be available.
+- <tt>-n NCHARS</tt> or <tt>--nchars=NCHARS</tt> causes \c read to return after reading NCHARS characters rather than waiting for a complete line of input.
 - <tt>-p PROMPT_CMD</tt> or <tt>--prompt=PROMPT_CMD</tt> uses the output of the shell command \c PROMPT_CMD as the prompt for the interactive mode. The default prompt command is <tt>set_color green; echo read; set_color normal; echo "> "</tt>.
 - <code>-s</code> or <code>--shell</code> enables syntax highlighting, tab completions and command termination suitable for entering shellscript code in the interactive mode.
 - <code>-u</code> or <code>--unexport</code> prevents the variables from being exported to child processes (default behaviour).

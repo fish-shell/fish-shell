@@ -180,7 +180,7 @@ It knows about paths and options:
 And history too. Type a command once, and you can re-summon it by just typing a few letters:
 
 \fish{cli-dark}
->_ r<s>__sync -avze ssh . myname@somelonghost.com:/some/long/path/doo/dee/doo/dee/doo</s>
+>_ <error>r</error><s>__sync -avze ssh . myname@somelonghost.com:/some/long/path/doo/dee/doo/dee/doo</s>
 \endfish
 
 To accept the autosuggestion, hit right arrow or @key{Control,F}. To accept a single word of the autosuggestion, @key{Alt,&rarr;} (right arrow). If the autosuggestion is not what you want, just ignore it.

@@ -2,6 +2,7 @@
 *~
 *.exe
 
+.DS_Store
 Makefile
 autom4te.cache/
 build/

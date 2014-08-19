@@ -36,12 +36,16 @@ prompt will be given. If `--delete` is specified with either of these
 parameters, an interactive prompt will be displayed before any items are
 deleted.
 
+
 \subsection history-examples Example
 
-`history --clear` deletes all history items
+\fish
+history --clear
+# Deletes all history items
 
-`history --search --contains "foo"` outputs a list of all previous
-commands containing the string "foo".
+history --search --contains "foo"
+# Outputs a list of all previous commands containing the string "foo".
 
-`history --delete --prefix "foo"` interactively deletes the record
-of previous commands which start with "foo".
+history --delete --prefix "foo"
+# Interactively deletes the record of previous commands which start with "foo".
+\endfish

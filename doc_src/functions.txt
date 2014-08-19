@@ -15,39 +15,36 @@ functions [-eq] FUNCTIONS...
 The following options are available:
 
 - `-a` or `--all` lists all functions, even those whose name start with an underscore.
+
 - `-c OLDNAME NEWNAME` or `--copy OLDNAME NEWNAME` creates a new function named NEWNAME, using the definition of the OLDNAME function.
+
 - `-d DESCRIPTION` or `--description=DESCRIPTION` changes the description of this function.
+
 - `-e` or `--erase` causes the specified functions to be erased.
+
 - `-h` or `--help` displays a help message and exits.
+
 - `-n` or `--names` lists the names of all defined functions.
+
 - `-q` or `--query` tests if the specified functions exist.
 
-The default behavior of `functions`, when called with no arguments,
-is to print the names of all defined functions. Unless the `-a` option is
-given, no functions starting with underscores are not included in the output.
+The default behavior of `functions`, when called with no arguments, is to print the names of all defined functions. Unless the `-a` option is given, no functions starting with underscores are not included in the output.
 
-If any non-option parameters are given, the definition of the specified
-functions are printed.
+If any non-option parameters are given, the definition of the specified functions are printed.
 
-Automatically loaded functions cannot be removed using `functions
--e`. Either remove the definition file or change the
-$fish_function_path variable to remove autoloaded functions.
+Automatically loaded functions cannot be removed using `functions -e`. Either remove the definition file or change the $fish_function_path variable to remove autoloaded functions.
 
-Copying a function using `-c` copies only the body of the function, and
-does not attach any event notifications from the original function.
+Copying a function using `-c` copies only the body of the function, and does not attach any event notifications from the original function.
 
-Only one function's description can be changed in a single invocation
-of `functions -d`.
+Only one function's description can be changed in a single invocation of `functions -d`.
 
-The exit status of `functions` is the number of functions
-specified in the argument list that do not exist, which can be used in
-concert with the `-q` option.
+The exit status of `functions` is the number of functions specified in the argument list that do not exist, which can be used in concert with the `-q` option.
+
 
 \subsection functions-example Examples
 
 `functions -n` displays a list of currently-defined functions.
 
-`functions -c foo bar` copies the `foo` function to a new function called
-`bar`.
+`functions -c foo bar` copies the `foo` function to a new function called `bar`.
 
 `functions -e bar` erases the function `bar`.

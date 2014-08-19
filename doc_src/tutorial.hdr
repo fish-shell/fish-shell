@@ -5,27 +5,49 @@
 <div class="menu tutorial_menu">
 \endhtmlonly
 - <a href="#tut_why_fish">Why fish?</a>
+
 - <a href="#tut_learning_Fish">Learning fish</a>
+
 - <a href="#tut_running_commands">Running Commands</a>
+
 - <a href="#tut_getting_help">Getting Help</a>
+
 - <a href="#tut_syntax_highlighting">Syntax Highlighting</a>
+
 - <a href="#tut_wildcards">Wildcards</a>
+
 - <a href="#tut_pipes_and_redirections">Pipes and Redirections</a>
+
 - <a href="#tut_autosuggestions">Autosuggestions</a>
+
 - <a href="#tut_tab_completions">Tab Completions</a>
+
 - <a href="#tut_variables">Variables</a>
+
 - <a href="#tut_exit_status">Exit Status</a>
+
 - <a href="#tut_exports">Shell Variables</a>
+
 - <a href="#tut_lists">Lists</a>
+
 - <a href="#tut_command_substitutions">Command Substitutions</a>
+
 - <a href="#tut_combiners">Combiners (And, Or, Not)</a>
+
 - <a href="#tut_conditionals">Conditionals (If, Else, Switch)</a>
+
 - <a href="#tut_functions">Functions</a>
+
 - <a href="#tut_loops">Loops</a>
+
 - <a href="#tut_prompt">Prompt</a>
+
 - <a href="#tut_path">$PATH</a>
+
 - <a href="#tut_startup">Startup</a>
+
 - <a href="#tut_autoload">Autoloading Functions</a>
+
 - <a href="#tut-more">Ready for more?</a>
 
 \htmlonly[block]

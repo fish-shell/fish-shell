@@ -7,20 +7,10 @@ COMMAND1 (COMMAND2 | psub [-f])
 
 \subsection psub-description Description
 
-Posix shells feature a syntax that is a mix between command
-substitution and piping, called process substitution. It is used to
-send the output of a command into the calling command, much like
-command substitution, but with the difference that the output is not
-sent through commandline arguments but through a named pipe, with the
-filename of the named pipe sent as an argument to the calling
-program. `psub` combined with a
-regular command substitution provides the same functionality.
+Posix shells feature a syntax that is a mix between command substitution and piping, called process substitution. It is used to send the output of a command into the calling command, much like command substitution, but with the difference that the output is not sent through commandline arguments but through a named pipe, with the filename of the named pipe sent as an argument to the calling program. `psub` combined with a regular command substitution provides the same functionality.
 
-If the `-f` or `--file` switch is given to `psub`, `psub` will use a
-regular file instead of a named pipe to communicate with the calling
-process. This will cause `psub` to be significantly slower when large
-amounts of data are involved, but has the advantage that the reading
-process can seek in the stream.
+If the `-f` or `--file` switch is given to `psub`, `psub` will use a regular file instead of a named pipe to communicate with the calling process. This will cause `psub` to be significantly slower when large amounts of data are involved, but has the advantage that the reading process can seek in the stream.
+
 
 \subsection psub-example Example
 

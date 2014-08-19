@@ -9,11 +9,8 @@ random [SEED]
 
 `random` outputs a random number from 0 to 32766, inclusive.
 
-If a `SEED` value is provided, it is used to seed the random number
-generator, and no output will be produced. This can be useful for debugging
-purposes, where it can be desirable to get the same random number sequence
-multiple times. If the random number generator is called without first
-seeding it, the current time will be used as the seed.
+If a `SEED` value is provided, it is used to seed the random number generator, and no output will be produced. This can be useful for debugging purposes, where it can be desirable to get the same random number sequence multiple times. If the random number generator is called without first seeding it, the current time will be used as the seed.
+
 
 \subsection random-example Example
 

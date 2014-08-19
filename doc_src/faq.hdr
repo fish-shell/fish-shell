@@ -7,21 +7,37 @@
 \endhtmlonly
 
 - <a href='#faq-envvar'>How do I set or clear an environment variable?</a>
+
 - <a href='#faq-login-cmd'>How do I run a command every login? What's fish's equivalent to `.bashrc`?</a>
+
 - <a href='#faq-prompt'>How do I set my prompt?</a>
+
 - <a href='#faq-cmd-history'>How do I run a command from history?</a>
+
 - <a href='#faq-subcommand'>How do I run a subcommand? The backtick doesn't work!</a>
+
 - <a href='#faq-exit-status'>How do I get the exit status of a command?</a>
+
 - <a href='#faq-single-env'>How do I set an environment variable for just one command?</a>
+
 - <a href='#faq-customize-colors'>How do I customize my syntax highlighting colors?</a>
+
 - <a href='#faq-update-manpage-completions'>How do I update man page completions?</a>
+
 - <a href='#faq-cwd-symlink'>Why does cd, pwd and other fish commands always resolve symlinked directories to their canonical path?</a>
+
 - <a href='#faq-cd-implicit'>I accidentally entered a directory path and fish changed directory. What happened?</a>
+
 - <a href='#faq-open'>The open command doesn't work.</a>
+
 - <a href='#faq-default'>How do I make fish my default shell?</a>
+
 - <a href='#faq-titlebar'>I'm seeing weird output before each prompt when using screen. What's wrong?</a>
+
 - <a href='#faq-greeting'>How do I change the greeting message?</a>
+
 - <a href='#faq-history'>Why doesn't history substitution ("!$" etc.) work?</a>
+
 - <a href='#faq-uninstalling'>How do I uninstall fish?</a>
 
 \htmlonly[block]
@@ -30,6 +46,7 @@
 <div class="faq fish_right_bar">
 <h1 class="interior_title">Frequently Asked Questions</h1>
 \endhtmlonly
+
 
 \section faq-envvar How do I set or clear an environment variable?
 
@@ -40,12 +57,11 @@ set -x key value
 set -e key
 \endfish
 
-<hr>
 
 \section faq-login-cmd How do I run a command every login? What's fish's equivalent to .bashrc?
 
-Edit the file `~/.config/fish/config.fish`, creating it if it does not exist. (Note the leading period.)
-<hr>
+Edit the file `~/.config/fish/config.fish`, creating it if it does not exist (Note the leading period).
+
 
 \section faq-prompt How do I set my prompt?
 
@@ -62,13 +78,11 @@ end
 
 You can also use the Web configuration tool, <a href="commands.html#fish_config">`fish_config`</a>, to preview and choose from a gallery of sample prompts.
 
-<hr>
 
 \section faq-cmd-history How do I run a command from history?
 
 Type some part of the command, and then hit the up or down arrow keys to navigate through history matches.
 
-<hr>
 
 \section faq-subcommand How do I run a subcommand? The backtick doesn't work!
 
@@ -80,13 +94,11 @@ for i in (ls)
 end
 \endfish
 
-<hr>
 
 \section faq-exit-status How do I get the exit status of a command?
 
 Use the `$status` variable. This replaces the `$?` variable used in some other shells.
 
-<hr>
 
 \section faq-single-env How do I set an environment variable for just one command?
 
@@ -105,18 +117,16 @@ begin
 end
 \endfish
 
-<hr>
 
 \section faq-customize-colors How do I customize my syntax highlighting colors?
 
 Use the web configuration tool, <a href="commands.html#fish_config">`fish_config`</a>, or alter the <a href="index.html#variables-color">`fish_color` family of environment variables</a>.
-<hr>
+
 
 \section faq-update-manpage-completions How do I update man page completions?
 
 Use the <a href="commands.html#fish_update_completions">`fish_update_completions`</a> command.
 
-<hr>
 
 \section faq-cwd-symlink Why does cd, $PWD and and various fish commands always resolve symlinked directories to their canonical path?
 
@@ -128,18 +138,16 @@ Writing `cd images; ls ..` given the above directory structure would list the co
 
 Another related issue is that many programs that operate on recursive directory trees, like the find command, silently ignore symlinked directories. For example, ```find $PWD -name '*.txt'``` silently fails in shells that don't resolve symlinked paths.
 
-<hr>
 
 \section faq-cd-implicit I accidentally entered a directory path and fish changed directory. What happened?
 
 If fish is unable to locate a command with a given name, and it starts with '`.`', '`/`' or '`~`', fish will test if a directory of that name exists. If it does, it is implicitly assumed that you want to change working directory. For example, the fastest way to switch to your home directory is to simply press `~` and enter.
-<hr>
+
 
 \section faq-open The open command doesn't work.
 
 The `open` command uses the MIME type database and the `.desktop` files used by Gnome and KDE to identify filetypes and default actions. If at least one of these environments is installed, but the open command is not working, this probably means that the relevant files are installed in a non-standard location. Consider <a href="index.html#more-help">asking for more help</a>.
 
-<hr>
 
 \section faq-default How do I make fish my default shell?
 
@@ -161,7 +169,6 @@ You may need to adjust the above path to e.g. `/usr/bin/fish`. Use the command `
 
 Unfortunately, there is no way to make the changes take effect at once. You will need to log out and back in again.
 
-<hr>
 
 \section faq-titlebar I'm seeing weird output before each prompt when using screen. What's wrong?
 
@@ -181,7 +188,6 @@ Fish is trying to set the titlebar message of your terminal. While screen itself
 
 Note that fish has a default titlebar message, which will be used if the fish_title function is undefined. So simply unsetting the fish_title function will not work.
 
-<hr>
 
 \section faq-greeting How do I change the greeting message?
 
@@ -191,7 +197,6 @@ Change the value of the variable `fish_greeting` or create a `fish_greeting` fun
 set fish_greeting
 \endfish
 
-<hr>
 
 \section faq-history Why doesn't history substitution ("!$" etc.) work?
 
@@ -200,14 +205,17 @@ Because history substitution is an awkward interface that was invented before in
 Fish history recall is very simple yet effective:
 
 - As in any modern shell, the Up arrow, @cursor_key{&uarr;,Up} recalls whole lines, starting from the last line executed.  A single press replaces "!!", later presses replace "!-3" and the like.
+
   - If the line you want is far back in the history, type any part of the line and then press Up one or more times.  This will constrain the recall to lines that include this text, and you will get to the line you want much faster.  This replaces "!vi", "!?bar.c" and the like.
+
 - @key{Alt,&uarr;,Up} recalls individual arguments, starting from the last argument in the last line executed.  A single press replaces "!$", later presses replace "!!:4" and the like.
+
   - If the argument you want is far back in history (e.g. 2 lines back - that's a lot of words!), type any part of it and then press @key{Alt,&uarr;,Up}.  This will show only arguments containing that part and you will get what you want much faster.  Try it out, this is very convenient!
+
   - If you want to reuse several arguments from the same line ("!!:3*" and the like), consider recalling the whole line and removing what you don't need (@key{Alt,D} and @key{Alt,Backspace} are your friends).
 
 See <a href='index.html#editor'>documentation</a> for more details about line editing in fish.
 
-<hr>
 
 \section faq-uninstalling Uninstalling fish
 

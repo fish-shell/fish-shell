@@ -7,8 +7,7 @@ read [OPTIONS] [VARIABLES...]
 
 \subsection read-description Description
 
-`read` reads one line from standard
-input and stores the result in one or more shell variables.
+`read` reads one line from standard input and stores the result in one or more shell variables.
 
 The following options are available:
 
@@ -33,12 +32,12 @@ input is considered a separate token.
 If \c -a or \c --array is provided, only one variable name is allowed and the
 tokens are stored as an array in this variable.
 
-See the documentation for `set` for more details on the scoping rules for
-variables.
 
 \subsection read-example Example
 
 The following code stores the value 'hello' in the shell variable
 `$foo`.
 
-`echo hello|read foo`
+\fish
+echo hello|read foo
+\endfish

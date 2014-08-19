@@ -7,14 +7,13 @@ contains [OPTIONS] KEY [VALUES...]
 
 \subsection contains-description Description
 
-`contains` tests whether the set `VALUES` contains the string
-`KEY`. If so, `contains` exits with status 0; if not, it exits
-with status 1.
+`contains` tests whether the set `VALUES` contains the string `KEY`. If so, `contains` exits with status 0; if not, it exits with status 1.
 
 The following options are available:
 
 - `-i` or `--index` print the word index
 - `-h` or `--help` display this message
+
 
 \subsection contains-example Example
 

@@ -19,10 +19,11 @@ The following options are available:
 - \c -P or \c --force-path returns the name of the disk file that would be executed, or nothing if no file with the specified name could be found in the <tt>$PATH</tt>.
 - \c -q or \c --quiet suppresses all output; this is useful when testing the exit status.
 
-`type` sets the exit status to 0 if the specified command was found,
-and 1 if it could not be found.
+`type` sets the exit status to 0 if the specified command was found, and 1 if it could not be found.
+
 
 \subsection type-example Example
+
 \fish
 type fg
 # Outputs the string 'fg is a shell builtin'.

@@ -13,6 +13,10 @@ The following parameters are available:
 
 - `-n` or `--names` List the names of all defined builtins
 
+
 \subsection builtin-example Example
 
-`builtin jobs` executes the jobs builtin, even if a function named jobs exists.
+\fish
+builtin jobs
+# executes the jobs builtin, even if a function named jobs exists
+\endfish

@@ -7,9 +7,8 @@ popd
 
 \subsection popd-description Description
 
-`popd` removes the top directory from the directory stack and
-changes the working directory to the new top directory. Use <a
-href="#pushd">`pushd`</a> to add directories to the stack.
+`popd` removes the top directory from the directory stack and changes the working directory to the new top directory. Use <a href="#pushd">`pushd`</a> to add directories to the stack.
+
 
 \subsection popd-example Example
 

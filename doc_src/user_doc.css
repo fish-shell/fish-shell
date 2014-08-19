@@ -64,13 +64,14 @@ body {
 .fish_right_big { margin-left: 200px; }
 .fish_only_bar {
     width: 100%;
+    padding-bottom: 3rem;
 }
 hr {
     height: 0;
     border: none;
     border-top: 1px solid #AAA;
 }
-/*Ineraction*/
+/*Interaction*/
 a { color: #3d5cb3; }
 .qindex a {
     color: white;

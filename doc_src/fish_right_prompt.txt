@@ -13,9 +13,11 @@ end
 
 Multiple lines are not supported in `fish_right_prompt`.
 
+
 \subsection fish_right_prompt-example Example
 
 A simple right prompt:
+
 \fish
 function fish_right_prompt -d "Write out the right prompt"
     date "+%m/%d/%y"

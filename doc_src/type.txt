@@ -12,16 +12,22 @@ With no options, `type` indicates how each `NAME` would be interpreted if used a
 The following options are available:
 
 - `-h` or `--help` prints help and then exits.
+
 - `-a` or `--all` prints all of possible definitions of the specified names.
+
 - `-f` or `--no-functions` suppresses function and builtin lookup.
+
 - `-t` or `--type` prints `keyword`, `function`, `builtin`, or `file` if `NAME` is a shell reserved word, function, builtin, or disk file, respectively.
+
 - `-p` or `--path` returns the name of the disk file that would be executed, or nothing if 'type  -t  name' would not return 'file'.
+
 - `-P` or `--force-path` returns the name of the disk file that would be executed, or nothing no file with the specified name could be found in the `$PATH`.
 
-`type` sets the exit status to 0 if the specified command was found,
-and 1 if it could not be found.
+`type` sets the exit status to 0 if the specified command was found, and 1 if it could not be found.
+
 
 \subsection type-example Example
+
 \fish
 type fg
 # Outputs the string 'fg is a shell builtin'.

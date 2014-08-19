@@ -6,21 +6,23 @@ jobs [OPTIONS] [PID]
 \endfish
 
 \subsection jobs-description Description
-`jobs` prints a list of the currently
-running <a href="index.html#syntax-job-control">jobs</a> and their status.
+
+`jobs` prints a list of the currently running <a href="index.html#syntax-job-control">jobs</a> and their status.
 
 jobs accepts the following switches:
 
 - `-c` or `--command` prints the command name for each process in jobs.
+
 - `-g` or `--group` only prints the group ID of each job.
+
 - `-h` or `--help` displays a help message and exits.
+
 - `-l` or `--last` prints only the last job to be started.
+
 - `-p` or `--pid` prints the process ID for each process in all jobs.
 
-On systems that supports this feature, jobs will print the CPU usage
-of each job since the last command was executed. The CPU usage is
-expressed as a percentage of full CPU activity. Note that on
-multiprocessor systems, the total activity may be more than 100\%.
+On systems that supports this feature, jobs will print the CPU usage of each job since the last command was executed. The CPU usage is expressed as a percentage of full CPU activity. Note that on multiprocessor systems, the total activity may be more than 100\%.
+
 
 \subsection jobs-example Example
 

@@ -6,12 +6,11 @@ for VARNAME in [VALUES...]; COMMANDS...; end
 \endfish
 
 \subsection for-description Description
-`for` is a loop construct. It will perform the commands specified by
-`COMMANDS` multiple times. On each iteration, the environment variable specified by
-`VARNAME` is assigned a new value from `VALUES`. If `VALUES` is empty, `COMMANDS` will
-not be executed at all.
+
+`for` is a loop construct. It will perform the commands specified by `COMMANDS` multiple times. On each iteration, the environment variable specified by `VARNAME` is assigned a new value from `VALUES`. If `VALUES` is empty, `COMMANDS` will not be executed at all.
 
 \subsection for-example Example
+
 \fish
 for i in foo bar baz; echo $i; end
 
@@ -20,4 +19,3 @@ foo
 bar
 baz
 \endfish
-

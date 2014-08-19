@@ -7,12 +7,10 @@ prevd [ -l | --list ] [POS]
 
 \subsection prevd-description Description
 
-`prevd` moves backwards `POS` positions in the history
-of visited directories; if the beginning of the history has been hit,
-a warning is printed.
+`prevd` moves backwards `POS` positions in the history of visited directories; if the beginning of the history has been hit, a warning is printed.
 
-If the `-l` or `--list` flag is specified, the current
-history is also displayed.
+If the `-l` or `--list` flag is specified, the current history is also displayed.
+
 
 \subsection prevd-example Example
 

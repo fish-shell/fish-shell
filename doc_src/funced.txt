@@ -7,17 +7,12 @@ funced [OPTIONS] NAME
 
 \subsection funced-description Description
 
-`funced` provides an interface to edit the definition of the function
-`NAME`.
+`funced` provides an interface to edit the definition of the function `NAME`.
 
-If the `$EDITOR` environment variable is set, it will be used as the program
-to edit the function. Otherwise, a built-in editor will be used.
+If the `$EDITOR` environment variable is set, it will be used as the program to edit the function. Otherwise, a built-in editor will be used.
 
-If there is no function called `NAME` a new function will be created with
-the specified name
+If there is no function called `NAME` a new function will be created with the specified name
 
-- `-e command` or `--editor command` Open the function
-  body inside the text editor given by the command (for example, "vi"). The
-  command 'fish' will use the built-in editor.
-- `-i` or `--interactive` Open function body in the
-  built-in editor.
+- `-e command` or `--editor command` Open the function body inside the text editor given by the command (for example, "vi"). The command 'fish' will use the built-in editor.
+
+- `-i` or `--interactive` Open function body in the built-in editor.

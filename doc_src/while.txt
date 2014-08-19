@@ -6,15 +6,13 @@ while CONDITION; COMMANDS...; end
 \endfish
 
 \subsection while-description Description
-`while` repeatedly executes `CONDITION`, and if the exit status
-is 0, then executes `COMMANDS`.
 
-If the exit status of `CONDITION` is non-zero on the first iteration,
-`COMMANDS` will not be executed at all.
+`while` repeatedly executes `CONDITION`, and if the exit status is 0, then executes `COMMANDS`.
 
-Use <a href="#begin">`begin; ...; end`</a> for complex conditions; more
-complex control can be achieved with `while true` containing a
-<a href="#break">break</a>.
+If the exit status of `CONDITION` is non-zero on the first iteration, `COMMANDS` will not be executed at all.
+
+Use <a href="#begin">`begin; ...; end`</a> for complex conditions; more complex control can be achieved with `while true` containing a <a href="#break">break</a>.
+
 
 \subsection while-example Example
 

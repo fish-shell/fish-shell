@@ -9,30 +9,36 @@ function [OPTIONS] NAME; BODY; end
 
 `function` creates a new function `NAME` with the body `BODY`.
 
-A function is a list of commands that will be executed when the name of the
-function is given as a command.
+A function is a list of commands that will be executed when the name of the function is given as a command.
 
 The following options are available:
 
 - `-a NAMES` or `--argument-names NAMES` assigns the value of successive command-line arguments to the names given in NAMES.
+
 - `-d DESCRIPTION` or `--description=DESCRIPTION` is a description of what the function does, suitable as a completion description.
+
 - `-w WRAPPED_COMMAND` or `--wraps=WRAPPED_COMMAND` causes the function to inherit completions from the given wrapped command. See the documentation for <a href="#complete">`complete`</a> for more information.
+
 - `-e` or `--on-event EVENT_NAME` tells fish to run this function when the specified named event is emitted. Fish internally generates named events e.g. when showing the prompt.
+
 - `-j PID` or `--on-job-exit PID` tells fish to run this function when the job with group ID PID exits. Instead of PID, the string 'caller' can be specified. This is only legal when in a command substitution, and will result in the handler being triggered by the exit of the job which created this command substitution.
+
 - `-p PID` or `--on-process-exit PID` tells fish to run this function when the fish child process with process ID PID exits.
+
 - `-s` or `--on-signal SIGSPEC` tells fish to run this function when the signal SIGSPEC is delivered. SIGSPEC can be a signal number, or the signal name, such as SIGHUP (or just HUP).
+
 - `-S` or `--no-scope-shadowing` allows the function to access the variables of calling functions. Normally, any variables inside the function that have the same name as variables from the calling function are "shadowed", and their contents is independent of the calling function.
+
 - `-v` or `--on-variable VARIABLE_NAME` tells fish to run this function when the variable VARIABLE_NAME changes value.
 
-If the user enters any additional arguments after the function, they
-are inserted into the environment <a href="index.html#variables-arrays">variable array</a>
-`$argv`. If the `--argument-names` option is provided, the arguments are
-also assigned to names specified in that option.
+If the user enters any additional arguments after the function, they are inserted into the environment <a href="index.html#variables-arrays">variable array</a> `$argv`. If the `--argument-names` option is provided, the arguments are also assigned to names specified in that option.
 
 By using one of the event handler switches, a function can be made to run automatically at specific events. The user may generate new events using the <a href="#emit">emit</a> builtin. Fish generates the following named events:
 
 - `fish_prompt`, which is emitted whenever a new fish prompt is about to be displayed.
+
 - `fish_command_not_found`, which is emitted whenever a command lookup failed.
+
 
 \subsection function-example Example
 

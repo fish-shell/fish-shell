@@ -6,18 +6,31 @@ status [OPTION]
 \endfish
 
 \subsection status-description Description
+
 With no arguments, `status` displays a summary of the current login and job control status of the shell.
 
 The following options are available:
+
 - `-c` or `--is-command-substitution` returns 0 if fish is currently executing a command substitution.
+
 - `-b` or `--is-block` returns 0 if fish is currently executing a block of code.
+
 - `-i` or `--is-interactive` returns 0 if fish is interactive - that is, connected to a keyboard.
+
 - `-l` or `--is-login` returns 0 if fish is a login shell - that is, if fish should perform login tasks such as setting up the PATH.
+
 - `--is-full-job-control` returns 0 if full job control is enabled.
+
 - `--is-interactive-job-control` returns 0 if interactive job control is enabled.
+
 - `--is-no-job-control` returns 0 if no job control is enabled.
+
 - `-f` or `--current-filename` prints the filename of the currently running script.
+
 - `-n` or `--current-line-number` prints the line number of the currently running script.
+
 - `-j CONTROLTYPE` or `--job-control=CONTROLTYPE` sets the job control type, which can be `none`, `full`, or `interactive`.
+
 - `-t` or `--print-stack-trace` prints a stack trace of all function calls on the call stack.
+
 - `-h` or `--help` displays a help message and exit.

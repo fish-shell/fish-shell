@@ -7,32 +7,38 @@ read [OPTIONS] [VARIABLES...]
 
 \subsection read-description Description
 
-`read` reads one line from standard
-input and stores the result in one or more shell variables.
+`read` reads one line from standard input and stores the result in one or more shell variables.
 
 The following options are available:
 
 - `-c CMD` or `--command=CMD` sets the initial string in the interactive mode command buffer to `CMD`.
+
 - `-g` or `--global` makes the variables global.
+
 - `-l` or `--local` makes the variables local.
+
 - `-m NAME` or `--mode-name=NAME` specifies that the name NAME should be used to save/load the history file. If NAME is fish, the regular fish history will be available.
+
 - `-p PROMPT_CMD` or `--prompt=PROMPT_CMD` uses the output of the shell command `PROMPT_CMD` as the prompt for the interactive mode. The default prompt command is `set_color green; echo read; set_color normal; echo "> "`.
+
 - `-s` or `--shell` enables syntax highlighting, tab completions and command termination suitable for entering shellscript code in the interactive mode.
+
 - `-u` or `--unexport` prevents the variables from being exported to child processes (default behaviour).
+
 - `-U` or `--universal` causes the specified shell variable to be made universal.
+
 - `-x` or `--export` exports the variables to child processes.
 
-`read` reads a single line of input from stdin, breaks it into tokens
-based on the `IFS` shell variable, and then assigns one
-token to each variable specified in `VARIABLES`. If there are more
-tokens than variables, the complete remainder is assigned to the last variable.
+`read` reads a single line of input from stdin, breaks it into tokens based on the `IFS` shell variable, and then assigns one token to each variable specified in `VARIABLES`. If there are more tokens than variables, the complete remainder is assigned to the last variable.
 
-See the documentation for `set` for more details on the scoping rules for
-variables.
+See the documentation for `set` for more details on the scoping rules for variables.
+
 
 \subsection read-example Example
 
 The following code stores the value 'hello' in the shell variable
 `$foo`.
 
-`echo hello|read foo`
+\fish
+echo hello|read foo
+\endfish

@@ -6,11 +6,11 @@ isatty [FILE | DEVICE | FILE DESCRIPTOR NUMBER]
 \endfish
 
 \subsection isatty-description Description
-`isatty` tests if a file or file descriptor is a tty.
-The argument may be in the form of a file path, device, or file descriptor
-number. Without an argument, `standard input` is implied.
+
+`isatty` tests if a file or file descriptor is a tty. The argument may be in the form of a file path, device, or file descriptor number. Without an argument, `standard input` is implied.
 
 If the resolved file descriptor is a tty, the command returns zero. Otherwise, the command exits one. No messages are printed to standard error.
+
 
 \subsection isatty-examples Examples
 

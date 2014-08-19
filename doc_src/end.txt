@@ -10,10 +10,10 @@ switch VALUE; [case [WILDCARD...]; [COMMANDS...]; ...] end
 \endfish
 
 \subsection end-description Description
+
 `end` ends a block of commands.
 
 For more information, read the
-documentation for the block constructs, such as \c if, \c for and \c
-while.
+documentation for the block constructs, such as `if`, `for` and `while`.
 
-The \c end command does not change the current exit status.
+The `end` command does not change the current exit status.

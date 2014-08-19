@@ -7,25 +7,21 @@ count $VARIABLE
 
 \subsection count-description Description
 
-`count` prints the number of arguments that were
-passed to it. This is usually used to find out how many elements an
-environment variable array contains.
+`count` prints the number of arguments that were passed to it. This is usually used to find out how many elements an environment variable array contains.
 
 `count` does not accept any options, including '`-h`'.
 
-`count` exits with a non-zero exit status if no arguments were passed
-to it, and with zero if at least one argument was passed.
+`count` exits with a non-zero exit status if no arguments were passed to it, and with zero if at least one argument was passed.
+
 
 \subsection count-example Example
 
-<pre>
+\fish
 count $PATH
-</pre>
 
-returns the number of directories in the users PATH variable.
+# Returns the number of directories in the users PATH variable.
 
-<pre>
 count *.txt
-</pre>
 
-returns the number of files in the current working directory ending with the suffix '.txt'.
+# Returns the number of files in the current working directory ending with the suffix '.txt'.
+\endfish

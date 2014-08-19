@@ -11,11 +11,10 @@ help [SECTION]
 
 If a `SECTION` is specified, the help for that command is shown.
 
-If the BROWSER environment variable is set, it will be used to display the
-documentation. Otherwise, fish will search for a suitable browser.
+If the BROWSER environment variable is set, it will be used to display the documentation. Otherwise, fish will search for a suitable browser.
 
-Note that most builtin commands display their help in the terminal when
-given the `--help` option.
+Note that most builtin commands display their help in the terminal when given the `--help` option.
+
 
 \subsection help-example Example
 

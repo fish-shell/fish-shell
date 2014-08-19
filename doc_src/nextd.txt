@@ -6,11 +6,11 @@ nextd [-l | --list] [POS]
 \endfish
 
 \subsection nextd-description Description
-`nextd` moves forwards `POS` positions in the history of visited
-directories; if the end of the history has been hit, a warning is printed.
 
-If the `-l` or `--list` flag is specified, the current
-directory history is also displayed.
+`nextd` moves forwards `POS` positions in the history of visited directories; if the end of the history has been hit, a warning is printed.
+
+If the `-l` or `--list` flag is specified, the current directory history is also displayed.
+
 
 \subsection nextd-example Example
 

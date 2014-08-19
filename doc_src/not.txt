@@ -7,8 +7,8 @@ not COMMAND [OPTIONS...]
 
 \subsection not-description Description
 
-`not` negates the exit status of another command. If the exit status
-is zero, `not` returns 1. Otherwise, `not` returns 0.
+`not` negates the exit status of another command. If the exit status is zero, `not` returns 1. Otherwise, `not` returns 0.
+
 
 \subsection not-example Example
 

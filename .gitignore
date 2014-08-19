@@ -2,6 +2,7 @@
 *~
 *.exe
 
+.DS_Store
 Makefile
 autom4te.cache/
 build/
@@ -30,8 +31,16 @@ share/man/
 toc.txt
 user_doc/
 xcuserdata
+fish.xccheckout
 tests/*tmp.*
 tests/foo.txt
 FISH-BUILD-VERSION-FILE
 version
 messages.pot
+
+lexicon_filter
+lexicon.txt
+lexicon.log
+
+Fish-Shell.sublime-project
+Fish-Shell.sublime-workspace

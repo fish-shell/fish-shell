@@ -2,11 +2,12 @@
 
 \subsection complete-synopsis Synopsis
 \fish{synopsis}
-complete ( -c | --command | -p | --path) COMMAND
-        [( -s | --short-option) SHORT_OPTION]
-        [( -l | --long-option | -o | --old-option) LONG_OPTION]
-        [( -a | --arguments) OPTION_ARGUMENTS]
-        [( -d | --description) DESCRIPTION]
+complete (-c | --command | -p | --path) COMMAND
+        [(-s | --short-option) SHORT_OPTION]
+        [(-l | --long-option | -o | --old-option) LONG_OPTION]
+        [(-a | --arguments) OPTION_ARGUMENTS]
+	[(-w | --wraps) WRAPPED_COMMAND]
+        [(-d | --description) DESCRIPTION]
 \endfish
 
 
@@ -16,21 +17,23 @@ For an introduction to specifying completions, see <a
 href='index.html#completion-own'>Writing your own completions</a> in
 the fish manual.
 
-- `COMMAND` is the name of the command for which to add a completion
-- `SHORT_OPTION` is a one character option for the command
-- `LONG_OPTION` is a multi character option for the command
-- `OPTION_ARGUMENTS` is parameter containing a space-separated list of possible option-arguments, which may contain subshells
-- `DESCRIPTION` is a description of what the option and/or option arguments do
-- `-C STRING` or `--do-complete=STRING` makes complete try to find all possible completions for the specified string
-- `-e` or `--erase` implies that the specified completion should be deleted
-- `-f` or `--no-files` specifies that the option specified by this completion may not be followed by a filename
+<<<<<<< HEAD
+- `COMMAND` is the name of the command for which to add a completion.
+- `SHORT_OPTION` is a one character option for the command.
+- `LONG_OPTION` is a multi character option for the command.
+- `OPTION_ARGUMENTS` is parameter containing a space-separated list of possible option-arguments, which may contain subshells.
+- `DESCRIPTION` is a description of what the option and/or option arguments do.
+- `-C STRING` or `--do-complete=STRING` makes complete try to find all possible completions for the specified string.
+- `-w WRAPPED_COMMAND` or `--wraps=WRAPPED_COMMAND` causes the specified command to inherit completions from the wrapped command.
+- `-e` or `--erase` implies that the specified completion should be deleted.
+- `-f` or `--no-files` specifies that the option specified by this completion may not be followed by a filename.
 - `-n` or `--condition` specifies a shell command that must return 0 if the completion is to be used. This makes it possible to specify completions that should only be used in some cases.
-- `-o` or `--old-option` implies that the command uses old long style options with only one dash
-- `-p` or `--path` implies that the string `COMMAND` is the full path of the command
-- `-r` or `--require-parameter` specifies that the option specified by this completion always must have an option argument, i.e. may not be followed by another option
-- `-u` or `--unauthoritative` implies that there may be more options than the ones specified, and that fish should not assume that options not listed are spelling errors
-- `-A` or `--authoritative` implies that there may be no more options than the ones specified, and that fish should assume that options not listed are spelling errors
-- `-x` or `--exclusive` implies both `-r` and `-f`
+- `-o` or `--old-option` implies that the command uses old long style options with only one dash.
+- `-p` or `--path` implies that the string `COMMAND` is the full path of the command.
+- `-r` or `--require-parameter` specifies that the option specified by this completion always must have an option argument, i.e. may not be followed by another option.
+- `-u` or `--unauthoritative` implies that there may be more options than the ones specified, and that fish should not assume that options not listed are spelling errors.
+- `-A` or `--authoritative` implies that there may be no more options than the ones specified, and that fish should assume that options not listed are spelling errors.
+- `-x` or `--exclusive` implies both `-r` and `-f`.
 
 Command specific tab-completions in `fish` are based on the notion
 of options and arguments. An option is a parameter which begins with a
@@ -47,6 +50,14 @@ The options for specifying command name, command path, or command
 switches may all be used multiple times to specify multiple commands
 which have the same completion or multiple switches accepted by a
 command.
+
+The \c -w or \c --wraps options causes the specified command to inherit
+completions from another command. The inheriting command is said to
+"wrap" the inherited command. The wrapping command may have its own
+completions in addition to inherited ones. A command may wrap multiple
+commands, and wrapping is transitive: if A wraps B, and B wraps C,
+then A automatically inherits all of C's completions. Wrapping can
+be removed using the \c -e or \c --erase options.
 
 When erasing completions, it is possible to either erase all
 completions for a specific command by specifying `complete -e -c
@@ -83,4 +94,11 @@ This can be written as:
 
 where `__fish_contains_opt` is a function that checks the commandline
 buffer for the presence of a specified set of options.
+
+To implement an alias, use the `-w` or `--wraps` option:
+
+`complete -c hub -w git`
+
+Now hub inherits all of the completions from git. Note this can
+also be specified in a function declaration.
 

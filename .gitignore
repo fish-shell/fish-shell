@@ -2,6 +2,7 @@
 *~
 *.exe
 
+.DS_Store
 Makefile
 autom4te.cache/
 build/
@@ -39,15 +40,10 @@ messages.pot
 
 lexicon.txt
 lexicon_filter
-lexicon-debug.log
+lexicon.log
 
 Fish-Shell.sublime-workspace
 Fish-Shell.sublime-project
 .editorconfig
 doc_src/.editorconfig
 
-
-
-lexicon.log
-
-.DS_Store

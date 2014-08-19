@@ -48,5 +48,5 @@ function alias --description "Legacy function for creating shellscript functions
 			end
 	end
 
-	eval "function $name; $prefix $body \$argv; end"
+	eval "function $name --wraps $body; $prefix $body \$argv; end"
 end

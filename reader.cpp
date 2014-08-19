@@ -403,6 +403,9 @@ public:
 /* Sets the command line contents, without clearing the pager */
 static void reader_set_buffer_maintaining_pager(const wcstring &b, size_t pos);
 
+/* Clears the pager */
+static void clear_pager();
+
 /**
    The current interactive reading context
 */
@@ -1564,6 +1567,9 @@ static void accept_autosuggestion(bool full)
 {
     if (! data->autosuggestion.empty())
     {
+        /* Accepting an autosuggestion clears the pager */
+        clear_pager();
+        
         /* Accept the autosuggestion */
         if (full)
         {

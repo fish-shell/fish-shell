@@ -1019,7 +1019,22 @@ static void escape_string_internal(const wchar_t *orig_in, size_t in_len, wcstri
                     out += *in;
                     break;
                 }
+                
+                
+                // Experimental fix for #1614
+                // The hope is that any time these appear in a string, they came from wildcard expansion
+                case ANY_CHAR:
+                    out += L'?';
+                    break;
 
+                case ANY_STRING:
+                    out += L'*';
+                    break;
+                    
+                case ANY_STRING_RECURSIVE:
+                    out += L"**";
+                    break;
+                    
                 case L'&':
                 case L'$':
                 case L' ':

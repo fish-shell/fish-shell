@@ -2955,7 +2955,7 @@ static int read_i(void)
           during evaluation.
         */
 
-        const wchar_t *tmp = reader_readline();
+        const wchar_t *tmp = reader_readline(0);
 
         if (data->end_loop)
         {
@@ -3044,7 +3044,7 @@ static wchar_t unescaped_quote(const wcstring &str, size_t pos)
 }
 
 
-const wchar_t *reader_readline(void)
+const wchar_t *reader_readline(int nchars)
 {
     wint_t c;
     int last_char=0;
@@ -3054,6 +3054,7 @@ const wchar_t *reader_readline(void)
     std::vector<completion_t> comp;
     int finished=0;
     struct termios old_modes;
+    int num_chars = 0;
 
     /* Coalesce redundant repaints. When we get a repaint, we set this to true, and skip repaints until we get something else. */
     bool coalescing_repaints = false;
@@ -3093,6 +3094,10 @@ const wchar_t *reader_readline(void)
         while (1)
         {
             int was_interactive_read = is_interactive_read;
+
+            if (0 < nchars && nchars <= ++num_chars)
+                finished=1;
+
             is_interactive_read = 1;
             c=input_readch();
             is_interactive_read = was_interactive_read;

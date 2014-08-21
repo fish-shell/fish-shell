@@ -1358,6 +1358,7 @@ const highlighter_t::color_array_t & highlighter_t::highlight()
             }
             break;
 
+            case parse_token_type_pipe:
             case parse_token_type_background:
             case parse_token_type_end:
             case symbol_optional_background:

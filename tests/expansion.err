@@ -1,0 +1,18 @@
+Array index out of bounds
+fish: show "$foo[2]"
+                 ^
+Array index out of bounds
+fish: show $foo[2]
+                ^
+Array index out of bounds
+fish: show "$foo[1 2]"
+                   ^
+Array index out of bounds
+fish: show $foo[1 2]
+                  ^
+Array index out of bounds
+fish: show "$foo[2 1]"
+                 ^
+Array index out of bounds
+fish: show $foo[2 1]
+                ^

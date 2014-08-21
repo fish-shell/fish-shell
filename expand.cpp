@@ -1155,10 +1155,10 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
                         for (size_t j=0; j<var_idx_list.size(); j++)
                         {
                             long tmp = var_idx_list.at(j);
-                            size_t var_src_pos = var_pos_list.at(j);
                             /* Check that we are within array bounds. If not, truncate the list to exit. */
                             if (tmp < 1 || (size_t)tmp > var_item_list.size())
                             {
+                                size_t var_src_pos = var_pos_list.at(j);
                                 /* The slice was parsed starting at stop_pos, so we have to add that to the error position */
                                 append_syntax_error(errors,
                                                     slice_start + var_src_pos,
@@ -1255,6 +1255,39 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
             }
             else
             {
+                // even with no value, we still need to parse out slice syntax
+                // Behave as though we had 1 value, so $foo[1] always works.
+                const size_t slice_start = stop_pos;
+                if (in[slice_start] == L'[')
+                {
+                    wchar_t *slice_end;
+
+                    if (parse_slice(in + slice_start, &slice_end, var_idx_list, var_pos_list, 1))
+                    {
+                        append_syntax_error(errors,
+                                            stop_pos,
+                                            L"Invalid index value");
+                        is_ok = 0;
+                        return is_ok;
+                    }
+                    stop_pos = (slice_end-in);
+
+                    // validate that the parsed indexes are valid
+                    for (size_t j=0; j<var_idx_list.size(); j++)
+                    {
+                        long tmp = var_idx_list.at(j);
+                        if (tmp != 1)
+                        {
+                            size_t var_src_pos = var_pos_list.at(j);
+                            append_syntax_error(errors,
+                                                slice_start + var_src_pos,
+                                                ARRAY_BOUNDS_ERR);
+                            is_ok = 0;
+                            return is_ok;
+                        }
+                    }
+                }
+
                 /*
                          Expand a non-existing variable
                          */

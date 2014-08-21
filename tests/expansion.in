@@ -62,3 +62,15 @@ show "$$foo"
 show $$foo
 show "prefix$$foo"
 show prefix$$foo
+
+set -l foo
+show "$foo[1]"
+show $foo[1]
+show "$foo[-1]"
+show $foo[-1]
+show "$foo[2]"
+show $foo[2]
+show "$foo[1 2]"
+show $foo[1 2]
+show "$foo[2 1]"
+show $foo[2 1]

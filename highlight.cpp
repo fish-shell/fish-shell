@@ -617,12 +617,26 @@ static size_t color_variable(const wchar_t *in, size_t in_len, std::vector<highl
     if (in[idx] == L'[')
     {
         wchar_t *slice_begin = NULL, *slice_end = NULL;
-        if (1 == parse_util_locate_slice(in, &slice_begin, &slice_end, false))
+        switch (parse_util_locate_slice(in, &slice_begin, &slice_end, false))
         {
-            size_t slice_begin_idx = slice_begin - in, slice_end_idx = slice_end - in;
-            assert(slice_end_idx > slice_begin_idx);
-            colors[slice_begin_idx] = highlight_spec_operator;
-            colors[slice_end_idx] = highlight_spec_operator;
+            case 1:
+            {
+                size_t slice_begin_idx = slice_begin - in, slice_end_idx = slice_end - in;
+                assert(slice_end_idx > slice_begin_idx);
+                colors[slice_begin_idx] = highlight_spec_operator;
+                colors[slice_end_idx] = highlight_spec_operator;
+                break;
+            }
+            case -1:
+            {
+                // syntax error
+                // Normally the entire token is colored red for us, but inside a double-quoted string
+                // that doesn't happen. As such, color the variable + the slice start red. Coloring any
+                // more than that looks bad, unless we're willing to try and detect where the double-quoted
+                // string ends, and I'd rather not do that.
+                std::fill(colors, colors + idx + 1, (highlight_spec_t)highlight_spec_error);
+                break;
+            }
         }
     }
     return idx;

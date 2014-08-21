@@ -880,7 +880,7 @@ static void color_argument_internal(const wcstring &buffstr, std::vector<highlig
                         if (in_pos + 1 < buff_len)
                         {
                             const wchar_t escaped_char = buffstr.at(in_pos + 1);
-                            if (escaped_char == L'\\' || escaped_char == L'\'' || escaped_char == L'$')
+                            if (wcschr(L"\\\"\n$", escaped_char))
                             {
                                 colors[in_pos] = highlight_spec_escape; //backslash
                                 colors[in_pos + 1] = highlight_spec_escape; //escaped char

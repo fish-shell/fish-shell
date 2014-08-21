@@ -1086,10 +1086,15 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
 
             while (1)
             {
-                if (!(in[stop_pos ]))
+                const wchar_t nc = in[stop_pos];
+                if (!(nc))
                     break;
-                if (!(iswalnum(in[stop_pos]) ||
-                        (wcschr(L"_", in[stop_pos])!= 0)))
+                if (nc == VARIABLE_EXPAND_EMPTY)
+                {
+                    stop_pos++;
+                    break;
+                }
+                if (!(wcsvarchr(nc)))
                     break;
 
                 stop_pos++;
@@ -1108,7 +1113,15 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
             }
 
             var_tmp.append(in + start_pos, var_len);
-            env_var_t var_val = expand_var(var_tmp.c_str());
+            env_var_t var_val;
+            if (var_len == 1 && var_tmp[0] == VARIABLE_EXPAND_EMPTY)
+            {
+                var_val = env_var_t::missing_var();
+            }
+            else
+            {
+                var_val = expand_var(var_tmp.c_str());
+            }
 
             if (! var_val.missing())
             {
@@ -1174,7 +1187,18 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
                     {
                         in[i]=0;
                         wcstring res = in;
-                        res.push_back(INTERNAL_SEPARATOR);
+                        if (i > 0)
+                        {
+                            if (in[i-1] != VARIABLE_EXPAND_SINGLE)
+                            {
+                                res.push_back(INTERNAL_SEPARATOR);
+                            }
+                            else if (var_item_list.empty() || var_item_list.front().empty())
+                            {
+                                // first expansion is empty, but we need to recursively expand
+                                res.push_back(VARIABLE_EXPAND_EMPTY);
+                            }
+                        }
 
                         for (size_t j=0; j<var_item_list.size(); j++)
                         {
@@ -1204,14 +1228,18 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
                                 if (is_ok)
                                 {
                                     wcstring new_in;
+                                    new_in.append(in, i);
 
-                                    if (start_pos > 0)
-                                        new_in.append(in, start_pos - 1);
-
-                                    // at this point new_in.size() is start_pos - 1
-                                    if (start_pos>1 && new_in[start_pos-2]!=VARIABLE_EXPAND)
+                                    if (i > 0)
                                     {
-                                        new_in.push_back(INTERNAL_SEPARATOR);
+                                        if (in[i-1] != VARIABLE_EXPAND)
+                                        {
+                                            new_in.push_back(INTERNAL_SEPARATOR);
+                                        }
+                                        else if (next.empty())
+                                        {
+                                            new_in.push_back(VARIABLE_EXPAND_EMPTY);
+                                        }
                                     }
                                     new_in.append(next);
                                     new_in.append(in + stop_pos);
@@ -1243,8 +1271,11 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
                                Expansion to single argument.
                                */
                     wcstring res;
-                    in[i] = 0;
-                    res.append(in);
+                    res.append(in, i);
+                    if (i > 0 && in[i-1] == VARIABLE_EXPAND_SINGLE)
+                    {
+                        res.push_back(VARIABLE_EXPAND_EMPTY);
+                    }
                     res.append(in + stop_pos);
 
                     is_ok &= expand_variables2(parser, res, out, i, errors);

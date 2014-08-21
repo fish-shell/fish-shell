@@ -1,0 +1,64 @@
+# Test expansion of variables
+
+function show --description 'Prints argument count followed by arguments'
+    echo (count $argv) $argv
+end
+
+set -l foo
+show "$foo"
+show $foo
+show "prefix$foo"
+show prefix$foo
+
+show "$$foo"
+show $$foo
+show "prefix$$foo"
+show prefix$$foo
+
+set -l foo ''
+show "$foo"
+show $foo
+show "prefix$foo"
+show prefix$foo
+
+show "$$foo"
+show $$foo
+show "prefix$$foo"
+show prefix$$foo
+
+set -l foo bar
+set -l bar
+show "$$foo"
+show $$foo
+show "prefix$$foo"
+show prefix$$foo
+
+set -l bar baz
+show "$$foo"
+show $$foo
+show "prefix$$foo"
+show prefix$$foo
+
+set -l bar baz quux
+show "$$foo"
+show $$foo
+show "prefix$$foo"
+show prefix$$foo
+
+set -l foo bar fooer fooest
+set -l fooer
+set -l fooest
+show "$$foo"
+show $$foo
+show "prefix$$foo"
+show prefix$$foo
+
+set -l fooer ''
+show $$foo
+show prefix$$foo
+
+set -l foo bar '' fooest
+show "$$foo"
+show $$foo
+show "prefix$$foo"
+show prefix$$foo

@@ -953,8 +953,11 @@ void expand_variable_error(parser_t &parser, const wcstring &token, size_t token
 
 /**
    Parse an array slicing specification
+   Returns 0 on success.
+   If a parse error occurs, returns the index of the bad token.
+   Note that 0 can never be a bad index because the string always starts with [.
  */
-static int parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx, std::vector<size_t> &source_positions, size_t array_size)
+static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx, std::vector<size_t> &source_positions, size_t array_size)
 {
     wchar_t *end;
 
@@ -981,7 +984,7 @@ static int parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &
         tmp = wcstol(&in[pos], &end, 10);
         if ((errno) || (end == &in[pos]))
         {
-            return 1;
+            return pos;
         }
         //    debug( 0, L"Push idx %d", tmp );
 
@@ -999,7 +1002,7 @@ static int parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &
             long tmp1 = wcstol(&in[pos], &end, 10);
             if ((errno) || (end == &in[pos]))
             {
-                return 1;
+                return pos;
             }
             pos = end-in;
 
@@ -1136,12 +1139,14 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
                     if (in[slice_start] == L'[')
                     {
                         wchar_t *slice_end;
+                        size_t bad_pos;
                         all_vars=0;
 
-                        if (parse_slice(in + slice_start, &slice_end, var_idx_list, var_pos_list, var_item_list.size()))
+                        bad_pos = parse_slice(in + slice_start, &slice_end, var_idx_list, var_pos_list, var_item_list.size());
+                        if (bad_pos != 0)
                         {
                             append_syntax_error(errors,
-                                                stop_pos,
+                                                stop_pos + bad_pos,
                                                 L"Invalid index value");
                             is_ok = 0;
                             break;
@@ -1261,11 +1266,13 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
                 if (in[slice_start] == L'[')
                 {
                     wchar_t *slice_end;
+                    size_t bad_pos;
 
-                    if (parse_slice(in + slice_start, &slice_end, var_idx_list, var_pos_list, 1))
+                    bad_pos = parse_slice(in + slice_start, &slice_end, var_idx_list, var_pos_list, 1);
+                    if (bad_pos != 0)
                     {
                         append_syntax_error(errors,
-                                            stop_pos,
+                                            stop_pos + bad_pos,
                                             L"Invalid index value");
                         is_ok = 0;
                         return is_ok;
@@ -1499,11 +1506,14 @@ static int expand_cmdsubst(parser_t &parser, const wcstring &input, std::vector<
     {
         std::vector<long> slice_idx;
         std::vector<size_t> slice_source_positions;
+        const wchar_t * const slice_begin = tail_begin;
         wchar_t *slice_end;
+        size_t bad_pos;
 
-        if (parse_slice(tail_begin, &slice_end, slice_idx, slice_source_positions, sub_res.size()))
+        bad_pos = parse_slice(slice_begin, &slice_end, slice_idx, slice_source_positions, sub_res.size());
+        if (bad_pos != 0)
         {
-            append_syntax_error(errors, SOURCE_LOCATION_UNKNOWN, L"Invalid index value");
+            append_syntax_error(errors, slice_begin - in + bad_pos, L"Invalid index value");
             return 0;
         }
         else
@@ -1515,8 +1525,9 @@ static int expand_cmdsubst(parser_t &parser, const wcstring &input, std::vector<
                 long idx = slice_idx.at(i);
                 if (idx < 1 || (size_t)idx > sub_res.size())
                 {
+                    size_t pos = slice_source_positions.at(i);
                     append_syntax_error(errors,
-                                        SOURCE_LOCATION_UNKNOWN,
+                                        slice_begin - in + pos,
                                         ARRAY_BOUNDS_ERR);
                     return 0;
                 }

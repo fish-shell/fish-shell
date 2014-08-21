@@ -74,3 +74,9 @@ show "$foo[1 2]"
 show $foo[1 2]
 show "$foo[2 1]"
 show $foo[2 1]
+
+echo "$foo[d]"
+echo $foo[d]
+
+echo ()[1]
+echo ()[d]

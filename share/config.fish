@@ -47,7 +47,7 @@ if not set -q fish_function_path
 end
 
 if not contains $__fish_datadir/functions $fish_function_path
-	set fish_function_path[-1] $__fish_datadir/functions
+        set fish_function_path $fish_function_path $__fish_datadir/functions
 end
 
 if not set -q fish_complete_path
@@ -55,7 +55,7 @@ if not set -q fish_complete_path
 end
 
 if not contains $__fish_datadir/completions $fish_complete_path
-	set fish_complete_path[-1] $__fish_datadir/completions
+        set fish_complete_path $fish_complete_path $__fish_datadir/completions
 end
 
 #

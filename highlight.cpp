@@ -861,7 +861,11 @@ static void color_argument_internal(const wcstring &buffstr, std::vector<highlig
              */
             case e_double_quoted:
             {
-                colors[in_pos] = highlight_spec_quote;
+                // slices are colored in advance, past `in_pos`, and we don't want to overwrite that
+                if (colors[in_pos] == highlight_spec_param)
+                {
+                    colors[in_pos] = highlight_spec_quote;
+                }
                 switch (c)
                 {
                     case L'"':

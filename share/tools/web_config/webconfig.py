@@ -617,6 +617,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def do_get_current_prompt(self):
         # Return the current prompt
+        # We run 'false' to demonstrate how the prompt shows the command status (#1624)
         prompt_func, err = run_fish_cmd('functions fish_prompt')
         result = self.do_get_prompt('builtin cd "' + initial_wd + '" ; false ; fish_prompt', prompt_func.strip(), {'name': 'Current'})
         return result
@@ -624,6 +625,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_get_sample_prompt(self, text, extras_dict):
         # Return the prompt you get from the given text
         # extras_dict is a dictionary whose values get merged in
+        # We run 'false' to demonstrate how the prompt shows the command status (#1624)
         cmd = text + "\n builtin cd \"" + initial_wd + "\" \n false \n fish_prompt\n"
         return self.do_get_prompt(cmd, text.strip(), extras_dict)
 

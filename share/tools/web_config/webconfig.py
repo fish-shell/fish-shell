@@ -618,13 +618,13 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_get_current_prompt(self):
         # Return the current prompt
         prompt_func, err = run_fish_cmd('functions fish_prompt')
-        result = self.do_get_prompt('builtin cd "' + initial_wd + '" ; fish_prompt', prompt_func.strip(), {'name': 'Current'})
+        result = self.do_get_prompt('builtin cd "' + initial_wd + '" ; false ; fish_prompt', prompt_func.strip(), {'name': 'Current'})
         return result
 
     def do_get_sample_prompt(self, text, extras_dict):
         # Return the prompt you get from the given text
         # extras_dict is a dictionary whose values get merged in
-        cmd = text + "\n cd \"" + initial_wd + "\" \n fish_prompt\n"
+        cmd = text + "\n builtin cd \"" + initial_wd + "\" \n false \n fish_prompt\n"
         return self.do_get_prompt(cmd, text.strip(), extras_dict)
 
     def parse_one_sample_prompt_hash(self, line, result_dict):

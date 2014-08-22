@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2014-03-13 21:29+0800\n"
-"PO-Revision-Date: 2014-08-22 13:02-0300\n"
+"PO-Revision-Date: 2014-08-22 14:49-0300\n"
 "Last-Translator: Iuri Rezende Souza <riuri@rocketmail.com>\n"
 "Language-Team: Português Brasileiro <>\n"
 "Language: pt_BR\n"
@@ -21,7 +21,9 @@ msgstr ""
 #: autoload.cpp:113
 #, fuzzy, c-format
 msgid "Could not autoload item '%ls', it is already being autoloaded. "
-msgstr "Could not autoload item “%ls”, it is already being autoloaded. "
+msgstr ""
+"Não pôde carregar item “%ls” automaticamente, ele já está sendo carregado "
+"automaticamente. "
 
 #: builtin.cpp:83
 #, c-format
@@ -53,9 +55,9 @@ msgid "%ls: Unknown error trying to bind to key named '%ls'\n"
 msgstr "%ls: Unknown error trying to bind to key named “%ls”\n"
 
 #: builtin.cpp:668
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Expected zero or two parameters, got %d\n"
-msgstr "%ls: Expected zero or one argument, got %d\n"
+msgstr "%ls: Esperava zero ou dois parâmetros, obteve %d\n"
 
 #: builtin.cpp:692
 #, c-format
@@ -65,12 +67,12 @@ msgstr "%ls: Estado inválido\n"
 #: builtin.cpp:796
 #, c-format
 msgid "%ls: Can not specify scope when removing block\n"
-msgstr ""
+msgstr "%ls: Não pode especificar escopo ao remover bloco\n"
 
 #: builtin.cpp:802
 #, c-format
 msgid "%ls: No blocks defined\n"
-msgstr ""
+msgstr "%ls: Não há blocos definidos\n"
 
 #: builtin.cpp:1312 builtin.h:32
 #, c-format
@@ -88,11 +90,13 @@ msgid "%ls: Function '%ls' does not exist\n"
 msgstr "%ls: Função “%ls” não existe\n"
 
 #: builtin.cpp:1394
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "%ls: Expected exactly two names (current function name, and new function "
 "name)\n"
-msgstr "%ls: Expected exactly one function name\n"
+msgstr ""
+"%ls: Esperava exatamente dois nomes (nome atual da função, e novo nome da "
+"função)\n"
 
 #: builtin.cpp:1417 builtin.cpp:1952 builtin.cpp:2259
 #, c-format
@@ -100,14 +104,14 @@ msgid "%ls: Illegal function name '%ls'\n"
 msgstr "%ls: Nome de função ilegal “%ls”\n"
 
 #: builtin.cpp:1428
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Function '%ls' already exists. Cannot create copy '%ls'\n"
-msgstr "%ls: Function “%ls” does not exist\n"
+msgstr "%ls: Função “%ls” já existe. Não pode criar cópia “%ls”\n"
 
 #: builtin.cpp:1809 builtin.cpp:2114
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Unknown signal '%ls'\n"
-msgstr "%ls: Unknown signal “%ls”\n"
+msgstr "%ls: Sinal desconhecido “%ls”\n"
 
 #: builtin.cpp:1824 builtin.cpp:1984 builtin.cpp:2129 builtin.cpp:2291
 #, c-format
@@ -120,9 +124,9 @@ msgid "%ls: Cannot find calling job for event handler\n"
 msgstr "%ls: Cannot find calling job for event handler\n"
 
 #: builtin.cpp:1895 builtin.cpp:2200
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Invalid process id %ls\n"
-msgstr "%ls: Invalid process id %ls\n"
+msgstr "%ls: ID de processo inválido %ls\n"
 
 #: builtin.cpp:1945 builtin.cpp:2252
 #, c-format
@@ -155,7 +159,7 @@ msgstr "Funções atuais são: "
 #: builtin.cpp:2459
 #, fuzzy, c-format
 msgid "%ls: Seed value '%ls' is not a valid number\n"
-msgstr "%ls: Seed value “%ls” is not a valid number\n"
+msgstr "%ls: Valor semeado “%ls” não é um número válido\n"
 
 #: builtin.cpp:2473
 #, c-format
@@ -177,12 +181,11 @@ msgstr "Este não é um shell de login\n"
 #: builtin.cpp:3028
 #, fuzzy, c-format
 msgid "Job control: %ls\n"
-msgstr "Job control: %ls\n"
+msgstr "Controle de job: %ls\n"
 
 #: builtin.cpp:3029
-#, fuzzy
 msgid "Only on interactive jobs"
-msgstr "Only on interactive jobs"
+msgstr "Somente em jobs interativos"
 
 #: builtin.cpp:3030
 msgid "Never"
@@ -228,9 +231,9 @@ msgid "%ls: Permission denied: '%ls'\n"
 msgstr "%ls: Permissão negada: “%ls”\n"
 
 #: builtin.cpp:3197
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Could not set PWD variable\n"
-msgstr "%ls: Could not set PWD variable\n"
+msgstr "%ls: Não pôde modificar variável PWD\n"
 
 #: builtin.cpp:3284
 #, fuzzy, c-format
@@ -240,7 +243,7 @@ msgstr "%ls: Key not specified\n"
 #: builtin.cpp:3328 builtin.cpp:3336
 #, fuzzy, c-format
 msgid "%ls: Error encountered while sourcing file '%ls':\n"
-msgstr "%ls: Error encountered while sourcing file “%ls”:\n"
+msgstr "%ls: Erro encontrado ao interpretar arquivo “%ls”:\n"
 
 #: builtin.cpp:3344
 #, c-format
@@ -342,46 +345,38 @@ msgid "%ls: 'case' command while not in switch block\n"
 msgstr "%ls: Comando “case” fora de bloco switch\n"
 
 #: builtin.cpp:4317 builtin.cpp:4360
-#, fuzzy
 msgid "Test a condition"
-msgstr "Set a config option"
+msgstr "Testa uma condição"
 
 #: builtin.cpp:4318
 msgid "Try out the new parser"
-msgstr ""
+msgstr "Tenta o novo interpretador"
 
 #: builtin.cpp:4319
-#, fuzzy
 msgid "Execute command if previous command suceeded"
 msgstr "Executa comando se o comando anterior obteve sucesso"
 
 #: builtin.cpp:4320
-#, fuzzy
 msgid "Create a block of code"
 msgstr "Cria um bloco de código"
 
 #: builtin.cpp:4321
-#, fuzzy
 msgid "Send job to background"
 msgstr "Envia job para background"
 
 #: builtin.cpp:4322
-#, fuzzy
 msgid "Handle fish key bindings"
-msgstr "Handle fish key bindings"
+msgstr "Gerencia atalhos de teclado"
 
 #: builtin.cpp:4323
-#, fuzzy
 msgid "Temporarily block delivery of events"
-msgstr "Temporarily block delivery of events"
+msgstr "Bloqueia temporariamente a entrega de eventos"
 
 #: builtin.cpp:4324
-#, fuzzy
 msgid "Stop the innermost loop"
 msgstr "Pára o laço mais interno"
 
 #: builtin.cpp:4325
-#, fuzzy
 msgid ""
 "Temporarily halt execution of a script and launch an interactive debug prompt"
 msgstr ""
@@ -389,182 +384,149 @@ msgstr ""
 "interativo"
 
 #: builtin.cpp:4326
-#, fuzzy
 msgid "Run a builtin command instead of a function"
 msgstr "Executa um comando builtin em vez de uma função"
 
 #: builtin.cpp:4327 builtin.cpp:4359
-#, fuzzy
 msgid "Conditionally execute a block of commands"
 msgstr "Executa condicionalmente um bloco de comandos"
 
 #: builtin.cpp:4328
-#, fuzzy
 msgid "Change working directory"
 msgstr "Muda diretório de trabalho"
 
 #: builtin.cpp:4329
-#, fuzzy
 msgid "Run a program instead of a function or builtin"
 msgstr "Executa um programa em vez de uma função ou builtin"
 
 #: builtin.cpp:4330
-#, fuzzy
 msgid "Set or get the commandline"
-msgstr "Set or get the commandline"
+msgstr "Obtém ou altera o buffer da linha de comando"
 
 #: builtin.cpp:4331
-#, fuzzy
 msgid "Edit command specific completions"
-msgstr "Edit command specific completions"
+msgstr "Edita compleções específicas para um comando"
 
 #: builtin.cpp:4332
-#, fuzzy
 msgid "Search for a specified string in a list"
 msgstr "Procura uma string especificada em uma lista"
 
 #: builtin.cpp:4333
-#, fuzzy
 msgid "Skip the rest of the current lap of the innermost loop"
-msgstr "Skip the rest of the current lap of the innermost loop"
+msgstr "Pula o restante da iteração atual do laço mais interno"
 
 #: builtin.cpp:4334
-#, fuzzy
 msgid "Count the number of arguments"
-msgstr "Count the number of arguments"
+msgstr "Conta o número de argumentos"
 
 #: builtin.cpp:4335
-#, fuzzy
 msgid "Print arguments"
-msgstr "Print word counts"
+msgstr "Imprime os argumentos"
 
 #: builtin.cpp:4336
-#, fuzzy
 msgid "Evaluate block if condition is false"
-msgstr "Evaluate block if condition is false"
+msgstr "Executa bloco se a condição é falsa"
 
 #: builtin.cpp:4337
-#, fuzzy
 msgid "Emit an event"
-msgstr "Emit an event"
+msgstr "Emite um evento"
 
 #: builtin.cpp:4338
-#, fuzzy
 msgid "End a block of commands"
-msgstr "End a block of commands"
+msgstr "Finaliza um bloco de comandos"
 
 #: builtin.cpp:4339
-#, fuzzy
 msgid "Run command in current process"
-msgstr "Run command in current process"
+msgstr "Executa um comando como o processo atual"
 
 #: builtin.cpp:4340
-#, fuzzy
 msgid "Exit the shell"
-msgstr "Exit the shell"
+msgstr "Sai do shell"
 
 #: builtin.cpp:4341
-#, fuzzy
 msgid "Send job to foreground"
-msgstr "Send job to foreground"
+msgstr "Envia job para foreground"
 
 #: builtin.cpp:4342
-#, fuzzy
 msgid "Perform a set of commands multiple times"
-msgstr "Perform a set of commands multiple times"
+msgstr "Executa um conjunto de comandos várias vezes"
 
 #: builtin.cpp:4343
-#, fuzzy
 msgid "Define a new function"
-msgstr "Define a new function"
+msgstr "Define uma nova função"
 
 #: builtin.cpp:4344
-#, fuzzy
 msgid "List or remove functions"
-msgstr "List or remove functions"
+msgstr "Lista ou remove funções"
 
 #: builtin.cpp:4345
 msgid "History of commands executed by user"
-msgstr ""
+msgstr "Histórico de funções executadas pelo usuário"
 
 #: builtin.cpp:4346
-#, fuzzy
 msgid "Evaluate block if condition is true"
-msgstr "Evaluate block if condition is true"
+msgstr "Executa bloco se a condição é verdadeira"
 
 #: builtin.cpp:4347
-#, fuzzy
 msgid "Print currently running jobs"
-msgstr "Print currently running jobs"
+msgstr "Imprime os jobs em execução"
 
 #: builtin.cpp:4348
-#, fuzzy
 msgid "Negate exit status of job"
-msgstr "Negate exit status of job"
+msgstr "Nega estado de saída do job"
 
 #: builtin.cpp:4349
-#, fuzzy
 msgid "Execute command if previous command failed"
-msgstr "Execute command if previous command failed"
+msgstr "Executa comando se o comando anterior falhou"
 
 #: builtin.cpp:4350
-#, fuzzy
 msgid "Prints formatted text"
-msgstr "Print command type"
+msgstr "Imprime texto formatado"
 
 #: builtin.cpp:4351
-#, fuzzy
 msgid "Print the working directory"
-msgstr "Print working directory"
+msgstr "Imprime o diretório de trabalho"
 
 #: builtin.cpp:4352
-#, fuzzy
 msgid "Generate random number"
-msgstr "Generate random number"
+msgstr "Gera um número aleatório"
 
 #: builtin.cpp:4353
-#, fuzzy
 msgid "Read a line of input into variables"
-msgstr "Read a line of input into variables"
+msgstr "Lê uma linha de entrada e a coloca em variáveis"
 
 #: builtin.cpp:4354
-#, fuzzy
 msgid "Stop the currently evaluated function"
-msgstr "Stop the currently evaluated function"
+msgstr "Pára a função em execução"
 
 #: builtin.cpp:4355
-#, fuzzy
 msgid "Handle environment variables"
-msgstr "Handle environment variables"
+msgstr "Modifica variáveis de ambiente"
 
 #: builtin.cpp:4356
 msgid "Set the terminal color"
-msgstr ""
+msgstr "Muda a cor do terminal"
 
 #: builtin.cpp:4357
-#, fuzzy
 msgid "Evaluate contents of file"
-msgstr "Evaluate contents of file"
+msgstr "Executa conteúdo do arquivo"
 
 #: builtin.cpp:4358
-#, fuzzy
 msgid "Return status information about fish"
-msgstr "Return status information about fish"
+msgstr "Retorna informação de estado do fish"
 
 #: builtin.cpp:4361
-#, fuzzy
 msgid "Set or get the shells resource usage limits"
-msgstr "Set or get the shells resource usage limits"
+msgstr "Modifica ou obtém limites de uso de recursos pelo shell"
 
 #: builtin.cpp:4362
-#, fuzzy
 msgid "Perform a command multiple times"
-msgstr "Perform a command multiple times"
+msgstr "Executa um comando várias vezes"
 
 #: builtin.cpp:4442 parser.cpp:53
-#, fuzzy, c-format
+#, c-format
 msgid "Unknown builtin '%ls'"
-msgstr "Unknown builtin “%ls”"
+msgstr "Builtin desconhecida “%ls”"
 
 #: builtin_commandline.cpp:411
 #, fuzzy, c-format
@@ -576,7 +538,6 @@ msgid "Job\tGroup\t"
 msgstr "Job\tGrupo\t"
 
 #: builtin_jobs.cpp:89
-#, fuzzy
 msgid "CPU\t"
 msgstr "CPU\t"
 
@@ -617,62 +578,63 @@ msgid ""
 msgstr ""
 
 #: builtin_printf.cpp:256
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: expected a numeric value"
-msgstr "%s: Expected an argument\n"
+msgstr "%ls: esperava valor numérico"
 
 #: builtin_printf.cpp:258
 #, c-format
 msgid "%ls: value not completely converted"
-msgstr ""
+msgstr "%ls: valor não convertido completamente"
 
 #: builtin_printf.cpp:359
 msgid "missing hexadecimal number in escape"
-msgstr ""
+msgstr "falta número hexadecimal no escape"
 
 #: builtin_printf.cpp:387
 msgid "Missing hexadecimal number in Unicode escape"
-msgstr ""
+msgstr "falta número hexadecimal no escape Unicode"
 
 #: builtin_printf.cpp:401
 #, c-format
 msgid "Unicode character out of range: \\%c%0*x"
-msgstr ""
+msgstr "Caracter Unicode fora dos limites: \\%c%0*x"
 
 #: builtin_printf.cpp:668
 #, c-format
 msgid "invalid field width: %ls"
-msgstr ""
+msgstr "tamanho de campo inválido: %ls"
 
 #: builtin_printf.cpp:706
-#, fuzzy, c-format
+#, c-format
 msgid "invalid precision: %ls"
-msgstr "%ls: Invalid process id %ls\n"
+msgstr "precisão inválida: %ls"
 
 #: builtin_printf.cpp:737
-#, fuzzy, c-format
+#, c-format
 msgid "%.*ls: invalid conversion specification"
-msgstr "%ls: Invalid combination of options\n"
+msgstr "%.*ls: especificação de conversão inválida"
 
 #: builtin_printf.cpp:769
 msgid "printf: not enough arguments"
-msgstr ""
+msgstr "printf: argumentos insuficientes"
 
 #: builtin_set.cpp:155
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Tried to change the read-only variable '%ls'\n"
-msgstr "%ls: Tried to change the read-only variable “%ls”\n"
+msgstr "%ls: Tentou mudar a variável somente leitura “%ls”\n"
 
 #: builtin_set.cpp:162
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Unknown error"
-msgstr "%ls: Unknown error"
+msgstr "%ls: Erro desconhecido"
 
 #: builtin_set.cpp:214
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Multiple variable names specified in single call (%ls and %.*ls)\n"
 msgstr ""
-"%ls: Multiple variable names specified in single call (%ls and %.*ls)\n"
+"%ls: Vários nomes de variáveis especificados em uma única chamada (%ls e "
+"%.*ls)\n"
 
 #: builtin_set.cpp:241
 #, fuzzy, c-format
@@ -697,14 +659,14 @@ msgid "%ls: Values cannot be specfied with erase\n"
 msgstr "%ls: Values cannot be specfied with erase\n"
 
 #: builtin_set_color.cpp:149
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Expected an argument\n"
-msgstr "%s: Expected an argument\n"
+msgstr "%s: Esperava um argumento\n"
 
 #: builtin_set_color.cpp:157 builtin_set_color.cpp:164
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Unknown color '%ls'\n"
-msgstr "%s: Unknown color “%s”\n"
+msgstr "%s: Cor desconhecida “%s”\n"
 
 #: builtin_set_color.cpp:171
 #, fuzzy, c-format
@@ -718,7 +680,7 @@ msgstr ""
 #: common.cpp:1901
 #, fuzzy
 msgid "empty"
-msgstr "empty"
+msgstr "vazio"
 
 #: complete.cpp:61
 #, c-format
@@ -726,24 +688,21 @@ msgid "Home for %ls"
 msgstr ""
 
 #: complete.cpp:66
-#, fuzzy, c-format
+#, c-format
 msgid "Variable: %ls"
-msgstr "Variable: %ls"
+msgstr "Variável: %ls"
 
 #: complete.cpp:907 complete.cpp:925
-#, fuzzy
 msgid "Unknown option: "
-msgstr "Unknown option: "
+msgstr "Opção desconhecida: "
 
 #: complete.cpp:929
-#, fuzzy
 msgid "Multiple matches for option: "
-msgstr "Multiple matches for option: "
+msgstr "Várias possibilidades para opção: "
 
 #: env.cpp:251
-#, fuzzy
 msgid "Could not get user information"
-msgstr "Could not get user information"
+msgstr "Não pôde obter informação do usuário"
 
 #: env.cpp:362
 msgid "Changing language to English"
@@ -805,47 +764,43 @@ msgid "Signal list overflow. Signals have been ignored."
 msgstr "Signal list overflow. Signals have been ignored."
 
 #: exec.cpp:57
-#, fuzzy, c-format
+#, c-format
 msgid "An error occurred while redirecting file descriptor %d"
-msgstr "An error occurred while redirecting file descriptor %d"
+msgstr "Um erro ocorreu ao redirecionar descritor de arquivo %d"
 
 #: exec.cpp:62
-#, fuzzy
 msgid "An error occurred while writing output"
-msgstr "An error occurred while setting up pipe"
+msgstr "Um erro ocorreu ao escrever na saída"
 
 #: exec.cpp:67
-#, fuzzy, c-format
+#, c-format
 msgid "An error occurred while redirecting file '%s'"
-msgstr "An error occurred while redirecting file “%ls”"
+msgstr "Um erro ocorreu ao redirecionar arquivo “%ls”"
 
 #: exec.cpp:912
-#, fuzzy, c-format
+#, c-format
 msgid "Unknown function '%ls'"
-msgstr "Unknown function “%ls”"
+msgstr "Função desconhecida “%ls”"
 
 #: exec.cpp:1063
-#, fuzzy, c-format
+#, c-format
 msgid "Unknown input redirection type %d"
-msgstr "Unknown input redirection type %d"
+msgstr "Tipo de redireção desconhecida %d"
 
 #: expand.cpp:59
-#, fuzzy
 msgid "Child process"
-msgstr "Child process"
+msgstr "Processo filho"
 
 #: expand.cpp:64
-#, fuzzy
 msgid "Process"
-msgstr "Process"
+msgstr "Processo"
 
 #: expand.cpp:69
-#, fuzzy
 msgid "Job"
 msgstr "Job"
 
 #: expand.cpp:74
-#, fuzzy, c-format
+#, c-format
 msgid "Job: %ls"
 msgstr "Job: %ls"
 
@@ -855,14 +810,13 @@ msgid "Shell process"
 msgstr "Shell process"
 
 #: expand.cpp:84
-#, fuzzy
 msgid "Last background job"
-msgstr "Last background job"
+msgstr "Último job em background"
 
 #: expand.cpp:1306
 #, fuzzy
 msgid "Mismatched brackets"
-msgstr "Mismatched brackets"
+msgstr "Erro de parênteses"
 
 #: fish.cpp:320
 #, fuzzy, c-format
@@ -870,9 +824,9 @@ msgid "Invalid value '%s' for debug level switch"
 msgstr "Invalid value “%s” for debug level switch"
 
 #: fish.cpp:361 mimedb.cpp:1335
-#, fuzzy, c-format
+#, c-format
 msgid "%s, version %s\n"
-msgstr "%s, version %s\n"
+msgstr "%s, versão %s\n"
 
 #: fish.cpp:416
 #, fuzzy
@@ -885,19 +839,19 @@ msgid "Error while reading file %ls\n"
 msgstr "Error while reading file %ls\n"
 
 #: fish_indent.cpp:345
-#, fuzzy, c-format
+#, c-format
 msgid "%ls, version %s\n"
-msgstr "%ls, version %s\n"
+msgstr "%ls, versão %s\n"
 
 #: fish_pager.cpp:113
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Argument '%s' is not a valid file descriptor\n"
-msgstr "%ls: Argument “%s” is not a valid file descriptor\n"
+msgstr "%ls: Argumento “%s” não é um descritor de arquivo válido\n"
 
 #: fish_pager.cpp:703
 #, c-format
 msgid " %d to %d of %d"
-msgstr ""
+msgstr " %d a %d de %d"
 
 #: fish_pager.cpp:1012
 msgid "Could not set up output file descriptors for pager"
@@ -923,19 +877,17 @@ msgid "Could not set up terminal"
 msgstr "Could not set up terminal"
 
 #: fish_pager.cpp:1110 input.cpp:436
-#, fuzzy
 msgid "Error while closing terminfo"
-msgstr "Error while closing terminfo"
+msgstr "Erro ao fechar terminfo"
 
 #: fish_pager.cpp:1306
-#, fuzzy
 msgid "Unspecified file descriptors"
-msgstr "Unspecified file descriptors"
+msgstr "Descritores de arquivos não especificados"
 
 #: fish_pager.cpp:1318
 #, fuzzy
 msgid "Could not read completions"
-msgstr "Could not read completions"
+msgstr "Não pôde ler compleções"
 
 #: fishd.cpp:766 path.cpp:358
 msgid ""
@@ -943,6 +895,9 @@ msgid ""
 "will not be saved. Please set the $XDG_CONFIG_HOME variable to a directory "
 "where the current user has write access."
 msgstr ""
+"Incapaz de criar um diretório de configuração para o fish. Suas "
+"configurações pessoais não serão salvas. Por favor modifique a variável "
+"$XDG_CONFIG_HOME para um diretório onde o usuário atual pode escrever."
 
 #: input.cpp:387
 #, c-format
@@ -952,7 +907,7 @@ msgstr ""
 #: input.cpp:389
 #, c-format
 msgid "Attempting to use '%ls' instead"
-msgstr ""
+msgstr "Tentando usar “%ls” no lugar"
 
 #: io.cpp:110
 #, fuzzy, c-format
@@ -962,9 +917,9 @@ msgstr ""
 "An error occured while reading output from code block on file descriptor %d"
 
 #: mimedb.cpp:173 mimedb.cpp:187 mimedb.cpp:1177
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Out of memory\n"
-msgstr "%s: Out of memory\n"
+msgstr "%s: Sem memória\n"
 
 #: mimedb.cpp:462
 #, fuzzy, c-format
@@ -977,9 +932,9 @@ msgid "%s: Locale string too long\n"
 msgstr "%s: Locale string too long\n"
 
 #: mimedb.cpp:550 mimedb.cpp:558
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Could not compile regular expressions %s with error %s\n"
-msgstr "%s: Could not compile regular expressions %s with error %s\n"
+msgstr "%s: Não pôde compilar expressão regular %s com erro %s\n"
 
 #: mimedb.cpp:674
 #, fuzzy, c-format
@@ -1012,9 +967,8 @@ msgid "%s: Could not parse mimetype from argument '%s'\n"
 msgstr "%s: Could not parse mimetype from argument “%s”\n"
 
 #: mimedb.cpp:1394 signal.cpp:407 signal.cpp:422
-#, fuzzy
 msgid "Unknown"
-msgstr "Unknown"
+msgstr "Desconhecido"
 
 #: pager.cpp:24
 #, fuzzy
@@ -1022,9 +976,9 @@ msgid "search: "
 msgstr "Set arch"
 
 #: parse_execution.cpp:526 parse_execution.cpp:961 parser.cpp:1404
-#, fuzzy, c-format
+#, c-format
 msgid "Could not expand string '%ls'"
-msgstr "Could not expand string “%ls”"
+msgstr "Não pôde expandir string “%ls”"
 
 #: parse_execution.cpp:549
 #, fuzzy, c-format
@@ -1104,15 +1058,14 @@ msgid "Tokenizer error: '%ls'"
 msgstr "Tokenizer error: “%ls”"
 
 #: parser.cpp:69
-#, fuzzy
 msgid "An additional command is required"
-msgstr "An additional command is required"
+msgstr "Requer um comando adicional"
 
 #: parser.cpp:74
 msgid ""
 "The function calls itself immediately, which would result in an infinite "
 "loop."
-msgstr ""
+msgstr "A função se chama imediatamente, causando um loop infinito."
 
 #: parser.cpp:79
 #, fuzzy
@@ -1530,9 +1483,8 @@ msgid "Quit request from job control with core dump (^\\)"
 msgstr "Quit request from job control with core dump (^\\)"
 
 #: signal.cpp:93
-#, fuzzy
 msgid "Illegal instruction"
-msgstr "Illegal instruction"
+msgstr "Instrução ilegal"
 
 #: signal.cpp:101
 #, fuzzy
@@ -1774,9 +1726,8 @@ msgid "Run job in background"
 msgstr "Run job in background"
 
 #: tokenizer.cpp:76
-#, fuzzy
 msgid "Comment"
-msgstr "Comment"
+msgstr "Comentário"
 
 #: tokenizer.cpp:602
 #, fuzzy
@@ -1784,129 +1735,117 @@ msgid "Invalid token type"
 msgstr "Invalid token type"
 
 #: wgetopt.cpp:536
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Option '%ls' is ambiguous\n"
-msgstr "%ls: Option “%ls” is ambiguous\n"
+msgstr "%ls: Opção “%ls” é ambígua\n"
 
 #: wgetopt.cpp:560
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Option '--%ls' doesn't allow an argument\n"
-msgstr "%ls: Option “--%ls” doesn't allow an argument\n"
+msgstr "%ls: Opção “--%ls” não permite argumento\n"
 
 #: wgetopt.cpp:565
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Option '%lc%ls' doesn't allow an argument\n"
-msgstr "%ls: Option “%lc%ls” doesn't allow an argument\n"
+msgstr "%ls: Opção “%lc%ls” não permite argumento\n"
 
 #: wgetopt.cpp:579
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Option '%ls' requires an argument\n"
-msgstr "%ls: Option “%ls” requires an argument\n"
+msgstr "%ls: Opção “%ls” requer argumento\n"
 
 #: wgetopt.cpp:607
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Unrecognized option '--%ls'\n"
-msgstr "%ls: Unrecognized option “--%ls”\n"
+msgstr "%ls: Opção não reconhecida “--%ls”\n"
 
 #: wgetopt.cpp:611
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Unrecognized option '%lc%ls'\n"
-msgstr "%ls: Unrecognized option “%lc%ls”\n"
+msgstr "%ls: Opção não reconhecida “%lc%ls”\n"
 
 #: wgetopt.cpp:636
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Illegal option -- %lc\n"
-msgstr "%ls: Illegal option -- %lc\n"
+msgstr "%ls: Opção ilegal -- %lc\n"
 
 #: wgetopt.cpp:638
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Invalid option -- %lc\n"
-msgstr "%ls: Invalid option -- %lc\n"
+msgstr "%ls: Opção inválida -- %lc\n"
 
 #: wgetopt.cpp:673
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Option requires an argument -- %lc\n"
-msgstr "%ls: Option requires an argument -- %lc\n"
+msgstr "%ls: Opção requer argumento -- %lc\n"
 
 #: wildcard.cpp:58
-#, fuzzy
 msgid "Executable"
-msgstr "Executable"
+msgstr "Executável"
 
 #: wildcard.cpp:62
-#, fuzzy
 msgid "Executable link"
-msgstr "Executable link"
+msgstr "Link para executável"
 
 #: wildcard.cpp:67 share/completions/git.fish:146
-#, fuzzy
 msgid "File"
-msgstr "File"
+msgstr "Arquivo"
 
 #: wildcard.cpp:71
-#, fuzzy
 msgid "Character device"
-msgstr "Character device"
+msgstr "Dispositivo caracter"
 
 #: wildcard.cpp:75
-#, fuzzy
 msgid "Block device"
-msgstr "Block device"
+msgstr "Dispositivo bloco"
 
 #: wildcard.cpp:79
-#, fuzzy
 msgid "Fifo"
 msgstr "Fifo"
 
 #: wildcard.cpp:83
-#, fuzzy
 msgid "Symbolic link"
-msgstr "Symbolic link"
+msgstr "Link simbólico"
 
 #: wildcard.cpp:87
-#, fuzzy
 msgid "Symbolic link to directory"
-msgstr "Symbolic link to directory"
+msgstr "Link simbólico para diretório"
 
 #: wildcard.cpp:91
-#, fuzzy
 msgid "Rotten symbolic link"
-msgstr "Rotten symbolic link"
+msgstr "Link simbólico quebrado"
 
 #: wildcard.cpp:95
-#, fuzzy
 msgid "Symbolic link loop"
-msgstr "Symbolic link loop"
+msgstr "Loop de link simbólico"
 
 #: wildcard.cpp:99
-#, fuzzy
 msgid "Socket"
 msgstr "Socket"
 
 #: wildcard.cpp:103 share/completions/ruby.fish:23
 #: share/functions/__fish_complete_directories.fish:8
-#, fuzzy
 msgid "Directory"
-msgstr "Directory"
+msgstr "Diretório"
 
 #: builtin.h:27
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Expected argument\n"
-msgstr "%ls: Expected argument\n"
+msgstr "%ls: Esperava argumento\n"
 
 #: builtin.h:37
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "%ls: Invalid combination of options,\n"
 "%ls\n"
 msgstr ""
-"%ls: Invalid combination of options,\n"
+"%ls: Combinação inválida de opções,\n"
 "%ls\n"
 
 #: builtin.h:42
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Variable scope can only be one of universal, global and local\n"
-msgstr "%ls: Variable scope can only be one of universal, global and local\n"
+msgstr "%ls: Escopo da variável só pode ser um de universal, global ou local\n"
 
 #: builtin.h:47
 #, fuzzy, c-format
@@ -1914,38 +1853,38 @@ msgid "%ls: Variable can't be both exported and unexported\n"
 msgstr "%ls: Variable can't be both exported and unexported\n"
 
 #: builtin.h:52
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Unknown option '%ls'\n"
-msgstr "%ls: Unknown option “%ls”\n"
+msgstr "%ls: Opção desconhecida “%ls”\n"
 
 #: builtin.h:57
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "%ls: Invalid character '%lc' in variable name. Only alphanumerical "
 "characters and underscores are valid in a variable name.\n"
 msgstr ""
-"%ls: Invalid character “%lc” in variable name. Only alphanumerical "
-"characters and underscores are valid in a variable name.\n"
+"%ls: Caracter “%lc” inválido no nome de variável. Somente caracteres "
+"alfanuméricos e underscores são válidos em nome de variável.\n"
 
 #: builtin.h:62
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Variable name can not be the empty string\n"
-msgstr "%ls: Variable name can not be the empty string\n"
+msgstr "%ls: Nome da variável não pode ser a string vazia\n"
 
 #: builtin.h:67
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Second argument must be 'in'\n"
-msgstr "%ls: Second argument must be “in”\n"
+msgstr "%ls: Segundo argumento deve ser “in”\n"
 
 #: builtin.h:72
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Expected at least two arguments, got %d\n"
-msgstr "%ls: Expected at least two arguments, got %d\n"
+msgstr "%ls: Esperava pelo menos dois argumentos, obteve %d\n"
 
 #: builtin.h:74
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: '%ls' is not a valid variable name\n"
-msgstr "%ls: “%ls” is not a valid variable name\n"
+msgstr "%ls: “%ls” não é um nome válido para variável\n"
 
 #: builtin.h:77
 #, c-format
@@ -1953,9 +1892,9 @@ msgid "%ls: can only take 'if' and then another command as an argument\n"
 msgstr ""
 
 #: builtin.h:78
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: any second argument must be 'if'\n"
-msgstr "%ls: Second argument must be “in”\n"
+msgstr "%ls: Segundo argumento deve ser “if”\n"
 
 #: builtin.h:88
 #, fuzzy, c-format
@@ -1968,9 +1907,9 @@ msgid "%ls: Unknown block type '%ls'\n"
 msgstr "%ls: Unknown block type “%ls”\n"
 
 #: builtin.h:95
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Argument '%ls' is not a number\n"
-msgstr "%ls: Argument “%ls” is not a number\n"
+msgstr "%ls: Argumento “%ls” não é número\n"
 
 #: exec.h:21
 #, fuzzy
@@ -1978,9 +1917,8 @@ msgid "An error occurred while setting up pipe"
 msgstr "An error occurred while setting up pipe"
 
 #: expand.h:132
-#, fuzzy
 msgid "Array index out of bounds"
-msgstr "Array index out of bounds"
+msgstr "Índice do array fora dos limites"
 
 #: output.h:91
 #, c-format
@@ -2003,95 +1941,89 @@ msgid ""
 msgstr ""
 
 #: parse_constants.h:152
-#, fuzzy
 msgid ""
 "Expected a command, but instead found a pipe. Did you mean 'COMMAND; or "
 "COMMAND'? See the help section for the 'or' builtin command by typing 'help "
 "or'."
 msgstr ""
-"Expected a command name, got token of type “%ls”. Did you mean “COMMAND; or "
-"COMMAND”? See the help section for the “or” builtin command by typing “help "
-"or”."
+"Esperava comando, obteve pipe. Você quis dizer “COMANDO; or COMANDO”? Veja a "
+"seção de ajuda para o comando builtin “or” digitando “help or”."
 
 #: parse_constants.h:155
-#, fuzzy
 msgid ""
 "Expected a command, but instead found a '&'. Did you mean 'COMMAND; and "
 "COMMAND'? See the help section for the 'and' builtin command by typing 'help "
 "and'."
 msgstr ""
-"Expected a command name, got token of type “%ls”. Did you mean “COMMAND; and "
-"COMMAND”? See the help section for the “and” builtin command by typing “help "
-"and”."
+"Esperava comando, obteve “&”. Você quis dizer “COMANDO; and COMANDO”? Veja a "
+"seção de ajuda para o comando builtin “and” digitando “help and”."
 
 #: parse_constants.h:161
-#, fuzzy, c-format
+#, c-format
 msgid "Unable to expand variable name '%ls'"
-msgstr "%ls: Invalid variable name “%ls”\n"
+msgstr "Incapaz de expandir o nome da variável “%ls”"
 
 #: parse_constants.h:170
-#, fuzzy
 msgid "break command while not inside of loop"
-msgstr "Loop control command while not inside of loop"
+msgstr "Comando break fora de loop"
 
 #: parse_constants.h:173
-#, fuzzy
 msgid "continue command while not inside of loop"
-msgstr "Loop control command while not inside of loop"
+msgstr "Comando continue fora de loop"
 
 #: parse_constants.h:184
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "The '$' character begins a variable name. The character '%lc', which "
 "directly followed a '$', is not allowed as a part of a variable name, and "
 "variable names may not be zero characters long. To learn more about variable "
 "expansion in fish, type 'help expand-variable'."
 msgstr ""
-"The “$” character begins a variable name. The character “%lc”, which "
-"directly followed a “$”, is not allowed as a part of a variable name, and "
-"variable names may not be zero characters long. To learn more about variable "
-"expansion in fish, type “help expand-variable”."
+"O caracter “$” inicia nomes de variáveis. O caracter “%lc”, logo após “$”, "
+"não é permitido como parte de nome de variável, e nomes de variável não "
+"podem ter tamanho nulo. Para saber mais sobre expansão de variáveis no fish, "
+"digite “help expand-variable”."
 
 #: parse_constants.h:189
 msgid ""
 "$? is not a valid variable in fish. If you want the exit status of the last "
 "command, try $status."
 msgstr ""
+"$? não é uma variável válida no fish. Se você quer o código de saída do "
+"último comando, tente $status."
 
 #: parse_constants.h:194
-#, fuzzy
 msgid ""
 "The '$' begins a variable name. It was given at the end of an argument. "
 "Variable names may not be zero characters long. To learn more about variable "
 "expansion in fish, type 'help expand-variable'."
 msgstr ""
-"The “$” begins a variable name. It was given at the end of an argument. "
-"Variable names may not be zero characters long. To learn more about variable "
-"expansion in fish, type “help expand-variable”."
+"O “$” inicia nomes de variáveis. Ele apareceu no final de um argumento. "
+"Nomes de variáveis não podem ter comprimento nulo. Para saber mais sobre "
+"expansão de variáveis no fish, digite “help expand-variable”."
 
 #: parse_constants.h:199
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Did you mean %ls{$%ls}%ls? The '$' character begins a variable name. A "
 "bracket, which directly followed a '$', is not allowed as a part of a "
 "variable name, and variable names may not be zero characters long. To learn "
 "more about variable expansion in fish, type 'help expand-variable'."
 msgstr ""
-"Did you mean %ls{$%ls}%ls? The “$” character begins a variable name. A "
-"bracket, which directly followed a “$”, is not allowed as a part of a "
-"variable name, and variable names may not be zero characters long. To learn "
-"more about variable expansion in fish, type “help expand-variable”."
+"Você quis dizer %ls{$%ls}%ls? O caracter “$” inicia nomes de variáveis. Uma "
+"chave, logo após um “$”, não é permitida como parte de nome de variável, e "
+"nomes de variáveis não podem ter comprimento nulo. Para saber mais sobre "
+"expansão de variáveis no fish, digite “help expand-variable”."
 
 #: parse_constants.h:204
-#, fuzzy
 msgid ""
 "Did you mean (COMMAND)? In fish, the '$' character is only used for "
 "accessing variables. To learn more about command substitution in fish, type "
 "'help expand-command-substitution'."
 msgstr ""
-"Did you mean (COMMAND)? In fish, the “$” character is only used for "
-"accessing variables. To learn more about command substitution in fish, type "
-"“help expand-command-substitution”."
+"Você quis dizer (COMANDO)? No fish, o caracter “$” é usado exclusivamente "
+"para acessar variáveis. Para saber mais sobre substituição de comandos no "
+"fish, digite “help expand-command-substitution”."
 
 #: share/completions/adb.fish:3
 #, fuzzy
@@ -2121,9 +2053,8 @@ msgstr ""
 #: share/functions/__fish_complete_ls.fish:96
 #: share/functions/__fish_complete_python.fish:15
 #: share/functions/__fish_complete_tex.fish:5
-#, fuzzy
 msgid "Display version and exit"
-msgstr "Display version and exit"
+msgstr "Mostra a versão e sai"
 
 #: share/completions/apm.fish:3
 #, fuzzy

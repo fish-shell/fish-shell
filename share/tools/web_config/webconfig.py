@@ -26,7 +26,7 @@ if term:
     os.environ['TERM'] = term
 
 import subprocess
-import re, socket, cgi, select, time, glob, random, string
+import re, socket, cgi, select, time, glob, random, string, binascii
 try:
     import json
 except ImportError:
@@ -680,6 +680,14 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         result.extend([r for r in sample_results if r])
         return result
 
+    def secure_startswith(self, haystack, needle):
+        if len(haystack) < len(needle):
+            return False
+        bits = 0
+        for x,y in zip(haystack, needle):
+            bits |= ord(x) ^ ord(y)
+        return bits == 0
+        
     def font_size_for_ansi_prompt(self, prompt_demo_ansi):
         width = ansi_prompt_line_width(prompt_demo_ansi)
         # Pick a font size
@@ -697,7 +705,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         p = self.path
 
         authpath = '/' + authkey
-        if p.startswith(authpath):
+        if self.secure_startswith(p, authpath):
             p = p[len(authpath):]
         else:
             return self.send_error(403)
@@ -736,7 +744,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         p = self.path
 
         authpath = '/' + authkey
-        if p.startswith(authpath):
+        if self.secure_startswith(p, authpath):
             p = p[len(authpath):]
         else:
             return self.send_error(403)
@@ -851,7 +859,7 @@ where = os.path.dirname(sys.argv[0])
 os.chdir(where)
 
 # Generate a 16-byte random key as a hexadecimal string
-authkey = hex(random.getrandbits(16*4))[2:]
+authkey = binascii.b2a_hex(os.urandom(16))
 
 # Try to find a suitable port
 PORT = 8000

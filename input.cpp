@@ -549,8 +549,10 @@ void input_function_push_args(int code)
 
 /**
    Perform the action of the specified binding
+   allow_commands controls whether fish commands should be executed, or should
+   be deferred until later.
 */
-static void input_mapping_execute(const input_mapping_t &m)
+static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
 {
     /* By default input functions always succeed */
     input_function_status = true;
@@ -575,7 +577,7 @@ static void input_mapping_execute(const input_mapping_t &m)
         {
             input_unreadch(code);
         }
-        else
+        else if (allow_commands)
         {
             /*
              This key sequence is bound to a command, which
@@ -587,6 +589,16 @@ static void input_mapping_execute(const input_mapping_t &m)
             proc_set_last_status(last_status);
 
             input_unreadch(R_NULL);
+        }
+        else
+        {
+            /* We don't want to run commands yet. Put the characters back and return R_NULL */
+            for (wcstring::const_reverse_iterator it = m.seq.rbegin(), end = m.seq.rend(); it != end; ++it)
+            {
+                input_unreadch(*it);
+            }
+            input_unreadch(R_NULL);
+            return; /* skip the input_set_bind_mode */
         }
     }
 
@@ -644,7 +656,7 @@ void input_unreadch(wint_t ch)
     input_common_unreadch(ch);
 }
 
-static void input_mapping_execute_matching_or_generic()
+static void input_mapping_execute_matching_or_generic(bool allow_commands)
 {
     const input_mapping_t *generic = NULL;
 
@@ -669,14 +681,14 @@ static void input_mapping_execute_matching_or_generic()
         }
         else if (input_mapping_is_match(m))
         {
-            input_mapping_execute(m);
+            input_mapping_execute(m, allow_commands);
             return;
         }
     }
 
     if (generic)
     {
-        input_mapping_execute(*generic);
+        input_mapping_execute(*generic, allow_commands);
     }
     else
     {
@@ -687,7 +699,7 @@ static void input_mapping_execute_matching_or_generic()
     }
 }
 
-wint_t input_readch()
+wint_t input_readch(bool allow_commands)
 {
     CHECK_BLOCK(R_NULL);
 
@@ -738,7 +750,10 @@ wint_t input_readch()
         else
         {
             input_unreadch(c);
-            input_mapping_execute_matching_or_generic();
+            input_mapping_execute_matching_or_generic(allow_commands);
+            // regarding allow_commands, we're in a loop, but if a fish command
+            // is executed, R_NULL is unread, so the next pass through the loop
+            // we'll break out and return it.
         }
     }
 }

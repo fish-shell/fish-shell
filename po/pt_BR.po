@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2014-03-13 21:29+0800\n"
-"PO-Revision-Date: 2014-08-22 12:25-0300\n"
+"PO-Revision-Date: 2014-08-22 13:02-0300\n"
 "Last-Translator: Iuri Rezende Souza <riuri@rocketmail.com>\n"
 "Language-Team: Português Brasileiro <>\n"
 "Language: pt_BR\n"
@@ -24,17 +24,17 @@ msgid "Could not autoload item '%ls', it is already being autoloaded. "
 msgstr "Could not autoload item “%ls”, it is already being autoloaded. "
 
 #: builtin.cpp:83
-#, fuzzy, c-format
+#, c-format
 msgid "Send job %d, '%ls' to foreground\n"
-msgstr "Send job %d, “%ls” to foreground\n"
+msgstr "Enviando job %d, “%ls” para foreground\n"
 
 #: builtin.cpp:344
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "%ls: Type 'help %ls' for related documentation\n"
 "\n"
 msgstr ""
-"%ls: Type “help %ls” for related documentation\n"
+"%ls: Digite “help %ls” para documentação relacionada\n"
 "\n"
 
 #: builtin.cpp:484
@@ -60,7 +60,7 @@ msgstr "%ls: Expected zero or one argument, got %d\n"
 #: builtin.cpp:692
 #, c-format
 msgid "%ls: Invalid state\n"
-msgstr ""
+msgstr "%ls: Estado inválido\n"
 
 #: builtin.cpp:796
 #, c-format
@@ -73,19 +73,19 @@ msgid "%ls: No blocks defined\n"
 msgstr ""
 
 #: builtin.cpp:1312 builtin.h:32
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Invalid combination of options\n"
-msgstr "%ls: Invalid combination of options\n"
+msgstr "%ls: Combinação inválida de opções\n"
 
 #: builtin.cpp:1334
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Expected exactly one function name\n"
-msgstr "%ls: Expected exactly one function name\n"
+msgstr "%ls: Esperava exatamente um nome de função\n"
 
 #: builtin.cpp:1344 builtin.cpp:1406
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Function '%ls' does not exist\n"
-msgstr "%ls: Function “%ls” does not exist\n"
+msgstr "%ls: Função “%ls” não existe\n"
 
 #: builtin.cpp:1394
 #, fuzzy, c-format
@@ -95,9 +95,9 @@ msgid ""
 msgstr "%ls: Expected exactly one function name\n"
 
 #: builtin.cpp:1417 builtin.cpp:1952 builtin.cpp:2259
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Illegal function name '%ls'\n"
-msgstr "%ls: Illegal function name “%ls”\n"
+msgstr "%ls: Nome de função ilegal “%ls”\n"
 
 #: builtin.cpp:1428
 #, fuzzy, c-format
@@ -110,9 +110,9 @@ msgid "%ls: Unknown signal '%ls'\n"
 msgstr "%ls: Unknown signal “%ls”\n"
 
 #: builtin.cpp:1824 builtin.cpp:1984 builtin.cpp:2129 builtin.cpp:2291
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Invalid variable name '%ls'\n"
-msgstr "%ls: Invalid variable name “%ls”\n"
+msgstr "%ls: Nome inválido de variável “%ls”\n"
 
 #: builtin.cpp:1877 builtin.cpp:2182
 #, fuzzy, c-format
@@ -125,33 +125,32 @@ msgid "%ls: Invalid process id %ls\n"
 msgstr "%ls: Invalid process id %ls\n"
 
 #: builtin.cpp:1945 builtin.cpp:2252
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Expected function name\n"
-msgstr "%ls: Expected function name\n"
+msgstr "%ls: Esperava nome de função\n"
 
 #: builtin.cpp:1962 builtin.cpp:2269
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "%ls: The name '%ls' is reserved,\n"
 "and can not be used as a function name\n"
 msgstr ""
-"%ls: The name “%ls” is reserved,\n"
-"and can not be used as a function name\n"
+"%ls: O nome “%ls” é reservado,\n"
+"e não pode ser usado como nome de função\n"
 
 #: builtin.cpp:1970 builtin.cpp:2277 builtin.cpp:3824
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: No function name given\n"
-msgstr "%ls: Expected function name\n"
+msgstr "%ls: Esperava nome de função\n"
 
 #: builtin.cpp:1997 builtin.cpp:2304
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Expected one argument, got %d\n"
-msgstr "%ls: Expected one argument, got %d\n"
+msgstr "%ls: Esperava um argumento, obteve %d\n"
 
 #: builtin.cpp:2319
-#, fuzzy
 msgid "Current functions are: "
-msgstr "Current functions are: "
+msgstr "Funções atuais são: "
 
 #: builtin.cpp:2459
 #, fuzzy, c-format
@@ -159,24 +158,21 @@ msgid "%ls: Seed value '%ls' is not a valid number\n"
 msgstr "%ls: Seed value “%ls” is not a valid number\n"
 
 #: builtin.cpp:2473
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Expected zero or one argument, got %d\n"
-msgstr "%ls: Expected zero or one argument, got %d\n"
+msgstr "%ls: Esperava zero ou um argumento, obteve %d\n"
 
 #: builtin.cpp:2981 fish.cpp:518 parser.cpp:1095
-#, fuzzy
 msgid "Standard input"
-msgstr "Standard input"
+msgstr "Entrada padrão"
 
 #: builtin.cpp:3024
-#, fuzzy
 msgid "This is a login shell\n"
-msgstr "This is a login shell\n"
+msgstr "Este é um shell de login\n"
 
 #: builtin.cpp:3026
-#, fuzzy
 msgid "This is not a login shell\n"
-msgstr "This is not a login shell\n"
+msgstr "Este não é um shell de login\n"
 
 #: builtin.cpp:3028
 #, fuzzy, c-format
@@ -189,49 +185,47 @@ msgid "Only on interactive jobs"
 msgstr "Only on interactive jobs"
 
 #: builtin.cpp:3030
-#, fuzzy
 msgid "Never"
-msgstr "Never"
+msgstr "Nunca"
 
 #: builtin.cpp:3030
-#, fuzzy
 msgid "Always"
-msgstr "Always"
+msgstr "Sempre"
 
 #: builtin.cpp:3066 builtin.cpp:3995
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Argument '%ls' must be an integer\n"
-msgstr "%ls: Argument “%ls” must be an integer\n"
+msgstr "%ls: Argumento “%ls” deve ser um inteiro\n"
 
 #: builtin.cpp:3108
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Could not find home directory\n"
-msgstr "%ls: Could not find home directory\n"
+msgstr "%ls: Não pôde encontrar diretório home\n"
 
 #: builtin.cpp:3128 builtin.cpp:3182
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: '%ls' is not a directory\n"
-msgstr "%ls: “%ls” is not a directory\n"
+msgstr "%ls: “%ls” não é um diretório\n"
 
 #: builtin.cpp:3135
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: The directory '%ls' does not exist\n"
-msgstr "%ls: The directory “%ls” does not exist\n"
+msgstr "%ls: O diretório “%ls” não existe\n"
 
 #: builtin.cpp:3142
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: '%ls' is a rotten symlink\n"
-msgstr "%ls: “%ls” is a rotten symlink\n"
+msgstr "%ls: “%ls” é um symlink quebrado\n"
 
 #: builtin.cpp:3150
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Unknown error trying to locate directory '%ls'\n"
-msgstr "%ls: Unknown error trying to locate directory “%ls”\n"
+msgstr "%ls: Erro desconhecido ao tentar localizar diretório “%ls”\n"
 
 #: builtin.cpp:3173
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Permission denied: '%ls'\n"
-msgstr "%ls: Permission denied: “%ls”\n"
+msgstr "%ls: Permissão negada: “%ls”\n"
 
 #: builtin.cpp:3197
 #, fuzzy, c-format
@@ -249,62 +243,62 @@ msgid "%ls: Error encountered while sourcing file '%ls':\n"
 msgstr "%ls: Error encountered while sourcing file “%ls”:\n"
 
 #: builtin.cpp:3344
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: '%ls' is not a file\n"
-msgstr "%ls: “%ls” is not a file\n"
+msgstr "%ls: “%ls” não é um arquivo\n"
 
 #: builtin.cpp:3363
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Error while reading file '%ls'\n"
-msgstr "%ls: Error while reading file “%ls”\n"
+msgstr "%ls: Erro ao ler arquivo “%ls”\n"
 
 #: builtin.cpp:3419 builtin.cpp:3599
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: There are no suitable jobs\n"
-msgstr "%ls: There are no suitable jobs\n"
+msgstr "%ls: Não há jobs adequados\n"
 
 #: builtin.cpp:3448
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Ambiguous job\n"
-msgstr "%ls: Ambiguous job\n"
+msgstr "%ls: Job ambíguo\n"
 
 #: builtin.cpp:3454 builtin.cpp:3622 builtin_jobs.cpp:301
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: '%ls' is not a job\n"
-msgstr "%ls: “%ls” is not a job\n"
+msgstr "%ls: “%ls” não é um job\n"
 
 #: builtin.cpp:3485 builtin_jobs.cpp:316
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: No suitable job: %d\n"
-msgstr "%ls: No suitable job: %d\n"
+msgstr "%ls: Não é trabalho adequado: %d\n"
 
 #: builtin.cpp:3494
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "%ls: Can't put job %d, '%ls' to foreground because it is not under job "
 "control\n"
 msgstr ""
-"%ls: Can't put job %d, “%ls” to foreground because it is not under job "
-"control\n"
+"%ls: Não pôde colocar job %d, “%ls” em foreground porque não está sob "
+"controle de jobs\n"
 
 #: builtin.cpp:3547
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Unknown job '%ls'\n"
-msgstr "%ls: Unknown job “%ls”\n"
+msgstr "%ls: Job desconhecido “%ls”\n"
 
 #: builtin.cpp:3556
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "%ls: Can't put job %d, '%ls' to background because it is not under job "
 "control\n"
 msgstr ""
-"%ls: Can't put job %d, “%ls” to background because it is not under job "
-"control\n"
+"%ls: Não pôde colocar job %d, “%ls” em background porque não está sob "
+"controle de jobs\n"
 
 #: builtin.cpp:3566
-#, fuzzy, c-format
+#, c-format
 msgid "Send job %d '%ls' to background\n"
-msgstr "Send job %d “%ls” to background\n"
+msgstr "Enviando job %d “%ls” para background\n"
 
 #: builtin.cpp:3605
 #, fuzzy
@@ -312,40 +306,40 @@ msgid "(default)"
 msgstr "(default)"
 
 #: builtin.cpp:3737
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Not inside of block\n"
-msgstr "%ls: Not inside of block\n"
+msgstr "%ls: Não está dentro de bloco\n"
 
 #: builtin.cpp:3884
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Not inside of 'if' block\n"
-msgstr "%ls: Not inside of “if” block\n"
+msgstr "%ls: Não está dentro de bloco “if”\n"
 
 #: builtin.cpp:3938
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Not inside of loop\n"
-msgstr "%ls: Not inside of loop\n"
+msgstr "%ls: Não está dentro de laço\n"
 
 #: builtin.cpp:4005 builtin_complete.cpp:539 builtin_set_color.cpp:140
 #: builtin.h:83
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Too many arguments\n"
-msgstr "%ls: Too many arguments\n"
+msgstr "%ls: Argumentos demais\n"
 
 #: builtin.cpp:4023
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Not inside of function\n"
-msgstr "%ls: Not inside of function\n"
+msgstr "%ls: Não está dentro de função\n"
 
 #: builtin.cpp:4059
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Expected exactly one argument, got %d\n"
-msgstr "%ls: Expected exactly one argument, got %d\n"
+msgstr "%ls: Esperava exatamente um argumento, obteve %d\n"
 
 #: builtin.cpp:4090
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: 'case' command while not in switch block\n"
-msgstr "%ls: “case” command while not in switch block\n"
+msgstr "%ls: Comando “case” fora de bloco switch\n"
 
 #: builtin.cpp:4317 builtin.cpp:4360
 #, fuzzy
@@ -359,17 +353,17 @@ msgstr ""
 #: builtin.cpp:4319
 #, fuzzy
 msgid "Execute command if previous command suceeded"
-msgstr "Execute command if previous command suceeded"
+msgstr "Executa comando se o comando anterior obteve sucesso"
 
 #: builtin.cpp:4320
 #, fuzzy
 msgid "Create a block of code"
-msgstr "Create a block of code"
+msgstr "Cria um bloco de código"
 
 #: builtin.cpp:4321
 #, fuzzy
 msgid "Send job to background"
-msgstr "Send job to background"
+msgstr "Envia job para background"
 
 #: builtin.cpp:4322
 #, fuzzy
@@ -384,34 +378,35 @@ msgstr "Temporarily block delivery of events"
 #: builtin.cpp:4324
 #, fuzzy
 msgid "Stop the innermost loop"
-msgstr "Stop the innermost loop"
+msgstr "Pára o laço mais interno"
 
 #: builtin.cpp:4325
 #, fuzzy
 msgid ""
 "Temporarily halt execution of a script and launch an interactive debug prompt"
 msgstr ""
-"Temporarily halt execution of a script and launch an interactive debug prompt"
+"Interrompe temporariamente a execução de um script e abre um prompt de debug "
+"interativo"
 
 #: builtin.cpp:4326
 #, fuzzy
 msgid "Run a builtin command instead of a function"
-msgstr "Run a builtin command instead of a function"
+msgstr "Executa um comando builtin em vez de uma função"
 
 #: builtin.cpp:4327 builtin.cpp:4359
 #, fuzzy
 msgid "Conditionally execute a block of commands"
-msgstr "Conditionally execute a block of commands"
+msgstr "Executa condicionalmente um bloco de comandos"
 
 #: builtin.cpp:4328
 #, fuzzy
 msgid "Change working directory"
-msgstr "Change working directory"
+msgstr "Muda diretório de trabalho"
 
 #: builtin.cpp:4329
 #, fuzzy
 msgid "Run a program instead of a function or builtin"
-msgstr "Run a program instead of a function or builtin"
+msgstr "Executa um programa em vez de uma função ou builtin"
 
 #: builtin.cpp:4330
 #, fuzzy
@@ -424,8 +419,9 @@ msgid "Edit command specific completions"
 msgstr "Edit command specific completions"
 
 #: builtin.cpp:4332
+#, fuzzy
 msgid "Search for a specified string in a list"
-msgstr ""
+msgstr "Procura uma string especificada em uma lista"
 
 #: builtin.cpp:4333
 #, fuzzy
@@ -576,9 +572,8 @@ msgid "%ls: Unknown input function '%ls'\n"
 msgstr "%ls: Unknown input function “%ls”\n"
 
 #: builtin_jobs.cpp:87
-#, fuzzy
 msgid "Job\tGroup\t"
-msgstr "Job\tGroup\t"
+msgstr "Job\tGrupo\t"
 
 #: builtin_jobs.cpp:89
 #, fuzzy
@@ -586,14 +581,12 @@ msgid "CPU\t"
 msgstr "CPU\t"
 
 #: builtin_jobs.cpp:91
-#, fuzzy
 msgid "State\tCommand\n"
-msgstr "State\tCommand\n"
+msgstr "Estado\tComando\n"
 
 #: builtin_jobs.cpp:99 proc.cpp:751
-#, fuzzy
 msgid "stopped"
-msgstr "stopped"
+msgstr "parado"
 
 #: builtin_jobs.cpp:99
 #, fuzzy
@@ -601,24 +594,21 @@ msgid "running"
 msgstr "running"
 
 #: builtin_jobs.cpp:113
-#, fuzzy
 msgid "Group\n"
-msgstr "Group\n"
+msgstr "Grupo\n"
 
 #: builtin_jobs.cpp:126
-#, fuzzy
 msgid "Process\n"
-msgstr "Process"
+msgstr "Processo\n"
 
 #: builtin_jobs.cpp:143
-#, fuzzy
 msgid "Command\n"
-msgstr "Command\n"
+msgstr "Comando\n"
 
 #: builtin_jobs.cpp:344
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: There are no jobs\n"
-msgstr "%ls: There are no jobs\n"
+msgstr "%ls: Não há jobs\n"
 
 #: builtin_printf.cpp:175
 #, c-format
@@ -756,9 +746,8 @@ msgid "Could not get user information"
 msgstr "Could not get user information"
 
 #: env.cpp:362
-#, fuzzy
 msgid "Changing language to English"
-msgstr "Changing language to English"
+msgstr "Mudando língua para Português"
 
 #: env.cpp:1252
 #, fuzzy
@@ -1383,21 +1372,21 @@ msgid "Error while searching for command '%ls'"
 msgstr "Error while searching for command “%ls”"
 
 #: proc.cpp:615
-#, fuzzy, c-format
+#, c-format
 msgid "Job %d, '%ls' has %ls"
-msgstr "Job %d, “%ls” has %ls"
+msgstr "Job %d, “%ls” está %ls"
 
 #: proc.cpp:699
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Job %d, '%ls' terminated by signal %ls (%ls)"
-msgstr "%ls: Job %d, “%ls” terminated by signal %ls (%ls)"
+msgstr "%ls: Job %d, “%ls” terminado pelo sinal %ls (%ls)"
 
 #: proc.cpp:707
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "%ls: Process %d, '%ls' from job %d, '%ls' terminated by signal %ls (%ls)"
 msgstr ""
-"%ls: Process %d, “%ls” from job %d, “%ls” terminated by signal %ls (%ls)"
+"%ls: Processo %d, “%ls” do job %d, “%ls” terminado pelo sinal %ls (%ls)"
 
 #: proc.cpp:736
 #, fuzzy
@@ -1488,7 +1477,7 @@ msgstr "Pop null reader block"
 msgid ""
 "There are stopped jobs. A second attempt to exit will enforce their "
 "termination.\n"
-msgstr ""
+msgstr "Há jobs parados. Uma segunda tentativa de sair forçará seu término.\n"
 
 #: reader.cpp:4069
 #, fuzzy, c-format

@@ -284,7 +284,7 @@ doc/refman.pdf: doc
 
 test: $(PROGRAMS) fish_tests
 	./fish_tests
-	cd tests; ../fish <test.fish;
+	cd tests; ../fish -c 'set -x fish_function_path "$$PWD"/../share/functions dummy; source' <test.fish;
 .PHONY: test
 
 

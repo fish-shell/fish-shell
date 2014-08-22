@@ -3404,6 +3404,8 @@ static void test_highlighting(void)
         {L"ls", highlight_spec_command},
         {L"param2", highlight_spec_param},
         {L")", highlight_spec_operator},
+        {L"|", highlight_spec_statement_terminator},
+        {L"cat", highlight_spec_command},
         {NULL, -1}
     };
 

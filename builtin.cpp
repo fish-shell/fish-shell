@@ -2636,7 +2636,13 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
                 size_t j = 0;
                 for (; i+1 < argc; ++i)
                 {
-                    env_set(argv[i], j < bufflen ? (wchar_t[2]){buff[j], 0} : L"", place);
+                    if (j < bufflen) {
+                        wchar_t buffer[2] = {buff[j], 0};
+                        env_set(argv[i], buffer, place);
+                    }
+                    else {
+                        env_set(argv[i], L"", place);
+                    }
                     if (j < bufflen) ++j;
                 }
                 if (i < argc) env_set(argv[i], &buff[j], place);

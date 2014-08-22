@@ -326,7 +326,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
 
         int opt = wgetopt_long(argc,
                                argv,
-                               L"abijpctwforhI:CLSs",
+                               L"abijpctwforhI:CLSsP",
                                long_options,
                                &opt_index);
         if (opt == -1)

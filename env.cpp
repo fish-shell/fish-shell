@@ -443,7 +443,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
         L"LINES",
         L"COLUMNS",
         L"PWD",
-        L"SHLVL",
+        //L"SHLVL", // will be inserted a bit lower down
         L"FISH_VERSION",
     };
     for (size_t i=0; i < sizeof ro_keys / sizeof *ro_keys; i++)
@@ -549,6 +549,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
         }
     }
     env_set(L"SHLVL", nshlvl_str.c_str(), ENV_GLOBAL | ENV_EXPORT);
+    env_read_only.insert(L"SHLVL");
 
     /* Set up the HOME variable */
     if (env_get_string(L"HOME").missing_or_empty())

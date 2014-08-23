@@ -102,6 +102,11 @@ enum
     */
     INTERNAL_SEPARATOR,
 
+    /**
+       Character representing an empty variable expansion.
+       Only used transitively while expanding variables.
+    */
+    VARIABLE_EXPAND_EMPTY,
 }
 ;
 

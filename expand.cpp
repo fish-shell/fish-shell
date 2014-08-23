@@ -953,8 +953,11 @@ void expand_variable_error(parser_t &parser, const wcstring &token, size_t token
 
 /**
    Parse an array slicing specification
+   Returns 0 on success.
+   If a parse error occurs, returns the index of the bad token.
+   Note that 0 can never be a bad index because the string always starts with [.
  */
-static int parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx, std::vector<size_t> &source_positions, size_t array_size)
+static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &idx, std::vector<size_t> &source_positions, size_t array_size)
 {
     wchar_t *end;
 
@@ -981,7 +984,7 @@ static int parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &
         tmp = wcstol(&in[pos], &end, 10);
         if ((errno) || (end == &in[pos]))
         {
-            return 1;
+            return pos;
         }
         //    debug( 0, L"Push idx %d", tmp );
 
@@ -999,7 +1002,7 @@ static int parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long> &
             long tmp1 = wcstol(&in[pos], &end, 10);
             if ((errno) || (end == &in[pos]))
             {
-                return 1;
+                return pos;
             }
             pos = end-in;
 
@@ -1086,10 +1089,15 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
 
             while (1)
             {
-                if (!(in[stop_pos ]))
+                const wchar_t nc = in[stop_pos];
+                if (!(nc))
                     break;
-                if (!(iswalnum(in[stop_pos]) ||
-                        (wcschr(L"_", in[stop_pos])!= 0)))
+                if (nc == VARIABLE_EXPAND_EMPTY)
+                {
+                    stop_pos++;
+                    break;
+                }
+                if (!(wcsvarchr(nc)))
                     break;
 
                 stop_pos++;
@@ -1108,7 +1116,15 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
             }
 
             var_tmp.append(in + start_pos, var_len);
-            env_var_t var_val = expand_var(var_tmp.c_str());
+            env_var_t var_val;
+            if (var_len == 1 && var_tmp[0] == VARIABLE_EXPAND_EMPTY)
+            {
+                var_val = env_var_t::missing_var();
+            }
+            else
+            {
+                var_val = expand_var(var_tmp.c_str());
+            }
 
             if (! var_val.missing())
             {
@@ -1123,12 +1139,14 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
                     if (in[slice_start] == L'[')
                     {
                         wchar_t *slice_end;
+                        size_t bad_pos;
                         all_vars=0;
 
-                        if (parse_slice(in + slice_start, &slice_end, var_idx_list, var_pos_list, var_item_list.size()))
+                        bad_pos = parse_slice(in + slice_start, &slice_end, var_idx_list, var_pos_list, var_item_list.size());
+                        if (bad_pos != 0)
                         {
                             append_syntax_error(errors,
-                                                stop_pos,
+                                                stop_pos + bad_pos,
                                                 L"Invalid index value");
                             is_ok = 0;
                             break;
@@ -1142,10 +1160,10 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
                         for (size_t j=0; j<var_idx_list.size(); j++)
                         {
                             long tmp = var_idx_list.at(j);
-                            size_t var_src_pos = var_pos_list.at(j);
                             /* Check that we are within array bounds. If not, truncate the list to exit. */
                             if (tmp < 1 || (size_t)tmp > var_item_list.size())
                             {
+                                size_t var_src_pos = var_pos_list.at(j);
                                 /* The slice was parsed starting at stop_pos, so we have to add that to the error position */
                                 append_syntax_error(errors,
                                                     slice_start + var_src_pos,
@@ -1174,7 +1192,18 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
                     {
                         in[i]=0;
                         wcstring res = in;
-                        res.push_back(INTERNAL_SEPARATOR);
+                        if (i > 0)
+                        {
+                            if (in[i-1] != VARIABLE_EXPAND_SINGLE)
+                            {
+                                res.push_back(INTERNAL_SEPARATOR);
+                            }
+                            else if (var_item_list.empty() || var_item_list.front().empty())
+                            {
+                                // first expansion is empty, but we need to recursively expand
+                                res.push_back(VARIABLE_EXPAND_EMPTY);
+                            }
+                        }
 
                         for (size_t j=0; j<var_item_list.size(); j++)
                         {
@@ -1204,14 +1233,18 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
                                 if (is_ok)
                                 {
                                     wcstring new_in;
+                                    new_in.append(in, i);
 
-                                    if (start_pos > 0)
-                                        new_in.append(in, start_pos - 1);
-
-                                    // at this point new_in.size() is start_pos - 1
-                                    if (start_pos>1 && new_in[start_pos-2]!=VARIABLE_EXPAND)
+                                    if (i > 0)
                                     {
-                                        new_in.push_back(INTERNAL_SEPARATOR);
+                                        if (in[i-1] != VARIABLE_EXPAND)
+                                        {
+                                            new_in.push_back(INTERNAL_SEPARATOR);
+                                        }
+                                        else if (next.empty())
+                                        {
+                                            new_in.push_back(VARIABLE_EXPAND_EMPTY);
+                                        }
                                     }
                                     new_in.append(next);
                                     new_in.append(in + stop_pos);
@@ -1227,6 +1260,41 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
             }
             else
             {
+                // even with no value, we still need to parse out slice syntax
+                // Behave as though we had 1 value, so $foo[1] always works.
+                const size_t slice_start = stop_pos;
+                if (in[slice_start] == L'[')
+                {
+                    wchar_t *slice_end;
+                    size_t bad_pos;
+
+                    bad_pos = parse_slice(in + slice_start, &slice_end, var_idx_list, var_pos_list, 1);
+                    if (bad_pos != 0)
+                    {
+                        append_syntax_error(errors,
+                                            stop_pos + bad_pos,
+                                            L"Invalid index value");
+                        is_ok = 0;
+                        return is_ok;
+                    }
+                    stop_pos = (slice_end-in);
+
+                    // validate that the parsed indexes are valid
+                    for (size_t j=0; j<var_idx_list.size(); j++)
+                    {
+                        long tmp = var_idx_list.at(j);
+                        if (tmp != 1)
+                        {
+                            size_t var_src_pos = var_pos_list.at(j);
+                            append_syntax_error(errors,
+                                                slice_start + var_src_pos,
+                                                ARRAY_BOUNDS_ERR);
+                            is_ok = 0;
+                            return is_ok;
+                        }
+                    }
+                }
+
                 /*
                          Expand a non-existing variable
                          */
@@ -1243,8 +1311,11 @@ static int expand_variables_internal(parser_t &parser, wchar_t * const in, std::
                                Expansion to single argument.
                                */
                     wcstring res;
-                    in[i] = 0;
-                    res.append(in);
+                    res.append(in, i);
+                    if (i > 0 && in[i-1] == VARIABLE_EXPAND_SINGLE)
+                    {
+                        res.push_back(VARIABLE_EXPAND_EMPTY);
+                    }
                     res.append(in + stop_pos);
 
                     is_ok &= expand_variables2(parser, res, out, i, errors);
@@ -1435,11 +1506,14 @@ static int expand_cmdsubst(parser_t &parser, const wcstring &input, std::vector<
     {
         std::vector<long> slice_idx;
         std::vector<size_t> slice_source_positions;
+        const wchar_t * const slice_begin = tail_begin;
         wchar_t *slice_end;
+        size_t bad_pos;
 
-        if (parse_slice(tail_begin, &slice_end, slice_idx, slice_source_positions, sub_res.size()))
+        bad_pos = parse_slice(slice_begin, &slice_end, slice_idx, slice_source_positions, sub_res.size());
+        if (bad_pos != 0)
         {
-            append_syntax_error(errors, SOURCE_LOCATION_UNKNOWN, L"Invalid index value");
+            append_syntax_error(errors, slice_begin - in + bad_pos, L"Invalid index value");
             return 0;
         }
         else
@@ -1451,8 +1525,9 @@ static int expand_cmdsubst(parser_t &parser, const wcstring &input, std::vector<
                 long idx = slice_idx.at(i);
                 if (idx < 1 || (size_t)idx > sub_res.size())
                 {
+                    size_t pos = slice_source_positions.at(i);
                     append_syntax_error(errors,
-                                        SOURCE_LOCATION_UNKNOWN,
+                                        slice_begin - in + pos,
                                         ARRAY_BOUNDS_ERR);
                     return 0;
                 }

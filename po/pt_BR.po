@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2014-08-24 10:25-0300\n"
-"PO-Revision-Date: 2014-08-24 09:25-0300\n"
+"PO-Revision-Date: 2014-08-24 11:48-0300\n"
 "Last-Translator: Iuri Rezende Souza <riuri@rocketmail.com>\n"
 "Language-Team: Português Brasileiro <>\n"
 "Language: pt_BR\n"
@@ -822,14 +822,13 @@ msgid "%ls, version %s\n"
 msgstr "%ls, versão %s\n"
 
 #: input.cpp:475 input.cpp:485
-#, fuzzy
 msgid "Could not set up terminal"
-msgstr "Could not set up terminal"
+msgstr "Não pôde preparar terminal"
 
 #: input.cpp:478
 #, c-format
 msgid "Check that your terminal type, '%ls', is supported on this system"
-msgstr ""
+msgstr "Verifique se seu tipo de terminal, “%ls”, é suportado neste sistema"
 
 #: input.cpp:480
 #, c-format
@@ -841,11 +840,11 @@ msgid "Error while closing terminfo"
 msgstr "Erro ao fechar terminfo"
 
 #: io.cpp:110
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "An error occured while reading output from code block on file descriptor %d"
 msgstr ""
-"An error occured while reading output from code block on file descriptor %d"
+"Ocorreu um erro ao ler saída do bloco de código no descritor de arquivo %d"
 
 #: mimedb.cpp:174 mimedb.cpp:188 mimedb.cpp:1179
 #, c-format
@@ -858,9 +857,9 @@ msgid "%s: Unknown error in munge()\n"
 msgstr "%s: Unknown error in munge()\n"
 
 #: mimedb.cpp:481
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Locale string too long\n"
-msgstr "%s: Locale string too long\n"
+msgstr "%s: String de localização muito longa\n"
 
 #: mimedb.cpp:551 mimedb.cpp:559
 #, c-format
@@ -909,71 +908,73 @@ msgid ""
 msgstr ""
 
 #: pager.cpp:24
-#, fuzzy
 msgid "search: "
-msgstr "Set arch"
+msgstr "procurar: "
 
 #: parse_execution.cpp:551
-#, fuzzy, c-format
+#, c-format
 msgid "switch: Expected exactly one argument, got %lu\n"
-msgstr "%ls: Expected exactly one argument, got %d\n"
+msgstr "switch: Esperava exatamente um argumento, obteve %d\n"
 
 #: parse_execution.cpp:772
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Unknown command '%ls'. Did you mean to run %ls with a modified environment? "
 "Try 'env %ls=%ls %ls%ls'. See the help section on the set command by typing "
 "'help set'."
 msgstr ""
-"Unknown command “%ls”. Did you mean “set %ls %ls”? For information on "
-"assigning values to variables, see the help section on the set command by "
-"typing “help set”."
+"Comando desconhecido “%ls”. Você quis executar %ls com um ambiente "
+"modificado? Tente “env %ls=%ls %ls%ls”. Veja a seção de ajuda no comando set "
+"digitando “help set”."
 
 #: parse_execution.cpp:797
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Variables may not be used as commands. Instead, define a function like "
 "'function %ls; %ls $argv; end' or use the eval builtin instead, like 'eval "
 "%ls'. See the help section for the function command by typing 'help "
 "function'."
 msgstr ""
-"Variables may not be used as commands. Instead, define a function like "
-"“function %ls; %ls $argv; end”. See the help section for the function "
-"command by typing “help function”."
+"Variáveis não podem ser usadas como comandos. Em vez disso, defina uma "
+"função como “function %ls; %ls $argv; end” ou use o builtin eval no lugar, "
+"como “eval %ls”. Veja a seção de ajuda para o comando function digitando "
+"“help function”."
 
 #: parse_execution.cpp:806
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Variables may not be used as commands. Instead, define a function or use the "
 "eval builtin instead, like 'eval %ls'. See the help section for the function "
 "command by typing 'help function'."
 msgstr ""
-"Variables may not be used as commands. Instead, define a function. See the "
-"help section for the function command by typing “help function”."
+"Variáveis não podem ser usadas como comandos. Em vez disso, defina uma "
+"função ou use o builtin eval no lugar, como “eval %ls”. Veja a seção de "
+"ajuda para o comando function digitando “help function”."
 
 #: parse_execution.cpp:814
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Commands may not contain variables. Use the eval builtin instead, like 'eval "
 "%ls'. See the help section for the eval command by typing 'help eval'."
 msgstr ""
-"Commands may not contain variables. Use the eval builtin instead, like “eval "
-"%ls”. See the help section for the eval command by typing “help eval”."
+"Comandos não podem conter variáveis. Em vez disso, use o builtin eval, como "
+"“eval %ls”. Veja a seção de ajuda para o comando eval digitando “help eval”."
 
 #: parse_execution.cpp:821
-#, fuzzy, c-format
+#, c-format
 msgid "The file '%ls' is not executable by this user"
-msgstr "The file “%ls” already exists"
+msgstr "O arquivo “%ls” não é executável por este usuário"
 
 #: parse_execution.cpp:1057
-#, fuzzy, c-format
+#, c-format
 msgid "Invalid redirection target: %ls"
-msgstr "Invalid IO redirection"
+msgstr "Alvo de redireção inválido: %ls"
 
 #: parse_execution.cpp:1081
-#, fuzzy, c-format
+#, c-format
 msgid "Requested redirection to '%ls', which is not a valid file descriptor"
-msgstr "Requested redirection to something that is not a file descriptor %ls"
+msgstr ""
+"Requeriu redireção para “%ls”, que não é um descritor de arquivo válido"
 
 #: parser.cpp:53
 #, fuzzy, c-format
@@ -981,89 +982,76 @@ msgid "Tokenizer error: '%ls'"
 msgstr "Tokenizer error: “%ls”"
 
 #: parser.cpp:58
-#, fuzzy, c-format
+#, c-format
 msgid "Tried to evaluate commands using invalid block type '%ls'"
-msgstr "Tried to evaluate commands using invalid block type “%ls”"
+msgstr "Tentou executar comandos usando tipo de bloco inválido “%ls”"
 
 #: parser.cpp:63
-#, fuzzy, c-format
+#, c-format
 msgid "Unexpected token of type '%ls'"
-msgstr "Unexpected token of type “%ls”"
+msgstr "Tipo inesperado de token “%ls”"
 
 #: parser.cpp:68 parse_constants.h:245
-#, fuzzy
 msgid "'while' block"
-msgstr "“while” block"
+msgstr "bloco “while”"
 
 #: parser.cpp:73 parse_constants.h:250
-#, fuzzy
 msgid "'for' block"
-msgstr "“for” block"
+msgstr "bloco “for”"
 
 #: parser.cpp:78 parse_constants.h:255
-#, fuzzy
 msgid "Block created by breakpoint"
-msgstr "Block created by breakpoint"
+msgstr "Bloco criado por breakpoint"
 
 #: parser.cpp:83 parse_constants.h:262
-#, fuzzy
 msgid "'if' conditional block"
-msgstr "“if” conditional block"
+msgstr "bloco condicional “if”"
 
 #: parser.cpp:88 parse_constants.h:268
-#, fuzzy
 msgid "function definition block"
-msgstr "function definition block"
+msgstr "bloco de definição de função"
 
 #: parser.cpp:93 parse_constants.h:274
-#, fuzzy
 msgid "function invocation block"
-msgstr "function invocation block"
+msgstr "bloco de chamada de função"
 
 #: parser.cpp:98 parse_constants.h:279
 #, fuzzy
 msgid "function invocation block with no variable shadowing"
-msgstr "function invocation block with no variable shadowing"
+msgstr "bloco de chamada de função sem mascaramento de variáveis"
 
 #: parser.cpp:103 parse_constants.h:285
-#, fuzzy
 msgid "'switch' block"
-msgstr "“switch” block"
+msgstr "bloco “switch”"
 
 #: parser.cpp:108 parse_constants.h:291
-#, fuzzy
 msgid "unexecutable block"
-msgstr "unexecutable block"
+msgstr "bloco não executável"
 
 #: parser.cpp:113 parse_constants.h:297
-#, fuzzy
 msgid "global root block"
-msgstr "global root block"
+msgstr "bloco raiz global"
 
 #: parser.cpp:118 parse_constants.h:303
-#, fuzzy
 msgid "command substitution block"
-msgstr "command substitution block"
+msgstr "bloco de substituição de comandos"
 
 #: parser.cpp:123 parse_constants.h:309
-#, fuzzy
 msgid "'begin' unconditional block"
-msgstr "“begin” unconditional block"
+msgstr "bloco não condicional “begin”"
 
 #: parser.cpp:128 parse_constants.h:315
-#, fuzzy
 msgid "Block created by the . builtin"
-msgstr "Block created by the . builtin"
+msgstr "Bloco criado pelo builtin ."
 
 #: parser.cpp:133 parse_constants.h:320
 #, fuzzy
 msgid "event handler block"
-msgstr "event handler block"
+msgstr "bloco gerenciador de evento"
 
 #: parser.cpp:138 parse_constants.h:326
-#, fuzzy
 msgid "unknown/invalid block"
-msgstr "unknown/invalid block"
+msgstr "bloco desconhecido/inválido"
 
 #: parser.cpp:456
 #, fuzzy, c-format
@@ -1071,88 +1059,83 @@ msgid "Could not write profiling information to file '%s'"
 msgstr "Could not write profiling information to file “%s”"
 
 #: parser.cpp:462
-#, fuzzy
 msgid "Time\tSum\tCommand\n"
-msgstr "Time\tSum\tCommand\n"
+msgstr "Tempo\tSoma\tComando\n"
 
 #: parser.cpp:544
 #, fuzzy, c-format
 msgid "in event handler: %ls\n"
-msgstr "in event handler: %ls\n"
+msgstr "no gerenciador de evento: %ls\n"
 
 #: parser.cpp:572
-#, fuzzy, c-format
+#, c-format
 msgid "from sourcing file %ls\n"
-msgstr "Error while reading file %ls\n"
+msgstr "do arquivo %ls\n"
 
 #: parser.cpp:579
-#, fuzzy, c-format
+#, c-format
 msgid "in function '%ls'\n"
-msgstr "in function “%ls”,\n"
+msgstr "na função “%ls”\n"
 
 #: parser.cpp:584
-#, fuzzy
 msgid "in command substitution\n"
-msgstr "in command substitution\n"
+msgstr "na substituição de comando\n"
 
 #: parser.cpp:597
-#, fuzzy, c-format
+#, c-format
 msgid "\tcalled on line %d of file %ls\n"
-msgstr "\tcalled on line %d of file “%ls”,\n"
+msgstr "\tchamado na linha %d do arquivo “%ls”\n"
 
 #: parser.cpp:603
-#, fuzzy
 msgid "\tcalled during startup\n"
-msgstr "\tcalled on standard input,\n"
+msgstr "\tchamado durante inicialização\n"
 
 #: parser.cpp:607
-#, fuzzy
 msgid "\tcalled on standard input\n"
-msgstr "\tcalled on standard input,\n"
+msgstr "\tchamado na entrada padrão\n"
 
 #: parser.cpp:624
-#, fuzzy, c-format
+#, c-format
 msgid "\twith parameter list '%ls'\n"
-msgstr "\twith parameter list “%ls”\n"
+msgstr "\tcom lista de parâmetros “%ls”\n"
 
 #: parser.cpp:738
-#, fuzzy, c-format
+#, c-format
 msgid "%ls (line %d): "
-msgstr "%ls (line %d): "
+msgstr "%ls (linha %d): "
 
 #: parser.cpp:742
 msgid "Startup"
-msgstr ""
+msgstr "Inicialização"
 
 #: parser.cpp:785
-#, fuzzy
 msgid "Job inconsistency"
-msgstr "Job inconsistency"
+msgstr "Inconsistência de job"
 
 #: parser.cpp:930
 #, fuzzy
 msgid "End of block mismatch. Program terminating."
-msgstr "End of block mismatch. Program terminating."
+msgstr "Fim de bloco desencontrado. Terminando programa."
 
 #: parser.cpp:1028
-#, fuzzy, c-format
+#, c-format
 msgid "%ls (line %lu): "
-msgstr "%ls (line %d): "
+msgstr "%ls (linha %d): "
 
 #: parser.cpp:1032
 #, c-format
 msgid "%ls: "
-msgstr ""
+msgstr "%ls: "
 
 #: parse_util.cpp:48
-#, fuzzy, c-format
+#, c-format
 msgid "The '%ls' command can not be used in a pipeline"
-msgstr "This command can not be used in a pipeline"
+msgstr "O comand “%ls” não pode ser usado em pipe"
 
 #: path.cpp:24
-#, fuzzy, c-format
+#, c-format
 msgid "Error while searching for command '%ls'"
-msgstr "Error while searching for command “%ls”"
+msgstr "Erro ao procurar por comando “%ls”"
 
 #: proc.cpp:613
 #, c-format
@@ -1172,89 +1155,85 @@ msgstr ""
 "%ls: Processo %d, “%ls” do job %d, “%ls” terminado pelo sinal %ls (%ls)"
 
 #: proc.cpp:734
-#, fuzzy
 msgid "ended"
-msgstr "ended"
+msgstr ""
 
 #: proc.cpp:968
-#, fuzzy
 msgid "An error occured while reading output from code block"
-msgstr "An error occured while reading output from code block"
+msgstr "Ocorreu um erro ao ler saída de bloco de código"
 
 #: proc.cpp:997 proc.cpp:1009
-#, fuzzy, c-format
+#, c-format
 msgid "Could not send job %d ('%ls') to foreground"
-msgstr "Could not send job %d (“%ls”) to foreground"
+msgstr "Não pôde enviar job %d (“%ls”) para foreground"
 
 #: proc.cpp:1029 proc.cpp:1039 proc.cpp:1054
-#, fuzzy
 msgid "Could not return shell to foreground"
-msgstr "Could not return shell to foreground"
+msgstr "Não pôde retornar shell ao foreground"
 
+# Notas:
+# Adicionar nota
+#
+# Caminhos:
+# proc.cpp:1279
+# proc.cpp:1305
 #: proc.cpp:1279 proc.cpp:1305
-#, fuzzy
 msgid "Process list pointer"
-msgstr "Process list pointer"
+msgstr "Ponteiro de lista de processo"
 
 #: proc.cpp:1290
-#, fuzzy, c-format
+#, c-format
 msgid "More than one job in foreground: job 1: '%ls' job 2: '%ls'"
-msgstr "More than one job in foreground: job 1: “%ls” job 2: “%ls”"
+msgstr "Mais de um job no foreground: job 1: “%ls” job 2: “%ls”"
 
 #: proc.cpp:1303
-#, fuzzy
 msgid "Process argument list"
-msgstr "Process argument list"
+msgstr "Lista de argumentos de processo"
 
 #: proc.cpp:1304
-#, fuzzy
 msgid "Process name"
-msgstr "Process name"
+msgstr "Nome de processo"
 
 #: proc.cpp:1310
-#, fuzzy, c-format
+#, c-format
 msgid "Job '%ls', process '%ls' has inconsistent state 'stopped'=%d"
-msgstr "Job “%ls”, process “%ls” has inconsistent state “stopped”=%d"
+msgstr "Job “%ls”, processo “%ls” está em estado inconsistente “parado”=%d"
 
 #: proc.cpp:1320
-#, fuzzy, c-format
+#, c-format
 msgid "Job '%ls', process '%ls' has inconsistent state 'completed'=%d"
-msgstr "Job “%ls”, process “%ls” has inconsistent state “completed”=%d"
+msgstr "Job “%ls”, processo “%ls” está em estado inconsistente “completo”=%d"
 
 #: reader.cpp:476
-#, fuzzy
 msgid "Could not set terminal mode for new job"
-msgstr "Could not set terminal mode for new job"
+msgstr "Não pôde preparar modo do terminal para novo job"
 
 #: reader.cpp:523
-#, fuzzy
 msgid "Could not set terminal mode for shell"
-msgstr "Could not set terminal mode for shell"
+msgstr "Não pôde preparar modo do terminal para shell"
 
 #: reader.cpp:2052
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
-msgstr ""
+msgstr "Não há TTY para shell interativo (falha em tcgetpgrp)"
 
 #: reader.cpp:2067
 #, c-format
 msgid ""
 "I appear to be an orphaned process, so I am quitting politely. My pid is %d."
 msgstr ""
+"Pareço um processo órfão, então estou saindo educadamente. Meu pid é %d."
 
 #: reader.cpp:2098
-#, fuzzy
 msgid "Couldn't put the shell in its own process group"
-msgstr "Couldn't put the shell in its own process group"
+msgstr "Não pôde colocar o shell em seu próprio grupo de processos"
 
 #: reader.cpp:2108
-#, fuzzy
 msgid "Couldn't grab control of terminal"
-msgstr "Couldn't grab control of terminal"
+msgstr "Não pôde pegar controle do terminal"
 
 #: reader.cpp:2609
-#, fuzzy
 msgid "Pop null reader block"
-msgstr "Pop null reader block"
+msgstr ""
 
 #: reader.cpp:2875
 msgid ""
@@ -1263,297 +1242,249 @@ msgid ""
 msgstr "Há jobs parados. Uma segunda tentativa de sair forçará seu término.\n"
 
 #: reader.cpp:4064
-#, fuzzy, c-format
+#, c-format
 msgid "Unknown keybinding %d"
-msgstr "Unknown keybinding %d"
+msgstr "Atalho desconhecido %d"
 
 #: reader.cpp:4205
-#, fuzzy
 msgid "Error while reading from file descriptor"
-msgstr "Error while reading from file descriptor"
+msgstr "Erro ao ler do descritor de arquivo"
 
 #: reader.cpp:4222
-#, fuzzy
 msgid "Error while closing input stream"
-msgstr "Error while closing input stream"
+msgstr "Erro ao fechar stream de entrada"
 
 #: reader.cpp:4243
-#, fuzzy
 msgid "Error while opening input stream"
-msgstr "Error while opening input stream"
+msgstr "Erro ao abrir stream de entrada"
 
+# Notas:
+# Adicionar nota
+#
+# Caminhos:
+# sanity.cpp:37
 #: sanity.cpp:37
-#, fuzzy
 msgid "Errors detected, shutting down. Break on sanity_lose() to debug."
-msgstr "Errors detected, shutting down"
+msgstr "Erros detectados, saindo. Breakpoint em sanity_lose() para debug."
 
 #: sanity.cpp:65
-#, fuzzy, c-format
+#, c-format
 msgid "The pointer '%ls' is invalid"
-msgstr "The pointer “%ls” is invalid"
+msgstr "O ponteiro “%ls” é inválido"
 
 #: sanity.cpp:71
-#, fuzzy, c-format
+#, c-format
 msgid "The pointer '%ls' is null"
-msgstr "The pointer “%ls” is null"
+msgstr "O ponteiro “%ls” é nulo"
 
 #: signal.cpp:69
-#, fuzzy
 msgid "Terminal hung up"
-msgstr "Terminal hung up"
+msgstr "Término de comunicação com terminal"
 
 #: signal.cpp:77
-#, fuzzy
 msgid "Quit request from job control (^C)"
-msgstr "Quit request from job control (^C)"
+msgstr "Interrupção de teclado (^C)"
 
 #: signal.cpp:85
-#, fuzzy
 msgid "Quit request from job control with core dump (^\\)"
-msgstr "Quit request from job control with core dump (^\\)"
+msgstr "Interrupção com imagem do núcleo gravada (^\\)"
 
 #: signal.cpp:93
 msgid "Illegal instruction"
 msgstr "Instrução ilegal"
 
 #: signal.cpp:101
-#, fuzzy
 msgid "Trace or breakpoint trap"
-msgstr "Trace or breakpoint trap"
+msgstr "Atingiu ponto de parada"
 
 #: signal.cpp:109
-#, fuzzy
 msgid "Abort"
-msgstr "Abort"
+msgstr "Abortado"
 
 #: signal.cpp:117
-#, fuzzy
 msgid "Misaligned address error"
-msgstr "Misaligned address error"
+msgstr "Erro de endereço de barramento"
 
 #: signal.cpp:125
-#, fuzzy
 msgid "Floating point exception"
-msgstr "Floating point exception"
+msgstr "Exceção de ponto flutuante"
 
 #: signal.cpp:133
-#, fuzzy
 msgid "Forced quit"
-msgstr "Forced quit"
+msgstr "Saída forçada"
 
 #: signal.cpp:141
-#, fuzzy
 msgid "User defined signal 1"
-msgstr "User defined signal 1"
+msgstr "Sinal definido pelo usuário 1"
 
 #: signal.cpp:148
-#, fuzzy
 msgid "User defined signal 2"
-msgstr "User defined signal 2"
+msgstr "Sinal definido pelo usuário 2"
 
 #: signal.cpp:156
-#, fuzzy
 msgid "Address boundary error"
-msgstr "Address boundary error"
+msgstr "Erro de fronteira de endereço (Falha de segmentação)"
 
 #: signal.cpp:164
-#, fuzzy
 msgid "Broken pipe"
-msgstr "Broken pipe"
+msgstr "Pipe sem saída"
 
 #: signal.cpp:172
-#, fuzzy
 msgid "Timer expired"
-msgstr "Timer expired"
+msgstr "Temporizador expirado"
 
 #: signal.cpp:180
-#, fuzzy
 msgid "Polite quit request"
-msgstr "Polite quit request"
+msgstr "Requisição educada de término"
 
 #: signal.cpp:188
-#, fuzzy
 msgid "Child process status changed"
-msgstr "Child process status changed"
+msgstr "Mudança de estado de processo filho"
 
 #: signal.cpp:196
-#, fuzzy
 msgid "Continue previously stopped process"
-msgstr "Continue previously stopped process"
+msgstr "Continuar processo previamente parado"
 
 #: signal.cpp:204
-#, fuzzy
 msgid "Forced stop"
-msgstr "Forced stop"
+msgstr "Parada forçada"
 
 #: signal.cpp:212
-#, fuzzy
 msgid "Stop request from job control (^Z)"
-msgstr "Stop request from job control (^Z)"
+msgstr "Parada requisitada por teclado (^Z)"
 
 #: signal.cpp:220
-#, fuzzy
 msgid "Stop from terminal input"
-msgstr "Stop from terminal input"
+msgstr "Parada para entrada de terminal"
 
 #: signal.cpp:228
-#, fuzzy
 msgid "Stop from terminal output"
-msgstr "Stop from terminal output"
+msgstr "Parada para saída de terminal"
 
 #: signal.cpp:236
-#, fuzzy
 msgid "Urgent socket condition"
-msgstr "Urgent socket condition"
+msgstr "Condição urgente de socket"
 
 #: signal.cpp:244
-#, fuzzy
 msgid "CPU time limit exceeded"
-msgstr "CPU time limit exceeded"
+msgstr "Limite de tempo da CPU excedido"
 
 #: signal.cpp:252
-#, fuzzy
 msgid "File size limit exceeded"
-msgstr "File size limit exceeded"
+msgstr "Limite de tamanho de arquivo excedido"
 
 #: signal.cpp:260
-#, fuzzy
 msgid "Virtual timer expired"
-msgstr "Virtual timer expired"
+msgstr "Temporizador virtual expirado"
 
 #: signal.cpp:268
-#, fuzzy
 msgid "Profiling timer expired"
-msgstr "Profiling timer expired"
+msgstr "Temporizador de análise expirado"
 
 #: signal.cpp:276 signal.cpp:284
-#, fuzzy
 msgid "Window size change"
-msgstr "Window size change"
+msgstr "Mudança de tamanho de janela"
 
 #: signal.cpp:292
-#, fuzzy
 msgid "I/O on asynchronous file descriptor is possible"
-msgstr "I/O on asynchronous file descriptor is possible"
+msgstr "E/S em descritor de arquivo assíncrono possível"
 
 #: signal.cpp:300
-#, fuzzy
 msgid "Power failure"
-msgstr "Power failure"
+msgstr "Falha de energia"
 
 #: signal.cpp:308
-#, fuzzy
 msgid "Bad system call"
-msgstr "Bad system call"
+msgstr "Chamada de sistema ruim"
 
 #: signal.cpp:316
-#, fuzzy
 msgid "Information request"
-msgstr "Information request"
+msgstr "Requisição de informação"
 
 #: signal.cpp:324
-#, fuzzy
 msgid "Stack fault"
-msgstr "Stack fault"
+msgstr "Falha de pilha"
 
 #: signal.cpp:332
-#, fuzzy
 msgid "Emulator trap"
-msgstr "Emulator trap"
+msgstr "Armadilha de emulador"
 
 #: signal.cpp:340
-#, fuzzy
 msgid "Abort (Alias for SIGABRT)"
-msgstr "Abort (Alias for SIGABRT)"
+msgstr "Abortado (Outro nome para SIGABRT)"
 
 #: signal.cpp:348
-#, fuzzy
 msgid "Unused signal"
-msgstr "Unused signal"
+msgstr "Sinal não utilizado"
 
 #: signal.cpp:684
 msgid "Signal block mismatch"
-msgstr ""
+msgstr "Desencontro de bloco de sinal"
 
 #: tokenizer.cpp:32
-#, fuzzy
 msgid "Unexpected end of string, quotes are not balanced"
-msgstr "Unexpected end of string, quotes are not balanced"
+msgstr "Final inesperado de string, aspas não batem"
 
 #: tokenizer.cpp:37
-#, fuzzy
 msgid "Unexpected end of string, parenthesis do not match"
-msgstr "Unexpected end of string, parenthesis do not match"
+msgstr "Final inesperado de string, parêntesis não batem"
 
 #: tokenizer.cpp:42
-#, fuzzy
 msgid "Unexpected end of string, square brackets do not match"
-msgstr "Unexpected end of string, parenthesis do not match"
+msgstr "Final inesperado de string, colchetes não batem"
 
 #: tokenizer.cpp:48
-#, fuzzy
 msgid "Invalid input/output redirection"
-msgstr "Invalid input/output redirection"
+msgstr "Redireção inválida de entrada/saída"
 
 #: tokenizer.cpp:53
-#, fuzzy
 msgid "Cannot use stdin (fd 0) as pipe output"
-msgstr "Can not use fd 0 as pipe output"
+msgstr "Não pode usar entrada padrão (fd 0) como saída de pipe"
 
 #: tokenizer.cpp:65
-#, fuzzy
 msgid "Tokenizer not yet initialized"
-msgstr "Tokenizer not yet initialized"
+msgstr ""
 
 #: tokenizer.cpp:66
 #, fuzzy
 msgid "Tokenizer error"
-msgstr "Tokenizer error"
+msgstr "Erro de tokenização"
 
 #: tokenizer.cpp:67
-#, fuzzy
 msgid "String"
 msgstr "String"
 
 #: tokenizer.cpp:68
-#, fuzzy
 msgid "Pipe"
 msgstr "Pipe"
 
 #: tokenizer.cpp:69
-#, fuzzy
 msgid "End of command"
-msgstr "End of command"
+msgstr "Fim de comando"
 
 #: tokenizer.cpp:70
-#, fuzzy
 msgid "Redirect output to file"
-msgstr "Redirect output to file"
+msgstr "Redirecionar saída para arquivo"
 
 #: tokenizer.cpp:71
-#, fuzzy
 msgid "Append output to file"
-msgstr "Append output to file"
+msgstr "Acrescentar saída a arquivo"
 
 #: tokenizer.cpp:72
-#, fuzzy
 msgid "Redirect input to file"
-msgstr "Redirect input to file"
+msgstr "Redirecionar entrada de arquivo"
 
 #: tokenizer.cpp:73
-#, fuzzy
 msgid "Redirect to file descriptor"
-msgstr "Redirect to file descriptor"
+msgstr "Redirecionar para descritor de arquivo"
 
 #: tokenizer.cpp:74
-#, fuzzy
 msgid "Redirect output to file if file does not exist"
-msgstr "Redirect output to file if file does not exist"
+msgstr "Redirecionar saída para arquivo se o arquivo não existe"
 
 #: tokenizer.cpp:75
-#, fuzzy
 msgid "Run job in background"
-msgstr "Run job in background"
+msgstr "Executar job em background"
 
 #: tokenizer.cpp:76
 msgid "Comment"
@@ -1562,7 +1493,7 @@ msgstr "Comentário"
 #: tokenizer.cpp:602
 #, fuzzy
 msgid "Invalid token type"
-msgstr "Invalid token type"
+msgstr "Tipo de token inválido"
 
 #: wgetopt.cpp:536
 #, c-format
@@ -1678,9 +1609,9 @@ msgid "%ls: Variable scope can only be one of universal, global and local\n"
 msgstr "%ls: Escopo da variável só pode ser um de universal, global ou local\n"
 
 #: builtin.h:47
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Variable can't be both exported and unexported\n"
-msgstr "%ls: Variable can't be both exported and unexported\n"
+msgstr ""
 
 #: builtin.h:52
 #, c-format
@@ -1719,7 +1650,7 @@ msgstr "%ls: “%ls” não é um nome válido para variável\n"
 #: builtin.h:77
 #, c-format
 msgid "%ls: can only take 'if' and then another command as an argument\n"
-msgstr ""
+msgstr "%ls: só pode tomar “if” e então outro comando como argumento\n"
 
 #: builtin.h:78
 #, c-format
@@ -1727,14 +1658,14 @@ msgid "%ls: any second argument must be 'if'\n"
 msgstr "%ls: Segundo argumento deve ser “if”\n"
 
 #: builtin.h:88
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Block mismatch: '%ls' vs. '%ls'\n"
-msgstr "%ls: Block mismatch: '%ls' vs. “%ls”\n"
+msgstr "%ls: Erro de bloco: “%ls” vs. “%ls”\n"
 
 #: builtin.h:93
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Unknown block type '%ls'\n"
-msgstr "%ls: Unknown block type “%ls”\n"
+msgstr "%ls: Tipo desconhecido de bloco “%ls”\n"
 
 #: builtin.h:95
 #, c-format
@@ -1742,9 +1673,8 @@ msgid "%ls: Argument '%ls' is not a number\n"
 msgstr "%ls: Argumento “%ls” não é número\n"
 
 #: exec.h:21
-#, fuzzy
 msgid "An error occurred while setting up pipe"
-msgstr "An error occurred while setting up pipe"
+msgstr "Ocorreu um erro ao preparar pipe"
 
 #: expand.h:138
 msgid "Array index out of bounds"
@@ -1756,12 +1686,15 @@ msgid ""
 "The function '%ls' calls itself immediately, which would result in an "
 "infinite loop."
 msgstr ""
+"A função “%ls” se chama imediatamente, o que causaria um loop infinito."
 
 #: parse_constants.h:179
 msgid ""
 "The function call stack limit has been exceeded. Do you have an accidental "
 "infinite loop?"
 msgstr ""
+"O limite de tamanho da pilha de chamada de funções foi excedido. Você está "
+"com um loop infinito acidental?"
 
 #: parse_constants.h:182
 msgid ""
@@ -1782,9 +1715,9 @@ msgstr ""
 "seção de ajuda para o comando builtin “and” digitando “help and”."
 
 #: parse_constants.h:188
-#, fuzzy, c-format
+#, c-format
 msgid "Illegal command name '%ls'"
-msgstr "Illegal command name “%ls”"
+msgstr "Nome de comando ilegal “%ls”"
 
 #: parse_constants.h:191
 #, c-format
@@ -1797,19 +1730,19 @@ msgid "Unable to expand variable name '%ls'"
 msgstr "Incapaz de expandir o nome da variável “%ls”"
 
 #: parse_constants.h:197
-#, fuzzy, c-format
+#, c-format
 msgid "Unable to find a process '%ls'"
-msgstr "Failed to execute process “%ls”"
+msgstr "Incapaz de encontrar um processo “%ls”"
 
 #: parse_constants.h:200
-#, fuzzy, c-format
+#, c-format
 msgid "Illegal file descriptor in redirection '%ls'"
-msgstr "Illegal file descriptor “%ls”"
+msgstr "Descritor de arquivo ilegal na redireção “%ls”"
 
 #: parse_constants.h:203
 #, c-format
 msgid "No matches for wildcard '%ls'."
-msgstr ""
+msgstr "Não há combinações para curinga “%ls”."
 
 #: parse_constants.h:206
 msgid "break command while not inside of loop"
@@ -1820,19 +1753,17 @@ msgid "continue command while not inside of loop"
 msgstr "Comando continue fora de loop"
 
 #: parse_constants.h:212
-#, fuzzy
 msgid "'return' builtin command outside of function definition"
-msgstr "“return” builtin command outside of function definition"
+msgstr "Comando builtin “return” fora de definição de função"
 
 #: parse_constants.h:215
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Unknown command '%ls'. Did you mean 'set %ls %ls'? See the help section on "
 "the set command by typing 'help set'."
 msgstr ""
-"Unknown command “%ls”. Did you mean “set %ls %ls”? For information on "
-"assigning values to variables, see the help section on the set command by "
-"typing “help set”."
+"Comando desconhecido “%ls”. Você quis dizer “set %ls %ls”? Veja a seção de "
+"ajuda para o comando set digitando “help set”."
 
 #: parse_constants.h:220
 #, c-format

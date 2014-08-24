@@ -253,6 +253,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
 
     int function_mode = 0;
     int selection_mode = 0;
+    int unread_mode = 0;
 
     int tokenize = 0;
 
@@ -319,6 +320,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
             { L"search-mode", no_argument, 0, 'S' },
             { L"selection", no_argument, 0, 's' },
             { L"paging-mode", no_argument, 0, 'P' },
+            { L"unread", no_argument, 0, 'u' },
             { 0, 0, 0, 0 }
         };
 
@@ -326,7 +328,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
 
         int opt = wgetopt_long(argc,
                                argv,
-                               L"abijpctwforhI:CLSs",
+                               L"abijpctwforhI:CLSsu",
                                long_options,
                                &opt_index);
         if (opt == -1)
@@ -411,6 +413,10 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
                 paging_mode = 1;
                 break;
 
+            case 'u':
+                unread_mode = 1;
+                break;
+
             case 'h':
                 builtin_print_help(parser, argv[0], stdout_buffer);
                 return 0;
@@ -428,7 +434,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
         /*
           Check for invalid switch combinations
         */
-        if (buffer_part || cut_at_cursor || append_mode || tokenize || cursor_mode || line_mode || search_mode || paging_mode)
+        if (buffer_part || cut_at_cursor || append_mode || tokenize || cursor_mode || unread_mode || line_mode || search_mode || paging_mode)
         {
             append_format(stderr_buffer,
                           BUILTIN_ERR_COMBO,
@@ -468,6 +474,57 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
                               argv[i]);
                 builtin_print_help(parser, argv[0], stderr_buffer);
                 return 1;
+            }
+        }
+
+        return 0;
+    }
+
+    if (unread_mode)
+    {
+        int i;
+
+        /*
+          Check for invalid switch combinations
+         */
+        if (buffer_part || cut_at_cursor || append_mode || tokenize || cursor_mode || line_mode || search_mode || paging_mode)
+        {
+            append_format(stderr_buffer,
+                          BUILTIN_ERR_COMBO,
+                          argv[0]);
+
+            builtin_print_help(parser, argv[0], stderr_buffer);
+            return 1;
+        }
+
+        if (argc == woptind)
+        {
+            append_format(stderr_buffer,
+                          BUILTIN_ERR_MISSING,
+                          argv[0]);
+
+            builtin_print_help(parser, argv[0], stderr_buffer);
+            return 1;
+        }
+        for (i=woptind; i<argc; i++)
+        {
+            wcstring arg = argv[i];
+            /* validate the characters in forwards order first, in case there are multiple invalid chars */
+            for (wcstring::const_iterator it = arg.begin(), end = arg.end(); it != end; ++it)
+            {
+                wchar_t c = *it;
+                if (input_char_is_private(c) || c <= 0)
+                {
+                    append_format(stderr_buffer,
+                                  _(L"%ls: Invalid input character '\\u%04x'\n"),
+                                  argv[0], (int)c);
+                    return 1;
+                }
+            }
+            /* now actually push the keypresses in reverse order */
+            for (wcstring::const_reverse_iterator it = arg.rbegin(), end = arg.rend(); it != end; ++it)
+            {
+                input_unreadch(*it);
             }
         }
 

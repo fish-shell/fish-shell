@@ -19,11 +19,17 @@ The following options are available:
 - <code>-u</code> or <code>--unexport</code> prevents the variables from being exported to child processes (default behaviour).
 - <code>-U</code> or <code>--universal</code> causes the specified shell variable to be made universal.
 - <code>-x</code> or <code>--export</code> exports the variables to child processes.
+- <code>-a</code> or <code>--array</code> stores the result as an array.
 
 \c read reads a single line of input from stdin, breaks it into tokens
 based on the <tt>IFS</tt> shell variable, and then assigns one
 token to each variable specified in <tt>VARIABLES</tt>. If there are more
 tokens than variables, the complete remainder is assigned to the last variable.
+As a special case, if \c IFS is set to the empty string, each character of the
+input is considered a separate token.
+
+If \c -a or \c --array is provided, only one variable name is allowed and the
+tokens are stored as an array in this variable.
 
 See the documentation for \c set for more details on the scoping rules for
 variables.

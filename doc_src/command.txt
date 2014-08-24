@@ -1,12 +1,22 @@
 \section command command - run a program
 
 \subsection command-synopsis Synopsis
-<tt>command COMMANDNAME [OPTIONS...]</tt>
+<tt>command [OPTIONS] COMMANDNAME [ARGS...]</tt>
 
 \subsection command-description Description
 
 \c command forces the shell to execute the program \c COMMANDNAME and ignore any functions or builtins with the same name.
 
-\subsection command-example Example
+The following options are available:
+- \c -h or \c --help prints help and then exits.
+- \c -s or \c --search returns the name of the disk file that would be executed, or nothing if no file with the specified name could be found in the <tt>$PATH</tt>.
+
+With the \c -s option, \c command treats every argument as a separate command to look up and sets the exit status to 0 if any of the specified commands were found, or 1 if no commands could be found.
+
+For basic compatibility with POSIX <tt>command</tt>, the \c -v flag is recognized as an alias for <tt>-s</tt>.
+
+\subsection command-example Examples
 
 <tt>command ls</tt> causes fish to execute the \c ls program, even if an 'ls' function exists.
+
+<tt>command -s ls</tt> returns the path to the \c ls program.

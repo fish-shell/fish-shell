@@ -1,0 +1,27 @@
+2
+2
+1
+
+1 'hello' 1 'there'
+1 'hello there'
+1 ''
+1 '' 1 ''
+1 'test' 1 '' 1 ''
+
+1 'hello'
+1 'h' 1 'ello'
+1 'h' 1 'e' 1 'llo'
+1 ''
+1 't' 1 ''
+1 't' 1 '' 1 ''
+1 ' ' 1 't'
+
+2 'hello' 'there'
+1 'hello'
+6 'this' 'is' 'a' 'bunch' 'of' 'words'
+3 'one' 'two' 'three'
+0
+
+5 'h' 'e' 'l' 'l' 'o'
+1 'h'
+0

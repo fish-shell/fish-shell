@@ -11563,7 +11563,7 @@ msgstr ""
 #~ msgstr "Führende Leerzeichen ignorieren"
 
 #~ msgid "Consider only blanks and alphanumerics"
-#~ msgstr "Nur Leerzeichen und alfanumerische Zeichen beachten"
+#~ msgstr "Nur Leerzeichen und alphanumerische Zeichen beachten"
 
 #~ msgid "Compare general numeric value"
 #~ msgstr "Vergleiche generelle numerische Werte"

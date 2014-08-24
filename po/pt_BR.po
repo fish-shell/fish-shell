@@ -9192,14 +9192,12 @@ msgid ""
 msgstr ""
 
 #: share/functions/__fish_config_interactive.fish:82
-#, fuzzy
 msgid "Welcome to fish, the friendly interactive shell"
-msgstr "Welcome to fish, the friendly interactive shell"
+msgstr "Bem-vindo ao fish, ou friendly interactive shell"
 
 #: share/functions/__fish_config_interactive.fish:83
-#, fuzzy
 msgid "Type %shelp%s for instructions on how to use fish"
-msgstr "Type %shelp%s for instructions on how to use fish"
+msgstr "Digite %shelp%s para instruções sobre como usar o fish"
 
 #: share/functions/__fish_config_interactive.fish:173
 #, fuzzy

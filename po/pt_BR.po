@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-08-24 10:25-0300\n"
-"PO-Revision-Date: 2014-08-24 11:48-0300\n"
+"POT-Creation-Date: 2014-08-24 12:29-0300\n"
+"PO-Revision-Date: 2014-08-24 12:32-0300\n"
 "Last-Translator: Iuri Rezende Souza <riuri@rocketmail.com>\n"
 "Language-Team: Português Brasileiro <>\n"
 "Language: pt_BR\n"
@@ -910,6 +910,25 @@ msgstr ""
 #: pager.cpp:24
 msgid "search: "
 msgstr "procurar: "
+
+#: pager.cpp:609
+#, c-format
+msgid "%lsand 1 more row"
+msgstr "%lse mais 1 linha"
+
+#: pager.cpp:613
+#, c-format
+msgid "%lsand %lu more rows"
+msgstr "%lse mais %lu linhas"
+
+#: pager.cpp:618
+#, c-format
+msgid "rows %lu to %lu of %lu"
+msgstr "linhas %lu a %lu de %lu"
+
+#: pager.cpp:623
+msgid "(no matches)"
+msgstr "(não encontrado)"
 
 #: parse_execution.cpp:551
 #, c-format
@@ -9434,9 +9453,6 @@ msgstr ""
 #~ msgid "%ls: Argument '%s' is not a valid file descriptor\n"
 #~ msgstr "%ls: Argumento “%s” não é um descritor de arquivo válido\n"
 
-#~ msgid " %d to %d of %d"
-#~ msgstr " %d a %d de %d"
-
 #, fuzzy
 #~ msgid "Could not set up input file descriptors for pager"
 #~ msgstr "Could not set up input file descriptors for pager"
@@ -9838,7 +9854,7 @@ msgstr ""
 #~ msgstr "in . (source) call of file “%ls”,\n"
 
 #~ msgid "Unknown command '%ls'"
-#~ msgstr "Unknown command “%ls”"
+#~ msgstr "Comando desconhecido “%ls”"
 
 #~ msgid "Job command"
 #~ msgstr "Job command"
@@ -10822,9 +10838,6 @@ msgstr ""
 
 #~ msgid "Bring work tree in sync with repository"
 #~ msgstr "Bring work tree in sync with repository"
-
-#~ msgid "Set watches"
-#~ msgstr "Set watches"
 
 #~ msgid "See who is watching a file"
 #~ msgstr "See who is watching a file"

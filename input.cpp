@@ -1067,3 +1067,8 @@ wchar_t input_function_get_code(const wcstring &name)
     }
     return -1;
 }
+
+bool input_char_is_private(wchar_t c)
+{
+    return ((c >= 0xe000) && (c <= 0xf8ff));
+}

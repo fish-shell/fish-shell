@@ -2999,15 +2999,6 @@ static int can_read(int fd)
 }
 
 /**
-   Test if the specified character is in the private use area that
-   fish uses to store internal characters
-*/
-static int wchar_private(wchar_t c)
-{
-    return ((c >= 0xe000) && (c <= 0xf8ff));
-}
-
-/**
    Test if the specified character in the specified string is
    backslashed. pos may be at the end of the string, which indicates
    if there is a trailing backslash.
@@ -3098,7 +3089,7 @@ const wchar_t *reader_readline(void)
             is_interactive_read = was_interactive_read;
             //fprintf(stderr, "C: %lx\n", (long)c);
 
-            if (((!wchar_private(c))) && (c>31) && (c != 127))
+            if (((!input_char_is_private(c))) && (c>31) && (c != 127))
             {
                 if (can_read(0))
                 {
@@ -3118,7 +3109,7 @@ const wchar_t *reader_readline(void)
                             break;
                         }
                         c = input_readch();
-                        if ((!wchar_private(c)) && (c>31) && (c != 127))
+                        if ((!input_char_is_private(c)) && (c>31) && (c != 127))
                         {
                             arr[i]=c;
                             c=0;
@@ -4030,7 +4021,7 @@ const wchar_t *reader_readline(void)
             /* Other, if a normal character, we add it to the command */
             default:
             {
-                if ((!wchar_private(c)) && (((c>31) || (c==L'\n'))&& (c != 127)))
+                if ((!input_char_is_private(c)) && (((c>31) || (c==L'\n'))&& (c != 127)))
                 {
                     bool allow_expand_abbreviations = false;
                     if (data->is_navigating_pager_contents())

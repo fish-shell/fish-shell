@@ -26,6 +26,14 @@ The following options are available:
   functions, and these functions will be injected into the reader, so
   that they will be returned to the reader before any additional
   actual key presses are read.
+- \c -u or \c --unread inject key presses into the reader. This option
+  cannot be combined with any other option. It will cause any additional
+  arguments to be interpreted as if they were typed at the keyboard,
+  before any actual key presses are read.
+  Note: all the characters in each argument are treated as if they were
+  typed in that order, but if multiple arguments are given, the latter
+  arguments are injected before the earlier ones, just as would happen
+  with multiple invocations of \c commandline.
 
 The following options change the way \c commandline updates the
 command line buffer:

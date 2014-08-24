@@ -184,5 +184,11 @@ wcstring_list_t input_function_get_names(void);
 /** Updates our idea of whether we support term256 */
 void update_fish_term256();
 
+/**
+   Test if the specified character is in the private use area that
+   fish uses to store internal characters
+*/
+bool input_char_is_private(wchar_t c);
+
 
 #endif

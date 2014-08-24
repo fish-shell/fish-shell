@@ -90,9 +90,12 @@ const wchar_t *program_name;
 int debug_level=1;
 
 /**
-   This struct should be continually updated by signals as the term resizes, and as such always contain the correct current size.
+   This struct maintains the current state of the terminal size. It is updated on demand after receiving a SIGWINCH.
+   Do not touch this struct directly, it's managed with a rwlock. Use common_get_width()/common_get_height().
 */
 static struct winsize termsize;
+static volatile bool termsize_valid;
+static rwlock_t termsize_rwlock;
 
 static char *wcs2str_internal(const wchar_t *in, char *out);
 
@@ -1686,26 +1689,44 @@ bool unescape_string(const wcstring &input, wcstring *output, unescape_flags_t e
 
 void common_handle_winch(int signal)
 {
-#ifdef HAVE_WINSIZE
-    if (ioctl(1,TIOCGWINSZ,&termsize)!=0)
-    {
-        return;
-    }
-#else
-    termsize.ws_col = 80;
-    termsize.ws_row = 24;
+    /* don't run ioctl() here, it's not safe to use in signals */
+    termsize_valid = false;
+}
+
+/* updates termsize as needed, and returns a copy of the winsize. */
+static struct winsize get_current_winsize()
+{
+#ifndef HAVE_WINSIZE
+    struct winsize retval = {0};
+    retval.ws_col = 80;
+    retval.ws_row = 24;
+    return retval;
 #endif
+    scoped_rwlock guard(termsize_rwlock, true);
+    struct winsize retval = termsize;
+    if (!termsize_valid)
+    {
+        struct winsize size;
+        if (ioctl(1,TIOCGWINSZ,&size) == 0)
+        {
+            retval = size;
+            guard.upgrade();
+            termsize = retval;
+        }
+        termsize_valid = true;
+    }
+    return retval;
 }
 
 int common_get_width()
 {
-    return termsize.ws_col;
+    return get_current_winsize().ws_col;
 }
 
 
 int common_get_height()
 {
-    return termsize.ws_row;
+    return get_current_winsize().ws_row;
 }
 
 void tokenize_variable_array(const wcstring &val, std::vector<wcstring> &out)
@@ -2223,7 +2244,7 @@ void scoped_lock::lock(void)
 {
     assert(! locked);
     assert(! is_forked_child());
-    VOMIT_ON_FAILURE(pthread_mutex_lock(lock_obj));
+    VOMIT_ON_FAILURE_NO_ERRNO(pthread_mutex_lock(lock_obj));
     locked = true;
 }
 
@@ -2231,7 +2252,7 @@ void scoped_lock::unlock(void)
 {
     assert(locked);
     assert(! is_forked_child());
-    VOMIT_ON_FAILURE(pthread_mutex_unlock(lock_obj));
+    VOMIT_ON_FAILURE_NO_ERRNO(pthread_mutex_unlock(lock_obj));
     locked = false;
 }
 
@@ -2248,6 +2269,84 @@ scoped_lock::scoped_lock(mutex_lock_t &lock) : lock_obj(&lock.mutex), locked(fal
 scoped_lock::~scoped_lock()
 {
     if (locked) this->unlock();
+}
+
+void scoped_rwlock::lock(void)
+{
+    assert(! (locked || locked_shared));
+    assert(! is_forked_child());
+    VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_rdlock(rwlock_obj));
+    locked = true;
+}
+
+void scoped_rwlock::unlock(void)
+{
+    assert(locked);
+    assert(! is_forked_child());
+    VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_unlock(rwlock_obj));
+    locked = false;
+}
+
+void scoped_rwlock::lock_shared(void)
+{
+    assert(! (locked || locked_shared));
+    assert(! is_forked_child());
+    VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_wrlock(rwlock_obj));
+    locked_shared = true;
+}
+
+void scoped_rwlock::unlock_shared(void)
+{
+    assert(locked_shared);
+    assert(! is_forked_child());
+    VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_unlock(rwlock_obj));
+    locked_shared = false;
+}
+
+void scoped_rwlock::upgrade(void)
+{
+    assert(locked_shared);
+    assert(! is_forked_child());
+    VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_unlock(rwlock_obj));
+    locked = false;
+    VOMIT_ON_FAILURE_NO_ERRNO(pthread_rwlock_wrlock(rwlock_obj));
+    locked_shared = true;
+}
+
+scoped_rwlock::scoped_rwlock(pthread_rwlock_t &rwlock, bool shared) : rwlock_obj(&rwlock), locked(false), locked_shared(false)
+{
+    if (shared)
+    {
+        this->lock_shared();
+    }
+    else
+    {
+        this->lock();
+    }
+}
+
+scoped_rwlock::scoped_rwlock(rwlock_t &rwlock, bool shared) : rwlock_obj(&rwlock.rwlock), locked(false), locked_shared(false)
+{
+    if (shared)
+    {
+        this->lock_shared();
+    }
+    else
+    {
+        this->lock();
+    }
+}
+
+scoped_rwlock::~scoped_rwlock()
+{
+    if (locked)
+    {
+        this->unlock();
+    }
+    else if (locked_shared)
+    {
+        this->unlock_shared();
+    }
 }
 
 wcstokenizer::wcstokenizer(const wcstring &s, const wcstring &separator) :

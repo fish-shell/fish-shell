@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2014-03-13 21:29+0800\n"
-"PO-Revision-Date: 2014-08-22 14:49-0300\n"
+"PO-Revision-Date: 2014-08-24 09:25-0300\n"
 "Last-Translator: Iuri Rezende Souza <riuri@rocketmail.com>\n"
 "Language-Team: Português Brasileiro <>\n"
 "Language: pt_BR\n"
@@ -685,7 +685,7 @@ msgstr "vazio"
 #: complete.cpp:61
 #, c-format
 msgid "Home for %ls"
-msgstr ""
+msgstr "Diretório de usuário para %ls"
 
 #: complete.cpp:66
 #, c-format
@@ -711,12 +711,12 @@ msgstr "Mudando língua para Português"
 #: env.cpp:1252
 #, fuzzy
 msgid "Tried to pop empty environment stack."
-msgstr "Tried to pop empty environment stack."
+msgstr "Tentou tirar de uma pilha de ambiente vazia."
 
 #: env_universal_common.cpp:529
-#, fuzzy, c-format
+#, c-format
 msgid "Could not convert message '%s' to wide character string"
-msgstr "Could not convert message “%s” to wide character string"
+msgstr "Não pôde converter mensagem “%s” para string de caracteres longos"
 
 #: event.cpp:168
 #, fuzzy, c-format
@@ -807,7 +807,7 @@ msgstr "Job: %ls"
 #: expand.cpp:79
 #, fuzzy
 msgid "Shell process"
-msgstr "Shell process"
+msgstr "Processo shell"
 
 #: expand.cpp:84
 msgid "Last background job"
@@ -829,14 +829,13 @@ msgid "%s, version %s\n"
 msgstr "%s, versão %s\n"
 
 #: fish.cpp:416
-#, fuzzy
 msgid "Can not use the no-execute mode when running an interactive session"
-msgstr "Can not use the no-execute mode when running an interactive session"
+msgstr "Não pode usar o modo não-executar durante uma sessão interativa"
 
 #: fish.cpp:517
-#, fuzzy, c-format
+#, c-format
 msgid "Error while reading file %ls\n"
-msgstr "Error while reading file %ls\n"
+msgstr "Erro ao ler arquivo %ls\n"
 
 #: fish_indent.cpp:345
 #, c-format

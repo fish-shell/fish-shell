@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2014-08-24 12:29-0300\n"
-"PO-Revision-Date: 2014-08-24 12:32-0300\n"
+"PO-Revision-Date: 2014-08-24 21:35-0300\n"
 "Last-Translator: Iuri Rezende Souza <riuri@rocketmail.com>\n"
 "Language-Team: Português Brasileiro <>\n"
 "Language: pt_BR\n"
@@ -4859,19 +4859,16 @@ msgid "Tag"
 msgstr "Target"
 
 #: share/completions/gpg.fish:116
-#, fuzzy
 msgid "Write output to specified file"
-msgstr "Write output to specified file"
+msgstr "Escreve a saída no arquivo especificado"
 
 #: share/completions/gpg.fish:161
-#, fuzzy
 msgid "Use specified keyserver"
-msgstr "Use specified keyserver"
+msgstr "Usa servidor de chaves especificado"
 
 #: share/completions/gpg.fish:169
-#, fuzzy
 msgid "The command line that should be run to view a photo ID"
-msgstr "The command line that should be run to view a photo ID"
+msgstr "O comando para abrir uma fotografia"
 
 #: share/completions/gpg.fish:170
 #, fuzzy
@@ -4881,149 +4878,131 @@ msgstr ""
 "Sets a list of directories to search for photo viewers and keyserver helpers"
 
 #: share/completions/gpg.fish:173
-#, fuzzy
 msgid "Add specified file to the current list of keyrings"
-msgstr "Add specified file to the current list of keyrings"
+msgstr "Adiciona o arquivo especificado à lista atual de chaveiros"
 
 #: share/completions/gpg.fish:175
-#, fuzzy
 msgid "Add specified file to the current list of secret keyrings"
-msgstr "Add specified file to the current list of secret keyrings"
+msgstr "Adiciona o arquivo especificado à lista de chaveiros secretos"
 
 #: share/completions/gpg.fish:176
-#, fuzzy
 msgid "Designate specified file as the primary public keyring"
-msgstr "Designate specified file as the primary public keyring"
+msgstr "Designa arquivo especificado como o chaveiro público primário"
 
 #: share/completions/gpg.fish:178
-#, fuzzy
 msgid "Use specified file instead of the default trustdb"
-msgstr "Use specified file instead of the default trustdb"
+msgstr ""
+"Usa o arquivo especificado em vez do banco de dados de confiança padrão"
 
 #: share/completions/gpg.fish:184
-#, fuzzy
 msgid "Read options from specified file, do not read the default options file"
-msgstr "Read options from specified file, do not read the default options file"
+msgstr "Lê opções do arquivo especificado, não lê do arquivo padrão de opções"
 
 #: share/completions/gpg.fish:186
-#, fuzzy
 msgid "Load an extension module"
-msgstr "Load an extension module"
+msgstr "Carrega um módulo de extensão"
 
 #: share/completions/gpg.fish:188
-#, fuzzy
 msgid "Write special status strings to the specified file descriptor"
-msgstr "Write special status strings to the specified file descriptor"
+msgstr "Escreve strings de estado no descritor de arquivo especificado"
 
 #: share/completions/gpg.fish:189
-#, fuzzy
 msgid "Write log output to the specified file descriptor"
-msgstr "Write log output to the specified file descriptor"
+msgstr "Escreve lo no descritor de arquivo especificado"
 
 #: share/completions/gpg.fish:195
-#, fuzzy
 msgid "Use specified string as comment string"
-msgstr "Use specified string as comment string"
+msgstr "Usa string especificada como comentário"
 
 #: share/completions/gpg.fish:204
-#, fuzzy
 msgid "Put the specified name value pair into the signature as notation data"
-msgstr "Put the specified name value pair into the signature as notation data"
+msgstr ""
+"Coloca o par nome-valor especificado na assinatura como dados de notação"
 
 #: share/completions/gpg.fish:205
-#, fuzzy
 msgid "Set signature policy"
-msgstr "Set signature policy"
+msgstr "Define política de assinatura"
 
 #: share/completions/gpg.fish:206
-#, fuzzy
 msgid "Set certificate policy"
-msgstr "Set certificate policy"
+msgstr "Define política de certificação"
 
 #: share/completions/gpg.fish:207
-#, fuzzy
 msgid "Set signature and certificate policy"
-msgstr "Set signature and certificate policy"
+msgstr "Define política de assinatura e certificação"
 
 #: share/completions/gpg.fish:208
-#, fuzzy
 msgid "Use specified URL as a preferred keyserver for data signatures"
-msgstr "Use specified URL as a preferred keyserver for data signatures"
+msgstr ""
+"Usa a URL especificada como servidor de chaves padrão para dados de "
+"assinatura"
 
 #: share/completions/gpg.fish:210
-#, fuzzy
 msgid "Use specified string as the filename which is stored inside messages"
-msgstr "Use specified string as the filename which is stored inside messages"
+msgstr ""
+"Usa a string especificada como nome de arquivo armazenado dentro das "
+"mensagens"
 
 #: share/completions/gpg.fish:218
-#, fuzzy
 msgid ""
 "Number of completely trusted users to introduce a new key signer (defaults "
 "to 1)"
 msgstr ""
-"Number of completely trusted users to introduce a new key signer (defaults "
-"to 1)"
+"Número de usuários com confiança completa para introduzir novo assinador "
+"(padrão é 1)"
 
 #: share/completions/gpg.fish:219
-#, fuzzy
 msgid ""
 "Number of marginally trusted users to introduce a new key signer (defaults "
 "to 3)"
 msgstr ""
-"Number of marginally trusted users to introduce a new key signer (defaults "
-"to 3)"
+"Número de usuários com confiança marginal para introduzir novo assinador "
+"(padrão é 3)"
 
 #: share/completions/gpg.fish:221
-#, fuzzy
 msgid "Maximum depth of a certification chain (default is 5)"
-msgstr "Maximum depth of a certification chain (default is 5)"
+msgstr "Máxima profundidade de cadeia de certificação (padrão é 5)"
 
 #: share/completions/gpg.fish:249
-#, fuzzy
 msgid "Read passphrase from specified file descriptor"
-msgstr "Read passphrase from specified file descriptor"
+msgstr "Lê senha a partir do descritor de arquivo especificado"
 
 #: share/completions/gpg.fish:250
-#, fuzzy
 msgid "Read user input from specified file descriptor"
-msgstr "Read user input from specified file descriptor"
+msgstr "Lê entrada de usuário a partir do descritor de arquivo especificado"
 
 #: share/completions/gpg.fish:254
-#, fuzzy
 msgid "Override value of GPG_AGENT_INFO environment variable"
-msgstr "Override value of GPG_AGENT_INFO environment variable"
+msgstr "Sobrepõe valor da variável de ambiente GPG_AGENT_INFO"
 
 #: share/completions/gpg.fish:304
-#, fuzzy
 msgid "Don't use the public key but the specified session key"
-msgstr "Don't use the public key but the specified session key"
+msgstr "Não usa a chave pública, mas a chave de sessão especificada"
 
 #: share/completions/gpg.fish:315
-#, fuzzy
 msgid "Sets up a named group, which is similar to aliases in email programs"
-msgstr "Sets up a named group, which is similar to aliases in email programs"
+msgstr ""
+"Define um grupo nomeado, o que é similar a aliases em programas de email"
 
 #: share/completions/gpg.fish:321
-#, fuzzy
 msgid "Set the list of personal cipher preferences to the specified string"
-msgstr "Set the list of personal cipher preferences to the specified string"
+msgstr ""
+"Define a lista de preferências de criptografia como a string especificada"
 
 #: share/completions/gpg.fish:322
-#, fuzzy
 msgid "Set the list of personal digest preferences to the specified string"
-msgstr "Set the list of personal digest preferences to the specified string"
+msgstr ""
+"Define a lista de preferências de assinatura como a string especificada"
 
 #: share/completions/gpg.fish:323
-#, fuzzy
 msgid ""
 "Set the list of personal compression preferences to the specified string"
 msgstr ""
-"Set the list of personal compression preferences to the specified string"
+"Define a lista de preferências de compressão como a string especificada"
 
 #: share/completions/gpg.fish:324
-#, fuzzy
 msgid "Set the list of default preferences to the specified string"
-msgstr "Set the list of default preferences to the specified string"
+msgstr "Define a lista de preferências padrão como a string especificada"
 
 #: share/completions/gprof.fish:24
 #, fuzzy
@@ -5259,59 +5238,48 @@ msgid "Controls use of speculative local echo"
 msgstr ""
 
 #: share/completions/mount.fish:19
-#, fuzzy
 msgid "Mount partition with specified label"
-msgstr "Mount partition with specified label"
+msgstr "Monta partição com etiqueta especificada"
 
 #: share/completions/mount.fish:20
-#, fuzzy
 msgid "Mount partition with specified UID"
-msgstr "Mount partition with specified UID"
+msgstr "Monta partição com UID especificado"
 
 #: share/completions/mount.fish:21
-#, fuzzy
 msgid "Exclude file systems"
-msgstr "Exclude filesystems"
+msgstr "Exclui sistemas de arquivos"
 
 #: share/completions/mount.fish:22
-#, fuzzy
 msgid "Remount a subtree to a second position"
-msgstr "Remount a subtree to a second position"
+msgstr "Remonta uma sub-árvore em outro lugar"
 
 #: share/completions/mount.fish:23
-#, fuzzy
 msgid "Move a subtree to a new position"
-msgstr "Move a subtree to a new position"
+msgstr "Move uma sub-árvore para outro lugar"
 
 #: share/completions/mount.fish:24
-#, fuzzy
 msgid "File system"
-msgstr "Filesystem"
+msgstr "Sistema de arquivos"
 
 #: share/completions/mount.fish:26
-#, fuzzy
 msgid "Mount option"
-msgstr "Mount option"
+msgstr "Opção de montagem"
 
 #: share/completions/mplayer.fish:28
-#, fuzzy
 msgid "A/V sync speed"
-msgstr "A/V sync speed"
+msgstr "Velocidade de sincronização A/V"
 
 #: share/completions/mplayer.fish:32
-#, fuzzy
 msgid "Loop playback"
-msgstr "Loop playback"
+msgstr "Repetir"
 
 #: share/completions/mplayer.fish:58 share/completions/mplayer.fish:76
-#, fuzzy
 msgid "Video output"
-msgstr "Video output"
+msgstr "Saída de vídeo"
 
 #: share/completions/mplayer.fish:64 share/completions/mplayer.fish:70
-#, fuzzy
 msgid "Audio output"
-msgstr "Audio output"
+msgstr "Saída de áudio"
 
 #: share/completions/msgfmt.fish:5
 #, fuzzy
@@ -8040,251 +8008,210 @@ msgid "Complete lpr option"
 msgstr "Tolerate sloppy mount options"
 
 #: share/functions/__fish_complete_ls.fish:16
-#, fuzzy
 msgid "Show hidden"
-msgstr "Show hidden"
+msgstr "Mostra tudo"
 
 #: share/functions/__fish_complete_ls.fish:17
-#, fuzzy
 msgid "Show hidden except . and .."
-msgstr "Show hidden except . and .."
+msgstr "Mostra tudo exceto . e .."
 
 #: share/functions/__fish_complete_ls.fish:18
 #: share/functions/__fish_complete_ls.fish:27
 #, fuzzy
 msgid "Append filetype indicator"
-msgstr "Append filetype indicator"
+msgstr "Adiciona indicador de tipo de arquivo"
 
 #: share/functions/__fish_complete_ls.fish:19
 #: share/functions/__fish_complete_ls.fish:20
-#, fuzzy
 msgid "Follow symlinks"
-msgstr "Follow symlinks"
+msgstr "Segue links simbólicos"
 
 #: share/functions/__fish_complete_ls.fish:21
-#, fuzzy
 msgid "List subdirectory recursively"
-msgstr "List subdirectory recursively"
+msgstr "Lista subdiretórios recursivamente"
 
 #: share/functions/__fish_complete_ls.fish:22
 #: share/functions/__fish_complete_ls.fish:102
-#, fuzzy
 msgid "Octal escapes for non graphic characters"
-msgstr "Octal escapes for non graphic characters"
+msgstr "Escapa caracteres não imprimíveis com octal"
 
 #: share/functions/__fish_complete_ls.fish:23
-#, fuzzy
 msgid "List directories, not their content"
-msgstr "List directories, not their content"
+msgstr "Lista diretórios, não seu conteúdo"
 
 #: share/functions/__fish_complete_ls.fish:24
-#, fuzzy
 msgid "Human readable sizes"
-msgstr "Human readable sizes"
+msgstr "Tamanhos entendíveis para humanos"
 
 #: share/functions/__fish_complete_ls.fish:25
-#, fuzzy
 msgid "Print inode number of files"
-msgstr "Print inode number of files"
+msgstr "Mostra inode dos arquivos"
 
 #: share/functions/__fish_complete_ls.fish:26
-#, fuzzy
 msgid "Long format, numeric IDs"
-msgstr "Long format, numeric IDs"
+msgstr "Formato longo, UIDs numéricos"
 
 #: share/functions/__fish_complete_ls.fish:28
-#, fuzzy
 msgid "Replace non-graphic characters with '?'"
-msgstr "Replace non-graphic characters with '?'"
+msgstr "Mostra caracteres não imprimíveis com '?'"
 
 #: share/functions/__fish_complete_ls.fish:29
-#, fuzzy
 msgid "Reverse sort order"
-msgstr "Reverse sort order"
+msgstr "Inverte a ordem"
 
 #: share/functions/__fish_complete_ls.fish:30
-#, fuzzy
 msgid "Print size of files"
-msgstr "Print size of files"
+msgstr "Mostra tamanhos de arquivos"
 
 #: share/functions/__fish_complete_ls.fish:32
-#, fuzzy
 msgid "List by columns"
-msgstr "List by columns"
+msgstr "Lista por colunas"
 
 #: share/functions/__fish_complete_ls.fish:33
-#, fuzzy
 msgid "Sort by size"
-msgstr "Sort by size"
+msgstr "Ordena por tamanho"
 
 #: share/functions/__fish_complete_ls.fish:34
-#, fuzzy
 msgid "Show and sort by ctime"
-msgstr "Show and sort by ctime"
+msgstr "Mostra e ordena por hora de criação"
 
 #: share/functions/__fish_complete_ls.fish:35
-#, fuzzy
 msgid "Don't sort"
-msgstr "Don't sort"
+msgstr "Não ordena"
 
 #: share/functions/__fish_complete_ls.fish:36
-#, fuzzy
 msgid "Long format without owner"
-msgstr "Long format without owner"
+msgstr "Formato longo sem proprietário"
 
 #: share/functions/__fish_complete_ls.fish:37
-#, fuzzy
 msgid "Set blocksize to 1kB"
-msgstr "Set blocksize to 1kB"
+msgstr "Tamanho de bloco é 1kB"
 
 #: share/functions/__fish_complete_ls.fish:38
-#, fuzzy
 msgid "Long format"
-msgstr "Long format"
+msgstr "Formato longo"
 
 #: share/functions/__fish_complete_ls.fish:39
-#, fuzzy
 msgid "Comma separated format"
-msgstr "Comma separated format"
+msgstr "Formato separado por vírgula"
 
 #: share/functions/__fish_complete_ls.fish:40
-#, fuzzy
 msgid "Sort by modification time"
-msgstr "Sort by modification time"
+msgstr "Ordena por hora de modificação"
 
 #: share/functions/__fish_complete_ls.fish:41
-#, fuzzy
 msgid "Show access time"
-msgstr "Show access time"
+msgstr "Mostra horário de acesso"
 
 #: share/functions/__fish_complete_ls.fish:42
-#, fuzzy
 msgid "List entries by lines"
-msgstr "List entries by lines"
+msgstr "Mostra entradas por linhas"
 
 #: share/functions/__fish_complete_ls.fish:43
-#, fuzzy
 msgid "List one file per line"
-msgstr "List one file per line"
+msgstr "Um arquivo por linha"
 
+# Notas:
+# Adicionar nota
+#
+# Caminhos:
+# share/functions/__fish_complete_ls.fish:49
 #: share/functions/__fish_complete_ls.fish:49
-#, fuzzy
 msgid "Do not list implied entries matching specified shell pattern"
-msgstr "Skip entries matching pattern"
+msgstr "Não lista entradas com o padrão especificado"
 
 #: share/functions/__fish_complete_ls.fish:50
-#, fuzzy
 msgid "Display security context"
-msgstr "Display version and exit"
+msgstr "Mostra contexto de segurança"
 
 #: share/functions/__fish_complete_ls.fish:51
 msgid "Display  security  context  so  it fits on most displays"
-msgstr ""
+msgstr "Mostra contexto de segurança para caber no monitor"
 
 #: share/functions/__fish_complete_ls.fish:52
 msgid "Display only security context and file name"
-msgstr ""
+msgstr "Mostra somente contexto de segurança e nome de arquivo"
 
 #: share/functions/__fish_complete_ls.fish:54
-#, fuzzy
 msgid "Print author"
-msgstr "Print author"
+msgstr "Mostra autor"
 
 #: share/functions/__fish_complete_ls.fish:56
-#, fuzzy
 msgid "Ignore files ending with ~"
-msgstr "Ignore files ending with ~"
+msgstr "Ignora arquivos terminados com ~"
 
 #: share/functions/__fish_complete_ls.fish:58
-#, fuzzy
 msgid "Generate dired output"
-msgstr "Generate dired output"
+msgstr "Mostra saída com dired"
 
 #: share/functions/__fish_complete_ls.fish:60
-#, fuzzy
 msgid "Long format, full-iso time"
-msgstr "Long format, full-iso time"
+msgstr "Formato longo, hora completa ISO"
 
 #: share/functions/__fish_complete_ls.fish:61
-#, fuzzy
 msgid "Don't print group information"
-msgstr "Don't print group information"
+msgstr "Não mostra grupo"
 
 #: share/functions/__fish_complete_ls.fish:62
-#, fuzzy
 msgid "Human readable sizes, powers of 1000"
-msgstr "Human readable sizes, powers of 1000"
+msgstr "Tamanhos em potências de 1000"
 
 #: share/functions/__fish_complete_ls.fish:66
 #: share/functions/__fish_complete_ls.fish:110
-#, fuzzy
 msgid "Print raw entry names"
-msgstr "Print raw entry names"
+msgstr ""
 
 #: share/functions/__fish_complete_ls.fish:67
-#, fuzzy
 msgid "Long format without groups"
-msgstr "Long format without groups"
+msgstr "Formato longo sem grupos"
 
 #: share/functions/__fish_complete_ls.fish:68
-#, fuzzy
 msgid "Non graphic as-is"
-msgstr "Non graphic as-is"
+msgstr "Mostra caracteres não imprimíveis como são"
 
 #: share/functions/__fish_complete_ls.fish:69
-#, fuzzy
 msgid "Enclose entry in quotes"
-msgstr "Enclose entry in quotes"
+msgstr "Coloca aspas nas entradas"
 
 #: share/functions/__fish_complete_ls.fish:91
-#, fuzzy
 msgid "Do not sort"
-msgstr "Do not sort"
+msgstr "Não ordena"
 
 #: share/functions/__fish_complete_ls.fish:92
-#, fuzzy
 msgid "Sort by version"
-msgstr "Sort by version"
+msgstr "Ordena por versão"
 
 #: share/functions/__fish_complete_ls.fish:94
-#, fuzzy
 msgid "Sort by extension"
-msgstr "Sort by extension"
+msgstr "Ordena por extensão"
 
 #: share/functions/__fish_complete_ls.fish:103
-#, fuzzy
 msgid "Use colors"
-msgstr "Use colors"
+msgstr "Usa cores"
 
 #: share/functions/__fish_complete_ls.fish:104
-#, fuzzy
 msgid "Prevent -A from being automatically set for root"
-msgstr "Prevent -A from being automatically set for root"
+msgstr "Evita a opção -A automática para o diretório raiz"
 
 #: share/functions/__fish_complete_ls.fish:105
-#, fuzzy
 msgid "Don't follow symlinks"
-msgstr "Don't follow symlinks"
+msgstr "Não segue links simbólicos"
 
 #: share/functions/__fish_complete_ls.fish:106
-#, fuzzy
 msgid "Show modification time"
-msgstr "Show modification time"
+msgstr "Mostra horário de modificação"
 
 #: share/functions/__fish_complete_ls.fish:107
-#, fuzzy
 msgid "Show whiteouts when scanning directories"
-msgstr "Show whiteouts when scanning directories"
+msgstr ""
 
 #: share/functions/__fish_complete_ls.fish:108
-#, fuzzy
 msgid "Display each file's MAC label"
-msgstr "Display each file's MAC label"
+msgstr "Mostra etiqueta MAC para cada arquivo"
 
 #: share/functions/__fish_complete_ls.fish:109
-#, fuzzy
 msgid "Include the file flags in a long (-l) output"
-msgstr "Include the file flags in a long (-l) output"
+msgstr "Inclu"
 
 #: share/functions/__fish_complete_ppp_peer.fish:1
 msgid "Complete isp name for pon/poff"
@@ -8322,49 +8249,40 @@ msgid "Complete setxkb options"
 msgstr "Tolerate sloppy mount options"
 
 #: share/functions/__fish_complete_ssh.fish:4
-#, fuzzy
 msgid "Protocol version 1 only"
-msgstr "Protocoll version 1 only"
+msgstr "Somente protocolo versão 1"
 
 #: share/functions/__fish_complete_ssh.fish:5
-#, fuzzy
 msgid "Protocol version 2 only"
-msgstr "Protocoll version 2 only"
+msgstr "Somente protocolo versão 2"
 
 #: share/functions/__fish_complete_ssh.fish:6
-#, fuzzy
 msgid "IPv4 addresses only"
-msgstr "IPv4 addresses only"
+msgstr "Somente endereços IPv4"
 
 #: share/functions/__fish_complete_ssh.fish:7
-#, fuzzy
 msgid "IPv6 addresses only"
-msgstr "IPv6 addresses only"
+msgstr "Somente endereços IPv6"
 
 #: share/functions/__fish_complete_ssh.fish:8
-#, fuzzy
 msgid "Compress all data"
-msgstr "Compress all data"
+msgstr "Comprime dados"
 
 #: share/functions/__fish_complete_ssh.fish:9
-#, fuzzy
 msgid "Encryption algorithm"
-msgstr "Encryption algorithm"
+msgstr "Algoritmo de criptografia"
 
 #: share/functions/__fish_complete_ssh.fish:10
-#, fuzzy
 msgid "Configuration file"
-msgstr "Configuration file"
+msgstr "Arquivo de configuração"
 
 #: share/functions/__fish_complete_ssh.fish:11
-#, fuzzy
 msgid "Identity file"
-msgstr "Identity file"
+msgstr "Arquivo de identificação"
 
 #: share/functions/__fish_complete_ssh.fish:12
-#, fuzzy
 msgid "Options"
-msgstr "Options"
+msgstr "Opções"
 
 #: share/functions/__fish_complete_svn_diff.fish:1
 #, fuzzy
@@ -9156,20 +9074,17 @@ msgid "Simple vi prompt"
 msgstr ""
 
 #: share/functions/funced.fish:1
-#, fuzzy
 msgid "Edit function definition"
-msgstr "function definition block"
+msgstr "Editar definição de função"
 
 #: share/functions/funced.fish:24 share/functions/nextd.fish:22
 #: share/functions/prevd.fish:22 share/functions/vared.fish:15
-#, fuzzy
 msgid "%s: Unknown option %s\\n"
-msgstr "%s: Unknown option %s\\n"
+msgstr "%s: Opção desconhecida %s\\n"
 
 #: share/functions/funced.fish:36
-#, fuzzy
 msgid "funced: You must specify one function name\n"
-msgstr "%ls: Expected exactly one function name\n"
+msgstr "funced: Você deve especificar um nome de função\n"
 
 #: share/functions/funcsave.fish:2
 msgid "Save the current definition of all specified functions to file"
@@ -9330,9 +9245,8 @@ msgid "%s: Expected 1, 2 or 3 arguments, got %d\\n"
 msgstr "%s: Expected 1, 2 or 3 arguments, got %d\\n"
 
 #: share/functions/seq.fish:38
-#, fuzzy
 msgid "%s: '%s' is not a number\\n"
-msgstr "%s: “%s” is not a number\\n"
+msgstr "%s: “%s” não é um número\\n"
 
 #: share/functions/setenv.fish:2
 msgid "Set global variable. Alias for set -g, made for csh compatibility"
@@ -9374,9 +9288,8 @@ msgid "%s is %s\\n"
 msgstr "%s is %s\\n"
 
 #: share/functions/type.fish:132
-#, fuzzy
 msgid "file"
-msgstr "file\\n"
+msgstr "arquivo"
 
 #: share/functions/type.fish:143
 #, fuzzy
@@ -9421,6 +9334,9 @@ msgid ""
 msgstr ""
 "%s: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s "
 "VARIABLE\\n"
+
+msgid "Encrypt for specified user id"
+msgstr "Criptografa para o id de usuário especificado"
 
 #~ msgid "Current functions are: "
 #~ msgstr "Funções atuais são: "
@@ -11915,9 +11831,6 @@ msgstr ""
 
 #~ msgid "Use specified key as the default key to sign with"
 #~ msgstr "Use specified key as the default key to sign with"
-
-#~ msgid "Encrypt for specified user id"
-#~ msgstr "Encrypt for specified user id"
 
 #~ msgid "Encrypt for specified user id, but hide the keyid of the key"
 #~ msgstr "Encrypt for specified user id, but hide the keyid of the key"

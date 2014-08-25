@@ -79,9 +79,9 @@ int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_
 */
 bool wildcard_match(const wcstring &str, const wcstring &wc, bool leading_dots_fail_to_match = false);
 
-
 /** Check if the specified string contains wildcards */
-bool wildcard_has(const wchar_t *str, bool internal);
+bool wildcard_has(const wcstring &, bool internal);
+bool wildcard_has(const wchar_t *, bool internal);
 
 /**
    Test wildcard completion

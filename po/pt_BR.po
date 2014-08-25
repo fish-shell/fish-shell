@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2014-08-24 21:41-0300\n"
-"PO-Revision-Date: 2014-08-24 21:35-0300\n"
+"PO-Revision-Date: 2014-08-25 08:37-0300\n"
 "Last-Translator: Iuri Rezende Souza <riuri@rocketmail.com>\n"
 "Language-Team: Português Brasileiro <>\n"
 "Language: pt_BR\n"
@@ -6629,54 +6629,44 @@ msgid "Specify directory with configuration files"
 msgstr "Specify a configuration file"
 
 #: share/completions/tar.fish:19 share/functions/cd.fish:5
-#, fuzzy
 msgid "Change directory"
-msgstr "Change directory"
+msgstr "Muda diretório"
 
 #: share/completions/tar.fish:21
-#, fuzzy
 msgid "Archive file"
-msgstr "Archive file"
+msgstr "Arquivo tar"
 
 #: share/completions/tar.fish:31
-#, fuzzy
 msgid "Starting file in archive"
-msgstr "Starting file in archive"
+msgstr "Arquivo inicial"
 
 #: share/completions/tar.fish:33
-#, fuzzy
 msgid "Tape length"
-msgstr "Tape length"
+msgstr "Comprimento da fita"
 
 #: share/completions/tar.fish:36
-#, fuzzy
 msgid "Only store newer files"
-msgstr "Only store newer files"
+msgstr "Armazenar apenas arquivos novos"
 
 #: share/completions/tar.fish:50
-#, fuzzy
 msgid "Extract file from file"
-msgstr "Extract file from file"
+msgstr "Extrair arquivos do arquivo de lista"
 
 #: share/completions/tar.fish:54
-#, fuzzy
 msgid "Set volume name"
-msgstr "Set volume name"
+msgstr "Etiquetar volume"
 
 #: share/completions/tar.fish:59
-#, fuzzy
 msgid "Exclude file"
-msgstr "Exclude file"
+msgstr "Exceto arquivo"
 
 #: share/completions/tar.fish:60
-#, fuzzy
 msgid "Exclude files listed in specified file"
-msgstr "Exclude files listed in specified file"
+msgstr "Exceto arquivos listados no arquivo especificado"
 
 #: share/completions/tar.fish:65
-#, fuzzy
 msgid "Filter through specified program"
-msgstr "Filter through specified program"
+msgstr "Filtrar pelo programa especificado"
 
 #: share/completions/telnet.fish:9 share/completions/telnet.fish:14
 #, fuzzy

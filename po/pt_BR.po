@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-08-24 12:29-0300\n"
+"POT-Creation-Date: 2014-08-24 21:41-0300\n"
 "PO-Revision-Date: 2014-08-24 21:35-0300\n"
 "Last-Translator: Iuri Rezende Souza <riuri@rocketmail.com>\n"
 "Language-Team: Português Brasileiro <>\n"
@@ -792,7 +792,7 @@ msgstr "Processo shell"
 msgid "Last background job"
 msgstr "Último job em background"
 
-#: expand.cpp:1419
+#: expand.cpp:1414
 #, fuzzy
 msgid "Mismatched brackets"
 msgstr "Erro de parênteses"
@@ -9335,8 +9335,8 @@ msgstr ""
 "%s: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s "
 "VARIABLE\\n"
 
-msgid "Encrypt for specified user id"
-msgstr "Criptografa para o id de usuário especificado"
+#~ msgid "Encrypt for specified user id"
+#~ msgstr "Criptografa para o id de usuário especificado"
 
 #~ msgid "Current functions are: "
 #~ msgstr "Funções atuais são: "

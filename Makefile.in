@@ -349,11 +349,11 @@ lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES
 	# Scan sources for commands/functions/binaries/colours. If GNU sed was portable, this could be much smarter.
 	sed <command_list_toc.txt >>lexicon.tmp -n \
 		-e "s|^.*>\([a-z][a-z_]*\)</a>|'\1'|w lexicon_catalog.tmp" \
-		-e "s|'\(.*\)'|cmnd \1|p"; mv lexicon_catalog.tmp lexicon_catalog.txt; \
+		-e "s|'\(.*\)'|bltn \1|p"; mv lexicon_catalog.tmp lexicon_catalog.txt; \
 	printf "%s\n" $(COMPLETIONS_DIR_FILES) | sed -n \
 		-e "s|[^ ]*/\([a-z][a-z_-]*\).fish|'\1'|p" | fgrep -vx -f lexicon_catalog.txt | sed >>lexicon.tmp -n \
 		-e 'w lexicon_catalog.tmp' \
-		-e "s|'\(.*\)'|sbin \1|p"; cat lexicon_catalog.tmp >> lexicon_catalog.txt; \
+		-e "s|'\(.*\)'|cmnd \1|p"; cat lexicon_catalog.tmp >> lexicon_catalog.txt; \
 	printf "%s\n" $(FUNCTIONS_DIR_FILES) | sed -n \
 		-e "s|[^ ]*/\([a-z][a-z_-]*\).fish|'\1'|p" | fgrep -vx -f lexicon_catalog.txt | sed >>lexicon.tmp -n \
 		-e 'w lexicon_catalog.tmp' \

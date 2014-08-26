@@ -102,4 +102,8 @@ Some useful Unicode/HTML5 entities:
 
 ### Lists
 
+### Synopsis rules
+
+### Prompts and cursor
+
 #### Author: Mark Griffiths [@GitHub](https://github.com/MarkGriffiths)

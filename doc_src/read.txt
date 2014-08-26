@@ -19,7 +19,7 @@ The following options are available:
 
 - `-m NAME` or `--mode-name=NAME` specifies that the name NAME should be used to save/load the history file. If NAME is fish, the regular fish history will be available.
 
-- `-p PROMPT_CMD` or `--prompt=PROMPT_CMD` uses the output of the shell command `PROMPT_CMD` as the prompt for the interactive mode. The default prompt command is `set_color green; echo read; set_color normal; echo "> "`.
+- `-p PROMPT_CMD` or `--prompt=PROMPT_CMD` uses the output of the shell command `PROMPT_CMD` as the prompt for the interactive mode. The default prompt command is <code>set_color green; echo read; set_color normal; echo "> "</code>.
 
 - `-s` or `--shell` enables syntax highlighting, tab completions and command termination suitable for entering shellscript code in the interactive mode.
 

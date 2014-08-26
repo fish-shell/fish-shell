@@ -25,6 +25,4 @@ The following options are available:
 
 - `-l`, `--launch` launches the default action for the specified files.
 
-- `-h`, `--help` displays a help message and exit.
-
 - `-v`, `--version` displays the version number and exits.

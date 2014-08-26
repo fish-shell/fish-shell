@@ -16,7 +16,7 @@
 # ALIASES  += "endfish=</pre>\endhtmlonly \n"
 #.
 # ALIASES  += "blah{1}=<span class=\"comment\">\1</span>"
-# ALIASES  += "cmnd{1}=<span class=\"command\">\1</span>" and so on...
+# ALIASES  += "bltn{1}=<span class=\"command\">\1</span>" and so on...
 #.
 # And simplify for man pages (Doxyfile.help)…
 # ALIASES   = "fish=<pre>"
@@ -24,7 +24,7 @@
 # ALIASES  += "endfish=</pre>"
 #.
 # ALIASES  += "blah{1}=\1"
-# ALIASES  += "cmnd{1}=<em>\1</em>"...
+# ALIASES  += "bltn{1}=<em>\1</em>"...
 #.
 # It's meant to only ever be run once, during make, as Doxygen's 'INPUT
 # FILTER', though can be run interactively by passing a file in via stdin. It
@@ -301,17 +301,17 @@ s/^PreClean: //
 }
 /@vars/{
     :cleanvars
-    s/\(vars{@optr{$}[^@}]*\)@cmnd{\([^}]*\)}/\1\2/
+    s/\(vars{@optr{$}[^@}]*\)@bltn{\([^}]*\)}/\1\2/
     s/\(vars{@optr{$}[^@}]*\)@func{\([^}]*\)}/\1\2/
-    s/\(vars{@optr{$}[^@}]*\)@sbin{\([^}]*\)}/\1\2/
+    s/\(vars{@optr{$}[^@}]*\)@cmnd{\([^}]*\)}/\1\2/
     s/\(vars{@optr{$}[^@}]*\)@args{\([^}]*\)}/\1\2/
     t cleanvars
 }
 /@redr/{
     :cleanredr
-    s/\(redr{[^@}]*\)@cmnd{\([^}]*\)}/\1\2/
+    s/\(redr{[^@}]*\)@bltn{\([^}]*\)}/\1\2/
     s/\(redr{[^@}]*\)@func{\([^}]*\)}/\1\2/
-    s/\(redr{[^@}]*\)@sbin{\([^}]*\)}/\1\2/
+    s/\(redr{[^@}]*\)@cmnd{\([^}]*\)}/\1\2/
     s/\(redr{[^@}]*\)@fsfo{\([^}]*\)}/\1\2/
     s/\(redr{[^}]*\)}\( *\)@path{\([^}]*\)/\1\2\3/
     t cleanredr
@@ -319,9 +319,9 @@ s/^PreClean: //
 /@sgst/{
     s/@sgst{<@/@sgst{@/
     :cleansgst
-    s/\(sgst{@curs{.}[^@]*\)@cmnd{\([^}]*\)}/\1\2/
+    s/\(sgst{@curs{.}[^@]*\)@bltn{\([^}]*\)}/\1\2/
     s/\(sgst{@curs{.}[^@]*\)@func{\([^}]*\)}/\1\2/
-    s/\(sgst{@curs{.}[^@]*\)@sbin{\([^}]*\)}/\1\2/
+    s/\(sgst{@curs{.}[^@]*\)@cmnd{\([^}]*\)}/\1\2/
     s/\(sgst{@curs{.}[^@]*\)@opts{\([^}]*\)}/\1\2/
     s/\(sgst{@curs{.}[^@]*\)@path{\([^}]*\)}/\1\2/
     s/\(sgst{@curs{.}[^@]*\)@args{\([^}]*\)}/\1\2/
@@ -330,9 +330,9 @@ s/^PreClean: //
 }
 /@fsfo/{
     :cleanfsfo
-    s/\(fsfo{[^@}]*\)@cmnd{\([^}]*\)}/\1\2/
+    s/\(fsfo{[^@}]*\)@bltn{\([^}]*\)}/\1\2/
     s/\(fsfo{[^@}]*\)@func{\([^}]*\)}/\1\2/
-    s/\(fsfo{[^@}]*\)@sbin{\([^}]*\)}/\1\2/
+    s/\(fsfo{[^@}]*\)@cmnd{\([^}]*\)}/\1\2/
     t cleanfsfo
 }
 /@prmt{/{
@@ -372,92 +372,94 @@ x
 s/^@prmt *//
 }
 #.
+# Special case for optional commands
+s/@args{\[@bltn/@args{[@xbln/g
 # Special case for one-line 'if' statements
-/@cmnd{if}/ {
-    s//@xcmd{if}/
-    s/@cmnd{set}/@xcmd{set}/
-    s/@cmnd{not}/@xcmd{not}/
-    s/@cmnd{else}/@xcmd{else}/
-    s/@cmnd{contains}/@xcmd{contains}/
-    s/@cmnd{test}/@xcmd{test}/
-    s/@cmnd{end}/@xcmd{end}/
-    s/@sbin{grep}/@xbin{grep}/
+/@bltn{if}/ {
+    s//@xbln{if}/
+    s/@bltn{set}/@xbln{set}/
+    s/@bltn{not}/@xbln{not}/
+    s/@bltn{else}/@xbln{else}/
+    s/@bltn{contains}/@xbln{contains}/
+    s/@bltn{test}/@xbln{test}/
+    s/@bltn{end}/@xbln{end}/
+    s/@cmnd{grep}/@xcmd{grep}/
 }
 # one-line 'for' statements
-/@cmnd{for}/ {
-    s//@xcmd{for}/
-    s/@args{in}/@xcmd{in}/
+/@bltn{for}/ {
+    s//@xbln{for}/
+    s/@args{in}/@xbln{in}/
 }
 # one-line 'begin' statements
-/@cmnd{begin}/ {
-    s//@xcmd{begin}/
-    s/@cmnd{end}/@xcmd{end}/
+/@bltn{begin}/ {
+    s//@xbln{begin}/
+    s/@bltn{end}/@xbln{end}/
 }
 # one-line 'break' statements
-/@cmnd{break}/ {
-    s//@xcmd{break}/
-    s/@cmnd{end}/@xcmd{end}/
+/@bltn{break}/ {
+    s//@xbln{break}/
+    s/@bltn{end}/@xbln{end}/
 }
 # one-line 'continue' statements
-/@cmnd{continue}/ {
-    s//@xcmd{continue}/
-    s/@cmnd{end}/@xcmd{end}/
+/@bltn{continue}/ {
+    s//@xbln{continue}/
+    s/@bltn{end}/@xbln{end}/
 }
 # one-line 'switch' statements
-/@cmnd{switch}/ {
-    s//@xcmd{switch}/
-    s/@cmnd{case}/@xcmd{case}/
-    s/@cmnd{end}/@xcmd{end}/
+/@bltn{switch}/ {
+    s//@xbln{switch}/
+    s/@bltn{case}/@xbln{case}/
+    s/@bltn{end}/@xbln{end}/
 }
 # one-line 'function' statements
-/@cmnd{function}/ {
-    s//@xcmd{function}/
-    s/@cmnd{return}/@xcmd{return}/
-    s/@cmnd{end}/@xcmd{end}/
+/@bltn{function}/ {
+    s//@xbln{function}/
+    s/@bltn{return}/@xbln{return}/
+    s/@bltn{end}/@xbln{end}/
 }
 # one-line 'bind' statements - special input functions
-/@cmnd{bind}/ {
-    s//@xcmd{bind}/
+/@bltn{bind}/ {
+    s//@xbln{bind}/
     s/@....{\([a-z]*\)}\(-[a-z-]*\)/@args{\1\2}/
 }
 # one-line 'builtin' statements
-s/@cmnd{builtin} @cmnd/@xcmd{builtin} @xcmd/g
-s/@cmnd{builtin} @sbin/@xcmd{builtin} @xbin/g
-s/@cmnd{builtin} @func/@xcmd{builtin} @xfnc/g
+s/@bltn{builtin} @bltn/@xbln{builtin} @xbln/g
+s/@bltn{builtin} @cmnd/@xbln{builtin} @xcmd/g
+s/@bltn{builtin} @func/@xbln{builtin} @xfnc/g
 #.
 # one-line 'command' statements
-s/@cmnd{command} @cmnd/@xcmd{command} @xcmd/g
-s/@cmnd{command} @sbin/@xcmd{command} @xbin/g
-s/@cmnd{command} @func/@xcmd{command} @xfnc/g
+s/@bltn{command} @bltn/@xbln{command} @xbln/g
+s/@bltn{command} @cmnd/@xbln{command} @xcmd/g
+s/@bltn{command} @func/@xbln{command} @xfnc/g
 #.
 # one-line 'and/or' statements
-s/@cmnd{and} @cmnd/@xcmd{and} @xcmd/g
-s/@cmnd{and} @sbin/@xcmd{and} @xbin/g
-s/@cmnd{and} @func/@xcmd{and} @xfnc/g
-s/@cmnd{or} @cmnd/@xcmd{or} @xcmd/g
-s/@cmnd{or} @sbin/@xcmd{or} @xbin/g
-s/@cmnd{or} @func/@xcmd{or} @xfnc/g
+s/@bltn{and} @bltn/@xbln{and} @xbln/g
+s/@bltn{and} @cmnd/@xbln{and} @xcmd/g
+s/@bltn{and} @func/@xbln{and} @xfnc/g
+s/@bltn{or} @bltn/@xbln{or} @xbln/g
+s/@bltn{or} @cmnd/@xbln{or} @xcmd/g
+s/@bltn{or} @func/@xbln{or} @xfnc/g
 #.
-s/^\( *\)@sbin/\1@xbin/
-s/\( *[;()] *\)@sbin/\1@xbin/g
-s/\( *@redr{|} *\)@sbin/\1@xbin/g
 s/^\( *\)@cmnd/\1@xcmd/
 s/\( *[;()] *\)@cmnd/\1@xcmd/g
 s/\( *@redr{|} *\)@cmnd/\1@xcmd/g
+s/^\( *\)@bltn/\1@xbln/
+s/\( *[;()] *\)@bltn/\1@xbln/g
+s/\( *@redr{|} *\)@bltn/\1@xbln/g
 s/^\( *\)@func/\1@xfnc/
 s/\( *[;()] *\)@func/\1@xfnc/g
 s/\( *@redr{|} *\)@func/\1@xfnc/g
-s/\\@cmnd{\([^}]*\)/@args{@bksl{\1}/g
-s/@cmnd/@args/g
+s/\\@bltn{\([^}]*\)/@args{@bksl{\1}/g
+s/@bltn/@args/g
 s/@func/@args/g
-s/@sbin/@args/g
+s/@cmnd/@args/g
 #.
 s/^.*$/PostArgs: &/w lexicon.log
 s/^PostArgs: //
 #.
-s/xcmd/cmnd/g
+s/xbln/bltn/g
 s/xfnc/func/g
-s/xbin/sbin/g
+s/xcmd/cmnd/g
 x
 /^@prmt/ {
 G
@@ -473,9 +475,23 @@ x
 s/</\&lt;/g
 s/>/\&gt;/g
 s/((d))/@/g
+#.
+# Final post processing
+s/};\([^]]\)/}@redr{;}\1/g
+s/};$/}@redr{;}/
+s/ \[\([@(]\)/ @args{[}\1/g
+s/ \[\([A-Z]*\) / @args{[\1} /g
+s/@args{\([a-zA-Z0-9_.]*\)}\]/@args{\1]}/g
+s/@args{\([a-zA-Z0-9_.]*\)}: /@args{\1:} /g
+s/@bltn{echo} @fsfo/@bltn{echo} @args/g
+s/@bltn{echo}\([a-zA-Z0-9.@{} _-]*\)@fsfo/@bltn{echo}\1@args/g
+s/ \] / @args{]} /g
+s/ \]$/ @args{]}/g
+s/\]}\]$/]]}/
 s/\\\([()]\)/@optr{@bksl{\1}}/g
 s/\([()]\)/@optr{\1}/g
 s/\\n/@bksl{n}/
+s/ \\$//
 #.
 # Uncomment the folowing two lines (ss) to log the final output, sent to Doxygen.
 s/^.*$/Output  : &\
@@ -562,25 +578,25 @@ s/\(@path{[^}]*\)}@fsfo/\1}@fsfo/
 #.
 #### This section is built in the Makefile. Just some formatting examples. #####
 #.
-#   fish commands (cmnd) <- 4 character code that has a Doxygen alias counterpart
-#   template : s/[[:<:]]function[[:>:]]/@cmnd{&}/
+#   Fish builtin (bltn) <- 4 character code that has a Doxygen alias counterpart
+#   template : s/[[:<:]]function[[:>:]]/@bltn{&}/
 #.
-#   s,[[:<:]]function[[:>:]],@cmnd{function},g
-#   s,[[:<:]]begin[[:>:]],@cmnd{begin},g
+#   s,[[:<:]]function[[:>:]],@bltn{function},g
+#   s,[[:<:]]begin[[:>:]],@bltn{begin},g
 #   ...
 #.
-#   fish functions (func)
+#   Fish functions (func)
 #   Populated by 'public' functions' filename.
 #.
 #   s,[[:<:]]fish_pwd[[:>:]],@func{fish_pwd},g
 #   s,[[:<:]]fish_prompt[[:>:]],@func{fish_prompt},g
 #   ...
 #.
-#   Shell Binary (sbin)
+#   Shell Command (cmnd)
 #   Populated from completion filenames
 #.
-#   s,[[:<:]]seq[[:>:]],@sbin{seq},g
-#   s,[[:<:]]rm[[:>:]],@sbin{rm},g
+#   s,[[:<:]]seq[[:>:]],@cmnd{seq},g
+#   s,[[:<:]]rm[[:>:]],@cmnd{rm},g
 #   ...
 #.
 #   Color Variable (clrv)
@@ -601,8 +617,8 @@ s/\(@path{[^}]*\)}@fsfo/\1}@fsfo/
 # As the lexicon is written into the output lexicon_filter, portability is
 # automatically handled.
 #.
-#!# sbin whoami
-#!# sbin mkdir
-#!# sbin basename
-#!# cmnd sleep
+#!# cmnd whoami
+#!# cmnd mkdir
+#!# cmnd basename
+#!# bltn sleep
 #!# args in

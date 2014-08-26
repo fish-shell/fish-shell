@@ -11,8 +11,6 @@ fish_indent [OPTIONS]
 
 The following options are available:
 
-- `-h` or `--help` displays this help message and then exits
-
 - `-i` or `--no-indent` do not indent commands
 
 - `-v` or `--version` displays the current fish version and then exits

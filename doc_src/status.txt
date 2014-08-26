@@ -32,5 +32,3 @@ The following options are available:
 - `-j CONTROLTYPE` or `--job-control=CONTROLTYPE` sets the job control type, which can be `none`, `full`, or `interactive`.
 
 - `-t` or `--print-stack-trace` prints a stack trace of all function calls on the call stack.
-
-- `-h` or `--help` displays a help message and exit.

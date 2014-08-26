@@ -15,8 +15,6 @@ The following options are available:
 
 - `-d` or `--debug-level=DEBUG_LEVEL` specify the verbosity level of fish. A higher number means higher verbosity. The default level is 1.
 
-- `-h` or `--help` display help and exit
-
 - `-i` or `--interactive` specify that fish is to run in interactive mode
 
 - `-l` or `--login` specify that fish is to run as a login shell

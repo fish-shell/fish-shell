@@ -10,7 +10,7 @@ command [OPTIONS] COMMANDNAME [ARGS...]
 `command` forces the shell to execute the program `COMMANDNAME` and ignore any functions or builtins with the same name.
 
 The following options are available:
-- `-h` or `--help` prints help and then exits.
+
 - `-s` or `--search` returns the name of the disk file that would be executed, or nothing if no file with the specified name could be found in the `$PATH`.
 
 With the `-s` option, `command` treats every argument as a separate command to look up and sets the exit status to 0 if any of the specified commands were found, or 1 if no commands could be found.

@@ -12,7 +12,6 @@ contains [OPTIONS] KEY [VALUES...]
 The following options are available:
 
 - `-i` or `--index` print the word index
-- `-h` or `--help` display this message
 
 
 \subsection contains-example Example

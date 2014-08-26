@@ -11,8 +11,6 @@ With no options, `type` indicates how each `NAME` would be interpreted if used a
 
 The following options are available:
 
-- `-h` or `--help` prints help and then exits.
-
 - `-a` or `--all` prints all of possible definitions of the specified names.
 
 - `-f` or `--no-functions` suppresses function and builtin lookup.

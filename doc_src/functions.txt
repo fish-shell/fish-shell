@@ -22,8 +22,6 @@ The following options are available:
 
 - `-e` or `--erase` causes the specified functions to be erased.
 
-- `-h` or `--help` displays a help message and exits.
-
 - `-n` or `--names` lists the names of all defined functions.
 
 - `-q` or `--query` tests if the specified functions exist.
@@ -42,9 +40,13 @@ The exit status of `functions` is the number of functions specified in the argum
 
 
 \subsection functions-example Examples
+\fish
+functions -n
+# Displays a list of currently-defined functions
 
-`functions -n` displays a list of currently-defined functions.
+functions -c foo bar
+# Copies the 'foo' function to a new function called 'bar'
 
-`functions -c foo bar` copies the `foo` function to a new function called `bar`.
-
-`functions -e bar` erases the function `bar`.
+functions -e bar
+# Erases the function `bar`
+\endfish

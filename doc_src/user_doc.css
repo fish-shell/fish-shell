@@ -138,12 +138,14 @@ h3 {
     margin-right: 2px;
 }
 .key em, .key b {
-    padding: 0 4px;
+    padding: 1px 4px;
     background-color: #fafafa;
-    border: 1px solid #aaa;
+    background: linear-gradient(to bottom, #eee 0%,#fafafa 100%);
+    border: 1px solid #bbb;
     border-radius: 3px;
     font-weight: normal;
     white-space: nowrap;
+    box-shadow: 0 1px 2px #ddd;
 }
 tt, code, pre, .fish {
     font-family: "DejaVu Sans Mono", Menlo, Monaco, "Source Code Pro", "Ubuntu Mono", "Consolas", "Lucida Console", monospace, fixed;

@@ -7,37 +7,21 @@
 \endhtmlonly
 
 - <a href='#faq-envvar'>How do I set or clear an environment variable?</a>
-
 - <a href='#faq-login-cmd'>How do I run a command every login? What's fish's equivalent to `.bashrc`?</a>
-
 - <a href='#faq-prompt'>How do I set my prompt?</a>
-
 - <a href='#faq-cmd-history'>How do I run a command from history?</a>
-
 - <a href='#faq-subcommand'>How do I run a subcommand? The backtick doesn't work!</a>
-
 - <a href='#faq-exit-status'>How do I get the exit status of a command?</a>
-
 - <a href='#faq-single-env'>How do I set an environment variable for just one command?</a>
-
 - <a href='#faq-customize-colors'>How do I customize my syntax highlighting colors?</a>
-
 - <a href='#faq-update-manpage-completions'>How do I update man page completions?</a>
-
 - <a href='#faq-cwd-symlink'>Why does cd, pwd and other fish commands always resolve symlinked directories to their canonical path?</a>
-
 - <a href='#faq-cd-implicit'>I accidentally entered a directory path and fish changed directory. What happened?</a>
-
 - <a href='#faq-open'>The open command doesn't work.</a>
-
 - <a href='#faq-default'>How do I make fish my default shell?</a>
-
 - <a href='#faq-titlebar'>I'm seeing weird output before each prompt when using screen. What's wrong?</a>
-
 - <a href='#faq-greeting'>How do I change the greeting message?</a>
-
 - <a href='#faq-history'>Why doesn't history substitution ("!$" etc.) work?</a>
-
 - <a href='#faq-uninstalling'>How do I uninstall fish?</a>
 
 \htmlonly[block]
@@ -81,7 +65,7 @@ You can also use the Web configuration tool, <a href="commands.html#fish_config"
 
 \section faq-cmd-history How do I run a command from history?
 
-Type some part of the command, and then hit the up or down arrow keys to navigate through history matches.
+Type some part of the command, and then hit the @cursor_key{&uarr;,up} or @cursor_key{&darr;,down} arrow keys to navigate through history matches.
 
 
 \section faq-subcommand How do I run a subcommand? The backtick doesn't work!

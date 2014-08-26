@@ -42,17 +42,11 @@ Every program on your computer can be used as a command in `fish`. If the progra
 Here is a list of some useful commands:
 
 - `cd`, change the current directory
-
 - `ls`, list files and directories
-
 - `man`, display a manual page on the screen
-
 - `mv`, move (rename) files
-
 - `cp`, copy files
-
 - `open`, open files with the default application associated with each filetype
-
 - `less`, list the contents of files
 
 Commands and parameters are separated by the space character '&nbsp;'. Every command ends with either a newline (i.e. by pressing the return key) or a semicolon '`;`'. More than one command can be written on the same line by separating them with semicolons.
@@ -86,61 +80,33 @@ would remove the two files 'cumbersome' and 'filename.txt'.
 Some characters can not be written directly on the command line. For these characters, so called escape sequences are provided. These are:
 
 - '<code>\\a</code>' escapes the alert character
-
 - '<code>\\b</code>' escapes the backspace character
-
 - '<code>\\e</code>' escapes the escape character
-
 - '<code>\\f</code>' escapes the form feed character
-
 - '<code>\\n</code>' escapes a newline character
-
 - '<code>\\r</code>' escapes the carriage return character
-
 - '<code>\\t</code>' escapes the tab character
-
 - '<code>\\v</code>' escapes the vertical tab character
-
 - '<code>\\ </code>' escapes the space character
-
 - '<code>\\$</code>' escapes the dollar character
-
 - '<code>\\\\</code>' escapes the backslash character
-
 - '<code>\\*</code>' escapes the star character
-
 - '<code>\\?</code>' escapes the question mark character
-
 - '<code>\\~</code>' escapes the tilde character
-
 - '<code>\\%</code>' escapes the percent character
-
 - '<code>\\#</code>' escapes the hash character
-
 - '<code>\\(</code>' escapes the left parenthesis character
-
 - '<code>\\)</code>' escapes the right parenthesis character
-
 - '<code>\\{</code>' escapes the left curly bracket character
-
 - '<code>\\}</code>' escapes the right curly bracket character
-
 - '<code>\\[</code>' escapes the left bracket character
-
 - '<code>\\]</code>' escapes the right bracket character
-
 - '<code>\\</code>' escapes the less than character
-
 - '<code>\\\></code>' escapes the more than character
-
 - '<code>\\^</code>' escapes the circumflex character
-
 - '<code>\\&amp;</code>' escapes the ampersand character
-
 - '<code>\\;</code>' escapes the semicolon character
-
 - '<code>\\"</code>' escapes the quote character
-
 - '<code>\\'</code>' escapes the apostrophe character
 
 - '<code>\\x<i>xx</i></code>', where <code><i>xx</i></code> is a hexadecimal number, escapes the ascii character with the specified value. For example, `\x9` is the tab character.
@@ -163,9 +129,7 @@ the tab character
 Most programs use three input/output (IO) streams, each represented by a number called a file descriptor (FD). These are:
 
 - Standard input, FD 0, for reading, defaults to reading from the keyboard.
-
 - Standard output, FD 1, for writing, defaults to writing to the screen.
-
 - Standard error, FD 2, for writing errors and warnings, defaults to writing to the screen.
 
 The reason for providing for two output file descriptors is to allow
@@ -432,11 +396,11 @@ When an argument for a program is given on the commandline, it undergoes the pro
 
 If a star (`*`) or a question mark (`?`) is present in the parameter, `fish` attempts to match the given parameter to any files in such a way that:
 
-- '`?`' can match any single character except '/'.
+- `?` can match any single character except '/'.
 
-- '`*`' can match any string of characters not containing '/'. This includes matching an empty string.
+- `*` can match any string of characters not containing '/'. This includes matching an empty string.
 
-- '`**`' matches any string of characters. This includes matching an empty string. The string may include the '/' character but does not need to.
+- `**` matches any string of characters. This includes matching an empty string. The string may include the `/` character but does not need to.
 
 Wildcard matches are sorted case insensitively. When sorting matches containing numbers, consecutive digits are considered to be one element, so that the strings '1' '5' and '12' would be sorted in the order given.
 
@@ -613,13 +577,9 @@ All of the above expansions can be combined. If several expansions result in mor
 When combining multiple parameter expansions, expansions are performed in the following order:
 
 - Command substitutions
-
 - Variable expansions
-
 - Bracket expansion
-
 - Pid expansion
-
 - Wildcard expansion
 
 Expansions are performed from right to left, nested bracket expansions are performed from the inside and out.
@@ -653,6 +613,7 @@ There are three kinds of variables in fish: universal, global and local variable
 Variables can be explicitly set to be universal with the `-U` or `--universal` switch, global with the `-g` or `--global` switch, or local with the `-l` or `--local` switch.  The scoping rules when creating or updating a variable are:
 
 -# If a variable is explicitly set to either universal, global or local, that setting will be honored. If a variable of the same name exists in a different scope, that variable will not be changed.
+
 -# If a variable is not explicitly set to be either universal, global or local, but has been previously defined, the variable scope is not changed.
 
 -# If a variable is not explicitly set to be either universal, global or local and has never before been defined, the variable will be local to the currently executing function. Note that this is different from using the `-l` or `--local` flag. If one of those flags is used, the variable will be local to the most inner currently executing block, while without these the variable will be local to the function. If no function is executing, the variable will be global.
@@ -685,7 +646,7 @@ To see universal variables in action, start two fish sessions side by side, and 
 
 When calling a function, all current local variables temporarily disappear. This shadowing of the local scope is needed since the variable namespace would become cluttered, making it very easy to accidentally overwrite variables from another function.
 
-For example, the following code will output '`Avast, mateys`':
+For example:
 
 \fish
 function shiver
@@ -700,6 +661,8 @@ function avast
     echo $phrase
 end
 avast
+
+# Outputs "Avast, mateys"
 \endfish
 
 
@@ -1057,11 +1020,8 @@ end
 Detected errors include:
 
 - Non existing commands.
-
 - Reading from or appending to a non existing file.
-
 - Incorrect use of output redirects
-
 - Mismatched parenthesis
 
 
@@ -1118,13 +1078,9 @@ If a function named `fish_greeting` exists, it will be run when entering interac
 When defining a new function in fish, it is possible to make it into an event handler, i.e. a function that is automatically run when a specific event takes place. Events that can trigger a handler currently are:
 
 - When a signal is delivered
-
 - When a process or job exits
-
 - When the value of a variable is updated
-
 - When the prompt is about to be shown
-
 - When a command lookup fails
 
 Example:

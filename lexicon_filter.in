@@ -193,25 +193,26 @@ s/@sgst{\([^}]*\)}/\\\
 #.
 # Command/Function options
 # Short options
-s/-\([A-Za-z]\)\([^A-Za-z}]\)/\\\
+s/ -\([A-Za-z][A-Za-z]*\)\([^A-Za-z}]\)/ \\\
 <@opts{-\1}\
 \2/g
 #.
 # Long options
-s/--\([A-Za-z][A-Za-z0-9=_-]*\)\([^A-Za-z0-9=_-]*\)/\\\
+s/ --\([A-Za-z][A-Za-z0-9=_-]*\)\([^A-Za-z0-9=_-]*\)/ \\\
 <@opts{--\1}\
 \2/g
 #.
 # Prompt
 s/~>_/\\\
-<@prmt{~}\
-/
+<@prmt{\
+<@path{~}\
+}/
 s/^>_/@prmt/
 #.
 # Cursor
 #.
-s/__$/@curs/
-s/__\(.\)/\\\
+s/___$/@curs/
+s/___\(.\)/\\\
 <@curs{\1}\
 /
 #.
@@ -223,17 +224,16 @@ s/__\(.\)/\\\
 # Normal Directory
 s|mkdir |mkdir :|
 s|\([~/:][/]*[.A-Za-z_0-9/-]*\)\\ |\1=|g
-s|\([~/:][/]*[.A-Za-z_0-9/=-]*\)|\\\
+s| \([~/][/]*[.A-Za-z_0-9/=-]*\)| \\\
 <@path{\1}\
 |g
-t protect
-s| \(:[/]*[.A-Za-z_0-9/=-]*\)|\\\
+s| \(:[/]*[.A-Za-z_0-9/=-]*\)| \\\
 <@path{\1}\
 |g
 t protect
 #.
 # Dot Relative Directory (no spaces in path)
-s| *\(./[A-Za-z_0-9/-]*\)| \\\
+s| \(./[A-Za-z_0-9/-]*\)| \\\
 <@path{\1}\
 |g
 b protect
@@ -241,14 +241,28 @@ b protect
 # Tidy up. Merge back 'pure' entities from hold space.
 :tidy
 #.
+# Convert loose text to arguments
+s/ \([a-zA-Z0-9+%*.-][{},a-zA-Z0-9%*._/?!=-]*\)/ @args{\1}/g
+#.
+# Or when tight to a newline
+s|\n\([a-zA-Z0-9+%*.-][{},a-zA-Z0-9%*._/?!-]*\)|\
+@args{\1}|g
+#.
+# Or when tight to the beginning
+s|^\([a-zA-Z][{},a-zA-Z0-9%*._/?!-]*\)|@args{\1}|g
+#.
+# Pick up loose text after markup.
+s/\([})]\)\([a-zA-Z0-9+%*.,][,a-zA-Z0-9%*._/?!-]*\);/\1@args{\2};/g
+s/\([})]\)\([a-zA-Z0-9+%*.,][,a-zA-Z0-9%*._/?!-]*\)$/\1@args{\2}/g
+#.
 # Uncomment the following 2 lines (ss) to log the pattern buffer.
-s/^.*$/PATT: &/w lexicon.log
-s/^PATT: //
+s/^.*$/Pattern : &/w lexicon.log
+s/^Pattern : //
 #.
 # Uncomment the following 4 lines (xssx) to log the hold buffer.
 x
-s/^.*$/HOLD: &/w lexicon.log
-s/^HOLD: //
+s/^.*$/HoldBufr: &/w lexicon.log
+s/^HoldBufr: //
 x
 #.
 # Tack the hold space to the end of the pattern buffer.
@@ -265,9 +279,9 @@ t join
 # Clean up stray new lines
 s/\n//g
 #.
-# Uncomment the folowing two lines (ss) to log the buffer join.
-s/^.*$/PCLN: &/w lexicon.log
-s/^PCLN: //
+# Uncomment the folowing two lines (ss) to log the buffer before 'cleaning'.
+s/^.*$/PreClean: &/w lexicon.log
+s/^PreClean: //
 # Clean up special cases
 #.
 /@blah/{
@@ -277,13 +291,21 @@ s/^PCLN: //
 }
 /@dblq/{
     :cleandblq
-    s/\(dblq{[^@<]*\)<*@...[^q]{\([^}]*\)}/\1\2/
+    s/\(dblq{[^@}<]*\)[<]*@...[^q]{\([^}]*\)}/\1\2/
     t cleandblq
 }
 /@sglq/{
     :cleansglq
-    s/\(sglq{[^@<]*\)<*@...[^q]{\([^}]*\)}/\1\2/
+    s/\(sglq{[^@}<]*\)[<]*@...[^q]{\([^}]*\)}/\1\2/
     t cleansglq
+}
+/@vars/{
+    :cleanvars
+    s/\(vars{@optr{$}[^@}]*\)@cmnd{\([^}]*\)}/\1\2/
+    s/\(vars{@optr{$}[^@}]*\)@func{\([^}]*\)}/\1\2/
+    s/\(vars{@optr{$}[^@}]*\)@sbin{\([^}]*\)}/\1\2/
+    s/\(vars{@optr{$}[^@}]*\)@args{\([^}]*\)}/\1\2/
+    t cleanvars
 }
 /@redr/{
     :cleanredr
@@ -298,8 +320,11 @@ s/^PCLN: //
     s/@sgst{<@/@sgst{@/
     :cleansgst
     s/\(sgst{@curs{.}[^@]*\)@cmnd{\([^}]*\)}/\1\2/
+    s/\(sgst{@curs{.}[^@]*\)@func{\([^}]*\)}/\1\2/
     s/\(sgst{@curs{.}[^@]*\)@sbin{\([^}]*\)}/\1\2/
+    s/\(sgst{@curs{.}[^@]*\)@opts{\([^}]*\)}/\1\2/
     s/\(sgst{@curs{.}[^@]*\)@path{\([^}]*\)}/\1\2/
+    s/\(sgst{@curs{.}[^@]*\)@args{\([^}]*\)}/\1\2/
     s/\(sgst{@curs{.}[^@]*\)@fsfo{\([^}]*\)}/\1\2/
     t cleansgst
 }
@@ -332,9 +357,9 @@ s/^PCLN: //
 #.
 # 'if' and 'for' seem to be special cases
 #.
-# Uncomment the folowing two lines (ss) to log the buffer join.
-s/^.*$/PREQ: &/w lexicon.log
-s/^PREQ: //
+# Uncomment the folowing two lines (ss) to log the buffer before semantic conversion.
+s/^.*$/PreArgs : &/w lexicon.log
+s/^PreArgs : //
 #.
 # Find initial commands/functions/binaries
 #.
@@ -347,22 +372,88 @@ x
 s/^@prmt *//
 }
 #.
+# Special case for one-line 'if' statements
+/@cmnd{if}/ {
+    s//@xcmd{if}/
+    s/@cmnd{set}/@xcmd{set}/
+    s/@cmnd{not}/@xcmd{not}/
+    s/@cmnd{else}/@xcmd{else}/
+    s/@cmnd{contains}/@xcmd{contains}/
+    s/@cmnd{test}/@xcmd{test}/
+    s/@cmnd{end}/@xcmd{end}/
+    s/@sbin{grep}/@xbin{grep}/
+}
+# one-line 'for' statements
+/@cmnd{for}/ {
+    s//@xcmd{for}/
+    s/@args{in}/@xcmd{in}/
+}
+# one-line 'begin' statements
+/@cmnd{begin}/ {
+    s//@xcmd{begin}/
+    s/@cmnd{end}/@xcmd{end}/
+}
+# one-line 'break' statements
+/@cmnd{break}/ {
+    s//@xcmd{break}/
+    s/@cmnd{end}/@xcmd{end}/
+}
+# one-line 'continue' statements
+/@cmnd{continue}/ {
+    s//@xcmd{continue}/
+    s/@cmnd{end}/@xcmd{end}/
+}
+# one-line 'switch' statements
+/@cmnd{switch}/ {
+    s//@xcmd{switch}/
+    s/@cmnd{case}/@xcmd{case}/
+    s/@cmnd{end}/@xcmd{end}/
+}
+# one-line 'function' statements
+/@cmnd{function}/ {
+    s//@xcmd{function}/
+    s/@cmnd{return}/@xcmd{return}/
+    s/@cmnd{end}/@xcmd{end}/
+}
+# one-line 'bind' statements - special input functions
+/@cmnd{bind}/ {
+    s//@xcmd{bind}/
+    s/@....{\([a-z]*\)}\(-[a-z-]*\)/@args{\1\2}/
+}
+# one-line 'builtin' statements
+s/@cmnd{builtin} @cmnd/@xcmd{builtin} @xcmd/g
+s/@cmnd{builtin} @sbin/@xcmd{builtin} @xbin/g
+s/@cmnd{builtin} @func/@xcmd{builtin} @xfnc/g
+#.
+# one-line 'command' statements
+s/@cmnd{command} @cmnd/@xcmd{command} @xcmd/g
+s/@cmnd{command} @sbin/@xcmd{command} @xbin/g
+s/@cmnd{command} @func/@xcmd{command} @xfnc/g
+#.
+# one-line 'and/or' statements
+s/@cmnd{and} @cmnd/@xcmd{and} @xcmd/g
+s/@cmnd{and} @sbin/@xcmd{and} @xbin/g
+s/@cmnd{and} @func/@xcmd{and} @xfnc/g
+s/@cmnd{or} @cmnd/@xcmd{or} @xcmd/g
+s/@cmnd{or} @sbin/@xcmd{or} @xbin/g
+s/@cmnd{or} @func/@xcmd{or} @xfnc/g
+#.
 s/^\( *\)@sbin/\1@xbin/
-s/\( *[;()] *\)@sbin/\1@xbin/
-s/\( *@redr{|} *\)@sbin/\1@xbin/
+s/\( *[;()] *\)@sbin/\1@xbin/g
+s/\( *@redr{|} *\)@sbin/\1@xbin/g
 s/^\( *\)@cmnd/\1@xcmd/
-s/\( *[;()] *\)@cmnd/\1@xcmd/
-s/\( *@redr{|} *\)@cmnd/\1@xcmd/
+s/\( *[;()] *\)@cmnd/\1@xcmd/g
+s/\( *@redr{|} *\)@cmnd/\1@xcmd/g
 s/^\( *\)@func/\1@xfnc/
-s/\( *[;()] *\)@func/\1@xfnc/
-s/\( *@redr{|} *\)@func/\1@xfnc/
-
+s/\( *[;()] *\)@func/\1@xfnc/g
+s/\( *@redr{|} *\)@func/\1@xfnc/g
+s/\\@cmnd{\([^}]*\)/@args{@bksl{\1}/g
 s/@cmnd/@args/g
 s/@func/@args/g
 s/@sbin/@args/g
-
-s/^.*$/PSTQ: &/w lexicon.log
-s/^PSTQ: //
+#.
+s/^.*$/PostArgs: &/w lexicon.log
+s/^PostArgs: //
 #.
 s/xcmd/cmnd/g
 s/xfnc/func/g
@@ -382,10 +473,16 @@ x
 s/</\&lt;/g
 s/>/\&gt;/g
 s/((d))/@/g
+s/\\\([()]\)/@optr{@bksl{\1}}/g
+s/\([()]\)/@optr{\1}/g
+s/\\n/@bksl{n}/
 #.
 # Uncomment the folowing two lines (ss) to log the final output, sent to Doxygen.
-s/^.*$/OUT : &/w lexicon.log
-s/^OUT : //
+s/^.*$/Output  : &\
+\
+/w lexicon.log
+s/^Output  : //
+s/\n\n$//
 #.
 # Lines are reassembled, so branch to end
 b
@@ -397,6 +494,8 @@ b
 #.
 # Move protected content to hold space and mark up other entities.
 :protect
+s/^.*$/Input   : &/w lexicon.log
+s/^Input   : //
 h
 # Clear out any content that has already been marked up, to prevent futher
 # markup on words that should be left alone.
@@ -413,9 +512,9 @@ s/\n$//g
 x
 /^\<@[^}]*$/ ! {
     s/[^\<]*//
-    s/^ *\\\n//
-    s/[()] \\//
-    s/\n *\\//
+    s/^ *\\\n//g
+    s/\n *\\//g
+    s/[()] \\//g
     s/^[^\<][^@][^\\]*//
     s/\n[]|;) ][^\\]*\\//
     s/\n[]|;) a-zA-z0-9-][^\\]*$//
@@ -433,6 +532,7 @@ x
 s/\\\n/\
 /
 s/\< \n//
+s/^[a-z][a-z]* \n//
 #.
 # Swap the buffers back.
 x
@@ -446,8 +546,11 @@ s/\([^{<>^] *\)\([0-9]* *[<>^][<>^]*[^@][a-zA-Z0-9._-]*\)/\1@redr{\2}/g
 s/\\}/}\\/g
 #.
 # Now we can add in 'unsafe' entities that would be too greedy.
+# Arrays
+s/[[][0-9$a-zA-Z_;. -]*]/@args{&}/g
+#.
 # Declared Variables
-s/\([$%][$%]*\)\([A-Za-z_0-9][A-Za-z_0-9]*\)/@vars{@optr{\1}\2}/g
+s/\($[$]*\)\([A-Za-z_0-9][A-Za-z_0-9]*\)/@vars{@optr{\1}\2}/g
 #.
 # Files
 s/\([^@]\)\([A-Za-z0-9_-][A-Za-z0-9_-]*\.[a-z0-9*][a-z0-9*]*\)/\1@fsfo{\2}/g
@@ -492,3 +595,14 @@ s/\(@path{[^}]*\)}@fsfo/\1}@fsfo/
 # single line.
 #.
 # b tidy
+#.
+#.
+# Below is a special section that adds vocabuarly to the lexicon during 'make'.
+# As the lexicon is written into the output lexicon_filter, portability is
+# automatically handled.
+#.
+#!# sbin whoami
+#!# sbin mkdir
+#!# sbin basename
+#!# cmnd sleep
+#!# args in

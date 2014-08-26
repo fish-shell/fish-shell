@@ -228,7 +228,7 @@ TAB_SIZE               = 4
 # "Side Effects:". You can put \n's in the value part of an alias to insert
 # newlines.
 
-# Enhance Fish docs output from Doxygen. (See fish_lexicon_filter.in)
+# Enhance Fish docs output from Doxygen. (See lexicon_filter.in)
 
 ALIASES  = "key{1}=<span class=\"key\"><b>\1</b></span>"
 ALIASES += "key{2}=<span class=\"key\"><em>\1</em><span>-</span><b>\2</b></span>"
@@ -272,6 +272,8 @@ ALIASES += "emph{1}=<em>\1</em>"
 ALIASES += "undr{1}=<span class=\"underline\">\1</span>"
 ALIASES += "span{2}=<span style=\"\1\">\2</span>"
 ALIASES += "spcl{2}=<span class=\"\1\">\2</span>"
+
+ALIASES += "bksl{1}=<span>\</span>\1"
 
 # This tag can be used to specify a number of word-keyword mappings (TCL only).
 # A mapping has the form "name=value". For example adding "class=itcl::class"

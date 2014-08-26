@@ -5,49 +5,27 @@
 <div class="menu tutorial_menu">
 \endhtmlonly
 - <a href="#tut_why_fish">Why fish?</a>
-
 - <a href="#tut_learning_Fish">Learning fish</a>
-
 - <a href="#tut_running_commands">Running Commands</a>
-
 - <a href="#tut_getting_help">Getting Help</a>
-
 - <a href="#tut_syntax_highlighting">Syntax Highlighting</a>
-
 - <a href="#tut_wildcards">Wildcards</a>
-
 - <a href="#tut_pipes_and_redirections">Pipes and Redirections</a>
-
 - <a href="#tut_autosuggestions">Autosuggestions</a>
-
 - <a href="#tut_tab_completions">Tab Completions</a>
-
 - <a href="#tut_variables">Variables</a>
-
 - <a href="#tut_exit_status">Exit Status</a>
-
 - <a href="#tut_exports">Shell Variables</a>
-
 - <a href="#tut_lists">Lists</a>
-
 - <a href="#tut_command_substitutions">Command Substitutions</a>
-
 - <a href="#tut_combiners">Combiners (And, Or, Not)</a>
-
 - <a href="#tut_conditionals">Conditionals (If, Else, Switch)</a>
-
 - <a href="#tut_functions">Functions</a>
-
 - <a href="#tut_loops">Loops</a>
-
 - <a href="#tut_prompt">Prompt</a>
-
 - <a href="#tut_path">$PATH</a>
-
 - <a href="#tut_startup">Startup</a>
-
 - <a href="#tut_autoload">Autoloading Functions</a>
-
 - <a href="#tut-more">Ready for more?</a>
 
 \htmlonly[block]
@@ -76,7 +54,7 @@ When you start `fish`, you should see this:
 \fish{cli-dark}
 <outp>Welcome to fish, the friendly interactive shell</outp>
 <outp>Type <span class="cwd">help</span> for instructions on how to use fish</outp>
-<asis>you@hostname</asis> ~>___
+<asis>you@hostname</asis> ~>____
 \endfish
 
 `fish` comes with a default prompt that shows your username, hostname, and working directory. You'll see <a href="#tut_prompt">how to change your prompt</a> further down. From now on, we'll pretend your prompt is just a '`>`' to save space.
@@ -131,7 +109,7 @@ A command may be invalid because it does not exist, or refers to a file that you
 `fish` will underline valid file paths as you type them:
 
 \fish{cli-dark}
->_ cat <u>~/somefi</u>__
+>_ cat <u>~/somefi</u>___
 \endfish
 
 This tells you that there exists a file that starts with '`somefi`', which is useful feedback as you type.
@@ -190,19 +168,19 @@ stdin and stdout can be redirected via the familiar &lt; and &gt;. Unlike other 
 `fish` suggests commands as you type, and shows the suggestion to the right of the cursor, in gray. For example:
 
 \fish{cli-dark}
->_ <error>/bin/h</error><s>__ostname</s>
+>_ <error>/bin/h</error><s>___ostname</s>
 \endfish
 
 It knows about paths and options:
 
 \fish{cli-dark}
->_ grep --i<s>__gnore-case</s>
+>_ grep --i<s>___gnore-case</s>
 \endfish
 
 And history too. Type a command once, and you can re-summon it by just typing a few letters:
 
 \fish{cli-dark}
->_ <error>r</error><s>__sync -avze ssh . myname@somelonghost.com:/some/long/path/doo/dee/doo/dee/doo</s>
+>_ <error>r</error><s>___sync -avze ssh . myname@somelonghost.com:/some/long/path/doo/dee/doo/dee/doo</s>
 \endfish
 
 To accept the autosuggestion, hit right arrow or @key{Control,F}. To accept a single word of the autosuggestion, @key{Alt,&rarr;} (right arrow). If the autosuggestion is not what you want, just ignore it.
@@ -512,7 +490,7 @@ You can define your own prompt:
 >_ function fish_prompt
     echo "New Prompt % "
 end
-New Prompt % __
+<asis>New Prompt % </asis>___
 \endfish
 
 Multiple lines are OK. Colors can be set via `set_color`, passing it named ANSI colors, or hex RGB values:
@@ -526,7 +504,7 @@ Multiple lines are OK. Colors can be set via `set_color`, passing it named ANSI 
       set_color normal
   end
 <span style="color: purple">02/06/13</span>
-<span style="color: #FF0">/home/tutorial ></span>__
+<span style="color: #FF0">/home/tutorial ></span>___
 \endfish
 
 You can choose among some sample prompts by running `fish_config prompt`. `fish` also supports RPROMPT through `fish_right_prompt`.

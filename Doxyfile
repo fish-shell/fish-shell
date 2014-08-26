@@ -216,7 +216,7 @@ SEPARATE_MEMBER_PAGES  = NO
 # uses this value to replace tabs by spaces in code fragments.
 # Minimum value: 1, maximum value: 16, default value: 4.
 
-TAB_SIZE               = 8
+TAB_SIZE               = 4
 
 # This tag can be used to specify a number of aliases that act as commands in
 # the documentation. An alias has the form:
@@ -228,14 +228,16 @@ TAB_SIZE               = 8
 # "Side Effects:". You can put \n's in the value part of an alias to insert
 # newlines.
 
+# Simplify Fish output from Doxygen for developer doc pages. (see lexicon_filter.in)
+
 ALIASES  = "key{1}=<b>\1</b>"
-ALIASES += "key{2}=<b>\1</b>-<b>\2</b>"
-ALIASES += "key{3}=<b>\1</b>-<b>\3</b>"
+ALIASES += "key{2}=<b>\1-\2</b>"
+ALIASES += "key{3}=<b>\1-\3</b>"
 ALIASES += "cursor_key{2}=<b>\2</b>"
 
-ALIASES += "fish=\htmlonly[block] \n<pre>"
-ALIASES += "fish{1}=\htmlonly[block] \n<pre>"
-ALIASES += "endfish=</pre>\endhtmlonly \n"
+ALIASES += "fish=<pre>"
+ALIASES += "fish{1}=<pre>"
+ALIASES += "endfish=</pre>\n"
 
 ALIASES += "asis{1}=\1"
 ALIASES += "outp{1}=\1"
@@ -270,6 +272,8 @@ ALIASES += "emph{1}=\1"
 ALIASES += "undr{1}=\1"
 ALIASES += "span{2}=\2"
 ALIASES += "spcl{2}=\2"
+
+ALIASES += "bksl{1}=\\\1"
 
 # This tag can be used to specify a number of word-keyword mappings (TCL only).
 # A mapping has the form "name=value". For example adding "class=itcl::class"
@@ -1677,7 +1681,7 @@ PAPER_TYPE             = a4wide
 # If left blank no extra packages will be included.
 # This tag requires that the tag GENERATE_LATEX is set to YES.
 
-EXTRA_PACKAGES         =
+EXTRA_PACKAGES         = bookmark
 
 # The LATEX_HEADER tag can be used to specify a personal LaTeX header for the
 # generated LaTeX document. The header should contain everything until the first
@@ -1736,7 +1740,7 @@ USE_PDFLATEX           = YES
 # The default value is: NO.
 # This tag requires that the tag GENERATE_LATEX is set to YES.
 
-LATEX_BATCHMODE        = NO
+LATEX_BATCHMODE        = YES
 
 # If the LATEX_HIDE_INDICES tag is set to YES then doxygen will not include the
 # index chapters (such as File Index, Compound Index, etc.) in the output.

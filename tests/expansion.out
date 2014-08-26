@@ -1,0 +1,42 @@
+1 
+0
+1 prefix
+0
+1 
+0
+1 prefix
+0
+1 
+1 
+1 prefix
+1 prefix
+1 
+0
+1 prefix
+0
+1 
+0
+1 prefix
+0
+1 baz
+1 baz
+1 prefixbaz
+1 prefixbaz
+1 baz quux
+2 baz quux
+1 prefixbaz quux
+2 prefixbaz prefixquux
+1 baz quux fooer fooest
+2 baz quux
+1 prefixbaz quux fooer fooest
+2 prefixbaz prefixquux
+3 baz quux 
+3 prefixbaz prefixquux prefix
+1 baz quux  fooest
+2 baz quux
+1 prefixbaz quux  fooest
+2 prefixbaz prefixquux
+1 
+0
+1 
+0

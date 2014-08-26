@@ -29,15 +29,16 @@ The following options are available:
 
 - `-x` or `--export` exports the variables to child processes.
 
-`read` reads a single line of input from stdin, breaks it into tokens based on the `IFS` shell variable, and then assigns one token to each variable specified in `VARIABLES`. If there are more tokens than variables, the complete remainder is assigned to the last variable.
+- `-a` or `--array` stores the result as an array.
 
-See the documentation for `set` for more details on the scoping rules for variables.
+`read` reads a single line of input from stdin, breaks it into tokens based on the `IFS` shell variable, and then assigns one token to each variable specified in `VARIABLES`. If there are more tokens than variables, the complete remainder is assigned to the last variable. As a special case, if `IFS` is set to the empty string, each character of the input is considered a separate token.
+
+If `-a` or `--array` is provided, only one variable name is allowed and the tokens are stored as an array in this variable.
 
 
 \subsection read-example Example
 
-The following code stores the value 'hello' in the shell variable
-`$foo`.
+The following code stores the value 'hello' in the shell variable `$foo`.
 
 \fish
 echo hello|read foo

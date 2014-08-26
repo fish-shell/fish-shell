@@ -1884,7 +1884,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
         //const wcstring prev_token(prev_begin, prev_token_len);
 
         parse_node_tree_t tree;
-        parse_tree_from_string(cmd, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens, &tree, NULL);
+        parse_tree_from_string(cmd, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens | parse_flag_include_comments, &tree, NULL);
 
         /* Find any plain statement that contains the position. We have to backtrack past spaces (#1261). So this will be at either the last space character, or after the end of the string */
         size_t adjusted_pos = pos;
@@ -1896,9 +1896,31 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
         const parse_node_t *plain_statement = tree.find_node_matching_source_location(symbol_plain_statement, adjusted_pos, NULL);
         if (plain_statement == NULL)
         {
-            /* Not part of a plain statement. This could be e.g. a for loop header, case expression, etc. Do generic file completions (#1309). If we had to backtrack, it means there was whitespace; don't do an autosuggestion in that case. */
-            bool no_file = (flags & COMPLETION_REQUEST_AUTOSUGGESTION) && (adjusted_pos < pos);
-            completer.complete_param_expand(current_token, ! no_file);
+            /* Not part of a plain statement. This could be e.g. a for loop header, case expression, etc. Do generic file completions (#1309). If we had to backtrack, it means there was whitespace; don't do an autosuggestion in that case. Also don't do it if we are just after a pipe, semicolon, or & (#1631), or in a comment.
+            
+            Overall this logic is a total mess. A better approach would be to return the "possible next token" from the parse tree directly (this data is available as the first of the sequence of nodes without source locations at the very end of the parse tree). */
+            bool do_file = true;
+            if (flags & COMPLETION_REQUEST_AUTOSUGGESTION)
+            {
+                if (adjusted_pos < pos)
+                {
+                    do_file = false;
+                }
+                else if (pos > 0)
+                {
+                    // If the previous character is in one of these types, we don't do file suggestions
+                    parse_token_type_t bad_types[] = {parse_token_type_pipe, parse_token_type_end, parse_token_type_background, parse_special_type_comment};
+                    for (size_t i=0; i < sizeof bad_types / sizeof *bad_types; i++)
+                    {
+                        if (tree.find_node_matching_source_location(bad_types[i], pos - 1, NULL))
+                        {
+                            do_file = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            completer.complete_param_expand(current_token, do_file);
         }
         else
         {

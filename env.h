@@ -80,7 +80,7 @@ void env_init(const struct config_paths_t *paths = NULL);
 
    * ENV_PERM, can only be returned when setting as a user, e.g. ENV_USER is set. This means that the user tried to change a read-only variable.
    * ENV_SCOPE, the variable cannot be set in the given scope. This applies to readonly/electric variables set from the local or universal scopes, or set as exported.
-   * ENV_INVALID, the variable name or mode was invalid
+   * ENV_INVALID, the variable value was invalid. This applies only to special variables.
 */
 
 int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t mode);

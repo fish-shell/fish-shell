@@ -1548,16 +1548,7 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, boo
 
     if (! ifs.missing_or_empty())
     {
-        if (ifs.at(0) < 128)
-        {
-            sep = '\n';//ifs[0];
-        }
-        else
-        {
-            sep = 0;
-            debug(0, L"Warning - invalid command substitution separator '%lc'. Please change the first character of IFS", ifs[0]);
-        }
-
+        sep = '\n';
     }
 
     is_subshell=1;

@@ -13,7 +13,7 @@ if command ls --version 1>/dev/null 2>/dev/null
 	end
 
 	if not set -q LS_COLORS
-		if type -f dircolors >/dev/null
+		if type -q -f dircolors
 			eval (dircolors -c | sed 's/>&\/dev\/null$//')
 		end
 	end

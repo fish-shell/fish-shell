@@ -17,13 +17,13 @@ The following options are available:
 
 - `-f` or `--no-functions` suppresses function and builtin lookup.
 
-- `-t` or `--type` prints `keyword`, `function`, `builtin`, or `file` if `NAME` is a shell reserved word, function, builtin, or disk file, respectively.
+- `-t` or `--type` prints `function`, `builtin`, or `file` if `NAME` is a shell function, builtin, or disk file, respectively.
 
-- `-p` or `--path` returns the name of the disk file that would be executed, or nothing if 'type  -t  name' would not return 'file'.
+- `-p` or `--path` returns the name of the disk file that would be executed, or nothing if `type  -t  name` would not return `file`.
 
-- `-P` or `--force-path` returns the name of the disk file that would be executed, or nothing no file with the specified name could be found in the `$PATH`.
+- `-P` or `--force-path` returns the name of the disk file that would be executed, or nothing if no file with the specified name could be found in the <tt>$PATH</tt>.
 
-`type` sets the exit status to 0 if the specified command was found, and 1 if it could not be found.
+- `-q` or `--quiet` suppresses all output; this is useful when testing the exit status.
 
 
 \subsection type-example Example

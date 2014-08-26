@@ -2,8 +2,8 @@
 
 \subsection history-synopsis Synopsis
 \fish{synopsis}
-history (--merge | --save | --clear)
-history (--search | --delete) [--prefix "prefix string" | --contains "search string"]
+history ( --merge | --save | --clear )
+history ( --search | --delete ) [ --prefix "prefix string" | --contains "search string" ]
 \endfish
 
 \subsection history-description Description

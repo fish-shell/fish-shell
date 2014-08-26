@@ -2,7 +2,7 @@
 
 \subsection psub-synopsis Synopsis
 \fish{synopsis}
-COMMAND1 (COMMAND2 | psub [-f])
+COMMAND1 ( COMMAND2 | psub [-f] )
 \endfish
 
 \subsection psub-description Description

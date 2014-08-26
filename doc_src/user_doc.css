@@ -142,12 +142,14 @@ em {
     margin-right: 2px;
 }
 .key em, .key b {
-    padding: 0 4px;
+    padding: 1px 4px;
     background-color: #fafafa;
-    border: 1px solid #aaa;
+    background: linear-gradient(to bottom, #eee 0%,#fafafa 100%);
+    border: 1px solid #bbb;
     border-radius: 3px;
     font-weight: normal;
     white-space: nowrap;
+    box-shadow: 0 1px 2px #ddd;
 }
 /* Console display */
 tt, code, pre, .fish {
@@ -175,21 +177,26 @@ h1 > code, h2 > code, h3 > code {
     color: #111;
     text-shadow: 0 0 0 #000; /* Stronger anti-aliasing */
     background-color: #fafafa;
-    border: 1px solid #eee;
+    border: 1px solid #bbb;
     border-radius: 0.6rem;
+    box-shadow: 0 0.2rem 0.2rem #ddd;
 }
 
 
 .comment { color: #555; }
-.command, .function, .binary { color: #23326b; }
-/*.command { color: #00F; }*/
-/*.binary { color: #F0F; }*/
-/*.function { color: #0FF; }*/
+/*.command, .function, .binary { color: #23326b; }*/
+.command { color: #00F; }
+.binary { color: #F0F; }
+.function { color: #0FF; }
 .string { color: #725000; }
-.variable { color: #741ba3; }
-/*.path { color: #F00; }*/
-/*.file { color: #0F0; }*/
-/*.argument { color: #19c9ff; }*/
+.operator, .variable { color: #741ba3; }
+.path { color: #F00; }
+.file { color: #0F0; }
+.argument { color: #19c9ff; }
+.redirect { color: #f00; }
+.prompt { color: #000; }
+.cursor { border-bottom: 2px solid #444; }
+.underline { text-decoration: underline; }
 
 /*.comment { color: #c33; }
 .command, .function, .binary { color: #2568e2; }
@@ -213,6 +220,7 @@ h1 > code, h2 > code, h3 > code {
     background: none;
     font-size: 1.3rem;
     padding: 0;
+    box-shadow: none;
 }
 /* Console variants */
 .cli-dark {
@@ -223,11 +231,11 @@ h1 > code, h2 > code, h3 > code {
     border-radius: 0.6rem;
 }
 .cli-dark .comment { color: #c33; }
-.cli-dark .command, .cli-dark .function, .cli-dark .binary { color: #2d5ddb; }
-.cli-dark .argument, .cli-dark .variable, .cli-dark .path, .cli-dark .file { color: #00afff; }
+.cli-dark .command, .cli-dark .function, .cli-dark .binary { color: #6159de; }
+.cli-dark .argument, .cli-dark .path, .cli-dark .file { color: #00afff; }
 .cli-dark .redirect { color: #fff; }
-.cli-dark .operator, .cli-dark .match, .cli-dark .history { color: #2ff; }
-.cli-dark .string { color: #c07d2f; }
+.cli-dark .operator,.cli-dark .variable, .cli-dark .match, .cli-dark .history { color: #2ff; }
+.cli-dark .string { color: #b3b206; }
 .cli-dark .suggest, .cli-dark em { color: #777; }
 .cli-dark .match { color: #2ff; }
 .cli-dark .search_match { background-color: #a100a3; }
@@ -238,8 +246,10 @@ h1 > code, h2 > code, h3 > code {
 .cli-dark .error, .cli-dark .error .path { color: #f33; font-weight: bold; }
 .cli-dark .key em, .cli-dark .key b {
     background-color: #ccc;
+    box-shadow: 0 0.1rem 0 #666;
     border: 1px solid #333;
     color: #000;
+    padding: 0 3px;
 }
 
 /*Menus*/

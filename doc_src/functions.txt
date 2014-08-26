@@ -2,10 +2,10 @@
 
 \subsection functions-synopsis Synopsis
 \fish{synopsis}
-functions [-a | --all] [-n | --names]
+functions [ -a | --all ] [ -n | --names ]
 functions -c OLDNAME NEWNAME
 functions -d DESCRIPTION FUNCTION
-functions [-eq] FUNCTIONS...
+functions [ -e | -q ] FUNCTIONS...
 \endfish
 
 \subsection functions-description Description

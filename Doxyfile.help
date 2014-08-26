@@ -228,12 +228,12 @@ TAB_SIZE               = 4
 # "Side Effects:". You can put \n's in the value part of an alias to insert
 # newlines.
 
-# Simplify Fish output from Doxygen for man pages. (see fish_lexicon_filter)
+# Simplify Fish output from Doxygen for man pages. (see lexicon_filter.in)
 
-ALIASES  = "key{1}=<b>\1</b>"
-ALIASES += "key{2}=<b>\1</b>-<em>\2</em>"
-ALIASES += "key{3}=<b>\1</b>-<em>\3</em>"
-ALIASES += "cursor_key{2}=<b>\2</b>"
+ALIASES  = "key{1}=[<b>\1</b>]"
+ALIASES += "key{2}=[<b>\1</b>-<em>\2</em>]"
+ALIASES += "key{3}=[<b>\1</b>-<em>\3</em>]"
+ALIASES += "cursor_key{2}=[<b>\2</b>]"
 
 ALIASES += "fish=<pre>"
 ALIASES += "fish{1}=<pre>"
@@ -272,6 +272,8 @@ ALIASES += "emph{1}=<em>\1</em>"
 ALIASES += "undr{1}=<em>\1</em>"
 ALIASES += "span{2}=\2"
 ALIASES += "spcl{2}=\2"
+
+ALIASES += "bksl{1}=\\\1"
 
 # This tag can be used to specify a number of word-keyword mappings (TCL only).
 # A mapping has the form "name=value". For example adding "class=itcl::class"

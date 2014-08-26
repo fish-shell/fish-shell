@@ -15,8 +15,6 @@ The following parameters are available:
 
 - `SIGSPEC` is the name of the signal to trap.
 
-- `-h` or `--help` displays help and exits.
-
 - `-l` or `--list-signals` prints a list of signal names.
 
 - `-p` or `--print` prints all defined signal handlers.

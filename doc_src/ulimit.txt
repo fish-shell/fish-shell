@@ -49,8 +49,6 @@ The following additional options are also understood by `ulimit`:
 
 - `-a` or `--all` prints all current limits
 
-- `-h` or `--help` displays help and exits.
-
 The `fish` implementation of `ulimit` should behave identically to the implementation in bash, except for these differences:
 
 - Fish `ulimit` supports GNU-style long options for all switches

@@ -581,7 +581,7 @@ vim
 
 \section tut-more  Ready for more?
 
-If you want to learn more about fish, there is <a href="index.html">lots of detailed documentation</a>, an <a href="https://lists.sourceforge.net/lists/listinfo/fish-users">official mailing list</a>, the IRC channel \#fish on `irc.oftc.net`, and the <a href="http://github.com/fish-shell/fish-shell/">github page</a>.
+If you want to learn more about fish, there is <a href="index.html">lots of detailed documentation</a>, an <a href="https://lists.sourceforge.net/lists/listinfo/fish-users">official mailing list</a>, the IRC channel \#fish on `irc.oftc.net`, and the <a href="https://github.com/fish-shell/fish-shell/">github page</a>.
 
 \htmlonly[block]
 </div>

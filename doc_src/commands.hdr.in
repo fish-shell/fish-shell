@@ -14,6 +14,21 @@
 \endhtmlonly
 `fish` ships with a large number of builtin commands, shellscript functions and external commands. These are all described below.
 
+Almost all fish commands respond to the `-h` or `--help` options to display their relevant help, also accessible using the `help` and `man` commands, like so:
+
+\fish
+echo -h
+echo --help
+# Prints help to the terminal window
+
+man echo
+# Displays the man page in the system pager
+# (normally 'less', 'more' or 'most').
+
+help echo
+# Open a web browser to show the relevant documentation
+\endfish
+
 @command_list@
 
 \htmlonly[block]

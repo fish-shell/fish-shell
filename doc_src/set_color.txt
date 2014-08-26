@@ -17,8 +17,6 @@ The following options are available:
 
 - `-c`, `--print-colors` prints a list of all valid color names.
 
-- `-h`, `--help` displays a help message and exit.
-
 - `-o`, `--bold` sets bold or extra bright mode.
 
 - `-u`, `--underline` sets underlined mode.
@@ -38,6 +36,6 @@ Not all terminal emulators support all these features.
 \fish
 set_color red; echo "Roses are red"
 set_color blue; echo "Violets are blue"
-set_color 62A ; echo "Eggplants are dark purple"
+set_color 62A; echo "Eggplants are dark purple"
 set_color normal; echo "Normal is nice too"
 \endfish

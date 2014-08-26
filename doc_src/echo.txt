@@ -19,8 +19,6 @@ The following options are available:
 
 - `-e`, Enable interpretation of backslash escapes
 
-- `-h`, `--help` Display this help
-
 \subsection echo-escapes Escape Sequences
 
 If `-e` is used, the following sequences are recognized:

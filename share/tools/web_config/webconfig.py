@@ -26,7 +26,7 @@ if term:
     os.environ['TERM'] = term
 
 import subprocess
-import re, socket, cgi, select, time, glob, random, string
+import re, socket, cgi, select, time, glob, random, string, binascii
 try:
     import json
 except ImportError:
@@ -617,14 +617,16 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def do_get_current_prompt(self):
         # Return the current prompt
+        # We run 'false' to demonstrate how the prompt shows the command status (#1624)
         prompt_func, err = run_fish_cmd('functions fish_prompt')
-        result = self.do_get_prompt('builtin cd "' + initial_wd + '" ; fish_prompt', prompt_func.strip(), {'name': 'Current'})
+        result = self.do_get_prompt('builtin cd "' + initial_wd + '" ; false ; fish_prompt', prompt_func.strip(), {'name': 'Current'})
         return result
 
     def do_get_sample_prompt(self, text, extras_dict):
         # Return the prompt you get from the given text
         # extras_dict is a dictionary whose values get merged in
-        cmd = text + "\n cd \"" + initial_wd + "\" \n fish_prompt\n"
+        # We run 'false' to demonstrate how the prompt shows the command status (#1624)
+        cmd = text + "\n builtin cd \"" + initial_wd + "\" \n false \n fish_prompt\n"
         return self.do_get_prompt(cmd, text.strip(), extras_dict)
 
     def parse_one_sample_prompt_hash(self, line, result_dict):
@@ -680,6 +682,14 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         result.extend([r for r in sample_results if r])
         return result
 
+    def secure_startswith(self, haystack, needle):
+        if len(haystack) < len(needle):
+            return False
+        bits = 0
+        for x,y in zip(haystack, needle):
+            bits |= ord(x) ^ ord(y)
+        return bits == 0
+        
     def font_size_for_ansi_prompt(self, prompt_demo_ansi):
         width = ansi_prompt_line_width(prompt_demo_ansi)
         # Pick a font size
@@ -697,7 +707,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         p = self.path
 
         authpath = '/' + authkey
-        if p.startswith(authpath):
+        if self.secure_startswith(p, authpath):
             p = p[len(authpath):]
         else:
             return self.send_error(403)
@@ -736,7 +746,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         p = self.path
 
         authpath = '/' + authkey
-        if p.startswith(authpath):
+        if self.secure_startswith(p, authpath):
             p = p[len(authpath):]
         else:
             return self.send_error(403)
@@ -851,7 +861,7 @@ where = os.path.dirname(sys.argv[0])
 os.chdir(where)
 
 # Generate a 16-byte random key as a hexadecimal string
-authkey = hex(random.getrandbits(16*4))[2:]
+authkey = binascii.b2a_hex(os.urandom(16))
 
 # Try to find a suitable port
 PORT = 8000

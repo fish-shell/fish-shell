@@ -12,6 +12,7 @@ function alias --description "Legacy function for creating shellscript functions
 	set -l name
 	set -l body
 	set -l prefix
+        set -l first_word
 	switch (count $argv)
 
 		case 0
@@ -21,8 +22,9 @@ function alias --description "Legacy function for creating shellscript functions
 			# Some seds (e.g. on Mac OS X), don't support \n in the RHS
 			# Use a literal newline instead
 			# http://sed.sourceforge.net/sedfaq4.html#s4.1
-			set -l tmp (echo $argv|sed -e "s/\([^=]\)=/\1\\
-/")
+                        # The extra '' at the end is so $tmp[2] is guaranteed to work
+                        set -l tmp (echo $argv|sed -e 's/\([^=]\{0,1\}\)=/\1\
+/') ''
 			set name $tmp[1]
 			set body $tmp[2]
 
@@ -35,18 +37,34 @@ function alias --description "Legacy function for creating shellscript functions
 			return 1
 	end
 
+        # sanity check
+        if test -z "$name"
+                printf ( _ "%s: Name cannot be empty\n") alias
+                return 1
+        else if test -z "$body"
+                printf ( _ "%s: Body cannot be empty\n") alias
+                return 1
+        end
+
+        # Extract the first command from the body
+        switch $body
+                case \*\ \* \*\t\*
+                        # note: strip leading spaces if present
+                        set first_word (echo $body|sed -e 's/^[[:space:]]\{1,\}//;s/[[:space:]].*//;q')
+                case '*'
+                        set first_word $body
+        end
 
 	# Prevent the alias from immediately running into an infinite recursion if
 	# $body starts with the same command as $name.
 
-	switch $body
-		case $name $name\ \* $name\t\*
-			if contains $name (builtin --names)
-				set prefix builtin
-			else
-				set prefix command
-			end
+        if test $first_word = $name
+                if contains $name (builtin --names)
+                        set prefix builtin
+                else
+                        set prefix command
+                end
 	end
 
-	eval "function $name --wraps $body; $prefix $body \$argv; end"
+        eval "function $name --wraps $first_word; $prefix $body \$argv; end"
 end

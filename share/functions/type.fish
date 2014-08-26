@@ -4,79 +4,84 @@ function type --description "Print the type of a command"
 	# Initialize
 	set -l res 1
 	set -l mode normal
+	set -l multi no
 	set -l selection all
-		
-	#
-	# Get options
-	#
-	set -l options
-	set -l shortopt tpPafh
-	if not getopt -T > /dev/null
-		# GNU getopt
-		set -l longopt type,path,force-path,all,no-functions,help
-		set options -o $shortopt -l $longopt --
-		# Verify options
-		if not getopt -n type $options $argv >/dev/null
-			return 1
-		end
-	else
-		# Old getopt, used on OS X
-		set options $shortopt
-		# Verify options
-		if not getopt $options $argv >/dev/null
-			return 1
-		end
-	end
 
-	# Do the real getopt invocation
-	set -l tmp (getopt $options $argv)
+	# Parse options
+	set -l names
+	if test (count $argv) -gt 0
+		for i in (seq (count $argv))
+			set -l arg $argv[$i]
+			set -l needbreak 0
+			while test -n $arg
+				set -l flag $arg
+				set arg ''
+				switch $flag
+					case '--*'
+						# do nothing; this just prevents it matching the next case
+					case '-??*'
+						# combined flags
+						set -l IFS
+						echo -n $flag | read _ flag arg
+						set flag -$flag
+						set arg -$arg
+				end
+				switch $flag
+					case -t --type
+						if test $mode != quiet
+							set mode type
+						end
 
-	# Break tmp up into an array
-	set -l opt
-	eval set opt $tmp
-	
-	for i in $opt
-		switch $i
-			case -t --type
-				set mode type
+					case -p --path
+						if test $mode != quiet
+							set mode path
+						end
 
-			case -p --path
-				set mode path
+					case -P --force-path
+						if test $mode != quiet
+							set mode path
+						end
+						set selection files
 
-			case -P --force-path
-				set mode path
-				set selection files
+					case -a --all
+						set multi yes
 
-			case -a --all
-				set selection multi
+					case -f --no-functions
+						set selection files
 
-			case -f --no-functions
-				set selection files
+					case -q --quiet
+						set mode quiet
 
-			case -h --help
-				 __fish_print_help type
-				 return 0
+					case -h --help
+						__fish_print_help type
+						return 0
 
-			case --
-				 break
+					case --
+						set names $argv[$i..-1]
+						set -e names[1]
+						set needbreak 1
+						break
 
+					case '*'
+						set names $argv[$i..-1]
+						set needbreak 1
+						break
+				end
+			end
+			if test $needbreak -eq 1
+				break
+			end
 		end
 	end
 
 	# Check all possible types for the remaining arguments
-	for i in $argv
-
-		switch $i
-			case '-*'
-				 continue
-		end
-
+	for i in $names
 		# Found will be set to 1 if a match is found
-		set found 0
+		set -l found 0
 
 		if test $selection != files
 
-			if contains -- $i (functions -na)
+			if functions -q -- $i
 				set res 0
 				set found 1
 				switch $mode
@@ -86,12 +91,8 @@ function type --description "Print the type of a command"
 
 					case type
 						echo (_ 'function')
-
-					case path
-						echo
-
 				end
-				if test $selection != multi
+				if test $multi != yes
 					continue
 				end
 			end
@@ -106,11 +107,8 @@ function type --description "Print the type of a command"
 
 					case type
 						echo (_ 'builtin')
-
-					case path
-						echo
 				end
-				if test $selection != multi
+				if test $multi != yes
 					continue
 				end
 			end
@@ -118,33 +116,31 @@ function type --description "Print the type of a command"
 		end
 
 		set -l paths
-		if test $selection != multi
-			set paths (which $i ^/dev/null)
+		if test $multi != yes
+			set paths (command -s -- $i)
 		else
-			set paths (which -a $i ^/dev/null)
+			set paths (which -a -- $i ^/dev/null)
 		end
 		for path in $paths
-			if test -x (echo $path)
-				set res 0
-				set found 1
-				switch $mode
-					case normal
-						printf (_ '%s is %s\n') $i $path
+			set res 0
+			set found 1
+			switch $mode
+				case normal
+					printf (_ '%s is %s\n') $i $path
 
-					case type
-						echo (_ 'file')
+				case type
+					echo (_ 'file')
 
-					case path
-						echo $path
-				end
-				if test $selection != multi
-					continue
-				end
+				case path
+					echo $path
+			end
+			if test $multi != yes
+				continue
 			end
 		end
 
-		if test $found = 0
-			printf (_ "%s: Could not find '%s'\n") type $i
+		if begin; test $found = 0; and test $mode != quiet; end
+			printf (_ "%s: Could not find '%s'\n") type $i >&2
 		end
 
 	end

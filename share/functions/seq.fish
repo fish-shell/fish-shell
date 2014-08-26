@@ -2,7 +2,7 @@
 # test -x in /usr/bin/seq because that's where it usually is and
 # that's substantially cheaper than the type function
 
-if begin ; not test -x /usr/bin/seq ; and not type -f seq > /dev/null; end
+if begin ; not test -x /usr/bin/seq ; and not type -q -f seq; end
 	# No seq command
 	function seq --description "Print sequences of numbers"
 		__fish_fallback_seq $argv

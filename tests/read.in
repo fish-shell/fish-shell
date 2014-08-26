@@ -1,0 +1,72 @@
+#
+# Test read builtin and IFS
+#
+
+count (echo one\ntwo)
+set -l IFS \t
+count (echo one\ntwo)
+set -l IFS
+count (echo one\ntwo)
+set -le IFS
+
+function print_vars --no-scope-shadowing
+	set -l space
+	set -l IFS \n # ensure our command substitution works right
+	for var in $argv
+		echo -n $space (count $$var) \'$$var\'
+		set space ''
+	end
+	echo
+end
+
+echo
+echo 'hello there' | read -l one two
+print_vars one two
+echo 'hello there' | read -l one
+print_vars one
+echo '' | read -l one
+print_vars one
+echo '' | read -l one two
+print_vars one two
+echo 'test' | read -l one two three
+print_vars one two three
+
+echo
+set -l IFS
+echo 'hello' | read -l one
+print_vars one
+echo 'hello' | read -l one two
+print_vars one two
+echo 'hello' | read -l one two three
+print_vars one two three
+echo '' | read -l one
+print_vars one
+echo 't' | read -l one two
+print_vars one two
+echo 't' | read -l one two three
+print_vars one two three
+echo ' t' | read -l one two
+print_vars one two
+set -le IFS
+
+echo
+echo 'hello there' | read -la ary
+print_vars ary
+echo 'hello' | read -la ary
+print_vars ary
+echo 'this is a bunch of words' | read -la ary
+print_vars ary
+echo '   one   two     three' | read -la ary
+print_vars ary
+echo '' | read -la ary
+print_vars ary
+
+echo
+set -l IFS
+echo 'hello' | read -la ary
+print_vars ary
+echo 'h' | read -la ary
+print_vars ary
+echo '' | read -la ary
+print_vars ary
+set -le IFS

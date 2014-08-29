@@ -7,6 +7,11 @@ set -l IFS \t
 count (echo one\ntwo)
 set -l IFS
 count (echo one\ntwo)
+echo [(echo -n one\ntwo)]
+count (echo one\ntwo\n)
+echo [(echo -n one\ntwo\n)]
+count (echo one\ntwo\n\n)
+echo [(echo -n one\ntwo\n\n)]
 set -le IFS
 
 function print_vars --no-scope-shadowing

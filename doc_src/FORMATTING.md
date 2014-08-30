@@ -60,9 +60,13 @@ which is then transformed by Doxygen into an HTML version (`make user_doc`):
 
 `<span class="command">echo</span> <span class="argument">hello</span> <span class="argument">world</span>`
 
-A man page version (`make share/man`): __echo__ hello world
+A man page version (`make share/man`):
 
-And a simple HTML version for the developer docs (`make doc` and `make doc/refman.pdf`): `echo hello world`
+__echo__ hello world
+
+And a simple HTML version for the developer docs (`make doc`) and the LATEX/PDF manual  (`make doc/refman.pdf`):
+
+`echo hello world`
 
 ### Choosing a CLI style: using a \\fish{style} block
 

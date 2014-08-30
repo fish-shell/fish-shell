@@ -36,7 +36,7 @@
 
 Use the <a href="commands.html#set">`set`</a> command:
 
-\fish
+\fish{cli-dark}
 set -x key value
 set -e key
 \endfish
@@ -51,7 +51,7 @@ Edit the file `~/.config/fish/config.fish`, creating it if it does not exist (No
 
 The prompt is the output of the `fish_prompt` function. Put it in `~/.config/fish/functions/fish_prompt.fish`. For example, a simple prompt is:
 
-\fish
+\fish{cli-dark}
 function fish_prompt
     set_color $fish_color_cwd
     echo -n (prompt_pwd)
@@ -72,7 +72,7 @@ Type some part of the command, and then hit the @cursor_key{&uarr;,up} or @curso
 
 `fish` uses parentheses for subcommands. For example:
 
-\fish
+\fish{cli-dark}
 for i in (ls)
     echo $i
 end
@@ -94,7 +94,7 @@ Use the `env` command.
 
 You can also declare a local variable in a block:
 
-\fish
+\fish{cli-dark}
 begin
     set -lx SOME_VAR 1
     command
@@ -137,7 +137,7 @@ The `open` command uses the MIME type database and the `.desktop` files used by 
 
 If you installed fish manually (e.g. by compiling it, not by using a package manager), you first need to add fish to the list of shells by executing the following command (assuming you installed fish in /usr/local) as root:
 
-\fish
+\fish{cli-dark}
 echo /usr/local/bin/fish >>/etc/shells
 \endfish
 
@@ -145,7 +145,7 @@ If you installed a prepackaged version of fish, the package manager should have 
 
 In order to change your default shell, type:
 
-\fish
+\fish{cli-dark}
 chsh -s /usr/local/bin/fish
 \endfish
 
@@ -160,7 +160,7 @@ Quick answer:
 
 Run the following command in fish:
 
-\fish
+\fish{cli-dark}
 echo 'function fish_title;end' > ~/.config/fish/config.fish
 \endfish
 
@@ -177,7 +177,7 @@ Note that fish has a default titlebar message, which will be used if the fish_ti
 
 Change the value of the variable `fish_greeting` or create a `fish_greeting` function. For example, to remove the greeting use:
 
-\fish
+\fish{cli-dark}
 set fish_greeting
 \endfish
 
@@ -207,7 +207,7 @@ Should you wish to uninstall fish, first ensure fish is not set as your shell. R
 
 Next, do the following (assuming fish was installed to /usr/local):
 
-\fish
+\fish{cli-dark}
 rm -Rf /usr/local/etc/fish /usr/local/share/fish ~/.config/fish
 rm /usr/local/share/man/man1/fish*.1
 cd /usr/local/bin

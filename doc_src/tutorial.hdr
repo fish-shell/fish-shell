@@ -2,6 +2,7 @@
 \page tutorial Tutorial
 \htmlonly[block]
 <div class="fish_left_bar">
+<div class="logo"></div>
 <div class="menu tutorial_menu">
 \endhtmlonly
 - <a href="#tut_why_fish">Why fish?</a>

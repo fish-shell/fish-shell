@@ -2,6 +2,7 @@
 \mainpage Documentation
 \htmlonly[block]
 <div class="fish_left_bar">
+<div class="logo"></div>
 <div class="menu docs_menu">
 \endhtmlonly
 @toc@

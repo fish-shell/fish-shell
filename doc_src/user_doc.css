@@ -1,7 +1,5 @@
 * {
     margin: 0;
-    -moz-box-sizing: border-box;
-    -webkit-box-sizing: border-box;
     box-sizing: border-box;
 }
 html { font-size: 62.5%; }
@@ -15,9 +13,10 @@ body {
     overflow: hidden;
 }
 .logo {
-    position: absolute;
-    width: 200px;
-    height: 135px;
+    width: 210px;
+    height: 147px;
+    margin-left: 2rem;
+    margin-bottom: -3rem;
     background-image: url(ascii_fish.png);
 }
 /*Top site index*/
@@ -25,9 +24,9 @@ body {
     font: 500 1.4rem/3.6rem "DejaVuSansCondensed", Roboto, Verdana, "Helvetica Neue", Helvetica, Arial, sans-serif;
     border: none;
     color: white;
-    background-color: #1f2d53;
     text-align: center;
     position: relative;
+    background-color: #1f2d53;
     width: 100%;
     height: 3.6rem;
 }
@@ -47,21 +46,19 @@ body {
     font: 400 1.3rem/2.1rem "DejaVuSans", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 .fish_left_bar {
-    width: 250px;
+    width: 25rem;
     color: white;
     font-family: "DejaVuSansCondensed", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
     background-color: #1f2d53;
 }
-.fish_left_little { width: 200px; }
+.fish_left_little { width: 19rem; }
 .fish_right_bar {
-    margin-left: 250px;
+    margin-left: 25rem;
     margin-right: 0;
     padding: 0 3rem;
-    -moz-box-shadow: -6px 0 6px 4px black;
-    -webkit-box-shadow: -6px 0 6px 4px black;
     box-shadow: -0.3rem 0.3rem 1rem #000818;
 }
-.fish_right_big { margin-left: 200px; }
+.fish_right_big { margin-left: 19rem; }
 .fish_only_bar {
     width: 100%;
     padding-bottom: 3rem;
@@ -225,7 +222,7 @@ h1 > code, h2 > code, h3 > code {
 }
 /*Page overrides*/
 /*Documentation*/
-.docs_menu { line-height: 2rem }
+.docs_menu { line-height: 2rem; }
 .docs_menu > ul > li { position: static; }
 .docs_menu > ul ul { margin: 0.6rem 0; }
 .docs_menu > ul ul > li { margin-bottom: 0.2rem; }
@@ -238,9 +235,9 @@ h1 > code, h2 > code, h3 > code {
     padding: 0 4rem;
 }
 /*Commands*/
-.commands_menu { line-height: 2rem }
+.commands_menu { line-height: 2rem; }
 /*FAQ*/
-.faq_menu { line-height: 2rem }
+.faq_menu { line-height: 2rem; }
 .faq_menu > ul li { margin-bottom: 0.6rem; }
 /*Licenses*/
 .license {

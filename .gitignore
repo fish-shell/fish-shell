@@ -31,7 +31,6 @@ share/man/
 toc.txt
 user_doc/
 xcuserdata
-fish.xccheckout
 tests/*tmp.*
 tests/foo.txt
 FISH-BUILD-VERSION-FILE
@@ -40,9 +39,4 @@ messages.pot
 lexicon.txt
 lexicon_filter
 lexicon-debug.log
-
-Fish-Shell.sublime-workspace
-Fish-Shell.sublime-project
-.editorconfig
-doc_src/.editorconfig
 

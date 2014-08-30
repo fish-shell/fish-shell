@@ -1,0 +1,1862 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"font",
+				"font-style"
+			],
+			[
+				"pad",
+				"padding"
+			],
+			[
+				"pa",
+				"padding-left"
+			],
+			[
+				"re",
+				"relative"
+			],
+			[
+				"margin",
+				"margin-top"
+			],
+			[
+				"padding",
+				"padding-top"
+			],
+			[
+				"lexicon",
+				"lexicon_catalog"
+			],
+			[
+				"lexico",
+				"lexicon_catalog"
+			],
+			[
+				"fon",
+				"font-style"
+			],
+			[
+				"bor",
+				"border-bottom"
+			],
+			[
+				"bo",
+				"border-radius"
+			],
+			[
+				"background-c",
+				"background-color"
+			],
+			[
+				"over",
+				"overflow"
+			],
+			[
+				"fo",
+				"font-family"
+			],
+			[
+				"te",
+				"text-indent"
+			],
+			[
+				"min",
+				"min-height"
+			],
+			[
+				"ba",
+				"background-image"
+			],
+			[
+				"ma",
+				"margin"
+			],
+			[
+				"marg",
+				"margin-left"
+			],
+			[
+				"max",
+				"max-width"
+			],
+			[
+				"paddin",
+				"padding"
+			],
+			[
+				"border",
+				"border-radius"
+			],
+			[
+				"f",
+				"font-size"
+			],
+			[
+				"min-",
+				"min-width"
+			],
+			[
+				"block",
+				"inline-block"
+			],
+			[
+				"pre",
+				"pre-wrap"
+			],
+			[
+				"no",
+				"nowrap"
+			],
+			[
+				"mar",
+				"margin"
+			],
+			[
+				"padd",
+				"padding"
+			],
+			[
+				"html",
+				"html	html"
+			],
+			[
+				"ss",
+				"ssh_host1"
+			],
+			[
+				"mem",
+				"memberPrice"
+			],
+			[
+				"s",
+				"snapshot_"
+			],
+			[
+				"bl",
+				"blockReward"
+			],
+			[
+				"blco",
+				"blockData"
+			],
+			[
+				"ge",
+				"general_spend"
+			],
+			[
+				"ex",
+				"explain"
+			],
+			[
+				"c",
+				"cursor_"
+			],
+			[
+				"cu",
+				"cursor_"
+			],
+			[
+				"qu",
+				"query_"
+			],
+			[
+				"sort",
+				"sort_"
+			],
+			[
+				"q",
+				"query_"
+			],
+			[
+				"frame",
+				"frameSize"
+			],
+			[
+				"fram",
+				"frameSize"
+			],
+			[
+				"pr",
+				"processTick"
+			],
+			[
+				"da",
+				"data"
+			],
+			[
+				"doc",
+				"document_"
+			],
+			[
+				"tex",
+				"text-align"
+			],
+			[
+				"m",
+				"margin-left"
+			],
+			[
+				"_",
+				"_Interface"
+			],
+			[
+				"text",
+				"text-decoration"
+			],
+			[
+				"paddi",
+				"padding-top"
+			],
+			[
+				"border-b",
+				"border-bottom"
+			],
+			[
+				"suff",
+				"suffix_"
+			],
+			[
+				"vla",
+				"value_"
+			],
+			[
+				"pe",
+				"precision_"
+			],
+			[
+				"abs",
+				"absValue"
+			],
+			[
+				"refresh",
+				"refresh_"
+			],
+			[
+				"file",
+				"filename_"
+			],
+			[
+				"refr",
+				"refreshAgent"
+			],
+			[
+				"req",
+				"require"
+			],
+			[
+				"un",
+				"unitaryFiatPrice"
+			],
+			[
+				"vo",
+				"vol_cur"
+			],
+			[
+				"vin",
+				"vinData_"
+			],
+			[
+				"get",
+				"getRawTransaction"
+			],
+			[
+				"margi",
+				"margin-bottom"
+			],
+			[
+				"counter",
+				"counter-reset"
+			],
+			[
+				"coun",
+				"counter-increment"
+			],
+			[
+				"list",
+				"list-style-type"
+			],
+			[
+				"b",
+				"border"
+			],
+			[
+				"border-bo",
+				"border-bottom-right-radius"
+			],
+			[
+				"border-r",
+				"border-bottom-left-radius"
+			],
+			[
+				"back",
+				"background-color"
+			],
+			[
+				"med",
+				"medium"
+			],
+			[
+				"t",
+				"text-align"
+			],
+			[
+				"v",
+				"vertical-align"
+			],
+			[
+				"inl",
+				"inline-block"
+			],
+			[
+				"img",
+				"img	img"
+			],
+			[
+				"clean",
+				"clean_build"
+			],
+			[
+				"css",
+				"css-builder"
+			],
+			[
+				"ch",
+				"chartPanel"
+			],
+			[
+				"bac",
+				"background-color"
+			],
+			[
+				"val",
+				"valueAxis"
+			],
+			[
+				"up",
+				"updateBuffer"
+			],
+			[
+				"tick",
+				"tickData_"
+			],
+			[
+				"data",
+				"dataProvider"
+			],
+			[
+				"d",
+				"data_"
+			],
+			[
+				"sy",
+				"_symbol"
+			],
+			[
+				"co",
+				"conformerSnapshot_"
+			],
+			[
+				"process",
+				"process"
+			],
+			[
+				"col",
+				"colour"
+			],
+			[
+				"inde",
+				"indexReport"
+			],
+			[
+				"def",
+				"defaultIndices"
+			],
+			[
+				"tim",
+				"timestamp"
+			],
+			[
+				"con",
+				"conformer"
+			],
+			[
+				"divi",
+				"divisor"
+			],
+			[
+				"bit",
+				"bitcoinPrice"
+			],
+			[
+				"colo",
+				"colour_"
+			],
+			[
+				"field",
+				"field_"
+			],
+			[
+				"pro",
+				"protocol"
+			],
+			[
+				"bes",
+				"bestPrice"
+			],
+			[
+				"total",
+				"totalVolume"
+			],
+			[
+				"storage",
+				"storageMap_"
+			],
+			[
+				"las",
+				"last_id"
+			],
+			[
+				"_op",
+				"_openID"
+			],
+			[
+				"time",
+				"timestamp"
+			],
+			[
+				"days",
+				"daystamp"
+			],
+			[
+				"day",
+				"daystamp"
+			],
+			[
+				"_las",
+				"_lastMode"
+			],
+			[
+				"cli",
+				"clientInfo"
+			],
+			[
+				"limi",
+				"limit_"
+			],
+			[
+				"br",
+				"brightGreen"
+			],
+			[
+				"yellow",
+				"brightYellow"
+			],
+			[
+				"mark",
+				"marketIndex"
+			],
+			[
+				"xc",
+				"xcSource"
+			],
+			[
+				"dela",
+				"delayIncrement"
+			],
+			[
+				"del",
+				"delayOffset"
+			],
+			[
+				"net",
+				"networkID_"
+			],
+			[
+				"api",
+				"apiCoinID"
+			],
+			[
+				"real",
+				"_realtimeMetrics"
+			],
+			[
+				"snap",
+				"snapshot"
+			],
+			[
+				"exc",
+				"exchangeData_"
+			],
+			[
+				"exch",
+				"exchangeID_"
+			],
+			[
+				"_shou",
+				"_shouldStore"
+			],
+			[
+				"fn",
+				"fnZone"
+			],
+			[
+				"supp",
+				"supplySource"
+			],
+			[
+				"Block",
+				"blockOffset"
+			],
+			[
+				"top",
+				"topOffest"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "doc_src/FORMATTING.md",
+			"settings":
+			{
+				"buffer_size": 6126,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "Makefile.in",
+			"settings":
+			{
+				"buffer_size": 34459,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "Doxyfile.help",
+			"settings":
+			{
+				"buffer_size": 102690,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "Doxyfile.user",
+			"settings":
+			{
+				"buffer_size": 103736,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "Doxyfile",
+			"settings":
+			{
+				"buffer_size": 103115,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "doc_src/tutorial.hdr",
+			"settings":
+			{
+				"buffer_size": 17999,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "doc_src/faq.hdr",
+			"settings":
+			{
+				"buffer_size": 10388,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "Make Fish-Shell",
+	"command_palette":
+	{
+		"height": 313.0,
+		"selected_items":
+		[
+			[
+				"pac",
+				"Package Control: Install Package"
+			],
+			[
+				"sh",
+				"Scope Hunter: Toggle Instant Scoper"
+			],
+			[
+				"scop",
+				"Scope Hunter: Toggle Instant Scoper"
+			],
+			[
+				"scoc",
+				"Scope Hunter: Toggle Instant Scoper"
+			],
+			[
+				"scope",
+				"Scope Hunter: Show Scope Under Cursor(s)"
+			],
+			[
+				"sc",
+				"Scope Hunter: Show Scope Under Cursor(s)"
+			],
+			[
+				"pc",
+				"Package Control: Install Package"
+			],
+			[
+				"",
+				"Modific: Show uncommitted files"
+			],
+			[
+				"mod",
+				"Modific: Show diff"
+			],
+			[
+				"pc ",
+				"Package Control: Upgrade Package"
+			],
+			[
+				"pack",
+				"Package Control: Upgrade Package"
+			],
+			[
+				"Package Control: ",
+				"Package Control: Remove Package"
+			],
+			[
+				"sim",
+				"SimplestDebugger: Toggle"
+			],
+			[
+				"m",
+				"Modific: Show diff"
+			],
+			[
+				"lint",
+				"SublimeLinter: Show All Errors"
+			],
+			[
+				"b",
+				"Build: User Docs"
+			],
+			[
+				"edi",
+				"Set Syntax: EditorConfig"
+			],
+			[
+				"bui",
+				"Build: User Docs"
+			],
+			[
+				"packa",
+				"Package Control: Install Package"
+			],
+			[
+				"pa",
+				"Package Control: Upgrade Package"
+			],
+			[
+				"co",
+				"Color Picker"
+			],
+			[
+				"Snippet: ",
+				"Snippet: html"
+			],
+			[
+				"html",
+				"Set Syntax: HTML5"
+			],
+			[
+				"p",
+				"Package Control: Install Package"
+			],
+			[
+				"in",
+				"Package Control: Install Package"
+			],
+			[
+				"pak",
+				"Package Control: Enable Package"
+			],
+			[
+				"js",
+				"Format: Javascript"
+			],
+			[
+				"sub",
+				"SublimeLinter: Show All Errors"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"up",
+				"Package Control: Upgrade Package"
+			],
+			[
+				"tr",
+				"Transpose Character"
+			],
+			[
+				"rev",
+				"Permute Lines: Reverse"
+			]
+		],
+		"width": 579.0
+	},
+	"console":
+	{
+		"height": 603.0,
+		"history":
+		[
+			"-V",
+			"version",
+			"help",
+			"pysed",
+			"sed",
+			"clear()",
+			"clear",
+			"$PATH",
+			"?",
+			"help",
+			"import os; os.environ['PATH']",
+			"help",
+			"env",
+			"import urllib.request,os; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); open(os.path.join(ipp, pf), 'wb').write(urllib.request.urlopen( 'http://sublime.wbond.net/' + pf.replace(' ','%20')).read())"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": true,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/Users/Mark/Projects/OpenSource/fish-shell",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src"
+	],
+	"file_history":
+	[
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc/latex/tutorial.tex",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc/html/commands.html",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc/latex/commands.tex",
+		"/Users/Mark/Projects/OpenSource/fish-shell/Doxyfile",
+		"/Users/Mark/Projects/OpenSource/fish-shell/Doxyfile.help",
+		"/Users/Mark/Projects/OpenSource/fish-shell/Doxyfile.user",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/user_doc.css",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/design.hdr",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/alias.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/echo.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/open.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/while.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/vared.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/and.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/begin.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/bg.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/bind.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/block.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/break.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/breakpoint.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/builtin.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/case.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/cd.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/command.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/commandline.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/complete.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/contains.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/continue.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/count.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/dirh.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/dirs.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/else.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/emit.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/end.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/eval.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/exec.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/exit.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/faq.hdr",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/fg.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/fish.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/fish_config.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/fish_indent.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/fish_prompt.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/fish_right_prompt.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/for.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/funced.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/funcsave.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/function.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/functions.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/help.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/history.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/if.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/index.hdr.in",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/isatty.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/jobs.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/license.hdr",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/math.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/mimedb.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/nextd.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/not.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/or.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/popd.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/prevd.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/psub.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/pushd.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/random.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/read.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/return.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/set.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/set_color.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/source.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/status.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/switch.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/test.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/trap.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/tutorial.hdr",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/type.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/ulimit.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/umask.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/Makefile.in",
+		"/Users/Mark/Projects/OpenSource/fish-shell/lexicon_filter.in",
+		"/Users/Mark/Projects/OpenSource/fish-shell/lexicon.log",
+		"/usr/local/Library/Formula/fish.rb",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc.h",
+		"/Users/Mark/Projects/OpenSource/fish-shell/1",
+		"/Users/Mark/Projects/OpenSource/fish-shell/lexicon_filter",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_16914_31280.fish",
+		"/tmp/fish_funced_50461_21389.fish",
+		"/tmp/fish_funced_50461_10789.fish",
+		"/tmp/fish_funced_50461_8228.fish",
+		"/tmp/fish_funced_50461_8117.fish",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_16914_12938.fish",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_16914_8747.fish",
+		"/Users/Mark/Projects/OpenSource/fish-shell/lexicon.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/debug-lexicon.log",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/commands.hdr.in",
+		"/Users/Mark/Projects/OpenSource/fish-shell/config.h.in~",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/fish_lexicon_filter.in",
+		"/Users/Mark/Projects/OpenSource/fish-shell/README.md",
+		"/Users/Mark/Projects/OpenSource/fish-shell/configure.ac",
+		"/Users/Mark/Projects/OpenSource/fish-shell/build_tools/build_documentation.sh",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_13808_4039.fish",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_13808_22651.fish",
+		"/Users/Mark/.iterm2_shell_integration.bash",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_88080_32082.fish",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_88080_24515.fish",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_88080_4414.fish",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_88080_28344.fish",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_88080_17502.fish",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_88000_28171.fish",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_88080_1705.fish",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_88000_26059.fish",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_88000_3465.fish",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_88080_5922.fish",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_29780_28168.fish",
+		"/Users/Mark/Projects/OpenSource/fish-shell/share/man/man1/alias.1",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_29780_21538.fish",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_29780_7461.fish",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_29780_4834.fish",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_29780_2485.fish",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_29780_29584.fish",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_29780_3237.fish",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_29780_25359.fish",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_29780_21748.fish",
+		"/Users/Mark/Projects/OpenSource/fish-shell/share/man/man1/alias.1.tmp",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/fish_lexicon_filter",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_29780_17427.fish",
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_29780_11508.fish"
+	],
+	"find":
+	{
+		"height": 37.0
+	},
+	"find_in_files":
+	{
+		"height": 144.0,
+		"where_history":
+		[
+			"/Users/Mark/Projects/OpenSource/fish-shell/doc_src",
+			"/Users/Mark/Projects/OpenSource/fish-shell/doc_src, *.txt",
+			"",
+			"/Users/Mark/Projects/OpenSource/fish-shell/doc_src, *.txt",
+			"/Users/Mark/Projects/OpenSource/fish-shell, *.txt",
+			"/Users/Mark/Projects/OpenSource/fish-shell, *.txt, *.hdr",
+			"/Users/Mark/Projects/OpenSource/fish-shell, *.txt",
+			"/Users/Mark/Projects/OpenSource/fish-shell",
+			"/Users/Mark/Projects/OpenSource/fish-shell/,*.fish,-doc.h",
+			"/Users/Mark/Projects/OpenSource/fish-shell/,*.cpp,*.h,-doc.h",
+			"/Users/Mark/Projects/OpenSource/fish-shell/,*.*",
+			"/Users/Mark/Projects/OpenSource/fish-shell,./*.*",
+			"/Users/Mark/Projects/OpenSource/fish-shell,*.*",
+			"/Users/Mark/Projects/OpenSource/fish-shell/*.*",
+			"/Users/Mark/Projects/OpenSource/fish-shell",
+			"/Users/Mark/Projects/OpenSource/fish-shell/doc_src",
+			"",
+			"user_doc",
+			"/Users/Mark/Projects/OpenSource/fish-shell/doc_src",
+			"/Users/Mark/Projects/OpenSource/fish-shell/doc_src,*.in",
+			"/Users/Mark/Projects/OpenSource/fish-shell/doc_src,*.hdr.in",
+			"/Users/Mark/Projects/OpenSource/fish-shell/doc_src,*.hdr",
+			"/Users/Mark/Projects/OpenSource/fish-shell/doc_src,*.txt",
+			"/Users/Mark/Projects/OpenSource/fish-shell/doc_src",
+			"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/*.hdr.in",
+			"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/*.hdr",
+			"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/*.txt",
+			"/Users/Mark/Projects/OpenSource/fish-shell/doc_src",
+			"*.txt|*.hdr.in|*.hdr",
+			"",
+			"doc_src/*.txt",
+			"*.txt",
+			"",
+			"/Users/Mark/Projects/CryptoComp/CC-Engine",
+			"",
+			"-*node_modules*",
+			"",
+			"<open folders>",
+			""
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": true,
+		"find_history":
+		[
+			"float",
+			"!",
+			"ref",
+			"github",
+			"- ",
+			"dblq",
+			"/etc/shells",
+			"etc",
+			" :[^ ]",
+			"instructions",
+			"output",
+			"\\}\\\\\\n",
+			"curs",
+			"stname",
+			"span",
+			"args",
+			"^( *@cmnd\\{[^}]*\\})(.*)",
+			"^( *@cmnd[^}]*\\})(.*)",
+			"^( *)@cmnd{.*}(.*)",
+			"^( *)@cmnd(.*)",
+			"w lexicon.log",
+			"@key{tab}",
+			"@key{Tab}",
+			"@key{tab}",
+			"\\section",
+			"tut_lists",
+			"section|subsection",
+			"section",
+			"<i class=\"quote\">",
+			"foo.txt",
+			"span",
+			"match",
+			"b",
+			"TAB",
+			"<i class=\"quote\">",
+			"undr",
+			"/1",
+			"asis",
+			"span",
+			"^>",
+			"<([^ ]*)>([^<]*)</\\1>",
+			"<([^ ]*)>([^ ]*)</\\1>",
+			"cleanpath",
+			"ARGUMENTS...",
+			"echo 'foo fired';",
+			"</b>,",
+			"//",
+			"which",
+			"command",
+			"hostname",
+			"instructions",
+			"w debug-",
+			"/endfish",
+			"\\fish",
+			"*/",
+			"INPUT_FILTER",
+			"lexicon_filter",
+			"asis",
+			"FISH_BUILD_VERSION",
+			"docdir",
+			"install",
+			"command",
+			"doxygen",
+			"use_doxygen",
+			"HAVE_DOXYGEN",
+			"<<<<<<< HEAD",
+			"\\--",
+			"\\\\--",
+			"echo",
+			"SIGCHLD",
+			"execute",
+			"signal",
+			"reader_run_command",
+			"preexec",
+			"preexec_invoke_exec",
+			"preexec_interactive_mode",
+			"alias \\\\\\- ([^ ]*) ",
+			"roff",
+			" Synopsis\\n\n\\\\fish",
+			"Synopsis\\n\n\\\\fish",
+			"Synopsis\\n",
+			"w de",
+			"grep",
+			"[ ]*",
+			"debug",
+			"fish_lexicon_filter",
+			"FILTER",
+			"INPUT",
+			"I",
+			" *",
+			"sglq",
+			"dblq",
+			"asis",
+			"#Output",
+			"#OUtput",
+			".cli-dark ",
+			"width",
+			"optimizeLegibility",
+			"F",
+			"Background",
+			"/f",
+			"#f",
+			"--is",
+			"-login",
+			"$f",
+			"#f",
+			"\\\\fish\\{syn\\}",
+			"\\\\fish{syn}",
+			"\\fish{syn}",
+			"#f",
+			"[",
+			"etc/shells",
+			"curs",
+			"Alt+Up",
+			"@key",
+			"date",
+			"tutorial_nav",
+			"fsfo",
+			"fsnm",
+			"HELP_SRC",
+			"HTML_SRC",
+			".in",
+			"user_doc",
+			"Synopsis\n<pre>([^`]*)<pre>",
+			"Synopsis\n`([^`]*)`",
+			"Synopsis\n `([^`]*)`",
+			"Synopsis\n`",
+			"grep"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": true,
+		"replace_history":
+		[
+			"\n- ",
+			"sglq",
+			"$1@xcmd\\n$2/",
+			"$1@xbin\\n$2/",
+			"\\1@xbin\\\n\\2/",
+			"@key{Tab}",
+			"<m>b</m>",
+			"tab",
+			"<i>",
+			">_",
+			"\\2",
+			"</b>",
+			"w ",
+			"\\\\fB\\1\\\\fP -",
+			"\\\\fB\\1\\\\fP",
+			" *",
+			"\\\\fish{synopsis}",
+			"Synopsis\n\\\\fish{syn}\n$1\n\\\\endfish",
+			"Synopsis\n\\fish{syn}\n$1\n\\endfish",
+			"A-Za-z",
+			"/g",
+			"</g",
+			"/\\",
+			"{}",
+			"[[",
+			",",
+			"{\\1}",
+			"@",
+			"\\1@shel{\\2}/g",
+			"\\1@func{\\2}/g",
+			"/\\1@cmnd{\\2}/g",
+			"-]*\\)[[",
+			"]*\\)[[",
+			"\\1\\2",
+			"\\)[[:>:]]",
+			"\\([^$%-]\\)[[:<:]]\\(",
+			"\\]\\\\($1\\\\)\\[",
+			"\\]\\($1\\)\\[",
+			"\\1",
+			"[ ;(]",
+			"s/^",
+			"/",
+			",&darr;,Down}",
+			",&rarr;,Right}",
+			",&larr;,Left}",
+			",&rarr;,Left}",
+			",&larr;,Left}",
+			"@key{$1,&uarr;,$2}",
+			"(?(Up)$uarr;)@key{$1,$$2,$2}",
+			"@key{$1,&uarr;,$2}",
+			"Control",
+			"@key{$1}",
+			"@key{$1,$2}",
+			"{\\1} /",
+			" /",
+			"\\1",
+			"\\)[[:>:]] ",
+			")[[:>:]] ",
+			"[[:<:]]\\(",
+			"cmnd",
+			" [^>]*>",
+			"[^>][^>]*>",
+			"[[:>:]]",
+			"[[:<:]]",
+			"\\>/",
+			"\\<",
+			"/>",
+			"\\<",
+			"[[:>:]]/@",
+			"\\)[[:>:]]",
+			"[[:>:]]\\)/@shl{\\1}",
+			"[[:>:]]\\)/@cmd{\\1}",
+			"\\)[[:>:]]",
+			"\\1",
+			"\\]\\](\\1)\\[\\[",
+			"\\]\\]\\1\\[\\[",
+			"s/[^\\{][[:<:]](function)[[:>:]]/@cmd{\\1}/",
+			"s/[^\\{][[:<:]]",
+			"s/[^{][[:<:]]",
+			"s/[[:<:]]$1[[:>:]]/@",
+			"s/\\\\b$1\\\\b/@",
+			"s/\\b$1\\b/@",
+			"/",
+			"&",
+			"\\)",
+			"\\(",
+			"{\\1}",
+			")[ ]/@cmd",
+			"[ ]/@cmd",
+			"\\fish",
+			"\\n\\\\fish\\n$1\\n\\\\endfish",
+			"\\\\fish\\n$1\\n\\\\endfish",
+			"\\\\fish\\\\n$1\\\\n\\\\endfish",
+			"\\fish\\n$1\\n\\endfish",
+			"\n\n\n",
+			"    ",
+			"<span class=\"u\">$1</span>",
+			"\\section",
+			"\\fish{cli-dark}",
+			"`$1`",
+			"`",
+			"<$1code>",
+			"<([/]*)code>",
+			"Control-",
+			"\\\\$1fish",
+			"1E335E",
+			"Ctrl",
+			"<b class=\"key\">$1</b>",
+			"<b class=\"key\">$1$2</b>",
+			"<b class=\"key\">$1</b>",
+			"<b>$1</b>",
+			"`Home`",
+			"<b>$1-$2</b>",
+			"<b>$1-$2</d>",
+			"`",
+			"`$1`",
+			"$2`$1`$2",
+			"`$1`",
+			"`",
+			"</code>'",
+			"'<code>",
+			"`'",
+			"'`",
+			"<code>fish</code>",
+			"- ",
+			"<h3>$1</h3>",
+			" -# ",
+			" -#"
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 4,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "doc_src/FORMATTING.md",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 6126,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								5237,
+								5237
+							]
+						],
+						"settings":
+						{
+							"BracketHighlighterBusy": false,
+							"bh_regions":
+							[
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close"
+							],
+							"syntax": "Packages/MarkdownEditing/Markdown.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 1692.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "Makefile.in",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 34459,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								7138,
+								7138
+							]
+						],
+						"settings":
+						{
+							"BracketHighlighterBusy": false,
+							"bh_regions":
+							[
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close"
+							],
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 3682.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "Doxyfile.help",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 102690,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								10175,
+								10175
+							]
+						],
+						"settings":
+						{
+							"BracketHighlighterBusy": false,
+							"bh_regions":
+							[
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close"
+							],
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 3051.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "Doxyfile.user",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 103736,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								10080,
+								10080
+							]
+						],
+						"settings":
+						{
+							"BracketHighlighterBusy": false,
+							"bh_regions":
+							[
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close"
+							],
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 3096.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "Doxyfile",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 103115,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								10419,
+								10419
+							]
+						],
+						"settings":
+						{
+							"BracketHighlighterBusy": false,
+							"bh_regions":
+							[
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close"
+							],
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 3307.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "doc_src/tutorial.hdr",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 17999,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								6360,
+								6360
+							]
+						],
+						"settings":
+						{
+							"BracketHighlighterBusy": false,
+							"bh_regions":
+							[
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close"
+							],
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 2511.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "doc_src/faq.hdr",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 10388,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2690,
+								2668
+							]
+						],
+						"settings":
+						{
+							"BracketHighlighterBusy": false,
+							"bh_regions":
+							[
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close"
+							],
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 742.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 6,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 23.0
+	},
+	"input":
+	{
+		"height": 35.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 218.0
+	},
+	"output.find_results":
+	{
+		"height": 102.0
+	},
+	"output.scope_viewer":
+	{
+		"height": 102.0
+	},
+	"output.unsaved_changes":
+	{
+		"height": 102.0
+	},
+	"output.vcs":
+	{
+		"height": 102.0
+	},
+	"project": "Fish-Shell.sublime-project",
+	"replace":
+	{
+		"height": 66.0
+	},
+	"save_all_on_build": false,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+			[
+				"share/functions/__fish_config_interactive.fish",
+				"fish-shell/share/functions/__fish_config_interactive.fish"
+			],
+			[
+				"",
+				"fish-shell/fish_lexicon_filter.sh"
+			],
+			[
+				"in",
+				"fish-shell/doc_src/index.hdr.in"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 500.0,
+		"selected_items":
+		[
+			[
+				"",
+				"/Users/Mark/Documents/Max/Packages/MarxLib/misc/MarxLib.sublime-project"
+			]
+		],
+		"width": 380.0
+	},
+	"select_symbol":
+	{
+		"height": 375.0,
+		"selected_items":
+		[
+		],
+		"width": 985.0
+	},
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": true,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 282.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

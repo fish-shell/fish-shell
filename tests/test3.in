@@ -233,4 +233,8 @@ echo $testu
 echo Missing: $testu
 ../fish -c 'echo Missing: $testu'
 
+# test SHLVL
+# use a subshell to ensure a clean slate
+env SHLVL= ../fish -c 'echo SHLVL: $SHLVL; ../fish -c \'echo SHLVL: $SHLVL\''
+
 true

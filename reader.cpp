@@ -3117,7 +3117,10 @@ const wchar_t *reader_readline(void)
                             c = 0;
                             break;
                         }
-                        c = input_readch();
+                        // only allow commands on the first key; otherwise, we might
+                        // have data we need to insert on the commandline that the
+                        // commmand might need to be able to see.
+                        c = input_readch(i == 1);
                         if ((!wchar_private(c)) && (c>31) && (c != 127))
                         {
                             arr[i]=c;

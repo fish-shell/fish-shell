@@ -90,7 +90,7 @@ A program should be designed to make its features as easy as possible to discove
 Rationale:
 A program whose features are discoverable turns a new user into an expert in a shorter span of time, since the user will become an expert on the program simply by using it.
 
-The main benefit of a graphical program over a command line-based program is discoverability. In a graphical program, one can discover all the common features by simply looking at the user interface and guessing what the different buttons, menus and other widgets do. The traditional way to discover features in commandline programs is through manual pages. This requires both that the user starts to use a different program, and the she/he then remembers the new information until the next time she/he uses the same program.
+The main benefit of a graphical program over a command line-based program is discoverability. In a graphical program, one can discover all the common features by simply looking at the user interface and guessing what the different buttons, menus and other widgets do. The traditional way to discover features in commandline programs is through manual pages. This requires both that the user starts to use a different program, and then she/he remembers the new information until the next time she/he uses the same program.
 
 Examples:
 - Everything should be tab-completable, and every tab completion should have a description.

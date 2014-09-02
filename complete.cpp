@@ -200,7 +200,7 @@ public:
 
     /** Adds or removes an option. */
     void add_option(const complete_entry_opt_t &opt);
-    bool remove_option(wchar_t short_opt, const wchar_t *long_opt);
+    bool remove_option(wchar_t short_opt, const wchar_t *long_opt, int old_mode);
 
     /** Getter for short_opt_str. */
     wcstring &get_short_opt_str();
@@ -464,7 +464,7 @@ completion_autoload_t::completion_autoload_t() : autoload_t(L"fish_complete_path
 /** Callback when an autoloaded completion is removed */
 void completion_autoload_t::command_removed(const wcstring &cmd)
 {
-    complete_remove(cmd.c_str(), COMMAND, 0, 0);
+    complete_remove(cmd.c_str(), COMMAND, 0, 0, 0);
 }
 
 
@@ -617,7 +617,7 @@ void complete_add(const wchar_t *cmd,
    specified short / long option strings. Returns true if it is now
    empty and should be deleted, false if it's not empty. Must be called while locked.
 */
-bool completion_entry_t::remove_option(wchar_t short_opt, const wchar_t *long_opt)
+bool completion_entry_t::remove_option(wchar_t short_opt, const wchar_t *long_opt, int old_mode)
 {
     ASSERT_IS_LOCKED(completion_lock);
     ASSERT_IS_LOCKED(completion_entry_lock);
@@ -631,7 +631,7 @@ bool completion_entry_t::remove_option(wchar_t short_opt, const wchar_t *long_op
         {
             complete_entry_opt_t &o = *iter;
             if ((short_opt && short_opt == o.short_opt) ||
-                (long_opt && long_opt == o.long_opt))
+                (long_opt && long_opt == o.long_opt && old_mode == o.old_mode))
             {
                 /*      fwprintf( stderr,
                       L"remove option -%lc --%ls\n",
@@ -669,7 +669,8 @@ bool completion_entry_t::remove_option(wchar_t short_opt, const wchar_t *long_op
 void complete_remove(const wchar_t *cmd,
                      bool cmd_is_path,
                      wchar_t short_opt,
-                     const wchar_t *long_opt)
+                     const wchar_t *long_opt,
+                     int old_mode)
 {
     CHECK(cmd,);
     scoped_lock lock(completion_lock);
@@ -680,7 +681,7 @@ void complete_remove(const wchar_t *cmd,
     if (iter != completion_set.end())
     {
         completion_entry_t *entry = *iter;
-        bool delete_it = entry->remove_option(short_opt, long_opt);
+        bool delete_it = entry->remove_option(short_opt, long_opt, old_mode);
         if (delete_it)
         {
             /* Delete this entry */

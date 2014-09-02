@@ -224,6 +224,14 @@ static void  builtin_complete_remove2(const wchar_t *cmd,
             }
         }
     }
+    else if (gnu_opt.empty() && old_opt.empty())
+    {
+        complete_remove(cmd,
+                        cmd_type,
+                        0,
+                        0,
+                        0);
+    }
     else
     {
         builtin_complete_remove3(cmd,

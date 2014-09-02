@@ -17,6 +17,12 @@ complete -C'BBBB -'
 # Test that erasing completions works correctly
 echo
 
+function sort
+    # GNU sort is really stupid, a non-C locale seems to make it assume --dictionary-order
+    # If I wanted --dictionary-order, I would have specified --dictionary-order!
+    env LC_ALL=C sort $argv
+end
+
 complete -c CCCC -l bar
 complete -c CCCC -l baz
 complete -c CCCC -o bar

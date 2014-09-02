@@ -630,7 +630,8 @@ bool completion_entry_t::remove_option(wchar_t short_opt, const wchar_t *long_op
         for (option_list_t::iterator iter = this->options.begin(); iter != this->options.end();)
         {
             complete_entry_opt_t &o = *iter;
-            if (short_opt==o.short_opt || (long_opt && long_opt == o.long_opt))
+            if ((short_opt && short_opt == o.short_opt) ||
+                (long_opt && long_opt == o.long_opt))
             {
                 /*      fwprintf( stderr,
                       L"remove option -%lc --%ls\n",

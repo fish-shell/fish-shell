@@ -11,11 +11,13 @@ history ( --search | --delete ) [ --prefix "prefix string" | --contains "search 
 `history` is used to list, search and delete the history of commands used.
 
 The following options are available:
+- `--merge` immediately incorporates history changes from other sessions. Ordinarily `fish` ignores history changes from sessions started after the current one. This command applies those changes immediately.
+
 - `--save` saves all changes in the history file. The shell automatically saves the history file; this option is provided for internal use.
 
 - `--clear` clears the history file. A prompt is displayed before the history is erased.
 
-- `--merge` immediately incorporates history changes from other sessions. Ordinarily `fish` ignores history changes from sessions started after the current one. This command applies those changes immediately.- `--search` returns history items in keeping with the `--prefix` or `--contains` options.
+- `--search` returns history items in keeping with the `--prefix` or `--contains` options.
 
 - `--delete` deletes history items.
 

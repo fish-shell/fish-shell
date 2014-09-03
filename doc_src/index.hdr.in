@@ -138,49 +138,46 @@ separation of errors and warnings from regular program output.
 
 Any file descriptor can be directed to a different output than its default through a simple mechanism called a redirection.
 
+An example of a file redirection is `echo hello > output.txt`, which directs the output of the echo command to the file output.txt.
 
-- To read standard input from a file, write <code>\<SOURCE_FILE</code>
-- To write standard output to a file, write <code>\>DESTINATION</code>
-- To write standard error to a file, write <code>^DESTINATION</code>
-- To append standard output to a file, write <code>\>\>DESTINATION_FILE</code>
-- To append standard error to a file, write <code>^^DESTINATION_FILE</code>
+- To read standard input from a file, write `<SOURCE_FILE`
+- To write standard output to a file, write `DESTINATION`
+- To write standard error to a file, write `^DESTINATION`
+- To append standard output to a file, write `>>DESTINATION_FILE`
+- To append standard error to a file, write `^^DESTINATION_FILE`
 
-- To redirect standard input, write `<SOURCE_FILE`
-- To redirect standard output, write `>DESTINATION`
-- To redirect standard error, write `^DESTINATION`
-- To redirect standard output to a file which will be appended, write `>>DESTINATION_FILE`
-- To redirect standard error to a file which will be appended, write `^^DESTINATION_FILE`
+`DESTINATION` can be one of the following:
 
 - A filename. The output will be written to the specified file.
-- An ampersand (\&) followed by the number of another file descriptor. The output will be written to that file descriptor instead.
-- An ampersand followed by a minus sign (\&-). The file descriptor will be closed.
+
+- An ampersand (`&`) followed by the number of another file descriptor. The output will be written to that file descriptor instead.
+
+- An ampersand followed by a minus sign (`&-`). The file descriptor will be closed.
 
 Example:
 
 To redirect both standard output and standard error to the file 'all_output.txt', you can write `echo Hello > all_output.txt ^&1`.
 
-Any FD can be redirected in an arbitrary way by prefixing the redirection with the number of the FD.
-
 Any file descriptor can be redirected in an arbitrary way by prefixing the
 redirection with the file descriptor.
 
-- To redirect input of FD N, write <code>N\<DESTINATION</code>
-- To redirect output of FD N, write <code>N\>DESTINATION</code>
-- To append the output of FD N to a file, write <code>N\>\>DESTINATION_FILE</code>
+- To redirect input of FD N, write `N<DESTINATION`
+- To redirect output of FD N, write `N>DESTINATION`
+- To append the output of FD N to a file, write `N>>DESTINATION_FILE`
 
-Example: <code>echo Hello 2\>output.stderr</code> and <code>echo Hello
-^output.stderr</code> are equivalent, and write the standard error (file
-descriptor 2) of the target program to <code>output.stderr</code>.
+Example: `echo Hello 2>output.stderr` and `echo Hello
+^output.stderr` are equivalent, and write the standard error (file
+descriptor 2) of the target program to `output.stderr`.
 
 \subsection piping Piping
 
-The user can string together multiple commands into a so called pipeline. This means that the standard output of one command will be read in as standard input into the next command. This is done by separating the commands by the pipe character '`|`'. For example
+The user can string together multiple commands into a so called pipeline. This means that the standard output of one command will be read in as standard input into the next command. This is done by separating the commands by the pipe character '`|`'. For example:
 
 \fish
 cat foo.txt | head
 \endfish
 
-will call the `cat` program with the parameter 'foo.txt', which will print the contents of the file 'foo.txt'. The contents of foo.txt will then be filtered through the program 'head', which will pass on the first ten lines of the file to the screen. For more information on how to combine commands through pipes, read the manual pages of the commands you want to use using the `man` command. If you want to find out more about the `cat` program, type `man cat`.
+This will call the `cat` program with the parameter 'foo.txt', which will print the contents of the file 'foo.txt'. The contents of foo.txt will then be filtered through the program 'head', which will pass on the first ten lines of the file to the screen. For more information on how to combine commands through pipes, read the manual pages of the commands you want to use using the `man` command. If you want to find out more about the `cat` program, type `man cat`.
 
 Pipes usually connect file descriptor 1 (standard output) of the first process to file descriptor 0 (standard input) of the second process. It is possible use a different output file descriptor by prepending the desired FD number and then output redirect symbol to the pipe. For example:
 
@@ -188,7 +185,7 @@ Pipes usually connect file descriptor 1 (standard output) of the first process t
 make fish 2> | less
 \endfish
 
-will attempt to build the fish program, and any errors will be shown using the less pager.
+This will attempt to build the fish program, and any errors will be shown using the less pager.
 
 
 \subsection syntax-background Background jobs
@@ -420,12 +417,7 @@ Note that if no matches are found for a specific wildcard, it will expand into z
 
 \subsection expand-command-substitution Command substitution
 
-The output of a series of commands can be used as the parameters to another
-command. If a parameter contains a set of parenthesis, the text enclosed by the
-parenthesis will be interpreted as a list of commands. On expansion,
-this list is executed, and substituted by the output. If the output is
-more than one line long, each line will be expanded to a new
-parameter. Setting \c IFS to the empty string will disable line splitting.
+The output of a series of commands can be used as the parameters to another command. If a parameter contains a set of parenthesis, the text enclosed by the parenthesis will be interpreted as a list of commands. On expansion, this list is executed, and substituted by the output. If the output is more than one line long, each line will be expanded to a new parameter. Setting `IFS` to the empty string will disable line splitting.
 
 The exit status of the last run command substitution is available in the <a href='#variables-status'>status</a> variable.
 
@@ -436,13 +428,14 @@ Examples:
 echo (basename image.jpg .jpg).png
 # Outputs 'image.png'.
 
-The command `echo (basename image.jpg .jpg).png` will output 'image.png'.
+for i in *.jpg; convert $i (basename $i .jpg).png; end
+# Convert all JPEG files in the current directory to the
+# PNG format using the 'convert' program.
 
-The command `for i in *.jpg; convert $i (basename $i .jpg).png; end` will convert all JPEG files in the current directory to the PNG format using the `convert` program.
-
-The command <code>begin; set -l IFS; set data (cat data.txt); end</code>
-will set the \c data variable to the contents of 'data.txt' without
-splitting it into an array.
+begin; set -l IFS; set data (cat data.txt); end
+# Set the `data` variable to the contents of 'data.txt'
+# without splitting it into an array.
+\endfish
 
 
 \subsection expand-brace Brace expansion
@@ -723,31 +716,46 @@ All arrays are one-dimensional and cannot contain other arrays, although it is p
 
 \subsection variables-special Special variables
 
-The user can change the settings of \c fish by changing the values of
+The user can change the settings of `fish` by changing the values of
 certain environment variables.
 
-- \c BROWSER, the user's preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
-- \c CDPATH, an array of directories in which to search for the new directory for the \c cd builtin. By default, the fish configuration defines \c CDPATH to be a universal variable with the values \c . and \c ~.
-- A large number of variable starting with the prefixes \c fish_color and \c fish_pager_color. See <a href='#variables-color'>Variables for changing highlighting colors</a> for more information.
-- \c fish_greeting, the greeting message printed on startup.
-- \c LANG, \c LC_ALL, \c LC_COLLATE, \c LC_CTYPE, \c LC_MESSAGES, \c LC_MONETARY, \c LC_NUMERIC and \c LC_TIME set the language option for the shell and subprograms. See the section <a href='#variables-locale'>Locale variables</a> for more information.
-- \c fish_user_paths, an array of directories that are prepended to PATH. This can be a universal variable.
-- \c PATH, an array of directories in which to search for commands
-- \c umask, the current file creation mask. The preferred way to change the umask variable is through the <a href="commands.html#umask">umask function</a>. An attempt to set umask to an invalid value will always fail.
+- `BROWSER`, the user's preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
 
-\c fish also sends additional information to the user through the
+- `CDPATH`, an array of directories in which to search for the new directory for the `cd` builtin. By default, the fish configuration defines `CDPATH` to be a universal variable with the values `.` and `~`.
+
+- A large number of variable starting with the prefixes `fish_color` and `fish_pager_color.` See <a href='#variables-color'>Variables for changing highlighting colors</a> for more information.
+
+- `fish_greeting`, the greeting message printed on startup.
+
+- `LANG`, `LC_ALL`, `LC_COLLATE`, `LC_CTYPE`, `LC_MESSAGES`, `LC_MONETARY`, `LC_NUMERIC` and `LC_TIME` set the language option for the shell and subprograms. See the section <a href='#variables-locale'>Locale variables</a> for more information.
+
+- `fish_user_paths`, an array of directories that are prepended to `PATH`. This can be a universal variable.
+
+- `PATH`, an array of directories in which to search for commands
+
+- `umask`, the current file creation mask. The preferred way to change the umask variable is through the <a href="commands.html#umask">umask function</a>. An attempt to set umask to an invalid value will always fail.
+
+`fish` also sends additional information to the user through the
 values of certain environment variables. The user cannot change the
 values of most of these variables.
 
-- \c _, the name of the currently running command.
-- \c argv, an array of arguments to the shell or function. \c argv is only defined when inside a function call, or if fish was invoked with a list of arguments, like 'fish myscript.fish foo bar'. This variable can be changed by the user.
-- \c history, an array containing the last commands that were entered.
-- \c HOME, the user's home directory. This variable can be changed by the user.
-- \c IFS, the internal field separator that is used for word splitting with the <a href="commands.html#read">read builtin</a>. Setting this to the empty string will also disable line splitting in <a href="#expand-command-substitution">command substitution</a>. This variable can be changed by the user.
-- \c PWD, the current working directory.
-- \c status, the <a href="#variables-status">exit status</a> of the last foreground job to exit. If the job was terminated through a signal, the exit status will be 128 plus the signal number.
-- \c USER, the current username. This variable can be changed by the user.
-- \c CMD_DURATION, the runtime of the last command in milliseconds.
+- `_`, the name of the currently running command.
+
+- `argv`, an array of arguments to the shell or function. `argv` is only defined when inside a function call, or if fish was invoked with a list of arguments, like `fish myscript.fish foo bar`. This variable can be changed by the user.
+
+- `history`, an array containing the last commands that were entered.
+
+- `HOME`, the user's home directory. This variable can be changed by the user.
+
+- `IFS`, the internal field separator that is used for word splitting with the <a href="commands.html#read">read builtin</a>. Setting this to the empty string will also disable line splitting in <a href="#expand-command-substitution">command substitution</a>. This variable can be changed by the user.
+
+- `PWD`, the current working directory.
+
+- `status`, the <a href="#variables-status">exit status</a> of the last foreground job to exit. If the job was terminated through a signal, the exit status will be 128 plus the signal number.
+
+- `USER`, the current username. This variable can be changed by the user.
+
+- `CMD_DURATION`, the runtime of the last command in milliseconds.
 
 The names of these variables are mostly derived from the csh family of shells and differ from the ones used by Bourne style shells such as bash.
 
@@ -756,9 +764,9 @@ Variables whose name are in uppercase are exported to the commands started by fi
 Variables whose name are in uppercase are exported to the commands
 started by fish, while those in lowercase are not exported. This rule is not
 enforced by fish, but it is good coding practice to use casing to
-distinguish between exported and unexported variables. \c fish also
+distinguish between exported and unexported variables. `fish` also
 uses several variables internally. Such variables are prefixed with
-the string \c __FISH or \c __fish. These should never be used by the
+the string `__FISH` or `__fish.` These should never be used by the
 user. Changing their value may break fish.
 
 \subsection variables-status The status variable
@@ -1007,7 +1015,6 @@ function on_exit --on-process %self
 end
 \endfish
 
-
 <a href="#variables-universal">Universal variables</a> are stored in the file `.config/fish/fishd.MACHINE_ID`, where MACHINE_ID is typically your MAC address. Do not edit this file directly, as your edits may be overwritten. Edit them through fish scripts or by using fish interactively instead.
 
 
@@ -1038,35 +1045,21 @@ set fish_color_error black --background=red --bold
 
 \subsection title Programmable title
 
-When using most virtual terminals, it is possible to set the message
-displayed in the titlebar of the terminal window. This can be done
-automatically in fish by defining the \c fish_title function. The \c
-fish_title function is executed before and after a new command is
-executed or put into the foreground and the output is used as a
-titlebar message. The $_ environment variable will always contain the
-name of the job to be put into the foreground (Or 'fish' if control is
-returning to the shell) when the \c fish_prompt function is called.
-The first argument to fish_title will contain the most
-recently executed foreground command as a string, starting with fish 2.2.
+When using most virtual terminals, it is possible to set the message displayed in the titlebar of the terminal window. This can be done automatically in fish by defining the `fish_title` function. The `fish_title` function is executed before and after a new command is executed or put into the foreground and the output is used as a titlebar message. The $_ environment variable will always contain the name of the job to be put into the foreground (Or 'fish' if control is returning to the shell) when the `fish_prompt` function is called. The first argument to fish_title will contain the most recently executed foreground command as a string, starting with fish 2.2.
 
 Examples:
-<p>
-The default \c fish title is
-</p>
-<p>
-<pre>
+The default `fish` title is
+
+\fish
 function fish_title
     echo $_ ' '
     pwd
 end
-</pre>
-</p>
+\endfish
 
-<p>
 To show the last command in the title:
-</p>
-<p>
-<pre>
+
+\fish
 function fish_title
     echo $argv[1]
 end
@@ -1117,7 +1110,7 @@ If you install fish in your home directory, fish will not work correctly for any
 If you have a question not answered by this documentation, there are several avenues for help:
 
 -# The official mailing list at <a href='https://lists.sf.net/lists/listinfo/fish-users'>fish-users@lists.sf.net</a>
--# The Internet Relay Chat channel, \c #fish on \c irc.oftc.net
+-# The Internet Relay Chat channel, `#fish` on `irc.oftc.net`
 -# The <a href="https://github.com/fish-shell/fish-shell/">project GitHub page</a>
 
 

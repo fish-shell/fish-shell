@@ -1,22 +1,24 @@
 \section command command - run a program
 
 \subsection command-synopsis Synopsis
-<tt>command [OPTIONS] COMMANDNAME [ARGS...]</tt>
+\fish{synopsis}
+command [OPTIONS] COMMANDNAME [ARGS...]
+\endfish
 
 \subsection command-description Description
 
 `command` forces the shell to execute the program `COMMANDNAME` and ignore any functions or builtins with the same name.
 
 The following options are available:
-- \c -h or \c --help prints help and then exits.
-- \c -s or \c --search returns the name of the disk file that would be executed, or nothing if no file with the specified name could be found in the <tt>$PATH</tt>.
 
-With the \c -s option, \c command treats every argument as a separate command to look up and sets the exit status to 0 if any of the specified commands were found, or 1 if no commands could be found.
+- `-s` or `--search` returns the name of the disk file that would be executed, or nothing if no file with the specified name could be found in the `$PATH`.
 
-For basic compatibility with POSIX <tt>command</tt>, the \c -v flag is recognized as an alias for <tt>-s</tt>.
+With the `-s` option, `command` treats every argument as a separate command to look up and sets the exit status to 0 if any of the specified commands were found, or 1 if no commands could be found.
+
+For basic compatibility with POSIX `command`, the `-v` flag is recognized as an alias for `-s`.
 
 \subsection command-example Examples
 
-<tt>command ls</tt> causes fish to execute the \c ls program, even if an 'ls' function exists.
+`command ls` causes fish to execute the `ls` program, even if an `ls` function exists.
 
-<tt>command -s ls</tt> returns the path to the \c ls program.
+`command -s ls` returns the path to the `ls` program.

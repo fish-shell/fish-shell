@@ -11,15 +11,17 @@ With no options, `type` indicates how each `NAME` would be interpreted if used a
 
 The following options are available:
 
-- \c -h or \c --help prints help and then exits.
-- \c -a or \c --all prints all of possible definitions of the specified names.
-- \c -f or \c --no-functions suppresses function and builtin lookup.
-- \c -t or \c --type prints <tt>function</tt>, <tt>builtin</tt>, or <tt>file</tt> if \c NAME is a shell function, builtin, or disk file, respectively.
-- \c -p or \c --path returns the name of the disk file that would be executed, or nothing if 'type  -t  name' would not return 'file'.
-- \c -P or \c --force-path returns the name of the disk file that would be executed, or nothing if no file with the specified name could be found in the <tt>$PATH</tt>.
-- \c -q or \c --quiet suppresses all output; this is useful when testing the exit status.
+- `-a` or `--all` prints all of possible definitions of the specified names.
 
-`type` sets the exit status to 0 if the specified command was found, and 1 if it could not be found.
+- `-f` or `--no-functions` suppresses function and builtin lookup.
+
+- `-t` or `--type` prints `function`, `builtin`, or `file` if `NAME` is a shell function, builtin, or disk file, respectively.
+
+- `-p` or `--path` returns the name of the disk file that would be executed, or nothing if `type  -t  name` would not return `file`.
+
+- `-P` or `--force-path` returns the name of the disk file that would be executed, or nothing if no file with the specified name could be found in the <tt>$PATH</tt>.
+
+- `-q` or `--quiet` suppresses all output; this is useful when testing the exit status.
 
 
 \subsection type-example Example

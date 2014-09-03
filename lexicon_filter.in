@@ -272,8 +272,8 @@ x
 G
 #.
 # Uncomment the folowing two lines (ss) to log the buffer join.
-s/^.*$/JOIN: &/w debug-lexicon.log
-s/^JOIN: //
+s/^.*$/Joined  : &/w lexicon.log
+s/^Joined  : //
 #.
 # Iterate over alternate lines, matching '<' to '\'
 :join
@@ -617,8 +617,8 @@ s/\([^@]\)\([A-Za-z0-9_-][A-Za-z0-9_-]*\.[a-z0-9*][a-z0-9*]*\)/\1@fsfo{\2}/g
 # As the lexicon is written into the output lexicon_filter, portability is
 # automatically handled.
 #.
-#!# sbin whoami
-#!# sbin mkdir
-#!# sbin basename
-#!# cmnd sleep
+#!# cmnd whoami
+#!# cmnd mkdir
+#!# cmnd basename
+#!# bltn sleep
 #!# args in

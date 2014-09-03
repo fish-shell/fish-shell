@@ -1,14 +1,14 @@
 # Formatting guide for fish docs
 
-The fish documentation has been updated to support Doxygen 1.8+, and while the main benefit of this change is extensive markdown support, the addition of a fish lexicon and syntax filter, combined with semantic markup rules allows for automatic formatting enhancements across the HTML user_docs, the developer docs and the man pages.
+The fish documentation has been updated to support Doxygen 1.8+, and while the main benefit of this change is extensive Markdown support, the addition of a fish lexicon and syntax filter, combined with semantic markup rules allows for automatic formatting enhancements across the HTML user_docs, the developer docs and the man pages.
 
-Initially my motivation was to fix a problem with long options (see [Issue #1557](https://github.com/fish-shell/fish-shell/issues/1557) on GitHub), but as I worked on fixing the issue I realised there was an opportunity to simplify, reinforce and clarify the current documentation, hopefully making further contribution easier and cleaner, while allowing the documentation examples to presented more clearly with less author effort.
+Initially my motivation was to fix a problem with long options ([Issue #1557](https://github.com/fish-shell/fish-shell/issues/1557) on GitHub), but as I worked on fixing the issue I realised there was an opportunity to simplify, reinforce and clarify the current documentation, hopefully making further contribution easier and cleaner, while allowing the documentation examples to presented more clearly with less author effort.
 
 While the documentation is pretty robust to variations in the documentation source, adherence to the following style guide will help keep the already excellent documention in good shape moving forward.
 
 ## Line breaks and wrapping
 
-Contrary to the rest of the fish source code, the documentation greatly benefits from the use of long lines and soft wrapping. It allows paragraphs to be treated as complete blocks by Doxygen, means that the semantic filter can see complete lines when deciding on how to apply syntax highlighting, and means that man pages will consistently wrap to the width of the users console in more advanced pagers, such as 'most'. 
+Contrary to the rest of the fish source code, the documentation greatly benefits from the use of long lines and soft wrapping. It allows paragraphs to be treated as complete blocks by Doxygen, means that the semantic filter can see complete lines when deciding on how to apply syntax highlighting, and means that man pages will consistently wrap to the width of the users console in advanced pagers, such as 'most'. 
 
 ## Doxygen special commands and aliases
 
@@ -68,7 +68,72 @@ And a simple HTML version for the developer docs (`make doc`) and the LATEX/PDF 
 
 `echo hello world`
 
+### Fonts
+
+In older browsers, it was easy to set the fonts used for the three basic type styles (serif, sans-serif and monospace). Modern browsers have removed these options in their respective quests for simplification, assuming the content author will provide suitable styles for the content in the site's CSS, or the end user will provide overriding styles manually. Doxygen's default styling is very simple and most users just accept this default.
+
+I've tried to use a sensible set of fonts in the documentation's CSS based on 'good' terminal fonts and as a result the firt preference font used throughout the documentation is '[DejaVu](http://dejavu-fonts.org)'. The rationale behaind this is that while DejaVu is getting a little long in the tooth, it still provides the most complete support across serif, sans-serif and monospace styles, has the widest support for extended Unicode characters and has a free, permissive licenses (though it's still incompatible with GPLv2, though arguably less so than the SIL Open Font license, though this is a moot point when using it solely in the docs).
+
+#### Fonts inside \\fish blocks and \`backticks\`
+
+As the point of these contructs is to make fish's syntax clearer to the user, it makes sense to mimic what the user will see in the console, therefore any content is formatted using the monospaced style, specifically monospaced fonts are chosen in the following order:
+
+1. __DejaVu Sans Mono__: Explained above. [[&darr;](http://dejavu-fonts.org)]
+2. __Source Code Pro__: Monospaced code font, part of Adobe's free Edge Web Fonts. [[&darr;](https://edgewebfonts.adobe.com)]
+3. __Menlo__: Apple supplied variant of DejaVu.
+4. __Ubuntu Mono__: Ubuntu Linux's default monospaced font. [[&darr;](http://font.ubuntu.com)]
+5. __Consolas__: Modern Microsoft supplied console font.
+6. __Monaco__: Apple supplied console font since 1984!
+7. __Lucida Console__: Generic mono terminal font, standard in many OS's and distros.
+8. __monospace__: catchall style. Chooses default monospaced font, often Courier.
+9. __fixed__: as above, more often used on mobile devices.
+
+#### General Fonts
+
+#### Other sources:
+
+- [Font Squirrel](http://www.fontsquirrel.com): Good source of open source font packages.
+
 ### Choosing a CLI style: using a \\fish{style} block
+
+By default, when output as HTML, a \\fish block uses syntax colouring suited to the style of the documentation rather than trying to mimic the terminal. The block has a light, bordered background and a colour scheme that 'suggests' what the user would see in a console.
+
+Additional stying can be applied adding a style declaration:
+
+    \fish{additional_style [another_style...]}
+        ...
+    \endfish
+
+This will translate to classes applied to the `<div>` tag, like so:
+
+    <div class="fish additional_style another_style">
+        ...
+    </div>
+
+The various classes are defined in `doc_src/user_doc.css` and new style can be simply added
+
+The documentation currently defines a couple of additional styles:
+
+- __cli-dark__: Used in the _tutorial_ and _FAQ_ to simulate a dark background terminal, with fish's default colours (slightly tweaked for legibility in the browser).
+
+- __synopsis__: A simple colour theme helpful for displaying the logical 'summary' of a command's syntax, options and structure.
+
+## Markdown
+
+
+
+### Backticks
+
+
+### Lists
+
+### Synopsis rules
+
+
+
+## Special cases
+
+### Prompts and cursors
 
 ### Keyboard shortcuts: @key{} and @cursor_key{}
 
@@ -96,18 +161,5 @@ Some useful Unicode/HTML5 entities:
 - Tab: `&rarrb;`
 - Mac option: `&#8997;`
 - Mac command: `&#8984;`
-
-## Markdown
-
-
-
-### Backticks
-
-
-### Lists
-
-### Synopsis rules
-
-### Prompts and cursor
 
 #### Author: Mark Griffiths [@GitHub](https://github.com/MarkGriffiths)

@@ -216,6 +216,9 @@ s/___\(.\)/\\\
 <@curs{\1}\
 /
 #.
+# Trailing Backslash
+s/ \\$/ @bksl{ }/
+#.
 # Paths
 /\n<@dblq[^}]*[~/]/b protect
 /\n<@sglq[^}]*[~/]/b protect

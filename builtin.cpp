@@ -2313,6 +2313,8 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
     const wchar_t *commandline = L"";
     int exit_res=STATUS_BUILTIN_OK;
     const wchar_t *mode_name = READ_MODE_NAME;
+    int nchars=0;
+    wchar_t *end;
     int shell = 0;
     int array = 0;
 
@@ -2356,6 +2358,10 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
             }
             ,
             {
+                L"nchars", required_argument, 0, 'n'
+            }
+            ,
+            {
                 L"shell", no_argument, 0, 's'
             }
             ,
@@ -2377,7 +2383,7 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
 
         int opt = wgetopt_long(argc,
                                argv,
-                               L"xglUup:c:hm:sa",
+                               L"xglUup:c:hm:n:sa",
                                long_options,
                                &opt_index);
         if (opt == -1)
@@ -2428,6 +2434,34 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
                 mode_name = woptarg;
                 break;
 
+            case L'n':
+                errno = 0;
+                nchars = fish_wcstoi(woptarg, &end, 10);
+                if (errno || *end != 0)
+                {
+                    switch (errno)
+                    {
+                    case ERANGE:
+                        append_format(stderr_buffer,
+                                _(L"%ls: Argument '%ls' is out of range\n"),
+                                argv[0],
+                                woptarg);
+                        builtin_print_help(parser, argv[0], stderr_buffer);
+                        return STATUS_BUILTIN_ERROR;
+                        break;
+
+                    default:
+                        append_format(stderr_buffer,
+                                _(L"%ls: Argument '%ls' must be an integer\n"),
+                                argv[0],
+                                woptarg);
+                        builtin_print_help(parser, argv[0], stderr_buffer);
+                        return STATUS_BUILTIN_ERROR;
+                        break;
+                    }
+                }
+                break;
+            
             case 's':
                 shell = 1;
                 break;
@@ -2530,7 +2564,7 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
         proc_push_interactive(1);
 
         event_fire_generic(L"fish_prompt");
-        line = reader_readline();
+        line = reader_readline(nchars);
         proc_pop_interactive();
         if (line)
         {

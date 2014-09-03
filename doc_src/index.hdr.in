@@ -133,8 +133,7 @@ Most programs use three input/output (IO) streams, each represented by a number 
 - Standard output, FD 1, for writing, defaults to writing to the screen.
 - Standard error, FD 2, for writing errors and warnings, defaults to writing to the screen.
 
-The reason for providing for two output file descriptors is to allow
-separation of errors and warnings from regular program output.
+The reason for providing for two output file descriptors is to allow separation of errors and warnings from regular program output.
 
 Any file descriptor can be directed to a different output than its default through a simple mechanism called a redirection.
 
@@ -158,16 +157,13 @@ Example:
 
 To redirect both standard output and standard error to the file 'all_output.txt', you can write `echo Hello > all_output.txt ^&1`.
 
-Any file descriptor can be redirected in an arbitrary way by prefixing the
-redirection with the file descriptor.
+Any file descriptor can be redirected in an arbitrary way by prefixing the redirection with the file descriptor.
 
 - To redirect input of FD N, write `N<DESTINATION`
 - To redirect output of FD N, write `N>DESTINATION`
 - To append the output of FD N to a file, write `N>>DESTINATION_FILE`
 
-Example: `echo Hello 2>output.stderr` and `echo Hello
-^output.stderr` are equivalent, and write the standard error (file
-descriptor 2) of the target program to `output.stderr`.
+Example: `echo Hello 2>output.stderr` and `echo Hello ^output.stderr` are equivalent, and write the standard error (file descriptor 2) of the target program to `output.stderr`.
 
 \subsection piping Piping
 
@@ -424,6 +420,7 @@ The exit status of the last run command substitution is available in the <a href
 Only part of the output can be used, see <a href='#expand-index-range'>index range expansion</a> for details.
 
 Examples:
+
 \fish
 echo (basename image.jpg .jpg).png
 # Outputs 'image.png'.
@@ -757,17 +754,9 @@ values of most of these variables.
 
 - `CMD_DURATION`, the runtime of the last command in milliseconds.
 
-The names of these variables are mostly derived from the csh family of
-shells and differ from the ones used by Bourne style shells such as
-bash.
+The names of these variables are mostly derived from the csh family of shells and differ from the ones used by Bourne style shells such as bash.
 
-Variables whose name are in uppercase are exported to the commands
-started by fish, while those in lowercase are not exported. This rule is not
-enforced by fish, but it is good coding practice to use casing to
-distinguish between exported and unexported variables. `fish` also
-uses several variables internally. Such variables are prefixed with
-the string `__FISH` or `__fish.` These should never be used by the
-user. Changing their value may break fish.
+Variables whose name are in uppercase are exported to the commands started by fish, while those in lowercase are not exported. This rule is not enforced by fish, but it is good coding practice to use casing to distinguish between exported and unexported variables. `fish` also uses several variables internally. Such variables are prefixed with the string `__FISH` or `__fish.` These should never be used by the user. Changing their value may break fish.
 
 \subsection variables-status The status variable
 
@@ -822,8 +811,7 @@ The following variables are available to change the highlighting colors in fish:
 
 - `fish_color_cwd`, the color used for the current working directory in the default prompt
 
-Additionally, the following variables are available to change the
-highlighting in the completion pager:
+Additionally, the following variables are available to change the highlighting in the completion pager:
 
 - `fish_pager_color_prefix`, the color of the prefix string, i.e. the string that is to be completed
 

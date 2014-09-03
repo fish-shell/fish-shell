@@ -173,14 +173,16 @@ static void  builtin_complete_add(const wcstring_list_t &cmd,
 static void builtin_complete_remove3(const wchar_t *cmd,
                                      int cmd_type,
                                      wchar_t short_opt,
-                                     const wcstring_list_t &long_opt)
+                                     const wcstring_list_t &long_opt,
+                                     int long_mode)
 {
     for (size_t i=0; i<long_opt.size(); i++)
     {
         complete_remove(cmd,
                         cmd_type,
                         short_opt,
-                        long_opt.at(i).c_str());
+                        long_opt.at(i).c_str(),
+                        long_mode);
     }
 }
 
@@ -203,6 +205,7 @@ static void  builtin_complete_remove2(const wchar_t *cmd,
                 complete_remove(cmd,
                                 cmd_type,
                                 *s,
+                                0,
                                 0);
 
             }
@@ -211,24 +214,36 @@ static void  builtin_complete_remove2(const wchar_t *cmd,
                 builtin_complete_remove3(cmd,
                                          cmd_type,
                                          *s,
-                                         gnu_opt);
+                                         gnu_opt,
+                                         0);
                 builtin_complete_remove3(cmd,
                                          cmd_type,
                                          *s,
-                                         old_opt);
+                                         old_opt,
+                                         1);
             }
         }
+    }
+    else if (gnu_opt.empty() && old_opt.empty())
+    {
+        complete_remove(cmd,
+                        cmd_type,
+                        0,
+                        0,
+                        0);
     }
     else
     {
         builtin_complete_remove3(cmd,
                                  cmd_type,
                                  0,
-                                 gnu_opt);
+                                 gnu_opt,
+                                 0);
         builtin_complete_remove3(cmd,
                                  cmd_type,
                                  0,
-                                 old_opt);
+                                 old_opt,
+                                 1);
 
     }
 

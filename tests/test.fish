@@ -61,14 +61,14 @@ for i in *.in
   else
 	set res fail
 	echo Output differs for file $i. Diff follows:
-	diff tmp.out $template_out
+	diff -u tmp.out $template_out
   end
 
   if diff tmp.err $template_err >/dev/null
   else
 	set res fail
 	echo Error output differs for file $i. Diff follows:
-	diff tmp.err $template_err
+	diff -u tmp.err $template_err
   end
 
   if test (cat tmp.status) = (cat $template_status)

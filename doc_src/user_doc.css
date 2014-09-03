@@ -43,7 +43,7 @@ body {
     bottom: 0;
     overflow-y: scroll;
     -webkit-overflow-scrolling: touch; /* necessary for momentum scrolling */
-    font: 400 1.3rem/2.1rem "DejaVuSans", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font: 400 1.3rem/2.1rem "DejaVuSans", Roboto, Verdana, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 .fish_left_bar {
     width: 25rem;
@@ -103,7 +103,7 @@ a { color: #3d5cb3; }
 p { margin: 1rem 0; }
 h1, h2, h3, h4, h5, h6 {
     color: #1f2d53;
-    font-family: Roboto, "DejaVuSansCondensed-Bold", "DejaVuSans-Bold", Verdana, sans-serif;
+    font-family: "DejaVuSansCondensed-Bold", Roboto, "DejaVuSans-Bold", Verdana, sans-serif;
 }
 h1 {
     margin: 1.6rem 0 1rem 0;
@@ -145,7 +145,7 @@ h3 {
     box-shadow: 0 1px 2px #ddd;
 }
 tt, code, pre, .fish {
-    font-family: "DejaVu Sans Mono", Menlo, Monaco, "Source Code Pro", "Ubuntu Mono", "Consolas", "Lucida Console", monospace, fixed;
+    font-family: "DejaVu Sans Mono", "Source Code Pro", Menlo, "Ubuntu Mono", "Consolas", Monaco, "Lucida Console", monospace, fixed;
     font-weight: 500;
     text-shadow: 0 0 0 rgba(0,0,0,0.2);
 }

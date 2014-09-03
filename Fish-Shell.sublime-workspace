@@ -4,6 +4,18 @@
 		"selected_items":
 		[
 			[
+				"m",
+				"margin-bottom"
+			],
+			[
+				"ma",
+				"margin-left"
+			],
+			[
+				"a-z",
+				"a-zA-Z_"
+			],
+			[
 				"font",
 				"font-style"
 			],
@@ -70,10 +82,6 @@
 			[
 				"ba",
 				"background-image"
-			],
-			[
-				"ma",
-				"margin"
 			],
 			[
 				"marg",
@@ -194,10 +202,6 @@
 			[
 				"tex",
 				"text-align"
-			],
-			[
-				"m",
-				"margin-left"
 			],
 			[
 				"_",
@@ -510,71 +514,11 @@
 			[
 				"Block",
 				"blockOffset"
-			],
-			[
-				"top",
-				"topOffest"
 			]
 		]
 	},
 	"buffers":
 	[
-		{
-			"file": "doc_src/FORMATTING.md",
-			"settings":
-			{
-				"buffer_size": 6126,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "Makefile.in",
-			"settings":
-			{
-				"buffer_size": 34459,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "Doxyfile.help",
-			"settings":
-			{
-				"buffer_size": 102690,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "Doxyfile.user",
-			"settings":
-			{
-				"buffer_size": 103736,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "Doxyfile",
-			"settings":
-			{
-				"buffer_size": 103115,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "doc_src/tutorial.hdr",
-			"settings":
-			{
-				"buffer_size": 17999,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "doc_src/faq.hdr",
-			"settings":
-			{
-				"buffer_size": 10388,
-				"line_ending": "Unix"
-			}
-		}
 	],
 	"build_system": "Make Fish-Shell",
 	"command_palette":
@@ -746,92 +690,102 @@
 	"expanded_folders":
 	[
 		"/Users/Mark/Projects/OpenSource/fish-shell",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src"
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src",
+		"/Users/Mark/Projects/OpenSource/fish-shell/share/completions"
 	],
 	"file_history":
 	[
+		"/Users/Mark/Projects/OpenSource/fish-shell/lexicon.log",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/faq.hdr",
+		"/Users/Mark/Projects/OpenSource/fish-shell/lexicon_filter.in",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/fish_prompt.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/FORMATTING.md",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/user_doc.css",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/user_doc_syntax.css",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/design.hdr",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/.editorconfig",
+		"/Users/Mark/Projects/OpenSource/fish-shell/exec.cpp",
+		"/Users/Mark/Projects/OpenSource/fish-shell/expand.cpp",
+		"/Users/Mark/Projects/OpenSource/fish-shell/share/completions/fossil.fish",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/tutorial.hdr",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/index.hdr.in",
+		"/Users/Mark/Projects/OpenSource/fish-shell/Makefile.in",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/command.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/contains.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/read.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/type.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/ulimit.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/complete.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/commands.hdr.in",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/count.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/echo.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/fish.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/Doxyfile.user",
+		"/Users/Mark/Projects/OpenSource/fish-shell/Doxyfile.help",
+		"/Users/Mark/Projects/OpenSource/fish-shell/Doxyfile",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/trap.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/status.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/set_color.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/else.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/jobs.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/mimedb.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/fish_indent.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/functions.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/bind.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/.git/MERGE_MSG",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/psub.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/nextd.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/set.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/lexicon.txt",
+		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/history.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc/latex/tutorial.tex",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc/html/commands.html",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc/latex/commands.tex",
-		"/Users/Mark/Projects/OpenSource/fish-shell/Doxyfile",
-		"/Users/Mark/Projects/OpenSource/fish-shell/Doxyfile.help",
-		"/Users/Mark/Projects/OpenSource/fish-shell/Doxyfile.user",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/user_doc.css",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/design.hdr",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/alias.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/echo.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/open.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/while.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/vared.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/and.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/begin.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/bg.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/bind.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/block.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/break.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/breakpoint.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/builtin.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/case.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/cd.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/command.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/commandline.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/complete.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/contains.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/continue.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/count.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/dirh.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/dirs.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/else.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/emit.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/end.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/eval.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/exec.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/exit.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/faq.hdr",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/fg.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/fish.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/fish_config.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/fish_indent.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/fish_prompt.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/fish_right_prompt.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/for.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/funced.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/funcsave.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/function.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/functions.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/help.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/history.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/if.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/index.hdr.in",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/isatty.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/jobs.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/license.hdr",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/math.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/mimedb.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/nextd.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/not.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/or.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/popd.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/prevd.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/psub.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/pushd.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/random.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/read.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/return.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/set.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/set_color.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/source.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/status.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/switch.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/test.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/trap.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/tutorial.hdr",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/type.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/ulimit.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/umask.txt",
-		"/Users/Mark/Projects/OpenSource/fish-shell/Makefile.in",
-		"/Users/Mark/Projects/OpenSource/fish-shell/lexicon_filter.in",
-		"/Users/Mark/Projects/OpenSource/fish-shell/lexicon.log",
 		"/usr/local/Library/Formula/fish.rb",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc.h",
 		"/Users/Mark/Projects/OpenSource/fish-shell/1",
@@ -843,9 +797,7 @@
 		"/tmp/fish_funced_50461_8117.fish",
 		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_16914_12938.fish",
 		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_16914_8747.fish",
-		"/Users/Mark/Projects/OpenSource/fish-shell/lexicon.txt",
 		"/Users/Mark/Projects/OpenSource/fish-shell/debug-lexicon.log",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/commands.hdr.in",
 		"/Users/Mark/Projects/OpenSource/fish-shell/config.h.in~",
 		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/fish_lexicon_filter.in",
 		"/Users/Mark/Projects/OpenSource/fish-shell/README.md",
@@ -870,14 +822,7 @@
 		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_29780_7461.fish",
 		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_29780_4834.fish",
 		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_29780_2485.fish",
-		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_29780_29584.fish",
-		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_29780_3237.fish",
-		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_29780_25359.fish",
-		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_29780_21748.fish",
-		"/Users/Mark/Projects/OpenSource/fish-shell/share/man/man1/alias.1.tmp",
-		"/Users/Mark/Projects/OpenSource/fish-shell/doc_src/fish_lexicon_filter",
-		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_29780_17427.fish",
-		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_29780_11508.fish"
+		"/var/folders/34/z1p9ktbj5971t9cp9vlptt40000101/T/fish_funced_29780_29584.fish"
 	],
 	"find":
 	{
@@ -934,6 +879,64 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"bksl",
+			"set_color",
+			"bksl",
+			"set_color",
+			"virago",
+			"user_doc",
+			"Additional stying can be applied using a declaration ",
+			">>>>>>>",
+			"split_output",
+			">>>>>>>",
+			"fsfo",
+			"shells",
+			".logo",
+			"\\fish",
+			"-h",
+			"emit",
+			"foo.t",
+			"\\[else",
+			"cmnd",
+			"xbin",
+			"sbin",
+			"cmnd",
+			"xcmd",
+			"cmnd",
+			"<tt>([A-z .=~-]+)</tt>",
+			"\\\\c ([A-z.~-]+)",
+			"<code>([A-z .=~-]+)</code>",
+			"\\\\c ([A-z.~]+)",
+			"<tt>([A-z .=~-]+)</tt>",
+			"<tt>([A-z .~-]+)</tt>",
+			"\\\\c ([A-z.~]+)",
+			"\\\\c ([A-z]+)",
+			"\\c ",
+			"\\c \\([a-z]*\\)",
+			">>>>>>>",
+			"\\c ",
+			">>>>>>>",
+			"bksl",
+			"_=_",
+			"Special case for",
+			"@args\\{\\\\",
+			"@args{\\\\\\",
+			"@args{\\\\",
+			"__",
+			"sleep",
+			"s//",
+			"s/",
+			"and",
+			".bak",
+			"basename",
+			"grep",
+			".bak",
+			".txt",
+			"status",
+			"optr",
+			"entities",
+			"@optr",
+			"src",
 			"float",
 			"!",
 			"ref",
@@ -1003,65 +1006,7 @@
 			"\\--",
 			"\\\\--",
 			"echo",
-			"SIGCHLD",
-			"execute",
-			"signal",
-			"reader_run_command",
-			"preexec",
-			"preexec_invoke_exec",
-			"preexec_interactive_mode",
-			"alias \\\\\\- ([^ ]*) ",
-			"roff",
-			" Synopsis\\n\n\\\\fish",
-			"Synopsis\\n\n\\\\fish",
-			"Synopsis\\n",
-			"w de",
-			"grep",
-			"[ ]*",
-			"debug",
-			"fish_lexicon_filter",
-			"FILTER",
-			"INPUT",
-			"I",
-			" *",
-			"sglq",
-			"dblq",
-			"asis",
-			"#Output",
-			"#OUtput",
-			".cli-dark ",
-			"width",
-			"optimizeLegibility",
-			"F",
-			"Background",
-			"/f",
-			"#f",
-			"--is",
-			"-login",
-			"$f",
-			"#f",
-			"\\\\fish\\{syn\\}",
-			"\\\\fish{syn}",
-			"\\fish{syn}",
-			"#f",
-			"[",
-			"etc/shells",
-			"curs",
-			"Alt+Up",
-			"@key",
-			"date",
-			"tutorial_nav",
-			"fsfo",
-			"fsnm",
-			"HELP_SRC",
-			"HTML_SRC",
-			".in",
-			"user_doc",
-			"Synopsis\n<pre>([^`]*)<pre>",
-			"Synopsis\n`([^`]*)`",
-			"Synopsis\n `([^`]*)`",
-			"Synopsis\n`",
-			"grep"
+			"SIGCHLD"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -1069,6 +1014,16 @@
 		"regex": true,
 		"replace_history":
 		[
+			"\\fish{cli-dark}",
+			"xcmd",
+			"cmnd",
+			"bltn",
+			"xbln",
+			"bltn",
+			"`$1`",
+			"`",
+			"one-line",
+			"or",
 			"\n- ",
 			"sglq",
 			"$1@xcmd\\n$2/",
@@ -1186,17 +1141,7 @@
 			"`",
 			"`$1`",
 			"$2`$1`$2",
-			"`$1`",
-			"`",
-			"</code>'",
-			"'<code>",
-			"`'",
-			"'`",
-			"<code>fish</code>",
-			"- ",
-			"<h3>$1</h3>",
-			" -# ",
-			" -#"
+			"`$1`"
 		],
 		"reverse": false,
 		"show_context": true,
@@ -1207,546 +1152,8 @@
 	"groups":
 	[
 		{
-			"selected": 4,
 			"sheets":
 			[
-				{
-					"buffer": 0,
-					"file": "doc_src/FORMATTING.md",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 6126,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								5237,
-								5237
-							]
-						],
-						"settings":
-						{
-							"BracketHighlighterBusy": false,
-							"bh_regions":
-							[
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close"
-							],
-							"syntax": "Packages/MarkdownEditing/Markdown.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 1692.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 2,
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"file": "Makefile.in",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 34459,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								7138,
-								7138
-							]
-						],
-						"settings":
-						{
-							"BracketHighlighterBusy": false,
-							"bh_regions":
-							[
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close"
-							],
-							"syntax": "Packages/Text/Plain text.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 3682.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 4,
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"file": "Doxyfile.help",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 102690,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								10175,
-								10175
-							]
-						],
-						"settings":
-						{
-							"BracketHighlighterBusy": false,
-							"bh_regions":
-							[
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close"
-							],
-							"syntax": "Packages/Text/Plain text.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 3051.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 5,
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "Doxyfile.user",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 103736,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								10080,
-								10080
-							]
-						],
-						"settings":
-						{
-							"BracketHighlighterBusy": false,
-							"bh_regions":
-							[
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close"
-							],
-							"syntax": "Packages/Text/Plain text.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 3096.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 3,
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "Doxyfile",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 103115,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								10419,
-								10419
-							]
-						],
-						"settings":
-						{
-							"BracketHighlighterBusy": false,
-							"bh_regions":
-							[
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close"
-							],
-							"syntax": "Packages/Text/Plain text.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 3307.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 0,
-					"type": "text"
-				},
-				{
-					"buffer": 5,
-					"file": "doc_src/tutorial.hdr",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 17999,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								6360,
-								6360
-							]
-						],
-						"settings":
-						{
-							"BracketHighlighterBusy": false,
-							"bh_regions":
-							[
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close"
-							],
-							"syntax": "Packages/Text/Plain text.tmLanguage",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 2511.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 1,
-					"type": "text"
-				},
-				{
-					"buffer": 6,
-					"file": "doc_src/faq.hdr",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 10388,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								2690,
-								2668
-							]
-						],
-						"settings":
-						{
-							"BracketHighlighterBusy": false,
-							"bh_regions":
-							[
-								"bh_unmatched",
-								"bh_unmatched_center",
-								"bh_unmatched_open",
-								"bh_unmatched_close",
-								"bh_curly",
-								"bh_curly_center",
-								"bh_curly_open",
-								"bh_curly_close",
-								"bh_default",
-								"bh_default_center",
-								"bh_default_open",
-								"bh_default_close",
-								"bh_round",
-								"bh_round_center",
-								"bh_round_open",
-								"bh_round_close",
-								"bh_square",
-								"bh_square_center",
-								"bh_square_open",
-								"bh_square_close",
-								"bh_angle",
-								"bh_angle_center",
-								"bh_angle_open",
-								"bh_angle_close",
-								"bh_single_quote",
-								"bh_single_quote_center",
-								"bh_single_quote_open",
-								"bh_single_quote_close",
-								"bh_double_quote",
-								"bh_double_quote_center",
-								"bh_double_quote_open",
-								"bh_double_quote_close",
-								"bh_tag",
-								"bh_tag_center",
-								"bh_tag_open",
-								"bh_tag_close",
-								"bh_regex",
-								"bh_regex_center",
-								"bh_regex_open",
-								"bh_regex_close",
-								"bh_c_define",
-								"bh_c_define_center",
-								"bh_c_define_open",
-								"bh_c_define_close"
-							],
-							"syntax": "Packages/Text/Plain text.tmLanguage",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 742.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 6,
-					"type": "text"
-				}
 			]
 		}
 	],
@@ -1847,6 +1254,7 @@
 		],
 		"width": 985.0
 	},
+	"selected_group": 0,
 	"settings":
 	{
 	},

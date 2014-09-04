@@ -24,12 +24,12 @@ Currently the make process for the documentation is quite convoluted, but basica
 
 The source files that contain the page markers are currently:
 
-- index.hdr.in: Core documentation
-- commands.hdr.in: Individual commands
-- tutorial.hdr: Tutorial
-- design.hdr: Design document
-- faq.hdr: Frequently Asked Questions
-- license.hdr: Fish and 3rd party licences
+- __index.hdr.in__: Core documentation
+- __commands.hdr.in__: Individual commands
+- __tutorial.hdr__: Tutorial
+- __design.hdr__: Design document
+- __faq.hdr__: Frequently Asked Questions
+- __license.hdr__: Fish and 3rd party licences
 
 Unless there is a _VERY_ good reason and developer consensus, new pages should never be added.
 
@@ -70,9 +70,9 @@ And a simple HTML version for the developer docs (`make doc`) and the LATEX/PDF 
 
 ### Fonts
 
-In older browsers, it was easy to set the fonts used for the three basic type styles (serif, sans-serif and monospace). Modern browsers have removed these options in their respective quests for simplification, assuming the content author will provide suitable styles for the content in the site's CSS, or the end user will provide overriding styles manually. Doxygen's default styling is very simple and most users just accept this default.
+In older browsers, it was easy to set the fonts used for the three basic type styles (serif, sans-serif and monospace). Modern browsers have removed these options in their respective quests for simplification, assuming the content author will provide suitable styles for the content in the site's CSS, or the end user will provide overriding styles manually. Doxygen's default styling is very simple and most users will just accept this default.
 
-I've tried to use a sensible set of fonts in the documentation's CSS based on 'good' terminal fonts and as a result the firt preference font used throughout the documentation is '[DejaVu](http://dejavu-fonts.org)'. The rationale behaind this is that while DejaVu is getting a little long in the tooth, it still provides the most complete support across serif, sans-serif and monospace styles, has the widest support for extended Unicode characters and has a free, permissive licenses (though it's still incompatible with GPLv2, though arguably less so than the SIL Open Font license, though this is a moot point when using it solely in the docs).
+I've tried to use a sensible set of fonts in the documentation's CSS based on 'good' terminal fonts and as a result the firt preference font used throughout the documentation is '[DejaVu](http://dejavu-fonts.org)'. The rationale behaind this is that while DejaVu is getting a little long in the tooth, it still provides the most complete support across serif, sans-serif and monospace styles (giving a well balanced feel and consistent [x-height](http://en.wikipedia.org/wiki/X-height)), has the widest support for extended Unicode characters and has a free, permissive licenses (though it's still incompatible with GPLv2, though arguably less so than the SIL Open Font license, though this is a moot point when using it solely in the docs).
 
 #### Fonts inside \\fish blocks and \`backticks\`
 
@@ -85,10 +85,24 @@ As the point of these contructs is to make fish's syntax clearer to the user, it
 5. __Consolas__: Modern Microsoft supplied console font.
 6. __Monaco__: Apple supplied console font since 1984!
 7. __Lucida Console__: Generic mono terminal font, standard in many OS's and distros.
-8. __monospace__: catchall style. Chooses default monospaced font, often Courier.
-9. __fixed__: as above, more often used on mobile devices.
+8. __monospace__: Catchall style. Chooses default monospaced font, often Courier.
+9. __fixed__: As above, more often used on mobile devices.
 
 #### General Fonts
+
+1. __DejaVu Sans__: As above.[[&darr;](http://dejavu-fonts.org)]
+2. __Roboto__: Elegant Google free font and is Doxygen's default [[&darr;](http://www.google.com/fonts/specimen/Roboto)]
+3. __Lucida Grande__: Default Apple OS X content font.
+4. __Calibri__: Default Microsoft Office font (since 2007).
+5. __Verdana__: Good general font found in a lot of OSs.
+6. __Helvetica Neue__: Better spaced and balanced Helvetica/Arial variant.
+7. __Helvetica__: Standard humanist typeface found almost everywhere.
+8. __Arial__: Microsoft's Helvetica.
+9. __sans-serif__: Catchall style. Chooses default sans-serif typeface, often Helvetica.
+
+The ordering of the fonts is important as it's designed to allow the documentation to settle into a number of different identities according to the fonts available. If you have the complete DejaVu family installed, then the docs are presented using that, and if your Console is set up to use the same fonts, presentation will be completely consistent.
+
+On OS X, with nothing extra installed, the docs will default to Menlo and Lucida Grande giving a Mac feel. Under Windows, it will default to using Consolas and Calibri on recent versions, giving a modern Windows style.
 
 #### Other sources:
 
@@ -120,20 +134,38 @@ The documentation currently defines a couple of additional styles:
 
 ## Markdown
 
+Apart from the exceptions discussed above, the rest of the documentation now supports the use of Markdown. As such the use of Doxygen special commands for HTML tags is unnecessary.
 
+There are a few exceptions and extensions to the Markdown [standard](http://daringfireball.net/projects/markdown/) that are documented in the Doxygen [documentation](http://www.stack.nl/~dimitri/doxygen/manual/markdown.html).
 
-### Backticks
+### \`Backticks\`
 
+As is standard in Markdown and 'Github Flavoured Markdown' (GFM), backticks can be used to denote inline technical terms in the documentation, `like so`. In the documentation this will set the font to the monospaced 'console' typeface and will cause the enclosed term to stand out.
+
+However, fenced code blocks using 4 spaces or 3 backticks (\`\`\`) should be avoided as Doxygen will interpret these as \\code blocks and try to apply standard syntax colouring, which doesn't work so well for fish examples. Use `\fish..\endfish` blocks instead.
 
 ### Lists
 
-### Synopsis rules
-
-
+Standard Markdown list rules apply, but as Doxygen will collapse white space on output, combined with the use of long lines, it's a good idea to include an extra new line between long list items to assist future editing.
 
 ## Special cases
 
+The following can be used in \\fish blocks to render some fish scenarios. These are mostly used in the tutorial when an interactive situation needs to be displayed.
+
+### Custom formatting tags
+
+- `<s>`: auto\<s\>suggestion\</s\>.
+- `<m>`: \<m\>Matched\</m\> items, such as tab completions.
+- `<sm>`: Matched items \<sm\>searched\<sm\> for, like grep results.
+- `<error>`: \<error\>This would be shown as an error.\</error\>
+- `<asis>`: \<asis\>This test will not be parsed for fish markup.\</asis\>
+
 ### Prompts and cursors
+
+- `>_`: Display a basic prompt.
+- `~>_`: Display a prompt with a the home directory as the current working directory.
+- `___` (3 underscores): Display a cursor.
+
 
 ### Keyboard shortcuts: @key{} and @cursor_key{}
 

@@ -159,6 +159,7 @@ The following can be used in \\fish blocks to render some fish scenarios. These 
 - `<sm>`: Matched items \<sm\>searched\<sm\> for, like grep results.
 - `<error>`: \<error\>This would be shown as an error.\</error\>
 - `<asis>`: \<asis\>This test will not be parsed for fish markup.\</asis\>
+- `<outp>`: \<outp\>This would be rendered as command/script output.\</outp\>
 
 ### Prompts and cursors
 
@@ -193,5 +194,56 @@ Some useful Unicode/HTML5 entities:
 - Tab: `&rarrb;`
 - Mac option: `&#8997;`
 - Mac command: `&#8984;`
+
+## Notes
+
+### Updated Configure/Makefile
+
+- Tested on Ubuntu 14.04, CentOS 6.5 and Mac OS X 10.9.
+- Makefile has GNU/BSD sed/grep detection.
+
+### HTML output
+
+- The output HTML is HTML5 compliant, but should quickly and elegantly degrade on older browsers without losing basic structure.
+- The CSS avoids the use or browser specific extenstions (i.e. -webkit, -moz etc), using the W3C HTML5 standard instead.
+- It's been tested in Chrome 37.0 and Firefox 32.0 on Mac OS X 10.9 (+Safari 7), Windows 8.1 (+Internet Explorer 11) and Ubuntu Desktop 14.04.
+- My assumption is basically that if someone cares enough to want to install fish, they'll be keeping a browser current.
+
+### Man page output
+
+- Tested on Ubuntu 14.04, CentOS 6.5 and Max OS X 10.9.
+- Output is substantially cleaner.
+- Tested in cat, less, more and most pagers using the following fish script:
+
+```
+function manTest --description 'Test manpage' --argument page
+    set -l pager
+    for i in $argv
+        switch $i
+            case "-l"
+                set pager -P '/usr/bin/less -is'
+            case "-m"
+                set pager -P '/usr/bin/more -s'
+            case "-c"
+                set pager -P '/bin/cat'
+        end
+    end
+    man $pager ~/Projects/OpenSource/fish-shell/share/man/man1/$page.1
+end
+
+# Assumes 'most' is the default system pager.
+# NOT PORTABLE! Paths would be need to be updated on other systems.
+```
+
+### Developer docs and LATEX/PDF output
+
+- HTML developer docs tested on Ubuntu 14.04, CentOS 6.5 and Mac OS X 10.9.
+- LATEX/PDF reference manual tested on Mac OS X 10.9 using MacTEX. PDF production returns an error (due to Doxygen's use of an outdated 'float' package), but manual PDF output is ok.
+
+### Future changes
+
+1. The documentation creation process would be better if it could be modularised further and moved out of the makefile into a number of supporting scripts. This would allow both the automake and Xcode build processes to use the documentation scripts directly. 
+2. Remove the Doxygen dependency entirely for the user documentation. This would be very acheivable now that the bulk of the documentation is in Markdown.
+3. It would be useful to gauge what parts of the documentation are actually used by users. Judging by the amount of 'missing comment' errors during the developer docs build phase, this aspect of the docs has been rather neglected. If it is not longer used or useful, then this could change the future direction of the documentation and significantly streamline the process.
 
 #### Author: Mark Griffiths [@GitHub](https://github.com/MarkGriffiths)

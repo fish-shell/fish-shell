@@ -32,7 +32,7 @@ Example:
 echo hello world
 \endfish
 
-calls the `echo` command. `echo` is a command which will write its arguments to the screen. In the example above, the output will be 'hello world'. Everything in fish is done with commands. There are commands for performing a set of commands multiple times, commands for assigning variables, commands for treating a group of commands as a single command, etc.. And every single command follows the same simple syntax.
+This calls the `echo` command. `echo` is a command which will write its arguments to the screen. In the example above, the output will be 'hello world'. Everything in fish is done with commands. There are commands for performing a set of commands multiple times, commands for assigning variables, commands for treating a group of commands as a single command, etc.. And every single command follows the same simple syntax.
 
 If you want to find out more about the echo command used above, read the manual page for the echo command by writing: `man echo`
 

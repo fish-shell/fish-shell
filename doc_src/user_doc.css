@@ -21,7 +21,7 @@ body {
 }
 /*Top site index*/
 .qindex {
-    font: 500 1.4rem/3.6rem "DejaVuSansCondensed", Roboto, Verdana, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font: 500 1.4rem/3.6rem DejaVuSansCondensed, DejaVuSans, Roboto, "Lucida Grande", Calibri, Verdana, "Helvetica Neue", Helvetica, Arial, sans-serif;
     border: none;
     color: white;
     text-align: center;
@@ -43,12 +43,12 @@ body {
     bottom: 0;
     overflow-y: scroll;
     -webkit-overflow-scrolling: touch; /* necessary for momentum scrolling */
-    font: 400 1.3rem/2.1rem "DejaVuSans", Roboto, Verdana, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font: 400 1.3rem/2.1rem DejaVuSans, Roboto, "Lucida Grande", Calibri, Verdana, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 .fish_left_bar {
     width: 25rem;
     color: white;
-    font-family: "DejaVuSansCondensed", Roboto, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: DejaVuSansCondensed, DejaVuSans, Roboto, "Lucida Grande", Calibri, Verdana, "Helvetica Neue", Helvetica, Arial, sans-serif;
     background-color: #1f2d53;
 }
 .fish_left_little { width: 19rem; }
@@ -103,7 +103,7 @@ a { color: #3d5cb3; }
 p { margin: 1rem 0; }
 h1, h2, h3, h4, h5, h6 {
     color: #1f2d53;
-    font-family: "DejaVuSansCondensed-Bold", Roboto, "DejaVuSans-Bold", Verdana, sans-serif;
+    font-family: DejaVuSansCondensed-Bold, DejaVuSans, Roboto, "Lucida Grande", Calibri, Verdana, sans-serif;
 }
 h1 {
     margin: 1.6rem 0 1rem 0;
@@ -150,9 +150,9 @@ em {
 }
 /* Console display */
 tt, code, pre, .fish {
-    font-family: "DejaVu Sans Mono", "Source Code Pro", Menlo, "Ubuntu Mono", "Consolas", Monaco, "Lucida Console", monospace, fixed;
+    font-family: "DejaVu Sans Mono", "Source Code Pro", Menlo, "Ubuntu Mono", Consolas, Monaco, "Lucida Console", monospace, fixed;
     font-weight: 500;
-    text-shadow: 0 0 0 rgba(0,0,0,0.2);
+    text-shadow: 0 0 0 rgba(0,0,0,0.4); /*Stronger anti-aliasing*/
     white-space: -moz-pre-wrap;
     white-space: -pre-wrap;
     white-space: -o-pre-wrap;
@@ -167,44 +167,18 @@ tt, code, pre, .fish {
     font-size: 1.2rem;
     line-height: 1.8rem;
     color: #111;
-    text-shadow: 0 0 0 #000; /* Stronger anti-aliasing */
     background-color: #fafafa;
     border: 1px solid #bbb;
     border-radius: 0.6rem;
-    box-shadow: 0 0.2rem 0.2rem #ddd;
+    box-shadow: 0 0.2rem 0.2rem #eee;
 }
+.comment, .suggest { color: #555; }
+.command, .function, .binary { color: #223aa4; }
+.argument, .path, .file  { color: #5961cf; }
+.string { color: #6c6d08; }
+.operator, .variable, .match, .history { color: #1c8885; }
 
-
-.comment { color: #555; }
-/*.command, .function, .binary { color: #23326b; }*/
-.command { color: #00F; }
-.binary { color: #F0F; }
-.function { color: #0FF; }
-.string { color: #725000; }
-.operator, .variable { color: #741ba3; }
-.path { color: #F00; }
-.file { color: #0F0; }
-.argument { color: #19c9ff; }
-.redirect { color: #f00; }
-.prompt { color: #000; }
-.cursor { border-bottom: 2px solid #444; }
-.underline { text-decoration: underline; }
-
-/*.comment { color: #c33; }
-.command, .function, .binary { color: #2568e2; }
-.argument, .variable, .path, .file { color: #00afff; }
-.redirect { color: #fff; }
-.operator, .match, .history { color: #2ff; }
-.string { color: #c07d2f; }
-.suggest { color: #555; }
-.error { color: #f33; font-weight: bold; }
-.match { color: #2ff; }
-.search_match { background-color: #f2f; }
-.cwd { color: #2f2; }
-.prompt { color: #fff; }
-.cursor { border-bottom: 2px solid #ccc; }
-.underline { text-decoration: underline; }*/
-
+/* Synopsis variant */
 .synopsis {
     border: none;
     color: #333;
@@ -214,13 +188,24 @@ tt, code, pre, .fish {
     padding: 0;
     box-shadow: none;
 }
+.synopsis .comment, .synopsis .suggest { color: #669; }
+.synopsis .command, .synopsis .function, .synopsis .binary { color: #333; }
+.synopsis .argument, .synopsis .path, .synopsis .file  { color: #666; }
+
 /* Console variants */
 .cli-dark {
     background-color: #222;
     color: #ccc;
-    text-shadow: 0 0 0 #222;
+    text-shadow: none;
     padding: 0.6rem 1.2rem;
     border-radius: 0.6rem;
+}
+.cli-dark .key em, .cli-dark .key b {
+    background-color: #ccc;
+    box-shadow: 0 0.1rem 0 #666;
+    border: 1px solid #333;
+    color: #000;
+    padding: 0 3px;
 }
 .cli-dark .comment { color: #c33; }
 .cli-dark .command, .cli-dark .function, .cli-dark .binary { color: #6159de; }
@@ -236,13 +221,7 @@ tt, code, pre, .fish {
 .cli-dark .cursor { border-bottom: 2px solid #3F3; }
 .cli-dark .underline { color: #00afff; text-decoration: underline; }
 .cli-dark .error, .cli-dark .error .path { color: #f33; font-weight: bold; }
-.cli-dark .key em, .cli-dark .key b {
-    background-color: #ccc;
-    box-shadow: 0 0.1rem 0 #666;
-    border: 1px solid #333;
-    color: #000;
-    padding: 0 3px;
-}
+
 
 /*Menus*/
 .menu { margin: 1.4rem 0; line-height: 2.2rem; }

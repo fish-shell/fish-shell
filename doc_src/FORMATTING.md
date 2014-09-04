@@ -199,8 +199,12 @@ Some useful Unicode/HTML5 entities:
 
 ### Doxygen
 
-- Tested on Ubuntu 14.04 with Doxygen 1.8.8, built from source.
-- Tested on Mac OS X 10.9 with Homebrew install Doxygen 1.8.7 and 1.8.8. 
+Tested on:
+- Ubuntu 14.04 with Doxygen 1.8.8, built from [GitHub source](https://github.com/doxygen/doxygen.git).
+- CentOS 6.5 with Doxygen 1.8.8, built from [GitHub source](https://github.com/doxygen/doxygen.git).
+- Mac OS X 10.9 with Homebrew install Doxygen 1.8.7 and 1.8.8. 
+
+Graphviz was also installed in all the above testing.
 
 Doxygen 1.8.6 and lower do not have the \\htmlonly[block] directive which fixes a multitude of problems in the rendering of the docs. In Doxygen 1.8.7 the list of understood HTML entities was greatly increased. I tested earlier versions and many little issues returned.
 

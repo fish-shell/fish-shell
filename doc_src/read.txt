@@ -19,6 +19,8 @@ The following options are available:
 
 - `-m NAME` or `--mode-name=NAME` specifies that the name NAME should be used to save/load the history file. If NAME is fish, the regular fish history will be available.
 
+- `-n NCHARS` or `--nchars=NCHARS` causes `read` to return after reading NCHARS characters rather than waiting for a complete line of input.
+
 - `-p PROMPT_CMD` or `--prompt=PROMPT_CMD` uses the output of the shell command `PROMPT_CMD` as the prompt for the interactive mode. The default prompt command is <code>set_color green; echo read; set_color normal; echo "> "</code>.
 
 - `-s` or `--shell` enables syntax highlighting, tab completions and command termination suitable for entering shellscript code in the interactive mode.
@@ -34,6 +36,8 @@ The following options are available:
 `read` reads a single line of input from stdin, breaks it into tokens based on the `IFS` shell variable, and then assigns one token to each variable specified in `VARIABLES`. If there are more tokens than variables, the complete remainder is assigned to the last variable. As a special case, if `IFS` is set to the empty string, each character of the input is considered a separate token.
 
 If `-a` or `--array` is provided, only one variable name is allowed and the tokens are stored as an array in this variable.
+
+See the documentation for `set` for more details on the scoping rules for variables.
 
 
 \subsection read-example Example

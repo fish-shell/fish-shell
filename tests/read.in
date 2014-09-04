@@ -75,3 +75,19 @@ print_vars ary
 echo '' | read -la ary
 print_vars ary
 set -le IFS
+
+# read -n tests
+
+echo
+echo '# read -n tests'
+echo 'testing' | read -n 3 foo
+echo $foo
+echo 'test' | read -n 10 foo
+echo $foo
+echo 'test' | read -n 0 foo
+echo $foo
+echo 'testing' | begin; read -n 3 foo; read -n 3 bar; end
+echo $foo
+echo $bar
+echo 'test' | read -n 1 foo
+echo $foo

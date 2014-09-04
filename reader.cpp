@@ -2955,7 +2955,7 @@ static int read_i(void)
           during evaluation.
         */
 
-        const wchar_t *tmp = reader_readline();
+        const wchar_t *tmp = reader_readline(0);
 
         if (data->end_loop)
         {
@@ -3044,7 +3044,7 @@ static wchar_t unescaped_quote(const wcstring &str, size_t pos)
 }
 
 
-const wchar_t *reader_readline(void)
+const wchar_t *reader_readline(int nchars)
 {
     wint_t c;
     int last_char=0;
@@ -3084,6 +3084,13 @@ const wchar_t *reader_readline(void)
 
     while (!finished && !data->end_loop)
     {
+        if (0 < nchars && (size_t)nchars <= data->command_line.size())
+        {
+            // we've already hit the specified character limit
+            finished = 1;
+            break;
+        }
+
         /*
          Sometimes strange input sequences seem to generate a zero
          byte. I believe these simply mean a character was pressed
@@ -3104,12 +3111,14 @@ const wchar_t *reader_readline(void)
                 {
 
                     wchar_t arr[READAHEAD_MAX+1];
-                    int i;
+                    size_t i;
+                    size_t limit = 0 < nchars ? std::min((size_t)nchars - data->command_line.size(), (size_t)READAHEAD_MAX)
+                                              : READAHEAD_MAX;
 
                     memset(arr, 0, sizeof(arr));
                     arr[0] = c;
 
-                    for (i=1; i<READAHEAD_MAX; i++)
+                    for (i = 1; i < limit; ++i)
                     {
 
                         if (!can_read(0))
@@ -3120,7 +3129,7 @@ const wchar_t *reader_readline(void)
                         // only allow commands on the first key; otherwise, we might
                         // have data we need to insert on the commandline that the
                         // commmand might need to be able to see.
-                        c = input_readch(i == 1);
+                        c = input_readch(false);
                         if ((!wchar_private(c)) && (c>31) && (c != 127))
                         {
                             arr[i]=c;
@@ -3137,6 +3146,12 @@ const wchar_t *reader_readline(void)
 
             if (c != 0)
                 break;
+
+            if (0 < nchars && (size_t)nchars <= data->command_line.size())
+            {
+                c = R_NULL;
+                break;
+            }
         }
 
         /* If we get something other than a repaint, then stop coalescing them */

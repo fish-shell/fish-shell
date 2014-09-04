@@ -52,14 +52,7 @@ Examples:
 
 \section design-configurability Configurability is the root of all evil
 
-<<<<<<< HEAD
-Every configuration option in a program is a place where the program is too stupid to figure out for itself what the user really wants, and should be considered a failiure of both the program and the programmer who implemented it.
-=======
-Every configuration option in a program is a place where the program
-is too stupid to figure out for itself what the user really wants, and
-should be considered a failure of both the program and the programmer
-who implemented it.
->>>>>>> master
+Every configuration option in a program is a place where the program is too stupid to figure out for itself what the user really wants, and should be considered a failure of both the program and the programmer who implemented it.
 
 Rationale:
 Different configuration options are a nightmare to maintain, since the number of potential bugs caused by specific configuration combinations quickly becomes an issue. Configuration options often imply assumptions about the code which change when reimplementing the code, causing issues with backwards compatibility. But mostly, configuration options should be avoided since they simply should not exist, as the program should be smart enough to do what is best, or at least a good enough approximation of it.

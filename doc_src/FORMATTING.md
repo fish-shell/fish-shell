@@ -197,6 +197,10 @@ Some useful Unicode/HTML5 entities:
 
 ## Notes
 
+### Doxygen
+
+- Tested on Mac OS X 10.9 with Homebrew install Doxygen 1.8.7 and 1.8.8. 
+
 ### Updated Configure/Makefile
 
 - Tested on Ubuntu 14.04, CentOS 6.5 and Mac OS X 10.9.

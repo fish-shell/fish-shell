@@ -1,6 +1,6 @@
 # Formatting guide for fish docs
 
-The fish documentation has been updated to support Doxygen 1.8+, and while the main benefit of this change is extensive Markdown support, the addition of a fish lexicon and syntax filter, combined with semantic markup rules allows for automatic formatting enhancements across the HTML user_docs, the developer docs and the man pages.
+The fish documentation has been updated to support Doxygen 1.8.7+, and while the main benefit of this change is extensive Markdown support, the addition of a fish lexicon and syntax filter, combined with semantic markup rules allows for automatic formatting enhancements across the HTML user_docs, the developer docs and the man pages.
 
 Initially my motivation was to fix a problem with long options ([Issue #1557](https://github.com/fish-shell/fish-shell/issues/1557) on GitHub), but as I worked on fixing the issue I realised there was an opportunity to simplify, reinforce and clarify the current documentation, hopefully making further contribution easier and cleaner, while allowing the documentation examples to presented more clearly with less author effort.
 
@@ -199,7 +199,12 @@ Some useful Unicode/HTML5 entities:
 
 ### Doxygen
 
+- Tested on Ubuntu 14.04 with Doxygen 1.8.8, built from source.
 - Tested on Mac OS X 10.9 with Homebrew install Doxygen 1.8.7 and 1.8.8. 
+
+Doxygen 1.8.6 and lower do not have the \\htmlonly[block] directive which fixes a multitude of problems in the rendering of the docs. In Doxygen 1.8.7 the list of understood HTML entities was greatly increased. I tested earlier versions and many little issues returned.
+
+As fish ships with pre-built documentation, I don't see this as an issue.
 
 ### Updated Configure/Makefile
 

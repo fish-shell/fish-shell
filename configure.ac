@@ -146,7 +146,7 @@ AS_IF([test x$local_gettext != xno],
 # Build/clean the documentation only if Doxygen is available
 #
 
-doxygen_minimum=1.8
+doxygen_minimum=1.8.7
 
 AC_ARG_WITH(
   doxygen,

@@ -617,8 +617,8 @@ s/\([^@]\)\([A-Za-z0-9_-][A-Za-z0-9_-]*\.[a-z0-9*][a-z0-9*]*\)/\1@fsfo{\2}/g
 # As the lexicon is written into the output lexicon_filter, portability is
 # automatically handled.
 #.
-#!# cmnd whoami
-#!# cmnd mkdir
-#!# cmnd basename
-#!# bltn sleep
-#!# args in
+#.!# cmnd whoami
+#.!# cmnd mkdir
+#.!# cmnd basename
+#.!# bltn sleep
+#.!# args in

@@ -361,7 +361,7 @@ lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES
 	sed <share/functions/__fish_config_interactive.fish >>lexicon.tmp -n \
 		-e '/set_default/s/.*\(fish_[a-z][a-z_]*\).*$$/clrv \1/p'; \
 	sed <lexicon_filter.in >>lexicon.tmp -n \
-		-e '/^#!#/s/^#!# \(.... [a-z][a-z_]*\)/\1/p'; \
+		-e '/^#.!#/s/^#.!# \(.... [a-z][a-z_]*\)/\1/p'; \
 	mv lexicon.tmp lexicon.txt; rm -f lexicon_catalog.tmp lexicon_catalog.txt;
 
 #

@@ -381,7 +381,7 @@ lexicon_filter: lexicon.txt lexicon_filter.in
 	# /bin or /usr/bin and some versions dont allow more than one comment!.
 	sed <$@.in >$@.tmp -e 's|@sed@|'"`which sed`"'|' -e '/^[ ]*#[^!]/d'
 	# Scan through the lexicon, transforming each line to something useful to Doxygen.
-	if `echo "x" | sed "/[[:<:]]x/d"`; then \
+	if `echo "x" | sed "/[[:<:]]x/d" 2>/dev/null`; then \
 		WORDBL='[[:<:]]'; WORDBR='[[:>:]]'; \
 	else\
 		WORDBL='\\<'; WORDBR='\\>'; \

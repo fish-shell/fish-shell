@@ -6,82 +6,78 @@
 
 
 if [ "$argv" != '-n' ]
-  # begin...end has bug in error redirecting...
-  begin
-    ../fish -n ./test.fish ^top.tmp.err
-    ../fish -n ./test.fish -n ^^top.tmp.err
-    ../fish ./test.fish -n ^^top.tmp.err
-  end | tee top.tmp.out
-  echo $status >top.tmp.status
-  set res ok
-  if diff top.tmp.out top.out >/dev/null
-  else
-	set res fail
-	echo Output differs for file test.fish
-  end
+    set -l res ok
 
-  if diff top.tmp.err top.err >/dev/null
-  else
-	set res fail
-	echo Error output differs for file test.fish
-  end
+    # begin...end has bug in error redirecting...
+    begin
+        ../fish -n ./test.fish ^top.tmp.err
+        ../fish -n ./test.fish -n ^^top.tmp.err
+        ../fish ./test.fish -n ^^top.tmp.err
+    end  | tee top.tmp.out
+    set -l tmp_status $status
+    if not diff top.tmp.out top.out >/dev/null
+        set res fail
+        echo "Output differs for file test.fish. Diff follows:"
+        diff -u top.out top.tmp.out
+    end
 
-  if test (cat top.tmp.status) = (cat top.status)
-  else
-	set res fail
-	echo Exit status differs for file test.fish
-  end
+    if not diff top.tmp.err top.err >/dev/null
+        set res fail
+        echo "Error output differs for file test.fish. Diff follows:"
+        diff -u top.err top.tmp.err
+    end
 
-  ../fish -p /dev/null -c 'echo testing' >/dev/null
-  if test $status -ne 0
-	set res fail
-	echo Profiling fails
-  end
+    if test $tmp_status -ne (cat top.status)
+        set res fail
+        echo "Exit status differs for file test.fish"
+    end
 
-  if test $res = ok;
-	echo File test.fish tested ok
+    if not ../fish -p /dev/null -c 'echo testing' >/dev/null
+        set res fail
+        echo "Profiling failed"
+    end
+
+    if test $res = ok
+        echo "File test.fish tested ok"
         exit 0
-  else
-	echo File test.fish failed tests
+    else
+        echo "File test.fish failed tests"
         exit 1
-  end;
+    end
 end
 
-echo Testing high level script functionality
+echo "Testing high level script functionality"
 
 for i in *.in
-  set template_out (basename $i .in).out
-  set template_err (basename $i .in).err
-  set template_status (basename $i .in).status
+    set -l res ok
 
-  ../fish <$i >tmp.out ^tmp.err
-  echo $status >tmp.status
-  set res ok
-  if diff tmp.out $template_out >/dev/null
-  else
-	set res fail
-	echo Output differs for file $i. Diff follows:
-	diff -u tmp.out $template_out
-  end
+    set -l base (basename $i .in)
+    set template_out (basename $i .in).out
+    set template_err (basename $i .in).err
+    set template_status (basename $i .in).status
 
-  if diff tmp.err $template_err >/dev/null
-  else
-	set res fail
-	echo Error output differs for file $i. Diff follows:
-	diff -u tmp.err $template_err
-  end
+    ../fish <$i >tmp.out ^tmp.err
+    set -l tmp_status $status
+    if not diff tmp.out $base.out >/dev/null
+        set res fail
+        echo "Output differs for file $i. Diff follows:"
+        diff -u tmp.out $base.out
+    end
 
-  if test (cat tmp.status) = (cat $template_status)
-  else
-	set res fail
-	echo Exit status differs for file $i
-  end
+    if not diff tmp.err $base.err >/dev/null
+        set res fail
+        echo "Error output differs for file $i. Diff follows:"
+        diff -u tmp.err $base.err
+    end
 
-  if test $res = ok;
-	echo File $i tested ok
-  else
-	echo File $i failed tests
-  end;
+    if test $tmp_status -ne (cat $template_status)
+        set res fail
+        echo "Exit status differs for file $i"
+    end
 
+    if test $res = ok
+        echo "File $i tested ok"
+    else
+        echo "File $i failed tests"
+    end
 end
-

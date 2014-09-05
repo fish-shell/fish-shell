@@ -282,10 +282,25 @@ doc/refman.pdf: doc
 # This target runs both the low level code tests and the high level script tests.
 #
 
+# normally we'd just depend on test_low_level and test_fishscript
+# But I'd rather not mix test output when doing parallel building with the -j flag
+# Instead we'll depend on the dependencies of those targets, for parallel building,
+# and use recursive make to actually invoke the tests themselves
 test: $(PROGRAMS) fish_tests
-	./fish_tests
-	cd tests; ../fish -c 'set -x fish_function_path "$$PWD"/../share/functions dummy; source' <test.fish;
+	@$(MAKE) test_low_level
+	@$(MAKE) test_fishscript
 .PHONY: test
+
+test_low_level: fish_tests
+	./fish_tests
+.PHONY: test_low_level
+
+test_fishscript: $(PROGRAMS)
+	@rm -rf tests/tmp.config
+	@mkdir -p tests/tmp.config/fish
+	@echo 'set fish_function_path "$$PWD/../share/functions"' > tests/tmp.config/fish/config.fish
+	cd tests; XDG_CONFIG_HOME="$$PWD"/tmp.config ../fish test.fish
+.PHONY: test_fishscript
 
 
 #

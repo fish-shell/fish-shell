@@ -7,6 +7,11 @@ set -l IFS \t
 count (echo one\ntwo)
 set -l IFS
 count (echo one\ntwo)
+echo [(echo -n one\ntwo)]
+count (echo one\ntwo\n)
+echo [(echo -n one\ntwo\n)]
+count (echo one\ntwo\n\n)
+echo [(echo -n one\ntwo\n\n)]
 set -le IFS
 
 function print_vars --no-scope-shadowing
@@ -70,3 +75,19 @@ print_vars ary
 echo '' | read -la ary
 print_vars ary
 set -le IFS
+
+# read -n tests
+
+echo
+echo '# read -n tests'
+echo 'testing' | read -n 3 foo
+echo $foo
+echo 'test' | read -n 10 foo
+echo $foo
+echo 'test' | read -n 0 foo
+echo $foo
+echo 'testing' | begin; read -n 3 foo; read -n 3 bar; end
+echo $foo
+echo $bar
+echo 'test' | read -n 1 foo
+echo $foo

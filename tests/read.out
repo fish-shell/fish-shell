@@ -1,6 +1,15 @@
 2
 2
 1
+[one
+two]
+1
+[one
+two]
+1
+[one
+two
+]
 
 1 'hello' 1 'there'
 1 'hello there'
@@ -25,3 +34,11 @@
 5 'h' 'e' 'l' 'l' 'o'
 1 'h'
 0
+
+# read -n tests
+tes
+test
+test
+tes
+tin
+t

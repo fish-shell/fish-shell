@@ -56,7 +56,7 @@ Examples:
 
 Every configuration option in a program is a place where the program
 is too stupid to figure out for itself what the user really wants, and
-should be considered a failiure of both the program and the programmer
+should be considered a failure of both the program and the programmer
 who implemented it.
 
 Rationale:
@@ -123,7 +123,7 @@ all the common features by simply looking at the user interface and
 guessing what the different buttons, menus and other widgets do. The
 traditional way to discover features in commandline programs is
 through manual pages. This requires both that the user starts to use a
-different program, and the she/he then remembers the new information
+different program, and then she/he remembers the new information
 until the next time she/he uses the same program.
 
 Examples:

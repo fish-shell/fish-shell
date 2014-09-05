@@ -1051,22 +1051,27 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
    and do proper testing afterwards.
    
    This function operates on strings backwards, starting at last_idx.
+
+    Note: last_idx is considered to be where it previously finished
+    procesisng. This means it actually starts operating on last_idx-1.
+    As such, to process a string fully, pass string.size() as last_idx
+    instead of string.size()-1.
 */
 static int expand_variables(parser_t &parser, const wcstring &instr, std::vector<completion_t> &out, long last_idx, parse_error_list_t *errors)
 {
-    // We permit last_idx to be beyond the end of the string if and only if the string is empty
-    assert(instr.empty() || (last_idx >= 0 && (size_t)last_idx < instr.size()));
-    
-    // Make this explicit
-    if (instr.empty())
+    const size_t insize = instr.size();
+
+    // last_idx may be 1 past the end of the string, but no further
+    assert(last_idx >= 0 && (size_t)last_idx <= insize);
+
+    if (last_idx == 0)
     {
         append_completion(out, instr);
         return true;
     }
-    
+
     bool is_ok = true;
     bool empty = false;
-    const size_t insize = instr.size();
 
     wcstring var_tmp;
 
@@ -1078,7 +1083,7 @@ static int expand_variables(parser_t &parser, const wcstring &instr, std::vector
 
     //  CHECK( out, 0 );
 
-    for (long i=last_idx; (i>=0) && is_ok && !empty; i--)
+    for (long i=last_idx-1; (i>=0) && is_ok && !empty; i--)
     {
         const wchar_t c = instr.at(i);
         if ((c == VARIABLE_EXPAND) || (c == VARIABLE_EXPAND_SINGLE))
@@ -1809,7 +1814,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
         }
         else
         {
-            if (!expand_variables(parser, next, *out, next.size() - 1, errors))
+            if (!expand_variables(parser, next, *out, next.size(), errors))
             {
                 return EXPAND_ERROR;
             }

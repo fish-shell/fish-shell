@@ -29,7 +29,7 @@ enough to handle all common use cases of either feature.
 Rationale:
 
 Related features make the language larger, which makes it harder to
-learn. It also increases the size of the sourcecode, making the
+learn. It also increases the size of the source code, making the
 program harder to maintain and update.
 
 Examples:
@@ -77,9 +77,9 @@ Examples:
 
 A special note on the evils of configurability is the long list of
 very useful features found in some shells, that are not turned on by
-default. Both zsh and bash support command specific completions, but
+default. Both zsh and bash support command-specific completions, but
 no such completions are shipped with bash by default, and they are
-turned off by default in zsh. Other features that zsh support that are
+turned off by default in zsh. Other features that zsh supports that are
 disabled by default include tab-completion of strings containing
 wildcards, a sane completion pager and a history file.
 
@@ -94,7 +94,7 @@ Rationale:
 This design rule is different than the others, since it describes how
 one should go about designing new features, not what the features
 should be. The problem with focusing on what can be done, and what is
-easy to do, is that to much of the implementation is exposed. This
+easy to do, is that too much of the implementation is exposed. This
 means that the user must know a great deal about the underlying system
 to be able to guess how the shell works, it also means that the
 language will often be rather low-level.
@@ -102,9 +102,9 @@ language will often be rather low-level.
 Examples:
 
 - There should only be one type of input to the shell, lists of commands. Loops, conditionals and variable assignments are all performed through regular commands.
-- The differences between builtin commands and shellscript functions should be made as small as possible. Builtins and shellscript functions should have exactly the same types of argument expansion as other commands, should be possible to use in any position in a pipeline, and should support any io redirection.
+- The differences between built-in commands and shellscript functions should be made as small as possible. Built-ins and shellscript functions should have exactly the same types of argument expansion as other commands, should be possible to use in any position in a pipeline, and should support any I/O redirection.
 - Instead of forking when performing command substitution to provide a fake variable scope, all fish commands are performed from the same process, and fish instead supports true scoping.
-- All blocks end with the \c end builtin.
+- All blocks end with the \c end built-in.
 
 \section disc The law of discoverability
 
@@ -117,11 +117,11 @@ A program whose features are discoverable turns a new user into an
 expert in a shorter span of time, since the user will become an expert
 on the program simply by using it.
 
-The main benefit of a graphical program over a command line-based
+The main benefit of a graphical program over a command-line-based
 program is discoverability. In a graphical program, one can discover
 all the common features by simply looking at the user interface and
 guessing what the different buttons, menus and other widgets do. The
-traditional way to discover features in commandline programs is
+traditional way to discover features in command-line programs is
 through manual pages. This requires both that the user starts to use a
 different program, and then she/he remembers the new information
 until the next time she/he uses the same program.
@@ -129,9 +129,9 @@ until the next time she/he uses the same program.
 Examples:
 
 - Everything should be tab-completable, and every tab completion should have a description.
-- Every syntax error and error in a builtin command should contain an error message describing what went wrong and a relevant help page. Whenever possible, errors should be flagged red by the syntax highlighter.
+- Every syntax error and error in a built-in command should contain an error message describing what went wrong and a relevant help page. Whenever possible, errors should be flagged red by the syntax highlighter.
 - The help manual should be easy to read, easily available from the shell, complete and contain many examples
-- The language should be uniform, so that once the user understands the command/argument syntax, he will know the whole language, and be able to use tab-completion to discover new featues.
+- The language should be uniform, so that once the user understands the command/argument syntax, she/he will know the whole language, and be able to use tab-completion to discover new features.
 
 */
 

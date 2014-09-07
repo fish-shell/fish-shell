@@ -44,7 +44,7 @@ Each page, section and subsection id _must_ be unique across the whole of the do
 
 While Doxygen has support for \\code..\\endcode blocks with enhanced markup and syntax colouring, it only understands the core Doxygen languages: C, C++, Objective C, Java, PHP, Python, Tcl and Fortran. To enhance Fish's syntax presentation, use the special \\fish..\\endfish blocks instead.
 
-Text placed in this block will be parsed by Doxygen using the included lexicon filter (see lexicon_filter.in) and a Doxygen input filter. The filter is built during make so that it can pick up information on builtins, functions and shell commands mentioned in completions and apply markup to keywords found inside the \\fish block.
+Text placed in this block will be parsed by Doxygen using the included lexicon filter (see lexicon_filter.in) as a Doxygen input filter. The filter is built during make so that it can pick up information on builtins, functions and shell commands mentioned in completions and apply markup to keywords found inside the \\fish block.
 
 Basically, preformatted plain text inside the \\fish block is fed through the filter and is returned marked up so that Doxygen aliases can convert it back to a presentable form, according to the output document type.
 
@@ -224,7 +224,7 @@ As fish ships with pre-built documentation, I don't see this as an issue.
 
 ### Man page output
 
-- Tested on Ubuntu 14.04, CentOS 6.5 and Max OS X 10.9.
+- Tested on Ubuntu 14.04, CentOS 6.5 and Mac OS X 10.9.
 - Output is substantially cleaner.
 - Tested in cat, less, more and most pagers using the following fish script:
 

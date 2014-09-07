@@ -51,14 +51,12 @@ body {
     font-family: DejaVuSansCondensed, DejaVuSans, Roboto, "Lucida Grande", Calibri, Verdana, "Helvetica Neue", Helvetica, Arial, sans-serif;
     background-color: #1f2d53;
 }
-.fish_left_little { width: 19rem; }
 .fish_right_bar {
     margin-left: 25rem;
     margin-right: 0;
     padding: 0 3rem;
     box-shadow: -0.3rem 0.3rem 1rem #000818;
 }
-.fish_right_big { margin-left: 19rem; }
 .fish_only_bar {
     width: 100%;
     padding-bottom: 3rem;
@@ -242,7 +240,7 @@ tt, code, pre, .fish {
 .docs_menu > ul ul { margin: 0.6rem 0; }
 .docs_menu > ul ul > li { margin-bottom: 0.2rem; }
 /*Tutorial*/
-
+.tutorial_menu { margin-left: 2rem; }
 /*Design*/
 .design {
     max-width: 780px;
@@ -250,10 +248,12 @@ tt, code, pre, .fish {
     padding: 0 4rem;
 }
 /*Commands*/
-.commands_menu { line-height: 2rem; }
+.commands_menu { line-height: 2rem; margin-left: 2rem; }
 /*FAQ*/
-.faq_menu { line-height: 2rem; }
+.faq_menu { line-height: 2rem; margin-top: 4rem; margin-right: 2rem;}
+.faq_menu > ul > li { position: static; }
 .faq_menu > ul li { margin-bottom: 0.6rem; }
+
 /*Licenses*/
 .license {
     max-width: 780px;

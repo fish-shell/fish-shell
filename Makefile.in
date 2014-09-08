@@ -262,7 +262,7 @@ prof: all
 user_doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FILES) lexicon_filter
 	(cat Doxyfile.user; echo INPUT_FILTER=./lexicon_filter; \
 	echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | sed "s/-.*//") | doxygen - && touch user_doc; \
-	cd user_doc/html; rm -f bc_s.png bdwn.png closed.png ftv2*.png nav*.png open.png sync_*.png tab*.* doxygen.* dynsections.js jquery.js pages.html
+	cd user_doc/html && rm -f bc_s.png bdwn.png closed.png ftv2*.png nav*.png open.png sync_*.png tab*.* doxygen.* dynsections.js jquery.js pages.html
 
 #
 # Source code documentation. Also includes user documentation.
@@ -277,10 +277,9 @@ doc: *.h *.cpp doc.h Doxyfile lexicon_filter
 #
 
 doc/refman.pdf: doc
-	cd doc/latex; \
-	make; \
-	mv refman.pdf ..; \
-	cd ../..; \
+	cd doc/latex && \
+	make &&  \
+	mv refman.pdf ..;
 	rm -r doc/latex;
 
 
@@ -381,10 +380,10 @@ lexicon_filter: lexicon.txt lexicon_filter.in
 	# /bin or /usr/bin and some versions dont allow more than one comment!.
 	sed <$@.in >$@.tmp -e 's|@sed@|'"`which sed`"'|' -e '/^[ ]*#[^!]/d'
 	# Scan through the lexicon, transforming each line to something useful to Doxygen.
-	if `echo "x" | sed "/[[:<:]]x/d" 2>/dev/null`; then \
+	if echo x | sed "/[[:<:]]x/d" 2>/dev/null; then \
 		WORDBL='[[:<:]]'; WORDBR='[[:>:]]'; \
-	else\
-		WORDBL='\\<'; WORDBR='\\>'; \
+	else \
+		WORDBL='\<'; WORDBR='\>'; \
 	fi; \
 	sed <lexicon.txt >>$@.tmp -n \
 		-e "s|^\([a-z][a-z][a-z][a-z]\) \([a-z_-]*\)$$|s,$$WORDBL\2$$WORDBR,@\1{\2},g|p" \

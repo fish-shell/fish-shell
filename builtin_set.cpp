@@ -788,7 +788,7 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
             if (woptind != argc)
             {
                 append_format(stderr_buffer,
-                              _(L"%ls: Values cannot be specfied with erase\n"),
+                              _(L"%ls: Values cannot be specified with erase\n"),
                               argv[0]);
                 builtin_print_help(parser, argv[0], stderr_buffer);
                 retcode=1;

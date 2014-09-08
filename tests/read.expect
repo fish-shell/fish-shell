@@ -1,0 +1,77 @@
+# vim: set filetype=expect:
+
+proc expect_read_prompt {} {
+    expect -re "\\r\\n?read> $"
+}
+
+proc expect_marker {text} {
+    expect_prompt -re "\\r\\n@MARKER:$text@\\r\\n" {} unmatched {
+        abort "Couldn't find marker line '$text'"
+    }
+}
+
+spawn $fish
+
+expect_prompt
+
+# read
+
+send_line "read foo"
+expect_read_prompt
+send_line "text"
+expect_prompt
+print_var_contents foo
+
+send_line "read foo"
+expect_read_prompt
+send_line "again\r_marker 1"
+expect_prompt
+expect_marker 1
+print_var_contents foo
+
+send_line "read foo"
+expect_read_prompt
+send_line -h "bar\r_marker 2"
+expect_prompt
+expect_marker 2
+print_var_contents foo
+
+# read -n
+
+send_line "read -n 3 foo"
+expect_read_prompt
+send_line -h "123_marker 3"
+expect_prompt
+expect_marker 3
+print_var_contents foo
+
+send_line "read -n 3 foo"
+expect_read_prompt
+send_line "456_marker 4"
+expect_prompt
+expect_marker 4
+print_var_contents foo
+
+send_line "read -n 12 foo bar"
+expect_read_prompt
+send_line "hello world!_marker 5"
+expect_prompt
+expect_marker 5
+print_var_contents foo
+print_var_contents bar
+
+send_line "bind ` 'commandline -i test'`"
+expect_prompt
+send_line "read -n 4 foo"
+expect_read_prompt
+send_line "te`_marker 6"
+expect_prompt
+expect_marker 6
+print_var_contents foo
+
+send_line "read -n 4 foo"
+expect_read_prompt
+send_line -h "12`_marker 7"
+expect_prompt
+expect_marker 7
+print_var_contents foo

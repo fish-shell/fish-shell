@@ -37,6 +37,34 @@ if [ "$argv" != '-n' ]
         echo "Profiling failed"
     end
 
+    echo "Testing interactive functionality"
+    # bug: `fish -n` throws errors on fishscript functions that don't shadow real commands,
+    # so we can't use `type -q expect` here.
+    if command -s expect >/dev/null
+        # we have expect, we can run the interactive tests
+        begin
+            ../fish -n ./interactive.fish ^interactive.tmp.err
+            ../fish ./interactive.fish ^^interactive.tmp.err
+        end  | tee interactive.tmp.out
+        set -l tmp_status $status
+        if not diff interactive.tmp.out interactive.out >/dev/null
+            set res fail
+            echo "Output differs for file interactive.fish"
+        end
+
+        if not diff interactive.tmp.err interactive.err >/dev/null
+            set res fail
+            echo "Error output differs for file interactive.fish"
+        end
+
+        if test $tmp_status -ne (cat interactive.status)
+            set res fail
+            echo "Exit status differs for file interactive.fish"
+        end
+    else
+        echo "Tests disabled: `expect` not found"
+    end
+
     if test $res = ok
         echo "File test.fish tested ok"
         exit 0

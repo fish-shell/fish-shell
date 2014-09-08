@@ -1,0 +1,228 @@
+# vim: set filetype=expect sw=4 ts=4 et:
+
+log_user 0
+log_file -noappend interactive.tmp.log
+
+set fish ../fish
+
+set timeout 2
+
+set send_human {.05 .1 5 .02 .2}
+
+proc abort {{msg "aborting"}} {
+    error $msg
+    exit 1
+}
+
+# # Debug logging
+
+set loglevel debug ;# none, info, debug
+
+proc log_info string {
+    global loglevel
+    switch $loglevel {
+        info -
+        debug {
+            send_log "\[INFO] $string\n"
+        }
+    }
+}
+
+proc log_debug string {
+    global loglevel
+    switch $loglevel {
+        debug {
+            send_log "\[DEBUG] $string\n"
+        }
+    }
+}
+
+# Utilities
+
+set prompt_counter 1
+# expect_prompt takes an argument list like `expect` does.
+# It supports a special pattern "unmatched" that is run if no
+# other provided patterns match.
+proc expect_prompt {args} {
+    global prompt_counter
+    upvar expect_out expect_out
+    set prompt_pat [list -re "(?:\\r\\n?|^)prompt $prompt_counter>(?:$|\r)"]
+    if {[llength $args] == 1 && [string match "\n*" $args]} {
+        set args [join $args]
+    }
+    set prompt_action ""
+    set expargs {}
+    upvar expect_out up_expect_out
+    set state "firstarg"
+    foreach arg $args {
+        switch $state {
+            "pat" {
+                lappend expargs $arg
+                set state "action"
+            }
+            "action" {
+                lappend expargs [subst -nocommands {
+                    log_debug "matched extra pattern to expect_prompt: [quote \$expect_out(0,string)]"
+                    if {\$matched} {
+                        exp_continue
+                    }
+                    set matched yes
+                    uplevel 1 {$arg}
+                    exp_continue
+                }]
+                set state "firstarg"
+            }
+            "firstarg" -
+            "arg" {
+                if {$arg eq "unmatched" && $state eq "firstarg"} {
+                    set state "unmatched"
+                    continue
+                }
+                lappend expargs $arg
+                switch $arg {
+                    -gl -
+                    -re -
+                    -ex {
+                        set state "pat"
+                    }
+                    -i -
+                    -timeout {
+                        set state "flagarg"
+                    }
+                }
+            }
+            "flagarg" {
+                lappend expargs $arg
+                set state "arg"
+            }
+            "unmatched" {
+                if {$prompt_action ne ""} continue
+                set prompt_action [subst -nocommands {
+                    if {!\$matched} {
+                        uplevel 1 {$arg}
+                    }
+                }]
+            }
+            default {
+                error "BUG: non-exhaustive switch in expect_prompt"
+            }
+        }
+    }
+    if {[llength $expargs] > 0} {
+        log_info "expecting prompt $prompt_counter + patterns"
+    } else {
+        log_info "expecting prompt $prompt_counter"
+    }
+    set expargs [concat $prompt_pat [list $prompt_action] $expargs]
+    set matched no
+    expect {*}$expargs
+    incr prompt_counter
+}
+
+trace add execution expect {enter leave} trace_expect
+proc trace_expect {cmd args} {
+    if {[lindex $cmd 1] eq "*" && [llength $cmd] == 3} {
+        # it's an `expect "*" {..}` command, don't log it
+        return
+    }
+    switch [lindex $args end] {
+        enter {
+            log_debug "entering expect"
+            uplevel {set expect_out(buffer) {}}
+        }
+        leave {
+            set code [lindex $args 0]
+            if {$code == 0} {
+                log_debug "expect finished: [quote [uplevel set expect_out(buffer)]]"
+            } else {
+                log_debug "expect returned code $code"
+            }
+        }
+    }
+}
+
+trace add execution exp_continue enter trace_exp_continue
+proc trace_exp_continue {cmd op} {
+    log_debug "exp_continue after consuming: [quote [uplevel set expect_out(buffer)]]"
+}
+
+
+trace add execution send enter trace_send
+proc trace_send {cmd op} {
+    log_info "[quote $cmd]"
+}
+
+trace add execution spawn {enter leave} trace_spawn
+proc trace_spawn {cmd args} {
+    switch [lindex $args end] {
+        enter {
+            log_info "[quote $cmd]"
+        }
+        leave {
+            log_debug "[quote $cmd]: code [lindex $args 0], result [lindex $args 1]"
+            expect_before {
+                timeout {
+                    expect "*" {
+                        log_debug "timeout; buffer=[quote $expect_out(buffer)]"
+                    }
+                    abort "timeout"
+                }
+                eof {
+                    log_debug "eof; buffer=[quote $expect_out(buffer)]"
+                    abort "eof"
+                }
+            }
+        }
+    }
+}
+
+proc quote string {
+    set map {
+        \\      \\\\
+        \r      \\r
+        \n      \\n
+        \t      \\t
+        \a      \\a
+        \v      \\v
+        \x1b    \\e
+        \x7f    \\x7f
+    }
+    for {set x 0} {$x<32} {incr x} {
+        lappend map [format %c $x] [format \\x%02x $x]
+    }
+    string map $map $string
+}
+
+proc send_line args {
+    if {[llength $args] > 0} {
+        lset args end [lindex $args end]\r
+    }
+    send {*}$args
+}
+
+proc rand_int {low hi} {
+    expr {entier(rand() * ($hi-$low))+$low}
+}
+
+# prints the output of `_echo_var $name` (defined in interactive.config)
+proc print_var_contents name {
+    # generate a random "guard" so we know where to stop matching
+    # the randomness is to defend against the variable value containing the guard
+    set guard [rand_int 1000000000 9999999999]
+
+    # print the variable
+    log_info "get_var_contents: $$name"
+    send_line "_echo_var $name $guard"
+
+    # match on the results
+    set pat {\r\n@GUARD:$guard@\r\n(.*)\r\n@/GUARD:$guard@\r\n}
+    set matched false
+    expect_prompt -re [subst -nocommands -nobackslashes $pat] {
+        log_info "get_var_contents: result: [quote $expect_out(1,string)]"
+        puts $expect_out(1,string)
+        exp_continue
+    } unmatched {
+        log_debug "unmatched: [quote $expect_out(buffer)]"
+        abort "Didn't match output for variable $$name"
+    }
+}

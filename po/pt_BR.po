@@ -7,15 +7,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-09-08 10:29-0300\n"
-"PO-Revision-Date: 2014-09-05 15:09-0300\n"
+"POT-Creation-Date: 2014-09-08 11:38-0300\n"
+"PO-Revision-Date: 2014-09-08 13:20-0300\n"
 "Last-Translator: Iuri Rezende Souza <riuri@rocketmail.com>\n"
-"Language-Team: Português Brasileiro <>\n"
+"Language-Team: Português <>\n"
 "Language: pt_BR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
 "X-Generator: Gtranslator 2.91.6\n"
 
 #: autoload.cpp:113
@@ -119,9 +119,9 @@ msgid "%ls: Invalid variable name '%ls'\n"
 msgstr "%ls: Nome inválido de variável “%ls”\n"
 
 #: builtin.cpp:2018
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Cannot find calling job for event handler\n"
-msgstr "%ls: Cannot find calling job for event handler\n"
+msgstr "%ls: Não pôde encotrar job para tratar o evento\n"
 
 #: builtin.cpp:2036
 #, c-format
@@ -310,9 +310,8 @@ msgid "Send job %d '%ls' to background\n"
 msgstr "Enviando job %d “%ls” para background\n"
 
 #: builtin.cpp:3543
-#, fuzzy
 msgid "(default)"
-msgstr "(default)"
+msgstr "(padrão)"
 
 #: builtin.cpp:3615
 #, c-format
@@ -459,7 +458,7 @@ msgstr "Imprime os jobs em execução"
 
 #: builtin.cpp:3948
 msgid "Negate exit status of job"
-msgstr "Nega estado de saída do job"
+msgstr "Inverte estado de saída do job"
 
 #: builtin.cpp:3949
 msgid "Execute command if previous command failed"
@@ -510,7 +509,7 @@ msgid "Perform a command multiple times"
 msgstr "Executa um comando várias vezes"
 
 #: builtin_commandline.cpp:466
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Unknown input function '%ls'\n"
 msgstr "%ls: Função de entrada “%ls” desconhecida\n"
 
@@ -552,7 +551,7 @@ msgid "%ls: There are no jobs\n"
 msgstr "%ls: Não há jobs\n"
 
 #: builtin_printf.cpp:175
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "warning: %ls: character(s) following character constant have been ignored"
 msgstr "aviso: %ls: caracter(es) após constante caracter foi(ram) ignorado(s)"
@@ -622,31 +621,29 @@ msgstr ""
 "%.*ls)\n"
 
 #: builtin_set.cpp:248
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Invalid index starting at '%ls'\n"
-msgstr "%ls: Invalid index starting at “%ls”\n"
+msgstr "%ls: Indexação inválida a partir de “%ls”\n"
 
 #: builtin_set.cpp:647
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Erase needs a variable name\n"
-msgstr ""
-"%ls: Erase needs a variable name\n"
-"%ls\n"
+msgstr "%ls: Opção -e requer nome de variável\n"
 
 #: builtin_set.cpp:791
-#, fuzzy, c-format
-msgid "%ls: Values cannot be specfied with erase\n"
-msgstr "%ls: Values cannot be specfied with erase\n"
+#, c-format
+msgid "%ls: Values cannot be specified with erase\n"
+msgstr "%ls: Não podem ser especificados valores com set -e\n"
 
 #: builtin_set_color.cpp:155
 #, c-format
 msgid "%ls: Expected an argument\n"
-msgstr "%s: Esperava um argumento\n"
+msgstr "%ls: Esperava um argumento\n"
 
 #: builtin_set_color.cpp:163 builtin_set_color.cpp:170
 #, c-format
 msgid "%ls: Unknown color '%ls'\n"
-msgstr "%s: Cor desconhecida “%s”\n"
+msgstr "%ls: Cor desconhecida “%ls”\n"
 
 #: builtin_set_color.cpp:177
 #, c-format
@@ -655,10 +652,9 @@ msgstr "%ls: Não pôde ajustar terminal\n"
 
 #: common.cpp:1938
 msgid "This is a bug. Break on bugreport to debug."
-msgstr ""
+msgstr "Este é um bug. Coloque break em bugreport para debugar."
 
 #: common.cpp:1957
-#, fuzzy
 msgid "empty"
 msgstr "vazio"
 
@@ -685,7 +681,6 @@ msgid "Changing language to English"
 msgstr "Mudando língua para Português"
 
 #: env.cpp:1188
-#, fuzzy
 msgid "Tried to pop empty environment stack."
 msgstr "Tentou tirar de uma pilha de ambiente vazia."
 
@@ -700,49 +695,48 @@ msgstr ""
 "$XDG_CONFIG_HOME para um diretório onde o usuário atual pode escrever."
 
 #: event.cpp:168
-#, fuzzy, c-format
+#, c-format
 msgid "signal handler for %ls (%ls)"
-msgstr "signal handler for %ls (%ls)"
+msgstr "tratador de sinal para %ls (%ls)"
 
 #: event.cpp:172
-#, fuzzy, c-format
+#, c-format
 msgid "handler for variable '%ls'"
-msgstr "handler for variable “%ls”"
+msgstr "tratador para variável “%ls”"
 
 #: event.cpp:178
-#, fuzzy, c-format
+#, c-format
 msgid "exit handler for process %d"
-msgstr "exit handler for process %d"
+msgstr "tratador de saída para o processo %d"
 
 #: event.cpp:184 event.cpp:195
-#, fuzzy, c-format
+#, c-format
 msgid "exit handler for job %d, '%ls'"
-msgstr "exit handler for job %d, “%ls”"
+msgstr "tratador de saída para o job %d, “%ls”"
 
 #: event.cpp:186
-#, fuzzy, c-format
+#, c-format
 msgid "exit handler for job with process group %d"
-msgstr "exit handler for job with process group %d"
+msgstr "tratador de saída para o job com grupo de processos %d"
 
 #: event.cpp:197
-#, fuzzy, c-format
+#, c-format
 msgid "exit handler for job with job id %d"
-msgstr "exit handler for job with job id %d"
+msgstr "tratador de saída para o job com id de job %d"
 
 #: event.cpp:203
-#, fuzzy, c-format
+#, c-format
 msgid "handler for generic event '%ls'"
-msgstr "handler for generic event “%ls”"
+msgstr "tratador para evento genérico “%ls”"
 
 #: event.cpp:207
-#, fuzzy, c-format
+#, c-format
 msgid "Unknown event type '0x%x'"
-msgstr "Unknown event type"
+msgstr "Tipo de evento '0x%x' desconhecido"
 
 #: event.cpp:621
-#, fuzzy
 msgid "Signal list overflow. Signals have been ignored."
-msgstr "Signal list overflow. Signals have been ignored."
+msgstr "Estouro de lista de sinais. Ignorados alguns sinais."
 
 #: exec.cpp:57
 #, c-format
@@ -756,7 +750,7 @@ msgstr "Um erro ocorreu ao escrever na saída"
 #: exec.cpp:67
 #, c-format
 msgid "An error occurred while redirecting file '%s'"
-msgstr "Um erro ocorreu ao redirecionar arquivo “%ls”"
+msgstr "Um erro ocorreu ao redirecionar arquivo “%s”"
 
 #: exec.cpp:873
 #, c-format
@@ -786,7 +780,6 @@ msgid "Job: %ls"
 msgstr "Job: %ls"
 
 #: expand.cpp:79
-#, fuzzy
 msgid "Shell process"
 msgstr "Processo shell"
 
@@ -795,14 +788,13 @@ msgid "Last background job"
 msgstr "Último job em background"
 
 #: expand.cpp:1419
-#, fuzzy
 msgid "Mismatched brackets"
 msgstr "Erro de parênteses"
 
 #: fish.cpp:321
-#, fuzzy, c-format
+#, c-format
 msgid "Invalid value '%s' for debug level switch"
-msgstr "Invalid value “%s” for debug level switch"
+msgstr "Valor “%s” inválido para ativar nível de debug"
 
 #: fish.cpp:362 mimedb.cpp:1343
 #, c-format
@@ -882,29 +874,29 @@ msgid "%s: No description for type %s\n"
 msgstr "%s: Não há descrição para o tipo %s\n"
 
 #: mimedb.cpp:744
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Could not parse launcher string '%s'\n"
-msgstr "%s: Could not parse launcher string “%s”\n"
+msgstr "%s: Não pôde interpretar lançador “%s”\n"
 
 #: mimedb.cpp:780
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Default launcher '%s' does not specify how to start\n"
-msgstr "%s: Default launcher “%s” does not specify how to start\n"
+msgstr "%s: Lançador padrão “%s” não especifica como iniciar\n"
 
 #: mimedb.cpp:1158
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Unsupported switch '%c' in launch string '%s'\n"
-msgstr "%s: Unsupported switch “%c” in launch string “%s”\n"
+msgstr "%s: Caracter “%c” não suportado na string de lançador “%s”\n"
 
 #: mimedb.cpp:1354
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Can not launch a mimetype\n"
-msgstr "%s: Can not launch a mimetype\n"
+msgstr "%s: Não pôde lançar um mimetype\n"
 
 #: mimedb.cpp:1382
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Could not parse mimetype from argument '%s'\n"
-msgstr "%s: Could not parse mimetype from argument “%s”\n"
+msgstr "%s: Não pôde interpretar mimetype do argumento “%s”\n"
 
 #: mimedb.cpp:1402 signal.cpp:407 signal.cpp:422
 msgid "Unknown"
@@ -916,6 +908,8 @@ msgid ""
 "Tried to use terminfo string %s on line %ld of %s, which is undefined in "
 "terminal of type \"%ls\". Please report this error to %s"
 msgstr ""
+"Tentou usar string terminfo %s na linha %ld de %s, que está indefinido no "
+"terminal de tipo “%ls”. Por favor relate este erro para %s"
 
 #: pager.cpp:24
 msgid "search: "
@@ -943,7 +937,7 @@ msgstr "(não encontrado)"
 #: parse_execution.cpp:551
 #, c-format
 msgid "switch: Expected exactly one argument, got %lu\n"
-msgstr "switch: Esperava exatamente um argumento, obteve %d\n"
+msgstr "switch: Esperava exatamente um argumento, obteve %lu\n"
 
 #: parse_execution.cpp:772
 #, c-format
@@ -1078,27 +1072,26 @@ msgid "Block created by the . builtin"
 msgstr "Bloco criado pelo builtin ."
 
 #: parser.cpp:133 parse_constants.h:320
-#, fuzzy
 msgid "event handler block"
-msgstr "bloco gerenciador de evento"
+msgstr "bloco tratador de evento"
 
 #: parser.cpp:138 parse_constants.h:326
 msgid "unknown/invalid block"
 msgstr "bloco desconhecido/inválido"
 
 #: parser.cpp:456
-#, fuzzy, c-format
+#, c-format
 msgid "Could not write profiling information to file '%s'"
-msgstr "Could not write profiling information to file “%s”"
+msgstr "Não pôde escrever informações de desempenho no arquivo “%s”"
 
 #: parser.cpp:462
 msgid "Time\tSum\tCommand\n"
 msgstr "Tempo\tSoma\tComando\n"
 
 #: parser.cpp:544
-#, fuzzy, c-format
+#, c-format
 msgid "in event handler: %ls\n"
-msgstr "no gerenciador de evento: %ls\n"
+msgstr "no tratador de evento: %ls\n"
 
 #: parser.cpp:572
 #, c-format
@@ -1152,7 +1145,7 @@ msgstr "Fim de bloco desencontrado. Terminando programa."
 #: parser.cpp:1028
 #, c-format
 msgid "%ls (line %lu): "
-msgstr "%ls (linha %d): "
+msgstr "%ls (linha %lu): "
 
 #: parser.cpp:1032
 #, c-format

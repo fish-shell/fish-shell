@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-08-24 21:41-0300\n"
-"PO-Revision-Date: 2014-08-25 08:37-0300\n"
+"POT-Creation-Date: 2014-09-05 14:37-0300\n"
+"PO-Revision-Date: 2014-09-05 15:09-0300\n"
 "Last-Translator: Iuri Rezende Souza <riuri@rocketmail.com>\n"
 "Language-Team: Português Brasileiro <>\n"
 "Language: pt_BR\n"
@@ -19,7 +19,7 @@ msgstr ""
 "X-Generator: Gtranslator 2.91.6\n"
 
 #: autoload.cpp:113
-#, fuzzy, c-format
+#, c-format
 msgid "Could not autoload item '%ls', it is already being autoloaded. "
 msgstr ""
 "Não pôde carregar item “%ls” automaticamente, ele já está sendo carregado "
@@ -28,9 +28,9 @@ msgstr ""
 #: builtin_commandline.cpp:466
 #, fuzzy, c-format
 msgid "%ls: Unknown input function '%ls'\n"
-msgstr "%ls: Unknown input function “%ls”\n"
+msgstr "%ls: Função de entrada “%ls” desconhecida\n"
 
-#: builtin_complete.cpp:536 builtin.cpp:3632 builtin_set_color.cpp:146
+#: builtin_complete.cpp:551 builtin.cpp:3682 builtin_set_color.cpp:146
 #: builtin.h:83
 #, c-format
 msgid "%ls: Too many arguments\n"
@@ -51,24 +51,24 @@ msgstr ""
 "\n"
 
 #: builtin.cpp:507
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: No key with name '%ls' found\n"
-msgstr "%ls: No key with name “%ls” found\n"
+msgstr "%ls: Não foi encontrada tecla “%ls”\n"
 
 #: builtin.cpp:513
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Key with name '%ls' does not have any mapping\n"
-msgstr "%ls: Key with name “%ls” does not have any mapping\n"
+msgstr "%ls: Tecla “%ls” não possui mapeamento\n"
 
 #: builtin.cpp:519
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Unknown error trying to bind to key named '%ls'\n"
-msgstr "%ls: Unknown error trying to bind to key named “%ls”\n"
+msgstr "%ls: Erro desconhecido ao tentar vincular à tecla “%ls”\n"
 
 #: builtin.cpp:705
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Expected zero or at least two parameters, got %d"
-msgstr "%ls: Esperava zero ou dois parâmetros, obteve %d\n"
+msgstr "%ls: Esperava zero ou dois parâmetros, obteve %d"
 
 #: builtin.cpp:736
 #, c-format
@@ -164,132 +164,135 @@ msgid "%ls: Expected one argument, got %d\n"
 msgstr "%ls: Esperava um argumento, obteve %d\n"
 
 #: builtin.cpp:2278
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Seed value '%ls' is not a valid number\n"
-msgstr "%ls: Valor semeado “%ls” não é um número válido\n"
+msgstr "%ls: Valor de seed “%ls” não é um número válido\n"
 
 #: builtin.cpp:2292
 #, c-format
 msgid "%ls: Expected zero or one argument, got %d\n"
 msgstr "%ls: Esperava zero ou um argumento, obteve %d\n"
 
-#: builtin.cpp:2473
-#, fuzzy, c-format
-msgid "%ls: --array option requires a single variable name.\n"
-msgstr ""
-"%ls: Erase needs a variable name\n"
-"%ls\n"
+#: builtin.cpp:2446
+#, c-format
+msgid "%ls: Argument '%ls' is out of range\n"
+msgstr "%ls: Argumento “%ls” está além do limite\n"
 
-#: builtin.cpp:2869 fish.cpp:519 parser.cpp:746
-msgid "Standard input"
-msgstr "Entrada padrão"
-
-#: builtin.cpp:2912
-msgid "This is a login shell\n"
-msgstr "Este é um shell de login\n"
-
-#: builtin.cpp:2914
-msgid "This is not a login shell\n"
-msgstr "Este não é um shell de login\n"
-
-#: builtin.cpp:2916
-#, fuzzy, c-format
-msgid "Job control: %ls\n"
-msgstr "Controle de job: %ls\n"
-
-#: builtin.cpp:2917
-msgid "Only on interactive jobs"
-msgstr "Somente em jobs interativos"
-
-#: builtin.cpp:2918
-msgid "Never"
-msgstr "Nunca"
-
-#: builtin.cpp:2918
-msgid "Always"
-msgstr "Sempre"
-
-#: builtin.cpp:2954 builtin.cpp:3622
+#: builtin.cpp:2454 builtin.cpp:3004 builtin.cpp:3672
 #, c-format
 msgid "%ls: Argument '%ls' must be an integer\n"
 msgstr "%ls: Argumento “%ls” deve ser um inteiro\n"
 
-#: builtin.cpp:2996
+#: builtin.cpp:2505
+#, c-format
+msgid "%ls: --array option requires a single variable name.\n"
+msgstr "%ls: Opção --array requer um nome de variável.\n"
+
+#: builtin.cpp:2919 fish.cpp:519 parser.cpp:746
+msgid "Standard input"
+msgstr "Entrada padrão"
+
+#: builtin.cpp:2962
+msgid "This is a login shell\n"
+msgstr "Este é um shell de login\n"
+
+#: builtin.cpp:2964
+msgid "This is not a login shell\n"
+msgstr "Este não é um shell de login\n"
+
+#: builtin.cpp:2966
+#, c-format
+msgid "Job control: %ls\n"
+msgstr "Controle de job: %ls\n"
+
+#: builtin.cpp:2967
+msgid "Only on interactive jobs"
+msgstr "Somente em jobs interativos"
+
+#: builtin.cpp:2968
+msgid "Never"
+msgstr "Nunca"
+
+#: builtin.cpp:2968
+msgid "Always"
+msgstr "Sempre"
+
+#: builtin.cpp:3046
 #, c-format
 msgid "%ls: Could not find home directory\n"
 msgstr "%ls: Não pôde encontrar diretório home\n"
 
-#: builtin.cpp:3016 builtin.cpp:3070
+#: builtin.cpp:3066 builtin.cpp:3120
 #, c-format
 msgid "%ls: '%ls' is not a directory\n"
 msgstr "%ls: “%ls” não é um diretório\n"
 
-#: builtin.cpp:3023
+#: builtin.cpp:3073
 #, c-format
 msgid "%ls: The directory '%ls' does not exist\n"
 msgstr "%ls: O diretório “%ls” não existe\n"
 
-#: builtin.cpp:3030
+#: builtin.cpp:3080
 #, c-format
 msgid "%ls: '%ls' is a rotten symlink\n"
 msgstr "%ls: “%ls” é um symlink quebrado\n"
 
-#: builtin.cpp:3038
+#: builtin.cpp:3088
 #, c-format
 msgid "%ls: Unknown error trying to locate directory '%ls'\n"
 msgstr "%ls: Erro desconhecido ao tentar localizar diretório “%ls”\n"
 
-#: builtin.cpp:3061
+#: builtin.cpp:3111
 #, c-format
 msgid "%ls: Permission denied: '%ls'\n"
 msgstr "%ls: Permissão negada: “%ls”\n"
 
-#: builtin.cpp:3085
+#: builtin.cpp:3135
 #, c-format
 msgid "%ls: Could not set PWD variable\n"
 msgstr "%ls: Não pôde modificar variável PWD\n"
 
-#: builtin.cpp:3172
-#, fuzzy, c-format
+#: builtin.cpp:3222
+#, c-format
 msgid "%ls: Key not specified\n"
-msgstr "%ls: Key not specified\n"
+msgstr "%ls: Palavra não especificada\n"
 
-#: builtin.cpp:3216 builtin.cpp:3224
-#, fuzzy, c-format
+#: builtin.cpp:3266 builtin.cpp:3274
+#, c-format
 msgid "%ls: Error encountered while sourcing file '%ls':\n"
 msgstr "%ls: Erro encontrado ao interpretar arquivo “%ls”:\n"
 
-#: builtin.cpp:3232
+#: builtin.cpp:3282
 #, c-format
 msgid "%ls: '%ls' is not a file\n"
 msgstr "%ls: “%ls” não é um arquivo\n"
 
-#: builtin.cpp:3251
+#: builtin.cpp:3301
 #, c-format
 msgid "%ls: Error while reading file '%ls'\n"
 msgstr "%ls: Erro ao ler arquivo “%ls”\n"
 
-#: builtin.cpp:3307 builtin.cpp:3487
+#: builtin.cpp:3357 builtin.cpp:3537
 #, c-format
 msgid "%ls: There are no suitable jobs\n"
 msgstr "%ls: Não há jobs adequados\n"
 
-#: builtin.cpp:3336
+#: builtin.cpp:3386
 #, c-format
 msgid "%ls: Ambiguous job\n"
 msgstr "%ls: Job ambíguo\n"
 
-#: builtin.cpp:3342 builtin.cpp:3510 builtin_jobs.cpp:301
+#: builtin.cpp:3392 builtin.cpp:3560 builtin_jobs.cpp:301
 #, c-format
 msgid "%ls: '%ls' is not a job\n"
 msgstr "%ls: “%ls” não é um job\n"
 
-#: builtin.cpp:3373 builtin_jobs.cpp:316
+#: builtin.cpp:3423 builtin_jobs.cpp:316
 #, c-format
 msgid "%ls: No suitable job: %d\n"
 msgstr "%ls: Não é trabalho adequado: %d\n"
 
-#: builtin.cpp:3382
+#: builtin.cpp:3432
 #, c-format
 msgid ""
 "%ls: Can't put job %d, '%ls' to foreground because it is not under job "
@@ -298,12 +301,12 @@ msgstr ""
 "%ls: Não pôde colocar job %d, “%ls” em foreground porque não está sob "
 "controle de jobs\n"
 
-#: builtin.cpp:3435
+#: builtin.cpp:3485
 #, c-format
 msgid "%ls: Unknown job '%ls'\n"
 msgstr "%ls: Job desconhecido “%ls”\n"
 
-#: builtin.cpp:3444
+#: builtin.cpp:3494
 #, c-format
 msgid ""
 "%ls: Can't put job %d, '%ls' to background because it is not under job "
@@ -312,202 +315,202 @@ msgstr ""
 "%ls: Não pôde colocar job %d, “%ls” em background porque não está sob "
 "controle de jobs\n"
 
-#: builtin.cpp:3454
+#: builtin.cpp:3504
 #, c-format
 msgid "Send job %d '%ls' to background\n"
 msgstr "Enviando job %d “%ls” para background\n"
 
-#: builtin.cpp:3493
+#: builtin.cpp:3543
 #, fuzzy
 msgid "(default)"
 msgstr "(default)"
 
-#: builtin.cpp:3565
+#: builtin.cpp:3615
 #, c-format
 msgid "%ls: Not inside of loop\n"
 msgstr "%ls: Não está dentro de laço\n"
 
-#: builtin.cpp:3650
+#: builtin.cpp:3700
 #, c-format
 msgid "%ls: Not inside of function\n"
 msgstr "%ls: Não está dentro de função\n"
 
-#: builtin.cpp:3867 builtin.cpp:3910
+#: builtin.cpp:3917 builtin.cpp:3960
 msgid "Test a condition"
 msgstr "Testa uma condição"
 
-#: builtin.cpp:3868
+#: builtin.cpp:3918
 msgid "Try out the new parser"
 msgstr "Tenta o novo interpretador"
 
-#: builtin.cpp:3869
+#: builtin.cpp:3919
 msgid "Execute command if previous command suceeded"
 msgstr "Executa comando se o comando anterior obteve sucesso"
 
-#: builtin.cpp:3870
+#: builtin.cpp:3920
 msgid "Create a block of code"
 msgstr "Cria um bloco de código"
 
-#: builtin.cpp:3871
+#: builtin.cpp:3921
 msgid "Send job to background"
 msgstr "Envia job para background"
 
-#: builtin.cpp:3872
+#: builtin.cpp:3922
 msgid "Handle fish key bindings"
 msgstr "Gerencia atalhos de teclado"
 
-#: builtin.cpp:3873
+#: builtin.cpp:3923
 msgid "Temporarily block delivery of events"
 msgstr "Bloqueia temporariamente a entrega de eventos"
 
-#: builtin.cpp:3874
+#: builtin.cpp:3924
 msgid "Stop the innermost loop"
 msgstr "Pára o laço mais interno"
 
-#: builtin.cpp:3875
+#: builtin.cpp:3925
 msgid ""
 "Temporarily halt execution of a script and launch an interactive debug prompt"
 msgstr ""
 "Interrompe temporariamente a execução de um script e abre um prompt de debug "
 "interativo"
 
-#: builtin.cpp:3876
+#: builtin.cpp:3926
 msgid "Run a builtin command instead of a function"
 msgstr "Executa um comando builtin em vez de uma função"
 
-#: builtin.cpp:3877 builtin.cpp:3909
+#: builtin.cpp:3927 builtin.cpp:3959
 msgid "Conditionally execute a block of commands"
 msgstr "Executa condicionalmente um bloco de comandos"
 
-#: builtin.cpp:3878
+#: builtin.cpp:3928
 msgid "Change working directory"
 msgstr "Muda diretório de trabalho"
 
-#: builtin.cpp:3879
+#: builtin.cpp:3929
 msgid "Run a program instead of a function or builtin"
 msgstr "Executa um programa em vez de uma função ou builtin"
 
-#: builtin.cpp:3880
+#: builtin.cpp:3930
 msgid "Set or get the commandline"
 msgstr "Obtém ou altera o buffer da linha de comando"
 
-#: builtin.cpp:3881
+#: builtin.cpp:3931
 msgid "Edit command specific completions"
 msgstr "Edita compleções específicas para um comando"
 
-#: builtin.cpp:3882
+#: builtin.cpp:3932
 msgid "Search for a specified string in a list"
 msgstr "Procura uma string especificada em uma lista"
 
-#: builtin.cpp:3883
+#: builtin.cpp:3933
 msgid "Skip the rest of the current lap of the innermost loop"
 msgstr "Pula o restante da iteração atual do laço mais interno"
 
-#: builtin.cpp:3884
+#: builtin.cpp:3934
 msgid "Count the number of arguments"
 msgstr "Conta o número de argumentos"
 
-#: builtin.cpp:3885
+#: builtin.cpp:3935
 msgid "Print arguments"
 msgstr "Imprime os argumentos"
 
-#: builtin.cpp:3886
+#: builtin.cpp:3936
 msgid "Evaluate block if condition is false"
 msgstr "Executa bloco se a condição é falsa"
 
-#: builtin.cpp:3887
+#: builtin.cpp:3937
 msgid "Emit an event"
 msgstr "Emite um evento"
 
-#: builtin.cpp:3888
+#: builtin.cpp:3938
 msgid "End a block of commands"
 msgstr "Finaliza um bloco de comandos"
 
-#: builtin.cpp:3889
+#: builtin.cpp:3939
 msgid "Run command in current process"
 msgstr "Executa um comando como o processo atual"
 
-#: builtin.cpp:3890
+#: builtin.cpp:3940
 msgid "Exit the shell"
 msgstr "Sai do shell"
 
-#: builtin.cpp:3891
+#: builtin.cpp:3941
 msgid "Send job to foreground"
 msgstr "Envia job para foreground"
 
-#: builtin.cpp:3892
+#: builtin.cpp:3942
 msgid "Perform a set of commands multiple times"
 msgstr "Executa um conjunto de comandos várias vezes"
 
-#: builtin.cpp:3893
+#: builtin.cpp:3943
 msgid "Define a new function"
 msgstr "Define uma nova função"
 
-#: builtin.cpp:3894
+#: builtin.cpp:3944
 msgid "List or remove functions"
 msgstr "Lista ou remove funções"
 
-#: builtin.cpp:3895
+#: builtin.cpp:3945
 msgid "History of commands executed by user"
 msgstr "Histórico de funções executadas pelo usuário"
 
-#: builtin.cpp:3896
+#: builtin.cpp:3946
 msgid "Evaluate block if condition is true"
 msgstr "Executa bloco se a condição é verdadeira"
 
-#: builtin.cpp:3897
+#: builtin.cpp:3947
 msgid "Print currently running jobs"
 msgstr "Imprime os jobs em execução"
 
-#: builtin.cpp:3898
+#: builtin.cpp:3948
 msgid "Negate exit status of job"
 msgstr "Nega estado de saída do job"
 
-#: builtin.cpp:3899
+#: builtin.cpp:3949
 msgid "Execute command if previous command failed"
 msgstr "Executa comando se o comando anterior falhou"
 
-#: builtin.cpp:3900
+#: builtin.cpp:3950
 msgid "Prints formatted text"
 msgstr "Imprime texto formatado"
 
-#: builtin.cpp:3901
+#: builtin.cpp:3951
 msgid "Print the working directory"
 msgstr "Imprime o diretório de trabalho"
 
-#: builtin.cpp:3902
+#: builtin.cpp:3952
 msgid "Generate random number"
 msgstr "Gera um número aleatório"
 
-#: builtin.cpp:3903
+#: builtin.cpp:3953
 msgid "Read a line of input into variables"
 msgstr "Lê uma linha de entrada e a coloca em variáveis"
 
-#: builtin.cpp:3904
+#: builtin.cpp:3954
 msgid "Stop the currently evaluated function"
 msgstr "Pára a função em execução"
 
-#: builtin.cpp:3905
+#: builtin.cpp:3955
 msgid "Handle environment variables"
 msgstr "Modifica variáveis de ambiente"
 
-#: builtin.cpp:3906
+#: builtin.cpp:3956
 msgid "Set the terminal color"
 msgstr "Muda a cor do terminal"
 
-#: builtin.cpp:3907
+#: builtin.cpp:3957
 msgid "Evaluate contents of file"
 msgstr "Executa conteúdo do arquivo"
 
-#: builtin.cpp:3908
+#: builtin.cpp:3958
 msgid "Return status information about fish"
 msgstr "Retorna informação de estado do fish"
 
-#: builtin.cpp:3911
+#: builtin.cpp:3961
 msgid "Set or get the shells resource usage limits"
 msgstr "Modifica ou obtém limites de uso de recursos pelo shell"
 
-#: builtin.cpp:3912
+#: builtin.cpp:3962
 msgid "Perform a command multiple times"
 msgstr "Executa um comando várias vezes"
 
@@ -528,9 +531,8 @@ msgid "stopped"
 msgstr "parado"
 
 #: builtin_jobs.cpp:99
-#, fuzzy
 msgid "running"
-msgstr "running"
+msgstr "execndo"
 
 #: builtin_jobs.cpp:113
 msgid "Group\n"
@@ -550,10 +552,10 @@ msgid "%ls: There are no jobs\n"
 msgstr "%ls: Não há jobs\n"
 
 #: builtin_printf.cpp:175
-#, c-format
+#, fuzzy, c-format
 msgid ""
 "warning: %ls: character(s) following character constant have been ignored"
-msgstr ""
+msgstr "aviso: %ls: caracter(es) após constante caracter foi(ram) ignorado(s)"
 
 #: builtin_printf.cpp:256
 #, c-format
@@ -608,9 +610,9 @@ msgid "%ls: Unknown color '%ls'\n"
 msgstr "%s: Cor desconhecida “%s”\n"
 
 #: builtin_set_color.cpp:177
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Could not set up terminal\n"
-msgstr "Could not set up terminal"
+msgstr "%ls: Não pôde ajustar terminal\n"
 
 #: builtin_set.cpp:155
 #, c-format
@@ -618,14 +620,14 @@ msgid "%ls: Tried to change the read-only variable '%ls'\n"
 msgstr "%ls: Tentou mudar a variável somente leitura “%ls”\n"
 
 #: builtin_set.cpp:162
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Tried to set the special variable '%ls' with the wrong scope\n"
-msgstr "%ls: Tentou mudar a variável somente leitura “%ls”\n"
+msgstr "%ls: Tentou mudar a variável especial “%ls” com o escopo errado\n"
 
 #: builtin_set.cpp:169
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Tried to set the special variable '%ls' to an invalid value\n"
-msgstr "%ls: Tentou mudar a variável somente leitura “%ls”\n"
+msgstr "%ls: Tentou mudar a variável especial “%ls” para um valor inválido\n"
 
 #: builtin_set.cpp:221
 #, c-format
@@ -651,11 +653,11 @@ msgstr ""
 msgid "%ls: Values cannot be specfied with erase\n"
 msgstr "%ls: Values cannot be specfied with erase\n"
 
-#: common.cpp:1917
+#: common.cpp:1938
 msgid "This is a bug. Break on bugreport to debug."
 msgstr ""
 
-#: common.cpp:1936
+#: common.cpp:1957
 #, fuzzy
 msgid "empty"
 msgstr "vazio"
@@ -670,11 +672,11 @@ msgstr "Diretório de usuário para %ls"
 msgid "Variable: %ls"
 msgstr "Variável: %ls"
 
-#: complete.cpp:907 complete.cpp:925
+#: complete.cpp:909 complete.cpp:927
 msgid "Unknown option: "
 msgstr "Opção desconhecida: "
 
-#: complete.cpp:929
+#: complete.cpp:931
 msgid "Multiple matches for option: "
 msgstr "Várias possibilidades para opção: "
 
@@ -682,7 +684,7 @@ msgstr "Várias possibilidades para opção: "
 msgid "Changing language to English"
 msgstr "Mudando língua para Português"
 
-#: env.cpp:1187
+#: env.cpp:1188
 #, fuzzy
 msgid "Tried to pop empty environment stack."
 msgstr "Tentou tirar de uma pilha de ambiente vazia."
@@ -792,7 +794,7 @@ msgstr "Processo shell"
 msgid "Last background job"
 msgstr "Último job em background"
 
-#: expand.cpp:1414
+#: expand.cpp:1419
 #, fuzzy
 msgid "Mismatched brackets"
 msgstr "Erro de parênteses"
@@ -851,10 +853,18 @@ msgstr ""
 msgid "%s: Out of memory\n"
 msgstr "%s: Sem memória\n"
 
+# Notas:
+# Adicionar nota
+#
+# Formato:
+# C
+#
+# Caminhos:
+# mimedb.cpp:463
 #: mimedb.cpp:463
-#, fuzzy, c-format
+#, c-format
 msgid "%s: Unknown error in munge()\n"
-msgstr "%s: Unknown error in munge()\n"
+msgstr "%s: Erro desconhecido em munge()\n"
 
 #: mimedb.cpp:481
 #, c-format
@@ -867,9 +877,9 @@ msgid "%s: Could not compile regular expressions %s with error %s\n"
 msgstr "%s: Não pôde compilar expressão regular %s com erro %s\n"
 
 #: mimedb.cpp:676
-#, fuzzy, c-format
+#, c-format
 msgid "%s: No description for type %s\n"
-msgstr "%s: No description for type %s\n"
+msgstr "%s: Não há descrição para o tipo %s\n"
 
 #: mimedb.cpp:744
 #, fuzzy, c-format
@@ -996,9 +1006,9 @@ msgstr ""
 "Requeriu redireção para “%ls”, que não é um descritor de arquivo válido"
 
 #: parser.cpp:53
-#, fuzzy, c-format
+#, c-format
 msgid "Tokenizer error: '%ls'"
-msgstr "Tokenizer error: “%ls”"
+msgstr "Erro de análise de token: “%ls”"
 
 #: parser.cpp:58
 #, c-format
@@ -1035,7 +1045,6 @@ msgid "function invocation block"
 msgstr "bloco de chamada de função"
 
 #: parser.cpp:98 parse_constants.h:279
-#, fuzzy
 msgid "function invocation block with no variable shadowing"
 msgstr "bloco de chamada de função sem mascaramento de variáveis"
 
@@ -1132,7 +1141,6 @@ msgid "Job inconsistency"
 msgstr "Inconsistência de job"
 
 #: parser.cpp:930
-#, fuzzy
 msgid "End of block mismatch. Program terminating."
 msgstr "Fim de bloco desencontrado. Terminando programa."
 
@@ -1175,7 +1183,7 @@ msgstr ""
 
 #: proc.cpp:734
 msgid "ended"
-msgstr ""
+msgstr "terminado"
 
 #: proc.cpp:968
 msgid "An error occured while reading output from code block"
@@ -1252,7 +1260,7 @@ msgstr "Não pôde pegar controle do terminal"
 
 #: reader.cpp:2609
 msgid "Pop null reader block"
-msgstr ""
+msgstr "Desempilhado bloco nulo"
 
 #: reader.cpp:2875
 msgid ""
@@ -1260,20 +1268,20 @@ msgid ""
 "termination.\n"
 msgstr "Há jobs parados. Uma segunda tentativa de sair forçará seu término.\n"
 
-#: reader.cpp:4064
+#: reader.cpp:4082
 #, c-format
 msgid "Unknown keybinding %d"
 msgstr "Atalho desconhecido %d"
 
-#: reader.cpp:4205
+#: reader.cpp:4223
 msgid "Error while reading from file descriptor"
 msgstr "Erro ao ler do descritor de arquivo"
 
-#: reader.cpp:4222
+#: reader.cpp:4240
 msgid "Error while closing input stream"
 msgstr "Erro ao fechar stream de entrada"
 
-#: reader.cpp:4243
+#: reader.cpp:4261
 msgid "Error while opening input stream"
 msgstr "Erro ao abrir stream de entrada"
 
@@ -1462,12 +1470,11 @@ msgstr "Não pode usar entrada padrão (fd 0) como saída de pipe"
 
 #: tokenizer.cpp:65
 msgid "Tokenizer not yet initialized"
-msgstr ""
+msgstr "Análise de token não inicializada ainda"
 
 #: tokenizer.cpp:66
-#, fuzzy
 msgid "Tokenizer error"
-msgstr "Erro de tokenização"
+msgstr "Erro de análise de token"
 
 #: tokenizer.cpp:67
 msgid "String"
@@ -1510,9 +1517,8 @@ msgid "Comment"
 msgstr "Comentário"
 
 #: tokenizer.cpp:602
-#, fuzzy
 msgid "Invalid token type"
-msgstr "Tipo de token inválido"
+msgstr "Tipo inválido de token"
 
 #: wgetopt.cpp:536
 #, c-format
@@ -1631,6 +1637,7 @@ msgstr "%ls: Escopo da variável só pode ser um de universal, global ou local\n
 #, c-format
 msgid "%ls: Variable can't be both exported and unexported\n"
 msgstr ""
+"%ls: Uma variável não pode ser exportada e desexportada ao mesmo tempo\n"
 
 #: builtin.h:52
 #, c-format

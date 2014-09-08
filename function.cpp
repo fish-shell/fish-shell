@@ -67,9 +67,6 @@ void function_autoload_t::command_removed(const wcstring &cmd)
     function_remove_ignore_autoload(cmd);
 }
 
-/* Helper macro for vomiting */
-#define VOMIT_ON_FAILURE(a) do { if (0 != (a)) { int err = errno; fprintf(stderr, "%s failed on line %d in file %s: %d (%s)\n", #a, __LINE__, __FILE__, err, strerror(err)); abort(); }} while (0)
-
 /**
    Kludgy flag set by the load function in order to tell function_add
    that the function being defined is autoloaded. There should be a

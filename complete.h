@@ -207,7 +207,8 @@ void complete_set_authoritative(const wchar_t *cmd, bool cmd_type, bool authorit
 void complete_remove(const wchar_t *cmd,
                      bool cmd_is_path,
                      wchar_t short_opt,
-                     const wchar_t *long_opt);
+                     const wchar_t *long_opt,
+                     int long_mode);
 
 
 /** Find all completions of the command cmd, insert them into out.

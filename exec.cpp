@@ -1540,7 +1540,7 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, boo
     ASSERT_IS_MAIN_THREAD();
     int prev_subshell = is_subshell;
     const int prev_status = proc_get_last_status();
-    char sep=0;
+    bool split_output=false;
 
     //fprintf(stderr, "subcmd %ls\n", cmd.c_str());
 
@@ -1548,7 +1548,7 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, boo
 
     if (! ifs.missing_or_empty())
     {
-        sep = '\n';
+        split_output=true;
     }
 
     is_subshell=1;
@@ -1580,23 +1580,36 @@ static int exec_subshell_internal(const wcstring &cmd, wcstring_list_t *lst, boo
     {
         const char *begin = io_buffer->out_buffer_ptr();
         const char *end = begin + io_buffer->out_buffer_size();
-        const char *cursor = begin;
-        while (cursor < end)
+        if (split_output)
         {
-            // Look for the next separator
-            const char *stop = (const char *)memchr(cursor, sep, end - cursor);
-            const bool hit_separator = (stop != NULL);
-            if (! hit_separator)
+            const char *cursor = begin;
+            while (cursor < end)
             {
-                // If it's not found, just use the end
-                stop = end;
-            }
-            // Stop now points at the first character we do not want to copy
-            const wcstring wc = str2wcstring(cursor, stop - cursor);
-            lst->push_back(wc);
+                // Look for the next separator
+                const char *stop = (const char *)memchr(cursor, '\n', end - cursor);
+                const bool hit_separator = (stop != NULL);
+                if (! hit_separator)
+                {
+                    // If it's not found, just use the end
+                    stop = end;
+                }
+                // Stop now points at the first character we do not want to copy
+                const wcstring wc = str2wcstring(cursor, stop - cursor);
+                lst->push_back(wc);
 
-            // If we hit a separator, skip over it; otherwise we're at the end
-            cursor = stop + (hit_separator ? 1 : 0);
+                // If we hit a separator, skip over it; otherwise we're at the end
+                cursor = stop + (hit_separator ? 1 : 0);
+            }
+        }
+        else
+        {
+            // we're not splitting output, but we still want to trim off a trailing newline
+            if (end != begin && end[-1] == '\n')
+            {
+                --end;
+            }
+            const wcstring wc = str2wcstring(begin, end - begin);
+            lst->push_back(wc);
         }
     }
 

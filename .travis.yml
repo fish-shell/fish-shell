@@ -5,7 +5,7 @@ compiler:
 before_install:
   - sudo apt-get update
 install:
-  - sudo apt-get install --no-install-recommends libncurses5-dev gettext doxygen
+  - sudo apt-get install --no-install-recommends libncurses5-dev gettext doxygen expect
 script:
   - autoreconf
   - ./configure

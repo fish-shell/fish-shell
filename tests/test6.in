@@ -3,9 +3,43 @@
 # We actually encountered some case that was effectively like this (Issue 2 in github)
 
 complete --command AAAA -l abcd --condition 'complete -c AAAA -l efgh'
-complete -C'AAAA -'
-complete -C'AAAA -'
+echo "AAAA:"
+complete -C'AAAA -' | sort
+echo "AAAA:"
+complete -C'AAAA -' | sort
 
 complete --command BBBB -l abcd --condition 'complete -e --command BBBB -l abcd'
+echo "BBBB:"
 complete -C'BBBB -'
+echo "BBBB:"
 complete -C'BBBB -'
+
+# Test that erasing completions works correctly
+echo
+
+function sort
+    # GNU sort is really stupid, a non-C locale seems to make it assume --dictionary-order
+    # If I wanted --dictionary-order, I would have specified --dictionary-order!
+    env LC_ALL=C sort $argv
+end
+
+complete -c CCCC -l bar
+complete -c CCCC -l baz
+complete -c CCCC -o bar
+complete -c CCCC -o foo
+complete -c CCCC -s a
+complete -c CCCC -s b
+echo "CCCC:"
+complete -C'CCCC -' | sort
+complete -c CCCC -l bar -e
+echo "CCCC:"
+complete -C'CCCC -' | sort
+complete -c CCCC -o foo -e
+echo "CCCC:"
+complete -C'CCCC -' | sort
+complete -c CCCC -s a -e
+echo "CCCC:"
+complete -C'CCCC -' | sort
+complete -c CCCC -e
+echo "CCCC:"
+complete -C'CCCC -' | sort

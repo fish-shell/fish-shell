@@ -3405,9 +3405,8 @@ msgstr ""
 #: share/functions/__fish_complete_grep.fish:22
 #: share/functions/__fish_complete_ls.fish:95
 #: share/functions/__fish_complete_tex.fish:4
-#, fuzzy
 msgid "Display help and exit"
-msgstr "Display help and exit"
+msgstr "Mostra ajuda e sai"
 
 #: share/completions/configure.fish:4
 #, fuzzy
@@ -4082,14 +4081,12 @@ msgid "Complete dd operands"
 msgstr "Compare FILE1 to all operands"
 
 #: share/completions/df.fish:17
-#, fuzzy
 msgid "Show file systems of specified type"
-msgstr "Show filesystems of specified type"
+msgstr "Tipo de sistema de arquivos"
 
 #: share/completions/df.fish:22
-#, fuzzy
 msgid "Block size"
-msgstr "Block size"
+msgstr "Especifica tamanho de bloco"
 
 #: share/completions/docker.fish:19
 #, fuzzy
@@ -4843,12 +4840,11 @@ msgstr ""
 
 #: share/completions/git.fish:121 share/completions/git.fish:144
 msgid "Branch"
-msgstr ""
+msgstr "Ramo"
 
 #: share/completions/git.fish:145
-#, fuzzy
 msgid "Tag"
-msgstr "Target"
+msgstr "Etiqueta"
 
 #: share/completions/gpg.fish:116
 msgid "Write output to specified file"
@@ -11154,41 +11150,44 @@ msgstr ""
 #~ msgid "Print or set Coordinated Universal Time"
 #~ msgstr "Print or set Coordinated Universal Time"
 
-#~ msgid "List inode information"
-#~ msgstr "List inode information"
+msgid "List inode information"
+msgstr "Mostra inodes"
 
-#~ msgid "Use 1kB block size"
-#~ msgstr "Use 1kB block size"
+msgid "Use 1kB block size"
+msgstr "Usa blocos de 1kB"
 
-#~ msgid "List only local filesystems"
-#~ msgstr "List only local filesystems"
+msgid "List only local file systems"
+msgstr "Apenas sistemas de arquivos locais"
 
-#~ msgid "Use Posix format"
-#~ msgstr "Use Posix format"
+msgid "Use POSIX format"
+msgstr "Usa formato POSIX"
 
-#~ msgid "Include empty filesystems"
-#~ msgstr "Include empty filesystems"
+msgid "Include empty file systems"
+msgstr "Inclui sistemas de arquivos vazios"
 
-#~ msgid "Do not sync before getting usage info"
-#~ msgstr "Do not sync before getting usage info"
+msgid "Excluded file system type"
+msgstr "Exclui tipo de sistema de arquivos"
 
-#~ msgid "Sync before getting usage info"
-#~ msgstr "Sync before getting usage info"
+msgid "Do not sync before getting usage info"
+msgstr "Não faz sync antes"
 
-#~ msgid "Print filesystem type"
-#~ msgstr "Print filesystem type"
+msgid "Sync before getting usage info"
+msgstr "Faz sync antes"
 
-#~ msgid "Excluded filesystem type"
-#~ msgstr "Excluded filesystem type"
+msgid "Print file system type"
+msgstr "Mostra tipos de sistema de arquivos"
 
-#~ msgid "Show all filesystems"
-#~ msgstr "Show all filesystems"
+msgid "Excluded filesystem type"
+msgstr "Tipo de sistema de arquivos excluído"
 
-#~ msgid "Show sizes in gigabytes"
-#~ msgstr "Show sizes in gigabytes"
+msgid "Show all filesystems"
+msgstr "Mostra todos os sistemas de arquivos"
 
-#~ msgid "Show sizes in megabytes"
-#~ msgstr "Show sizes in megabytes"
+msgid "Show sizes in gigabytes"
+msgstr "Tamanhos em gigabytes"
+
+msgid "Show sizes in megabytes"
+msgstr "Tamanhos em megabytes"
 
 #~ msgid "Print out the previously obtained statistics from the file systems"
 #~ msgstr "Print out the previously obtained statistics from the file systems"

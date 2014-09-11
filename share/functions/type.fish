@@ -6,6 +6,7 @@ function type --description "Print the type of a command"
 	set -l mode normal
 	set -l multi no
 	set -l selection all
+	set -l IFS \n\ \t
 
 	# Parse options
 	set -l names

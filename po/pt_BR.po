@@ -6618,7 +6618,7 @@ msgstr "Muda diretório"
 
 #: share/completions/tar.fish:21
 msgid "Archive file"
-msgstr "Arquivo tar"
+msgstr "Especifica arquivo .tar"
 
 #: share/completions/tar.fish:31
 msgid "Starting file in archive"
@@ -6775,9 +6775,8 @@ msgid "Extract files to current directory"
 msgstr "Read files under each directory"
 
 #: share/completions/unrar.fish:6
-#, fuzzy
 msgid "List archive"
-msgstr "List archive"
+msgstr "Lista conteúdo do arquivo"
 
 #: share/completions/unrar.fish:7
 #, fuzzy
@@ -6800,9 +6799,8 @@ msgid "Test archive files"
 msgstr "Archive file"
 
 #: share/completions/unrar.fish:11
-#, fuzzy
 msgid "Verbosely list archive"
-msgstr "Verify archive"
+msgstr ""
 
 #: share/completions/unrar.fish:12
 msgid "Verbosely list archive (technical)"
@@ -13328,113 +13326,119 @@ msgstr "Tamanhos em megabytes"
 #~ msgid "Print client version info"
 #~ msgstr "Print client version info"
 
-#~ msgid "Append archive to archive"
-#~ msgstr "Append archive to archive"
+msgid "Append archive to archive"
+msgstr "Acrescenta um .tar a outro"
 
-#~ msgid "Create archive"
-#~ msgstr "Create archive"
+msgid "Create archive"
+msgstr "Cria arquivo .tar"
 
-#~ msgid "Compare archive and filesystem"
-#~ msgstr "Compare archive and filesystem"
+msgid "Compare archive and filesystem"
+msgstr "Compara arquivo .tar e sistema de arquivos"
 
-#~ msgid "Delete from archive"
-#~ msgstr "Delete from archive"
+msgid "Delete from archive"
+msgstr "Apaga do arquivo .tar"
 
-#~ msgid "Append files to archive"
-#~ msgstr "Append files to archive"
+msgid "Append files to archive"
+msgstr "Acrescenta arquivos no final"
 
-#~ msgid "Append new files"
-#~ msgstr "Append new files"
+msgid "Append new files"
+msgstr "Acrescenta novos arquivos"
 
-#~ msgid "Extract from archive"
-#~ msgstr "Extract from archive"
+msgid "Extract from archive"
+msgstr "Extrai do arquivo .tar"
 
-#~ msgid "Keep access time"
-#~ msgstr "Keep access time"
+msgid "Keep access time"
+msgstr "Preserva hora de acesso"
 
-#~ msgid "Reblock while reading"
-#~ msgstr "Reblock while reading"
+msgid "Reblock while reading"
+msgstr "Aceita blocos incompletos na leitura"
 
-#~ msgid "Print directory names"
-#~ msgstr "Print directory names"
+msgid "Print directory names"
+msgstr "Mostra nomes de diretórios"
 
-#~ msgid "Archive is local"
-#~ msgstr "Archive is local"
+msgid "Archive is local"
+msgstr "Arquivo é local mesmo com /"
 
-#~ msgid "Run script at end of tape"
-#~ msgstr "Run script at end of tape"
+msgid "Run script at end of tape"
+msgstr "Executa script ao final de cada fita"
 
-#~ msgid "Use old incremental GNU format"
-#~ msgstr "Use old incremental GNU format"
+msgid "Use old incremental GNU format"
+msgstr "Usa antigo formato GNU incremental"
 
-#~ msgid "Use new incremental GNU format"
-#~ msgstr "Use new incremental GNU format"
+msgid "Use new incremental GNU format"
+msgstr "Usa novo formato GNU incremental"
 
-#~ msgid "Dereference symlinks"
-#~ msgstr "Dereference symlinks"
+msgid "Dereference symlinks"
+msgstr "Copia conteúdo dos symlinks"
 
-#~ msgid "Ignore zero block in archive"
-#~ msgstr "Ignore zero block in archive"
+msgid "Ignore zero block in archive"
+msgstr "Ignora blocos zero de fim-de-arquivo"
 
-#~ msgid "Filter through bzip2"
-#~ msgstr "Filter through bzip2"
+msgid "Filter through bzip2"
+msgstr "Filtra por bzip2"
 
-#~ msgid "Don't exit on unreadable files"
-#~ msgstr "Don't exit on unreadable files"
+msgid "Don't exit on unreadable files"
+msgstr "Não sair com erros de leitura"
 
-#~ msgid "Don't overwrite"
-#~ msgstr "Don't overwrite"
+msgid "Don't overwrite"
+msgstr "Não sobrescreve"
 
-#~ msgid "Stay in local filesystem"
-#~ msgstr "Stay in local filesystem"
+msgid "Stay in local filesystem"
+msgstr "Fica no sistema de arquivos local"
 
-#~ msgid "Don't extract modification time"
-#~ msgstr "Don't extract modification time"
+msgid "Don't extract modification time"
+msgstr "Não extrai hora de modificação"
 
-#~ msgid "Multi volume archive"
-#~ msgstr "Multi volume archive"
+msgid "Multi volume archive"
+msgstr "Arquivo de vários volumes"
 
-#~ msgid "Use V7 format"
-#~ msgstr "Use V7 format"
+msgid "Use V7 format"
+msgstr "Usa formato V7"
 
-#~ msgid "Extract to stdout"
-#~ msgstr "Extract to stdout"
+msgid "Extract to stdout"
+msgstr "Extrai para saída padrão"
 
-#~ msgid "Extract all permissions"
-#~ msgstr "Extract all permissions"
+msgid "Extract all permissions"
+msgstr "Extrai todas as permissões"
 
-#~ msgid "Don't strip leading /"
-#~ msgstr "Don't strip leading /"
+msgid "Don't strip leading /"
+msgstr "Não retira / inicial"
 
-#~ msgid "Preserve all permissions and do not sort file arguments"
-#~ msgstr "Preserve all permissions and do not sort file arguments"
+msgid "Preserve all permissions and do not sort file arguments"
+msgstr "Preserve todas as permissões e não reordena arquivos"
 
-#~ msgid "Show record number"
-#~ msgstr "Show record number"
+msgid "Do not sort file arguments"
+msgstr "Não reordena arquivos"
 
-#~ msgid "Remove files after adding to archive"
-#~ msgstr "Remove files after adding to archive"
+msgid "Show record number"
+msgstr "Mostra número de bloco no arquivo"
 
-#~ msgid "Preserve file ownership"
-#~ msgstr "Preserve file ownership"
+msgid "Remove files after adding to archive"
+msgstr "Apaga arquivos após adicionar ao .tar"
 
-#~ msgid "Handle sparse files"
-#~ msgstr "Handle sparse files"
+msgid "Preserve file ownership"
+msgstr "Preserva proprietário"
 
-#~ msgid "-T has null-terminated names"
-#~ msgstr "-T has null-terminated names"
+msgid "Handle sparse files"
+msgstr "Trata arquivos esparsos eficientemente"
 
-#~ msgid "Print total bytes written"
-#~ msgstr "Print total bytes written"
+msgid "-T has null-terminated names"
+msgstr "-T tem nomes terminados por null"
 
-#~ msgid "Ask for confirmation"
-#~ msgstr "Ask for confirmation"
+msgid "Print total bytes written"
+msgstr "Mostra total de bytes escritos"
 
-#~ msgid "Filter through compress"
-#~ msgstr "Filter through compress"
+msgid "Ask for confirmation"
+msgstr "Pergunta por confirmação"
 
-#~ msgid "Filter through gzip"
-#~ msgstr "Filter through gzip"
+msgid "Filter through compress"
+msgstr "Filtra por compress"
+
+msgid "Filter through gzip"
+msgstr "Filtra por gzip"
+
+msgid "Verify archive"
+msgstr "Verifica arquivo .tar"
 
 #~ msgid "Logical and"
 #~ msgstr "Logical and"

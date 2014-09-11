@@ -6512,9 +6512,8 @@ msgstr "Bandwidth limit"
 
 #: share/completions/scp.fish:41 share/completions/ssh.fish:39
 #: share/completions/sshfs.fish:25
-#, fuzzy
 msgid "Port"
-msgstr "Port"
+msgstr "Porta"
 
 #: share/completions/screen.fish:1
 #, fuzzy
@@ -6567,19 +6566,16 @@ msgid "Set temporary directory"
 msgstr "Set temporary directory"
 
 #: share/completions/ssh.fish:24
-#, fuzzy
 msgid "Interface to transmit from"
-msgstr "Interface to transmit from"
+msgstr "Interface de origem"
 
 #: share/completions/ssh.fish:30
-#, fuzzy
 msgid "Escape character"
-msgstr "Escape character"
+msgstr "Caracter de escape"
 
 #: share/completions/ssh.fish:35
-#, fuzzy
 msgid "User"
-msgstr "User"
+msgstr "Usuário"
 
 #: share/completions/su.fish:5
 #, fuzzy
@@ -7999,7 +7995,6 @@ msgstr "Mostra tudo exceto . e .."
 
 #: share/functions/__fish_complete_ls.fish:18
 #: share/functions/__fish_complete_ls.fish:27
-#, fuzzy
 msgid "Append filetype indicator"
 msgstr "Adiciona indicador de tipo de arquivo"
 
@@ -8141,7 +8136,7 @@ msgstr "Tamanhos em potências de 1000"
 #: share/functions/__fish_complete_ls.fish:66
 #: share/functions/__fish_complete_ls.fish:110
 msgid "Print raw entry names"
-msgstr ""
+msgstr "Imprime nomes sem tratamento"
 
 #: share/functions/__fish_complete_ls.fish:67
 msgid "Long format without groups"
@@ -8193,7 +8188,7 @@ msgstr "Mostra etiqueta MAC para cada arquivo"
 
 #: share/functions/__fish_complete_ls.fish:109
 msgid "Include the file flags in a long (-l) output"
-msgstr "Inclu"
+msgstr ""
 
 #: share/functions/__fish_complete_ppp_peer.fish:1
 msgid "Complete isp name for pon/poff"

@@ -1900,9 +1900,8 @@ msgid "APM status debugging info"
 msgstr "APM status debugging info"
 
 #: share/completions/apropos.fish:12
-#, fuzzy
 msgid "Print debugging info"
-msgstr "Print debugging info"
+msgstr "Mostra informação de debug"
 
 #: share/completions/apropos.fish:13 share/completions/apt-file.fish:8
 #: share/completions/apt-listchanges.fish:4
@@ -1911,39 +1910,32 @@ msgstr "Print debugging info"
 #: share/functions/__fish_complete_python.fish:14
 #: share/functions/__fish_complete_ssh.fish:59
 #: share/functions/__fish_complete_vi.fish:98
-#, fuzzy
 msgid "Verbose mode"
-msgstr "Verbose mode"
+msgstr "Modo verboso"
 
 #: share/completions/apropos.fish:14
-#, fuzzy
 msgid "Keyword as regex"
-msgstr "Keyword as regex"
+msgstr "Palavra-chave como regex"
 
 #: share/completions/apropos.fish:15
-#, fuzzy
 msgid "Keyword as wildcards"
-msgstr "Keyword as wildcards"
+msgstr "Palavra-chave como curinga"
 
 #: share/completions/apropos.fish:16
-#, fuzzy
 msgid "Keyword as exactly match"
-msgstr "Keyword as exactly match"
+msgstr "Palavra-chave exata"
 
 #: share/completions/apropos.fish:17
-#, fuzzy
 msgid "Search for other system"
-msgstr "Search for other system"
+msgstr "Procurar por outro sistema"
 
 #: share/completions/apropos.fish:18
-#, fuzzy
 msgid "Specify man path"
-msgstr "Specify man path"
+msgstr "Especificar caminho de procura"
 
 #: share/completions/apropos.fish:19
-#, fuzzy
 msgid "Specify a configuration file"
-msgstr "Specify a configuration file"
+msgstr "Especificar um arquivo de configuração"
 
 #: share/completions/apt-build.fish:4
 #, fuzzy

@@ -2,6 +2,7 @@
 *~
 *.exe
 
+.DS_Store
 Makefile
 autom4te.cache/
 build/
@@ -35,3 +36,7 @@ tests/foo.txt
 FISH-BUILD-VERSION-FILE
 version
 messages.pot
+lexicon.txt
+lexicon_filter
+lexicon.log
+

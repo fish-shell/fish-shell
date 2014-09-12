@@ -148,6 +148,11 @@ HDR_FILES := $(HDR_FILES_SRC:.hdr.in=.hdr)
 
 HELP_SRC := $(wildcard doc_src/*.txt)
 
+#
+# HTML includes needed for HTML help
+#
+
+HTML_SRC := doc_src/user_doc.header.html doc_src/user_doc.footer.html doc_src/user_doc.css
 
 #
 # Files in the test directory
@@ -252,18 +257,19 @@ prof: all
 # Depend on the sources (*.hdr.in) and manually make the
 # intermediate *.hdr and doc.h files if needed
 # The sed command deletes everything including and after the first -, for simpler version numbers
+# Cleans up the user_doc/html directory once Doxygen is done.
 
-user_doc: $(HDR_FILES_SRC) Doxyfile.user user_doc.head.html $(HELP_SRC) doc.h $(HDR_FILES)
-	(cat Doxyfile.user ; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | sed "s/-.*//") | doxygen - && touch user_doc
-
-
+user_doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FILES) lexicon_filter
+	(cat Doxyfile.user; echo INPUT_FILTER=./lexicon_filter; \
+	echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | sed "s/-.*//") | doxygen - && touch user_doc; \
+	cd user_doc/html && rm -f bc_s.png bdwn.png closed.png ftv2*.png nav*.png open.png sync_*.png tab*.* doxygen.* dynsections.js jquery.js pages.html
 
 #
 # Source code documentation. Also includes user documentation.
 #
 
-doc: *.h *.cpp doc.h Doxyfile
-	(cat Doxyfile ; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION)) | doxygen - ;
+doc: *.h *.cpp doc.h Doxyfile lexicon_filter
+	(cat Doxyfile; echo INPUT_FILTER=./lexicon_filter; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION)) | doxygen - ;
 
 
 #
@@ -271,10 +277,9 @@ doc: *.h *.cpp doc.h Doxyfile
 #
 
 doc/refman.pdf: doc
-	cd doc/latex;
-	make;
+	cd doc/latex && \
+	make &&  \
 	mv refman.pdf ..;
-	cd ../..;
 	rm -r doc/latex;
 
 
@@ -343,11 +348,67 @@ toc.txt: $(HDR_FILES:index.hdr=index.hdr.in)
 doc_src/index.hdr: toc.txt doc_src/index.hdr.in
 	cat $@.in | awk '{if ($$0 ~ /@toc@/){ system("cat toc.txt");} else{ print $$0;}}' >$@
 
+#
+# To enable the lexicon filter, we first need to be aware of what fish
+# considers to be a command, function, or external binary. We use
+# command_list_toc.txt for the base commands. Scan the share/functions
+# directory for other functions, some of which are mentioned in the docs, and
+# use /share/completions to find a good selection of binaries. Additionally,
+# colour defaults from __fish_config_interactive to set the docs colours when
+# used in a 'cli' style context.
+#
+
+lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) share/functions/__fish_config_interactive.fish
+	-rm lexicon.tmp lexicon_catalog.tmp lexicon_catalog.txt $@
+	# Scan sources for commands/functions/binaries/colours. If GNU sed was portable, this could be much smarter.
+	sed <command_list_toc.txt >>lexicon.tmp -n \
+		-e "s|^.*>\([a-z][a-z_]*\)</a>|'\1'|w lexicon_catalog.tmp" \
+		-e "s|'\(.*\)'|bltn \1|p"; mv lexicon_catalog.tmp lexicon_catalog.txt; \
+	printf "%s\n" $(COMPLETIONS_DIR_FILES) | sed -n \
+		-e "s|[^ ]*/\([a-z][a-z_-]*\).fish|'\1'|p" | fgrep -vx -f lexicon_catalog.txt | sed >>lexicon.tmp -n \
+		-e 'w lexicon_catalog.tmp' \
+		-e "s|'\(.*\)'|cmnd \1|p"; cat lexicon_catalog.tmp >> lexicon_catalog.txt; \
+	printf "%s\n" $(FUNCTIONS_DIR_FILES) | sed -n \
+		-e "s|[^ ]*/\([a-z][a-z_-]*\).fish|'\1'|p" | fgrep -vx -f lexicon_catalog.txt | sed >>lexicon.tmp -n \
+		-e 'w lexicon_catalog.tmp' \
+		-e "s|'\(.*\)'|func \1|p"; \
+	sed <share/functions/__fish_config_interactive.fish >>lexicon.tmp -n \
+		-e '/set_default/s/.*\(fish_[a-z][a-z_]*\).*$$/clrv \1/p'; \
+	sed <lexicon_filter.in >>lexicon.tmp -n \
+		-e '/^#.!#/s/^#.!# \(.... [a-z][a-z_]*\)/\1/p'; \
+	mv lexicon.tmp lexicon.txt; rm -f lexicon_catalog.tmp lexicon_catalog.txt;
+
+#
+# Compile Doxygen Input Filter from the lexicon. This is an executable sed
+# script as Doxygen opens it via popen()(3) Input (doc.h) is piped through and
+# matching words inside /fish../endfish blocks are marked up, contextually,
+# with custom Doxygen commands in the form of @word_type{content}. These are
+# trapped by ALIASES in the various Doxyfiles, allowing the content to be
+# transformed depending on output type (HTML, man page, developer docs). In
+# HTML, a style context can be applied through the /fish{style} block and
+# providing suitable CSS in user_doc.css.in
+#
+
+lexicon_filter: lexicon.txt lexicon_filter.in
+	-rm $@.tmp $@
+	# Clean the filter input comments and set the shebang as sed can reside in
+	# /bin or /usr/bin and some versions dont allow more than one comment!.
+	sed <$@.in >$@.tmp -e 's|@sed@|'"`which sed`"'|' -e '/^[ ]*#[^!]/d'
+	# Scan through the lexicon, transforming each line to something useful to Doxygen.
+	if echo x | sed "/[[:<:]]x/d" 2>/dev/null; then \
+		WORDBL='[[:<:]]'; WORDBR='[[:>:]]'; \
+	else \
+		WORDBL='\<'; WORDBR='\>'; \
+	fi; \
+	sed <lexicon.txt >>$@.tmp -n \
+		-e "s|^\([a-z][a-z][a-z][a-z]\) \([a-z_-]*\)$$|s,$$WORDBL\2$$WORDBR,@\1{\2},g|p" \
+		-e '$$G;s/.*\n/b tidy/p'; \
+	mv $@.tmp $@; if test -x $@; then true; else chmod a+x $@; fi
 
 #
 # doc.h is a compilation of the various snipptes of text used both for
 # the user documentation and for internal help functions into a single
-# file that can be parsed dy Doxygen to generate the user
+# file that can be parsed by Doxygen to generate the user
 # documentation.
 #
 
@@ -445,11 +506,12 @@ common.o: $(COMMON_FILES)
 # There ought to be something simpler.
 #
 
-share/man: $(HELP_SRC)
+share/man: $(HELP_SRC) lexicon_filter
 	-mkdir share/man
 	touch share/man
 	-rm -Rf share/man/man1
-	PROJECT_NUMBER=`echo $(FISH_BUILD_VERSION)| sed "s/-.*//"` ./build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share
+	PROJECT_NUMBER=`echo $(FISH_BUILD_VERSION)| sed "s/-.*//"` INPUT_FILTER=./lexicon_filter \
+	./build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share
 
 #
 # The build rules for installing/uninstalling fish
@@ -763,6 +825,7 @@ clean:
 	rm -f $(PROGRAMS) fish_tests key_reader
 	rm -f command_list.txt command_list_toc.txt toc.txt
 	rm -f doc_src/index.hdr doc_src/commands.hdr
+	rm -f lexicon_filter lexicon.txt lexicon.log
 	rm -f FISH-BUILD-VERSION-FILE
 	if test "$(HAVE_DOXYGEN)" = 1; then \
 		rm -rf doc user_doc share/man; \

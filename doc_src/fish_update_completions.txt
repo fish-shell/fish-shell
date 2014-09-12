@@ -2,8 +2,8 @@
 
 \subsection fish_update_completions-description Description
 
-\c fish_update_completions parses manual pages installed on the system, and attempts to create completion files in the \c fish configuration directory.
+`fish_update_completions` parses manual pages installed on the system, and attempts to create completion files in the `fish` configuration directory.
 
 This does not overwrite custom completions.
 
-There are no parameters for <code>fish_update_completions</code>.
+There are no parameters for `fish_update_completions`.

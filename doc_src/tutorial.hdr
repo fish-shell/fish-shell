@@ -184,13 +184,13 @@ And history too. Type a command once, and you can re-summon it by just typing a 
 >_ <error>r</error><s>___sync -avze ssh . myname@somelonghost.com:/some/long/path/doo/dee/doo/dee/doo</s>
 \endfish
 
-To accept the autosuggestion, hit right arrow or @key{Control,F}. To accept a single word of the autosuggestion, @key{Alt,&rarr;} (right arrow). If the autosuggestion is not what you want, just ignore it.
+To accept the autosuggestion, hit @cursor_key{&rarr;,right arrow} or @key{Control,F}. To accept a single word of the autosuggestion, @key{Alt,&rarr;} (right arrow). If the autosuggestion is not what you want, just ignore it.
 
 \section tut_tab_completions Tab Completions
 
 `fish` comes with a rich set of tab completions, that work "out of the box."
 
-Press tab, and `fish` will attempt to complete the command, argument, or path:
+Press @key{Tab}, and `fish` will attempt to complete the command, argument, or path:
 
 \fish{cli-dark}
 >_ <error>/pri</error> @key{Tab} &rarr; /private/

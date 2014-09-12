@@ -861,7 +861,10 @@ where = os.path.dirname(sys.argv[0])
 os.chdir(where)
 
 # Generate a 16-byte random key as a hexadecimal string
-authkey = binascii.b2a_hex(os.urandom(16))
+if IS_PY2:
+    authkey = binascii.b2a_hex(os.urandom(16))
+else:
+    authkey = binascii.b2a_hex(os.urandom(16)).decode()
 
 # Try to find a suitable port
 PORT = 8000

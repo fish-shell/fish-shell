@@ -208,8 +208,8 @@ else
 endif
 
 #
-# Set path to sed, so that Doxygen and lexicon_filter can find it in
-# alternative build environments, such as Hombrew.
+# Set path to sed, so that the Doxygen lexicon filter can find it in
+# alternative build environments, such as Homebrew.
 #
 
 LEXICON_SED_PATH := $(shell which sed)

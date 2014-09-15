@@ -208,6 +208,13 @@ else
 endif
 
 #
+# Set path to sed, so that Doxygen and lexicon_filter can find it in
+# alternative build environments, such as Hombrew.
+#
+
+LEXICON_SED_PATH := $(shell which sed)
+
+#
 # Make everything needed for installing fish
 #
 
@@ -393,7 +400,7 @@ lexicon_filter: lexicon.txt lexicon_filter.in
 	-rm $@.tmp $@
 	# Clean the filter input comments and set the shebang as sed can reside in
 	# /bin or /usr/bin and some versions dont allow more than one comment!.
-	sed <$@.in >$@.tmp -e 's|@sed@|'"`which sed`"'|' -e '/^[ ]*#[^!]/d'
+	sed <$@.in >$@.tmp -e "s|@sed@|$(LEXICON_SED_PATH)|" -e '/^[ ]*#[^!]/d'
 	# Scan through the lexicon, transforming each line to something useful to Doxygen.
 	if echo x | sed "/[[:<:]]x/d" 2>/dev/null; then \
 		WORDBL='[[:<:]]'; WORDBR='[[:>:]]'; \

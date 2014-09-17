@@ -5,6 +5,7 @@ complete -c type -s f -l no-functions --description "Suppress function and built
 complete -c type -s t -l type --description "Print command type"
 complete -c type -s p -l path --description "Print path to command, or nothing if name is not a command"
 complete -c type -s P -l force-path --description "Print path to command"
+complete -c type -s q -l quiet --description "Suppress output"
 
 complete -c type -a "(builtin -n)" --description "Builtin"
 complete -c type -a "(functions -n)" --description "Function"

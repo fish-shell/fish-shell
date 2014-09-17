@@ -9,3 +9,6 @@ complete -c status -l is-interactive-job-control --description "Test if only int
 complete -c status -l is-no-job-control --description "Test if new jobs are never put under job control"
 complete -c status -s j -l job-control -xa "full interactive none" --description "Set which jobs are out under job control"
 complete -c status -s t -l print-stack-trace --description "Print a list of all function calls leading up to running the current command"
+complete -c status -s f -l current-filename --description "Print the filename of the currently running script"
+complete -c status -s n -l current-line-number --description "Print the line number of the currently running script"
+complete -c status -s t -l print-stack-trace --description "Prints a trace of all function calls on the stack"

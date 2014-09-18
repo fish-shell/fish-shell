@@ -32,6 +32,7 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 
 CXX := @CXX@
 INSTALL:=@INSTALL@
+SED := @SED@
 
 
 #
@@ -261,7 +262,7 @@ prof: all
 
 user_doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FILES) lexicon_filter
 	(cat Doxyfile.user; echo INPUT_FILTER=./lexicon_filter; \
-	echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | sed "s/-.*//") | doxygen - && touch user_doc; \
+	echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | $(SED) "s/-.*//") | doxygen - && touch user_doc; \
 	cd user_doc/html && rm -f bc_s.png bdwn.png closed.png ftv2*.png nav*.png open.png sync_*.png tab*.* doxygen.* dynsections.js jquery.js pages.html
 
 #
@@ -339,7 +340,7 @@ toc.txt: $(HDR_FILES:index.hdr=index.hdr.in)
 	for i in $(HDR_FILES:index.hdr=index.hdr.in); do\
 		NAME=`basename $$i .hdr`; \
 		NAME=`basename $$NAME .hdr.in`; \
-		sed <$$i >>toc.tmp -n \
+		$(SED) <$$i >>toc.tmp -n \
 		-e 's,.*\\page *\([^ ]*\) *\(.*\)$$,- <a href="'$$NAME'.html" id="toc-'$$NAME'">\2</a>,p' \
 		-e 's,.*\\section *\([^ ]*\) *\([^-]*\)\(.*\)$$,  - <a href="'$$NAME'.html#\1">\2</a>,p'; \
 	done
@@ -361,20 +362,20 @@ doc_src/index.hdr: toc.txt doc_src/index.hdr.in
 lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) share/functions/__fish_config_interactive.fish
 	-rm lexicon.tmp lexicon_catalog.tmp lexicon_catalog.txt $@
 	# Scan sources for commands/functions/binaries/colours. If GNU sed was portable, this could be much smarter.
-	sed <command_list_toc.txt >>lexicon.tmp -n \
+	$(SED) <command_list_toc.txt >>lexicon.tmp -n \
 		-e "s|^.*>\([a-z][a-z_]*\)</a>|'\1'|w lexicon_catalog.tmp" \
 		-e "s|'\(.*\)'|bltn \1|p"; mv lexicon_catalog.tmp lexicon_catalog.txt; \
-	printf "%s\n" $(COMPLETIONS_DIR_FILES) | sed -n \
-		-e "s|[^ ]*/\([a-z][a-z_-]*\).fish|'\1'|p" | fgrep -vx -f lexicon_catalog.txt | sed >>lexicon.tmp -n \
+	printf "%s\n" $(COMPLETIONS_DIR_FILES) | $(SED) -n \
+		-e "s|[^ ]*/\([a-z][a-z_-]*\).fish|'\1'|p" | fgrep -vx -f lexicon_catalog.txt | $(SED) >>lexicon.tmp -n \
 		-e 'w lexicon_catalog.tmp' \
 		-e "s|'\(.*\)'|cmnd \1|p"; cat lexicon_catalog.tmp >> lexicon_catalog.txt; \
-	printf "%s\n" $(FUNCTIONS_DIR_FILES) | sed -n \
-		-e "s|[^ ]*/\([a-z][a-z_-]*\).fish|'\1'|p" | fgrep -vx -f lexicon_catalog.txt | sed >>lexicon.tmp -n \
+	printf "%s\n" $(FUNCTIONS_DIR_FILES) | $(SED) -n \
+		-e "s|[^ ]*/\([a-z][a-z_-]*\).fish|'\1'|p" | fgrep -vx -f lexicon_catalog.txt | $(SED) >>lexicon.tmp -n \
 		-e 'w lexicon_catalog.tmp' \
 		-e "s|'\(.*\)'|func \1|p"; \
-	sed <share/functions/__fish_config_interactive.fish >>lexicon.tmp -n \
+	$(SED) <share/functions/__fish_config_interactive.fish >>lexicon.tmp -n \
 		-e '/set_default/s/.*\(fish_[a-z][a-z_]*\).*$$/clrv \1/p'; \
-	sed <lexicon_filter.in >>lexicon.tmp -n \
+	$(SED) <lexicon_filter.in >>lexicon.tmp -n \
 		-e '/^#.!#/s/^#.!# \(.... [a-z][a-z_]*\)/\1/p'; \
 	mv lexicon.tmp lexicon.txt; rm -f lexicon_catalog.tmp lexicon_catalog.txt;
 
@@ -391,16 +392,15 @@ lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES
 
 lexicon_filter: lexicon.txt lexicon_filter.in
 	-rm $@.tmp $@
-	# Clean the filter input comments and set the shebang as sed can reside in
-	# /bin or /usr/bin and some versions dont allow more than one comment!.
-	sed <$@.in >$@.tmp -e 's|@sed@|'"`which sed`"'|' -e '/^[ ]*#[^!]/d'
+	# Set the shebang as sed can reside in multiple places.
+	$(SED) <$@.in >$@.tmp -e 's|@sed@|'$(SED)'|'
 	# Scan through the lexicon, transforming each line to something useful to Doxygen.
-	if echo x | sed "/[[:<:]]x/d" 2>/dev/null; then \
+	if echo x | $(SED) "/[[:<:]]x/d" 2>/dev/null; then \
 		WORDBL='[[:<:]]'; WORDBR='[[:>:]]'; \
 	else \
 		WORDBL='\<'; WORDBR='\>'; \
 	fi; \
-	sed <lexicon.txt >>$@.tmp -n \
+	$(SED) <lexicon.txt >>$@.tmp -n \
 		-e "s|^\([a-z][a-z][a-z][a-z]\) \([a-z_-]*\)$$|s,$$WORDBL\2$$WORDBR,@\1{\2},g|p" \
 		-e '$$G;s/.*\n/b tidy/p'; \
 	mv $@.tmp $@; if test -x $@; then true; else chmod a+x $@; fi
@@ -428,7 +428,7 @@ doc.h: $(HDR_FILES)
 	echo "*/" >>$@
 
 %: %.in
-	sed <$@.in >$@ \
+	$(SED) <$@.in >$@ \
 		-e "s,@sysconfdir\@,$(sysconfdir),g" \
 		-e "s,@datadir\@,$(datadir),g" \
 		-e "s,@docdir\@,$(docdir),g" \
@@ -510,7 +510,7 @@ share/man: $(HELP_SRC) lexicon_filter
 	-mkdir share/man
 	touch share/man
 	-rm -Rf share/man/man1
-	PROJECT_NUMBER=`echo $(FISH_BUILD_VERSION)| sed "s/-.*//"` INPUT_FILTER=./lexicon_filter \
+	PROJECT_NUMBER=`echo $(FISH_BUILD_VERSION)| $(SED) "s/-.*//"` INPUT_FILTER=./lexicon_filter \
 	./build_tools/build_documentation.sh Doxyfile.help ./doc_src ./share
 
 #

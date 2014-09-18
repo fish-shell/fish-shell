@@ -90,6 +90,7 @@ fi
 
 AC_PROG_CXX([g++ c++])
 AC_PROG_INSTALL
+AC_PROG_SED
 AC_LANG(C++)
 
 echo "CXXFLAGS: $CXXFLAGS"

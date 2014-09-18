@@ -42,17 +42,24 @@ proc log_debug string {
 set prompt_counter 1
 # expect_prompt takes an argument list like `expect` does.
 # It supports a special pattern "unmatched" that is run if no
-# other provided patterns match.
+# other provided patterns match, and a special flag "-nounmatched"
+# that marks the following pattern as not being tracked for
+# "unmatched" handling.
+# If multiple patterns are provided, they may all match. Each pattern
+# is matched at most once. The matching only ends once the prompt is
+# found.
 proc expect_prompt {args} {
     global prompt_counter
     upvar expect_out expect_out
-    set prompt_pat [list -re "(?:\\r\\n?|^)prompt $prompt_counter>(?:$|\r)"]
+    set prompt_pat [list -re "(?:\\r\\n?|^)prompt $prompt_counter>(?:$|\\r)"]
     if {[llength $args] == 1 && [string match "\n*" $args]} {
         set args [join $args]
     }
     set prompt_action ""
     set expargs {}
-    upvar expect_out up_expect_out
+    set nounmatched no
+    set matchidx 0
+    set matched(any) no
     set state "firstarg"
     foreach arg $args {
         switch $state {
@@ -63,14 +70,17 @@ proc expect_prompt {args} {
             "action" {
                 lappend expargs [subst -nocommands {
                     log_debug "matched extra pattern to expect_prompt: [quote \$expect_out(0,string)]"
-                    if {\$matched} {
-                        exp_continue
+                    if {!\$matched($matchidx)} {
+                        set matched($matchidx) yes
+                        if {!$nounmatched} { set matched(any) yes }
+                        uplevel 1 {$arg}
                     }
-                    set matched yes
-                    uplevel 1 {$arg}
                     exp_continue
                 }]
+                set matched($matchidx) no
+                incr matchidx
                 set state "firstarg"
+                set nounmatched no
             }
             "firstarg" -
             "arg" {
@@ -78,8 +88,8 @@ proc expect_prompt {args} {
                     set state "unmatched"
                     continue
                 }
-                lappend expargs $arg
-                switch $arg {
+                set keep yes
+                switch -glob -- $arg {
                     -gl -
                     -re -
                     -ex {
@@ -89,6 +99,20 @@ proc expect_prompt {args} {
                     -timeout {
                         set state "flagarg"
                     }
+                    -nounmatched {
+                        set keep no
+                        set nounmatched yes
+                        set state "arg"
+                    }
+                    -* {
+                        error "BUG: unknown expect flag in expect_prompt"
+                    }
+                    default {
+                        set state "pat"
+                    }
+                }
+                if {$keep} {
+                    lappend expargs $arg
                 }
             }
             "flagarg" {
@@ -96,9 +120,11 @@ proc expect_prompt {args} {
                 set state "arg"
             }
             "unmatched" {
+                set state "firstarg"
                 if {$prompt_action ne ""} continue
                 set prompt_action [subst -nocommands {
-                    if {!\$matched} {
+                    if {!\$matched(any)} {
+                        log_debug "triggered unmatched action in expect_prompt"
                         uplevel 1 {$arg}
                     }
                 }]
@@ -114,7 +140,6 @@ proc expect_prompt {args} {
         log_info "expecting prompt $prompt_counter"
     }
     set expargs [concat $prompt_pat [list $prompt_action] $expargs]
-    set matched no
     expect {*}$expargs
     incr prompt_counter
 }
@@ -128,6 +153,7 @@ proc trace_expect {cmd args} {
     switch [lindex $args end] {
         enter {
             log_debug "entering expect"
+            log_debug "command: $cmd"
             uplevel {set expect_out(buffer) {}}
         }
         leave {
@@ -160,7 +186,7 @@ proc trace_spawn {cmd args} {
         }
         leave {
             log_debug "[quote $cmd]: code [lindex $args 0], result [lindex $args 1]"
-            expect_before {
+            expect_after {
                 timeout {
                     expect "*" {
                         log_debug "timeout; buffer=[quote $expect_out(buffer)]"
@@ -216,7 +242,6 @@ proc print_var_contents name {
 
     # match on the results
     set pat {\r\n@GUARD:$guard@\r\n(.*)\r\n@/GUARD:$guard@\r\n}
-    set matched false
     expect_prompt -re [subst -nocommands -nobackslashes $pat] {
         log_info "get_var_contents: result: [quote $expect_out(1,string)]"
         puts $expect_out(1,string)

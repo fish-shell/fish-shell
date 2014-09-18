@@ -1,0 +1,43 @@
+# vim: set filetype=expect:
+
+spawn $fish
+
+expect_prompt
+
+# test switching key bindings
+# this should leave the mode in the appropriate state
+
+send_line "set -g fish_key_bindings fish_vi_key_bindings"
+expect_prompt
+send_line -h "echo fail\033ddiecho success"
+expect_prompt -re {\r\nsuccess\r\n} {
+    puts "success"
+} -nounmatched -re {\r\nfail} {
+    puts stderr "fail"
+} unmatched {
+    puts stderr "Couldn't find expected output 'success'"
+}
+# try again without the human typing
+send_line "echo fail\033ddiecho success"
+expect_prompt -re {\r\nsuccess\r\n} {
+    puts "success"
+} -nounmatched -re {\r\nfail} {
+    puts stderr "fail"
+} unmatched {
+    puts stderr "Couldn't find expected output 'success'"
+}
+
+# still in insert mode, switch back to regular key bindings
+send_line "set -g fish_key_bindings fish_default_key_bindings"
+expect_prompt
+send_line "echo success"
+expect_prompt -re {\r\nsuccess\r\n} {
+    puts "success"
+} unmatched {
+    puts stderr "Couldn't find expected output 'success'"
+} timeout {
+    set msg ""
+    append msg "Timeout after setting fish_key_bindings to fish_default_key_bindings\n" \
+               "\$fish_bind_mode is most likely still set to 'insert'"
+    abort $msg
+}

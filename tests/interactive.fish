@@ -15,20 +15,21 @@ for i in *.expect
     begin
         set -lx XDG_CONFIG_HOME $PWD/tmp.interactive.config
         set -lx TERM dumb
-        expect -n -c 'source interactive.expect.rc' -f $i >tmp.out ^tmp.err
+        expect -n -c 'source interactive.expect.rc' -f $i >$i.tmp.out ^$i.tmp.err
     end
     set -l tmp_status $status
     set res ok
-    if not diff tmp.out $i.out >/dev/null
+    mv -f interactive.tmp.log $i.tmp.log
+    if not diff $i.tmp.out $i.out >/dev/null
         set res fail
         echo "Output differs for file $i. Diff follows:"
-        diff -u tmp.out $i.out
+        diff -u $i.tmp.out $i.out
     end
 
-    if not diff tmp.err $i.err >/dev/null
+    if not diff $i.tmp.err $i.err >/dev/null
         set res fail
         echo "Error output differs for file $i. Diff follows:"
-        diff -u tmp.err $i.err
+        diff -u $i.tmp.err $i.err
     end
 
     if test $tmp_status != (cat $i.status)
@@ -38,6 +39,8 @@ for i in *.expect
 
     if test $res = ok
         echo "File $i tested ok"
+        # clean up tmp files
+        rm -f $i.tmp.{err,out,log}
     else
         echo "File $i failed tests"
     end

@@ -36,12 +36,7 @@
 #.
 # The, at times, archiac looking regex is down to ensuring portable sed BREs
 #.
-# Licensed under whatever terms are most compatible with Fish's GPLv2 license,
-# bascially free to use/reuse/redistribute/laugh at/be inspired by. Don't
-# pretend it's your code unless you've spent more late nights on it than me but
-# if it saves you a late night, do what you can to help rebalance karma. If it
-# doesn't work or breaks something, it's your fault for using it: if it seems
-# to work it's more likely a hallucination than anything based in reality.
+# This code is licensed with fish under the GPL 2.0.
 #.
 # Pattern flow control for scanning doc.h
 /\\fish/,/\\endfish/ {

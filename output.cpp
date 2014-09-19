@@ -107,8 +107,8 @@ static int (*out)(char c) = &writeb_internal;
  */
 static wcstring current_term;
 
-/* Whether term256 is supported */
-static bool support_term256 = false;
+/* Whether term256 and term24bit are supported */
+static color_support_t color_support = 0;
 
 
 void output_set_writer(int (*writer)(char))
@@ -125,22 +125,22 @@ int (*output_get_writer())(char)
 static bool term256_support_is_native(void)
 {
     /* Return YES if we think the term256 support is "native" as opposed to forced. */
-    return max_colors == 256;
+    return max_colors >= 256;
 }
 
-bool output_get_supports_term256(void)
+color_support_t output_get_color_support(void)
 {
-    return support_term256;
+    return color_support;
 }
 
-void output_set_supports_term256(bool val)
+void output_set_color_support(color_support_t val)
 {
-    support_term256 = val;
+    color_support = val;
 }
 
 unsigned char index_for_color(rgb_color_t c)
 {
-    if (c.is_named() || ! output_get_supports_term256())
+    if (c.is_named() || ! (output_get_color_support() & color_support_term256))
     {
         return c.to_name_index();
     }
@@ -686,7 +686,8 @@ rgb_color_t parse_color(const wcstring &val, bool is_background)
 
     // If we have both RGB and named colors, then prefer rgb if term256 is supported
     rgb_color_t result;
-    if ((!first_rgb.is_none() && output_get_supports_term256()) || first_named.is_none())
+    bool has_term256 = !! (output_get_color_support() & color_support_term256);
+    if ((!first_rgb.is_none() && has_term256) || first_named.is_none())
     {
         result = first_rgb;
     }

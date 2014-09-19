@@ -325,7 +325,7 @@ static void react_to_variable_change(const wcstring &key)
     }
     else if (key == L"fish_term256")
     {
-        update_fish_term256();
+        update_fish_color_support();
         reader_react_to_color_change();
     }
     else if (string_prefixes_string(L"fish_color_", key))

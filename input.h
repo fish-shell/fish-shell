@@ -185,8 +185,8 @@ wchar_t input_function_get_code(const wcstring &name);
 /** Returns a list of all existing input function names */
 wcstring_list_t input_function_get_names(void);
 
-/** Updates our idea of whether we support term256 */
-void update_fish_term256();
+/** Updates our idea of whether we support term256 and term24bit */
+void update_fish_color_support();
 
 
 #endif

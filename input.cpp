@@ -423,7 +423,7 @@ static int interrupt_handler()
     return R_NULL;
 }
 
-void update_fish_term256(void)
+void update_fish_color_support(void)
 {
     /* Infer term256 support. If fish_term256 is set, we respect it; otherwise try to detect it from the TERM variable */
     env_var_t fish_term256 = env_get_string(L"fish_term256");
@@ -456,7 +456,20 @@ void update_fish_term256(void)
             support_term256 = false;
         }
     }
-    output_set_supports_term256(support_term256);
+
+    env_var_t fish_term24bit = env_get_string(L"fish_term24bit");
+    bool support_term24bit;
+    if (! fish_term24bit.missing_or_empty())
+    {
+        support_term24bit = from_string<bool>(fish_term24bit);
+    }
+    else
+    {
+        support_term24bit = false;
+    }
+
+    color_support_t support = (support_term256 ? color_support_term256 : 0) | (support_term24bit ? color_support_term24bit : 0);
+    output_set_color_support(support);
 }
 
 int input_init()
@@ -496,7 +509,7 @@ int input_init()
 
     input_terminfo_init();
 
-    update_fish_term256();
+    update_fish_color_support();
 
     /* If we have no keybindings, add a few simple defaults */
     if (mapping_list.empty())

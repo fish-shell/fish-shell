@@ -435,7 +435,7 @@ int main(int argc, char **argv)
     reader_init();
     history_init();
     /* For setcolor to support term256 in config.fish (#1022) */
-    update_fish_term256();
+    update_fish_color_support();
 
     parser_t &parser = parser_t::principal_parser();
 

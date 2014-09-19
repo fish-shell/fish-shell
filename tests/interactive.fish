@@ -42,6 +42,12 @@ for i in *.expect
         # clean up tmp files
         rm -f $i.tmp.{err,out,log}
     else
+        if set -qgx SHOW_INTERACTIVE_LOG
+            # dump the interactive log
+            # primarily for use in travis where we can't check it manually
+            echo "Log for file $i:"
+            cat $i.tmp.log
+        end
         echo "File $i failed tests"
     end
 end

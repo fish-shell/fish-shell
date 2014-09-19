@@ -1238,7 +1238,7 @@ static bool insert_string(editable_line_t *el, const wcstring &str, bool allow_e
     while (cursor < len)
     {
         /* Determine the position of the next expansion-triggering char (possibly none), and the end of the range we wish to insert */
-        const wchar_t *expansion_triggering_chars = L" ;";
+        const wchar_t *expansion_triggering_chars = L" ;|&^><";
         size_t char_triggering_expansion_pos = allow_expand_abbreviations ? str.find_first_of(expansion_triggering_chars, cursor) : wcstring::npos;
         bool has_expansion_triggering_char = (char_triggering_expansion_pos != wcstring::npos);
         size_t range_end = (has_expansion_triggering_char ? char_triggering_expansion_pos + 1 : len);

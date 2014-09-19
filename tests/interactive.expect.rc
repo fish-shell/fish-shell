@@ -57,6 +57,7 @@ proc expect_prompt {args} {
     }
     set prompt_action ""
     set expargs {}
+    set debugpats {}
     set nounmatched no
     set matchidx 0
     set matched(any) no
@@ -68,6 +69,7 @@ proc expect_prompt {args} {
                 set state "action"
             }
             "action" {
+                lappend debugpats [lindex $expargs end]
                 lappend expargs [subst -nocommands {
                     log_debug "matched extra pattern to expect_prompt: [quote \$expect_out(0,string)]"
                     if {!\$matched($matchidx)} {
@@ -93,6 +95,7 @@ proc expect_prompt {args} {
                     -gl -
                     -re -
                     -ex {
+                        lappend debugpats $arg
                         set state "pat"
                     }
                     -i -
@@ -108,7 +111,7 @@ proc expect_prompt {args} {
                         error "BUG: unknown expect flag in expect_prompt"
                     }
                     default {
-                        set state "pat"
+                        set state "action"
                     }
                 }
                 if {$keep} {
@@ -134,8 +137,8 @@ proc expect_prompt {args} {
             }
         }
     }
-    if {[llength $expargs] > 0} {
-        log_info "expecting prompt $prompt_counter + patterns"
+    if {[llength $debugpats] > 0} {
+        log_info "expecting prompt $prompt_counter + \[$debugpats]"
     } else {
         log_info "expecting prompt $prompt_counter"
     }
@@ -153,7 +156,6 @@ proc trace_expect {cmd args} {
     switch [lindex $args end] {
         enter {
             log_debug "entering expect"
-            log_debug "command: $cmd"
             uplevel {set expect_out(buffer) {}}
         }
         leave {
@@ -195,6 +197,22 @@ proc trace_spawn {cmd args} {
                 }
                 eof {
                     log_debug "eof; buffer=[quote $expect_out(buffer)]"
+                    # even though we're about to abort, we want to wait so we can get the status
+                    # note: it's possible that fish could have closed its end and then hung, and
+                    # expect doesn't provide any way to set a timeout for wait. But I think that's
+                    # an acceptable risk.
+                    puts stderr "eof; waiting on child process to exit"
+                    set status [wait]
+                    if {[lindex $status 2] == -1} {
+                        # operating system error
+                        puts stderr "error: OS error code [lindex $status 3]"
+                    } else {
+                        set msg "process [lindex $status 0] exited with status [lindex $status 3]"
+                        if {[llength $status] > 4} {
+                            append msg " ([lrange $status 4 end])"
+                        }
+                        puts stderr $msg
+                    }
                     abort "eof"
                 }
             }

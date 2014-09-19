@@ -32,9 +32,11 @@ for i in *.expect
         diff -u $i.tmp.err $i.err
     end
 
-    if test $tmp_status != (cat $i.status)
+    set -l exp_status (cat $i.status)[1]
+    if test $tmp_status != $exp_status
         set res fail
         echo "Exit status differs for file $i."
+        echo "Expected $exp_status, got $tmp_status."
     end
 
     if test $res = ok

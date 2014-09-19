@@ -1237,10 +1237,11 @@ static bool insert_string(editable_line_t *el, const wcstring &str, bool allow_e
     size_t cursor = 0;
     while (cursor < len)
     {
-        /* Determine the position of the next space (possibly none), and the end of the range we wish to insert */
-        size_t space_triggering_expansion_pos = allow_expand_abbreviations ? str.find(L' ', cursor) : wcstring::npos;
-        bool has_space_triggering_expansion = (space_triggering_expansion_pos != wcstring::npos);
-        size_t range_end = (has_space_triggering_expansion ? space_triggering_expansion_pos + 1 : len);
+        /* Determine the position of the next expansion-triggering char (possibly none), and the end of the range we wish to insert */
+        const wchar_t *expansion_triggering_chars = L" ;";
+        size_t char_triggering_expansion_pos = allow_expand_abbreviations ? str.find_first_of(expansion_triggering_chars, cursor) : wcstring::npos;
+        bool has_expansion_triggering_char = (char_triggering_expansion_pos != wcstring::npos);
+        size_t range_end = (has_expansion_triggering_char ? char_triggering_expansion_pos + 1 : len);
         
         /* Insert from the cursor up to but not including the range end */
         assert(range_end > cursor);
@@ -1249,11 +1250,11 @@ static bool insert_string(editable_line_t *el, const wcstring &str, bool allow_e
         update_buff_pos(el, el->position);
         data->command_line_changed(el);
         
-        /* If we got a space, then the last character we inserted was that space. Expand abbreviations. */
-        if (has_space_triggering_expansion && allow_expand_abbreviations)
+        /* If we got an expansion trigger, then the last character we inserted was it (i.e. was a space). Expand abbreviations. */
+        if (has_expansion_triggering_char && allow_expand_abbreviations)
         {
             assert(range_end > 0);
-            assert(str.at(range_end - 1) == L' ');
+            assert(wcschr(expansion_triggering_chars, str.at(range_end - 1)));
             data->expand_abbreviation_as_necessary(1);
         }
         cursor = range_end;

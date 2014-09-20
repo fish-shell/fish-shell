@@ -732,6 +732,16 @@ static bool test_flags(const wchar_t *filename, expand_flags_t flags)
     {
         if (waccess(filename, X_OK) != 0)
             return false;
+        struct stat buf;
+        if (wstat(filename, &buf) == -1)
+        {
+            return false;
+        }
+
+        if (!S_ISREG(buf.st_mode))
+        {
+            return false;
+        }
     }
 
     return true;

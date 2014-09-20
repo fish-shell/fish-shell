@@ -332,7 +332,7 @@ static void iothread_service_result_queue()
     // Move the queue to a local variable
     std::queue<SpawnRequest_t *> result_queue;
     {
-        scoped_lock queue_lock(s_main_thread_request_queue_lock);
+        scoped_lock queue_lock(s_result_queue_lock);
         std::swap(result_queue, s_result_queue);
     }
     

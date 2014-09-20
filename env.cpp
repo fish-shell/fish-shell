@@ -542,8 +542,10 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     wcstring nshlvl_str = L"1";
     if (! shlvl_str.missing())
     {
-        long shlvl_i = wcstol(shlvl_str.c_str(), NULL, 10);
-        if (shlvl_i >= 0)
+        wchar_t *end;
+        long shlvl_i = wcstol(shlvl_str.c_str(), &end, 10);
+        while (iswspace(*end)) ++end; /* skip trailing whitespace */
+        if (shlvl_i >= 0 && *end == '\0')
         {
             nshlvl_str = to_string<long>(shlvl_i + 1);
         }

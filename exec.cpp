@@ -651,6 +651,21 @@ void exec_job(parser_t &parser, job_t *j)
         /* PCA This is for handling exec. Passing all_ios here matches what fish 2.0.0 and 1.x did. It's known to be wrong - for example, it means that redirections bound for subsequent commands in the pipeline will apply to exec. However, using exec in a pipeline doesn't really make sense, so I'm not trying to fix it here. */
         if (!setup_child_process(j, 0, all_ios))
         {
+            /* decrement SHLVL as we're removing ourselves from the shell "stack" */
+            const env_var_t shlvl_str = env_get_string(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
+            wcstring nshlvl_str = L"0";
+            if (!shlvl_str.missing())
+            {
+                wchar_t *end;
+                long shlvl_i = wcstol(shlvl_str.c_str(), &end, 10);
+                while (iswspace(*end)) ++end; /* skip trailing whitespace */
+                if (shlvl_i > 0 && *end == '\0')
+                {
+                    nshlvl_str = to_string<long>(shlvl_i - 1);
+                }
+            }
+            env_set(L"SHLVL", nshlvl_str.c_str(), ENV_GLOBAL | ENV_EXPORT);
+
             /*
               launch_process _never_ returns
             */

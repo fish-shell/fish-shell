@@ -236,5 +236,12 @@ echo Missing: $testu
 # test SHLVL
 # use a subshell to ensure a clean slate
 env SHLVL= ../fish -c 'echo SHLVL: $SHLVL; ../fish -c \'echo SHLVL: $SHLVL\''
+# exec should decrement SHLVL
+env SHLVL= ../fish -c 'echo SHLVL: $SHLVL; exec ../fish -c \'echo SHLVL: $SHLVL\''
+# garbage SHLVLs should be treated as garbage
+env SHLVL=3foo ../fish -c 'echo SHLVL: $SHLVL'
+# whitespace is allowed though (for bash compatibility)
+env SHLVL="3  " ../fish -c 'echo SHLVL: $SHLVL'
+env SHLVL="  3" ../fish -c 'echo SHLVL: $SHLVL'
 
 true

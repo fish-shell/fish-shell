@@ -87,6 +87,10 @@ function __fish_git_complete_stashes
    command git stash list --format=format:"%gd:%gs" | sed 's/:/\t/'
 end
 
+function __fish_git_aliases
+    command git config --get-regexp '^alias\.' | sed -n "s/^alias\.\([^ ]*\).*/\1/p"
+end
+
 # general options
 complete -f -c git -n 'not __fish_git_needs_command' -l help -d 'Display the manual of a git command'
 
@@ -387,4 +391,4 @@ complete -f -c git -n '__fish_git_using_command submodule' -a 'sync' -d 'Sync su
 complete -f -c git -n '__fish_git_needs_command' -a whatchanged -d 'Show logs with difference each commit introduces'
 
 ## Aliases (custom user-defined commands)
-complete -c git -n '__fish_git_needs_command' -a '(command git config --get-regexp alias | sed "s/^alias\.\([^ ]*\).*/\1/")' -d 'Alias (user-defined command)'
+complete -c git -n '__fish_git_needs_command' -a '(__fish_git_aliases)' -d 'Alias (user-defined command)'

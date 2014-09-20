@@ -323,7 +323,7 @@ static void react_to_variable_change(const wcstring &key)
     {
         handle_locale();
     }
-    else if (key == L"fish_term256")
+    else if (key == L"fish_term256" || key == L"fish_term24bit")
     {
         update_fish_color_support();
         reader_react_to_color_change();

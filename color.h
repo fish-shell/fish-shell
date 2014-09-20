@@ -9,7 +9,8 @@
 #include "common.h"
 
 /* 24 bit color */
-struct color24_t {
+struct color24_t
+{
     unsigned char rgb[3];
 };
 

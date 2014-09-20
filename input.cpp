@@ -465,6 +465,7 @@ void update_fish_color_support(void)
     }
     else
     {
+        /* We don't attempt to infer term24 bit support yet. */
         support_term24bit = false;
     }
 

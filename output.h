@@ -145,8 +145,7 @@ color_support_t output_get_color_support();
 void output_set_color_support(color_support_t support);
 
 /* Exported for builtin_set_color's usage only */
-bool write_foreground_color(unsigned char idx);
-bool write_background_color(unsigned char idx);
+void write_color(rgb_color_t color, bool is_fg);
 unsigned char index_for_color(rgb_color_t c);
 
 #endif

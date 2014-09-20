@@ -211,7 +211,7 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
     {
         if (bg.is_normal())
         {
-            write_background_color(0);
+            write_color(rgb_color_t::black(), false /* not is_fg */);
             writembs(tparm(exit_attribute_mode));
         }
     }
@@ -220,12 +220,12 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
     {
         if (fg.is_normal() || fg.is_reset())
         {
-            write_foreground_color(0);
+            write_color(rgb_color_t::black(), true /* is_fg */);
             writembs(tparm(exit_attribute_mode));
         }
         else
         {
-            write_foreground_color(index_for_color(fg));
+            write_color(fg, true /* is_fg */);
         }
     }
 
@@ -233,7 +233,7 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
     {
         if (! bg.is_normal() && ! bg.is_reset())
         {
-            write_background_color(index_for_color(bg));
+            write_color(bg, false /* not is_fg */);
         }
     }
 

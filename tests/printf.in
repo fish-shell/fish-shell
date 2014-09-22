@@ -4,6 +4,7 @@ printf "%x %X %o %llu\n" 10 11 8 -1
 printf "%a %A\n" 14 15
 
 printf "%c %s\n" a hello
+printf "%c%c%c\n" hello … o
 printf "%e %E\n" 5 6
 
 printf "%20d\n" 50

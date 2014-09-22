@@ -1318,13 +1318,6 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                         errored = append_syntax_error(&parse_errors, node, ILLEGAL_CMD_ERR_MSG, command.c_str());
                     }
 
-                    // Check that it doesn't contain a variable
-                    // Note this check is clumsy (it doesn't allow for escaping) but it matches what we do in parse_execution
-                    if (command.find(L'$') != wcstring::npos)
-                    {
-                        errored = append_syntax_error(&parse_errors, node, ILLEGAL_CMD_ERR_MSG, command.c_str());
-                    }
-
                     // Check that pipes are sound
                     if (! errored && parser_is_pipe_forbidden(command) && is_in_pipeline)
                     {

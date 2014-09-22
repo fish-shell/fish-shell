@@ -1303,7 +1303,7 @@ static void test_lru(void)
    \param flags the flags to send to expand_string
 */
 
-static int expand_test(const wchar_t *in, int flags, ...)
+static int expand_test(const wchar_t *in, expand_flags_t flags, ...)
 {
     std::vector<completion_t> output;
     va_list va;
@@ -1377,6 +1377,11 @@ static void test_expand()
     if (!expand_test(L"/bin/l\\0", ACCEPT_INCOMPLETE, 0))
     {
         err(L"Failed to handle null escape in expansion");
+    }
+
+    if (!expand_test(L"foo\\$bar", EXPAND_SKIP_VARIABLES, L"foo$bar", 0))
+    {
+        err(L"Failed to handle dollar sign in variable-skipping expansion");
     }
 
     if (system("mkdir -p /tmp/fish_expand_test/")) err(L"mkdir failed");

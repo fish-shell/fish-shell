@@ -17,6 +17,7 @@ two
 1 '' 1 ''
 1 'test' 1 '' 1 ''
 1 'foo' 1 'bar' 1 '  baz'
+0 a
 
 1 'hello'
 1 'h' 1 'ello'

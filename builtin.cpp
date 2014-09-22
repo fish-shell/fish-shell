@@ -2655,7 +2655,7 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
             }
         }
 
-        if (buff.size() < 2 && eof)
+        if (buff.empty() && eof)
         {
             exit_res = 1;
         }

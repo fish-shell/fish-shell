@@ -38,6 +38,8 @@ echo 'test' | read -l one two three
 print_vars one two three
 echo 'foo   bar   baz' | read -l one two three
 print_vars one two three
+echo -n 'a' | read -l one
+echo "$status $one"
 
 echo
 set -l IFS

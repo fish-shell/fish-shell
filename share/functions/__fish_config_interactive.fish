@@ -149,20 +149,22 @@ function __fish_config_interactive -d "Initializations that should be performed 
         eval "$__fish_bin_dir/fish -c 'fish_update_completions > /dev/null ^/dev/null' &"
     end
 
-	#
-	# Print a greeting
-	#
+	if status -i
+		#
+		# Print a greeting
+		#
 
-	if functions -q fish_greeting
-		fish_greeting
-	else
-		if set -q fish_greeting
-			switch "$fish_greeting"
-				case ''
-				# If variable is empty, don't print anything, saves us a fork
+		if functions -q fish_greeting
+			fish_greeting
+		else
+			if set -q fish_greeting
+				switch "$fish_greeting"
+					case ''
+					# If variable is empty, don't print anything, saves us a fork
 
-				case '*'
-				echo $fish_greeting
+					case '*'
+					echo $fish_greeting
+				end
 			end
 		end
 	end

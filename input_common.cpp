@@ -243,7 +243,7 @@ wchar_t input_common_readch(int timed)
         }
 
         wchar_t res;
-        static mbstate_t state;
+        mbstate_t state = {};
 
         while (1)
         {

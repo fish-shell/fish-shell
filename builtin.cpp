@@ -2605,8 +2605,7 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
             int finished=0;
 
             wchar_t res=0;
-            static mbstate_t state;
-            memset(&state, '\0', sizeof(state));
+            mbstate_t state = {};
 
             while (!finished)
             {

@@ -23,6 +23,8 @@ The following options are available:
 
 - `-p PROMPT_CMD` or `--prompt=PROMPT_CMD` uses the output of the shell command `PROMPT_CMD` as the prompt for the interactive mode. The default prompt command is <code>set_color green; echo read; set_color normal; echo "> "</code>.
 
+- `-R RIGHT_PROMPT_CMD` or `--right-prompt=RIGHT_PROMPT_CMD` uses the output of the shell command `RIGHT_PROMPT_CMD` as the right prompt for the interactive mode. There is no default right prompt command.
+
 - `-s` or `--shell` enables syntax highlighting, tab completions and command termination suitable for entering shellscript code in the interactive mode.
 
 - `-u` or `--unexport` prevents the variables from being exported to child processes (default behaviour).

@@ -2310,6 +2310,7 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
     int i, argc = builtin_count_args(argv);
     int place = ENV_USER;
     const wchar_t *prompt = DEFAULT_READ_PROMPT;
+    const wchar_t *right_prompt = L"";
     const wchar_t *commandline = L"";
     int exit_res=STATUS_BUILTIN_OK;
     const wchar_t *mode_name = READ_MODE_NAME;
@@ -2351,6 +2352,10 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
             }
             ,
             {
+                L"right-prompt", required_argument, 0, 'R'
+            }
+            ,
+            {
                 L"command", required_argument, 0, 'c'
             }
             ,
@@ -2388,7 +2393,7 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
 
         int opt = wgetopt_long(argc,
                                argv,
-                               L"xglUup:c:hm:n:saz",
+                               L"xglUup:R:c:hm:n:saz",
                                long_options,
                                &opt_index);
         if (opt == -1)
@@ -2429,6 +2434,10 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
 
             case L'p':
                 prompt = woptarg;
+                break;
+
+            case L'R':
+                right_prompt = woptarg;
                 break;
 
             case L'c':
@@ -2556,6 +2565,7 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
 
         reader_push(mode_name);
         reader_set_left_prompt(prompt);
+        reader_set_right_prompt(right_prompt);
         if (shell)
         {
             reader_set_complete_function(&complete);

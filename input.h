@@ -76,7 +76,7 @@ enum
 wcstring describe_char(wint_t c);
 
 #define R_MIN R_NULL
-#define R_MAX R_AND
+#define R_MAX R_CANCEL
 
 /**
    Initialize the terminal by calling setupterm, and set up arrays

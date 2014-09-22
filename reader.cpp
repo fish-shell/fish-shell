@@ -3002,10 +3002,13 @@ static int can_read(int fd)
 /**
    Test if the specified character is in the private use area that
    fish uses to store internal characters
+
+    Note: Allow U+F8FF because that's the Apple symbol, which is in the
+    OS X US keyboard layout.
 */
 static int wchar_private(wchar_t c)
 {
-    return ((c >= 0xe000) && (c <= 0xf8ff));
+    return ((c >= 0xe000) && (c < 0xf8ff));
 }
 
 /**

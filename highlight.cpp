@@ -575,7 +575,6 @@ bool autosuggest_validate_from_history(const history_item_t &item, file_detectio
             }
             else
             {
-                detector.potential_paths = paths;
                 suggestionOK = detector.paths_are_valid(paths);
             }
         }

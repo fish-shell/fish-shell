@@ -65,6 +65,7 @@
 #include "path.h"
 #include "history.h"
 #include "parse_tree.h"
+#include "wcstringutil.h"
 
 /**
    The default prompt for the read command
@@ -2305,10 +2306,9 @@ static int builtin_random(parser_t &parser, wchar_t **argv)
 */
 static int builtin_read(parser_t &parser, wchar_t **argv)
 {
-    wchar_t *buff=0;
+    wcstring buff;
     int i, argc = builtin_count_args(argv);
     int place = ENV_USER;
-    wchar_t *nxt;
     const wchar_t *prompt = DEFAULT_READ_PROMPT;
     const wchar_t *commandline = L"";
     int exit_res=STATUS_BUILTIN_OK;
@@ -2317,6 +2317,7 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
     wchar_t *end;
     int shell = 0;
     int array = 0;
+    bool split_null = false;
 
     woptind=0;
 
@@ -2370,6 +2371,10 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
             }
             ,
             {
+                L"null", no_argument, 0, 'z'
+            }
+            ,
+            {
                 L"help", no_argument, 0, 'h'
             }
             ,
@@ -2383,7 +2388,7 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
 
         int opt = wgetopt_long(argc,
                                argv,
-                               L"xglUup:c:hm:n:sa",
+                               L"xglUup:c:hm:n:saz",
                                long_options,
                                &opt_index);
         if (opt == -1)
@@ -2468,6 +2473,10 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
                 array = 1;
                 break;
 
+            case L'z':
+                split_null = true;
+                break;
+
             case 'h':
                 builtin_print_help(parser, argv[0], stdout_buffer);
                 return STATUS_BUILTIN_OK;
@@ -2541,7 +2550,7 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
     /*
       Check if we should read interactively using \c reader_readline()
     */
-    if (isatty(0) && builtin_stdin == 0)
+    if (isatty(0) && builtin_stdin == 0 && !split_null)
     {
         const wchar_t *line;
 
@@ -2572,13 +2581,11 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
                 // note: we're deliberately throwing away the tail of the commandline.
                 // It shouldn't be unread because it was produced with `commandline -i`,
                 // not typed.
-                buff = (wchar_t *)malloc(((size_t)nchars + 1) * sizeof(wchar_t));
-                wmemcpy(buff, line, (size_t)nchars);
-                buff[nchars] = 0;
+                buff = wcstring(line, nchars);
             }
             else
             {
-                buff = wcsdup(line);
+                buff = wcstring(line);
             }
         }
         else
@@ -2591,7 +2598,7 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
     {
         int eof=0;
 
-        wcstring sb;
+        buff.clear();
 
         while (1)
         {
@@ -2621,7 +2628,6 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
                     case (size_t)(-2):
                         break;
                     case 0:
-                        eof=1;
                         finished = 1;
                         break;
 
@@ -2635,44 +2641,43 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
             if (eof)
                 break;
 
-            if (res == L'\n')
+            if (!split_null && res == L'\n')
                 break;
 
-            sb.push_back(res);
+            if (split_null && res == L'\0')
+                break;
 
-            if (0 < nchars && (size_t)nchars <= sb.size())
+            buff.push_back(res);
+
+            if (0 < nchars && (size_t)nchars <= buff.size())
             {
                 break;
             }
         }
 
-        if (sb.size() < 2 && eof)
+        if (buff.size() < 2 && eof)
         {
             exit_res = 1;
         }
-
-        buff = wcsdup(sb.c_str());
     }
 
     if (i != argc && !exit_res)
     {
-
-        wchar_t *state;
-
         env_var_t ifs = env_get_string(L"IFS");
-
         if (ifs.missing_or_empty())
         {
             /* Every character is a separate token */
-            size_t bufflen = wcslen(buff);
+            size_t bufflen = buff.size();
             if (array)
             {
                 if (bufflen > 0)
                 {
                     wcstring chars(bufflen+(bufflen-1), ARRAY_SEP);
-                    for (size_t j=0; j<bufflen; ++j)
+                    wcstring::iterator out = chars.begin();
+                    for (wcstring::const_iterator it = buff.begin(), end = buff.end(); it != end; ++it)
                     {
-                        chars[j*2] = buff[j];
+                        *out = *it;
+                        out += 2;
                     }
                     env_set(argv[i], chars.c_str(), place);
                 }
@@ -2686,14 +2691,15 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
                 size_t j = 0;
                 for (; i+1 < argc; ++i)
                 {
-                    if (j < bufflen) {
-                        wchar_t buffer[2] = {buff[j], 0};
+                    if (j < bufflen)
+                    {
+                        wchar_t buffer[2] = {buff[j++], 0};
                         env_set(argv[i], buffer, place);
                     }
-                    else {
+                    else
+                    {
                         env_set(argv[i], L"", place);
                     }
-                    if (j < bufflen) ++j;
                 }
                 if (i < argc) env_set(argv[i], &buff[j], place);
             }
@@ -2701,33 +2707,31 @@ static int builtin_read(parser_t &parser, wchar_t **argv)
         else if (array)
         {
             wcstring tokens;
-            tokens.reserve(wcslen(buff));
+            tokens.reserve(buff.size());
             bool empty = true;
 
-            for (nxt = wcstok(buff, ifs.c_str(), &state); nxt != 0; nxt = wcstok(0, ifs.c_str(), &state))
+            for (wcstring_range loc = wcstring_tok(buff, ifs); loc.first != wcstring::npos; loc = wcstring_tok(buff, ifs, loc))
             {
-                if (! tokens.empty()) tokens.push_back(ARRAY_SEP);
-                tokens.append(nxt);
+                if (!empty) tokens.push_back(ARRAY_SEP);
+                tokens.append(buff, loc.first, loc.second);
                 empty = false;
             }
             env_set(argv[i], empty ? NULL : tokens.c_str(), place);
         }
         else
         {
-            nxt = wcstok(buff, (i<argc-1)?ifs.c_str():L"", &state);
+            wcstring_range loc = wcstring_range(0,0);
 
             while (i<argc)
             {
-                env_set(argv[i], nxt != 0 ? nxt: L"", place);
+                loc = wcstring_tok(buff, (i+1<argc) ? ifs : L"", loc);
+                env_set(argv[i], loc.first == wcstring::npos ? L"" : &buff.c_str()[loc.first], place);
 
-                i++;
-                if (nxt != 0)
-                    nxt = wcstok(0, (i<argc-1)?ifs.c_str():L"", &state);
+                ++i;
             }
+
         }
     }
-
-    free(buff);
 
     return exit_res;
 }

@@ -65,6 +65,7 @@
 #include "input.h"
 #include "utf8.h"
 #include "env_universal_common.h"
+#include "wcstringutil.h"
 
 static const char * const * s_arguments;
 static int s_test_run_count = 0;
@@ -3629,6 +3630,37 @@ static void test_highlighting(void)
     }
 }
 
+static void test_wcstring_tok(void)
+{
+    say(L"Testing wcstring_tok");
+    wcstring buff = L"hello world";
+    wcstring needle = L" \t\n";
+    wcstring_range loc = wcstring_tok(buff, needle);
+    if (loc.first == wcstring::npos || buff.substr(loc.first, loc.second) != L"hello")
+    {
+        err(L"Wrong results from first wcstring_tok(): {%zu, %zu}", loc.first, loc.second);
+    }
+    loc = wcstring_tok(buff, needle, loc);
+    if (loc.first == wcstring::npos || buff.substr(loc.first, loc.second) != L"world")
+    {
+        err(L"Wrong results from second wcstring_tok(): {%zu, %zu}", loc.first, loc.second);
+    }
+    loc = wcstring_tok(buff, needle, loc);
+    if (loc.first != wcstring::npos)
+    {
+        err(L"Wrong results from third wcstring_tok(): {%zu, %zu}", loc.first, loc.second);
+    }
+
+    buff = L"hello world";
+    loc = wcstring_tok(buff, needle);
+    // loc is "hello" again
+    loc = wcstring_tok(buff, L"", loc);
+    if (loc.first == wcstring::npos || buff.substr(loc.first, loc.second) != L"world")
+    {
+        err(L"Wrong results from wcstring_tok with empty needle: {%zu, %zu}", loc.first, loc.second);
+    }
+}
+
 /**
    Main test
 */
@@ -3709,6 +3741,7 @@ int main(int argc, char **argv)
     if (should_test_function("autosuggestion_ignores")) test_autosuggestion_ignores();
     if (should_test_function("autosuggestion_combining")) test_autosuggestion_combining();
     if (should_test_function("autosuggest_suggest_special")) test_autosuggest_suggest_special();
+    if (should_test_function("wcstring_tok")) test_wcstring_tok();
     if (should_test_function("history")) history_tests_t::test_history();
     if (should_test_function("history_merge")) history_tests_t::test_history_merge();
     if (should_test_function("history_races")) history_tests_t::test_history_races();

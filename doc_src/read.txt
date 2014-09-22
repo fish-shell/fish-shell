@@ -33,6 +33,8 @@ The following options are available:
 
 - `-a` or `--array` stores the result as an array.
 
+- `-z` or `--null` reads up to NUL instead of newline. Disables interactive mode.
+
 `read` reads a single line of input from stdin, breaks it into tokens based on the `IFS` shell variable, and then assigns one token to each variable specified in `VARIABLES`. If there are more tokens than variables, the complete remainder is assigned to the last variable. As a special case, if `IFS` is set to the empty string, each character of the input is considered a separate token.
 
 If `-a` or `--array` is provided, only one variable name is allowed and the tokens are stored as an array in this variable.

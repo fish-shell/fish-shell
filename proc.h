@@ -80,12 +80,7 @@ enum process_type_t
     /**
        The exec builtin
     */
-    INTERNAL_EXEC,
-    /**
-       A buffer
-    */
-    INTERNAL_BUFFER,
-
+    INTERNAL_EXEC
 };
 
 enum
@@ -105,8 +100,7 @@ enum
   commands to be evaluated by calling eval. Lastly, this process can
   be the result of an exec command. The role of this process_t is
   determined by the type field, which can be one of EXTERNAL,
-  INTERNAL_BUILTIN, INTERNAL_FUNCTION, INTERNAL_BLOCK, INTERNAL_EXEC,
-  and INTERNAL_BUFFER.
+  INTERNAL_BUILTIN, INTERNAL_FUNCTION, INTERNAL_BLOCK, INTERNAL_EXEC.
 
   The process_t contains information on how the process should be
   started, such as command name and arguments, as well as runtime
@@ -153,7 +147,7 @@ public:
     /**
       Type of process. Can be one of \c EXTERNAL, \c
       INTERNAL_BUILTIN, \c INTERNAL_FUNCTION, \c INTERNAL_BLOCK,
-      INTERNAL_EXEC, or INTERNAL_BUFFER
+      INTERNAL_EXEC
     */
     enum process_type_t type;
 

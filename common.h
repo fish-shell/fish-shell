@@ -805,7 +805,7 @@ void print_stderr(const wcstring &str);
    replaced with \n, etc.
 
    \param in The string to be escaped
-   \param escape_all Whether all characters wich hold special meaning in fish (Pipe, semicolon, etc,) should be escaped, or only unprintable characters
+   \param flags Flags to control the escaping
    \return The escaped string, or 0 if there is not enough memory
 */
 

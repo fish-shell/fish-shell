@@ -424,21 +424,37 @@ static void builtin_bind_list(const wchar_t *bind_mode)
         {
             continue;
         }
-        
-        // Append the initial 'bind' command and the name
+
+        stdout_buffer.append(L"bind");
+
+        // Append the mode flags if applicable
+        if (mode != DEFAULT_BIND_MODE)
+        {
+            const wcstring emode = escape_string(mode, ESCAPE_ALL);
+            stdout_buffer.append(L" -M ");
+            stdout_buffer.append(emode);
+        }
+        if (sets_mode != mode)
+        {
+            const wcstring esets_mode = escape_string(sets_mode, ESCAPE_ALL);
+            stdout_buffer.append(L" -m ");
+            stdout_buffer.append(esets_mode);
+        }
+
+        // Append the name
         wcstring tname;
         if (input_terminfo_get_name(seq, &tname))
         {
             // Note that we show -k here because we have an input key name
-            append_format(stdout_buffer, L"bind -k %ls", tname.c_str());
+            append_format(stdout_buffer, L" -k %ls", tname.c_str());
         }
         else
         {
             // No key name, so no -k; we show the escape sequence directly
-            const wcstring eseq = escape_string(seq, 1);
-            append_format(stdout_buffer, L"bind %ls", eseq.c_str());
+            const wcstring eseq = escape_string(seq, ESCAPE_ALL);
+            append_format(stdout_buffer, L" %ls", eseq.c_str());
         }
-        
+
         // Now show the list of commands
         for (size_t i = 0; i < ecmds.size(); i++)
         {

@@ -84,11 +84,21 @@ function __fish_git_stash_not_using_subcommand
 end
 
 function __fish_git_complete_stashes
-   command git stash list --format=format:"%gd:%gs" | sed 's/:/\t/'
+    set -l IFS ':'
+    command git stash list --format=%gd:%gs | while read -l name desc
+        echo $name\t$desc
+    end
 end
 
 function __fish_git_aliases
-    command git config --get-regexp '^alias\.' | sed -n "s/^alias\.\([^ ]*\).*/\1/p"
+    set -l IFS \n
+    command git config -z --get-regexp '^alias\.' | while read -lz key value
+        begin
+            set -l IFS "."
+            echo -n $key | read -l _ name
+            echo $name
+        end
+    end
 end
 
 function __fish_git_custom_commands

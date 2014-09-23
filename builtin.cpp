@@ -500,6 +500,36 @@ static void builtin_bind_function_names()
     }
 }
 
+// Wraps input_terminfo_get_sequence(), appending the correct error messages as needed.
+static int get_terminfo_sequence(const wchar_t *seq, wcstring *out_seq)
+{
+    if (input_terminfo_get_sequence(seq, out_seq))
+    {
+        return 1;
+    }
+    switch (errno)
+    {
+        case ENOENT:
+        {
+            append_format(stderr_buffer, _(L"%ls: No key with name '%ls' found\n"), L"bind", seq);
+            break;
+        }
+
+        case EILSEQ:
+        {
+            append_format(stderr_buffer, _(L"%ls: Key with name '%ls' does not have any mapping\n"), L"bind", seq);
+            break;
+        }
+
+        default:
+        {
+            append_format(stderr_buffer, _(L"%ls: Unknown error trying to bind to key named '%ls'\n"), L"bind", seq);
+            break;
+        }
+    }
+    return 0;
+}
+
 /**
    Add specified key binding.
  */
@@ -510,35 +540,12 @@ static int builtin_bind_add(const wchar_t *seq, const wchar_t **cmds, size_t cmd
     if (terminfo)
     {
         wcstring seq2;
-        if (input_terminfo_get_sequence(seq, &seq2))
+        if (get_terminfo_sequence(seq, &seq2))
         {
             input_mapping_add(seq2.c_str(), cmds, cmds_len, mode, sets_mode);
         }
         else
         {
-            switch (errno)
-            {
-
-                case ENOENT:
-                {
-                    append_format(stderr_buffer, _(L"%ls: No key with name '%ls' found\n"), L"bind", seq);
-                    break;
-                }
-
-                case EILSEQ:
-                {
-                    append_format(stderr_buffer, _(L"%ls: Key with name '%ls' does not have any mapping\n"), L"bind", seq);
-                    break;
-                }
-
-                default:
-                {
-                    append_format(stderr_buffer, _(L"%ls: Unknown error trying to bind to key named '%ls'\n"), L"bind", seq);
-                    break;
-                }
-
-            }
-
             return 1;
         }
 
@@ -558,7 +565,7 @@ static int builtin_bind_add(const wchar_t *seq, const wchar_t **cmds, size_t cmd
    \param seq an array of all key bindings to erase
    \param all if specified, _all_ key bindings will be erased
  */
-static void builtin_bind_erase(wchar_t **seq, int all, const wchar_t *mode)
+static int builtin_bind_erase(wchar_t **seq, int all, const wchar_t *mode, int use_terminfo)
 {
     if (all)
     {
@@ -568,16 +575,27 @@ static void builtin_bind_erase(wchar_t **seq, int all, const wchar_t *mode)
             input_mapping_erase(lst.at(i).c_str(), mode);
         }
 
+        return 0;
     }
     else
     {
+        int res = 0;
+
         while (*seq)
         {
-            input_mapping_erase(*seq++, mode);
+            wcstring seq2;
+            if (get_terminfo_sequence(*seq++, &seq2))
+            {
+                input_mapping_erase(seq2.c_str(), mode);
+            }
+            else
+            {
+                res = 1;
+            }
         }
 
+        return res;
     }
-
 }
 
 
@@ -702,7 +720,10 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
 
         case BIND_ERASE:
         {
-            builtin_bind_erase(&argv[woptind], all, bind_mode_given ? bind_mode : NULL);
+            if (builtin_bind_erase(&argv[woptind], all, bind_mode_given ? bind_mode : NULL, use_terminfo))
+            {
+                res = STATUS_BUILTIN_ERROR;
+            }
             break;
         }
 
@@ -725,7 +746,10 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
 
                 default:
                 {
-                    builtin_bind_add(argv[woptind], (const wchar_t **)argv + (woptind + 1), argc - (woptind + 1), bind_mode, sets_bind_mode, use_terminfo);
+                    if (builtin_bind_add(argv[woptind], (const wchar_t **)argv + (woptind + 1), argc - (woptind + 1), bind_mode, sets_bind_mode, use_terminfo))
+                    {
+                        res = STATUS_BUILTIN_ERROR;
+                    }
                     break;
                 }
 

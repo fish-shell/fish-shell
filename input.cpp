@@ -794,7 +794,7 @@ bool input_mapping_erase(const wcstring &sequence, const wcstring &mode)
     ASSERT_IS_MAIN_THREAD();
     bool result = false;
 
-    for (std::vector<input_mapping_t>::const_iterator it = mapping_list.begin(), end = mapping_list.end();
+    for (std::vector<input_mapping_t>::iterator it = mapping_list.begin(), end = mapping_list.end();
          it != end;
          ++it)
     {

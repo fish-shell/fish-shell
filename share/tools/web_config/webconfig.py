@@ -483,14 +483,14 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 result.append(data)
                 remaining.discard(color_name)
 
+        # Sort our result (by their keys)
+        result.sort(key=operator.itemgetter('name'))
+
         # Ensure that we have all the color names we know about, so that if the
         # user deletes one he can still set it again via the web interface
         for color_name in remaining:
             color_desc = descriptions.get(color_name, '')
             result.append([color_name, color_desc, parse_color('')])
-
-        # Sort our result (by their keys)
-        result.sort(key=operator.itemgetter('name'))
 
         return result
 

@@ -44,13 +44,13 @@ body {
     bottom: 0;
     overflow-y: scroll;
     -webkit-overflow-scrolling: touch; /* necessary for momentum scrolling */
-    font: 400 1.3rem/2.1rem DejaVuSansCondensed, "DejaVu Sans", Roboto, "Lucida Grande", Calibri, Verdana, "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-stretch: condensed;
+    font: 400 1.3rem/2.1rem "DejaVu Sans", Roboto, "Lucida Grande", Calibri, Verdana, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 .fish_left_bar {
     width: 25rem;
     color: white;
-    font-family: DejaVuSans, Roboto, "Lucida Grande", Calibri, Verdana, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: DejaVuSansCondensed, "DejaVu Sans", Roboto, "Lucida Grande", Calibri, Verdana, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-stretch: condensed;
     background-color: #1f2d53;
 }
 .fish_right_bar {
@@ -103,7 +103,7 @@ a { color: #3d5cb3; }
 p { margin: 1rem 0; }
 h1, h2, h3, h4, h5, h6 {
     color: #1f2d53;
-    font-family: DejaVuSansCondensed, DejaVuSans, Roboto, "Lucida Grande", Calibri, Verdana, sans-serif;
+    font-family: DejaVuSansCondensed-Bold, "DejaVu Sans", Roboto, "Lucida Grande", Calibri, Verdana, sans-serif;
     font-stretch: condensed;
 }
 h1 {

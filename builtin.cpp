@@ -516,23 +516,24 @@ static int get_terminfo_sequence(const wchar_t *seq, wcstring *out_seq)
     {
         return 1;
     }
+    wcstring eseq = escape_string(seq, 0);
     switch (errno)
     {
         case ENOENT:
         {
-            append_format(stderr_buffer, _(L"%ls: No key with name '%ls' found\n"), L"bind", seq);
+            append_format(stderr_buffer, _(L"%ls: No key with name '%ls' found\n"), L"bind", eseq.c_str());
             break;
         }
 
         case EILSEQ:
         {
-            append_format(stderr_buffer, _(L"%ls: Key with name '%ls' does not have any mapping\n"), L"bind", seq);
+            append_format(stderr_buffer, _(L"%ls: Key with name '%ls' does not have any mapping\n"), L"bind", eseq.c_str());
             break;
         }
 
         default:
         {
-            append_format(stderr_buffer, _(L"%ls: Unknown error trying to bind to key named '%ls'\n"), L"bind", seq);
+            append_format(stderr_buffer, _(L"%ls: Unknown error trying to bind to key named '%ls'\n"), L"bind", eseq.c_str());
             break;
         }
     }
@@ -763,8 +764,33 @@ static int builtin_bind(parser_t &parser, wchar_t **argv)
 
                 case 1:
                 {
-                    res = STATUS_BUILTIN_ERROR;
-                    append_format(stderr_buffer, _(L"%ls: Expected zero or at least two parameters, got %d\n"), argv[0], argc-woptind);
+                    wcstring seq;
+                    if (use_terminfo)
+                    {
+                        if (!get_terminfo_sequence(argv[woptind], &seq))
+                        {
+                            res = STATUS_BUILTIN_ERROR;
+                            // get_terminfo_sequence already printed the error
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        seq = argv[woptind];
+                    }
+                    if (!builtin_bind_list_one(seq, bind_mode))
+                    {
+                        res = STATUS_BUILTIN_ERROR;
+                        wcstring eseq = escape_string(argv[woptind], 0);
+                        if (use_terminfo)
+                        {
+                            append_format(stderr_buffer, _(L"%ls: No binding found for key '%ls'\n"), argv[0], eseq.c_str());
+                        }
+                        else
+                        {
+                            append_format(stderr_buffer, _(L"%ls: No binding found for sequence '%ls'\n"), argv[0], eseq.c_str());
+                        }
+                    }
                     break;
                 }
 

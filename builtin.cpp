@@ -583,14 +583,21 @@ static int builtin_bind_erase(wchar_t **seq, int all, const wchar_t *mode, int u
 
         while (*seq)
         {
-            wcstring seq2;
-            if (get_terminfo_sequence(*seq++, &seq2))
+            if (use_terminfo)
             {
-                input_mapping_erase(seq2.c_str(), mode);
+                wcstring seq2;
+                if (get_terminfo_sequence(*seq++, &seq2))
+                {
+                    input_mapping_erase(seq2.c_str(), mode);
+                }
+                else
+                {
+                    res = 1;
+                }
             }
             else
             {
-                res = 1;
+                input_mapping_erase(*seq++, mode);
             }
         }
 

@@ -2,7 +2,12 @@
 
 \subsection bind-synopsis Synopsis
 \fish{synopsis}
-bind [OPTIONS] SEQUENCE COMMAND
+bind [(-M | --mode) MODE] [(-m | --sets-mode) NEW_MODE]
+     [(-k | --key)] SEQUENCE COMMAND [COMMAND...]
+bind (-K | --key-names) [(-a | --all)]
+bind (-f | --function-names)
+bind (-e | --erase) [(-M | --mode) MODE]
+     (-a | --all | [(-k | --key)] SEQUENCE [SEQUENCE...])
 \endfish
 
 \subsection bind-description Description
@@ -24,13 +29,23 @@ If such a script produces output, the script needs to finish by calling `command
 
 Key bindings are not saved between sessions by default. To save custom keybindings, edit the `fish_user_key_bindings` function and insert the appropriate `bind` statements.
 
+Key bindings may use "modes", which mimics Vi's modal input behavior. The default mode is "default", and every bind applies to a single mode. The mode can be viewed/changed with the `$fish_bind_mode` variable.
+
 The following parameters are available:
 
 - `-k` or `--key` Specify a key name, such as 'left' or 'backspace' instead of a character sequence
 
-- `-K` or `--key-names` Display a list of available key names
+- `-K` or `--key-names` Display a list of available key names. Specifying `-a` or `--all` includes keys that don't have a known mapping
 
 - `-f` or `--function-names` Display a list of available input functions
+
+- `-M MODE` or `--mode MODE` Specify a bind mode that the bind is used in. Defaults to "default"
+
+- `-m NEW_MODE` or `--sets-mode NEW_MODE` Change the current mode to `NEW_MODE` after this binding is executed
+
+- `-e` or `--erase` Erase the binding with the given sequence and mode instead of defining a new one. Multiple sequences can be specified with this flag. Specifying `-a` or `--all` erases all binds in this mode regardless of sequence.
+
+- `-a` or `--all` See `--erase` and `--key-names`
 
 The following special input functions are available:
 
@@ -99,3 +114,8 @@ bind -k ppage history-search-backward
 \endfish
 Performs a history search when the @key{Page Up} key is pressed.
 
+\fish
+set -g fish_key_bindings fish_vi_key_bindings
+bind -M insert @args{@bksl{cc}} kill-whole-line force-repaint
+\endfish
+Turns on Vi key bindings and rebinds @key{Control,C} to clear the input line.

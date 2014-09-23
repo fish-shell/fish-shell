@@ -43,7 +43,7 @@ The following parameters are available:
 
 - `-m NEW_MODE` or `--sets-mode NEW_MODE` Change the current mode to `NEW_MODE` after this binding is executed
 
-- `-e` or `--erase` Erase the binding with the given sequence and mode instead of defining a new one. Multiple sequences can be specified with this flag. Specifying `-a` or `--all` erases all binds in this mode regardless of sequence.
+- `-e` or `--erase` Erase the binding with the given sequence and mode instead of defining a new one. Multiple sequences can be specified with this flag. Specifying `-a` or `--all` with `-M` or `--mode` erases all binds in the given mode regardless of sequence. Specifying `-a` or `--all` without `-M` or `--mode` erases all binds in all modes regardless of sequence.
 
 - `-a` or `--all` See `--erase` and `--key-names`
 

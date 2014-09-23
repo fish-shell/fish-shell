@@ -772,59 +772,53 @@ wint_t input_readch(bool allow_commands)
     }
 }
 
-wcstring_list_t input_mapping_get_names()
+std::vector<input_mapping_name_t> input_mapping_get_names()
 {
     // Sort the mappings by the user specification order, so we can return them in the same order that the user specified them in
     std::vector<input_mapping_t> local_list = mapping_list;
     std::sort(local_list.begin(), local_list.end(), specification_order_is_less_than);
-    wcstring_list_t result;
+    std::vector<input_mapping_name_t> result;
     result.reserve(local_list.size());
 
     for (size_t i=0; i<local_list.size(); i++)
     {
         const input_mapping_t &m = local_list.at(i);
-        result.push_back(m.seq);
+        result.push_back((input_mapping_name_t){m.seq, m.mode});
     }
     return result;
 }
 
 
-bool input_mapping_erase(const wchar_t *sequence, const wchar_t *mode)
+bool input_mapping_erase(const wcstring &sequence, const wcstring &mode)
 {
     ASSERT_IS_MAIN_THREAD();
     bool result = false;
-    size_t i, sz = mapping_list.size();
 
-    for (i=0; i<sz; i++)
+    for (std::vector<input_mapping_t>::const_iterator it = mapping_list.begin(), end = mapping_list.end();
+         it != end;
+         ++it)
     {
-        const input_mapping_t &m = mapping_list.at(i);
-        if (sequence == m.seq && (mode == NULL || mode == m.mode))
+        if (sequence == it->seq && mode == it->mode)
         {
-            if (i != (sz-1))
-            {
-                mapping_list[i] = mapping_list[sz-1];
-            }
-            mapping_list.pop_back();
+            mapping_list.erase(it);
             result = true;
             break;
-
         }
     }
     return result;
 }
 
-bool input_mapping_get(const wcstring &sequence, wcstring_list_t *out_cmds, wcstring *out_mode, wcstring *out_sets_mode)
+bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds, wcstring *out_sets_mode)
 {
     bool result = false;
-    size_t sz = mapping_list.size();
-    for (size_t i=0; i<sz; i++)
+    for (std::vector<input_mapping_t>::const_iterator it = mapping_list.begin(), end = mapping_list.end();
+         it != end;
+         ++it)
     {
-        const input_mapping_t &m = mapping_list.at(i);
-        if (sequence == m.seq)
+        if (sequence == it->seq && mode == it->mode)
         {
-            *out_cmds = m.commands;
-            *out_mode = m.mode;
-            *out_sets_mode = m.sets_mode;
+            *out_cmds = it->commands;
+            *out_sets_mode = it->sets_mode;
             result = true;
             break;
         }

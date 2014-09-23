@@ -400,70 +400,79 @@ static void builtin_missing_argument(parser_t &parser, const wchar_t *cmd, const
 int builtin_test(parser_t &parser, wchar_t **argv);
 
 /**
+   List a single key binding.
+   Returns false if no binding with that sequence and mode exists.
+ */
+static bool builtin_bind_list_one(const wcstring& seq, const wcstring& bind_mode)
+{
+    std::vector<wcstring> ecmds;
+    wcstring sets_mode;
+
+    if (!input_mapping_get(seq, bind_mode, &ecmds, &sets_mode))
+    {
+        return false;
+    }
+
+    stdout_buffer.append(L"bind");
+
+    // Append the mode flags if applicable
+    if (bind_mode != DEFAULT_BIND_MODE)
+    {
+        const wcstring emode = escape_string(bind_mode, ESCAPE_ALL);
+        stdout_buffer.append(L" -M ");
+        stdout_buffer.append(emode);
+    }
+    if (sets_mode != bind_mode)
+    {
+        const wcstring esets_mode = escape_string(sets_mode, ESCAPE_ALL);
+        stdout_buffer.append(L" -m ");
+        stdout_buffer.append(esets_mode);
+    }
+
+    // Append the name
+    wcstring tname;
+    if (input_terminfo_get_name(seq, &tname))
+    {
+        // Note that we show -k here because we have an input key name
+        append_format(stdout_buffer, L" -k %ls", tname.c_str());
+    }
+    else
+    {
+        // No key name, so no -k; we show the escape sequence directly
+        const wcstring eseq = escape_string(seq, ESCAPE_ALL);
+        append_format(stdout_buffer, L" %ls", eseq.c_str());
+    }
+
+    // Now show the list of commands
+    for (size_t i = 0; i < ecmds.size(); i++)
+    {
+        const wcstring &ecmd = ecmds.at(i);
+        const wcstring escaped_ecmd = escape_string(ecmd, ESCAPE_ALL);
+        stdout_buffer.push_back(' ');
+        stdout_buffer.append(escaped_ecmd);
+    }
+    stdout_buffer.push_back(L'\n');
+
+    return true;
+}
+
+/**
    List all current key bindings
  */
 static void builtin_bind_list(const wchar_t *bind_mode)
 {
-    size_t i;
-    const wcstring_list_t lst = input_mapping_get_names();
+    const std::vector<input_mapping_name_t> lst = input_mapping_get_names();
 
-    for (i=0; i<lst.size(); i++)
+    for (std::vector<input_mapping_name_t>::const_iterator it = lst.begin(), end = lst.end();
+         it != end;
+         ++it)
     {
-        wcstring seq = lst.at(i);
-
-        std::vector<wcstring> ecmds;
-        wcstring mode;
-        wcstring sets_mode;
-
-        if (! input_mapping_get(seq, &ecmds, &mode, &sets_mode))
+        if (bind_mode != NULL && bind_mode != it->mode)
         {
             continue;
         }
 
-        if (bind_mode != NULL && bind_mode != mode)
-        {
-            continue;
-        }
-
-        stdout_buffer.append(L"bind");
-
-        // Append the mode flags if applicable
-        if (mode != DEFAULT_BIND_MODE)
-        {
-            const wcstring emode = escape_string(mode, ESCAPE_ALL);
-            stdout_buffer.append(L" -M ");
-            stdout_buffer.append(emode);
-        }
-        if (sets_mode != mode)
-        {
-            const wcstring esets_mode = escape_string(sets_mode, ESCAPE_ALL);
-            stdout_buffer.append(L" -m ");
-            stdout_buffer.append(esets_mode);
-        }
-
-        // Append the name
-        wcstring tname;
-        if (input_terminfo_get_name(seq, &tname))
-        {
-            // Note that we show -k here because we have an input key name
-            append_format(stdout_buffer, L" -k %ls", tname.c_str());
-        }
-        else
-        {
-            // No key name, so no -k; we show the escape sequence directly
-            const wcstring eseq = escape_string(seq, ESCAPE_ALL);
-            append_format(stdout_buffer, L" %ls", eseq.c_str());
-        }
-
-        // Now show the list of commands
-        for (size_t i = 0; i < ecmds.size(); i++)
-        {
-            const wcstring &ecmd = ecmds.at(i);
-            const wcstring escaped_ecmd = escape_string(ecmd, ESCAPE_ALL);
-            stdout_buffer.push_back(' ');
-            stdout_buffer.append(escaped_ecmd);
-        }
-        stdout_buffer.push_back(L'\n');
+        builtin_bind_list_one(it->seq, it->mode);
     }
 }
 
@@ -564,15 +573,21 @@ static int builtin_bind_add(const wchar_t *seq, const wchar_t **cmds, size_t cmd
 
    \param seq an array of all key bindings to erase
    \param all if specified, _all_ key bindings will be erased
+   \param mode if specified, only bindings from that mode will be erased. If not given and \c all is \c false, \c DEFAULT_BIND_MODE will be used.
  */
 static int builtin_bind_erase(wchar_t **seq, int all, const wchar_t *mode, int use_terminfo)
 {
     if (all)
     {
-        const wcstring_list_t lst = input_mapping_get_names();
-        for (size_t i=0; i<lst.size(); i++)
+        const std::vector<input_mapping_name_t> lst = input_mapping_get_names();
+        for (std::vector<input_mapping_name_t>::const_iterator it = lst.begin(), end = lst.end();
+             it != end;
+             ++it)
         {
-            input_mapping_erase(lst.at(i).c_str(), mode);
+            if (mode == NULL || mode == it->mode)
+            {
+                input_mapping_erase(it->seq, it->mode);
+            }
         }
 
         return 0;
@@ -580,6 +595,8 @@ static int builtin_bind_erase(wchar_t **seq, int all, const wchar_t *mode, int u
     else
     {
         int res = 0;
+
+        if (mode == NULL) mode = DEFAULT_BIND_MODE;
 
         while (*seq)
         {

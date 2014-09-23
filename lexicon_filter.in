@@ -188,14 +188,14 @@ s/@sgst{\([^}]*\)}/\\\
 #.
 # Command/Function options
 # Short options
-s/ -\([A-Za-z][A-Za-z]*\)\([^A-Za-z}]\)/ \\\
-<@opts{-\1}\
-\2/g
+s/\([[( ]\)-\([A-Za-z][A-Za-z]*\)\([^A-Za-z}]\)/\1\\\
+<@opts{-\2}\
+\3/g
 #.
 # Long options
-s/ --\([A-Za-z][A-Za-z0-9=_-]*\)\([^A-Za-z0-9=_-]*\)/ \\\
-<@opts{--\1}\
-\2/g
+s/\([[( ]\)--\([A-Za-z][A-Za-z0-9=_-]*\)\([^A-Za-z0-9=_-]*\)/\1\\\
+<@opts{--\2}\
+\3/g
 #.
 # Prompt
 s/~>_/\\\
@@ -210,6 +210,9 @@ s/___$/@curs/
 s/___\(.\)/\\\
 <@curs{\1}\
 /
+#.
+# Escaped Options
+s/ \\\([A-Za-z0-9][A-Za-z0-9]*\) / @bksl{\1} /g
 #.
 # Trailing Backslash
 s/ \\$/ @bksl{ }/
@@ -447,7 +450,10 @@ s/\( *@redr{|} *\)@bltn/\1@xbln/g
 s/^\( *\)@func/\1@xfnc/
 s/\( *[;()] *\)@func/\1@xfnc/g
 s/\( *@redr{|} *\)@func/\1@xfnc/g
-s/\\@bltn{\([^}]*\)/@args{@bksl{\1}/g
+s/ @bksl{\([^}]*\)} / @args{@bksl{\1}} /g
+s/ @bksl{@bltn{\([^}]*\)}/ @args{@bksl{\1}/g
+s/ @bksl{@func{\([^}]*\)}/ @args{@bksl{\1}/g
+s/ @bksl{@cmnd{\([^}]*\)}/ @args{@bksl{\1}/g
 s/@bltn/@args/g
 s/@func/@args/g
 s/@cmnd/@args/g

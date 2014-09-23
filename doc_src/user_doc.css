@@ -131,6 +131,7 @@ h3 {
     display:none;
 }
 .key em {
+    font-style: normal;
     margin-right: 2px;
 }
 .key em, .key b {

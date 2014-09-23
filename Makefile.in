@@ -288,26 +288,42 @@ doc/refman.pdf: doc
 # This target runs both the low level code tests and the high level script tests.
 #
 
-# normally we'd just depend on test_low_level and test_fishscript
-# But I'd rather not mix test output when doing parallel building with the -j flag
-# Instead we'll depend on the dependencies of those targets, for parallel building,
-# and use recursive make to actually invoke the tests themselves
-test: $(PROGRAMS) fish_tests
-	@$(MAKE) test_low_level
-	@$(MAKE) test_fishscript
+test: test_low_level test_high_level
 .PHONY: test
 
-test_low_level: fish_tests
+# We want the various tests to run serially so their output doesn't mix
+# We can do that by adding ordering dependencies based on what goals are being used.
+
+test_goals := test_low_level test_fishscript test_interactive
+
+# The following variables define targets that depend on the tests. If any more targets
+# are added that depend, directly or indirectly, on tests, they need to be recorded here.
+test_test_deps = test_low_level $(test_high_level_test_deps)
+test_high_level_test_deps = test_fishscript test_interactive
+
+active_test_goals = $(filter $(test_goals),$(foreach a,$(or $(MAKECMDGOALS),$(.DEFAULT_GOAL)),$(a) $($(a)_test_deps)))
+filter_up_to = $(eval b:=1)$(foreach a,$(2),$(and $(b),$(if $(subst $(1),,$(a)),$(a),$(eval b:=))))
+
+test_low_level: fish_tests $(call filter_up_to,test_low_level,$(active_test_goals))
 	./fish_tests
 .PHONY: test_low_level
 
-test_fishscript: $(PROGRAMS)
-	@rm -rf tests/tmp.config
-	@mkdir -p tests/tmp.config/fish
-	@echo 'set fish_function_path "$$PWD/../share/functions"' > tests/tmp.config/fish/config.fish
+test_high_level: test_fishscript test_interactive
+.PHONY: test_high_level
+
+test_fishscript: $(PROGRAMS) test_fishscript_config $(call filter_up_to,test_fishscript,$(active_test_goals))
 	cd tests; XDG_CONFIG_HOME="$$PWD"/tmp.config ../fish test.fish
 .PHONY: test_fishscript
 
+test_interactive: $(PROGRAMS) test_fishscript_config $(call filter_up_to,test_interactive,$(active_test_goals))
+	cd tests; XDG_CONFIG_HOME="$$PWD"/tmp.config ../fish interactive.fish
+.PHONY: test_interactive
+
+test_fishscript_config:
+	@rm -rf tests/tmp.config
+	@mkdir -p tests/tmp.config/fish
+	@echo 'set fish_function_path "$$PWD/../share/functions"' > tests/tmp.config/fish/config.fish
+.PHONY: test_fishscript_config
 
 #
 # commands.hdr collects documentation on all commands, functions and

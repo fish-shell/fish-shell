@@ -2,54 +2,78 @@
 #
 # Interactive tests using `expect`
 
-function die
-    echo $argv[1] >&2
-    exit 1
+source test_util.fish
+
+say -o cyan "Testing interactive functionality"
+if not type -q expect
+    say red "Tests disabled: `expect` not found"
+    exit 0
 end
 
-for i in *.expect
+function test_file
     rm -Rf tmp.interactive.config; or die "Couldn't remove tmp.interactive.config"
     mkdir -p tmp.interactive.config/fish; or die "Couldn't create tmp.interactive.config/fish"
     cp interactive.config tmp.interactive.config/fish/config.fish; or die "Couldn't create tmp.interactive.config/fish/config.fish"
 
+    set -l file $argv[1]
+
+    echo -n "Testing file $file ... "
+
     begin
         set -lx XDG_CONFIG_HOME $PWD/tmp.interactive.config
         set -lx TERM dumb
-        expect -n -c 'source interactive.expect.rc' -f $i >$i.tmp.out ^$i.tmp.err
+        expect -n -c 'source interactive.expect.rc' -f $file >$file.tmp.out ^$file.tmp.err
     end
     set -l tmp_status $status
-    set res ok
-    mv -f interactive.tmp.log $i.tmp.log
-    if not diff $i.tmp.out $i.out >/dev/null
-        set res fail
-        echo "Output differs for file $i. Diff follows:"
-        diff -u $i.tmp.out $i.out
-    end
+    set -l res ok
+    mv -f interactive.tmp.log $file.tmp.log
 
-    if not diff $i.tmp.err $i.err >/dev/null
-        set res fail
-        echo "Error output differs for file $i. Diff follows:"
-        diff -u $i.tmp.err $i.err
-    end
+    diff $file.tmp.out $file.out >/dev/null
+    set -l out_status $status
+    diff $file.tmp.err $file.err >/dev/null
+    set -l err_status $status
+    set -l exp_status (cat $file.status)[1]
 
-    set -l exp_status (cat $i.status)[1]
-    if test $tmp_status != $exp_status
-        set res fail
-        echo "Exit status differs for file $i."
-        echo "Expected $exp_status, got $tmp_status."
-    end
-
-    if test $res = ok
-        echo "File $i tested ok"
+    if test $out_status -eq 0 -a $err_status -eq 0 -a $exp_status -eq $tmp_status
+        say green "ok"
         # clean up tmp files
-        rm -f $i.tmp.{err,out,log}
+        rm -f $file.tmp.{err,out,log}
+        return 0
     else
-        if set -qgx SHOW_INTERACTIVE_LOG
+        say red "fail"
+        if test $out_status -ne 0
+            say yellow "Output differs for file $file. Diff follows:"
+            colordiff -u $file.tmp.out $file.out
+        end
+        if test $err_status -ne 0
+            say yellow "Error output differs for file $file. Diff follows:"
+            colordiff -u $file.tmp.err $file.err
+        end
+        if test $exp_status -ne $tmp_status
+            say yellow "Exit status differs for file $file."
+            echo "Expected $exp_status, got $tmp_status."
+        end
+        if set -q SHOW_INTERACTIVE_LOG
             # dump the interactive log
             # primarily for use in travis where we can't check it manually
-            echo "Log for file $i:"
-            cat $i.tmp.log
+            say yellow "Log for file $file:"
+            cat $file.tmp.log
         end
-        echo "File $i failed tests"
+        return 1
     end
+end
+
+set -l failed 0
+for i in *.expect
+    if not test_file $i
+        set failed (expr $failed + 1)
+    end
+end
+
+if test $failed -eq 0
+    say green "All tests completed successfully"
+    exit 0
+else
+    say red "$failed test"(test $failed -eq 1; or echo s)" failed"
+    exit 1
 end

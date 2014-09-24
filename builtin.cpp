@@ -3852,7 +3852,7 @@ static int builtin_history(parser_t &parser, wchar_t **argv)
     if (! history)
         history = &history_t::history_with_name(L"fish");
 
-    while ((opt = wgetopt_long_only(argc, argv, L"pdscvl", long_options, &opt_index)) != -1)
+    while ((opt = wgetopt_long_only(argc, argv, L"pdscvl", long_options, &opt_index)) != EOF)
     {
         switch (opt)
         {
@@ -3879,9 +3879,6 @@ static int builtin_history(parser_t &parser, wchar_t **argv)
             case 'h':
                 builtin_print_help(parser, argv[0], stdout_buffer);
                 return STATUS_BUILTIN_OK;
-                break;
-            case EOF:
-                /* Remainder are arguments */
                 break;
             case '?':
                 append_format(stderr_buffer, BUILTIN_ERR_UNKNOWN, argv[0], argv[woptind-1]);

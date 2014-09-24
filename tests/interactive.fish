@@ -74,6 +74,7 @@ if test $failed -eq 0
     say green "All tests completed successfully"
     exit 0
 else
-    say red "$failed test"(test $failed -eq 1; or echo s)" failed"
+    set plural (test $failed -eq 1; or echo s)
+    say red "$failed test$plural failed"
     exit 1
 end

@@ -14,14 +14,18 @@ end
 
 function say
     set -l color_flags
+    set -l suppress_newline
     while set -q argv[1]
         switch $argv[1]
             case -b -o -u
                 set color_flags $color_flags $argv[1]
+            case -n
+                set suppress_newline 1
             case --
                 set -e argv[1]
                 break
             case -\*
+                continue
             case \*
                 break
         end
@@ -35,10 +39,11 @@ function say
 
     if set_color $color_flags $argv[1]
         set -e argv[1]
-        echo $argv
-        set -l stat $status
+        echo -n $argv
         set_color reset
-        or return $stat
+        if test -z "$suppress_newline"
+            echo
+        end
     end
 end
 

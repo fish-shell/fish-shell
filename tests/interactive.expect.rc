@@ -143,7 +143,7 @@ proc expect_prompt {args} {
     } else {
         log_info "expecting prompt $prompt_counter"
     }
-    set expargs [concat $prompt_pat [list $prompt_action] $expargs]
+    set expargs [concat $expargs $prompt_pat [list $prompt_action]]
     expect {*}$expargs
     incr prompt_counter
 }

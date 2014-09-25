@@ -1387,6 +1387,8 @@ static void test_expand()
     if (system("mkdir -p /tmp/fish_expand_test/")) err(L"mkdir failed");
     if (system("touch /tmp/fish_expand_test/.foo")) err(L"touch failed");
     if (system("touch /tmp/fish_expand_test/bar")) err(L"touch failed");
+    if (system("touch /tmp/fish_expand_test/-flag1")) err(L"touch failed");
+    if (system("touch /tmp/fish_expand_test/--flag2")) err(L"touch failed");
 
     // This is checking that .* does NOT match . and .. (https://github.com/fish-shell/fish-shell/issues/270). But it does have to match literal components (e.g. "./*" has to match the same as "*"
     if (! expand_test(L"/tmp/fish_expand_test/.*", 0, L"/tmp/fish_expand_test/.foo", 0))
@@ -1397,6 +1399,32 @@ static void test_expand()
     {
         err(L"Expansion not correctly handling literal path components in dotfiles");
     }
+    if (! expand_test(L"/tmp/fish_expand_test/*flag?", 0, L"/tmp/fish_expand_test/--flag2", L"/tmp/fish_expand_test/-flag1", 0))
+    {
+        err(L"Expansion not correctly handling flag-like files");
+    }
+
+    // Verify that flag-like file expansions never expand to flags
+    char saved_wd[PATH_MAX + 1] = {};
+    getcwd(saved_wd, sizeof saved_wd);
+    if (chdir("/tmp/fish_expand_test/")) err(L"chdir failed");
+    if (! expand_test(L"*flag?", 0, L"./--flag2", L"./-flag1", 0))
+    {
+        err(L"Expansion not correctly handling flag-like files in cwd");
+    }
+    if (! expand_test(L"*flag?", EXPAND_NO_SANITIZE_FLAGLIKE_FILES, L"--flag2", L"-flag1", 0))
+    {
+        err(L"Expansion not correctly handling flag-like files in cwd");
+    }
+
+
+    // For suffix-only completions, we don't attempt any sanitization
+    if (! expand_test(L"*flag", ACCEPT_INCOMPLETE, L"2", L"1", 0))
+    {
+        err(L"Expansion not correctly handling flag-like files in cwd");
+    }
+
+    if (chdir(saved_wd)) err(L"chdir restoration failed");
 
     if (system("rm -Rf /tmp/fish_expand_test")) err(L"rm failed");
 }

@@ -84,7 +84,9 @@ bool wildcard_has(const wcstring &, bool internal);
 bool wildcard_has(const wchar_t *, bool internal);
 
 /**
-   Test wildcard completion
+   Matches the string against the wildcard, and if the wildcard is a
+   possible completion of the string, the remainder of the string is
+   inserted into the out vector.
 */
 bool wildcard_complete(const wcstring &str,
                        const wchar_t *wc,

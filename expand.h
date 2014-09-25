@@ -60,7 +60,10 @@ enum
     EXPAND_SKIP_HOME_DIRECTORIES = 1 << 9,
 
     /** Allow fuzzy matching */
-    EXPAND_FUZZY_MATCH = 1 << 10
+    EXPAND_FUZZY_MATCH = 1 << 10,
+
+    /** Requests that flag-like files not be sanitized. Sanitization means that a completion '--foo' that represents a file will be replaced by './--foo'. */
+    EXPAND_NO_SANITIZE_FLAGLIKE_FILES = 1 << 11
 };
 typedef int expand_flags_t;
 

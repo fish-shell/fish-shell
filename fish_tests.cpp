@@ -1310,58 +1310,76 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...)
 {
     std::vector<completion_t> output;
     va_list va;
-    size_t i=0;
     bool res=true;
     wchar_t *arg;
+    parse_error_list_t errors;
 
-    if (expand_string(in, output, flags, NULL))
+    if (expand_string(in, output, flags, &errors) == EXPAND_ERROR)
     {
+        if (errors.empty())
+        {
+            err(L"Bug: Parse error reported but no error text found.");
+        }
+        else
+        {
+            err(L"%ls", errors.at(0).describe(wcstring(in)).c_str());
+        }
+        return false;
+    }
 
-    }
-#if 0
-    printf("input: %ls\n", in);
-    for (size_t idx=0; idx < output.size(); idx++)
-    {
-        printf("%ls\n", output.at(idx).completion.c_str());
-    }
-#endif
+    wcstring_list_t expected;
 
     va_start(va, flags);
-
     while ((arg=va_arg(va, wchar_t *))!= 0)
     {
-        if (output.size() == i)
-        {
-            res=false;
-            break;
-        }
-
-        if (output.at(i).completion != arg)
-        {
-            res=false;
-            break;
-        }
-
-        i++;
-
-        if (!res)
-        {
-            // empty the rest of the args
-            while(va_arg(va, wchar_t *) != 0);
-            break;
-        }
+        expected.push_back(wcstring(arg));
     }
+    va_end(va);
 
-    if (output.size() != i)
+    wcstring_list_t::const_iterator exp_it = expected.begin(), exp_end = expected.end();
+    std::vector<completion_t>::const_iterator out_it = output.begin(), out_end = output.end();
+    for (; exp_it != exp_end || out_it != out_end; ++exp_it, ++out_it)
     {
-        res = false;
+        if (exp_it == exp_end || out_it == out_end)
+        {
+            // sizes don't match
+            res = false;
+            break;
+        }
+
+        if (out_it->completion != *exp_it)
+        {
+            res = false;
+            break;
+        }
     }
 
     if (!res)
     {
         if ((arg = va_arg(va, wchar_t *)) != 0)
         {
-            err(arg);
+            wcstring msg = L"Expected [";
+            bool first = true;
+            for (wcstring_list_t::const_iterator it = expected.begin(), end = expected.end(); it != end; ++it)
+            {
+                if (!first) msg += L", ";
+                first = false;
+                msg += '"';
+                msg += *it;
+                msg += '"';
+            }
+            msg += L"], found [";
+            first = true;
+            for (std::vector<completion_t>::const_iterator it = output.begin(), end = output.end(); it != end; ++it)
+            {
+                if (!first) msg += L", ";
+                first = false;
+                msg += '"';
+                msg += it->completion;
+                msg += '"';
+            }
+            msg += L"]";
+            err(L"%ls\n%ls", arg, msg.c_str());
         }
     }
 

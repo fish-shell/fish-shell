@@ -713,11 +713,13 @@ const wchar_t *wcsfuncname(const wchar_t *str);
 
 bool wcsvarchr(wchar_t chr);
 
-
 /**
-   A wcswidth workalike. Fish uses this since the regular wcswidth seems flaky.
+   Convenience variants on fish_wcwswidth().
+
+   See fallback.h for the normal definitions.
 */
-int my_wcswidth(const wchar_t *c);
+int fish_wcswidth(const wchar_t *str);
+int fish_wcswidth(const wcstring& str);
 
 /**
    This functions returns the end of the quoted substring beginning at

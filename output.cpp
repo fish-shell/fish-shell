@@ -535,7 +535,7 @@ void writestr_ellipsis(const wchar_t *str, int max_width)
 
     CHECK(str,);
 
-    tot = my_wcswidth(str);
+    tot = fish_wcswidth(str);
 
     if (tot <= max_width)
     {
@@ -575,7 +575,7 @@ int write_escaped_str(const wchar_t *str, int max_len)
     CHECK(str, 0);
 
     out = escape(str, 1);
-    len = my_wcswidth(out);
+    len = fish_wcswidth(out);
 
     if (max_len && (max_len < len))
     {

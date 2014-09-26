@@ -567,15 +567,13 @@ void writestr_ellipsis(const wchar_t *str, int max_width)
 int write_escaped_str(const wchar_t *str, int max_len)
 {
 
-    wchar_t *out;
     int i;
-    int len;
     int written=0;
 
     CHECK(str, 0);
 
-    out = escape(str, 1);
-    len = fish_wcswidth(out);
+    wcstring out = escape(str, ESCAPE_ALL);
+    int len = fish_wcswidth(out);
 
     if (max_len && (max_len < len))
     {
@@ -596,10 +594,9 @@ int write_escaped_str(const wchar_t *str, int max_len)
     else
     {
         written = len;
-        writestr(out);
+        writestr(out.c_str());
     }
 
-    free(out);
     return written;
 }
 

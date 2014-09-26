@@ -808,10 +808,10 @@ void print_stderr(const wcstring &str);
 
    \param in The string to be escaped
    \param flags Flags to control the escaping
-   \return The escaped string, or 0 if there is not enough memory
+   \return The escaped string
 */
 
-wchar_t *escape(const wchar_t *in, escape_flags_t flags);
+wcstring escape(const wchar_t *in, escape_flags_t flags);
 wcstring escape_string(const wcstring &in, escape_flags_t flags);
 
 /**

@@ -1309,7 +1309,6 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
     {
         size_t move_cursor;
         const wchar_t *begin, *end;
-        wchar_t *escaped;
 
         const wchar_t *buff = command_line.c_str();
         parse_util_token_extent(buff, cursor_pos, &begin, 0, 0, 0);
@@ -1321,10 +1320,9 @@ wcstring completion_apply_to_command_line(const wcstring &val_str, complete_flag
         {
             /* Respect COMPLETE_DONT_ESCAPE_TILDES */
             bool no_tilde = !!(flags & COMPLETE_DONT_ESCAPE_TILDES);
-            escaped = escape(val, ESCAPE_ALL | ESCAPE_NO_QUOTED | (no_tilde ? ESCAPE_NO_TILDE : 0));
+            wcstring escaped = escape(val, ESCAPE_ALL | ESCAPE_NO_QUOTED | (no_tilde ? ESCAPE_NO_TILDE : 0));
             sb.append(escaped);
-            move_cursor = wcslen(escaped);
-            free(escaped);
+            move_cursor = escaped.size();
         }
         else
         {

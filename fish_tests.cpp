@@ -1414,44 +1414,23 @@ static void test_expand()
     if (system("mkdir -p /tmp/fish_expand_test/")) err(L"mkdir failed");
     if (system("touch /tmp/fish_expand_test/.foo")) err(L"touch failed");
     if (system("touch /tmp/fish_expand_test/bar")) err(L"touch failed");
-    if (system("touch /tmp/fish_expand_test/-flag1")) err(L"touch failed");
-    if (system("touch /tmp/fish_expand_test/--flag2")) err(L"touch failed");
 
     // This is checking that .* does NOT match . and .. (https://github.com/fish-shell/fish-shell/issues/270). But it does have to match literal components (e.g. "./*" has to match the same as "*"
     expand_test(L"/tmp/fish_expand_test/.*", 0, L"/tmp/fish_expand_test/.foo", 0,
                 L"Expansion not correctly handling dotfiles");
     expand_test(L"/tmp/fish_expand_test/./.*", 0, L"/tmp/fish_expand_test/./.foo", 0,
                 L"Expansion not correctly handling literal path components in dotfiles");
-    expand_test(L"/tmp/fish_expand_test/*flag?", 0, L"/tmp/fish_expand_test/--flag2", L"/tmp/fish_expand_test/-flag1", 0,
-                L"Expansion not correctly handling flag-like files");
 
-    // Verify that flag-like file expansions never expand to flags
-    char saved_wd[PATH_MAX + 1] = {};
-    if (getcwd(saved_wd, sizeof saved_wd) != NULL && !chdir("/tmp/fish_expand_test/"))
+    if (! expand_test(L"/tmp/fish_expand_test/.*", 0, L"/tmp/fish_expand_test/.foo", 0))
     {
-        expand_test(L"*flag?", 0, L"./--flag2", L"./-flag1", 0,
-                    L"Expansion not correctly handling flag-like files in cwd");
-        expand_test(L"*flag?", EXPAND_NO_SANITIZE_FLAGLIKE_FILES, L"--flag2", L"-flag1", 0,
-                    L"Expansion (no sanitize) not correctly handling flag-like files in cwd");
-
-        // For suffix-only completions, we don't attempt any sanitization
-        expand_test(L"*flag", ACCEPT_INCOMPLETE, L"2", L"1", 0,
-                    L"Expansion (accept incomplete) not correctly handling flag-like files in cwd");
-
-        if (!chdir(saved_wd))
-        {
-            if (system("rm -Rf /tmp/fish_expand_test")) err(L"rm failed");
-        }
-        else
-        {
-            err(L"chdir restoration failed");
-        }
+        err(L"Expansion not correctly handling dotfiles");
     }
-    else
+    if (! expand_test(L"/tmp/fish_expand_test/./.*", 0, L"/tmp/fish_expand_test/./.foo", 0))
     {
-        err(L"chdir failed");
+        err(L"Expansion not correctly handling literal path components in dotfiles");
     }
 
+    if (system("rm -Rf /tmp/fish_expand_test")) err(L"rm failed");
 }
 
 static void test_fuzzy_match(void)

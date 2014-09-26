@@ -306,15 +306,7 @@ static bool wildcard_complete_internal(const wcstring &orig,
         }
 
         /* Note: out_completion may be empty if the completion really is empty, e.g. tab-completing 'foo' when a file 'foo' exists. */
-        if ((expand_flags & EXPAND_NO_SANITIZE_FLAGLIKE_FILES) == 0 && string_prefixes_string(L"-", out_completion))
-        {
-            append_completion(out, L"./" + out_completion, out_desc, flags, fuzzy_match);
-        }
-        else
-        {
-            append_completion(out, out_completion, out_desc, flags, fuzzy_match);
-        }
-
+        append_completion(out, out_completion, out_desc, flags, fuzzy_match);
         return true;
     }
 
@@ -636,7 +628,7 @@ static void wildcard_completion_allocate(std::vector<completion_t> &list,
     wcstring sb;
     wcstring munged_completion;
 
-    complete_flags_t complete_flags = 0;
+    int flags = 0;
     int stat_res, lstat_res;
     int stat_errno=0;
 
@@ -690,7 +682,7 @@ static void wildcard_completion_allocate(std::vector<completion_t> &list,
 
     if (sz >= 0 && S_ISDIR(buf.st_mode))
     {
-        complete_flags |= COMPLETE_NO_SPACE;
+        flags |= COMPLETE_NO_SPACE;
         munged_completion = completion;
         munged_completion.push_back(L'/');
         if (wants_desc)
@@ -709,14 +701,8 @@ static void wildcard_completion_allocate(std::vector<completion_t> &list,
         }
     }
 
-    /* Hackish. If the fullname is longer than the completion, it means we have a prefix. An example is completing "./foo" where the fullname is "./foo" and the completion might be "foo". In that case, we will pass "foo" to wildcard_complete, and it may choose to sanitize the file by appending a ./ to the front (since it doesn't know it already has one). Avoid that by cleaing the sanitize flag. */
-    if (completion.size() < fullname.size())
-    {
-        expand_flags |= EXPAND_NO_SANITIZE_FLAGLIKE_FILES;
-    }
-
     const wcstring &completion_to_use = munged_completion.empty() ? completion : munged_completion;
-    wildcard_complete(completion_to_use, wc, sb.c_str(), NULL, list, expand_flags, complete_flags);
+    wildcard_complete(completion_to_use, wc, sb.c_str(), NULL, list, expand_flags, flags);
 }
 
 /**
@@ -724,9 +710,8 @@ static void wildcard_completion_allocate(std::vector<completion_t> &list,
   expansion flags specified. flags can be a combination of
   EXECUTABLES_ONLY and DIRECTORIES_ONLY.
 */
-static bool test_flags(const wcstring &filename_str, expand_flags_t flags)
+static bool test_flags(const wchar_t *filename, expand_flags_t flags)
 {
-    const wchar_t * const filename = filename_str.c_str();
     if (flags & DIRECTORIES_ONLY)
     {
         struct stat buf;
@@ -761,22 +746,11 @@ static bool test_flags(const wcstring &filename_str, expand_flags_t flags)
     return true;
 }
 
-/** Appends a completion to the completion list, if the string is missing from the set. Sanitizing means that if the file looks like a flag (has a leading -), we prepend a ./ */
-static void insert_and_sanitize_completion_if_missing(const wcstring &str, std::vector<completion_t> &out, expand_flags_t flags, std::set<wcstring> &completion_set)
+/** Appends a completion to the completion list, if the string is missing from the set. */
+static void insert_completion_if_missing(const wcstring &str, std::vector<completion_t> &out, std::set<wcstring> &completion_set)
 {
     if (completion_set.insert(str).second)
-    {
-        if ((flags & EXPAND_NO_SANITIZE_FLAGLIKE_FILES) == 0 && string_prefixes_string(L"-", str))
-        {
-            // sanitized
-            append_completion(out, L"./" + str);
-        }
-        else
-        {
-            // not sanitized
-            append_completion(out, str);
-        }
-    }
+        append_completion(out, str);
 }
 
 /**
@@ -882,11 +856,11 @@ static int wildcard_expand_internal(const wchar_t *wc,
                 wcstring next;
                 while (wreaddir(dir, next))
                 {
-                    if (! next.empty() && next.at(0) != L'.')
+                    if (next[0] != L'.')
                     {
                         wcstring long_name = make_path(base_dir, next);
 
-                        if (test_flags(long_name, flags))
+                        if (test_flags(long_name.c_str(), flags))
                         {
                             wildcard_completion_allocate(out, long_name, next, L"", flags);
                         }
@@ -896,7 +870,7 @@ static int wildcard_expand_internal(const wchar_t *wc,
             else
             {
                 res = 1;
-                insert_and_sanitize_completion_if_missing(base_dir, out, flags, completion_set);
+                insert_completion_if_missing(base_dir, out, completion_set);
             }
         }
         else
@@ -914,7 +888,7 @@ static int wildcard_expand_internal(const wchar_t *wc,
                     std::vector<completion_t> test;
                     if (wildcard_complete(name_str, wc, L"", NULL, test, flags & EXPAND_FUZZY_MATCH, 0))
                     {
-                        if (test_flags(long_name, flags))
+                        if (test_flags(long_name.c_str(), flags))
                         {
                             wildcard_completion_allocate(out, long_name, name_str, wc, flags);
 
@@ -932,7 +906,7 @@ static int wildcard_expand_internal(const wchar_t *wc,
                         {
                             /*
                               In recursive mode, we are only
-                              interested in adding files. Directories
+                              interested in adding files -directories
                               will be added in the next pass.
                             */
                             struct stat buf;
@@ -943,7 +917,7 @@ static int wildcard_expand_internal(const wchar_t *wc,
                         }
                         if (! skip)
                         {
-                            insert_and_sanitize_completion_if_missing(long_name, out, flags, completion_set);
+                            insert_completion_if_missing(long_name, out, completion_set);
                         }
                         res = 1;
                     }
@@ -1085,7 +1059,10 @@ static int wildcard_expand_internal(const wchar_t *wc,
 }
 
 
-static int wildcard_expand(const wchar_t *wc, const wchar_t *base_dir, expand_flags_t flags, std::vector<completion_t> &out)
+int wildcard_expand(const wchar_t *wc,
+                    const wchar_t *base_dir,
+                    expand_flags_t flags,
+                    std::vector<completion_t> &out)
 {
     size_t c = out.size();
 

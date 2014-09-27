@@ -681,10 +681,15 @@ install-force: all install-translations
 	@echo fish is now installed on your system.
 	@echo To run fish, type \'fish\' in your terminal.
 	@echo
-	@if type chsh &> /dev/null; then \
+	@if type chsh >/dev/null 2>&1; then \
 		echo To use fish as your login shell:; \
 		grep -q -- "$(DESTDIR)$(bindir)/fish" /etc/shells || echo \* add the line \'$(DESTDIR)$(bindir)/fish\' to the file \'/etc/shells\'.; \
 		echo \* use the command \'chsh -s $(DESTDIR)$(bindir)/fish\'.; \
+		echo; \
+	fi;
+	@if type chcon >/dev/null 2>&1; then \
+		echo If you have SELinux enabled, you may need to manually update the security policy:; \
+		echo \* use the command \'chcon -t shell_exec_t $(DESTDIR)$(bindir)/fish\'.; \
 		echo; \
 	fi;
 	@echo To set your colors, run \'fish_config\'

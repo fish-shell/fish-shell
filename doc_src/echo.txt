@@ -51,8 +51,10 @@ If `-e` is used, the following sequences are recognized:
 
 \fish
 echo 'Hello World'
-# Print hello world to stdout
-
-echo -e 'Top\nBottom'
-# Print Top and Bottom on separate lines, using an escape sequence
 \endfish
+Print hello world to stdout
+
+\fish
+echo -e 'Top\\nBottom'
+\endfish
+Print Top and Bottom on separate lines, using an escape sequence

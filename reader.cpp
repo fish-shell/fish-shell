@@ -3220,20 +3220,6 @@ const wchar_t *reader_readline(int nchars)
 
         //fprintf(stderr, "\n\nchar: %ls\n\n", describe_char(c).c_str());
 
-        if (replace)
-        {
-            editable_line_t *el = data->active_edit_line();
-            if (el->position < el->size())
-            {
-                update_buff_pos(el, el->position + 1);
-                remove_backward();
-            }
-
-            replace = false;
-            env_set(FISH_BIND_MODE_VAR, L"default", ENV_GLOBAL);
-        }
-
-
         switch (c)
         {
                 /* go to beginning of line*/
@@ -4145,7 +4131,24 @@ const wchar_t *reader_readline(int nchars)
 
                     /* Regular character */
                     editable_line_t *el = data->active_edit_line();
-                    insert_char(data->active_edit_line(), c, allow_expand_abbreviations);
+                    if (!replace)
+                    {
+                        insert_char(data->active_edit_line(), c, allow_expand_abbreviations);
+                    }
+                    else
+                    {
+                        if (el->position < el->size())
+                        {
+                            update_buff_pos(el, el->position + 1);
+                            remove_backward();
+                        }
+
+                        insert_char(data->active_edit_line(), c, allow_expand_abbreviations);
+
+                        replace = false;
+                        update_buff_pos(el, el->position - 1);
+                        env_set(FISH_BIND_MODE_VAR, L"default", ENV_GLOBAL);
+                    }
 
                     /* End paging upon inserting into the normal command line */
                     if (el == &data->command_line)

@@ -97,7 +97,7 @@ private:
     parse_execution_result_t run_if_statement(const parse_node_t &statement);
     parse_execution_result_t run_switch_statement(const parse_node_t &statement);
     parse_execution_result_t run_while_statement(const parse_node_t &header, const parse_node_t &contents);
-    parse_execution_result_t run_function_statement(const parse_node_t &header, const parse_node_t &contents);
+    parse_execution_result_t run_function_statement(const parse_node_t &header, const parse_node_t &block_end_command);
     parse_execution_result_t run_begin_statement(const parse_node_t &header, const parse_node_t &contents);
 
     parse_execution_result_t determine_arguments(const parse_node_t &parent, wcstring_list_t *out_arguments, const parse_node_t **out_unmatched_wildcard_node);
@@ -111,6 +111,7 @@ private:
 
     /* Returns the line number of the node at the given index, indexed from 0. Not const since it touches cached_lineno_offset */
     int line_offset_of_node_at_offset(node_offset_t idx);
+    int line_offset_of_character_at_offset(size_t char_idx);
 
 public:
     parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, parser_t *p, int initial_eval_level);

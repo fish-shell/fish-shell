@@ -363,11 +363,11 @@ parse_execution_result_t parse_execution_context_t::run_begin_statement(const pa
 }
 
 /* Define a function */
-parse_execution_result_t parse_execution_context_t::run_function_statement(const parse_node_t &header, const parse_node_t &contents)
+parse_execution_result_t parse_execution_context_t::run_function_statement(const parse_node_t &header, const parse_node_t &block_end_command)
 {
     assert(header.type == symbol_function_header);
-    assert(contents.type == symbol_job_list);
-
+    assert(block_end_command.type == symbol_end_command);
+    
     /* Get arguments */
     const parse_node_t *unmatched_wildcard = NULL;
     wcstring_list_t argument_list;
@@ -382,8 +382,25 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(const
 
     if (result == parse_execution_success)
     {
-        const wcstring contents_str = get_source(contents);
-        int definition_line_offset = this->line_offset_of_node_at_offset(this->get_offset(contents));
+        /* The function definition extends from the end of the header to the function end. It's not just the range of the contents because that loses comments - see issue #1710 */
+        assert(block_end_command.has_source());
+        size_t contents_start = header.source_start + header.source_length;
+        size_t contents_end = block_end_command.source_start; // 1 past the last character in the function definition
+        assert(contents_end >= contents_start);
+        
+        // Swallow whitespace at both ends
+        while (contents_start < contents_end && iswspace(this->src.at(contents_start)))
+        {
+            contents_start++;
+        }
+        while (contents_start < contents_end && iswspace(this->src.at(contents_end - 1)))
+        {
+            contents_end--;
+        }
+        
+        assert(contents_end >= contents_start);
+        const wcstring contents_str = wcstring(this->src, contents_start, contents_end - contents_start);
+        int definition_line_offset = this->line_offset_of_character_at_offset(contents_start);
         wcstring error_str;
         int err = define_function(*parser, argument_list, contents_str, definition_line_offset, &error_str);
         proc_set_last_status(err);
@@ -418,8 +435,11 @@ parse_execution_result_t parse_execution_context_t::run_block_statement(const pa
             break;
 
         case symbol_function_header:
-            ret = run_function_statement(header, contents);
+        {
+            const parse_node_t &function_end = *get_child(statement, 3, symbol_end_command); //the 'end' associated with the block
+            ret = run_function_statement(header, function_end);
             break;
+        }
 
         case symbol_begin_header:
             ret = run_begin_statement(header, contents);
@@ -1575,9 +1595,14 @@ int parse_execution_context_t::line_offset_of_node_at_offset(node_offset_t reque
     {
         return -1;
     }
+    
+    size_t char_offset = tree.at(requested_index).source_start;
+    return this->line_offset_of_character_at_offset(char_offset);
+}
 
+int parse_execution_context_t::line_offset_of_character_at_offset(size_t offset)
+{
     /* Count the number of newlines, leveraging our cache */
-    const size_t offset = tree.at(requested_index).source_start;
     assert(offset <= src.size());
 
     /* Easy hack to handle 0 */

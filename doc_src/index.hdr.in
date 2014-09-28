@@ -896,7 +896,7 @@ Similar to bash, fish has Emacs and Vi editing modes. The default editing mode i
 
 - @key{Alt,U} makes the current word uppercase.
 
-- @key{F1} shows the manual page for the current command, if one exists.
+- @key{Alt,H} (or @key{F1}) shows the manual page for the current command, if one exists.
 
 You can change these key bindings using the <a href="commands.html#bind">bind</a> builtin command.
 

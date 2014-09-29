@@ -4001,6 +4001,16 @@ int builtin_parse(parser_t &parser, wchar_t **argv)
     return STATUS_BUILTIN_OK;
 }
 
+int builtin_true(parser_t &parser, wchar_t **argv)
+{
+    return STATUS_BUILTIN_OK;
+}
+
+int builtin_false(parser_t &parser, wchar_t **argv)
+{
+    return STATUS_BUILTIN_ERROR;
+}
+
 /*
   END OF BUILTIN COMMANDS
   Below are functions for handling the builtin commands.
@@ -4038,6 +4048,7 @@ static const builtin_data_t builtin_datas[]=
     { 		L"end",  &builtin_generic, N_(L"End a block of commands")   },
     { 		L"exec",  &builtin_generic, N_(L"Run command in current process")  },
     { 		L"exit",  &builtin_exit, N_(L"Exit the shell") },
+    { 		L"false",  &builtin_false, N_(L"Return an unsuccessful result") },
     { 		L"fg",  &builtin_fg, N_(L"Send job to foreground")   },
     { 		L"for",  &builtin_generic, N_(L"Perform a set of commands multiple times")   },
     { 		L"function",  &builtin_generic, N_(L"Define a new function")   },
@@ -4058,6 +4069,7 @@ static const builtin_data_t builtin_datas[]=
     { 		L"status",  &builtin_status, N_(L"Return status information about fish")  },
     { 		L"switch",  &builtin_generic, N_(L"Conditionally execute a block of commands")   },
     { 		L"test",  &builtin_test, N_(L"Test a condition")   },
+    { 		L"true",  &builtin_true, N_(L"Return a successful result") },
     { 		L"ulimit",  &builtin_ulimit, N_(L"Set or get the shells resource usage limits")  },
     { 		L"while",  &builtin_generic, N_(L"Perform a command multiple times")   }
 };

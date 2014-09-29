@@ -18,11 +18,11 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
 
 	# Print hosts from system wide ssh configuration file
 	if [ -e /etc/ssh/ssh_config ]
-		sgrep -Eoi '^ *host[^*]*$' /etc/ssh/ssh_config | cut -d ' ' -f 2 | tr ' ' '\n' | sgrep -v '[\*\?\!]'
+		awk -v FS="[ =]+" -v OFS='\n' 'tolower($0) ~ /^ *host[^*?!]*$/{ $1=""; print }' /etc/ssh/ssh_config
 	end
 
 	# Print hosts from ssh configuration file
 	if [ -e ~/.ssh/config ]
-		sgrep -Eoi '^ *host[^*]*$' ~/.ssh/config | cut -d ' ' -f 2 | tr ' ' '\n' | sgrep -v '[\*\?\!]'
+		awk -v FS="[ =]+" -v OFS='\n' 'tolower($0) ~ /^ *host[^*?!]*$/{ $1=""; print }' ~/.ssh/config
 	end
 end

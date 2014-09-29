@@ -896,9 +896,17 @@ static void test_indents()
         {NULL, -1}
     };
 
+    const indent_component_t components12[] =
+    {
+        {L"while false", 0},
+        {L"# comment", 1}, //comment indentation handling
+        {L"command", 1}, //comment indentation handling
+        {L"# comment2", 1}, //comment indentation handling
+        {NULL, -1}
+    };
 
 
-    const indent_component_t *tests[] = {components1, components2, components3, components4, components5, components6, components7, components8, components9, components10, components11};
+    const indent_component_t *tests[] = {components1, components2, components3, components4, components5, components6, components7, components8, components9, components10, components11, components12};
     for (size_t which = 0; which < sizeof tests / sizeof *tests; which++)
     {
         const indent_component_t *components = tests[which];

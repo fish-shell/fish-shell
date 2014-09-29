@@ -36,6 +36,12 @@ if set -q XDG_CONFIG_HOME
 	set configdir $XDG_CONFIG_HOME
 end
 
+set -l userdatadir ~/.local/share
+
+if set -q XDG_DATA_HOME
+	set userdatadir $XDG_DATA_HOME
+end
+
 # __fish_datadir, __fish_sysconfdir, __fish_help_dir, __fish_bin_dir
 # are expected to have been set up by read_init from fish.cpp
 
@@ -51,7 +57,7 @@ if not contains $__fish_datadir/functions $fish_function_path
 end
 
 if not set -q fish_complete_path
-	set fish_complete_path $configdir/fish/completions  $__fish_sysconfdir/completions  $__fish_datadir/completions $configdir/fish/generated_completions
+	set fish_complete_path $configdir/fish/completions  $__fish_sysconfdir/completions  $__fish_datadir/completions $userdatadir/fish/generated_completions
 end
 
 if not contains $__fish_datadir/completions $fish_complete_path

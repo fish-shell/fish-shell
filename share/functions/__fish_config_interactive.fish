@@ -19,6 +19,11 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	if set -q XDG_CONFIG_HOME
 		set configdir $XDG_CONFIG_HOME
 	end
+	# Set the correct user data directory
+	set -l userdatadir ~/.local/share
+	if set -q XDG_DATA_HOME
+		set userdatadir $XDG_DATA_HOME
+	end
 
 	# Migrate old (pre 1.22.0) init scripts if they exist
 	if not set -q __fish_init_1_22_0
@@ -144,7 +149,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # Generate man page completions if not present
     #
 
-    if not test -d $configdir/fish/generated_completions
+    if not test -d $userdatadir/fish/generated_completions
         #fish_update_completions is a function, so it can not be directly run in background.
         eval "$__fish_bin_dir/fish -c 'fish_update_completions > /dev/null ^/dev/null' &"
     end

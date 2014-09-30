@@ -591,6 +591,7 @@ static size_t color_variable(const wchar_t *in, size_t in_len, std::vector<highl
 
     // Handle an initial run of $s.
     size_t idx = 0;
+    size_t dollar_count = 0;
     while (in[idx] == '$')
     {
         // Our color depends on the next char
@@ -604,6 +605,7 @@ static size_t color_variable(const wchar_t *in, size_t in_len, std::vector<highl
             colors[idx] = highlight_spec_error;
         }
         idx++;
+        dollar_count++;
     }
 
     // Handle a sequence of variable characters
@@ -612,30 +614,34 @@ static size_t color_variable(const wchar_t *in, size_t in_len, std::vector<highl
         colors[idx++] = highlight_spec_operator;
     }
 
-    // Handle a slice. Note that we currently don't do any validation of the slice's contents, e.g. $foo[blah] will not show an error even though it's invalid.
-    if (in[idx] == L'[')
+    // Handle a slice, up to dollar_count of them. Note that we currently don't do any validation of the slice's contents, e.g. $foo[blah] will not show an error even though it's invalid.
+    for (size_t slice_count=0; slice_count < dollar_count && in[idx] == L'['; slice_count++)
     {
         wchar_t *slice_begin = NULL, *slice_end = NULL;
-        switch (parse_util_locate_slice(in, &slice_begin, &slice_end, false))
+        int located = parse_util_locate_slice(in + idx, &slice_begin, &slice_end, false);
+        if (located == 1)
         {
-            case 1:
-            {
-                size_t slice_begin_idx = slice_begin - in, slice_end_idx = slice_end - in;
-                assert(slice_end_idx > slice_begin_idx);
-                colors[slice_begin_idx] = highlight_spec_operator;
-                colors[slice_end_idx] = highlight_spec_operator;
-                break;
-            }
-            case -1:
-            {
-                // syntax error
-                // Normally the entire token is colored red for us, but inside a double-quoted string
-                // that doesn't happen. As such, color the variable + the slice start red. Coloring any
-                // more than that looks bad, unless we're willing to try and detect where the double-quoted
-                // string ends, and I'd rather not do that.
-                std::fill(colors, colors + idx + 1, (highlight_spec_t)highlight_spec_error);
-                break;
-            }
+            size_t slice_begin_idx = slice_begin - in, slice_end_idx = slice_end - in;
+            assert(slice_end_idx > slice_begin_idx);
+            colors[slice_begin_idx] = highlight_spec_operator;
+            colors[slice_end_idx] = highlight_spec_operator;
+            idx = slice_end_idx + 1;
+        }
+        else if (located == 0)
+        {
+            // not a slice
+            break;
+        }
+        else
+        {
+            assert(located < 0);
+            // syntax error
+            // Normally the entire token is colored red for us, but inside a double-quoted string
+            // that doesn't happen. As such, color the variable + the slice start red. Coloring any
+            // more than that looks bad, unless we're willing to try and detect where the double-quoted
+            // string ends, and I'd rather not do that.
+            std::fill(colors, colors + idx + 1, (highlight_spec_t)highlight_spec_error);
+            break;
         }
     }
     return idx;

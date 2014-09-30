@@ -621,6 +621,7 @@ install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/completions
+	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/vendor_completions.d
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/functions
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/man/man1
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools

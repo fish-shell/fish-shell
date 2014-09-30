@@ -57,7 +57,7 @@ if not contains $__fish_datadir/functions $fish_function_path
 end
 
 if not set -q fish_complete_path
-	set fish_complete_path $configdir/fish/completions  $__fish_sysconfdir/completions  $__fish_datadir/completions $userdatadir/fish/generated_completions
+	set fish_complete_path $configdir/fish/completions  $__fish_sysconfdir/completions  $__fish_datadir/vendor_completions.d  $__fish_datadir/completions $userdatadir/fish/generated_completions
 end
 
 if not contains $__fish_datadir/completions $fish_complete_path

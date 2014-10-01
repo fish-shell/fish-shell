@@ -212,7 +212,7 @@ endif
 # Make everything needed for installing fish
 #
 
-all: $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS)
+all: $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc
 	@echo fish has now been built.
 	@echo Use \'$(MAKE) install\' to install fish.
 .PHONY: all
@@ -450,6 +450,7 @@ doc.h: $(HDR_FILES)
 		-e "s,@docdir\@,$(docdir),g" \
 		-e "s|@configure_input\@|$@, generated from $@.in by the Makefile. DO NOT MANUALLY EDIT THIS FILE!|g" \
 		-e "s,@prefix\@,$(prefix),g" \
+		-e "s,@fish_build_version\@,$(FISH_BUILD_VERSION),g" \
 
 
 #
@@ -631,6 +632,8 @@ install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config/sample_prompts
 	$(INSTALL) -m 644 etc/config.fish                  $(DESTDIR)$(sysconfdir)/fish/
 	$(INSTALL) -m 644 share/config.fish                $(DESTDIR)$(datadir)/fish/
+	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/pkgconfig
+	$(INSTALL) -m 644 fish.pc $(DESTDIR)$(datadir)/pkgconfig
 	for i in $(COMPLETIONS_DIR_FILES:%='%'); do \
 		$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/fish/completions/; \
 		true; \

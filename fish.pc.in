@@ -1,0 +1,8 @@
+prefix=@prefix@
+datadir=@datadir@
+completionsdir=${datadir}/fish/vendor_completions.d
+
+Name: fish
+Description: fish, the friendly interactive shell
+URL: http://fishshell.com/
+Version: @fish_build_version@

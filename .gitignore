@@ -23,6 +23,7 @@ fish
 fish_indent
 fish_tests
 fishd
+fish.pc
 mimedb
 seq
 set_color

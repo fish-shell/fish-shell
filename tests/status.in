@@ -1,0 +1,9 @@
+# vim: set filetype=fish:
+
+# Issue #1728
+# Bad file redirection on a block causes `status --is-block` to return 0 forever.
+begin; end >/ # / is a directory, it can't be opened for writing
+status -b
+and echo 'block'
+
+true

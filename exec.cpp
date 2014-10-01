@@ -516,9 +516,6 @@ static void internal_exec_helper(parser_t &parser,
     std::vector<int> opened_fds;
     bool transmorgrified = io_transmogrify(ios, &morphed_chain, &opened_fds);
 
-    int is_block_old=is_block;
-    is_block=1;
-
     /*
       Did the transmogrification fail - if so, set error status and return
     */
@@ -527,6 +524,9 @@ static void internal_exec_helper(parser_t &parser,
         proc_set_last_status(STATUS_EXEC_FAIL);
         return;
     }
+
+    int is_block_old=is_block;
+    is_block=1;
 
     signal_unblock();
 

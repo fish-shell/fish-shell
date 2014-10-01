@@ -525,9 +525,6 @@ static void internal_exec_helper(parser_t &parser,
         return;
     }
 
-    int is_block_old=is_block;
-    is_block=1;
-
     signal_unblock();
 
     if (node_offset == NODE_OFFSET_INVALID)
@@ -544,7 +541,6 @@ static void internal_exec_helper(parser_t &parser,
     morphed_chain.clear();
     io_cleanup_fds(opened_fds);
     job_reap(0);
-    is_block=is_block_old;
 }
 
 /* Returns whether we can use posix spawn for a given process in a given job.

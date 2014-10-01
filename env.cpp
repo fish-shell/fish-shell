@@ -530,11 +530,6 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     env_set(L"version", version.c_str(), ENV_GLOBAL);
     env_set(L"FISH_VERSION", version.c_str(), ENV_GLOBAL);
 
-    /* Set up universal variables. The empty string means to use the deafult path. */
-    assert(s_universal_variables == NULL);
-    s_universal_variables = new env_universal_t(L"");
-    s_universal_variables->load();
-
     /*
       Set up SHLVL variable
     */
@@ -569,6 +564,11 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
 
     /* Set PWD */
     env_set_pwd();
+
+    /* Set up universal variables. The empty string means to use the deafult path. */
+    assert(s_universal_variables == NULL);
+    s_universal_variables = new env_universal_t(L"");
+    s_universal_variables->load();
 
     /* Set g_log_forks */
     env_var_t log_forks = env_get_string(L"fish_log_forks");

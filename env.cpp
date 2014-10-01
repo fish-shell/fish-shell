@@ -562,7 +562,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
         if (pw->pw_dir != NULL)
         {
             const wcstring dir = str2wcstring(pw->pw_dir);
-            env_set(L"HOME", dir.c_str(), ENV_GLOBAL);
+            env_set(L"HOME", dir.c_str(), ENV_GLOBAL | ENV_EXPORT);
         }
         free(unam_narrow);
     }

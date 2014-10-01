@@ -69,10 +69,6 @@ enum process_type_t
        A shellscript function
     */
     INTERNAL_FUNCTION,
-    /**
-       A block of commands
-    */
-    INTERNAL_BLOCK,
 
     /** A block of commands, represented as a node */
     INTERNAL_BLOCK_NODE,
@@ -100,7 +96,7 @@ enum
   commands to be evaluated by calling eval. Lastly, this process can
   be the result of an exec command. The role of this process_t is
   determined by the type field, which can be one of EXTERNAL,
-  INTERNAL_BUILTIN, INTERNAL_FUNCTION, INTERNAL_BLOCK, INTERNAL_EXEC.
+  INTERNAL_BUILTIN, INTERNAL_FUNCTION, INTERNAL_EXEC.
 
   The process_t contains information on how the process should be
   started, such as command name and arguments, as well as runtime
@@ -118,9 +114,6 @@ enum
 
   If the process is of type INTERNAL_FUNCTION, argv is the argument
   vector, and argv[0] is the name of the shellscript function.
-
-  If the process is of type INTERNAL_BLOCK, argv has exactly one
-  element, which is the block of commands to execute.
 
 */
 class process_t
@@ -146,8 +139,7 @@ public:
 
     /**
       Type of process. Can be one of \c EXTERNAL, \c
-      INTERNAL_BUILTIN, \c INTERNAL_FUNCTION, \c INTERNAL_BLOCK,
-      INTERNAL_EXEC
+      INTERNAL_BUILTIN, \c INTERNAL_FUNCTION, \c INTERNAL_EXEC
     */
     enum process_type_t type;
 

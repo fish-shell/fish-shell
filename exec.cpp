@@ -909,7 +909,6 @@ void exec_job(parser_t &parser, job_t *j)
                 break;
             }
 
-            case INTERNAL_BLOCK:
             case INTERNAL_BLOCK_NODE:
             {
                 if (p->next)
@@ -930,17 +929,7 @@ void exec_job(parser_t &parser, job_t *j)
 
                 if (! exec_error)
                 {
-                    if (p->type == INTERNAL_BLOCK)
-                    {
-                        /* The block contents (as in, fish code) are stored in argv0 (ugh) */
-                        assert(p->argv0() != NULL);
-                        internal_exec_helper(parser, p->argv0(), NODE_OFFSET_INVALID, TOP, process_net_io_chain);
-                    }
-                    else
-                    {
-                        assert(p->type == INTERNAL_BLOCK_NODE);
-                        internal_exec_helper(parser, wcstring(), p->internal_block_node, TOP, process_net_io_chain);
-                    }
+                    internal_exec_helper(parser, wcstring(), p->internal_block_node, TOP, process_net_io_chain);
                 }
                 break;
             }
@@ -1108,7 +1097,6 @@ void exec_job(parser_t &parser, job_t *j)
         switch (p->type)
         {
 
-            case INTERNAL_BLOCK:
             case INTERNAL_BLOCK_NODE:
             case INTERNAL_FUNCTION:
             {

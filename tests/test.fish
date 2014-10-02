@@ -1,83 +1,63 @@
 #!/usr/local/bin/fish
 #
-# Main loop of the test suite. I wrote this
-# instad of using autotest to provide additional
-# testing for fish. :-)
+# Fishscript tests
 
+source test_util.fish
 
-if [ "$argv" != '-n' ]
+say -o cyan "Testing high level script functionality"
+
+function test_file
+    set -l file $argv[1]
+    set -l base (basename $file .in)
+
+    echo -n "Testing file $file ... "
+
+    ../fish <$file >$base.tmp.out ^$base.tmp.err
+    set -l tmp_status $status
     set -l res ok
 
-    # begin...end has bug in error redirecting...
-    begin
-        ../fish -n ./test.fish ^top.tmp.err
-        ../fish -n ./test.fish -n ^^top.tmp.err
-        ../fish ./test.fish -n ^^top.tmp.err
-    end  | tee top.tmp.out
-    set -l tmp_status $status
-    if not diff top.tmp.out top.out >/dev/null
-        set res fail
-        echo "Output differs for file test.fish. Diff follows:"
-        diff -u top.out top.tmp.out
-    end
+    diff $base.tmp.out $base.out >/dev/null
+    set -l out_status $status
+    diff $base.tmp.err $base.err >/dev/null
+    set -l err_status $status
+    set -l exp_status (cat $base.status)[1]
 
-    if not diff top.tmp.err top.err >/dev/null
-        set res fail
-        echo "Error output differs for file test.fish. Diff follows:"
-        diff -u top.err top.tmp.err
-    end
-
-    if test $tmp_status -ne (cat top.status)
-        set res fail
-        echo "Exit status differs for file test.fish"
-    end
-
-    if not ../fish -p /dev/null -c 'echo testing' >/dev/null
-        set res fail
-        echo "Profiling failed"
-    end
-
-    if test $res = ok
-        echo "File test.fish tested ok"
-        exit 0
+    if test $out_status -eq 0 -a $err_status -eq 0 -a $exp_status -eq $tmp_status
+        say green "ok"
+        # clean up tmp files
+        rm -f $base.tmp.{err,out}
+        return 0
     else
-        echo "File test.fish failed tests"
-        exit 1
+        say red "fail"
+        if test $out_status -ne 0
+            say yellow "Output differs for file $file. Diff follows:"
+            colordiff -u $base.tmp.out $base.out
+        end
+        if test $err_status -ne 0
+            say yellow "Error output differs for file $file. Diff follows:"
+            colordiff -u $base.tmp.err $base.err
+        end
+        if test $exp_status -ne $tmp_status
+            say yellow "Exit status differs for file $file."
+            echo "Expected $exp_status, got $tmp_status."
+        end
+        return 1
     end
 end
 
-echo "Testing high level script functionality"
-
+set -l failed
 for i in *.in
-    set -l res ok
-
-    set -l base (basename $i .in)
-    set template_out (basename $i .in).out
-    set template_err (basename $i .in).err
-    set template_status (basename $i .in).status
-
-    ../fish <$i >tmp.out ^tmp.err
-    set -l tmp_status $status
-    if not diff tmp.out $base.out >/dev/null
-        set res fail
-        echo "Output differs for file $i. Diff follows:"
-        diff -u tmp.out $base.out
+    if not test_file $i
+        set failed $failed $i
     end
+end
 
-    if not diff tmp.err $base.err >/dev/null
-        set res fail
-        echo "Error output differs for file $i. Diff follows:"
-        diff -u tmp.err $base.err
-    end
-
-    if test $tmp_status -ne (cat $template_status)
-        set res fail
-        echo "Exit status differs for file $i"
-    end
-
-    if test $res = ok
-        echo "File $i tested ok"
-    else
-        echo "File $i failed tests"
-    end
+set failed (count $failed)
+if test $failed -eq 0
+    say green "All tests completed successfully"
+    exit 0
+else
+    set plural (test $failed -eq 1; or echo s)
+    say red "$failed test$plural failed"
+    exit 1
 end

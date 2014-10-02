@@ -63,13 +63,14 @@ function test_file
     end
 end
 
-set -l failed 0
+set -l failed
 for i in *.expect
     if not test_file $i
-        set failed (expr $failed + 1)
+        set failed $failed $i
     end
 end
 
+set failed (count $failed)
 if test $failed -eq 0
     say green "All tests completed successfully"
     exit 0

@@ -166,7 +166,7 @@ public:
 };
 
 /**
-   Gets the variable with the specified name, or env_var_t::missing_var if it does not exist.
+   Gets the variable with the specified name, or env_var_t::missing_var if it does not exist or is an empty array.
 
    \param key The name of the variable to get
    \param mode An optional scope to search in. All scopes are searched if unset

@@ -1391,6 +1391,26 @@ static void functions_def(const wcstring &name, wcstring &out)
         out.append(escape_string(name, true));
     }
 
+    /* Output any inherited variables as `set -l` lines */
+    std::map<wcstring,env_var_t> inherit_vars = function_get_inherit_vars(name);
+    for (std::map<wcstring,env_var_t>::const_iterator it = inherit_vars.begin(), end = inherit_vars.end(); it != end; ++it)
+    {
+        wcstring_list_t lst;
+        if (!it->second.missing())
+        {
+            tokenize_variable_array(it->second, lst);
+        }
+
+        /* This forced tab is crummy, but we don't know what indentation style the function uses */
+        append_format(out, L"\n\tset -l %ls", it->first.c_str());
+        for (wcstring_list_t::const_iterator arg_it = lst.begin(), arg_end = lst.end(); arg_it != arg_end; ++arg_it)
+        {
+            wcstring earg = escape_string(*arg_it, ESCAPE_ALL);
+            out.push_back(L' ');
+            out.append(earg);
+        }
+    }
+
     /* This forced tab is sort of crummy - not all functions start with a tab */
     append_format(out, L"\n\t%ls", def.c_str());
 
@@ -1976,6 +1996,7 @@ int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstr
     wchar_t *desc=0;
     std::vector<event_t> events;
     std::auto_ptr<wcstring_list_t> named_arguments(NULL);
+    wcstring_list_t inherit_vars;
 
     wchar_t *name = 0;
     bool shadows = true;
@@ -1996,6 +2017,7 @@ int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstr
         { L"help", no_argument, 0, 'h' },
         { L"argument-names", no_argument, 0, 'a' },
         { L"no-scope-shadowing", no_argument, 0, 'S' },
+        { L"inherit-variable", required_argument, 0, 'V' },
         { 0, 0, 0, 0 }
     };
 
@@ -2005,7 +2027,7 @@ int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstr
 
         int opt = wgetopt_long(argc,
                                argv,
-                               L"d:s:j:p:v:e:haS",
+                               L"d:s:j:p:v:e:haSV:",
                                long_options,
                                &opt_index);
         if (opt == -1)
@@ -2154,10 +2176,23 @@ int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstr
             case 'S':
                 shadows = 0;
                 break;
-                
+
             case 'w':
                 wrap_targets.push_back(woptarg);
                 break;
+
+            case 'V':
+            {
+                if (wcsvarname(woptarg))
+                {
+                    append_format(*out_err, _(L"%ls: Invalid variable name '%ls'\n"), argv[0], woptarg);
+                    res = STATUS_BUILTIN_ERROR;
+                    break;
+                }
+
+                inherit_vars.push_back(woptarg);
+                break;
+            }
 
             case 'h':
                 builtin_print_help(parser, argv[0], stdout_buffer);
@@ -2255,6 +2290,7 @@ int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstr
         d.shadows = shadows;
         if (named_arguments.get())
             d.named_arguments.swap(*named_arguments);
+        d.inherit_vars.swap(inherit_vars);
 
         for (size_t i=0; i<d.events.size(); i++)
         {
@@ -2265,7 +2301,7 @@ int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstr
         d.definition = contents.c_str();
 
         function_add(d, parser, definition_line_offset);
-        
+
         // Handle wrap targets
         for (size_t w=0; w < wrap_targets.size(); w++)
         {

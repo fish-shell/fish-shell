@@ -21,7 +21,9 @@ The following options are available:
 
 - `-e` or `--on-event EVENT_NAME` tells fish to run this function when the specified named event is emitted. Fish internally generates named events e.g. when showing the prompt.
 
-- `-j PID` or `--on-job-exit PID` tells fish to run this function when the job with group ID PID exits. Instead of PID, the string 'caller' can be specified. This is only legal when in a command substitution, and will result in the handler being triggered by the exit of the job which created this command substitution.
+- `-v` or `--on-variable VARIABLE_NAME` tells fish to run this function when the variable VARIABLE_NAME changes value.
+
+- `-j PGID` or `--on-job-exit PGID` tells fish to run this function when the job with group ID PGID exits. Instead of PGID, the string 'caller' can be specified. This is only legal when in a command substitution, and will result in the handler being triggered by the exit of the job which created this command substitution.
 
 - `-p PID` or `--on-process-exit PID` tells fish to run this function when the fish child process with process ID PID exits.
 
@@ -29,7 +31,7 @@ The following options are available:
 
 - `-S` or `--no-scope-shadowing` allows the function to access the variables of calling functions. Normally, any variables inside the function that have the same name as variables from the calling function are "shadowed", and their contents is independent of the calling function.
 
-- `-v` or `--on-variable VARIABLE_NAME` tells fish to run this function when the variable VARIABLE_NAME changes value.
+- `-V` or `--inherit-variable NAME` snapshots the value of the variable `NAME` and defines a local variable with that same name and value when the function is executed.
 
 If the user enters any additional arguments after the function, they are inserted into the environment <a href="index.html#variables-arrays">variable array</a> `$argv`. If the `--argument-names` option is provided, the arguments are also assigned to names specified in that option.
 
@@ -74,4 +76,18 @@ end
 \endfish
 
 This will run the `mkdir` command, and if it is successful, change the current working directory to the one just created.
+
+\fish
+function notify
+    set -l job (jobs -l -g)
+    or begin; echo "There are no jobs" >&2; return 1; end
+
+    function _notify_job_$job --on-job-exit $job --inherit-variable job
+        echo -n \a # beep
+        functions -e _notify_job_$job
+    end
+end
+\endfish
+
+This will beep when the most recent job completes.
 

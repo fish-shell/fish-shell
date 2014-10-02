@@ -1,0 +1,20 @@
+Testing -V
+$foo: (1)
+1: 'local foo'
+$bar: (5)
+1: 'one'
+2: 'two    2'
+3: '	'
+4: ''
+5: '3'
+$baz: (0)
+Testing -V with changed variables
+$foo: (1)
+1: 'local foo'
+$bar: (5)
+1: 'one'
+2: 'two    2'
+3: '	'
+4: ''
+5: '3'
+$baz: (0)

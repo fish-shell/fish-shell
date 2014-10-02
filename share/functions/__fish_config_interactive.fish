@@ -220,10 +220,9 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		end
 		set -g __fish_active_key_bindings "$fish_key_bindings"
 		set -g fish_bind_mode default
-		# Do something nasty to avoid two forks
 		if test "$fish_key_bindings" = fish_default_key_bindings
 			fish_default_key_bindings
-			#Load user key bindings if they are defined
+			# Load user key bindings if they are defined
 			if functions --query fish_user_key_bindings > /dev/null
 				fish_user_key_bindings
 			end
@@ -233,6 +232,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	end
 
 	# Load key bindings. Redirect stderr per #1155
+	set -g __fish_active_key_bindings
 	__fish_reload_key_bindings ^ /dev/null
 
 	# Repaint screen when window changes size

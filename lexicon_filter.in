@@ -530,7 +530,7 @@ s/\n$//g
 # characters. Basically the inverse of the 'patternflush' action, with
 # additional trailing characters stripped.
 x
-/^\<@[^}]*$/ ! {
+/^<@[^}]*$/ ! {
     s/[^\<]*//
     s/^ *\\\n//g
     s/\n *\\//g
@@ -551,7 +551,7 @@ x
 }
 s/\\\n/\
 /
-s/\< \n//
+s/< \n//
 s/^[a-z][a-z]* \n//
 #.
 # Swap the buffers back.

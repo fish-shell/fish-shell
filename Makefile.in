@@ -414,7 +414,7 @@ lexicon_filter: lexicon.txt lexicon_filter.in
 	if echo x | $(SED) "/[[:<:]]x/d" 2>/dev/null; then \
 		WORDBL='[[:<:]]'; WORDBR='[[:>:]]'; \
 	else \
-		WORDBL='\<'; WORDBR='\>'; \
+		WORDBL='\\<'; WORDBR='\\>'; \
 	fi; \
 	$(SED) <lexicon.txt >>$@.tmp -n \
 		-e "s|^\([a-z][a-z][a-z][a-z]\) \([a-z_-]*\)$$|s,$$WORDBL\2$$WORDBR,@\1{\2},g|p" \

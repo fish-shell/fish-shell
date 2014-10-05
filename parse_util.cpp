@@ -1154,14 +1154,14 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
     int err=0;
 
     wchar_t *paran_begin, *paran_end;
-    wchar_t *arg_cpy;
     int do_loop = 1;
-
-    arg_cpy = wcsdup(arg_src.c_str());
+    
+    wcstring working_copy = arg_src;
 
     while (do_loop)
     {
-        switch (parse_util_locate_cmdsubst(arg_cpy,
+        const wchar_t *working_copy_cstr = working_copy.c_str();
+        switch (parse_util_locate_cmdsubst(working_copy_cstr,
                                            &paran_begin,
                                            &paran_end,
                                            false))
@@ -1173,7 +1173,6 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
                 {
                     append_syntax_error(out_errors, node, L"Mismatched parenthesis");
                 }
-                free(arg_cpy);
                 return err;
             }
 
@@ -1189,36 +1188,33 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
                 const wcstring subst(paran_begin + 1, paran_end);
                 wcstring tmp;
 
-                tmp.append(arg_cpy, paran_begin - arg_cpy);
-                tmp.push_back(INTERNAL_SEPARATOR);
-                tmp.append(paran_end+1);
+                // Replace the command substitution with just INTERNAL_SEPARATOR
+                size_t cmd_sub_start = paran_begin - working_copy_cstr;
+                size_t cmd_sub_len = paran_end + 1 - paran_begin;
+                working_copy.replace(cmd_sub_start, cmd_sub_len, wcstring(1, INTERNAL_SEPARATOR));
 
                 parse_error_list_t subst_errors;
                 err |= parse_util_detect_errors(subst, &subst_errors, false /* do not accept incomplete */);
 
                 /* Our command substitution produced error offsets relative to its source. Tweak the offsets of the errors in the command substitution to account for both its offset within the string, and the offset of the node */
-                size_t error_offset = (paran_begin + 1 - arg_cpy) + node.source_start;
+                size_t error_offset = cmd_sub_start + 1 + node.source_start;
                 parse_error_offset_source_start(&subst_errors, error_offset);
 
                 if (out_errors != NULL)
                 {
                     out_errors->insert(out_errors->end(), subst_errors.begin(), subst_errors.end());
                 }
-
-                free(arg_cpy);
-                arg_cpy = wcsdup(tmp.c_str());
-
                 break;
             }
         }
     }
 
     wcstring unesc;
-    if (! unescape_string(arg_cpy, &unesc, UNESCAPE_SPECIAL))
+    if (! unescape_string(working_copy, &unesc, UNESCAPE_SPECIAL))
     {
         if (out_errors)
         {
-            append_syntax_error(out_errors, node, L"Invalid token '%ls'", arg_cpy);
+            append_syntax_error(out_errors, node, L"Invalid token '%ls'", working_copy.c_str());
         }
         return 1;
     }
@@ -1251,8 +1247,6 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
             }
         }
     }
-
-    free(arg_cpy);
 
     return err;
 }

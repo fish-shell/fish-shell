@@ -682,6 +682,15 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         result.extend([r for r in sample_results if r])
         return result
 
+    def do_get_abbreviations(self):
+        out, err = run_fish_cmd('abbr -s')
+        lines = (x for x in out.rstrip().split('\n'))
+        # Turn the output into something we can use
+        abbrout = (line[len('abbr -a '):].strip('\'') for line in lines)
+        abbrs = (x.split('=') for x in abbrout)
+        result = [{'word': x, 'phrase': y} for x, y in abbrs]
+        return result
+
     def secure_startswith(self, haystack, needle):
         if len(haystack) < len(needle):
             return False
@@ -731,6 +740,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             output = self.do_get_color_for_variable(name)
         elif p == '/bindings/':
             output = self.do_get_bindings()
+        elif p == '/abbreviations/':
+            output = self.do_get_abbreviations()
         else:
             return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
 
@@ -887,7 +898,7 @@ if PORT > 9000:
 # Just look at the first letter
 initial_tab = ''
 if len(sys.argv) > 1:
-    for tab in ['functions', 'prompt', 'colors', 'variables', 'history', 'bindings']:
+    for tab in ['functions', 'prompt', 'colors', 'variables', 'history', 'bindings', 'abbreviations']:
         if tab.startswith(sys.argv[1]):
             initial_tab = '#' + tab
             break

@@ -284,3 +284,13 @@ controllers.controller("bindingsController", function($scope, $http) {
 
     $scope.fetchBindings();
 });
+
+controllers.controller("abbreviationsController", function($scope, $http) {
+    $scope.abbreviations = [];
+    $scope.fetchAbbreviations = function() {
+        $http.get("abbreviations/").success(function(data, status, headers, config) {
+            $scope.abbreviations = data;
+    })};
+
+    $scope.fetchAbbreviations();
+});

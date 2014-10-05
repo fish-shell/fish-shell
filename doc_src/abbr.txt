@@ -1,0 +1,44 @@
+\section abbr abbr - manage fish abbreviations
+
+\subsection abbr-synopsis Synopsis
+\fish{synopsis}
+abbr -a word="phrase"
+abbr -s
+abbr -l
+abbr -r word
+\endfish
+
+\subsection abbr-description Description
+
+`abbr` manipulates the list of abbreviations that fish will expand.
+
+Abbreviations are user-defined character sequences or words that are replaced with longer phrases after tehy are entered. For example, a frequently-run command such as `git checkout` can be abbreviated to `gco`. After entering `gco` and pressing @key{Space} or @key{Enter}, the full text `git checkout` will appear in the command line.
+
+Abbreviations are stored, by default, in a universal variable.
+
+The following parameters are available:
+
+- `-a 'WORD=PHRASE'` or `--add 'WORD=PHRASE'` Adds a new abbreviation, where WORD will be expanded to PHRASE. Only a single argument is supported - protect the contents with quotes or escapes.
+
+- `-s` or `--show` Show all abbreviated words and their expanded phrases in a manner suitable for export and import.
+
+- `-l` or `--list` Lists all abbreviated words.
+
+- `-r WORD` or `--remove WORD` Remove the abbreviation WORD.
+
+\subsection abbr-example Examples
+
+\fish
+abbr -a 'gco=git checkout'
+\endfish
+Add a new abbreviation where `gco` will be replaced with `git checkout`.
+
+\fish
+abbr -r gco
+\endfish
+Remove the `gco` abbreviation.
+
+\fish
+ssh another_host abbr -s | source
+\endfish
+Import the abbreviations defined on another_host over SSH.

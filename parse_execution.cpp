@@ -731,7 +731,7 @@ parse_execution_result_t parse_execution_context_t::report_error(const parse_nod
 
 parse_execution_result_t parse_execution_context_t::report_errors(const parse_error_list_t &error_list) const
 {
-    if (parser->show_errors)
+    if (parser->show_errors && ! parser->cancellation_requested)
     {
         if (error_list.empty())
         {

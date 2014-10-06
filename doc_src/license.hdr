@@ -121,18 +121,6 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH RE
 ----
 
 
-## License for XSel
-
-The XSel command, written and copyrighted by Conrad Parker, is distributed together with `fish`.
-
-It is Copyright © 2001 Conrad Parker \<conrad@vergenet.net>
-
-Permission to use, copy, modify, distribute, and sell this software and its documentation for any purpose is hereby granted without fee, provided that the above copyright notice appear in all copies and that both that copyright notice and this permission notice appear in supporting documentation. No representations are made about the suitability of this software for any purpose. It is provided "as is"without express or implied warranty.
-
-
-----
-
-
 ## License for xdgmime and glibc
 
 The xdgmime library, written and copyrighted by Red Hat, Inc, is used by the mimedb command, which is a part of fish. It is released under the LGPL, version 2 or later, or under the Academic Free License, version 2. Version 2 of the LGPL license agreement is included below.

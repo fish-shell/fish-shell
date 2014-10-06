@@ -807,6 +807,16 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
         }
     }
 
+    /* Check if we are setting variables above the effective scope.
+       See https://github.com/fish-shell/fish-shell/issues/806
+     */
+
+    env_var_t global_dest = env_get_string(dest, ENV_GLOBAL);
+    if (universal && ! global_dest.missing())
+    {
+        append_format(stderr_buffer, _(L"%ls: Warning: universal scope selected, but a global variable %ls exists.\n"), L"set", dest);
+    }
+
     free(dest);
 
     if (retcode == STATUS_BUILTIN_OK && preserve_incoming_failure_exit_status)

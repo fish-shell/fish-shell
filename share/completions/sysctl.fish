@@ -1,5 +1,5 @@
 function __fish_sysctl_list_variable
-  sysctl -a -N ^/dev/null
+  sysctl -a | sed "s/\s*=.*//g"
 end
 
 complete -f -c sysctl -a '(__fish_sysctl_list_variable)' -d 'Variable'

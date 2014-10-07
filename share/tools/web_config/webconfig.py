@@ -687,8 +687,12 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         lines = (x for x in out.rstrip().split('\n'))
         # Turn the output into something we can use
         abbrout = (line[len('abbr -a '):].strip('\'') for line in lines)
-        abbrs = (x.split('=') for x in abbrout)
-        result = [{'word': x, 'phrase': y} for x, y in abbrs]
+        abbrs = [x.split('=') for x in abbrout]
+
+        if abbrs[0][0]:
+            result = [{'word': x, 'phrase': y} for x, y in abbrs]
+        else:
+            result = []
         return result
 
     def secure_startswith(self, haystack, needle):

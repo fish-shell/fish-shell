@@ -12,7 +12,7 @@ abbr -r word
 
 `abbr` manipulates the list of abbreviations that fish will expand.
 
-Abbreviations are user-defined character sequences or words that are replaced with longer phrases after tehy are entered. For example, a frequently-run command such as `git checkout` can be abbreviated to `gco`. After entering `gco` and pressing @key{Space} or @key{Enter}, the full text `git checkout` will appear in the command line.
+Abbreviations are user-defined character sequences or words that are replaced with longer phrases after they are entered. For example, a frequently-run command such as `git checkout` can be abbreviated to `gco`. After entering `gco` and pressing @key{Space} or @key{Enter}, the full text `git checkout` will appear in the command line.
 
 Abbreviations are stored, by default, in a universal variable.
 

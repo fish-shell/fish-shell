@@ -443,8 +443,10 @@ doc.h: $(HDR_FILES)
 	cat $*.txt >>$@;
 	echo "*/" >>$@
 
-%: %.in
-	$(SED) <$@.in >$@ \
+# Depend on Makefile because I don't see a better way of rebuilding
+# if any of the paths change.
+%: %.in Makefile FISH-BUILD-VERSION-FILE
+	$(SED) <$< >$@ \
 		-e "s,@sysconfdir\@,$(sysconfdir),g" \
 		-e "s,@datadir\@,$(datadir),g" \
 		-e "s,@docdir\@,$(docdir),g" \

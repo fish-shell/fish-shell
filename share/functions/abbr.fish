@@ -1,68 +1,157 @@
 function abbr --description "Manage abbreviations"
-	if test (count $argv) -lt 1 -o (count $argv) -gt 2
-		printf ( _ "%s: Expected one or two arguments, got %d\n") abbr (count $argv)
+	if not set -q argv[1]
 		__fish_print_help abbr
 		return 1
 	end
 
-	switch $argv[1]
-		case '-a' '--add'
-			if __fish_abbr_get_by_key "$argv[2]" >/dev/null
-				printf ( _ "%s: abbreviation %s already exists\n" ) abbr (__fish_abbr_print_key "$argv[2]" )
-				return 2
-			end
-			set -U fish_user_abbreviations $fish_user_abbreviations "$argv[2]"
-			return 0
-
-		case '-r' '--remove'
-			set -l index (__fish_abbr_get_by_key "$argv[2]")
-			if test $index -gt 0
-				set -e fish_user_abbreviations[$index]
+	# parse arguments
+	set -l mode
+	set -l mode_flag # the flag that was specified, for better errors
+	set -l mode_arg
+	set -l needs_arg no
+	while set -q argv[1]
+		if test $needs_arg = yes
+			set mode_arg $argv[1]
+			set needs_arg no
+		else
+			set -l new_mode
+			switch $argv[1]
+			case '-h' '--help'
+				__fish_print_help abbr
 				return 0
-			else
-				printf ( _ "%s: no such abbreviation %s\n" ) abbr (__fish_abbr_print_key "$argv[2]" )
-				return 3
+			case '-a' '--add'
+				set new_mode add
+				set needs_arg yes
+			case '-r' '--remove'
+				set new_mode remove
+				set needs_arg yes
+			case '-l' '--list'
+				set new_mode list
+			case '-s' '--show'
+				set new_mode show
+			case '--'
+				set -e argv[1]
+				break
+			case '-*'
+				printf ( _ "%s: invalid option -- %s\n" ) abbr $argv[1] >&2
+				return 1
+			case '*'
+				break
 			end
-
-		case '-s' '--show'
-			for i in $fish_user_abbreviations
-				echo abbr -a \'$i\'
+			if test -n "$mode" -a -n "$new_mode"
+				# we're trying to set two different modes
+				printf ( _ "%s: %s cannot be specified along with %s\n" ) abbr $argv[1] $mode_flag >&2
+				return 1
 			end
-			return 0
-
-		case '-l' '--list'
-			for i in $fish_user_abbreviations
-				__fish_abbr_print_key $i
-			end
-			return 0
-
-		case '-h' '--help'
-			__fish_print_help abbr
-			return 0
-
-		case '' '*'
-			printf (_ "%s: Unknown option %s\n" ) abbr $argv[1]
-			__fish_print_help abbr
-			return 1
+			set mode $new_mode
+			set mode_flag $argv[1]
+		end
+		set -e argv[1]
 	end
-end
+	if test $needs_arg = yes
+		printf ( _ "%s: option requires an argument -- %s\n" ) abbr $mode_flag >&2
+		return 1
+	end
 
-function __fish_abbr_printable
-	echo (__fish_abbr_print_key $argv)'="'(echo $argv | cut -f 2 -d =)'"'
+	# none of our modes want any excess arguments
+	if set -q argv[1]
+		printf ( _ "%s: Unexpected argument -- %s\n" ) abbr $argv[1] >&2
+		return 1
+	end
+
+	switch $mode
+	case 'add'
+		set -l key
+		set -l value
+		__fish_abbr_parse_entry $mode_arg key value
+		# ensure the key contains at least one non-space character
+		set -l IFS \n\ \t
+		printf '%s' $key | read -lz key_ _
+		if test -z "$key_"
+			printf ( _ "%s: abbreviation must have a non-empty key\n" ) abbr >&2
+			return 1
+		end
+		if test -z "$value"
+			printf ( _ "%s: abbreviation must have a value\n" ) abbr >&2
+			return 1
+		end
+		if set -l idx (__fish_abbr_get_by_key $key)
+			# erase the existing abbreviation
+			set -e fish_user_abbreviations[$idx]
+		end
+		if not set -q fish_user_abbreviations
+			# initialize as a universal variable, so we can skip the -U later
+			# and therefore work properly if someone sets this as a global variable
+			set -U fish_user_abbreviations
+		end
+		set fish_user_abbreviations $fish_user_abbreviations $mode_arg
+		return 0
+
+	case 'remove'
+		set -l key
+		__fish_abbr_parse_entry $mode_arg key
+		if set -l idx (__fish_abbr_get_by_key $key)
+			set -e fish_user_abbreviations[$idx]
+			return 0
+		else
+			printf ( _ "%s: no such abbreviation '%s'\n" ) abbr $key >&2
+			return 2
+		end
+
+	case 'show'
+		for i in $fish_user_abbreviations
+			echo abbr -a \'$i\'
+		end
+		return 0
+
+	case 'list'
+		for i in $fish_user_abbreviations
+			set -l key
+			__fish_abbr_parse_entry $i key
+			printf "%s\n" $key
+		end
+		return 0
+	end
 end
 
 function __fish_abbr_get_by_key
-	for i in (seq (count $fish_user_abbreviations))
-		switch $fish_user_abbreviations[$i]
-			case (__fish_abbr_print_key $argv)'=*'
+	if not set -q argv[1]
+		echo "__fish_abbr_get_by_key: expected one argument, got none" >&2
+		return 2
+	end
+	set -l count (count $fish_user_abbreviations)
+	if test $count -gt 0
+		set -l key
+		__fish_abbr_parse_entry $argv[1] key
+		set -l IFS \n # ensure newline splitting is enabled
+		for i in (seq $count)
+			set -l key_i
+			__fish_abbr_parse_entry $fish_user_abbreviations[$i] key_i
+			if test "$key" = "$key_i"
 				echo $i
 				return 0
+			end
 		end
 	end
-	echo 0
 	return 1
 end
 
-function __fish_abbr_print_key
-	echo $argv| cut -f 1 -d =
+function __fish_abbr_parse_entry -S -a __input __key __value
+	if test -z "$__key"
+		set __key _
+	end
+	if test -z "$__value"
+		set __value _
+	end
+	switch $__input
+	case '=*'
+		# read will skip any leading ='s, but we don't want that
+		set __input " $__input"
+		set __key _
+	end
+	# use read -z to avoid splitting on newlines
+	# I think we can safely assume there will be no NULs in the input
+	set -l IFS =
+	printf "%s" $__input | read -z $__key $__value
+	return 0
 end

@@ -1,2 +1,2 @@
-
-complete -c eval -s h -l help --description 'Display help and exit'
+# No completions for eval.
+# This file is left here so it will overwrite the old and buggy completion

@@ -487,7 +487,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
             wcstring key = key_and_val.substr(0, eql);
             if (is_read_only(key) || is_electric(key)) continue;
             wcstring val = key_and_val.substr(eql + 1);
-            if (variable_can_be_array(val))
+            if (variable_can_be_array(key))
             {
                 std::replace(val.begin(), val.end(), L':', ARRAY_SEP);
             }

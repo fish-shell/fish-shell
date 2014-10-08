@@ -244,4 +244,8 @@ env SHLVL=3foo ../fish -c 'echo SHLVL: $SHLVL'
 env SHLVL="3  " ../fish -c 'echo SHLVL: $SHLVL'
 env SHLVL="  3" ../fish -c 'echo SHLVL: $SHLVL'
 
+# Test transformation of inherited variables
+env DISPLAY="localhost:0.0" ../fish -c 'echo Elements in DISPLAY: (count $DISPLAY)'
+env PATH="/bin:/sbin:/usr/bin:/usr/sbin" ../fish -c 'echo Elements in PATH: (count $PATH)'
+
 true

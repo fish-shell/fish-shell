@@ -11,10 +11,12 @@
 #define FISH_FUNCTION_H
 
 #include <wchar.h>
+#include <map>
 
 #include "util.h"
 #include "common.h"
 #include "event.h"
+#include "env.h"
 
 class parser_t;
 class env_vars_snapshot_t;
@@ -49,6 +51,11 @@ struct function_data_t
      */
     wcstring_list_t named_arguments;
     /**
+       List of all variables that are inherited from the function definition scope.
+       The variable values are snapshotted when function_add() is called.
+      */
+    wcstring_list_t inherit_vars;
+    /**
        Set to non-zero if invoking this function shadows the variables
        of the underlying function.
      */
@@ -78,6 +85,9 @@ public:
 
     /** List of all named arguments for this function */
     const wcstring_list_t named_arguments;
+
+    /** Mapping of all variables that were inherited from the function definition scope to their values */
+    const std::map<wcstring,env_var_t> inherit_vars;
 
     /** Flag for specifying that this function was automatically loaded */
     const bool is_autoload;
@@ -161,6 +171,12 @@ int function_get_definition_offset(const wcstring &name);
    Returns a list of all named arguments of the specified function.
 */
 wcstring_list_t function_get_named_arguments(const wcstring &name);
+
+/**
+   Returns a mapping of all variables of the specified function that were inherited
+   from the scope of the function definition to their values.
+ */
+std::map<wcstring,env_var_t> function_get_inherit_vars(const wcstring &name);
 
 /**
    Creates a new function using the same definition as the specified function.

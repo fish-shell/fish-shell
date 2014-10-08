@@ -483,14 +483,14 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 result.append(data)
                 remaining.discard(color_name)
 
+        # Sort our result (by their keys)
+        result.sort(key=operator.itemgetter('name'))
+
         # Ensure that we have all the color names we know about, so that if the
         # user deletes one he can still set it again via the web interface
         for color_name in remaining:
             color_desc = descriptions.get(color_name, '')
             result.append([color_name, color_desc, parse_color('')])
-
-        # Sort our result (by their keys)
-        result.sort(key=operator.itemgetter('name'))
 
         return result
 
@@ -682,6 +682,19 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         result.extend([r for r in sample_results if r])
         return result
 
+    def do_get_abbreviations(self):
+        out, err = run_fish_cmd('abbr -s')
+        lines = (x for x in out.rstrip().split('\n'))
+        # Turn the output into something we can use
+        abbrout = (line[len('abbr -a '):].strip('\'') for line in lines)
+        abbrs = [x.split('=') for x in abbrout]
+
+        if abbrs[0][0]:
+            result = [{'word': x, 'phrase': y} for x, y in abbrs]
+        else:
+            result = []
+        return result
+
     def secure_startswith(self, haystack, needle):
         if len(haystack) < len(needle):
             return False
@@ -731,6 +744,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             output = self.do_get_color_for_variable(name)
         elif p == '/bindings/':
             output = self.do_get_bindings()
+        elif p == '/abbreviations/':
+            output = self.do_get_abbreviations()
         else:
             return SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(self)
 
@@ -861,7 +876,7 @@ where = os.path.dirname(sys.argv[0])
 os.chdir(where)
 
 # Generate a 16-byte random key as a hexadecimal string
-authkey = binascii.b2a_hex(os.urandom(16))
+authkey = binascii.b2a_hex(os.urandom(16)).decode('ascii')
 
 # Try to find a suitable port
 PORT = 8000
@@ -887,7 +902,7 @@ if PORT > 9000:
 # Just look at the first letter
 initial_tab = ''
 if len(sys.argv) > 1:
-    for tab in ['functions', 'prompt', 'colors', 'variables', 'history', 'bindings']:
+    for tab in ['functions', 'prompt', 'colors', 'variables', 'history', 'bindings', 'abbreviations']:
         if tab.startswith(sys.argv[1]):
             initial_tab = '#' + tab
             break

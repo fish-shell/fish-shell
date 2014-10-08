@@ -5,3 +5,4 @@ complete -c fish -s n -l no-execute --description "Only parse input, do not exec
 complete -c fish -s i -l interactive --description "Run in interactive mode"
 complete -c fish -s l -l login --description "Run in login mode"
 complete -c fish -s p -l profile --description "Output profiling information to specified file" -f
+complete -c fish -s d -l debug --description "Run with the specified verbosity level"

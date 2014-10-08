@@ -602,7 +602,7 @@ void parse_util_set_argv(const wchar_t * const *argv, const wcstring_list_t &nam
         size_t i;
         for (i=0, arg=argv; i < named_arguments.size(); i++)
         {
-            env_set(named_arguments.at(i).c_str(), *arg, ENV_LOCAL);
+            env_set(named_arguments.at(i).c_str(), *arg, ENV_LOCAL | ENV_USER);
 
             if (*arg)
                 arg++;
@@ -840,7 +840,7 @@ static void compute_indents_recursive(const parse_node_tree_t &tree, node_offset
     if (node_idx > *max_visited_node_idx)
         *max_visited_node_idx = node_idx;
 
-    /* We could implement this by utilizing the fish grammar. But there's an easy trick instead: almost everything that wraps a job list should be indented by 1. So just find all of the job lists. One exception is switch; the other exception is job_list itself: a job_list is a job and a job_list, and we want that child list to be indented the same as the parent. So just find all job_lists whose parent is not a job_list, and increment their indent by 1. */
+    /* We could implement this by utilizing the fish grammar. But there's an easy trick instead: almost everything that wraps a job list should be indented by 1. So just find all of the job lists. One exception is switch, which wraps a case_item_list instead of a job_list. The other exception is job_list itself: a job_list is a job and a job_list, and we want that child list to be indented the same as the parent. So just find all job_lists whose parent is not a job_list, and increment their indent by 1. */
 
     const parse_node_t &node = tree.at(node_idx);
     const parse_token_type_t node_type = node.type;
@@ -877,10 +877,39 @@ static void compute_indents_recursive(const parse_node_tree_t &tree, node_offset
 
 
     /* Store the indent into the indent array */
-    if (node.has_source())
+    if (node.source_start != SOURCE_OFFSET_INVALID && node.source_start < indents->size())
     {
-        assert(node.source_start < indents->size());
-        indents->at(node.source_start) = node_indent;
+        if (node.has_source())
+        {
+            /* A normal non-empty node. Store the indent unconditionally. */
+            indents->at(node.source_start) = node_indent;
+        }
+        else
+        {
+            /* An empty node. We have a source offset but no source length. This can come about when a node legitimately empty:
+
+                  while true; end
+
+               The job_list inside the while loop is empty. It still has a source offset (at the end of the while statement) but no source extent.
+               We still need to capture that indent, because there may be comments inside:
+                    while true
+                       # loop forever
+                    end
+
+               The 'loop forever' comment must be indented, by virtue of storing the indent.
+
+               Now consider what happens if we remove the end:
+
+                   while true
+                     # loop forever
+
+                Now both the job_list and end_command are unmaterialized. However, we want the indent to be of the job_list and not the end_command.  Therefore, we only store the indent if it's bigger.
+            */
+            if (node_indent > indents->at(node.source_start))
+            {
+                indents->at(node.source_start) = node_indent;
+            }
+        }
     }
 
 
@@ -900,7 +929,7 @@ std::vector<int> parse_util_compute_indents(const wcstring &src)
 
     /* Parse the string. We pass continue_after_error to produce a forest; the trailing indent of the last node we visited becomes the input indent of the next. I.e. in the case of 'switch foo ; cas', we get an invalid parse tree (since 'cas' is not valid) but we indent it as if it were a case item list */
     parse_node_tree_t tree;
-    parse_tree_from_string(src, parse_flag_continue_after_error | parse_flag_accept_incomplete_tokens, &tree, NULL /* errors */);
+    parse_tree_from_string(src, parse_flag_continue_after_error | parse_flag_include_comments | parse_flag_accept_incomplete_tokens, &tree, NULL /* errors */);
 
     /* Start indenting at the first node. If we have a parse error, we'll have to start indenting from the top again */
     node_offset_t start_node_idx = 0;
@@ -922,6 +951,22 @@ std::vector<int> parse_util_compute_indents(const wcstring &src)
         start_node_idx = max_visited_node_idx + 1;
     }
 
+    /* Handle comments. Each comment node has a parent (which is whatever the top of the symbol stack was when the comment was encountered). So the source range of the comment has the same indent as its parent. */
+    const size_t tree_size = tree.size();
+    for (node_offset_t i=0; i < tree_size; i++)
+    {
+        const parse_node_t &node = tree.at(i);
+        if (node.type == parse_special_type_comment && node.has_source() && node.parent < tree_size)
+        {
+            const parse_node_t &parent = tree.at(node.parent);
+            if (parent.source_start != SOURCE_OFFSET_INVALID)
+            {
+                indents.at(node.source_start) = indents.at(parent.source_start);
+            }
+        }
+    }
+
+    /* Now apply the indents. The indents array has -1 for places where the indent does not change, so start at each value and extend it along the run of -1s */
     int last_indent = 0;
     for (size_t i=0; i<src_size; i++)
     {
@@ -1109,14 +1154,14 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
     int err=0;
 
     wchar_t *paran_begin, *paran_end;
-    wchar_t *arg_cpy;
     int do_loop = 1;
-
-    arg_cpy = wcsdup(arg_src.c_str());
+    
+    wcstring working_copy = arg_src;
 
     while (do_loop)
     {
-        switch (parse_util_locate_cmdsubst(arg_cpy,
+        const wchar_t *working_copy_cstr = working_copy.c_str();
+        switch (parse_util_locate_cmdsubst(working_copy_cstr,
                                            &paran_begin,
                                            &paran_end,
                                            false))
@@ -1128,7 +1173,6 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
                 {
                     append_syntax_error(out_errors, node, L"Mismatched parenthesis");
                 }
-                free(arg_cpy);
                 return err;
             }
 
@@ -1144,36 +1188,33 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
                 const wcstring subst(paran_begin + 1, paran_end);
                 wcstring tmp;
 
-                tmp.append(arg_cpy, paran_begin - arg_cpy);
-                tmp.push_back(INTERNAL_SEPARATOR);
-                tmp.append(paran_end+1);
+                // Replace the command substitution with just INTERNAL_SEPARATOR
+                size_t cmd_sub_start = paran_begin - working_copy_cstr;
+                size_t cmd_sub_len = paran_end + 1 - paran_begin;
+                working_copy.replace(cmd_sub_start, cmd_sub_len, wcstring(1, INTERNAL_SEPARATOR));
 
                 parse_error_list_t subst_errors;
                 err |= parse_util_detect_errors(subst, &subst_errors, false /* do not accept incomplete */);
 
                 /* Our command substitution produced error offsets relative to its source. Tweak the offsets of the errors in the command substitution to account for both its offset within the string, and the offset of the node */
-                size_t error_offset = (paran_begin + 1 - arg_cpy) + node.source_start;
+                size_t error_offset = cmd_sub_start + 1 + node.source_start;
                 parse_error_offset_source_start(&subst_errors, error_offset);
 
                 if (out_errors != NULL)
                 {
                     out_errors->insert(out_errors->end(), subst_errors.begin(), subst_errors.end());
                 }
-
-                free(arg_cpy);
-                arg_cpy = wcsdup(tmp.c_str());
-
                 break;
             }
         }
     }
 
     wcstring unesc;
-    if (! unescape_string(arg_cpy, &unesc, UNESCAPE_SPECIAL))
+    if (! unescape_string(working_copy, &unesc, UNESCAPE_SPECIAL))
     {
         if (out_errors)
         {
-            append_syntax_error(out_errors, node, L"Invalid token '%ls'", arg_cpy);
+            append_syntax_error(out_errors, node, L"Invalid token '%ls'", working_copy.c_str());
         }
         return 1;
     }
@@ -1206,8 +1247,6 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
             }
         }
     }
-
-    free(arg_cpy);
 
     return err;
 }
@@ -1315,13 +1354,6 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                     if (! expand_one(command, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS, NULL))
                     {
                         // TODO: leverage the resulting errors
-                        errored = append_syntax_error(&parse_errors, node, ILLEGAL_CMD_ERR_MSG, command.c_str());
-                    }
-
-                    // Check that it doesn't contain a variable
-                    // Note this check is clumsy (it doesn't allow for escaping) but it matches what we do in parse_execution
-                    if (command.find(L'$') != wcstring::npos)
-                    {
                         errored = append_syntax_error(&parse_errors, node, ILLEGAL_CMD_ERR_MSG, command.c_str());
                     }
 

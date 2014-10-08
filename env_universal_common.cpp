@@ -547,28 +547,12 @@ bool env_universal_t::move_new_vars_file_into_place(const wcstring &src, const w
     return ret == 0;
 }
 
-/**
- Get environment variable value.
- */
-static env_var_t fishd_env_get(const char *key)
-{
-    const char *env = getenv(key);
-    if (env != NULL)
-    {
-        return env_var_t(str2wcstring(env));
-    }
-    else
-    {
-        return env_var_t::missing_var();
-    }
-}
-
 static wcstring fishd_get_config()
 {
     bool done = false;
     wcstring result;
-    
-    env_var_t xdg_dir = fishd_env_get("XDG_CONFIG_HOME");
+
+    env_var_t xdg_dir = env_get_string(L"XDG_CONFIG_HOME", ENV_GLOBAL | ENV_EXPORT);
     if (! xdg_dir.missing_or_empty())
     {
         result = xdg_dir;
@@ -580,7 +564,7 @@ static wcstring fishd_get_config()
     }
     else
     {
-        env_var_t home = fishd_env_get("HOME");
+        env_var_t home = env_get_string(L"HOME", ENV_GLOBAL | ENV_EXPORT);
         if (! home.missing_or_empty())
         {
             result = home;

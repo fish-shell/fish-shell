@@ -1,51 +1,52 @@
 \section functions functions - print or erase functions
 
-\subsection function-synopsis Synopsis
-<pre>functions [-n]
+\subsection functions-synopsis Synopsis
+\fish{synopsis}
+functions [ -a | --all ] [ -n | --names ]
 functions -c OLDNAME NEWNAME
 functions -d DESCRIPTION FUNCTION
-functions [-eq] FUNCTIONS...</pre>
+functions [ -e | -q ] FUNCTIONS...
+\endfish
 
 \subsection functions-description Description
 
-\c functions prints or erases functions.
+`functions` prints or erases functions.
 
 The following options are available:
 
-- <code>-a</code> or <code>--all</code> lists all functions, even those whose name start with an underscore.
-- <code>-c OLDNAME NEWNAME</code> or <code>--copy OLDNAME NEWNAME</code> creates a new function named NEWNAME, using the definition of the OLDNAME function.
-- <code>-d DESCRIPTION</code> or <code>--description=DESCRIPTION</code> changes the description of this function.
-- <code>-e</code> or <code>--erase</code> causes the specified functions to be erased.
-- <code>-h</code> or <code>--help</code> displays a help message and exits.
-- <code>-n</code> or <code>--names</code> lists the names of all defined functions.
-- <code>-q</code> or <code>--query</code> tests if the specified functions exist.
+- `-a` or `--all` lists all functions, even those whose name start with an underscore.
 
-The default behavior of <code>functions</code>, when called with no arguments,
-is to print the names of all defined functions. Unless the \c -a option is
-given, no functions starting with underscores are not included in the output.
+- `-c OLDNAME NEWNAME` or `--copy OLDNAME NEWNAME` creates a new function named NEWNAME, using the definition of the OLDNAME function.
 
-If any non-option parameters are given, the definition of the specified
-functions are printed.
+- `-d DESCRIPTION` or `--description=DESCRIPTION` changes the description of this function.
 
-Automatically loaded functions cannot be removed using <code>functions
--e</code>. Either remove the definition file or change the
-$fish_function_path variable to remove autoloaded functions.
+- `-e` or `--erase` causes the specified functions to be erased.
 
-Copying a function using \c -c copies only the body of the function, and
-does not attach any event notifications from the original function.
+- `-n` or `--names` lists the names of all defined functions.
 
-Only one function's description can be changed in a single invocation
-of <code>functions -d</code>.
+- `-q` or `--query` tests if the specified functions exist.
 
-The exit status of \c functions is the number of functions
-specified in the argument list that do not exist, which can be used in
-concert with the \c -q option.
+The default behavior of `functions`, when called with no arguments, is to print the names of all defined functions. Unless the `-a` option is given, no functions starting with underscores are not included in the output.
+
+If any non-option parameters are given, the definition of the specified functions are printed.
+
+Automatically loaded functions cannot be removed using `functions -e`. Either remove the definition file or change the $fish_function_path variable to remove autoloaded functions.
+
+Copying a function using `-c` copies only the body of the function, and does not attach any event notifications from the original function.
+
+Only one function's description can be changed in a single invocation of `functions -d`.
+
+The exit status of `functions` is the number of functions specified in the argument list that do not exist, which can be used in concert with the `-q` option.
+
 
 \subsection functions-example Examples
+\fish
+functions -n
+# Displays a list of currently-defined functions
 
-<code>functions -n</code> displays a list of currently-defined functions.
+functions -c foo bar
+# Copies the 'foo' function to a new function called 'bar'
 
-<code>functions -c foo bar</code> copies the \c foo function to a new function called
-<code>bar</code>.
-
-<code>functions -e bar</code> erases the function <code>bar</code>.
+functions -e bar
+# Erases the function `bar`
+\endfish

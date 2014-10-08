@@ -8,3 +8,4 @@ complete -c function -s v -l on-variable --description "Make the function a vari
 complete -c function -s e -l on-event --description "Make the function a generic event handler" -xa 'fish_prompt fish_command_not_found'
 complete -c function -s a -l argument-names --description "Specify named arguments"
 complete -c function -s S -l no-scope-shadowing --description "Do not shadow variable scope of calling function"
+complete -c function -s w -l wraps --description "Inherit completions from the given command"

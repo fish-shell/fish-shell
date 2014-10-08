@@ -1,15 +1,38 @@
-/** \page commands Commands bundled with fish
-
-\htmlonly <div class="fish_left_bar fish_left_little"> \endhtmlonly
-@command_list_toc@
-\htmlonly </div> \endhtmlonly
-
-\htmlonly
-<div class="fish_right_bar fish_right_big">
-<h1 class="interior_title_borderless">Commands</h1>
-Fish ships with a large number of builtin commands, shellscript functions and external commands. These are all described below.
+/**
+\page commands Commands
+\htmlonly[block]
+<div class="fish_left_bar">
+<div class="logo"></div>
+<div class="menu commands_menu">
 \endhtmlonly
-@command_list@
-\htmlonly </div> \endhtmlonly
+@command_list_toc@
 
+\htmlonly[block]
+</div>
+</div>
+<div class="commands fish_right_bar">
+<h1 class="interior_title">Command reference</h1>
+\endhtmlonly
+`fish` ships with a large number of builtin commands, shellscript functions and external commands. These are all described below.
+
+Almost all fish commands respond to the `-h` or `--help` options to display their relevant help, also accessible using the `help` and `man` commands, like so:
+
+\fish
+echo -h
+echo --help
+# Prints help to the terminal window
+
+man echo
+# Displays the man page in the system pager
+# (normally 'less', 'more' or 'most').
+
+help echo
+# Open a web browser to show the relevant documentation
+\endfish
+
+@command_list@
+
+\htmlonly[block]
+</div>
+\endhtmlonly
 */

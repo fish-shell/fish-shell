@@ -3,3 +3,5 @@ complete -c history -r -l contains --description "Match history items that conta
 complete -c history -l search --description "Print matching history items, which is the default behavior"
 complete -c history -l delete --description "Interactively delete matching history items"
 complete -c history -l clear --description "Clear your entire history"
+complete -c history -l merge --description "Incorporate history changes from other sessions"
+# --save is not completed; it is for internal use

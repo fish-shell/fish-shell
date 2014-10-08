@@ -365,7 +365,7 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t **commands, size_t
     CHECK(mode,);
     CHECK(sets_mode,);
 
-    // debug( 0, L"Add mapping from %ls to %ls in mode %ls", escape(sequence, 1), escape(command, 1 ), mode);
+    // debug( 0, L"Add mapping from %ls to %ls in mode %ls", escape(sequence, ESCAPE_ALL).c_str(), escape(command, ESCAPE_ALL).c_str(), mode);
 
     // remove existing mappings with this sequence
     const wcstring_list_t commands_vector(commands, commands + commands_len);
@@ -423,7 +423,7 @@ static int interrupt_handler()
     return R_NULL;
 }
 
-void update_fish_term256(void)
+void update_fish_color_support(void)
 {
     /* Infer term256 support. If fish_term256 is set, we respect it; otherwise try to detect it from the TERM variable */
     env_var_t fish_term256 = env_get_string(L"fish_term256");
@@ -456,7 +456,21 @@ void update_fish_term256(void)
             support_term256 = false;
         }
     }
-    output_set_supports_term256(support_term256);
+
+    env_var_t fish_term24bit = env_get_string(L"fish_term24bit");
+    bool support_term24bit;
+    if (! fish_term24bit.missing_or_empty())
+    {
+        support_term24bit = from_string<bool>(fish_term24bit);
+    }
+    else
+    {
+        /* We don't attempt to infer term24 bit support yet. */
+        support_term24bit = false;
+    }
+
+    color_support_t support = (support_term256 ? color_support_term256 : 0) | (support_term24bit ? color_support_term24bit : 0);
+    output_set_color_support(support);
 }
 
 int input_init()
@@ -496,7 +510,7 @@ int input_init()
 
     input_terminfo_init();
 
-    update_fish_term256();
+    update_fish_color_support();
 
     /* If we have no keybindings, add a few simple defaults */
     if (mapping_list.empty())
@@ -615,7 +629,7 @@ static bool input_mapping_is_match(const input_mapping_t &m)
     wint_t c = 0;
     int j;
 
-    //debug(0, L"trying mapping %ls\n", escape(m.seq.c_str(), 1));
+    //debug(0, L"trying mapping %ls\n", escape(m.seq.c_str(), ESCAPE_ALL).c_str());
     const wchar_t *str = m.seq.c_str();
     for (j=0; str[j] != L'\0'; j++)
     {
@@ -630,7 +644,7 @@ static bool input_mapping_is_match(const input_mapping_t &m)
 
     if (str[j] == L'\0')
     {
-        //debug(0, L"matched mapping %ls (%ls)\n", escape(m.seq.c_str(), 1), m.command.c_str());
+        //debug(0, L"matched mapping %ls (%ls)\n", escape(m.seq.c_str(), ESCAPE_ALL).c_str(), m.command.c_str());
         /* We matched the entire sequence */
         return true;
     }
@@ -666,7 +680,7 @@ static void input_mapping_execute_matching_or_generic(bool allow_commands)
     {
         const input_mapping_t &m = mapping_list.at(i);
 
-        //debug(0, L"trying mapping (%ls,%ls,%ls)\n", escape(m.seq.c_str(), 1),
+        //debug(0, L"trying mapping (%ls,%ls,%ls)\n", escape(m.seq.c_str(), ESCAPE_ALL).c_str(),
         //           m.mode.c_str(), m.sets_mode.c_str());
 
         if (m.mode != bind_mode)
@@ -758,59 +772,53 @@ wint_t input_readch(bool allow_commands)
     }
 }
 
-wcstring_list_t input_mapping_get_names()
+std::vector<input_mapping_name_t> input_mapping_get_names()
 {
     // Sort the mappings by the user specification order, so we can return them in the same order that the user specified them in
     std::vector<input_mapping_t> local_list = mapping_list;
     std::sort(local_list.begin(), local_list.end(), specification_order_is_less_than);
-    wcstring_list_t result;
+    std::vector<input_mapping_name_t> result;
     result.reserve(local_list.size());
 
     for (size_t i=0; i<local_list.size(); i++)
     {
         const input_mapping_t &m = local_list.at(i);
-        result.push_back(m.seq);
+        result.push_back((input_mapping_name_t){m.seq, m.mode});
     }
     return result;
 }
 
 
-bool input_mapping_erase(const wchar_t *sequence, const wchar_t *mode)
+bool input_mapping_erase(const wcstring &sequence, const wcstring &mode)
 {
     ASSERT_IS_MAIN_THREAD();
     bool result = false;
-    size_t i, sz = mapping_list.size();
 
-    for (i=0; i<sz; i++)
+    for (std::vector<input_mapping_t>::iterator it = mapping_list.begin(), end = mapping_list.end();
+         it != end;
+         ++it)
     {
-        const input_mapping_t &m = mapping_list.at(i);
-        if (sequence == m.seq && (mode == NULL || mode == m.mode))
+        if (sequence == it->seq && mode == it->mode)
         {
-            if (i != (sz-1))
-            {
-                mapping_list[i] = mapping_list[sz-1];
-            }
-            mapping_list.pop_back();
+            mapping_list.erase(it);
             result = true;
             break;
-
         }
     }
     return result;
 }
 
-bool input_mapping_get(const wcstring &sequence, wcstring_list_t *out_cmds, wcstring *out_mode, wcstring *out_sets_mode)
+bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds, wcstring *out_sets_mode)
 {
     bool result = false;
-    size_t sz = mapping_list.size();
-    for (size_t i=0; i<sz; i++)
+    for (std::vector<input_mapping_t>::const_iterator it = mapping_list.begin(), end = mapping_list.end();
+         it != end;
+         ++it)
     {
-        const input_mapping_t &m = mapping_list.at(i);
-        if (sequence == m.seq)
+        if (sequence == it->seq && mode == it->mode)
         {
-            *out_cmds = m.commands;
-            *out_mode = m.mode;
-            *out_sets_mode = m.sets_mode;
+            *out_cmds = it->commands;
+            *out_sets_mode = it->sets_mode;
             result = true;
             break;
         }

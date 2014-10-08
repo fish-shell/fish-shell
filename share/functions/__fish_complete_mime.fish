@@ -14,14 +14,14 @@ function __fish_complete_mime -d "Complete using text files"
 	set desc (mimedb -d $files)
 
 	# Format completions and descriptions
-	set -l res
-	for i in (seq (count $files))
-		set res $res $files[$i]\t$desc[$i]
-	end
+	if count $files > /dev/null
+		set -l res
+		for i in (seq (count $files))
+			set res $res $files[$i]\t$desc[$i]
+		end
 
-	if test $res[1]
-		printf "%s\n" $res
+		if test $res[1]
+			printf "%s\n" $res
+		end
 	end
-
 end
-

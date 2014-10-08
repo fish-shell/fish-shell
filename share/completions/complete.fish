@@ -13,3 +13,4 @@ complete -c complete -s e -l erase --description "Remove completion"
 complete -c complete -s h -l help --description "Display help and exit"
 complete -c complete -s C -l do-complete --description "Print all completions for the specified commandline"
 complete -c complete -s n -l condition --description "The completion should only be used if the specified command has a zero exit status" -r
+complete -c complete -s w -l wraps --description "Inherit completions from the specified command"

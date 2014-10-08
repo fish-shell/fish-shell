@@ -111,7 +111,9 @@ public:
     /* Indicate if this node has a range of source code associated with it */
     bool has_source() const
     {
-        return source_start != SOURCE_OFFSET_INVALID;
+        /* Should never have a nonempty range with an invalid offset */
+        assert(this->source_start != SOURCE_OFFSET_INVALID || this->source_length == 0);
+        return this->source_length > 0;
     }
 
     /* Gets source for the node, or the empty string if it has no source */

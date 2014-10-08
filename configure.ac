@@ -90,6 +90,7 @@ fi
 
 AC_PROG_CXX([g++ c++])
 AC_PROG_INSTALL
+AC_PROG_SED
 AC_LANG(C++)
 
 echo "CXXFLAGS: $CXXFLAGS"
@@ -146,7 +147,7 @@ AS_IF([test x$local_gettext != xno],
 # Build/clean the documentation only if Doxygen is available
 #
 
-doxygen_minimum=1.5
+doxygen_minimum=1.8.7
 
 AC_ARG_WITH(
   doxygen,

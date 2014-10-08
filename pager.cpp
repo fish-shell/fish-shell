@@ -319,7 +319,7 @@ static comp_info_list_t process_completions_into_infos(const completion_list_t &
 
 void pager_t::measure_completion_infos(comp_info_list_t *infos, const wcstring &prefix) const
 {
-    size_t prefix_len = my_wcswidth(prefix.c_str());
+    size_t prefix_len = fish_wcswidth(prefix.c_str());
     for (size_t i=0; i < infos->size(); i++)
     {
         comp_t *comp = &infos->at(i);
@@ -332,11 +332,11 @@ void pager_t::measure_completion_infos(comp_info_list_t *infos, const wcstring &
             if (j >= 1)
                 comp->comp_width += 2;
 
-            comp->comp_width += prefix_len + my_wcswidth(comp_strings.at(j).c_str());
+            comp->comp_width += prefix_len + fish_wcswidth(comp_strings.at(j).c_str());
         }
 
         // Compute desc_width
-        comp->desc_width = my_wcswidth(comp->desc.c_str());
+        comp->desc_width = fish_wcswidth(comp->desc.c_str());
 
         // Compute preferred width
         comp->pref_width = comp->comp_width + comp->desc_width + (comp->desc_width?4:0);

@@ -160,7 +160,7 @@ static void print_all(int hard)
 
     for (i=0; resource_arr[i].desc; i++)
     {
-        w=maxi(w, my_wcswidth(resource_arr[i].desc));
+        w=maxi(w, fish_wcswidth(resource_arr[i].desc));
     }
 
     for (i=0; resource_arr[i].desc; i++)

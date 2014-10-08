@@ -323,9 +323,9 @@ static void react_to_variable_change(const wcstring &key)
     {
         handle_locale();
     }
-    else if (key == L"fish_term256")
+    else if (key == L"fish_term256" || key == L"fish_term24bit")
     {
-        update_fish_term256();
+        update_fish_color_support();
         reader_react_to_color_change();
     }
     else if (string_prefixes_string(L"fish_color_", key))
@@ -487,7 +487,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
             wcstring key = key_and_val.substr(0, eql);
             if (is_read_only(key) || is_electric(key)) continue;
             wcstring val = key_and_val.substr(eql + 1);
-            if (variable_can_be_array(val))
+            if (variable_can_be_array(key))
             {
                 std::replace(val.begin(), val.end(), L':', ARRAY_SEP);
             }
@@ -530,11 +530,6 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     env_set(L"version", version.c_str(), ENV_GLOBAL);
     env_set(L"FISH_VERSION", version.c_str(), ENV_GLOBAL);
 
-    /* Set up universal variables. The empty string means to use the deafult path. */
-    assert(s_universal_variables == NULL);
-    s_universal_variables = new env_universal_t(L"");
-    s_universal_variables->load();
-
     /*
       Set up SHLVL variable
     */
@@ -542,8 +537,10 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     wcstring nshlvl_str = L"1";
     if (! shlvl_str.missing())
     {
-        long shlvl_i = wcstol(shlvl_str.c_str(), NULL, 10);
-        if (shlvl_i >= 0)
+        wchar_t *end;
+        long shlvl_i = wcstol(shlvl_str.c_str(), &end, 10);
+        while (iswspace(*end)) ++end; /* skip trailing whitespace */
+        if (shlvl_i >= 0 && *end == '\0')
         {
             nshlvl_str = to_string<long>(shlvl_i + 1);
         }
@@ -560,13 +557,18 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
         if (pw->pw_dir != NULL)
         {
             const wcstring dir = str2wcstring(pw->pw_dir);
-            env_set(L"HOME", dir.c_str(), ENV_GLOBAL);
+            env_set(L"HOME", dir.c_str(), ENV_GLOBAL | ENV_EXPORT);
         }
         free(unam_narrow);
     }
 
     /* Set PWD */
     env_set_pwd();
+
+    /* Set up universal variables. The empty string means to use the deafult path. */
+    assert(s_universal_variables == NULL);
+    s_universal_variables = new env_universal_t(L"");
+    s_universal_variables->load();
 
     /* Set g_log_forks */
     env_var_t log_forks = env_get_string(L"fish_log_forks");

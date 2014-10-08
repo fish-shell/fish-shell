@@ -1,0 +1,625 @@
+#! @sed@ -f
+#.
+# A Doxygen filter for building Fish's lexicon, for documentation bling.
+#.
+# Written specially for Fish, the shell for the 90's, in sed, the state of the
+# art text processor from the 70's. Who's sed? sed's dead, baby, sed's dead.*
+# by Mark Griffiths <mark@thebespokepixel.com>             *but quite portable
+#.
+# Finds /fish../endfish blocks in documentation source files and enhances
+# markup. Requires that the four character word 'classes' declared here are
+# added to Doxyfiles as aliases i.e.:
+#.
+# Enhance for HTML Help pages (Doxyfile.user)…
+# ALIASES   = "fish=\htmlonly[block] \n<pre class=\"fish\">"
+# ALIASES  += "fish{1}=\htmlonly[block] \n<pre class=\"fish \1\">"
+# ALIASES  += "endfish=</pre>\endhtmlonly \n"
+#.
+# ALIASES  += "blah{1}=<span class=\"comment\">\1</span>"
+# ALIASES  += "bltn{1}=<span class=\"command\">\1</span>" and so on...
+#.
+# And simplify for man pages (Doxyfile.help)…
+# ALIASES   = "fish=<pre>"
+# ALIASES  += "fish{1}=<pre>"
+# ALIASES  += "endfish=</pre>"
+#.
+# ALIASES  += "blah{1}=\1"
+# ALIASES  += "bltn{1}=<em>\1</em>"...
+#.
+# It's meant to only ever be run once, during make, as Doxygen's 'INPUT
+# FILTER', though can be run interactively by passing a file in via stdin. It
+# wont respond to arguments.
+#.
+# It's most easily tested by passing test strings into the compiled script:
+#.
+# echo "/fish Line to test" | ./fish_lexicon_filter
+#.
+# The, at times, archiac looking regex is down to ensuring portable sed BREs
+#.
+# This code is licensed with fish under the GPL 2.0.
+#.
+# Pattern flow control for scanning doc.h
+/\\fish/,/\\endfish/ {
+    # Open \fish block, firstly it it's on it's own line
+    /^\\fish$/b
+    /^\\fish{[^}]*}$/b
+    # Then if it's inline. Remove and process immediately...
+    /^\\fish.*$/ {
+        # Catch @ symbol
+        s/@/(at)/
+        s/^\\fish//
+        s/\\endfish//
+        b html
+    }
+    # Output blank lines
+    /^$/b
+    # Inside \fish block. Process...
+    /\\endfish/!{
+        # Catch @ symbol
+        s/@/((d))/
+        # Preprocess HTML and HTML-like formatting
+        /<[^>]*>/ {
+            b html
+        }
+        # Process the rest
+        b process
+    }
+    # End block
+    /\\endfish/b
+}
+#.
+# This is not the pattern we're looking for
+b
+#.
+# Process any HTML tags.
+# Structured to reduce sed's greediness.
+:html
+# Spans
+s|<span style=['"]\([^'"][^'"]*\)">|@span{\1,|
+s|<span class=['"]\([^'"][^'"]*\)">|@spcl{\1,|
+s|</span>|}|
+#.
+# Bold
+s|<b>|@bold{|
+s|<b [^>]*>|@bold{|
+s|</b>|}|
+#.
+# Strong (synonimous with emphasis)
+s|<strong>|@bold{|
+s|<strong [^>]*>|@bold{|
+s|</strong>|}|
+#.
+# EMPHasis
+s|<em>|@emph{|
+s|<em [^>]*>|@emph{|
+s|</em>|}|
+#.
+# Italic (synonimous with emphasis)
+s|<i>|@emph{|
+s|<i [^>]*>|@emph{|
+s|</i>|}|
+#.
+# UNDeRline
+s|<u>|@undr{|
+s|<u [^>]*>|@undr{|
+s|</u>|}|
+t html
+#.
+# Some handy non-standard extensions
+# autoSuGgeSTion
+s|<s>|@sgst{|
+s|<s [^>]*>|@sgst{|
+s|</s>|}|
+#.
+# MaTCH
+s|<m>|@mtch{|
+s|<m [^>]*>|@mtch{|
+s|</m>|}|
+#.
+# SearchMaTCh
+s|<sm>|@smtc{|
+s|<sm [^>]*>|@smtc{|
+s|</sm>|}|
+#.
+# ERrOR
+s|<error>|@eror{|
+s|<error [^>]*>|@eror{|
+s|</error>|}|
+#.
+# AsIs - protect from auto-formatting
+s|<asis>|@asis{|
+s|</asis>|}|
+#.
+# OUTPut - protect from auto-formatting
+s|<outp>|@outp{|
+s|</outp>|}|
+t html
+#.
+# Clean other unhandled html
+s|<\([A-Za-z][A-Za-z]*\)[^>]*>\([^<]*\)</\1>|\2|
+t html
+#.
+# Start processing entities
+:process
+# Output:
+# Line marked as output pass through
+/@outp/ {
+    b
+}
+# Comments:
+# Capture full line comments
+/^\( *\)#\(.*\)$/ {
+    # Assume any line starting with a # is complete
+    s//\1@blah{\2}/
+    t
+}
+# Match sub-line comments
+/#[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]/ ! {
+    s/#\(.*$\)/\\\
+<@blah{#\1}\
+/
+}
+#.
+# Protected entities These shouldn't allow nested structure, so we move them
+# to a marked, new line for a future extract/process/insert action.
+#.
+# AsIs block - resists formatting.
+s/@asis{\(.*\)}/\\\
+<@asis{\1}\
+/g
+#.
+# Manual <span>
+s/@span{\(.*\)}/\\\
+<@span{\1}\
+/g
+#.
+# String Literals
+s/"\([^"]*\)"/\\\
+<@dblq{\1}\
+/g
+s/'\([^']*\)'/\\\
+<@sglq{\1}\
+/g
+#.
+# AutoSuggestions.
+s/@sgst{\([^}]*\)}/\\\
+<@sgst{\1}\
+/
+#.
+# Command/Function options
+# Short options
+s/\([[( ]\)-\([A-Za-z][A-Za-z]*\)\([^A-Za-z}]\)/\1\\\
+<@opts{-\2}\
+\3/g
+#.
+# Long options
+s/\([[( ]\)--\([A-Za-z][A-Za-z0-9=_-]*\)\([^A-Za-z0-9=_-]*\)/\1\\\
+<@opts{--\2}\
+\3/g
+#.
+# Prompt
+s/~>_/\\\
+<@prmt{\
+<@path{~}\
+}/
+s/^>_/@prmt/
+#.
+# Cursor
+#.
+s/___$/@curs/
+s/___\(.\)/\\\
+<@curs{\1}\
+/
+#.
+# Escaped Options
+s/ \\\([A-Za-z0-9][A-Za-z0-9]*\) / @bksl{\1} /g
+#.
+# Trailing Backslash
+s/ \\$/ @bksl{ }/
+#.
+# Paths
+/\n<@dblq[^}]*[~/]/b protect
+/\n<@sglq[^}]*[~/]/b protect
+/\n<@span[^}]*[~/]/b protect
+#.
+# Normal Directory
+s|mkdir |mkdir :|
+s|\([~/:][/]*[.A-Za-z_0-9/-]*\)\\ |\1=|g
+s| \([~/][/]*[.A-Za-z_0-9/=-]*\)| \\\
+<@path{\1}\
+|g
+s| \(:[/]*[.A-Za-z_0-9/=-]*\)| \\\
+<@path{\1}\
+|g
+t protect
+#.
+# Dot Relative Directory (no spaces in path)
+s| \(./[A-Za-z_0-9/-]*\)| \\\
+<@path{\1}\
+|g
+b protect
+#.
+# Tidy up. Merge back 'pure' entities from hold space.
+:tidy
+#.
+# Convert loose text to arguments
+s/ \([a-zA-Z0-9+%*.-][{},a-zA-Z0-9%*._/?!=-]*\)/ @args{\1}/g
+#.
+# Or when tight to a newline
+s|\n\([a-zA-Z0-9+%*.-][{},a-zA-Z0-9%*._/?!-]*\)|\
+@args{\1}|g
+#.
+# Or when tight to the beginning
+s|^\([a-zA-Z][{},a-zA-Z0-9%*._/?!-]*\)|@args{\1}|g
+#.
+# Pick up loose text after markup.
+s/\([})]\)\([a-zA-Z0-9+%*.,][,a-zA-Z0-9%*._/?!-]*\);/\1@args{\2};/g
+s/\([})]\)\([a-zA-Z0-9+%*.,][,a-zA-Z0-9%*._/?!-]*\)$/\1@args{\2}/g
+#.
+# Uncomment the following 2 lines (ss) to log the pattern buffer.
+s/^.*$/Pattern : &/w lexicon.log
+s/^Pattern : //
+#.
+# Uncomment the following 4 lines (xssx) to log the hold buffer.
+x
+s/^.*$/HoldBufr: &/w lexicon.log
+s/^HoldBufr: //
+x
+#.
+# Tack the hold space to the end of the pattern buffer.
+G
+#.
+# Uncomment the folowing two lines (ss) to log the buffer join.
+s/^.*$/Joined  : &/w lexicon.log
+s/^Joined  : //
+#.
+# Iterate over alternate lines, matching '<' to '\'
+:join
+s,\([^\\ ]*\)\\\n\([^<]*\)<\(@[^}]*[}\\]\),\1\3\2,
+t join
+# Clean up stray new lines
+s/\n//g
+#.
+# Uncomment the folowing two lines (ss) to log the buffer before 'cleaning'.
+s/^.*$/PreClean: &/w lexicon.log
+s/^PreClean: //
+# Clean up special cases
+#.
+/@blah/{
+    s/\(blah{[^@]*\)@sglq{\([^}]*\)}/\1'\2'/
+    s/\(blah{[^@]*\)@dblq{\([^}]*\)}/\1"\2"/
+    s/\(blah{[^@]*\)@....{\([^}]*\)}/\1\2/
+}
+/@dblq/{
+    :cleandblq
+    s/\(dblq{[^@}<]*\)[<]*@...[^q]{\([^}]*\)}/\1\2/
+    t cleandblq
+}
+/@sglq/{
+    :cleansglq
+    s/\(sglq{[^@}<]*\)[<]*@...[^q]{\([^}]*\)}/\1\2/
+    t cleansglq
+}
+/@vars/{
+    :cleanvars
+    s/\(vars{@optr{$}[^@}]*\)@bltn{\([^}]*\)}/\1\2/
+    s/\(vars{@optr{$}[^@}]*\)@func{\([^}]*\)}/\1\2/
+    s/\(vars{@optr{$}[^@}]*\)@cmnd{\([^}]*\)}/\1\2/
+    s/\(vars{@optr{$}[^@}]*\)@args{\([^}]*\)}/\1\2/
+    t cleanvars
+}
+/@redr/{
+    :cleanredr
+    s/\(redr{[^@}]*\)@bltn{\([^}]*\)}/\1\2/
+    s/\(redr{[^@}]*\)@func{\([^}]*\)}/\1\2/
+    s/\(redr{[^@}]*\)@cmnd{\([^}]*\)}/\1\2/
+    s/\(redr{[^@}]*\)@fsfo{\([^}]*\)}/\1\2/
+    s/\(redr{[^}]*\)}\( *\)@path{\([^}]*\)/\1\2\3/
+    t cleanredr
+}
+/@sgst/{
+    s/@sgst{<@/@sgst{@/
+    :cleansgst
+    s/\(sgst{@curs{.}[^@]*\)@bltn{\([^}]*\)}/\1\2/
+    s/\(sgst{@curs{.}[^@]*\)@func{\([^}]*\)}/\1\2/
+    s/\(sgst{@curs{.}[^@]*\)@cmnd{\([^}]*\)}/\1\2/
+    s/\(sgst{@curs{.}[^@]*\)@opts{\([^}]*\)}/\1\2/
+    s/\(sgst{@curs{.}[^@]*\)@path{\([^}]*\)}/\1\2/
+    s/\(sgst{@curs{.}[^@]*\)@args{\([^}]*\)}/\1\2/
+    s/\(sgst{@curs{.}[^@]*\)@fsfo{\([^}]*\)}/\1\2/
+    t cleansgst
+}
+/@fsfo/{
+    :cleanfsfo
+    s/\(fsfo{[^@}]*\)@bltn{\([^}]*\)}/\1\2/
+    s/\(fsfo{[^@}]*\)@func{\([^}]*\)}/\1\2/
+    s/\(fsfo{[^@}]*\)@cmnd{\([^}]*\)}/\1\2/
+    t cleanfsfo
+}
+/@prmt{/{
+    s/@prmt{<@path/@prmt{@path/
+}
+#.
+# Restore Paths
+/@fsfo/ {
+    s/\(@fsfo{[^=]*\)=/\1 /
+}
+/@path/ {
+    :cleanpath
+    s/\(@path{[^:]*\):/\1/
+    s/\(@path{[^=]*\)=/\1\\ /
+    t cleanpath
+    s/@path{}//
+}
+#.
+# Finally, restructure to follow Fish's command [arguments] semantics.
+# Find the initial command, and change any others to arguments, up to a |, ( or ;
+# Assumes that a valid line will start with either a builtin, a function or a binary.
+#.
+# 'if' and 'for' seem to be special cases
+#.
+# Uncomment the folowing two lines (ss) to log the buffer before semantic conversion.
+s/^.*$/PreArgs : &/w lexicon.log
+s/^PreArgs : //
+#.
+# Find initial commands/functions/binaries
+#.
+# Store prmt, if present
+#.
+/@prmt/ {
+h
+s/^\(@prmt *\).*$/\1/
+x
+s/^@prmt *//
+}
+#.
+# Special case for optional commands
+s/@args{\[@bltn/@args{[@xbln/g
+# Special case for one-line 'if' statements
+/@bltn{if}/ {
+    s//@xbln{if}/
+    s/@bltn{set}/@xbln{set}/
+    s/@bltn{not}/@xbln{not}/
+    s/@bltn{else}/@xbln{else}/
+    s/@bltn{contains}/@xbln{contains}/
+    s/@bltn{test}/@xbln{test}/
+    s/@bltn{end}/@xbln{end}/
+    s/@cmnd{grep}/@xcmd{grep}/
+}
+# one-line 'for' statements
+/@bltn{for}/ {
+    s//@xbln{for}/
+    s/@args{in}/@xbln{in}/
+}
+# one-line 'begin' statements
+/@bltn{begin}/ {
+    s//@xbln{begin}/
+    s/@bltn{end}/@xbln{end}/
+}
+# one-line 'break' statements
+/@bltn{break}/ {
+    s//@xbln{break}/
+    s/@bltn{end}/@xbln{end}/
+}
+# one-line 'continue' statements
+/@bltn{continue}/ {
+    s//@xbln{continue}/
+    s/@bltn{end}/@xbln{end}/
+}
+# one-line 'switch' statements
+/@bltn{switch}/ {
+    s//@xbln{switch}/
+    s/@bltn{case}/@xbln{case}/
+    s/@bltn{end}/@xbln{end}/
+}
+# one-line 'function' statements
+/@bltn{function}/ {
+    s//@xbln{function}/
+    s/@bltn{return}/@xbln{return}/
+    s/@bltn{end}/@xbln{end}/
+}
+# one-line 'bind' statements - special input functions
+/@bltn{bind}/ {
+    s//@xbln{bind}/
+    s/@....{\([a-z]*\)}\(-[a-z-]*\)/@args{\1\2}/
+}
+# one-line 'builtin' statements
+s/@bltn{builtin} @bltn/@xbln{builtin} @xbln/g
+s/@bltn{builtin} @cmnd/@xbln{builtin} @xcmd/g
+s/@bltn{builtin} @func/@xbln{builtin} @xfnc/g
+#.
+# one-line 'command' statements
+s/@bltn{command} @bltn/@xbln{command} @xbln/g
+s/@bltn{command} @cmnd/@xbln{command} @xcmd/g
+s/@bltn{command} @func/@xbln{command} @xfnc/g
+#.
+# one-line 'and/or' statements
+s/@bltn{and} @bltn/@xbln{and} @xbln/g
+s/@bltn{and} @cmnd/@xbln{and} @xcmd/g
+s/@bltn{and} @func/@xbln{and} @xfnc/g
+s/@bltn{or} @bltn/@xbln{or} @xbln/g
+s/@bltn{or} @cmnd/@xbln{or} @xcmd/g
+s/@bltn{or} @func/@xbln{or} @xfnc/g
+#.
+s/^\( *\)@cmnd/\1@xcmd/
+s/\( *[;()] *\)@cmnd/\1@xcmd/g
+s/\( *@redr{|} *\)@cmnd/\1@xcmd/g
+s/^\( *\)@bltn/\1@xbln/
+s/\( *[;()] *\)@bltn/\1@xbln/g
+s/\( *@redr{|} *\)@bltn/\1@xbln/g
+s/^\( *\)@func/\1@xfnc/
+s/\( *[;()] *\)@func/\1@xfnc/g
+s/\( *@redr{|} *\)@func/\1@xfnc/g
+s/ @bksl{\([^}]*\)} / @args{@bksl{\1}} /g
+s/ @bksl{@bltn{\([^}]*\)}/ @args{@bksl{\1}/g
+s/ @bksl{@func{\([^}]*\)}/ @args{@bksl{\1}/g
+s/ @bksl{@cmnd{\([^}]*\)}/ @args{@bksl{\1}/g
+s/@bltn/@args/g
+s/@func/@args/g
+s/@cmnd/@args/g
+#.
+s/^.*$/PostArgs: &/w lexicon.log
+s/^PostArgs: //
+#.
+s/xbln/bltn/g
+s/xfnc/func/g
+s/xcmd/cmnd/g
+x
+/^@prmt/ {
+G
+s/^@prmt \n/@prmt /
+}
+/^@prmt/ ! {
+x
+}
+#.
+# Mark up sesitive character entities.
+#.
+:entities
+s/</\&lt;/g
+s/>/\&gt;/g
+s/((d))/@/g
+#.
+# Final post processing
+s/};\([^]]\)/}@redr{;}\1/g
+s/};$/}@redr{;}/
+s/ \[\([@(]\)/ @args{[}\1/g
+s/ \[\([A-Z]*\) / @args{[\1} /g
+s/@args{\([a-zA-Z0-9_.]*\)}\]/@args{\1]}/g
+s/@args{\([a-zA-Z0-9_.]*\)}: /@args{\1:} /g
+s/@bltn{echo} @fsfo/@bltn{echo} @args/g
+s/@bltn{echo}\([a-zA-Z0-9.@{} _-]*\)@fsfo/@bltn{echo}\1@args/g
+s/ \] / @args{]} /g
+s/ \]$/ @args{]}/g
+s/\]}\]$/]]}/
+s/\\\([()]\)/@optr{@bksl{\1}}/g
+s/\([()]\)/@optr{\1}/g
+s/\\n/@bksl{n}/
+s/ \\$//
+#.
+# Uncomment the folowing two lines (ss) to log the final output, sent to Doxygen.
+s/^.*$/Output  : &\
+\
+/w lexicon.log
+s/^Output  : //
+s/\n\n$//
+#.
+# Lines are reassembled, so branch to end
+b
+# === Main End ===
+#.
+#.
+# === Subroutines ===
+# Branched to when content requires.
+#.
+# Move protected content to hold space and mark up other entities.
+:protect
+s/^.*$/Input   : &/w lexicon.log
+s/^Input   : //
+h
+# Clear out any content that has already been marked up, to prevent futher
+# markup on words that should be left alone.
+#.
+:patternflush
+s/\n<@[^}]*[}\\]//
+s/\\ [^\\]*$/\\/
+t patternflush
+s/\n$//g
+#.
+# Swap the pattern and hold buffers and remove unmarked lines and extra
+# characters. Basically the inverse of the 'patternflush' action, with
+# additional trailing characters stripped.
+x
+/^<@[^}]*$/ ! {
+    s/[^\<]*//
+    s/^ *\\\n//g
+    s/\n *\\//g
+    s/[()] \\//g
+    s/^[^\<][^@][^\\]*//
+    s/\n[]|;) ][^\\]*\\//
+    s/\n[]|;) a-zA-Z0-9-][^\\]*$//
+    s/\n[]|;)}]\\//
+    s/\n[]|;)}]\n//
+    s/\n[]|;)}]$//
+    s/[()]$//
+    s/}@curs/}/
+    s/\n@curs$//
+    s/\n[^\<@][^\\]*\\//
+    s/\n[^\<@][^\\]*//
+    s/^\\//
+    s/\n$//g
+}
+s/\\\n/\
+/
+s/< \n//
+s/^[a-z][a-z]* \n//
+#.
+# Swap the buffers back.
+x
+#.
+# A special case. Tidy up after commands.
+# Redirectors
+s/\([^{|] *\)|/\1@redr{|}/g
+s/&$/@redr{\&amp;}/
+s/\([^{&] *\)&[^a-z]/\1@redr{\&amp;}/g
+s/\([^{<>^] *\)\([0-9]* *[<>^][<>^]*[^@][a-zA-Z0-9./_-]*\)/\1@redr{\2}/g
+s/\\}/}\\/g
+#.
+# Now we can add in 'unsafe' entities that would be too greedy.
+# Arrays
+s/[[][0-9$a-zA-Z_;. -]*]/@args{&}/g
+#.
+# Declared Variables
+s/\($[$]*\)\([A-Za-z_0-9][A-Za-z_0-9]*\)/@vars{@optr{\1}\2}/g
+#.
+# Files
+s/\([^@]\)\([A-Za-z0-9_-][A-Za-z0-9_-]*\.[a-z0-9*][a-z0-9*]*\)/\1@fsfo{\2}/g
+#.
+:commands
+#.
+#### This section is built in the Makefile. Just some formatting examples. #####
+#.
+#   Fish builtin (bltn) <- 4 character code that has a Doxygen alias counterpart
+#   template : s/[[:<:]]function[[:>:]]/@bltn{&}/
+#.
+#   s,[[:<:]]function[[:>:]],@bltn{function},g
+#   s,[[:<:]]begin[[:>:]],@bltn{begin},g
+#   ...
+#.
+#   Fish functions (func)
+#   Populated by 'public' functions' filename.
+#.
+#   s,[[:<:]]fish_pwd[[:>:]],@func{fish_pwd},g
+#   s,[[:<:]]fish_prompt[[:>:]],@func{fish_prompt},g
+#   ...
+#.
+#   Shell Command (cmnd)
+#   Populated from completion filenames
+#.
+#   s,[[:<:]]seq[[:>:]],@cmnd{seq},g
+#   s,[[:<:]]rm[[:>:]],@cmnd{rm},g
+#   ...
+#.
+#   Color Variable (clrv)
+#   Populated from __fish_config_interactive.fish
+#   Allows fish's 'special' color variables to be identified
+#.
+#   s,[[:<:]]fish_color_normal[[:>:]],@clrv{fish_color_normal},g
+#   s,[[:<:]]fish_color_command[[:>:]],@clrv{fish_color_command},g
+#.
+# Once all of the commands/functions/variables/special's have been marked up,
+# branch back to tidy up and collapse the pattern/hold buffers back to a
+# single line.
+#.
+# b tidy
+#.
+#.
+# Below is a special section that adds vocabuarly to the lexicon during 'make'.
+# As the lexicon is written into the output lexicon_filter, portability is
+# automatically handled.
+#.
+#.!# cmnd whoami
+#.!# cmnd mkdir
+#.!# cmnd basename
+#.!# bltn sleep
+#.!# args in

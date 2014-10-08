@@ -973,7 +973,8 @@ if __name__ == "__main__":
     if not WRITE_TO_STDOUT and not output_directory:
         # Default to ~/.config/fish/generated_completions/
         # Create it if it doesn't exist
-        output_directory = os.path.expanduser('~/.config/fish/generated_completions/')
+        xdg_data_home = os.getenv('XDG_DATA_HOME', '~/.local/share')
+        output_directory = os.path.expanduser(xdg_data_home + '/fish/generated_completions/')
         try:
             os.makedirs(output_directory)
         except OSError as e:

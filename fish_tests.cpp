@@ -65,6 +65,7 @@
 #include "input.h"
 #include "utf8.h"
 #include "env_universal_common.h"
+#include "wcstringutil.h"
 
 static const char * const * s_arguments;
 static int s_test_run_count = 0;
@@ -895,9 +896,17 @@ static void test_indents()
         {NULL, -1}
     };
 
+    const indent_component_t components12[] =
+    {
+        {L"while false", 0},
+        {L"# comment", 1}, //comment indentation handling
+        {L"command", 1}, //comment indentation handling
+        {L"# comment2", 1}, //comment indentation handling
+        {NULL, -1}
+    };
 
 
-    const indent_component_t *tests[] = {components1, components2, components3, components4, components5, components6, components7, components8, components9, components10, components11};
+    const indent_component_t *tests[] = {components1, components2, components3, components4, components5, components6, components7, components8, components9, components10, components11, components12};
     for (size_t which = 0; which < sizeof tests / sizeof *tests; which++)
     {
         const indent_component_t *components = tests[which];
@@ -1300,52 +1309,89 @@ static void test_lru(void)
 
    \param in the string to expand
    \param flags the flags to send to expand_string
+   \param ... A zero-terminated parameter list of values to test.
+              After the zero terminator comes one more arg, a string, which is the error
+              message to print if the test fails.
 */
 
-static int expand_test(const wchar_t *in, int flags, ...)
+static bool expand_test(const wchar_t *in, expand_flags_t flags, ...)
 {
     std::vector<completion_t> output;
     va_list va;
-    size_t i=0;
-    int res=1;
+    bool res=true;
     wchar_t *arg;
+    parse_error_list_t errors;
 
-    if (expand_string(in, output, flags, NULL))
+    if (expand_string(in, output, flags, &errors) == EXPAND_ERROR)
     {
+        if (errors.empty())
+        {
+            err(L"Bug: Parse error reported but no error text found.");
+        }
+        else
+        {
+            err(L"%ls", errors.at(0).describe(wcstring(in)).c_str());
+        }
+        return false;
+    }
 
-    }
-#if 0
-    printf("input: %ls\n", in);
-    for (size_t idx=0; idx < output.size(); idx++)
-    {
-        printf("%ls\n", output.at(idx).completion.c_str());
-    }
-#endif
+    wcstring_list_t expected;
 
     va_start(va, flags);
-
     while ((arg=va_arg(va, wchar_t *))!= 0)
     {
-        if (output.size() == i)
-        {
-            res=0;
-            break;
-        }
-
-        if (output.at(i).completion != arg)
-        {
-            res=0;
-            break;
-        }
-
-        i++;
+        expected.push_back(wcstring(arg));
     }
     va_end(va);
-    
-    if (output.size() != i)
+
+    wcstring_list_t::const_iterator exp_it = expected.begin(), exp_end = expected.end();
+    std::vector<completion_t>::const_iterator out_it = output.begin(), out_end = output.end();
+    for (; exp_it != exp_end || out_it != out_end; ++exp_it, ++out_it)
     {
-        res = false;
+        if (exp_it == exp_end || out_it == out_end)
+        {
+            // sizes don't match
+            res = false;
+            break;
+        }
+
+        if (out_it->completion != *exp_it)
+        {
+            res = false;
+            break;
+        }
     }
+
+    if (!res)
+    {
+        if ((arg = va_arg(va, wchar_t *)) != 0)
+        {
+            wcstring msg = L"Expected [";
+            bool first = true;
+            for (wcstring_list_t::const_iterator it = expected.begin(), end = expected.end(); it != end; ++it)
+            {
+                if (!first) msg += L", ";
+                first = false;
+                msg += '"';
+                msg += *it;
+                msg += '"';
+            }
+            msg += L"], found [";
+            first = true;
+            for (std::vector<completion_t>::const_iterator it = output.begin(), end = output.end(); it != end; ++it)
+            {
+                if (!first) msg += L", ";
+                first = false;
+                msg += '"';
+                msg += it->completion;
+                msg += '"';
+            }
+            msg += L"]";
+            err(L"%ls\n%ls", arg, msg.c_str());
+        }
+    }
+
+    va_end(va);
 
     return res;
 
@@ -1358,31 +1404,31 @@ static void test_expand()
 {
     say(L"Testing parameter expansion");
 
-    if (!expand_test(L"foo", 0, L"foo", 0))
-    {
-        err(L"Strings do not expand to themselves");
-    }
+    expand_test(L"foo", 0, L"foo", 0,
+                L"Strings do not expand to themselves");
 
-    if (!expand_test(L"a{b,c,d}e", 0, L"abe", L"ace", L"ade", 0))
-    {
-        err(L"Bracket expansion is broken");
-    }
+    expand_test(L"a{b,c,d}e", 0, L"abe", L"ace", L"ade", 0,
+                L"Bracket expansion is broken");
 
-    if (!expand_test(L"a*", EXPAND_SKIP_WILDCARDS, L"a*", 0))
-    {
-        err(L"Cannot skip wildcard expansion");
-    }
-    
-    if (!expand_test(L"/bin/l\\0", ACCEPT_INCOMPLETE, 0))
-    {
-        err(L"Failed to handle null escape in expansion");
-    }
+    expand_test(L"a*", EXPAND_SKIP_WILDCARDS, L"a*", 0,
+                L"Cannot skip wildcard expansion");
+
+    expand_test(L"/bin/l\\0", ACCEPT_INCOMPLETE, 0,
+                L"Failed to handle null escape in expansion");
+
+    expand_test(L"foo\\$bar", EXPAND_SKIP_VARIABLES, L"foo$bar", 0,
+                L"Failed to handle dollar sign in variable-skipping expansion");
 
     if (system("mkdir -p /tmp/fish_expand_test/")) err(L"mkdir failed");
     if (system("touch /tmp/fish_expand_test/.foo")) err(L"touch failed");
     if (system("touch /tmp/fish_expand_test/bar")) err(L"touch failed");
 
     // This is checking that .* does NOT match . and .. (https://github.com/fish-shell/fish-shell/issues/270). But it does have to match literal components (e.g. "./*" has to match the same as "*"
+    expand_test(L"/tmp/fish_expand_test/.*", 0, L"/tmp/fish_expand_test/.foo", 0,
+                L"Expansion not correctly handling dotfiles");
+    expand_test(L"/tmp/fish_expand_test/./.*", 0, L"/tmp/fish_expand_test/./.foo", 0,
+                L"Expansion not correctly handling literal path components in dotfiles");
+
     if (! expand_test(L"/tmp/fish_expand_test/.*", 0, L"/tmp/fish_expand_test/.foo", 0))
     {
         err(L"Expansion not correctly handling dotfiles");
@@ -3574,8 +3620,19 @@ static void test_highlighting(void)
         {NULL, -1}
     };
 
+    const highlight_component_t components13[] =
+    {
+        {L"echo", highlight_spec_command},
+        {L"$$foo[", highlight_spec_operator},
+        {L"1", highlight_spec_param},
+        {L"][", highlight_spec_operator},
+        {L"2", highlight_spec_param},
+        {L"]", highlight_spec_operator},
+        {L"[3]", highlight_spec_param}, // two dollar signs, so last one is not an expansion
+        {NULL, -1}
+    };
 
-    const highlight_component_t *tests[] = {components1, components2, components3, components4, components5, components6, components7, components8, components9, components10, components11, components12};
+    const highlight_component_t *tests[] = {components1, components2, components3, components4, components5, components6, components7, components8, components9, components10, components11, components12, components13};
     for (size_t which = 0; which < sizeof tests / sizeof *tests; which++)
     {
         const highlight_component_t *components = tests[which];
@@ -3626,6 +3683,37 @@ static void test_highlighting(void)
     if (system("rm -Rf /tmp/fish_highlight_test"))
     {
         err(L"rm failed");
+    }
+}
+
+static void test_wcstring_tok(void)
+{
+    say(L"Testing wcstring_tok");
+    wcstring buff = L"hello world";
+    wcstring needle = L" \t\n";
+    wcstring_range loc = wcstring_tok(buff, needle);
+    if (loc.first == wcstring::npos || buff.substr(loc.first, loc.second) != L"hello")
+    {
+        err(L"Wrong results from first wcstring_tok(): {%zu, %zu}", loc.first, loc.second);
+    }
+    loc = wcstring_tok(buff, needle, loc);
+    if (loc.first == wcstring::npos || buff.substr(loc.first, loc.second) != L"world")
+    {
+        err(L"Wrong results from second wcstring_tok(): {%zu, %zu}", loc.first, loc.second);
+    }
+    loc = wcstring_tok(buff, needle, loc);
+    if (loc.first != wcstring::npos)
+    {
+        err(L"Wrong results from third wcstring_tok(): {%zu, %zu}", loc.first, loc.second);
+    }
+
+    buff = L"hello world";
+    loc = wcstring_tok(buff, needle);
+    // loc is "hello" again
+    loc = wcstring_tok(buff, L"", loc);
+    if (loc.first == wcstring::npos || buff.substr(loc.first, loc.second) != L"world")
+    {
+        err(L"Wrong results from wcstring_tok with empty needle: {%zu, %zu}", loc.first, loc.second);
     }
 }
 
@@ -3709,6 +3797,7 @@ int main(int argc, char **argv)
     if (should_test_function("autosuggestion_ignores")) test_autosuggestion_ignores();
     if (should_test_function("autosuggestion_combining")) test_autosuggestion_combining();
     if (should_test_function("autosuggest_suggest_special")) test_autosuggest_suggest_special();
+    if (should_test_function("wcstring_tok")) test_wcstring_tok();
     if (should_test_function("history")) history_tests_t::test_history();
     if (should_test_function("history_merge")) history_tests_t::test_history_merge();
     if (should_test_function("history_races")) history_tests_t::test_history_races();

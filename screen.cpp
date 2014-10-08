@@ -1428,7 +1428,7 @@ void s_reset(screen_t *s, screen_reset_mode_t mode)
         int non_space_width = wcwidth(omitted_newline_char);
         if (screen_width >= non_space_width)
         {
-            if (output_get_supports_term256())
+            if (output_get_color_support() & color_support_term256)
             {
                 // draw the string in term256 gray
                 abandon_line_string.append(L"\x1b[38;5;245m");

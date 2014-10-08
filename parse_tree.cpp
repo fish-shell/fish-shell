@@ -13,13 +13,6 @@ static bool production_is_empty(const production_t *production)
     return (*production)[0] == token_type_invalid;
 }
 
-void swap2(parse_node_tree_t &a, parse_node_tree_t &b)
-{
-    fprintf(stderr, "Swapping!\n");
-    // This uses the base vector implementation
-    a.swap(b);
-}
-
 /** Returns a string description of this parse error */
 wcstring parse_error_t::describe_with_prefix(const wcstring &src, const wcstring &prefix, bool is_interactive, bool skip_caret) const
 {
@@ -682,6 +675,8 @@ void parse_ll_t::dump_stack(void) const
 // Give each node a source range equal to the union of the ranges of its children
 // Terminal nodes already have source ranges (and no children)
 // Since children always appear after their parents, we can implement this very simply by walking backwards
+// We then do a second pass to give empty nodes an empty source range (but with a valid offset)
+// We do this by walking forward. If a child of a node has an invalid source range, we set it equal to the end of the source range of its previous child
 void parse_ll_t::determine_node_ranges(void)
 {
     size_t idx = nodes.size();
@@ -710,6 +705,30 @@ void parse_ll_t::determine_node_ranges(void)
             assert(max_end >= min_start);
             parent->source_start = min_start;
             parent->source_length = max_end - min_start;
+        }
+    }
+
+    /* Forwards pass */
+    size_t size = nodes.size();
+    for (idx = 0; idx < size; idx++)
+    {
+        /* Since we populate the source range based on the sibling node, it's simpler to walk over the children of each node.
+        We keep a running "child_source_cursor" which is meant to be the end of the child's source range. It's initially set to the beginning of the parent' source range. */
+        parse_node_t *parent = &nodes[idx];
+        // If the parent doesn't have a valid source range, then none of its children will either; skip it entirely
+        if (parent->source_start == SOURCE_OFFSET_INVALID)
+        {
+            continue;
+        }
+        source_offset_t child_source_cursor = parent->source_start;
+        for (size_t child_idx = 0; child_idx < parent->child_count; child_idx++)
+        {
+            parse_node_t *child = &nodes[parent->child_start + child_idx];
+            if (child->source_start == SOURCE_OFFSET_INVALID)
+            {
+                child->source_start = child_source_cursor;
+            }
+            child_source_cursor = child->source_start + child->source_length;
         }
     }
 }
@@ -1002,10 +1021,12 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2)
     // Handle special types specially. Note that these are the only types that can be pushed if the symbol stack is empty.
     if (token1.type == parse_special_type_parse_error || token1.type == parse_special_type_tokenizer_error || token1.type == parse_special_type_comment)
     {
-        parse_node_t err_node(token1.type);
-        err_node.source_start = token1.source_start;
-        err_node.source_length = token1.source_length;
-        nodes.push_back(err_node);
+        /* We set the special node's parent to the top of the stack. This means that we have an asymmetric relationship: the special node has a parent (which is the node we were trying to generate when we encountered the special node), but the parent node does not have the special node as a child. This means for example that parents don't have to worry about tracking any comment nodes, but we can still recover the parent from the comment. */
+        parse_node_t special_node(token1.type);
+        special_node.parent = symbol_stack.back().node_idx;
+        special_node.source_start = token1.source_start;
+        special_node.source_length = token1.source_length;
+        nodes.push_back(special_node);
         consumed = true;
 
         /* tokenizer errors are fatal */

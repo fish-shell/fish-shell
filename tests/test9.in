@@ -1,3 +1,4 @@
+# vim: set filetype=fish:
 # ensure that builtins that produce no output can still truncate files
 # (bug PCA almost reintroduced!)
 echo "Testing that builtins can truncate files"
@@ -88,5 +89,12 @@ status -n'
 cat (echo foo | psub)
 cat (echo bar | psub)
 cat (echo baz | psub)
+
+set -l filename (echo foo | psub)
+if test -e $filename
+    echo 'psub file was not deleted'
+else
+    echo 'psub file was deleted'
+end
 
 false

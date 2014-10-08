@@ -9,6 +9,7 @@ inputrc information for key bindings.
 #define FISH_INPUT_H
 
 #include <wchar.h>
+#include <utility>
 #include "input_common.h"
 
 
@@ -76,7 +77,7 @@ enum
 wcstring describe_char(wint_t c);
 
 #define R_MIN R_NULL
-#define R_MAX R_AND
+#define R_MAX R_CANCEL
 
 /**
    Initialize the terminal by calling setupterm, and set up arrays
@@ -131,20 +132,25 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t *command,
 void input_mapping_add(const wchar_t *sequence, const wchar_t **commands, size_t commands_len,
                        const wchar_t *mode = DEFAULT_BIND_MODE, const wchar_t *new_mode = DEFAULT_BIND_MODE);
 
+struct input_mapping_name_t {
+    wcstring seq;
+    wcstring mode;
+};
+
 /**
-   Returns all mapping names
+   Returns all mapping names and modes
  */
-wcstring_list_t input_mapping_get_names();
+std::vector<input_mapping_name_t> input_mapping_get_names();
 
 /**
    Erase binding for specified key sequence
  */
-bool input_mapping_erase(const wchar_t *sequence, const wchar_t *mode = DEFAULT_BIND_MODE);
+bool input_mapping_erase(const wcstring &sequence, const wcstring &mode = DEFAULT_BIND_MODE);
 
 /**
-   Gets the command bound to the specified key sequence. Returns true if it exists, false if not.
+   Gets the command bound to the specified key sequence in the specified mode. Returns true if it exists, false if not.
  */
-bool input_mapping_get(const wcstring &sequence, wcstring_list_t *out_cmds, wcstring *out_mode, wcstring *out_new_mode);
+bool input_mapping_get(const wcstring &sequence, const wcstring &mode, wcstring_list_t *out_cmds, wcstring *out_new_mode);
 
 /**
     Return the current bind mode
@@ -185,8 +191,8 @@ wchar_t input_function_get_code(const wcstring &name);
 /** Returns a list of all existing input function names */
 wcstring_list_t input_function_get_names(void);
 
-/** Updates our idea of whether we support term256 */
-void update_fish_term256();
+/** Updates our idea of whether we support term256 and term24bit */
+void update_fish_color_support();
 
 
 #endif

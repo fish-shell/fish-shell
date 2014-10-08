@@ -516,9 +516,6 @@ static void internal_exec_helper(parser_t &parser,
     std::vector<int> opened_fds;
     bool transmorgrified = io_transmogrify(ios, &morphed_chain, &opened_fds);
 
-    int is_block_old=is_block;
-    is_block=1;
-
     /*
       Did the transmogrification fail - if so, set error status and return
     */
@@ -544,7 +541,6 @@ static void internal_exec_helper(parser_t &parser,
     morphed_chain.clear();
     io_cleanup_fds(opened_fds);
     job_reap(0);
-    is_block=is_block_old;
 }
 
 /* Returns whether we can use posix spawn for a given process in a given job.
@@ -603,11 +599,7 @@ void exec_job(parser_t &parser, job_t *j)
 
     debug(4, L"Exec job '%ls' with id %d", j->command_wcstr(), j->job_id);
 
-    /* PCA Here we detect the special case of an input buffer redirection, i.e. we want a process to receive data that we hold in a buffer (it is an INPUT for the process, but an output for fish). This is extremely rare: I believe only run_pager creates these and it would be nice to dump it. So we can only have at most one.
-
-        It would be great to wean fish_pager off of input redirections so that we can dump input redirections and the INTERNAL_BUFFER process type altogether.
-      */
-    const io_buffer_t *single_magic_input_redirect = NULL;
+    /* Verify that all IO_BUFFERs are output. We used to support a (single, hacked-in) magical input IO_BUFFER used by fish_pager, but now the claim is that there are no more clients and it is removed. This assertion double-checks that. */
     const io_chain_t all_ios = j->all_io_redirections();
     for (size_t idx = 0; idx < all_ios.size(); idx++)
     {
@@ -616,23 +608,7 @@ void exec_job(parser_t &parser, job_t *j)
         if ((io->io_mode == IO_BUFFER))
         {
             CAST_INIT(io_buffer_t *, io_buffer, io.get());
-            if (io_buffer->is_input)
-            {
-                /* We expect to have at most one of these, per the comment above. Note that this assertion is the only reason we don't break out of the loop below  */
-                assert(single_magic_input_redirect == NULL && "Should have at most one input IO_BUFFER");
-
-                /*
-                  Input redirection - create a new gobetween process to take
-                  care of buffering, save the redirection in input_redirect
-                */
-                process_t *fake = new process_t();
-                fake->type  = INTERNAL_BUFFER;
-                fake->pipe_write_fd = STDOUT_FILENO;
-                j->first_process->pipe_read_fd = io->fd;
-                fake->next = j->first_process;
-                j->first_process = fake;
-                single_magic_input_redirect = io_buffer;
-            }
+            assert(! io_buffer->is_input);
         }
     }
 
@@ -651,6 +627,21 @@ void exec_job(parser_t &parser, job_t *j)
         /* PCA This is for handling exec. Passing all_ios here matches what fish 2.0.0 and 1.x did. It's known to be wrong - for example, it means that redirections bound for subsequent commands in the pipeline will apply to exec. However, using exec in a pipeline doesn't really make sense, so I'm not trying to fix it here. */
         if (!setup_child_process(j, 0, all_ios))
         {
+            /* decrement SHLVL as we're removing ourselves from the shell "stack" */
+            const env_var_t shlvl_str = env_get_string(L"SHLVL", ENV_GLOBAL | ENV_EXPORT);
+            wcstring nshlvl_str = L"0";
+            if (!shlvl_str.missing())
+            {
+                wchar_t *end;
+                long shlvl_i = wcstol(shlvl_str.c_str(), &end, 10);
+                while (iswspace(*end)) ++end; /* skip trailing whitespace */
+                if (shlvl_i > 0 && *end == '\0')
+                {
+                    nshlvl_str = to_string<long>(shlvl_i - 1);
+                }
+            }
+            env_set(L"SHLVL", nshlvl_str.c_str(), ENV_GLOBAL | ENV_EXPORT);
+
             /*
               launch_process _never_ returns
             */
@@ -865,6 +856,7 @@ void exec_job(parser_t &parser, job_t *j)
 
                 wcstring_list_t named_arguments = function_get_named_arguments(p->argv0());
                 bool shadows = function_get_shadows(p->argv0());
+                std::map<wcstring,env_var_t> inherit_vars = function_get_inherit_vars(p->argv0());
 
                 signal_block();
 
@@ -877,12 +869,16 @@ void exec_job(parser_t &parser, job_t *j)
                 parser.push_block(newv);
 
                 /*
-                  set_argv might trigger an event
+                  setting variables might trigger an event
                   handler, hence we need to unblock
                   signals.
                 */
                 signal_unblock();
                 parse_util_set_argv(p->get_argv()+1, named_arguments);
+                for (std::map<wcstring,env_var_t>::const_iterator it = inherit_vars.begin(), end = inherit_vars.end(); it != end; ++it)
+                {
+                    env_set(it->first, it->second.missing() ? NULL : it->second.c_str(), ENV_LOCAL | ENV_USER);
+                }
                 signal_block();
 
                 parser.forbid_function(p->argv0());
@@ -914,7 +910,6 @@ void exec_job(parser_t &parser, job_t *j)
                 break;
             }
 
-            case INTERNAL_BLOCK:
             case INTERNAL_BLOCK_NODE:
             {
                 if (p->next)
@@ -935,17 +930,7 @@ void exec_job(parser_t &parser, job_t *j)
 
                 if (! exec_error)
                 {
-                    if (p->type == INTERNAL_BLOCK)
-                    {
-                        /* The block contents (as in, fish code) are stored in argv0 (ugh) */
-                        assert(p->argv0() != NULL);
-                        internal_exec_helper(parser, p->argv0(), NODE_OFFSET_INVALID, TOP, process_net_io_chain);
-                    }
-                    else
-                    {
-                        assert(p->type == INTERNAL_BLOCK_NODE);
-                        internal_exec_helper(parser, wcstring(), p->internal_block_node, TOP, process_net_io_chain);
-                    }
+                    internal_exec_helper(parser, wcstring(), p->internal_block_node, TOP, process_net_io_chain);
                 }
                 break;
             }
@@ -1103,11 +1088,6 @@ void exec_job(parser_t &parser, job_t *j)
                 /* We should have handled exec up above */
                 assert(0 && "INTERNAL_EXEC process found in pipeline, where it should never be. Aborting.");
                 break;
-
-            case INTERNAL_BUFFER:
-                /* Internal buffers are handled in the next switch statement below */
-                break;
-
         }
 
         if (exec_error)
@@ -1118,7 +1098,6 @@ void exec_job(parser_t &parser, job_t *j)
         switch (p->type)
         {
 
-            case INTERNAL_BLOCK:
             case INTERNAL_BLOCK_NODE:
             case INTERNAL_FUNCTION:
             {
@@ -1197,44 +1176,6 @@ void exec_job(parser_t &parser, job_t *j)
                 block_output_io_buffer.reset();
                 break;
 
-            }
-
-
-            case INTERNAL_BUFFER:
-            {
-                assert(single_magic_input_redirect != NULL);
-                const char *buffer = single_magic_input_redirect->out_buffer_ptr();
-                size_t count = single_magic_input_redirect->out_buffer_size();
-
-                /* We don't have to drain threads here because our child process is simple */
-                if (g_log_forks)
-                {
-                    printf("fork #%d: Executing fork for internal buffer for '%ls'\n", g_fork_count, p->argv0() ? p->argv0() : L"(null)");
-                }
-                pid = execute_fork(false);
-                if (pid == 0)
-                {
-                    /*
-                      This is the child process. Write out the
-                      contents of the pipeline.
-                    */
-                    p->pid = getpid();
-                    setup_child_process(j, p, process_net_io_chain);
-
-                    exec_write_and_exit(1, buffer, count, 0);
-                }
-                else
-                {
-                    /*
-                       This is the parent process. Store away
-                       information on the child, and possibly give
-                       it control over the terminal.
-                    */
-                    p->pid = pid;
-                    set_child_group(j, p, 0);
-                }
-
-                break;
             }
 
             case INTERNAL_BUILTIN:

@@ -513,13 +513,14 @@ bool wcsvarchr(wchar_t chr)
     return iswalnum(chr) || chr == L'_';
 }
 
-
-/**
-	The glibc version of wcswidth seems to hang on some strings. fish uses this replacement.
-*/
-int my_wcswidth(const wchar_t *c)
+int fish_wcswidth(const wchar_t *str)
 {
-    return fish_wcswidth(c, wcslen(c));
+    return fish_wcswidth(str, wcslen(str));
+}
+
+int fish_wcswidth(const wcstring& str)
+{
+    return fish_wcswidth(str.c_str(), str.size());
 }
 
 wchar_t *quote_end(const wchar_t *pos)
@@ -1119,7 +1120,7 @@ static void escape_string_internal(const wchar_t *orig_in, size_t in_len, wcstri
     }
 }
 
-wchar_t *escape(const wchar_t *in, escape_flags_t flags)
+wcstring escape(const wchar_t *in, escape_flags_t flags)
 {
     if (!in)
     {
@@ -1127,9 +1128,9 @@ wchar_t *escape(const wchar_t *in, escape_flags_t flags)
         FATAL_EXIT();
     }
 
-    wcstring tmp;
-    escape_string_internal(in, wcslen(in), &tmp, flags);
-    return wcsdup(tmp.c_str());
+    wcstring result;
+    escape_string_internal(in, wcslen(in), &result, flags);
+    return result;
 }
 
 wcstring escape_string(const wcstring &in, escape_flags_t flags)

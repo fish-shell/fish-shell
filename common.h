@@ -713,11 +713,13 @@ const wchar_t *wcsfuncname(const wchar_t *str);
 
 bool wcsvarchr(wchar_t chr);
 
-
 /**
-   A wcswidth workalike. Fish uses this since the regular wcswidth seems flaky.
+   Convenience variants on fish_wcwswidth().
+
+   See fallback.h for the normal definitions.
 */
-int my_wcswidth(const wchar_t *c);
+int fish_wcswidth(const wchar_t *str);
+int fish_wcswidth(const wcstring& str);
 
 /**
    This functions returns the end of the quoted substring beginning at
@@ -805,11 +807,11 @@ void print_stderr(const wcstring &str);
    replaced with \n, etc.
 
    \param in The string to be escaped
-   \param escape_all Whether all characters wich hold special meaning in fish (Pipe, semicolon, etc,) should be escaped, or only unprintable characters
-   \return The escaped string, or 0 if there is not enough memory
+   \param flags Flags to control the escaping
+   \return The escaped string
 */
 
-wchar_t *escape(const wchar_t *in, escape_flags_t flags);
+wcstring escape(const wchar_t *in, escape_flags_t flags);
 wcstring escape_string(const wcstring &in, escape_flags_t flags);
 
 /**

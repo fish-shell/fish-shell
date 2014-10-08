@@ -11,7 +11,7 @@ script:
   - ./configure
   - make
   - sudo make install
-  - make test
+  - make test SHOW_INTERACTIVE_LOG=1
 notifications:
   irc:
     channels:

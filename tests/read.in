@@ -1,3 +1,4 @@
+# vim: set filetype=fish:
 #
 # Test read builtin and IFS
 #
@@ -35,6 +36,10 @@ echo '' | read -l one two
 print_vars one two
 echo 'test' | read -l one two three
 print_vars one two three
+echo 'foo   bar   baz' | read -l one two three
+print_vars one two three
+echo -n 'a' | read -l one
+echo "$status $one"
 
 echo
 set -l IFS
@@ -91,3 +96,25 @@ echo $foo
 echo $bar
 echo 'test' | read -n 1 foo
 echo $foo
+
+# read -0 tests
+
+echo
+echo '# read -z tests'
+echo -n 'testing' | read -lz foo
+echo $foo
+echo -n 'test ing' | read -lz foo
+echo $foo
+echo 'newline' | read -lz foo
+echo $foo
+echo -n 'test ing' | read -lz foo bar
+print_vars foo bar
+echo -ne 'test\0ing' | read -lz foo bar
+print_vars foo bar
+echo -ne 'foo\nbar' | read -lz foo bar
+print_vars foo bar
+echo -ne 'foo\nbar\0baz\nquux' | while read -lza foo
+    print_vars foo
+end
+
+true

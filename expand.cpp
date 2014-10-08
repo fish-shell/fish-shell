@@ -860,7 +860,7 @@ static bool expand_pid(const wcstring &instr_with_sep, expand_flags_t flags, std
         if (!(flags & ACCEPT_INCOMPLETE))
         {
             /* We failed to find anything */
-            append_syntax_error(errors, 1, FAILED_EXPANSION_PROCESS_ERR_MSG, in+1);
+            append_syntax_error(errors, 1, FAILED_EXPANSION_PROCESS_ERR_MSG, escape(in+1, ESCAPE_NO_QUOTED).c_str());
             return false;
         }
     }

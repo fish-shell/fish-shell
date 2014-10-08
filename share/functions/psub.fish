@@ -42,19 +42,24 @@ function psub --description "Read from stdin into a file and output the filename
 
 	if not status --is-command-substitution
 		echo psub: Not inside of command substitution >&2
-		return
+		return 1
+	end
+
+	set -l TMPDIR $TMPDIR
+	if test -z "$TMPDIR[1]"
+		set TMPDIR /tmp
 	end
 
 	if test use_fifo = 1
 		# Write output to pipe. This needs to be done in the background so
 		# that the command substitution exits without needing to wait for
 		# all the commands to exit
-                set dir (mktemp -d /tmp/.psub.XXXXXXXXXX); or return
-                set filename $dir/psub.fifo
+		set dir (mktemp -d "$TMPDIR[1]"/.psub.XXXXXXXXXX); or return
+		set filename $dir/psub.fifo
 		mkfifo $filename
 		cat >$filename &
 	else
-                set filename (mktemp /tmp/.psub.XXXXXXXXXX)
+		set filename (mktemp "$TMPDIR[1]"/.psub.XXXXXXXXXX)
 		cat >$filename
 	end
 
@@ -70,6 +75,9 @@ function psub --description "Read from stdin into a file and output the filename
 	end
 
 	# Make sure we erase file when caller exits
-	eval function $funcname --on-job-exit caller\; command rm $filename\; functions -e $funcname\; end
+	function $funcname --on-job-exit caller --inherit-variable filename --inherit-variable funcname
+		command rm $filename
+		functions -e $funcname
+	end
 
 end

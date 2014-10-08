@@ -54,11 +54,10 @@ static void read_file(FILE *f, wcstring &b)
 {
     while (1)
     {
-        errno=0;
         wint_t c = fgetwc(f);
         if (c == WEOF)
         {
-            if (errno)
+            if (ferror(f))
             {
                 wperror(L"fgetwc");
                 exit(1);

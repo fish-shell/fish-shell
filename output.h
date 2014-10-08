@@ -134,13 +134,18 @@ void output_set_term(const wcstring &term);
 /** Return the terminal name */
 const wchar_t *output_get_term();
 
-/** Sets whether term256 colors are supported */
-bool output_get_supports_term256();
-void output_set_supports_term256(bool val);
+/** Sets what colors are supported */
+enum
+{
+    color_support_term256 = 1 << 0,
+    color_support_term24bit = 1 << 1
+};
+typedef unsigned int color_support_t;
+color_support_t output_get_color_support();
+void output_set_color_support(color_support_t support);
 
 /* Exported for builtin_set_color's usage only */
-bool write_foreground_color(unsigned char idx);
-bool write_background_color(unsigned char idx);
+void write_color(rgb_color_t color, bool is_fg);
 unsigned char index_for_color(rgb_color_t c);
 
 #endif

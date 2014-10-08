@@ -84,7 +84,39 @@ function __fish_git_stash_not_using_subcommand
 end
 
 function __fish_git_complete_stashes
-   command git stash list --format=format:"%gd:%gs" | sed 's/:/\t/'
+    set -l IFS ':'
+    command git stash list --format=%gd:%gs | while read -l name desc
+        echo $name\t$desc
+    end
+end
+
+function __fish_git_aliases
+    set -l IFS \n
+    command git config -z --get-regexp '^alias\.' | while read -lz key value
+        begin
+            set -l IFS "."
+            echo -n $key | read -l _ name
+            echo $name
+        end
+    end
+end
+
+function __fish_git_custom_commands
+    # complete all commands starting with git-
+    # however, a few builtin commands are placed into $PATH by git because
+    # they're used by the ssh transport. We could filter them out by checking
+    # if any of these completion results match the name of the builtin git commands,
+    # but it's simpler just to blacklist these names. They're unlikely to change,
+    # and the failure mode is we accidentally complete a plumbing command.
+    set -l IFS \n
+    for name in (builtin complete -Cgit- | sed 's/^git-\([^[:space:]]*\).*/\1/')
+        switch $name
+            case cvsserver receive-pack shell upload-archive upload-pack
+                # skip these
+            case \*
+                echo $name
+        end
+    end
 end
 
 # general options
@@ -387,4 +419,7 @@ complete -f -c git -n '__fish_git_using_command submodule' -a 'sync' -d 'Sync su
 complete -f -c git -n '__fish_git_needs_command' -a whatchanged -d 'Show logs with difference each commit introduces'
 
 ## Aliases (custom user-defined commands)
-complete -c git -n '__fish_git_needs_command' -a '(command git config --get-regexp alias | sed "s/^alias\.\([^ ]*\).*/\1/")' -d 'Alias (user-defined command)'
+complete -c git -n '__fish_git_needs_command' -a '(__fish_git_aliases)' -d 'Alias (user-defined command)'
+
+## Custom commands (git-* commands installed in the PATH)
+complete -c git -n '__fish_git_needs_command' -a '(__fish_git_custom_commands)' -d 'Custom command'

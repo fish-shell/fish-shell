@@ -432,7 +432,6 @@ static wcstring complete_get_desc_suffix(const wchar_t *suff_orig)
     size_t len;
     wchar_t *suff;
     wchar_t *pos;
-    wchar_t *tmp;
 
     len = wcslen(suff_orig);
 
@@ -453,9 +452,9 @@ static wcstring complete_get_desc_suffix(const wchar_t *suff_orig)
         }
     }
 
-    tmp = escape(suff, 1);
+    wcstring tmp = escape(suff, ESCAPE_ALL);
     free(suff);
-    suff = tmp;
+    suff = wcsdup(tmp.c_str());
 
     std::map<wcstring, wcstring>::iterator iter = suffix_map.find(suff);
     wcstring desc;
@@ -732,6 +731,16 @@ static bool test_flags(const wchar_t *filename, expand_flags_t flags)
     {
         if (waccess(filename, X_OK) != 0)
             return false;
+        struct stat buf;
+        if (wstat(filename, &buf) == -1)
+        {
+            return false;
+        }
+
+        if (!S_ISREG(buf.st_mode))
+        {
+            return false;
+        }
     }
 
     return true;

@@ -49,7 +49,7 @@ static kill_list_t kill_list;
 /**
    Contents of the X clipboard, at last time we checked it
 */
-static wchar_t *cut_buffer=0;
+static wcstring cut_buffer;
 
 /**
    Test if the xsel command is installed.  Since this is called often,
@@ -73,7 +73,7 @@ void kill_add(const wcstring &str)
         return;
 
     wcstring cmd;
-    wchar_t *escaped_str = NULL;
+    wcstring escaped_str;
     kill_list.push_front(str);
 
     /*
@@ -87,7 +87,7 @@ void kill_add(const wcstring &str)
     const env_var_t clipboard_wstr = env_get_string(L"FISH_CLIPBOARD_CMD");
     if (!clipboard_wstr.missing())
     {
-        escaped_str = escape(str.c_str(), 1);
+        escaped_str = escape(str.c_str(), ESCAPE_ALL);
         cmd.assign(L"echo -n ");
         cmd.append(escaped_str);
         cmd.append(clipboard_wstr);
@@ -118,8 +118,6 @@ void kill_add(const wcstring &str)
                Do nothing on failiure
             */
         }
-
-        free(cut_buffer);
 
         cut_buffer = escaped_str;
     }
@@ -193,10 +191,9 @@ static void kill_check_x_buffer()
                   etc. anyway.
                 */
 
-                if (cut_buffer == NULL || cut_buffer != new_cut_buffer)
+                if (cut_buffer != new_cut_buffer)
                 {
-                    free(cut_buffer);
-                    cut_buffer = wcsdup(new_cut_buffer.c_str());
+                    cut_buffer = new_cut_buffer;
                     kill_list.push_front(new_cut_buffer);
                 }
             }
@@ -228,7 +225,6 @@ void kill_init()
 
 void kill_destroy()
 {
-    if (cut_buffer)
-        free(cut_buffer);
+    cut_buffer.clear();
 }
 

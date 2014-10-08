@@ -21,7 +21,7 @@ fish depends on a curses implementation, such as ncurses. The headers and librar
 
 fish requires gettext for translation support.
 
-Building the documentation requires Doxygen 1.5 or newer.
+Building the documentation requires Doxygen 1.8.7 or newer.
 
 ### Autotools Build
 

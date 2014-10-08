@@ -125,7 +125,7 @@ bool rgb_color_t::try_parse_rgb(const wcstring &name)
         {
             int val = parse_hex_digit(name.at(digit_idx++));
             if (val < 0) break;
-            data.rgb[i] = val*16+val;
+            data.color.rgb[i] = val*16+val;
         }
         success = (i == 3);
     }
@@ -137,7 +137,7 @@ bool rgb_color_t::try_parse_rgb(const wcstring &name)
             int hi = parse_hex_digit(name.at(digit_idx++));
             int lo = parse_hex_digit(name.at(digit_idx++));
             if (lo < 0 || hi < 0) break;
-            data.rgb[i] = hi*16+lo;
+            data.color.rgb[i] = hi*16+lo;
         }
         success = (i == 3);
     }
@@ -298,7 +298,13 @@ static unsigned char term256_color_for_rgb(const unsigned char rgb[3])
 unsigned char rgb_color_t::to_term256_index() const
 {
     assert(type == type_rgb);
-    return term256_color_for_rgb(data.rgb);
+    return term256_color_for_rgb(data.color.rgb);
+}
+
+color24_t rgb_color_t::to_color24() const
+{
+    assert(type == type_rgb);
+    return data.color;
 }
 
 unsigned char rgb_color_t::to_name_index() const
@@ -310,7 +316,7 @@ unsigned char rgb_color_t::to_name_index() const
     }
     else if (type == type_rgb)
     {
-        return term8_color_for_rgb(data.rgb);
+        return term8_color_for_rgb(data.color.rgb);
     }
     else
     {
@@ -327,7 +333,7 @@ void rgb_color_t::parse(const wcstring &str)
     if (! success) success = try_parse_rgb(str);
     if (! success)
     {
-        bzero(this->data.rgb, sizeof this->data.rgb);
+        bzero(&this->data, sizeof this->data);
         this->type = type_none;
     }
 }
@@ -351,7 +357,7 @@ wcstring rgb_color_t::description() const
         case type_named:
             return format_string(L"named(%d: %ls)", (int)data.name_idx, name_for_color_idx(data.name_idx));
         case type_rgb:
-            return format_string(L"rgb(0x%02x%02x%02x)", data.rgb[0], data.rgb[1], data.rgb[2]);
+            return format_string(L"rgb(0x%02x%02x%02x)", data.color.rgb[0], data.color.rgb[1], data.color.rgb[2]);
         case type_reset:
             return L"reset";
         case type_normal:

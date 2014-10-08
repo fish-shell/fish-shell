@@ -8,6 +8,11 @@
 #include "config.h"
 #include "common.h"
 
+/* 24 bit color */
+struct color24_t
+{
+    unsigned char rgb[3];
+};
 
 /* A type that represents a color. We work hard to keep it at a size of 4 bytes. */
 class rgb_color_t
@@ -36,7 +41,7 @@ class rgb_color_t
     union
     {
         unsigned char name_idx; //0-10
-        unsigned char rgb[3];
+        color24_t color;
     } data;
 
     /** Try parsing a special color name like "normal" */
@@ -129,8 +134,11 @@ public:
     /** Returns the name index for the given color. Requires that the color be named or RGB. */
     unsigned char to_name_index() const;
 
-    /** Returns the term256 index for the given color. Requires that the color be named or RGB. */
+    /** Returns the term256 index for the given color. Requires that the color be RGB. */
     unsigned char to_term256_index() const;
+
+    /** Returns the 24 bit color for the given color. Requires that the color be RGB. */
+    color24_t to_color24() const;
 
     /** Returns whether the color is bold */
     bool is_bold() const

@@ -8,7 +8,7 @@ end
 function __fish_fossil_command
     set -l cmd (commandline -poc)
     test (count $cmd) -gt 1
-    and contains $cmd[2] $argv
+    and contains -- $cmd[2] $argv
 end
 
 function __fish_fossil_subcommand

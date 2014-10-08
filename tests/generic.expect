@@ -1,0 +1,13 @@
+# vim: set filetype=expect:
+#
+# General tests that don't belong elsewhere
+
+spawn $fish
+
+expect_prompt
+
+# ensure the Apple key () is typeable
+send_line "echo "
+expect_prompt "" {} unmatched {
+    puts stderr "Couldn't type apple key ()"
+}

@@ -751,7 +751,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
         # Return valid output
         self.send_response(200)
-        self.send_header('Content-type','text/html')
+        self.send_header('Content-type','application/json')
+        self.end_headers()
         self.write_to_wfile('\n')
 
         # Output JSON

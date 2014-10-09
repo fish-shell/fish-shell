@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2014-10-08 10:16-0300\n"
-"PO-Revision-Date: 2014-10-08 11:33-0300\n"
+"PO-Revision-Date: 2014-10-09 09:00-0300\n"
 "Last-Translator: Iuri Rezende Souza <riuri@rocketmail.com>\n"
 "Language-Team: Português Brasileiro <>\n"
 "Language: pt_BR\n"
@@ -13507,12 +13507,10 @@ msgid "Update the RubyGems system software"
 msgstr ""
 
 #: share/completions/git.fish:121 share/completions/git.fish:144
-#, fuzzy
 msgid "Branch"
 msgstr "Ramo"
 
 #: share/completions/git.fish:145
-#, fuzzy
 msgid "Tag"
 msgstr "Etiqueta"
 
@@ -18390,109 +18388,88 @@ msgid "Installed Package"
 msgstr "Install new package"
 
 #: share/completions/ps.fish:3 share/completions/ps.fish:7
-#, fuzzy
 msgid "Select all"
-msgstr "Select all"
+msgstr "Seleciona todos"
 
 #: share/completions/ps.fish:4
-#, fuzzy
 msgid "Invert selection"
-msgstr "Invert selection"
+msgstr "Inverte seleção"
 
 #: share/completions/ps.fish:5
-#, fuzzy
 msgid "Select all processes except session leaders and terminal-less"
-msgstr "Select all processes except session leaders and terminal-less"
+msgstr "Seleciona todos os processos exceto de sessão e sem terminal"
 
 #: share/completions/ps.fish:6
-#, fuzzy
 msgid "Select all processes except session leaders"
-msgstr "Select all processes except session leaders"
+msgstr "Seleciona todos os processos exceto de sessão"
 
 #: share/completions/ps.fish:8
-#, fuzzy
 msgid "Deselect all processes that do not fulfill conditions"
-msgstr "Deselect all processes that do not fulfill conditions"
+msgstr "Inverte a seleção"
 
 #: share/completions/ps.fish:10
-#, fuzzy
 msgid "Select by command"
-msgstr "Select by command"
+msgstr "Seleciona por comando"
 
 #: share/completions/ps.fish:11
-#, fuzzy
 msgid "Select by group"
-msgstr "Select by group"
+msgstr "Seleciona por grupo"
 
 #: share/completions/ps.fish:13 share/completions/ps.fish:14
-#, fuzzy
 msgid "Select by user"
-msgstr "Select by user"
+msgstr "Seleciona por usuário"
 
 #: share/completions/ps.fish:15
-#, fuzzy
 msgid "Select by group/session"
-msgstr "Select by group/session"
+msgstr "Seleciona por grupo/sessão"
 
 #: share/completions/ps.fish:16
-#, fuzzy
 msgid "Select by PID"
-msgstr "Select by PID"
+msgstr "Seleciona por PID"
 
 #: share/completions/ps.fish:17
-#, fuzzy
 msgid "Select by parent PID"
-msgstr "Select by parent PID"
+msgstr "Seleciona por PID do pai"
 
 #: share/completions/ps.fish:18
-#, fuzzy
 msgid "Select by session ID"
-msgstr "Select by session ID"
+msgstr "Seleciona pelo ID de sessão"
 
 #: share/completions/ps.fish:19
-#, fuzzy
 msgid "Select by tty"
-msgstr "Select by tty"
+msgstr "Seleciona por terminal"
 
 #: share/completions/ps.fish:20
-#, fuzzy
 msgid "Extra full format"
-msgstr "Extra full format"
+msgstr "Formato extra completo"
 
 #: share/completions/ps.fish:21 share/completions/ps.fish:27
-#, fuzzy
 msgid "User defined format"
-msgstr "User defined format"
+msgstr "Formato definido pelo usuário"
 
 #: share/completions/ps.fish:22 share/completions/ps.fish:29
-#, fuzzy
 msgid "Add column for security data"
-msgstr "Add column for security data"
+msgstr "Adiciona coluna para dados de segurança"
 
 #: share/completions/ps.fish:24
-#, fuzzy
 msgid "Full format"
-msgstr "Full format"
+msgstr "Formato completo"
 
 #: share/completions/ps.fish:25
-#, fuzzy
 msgid "Jobs format"
-msgstr "Jobs format"
+msgstr "Formato de jobs"
 
 #: share/completions/ps.fish:26 share/functions/__fish_complete_ls.fish:38
-#, fuzzy
 msgid "Long format"
 msgstr "Formato longo"
 
 #: share/completions/ps.fish:28
-#, fuzzy
 msgid "Do not show flags"
-msgstr "Do not show flags"
+msgstr "Não mostra flags"
 
 #: share/completions/ps.fish:30
-#, fuzzy
 msgid "Show hierarchy"
-msgstr "Show hierarchy"
+msgstr "Mostra hierarquia"
 
 #: share/completions/ps.fish:31
 #, fuzzy
@@ -18500,19 +18477,16 @@ msgid "Set namelist file"
 msgstr "Set namelist file"
 
 #: share/completions/ps.fish:32
-#, fuzzy
 msgid "Wide output"
-msgstr "Wide output"
+msgstr "Saída larga"
 
 #: share/completions/ps.fish:39
-#, fuzzy
 msgid "Show threads. With LWP/NLWP"
-msgstr "Show threads"
+msgstr "Mostra threads. Com LWP/NLWP"
 
 #: share/completions/ps.fish:40
-#, fuzzy
 msgid "Show threads. With SPID"
-msgstr "Show threads"
+msgstr "Mostra threads. Com SPID"
 
 #: share/completions/psql.fish:17
 msgid "database name to connect to"
@@ -18651,52 +18625,46 @@ msgid "Communicate using a regular file, not a named pipe"
 msgstr ""
 
 #: share/completions/read.fish:2
-#, fuzzy
 msgid "Set prompt command"
-msgstr "Select by command"
+msgstr "Escolhe prompt"
 
 #: share/completions/read.fish:3 share/completions/set.fish:59
-#, fuzzy
 msgid "Export variable to subprocess"
-msgstr "Export variable to subprocess"
+msgstr "Exporta variável para subprocessos"
 
 #: share/completions/read.fish:4 share/completions/set.fish:61
-#, fuzzy
 msgid "Make variable scope global"
-msgstr "Make variable scope global"
+msgstr "Escopo da variável será global"
 
 #: share/completions/read.fish:5 share/completions/set.fish:62
-#, fuzzy
 msgid "Make variable scope local"
-msgstr "Make variable scope local"
+msgstr "Escopo da variável será local"
 
 #: share/completions/read.fish:6
-#, fuzzy
 msgid ""
 "Make variable scope universal, i.e. share variable with all the users fish "
 "processes on this computer"
 msgstr ""
-"Make variable scope universal, i.e. share variable with all the users fish "
-"processes on this computer"
+"Escopo da variável será universal, isto é, compartilha variável com todos os "
+"processos fish do usuário neste computador"
 
 #: share/completions/read.fish:7 share/completions/set.fish:60
-#, fuzzy
 msgid "Do not export variable to subprocess"
-msgstr "Do not export variable to subprocess"
+msgstr "Não exporta variável para subprocessos"
 
 #: share/completions/read.fish:8
 msgid "Name to load/save history under"
-msgstr ""
+msgstr "Nome para carregar/salvar histórico"
 
 #: share/completions/read.fish:9
 msgid "Initial contents of read buffwhen reading interactively"
-msgstr ""
+msgstr "Conteúdo inicial do buffer ao ler interativamente"
 
 #: share/completions/read.fish:10
 msgid ""
 "Use syntax highlighting, tab completions and command termination suitable "
 "for entering shellscript code"
-msgstr ""
+msgstr "Usa sintaxe e compleções adequados para entrada de código shell"
 
 #: share/completions/readlink.fish:2
 msgid "Canonicalize, follow symlinks, last can be missing"
@@ -20097,106 +20065,88 @@ msgid "Locale"
 msgstr "Locale"
 
 #: share/completions/sort.fish:2
-#, fuzzy
 msgid "Ignore leading blanks"
-msgstr "Ignore leading blanks"
+msgstr "Ignora espaços no começo"
 
 #: share/completions/sort.fish:3
-#, fuzzy
 msgid "Consider only blanks and alphanumerics"
-msgstr "Consider only blanks and alphanumerics"
+msgstr "Considera apenas espaços e alfanuméricos"
 
 #: share/completions/sort.fish:4 share/functions/__fish_complete_grep.fish:24
-#, fuzzy
 msgid "Ignore case"
-msgstr "Ignore case"
+msgstr "Ignora capitalização"
 
 #: share/completions/sort.fish:5
-#, fuzzy
 msgid "Compare general numeric value"
-msgstr "Compare general numeric value"
+msgstr "Compara com numeração genérica"
 
 #: share/completions/sort.fish:6
-#, fuzzy
 msgid "Consider only printable"
-msgstr "Consider only printable"
+msgstr "Considera apenas imprimíveis"
 
 #: share/completions/sort.fish:7
 msgid "Compare human readable numbers [2K 1G]"
-msgstr ""
+msgstr "Compara números do tipo [2K 1G]"
 
 #: share/completions/sort.fish:8
-#, fuzzy
 msgid "Compare month names"
-msgstr "Compare month names"
+msgstr "Compara nomes de meses"
 
 #: share/completions/sort.fish:9
-#, fuzzy
 msgid "Compare string numerical value"
-msgstr "Compare string numerical value"
+msgstr "Compara valor numérico da string"
 
 #: share/completions/sort.fish:10
 msgid "Sort by random hash of keys"
-msgstr ""
+msgstr "Ordena por hash aleatório"
 
 #: share/completions/sort.fish:11
 msgid "Get random bytes from FILE"
-msgstr ""
+msgstr "Pega bytes aleatórios do ARQUIVO"
 
 #: share/completions/sort.fish:12
-#, fuzzy
 msgid "Reverse results"
-msgstr "Reverse results"
+msgstr "Inverte resultados"
 
 #: share/completions/sort.fish:13
-#, fuzzy
 msgid "Only check if sorted"
-msgstr "Only check if sorted"
+msgstr "Só verifica se está ordenado"
 
 #: share/completions/sort.fish:14
-#, fuzzy
 msgid "Define key"
-msgstr "Define key"
+msgstr "Define chave"
 
 #: share/completions/sort.fish:15
-#, fuzzy
 msgid "Merge sorted files"
-msgstr "Erase obsolete files"
+msgstr "Junta arquivos já ordenados"
 
 #: share/completions/sort.fish:16
-#, fuzzy
 msgid "Write to file"
-msgstr "Write to file"
+msgstr "Escreve em arquivo"
 
 #: share/completions/sort.fish:17
-#, fuzzy
 msgid "Stabilize sort"
-msgstr "Stabilize sort"
+msgstr "Estabiliza ordenação"
 
 #: share/completions/sort.fish:18
-#, fuzzy
 msgid "Set memory buffer size"
-msgstr "Set memory buffer size"
+msgstr "Ajusta tamanho de memória"
 
 #: share/completions/sort.fish:19
-#, fuzzy
 msgid "Field separator"
-msgstr "Field separator"
+msgstr "Separador de campo"
 
 #: share/completions/sort.fish:20
-#, fuzzy
 msgid "Set temporary directory"
-msgstr "Set temporary directory"
+msgstr "Escolhe diretório temporário"
 
 #: share/completions/sort.fish:21
-#, fuzzy
 msgid "Output only first of equal lines"
-msgstr "Output only first of equal lines"
+msgstr "Remove duplicadas"
 
 #: share/completions/sort.fish:22
-#, fuzzy
 msgid "Lines end with 0 byte"
-msgstr "Lines end with 0 byte"
+msgstr "Linhas terminam com byte 0"
 
 #: share/completions/ssh.fish:22
 #, fuzzy
@@ -20209,29 +20159,24 @@ msgid "Enables forwarding of the authentication agent"
 msgstr "Enables forwarding of the authentication agent"
 
 #: share/completions/ssh.fish:24
-#, fuzzy
 msgid "Interface to transmit from"
 msgstr "Interface de origem"
 
 #: share/completions/ssh.fish:30
-#, fuzzy
 msgid "Escape character"
 msgstr "Caracter de escape"
 
 #: share/completions/ssh.fish:31
-#, fuzzy
 msgid "Go to background"
-msgstr "Go to background"
+msgstr "Ir para background"
 
 #: share/completions/ssh.fish:32
-#, fuzzy
 msgid "Allow remote host to connect to local forwarded ports"
-msgstr "Allow remote host to connect to local forwarded ports"
+msgstr "Permitir nó remoto conectar a portas redirecionadas localmente"
 
 #: share/completions/ssh.fish:33
-#, fuzzy
 msgid "Smartcard device"
-msgstr "Smartcard device"
+msgstr "Dispositivo token"
 
 #: share/completions/ssh.fish:34
 #, fuzzy
@@ -20239,84 +20184,68 @@ msgid "Disable forwarding of Kerberos tickets"
 msgstr "Disable forwarding of Kerberos tickets"
 
 #: share/completions/ssh.fish:35
-#, fuzzy
 msgid "User"
 msgstr "Usuário"
 
 #: share/completions/ssh.fish:36
-#, fuzzy
 msgid "MAC algorithm"
-msgstr "MAC algorithm"
+msgstr "Algoritmo MAC"
 
 #: share/completions/ssh.fish:37
-#, fuzzy
 msgid "Prevent reading from stdin"
-msgstr "Read names from stdin"
+msgstr "Evita ler da entrada padrão"
 
 #: share/completions/ssh.fish:38
-#, fuzzy
 msgid "Do not execute remote command"
-msgstr "Do not execute remote command"
+msgstr "Não executa comando remoto"
 
 #: share/completions/ssh.fish:41
-#, fuzzy
 msgid "Subsystem"
-msgstr "Subsystem"
+msgstr "Subsistema"
 
 #: share/completions/ssh.fish:42
-#, fuzzy
 msgid "Force pseudo-tty allocation"
-msgstr "Disable pseudo-tty allocation"
+msgstr "Força alocação de pseudo-terminal"
 
 #: share/completions/ssh.fish:43
-#, fuzzy
 msgid "Disable pseudo-tty allocation"
-msgstr "Disable pseudo-tty allocation"
+msgstr "Desativa alocação de pseudo-terminal"
 
 #: share/completions/ssh.fish:44
-#, fuzzy
 msgid "Disable X11 forwarding"
-msgstr "Disable X11 forwarding"
+msgstr "Desativa redireção de X11"
 
 #: share/completions/ssh.fish:45
-#, fuzzy
 msgid "Enable X11 forwarding"
-msgstr "Enable X11 forwarding"
+msgstr "Ativa redireção de X11"
 
 #: share/completions/ssh.fish:46
-#, fuzzy
 msgid "Locally forwarded ports"
-msgstr "Locally forwarded ports"
+msgstr "Portas redirecionadas localmente"
 
 #: share/completions/ssh.fish:47
-#, fuzzy
 msgid "Remotely forwarded ports"
-msgstr "Remotely forwarded ports"
+msgstr "Portas redirecionadas remotamente"
 
 #: share/completions/ssh.fish:48
-#, fuzzy
 msgid "Dynamic port forwarding"
-msgstr "Dynamic port forwarding"
+msgstr "Portas redirecionadas dinamicamente"
 
 #: share/completions/sshfs.fish:26
-#, fuzzy
 msgid "Compression"
-msgstr "Compression"
+msgstr "Compressão"
 
 #: share/completions/sshfs.fish:28
-#, fuzzy
 msgid "Enable debug"
-msgstr "Enable debug"
+msgstr "Ativa debug"
 
 #: share/completions/sshfs.fish:29
-#, fuzzy
 msgid "Foreground operation"
-msgstr "Foreground operation"
+msgstr "Opera em foreground"
 
 #: share/completions/sshfs.fish:30
-#, fuzzy
 msgid "Disable multi-threaded operation"
-msgstr "Disable multi-threaded operation"
+msgstr "Desativa operação multi-thread"
 
 #: share/completions/status.fish:3
 #, fuzzy
@@ -25496,115 +25425,93 @@ msgid "Complete lpr option"
 msgstr "Tolerate sloppy mount options"
 
 #: share/functions/__fish_complete_ls.fish:16
-#, fuzzy
 msgid "Show hidden"
 msgstr "Mostra tudo"
 
 #: share/functions/__fish_complete_ls.fish:17
-#, fuzzy
 msgid "Show hidden except . and .."
 msgstr "Mostra tudo exceto . e .."
 
 #: share/functions/__fish_complete_ls.fish:18
 #: share/functions/__fish_complete_ls.fish:27
 #: share/functions/__fish_complete_ls.fish:64
-#, fuzzy
 msgid "Append filetype indicator"
 msgstr "Adiciona indicador de tipo de arquivo"
 
 #: share/functions/__fish_complete_ls.fish:21
-#, fuzzy
 msgid "List subdirectory recursively"
 msgstr "Lista subdiretórios recursivamente"
 
 #: share/functions/__fish_complete_ls.fish:22
 #: share/functions/__fish_complete_ls.fish:102
-#, fuzzy
 msgid "Octal escapes for non graphic characters"
 msgstr "Escapa caracteres não imprimíveis com octal"
 
 #: share/functions/__fish_complete_ls.fish:23
-#, fuzzy
 msgid "List directories, not their content"
 msgstr "Lista diretórios, não seu conteúdo"
 
 #: share/functions/__fish_complete_ls.fish:25
-#, fuzzy
 msgid "Print inode number of files"
 msgstr "Mostra inode dos arquivos"
 
 #: share/functions/__fish_complete_ls.fish:26
-#, fuzzy
 msgid "Long format, numeric IDs"
 msgstr "Formato longo, UIDs numéricos"
 
 #: share/functions/__fish_complete_ls.fish:28
-#, fuzzy
 msgid "Replace non-graphic characters with '?'"
 msgstr "Mostra caracteres não imprimíveis com '?'"
 
 #: share/functions/__fish_complete_ls.fish:29
-#, fuzzy
 msgid "Reverse sort order"
 msgstr "Inverte a ordem"
 
 #: share/functions/__fish_complete_ls.fish:30
-#, fuzzy
 msgid "Print size of files"
 msgstr "Mostra tamanhos de arquivos"
 
 #: share/functions/__fish_complete_ls.fish:32
-#, fuzzy
 msgid "List by columns"
 msgstr "Lista por colunas"
 
 #: share/functions/__fish_complete_ls.fish:33
-#, fuzzy
 msgid "Sort by size"
 msgstr "Ordena por tamanho"
 
 #: share/functions/__fish_complete_ls.fish:34
-#, fuzzy
 msgid "Show and sort by ctime"
 msgstr "Mostra e ordena por hora de criação"
 
 #: share/functions/__fish_complete_ls.fish:35
-#, fuzzy
 msgid "Don't sort"
 msgstr "Não ordena"
 
 #: share/functions/__fish_complete_ls.fish:36
-#, fuzzy
 msgid "Long format without owner"
 msgstr "Formato longo sem proprietário"
 
 #: share/functions/__fish_complete_ls.fish:37
-#, fuzzy
 msgid "Set blocksize to 1kB"
 msgstr "Tamanho de bloco é 1kB"
 
 #: share/functions/__fish_complete_ls.fish:39
-#, fuzzy
 msgid "Comma separated format"
 msgstr "Formato separado por vírgula"
 
 #: share/functions/__fish_complete_ls.fish:40
-#, fuzzy
 msgid "Sort by modification time"
 msgstr "Ordena por hora de modificação"
 
 #: share/functions/__fish_complete_ls.fish:41
-#, fuzzy
 msgid "Show access time"
 msgstr "Mostra horário de acesso"
 
 #: share/functions/__fish_complete_ls.fish:42
-#, fuzzy
 msgid "List entries by lines"
 msgstr "Mostra entradas por linhas"
 
 #: share/functions/__fish_complete_ls.fish:43
-#, fuzzy
 msgid "List one file per line"
 msgstr "Um arquivo por linha"
 
@@ -25614,153 +25521,124 @@ msgstr "Um arquivo por linha"
 # Caminhos:
 # share/functions/__fish_complete_ls.fish:49
 #: share/functions/__fish_complete_ls.fish:49
-#, fuzzy
 msgid "Do not list implied entries matching specified shell pattern"
 msgstr "Não lista entradas com o padrão especificado"
 
 #: share/functions/__fish_complete_ls.fish:50
-#, fuzzy
 msgid "Display security context"
 msgstr "Mostra contexto de segurança"
 
 #: share/functions/__fish_complete_ls.fish:51
-#, fuzzy
 msgid "Display  security  context  so  it fits on most displays"
 msgstr "Mostra contexto de segurança para caber no monitor"
 
 #: share/functions/__fish_complete_ls.fish:52
-#, fuzzy
 msgid "Display only security context and file name"
 msgstr "Mostra somente contexto de segurança e nome de arquivo"
 
 #: share/functions/__fish_complete_ls.fish:54
-#, fuzzy
 msgid "Print author"
 msgstr "Mostra autor"
 
 #: share/functions/__fish_complete_ls.fish:55
-#, fuzzy
 msgid "Set block size"
 msgstr "Set block size"
 
 #: share/functions/__fish_complete_ls.fish:56
-#, fuzzy
 msgid "Ignore files ending with ~"
 msgstr "Ignora arquivos terminados com ~"
 
 #: share/functions/__fish_complete_ls.fish:57
 #: share/functions/__fish_complete_ls.fish:103
-#, fuzzy
 msgid "Use colors"
 msgstr "Usa cores"
 
 #: share/functions/__fish_complete_ls.fish:58
-#, fuzzy
 msgid "Generate dired output"
 msgstr "Mostra saída com dired"
 
 #: share/functions/__fish_complete_ls.fish:59
-#, fuzzy
 msgid "List format"
 msgstr "Formato longo"
 
 #: share/functions/__fish_complete_ls.fish:60
-#, fuzzy
 msgid "Long format, full-iso time"
 msgstr "Formato longo, hora completa ISO"
 
 #: share/functions/__fish_complete_ls.fish:61
-#, fuzzy
 msgid "Don't print group information"
 msgstr "Não mostra grupo"
 
 #: share/functions/__fish_complete_ls.fish:63
 msgid "Follow directory symlinks from command line"
-msgstr ""
+msgstr "Seguir symlinks especificados na linha de comando"
 
 #: share/functions/__fish_complete_ls.fish:65
-#, fuzzy
 msgid "Skip entries matching pattern"
-msgstr "List contents of a package matching pattern"
+msgstr "Pula entradas com dado padrão"
 
 #: share/functions/__fish_complete_ls.fish:66
 #: share/functions/__fish_complete_ls.fish:110
-#, fuzzy
 msgid "Print raw entry names"
 msgstr "Imprime nomes sem tratamento"
 
 #: share/functions/__fish_complete_ls.fish:67
-#, fuzzy
 msgid "Long format without groups"
 msgstr "Formato longo sem grupos"
 
 #: share/functions/__fish_complete_ls.fish:68
-#, fuzzy
 msgid "Non graphic as-is"
 msgstr "Mostra caracteres não imprimíveis como são"
 
 #: share/functions/__fish_complete_ls.fish:69
-#, fuzzy
 msgid "Enclose entry in quotes"
 msgstr "Coloca aspas nas entradas"
 
 #: share/functions/__fish_complete_ls.fish:70
-#, fuzzy
 msgid "Select quoting style"
-msgstr "Select quoting style"
+msgstr "Seleciona estilo de escape"
 
 #: share/functions/__fish_complete_ls.fish:71
-#, fuzzy
 msgid "Sort criteria"
-msgstr "Sort criteria"
+msgstr "Critério de ordenação"
 
 #: share/functions/__fish_complete_ls.fish:82
-#, fuzzy
 msgid "Show time type"
-msgstr "Show time type"
+msgstr "Escolhe tipo de hora a mostrar"
 
 #: share/functions/__fish_complete_ls.fish:89
-#, fuzzy
 msgid "Select time style"
-msgstr "Select time style"
+msgstr "Escolhe estilo de hora"
 
 #: share/functions/__fish_complete_ls.fish:90
-#, fuzzy
 msgid "Assume tab stops at each COLS"
-msgstr "Assume tab stops at each COLS"
+msgstr "Supôr que tab pára a cada n colunas"
 
 #: share/functions/__fish_complete_ls.fish:91
-#, fuzzy
 msgid "Do not sort"
 msgstr "Não ordena"
 
 #: share/functions/__fish_complete_ls.fish:92
-#, fuzzy
 msgid "Sort by version"
 msgstr "Ordena por versão"
 
 #: share/functions/__fish_complete_ls.fish:93
-#, fuzzy
 msgid "Assume screen width"
-msgstr "Assume screen width"
+msgstr "Supõe essa largura de tela"
 
 #: share/functions/__fish_complete_ls.fish:94
-#, fuzzy
 msgid "Sort by extension"
 msgstr "Ordena por extensão"
 
 #: share/functions/__fish_complete_ls.fish:104
-#, fuzzy
 msgid "Prevent -A from being automatically set for root"
 msgstr "Evita a opção -A automática para o diretório raiz"
 
 #: share/functions/__fish_complete_ls.fish:105
-#, fuzzy
 msgid "Don't follow symlinks"
 msgstr "Não segue links simbólicos"
 
 #: share/functions/__fish_complete_ls.fish:106
-#, fuzzy
 msgid "Show modification time"
 msgstr "Mostra horário de modificação"
 
@@ -25782,9 +25660,8 @@ msgid "Complete isp name for pon/poff"
 msgstr ""
 
 #: share/functions/__fish_complete_proc.fish:1
-#, fuzzy
 msgid "Complete by list of running processes"
-msgstr "Print a list of running screen sessions"
+msgstr "Completa pela lista de processos em execução"
 
 #: share/functions/__fish_complete_python.fish:12
 #, fuzzy
@@ -25817,42 +25694,34 @@ msgid "Complete setxkb options"
 msgstr "Tolerate sloppy mount options"
 
 #: share/functions/__fish_complete_ssh.fish:4
-#, fuzzy
 msgid "Protocol version 1 only"
 msgstr "Somente protocolo versão 1"
 
 #: share/functions/__fish_complete_ssh.fish:5
-#, fuzzy
 msgid "Protocol version 2 only"
 msgstr "Somente protocolo versão 2"
 
 #: share/functions/__fish_complete_ssh.fish:6
-#, fuzzy
 msgid "IPv4 addresses only"
 msgstr "Somente endereços IPv4"
 
 #: share/functions/__fish_complete_ssh.fish:7
-#, fuzzy
 msgid "IPv6 addresses only"
 msgstr "Somente endereços IPv6"
 
 #: share/functions/__fish_complete_ssh.fish:8
-#, fuzzy
 msgid "Compress all data"
 msgstr "Comprime dados"
 
 #: share/functions/__fish_complete_ssh.fish:9
-#, fuzzy
 msgid "Encryption algorithm"
 msgstr "Algoritmo de criptografia"
 
 #: share/functions/__fish_complete_ssh.fish:11
-#, fuzzy
 msgid "Identity file"
 msgstr "Arquivo de identificação"
 
 #: share/functions/__fish_complete_ssh.fish:12
-#, fuzzy
 msgid "Options"
 msgstr "Opções"
 

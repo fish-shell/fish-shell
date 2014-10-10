@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import unicode_literals
 # Whether we're Python 2
 import sys
 import multiprocessing.pool
@@ -45,15 +46,9 @@ def run_fish_cmd(text):
         env = os.environ.copy()
         env.update(LC_CTYPE="en_US.UTF-8", LANG="en_US.UTF-8")
     p = subprocess.Popen([FISH_BIN_PATH], stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
-    if IS_PY2:
-        out, err = p.communicate(text)
-        # interpret as utf-8 in a lossy fashion
-        out = unicode(out, 'utf-8', 'replace').encode('utf-8')
-        err = unicode(err, 'utf-8', 'replace').encode('utf-8')
-    else:
-        out, err = p.communicate(bytes(text, 'utf-8'))
-        out = str(out, 'utf-8', 'replace')
-        err = str(err, 'utf-8', 'replace')
+    out, err = p.communicate(text.encode('utf-8'))
+    out = out.decode('utf-8', 'replace')
+    err = err.decode('utf-8', 'replace')
     return(out, err)
 
 def escape_fish_cmd(text):
@@ -435,11 +430,7 @@ class FishConfigTCPServer(SocketServer.TCPServer):
 class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def write_to_wfile(self, txt):
-        if IS_PY2:
-            self.wfile.write(txt)
-        else: # Python 3
-            self.wfile.write(bytes(txt, 'utf-8'))
-
+        self.wfile.write(txt.encode('utf-8'))
 
     def do_get_colors(self):
         # Looks for fish_color_*.
@@ -539,7 +530,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         for name in self.do_get_variable_names('set -nxL'):
             if name in vars: vars[name].exported = True
 
-        return [vars[key].get_json_obj() for key in sorted(vars.keys(), key=str.lower)]
+        return [vars[key].get_json_obj() for key in sorted(vars.keys(), key=lambda x: x.lower())]
 
     def do_get_bindings(self):
         """ Get key bindings """
@@ -659,12 +650,13 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
     def read_one_sample_prompt(self, path):
         try:
-            with open(path) as fd:
+            with open(path, 'rb') as fd:
                 extras_dict = {}
                 # Read one sample prompt from fd
                 function_lines = []
                 parsing_hashes = True
-                for line in fd:
+                unicode_lines = (line.decode('utf-8') for line in fd)
+                for line in unicode_lines:
                     # Parse hashes until parse_one_sample_prompt_hash return False
                     if parsing_hashes:
                         parsing_hashes = self.parse_one_sample_prompt_hash(line, extras_dict)
@@ -792,9 +784,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 length = int(self.headers.getheader('content-length'))
             except AttributeError:
                 length = int(self.headers['content-length'])
-            # parse_qs borks if we give it a Unicode string in Python2.
             url_str = self.rfile.read(length).decode('utf-8')
-            if IS_PY2: url_str = str(url_str)
             postvars = cgi.parse_qs(url_str, keep_blank_values=1)
         else:
             postvars = {}

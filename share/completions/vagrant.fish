@@ -32,7 +32,7 @@ function __fish_vagrant_using_subcommand
 end
 
 function __fish_vagrant_boxes --description 'Lists all available Vagrant boxes'
-  command vagrant box list
+  command vagrant box list | awk '{print $1}'
 end
 
 # --version and --help are always active

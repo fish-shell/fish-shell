@@ -829,6 +829,15 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         """ Disable request logging """
         pass
 
+    def log_error(self, format, *args):
+        if format == 'code %d, message %s':
+            # This appears to be a send_error() message
+            # We want to include the path
+            (code, msg) = args
+            format = 'code %d, message %s, path %s'
+            args = (code, msg, self.path)
+        SimpleHTTPServer.SimpleHTTPRequestHandler.log_error(self, format, *args)
+
 redirect_template_html = """
 <!DOCTYPE html>
 <html>

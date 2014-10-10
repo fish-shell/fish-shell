@@ -35,13 +35,25 @@ except ImportError:
 FISH_BIN_PATH = False # will be set later
 def run_fish_cmd(text):
     from subprocess import PIPE
-    p = subprocess.Popen([FISH_BIN_PATH], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    # ensure that fish is using UTF-8
+    ctype = os.environ.get("LC_ALL", os.environ.get("LC_CTYPE", os.environ.get("LANG")))
+    env = None
+    if re.search(r"\.utf-?8$", ctype, flags=re.I) is None:
+        # override LC_CTYPE with en_US.UTF-8
+        # We're assuming this locale exists.
+        # Fish makes the same assumption in config.fish
+        env = os.environ.copy()
+        env.update(LC_CTYPE="en_US.UTF-8", LANG="en_US.UTF-8")
+    p = subprocess.Popen([FISH_BIN_PATH], stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
     if IS_PY2:
         out, err = p.communicate(text)
+        # interpret as utf-8 in a lossy fashion
+        out = unicode(out, 'utf-8', 'replace').encode('utf-8')
+        err = unicode(err, 'utf-8', 'replace').encode('utf-8')
     else:
         out, err = p.communicate(bytes(text, 'utf-8'))
-        out = str(out, 'utf-8')
-        err = str(err, 'utf-8')
+        out = str(out, 'utf-8', 'replace')
+        err = str(err, 'utf-8', 'replace')
     return(out, err)
 
 def escape_fish_cmd(text):

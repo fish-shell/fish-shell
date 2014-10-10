@@ -10,7 +10,7 @@ end
 
 function __fish_vagrant_using_command
   set cmd (commandline -opc)
-  if [ (count $cmd) -gt 1 ]
+  if [ (count $cmd) -eq 2 ]
     if [ $argv[1] = $cmd[2] ]
       return 0
     end
@@ -23,7 +23,7 @@ function __fish_vagrant_using_subcommand
   set cmd_main $argv[1]
   set cmd_sub $argv[2]
 
-  if [ (count $cmd) -gt 2 ]
+  if [ (count $cmd) -eq 3 ]
     if [ $cmd_main = $cmd[2] ]; and [ $cmd_sub = $cmd[3] ]
       return 0
     end

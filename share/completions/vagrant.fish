@@ -21,7 +21,10 @@ function __fish_vagrant_using_subcommand --argument-names cmd_main cmd_sub
 end
 
 function __fish_vagrant_boxes --description 'Lists all available Vagrant boxes'
-  command vagrant box list | awk '{print $1}'
+  set -l IFS \n\ \t
+  command vagrant box list | while read -l name _
+    echo $name
+  end
 end
 
 # --version and --help are always active

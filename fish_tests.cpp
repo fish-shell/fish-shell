@@ -1466,7 +1466,8 @@ static void test_abbreviations(void)
         L"=" ARRAY_SEP_STR
         L"=foo" ARRAY_SEP_STR
         L"foo" ARRAY_SEP_STR
-        L"foo=bar";
+        L"foo=bar" ARRAY_SEP_STR
+        L"gx git checkout";
 
     env_push(true);
 
@@ -1492,6 +1493,11 @@ static void test_abbreviations(void)
 
     expanded = reader_expand_abbreviation_in_command(L"gc somebranch", wcslen(L"gc"), &result);
     if (! expanded) err(L"gc not expanded");
+    if (result != L"git checkout somebranch") err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result.c_str());
+    
+    /* space separation */
+    expanded = reader_expand_abbreviation_in_command(L"gx somebranch", wcslen(L"gc"), &result);
+    if (! expanded) err(L"gx not expanded");
     if (result != L"git checkout somebranch") err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result.c_str());
 
     expanded = reader_expand_abbreviation_in_command(L"echo hi ; gc somebranch", wcslen(L"echo hi ; g"), &result);

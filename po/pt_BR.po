@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2014-10-08 10:16-0300\n"
-"PO-Revision-Date: 2014-10-09 09:00-0300\n"
+"PO-Revision-Date: 2014-10-10 23:53-0300\n"
 "Last-Translator: Iuri Rezende Souza <riuri@rocketmail.com>\n"
 "Language-Team: Português Brasileiro <>\n"
 "Language: pt_BR\n"
@@ -1788,7 +1788,6 @@ msgstr ""
 #: share/functions/__fish_complete_grep.fish:22
 #: share/functions/__fish_complete_ls.fish:95
 #: share/functions/__fish_complete_tex.fish:4
-#, fuzzy
 msgid "Display help and exit"
 msgstr "Mostra ajuda e sai"
 
@@ -3759,27 +3758,23 @@ msgstr "Do not print the GNU welcome"
 
 #: share/completions/bind.fish:2
 msgid "Show unavailable key bindings/erase all bindings"
-msgstr ""
+msgstr "Mostra atalhos indisponíveis/apaga todos os atalhos"
 
 #: share/completions/bind.fish:3
-#, fuzzy
 msgid "Erase mode"
-msgstr "Modo verboso"
+msgstr "Apagar"
 
 #: share/completions/bind.fish:4
-#, fuzzy
 msgid "Print names of available functions"
-msgstr "Print available list"
+msgstr "Mostra nomes de funções disponíveis"
 
 #: share/completions/bind.fish:6
-#, fuzzy
 msgid "Specify key name, not sequence"
-msgstr "Specify date range for query"
+msgstr "Especifica nome de tecla, não sequência"
 
 #: share/completions/bind.fish:7
-#, fuzzy
 msgid "Print names of available keys"
-msgstr "Print available list"
+msgstr "Mostra nomes de teclas disponíveis"
 
 #: share/completions/bison.fish:8
 msgid "Specify a prefix to use for all bison output file names"
@@ -14715,150 +14710,124 @@ msgid "The numerical value of the group\\s"
 msgstr ""
 
 #: share/completions/gunzip.fish:9 share/completions/gzip.fish:11
-#, fuzzy
 msgid "List compression information"
-msgstr "List compression information"
+msgstr "Lista informação de compressão"
 
 #: share/completions/gunzip.fish:11 share/completions/gzip.fish:13
-#, fuzzy
 msgid "Do not save/restore filename"
-msgstr "Do not save/restore filename"
+msgstr "Não salva/recupera nome de arquivo"
 
 #: share/completions/gunzip.fish:12 share/completions/gzip.fish:14
-#, fuzzy
 msgid "Save/restore filename"
-msgstr "Save/restore filename"
+msgstr "Salva/recupera nome de arquivo"
 
 #: share/completions/gunzip.fish:13 share/completions/gzip.fish:15
-#, fuzzy
 msgid "Suppress warnings"
-msgstr "Supress warnings"
+msgstr "Suprime avisos"
 
 #: share/completions/gunzip.fish:14 share/completions/gzip.fish:16
-#, fuzzy
 msgid "Recurse directories"
-msgstr "Recurse directories"
+msgstr "Recursão em diretórios"
 
 #: share/completions/gunzip.fish:15 share/completions/gzip.fish:17
-#, fuzzy
 msgid "Suffix"
-msgstr "Suffix"
+msgstr "Especificar sufixo"
 
 #: share/completions/gunzip.fish:17 share/completions/gzip.fish:19
-#, fuzzy
 msgid "Display compression ratios"
-msgstr "Display compression ratios"
+msgstr "Mostra taxas de compressão"
 
 #: share/completions/gzip.fish:21
-#, fuzzy
 msgid "Use fast setting"
-msgstr "Use fast setting"
+msgstr "Compressão rápida"
 
 #: share/completions/gzip.fish:22
-#, fuzzy
 msgid "Use high compression setting"
-msgstr "Use high compression setting"
+msgstr "Compressão melhor"
 
 #: share/completions/help.fish:6
-#, fuzzy
 msgid "Help for this command"
-msgstr "Set prompt command"
+msgstr "Ajuda para este comando"
 
 #: share/completions/help.fish:9
 msgid "Introduction to the fish syntax"
-msgstr ""
+msgstr "Introdução à sintaxe fish"
 
 #: share/completions/help.fish:10
 msgid "Incomplete aspects of fish"
-msgstr ""
+msgstr "Aspectos incompletos do fish"
 
 #: share/completions/help.fish:11
 msgid "Known fish bugs"
-msgstr ""
+msgstr "Bugs conhecidos do fish"
 
 #: share/completions/help.fish:12
 msgid "Help on how to reuse previously entered commands"
-msgstr ""
+msgstr "Ajuda para reutilizar comandos digitados anteriormente"
 
 #: share/completions/help.fish:14
-#, fuzzy
 msgid "Help on how tab-completion works"
-msgstr "Help on how tab-completion works"
+msgstr "Ajuda para completar com tab"
 
 #: share/completions/help.fish:15
-#, fuzzy
 msgid "Help on how job control works"
-msgstr "Help on how job control works"
+msgstr "Ajuda sobre o controle de jobs"
 
 #: share/completions/help.fish:16
-#, fuzzy
 msgid "Summary on how fish differs from other shells"
-msgstr "Summary on how fish differs from other shells"
+msgstr "Resumo das diferenças com outros shells"
 
 #: share/completions/help.fish:18
-#, fuzzy
 msgid "Help on how to set the prompt"
-msgstr "Help on how to set the prompt"
+msgstr "Ajuda para configurar o prompt"
 
 #: share/completions/help.fish:19
-#, fuzzy
 msgid "Help on how to set the titlebar message"
-msgstr "Help on how to set the titlebar message"
+msgstr "Ajuda para a mensagem da barra de título"
 
 #: share/completions/help.fish:20
-#, fuzzy
 msgid "Help on how to copy and paste"
-msgstr "Help on how to copy and paste"
+msgstr "Ajuda para copiar e colar"
 
 #: share/completions/help.fish:21
-#, fuzzy
 msgid "Help on editor shortcuts"
-msgstr "Help on editor shortcuts"
+msgstr "Ajuda para atalhos de editor"
 
 #: share/completions/help.fish:22
-#, fuzzy
 msgid "Help on environment variables"
-msgstr "Help on environment variables"
+msgstr "Ajuda para variáveis de ambiente\t"
 
 #: share/completions/help.fish:23
-#, fuzzy
 msgid "Help on setting syntax highlighting colors"
-msgstr "Help on setting syntax highlighting colors"
+msgstr "Ajuda para cores de destaque de sintaxe"
 
 #: share/completions/help.fish:25 share/completions/help.fish:26
-#, fuzzy
 msgid "Help on parameter expansion (Globbing)"
-msgstr "Help on parameter expansion (Globbing)"
+msgstr "Ajuda sobre expansão de parâmetros (Globbing)"
 
 #: share/completions/help.fish:27
-#, fuzzy
 msgid "Help on variable expansion $VARNAME"
-msgstr "Help on variable expansion $VARNAME"
+msgstr "Ajuda sobre expansão de variáveis $NOMEVARIAVEL"
 
 #: share/completions/help.fish:28
-#, fuzzy
 msgid "Help on home directory expansion ~USER"
-msgstr "Help on home directory expansion ~USER"
+msgstr "Ajuda sobre expansão de diretório usuário ~USUARIO"
 
 #: share/completions/help.fish:29
-#, fuzzy
 msgid "Help on brace expansion {a,b,c}"
-msgstr "Help on brace expansion {a,b,c}"
+msgstr "Ajuda sobre expansão de chaves {a,b,c}"
 
 #: share/completions/help.fish:30
-#, fuzzy
 msgid "Help on wildcard expansion *.*"
-msgstr "Help on wildcard expansion *.*"
+msgstr "Ajuda sobre expansão de curingas *.*"
 
 #: share/completions/help.fish:31
-#, fuzzy
 msgid "Help on command substitution (SUBCOMMAND)"
-msgstr "Help on command substitution (SUBCOMMAND)"
+msgstr "Ajuda sobre substituição de comandos (COMANDOSUB)"
 
 #: share/completions/help.fish:32
-#, fuzzy
 msgid "Help on process expansion %JOB"
-msgstr "Help on process expansion %JOB"
+msgstr "Ajuda sobre expansão de processo %JOB"
 
 #: share/completions/history.fish:1
 msgid "Match history items that start with the given prefix"
@@ -18074,137 +18043,112 @@ msgid "Config option"
 msgstr "Config option"
 
 #: share/completions/ping.fish:2
-#, fuzzy
 msgid "Audible ping"
-msgstr "Audible ping"
+msgstr "Ping audível"
 
 #: share/completions/ping.fish:3
-#, fuzzy
 msgid "Adaptive ping"
-msgstr "Adaptive ping"
+msgstr "Ping adaptativo"
 
 #: share/completions/ping.fish:4
-#, fuzzy
 msgid "Allow pinging a broadcast address"
-msgstr "Allow pinging a broadcast address"
+msgstr "Permite pingar um endereço broadcast"
 
 #: share/completions/ping.fish:5
-#, fuzzy
 msgid "Do not allow ping to change source address of probes"
-msgstr "Do not allow ping to change source address of probes"
+msgstr "Não permite mudar endereço de origem das requisições"
 
 #: share/completions/ping.fish:6
-#, fuzzy
 msgid "Stop after specified number of ECHO_REQUEST packets"
-msgstr "Stop after specified number of ECHO_REQUEST packets"
+msgstr "Pára após o número especificado de pacotes"
 
 #: share/completions/ping.fish:7
-#, fuzzy
 msgid "Set the SO_DEBUG option on the socket being used"
-msgstr "Set the SO_DEBUG option on the socket being used"
+msgstr "Ajusta a opção SO_DEBUG no socket utilizado"
 
 #: share/completions/ping.fish:8
-#, fuzzy
 msgid "Allocate and set 20 bit flow label on ECHO_REQUEST packets"
-msgstr "Allocate and set 20 bit flow label on ECHO_REQUEST packets"
+msgstr "Aloca e ajusta etiqueta de 20 bits nos pacotes de requisição"
 
 #: share/completions/ping.fish:9
-#, fuzzy
 msgid "Flood ping"
 msgstr "Flood ping"
 
 #: share/completions/ping.fish:10
-#, fuzzy
 msgid "Wait specified interval of seconds between sending each packet"
-msgstr "Wait specified interval of seconds between sending each packet"
+msgstr "Espera número especificado de segundos entre pacotes"
 
 #: share/completions/ping.fish:11
-#, fuzzy
 msgid "Set source address to specified interface address"
-msgstr "Set source address to specified interface address"
+msgstr "Ajusta endereço de origem para a interface especificada"
 
 #: share/completions/ping.fish:12
-#, fuzzy
 msgid "Send the specified number of packets without waiting for reply"
-msgstr "Send the specified number of packets without waiting for reply"
+msgstr "Envia o número especificado de pacotes sem esperar resposta"
 
 #: share/completions/ping.fish:13
-#, fuzzy
 msgid "Suppress loopback of multicast packets"
-msgstr "Suppress loopback of multicast packets"
+msgstr "Esconde a resposta de loopback de pacotes multicast"
 
 #: share/completions/ping.fish:14
-#, fuzzy
 msgid "Numeric output only"
-msgstr "Numeric output only"
+msgstr "Somente endereços numéricos"
 
 #: share/completions/ping.fish:15
-#, fuzzy
 msgid "Pad packet with empty bytes"
-msgstr "Pad packet with empty bytes"
+msgstr "Preenche pacote com bytes vazios"
 
 #: share/completions/ping.fish:16
-#, fuzzy
 msgid "Set Quality of Service -related bits in ICMP datagrams"
-msgstr "Set Quality of Service -related bits in ICMP datagrams"
+msgstr ""
 
 #: share/completions/ping.fish:18
-#, fuzzy
 msgid "Record route"
-msgstr "Record route"
+msgstr "Gravar rota"
 
 #: share/completions/ping.fish:19
-#, fuzzy
 msgid ""
 "Bypass the normal routing tables and send directly to a host on an attached "
 "interface"
 msgstr ""
-"Bypass the normal routing tables and send directly to a host on an attached "
+"Ignora tabela normal de roteamento e envia diretamente para nó em uma "
 "interface"
 
 #: share/completions/ping.fish:20
-#, fuzzy
 msgid "Specifies the number of data bytes to be sent"
-msgstr "Specifies the number of data bytes to be sent"
+msgstr "Especifica o número de bytes de dados enviados"
 
 #: share/completions/ping.fish:21
-#, fuzzy
 msgid "Set socket buffer size"
-msgstr "Set socket buffer size"
+msgstr ""
 
 #: share/completions/ping.fish:22
-#, fuzzy
 msgid "Set the IP Time to Live"
-msgstr "Set the IP Time to Live"
+msgstr "Ajusta Tempo de Vida (TTL) do pacote IP"
 
 #: share/completions/ping.fish:23
-#, fuzzy
 msgid "Set special IP timestamp options"
-msgstr "Set special IP timestamp options"
+msgstr ""
 
 #: share/completions/ping.fish:24
-#, fuzzy
 msgid "Select Path MTU Discovery strategy"
-msgstr "Select Path MTU Discovery strategy"
+msgstr ""
 
 #: share/completions/ping.fish:25
-#, fuzzy
 msgid "Print full user-to-user latency"
-msgstr "Print full user-to-user latency"
+msgstr "Mostra latência usuário-usuário"
 
 #: share/completions/ping.fish:28
-#, fuzzy
 msgid ""
 "Specify  a timeout, in seconds, before ping exits regardless of how many "
 "packets have been sent or received"
 msgstr ""
-"Specify  a timeout, in seconds, before ping exits regardless of how many "
-"packets have been sent or received"
+"Especifica um tempo limite, em segundos, para o ping sair independente dos "
+"pacotes"
 
 #: share/completions/ping.fish:29
-#, fuzzy
 msgid "Time to wait for a response, in seconds"
-msgstr "Time to wait for a response, in seconds"
+msgstr "Tempo a esperar por uma resposta, em segundos"
 
 #: share/completions/portmaster.fish:4
 msgid "run \\make"

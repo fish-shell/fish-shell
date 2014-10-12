@@ -811,7 +811,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             else:
                 output = ["Unable to set prompt"]
         else:
-            return SimpleHTTPServer.SimpleHTTPRequestHandler.do_POST(self)
+            return self.send_error(404)
 
         # Return valid output
         self.send_response(200)

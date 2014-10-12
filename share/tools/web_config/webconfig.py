@@ -772,18 +772,12 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             return self.send_error(403)
         self.path = p
 
-        if IS_PY2:
-            ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
-        else: # Python 3
-            ctype, pdict = cgi.parse_header(self.headers['content-type'])
+        ctype, pdict = cgi.parse_header(self.headers['content-type'])
 
         if ctype == 'multipart/form-data':
             postvars = cgi.parse_multipart(self.rfile, pdict)
         elif ctype == 'application/x-www-form-urlencoded':
-            try:
-                length = int(self.headers.getheader('content-length'))
-            except AttributeError:
-                length = int(self.headers['content-length'])
+            length = int(self.headers['content-length'])
             url_str = self.rfile.read(length).decode('utf-8')
             postvars = cgi.parse_qs(url_str, keep_blank_values=1)
         else:

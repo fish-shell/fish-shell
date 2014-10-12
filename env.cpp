@@ -310,7 +310,7 @@ static void handle_locale()
 
         if (get_is_interactive())
         {
-            debug(0, _(L"Changing language to English"));
+            debug(2, _(L"Changing language to English"));
         }
     }
 }

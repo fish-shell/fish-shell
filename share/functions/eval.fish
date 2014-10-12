@@ -1,4 +1,13 @@
 function eval -S -d "Evaluate parameters as a command"
+	if not set -q argv[2]
+		# like most builtins, we only check for -h/--help
+		# if we only have a single argument
+		switch "$argv[1]"
+		case -h --help
+			__fish_print_help eval
+			return 0
+		end
+	end
 
 	# If we are in an interactive shell, eval should enable full
 	# job control since it should behave like the real code was

@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2014-10-08 10:16-0300\n"
-"PO-Revision-Date: 2014-10-10 23:53-0300\n"
+"PO-Revision-Date: 2014-10-12 13:17-0300\n"
 "Last-Translator: Iuri Rezende Souza <riuri@rocketmail.com>\n"
 "Language-Team: Português Brasileiro <>\n"
 "Language: pt_BR\n"
@@ -20302,247 +20302,198 @@ msgid "Specify directory with configuration files"
 msgstr "Specify a configuration file"
 
 #: share/completions/tar.fish:5 share/completions/tar.fish:6
-#, fuzzy
 msgid "Append archive to archive"
 msgstr "Acrescenta um .tar a outro"
 
 #: share/completions/tar.fish:7
-#, fuzzy
 msgid "Create archive"
 msgstr "Cria arquivo .tar"
 
 #: share/completions/tar.fish:8 share/completions/tar.fish:9
-#, fuzzy
 msgid "Compare archive and filesystem"
 msgstr "Compara arquivo .tar e sistema de arquivos"
 
 #: share/completions/tar.fish:10
-#, fuzzy
 msgid "Delete from archive"
 msgstr "Apaga do arquivo .tar"
 
 #: share/completions/tar.fish:11
-#, fuzzy
 msgid "Append files to archive"
 msgstr "Acrescenta arquivos no final"
 
 #: share/completions/tar.fish:12 share/completions/unrar.fish:6
-#, fuzzy
 msgid "List archive"
 msgstr "Lista conteúdo do arquivo"
 
 #: share/completions/tar.fish:13
-#, fuzzy
 msgid "Append new files"
 msgstr "Acrescenta novos arquivos"
 
 #: share/completions/tar.fish:14 share/completions/tar.fish:15
-#, fuzzy
 msgid "Extract from archive"
 msgstr "Extrai do arquivo .tar"
 
 #: share/completions/tar.fish:16
-#, fuzzy
 msgid "Keep access time"
 msgstr "Preserva hora de acesso"
 
 #: share/completions/tar.fish:18
-#, fuzzy
 msgid "Reblock while reading"
 msgstr "Aceita blocos incompletos na leitura"
 
 #: share/completions/tar.fish:20
-#, fuzzy
 msgid "Print directory names"
 msgstr "Mostra nomes de diretórios"
 
 #: share/completions/tar.fish:21
-#, fuzzy
 msgid "Archive file"
 msgstr "Especifica arquivo .tar"
 
 #: share/completions/tar.fish:22
-#, fuzzy
 msgid "Archive is local"
 msgstr "Arquivo é local mesmo com /"
 
 #: share/completions/tar.fish:23
-#, fuzzy
 msgid "Run script at end of tape"
 msgstr "Executa script ao final de cada fita"
 
 #: share/completions/tar.fish:24
-#, fuzzy
 msgid "Use old incremental GNU format"
 msgstr "Usa antigo formato GNU incremental"
 
 #: share/completions/tar.fish:25
-#, fuzzy
 msgid "Use new incremental GNU format"
 msgstr "Usa novo formato GNU incremental"
 
 #: share/completions/tar.fish:26
-#, fuzzy
 msgid "Dereference symlinks"
 msgstr "Copia conteúdo dos symlinks"
 
 #: share/completions/tar.fish:27
-#, fuzzy
 msgid "Ignore zero block in archive"
 msgstr "Ignora blocos zero de fim-de-arquivo"
 
 #: share/completions/tar.fish:28
-#, fuzzy
 msgid "Filter through bzip2"
 msgstr "Filtra por bzip2"
 
 #: share/completions/tar.fish:29
-#, fuzzy
 msgid "Don't exit on unreadable files"
 msgstr "Não sair com erros de leitura"
 
 #: share/completions/tar.fish:30
-#, fuzzy
 msgid "Don't overwrite"
 msgstr "Não sobrescreve"
 
 #: share/completions/tar.fish:31
-#, fuzzy
 msgid "Starting file in archive"
 msgstr "Arquivo inicial"
 
 #: share/completions/tar.fish:32
-#, fuzzy
 msgid "Stay in local filesystem"
 msgstr "Fica no sistema de arquivos local"
 
 #: share/completions/tar.fish:33
-#, fuzzy
 msgid "Tape length"
 msgstr "Comprimento da fita"
 
 #: share/completions/tar.fish:34
-#, fuzzy
 msgid "Don't extract modification time"
 msgstr "Não extrai hora de modificação"
 
 #: share/completions/tar.fish:35
-#, fuzzy
 msgid "Multi volume archive"
 msgstr "Arquivo de vários volumes"
 
 #: share/completions/tar.fish:36
-#, fuzzy
 msgid "Only store newer files"
 msgstr "Armazenar apenas arquivos novos"
 
 #: share/completions/tar.fish:37 share/completions/tar.fish:38
-#, fuzzy
 msgid "Use V7 format"
 msgstr "Usa formato V7"
 
 #: share/completions/tar.fish:39
-#, fuzzy
 msgid "Extract to stdout"
 msgstr "Extrai para saída padrão"
 
 #: share/completions/tar.fish:40 share/completions/tar.fish:41
-#, fuzzy
 msgid "Extract all permissions"
 msgstr "Extrai todas as permissões"
 
 #: share/completions/tar.fish:42
-#, fuzzy
 msgid "Don't strip leading /"
 msgstr "Não retira / inicial"
 
 #: share/completions/tar.fish:43
-#, fuzzy
 msgid "Preserve all permissions and do not sort file arguments"
-msgstr "Preserve todas as permissões e não reordena arquivos"
+msgstr "Preserva todas as permissões e não reordena arquivos"
 
 #: share/completions/tar.fish:44
-#, fuzzy
 msgid "Show record number"
 msgstr "Mostra número de bloco no arquivo"
 
 #: share/completions/tar.fish:45
-#, fuzzy
 msgid "Remove files after adding to archive"
 msgstr "Apaga arquivos após adicionar ao .tar"
 
 #: share/completions/tar.fish:46 share/completions/tar.fish:47
-#, fuzzy
 msgid "Do not sort file arguments"
 msgstr "Não reordena arquivos"
 
 #: share/completions/tar.fish:48
-#, fuzzy
 msgid "Preserve file ownership"
 msgstr "Preserva proprietário"
 
 #: share/completions/tar.fish:49
-#, fuzzy
 msgid "Handle sparse files"
 msgstr "Trata arquivos esparsos eficientemente"
 
 #: share/completions/tar.fish:50
-#, fuzzy
 msgid "Extract file from file"
 msgstr "Extrair arquivos do arquivo de lista"
 
 #: share/completions/tar.fish:51
-#, fuzzy
 msgid "-T has null-terminated names"
 msgstr "-T tem nomes terminados por null"
 
 #: share/completions/tar.fish:52
-#, fuzzy
 msgid "Print total bytes written"
 msgstr "Mostra total de bytes escritos"
 
 #: share/completions/tar.fish:54
-#, fuzzy
 msgid "Set volume name"
 msgstr "Etiquetar volume"
 
 #: share/completions/tar.fish:56 share/completions/tar.fish:57
-#, fuzzy
 msgid "Ask for confirmation"
 msgstr "Pergunta por confirmação"
 
 #: share/completions/tar.fish:58
-#, fuzzy
 msgid "Verify archive"
 msgstr "Verifica arquivo .tar"
 
 #: share/completions/tar.fish:59
-#, fuzzy
 msgid "Exclude file"
 msgstr "Exceto arquivo"
 
 #: share/completions/tar.fish:60
-#, fuzzy
 msgid "Exclude files listed in specified file"
 msgstr "Exceto arquivos listados no arquivo especificado"
 
 #: share/completions/tar.fish:61 share/completions/tar.fish:62
-#, fuzzy
 msgid "Filter through compress"
 msgstr "Filtra por compress"
 
 #: share/completions/tar.fish:63 share/completions/tar.fish:64
-#, fuzzy
 msgid "Filter through gzip"
 msgstr "Filtra por gzip"
 
 #: share/completions/tar.fish:65
-#, fuzzy
 msgid "Filter through specified program"
 msgstr "Filtrar pelo programa especificado"
 
 #: share/completions/telnet.fish:9 share/completions/telnet.fish:14
-#, fuzzy
 msgid "Specifies an 8-bit data path"
 msgstr "Specifies an 8-bit data path"
 
@@ -20617,169 +20568,136 @@ msgid "Use Kerberos realm for authentication"
 msgstr "Use Kerberos realm for authentication"
 
 #: share/completions/test.fish:4
-#, fuzzy
 msgid "Negate expression"
-msgstr "Evaluate expression"
+msgstr "Negar expressão"
 
 #: share/completions/test.fish:5
-#, fuzzy
 msgid "Logical and"
-msgstr "Logical and"
+msgstr "E lógico"
 
 #: share/completions/test.fish:6
-#, fuzzy
 msgid "Logical or"
-msgstr "Logical or"
+msgstr "OU lógico"
 
 #: share/completions/test.fish:7
-#, fuzzy
 msgid "String length is non-zero"
-msgstr "String length is non-zero"
+msgstr "Comprimento da string não é zero"
 
 #: share/completions/test.fish:8
-#, fuzzy
 msgid "String length is zero"
-msgstr "String length is zero"
+msgstr "Comprimento da string é zero"
 
 #: share/completions/test.fish:9
-#, fuzzy
 msgid "Strings are equal"
-msgstr "Strings are equal"
+msgstr "Strings são iguais"
 
 #: share/completions/test.fish:10
-#, fuzzy
 msgid "Strings are not equal"
-msgstr "Strings are not equal"
+msgstr "Strings não são iguais"
 
 #: share/completions/test.fish:11
-#, fuzzy
 msgid "Integers are equal"
-msgstr "Integers are equal"
+msgstr "Inteiros são iguais"
 
 #: share/completions/test.fish:12
-#, fuzzy
 msgid "Left integer larger than or equal to right integer"
-msgstr "Left integer larger than or equal to right integer"
+msgstr "Inteiro da esquerda maior que ou igual ao da direita"
 
 #: share/completions/test.fish:13
-#, fuzzy
 msgid "Left integer larger than right integer"
-msgstr "Left integer larger than right integer"
+msgstr "Inteiro da esquerda maior que o da direita"
 
 #: share/completions/test.fish:14
-#, fuzzy
 msgid "Left integer less than or equal to right integer"
-msgstr "Left integer less than or equal to right integer"
+msgstr "Inteiro da esquerda menor que ou igual ao da direita"
 
 #: share/completions/test.fish:15
-#, fuzzy
 msgid "Left integer less than right integer"
-msgstr "Left integer less than right integer"
+msgstr "Inteiro da esquerda menor que o da direita"
 
 #: share/completions/test.fish:16
-#, fuzzy
 msgid "Left integer not equal to right integer"
-msgstr "Left integer not equal to right integer"
+msgstr "Inteiro da esquerda diferente do da direita"
 
 #: share/completions/test.fish:17
-#, fuzzy
 msgid "Left file equal to right file"
-msgstr "Left file equal to right file"
+msgstr "Arquivo da esquerda igual ao da direita"
 
 #: share/completions/test.fish:18
-#, fuzzy
 msgid "Left file newer than right file"
-msgstr "Left file newer than right file"
+msgstr "Arquivo da esquerda mais novo que o da direita"
 
 #: share/completions/test.fish:19
-#, fuzzy
 msgid "Left file older than right file"
-msgstr "Left file older than right file"
+msgstr "Arquivo da esquerda mais antigo que o da direita"
 
 #: share/completions/test.fish:20
-#, fuzzy
 msgid "File is block device"
-msgstr "File is block device"
+msgstr "Arquivo é dispositivo de bloco"
 
 #: share/completions/test.fish:21
-#, fuzzy
 msgid "File is character device"
-msgstr "File is character device"
+msgstr "Arquivo é dispositivo de caracter"
 
 #: share/completions/test.fish:22
-#, fuzzy
 msgid "File is directory"
-msgstr "File is directory"
+msgstr "Arquivo é diretório"
 
 #: share/completions/test.fish:23
-#, fuzzy
 msgid "File exists"
-msgstr "File exists"
+msgstr "Arquivo existe"
 
 #: share/completions/test.fish:24
-#, fuzzy
 msgid "File is regular"
-msgstr "File is regular"
+msgstr "Arquivo é regular"
 
 #: share/completions/test.fish:25
-#, fuzzy
 msgid "File is set-group-ID"
-msgstr "File is set-group-ID"
+msgstr ""
 
 #: share/completions/test.fish:26 share/completions/test.fish:29
-#, fuzzy
 msgid "File is symlink"
-msgstr "File is symlink"
+msgstr "Arquivo é symlink"
 
 #: share/completions/test.fish:27
-#, fuzzy
 msgid "File owned by effective group ID"
-msgstr "File owned by effective group ID"
+msgstr ""
 
 #: share/completions/test.fish:28
-#, fuzzy
 msgid "File has sticky bit set"
-msgstr "File has sticky bit set"
+msgstr "Arquivo tem o bit de persistência"
 
 #: share/completions/test.fish:30
-#, fuzzy
 msgid "File owned by effective user ID"
-msgstr "File owned by effective user ID"
+msgstr ""
 
 #: share/completions/test.fish:31
-#, fuzzy
 msgid "File is named pipe"
-msgstr "File is named pipe"
+msgstr "Arquivo é fifo"
 
 #: share/completions/test.fish:32
-#, fuzzy
 msgid "File is readable"
-msgstr "File is readable"
+msgstr "Arquivo pode ser lido"
 
 #: share/completions/test.fish:33
-#, fuzzy
 msgid "File size is non-zero"
-msgstr "File size is non-zero"
+msgstr "Tamanho do arquivo não é zero"
 
 #: share/completions/test.fish:34
-#, fuzzy
 msgid "File is socket"
-msgstr "File is socket"
+msgstr "Arquivo é socket"
 
 #: share/completions/test.fish:35
-#, fuzzy
 msgid "FD is terminal"
-msgstr "FD is terminal"
+msgstr "FD é um terminal"
 
 #: share/completions/test.fish:36
-#, fuzzy
 msgid "File set-user-ID bit is set"
-msgstr "File set-user-ID bit is set"
+msgstr ""
 
 #: share/completions/test.fish:37
-#, fuzzy
 msgid "File is writable"
-msgstr "File is writable"
+msgstr "Arquivo pode ser escrito"
 
 #: share/completions/time.fish:4
 #, fuzzy
@@ -20916,34 +20834,28 @@ msgid "Tell any running totem instance: Play from playlist"
 msgstr ""
 
 #: share/completions/touch.fish:1
-#, fuzzy
 msgid "Change access time"
-msgstr "Change access time"
+msgstr "Mudar hora de acesso"
 
 #: share/completions/touch.fish:2
-#, fuzzy
 msgid "Set date back"
-msgstr "Set date back"
+msgstr ""
 
 #: share/completions/touch.fish:3
-#, fuzzy
 msgid "Do not create file"
-msgstr "Do not create output files"
+msgstr "Não cria arquivo"
 
 #: share/completions/touch.fish:4 share/completions/touch.fish:8
-#, fuzzy
 msgid "Set date"
-msgstr "Set date"
+msgstr "Ajusta a data"
 
 #: share/completions/touch.fish:5
-#, fuzzy
 msgid "Set date forward"
-msgstr "Set date forward"
+msgstr ""
 
 #: share/completions/touch.fish:6
-#, fuzzy
 msgid "Change modification time"
-msgstr "Change modification time"
+msgstr "Muda hora de modificação"
 
 #: share/completions/touch.fish:7
 #, fuzzy

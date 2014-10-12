@@ -14,8 +14,12 @@ function __fish_facl_starts_with_spec_group
   echo (commandline -ct) | grep -q -E 'g(roup)?:'
 end
 
-complete -c setfacl -f -s m -s x -l modify -l remove -l set -n '__fish_facl_starts_with_spec_user' -a '(commandline -ct)(__fish_complete_users)'
-complete -c setfacl -f -s m -s x -l modify -l remove -l set -n '__fish_facl_starts_with_spec_group' -a '(commandline -ct)(__fish_complete_groups)'
+function __fish_facl_extract_acl
+  echo (commandline -ct) | grep -o -E '\w*:'
+end
+
+complete -c setfacl -f -s m -s x -l modify -l remove -l set -n '__fish_facl_starts_with_spec_user'  -a '(__fish_facl_extract_acl)(__fish_complete_users)'
+complete -c setfacl -f -s m -s x -l modify -l remove -l set -n '__fish_facl_starts_with_spec_group' -a '(__fish_facl_extract_acl)(__fish_complete_groups)'
 complete -c setfacl -f -s m -s x -l modify -l remove -l set -a '(__fish_facl_list_spec_keyword)'
 
 complete -c setfacl    -s b -l remove-all     --description 'Remove all extended ACL entries'

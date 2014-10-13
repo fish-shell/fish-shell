@@ -868,8 +868,19 @@ int parser_t::eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t 
 
     /* Parse the source into a tree, if we can */
     parse_node_tree_t tree;
-    if (! parse_tree_from_string(cmd, parse_flag_none, &tree, NULL))
+    parse_error_list_t error_list;
+    if (! parse_tree_from_string(cmd, parse_flag_none, &tree, this->show_errors ? &error_list : NULL))
     {
+        if (this->show_errors)
+        {
+            /* Get a backtrace */
+            wcstring backtrace_and_desc;
+            this->get_backtrace(cmd, error_list, &backtrace_and_desc);
+
+            /* Print it */
+            fprintf(stderr, "%ls", backtrace_and_desc.c_str());
+        }
+
         return 1;
     }
 

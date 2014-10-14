@@ -97,4 +97,15 @@ else
     echo 'psub file was deleted'
 end
 
+# Test support for unbalanced blocks
+function try_unbalanced_block
+    ../fish -c "echo $argv | source " 2>&1 | grep "Missing end" 1>&2
+end
+try_unbalanced_block 'begin'
+try_unbalanced_block 'while true'
+try_unbalanced_block 'for x in 1 2 3'
+try_unbalanced_block 'switch abc'
+try_unbalanced_block 'function anything'
+try_unbalanced_block 'if false'
+
 false

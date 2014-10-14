@@ -1,1 +1,7 @@
 emit: expected event name
+Missing end to balance this begin
+Missing end to balance this while loop
+Missing end to balance this for loop
+Missing end to balance this switch statement
+Missing end to balance this function definition
+Missing end to balance this if statement

@@ -750,10 +750,33 @@ parse_execution_result_t parse_execution_context_t::report_errors(const parse_er
 parse_execution_result_t parse_execution_context_t::report_unmatched_wildcard_error(const parse_node_t &unmatched_wildcard)
 {
     proc_set_last_status(STATUS_UNMATCHED_WILDCARD);
-    /* For reasons I cannot explain, unmatched wildcards are only reported in interactive use. */
+    // unmatched wildcards are only reported in interactive use because scripts have legitimate reasons
+    // to want to use wildcards without knowing whether they expand to anything.
     if (get_is_interactive())
     {
-        report_error(unmatched_wildcard, WILDCARD_ERR_MSG, get_source(unmatched_wildcard).c_str());
+        // Check if we're running code that was typed at the commandline.
+        // We can't just use `is_block` or the eval level, because `begin; echo *.unmatched; end` would not report
+        // the error even though it's run interactively.
+        // But any non-interactive use must have at least one function / event handler / source on the stack.
+        bool interactive = true;
+        for (size_t i = 0, count = parser->block_count(); i < count; ++i)
+        {
+            switch (parser->block_at_index(i)->type())
+            {
+                case FUNCTION_CALL:
+                case FUNCTION_CALL_NO_SHADOW:
+                case EVENT:
+                case SOURCE:
+                    interactive = false;
+                    break;
+                default:
+                    break;
+            }
+        }
+        if (interactive)
+        {
+            report_error(unmatched_wildcard, WILDCARD_ERR_MSG, get_source(unmatched_wildcard).c_str());
+        }
     }
     return parse_execution_errored;
 }

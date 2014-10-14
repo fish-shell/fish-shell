@@ -552,9 +552,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
 
         case EXPAND_WILDCARD_NO_MATCH:
         {
-            /* Store the node that failed to expand */
-            report_error(switch_value_node, WILDCARD_ERR_MSG, switch_value.c_str());
-            result = parse_execution_errored;
+            result = report_unmatched_wildcard_error(switch_value_node);
             break;
         }
 

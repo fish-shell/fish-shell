@@ -972,7 +972,6 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(job_t
         /* If we were not able to expand any wildcards, here is the first one that failed */
         if (unmatched_wildcard != NULL)
         {
-            job_set_flag(job, JOB_WILDCARD_ERROR, 1);
             return report_unmatched_wildcard_error(*unmatched_wildcard);
         }
 

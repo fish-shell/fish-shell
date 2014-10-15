@@ -108,4 +108,9 @@ try_unbalanced_block 'switch abc'
 try_unbalanced_block 'function anything'
 try_unbalanced_block 'if false'
 
+# Ensure that quoted keywords work
+'while' false; end
+"while" false; end
+"wh"'ile' false; "e"nd
+
 false

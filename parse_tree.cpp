@@ -3,6 +3,7 @@
 #include "fallback.h"
 #include "wutil.h"
 #include "proc.h"
+#include "expand.h"
 #include <vector>
 #include <algorithm>
 
@@ -1183,29 +1184,71 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2)
     }
 }
 
+/* Given an expanded string, returns any keyword it matches */
+static parse_keyword_t keyword_with_name(const wchar_t *name)
+{
+    /* Binary search on keyword_map. Start at 1 since 0 is keyword_none */
+    parse_keyword_t result = parse_keyword_none;
+    size_t left = 1, right = sizeof keyword_map / sizeof *keyword_map;
+    while (left < right)
+    {
+        size_t mid = left + (right - left)/2;
+        int cmp = wcscmp(name, keyword_map[mid].name);
+        if (cmp < 0)
+        {
+            right = mid; // name was smaller than mid
+        }
+        else if (cmp > 0)
+        {
+            left = mid + 1; // name was larger than mid
+        }
+        else
+        {
+            result = keyword_map[mid].keyword; // found it
+            break;
+        }
+    }
+    return result;
+}
+
+/* Given a token, returns the keyword it matches, or parse_keyword_none. */
 static parse_keyword_t keyword_for_token(token_type tok, const wchar_t *tok_txt)
 {
-    parse_keyword_t result = parse_keyword_none;
-    if (tok == TOK_STRING)
+    /* Only strings can be keywords */
+    if (tok != TOK_STRING)
     {
-        /* Binary search on keyword_map. Start at 1 since 0 is keyword_none */
-        size_t left = 1, right = sizeof keyword_map / sizeof *keyword_map;
-        while (left < right)
+        return parse_keyword_none;
+    }
+    
+    /* If tok_txt is clean (which most are), we can compare it directly. Otherwise we have to expand it. We only expand quotes, and we don't want to do expensive expansions like tilde expansions. So we do our own "cleanliness" check; if we find a character not in our allowed set we know it's not a keyword, and if we never find a quote we don't have to expand! Note that this lowercase set could be shrunk to be just the characters that are in keywords. */
+    parse_keyword_t result = parse_keyword_none;
+    bool needs_expand = false, all_chars_valid = true;
+    const wchar_t *chars_allowed_in_keywords = L"abcdefghijklmnopqrstuvwxyz'\"";
+    for (size_t i=0; tok_txt[i] != L'\0'; i++)
+    {
+        wchar_t c = tok_txt[i];
+        if (! wcschr(chars_allowed_in_keywords, c))
         {
-            size_t mid = left + (right - left)/2;
-            int cmp = wcscmp(tok_txt, keyword_map[mid].name);
-            if (cmp < 0)
+            all_chars_valid = false;
+            break;
+        }
+        // If we encounter a quote, we need expansion
+        needs_expand = needs_expand || c == L'"' || c == L'\'';
+    }
+    
+    if (all_chars_valid)
+    {
+        /* Expand if necessary */
+        if (! needs_expand)
+        {
+            result = keyword_with_name(tok_txt);
+        }
+        else
+        {
+            wcstring storage = tok_txt;
+            if (expand_one(storage, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_WILDCARDS | EXPAND_SKIP_JOBS | EXPAND_SKIP_HOME_DIRECTORIES))
             {
-                right = mid; // tok_txt was smaller than mid
-            }
-            else if (cmp > 0)
-            {
-                left = mid + 1; // tok_txt was larger than mid
-            }
-            else
-            {
-                result = keyword_map[mid].keyword; // found it
-                break;
+                result = keyword_with_name(storage.c_str());
             }
         }
     }

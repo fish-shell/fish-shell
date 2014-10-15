@@ -236,23 +236,24 @@ static const struct
 }
 keyword_map[] =
 {
+    /* Note that these must be sorted (except for the first), so that we can do binary search */
     KEYWORD_MAP(none),
-    KEYWORD_MAP(if),
-    KEYWORD_MAP(else),
-    KEYWORD_MAP(for),
-    KEYWORD_MAP(in),
-    KEYWORD_MAP(while),
-    KEYWORD_MAP(begin),
-    KEYWORD_MAP(function),
-    KEYWORD_MAP(switch),
-    KEYWORD_MAP(case),
-    KEYWORD_MAP(end),
     KEYWORD_MAP(and),
-    KEYWORD_MAP(or),
-    KEYWORD_MAP(not),
-    KEYWORD_MAP(command),
+    KEYWORD_MAP(begin),
     KEYWORD_MAP(builtin),
-    KEYWORD_MAP(exec)
+    KEYWORD_MAP(case),
+    KEYWORD_MAP(command),
+    KEYWORD_MAP(else),
+    KEYWORD_MAP(end),
+    KEYWORD_MAP(exec),
+    KEYWORD_MAP(for),
+    KEYWORD_MAP(function),
+    KEYWORD_MAP(if),
+    KEYWORD_MAP(in),
+    KEYWORD_MAP(not),
+    KEYWORD_MAP(or),
+    KEYWORD_MAP(switch),
+    KEYWORD_MAP(while)
 };
 
 wcstring keyword_description(parse_keyword_t k)
@@ -1187,11 +1188,23 @@ static parse_keyword_t keyword_for_token(token_type tok, const wchar_t *tok_txt)
     parse_keyword_t result = parse_keyword_none;
     if (tok == TOK_STRING)
     {
-        for (size_t i=0; i < sizeof keyword_map / sizeof *keyword_map; i++)
+        /* Binary search on keyword_map. Start at 1 since 0 is keyword_none */
+        size_t left = 1, right = sizeof keyword_map / sizeof *keyword_map;
+        while (left < right)
         {
-            if (! wcscmp(keyword_map[i].name, tok_txt))
+            size_t mid = left + (right - left)/2;
+            int cmp = wcscmp(tok_txt, keyword_map[mid].name);
+            if (cmp < 0)
             {
-                result = keyword_map[i].keyword;
+                right = mid; // tok_txt was smaller than mid
+            }
+            else if (cmp > 0)
+            {
+                left = mid + 1; // tok_txt was larger than mid
+            }
+            else
+            {
+                result = keyword_map[mid].keyword; // found it
                 break;
             }
         }

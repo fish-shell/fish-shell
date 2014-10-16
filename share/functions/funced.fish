@@ -81,17 +81,30 @@ function funced --description 'Edit function definition'
         return 0
     end
 
-    set tmpname (mktemp -t fish_funced.XXXXXXXXXX)
+    set -l configdir ~/.config
+    if set -q XDG_CONFIG_HOME
+        set configdir $XDG_CONFIG_HOME
+    end
 
-    if functions -q -- $funcname
-        functions -- $funcname > $tmpname
-    else
-        echo $init > $tmpname
+    for i in $configdir $configdir/fish $configdir/fish/functions
+        if not test -d $i
+            if not command mkdir $i >/dev/null
+                printf (_ "%s: Could not create configuration directory\n") funced
+                return 1
+            end
+        end
     end
-    if eval $editor $tmpname
-        . $tmpname
+
+    set -l editname (printf "$configdir/fish/functions/%s.fish.edit" $funcname)
+    if not test -f $editname
+        if functions -q -- $funcname
+            functions -- $funcname > $editname
+        else
+            echo $init > $editname
+        end
     end
-    set -l stat $status
-    rm -f $tmpname >/dev/null
-    return $stat
+
+    if eval $editor $editname
+        . $editname; and rm -f $editname >/dev/null
+    end
 end

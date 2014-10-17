@@ -88,9 +88,31 @@ function funced --description 'Edit function definition'
     else
         echo $init > $tmpname
     end
-    if eval $editor $tmpname
-        . $tmpname
-    end
+        # Repeatedly edit until it either parses successfully, or the user cancels
+        # If the editor command itself fails, we assume the user cancelled or the file
+        # could not be edited, and we do not try again
+        while true
+            if not eval $editor $tmpname
+                        _ "Editing failed or was cancelled"
+                        echo
+                else
+                if not source $tmpname
+                                # Failed to source the function file. Prompt to try again.
+                                echo # add a line between the parse error and the prompt
+                                set -l repeat
+                                set -l prompt (_ 'Edit the file again\? [Y/n]')
+                                while test -z "$repeat"
+                                        read -p "echo $prompt\  " repeat
+                                end
+                                if not contains $repeat n N no NO No nO
+                                        continue
+                                end
+                                _ "Cancelled function editing"
+                                echo
+                        end
+                end
+                break
+        end
     set -l stat $status
     rm -f $tmpname >/dev/null
     return $stat

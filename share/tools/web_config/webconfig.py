@@ -699,6 +699,20 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             result = []
         return result
 
+    def do_remove_abbreviation(self, abbreviation):
+        out, err = run_fish_cmd('abbr -r %s' % abbreviation['word'])
+        if out or err:
+            return err
+        else:
+            return True
+
+    def do_save_abbreviation(self, abbreviation):
+        out, err = run_fish_cmd('abbr -a \'%s=%s\'' % (abbreviation['word'], abbreviation['phrase']))
+        if err:
+            return err
+        else:
+            return True
+
     def secure_startswith(self, haystack, needle):
         if len(haystack) < len(needle):
             return False
@@ -780,6 +794,10 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             length = int(self.headers['content-length'])
             url_str = self.rfile.read(length).decode('utf-8')
             postvars = cgi.parse_qs(url_str, keep_blank_values=1)
+        elif ctype == 'application/json':
+            length = int(self.headers['content-length'])
+            url_str = self.rfile.read(length).decode('utf-8')
+            postvars = json.loads(url_str)
         else:
             postvars = {}
 
@@ -810,12 +828,25 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 output = ["OK"]
             else:
                 output = ["Unable to set prompt"]
+        elif p == '/save_abbreviation/':
+            r = self.do_save_abbreviation(postvars)
+            if r == True:
+                output = ["OK"]
+            else:
+                output = [r]
+        elif p == '/remove_abbreviation/':
+            r = self.do_remove_abbreviation(postvars)
+            if r == True:
+                output = ["OK"]
+            else:
+                output = [r]
         else:
             return self.send_error(404)
 
         # Return valid output
         self.send_response(200)
-        self.send_header('Content-type','text/html')
+        self.send_header('Content-type','application/json')
+        self.end_headers()
         self.write_to_wfile('\n')
 
         # Output JSON

@@ -4,9 +4,19 @@
 
 <table class="data_table">
     <tbody>
-    <tr class="data_table_row" ng-repeat="abbreviation in abbreviations | filterAbbreviations:query">
-        <td ng-class="{ data_table_cell: true}" style="text-align: right; padding-right: 30px;" ng-click="abbreviation._is_selected = !abbreviation._is_selected">{{ abbreviation.word }}</td>
-        <td ng-class="{ data_table_cell: true}" style="text-align: left; padding-right: 30px;" ng-click="abbreviation._is_selected = !abbreviation._is_selected">{{ abbreviation.phrase }}</td>
+    <tr class="data_table_row" ng-repeat="abbreviation in abbreviations | filterAbbreviations:query" ng-click="editAbbreviation(abbreviation)">
+        <td ng-class="{ data_table_cell: true }" style="text-align: right; padding-right: 30px;">
+            <span ng-hide="abbreviation.editable">{{ abbreviation.word }}</span>
+            <span ng-show="abbreviation.editable"><input ng-model="abbreviation.word"></span>
+        </td>
+        <td ng-class="{ data_table_cell: true }" style="text-align: left; padding-right: 30px;">
+            <span ng-hide="abbreviation.editable">{{ abbreviation.phrase }}</span>
+            <span ng-show="abbreviation.editable"><input ng-model="abbreviation.phrase"></span>
+        </td>
+        <td ng-class="{ data_table_cell: true }" class="abbreviation_actions">
+            <span ng-show="abbreviation.editable && abbreviation.word && abbreviation.phrase" ng-click="saveAbbreviation(abbreviation)">Save</span>
+            <a ng-show="abbreviation.word" ng-click="removeAbbreviation(abbreviation)"><img alt="Delete" src="delete.png"></a>
+        </td>
     </tr>
     </tbody>
 </table>

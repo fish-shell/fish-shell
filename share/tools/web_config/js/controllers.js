@@ -287,10 +287,45 @@ controllers.controller("bindingsController", function($scope, $http) {
 
 controllers.controller("abbreviationsController", function($scope, $http) {
     $scope.abbreviations = [];
+    $scope.addBlank = function() {
+        // Add blank entry if it is missing
+        hasBlank = {hasBlank: false}
+        angular.forEach($scope.abbreviations, function(value, key) {
+            if (value.phrase === "" && value.word === "") {
+                this.hasBlank = true;
+            }
+        }, hasBlank);
+        if (! hasBlank.hasBlank) {
+            $scope.abbreviations.push({phrase: "", word: "", editable: true})
+        }
+    }
     $scope.fetchAbbreviations = function() {
         $http.get("abbreviations/").success(function(data, status, headers, config) {
             $scope.abbreviations = data;
+            $scope.addBlank();
     })};
+
+    $scope.editAbbreviation = function(abbreviation) {
+        abbreviation.editable = true;
+    }
+
+    $scope.saveAbbreviation = function(abbreviation) {
+        if (abbreviation.word && abbreviation.phrase) {
+            $http.post("save_abbreviation/", abbreviation).success(function(data, status, headers, config) {
+                abbreviation.editable = false;
+                $scope.addBlank();
+            });
+        }
+    };
+
+    $scope.removeAbbreviation = function(abbreviation) {
+        if (abbreviation.word) {
+            $http.post("remove_abbreviation/", abbreviation).success(function(data, status, headers, config) {
+                $scope.abbreviations.splice($scope.abbreviations.indexOf(abbreviation), 1);
+                $scope.addBlank();
+            });
+        }
+    };
 
     $scope.fetchAbbreviations();
 });

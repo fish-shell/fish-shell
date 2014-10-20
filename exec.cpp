@@ -1388,6 +1388,7 @@ void exec_job(parser_t &parser, job_t *j)
                         /*
                           safe_launch_process _never_ returns...
                         */
+                        assert(0 && "safe_launch_process should not have returned");
                     }
                     else if (pid < 0)
                     {

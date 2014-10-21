@@ -646,11 +646,6 @@ void job_handle_signal(int signal, siginfo_t *info, void *con)
     /* This is the only place that this generation count is modified. It's OK if it overflows. */
     s_sigchld_generation_count += 1;
     got_signal = 1;
-
-    /* pca: I can't justify this kill() call */
-    int errno_old = errno;
-    kill(0, SIGIO);
-    errno=errno_old;
 }
 
 /**

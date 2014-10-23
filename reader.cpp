@@ -3137,7 +3137,7 @@ const wchar_t *reader_readline(int nchars)
         {
             int was_interactive_read = is_interactive_read;
             is_interactive_read = 1;
-            c=input_readch();
+            !replace ? c = input_readch() : c = input_common_readch(0);
             is_interactive_read = was_interactive_read;
             //fprintf(stderr, "C: %lx\n", (long)c);
 
@@ -3555,8 +3555,6 @@ const wchar_t *reader_readline(int nchars)
             case R_REPLACE_CHAR:
             {
                 replace = true;
-                env_set(FISH_BIND_MODE_VAR, L"insert", ENV_GLOBAL);
-
                 break;
             }
 
@@ -4143,11 +4141,10 @@ const wchar_t *reader_readline(int nchars)
                             remove_backward();
                         }
 
-                        insert_char(data->active_edit_line(), c, allow_expand_abbreviations);
+                        insert_char(data->active_edit_line(), c);
 
                         replace = false;
                         update_buff_pos(el, el->position - 1);
-                        env_set(FISH_BIND_MODE_VAR, L"default", ENV_GLOBAL);
                     }
 
                     /* End paging upon inserting into the normal command line */

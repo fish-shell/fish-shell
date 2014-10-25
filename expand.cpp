@@ -1633,7 +1633,6 @@ static void expand_home_directory(wcstring &input)
             if (userinfo == NULL)
             {
                 tilde_error = true;
-                input[0] = L'~';
             }
             else
             {
@@ -1641,10 +1640,17 @@ static void expand_home_directory(wcstring &input)
             }
         }
 
-        if (! tilde_error)
+        wchar_t *realhome;
+        realhome = wrealpath(home, NULL);
+
+        if (! tilde_error && realhome)
         {
-            input.replace(input.begin(), input.begin() + tail_idx, home);
+            input.replace(input.begin(), input.begin() + tail_idx, realhome);
         }
+	else
+	{
+            input[0] = L'~';
+	}
     }
 }
 

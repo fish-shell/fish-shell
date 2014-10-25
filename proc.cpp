@@ -569,36 +569,79 @@ io_chain_t job_t::all_io_redirections() const
     return result;
 }
 
-/* This is called from a signal handler */
-void job_handle_signal(int signal, siginfo_t *info, void *con)
+typedef unsigned int process_generation_count_t;
+
+/* A static value tracking how many SIGCHLDs we have seen. This is only ever modified from within the SIGCHLD signal handler, and therefore does not need atomics or locks */
+static volatile process_generation_count_t s_sigchld_generation_count = 0;
+
+/* If we have received a SIGCHLD signal, process any children. If await is false, this returns immediately if no SIGCHLD has been received. If await is true, this waits for one. Returns true if something was processed. This returns the number of children processed, or -1 on error. */
+static int process_mark_finished_children(bool wants_await)
 {
+    ASSERT_IS_MAIN_THREAD();
+    
+    /* A static value tracking the SIGCHLD gen count at the time we last processed it. When this is different from s_sigchld_generation_count, it indicates there may be unreaped processes. There may not be if we reaped them via the other waitpid path. This is only ever modified from the main thread, and not from a signal handler. */
+    static process_generation_count_t s_last_processed_sigchld_generation_count = 0;
+    
+    int processed_count = 0;
+    bool got_error = false;
 
-    int status;
-    pid_t pid;
-    int errno_old = errno;
+    /* The critical read. This fetches a value which is only written in the signal handler. This needs to be an atomic read (we'd use sig_atomic_t, if we knew that were unsigned - fortunately aligned unsigned int is atomic on pretty much any modern chip.) It also needs to occur before we start reaping, since the signal handler can be invoked at any point. */
+    const process_generation_count_t local_count = s_sigchld_generation_count;
+    
+    /* Determine whether we have children to process. Note that we can't reliably use the difference because a single SIGCHLD may be delivered for multiple children - see #1768. Also if we are awaiting, we always process. */
+    bool wants_waitpid = wants_await || local_count != s_last_processed_sigchld_generation_count;
 
-    got_signal = 1;
-
-//	write( 2, "got signal\n", 11 );
-
-    while (1)
+    if (wants_waitpid)
     {
-        switch (pid=waitpid(-1,&status,WUNTRACED|WNOHANG))
+        for (;;)
         {
-            case 0:
-            case -1:
+            /* Call waitpid until we get 0/ECHILD. If we wait, it's only on the first iteration. So we want to set NOHANG (don't wait) unless wants_await is true and this is the first iteration. */
+            int options = WUNTRACED;
+            if (! (wants_await && processed_count == 0))
             {
-                errno=errno_old;
-                return;
+                options |= WNOHANG;
             }
-            default:
-
+            
+            int status = -1;
+            pid_t pid = waitpid(-1, &status, options);
+            if (pid > 0)
+            {
+                /* We got a valid pid */
                 handle_child_status(pid, status);
+                processed_count += 1;
+            }
+            else if (pid == 0)
+            {
+                /* No ready-and-waiting children, we're done */
                 break;
+            }
+            else
+            {
+                /* This indicates an error. One likely failure is ECHILD (no children), which we break on, and is not considered an error. The other likely failure is EINTR, which means we got a signal, which is considered an error. */
+                got_error = (errno != ECHILD);
+                break;
+            }
         }
     }
-    kill(0, SIGIO);
-    errno=errno_old;
+
+    if (got_error)
+    {
+        return -1;
+    }
+    else
+    {
+        s_last_processed_sigchld_generation_count = local_count;
+        return processed_count;
+    }
+}
+
+
+/* This is called from a signal handler. The signal is always SIGCHLD. */
+void job_handle_signal(int signal, siginfo_t *info, void *con)
+{
+    /* This is the only place that this generation count is modified. It's OK if it overflows. */
+    s_sigchld_generation_count += 1;
+    got_signal = 1;
 }
 
 /**
@@ -635,19 +678,18 @@ int job_reap(bool interactive)
     job_t *jnext;
     int found=0;
 
-    static int locked = 0;
-
-    locked++;
+    /* job_reap may fire an event handler, we do not want to call ourselves recursively (to avoid infinite recursion). */
+    static bool locked = false;
+    if (locked)
+    {
+        return 0;
+    }
+    locked = true;
+    
+    process_mark_finished_children(false);
 
     /* Preserve the exit status */
     const int saved_status = proc_get_last_status();
-
-    /*
-      job_read may fire an event handler, we do not want to call
-      ourselves recursively (to avoid infinite recursion).
-    */
-    if (locked>1)
-        return 0;
 
     job_iterator_t jobs;
     jnext = jobs.next();
@@ -759,7 +801,7 @@ int job_reap(bool interactive)
     /* Restore the exit status. */
     proc_set_last_status(saved_status);
 
-    locked = 0;
+    locked = false;
 
     return found;
 }
@@ -1153,6 +1195,14 @@ void job_continue(job_t *j, bool cont)
                         case 1:
                         {
                             read_try(j);
+                            process_mark_finished_children(false);
+                            break;
+                        }
+                        
+                        case 0:
+                        {
+                            /* No FDs are ready. Look for finished processes. */
+                            process_mark_finished_children(false);
                             break;
                         }
 
@@ -1166,13 +1216,8 @@ void job_continue(job_t *j, bool cont)
                               improvement on my 300 MHz machine) on
                               short-lived jobs.
                             */
-                            int status;
-                            pid_t pid = waitpid(-1, &status, WUNTRACED);
-                            if (pid > 0)
-                            {
-                                handle_child_status(pid, status);
-                            }
-                            else
+                            int processed = process_mark_finished_children(true);
+                            if (processed < 0)
                             {
                                 /*
                                   This probably means we got a

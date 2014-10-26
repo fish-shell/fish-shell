@@ -12,6 +12,11 @@ function history --description "Deletes an item from history"
 
     set -l search_mode none
 
+    set -l pager less
+    if set -q PAGER
+        set pager $PAGER
+    end
+
     if test $argc -gt 0
         for i in (seq $argc)
             switch $argv[$i]
@@ -33,7 +38,11 @@ function history --description "Deletes an item from history"
         end
     else
         #Execute history builtin without any argument
-        builtin history
+        if status --is-interactive
+            builtin history | eval $pager
+        else
+            builtin history
+        end
         return
     end
 

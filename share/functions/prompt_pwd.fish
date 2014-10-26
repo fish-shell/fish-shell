@@ -9,5 +9,6 @@ case 'CYGWIN_*'
 end
 
 function prompt_pwd -V args_pre -V args_post --description "Print the current working directory, shortened to fit the prompt"
-	echo $PWD | sed -e "s|^$HOME|~|" $args_pre -e 's-\([^/.]\)[^/]*/-\1/-g' $args_post
+	set -l realhome ~
+	echo $PWD | sed -e "s|^$realhome|~|" $args_pre -e 's-\([^/.]\)[^/]*/-\1/-g' $args_post
 end

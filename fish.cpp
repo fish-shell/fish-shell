@@ -523,7 +523,9 @@ int main(int argc, char **argv)
         }
     }
 
-    proc_fire_event(L"PROCESS_EXIT", EVENT_EXIT, getpid(), res);
+    int exit_status = res ? STATUS_UNKNOWN_COMMAND : proc_get_last_status();
+
+    proc_fire_event(L"PROCESS_EXIT", EVENT_EXIT, getpid(), exit_status);
 
     restore_term_mode();
     restore_term_foreground_process_group();
@@ -543,6 +545,6 @@ int main(int argc, char **argv)
     if (g_log_forks)
         printf("%d: g_fork_count: %d\n", __LINE__, g_fork_count);
 
-    exit_without_destructors(res ? STATUS_UNKNOWN_COMMAND : proc_get_last_status());
+    exit_without_destructors(exit_status);
     return EXIT_FAILURE; //above line should always exit
 }

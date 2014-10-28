@@ -1,3 +1,4 @@
+# vim: set ts=4 sw=4 et:
 # Utilities for the test runners
 
 if test "$argv[1]" = (status -f)
@@ -38,8 +39,10 @@ if not set -q __fish_is_running_tests
         rm -r $XDG_CONFIG_HOME; or die
     end
     mkdir -p $XDG_CONFIG_HOME/fish; or die
+    ln -s $PWD/test_functions $XDG_CONFIG_HOME/fish/functions; or die
     set -l escaped_parent (dirname $PWD | sed -e 's/[\'\\\\]/\\\\&/g'); or die
-    printf 'set fish_function_path \'%s/share/functions\'\n' $escaped_parent > $XDG_CONFIG_HOME/fish/config.fish; or die
+    set -l escaped_config (printf '%s/fish' $XDG_CONFIG_HOME | sed -e 's/[\'\\\\]/\\\\&/g'); or die
+    printf 'set fish_function_path \'%s/functions\' \'%s/share/functions\'\n' $escaped_config $escaped_parent > $XDG_CONFIG_HOME/fish/config.fish; or die
     set -xl __fish_is_running_tests $XDG_CONFIG_HOME
     exec ../fish $script
     die 'exec failed'
@@ -51,10 +54,12 @@ else if test "$__fish_is_running_tests" != "$XDG_CONFIG_HOME"
 else
     # we're running tests with a temporary config directory
     function test_util_on_exit --on-process-exit %self -V __fish_is_running_tests
-        # remove the temporary config directory
-        # unfortunately if this fails we can't alter the exit status of fish
-        if not rm -r "$__fish_is_running_tests"
-            echo "error: Couldn't remove temporary config directory '$__fish_is_running_tests'" >&2
+        if not set -q __fish_test_keep_tmp_config
+            # remove the temporary config directory
+            # unfortunately if this fails we can't alter the exit status of fish
+            if not rm -r "$__fish_is_running_tests"
+                echo "error: Couldn't remove temporary config directory '$__fish_is_running_tests'" >&2
+            end
         end
     end
     # unset __fish_is_running_tests so any children that source

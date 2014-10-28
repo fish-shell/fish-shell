@@ -2,7 +2,7 @@
 #
 # Interactive tests using `expect`
 
-source test_util.fish
+source test_util.fish (status -f); or exit
 
 say -o cyan "Testing interactive functionality"
 if not type -q expect
@@ -13,7 +13,8 @@ end
 function test_file
     rm -Rf tmp.interactive.config; or die "Couldn't remove tmp.interactive.config"
     mkdir -p tmp.interactive.config/fish; or die "Couldn't create tmp.interactive.config/fish"
-    cp interactive.config tmp.interactive.config/fish/config.fish; or die "Couldn't create tmp.interactive.config/fish/config.fish"
+    cat $XDG_CONFIG_HOME/fish/config.fish interactive.config > tmp.interactive.config/fish/config.fish
+    or die "Couldn't create tmp.interactive.config/fish/config.fish"
 
     set -l file $argv[1]
 

@@ -2,7 +2,7 @@
 #
 # Fishscript tests
 
-source test_util.fish
+source test_util.fish (status -f); or exit
 
 say -o cyan "Testing high level script functionality"
 

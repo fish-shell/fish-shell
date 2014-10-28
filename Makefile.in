@@ -315,19 +315,13 @@ test_low_level: fish_tests $(call filter_up_to,test_low_level,$(active_test_goal
 test_high_level: test_fishscript test_interactive
 .PHONY: test_high_level
 
-test_fishscript: $(PROGRAMS) test_fishscript_config $(call filter_up_to,test_fishscript,$(active_test_goals))
-	cd tests; XDG_CONFIG_HOME="$$PWD"/tmp.config ../fish test.fish
+test_fishscript: $(PROGRAMS) $(call filter_up_to,test_fishscript,$(active_test_goals))
+	cd tests && ../fish test.fish
 .PHONY: test_fishscript
 
-test_interactive: $(PROGRAMS) test_fishscript_config $(call filter_up_to,test_interactive,$(active_test_goals))
-	cd tests; XDG_CONFIG_HOME="$$PWD"/tmp.config ../fish interactive.fish
+test_interactive: $(PROGRAMS) $(call filter_up_to,test_interactive,$(active_test_goals))
+	cd tests && ../fish interactive.fish
 .PHONY: test_interactive
-
-test_fishscript_config:
-	@rm -rf tests/tmp.config
-	@mkdir -p tests/tmp.config/fish
-	@echo 'set fish_function_path "$$PWD/../share/functions"' > tests/tmp.config/fish/config.fish
-.PHONY: test_fishscript_config
 
 #
 # commands.hdr collects documentation on all commands, functions and

@@ -25160,7 +25160,7 @@ msgstr "Gerencia abreviações"
 
 #: share/functions/abbr.fish:36
 msgid "%s: invalid option -- %s\\n"
-msgstr "%s: opção inválida -- %s\n"
+msgstr "%s: opção inválida -- %s\\n"
 
 #: share/functions/abbr.fish:43
 msgid "%s: %s cannot be specified along with %s\\n"
@@ -27016,7 +27016,7 @@ msgstr "Apaga itens do histórico"
 
 #: share/functions/hostname.fish:7
 msgid "Show or set the system's host name\r"
-msgstr "Mostra ou muda o nome do host\n"
+msgstr "Mostra ou muda o nome do host\r"
 
 #: share/functions/la.fish:4
 msgid ""

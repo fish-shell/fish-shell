@@ -13,6 +13,7 @@ The following options are available:
 
 - `-i` or `--index` print the word index
 
+Note that, like GNU tools, `contains` interprets all arguments starting with a `-` as options to contains, until it reaches an argument that is `--` (two dashes). See the examples below.
 
 \subsection contains-example Example
 
@@ -25,3 +26,13 @@ end
 \endfish
 
 The above code tests if `~/bin` and `/usr/local/bin` are in the path and adds them if not.
+
+\fish
+function hasargs
+    if contains -- -q $argv
+        echo '$argv contains a -q option'
+    end
+end
+\endfish
+
+The above code checks for `-q` in the argument list, using the `--` argument to demarcate options to `contains` from the key to search for.

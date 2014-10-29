@@ -253,20 +253,11 @@ enum
     /** Whether the exit status should be negated. This flag can only be set by the not builtin. */
     JOB_NEGATE = 1 << 4,
 
-    /** Whether the exit status should be used to re-evaluate the condition in an if block? This is only used by elseif and is a big hack. */
-    JOB_ELSEIF = 1 << 5,
-
-    /** This flag is set to one on wildcard expansion errors. It means that the current command should not be executed */
-    JOB_WILDCARD_ERROR = 1 << 6,
-
-    /** Whether to skip executing this job. This flag is set by the short-circuit builtins, i.e. and and or  */
-    JOB_SKIP = 1 << 7,
-
     /** Whether the job is under job control  */
-    JOB_CONTROL = 1 << 8,
+    JOB_CONTROL = 1 << 5,
 
     /** Whether the job wants to own the terminal when in the foreground  */
-    JOB_TERMINAL = 1 << 9
+    JOB_TERMINAL = 1 << 6
 };
 
 typedef int job_id_t;
@@ -607,6 +598,5 @@ void proc_pop_interactive();
    Format an exit status code as returned by e.g. wait into a fish exit code number as accepted by proc_set_last_status.
  */
 int proc_format_status(int status);
-
 
 #endif

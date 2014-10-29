@@ -1,0 +1,19 @@
+Fish is a smart and user-friendly command line shell.
+
+Copyright (C) 2005-2009 Axel Liljencrantz
+
+fish is free software.
+
+Most of fish is licensed under the GNU General Public License version 2, and
+you can redistribute it and/or modify it under the terms of the GNU GPL as
+published by the Free Software Foundation.
+
+fish also includes software licensed under the GNU Lesser General Public
+License version 2, the OpenBSD license and the ISC license.
+
+Full licensing information is contained in doc_src/license.hdr.
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+more details.

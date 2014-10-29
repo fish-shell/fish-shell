@@ -50,17 +50,14 @@ enum
     /** Don't generate descriptions */
     EXPAND_NO_DESCRIPTIONS = 1 << 6,
 
-    /** Don't do process expansion */
-    EXPAND_SKIP_PROCESS = 1 << 7,
-
     /** Don't expand jobs (but you can still expand processes). This is because job expansion is not thread safe. */
-    EXPAND_SKIP_JOBS = 1 << 8,
+    EXPAND_SKIP_JOBS = 1 << 7,
 
     /** Don't expand home directories */
-    EXPAND_SKIP_HOME_DIRECTORIES = 1 << 9,
+    EXPAND_SKIP_HOME_DIRECTORIES = 1 << 8,
 
     /** Allow fuzzy matching */
-    EXPAND_FUZZY_MATCH = 1 << 10
+    EXPAND_FUZZY_MATCH = 1 << 9
 };
 typedef int expand_flags_t;
 

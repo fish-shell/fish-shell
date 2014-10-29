@@ -100,7 +100,7 @@ private:
     parse_execution_result_t run_function_statement(const parse_node_t &header, const parse_node_t &block_end_command);
     parse_execution_result_t run_begin_statement(const parse_node_t &header, const parse_node_t &contents);
 
-    parse_execution_result_t determine_arguments(const parse_node_t &parent, wcstring_list_t *out_arguments, const parse_node_t **out_unmatched_wildcard_node);
+    parse_execution_result_t determine_arguments(const parse_node_t &parent, wcstring_list_t *out_arguments);
 
     /* Determines the IO chain. Returns true on success, false on error */
     bool determine_io_chain(const parse_node_t &statement, io_chain_t *out_chain);

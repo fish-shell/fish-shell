@@ -3,6 +3,7 @@
 #include "fallback.h"
 #include "wutil.h"
 #include "proc.h"
+#include "expand.h"
 #include <vector>
 #include <algorithm>
 
@@ -236,23 +237,24 @@ static const struct
 }
 keyword_map[] =
 {
+    /* Note that these must be sorted (except for the first), so that we can do binary search */
     KEYWORD_MAP(none),
-    KEYWORD_MAP(if),
-    KEYWORD_MAP(else),
-    KEYWORD_MAP(for),
-    KEYWORD_MAP(in),
-    KEYWORD_MAP(while),
-    KEYWORD_MAP(begin),
-    KEYWORD_MAP(function),
-    KEYWORD_MAP(switch),
-    KEYWORD_MAP(case),
-    KEYWORD_MAP(end),
     KEYWORD_MAP(and),
-    KEYWORD_MAP(or),
-    KEYWORD_MAP(not),
-    KEYWORD_MAP(command),
+    KEYWORD_MAP(begin),
     KEYWORD_MAP(builtin),
-    KEYWORD_MAP(exec)
+    KEYWORD_MAP(case),
+    KEYWORD_MAP(command),
+    KEYWORD_MAP(else),
+    KEYWORD_MAP(end),
+    KEYWORD_MAP(exec),
+    KEYWORD_MAP(for),
+    KEYWORD_MAP(function),
+    KEYWORD_MAP(if),
+    KEYWORD_MAP(in),
+    KEYWORD_MAP(not),
+    KEYWORD_MAP(or),
+    KEYWORD_MAP(switch),
+    KEYWORD_MAP(while)
 };
 
 wcstring keyword_description(parse_keyword_t k)
@@ -276,7 +278,7 @@ static wcstring token_type_user_presentable_description(parse_token_type_t type,
 
     switch (type)
     {
-            /* Hackish. We only support the following types. */
+        /* Hackish. We only support the following types. */
         case symbol_statement:
             return L"a command";
 
@@ -298,8 +300,38 @@ static wcstring token_type_user_presentable_description(parse_token_type_t type,
         case parse_token_type_end:
             return L"end of the statement";
 
+        case parse_token_type_terminate:
+            return L"end of the input";
+
         default:
             return format_string(L"a %ls", token_type_description(type).c_str());
+    }
+}
+
+static wcstring block_type_user_presentable_description(parse_token_type_t type)
+{
+    switch (type)
+    {
+        case symbol_for_header:
+            return L"for loop";
+
+        case symbol_while_header:
+            return L"while loop";
+
+        case symbol_function_header:
+            return L"function definition";
+
+        case symbol_begin_header:
+            return L"begin";
+
+        case symbol_if_statement:
+            return L"if statement";
+
+        case symbol_switch_statement:
+            return L"switch statement";
+
+        default:
+            return token_type_description(type);
     }
 }
 
@@ -506,10 +538,14 @@ class parse_ll_t
     /* The symbol stack can contain terminal types or symbols. Symbols go on to do productions, but terminal types are just matched against input tokens. */
     bool top_node_handle_terminal_types(parse_token_t token);
 
-    void parse_error(const wchar_t *expected, parse_token_t token);
+    void parse_error_unexpected_token(const wchar_t *expected, parse_token_t token);
     void parse_error(parse_token_t token, parse_error_code_t code, const wchar_t *format, ...);
+    void parse_error_at_location(size_t location, parse_error_code_t code, const wchar_t *format, ...);
     void parse_error_failed_production(struct parse_stack_element_t &elem, parse_token_t token);
     void parse_error_unbalancing_token(parse_token_t token);
+
+    /* Reports an error for an unclosed block, e.g. 'begin;'. Returns true on success, false on failure (e.g. it is not an unclosed block) */
+    bool report_error_for_unclosed_block();
 
     void dump_stack(void) const;
 
@@ -558,7 +594,7 @@ class parse_ll_t
         assert(child_start_big < NODE_OFFSET_INVALID);
         node_offset_t child_start = static_cast<node_offset_t>(child_start_big);
 
-        // To avoid constructing multiple nodes, we push_back a single one that we modify
+        // To avoid constructing multiple nodes, we make a single one that we modify
         parse_node_t representative_child(token_type_invalid);
         representative_child.parent = parent_node_idx;
 
@@ -769,6 +805,26 @@ void parse_ll_t::parse_error(parse_token_t token, parse_error_code_t code, const
     }
 }
 
+void parse_ll_t::parse_error_at_location(size_t source_location, parse_error_code_t code, const wchar_t *fmt, ...)
+{
+    this->fatal_errored = true;
+    if (this->should_generate_error_messages)
+    {
+        //this->dump_stack();
+        parse_error_t err;
+
+        va_list va;
+        va_start(va, fmt);
+        err.text = vformat_string(fmt, va);
+        err.code = code;
+        va_end(va);
+
+        err.source_start = source_location;
+        err.source_length = 0;
+        this->errors.push_back(err);
+    }
+}
+
 // Unbalancing token. This includes 'else' or 'case' or 'end' outside of the appropriate block
 // This essentially duplicates some logic from resolving the production for symbol_statement_list - yuck
 void parse_ll_t::parse_error_unbalancing_token(parse_token_t token)
@@ -844,7 +900,7 @@ void parse_ll_t::parse_error_failed_production(struct parse_stack_element_t &sta
         if (! done)
         {
             const wcstring expected = stack_elem.user_presentable_description();
-            this->parse_error(expected.c_str(), token);
+            this->parse_error_unexpected_token(expected.c_str(), token);
         }
     }
 }
@@ -876,7 +932,7 @@ void parse_ll_t::report_tokenizer_error(parse_token_t token, int tok_err_code, c
     this->parse_error(token, parse_error_code, L"%ls", tok_error);
 }
 
-void parse_ll_t::parse_error(const wchar_t *expected, parse_token_t token)
+void parse_ll_t::parse_error_unexpected_token(const wchar_t *expected, parse_token_t token)
 {
     fatal_errored = true;
     if (this->should_generate_error_messages)
@@ -918,6 +974,42 @@ static bool type_is_terminal_type(parse_token_type_t type)
         default:
             return false;
     }
+}
+
+bool parse_ll_t::report_error_for_unclosed_block()
+{
+    bool reported_error = false;
+    /* Unclosed block, for example, 'while true ; '. We want to show the block node that opened it. */
+    const parse_node_t &top_node = this->node_for_top_symbol();
+
+    /* Hacktastic. We want to point at the source location of the block, but our block doesn't have a source range yet - only the terminal tokens do. So get the block statement corresponding to this end command. In general this block may be of a variety of types: if_statement, switch_statement, etc., each with different node structures. But keep descending the first child and eventually you hit a keyword: begin, if, etc. That's the keyword we care about. */
+    const parse_node_t *end_command = this->nodes.get_parent(top_node, symbol_end_command);
+    const parse_node_t *block_node = end_command ? this->nodes.get_parent(*end_command) : NULL;
+
+    if (block_node && block_node->type == symbol_block_statement)
+    {
+        // Get the header
+        block_node = this->nodes.get_child(*block_node, 0, symbol_block_header);
+        block_node = this->nodes.get_child(*block_node, 0); // specific statement
+    }
+    if (block_node != NULL)
+    {
+        // block_node is now an if_statement, switch_statement, for_header, while_header, function_header, or begin_header
+        // Hackish: descend down the first node until we reach the bottom. This will be a keyword node like SWITCH, which will have the source range. Ordinarily the source range would be known by the parent node too, but we haven't completed parsing yet, so we haven't yet propagated source ranges
+        const parse_node_t *cursor = block_node;
+        while (cursor->child_count > 0)
+        {
+            cursor = this->nodes.get_child(*cursor, 0);
+            assert(cursor != NULL);
+        }
+        if (cursor->source_start != NODE_OFFSET_INVALID)
+        {
+            const wcstring node_desc = block_type_user_presentable_description(block_node->type);
+            this->parse_error_at_location(cursor->source_start, parse_error_generic, L"Missing end to balance this %ls", node_desc.c_str());
+            reported_error = true;
+        }
+    }
+    return reported_error;
 }
 
 bool parse_ll_t::top_node_handle_terminal_types(parse_token_t token)
@@ -994,10 +1086,14 @@ bool parse_ll_t::top_node_handle_terminal_types(parse_token_t token)
                     }
                 }
             }
+            else if (stack_top.keyword == parse_keyword_end && token.type == parse_token_type_terminate && this->report_error_for_unclosed_block())
+            {
+                // Handled by report_error_for_unclosed_block
+            }
             else
             {
                 const wcstring expected = stack_top.user_presentable_description();
-                this->parse_error(expected.c_str(), token);
+                this->parse_error_unexpected_token(expected.c_str(), token);
             }
         }
 
@@ -1088,17 +1184,71 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2)
     }
 }
 
+/* Given an expanded string, returns any keyword it matches */
+static parse_keyword_t keyword_with_name(const wchar_t *name)
+{
+    /* Binary search on keyword_map. Start at 1 since 0 is keyword_none */
+    parse_keyword_t result = parse_keyword_none;
+    size_t left = 1, right = sizeof keyword_map / sizeof *keyword_map;
+    while (left < right)
+    {
+        size_t mid = left + (right - left)/2;
+        int cmp = wcscmp(name, keyword_map[mid].name);
+        if (cmp < 0)
+        {
+            right = mid; // name was smaller than mid
+        }
+        else if (cmp > 0)
+        {
+            left = mid + 1; // name was larger than mid
+        }
+        else
+        {
+            result = keyword_map[mid].keyword; // found it
+            break;
+        }
+    }
+    return result;
+}
+
+/* Given a token, returns the keyword it matches, or parse_keyword_none. */
 static parse_keyword_t keyword_for_token(token_type tok, const wchar_t *tok_txt)
 {
-    parse_keyword_t result = parse_keyword_none;
-    if (tok == TOK_STRING)
+    /* Only strings can be keywords */
+    if (tok != TOK_STRING)
     {
-        for (size_t i=0; i < sizeof keyword_map / sizeof *keyword_map; i++)
+        return parse_keyword_none;
+    }
+    
+    /* If tok_txt is clean (which most are), we can compare it directly. Otherwise we have to expand it. We only expand quotes, and we don't want to do expensive expansions like tilde expansions. So we do our own "cleanliness" check; if we find a character not in our allowed set we know it's not a keyword, and if we never find a quote we don't have to expand! Note that this lowercase set could be shrunk to be just the characters that are in keywords. */
+    parse_keyword_t result = parse_keyword_none;
+    bool needs_expand = false, all_chars_valid = true;
+    const wchar_t *chars_allowed_in_keywords = L"abcdefghijklmnopqrstuvwxyz'\"";
+    for (size_t i=0; tok_txt[i] != L'\0'; i++)
+    {
+        wchar_t c = tok_txt[i];
+        if (! wcschr(chars_allowed_in_keywords, c))
         {
-            if (! wcscmp(keyword_map[i].name, tok_txt))
+            all_chars_valid = false;
+            break;
+        }
+        // If we encounter a quote, we need expansion
+        needs_expand = needs_expand || c == L'"' || c == L'\'';
+    }
+    
+    if (all_chars_valid)
+    {
+        /* Expand if necessary */
+        if (! needs_expand)
+        {
+            result = keyword_with_name(tok_txt);
+        }
+        else
+        {
+            wcstring storage = tok_txt;
+            if (expand_one(storage, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_WILDCARDS | EXPAND_SKIP_JOBS | EXPAND_SKIP_HOME_DIRECTORIES))
             {
-                result = keyword_map[i].keyword;
-                break;
+                result = keyword_with_name(storage.c_str());
             }
         }
     }
@@ -1231,7 +1381,7 @@ const parse_node_t *parse_node_tree_t::get_child(const parse_node_t &parent, nod
 {
     const parse_node_t *result = NULL;
 
-    /* We may get nodes with no children if we had an imcomplete parse. Don't consider than an error */
+    /* We may get nodes with no children if we had an incomplete parse. Don't consider than an error */
     if (parent.child_count > 0)
     {
         PARSE_ASSERT(which < parent.child_count);

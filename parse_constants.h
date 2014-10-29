@@ -77,27 +77,27 @@ enum parse_token_type_t
     FIRST_PARSE_TOKEN_TYPE = parse_token_type_string
 } __packed;
 
+/* These must be maintained in sorted order (except for none, which isn't a keyword). This enables us to do binary search. */
 enum parse_keyword_t
 {
     parse_keyword_none,
-    parse_keyword_if,
-    parse_keyword_else,
-    parse_keyword_for,
-    parse_keyword_in,
-    parse_keyword_while,
-    parse_keyword_begin,
-    parse_keyword_function,
-    parse_keyword_switch,
-    parse_keyword_case,
-    parse_keyword_end,
     parse_keyword_and,
-    parse_keyword_or,
-    parse_keyword_not,
-    parse_keyword_command,
+    parse_keyword_begin,
     parse_keyword_builtin,
+    parse_keyword_case,
+    parse_keyword_command,
+    parse_keyword_else,
+    parse_keyword_end,
     parse_keyword_exec,
-
-    LAST_KEYWORD = parse_keyword_exec
+    parse_keyword_for,
+    parse_keyword_function,
+    parse_keyword_if,
+    parse_keyword_in,
+    parse_keyword_not,
+    parse_keyword_or,
+    parse_keyword_switch,
+    parse_keyword_while,
+    LAST_KEYWORD = parse_keyword_while
 } __packed;
 
 /* Statement decorations. This matches the order of productions in decorated_statement */

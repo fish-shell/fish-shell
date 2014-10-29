@@ -1633,7 +1633,6 @@ static void expand_home_directory(wcstring &input)
             if (userinfo == NULL)
             {
                 tilde_error = true;
-                input[0] = L'~';
             }
             else
             {
@@ -1641,10 +1640,17 @@ static void expand_home_directory(wcstring &input)
             }
         }
 
-        if (! tilde_error)
+        wchar_t *realhome;
+        realhome = wrealpath(home, NULL);
+
+        if (! tilde_error && realhome)
         {
-            input.replace(input.begin(), input.begin() + tail_idx, home);
+            input.replace(input.begin(), input.begin() + tail_idx, realhome);
         }
+	else
+	{
+            input[0] = L'~';
+	}
     }
 }
 
@@ -1843,7 +1849,6 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
         if (!(EXPAND_SKIP_HOME_DIRECTORIES & flags))
             expand_home_directory(next);
 
-
         if (flags & ACCEPT_INCOMPLETE)
         {
             if (! next.empty() && next.at(0) == PROCESS_EXPAND)
@@ -1853,10 +1858,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
                  interested in other completions, so we
                  short-circuit and return
                  */
-                if (!(flags & EXPAND_SKIP_PROCESS))
-                {
-                    expand_pid(next, flags, output, NULL);
-                }
+                expand_pid(next, flags, output, NULL);
                 return EXPAND_OK;
             }
             else
@@ -1864,12 +1866,9 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
                 append_completion(*out, next);
             }
         }
-        else
+        else if (! expand_pid(next, flags, *out, errors))
         {
-            if (!(flags & EXPAND_SKIP_PROCESS) && ! expand_pid(next, flags, *out, errors))
-            {
-                return EXPAND_ERROR;
-            }
+            return EXPAND_ERROR;
         }
     }
 

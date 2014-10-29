@@ -12,10 +12,7 @@ DEF_VER=unknown
 if test -f version
 then
 	VN=$(cat version) || VN="$DEF_VER"
-elif test -d .git -o -f .git && type git >/dev/null
-then
-	VN=$(git describe --always --dirty 2>/dev/null)
-else
+elif ! VN=$(git describe --always --dirty 2>/dev/null); then
 	VN="$DEF_VER"
 fi
 

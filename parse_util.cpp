@@ -1271,7 +1271,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
 
     // Parse the input string into a parse tree
     // Some errors are detected here
-    bool parsed = parse_tree_from_string(buff_src, parse_flag_leave_unterminated, &node_tree, &parse_errors);
+    bool parsed = parse_tree_from_string(buff_src, allow_incomplete ? parse_flag_leave_unterminated : parse_flag_none, &node_tree, &parse_errors);
 
     if (allow_incomplete)
     {

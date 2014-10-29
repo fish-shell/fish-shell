@@ -14,7 +14,15 @@ if command ls --version 1>/dev/null 2>/dev/null
 
 	if not set -q LS_COLORS
 		if type -q -f dircolors
-			eval (dircolors -c | sed 's/>&\/dev\/null$//')
+			set -l colorfile
+			for file in ~/.dir_colors ~/.dircolors /etc/DIR_COLORS
+				if test -f $file
+					set colorfile $file
+					break
+				end
+			end
+			echo $colorfile
+			eval (dircolors -c $colorfile | sed 's/>&\/dev\/null$//')
 		end
 	end
 

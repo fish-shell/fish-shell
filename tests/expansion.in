@@ -80,3 +80,15 @@ echo $foo[d]
 
 echo ()[1]
 echo ()[d]
+
+# Test tilde expansion
+set tmpdir (mktemp -d)
+mkdir $tmpdir/realhome
+ln -s $tmpdir/realhome $tmpdir/linkhome
+set expandedtilde (env HOME=$tmpdir/linkhome ../fish -c 'echo ~')
+if test $expandedtilde != $tmpdir/realhome
+	echo '~ expands to' $expandedtilde ' - expected ' $tmpdir/realhome
+end
+unlink $tmpdir/linkhome
+rmdir $tmpdir/realhome
+rmdir $tmpdir

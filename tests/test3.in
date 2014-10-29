@@ -248,7 +248,9 @@ env SHLVL="  3" ../fish -c 'echo SHLVL: $SHLVL'
 env DISPLAY="localhost:0.0" ../fish -c 'echo Elements in DISPLAY: (count $DISPLAY)'
 # We can't use PATH for this because the global configuration will modify PATH
 # based on /etc/paths and /etc/paths.d.
-# At the moment, most variables split on :. So we can use an arbitrary variable for this.
-env FOO="one:two:three:four" ../fish -c 'echo Elements in FOO: (count $FOO)'
+# Exported arrays should use record separator, with a few exceptions. So we can use an arbitrary variable for this.
+env FOO=one\x1etwo\x1ethree\x1efour ../fish -c 'echo Elements in FOO: (count $FOO)'
+# some must use colon separators!
+set -lx MANPATH man1 man2 man3 ; env | grep MANPATH
 
 true

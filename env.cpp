@@ -415,17 +415,10 @@ wcstring env_get_pwd_slash(void)
     return pwd;
 }
 
-// Some variables should not be arrays. This used to be handled by a startup script, but we'd like to get down to 0 forks for startup, so handle it here.
-static bool variable_can_be_array(const wcstring &key)
+/* Here is the whitelist of variables that we colon-delimit, both incoming from the environment and outgoing back to it. This is deliberately very short - we don't want to add language-specific values like CLASSPATH. */
+static bool variable_is_colon_delimited_array(const wcstring &str)
 {
-    if (key == L"DISPLAY")
-    {
-        return false;
-    }
-    else
-    {
-        return true;
-    }
+    return contains(str, L"PATH", L"MANPATH", L"CDPATH");
 }
 
 void env_init(const struct config_paths_t *paths /* or NULL */)
@@ -487,7 +480,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
             wcstring key = key_and_val.substr(0, eql);
             if (is_read_only(key) || is_electric(key)) continue;
             wcstring val = key_and_val.substr(eql + 1);
-            if (variable_can_be_array(key))
+            if (variable_is_colon_delimited_array(key))
             {
                 std::replace(val.begin(), val.end(), L':', ARRAY_SEP);
             }
@@ -1293,19 +1286,22 @@ static void get_exported(const env_node_t *n, std::map<wcstring, wcstring> &h)
     }
 }
 
+/* Given a map from key to value, add values to out of the form key=value */
 static void export_func(const std::map<wcstring, wcstring> &envs, std::vector<std::string> &out)
 {
+    out.reserve(out.size() + envs.size());
     std::map<wcstring, wcstring>::const_iterator iter;
     for (iter = envs.begin(); iter != envs.end(); ++iter)
     {
-        const std::string ks = wcs2string(iter->first);
+        const wcstring &key = iter->first;
+        const std::string &ks = wcs2string(key);
         std::string vs = wcs2string(iter->second);
 
-        for (size_t i=0; i < vs.size(); i++)
+        /* Arrays in the value are ASCII record separator (0x1e) delimited. But some variables should have colons. Add those. */
+        if (variable_is_colon_delimited_array(key))
         {
-            char &vc = vs.at(i);
-            if (vc == ARRAY_SEP)
-                vc = ':';
+            /* Replace ARRAY_SEP with colon */
+            std::replace(vs.begin(), vs.end(), (char)ARRAY_SEP, ':');
         }
 
         /* Put a string on the vector */

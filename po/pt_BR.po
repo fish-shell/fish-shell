@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2014-10-29 09:21-0200\n"
-"PO-Revision-Date: 2014-10-29 09:23-0200\n"
+"PO-Revision-Date: 2014-10-29 10:00-0200\n"
 "Last-Translator: Iuri Rezende Souza <riuri@rocketmail.com>\n"
 "Language-Team: Português Brasileiro <>\n"
 "Language: pt_BR\n"
@@ -3801,60 +3801,49 @@ msgid "Take addr from filename, default /etc/ethers"
 msgstr "Take addr from filename, default /etc/ethers"
 
 #: share/completions/atd.fish:2
-#, fuzzy
 msgid "Limiting load factor"
-msgstr "Limiting load factor"
+msgstr "Máximo fator de carga"
 
 #: share/completions/atd.fish:3
-#, fuzzy
 msgid "Minimum interval in seconds"
-msgstr "Minimum interval in seconds"
+msgstr "Intervalo mínimo em segundos"
 
 #: share/completions/atd.fish:4 share/completions/make.fish:15
 #: share/completions/sylpheed.fish:4
-#, fuzzy
 msgid "Debug mode"
-msgstr "Debug mode"
+msgstr "Modo debug"
 
 #: share/completions/atd.fish:5
-#, fuzzy
 msgid "Process at queue only once"
-msgstr "Process at queue only once"
+msgstr "Processa fila apenas uma vez"
 
 #: share/completions/at.fish:3 share/completions/atq.fish:3
-#, fuzzy
 msgid "Use specified queue"
-msgstr "Use specified queue"
+msgstr "Usa fila especificada"
 
 #: share/completions/at.fish:4
-#, fuzzy
 msgid "Send mail to user"
-msgstr "Send mail to user"
+msgstr "Envia mensagem ao usuário"
 
 #: share/completions/at.fish:5
-#, fuzzy
 msgid "Read job from file"
-msgstr "Read job from file"
+msgstr "Lê trabalho do arquivo"
 
 #: share/completions/at.fish:6
-#, fuzzy
 msgid "Alias for atq"
-msgstr "Alias for atq"
+msgstr "Alias para atq"
 
 #: share/completions/at.fish:7
-#, fuzzy
 msgid "Alias for atrm"
-msgstr "Alias for atrm"
+msgstr "Alias para atrm"
 
 #: share/completions/at.fish:8
-#, fuzzy
 msgid "Show the time"
-msgstr "Show the time"
+msgstr "Mostra a hora"
 
 #: share/completions/at.fish:9
-#, fuzzy
 msgid "Print the jobs listed"
-msgstr "Print the jobs listed"
+msgstr "Printa os trabalhos listados"
 
 #: share/completions/awk.fish:8
 msgid ""
@@ -25166,29 +25155,24 @@ msgid ""
 msgstr ""
 
 #: share/functions/abbr.fish:1
-#, fuzzy
 msgid "Manage abbreviations"
-msgstr "Manual sections"
+msgstr "Gerencia abreviações"
 
 #: share/functions/abbr.fish:36
-#, fuzzy
 msgid "%s: invalid option -- %s\\n"
-msgstr "%ls: Opção inválida -- %lc\n"
+msgstr "%s: opção inválida -- %s\n"
 
 #: share/functions/abbr.fish:43
-#, fuzzy
 msgid "%s: %s cannot be specified along with %s\\n"
-msgstr "%ls: Não podem ser especificados valores com set -e\n"
+msgstr "%s: %s não pode ser especificado com %s\\n"
 
 #: share/functions/abbr.fish:52
-#, fuzzy
 msgid "%s: option requires an argument -- %s\\n"
-msgstr "%ls: Opção requer argumento -- %lc\n"
+msgstr "%s: opção requer um argumento -- %s\\n"
 
 #: share/functions/abbr.fish:58
-#, fuzzy
 msgid "%s: Unexpected argument -- %s\\n"
-msgstr "%ls: Esperava argumento\n"
+msgstr "%s: Argumento inesperado -- %s\\n"
 
 #: share/functions/abbr.fish:71
 msgid "%s: abbreviation must have a non-empty key\\n"
@@ -25196,88 +25180,76 @@ msgstr ""
 
 #: share/functions/abbr.fish:75
 msgid "%s: abbreviation must have a value\\n"
-msgstr ""
+msgstr "%s: abreviação deve ter um valor\\n"
 
 #: share/functions/abbr.fish:97
-#, fuzzy
 msgid "%s: no such abbreviation '%s'\\n"
-msgstr "%s: Unknown option “%s”\\n"
+msgstr "%s: não há abreviação “%s”\\n"
 
 #: share/functions/alias.fish:2
 msgid ""
 "Legacy function for creating shellscript functions using an alias-like syntax"
-msgstr ""
+msgstr "Função de compatibilidade para criar funções usando sintaxe do alias"
 
 #: share/functions/alias.fish:36
-#, fuzzy
 msgid "%s: Expected one or two arguments, got %d\\n"
-msgstr "%s: Expected 1, 2 or 3 arguments, got %d\\n"
+msgstr "%s: Esperava um ou dois argumentos, obteve %d\\n"
 
 #: share/functions/alias.fish:42
-#, fuzzy
 msgid "%s: Name cannot be empty\\n"
-msgstr "%ls: Nome da variável não pode ser a string vazia\n"
+msgstr "%s: Nome não pode ser vazio\\n"
 
 #: share/functions/alias.fish:45
 msgid "%s: Body cannot be empty\\n"
-msgstr ""
+msgstr "%s: Corpo não pode ser vazio\\n"
 
 #: share/functions/contains_seq.fish:1
 msgid "Return true if array contains a sequence"
-msgstr ""
+msgstr "Retorna verdadeiro se vetor contém uma sequência"
 
 #: share/functions/dirh.fish:2
-#, fuzzy
 msgid "Print the current directory history (the back- and fwd- lists)"
-msgstr "Print the current directory history (the back- and fwd- lists)"
+msgstr "Mostra o histórico atual de diretórios (listas back- e fwd-)"
 
 #: share/functions/dirs.fish:1
-#, fuzzy
 msgid "Print directory stack"
-msgstr "Print directory stack"
+msgstr "Mostra a pilha de diretórios"
 
 #: share/functions/_.fish:8 share/functions/_.fish:12
-#, fuzzy
 msgid "Alias for the gettext command"
-msgstr "Help for the specified command"
+msgstr "Alias para o comando gettext"
 
 #: share/functions/_.fish:9
-#, fuzzy
 msgid "fish"
 msgstr "fish"
 
 #: share/functions/__fish_complete_abook_formats.fish:1
 msgid "Complete abook formats"
-msgstr ""
+msgstr "Completa formatos abook"
 
 #: share/functions/__fish_complete_atool_archive_contents.fish:1
-#, fuzzy
 msgid "List archive contents"
-msgstr "List archive"
+msgstr "Mostra conteúdo do arquivo comprimido"
 
 #: share/functions/__fish_complete_atool.fish:1
 msgid "Complete atool"
-msgstr ""
+msgstr "Completa atool"
 
 #: share/functions/__fish_complete_bittorrent.fish:4
-#, fuzzy
 msgid "Maximum uploads at once"
-msgstr "Maximum uploads at once"
+msgstr "Máximo de uploads ao mesmo tempo"
 
 #: share/functions/__fish_complete_bittorrent.fish:5
-#, fuzzy
 msgid "Number of seconds between keepalives"
-msgstr "Number of seconds between keepalives"
+msgstr "Número de segundos entre keepalives"
 
 #: share/functions/__fish_complete_bittorrent.fish:6
-#, fuzzy
 msgid "Bytes per request"
-msgstr "Bytes per request"
+msgstr "Bytes por requisição"
 
 #: share/functions/__fish_complete_bittorrent.fish:7
-#, fuzzy
 msgid "Requests per pipe"
-msgstr "Requests per pipe"
+msgstr "Requisições por pipe"
 
 #: share/functions/__fish_complete_bittorrent.fish:8
 #, fuzzy
@@ -25406,117 +25378,96 @@ msgstr "Whether to inform the user that hash failures occur"
 
 #: share/functions/__fish_complete_command.fish:1
 msgid "Complete using all available commands"
-msgstr ""
+msgstr "Completa usando todos os comandos disponíveis"
 
 #: share/functions/__fish_complete_convert_options.fish:1
-#, fuzzy
 msgid "Complete Convert options"
-msgstr "Tolerate sloppy mount options"
+msgstr ""
 
 #: share/functions/__fish_complete_diff.fish:3
-#, fuzzy
 msgid "Ignore case differences"
-msgstr "Ignore case differences"
+msgstr "Ignora diferença de maiúscula/minúscula"
 
 #: share/functions/__fish_complete_diff.fish:4
-#, fuzzy
 msgid "Ignore case when comparing file names"
-msgstr "Ignore case when comparing file names"
+msgstr "Ignora caso ao comparar nomes de arquivos"
 
 #: share/functions/__fish_complete_diff.fish:5
-#, fuzzy
 msgid "Consider case when comparing file names"
-msgstr "Consider case when comparing file names"
+msgstr "Considera caso ao comparar nomes de arquivos"
 
 #: share/functions/__fish_complete_diff.fish:6
-#, fuzzy
 msgid "Ignore changes due to tab expansion"
-msgstr "Ignore changes due to tab expansion"
+msgstr "Ignora mudanças devido ao tab"
 
 #: share/functions/__fish_complete_diff.fish:7
-#, fuzzy
 msgid "Ignore changes in the amount of white space"
-msgstr "Ignore changes in the amount of white space"
+msgstr "Ignora mudanças na quantidade de espaços em branco"
 
 #: share/functions/__fish_complete_diff.fish:8
-#, fuzzy
 msgid "Ignore all white space"
-msgstr "Ignore all white space"
+msgstr "Ignora todos os espaços em branco"
 
 #: share/functions/__fish_complete_diff.fish:9
-#, fuzzy
 msgid "Ignore changes whose lines are all blank"
-msgstr "Ignore changes whose lines are all blank"
+msgstr "Ignora mudanças cujas linhas são vazias"
 
 #: share/functions/__fish_complete_diff.fish:10
-#, fuzzy
 msgid "Ignore changes whose lines match the REGEX"
-msgstr "Ignore changes whose lines match the REGEX"
+msgstr "Ignora mudanças cujas linhas correspondem à REGEX"
 
 #: share/functions/__fish_complete_diff.fish:11
-#, fuzzy
 msgid "Treat all files as text"
-msgstr "Treat all files as text"
+msgstr "Trata todos os arquivos como texto"
 
 #: share/functions/__fish_complete_diff.fish:12
-#, fuzzy
 msgid "Recursively compare subdirectories"
-msgstr "Recursively compare subdirectories"
+msgstr "Compara recursivamente subdiretórios"
 
 #: share/functions/__fish_complete_diff.fish:13
-#, fuzzy
 msgid "Treat absent files as empty"
-msgstr "Treat absent files as empty"
+msgstr "Trata arquivos ausentes como vazios"
 
 #: share/functions/__fish_complete_diff.fish:14
-#, fuzzy
 msgid "Output NUM lines of copied context"
-msgstr "Output NUM lines of copied context"
+msgstr "Mostra NUM linhas de contexto copiado"
 
 #: share/functions/__fish_complete_diff.fish:15
-#, fuzzy
 msgid "Output 3 lines of copied context"
-msgstr "Output 3 lines of copied context"
+msgstr "Mostra 3 linhas de contexto copiado"
 
 #: share/functions/__fish_complete_diff.fish:16
-#, fuzzy
 msgid "Output NUM lines of unified context"
-msgstr "Output NUM lines of unified context"
+msgstr "Mostra NUM linhas de contexto unificado"
 
 #: share/functions/__fish_complete_diff.fish:17
-#, fuzzy
 msgid "Output 3 lines of unified context"
-msgstr "Output 3 lines of unified context"
+msgstr "Mostra 3 linhas de contexto unificado"
 
 #: share/functions/__fish_complete_diff.fish:18
-#, fuzzy
 msgid "Output only whether the files differ"
-msgstr "Output only whether the files differ"
+msgstr "Mostra somente quando os arquivos diferem"
 
 #: share/functions/__fish_complete_diff.fish:19
-#, fuzzy
 msgid "Output a normal diff"
-msgstr "Output a normal diff"
+msgstr "Mostra diff normal"
 
 #: share/functions/__fish_complete_diff.fish:20
-#, fuzzy
 msgid "Output in two columns"
-msgstr "Output in two columns"
+msgstr "Mostra em duas colunas"
 
 #: share/functions/__fish_complete_diff.fish:21
 #, fuzzy
 msgid "Output at most NUM print columns"
-msgstr "Output at most NUM print columns"
+msgstr "Mostra no máximo NUM colunas"
 
 #: share/functions/__fish_complete_diff.fish:22
-#, fuzzy
 msgid "Try to find a smaller set of changes"
-msgstr "Try to find a smaller set of changes"
+msgstr "Tenta encontrar um conjunto menor de mudanças"
 
 #: share/functions/__fish_complete_diff.fish:23
-#, fuzzy
 msgid "Compare FILE1 to all operands"
-msgstr "Compare FILE2 to all operands"
+msgstr ""
 
 #: share/functions/__fish_complete_diff.fish:24
 #, fuzzy
@@ -26740,12 +26691,10 @@ msgid ""
 msgstr ""
 
 #: share/functions/__fish_config_interactive.fish:87
-#, fuzzy
 msgid "Welcome to fish, the friendly interactive shell"
 msgstr "Bem-vindo ao fish, ou friendly interactive shell"
 
 #: share/functions/__fish_config_interactive.fish:88
-#, fuzzy
 msgid "Type %shelp%s for instructions on how to use fish"
 msgstr "Digite %shelp%s para instruções sobre como usar o fish"
 
@@ -26958,14 +26907,12 @@ msgid "Print X windows"
 msgstr "Print APM info"
 
 #: share/functions/fish_prompt.fish:5
-#, fuzzy
 msgid "Write out the prompt"
-msgstr "Write out the prompt"
+msgstr "Escreve o prompt"
 
 #: share/functions/__fish_pwd.fish:3 share/functions/__fish_pwd.fish:7
-#, fuzzy
 msgid "Show current path"
-msgstr "Show source package"
+msgstr "Mostra diretório atual"
 
 #: share/functions/__fish_test_arg.fish:2
 msgid "Test if the token under the cursor matches the specified wildcard"
@@ -26987,16 +26934,14 @@ msgid "vi-like key bindings for fish"
 msgstr "Specify key bindings file"
 
 #: share/functions/fish_vi_prompt.fish:1
-#, fuzzy
 msgid "Displays the current mode"
-msgstr "Display version and exit"
+msgstr "Mostra o modo atual"
 
 #: share/functions/fish_vi_prompt.fish:17
 msgid "Simple vi prompt"
 msgstr ""
 
 #: share/functions/funced.fish:1
-#, fuzzy
 msgid "Edit function definition"
 msgstr "Editar definição de função"
 
@@ -27007,7 +26952,6 @@ msgid "%s: Unknown option %s\\n"
 msgstr "%s: Opção desconhecida %s\\n"
 
 #: share/functions/funced.fish:36
-#, fuzzy
 msgid "funced: You must specify one function name\n"
 msgstr "funced: Você deve especificar um nome de função\n"
 
@@ -27028,73 +26972,67 @@ msgstr "Set function description"
 #: share/functions/funcsave.fish:2
 msgid "Save the current definition of all specified functions to file"
 msgstr ""
+"Salva a definição atual de todas as funções especificadas em um arquivo"
 
 #: share/functions/funcsave.fish:11
-#, fuzzy
 msgid "%s: Expected function name\\n"
-msgstr "%ls: Expected function name\n"
+msgstr "%s: Esperava nome de função\\n"
 
 #: share/functions/funcsave.fish:26
-#, fuzzy
 msgid "%s: Could not create configuration directory\\n"
-msgstr "%ls: Could not find home directory\n"
+msgstr "%ls: Não pôde criar diretório de configuração\\n"
 
 #: share/functions/funcsave.fish:37
-#, fuzzy
 msgid "%s: Unknown function '%s'\\n"
-msgstr "%s: Unknown option “%s”\\n"
+msgstr "%s: Função desconhecida “%s”\\n"
 
 #: share/functions/help.fish:1
-#, fuzzy
 msgid "Show help for the fish shell"
-msgstr "Show help for the fish shell"
+msgstr "Mostra ajuda para o shell fish"
 
 #: share/functions/help.fish:76
-#, fuzzy
 msgid "%s: Could not find a web browser.\\n"
-msgstr "%s: Could not find a web browser.\\n"
+msgstr "%s: Não pôde encontrar um navegador web.\\n"
 
 #: share/functions/help.fish:77
-#, fuzzy, sh-format
+#, sh-format
 msgid ""
 "Please set the variable $BROWSER to a suitable browser and try again.\\n\\n"
 msgstr ""
-"Please set the variable $BROWSER to a suitable browser and try again\\n\\n"
+"Por favor atribua a variável $BROWSER para um navegador adequado e tente "
+"novamente.\\n\\n"
 
 #: share/functions/help.fish:129
 msgid "help: Help is being displayed in your default browser.\\n"
-msgstr ""
+msgstr "help: Ajuda está sendo exibida no seu navegador padrão.\\n"
 
 #: share/functions/help.fish:132
 msgid "help: Help is being displayed in %s.\\n"
-msgstr ""
+msgstr "help: Ajuda está sendo mostrada em %s.\\n"
 
 #: share/functions/history.fish:5
 msgid "Deletes an item from history"
-msgstr ""
+msgstr "Apaga itens do histórico"
 
 #: share/functions/hostname.fish:7
 msgid "Show or set the system's host name\r"
-msgstr ""
+msgstr "Mostra ou muda o nome do host\n"
 
 #: share/functions/la.fish:4
-#, fuzzy
 msgid ""
 "List contents of directory, including hidden files in directory using long "
 "format"
 msgstr ""
-"List contents of directory, including hidden files in directory using long "
-"format"
+"Lista conteúdo do diretório, incluindo arquivos ocultos em diretórios usando "
+"formato longo"
 
 #: share/functions/ll.fish:4
-#, fuzzy
 msgid "List contents of directory using long format"
-msgstr "List contents of directory using long format"
+msgstr "Lista conteúdo do diretório usando formato longo"
 
 #: share/functions/ls.fish:7 share/functions/ls.fish:32
-#, fuzzy
 msgid "List contents of directory"
-msgstr "List contents of directory"
+msgstr "Lista conteúdo do diretório"
 
 #: share/functions/man.fish:1
 #, fuzzy
@@ -27102,47 +27040,40 @@ msgid "Format and display the on-line manual pages"
 msgstr "Display change information for the package"
 
 #: share/functions/math.fish:2
-#, fuzzy
 msgid "Perform math calculations in bc"
-msgstr "Perform a simulation"
+msgstr "Executa cálculos matemáticos no bc"
 
 #: share/functions/mimedb.fish:4
 msgid "Look up file information via the mimedb database"
 msgstr ""
 
 #: share/functions/nextd.fish:2
-#, fuzzy
 msgid "Move forward in the directory history"
-msgstr "Move forward in the directory history"
+msgstr "Move para frente no histórico de diretórios"
 
 #: share/functions/nextd.fish:28
-#, fuzzy
 msgid "%s: The number of positions to skip must be a non-negative integer\\n"
-msgstr "%s: The number of positions to skip must be a non-negative integer\\n"
+msgstr "%s: O número de posições a pular deve ser um inteiro não-negativo\\n"
 
 #: share/functions/N_.fish:3
 msgid "No-op"
-msgstr ""
+msgstr "Sem operação"
 
 #: share/functions/open.fish:8
-#, fuzzy
 msgid "Open file in default application"
-msgstr "Open file in default application"
+msgstr "Abrir arquivo na aplicação padrão"
 
 #: share/functions/popd.fish:2
-#, fuzzy
 msgid "Pop dir from stack"
-msgstr "Pop dir from stack"
+msgstr "Retira diretório da pilha"
 
 #: share/functions/popd.fish:14
-#, fuzzy
 msgid "%s: Directory stack is empty...\\n"
-msgstr "%s: Directory stack is empty..."
+msgstr "%s: Pilha de diretórios está vazia...\\n"
 
 #: share/functions/prevd.fish:2
-#, fuzzy
 msgid "Move back in the directory history"
-msgstr "Move back in the directory history"
+msgstr "Move para trás no histórico de diretórios"
 
 #: share/functions/prevd.fish:28
 #, fuzzy
@@ -27150,9 +27081,8 @@ msgid "The number of positions to skip must be a non-negative integer\\n"
 msgstr "The number of positions to skip must be a non-negative integer\\n"
 
 #: share/functions/prompt_pwd.fish:11
-#, fuzzy
 msgid "Print the current working directory, shortened to fit the prompt"
-msgstr "Print the current working directory, shortend to fit the prompt"
+msgstr "Mostra o diretório atual de trabalho, reduzido para caber no prompt"
 
 #: share/functions/psub.fish:3
 #, fuzzy
@@ -27164,9 +27094,8 @@ msgstr ""
 "the command that called psub exits."
 
 #: share/functions/pushd.fish:3
-#, fuzzy
 msgid "Push directory to stack"
-msgstr "Push directory to stack"
+msgstr "Coloca diretório na pilha"
 
 #: share/functions/seq.fish:7
 #, fuzzy
@@ -27175,15 +27104,13 @@ msgstr "Print name, not number"
 
 #: share/functions/seq.fish:11
 msgid "Fallback implementation of the seq command"
-msgstr ""
+msgstr "Implementação fallback do comando seq"
 
 #: share/functions/seq.fish:31
-#, fuzzy
 msgid "%s: Expected 1, 2 or 3 arguments, got %d\\n"
-msgstr "%s: Expected 1, 2 or 3 arguments, got %d\\n"
+msgstr "%s: Esperava 1, 2 ou 3 argumentos, obteve %d\\n"
 
 #: share/functions/seq.fish:38
-#, fuzzy
 msgid "%s: '%s' is not a number\\n"
 msgstr "%s: “%s” não é um número\\n"
 
@@ -27197,83 +27124,69 @@ msgid "Write out the git prompt"
 msgstr "Write out the prompt"
 
 #: share/functions/type.fish:2
-#, fuzzy
 msgid "Print the type of a command"
-msgstr "Print the type of a command"
+msgstr "Mostra o tipo de um comando"
 
 #: share/functions/type.fish:90
-#, fuzzy
 msgid "%s is a function with definition\\n"
-msgstr "%ls: Missing function definition information."
+msgstr "%s: é uma função com definição\\n"
 
 #: share/functions/type.fish:94
-#, fuzzy
 msgid "function"
-msgstr "function\\n"
+msgstr "função"
 
 #: share/functions/type.fish:107
-#, fuzzy
 msgid "%s is a builtin\\n"
-msgstr "%s is a builtin\\n"
+msgstr "%s é um builtin\\n"
 
 #: share/functions/type.fish:110
-#, fuzzy
 msgid "builtin"
-msgstr "builtin\\n"
+msgstr "builtin"
 
 #: share/functions/type.fish:130
-#, fuzzy
 msgid "%s is %s\\n"
-msgstr "%s is %s\\n"
+msgstr "%s é %s\\n"
 
 #: share/functions/type.fish:133
-#, fuzzy
 msgid "file"
 msgstr "arquivo"
 
 #: share/functions/type.fish:144
-#, fuzzy
 msgid "%s: Could not find '%s'\\n"
-msgstr "%s: Could not find “%s”\\n"
+msgstr "%s: Não pôde encontrar “%s”\\n"
 
 #: share/functions/umask.fish:11 share/functions/umask.fish:69
 #: share/functions/umask.fish:76
-#, fuzzy
 msgid "%s: Invalid mask '%s'\\n"
-msgstr "%s: Invalid mask “%s”\\n"
+msgstr "%s: Máscara inválida “%s”\\n"
 
 #: share/functions/umask.fish:137
-#, fuzzy
 msgid "Set default file permission mask"
-msgstr "Set default file permission mask"
+msgstr "Ajusta a máscara de permissões padrão"
 
 #: share/functions/umask.fish:212
-#, fuzzy
 msgid "%s: Too many arguments\\n"
-msgstr "%s: Too many arguments\\n"
+msgstr "%s: Argumentos demais\\n"
 
 #: share/functions/vared.fish:6
-#, fuzzy
 msgid "Edit variable value"
-msgstr "Edit variable value"
+msgstr "Edita valor de variável"
 
 #: share/functions/vared.fish:41
-#, fuzzy
 msgid ""
 "%s: %s is an array variable. Use %svared%s %s[n] to edit the n:th element of "
 "%s\\n"
 msgstr ""
-"%s: %s is an array variable. Use %svared%s %s[n] to edit the n:th element of "
-"%s\\n"
+"%s: %s é uma variável vetorial. Use %svared%s %s[n] para editar o n-ésimo "
+"elemento de %s\\n"
 
 #: share/functions/vared.fish:45
-#, fuzzy
 msgid ""
 "%s: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s "
 "VARIABLE\\n"
 msgstr ""
-"%s: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s "
-"VARIABLE\\n"
+"%s: Esperava exatamente um argumento, obteve %s.\\n\\nSinopse:\\n\\t%svared"
+"%s VARIÁVEL\\n"
 
 #~ msgid "%ls: Expected zero or at least two parameters, got %d\n"
 #~ msgstr "%ls: Esperava zero ou dois parâmetros, obteve %d\n"

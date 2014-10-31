@@ -103,7 +103,7 @@
 #ifdef USE_GETTEXT
 static const wchar_t *C_(const wcstring &s)
 {
-    return s.empty() ? L"" : wgettext(s);
+    return s.empty() ? L"" : wgettext(s.c_str());
 }
 #else
 static const wcstring &C_(const wcstring &s)

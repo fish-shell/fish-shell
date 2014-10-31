@@ -485,7 +485,7 @@ const wchar_t *wgettext(const wchar_t *in)
         val = new wcstring(format_string(L"%s", out)); //note that this writes into the map!
     }
     errno = err;
-    return val->c_str();
+    return val->c_str(); //looks dangerous but is safe, since the string is stored in the map
 }
 
 const wchar_t *wgetenv(const wcstring &name)

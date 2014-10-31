@@ -53,7 +53,7 @@ int parse_util_lineno(const wchar_t *str, size_t offset)
         return 0;
 
     int res = 1;
-    for (size_t i=0; str[i] && i<offset; i++)
+    for (size_t i=0; i < offset && str[i] != L'\0'; i++)
     {
         if (str[i] == L'\n')
         {
@@ -1186,7 +1186,6 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
             {
 
                 const wcstring subst(paran_begin + 1, paran_end);
-                wcstring tmp;
 
                 // Replace the command substitution with just INTERNAL_SEPARATOR
                 size_t cmd_sub_start = paran_begin - working_copy_cstr;

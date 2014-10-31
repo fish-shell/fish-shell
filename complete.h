@@ -136,9 +136,6 @@ enum
 };
 typedef uint32_t completion_request_flags_t;
 
-/** Given a list of completions, returns a list of their completion fields */
-wcstring_list_t completions_to_wcstring_list(const std::vector<completion_t> &completions);
-
 /**
 
   Add a completion.

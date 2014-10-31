@@ -97,9 +97,6 @@ struct tokenizer_t
     size_t cached_lineno_offset;
     int cached_lineno_count;
 
-    /** Return the line number of the character at the given offset */
-    int line_number_of_character_at_offset(size_t offset);
-
     /**
       Constructor for a tokenizer. b is the string that is to be
       tokenized. It is not copied, and should not be freed by the caller

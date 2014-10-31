@@ -136,42 +136,6 @@ int tok_has_next(tokenizer_t *tok)
     return   tok->has_next;
 }
 
-int tokenizer_t::line_number_of_character_at_offset(size_t offset)
-{
-    // we want to return (one plus) the number of newlines at offsets less than the given offset
-    // cached_lineno_count is the number of newlines at indexes less than cached_lineno_offset
-    const wchar_t *str = orig_buff;
-    if (! str)
-        return 0;
-
-    // easy hack to handle 0
-    if (offset == 0)
-        return 1;
-
-    size_t i;
-    if (offset > cached_lineno_offset)
-    {
-        for (i = cached_lineno_offset; str[i] && i<offset; i++)
-        {
-            /* Add one for every newline we find in the range [cached_lineno_offset, offset) */
-            if (str[i] == L'\n')
-                cached_lineno_count++;
-        }
-        cached_lineno_offset = i; //note: i, not offset, in case offset is beyond the length of the string
-    }
-    else if (offset < cached_lineno_offset)
-    {
-        /* Subtract one for every newline we find in the range [offset, cached_lineno_offset) */
-        for (i = offset; i < cached_lineno_offset; i++)
-        {
-            if (str[i] == L'\n')
-                cached_lineno_count--;
-        }
-        cached_lineno_offset = offset;
-    }
-    return cached_lineno_count + 1;
-}
-
 /**
    Tests if this character can be a part of a string. The redirect ^ is allowed unless it's the first character.
 */

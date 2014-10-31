@@ -330,14 +330,6 @@ void input_function_set_status(bool status)
     input_function_status = status;
 }
 
-/**
-    Returns the nth argument for a given input function
-*/
-wchar_t input_function_get_arg(int index)
-{
-    return input_function_args[index];
-}
-
 /* Helper function to compare the lengths of sequences */
 static bool length_is_greater_than(const input_mapping_t &m1, const input_mapping_t &m2)
 {

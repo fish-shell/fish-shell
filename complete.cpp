@@ -324,18 +324,6 @@ completion_t &completion_t::operator=(const completion_t &him)
     return *this;
 }
 
-
-wcstring_list_t completions_to_wcstring_list(const std::vector<completion_t> &list)
-{
-    wcstring_list_t strings;
-    strings.reserve(list.size());
-    for (std::vector<completion_t>::const_iterator iter = list.begin(); iter != list.end(); ++iter)
-    {
-        strings.push_back(iter->completion);
-    }
-    return strings;
-}
-
 bool completion_t::is_alphabetically_less_than(const completion_t &a, const completion_t &b)
 {
     return a.completion < b.completion;
@@ -411,8 +399,6 @@ public:
                         bool use_switches);
 
     void complete_param_expand(const wcstring &str, bool do_file);
-
-    void debug_print_completions();
 
     void complete_cmd(const wcstring &str,
                       bool use_function,
@@ -1656,14 +1642,6 @@ void completer_t::complete_param_expand(const wcstring &sstr, bool do_file)
                       flags, NULL) == EXPAND_ERROR)
     {
         debug(3, L"Error while expanding string '%ls'", comp_str);
-    }
-}
-
-void completer_t::debug_print_completions()
-{
-    for (size_t i=0; i < completions.size(); i++)
-    {
-        printf("- Completion: %ls\n", completions.at(i).completion.c_str());
     }
 }
 

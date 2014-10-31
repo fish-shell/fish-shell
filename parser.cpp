@@ -1019,13 +1019,6 @@ bool parser_t::detect_errors_in_argument_list(const wcstring &arg_list_src, wcst
     return errored;
 }
 
-// helper type used in parser::test below
-struct block_info_t
-{
-    int position; //tokenizer position
-    block_type_t type; //type of the block
-};
-
 void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &errors, wcstring *output) const
 {
     assert(output != NULL);

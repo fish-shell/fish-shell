@@ -1428,19 +1428,6 @@ const parse_node_t *parse_node_tree_t::get_parent(const parse_node_t &node, pars
     return result;
 }
 
-const parse_node_t *parse_node_tree_t::get_first_ancestor_of_type(const parse_node_t &node, parse_token_type_t desired_type) const
-{
-    const parse_node_t *ancestor = &node;
-    while ((ancestor = this->get_parent(*ancestor)))
-    {
-        if (ancestor->type == desired_type)
-        {
-            break;
-        }
-    }
-    return ancestor;
-}
-
 static void find_nodes_recursive(const parse_node_tree_t &tree, const parse_node_t &parent, parse_token_type_t type, parse_node_tree_t::parse_node_list_t *result, size_t max_count)
 {
     if (result->size() < max_count)

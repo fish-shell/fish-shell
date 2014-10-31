@@ -383,27 +383,6 @@ static char *wcs2str_internal(const wchar_t *in, char *out)
     return out;
 }
 
-char **wcsv2strv(const wchar_t * const *in)
-{
-    size_t i, count = 0;
-
-    while (in[count] != 0)
-        count++;
-    char **res = (char **)malloc(sizeof(char *)*(count+1));
-    if (res == 0)
-    {
-        DIE_MEM();
-    }
-
-    for (i=0; i<count; i++)
-    {
-        res[i]=wcs2str(in[i]);
-    }
-    res[count]=0;
-    return res;
-
-}
-
 wcstring format_string(const wchar_t *format, ...)
 {
     va_list va;

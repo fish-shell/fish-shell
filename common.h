@@ -683,12 +683,6 @@ void append_format(wcstring &str, const wchar_t *format, ...);
 void append_formatv(wcstring &str, const wchar_t *format, va_list ap);
 
 /**
-   Returns a newly allocated wide character string array equivalent of
-   the specified multibyte character string array
-*/
-char **wcsv2strv(const wchar_t * const *in);
-
-/**
    Test if the given string is a valid variable name.
 
    \return null if this is a valid name, and a pointer to the first invalid character otherwise

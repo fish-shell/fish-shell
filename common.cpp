@@ -255,7 +255,6 @@ char *wcs2str(const wchar_t *in)
 {
     if (! in)
         return NULL;
-    char *out;
     size_t desired_size = MAX_UTF8_BYTES*wcslen(in)+1;
     char local_buff[512];
     if (desired_size <= sizeof local_buff / sizeof *local_buff)
@@ -277,7 +276,7 @@ char *wcs2str(const wchar_t *in)
     else
     {
         // here we fall into the bad case of allocating a buffer probably much larger than necessary
-        out = (char *)malloc(MAX_UTF8_BYTES*wcslen(in)+1);
+        char *out = (char *)malloc(MAX_UTF8_BYTES*wcslen(in)+1);
         if (!out)
         {
             DIE_MEM();

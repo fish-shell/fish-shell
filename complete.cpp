@@ -101,9 +101,15 @@
    response)
 */
 #ifdef USE_GETTEXT
-#define C_(wstr) ((wcscmp(wstr, L"")==0)?L"":wgettext(wstr))
+static const wchar_t *C_(const wcstring &s)
+{
+    return s.empty() ? L"" : wgettext(s);
+}
 #else
-#define C_(string) (string)
+static const wcstring &C_(const wcstring &s)
+{
+    return s;
+}
 #endif
 
 /* Testing apparatus */
@@ -158,10 +164,9 @@ typedef struct complete_entry_opt
     /** Completion flags */
     complete_flags_t flags;
 
-    const wchar_t *localized_desc() const
+    const wcstring localized_desc() const
     {
-        const wchar_t *tmp = desc.c_str();
-        return C_(tmp);
+        return C_(desc);
     }
 } complete_entry_opt_t;
 
@@ -1535,7 +1540,7 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
                     if (o->short_opt != L'\0' &&
                             short_ok(str, o->short_opt, iter->short_opt_str))
                     {
-                        const wchar_t *desc = o->localized_desc();
+                        const wcstring desc = o->localized_desc();
                         wchar_t completion[2];
                         completion[0] = o->short_opt;
                         completion[1] = 0;
@@ -2110,7 +2115,7 @@ void complete_print(wcstring &out)
     for (std::vector<const completion_entry_t *>::const_iterator iter = all_completions.begin(); iter != all_completions.end(); ++iter)
     {
         const completion_entry_t *e = *iter;
-        const option_list_t options = e->get_options();
+        const option_list_t &options = e->get_options();
         for (option_list_t::const_iterator oiter = options.begin(); oiter != options.end(); ++oiter)
         {
             const complete_entry_opt_t *o = &*oiter;
@@ -2146,7 +2151,7 @@ void complete_print(wcstring &out)
 
             append_switch(out,
                           L"description",
-                          C_(o->desc.c_str()));
+                          C_(o->desc));
 
             append_switch(out,
                           L"arguments",

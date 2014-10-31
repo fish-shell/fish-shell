@@ -32,7 +32,7 @@
 #define NO_COMMON 2
 /**
  * Only use the argument list specifies with completion after
- * option. This is the same as (NO_FILES & NO_COMMON)
+ * option. This is the same as (NO_FILES | NO_COMMON)
  */
 #define EXCLUSIVE 3
 

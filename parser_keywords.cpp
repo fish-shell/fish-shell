@@ -13,23 +13,6 @@ Functions having to do with parser keywords, like testing if a function is a blo
 #include "common.h"
 #include "parser_keywords.h"
 
-
-bool parser_keywords_is_switch(const wcstring &cmd)
-{
-    if (cmd == L"--")
-    {
-        return ARG_SKIP;
-    }
-    else if (! cmd.empty() && cmd.at(0) == L'-')
-    {
-        return ARG_SWITCH;
-    }
-    else
-    {
-        return ARG_NON_SWITCH;
-    }
-}
-
 bool parser_keywords_skip_arguments(const wcstring &cmd)
 {
     return contains(cmd,

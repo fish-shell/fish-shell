@@ -1075,7 +1075,7 @@ block_t::block_t(block_type_t t) :
     skip(),
     tok_pos(),
     node_offset(NODE_OFFSET_INVALID),
-    loop_status(),
+    loop_status(LOOP_NORMAL),
     job(),
     src_filename(),
     src_lineno(),

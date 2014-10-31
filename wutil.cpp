@@ -188,12 +188,6 @@ FILE *wfopen(const wcstring &path, const char *mode)
     return result;
 }
 
-FILE *wfreopen(const wcstring &path, const char *mode, FILE *stream)
-{
-    cstring tmp = wcs2string(path);
-    return freopen(tmp.c_str(), mode, stream);
-}
-
 bool set_cloexec(int fd)
 {
     int flags = fcntl(fd, F_GETFD, 0);
@@ -232,24 +226,10 @@ static int wopen_internal(const wcstring &pathname, int flags, mode_t mode, bool
     return fd;
 
 }
-int wopen(const wcstring &pathname, int flags, mode_t mode)
-{
-    // off the main thread, always use wopen_cloexec
-    ASSERT_IS_MAIN_THREAD();
-    ASSERT_IS_NOT_FORKED_CHILD();
-    return wopen_internal(pathname, flags, mode, false);
-}
 
 int wopen_cloexec(const wcstring &pathname, int flags, mode_t mode)
 {
     return wopen_internal(pathname, flags, mode, true);
-}
-
-
-int wcreat(const wcstring &pathname, mode_t mode)
-{
-    const cstring tmp = wcs2string(pathname);
-    return creat(tmp.c_str(), mode);
 }
 
 DIR *wopendir(const wcstring &name)
@@ -486,21 +466,6 @@ const wchar_t *wgettext(const wchar_t *in)
     }
     errno = err;
     return val->c_str(); //looks dangerous but is safe, since the string is stored in the map
-}
-
-const wchar_t *wgetenv(const wcstring &name)
-{
-    ASSERT_IS_MAIN_THREAD();
-    cstring name_narrow = wcs2string(name);
-    char *res_narrow = getenv(name_narrow.c_str());
-    static wcstring out;
-
-    if (!res_narrow)
-        return 0;
-
-    out = format_string(L"%s", res_narrow);
-    return out.c_str();
-
 }
 
 int wmkdir(const wcstring &name, int mode)

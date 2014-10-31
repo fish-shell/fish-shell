@@ -608,7 +608,7 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
         }
     }
 
-    input_set_bind_mode(m.sets_mode.c_str());
+    input_set_bind_mode(m.sets_mode);
 }
 
 

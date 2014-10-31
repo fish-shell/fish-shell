@@ -1588,14 +1588,14 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
                                 wcstring completion = format_string(L"%ls=", whole_opt.c_str()+offset);
                                 append_completion(this->completions,
                                                   completion,
-                                                  C_(o->desc.c_str()),
+                                                  C_(o->desc),
                                                   flags);
 
                             }
 
                             append_completion(this->completions,
                                               whole_opt.c_str() + offset,
-                                              C_(o->desc.c_str()),
+                                              C_(o->desc),
                                               flags);
                         }
                     }

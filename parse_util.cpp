@@ -288,11 +288,6 @@ int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_o
     return parse_util_locate_brackets_range(str, inout_cursor_offset, out_contents, out_start, out_end, accept_incomplete, L'(', L')');
 }
 
-int parse_util_locate_slice_range(const wcstring &str, size_t *inout_cursor_offset, wcstring *out_contents, size_t *out_start, size_t *out_end, bool accept_incomplete)
-{
-    return parse_util_locate_brackets_range(str, inout_cursor_offset, out_contents, out_start, out_end, accept_incomplete, L'[', L']');
-}
-
 void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **a, const wchar_t **b)
 {
     const wchar_t * const cursor = buff + cursor_pos;

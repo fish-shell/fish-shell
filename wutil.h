@@ -38,14 +38,6 @@ FILE *wfopen(const wcstring &path, const char *mode);
 /** Sets CLO_EXEC on a given fd */
 bool set_cloexec(int fd);
 
-/**
-   Wide character version of freopen().
-*/
-FILE *wfreopen(const wcstring &path, const char *mode, FILE *stream);
-
-/** Wide character version of open(). */
-int wopen(const wcstring &pathname, int flags, mode_t mode = 0);
-
 /** Wide character version of open() that also sets the close-on-exec flag (atomically when possible). */
 int wopen_cloexec(const wcstring &pathname, int flags, mode_t mode = 0);
 
@@ -54,10 +46,6 @@ int make_fd_nonblocking(int fd);
 
 /** Mark an fd as blocking; returns errno or 0 on success */
 int make_fd_blocking(int fd);
-
-/** Wide character version of creat(). */
-int wcreat(const wcstring &pathname, mode_t mode);
-
 
 /** Wide character version of opendir(). Note that opendir() is guaranteed to set close-on-exec by POSIX (hooray). */
 DIR *wopendir(const wcstring &name);
@@ -140,11 +128,6 @@ std::wstring wbasename(const std::wstring &path);
    around gettext, like all other functions in this file.
 */
 const wchar_t *wgettext(const wchar_t *in);
-
-/**
-   Wide character version of getenv
-*/
-const wchar_t *wgetenv(const wcstring &name);
 
 /**
    Wide character version of mkdir

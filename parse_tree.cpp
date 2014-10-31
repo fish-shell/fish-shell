@@ -559,11 +559,6 @@ class parse_ll_t
         return nodes.at(top_symbol.node_idx);
     }
 
-    parse_token_type_t stack_top_type() const
-    {
-        return symbol_stack.back().type;
-    }
-
     // Pop from the top of the symbol stack, then push the given production, updating node counts. Note that production_t has type "pointer to array" so some care is required.
     inline void symbol_stack_pop_push_production(const production_t *production)
     {

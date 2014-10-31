@@ -80,24 +80,6 @@ static wcstring default_vars_path()
 }
 
 /**
-   The table of all universal variables
-*/
-static env_universal_t &default_universal_vars()
-{
-    static env_universal_t s_default_vars(L"");
-    return s_default_vars;
-}
-
-static void (*callback)(fish_message_type_t type,
-                        const wchar_t *key,
-                        const wchar_t *val);
-
-void env_universal_common_init(void (*cb)(fish_message_type_t type, const wchar_t *key, const wchar_t *val))
-{
-    callback = cb;
-}
-
-/**
    Test if the message msg contains the command cmd
 */
 static bool match(const wchar_t *msg, const wchar_t *cmd)
@@ -1612,24 +1594,6 @@ static bool bool_from_env_var(const char *name, bool default_value)
 {
     const char *var = getenv(name);
     return var ? from_string<bool>(var) : default_value;
-}
-
-static bool initialize_synchronizes_via_fishd()
-{
-    if (program_name && ! wcscmp(program_name, L"fishd"))
-    {
-        /* fishd always wants to use fishd */
-        return true;
-    }
-    
-    return bool_from_env_var(UNIVERSAL_USE_FISHD, false);
-}
-
-bool synchronizes_via_fishd()
-{
-    /* Note that in general we can't change this once it's been set, so we only load it once */
-    static bool result = initialize_synchronizes_via_fishd();
-    return result;
 }
 
 bool universal_log_enabled()

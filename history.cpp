@@ -656,7 +656,7 @@ void history_t::set_valid_file_paths(const wcstring_list_t &valid_file_paths, hi
     scoped_lock locker(lock);
 
     /* Look for an item with the given identifier. It is likely to be at the end of new_items */
-    for (history_item_list_t::reverse_iterator iter = new_items.rbegin(); iter != new_items.rend(); iter++)
+    for (history_item_list_t::reverse_iterator iter = new_items.rbegin(); iter != new_items.rend(); ++iter)
     {
         if (iter->identifier == ident)
         {
@@ -1563,12 +1563,6 @@ void history_t::save(void)
 {
     scoped_lock locker(lock);
     this->save_internal(false);
-}
-
-void history_t::save_and_vacuum(void)
-{
-    scoped_lock locker(lock);
-    this->save_internal(true);
 }
 
 void history_t::disable_automatic_saving()

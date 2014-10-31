@@ -542,13 +542,6 @@ int oflags_for_redirection_type(enum token_type type)
     }
 }
 
-wchar_t tok_last_quote(tokenizer_t *tok)
-{
-    CHECK(tok, 0);
-
-    return tok->last_quote;
-}
-
 /**
    Test if a character is whitespace. Differs from iswspace in that it
    does not consider a newline to be whitespace.
@@ -704,36 +697,6 @@ void tok_next(tokenizer_t *tok)
 
     }
 
-}
-
-enum token_type tok_peek_next(tokenizer_t *tok, wcstring *out_next_string)
-{
-    if (out_next_string != NULL)
-    {
-        out_next_string->clear();
-    }
-
-    enum token_type result = TOK_END;
-    if (tok_has_next(tok))
-    {
-        int saved = tok_get_pos(tok);
-        tok_next(tok);
-        result = tok_last_type(tok);
-
-        if (out_next_string != NULL)
-        {
-            const wchar_t *last = tok_last(tok);
-            out_next_string->assign(last ? last : L"");
-        }
-
-        tok_set_pos(tok, saved);
-    }
-    return result;
-}
-
-const wchar_t *tok_string(tokenizer_t *tok)
-{
-    return tok?tok->orig_buff:0;
 }
 
 wcstring tok_first(const wchar_t *str)

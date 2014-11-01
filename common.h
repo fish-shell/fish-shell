@@ -59,6 +59,9 @@ typedef std::vector<wcstring> wcstring_list_t;
 */
 #define BYTE_MAX 0xffu
 
+/** BOM value */
+#define UTF8_BOM_WCHAR 0xFEFFu
+
 /* Flags for unescape_string functions */
 enum
 {

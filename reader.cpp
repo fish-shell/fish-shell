@@ -4205,7 +4205,7 @@ static int read_ni(int fd, const io_chain_t &io)
             acc.insert(acc.end(), buff, buff + c);
         }
 
-        const wcstring str = acc.empty() ? wcstring() : str2wcstring(&acc.at(0), acc.size());
+        wcstring str = acc.empty() ? wcstring() : str2wcstring(&acc.at(0), acc.size());
         acc.clear();
 
         if (fclose(in_stream))
@@ -4214,6 +4214,12 @@ static int read_ni(int fd, const io_chain_t &io)
                   _(L"Error while closing input stream"));
             wperror(L"fclose");
             res = 1;
+        }
+
+        /* Swallow a BOM (#1518) */
+        if (! str.empty() && str.at(0) == UTF8_BOM_WCHAR)
+        {
+            str.erase(0, 1);
         }
 
         parse_error_list_t errors;

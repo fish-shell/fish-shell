@@ -113,4 +113,7 @@ try_unbalanced_block 'if false'
 "while" false; end
 "wh"'ile' false; "e"nd
 
+# BOM checking (see #1518)
+echo \uFEFF"echo bom_test" | source
+
 false

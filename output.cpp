@@ -56,45 +56,6 @@
 
 static int writeb_internal(char c);
 
-/**
- Names of different colors.
- */
-static const wchar_t *col[]=
-{
-    L"black",
-    L"red",
-    L"green",
-    L"brown",
-    L"yellow",
-    L"blue",
-    L"magenta",
-    L"purple",
-    L"cyan",
-    L"white",
-    L"normal"
-}
-;
-
-/**
- Mapping from color name (the 'col' array) to color index as used in
- ANSI color terminals, and also the fish_color_* constants defined
- in highlight.h. Non-ANSI terminals will display the wrong colors,
- since they use a different mapping.
- */
-static const int col_idx[]=
-{
-    0,
-    1,
-    2,
-    3,
-    3,
-    4,
-    5,
-    5,
-    6,
-    7,
-    FISH_COLOR_NORMAL,
-};
 
 /**
  The function used for output

@@ -78,49 +78,49 @@ msgstr "%ls：应恰好有一个函数名\n"
 #: builtin.cpp:1344 builtin.cpp:1406
 #, c-format
 msgid "%ls: Function '%ls' does not exist\n"
-msgstr "%ls: Function “%ls” does not exist\n"
+msgstr "%ls：函数 “%ls” 不存在\n"
 
 #: builtin.cpp:1394
 #, fuzzy, c-format
 msgid ""
 "%ls: Expected exactly two names (current function name, and new function "
 "name)\n"
-msgstr "%ls: Expected exactly one function name\n"
+msgstr "%ls：应恰好有一个函数名\n"
 
 #: builtin.cpp:1417 builtin.cpp:1952 builtin.cpp:2259
 #, c-format
 msgid "%ls: Illegal function name '%ls'\n"
-msgstr "%ls: Illegal function name “%ls”\n"
+msgstr "%ls：函数名 “%ls” 非法\n"
 
 #: builtin.cpp:1428
 #, fuzzy, c-format
 msgid "%ls: Function '%ls' already exists. Cannot create copy '%ls'\n"
-msgstr "%ls: Function “%ls” does not exist\n"
+msgstr "%ls：函数 “%ls” 不存在\n"
 
 #: builtin.cpp:1809 builtin.cpp:2114
 #, c-format
 msgid "%ls: Unknown signal '%ls'\n"
-msgstr "%ls: Unknown signal “%ls”\n"
+msgstr "%ls：未知的信号 “%ls”\n"
 
 #: builtin.cpp:1824 builtin.cpp:1984 builtin.cpp:2129 builtin.cpp:2291
 #, c-format
 msgid "%ls: Invalid variable name '%ls'\n"
-msgstr "%ls: Invalid variable name “%ls”\n"
+msgstr "%ls：变量名 “%ls” 非法\n"
 
 #: builtin.cpp:1877 builtin.cpp:2182
 #, c-format
 msgid "%ls: Cannot find calling job for event handler\n"
-msgstr "%ls: Cannot find calling job for event handler\n"
+msgstr "%ls：Cannot find calling job for event handler\n"
 
 #: builtin.cpp:1895 builtin.cpp:2200
 #, c-format
 msgid "%ls: Invalid process id %ls\n"
-msgstr "%ls: Invalid process id %ls\n"
+msgstr "%ls：进程id %ls 非法\n"
 
 #: builtin.cpp:1945 builtin.cpp:2252
 #, c-format
 msgid "%ls: Expected function name\n"
-msgstr "%ls: Expected function name\n"
+msgstr "%ls：应有函数名\n"
 
 #: builtin.cpp:1962 builtin.cpp:2269
 #, c-format
@@ -128,81 +128,81 @@ msgid ""
 "%ls: The name '%ls' is reserved,\n"
 "and can not be used as a function name\n"
 msgstr ""
-"%ls: The name “%ls” is reserved,\n"
-"and can not be used as a function name\n"
+"%ls：名字 “%ls” 已经保留，\n"
+"不能作为函数名\n"
 
 #: builtin.cpp:1970 builtin.cpp:2277 builtin.cpp:3824
 #, fuzzy, c-format
 msgid "%ls: No function name given\n"
-msgstr "%ls: Expected function name\n"
+msgstr "%ls：应有函数名\n"
 
 #: builtin.cpp:1997 builtin.cpp:2304
 #, c-format
 msgid "%ls: Expected one argument, got %d\n"
-msgstr "%ls: Expected one argument, got %d\n"
+msgstr "%ls：应有一个参数，提供了 %d 个\n"
 
 #: builtin.cpp:2319
 msgid "Current functions are: "
-msgstr "Current functions are: "
+msgstr "当前的函数是： "
 
 #: builtin.cpp:2459
 #, c-format
 msgid "%ls: Seed value '%ls' is not a valid number\n"
-msgstr "%ls: Seed value “%ls” is not a valid number\n"
+msgstr "%ls：种子值 “%ls” 不是一个有效的数字\n"
 
 #: builtin.cpp:2473
 #, c-format
 msgid "%ls: Expected zero or one argument, got %d\n"
-msgstr "%ls: Expected zero or one argument, got %d\n"
+msgstr "%ls：至多应有一个参数，提供了 %d 个\n"
 
 #: builtin.cpp:2981 fish.cpp:518 parser.cpp:1095
 msgid "Standard input"
-msgstr "Standard input"
+msgstr "标准输入"
 
 #: builtin.cpp:3024
 msgid "This is a login shell\n"
-msgstr "This is a login shell\n"
+msgstr "这是登录shell\n"
 
 #: builtin.cpp:3026
 msgid "This is not a login shell\n"
-msgstr "This is not a login shell\n"
+msgstr "这不是登录shell\n"
 
 #: builtin.cpp:3028
 #, c-format
 msgid "Job control: %ls\n"
-msgstr "Job control: %ls\n"
+msgstr "任务控制：%ls\n"
 
 #: builtin.cpp:3029
 msgid "Only on interactive jobs"
-msgstr "Only on interactive jobs"
+msgstr "只在不活跃的进程上"
 
 #: builtin.cpp:3030
 msgid "Never"
-msgstr "Never"
+msgstr "从不"
 
 #: builtin.cpp:3030
 msgid "Always"
-msgstr "Always"
+msgstr "总是"
 
 #: builtin.cpp:3066 builtin.cpp:3995
 #, c-format
 msgid "%ls: Argument '%ls' must be an integer\n"
-msgstr "%ls: Argument “%ls” must be an integer\n"
+msgstr "%ls：参数 “%ls” 必须是整数\n"
 
 #: builtin.cpp:3108
 #, c-format
 msgid "%ls: Could not find home directory\n"
-msgstr "%ls: Could not find home directory\n"
+msgstr "%ls：找不到home目录\n"
 
 #: builtin.cpp:3128 builtin.cpp:3182
 #, c-format
 msgid "%ls: '%ls' is not a directory\n"
-msgstr "%ls: “%ls” is not a directory\n"
+msgstr "%ls：“%ls” 不是一个目录\n"
 
 #: builtin.cpp:3135
 #, c-format
 msgid "%ls: The directory '%ls' does not exist\n"
-msgstr "%ls: The directory “%ls” does not exist\n"
+msgstr "%ls：目录 “%ls” 不存在\n"
 
 #: builtin.cpp:3142
 #, c-format

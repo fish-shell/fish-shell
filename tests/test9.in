@@ -114,7 +114,12 @@ try_unbalanced_block 'if false'
 "wh"'ile' false; "e"nd
 
 # BOM checking (see #1518)
-echo \uFEFF"echo bom_test" | source
+# But only in UTF8
+if locale | sgrep -q -i utf-8
+    echo \uFEFF"echo bom_test" | source
+else
+    echo "echo bom_test" | source
+end
 
 # Comments abutting text (#953)
 echo not#a#comment

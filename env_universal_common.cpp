@@ -568,7 +568,7 @@ bool env_universal_t::open_temporary_file(const wcstring &directory, wcstring *o
         int result_fd = -1;
         char *narrow_str = wcs2str(tmp_name_template.c_str());
 #if HAVE_MKOSTEMP
-        result_fd = mkostemp(narrow_str, O_WRONLY | O_CREAT | O_EXCL | O_TRUNC | O_CLOEXEC);
+        result_fd = mkostemp(narrow_str, O_CLOEXEC);
         if (result_fd >= 0)
         {
             tmp_name = str2wcstring(narrow_str);

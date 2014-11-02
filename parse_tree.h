@@ -184,10 +184,12 @@ public:
     /* Given a job, return all of its statements. These are 'specific statements' (e.g. symbol_decorated_statement, not symbol_statement) */
     parse_node_list_t specific_statements_for_job(const parse_node_t &job) const;
 
+    /* Returns the boolean type for a boolean node */
+    static enum parse_bool_statement_type_t statement_boolean_type(const parse_node_t &node);
+
     /* Given a job, return whether it should be backgrounded, because it has a & specifier */
     bool job_should_be_backgrounded(const parse_node_t &job) const;
 };
-
 
 /* The big entry point. Parse a string, attempting to produce a tree for the given goal type */
 bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags, parse_node_tree_t *output, parse_error_list_t *errors, parse_token_type_t goal = symbol_job_list);

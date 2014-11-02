@@ -109,6 +109,14 @@ enum parse_statement_decoration_t
     parse_statement_decoration_exec
 };
 
+/* Boolean statement types */
+enum parse_bool_statement_type_t
+{
+    parse_bool_and,
+    parse_bool_or,
+    parse_bool_not
+};
+
 /* Parse error code list */
 enum parse_error_code_t
 {

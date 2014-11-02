@@ -116,4 +116,8 @@ try_unbalanced_block 'if false'
 # BOM checking (see #1518)
 echo \uFEFF"echo bom_test" | source
 
+# Comments abutting text (#953)
+echo not#a#comment
+echo is # a # comment
+
 false

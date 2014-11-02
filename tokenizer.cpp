@@ -138,6 +138,8 @@ int tok_has_next(tokenizer_t *tok)
 
 /**
    Tests if this character can be a part of a string. The redirect ^ is allowed unless it's the first character.
+   Hash (#) starts a comment if it's the first character in a token; otherwise it is considered a string character.
+   See #953.
 */
 bool tok_is_string_character(wchar_t c, bool is_first)
 {
@@ -150,7 +152,6 @@ bool tok_is_string_character(wchar_t c, bool is_first)
         case L'|':
         case L'\t':
         case L';':
-        case L'#':
         case L'\r':
         case L'<':
         case L'>':
@@ -689,7 +690,7 @@ void tok_next(tokenizer_t *tok)
             }
             else
             {
-                /* Not a redirection or pipe, so just a stirng */
+                /* Not a redirection or pipe, so just a string */
                 read_string(tok);
             }
         }

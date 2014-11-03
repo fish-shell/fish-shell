@@ -103,11 +103,15 @@ job_iterator_t::job_iterator_t(job_list_t &jobs) : job_list(&jobs)
     this->reset();
 }
 
-
 job_iterator_t::job_iterator_t() : job_list(&parser_t::principal_parser().job_list())
 {
     ASSERT_IS_MAIN_THREAD();
     this->reset();
+}
+
+size_t job_iterator_t::count() const
+{
+    return this->job_list->size();
 }
 
 void print_jobs(void)
@@ -644,16 +648,55 @@ void job_handle_signal(int signal, siginfo_t *info, void *con)
     got_signal = 1;
 }
 
+/* Given a command like "cat file", truncate it to a reasonable length */
+static wcstring truncate_command(const wcstring &cmd)
+{
+    const size_t max_len = 32;
+    if (cmd.size() <= max_len)
+    {
+        // No truncation necessary
+        return cmd;
+    }
+    
+    // Truncation required
+    const bool ellipsis_is_unicode = (ellipsis_char == L'\x2026');
+    const size_t ellipsis_length = ellipsis_is_unicode ? 1 : 3;
+    size_t trunc_length = max_len - ellipsis_length;
+    // Eat trailing whitespace
+    while (trunc_length > 0 && iswspace(cmd.at(trunc_length - 1)))
+    {
+        trunc_length -= 1;
+    }
+    wcstring result = wcstring(cmd, 0, trunc_length);
+    // Append ellipsis
+    if (ellipsis_is_unicode)
+    {
+        result.push_back(ellipsis_char);
+    }
+    else
+    {
+        result.append(L"...");
+    }
+    return result;
+}
+
 /**
 	Format information about job status for the user to look at.
 
 	\param j the job to test
 	\param status a string description of the job exit type
 */
-static void format_job_info(const job_t *j, const wchar_t *status)
+static void format_job_info(const job_t *j, const wchar_t *status, size_t job_count)
 {
     fwprintf(stdout, L"\r");
-    fwprintf(stdout, _(L"Job %d, \'%ls\' has %ls"), j->job_id, j->command_wcstr(), status);
+    if (job_count == 1)
+    {
+        fwprintf(stdout, _(L"\'%ls\' has %ls"), truncate_command(j->command()).c_str(), status);
+    }
+    else
+    {
+        fwprintf(stdout, _(L"Job %d, \'%ls\' has %ls"), j->job_id, truncate_command(j->command()).c_str(), status);
+    }
     fflush(stdout);
     tputs(clr_eol,1,&writeb);
     fwprintf(stdout, L"\n");
@@ -692,6 +735,7 @@ int job_reap(bool interactive)
     const int saved_status = proc_get_last_status();
 
     job_iterator_t jobs;
+    const size_t job_count = jobs.count();
     jnext = jobs.next();
     while (jnext)
     {
@@ -734,26 +778,39 @@ int job_reap(bool interactive)
                         job_set_flag(j, JOB_NOTIFIED, 1);
                     if (!job_get_flag(j, JOB_SKIP_NOTIFICATION))
                     {
-                        if (proc_is_job)
-                            fwprintf(stdout,
-                                     _(L"%ls: Job %d, \'%ls\' terminated by signal %ls (%ls)"),
-                                     program_name,
-                                     j->job_id,
-                                     j->command_wcstr(),
-                                     sig2wcs(WTERMSIG(p->status)),
-                                     signal_get_desc(WTERMSIG(p->status)));
-                        else
-                            fwprintf(stdout,
-                                     _(L"%ls: Process %d, \'%ls\' from job %d, \'%ls\' terminated by signal %ls (%ls)"),
-                                     program_name,
-                                     p->pid,
-                                     p->argv0(),
-                                     j->job_id,
-                                     j->command_wcstr(),
-                                     sig2wcs(WTERMSIG(p->status)),
-                                     signal_get_desc(WTERMSIG(p->status)));
-                        tputs(clr_eol,1,&writeb);
-                        fwprintf(stdout, L"\n");
+                        /* Print nothing if we get SIGINT in the foreground process group, to avoid spamming obvious stuff on the console (#1119). If we get SIGINT for the foreground process, assume the user typed ^C and can see it working. It's possible they didn't, and the signal was delivered via pkill, etc., but the SIGINT/SIGTERM distinction is precisely to allow INT to be from a UI and TERM to be programmatic, so this assumption is keeping with the design of signals.
+                        If echoctl is on, then the terminal will have written ^C to the console. If off, it won't have. We don't echo ^C either way, so as to respect the user's preference. */
+                        if (WTERMSIG(p->status) != SIGINT || ! job_get_flag(j, JOB_FOREGROUND))
+                            {
+                            if (proc_is_job)
+                            {
+                                // We want to report the job number, unless it's the only job, in which case we don't need to
+                                const wcstring job_number_desc = (job_count == 1) ? wcstring() : format_string(L"Job %d, ", j->job_id);
+                                fwprintf(stdout,
+                                         _(L"%ls: %ls\'%ls\' terminated by signal %ls (%ls)"),
+                                         program_name,
+                                         job_number_desc.c_str(),
+                                         truncate_command(j->command()).c_str(),
+                                         sig2wcs(WTERMSIG(p->status)),
+                                         signal_get_desc(WTERMSIG(p->status)));
+                            }
+                            else
+                            {
+                                const wcstring job_number_desc = (job_count == 1) ? wcstring() : format_string(L"from job %d, ", j->job_id);
+                                // This case is pretty rare
+                                fwprintf(stdout,
+                                         _(L"%ls: Process %d, \'%ls\' %ls\'%ls\' terminated by signal %ls (%ls)"),
+                                         program_name,
+                                         p->pid,
+                                         p->argv0(),
+                                         job_number_desc.c_str(),
+                                         truncate_command(j->command()).c_str(),
+                                         sig2wcs(WTERMSIG(p->status)),
+                                         signal_get_desc(WTERMSIG(p->status)));
+                            }
+                            tputs(clr_eol,1,&writeb);
+                            fwprintf(stdout, L"\n");
+                        }
                         found=1;
                     }
 
@@ -773,7 +830,7 @@ int job_reap(bool interactive)
         {
             if (!job_get_flag(j, JOB_FOREGROUND) && !job_get_flag(j, JOB_NOTIFIED) && !job_get_flag(j, JOB_SKIP_NOTIFICATION))
             {
-                format_job_info(j, _(L"ended"));
+                format_job_info(j, _(L"ended"), job_count);
                 found=1;
             }
             proc_fire_event(L"JOB_EXIT", EVENT_EXIT, -j->pgid, 0);
@@ -788,7 +845,7 @@ int job_reap(bool interactive)
             */
             if (!job_get_flag(j, JOB_SKIP_NOTIFICATION))
             {
-                format_job_info(j, _(L"stopped"));
+                format_job_info(j, _(L"stopped"), job_count);
                 found=1;
             }
             job_set_flag(j, JOB_NOTIFIED, 1);

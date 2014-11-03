@@ -797,7 +797,6 @@ int job_reap(bool interactive)
                             else
                             {
                                 const wcstring job_number_desc = (job_count == 1) ? wcstring() : format_string(L"from job %d, ", j->job_id);
-                                // This case is pretty rare
                                 fwprintf(stdout,
                                          _(L"%ls: Process %d, \'%ls\' %ls\'%ls\' terminated by signal %ls (%ls)"),
                                          program_name,

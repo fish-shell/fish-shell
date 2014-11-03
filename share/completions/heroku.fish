@@ -2,49 +2,49 @@
 # By Jason Brokaw (github.com/jbbrokaw)
 
 function __fish_list_available_addons
-  heroku addons:list | awk -F":" '/^[a-z]/ {print $1}'
+    heroku addons:list | awk -F":" '/^[a-z]/ {print $1}'
 end
 
 function __fish_list_installed_addons
-  heroku addons | awk '{if (NR>1) print $1}'
+    heroku addons | awk '{if (NR>1) print $1}'
 end
 
 function __fish_list_heroku_apps
-  heroku apps | awk '{if (NR>1) print $1}'
+    heroku apps | awk '{if (NR>1) print $1}'
 end
 
 function __fish_list_heroku_config_keys
-  heroku config | awk -F':' '{if (NR>1) print $1}'
+    heroku config | awk -F':' '{if (NR>1) print $1}'
 end
 
 function __fish_list_heroku_domains
-  heroku domains | awk '{if (NR>1) print $1}'
+    heroku domains | awk '{if (NR>1) print $1}'
 end
 
 function __fish_list_heroku_dynos
-  heroku ps | awk -F':' '{if (NR>1) print $1}'
+    heroku ps | awk -F':' '{if (NR>1) print $1}'
 end
 
 function __fish_list_heroku_releases
-  heroku releases | awk '{if (NR>1) print $1}'
+    heroku releases | awk '{if (NR>1) print $1}'
 end
 
 function __fish_heroku_needs_command
-  set cmd (commandline -opc)
-  if [ (count $cmd) -eq 1 -a $cmd[1] = 'heroku' ]
-    return 0
-  end
-  return 1
+    set cmd (commandline -opc)
+    if [ (count $cmd) -eq 1 -a $cmd[1] = 'heroku' ]
+        return 0
+    end
+    return 1
 end
 
 function __fish_heroku_using_command
-  set cmd (commandline -opc)
-  if [ (count $cmd) -gt 1 ]
-    if [ $argv[1] = $cmd[2] ]
-      return 0
+    set cmd (commandline -opc)
+    if [ (count $cmd) -gt 1 ]
+        if [ $argv[1] = $cmd[2] ]
+            return 0
+        end
     end
-  end
-  return 1
+    return 1
 end
 
 set -l heroku_looking -c heroku -n '__fish_heroku_needs_command'
@@ -107,7 +107,7 @@ complete $heroku_looking -xa addons:upgrade -d 'upgrade an existing addon'
 complete -c heroku -n '__fish_heroku_using_command addons:upgrade' -fa '(__fish_list_installed_addons)'
 
 # Apps options and subcommands
-complete -c heroku -n '__fish_heroku_using_command apps' -s o -l org -l ORG  -d "the org to list the apps for"
+complete -c heroku -n '__fish_heroku_using_command apps' -s o -l org -l ORG    -d "the org to list the apps for"
 complete -c heroku -n '__fish_heroku_using_command apps' -s A -l all -d "list all apps in the org. Not just joined apps"
 complete -c heroku -n '__fish_heroku_using_command apps' -s p -l personal -d "list apps in personal account when a default org is set"
 

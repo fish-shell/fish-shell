@@ -48,6 +48,7 @@ function __fish_heroku_using_command
 end
 
 set -l heroku_looking -c heroku -n '__fish_heroku_needs_command'
+
 # Main commands
 complete $heroku_looking -xa addons -d 'list installed addons'
 complete $heroku_looking -xa apps -d 'manage apps (create, destroy)'
@@ -83,7 +84,7 @@ complete $heroku_looking -xa update -d 'update the heroku client'
 complete $heroku_looking -xa version -d 'display version'
 
 complete $heroku_looking -xa git:clone -d "APP DIRECTORY clones a heroku app to your local machine at DIRECTORY (defaults to app name)"
-complete $heroku_lookgin -xa git:remote -d "adds a git remote to an app repo (-a APP)"
+complete $heroku_looking -xa git:remote -d "adds a git remote to an app repo (-a APP)"
 
 # Addons subcommands
 complete $heroku_looking -xa addons:add -d 'install an addon'

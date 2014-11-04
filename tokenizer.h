@@ -97,9 +97,6 @@ struct tokenizer_t
     size_t cached_lineno_offset;
     int cached_lineno_count;
 
-    /** Return the line number of the character at the given offset */
-    int line_number_of_character_at_offset(size_t offset);
-
     /**
       Constructor for a tokenizer. b is the string that is to be
       tokenized. It is not copied, and should not be freed by the caller
@@ -130,11 +127,6 @@ enum token_type tok_last_type(tokenizer_t *tok);
 const wchar_t *tok_last(tokenizer_t *tok);
 
 /**
-  Returns the type of quote from the last TOK_QSTRING
-*/
-wchar_t tok_last_quote(tokenizer_t *tok);
-
-/**
   Returns true as long as there are more tokens left
 */
 int tok_has_next(tokenizer_t *tok);
@@ -146,14 +138,6 @@ int tok_get_pos(const tokenizer_t *tok);
 
 /** Returns the extent of the current token */
 size_t tok_get_extent(const tokenizer_t *tok);
-
-/** Returns the token type after the current one, without adjusting the position. Optionally returns the next string by reference. */
-enum token_type tok_peek_next(tokenizer_t *tok, wcstring *out_next_string);
-
-/**
-   Returns the original string to tokenizer
- */
-const wchar_t *tok_string(tokenizer_t *tok);
 
 /**
    Returns only the first token from the specified string. This is a

@@ -42,10 +42,15 @@
 #include "parser.h"
 #include "builtin.h"
 
-/**
-   Error message for improper use of the exec builtin
-*/
+/** Error message for improper use of the exec builtin */
 #define EXEC_ERR_MSG _(L"The '%ls' command can not be used in a pipeline")
+
+/** Error message for use of backgrounded commands before and/or */
+#define BOOL_AFTER_BACKGROUND_ERROR_MSG _(L"The '%ls' command can not be used immediately after a backgrounded job")
+
+/** Error message for backgrounded commands as conditionals */
+#define BACKGROUND_IN_CONDITIONAL_ERROR_MSG _(L"Backgrounded commands can not be used as conditionals")
+
 
 int parse_util_lineno(const wchar_t *str, size_t offset)
 {
@@ -53,7 +58,7 @@ int parse_util_lineno(const wchar_t *str, size_t offset)
         return 0;
 
     int res = 1;
-    for (size_t i=0; str[i] && i<offset; i++)
+    for (size_t i=0; i < offset && str[i] != L'\0'; i++)
     {
         if (str[i] == L'\n')
         {
@@ -286,11 +291,6 @@ static int parse_util_locate_brackets_range(const wcstring &str, size_t *inout_c
 int parse_util_locate_cmdsubst_range(const wcstring &str, size_t *inout_cursor_offset, wcstring *out_contents, size_t *out_start, size_t *out_end, bool accept_incomplete)
 {
     return parse_util_locate_brackets_range(str, inout_cursor_offset, out_contents, out_start, out_end, accept_incomplete, L'(', L')');
-}
-
-int parse_util_locate_slice_range(const wcstring &str, size_t *inout_cursor_offset, wcstring *out_contents, size_t *out_start, size_t *out_end, bool accept_incomplete)
-{
-    return parse_util_locate_brackets_range(str, inout_cursor_offset, out_contents, out_start, out_end, accept_incomplete, L'[', L']');
 }
 
 void parse_util_cmdsubst_extent(const wchar_t *buff, size_t cursor_pos, const wchar_t **a, const wchar_t **b)
@@ -1186,7 +1186,6 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
             {
 
                 const wcstring subst(paran_begin + 1, paran_end);
-                wcstring tmp;
 
                 // Replace the command substitution with just INTERNAL_SEPARATOR
                 size_t cmd_sub_start = paran_begin - working_copy_cstr;
@@ -1321,17 +1320,78 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
             else if (node.type == symbol_boolean_statement)
             {
                 // 'or' and 'and' can be in a pipeline, as long as they're first
-                // These numbers 0 and 1 correspond to productions for boolean_statement. This should be cleaned up.
-                bool is_and = (node.production_idx == 0), is_or = (node.production_idx == 1);
-                if ((is_and || is_or) && node_tree.statement_is_in_pipeline(node, false /* don't count first */))
+                parse_bool_statement_type_t type = parse_node_tree_t::statement_boolean_type(node);
+                if ((type ==  parse_bool_and || type == parse_bool_or) && node_tree.statement_is_in_pipeline(node, false /* don't count first */))
                 {
-                    errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG, is_and ? L"and" : L"or");
+                    errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG, (type ==  parse_bool_and) ? L"and" : L"or");
                 }
             }
             else if (node.type == symbol_argument)
             {
                 const wcstring arg_src = node.get_source(buff_src);
                 res |= parse_util_detect_errors_in_argument(node, arg_src, &parse_errors);
+            }
+            else if (node.type == symbol_job)
+            {
+                if (node_tree.job_should_be_backgrounded(node))
+                {
+                    /* Disallow background in the following cases:
+                    
+                       foo & ; and bar
+                       foo & ; or bar
+                       if foo & ; end
+                       while foo & ; end
+                    */
+                    const parse_node_t *job_parent = node_tree.get_parent(node);
+                    assert(job_parent != NULL);
+                    switch (job_parent->type)
+                    {
+                        case symbol_if_clause:
+                        case symbol_while_header:
+                        {
+                            assert(node_tree.get_child(*job_parent, 1) == &node);
+                            errored = append_syntax_error(&parse_errors, node, BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
+                            break;
+                        }
+                        
+                        case symbol_job_list:
+                        {
+                            // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'
+                            assert(node_tree.get_child(*job_parent, 0) == &node);
+                            const parse_node_t *next_job_list = node_tree.get_child(*job_parent, 1, symbol_job_list);
+                            assert(next_job_list != NULL);
+                            const parse_node_t *next_job = node_tree.next_node_in_node_list(*next_job_list, symbol_job, NULL);
+                            if (next_job != NULL)
+                            {
+                                const parse_node_t *next_statement = node_tree.get_child(*next_job, 0, symbol_statement);
+                                if (next_statement != NULL)
+                                {
+                                    const parse_node_t *spec_statement = node_tree.get_child(*next_statement, 0);
+                                    if (spec_statement && spec_statement->type == symbol_boolean_statement)
+                                    {
+                                        switch (parse_node_tree_t::statement_boolean_type(*spec_statement))
+                                        {
+                                            // These are not allowed
+                                            case parse_bool_and:
+                                                errored = append_syntax_error(&parse_errors, *spec_statement, BOOL_AFTER_BACKGROUND_ERROR_MSG, L"and");
+                                                break;
+                                            case parse_bool_or:
+                                                errored = append_syntax_error(&parse_errors, *spec_statement, BOOL_AFTER_BACKGROUND_ERROR_MSG, L"or");
+                                                break;
+                                            case parse_bool_not:
+                                                // This one is OK
+                                                break;
+                                        }
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                        
+                        default:
+                        break;
+                    }
+                }
             }
             else if (node.type == symbol_plain_statement)
             {

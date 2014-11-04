@@ -7,25 +7,6 @@ Functions having to do with parser keywords, like testing if a function is a blo
 #define FISH_PARSER_KEYWORD_H
 
 /**
-   Return values for parser_keywords_is_switch()
-*/
-enum
-{
-    ARG_NON_SWITCH,
-    ARG_SWITCH,
-    ARG_SKIP
-};
-
-
-
-/**
-   Check if the specified argument is a switch. Return ARG_SWITCH if yes,
-   ARG_NON_SWITCH if no and ARG_SKIP if the argument is '--'
-*/
-bool parser_keywords_is_switch(const wcstring &cmd);
-
-
-/**
    Tests if the specified commands parameters should be interpreted as another command, which will be true if the command is either 'command', 'exec', 'if', 'while', or 'builtin'.  This does not handle "else if" which is more complicated.
 
    \param cmd The command name to test

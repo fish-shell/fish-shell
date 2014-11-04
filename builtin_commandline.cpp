@@ -480,16 +480,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
         const wchar_t *buffer = reader_get_buffer();
         if (reader_get_selection(&start, &len))
         {
-            wchar_t *selection = new wchar_t[len + 1];
-            selection[len] = L'\0';
-            selection = wcsncpy(selection, buffer + start, len);
-
-            append_format(stdout_buffer, selection);
-            delete selection;
-        }
-        else
-        {
-            append_format(stdout_buffer, L"");
+            stdout_buffer.append(buffer + start, len);
         }
         return 0;
     }

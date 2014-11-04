@@ -30,7 +30,8 @@ static size_t divide_round_up(size_t numer, size_t denom)
         return 0;
 
     assert(denom > 0);
-    return numer / denom + (numer % denom ? 1 : 0);
+    bool has_rem = (numer % denom) > 0;
+    return numer / denom + (has_rem ? 1 : 0);
 }
 
 /**
@@ -393,7 +394,7 @@ void pager_t::refilter_completions()
 void pager_t::set_completions(const completion_list_t &raw_completions)
 {
     // Get completion infos out of it
-    unfiltered_completion_infos = process_completions_into_infos(raw_completions, prefix.c_str());
+    unfiltered_completion_infos = process_completions_into_infos(raw_completions, prefix);
 
     // Maybe join them
     if (prefix == L"-")
@@ -626,7 +627,7 @@ bool pager_t::completion_try_print(size_t cols, const wcstring &prefix, const co
         if (! progress_text.empty())
         {
             line_t &line = rendering->screen_data.add_line();
-            print_max(progress_text.c_str(), highlight_spec_pager_progress | highlight_make_background(highlight_spec_pager_progress), term_width, true /* has_more */, &line);
+            print_max(progress_text, highlight_spec_pager_progress | highlight_make_background(highlight_spec_pager_progress), term_width, true /* has_more */, &line);
         }
 
         if (search_field_shown)

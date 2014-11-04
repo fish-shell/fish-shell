@@ -136,44 +136,10 @@ int tok_has_next(tokenizer_t *tok)
     return   tok->has_next;
 }
 
-int tokenizer_t::line_number_of_character_at_offset(size_t offset)
-{
-    // we want to return (one plus) the number of newlines at offsets less than the given offset
-    // cached_lineno_count is the number of newlines at indexes less than cached_lineno_offset
-    const wchar_t *str = orig_buff;
-    if (! str)
-        return 0;
-
-    // easy hack to handle 0
-    if (offset == 0)
-        return 1;
-
-    size_t i;
-    if (offset > cached_lineno_offset)
-    {
-        for (i = cached_lineno_offset; str[i] && i<offset; i++)
-        {
-            /* Add one for every newline we find in the range [cached_lineno_offset, offset) */
-            if (str[i] == L'\n')
-                cached_lineno_count++;
-        }
-        cached_lineno_offset = i; //note: i, not offset, in case offset is beyond the length of the string
-    }
-    else if (offset < cached_lineno_offset)
-    {
-        /* Subtract one for every newline we find in the range [offset, cached_lineno_offset) */
-        for (i = offset; i < cached_lineno_offset; i++)
-        {
-            if (str[i] == L'\n')
-                cached_lineno_count--;
-        }
-        cached_lineno_offset = offset;
-    }
-    return cached_lineno_count + 1;
-}
-
 /**
    Tests if this character can be a part of a string. The redirect ^ is allowed unless it's the first character.
+   Hash (#) starts a comment if it's the first character in a token; otherwise it is considered a string character.
+   See #953.
 */
 bool tok_is_string_character(wchar_t c, bool is_first)
 {
@@ -186,7 +152,6 @@ bool tok_is_string_character(wchar_t c, bool is_first)
         case L'|':
         case L'\t':
         case L';':
-        case L'#':
         case L'\r':
         case L'<':
         case L'>':
@@ -578,13 +543,6 @@ int oflags_for_redirection_type(enum token_type type)
     }
 }
 
-wchar_t tok_last_quote(tokenizer_t *tok)
-{
-    CHECK(tok, 0);
-
-    return tok->last_quote;
-}
-
 /**
    Test if a character is whitespace. Differs from iswspace in that it
    does not consider a newline to be whitespace.
@@ -732,7 +690,7 @@ void tok_next(tokenizer_t *tok)
             }
             else
             {
-                /* Not a redirection or pipe, so just a stirng */
+                /* Not a redirection or pipe, so just a string */
                 read_string(tok);
             }
         }
@@ -740,36 +698,6 @@ void tok_next(tokenizer_t *tok)
 
     }
 
-}
-
-enum token_type tok_peek_next(tokenizer_t *tok, wcstring *out_next_string)
-{
-    if (out_next_string != NULL)
-    {
-        out_next_string->clear();
-    }
-
-    enum token_type result = TOK_END;
-    if (tok_has_next(tok))
-    {
-        int saved = tok_get_pos(tok);
-        tok_next(tok);
-        result = tok_last_type(tok);
-
-        if (out_next_string != NULL)
-        {
-            const wchar_t *last = tok_last(tok);
-            out_next_string->assign(last ? last : L"");
-        }
-
-        tok_set_pos(tok, saved);
-    }
-    return result;
-}
-
-const wchar_t *tok_string(tokenizer_t *tok)
-{
-    return tok?tok->orig_buff:0;
 }
 
 wcstring tok_first(const wchar_t *str)

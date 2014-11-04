@@ -59,6 +59,9 @@ typedef std::vector<wcstring> wcstring_list_t;
 */
 #define BYTE_MAX 0xffu
 
+/** BOM value */
+#define UTF8_BOM_WCHAR 0xFEFFu
+
 /* Flags for unescape_string functions */
 enum
 {
@@ -681,12 +684,6 @@ wcstring format_string(const wchar_t *format, ...);
 wcstring vformat_string(const wchar_t *format, va_list va_orig);
 void append_format(wcstring &str, const wchar_t *format, ...);
 void append_formatv(wcstring &str, const wchar_t *format, va_list ap);
-
-/**
-   Returns a newly allocated wide character string array equivalent of
-   the specified multibyte character string array
-*/
-char **wcsv2strv(const wchar_t * const *in);
 
 /**
    Test if the given string is a valid variable name.

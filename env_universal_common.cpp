@@ -80,32 +80,6 @@ static wcstring default_vars_path()
 }
 
 /**
-   The table of all universal variables
-*/
-static env_universal_t &default_universal_vars()
-{
-    static env_universal_t s_default_vars(L"");
-    return s_default_vars;
-}
-
-static void (*callback)(fish_message_type_t type,
-                        const wchar_t *key,
-                        const wchar_t *val);
-
-void env_universal_common_init(void (*cb)(fish_message_type_t type, const wchar_t *key, const wchar_t *val))
-{
-    callback = cb;
-}
-
-/**
-   Remove variable with specified name
-*/
-bool env_universal_common_remove(const wcstring &name)
-{
-    return default_universal_vars().remove(name);
-}
-
-/**
    Test if the message msg contains the command cmd
 */
 static bool match(const wchar_t *msg, const wchar_t *cmd)
@@ -118,19 +92,6 @@ static bool match(const wchar_t *msg, const wchar_t *cmd)
         return false;
 
     return true;
-}
-
-void env_universal_common_set(const wchar_t *key, const wchar_t *val, bool exportv)
-{
-    CHECK(key,);
-    CHECK(val,);
-    
-    default_universal_vars().set(key, val, exportv);
-
-    if (callback)
-    {
-        callback(exportv?SET_EXPORT:SET, key, val);
-    }
 }
 
 static void report_error(int err_code, const wchar_t *err_format, ...)
@@ -250,23 +211,6 @@ static bool append_file_entry(fish_message_type_t type, const wcstring &key_in, 
     }
     
     return success;
-}
-
-wcstring_list_t env_universal_get_names(bool show_exported, bool show_unexported)
-{
-    return default_universal_vars().get_names(show_exported, show_unexported);
-    
-}
-
-
-env_var_t env_universal_get(const wcstring &name)
-{
-    return default_universal_vars().get(name);
-}
-
-bool env_universal_common_get_export(const wcstring &name)
-{
-    return default_universal_vars().get_export(name);
 }
 
 env_universal_t::env_universal_t(const wcstring &path) : explicit_vars_path(path), tried_renaming(false), last_read_file(kInvalidFileID)
@@ -624,7 +568,7 @@ bool env_universal_t::open_temporary_file(const wcstring &directory, wcstring *o
         int result_fd = -1;
         char *narrow_str = wcs2str(tmp_name_template.c_str());
 #if HAVE_MKOSTEMP
-        result_fd = mkostemp(narrow_str, O_WRONLY | O_CREAT | O_EXCL | O_TRUNC | O_CLOEXEC);
+        result_fd = mkostemp(narrow_str, O_CLOEXEC);
         if (result_fd >= 0)
         {
             tmp_name = str2wcstring(narrow_str);
@@ -1650,24 +1594,6 @@ static bool bool_from_env_var(const char *name, bool default_value)
 {
     const char *var = getenv(name);
     return var ? from_string<bool>(var) : default_value;
-}
-
-static bool initialize_synchronizes_via_fishd()
-{
-    if (program_name && ! wcscmp(program_name, L"fishd"))
-    {
-        /* fishd always wants to use fishd */
-        return true;
-    }
-    
-    return bool_from_env_var(UNIVERSAL_USE_FISHD, false);
-}
-
-bool synchronizes_via_fishd()
-{
-    /* Note that in general we can't change this once it's been set, so we only load it once */
-    static bool result = initialize_synchronizes_via_fishd();
-    return result;
 }
 
 bool universal_log_enabled()

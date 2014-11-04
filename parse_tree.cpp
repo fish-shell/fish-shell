@@ -559,11 +559,6 @@ class parse_ll_t
         return nodes.at(top_symbol.node_idx);
     }
 
-    parse_token_type_t stack_top_type() const
-    {
-        return symbol_stack.back().type;
-    }
-
     // Pop from the top of the symbol stack, then push the given production, updating node counts. Note that production_t has type "pointer to array" so some care is required.
     inline void symbol_stack_pop_push_production(const production_t *production)
     {
@@ -1428,19 +1423,6 @@ const parse_node_t *parse_node_tree_t::get_parent(const parse_node_t &node, pars
     return result;
 }
 
-const parse_node_t *parse_node_tree_t::get_first_ancestor_of_type(const parse_node_t &node, parse_token_type_t desired_type) const
-{
-    const parse_node_t *ancestor = &node;
-    while ((ancestor = this->get_parent(*ancestor)))
-    {
-        if (ancestor->type == desired_type)
-        {
-            break;
-        }
-    }
-    return ancestor;
-}
-
 static void find_nodes_recursive(const parse_node_tree_t &tree, const parse_node_t &parent, parse_token_type_t type, parse_node_tree_t::parse_node_list_t *result, size_t max_count)
 {
     if (result->size() < max_count)
@@ -1667,6 +1649,30 @@ parse_node_tree_t::parse_node_list_t parse_node_tree_t::specific_statements_for_
     return result;
 }
 
+enum parse_bool_statement_type_t parse_node_tree_t::statement_boolean_type(const parse_node_t &node)
+{
+    assert(node.type == symbol_boolean_statement);
+    switch (node.production_idx)
+    {
+        // These magic numbers correspond to productions for boolean_statement
+        case 0:
+            return parse_bool_and;
+
+        case 1:
+            return parse_bool_or;
+
+        case 2:
+            return parse_bool_not;
+
+        default:
+        {
+            fprintf(stderr, "Unexpected production in boolean statement\n");
+            PARSER_DIE();
+            return (enum parse_bool_statement_type_t)(-1);
+        }
+    }
+}
+
 bool parse_node_tree_t::job_should_be_backgrounded(const parse_node_t &job) const
 {
     assert(job.type == symbol_job);
@@ -1675,7 +1681,8 @@ bool parse_node_tree_t::job_should_be_backgrounded(const parse_node_t &job) cons
     const parse_node_t *opt_background = get_child(job, 2, symbol_optional_background);
     if (opt_background != NULL)
     {
-        assert(opt_background->production_idx <= 1);
+        // We may get the value -1 if the node is not yet materialized (i.e. an incomplete parse tree)
+        assert(opt_background->production_idx == uint8_t(-1) || opt_background->production_idx <= 1);
         result = (opt_background->production_idx == 1);
     }
     return result;

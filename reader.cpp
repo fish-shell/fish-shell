@@ -1608,7 +1608,6 @@ static void clear_pager()
 static void select_completion_in_direction(enum selection_direction_t dir)
 {
     assert(data != NULL);
-    /* Note: this will probably trigger reader_selected_completion_changed, which will cause us to update stuff */
     bool selection_changed = data->pager.select_next_completion_in_direction(dir, data->current_page_rendering);
     if (selection_changed)
     {
@@ -4151,36 +4150,6 @@ int reader_has_pager_contents()
     return ! data->current_page_rendering.screen_data.empty();
 }
 
-void reader_selected_completion_changed(pager_t *pager)
-{
-    /* Only interested in the top level pager */
-    if (data == NULL || pager != &data->pager)
-        return;
-
-    const completion_t *completion = pager->selected_completion(data->current_page_rendering);
-
-    /* Update the cursor and command line */
-    size_t cursor_pos = data->cycle_cursor_pos;
-    wcstring new_cmd_line;
-
-    if (completion == NULL)
-    {
-        new_cmd_line = data->cycle_command_line;
-    }
-    else
-    {
-        new_cmd_line = completion_apply_to_command_line(completion->completion, completion->flags, data->cycle_command_line, &cursor_pos, false);
-    }
-    reader_set_buffer_maintaining_pager(new_cmd_line, cursor_pos);
-
-    /* Since we just inserted a completion, don't immediately do a new autosuggestion */
-    data->suppress_autosuggestion = true;
-
-    /* Trigger repaint (see #765) */
-    reader_repaint_needed();
-}
-
-
 /**
    Read non-interactively.  Read input from stdin without displaying
    the prompt, using syntax highlighting. This is used for reading
@@ -4236,7 +4205,7 @@ static int read_ni(int fd, const io_chain_t &io)
             acc.insert(acc.end(), buff, buff + c);
         }
 
-        const wcstring str = acc.empty() ? wcstring() : str2wcstring(&acc.at(0), acc.size());
+        wcstring str = acc.empty() ? wcstring() : str2wcstring(&acc.at(0), acc.size());
         acc.clear();
 
         if (fclose(in_stream))
@@ -4245,6 +4214,12 @@ static int read_ni(int fd, const io_chain_t &io)
                   _(L"Error while closing input stream"));
             wperror(L"fclose");
             res = 1;
+        }
+
+        /* Swallow a BOM (#1518) */
+        if (! str.empty() && str.at(0) == UTF8_BOM_WCHAR)
+        {
+            str.erase(0, 1);
         }
 
         parse_error_list_t errors;

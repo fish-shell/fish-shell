@@ -424,6 +424,7 @@ public:
 
     job_iterator_t(job_list_t &jobs);
     job_iterator_t();
+    size_t count() const;
 };
 
 /**

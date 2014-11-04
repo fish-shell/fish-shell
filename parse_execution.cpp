@@ -1128,30 +1128,22 @@ parse_execution_result_t parse_execution_context_t::populate_boolean_process(job
     // Handle a boolean statement
     bool skip_job = false;
     assert(bool_statement.type == symbol_boolean_statement);
-    switch (bool_statement.production_idx)
+    switch (parse_node_tree_t::statement_boolean_type(bool_statement))
     {
-            // These magic numbers correspond to productions for boolean_statement
-        case 0:
+        case parse_bool_and:
             // AND. Skip if the last job failed.
             skip_job = (proc_get_last_status() != 0);
             break;
 
-        case 1:
+        case parse_bool_or:
             // OR. Skip if the last job succeeded.
             skip_job = (proc_get_last_status() == 0);
             break;
 
-        case 2:
+        case parse_bool_not:
             // NOT. Negate it.
             job_set_flag(job, JOB_NEGATE, !job_get_flag(job, JOB_NEGATE));
             break;
-
-        default:
-        {
-            fprintf(stderr, "Unexpected production in boolean statement\n");
-            PARSER_DIE();
-            break;
-        }
     }
 
     if (skip_job)

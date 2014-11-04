@@ -336,6 +336,7 @@ int main(int argc, char **argv)
             {
                 print_help("fish_indent", 1);
                 exit(0);
+                assert(0 && "Unreachable code reached");
                 break;
             }
 
@@ -346,6 +347,8 @@ int main(int argc, char **argv)
                          program_name,
                          get_fish_version());
                 exit(0);
+                assert(0 && "Unreachable code reached");
+                break;
             }
 
             case 'i':

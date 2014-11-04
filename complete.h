@@ -32,7 +32,7 @@
 #define NO_COMMON 2
 /**
  * Only use the argument list specifies with completion after
- * option. This is the same as (NO_FILES & NO_COMMON)
+ * option. This is the same as (NO_FILES | NO_COMMON)
  */
 #define EXCLUSIVE 3
 
@@ -135,9 +135,6 @@ enum
     COMPLETION_REQUEST_FUZZY_MATCH = 1 << 2 // indicates that we don't require a prefix match
 };
 typedef uint32_t completion_request_flags_t;
-
-/** Given a list of completions, returns a list of their completion fields */
-wcstring_list_t completions_to_wcstring_list(const std::vector<completion_t> &completions);
 
 /**
 

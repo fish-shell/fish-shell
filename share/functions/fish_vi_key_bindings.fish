@@ -17,6 +17,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   #
 
   bind \cd exit
+  bind \cc 'commandline ""'
   bind h backward-char
   bind l forward-char
   bind \e\[C forward-char

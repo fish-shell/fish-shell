@@ -232,6 +232,7 @@ bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_
         /* If we can use this function, return whether we were able to access it */
         if (use_cached)
         {
+            assert(func != NULL);
             return func->is_internalized || func->access.accessible;
         }
     }

@@ -255,7 +255,6 @@ char *wcs2str(const wchar_t *in)
 {
     if (! in)
         return NULL;
-    char *out;
     size_t desired_size = MAX_UTF8_BYTES*wcslen(in)+1;
     char local_buff[512];
     if (desired_size <= sizeof local_buff / sizeof *local_buff)
@@ -277,7 +276,7 @@ char *wcs2str(const wchar_t *in)
     else
     {
         // here we fall into the bad case of allocating a buffer probably much larger than necessary
-        out = (char *)malloc(MAX_UTF8_BYTES*wcslen(in)+1);
+        char *out = (char *)malloc(MAX_UTF8_BYTES*wcslen(in)+1);
         if (!out)
         {
             DIE_MEM();
@@ -381,27 +380,6 @@ static char *wcs2str_internal(const wchar_t *in, char *out)
     out[out_pos] = 0;
 
     return out;
-}
-
-char **wcsv2strv(const wchar_t * const *in)
-{
-    size_t i, count = 0;
-
-    while (in[count] != 0)
-        count++;
-    char **res = (char **)malloc(sizeof(char *)*(count+1));
-    if (res == 0)
-    {
-        DIE_MEM();
-    }
-
-    for (i=0; i<count; i++)
-    {
-        res[i]=wcs2str(in[i]);
-    }
-    res[count]=0;
-    return res;
-
 }
 
 wcstring format_string(const wchar_t *format, ...)

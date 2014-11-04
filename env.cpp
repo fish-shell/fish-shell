@@ -978,7 +978,6 @@ env_var_t env_get_string(const wcstring &key, env_mode_flags_t mode)
         scoped_lock lock(env_lock);
 
         env_node_t *env = search_local ? top : global_env;
-        wcstring result;
 
         while (env != NULL)
         {

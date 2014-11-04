@@ -339,7 +339,7 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
 
         int opt = wgetopt_long(argc,
                                argv,
-                               L"a:c:p:s:l:o:d:frxeuAn:C::h",
+                               L"a:c:p:s:l:o:d:frxeuAn:C::w:h",
                                long_options,
                                &opt_index);
         if (opt == -1)

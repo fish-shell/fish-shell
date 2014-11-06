@@ -1883,8 +1883,12 @@ static bool handle_completions(const std::vector<completion_t> &comp, bool conti
                     break;
             }
         }
+        
+        /* Determine if we use the prefix. We use it if it's non-empty and it will actually make the command line longer. It may make the command line longer by virtue of not using REPLACE_TOKEN (so it always appends to the command line), or by virtue of replacing the token but being longer than it. */
+        bool use_prefix = common_prefix.size() > (will_replace_token ? tok.size() : 0);
+        assert(! use_prefix || ! common_prefix.empty());
 
-        if (! common_prefix.empty())
+        if (use_prefix)
         {
             /* We got something. If more than one completion contributed, then it means we have a prefix; don't insert a space after it */
             if (prefix_is_partial_completion)
@@ -1893,7 +1897,7 @@ static bool handle_completions(const std::vector<completion_t> &comp, bool conti
             success = true;
         }
 
-        if (continue_after_prefix_insertion || common_prefix.empty())
+        if (continue_after_prefix_insertion || ! use_prefix)
         {
             /* We didn't get a common prefix, or we want to print the list anyways. */
             size_t len, prefix_start = 0;

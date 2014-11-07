@@ -13717,7 +13717,7 @@ msgstr ""
 #~ msgstr "Assume tab stops at each COLS"
 
 #~ msgid "Assume screen width"
-#~ msgstr "Assume screen width"
+#~ msgstr "假定的屏幕高度"
 
 #~ msgid "%s: Unknown argument '%s'\\n"
 #~ msgstr "%s: 未知的参数 “%s”\\n"

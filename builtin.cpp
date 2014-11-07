@@ -3502,7 +3502,6 @@ static int builtin_fg(parser_t &parser, wchar_t **argv)
             append_format(stderr_buffer,
                           _(L"%ls: There are no suitable jobs\n"),
                           argv[0]);
-            builtin_print_help(parser, argv[0], stderr_buffer);
         }
     }
     else if (argv[2] != 0)

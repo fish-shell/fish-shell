@@ -207,62 +207,62 @@ msgstr "%ls：目录 “%ls” 不存在\n"
 #: builtin.cpp:3142
 #, c-format
 msgid "%ls: '%ls' is a rotten symlink\n"
-msgstr "%ls: “%ls” is a rotten symlink\n"
+msgstr "%ls：“%ls” 是一个损坏的符号链接\n"
 
 #: builtin.cpp:3150
 #, c-format
 msgid "%ls: Unknown error trying to locate directory '%ls'\n"
-msgstr "%ls: Unknown error trying to locate directory “%ls”\n"
+msgstr "%ls：定位目录“%ls”时发生未知错误\n"
 
 #: builtin.cpp:3173
 #, c-format
 msgid "%ls: Permission denied: '%ls'\n"
-msgstr "%ls: Permission denied: “%ls”\n"
+msgstr "%ls：拒绝访问：“%ls”\n"
 
 #: builtin.cpp:3197
 #, c-format
 msgid "%ls: Could not set PWD variable\n"
-msgstr "%ls: Could not set PWD variable\n"
+msgstr "%ls：不能设置 PWD 变量\n"
 
 #: builtin.cpp:3284
 #, c-format
 msgid "%ls: Key not specified\n"
-msgstr "%ls: Key not specified\n"
+msgstr "%ls：没有指定键\n"
 
 #: builtin.cpp:3328 builtin.cpp:3336
 #, c-format
 msgid "%ls: Error encountered while sourcing file '%ls':\n"
-msgstr "%ls: Error encountered while sourcing file “%ls”:\n"
+msgstr "%ls：读取源文件“%ls”时遇到错误：\n"
 
 #: builtin.cpp:3344
 #, c-format
 msgid "%ls: '%ls' is not a file\n"
-msgstr "%ls: “%ls” is not a file\n"
+msgstr "%ls：“%ls” 不是一个文件\n"
 
 #: builtin.cpp:3363
 #, c-format
 msgid "%ls: Error while reading file '%ls'\n"
-msgstr "%ls: Error while reading file “%ls”\n"
+msgstr "%ls：读取文件 “%ls” 时发生错误\n"
 
 #: builtin.cpp:3419 builtin.cpp:3599
 #, c-format
 msgid "%ls: There are no suitable jobs\n"
-msgstr "%ls: There are no suitable jobs\n"
+msgstr "%ls：没有匹配的任务\n"
 
 #: builtin.cpp:3448
 #, c-format
 msgid "%ls: Ambiguous job\n"
-msgstr "%ls: Ambiguous job\n"
+msgstr "%ls：不明确的任务\n"
 
 #: builtin.cpp:3454 builtin.cpp:3622 builtin_jobs.cpp:301
 #, c-format
 msgid "%ls: '%ls' is not a job\n"
-msgstr "%ls: “%ls” is not a job\n"
+msgstr "%ls：“%ls” 不是一个任务\n"
 
 #: builtin.cpp:3485 builtin_jobs.cpp:316
 #, c-format
 msgid "%ls: No suitable job: %d\n"
-msgstr "%ls: No suitable job: %d\n"
+msgstr "%ls：没有匹配的任务：%d\n"
 
 #: builtin.cpp:3494
 #, c-format
@@ -270,13 +270,13 @@ msgid ""
 "%ls: Can't put job %d, '%ls' to foreground because it is not under job "
 "control\n"
 msgstr ""
-"%ls: Can't put job %d, “%ls” to foreground because it is not under job "
-"control\n"
+"%ls：不能将任务 %d, “%ls” 带到前台，因为它不受到任务"
+"控制\n"
 
 #: builtin.cpp:3547
 #, c-format
 msgid "%ls: Unknown job '%ls'\n"
-msgstr "%ls: Unknown job “%ls”\n"
+msgstr "%ls：未知的任务 “%ls”\n"
 
 #: builtin.cpp:3556
 #, c-format
@@ -284,58 +284,58 @@ msgid ""
 "%ls: Can't put job %d, '%ls' to background because it is not under job "
 "control\n"
 msgstr ""
-"%ls: Can't put job %d, “%ls” to background because it is not under job "
-"control\n"
+"%ls：不能将任务 %d, “%ls” 置于后台，因为它不受到任务"
+"控制\n"
 
 #: builtin.cpp:3566
 #, c-format
 msgid "Send job %d '%ls' to background\n"
-msgstr "Send job %d “%ls” to background\n"
+msgstr "将任务 %d “%ls” 置于后台\n"
 
 #: builtin.cpp:3605
 msgid "(default)"
-msgstr "(default)"
+msgstr "(默认)"
 
 #: builtin.cpp:3737
 #, c-format
 msgid "%ls: Not inside of block\n"
-msgstr "%ls: Not inside of block\n"
+msgstr "%ls：不在区块之内\n"
 
 #: builtin.cpp:3884
 #, c-format
 msgid "%ls: Not inside of 'if' block\n"
-msgstr "%ls: Not inside of “if” block\n"
+msgstr "%ls：不在 “if” 区块之内\n"
 
 #: builtin.cpp:3938
 #, c-format
 msgid "%ls: Not inside of loop\n"
-msgstr "%ls: Not inside of loop\n"
+msgstr "%ls：不在循环体内部\n"
 
 #: builtin.cpp:4005 builtin_complete.cpp:539 builtin_set_color.cpp:140
 #: builtin.h:83
 #, c-format
 msgid "%ls: Too many arguments\n"
-msgstr "%ls: Too many arguments\n"
+msgstr "%ls：参数过多\n"
 
 #: builtin.cpp:4023
 #, c-format
 msgid "%ls: Not inside of function\n"
-msgstr "%ls: Not inside of function\n"
+msgstr "%ls：不在函数体之内\n"
 
 #: builtin.cpp:4059
 #, c-format
 msgid "%ls: Expected exactly one argument, got %d\n"
-msgstr "%ls: Expected exactly one argument, got %d\n"
+msgstr "%ls：应恰好有一个参数，提供了 %d 个\n"
 
 #: builtin.cpp:4090
 #, c-format
 msgid "%ls: 'case' command while not in switch block\n"
-msgstr "%ls: “case” command while not in switch block\n"
+msgstr "%ls：“case” 命令不在 switch 块内\n"
 
 #: builtin.cpp:4317 builtin.cpp:4360
 #, fuzzy
 msgid "Test a condition"
-msgstr "Set a config option"
+msgstr "设置配置选项"
 
 #: builtin.cpp:4318
 msgid "Try out the new parser"
@@ -343,19 +343,19 @@ msgstr ""
 
 #: builtin.cpp:4319
 msgid "Execute command if previous command suceeded"
-msgstr "Execute command if previous command suceeded"
+msgstr "如果上一个命令成功，执行命令"
 
 #: builtin.cpp:4320
 msgid "Create a block of code"
-msgstr "Create a block of code"
+msgstr "创建代码区块"
 
 #: builtin.cpp:4321
 msgid "Send job to background"
-msgstr "Send job to background"
+msgstr "将任务置于后台"
 
 #: builtin.cpp:4322
 msgid "Handle fish key bindings"
-msgstr "Handle fish key bindings"
+msgstr "处理 fish 键 绑定"
 
 #: builtin.cpp:4323
 msgid "Temporarily block delivery of events"
@@ -363,37 +363,37 @@ msgstr "Temporarily block delivery of events"
 
 #: builtin.cpp:4324
 msgid "Stop the innermost loop"
-msgstr "Stop the innermost loop"
+msgstr "停止最内层的循环"
 
 #: builtin.cpp:4325
 msgid ""
 "Temporarily halt execution of a script and launch an interactive debug prompt"
 msgstr ""
-"Temporarily halt execution of a script and launch an interactive debug prompt"
+"暂时终止一个脚本的执行并运行一个交互式的 debug 提示符"
 
 #: builtin.cpp:4326
 msgid "Run a builtin command instead of a function"
-msgstr "Run a builtin command instead of a function"
+msgstr "执行内部命令而不是一个函数"
 
 #: builtin.cpp:4327 builtin.cpp:4359
 msgid "Conditionally execute a block of commands"
-msgstr "Conditionally execute a block of commands"
+msgstr "有条件地执行一个命令区块"
 
 #: builtin.cpp:4328
 msgid "Change working directory"
-msgstr "Change working directory"
+msgstr "改变工作目录（当前目录）"
 
 #: builtin.cpp:4329
 msgid "Run a program instead of a function or builtin"
-msgstr "Run a program instead of a function or builtin"
+msgstr "执行一个程序，而不是一个函数或内部命令"
 
 #: builtin.cpp:4330
 msgid "Set or get the commandline"
-msgstr "Set or get the commandline"
+msgstr "设置或取得命令行"
 
 #: builtin.cpp:4331
 msgid "Edit command specific completions"
-msgstr "Edit command specific completions"
+msgstr "编辑命令相关的补全"
 
 #: builtin.cpp:4332
 msgid "Search for a specified string in a list"

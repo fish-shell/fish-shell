@@ -906,27 +906,61 @@ You can change these key bindings using the <a href="commands.html#bind">bind</a
 
 Vi mode allows for the use of Vi-like commands when at the bash prompt. You'll initially be in insert mode. Hitting the escape key takes you into command mode where you can use, but aren't limited to, the following.
 
-- @key{h} moves cursor left
+- __Deafult/Command Mode__
 
-- @key{l} moves cursor right
+ - @key{h} moves cursor left
 
-- @key{Shift,A} moves cursor to end of line and put in insert mode
+ - @key{l} moves cursor right
 
-- @key{0} (zero) Move cursor to beginning of line (doesn't put in insert mode)
+ - @key{i} enter __insert mode__ at current position
 
-- @key{i} put into insert mode at current position
+ - @key{v} enter __visual mode__ at current position
 
-- @key{a} put into insert mode after current position
+ - @key{a} enter __insert mode__ after current position
 
-- @key{d}@key{d} Delete line (saved for pasting)
+ - @key{Shift,A} moves cursor to end of line and put in __insert mode__
 
-- @key{Shift,D} delete text after current cursor position (saved for pasting)
+ - @key{0} (zero) Move cursor to beginning of line (doesn't put in __insert mode__)
 
-- @key{p} paste text that was deleted
+ - @key{d}@key{d} Delete line (saved for pasting)
 
-- @key{u} undo
+ - @key{Shift,D} delete text after current cursor position (saved for pasting)
 
-- etc for many of the other Vi commands
+ - @key{p} paste text that was deleted
+
+ - @key{u} undo
+
+ - @key{[} and @key{]} search the command history for the previous/next token
+
+ - @key{Control,C} clear the current command line and start over
+
+- __Insert Mode__
+
+ - @key{Tab} <a href="#completion">completes</a> the current token.
+
+ - @key{Escape} or @key{Control,C} exit back to __normal mode__
+
+ - @cursor_key{&uarr;,Up} and @cursor_key{&darr;,Down} search the command history; see <a href='#history'>history </a>.
+
+ - @key{Control,W} moves the previous word to the <a href="#killring">killring</a>.
+
+ - @key{Control,U} moves contents from the beginning of line to the cursor to the <a href="#killring">killring</a>.
+
+ - @key{Control,B} and @key{Control,F} move the cursor one word left or right. If the cursor is already at the end of the line, and an autosuggestion is available, @key{Control,F} accepts the first word in the suggestion.
+
+- __Visual Mode__
+
+ - @cursor_key{&larr;,Left} and @cursor_key{&rarr;,Right} extend bounds of selection by one character left/right
+
+ - @key{b} and @key{w} extend bounds of selection backward/forward by one word
+
+ - @key{d} delete the selection, and exit back to __normal mode__
+
+ - @key{x} cut the selection (ie, delete and save for pasting), and exit back to __normal mode__
+
+ - @key{Escape} or @key{Control,C} exit back to __normal mode__
+
+- etc, for many of the other Vi commands.
 
 
 \subsection killring Copy and paste (Kill Ring)

@@ -25,59 +25,6 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		set userdatadir $XDG_DATA_HOME
 	end
 
-	# Migrate old (pre 1.22.0) init scripts if they exist
-	if not set -q __fish_init_1_22_0
-
-		if test -f ~/.fish_history -o -f ~/.fish -o -d ~/.fish.d -a ! -d $configdir/fish
-
-			# Perform upgrade of configuration file hierarchy
-
-			if not test -d $configdir
-				command mkdir $configdir >/dev/null
-			end
-
-			if test -d $configdir
-				if command mkdir $configdir/fish
-
-					# These files are sometimes overwritten to by fish, so
-					# we want backups of them in case something goes wrong
-
-					cp ~/.fishd.(hostname)    $configdir/fish/fishd.(hostname).backup
-					cp ~/.fish_history        $configdir/fish/fish_history.backup
-
-					# Move the files
-
-					mv ~/.fish_history        $configdir/fish/fish_history
-					mv ~/.fish                $configdir/fish/config.fish
-					mv ~/.fish_inputrc        $configdir/fish/fish_inputrc
-					mv ~/.fish.d/functions    $configdir/fish/functions
-					mv ~/.fish.d/completions  $configdir/fish/completions
-
-					#
-					# Move the fishd stuff from another shell to avoid concurrency problems
-					#
-
-					/bin/sh -c mv\ \~/.fishd.(hostname)\ $configdir/fish/fishd.(hostname)\;kill\ -9\ (echo %fishd)
-
-					# Update paths to point to new configuration locations
-
-					set fish_function_path (printf "%s\n" $fish_function_path|sed -e "s|/usr/local/etc/fish.d/|/usr/local/etc/fish/|")
-					set fish_complete_path (printf "%s\n" $fish_complete_path|sed -e "s|/usr/local/etc/fish.d/|/usr/local/etc/fish/|")
-
-					set fish_function_path (printf "%s\n" $fish_function_path|sed -e "s|$HOME/.fish.d/|$configdir/fish/|")
-					set fish_complete_path (printf "%s\n" $fish_complete_path|sed -e "s|$HOME/.fish.d/|$configdir/fish/|")
-
-					printf (_ "\nWARNING\n\nThe location for fish configuration files has changed to %s.\nYour old files have been moved to this location.\nYou can change to a different location by changing the value of the variable \$XDG_CONFIG_HOME.\n\n") $configdir
-
-				end ^/dev/null
-			end
-		end
-
-		# Make sure this is only done once
-		set -U __fish_init_1_22_0
-
-	end
-
 	#
 	# If we are starting up for the first time, set various defaults
 	#

@@ -171,10 +171,6 @@ public:
     virtual bool notification_fd_became_readable(int fd);
 };
 
-std::string get_machine_identifier();
-bool get_hostname_identifier(std::string *result);
-
-
 bool universal_log_enabled();
 #define UNIVERSAL_LOG(x) if (universal_log_enabled()) fprintf(stderr, "UNIVERSAL LOG: %s\n", x)
 

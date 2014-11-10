@@ -713,6 +713,7 @@ A range of indices can be specified, see <a href='#expand-index-range'>index ran
 
 All arrays are one-dimensional and cannot contain other arrays, although it is possible to fake nested arrays using the dereferencing rules of <a href="#expand-variable">variable expansion</a>.
 
+`fish` automatically creates arrays from the variables `PATH`, `CDPATH` and `MANPATH` when it is started. (Previous versions created arrays from *all* colon-delimited environment variables.)
 
 \subsection variables-special Special variables
 

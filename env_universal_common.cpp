@@ -67,13 +67,12 @@
 static wcstring fishd_get_config();
 static std::string get_variables_file_path(const std::string &dir, const std::string &identifier);
 
-static wcstring default_vars_path_uncached()
+static wcstring vars_filename_in_directory(const wcstring &wdir)
 {
-    wcstring wdir = fishd_get_config();
-    const std::string dir = wcs2string(wdir);
-    if (dir.empty())
+    if (wdir.empty())
         return L"";
     
+    const std::string dir = wcs2string(wdir);
     const std::string machine_id = get_machine_identifier();
     const std::string machine_id_path = get_variables_file_path(dir, machine_id);
     return str2wcstring(machine_id_path);
@@ -81,8 +80,22 @@ static wcstring default_vars_path_uncached()
 
 static const wcstring &default_vars_path()
 {
-    static wcstring cached_result = default_vars_path_uncached();
+    static wcstring cached_result = vars_filename_in_directory(fishd_get_config());
     return cached_result;
+}
+
+/* Like default_vars_path, but returns a file in XDG_RUNTIME_DIR, if present. This is called infrequently and so does not need to be cached. */
+static wcstring default_named_pipe_path()
+{
+    env_var_t xdg_runtime_wdir = env_get_string(L"XDG_RUNTIME_DIR", ENV_GLOBAL | ENV_EXPORT);
+    if (! xdg_runtime_wdir.missing_or_empty())
+    {
+        return vars_filename_in_directory(xdg_runtime_wdir);
+    }
+    else
+    {
+        return default_vars_path();
+    }
 }
 
 /**
@@ -1277,7 +1290,7 @@ class universal_notifier_named_pipe_t : public universal_notifier_t
     
     void make_pipe(const wchar_t *test_path)
     {
-        wcstring vars_path = test_path ? wcstring(test_path) : default_vars_path();
+        wcstring vars_path = test_path ? wcstring(test_path) : default_named_pipe_path();
         vars_path.append(L".notifier");
         const std::string narrow_path = wcs2string(vars_path);
         

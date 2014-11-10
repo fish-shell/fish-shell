@@ -67,7 +67,7 @@
 static wcstring fishd_get_config();
 static std::string get_variables_file_path(const std::string &dir, const std::string &identifier);
 
-static wcstring default_vars_path()
+static wcstring default_vars_path_uncached()
 {
     wcstring wdir = fishd_get_config();
     const std::string dir = wcs2string(wdir);
@@ -77,6 +77,12 @@ static wcstring default_vars_path()
     const std::string machine_id = get_machine_identifier();
     const std::string machine_id_path = get_variables_file_path(dir, machine_id);
     return str2wcstring(machine_id_path);
+}
+
+static const wcstring &default_vars_path()
+{
+    static wcstring cached_result = default_vars_path_uncached();
+    return cached_result;
 }
 
 /**

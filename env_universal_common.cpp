@@ -16,6 +16,7 @@
 #include <sys/file.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <pwd.h>
 
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
@@ -84,18 +85,80 @@ static const wcstring &default_vars_path()
     return cached_result;
 }
 
-/* Like default_vars_path, but returns a file in XDG_RUNTIME_DIR, if present. This is called infrequently and so does not need to be cached. */
-static wcstring default_named_pipe_path()
+/**
+   Check, and create if necessary, a secure runtime path
+   Derived from tmux.c in tmux (http://tmux.sourceforge.net/)
+*/
+static int check_runtime_path(const char * path)
 {
-    env_var_t xdg_runtime_wdir = env_get_string(L"XDG_RUNTIME_DIR", ENV_GLOBAL | ENV_EXPORT);
-    if (! xdg_runtime_wdir.missing_or_empty())
+    /*
+     * Copyright (c) 2007 Nicholas Marriott <nicm@users.sourceforge.net>
+     *
+     * Permission to use, copy, modify, and distribute this software for any
+     * purpose with or without fee is hereby granted, provided that the above
+     * copyright notice and this permission notice appear in all copies.
+     *
+     * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+     * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+     * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+     * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+     * WHATSOEVER RESULTING FROM LOSS OF MIND, USE, DATA OR PROFITS, WHETHER
+     * IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING
+     * OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+     */
+
+    struct stat statpath;
+    u_int uid = geteuid();
+
+    if (mkdir(path, S_IRWXU) != 0 && errno != EEXIST)
+        return errno;
+    if (lstat(path, &statpath) != 0)
+        return errno;
+    if (!S_ISDIR(statpath.st_mode)
+            || statpath.st_uid != uid
+            || (statpath.st_mode & (S_IRWXG|S_IRWXO)) != 0)
+        return EACCES;
+    return 0;
+}
+
+/** Return the path of an appropriate runtime data directory */
+static std::string get_runtime_path()
+{
+    std::string path;
+    const char *dir = getenv("XDG_RUNTIME_DIR");
+    if (dir != NULL)
     {
-        return vars_filename_in_directory(xdg_runtime_wdir);
+        path = dir;
     }
     else
     {
-        return default_vars_path();
+        const char *uname = getenv("USER");
+        if (uname == NULL)
+        {
+            const struct passwd *pw = getpwuid(getuid());
+            uname = pw->pw_name;
+        }
+
+        // /tmp/fish.user
+        dir = "/tmp/fish.";
+        path.reserve(strlen(dir) + strlen(uname));
+        path.append(dir);
+        path.append(uname);
+        if (check_runtime_path(path.c_str()) != 0)
+        {
+            debug(0, L"Runtime path not available. Try deleting the directory %s and restarting fish.", path.c_str());
+            path.clear();
+        }
     }
+    return path;
+}
+
+
+/* Returns a "variables" file in the appropriate runtime directory. This is called infrequently and so does not need to be cached. */
+static wcstring default_named_pipe_path()
+{
+    // Note that vars_filename_in_directory returns empty string wuhen passed the empty string
+    return vars_filename_in_directory(str2wcstring(get_runtime_path()));
 }
 
 /**

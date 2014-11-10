@@ -132,6 +132,9 @@ typedef unsigned int color_support_t;
 color_support_t output_get_color_support();
 void output_set_color_support(color_support_t support);
 
+/** Given a list of rgb_color_t, pick the "best" one, as determined by the color support. Returns rgb_color_t::none() if empty */
+rgb_color_t best_color(const std::vector<rgb_color_t> &colors, color_support_t support);
+
 /* Exported for builtin_set_color's usage only */
 void write_color(rgb_color_t color, bool is_fg);
 unsigned char index_for_color(rgb_color_t c);

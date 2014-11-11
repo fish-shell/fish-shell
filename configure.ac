@@ -409,12 +409,6 @@ AC_CHECK_HEADER(
 )
 
 #
-# Detect nanoseconds fields in struct stat
-#
-AC_CHECK_MEMBERS([struct stat.st_mtimespec.tv_nsec])
-AC_CHECK_MEMBERS([struct stat.st_mtim.tv_nsec])
-
-#
 # On some platforms (Solaris 10) adding -std=c99 in turn requires that
 # _POSIX_C_SOURCE be defined to 200112L otherwise several
 # POSIX-specific, non-ISO-C99 types/prototypes are made unavailable
@@ -527,6 +521,12 @@ done
 if test ! x$local_found_posix_switch = xyes; then
   CXXFLAGS="$XCXXFLAGS"
 fi
+
+#
+# Detect nanoseconds fields in struct stat
+#
+AC_CHECK_MEMBERS([struct stat.st_mtimespec.tv_nsec])
+AC_CHECK_MEMBERS([struct stat.st_mtim.tv_nsec])
 
 
 #

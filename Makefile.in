@@ -756,18 +756,16 @@ uninstall-legacy: uninstall
 install-translations: $(TRANSLATIONS)
 	if test "$(HAVE_GETTEXT)" = 1; then \
 		for i in $(TRANSLATIONS); do \
-			$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/locale/`basename $$i .gmo`/LC_MESSAGES; \
-			$(INSTALL) -m 644 $$i $(DESTDIR)$(datadir)/locale/`basename $$i .gmo`/LC_MESSAGES/fish.mo; \
-			echo $(DESTDIR)$(datadir)/locale/`basename $$i .gmo`/LC_MESSAGES/fish.mo;\
+			$(INSTALL) -m 755 -d $(DESTDIR)$(localedir)/`basename $$i .gmo`/LC_MESSAGES; \
+			$(INSTALL) -m 644 $$i $(DESTDIR)$(localedir)/`basename $$i .gmo`/LC_MESSAGES/fish.mo; \
+			echo $(DESTDIR)$(localedir)/`basename $$i .gmo`/LC_MESSAGES/fish.mo;\
 		done; \
 	fi;
 .PHONY: install-translations
 
 uninstall-translations:
 	if test "$(HAVE_GETTEXT)" = 1; then \
-		for i in $(TRANSLATIONS_SRC); do \
-			rm -f $(DESTDIR)$(datadir)/locale/*/LC_MESSAGES/fish.mo; \
-		done; \
+		rm -f $(DESTDIR)$(localedir)/*/LC_MESSAGES/fish.mo; \
 	fi
 .PHONY: uninstall-translations
 

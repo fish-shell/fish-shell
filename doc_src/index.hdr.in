@@ -867,9 +867,9 @@ Similar to bash, fish has Emacs and Vi editing modes. The default editing mode i
 
 - @key{Alt,&larr;,Left} and @key{Alt,&rarr;,Right} move the cursor one word left or right, or moves forward/backward in the directory history if the command line is empty. If the cursor is already at the end of the line, and an autosuggestion is available, @key{Alt,&rarr;,Right} (or @key{Alt,F}) accepts the first word in the suggestion.
 
-- @cursor_key{&uarr;,Up} and @cursor_key{&darr;,Down} search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the <a href='#history'>history </a>section for more information on history searching.
+- @cursor_key{&uarr;,Up} and @cursor_key{&darr;,Down} search the command history for the previous/next command containing the string that was specified on the commandline before the search was started. If the commandline was empty when the search started, all commands match. See the <a href='#history'>history</a> section for more information on history searching.
 
-- @key{Alt,&uarr;,Up} and @key{Alt,&darr;,Down} search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the <a href='#history'>history </a>section for more information on history searching.
+- @key{Alt,&uarr;,Up} and @key{Alt,&darr;,Down} search the command history for the previous/next token containing the token under the cursor before the search was started. If the commandline was not on a token when the search started, all tokens match. See the <a href='#history'>history</a> section for more information on history searching.
 
 - @key{Delete} and @key{Backspace} removes one character forwards or backwards respectively.
 
@@ -904,64 +904,61 @@ You can change these key bindings using the <a href="commands.html#bind">bind</a
 
 \subsection vi-mode Vi mode commands
 
-Vi mode allows for the use of Vi-like commands when at the bash prompt. You'll initially be in insert mode. Hitting the escape key takes you into command mode where you can use, but aren't limited to, the following.
+Vi mode allows for the use of Vi-like commands at the prompt. Initially, <a href="#vi-mode-insert">insert mode</a> is active. @key{Escape} enters <a href="#vi-mode-command">command mode</a>. The commands available in command, insert and visual mode are described below.
 
-- __Deafult/Command Mode__
+\subsubsection vi-mode-command Command mode
 
- - @key{h} moves cursor left
+Command mode is also known as normal mode.
 
- - @key{l} moves cursor right
+- @key{h} moves the cursor left.
 
- - @key{i} enter __insert mode__ at current position
+- @key{l} moves the cursor right.
 
- - @key{v} enter __visual mode__ at current position
+- @key{i} enters <a href="#vi-mode-insert">insert mode</a> at the current cursor position.
 
- - @key{a} enter __insert mode__ after current position
+- @key{v} enters <a href="#vi-mode-visual">visual mode</a> at the current cursor position.
 
- - @key{Shift,A} moves cursor to end of line and put in __insert mode__
+- @key{a} enters <a href="#vi-mode-insert">insert mode</a> after the current cursor position.
 
- - @key{0} (zero) Move cursor to beginning of line (doesn't put in __insert mode__)
+- @key{Shift,A} enters <a href="#vi-mode-insert">insert mode</a> at the end of the line.
 
- - @key{d}@key{d} Delete line (saved for pasting)
+- @key{0} (zero) moves the cursor to beginning of line (remaining in command mode).
 
- - @key{Shift,D} delete text after current cursor position (saved for pasting)
+- @key{d}@key{d} deletes the current line and moves it to the <a href="#killring">killring</a>.
 
- - @key{p} paste text that was deleted
+- @key{Shift,D} deletes text after the current cursor position and moves it to the <a href="#killring">killring</a>.
 
- - @key{u} undo
+- @key{p} pastes text from the <a href="#killring">killring</a>.
 
- - @key{[} and @key{]} search the command history for the previous/next token
+- @key{u} undoes the most recent action.
 
- - @key{Control,C} clear the current command line and start over
+- @key{[} and @key{]} search the command history for the previous/next token containing the token under the cursor before the search was started. See the <a href='#history'>history</a> section for more information on history searching.
 
-- __Insert Mode__
+- @key{Control,C} deletes the entire line.
 
- - @key{Tab} <a href="#completion">completes</a> the current token.
+\subsubsection vi-mode-insert Insert mode
 
- - @key{Escape} or @key{Control,C} exit back to __normal mode__
+- @key{Tab} <a href="#completion">completes</a> the current token.
 
- - @cursor_key{&uarr;,Up} and @cursor_key{&darr;,Down} search the command history; see <a href='#history'>history </a>.
+- @key{Escape} or @key{Control,C} enters <a href="#vi-mode-command">command mode</a>.
 
- - @key{Control,W} moves the previous word to the <a href="#killring">killring</a>.
+- @cursor_key{&uarr;,Up} and @cursor_key{&darr;,Down} search the command history.  See the <a href='#history'>history</a> section for more information on history searching.
 
- - @key{Control,U} moves contents from the beginning of line to the cursor to the <a href="#killring">killring</a>.
+- @key{Control,W} moves the previous word to the <a href="#killring">killring</a>.
 
- - @key{Control,B} and @key{Control,F} move the cursor one word left or right. If the cursor is already at the end of the line, and an autosuggestion is available, @key{Control,F} accepts the first word in the suggestion.
+- @key{Control,U} moves contents from the beginning of line to the cursor to the <a href="#killring">killring</a>.
 
-- __Visual Mode__
+- @key{Control,B} and @key{Control,F} move the cursor one word left or right. If the cursor is already at the end of the line, and an autosuggestion is available, @key{Control,F} accepts the first word in the suggestion.
 
- - @cursor_key{&larr;,Left} and @cursor_key{&rarr;,Right} extend bounds of selection by one character left/right
+\subsubsection vi-mode-visual Visual mode
 
- - @key{b} and @key{w} extend bounds of selection backward/forward by one word
+- @cursor_key{&larr;,Left} and @cursor_key{&rarr;,Right} extend the selection backward/forward by one character.
 
- - @key{d} delete the selection, and exit back to __normal mode__
+- @key{b} and @key{w} extend the selection backward/forward by one word.
 
- - @key{x} cut the selection (ie, delete and save for pasting), and exit back to __normal mode__
+- @key{d} and @key{x} move the selection to the <a href="#killring">killring</a> and enter <a href="#vi-mode-command">command mode</a>.
 
- - @key{Escape} or @key{Control,C} exit back to __normal mode__
-
-- etc, for many of the other Vi commands.
-
+- @key{Escape} and @key{Control,C} enter <a href="#vi-mode-command">command mode</a>.
 
 \subsection killring Copy and paste (Kill Ring)
 

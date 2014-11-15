@@ -223,6 +223,10 @@ complete -f -c brew -n '__fish_brew_using_command unlink' -a '(__fish_brew_insta
 complete -f -c brew -n '__fish_brew_needs_command' -a unlinkapps -d 'Remove links created by brew linkapps'
 complete -f -c brew -n '__fish_brew_using_command unlinkapps' -l local -d 'Remove links from ~/Applications created by brew linkapps'
 
+# unpack
+complete -f -c brew -n '__fish_brew_needs_command' -a unpack -d 'Extract source code'
+complete -c brew -n '__fish_brew_using_command unpack' -a '(__fish_brew_formulae)'
+
 # unpin
 complete -f -c brew -n '__fish_brew_needs_command' -a unpin -d 'Unpin specified formulae'
 complete -f -c brew -n '__fish_brew_using_command unpin' -a '(__fish_brew_pinned_formulas)'

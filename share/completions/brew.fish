@@ -122,7 +122,6 @@ complete -f -c brew -n '__fish_brew_needs_command' -a 'install' -d 'Install form
 complete -f -c brew -n '__fish_brew_using_command install' -l force -d 'Force install'
 complete -f -c brew -n '__fish_brew_using_command install' -l debug -d 'If install fails, open shell in temp directory'
 complete -f -c brew -n '__fish_brew_using_command install' -l ignore-dependencies -d 'skip installing any dependencies of any kind'
-complete -f -c brew -n '__fish_brew_using_command install' -l fresh -d 'Don\'t re-use any options from previous installs'
 complete -f -c brew -n '__fish_brew_using_command install' -l cc -a "clang gcc-4.0 gcc-4.2 gcc-4.3 gcc-4.4 gcc-4.5 gcc-4.6 gcc-4.7 gcc-4.8 gcc-4.9 llvm-gcc" -d 'Attempt to compile using the specified compiler'
 complete -f -c brew -n '__fish_brew_using_command install' -l build-from-source -d 'Compile from source even if a bottle is provided'
 complete -f -c brew -n '__fish_brew_using_command install' -l devel -d 'Install the development version of formula'

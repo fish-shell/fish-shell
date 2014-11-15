@@ -122,10 +122,6 @@ complete -f -c brew -n '__fish_brew_needs_command' -a 'install' -d 'Install form
 complete -f -c brew -n '__fish_brew_using_command install' -l force -d 'Force install'
 complete -f -c brew -n '__fish_brew_using_command install' -l debug -d 'If install fails, open shell in temp directory'
 complete -f -c brew -n '__fish_brew_using_command install' -l ignore-dependencies -d 'skip installing any dependencies of any kind'
-complete -f -c brew -n '__fish_brew_using_command install' -l fresh -d 'Don\'t re-use any options from previous installs'
-complete -f -c brew -n '__fish_brew_using_command install' -l use-clang -d 'Attempt to compile using clang'
-complete -f -c brew -n '__fish_brew_using_command install' -l use-gcc -d 'Attempt to compile using GCC'
-complete -f -c brew -n '__fish_brew_using_command install' -l use-llvm -d 'Attempt to compile using the LLVM'
 complete -f -c brew -n '__fish_brew_using_command install' -l cc -a "clang gcc-4.0 gcc-4.2 gcc-4.3 gcc-4.4 gcc-4.5 gcc-4.6 gcc-4.7 gcc-4.8 gcc-4.9 llvm-gcc" -d 'Attempt to compile using the specified compiler'
 complete -f -c brew -n '__fish_brew_using_command install' -l build-from-source -d 'Compile from source even if a bottle is provided'
 complete -f -c brew -n '__fish_brew_using_command install' -l devel -d 'Install the development version of formula'
@@ -226,6 +222,10 @@ complete -f -c brew -n '__fish_brew_using_command unlink' -a '(__fish_brew_insta
 complete -f -c brew -n '__fish_brew_needs_command' -a unlinkapps -d 'Remove links created by brew linkapps'
 complete -f -c brew -n '__fish_brew_using_command unlinkapps' -l local -d 'Remove links from ~/Applications created by brew linkapps'
 
+# unpack
+complete -f -c brew -n '__fish_brew_needs_command' -a unpack -d 'Extract source code'
+complete -c brew -n '__fish_brew_using_command unpack' -a '(__fish_brew_formulae)'
+
 # unpin
 complete -f -c brew -n '__fish_brew_needs_command' -a unpin -d 'Unpin specified formulae'
 complete -f -c brew -n '__fish_brew_using_command unpin' -a '(__fish_brew_pinned_formulas)'
@@ -247,11 +247,6 @@ complete -f -c brew -n '__fish_brew_needs_command' -a uses -d 'Show formulas tha
 complete -f -c brew -n '__fish_brew_using_command uses' -l installed -d 'List only installed formulae'
 complete -f -c brew -n '__fish_brew_using_command uses' -l recursive -d 'Resolve more than one level of dependencies'
 complete -c brew -n '__fish_brew_using_command uses' -a '(__fish_brew_formulae)'
-
-# versions
-complete -f -c brew -n '__fish_brew_needs_command' -a versions -d 'List previous versions of formula'
-complete -f -c brew -n '__fish_brew_using_command versions' -l compact -d 'Show all options on a single line'
-complete -c brew -n '__fish_brew_using_command versions' -a '(__fish_brew_formulae)'
 
 
 ############

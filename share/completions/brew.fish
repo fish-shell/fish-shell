@@ -245,11 +245,6 @@ complete -f -c brew -n '__fish_brew_using_command uses' -l installed -d 'List on
 complete -f -c brew -n '__fish_brew_using_command uses' -l recursive -d 'Resolve more than one level of dependencies'
 complete -c brew -n '__fish_brew_using_command uses' -a '(__fish_brew_formulae)'
 
-# versions
-complete -f -c brew -n '__fish_brew_needs_command' -a versions -d 'List previous versions of formula'
-complete -f -c brew -n '__fish_brew_using_command versions' -l compact -d 'Show all options on a single line'
-complete -c brew -n '__fish_brew_using_command versions' -a '(__fish_brew_formulae)'
-
 
 ############
 # switches #

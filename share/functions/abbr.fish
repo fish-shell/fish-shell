@@ -151,7 +151,7 @@ function __fish_abbr_parse_entry -S -a __input __key __value
 	end
 	# use read -z to avoid splitting on newlines
 	# I think we can safely assume there will be no NULs in the input
-	set -l IFS =
+	set -l IFS '= '
 	printf "%s" $__input | read -z $__key $__value
 	return 0
 end

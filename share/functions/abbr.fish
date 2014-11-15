@@ -66,7 +66,7 @@ function abbr --description "Manage abbreviations"
 		__fish_abbr_parse_entry $mode_arg key value
 		# ensure the key contains at least one non-space character
 		set -l IFS \n\ \t
-		printf '%s' $key | read -lz key_ _
+		printf '%s' $key | read -lz key_ __
 		if test -z "$key_"
 			printf ( _ "%s: abbreviation must have a non-empty key\n" ) abbr >&2
 			return 1
@@ -144,10 +144,10 @@ end
 
 function __fish_abbr_parse_entry -S -a __input __key __value
 	if test -z "$__key"
-		set __key _
+		set __key __
 	end
 	if test -z "$__value"
-		set __value _
+		set __value __
 	end
 	set -l IFS '= '
 	switch $__input

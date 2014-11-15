@@ -190,7 +190,7 @@ void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt);
 #define CMD_OR_ERR_MSG _( L"Expected a command, but instead found a pipe. Did you mean 'COMMAND; or COMMAND'? See the help section for the 'or' builtin command by typing 'help or'.")
 
 /** Error message when a non-string token is found when expecting a command name */
-#define CMD_AND_ERR_MSG _( L"Expected a command, but instead found a '&'. Did you mean 'COMMAND; and COMMAND'? See the help section for the 'and' builtin command by typing 'help and'.")
+#define CMD_AND_ERR_MSG _( L"Expected a command, but instead found an '&'. Did you mean 'COMMAND; and COMMAND'? See the help section for the 'and' builtin command by typing 'help and'.")
 
 /** Error message when encountering an illegal command name */
 #define ILLEGAL_CMD_ERR_MSG _( L"Illegal command name '%ls'")

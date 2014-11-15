@@ -814,7 +814,7 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
     env_var_t global_dest = env_get_string(dest, ENV_GLOBAL);
     if (universal && ! global_dest.missing())
     {
-        append_format(stderr_buffer, _(L"%ls: Warning: universal scope selected, but a global variable %ls exists.\n"), L"set", dest);
+        append_format(stderr_buffer, _(L"%ls: Warning: universal scope selected, but a global variable '%ls' exists.\n"), L"set", dest);
     }
 
     free(dest);

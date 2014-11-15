@@ -241,7 +241,7 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 		# (git-svn uses essentially the same procedure internally)
 		set -l svn_upstream (git log --first-parent -1 --grep="^git-svn-id: \($svn_url_pattern\)" ^/dev/null)
 		if test (count $svn_upstream) -ne 0
-			echo $svn_upstream[-1] | read -l _ svn_upstream _
+			echo $svn_upstream[-1] | read -l __ svn_upstream __
 			set svn_upstream (echo $svn_upstream | sed 's/@.*//')
 			set -l cur_prefix
 			for i in (seq (count $svn_remote))

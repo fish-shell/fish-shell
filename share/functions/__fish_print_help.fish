@@ -32,7 +32,7 @@ function __fish_print_help --description "Print help message for the specified f
 		# different than the stdin of fish.
 		# use fd 3 to copy our stdout because we need to pipe the output of stty
 		begin
-			stty size 0<&3 | read _ cols
+			stty size 0<&3 | read __ cols
 		end 3<&1
 	end
 	if test -n "$cols"
@@ -58,7 +58,7 @@ function __fish_print_help --description "Print help message for the specified f
 		switch $line
 		case ' *' \t\*
 			# starts with whitespace, check if it has non-whitespace
-			printf "%s\n" $line | read -l word _
+			printf "%s\n" $line | read -l word __
 			if test -n $word
 				set line_type normal
 			else

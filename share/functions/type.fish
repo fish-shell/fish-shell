@@ -23,7 +23,7 @@ function type --description "Print the type of a command"
 					case '-??*'
 						# combined flags
 						set -l IFS
-						echo -n $flag | read _ flag arg
+						echo -n $flag | read __ flag arg
 						set flag -$flag
 						set arg -$arg
 				end

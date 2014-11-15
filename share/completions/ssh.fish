@@ -4,7 +4,7 @@
 
 __fish_complete_ssh ssh
 
-complete -x -c ssh -d Hostname -a "
+complete -x -c ssh --description Hostname -a "
 
 (__fish_print_hostnames)
 
@@ -14,7 +14,7 @@ complete -x -c ssh -d Hostname -a "
 )(__fish_print_hostnames)
 "
 
-complete -x -c ssh -d User -a "
+complete -x -c ssh --description User -a "
 (__fish_print_users | sgrep -v '^_')@
 "
 complete -c ssh --description "Command to run" -x -a '(__fish_complete_subcommand --fcs-skip=2)'

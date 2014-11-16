@@ -143,15 +143,19 @@ function __fish_abbr_parse_entry -S -a __input __key __value
 	if test -z "$__value"
 		set __value _
 	end
+	set -l IFS '= '
 	switch $__input
 	case '=*'
 		# read will skip any leading ='s, but we don't want that
 		set __input " $__input"
 		set __key _
+		set IFS '='
+	case ' =*'
+		set __key _
+		set IFS '='
 	end
 	# use read -z to avoid splitting on newlines
 	# I think we can safely assume there will be no NULs in the input
-	set -l IFS '= '
 	printf "%s" $__input | read -z $__key $__value
 	return 0
 end

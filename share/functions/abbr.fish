@@ -100,7 +100,9 @@ function abbr --description "Manage abbreviations"
 
 	case 'show'
 		for i in $fish_user_abbreviations
-			echo abbr -a \'$i\'
+			# Disable newline splitting
+			set -lx IFS ''
+			echo abbr -a \'(__fish_abbr_escape $i)\'
 		end
 		return 0
 
@@ -112,6 +114,10 @@ function abbr --description "Manage abbreviations"
 		end
 		return 0
 	end
+end
+
+function __fish_abbr_escape
+	echo $argv | sed -e s,\\\\,\\\\\\\\,g -e s,\',\\\\\',g
 end
 
 function __fish_abbr_get_by_key

@@ -687,16 +687,11 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return result
 
     def do_get_abbreviations(self):
-        out, err = run_fish_cmd('abbr -s')
-        lines = (x for x in out.rstrip().split('\n'))
-        # Turn the output into something we can use
-        abbrout = (line[len('abbr -a '):].strip('\'') for line in lines)
-        abbrs = [re.split('[ =]', x, maxsplit=1) for x in abbrout]
+        out, err = run_fish_cmd('echo -n -s $fish_user_abbreviations\x1e')
 
-        if abbrs[0][0]:
-            result = [{'word': x, 'phrase': y} for x, y in abbrs]
-        else:
-            result = []
+        lines = (x for x in out.rstrip().split('\x1e'))
+        abbrs = (re.split('[ =]', x, maxsplit=1) for x in lines if x)
+        result = [{'word': x, 'phrase': y} for x, y in abbrs]
         return result
 
     def do_remove_abbreviation(self, abbreviation):
@@ -707,7 +702,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             return True
 
     def do_save_abbreviation(self, abbreviation):
-        out, err = run_fish_cmd('abbr -a \'%s=%s\'' % (abbreviation['word'], abbreviation['phrase']))
+        out, err = run_fish_cmd('abbr -a \'%s %s\'' % (abbreviation['word'], abbreviation['phrase']))
         if err:
             return err
         else:

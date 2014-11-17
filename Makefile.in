@@ -194,7 +194,11 @@ MANUALS := $(addsuffix .1, $(addprefix share/man/man1/,	\
 #
 
 TRANSLATIONS_SRC := $(wildcard po/*.po)
-TRANSLATIONS := $(TRANSLATIONS_SRC:.po=.gmo)
+ifdef HAVE_GETTEXT
+	TRANSLATIONS := $(TRANSLATIONS_SRC:.po=.gmo)
+else
+	TRANSLATIONS :=
+endif
 
 #
 # If Doxygen is not available, don't attempt to build the documentation
@@ -460,34 +464,26 @@ doc.h: $(HDR_FILES)
 #
 
 %.gmo:
-	if test "$(HAVE_GETTEXT)" = 1; then \
-		msgfmt -o $*.gmo $*.po; \
-	fi
-
+	msgfmt -o $@ $*.po
 
 #
 # Update existing po file or copy messages.pot
 #
 
 %.po:messages.pot
-	if test "$(HAVE_GETTEXT)" = 1;then \
-		if test -f $*.po; then \
-			msgmerge -U --backup=existing $*.po messages.pot;\
-		else \
-			cp messages.pot $*.po;\
-		fi; \
+	if test -f $*.po; then \
+		msgmerge -U --backup=existing $*.po messages.pot;\
+	else \
+		cp messages.pot $*.po;\
 	fi
-
 
 #
 # Create a template translation object
 #
 
 messages.pot: *.cpp *.h share/completions/*.fish share/functions/*.fish
-	if test "$(HAVE_GETTEXT)" = 1; then \
-		xgettext -k_ -kN_ *.cpp *.h -o messages.pot; \
-		xgettext -j -k_ -kN_ -k--description -LShell --from-code=UTF-8 share/completions/*.fish share/functions/*.fish -o messages.pot; \
-	fi
+	xgettext -k_ -kN_ *.cpp *.h -o messages.pot
+	xgettext -j -k_ -kN_ -k--description -LShell --from-code=UTF-8 share/completions/*.fish share/functions/*.fish -o messages.pot
 
 builtin.o: $(BUILTIN_FILES)
 
@@ -750,19 +746,17 @@ uninstall-legacy: uninstall
 .PHONY: uninstall-legacy
 
 install-translations: $(TRANSLATIONS)
-	if test "$(HAVE_GETTEXT)" = 1; then \
-		for i in $(TRANSLATIONS); do \
-			$(INSTALL) -m 755 -d $(DESTDIR)$(localedir)/`basename $$i .gmo`/LC_MESSAGES; \
-			$(INSTALL) -m 644 $$i $(DESTDIR)$(localedir)/`basename $$i .gmo`/LC_MESSAGES/fish.mo; \
-			echo $(DESTDIR)$(localedir)/`basename $$i .gmo`/LC_MESSAGES/fish.mo;\
-		done; \
-	fi;
+ifdef HAVE_GETTEXT
+	for i in $(TRANSLATIONS); do \
+		$(INSTALL) -m 755 -d $(DESTDIR)$(localedir)/`basename $$i .gmo`/LC_MESSAGES; \
+		$(INSTALL) -m 644 $$i $(DESTDIR)$(localedir)/`basename $$i .gmo`/LC_MESSAGES/fish.mo; \
+		echo $(DESTDIR)$(localedir)/`basename $$i .gmo`/LC_MESSAGES/fish.mo;\
+	done
+endif
 .PHONY: install-translations
 
 uninstall-translations:
-	if test "$(HAVE_GETTEXT)" = 1; then \
-		rm -f $(DESTDIR)$(localedir)/*/LC_MESSAGES/fish.mo; \
-	fi
+	rm -f $(DESTDIR)$(localedir)/*/LC_MESSAGES/fish.mo
 .PHONY: uninstall-translations
 
 
@@ -851,7 +845,7 @@ clean:
 	if test "$(HAVE_DOXYGEN)" = 1; then \
 		rm -rf doc user_doc share/man; \
 	fi
-	rm -f $(TRANSLATIONS)
+	rm -f po/*.gmo
 .PHONY: clean
 
 

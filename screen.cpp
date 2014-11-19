@@ -1338,7 +1338,6 @@ void s_write(screen_t *s,
 
         if (! cursor_position_is_within_pager && i == cursor_pos)
         {
-            color = 0;
             cursor_arr = s->desired.cursor;
         }
 

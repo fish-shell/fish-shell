@@ -1276,14 +1276,14 @@ class universal_notifier_notifyd_t : public universal_notifier_t
     }
     
 public:
-    universal_notifier_notifyd_t() : notify_fd(-1), token(0)
+    universal_notifier_notifyd_t() : notify_fd(-1), token(-1 /* NOTIFY_TOKEN_INVALID */)
     {
         setup_notifyd();
     }
     
     ~universal_notifier_notifyd_t()
     {
-        if (token != 0)
+        if (token != -1 /* NOTIFY_TOKEN_INVALID */)
         {
 #if FISH_NOTIFYD_AVAILABLE
             notify_cancel(token);

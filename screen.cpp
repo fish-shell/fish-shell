@@ -1334,20 +1334,21 @@ void s_write(screen_t *s,
     size_t i;
     for (i=0; i < effective_commandline.size(); i++)
     {
-        int color = colors[i];
-
+        /* Grab the current cursor's x,y position if this character matches the cursor's offset */
         if (! cursor_position_is_within_pager && i == cursor_pos)
         {
             cursor_arr = s->desired.cursor;
         }
-
-        s_desired_append_char(s, effective_commandline.at(i), color, indent[i], first_line_prompt_space);
+        s_desired_append_char(s, effective_commandline.at(i), colors[i], indent[i], first_line_prompt_space);
     }
+    
+    /* Cursor may have been at the end too */
     if (! cursor_position_is_within_pager && i == cursor_pos)
     {
         cursor_arr = s->desired.cursor;
     }
-
+    
+    /* Now that we've output everything, set the cursor to the position that we saved in the loop above */
     s->desired.cursor = cursor_arr;
 
     if (cursor_position_is_within_pager)

@@ -189,10 +189,10 @@ function __fish_config_interactive -d "Initializations that should be performed 
 
 
 	# Notify vte-based terminals when $PWD changes (issue #906)
-	if test "$VTE_VERSION" -ge 3405
+	if test "$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal"
 		function __update_vte_cwd --on-variable PWD --description 'Notify VTE of change to $PWD'
 			status --is-command-substitution; and return
-			printf '\033]7;file://%s\a' (pwd | __fish_urlencode)
+			printf '\033]7;file://%s%s\a' (hostname) (pwd | __fish_urlencode)
 		end
 	end
 

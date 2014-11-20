@@ -1360,9 +1360,14 @@ static int complete_load_no_reload(wcstring *name)
 }
 
 /**
-   Find completion for the argument str of command cmd_orig with
-   previous option popt. Insert results into comp_out. Return 0 if file
-   completion should be disabled, 1 otherwise.
+   complete_param: Given a command, find completions for the argument str of command cmd_orig with previous option popt.
+   
+   Examples in format (cmd, popt, str):
+   
+      echo hello world <tab> -> ("echo", "world", "")
+      echo hello world<tab> -> ("echo", "hello", "world")
+ 
+   Insert results into comp_out. Return true to perform file completion, false to disable it.
 */
 struct local_options_t
 {
@@ -1967,7 +1972,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
                 for (size_t i=0; i < all_arguments.size(); i++)
                 {
                     const parse_node_t *node = all_arguments.at(i);
-                    if (node->location_in_or_at_end_of_source_range(pos))
+                    if (node->location_in_or_at_end_of_source_range(adjusted_pos))
                     {
                         matching_arg_index = i;
                         break;
@@ -1978,11 +1983,23 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
                 wcstring current_argument, previous_argument;
                 if (matching_arg_index != (size_t)(-1))
                 {
-                    /* Get the current argument and the previous argument, if we have one */
-                    current_argument = all_arguments.at(matching_arg_index)->get_source(cmd);
-
-                    if (matching_arg_index > 0)
-                        previous_argument = all_arguments.at(matching_arg_index - 1)->get_source(cmd);
+                    const wcstring matching_arg = all_arguments.at(matching_arg_index)->get_source(cmd);
+                    
+                    /* If the cursor is in whitespace, then the "current" argument is empty and the previous argument is the matching one. But if the cursor was in or at the end of the argument, then the current argument is the matching one, and the previous argument is the one before it. */
+                    bool cursor_in_whitespace = (adjusted_pos < pos);
+                    if (cursor_in_whitespace)
+                    {
+                        current_argument = L"";
+                        previous_argument = matching_arg;
+                    }
+                    else
+                    {
+                        current_argument = matching_arg;
+                        if (matching_arg_index > 0)
+                        {
+                            previous_argument = all_arguments.at(matching_arg_index - 1)->get_source(cmd);
+                        }
+                    }
 
                     /* Check to see if we have a preceding double-dash */
                     for (size_t i=0; i < matching_arg_index; i++)

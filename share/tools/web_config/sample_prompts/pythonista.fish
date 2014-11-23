@@ -7,6 +7,7 @@ set yellow (set_color yellow)
 set green (set_color green)
 set gray (set_color -o black)
 
+set -g VIRTUAL_ENV_DISABLE_PROMPT true
 
 function fish_prompt
    set_color yellow

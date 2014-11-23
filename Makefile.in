@@ -713,6 +713,9 @@ uninstall: uninstall-translations
 	-if test -d $(DESTDIR)$(docdir); then \
 		rm -rf $(DESTDIR)$(docdir);\
 	fi
+	-if test -f $(DESTDIR)$(datadir)/pkgconfig/fish.pc; then \
+		rm -f $(DESTDIR)$(datadir)/pkgconfig/fish.pc;\
+	fi
 	-for i in $(MANUALS); do \
 		rm -rf $(DESTDIR)$(mandir)/man1/`basename $$i`*; \
 	done;

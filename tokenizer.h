@@ -122,7 +122,7 @@ void tok_next(tokenizer_t *tok);
 enum token_type tok_last_type(tokenizer_t *tok);
 
 /**
-  Returns the last token string. The string should not be freed by the caller.
+  Returns the last token string. The string should not be freed by the caller. This returns nonsense results for some token types, like TOK_END.
 */
 const wchar_t *tok_last(tokenizer_t *tok);
 

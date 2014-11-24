@@ -621,14 +621,22 @@ void tok_next(tokenizer_t *tok)
 
     switch (*tok->buff)
     {
-
         case L'\0':
             tok->last_type = TOK_END;
             /*fwprintf( stderr, L"End of string\n" );*/
             tok->has_next = false;
             break;
-        case 13:
+        case 13: // carriage return
         case L'\n':
+            // Hack: when we get a newline, swallow as many as we can
+            // This compresses multiple subsequent newlines into a single one
+            while (*tok->buff == L'\n' || *tok->buff == 13 || *tok->buff == ' ' || *tok->buff == '\t')
+            {
+                tok->buff++;
+            }
+            tok->last_type = TOK_END;
+            break;
+
         case L';':
             tok->last_type = TOK_END;
             tok->buff++;

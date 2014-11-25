@@ -44,6 +44,13 @@ if not set -q __fish_is_running_tests
     set -l escaped_config (printf '%s/fish' $XDG_CONFIG_HOME | sed -e 's/[\'\\\\]/\\\\&/g'); or die
     printf 'set fish_function_path \'%s/functions\' \'%s/share/functions\'\n' $escaped_config $escaped_parent > $XDG_CONFIG_HOME/fish/config.fish; or die
     set -xl __fish_is_running_tests $XDG_CONFIG_HOME
+    # set locale information to be consistent
+    set -lx LANG C
+    set -lx LC_ALL ''
+    for var in ALL COLLATE MESSAGES MONETARY NUMERIC TIME
+        set -lx LC_$var ''
+    end
+    set -lx LC_CTYPE en_US.UTF-8
     exec ../fish $script
     die 'exec failed'
 else if test "$__fish_is_running_tests" != "$XDG_CONFIG_HOME"

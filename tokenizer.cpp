@@ -101,6 +101,7 @@ tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig
     this->accept_unfinished = !!(flags & TOK_ACCEPT_UNFINISHED);
     this->show_comments = !!(flags & TOK_SHOW_COMMENTS);
     this->squash_errors = !!(flags & TOK_SQUASH_ERRORS);
+    this->show_blank_lines = !!(flags & TOK_SHOW_BLANK_LINES);
 
     this->has_next = (*b != L'\0');
     this->orig_buff = this->buff = b;
@@ -562,7 +563,6 @@ const wchar_t *tok_get_desc(int type)
     return _(tok_desc[type]);
 }
 
-
 void tok_next(tokenizer_t *tok)
 {
 
@@ -628,18 +628,18 @@ void tok_next(tokenizer_t *tok)
             break;
         case 13: // carriage return
         case L'\n':
-            // Hack: when we get a newline, swallow as many as we can
-            // This compresses multiple subsequent newlines into a single one
-            while (*tok->buff == L'\n' || *tok->buff == 13 || *tok->buff == ' ' || *tok->buff == '\t')
-            {
-                tok->buff++;
-            }
-            tok->last_type = TOK_END;
-            break;
-
         case L';':
             tok->last_type = TOK_END;
             tok->buff++;
+            // Hack: when we get a newline, swallow as many as we can
+            // This compresses multiple subsequent newlines into a single one
+            if (! tok->show_blank_lines)
+            {
+                while (*tok->buff == L'\n' || *tok->buff == 13 /* CR */ || *tok->buff == ' ' || *tok->buff == '\t')
+                {
+                    tok->buff++;
+                }
+            }
             break;
         case L'&':
             tok->last_type = TOK_BACKGROUND;

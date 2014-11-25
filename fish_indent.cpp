@@ -91,7 +91,7 @@ static int indent(wcstring &out, const wcstring &in, int flags)
     int prev_type = 0;
     int prev_prev_type = 0;
 
-    tokenizer_t tok(in.c_str(), TOK_SHOW_COMMENTS);
+    tokenizer_t tok(in.c_str(), TOK_SHOW_COMMENTS | TOK_SHOW_BLANK_LINES);
     for (; tok_has_next(&tok); tok_next(&tok))
     {
         int type = tok_last_type(&tok);

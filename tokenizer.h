@@ -61,6 +61,10 @@ enum tokenizer_error
 */
 #define TOK_SQUASH_ERRORS 4
 
+/** Ordinarily, the tokenizer ignores newlines following a newline, or a semicolon.
+    This flag tells the tokenizer to return each of them as a separate END. */
+#define TOK_SHOW_BLANK_LINES 8
+
 typedef unsigned int tok_flags_t;
 
 /**
@@ -84,8 +88,10 @@ struct tokenizer_t
     bool has_next;
     /** Whether incomplete tokens are accepted*/
     bool accept_unfinished;
-    /** Whether commants should be returned*/
+    /** Whether comments should be returned*/
     bool show_comments;
+    /** Whether all blank lines are returned */
+    bool show_blank_lines;
     /** Type of last quote, can be either ' or ".*/
     wchar_t last_quote;
     /** Last error */

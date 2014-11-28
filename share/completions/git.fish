@@ -421,5 +421,16 @@ complete -f -c git -n '__fish_git_needs_command' -a whatchanged -d 'Show logs wi
 ## Aliases (custom user-defined commands)
 complete -c git -n '__fish_git_needs_command' -a '(__fish_git_aliases)' -d 'Alias (user-defined command)'
 
+### git clean
+complete -f -c git -n '__fish_git_needs_command' -a clean -d 'Remove untracked files from the working tree'
+complete -f -c git -n '__fish_git_using_command clean' -s f -l force -d 'Force run'
+complete -f -c git -n '__fish_git_using_command clean' -s i -l interactive -d 'Show what would be done and clean files interactively'
+complete -f -c git -n '__fish_git_using_command clean' -s n -l dry-run -d 'Don\'t actually remove anything, just show what would be done'
+complete -f -c git -n '__fish_git_using_command clean' -s q -l quite -d 'Be quiet, only report errors'
+complete -f -c git -n '__fish_git_using_command clean' -s d -d 'Remove untracked directories in addition to untracked files'
+complete -f -c git -n '__fish_git_using_command clean' -s x -d 'Remove ignored files, as well'
+complete -f -c git -n '__fish_git_using_command clean' -s X -d 'Remove only ignored files'
+# TODO -e option
+
 ## Custom commands (git-* commands installed in the PATH)
 complete -c git -n '__fish_git_needs_command' -a '(__fish_git_custom_commands)' -d 'Custom command'

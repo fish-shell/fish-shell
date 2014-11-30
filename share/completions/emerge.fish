@@ -28,6 +28,22 @@ function __fish_emerge_use_installed_package --description 'Tests if emerge comm
   return 1
 end
 
+
+function __fish_emerge_print_all_pkgs_with_version_compare --description 'Print completions for all packages including the version compare if that is already typed'
+    set -l version_comparator (commandline --current-token | \
+                               sgrep -o '^[\'"]*[<>]\?=\?' | \
+                               sed -r 's/^[\'"]*(.*)/\1/g')
+    set -l sedstring
+
+    if set -q $version_comparator
+        set sedstring 's/^(.*)/\1\tPackage/g'
+    else
+        set sedstring 's/^(.*)/'$version_comparator'\1\tPackage/g'
+    end
+
+    __fish_emerge_print_all_pkgs | sed -r $sedstring
+end
+
 #########################
 # Actions
 complete -c emerge -n '__fish_emerge_use_installed_package' -xua \
@@ -38,7 +54,10 @@ complete -c emerge -n '__fish_emerge_use_installed_package' -xua \
 complete -c emerge -n 'not __fish_emerge_use_installed_package' -xua \
 'system\t"'(_ "All base system packages")'" '\
 'world\t"'(_ "All packages in world")'" '\
-'(__fish_emerge_print_all_pkgs)\t"'(_ "Package")'"'
+'@world\t"'(_ "All packages in world")'" '\
+'@preserved-rebuild\t"'(_ 'Packages that are linked to preserved libs')'" '\
+'@module-rebuild\t"'(_ "Packages that contain kernel modules")'" '\
+'(__fish_emerge_print_all_pkgs_with_version_compare)'
 
 complete -c emerge -l sync -d "Synchronize the portage tree"
 complete -c emerge -l info -d "Get informations to include in bug reports"

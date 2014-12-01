@@ -1,7 +1,7 @@
 
 # Options
-complete -c cygport -s 4 -l 32    -d "Build package for 32-bit Cygwin"
-complete -c cygport -s 8 -l 64    -d "Build package for 64-bit Cygwin"
+complete -c cygport -s 4 -l 32    -d "Build for 32-bit Cygwin"
+complete -c cygport -s 8 -l 64    -d "Build for 64-bit Cygwin"
 complete -c cygport      -l debug -d "Enable debugging messages"
 
 # Cygport file

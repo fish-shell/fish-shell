@@ -39,7 +39,7 @@ def run_fish_cmd(text):
     # ensure that fish is using UTF-8
     ctype = os.environ.get("LC_ALL", os.environ.get("LC_CTYPE", os.environ.get("LANG")))
     env = None
-    if re.search(r"\.utf-?8$", ctype, flags=re.I) is None:
+    if ctype is None or re.search(r"\.utf-?8$", ctype, flags=re.I) is None:
         # override LC_CTYPE with en_US.UTF-8
         # We're assuming this locale exists.
         # Fish makes the same assumption in config.fish

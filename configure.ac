@@ -748,25 +748,6 @@ else
   AC_MSG_RESULT(no)
 fi
 
-# Check if del_curterm is broken - in that case we redefine
-# del_curterm as a no-op, to avoid a double-free
-
-AC_MSG_CHECKING([If del_curterm is broken])
-case $target_os in
-  *bsd*)
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(
-      [HAVE_BROKEN_DEL_CURTERM],
-      [1],
-      [del_curterm is broken, redefine it to a no-op to avoid a double-free bug]
-    )
-    ;;
-  *)
-    AC_MSG_RESULT(no)
-    ;;
-esac
-
-
 # Tell the world what we know
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

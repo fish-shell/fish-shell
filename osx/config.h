@@ -61,6 +61,9 @@
 /* Define to 1 if you have the nan function */
 #define HAVE_NAN 1
 
+/* Define to 1 if you have the <ncurses/curses.h> header file. */
+/* #undef HAVE_NCURSES_CURSES_H */
+
 /* Define to 1 if you have the <ncurses.h> header file. */
 #define HAVE_NCURSES_H 1
 

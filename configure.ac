@@ -301,35 +301,6 @@ case $target_os in
     ;;
 esac
 
-# Check for Solaris curses tputs having fixed length parameter list.
-AC_MSG_CHECKING([if we are using non varargs tparm.])
-AC_COMPILE_IFELSE(
-  [
-    AC_LANG_PROGRAM(
-      [
-        #include <curses.h>
-        #include <term.h>
-      ],
-      [
-        tparm( "" );
-      ]
-    )
-  ],
-  [tparm_solaris_kludge=no],
-  [tparm_solaris_kludge=yes]
-)
-if test "x$tparm_solaris_kludge" = "xyes"; then
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(
-    [TPARM_SOLARIS_KLUDGE],
-    [1],
-    [Define to 1 if tparm accepts a fixed amount of paramters.]
-  )
-else
-  AC_MSG_RESULT(no)
-fi
-
-
 #
 # BSD-specific flags go here
 #
@@ -390,7 +361,7 @@ fi
 # Check presense of various header files
 #
 
-AC_CHECK_HEADERS([getopt.h termios.h sys/resource.h term.h ncurses/term.h ncurses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h execinfo.h spawn.h sys/sysctl.h])
+AC_CHECK_HEADERS([getopt.h termios.h sys/resource.h term.h ncurses/term.h ncurses.h ncurses/curses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h execinfo.h spawn.h sys/sysctl.h])
 
 if test x$local_gettext != xno; then
   AC_CHECK_HEADERS([libintl.h])
@@ -743,6 +714,43 @@ if test "$have_working_getopt_long" = yes; then
     [HAVE_WORKING_GETOPT_LONG],
     [1],
     [Define to 1 if getopt_long exists and works.]
+  )
+else
+  AC_MSG_RESULT(no)
+fi
+
+# Check for Solaris curses tputs having fixed length parameter list.
+AC_MSG_CHECKING([if we are using non varargs tparm.])
+AC_COMPILE_IFELSE(
+  [
+    AC_LANG_PROGRAM(
+      [
+	#if HAVE_NCURSES_H
+	#include <ncurses.h>
+	#else
+	#include <curses.h>
+	#endif
+
+	#if HAVE_TERM_H
+	#include <term.h>
+	#elif HAVE_NCURSES_TERM_H
+	#include <ncurses/term.h>
+	#endif
+      ],
+      [
+        tparm( "" );
+      ]
+    )
+  ],
+  [tparm_solaris_kludge=no],
+  [tparm_solaris_kludge=yes]
+)
+if test "x$tparm_solaris_kludge" = "xyes"; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(
+    [TPARM_SOLARIS_KLUDGE],
+    [1],
+    [Define to 1 if tparm accepts a fixed amount of paramters.]
   )
 else
   AC_MSG_RESULT(no)

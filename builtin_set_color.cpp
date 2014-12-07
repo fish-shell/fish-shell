@@ -11,8 +11,13 @@ Functions used for implementing the set_color builtin.
 
 #if HAVE_NCURSES_H
 #include <ncurses.h>
+#elif HAVE_NCURSES_CURSES_H
+#include <ncurses/curses.h>
 #else
+// Solaris curses defines lots of unneeded macros which conflict with C++
+#define NOMACROS
 #include <curses.h>
+#undef NOMACROS
 #endif
 
 #if HAVE_TERM_H

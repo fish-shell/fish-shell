@@ -694,6 +694,56 @@ else
   AC_MSG_RESULT(no)
 fi
 
+# Check for sys_errlist
+AC_MSG_CHECKING([for sys_errlist array])
+AC_TRY_LINK(
+  [
+   #include <stdio.h>
+  ],
+  [
+    const char *p;
+    p = sys_errlist[sys_nerr];
+  ],
+  have_sys_errlist=yes,
+  have_sys_errlist=no
+)
+if test "$have_sys_errlist" = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(
+    [HAVE_SYS_ERRLIST],
+    [1],
+    [Define to 1 if the sys_errlist array is available.]
+  )
+else
+  AC_MSG_RESULT(no)
+fi
+
+# Check for _sys_errs
+AC_MSG_CHECKING([for _sys_errs array])
+AC_TRY_LINK(
+  [
+   #include <string>
+  ],
+  [
+    std::string p;
+    extern const char _sys_errs[];
+    extern const int _sys_index[];
+    p = _sys_errs[_sys_index[0]];
+  ],
+  have__sys__errs=yes,
+  have__sys__errs=no
+)
+if test "$have__sys__errs" = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(
+    [HAVE__SYS__ERRS],
+    [1],
+    [Define to 1 if the _sys_errs array is available.]
+  )
+else
+  AC_MSG_RESULT(no)
+fi
+
 # Check if getopt_long exists and works
 AC_MSG_CHECKING([if getopt_long exists and works])
 AC_TRY_LINK(

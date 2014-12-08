@@ -114,6 +114,9 @@
    */
 /* #undef HAVE_SYS_DIR_H */
 
+/* Define to 1 if the sys_errlist array is available. */
+#define HAVE_SYS_ERRLIST 1
+
 /* Define to 1 if you have the <sys/ioctl.h> header file. */
 #define HAVE_SYS_IOCTL_H 1
 
@@ -193,6 +196,9 @@
 
 /* Define to 1 if you have the file `/proc/self/stat'. */
 /* #undef HAVE__PROC_SELF_STAT */
+
+/* Define to 1 if the _sys_errs array is available. */
+/* #undef HAVE__SYS__ERRS */
 
 /* Define to 1 if the __environ symbol is exported. */
 /* #undef HAVE___ENVIRON */

@@ -450,6 +450,10 @@ for i in "" "-D_POSIX_C_SOURCE=200112L" "-D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=2
       /* As above (under at least Linux and FreeBSD). */
       #include <sys/ioctl.h>
       #endif
+
+      #ifdef HAVE_TERMIOS_H
+      #include <termios.h>
+      #endif
     ],
     [
       /* Avert high-level optimisation, by making the program's

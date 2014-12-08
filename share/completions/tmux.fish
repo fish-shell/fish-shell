@@ -38,7 +38,7 @@ complete -c tmux -n '__fish_use_subcommand' -rs S   -d 'Full path to sever socke
 ###############  End:   Front  Flags ###############
 
 ###############  Begin: Clients and Sessions ###############
-set -l attach 'attach-session attach'
+set -l attach 'attach-session attach at a'
 set -l detach 'detach-client detach'
 set -l has 'has-session has'
 set -l killserver 'kill-server'

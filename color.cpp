@@ -6,7 +6,7 @@
 
 bool rgb_color_t::try_parse_special(const wcstring &special)
 {
-    bzero(&data, sizeof data);
+    memset(&data, 0, sizeof data);
     const wchar_t *name = special.c_str();
     if (! wcscasecmp(name, L"normal"))
     {
@@ -102,7 +102,7 @@ static unsigned char convert_color(const unsigned char rgb[3], const uint32_t *c
 
 bool rgb_color_t::try_parse_rgb(const wcstring &name)
 {
-    bzero(&data, sizeof data);
+    memset(&data, 0, sizeof data);
     /* We support the following style of rgb formats (case insensitive):
         #FA3
         #F3A035
@@ -184,7 +184,7 @@ wcstring_list_t rgb_color_t::named_color_names(void)
 
 bool rgb_color_t::try_parse_named(const wcstring &str)
 {
-    bzero(&data, sizeof data);
+    memset(&data, 0, sizeof data);
     size_t max = sizeof named_colors / sizeof *named_colors;
     for (size_t idx=0; idx < max; idx++)
     {
@@ -333,7 +333,7 @@ void rgb_color_t::parse(const wcstring &str)
     if (! success) success = try_parse_rgb(str);
     if (! success)
     {
-        bzero(&this->data, sizeof this->data);
+        memset(&this->data, 0, sizeof this->data);
         this->type = type_none;
     }
 }

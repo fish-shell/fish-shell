@@ -502,6 +502,10 @@ fi
 AC_CHECK_MEMBERS([struct stat.st_mtimespec.tv_nsec])
 AC_CHECK_MEMBERS([struct stat.st_mtim.tv_nsec])
 
+#
+# Check for D_TYPE in dirent, only on BSD and Linux
+#
+AC_STRUCT_DIRENT_D_TYPE
 
 #
 # Check for presense of various functions used by fish

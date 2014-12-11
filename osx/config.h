@@ -19,6 +19,10 @@
 /* Define to 1 if you have the `dcgettext' function. */
 /* #undef HAVE_DCGETTEXT */
 
+/* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
+   */
+#define HAVE_DIRENT_H 1
+
 /* Define to 1 if you have the <execinfo.h> header file. */
 #define HAVE_EXECINFO_H 1
 
@@ -70,6 +74,9 @@
 /* Define to 1 if you have the <ncurses/term.h> header file. */
 /* #undef HAVE_NCURSES_TERM_H */
 
+/* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
+/* #undef HAVE_NDIR_H */
+
 /* Define to 1 if realpath accepts null for its second argument. */
 #define HAVE_REALPATH_NULL 1
 
@@ -97,11 +104,22 @@
 /* Define to 1 if you have the <stropts.h> header file. */
 /* #undef HAVE_STROPTS_H */
 
+/* Define to 1 if `d_type' is a member of `struct dirent'. */
+#define HAVE_STRUCT_DIRENT_D_TYPE 1
+
 /* Define to 1 if you have the `sysconf' function. */
 #define HAVE_SYSCONF 1
 
+/* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
+   */
+/* #undef HAVE_SYS_DIR_H */
+
 /* Define to 1 if you have the <sys/ioctl.h> header file. */
 #define HAVE_SYS_IOCTL_H 1
+
+/* Define to 1 if you have the <sys/ndir.h> header file, and it defines `DIR'.
+   */
+/* #undef HAVE_SYS_NDIR_H */
 
 /* Define to 1 if you have the <sys/resource.h> header file. */
 #define HAVE_SYS_RESOURCE_H 1

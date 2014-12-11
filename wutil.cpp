@@ -81,7 +81,7 @@ bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &ou
         
         /* We may be able to skip stat, if the readdir can tell us the file type directly */
         bool check_with_stat = true;
-#if defined(_DIRENT_HAVE_D_TYPE) || __APPLE__
+#ifdef HAVE_STRUCT_DIRENT_D_TYPE
         if (d->d_type == DT_DIR)
         {
             /* Known directory */
@@ -99,7 +99,7 @@ bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &ou
             is_dir = false;
             check_with_stat = false;
         }
-#endif
+#endif // HAVE_STRUCT_DIRENT_D_TYPE
         if (check_with_stat)
         {
             /* We couldn't determine the file type from the dirent; check by stat'ing it */

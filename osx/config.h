@@ -179,6 +179,12 @@
 /* Define to 1 if the __environ symbol is exported. */
 /* #undef HAVE___ENVIRON */
 
+/* Define to 1 to disable ncurses macros that conflict with the STL */
+#define NCURSES_NOMACROS 1
+
+/* Define to 1 to disable curses macros that conflict with the STL */
+#define NOMACROS 1
+
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "fish-users@lists.sf.net"
 

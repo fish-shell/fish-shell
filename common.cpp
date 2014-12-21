@@ -45,9 +45,10 @@ parts of fish.
 #include <execinfo.h>
 #endif
 
-
 #if HAVE_NCURSES_H
 #include <ncurses.h>
+#elif HAVE_NCURSES_CURSES_H
+#include <ncurses/curses.h>
 #else
 #include <curses.h>
 #endif
@@ -216,14 +217,14 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len)
             wc = ENCODE_DIRECT_BASE + (unsigned char)in[in_pos];
             result.push_back(wc);
             in_pos++;
-            bzero(&state, sizeof state);
+            memset(&state, 0, sizeof state);
         }
         else if (ret == 0)
         {
             /* Embedded null byte! */
             result.push_back(L'\0');
             in_pos++;
-            bzero(&state, sizeof state);
+            memset(&state, 0, sizeof state);
         }
         else
         {
@@ -314,7 +315,7 @@ std::string wcs2string(const wcstring &input)
         }
         else
         {
-            bzero(converted, sizeof converted);
+            memset(converted, 0, sizeof converted);
             size_t len = wcrtomb(converted, wc, &state);
             if (len == (size_t)(-1))
             {
@@ -1995,7 +1996,7 @@ void format_size_safe(char buff[128], unsigned long long sz)
 {
     const size_t buff_size = 128;
     const size_t max_len = buff_size - 1; //need to leave room for a null terminator
-    bzero(buff, buff_size);
+    memset(buff, 0, buff_size);
     size_t idx = 0;
     const char * const sz_name[]=
     {

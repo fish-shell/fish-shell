@@ -36,6 +36,13 @@
 #include <notify.h>
 #endif
 
+// NAME_MAX is not defined on Solaris and suggests the use of pathconf()
+// There is no obvious sensible pathconf() for shared memory and _XPG_NAME_MAX
+// seems a reasonable choice.
+#if !defined(NAME_MAX) && defined(_XOPEN_NAME_MAX)
+#define NAME_MAX _XOPEN_NAME_MAX
+#endif
+
 /**
    The set command
 */

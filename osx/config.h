@@ -19,6 +19,10 @@
 /* Define to 1 if you have the `dcgettext' function. */
 /* #undef HAVE_DCGETTEXT */
 
+/* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
+   */
+#define HAVE_DIRENT_H 1
+
 /* Define to 1 if you have the <execinfo.h> header file. */
 #define HAVE_EXECINFO_H 1
 
@@ -61,11 +65,17 @@
 /* Define to 1 if you have the nan function */
 #define HAVE_NAN 1
 
+/* Define to 1 if you have the <ncurses/curses.h> header file. */
+/* #undef HAVE_NCURSES_CURSES_H */
+
 /* Define to 1 if you have the <ncurses.h> header file. */
 #define HAVE_NCURSES_H 1
 
 /* Define to 1 if you have the <ncurses/term.h> header file. */
 /* #undef HAVE_NCURSES_TERM_H */
+
+/* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
+/* #undef HAVE_NDIR_H */
 
 /* Define to 1 if realpath accepts null for its second argument. */
 #define HAVE_REALPATH_NULL 1
@@ -94,11 +104,25 @@
 /* Define to 1 if you have the <stropts.h> header file. */
 /* #undef HAVE_STROPTS_H */
 
+/* Define to 1 if `d_type' is a member of `struct dirent'. */
+#define HAVE_STRUCT_DIRENT_D_TYPE 1
+
 /* Define to 1 if you have the `sysconf' function. */
 #define HAVE_SYSCONF 1
 
+/* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
+   */
+/* #undef HAVE_SYS_DIR_H */
+
+/* Define to 1 if the sys_errlist array is available. */
+#define HAVE_SYS_ERRLIST 1
+
 /* Define to 1 if you have the <sys/ioctl.h> header file. */
 #define HAVE_SYS_IOCTL_H 1
+
+/* Define to 1 if you have the <sys/ndir.h> header file, and it defines `DIR'.
+   */
+/* #undef HAVE_SYS_NDIR_H */
 
 /* Define to 1 if you have the <sys/resource.h> header file. */
 #define HAVE_SYS_RESOURCE_H 1
@@ -173,8 +197,17 @@
 /* Define to 1 if you have the file `/proc/self/stat'. */
 /* #undef HAVE__PROC_SELF_STAT */
 
+/* Define to 1 if the _sys_errs array is available. */
+/* #undef HAVE__SYS__ERRS */
+
 /* Define to 1 if the __environ symbol is exported. */
 /* #undef HAVE___ENVIRON */
+
+/* Define to 1 to disable ncurses macros that conflict with the STL */
+#define NCURSES_NOMACROS 1
+
+/* Define to 1 to disable curses macros that conflict with the STL */
+#define NOMACROS 1
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "fish-users@lists.sf.net"

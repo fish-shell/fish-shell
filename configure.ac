@@ -301,35 +301,6 @@ case $target_os in
     ;;
 esac
 
-# Check for Solaris curses tputs having fixed length parameter list.
-AC_MSG_CHECKING([if we are using non varargs tparm.])
-AC_COMPILE_IFELSE(
-  [
-    AC_LANG_PROGRAM(
-      [
-        #include <curses.h>
-        #include <term.h>
-      ],
-      [
-        tparm( "" );
-      ]
-    )
-  ],
-  [tparm_solaris_kludge=no],
-  [tparm_solaris_kludge=yes]
-)
-if test "x$tparm_solaris_kludge" = "xyes"; then
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(
-    [TPARM_SOLARIS_KLUDGE],
-    [1],
-    [Define to 1 if tparm accepts a fixed amount of paramters.]
-  )
-else
-  AC_MSG_RESULT(no)
-fi
-
-
 #
 # BSD-specific flags go here
 #
@@ -366,6 +337,9 @@ AC_DEFINE(
   [Define to 1 if the wgettext function should be used for translating strings.]
 )
 
+# Disable curses macros that conflict with the STL
+AC_DEFINE([NCURSES_NOMACROS], [1], [Define to 1 to disable ncurses macros that conflict with the STL])
+AC_DEFINE([NOMACROS], [1], [Define to 1 to disable curses macros that conflict with the STL])
 
 #
 # Check presense of various libraries. This is done on a per-binary
@@ -390,7 +364,7 @@ fi
 # Check presense of various header files
 #
 
-AC_CHECK_HEADERS([getopt.h termios.h sys/resource.h term.h ncurses/term.h ncurses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h execinfo.h spawn.h sys/sysctl.h])
+AC_CHECK_HEADERS([getopt.h termios.h sys/resource.h term.h ncurses/term.h ncurses.h ncurses/curses.h curses.h stropts.h siginfo.h sys/select.h sys/ioctl.h execinfo.h spawn.h sys/sysctl.h])
 
 if test x$local_gettext != xno; then
   AC_CHECK_HEADERS([libintl.h])
@@ -476,6 +450,10 @@ for i in "" "-D_POSIX_C_SOURCE=200112L" "-D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=2
       /* As above (under at least Linux and FreeBSD). */
       #include <sys/ioctl.h>
       #endif
+
+      #ifdef HAVE_TERMIOS_H
+      #include <termios.h>
+      #endif
     ],
     [
       /* Avert high-level optimisation, by making the program's
@@ -528,6 +506,10 @@ fi
 AC_CHECK_MEMBERS([struct stat.st_mtimespec.tv_nsec])
 AC_CHECK_MEMBERS([struct stat.st_mtim.tv_nsec])
 
+#
+# Check for D_TYPE in dirent, only on BSD and Linux
+#
+AC_STRUCT_DIRENT_D_TYPE
 
 #
 # Check for presense of various functions used by fish
@@ -712,6 +694,56 @@ else
   AC_MSG_RESULT(no)
 fi
 
+# Check for sys_errlist
+AC_MSG_CHECKING([for sys_errlist array])
+AC_TRY_LINK(
+  [
+   #include <stdio.h>
+  ],
+  [
+    const char *p;
+    p = sys_errlist[sys_nerr];
+  ],
+  have_sys_errlist=yes,
+  have_sys_errlist=no
+)
+if test "$have_sys_errlist" = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(
+    [HAVE_SYS_ERRLIST],
+    [1],
+    [Define to 1 if the sys_errlist array is available.]
+  )
+else
+  AC_MSG_RESULT(no)
+fi
+
+# Check for _sys_errs
+AC_MSG_CHECKING([for _sys_errs array])
+AC_TRY_LINK(
+  [
+   #include <string>
+  ],
+  [
+    std::string p;
+    extern const char _sys_errs[];
+    extern const int _sys_index[];
+    p = _sys_errs[_sys_index[0]];
+  ],
+  have__sys__errs=yes,
+  have__sys__errs=no
+)
+if test "$have__sys__errs" = yes; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(
+    [HAVE__SYS__ERRS],
+    [1],
+    [Define to 1 if the _sys_errs array is available.]
+  )
+else
+  AC_MSG_RESULT(no)
+fi
+
 # Check if getopt_long exists and works
 AC_MSG_CHECKING([if getopt_long exists and works])
 AC_TRY_LINK(
@@ -743,6 +775,43 @@ if test "$have_working_getopt_long" = yes; then
     [HAVE_WORKING_GETOPT_LONG],
     [1],
     [Define to 1 if getopt_long exists and works.]
+  )
+else
+  AC_MSG_RESULT(no)
+fi
+
+# Check for Solaris curses tputs having fixed length parameter list.
+AC_MSG_CHECKING([if we are using non varargs tparm.])
+AC_COMPILE_IFELSE(
+  [
+    AC_LANG_PROGRAM(
+      [
+	#if HAVE_NCURSES_H
+	#include <ncurses.h>
+	#else
+	#include <curses.h>
+	#endif
+
+	#if HAVE_TERM_H
+	#include <term.h>
+	#elif HAVE_NCURSES_TERM_H
+	#include <ncurses/term.h>
+	#endif
+      ],
+      [
+        tparm( "" );
+      ]
+    )
+  ],
+  [tparm_solaris_kludge=no],
+  [tparm_solaris_kludge=yes]
+)
+if test "x$tparm_solaris_kludge" = "xyes"; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(
+    [TPARM_SOLARIS_KLUDGE],
+    [1],
+    [Define to 1 if tparm accepts a fixed amount of paramters.]
   )
 else
   AC_MSG_RESULT(no)

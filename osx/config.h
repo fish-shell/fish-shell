@@ -7,9 +7,6 @@
 /* Define to 1 if you have the `backtrace_symbols' function. */
 #define HAVE_BACKTRACE_SYMBOLS 1
 
-/* del_curterm is broken, redefine it to a no-op to avoid a double-free bug */
-/* #undef HAVE_BROKEN_DEL_CURTERM */
-
 /* Define to 1 one if the implemented fwprintf is broken */
 /* #undef HAVE_BROKEN_FWPRINTF */
 
@@ -62,6 +59,9 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #define HAVE_MEMORY_H 1
 
+/* Define to 1 if you have the `mkostemp' function. */
+/* #undef HAVE_MKOSTEMP */
+
 /* Define to 1 if you have the nan function */
 #define HAVE_NAN 1
 
@@ -106,6 +106,12 @@
 
 /* Define to 1 if `d_type' is a member of `struct dirent'. */
 #define HAVE_STRUCT_DIRENT_D_TYPE 1
+
+/* Define to 1 if `st_mtimespec.tv_nsec' is a member of `struct stat'. */
+#define HAVE_STRUCT_STAT_ST_MTIMESPEC_TV_NSEC 1
+
+/* Define to 1 if `st_mtim.tv_nsec' is a member of `struct stat'. */
+/* #undef HAVE_STRUCT_STAT_ST_MTIM_TV_NSEC */
 
 /* Define to 1 if you have the `sysconf' function. */
 #define HAVE_SYSCONF 1
@@ -216,7 +222,7 @@
 #define PACKAGE_NAME "fish"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "fish 2.1.0"
+#define PACKAGE_STRING "fish 2.1.1-git"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "fish"
@@ -225,7 +231,7 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.1.0"
+#define PACKAGE_VERSION "2.1.1-git"
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1

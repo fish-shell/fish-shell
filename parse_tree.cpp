@@ -216,7 +216,6 @@ wcstring token_type_description(parse_token_type_t type)
         case parse_token_type_terminate:
             return L"token_terminate";
 
-
         case parse_special_type_parse_error:
             return L"parse_error";
         case parse_special_type_tokenizer_error:
@@ -339,7 +338,10 @@ static wcstring block_type_user_presentable_description(parse_token_type_t type)
 wcstring parse_node_t::describe(void) const
 {
     wcstring result = token_type_description(type);
-    append_format(result, L" (prod %d)", this->production_idx);
+    if (type < FIRST_TERMINAL_TYPE)
+    {
+        append_format(result, L" (prod %d)", this->production_idx);
+    }
     return result;
 }
 
@@ -436,6 +438,10 @@ static void dump_tree_recursive(const parse_node_tree_t &nodes, const wcstring &
     if (node.child_count > 0)
     {
         append_format(*result, L" <%lu children>", node.child_count);
+    }
+    if (node.has_comments())
+    {
+        append_format(*result, L" <has_comments>", node.child_count);
     }
 
     if (node.has_source() && node.type == parse_token_type_string)
@@ -1120,6 +1126,12 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2)
         nodes.push_back(special_node);
         consumed = true;
 
+        /* Mark special flags */
+        if (token1.type == parse_special_type_comment)
+        {
+            this->node_for_top_symbol().flags |= parse_node_flag_has_comments;
+        }
+
         /* tokenizer errors are fatal */
         if (token1.type == parse_special_type_tokenizer_error)
             this->fatal_errored = true;
@@ -1301,6 +1313,9 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
 
     if (parse_flags & parse_flag_accept_incomplete_tokens)
         tok_options |= TOK_ACCEPT_UNFINISHED;
+
+    if (parse_flags & parse_flag_show_blank_lines)
+        tok_options |= TOK_SHOW_BLANK_LINES;
 
     if (errors == NULL)
         tok_options |= TOK_SQUASH_ERRORS;
@@ -1651,6 +1666,24 @@ parse_node_tree_t::parse_node_list_t parse_node_tree_t::specific_statements_for_
         result.at(i) = this->get_child(*statement, 0);
     }
 
+    return result;
+}
+
+parse_node_tree_t::parse_node_list_t parse_node_tree_t::comment_nodes_for_node(const parse_node_t &parent) const
+{
+    parse_node_list_t result;
+    if (parent.has_comments())
+    {
+        /* Walk all our nodes, looking for comment nodes that have the given node as a parent */
+        for (size_t i=0; i < this->size(); i++)
+        {
+            const parse_node_t &potential_comment = this->at(i);
+            if (potential_comment.type == parse_special_type_comment && this->get_parent(potential_comment) == &parent)
+            {
+                result.push_back(&potential_comment);
+            }
+        }
+    }
     return result;
 }
 

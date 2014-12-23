@@ -1240,8 +1240,8 @@ static parse_keyword_t keyword_for_token(token_type tok, const wchar_t *tok_txt)
         }
         else
         {
-            wcstring storage = tok_txt;
-            if (expand_one(storage, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_WILDCARDS | EXPAND_SKIP_JOBS | EXPAND_SKIP_HOME_DIRECTORIES))
+            wcstring storage;
+            if (unescape_string(tok_txt, &storage, 0))
             {
                 result = keyword_with_name(storage.c_str());
             }

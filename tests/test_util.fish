@@ -8,6 +8,12 @@ if test "$argv[1]" = (status -f)
     exit 1
 end
 
+# Any remaining arguments are passed back to test.fish
+set -l args_for_test_script
+if set -q argv[2]
+    set args_for_test_script $argv[2..-1]
+end
+
 function die
     set -q argv[1]; and echo $argv[1] >&2
     exit 1
@@ -51,7 +57,7 @@ if not set -q __fish_is_running_tests
         set -lx LC_$var ''
     end
     set -lx LC_CTYPE en_US.UTF-8
-    exec ../fish $script
+    exec ../fish $script $args_for_test_script
     die 'exec failed'
 else if test "$__fish_is_running_tests" != "$XDG_CONFIG_HOME"
     echo 'Something went wrong with the test runner.' >&2

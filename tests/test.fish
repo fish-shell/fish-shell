@@ -2,7 +2,18 @@
 #
 # Fishscript tests
 
-source test_util.fish (status -f); or exit
+# Change to directory containing this script
+cd (dirname (status -f))
+
+# Test files specified on commandline, or all *.in files
+set -q argv[1]
+if set -q argv[1]
+    set files_to_test $argv.in
+else
+    set files_to_test *.in
+end
+
+source test_util.fish (status -f) $argv; or exit
 
 say -o cyan "Testing high level script functionality"
 
@@ -46,7 +57,7 @@ function test_file
 end
 
 set -l failed
-for i in *.in
+for i in $files_to_test
     if not test_file $i
         set failed $failed $i
     end

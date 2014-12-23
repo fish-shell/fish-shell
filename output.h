@@ -9,6 +9,7 @@
 #define FISH_OUTPUT_H
 
 #include <wchar.h>
+#include "fallback.h"
 #include "screen.h"
 #include "color.h"
 

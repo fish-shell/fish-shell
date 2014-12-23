@@ -1341,7 +1341,12 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
             if (parse_flags & parse_flag_continue_after_error)
             {
                 /* Hack hack hack. Typically the parse error is due to the first token. However, if it's a tokenizer error, then has_fatal_error was set due to the check above; in that case the second token is what matters. */
-                size_t error_token_idx = (queue[1].type == parse_special_type_tokenizer_error ? 1 : 0);
+                size_t error_token_idx = 0;
+                if (queue[1].type == parse_special_type_tokenizer_error)
+                {
+                    error_token_idx = (queue[1].type == parse_special_type_tokenizer_error ? 1 : 0);
+                    token_count = -1; // so that it will be 0 after incrementing, and our tokenizer error will be ignored
+                }
 
                 /* Mark a special error token, and then keep going */
                 const parse_token_t token = {parse_special_type_parse_error, parse_keyword_none, false, false, queue[error_token_idx].source_start, queue[error_token_idx].source_length};

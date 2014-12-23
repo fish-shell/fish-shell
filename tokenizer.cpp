@@ -640,6 +640,7 @@ void tok_next(tokenizer_t *tok)
                     tok->buff++;
                 }
             }
+            tok->last_token.clear();
             break;
         case L'&':
             tok->last_type = TOK_BACKGROUND;

@@ -74,7 +74,9 @@ enum parse_token_type_t
     LAST_TERMINAL_TYPE = parse_token_type_terminate,
 
     LAST_TOKEN_OR_SYMBOL = parse_token_type_terminate,
-    FIRST_PARSE_TOKEN_TYPE = parse_token_type_string
+
+    FIRST_PARSE_TOKEN_TYPE = parse_token_type_string,
+    LAST_PARSE_TOKEN_TYPE = parse_token_type_end
 } __packed;
 
 /* These must be maintained in sorted order (except for none, which isn't a keyword). This enables us to do binary search. */

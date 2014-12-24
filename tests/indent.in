@@ -76,3 +76,10 @@ else
 echo bye
 end; echo alpha "
 ' | ../fish_indent
+
+echo \nTest7
+# issue 1665
+echo -n '
+if begin ; false; end; echo hi ; end
+while begin ; false; end; echo hi ; end
+' | ../fish_indent

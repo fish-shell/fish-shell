@@ -78,3 +78,16 @@ else
 echo bye
 end
 echo alpha "
+
+Test7
+
+if begin
+        false
+    end
+    echo hi
+end
+while begin
+        false
+    end
+    echo hi
+end

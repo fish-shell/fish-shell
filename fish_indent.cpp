@@ -179,7 +179,7 @@ static std::string ansi_colorize(const wcstring &text, const std::vector<highlig
         highlight_spec_t color = colors.at(i);
         if (color != last_color)
         {
-            write_color(highlight_get_color(color, false), true);
+            set_color(highlight_get_color(color, false), rgb_color_t::normal());
             last_color = color;
         }
         writech(text.at(i));

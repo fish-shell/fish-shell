@@ -102,6 +102,43 @@
 		D00F63F219137E9D00FCCDEC /* fish_version.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00F63F019137E9D00FCCDEC /* fish_version.cpp */; };
 		D01A2D24169B736200767098 /* man1 in Copy Files */ = {isa = PBXBuildFile; fileRef = D01A2D23169B730A00767098 /* man1 */; };
 		D01A2D25169B737700767098 /* man1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D01A2D23169B730A00767098 /* man1 */; };
+		D030FBEF1A4A382000F7ADA0 /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0854A13B3ACEE0099B651 /* input.cpp */; };
+		D030FBF01A4A382B00F7ADA0 /* event.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853B13B3ACEE0099B651 /* event.cpp */; };
+		D030FBF11A4A384000F7ADA0 /* output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855113B3ACEE0099B651 /* output.cpp */; };
+		D030FBF21A4A384A00F7ADA0 /* signal.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855C13B3ACEE0099B651 /* signal.cpp */; };
+		D030FBF31A4A386A00F7ADA0 /* reader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855813B3ACEE0099B651 /* reader.cpp */; };
+		D030FBF41A4A38F300F7ADA0 /* autoload.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0C6FCC914CFA4B0004CE8AD /* autoload.cpp */; };
+		D030FBF51A4A38F300F7ADA0 /* builtin.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853513B3ACEE0099B651 /* builtin.cpp */; };
+		D030FBF61A4A38F300F7ADA0 /* color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0B6B0FE14E88BA400AD6C10 /* color.cpp */; };
+		D030FBF71A4A38F300F7ADA0 /* complete.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853713B3ACEE0099B651 /* complete.cpp */; };
+		D030FBF81A4A38F300F7ADA0 /* env_universal_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853813B3ACEE0099B651 /* env_universal_common.cpp */; };
+		D030FBF91A4A38F300F7ADA0 /* env.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853A13B3ACEE0099B651 /* env.cpp */; };
+		D030FBFA1A4A38F300F7ADA0 /* exec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853C13B3ACEE0099B651 /* exec.cpp */; };
+		D030FBFB1A4A38F300F7ADA0 /* expand.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853D13B3ACEE0099B651 /* expand.cpp */; };
+		D030FBFC1A4A38F300F7ADA0 /* parse_productions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0FE8EE7179FB75F008C9F21 /* parse_productions.cpp */; };
+		D030FBFD1A4A38F300F7ADA0 /* parse_tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0C52F351765284C00BFAB82 /* parse_tree.cpp */; };
+		D030FBFE1A4A38F300F7ADA0 /* parse_execution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D052D8091868F7FC003ABCBD /* parse_execution.cpp */; };
+		D030FC001A4A38F300F7ADA0 /* function.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0854413B3ACEE0099B651 /* function.cpp */; };
+		D030FC011A4A38F300F7ADA0 /* highlight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0854713B3ACEE0099B651 /* highlight.cpp */; };
+		D030FC021A4A38F300F7ADA0 /* history.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0854813B3ACEE0099B651 /* history.cpp */; };
+		D030FC031A4A38F300F7ADA0 /* input_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0854913B3ACEE0099B651 /* input_common.cpp */; };
+		D030FC041A4A38F300F7ADA0 /* intern.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0854B13B3ACEE0099B651 /* intern.cpp */; };
+		D030FC051A4A38F300F7ADA0 /* io.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0854C13B3ACEE0099B651 /* io.cpp */; };
+		D030FC061A4A38F300F7ADA0 /* iothread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0854D13B3ACEE0099B651 /* iothread.cpp */; };
+		D030FC071A4A38F300F7ADA0 /* kill.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0854F13B3ACEE0099B651 /* kill.cpp */; };
+		D030FC081A4A38F300F7ADA0 /* pager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D03238891849D1980032CF2C /* pager.cpp */; };
+		D030FC091A4A38F300F7ADA0 /* parse_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855213B3ACEE0099B651 /* parse_util.cpp */; };
+		D030FC0A1A4A38F300F7ADA0 /* parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855413B3ACEE0099B651 /* parser.cpp */; };
+		D030FC0B1A4A38F300F7ADA0 /* path.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855513B3ACEE0099B651 /* path.cpp */; };
+		D030FC0C1A4A38F300F7ADA0 /* postfork.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D09B1C1914FC7B5B00F91077 /* postfork.cpp */; };
+		D030FC0D1A4A38F300F7ADA0 /* proc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855713B3ACEE0099B651 /* proc.cpp */; };
+		D030FC0E1A4A38F300F7ADA0 /* sanity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855913B3ACEE0099B651 /* sanity.cpp */; };
+		D030FC0F1A4A38F300F7ADA0 /* screen.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855A13B3ACEE0099B651 /* screen.cpp */; };
+		D030FC101A4A38F300F7ADA0 /* utf8.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0C9733718DE5449002D7C81 /* utf8.cpp */; };
+		D030FC121A4A38F300F7ADA0 /* wcstringutil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0F5B46319CFCDE80090665E /* wcstringutil.cpp */; };
+		D030FC131A4A38F300F7ADA0 /* wgetopt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855F13B3ACEE0099B651 /* wgetopt.cpp */; };
+		D030FC141A4A38F300F7ADA0 /* wildcard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0856013B3ACEE0099B651 /* wildcard.cpp */; };
+		D030FC151A4A391900F7ADA0 /* builtin_test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0F3373A1506DE3C00ECEFC0 /* builtin_test.cpp */; };
 		D031890C15E36E4600D9CC39 /* base in Resources */ = {isa = PBXBuildFile; fileRef = D031890915E36D9800D9CC39 /* base */; };
 		D032388B1849D1980032CF2C /* pager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D03238891849D1980032CF2C /* pager.cpp */; };
 		D033781115DC6D4C00A634BA /* completions in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02715D1FEA100B9DB63 /* completions */; };
@@ -1064,13 +1101,50 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D0D02AD615986492008E62BD /* fish_indent.cpp in Sources */,
-				D0D02AD715986498008E62BD /* print_help.cpp in Sources */,
+				D030FBF41A4A38F300F7ADA0 /* autoload.cpp in Sources */,
+				D030FBF51A4A38F300F7ADA0 /* builtin.cpp in Sources */,
+				D030FC151A4A391900F7ADA0 /* builtin_test.cpp in Sources */,
+				D030FBF61A4A38F300F7ADA0 /* color.cpp in Sources */,
 				D0D02AD81598649E008E62BD /* common.cpp in Sources */,
-				D00F63F219137E9D00FCCDEC /* fish_version.cpp in Sources */,
+				D030FBF71A4A38F300F7ADA0 /* complete.cpp in Sources */,
+				D030FBF81A4A38F300F7ADA0 /* env_universal_common.cpp in Sources */,
+				D030FBF91A4A38F300F7ADA0 /* env.cpp in Sources */,
+				D030FBF01A4A382B00F7ADA0 /* event.cpp in Sources */,
+				D030FBFA1A4A38F300F7ADA0 /* exec.cpp in Sources */,
+				D030FBFB1A4A38F300F7ADA0 /* expand.cpp in Sources */,
+				D030FBFC1A4A38F300F7ADA0 /* parse_productions.cpp in Sources */,
+				D030FBFD1A4A38F300F7ADA0 /* parse_tree.cpp in Sources */,
+				D030FBFE1A4A38F300F7ADA0 /* parse_execution.cpp in Sources */,
+				D030FC001A4A38F300F7ADA0 /* function.cpp in Sources */,
+				D030FC011A4A38F300F7ADA0 /* highlight.cpp in Sources */,
+				D030FC021A4A38F300F7ADA0 /* history.cpp in Sources */,
+				D030FC031A4A38F300F7ADA0 /* input_common.cpp in Sources */,
+				D030FBEF1A4A382000F7ADA0 /* input.cpp in Sources */,
+				D030FC041A4A38F300F7ADA0 /* intern.cpp in Sources */,
+				D030FC051A4A38F300F7ADA0 /* io.cpp in Sources */,
+				D030FC061A4A38F300F7ADA0 /* iothread.cpp in Sources */,
+				D030FC071A4A38F300F7ADA0 /* kill.cpp in Sources */,
+				D030FBF11A4A384000F7ADA0 /* output.cpp in Sources */,
+				D030FC081A4A38F300F7ADA0 /* pager.cpp in Sources */,
+				D030FC091A4A38F300F7ADA0 /* parse_util.cpp in Sources */,
 				D0D02AD9159864A6008E62BD /* parser_keywords.cpp in Sources */,
-				D0D02ADA159864AB008E62BD /* wutil.cpp in Sources */,
+				D030FC0A1A4A38F300F7ADA0 /* parser.cpp in Sources */,
+				D030FC0B1A4A38F300F7ADA0 /* path.cpp in Sources */,
+				D030FC0C1A4A38F300F7ADA0 /* postfork.cpp in Sources */,
+				D0D02AD715986498008E62BD /* print_help.cpp in Sources */,
+				D030FC0D1A4A38F300F7ADA0 /* proc.cpp in Sources */,
+				D030FBF31A4A386A00F7ADA0 /* reader.cpp in Sources */,
+				D030FC0E1A4A38F300F7ADA0 /* sanity.cpp in Sources */,
+				D030FC0F1A4A38F300F7ADA0 /* screen.cpp in Sources */,
+				D030FBF21A4A384A00F7ADA0 /* signal.cpp in Sources */,
 				D0D02ADB159864C2008E62BD /* tokenizer.cpp in Sources */,
+				D030FC101A4A38F300F7ADA0 /* utf8.cpp in Sources */,
+				D030FC121A4A38F300F7ADA0 /* wcstringutil.cpp in Sources */,
+				D030FC131A4A38F300F7ADA0 /* wgetopt.cpp in Sources */,
+				D030FC141A4A38F300F7ADA0 /* wildcard.cpp in Sources */,
+				D0D02ADA159864AB008E62BD /* wutil.cpp in Sources */,
+				D0D02AD615986492008E62BD /* fish_indent.cpp in Sources */,
+				D00F63F219137E9D00FCCDEC /* fish_version.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

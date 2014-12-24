@@ -142,7 +142,7 @@ static wcstring prettify(const wcstring &src, bool do_indent)
     /* We may have a forest of disconnected trees on a parse failure. We have to handle all nodes that have no parent, and all parse errors. */
     bool has_new_line = true;
     wcstring result;
-    for (size_t i=0; i < tree.size(); i++)
+    for (node_offset_t i=0; i < tree.size(); i++)
     {
         const parse_node_t &node = tree.at(i);
         if (node.parent == NODE_OFFSET_INVALID || node.type == parse_special_type_parse_error)

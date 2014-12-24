@@ -264,7 +264,7 @@ static std::string html_colorize(const wcstring &text, const std::vector<highlig
                 break;
         }
     }
-    html.append(L"</span></pre></code>");
+    html.append(L"</span></code></pre>");
     return wcs2string(html);
 }
 

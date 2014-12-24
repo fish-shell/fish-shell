@@ -224,7 +224,7 @@ static std::string html_colorize(const wcstring &text, const std::vector<highlig
     }
 
     assert(colors.size() == text.size());
-    wcstring html = L"<pre>";
+    wcstring html = L"<pre><code>";
     highlight_spec_t last_color = highlight_spec_normal;
     for (size_t i=0; i < text.size(); i++)
     {
@@ -264,7 +264,7 @@ static std::string html_colorize(const wcstring &text, const std::vector<highlig
                 break;
         }
     }
-    html.append(L"</span></pre>");
+    html.append(L"</span></pre></code>");
     return wcs2string(html);
 }
 

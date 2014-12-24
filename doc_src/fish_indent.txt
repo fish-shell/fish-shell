@@ -15,6 +15,6 @@ The following options are available:
 
 - `-v` or `--version` displays the current fish version and then exits
 
-- `--ansi` colorizes the output using ANSI escape sequences, appropriate for the current $TERM, using the colors defined in the environment (such as $fish_color_command)
+- `--ansi` colorizes the output using ANSI escape sequences, appropriate for the current $TERM, using the colors defined in the environment (such as `$fish_color_command`).
 
-- `--html` outputs HTML, which supports syntax highlighting if the appropriate CSS is defined
+- `--html` outputs HTML, which supports syntax highlighting if the appropriate CSS is defined. The CSS class names are the same as the variable names, such as `fish_color_command`

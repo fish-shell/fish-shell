@@ -58,7 +58,7 @@ signal_list_t;
   active, which is the one that new events is written to. The inactive
   one contains the events that are currently beeing performed.
 */
-static signal_list_t sig_list[]= {{},{}};
+static signal_list_t sig_list[2]= {{},{}};
 
 /**
    The index of sig_list that is the list of signals currently written to
@@ -69,9 +69,8 @@ typedef std::vector<event_t *> event_list_t;
 
 /**
    List of event handlers.
-   Note this is inspected by our signal handler, so we must block signals around manipulating it.
 */
-static event_list_t events;
+static event_list_t s_event_handlers;
 /**
    List of event handlers that should be removed
 */
@@ -81,6 +80,17 @@ static event_list_t killme;
    List of events that have been sent but have not yet been delivered because they are blocked.
 */
 static event_list_t blocked;
+
+/** Variables (one per signal) set when a signal is observed. This is inspected by a signal handler. */
+static volatile bool s_observed_signals[NSIG] = {};
+static void set_signal_observed(int sig, bool val)
+{
+    ASSERT_IS_MAIN_THREAD();
+    if (sig >= 0 && (size_t)sig < sizeof s_observed_signals / sizeof *s_observed_signals)
+    {
+        s_observed_signals[sig] = val;
+    }
+}
 
 /**
    Tests if one event instance matches the definition of a event
@@ -324,12 +334,10 @@ void event_add_handler(const event_t &event)
     if (e->type == EVENT_SIGNAL)
     {
         signal_handle(e->param1.signal, 1);
+        set_signal_observed(e->param1.signal, true);
     }
 
-    // Block around updating the events vector
-    signal_block();
-    events.push_back(e);
-    signal_unblock();
+    s_event_handlers.push_back(e);
 }
 
 void event_remove(const event_t &criterion)
@@ -351,12 +359,12 @@ void event_remove(const event_t &criterion)
       events-list.
     */
 
-    if (events.empty())
+    if (s_event_handlers.empty())
         return;
 
-    for (size_t i=0; i<events.size(); i++)
+    for (size_t i=0; i<s_event_handlers.size(); i++)
     {
-        event_t *n = events.at(i);
+        event_t *n = s_event_handlers.at(i);
         if (event_match(criterion, *n))
         {
             killme.push_back(n);
@@ -372,6 +380,7 @@ void event_remove(const event_t &criterion)
                 if (event_get(e, 0) == 1)
                 {
                     signal_handle(e.param1.signal, 0);
+                    set_signal_observed(e.param1.signal, 0);
                 }
             }
         }
@@ -380,22 +389,15 @@ void event_remove(const event_t &criterion)
             new_list.push_back(n);
         }
     }
-    signal_block();
-    events.swap(new_list);
-    signal_unblock();
+    s_event_handlers.swap(new_list);
 }
 
 int event_get(const event_t &criterion, std::vector<event_t *> *out)
 {
-    size_t i;
     int found = 0;
-
-    if (events.empty())
-        return 0;
-
-    for (i=0; i<events.size(); i++)
+    for (size_t i=0; i < s_event_handlers.size(); i++)
     {
-        event_t *n = events.at(i);
+        event_t *n = s_event_handlers.at(i);
         if (event_match(criterion, *n))
         {
             found++;
@@ -409,23 +411,13 @@ int event_get(const event_t &criterion, std::vector<event_t *> *out)
 bool event_is_signal_observed(int sig)
 {
     /* We are in a signal handler! Don't allocate memory, etc.
-       This does what event_match does, except it doesn't require passing in an event_t.
     */
-    size_t i, max = events.size();
-    for (i=0; i < max; i++)
+    bool result = false;
+    if (sig >= 0 && sig < sizeof s_observed_signals / sizeof *s_observed_signals)
     {
-        const event_t *event = events[i];
-        if (event->type == EVENT_ANY)
-        {
-            return true;
-        }
-        else if (event->type == EVENT_SIGNAL)
-        {
-            if (event->param1.signal == EVENT_ANY_SIGNAL || event->param1.signal == sig)
-                return true;
-        }
+        result = s_observed_signals[sig];
     }
-    return false;
+    return result;
 }
 
 /**
@@ -473,7 +465,7 @@ static void event_fire_internal(const event_t &event)
     if (is_event <= 1)
         event_free_kills();
 
-    if (events.empty())
+    if (s_event_handlers.empty())
         return;
 
     /*
@@ -483,9 +475,9 @@ static void event_fire_internal(const event_t &event)
       event_add_handler, which will change the contents of the \c
       events list.
     */
-    for (size_t i=0; i<events.size(); i++)
+    for (size_t i=0; i<s_event_handlers.size(); i++)
     {
-        event_t *criterion = events.at(i);
+        event_t *criterion = s_event_handlers.at(i);
 
         /*
           Check if this event is a match
@@ -695,8 +687,8 @@ void event_init()
 void event_destroy()
 {
 
-    for_each(events.begin(), events.end(), event_free);
-    events.clear();
+    for_each(s_event_handlers.begin(), s_event_handlers.end(), event_free);
+    s_event_handlers.clear();
 
     for_each(killme.begin(), killme.end(), event_free);
     killme.clear();

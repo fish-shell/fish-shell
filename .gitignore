@@ -1,6 +1,7 @@
 *.o
 *~
 *.exe
+*.xccheckout
 
 .DS_Store
 Makefile

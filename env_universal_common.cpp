@@ -1275,9 +1275,18 @@ class universal_notifier_notifyd_t : public universal_notifier_t
         }
         if (this->notify_fd >= 0)
         {
-            // Mark us for non-blocking reads, with CLO_EXEC
+            // Mark us for non-blocking reads, and CLO_EXEC
             int flags = fcntl(this->notify_fd, F_GETFL, 0);
-            fcntl(this->notify_fd, F_SETFL, flags | O_NONBLOCK | FD_CLOEXEC);
+            if (flags >= 0 && ! (flags & O_NONBLOCK))
+            {
+                fcntl(this->notify_fd, F_SETFL, flags | O_NONBLOCK);
+            }
+            
+            set_cloexec(this->notify_fd);
+            // Serious hack: notify_fd is likely the read end of a pipe. The other end is owned by libnotify, which does not mark it as CLO_EXEC (it should!)
+            // The next fd is probably notify_fd + 1
+            // Do it ourselves. If the implementation changes and some other FD gets marked as CLO_EXEC, that's probably a good thing.
+            set_cloexec(this->notify_fd + 1);
         }
 #endif
     }

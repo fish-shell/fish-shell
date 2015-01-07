@@ -29,10 +29,9 @@ function eval -S -d "Evaluate parameters as a command"
 	end
 
         # rfish: To eval 'foo', we construct a block "begin ; foo; end <&3 3<&-"
-        # The 'eval2_inner' is a param to 'begin' itself; I believe it does nothing.
         # Note the redirections are also within the quotes.
         #
-        # We then pipe this to 'source 3<&0' which dup2's 3 to stdin.
+        # We then pipe this to 'source 3<&0’.
         #
         # You might expect that the dup2(3, stdin) should overwrite stdin,
         # and therefore prevent 'source' from reading the piped-in block. This doesn't happen
@@ -40,8 +39,17 @@ function eval -S -d "Evaluate parameters as a command"
         # of the block; instead we set a separate fd in a variable 'builtin_stdin', which is
         # what it reads from. So builtins are magic in that, in pipes, their stdin
         # is not fd 0.
+        #
+        # ‘source’ does not apply the redirections to itself. Instead it saves them and passes
+        # them as block-level redirections to parser.eval(). Ultimately the eval’d code sees
+        # the following redirections (in the following order):
+        #    dup2 0 -> 3
+        #    dup2 pipe -> 0
+        #    dup2 3 -> 0
+        # where the pipe is the pipe we get from piping ‘echo’ to ‘source’. Thus the redirection
+        # effectively makes stdin fd0, instead of the thing that was piped to ‘source’
 
-	echo "begin; $argv "\n" ;end eval2_inner <&3 3<&-" | source 3<&0
+	echo "begin; $argv "\n" ;end <&3 3<&-" | source 3<&0
 	set -l res $status
 
 	status --job-control $mode

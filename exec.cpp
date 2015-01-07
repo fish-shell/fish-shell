@@ -767,7 +767,7 @@ void exec_job(parser_t &parser, job_t *j)
 
             However, eval does this:
 
-               echo "begin; $argv "\n" ;end eval2_inner <&3 3<&-" | source 3<&0
+               echo "begin; $argv "\n" ;end <&3 3<&-" | source 3<&0
 
             which depends on the redirection being evaluated before the pipe. So the write end of the pipe comes first, the read pipe of the pipe comes last. See issue #966.
         */

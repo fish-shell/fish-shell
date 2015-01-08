@@ -122,6 +122,7 @@ public:
     }
 };
 
+class io_chain_t;
 class io_buffer_t : public io_pipe_t
 {
 private:
@@ -161,6 +162,9 @@ public:
     {
         return out_buffer.size();
     }
+    
+    /* Ensures that the pipes do not conflict with any fd redirections in the chain */
+    bool avoid_conflicts_with_io_chain(const io_chain_t &ios);
 
     /**
        Close output pipe, and read from input pipe until eof.
@@ -170,11 +174,13 @@ public:
     /**
        Create a IO_BUFFER type io redirection, complete with a pipe and a
        vector<char> for output. The default file descriptor used is STDOUT_FILENO
-       for buffering
+       for buffering. 
 
        \param fd the fd that will be mapped in the child process, typically STDOUT_FILENO
+       \param conflicts A set of IO redirections. The function ensures that any pipe it makes
+              does not conflict with an fd redirection in this list.
     */
-    static io_buffer_t *create(int fd);
+    static io_buffer_t *create(int fd, const io_chain_t &conflicts);
 };
 
 class io_chain_t : public std::vector<shared_ptr<io_data_t> >
@@ -199,6 +205,8 @@ public:
 shared_ptr<const io_data_t> io_chain_get(const io_chain_t &src, int fd);
 shared_ptr<io_data_t> io_chain_get(io_chain_t &src, int fd);
 
+/* Given a pair of fds, if an fd is used by the given io chain, duplicate that fd repeatedly until we find one that does not conflict, or we run out of fds. Returns the new fds by reference, closing the old ones. If we get an error, returns false (in which case both fds are closed and set to -1). */
+bool pipe_avoid_conflicts_with_io_chain(int fds[2], const io_chain_t &ios);
 
 /** Print debug information about the specified IO redirection chain to stderr. */
 void io_print(const io_chain_t &chain);

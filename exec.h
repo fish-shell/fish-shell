@@ -60,21 +60,15 @@ int exec_subshell(const wcstring &cmd, bool preserve_exit_status);
 
 /**
    Loops over close until the syscall was run without being
-   interrupted. Then removes the fd from the open_fds list.
+   interrupted.
 */
 void exec_close(int fd);
 
 /**
-   Call pipe(), and add resulting fds to open_fds, the list of opend
-   file descriptors for pipes.
+   Call pipe(), and add resulting fds to open_fds, the list of opened
+   file descriptors for pipes. The pipes are marked CLO_EXEC.
 */
 int exec_pipe(int fd[2]);
-
-/* Close all fds in open_fds. This is called from postfork.cpp */
-void close_unused_internal_pipes(const io_chain_t &io);
-
-/* Gets all unused internal pipes into fds */
-void get_unused_internal_pipes(std::vector<int> &fds, const io_chain_t &io);
 
 /** Gets the interpreter for a given command */
 char *get_interpreter(const char *command, char *interpreter, size_t buff_size);

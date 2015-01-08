@@ -124,8 +124,17 @@ void io_buffer_t::read()
     }
 }
 
+bool io_buffer_t::avoid_conflicts_with_io_chain(const io_chain_t &ios)
+{
+    bool result = pipe_avoid_conflicts_with_io_chain(this->pipe_fd, ios);
+    if (! result)
+    {
+        wperror(L"dup");
+    }
+    return result;
+}
 
-io_buffer_t *io_buffer_t::create(int fd)
+io_buffer_t *io_buffer_t::create(int fd, const io_chain_t &conflicts)
 {
     bool success = true;
     assert(fd >= 0);
@@ -135,6 +144,11 @@ io_buffer_t *io_buffer_t::create(int fd)
     {
         debug(1, PIPE_ERROR);
         wperror(L"pipe");
+        success = false;
+    }
+    else if (! buffer_redirect->avoid_conflicts_with_io_chain(conflicts))
+    {
+        // The above call closes the fds on error
         success = false;
     }
     else if (make_fd_nonblocking(buffer_redirect->pipe_fd[0]) != 0)
@@ -149,27 +163,11 @@ io_buffer_t *io_buffer_t::create(int fd)
         delete buffer_redirect;
         buffer_redirect = NULL;
     }
-    else
-    {
-        //fprintf(stderr, "Created pipes {%d, %d} for %p\n", buffer_redirect->pipe_fd[0], buffer_redirect->pipe_fd[1], buffer_redirect);
-    }
-
     return buffer_redirect;
 }
 
 io_buffer_t::~io_buffer_t()
 {
-
-    //fprintf(stderr, "Deallocating pipes {%d, %d} for %p\n", this->pipe_fd[0], this->pipe_fd[1], this);
-    /**
-       If this is an input buffer, then io_read_buffer will not have
-       been called, and we need to close the output fd as well.
-    */
-    if (is_input && pipe_fd[1] >= 0)
-    {
-        exec_close(pipe_fd[1]);
-    }
-
     if (pipe_fd[0] >= 0)
     {
         exec_close(pipe_fd[0]);
@@ -234,6 +232,71 @@ void io_print(const io_chain_t &chain)
             io->print();
         }
     }
+}
+
+/* If the given fd is used by the io chain, duplicates it repeatedly until an fd not used in the io chain is found, or we run out. If we return a new fd or an error, closes the old one. Any fd created is marked close-on-exec. Returns -1 on failure (in which case the given fd is still closed). */
+static int move_fd_to_unused(int fd, const io_chain_t &io_chain)
+{
+    int new_fd = fd;
+    if (fd >= 0 && io_chain.get_io_for_fd(fd).get() != NULL)
+    {
+        /* We have fd >= 0, and it's a conflict. dup it and recurse. Note that we recurse before anything is closed; this forces the kernel to give us a new one (or report fd exhaustion). */
+        int tmp_fd;
+        do
+        {
+            tmp_fd = dup(fd);
+        } while (tmp_fd < 0 && errno == EINTR);
+        
+        assert(tmp_fd != fd);
+        if (tmp_fd < 0)
+        {
+            /* Likely fd exhaustion. */
+            new_fd = -1;
+        }
+        else
+        {
+            /* Ok, we have a new candidate fd. Recurse. If we get a valid fd, either it's the same as what we gave it, or it's a new fd and what we gave it has been closed. If we get a negative value, the fd also has been closed. */
+            set_cloexec(tmp_fd);
+            new_fd = move_fd_to_unused(tmp_fd, io_chain);
+        }
+        
+        /* We're either returning a new fd or an error. In both cases, we promise to close the old one. */
+        assert(new_fd != fd);
+        int saved_errno = errno;
+        exec_close(fd);
+        errno = saved_errno;
+    }
+    return new_fd;
+}
+
+bool pipe_avoid_conflicts_with_io_chain(int fds[2], const io_chain_t &ios)
+{
+    bool success = true;
+    for (int i=0; i < 2; i++)
+    {
+        fds[i] = move_fd_to_unused(fds[i], ios);
+        if (fds[i] < 0)
+        {
+            success = false;
+            break;
+        }
+    }
+    
+    /* If any fd failed, close all valid fds */
+    if (! success)
+    {
+        int saved_errno = errno;
+        for (int i=0; i < 2; i++)
+        {
+            if (fds[i] >= 0)
+            {
+                exec_close(fds[i]);
+                fds[i] = -1;
+            }
+        }
+        errno = saved_errno;
+    }
+    return success;
 }
 
 /* Return the last IO for the given fd */

@@ -4166,7 +4166,8 @@ static int internal_help(const wchar_t *cmd)
 int builtin_run(parser_t &parser, const wchar_t * const *argv, const io_chain_t &io)
 {
     int (*cmd)(parser_t &parser, const wchar_t * const *argv)=0;
-    real_io = &io;
+    
+    scoped_push<const io_chain_t*> set_real_io(&real_io, &io);
 
     CHECK(argv, STATUS_BUILTIN_ERROR);
     CHECK(argv[0], STATUS_BUILTIN_ERROR);

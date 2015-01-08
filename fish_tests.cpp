@@ -526,7 +526,7 @@ static void test_iothread(void)
     double start = timef();
     for (int i=0; i < iterations; i++)
     {
-        int thread_count = iothread_perform(test_iothread_thread_call, (void (*)(int *, int))NULL, int_ptr);
+        int thread_count = iothread_perform(test_iothread_thread_call, int_ptr);
         max_achieved_thread_count = std::max(max_achieved_thread_count, thread_count);
     }
 
@@ -776,7 +776,7 @@ static void test_1_cancellation(const wchar_t *src)
     shared_ptr<io_buffer_t> out_buff(io_buffer_t::create(STDOUT_FILENO, io_chain_t()));
     const io_chain_t io_chain(out_buff);
     test_cancellation_info_t ctx = {pthread_self(), 0.25 /* seconds */ };
-    iothread_perform(signal_main, (void (*)(test_cancellation_info_t *, int))NULL, &ctx);
+    iothread_perform(signal_main, &ctx);
     parser_t::principal_parser().eval(src, io_chain, TOP);
     out_buff->read();
     if (out_buff->out_buffer_size() != 0)
@@ -2424,7 +2424,7 @@ static void test_universal()
     const int threads = 16;
     for (int i=0; i < threads; i++)
     {
-        iothread_perform(test_universal_helper, (void (*)(int *, int))NULL, new int(i));
+        iothread_perform(test_universal_helper, new int(i));
     }
     iothread_drain_all();
     

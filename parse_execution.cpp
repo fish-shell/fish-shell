@@ -1083,7 +1083,7 @@ bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement
                     }
                     else
                     {
-                        new_io.reset(new io_fd_t(source_fd, old_fd));
+                        new_io.reset(new io_fd_t(source_fd, old_fd, true));
                     }
                 }
                 break;

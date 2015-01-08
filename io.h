@@ -66,11 +66,15 @@ public:
     /** fd to redirect specified fd to. For example, in 2>&1, old_fd is 1, and io_data_t::fd is 2 */
     const int old_fd;
     
+    /** Whether this redirection was supplied by a script. For example, 'cmd <&3' would have user_supplied set to true. But a redirection that comes about through transmogrification would not. */
+    const bool user_supplied;
+    
     virtual void print() const;
 
-    io_fd_t(int f, int old) :
+    io_fd_t(int f, int old, bool us) :
         io_data_t(IO_FD, f),
-        old_fd(old)
+        old_fd(old),
+        user_supplied(us)
     {
     }
 };

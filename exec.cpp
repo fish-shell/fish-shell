@@ -366,7 +366,7 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t *out_chain, s
                 }
 
                 opened_fds.push_back(fd);
-                out.reset(new io_fd_t(in->fd, fd));
+                out.reset(new io_fd_t(in->fd, fd, false));
 
                 break;
             }
@@ -867,7 +867,7 @@ void exec_job(parser_t &parser, job_t *j)
 
             case INTERNAL_BUILTIN:
             {
-                int local_builtin_stdin = 0;
+                int local_builtin_stdin = STDIN_FILENO;
                 bool close_stdin = false;
 
                 /*
@@ -887,7 +887,11 @@ void exec_job(parser_t &parser, job_t *j)
                             case IO_FD:
                             {
                                 CAST_INIT(const io_fd_t *, in_fd, in.get());
-                                local_builtin_stdin = in_fd->old_fd;
+                                /* Ignore user-supplied fd redirections from an fd other than the standard ones. e.g. in source <&3 don't actually read from fd 3, which is internal to fish. We still respect this redirection in that we pass it on as a block IO to the code that source runs, and therefore this is not an error. Non-user supplied fd redirections come about through transmogrification, and we need to respect those here. */
+                                if (! in_fd->user_supplied || (in_fd->old_fd >= 0 && in_fd->old_fd < 3))
+                                {
+                                    local_builtin_stdin = in_fd->old_fd;
+                                }
                                 break;
                             }
                             case IO_PIPE:

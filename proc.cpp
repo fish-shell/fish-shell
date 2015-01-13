@@ -1012,6 +1012,9 @@ static int select_try(job_t *j)
         tv.tv_usec=10000;
 
         retval =select(maxfd+1, &fds, 0, 0, &tv);
+        if (retval == 0) {
+            debug(3, L"select_try hit timeout\n");
+        }
         return retval > 0;
     }
 
@@ -1223,6 +1226,9 @@ void job_continue(job_t *j, bool cont)
         if (job_get_flag(j, JOB_FOREGROUND))
         {
             bool quit = false;
+
+            /* Look for finished processes first, to avoid select() if it's already done. */
+            process_mark_finished_children(false);
 
             /*
                Wait for job to report.

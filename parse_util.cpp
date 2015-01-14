@@ -423,14 +423,14 @@ static void job_or_process_extent(const wchar_t *buff,
                     finished=1;
                     if (b)
                     {
-                        *b = (wchar_t *)buff + tok_begin;
+                        *b = (wchar_t *)begin + tok_begin;
                     }
                 }
                 else
                 {
                     if (a)
                     {
-                        *a = (wchar_t *)buff + tok_begin+1;
+                        *a = (wchar_t *)begin + tok_begin+1;
                     }
                 }
 

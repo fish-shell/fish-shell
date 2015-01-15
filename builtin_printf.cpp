@@ -357,16 +357,17 @@ long builtin_printf_state_t::print_esc(const wchar_t *escstart, bool octal_0)
             esc_value = esc_value * 16 + hex_to_bin(*p);
         if (esc_length == 0)
             this->fatal_error(_(L"missing hexadecimal number in escape"));
-        this->append_output(esc_value);
+        this->append_output(ENCODE_DIRECT_BASE + esc_value % 256);
     }
     else if (is_octal_digit(*p))
     {
         /* Parse \0ooo (if octal_0 && *p == L'0') or \ooo (otherwise).
         Allow \ooo if octal_0 && *p != L'0'; this is an undocumented
         extension to POSIX that is compatible with Bash 2.05b.  */
+        /* Wrap mod 256, which matches historic behavior */
         for (esc_length = 0, p += octal_0 && *p == L'0'; esc_length < 3 && is_octal_digit(*p); ++esc_length, ++p)
             esc_value = esc_value * 8 + octal_to_bin(*p);
-        this->append_output(esc_value);
+        this->append_output(ENCODE_DIRECT_BASE + esc_value % 256);
     }
     else if (*p && wcschr(L"\"\\abcefnrtv", *p))
     {

@@ -1937,8 +1937,8 @@ static int builtin_echo(parser_t &parser, wchar_t **argv)
                         unsigned char narrow_val = 0;
                         if (builtin_echo_parse_numeric_sequence(str + j + 1, &consumed, &narrow_val))
                         {
-                            /* Here consumed must have been set to something */
-                            wc = narrow_val; //is this OK for conversion?
+                            /* Here consumed must have been set to something. The narrow_val is a literal byte that we want to output (#1894) */
+                            wc = ENCODE_DIRECT_BASE + narrow_val % 256;
                         }
                         else
                         {

@@ -3,7 +3,7 @@ function eval -S -d "Evaluate parameters as a command"
 	# to preserve the status in case the block that is evaluated
 	# does not modify the status itself.
 	set -l status_copy $status
-	function -S restore_status
+	function -S __fish_restore_status
 		return $status_copy
 	end
 
@@ -49,7 +49,7 @@ function eval -S -d "Evaluate parameters as a command"
   # what it reads from. So builtins are magic in that, in pipes, their stdin
   # is not fd 0.
 
-	restore_status
+	__fish_restore_status
 	echo "begin; $argv "\n" ;end eval2_inner <&3 3<&-" | source 3<&0
 	set -l res $status
 

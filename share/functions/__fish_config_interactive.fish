@@ -217,7 +217,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		# Check for Fedora's handler
 		else if test -f /usr/libexec/pk-command-not-found
 			function __fish_command_not_found_handler --on-event fish_command_not_found
-				/usr/libexec/pk-command-not-found -- $argv
+				/usr/libexec/pk-command-not-found $argv
 			end
 		# Check in /usr/lib, this is where modern Ubuntus place this command
 		else if test -f /usr/lib/command-not-found

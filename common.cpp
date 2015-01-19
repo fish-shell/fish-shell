@@ -806,10 +806,9 @@ void format_long_safe(wchar_t buff[64], long val)
         size_t idx = 0;
         bool negative = (val < 0);
 
-        while (val > 0)
+        while (val != 0)
         {
             long rem = val % 10;
-            /* Here we're assuming that wide character digits are contiguous - is that a correct assumption? */
             buff[idx++] = L'0' + (wchar_t)(rem < 0 ? -rem : rem);
             val /= 10;
         }

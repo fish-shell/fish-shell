@@ -296,6 +296,12 @@ static void test_format(void)
         format_long_safe(buff1, j);
         sprintf(buff2, "%d", j);
         do_test(! strcmp(buff1, buff2));
+        
+        wchar_t wbuf1[128], wbuf2[128];
+        format_long_safe(wbuf1, j);
+        swprintf(wbuf2, 128, L"%d", j);
+        do_test(! wcscmp(wbuf1, wbuf2));
+
     }
 
     long q = LONG_MIN;
@@ -303,7 +309,6 @@ static void test_format(void)
     format_long_safe(buff1, q);
     sprintf(buff2, "%ld", q);
     do_test(! strcmp(buff1, buff2));
-
 }
 
 /**

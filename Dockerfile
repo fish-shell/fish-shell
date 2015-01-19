@@ -2,7 +2,7 @@ FROM centos:latest
 
 # Build dependency
 RUN yum update -y &&\
-  yum install -y autoconf automake clang gcc-c++ make ncurses-devel &&\
+  yum install -y autoconf automake bc clang gcc-c++ make ncurses-devel &&\
   yum clean all
 
 # Test dependency

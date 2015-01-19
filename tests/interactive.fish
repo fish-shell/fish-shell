@@ -23,7 +23,7 @@ function test_file
     begin
         set -lx XDG_CONFIG_HOME $PWD/tmp.interactive.config
         set -lx TERM dumb
-        expect -n -c 'source interactive.expect.rc' -f $file >$file.tmp.out ^$file.tmp.err
+        command expect -n -c 'source interactive.expect.rc' -f $file >$file.tmp.out ^$file.tmp.err
     end
     set -l tmp_status $status
     set -l res ok

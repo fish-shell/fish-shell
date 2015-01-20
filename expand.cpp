@@ -1616,7 +1616,7 @@ static void expand_home_directory(wcstring &input)
     {
         size_t tail_idx;
         wcstring username = get_home_directory_name(input, &tail_idx);
-
+        
         bool tilde_error = false;
         wcstring home;
         if (username.empty())
@@ -1639,18 +1639,18 @@ static void expand_home_directory(wcstring &input)
                 home = str2wcstring(userinfo->pw_dir);
             }
         }
-
-        wchar_t *realhome;
-        realhome = wrealpath(home, NULL);
-
+        
+        wchar_t *realhome = wrealpath(home, NULL);
+        
         if (! tilde_error && realhome)
         {
             input.replace(input.begin(), input.begin() + tail_idx, realhome);
         }
-	else
-	{
+        else
+        {
             input[0] = L'~';
-	}
+        }
+        free((void *)realhome);
     }
 }
 

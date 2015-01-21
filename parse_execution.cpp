@@ -295,8 +295,9 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(const parse
         }
         else if (else_clause->child_count == 0)
         {
-            /* 'if' condition failed, no else clause, we're done */
+            /* 'if' condition failed, no else clause, return 0, we're done. */
             job_list_to_execute = NULL;
+            proc_set_last_status(STATUS_BUILTIN_OK);
             break;
         }
         else
@@ -325,8 +326,12 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(const parse
     {
         run_job_list(*job_list_to_execute, ib);
     }
+    else
+    {   /* No job list means no sucessful conditions, so return 0 (#1443). */
+        proc_set_last_status(STATUS_BUILTIN_OK);
+    }
 
-    /* It's possible there's a last-minute cancellation, in which case we should not stomp the exit status (#1297) */
+    /* It's possible there's a last-minute cancellation (#1297). */
     if (should_cancel_execution(ib))
     {
         result = parse_execution_cancelled;
@@ -335,12 +340,7 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(const parse
     /* Done */
     parser->pop_block(ib);
 
-    /* Issue 1061: If we executed, then always report success, instead of letting the exit status of the last command linger */
-    if (result == parse_execution_success)
-    {
-        proc_set_last_status(STATUS_BUILTIN_OK);
-    }
-
+    /* Otherwise, take the exit status of the job list. Reversal of #1061. */
     return result;
 }
 

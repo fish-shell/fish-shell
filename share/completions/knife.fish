@@ -2,65 +2,34 @@
 # Define functions for knife with arguments (e.g. knife bootstrap [--server])
 #
 
-
 function __fish_knife_scan_eq0
   set cmd (commandline -opc)
-  if [ (count $cmd) -eq 1 ]
-    return 0
-  end
-  return 1
+  test (count $cmd) -eq 1
 end
 
 function __fish_knife_scan_eq1
   set cmd (commandline -opc)
-  if [ (count $cmd) -eq 2 ]
-    if [ $argv[1] = $cmd[2] ]
-      return 0
-    end
-  end
-  return 1
+  test (count $cmd) -eq 2; and test $argv[1] = $cmd[2]
 end
 
 function __fish_knife_scan_eq2
   set cmd (commandline -opc)
-  set cmd_main $argv[1]
-  set cmd_sub $argv[2]
-
-  if [ (count $cmd) -eq 3 ]
-    if [ $cmd_main = $cmd[2] ]; and [ $cmd_sub = $cmd[3] ]
-      return 0
-    end
-  end
-  return 1
+  test (count $cmd) -eq 3; and test $argv[1] = $cmd[2]; and test $argv[2] = $cmd[3]
 end
 
 function __fish_knife_scan_eq3
   set cmd (commandline -opc)
-  if [ (count $cmd) -eq 4 ]
-    if [ $argv[1] = $cmd[2] ]; and [ $argv[2] = $cmd[3] ]; and [ $argv[3] = $cmd[4] ]
-      return 0
-    end
-  end
-  return 1
+  test (count $cmd) -eq 4; and test $argv[1] = $cmd[2]; and test $argv[2] = $cmd[3]; and test $argv[3] = $cmd[4]
 end
+
 function __fish_knife_scan_eq4
   set cmd (commandline -opc)
-  if [ (count $cmd) -eq 5 ]
-    if [ $argv[1] = $cmd[2] ]; and [ $argv[2] = $cmd[3] ]; and [ $argv[3] = $cmd[4] ]; and [ $argv[4] = $cmd[5] ]
-      return 0
-    end
-  end
-  return 1
+  test (count $cmd) -eq 5; and test $argv[1] = $cmd[2]; and test $argv[2] = $cmd[3]; and test $argv[3] = $cmd[4]; and test $argv[4] = $cmd[5]
 end
+
 function __fish_knife_scan_eq5
   set cmd (commandline -opc)
-
-  if [ (count $cmd) -eq 6 ]
-    if [ $argv[1] = $cmd[2] ]; and [ $argv[2] = $cmd[3] ]; and [ $argv[3] = $cmd[4] ]; and [ $argv[4] = $cmd[5] ]; and [ $argv[5] = $cmd[6] ]
-      return 0
-    end
-  end
-  return 1
+  test (count $cmd) -eq 6; and test $argv[1] = $cmd[2]; and test $argv[2] = $cmd[3]; and test $argv[3] = $cmd[4]; and test $argv[4] = $cmd[5]; and test $argv[5] = $cmd[6]
 end
 
 #
@@ -69,54 +38,27 @@ end
 
 function __fish_knife_scan1
   set cmd (commandline -opc)
-  if [ (count $cmd) -gt 1 ]
-    if [ $argv[1] = $cmd[2] ]
-      return 0
-    end
-  end
-  return 1
+  test (count $cmd) -gt 1; and test $argv[1] = $cmd[2]
 end
 
 function __fish_knife_scan2
   set cmd (commandline -opc)
-  set cmd_main $argv[1]
-  set cmd_sub $argv[2]
-
-  if [ (count $cmd) -gt 2 ]
-    if [ $cmd_main = $cmd[2] ]; and [ $cmd_sub = $cmd[3] ]
-      return 0
-    end
-  end
-  return 1
+  test (count $cmd) -gt 2; and test $argv[1] = $cmd[2]; and test $argv[2] = $cmd[3]
 end
 
 function __fish_knife_scan3
   set cmd (commandline -opc)
-  if [ (count $cmd) -gt 3 ]
-    if [ $argv[1] = $cmd[2] ]; and [ $argv[2] = $cmd[3] ]; and [ $argv[3] = $cmd[4] ]
-      return 0
-    end
-  end
-  return 1
+  test (count $cmd) -gt 3; and test $argv[1] = $cmd[2]; and test $argv[2] = $cmd[3]; and test $argv[3] = $cmd[4]
 end
+
 function __fish_knife_scan4
   set cmd (commandline -opc)
-  if [ (count $cmd) -gt 4 ]
-    if [ $argv[1] = $cmd[2] ]; and [ $argv[2] = $cmd[3] ]; and [ $argv[3] = $cmd[4] ]; and [ $argv[4] = $cmd[5] ]
-      return 0
-    end
-  end
-  return 1
+  test (count $cmd) -gt 4; and test $argv[1] = $cmd[2]; and test $argv[2] = $cmd[3]; and test $argv[3] = $cmd[4]; and test $argv[4] = $cmd[5]
 end
+
 function __fish_knife_scan5
   set cmd (commandline -opc)
-
-  if [ (count $cmd) -gt 5 ]
-    if [ $argv[1] = $cmd[2] ]; and [ $argv[2] = $cmd[3] ]; and [ $argv[3] = $cmd[4] ]; and [ $argv[4] = $cmd[5] ]; and [ $argv[5] = $cmd[6] ]
-      return 0
-    end
-  end
-  return 1
+  test (count $cmd) -gt 5; and test $argv[1] = $cmd[2]; and test $argv[2] = $cmd[3]; and test $argv[3] = $cmd[4]; and test $argv[4] = $cmd[5]; and test $argv[5] = $cmd[6]
 end
 
 #

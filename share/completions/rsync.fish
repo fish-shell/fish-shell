@@ -129,6 +129,6 @@ complete -c rsync -d "Remote path" -n "commandline -ct|sgrep -q :" -a "
 	commandline -ct|sgrep -Eo '.*:+(.*/)?'
 )(
 	#Get the list of remote files from the specified rsync server
-	rsync --list-only (commandline -ct|sgrep -Eo '.*:+(.*/)?') ^/dev/null | awk '{if (\$1 ~ \"^d\" ) {print \$NF \"/\";} else {print \$NF;} };' 
+	rsync --list-only (commandline -ct|sgrep -Eo '.*:+(.*/)?') ^/dev/null | sed '/^d/ s,\$,/, ' | tr -s ' '| cut -d' ' -f 5-
 )
 "

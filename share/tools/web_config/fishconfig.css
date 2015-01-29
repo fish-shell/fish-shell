@@ -438,6 +438,10 @@ img.delete_icon {
 	text-overflow: ellipsis;
 }
 
+.prompt_demo {
+    white-space: pre;
+}
+
 .unbordered {
 	border: none;
 	padding-top: 0;

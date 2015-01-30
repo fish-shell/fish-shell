@@ -140,7 +140,7 @@ controllers.controller("promptController", function($scope, $http) {
     }
 
     $scope.setNewPrompt = function(selectedPrompt) {
-        $http.post("set_prompt/","what=" + encodeURIComponent(selectedPrompt.function), { headers: {'Content-Type': 'application/x-www-form-urlencoded'} }).success(function(data, status, headers, config){
+        $http.post("set_prompt/", {'fish_prompt': selectedPrompt.function,}).success(function(data, status, headers, config){
 
             // Update attributes of current prompt and select it
             $scope.samplePrompts[0].demo = selectedPrompt.demo;

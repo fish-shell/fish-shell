@@ -816,8 +816,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             else:
                 output = ["Unable to delete history item"]
         elif p == '/set_prompt/':
-            what = postvars.get('what')
-            if self.do_set_prompt_function(what[0]):
+            what = postvars.get('fish_prompt')
+            if self.do_set_prompt_function(what):
                 output = ["OK"]
             else:
                 output = ["Unable to set prompt"]

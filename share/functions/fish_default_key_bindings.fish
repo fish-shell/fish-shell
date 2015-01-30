@@ -124,6 +124,11 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	# escape cancels stuff	
 	bind \e cancel
 
+	# Ignore some known-bad control sequences
+	# https://github.com/fish-shell/fish-shell/issues/1917
+	bind \e\[I 'begin;end'
+	bind \e\[O 'begin;end'
+
 	# term-specific special bindings
 	switch "$TERM"
 		case 'rxvt*'

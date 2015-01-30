@@ -11,10 +11,8 @@ IS_PY2 = sys.version_info[0] == 2
 if IS_PY2:
     import SimpleHTTPServer
     import SocketServer
-    try:
-        from urllib.parse import parse_qs
-    except ImportError:
-        from cgi import parse_qs
+    from urlparse import parse_qs
+
 else:
     import http.server as SimpleHTTPServer
     import socketserver as SocketServer
@@ -788,7 +786,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         elif ctype == 'application/x-www-form-urlencoded':
             length = int(self.headers['content-length'])
             url_str = self.rfile.read(length).decode('utf-8')
-            postvars = cgi.parse_qs(url_str, keep_blank_values=1)
+            postvars = parse_qs(url_str, keep_blank_values=1)
         elif ctype == 'application/json':
             length = int(self.headers['content-length'])
             url_str = self.rfile.read(length).decode('utf-8')

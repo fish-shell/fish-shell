@@ -789,7 +789,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             postvars = parse_qs(url_str, keep_blank_values=1)
         elif ctype == 'application/json':
             length = int(self.headers['content-length'])
-            url_str = self.rfile.read(length).decode('utf-8')
+            url_str = self.rfile.read(length).decode(pdict['charset'])
             postvars = json.loads(url_str)
         else:
             postvars = {}

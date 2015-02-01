@@ -8,7 +8,7 @@ function isatty -d "Tests if a file descriptor is a tty"
 				__fish_print_help isatty
 				return 0
 
-			case stdin
+			case stdin ''
 				set fd 0
 
 			case stdout
@@ -23,6 +23,8 @@ function isatty -d "Tests if a file descriptor is a tty"
 		end
 	end
 
-	eval "tty 0>&$fd >/dev/null"
+	# Use `command test` because `builtin test` doesn't open the regular fd's.
+	# See https://github.com/fish-shell/fish-shell/issues/1228
+	command test -t "$fd"
 
 end

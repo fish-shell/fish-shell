@@ -943,6 +943,9 @@ void reader_write_title(const wcstring &cmd)
             return;
         }
 
+        if (contains(term, L"dumb"))
+            return;
+
         if (strstr(n, "tty") || strstr(n, "/vc/"))
             return;
     }

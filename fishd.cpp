@@ -626,12 +626,21 @@ repeat:
 
     // Attempt to hardlink the old socket name so that old versions of fish keep working on upgrade
     // Not critical if it fails
+    // On OS X, we use symlinks instead of hardlinks to work around a filesystem corruption bug http://openradar.appspot.com/19687545
+    // On Linux, we use hardlinks instead of symlinks for compatibility with the Yama security model - see #1859
+    int (*linkfunc)(const char *, const char *);
+#if __APPLE__
+    linkfunc = symlink;
+#else
+    linkfunc = link;
+#endif
+
     if (unlink(old_sock_name.c_str()) != 0 && errno != ENOENT)
     {
         debug(0, L"Could not create legacy socket path");
         wperror(L"unlink");
     }
-    else if (link(sock_name.c_str(), old_sock_name.c_str()) != 0)
+    else if (linkfunc(sock_name.c_str(), old_sock_name.c_str()) != 0)
     {
         debug(0, L"Could not create legacy socket path");
         wperror(L"link");

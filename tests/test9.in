@@ -97,6 +97,27 @@ else
     echo 'psub file was deleted'
 end
 
+if count (echo foo | psub -s .cc | grep -o '\.cc$') >/dev/null
+    echo 'psub filename ends with .cc'
+else
+    echo 'psub filename does not end with .cc'
+end
+
+if count (echo foo | psub -f -s .cc | grep -o '\.cc$') >/dev/null
+    echo 'psub filename ends with .cc'
+else
+    echo 'psub filename does not end with .cc'
+end
+
+set -l filename (echo foo | psub -s .fish)
+if test -e (dirname $filename)
+    echo 'psub directory was not deleted'
+else
+    echo 'psub directory was deleted'
+end
+
+diff -q (__fish_print_help psub | psub) (psub -hs banana | psub)
+
 # Test support for unbalanced blocks
 function try_unbalanced_block
     ../fish -c "echo $argv | source " 2>&1 | grep "Missing end" 1>&2

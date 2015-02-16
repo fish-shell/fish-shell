@@ -2,7 +2,7 @@
 
 \subsection psub-synopsis Synopsis
 \fish{synopsis}
-COMMAND1 ( COMMAND2 | psub [-f] )
+COMMAND1 ( COMMAND2 | psub [-f] [-s SUFFIX])
 \endfish
 
 \subsection psub-description Description
@@ -11,10 +11,15 @@ Posix shells feature a syntax that is a mix between command substitution and pip
 
 If the `-f` or `--file` switch is given to `psub`, `psub` will use a regular file instead of a named pipe to communicate with the calling process. This will cause `psub` to be significantly slower when large amounts of data are involved, but has the advantage that the reading process can seek in the stream.
 
+If the `-s` or `---suffix` switch is given, `psub` will append SUFFIX to the filename.
+
 
 \subsection psub-example Example
 
 \fish
 diff (sort a.txt | psub) (sort b.txt | psub)
 # shows the difference between the sorted versions of files `a.txt` and `b.txt`.
+
+source-highlight -f esc (cpp main.c | psub -s .c)
+# highlights `main.c` after preprocessing as a C source.
 \endfish

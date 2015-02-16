@@ -97,6 +97,18 @@ else
     echo 'psub file was deleted'
 end
 
+if count (echo foo | psub -s .cc | grep -o '\.cc$') >/dev/null
+    echo 'psub filename ends with .cc'
+else
+    echo 'psub filename does not end with .cc'
+end
+
+if count (echo foo | psub -f -s .cc | grep -o '\.cc$') >/dev/null
+    echo 'psub filename ends with .cc'
+else
+    echo 'psub filename does not end with .cc'
+end
+
 # Test support for unbalanced blocks
 function try_unbalanced_block
     ../fish -c "echo $argv | source " 2>&1 | grep "Missing end" 1>&2

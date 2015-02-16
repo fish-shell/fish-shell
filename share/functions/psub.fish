@@ -3,9 +3,10 @@ function psub --description "Read from stdin into a file and output the filename
 
 	set -l filename
 	set -l funcname
+	set -l suffix
 	set -l use_fifo 1
-	set -l shortopt -o hf
-	set -l longopt -l help,file
+	set -l shortopt -o hfs:
+	set -l longopt -l help,file,suffix:
 
 	if getopt -T >/dev/null
 		set longopt
@@ -28,6 +29,10 @@ function psub --description "Read from stdin into a file and output the filename
 
 			case -f --file
 				set use_fifo 0
+
+			case -s --suffix
+				set suffix $opt[2]
+				set -e opt[1..2]
 
 			case --
 				set -e opt[1]
@@ -54,11 +59,15 @@ function psub --description "Read from stdin into a file and output the filename
 		# that the command substitution exits without needing to wait for
 		# all the commands to exit
 		set dir (mktemp -d "$TMPDIR[1]"/.psub.XXXXXXXXXX); or return
-		set filename $dir/psub.fifo
+		set filename $dir/psub.fifo$suffix
 		mkfifo $filename
 		cat >$filename &
-	else
+	else if test -z $suffix
 		set filename (mktemp "$TMPDIR[1]"/.psub.XXXXXXXXXX)
+		cat >$filename
+	else
+		set dir (mktemp -d "$TMPDIR[1]"/.psub.XXXXXXXXXX)
+		set filename $dir/psub$suffix
 		cat >$filename
 	end
 

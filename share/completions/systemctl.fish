@@ -4,6 +4,17 @@ set -l commands list-units list-sockets start stop reload restart try-restart re
 	list-dependencies snapshot delete daemon-reload daemon-reexec show-environment set-environment unset-environment \
 	default rescue emergency halt poweroff reboot kexec exit suspend hibernate hybrid-sleep switch-root
 
+function __fish_systemd_properties
+	if type -q /usr/lib/systemd/systemd
+		set IFS "="
+		/usr/lib/systemd/systemd --dump-configuration-items | while read key value
+		if not test -z $value
+			echo $key
+		end
+		end
+	end
+end
+
 complete -f -e -c systemctl
 # All systemctl commands
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a "$commands"
@@ -52,7 +63,7 @@ complete -f -c systemctl -n "__fish_seen_subcommand_from set-default" -a '(__fis
 
 complete -f -c systemctl -s t -l type -d 'List of unit types' -xa 'help service, mount, socket, target,'
 complete -f -c systemctl -l state -d 'List of unit states' -xa 'LOAD, SUB, ACTIVE,'
-complete -f -c systemctl -s p -l property -d 'Properties displayed in the "show" command'
+complete -f -c systemctl -s p -l property -d 'Properties displayed in the "show" command' -a '(__fish_systemd_properties)'
 complete -f -c systemctl -s a -l all -d 'Show all units or properties'
 complete -f -c systemctl -s r -l recursive -d 'Show also units of local containers'
 complete -f -c systemctl -l reverse -d 'Show reverse dependencies between units'

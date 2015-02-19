@@ -6,7 +6,7 @@ set -l commands list-units list-sockets start stop reload restart try-restart re
 
 complete -f -e -c systemctl
 # All systemctl commands
-complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a 'list-units list-sockets start stop reload restart try-restart reload-or-restart reload-or-try-restart isolate kill is-active is-failed status show get-cgroup-attr set-cgroup-attr unset-cgroup-attr set-cgroup help reset-failed list-unit-files enable disable is-enabled reenable preset mask unmask link load list-jobs cancel dump list-dependencies snapshot delete daemon-reload daemon-reexec show show-environment set-environment unset-environment default rescue emergency halt poweroff reboot kexec exit suspend hibernate hybrid-sleep switch-root'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a 'list-units list-sockets start stop reload restart try-restart reload-or-restart reload-or-try-restart isolate kill is-active is-failed status show get-cgroup-attr set-cgroup-attr unset-cgroup-attr set-cgroup help reset-failed list-unit-files enable disable is-enabled reenable preset mask unmask link load list-jobs cancel dump list-dependencies snapshot delete daemon-reload daemon-reexec show-environment set-environment unset-environment default rescue emergency halt poweroff reboot kexec exit suspend hibernate hybrid-sleep switch-root'
 
 #### Units commands
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a start -d 'Start one or more units'
@@ -15,7 +15,7 @@ complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a resta
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a status -d 'Runtime status about one or more units'
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a enable -d 'Enable one or more units'
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a disable -d 'Disable one or more units'
-for command in start stop restart status enable disable
+for command in start stop restart try-restart reload-or-restart reload-or-try-restart is-active is-failed is-enabled reenable mask loaded link list-dependencies show status
 	complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a '(__fish_systemctl_services)' -d 'Service'
 	complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a '(__fish_systemctl_sockets)' -d 'Socket'
 	complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a '(__fish_systemctl_mounts)' -d 'Mount'
@@ -24,6 +24,17 @@ for command in start stop restart status enable disable
 	complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a '(__fish_systemctl_automounts)' -d 'Automount'
 	complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a '(__fish_systemctl_timers)' -d 'Timer'
 end
+
+# Enable/Disable: Only show units with matching state
+complete -f -c systemctl -n "__fish_seen_subcommand_from enable" -a '(__fish_systemctl_services --state=disabled)' -d 'Service'
+complete -f -c systemctl -n "__fish_seen_subcommand_from enable" -a '(__fish_systemctl_sockets --state=disabled)' -d 'Socket'
+complete -f -c systemctl -n "__fish_seen_subcommand_from enable" -a '(__fish_systemctl_timers --state=disabled)' -d 'Timer'
+complete -f -c systemctl -n "__fish_seen_subcommand_from enable" -a '(__fish_systemctl_service_paths --state=disabled)' -d 'Path'
+
+complete -f -c systemctl -n "__fish_seen_subcommand_from disable" -a '(__fish_systemctl_services --state=enabled)' -d 'Service'
+complete -f -c systemctl -n "__fish_seen_subcommand_from disable" -a '(__fish_systemctl_sockets --state=enabled)' -d 'Socket'
+complete -f -c systemctl -n "__fish_seen_subcommand_from disable" -a '(__fish_systemctl_timers --state=enabled)' -d 'Timer'
+complete -f -c systemctl -n "__fish_seen_subcommand_from disable" -a '(__fish_systemctl_service_paths --state=enabled)' -d 'Path'
 
 # These are useless for the other commands
 # .device in particular creates too much noise

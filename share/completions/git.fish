@@ -203,6 +203,8 @@ complete -f -c git -n '__fish_git_using_command branch' -s a -d 'Lists both loca
 complete -f -c git -n '__fish_git_using_command branch' -s t -l track -d 'Track remote branch'
 complete -f -c git -n '__fish_git_using_command branch' -l no-track -d 'Do not track remote branch'
 complete -f -c git -n '__fish_git_using_command branch' -l set-upstream -d 'Set remote branch to track'
+complete -f -c git -n '__fish_git_using_command branch' -l merged -d 'List branches that have been merged'
+complete -f -c git -n '__fish_git_using_command branch' -l no-merged -d 'List branches that have not been merged'
 
 ### cherry-pick
 complete -f -c git -n '__fish_git_needs_command' -a cherry-pick -d 'Apply the change introduced by an existing commit'

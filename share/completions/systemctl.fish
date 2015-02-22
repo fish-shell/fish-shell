@@ -3,6 +3,7 @@ set -l commands list-units list-sockets start stop reload restart try-restart re
 	reset-failed list-unit-files enable disable is-enabled reenable preset mask unmask link load list-jobs cancel dump \
 	list-dependencies snapshot delete daemon-reload daemon-reexec show-environment set-environment unset-environment \
 	default rescue emergency halt poweroff reboot kexec exit suspend hibernate hybrid-sleep switch-root
+set -l types services sockets mounts service_paths targets automounts timers
 
 function __fish_systemd_properties
 	if type -q /usr/lib/systemd/systemd
@@ -26,35 +27,26 @@ complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a resta
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a status -d 'Runtime status about one or more units'
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a enable -d 'Enable one or more units'
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a disable -d 'Disable one or more units'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a isolate -d 'Start a unit and dependencies and disable all others'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a set-default -d 'Set the default target to boot into'
 for command in start stop restart try-restart reload-or-restart reload-or-try-restart is-active is-failed is-enabled reenable mask loaded link list-dependencies show status
-	complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a '(__fish_systemctl_services)' -d 'Service'
-	complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a '(__fish_systemctl_sockets)' -d 'Socket'
-	complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a '(__fish_systemctl_mounts)' -d 'Mount'
-	complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a '(__fish_systemctl_service_paths)' -d 'Path'
-	complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a '(__fish_systemctl_targets)' -d 'Target'
-	complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a '(__fish_systemctl_automounts)' -d 'Automount'
-	complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a '(__fish_systemctl_timers)' -d 'Timer'
+	for t in $types
+		complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a "(eval __fish_systemctl_$t)"
+	end
 end
 
 # Enable/Disable: Only show units with matching state
-complete -f -c systemctl -n "__fish_seen_subcommand_from enable" -a '(__fish_systemctl_services --state=disabled)' -d 'Service'
-complete -f -c systemctl -n "__fish_seen_subcommand_from enable" -a '(__fish_systemctl_sockets --state=disabled)' -d 'Socket'
-complete -f -c systemctl -n "__fish_seen_subcommand_from enable" -a '(__fish_systemctl_timers --state=disabled)' -d 'Timer'
-complete -f -c systemctl -n "__fish_seen_subcommand_from enable" -a '(__fish_systemctl_service_paths --state=disabled)' -d 'Path'
-
-complete -f -c systemctl -n "__fish_seen_subcommand_from disable" -a '(__fish_systemctl_services --state=enabled)' -d 'Service'
-complete -f -c systemctl -n "__fish_seen_subcommand_from disable" -a '(__fish_systemctl_sockets --state=enabled)' -d 'Socket'
-complete -f -c systemctl -n "__fish_seen_subcommand_from disable" -a '(__fish_systemctl_timers --state=enabled)' -d 'Timer'
-complete -f -c systemctl -n "__fish_seen_subcommand_from disable" -a '(__fish_systemctl_service_paths --state=enabled)' -d 'Path'
+for t in services sockets timers service_paths
+		complete -f -c systemctl -n "__fish_seen_subcommand_from enable" -a '(eval __fish_systemctl_$t --state=disabled)'
+		complete -f -c systemctl -n "__fish_seen_subcommand_from disable" -a '(eval __fish_systemctl_$t --state=enabled)'
+end
 
 # These are useless for the other commands
 # .device in particular creates too much noise
-complete -f -c systemctl -n "__fish_seen_subcommand_from status" -a '(__fish_systemctl_devices)' -d 'Device'
-complete -f -c systemctl -n "__fish_seen_subcommand_from status" -a '(__fish_systemctl_slices)' -d 'Slice'
-complete -f -c systemctl -n "__fish_seen_subcommand_from status" -a '(__fish_systemctl_scopes)' -d 'Scope'
-complete -f -c systemctl -n "__fish_seen_subcommand_from status" -a '(__fish_systemctl_swaps)' -d 'Swap'
+for t in devices slices scopes swaps
+	complete -f -c systemctl -n "__fish_seen_subcommand_from status" -a '(eval __fish_systemctl_$t)'
+end
 
-complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a isolate -d 'Disable one or more units'
 complete -f -c systemctl -n "__fish_seen_subcommand_from isolate" -a '(__fish_systemctl_targets)' -d 'Target'
 complete -f -c systemctl -n "__fish_seen_subcommand_from isolate" -a '(__fish_systemctl_snapshots)' -d 'Snapshot'
 

@@ -37,8 +37,8 @@ end
 
 # Enable/Disable: Only show units with matching state
 for t in services sockets timers service_paths
-		complete -f -c systemctl -n "__fish_seen_subcommand_from enable" -a '(eval __fish_systemctl_$t --state=disabled)'
-		complete -f -c systemctl -n "__fish_seen_subcommand_from disable" -a '(eval __fish_systemctl_$t --state=enabled)'
+		complete -f -c systemctl -n "__fish_seen_subcommand_from enable" -a "(eval __fish_systemctl_$t --state=disabled)"
+		complete -f -c systemctl -n "__fish_seen_subcommand_from disable" -a "(eval __fish_systemctl_$t --state=enabled)"
 end
 
 # These are useless for the other commands

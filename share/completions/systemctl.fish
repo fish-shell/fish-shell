@@ -29,10 +29,23 @@ complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a enabl
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a disable -d 'Disable one or more units'
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a isolate -d 'Start a unit and dependencies and disable all others'
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a set-default -d 'Set the default target to boot into'
-for command in start stop restart try-restart reload-or-restart reload-or-try-restart is-active is-failed is-enabled reenable mask loaded link list-dependencies show status
+for command in restart try-restart reload-or-restart reload-or-try-restart is-active is-failed is-enabled reenable loaded link list-dependencies show status\
+	condrestart force-reload # these are aliases for try-restart and reload-or-try-restart, respectively. Intentionally don't offer them as command options
 	for t in $types
 		complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a "(eval __fish_systemctl_$t)"
 	end
+end
+
+for t in $types
+	complete -f -c systemctl -n "__fish_seen_subcommand_from unmask" -a "(eval __fish_systemctl_$t --state masked)"
+	# These are intentionally not documented so far (http://lists.freedesktop.org/archives/systemd-devel/2015-January/026805.html)
+	# and there's no performant way to do a "!masked"
+	# so we assume that LOADED can only be masked, loaded or not-found
+	complete -f -c systemctl -n "__fish_seen_subcommand_from mask" -a "(eval __fish_systemctl_$t --state loaded --state not-found)"
+	complete -f -c systemctl -n "__fish_seen_subcommand_from stop" -a "(eval __fish_systemctl_$t --state loaded,active,running)"
+	# Unfortunately, "--state=loaded,inactive" doesn't seem to work (systemd 218)
+	# at least filter out not-found and masked states (these error out)
+	complete -f -c systemctl -n "__fish_seen_subcommand_from start" -a "(eval __fish_systemctl_$t --state loaded)"
 end
 
 # Enable/Disable: Only show units with matching state
@@ -45,6 +58,8 @@ end
 # .device in particular creates too much noise
 for t in devices slices scopes swaps
 	complete -f -c systemctl -n "__fish_seen_subcommand_from status" -a '(eval __fish_systemctl_$t)'
+	complete -f -c systemctl -n "__fish_seen_subcommand_from show" -a '(eval __fish_systemctl_$t)'
+	complete -f -c systemctl -n "__fish_seen_subcommand_from list-dependencies" -a '(eval __fish_systemctl_$t)'
 end
 
 complete -f -c systemctl -n "__fish_seen_subcommand_from isolate" -a '(__fish_systemctl_targets)' -d 'Target'

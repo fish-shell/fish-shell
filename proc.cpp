@@ -1225,15 +1225,13 @@ void job_continue(job_t *j, bool cont)
 
         if (job_get_flag(j, JOB_FOREGROUND))
         {
-            bool quit = false;
-
             /* Look for finished processes first, to avoid select() if it's already done. */
             process_mark_finished_children(false);
 
             /*
                Wait for job to report.
             */
-            while (! job_is_stopped(j) && ! job_is_completed(j))
+            while (! reader_exit_forced() && ! job_is_stopped(j) && ! job_is_completed(j))
             {
 //					debug( 1, L"select_try()" );
                 switch (select_try(j))
@@ -1261,23 +1259,11 @@ void job_continue(job_t *j, bool cont)
                           speed boost (A factor 3 startup time
                           improvement on my 300 MHz machine) on
                           short-lived jobs.
+                         
+                          This will return early if we get a signal,
+                          like SIGHUP.
                         */
-                        int processed = process_mark_finished_children(true);
-                        if (processed < 0)
-                        {
-                            /*
-                              This probably means we got a
-                              signal. A signal might mean that the
-                              terminal emulator sent us a hup
-                              signal to tell is to close. If so,
-                              we should exit.
-                            */
-                            if (reader_exit_forced())
-                            {
-                                quit = 1;
-                            }
-
-                        }
+                        process_mark_finished_children(true);
                         break;
                     }
                 }

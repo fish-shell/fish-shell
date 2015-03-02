@@ -1664,7 +1664,19 @@ static void test_pager_navigation()
         {direction_north, 18},
         {direction_west, 14},
         {direction_south, 15},
-        {direction_north, 14}
+        {direction_north, 14},
+
+        /* pages */
+        {direction_page_north, 12},
+        {direction_page_south, 15},
+        {direction_page_north, 12},
+        {direction_east, 16},
+        {direction_page_south, 18},
+        {direction_east, 3},
+        {direction_north, 2},
+        {direction_page_north, 0},
+        {direction_page_south, 3},
+
     };
     for (size_t i=0; i < sizeof cmds / sizeof *cmds; i++)
     {

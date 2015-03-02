@@ -684,6 +684,7 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
         {
                 /* These directions do something sane */
             case direction_south:
+            case direction_page_south:
             case direction_next:
             case direction_prev:
                 if (direction == direction_prev)
@@ -698,6 +699,7 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
 
                 /* These do nothing */
             case direction_north:
+            case direction_page_north:
             case direction_east:
             case direction_west:
             case direction_deselect:
@@ -744,9 +746,18 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
         /* Cardinal directions. We have a completion index; we wish to compute its row and column. */
         size_t current_row = this->get_selected_row(rendering);
         size_t current_col = this->get_selected_column(rendering);
+        size_t page_height = maxi(rendering.term_height - 1, 1);
 
         switch (direction)
         {
+            case direction_page_north:
+            {
+                if (current_row > page_height)
+                   current_row = current_row - page_height;
+                else
+                   current_row = 0;
+                break;
+            }
             case direction_north:
             {
                 /* Go up a whole row. If we cycle, go to the previous column. */
@@ -763,6 +774,21 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
                 break;
             }
 
+            case direction_page_south:
+            {
+                if (current_row + page_height < rendering.rows)
+                {
+                    current_row += page_height;
+                }
+                else
+                {
+                    current_row = rendering.rows - 1;
+                    if (current_col * rendering.rows + current_row >= completion_infos.size()) {
+                        current_row = (completion_infos.size() - 1) % rendering.rows;
+                    }
+                }
+                break;
+            }
             case direction_south:
             {
                 /* Go down, unless we are in the last row. Note that this means that we may set selected_completion_idx to an out-of-bounds value if the last row is incomplete; this is a feature (it allows "last column memory"). */

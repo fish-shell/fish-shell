@@ -1142,8 +1142,6 @@ static bool command_ends_paging(wchar_t c, bool focused_on_search_field)
             /* These commands always end paging */
         case R_HISTORY_SEARCH_BACKWARD:
         case R_HISTORY_SEARCH_FORWARD:
-        case R_BEGINNING_OF_HISTORY:
-        case R_END_OF_HISTORY:
         case R_HISTORY_TOKEN_SEARCH_BACKWARD:
         case R_HISTORY_TOKEN_SEARCH_FORWARD:
         case R_ACCEPT_AUTOSUGGESTION:
@@ -1160,6 +1158,8 @@ static bool command_ends_paging(wchar_t c, bool focused_on_search_field)
         case R_NULL:
         case R_REPAINT:
         case R_SUPPRESS_AUTOSUGGESTION:
+        case R_BEGINNING_OF_HISTORY:
+        case R_END_OF_HISTORY:
         default:
             return false;
 
@@ -3780,21 +3780,30 @@ const wchar_t *reader_readline(int nchars)
 
             case R_BEGINNING_OF_HISTORY:
             {
-                const editable_line_t *el = &data->command_line;
-                data->history_search = history_search_t(*data->history, el->text, HISTORY_SEARCH_TYPE_PREFIX);
-                data->history_search.go_to_beginning();
-                if (! data->history_search.is_at_end())
+                if (data->is_navigating_pager_contents())
                 {
-                    wcstring new_text = data->history_search.current_string();
-                    set_command_line_and_position(&data->command_line, new_text, new_text.size());
+                        select_completion_in_direction(direction_page_north);
+                } else {
+                    const editable_line_t *el = &data->command_line;
+                    data->history_search = history_search_t(*data->history, el->text, HISTORY_SEARCH_TYPE_PREFIX);
+                    data->history_search.go_to_beginning();
+                    if (! data->history_search.is_at_end())
+                    {
+                        wcstring new_text = data->history_search.current_string();
+                        set_command_line_and_position(&data->command_line, new_text, new_text.size());
+                    }
                 }
-
                 break;
             }
 
             case R_END_OF_HISTORY:
             {
-                data->history_search.go_to_end();
+                if (data->is_navigating_pager_contents())
+                {
+                    select_completion_in_direction(direction_page_south);
+                } else {
+                    data->history_search.go_to_end();
+                }
                 break;
             }
 

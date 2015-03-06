@@ -609,7 +609,7 @@ AC_LINK_IFELSE(
 
 #
 # If we have a fwprintf in libc, test that it actually works. As of
-# March 2006, it is broken under Dragonfly BSD.
+# March 2006, it is broken under DragonFly BSD.
 #
 
 if test "$ac_cv_func_fwprintf" = yes; then

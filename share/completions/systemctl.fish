@@ -44,7 +44,9 @@ end
 # These are useless for the other commands
 # .device in particular creates too much noise
 for t in devices slices scopes swaps
-	complete -f -c systemctl -n "__fish_seen_subcommand_from status" -a '(eval __fish_systemctl_$t)'
+	for command in status show list-dependencies
+		complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a "(eval __fish_systemctl_$t)"
+	end
 end
 
 complete -f -c systemctl -n "__fish_seen_subcommand_from isolate" -a '(__fish_systemctl_targets)' -d 'Target'

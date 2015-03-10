@@ -39,7 +39,7 @@ function __fish_print_help --description "Print help message for the specified f
 		set cols (expr $cols - 4) # leave a bit of space on the right
 		set rLL -rLL=$cols[1]n
 	end
-	set help (nroff -man -t $rLL "$__fish_datadir/man/man1/$item.1" ^/dev/null)
+	set help (nroff -man -c -t $rLL "$__fish_datadir/man/man1/$item.1" ^/dev/null)
 
 	# The original implementation trimmed off the top 5 lines and bottom 3 lines
 	# from the nroff output. Perhaps that's reliable, but the magic numbers make

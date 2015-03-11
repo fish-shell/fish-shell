@@ -249,14 +249,14 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags, parse
 
     case_item = CASE argument_list <TOK_END> job_list
 
-    block_statement = block_header <TOK_END> job_list end_command arguments_or_redirections_list
-    block_header = for_header | while_header | function_header | begin_header
-    for_header = FOR var_name IN argument_list
-    while_header = WHILE job
-    begin_header = BEGIN
+    block_statement = block_header  job_list end_command arguments_or_redirections_list
+    block_header = for_header | while_header  | function_header | begin_header
+    for_header = FOR var_name IN argument_list <TOK_END>
+    while_header = WHILE job <TOK_END>
+    begin_header = BEGIN | BEGIN <TOK_END>
 
 # Functions take arguments, and require at least one (the name). No redirections allowed.
-    function_header = FUNCTION argument argument_list
+    function_header = FUNCTION argument argument_list <TOK_END>
 
 # A boolean statement is AND or OR or NOT
 

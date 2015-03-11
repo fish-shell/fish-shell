@@ -298,7 +298,7 @@ RESOLVE(freestanding_argument_list)
 
 PRODUCTIONS(block_statement) =
 {
-    {symbol_block_header, parse_token_type_end, symbol_job_list, symbol_end_command, symbol_arguments_or_redirections_list}
+    {symbol_block_header, symbol_job_list, symbol_end_command, symbol_arguments_or_redirections_list}
 };
 RESOLVE_ONLY(block_statement)
 
@@ -328,25 +328,35 @@ RESOLVE(block_header)
 
 PRODUCTIONS(for_header) =
 {
-    {KEYWORD(parse_keyword_for), parse_token_type_string, KEYWORD(parse_keyword_in), symbol_argument_list}
+    {KEYWORD(parse_keyword_for), parse_token_type_string, KEYWORD
+        (parse_keyword_in), symbol_argument_list, parse_token_type_end}
 };
 RESOLVE_ONLY(for_header)
 
 PRODUCTIONS(while_header) =
 {
-    {KEYWORD(parse_keyword_while), symbol_job}
+    {KEYWORD(parse_keyword_while), symbol_job, parse_token_type_end}
 };
 RESOLVE_ONLY(while_header)
 
 PRODUCTIONS(begin_header) =
 {
+    {KEYWORD(parse_keyword_begin), parse_token_type_end},
     {KEYWORD(parse_keyword_begin)}
 };
-RESOLVE_ONLY(begin_header)
+RESOLVE(begin_header)
+{
+    switch (token2.type) {
+        case parse_token_type_end:
+            return 0;
+        default:
+            return 1;
+    }
+}
 
 PRODUCTIONS(function_header) =
 {
-    {KEYWORD(parse_keyword_function), symbol_argument, symbol_argument_list}
+    {KEYWORD(parse_keyword_function), symbol_argument, symbol_argument_list, parse_token_type_end}
 };
 RESOLVE_ONLY(function_header)
 

@@ -413,7 +413,7 @@ parse_execution_result_t parse_execution_context_t::run_block_statement(const pa
 
     const parse_node_t &block_header = *get_child(statement, 0, symbol_block_header); //block header
     const parse_node_t &header = *get_child(block_header, 0); //specific header type (e.g. for loop)
-    const parse_node_t &contents = *get_child(statement, 2, symbol_job_list); //block contents
+    const parse_node_t &contents = *get_child(statement, 1, symbol_job_list); //block contents
 
     parse_execution_result_t ret = parse_execution_success;
     switch (header.type)
@@ -428,7 +428,7 @@ parse_execution_result_t parse_execution_context_t::run_block_statement(const pa
 
         case symbol_function_header:
         {
-            const parse_node_t &function_end = *get_child(statement, 3, symbol_end_command); //the 'end' associated with the block
+            const parse_node_t &function_end = *get_child(statement, 2, symbol_end_command); //the 'end' associated with the block
             ret = run_function_statement(header, function_end);
             break;
         }

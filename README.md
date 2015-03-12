@@ -1,6 +1,8 @@
 [fish](http://fishshell.com/) - the friendly interactive shell [![Build Status](https://travis-ci.org/fish-shell/fish-shell.svg?branch=master)](https://travis-ci.org/fish-shell/fish-shell)
 ================================================
 
+[![Join the chat at https://gitter.im/fish-shell/fish-shell](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/fish-shell/fish-shell?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 fish is a smart and user-friendly command line shell for OS X, Linux, and the rest of the family. fish includes features like syntax highlighting, autosuggest-as-you-type, and fancy tab completions that just work, with no configuration required.
 
 For more on fish's design philosophy, see the [design document](http://fishshell.com/docs/current/design.html).

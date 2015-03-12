@@ -2900,7 +2900,11 @@ static void handle_end_loop()
             job_iterator_t jobs;
             while ((j = jobs.next()))
             {
-                if (! job_is_completed(j))
+                /* Send SIGHUP only to foreground processes.
+
+                   See https://github.com/fish-shell/fish-shell/issues/1771
+                 */
+                if (! job_is_completed(j) && job_get_flag(j, JOB_FOREGROUND))
                 {
                     job_signal(j, SIGHUP);
                 }

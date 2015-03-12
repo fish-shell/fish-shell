@@ -3209,7 +3209,11 @@ static void test_new_parser_correctness(void)
         {L"if end", false},
         {L"end", false},
         {L"for i i", false},
-        {L"for i in a b c ; end", true}
+        {L"for i in a b c ; end", true},
+        {L"begin end", true},
+        {L"begin; end", true},
+        {L"begin if true; end; end;", true},
+        {L"begin if true ; echo hi ; end; end", true},
     };
 
     for (size_t i=0; i < sizeof parser_tests / sizeof *parser_tests; i++)

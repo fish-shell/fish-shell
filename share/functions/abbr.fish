@@ -10,9 +10,13 @@ function abbr --description "Manage abbreviations"
 	set -l mode_arg
 	set -l needs_arg no
 	while set -q argv[1]
-		if test $needs_arg = yes
+		if test $needs_arg = single
 			set mode_arg $argv[1]
 			set needs_arg no
+		else if test $needs_arg = coalesce
+			set mode_arg "$argv"
+			set needs_arg no
+			set -e argv
 		else
 			set -l new_mode
 			switch $argv[1]
@@ -21,10 +25,10 @@ function abbr --description "Manage abbreviations"
 				return 0
 			case '-a' '--add'
 				set new_mode add
-				set needs_arg yes
+				set needs_arg coalesce
 			case '-r' '--remove'
 				set new_mode remove
-				set needs_arg yes
+				set needs_arg single
 			case '-l' '--list'
 				set new_mode list
 			case '-s' '--show'
@@ -48,7 +52,7 @@ function abbr --description "Manage abbreviations"
 		end
 		set -e argv[1]
 	end
-	if test $needs_arg = yes
+	if test $needs_arg != no
 		printf ( _ "%s: option requires an argument -- %s\n" ) abbr $mode_flag >&2
 		return 1
 	end

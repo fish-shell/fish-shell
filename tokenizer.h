@@ -103,6 +103,9 @@ struct tokenizer_t
     size_t cached_lineno_offset;
     int cached_lineno_count;
 
+    /* Whether to continue the previous line after the comment */
+    bool continue_line_after_comment;
+
     /**
       Constructor for a tokenizer. b is the string that is to be
       tokenized. It is not copied, and should not be freed by the caller

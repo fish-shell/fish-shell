@@ -94,7 +94,7 @@ int tok_get_error(tokenizer_t *tok)
 }
 
 
-tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig_buff(NULL), last_type(TOK_NONE), last_pos(0), has_next(false), accept_unfinished(false), show_comments(false), last_quote(0), error(0), squash_errors(false), cached_lineno_offset(0), cached_lineno_count(0)
+tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig_buff(NULL), last_type(TOK_NONE), last_pos(0), has_next(false), accept_unfinished(false), show_comments(false), last_quote(0), error(0), squash_errors(false), cached_lineno_offset(0), cached_lineno_count(0), continue_line_after_comment(false)
 {
     CHECK(b,);
 
@@ -587,6 +587,7 @@ void tok_next(tokenizer_t *tok)
         if (tok->buff[0] == L'\\' && tok->buff[1] == L'\n')
         {
             tok->buff += 2;
+            tok->continue_line_after_comment = true;
         }
         else if (my_iswspace(tok->buff[0]))
         {
@@ -599,23 +600,33 @@ void tok_next(tokenizer_t *tok)
     }
 
 
-    if (*tok->buff == L'#')
+    while (*tok->buff == L'#')
     {
         if (tok->show_comments)
         {
             tok->last_pos = tok->buff - tok->orig_buff;
             read_comment(tok);
+
+            if (tok->buff[0] == L'\n' && tok->continue_line_after_comment)
+                tok->buff++;
+
             return;
         }
         else
         {
             while (*(tok->buff)!= L'\n' && *(tok->buff)!= L'\0')
                 tok->buff++;
+
+            if (tok->buff[0] == L'\n' && tok->continue_line_after_comment)
+                tok->buff++;
         }
 
-        while (my_iswspace(*(tok->buff)))
+        while (my_iswspace(*(tok->buff))) {
             tok->buff++;
+        }
     }
+
+    tok->continue_line_after_comment = false;
 
     tok->last_pos = tok->buff - tok->orig_buff;
 

@@ -9,7 +9,7 @@ install:
 script:
   - autoreconf
   - ./configure
-  - make
+  - make -j2
   - sudo make install
   - make test SHOW_INTERACTIVE_LOG=1
 notifications:

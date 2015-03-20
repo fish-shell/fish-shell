@@ -20,5 +20,8 @@ notifications:
       - "%{repository}#%{build_number} (%{commit} on %{branch} by %{author}): %{message} Details at %{build_url}"
     use_notice: true
     skip_join: true
+  webhooks:
+    urls:
+      - https://webhooks.gitter.im/e/61821cec3015bf0f8bb1
 matrix:
   fast_finish: true

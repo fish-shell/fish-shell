@@ -64,7 +64,7 @@ void autoload_t::node_was_evicted(autoload_function_t *node)
     ASSERT_IS_MAIN_THREAD();
 
     // Tell ourselves that the command was removed if it was loaded
-    if (! node->is_loaded)
+    if (node->is_loaded)
         this->command_removed(node->key);
     delete node;
 }

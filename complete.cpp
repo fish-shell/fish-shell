@@ -324,9 +324,9 @@ completion_t &completion_t::operator=(const completion_t &him)
     return *this;
 }
 
-bool completion_t::is_alphabetically_less_than(const completion_t &a, const completion_t &b)
+bool completion_t::is_naturally_less_than(const completion_t &a, const completion_t &b)
 {
-    return a.completion < b.completion;
+    return wcsfilecmp(a.completion.c_str(), b.completion.c_str()) < 0;
 }
 
 bool completion_t::is_alphabetically_equal_to(const completion_t &a, const completion_t &b)

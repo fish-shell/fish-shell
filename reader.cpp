@@ -867,7 +867,7 @@ bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack)
 /** Sorts and remove any duplicate completions in the list. */
 static void sort_and_make_unique(std::vector<completion_t> &l)
 {
-    sort(l.begin(), l.end(), completion_t::is_alphabetically_less_than);
+    sort(l.begin(), l.end(), completion_t::is_naturally_less_than);
     l.erase(std::unique(l.begin(), l.end(), completion_t::is_alphabetically_equal_to), l.end());
 }
 

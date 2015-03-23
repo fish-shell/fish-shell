@@ -3156,8 +3156,15 @@ const wchar_t *reader_readline(int nchars)
                             break;
                     }
 
-                    insert_string(&data->command_line, arr, true);
-
+                    editable_line_t *el = data->active_edit_line();
+                    insert_string(el, arr, true);
+                    
+                    /* End paging upon inserting into the normal command line */
+                    if (el == &data->command_line)
+                    {
+                        clear_pager();
+                    }
+                    last_char = c;
                 }
             }
 

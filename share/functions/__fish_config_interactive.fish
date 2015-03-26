@@ -119,6 +119,18 @@ function __fish_config_interactive -d "Initializations that should be performed 
 				end
 			end
 		end
+
+		# Warn upgrading users that fishd has gone away
+		# https://github.com/fish-shell/fish-shell/issues/1730
+		set -l __fishd_socket_path
+		if set -q XDG_RUNTIME_DIR
+			set __fishd_socket_path "$XDG_RUNTIME_DIR/fishd.socket"
+		else
+			set __fishd_socket_path "/tmp/fish.$USER/fishd.socket"
+		end
+		if test -S "$__fishd_socket_path"
+			printf (_ "One or more instances of an old version of fish is still running.\nUniversal variables will not be shared across instances and changes may be lost.\nAll running instances of old versions of fish should be restarted.\n")
+		end
 	end
 
 	#

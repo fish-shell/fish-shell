@@ -18,7 +18,7 @@ function __fish_complete_python -d 'Make completion for python' --argument-names
     complete -c $cmd -a "(__fish_complete_suffix .py)"
     complete -c $cmd -a '-' -d 'Read program from stdin'
 
-    switch (eval $cmd -V 2>&1 | head -n1 | sed 's/^.*\s\([23]\)\..*/\1/')
+    switch (eval $cmd -V 2>&1 | head -n1 | sed 's/^.*[[:space:]]\([23]\)\..*/\1/')
         case 2
         complete -c $cmd -s 3 -d 'Warn about Python 3.x incompatibilities that 2to3 cannot trivially fix'
         complete -c $cmd -s t --description "Warn on mixed tabs and spaces"

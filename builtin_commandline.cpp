@@ -455,10 +455,10 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
             {
                 /*
                   input_unreadch inserts the specified keypress or
-                  readline function at the top of the stack of unused
+                  readline function at the back of the queue of unused
                   keypresses
                 */
-                input_unreadch(c);
+                input_queue_ch(c);
             }
             else
             {

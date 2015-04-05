@@ -2389,11 +2389,9 @@ static void test_input()
     input_mapping_add(prefix_binding.c_str(), L"up-line");
     input_mapping_add(desired_binding.c_str(), L"down-line");
 
-    /* Push the desired binding on the stack (backwards!) */
-    size_t idx = desired_binding.size();
-    while (idx--)
-    {
-        input_unreadch(desired_binding.at(idx));
+    /* Push the desired binding to the queue */
+    for (size_t idx = 0; idx < desired_binding.size(); idx++) {
+        input_queue_ch(desired_binding.at(idx));
     }
 
     /* Now test */

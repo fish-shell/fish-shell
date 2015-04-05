@@ -38,7 +38,7 @@ Implementation file for the low level input library
 #define WAIT_ON_ESCAPE 10
 
 /** Characters that have been read and returned by the sequence matching code */
-static std::stack<wint_t, std::vector<wint_t> > lookahead_list;
+static std::deque<wint_t> lookahead_list;
 
 /* Queue of pairs of (function pointer, argument) to be invoked. Expected to be mostly empty. */
 typedef std::pair<void (*)(void *), void *> callback_info_t;
@@ -53,19 +53,24 @@ static bool has_lookahead(void)
 
 static wint_t lookahead_pop(void)
 {
-    wint_t result = lookahead_list.top();
-    lookahead_list.pop();
+    wint_t result = lookahead_list.front();
+    lookahead_list.pop_front();
     return result;
 }
 
-static void lookahead_push(wint_t c)
+static void lookahead_push_back(wint_t c)
 {
-    lookahead_list.push(c);
+    lookahead_list.push_back(c);
 }
 
-static wint_t lookahead_top(void)
+static void lookahead_push_front(wint_t c)
 {
-    return lookahead_list.top();
+    lookahead_list.push_front(c);
+}
+
+static wint_t lookahead_front(void)
+{
+    return lookahead_list.front();
 }
 
 /** Callback function for handling interrupts on reading */
@@ -278,7 +283,7 @@ wchar_t input_common_readch(int timed)
     {
         if (!timed)
         {
-            while (has_lookahead() && lookahead_top() == WEOF)
+            while (has_lookahead() && lookahead_front() == WEOF)
                 lookahead_pop();
             if (! has_lookahead())
                 return input_common_readch(0);
@@ -289,9 +294,14 @@ wchar_t input_common_readch(int timed)
 }
 
 
-void input_common_unreadch(wint_t ch)
+void input_common_queue_ch(wint_t ch)
 {
-    lookahead_push(ch);
+    lookahead_push_back(ch);
+}
+
+void input_common_next_ch(wint_t ch)
+{
+    lookahead_push_front(ch);
 }
 
 void input_common_add_callback(void (*callback)(void *), void *arg)

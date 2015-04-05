@@ -583,7 +583,7 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
         wchar_t code = input_function_get_code(command);
         if (code != (wchar_t)-1)
         {
-            input_unreadch(code);
+            input_common_next_ch(code);
         }
         else if (allow_commands)
         {
@@ -596,16 +596,16 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
 
             proc_set_last_status(last_status);
 
-            input_unreadch(R_NULL);
+            input_common_next_ch(R_NULL);
         }
         else
         {
             /* We don't want to run commands yet. Put the characters back and return R_NULL */
             for (wcstring::const_reverse_iterator it = m.seq.rbegin(), end = m.seq.rend(); it != end; ++it)
             {
-                input_unreadch(*it);
+                input_common_next_ch(*it);
             }
-            input_unreadch(R_NULL);
+            input_common_next_ch(R_NULL);
             return; /* skip the input_set_bind_mode */
         }
     }
@@ -648,10 +648,10 @@ static bool input_mapping_is_match(const input_mapping_t &m)
         /*
           Return the read characters
         */
-        input_unreadch(c);
+        input_common_next_ch(c);
         for (k=j-1; k>=0; k--)
         {
-            input_unreadch(m.seq[k]);
+            input_common_next_ch(m.seq[k]);
         }
     }
 
@@ -659,9 +659,9 @@ static bool input_mapping_is_match(const input_mapping_t &m)
 
 }
 
-void input_unreadch(wint_t ch)
+void input_queue_ch(wint_t ch)
 {
-    input_common_unreadch(ch);
+    input_common_queue_ch(ch);
 }
 
 static void input_mapping_execute_matching_or_generic(bool allow_commands)
@@ -679,7 +679,7 @@ static void input_mapping_execute_matching_or_generic(bool allow_commands)
 
         if (m.mode != bind_mode)
         {
-            //debug(0, L"skipping mapping because mode %ls != %ls\n", m.mode.c_str(), input_get_bind_mode());
+            //debug(0, L"skipping mapping because mode %ls != %ls\n", m.mode.c_str(), input_get_bind_mode().c_str());
             continue;
         }
 
@@ -703,7 +703,7 @@ static void input_mapping_execute_matching_or_generic(bool allow_commands)
         //debug(0, L"no generic found, ignoring...");
         wchar_t c = input_common_readch(0);
         if (c == R_EOF)
-            input_common_unreadch(c);
+            input_common_next_ch(c);
     }
 }
 
@@ -745,7 +745,7 @@ wint_t input_readch(bool allow_commands)
                     else
                     {
                         while ((c = input_common_readch(0)) && c >= R_MIN && c <= R_MAX);
-                        input_unreadch(c);
+                        input_common_next_ch(c);
                         return input_readch();
                     }
                 }
@@ -757,7 +757,7 @@ wint_t input_readch(bool allow_commands)
         }
         else
         {
-            input_unreadch(c);
+            input_common_next_ch(c);
             input_mapping_execute_matching_or_generic(allow_commands);
             // regarding allow_commands, we're in a loop, but if a fish command
             // is executed, R_NULL is unread, so the next pass through the loop

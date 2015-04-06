@@ -150,6 +150,11 @@ echo "/bin/echo pipe 12 <&12 12<&-" | source 12<&0
 echo "Checking for infinite loops in no-execute"
 echo "while true; end" | ../fish --no-execute
 
+# Comments allowed in between lines (#1987)
+echo before comment \
+  # comment
+  after comment
+
 function always_fails
     if true
         return 1

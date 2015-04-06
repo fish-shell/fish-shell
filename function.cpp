@@ -92,7 +92,7 @@ static int load(const wcstring &name)
     bool was_autoload = is_autoload;
     int res;
 
-    bool no_more_autoload = function_tombstones.count(name) == 1;
+    bool no_more_autoload = function_tombstones.count(name) > 0;
     if (no_more_autoload)
         return 0;
 
@@ -239,6 +239,7 @@ int function_exists_no_autoload(const wcstring &cmd, const env_vars_snapshot_t &
 
 static bool function_remove_ignore_autoload(const wcstring &name)
 {
+    // Note: the lock may be held at this point, but is recursive
     scoped_lock lock(functions_lock);
 
     function_map_t::iterator iter = loaded_functions.find(name);

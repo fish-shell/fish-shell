@@ -341,18 +341,9 @@ RESOLVE_ONLY(while_header)
 
 PRODUCTIONS(begin_header) =
 {
-    {KEYWORD(parse_keyword_begin), parse_token_type_end},
     {KEYWORD(parse_keyword_begin)}
 };
-RESOLVE(begin_header)
-{
-    switch (token2.type) {
-        case parse_token_type_end:
-            return 0;
-        default:
-            return 1;
-    }
-}
+RESOLVE_ONLY(begin_header)
 
 PRODUCTIONS(function_header) =
 {

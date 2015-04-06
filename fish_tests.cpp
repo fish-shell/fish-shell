@@ -891,7 +891,9 @@ static void test_indents()
 
     const indent_component_t components7[] =
     {
-        {L"begin; end", 0},
+        {L"begin", 0},
+        {L";", 1},
+        {L"end", 0},
         {L"foo", 0},
         {L"", 0},
         {NULL, -1}

@@ -32,7 +32,6 @@ function funcsave --description "Save the current definition of all specified fu
 	for i in $argv
 		if functions -q -- $i
 			functions -- $i > $configdir/fish/functions/$i.fish
-			functions -e -- $i
 		else
 			printf (_ "%s: Unknown function '%s'\n") funcsave $i
 			set res 1

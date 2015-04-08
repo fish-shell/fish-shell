@@ -66,12 +66,12 @@ function_autoload_t::function_autoload_t() : autoload_t(L"fish_function_path", N
 {
 }
 
-static bool function_remove_ignore_autoload(const wcstring &name);
+static bool function_remove_ignore_autoload(const wcstring &name, bool tombstone = true);
 
 /** Callback when an autoloaded function is removed */
 void function_autoload_t::command_removed(const wcstring &cmd)
 {
-    function_remove_ignore_autoload(cmd);
+    function_remove_ignore_autoload(cmd, false);
 }
 
 /**
@@ -237,7 +237,7 @@ int function_exists_no_autoload(const wcstring &cmd, const env_vars_snapshot_t &
     return loaded_functions.find(cmd) != loaded_functions.end() || function_autoloader.can_load(cmd, vars);
 }
 
-static bool function_remove_ignore_autoload(const wcstring &name)
+static bool function_remove_ignore_autoload(const wcstring &name, bool tombstone)
 {
     // Note: the lock may be held at this point, but is recursive
     scoped_lock lock(functions_lock);
@@ -250,7 +250,7 @@ static bool function_remove_ignore_autoload(const wcstring &name)
 
     // removing an auto-loaded function.  prevent it from being
     // auto-reloaded.
-    if (iter->second.is_autoload)
+    if (iter->second.is_autoload && tombstone)
         function_tombstones.insert(name);
 
     loaded_functions.erase(iter);

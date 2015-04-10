@@ -428,6 +428,7 @@ static void setup_delimit_targets()
         env_set(L"fish_export_colons", L"PATH" ARRAY_SEP_STR L"CDPATH" ARRAY_SEP_STR L"MANPATH", ENV_GLOBAL | ENV_EXPORT);
     }
 }
+
 /* Here is the whitelist of variables that we colon-delimit, both incoming from the environment and outgoing back to it. This is deliberately very short - we don't want to add language-specific values like CLASSPATH. */
 static bool variable_is_colon_delimited_array(const wcstring &str)
 {

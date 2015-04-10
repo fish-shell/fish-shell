@@ -20,7 +20,7 @@ function __fish_apt_use_package --description 'Test if apt command should have p
 	return 1
 end
 
-function apt_subcommand 
+function __fish_apt_subcommand 
     set subcommand $argv[1]; set -e argv[1]
     complete -f -c apt -n '__fish_apt_no_subcommand' -a $subcommand $argv
 end
@@ -37,31 +37,31 @@ complete -f -c apt -s c -l config-file  --description 'Configuration file'
 complete -f -c apt -s t                 --description 'Target release'
 
 # List
-apt_subcommand list                  --description 'List packages'
-apt_subcommand list -l installed     --description 'Installed packages'
-apt_subcommand list -l upgradable    --description 'Upgradable packages'
-apt_subcommand list -l all-versions  --description 'Show all versions of any package'
+__fish_apt_subcommand list                  --description 'List packages'
+__fish_apt_subcommand list -l installed     --description 'Installed packages'
+__fish_apt_subcommand list -l upgradable    --description 'Upgradable packages'
+__fish_apt_subcommand list -l all-versions  --description 'Show all versions of any package'
 
 # Search
-apt_subcommand search -r        --description 'Search for packages'
+__fish_apt_subcommand search -r        --description 'Search for packages'
 
 # Search
-apt_subcommand show -r          --description 'Show package information'
+__fish_apt_subcommand show -r          --description 'Show package information'
 
 # Install
-apt_subcommand install -r       --description 'Install packages'
+__fish_apt_subcommand install -r       --description 'Install packages'
 
 # Remove
-apt_subcommand remove -r        --description 'Remove packages'
+__fish_apt_subcommand remove -r        --description 'Remove packages'
 
 # Edit sources
-apt_subcommand edit-sources     --description 'Edit sources list'
+__fish_apt_subcommand edit-sources     --description 'Edit sources list'
 
 # Update
-apt_subcommand update -x        --description 'Update package list'
+__fish_apt_subcommand update -x        --description 'Update package list'
 
 # Upgrade
-apt_subcommand upgrade -r       --description 'Upgrade packages'
+__fish_apt_subcommand upgrade -r       --description 'Upgrade packages'
 
 # Full Upgrade
-apt_subcommand full-upgrade -r  --description 'Upgrade packages, removing others when needed'
+__fish_apt_subcommand full-upgrade -r  --description 'Upgrade packages, removing others when needed'

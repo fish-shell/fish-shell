@@ -417,10 +417,28 @@ wcstring env_get_pwd_slash(void)
     return pwd;
 }
 
+/**
+ * Set up the environment variable that describes which arrays should be exported using `:` as the RS instead of `\xE1`
+ */
+static void setup_delimit_targets() 
+{
+    /* Set up the colon-delimiter export list */
+    if (env_get_string(L"fish_export_colons").missing_or_empty())
+    {
+        env_set(L"fish_export_colons", L"PATH" ARRAY_SEP_STR L"CDPATH" ARRAY_SEP_STR L"MANPATH", ENV_GLOBAL | ENV_EXPORT);
+    }
+}
 /* Here is the whitelist of variables that we colon-delimit, both incoming from the environment and outgoing back to it. This is deliberately very short - we don't want to add language-specific values like CLASSPATH. */
 static bool variable_is_colon_delimited_array(const wcstring &str)
 {
-    return contains(str, L"PATH", L"MANPATH", L"CDPATH");
+    const env_var_t env_arrays = env_get_string(L"fish_export_colons");
+    wcstring_list_t env_arrays_list;
+    if(env_arrays.missing_or_empty()) setup_delimit_targets(); // XXX should never be possible
+
+    tokenize_variable_array(env_arrays, env_arrays_list);
+   
+    return list_contains_string(env_arrays_list, str);
+
 }
 
 void env_init(const struct config_paths_t *paths /* or NULL */)
@@ -556,6 +574,9 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
         }
         free(unam_narrow);
     }
+
+    /* Set up the list of arrays to export as colon-delimited lists */
+    setup_delimit_targets();
 
     /* Set PWD */
     env_set_pwd();

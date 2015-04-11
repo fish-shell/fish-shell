@@ -33,6 +33,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <termios.h>
 #include <fcntl.h>
 #include <sys/param.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
@@ -231,6 +235,101 @@ static void source_config_in_directory(const wcstring &dir)
     parser.set_is_within_fish_initialization(true);
     parser.eval(cmd, io_chain_t(), TOP);
     parser.set_is_within_fish_initialization(false);
+}
+
+static int try_connect_socket(std::string &name)
+{
+    int s, r, ret = -1;
+
+    /** Connect to a DGRAM socket rather than the expected STREAM.
+      This avoids any notification to a remote socket that we have connected,
+      preventing any surprising behaviour.
+      If the connection fails with EPROTOTYPE, the connection is probably a
+      STREAM; if it succeeds or fails any other way, there is no cause for
+      alarm.
+      With thanks to Andrew Lutomirski <github.com/amluto>
+    */
+
+    if ((s = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1)
+    {
+        wperror(L"socket");
+        return -1;
+    }
+
+    debug(3, L"Connect to socket %s at fd %d", name.c_str(), s);
+
+    struct sockaddr_un local = {};
+    local.sun_family = AF_UNIX;
+    strncpy(local.sun_path, name.c_str(), (sizeof local.sun_path) - 1);
+
+    r = connect(s, (struct sockaddr *)&local, sizeof local);
+
+    if (r == -1 && errno == EPROTOTYPE)
+    {
+        ret = 0;
+    }
+
+    close(s);
+    return ret;
+}
+
+/**
+   Check for a running fishd from old versions and warn about not being able
+   to share variables.
+   https://github.com/fish-shell/fish-shell/issues/1730
+*/
+static void check_running_fishd()
+{
+    /* There are two paths to check:
+       $FISHD_SOCKET_DIR/fishd.socket.$USER or /tmp/fishd.socket.$USER
+         - referred to as the "old socket"
+       $XDG_RUNTIME_DIR/fishd.socket or /tmp/fish.$USER/fishd.socket
+         - referred to as the "new socket"
+       All existing versions of fish attempt to create the old socket, but
+       failure in newer versions is not treated as critical, so both need
+       to be checked. */
+    const char *uname = getenv("USER");
+    if (uname == NULL)
+    {
+        const struct passwd *pw = getpwuid(getuid());
+        uname = pw->pw_name;
+    }
+
+    const char *dir_old_socket = getenv("FISHD_SOCKET_DIR");
+    std::string path_old_socket;
+
+    if (dir_old_socket == NULL)
+    {
+        path_old_socket = "/tmp/";
+    }
+    else
+    {
+        path_old_socket.append(dir_old_socket);
+    }
+
+    path_old_socket.append("fishd.socket.");
+    path_old_socket.append(uname);
+
+    const char *dir_new_socket = getenv("XDG_RUNTIME_DIR");
+    std::string path_new_socket;
+    if (dir_new_socket == NULL)
+    {
+        path_new_socket = "/tmp/fish.";
+        path_new_socket.append(uname);
+        path_new_socket.push_back('/');
+    }
+    else
+    {
+        path_new_socket.append(dir_new_socket);
+    }
+
+    path_new_socket.append("fishd.socket");
+
+    if (try_connect_socket(path_old_socket) == 0 || try_connect_socket(path_new_socket) == 0)
+    {
+        debug(1, _(L"Old versions of fish appear to be running. You will not be able to share variable values between old and new fish sessions. For best results, restart all running instances of fish."));
+    }
+
 }
 
 /**
@@ -467,6 +566,8 @@ int main(int argc, char **argv)
         {
             if (my_optind == argc)
             {
+                // Interactive mode
+                check_running_fishd();
                 res = reader_read(STDIN_FILENO, empty_ios);
             }
             else

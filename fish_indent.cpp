@@ -105,11 +105,15 @@ static void prettify_node_recursive(const wcstring &source, const parse_node_tre
         }
     }
 
+    static bool after_begin = false;
     if (node_type == parse_token_type_end)
     {
-        /* Newline */
-        out_result->push_back(L'\n');
-        *has_new_line = true;
+        if (!after_begin) {
+            /* Newline */
+            out_result->push_back(L'\n');
+            *has_new_line = true;
+        }
+        after_begin = false;
     }
     else if ((node_type >= FIRST_PARSE_TOKEN_TYPE && node_type <= LAST_PARSE_TOKEN_TYPE) || node_type == parse_special_type_parse_error)
     {
@@ -118,7 +122,16 @@ static void prettify_node_recursive(const wcstring &source, const parse_node_tre
             /* Some type representing a particular token */
             append_whitespace(node_indent, do_indent, *has_new_line, out_result);
             out_result->append(source, node.source_start, node.source_length);
-            *has_new_line = false;
+            if (node_type == parse_token_type_string &&
+                !wcsncmp(source.c_str() + node.source_start, L"begin",
+                         node.source_length)) {
+                out_result->push_back(L'\n');
+                *has_new_line = true;
+                after_begin = true;
+            } else {
+                *has_new_line = false;
+                after_begin = false;
+            }
         }
     }
 

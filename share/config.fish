@@ -97,10 +97,6 @@ set -xg PATH $__fish_tmp_path
 set -e __fish_tmp_path
 functions -e __fish_load_path_helper_paths
 
-# Source any files matching /etc/profile.d/*.fish
-for file in /etc/profile.d/*.fish
-	source $file
-end
 
 # Add a handler for when fish_user_path changes, so we can apply the same changes to PATH
 # Invoke it immediately to apply the current value of fish_user_path

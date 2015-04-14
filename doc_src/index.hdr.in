@@ -1016,14 +1016,9 @@ Note that functions cannot be started in the background. Functions that are stop
 
 \section initialization Initialization files
 
-On startup, `fish` evaluates the files listed below, in order. Some of the exact paths may be different depending on how fish has been installed.
+On startup, `fish` evaluates the files `/usr/share/fish/config.fish` (Or `/usr/local/fish...` if you installed fish in `/usr/local`), `/etc/fish/config.fish` (Or `~/etc/fish/...` if you installed fish in your home directory) and `~/.config/fish/config.fish` (Or any other directory specified by the `$XDG_CONFIG_HOME` variable), in that order.
 
-- `/usr/share/fish/config.fish`, which sets up the default behaviour of `fish`. Editing this file is discouraged.
-- `/etc/profile.d/*.fish` - all files matching this pattern are evaluated. Third-party packages should install snippets as separate files in this directory.
-- `/etc/fish/config.fish`, which contains system-wide configuration.
-- `$XDG_CONFIG_HOME/fish/config.fish` (usually `~/.config/fish/config.fish`), which contains configuration specific to your user account.
-
-If you want to run a command only on starting an interactive shell, use the exit status of the command `status --is-interactive` to determine if the shell is interactive. If you want to run a command only when using a login shell, use `status --is-login` instead.
+The first file should not be directly edited, the second one is meant for systemwide configuration and the last one is meant for user configuration. If you want to run a command only on starting an interactive shell, use the exit status of the command `status --is-interactive` to determine if the shell is interactive. If you want to run a command only when using a login shell, use `status --is-login` instead.
 
 Examples:
 

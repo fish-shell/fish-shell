@@ -562,52 +562,67 @@ void input_function_push_args(int code)
 */
 static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
 {
-    /* By default input functions always succeed */
-    input_function_status = true;
+    /* has_functions: there are functions that need to be put on the input
+       queue
+       has_commands: there are shell commands that need to be evaluated */
+    bool has_commands = false, has_functions = false;
 
-    size_t idx = m.commands.size();
-    while (idx--)
+    for (wcstring_list_t::const_iterator it = m.commands.begin(), end = m.commands.end(); it != end; it++)
     {
-        wcstring command = m.commands.at(idx);
-        wchar_t code = input_function_get_code(command);
-        if (code != (wchar_t)-1)
-        {
-            input_function_push_args(code);
-        }
+        if (input_function_get_code(*it) != -1)
+            has_functions = true;
+        else
+            has_commands = true;
     }
 
-    idx = m.commands.size();
-    while (idx--)
+    /* !has_functions && !has_commands: only set bind mode */
+    if (!has_commands && !has_functions)
     {
-        wcstring command = m.commands.at(idx);
-        wchar_t code = input_function_get_code(command);
-        if (code != (wchar_t)-1)
+        input_set_bind_mode(m.sets_mode);
+        return;
+    }
+
+    if (!allow_commands)
+    {
+        /* We don't want to run commands yet. Put the characters back and return
+           R_NULL */
+        for (wcstring::const_reverse_iterator it = m.seq.rbegin(), end = m.seq.rend(); it != end; ++it)
         {
+            input_common_next_ch(*it);
+        }
+        input_common_next_ch(R_NULL);
+        return; /* skip the input_set_bind_mode */
+    }
+    else if (has_functions && !has_commands)
+    {
+        /* functions are added at the head of the input queue */
+        for (wcstring_list_t::const_reverse_iterator it = m.commands.rbegin(), end = m.commands.rend (); it != end; it++)
+        {
+            wchar_t code = input_function_get_code(*it);
+            input_function_push_args(code);
             input_common_next_ch(code);
         }
-        else if (allow_commands)
-        {
-            /*
-             This key sequence is bound to a command, which
-             is sent to the parser for evaluation.
-             */
-            int last_status = proc_get_last_status();
-            parser_t::principal_parser().eval(command.c_str(), io_chain_t(), TOP);
+    }
+    else if (has_commands && !has_functions)
+    {
+        /* Execute all commands.
 
-            proc_set_last_status(last_status);
-
-            input_common_next_ch(R_NULL);
-        }
-        else
+           FIXME(snnw): if commands add stuff to input queue (e.g. commandline
+           -f execute), we won't see that until all other commands have also
+           been run. */
+        int last_status = proc_get_last_status();
+        for (wcstring_list_t::const_iterator it = m.commands.begin(), end = m.commands.end(); it != end; it++)
         {
-            /* We don't want to run commands yet. Put the characters back and return R_NULL */
-            for (wcstring::const_reverse_iterator it = m.seq.rbegin(), end = m.seq.rend(); it != end; ++it)
-            {
-                input_common_next_ch(*it);
-            }
-            input_common_next_ch(R_NULL);
-            return; /* skip the input_set_bind_mode */
+            parser_t::principal_parser().eval(it->c_str(), io_chain_t(), TOP);
         }
+        proc_set_last_status(last_status);
+        input_common_next_ch(R_NULL);
+    }
+    else
+    {
+        /* invalid binding, mixed commands and functions.  We would need to
+           execute these one by one. */
+        input_common_next_ch(R_NULL);
     }
 
     input_set_bind_mode(m.sets_mode);

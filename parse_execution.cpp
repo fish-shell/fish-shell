@@ -768,7 +768,7 @@ parse_execution_result_t parse_execution_context_t::report_unmatched_wildcard_er
 }
 
 /* Handle the case of command not found */
-void parse_execution_context_t::handle_command_not_found(const wcstring &cmd_str, const parse_node_t &statement_node, int err_code)
+parse_execution_result_t parse_execution_context_t::handle_command_not_found(const wcstring &cmd_str, const parse_node_t &statement_node, int err_code)
 {
     assert(statement_node.type == symbol_plain_statement);
 
@@ -857,7 +857,17 @@ void parse_execution_context_t::handle_command_not_found(const wcstring &cmd_str
          */
 
         wcstring_list_t event_args;
-        event_args.push_back(cmd_str);
+        {
+            parse_execution_result_t arg_result = this->determine_arguments(statement_node, &event_args);
+
+            if (arg_result != parse_execution_success)
+            {
+                return arg_result;
+            }
+
+            event_args.insert(event_args.begin(), cmd_str);
+        }
+
         event_fire_generic(L"fish_command_not_found", &event_args);
 
         /* Here we want to report an error (so it shows a backtrace), but with no text */
@@ -866,6 +876,8 @@ void parse_execution_context_t::handle_command_not_found(const wcstring &cmd_str
 
     /* Set the last proc status appropriately */
     proc_set_last_status(err_code==ENOENT?STATUS_UNKNOWN_COMMAND:STATUS_NOT_EXECUTABLE);
+
+    return parse_execution_errored;
 }
 
 /* Creates a 'normal' (non-block) process */
@@ -926,14 +938,13 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(job_t
         if (! has_command && ! use_implicit_cd)
         {
             /* No command */
-            this->handle_command_not_found(cmd, statement, no_cmd_err_code);
-            return parse_execution_errored;
+            return this->handle_command_not_found(cmd, statement, no_cmd_err_code);
         }
     }
 
     /* The argument list and set of IO redirections that we will construct for the process */
-    wcstring_list_t argument_list;
     io_chain_t process_io_chain;
+    wcstring_list_t argument_list;
     if (use_implicit_cd)
     {
         /* Implicit cd is simple */

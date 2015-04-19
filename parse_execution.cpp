@@ -957,12 +957,13 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(job_t
     }
     else
     {
-        /* Form the list of arguments. The command is the first argument. TODO: count hack, where we treat 'count --help' as different from 'count $foo' that expands to 'count --help'. fish 1.x never successfully did this, but it tried to! */
         parse_execution_result_t arg_result = this->determine_arguments(statement, &argument_list);
-        if (arg_result != parse_execution_success)
+
+        if(arg_result != parse_execution_success)
         {
             return arg_result;
         }
+
         argument_list.insert(argument_list.begin(), cmd);
 
         /* The set of IO redirections that we construct for the process */

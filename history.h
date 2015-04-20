@@ -61,7 +61,7 @@ private:
 
     /** Paths that we require to be valid for this item to be autosuggested */
     path_list_t required_paths;
-
+    
 public:
     const wcstring &str() const
     {
@@ -115,8 +115,8 @@ private:
     /** Private creator */
     history_t(const wcstring &pname);
 
-    /** Privately add an item */
-    void add(const history_item_t &item);
+    /** Privately add an item. If pending, the item will not be returned by history searches until a call to resolve_pending. */
+    void add(const history_item_t &item, bool pending = false);
 
     /** Destructor */
     ~history_t();
@@ -136,6 +136,9 @@ private:
     /** The index of the first new item that we have not yet written. */
     size_t first_unwritten_new_item_index;
 
+    /** Whether we have a pending item. If so, the most recently added item is ignored by item_at_index. */
+    bool has_pending_item;
+    
     /** Whether we should disable saving to the file for a time */
     uint32_t disable_automatic_save_counter;
 
@@ -208,14 +211,17 @@ public:
     /** Determines whether the history is empty. Unfortunately this cannot be const, since it may require populating the history. */
     bool is_empty(void);
 
-    /** Add a new history item to the end */
-    void add(const wcstring &str, history_identifier_t ident = 0);
+    /** Add a new history item to the end. If pending is set, the item will not be returned by item_at_index until a call to resolve_pending(). Pending items are tracked with an offset into the array of new items, so adding a non-pending item has the effect of resolving all pending items. */
+    void add(const wcstring &str, history_identifier_t ident = 0, bool pending = false);
 
     /** Remove a history item */
     void remove(const wcstring &str);
 
-    /** Add a new history item to the end */
-    void add_with_file_detection(const wcstring &str);
+    /** Add a new pending history item to the end, and then begin file detection on the items to determine which arguments are paths */
+    void add_pending_with_file_detection(const wcstring &str);
+    
+    /** Resolves any pending history items, so that they may be returned in history searches. */
+    void resolve_pending();
 
     /** Saves history */
     void save();

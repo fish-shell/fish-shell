@@ -2982,6 +2982,11 @@ static int read_i(void)
             event_fire_generic(L"fish_preexec", &argv);
             reader_run_command(parser, command);
             event_fire_generic(L"fish_postexec", &argv);
+            /* Allow any pending history items to be returned in the history array. */
+            if (data->history)
+            {
+                data->history->resolve_pending();
+            }
             if (data->end_loop)
             {
                 handle_end_loop();
@@ -3592,7 +3597,7 @@ const wchar_t *reader_readline(int nchars)
                         const editable_line_t *el = &data->command_line;
                         if (data->history != NULL && ! el->empty() && el->text.at(0) != L' ')
                         {
-                            data->history->add_with_file_detection(el->text);
+                            data->history->add_pending_with_file_detection(el->text);
                         }
                         finished=1;
                         update_buff_pos(&data->command_line, data->command_line.size());

@@ -47,11 +47,18 @@ void input_common_destroy();
 wchar_t input_common_readch(int timed);
 
 /**
-   Push a character or a readline function onto the stack of unread
+   Enqueue a character or a readline function to the queue of unread
    characters that input_readch will return before actually reading from fd
    0.
 */
-void input_common_unreadch(wint_t ch);
+void input_common_queue_ch(wint_t ch);
+
+/**
+   Add a character or a readline function to the front of the queue of unread
+   characters.  This will be the first character returned by input_readch
+   (unless this function is called more than once).
+*/
+void input_common_next_ch(wint_t ch);
 
 /** Adds a callback to be invoked at the next turn of the "event loop." The callback function will be invoked and passed arg. */
 void input_common_add_callback(void (*callback)(void *), void *arg);

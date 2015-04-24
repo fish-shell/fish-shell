@@ -212,44 +212,44 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		# also check if there is command-not-found command.
 		if begin; test -f /etc/SuSE-release; and type -q -p command-not-found; end
 			function __fish_command_not_found_handler --on-event fish_command_not_found
-				/usr/bin/command-not-found $argv
+				/usr/bin/command-not-found $argv[1]
 			end
 		# Check for Fedora's handler
 		else if test -f /usr/libexec/pk-command-not-found
 			function __fish_command_not_found_handler --on-event fish_command_not_found
-				/usr/libexec/pk-command-not-found $argv
+				/usr/libexec/pk-command-not-found $argv[1]
 			end
 		# Check in /usr/lib, this is where modern Ubuntus place this command
 		else if test -f /usr/lib/command-not-found
 			function __fish_command_not_found_handler --on-event fish_command_not_found
-				/usr/lib/command-not-found -- $argv
+				/usr/lib/command-not-found -- $argv[1]
 			end
 		# Check for NixOS handler
 		else if test -f /run/current-system/sw/bin/command-not-found
 			function __fish_command_not_found_handler --on-event fish_command_not_found
-				/run/current-system/sw/bin/command-not-found $argv
+				/run/current-system/sw/bin/command-not-found $argv[1]
 			end
 		# Ubuntu Feisty places this command in the regular path instead
 		else if type -q -p command-not-found
 			function __fish_command_not_found_handler --on-event fish_command_not_found
-				command-not-found -- $argv
+				command-not-found -- $argv[1]
 			end
 		# pkgfile is an optional, but official, package on Arch Linux
 		# it ships with example handlers for bash and zsh, so we'll follow that format
 		else if type -p -q pkgfile
 			function __fish_command_not_found_handler --on-event fish_command_not_found
-				set -l __packages (pkgfile --binaries --verbose -- $argv ^/dev/null)
+				set -l __packages (pkgfile --binaries --verbose -- $argv[1] ^/dev/null)
 				if test $status -eq 0
-					printf "%s may be found in the following packages:\n" "$argv"
+					printf "%s may be found in the following packages:\n" "$argv[1]"
 					printf "  %s\n" $__packages
 				else
-					__fish_default_command_not_found_handler $argv
+					__fish_default_command_not_found_handler $argv[1]
 				end
 			end
 		# Use standard fish command not found handler otherwise
 		else
 			function __fish_command_not_found_handler --on-event fish_command_not_found
-				__fish_default_command_not_found_handler $argv
+				__fish_default_command_not_found_handler $argv[1]
 			end
 		end
 		__fish_command_not_found_handler $argv

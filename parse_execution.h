@@ -72,7 +72,7 @@ private:
     parse_execution_result_t report_unmatched_wildcard_error(const parse_node_t &unmatched_wildcard);
 
     /* Command not found support */
-    void handle_command_not_found(const wcstring &cmd, const parse_node_t &statement_node, int err_code);
+    parse_execution_result_t handle_command_not_found(const wcstring &cmd, const parse_node_t &statement_node, int err_code);
 
     /* Utilities */
     wcstring get_source(const parse_node_t &node) const;

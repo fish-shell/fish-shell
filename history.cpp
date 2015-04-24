@@ -538,6 +538,7 @@ history_t & history_t::history_with_name(const wcstring &name)
 history_t::history_t(const wcstring &pname) :
     name(pname),
     first_unwritten_new_item_index(0),
+    has_pending_item(false),
     disable_automatic_save_counter(0),
     mmap_start(NULL),
     mmap_length(0),
@@ -555,19 +556,21 @@ history_t::~history_t()
     pthread_mutex_destroy(&lock);
 }
 
-void history_t::add(const history_item_t &item)
+void history_t::add(const history_item_t &item, bool pending)
 {
     scoped_lock locker(lock);
 
     /* Try merging with the last item */
     if (! new_items.empty() && new_items.back().merge(item))
     {
-        /* We merged, so we don't have to add anything */
+        /* We merged, so we don't have to add anything. Maybe this item was pending, but it just got merged with an item that is not pending, so pending just becomes false. */
+        this->has_pending_item = false;
     }
     else
     {
         /* We have to add a new item */
         new_items.push_back(item);
+        this->has_pending_item = pending;
         save_internal_unless_disabled();
     }
 }
@@ -609,7 +612,7 @@ void history_t::save_internal_unless_disabled()
     countdown_to_vacuum--;
 }
 
-void history_t::add(const wcstring &str, history_identifier_t ident)
+void history_t::add(const wcstring &str, history_identifier_t ident, bool pending)
 {
     time_t when = time(NULL);
     /* Big hack: do not allow timestamps equal to our boundary date. This is because we include items whose timestamps are equal to our boundary when reading old history, so we can catch "just closed" items. But this means that we may interpret our own items, that we just wrote, as old items, if we wrote them in the same second as our birthdate.
@@ -619,7 +622,7 @@ void history_t::add(const wcstring &str, history_identifier_t ident)
         when++;
     }
 
-    this->add(history_item_t(str, when, ident));
+    this->add(history_item_t(str, when, ident), pending);
 }
 
 void history_t::remove(const wcstring &str)
@@ -675,9 +678,19 @@ void history_t::get_string_representation(wcstring *result, const wcstring &sepa
 
     std::set<wcstring> seen;
 
+    /* If we have a pending item, we skip the first encountered (i.e. last) new item */
+    bool next_is_pending = this->has_pending_item;
+
     /* Append new items. Note that in principle we could use const_reverse_iterator, but we do not because reverse_iterator is not convertible to const_reverse_iterator ( http://github.com/fish-shell/fish-shell/issues/431 ) */
     for (history_item_list_t::reverse_iterator iter=new_items.rbegin(); iter < new_items.rend(); ++iter)
     {
+        /* Skip a pending item if we have one */
+        if (next_is_pending)
+        {
+            next_is_pending = false;
+            continue;
+        }
+
         /* Skip duplicates */
         if (! seen.insert(iter->str()).second)
             continue;
@@ -714,15 +727,21 @@ history_item_t history_t::item_at_index(size_t idx)
     assert(idx > 0);
     idx--;
 
-    /* idx=0 corresponds to last item in new_items */
-    size_t new_item_count = new_items.size();
-    if (idx < new_item_count)
+    /* Determine how many "resolved" (non-pending) items we have. We can have at most one pending item, and it's always the last one. */
+    size_t resolved_new_item_count = new_items.size();
+    if (this->has_pending_item && resolved_new_item_count > 0)
     {
-        return new_items.at(new_item_count - idx - 1);
+        resolved_new_item_count -= 1;
+    }
+    
+    /* idx=0 corresponds to the last resolved item */
+    if (idx < resolved_new_item_count)
+    {
+        return new_items.at(resolved_new_item_count - idx - 1);
     }
 
     /* Now look in our old items */
-    idx -= new_item_count;
+    idx -= resolved_new_item_count;
     load_old_if_needed();
     size_t old_item_count = old_item_offsets.size();
     if (idx < old_item_count)
@@ -1495,7 +1514,7 @@ bool history_t::save_internal_via_appending()
            Periodically we "clean up" the file by rewriting it, so that most of the time it doesn't have duplicates, although we don't yet sort by timestamp (the timestamp isn't really used for much anyways).
         */
 
-        /* So far so good. Write all items at or after first_unwritten_new_item_index */
+        /* So far so good. Write all items at or after first_unwritten_new_item_index. Note that we write even a pending item - pending items are ignored by history within the command itself, but should still be written to the file. */
 
         bool errored = false;
         history_output_buffer_t buffer;
@@ -1800,7 +1819,7 @@ static bool string_could_be_path(const wcstring &potential_path)
     return true;
 }
 
-void history_t::add_with_file_detection(const wcstring &str)
+void history_t::add_pending_with_file_detection(const wcstring &str)
 {
     ASSERT_IS_MAIN_THREAD();
     path_list_t potential_paths;
@@ -1865,12 +1884,19 @@ void history_t::add_with_file_detection(const wcstring &str)
         iothread_perform(threaded_perform_file_detection, perform_file_detection_done, context);
     }
 
-    /* Actually add the item to the history */
-    this->add(str, identifier);
+    /* Actually add the item to the history. */
+    this->add(str, identifier, true /* pending */);
 
     /* If we think we're about to exit, save immediately, regardless of any disabling. This may cause us to lose file hinting for some commands, but it beats losing history items */
     if (impending_exit)
     {
         this->save();
     }
+}
+
+/* Very simple, just mark that we have no more pending items */
+void history_t::resolve_pending()
+{
+    scoped_lock locker(lock);
+    this->has_pending_item = false;
 }

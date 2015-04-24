@@ -112,11 +112,11 @@ void input_destroy();
 wint_t input_readch(bool allow_commands = true);
 
 /**
-   Push a character or a readline function onto the stack of unread
+   Enqueue a character or a readline function to the queue of unread
    characters that input_readch will return before actually reading from fd
    0.
  */
-void input_unreadch(wint_t ch);
+void input_queue_ch(wint_t ch);
 
 
 /**

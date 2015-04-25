@@ -567,7 +567,7 @@ See the documentation for <a href="commands.html#funced">funced</a> and <a href=
 
 \section tut-universal Universal Variables
 
-A universal variable is a variable whose value is shared across all instances of `fish`, now and in the future - even after a reboot. You can make a variable universal with `set -U`:
+A universal variable is a variable whose value is shared across all instances of `fish`, now and in the future – even after a reboot. You can make a variable universal with `set -U`:
 
 \fish{cli-dark}
 >_ set -U EDITOR vim

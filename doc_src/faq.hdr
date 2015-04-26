@@ -115,7 +115,7 @@ Use the <a href="commands.html#fish_update_completions">`fish_update_completions
 <hr>
 \section faq-cwd-symlink Why does cd, $PWD and and various fish commands always resolve symlinked directories to their canonical path?
 
-<i>For example if `~/images` is a symlink to `~/Documents/Images`, if I write '`cd images`', my prompt will say `~/D/Images`, not `~/images`.</i>
+<i>For example if `~/images` is a symlink to `~/Documents/Images`, if I write '`cd images`', my prompt will say `~/Documents/Images`, not `~/images`.</i>
 
 Because it is impossible to consistently keep symlinked directories unresolved. It is indeed possible to do this partially, and many other shells do so. But it was felt there are enough serious corner cases that this is a bad idea. Most such issues have to do with how '..' is handled, and are varitations of the following example:
 
@@ -169,7 +169,7 @@ Problem solved!
 
 The long answer:
 
-Fish is trying to set the titlebar message of your terminal. While screen itself supports this feature, your terminal does not. Unfortunately, when the underlying terminal doesn't support setting the titlebar, screen simply passes through the escape codes and text to the underlying terminal instead of ignoring them. It is impossible detect and resolve this problem from inside fish since fish has no way of knowing what the underlying terminal type is. For now, the only way to fix this is to unset the titlebar message, as suggested above.
+Fish is trying to set the titlebar message of your terminal. While screen itself supports this feature, your terminal does not. Unfortunately, when the underlying terminal doesn't support setting the titlebar, screen simply passes through the escape codes and text to the underlying terminal instead of ignoring them. It is impossible to detect and resolve this problem from inside fish since fish has no way of knowing what the underlying terminal type is. For now, the only way to fix this is to unset the titlebar message, as suggested above.
 
 Note that fish has a default titlebar message, which will be used if the fish_title function is undefined. So simply unsetting the fish_title function will not work.
 

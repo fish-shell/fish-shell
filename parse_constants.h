@@ -184,15 +184,8 @@ void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt);
 /** Error message on a function that calls itself immediately */
 #define INFINITE_FUNC_RECURSION_ERR_MSG _( L"The function '%ls' calls itself immediately, which would result in an infinite loop.")
 
-
 /** Error message on reaching maximum call stack depth */
 #define CALL_STACK_LIMIT_EXCEEDED_ERR_MSG _( L"The function call stack limit has been exceeded. Do you have an accidental infinite loop?")
-
-/** Error message when a non-string token is found when expecting a command name */
-#define CMD_OR_ERR_MSG _( L"Expected a command, but instead found a pipe. Did you mean 'COMMAND; or COMMAND'? See the help section for the 'or' builtin command by typing 'help or'.")
-
-/** Error message when a non-string token is found when expecting a command name */
-#define CMD_AND_ERR_MSG _( L"Expected a command, but instead found an '&'. Did you mean 'COMMAND; and COMMAND'? See the help section for the 'and' builtin command by typing 'help and'.")
 
 /** Error message when encountering an illegal command name */
 #define ILLEGAL_CMD_ERR_MSG _( L"Illegal command name '%ls'")
@@ -213,41 +206,60 @@ void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt);
 #define WILDCARD_ERR_MSG _( L"No matches for wildcard '%ls'.")
 
 /** Error when using break outside of loop */
-#define INVALID_BREAK_ERR_MSG _( L"break command while not inside of loop" )
+#define INVALID_BREAK_ERR_MSG _( L"'break' while not inside of loop" )
 
 /** Error when using continue outside of loop */
-#define INVALID_CONTINUE_ERR_MSG _( L"continue command while not inside of loop" )
+#define INVALID_CONTINUE_ERR_MSG _( L"'continue' while not inside of loop" )
 
 /** Error when using return builtin outside of function definition */
-#define INVALID_RETURN_ERR_MSG _( L"'return' builtin command outside of function definition" )
+#define INVALID_RETURN_ERR_MSG _( L"'return' outside of function definition" )
+
+
+/*** Error messages. The number is a reminder of how many format specifiers are contained. */
+
+/** Error for (e.g.) $^ */
+#define ERROR_BAD_VAR_CHAR1 _( L"$%lc is not a valid variable in fish." )
+
+/** Error for ${a} */
+#define ERROR_BRACKETED_VARIABLE1 _( L"Variables cannot be bracketed. In fish, please use {$%ls}." )
+
+/** Error for "${a}" */
+#define ERROR_BRACKETED_VARIABLE_QUOTED1 _( L"Variables cannot be bracketed. In fish, please use \"$%ls\"." )
+
+/** Error issued on $? */
+#define ERROR_NOT_STATUS _( L"$? is not the exit status. In fish, please use $status.")
+
+/** Error issued on $$ */
+#define ERROR_NOT_PID _( L"$$ is not the pid. In fish, please use %%self.")
+
+/** Error issued on $# */
+#define ERROR_NOT_ARGV_COUNT _( L"$# is not supported. In fish, please use 'count $argv'.")
+
+/** Error issued on $@ */
+#define ERROR_NOT_ARGV_AT _( L"$@ is not supported. In fish, please use $argv.")
+
+/** Error issued on $(...) */
+#define ERROR_BAD_VAR_SUBCOMMAND1 _( L"$(...) is not supported. In fish, please use '(%ls)'." )
+
+/** Error issued on $* */
+#define ERROR_NOT_ARGV_STAR _( L"$* is not supported. In fish, please use $argv." )
+
+/** Error issued on $ */
+#define ERROR_NO_VAR_NAME _( L"Expected a variable name after this $.")
+
+/** Error on || */
+#define ERROR_BAD_OR _( L"Unsupported use of '||'. In fish, please use 'COMMAND; or COMMAND'.")
+
+/** Error on && */
+#define ERROR_BAD_AND _( L"Unsupported use of '&&'. In fish, please use 'COMMAND; and COMMAND'.")
+
+/** Error on foo=bar */
+#define ERROR_BAD_EQUALS_IN_COMMAND5 _( L"Unsupported use of '='. To run '%ls' with a modified environment, please use 'env %ls=%ls %ls%ls'")
 
 /** Error message for Posix-style assignment: foo=bar */
-#define COMMAND_ASSIGN_ERR_MSG _( L"Unknown command '%ls'. Did you mean 'set %ls %ls'? See the help section on the set command by typing 'help set'.")
+#define ERROR_BAD_COMMAND_ASSIGN_ERR_MSG _( L"Unsupported use of '='. In fish, please use 'set %ls %ls'.")
 
-/**
-   Error issued on invalid variable name
-*/
-#define COMPLETE_VAR_DESC _( L"The '$' character begins a variable name. The character '%lc', which directly followed a '$', is not allowed as a part of a variable name, and variable names may not be zero characters long. To learn more about variable expansion in fish, type 'help expand-variable'.")
 
-/**
-   Error issued on $?
-*/
-#define COMPLETE_YOU_WANT_STATUS _( L"$? is not a valid variable in fish. If you want the exit status of the last command, try $status.")
-
-/**
-   Error issued on invalid variable name
-*/
-#define COMPLETE_VAR_NULL_DESC _( L"The '$' begins a variable name. It was given at the end of an argument. Variable names may not be zero characters long. To learn more about variable expansion in fish, type 'help expand-variable'.")
-
-/**
-   Error issued on invalid variable name
-*/
-#define COMPLETE_VAR_BRACKET_DESC _( L"Did you mean %ls{$%ls}%ls? The '$' character begins a variable name. A bracket, which directly followed a '$', is not allowed as a part of a variable name, and variable names may not be zero characters long. To learn more about variable expansion in fish, type 'help expand-variable'." )
-
-/**
-   Error issued on invalid variable name
-*/
-#define COMPLETE_VAR_PARAN_DESC _( L"Did you mean (COMMAND)? In fish, the '$' character is only used for accessing variables. To learn more about command substitution in fish, type 'help expand-command-substitution'.")
 
 /**
    While block description

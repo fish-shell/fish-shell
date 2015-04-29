@@ -20,7 +20,7 @@
    \param begin the starting paranthesis of the subshell
    \param end the ending paranthesis of the subshell
    \param accept_incomplete whether to permit missing closing parenthesis
-   \return -1 on syntax error, 0 if no subshells exist and 1 on sucess
+   \return -1 on syntax error, 0 if no subshells exist and 1 on success
 */
 
 int parse_util_locate_cmdsubst(const wchar_t *in,
@@ -43,7 +43,7 @@ int parse_util_locate_slice(const wchar_t *in,
    \param out_start On output, the offset of the start of the command substitution (open paren)
    \param out_end On output, the offset of the end of the command substitution (close paren), or the end of the string if it was incomplete
    \param accept_incomplete whether to permit missing closing parenthesis
-   \return -1 on syntax error, 0 if no subshells exist and 1 on sucess
+   \return -1 on syntax error, 0 if no subshells exist and 1 on success
 */
 
 int parse_util_locate_cmdsubst_range(const wcstring &str,
@@ -187,5 +187,8 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
    This does NOT currently detect unterminated quotes.
 */
 parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t &node, const wcstring &arg_src, parse_error_list_t *out_errors = NULL);
+
+/* Given a string containing a variable expansion error, append an appropriate error to the errors list. The global_token_pos is the offset of the token in the larger source, and the dollar_pos is the offset of the offending dollar sign within the token. */
+void parse_util_expand_variable_error(const wcstring &token, size_t global_token_pos, size_t dollar_pos, parse_error_list_t *out_errors);
 
 #endif

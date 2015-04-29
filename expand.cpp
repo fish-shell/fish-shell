@@ -868,89 +868,6 @@ static bool expand_pid(const wcstring &instr_with_sep, expand_flags_t flags, std
     return true;
 }
 
-
-void expand_variable_error(parser_t &parser, const wcstring &token, size_t token_pos, int error_pos, parse_error_list_t *errors)
-{
-    size_t stop_pos = token_pos+1;
-
-    switch (token[stop_pos])
-    {
-        case BRACKET_BEGIN:
-        {
-            wchar_t *cpy = wcsdup(token.c_str());
-            *(cpy+token_pos)=0;
-            wchar_t *name = &cpy[stop_pos+1];
-            wchar_t *end = wcschr(name, BRACKET_END);
-            wchar_t *post = NULL;
-            int is_var=0;
-            if (end)
-            {
-                post = end+1;
-                *end = 0;
-
-                if (!wcsvarname(name))
-                {
-                    is_var = 1;
-                }
-            }
-
-            if (is_var)
-            {
-                append_syntax_error(errors,
-                                    error_pos,
-                                    COMPLETE_VAR_BRACKET_DESC,
-                                    cpy,
-                                    name,
-                                    post);
-            }
-            else
-            {
-                append_syntax_error(errors,
-                                    error_pos,
-                                    COMPLETE_VAR_BRACKET_DESC,
-                                    L"",
-                                    L"VARIABLE",
-                                    L"");
-            }
-            free(cpy);
-
-            break;
-        }
-
-        case INTERNAL_SEPARATOR:
-        {
-            append_syntax_error(errors,
-                                error_pos,
-                                COMPLETE_VAR_PARAN_DESC);
-            break;
-        }
-
-        case 0:
-        {
-            append_syntax_error(errors,
-                                error_pos,
-                                COMPLETE_VAR_NULL_DESC);
-            break;
-        }
-
-        default:
-        {
-            wchar_t token_stop_char = token[stop_pos];
-            // Unescape (see http://github.com/fish-shell/fish-shell/issues/50)
-            if (token_stop_char == ANY_CHAR)
-                token_stop_char = L'?';
-            else if (token_stop_char == ANY_STRING || token_stop_char == ANY_STRING_RECURSIVE)
-                token_stop_char = L'*';
-
-            append_syntax_error(errors,
-                                error_pos,
-                                (token_stop_char == L'?' ? COMPLETE_YOU_WANT_STATUS : COMPLETE_VAR_DESC),
-                                token_stop_char);
-            break;
-        }
-    }
-}
-
 /**
    Parse an array slicing specification
    Returns 0 on success.
@@ -1115,7 +1032,10 @@ static int expand_variables(parser_t &parser, const wcstring &instr, std::vector
 
             if (var_len == 0)
             {
-                expand_variable_error(parser, instr, stop_pos-1, -1, errors);
+                if (errors)
+                {
+                    parse_util_expand_variable_error(instr, 0 /* global_token_pos */, c, errors);
+                }
 
                 is_ok = false;
                 break;

@@ -1019,6 +1019,23 @@ static bool append_syntax_error(parse_error_list_t *errors, const parse_node_t &
     return true;
 }
 
+static bool append_syntax_error(parse_error_list_t *errors, size_t source_location, const wchar_t *fmt, ...)
+{
+    parse_error_t error;
+    error.source_start = source_location;
+    error.source_length = 0;
+    error.code = parse_error_syntax;
+    
+    va_list va;
+    va_start(va, fmt);
+    error.text = vformat_string(fmt, va);
+    va_end(va);
+    
+    errors->push_back(error);
+    return true;
+}
+
+
 /**
    Returns 1 if the specified command is a builtin that may not be used in a pipeline
 */
@@ -1059,88 +1076,191 @@ static bool first_argument_is_help(const parse_node_tree_t &node_tree, const par
     return is_help;
 }
 
-void parse_util_expand_variable_error(const parse_node_t &node, const wcstring &token, size_t token_pos, size_t error_pos, parse_error_list_t *out_errors)
+/* If a var name or command is too long for error reporting, make it shorter */
+static wcstring truncate_string(const wcstring &str)
 {
-    size_t stop_pos = token_pos+1;
+    const size_t max_len = 16;
+    wcstring result(str, 0, max_len);
+    if (str.size() > max_len)
+    {
+        // Truncate!
+        if (ellipsis_char == L'\x2026')
+        {
+            result.at(max_len - 1) = ellipsis_char;
+        }
+        else
+        {
+            result.replace(max_len - 3, 3, L"...");
+        }
+    }
+    return result;
+}
 
-    switch (token[stop_pos])
+/* Given a wide character immediately after a dollar sign, return the appropriate error message. For example, if wc is @, then the variable name was $@ and we suggest $argv. */
+static const wchar_t *error_format_for_character(wchar_t wc)
+{
+    switch (wc)
+    {
+        case L'?': return ERROR_NOT_STATUS;
+        case L'#': return ERROR_NOT_ARGV_COUNT;
+        case L'@': return ERROR_NOT_ARGV_AT;
+        case L'*': return ERROR_NOT_ARGV_STAR;
+        case L'$':
+        case VARIABLE_EXPAND:
+        case VARIABLE_EXPAND_SINGLE:
+        case VARIABLE_EXPAND_EMPTY:
+            return ERROR_NOT_PID;
+        default: return ERROR_BAD_VAR_CHAR1;
+    }
+}
+
+void parse_util_expand_variable_error(const wcstring &token, size_t global_token_pos, size_t dollar_pos, parse_error_list_t *errors)
+{
+    // Note that dollar_pos is probably VARIABLE_EXPAND or VARIABLE_EXPAND_SINGLE, not a literal dollar sign
+    assert(errors != NULL);
+    assert(dollar_pos < token.size());
+    const bool double_quotes = (token.at(dollar_pos) == VARIABLE_EXPAND_SINGLE);
+    const size_t start_error_count = errors->size();
+    const size_t global_dollar_pos = global_token_pos + dollar_pos;
+    const size_t global_after_dollar_pos = global_dollar_pos + 1;
+    wchar_t char_after_dollar = (dollar_pos + 1 >= token.size() ? L'\0' : token.at(dollar_pos + 1));
+    switch (char_after_dollar)
     {
         case BRACKET_BEGIN:
+        case L'{':
+            
         {
-            wchar_t *cpy = wcsdup(token.c_str());
-            *(cpy+token_pos)=0;
-            wchar_t *name = &cpy[stop_pos+1];
-            wchar_t *end = wcschr(name, BRACKET_END);
-            wchar_t *post = NULL;
-            int is_var=0;
-            if (end)
+            // The BRACKET_BEGIN is for unquoted, the { is for quoted. Anyways we have (possible quoted) ${. See if we have a }, and the stuff in between is variable material. If so, report a bracket error. Otherwise just complain about the ${.
+            bool looks_like_variable = false;
+            size_t closing_bracket = token.find(char_after_dollar == L'{' ? L'}' : BRACKET_END, dollar_pos + 2);
+            wcstring var_name;
+            if (closing_bracket != wcstring::npos)
             {
-                post = end+1;
-                *end = 0;
-
-                if (!wcsvarname(name))
-                {
-                    is_var = 1;
-                }
+                size_t var_start = dollar_pos + 2, var_end = closing_bracket;
+                var_name = wcstring(token, var_start, var_end - var_start);
+                looks_like_variable = ! var_name.empty() && wcsvarname(var_name.c_str()) == NULL;
             }
-
-            if (is_var)
+            if (looks_like_variable)
             {
-                append_syntax_error(out_errors,
-                                    node,
-                                    COMPLETE_VAR_BRACKET_DESC,
-                                    cpy,
-                                    name,
-                                    post);
+                append_syntax_error(errors,
+                                    global_after_dollar_pos,
+                                    double_quotes ? ERROR_BRACKETED_VARIABLE_QUOTED1 : ERROR_BRACKETED_VARIABLE1,
+                                    truncate_string(var_name).c_str());
             }
             else
             {
-                append_syntax_error(out_errors,
-                                    node,
-                                    COMPLETE_VAR_BRACKET_DESC,
-                                    L"",
-                                    L"VARIABLE",
-                                    L"");
+                append_syntax_error(errors,
+                                    global_after_dollar_pos,
+                                    ERROR_BAD_VAR_CHAR1,
+                                    L'{');
             }
-            free(cpy);
-
             break;
         }
-
+            
         case INTERNAL_SEPARATOR:
         {
-            append_syntax_error(out_errors,
-                                node,
-                                COMPLETE_VAR_PARAN_DESC);
+            //e.g.: echo foo"$"baz
+            // These are only ever quotes, not command substitutions. Command substitutions are handled earlier.
+            append_syntax_error(errors,
+                                global_dollar_pos,
+                                ERROR_NO_VAR_NAME);
             break;
         }
-
-        case 0:
+        
+        case '(':
         {
-            append_syntax_error(out_errors,
-                                node,
-                                COMPLETE_VAR_NULL_DESC);
+            // e.g.: 'echo "foo$(bar)baz"
+            // Try to determine what's in the parens.
+            wcstring token_after_parens;
+            wcstring paren_text;
+            size_t open_parens = dollar_pos + 1, cmdsub_start = 0, cmdsub_end = 0;
+            if (parse_util_locate_cmdsubst_range(token,
+                                                 &open_parens,
+                                                 &paren_text,
+                                                 &cmdsub_start,
+                                                 &cmdsub_end,
+                                                 true) > 0)
+            {
+                token_after_parens = tok_first(paren_text.c_str());
+            }
+            
+            /* Make sure we always show something */
+            if (token_after_parens.empty())
+            {
+                token_after_parens = L"...";
+            }
+            
+            append_syntax_error(errors,
+                                global_dollar_pos,
+                                ERROR_BAD_VAR_SUBCOMMAND1,
+                                truncate_string(token_after_parens).c_str());
             break;
         }
-
+        
+        case L'\0':
+        {
+            append_syntax_error(errors,
+                                global_dollar_pos,
+                                ERROR_NO_VAR_NAME);
+            break;
+        }
+        
         default:
         {
-            wchar_t token_stop_char = token[stop_pos];
-            // Unescape (see http://github.com/fish-shell/fish-shell/issues/50)
+            wchar_t token_stop_char = char_after_dollar;
+            // Unescape (see #50)
             if (token_stop_char == ANY_CHAR)
                 token_stop_char = L'?';
             else if (token_stop_char == ANY_STRING || token_stop_char == ANY_STRING_RECURSIVE)
                 token_stop_char = L'*';
-
-            append_syntax_error(out_errors,
-                                node,
-                                (token_stop_char == L'?' ? COMPLETE_YOU_WANT_STATUS : COMPLETE_VAR_DESC),
+            
+            /* Determine which error message to use. The format string may not consume all the arguments we pass but that's harmless. */
+            const wchar_t *error_fmt = error_format_for_character(token_stop_char);
+            
+            append_syntax_error(errors,
+                                global_after_dollar_pos,
+                                error_fmt,
                                 token_stop_char);
             break;
         }
+            
     }
+    
+    // We should have appended exactly one error
+    assert(errors->size() == start_error_count + 1);
 }
 
+/* Detect cases like $(abc). Given an arg like foo(bar), let arg_src be foo and cmdsubst_src be bar. If arg ends with VARIABLE_EXPAND, then report an error. */
+static parser_test_error_bits_t detect_dollar_cmdsub_errors(size_t arg_src_offset, const wcstring &arg_src, const wcstring &cmdsubst_src, parse_error_list_t *out_errors)
+{
+    parser_test_error_bits_t result_bits = 0;
+    wcstring unescaped_arg_src;
+    if (unescape_string(arg_src, &unescaped_arg_src, UNESCAPE_SPECIAL))
+    {
+        if (! unescaped_arg_src.empty())
+        {
+            wchar_t last = unescaped_arg_src.at(unescaped_arg_src.size() - 1);
+            if (last == VARIABLE_EXPAND)
+            {
+                result_bits |= PARSER_TEST_ERROR;
+                if (out_errors != NULL)
+                {
+                    wcstring subcommand_first_token = tok_first(cmdsubst_src.c_str());
+                    if (subcommand_first_token.empty())
+                    {
+                        // e.g. $(). Report somthing.
+                        subcommand_first_token = L"...";
+                    }
+                    append_syntax_error(out_errors,
+                                        arg_src_offset + arg_src.size() - 1, // global position of the dollar
+                                        ERROR_BAD_VAR_SUBCOMMAND1,
+                                        truncate_string(subcommand_first_token).c_str());
+                }
+            }
+        }
+    }
+    return result_bits;
+}
 
 /**
    Test if this argument contains any errors. Detected errors include
@@ -1198,10 +1318,19 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
                 /* Our command substitution produced error offsets relative to its source. Tweak the offsets of the errors in the command substitution to account for both its offset within the string, and the offset of the node */
                 size_t error_offset = cmd_sub_start + 1 + node.source_start;
                 parse_error_offset_source_start(&subst_errors, error_offset);
-
+                
                 if (out_errors != NULL)
                 {
                     out_errors->insert(out_errors->end(), subst_errors.begin(), subst_errors.end());
+                    
+                    /* Hackish. Take this opportunity to report $(...) errors. We do this because after we've replaced with internal separators, we can't distinguish between "" and (), and also we no longer have the source of the command substitution. As an optimization, this is only necessary if the last character is a $. */
+                    if (cmd_sub_start > 0 && working_copy.at(cmd_sub_start - 1) == L'$')
+                    {
+                        err |= detect_dollar_cmdsub_errors(node.source_start,
+                                                           working_copy.substr(0, cmd_sub_start),
+                                                           subst,
+                                                           out_errors);
+                    }
                 }
                 break;
             }
@@ -1230,14 +1359,18 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
                 {
                     wchar_t next_char = (idx + 1 < unesc_size ? unesc.at(idx + 1) : L'\0');
 
-                    if (next_char != VARIABLE_EXPAND &&
-                            next_char != VARIABLE_EXPAND_SINGLE &&
-                            ! wcsvarchr(next_char))
+                    if (next_char != VARIABLE_EXPAND && next_char != VARIABLE_EXPAND_SINGLE && ! wcsvarchr(next_char))
                     {
                         err=1;
                         if (out_errors)
                         {
-                            parse_util_expand_variable_error(node, unesc, idx, node.source_start, out_errors);
+                            /* We have something like $$$^....  Back up until we reach the first $ */
+                            size_t first_dollar = idx;
+                            while (first_dollar > 0 && (unesc.at(first_dollar-1) == VARIABLE_EXPAND || unesc.at(first_dollar-1) == VARIABLE_EXPAND_SINGLE))
+                            {
+                                first_dollar--;
+                            }
+                            parse_util_expand_variable_error(unesc, node.source_start, first_dollar, out_errors);
                         }
                     }
 

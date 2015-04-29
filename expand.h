@@ -198,18 +198,6 @@ wcstring replace_home_directory_with_tilde(const wcstring &str);
 int expand_is_clean(const wchar_t *in);
 
 /**
-   Perform error reporting for a syntax error related to the variable
-   expansion beginning at the specified character of the specified
-   token. This function will call the error function with an
-   explanatory string about what is wrong with the specified token.
-
-   \param token The token containing the error
-   \param token_pos The position where the expansion begins
-   \param error_pos The position on the line to report to the error function.
-*/
-void expand_variable_error(parser_t &parser, const wcstring &token, size_t token_pos, int error_pos);
-
-/**
    Testing function for getting all process names.
 */
 std::vector<wcstring> expand_get_all_process_names(void);

@@ -880,7 +880,7 @@ void parse_ll_t::parse_error_failed_production(struct parse_stack_element_t &sta
             if (prev_pipe != NULL)
             {
                 /* The pipe of the previous job abuts our current token. So we have ||. */
-                this->parse_error(token, parse_error_double_pipe, CMD_OR_ERR_MSG);
+                this->parse_error(token, parse_error_double_pipe, ERROR_BAD_OR);
                 done = true;
             }
         }
@@ -893,7 +893,7 @@ void parse_ll_t::parse_error_failed_production(struct parse_stack_element_t &sta
             if (prev_background != NULL)
             {
                 /* We have &&. */
-                this->parse_error(token, parse_error_double_background, CMD_AND_ERR_MSG);
+                this->parse_error(token, parse_error_double_background, ERROR_BAD_AND);
                 done = true;
             }
         }

@@ -184,6 +184,8 @@ static wcstring comma_join(const wcstring_list_t &lst)
 
 #define do_test(e) do { if (! (e)) err(L"Test failed on line %lu: %s", __LINE__, #e); } while (0)
 
+#define do_test1(e, msg) do { if (! (e)) err(L"Test failed on line %lu: %ls", __LINE__, (msg)); } while (0)
+
 /* Test sane escapes */
 static void test_unescape_sane()
 {
@@ -2009,7 +2011,7 @@ static void test_complete(void)
     do_test(completions.at(0).completion == L"r");
 
     /* Add a function and test completing it in various ways */
-    struct function_data_t func_data;
+    struct function_data_t func_data = {};
     func_data.name = L"scuttlebutt";
     func_data.definition = L"echo gongoozle";
     function_add(func_data, parser_t::principal_parser());
@@ -3593,7 +3595,23 @@ static void test_error_messages()
     }
     error_tests[] =
     {
-        {L"echo $?", COMPLETE_YOU_WANT_STATUS}
+        {L"echo $^", ERROR_BAD_VAR_CHAR1},
+        {L"echo foo${a}bar", ERROR_BRACKETED_VARIABLE1},
+        {L"echo foo\"${a}\"bar", ERROR_BRACKETED_VARIABLE_QUOTED1},
+        {L"echo foo\"${\"bar", ERROR_BAD_VAR_CHAR1},
+        {L"echo $?", ERROR_NOT_STATUS},
+        {L"echo $$", ERROR_NOT_PID},
+        {L"echo $#", ERROR_NOT_ARGV_COUNT},
+        {L"echo $@", ERROR_NOT_ARGV_AT},
+        {L"echo $*", ERROR_NOT_ARGV_STAR},
+        {L"echo $", ERROR_NO_VAR_NAME},
+        {L"echo foo\"$\"bar", ERROR_NO_VAR_NAME},
+        {L"echo \"foo\"$\"bar\"", ERROR_NO_VAR_NAME},
+        {L"echo foo $ bar", ERROR_NO_VAR_NAME},
+        {L"echo foo$(foo)bar", ERROR_BAD_VAR_SUBCOMMAND1},
+        {L"echo \"foo$(foo)bar\"", ERROR_BAD_VAR_SUBCOMMAND1},
+        {L"echo foo || echo bar", ERROR_BAD_OR},
+        {L"echo foo && echo bar", ERROR_BAD_AND}
     };
     
     parse_error_list_t errors;
@@ -3605,7 +3623,7 @@ static void test_error_messages()
         do_test(! errors.empty());
         if (! errors.empty())
         {
-            do_test(string_matches_format(errors.at(0).text, test->error_text_format));
+            do_test1(string_matches_format(errors.at(0).text, test->error_text_format), test->src);
         }
     }
 }

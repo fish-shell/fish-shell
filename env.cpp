@@ -901,6 +901,7 @@ int env_remove(const wcstring &key, int var_mode)
             !(var_mode & ENV_GLOBAL) &&
             !(var_mode & ENV_LOCAL))
     {
+        bool is_exported = uvars()->get_export(key);
         erased = uvars() && uvars()->remove(key);
         if (erased)
         {
@@ -911,6 +912,9 @@ int env_remove(const wcstring &key, int var_mode)
             ev.arguments.push_back(key);
             event_fire(&ev);
         }
+        
+        if (is_exported)
+            mark_changed_exported();
     }
 
     react_to_variable_change(key);

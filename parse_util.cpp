@@ -1003,21 +1003,6 @@ std::vector<int> parse_util_compute_indents(const wcstring &src)
 }
 
 /* Append a syntax error to the given error list */
-static bool append_syntax_error(parse_error_list_t *errors, const parse_node_t &node, const wchar_t *fmt, ...)
-{
-    parse_error_t error;
-    error.source_start = node.source_start;
-    error.source_length = node.source_length;
-    error.code = parse_error_syntax;
-
-    va_list va;
-    va_start(va, fmt);
-    error.text = vformat_string(fmt, va);
-    va_end(va);
-
-    errors->push_back(error);
-    return true;
-}
 
 static bool append_syntax_error(parse_error_list_t *errors, size_t source_location, const wchar_t *fmt, ...)
 {
@@ -1291,7 +1276,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
                 err=1;
                 if (out_errors)
                 {
-                    append_syntax_error(out_errors, node, L"Mismatched parenthesis");
+                    append_syntax_error(out_errors, node.source_start, L"Mismatched parenthesis");
                 }
                 return err;
             }
@@ -1342,7 +1327,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
     {
         if (out_errors)
         {
-            append_syntax_error(out_errors, node, L"Invalid token '%ls'", working_copy.c_str());
+            append_syntax_error(out_errors, node.source_start, L"Invalid token '%ls'", working_copy.c_str());
         }
         return 1;
     }
@@ -1456,7 +1441,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                 parse_bool_statement_type_t type = parse_node_tree_t::statement_boolean_type(node);
                 if ((type ==  parse_bool_and || type == parse_bool_or) && node_tree.statement_is_in_pipeline(node, false /* don't count first */))
                 {
-                    errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG, (type ==  parse_bool_and) ? L"and" : L"or");
+                    errored = append_syntax_error(&parse_errors, node.source_start, EXEC_ERR_MSG, (type ==  parse_bool_and) ? L"and" : L"or");
                 }
             }
             else if (node.type == symbol_argument)
@@ -1483,7 +1468,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                         case symbol_while_header:
                         {
                             assert(node_tree.get_child(*job_parent, 1) == &node);
-                            errored = append_syntax_error(&parse_errors, node, BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
+                            errored = append_syntax_error(&parse_errors, node.source_start, BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
                             break;
                         }
                         
@@ -1506,10 +1491,10 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                                         {
                                             // These are not allowed
                                             case parse_bool_and:
-                                                errored = append_syntax_error(&parse_errors, *spec_statement, BOOL_AFTER_BACKGROUND_ERROR_MSG, L"and");
+                                                errored = append_syntax_error(&parse_errors, spec_statement->source_start, BOOL_AFTER_BACKGROUND_ERROR_MSG, L"and");
                                                 break;
                                             case parse_bool_or:
-                                                errored = append_syntax_error(&parse_errors, *spec_statement, BOOL_AFTER_BACKGROUND_ERROR_MSG, L"or");
+                                                errored = append_syntax_error(&parse_errors, spec_statement->source_start, BOOL_AFTER_BACKGROUND_ERROR_MSG, L"or");
                                                 break;
                                             case parse_bool_not:
                                                 // This one is OK
@@ -1537,7 +1522,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                 // Check that we don't try to pipe through exec
                 if (is_in_pipeline && decoration == parse_statement_decoration_exec)
                 {
-                    errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG, L"exec");
+                    errored = append_syntax_error(&parse_errors, node.source_start, EXEC_ERR_MSG, L"exec");
                 }
 
                 wcstring command;
@@ -1547,13 +1532,13 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                     if (! expand_one(command, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES | EXPAND_SKIP_JOBS, NULL))
                     {
                         // TODO: leverage the resulting errors
-                        errored = append_syntax_error(&parse_errors, node, ILLEGAL_CMD_ERR_MSG, command.c_str());
+                        errored = append_syntax_error(&parse_errors, node.source_start, ILLEGAL_CMD_ERR_MSG, command.c_str());
                     }
 
                     // Check that pipes are sound
                     if (! errored && parser_is_pipe_forbidden(command) && is_in_pipeline)
                     {
-                        errored = append_syntax_error(&parse_errors, node, EXEC_ERR_MSG, command.c_str());
+                        errored = append_syntax_error(&parse_errors, node.source_start, EXEC_ERR_MSG, command.c_str());
                     }
 
                     // Check that we don't return from outside a function
@@ -1575,7 +1560,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
                         }
                         if (! found_function && ! first_argument_is_help(node_tree, node, buff_src))
                         {
-                            errored = append_syntax_error(&parse_errors, node, INVALID_RETURN_ERR_MSG);
+                            errored = append_syntax_error(&parse_errors, node.source_start, INVALID_RETURN_ERR_MSG);
                         }
                     }
 
@@ -1616,14 +1601,19 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
 
                         if (! found_loop && ! first_argument_is_help(node_tree, node, buff_src))
                         {
-                            errored = append_syntax_error(&parse_errors, node, (command == L"break" ? INVALID_BREAK_ERR_MSG : INVALID_CONTINUE_ERR_MSG));
+                            errored = append_syntax_error(&parse_errors,
+                                                          node.source_start,
+                                                          (command == L"break" ? INVALID_BREAK_ERR_MSG : INVALID_CONTINUE_ERR_MSG));
                         }
                     }
 
                     // Check that we don't do an invalid builtin (#1252)
                     if (! errored && decoration == parse_statement_decoration_builtin && ! builtin_exists(command))
                     {
-                        errored = append_syntax_error(&parse_errors, node, UNKNOWN_BUILTIN_ERR_MSG, command.c_str());
+                        errored = append_syntax_error(&parse_errors,
+                                                      node.source_start,
+                                                      UNKNOWN_BUILTIN_ERR_MSG,
+                                                      command.c_str());
                     }
 
                 }

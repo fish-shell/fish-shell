@@ -381,7 +381,7 @@ Completions can be defined on the commandline or in a configuration file, but th
 
 The default value for `$fish_complete_path` is `~/.config/fish/completions` `/etc/fish/completions` `/usr/share/fish/vendor_completions.d` `/usr/share/fish/completions` `~/.local/share/generated_completions`. (Some paths may be slightly different depending on where fish is installed). If a suitable file is found in one of these directories, it will be automatically loaded and the search will be stopped. The large number of directories searched may be confusing. It is to allow, respectively, user-specific completions, system-wide completions, completions installed by other packages, default completions that ship with fish, and finally, completions generated from manual pages. If you are unsure, put your completions in `~/.config/fish/completions`.
 
-If you have written new completions for a common Unix command, please consider sharing your work by submitting it via the instructions in <a href="#more-help">Further help and development</a>. If you are developing another program and would like to ship completions with your program, install them to `/usr/share/fish/vendor_completions.d`.
+If you have written new completions for a common Unix command, please consider sharing your work by submitting it via the instructions in <a href="#more-help">Further help and development</a>. If you are developing another program and would like to ship completions with your program, install them to `/usr/share/fish/vendor_completions.d` or similar directory. Systems using the `pkgconfig` framework can discover this path from the output of `pkg-config --variable completionsdir fish`.
 
 
 \section expand Parameter expansion (Globbing)

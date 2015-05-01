@@ -356,6 +356,8 @@ Functions beginning with the string `__fish_print_` print a newline separated li
 
 - `__fish_complete_directories STRING DESCRIPTION` performs path completion on STRING, allowing only directories, and giving them the description DESCRIPTION.
 
+- `__fish_complete_path STRING DESCRIPTION` performs path completion on STRING, giving them the description DESCRIPTION.
+
 - `__fish_complete_groups` prints a list of all user groups with the groups members as description.
 
 - `__fish_complete_pids` prints a list of all processes IDs with the command name as description.

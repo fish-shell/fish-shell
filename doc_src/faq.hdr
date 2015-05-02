@@ -162,7 +162,7 @@ Quick answer:
 Run the following command in fish:
 
 \fish{cli-dark}
-echo 'function fish_title;end' > ~/.config/fish/config.fish
+echo 'function fish_title;end' >> ~/.config/fish/config.fish
 \endfish
 
 Problem solved!

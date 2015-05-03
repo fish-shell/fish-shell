@@ -4067,7 +4067,9 @@ int builtin_false(parser_t &parser, wchar_t **argv)
 static const builtin_data_t builtin_datas[]=
 {
     { 		L"[",  &builtin_test, N_(L"Test a condition")   },
+#if 0
     { 		L"__fish_parse",  &builtin_parse, N_(L"Try out the new parser")  },
+#endif
     { 		L"and",  &builtin_generic, N_(L"Execute command if previous command suceeded")  },
     { 		L"begin",  &builtin_generic, N_(L"Create a block of code")   },
     { 		L"bg",  &builtin_bg, N_(L"Send job to background")   },

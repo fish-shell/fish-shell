@@ -4149,7 +4149,9 @@ const wchar_t *reader_readline(int nchars)
                 (c != R_HISTORY_SEARCH_FORWARD) &&
                 (c != R_HISTORY_TOKEN_SEARCH_BACKWARD) &&
                 (c != R_HISTORY_TOKEN_SEARCH_FORWARD) &&
-                (c != R_NULL))
+                (c != R_NULL) &&
+                (c != R_REPAINT) &&
+                (c != R_FORCE_REPAINT))
         {
             data->search_mode = NO_SEARCH;
             data->search_buff.clear();

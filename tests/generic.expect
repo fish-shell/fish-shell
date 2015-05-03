@@ -33,3 +33,9 @@ send_line $hist_command
 expect_prompt -re {echo .history.*} {} unmatched {
     puts stderr "Couldn't find expected output $hist_command"
 }
+
+# Backslashes at end of comments (#1255)
+# This backslash should NOT cause the line to continue
+send_line "echo -n #comment\\"
+expect_prompt
+

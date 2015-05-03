@@ -155,6 +155,11 @@ echo before comment \
   # comment
   after comment
 
+# Backslashes are part of comments and do not join lines (#1255)
+# This should execute false, not echo it
+echo -n # comment\
+false
+
 function always_fails
     if true
         return 1

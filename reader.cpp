@@ -3065,6 +3065,18 @@ static wchar_t unescaped_quote(const wcstring &str, size_t pos)
     return result;
 }
 
+/* Returns true if the last token is a comment. */
+static bool text_ends_in_comment(const wcstring &text)
+{
+    token_type last_type = TOK_NONE;
+    tokenizer_t tok(text.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SHOW_COMMENTS | TOK_SQUASH_ERRORS);
+    while (tok_has_next(&tok))
+    {
+        last_type = tok_last_type(&tok);
+        tok_next(&tok);
+    }
+    return last_type == TOK_COMMENT;
+}
 
 const wchar_t *reader_readline(int nchars)
 {
@@ -3561,10 +3573,19 @@ const wchar_t *reader_readline(int nchars)
                 /* We only execute the command line */
                 editable_line_t *el = &data->command_line;
 
-                /* Allow backslash-escaped newlines, but only if the following character is whitespace, or we're at the end of the text (see issue #613) */
+                /* Allow backslash-escaped newlines, but only if the following character is whitespace, or we're at the end of the text (see issue #613) and not in a comment (#1255). */
                 if (is_backslashed(el->text, el->position))
                 {
-                    if (el->position >= el->size() || iswspace(el->text.at(el->position)))
+                    bool continue_on_next_line = false;
+                    if (el->position >= el->size())
+                    {
+                        continue_on_next_line = ! text_ends_in_comment(el->text);
+                    }
+                    else
+                    {
+                        continue_on_next_line = iswspace(el->text.at(el->position));
+                    }
+                    if (continue_on_next_line)
                     {
                         insert_char(el, '\n');
                         break;

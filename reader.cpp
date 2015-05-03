@@ -3561,7 +3561,7 @@ const wchar_t *reader_readline(int nchars)
                 /* We only execute the command line */
                 editable_line_t *el = &data->command_line;
 
-                /* Allow backslash-escaped newlines, but only if the following character is whitespace, or we're at the end of the text (see issue #163) */
+                /* Allow backslash-escaped newlines, but only if the following character is whitespace, or we're at the end of the text (see issue #613) */
                 if (is_backslashed(el->text, el->position))
                 {
                     if (el->position >= el->size() || iswspace(el->text.at(el->position)))

@@ -336,7 +336,7 @@ public:
     /**
        Function for testing if the string can be returned
     */
-    int (*test_func)(const wchar_t *);
+    parser_test_error_bits_t (*test_func)(const wchar_t *);
 
     /**
        When this is true, the reader will exit
@@ -2548,7 +2548,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd)
 }
 
 
-int reader_shell_test(const wchar_t *b)
+parser_test_error_bits_t reader_shell_test(const wchar_t *b)
 {
     assert(b != NULL);
     wcstring bstr = b;
@@ -2557,7 +2557,7 @@ int reader_shell_test(const wchar_t *b)
     bstr.push_back(L'\n');
 
     parse_error_list_t errors;
-    int res = parse_util_detect_errors(bstr, &errors, true /* do accept incomplete */);
+    parser_test_error_bits_t res = parse_util_detect_errors(bstr, &errors, true /* do accept incomplete */);
 
     if (res & PARSER_TEST_ERROR)
     {
@@ -2579,7 +2579,7 @@ int reader_shell_test(const wchar_t *b)
    detection for general purpose, there are no invalid strings, so
    this function always returns false.
 */
-static int default_test(const wchar_t *b)
+static parser_test_error_bits_t default_test(const wchar_t *b)
 {
     return 0;
 }
@@ -2665,7 +2665,7 @@ void reader_set_highlight_function(highlight_function_t func)
     data->highlight_function = func;
 }
 
-void reader_set_test_function(int (*f)(const wchar_t *))
+void reader_set_test_function(parser_test_error_bits_t (*f)(const wchar_t *))
 {
     data->test_func = f;
 }

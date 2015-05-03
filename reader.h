@@ -17,6 +17,7 @@
 #include "common.h"
 #include "complete.h"
 #include "highlight.h"
+#include "parse_constants.h"
 
 class parser_t;
 class completion_t;
@@ -247,7 +248,7 @@ void reader_set_highlight_function(highlight_function_t);
    Specify function for testing if the command buffer contains syntax
    errors that must be corrected before returning.
 */
-void reader_set_test_function(int (*f)(const wchar_t *));
+void reader_set_test_function(parser_test_error_bits_t (*f)(const wchar_t *));
 
 /**
    Specify string of shell commands to be run in order to generate the
@@ -291,7 +292,7 @@ int reader_exit_forced();
    Test if the given shell command contains errors. Uses parser_test
    for testing. Suitable for reader_set_test_function().
 */
-int reader_shell_test(const wchar_t *b);
+parser_test_error_bits_t reader_shell_test(const wchar_t *b);
 
 /**
    Test whether the interactive reader is in search mode.

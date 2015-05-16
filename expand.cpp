@@ -1034,7 +1034,7 @@ static int expand_variables(parser_t &parser, const wcstring &instr, std::vector
             {
                 if (errors)
                 {
-                    parse_util_expand_variable_error(instr, 0 /* global_token_pos */, c, errors);
+                    parse_util_expand_variable_error(instr, 0 /* global_token_pos */, i, errors);
                 }
 
                 is_ok = false;

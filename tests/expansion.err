@@ -28,3 +28,6 @@ fish: echo ()[1]
 Invalid index value
 fish: echo ()[d]
               ^
+$) is not a valid variable in fish.
+fish: echo $$paren
+            ^

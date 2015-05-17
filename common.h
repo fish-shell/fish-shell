@@ -696,6 +696,7 @@ void append_formatv(wcstring &str, const wchar_t *format, va_list ap);
 */
 
 const wchar_t *wcsvarname(const wchar_t *str);
+const wchar_t *wcsvarname(const wcstring &str);
 
 
 /**
@@ -704,7 +705,7 @@ const wchar_t *wcsvarname(const wchar_t *str);
    \return null if this is a valid name, and a pointer to the first invalid character otherwise
 */
 
-const wchar_t *wcsfuncname(const wchar_t *str);
+const wchar_t *wcsfuncname(const wcstring &str);
 
 /**
    Test if the given string is valid in a variable name

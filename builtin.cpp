@@ -2020,8 +2020,6 @@ int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstr
     bool name_is_first_positional = true;
     wcstring_list_t positionals;
     
-    wcstring function_name;
-
     const struct woption long_options[] =
     {
         { L"description", required_argument, 0, 'd' },
@@ -2234,6 +2232,7 @@ int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstr
     if (!res)
     {
         /* Determine the function name, and remove it from the list of positionals */
+        wcstring function_name;
         bool name_is_missing = positionals.empty();
         if (! name_is_missing)
         {
@@ -2309,14 +2308,7 @@ int define_function(parser_t &parser, const wcstring_list_t &c_args, const wcstr
                 res=1;
             }
         }
-    }
-    
-    if (res)
-    {
-        builtin_print_help(parser, argv[0], *out_err);
-    }
-    else
-    {
+
         /* Here we actually define the function! */
         function_data_t d;
 

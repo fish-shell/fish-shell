@@ -6,6 +6,7 @@ import sys
 import multiprocessing.pool
 import os
 import operator
+import socket
 IS_PY2 = sys.version_info[0] == 2
 
 if IS_PY2:
@@ -17,6 +18,14 @@ else:
     import http.server as SimpleHTTPServer
     import socketserver as SocketServer
     from urllib.parse import parse_qs
+
+# Check to see if IPv6 is enabled in the kernel
+HAS_IPV6 = True
+try:
+    s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+    s.close()
+except:
+    HAS_IPV6 = False
 
 # Disable CLI web browsers
 term = os.environ.pop('TERM', None)
@@ -419,7 +428,7 @@ class FishConfigTCPServer(SocketServer.TCPServer):
     """TCPServer that only accepts connections from localhost (IPv4/IPv6)."""
     WHITELIST = set(['::1', '::ffff:127.0.0.1', '127.0.0.1'])
 
-    address_family = socket.AF_INET6
+    address_family = socket.AF_INET6 if HAS_IPV6 else socket.AF_INET
 
     def verify_request(self, request, client_address):
         return client_address[0] in FishConfigTCPServer.WHITELIST
@@ -910,16 +919,18 @@ authkey = binascii.b2a_hex(os.urandom(16)).decode('ascii')
 
 # Try to find a suitable port
 PORT = 8000
+HOST = "::" if HAS_IPV6 else "localhost"
 while PORT <= 9000:
     try:
         Handler = FishConfigHTTPRequestHandler
-        httpd = FishConfigTCPServer(("::", PORT), Handler)
+        httpd = FishConfigTCPServer((HOST, PORT), Handler)
         # Success
         break
     except socket.error:
         err_type, err_value = sys.exc_info()[:2]
         # str(err_value) handles Python3 correctly
         if 'Address already in use' not in str(err_value):
+            print(str(err_value))
             break
     PORT += 1
 

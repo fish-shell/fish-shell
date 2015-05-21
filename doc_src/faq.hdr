@@ -162,7 +162,7 @@ Quick answer:
 Run the following command in fish:
 
 \fish{cli-dark}
-echo 'function fish_title;end' >> ~/.config/fish/config.fish
+function fish_title; end; funcsave fish_title
 \endfish
 
 Problem solved!

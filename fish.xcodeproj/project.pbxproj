@@ -397,7 +397,6 @@
 		D0A0851613B3ACEE0099B651 /* io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = io.h; sourceTree = "<group>"; };
 		D0A0851713B3ACEE0099B651 /* iothread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = iothread.h; sourceTree = "<group>"; };
 		D0A0851813B3ACEE0099B651 /* kill.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = kill.h; sourceTree = "<group>"; };
-		D0A0851913B3ACEE0099B651 /* mimedb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mimedb.h; sourceTree = "<group>"; };
 		D0A0851A13B3ACEE0099B651 /* output.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = output.h; sourceTree = "<group>"; };
 		D0A0851B13B3ACEE0099B651 /* parse_util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = parse_util.h; sourceTree = "<group>"; };
 		D0A0851C13B3ACEE0099B651 /* parser_keywords.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = parser_keywords.h; sourceTree = "<group>"; };
@@ -649,7 +648,6 @@
 				D0A0854F13B3ACEE0099B651 /* kill.cpp */,
 				D0A0854E13B3ACEE0099B651 /* key_reader.cpp */,
 				D03EE83814DF88B200FC7150 /* lru.h */,
-				D0A0851913B3ACEE0099B651 /* mimedb.h */,
 				D0A0855013B3ACEE0099B651 /* mimedb.cpp */,
 				D0A0851A13B3ACEE0099B651 /* output.h */,
 				D0A0855113B3ACEE0099B651 /* output.cpp */,

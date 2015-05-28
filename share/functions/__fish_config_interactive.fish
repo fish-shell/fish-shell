@@ -196,6 +196,16 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		end
 	end
 
+	# Notify vte-based terminals when a command completes
+	if test "$VTE_VERSION" -ge 3405
+		switch "$TERM"
+			case 'vte*' 'xterm*'
+				function __notify_vte_command_completed --on-event fish_postexec --description 'Notify VTE of command completion'
+					printf '\e]777;notify;Command completed;%s\a' (echo "$argv" | cat --show-nonprinting | tr --delete \;)
+				end
+		end
+	end
+
 	# The first time a command is not found, look for command-not-found
 	# This is not cheap so we try to avoid doing it during startup
 	# config.fish already installed a handler for noninteractive command-not-found,

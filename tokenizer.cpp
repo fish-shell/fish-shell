@@ -913,6 +913,59 @@ bool move_word_state_machine_t::consume_char_path_components(wchar_t c)
     return consumed;
 }
 
+bool move_word_state_machine_t::consume_char_whitespace(wchar_t c)
+{
+    enum
+    {
+        s_always_one = 0,
+        s_blank,
+        s_graph,
+        s_end
+    };
+
+    bool consumed = false;
+    while (state != s_end && ! consumed)
+    {
+        switch (state)
+        {
+            case s_always_one:
+                /* Always consume the first character */
+                consumed = true;
+                state = s_blank;
+                break;
+
+            case s_blank:
+                if (iswblank(c))
+                {
+                    /* Consumed whitespace */
+                    consumed = true;
+                }
+                else
+                {
+                    state = s_graph;
+                }
+                break;
+
+            case s_graph:
+                if (iswgraph(c))
+                {
+                    /* Consumed printable non-space */
+                    consumed = true;
+                }
+                else
+                {
+                    state = s_end;
+                }
+                break;
+
+            case s_end:
+            default:
+                break;
+        }
+    }
+    return consumed;
+}
+
 bool move_word_state_machine_t::consume_char(wchar_t c)
 {
     switch (style)
@@ -921,6 +974,8 @@ bool move_word_state_machine_t::consume_char(wchar_t c)
             return consume_char_punctuation(c);
         case move_word_style_path_components:
             return consume_char_path_components(c);
+        case move_word_style_whitespace:
+            return consume_char_whitespace(c);
         default:
             return false;
     }

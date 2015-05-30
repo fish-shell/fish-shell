@@ -1172,6 +1172,8 @@ static bool command_ends_paging(wchar_t c, bool focused_on_search_field)
         case R_END_OF_LINE:
         case R_FORWARD_WORD:
         case R_BACKWARD_WORD:
+        case R_FORWARD_BIGWORD:
+        case R_BACKWARD_BIGWORD:
         case R_DELETE_CHAR:
         case R_BACKWARD_DELETE_CHAR:
         case R_KILL_LINE:
@@ -1180,8 +1182,10 @@ static bool command_ends_paging(wchar_t c, bool focused_on_search_field)
         case R_BACKWARD_KILL_LINE:
         case R_KILL_WHOLE_LINE:
         case R_KILL_WORD:
+        case R_KILL_BIGWORD:
         case R_BACKWARD_KILL_WORD:
         case R_BACKWARD_KILL_PATH_COMPONENT:
+        case R_BACKWARD_KILL_BIGWORD:
         case R_SELF_INSERT:
         case R_TRANSPOSE_CHARS:
         case R_TRANSPOSE_WORDS:
@@ -3775,9 +3779,12 @@ const wchar_t *reader_readline(int nchars)
             /* kill one word left */
             case R_BACKWARD_KILL_WORD:
             case R_BACKWARD_KILL_PATH_COMPONENT:
+            case R_BACKWARD_KILL_BIGWORD:
             {
-                move_word_style_t style = (c == R_BACKWARD_KILL_PATH_COMPONENT ? move_word_style_path_components : move_word_style_punctuation);
-                bool newv = (last_char != R_BACKWARD_KILL_WORD && last_char != R_BACKWARD_KILL_PATH_COMPONENT);
+                move_word_style_t style =
+                    (c == R_BACKWARD_KILL_BIGWORD ? move_word_style_whitespace :
+                     c == R_BACKWARD_KILL_PATH_COMPONENT ? move_word_style_path_components : move_word_style_punctuation);
+                bool newv = (last_char != R_BACKWARD_KILL_WORD && last_char != R_BACKWARD_KILL_PATH_COMPONENT && last_char != R_BACKWARD_KILL_BIGWORD);
                 move_word(data->active_edit_line(), MOVE_DIR_LEFT, true /* erase */, style, newv);
                 break;
             }
@@ -3789,10 +3796,24 @@ const wchar_t *reader_readline(int nchars)
                 break;
             }
 
+            /* kill one bigword right */
+            case R_KILL_BIGWORD:
+            {
+                move_word(data->active_edit_line(), MOVE_DIR_RIGHT, true /* erase */, move_word_style_whitespace, last_char!=R_KILL_BIGWORD);
+                break;
+            }
+
             /* move one word left*/
             case R_BACKWARD_WORD:
             {
                 move_word(data->active_edit_line(), MOVE_DIR_LEFT, false /* do not erase */, move_word_style_punctuation, false);
+                break;
+            }
+
+            /* move one bigword left */
+            case R_BACKWARD_BIGWORD:
+            {
+                move_word(data->active_edit_line(), MOVE_DIR_LEFT, false /* do not erase */, move_word_style_whitespace, false);
                 break;
             }
 
@@ -3803,6 +3824,21 @@ const wchar_t *reader_readline(int nchars)
                 if (el->position < el->size())
                 {
                     move_word(el, MOVE_DIR_RIGHT, false /* do not erase */, move_word_style_punctuation, false);
+                }
+                else
+                {
+                    accept_autosuggestion(false /* accept only one word */);
+                }
+                break;
+            }
+
+            /* move one bigword right */
+            case R_FORWARD_BIGWORD:
+            {
+                editable_line_t *el = data->active_edit_line();
+                if (el->position < el->size())
+                {
+                    move_word(el, MOVE_DIR_RIGHT, false /* do not erase */, move_word_style_whitespace, false);
                 }
                 else
                 {

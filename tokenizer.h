@@ -192,7 +192,8 @@ int oflags_for_redirection_type(enum token_type type);
 enum move_word_style_t
 {
     move_word_style_punctuation, //stop at punctuation
-    move_word_style_path_components //stops at path components
+    move_word_style_path_components, //stops at path components
+    move_word_style_whitespace // stops at whitespace
 };
 
 /* Our state machine that implements "one word" movement or erasure. */
@@ -203,6 +204,7 @@ private:
     bool consume_char_punctuation(wchar_t c);
     bool consume_char_path_components(wchar_t c);
     bool is_path_component_character(wchar_t c);
+    bool consume_char_whitespace(wchar_t c);
 
     int state;
     move_word_style_t style;

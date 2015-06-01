@@ -35,6 +35,13 @@ function __fish_config_interactive -d "Initializations that should be performed 
 			set -l line2 (printf (_ 'Type %shelp%s for instructions on how to use fish') (set_color green) (set_color normal))
 			set -U fish_greeting $line1\n$line2
 		end
+		if not set -q fish_vi_greeting
+			set -l line1 (printf (_ 'Welcome to fish, the friendly interactive shell') )
+			set -l line2 (printf (_ 'You are in vi mode. To customize your prompt, you must edit %sfish_vi_prompt%s') (set_color green) (set_color normal))
+			set -l line3 (printf (_ 'instead of %sfish_prompt%s. This message can be removed by setting') (set_color green) (set_color normal))
+			set -l line4 (printf (_ '%sfish_vi_greeting%s to %s""%s.') (set_color green) (set_color normal) (set_color green) (set_color normal))
+			set -U fish_vi_greeting $line1\n$line2\n$line3\n$line4
+		end
 		set -U __fish_init_1_50_0
 
 		#

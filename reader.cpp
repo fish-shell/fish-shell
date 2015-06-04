@@ -128,6 +128,10 @@ commence.
 #define RIGHT_PROMPT_FUNCTION_NAME L"fish_right_prompt"
 
 
+/* The name of the function for getting the input mode indicator */
+#define MODE_PROMPT_FUNCTION_NAME L"fish_mode_prompt"
+
+
 /**
    The default title for the reader. This is used by reader_readline.
 */
@@ -996,6 +1000,18 @@ static void exec_prompt()
     if (data->left_prompt.size() || data->right_prompt.size())
     {
         proc_push_interactive(0);
+
+        // Prepend any mode indicator to the left prompt (#1988)
+        if (function_exists(MODE_PROMPT_FUNCTION_NAME))
+        {
+            wcstring_list_t mode_indicator_list;
+            exec_subshell(MODE_PROMPT_FUNCTION_NAME, mode_indicator_list, apply_exit_status);
+            // We do not support multiple lines in the mode indicator, so just concatenate all of them
+            for (size_t i = 0; i < mode_indicator_list.size(); i++)
+            {
+                data->left_prompt_buff += mode_indicator_list.at(i);
+            }
+        }
 
         if (! data->left_prompt.empty())
         {

@@ -5,7 +5,7 @@
 abbr -a word="phrase"
 abbr -s
 abbr -l
-abbr -r word
+abbr -e word
 \endfish
 
 \subsection abbr-description Description
@@ -24,7 +24,7 @@ The following parameters are available:
 
 - `-l` or `--list` Lists all abbreviated words.
 
-- `-r WORD` or `--remove WORD` Remove the abbreviation WORD.
+- `-e WORD` or `--erase WORD` Erase the abbreviation WORD.
 
 \subsection abbr-example Examples
 
@@ -34,9 +34,9 @@ abbr -a gco git checkout
 Add a new abbreviation where `gco` will be replaced with `git checkout`.
 
 \fish
-abbr -r gco
+abbr -e gco
 \endfish
-Remove the `gco` abbreviation.
+Erase the `gco` abbreviation.
 
 \fish
 ssh another_host abbr -s | source

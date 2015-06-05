@@ -26,8 +26,8 @@ function abbr --description "Manage abbreviations"
 			case '-a' '--add'
 				set new_mode add
 				set needs_arg coalesce
-			case '-r' '--remove'
-				set new_mode remove
+			case '-e' '--erase'
+				set new_mode erase
 				set needs_arg single
 			case '-l' '--list'
 				set new_mode list
@@ -91,7 +91,7 @@ function abbr --description "Manage abbreviations"
 		set fish_user_abbreviations $fish_user_abbreviations $mode_arg
 		return 0
 
-	case 'remove'
+	case 'erase'
 		set -l key
 		__fish_abbr_parse_entry $mode_arg key
 		if set -l idx (__fish_abbr_get_by_key $key)

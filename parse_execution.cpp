@@ -796,8 +796,7 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(con
 
             /* Looks like a command */
             this->report_error(statement_node,
-                               _(L"Unknown command '%ls'. Did you mean to run %ls with a modified environment? Try 'env %ls=%ls %ls%ls'. See the help section on the set command by typing 'help set'."),
-                               cmd,
+                               ERROR_BAD_EQUALS_IN_COMMAND5,
                                argument.c_str(),
                                name_str.c_str(),
                                val_str.c_str(),
@@ -807,39 +806,21 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(con
         else
         {
             this->report_error(statement_node,
-                               COMMAND_ASSIGN_ERR_MSG,
-                               cmd,
+                               ERROR_BAD_COMMAND_ASSIGN_ERR_MSG,
                                name_str.c_str(),
                                val_str.c_str());
         }
     }
-    else if (cmd[0]==L'$' || cmd[0] == VARIABLE_EXPAND || cmd[0] == VARIABLE_EXPAND_SINGLE)
+    else if ((cmd[0] == L'$' || cmd[0] == VARIABLE_EXPAND || cmd[0] == VARIABLE_EXPAND_SINGLE) && cmd[1] != L'\0')
     {
-
-        const env_var_t val_wstr = env_get_string(cmd+1);
-        const wchar_t *val = val_wstr.missing() ? NULL : val_wstr.c_str();
-        if (val)
-        {
-            this->report_error(statement_node,
-                               _(L"Variables may not be used as commands. Instead, define a function like 'function %ls; %ls $argv; end' or use the eval builtin instead, like 'eval %ls'. See the help section for the function command by typing 'help function'."),
-                               cmd+1,
-                               val,
-                               cmd,
-                               cmd);
-        }
-        else
-        {
-            this->report_error(statement_node,
-                               _(L"Variables may not be used as commands. Instead, define a function or use the eval builtin instead, like 'eval %ls'. See the help section for the function command by typing 'help function'."),
-                               cmd,
-                               cmd);
-        }
+        this->report_error(statement_node,
+                           _(L"Variables may not be used as commands. In fish, please define a function or use 'eval %ls'."),
+                           cmd+1);
     }
     else if (wcschr(cmd, L'$'))
     {
         this->report_error(statement_node,
-                           _(L"Commands may not contain variables. Use the eval builtin instead, like 'eval %ls'. See the help section for the eval command by typing 'help eval'."),
-                           cmd,
+                           _(L"Commands may not contain variables. In fish, please use 'eval %ls'."),
                            cmd);
     }
     else if (err_code!=ENOENT)

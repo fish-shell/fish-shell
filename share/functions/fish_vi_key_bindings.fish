@@ -59,13 +59,13 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind -k up up-or-search
 
   bind b backward-word
-  bind B backward-word
-  bind gE backward-word
-  bind gE backward-word
+  bind B backward-bigword
+  bind ge backward-word
+  bind gE backward-bigword
   bind w forward-word
-  bind W forward-word
+  bind W forward-bigword
   bind e forward-word
-  bind E forward-word
+  bind E forward-bigword
 
   bind x delete-char
   bind X backward-delete-char
@@ -81,17 +81,17 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind d\x24 kill-line
   bind d\x5e backward-kill-line
   bind dw kill-word
-  bind dW kill-word
+  bind dW kill-bigword
   bind diw forward-char forward-char backward-word kill-word
-  bind diW forward-char forward-char backward-word kill-word
+  bind diW forward-char forward-char backward-bigword kill-bigword
   bind daw forward-char forward-char backward-word kill-word
-  bind daW forward-char forward-char backward-word kill-word
+  bind daW forward-char forward-char backward-bigword kill-bigword
   bind de kill-word
-  bind dE kill-word
+  bind dE kill-bigword
   bind db backward-kill-word
-  bind dB backward-kill-word
-  bind dgE backward-kill-word
-  bind dgE backward-kill-word
+  bind dB backward-kill-bigword
+  bind dge backward-kill-word
+  bind dgE backward-kill-bigword
 
   bind -m insert s delete-char force-repaint
   bind -m insert S kill-whole-line force-repaint
@@ -100,17 +100,17 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind -m insert c\x24 kill-line force-repaint
   bind -m insert c\x5e backward-kill-line force-repaint
   bind -m insert cw kill-word force-repaint
-  bind -m insert cW kill-word force-repaint
+  bind -m insert cW kill-bigword force-repaint
   bind -m insert ciw forward-char forward-char backward-word kill-word force-repaint
-  bind -m insert ciW forward-char forward-char backward-word kill-word force-repaint
+  bind -m insert ciW forward-char forward-char backward-bigword kill-bigword force-repaint
   bind -m insert caw forward-char forward-char backward-word kill-word force-repaint
-  bind -m insert caW forward-char forward-char backward-word kill-word force-repaint
+  bind -m insert caW forward-char forward-char backward-bigword kill-bigword force-repaint
   bind -m insert ce kill-word force-repaint
-  bind -m insert cE kill-word force-repaint
+  bind -m insert cE kill-bigword force-repaint
   bind -m insert cb backward-kill-word force-repaint
-  bind -m insert cB backward-kill-word force-repaint
-  bind -m insert cgE backward-kill-word force-repaint
-  bind -m insert cgE backward-kill-word force-repaint
+  bind -m insert cB backward-kill-bigword force-repaint
+  bind -m insert cge backward-kill-word force-repaint
+  bind -m insert cgE backward-kill-bigword force-repaint
 
   bind '~' capitalize-word 
   bind gu downcase-word 
@@ -124,17 +124,17 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind y\x24 kill-line yank
   bind y\x5e backward-kill-line yank
   bind yw kill-word yank
-  bind yW kill-word yank
+  bind yW kill-bigword yank
   bind yiw forward-char forward-char backward-word kill-word yank
-  bind yiW forward-char forward-char backward-word kill-word yank
+  bind yiW forward-char forward-char backward-bigword kill-bigword yank
   bind yaw forward-char forward-char backward-word kill-word yank
-  bind yaW forward-char forward-char backward-word kill-word yank
+  bind yaW forward-char forward-char backward-bigword kill-bigword yank
   bind ye kill-word yank
-  bind yE kill-word yank
+  bind yE kill-bigword yank
   bind yb backward-kill-word yank
-  bind yB backward-kill-word yank
-  bind ygE backward-kill-word yank
-  bind ygE backward-kill-word yank
+  bind yB backward-kill-bigword yank
+  bind yge backward-kill-word yank
+  bind ygE backward-kill-bigword yank
 
   bind f forward-jump
   bind F backward-jump
@@ -191,7 +191,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind -M insert \cb backward-word
   bind -M insert \cf forward-word
 
-  bind -M insert -m default \cc backward-char force-repaint
+  bind -M insert \cc 'commandline ""'
   bind -M insert -m default \e backward-char force-repaint
 
   bind -M insert \cd exit
@@ -212,13 +212,13 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind -M visual l forward-char
 
   bind -M visual b backward-word
-  bind -M visual B backward-word
-  bind -M visual gE backward-word
-  bind -M visual gE backward-word
+  bind -M visual B backward-bigword
+  bind -M visual ge backward-word
+  bind -M visual gE backward-bigword
   bind -M visual w forward-word
-  bind -M visual W forward-word
+  bind -M visual W forward-bigword
   bind -M visual e forward-word
-  bind -M visual E forward-word
+  bind -M visual E forward-bigword
 
   bind -M visual -m default d kill-selection end-selection force-repaint
   bind -M visual -m default x kill-selection end-selection force-repaint

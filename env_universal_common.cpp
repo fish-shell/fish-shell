@@ -1376,7 +1376,13 @@ class universal_notifier_named_pipe_t : public universal_notifier_t
         {
             // Maybe open failed, maybe mkfifo failed
             int err = errno;
-            report_error(err, L"Unable to make or open a FIFO for universal variables with path '%ls'", vars_path.c_str());
+            // We explicitly do NOT report an error for ENOENT or EACCESS
+            // This works around #1955, where $XDG_RUNTIME_DIR may get a bogus value under suc
+            if (err != ENOENT && err != EPERM)
+            {
+                report_error(err, L"Unable to make or open a FIFO for universal variables with path '%ls'", vars_path.c_str());
+            }
+            pipe_fd= -1;
         }
         else
         {

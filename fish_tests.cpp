@@ -184,6 +184,8 @@ static wcstring comma_join(const wcstring_list_t &lst)
 
 #define do_test(e) do { if (! (e)) err(L"Test failed on line %lu: %s", __LINE__, #e); } while (0)
 
+#define do_test1(e, msg) do { if (! (e)) err(L"Test failed on line %lu: %ls", __LINE__, (msg)); } while (0)
+
 /* Test sane escapes */
 static void test_unescape_sane()
 {
@@ -2009,7 +2011,7 @@ static void test_complete(void)
     do_test(completions.at(0).completion == L"r");
 
     /* Add a function and test completing it in various ways */
-    struct function_data_t func_data;
+    struct function_data_t func_data = {};
     func_data.name = L"scuttlebutt";
     func_data.definition = L"echo gongoozle";
     function_add(func_data, parser_t::principal_parser());
@@ -3501,7 +3503,129 @@ static void test_new_parser_errors(void)
         }
 
     }
+}
 
+/* Given a format string, returns a list of non-empty strings separated by format specifiers. The format specifiers themselves are omitted. */
+static wcstring_list_t separate_by_format_specifiers(const wchar_t *format)
+{
+    wcstring_list_t result;
+    const wchar_t *cursor = format;
+    const wchar_t *end = format + wcslen(format);
+    while (cursor < end)
+    {
+        const wchar_t *next_specifier = wcschr(cursor, '%');
+        if (next_specifier == NULL)
+        {
+            next_specifier = end;
+        }
+        assert(next_specifier != NULL);
+        
+        /* Don't return empty strings */
+        if (next_specifier > cursor)
+        {
+            result.push_back(wcstring(cursor, next_specifier - cursor));
+        }
+        
+        /* Walk over the format specifier (if any) */
+        cursor = next_specifier;
+        if (*cursor == '%')
+        {
+            cursor++;
+            // Flag
+            if (wcschr(L"#0- +'", *cursor))
+                cursor++;
+            // Minimum field width
+            while (iswdigit(*cursor))
+                cursor++;
+            // Precision
+            if (*cursor == L'.')
+            {
+                cursor++;
+                while (iswdigit(*cursor))
+                    cursor++;
+            }
+            // Length modifier
+            if (! wcsncmp(cursor, L"ll", 2) || ! wcsncmp(cursor, L"hh", 2))
+            {
+                cursor += 2;
+            }
+            else if (wcschr(L"hljtzqL", *cursor))
+            {
+                cursor++;
+            }
+            // The format specifier itself. We allow any character except NUL
+            if (*cursor != L'\0')
+            {
+                cursor += 1;
+            }
+            assert(cursor <= end);
+        }
+    }
+    return result;
+}
+
+/* Given a format string 'format', return true if the string may have been produced by that format string. We do this by splitting the format string around the format specifiers, and then ensuring that each of the remaining chunks is found (in order) in the string. */
+static bool string_matches_format(const wcstring &string, const wchar_t *format)
+{
+    bool result = true;
+    wcstring_list_t components = separate_by_format_specifiers(format);
+    size_t idx = 0;
+    for (size_t i=0; i < components.size(); i++)
+    {
+        const wcstring &component = components.at(i);
+        size_t where = string.find(component, idx);
+        if (where == wcstring::npos)
+        {
+            result = false;
+            break;
+        }
+        idx = where + component.size();
+        assert(idx <= string.size());
+    }
+    return result;
+}
+
+static void test_error_messages()
+{
+    say(L"Testing error messages");
+    const struct error_test_t
+    {
+        const wchar_t *src;
+        const wchar_t *error_text_format;
+    }
+    error_tests[] =
+    {
+        {L"echo $^", ERROR_BAD_VAR_CHAR1},
+        {L"echo foo${a}bar", ERROR_BRACKETED_VARIABLE1},
+        {L"echo foo\"${a}\"bar", ERROR_BRACKETED_VARIABLE_QUOTED1},
+        {L"echo foo\"${\"bar", ERROR_BAD_VAR_CHAR1},
+        {L"echo $?", ERROR_NOT_STATUS},
+        {L"echo $$", ERROR_NOT_PID},
+        {L"echo $#", ERROR_NOT_ARGV_COUNT},
+        {L"echo $@", ERROR_NOT_ARGV_AT},
+        {L"echo $*", ERROR_NOT_ARGV_STAR},
+        {L"echo $", ERROR_NO_VAR_NAME},
+        {L"echo foo\"$\"bar", ERROR_NO_VAR_NAME},
+        {L"echo \"foo\"$\"bar\"", ERROR_NO_VAR_NAME},
+        {L"echo foo $ bar", ERROR_NO_VAR_NAME},
+        {L"echo foo$(foo)bar", ERROR_BAD_VAR_SUBCOMMAND1},
+        {L"echo \"foo$(foo)bar\"", ERROR_BAD_VAR_SUBCOMMAND1},
+        {L"echo foo || echo bar", ERROR_BAD_OR},
+        {L"echo foo && echo bar", ERROR_BAD_AND}
+    };
+    
+    parse_error_list_t errors;
+    for (size_t i=0; i < sizeof error_tests / sizeof *error_tests; i++)
+    {
+        const struct error_test_t *test = &error_tests[i];
+        errors.clear();
+        parse_util_detect_errors(test->src, &errors, false /* allow_incomplete */);
+        do_test(! errors.empty());
+        if (! errors.empty())
+        {
+            do_test1(string_matches_format(errors.at(0).text, test->error_text_format), test->src);
+        }
+    }
 }
 
 static void test_highlighting(void)
@@ -3822,6 +3946,7 @@ int main(int argc, char **argv)
     if (should_test_function("new_parser_correctness")) test_new_parser_correctness();
     if (should_test_function("new_parser_ad_hoc")) test_new_parser_ad_hoc();
     if (should_test_function("new_parser_errors")) test_new_parser_errors();
+    if (should_test_function("error_messages")) test_error_messages();
     if (should_test_function("escape")) test_unescape_sane();
     if (should_test_function("escape")) test_escape_crazy();
     if (should_test_function("format")) test_format();

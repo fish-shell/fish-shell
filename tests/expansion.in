@@ -81,6 +81,10 @@ echo $foo[d]
 echo ()[1]
 echo ()[d]
 
+echo "Catch your breath"
+set paren ')'
+echo $$paren
+
 # Test tilde expansion
 # On OS X, /tmp is symlinked to /private/tmp
 # $PWD is our best bet for resolving it

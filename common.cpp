@@ -481,9 +481,14 @@ const wchar_t *wcsvarname(const wchar_t *str)
     return NULL;
 }
 
-const wchar_t *wcsfuncname(const wchar_t *str)
+const wchar_t *wcsvarname(const wcstring &str)
 {
-    return wcschr(str, L'/');
+    return wcsvarname(str.c_str());
+}
+
+const wchar_t *wcsfuncname(const wcstring &str)
+{
+    return wcschr(str.c_str(), L'/');
 }
 
 

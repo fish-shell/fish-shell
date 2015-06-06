@@ -149,6 +149,10 @@ else
 end
 
 set -Ue __fish_test_universal_variables_variable_foo
+
+# Should no longer be in environment (#2046)
+env | sgrep __fish_test_universal_variables_variable_foo
+
 set -Ux __fish_test_universal_variables_variable_foo bar
 set -U __fish_test_universal_variables_variable_foo baz
 if test (/bin/sh -c 'echo $__fish_test_universal_variables_variable_foo') = baz -a (../fish -c 'echo $__fish_test_universal_variables_variable_foo') = baz

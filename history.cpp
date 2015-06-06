@@ -1405,7 +1405,7 @@ bool history_t::save_internal_via_rewrite()
             {
                 /* It was successfully templated; try opening it atomically */
                 tmp_name = str2wcstring(narrow_str);
-                out_fd = wopen_cloexec(tmp_name, O_WRONLY | O_CREAT | O_EXCL | O_TRUNC, 0644);
+                out_fd = wopen_cloexec(tmp_name, O_WRONLY | O_CREAT | O_EXCL | O_TRUNC, 0600);
             }
 #endif
             free(narrow_str);

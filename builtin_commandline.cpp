@@ -206,7 +206,9 @@ static void write_part(const wchar_t *begin,
             {
                 case TOK_STRING:
                 {
-                    out.append(escape_string(tok_last(&tok), UNESCAPE_INCOMPLETE));
+                    wcstring tmp = tok_last(&tok);
+                    unescape_string_in_place(&tmp, UNESCAPE_INCOMPLETE);
+                    out.append(tmp);
                     out.push_back(L'\n');
                     break;
                 }
@@ -230,8 +232,9 @@ static void write_part(const wchar_t *begin,
         }
 
 //    debug( 0, L"woot2 %ls -> %ls", buff, esc );
-
-        stdout_buffer.append(begin, end - begin);
+        wcstring tmp = wcstring(begin, end - begin);
+        unescape_string_in_place(&tmp, UNESCAPE_INCOMPLETE);
+        stdout_buffer.append(tmp);
         stdout_buffer.append(L"\n");
 
     }

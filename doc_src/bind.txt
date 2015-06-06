@@ -55,7 +55,11 @@ The following special input functions are available:
 
 - `backward-char`, moves one character to the left
 
+- `backward-bigword`, move one whitespace-delimited word to the left
+
 - `backward-delete-char`, deletes one character of input to the left of the cursor
+
+- `backward-kill-bigword`, move the whitespace-delimited word to the left of the cursor to the killring
 
 - `backward-kill-line`, move everything from the beginning of the line to the cursor to the killring
 
@@ -85,6 +89,8 @@ The following special input functions are available:
 
 - `explain`, print a description of possible problems with the current command
 
+- `forward-bigword`, move one whitespace-delimited word to the right
+
 - `forward-char`, move one character to the right
 
 - `forward-word`, move one word to the right
@@ -92,6 +98,8 @@ The following special input functions are available:
 - `history-search-backward`, search the history for the previous match
 
 - `history-search-forward`, search the history for the next match
+
+- `kill-bigword`, move the next whitespace-delimited word to the killring
 
 - `kill-line`, move everything from the cursor to the end of the line to the killring
 

@@ -111,6 +111,7 @@ body {
 }
 
 .master_element {
+    cursor: pointer;
     padding-top: 6px;
     padding-bottom: 11px;
     padding-left: 5px;

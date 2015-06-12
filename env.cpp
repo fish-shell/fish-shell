@@ -1264,7 +1264,7 @@ wcstring_list_t env_get_names(int flags)
   Get list of all exported variables
 */
 
-static void get_exported(const env_node_t *n, std::map<wcstring, wcstring> &h)
+static void get_exported(const env_node_t *n, std::map<wcstring, wcstring> *h)
 {
     if (!n)
         return;
@@ -1279,10 +1279,19 @@ static void get_exported(const env_node_t *n, std::map<wcstring, wcstring> &h)
     {
         const wcstring &key = iter->first;
         const var_entry_t &val_entry = iter->second;
-        if (val_entry.exportv && (val_entry.val != ENV_NULL))
+
+        if (val_entry.exportv && val_entry.val != ENV_NULL)
         {
-            // Don't use std::map::insert here, since we need to overwrite existing values from previous scopes
-            h[key] = val_entry.val;
+            // Export the variable
+            // Don't use std::map::insert here, since we need to overwrite existing
+            // values from previous scopes
+            (*h)[key] = val_entry.val;
+        }
+        else
+        {
+            // We need to erase from the map if we are not exporting,
+            // since a lower scope may have exported. See #2132
+            h->erase(key);
         }
     }
 }
@@ -1333,7 +1342,7 @@ static void update_export_array_if_necessary(bool recalc)
 
         debug(4, L"env_export_arr() recalc");
 
-        get_exported(top, vals);
+        get_exported(top, &vals);
 
         if (uvars())
         {

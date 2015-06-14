@@ -1,8 +1,8 @@
 controllers = angular.module("controllers", []);
 
 controllers.controller("main", function($scope, $location) {
-    $scope.currentTab = "colors";
-
+    // substr(1) strips a leading slash
+    $scope.currentTab = $location.path().substr(1) || "colors";
     $scope.changeView = function(view) {
         $location.path(view);
         $scope.currentTab = view;

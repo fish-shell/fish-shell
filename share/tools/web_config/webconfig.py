@@ -702,14 +702,14 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         return result
 
     def do_remove_abbreviation(self, abbreviation):
-        out, err = run_fish_cmd('abbr -e %s' % abbreviation['word'])
+        out, err = run_fish_cmd('abbr --remove %s' % abbreviation['word'])
         if out or err:
             return err
         else:
             return True
 
     def do_save_abbreviation(self, abbreviation):
-        out, err = run_fish_cmd('abbr -a \'%s %s\'' % (abbreviation['word'], abbreviation['phrase']))
+        out, err = run_fish_cmd('abbr --add \'%s %s\'' % (abbreviation['word'], abbreviation['phrase']))
         if err:
             return err
         else:

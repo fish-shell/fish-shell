@@ -772,19 +772,12 @@ static int wildcard_expand_internal(const wchar_t *wc,
                                     std::set<wcstring> &completion_set,
                                     std::set<file_id_t> &visited_files)
 {
-
     /* Variables for traversing a directory */
     DIR *dir;
 
     /* The result returned */
     int res = 0;
 
-    /* Variables for testing for presense of recursive wildcards */
-    const wchar_t *wc_recursive;
-    bool is_recursive;
-
-    /* Slightly mangled version of base_dir */
-    const wchar_t *dir_string;
 
     //  debug( 3, L"WILDCARD_EXPAND %ls in %ls", wc, base_dir );
 
@@ -800,45 +793,61 @@ static int wildcard_expand_internal(const wchar_t *wc,
     }
 
     const size_t base_dir_len = wcslen(base_dir);
+    const size_t wc_len = wcslen(wc);
 
     if (flags & ACCEPT_INCOMPLETE)
     {
         /*
            Avoid excessive number of returned matches for wc ending with a *
         */
-        size_t len = wcslen(wc);
-        if (len > 0 && (wc[len-1]==ANY_STRING))
+        if (wc_len > 0 && (wc[wc_len-1]==ANY_STRING))
         {
             wchar_t * foo = wcsdup(wc);
-            foo[len-1]=0;
+            foo[wc_len-1]=0;
             int res = wildcard_expand_internal(foo, base_dir, flags, out, completion_set, visited_files);
             free(foo);
             return res;
         }
     }
 
-    /* Initialize various variables */
+    /* Determine if we are the last segment */
+    const wchar_t * const next_slash = wcschr(wc,L'/');
+    const bool is_last_segment = (next_slash == NULL);
+    const size_t wc_segment_len = next_slash ? next_slash - wc : wc_len;
+    const wcstring wc_segment = wcstring(wc, wc_segment_len);
+    
+    /* Maybe this segment has no wildcards at all. If this is not the last segment, and it has no wildcards, then we don't need to match against the directory contents, and in fact we don't want to match since we may not be able to read it anyways (#2099). Don't even open the directory! */
+    const bool segment_has_wildcards = wildcard_has(wc_segment, true /* internal, i.e. look for ANY_CHAR instead of ? */);
+    if (! segment_has_wildcards && ! is_last_segment)
+    {
+        wcstring new_base_dir = make_path(base_dir, wc_segment);
+        new_base_dir.push_back(L'/');
+        
+        /* Skip multiple separators */
+        assert(next_slash != NULL);
+        const wchar_t *new_wc = next_slash;
+        while (*new_wc==L'/')
+        {
+            new_wc++;
+        }
+        /* Early out! */
+        return wildcard_expand_internal(new_wc, new_base_dir.c_str(), flags, out, completion_set, visited_files);
+    }
+    
+    /* Test for recursive match string in current segment */
+    const bool is_recursive = (wc_segment.find(ANY_STRING_RECURSIVE) != wcstring::npos);
+    
 
-    dir_string = (base_dir[0] == L'\0') ? L"." : base_dir;
-
-    if (!(dir = wopendir(dir_string)))
+    const wchar_t *base_dir_or_cwd = (base_dir[0] == L'\0') ? L"." : base_dir;
+    if (!(dir = wopendir(base_dir_or_cwd)))
     {
         return 0;
     }
-
-    /* Points to the end of the current wildcard segment */
-    const wchar_t * const wc_end = wcschr(wc,L'/');
-
-    /*
-      Test for recursive match string in current segment
-    */
-    wc_recursive = wcschr(wc, ANY_STRING_RECURSIVE);
-    is_recursive = (wc_recursive && (!wc_end || wc_recursive < wc_end));
-
+    
     /*
       Is this segment of the wildcard the last?
     */
-    if (!wc_end)
+    if (is_last_segment)
     {
         /*
           Wildcard segment is the last segment,
@@ -926,7 +935,7 @@ static int wildcard_expand_internal(const wchar_t *wc,
         }
     }
 
-    if (wc_end || is_recursive)
+    if ((! is_last_segment) || is_recursive)
     {
         /*
           Wilcard segment is not the last segment.  Recursively call
@@ -939,12 +948,6 @@ static int wildcard_expand_internal(const wchar_t *wc,
         */
         rewinddir(dir);
 
-        /*
-          wc_str is the part of the wildcarded string from the
-          beginning to the first slash
-        */
-        const wcstring wc_str = wcstring(wc, wc_end ? wc_end - wc : wcslen(wc));
-
         /* new_dir is a scratch area containing the full path to a file/directory we are iterating over */
         wcstring new_dir = base_dir;
 
@@ -955,8 +958,8 @@ static int wildcard_expand_internal(const wchar_t *wc,
               Test if the file/directory name matches the whole
               wildcard element, i.e. regular matching.
             */
-            int whole_match = wildcard_match(name_str, wc_str, true /* ignore leading dots */);
-            int partial_match = 0;
+            bool whole_match = wildcard_match(name_str, wc_segment, true /* ignore leading dots */);
+            bool partial_match = false;
 
             /*
                If we are doing recursive matching, also check if this
@@ -999,11 +1002,11 @@ static int wildcard_expand_internal(const wchar_t *wc,
                         if (whole_match)
                         {
                             const wchar_t *new_wc = L"";
-                            if (wc_end)
+                            if (next_slash)
                             {
-                                new_wc=wc_end+1;
+                                new_wc=next_slash+1;
                                 /*
-                                  Accept multiple '/' as a single direcotry separator
+                                  Accept multiple '/' as a single directory separator
                                 */
                                 while (*new_wc==L'/')
                                 {

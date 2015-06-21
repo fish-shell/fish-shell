@@ -6,7 +6,7 @@ function __fish_git_branches
 end
 
 function __fish_git_tags
-  command git tag
+  command git tag ^/dev/null
 end
 
 function __fish_git_heads
@@ -15,7 +15,7 @@ function __fish_git_heads
 end
 
 function __fish_git_remotes
-  command git remote
+  command git remote ^/dev/null
 end
 
 function __fish_git_modified_files
@@ -89,14 +89,14 @@ end
 
 function __fish_git_complete_stashes
     set -l IFS ':'
-    command git stash list --format=%gd:%gs | while read -l name desc
+    command git stash list --format=%gd:%gs ^/dev/null | while read -l name desc
         echo $name\t$desc
     end
 end
 
 function __fish_git_aliases
     set -l IFS \n
-    command git config -z --get-regexp '^alias\.' | while read -lz key value
+    command git config -z --get-regexp '^alias\.' ^/dev/null | while read -lz key value
         begin
             set -l IFS "."
             echo -n $key | read -l _ name

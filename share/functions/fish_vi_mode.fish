@@ -5,4 +5,11 @@ function fish_vi_mode
   
   # Turn on vi keybindings
   set -g fish_key_bindings fish_vi_key_bindings
+  switch "$fish_vi_greeting"
+    case ''
+    # Do not print an empty message.
+
+    case '*'
+    echo $fish_vi_greeting
+  end
 end

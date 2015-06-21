@@ -436,7 +436,11 @@ complete -f -c git -n '__fish_git_using_command submodule' -a 'sync' -d 'Sync su
 complete -f -c git -n '__fish_git_needs_command' -a whatchanged -d 'Show logs with difference each commit introduces'
 
 ## Aliases (custom user-defined commands)
-complete -c git -n '__fish_git_needs_command' -a '(__fish_git_aliases)' -d 'Alias (user-defined command)'
+for alias in (__fish_git_aliases)
+	# Use the definition as the description
+	set -l description (command git config --get-regexp "^alias\.$alias" | while read a b; echo $b; end)
+	complete -c git -n '__fish_git_needs_command' -a "$alias" -d "Alias for $description"
+end
 
 ### git clean
 complete -f -c git -n '__fish_git_needs_command' -a clean -d 'Remove untracked files from the working tree'

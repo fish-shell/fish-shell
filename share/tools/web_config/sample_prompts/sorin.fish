@@ -1,5 +1,5 @@
-# Name:   Sorin
-# Author: Ivan Tham <ivanthamjunhoe@gmail.com>
+# name: Sorin
+# author: Ivan Tham <ivanthamjunhoe@gmail.com>
 
 # If login shell, don't do anything
 if status --is-login; and function fish_prompt; echo -n '% '; end; end

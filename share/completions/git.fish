@@ -45,7 +45,10 @@ function __fish_git_ranges
 end
 
 function __fish_git_needs_command
-	if __fish_seen_subcommand_from $__fish_git_commands (__fish_git_aliases) (__fish_git_custom_commands)
+	if __fish_seen_subcommand_from $__fish_git_commands
+		return 1
+	end
+	if __fish_seen_subcommand_from (__fish_git_aliases) (__fish_git_custom_commands)
 		return 1
 	end
 	return 0

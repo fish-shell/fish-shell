@@ -223,16 +223,6 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[]],[[]])],
                ])
 LDFLAGS="$prev_LDFLAGS"
 
-#
-# On Cygwin, we need to add some flags for ncurses.
-#
-case `uname` in
-    CYGWIN*)
-        echo "adding flags for ncurses on Cygwin"
-        CXXFLAGS="$CXXFLAGS -I/usr/include -I/usr/include/ncursesw"
-        LDFLAGS_FISH="$LDFLAGS_FISH -L/usr/lib/ncursesw"
-    ;;
-esac
 
 #
 # If we are compiling against glibc, set some flags to work around

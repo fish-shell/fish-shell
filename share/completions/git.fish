@@ -61,7 +61,13 @@ function __fish_git_using_command
   end
   
   # aliased command
-  set -l aliases (command git config --get-regexp "^alias\.*" "$argv.*" ^/dev/null | sed -e 's/alias.//' -e 's/ .*$//')
+  set -l aliases (command git config --get-regexp "^alias\.*" "$argv.*" ^/dev/null | while read -lz key value
+	  begin
+		  set -l IFS "."
+		  echo -n $key | read -l _ name
+		  echo $name
+	  end
+  end)
   if __fish_seen_subcommand_from $aliases
 	  return 0
   end

@@ -34,6 +34,7 @@ complete -f -c machinectl -s h -l help -d 'Print a short help and exit'
 complete -f -c machinectl -l version -d 'Print a short version and exit'
 complete -f -c machinectl -l no-pager -d 'Do not pipe output into a pager'
 complete -f -c machinectl -l no-legend -d 'Do not print header and footer'
+complete -f -c machinectl -l no-ask-password -d "Don't ask for password for privileged operations" # might only be valid for certain commands, manpage is vague
 
 # Machine commands
 complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "list" -d "List running machines"

@@ -6,9 +6,9 @@ terminate kill bind copy-{to,from} list-images image-status show-image clone ren
 
 function __fish_systemd_has_machine_image
 	set -l images (__fish_systemd_machine_images)
-	for i in images
+	for i in $images ".host"
 		# Include ".host" here because it _is_ a valid machine
-		if contains -- $i (commandline -opc) ".host"
+		if contains -- $i (commandline -opc)
 			echo $i
 			return 0
 		end

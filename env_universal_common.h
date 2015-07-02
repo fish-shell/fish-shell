@@ -180,7 +180,4 @@ bool universal_log_enabled();
 /* Environment variable for enabling universal variable logging (to stderr) */
 #define UNIVERSAL_LOGGING_ENV_NAME "fish_universal_log"
 
-/* Environment variable for enabling fishd */
-#define UNIVERSAL_USE_FISHD "fish_use_fishd"
-
 #endif

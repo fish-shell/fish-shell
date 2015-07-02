@@ -1,0 +1,131 @@
+This work was packaged for Debian by David Adam <zanchey@ucc.gu.uwa.edu.au>
+on Thu, 14 Jun 2012 20:33:34 +0800, based on work by James Vega
+<jamessan@jamessan.com>.
+
+It was downloaded from:
+
+    https://github.com/fish-shell/fish-shell
+
+Upstream Authors:
+
+    Axel Liljencrantz
+    ridiculous_fish
+
+Copyright:
+
+    Copyright (C) 2005-2008 Axel Liljencrantz
+    Copyright (C) 2011-2012 ridiculous_fish
+
+License:
+
+Copyright (C) 2005-2008 Axel Liljencrantz
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License version 2 as
+    published by the Free Software Foundation.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+    MA 02110-1301, USA.
+
+On Debian systems, the complete text of the GNU General
+Public License version 2 can be found in "/usr/share/common-licenses/GPL-2".
+
+Fish contains code under the BSD license, namely versions of the
+two functions strlcat and strlcpy, modified for use with wide
+character strings.
+
+  Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
+
+  Permission to use, copy, modify, and distribute this software for any
+  purpose with or without fee is hereby granted, provided that the above
+  copyright notice and this permission notice appear in all copies.
+
+  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+  ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+The XSel command, written and copyrighted by Conrad Parker, is
+distributed together with, and used by fish. It is released under the MIT
+license.
+
+  It is Copyright (C) 2001 Conrad Parker <conrad@vergenet.net>
+
+  Permission to use, copy, modify, distribute, and sell this software
+  and its documentation for any purpose is hereby granted without fee,
+  provided that the above copyright notice appear in all copies and that
+  both that copyright notice and this permission notice appear in
+  supporting documentation. No representations are made about the
+  suitability of this software for any purpose. It is provided "as is"
+  without express or implied warranty.
+
+The xdgmime library, written and copyrighted by Red Hat, Inc, is used
+by the mimedb command, which is a part of fish. It is released under
+the LGPL license.
+
+The copyright for the xdgmime-related files belong to the following people
+xdgmime.c
+   Copyright (C) 2003,2004  Red Hat, Inc.
+   Copyright (C) 2003,2004  Jonathan Blandford <jrb@alum.mit.edu>
+
+xdgmime.h
+   Copyright (C) 2003  Red Hat, Inc.
+   Copyright (C) 2003  Jonathan Blandford <jrb@alum.mit.edu>
+
+xdgmimealias.c, xdgmimealias.h
+   Copyright (C) 2004  Red Hat, Inc.
+   Copyright (C) 2004  Matthias Clasen <mclasen@redhat.com>
+
+xdgmimeglob.c, xdgmimeglob.h
+   Copyright (C) 2003  Red Hat, Inc.
+   Copyright (C) 2003  Jonathan Blandford <jrb@alum.mit.edu>
+
+xdgmimeint.c, xdgmimeint.h
+   Copyright (C) 2003  Red Hat, Inc.
+   Copyright (C) 2003  Jonathan Blandford <jrb@alum.mit.edu>
+
+xdgmimemagic.c, xdgmimemagic.h
+   Copyright (C) 2003  Red Hat, Inc.
+   Copyright (C) 2003  Jonathan Blandford <jrb@alum.mit.edu>
+
+xdgmimeparent.c, xdgmimeparent.h
+   Copyright (C) 2004  Red Hat, Inc.
+   Copyright (C) 2004  Matthias Clasen <mclasen@redhat.com>
+
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2 of the License, or (at your option) any later version.
+
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+  02110-1301, USA.
+
+Fish contains code from the glibc library, namely the wcstok function
+in fallback.c.  This code is licensed under the LGPL.
+
+On Debian systems, the complete text of the GNU Lesser General
+Public License can be found in `/usr/share/common-licenses/LGPL'.
+
+The Debian packaging is:
+
+    Copyright (C) 2005 James Vega <jamessan@jamessan.com>
+    Copyright (C) 2012 David Adam <zanchey@ucc.gu.uwa.edu.au>
+
+and is licensed under the GPL version 2, see above.

@@ -1,0 +1,25 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+# Uncomment this to turn on verbose mode.
+export DH_VERBOSE=1
+
+# dpkg-dev 1.16.1 doesn't export buildflags
+# can be removed once on dh compat level 9
+DPKG_EXPORT_BUILDFLAGS = 1
+-include /usr/share/dpkg/buildflags.mk
+
+%:
+	dh $@ --with autotools-dev,autoreconf
+
+override_dh_auto_install:
+	dh_auto_install --destdir=debian/fish
+
+override_dh_installdocs:
+	dh_installdocs --link-doc=fish
+
+override_dh_strip:
+	dh_strip --dbg-package=fish-dbg
+
+# Don't run tests; they don't work until fish is installed
+override_dh_auto_test:

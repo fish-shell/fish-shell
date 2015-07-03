@@ -514,15 +514,21 @@ You can choose among some sample prompts by running `fish_config prompt`. `fish`
 
 `$PATH` is an environment variable containing the directories in which `fish` searches for commands. Unlike other shells, $PATH is a [list](#tut_lists), not a colon-delimited string.
 
-You can set PATH directly in fish.config, like you would do in other shells. See [this example](#path_example).
+To prepend to `$PATH`, you can write:
+
+\fish{cli-dark}
+>_ set PATH /new/path $PATH
+\endfish
+
+You can do so directly in `fish.config`, like you might do in other shells with `.profile`. See [this example](#path_example).
 
 A faster way is to modify the `$fish_user_paths` [universal variable](#tut_universal), which is automatically prepended to `$PATH`. For example, to permanently add `/usr/local/bin` to your `$PATH`, you could write:
 
 \fish{cli-dark}
->_ set -U fish_user_paths $fish_user_paths /usr/local/bin
+>_ set -U fish_user_paths /usr/local/bin $fish_user_paths
 \endfish
 
-You just run this once at the command line, and it will affect the current session and all future instances too. (Note: you should NOT add this line to `fish.config`. If you do, the variable will get longer each time you run fish!)
+The advantage is that you don't have to go mucking around in files: just run this once at the command line, and it will affect the current session and all future instances too. (Note: you should NOT add this line to `fish.config`. If you do, the variable will get longer each time you run fish!)
 
 \section tut_startup Startup (Where's .bashrc?)
 

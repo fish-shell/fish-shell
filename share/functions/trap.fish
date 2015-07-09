@@ -12,7 +12,7 @@ function __trap_switch
 
 	switch $argv[1]
 		case EXIT
-			echo --on-exit %self
+			echo --on-process-exit %self
 
 		case '*'
 			echo --on-signal $argv[1]

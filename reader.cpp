@@ -131,6 +131,8 @@ commence.
 /* The name of the function for getting the input mode indicator */
 #define MODE_PROMPT_FUNCTION_NAME L"fish_mode_prompt"
 
+/* The name of the function to be executed immediately following prompt */
+#define END_PROMPT_FUNCTION_NAME L"fish_end_prompt"
 
 /**
    The default title for the reader. This is used by reader_readline.
@@ -1022,6 +1024,18 @@ static void exec_prompt()
             {
                 if (i > 0) data->left_prompt_buff += L'\n';
                 data->left_prompt_buff += prompt_list.at(i);
+            }
+        }
+
+        // Append any end-of-prompt command to the left prompt
+        if (function_exists(END_PROMPT_FUNCTION_NAME))
+        {
+            wcstring_list_t end_prompt_list;
+            exec_subshell(END_PROMPT_FUNCTION_NAME, end_prompt_list, apply_exit_status);
+            // We do not support multiple lines in the end-of-prompt command, so just concatenate all of them
+            for (size_t i = 0; i < end_prompt_list.size(); i++)
+            {
+                data->left_prompt_buff += end_prompt_list.at(i);
             }
         }
 

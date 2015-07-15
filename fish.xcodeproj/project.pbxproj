@@ -361,6 +361,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4E142D731B56B5D7008783C8 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = config.h; path = osx/config.h; sourceTree = "<group>"; };
 		D00769421990137800CA4627 /* fish_tests */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = fish_tests; sourceTree = BUILT_PRODUCTS_DIR; };
 		D00F63F019137E9D00FCCDEC /* fish_version.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fish_version.cpp; sourceTree = "<group>"; };
 		D01A2D23169B730A00767098 /* man1 */ = {isa = PBXFileReference; lastKnownFileType = text; name = man1; path = pages_for_manpath/man1; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -381,7 +382,6 @@
 		D0A0850313B3ACEE0099B651 /* builtin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = builtin.h; sourceTree = "<group>"; };
 		D0A0850413B3ACEE0099B651 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
 		D0A0850513B3ACEE0099B651 /* complete.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = complete.h; sourceTree = "<group>"; };
-		D0A0850613B3ACEE0099B651 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
 		D0A0850713B3ACEE0099B651 /* env_universal_common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = env_universal_common.h; sourceTree = "<group>"; };
 		D0A0850913B3ACEE0099B651 /* env.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = env.h; sourceTree = "<group>"; };
 		D0A0850A13B3ACEE0099B651 /* event.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = event.h; sourceTree = "<group>"; };
@@ -496,7 +496,6 @@
 		D0F3373A1506DE3C00ECEFC0 /* builtin_test.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = builtin_test.cpp; sourceTree = "<group>"; };
 		D0F5B46319CFCDE80090665E /* wcstringutil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = wcstringutil.cpp; sourceTree = "<group>"; };
 		D0F5B46419CFCDE80090665E /* wcstringutil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = wcstringutil.h; sourceTree = "<group>"; };
-		D0F5E28415A7A32D00315DFF /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
 		D0FE8EE6179CA8A5008C9F21 /* parse_productions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = parse_productions.h; sourceTree = "<group>"; };
 		D0FE8EE7179FB75F008C9F21 /* parse_productions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = parse_productions.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -564,7 +563,6 @@
 			isa = PBXGroup;
 			children = (
 				D0D02A91159845EF008E62BD /* Sources */,
-				D0F5E28115A7A32D00315DFF /* DerivedSources */,
 				D0D02AFC159871BF008E62BD /* Launcher */,
 				D0D02A8E15983D5F008E62BD /* Libraries */,
 				D0D02AAB15985C14008E62BD /* Resources */,
@@ -586,6 +584,7 @@
 		D0D02A91159845EF008E62BD /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				4E142D731B56B5D7008783C8 /* config.h */,
 				D0C6FCCB14CFA4B7004CE8AD /* autoload.h */,
 				D0C6FCC914CFA4B0004CE8AD /* autoload.cpp */,
 				D0A0850313B3ACEE0099B651 /* builtin.h */,
@@ -604,7 +603,6 @@
 				D0A0853613B3ACEE0099B651 /* common.cpp */,
 				D0A0850513B3ACEE0099B651 /* complete.h */,
 				D0A0853713B3ACEE0099B651 /* complete.cpp */,
-				D0A0850613B3ACEE0099B651 /* config.h */,
 				D0A0850713B3ACEE0099B651 /* env_universal_common.h */,
 				D0A0853813B3ACEE0099B651 /* env_universal_common.cpp */,
 				D0A0850913B3ACEE0099B651 /* env.h */,
@@ -744,14 +742,6 @@
 			);
 			name = Products;
 			sourceTree = "<group>";
-		};
-		D0F5E28115A7A32D00315DFF /* DerivedSources */ = {
-			isa = PBXGroup;
-			children = (
-				D0F5E28415A7A32D00315DFF /* config.h */,
-			);
-			name = DerivedSources;
-			sourceTree = DERIVED_FILE_DIR;
 		};
 /* End PBXGroup section */
 

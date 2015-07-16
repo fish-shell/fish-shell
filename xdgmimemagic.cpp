@@ -47,8 +47,6 @@
 #define  TRUE  (!FALSE)
 #endif
 
-extern int errno;
-
 typedef struct XdgMimeMagicMatch XdgMimeMagicMatch;
 typedef struct XdgMimeMagicMatchlet XdgMimeMagicMatchlet;
 

@@ -18,4 +18,6 @@
 /build_tools/osx_package_scripts/postinstall export-ignore
 /build_tools/make_pkg.sh export-ignore
 /build_tools/make_darcs_completions.fish export-ignore
+/debian export-ignore
+/debian/* export-ignore
 

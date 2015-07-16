@@ -27,7 +27,7 @@
 - <a href="#tut_path">$PATH</a>
 - <a href="#tut_startup">Startup</a>
 - <a href="#tut_autoload">Autoloading Functions</a>
-- <a href="#tut-more">Ready for more?</a>
+- <a href="#tut_more">Ready for more?</a>
 
 \htmlonly[block]
 </div>
@@ -510,18 +510,25 @@ Multiple lines are OK. Colors can be set via `set_color`, passing it named ANSI 
 
 You can choose among some sample prompts by running `fish_config prompt`. `fish` also supports RPROMPT through `fish_right_prompt`.
 
-\section tut-path $PATH
+\section tut_path $PATH
 
-`$PATH` is an environment variable containing the directories in which `fish` searches for commands. Instead of separating entries with a colon, $PATH is a list. You can modify $PATH in a few ways:
+`$PATH` is an environment variable containing the directories in which `fish` searches for commands. Unlike other shells, $PATH is a [list](#tut_lists), not a colon-delimited string.
 
--# By modifying the `$fish_user_paths` variable, which is automatically appended to `$PATH`. For example, to permanently add `/usr/local/bin` to your `$PATH`, you could write:
+To prepend to `$PATH`, you can write:
 
 \fish{cli-dark}
->_ set -U fish_user_paths $fish_user_paths /usr/local/bin
+>_ set PATH /new/path $PATH
 \endfish
 
--# Directly in config.fish (see below).
+You can do so directly in `fish.config`, like you might do in other shells with `.profile`. See [this example](#path_example).
 
+A faster way is to modify the `$fish_user_paths` [universal variable](#tut_universal), which is automatically prepended to `$PATH`. For example, to permanently add `/usr/local/bin` to your `$PATH`, you could write:
+
+\fish{cli-dark}
+>_ set -U fish_user_paths /usr/local/bin $fish_user_paths
+\endfish
+
+The advantage is that you don't have to go mucking around in files: just run this once at the command line, and it will affect the current session and all future instances too. (Note: you should NOT add this line to `fish.config`. If you do, the variable will get longer each time you run fish!)
 
 \section tut_startup Startup (Where's .bashrc?)
 
@@ -529,6 +536,7 @@ You can choose among some sample prompts by running `fish_config prompt`. `fish`
 
 It is possible to directly create functions and variables in `config.fish` file, using the commands shown above. For example:
 
+<a name="path_example"></a>
 \fish{cli-dark}
 >_ cat ~/.config/fish/config.fish
 
@@ -541,7 +549,7 @@ end
 
 However, it is more common and efficient to use  autoloading functions and universal variables.
 
-\section tut-autoload Autoloading Functions
+\section tut_autoload Autoloading Functions
 
 When `fish` encounters a command, it attempts to autoload a function for that command, by looking for a file with the name of that command in `~/.config/fish/functions/`.
 
@@ -565,7 +573,7 @@ end
 
 See the documentation for <a href="commands.html#funced">funced</a> and <a href="commands.html#funcsave">funcsave</a> for ways to create these files automatically.
 
-\section tut-universal Universal Variables
+\section tut_universal Universal Variables
 
 A universal variable is a variable whose value is shared across all instances of `fish`, now and in the future – even after a reboot. You can make a variable universal with `set -U`:
 
@@ -580,7 +588,7 @@ Now in another shell:
 vim
 \endfish
 
-\section tut-more  Ready for more?
+\section tut_more  Ready for more?
 
 If you want to learn more about fish, there is <a href="index.html">lots of detailed documentation</a>, an <a href="https://lists.sourceforge.net/lists/listinfo/fish-users">official mailing list</a>, the IRC channel \#fish on `irc.oftc.net`, and the <a href="https://github.com/fish-shell/fish-shell/">github page</a>.
 

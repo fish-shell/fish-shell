@@ -1,0 +1,33 @@
+# Test basic add and list
+abbr __abbr1 alpha beta gamma
+abbr | grep __abbr1
+
+# Erasing one that doesn't exist should do nothing
+abbr --erase NOT_AN_ABBR
+abbr | grep __abbr1
+
+# Adding existing one should be idempotent
+abbr __abbr1 alpha beta gamma
+abbr | grep __abbr1
+
+# Replacing
+abbr __abbr1 delta 
+abbr | grep __abbr1
+
+# -s and --show tests
+abbr -s | grep __abbr1
+abbr --show | grep __abbr1
+
+# Test erasing
+abbr -e __abbr1
+abbr | grep __abbr1
+
+# Ensure we escape special characters on output
+abbr '~__abbr2' '$xyz'
+abbr | grep __abbr2
+abbr -e '~__abbr2'
+
+# Ensure we handle leading dashes in abbreviation names properly
+abbr -- '--__abbr3' 'xyz'
+abbr | grep __abbr3
+abbr -e '--__abbr3'

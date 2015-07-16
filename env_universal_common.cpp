@@ -698,7 +698,7 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd)
     */
     int result_fd = -1;
     bool needs_lock = true;
-    int flags = O_RDONLY | O_CREAT;
+    int flags = O_RDWR | O_CREAT;
 #ifdef O_EXLOCK
     flags |= O_EXLOCK;
     needs_lock = false;
@@ -741,8 +741,7 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd)
                 /* error */
                 if (errno != EINTR)
                 {
-                    int err = errno;
-                    report_error(err, L"Unable to lock universal variable file '%ls'", path.c_str());
+                    /* Do nothing per #2149 */
                     break;
                 }
             }

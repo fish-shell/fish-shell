@@ -81,7 +81,7 @@ function funced --description 'Edit function definition'
         return 0
     end
 
-    set tmpname (mktemp -t fish_funced.XXXXXXXXXX)
+    set tmpname (mktemp -t fish_funced.XXXXXXXXXX.fish)
 
     if functions -q -- $funcname
         functions -- $funcname > $tmpname

@@ -1,3 +1,1 @@
-
-__fish_complete_pacman pacmatic
-
+complete -c pacmatic -w pacman

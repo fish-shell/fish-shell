@@ -1,3 +1,1 @@
-
-__fish_complete_pacman pacman-color
-
+complete -c pacman-color -w pacman

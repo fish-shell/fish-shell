@@ -1260,11 +1260,7 @@ double nan(char *tagp)
 
 /* Big hack to use our versions of wcswidth where we know them to be broken, like on OS X */
 #ifndef HAVE_BROKEN_WCWIDTH
-#if __APPLE__
 #define HAVE_BROKEN_WCWIDTH 1
-#else
-#define HAVE_BROKEN_WCWIDTH 0
-#endif
 #endif
 
 #if ! HAVE_BROKEN_WCWIDTH

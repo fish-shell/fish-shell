@@ -22,7 +22,7 @@ controllers.controller("colorsController", function($scope, $http) {
         $scope.colorArraysArray = $scope.getColorArraysArray();
         //TODO: Save button should be shown only when colors are changed
         $scope.showSaveButton = true;
-        
+
         $scope.noteThemeChanged();
     }
 
@@ -31,7 +31,7 @@ controllers.controller("colorsController", function($scope, $http) {
     }
 
     $scope.text_color_for_color = text_color_for_color;
-    
+
     $scope.border_color_for_color = border_color_for_color;
 
     $scope.getColorArraysArray = function() {
@@ -42,7 +42,7 @@ controllers.controller("colorsController", function($scope, $http) {
             result =  get_colors_as_nested_array(term_256_colors, 32);
         return result;
     }
-    
+
     $scope.beginCustomizationWithSetting = function(setting) {
     	if (! $scope.customizationActive) {
 	    	$scope.customizationActive = true;
@@ -51,14 +51,14 @@ controllers.controller("colorsController", function($scope, $http) {
 			$scope.csUserVisibleTitle = user_visible_title_for_setting_name(setting);
     	}
     }
-        
+
     $scope.selectColorSetting = function(name) {
     	$scope.selectedColorSetting = name;
     	$scope.csEditingType = $scope.customizationActive ? name : '';
     	$scope.csUserVisibleTitle = user_visible_title_for_setting_name(name);
     	$scope.beginCustomizationWithSetting(name);
     }
-    
+
     $scope.toggleCustomizationActive = function() {
 	    if (! $scope.customizationActive) {
 	    	$scope.beginCustomizationWithSetting($scope.selectedColorSetting || 'command');
@@ -93,7 +93,7 @@ controllers.controller("colorsController", function($scope, $http) {
      })};
 
 	$scope.saveThemeButtonTitle = "Set Theme";
-	
+
 	$scope.noteThemeChanged = function() {
 		$scope.saveThemeButtonTitle = "Set Theme";
 	}
@@ -135,7 +135,7 @@ controllers.controller("promptController", function($scope, $http) {
 
     $scope.selectPrompt = function(prompt) {
         $scope.selectedPrompt= prompt;
-        
+
         $scope.savePromptButtonTitle = "Set Prompt";
     }
 
@@ -163,7 +163,7 @@ controllers.controller("promptController", function($scope, $http) {
 
 controllers.controller("functionsController", function($scope, $http) {
     $scope.selectedFunction = null;
-    $scope.functionDefinition = ""; 
+    $scope.functionDefinition = "";
 
     $scope.selectFunction = function(fun) {
         $scope.selectedFunction = fun;

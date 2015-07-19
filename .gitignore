@@ -24,7 +24,6 @@ fish
 fish_indent
 fish_tests
 fish.pc
-mimedb
 seq
 set_color
 share/config.fish

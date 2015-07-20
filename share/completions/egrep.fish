@@ -1,1 +1,1 @@
-__fish_complete_grep egrep
+complete -c grep -w egrep

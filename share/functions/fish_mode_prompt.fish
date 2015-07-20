@@ -9,6 +9,9 @@ function fish_mode_prompt --description "Displays the current mode"
       case insert
         set_color --bold --background green white
         echo '[I]'
+      case replace-one
+        set_color --bold --background green white
+        echo '[R]'
       case visual
         set_color --bold --background magenta white
         echo '[V]'

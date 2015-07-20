@@ -27,6 +27,16 @@ expect_prompt -re {\r\nsuccess\r\n} {
     puts stderr "Couldn't find expected output 'success'"
 }
 
+# Test lowercase-r replace
+send_line "\033ddiecho TEXT\033hhrAi"
+expect_prompt -re {\r\nTAXT\r\n} {
+    puts "replace success"
+} -nounmatched -re {\r\nfail} {
+    puts stderr "replace fail"
+} unmatched {
+    puts stderr "Couldn't find expected output 'TAXT'"
+}
+
 # still in insert mode, switch back to regular key bindings
 send_line "set -g fish_key_bindings fish_default_key_bindings"
 expect_prompt

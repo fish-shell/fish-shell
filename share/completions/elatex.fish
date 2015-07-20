@@ -1,2 +1,2 @@
-__fish_complete_tex elatex
+complete -c tex -w elatex
 

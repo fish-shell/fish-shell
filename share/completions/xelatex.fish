@@ -1,2 +1,2 @@
-__fish_complete_tex xelatex
+complete -c tex -w xelatex
 

@@ -730,6 +730,32 @@ static void input_mapping_execute_matching_or_generic(bool allow_commands)
     }
 }
 
+/* Helper function. Picks through the queue of incoming characters until we get to one that's not a readline function. */
+static wchar_t input_read_characters_only()
+{
+    std::vector<wchar_t> functions_to_put_back;
+    wchar_t char_to_return;
+    for (;;)
+    {
+        char_to_return = input_common_readch(0);
+        bool is_readline_function = (char_to_return >= R_MIN && char_to_return <= R_MAX);
+        // R_NULL and R_EOF are more control characters than readline functions, so check specially for those
+        if (!is_readline_function || char_to_return == R_NULL || char_to_return == R_EOF)
+        {
+            break;
+        }
+        // This is a readline function; save it off for later re-enqueing and try again
+        functions_to_put_back.push_back(char_to_return);
+    }
+    // Restore any readline functions, in reverse to preserve their original order
+    size_t idx = functions_to_put_back.size();
+    while (idx--)
+    {
+        input_common_next_ch(functions_to_put_back.at(idx));
+    }
+    return char_to_return;
+}
+
 wint_t input_readch(bool allow_commands)
 {
     CHECK_BLOCK(R_NULL);
@@ -757,7 +783,8 @@ wint_t input_readch(bool allow_commands)
                 }
                 case R_SELF_INSERT:
                 {
-                    return input_common_readch(0);
+                    /* #1595: ensure we only insert characters, not readline functions. The common case is that this will be empty. */
+                    return input_read_characters_only();
                 }
                 case R_AND:
                 {

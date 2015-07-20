@@ -78,7 +78,7 @@ if test -d /usr/xpg4/bin
 	end
 end
 
-# OS X-ism: Load the path files out of /etc/paths and /etc/paths.d/*
+# OS X-ism: Load the path files out of /etc/paths, /etc/paths.d/* and /etc/manpaths
 set -g __fish_tmp_path $PATH
 function __fish_load_path_helper_paths
 	# We want to rearrange the path to reflect this order. Delete that path component if it exists and then prepend it.
@@ -92,6 +92,7 @@ function __fish_load_path_helper_paths
     set __fish_tmp_path $__fish_tmp_path[-1..1]
 end
 test -r /etc/paths ; and __fish_load_path_helper_paths < /etc/paths 
+test -r /etc/manpaths ; and __fish_load_path_helper_paths < /etc/manpaths 
 for pathfile in /etc/paths.d/* ; __fish_load_path_helper_paths < $pathfile ; end
 set -xg PATH $__fish_tmp_path
 set -e __fish_tmp_path

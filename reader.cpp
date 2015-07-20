@@ -1191,6 +1191,7 @@ static bool command_ends_paging(wchar_t c, bool focused_on_search_field)
         case R_FORWARD_BIGWORD:
         case R_BACKWARD_BIGWORD:
         case R_DELETE_CHAR:
+        case R_REPLACE_CHAR:
         case R_BACKWARD_DELETE_CHAR:
         case R_KILL_LINE:
         case R_YANK:
@@ -3108,6 +3109,7 @@ const wchar_t *reader_readline(int nchars)
     std::vector<completion_t> comp;
     int finished=0;
     struct termios old_modes;
+    bool replace = false;
 
     /* Coalesce redundant repaints. When we get a repaint, we set this to true, and skip repaints until we get something else. */
     bool coalescing_repaints = false;
@@ -3155,7 +3157,7 @@ const wchar_t *reader_readline(int nchars)
         {
             int was_interactive_read = is_interactive_read;
             is_interactive_read = 1;
-            c=input_readch();
+            !replace ? c = input_readch() : c = input_common_readch(0);
             is_interactive_read = was_interactive_read;
             //fprintf(stderr, "C: %lx\n", (long)c);
 
@@ -3567,6 +3569,12 @@ const wchar_t *reader_readline(int nchars)
                     update_buff_pos(el, el->position + 1);
                     remove_backward();
                 }
+                break;
+            }
+
+            case R_REPLACE_CHAR:
+            {
+                replace = true;
                 break;
             }
 
@@ -4173,7 +4181,23 @@ const wchar_t *reader_readline(int nchars)
 
                     /* Regular character */
                     editable_line_t *el = data->active_edit_line();
-                    insert_char(data->active_edit_line(), c, allow_expand_abbreviations);
+                    if (!replace)
+                    {
+                        insert_char(data->active_edit_line(), c, allow_expand_abbreviations);
+                    }
+                    else
+                    {
+                        if (el->position < el->size())
+                        {
+                            update_buff_pos(el, el->position + 1);
+                            remove_backward();
+                        }
+
+                        insert_char(data->active_edit_line(), c);
+
+                        replace = false;
+                        update_buff_pos(el, el->position - 1);
+                    }
 
                     /* End paging upon inserting into the normal command line */
                     if (el == &data->command_line)

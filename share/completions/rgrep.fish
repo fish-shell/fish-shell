@@ -1,1 +1,1 @@
-__fish_complete_grep rgrep
+complete -c grep -w rgrep

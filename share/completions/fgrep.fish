@@ -1,1 +1,1 @@
-__fish_complete_grep fgrep
+complete -c grep -w fgrep

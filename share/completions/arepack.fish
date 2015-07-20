@@ -1,1 +1,1 @@
-__fish_complete_atool arepack
+complete -c arepack -w atool

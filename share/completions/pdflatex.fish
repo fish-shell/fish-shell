@@ -1,2 +1,2 @@
-__fish_complete_tex pdflatex
+complete -c tex -w pdflatex
 

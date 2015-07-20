@@ -1,1 +1,1 @@
-__fish_complete_xsum sha256sum
+complete -c sha256sum -w md5sum

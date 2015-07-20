@@ -1241,8 +1241,7 @@ static void remove_backward()
 
     reader_super_highlight_me_plenty();
 
-    reader_repaint();
-
+    reader_repaint_needed();
 }
 
 

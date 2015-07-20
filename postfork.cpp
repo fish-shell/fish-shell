@@ -176,6 +176,7 @@ static int handle_child_io(const io_chain_t &io_chain)
                     {
                         debug_safe_int(1,  FD_ERROR, io->fd);
                         safe_perror("dup2");
+                        exec_close(tmp);
                         return -1;
                     }
                     exec_close(tmp);

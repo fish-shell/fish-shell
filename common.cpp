@@ -2176,7 +2176,11 @@ void restore_term_foreground_process_group(void)
 {
     if (initial_foreground_process_group != -1)
     {
-        tcsetpgrp(STDIN_FILENO, initial_foreground_process_group);
+        /* This is called during shutdown and from a signal handler. We don't bother to complain on failure. */
+        if (0 > tcsetpgrp(STDIN_FILENO, initial_foreground_process_group))
+        {
+            /* Ignore failure */
+        }
     }
 }
 

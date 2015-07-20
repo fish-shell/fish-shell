@@ -54,8 +54,6 @@ static bool path_get_path_core(const wcstring &cmd, wcstring *out_path, const en
         }
         else
         {
-            struct stat buff;
-            wstat(cmd, &buff);
             return false;
         }
 

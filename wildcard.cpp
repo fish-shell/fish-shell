@@ -488,7 +488,7 @@ static wcstring complete_get_desc_suffix(const wchar_t *suff_orig)
 
 static wcstring file_get_desc(const wcstring &filename,
                               int lstat_res,
-                              struct stat lbuf,
+                              const struct stat &lbuf,
                               int stat_res,
                               struct stat buf,
                               int err)

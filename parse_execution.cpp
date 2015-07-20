@@ -136,9 +136,9 @@ const parse_node_t *parse_execution_context_t::infinite_recursive_statement_in_j
         /* Ok, this is an undecorated plain statement. Get and expand its command */
         wcstring cmd;
         tree.command_for_plain_statement(plain_statement, src, &cmd);
-        expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES, NULL);
 
-        if (cmd == forbidden_function_name)
+        if (expand_one(cmd, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_VARIABLES, NULL) &&
+            cmd == forbidden_function_name)
         {
             /* This is it */
             infinite_recursive_statement = &statement;
@@ -1286,15 +1286,6 @@ parse_execution_result_t parse_execution_context_t::populate_job_from_job_node(j
 
 parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t &job_node, const block_t *associated_block)
 {
-    parse_execution_result_t result = parse_execution_success;
-
-    bool log_it = false;
-    if (log_it)
-    {
-        fprintf(stderr, "%s: %ls\n", __FUNCTION__, get_source(job_node).c_str());
-    }
-
-
     if (should_cancel_execution(associated_block))
     {
         return parse_execution_cancelled;
@@ -1329,6 +1320,8 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
     /* When we encounter a block construct (e.g. while loop) in the general case, we create a "block process" that has a pointer to its source. This allows us to handle block-level redirections. However, if there are no redirections, then we can just jump into the block directly, which is significantly faster. */
     if (job_is_simple_block(job_node))
     {
+        parse_execution_result_t result = parse_execution_success;
+        
         const parse_node_t &statement = *get_child(job_node, 0, symbol_statement);
         const parse_node_t &specific_statement = *get_child(statement, 0);
         assert(specific_statement_type_is_redirectable_block(specific_statement));
@@ -1360,7 +1353,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
             profile_item->parse = 0;
             profile_item->exec=(int)(exec_time-start_time);
             profile_item->cmd = profiling_cmd_name_for_redirectable_block(specific_statement, this->tree, this->src);
-            profile_item->skipped = result != parse_execution_success;
+            profile_item->skipped = false;
         }
 
         return result;
@@ -1439,13 +1432,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
         profile_item->parse = (int)(parse_time-start_time);
         profile_item->exec=(int)(exec_time-parse_time);
         profile_item->cmd = j ? j->command() : wcstring();
-        profile_item->skipped = ! populated_job || result != parse_execution_success;
-    }
-
-    /* If the job was skipped, we pretend it ran anyways */
-    if (result == parse_execution_skipped)
-    {
-        result = parse_execution_success;
+        profile_item->skipped = ! populated_job;
     }
 
 
@@ -1453,7 +1440,7 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
     job_reap(0);
 
     /* All done */
-    return result;
+    return parse_execution_success;
 }
 
 parse_execution_result_t parse_execution_context_t::run_job_list(const parse_node_t &job_list_node, const block_t *associated_block)
@@ -1481,8 +1468,6 @@ parse_execution_result_t parse_execution_context_t::run_job_list(const parse_nod
 
 parse_execution_result_t parse_execution_context_t::eval_node_at_offset(node_offset_t offset, const block_t *associated_block, const io_chain_t &io)
 {
-    bool log_it = false;
-
     /* Don't ever expect to have an empty tree if this is called */
     assert(! tree.empty());
     assert(offset < tree.size());
@@ -1491,11 +1476,6 @@ parse_execution_result_t parse_execution_context_t::eval_node_at_offset(node_off
     scoped_push<io_chain_t> block_io_push(&block_io, io);
 
     const parse_node_t &node = tree.at(offset);
-
-    if (log_it)
-    {
-        fprintf(stderr, "eval node: %ls\n", get_source(node).c_str());
-    }
 
     /* Currently, we only expect to execute the top level job list, or a block node. Assert that. */
     assert(node.type == symbol_job_list || specific_statement_type_is_redirectable_block(node));

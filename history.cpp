@@ -542,6 +542,7 @@ history_t::history_t(const wcstring &pname) :
     disable_automatic_save_counter(0),
     mmap_start(NULL),
     mmap_length(0),
+    mmap_type(history_file_type_t(-1)),
     mmap_file_id(kInvalidFileID),
     boundary_timestamp(time(NULL)),
     countdown_to_vacuum(-1),
@@ -1443,7 +1444,10 @@ bool history_t::save_internal_via_rewrite()
             else
             {
                 wcstring new_name = history_filename(name, wcstring());
-                wrename(tmp_name, new_name);
+                if (0 > wrename(tmp_name, new_name))
+                {
+                    debug(2, L"Error when renaming history file");
+                }
             }
             close(out_fd);
         }

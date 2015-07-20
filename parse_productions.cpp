@@ -11,7 +11,8 @@ static bool production_is_empty(const production_t production)
 /* Empty productions are allowed but must be first. Validate that the given production is in the valid range, i.e. it is either not empty or there is a non-empty production after it */
 static bool production_is_valid(const production_options_t production_list, production_option_idx_t which)
 {
-    if (which < 0 || which >= MAX_PRODUCTIONS)
+    assert(which >= 0);
+    if (which >= MAX_PRODUCTIONS)
         return false;
 
     bool nonempty_found = false;
@@ -480,7 +481,7 @@ RESOLVE_ONLY(end_command)
 #define TEST(sym) case (symbol_##sym): production_list = & productions_ ## sym ; resolver = resolve_ ## sym ; break;
 const production_t *parse_productions::production_for_token(parse_token_type_t node_type, const parse_token_t &input1, const parse_token_t &input2, production_option_idx_t *out_which_production, wcstring *out_error_text)
 {
-    bool log_it = false;
+    const bool log_it = false;
     if (log_it)
     {
         fprintf(stderr, "Resolving production for %ls with input token <%ls>\n", token_type_description(node_type).c_str(), input1.describe().c_str());

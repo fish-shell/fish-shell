@@ -2194,7 +2194,7 @@ static void set_command_line_and_position(editable_line_t *el, const wcstring &n
     reader_repaint_needed();
 }
 
-static void reader_replace_current_token(const wchar_t *new_token)
+static void reader_replace_current_token(const wcstring &new_token)
 {
 
     const wchar_t *begin, *end;
@@ -2212,7 +2212,7 @@ static void reader_replace_current_token(const wchar_t *new_token)
     wcstring new_buff(buff, begin - buff);
     new_buff.append(new_token);
     new_buff.append(end);
-    new_pos = (begin-buff) + wcslen(new_token);
+    new_pos = (begin-buff) + new_token.size();
 
     set_command_line_and_position(el, new_buff, new_pos);
 }
@@ -2255,7 +2255,7 @@ static void handle_token_history(int forward, int reset)
     if (! data)
         return;
 
-    const wchar_t *str=0;
+    wcstring str;
     long current_pos;
 
     if (reset)
@@ -2278,12 +2278,12 @@ static void handle_token_history(int forward, int reset)
             {
                 data->search_pos--;
             }
-            str = data->search_prev.at(data->search_pos).c_str();
+            str = data->search_prev.at(data->search_pos);
         }
         else
         {
             data->search_pos++;
-            str = data->search_prev.at(data->search_pos).c_str();
+            str = data->search_prev.at(data->search_pos);
         }
 
         reader_replace_current_token(str);
@@ -2318,7 +2318,7 @@ static void handle_token_history(int forward, int reset)
             const wcstring &last = data->search_prev.back();
             if (data->search_buff != last)
             {
-                str = wcsdup(data->search_buff.c_str());
+                str = data->search_buff;
             }
             else
             {
@@ -2349,7 +2349,7 @@ static void handle_token_history(int forward, int reset)
                             if (find(data->search_prev.begin(), data->search_prev.end(), last_tok) == data->search_prev.end())
                             {
                                 data->token_history_pos = tok_get_pos(&tok);
-                                str = wcsdup(tok_last(&tok));
+                                str = tok_last(&tok);
                             }
 
                         }
@@ -2365,7 +2365,7 @@ static void handle_token_history(int forward, int reset)
             }
         }
 
-        if (str)
+        if (!str.empty())
         {
             reader_replace_current_token(str);
             reader_super_highlight_me_plenty();
@@ -3536,7 +3536,7 @@ const wchar_t *reader_readline(int nchars)
                     }
                     else
                     {
-                        reader_replace_current_token(data->search_buff.c_str());
+                        reader_replace_current_token(data->search_buff);
                     }
                     data->search_buff.clear();
                     reader_super_highlight_me_plenty();

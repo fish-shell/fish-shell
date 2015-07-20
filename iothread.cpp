@@ -50,7 +50,7 @@ struct MainThreadRequest_t
 /* Spawn support. Requests are allocated and come in on request_queue. They go out on result_queue, at which point they can be deallocated. s_active_thread_count is also protected by the lock. */
 static pthread_mutex_t s_spawn_queue_lock;
 static std::queue<SpawnRequest_t *> s_request_queue;
-static volatile int s_active_thread_count;
+static int s_active_thread_count;
 
 static pthread_mutex_t s_result_queue_lock;
 static std::queue<SpawnRequest_t *> s_result_queue;
@@ -267,9 +267,7 @@ void iothread_drain_all(void)
     ASSERT_IS_MAIN_THREAD();
     ASSERT_IS_NOT_FORKED_CHILD();
     
-    /* Hackish. Since we are the only thread that can increment s_active_thread_count, we can check for a zero value without locking; the true value may be smaller than we read, but never bigger. */
-    if (s_active_thread_count == 0)
-        return;
+    scoped_lock locker(s_spawn_queue_lock);
     
 #define TIME_DRAIN 0
 #if TIME_DRAIN
@@ -280,10 +278,12 @@ void iothread_drain_all(void)
     /* Nasty polling via select(). */
     while (s_active_thread_count > 0)
     {
+        locker.unlock();
         if (iothread_wait_for_pending_completions(1000))
         {
             iothread_service_completion();
         }
+        locker.lock();
     }
 #if TIME_DRAIN
     double after = timef();

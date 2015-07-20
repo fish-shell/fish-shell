@@ -338,12 +338,12 @@ void rgb_color_t::parse(const wcstring &str)
     }
 }
 
-rgb_color_t::rgb_color_t(const wcstring &str)
+rgb_color_t::rgb_color_t(const wcstring &str) : type(), flags()
 {
     this->parse(str);
 }
 
-rgb_color_t::rgb_color_t(const std::string &str)
+rgb_color_t::rgb_color_t(const std::string &str) : type(), flags()
 {
     this->parse(str2wcstring(str));
 }

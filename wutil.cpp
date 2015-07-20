@@ -223,9 +223,9 @@ static int wopen_internal(const wcstring &pathname, int flags, mode_t mode, bool
 {
     ASSERT_IS_NOT_FORKED_CHILD();
     cstring tmp = wcs2string(pathname);
-    /* Prefer to use O_CLOEXEC. It has to both be defined and nonzero */
+    /* Prefer to use O_CLOEXEC. It has to both be defined and nonzero. */
 #ifdef O_CLOEXEC
-    if (cloexec && O_CLOEXEC)
+    if (cloexec && (O_CLOEXEC != 0))
     {
         flags |= O_CLOEXEC;
         cloexec = false;

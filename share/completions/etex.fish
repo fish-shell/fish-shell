@@ -1,1 +1,1 @@
-__fish_complete_tex etex
+complete -c tex -w etex

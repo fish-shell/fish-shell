@@ -1,6 +1,6 @@
 #
 # Find files that complete $argv[1], has the suffix $argv[2], and
-# output them as completions with the description $argv[3] Both
+# output them as completions with the optional description $argv[3] Both
 # $argv[1] and $argv[3] are optional, if only one is specified, it is
 # assumed to be the argument to complete.
 #
@@ -19,12 +19,12 @@ function __fish_complete_suffix -d "Complete using files"
 		case 1
 		set comp (commandline -ct)
 		set suff $argv
-		set desc (mimedb -d $suff)
+		set desc ""
 
 		case 2
 		set comp $argv[1]
 		set suff $argv[2]
-		set desc (mimedb -d $suff)
+		set desc ""
 
 		case 3
 		set comp $argv[1]
@@ -45,8 +45,9 @@ function __fish_complete_suffix -d "Complete using files"
 	#
 	# Also do directory completion, since there might be files
 	# with the correct suffix in a subdirectory
+	# No need to describe directories (#279)
 	#
 
-	__fish_complete_directories $comp
+	__fish_complete_directories $comp ""
 
 end

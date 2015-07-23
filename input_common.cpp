@@ -107,7 +107,7 @@ static wint_t readb()
         int res;
 
         FD_ZERO(&fdset);
-        FD_SET(0, &fdset);
+        FD_SET(STDIN_FILENO, &fdset);
         if (ioport > 0)
         {
             FD_SET(ioport, &fdset);
@@ -198,14 +198,39 @@ static wint_t readb()
 
             if (FD_ISSET(STDIN_FILENO, &fdset))
             {
-                if (read_blocked(0, arr, 1) != 1)
+                switch (read_blocked(STDIN_FILENO, arr, 1))
                 {
-                    /* The teminal has been closed. Save and exit. */
-                    return R_EOF;
+                    case 1:
+                        /* We read from stdin, so don't loop */
+                        do_loop = false;
+                        break;
+                    case 0:
+                        /* The terminal has been closed. Save and exit. */
+                        return R_EOF;
+                    case -1:
+                        /* An error occurred */
+                        switch (errno)
+                        {
+                            case EINTR:
+                            case EAGAIN:
+                                if (interrupt_handler)
+                                {
+                                    int res = interrupt_handler();
+                                    if (res)
+                                    {
+                                        return res;
+                                    }
+                                    if (has_lookahead())
+                                    {
+                                        return lookahead_pop();
+                                    }
+                                }
+                                break;
+                            default:
+                                /* some error occurred. Save and exit. */
+                                return R_EOF;
+                        }
                 }
-
-                /* We read from stdin, so don't loop */
-                do_loop = false;
             }
         }
     }

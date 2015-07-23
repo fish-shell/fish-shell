@@ -128,8 +128,8 @@ inline bool selection_direction_is_cardinal(selection_direction_t dir)
 /**
  Helper macro for errors
  */
-#define VOMIT_ON_FAILURE(a) do { if (0 != (a)) { VOMIT_ABORT(errno, #a); } } while (0)
-#define VOMIT_ON_FAILURE_NO_ERRNO(a) do { int err = (a); if (0 != err) { VOMIT_ABORT(err, #a); } } while (0)
+#define VOMIT_ON_FAILURE(a) do { int olderrno=errno; if (0 != (a)) { VOMIT_ABORT(errno, #a); } errno=olderrno; } while (0)
+#define VOMIT_ON_FAILURE_NO_ERRNO(a) do { int olderrno=errno; int err = (a); if (0 != err) { VOMIT_ABORT(err, #a); } errno=olderrno; } while (0)
 #define VOMIT_ABORT(err, str) do { int code = (err); fprintf(stderr, "%s failed on line %d in file %s: %d (%s)\n", str, __LINE__, __FILE__, code, strerror(code)); abort(); } while(0)
 
 /** Exits without invoking destructors (via _exit), useful for code after fork. */

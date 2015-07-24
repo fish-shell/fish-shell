@@ -1,0 +1,77 @@
+Summary:                Friendly interactive shell
+Name:                   fish
+
+Version:                @RPMVERSION@
+Release:                0.%{?dist}
+
+License:                GPL-2.0
+Group:                  System/Shells
+URL:                    http://fishshell.com/
+
+Source0:                %{name}_@VERSION@.orig.tar.gz
+BuildRequires:          ncurses-devel gettext gcc-c++ autoconf
+
+BuildRoot:              %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+
+Requires:		bc
+Requires:               python
+Requires:		which
+Requires:		man
+
+%description
+
+fish is a shell geared towards interactive use. Its features are
+focused on user friendliness and discoverability. The language syntax
+is simple but incompatible with other shell languages.
+
+%prep
+%setup -q -n %{name}-@VERSION@
+
+%build
+%configure
+make %{?_smp_mflags}
+
+%install
+make install DESTDIR="$RPM_BUILD_ROOT"
+%find_lang %{name}
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%post
+# Add fish to the list of allowed shells in /etc/shells
+if ! grep %{_bindir}/fish %{_sysconfdir}/shells >/dev/null; then
+	echo %{_bindir}/fish >>%{_sysconfdir}/shells
+fi
+
+%postun
+# Remove fish from the list of allowed shells in /etc/shells
+if [ "$1" = 0 ]; then
+	grep -v %{_bindir}/fish %{_sysconfdir}/shells >%{_sysconfdir}/fish.tmp
+	mv %{_sysconfdir}/fish.tmp %{_sysconfdir}/shells
+fi
+
+%files -f %{name}.lang
+%defattr(-,root,root,-)
+
+# The documentation directory
+%docdir %{_datadir}/doc/fish/
+%{_datadir}/doc/fish/
+
+# man files
+%{_mandir}/man1/*
+%docdir %{_datadir}/fish/man/man1/
+%{_datadir}/fish/man/man1/
+
+# The program binaries
+%attr(0755,root,root) %{_bindir}/*
+
+# Configuration files
+%dir %{_sysconfdir}/fish/
+%config(noreplace) %{_sysconfdir}/fish/config.fish
+
+# Support files
+%{_datadir}/fish/
+
+# pkgconfig
+%{_datadir}/pkgconfig/fish.pc

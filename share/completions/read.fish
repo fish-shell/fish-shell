@@ -10,3 +10,4 @@ complete -c read -s c -l command --description "Initial contents of read buffwhe
 complete -c read -s s -l shell --description "Use syntax highlighting, tab completions and command termination suitable for entering shellscript code"
 complete -c read -s n -l nchars --description "Read the specified number of characters"
 complete -c read -s a -l array --description "Store the results as an array"
+complete -c read -s R -l right-prompt --description "Set right-hand prompt command" -x

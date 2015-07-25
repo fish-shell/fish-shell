@@ -107,6 +107,14 @@ FISH_TESTS_OBJS := $(FISH_OBJS) obj/fish_tests.o
 
 
 #
+# All of the sources that produce object files
+# (that is, are not themselves #included in other source files)
+#
+FISH_ALL_OBJS := $(sort $(FISH_OBJS) $(FISH_INDENT_OBJS) $(FISH_TESTS_OBJS) \
+                   obj/fish.o obj/key_reader.o)
+
+
+#
 # Files containing user documentation
 #
 
@@ -800,11 +808,26 @@ key_reader: $(FISH_OBJS) key_reader.o
 
 #
 # Update dependencies
+# Unfortunately makedepend cannot handle source files in one directory
+# and object files in another. So we have to cons up a fake directory
+# tree and run it there. Note that some .cpp files do not result in
+# objects because they are #include'd directly. In that case we need to
+# leave them in the 'header' directory, so they get picked up by the
+# dependencies. So we put everything in the header directory and move out
+# exactly the files that result in objects, leaving the #include'd files
+# behind.
 #
 depend:
-	makedepend -fMakefile.in -Y src/*.cpp
+	mkdir -p /tmp/fish_make_depend/src
+	cp src/*.cpp src/*.h /tmp/fish_make_depend/src
+	cp config.h /tmp/fish_make_depend/
+	mv $(subst obj/,/tmp/fish_make_depend/src/,$(FISH_ALL_OBJS:.o=.cpp)) /tmp/fish_make_depend/
+	cd /tmp/fish_make_depend && \
+	    makedepend -f$(CURDIR)/Makefile.in -pobj/ -Y -Isrc *.cpp
+	rm -Rf /tmp/fish_make_depend
 	./config.status
 .PHONY: depend
+
 
 #
 # Cleanup targets
@@ -863,39 +886,9 @@ obj/builtin.o: src/builtin_commandline.cpp src/builtin_complete.cpp
 obj/builtin.o: src/builtin_ulimit.cpp src/builtin_jobs.cpp
 obj/builtin.o: src/builtin_set_color.cpp src/output.h src/screen.h
 obj/builtin.o: src/builtin_printf.cpp
-obj/builtin_commandline.o: config.h src/signal.h src/fallback.h src/util.h
-obj/builtin_commandline.o: src/wutil.h src/common.h src/builtin.h src/io.h
-obj/builtin_commandline.o: src/wgetopt.h src/reader.h src/complete.h
-obj/builtin_commandline.o: src/highlight.h src/env.h src/color.h
-obj/builtin_commandline.o: src/parse_constants.h src/proc.h src/parse_tree.h
-obj/builtin_commandline.o: src/tokenizer.h src/parser.h src/event.h
-obj/builtin_commandline.o: src/function.h src/input_common.h src/input.h
-obj/builtin_commandline.o: src/parse_util.h src/autoload.h src/lru.h
-obj/builtin_complete.o: config.h src/signal.h src/fallback.h src/util.h
-obj/builtin_complete.o: src/wutil.h src/common.h src/builtin.h src/io.h
-obj/builtin_complete.o: src/complete.h src/wgetopt.h src/parser.h src/proc.h
-obj/builtin_complete.o: src/parse_tree.h src/tokenizer.h
-obj/builtin_complete.o: src/parse_constants.h src/event.h src/function.h
-obj/builtin_complete.o: src/env.h src/reader.h src/highlight.h src/color.h
-obj/builtin_jobs.o: config.h src/fallback.h src/signal.h src/util.h
-obj/builtin_jobs.o: src/wutil.h src/common.h src/builtin.h src/io.h
-obj/builtin_jobs.o: src/proc.h src/parse_tree.h src/tokenizer.h
-obj/builtin_jobs.o: src/parse_constants.h src/parser.h src/event.h
-obj/builtin_jobs.o: src/function.h src/env.h src/wgetopt.h
-obj/builtin_printf.o: src/common.h src/util.h
-obj/builtin_set.o: config.h src/signal.h src/fallback.h src/util.h
-obj/builtin_set.o: src/wutil.h src/common.h src/builtin.h src/io.h src/env.h
-obj/builtin_set.o: src/expand.h src/parse_constants.h src/wgetopt.h
-obj/builtin_set.o: src/proc.h src/parse_tree.h src/tokenizer.h src/parser.h
-obj/builtin_set.o: src/event.h src/function.h
-obj/builtin_set_color.o: config.h src/builtin.h src/util.h src/io.h
-obj/builtin_set_color.o: src/common.h src/color.h src/output.h src/fallback.h
-obj/builtin_set_color.o: src/signal.h src/screen.h src/highlight.h src/env.h
 obj/builtin_test.o: config.h src/common.h src/util.h src/builtin.h src/io.h
 obj/builtin_test.o: src/wutil.h src/proc.h src/signal.h src/parse_tree.h
 obj/builtin_test.o: src/tokenizer.h src/parse_constants.h
-obj/builtin_ulimit.o: config.h src/fallback.h src/signal.h src/util.h
-obj/builtin_ulimit.o: src/builtin.h src/io.h src/common.h src/wgetopt.h
 obj/color.o: src/color.h config.h src/common.h src/util.h src/fallback.h
 obj/color.o: src/signal.h
 obj/common.o: config.h src/fallback.h src/signal.h src/util.h src/wutil.h
@@ -937,7 +930,6 @@ obj/expand.o: src/tokenizer.h src/parse_constants.h src/parser.h src/event.h
 obj/expand.o: src/function.h src/expand.h src/wildcard.h src/complete.h
 obj/expand.o: src/exec.h src/iothread.h src/parse_util.h src/autoload.h
 obj/expand.o: src/lru.h
-obj/fallback.o: config.h src/fallback.h src/signal.h src/util.h
 obj/fish.o: config.h src/signal.h src/fallback.h src/util.h src/common.h
 obj/fish.o: src/reader.h src/io.h src/complete.h src/highlight.h src/env.h
 obj/fish.o: src/color.h src/parse_constants.h src/builtin.h src/function.h
@@ -1077,8 +1069,6 @@ obj/signal.o: src/proc.h src/parse_tree.h src/tokenizer.h
 obj/tokenizer.o: config.h src/fallback.h src/signal.h src/util.h src/wutil.h
 obj/tokenizer.o: src/common.h src/tokenizer.h
 obj/utf8.o: src/utf8.h
-obj/util.o: config.h src/fallback.h src/signal.h src/util.h src/common.h
-obj/util.o: src/wutil.h
 obj/wcstringutil.o: config.h src/wcstringutil.h src/common.h src/util.h
 obj/wgetopt.o: config.h src/wgetopt.h src/wutil.h src/common.h src/util.h
 obj/wgetopt.o: src/fallback.h src/signal.h

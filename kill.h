@@ -7,7 +7,7 @@
 #ifndef FISH_KILL_H
 #define FISH_KILL_H
 
-#include <wchar.h>
+#include "common.h"
 
 /**
    Replace the specified string in the killring

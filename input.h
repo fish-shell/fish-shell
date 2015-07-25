@@ -8,8 +8,12 @@ inputrc information for key bindings.
 #ifndef FISH_INPUT_H
 #define FISH_INPUT_H
 
-#include <wchar.h>
-#include <utility>
+#include <stddef.h>
+#include <string>
+#include <vector>
+
+#include "common.h"
+#include "env.h"
 #include "input_common.h"
 
 

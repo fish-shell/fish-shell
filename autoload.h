@@ -6,10 +6,10 @@
 #ifndef FISH_AUTOLOAD_H
 #define FISH_AUTOLOAD_H
 
-#include <wchar.h>
-#include <map>
+#include <pthread.h>
+#include <stddef.h>
+#include <time.h>
 #include <set>
-#include <list>
 #include "common.h"
 #include "lru.h"
 
@@ -40,7 +40,6 @@ struct builtin_script_t
     const char *def;
 };
 
-struct builtin_script_t;
 class env_vars_snapshot_t;
 
 /**

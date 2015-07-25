@@ -7,18 +7,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <errno.h>
-#include <termios.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-
-#ifdef HAVE_SYS_IOCTL_H
-#include <sys/ioctl.h>
-#endif
-
-#include <sys/time.h>
-#include <unistd.h>
-#include <wctype.h>
 
 #if HAVE_NCURSES_H
 #include <ncurses.h>
@@ -34,22 +22,14 @@
 #include <ncurses/term.h>
 #endif
 
-#include <signal.h>
-#include <fcntl.h>
-#include <dirent.h>
-#include <time.h>
 #include <wchar.h>
-
+#include <limits.h>
+#include <string>
 
 #include "fallback.h"
-#include "util.h"
-
-#include "wutil.h"
-#include "expand.h"
+#include "wutil.h" // IWYU pragma: keep - needed for wgettext
 #include "common.h"
 #include "output.h"
-#include "highlight.h"
-#include "env.h"
 
 /**
  Number of color names in the col array

@@ -6,8 +6,11 @@
 #ifndef FISH_PARSE_TREE_CONSTRUCTION_H
 #define FISH_PARSE_TREE_CONSTRUCTION_H
 
-#include "parse_tree.h"
-#include <inttypes.h>
+#include <stdint.h>                     // for uint8_t, uint32_t
+#include "common.h"                     // for wcstring
+#include "parse_constants.h"            // for parse_token_type_t, etc
+
+struct parse_token_t;
 
 namespace parse_productions
 {

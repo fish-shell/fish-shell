@@ -6,17 +6,15 @@
 #ifndef FISH_PARSE_PRODUCTIONS_H
 #define FISH_PARSE_PRODUCTIONS_H
 
-#include <wchar.h>
+#include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
 
-#include "config.h"
-#include "util.h"
 #include "common.h"
 #include "tokenizer.h"
 #include "parse_constants.h"
 #include <vector>
-#include <inttypes.h>
 
-class parse_node_t;
 class parse_node_tree_t;
 
 typedef uint32_t node_offset_t;

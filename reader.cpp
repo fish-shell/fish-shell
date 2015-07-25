@@ -24,38 +24,16 @@ commence.
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include <errno.h>
 #include <termios.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-
-#ifdef HAVE_SYS_IOCTL_H
-#include <sys/ioctl.h>
-#endif
-
 #include <time.h>
 #include <sys/time.h>
-#include <sys/wait.h>
-#include <sys/poll.h>
 #include <unistd.h>
 #include <wctype.h>
 #include <stack>
 #include <pthread.h>
-
-#if HAVE_NCURSES_H
-#include <ncurses.h>
-#elif HAVE_NCURSES_CURSES_H
-#include <ncurses/curses.h>
-#else
-#include <curses.h>
-#endif
-
-#if HAVE_TERM_H
-#include <term.h>
-#elif HAVE_NCURSES_TERM_H
-#include <ncurses/term.h>
-#endif
 
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
@@ -67,9 +45,7 @@ commence.
 
 #include <signal.h>
 #include <fcntl.h>
-#include <dirent.h>
 #include <wchar.h>
-
 #include <assert.h>
 
 
@@ -98,11 +74,11 @@ commence.
 #include "screen.h"
 #include "iothread.h"
 #include "intern.h"
-#include "path.h"
 #include "parse_util.h"
-#include "parser_keywords.h"
 #include "parse_tree.h"
 #include "pager.h"
+#include "color.h"
+#include "event.h"
 
 /**
    Maximum length of prefix string when printing completion

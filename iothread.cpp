@@ -1,16 +1,17 @@
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 #include "iothread.h"
 #include "common.h"
 #include <pthread.h>
 #include <assert.h>
-#include <errno.h>
 #include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <limits.h> // IWYU pragma: keep - for _POSIX_THREADS_MAX, suggests internal header
+#include <sys/select.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <signal.h>
 #include <fcntl.h>
 #include <queue>
+#include <algorithm>
 
 #ifdef _POSIX_THREAD_THREADS_MAX
 #if _POSIX_THREAD_THREADS_MAX < 64

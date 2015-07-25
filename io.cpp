@@ -3,42 +3,15 @@
 Utilities for io redirection.
 
 */
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
 
-#include <stdlib.h>
 #include <stdio.h>
-#include <wchar.h>
-#include <string.h>
 #include <errno.h>
-#include <sys/types.h>
-#include <set>
-#include <algorithm>
-
-#ifdef HAVE_SYS_IOCTL_H
-#include <sys/ioctl.h>
-#endif
-
+#include <assert.h>
 #include <unistd.h>
-#include <fcntl.h>
 
-#if HAVE_NCURSES_H
-#include <ncurses.h>
-#elif HAVE_NCURSES_CURSES_H
-#include <ncurses/curses.h>
-#else
-#include <curses.h>
-#endif
-
-#if HAVE_TERM_H
-#include <term.h>
-#elif HAVE_NCURSES_TERM_H
-#include <ncurses/term.h>
-#endif
-
-#include "fallback.h"
-#include "util.h"
-
+#include "fallback.h" // IWYU pragma: keep
 #include "wutil.h"
 #include "exec.h"
 #include "common.h"

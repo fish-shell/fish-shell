@@ -4,15 +4,11 @@ The library for various signal related issues
 
 */
 
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
-
-#include <stdlib.h>
+#include <wchar.h>
 #include <stdio.h>
-#include <sys/types.h>
 #include <signal.h>
-#include <dirent.h>
-#include <unistd.h>
 #include <errno.h>
 
 #ifdef HAVE_SIGINFO_H
@@ -20,9 +16,7 @@ The library for various signal related issues
 #endif
 
 #include "common.h"
-#include "fallback.h"
-#include "util.h"
-
+#include "fallback.h" // IWYU pragma: keep
 #include "wutil.h"
 #include "signal.h"
 #include "event.h"

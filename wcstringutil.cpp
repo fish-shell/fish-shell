@@ -3,7 +3,7 @@
 Helper functions for working with wcstring
 */
 
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
 #include "wcstringutil.h"
 

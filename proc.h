@@ -11,13 +11,14 @@
 #ifndef FISH_PROC_H
 #define FISH_PROC_H
 
-#include <wchar.h>
 #include <signal.h>
-#include <unistd.h>
 #include <sys/time.h>
 #include <list>
+#include <assert.h>                     // for assert
+#include <stddef.h>                     // for size_t
+#include <termios.h>                    // for pid_t, termios
 
-#include "util.h"
+#include "config.h"                     // for HAVE__PROC_SELF_STAT
 #include "io.h"
 #include "common.h"
 #include "parse_tree.h"
@@ -268,7 +269,6 @@ void release_job_id(job_id_t jobid);
     A struct represeting a job. A job is basically a pipeline of one
     or more processes and a couple of flags.
  */
-class parser_t;
 class job_t
 {
     /**

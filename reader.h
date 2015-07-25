@@ -10,17 +10,15 @@
 #define FISH_READER_H
 
 #include <vector>
-#include <wchar.h>
+#include <string>
+#include <stddef.h>
 
-#include "util.h"
 #include "io.h"
 #include "common.h"
 #include "complete.h"
 #include "highlight.h"
 #include "parse_constants.h"
 
-class parser_t;
-class completion_t;
 class history_t;
 
 /* Helper class for storing a command line */

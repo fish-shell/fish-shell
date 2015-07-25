@@ -1,46 +1,26 @@
 /** \file env.c
   Functions for setting and getting environment variables.
 */
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
 #include <stdlib.h>
 #include <wchar.h>
-#include <string.h>
-#include <stdio.h>
 #include <locale.h>
 #include <unistd.h>
-#include <signal.h>
 #include <assert.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <pthread.h>
 #include <pwd.h>
 #include <set>
 #include <map>
 #include <algorithm>
-
-#if HAVE_NCURSES_H
-#include <ncurses.h>
-#elif HAVE_NCURSES_CURSES_H
-#include <ncurses/curses.h>
-#else
-#include <curses.h>
-#endif
-
-#if HAVE_TERM_H
-#include <term.h>
-#elif HAVE_NCURSES_TERM_H
-#include <ncurses/term.h>
-#endif
-
-#if HAVE_LIBINTL_H
-#include <libintl.h>
-#endif
-
 #include <errno.h>
+#include <stddef.h>
+#include <wctype.h>
+#include <utility>
+#include <vector>
 
 #include "fallback.h"
-#include "util.h"
 
 #include "wutil.h"
 #include "proc.h"
@@ -50,13 +30,11 @@
 #include "expand.h"
 #include "history.h"
 #include "reader.h"
-#include "parser.h"
 #include "env_universal_common.h"
 #include "input.h"
 #include "event.h"
 #include "path.h"
 
-#include "complete.h"
 #include "fish_version.h"
 
 /** Value denoting a null string */

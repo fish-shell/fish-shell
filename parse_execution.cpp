@@ -8,17 +8,33 @@
 */
 
 #include "parse_execution.h"
+#include <assert.h>
+#include <errno.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <termios.h>
+#include <unistd.h>
+#include <wchar.h>
+#include <wctype.h>
+#include <string>
+#include <memory> // IWYU pragma: keep - suggests <tr1/memory> instead
+#include <vector>
+#include "env.h"
+#include "event.h"
+#include "tokenizer.h"
+#include "util.h"
 #include "parse_util.h"
 #include "complete.h"
 #include "wildcard.h"
-#include "builtin.h"
 #include "parser.h"
 #include "expand.h"
 #include "reader.h"
 #include "wutil.h"
-#include "exec.h"
 #include "path.h"
-#include <algorithm>
+#include "function.h"
+#include "builtin.h"
+#include "exec.h"
 
 /* These are the specific statement types that support redirections */
 static bool specific_statement_type_is_redirectable_block(const parse_node_t &node)

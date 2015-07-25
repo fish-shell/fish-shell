@@ -3,28 +3,23 @@
   Functions for handling event triggers
 
 */
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <wchar.h>
-#include <unistd.h>
-#include <termios.h>
 #include <signal.h>
-#include <string.h>
 #include <algorithm>
+#include <assert.h>
+#include <stddef.h>
+#include <string>
 
-#include "fallback.h"
-#include "util.h"
-
-#include "wutil.h"
-#include "function.h"
+#include "fallback.h" // IWYU pragma: keep
+#include "wutil.h" // IWYU pragma: keep - needed for gettext
 #include "input_common.h"
 #include "proc.h"
 #include "parser.h"
 #include "common.h"
 #include "event.h"
 #include "signal.h"
+#include "io.h"
 
 
 /**

@@ -1,12 +1,13 @@
 #ifndef FISH_ENV_UNIVERSAL_COMMON_H
 #define FISH_ENV_UNIVERSAL_COMMON_H
 
-#include <wchar.h>
-#include <queue>
 #include <string>
 #include <set>
+#include <pthread.h>
+#include <stdio.h>
+#include <vector>
+#include "common.h"
 #include "wutil.h"
-#include "util.h"
 #include "env.h"
 
 /**
@@ -24,8 +25,6 @@ typedef enum
 */
 #define ENV_UNIVERSAL_BUFFER_SIZE 1024
 
-typedef std::vector<struct callback_data_t> callback_data_list_t;
-
 /**
    Callback data, reflecting a change in universal variables
 */
@@ -39,6 +38,8 @@ struct callback_data_t
     {
     }
 };
+
+typedef std::vector<struct callback_data_t> callback_data_list_t;
 
 /** Class representing universal variables */
 class env_universal_t

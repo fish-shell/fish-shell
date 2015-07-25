@@ -5,8 +5,6 @@
 #ifndef FISH_SANITY_H
 #define FISH_SANITY_H
 
-#include <wchar.h>
-
 /**
   Call this function to tell the program it is not in a sane state.
 */

@@ -1,36 +1,31 @@
 /** \file highlight.c
   Functions for syntax highlighting
 */
-#include "config.h"
 
-#include <stdlib.h>
-#include <stdio.h>
+#include "config.h" // IWYU pragma: keep
+
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
 #include <wchar.h>
-#include <wctype.h>
-#include <termios.h>
-#include <signal.h>
 #include <algorithm>
+#include <dirent.h>
+#include <map>
+#include <set>
+#include <string>
 
 #include "fallback.h"
-#include "util.h"
 
 #include "wutil.h"
 #include "highlight.h"
 #include "tokenizer.h"
-#include "proc.h"
-#include "parser.h"
 #include "parse_util.h"
-#include "parser_keywords.h"
+#include "parse_constants.h"
 #include "builtin.h"
 #include "function.h"
 #include "env.h"
 #include "expand.h"
-#include "sanity.h"
 #include "common.h"
-#include "complete.h"
 #include "output.h"
 #include "wildcard.h"
 #include "path.h"

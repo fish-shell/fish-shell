@@ -2,6 +2,10 @@
   Pager support
 */
 
+#include <stddef.h>
+#include <string>
+#include <vector>
+#include "common.h"
 #include "complete.h"
 #include "screen.h"
 #include "reader.h"

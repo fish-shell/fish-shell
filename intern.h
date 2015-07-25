@@ -7,8 +7,6 @@
 #ifndef FISH_INTERN_H
 #define FISH_INTERN_H
 
-#include <wchar.h>
-
 /**
    Return an identical copy of the specified string from a pool of unique strings. If the string was not in the pool, add a copy.
 

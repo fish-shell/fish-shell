@@ -6,22 +6,19 @@ tokenizing multiple strings and disposing of unused string
 segments.
 */
 
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <wchar.h>
 #include <wctype.h>
-#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <assert.h>
+#include <string>
 
-#include "fallback.h"
-#include "util.h"
-
-#include "wutil.h"
-#include "tokenizer.h"
+#include "fallback.h" // IWYU pragma: keep
 #include "common.h"
+#include "wutil.h" // IWYU pragma: keep - needed for wgettext
+#include "tokenizer.h"
 
 /* Wow what a hack */
 #define TOK_CALL_ERROR(t, e, x) do { tok_call_error((t), (e), (t)->squash_errors ? L"" : (x)); } while (0)

@@ -5,37 +5,32 @@
   manual, though the changes performed have been massive.
 */
 
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <termios.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <wchar.h>
 #include <string.h>
-#include <limits.h>
 #include <signal.h>
-#include <sys/wait.h>
 #include <assert.h>
-#include <dirent.h>
-#include <time.h>
 #include <vector>
 #include <algorithm>
-#include <memory>
+#include <spawn.h>
+#include <wctype.h>
+#include <map>
+#include <string>
+#include <memory> // IWYU pragma: keep - suggests <tr1/memory> instead
+#include <utility>
 
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
 
-#include "fallback.h"
-#include "util.h"
-#include "iothread.h"
+#include "fallback.h" // IWYU pragma: keep
 #include "postfork.h"
-
 #include "common.h"
 #include "wutil.h"
 #include "proc.h"
@@ -44,12 +39,10 @@
 #include "builtin.h"
 #include "function.h"
 #include "env.h"
-#include "wildcard.h"
-#include "sanity.h"
-#include "expand.h"
 #include "signal.h"
-
 #include "parse_util.h"
+#include "io.h"
+#include "parse_tree.h"
 
 /**
    file descriptor redirection error message

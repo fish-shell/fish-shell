@@ -25,15 +25,20 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <stdio.h>
 #include <wchar.h>
 #include <vector>
-#include <map>
 #ifdef HAVE_GETOPT_H
 #include <getopt.h>
 #endif
+#include <assert.h>
+#include <locale.h>
+#include <stddef.h>
+#include <string>
 
+#include "color.h"
+#include "highlight.h"
+#include "parse_constants.h"
 #include "wutil.h"
 #include "common.h"
 #include "output.h"
-#include "screen.h"
 #include "env.h"
 #include "input.h"
 #include "parse_tree.h"

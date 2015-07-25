@@ -18,26 +18,15 @@ Some of the code in this file is based on code from the Glibc manual.
 #include <string.h>
 #include <errno.h>
 #include <termios.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <pthread.h>
+#include <wctype.h>
 #include <algorithm>
-
-#ifdef HAVE_SYS_IOCTL_H
-#include <sys/ioctl.h>
-#endif
+#include <memory> // IWYU pragma: keep - suggests <tr1/memory> instead
+#include <vector>
 
 #include <unistd.h>
 #include <signal.h>
-#include <dirent.h>
 #include <sys/time.h>
-
-#if HAVE_NCURSES_H
-#include <ncurses.h>
-#elif HAVE_NCURSES_CURSES_H
-#include <ncurses/curses.h>
-#else
-#include <curses.h>
-#endif
 
 #if HAVE_TERM_H
 #include <term.h>
@@ -53,7 +42,7 @@ Some of the code in this file is based on code from the Glibc manual.
 #include <sys/select.h>
 #endif
 
-#include "fallback.h"
+#include "fallback.h" // IWYU pragma: keep
 #include "util.h"
 
 #include "wutil.h"
@@ -61,7 +50,6 @@ Some of the code in this file is based on code from the Glibc manual.
 #include "common.h"
 #include "reader.h"
 #include "sanity.h"
-#include "env.h"
 #include "parser.h"
 #include "signal.h"
 #include "event.h"

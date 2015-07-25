@@ -6,9 +6,10 @@
 #define FISH_ENV_H
 
 #include <wchar.h>
+#include <stdint.h>
+#include <string>
 #include <map>
 
-#include "util.h"
 #include "common.h"
 
 /* Flags that may be passed as the 'mode' in env_set / env_get_string */

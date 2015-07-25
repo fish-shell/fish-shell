@@ -2,6 +2,8 @@
 #define FISH_IO_H
 
 #include <vector>
+#include <stddef.h>
+#include <stdlib.h>
 
 // Note that we have to include something to get any _LIBCPP_VERSION defined so we can detect libc++
 // So it's key that vector go above. If we didn't need vector for other reasons, we might include ciso646, which does nothing
@@ -15,6 +17,8 @@ using std::shared_ptr;
 #include <tr1/memory>
 using std::tr1::shared_ptr;
 #endif
+
+#include "common.h"
 
 /**
    Describes what type of IO operation an io_data_t represents

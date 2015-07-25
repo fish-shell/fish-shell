@@ -15,12 +15,14 @@
 */
 #define FISH_EXPAND_H
 
-#include <wchar.h>
+#include "config.h"                     // for __warn_unused
 
-#include "util.h"
+#include <wchar.h>
+#include <string>                       // for string
+#include <vector>                       // for vector
+
 #include "common.h"
 #include "parse_constants.h"
-#include <list>
 
 enum
 {
@@ -133,8 +135,6 @@ enum
    Error issued on array out of bounds
 */
 #define ARRAY_BOUNDS_ERR _(L"Array index out of bounds")
-
-class parser_t;
 
 /**
    Perform various forms of expansion on in, such as tilde expansion

@@ -3,14 +3,21 @@
 The classes responsible for autoloading functions and completions.
 */
 
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 #include "autoload.h"
 #include "wutil.h"
 #include "common.h"
-#include "signal.h"
+#include "signal.h" // IWYU pragma: keep - needed for CHECK_BLOCK
 #include "env.h"
 #include "exec.h"
 #include <assert.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <wchar.h>
+#include <string>
+#include <utility>
+#include <vector>
 #include <algorithm>
 
 /* The time before we'll recheck an autoloaded file */

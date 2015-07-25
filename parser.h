@@ -5,13 +5,16 @@
 #ifndef FISH_PARSER_H
 #define FISH_PARSER_H
 
-#include <wchar.h>
+#include <stddef.h>                     // for size_t
+#include <list>                         // for _List_const_iterator, list, etc
 
+#include "common.h"
 #include "proc.h"
-#include "util.h"
 #include "event.h"
-#include "function.h"
 #include "parse_tree.h"
+#include "io.h"
+#include "parse_constants.h"
+
 #include <vector>
 
 /**
@@ -226,8 +229,8 @@ struct profile_item_t
     wcstring cmd;
 };
 
-struct tokenizer_t;
 class parse_execution_context_t;
+class completion_t;
 
 class parser_t
 {

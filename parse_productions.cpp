@@ -1,4 +1,7 @@
 #include "parse_productions.h"
+#include <assert.h>
+#include <stdio.h>
+#include "parse_tree.h"
 
 using namespace parse_productions;
 #define NO_PRODUCTION ((production_option_idx_t)(-1))

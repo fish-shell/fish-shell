@@ -1,9 +1,18 @@
+#include <assert.h>
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <wchar.h>
+#include <string>
+#include "common.h"
+#include "parse_constants.h"
 #include "parse_productions.h"
+#include "parse_tree.h"
 #include "tokenizer.h"
 #include "fallback.h"
-#include "wutil.h"
+#include "wutil.h" // IWYU pragma: keep - needed for wgettext
 #include "proc.h"
-#include "expand.h"
 #include <vector>
 #include <algorithm>
 

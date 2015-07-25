@@ -556,12 +556,12 @@ check-legacy-binaries:
 	fi;
 	@MIMEDB_LOC=$(prefix)/bin/mimedb;\
 	if test -x "$$MIMEDB_LOC" && $$MIMEDB_LOC --version 2>&1 | grep -q "^mimedb, version "; then\
-		echo "An outdated mimedb binary from a prevoius fish install was found. You should remove it with:";\
+		echo "An outdated mimedb binary from a previous fish install was found. You should remove it with:";\
 		echo "    rm '$$MIMEDB_LOC'";\
 	fi;
 	@FISHD_LOC=$(prefix)/bin/fishd;\
 	if test -x "$$FISHD_LOC" && $$FISHD_LOC --version 2>&1 | grep -q "^fishd: fishd, version "; then\
-		echo "An outdated fishd binary from a prevoius fish install was found. You should remove it with:";\
+		echo "An outdated fishd binary from a previous fish install was found. You should remove it with:";\
 		echo "    rm '$$FISHD_LOC'";\
 	fi;
 	@true;

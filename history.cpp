@@ -32,6 +32,7 @@
 #include "signal.h"
 #include "autoload.h"
 #include "iothread.h"
+#include "env.h"
 #include <map>
 #include <algorithm>
 
@@ -1279,12 +1280,21 @@ static wcstring history_filename(const wcstring &name, const wcstring &suffix)
     if (! path_get_config(path))
         return L"";
 
-    wcstring result = path;
-    result.append(L"/");
-    result.append(name);
-    result.append(L"_history");
-    result.append(suffix);
-    return result;
+    /* If the fish_history_filename environment variable is set, store our history there */
+    const env_var_t history_filename = env_get_string(L"fish_history_filename");
+    if (history_filename.missing_or_empty())
+    {
+        wcstring result = path;
+        result.append(L"/");
+        result.append(name);
+        result.append(L"_history");
+        result.append(suffix);
+        return result;
+    } else {
+        wcstring result = history_filename;
+        result.append(suffix);
+        return result;
+    }
 }
 
 void history_t::clear_file_state()

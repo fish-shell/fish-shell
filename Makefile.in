@@ -112,15 +112,6 @@ FISH_TESTS_OBJS := $(FISH_OBJS) fish_tests.o
 
 
 #
-# All objects needed to build mimedb
-#
-
-MIME_OBJS := mimedb.o print_help.o xdgmimealias.o xdgmime.o				\
-	xdgmimeglob.o xdgmimeint.o xdgmimemagic.o xdgmimeparent.o wutil.o	\
-	common.o fish_version.o
-
-
-#
 # Files containing user documentation
 #
 
@@ -178,7 +169,7 @@ FUNCTIONS_DIR_FILES := $(wildcard share/functions/*.fish)
 # Programs to install
 #
 
-PROGRAMS := fish mimedb fish_indent
+PROGRAMS := fish fish_indent
 
 #
 # Manual pages to install
@@ -563,6 +554,16 @@ check-legacy-binaries:
 		echo "An outdated set_color from a previous fish install was found. You should remove it with:";\
 		echo "    rm '$$SETCOLOR_LOC'";\
 	fi;
+	@MIMEDB_LOC=$(prefix)/bin/mimedb;\
+	if test -x "$$MIMEDB_LOC" && $$MIMEDB_LOC --version 2>&1 | grep -q "^mimedb, version "; then\
+		echo "An outdated mimedb binary from a prevoius fish install was found. You should remove it with:";\
+		echo "    rm '$$MIMEDB_LOC'";\
+	fi;
+	@FISHD_LOC=$(prefix)/bin/fishd;\
+	if test -x "$$FISHD_LOC" && $$FISHD_LOC --version 2>&1 | grep -q "^fishd: fishd, version "; then\
+		echo "An outdated fishd binary from a prevoius fish install was found. You should remove it with:";\
+		echo "    rm '$$FISHD_LOC'";\
+	fi;
 	@true;
 .PHONY: check-legacy-binaries
 
@@ -777,14 +778,6 @@ fish_tests: $(FISH_TESTS_OBJS)
 
 
 #
-# Build the mimedb program.
-#
-
-mimedb: $(MIME_OBJS)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(MIME_OBJS) $(LIBS) -o $@
-
-
-#
 # Build the fish_indent program.
 #
 
@@ -954,8 +947,6 @@ key_reader.o: config.h common.h util.h fallback.h signal.h input_common.h
 kill.o: config.h signal.h fallback.h util.h wutil.h common.h kill.h proc.h
 kill.o: io.h parse_tree.h tokenizer.h parse_constants.h sanity.h env.h exec.h
 kill.o: path.h
-mimedb.o: config.h xdgmime.h fallback.h signal.h util.h print_help.h
-mimedb.o: fish_version.h
 output.o: config.h signal.h fallback.h util.h wutil.h common.h expand.h
 output.o: parse_constants.h output.h screen.h highlight.h env.h color.h
 pager.o: config.h pager.h complete.h util.h common.h screen.h highlight.h
@@ -1015,10 +1006,3 @@ wildcard.o: config.h fallback.h signal.h util.h wutil.h common.h complete.h
 wildcard.o: wildcard.h expand.h parse_constants.h reader.h io.h highlight.h
 wildcard.o: env.h color.h exec.h proc.h parse_tree.h tokenizer.h
 wutil.o: config.h fallback.h signal.h util.h common.h wutil.h
-xdgmime.o: xdgmime.h xdgmimeint.h xdgmimeglob.h xdgmimemagic.h xdgmimealias.h
-xdgmime.o: xdgmimeparent.h
-xdgmimealias.o: xdgmimealias.h xdgmime.h xdgmimeint.h
-xdgmimeglob.o: xdgmimeglob.h xdgmime.h xdgmimeint.h
-xdgmimeint.o: xdgmimeint.h xdgmime.h
-xdgmimemagic.o: xdgmimemagic.h xdgmime.h xdgmimeint.h
-xdgmimeparent.o: xdgmimeparent.h xdgmime.h xdgmimeint.h

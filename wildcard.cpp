@@ -48,11 +48,6 @@ wildcards using **.
 #define MAX_FILE_LENGTH 1024
 
 /**
-   The command to run to get a description from a file suffix
-*/
-#define SUFFIX_CMD_STR L"mimedb 2>/dev/null -fd "
-
-/**
    Description for generic executable
 */
 #define COMPLETE_EXEC_DESC _( L"Executable" )
@@ -383,97 +378,6 @@ static wcstring make_path(const wcstring &base_dir, const wcstring &name)
 }
 
 /**
-   Return a description of a file based on its suffix. This function
-   does not perform any caching, it directly calls the mimedb command
-   to do a lookup.
- */
-static wcstring complete_get_desc_suffix_internal(const wcstring &suff)
-{
-
-    wcstring cmd = wcstring(SUFFIX_CMD_STR) + suff;
-
-    wcstring_list_t lst;
-    wcstring desc;
-
-    if (exec_subshell(cmd, lst, false /* do not apply exit status */) != -1)
-    {
-        if (! lst.empty())
-        {
-            const wcstring & ln = lst.at(0);
-            if (ln.size() > 0 && ln != L"unknown")
-            {
-                desc = ln;
-                /*
-                  I have decided I prefer to have the description
-                  begin in uppercase and the whole universe will just
-                  have to accept it. Hah!
-                */
-                desc[0]=towupper(desc[0]);
-            }
-        }
-    }
-
-    if (desc.empty())
-    {
-        desc = COMPLETE_FILE_DESC;
-    }
-
-    suffix_map[suff] = desc.c_str();
-    return desc;
-}
-
-
-/**
-   Use the mimedb command to look up a description for a given suffix
-*/
-static wcstring complete_get_desc_suffix(const wchar_t *suff_orig)
-{
-
-    size_t len;
-    wchar_t *suff;
-    wchar_t *pos;
-
-    len = wcslen(suff_orig);
-
-    if (len == 0)
-        return COMPLETE_FILE_DESC;
-
-    suff = wcsdup(suff_orig);
-
-    /*
-      Drop characters that are commonly used as backup suffixes from the suffix
-    */
-    for (pos=suff; *pos; pos++)
-    {
-        if (wcschr(L"?;#~@&", *pos))
-        {
-            *pos=0;
-            break;
-        }
-    }
-
-    wcstring tmp = escape(suff, ESCAPE_ALL);
-    free(suff);
-    suff = wcsdup(tmp.c_str());
-
-    std::map<wcstring, wcstring>::iterator iter = suffix_map.find(suff);
-    wcstring desc;
-    if (iter != suffix_map.end())
-    {
-        desc = iter->second;
-    }
-    else
-    {
-        desc = complete_get_desc_suffix_internal(suff);
-    }
-
-    free(suff);
-
-    return desc;
-}
-
-
-/**
    Obtain a description string for the file specified by the filename.
 
    The returned value is a string constant and should not be free'd.
@@ -493,7 +397,6 @@ static wcstring file_get_desc(const wcstring &filename,
                               struct stat buf,
                               int err)
 {
-    const wchar_t *suffix;
 
     if (!lstat_res)
     {
@@ -593,12 +496,6 @@ static wcstring file_get_desc(const wcstring &filename,
                 }
             }
         }
-    }
-
-    suffix = wcsrchr(filename.c_str(), L'.');
-    if (suffix != 0 && !wcsrchr(suffix, L'/'))
-    {
-        return complete_get_desc_suffix(suffix);
     }
 
     return COMPLETE_FILE_DESC ;

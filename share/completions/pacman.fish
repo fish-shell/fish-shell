@@ -10,7 +10,7 @@ set -l listall "(__fish_print_packages)"
 set -l listrepos "(grep '^\[.\+\]' /etc/pacman.conf | sed 's/[]\[]//g')"
 set -l listgroups "(pacman -Sg | sed 's/\(.*\)/\1\tPackage group/g')"
 
-set -l noopt '__fish_contains_opt -s S -s D -s Q -s R -s U -s T database query sync remove upgrade deptest'
+set -l noopt 'not __fish_contains_opt -s S -s D -s Q -s R -s U -s T database query sync remove upgrade deptest'
 set -l database '__fish_contains_opt -s D database'
 set -l query '__fish_contains_opt -s Q query'
 set -l remove '__fish_contains_opt -s R remove'

@@ -247,7 +247,7 @@ static void write_part(const wchar_t *begin,
 */
 static int builtin_commandline(parser_t &parser, wchar_t **argv)
 {
-
+    wgetopter_t w;
     int buffer_part=0;
     int cut_at_cursor=0;
 
@@ -298,7 +298,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
         return 1;
     }
 
-    woptind=0;
+    w.woptind=0;
 
     while (1)
     {
@@ -327,11 +327,11 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
 
         int opt_index = 0;
 
-        int opt = wgetopt_long(argc,
-                               argv,
-                               L"abijpctwforhI:CLSsP",
-                               long_options,
-                               &opt_index);
+        int opt = w.wgetopt_long(argc,
+                                 argv,
+                                 L"abijpctwforhI:CLSsP",
+                                 long_options,
+                                 &opt_index);
         if (opt == -1)
             break;
 
@@ -390,8 +390,8 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
                 break;
 
             case 'I':
-                current_buffer = woptarg;
-                current_cursor_pos = wcslen(woptarg);
+                current_buffer = w.woptarg;
+                current_cursor_pos = wcslen(w.woptarg);
                 break;
 
             case 'C':
@@ -419,7 +419,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
                 return 0;
 
             case L'?':
-                builtin_unknown_option(parser, argv[0], argv[woptind-1]);
+                builtin_unknown_option(parser, argv[0], argv[w.woptind-1]);
                 return 1;
         }
     }
@@ -442,7 +442,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
         }
 
 
-        if (argc == woptind)
+        if (argc == w.woptind)
         {
             append_format(stderr_buffer,
                           BUILTIN_ERR_MISSING,
@@ -451,7 +451,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
             builtin_print_help(parser, argv[0], stderr_buffer);
             return 1;
         }
-        for (i=woptind; i<argc; i++)
+        for (i=w.woptind; i<argc; i++)
         {
             wchar_t c = input_function_get_code(argv[i]);
             if (c != (wchar_t)(-1))
@@ -491,7 +491,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
     /*
       Check for invalid switch combinations
     */
-    if ((search_mode || line_mode || cursor_mode || paging_mode) && (argc-woptind > 1))
+    if ((search_mode || line_mode || cursor_mode || paging_mode) && (argc-w.woptind > 1))
     {
 
         append_format(stderr_buffer,
@@ -513,7 +513,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
     }
 
 
-    if ((tokenize || cut_at_cursor) && (argc-woptind))
+    if ((tokenize || cut_at_cursor) && (argc-w.woptind))
     {
         append_format(stderr_buffer,
                       BUILTIN_ERR_COMBO2,
@@ -525,7 +525,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
         return 1;
     }
 
-    if (append_mode && !(argc-woptind))
+    if (append_mode && !(argc-w.woptind))
     {
         append_format(stderr_buffer,
                       BUILTIN_ERR_COMBO2,
@@ -551,19 +551,19 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
 
     if (cursor_mode)
     {
-        if (argc-woptind)
+        if (argc-w.woptind)
         {
             wchar_t *endptr;
             long new_pos;
             errno = 0;
 
-            new_pos = wcstol(argv[woptind], &endptr, 10);
+            new_pos = wcstol(argv[w.woptind], &endptr, 10);
             if (*endptr || errno)
             {
                 append_format(stderr_buffer,
                               BUILTIN_ERR_NOT_NUMBER,
                               argv[0],
-                              argv[woptind]);
+                              argv[w.woptind]);
                 builtin_print_help(parser, argv[0], stderr_buffer);
             }
 
@@ -639,7 +639,7 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
 
     }
 
-    switch (argc-woptind)
+    switch (argc-w.woptind)
     {
         case 0:
         {
@@ -649,16 +649,16 @@ static int builtin_commandline(parser_t &parser, wchar_t **argv)
 
         case 1:
         {
-            replace_part(begin, end, argv[woptind], append_mode);
+            replace_part(begin, end, argv[w.woptind], append_mode);
             break;
         }
 
         default:
         {
-            wcstring sb = argv[woptind];
+            wcstring sb = argv[w.woptind];
             int i;
 
-            for (i=woptind+1; i<argc; i++)
+            for (i=w.woptind+1; i<argc; i++)
             {
                 sb.push_back(L'\n');
                 sb.append(argv[i]);

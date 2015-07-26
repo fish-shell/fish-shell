@@ -84,9 +84,6 @@
    when it is done, all the options precede everything else.  Thus
    all application programs are extended to handle flexible argument order.
 
-   Setting the environment variable POSIXLY_CORRECT disables permutation.
-   Then the behavior is completely standard.
-
    GNU application programs can use a third alternative mode in which
    they can distinguish the relative order of options and other arguments.  */
 
@@ -94,87 +91,6 @@
 #include "wutil.h"
 #include "fallback.h"
 
-
-
-/* For communication from `getopt' to the caller.
-   When `getopt' finds an option that takes an argument,
-   the argument value is returned here.
-   Also, when `ordering' is RETURN_IN_ORDER,
-   each non-option ARGV-element is returned here.  */
-
-wchar_t *woptarg = NULL;
-
-/* Index in ARGV of the next element to be scanned.
-   This is used for communication to and from the caller
-   and for communication between successive calls to `getopt'.
-
-   On entry to `getopt', zero means this is the first call; initialize.
-
-   When `getopt' returns EOF, this is the index of the first of the
-   non-option elements that the caller should itself scan.
-
-   Otherwise, `woptind' communicates from one call to the next
-   how much of ARGV has been scanned so far.  */
-
-/* XXX 1003.2 says this must be 1 before any call.  */
-int woptind = 0;
-
-/* The next char to be scanned in the option-element
-   in which the last option character we returned was found.
-   This allows us to pick up the scan where we left off.
-
-   If this is zero, or a null string, it means resume the scan
-   by advancing to the next ARGV-element.  */
-
-static wchar_t *nextchar;
-
-/* Callers store zero here to inhibit the error message
-   for unrecognized options.  */
-
-int wopterr = 1;
-
-/* Set to an option character which was unrecognized.
-   This must be initialized on some systems to avoid linking in the
-   system's own getopt implementation.  */
-
-int woptopt = '?';
-
-/* Describe how to deal with options that follow non-option ARGV-elements.
-
-If the caller did not specify anything,
-the default is REQUIRE_ORDER if the environment variable
-POSIXLY_CORRECT is defined, PERMUTE otherwise.
-
-REQUIRE_ORDER means don't recognize them as options;
-stop option processing when the first non-option is seen.
-This is what Unix does.
-This mode of operation is selected by either setting the environment
-variable POSIXLY_CORRECT, or using `+' as the first character
-of the list of option characters.
-
-PERMUTE is the default.  We permute the contents of ARGV as we scan,
-so that eventually all the non-options are at the end.  This allows options
-to be given in any order, even with programs that were not written to
-expect this.
-
-RETURN_IN_ORDER is an option available to programs that were written
-to expect options and other ARGV-elements in any order and that care about
-the ordering of the two.  We describe each non-option ARGV-element
-as if it were the argument of an option with character code 1.
-Using `-' as the first character of the list of option characters
-selects this mode of operation.
-
-The special argument `--' forces an end of option-scanning regardless
-of the value of `ordering'.  In the case of RETURN_IN_ORDER, only
-`--' can cause `getopt' to return EOF with `woptind' != ARGC.  */
-
-static enum
-{
-    REQUIRE_ORDER, PERMUTE, RETURN_IN_ORDER
-} ordering;
-
-/* Value of POSIXLY_CORRECT environment variable.  */
-static char *posixly_correct;
 
 /**
    Use translation functions if available
@@ -233,14 +149,6 @@ extern int wcslen(const wchar_t *);
 
 #endif /* not __GNU_LIBRARY__ */
 
-/* Handle permutation of arguments.  */
-
-/* Describe the part of ARGV that contains non-options that have
-   been skipped.  `first_nonopt' is the index in ARGV of the first of them;
-   `last_nonopt' is the index after the last of them.  */
-
-static int first_nonopt;
-static int last_nonopt;
 
 /* Exchange two adjacent subsequences of ARGV.
    One subsequence is elements [first_nonopt,last_nonopt)
@@ -251,8 +159,7 @@ static int last_nonopt;
    `first_nonopt' and `last_nonopt' are relocated so that they describe
    the new indices of the non-options in ARGV after they are moved.  */
 
-static void
-exchange(wchar_t **argv)
+void wgetopter_t::exchange(wchar_t **argv)
 {
     int bottom = first_nonopt;
     int middle = last_nonopt;
@@ -308,8 +215,7 @@ exchange(wchar_t **argv)
 
 /* Initialize the internal data when the first call is made.  */
 
-static const wchar_t *
-_wgetopt_initialize(const wchar_t *optstring)
+const wchar_t * wgetopter_t::_wgetopt_initialize(const wchar_t *optstring)
 {
     /* Start processing options with ARGV-element 1 (since ARGV-element 0
        is the program name); the sequence of previously skipped
@@ -318,8 +224,6 @@ _wgetopt_initialize(const wchar_t *optstring)
     first_nonopt = last_nonopt = woptind = 1;
 
     nextchar = NULL;
-
-    posixly_correct = getenv("POSIXLY_CORRECT");
 
     /* Determine how to handle the ordering of options and nonoptions.  */
 
@@ -333,8 +237,6 @@ _wgetopt_initialize(const wchar_t *optstring)
         ordering = REQUIRE_ORDER;
         ++optstring;
     }
-    else if (posixly_correct != NULL)
-        ordering = REQUIRE_ORDER;
     else
         ordering = PERMUTE;
 
@@ -368,7 +270,7 @@ _wgetopt_initialize(const wchar_t *optstring)
    so the following text in the same ARGV-element, or the text of the following
    ARGV-element, is returned in `optarg'.  Two colons mean an option that
    wants an optional arg; if there is text in the current ARGV-element,
-   it is returned in `woptarg', otherwise `woptarg' is set to zero.
+   it is returned in `w.woptarg', otherwise `w.woptarg' is set to zero.
 
    If OPTSTRING starts with `-' or `+', it requests different methods of
    handling the non-option ARGV-elements.
@@ -397,8 +299,7 @@ _wgetopt_initialize(const wchar_t *optstring)
    If LONG_ONLY is nonzero, '-' as well as '--' can introduce
    long-named options.  */
 
-int
-_wgetopt_internal(int argc, wchar_t *const *argv, const wchar_t *optstring, const struct woption *longopts, int *longind, int long_only)
+int wgetopter_t::_wgetopt_internal(int argc, wchar_t *const *argv, const wchar_t *optstring, const struct woption *longopts, int *longind, int long_only)
 {
     woptarg = NULL;
 
@@ -631,11 +532,7 @@ _wgetopt_internal(int argc, wchar_t *const *argv, const wchar_t *optstring, cons
         {
             if (wopterr)
             {
-                if (posixly_correct)
-                    /* 1003.2 specifies the format of this message.  */
-                    fwprintf(stderr, _(L"%ls: Illegal option -- %lc\n"), argv[0], c);
-                else
-                    fwprintf(stderr, _(L"%ls: Invalid option -- %lc\n"), argv[0], c);
+                fwprintf(stderr, _(L"%ls: Invalid option -- %lc\n"), argv[0], c);
             }
             woptopt = c;
 
@@ -693,8 +590,7 @@ _wgetopt_internal(int argc, wchar_t *const *argv, const wchar_t *optstring, cons
     }
 }
 
-int
-wgetopt(int argc, wchar_t *const *argv, const wchar_t *optstring)
+int wgetopter_t::wgetopt(int argc, wchar_t *const *argv, const wchar_t *optstring)
 {
     return _wgetopt_internal(argc, argv, optstring,
                              (const struct woption *) 0,
@@ -702,14 +598,12 @@ wgetopt(int argc, wchar_t *const *argv, const wchar_t *optstring)
                              0);
 }
 
-int
-wgetopt_long(int argc, wchar_t *const *argv, const wchar_t *options, const struct woption *long_options, int *opt_index)
+int wgetopter_t::wgetopt_long(int argc, wchar_t *const *argv, const wchar_t *options, const struct woption *long_options, int *opt_index)
 {
     return _wgetopt_internal(argc, argv, options, long_options, opt_index, 0);
 }
 
-int
-wgetopt_long_only(int argc, wchar_t *const *argv, const wchar_t *options, const struct woption *long_options, int *opt_index)
+int wgetopter_t::wgetopt_long_only(int argc, wchar_t *const *argv, const wchar_t *options, const struct woption *long_options, int *opt_index)
 {
     return _wgetopt_internal(argc, argv, options, long_options, opt_index, 1);
 }

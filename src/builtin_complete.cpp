@@ -287,6 +287,7 @@ static void  builtin_complete_remove(const wcstring_list_t &cmd,
 static int builtin_complete(parser_t &parser, wchar_t **argv)
 {
     ASSERT_IS_MAIN_THREAD();
+    wgetopter_t w;
     bool res=false;
     int argc=0;
     int result_mode=SHARED;
@@ -308,7 +309,7 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
 
     argc = builtin_count_args(argv);
 
-    woptind=0;
+    w.woptind=0;
 
     while (! res)
     {
@@ -337,11 +338,11 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
 
         int opt_index = 0;
 
-        int opt = wgetopt_long(argc,
-                               argv,
-                               L"a:c:p:s:l:o:d:frxeuAn:C::w:h",
-                               long_options,
-                               &opt_index);
+        int opt = w.wgetopt_long(argc,
+                                 argv,
+                                 L"a:c:p:s:l:o:d:frxeuAn:C::w:h",
+                                 long_options,
+                                 &opt_index);
         if (opt == -1)
             break;
 
@@ -376,7 +377,7 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
             case 'c':
             {
                 wcstring tmp;
-                if (unescape_string(woptarg, &tmp, UNESCAPE_SPECIAL))
+                if (unescape_string(w.woptarg, &tmp, UNESCAPE_SPECIAL))
                 {
                     if (opt=='p')
                         path.push_back(tmp);
@@ -385,14 +386,14 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
                 }
                 else
                 {
-                    append_format(stderr_buffer, L"%ls: Invalid token '%ls'\n", argv[0], woptarg);
+                    append_format(stderr_buffer, L"%ls: Invalid token '%ls'\n", argv[0], w.woptarg);
                     res = true;
                 }
                 break;
             }
 
             case 'd':
-                desc = woptarg;
+                desc = w.woptarg;
                 break;
 
             case 'u':
@@ -404,19 +405,19 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
                 break;
 
             case 's':
-                short_opt.append(woptarg);
+                short_opt.append(w.woptarg);
                 break;
 
             case 'l':
-                gnu_opt.push_back(woptarg);
+                gnu_opt.push_back(w.woptarg);
                 break;
 
             case 'o':
-                old_opt.push_back(woptarg);
+                old_opt.push_back(w.woptarg);
                 break;
 
             case 'a':
-                comp = woptarg;
+                comp = w.woptarg;
                 break;
 
             case 'e':
@@ -424,16 +425,16 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
                 break;
 
             case 'n':
-                condition = woptarg;
+                condition = w.woptarg;
                 break;
                 
             case 'w':
-                wrap_targets.push_back(woptarg);
+                wrap_targets.push_back(w.woptarg);
                 break;
 
             case 'C':
                 do_complete = true;
-                do_complete_param = woptarg ? woptarg : reader_get_buffer();
+                do_complete_param = w.woptarg ? w.woptarg : reader_get_buffer();
                 break;
 
             case 'h':
@@ -441,7 +442,7 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
                 return 0;
 
             case '?':
-                builtin_unknown_option(parser, argv[0], argv[woptind-1]);
+                builtin_unknown_option(parser, argv[0], argv[w.woptind-1]);
                 res = true;
                 break;
 
@@ -545,7 +546,7 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
                 recursion_level--;
             }
         }
-        else if (woptind != argc)
+        else if (w.woptind != argc)
         {
             append_format(stderr_buffer,
                           _(L"%ls: Too many arguments\n"),

@@ -1150,7 +1150,10 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
     }
     if (use_implicit_cd)
     {
-        (void)expand_string(str_cmd, this->completions, ACCEPT_INCOMPLETE | DIRECTORIES_ONLY | this->expand_flags(), NULL);
+        if (!expand_string(str_cmd, this->completions, ACCEPT_INCOMPLETE | DIRECTORIES_ONLY | this->expand_flags(), NULL))
+        {
+            // Not valid as implicit cd.
+        }
     }
     if (str_cmd.find(L'/') == wcstring::npos && str_cmd.at(0) != L'~')
     {

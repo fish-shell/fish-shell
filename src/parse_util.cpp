@@ -1169,7 +1169,7 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
                                                  &cmdsub_end,
                                                  true) > 0)
             {
-                token_after_parens = tok_first(paren_text.c_str());
+                token_after_parens = tok_first(paren_text);
             }
             
             /* Make sure we always show something */
@@ -1233,7 +1233,7 @@ static parser_test_error_bits_t detect_dollar_cmdsub_errors(size_t arg_src_offse
                 result_bits |= PARSER_TEST_ERROR;
                 if (out_errors != NULL)
                 {
-                    wcstring subcommand_first_token = tok_first(cmdsubst_src.c_str());
+                    wcstring subcommand_first_token = tok_first(cmdsubst_src);
                     if (subcommand_first_token.empty())
                     {
                         // e.g. $(). Report somthing.

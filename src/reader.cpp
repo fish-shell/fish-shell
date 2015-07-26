@@ -2538,7 +2538,7 @@ void reader_run_command(parser_t &parser, const wcstring &cmd)
 
     struct timeval time_before, time_after;
 
-    wcstring ft = tok_first(cmd.c_str());
+    wcstring ft = tok_first(cmd);
 
     if (! ft.empty())
         env_set(L"_", ft.c_str(), ENV_GLOBAL);

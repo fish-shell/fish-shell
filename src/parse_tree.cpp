@@ -1299,7 +1299,7 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
     if (errors == NULL)
         tok_options |= TOK_SQUASH_ERRORS;
 
-    tokenizer_t tok = tokenizer_t(str.c_str(), tok_options);
+    tokenizer_t tok(str.c_str(), tok_options);
 
     /* We are an LL(2) parser. We pass two tokens at a time. New tokens come in at index 1. Seed our queue with an initial token at index 1. */
     parse_token_t queue[2] = {kInvalidToken, kInvalidToken};

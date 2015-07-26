@@ -3620,7 +3620,7 @@ static int builtin_fg(parser_t &parser, wchar_t **argv)
                      j->command_wcstr());
         }
 
-        const wcstring ft = tok_first(j->command_wcstr());
+        const wcstring ft = tok_first(j->command());
         if (! ft.empty())
             env_set(L"_", ft.c_str(), ENV_EXPORT);
         reader_write_title(j->command());

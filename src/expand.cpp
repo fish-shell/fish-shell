@@ -535,7 +535,7 @@ bool process_iterator_t::next_process(wcstring *out_str, pid_t *out_pid)
             fgetws2(&full_command_line, cmdfile);
 
             /* The command line needs to be escaped */
-            cmd = tok_first(full_command_line.c_str());
+            cmd = tok_first(full_command_line);
         }
 #ifdef SunOS
         else if ((cmdfile=wfopen(path + L"/psinfo", "r")))

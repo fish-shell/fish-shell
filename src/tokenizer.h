@@ -91,8 +91,12 @@ struct tok_t
 /**
    The tokenizer struct.
 */
-struct tokenizer_t
+class tokenizer_t
 {
+    /* No copying, etc. */
+    tokenizer_t(const tokenizer_t&);
+    void operator=(const tokenizer_t&);
+
     /** A pointer into the original string, showing where the next token begins */
     const wchar_t *buff;
     /** A copy of the original string */
@@ -120,7 +124,13 @@ struct tokenizer_t
 
     /* Whether to continue the previous line after the comment */
     bool continue_line_after_comment;
-
+    
+    void call_error(enum tokenizer_error error_type, const wchar_t *error_message);
+    void read_string();
+    void read_comment();
+    void tok_next();
+    
+public:
     /**
       Constructor for a tokenizer. b is the string that is to be
       tokenized. It is not copied, and should not be freed by the caller
@@ -146,7 +156,7 @@ struct tokenizer_t
 
    On failure, returns the empty string.
 */
-wcstring tok_first(const wchar_t *str);
+wcstring tok_first(const wcstring &str);
 
 /* Helper function to determine redirection type from a string, or TOK_NONE if the redirection is invalid. Also returns the fd by reference. */
 enum token_type redirection_type_for_string(const wcstring &str, int *out_fd = NULL);

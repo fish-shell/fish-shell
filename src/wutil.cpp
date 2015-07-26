@@ -18,7 +18,6 @@
 #include <libgen.h>
 #include <pthread.h>
 #include <assert.h>
-#include <features.h>
 #include <string>
 #include <map>
 

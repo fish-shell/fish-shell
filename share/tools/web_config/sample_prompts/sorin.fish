@@ -1,14 +1,10 @@
 # name: Sorin
-# author: Ivan Tham <ivanthamjunhoe@gmail.com>
+# author: Ivan Tham <pickfire@riseup.net>
 
 # If login shell, don't do anything
-if status --is-login; and function fish_prompt; echo -n '% '; end; end
+if status --is-login; and test TERM = 'linux'; function fish_prompt; echo -n '% '; end; end
 
 function fish_prompt
-	if not set -q -g __prompt_sorin_functions-defined
-		set -g __prompt_sorin_functions-defined
-	end
-
 	test $SSH_TTY; and printf (set_color red)(whoami)(set_color white)'@'(set_color yellow)(hostname)' '
 
     test $USER = 'root'; and echo (set_color red)"#"

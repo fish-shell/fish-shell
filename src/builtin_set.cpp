@@ -396,6 +396,7 @@ static void print_variables(int include_values, int esc, bool shorten_ok, int sc
 */
 static int builtin_set(parser_t &parser, wchar_t **argv)
 {
+    wgetopter_t w;
     /** Variables used for parsing the argument list */
     const struct woption long_options[] =
     {
@@ -439,10 +440,10 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
 
 
     /* Parse options to obtain the requested operation and the modifiers */
-    woptind = 0;
+    w.woptind = 0;
     while (1)
     {
-        int c = wgetopt_long(argc, argv, short_options, long_options, 0);
+        int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
 
         if (c == -1)
         {
@@ -498,7 +499,7 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
                 return 0;
 
             case '?':
-                builtin_unknown_option(parser, argv[0], argv[woptind-1]);
+                builtin_unknown_option(parser, argv[0], argv[w.woptind-1]);
                 return 1;
 
             default:
@@ -573,7 +574,7 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
           out of the specified variables.
         */
         int i;
-        for (i=woptind; i<argc; i++)
+        for (i=w.woptind; i<argc; i++)
         {
             wchar_t *arg = argv[i];
             int slice=0;
@@ -635,7 +636,7 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
         return 0;
     }
 
-    if (woptind == argc)
+    if (w.woptind == argc)
     {
         /*
           Print values of variables
@@ -658,7 +659,7 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
         return retcode;
     }
 
-    if (!(dest = wcsdup(argv[woptind])))
+    if (!(dest = wcsdup(argv[w.woptind])))
     {
         DIE_MEM();
     }
@@ -711,9 +712,9 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
 
         if (!retcode)
         {
-            for (; woptind<argc; woptind++)
+            for (; w.woptind<argc; w.woptind++)
             {
-                if (!parse_index(indexes, argv[woptind], dest, result.size()))
+                if (!parse_index(indexes, argv[w.woptind], dest, result.size()))
                 {
                     builtin_print_help(parser, argv[0], stderr_buffer);
                     retcode = 1;
@@ -721,7 +722,7 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
                 }
 
                 size_t idx_count = indexes.size();
-                size_t val_count = argc-woptind-1;
+                size_t val_count = argc-w.woptind-1;
 
                 if (!erase)
                 {
@@ -734,7 +735,7 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
                     }
                     if (val_count == idx_count)
                     {
-                        woptind++;
+                        w.woptind++;
                         break;
                     }
                 }
@@ -756,9 +757,9 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
             {
                 wcstring_list_t value;
 
-                while (woptind < argc)
+                while (w.woptind < argc)
                 {
-                    value.push_back(argv[woptind++]);
+                    value.push_back(argv[w.woptind++]);
                 }
 
                 if (update_values(result,
@@ -778,14 +779,14 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
     }
     else
     {
-        woptind++;
+        w.woptind++;
 
         /*
           No slicing
         */
         if (erase)
         {
-            if (woptind != argc)
+            if (w.woptind != argc)
             {
                 append_format(stderr_buffer,
                               _(L"%ls: Values cannot be specfied with erase\n"),
@@ -801,7 +802,7 @@ static int builtin_set(parser_t &parser, wchar_t **argv)
         else
         {
             wcstring_list_t val;
-            for (i=woptind; i<argc; i++)
+            for (i=w.woptind; i<argc; i++)
                 val.push_back(argv[i]);
             retcode = my_env_set(dest, val, scope);
         }

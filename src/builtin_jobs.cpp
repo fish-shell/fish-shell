@@ -160,13 +160,14 @@ static void builtin_jobs_print(const job_t *j, int mode, int header)
 */
 static int builtin_jobs(parser_t &parser, wchar_t **argv)
 {
+    wgetopter_t w;
     int argc=0;
     int found=0;
     int mode=JOBS_DEFAULT;
     int print_last = 0;
 
     argc = builtin_count_args(argv);
-    woptind=0;
+    w.woptind=0;
 
     while (1)
     {
@@ -201,11 +202,11 @@ static int builtin_jobs(parser_t &parser, wchar_t **argv)
 
         int opt_index = 0;
 
-        int opt = wgetopt_long(argc,
-                               argv,
-                               L"pclgh",
-                               long_options,
-                               &opt_index);
+        int opt = w.wgetopt_long(argc,
+                                 argv,
+                                 L"pclgh",
+                                 long_options,
+                                 &opt_index);
         if (opt == -1)
             break;
 
@@ -248,7 +249,7 @@ static int builtin_jobs(parser_t &parser, wchar_t **argv)
                 return 0;
 
             case '?':
-                builtin_unknown_option(parser, argv[0], argv[woptind-1]);
+                builtin_unknown_option(parser, argv[0], argv[w.woptind-1]);
                 return 1;
 
         }
@@ -283,13 +284,13 @@ static int builtin_jobs(parser_t &parser, wchar_t **argv)
     }
     else
     {
-        if (woptind < argc)
+        if (w.woptind < argc)
         {
             int i;
 
             found = 1;
 
-            for (i=woptind; i<argc; i++)
+            for (i=w.woptind; i<argc; i++)
             {
                 int pid;
                 wchar_t *end;

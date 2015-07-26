@@ -47,4 +47,3 @@ complete -c grep -s x -l line-regexp --description "Only whole matching lines"
 complete -c grep -s y --description "Obsolete synonym for -i"
 complete -c grep -s z -l null-data --description 'treat input as a set of lines each terminated by a zero byte'
 complete -c grep -s Z -l null --description "Output a zero byte after filename"
-end

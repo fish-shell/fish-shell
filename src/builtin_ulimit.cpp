@@ -254,6 +254,7 @@ static int set(int resource, int hard, int soft, rlim_t value)
 */
 static int builtin_ulimit(parser_t &parser, wchar_t ** argv)
 {
+    wgetopter_t w;
     int hard=0;
     int soft=0;
 
@@ -262,7 +263,7 @@ static int builtin_ulimit(parser_t &parser, wchar_t ** argv)
 
     int argc = builtin_count_args(argv);
 
-    woptind=0;
+    w.woptind=0;
 
     while (1)
     {
@@ -334,11 +335,11 @@ static int builtin_ulimit(parser_t &parser, wchar_t ** argv)
 
         int opt_index = 0;
 
-        int opt = wgetopt_long(argc,
-                               argv,
-                               L"aHScdflmnstuvh",
-                               long_options,
-                               &opt_index);
+        int opt = w.wgetopt_long(argc,
+                                 argv,
+                                 L"aHScdflmnstuvh",
+                                 long_options,
+                                 &opt_index);
         if (opt == -1)
             break;
 
@@ -419,14 +420,14 @@ static int builtin_ulimit(parser_t &parser, wchar_t ** argv)
                 return 0;
 
             case L'?':
-                builtin_unknown_option(parser, argv[0], argv[woptind-1]);
+                builtin_unknown_option(parser, argv[0], argv[w.woptind-1]);
                 return 1;
         }
     }
 
     if (report_all)
     {
-        if (argc - woptind == 0)
+        if (argc - w.woptind == 0)
         {
             print_all(hard);
         }
@@ -441,7 +442,7 @@ static int builtin_ulimit(parser_t &parser, wchar_t ** argv)
         return 0;
     }
 
-    switch (argc - woptind)
+    switch (argc - w.woptind)
     {
         case 0:
         {
@@ -468,28 +469,28 @@ static int builtin_ulimit(parser_t &parser, wchar_t ** argv)
                 hard=soft=1;
             }
 
-            if (wcscasecmp(argv[woptind], L"unlimited")==0)
+            if (wcscasecmp(argv[w.woptind], L"unlimited")==0)
             {
                 new_limit = RLIM_INFINITY;
             }
-            else if (wcscasecmp(argv[woptind], L"hard")==0)
+            else if (wcscasecmp(argv[w.woptind], L"hard")==0)
             {
                 new_limit = get(what, 1);
             }
-            else if (wcscasecmp(argv[woptind], L"soft")==0)
+            else if (wcscasecmp(argv[w.woptind], L"soft")==0)
             {
                 new_limit = get(what, soft);
             }
             else
             {
                 errno=0;
-                new_limit = wcstol(argv[woptind], &end, 10);
+                new_limit = wcstol(argv[w.woptind], &end, 10);
                 if (errno || *end)
                 {
                     append_format(stderr_buffer,
                                   L"%ls: Invalid limit '%ls'\n",
                                   argv[0],
-                                  argv[woptind]);
+                                  argv[w.woptind]);
                     builtin_print_help(parser, argv[0], stderr_buffer);
                     return 1;
                 }

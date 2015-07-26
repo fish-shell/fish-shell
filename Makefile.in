@@ -54,7 +54,7 @@ localedir = @localedir@
 #
 
 MACROS = -DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\" -DBINDIR=L\"$(bindir)\" -DDOCDIR=L\"$(docdir)\"
-CXXFLAGS = @CXXFLAGS@ $(MACROS) $(EXTRA_CXXFLAGS)
+CXXFLAGS = @CXXFLAGS@ -iquote. -iquote./src/ $(MACROS) $(EXTRA_CXXFLAGS)
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -73,42 +73,45 @@ HAVE_GETTEXT=@HAVE_GETTEXT@
 HAVE_DOXYGEN=@HAVE_DOXYGEN@
 
 #
-#Additional .cpp files used by common.o. These also have a corresponding
-#.h file.
-#
-
-COMMON_FILES := util.cpp fallback.cpp
-
-
-#
 # All objects that the system needs to build fish, except fish.o
 #
 
-FISH_OBJS := function.o builtin.o complete.o env.o exec.o expand.o		\
-	highlight.o history.o kill.o parser.o proc.o reader.o sanity.o		\
-	tokenizer.o wildcard.o wgetopt.o wutil.o input.o output.o intern.o	\
-	env_universal_common.o input_common.o event.o		\
-	signal.o io.o parse_util.o common.o screen.o path.o autoload.o		\
-	parser_keywords.o iothread.o color.o postfork.o	\
-	builtin_test.o parse_tree.o parse_productions.o parse_execution.o \
-	pager.o utf8.o fish_version.o wcstringutil.o
+FISH_OBJS := obj/function.o obj/builtin.o obj/complete.o obj/env.o obj/exec.o \
+	obj/expand.o obj/highlight.o obj/history.o obj/kill.o obj/parser.o \
+	obj/proc.o obj/reader.o obj/sanity.o obj/tokenizer.o obj/wildcard.o \
+	obj/wgetopt.o obj/wutil.o obj/input.o obj/output.o obj/intern.o \
+	obj/env_universal_common.o obj/input_common.o obj/event.o obj/signal.o \
+	obj/io.o obj/parse_util.o obj/common.o obj/screen.o obj/path.o \
+	obj/autoload.o obj/parser_keywords.o obj/iothread.o obj/color.o \
+	obj/postfork.o obj/builtin_test.o obj/parse_tree.o obj/parse_productions.o \
+	obj/parse_execution.o obj/pager.o obj/utf8.o obj/fish_version.o \
+	obj/wcstringutil.o
 
-FISH_INDENT_OBJS := fish_indent.o print_help.o $(FISH_OBJS) 
+FISH_INDENT_OBJS := obj/fish_indent.o obj/print_help.o $(FISH_OBJS) 
 
 #
 # Additional files used by builtin.o
 #
 
-BUILTIN_FILES := builtin_set.cpp builtin_commandline.cpp	\
-	builtin_ulimit.cpp builtin_complete.cpp builtin_jobs.cpp	\
-	builtin_set_color.cpp builtin_printf.cpp
+BUILTIN_FILES := src/builtin_set.cpp src/builtin_commandline.cpp	\
+	src/builtin_ulimit.cpp src/builtin_complete.cpp	\
+	src/builtin_jobs.cpp src/builtin_set_color.cpp	\
+	src/builtin_printf.cpp
 
 
 #
 # All objects that the system needs to build fish_tests
 #
 
-FISH_TESTS_OBJS := $(FISH_OBJS) fish_tests.o
+FISH_TESTS_OBJS := $(FISH_OBJS) obj/fish_tests.o
+
+
+#
+# All of the sources that produce object files
+# (that is, are not themselves #included in other source files)
+#
+FISH_ALL_OBJS := $(sort $(FISH_OBJS) $(FISH_INDENT_OBJS) $(FISH_TESTS_OBJS) \
+                   obj/fish.o obj/key_reader.o)
 
 
 #
@@ -218,7 +221,7 @@ all: $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc
 FISH-BUILD-VERSION-FILE: FORCE
 	@./build_tools/git_version_gen.sh
 -include FISH-BUILD-VERSION-FILE
-CPPFLAGS += -DFISH_BUILD_VERSION=\"$(FISH_BUILD_VERSION)\"
+CXXFLAGS += -DFISH_BUILD_VERSION=\"$(FISH_BUILD_VERSION)\"
 .PHONY: FORCE
 fish_version.o: FISH-BUILD-VERSION-FILE
 
@@ -263,7 +266,7 @@ user_doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FIL
 # Source code documentation. Also includes user documentation.
 #
 
-doc: *.h *.cpp doc.h Doxyfile lexicon_filter
+doc: src/*.h src/*.cpp doc.h Doxyfile lexicon_filter
 	(cat Doxyfile; echo INPUT_FILTER=./lexicon_filter; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION)) | doxygen - ;
 
 
@@ -465,13 +468,11 @@ doc.h: $(HDR_FILES)
 # Create a template translation object
 #
 
-messages.pot: *.cpp *.h share/completions/*.fish share/functions/*.fish
-	xgettext -k_ -kN_ *.cpp *.h -o messages.pot
+messages.pot: src/*.cpp src/*.h share/completions/*.fish share/functions/*.fish
+	xgettext -k_ -kN_ src/*.cpp src/*.h -o messages.pot
 	xgettext -j -k_ -kN_ -k--description -LShell --from-code=UTF-8 share/completions/*.fish share/functions/*.fish -o messages.pot
 
 builtin.o: $(BUILTIN_FILES)
-
-common.o: $(COMMON_FILES)
 
 
 #
@@ -762,11 +763,23 @@ uninstall-translations:
 #
 
 #
+# How basic files get compiled
+#
+obj/%.o: src/%.cpp | obj
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+	
+#
+# obj directory
+#
+obj:
+	mkdir obj
+
+#
 # Build the fish program.
 #
 
-fish: $(FISH_OBJS) fish.o
-	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_OBJS) fish.o $(LIBS) -o $@
+fish: $(FISH_OBJS) obj/fish.o
+	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_OBJS) obj/fish.o $(LIBS) -o $@
 
 
 #
@@ -795,11 +808,26 @@ key_reader: $(FISH_OBJS) key_reader.o
 
 #
 # Update dependencies
+# Unfortunately makedepend cannot handle source files in one directory
+# and object files in another. So we have to cons up a fake directory
+# tree and run it there. Note that some .cpp files do not result in
+# objects because they are #include'd directly. In that case we need to
+# leave them in the 'header' directory, so they get picked up by the
+# dependencies. So we put everything in the header directory and move out
+# exactly the files that result in objects, leaving the #include'd files
+# behind.
 #
 depend:
-	makedepend -fMakefile.in -Y *.cpp
+	mkdir -p /tmp/fish_make_depend/src
+	cp src/*.cpp src/*.h /tmp/fish_make_depend/src
+	cp config.h /tmp/fish_make_depend/
+	mv $(subst obj/,/tmp/fish_make_depend/src/,$(FISH_ALL_OBJS:.o=.cpp)) /tmp/fish_make_depend/
+	cd /tmp/fish_make_depend && \
+	    makedepend -f$(CURDIR)/Makefile.in -pobj/ -Y -Isrc *.cpp
+	rm -Rf /tmp/fish_make_depend
 	./config.status
 .PHONY: depend
+
 
 #
 # Cleanup targets
@@ -824,7 +852,7 @@ distclean: clean
 # deleted we won't be able to regenerate them
 
 clean:
-	rm -f *.o doc.h doc.tmp doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr
+	rm -f obj/*.o *.o doc.h doc.tmp doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr
 	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
 	rm -f $(PROGRAMS) fish_tests key_reader
 	rm -f command_list.txt command_list_toc.txt toc.txt
@@ -835,151 +863,191 @@ clean:
 		rm -rf doc user_doc share/man; \
 	fi
 	rm -f po/*.gmo
+	rm -rf obj
 .PHONY: clean
 
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 
-autoload.o: config.h autoload.h common.h fallback.h lru.h wutil.h signal.h
-autoload.o: env.h exec.h
-builtin.o: config.h signal.h fallback.h wutil.h common.h builtin.h io.h
-builtin.o: function.h event.h env.h complete.h proc.h parse_tree.h
-builtin.o: tokenizer.h parse_constants.h parser.h reader.h highlight.h
-builtin.o: color.h wgetopt.h input.h input_common.h intern.h exec.h
-builtin.o: parse_util.h parser_keywords.h expand.h path.h history.h
-builtin.o: wcstringutil.h builtin_set.cpp util.h builtin_commandline.cpp
-builtin.o: builtin_complete.cpp builtin_ulimit.cpp builtin_jobs.cpp
-builtin.o: builtin_set_color.cpp output.h builtin_printf.cpp
-builtin_commandline.o: config.h signal.h fallback.h util.h wutil.h common.h
-builtin_commandline.o: builtin.h io.h wgetopt.h reader.h complete.h
-builtin_commandline.o: highlight.h env.h color.h parse_constants.h proc.h
-builtin_commandline.o: parse_tree.h tokenizer.h parser.h event.h
-builtin_commandline.o: input_common.h input.h parse_util.h
-builtin_complete.o: config.h signal.h fallback.h util.h wutil.h common.h
-builtin_complete.o: builtin.h io.h complete.h wgetopt.h parser.h proc.h
-builtin_complete.o: parse_tree.h tokenizer.h parse_constants.h event.h
-builtin_complete.o: reader.h highlight.h env.h color.h
-builtin_jobs.o: config.h fallback.h util.h wutil.h common.h builtin.h io.h
-builtin_jobs.o: proc.h signal.h parse_tree.h tokenizer.h parse_constants.h
-builtin_jobs.o: parser.h event.h wgetopt.h
-builtin_printf.o: common.h config.h fallback.h
-builtin_set.o: config.h signal.h fallback.h util.h wutil.h common.h builtin.h
-builtin_set.o: io.h env.h expand.h parse_constants.h wgetopt.h proc.h
-builtin_set.o: parse_tree.h tokenizer.h parser.h event.h
-builtin_set_color.o: config.h builtin.h io.h common.h fallback.h color.h
-builtin_set_color.o: output.h
-builtin_test.o: config.h common.h fallback.h builtin.h io.h wutil.h proc.h
-builtin_test.o: signal.h parse_tree.h tokenizer.h parse_constants.h
-builtin_ulimit.o: config.h fallback.h util.h builtin.h io.h common.h
-builtin_ulimit.o: wgetopt.h
-color.o: color.h common.h config.h fallback.h
-common.o: config.h signal.h fallback.h wutil.h common.h expand.h
-common.o: parse_constants.h wildcard.h complete.h util.cpp util.h
-common.o: fallback.cpp
-complete.o: config.h fallback.h util.h wildcard.h common.h expand.h
-complete.o: parse_constants.h complete.h proc.h signal.h io.h parse_tree.h
-complete.o: tokenizer.h parser.h event.h function.h env.h builtin.h exec.h
-complete.o: parse_util.h wutil.h path.h iothread.h autoload.h lru.h
-env.o: config.h fallback.h wutil.h common.h proc.h signal.h io.h parse_tree.h
-env.o: tokenizer.h parse_constants.h env.h sanity.h expand.h history.h
-env.o: reader.h complete.h highlight.h color.h env_universal_common.h input.h
-env.o: input_common.h event.h path.h fish_version.h
-env_universal_common.o: config.h env_universal_common.h common.h fallback.h
-env_universal_common.o: wutil.h env.h util.h utf8.h
-event.o: config.h signal.h fallback.h wutil.h common.h input_common.h proc.h
-event.o: io.h parse_tree.h tokenizer.h parse_constants.h parser.h event.h
-exec.o: config.h signal.h fallback.h postfork.h io.h common.h wutil.h proc.h
-exec.o: parse_tree.h tokenizer.h parse_constants.h exec.h parser.h event.h
-exec.o: builtin.h function.h env.h parse_util.h
-expand.o: config.h fallback.h util.h common.h wutil.h env.h proc.h signal.h
-expand.o: io.h parse_tree.h tokenizer.h parse_constants.h parser.h event.h
-expand.o: expand.h wildcard.h complete.h exec.h iothread.h parse_util.h
-fallback.o: config.h fallback.h util.h
-fish.o: config.h fallback.h common.h reader.h io.h complete.h highlight.h
-fish.o: env.h color.h parse_constants.h builtin.h function.h event.h wutil.h
-fish.o: proc.h signal.h parse_tree.h tokenizer.h parser.h expand.h intern.h
-fish.o: history.h path.h input.h input_common.h fish_version.h
-fish_indent.o: config.h color.h common.h fallback.h highlight.h env.h
-fish_indent.o: parse_constants.h wutil.h output.h input.h input_common.h
-fish_indent.o: parse_tree.h tokenizer.h print_help.h fish_version.h
-fish_tests.o: config.h signal.h fallback.h util.h common.h proc.h io.h
-fish_tests.o: parse_tree.h tokenizer.h parse_constants.h reader.h complete.h
-fish_tests.o: highlight.h env.h color.h builtin.h function.h event.h
-fish_tests.o: autoload.h lru.h wutil.h expand.h parser.h output.h exec.h
-fish_tests.o: path.h history.h iothread.h postfork.h parse_util.h pager.h
-fish_tests.o: screen.h input.h input_common.h utf8.h env_universal_common.h
-fish_tests.o: wcstringutil.h
-fish_version.o: fish_version.h
-function.o: config.h wutil.h common.h fallback.h autoload.h lru.h function.h
-function.o: event.h env.h intern.h reader.h io.h complete.h highlight.h
-function.o: color.h parse_constants.h parser_keywords.h
-highlight.o: config.h fallback.h wutil.h common.h highlight.h env.h color.h
-highlight.o: tokenizer.h parse_util.h parse_constants.h builtin.h io.h
-highlight.o: function.h event.h expand.h output.h wildcard.h complete.h
-highlight.o: path.h history.h parse_tree.h
-history.o: config.h fallback.h sanity.h reader.h io.h common.h complete.h
-history.o: highlight.h env.h color.h parse_constants.h parse_tree.h
-history.o: tokenizer.h wutil.h history.h path.h signal.h iothread.h lru.h
-input.o: config.h fallback.h wutil.h common.h reader.h io.h complete.h
-input.o: highlight.h env.h color.h parse_constants.h proc.h signal.h
-input.o: parse_tree.h tokenizer.h input_common.h input.h parser.h event.h
-input.o: output.h
-input_common.o: config.h fallback.h util.h common.h input_common.h
-input_common.o: env_universal_common.h wutil.h env.h iothread.h
-intern.o: config.h fallback.h common.h intern.h
-io.o: config.h fallback.h wutil.h common.h exec.h io.h
-iothread.o: config.h iothread.h common.h fallback.h signal.h
-key_reader.o: config.h common.h fallback.h input_common.h
-kill.o: config.h fallback.h kill.h common.h env.h exec.h path.h
-output.o: config.h fallback.h wutil.h common.h output.h color.h
-pager.o: config.h util.h wutil.h common.h fallback.h pager.h complete.h
-pager.o: screen.h highlight.h env.h color.h reader.h io.h parse_constants.h
-parse_execution.o: parse_execution.h common.h config.h fallback.h io.h
-parse_execution.o: parse_constants.h parse_tree.h tokenizer.h proc.h signal.h
-parse_execution.o: env.h event.h util.h parse_util.h complete.h wildcard.h
-parse_execution.o: expand.h parser.h reader.h highlight.h color.h wutil.h
-parse_execution.o: path.h function.h builtin.h exec.h
-parse_productions.o: parse_productions.h common.h config.h fallback.h
-parse_productions.o: parse_constants.h parse_tree.h tokenizer.h
-parse_tree.o: common.h config.h fallback.h parse_constants.h
-parse_tree.o: parse_productions.h parse_tree.h tokenizer.h wutil.h proc.h
-parse_tree.o: signal.h io.h
-parse_util.o: config.h fallback.h util.h wutil.h common.h tokenizer.h
-parse_util.o: parse_util.h parse_constants.h expand.h env.h wildcard.h
-parse_util.o: complete.h parse_tree.h builtin.h io.h
-parser.o: config.h fallback.h common.h wutil.h proc.h signal.h io.h
-parser.o: parse_tree.h tokenizer.h parse_constants.h parser.h event.h
-parser.o: function.h env.h expand.h reader.h complete.h highlight.h color.h
-parser.o: sanity.h intern.h parse_util.h parse_execution.h
-parser_keywords.o: config.h fallback.h common.h parser_keywords.h
-path.o: config.h fallback.h common.h env.h wutil.h path.h expand.h
-path.o: parse_constants.h
-postfork.o: signal.h common.h config.h fallback.h proc.h io.h parse_tree.h
-postfork.o: tokenizer.h parse_constants.h wutil.h postfork.h iothread.h
-postfork.o: exec.h
-print_help.o: print_help.h
-proc.o: config.h signal.h fallback.h util.h wutil.h common.h proc.h io.h
-proc.o: parse_tree.h tokenizer.h parse_constants.h reader.h complete.h
-proc.o: highlight.h env.h color.h sanity.h parser.h event.h output.h
-reader.o: config.h signal.h fallback.h util.h wutil.h common.h highlight.h
-reader.o: env.h color.h reader.h io.h complete.h parse_constants.h proc.h
-reader.o: parse_tree.h tokenizer.h parser.h event.h history.h sanity.h exec.h
-reader.o: expand.h kill.h input_common.h input.h function.h output.h screen.h
-reader.o: iothread.h intern.h parse_util.h pager.h
-sanity.o: config.h fallback.h common.h sanity.h proc.h signal.h io.h
-sanity.o: parse_tree.h tokenizer.h parse_constants.h history.h wutil.h
-sanity.o: reader.h complete.h highlight.h env.h color.h kill.h
-screen.o: config.h fallback.h common.h util.h output.h color.h highlight.h
-screen.o: env.h screen.h pager.h complete.h reader.h io.h parse_constants.h
-signal.o: config.h signal.h common.h fallback.h wutil.h event.h reader.h io.h
-signal.o: complete.h highlight.h env.h color.h parse_constants.h proc.h
-signal.o: parse_tree.h tokenizer.h
-tokenizer.o: config.h fallback.h common.h wutil.h tokenizer.h
-utf8.o: utf8.h
-util.o: config.h fallback.h util.h common.h wutil.h
-wcstringutil.o: config.h wcstringutil.h common.h fallback.h
-wgetopt.o: config.h common.h fallback.h wgetopt.h wutil.h
-wildcard.o: config.h fallback.h wutil.h common.h wildcard.h expand.h
-wildcard.o: parse_constants.h complete.h reader.h io.h highlight.h env.h
-wildcard.o: color.h
-wutil.o: config.h fallback.h common.h wutil.h
+obj/autoload.o: config.h src/autoload.h src/common.h src/fallback.h
+obj/autoload.o: src/signal.h src/lru.h src/wutil.h src/env.h src/exec.h
+obj/builtin.o: config.h src/signal.h src/fallback.h src/wutil.h src/common.h
+obj/builtin.o: src/builtin.h src/io.h src/function.h src/event.h src/env.h
+obj/builtin.o: src/complete.h src/proc.h src/parse_tree.h src/tokenizer.h
+obj/builtin.o: src/parse_constants.h src/parser.h src/reader.h
+obj/builtin.o: src/highlight.h src/color.h src/wgetopt.h src/input.h
+obj/builtin.o: src/input_common.h src/intern.h src/exec.h src/parse_util.h
+obj/builtin.o: src/parser_keywords.h src/expand.h src/path.h src/history.h
+obj/builtin.o: src/wcstringutil.h src/builtin_set.cpp src/util.h
+obj/builtin.o: src/builtin_commandline.cpp src/builtin_complete.cpp
+obj/builtin.o: src/builtin_ulimit.cpp src/builtin_jobs.cpp
+obj/builtin.o: src/builtin_set_color.cpp src/output.h src/builtin_printf.cpp
+obj/builtin_test.o: config.h src/common.h src/fallback.h src/signal.h
+obj/builtin_test.o: src/builtin.h src/io.h src/wutil.h src/proc.h
+obj/builtin_test.o: src/parse_tree.h src/tokenizer.h src/parse_constants.h
+obj/color.o: src/color.h src/common.h config.h src/fallback.h src/signal.h
+obj/common.o: config.h src/signal.h src/fallback.h src/wutil.h src/common.h
+obj/common.o: src/expand.h src/parse_constants.h src/wildcard.h
+obj/common.o: src/complete.h src/util.cpp src/util.h src/fallback.cpp
+obj/complete.o: config.h src/fallback.h src/signal.h src/util.h
+obj/complete.o: src/wildcard.h src/common.h src/expand.h
+obj/complete.o: src/parse_constants.h src/complete.h src/proc.h src/io.h
+obj/complete.o: src/parse_tree.h src/tokenizer.h src/parser.h src/event.h
+obj/complete.o: src/function.h src/env.h src/builtin.h src/exec.h
+obj/complete.o: src/parse_util.h src/wutil.h src/path.h src/iothread.h
+obj/complete.o: src/autoload.h src/lru.h
+obj/env.o: config.h src/fallback.h src/signal.h src/wutil.h src/common.h
+obj/env.o: src/proc.h src/io.h src/parse_tree.h src/tokenizer.h
+obj/env.o: src/parse_constants.h src/env.h src/sanity.h src/expand.h
+obj/env.o: src/history.h src/reader.h src/complete.h src/highlight.h
+obj/env.o: src/color.h src/env_universal_common.h src/input.h
+obj/env.o: src/input_common.h src/event.h src/path.h src/fish_version.h
+obj/env_universal_common.o: config.h src/env_universal_common.h src/common.h
+obj/env_universal_common.o: src/fallback.h src/signal.h src/wutil.h src/env.h
+obj/env_universal_common.o: src/util.h src/utf8.h
+obj/event.o: config.h src/signal.h src/fallback.h src/wutil.h src/common.h
+obj/event.o: src/input_common.h src/proc.h src/io.h src/parse_tree.h
+obj/event.o: src/tokenizer.h src/parse_constants.h src/parser.h src/event.h
+obj/exec.o: config.h src/signal.h src/fallback.h src/postfork.h src/io.h
+obj/exec.o: src/common.h src/wutil.h src/proc.h src/parse_tree.h
+obj/exec.o: src/tokenizer.h src/parse_constants.h src/exec.h src/parser.h
+obj/exec.o: src/event.h src/builtin.h src/function.h src/env.h
+obj/exec.o: src/parse_util.h
+obj/expand.o: config.h src/fallback.h src/signal.h src/util.h src/common.h
+obj/expand.o: src/wutil.h src/env.h src/proc.h src/io.h src/parse_tree.h
+obj/expand.o: src/tokenizer.h src/parse_constants.h src/parser.h src/event.h
+obj/expand.o: src/expand.h src/wildcard.h src/complete.h src/exec.h
+obj/expand.o: src/iothread.h src/parse_util.h
+obj/fish.o: config.h src/fallback.h src/signal.h src/common.h src/reader.h
+obj/fish.o: src/io.h src/complete.h src/highlight.h src/env.h src/color.h
+obj/fish.o: src/parse_constants.h src/builtin.h src/function.h src/event.h
+obj/fish.o: src/wutil.h src/proc.h src/parse_tree.h src/tokenizer.h
+obj/fish.o: src/parser.h src/expand.h src/intern.h src/history.h src/path.h
+obj/fish.o: src/input.h src/input_common.h src/fish_version.h
+obj/fish_indent.o: config.h src/color.h src/common.h src/fallback.h
+obj/fish_indent.o: src/signal.h src/highlight.h src/env.h
+obj/fish_indent.o: src/parse_constants.h src/wutil.h src/output.h src/input.h
+obj/fish_indent.o: src/input_common.h src/parse_tree.h src/tokenizer.h
+obj/fish_indent.o: src/print_help.h src/fish_version.h
+obj/fish_tests.o: config.h src/signal.h src/fallback.h src/util.h
+obj/fish_tests.o: src/common.h src/proc.h src/io.h src/parse_tree.h
+obj/fish_tests.o: src/tokenizer.h src/parse_constants.h src/reader.h
+obj/fish_tests.o: src/complete.h src/highlight.h src/env.h src/color.h
+obj/fish_tests.o: src/builtin.h src/function.h src/event.h src/autoload.h
+obj/fish_tests.o: src/lru.h src/wutil.h src/expand.h src/parser.h
+obj/fish_tests.o: src/output.h src/exec.h src/path.h src/history.h
+obj/fish_tests.o: src/iothread.h src/postfork.h src/parse_util.h src/pager.h
+obj/fish_tests.o: src/screen.h src/input.h src/input_common.h src/utf8.h
+obj/fish_tests.o: src/env_universal_common.h src/wcstringutil.h
+obj/fish_version.o: src/fish_version.h
+obj/function.o: config.h src/wutil.h src/common.h src/fallback.h src/signal.h
+obj/function.o: src/autoload.h src/lru.h src/function.h src/event.h src/env.h
+obj/function.o: src/intern.h src/reader.h src/io.h src/complete.h
+obj/function.o: src/highlight.h src/color.h src/parse_constants.h
+obj/function.o: src/parser_keywords.h
+obj/highlight.o: config.h src/fallback.h src/signal.h src/wutil.h
+obj/highlight.o: src/common.h src/highlight.h src/env.h src/color.h
+obj/highlight.o: src/tokenizer.h src/parse_util.h src/parse_constants.h
+obj/highlight.o: src/builtin.h src/io.h src/function.h src/event.h
+obj/highlight.o: src/expand.h src/output.h src/wildcard.h src/complete.h
+obj/highlight.o: src/path.h src/history.h src/parse_tree.h
+obj/history.o: config.h src/fallback.h src/signal.h src/sanity.h src/reader.h
+obj/history.o: src/io.h src/common.h src/complete.h src/highlight.h src/env.h
+obj/history.o: src/color.h src/parse_constants.h src/parse_tree.h
+obj/history.o: src/tokenizer.h src/wutil.h src/history.h src/path.h
+obj/history.o: src/iothread.h src/lru.h
+obj/input.o: config.h src/fallback.h src/signal.h src/wutil.h src/common.h
+obj/input.o: src/reader.h src/io.h src/complete.h src/highlight.h src/env.h
+obj/input.o: src/color.h src/parse_constants.h src/proc.h src/parse_tree.h
+obj/input.o: src/tokenizer.h src/input_common.h src/input.h src/parser.h
+obj/input.o: src/event.h src/output.h
+obj/input_common.o: config.h src/fallback.h src/signal.h src/util.h
+obj/input_common.o: src/common.h src/input_common.h
+obj/input_common.o: src/env_universal_common.h src/wutil.h src/env.h
+obj/input_common.o: src/iothread.h
+obj/intern.o: config.h src/fallback.h src/signal.h src/common.h src/intern.h
+obj/io.o: config.h src/fallback.h src/signal.h src/wutil.h src/common.h
+obj/io.o: src/exec.h src/io.h
+obj/iothread.o: config.h src/iothread.h src/common.h src/fallback.h
+obj/iothread.o: src/signal.h
+obj/key_reader.o: config.h src/common.h src/fallback.h src/signal.h
+obj/key_reader.o: src/input_common.h
+obj/kill.o: config.h src/fallback.h src/signal.h src/kill.h src/common.h
+obj/kill.o: src/env.h src/exec.h src/path.h
+obj/output.o: config.h src/fallback.h src/signal.h src/wutil.h src/common.h
+obj/output.o: src/output.h src/color.h
+obj/pager.o: config.h src/util.h src/wutil.h src/common.h src/fallback.h
+obj/pager.o: src/signal.h src/pager.h src/complete.h src/screen.h
+obj/pager.o: src/highlight.h src/env.h src/color.h src/reader.h src/io.h
+obj/pager.o: src/parse_constants.h
+obj/parse_execution.o: src/parse_execution.h src/common.h config.h
+obj/parse_execution.o: src/fallback.h src/signal.h src/io.h
+obj/parse_execution.o: src/parse_constants.h src/parse_tree.h src/tokenizer.h
+obj/parse_execution.o: src/proc.h src/env.h src/event.h src/util.h
+obj/parse_execution.o: src/parse_util.h src/complete.h src/wildcard.h
+obj/parse_execution.o: src/expand.h src/parser.h src/reader.h src/highlight.h
+obj/parse_execution.o: src/color.h src/wutil.h src/path.h src/function.h
+obj/parse_execution.o: src/builtin.h src/exec.h
+obj/parse_productions.o: src/parse_productions.h src/common.h config.h
+obj/parse_productions.o: src/fallback.h src/signal.h src/parse_constants.h
+obj/parse_productions.o: src/parse_tree.h src/tokenizer.h
+obj/parse_tree.o: src/common.h config.h src/fallback.h src/signal.h
+obj/parse_tree.o: src/parse_constants.h src/parse_productions.h
+obj/parse_tree.o: src/parse_tree.h src/tokenizer.h src/wutil.h src/proc.h
+obj/parse_tree.o: src/io.h
+obj/parse_util.o: config.h src/fallback.h src/signal.h src/util.h src/wutil.h
+obj/parse_util.o: src/common.h src/tokenizer.h src/parse_util.h
+obj/parse_util.o: src/parse_constants.h src/expand.h src/env.h src/wildcard.h
+obj/parse_util.o: src/complete.h src/parse_tree.h src/builtin.h src/io.h
+obj/parser.o: config.h src/fallback.h src/signal.h src/common.h src/wutil.h
+obj/parser.o: src/proc.h src/io.h src/parse_tree.h src/tokenizer.h
+obj/parser.o: src/parse_constants.h src/parser.h src/event.h src/function.h
+obj/parser.o: src/env.h src/expand.h src/reader.h src/complete.h
+obj/parser.o: src/highlight.h src/color.h src/sanity.h src/intern.h
+obj/parser.o: src/parse_util.h src/parse_execution.h
+obj/parser_keywords.o: config.h src/fallback.h src/signal.h src/common.h
+obj/parser_keywords.o: src/parser_keywords.h
+obj/path.o: config.h src/fallback.h src/signal.h src/common.h src/env.h
+obj/path.o: src/wutil.h src/path.h src/expand.h src/parse_constants.h
+obj/postfork.o: src/signal.h src/common.h config.h src/fallback.h src/proc.h
+obj/postfork.o: src/io.h src/parse_tree.h src/tokenizer.h
+obj/postfork.o: src/parse_constants.h src/wutil.h src/postfork.h
+obj/postfork.o: src/iothread.h src/exec.h
+obj/print_help.o: src/print_help.h
+obj/proc.o: config.h src/signal.h src/fallback.h src/util.h src/wutil.h
+obj/proc.o: src/common.h src/proc.h src/io.h src/parse_tree.h src/tokenizer.h
+obj/proc.o: src/parse_constants.h src/reader.h src/complete.h src/highlight.h
+obj/proc.o: src/env.h src/color.h src/sanity.h src/parser.h src/event.h
+obj/proc.o: src/output.h
+obj/reader.o: config.h src/signal.h src/fallback.h src/util.h src/wutil.h
+obj/reader.o: src/common.h src/highlight.h src/env.h src/color.h src/reader.h
+obj/reader.o: src/io.h src/complete.h src/parse_constants.h src/proc.h
+obj/reader.o: src/parse_tree.h src/tokenizer.h src/parser.h src/event.h
+obj/reader.o: src/history.h src/sanity.h src/exec.h src/expand.h src/kill.h
+obj/reader.o: src/input_common.h src/input.h src/function.h src/output.h
+obj/reader.o: src/screen.h src/iothread.h src/intern.h src/parse_util.h
+obj/reader.o: src/pager.h
+obj/sanity.o: config.h src/fallback.h src/signal.h src/common.h src/sanity.h
+obj/sanity.o: src/proc.h src/io.h src/parse_tree.h src/tokenizer.h
+obj/sanity.o: src/parse_constants.h src/history.h src/wutil.h src/reader.h
+obj/sanity.o: src/complete.h src/highlight.h src/env.h src/color.h src/kill.h
+obj/screen.o: config.h src/fallback.h src/signal.h src/common.h src/util.h
+obj/screen.o: src/output.h src/color.h src/highlight.h src/env.h src/screen.h
+obj/screen.o: src/pager.h src/complete.h src/reader.h src/io.h
+obj/screen.o: src/parse_constants.h
+obj/signal.o: config.h src/signal.h src/common.h src/fallback.h src/wutil.h
+obj/signal.o: src/event.h src/reader.h src/io.h src/complete.h
+obj/signal.o: src/highlight.h src/env.h src/color.h src/parse_constants.h
+obj/signal.o: src/proc.h src/parse_tree.h src/tokenizer.h
+obj/tokenizer.o: config.h src/fallback.h src/signal.h src/common.h
+obj/tokenizer.o: src/wutil.h src/tokenizer.h
+obj/utf8.o: src/utf8.h
+obj/wcstringutil.o: config.h src/wcstringutil.h src/common.h src/fallback.h
+obj/wcstringutil.o: src/signal.h
+obj/wgetopt.o: config.h src/common.h src/fallback.h src/signal.h
+obj/wgetopt.o: src/wgetopt.h src/wutil.h
+obj/wildcard.o: config.h src/fallback.h src/signal.h src/wutil.h src/common.h
+obj/wildcard.o: src/wildcard.h src/expand.h src/parse_constants.h
+obj/wildcard.o: src/complete.h src/reader.h src/io.h src/highlight.h
+obj/wildcard.o: src/env.h src/color.h
+obj/wutil.o: config.h src/fallback.h src/signal.h src/common.h src/wutil.h

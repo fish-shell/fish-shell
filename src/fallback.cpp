@@ -861,21 +861,21 @@ static int wcsncasecmp_fallback(const wchar_t *a, const wchar_t *b, size_t count
 /* Note parens avoid the macro expansion */
 wchar_t *wcsdup_use_weak(const wchar_t *a)
 {
-    if (wcsdup != NULL)
+    if (&wcsdup != NULL)
         return (wcsdup)(a);
     return wcsdup_fallback(a);
 }
 
 int wcscasecmp_use_weak(const wchar_t *a, const wchar_t *b)
 {
-    if (wcscasecmp != NULL)
+    if (&wcscasecmp != NULL)
         return (wcscasecmp)(a, b);
     return wcscasecmp_fallback(a, b);
 }
 
 int wcsncasecmp_use_weak(const wchar_t *s1, const wchar_t *s2, size_t n)
 {
-    if (wcsncasecmp != NULL)
+    if (&wcsncasecmp != NULL)
         return (wcsncasecmp)(s1, s2, n);
     return wcsncasecmp_fallback(s1, s2, n);
 }

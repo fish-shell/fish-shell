@@ -632,7 +632,7 @@ public:
     void accept_tokens(parse_token_t token1, parse_token_t token2);
 
     /* Report tokenizer errors */
-    void report_tokenizer_error(parse_token_t token, int tok_err, const wchar_t *tok_error);
+    void report_tokenizer_error(parse_token_t token, int tok_err, const wcstring &tok_error);
 
     /* Indicate if we hit a fatal error */
     bool has_fatal_error(void) const
@@ -887,9 +887,8 @@ void parse_ll_t::parse_error_failed_production(struct parse_stack_element_t &sta
     }
 }
 
-void parse_ll_t::report_tokenizer_error(parse_token_t token, int tok_err_code, const wchar_t *tok_error)
+void parse_ll_t::report_tokenizer_error(parse_token_t token, int tok_err_code, const wcstring &tok_error)
 {
-    assert(tok_error != NULL);
     parse_error_code_t parse_error_code;
     switch (tok_err_code)
     {
@@ -911,7 +910,7 @@ void parse_ll_t::report_tokenizer_error(parse_token_t token, int tok_err_code, c
             break;
 
     }
-    this->parse_error(token, parse_error_code, L"%ls", tok_error);
+    this->parse_error(token, parse_error_code, L"%ls", tok_error.c_str());
 }
 
 void parse_ll_t::parse_error_unexpected_token(const wchar_t *expected, parse_token_t token)
@@ -1200,7 +1199,7 @@ static parse_keyword_t keyword_with_name(const wchar_t *name)
 }
 
 /* Given a token, returns the keyword it matches, or parse_keyword_none. */
-static parse_keyword_t keyword_for_token(token_type tok, const wchar_t *tok_txt)
+static parse_keyword_t keyword_for_token(token_type tok, const wcstring &token)
 {
     /* Only strings can be keywords */
     if (tok != TOK_STRING)
@@ -1211,6 +1210,7 @@ static parse_keyword_t keyword_for_token(token_type tok, const wchar_t *tok_txt)
     /* If tok_txt is clean (which most are), we can compare it directly. Otherwise we have to expand it. We only expand quotes, and we don't want to do expensive expansions like tilde expansions. So we do our own "cleanliness" check; if we find a character not in our allowed set we know it's not a keyword, and if we never find a quote we don't have to expand! Note that this lowercase set could be shrunk to be just the characters that are in keywords. */
     parse_keyword_t result = parse_keyword_none;
     bool needs_expand = false, all_chars_valid = true;
+    const wchar_t *tok_txt = token.c_str();
     const wchar_t *chars_allowed_in_keywords = L"abcdefghijklmnopqrstuvwxyz'\"";
     for (size_t i=0; tok_txt[i] != L'\0'; i++)
     {
@@ -1249,36 +1249,34 @@ static const parse_token_t kInvalidToken = {token_type_invalid, parse_keyword_no
 /* Terminal token */
 static const parse_token_t kTerminalToken = {parse_token_type_terminate, parse_keyword_none, false, false, SOURCE_OFFSET_INVALID, 0};
 
-static inline bool is_help_argument(const wchar_t *txt)
+static inline bool is_help_argument(const wcstring &txt)
 {
-    return ! wcscmp(txt, L"-h") || ! wcscmp(txt, L"--help");
+    return contains(txt, L"-h", L"--help");
 }
 
 /* Return a new parse token, advancing the tokenizer */
-static inline parse_token_t next_parse_token(tokenizer_t *tok)
+static inline parse_token_t next_parse_token(tokenizer_t *tok, tok_t *token)
 {
-    if (! tok_has_next(tok))
+    if (! tok->next(token))
     {
         return kTerminalToken;
     }
 
-    token_type tok_type = static_cast<token_type>(tok_last_type(tok));
-    int tok_start = tok_get_pos(tok);
-    size_t tok_extent = tok_get_extent(tok);
-    assert(tok_extent < 10000000); //paranoia
-    const wchar_t *tok_txt = tok_last(tok);
-
     parse_token_t result;
 
     /* Set the type, keyword, and whether there's a dash prefix. Note that this is quite sketchy, because it ignores quotes. This is the historical behavior. For example, `builtin --names` lists builtins, but `builtin "--names"` attempts to run --names as a command. Amazingly as of this writing (10/12/13) nobody seems to have noticed this. Squint at it really hard and it even starts to look like a feature. */
-    result.type = parse_token_type_from_tokenizer_token(tok_type);
-    result.keyword = keyword_for_token(tok_type, tok_txt);
-    result.has_dash_prefix = (tok_txt[0] == L'-');
-    result.is_help_argument = result.has_dash_prefix && is_help_argument(tok_txt);
-    result.source_start = (source_offset_t)tok_start;
-    result.source_length = (source_offset_t)tok_extent;
+    result.type = parse_token_type_from_tokenizer_token(token->type);
+    result.keyword = keyword_for_token(token->type, token->text);
+    result.has_dash_prefix = !token->text.empty() && token->text.at(0) == L'-';
+    result.is_help_argument = result.has_dash_prefix && is_help_argument(token->text);
+    
+    /* These assertions are totally bogus. Basically our tokenizer works in size_t but we work in uint32_t to save some space. If we have a source file larger than 4 GB, we'll probably just crash. */
+    assert(token->offset < SOURCE_OFFSET_INVALID);
+    result.source_start = (source_offset_t)token->offset;
+    
+    assert(token->length <= SOURCE_OFFSET_INVALID);
+    result.source_length = (source_offset_t)token->length;
 
-    tok_next(tok);
     return result;
 }
 
@@ -1307,11 +1305,12 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
     parse_token_t queue[2] = {kInvalidToken, kInvalidToken};
 
     /* Loop until we have a terminal token. */
+    tok_t tokenizer_token;
     for (size_t token_count = 0; queue[0].type != parse_token_type_terminate; token_count++)
     {
         /* Push a new token onto the queue */
         queue[0] = queue[1];
-        queue[1] = next_parse_token(&tok);
+        queue[1] = next_parse_token(&tok, &tokenizer_token);
 
         /* If we are leaving things unterminated, then don't pass parse_token_type_terminate */
         if (queue[0].type == parse_token_type_terminate && (parse_flags & parse_flag_leave_unterminated))
@@ -1328,7 +1327,7 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t parse_flags,
         /* Handle tokenizer errors. This is a hack because really the parser should report this for itself; but it has no way of getting the tokenizer message */
         if (queue[1].type == parse_special_type_tokenizer_error)
         {
-            parser.report_tokenizer_error(queue[1], tok_get_error(&tok), tok_last(&tok));
+            parser.report_tokenizer_error(queue[1], tokenizer_token.error, tokenizer_token.text);
         }
 
         /* Handle errors */

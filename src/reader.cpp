@@ -2336,7 +2336,7 @@ static void handle_token_history(int forward, int reset)
                 switch (token.type)
                 {
                     case TOK_STRING:
-                    {   
+                    {
                         if (token.text.find(data->search_buff) != wcstring::npos)
                         {
                             //debug( 3, L"Found token at pos %d\n", tok_get_pos( &tok ) );
@@ -3087,14 +3087,13 @@ static wchar_t unescaped_quote(const wcstring &str, size_t pos)
 /* Returns true if the last token is a comment. */
 static bool text_ends_in_comment(const wcstring &text)
 {
-    token_type last_type = TOK_NONE;
     tokenizer_t tok(text.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SHOW_COMMENTS | TOK_SQUASH_ERRORS);
-    while (tok_has_next(&tok))
+    tok_t token;
+    while (tok.next(&token))
     {
-        last_type = tok_last_type(&tok);
-        tok_next(&tok);
+        // pass
     }
-    return last_type == TOK_COMMENT;
+    return token.type == TOK_COMMENT;
 }
 
 const wchar_t *reader_readline(int nchars)

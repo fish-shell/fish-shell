@@ -358,7 +358,6 @@ static void job_or_process_extent(const wchar_t *buff,
                                   int process)
 {
     const wchar_t *begin, *end;
-    long pos;
     wchar_t *buffcpy;
     int finished=0;
 
@@ -380,7 +379,8 @@ static void job_or_process_extent(const wchar_t *buff,
         return;
     }
 
-    pos = cursor_pos - (begin - buff);
+    assert(cursor_pos >= (begin - buff));
+    const size_t pos = cursor_pos - (begin - buff);
 
     if (a)
     {
@@ -400,11 +400,12 @@ static void job_or_process_extent(const wchar_t *buff,
     }
 
     tokenizer_t tok(buffcpy, TOK_ACCEPT_UNFINISHED);
-    for (; tok_has_next(&tok) && !finished; tok_next(&tok))
+    tok_t token;
+    while (tok.next(&token) && !finished)
     {
-        int tok_begin = tok_get_pos(&tok);
+        size_t tok_begin = token.offset;
 
-        switch (tok_last_type(&tok))
+        switch (token.type)
         {
             case TOK_PIPE:
             {
@@ -501,17 +502,18 @@ void parse_util_token_extent(const wchar_t *buff,
     const wcstring buffcpy = wcstring(cmdsubst_begin, cmdsubst_end-cmdsubst_begin);
 
     tokenizer_t tok(buffcpy.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
-    for (; tok_has_next(&tok); tok_next(&tok))
+    tok_t token;
+    while (tok.next(&token))
     {
-        size_t tok_begin = tok_get_pos(&tok);
+        size_t tok_begin = token.offset;
         size_t tok_end = tok_begin;
 
         /*
           Calculate end of token
         */
-        if (tok_last_type(&tok) == TOK_STRING)
+        if (token.type == TOK_STRING)
         {
-            tok_end += wcslen(tok_last(&tok));
+            tok_end += token.text.size();
         }
 
         /*
@@ -529,20 +531,20 @@ void parse_util_token_extent(const wchar_t *buff,
           If cursor is inside the token, this is the token we are
           looking for. If so, set a and b and break
         */
-        if ((tok_last_type(&tok) == TOK_STRING) && (tok_end >= offset_within_cmdsubst))
+        if (token.type == TOK_STRING && tok_end >= offset_within_cmdsubst)
         {
-            a = cmdsubst_begin + tok_get_pos(&tok);
-            b = a + wcslen(tok_last(&tok));
+            a = cmdsubst_begin + token.offset;
+            b = a + token.text.size();
             break;
         }
 
         /*
           Remember previous string token
         */
-        if (tok_last_type(&tok) == TOK_STRING)
+        if (token.type == TOK_STRING)
         {
-            pa = cmdsubst_begin + tok_get_pos(&tok);
-            pb = pa + wcslen(tok_last(&tok));
+            pa = cmdsubst_begin + token.offset;
+            pb = pa + token.text.size();
         }
     }
 
@@ -684,10 +686,11 @@ wchar_t *parse_util_unescape_wildcards(const wchar_t *str)
    token is not quoted.
 
 */
-static wchar_t get_quote(const wchar_t *cmd, size_t len)
+static wchar_t get_quote(const wcstring &cmd_str, size_t len)
 {
     size_t i=0;
     wchar_t res=0;
+    const wchar_t * const cmd = cmd_str.c_str();
 
     while (1)
     {
@@ -722,26 +725,26 @@ static wchar_t get_quote(const wchar_t *cmd, size_t len)
     return res;
 }
 
-void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_t *quote, size_t *offset, int *type)
+void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_t *quote, size_t *offset, enum token_type *out_type)
 {
     size_t prev_pos=0;
     wchar_t last_quote = '\0';
     int unfinished;
 
     tokenizer_t tok(cmd.c_str(), TOK_ACCEPT_UNFINISHED | TOK_SQUASH_ERRORS);
-    for (; tok_has_next(&tok); tok_next(&tok))
+    tok_t token;
+    while (tok.next(&token))
     {
-        if (tok_get_pos(&tok) > pos)
+        if (token.offset > pos)
             break;
 
-        if (tok_last_type(&tok) == TOK_STRING)
-            last_quote = get_quote(tok_last(&tok),
-                                   pos - tok_get_pos(&tok));
+        if (token.type == TOK_STRING)
+            last_quote = get_quote(token.text, pos - token.offset);
 
-        if (type != NULL)
-            *type = tok_last_type(&tok);
+        if (out_type != NULL)
+            *out_type = token.type;
 
-        prev_pos = tok_get_pos(&tok);
+        prev_pos = token.offset;
     }
 
     wchar_t *cmd_tmp = wcsdup(cmd.c_str());

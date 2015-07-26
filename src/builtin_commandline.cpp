@@ -196,17 +196,18 @@ static void write_part(const wchar_t *begin,
 //    fwprintf( stderr, L"Subshell: %ls, end char %lc\n", buff, *end );
         wcstring out;
         tokenizer_t tok(buff, TOK_ACCEPT_UNFINISHED);
-        for (; tok_has_next(&tok); tok_next(&tok))
+        tok_t token;
+        while (tok.next(&token))
         {
             if ((cut_at_cursor) &&
-                    (tok_get_pos(&tok)+wcslen(tok_last(&tok)) >= pos))
+                    (token.offset + token.text.size() >= pos))
                 break;
 
-            switch (tok_last_type(&tok))
+            switch (token.type)
             {
                 case TOK_STRING:
                 {
-                    wcstring tmp = tok_last(&tok);
+                    wcstring tmp = token.text;
                     unescape_string_in_place(&tmp, UNESCAPE_INCOMPLETE);
                     out.append(tmp);
                     out.push_back(L'\n');

@@ -166,9 +166,9 @@ bool parse_util_argument_is_help(const wchar_t *s, int min_match);
    \param pos An index in the string which is inside the parameter
    \param quote If not NULL, store the type of quote this parameter has, can be either ', " or \\0, meaning the string is not quoted.
    \param offset If not NULL, get_param will store the offset to the beginning of the parameter.
-   \param type If not NULL, get_param will store the token type as returned by tok_last.
+   \param type If not NULL, get_param will store the token type.
 */
-void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_t *quote, size_t *offset, int *type);
+void parse_util_get_parameter_info(const wcstring &cmd, const size_t pos, wchar_t *quote, size_t *offset, enum token_type *out_type);
 
 /**
    Attempts to escape the string 'cmd' using the given quote type, as determined by the quote character. The quote can be a single quote or double quote, or L'\0' to indicate no quoting (and thus escaping should be with backslashes).

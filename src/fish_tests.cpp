@@ -435,34 +435,7 @@ static void test_convert_nulls(void)
 */
 static void test_tok()
 {
-
     say(L"Testing tokenizer");
-
-
-    say(L"Testing invalid input");
-    tokenizer_t t(NULL, 0);
-
-    if (tok_last_type(&t) != TOK_ERROR)
-    {
-        err(L"Invalid input to tokenizer was undetected");
-    }
-
-    say(L"Testing use of broken tokenizer");
-    if (!tok_has_next(&t))
-    {
-        err(L"tok_has_next() should return 1 once on broken tokenizer");
-    }
-
-    tok_next(&t);
-    if (tok_last_type(&t) != TOK_ERROR)
-    {
-        err(L"Invalid input to tokenizer was undetected");
-    }
-
-    /*
-      This should crash if there is a bug. No reliable way to detect otherwise.
-    */
-    say(L"Test destruction of broken tokenizer");
     {
 
         const wchar_t *str = L"string <redirection  2>&1 'nested \"quoted\" '(string containing subshells ){and,brackets}$as[$well (as variable arrays)] not_a_redirect^ ^ ^^is_a_redirect Compress_Newlines\n  \n\t\n   \nInto_Just_One";

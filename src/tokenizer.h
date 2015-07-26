@@ -76,16 +76,16 @@ struct tok_t
     /* The type of the token */
     token_type type;
     
+    /* If an error, this is the error code */
+    enum tokenizer_error error;
+    
     /* Offset of the token */
     size_t offset;
     
     /* Length of the token */
     size_t length;
     
-    /* If an error, this is the error code */
-    enum tokenizer_error error;
-    
-    tok_t() : type(TOK_NONE), offset(-1), length(-1), error(TOK_ERROR_NONE) {}
+    tok_t() : type(TOK_NONE), error(TOK_ERROR_NONE), offset(-1), length(-1) {}
 };
 
 /**
@@ -138,33 +138,6 @@ struct tokenizer_t
     bool next(struct tok_t *result);
 };
 
-/**
-  Jump to the next token.
-*/
-void tok_next(tokenizer_t *tok);
-
-/**
-  Returns the type of the last token. Must be one of the values in the token_type enum.
-*/
-enum token_type tok_last_type(tokenizer_t *tok);
-
-/**
-  Returns the last token string. The string should not be freed by the caller. This returns nonsense results for some token types, like TOK_END.
-*/
-const wchar_t *tok_last(tokenizer_t *tok);
-
-/**
-  Returns true as long as there are more tokens left
-*/
-int tok_has_next(tokenizer_t *tok);
-
-/**
-  Returns the position of the beginning of the current token in the original string
-*/
-int tok_get_pos(const tokenizer_t *tok);
-
-/** Returns the extent of the current token */
-size_t tok_get_extent(const tokenizer_t *tok);
 
 /**
    Returns only the first token from the specified string. This is a
@@ -174,11 +147,6 @@ size_t tok_get_extent(const tokenizer_t *tok);
    On failure, returns the empty string.
 */
 wcstring tok_first(const wchar_t *str);
-
-/**
-   Get tokenizer error type. Should only be called if tok_last_tope returns TOK_ERROR.
-*/
-int tok_get_error(tokenizer_t *tok);
 
 /* Helper function to determine redirection type from a string, or TOK_NONE if the redirection is invalid. Also returns the fd by reference. */
 enum token_type redirection_type_for_string(const wcstring &str, int *out_fd = NULL);

@@ -52,6 +52,10 @@ segments.
 */
 #define PIPE_ERROR _( L"Cannot use stdin (fd 0) as pipe output" )
 
+static void tok_next(tokenizer_t *tok);
+static enum token_type tok_last_type(tokenizer_t *tok);
+static const wchar_t *tok_last(tokenizer_t *tok);
+
 /**
    Set the latest tokens string to be the specified error message
 */
@@ -60,11 +64,6 @@ static void tok_call_error(tokenizer_t *tok, enum tokenizer_error error_type, co
     tok->last_type = TOK_ERROR;
     tok->error = error_type;
     tok->last_token = error_message;
-}
-
-int tok_get_error(tokenizer_t *tok)
-{
-    return tok->error;
 }
 
 tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig_buff(NULL), last_type(TOK_NONE), last_pos(0), has_next(false), accept_unfinished(false), show_comments(false), show_blank_lines(false), error(TOK_ERROR_NONE), squash_errors(false), continue_line_after_comment(false)
@@ -91,13 +90,18 @@ bool tokenizer_t::next(struct tok_t *result)
     result->text = this->last_token;
     result->type = this->last_type;
     result->offset = last_pos;
+    result->error = this->last_type == TOK_ERROR ? this->error : TOK_ERROR_NONE;
     assert(this->buff >= this->orig_buff);
-    result->length = this->buff - this->orig_buff;
+    
+    assert(this->buff >= this->orig_buff);
+    size_t current_pos = this->buff - this->orig_buff;
+    result->length = current_pos >= this->last_pos ? current_pos - this->last_pos : 0;
+    
     tok_next(this);
     return true;
 }
 
-enum token_type tok_last_type(tokenizer_t *tok)
+static enum token_type tok_last_type(tokenizer_t *tok)
 {
     CHECK(tok, TOK_ERROR);
     CHECK(tok->buff, TOK_ERROR);
@@ -105,23 +109,11 @@ enum token_type tok_last_type(tokenizer_t *tok)
     return tok->last_type;
 }
 
-const wchar_t *tok_last(tokenizer_t *tok)
+static const wchar_t *tok_last(tokenizer_t *tok)
 {
     CHECK(tok, 0);
 
     return tok->last_token.c_str();
-}
-
-int tok_has_next(tokenizer_t *tok)
-{
-    /*
-      Return 1 on broken tokenizer
-    */
-    CHECK(tok, 1);
-    CHECK(tok->buff, 1);
-
-    /*  fwprintf( stderr, L"has_next is %ls \n", tok->has_next?L"true":L"false" );*/
-    return   tok->has_next;
 }
 
 /**
@@ -539,7 +531,7 @@ static bool my_iswspace(wchar_t c)
     return c != L'\n' && iswspace(c);
 }
 
-void tok_next(tokenizer_t *tok)
+static void tok_next(tokenizer_t *tok)
 {
 
     CHECK(tok,);
@@ -717,20 +709,6 @@ wcstring tok_first(const wchar_t *str)
     }
     return result;
 }
-
-int tok_get_pos(const tokenizer_t *tok)
-{
-    CHECK(tok, 0);
-    return (int)tok->last_pos;
-}
-
-size_t tok_get_extent(const tokenizer_t *tok)
-{
-    CHECK(tok, 0);
-    size_t current_pos = tok->buff - tok->orig_buff;
-    return current_pos > tok->last_pos ? current_pos - tok->last_pos : 0;
-}
-
 
 bool move_word_state_machine_t::consume_char_punctuation(wchar_t c)
 {

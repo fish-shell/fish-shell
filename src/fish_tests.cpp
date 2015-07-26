@@ -468,22 +468,34 @@ static void test_tok()
         const wchar_t *str = L"string <redirection  2>&1 'nested \"quoted\" '(string containing subshells ){and,brackets}$as[$well (as variable arrays)] not_a_redirect^ ^ ^^is_a_redirect Compress_Newlines\n  \n\t\n   \nInto_Just_One";
         const int types[] =
         {
-            TOK_STRING, TOK_REDIRECT_IN, TOK_STRING, TOK_REDIRECT_FD, TOK_STRING, TOK_STRING, TOK_STRING, TOK_REDIRECT_OUT, TOK_REDIRECT_APPEND, TOK_STRING, TOK_STRING, TOK_END, TOK_STRING, TOK_END
+            TOK_STRING, TOK_REDIRECT_IN, TOK_STRING, TOK_REDIRECT_FD, TOK_STRING, TOK_STRING, TOK_STRING, TOK_REDIRECT_OUT, TOK_REDIRECT_APPEND, TOK_STRING, TOK_STRING, TOK_END, TOK_STRING
         };
 
         say(L"Test correct tokenization");
 
         tokenizer_t t(str, 0);
-        for (size_t i=0; i < sizeof types / sizeof *types; i++, tok_next(&t))
+        tok_t token;
+        size_t i = 0;
+        while (t.next(&token))
         {
-            if (types[i] != tok_last_type(&t))
+            if (i > sizeof types / sizeof *types)
+            {
+                err(L"Too many tokens returned from tokenizer");
+                break;
+            }
+            if (types[i] != token.type)
             {
                 err(L"Tokenization error:");
-                wprintf(L"Token number %d of string \n'%ls'\n, got token '%ls'\n",
+                wprintf(L"Token number %d of string \n'%ls'\n, got token type %ld\n",
                         i+1,
                         str,
-                        tok_last(&t));
+                        (long)token.type);
             }
+            i++;
+        }
+        if (i < sizeof types / sizeof *types)
+        {
+            err(L"Too few tokens returned from tokenizer");
         }
     }
 

@@ -246,7 +246,7 @@ public:
     /**
        Saved position used by token history search
     */
-    int token_history_pos;
+    size_t token_history_pos;
 
     /**
        Saved search string for token history search. Not handled by command_line_changed.
@@ -2256,7 +2256,7 @@ static void handle_token_history(int forward, int reset)
         return;
 
     wcstring str;
-    long current_pos;
+    size_t current_pos;
 
     if (reset)
     {
@@ -2292,7 +2292,7 @@ static void handle_token_history(int forward, int reset)
     }
     else
     {
-        if (current_pos == -1)
+        if (current_pos == size_t(-1))
         {
             data->token_history_buff.clear();
 
@@ -2330,26 +2330,26 @@ static void handle_token_history(int forward, int reset)
 
             //debug( 3, L"new '%ls'", data->token_history_buff.c_str() );
             tokenizer_t tok(data->token_history_buff.c_str(), TOK_ACCEPT_UNFINISHED);
-            for (; tok_has_next(&tok); tok_next(&tok))
+            tok_t token;
+            while (tok.next(&token))
             {
-                switch (tok_last_type(&tok))
+                switch (token.type)
                 {
                     case TOK_STRING:
-                    {
-                        if (wcsstr(tok_last(&tok), data->search_buff.c_str()))
+                    {   
+                        if (token.text.find(data->search_buff) != wcstring::npos)
                         {
                             //debug( 3, L"Found token at pos %d\n", tok_get_pos( &tok ) );
-                            if (tok_get_pos(&tok) >= current_pos)
+                            if (token.offset >= current_pos)
                             {
                                 break;
                             }
                             //debug( 3, L"ok pos" );
 
-                            const wcstring last_tok = tok_last(&tok);
-                            if (find(data->search_prev.begin(), data->search_prev.end(), last_tok) == data->search_prev.end())
+                            if (find(data->search_prev.begin(), data->search_prev.end(), token.text) == data->search_prev.end())
                             {
-                                data->token_history_pos = tok_get_pos(&tok);
-                                str = tok_last(&tok);
+                                data->token_history_pos = token.offset;
+                                str = token.text;
                             }
 
                         }

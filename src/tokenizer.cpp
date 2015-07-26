@@ -55,7 +55,7 @@ segments.
 /**
    Set the latest tokens string to be the specified error message
 */
-static void tok_call_error(tokenizer_t *tok, int error_type, const wchar_t *error_message)
+static void tok_call_error(tokenizer_t *tok, enum tokenizer_error error_type, const wchar_t *error_message)
 {
     tok->last_type = TOK_ERROR;
     tok->error = error_type;
@@ -67,7 +67,7 @@ int tok_get_error(tokenizer_t *tok)
     return tok->error;
 }
 
-tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig_buff(NULL), last_type(TOK_NONE), last_pos(0), has_next(false), accept_unfinished(false), show_comments(false), show_blank_lines(false), error(0), squash_errors(false), continue_line_after_comment(false)
+tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig_buff(NULL), last_type(TOK_NONE), last_pos(0), has_next(false), accept_unfinished(false), show_comments(false), show_blank_lines(false), error(TOK_ERROR_NONE), squash_errors(false), continue_line_after_comment(false)
 {
     CHECK(b,);
 
@@ -79,6 +79,22 @@ tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig
     this->has_next = (*b != L'\0');
     this->orig_buff = this->buff = b;
     tok_next(this);
+}
+
+bool tokenizer_t::next(struct tok_t *result)
+{
+    assert(result != NULL);
+    if (! this->has_next)
+    {
+        return false;
+    }
+    result->text = this->last_token;
+    result->type = this->last_type;
+    result->offset = last_pos;
+    assert(this->buff >= this->orig_buff);
+    result->length = this->buff - this->orig_buff;
+    tok_next(this);
+    return true;
 }
 
 enum token_type tok_last_type(tokenizer_t *tok)

@@ -36,6 +36,7 @@ enum token_type
 */
 enum tokenizer_error
 {
+    TOK_ERROR_NONE,
     TOK_UNTERMINATED_QUOTE,
     TOK_UNTERMINATED_SUBSHELL,
     TOK_UNTERMINATED_ESCAPE,
@@ -67,6 +68,26 @@ enum tokenizer_error
 
 typedef unsigned int tok_flags_t;
 
+struct tok_t
+{
+    /* The text of the token, or an error message for type error */
+    wcstring text;
+    
+    /* The type of the token */
+    token_type type;
+    
+    /* Offset of the token */
+    size_t offset;
+    
+    /* Length of the token */
+    size_t length;
+    
+    /* If an error, this is the error code */
+    enum tokenizer_error error;
+    
+    tok_t() : type(TOK_NONE), offset(-1), length(-1), error(TOK_ERROR_NONE) {}
+};
+
 /**
    The tokenizer struct.
 */
@@ -93,7 +114,7 @@ struct tokenizer_t
     /** Whether all blank lines are returned */
     bool show_blank_lines;
     /** Last error */
-    int error;
+    tokenizer_error error;
     /* Whether we are squashing errors */
     bool squash_errors;
 
@@ -112,6 +133,9 @@ struct tokenizer_t
 
     */
     tokenizer_t(const wchar_t *b, tok_flags_t flags);
+    
+    /** Returns the next token by reference. Returns true if we got one, false if we're at the end. */
+    bool next(struct tok_t *result);
 };
 
 /**

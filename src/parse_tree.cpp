@@ -95,25 +95,6 @@ wcstring parse_error_t::describe(const wcstring &src) const
     return this->describe_with_prefix(src, wcstring(), get_is_interactive(), false);
 }
 
-wcstring parse_errors_description(const parse_error_list_t &errors, const wcstring &src, const wchar_t *prefix)
-{
-    wcstring target;
-    for (size_t i=0; i < errors.size(); i++)
-    {
-        if (i > 0)
-        {
-            target.push_back(L'\n');
-        }
-        if (prefix != NULL)
-        {
-            target.append(prefix);
-            target.append(L": ");
-        }
-        target.append(errors.at(i).describe(src));
-    }
-    return target;
-}
-
 void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt)
 {
     assert(errors != NULL);

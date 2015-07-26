@@ -27,9 +27,6 @@ typedef uint32_t source_offset_t;
 
 #define SOURCE_OFFSET_INVALID (static_cast<source_offset_t>(-1))
 
-/* Returns a description of a list of parse errors */
-wcstring parse_errors_description(const parse_error_list_t &errors, const wcstring &src, const wchar_t *prefix = NULL);
-
 /** A struct representing the token type that we use internally */
 struct parse_token_t
 {

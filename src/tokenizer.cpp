@@ -53,32 +53,6 @@ segments.
 #define PIPE_ERROR _( L"Cannot use stdin (fd 0) as pipe output" )
 
 /**
-   Characters that separate tokens. They are ordered by frequency of occurrence to increase parsing speed.
-*/
-#define SEP L" \n|\t;#\r<>^&"
-
-/**
-   Descriptions of all tokenizer errors
-*/
-static const wchar_t *tok_desc[] =
-{
-    N_(L"Tokenizer not yet initialized"),
-    N_(L"Tokenizer error"),
-    N_(L"String"),
-    N_(L"Pipe"),
-    N_(L"End of command"),
-    N_(L"Redirect output to file"),
-    N_(L"Append output to file"),
-    N_(L"Redirect input to file"),
-    N_(L"Redirect to file descriptor"),
-    N_(L"Redirect output to file if file does not exist"),
-    N_(L"Run job in background"),
-    N_(L"Comment")
-};
-
-
-
-/**
    Set the latest tokens string to be the specified error message
 */
 static void tok_call_error(tokenizer_t *tok, int error_type, const wchar_t *error_message)
@@ -93,8 +67,7 @@ int tok_get_error(tokenizer_t *tok)
     return tok->error;
 }
 
-
-tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig_buff(NULL), last_type(TOK_NONE), last_pos(0), has_next(false), accept_unfinished(false), show_comments(false), show_blank_lines(false), last_quote(0), error(0), squash_errors(false), cached_lineno_offset(0), cached_lineno_count(0), continue_line_after_comment(false)
+tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig_buff(NULL), last_type(TOK_NONE), last_pos(0), has_next(false), accept_unfinished(false), show_comments(false), show_blank_lines(false), error(0), squash_errors(false), continue_line_after_comment(false)
 {
     CHECK(b,);
 
@@ -105,8 +78,6 @@ tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(NULL), orig
 
     this->has_next = (*b != L'\0');
     this->orig_buff = this->buff = b;
-    this->cached_lineno_offset = 0;
-    this->cached_lineno_count = 0;
     tok_next(this);
 }
 
@@ -142,7 +113,7 @@ int tok_has_next(tokenizer_t *tok)
    Hash (#) starts a comment if it's the first character in a token; otherwise it is considered a string character.
    See #953.
 */
-bool tok_is_string_character(wchar_t c, bool is_first)
+static bool tok_is_string_character(wchar_t c, bool is_first)
 {
     switch (c)
     {
@@ -251,7 +222,6 @@ static void read_string(tokenizer_t *tok)
                         {
 
                             const wchar_t *end = quote_end(tok->buff);
-                            tok->last_quote = *tok->buff;
                             if (end)
                             {
                                 tok->buff=(wchar_t *)end;
@@ -553,16 +523,6 @@ static bool my_iswspace(wchar_t c)
     return c != L'\n' && iswspace(c);
 }
 
-
-const wchar_t *tok_get_desc(int type)
-{
-    if (type < 0 || (size_t)type >= (sizeof tok_desc / sizeof *tok_desc))
-    {
-        return _(L"Invalid token type");
-    }
-    return _(tok_desc[type]);
-}
-
 void tok_next(tokenizer_t *tok)
 {
 
@@ -755,15 +715,6 @@ size_t tok_get_extent(const tokenizer_t *tok)
     return current_pos > tok->last_pos ? current_pos - tok->last_pos : 0;
 }
 
-
-void tok_set_pos(tokenizer_t *tok, int pos)
-{
-    CHECK(tok,);
-
-    tok->buff = tok->orig_buff + pos;
-    tok->has_next = true;
-    tok_next(tok);
-}
 
 bool move_word_state_machine_t::consume_char_punctuation(wchar_t c)
 {

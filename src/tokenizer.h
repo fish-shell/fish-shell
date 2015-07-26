@@ -92,16 +92,10 @@ struct tokenizer_t
     bool show_comments;
     /** Whether all blank lines are returned */
     bool show_blank_lines;
-    /** Type of last quote, can be either ' or ".*/
-    wchar_t last_quote;
     /** Last error */
     int error;
     /* Whether we are squashing errors */
     bool squash_errors;
-
-    /* Cached line number information */
-    size_t cached_lineno_offset;
-    int cached_lineno_count;
 
     /* Whether to continue the previous line after the comment */
     bool continue_line_after_comment;
@@ -156,24 +150,6 @@ size_t tok_get_extent(const tokenizer_t *tok);
    On failure, returns the empty string.
 */
 wcstring tok_first(const wchar_t *str);
-
-/**
-   Indicates whether a character can be part of a string, or is a string separator.
-   Separators include newline, tab, |, ^, >, <, etc.
-
-   is_first should indicate whether this is the first character in a potential string.
-*/
-bool tok_is_string_character(wchar_t c, bool is_first);
-
-/**
-   Move tokenizer position
-*/
-void tok_set_pos(tokenizer_t *tok, int pos);
-
-/**
-   Returns a string description of the specified token type
-*/
-const wchar_t *tok_get_desc(int type);
 
 /**
    Get tokenizer error type. Should only be called if tok_last_tope returns TOK_ERROR.

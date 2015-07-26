@@ -226,7 +226,6 @@ struct profile_item_t
     wcstring cmd;
 };
 
-struct tokenizer_t;
 class parse_execution_context_t;
 
 class parser_t

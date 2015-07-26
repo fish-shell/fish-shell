@@ -479,12 +479,10 @@ static void test_tok()
             if (types[i] != tok_last_type(&t))
             {
                 err(L"Tokenization error:");
-                wprintf(L"Token number %d of string \n'%ls'\n, expected token type %ls, got token '%ls' of type %ls\n",
+                wprintf(L"Token number %d of string \n'%ls'\n, got token '%ls'\n",
                         i+1,
                         str,
-                        tok_get_desc(types[i]),
-                        tok_last(&t),
-                        tok_get_desc(tok_last_type(&t)));
+                        tok_last(&t));
             }
         }
     }

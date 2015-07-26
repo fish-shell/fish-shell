@@ -266,7 +266,7 @@ user_doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FIL
 # Source code documentation. Also includes user documentation.
 #
 
-doc: *.h *.cpp doc.h Doxyfile lexicon_filter
+doc: src/*.h src/*.cpp doc.h Doxyfile lexicon_filter
 	(cat Doxyfile; echo INPUT_FILTER=./lexicon_filter; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION)) | doxygen - ;
 
 
@@ -468,8 +468,8 @@ doc.h: $(HDR_FILES)
 # Create a template translation object
 #
 
-messages.pot: *.cpp *.h share/completions/*.fish share/functions/*.fish
-	xgettext -k_ -kN_ *.cpp *.h -o messages.pot
+messages.pot: src/*.cpp src/*.h share/completions/*.fish share/functions/*.fish
+	xgettext -k_ -kN_ src/*.cpp src/*.h -o messages.pot
 	xgettext -j -k_ -kN_ -k--description -LShell --from-code=UTF-8 share/completions/*.fish share/functions/*.fish -o messages.pot
 
 builtin.o: $(BUILTIN_FILES)

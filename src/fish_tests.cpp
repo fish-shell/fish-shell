@@ -2037,7 +2037,7 @@ static void test_complete(void)
     
     /* File completions */
     char saved_wd[PATH_MAX + 1] = {};
-    getcwd(saved_wd, sizeof saved_wd);
+    (void)getcwd(saved_wd, sizeof saved_wd);
     if (system("mkdir -p '/tmp/complete_test/'")) err(L"mkdir failed");
     if (system("touch '/tmp/complete_test/testfile'")) err(L"touch failed");
     if (chdir("/tmp/complete_test/")) err(L"chdir failed");
@@ -3891,7 +3891,7 @@ int main(int argc, char **argv)
     while (access("./tests/test.fish", F_OK) != 0)
     {
         char wd[PATH_MAX + 1] = {};
-        getcwd(wd, sizeof wd);
+        (void)getcwd(wd, sizeof wd);
         if (! strcmp(wd, "/"))
         {
             fprintf(stderr, "Unable to find 'tests' directory, which should contain file test.fish\n");

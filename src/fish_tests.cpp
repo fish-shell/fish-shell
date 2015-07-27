@@ -2049,6 +2049,26 @@ static void test_complete(void)
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
     completions.clear();
+    complete(L"something --abc=te", completions, COMPLETION_REQUEST_DEFAULT);
+    do_test(completions.size() == 1);
+    do_test(completions.at(0).completion == L"stfile");
+    completions.clear();
+    complete(L"something -abc=te", completions, COMPLETION_REQUEST_DEFAULT);
+    do_test(completions.size() == 1);
+    do_test(completions.at(0).completion == L"stfile");
+    completions.clear();
+    complete(L"something abc=te", completions, COMPLETION_REQUEST_DEFAULT);
+    do_test(completions.size() == 1);
+    do_test(completions.at(0).completion == L"stfile");
+    completions.clear();
+    complete(L"something abc=stfile", completions, COMPLETION_REQUEST_DEFAULT);
+    do_test(completions.size() == 0);
+    completions.clear();
+    complete(L"something abc=stfile", completions, COMPLETION_REQUEST_FUZZY_MATCH);
+    do_test(completions.size() == 1);
+    do_test(completions.at(0).completion == L"abc=testfile");
+    completions.clear();
+
     complete(L"cat /tmp/complete_test/te", completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");

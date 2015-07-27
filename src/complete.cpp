@@ -1617,20 +1617,8 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
 /**
    Perform file completion on the specified string
 */
-void completer_t::complete_param_expand(const wcstring &sstr, bool do_file, bool directories_only)
+void completer_t::complete_param_expand(const wcstring &str, bool do_file, bool directories_only)
 {
-    const wchar_t * const str = sstr.c_str();
-    const wchar_t *comp_str;
-
-    if (string_prefixes_string(L"--", sstr) && (comp_str = wcschr(str, L'=')))
-    {
-        comp_str++;
-    }
-    else
-    {
-        comp_str = str;
-    }
-
     expand_flags_t flags = EXPAND_SKIP_CMDSUBST | ACCEPT_INCOMPLETE | this->expand_flags();
 
     if (! do_file)
@@ -1643,15 +1631,58 @@ void completer_t::complete_param_expand(const wcstring &sstr, bool do_file, bool
     if (this->type() == COMPLETE_AUTOSUGGEST || do_file)
         flags |= EXPAND_NO_DESCRIPTIONS;
 
-    /* Don't do fuzzy matching for files if the string begins with a dash (#568). We could consider relaxing this if there was a preceding double-dash argument */
-    if (string_prefixes_string(L"-", sstr))
-        flags &= ~EXPAND_FUZZY_MATCH;
-
-    if (expand_string(comp_str,
-                      this->completions,
-                      flags, NULL) == EXPAND_ERROR)
+    /* We have the following cases:
+     
+     --foo=bar => expand just bar
+     -foo=bar => expand just bar
+     foo=bar => expand the whole thing, and also just bar
+     
+     We also support colon separator (#2178). If there's more than one, prefer the last one.
+     */
+    
+    size_t sep_index = str.find_last_of(L"=:");
+    bool complete_from_separator = (sep_index != wcstring::npos);
+    bool complete_from_start = !complete_from_separator || !string_prefixes_string(L"-", str);
+    
+    if (complete_from_separator)
     {
-        debug(3, L"Error while expanding string '%ls'", comp_str);
+        const wcstring sep_string = wcstring(str, sep_index + 1);
+        std::vector<completion_t> local_completions;
+        if (expand_string(sep_string,
+                          local_completions,
+                          flags,
+                          NULL) == EXPAND_ERROR)
+        {
+            debug(3, L"Error while expanding string '%ls'", sep_string.c_str());
+        }
+        
+        /* Hack hack hack. Any COMPLETE_REPLACES_TOKEN will also stomp the separator. We need to "repair" them by inserting our separator and prefix. */
+        const wcstring prefix_with_sep = wcstring(str, 0, sep_index + 1);
+        for (size_t i=0; i < local_completions.size(); i++)
+        {
+            completion_t *c = &local_completions.at(i);
+            if (c->flags & COMPLETE_REPLACES_TOKEN)
+            {
+                c->completion.insert(0, prefix_with_sep);
+            }
+        }
+        this->completions.insert(this->completions.end(),
+                                 local_completions.begin(),
+                                 local_completions.end());
+    }
+    
+    if (complete_from_start)
+    {
+        /* Don't do fuzzy matching for files if the string begins with a dash (#568). We could consider relaxing this if there was a preceding double-dash argument */
+        if (string_prefixes_string(L"-", str))
+            flags &= ~EXPAND_FUZZY_MATCH;
+        
+        if (expand_string(str,
+                          this->completions,
+                          flags, NULL) == EXPAND_ERROR)
+        {
+            debug(3, L"Error while expanding string '%ls'", str.c_str());
+        }
     }
 }
 

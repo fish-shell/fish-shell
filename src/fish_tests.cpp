@@ -739,7 +739,7 @@ static void test_parser()
 
     say(L"Testing eval_args");
     completion_list_t comps;
-    parser_t::principal_parser().expand_argument_list(L"alpha 'beta gamma' delta", comps);
+    parser_t::principal_parser().expand_argument_list(L"alpha 'beta gamma' delta", &comps);
     do_test(comps.size() == 3);
     do_test(comps.at(0).completion == L"alpha");
     do_test(comps.at(1).completion == L"beta gamma");
@@ -1344,7 +1344,7 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...)
     wchar_t *arg;
     parse_error_list_t errors;
 
-    if (expand_string(in, output, flags, &errors) == EXPAND_ERROR)
+    if (expand_string(in, &output, flags, &errors) == EXPAND_ERROR)
     {
         if (errors.empty())
         {
@@ -1583,7 +1583,7 @@ static void test_pager_navigation()
     completion_list_t completions;
     for (size_t i=0; i < 19; i++)
     {
-        append_completion(completions, L"abcdefghij");
+        append_completion(&completions, L"abcdefghij");
     }
 
     pager_t pager;

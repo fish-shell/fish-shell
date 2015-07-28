@@ -68,7 +68,7 @@ enum
   \return 1 if matches where found, 0 otherwise. Return -1 on abort (I.e. ^C was pressed).
 
 */
-int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_flags_t flags, std::vector<completion_t> &out);
+int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_flags_t flags, std::vector<completion_t> *out);
 /**
    Test whether the given wildcard matches the string. Does not perform any I/O.
 
@@ -90,7 +90,7 @@ bool wildcard_complete(const wcstring &str,
                        const wchar_t *wc,
                        const wchar_t *desc,
                        wcstring(*desc_func)(const wcstring &),
-                       std::vector<completion_t> &out,
+                       std::vector<completion_t> *out,
                        expand_flags_t expand_flags,
                        complete_flags_t flags);
 

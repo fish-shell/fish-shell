@@ -607,7 +607,7 @@ static int find_job(const struct find_job_data_t *info)
         {
             if (!j->command_is_empty())
             {
-                append_completion(completions, to_string<long>(j->pgid));
+                append_completion(&completions, to_string<long>(j->pgid));
                 break;
             }
         }
@@ -638,7 +638,7 @@ static int find_job(const struct find_job_data_t *info)
                 if (wcsncmp(proc, jid, wcslen(proc))==0)
                 {
                     wcstring desc_buff = format_string(COMPLETE_JOB_DESC_VAL, j->command_wcstr());
-                    append_completion(completions,
+                    append_completion(&completions,
                                       jid+wcslen(proc),
                                       desc_buff,
                                       0);
@@ -657,7 +657,7 @@ static int find_job(const struct find_job_data_t *info)
                 j = job_get(jid);
                 if ((j != 0) && (j->command_wcstr() != 0) && (!j->command_is_empty()))
                 {
-                    append_completion(completions, to_string<long>(j->pgid));
+                    append_completion(&completions, to_string<long>(j->pgid));
                 }
             }
         }
@@ -682,14 +682,14 @@ static int find_job(const struct find_job_data_t *info)
             {
                 if (flags & ACCEPT_INCOMPLETE)
                 {
-                    append_completion(completions,
+                    append_completion(&completions,
                                       j->command_wcstr() + offset + wcslen(proc),
                                       COMPLETE_JOB_DESC,
                                       0);
                 }
                 else
                 {
-                    append_completion(completions, to_string<long>(j->pgid));
+                    append_completion(&completions, to_string<long>(j->pgid));
                     found = 1;
                 }
             }
@@ -713,14 +713,14 @@ static int find_job(const struct find_job_data_t *info)
                     {
                         if (flags & ACCEPT_INCOMPLETE)
                         {
-                            append_completion(completions,
+                            append_completion(&completions,
                                               wcstring(p->actual_cmd, offset + wcslen(proc)),
                                               COMPLETE_CHILD_PROCESS_DESC,
                                               0);
                         }
                         else
                         {
-                            append_completion(completions,
+                            append_completion(&completions,
                                               to_string<long>(p->pid),
                                               L"",
                                               0);
@@ -750,11 +750,11 @@ static int find_job(const struct find_job_data_t *info)
    understand the contents of the /proc filesystem, all the users
    processes are searched for matches.
 */
-static void find_process(const wchar_t *proc, expand_flags_t flags, std::vector<completion_t> &out)
+static void find_process(const wchar_t *proc, expand_flags_t flags, std::vector<completion_t> *out)
 {
     if (!(flags & EXPAND_SKIP_JOBS))
     {
-        const struct find_job_data_t data = {proc, flags, &out};
+        const struct find_job_data_t data = {proc, flags, out};
         int found = iothread_perform_on_main(find_job, &data);
         if (found)
         {
@@ -789,7 +789,7 @@ static void find_process(const wchar_t *proc, expand_flags_t flags, std::vector<
 /**
    Process id expansion
 */
-static bool expand_pid(const wcstring &instr_with_sep, expand_flags_t flags, std::vector<completion_t> &out, parse_error_list_t *errors)
+static bool expand_pid(const wcstring &instr_with_sep, expand_flags_t flags, std::vector<completion_t> *out, parse_error_list_t *errors)
 {
     /* Hack. If there's no INTERNAL_SEP and no PROCESS_EXPAND, then there's nothing to do. Check out this "null terminated string." */
     const wchar_t some_chars[] = {INTERNAL_SEPARATOR, PROCESS_EXPAND, L'\0'};
@@ -852,10 +852,10 @@ static bool expand_pid(const wcstring &instr_with_sep, expand_flags_t flags, std
     }
 
     /* This is sort of crummy - find_process doesn't return any indication of success, so instead we check to see if it inserted any completions */
-    const size_t prev_count = out.size();
+    const size_t prev_count = out->size();
     find_process(in+1, flags, out);
 
-    if (prev_count == out.size())
+    if (prev_count == out->size())
     {
         if (!(flags & ACCEPT_INCOMPLETE))
         {
@@ -974,7 +974,7 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
     As such, to process a string fully, pass string.size() as last_idx
     instead of string.size()-1.
 */
-static int expand_variables(parser_t &parser, const wcstring &instr, std::vector<completion_t> &out, long last_idx, parse_error_list_t *errors)
+static int expand_variables(parser_t &parser, const wcstring &instr, std::vector<completion_t> *out, long last_idx, parse_error_list_t *errors)
 {
     const size_t insize = instr.size();
 
@@ -1258,7 +1258,7 @@ static int expand_variables(parser_t &parser, const wcstring &instr, std::vector
 /**
    Perform bracket expansion
 */
-static int expand_brackets(parser_t &parser, const wcstring &instr, int flags, std::vector<completion_t> &out, parse_error_list_t *errors)
+static int expand_brackets(parser_t &parser, const wcstring &instr, int flags, std::vector<completion_t> *out, parse_error_list_t *errors)
 {
     bool syntax_error = false;
     int bracket_count=0;
@@ -1388,7 +1388,7 @@ static int expand_brackets(parser_t &parser, const wcstring &instr, int flags, s
 /**
  Perform cmdsubst expansion
  */
-static int expand_cmdsubst(parser_t &parser, const wcstring &input, std::vector<completion_t> &out_list, parse_error_list_t *errors)
+static int expand_cmdsubst(parser_t &parser, const wcstring &input, std::vector<completion_t> *out_list, parse_error_list_t *errors)
 {
     wchar_t *paran_begin=0, *paran_end=0;
     std::vector<wcstring> sub_res;
@@ -1468,7 +1468,7 @@ static int expand_cmdsubst(parser_t &parser, const wcstring &input, std::vector<
        of the string is inserted into the tail_expand array list
        */
     std::vector<completion_t> tail_expand;
-    expand_cmdsubst(parser, tail_begin, tail_expand, errors /* TODO: offset error locations */);
+    expand_cmdsubst(parser, tail_begin, &tail_expand, errors /* TODO: offset error locations */);
 
     /*
        Combine the result of the current command substitution with the
@@ -1683,7 +1683,7 @@ static void remove_internal_separator(wcstring &str, bool conv)
 }
 
 
-int expand_string(const wcstring &input, std::vector<completion_t> &output, expand_flags_t flags, parse_error_list_t *errors)
+int expand_string(const wcstring &input, std::vector<completion_t> *output, expand_flags_t flags, parse_error_list_t *errors)
 {
     parser_t parser(PARSER_TYPE_ERRORS_ONLY, true /* show errors */);
 
@@ -1708,11 +1708,11 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
             append_cmdsub_error(errors, SOURCE_LOCATION_UNKNOWN, L"Command substitutions not allowed");
             return EXPAND_ERROR;
         }
-        append_completion(*in, input);
+        append_completion(in, input);
     }
     else
     {
-        int cmdsubst_ok = expand_cmdsubst(parser, input, *in, errors);
+        int cmdsubst_ok = expand_cmdsubst(parser, input, in, errors);
         if (! cmdsubst_ok)
             return EXPAND_ERROR;
     }
@@ -1736,11 +1736,11 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
                     next[i] = L'$';
                 }
             }
-            append_completion(*out, next);
+            append_completion(out, next);
         }
         else
         {
-            if (!expand_variables(parser, next, *out, next.size(), errors))
+            if (!expand_variables(parser, next, out, next.size(), errors))
             {
                 return EXPAND_ERROR;
             }
@@ -1754,7 +1754,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
     {
         const wcstring &next = in->at(i).completion;
 
-        if (!expand_brackets(parser, next, flags, *out, errors))
+        if (!expand_brackets(parser, next, flags, out, errors))
         {
             return EXPAND_ERROR;
         }
@@ -1783,10 +1783,10 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
             }
             else
             {
-                append_completion(*out, next);
+                append_completion(out, next);
             }
         }
-        else if (! expand_pid(next, flags, *out, errors))
+        else if (! expand_pid(next, flags, out, errors))
         {
             return EXPAND_ERROR;
         }
@@ -1824,7 +1824,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
             }
 
             std::vector<completion_t> expanded;
-            wc_res = wildcard_expand_string(rest, start, flags, expanded);
+            wc_res = wildcard_expand_string(rest, start, flags, &expanded);
             if (flags & ACCEPT_INCOMPLETE)
             {
                 out->insert(out->end(), expanded.begin(), expanded.end());
@@ -1860,7 +1860,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
         {
             if (!(flags & ACCEPT_INCOMPLETE))
             {
-                append_completion(*out, next);
+                append_completion(out, next);
             }
         }
     }
@@ -1872,7 +1872,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> &output, expa
     }
 
     // Return our output
-    output.insert(output.end(), out->begin(), out->end());
+    output->insert(output->end(), out->begin(), out->end());
 
     return res;
 }
@@ -1887,7 +1887,7 @@ bool expand_one(wcstring &string, expand_flags_t flags, parse_error_list_t *erro
         return true;
     }
 
-    if (expand_string(string, completions, flags | EXPAND_NO_DESCRIPTIONS, errors))
+    if (expand_string(string, &completions, flags | EXPAND_NO_DESCRIPTIONS, errors))
     {
         if (completions.size() == 1)
         {
@@ -1990,19 +1990,19 @@ bool fish_openSUSE_dbus_hack_hack_hack_hack(std::vector<completion_t> *args)
                         val.resize(last_good + 1);
 
                     args->clear();
-                    append_completion(*args, L"set");
+                    append_completion(args, L"set");
                     if (key == L"DBUS_SESSION_BUS_ADDRESS")
-                        append_completion(*args, L"-x");
-                    append_completion(*args, key);
-                    append_completion(*args, val);
+                        append_completion(args, L"-x");
+                    append_completion(args, key);
+                    append_completion(args, val);
                     result = true;
                 }
                 else if (string_prefixes_string(L"export DBUS_SESSION_BUS_ADDRESS;", cmd))
                 {
                     /* Nothing, we already exported it */
                     args->clear();
-                    append_completion(*args, L"echo");
-                    append_completion(*args, L"-n");
+                    append_completion(args, L"echo");
+                    append_completion(args, L"-n");
                     result = true;
                 }
             }

@@ -525,7 +525,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
     /* Expand it. We need to offset any errors by the position of the string */
     std::vector<completion_t> switch_values_expanded;
     parse_error_list_t errors;
-    int expand_ret = expand_string(switch_value, switch_values_expanded, EXPAND_NO_DESCRIPTIONS, &errors);
+    int expand_ret = expand_string(switch_value, &switch_values_expanded, EXPAND_NO_DESCRIPTIONS, &errors);
     parse_error_offset_source_start(&errors, switch_value_node.source_start);
 
     switch (expand_ret)
@@ -985,7 +985,7 @@ parse_execution_result_t parse_execution_context_t::determine_arguments(const pa
         /* Expand this string */
         std::vector<completion_t> arg_expanded;
         parse_error_list_t errors;
-        int expand_ret = expand_string(arg_str, arg_expanded, EXPAND_NO_DESCRIPTIONS, &errors);
+        int expand_ret = expand_string(arg_str, &arg_expanded, EXPAND_NO_DESCRIPTIONS, &errors);
         parse_error_offset_source_start(&errors, arg_node.source_start);
         switch (expand_ret)
         {

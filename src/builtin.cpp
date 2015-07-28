@@ -4226,8 +4226,10 @@ wcstring_list_t builtin_get_names(void)
     return result;
 }
 
-void builtin_get_names(std::vector<completion_t> &list)
+void builtin_get_names(std::vector<completion_t> *list)
 {
+    assert(list != NULL);
+    list->reserve(list->size() + BUILTIN_COUNT);
     for (size_t i=0; i < BUILTIN_COUNT; i++)
     {
         append_completion(list, builtin_datas[i].name);

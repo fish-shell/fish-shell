@@ -142,10 +142,10 @@ int builtin_exists(const wcstring &cmd);
 int builtin_run(parser_t &parser, const wchar_t * const *argv, const io_chain_t &io);
 
 /** Returns a list of all builtin names */
-wcstring_list_t builtin_get_names(void);
+wcstring_list_t builtin_get_names();
 
 /** Insert all builtin names into list. */
-void builtin_get_names(std::vector<completion_t> &list);
+void builtin_get_names(std::vector<completion_t> *list);
 
 /**
    Pushes a new set of input/output to the stack. The new stdin is supplied, a new set of output strings is created.

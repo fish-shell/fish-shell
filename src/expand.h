@@ -152,7 +152,7 @@ class parser_t;
    \param errors Resulting errors, or NULL to ignore
    \return One of EXPAND_OK, EXPAND_ERROR, EXPAND_WILDCARD_MATCH and EXPAND_WILDCARD_NO_MATCH. EXPAND_WILDCARD_NO_MATCH and EXPAND_WILDCARD_MATCH are normal exit conditions used only on strings containing wildcards to tell if the wildcard produced any matches.
 */
-__warn_unused int expand_string(const wcstring &input, std::vector<completion_t> &output, expand_flags_t flags, parse_error_list_t *errors);
+__warn_unused int expand_string(const wcstring &input, std::vector<completion_t> *output, expand_flags_t flags, parse_error_list_t *errors);
 
 
 /**

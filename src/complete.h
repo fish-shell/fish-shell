@@ -262,7 +262,7 @@ void complete_load(const wcstring &cmd, bool reload);
    \param flags completion flags
 
 */
-void append_completion(std::vector<completion_t> &completions, const wcstring &comp, const wcstring &desc = wcstring(), int flags = 0, string_fuzzy_match_t match = string_fuzzy_match_t(fuzzy_match_exact));
+void append_completion(std::vector<completion_t> *completions, const wcstring &comp, const wcstring &desc = wcstring(), int flags = 0, string_fuzzy_match_t match = string_fuzzy_match_t(fuzzy_match_exact));
 
 /* Function used for testing */
 void complete_set_variable_names(const wcstring_list_t *names);

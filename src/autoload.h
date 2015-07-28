@@ -123,11 +123,6 @@ public:
     */
     int unload(const wcstring &cmd);
 
-    /**
-       Unloads all files.
-    */
-    void unload_all();
-
     /** Check whether the given command could be loaded, but do not load it. */
     bool can_load(const wcstring &cmd, const env_vars_snapshot_t &vars);
 

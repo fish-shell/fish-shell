@@ -140,12 +140,6 @@ static bool script_name_precedes_script_name(const builtin_script_t &script1, co
     return wcscmp(script1.name, script2.name) < 0;
 }
 
-void autoload_t::unload_all(void)
-{
-    scoped_lock locker(lock);
-    this->evict_all_nodes();
-}
-
 /** Check whether the given command is loaded. */
 bool autoload_t::has_tried_loading(const wcstring &cmd)
 {

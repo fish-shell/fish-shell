@@ -149,6 +149,10 @@ else
 end
 
 set -Ue __fish_test_universal_variables_variable_foo
+
+# Should no longer be in environment (#2046)
+env | sgrep __fish_test_universal_variables_variable_foo
+
 set -Ux __fish_test_universal_variables_variable_foo bar
 set -U __fish_test_universal_variables_variable_foo baz
 if test (/bin/sh -c 'echo $__fish_test_universal_variables_variable_foo') = baz -a (../fish -c 'echo $__fish_test_universal_variables_variable_foo') = baz
@@ -223,6 +227,14 @@ else
   echo Test 16 fail
 end
 
+# Test that shadowing with a non-exported variable works
+set -gx __fish_test_env17 UNSHADOWED
+env | sgrep __fish_test_env17
+function __fish_test_shadow
+  set -l __fish_test_env17
+  env | sgrep __fish_test_env17 ; or echo SHADOWED
+end
+__fish_test_shadow
 
 # clear for other shells
 set -eU __fish_test_universal_variables_variable_foo

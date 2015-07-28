@@ -30,3 +30,17 @@ set foo 'bad foo'
 set bar 'bad bar'
 set baz 'bad baz'
 frob
+
+# Test that -a does not mix up the function name with arguments
+# See #2068
+function name1 -a arg1 arg2 ; end
+function -a arg1 arg2 name2 ; end
+function name3 --argument-names arg1 arg2 ; end
+function --argument-names arg1 arg2 name4 ; end
+for i in (seq 4)
+    if functions -q name$i
+        echo "Function name$i found"
+    else
+        echo "Function name$i not found, but should have been"
+    end
+end

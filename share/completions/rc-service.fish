@@ -4,7 +4,7 @@ complete -c rc-service -n "test (__fish_number_of_cmd_args_wo_opts) = 1" \
 
 # The second argument is what action to take with the service
 complete -c rc-service -n "test (__fish_number_of_cmd_args_wo_opts) -gt 1" \
-    -xa "(__fish_complete_service_actions)"
+    -xa "start stop restart"
 
 # Complete rc-service the options
 complete -c rc-service -s e -l exists -d 'Tests if the service exists or not'

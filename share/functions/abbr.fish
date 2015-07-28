@@ -1,9 +1,4 @@
 function abbr --description "Manage abbreviations"
-	if not set -q argv[1]
-		__fish_print_help abbr
-		return 1
-	end
-
 	# parse arguments
 	set -l mode
 	set -l mode_flag # the flag that was specified, for better errors
@@ -26,8 +21,8 @@ function abbr --description "Manage abbreviations"
 			case '-a' '--add'
 				set new_mode add
 				set needs_arg coalesce
-			case '-r' '--remove'
-				set new_mode remove
+			case '-e' '--erase'
+				set new_mode erase
 				set needs_arg single
 			case '-l' '--list'
 				set new_mode list
@@ -55,6 +50,18 @@ function abbr --description "Manage abbreviations"
 	if test $needs_arg != no
 		printf ( _ "%s: option requires an argument -- %s\n" ) abbr $mode_flag >&2
 		return 1
+	end
+	
+	# If run with no options, treat it like --add if we have an argument, or
+	# --show if we do not have an argument
+	if test -z "$mode"
+		if set -q argv[1]
+			set mode 'add'
+			set mode_arg "$argv"
+			set -e argv
+		else
+			set mode 'show'
+		end
 	end
 
 	# none of our modes want any excess arguments
@@ -91,7 +98,7 @@ function abbr --description "Manage abbreviations"
 		set fish_user_abbreviations $fish_user_abbreviations $mode_arg
 		return 0
 
-	case 'remove'
+	case 'erase'
 		set -l key
 		__fish_abbr_parse_entry $mode_arg key
 		if set -l idx (__fish_abbr_get_by_key $key)
@@ -106,7 +113,14 @@ function abbr --description "Manage abbreviations"
 		for i in $fish_user_abbreviations
 			# Disable newline splitting
 			set -lx IFS ''
-			echo abbr -a \'(__fish_abbr_escape $i)\'
+			__fish_abbr_parse_entry $i key value
+			
+			# Check to see if either key or value has a leading dash
+			# If so, we need to write --
+			set -l opt_double_dash ''
+			switch $key ; case '-*'; set opt_double_dash ' --'; end
+			switch $value ; case '-*'; set opt_double_dash ' --'; end
+			echo abbr$opt_double_dash (__fish_abbr_escape "$key") (__fish_abbr_escape "$value")
 		end
 		return 0
 
@@ -121,7 +135,17 @@ function abbr --description "Manage abbreviations"
 end
 
 function __fish_abbr_escape
-	echo $argv | sed -e s,\\\\,\\\\\\\\,g -e s,\',\\\\\',g
+	# Prettify the common case: if everything is alphanumeric,
+	# we do not need escapes.
+	# Do this by deleting alnum characters, and check if there's anything left.
+	# Note we need to preserve spaces, so spaces are not considered alnum
+	if test -z (echo -n "$argv" | tr -d '[:alnum:]_')
+		echo $argv
+	else
+		# Escape via single quotes
+		# printf is nice for stripping the newline that sed outputs
+		printf "'%s'" (echo -n $argv | sed -e s,\\\\,\\\\\\\\,g -e s,\',\\\\\',g)
+	end
 end
 
 function __fish_abbr_get_by_key

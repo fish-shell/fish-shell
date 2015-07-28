@@ -23,9 +23,7 @@ po/*.gmo
 fish
 fish_indent
 fish_tests
-fishd
 fish.pc
-mimedb
 seq
 set_color
 share/config.fish
@@ -41,4 +39,5 @@ messages.pot
 lexicon.txt
 lexicon_filter
 lexicon.log
+DerivedData/
 

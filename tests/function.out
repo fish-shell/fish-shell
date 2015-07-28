@@ -18,3 +18,7 @@ $bar: (5)
 4: ''
 5: '3'
 $baz: (0)
+Function name1 found
+Function name2 found
+Function name3 found
+Function name4 found

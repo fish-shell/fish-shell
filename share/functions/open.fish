@@ -23,7 +23,7 @@ if not test (uname) = Darwin
 				xdg-open $i
 			end
 		else
-			mimedb -l -- $argv
+			echo (_ 'No open utility found. Try installing "xdg-open" or "xdg-utils".')
 		end
 	end
 end

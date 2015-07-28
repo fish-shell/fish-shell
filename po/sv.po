@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.22.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-03-13 21:29+0800\n"
+"POT-Creation-Date: 2015-04-13 22:15+0800\n"
 "PO-Revision-Date: 2006-03-13 18:06+0100\n"
 "Last-Translator: Axel Liljencrantz <liljencrantz@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -21,12 +21,12 @@ msgstr ""
 msgid "Could not autoload item '%ls', it is already being autoloaded. "
 msgstr "Kunde inte automatiskt ladda elementet ”%ls”, det autoladdas redan. "
 
-#: builtin.cpp:83
+#: builtin.cpp:84
 #, c-format
 msgid "Send job %d, '%ls' to foreground\n"
 msgstr "Skicka job %d, ”%ls” till förgrunden\n"
 
-#: builtin.cpp:344
+#: builtin.cpp:352
 #, c-format
 msgid ""
 "%ls: Type 'help %ls' for related documentation\n"
@@ -35,100 +35,105 @@ msgstr ""
 "%ls: Skriv 'help %ls' för relaterad dokumnetation\n"
 "\n"
 
-#: builtin.cpp:484
+#: builtin.cpp:531
 #, c-format
 msgid "%ls: No key with name '%ls' found\n"
 msgstr "%ls: Ingen tangent med namn ”%ls” kunde hittas\n"
 
-#: builtin.cpp:490
+#: builtin.cpp:537
 #, c-format
 msgid "%ls: Key with name '%ls' does not have any mapping\n"
 msgstr "%ls: Tangent mad namn “%ls“ har ingen mappning\n"
 
-#: builtin.cpp:496
+#: builtin.cpp:543
 #, c-format
 msgid "%ls: Unknown error trying to bind to key named '%ls'\n"
 msgstr ""
 "%ls: Okänt fel inträffade vid försök att binda till tangen med namn ”%ls”\n"
 
-#: builtin.cpp:668
+#: builtin.cpp:794
 #, fuzzy, c-format
-msgid "%ls: Expected zero or two parameters, got %d\n"
-msgstr "%ls: Förväntade noll eller två argument, fick %d"
+msgid "%ls: No binding found for key '%ls'\n"
+msgstr "%s: Beskrivning saknas för typ %s\n"
 
-#: builtin.cpp:692
+#: builtin.cpp:798
+#, c-format
+msgid "%ls: No binding found for sequence '%ls'\n"
+msgstr ""
+
+#: builtin.cpp:834
 #, c-format
 msgid "%ls: Invalid state\n"
 msgstr "%ls: Ogiltigt tillstånd\n"
 
-#: builtin.cpp:796
+#: builtin.cpp:939
 #, c-format
 msgid "%ls: Can not specify scope when removing block\n"
 msgstr "%ls: Kan inte ange definitionsområde vid blockradering\n"
 
-#: builtin.cpp:802
+#: builtin.cpp:945
 #, c-format
 msgid "%ls: No blocks defined\n"
 msgstr "%ls: Inga block definerade\n"
 
-#: builtin.cpp:1312 builtin.h:32
+#: builtin.cpp:1556 builtin.h:32
 #, c-format
 msgid "%ls: Invalid combination of options\n"
 msgstr "%ls: Ogiltig kombination av flaggor\n"
 
-#: builtin.cpp:1334
+#: builtin.cpp:1578
 #, c-format
 msgid "%ls: Expected exactly one function name\n"
 msgstr "%ls: Förväntade exakt ett funktionsnamn\n"
 
-#: builtin.cpp:1344 builtin.cpp:1406
+#: builtin.cpp:1588 builtin.cpp:1650
 #, c-format
 msgid "%ls: Function '%ls' does not exist\n"
 msgstr "%ls: Funktionen ”%ls” existerar inte\n"
 
-#: builtin.cpp:1394
+#: builtin.cpp:1638
 #, fuzzy, c-format
 msgid ""
 "%ls: Expected exactly two names (current function name, and new function "
 "name)\n"
 msgstr "%ls: Förväntade exakt ett funktionsnamn\n"
 
-#: builtin.cpp:1417 builtin.cpp:1952 builtin.cpp:2259
+#: builtin.cpp:1661 builtin.cpp:2230
 #, c-format
 msgid "%ls: Illegal function name '%ls'\n"
 msgstr "%ls: Ogiltigt funktionsnamn ”%ls”\n"
 
-#: builtin.cpp:1428
+#: builtin.cpp:1672
 #, fuzzy, c-format
 msgid "%ls: Function '%ls' already exists. Cannot create copy '%ls'\n"
 msgstr "%ls: Funktionen ”%ls” existerar inte\n"
 
-#: builtin.cpp:1809 builtin.cpp:2114
+#: builtin.cpp:2070
 #, c-format
 msgid "%ls: Unknown signal '%ls'\n"
 msgstr "%ls: Okänd signal ”%ls”\n"
 
-#: builtin.cpp:1824 builtin.cpp:1984 builtin.cpp:2129 builtin.cpp:2291
+#: builtin.cpp:2085 builtin.cpp:2195 builtin.cpp:2263
 #, c-format
 msgid "%ls: Invalid variable name '%ls'\n"
 msgstr "%ls: Ogiltigt variabelnamn ”%ls”\n"
 
-#: builtin.cpp:1877 builtin.cpp:2182
+#: builtin.cpp:2138
 #, c-format
 msgid "%ls: Cannot find calling job for event handler\n"
 msgstr "%ls: Kan inte hitta anropande job för händelsehanterare\n"
 
-#: builtin.cpp:1895 builtin.cpp:2200
+#: builtin.cpp:2156
 #, c-format
 msgid "%ls: Invalid process id %ls\n"
 msgstr "%ls: Ogiltigt processid %ls\n"
 
-#: builtin.cpp:1945 builtin.cpp:2252
+#: builtin.cpp:2223
 #, c-format
 msgid "%ls: Expected function name\n"
 msgstr "%ls: Förväntade ett funktionsnamn\n"
 
-#: builtin.cpp:1962 builtin.cpp:2269
+#: builtin.cpp:2240
 #, c-format
 msgid ""
 "%ls: The name '%ls' is reserved,\n"
@@ -137,140 +142,148 @@ msgstr ""
 "%ls: Namnet ”%ls” är reserverat,\n"
 " och kan inte användas som funktionsnamn\n"
 
-#: builtin.cpp:1970 builtin.cpp:2277 builtin.cpp:3824
+#: builtin.cpp:2248
 #, fuzzy, c-format
 msgid "%ls: No function name given\n"
 msgstr "%ls: Förväntade ett funktionsnamn\n"
 
-#: builtin.cpp:1997 builtin.cpp:2304
+#: builtin.cpp:2276
 #, c-format
 msgid "%ls: Expected one argument, got %d\n"
 msgstr "%ls: Förväntade ett argument, fick %d\n"
 
-#: builtin.cpp:2319
-msgid "Current functions are: "
-msgstr "Nuvarande funktioner är: "
-
-#: builtin.cpp:2459
+#: builtin.cpp:2412
 #, c-format
 msgid "%ls: Seed value '%ls' is not a valid number\n"
 msgstr "%ls: Slumpfrö ”%ls” är inte ett giltigt nummer\n"
 
-#: builtin.cpp:2473
+#: builtin.cpp:2426
 #, c-format
 msgid "%ls: Expected zero or one argument, got %d\n"
 msgstr "%ls: Förväntade noll eller ett argument, fick %d\n"
 
-#: builtin.cpp:2981 fish.cpp:518 parser.cpp:1095
-msgid "Standard input"
-msgstr "Standard in"
+#: builtin.cpp:2593
+#, fuzzy, c-format
+msgid "%ls: Argument '%ls' is out of range\n"
+msgstr "%ls: Argumentet ”%ls” är inte ett nummer\n"
 
-#: builtin.cpp:3024
-msgid "This is a login shell\n"
-msgstr "Detta är ett login-skal\n"
-
-#: builtin.cpp:3026
-msgid "This is not a login shell\n"
-msgstr "Detta är inte ett login-skal\n"
-
-#: builtin.cpp:3028
-#, c-format
-msgid "Job control: %ls\n"
-msgstr "Jobkontroll: %ls\n"
-
-#: builtin.cpp:3029
-msgid "Only on interactive jobs"
-msgstr "Bara för interaktiva jobb"
-
-#: builtin.cpp:3030
-msgid "Never"
-msgstr "Aldrig"
-
-#: builtin.cpp:3030
-msgid "Always"
-msgstr "Alltid"
-
-#: builtin.cpp:3066 builtin.cpp:3995
+#: builtin.cpp:2601 builtin.cpp:3150 builtin.cpp:3817
 #, c-format
 msgid "%ls: Argument '%ls' must be an integer\n"
 msgstr "%ls: Argumentet ”%ls” måste vara ett heltal\n"
 
+#: builtin.cpp:2656
+#, fuzzy, c-format
+msgid "%ls: --array option requires a single variable name.\n"
+msgstr ""
+"%ls: Radering kräver ett variabelnamn\n"
+"%ls\n"
+
+#: builtin.cpp:3065 fish.cpp:620 parser.cpp:764
+msgid "Standard input"
+msgstr "Standard in"
+
 #: builtin.cpp:3108
+msgid "This is a login shell\n"
+msgstr "Detta är ett login-skal\n"
+
+#: builtin.cpp:3110
+msgid "This is not a login shell\n"
+msgstr "Detta är inte ett login-skal\n"
+
+#: builtin.cpp:3112
+#, c-format
+msgid "Job control: %ls\n"
+msgstr "Jobkontroll: %ls\n"
+
+#: builtin.cpp:3113
+msgid "Only on interactive jobs"
+msgstr "Bara för interaktiva jobb"
+
+#: builtin.cpp:3114
+msgid "Never"
+msgstr "Aldrig"
+
+#: builtin.cpp:3114
+msgid "Always"
+msgstr "Alltid"
+
+#: builtin.cpp:3192
 #, c-format
 msgid "%ls: Could not find home directory\n"
 msgstr "%ls: Kunde inte hitta hemkatalogen\n"
 
-#: builtin.cpp:3128 builtin.cpp:3182
+#: builtin.cpp:3212 builtin.cpp:3266
 #, c-format
 msgid "%ls: '%ls' is not a directory\n"
 msgstr "%ls: ”%ls” är inte en katalog\n"
 
-#: builtin.cpp:3135
+#: builtin.cpp:3219
 #, c-format
 msgid "%ls: The directory '%ls' does not exist\n"
 msgstr "%ls: Katalogen ”%ls” existerar inte\n"
 
-#: builtin.cpp:3142
+#: builtin.cpp:3226
 #, c-format
 msgid "%ls: '%ls' is a rotten symlink\n"
 msgstr "%ls: ”%ls” är en rutten symbolisk länk\n"
 
-#: builtin.cpp:3150
+#: builtin.cpp:3234
 #, c-format
 msgid "%ls: Unknown error trying to locate directory '%ls'\n"
 msgstr "%ls: Okänd fel inträffade under lokalisering av katalogen ”%ls”\n"
 
-#: builtin.cpp:3173
+#: builtin.cpp:3257
 #, c-format
 msgid "%ls: Permission denied: '%ls'\n"
 msgstr "%ls: Åtkomst nekad till katalogen ”%ls”\n"
 
-#: builtin.cpp:3197
+#: builtin.cpp:3281
 #, c-format
 msgid "%ls: Could not set PWD variable\n"
 msgstr "%ls: Kunde inte sätta variableln PWD\n"
 
-#: builtin.cpp:3284
+#: builtin.cpp:3368
 #, c-format
 msgid "%ls: Key not specified\n"
 msgstr "%ls: Ingen nyckel angiven\n"
 
-#: builtin.cpp:3328 builtin.cpp:3336
+#: builtin.cpp:3412 builtin.cpp:3420
 #, c-format
 msgid "%ls: Error encountered while sourcing file '%ls':\n"
 msgstr "%ls: Ett fel uppstod medan filen ”%ls” lästes\n"
 
-#: builtin.cpp:3344
+#: builtin.cpp:3428
 #, c-format
 msgid "%ls: '%ls' is not a file\n"
 msgstr "%ls: ”%ls” är inte en fil\n"
 
-#: builtin.cpp:3363
+#: builtin.cpp:3447
 #, c-format
 msgid "%ls: Error while reading file '%ls'\n"
 msgstr "%ls: Ett fel uppstod medan filen ”%ls” lästes\n"
 
-#: builtin.cpp:3419 builtin.cpp:3599
+#: builtin.cpp:3503 builtin.cpp:3682
 #, c-format
 msgid "%ls: There are no suitable jobs\n"
 msgstr "%ls: Det finns inga lämpliga jobb\n"
 
-#: builtin.cpp:3448
+#: builtin.cpp:3531
 #, c-format
 msgid "%ls: Ambiguous job\n"
 msgstr "%ls: Mer än ett jobb matchar\n"
 
-#: builtin.cpp:3454 builtin.cpp:3622 builtin_jobs.cpp:301
+#: builtin.cpp:3537 builtin.cpp:3705 builtin_jobs.cpp:301
 #, c-format
 msgid "%ls: '%ls' is not a job\n"
 msgstr "%ls: ”%ls” är inte ett jobb\n"
 
-#: builtin.cpp:3485 builtin_jobs.cpp:316
+#: builtin.cpp:3568 builtin_jobs.cpp:316
 #, c-format
 msgid "%ls: No suitable job: %d\n"
 msgstr "%ls: Inget passande jobb: %d\n"
 
-#: builtin.cpp:3494
+#: builtin.cpp:3577
 #, c-format
 msgid ""
 "%ls: Can't put job %d, '%ls' to foreground because it is not under job "
@@ -279,12 +292,12 @@ msgstr ""
 "Kan inte skicka jobb %d, ”%ls” till förgrunden eftersom det inte anväder "
 "jobbkontroll\n"
 
-#: builtin.cpp:3547
+#: builtin.cpp:3630
 #, c-format
 msgid "%ls: Unknown job '%ls'\n"
 msgstr "%ls: Okänt jobb ”%ls”\n"
 
-#: builtin.cpp:3556
+#: builtin.cpp:3639
 #, c-format
 msgid ""
 "%ls: Can't put job %d, '%ls' to background because it is not under job "
@@ -293,239 +306,221 @@ msgstr ""
 "Kan inte skicka jobb %d, ”%ls” till bakgrunden eftersom det inte anväder "
 "jobbkontrol\n"
 
-#: builtin.cpp:3566
+#: builtin.cpp:3649
 #, c-format
 msgid "Send job %d '%ls' to background\n"
 msgstr "Skicka jobb %d ”%ls” till bakgrunden\n"
 
-#: builtin.cpp:3605
+#: builtin.cpp:3688
 msgid "(default)"
 msgstr "(standard)"
 
-#: builtin.cpp:3737
-#, c-format
-msgid "%ls: Not inside of block\n"
-msgstr "%ls: Inte i ett block\n"
-
-#: builtin.cpp:3884
-#, c-format
-msgid "%ls: Not inside of 'if' block\n"
-msgstr "%ls: Inte i ett ”if” block\n"
-
-#: builtin.cpp:3938
+#: builtin.cpp:3760
 #, c-format
 msgid "%ls: Not inside of loop\n"
 msgstr "%ls: Inte i en loop\n"
 
-#: builtin.cpp:4005 builtin_complete.cpp:539 builtin_set_color.cpp:140
-#: builtin.h:83
+#: builtin.cpp:3827 builtin_complete.cpp:551 builtin.h:83
 #, c-format
 msgid "%ls: Too many arguments\n"
 msgstr "%ls: För många argument\n"
 
-#: builtin.cpp:4023
+#: builtin.cpp:3845
 #, c-format
 msgid "%ls: Not inside of function\n"
 msgstr "%ls: Inte i en funktion\n"
 
-#: builtin.cpp:4059
-#, c-format
-msgid "%ls: Expected exactly one argument, got %d\n"
-msgstr "%ls: Förväntade exakt ett argument, fick %d\n"
-
-#: builtin.cpp:4090
-#, c-format
-msgid "%ls: 'case' command while not in switch block\n"
-msgstr "%ls: ”case” kommandot kan bara användas i ett ”switch”-block\n"
-
-#: builtin.cpp:4317 builtin.cpp:4360
+#: builtin.cpp:4069 builtin.cpp:4113
 #, fuzzy
 msgid "Test a condition"
 msgstr "Välj en konfigurationsinställning"
 
-#: builtin.cpp:4318
+#: builtin.cpp:4070
 msgid "Try out the new parser"
 msgstr ""
 
-#: builtin.cpp:4319
+#: builtin.cpp:4071
 msgid "Execute command if previous command suceeded"
 msgstr "Utför kommando om föregående kommando lyckades"
 
-#: builtin.cpp:4320
+#: builtin.cpp:4072
 msgid "Create a block of code"
 msgstr "Skapa ett kodblock"
 
-#: builtin.cpp:4321
+#: builtin.cpp:4073
 msgid "Send job to background"
 msgstr "Skicka jobb till bakgrunden"
 
-#: builtin.cpp:4322
+#: builtin.cpp:4074
 msgid "Handle fish key bindings"
 msgstr "Hantera tangentbordsgenvägar för fish"
 
-#: builtin.cpp:4323
+#: builtin.cpp:4075
 msgid "Temporarily block delivery of events"
 msgstr "Blockera tillfälligt leverans av händelser"
 
-#: builtin.cpp:4324
+#: builtin.cpp:4076
 msgid "Stop the innermost loop"
 msgstr "Avbryt den innersta loopen"
 
-#: builtin.cpp:4325
+#: builtin.cpp:4077
 msgid ""
 "Temporarily halt execution of a script and launch an interactive debug prompt"
 msgstr "Avbryt exekvering tillfälligt och starta en interaktiv debugprompt"
 
-#: builtin.cpp:4326
+#: builtin.cpp:4078
 msgid "Run a builtin command instead of a function"
 msgstr "Utför ett inbyggt kommando istället för en funktion"
 
-#: builtin.cpp:4327 builtin.cpp:4359
+#: builtin.cpp:4079 builtin.cpp:4112
 msgid "Conditionally execute a block of commands"
 msgstr "Utför ett kommando om ett villkor är uppfyllt"
 
-#: builtin.cpp:4328
+#: builtin.cpp:4080
 msgid "Change working directory"
 msgstr "Ändra arbetskatalog"
 
-#: builtin.cpp:4329
+#: builtin.cpp:4081
 msgid "Run a program instead of a function or builtin"
 msgstr "Kör ett program istället för en funktion eller ett inbuggt kommando"
 
-#: builtin.cpp:4330
+#: builtin.cpp:4082
 msgid "Set or get the commandline"
 msgstr "Ändra eller visa kommandoraden"
 
-#: builtin.cpp:4331
+#: builtin.cpp:4083
 msgid "Edit command specific completions"
 msgstr "Redigera kommando-specifika kompletteringar"
 
-#: builtin.cpp:4332
+#: builtin.cpp:4084
 msgid "Search for a specified string in a list"
 msgstr "Sök efter en angiven sträng i en lista"
 
-#: builtin.cpp:4333
+#: builtin.cpp:4085
 msgid "Skip the rest of the current lap of the innermost loop"
 msgstr "Avbryt nuvarande varv i den innersta loopen"
 
-#: builtin.cpp:4334
+#: builtin.cpp:4086
 msgid "Count the number of arguments"
 msgstr "Räkna antalet argument"
 
-#: builtin.cpp:4335
+#: builtin.cpp:4087
 #, fuzzy
 msgid "Print arguments"
 msgstr "Visa antal ord"
 
-#: builtin.cpp:4336
+#: builtin.cpp:4088
 msgid "Evaluate block if condition is false"
 msgstr "Utför block om ett villkor inte är uppfyllt"
 
-#: builtin.cpp:4337
+#: builtin.cpp:4089
 msgid "Emit an event"
 msgstr "Sänd en händelse"
 
-#: builtin.cpp:4338
+#: builtin.cpp:4090
 msgid "End a block of commands"
 msgstr "Avsluta ett block av kommandon"
 
-#: builtin.cpp:4339
+#: builtin.cpp:4091
 msgid "Run command in current process"
 msgstr "Kör ett kommando i den nuvarande processen"
 
-#: builtin.cpp:4340
+#: builtin.cpp:4092
 msgid "Exit the shell"
 msgstr "Avsluta fish"
 
-#: builtin.cpp:4341
+#: builtin.cpp:4093
+msgid "Return an unsuccessful result"
+msgstr ""
+
+#: builtin.cpp:4094
 msgid "Send job to foreground"
 msgstr "Skick jobb till förgrunden"
 
-#: builtin.cpp:4342
+#: builtin.cpp:4095
 msgid "Perform a set of commands multiple times"
 msgstr "Utför ett block flera gånger"
 
-#: builtin.cpp:4343
+#: builtin.cpp:4096
 msgid "Define a new function"
 msgstr "Definera ny funktion"
 
-#: builtin.cpp:4344
+#: builtin.cpp:4097
 msgid "List or remove functions"
 msgstr "Visa eller ta bort funktioner"
 
-#: builtin.cpp:4345
+#: builtin.cpp:4098
 msgid "History of commands executed by user"
 msgstr ""
 
-#: builtin.cpp:4346
+#: builtin.cpp:4099
 msgid "Evaluate block if condition is true"
 msgstr "Utför ett block om ett villkor är uppfyllt"
 
-#: builtin.cpp:4347
+#: builtin.cpp:4100
 msgid "Print currently running jobs"
 msgstr "Visa nuvarande jobb"
 
-#: builtin.cpp:4348
+#: builtin.cpp:4101
 msgid "Negate exit status of job"
 msgstr "Negera resultatet av ett kommando"
 
-#: builtin.cpp:4349
+#: builtin.cpp:4102
 msgid "Execute command if previous command failed"
 msgstr "Utför  kommando om föregående kommando misslyckades"
 
-#: builtin.cpp:4350
+#: builtin.cpp:4103
 #, fuzzy
 msgid "Prints formatted text"
 msgstr "Visa informativa meddelanden"
 
-#: builtin.cpp:4351
+#: builtin.cpp:4104
 #, fuzzy
 msgid "Print the working directory"
 msgstr "Visa nuvarande katalog"
 
-#: builtin.cpp:4352
+#: builtin.cpp:4105
 msgid "Generate random number"
 msgstr "Generera ett slumptal"
 
-#: builtin.cpp:4353
+#: builtin.cpp:4106
 msgid "Read a line of input into variables"
 msgstr "Läs in en rad till variabler"
 
-#: builtin.cpp:4354
+#: builtin.cpp:4107
 msgid "Stop the currently evaluated function"
 msgstr "Avbryt den nuvarande funktionen"
 
-#: builtin.cpp:4355
+#: builtin.cpp:4108
 msgid "Handle environment variables"
 msgstr "Redigera miljövariabler"
 
-#: builtin.cpp:4356
+#: builtin.cpp:4109
 #, fuzzy
 msgid "Set the terminal color"
 msgstr "Sätt maximal fuzzfaktor"
 
-#: builtin.cpp:4357
+#: builtin.cpp:4110
 msgid "Evaluate contents of file"
 msgstr "Utför filinnehåll som kommandon"
 
-#: builtin.cpp:4358
+#: builtin.cpp:4111
 msgid "Return status information about fish"
 msgstr "Visa statusinformation om fish"
 
-#: builtin.cpp:4361
+#: builtin.cpp:4114
+msgid "Return a successful result"
+msgstr ""
+
+#: builtin.cpp:4115
 msgid "Set or get the shells resource usage limits"
 msgstr "Redigera eller visa skalets resursanvändningsgränser"
 
-#: builtin.cpp:4362
+#: builtin.cpp:4116
 msgid "Perform a command multiple times"
 msgstr "Utför ett kommando upprepade gånger"
 
-#: builtin.cpp:4442 parser.cpp:53
-#, c-format
-msgid "Unknown builtin '%ls'"
-msgstr "Okänt inbyggt kommando ”%ls”"
-
-#: builtin_commandline.cpp:411
+#: builtin_commandline.cpp:466
 #, c-format
 msgid "%ls: Unknown input function '%ls'\n"
 msgstr "%ls: Okänd inläsnings-function ”%ls”\n"
@@ -542,7 +537,7 @@ msgstr "CPU\t"
 msgid "State\tCommand\n"
 msgstr "Status\tKommando\n"
 
-#: builtin_jobs.cpp:99 proc.cpp:751
+#: builtin_jobs.cpp:99 proc.cpp:843
 msgid "stopped"
 msgstr "stannat"
 
@@ -588,31 +583,31 @@ msgstr ""
 msgid "missing hexadecimal number in escape"
 msgstr ""
 
-#: builtin_printf.cpp:387
+#: builtin_printf.cpp:388
 msgid "Missing hexadecimal number in Unicode escape"
 msgstr ""
 
-#: builtin_printf.cpp:401
+#: builtin_printf.cpp:402
 #, c-format
 msgid "Unicode character out of range: \\%c%0*x"
 msgstr ""
 
-#: builtin_printf.cpp:668
+#: builtin_printf.cpp:670
 #, c-format
 msgid "invalid field width: %ls"
 msgstr ""
 
-#: builtin_printf.cpp:706
+#: builtin_printf.cpp:708
 #, fuzzy, c-format
 msgid "invalid precision: %ls"
 msgstr "%ls: Ogiltigt processid %ls\n"
 
-#: builtin_printf.cpp:737
+#: builtin_printf.cpp:739
 #, fuzzy, c-format
 msgid "%.*ls: invalid conversion specification"
 msgstr "%ls: Ogiltig kombination av flaggor\n"
 
-#: builtin_printf.cpp:769
+#: builtin_printf.cpp:771
 msgid "printf: not enough arguments"
 msgstr ""
 
@@ -622,57 +617,63 @@ msgid "%ls: Tried to change the read-only variable '%ls'\n"
 msgstr "%ls: Försökte ändra den skrivskyddade variablen ”%ls”\n"
 
 #: builtin_set.cpp:162
-#, c-format
-msgid "%ls: Unknown error"
-msgstr "%ls: Okänt fel"
+#, fuzzy, c-format
+msgid "%ls: Tried to set the special variable '%ls' with the wrong scope\n"
+msgstr "%ls: Försökte ändra den skrivskyddade variablen ”%ls”\n"
 
-#: builtin_set.cpp:214
+#: builtin_set.cpp:169
+#, fuzzy, c-format
+msgid "%ls: Tried to set the special variable '%ls' to an invalid value\n"
+msgstr "%ls: Försökte ändra den skrivskyddade variablen ”%ls”\n"
+
+#: builtin_set.cpp:221
 #, c-format
 msgid "%ls: Multiple variable names specified in single call (%ls and %.*ls)\n"
 msgstr "%ls: Flera variabelnamn angivna i ett anrop (%ls och %.*ls)\n"
 
-#: builtin_set.cpp:241
+#: builtin_set.cpp:248
 #, c-format
 msgid "%ls: Invalid index starting at '%ls'\n"
 msgstr "%ls: Ogiltigt index vid ”%ls”\n"
 
-#: builtin_set.cpp:640
+#: builtin_set.cpp:647
 #, fuzzy, c-format
 msgid "%ls: Erase needs a variable name\n"
 msgstr ""
 "%ls: Radering kräver ett variabelnamn\n"
 "%ls\n"
 
-#: builtin_set.cpp:684
-#, c-format
-msgid "%ls: Can not specify scope when erasing array slice\n"
-msgstr "%ls: Kan inte ange definitionsområde vid radering av arraydel\n"
-
-#: builtin_set.cpp:783
+#: builtin_set.cpp:791
 #, c-format
 msgid "%ls: Values cannot be specfied with erase\n"
 msgstr "%ls: Värden kan inte anges vid radering\n"
 
-#: builtin_set_color.cpp:149
-#, fuzzy, c-format
-msgid "%ls: Expected an argument\n"
-msgstr "%s: Förväntade argument\n"
+#: builtin_set.cpp:817
+#, c-format
+msgid ""
+"%ls: Warning: universal scope selected, but a global variable '%ls' exists.\n"
+msgstr ""
 
-#: builtin_set_color.cpp:157 builtin_set_color.cpp:164
+#: builtin_set_color.cpp:144 builtin_set_color.cpp:166
 #, fuzzy, c-format
 msgid "%ls: Unknown color '%ls'\n"
 msgstr "%s: Okänd färg ”%s”\n"
 
-#: builtin_set_color.cpp:171
+#: builtin_set_color.cpp:153
+#, fuzzy, c-format
+msgid "%ls: Expected an argument\n"
+msgstr "%s: Förväntade argument\n"
+
+#: builtin_set_color.cpp:173
 #, fuzzy, c-format
 msgid "%ls: Could not set up terminal\n"
 msgstr "Kunde inte initiera terminalen"
 
-#: common.cpp:1882
+#: common.cpp:1917
 msgid "This is a bug. Break on bugreport to debug."
 msgstr ""
 
-#: common.cpp:1901
+#: common.cpp:1936
 msgid "empty"
 msgstr "tom"
 
@@ -686,72 +687,73 @@ msgstr "Hemkatalog för %s"
 msgid "Variable: %ls"
 msgstr "Variabel: %ls"
 
-#: complete.cpp:907 complete.cpp:925
+#: complete.cpp:901 complete.cpp:919
 msgid "Unknown option: "
 msgstr "Okänd flagga: "
 
-#: complete.cpp:929
+#: complete.cpp:923
 msgid "Multiple matches for option: "
 msgstr "Mer än en flagga matchar: "
 
-#: env.cpp:251
-msgid "Could not get user information"
-msgstr "Kunde inte hitta information om användare"
-
-#: env.cpp:362
+#: env.cpp:315
 msgid "Changing language to English"
 msgstr "Byter språk till svenska"
 
-#: env.cpp:1252
+#: env.cpp:1180
 msgid "Tried to pop empty environment stack."
 msgstr "Försökte ta bort element från tom variabelstack"
 
-#: env_universal_common.cpp:529
-#, c-format
-msgid "Could not convert message '%s' to wide character string"
-msgstr "Kunde inte konvertera meddelandet ”%s” till en bred teckensträng"
+#: env_universal_common.cpp:617 path.cpp:279
+msgid ""
+"Unable to create a configuration directory for fish. Your personal settings "
+"will not be saved. Please set the $XDG_CONFIG_HOME variable to a directory "
+"where the current user has write access."
+msgstr ""
+"Kunde inte skapa en konfigurationskatalog för fish. Dina personliga "
+"inställningar kommer inte sparas. Var vänlig sätt variabeln $XDH_CONFIG_HOME "
+"till en katalog där den nuvarande användaren har skrivrättigheter."
 
-#: event.cpp:168
+#: event.cpp:178
 #, c-format
 msgid "signal handler for %ls (%ls)"
 msgstr "signalhanterare för %ls (%ls)"
 
-#: event.cpp:172
+#: event.cpp:182
 #, c-format
 msgid "handler for variable '%ls'"
 msgstr "hanterare för variabel ”%ls”"
 
-#: event.cpp:178
+#: event.cpp:188
 #, c-format
 msgid "exit handler for process %d"
 msgstr "avslutshanterare för process %d"
 
-#: event.cpp:184 event.cpp:195
+#: event.cpp:194 event.cpp:205
 #, c-format
 msgid "exit handler for job %d, '%ls'"
 msgstr "avslutshanterare för jobb %d, ”%ls”"
 
-#: event.cpp:186
+#: event.cpp:196
 #, c-format
 msgid "exit handler for job with process group %d"
 msgstr "avslutshanterare för jobb med processgrupp %d"
 
-#: event.cpp:197
+#: event.cpp:207
 #, c-format
 msgid "exit handler for job with job id %d"
 msgstr "avslutshanterare för jobb med jobid %d"
 
-#: event.cpp:203
+#: event.cpp:213
 #, c-format
 msgid "handler for generic event '%ls'"
 msgstr "hanterare för generisk händelse ”%ls”"
 
-#: event.cpp:207
+#: event.cpp:217
 #, fuzzy, c-format
 msgid "Unknown event type '0x%x'"
 msgstr "Okänd händelsetyp"
 
-#: event.cpp:621
+#: event.cpp:613
 msgid "Signal list overflow. Signals have been ignored."
 msgstr "Signallistan är full. Signaler har ignorerats."
 
@@ -770,12 +772,12 @@ msgstr "Ett fel inträffade under skapandet av ett rör"
 msgid "An error occurred while redirecting file '%s'"
 msgstr "Ett fel inträffade vid IO dirigering av filen ”%ls”"
 
-#: exec.cpp:912
+#: exec.cpp:795
 #, c-format
 msgid "Unknown function '%ls'"
 msgstr "Okänd funktion ”%ls”"
 
-#: exec.cpp:1063
+#: exec.cpp:943
 #, c-format
 msgid "Unknown input redirection type %d"
 msgstr "Okänd dirigering av standard in av typ %d"
@@ -805,99 +807,60 @@ msgstr "Skalprocess"
 msgid "Last background job"
 msgstr "Senaste bakgrundsjobb"
 
-#: expand.cpp:1306
+#: expand.cpp:1419
 msgid "Mismatched brackets"
 msgstr "Klammerparanteser matchar inte varandra"
 
-#: fish.cpp:320
+#: fish.cpp:330
+msgid ""
+"Old versions of fish appear to be running. You will not be able to share "
+"variable values between old and new fish sessions. For best results, restart "
+"all running instances of fish."
+msgstr ""
+
+#: fish.cpp:420
 #, c-format
 msgid "Invalid value '%s' for debug level switch"
 msgstr "Ogiltigt värde ”%s” för debugnivåflagga"
 
-#: fish.cpp:361 mimedb.cpp:1335
+#: fish.cpp:461 mimedb.cpp:1343
 #, c-format
 msgid "%s, version %s\n"
 msgstr "%s, version %s\n"
 
-#: fish.cpp:416
+#: fish.cpp:516
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "no-execute läget kan inte användas i en i interaktiv session"
 
-#: fish.cpp:517
+#: fish.cpp:619
 #, c-format
 msgid "Error while reading file %ls\n"
 msgstr "Ett fel uppstod medan filen ”%ls” lästes\n"
 
-#: fish_indent.cpp:345
+#: fish_indent.cpp:332
 #, c-format
 msgid "%ls, version %s\n"
 msgstr "%ls, version %s\n"
 
-#: fish_pager.cpp:113
-#, c-format
-msgid "%ls: Argument '%s' is not a valid file descriptor\n"
-msgstr "%ls: Argumentet ”%s” är inte en giltig filidentifierare\n"
-
-#: fish_pager.cpp:703
-#, c-format
-msgid " %d to %d of %d"
-msgstr " %d till %d av %d"
-
-#: fish_pager.cpp:1012
-msgid "Could not set up output file descriptors for pager"
-msgstr "Kunde inte initiera utdata-filidentifierare för visare"
-
-#: fish_pager.cpp:1018
-msgid "Could not set up input file descriptors for pager"
-msgstr "Kunde inte initiera indata-filidentifierare för visare"
-
-#: fish_pager.cpp:1024
-msgid "Could not open tty for pager"
-msgstr "Kunde inte öppna tty för visare"
-
-#: fish_pager.cpp:1031
-msgid "Could not initialize result pipe"
-msgstr "Kunde inte initiera rör för utskrift av resultat"
-
-#: fish_pager.cpp:1075 input.cpp:384 input.cpp:394
+#: input.cpp:483 input.cpp:493
 msgid "Could not set up terminal"
 msgstr "Kunde inte initiera terminalen"
 
-#: fish_pager.cpp:1110 input.cpp:436
-msgid "Error while closing terminfo"
-msgstr "Ett fel inträffade medan terminfo stängdes"
-
-#
-#: fish_pager.cpp:1306
-msgid "Unspecified file descriptors"
-msgstr "Ospecificerad filidentifierare"
-
-#
-#: fish_pager.cpp:1318
-msgid "Could not read completions"
-msgstr "Kunde inte läsa kompletteringar"
-
-#: fishd.cpp:766 path.cpp:358
-msgid ""
-"Unable to create a configuration directory for fish. Your personal settings "
-"will not be saved. Please set the $XDG_CONFIG_HOME variable to a directory "
-"where the current user has write access."
-msgstr ""
-"Kunde inte skapa en konfigurationskatalog för fish. Dina personliga "
-"inställningar kommer inte sparas. Var vänlig sätt variabeln $XDH_CONFIG_HOME "
-"till en katalog där den nuvarande användaren har skrivrättigheter."
-
-#: input.cpp:387
+#: input.cpp:486
 #, c-format
 msgid "Check that your terminal type, '%ls', is supported on this system"
 msgstr ""
 
-#: input.cpp:389
+#: input.cpp:488
 #, c-format
 msgid "Attempting to use '%ls' instead"
 msgstr ""
 
-#: io.cpp:110
+#: input.cpp:535
+msgid "Error while closing terminfo"
+msgstr "Ett fel inträffade medan terminfo stängdes"
+
+#: io.cpp:112
 #, c-format
 msgid ""
 "An error occured while reading output from code block on file descriptor %d"
@@ -905,76 +868,100 @@ msgstr ""
 "Ett fel inträffade under inläsning av utdata från kodblock på "
 "filidentifierare %d"
 
-#: mimedb.cpp:173 mimedb.cpp:187 mimedb.cpp:1177
+#: mimedb.cpp:174 mimedb.cpp:188 mimedb.cpp:1179
 #, c-format
 msgid "%s: Out of memory\n"
 msgstr "%s: Slut på minne\n"
 
-#: mimedb.cpp:462
+#: mimedb.cpp:463
 #, c-format
 msgid "%s: Unknown error in munge()\n"
 msgstr "%s: Okänt fel i munge()\n"
 
-#: mimedb.cpp:480
+#: mimedb.cpp:481
 #, c-format
 msgid "%s: Locale string too long\n"
 msgstr "%s: Lokalsträng för lång\n"
 
-#: mimedb.cpp:550 mimedb.cpp:558
+#: mimedb.cpp:551 mimedb.cpp:559
 #, c-format
 msgid "%s: Could not compile regular expressions %s with error %s\n"
 msgstr "%s: Kunde inte kompilera reguljärt uttryck %s med fel %s\n"
 
-#: mimedb.cpp:674
+#: mimedb.cpp:676
 #, c-format
 msgid "%s: No description for type %s\n"
 msgstr "%s: Beskrivning saknas för typ %s\n"
 
-#: mimedb.cpp:742
+#: mimedb.cpp:744
 #, c-format
 msgid "%s: Could not parse launcher string '%s'\n"
 msgstr "%s: Kunde inte tolka körsträng ”%ls”\n"
 
-#: mimedb.cpp:778
+#: mimedb.cpp:780
 #, c-format
 msgid "%s: Default launcher '%s' does not specify how to start\n"
 msgstr "%s: Standardkörsträng ”%s” anger inte hur programmet ska startas\n"
 
-#: mimedb.cpp:1156
+#: mimedb.cpp:1158
 #, c-format
 msgid "%s: Unsupported switch '%c' in launch string '%s'\n"
 msgstr "%s: Flaggan ”%c” i körsträng ”%s” stöds inte\n"
 
-#: mimedb.cpp:1346
+#: mimedb.cpp:1354
 #, c-format
 msgid "%s: Can not launch a mimetype\n"
 msgstr "%s: Kan inte köra en mimetyp\n"
 
-#: mimedb.cpp:1374
+#: mimedb.cpp:1382
 #, c-format
 msgid "%s: Could not parse mimetype from argument '%s'\n"
 msgstr "%s: Kunde inte tolka mimetyp från argument ”%s”\n"
 
-#: mimedb.cpp:1394 signal.cpp:407 signal.cpp:422
+#: mimedb.cpp:1402 signal.cpp:407 signal.cpp:422
 msgid "Unknown"
 msgstr "Okänd"
+
+#: output.cpp:608
+#, fuzzy, c-format
+msgid ""
+"Tried to use terminfo string %s on line %ld of %s, which is undefined in "
+"terminal of type \"%ls\". Please report this error to %s"
+msgstr ""
+"Försökte använda terminfosträng %s på rad %d av %s, vilken är odefinerad i "
+"terminaler av typen ”%ls”. Vänligen rapportera detta fel till %s"
 
 #: pager.cpp:24
 #, fuzzy
 msgid "search: "
 msgstr "Välj arkitektur"
 
-#: parse_execution.cpp:526 parse_execution.cpp:961 parser.cpp:1404
+#: pager.cpp:562
 #, c-format
-msgid "Could not expand string '%ls'"
-msgstr "Kunde inte expandera strängen ”%ls”"
+msgid "%lsand 1 more row"
+msgstr ""
 
-#: parse_execution.cpp:549
+#: pager.cpp:566
+#, c-format
+msgid "%lsand %lu more rows"
+msgstr ""
+
+#: pager.cpp:571
+#, fuzzy, c-format
+msgid "rows %lu to %lu of %lu"
+msgstr " %d till %d av %d"
+
+#: pager.cpp:576
+#, fuzzy
+msgid "(no matches)"
+msgstr "Lägg till övervakning"
+
+#: parse_execution.cpp:555
 #, fuzzy, c-format
 msgid "switch: Expected exactly one argument, got %lu\n"
 msgstr "%ls: Förväntade exakt ett argument, fick %d\n"
 
-#: parse_execution.cpp:749 parser.cpp:2053
+#: parse_execution.cpp:799
 #, fuzzy, c-format
 msgid ""
 "Unknown command '%ls'. Did you mean to run %ls with a modified environment? "
@@ -985,7 +972,7 @@ msgstr ""
 "man tilldelar variabler, se hjälpsektionen om det inbyggda kommandot ”set” "
 "genom att skriva ”help set”."
 
-#: parse_execution.cpp:774 parser.cpp:2078
+#: parse_execution.cpp:824
 #, fuzzy, c-format
 msgid ""
 "Variables may not be used as commands. Instead, define a function like "
@@ -997,7 +984,7 @@ msgstr ""
 "ex. ”function %ls; %ls $argv; end”. Se hjälpsektionen för function-kommandot "
 "genom att skriva ”help function”"
 
-#: parse_execution.cpp:783 parser.cpp:2087
+#: parse_execution.cpp:833
 #, fuzzy, c-format
 msgid ""
 "Variables may not be used as commands. Instead, define a function or use the "
@@ -1007,7 +994,7 @@ msgstr ""
 "Variabler får inte användas som kommandon. Definera istället en funktion. Se "
 "hjälpsektionen för function-kommandot genom att skriva ”help function”"
 
-#: parse_execution.cpp:791 parser.cpp:2095
+#: parse_execution.cpp:841
 #, c-format
 msgid ""
 "Commands may not contain variables. Use the eval builtin instead, like 'eval "
@@ -1016,389 +1003,306 @@ msgstr ""
 "Okänt kommando ”%ls”. Menade du ”set VARIABEL VÄRDE”? Se hjälpsektionen om "
 "det inbyggda kommandot ”set” genom att skriva ”help set”."
 
-#: parse_execution.cpp:798 parser.cpp:2102
+#: parse_execution.cpp:848
 #, fuzzy, c-format
 msgid "The file '%ls' is not executable by this user"
 msgstr "Filen ”%ls” existerar redan"
 
-#: parse_execution.cpp:1029
+#: parse_execution.cpp:1057
 #, fuzzy, c-format
 msgid "Invalid redirection target: %ls"
 msgstr "Ogiltig IO omdirigering"
 
-#: parse_execution.cpp:1053
+#: parse_execution.cpp:1081
 #, fuzzy, c-format
 msgid "Requested redirection to '%ls', which is not a valid file descriptor"
 msgstr "IO dirigering till någonting som inte är en filidentifierare"
 
-#: parse_util.cpp:47
+#: parse_util.cpp:46
 #, fuzzy, c-format
 msgid "The '%ls' command can not be used in a pipeline"
 msgstr "Detta kommando kan ej användas i ett rör"
 
-#: parser.cpp:58
-msgid "This command can not be used in a pipeline"
+#: parse_util.cpp:49
+#, fuzzy, c-format
+msgid "The '%ls' command can not be used immediately after a backgrounded job"
 msgstr "Detta kommando kan ej användas i ett rör"
 
-#: parser.cpp:64
+#: parse_util.cpp:52
+#, fuzzy
+msgid "Backgrounded commands can not be used as conditionals"
+msgstr "Detta kommando kan ej användas i ett rör"
+
+#: parser.cpp:52
 #, c-format
 msgid "Tokenizer error: '%ls'"
 msgstr "Ett fel inträffade vid symboluppdelning: ”%ls”"
 
-#: parser.cpp:69
-msgid "An additional command is required"
-msgstr "Ett till kommand krävs"
-
-#: parser.cpp:74
-msgid ""
-"The function calls itself immediately, which would result in an infinite "
-"loop."
-msgstr ""
-
-#: parser.cpp:79
-msgid ""
-"Could not locate end of block. The 'end' command is missing, misspelled or a "
-"';' is missing."
-msgstr ""
-"Kunde inte hitta slutet på kodblock. Kommandot ”end” saknas, är felstavat "
-"eller ett ”;” saknas."
-
-#: parser.cpp:82
-#, c-format
-msgid "Expected a command name, got token of type '%ls'"
-msgstr ""
-"Förväntade att hitta ett kommandonamn, hittade en symbol av typen ”%ls”"
-
-#: parser.cpp:87 parse_constants.h:158
-#, c-format
-msgid "Illegal command name '%ls'"
-msgstr "Ogiltigt kommandonamn ”%ls”"
-
-#: parser.cpp:92 parse_constants.h:164
-#, fuzzy, c-format
-msgid "Illegal file descriptor in redirection '%ls'"
-msgstr "Ogiltig filidentifierare ”%ls”"
-
-#: parser.cpp:97 parse_constants.h:167
-#, c-format
-msgid "No matches for wildcard '%ls'."
-msgstr ""
-
-#: parser.cpp:102
-msgid "'case' builtin not inside of switch block"
-msgstr "Det inbyggda kommandot ”case” får bara användas i ett ”switch”-block."
-
-#: parser.cpp:107
-msgid "Loop control command while not inside of loop"
-msgstr "Loopstyrningskommandon får bara användas i loopar."
-
-#: parser.cpp:112 parse_constants.h:176
-msgid "'return' builtin command outside of function definition"
-msgstr ""
-"Det inbyggda kommandot ”return” påträffades utanför en funktionsdefinition"
-
-#: parser.cpp:117
-#, fuzzy, c-format
-msgid "'%ls' builtin not inside of if block"
-msgstr "Det inbyggda kommandot ”else” får bara användas i ett if-block"
-
-#: parser.cpp:122
-#, c-format
-msgid "'%ls' used past terminating 'else'"
-msgstr ""
-
-#: parser.cpp:127
-msgid "'end' command outside of block"
-msgstr "Det inbyggda kommandot ”end” får bara användas i ett block"
-
-#: parser.cpp:132 parse_constants.h:179
-#, fuzzy, c-format
-msgid ""
-"Unknown command '%ls'. Did you mean 'set %ls %ls'? See the help section on "
-"the set command by typing 'help set'."
-msgstr ""
-"Okänt kommando ”%ls”. Menade du ”set %ls %ls”? För mer information om hur "
-"man tilldelar variabler, se hjälpsektionen om det inbyggda kommandot ”set” "
-"genom att skriva ”help set”."
-
-#: parser.cpp:137
-#, c-format
-msgid "Expected redirection specification, got token of type '%ls'"
-msgstr "Förväntade en IO dirigering, hittade en symbol av typen ”%ls”"
-
-#: parser.cpp:142
-msgid ""
-"Encountered redirection when expecting a command name. Fish does not allow a "
-"redirection operation before a command."
-msgstr ""
-"Förväntade ett kommandonamn, hittade en IO dirigering. Fish tillåter into IO "
-"dirigeringar före kommandonamn"
-
-#: parser.cpp:147
+#: parser.cpp:57
 #, c-format
 msgid "Tried to evaluate commands using invalid block type '%ls'"
 msgstr "Försökte utföra kommandon i ogiltig blocktyp ”%ls”"
 
-#: parser.cpp:153
+#: parser.cpp:62
 #, c-format
 msgid "Unexpected token of type '%ls'"
 msgstr "Oväntad symbol av typ ”%ls”"
 
-#: parser.cpp:158 parse_constants.h:209
+#: parser.cpp:67 parse_constants.h:255
 msgid "'while' block"
 msgstr "”while” block"
 
-#: parser.cpp:163 parse_constants.h:214
+#: parser.cpp:72 parse_constants.h:260
 msgid "'for' block"
 msgstr "”for” block"
 
-#: parser.cpp:168 parse_constants.h:219
+#: parser.cpp:77 parse_constants.h:265
 msgid "Block created by breakpoint"
 msgstr "Block skapat av det inbuggde kommandot breakpoint"
 
-#: parser.cpp:175 parse_constants.h:226
+#: parser.cpp:82 parse_constants.h:272
 msgid "'if' conditional block"
 msgstr "”if” villkorligt block"
 
-#: parser.cpp:181 parse_constants.h:232
+#: parser.cpp:87 parse_constants.h:278
 msgid "function definition block"
 msgstr "funktionsdefinition-block"
 
-#: parser.cpp:187 parse_constants.h:238
+#: parser.cpp:92 parse_constants.h:284
 msgid "function invocation block"
 msgstr "funktionsanropp-block"
 
-#: parser.cpp:192 parse_constants.h:243
+#: parser.cpp:97 parse_constants.h:289
 msgid "function invocation block with no variable shadowing"
 msgstr "funktionsanroppsblock utan variabelskuggning"
 
-#: parser.cpp:198 parse_constants.h:249
+#: parser.cpp:102 parse_constants.h:295
 msgid "'switch' block"
 msgstr "”switch” block"
 
-#: parser.cpp:204 parse_constants.h:255
+#: parser.cpp:107 parse_constants.h:301
 msgid "unexecutable block"
 msgstr "oexekverbart block"
 
-#: parser.cpp:210 parse_constants.h:261
+#: parser.cpp:112 parse_constants.h:307
 msgid "global root block"
 msgstr "globalt rot-block"
 
-#: parser.cpp:216 parse_constants.h:267
+#: parser.cpp:117 parse_constants.h:313
 msgid "command substitution block"
 msgstr "kommandosubstitution-block"
 
-#: parser.cpp:222 parse_constants.h:273
+#: parser.cpp:122 parse_constants.h:319
 msgid "'begin' unconditional block"
 msgstr "”begin” ovillkorligen exekverat block"
 
-#: parser.cpp:228 parse_constants.h:279
+#: parser.cpp:127 parse_constants.h:325
 msgid "Block created by the . builtin"
 msgstr "Block skapat av det inbyggda kommandot ”.”"
 
-#: parser.cpp:233 parse_constants.h:284
+#: parser.cpp:132 parse_constants.h:330
 msgid "event handler block"
 msgstr "händelsehanterarblock"
 
-#: parser.cpp:239 parse_constants.h:290
+#: parser.cpp:137 parse_constants.h:336
 msgid "unknown/invalid block"
 msgstr "okänt/ogiltigt block"
 
-#: parser.cpp:645
+#: parser.cpp:474
 #, c-format
 msgid "Could not write profiling information to file '%s'"
 msgstr "Kunde inte skriva profileringsinformation till filen ”%s”"
 
-#: parser.cpp:651
+#: parser.cpp:480
 msgid "Time\tSum\tCommand\n"
 msgstr "Tid\tSumma\tKommando\n"
 
-#: parser.cpp:811
+#: parser.cpp:562
 #, c-format
 msgid "in event handler: %ls\n"
 msgstr "i händelsehanterare: %ls\n"
 
-#: parser.cpp:839
+#: parser.cpp:590
 #, fuzzy, c-format
 msgid "from sourcing file %ls\n"
 msgstr "Ett fel uppstod medan filen ”%ls” lästes\n"
 
-#: parser.cpp:845
+#: parser.cpp:597
 #, fuzzy, c-format
 msgid "in function '%ls'\n"
 msgstr "i funktion ”%ls”,\n"
 
-#: parser.cpp:850
+#: parser.cpp:602
 msgid "in command substitution\n"
 msgstr "i kommandosubstitution\n"
 
-#: parser.cpp:863
+#: parser.cpp:615
 #, fuzzy, c-format
 msgid "\tcalled on line %d of file %ls\n"
 msgstr "\tanropad på rad %d i fil ”%ls”,\n"
 
-#: parser.cpp:869
+#: parser.cpp:621
 #, fuzzy
 msgid "\tcalled during startup\n"
 msgstr "\tanropad från standard in,\n"
 
-#: parser.cpp:873
+#: parser.cpp:625
 #, fuzzy
 msgid "\tcalled on standard input\n"
 msgstr "\tanropad från standard in,\n"
 
-#: parser.cpp:890
+#: parser.cpp:642
 #, c-format
 msgid "\twith parameter list '%ls'\n"
 msgstr "\tmed parameterlista ”%ls”\n"
 
-#: parser.cpp:1087
+#: parser.cpp:756
 #, c-format
 msgid "%ls (line %d): "
 msgstr "%ls (rad %d): "
 
-#: parser.cpp:1091
+#: parser.cpp:760
 msgid "Startup"
 msgstr ""
 
-#: parser.cpp:1197
+#: parser.cpp:803
 msgid "Job inconsistency"
 msgstr "Jobb i ogiltigt tillstånd"
 
-#: parser.cpp:1520
-msgid "Invalid IO redirection"
-msgstr "Ogiltig IO omdirigering"
-
-#: parser.cpp:1541
-#, c-format
-msgid "Requested redirection to something that is not a file descriptor %ls"
-msgstr "IO dirigering till någonting som inte är en filidentifierare"
-
-#: parser.cpp:2667 parser.cpp:2750
+#: parser.cpp:956
 msgid "End of block mismatch. Program terminating."
 msgstr "Blockslut matchar inte. Programmet avslutas."
 
-#: parser.cpp:3034
+#: parser.cpp:1047
 #, fuzzy, c-format
 msgid "%ls (line %lu): "
 msgstr "%ls (rad %d): "
+
+#: parser.cpp:1051
+#, c-format
+msgid "%ls: "
+msgstr ""
 
 #: path.cpp:24
 #, c-format
 msgid "Error while searching for command '%ls'"
 msgstr "Ett fel uppstod under sökning efter kommandot ”%ls”"
 
-#: proc.cpp:615
+#: proc.cpp:690
+#, fuzzy, c-format
+msgid "'%ls' has %ls"
+msgstr "Jobb %d, ”%ls” har %ls"
+
+#: proc.cpp:694
 #, c-format
 msgid "Job %d, '%ls' has %ls"
 msgstr "Jobb %d, ”%ls” har %ls"
 
-#: proc.cpp:699
-#, c-format
-msgid "%ls: Job %d, '%ls' terminated by signal %ls (%ls)"
+#: proc.cpp:786
+#, fuzzy, c-format
+msgid "%ls: %ls'%ls' terminated by signal %ls (%ls)"
 msgstr "%ls: Jobb %d, ”%ls” avslutat av signal %ls (%ls)"
 
-#: proc.cpp:707
-#, c-format
-msgid ""
-"%ls: Process %d, '%ls' from job %d, '%ls' terminated by signal %ls (%ls)"
+#: proc.cpp:797
+#, fuzzy, c-format
+msgid "%ls: Process %d, '%ls' %ls'%ls' terminated by signal %ls (%ls)"
 msgstr ""
 "%ls: Process %d, ”%ls”, från jobb %d, ”%ls” avslutat av signal %ls (%ls)"
 
-#: proc.cpp:736
+#: proc.cpp:828
 msgid "ended"
 msgstr "avslutat"
 
-#: proc.cpp:969
+#: proc.cpp:1065
 msgid "An error occured while reading output from code block"
 msgstr "Ett fel inträffade under läsandet av utdata från kodblock"
 
-#: proc.cpp:998 proc.cpp:1010
+#: proc.cpp:1094 proc.cpp:1106
 #, c-format
 msgid "Could not send job %d ('%ls') to foreground"
 msgstr "Kunde inte skicka jobb %d (”%ls”) till förgrunden"
 
-#: proc.cpp:1030 proc.cpp:1040 proc.cpp:1055
+#: proc.cpp:1126 proc.cpp:1136 proc.cpp:1151
 msgid "Could not return shell to foreground"
 msgstr "Kunde inte återställa skalet till förgrunden"
 
-#: proc.cpp:1280 proc.cpp:1304
+#: proc.cpp:1354 proc.cpp:1380
 msgid "Process list pointer"
 msgstr "Processlistepekare"
 
-#: proc.cpp:1291
+#: proc.cpp:1365
 #, c-format
 msgid "More than one job in foreground: job 1: '%ls' job 2: '%ls'"
 msgstr "Mer än ett jobb i förgrunden: job 1: ”%ls”, jobb 2 ”%ls”"
 
-#: proc.cpp:1302
+#: proc.cpp:1378
 msgid "Process argument list"
 msgstr "Processargumentlista"
 
-#: proc.cpp:1303
+#: proc.cpp:1379
 msgid "Process name"
 msgstr "Processnamn"
 
-#: proc.cpp:1309
+#: proc.cpp:1385
 #, c-format
 msgid "Job '%ls', process '%ls' has inconsistent state 'stopped'=%d"
 msgstr "Jobb ”%ls”, process ”%ls” har ogiltigt tillstånd ”stopped”=%d"
 
-#: proc.cpp:1319
+#: proc.cpp:1395
 #, c-format
 msgid "Job '%ls', process '%ls' has inconsistent state 'completed'=%d"
 msgstr "Jobb ”%ls”, process ”%ls” har ogiltigt tillstånd ”completed”=%d"
 
-#: reader.cpp:453
+#: reader.cpp:478
 msgid "Could not set terminal mode for new job"
 msgstr "Kunde inte återställa terminalen för nytt jobb"
 
-#: reader.cpp:477
+#: reader.cpp:525
 msgid "Could not set terminal mode for shell"
 msgstr "Kunde inte återställa terminalen till skalet"
 
-#: reader.cpp:2133
+#: reader.cpp:2059
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr ""
 
-#: reader.cpp:2148
+#: reader.cpp:2074
 #, c-format
 msgid ""
 "I appear to be an orphaned process, so I am quitting politely. My pid is %d."
 msgstr ""
 
-#: reader.cpp:2179
+#: reader.cpp:2105
 msgid "Couldn't put the shell in its own process group"
 msgstr "Kunde inte skicka skalet till sin egen processgrupp"
 
-#: reader.cpp:2189
+#: reader.cpp:2115
 msgid "Couldn't grab control of terminal"
 msgstr "Kunde inte ta kontroll över terminalen"
 
-#: reader.cpp:2703
+#: reader.cpp:2616
 msgid "Pop null reader block"
 msgstr "Ta bort element från tomt läsarblock"
 
-#: reader.cpp:2956
+#: reader.cpp:2882
 msgid ""
 "There are stopped jobs. A second attempt to exit will enforce their "
 "termination.\n"
 msgstr ""
 
-#: reader.cpp:4069
+#: reader.cpp:4115
 #, c-format
 msgid "Unknown keybinding %d"
 msgstr "Okänd tangentbordsbindning %d"
 
-#: reader.cpp:4210
+#: reader.cpp:4226
 msgid "Error while reading from file descriptor"
 msgstr "Ett fel uppstod under inläsning från filidentifierare"
 
-#: reader.cpp:4227
+#: reader.cpp:4243
 msgid "Error while closing input stream"
 msgstr "Ett fel inträffade medan indataström stängdes"
 
-#: reader.cpp:4248
+#: reader.cpp:4270
 msgid "Error while opening input stream"
 msgstr "Ett fel inträffade medan indataström öppnades"
 
@@ -1631,7 +1535,7 @@ msgstr "Kör jobb i bakgrunden"
 msgid "Comment"
 msgstr "Kommentar"
 
-#: tokenizer.cpp:602
+#: tokenizer.cpp:561
 msgid "Invalid token type"
 msgstr "Ogiltig symboltyp"
 
@@ -1675,7 +1579,7 @@ msgstr "%ls: Ogiltig flagga -- ”%lc”\n"
 msgid "%ls: Invalid option -- %lc\n"
 msgstr "%ls: Ogiltigt flagga -- %lc\n"
 
-#: wgetopt.cpp:673
+#: wgetopt.cpp:676
 #, c-format
 msgid "%ls: Option requires an argument -- %lc\n"
 msgstr "%ls: Flaggan kräver ett argument -- %lc\n"
@@ -1688,7 +1592,7 @@ msgstr "Program"
 msgid "Executable link"
 msgstr "Länk till program"
 
-#: wildcard.cpp:67 share/completions/git.fish:146
+#: wildcard.cpp:67 share/completions/git.fish:178
 msgid "File"
 msgstr "Fil"
 
@@ -1819,33 +1723,24 @@ msgstr "%ls: Argumentet ”%ls” är inte ett nummer\n"
 msgid "An error occurred while setting up pipe"
 msgstr "Ett fel inträffade under skapandet av ett rör"
 
-#: expand.h:132
+#: expand.h:135
 msgid "Array index out of bounds"
 msgstr "Arrayindexet är otållåtet"
 
-#: output.h:91
-#, c-format
-msgid ""
-"Tried to use terminfo string %s on line %d of %s, which is undefined in "
-"terminal of type \"%ls\". Please report this error to %s"
-msgstr ""
-"Försökte använda terminfosträng %s på rad %d av %s, vilken är odefinerad i "
-"terminaler av typen ”%ls”. Vänligen rapportera detta fel till %s"
-
-#: parse_constants.h:145
+#: parse_constants.h:185
 #, c-format
 msgid ""
 "The function '%ls' calls itself immediately, which would result in an "
 "infinite loop."
 msgstr ""
 
-#: parse_constants.h:149
+#: parse_constants.h:189
 msgid ""
 "The function call stack limit has been exceeded. Do you have an accidental "
 "infinite loop?"
 msgstr ""
 
-#: parse_constants.h:152
+#: parse_constants.h:192
 #, fuzzy
 msgid ""
 "Expected a command, but instead found a pipe. Did you mean 'COMMAND; or "
@@ -1856,10 +1751,10 @@ msgstr ""
 "Menade du ”KOMMANDO; or KOMMANDO”? Se hjälpsektionen om ”or” genom att "
 "skriva ”help or”."
 
-#: parse_constants.h:155
+#: parse_constants.h:195
 #, fuzzy
 msgid ""
-"Expected a command, but instead found a '&'. Did you mean 'COMMAND; and "
+"Expected a command, but instead found an '&'. Did you mean 'COMMAND; and "
 "COMMAND'? See the help section for the 'and' builtin command by typing 'help "
 "and'."
 msgstr ""
@@ -1867,22 +1762,62 @@ msgstr ""
 "Menade du ”KOMMANDO; and KOMMANDO”? Se hjälpsektionen om ”and” genom att "
 "skriva ”help and”."
 
-#: parse_constants.h:161
+#: parse_constants.h:198
+#, c-format
+msgid "Illegal command name '%ls'"
+msgstr "Ogiltigt kommandonamn ”%ls”"
+
+#: parse_constants.h:201
+#, c-format
+msgid "Unknown builtin '%ls'"
+msgstr "Okänt inbyggt kommando ”%ls”"
+
+#: parse_constants.h:204
 #, fuzzy, c-format
 msgid "Unable to expand variable name '%ls'"
 msgstr "%ls: Ogiltigt variabelnamn ”%ls”\n"
 
-#: parse_constants.h:170
+#: parse_constants.h:207
+#, fuzzy, c-format
+msgid "Unable to find a process '%ls'"
+msgstr "Misslyckades med att exekvera processen ”%ls”"
+
+#: parse_constants.h:210
+#, fuzzy, c-format
+msgid "Illegal file descriptor in redirection '%ls'"
+msgstr "Ogiltig filidentifierare ”%ls”"
+
+#: parse_constants.h:213
+#, c-format
+msgid "No matches for wildcard '%ls'."
+msgstr ""
+
+#: parse_constants.h:216
 #, fuzzy
 msgid "break command while not inside of loop"
 msgstr "Loopstyrningskommandon får bara användas i loopar."
 
-#: parse_constants.h:173
+#: parse_constants.h:219
 #, fuzzy
 msgid "continue command while not inside of loop"
 msgstr "Loopstyrningskommandon får bara användas i loopar."
 
-#: parse_constants.h:184
+#: parse_constants.h:222
+msgid "'return' builtin command outside of function definition"
+msgstr ""
+"Det inbyggda kommandot ”return” påträffades utanför en funktionsdefinition"
+
+#: parse_constants.h:225
+#, fuzzy, c-format
+msgid ""
+"Unknown command '%ls'. Did you mean 'set %ls %ls'? See the help section on "
+"the set command by typing 'help set'."
+msgstr ""
+"Okänt kommando ”%ls”. Menade du ”set %ls %ls”? För mer information om hur "
+"man tilldelar variabler, se hjälpsektionen om det inbyggda kommandot ”set” "
+"genom att skriva ”help set”."
+
+#: parse_constants.h:230
 #, c-format
 msgid ""
 "The '$' character begins a variable name. The character '%lc', which "
@@ -1895,13 +1830,13 @@ msgstr ""
 "vara noll tecken långa. För mer information om variabelexpansion i fish, "
 "skriv ”help expand-variable”."
 
-#: parse_constants.h:189
+#: parse_constants.h:235
 msgid ""
 "$? is not a valid variable in fish. If you want the exit status of the last "
 "command, try $status."
 msgstr ""
 
-#: parse_constants.h:194
+#: parse_constants.h:240
 msgid ""
 "The '$' begins a variable name. It was given at the end of an argument. "
 "Variable names may not be zero characters long. To learn more about variable "
@@ -1911,7 +1846,7 @@ msgstr ""
 "ett argument. Variabelnamn får inte vara noll tecken långa. För mer "
 "information om variabelexpansion i fish, skriv ”help expand-variable”."
 
-#: parse_constants.h:199
+#: parse_constants.h:245
 #, c-format
 msgid ""
 "Did you mean %ls{$%ls}%ls? The '$' character begins a variable name. A "
@@ -1924,7 +1859,7 @@ msgstr ""
 "variabelnamn, och variabelnamn får inte vara noll tecken långa. För mer "
 "information om variabelexpansion i fish, skriv ”help expand-variable”."
 
-#: parse_constants.h:204
+#: parse_constants.h:250
 msgid ""
 "Did you mean (COMMAND)? In fish, the '$' character is only used for "
 "accessing variables. To learn more about command substitution in fish, type "
@@ -3056,227 +2991,324 @@ msgstr "Testa om aptitude har tagit emot ett underkommando"
 msgid "Test if bundle has been given a specific subcommand"
 msgstr "Testa om aptitude har tagit emot ett underkommando"
 
-#: share/completions/bundle.fish:30
+#: share/completions/bundle.fish:31
 #, fuzzy
 msgid "Display a help page"
 msgstr "Visa manualsida"
 
-#: share/completions/bundle.fish:38 share/completions/bundle.fish:65
+#: share/completions/bundle.fish:39 share/completions/bundle.fish:83
 msgid "Install the gems specified by the Gemfile or Gemfile.lock"
 msgstr ""
 
-#: share/completions/bundle.fish:39 share/completions/bundle.fish:87
-msgid "The location of the Gemfile bundler should use."
-msgstr ""
-
-#: share/completions/bundle.fish:40
+#: share/completions/bundle.fish:40 share/completions/bundle.fish:106
 #, fuzzy
-msgid "The location to install the gems in the bundle to."
+msgid "The location of the Gemfile bundler should use"
 msgstr "Lägg till fil eller träd utan version till förrådet"
 
 #: share/completions/bundle.fish:41
-msgid "Installs the gems in the bundle to the system location."
-msgstr ""
+#, fuzzy
+msgid "The location to install the gems in the bundle to"
+msgstr "Lägg till fil eller träd utan version till förrådet"
 
 #: share/completions/bundle.fish:42
-msgid "A space-separated list of groups to skip installing."
-msgstr ""
+#, fuzzy
+msgid "Installs the gems in the bundle to the system location"
+msgstr "Lägg till fil eller träd utan version till förrådet"
 
 #: share/completions/bundle.fish:43
-msgid "Use cached gems instead of connecting to rubygems.org."
+msgid "A space-separated list of groups to skip installing"
 msgstr ""
 
 #: share/completions/bundle.fish:44
-msgid "Switches bundler's defaults into deployment mode."
+msgid "Use cached gems instead of connecting to rubygems.org"
 msgstr ""
 
 #: share/completions/bundle.fish:45
-msgid ""
-"Create a directory containing executabes that run in the context of the "
-"bundle."
+msgid "Switches bundler's defaults into deployment mode."
 msgstr ""
 
 #: share/completions/bundle.fish:46
-msgid "Specify a ruby executable to use with generated binstubs."
+msgid ""
+"Create a directory containing executabes that run in the context of the "
+"bundle"
 msgstr ""
 
 #: share/completions/bundle.fish:47
-msgid "Make a bundle that can work without RubyGems or Bundler at run-time."
+msgid "Specify a ruby executable to use with generated binstubs"
 msgstr ""
 
 #: share/completions/bundle.fish:48
-msgid "Apply a RubyGems security policy: {High,Medium,Low,No}Security"
+msgid "Make a bundle that can work without RubyGems or Bundler at run-time"
 msgstr ""
 
 #: share/completions/bundle.fish:49
-msgid "Do not update the cache in vendor/cache with the newly bundled gems."
+msgid "Apply a RubyGems security policy: {High,Medium,Low,No}Security"
 msgstr ""
 
 #: share/completions/bundle.fish:50
+msgid "Install  gems parallely by starting size number of parallel workers"
+msgstr ""
+
+#: share/completions/bundle.fish:51
+msgid "Do not update the cache in vendor/cache with the newly bundled gems"
+msgstr ""
+
+#: share/completions/bundle.fish:52
 #, fuzzy
-msgid "Do not print progress information to stdout."
+msgid "Do not print progress information to stdout"
 msgstr "Visa all information"
 
-#: share/completions/bundle.fish:53 share/completions/bundle.fish:66
+#: share/completions/bundle.fish:53
+#, fuzzy
+msgid "Run bundle clean automatically after install"
+msgstr "Upgradera paket om det är installerat"
+
+#: share/completions/bundle.fish:54 share/completions/bundle.fish:63
+msgid "Use the rubygems modern index instead of the API endpoint"
+msgstr ""
+
+#: share/completions/bundle.fish:55 share/completions/bundle.fish:164
+#, fuzzy
+msgid "Do not remove stale gems from the cache"
+msgstr "Ta bort alla gz-filer från cache"
+
+#: share/completions/bundle.fish:56
+msgid "Do not allow the Gemfile.lock to be updated after this install"
+msgstr ""
+
+#: share/completions/bundle.fish:59 share/completions/bundle.fish:84
 #, fuzzy
 msgid "Update dependencies to their latest versions"
 msgstr "Visa alla källkodspaket med version"
 
-#: share/completions/bundle.fish:54
-msgid "The name of a :git or :path source used in the Gemfile."
+#: share/completions/bundle.fish:60
+msgid "The name of a :git or :path source used in the Gemfile"
 msgstr ""
 
-#: share/completions/bundle.fish:58
+#: share/completions/bundle.fish:61
+msgid "Do not attempt to fetch gems remotely and use the gem cache instead"
+msgstr ""
+
+#: share/completions/bundle.fish:62
+msgid "Only output warnings and errors"
+msgstr ""
+
+#: share/completions/bundle.fish:64
+#, fuzzy
+msgid "Specify the number of jobs to run in parallel"
+msgstr "Ange antalet bytes av data att sicka"
+
+#: share/completions/bundle.fish:65
+#, fuzzy
+msgid "Update a specific group"
+msgstr "Använd angiven tagg"
+
+#: share/completions/bundle.fish:69
 msgid ""
 "Package the .gem files required by your application into the vendor/cache "
 "directory"
 msgstr ""
 
-#: share/completions/bundle.fish:61 share/completions/bundle.fish:68
+#: share/completions/bundle.fish:72
+#, fuzzy
+msgid "Install the binstubs of the listed gem"
+msgstr "Visa låtsasinstallationsutdata i tabellform"
+
+#: share/completions/bundle.fish:73
+#, fuzzy
+msgid "Binstub destination directory (default bin)"
+msgstr "Installera dokumentation (standard)"
+
+#: share/completions/bundle.fish:74
+msgid "Overwrite existing binstubs if they exist"
+msgstr ""
+
+#: share/completions/bundle.fish:78 share/completions/bundle.fish:86
 msgid "Execute a script in the context of the current bundle"
 msgstr ""
 
-#: share/completions/bundle.fish:64
+#: share/completions/bundle.fish:79
+msgid "Exec runs a command, providing it access to the gems in the bundle"
+msgstr ""
+
+#: share/completions/bundle.fish:82
 msgid "Describe available tasks or one specific task"
 msgstr ""
 
-#: share/completions/bundle.fish:67
+#: share/completions/bundle.fish:85
 #, fuzzy
 msgid "Package .gem files into the vendor/cache directory"
 msgstr "Ändra arbetskatalog"
 
-#: share/completions/bundle.fish:69
+#: share/completions/bundle.fish:87
+#, fuzzy
+msgid "Specify and read configuration options for bundler"
+msgstr "Välj en konfigurationsfil"
+
+#: share/completions/bundle.fish:88
 msgid "Check bundler requirements for your application"
 msgstr ""
 
-#: share/completions/bundle.fish:70 share/completions/bundle.fish:92
+#: share/completions/bundle.fish:89
 #, fuzzy
 msgid "Show all of the gems in the current bundle"
 msgstr "Nedstig aldrig i föräldrakatalog"
 
-#: share/completions/bundle.fish:71 share/completions/bundle.fish:96
+#: share/completions/bundle.fish:90
 #, fuzzy
 msgid "Show the source location of a particular gem in the bundle"
 msgstr "Visa process-id för varje process i jobbet"
 
-#: share/completions/bundle.fish:72 share/completions/bundle.fish:100
+#: share/completions/bundle.fish:91 share/completions/bundle.fish:121
 msgid "Show all of the outdated gems in the current bundle"
 msgstr ""
 
-#: share/completions/bundle.fish:73 share/completions/bundle.fish:107
+#: share/completions/bundle.fish:92 share/completions/bundle.fish:129
 msgid "Start an IRB session in the context of the current bundle"
 msgstr ""
 
-#: share/completions/bundle.fish:74 share/completions/bundle.fish:110
+#: share/completions/bundle.fish:93 share/completions/bundle.fish:132
 #, sh-format
 msgid "Open an installed gem in your $EDITOR"
 msgstr ""
 
-#: share/completions/bundle.fish:75 share/completions/bundle.fish:114
+#: share/completions/bundle.fish:94 share/completions/bundle.fish:136
 msgid "Generate a visual representation of your dependencies"
 msgstr ""
 
-#: share/completions/bundle.fish:76
+#: share/completions/bundle.fish:95
 #, fuzzy
 msgid "Generate a simple Gemfile"
 msgstr "Generera huvudfil"
 
-#: share/completions/bundle.fish:77 share/completions/bundle.fish:125
+#: share/completions/bundle.fish:96 share/completions/bundle.fish:147
 msgid "Create a simple gem, suitable for development with bundler"
 msgstr ""
 
-#: share/completions/bundle.fish:78 share/completions/bundle.fish:131
+#: share/completions/bundle.fish:97 share/completions/bundle.fish:154
 #, fuzzy
 msgid "Displays platform compatibility information"
 msgstr "Visa uppdateringsinformation"
 
-#: share/completions/bundle.fish:79 share/completions/bundle.fish:135
+#: share/completions/bundle.fish:98 share/completions/bundle.fish:158
 msgid "Cleans up unused gems in your bundler directory"
 msgstr ""
 
-#: share/completions/bundle.fish:86
+#: share/completions/bundle.fish:105
 msgid ""
 "Determine whether the requirements for your application are installed and "
 "available to bundler"
 msgstr ""
 
-#: share/completions/bundle.fish:88
-msgid "Specify a path other than the system default (BUNDLE_PATH or GEM_HOME)."
+#: share/completions/bundle.fish:107
+msgid "Specify a path other than the system default (BUNDLE_PATH or GEM_HOME)"
 msgstr ""
 
-#: share/completions/bundle.fish:89
+#: share/completions/bundle.fish:108
 #, fuzzy
 msgid "Lock the Gemfile"
 msgstr "Logga till spårfil"
 
-#: share/completions/bundle.fish:93
+#: share/completions/bundle.fish:111 share/completions/bundle.fish:116
+msgid ""
+"Show lists the names and versions of all gems that are required by your "
+"Gemfile"
+msgstr ""
+
+#: share/completions/bundle.fish:112 share/completions/bundle.fish:117
 msgid "List the paths of all gems required by your Gemfile"
 msgstr ""
 
-#: share/completions/bundle.fish:101
+#: share/completions/bundle.fish:122
 #, fuzzy
 msgid "Check for newer pre-release gems"
 msgstr "Kontrollera förekomst av minnesläckor"
 
-#: share/completions/bundle.fish:102
+#: share/completions/bundle.fish:123
 msgid "Check against a specific source"
 msgstr ""
 
-#: share/completions/bundle.fish:103
+#: share/completions/bundle.fish:124
 msgid "Use cached gems instead of attempting to fetch gems remotely"
 msgstr ""
 
-#: share/completions/bundle.fish:115
+#: share/completions/bundle.fish:125
+msgid "Only list newer versions allowed by your Gemfile requirements"
+msgstr ""
+
+#: share/completions/bundle.fish:137
 msgid "The name to use for the generated file (see format option)"
 msgstr ""
 
-#: share/completions/bundle.fish:116
+#: share/completions/bundle.fish:138
 #, fuzzy
 msgid "Show each gem version"
 msgstr "Källkodsträdsversion"
 
-#: share/completions/bundle.fish:117
+#: share/completions/bundle.fish:139
 msgid "Show the version of each required dependency"
 msgstr ""
 
-#: share/completions/bundle.fish:118
+#: share/completions/bundle.fish:140
 msgid "Output a specific format (png, jpg, svg, dot, ...)"
 msgstr ""
 
-#: share/completions/bundle.fish:121
+#: share/completions/bundle.fish:143
 #, fuzzy
 msgid "Generate a simple Gemfile, placed in the current directory"
 msgstr "Nedstig aldrig i föräldrakatalog"
 
-#: share/completions/bundle.fish:122
+#: share/completions/bundle.fish:144
 msgid "Use a specified .gemspec to create the Gemfile"
 msgstr ""
 
-#: share/completions/bundle.fish:126
+#: share/completions/bundle.fish:148
 msgid "Generate a binary for your library"
 msgstr ""
 
-#: share/completions/bundle.fish:127
+#: share/completions/bundle.fish:149
 msgid "Generate a test directory for your library (rspec or minitest)"
 msgstr ""
 
-#: share/completions/bundle.fish:128
+#: share/completions/bundle.fish:150
 #, fuzzy
 msgid "Path to your editor"
 msgstr "Välj källkatalog"
 
-#: share/completions/bundle.fish:132
+#: share/completions/bundle.fish:151
+msgid "Generate the boilerplate for C extension code"
+msgstr ""
+
+#: share/completions/bundle.fish:155
 #, fuzzy
 msgid "Only display Ruby directive information"
 msgstr "Visa uppdateringsinformation"
 
-#: share/completions/bundle.fish:136
+#: share/completions/bundle.fish:159
 msgid "Only print out changes, do not actually clean gems"
 msgstr ""
 
-#: share/completions/bundle.fish:137
+#: share/completions/bundle.fish:160
 msgid "Forces clean even if --path is not set"
 msgstr ""
+
+#: share/completions/bundle.fish:163
+msgid "Cache all the gems to vendor/cache"
+msgstr ""
+
+#: share/completions/bundle.fish:165
+msgid "Include all sources (including path and git)"
+msgstr ""
+
+#: share/completions/bundle.fish:168
+#, fuzzy
+msgid "Prints the license of all gems in the bundle"
+msgstr "Lägg till fil eller träd utan version till förrådet"
+
+#: share/completions/bundle.fish:171
+#, fuzzy
+msgid "Print information about the environment Bundler is running under"
+msgstr "Hämta ändringar från förrådet till arbetskopian"
 
 #: share/completions/configure.fish:1
 #: share/functions/__fish_complete_diff.fish:27
@@ -3290,19 +3322,15 @@ msgstr "Visa hjälp och avsluta"
 msgid "Cache test results in specified file"
 msgstr "Cache:a resultat i angiven fil"
 
-#: share/completions/cp.fish:10 share/completions/mv.fish:6
+#: share/completions/cp.fish:11 share/completions/mv.fish:6
 msgid "Backup suffix"
 msgstr "Backup-ändelse"
 
 #: share/completions/cp.fish:20
-msgid "Don't preserve the specified attributes"
-msgstr "Behåll inte de angivna attributen"
+msgid "Preserve ATTRIBUTES if possible"
+msgstr ""
 
-#: share/completions/cp.fish:24
-msgid "Control creation of sparse files"
-msgstr "Kontrollera skapandet av glesa filer"
-
-#: share/completions/cp.fish:28
+#: share/completions/cp.fish:29
 msgid "Set security context of copy to CONTEXT"
 msgstr "Ange säkerhetskontext för kopia"
 
@@ -3925,6 +3953,33 @@ msgstr "Visa filsystem av angiven typ"
 msgid "Block size"
 msgstr "Blockstorlek"
 
+#: share/completions/docker.fish:19
+#, fuzzy
+msgid "Show all containers"
+msgstr "Visa ARP-inlägg"
+
+#: share/completions/docker.fish:24
+#, fuzzy
+msgid "Show the running containers"
+msgstr "Visa dolda funktioner"
+
+#: share/completions/docker.fish:28
+#, fuzzy
+msgid "Show the exited containers"
+msgstr "Visa tid"
+
+#: share/completions/docker.fish:70 share/completions/docker.fish:92
+msgid "Docker container"
+msgstr ""
+
+#: share/completions/docker.fish:82
+msgid "Stopped container"
+msgstr ""
+
+#: share/completions/docker.fish:87
+msgid "Container running"
+msgstr ""
+
 #: share/completions/du.fish:15
 #, fuzzy
 msgid "Exclude files that match pattern in file"
@@ -3938,96 +3993,96 @@ msgstr "Exkludera filer som matchar mönster"
 msgid "Recursion limit"
 msgstr "Rekursionsgräns"
 
-#: share/completions/duply.fish:5
+#: share/completions/duply.fish:3
 #, fuzzy
 msgid "Profile"
 msgstr "Konfigurationsfil"
 
-#: share/completions/duply.fish:6
+#: share/completions/duply.fish:4
 msgid "Get usage help text"
 msgstr ""
 
-#: share/completions/duply.fish:9
+#: share/completions/duply.fish:7
 #, fuzzy
 msgid "Creates a configuration profile"
 msgstr "Välj konfigurationsfil"
 
-#: share/completions/duply.fish:10
+#: share/completions/duply.fish:8
 msgid "Backup with pre/post script execution"
 msgstr ""
 
-#: share/completions/duply.fish:11
+#: share/completions/duply.fish:9
 #, fuzzy
 msgid "Backup without executing pre/post scripts"
 msgstr "Kör inte post-skript"
 
-#: share/completions/duply.fish:12
+#: share/completions/duply.fish:10
 #, fuzzy
 msgid "Execute <profile>/pre script"
 msgstr "Kör inte pre-skript"
 
-#: share/completions/duply.fish:13
+#: share/completions/duply.fish:11
 #, fuzzy
 msgid "Execute <profile>/post script"
 msgstr "Kör inte post-skript"
 
-#: share/completions/duply.fish:14
+#: share/completions/duply.fish:12
 msgid "Force full backup"
 msgstr ""
 
-#: share/completions/duply.fish:15
+#: share/completions/duply.fish:13
 msgid "Force incremental backup"
 msgstr ""
 
-#: share/completions/duply.fish:16
+#: share/completions/duply.fish:14
 msgid "List all files in backup (as it was at <age>, default: now)"
 msgstr ""
 
-#: share/completions/duply.fish:17
+#: share/completions/duply.fish:15
 msgid "Prints backup sets and chains currently in repository"
 msgstr ""
 
-#: share/completions/duply.fish:18
+#: share/completions/duply.fish:16
 msgid "List files changed since latest backup"
 msgstr ""
 
-#: share/completions/duply.fish:19
+#: share/completions/duply.fish:17
 msgid "Shows outdated backup archives [--force, delete these files]"
 msgstr ""
 
-#: share/completions/duply.fish:20
+#: share/completions/duply.fish:18
 msgid "Shows outdated backups [--force, delete these files]"
 msgstr ""
 
-#: share/completions/duply.fish:21
+#: share/completions/duply.fish:19
 msgid "Shows broken backup archives [--force, delete these files]"
 msgstr ""
 
-#: share/completions/duply.fish:22
+#: share/completions/duply.fish:20
 msgid "Restore the backup to <target_path> [as it was at <age>]"
 msgstr ""
 
-#: share/completions/duply.fish:23
+#: share/completions/duply.fish:21
 msgid "Restore single file/folder from backup [as it was at <age>]"
 msgstr ""
 
-#: share/completions/duply.fish:26
+#: share/completions/duply.fish:24
 msgid "Really execute the commands: purge, purge-full, cleanup"
 msgstr ""
 
-#: share/completions/duply.fish:27
+#: share/completions/duply.fish:25
 msgid "Do nothing but print out generated duplicity command lines"
 msgstr ""
 
-#: share/completions/duply.fish:28
+#: share/completions/duply.fish:26
 msgid "Calculate what would be done, but dont perform any actions"
 msgstr ""
 
-#: share/completions/duply.fish:29
+#: share/completions/duply.fish:27
 msgid "Dont abort when backup different dirs to the same backend"
 msgstr ""
 
-#: share/completions/duply.fish:30
+#: share/completions/duply.fish:28
 #, fuzzy
 msgid "Output verbosity level"
 msgstr "Återställ felrapporteringsnivå till 0"
@@ -4038,14 +4093,14 @@ msgid ""
 msgstr ""
 "Visa kompletteringar för installerade packet på systemet från /var/db/pkg"
 
-#: share/completions/emerge.fish:12 share/completions/equery.fish:12
+#: share/completions/emerge.fish:13 share/completions/equery.fish:12
 msgid ""
 "Prints completions for all available packages on the system from /usr/portage"
 msgstr ""
 "Visa kompletteringar för alla tillgängliga packet på systemet från /usr/"
 "portage"
 
-#: share/completions/emerge.fish:19
+#: share/completions/emerge.fish:22
 msgid ""
 "Tests if emerge command should have an installed package as potential "
 "completion"
@@ -4053,56 +4108,13 @@ msgstr ""
 "Testa om emergekommando borde ha ett installerat paket som potentiell "
 "komplettering"
 
-#: share/completions/emerge.fish:30 share/completions/emerge.fish:31
-msgid "All base system packages"
-msgstr "Alla bassystempaket"
-
-#: share/completions/emerge.fish:30 share/completions/emerge.fish:31
-msgid "All packages in world"
-msgstr "Alla paket i världen"
-
-#: share/completions/emerge.fish:30
-msgid "Installed package"
-msgstr "Installerade paket"
-
-#: share/completions/emerge.fish:31
-#: share/functions/__fish_print_packages.fish:13
-msgid "Package"
-msgstr "Paket"
-
-#: share/completions/emerge.fish:35
-msgid "Usage overview of emerge"
-msgstr "Användningsöversikt av emerge"
-
-#: share/completions/emerge.fish:35
-msgid "Help on subject system"
-msgstr "Hjälp för ämnet system"
-
-#: share/completions/emerge.fish:35
-msgid "Help on subject config"
-msgstr "Hjäl för ämnet konfiguration"
-
-#: share/completions/emerge.fish:35
-msgid "Help on subject sync"
-msgstr "Hjälp för ämnet sync"
-
-#: share/completions/emerge.fish:57
-msgid "Use colors in output"
-msgstr "Använd färger"
-
-#: share/completions/emerge.fish:57
-msgid "Don't use colors in output"
-msgstr "Använd inte färger"
-
-#: share/completions/emerge.fish:81
+#: share/completions/emerge.fish:32
 #, fuzzy
-msgid "Pull in build time dependencies"
-msgstr "Visa byggberoenden"
-
-#: share/completions/emerge.fish:81
-#, fuzzy
-msgid "Don't pull in build time dependencies"
-msgstr "Fråga efter extra beroenden"
+msgid ""
+"Print completions for all packages including the version compare if that is "
+"already typed"
+msgstr ""
+"Visa kompletteringar för installerade packet på systemet från /var/db/pkg"
 
 #: share/completions/env.fish:2
 msgid "Redefine variable"
@@ -4636,11 +4648,16 @@ msgstr ""
 msgid "Update the RubyGems system software"
 msgstr ""
 
-#: share/completions/git.fish:121 share/completions/git.fish:144
+#: share/completions/git.fish:98
+#, fuzzy
+msgid "name"
+msgstr "Användarnamn"
+
+#: share/completions/git.fish:153 share/completions/git.fish:176
 msgid "Branch"
 msgstr ""
 
-#: share/completions/git.fish:145
+#: share/completions/git.fish:177
 #, fuzzy
 msgid "Tag"
 msgstr "Mål"
@@ -4885,607 +4902,6 @@ msgstr "Hjälp om kommandosubstitution (UNDERKOMMANDO)"
 msgid "Help on process expansion %JOB"
 msgstr "Hjälp om processexpansion %JOB"
 
-#: share/completions/hg.fish:17
-#, fuzzy
-msgid "add the specified files on the next commit"
-msgstr "Lägg till angiven fil fill den nuvarande listan av nyckelringar"
-
-#: share/completions/hg.fish:18
-msgid "add all new files, delete all missing files"
-msgstr ""
-
-#: share/completions/hg.fish:19
-#, fuzzy
-msgid "show changeset information by line for each file"
-msgstr "Visa ändringsinformation för paket"
-
-#: share/completions/hg.fish:20
-#, fuzzy
-msgid "create an unversioned archive of a repository revision"
-msgstr "Lägg till fil eller träd utan version till förrådet"
-
-#: share/completions/hg.fish:21
-msgid "reverse effect of earlier changeset"
-msgstr ""
-
-#: share/completions/hg.fish:22
-msgid "subdivision search of changesets"
-msgstr ""
-
-#: share/completions/hg.fish:23
-msgid "track a line of development with movable markers"
-msgstr ""
-
-#: share/completions/hg.fish:24
-msgid "set or show the current branch name"
-msgstr ""
-
-#: share/completions/hg.fish:25
-#, fuzzy
-msgid "list repository named branches"
-msgstr "Inaktivera förråd"
-
-#: share/completions/hg.fish:26
-#, fuzzy
-msgid "create a changegroup file"
-msgstr "Skapa en kontrollpunktfil"
-
-#: share/completions/hg.fish:27
-#, fuzzy
-msgid "output the current or given revision of files"
-msgstr "Visa loggmeddelanden för en uppsättning revisioner och/eller filer"
-
-#: share/completions/hg.fish:28
-#, fuzzy
-msgid "make a copy of an existing repository"
-msgstr "Skapa lokal kopia av förråd"
-
-#: share/completions/hg.fish:29
-#, fuzzy
-msgid "commit the specified files or all outstanding changes"
-msgstr "Dekryptera angiven fil eller standard in"
-
-#: share/completions/hg.fish:30
-msgid "mark files as copied for the next commit"
-msgstr ""
-
-#: share/completions/hg.fish:31
-#, fuzzy
-msgid "diff repository (or selected files)"
-msgstr "Radera urval"
-
-#: share/completions/hg.fish:32
-msgid "dump the header and diffs for one or more changesets"
-msgstr ""
-
-#: share/completions/hg.fish:33
-#, fuzzy
-msgid "forget the specified files on the next commit"
-msgstr "Flytta filen angiven på kommandoraden"
-
-#: share/completions/hg.fish:34
-#, fuzzy
-msgid "copy changes from other branches onto the current branch"
-msgstr "Hämta ändringar från förrådet till arbetskopian"
-
-#: share/completions/hg.fish:35
-msgid "search for a pattern in specified files and revisions"
-msgstr ""
-
-#: share/completions/hg.fish:36
-msgid "show current repository heads or show branch heads"
-msgstr ""
-
-#: share/completions/hg.fish:37
-msgid "show help for a given topic or a help overview"
-msgstr ""
-
-#: share/completions/hg.fish:38
-#, fuzzy
-msgid "identify the working copy or specified revision"
-msgstr "Uppdatera arbetskopian till en annan URL"
-
-#: share/completions/hg.fish:39
-#, fuzzy
-msgid "import an ordered set of patches"
-msgstr "Visa byteavstånd för matchningar"
-
-#: share/completions/hg.fish:40
-msgid "show new changesets found in source"
-msgstr ""
-
-#: share/completions/hg.fish:41
-#, fuzzy
-msgid "create a new repository in the given directory"
-msgstr "Skapa förråd om det inte redan existerar"
-
-#: share/completions/hg.fish:42
-#, fuzzy
-msgid "locate files matching specific patterns"
-msgstr "Visa inte filer som matchar mönster"
-
-#: share/completions/hg.fish:43
-msgid "show revision history of entire repository or files"
-msgstr ""
-
-#: share/completions/hg.fish:44
-#, fuzzy
-msgid "output the current or given revision of the project manifest"
-msgstr "Visa loggmeddelanden för en uppsättning revisioner och/eller filer"
-
-#: share/completions/hg.fish:45
-msgid "merge working directory with another revision"
-msgstr ""
-
-#: share/completions/hg.fish:46
-#, fuzzy
-msgid "show changesets not found in the destination"
-msgstr "Fråga paket med angiven grupp"
-
-#: share/completions/hg.fish:47
-#, fuzzy
-msgid "show the parents of the working directory or revision"
-msgstr "Ändra arbetskatalog"
-
-#: share/completions/hg.fish:48
-#, fuzzy
-msgid "show aliases for remote repositories"
-msgstr "Ta bort inlägg i .cvspass för fjärrförråd"
-
-#: share/completions/hg.fish:49
-msgid "set or show the current phase name"
-msgstr ""
-
-#: share/completions/hg.fish:50
-#, fuzzy
-msgid "pull changes from the specified source"
-msgstr "Fråga paket med angiven grupp"
-
-#: share/completions/hg.fish:51
-#, fuzzy
-msgid "push changes to the specified destination"
-msgstr "Fråga paket med angiven grupp"
-
-#: share/completions/hg.fish:52
-msgid "roll back an interrupted transaction"
-msgstr ""
-
-#: share/completions/hg.fish:53
-#, fuzzy
-msgid "remove the specified files on the next commit"
-msgstr "Flytta filen angiven på kommandoraden"
-
-#: share/completions/hg.fish:54
-msgid "rename files; equivalent of copy + remove"
-msgstr ""
-
-#: share/completions/hg.fish:55
-msgid "redo merges or set/view the merge status of files"
-msgstr ""
-
-#: share/completions/hg.fish:56
-msgid "restore files to their checkout state"
-msgstr ""
-
-#: share/completions/hg.fish:57
-#, fuzzy
-msgid "roll back the last transaction (dangerous)"
-msgstr "Ordna om fixarna i förrådet"
-
-#: share/completions/hg.fish:58
-#, fuzzy
-msgid "print the root (top) of the current working directory"
-msgstr "Ändra arbetskatalog"
-
-#: share/completions/hg.fish:59
-msgid "start stand-alone webserver"
-msgstr ""
-
-#: share/completions/hg.fish:60
-msgid "show combined config settings from all hgrc files"
-msgstr ""
-
-#: share/completions/hg.fish:61
-#, fuzzy
-msgid "show changed files in the working directory"
-msgstr "Ändra arbetskatalog"
-
-#: share/completions/hg.fish:62
-#, fuzzy
-msgid "summarize working directory state"
-msgstr "Visa nuvarande katalog"
-
-#: share/completions/hg.fish:63
-msgid "add one or more tags for the current or given revision"
-msgstr ""
-
-#: share/completions/hg.fish:64
-#, fuzzy
-msgid "list repository tags"
-msgstr "Inaktivera förråd"
-
-#: share/completions/hg.fish:65
-#, fuzzy
-msgid "show the tip revision"
-msgstr "Visa tid"
-
-#: share/completions/hg.fish:66
-#, fuzzy
-msgid "apply one or more changegroup files"
-msgstr "Läs paket från fil"
-
-#: share/completions/hg.fish:67
-#, fuzzy
-msgid "update working directory (or switch revisions)"
-msgstr "Ändra arbetskatalog"
-
-#: share/completions/hg.fish:68
-#, fuzzy
-msgid "verify the integrity of the repository"
-msgstr "Ta bort ett inlägg från förråd"
-
-#: share/completions/hg.fish:69
-#, fuzzy
-msgid "output version and copyright information"
-msgstr "Ignorera versionsmagiinformation"
-
-#: share/completions/hg.fish:70
-#, fuzzy
-msgid "Configuration Files"
-msgstr "Konfigureringsfil"
-
-#: share/completions/hg.fish:71
-#, fuzzy
-msgid "Date Formats"
-msgstr "Välj format"
-
-#: share/completions/hg.fish:72
-#, fuzzy
-msgid "Diff Formats"
-msgstr "Listformat"
-
-#: share/completions/hg.fish:73
-#, fuzzy
-msgid "Environment Variables"
-msgstr "Redigera miljövariabler"
-
-#: share/completions/hg.fish:74
-msgid "Using Additional Features"
-msgstr ""
-
-#: share/completions/hg.fish:75
-#, fuzzy
-msgid "Specifying File Sets"
-msgstr "Välj konfigurationsfil"
-
-#: share/completions/hg.fish:76
-msgid "Glossary"
-msgstr ""
-
-#: share/completions/hg.fish:77
-msgid "Syntax for Mercurial Ignore Files"
-msgstr ""
-
-#: share/completions/hg.fish:78
-#, fuzzy
-msgid "Configuring hgweb"
-msgstr "Konfigureringsfil"
-
-#: share/completions/hg.fish:79
-#, fuzzy
-msgid "Merge Tools"
-msgstr "Sammanslå sorterade filer"
-
-#: share/completions/hg.fish:80
-#, fuzzy
-msgid "Specifying Multiple Revisions"
-msgstr "Ange revision"
-
-#: share/completions/hg.fish:81
-#, fuzzy
-msgid "File Name Patterns"
-msgstr "Visa inte filer som matchar mönster"
-
-#: share/completions/hg.fish:82
-msgid "Working with Phases"
-msgstr ""
-
-#: share/completions/hg.fish:83
-#, fuzzy
-msgid "Specifying Single Revisions"
-msgstr "Ange revision"
-
-#: share/completions/hg.fish:84
-#, fuzzy
-msgid "Specifying Revision Sets"
-msgstr "Ange revisionstiollstånd"
-
-#: share/completions/hg.fish:85
-#, fuzzy
-msgid "Subrepositories"
-msgstr "Aktivera förråd"
-
-#: share/completions/hg.fish:86
-msgid "Template Usage"
-msgstr ""
-
-#: share/completions/hg.fish:87
-msgid "URL Paths"
-msgstr ""
-
-#: share/completions/hg.fish:94 share/completions/hg.fish:433
-#: share/completions/hg.fish:458 share/completions/hg.fish:569
-#: share/completions/hg.fish:579 share/completions/hg.fish:594
-#: share/completions/hg.fish:606 share/completions/hg.fish:671
-#, fuzzy
-msgid "[+] include names matching the given patterns"
-msgstr "Visa inte filer som matchar mönster"
-
-#: share/completions/hg.fish:95 share/completions/hg.fish:434
-#: share/completions/hg.fish:459 share/completions/hg.fish:570
-#: share/completions/hg.fish:580 share/completions/hg.fish:595
-#: share/completions/hg.fish:607 share/completions/hg.fish:672
-#, fuzzy
-msgid "[+] exclude names matching the given patterns"
-msgstr "Lista alla moduler som matchar parameter med jokertecken"
-
-#: share/completions/hg.fish:104 share/completions/hg.fish:391
-msgid "Guess renamed files by similarity (0<=s<=100)"
-msgstr ""
-
-#: share/completions/hg.fish:105
-#, fuzzy
-msgid "[+]   include names matching the given patterns"
-msgstr "Visa inte filer som matchar mönster"
-
-#: share/completions/hg.fish:106
-#, fuzzy
-msgid "[+]   exclude names matching the given patterns"
-msgstr "Lista alla moduler som matchar parameter med jokertecken"
-
-#: share/completions/hg.fish:114
-#, fuzzy
-msgid "Annotate the specified revision"
-msgstr "Hjälp för det angivna inbyggda kommandot"
-
-#: share/completions/hg.fish:387
-#, fuzzy
-msgid "Use text as commit message"
-msgstr "Läs meddelande för tillägg från fil"
-
-#: share/completions/hg.fish:388
-msgid "Read commit message from file"
-msgstr "Läs meddelande för tillägg från fil"
-
-#: share/completions/hg.fish:389 share/completions/hg.fish:693
-#, fuzzy
-msgid "Record the specified date as commit date"
-msgstr "Hjälp för det angivna kommandot"
-
-#: share/completions/hg.fish:390 share/completions/hg.fish:694
-#, fuzzy
-msgid "Record the specified user as committer"
-msgstr "Använd angiven sträng som kommentarsträng"
-
-#: share/completions/hg.fish:400
-#, fuzzy
-msgid "File to store the bundles into"
-msgstr "Redigera fix-paketbeskrivning"
-
-#: share/completions/hg.fish:401 share/completions/hg.fish:446
-#: share/completions/hg.fish:448 share/completions/hg.fish:450
-#: share/completions/hg.fish:485 share/completions/hg.fish:534
-#: share/completions/hg.fish:536 share/completions/hg.fish:548
-#: share/completions/hg.fish:550 share/completions/hg.fish:669
-msgid "[+]"
-msgstr ""
-
-#: share/completions/hg.fish:403
-msgid "[+] a specific branch you would like to pull"
-msgstr ""
-
-#: share/completions/hg.fish:406 share/completions/hg.fish:453
-#: share/completions/hg.fish:491
-#, fuzzy
-msgid "Limit number of changes displayed"
-msgstr "Skriv bara ut angivet antal matchningar"
-
-#: share/completions/hg.fish:409 share/completions/hg.fish:456
-#: share/completions/hg.fish:494 share/completions/hg.fish:507
-#: share/completions/hg.fish:709
-msgid "Display using template map file"
-msgstr ""
-
-#: share/completions/hg.fish:410 share/completions/hg.fish:457
-#: share/completions/hg.fish:495 share/completions/hg.fish:508
-#: share/completions/hg.fish:710
-#, fuzzy
-msgid "Display with template"
-msgstr "Visa alla matchningar"
-
-#: share/completions/hg.fish:411 share/completions/hg.fish:421
-#: share/completions/hg.fish:496 share/completions/hg.fish:537
-#: share/completions/hg.fish:552
-#, fuzzy
-msgid "Specify ssh command to use"
-msgstr "Ange kommando att operera på"
-
-#: share/completions/hg.fish:412 share/completions/hg.fish:422
-#: share/completions/hg.fish:497 share/completions/hg.fish:538
-#: share/completions/hg.fish:553
-#, fuzzy
-msgid "Specify hg command to run on the remote side"
-msgstr "Välj destinationsadress"
-
-#: share/completions/hg.fish:430
-#, fuzzy
-msgid "Search the repository as it is in REV"
-msgstr "Ange förråd-URL"
-
-#: share/completions/hg.fish:441
-msgid "A filename will only show ancestors or"
-msgstr ""
-
-#: share/completions/hg.fish:443
-#, fuzzy
-msgid "Show revisions matching date spec"
-msgstr "Visa bara matchande del"
-
-#: share/completions/hg.fish:445
-msgid "[+]    do case-insensitive search for a given text"
-msgstr ""
-
-#: share/completions/hg.fish:449
-msgid "[+]   show changesets within the given named branch"
-msgstr ""
-
-#: share/completions/hg.fish:466
-#, fuzzy
-msgid "Revision to display"
-msgstr "Välj display"
-
-#: share/completions/hg.fish:475
-msgid "Revision to merge"
-msgstr ""
-
-#: share/completions/hg.fish:477 share/completions/hg.fish:593
-#, fuzzy
-msgid "Specify merge tool"
-msgstr "Ange förtroendemodell"
-
-#: share/completions/hg.fish:488
-msgid "[+] a specific branch you would like to push"
-msgstr ""
-
-#: share/completions/hg.fish:506
-#, fuzzy
-msgid "Show parents of the specified revision"
-msgstr "Fråga paket med angiven grupp"
-
-#: share/completions/hg.fish:525
-#, fuzzy
-msgid "[+] target revision"
-msgstr "Slå ihop revisioner"
-
-#: share/completions/hg.fish:535
-msgid "[+] bookmark to pull"
-msgstr ""
-
-#: share/completions/hg.fish:546
-msgid "You want to allow push to create a new named branch"
-msgstr ""
-
-#: share/completions/hg.fish:549
-msgid "[+] bookmark to push"
-msgstr ""
-
-#: share/completions/hg.fish:603 share/completions/hg.fish:726
-#, fuzzy
-msgid "Tipmost revision matching date"
-msgstr "Visa inte filer som matchar mönster"
-
-#: share/completions/hg.fish:604
-#, fuzzy
-msgid "Revert to the specified revision"
-msgstr "Flytta filen angiven på kommandoraden"
-
-#: share/completions/hg.fish:615
-msgid "Not perform actions, just print output"
-msgstr ""
-
-#: share/completions/hg.fish:629
-msgid "Name of access log file to write to"
-msgstr ""
-
-#: share/completions/hg.fish:631
-msgid "Used internally by daemon mode"
-msgstr ""
-
-#: share/completions/hg.fish:632
-msgid "Name of error log file to write to"
-msgstr ""
-
-#: share/completions/hg.fish:633
-msgid "Port to listen on (default: 8000)"
-msgstr ""
-
-#: share/completions/hg.fish:634
-msgid "Address to listen on (default: all interfaces)"
-msgstr ""
-
-#: share/completions/hg.fish:635
-msgid "Prefix path to serve from (default: server root)"
-msgstr ""
-
-#: share/completions/hg.fish:636
-msgid "Name to show in web pages (default: working"
-msgstr ""
-
-#: share/completions/hg.fish:637
-msgid "Name of the hgweb config file (see \"hg help hgweb\")"
-msgstr ""
-
-#: share/completions/hg.fish:638
-msgid "Name of file to write process ID to"
-msgstr ""
-
-#: share/completions/hg.fish:640
-#, fuzzy
-msgid "For remote clients"
-msgstr "Visa eller ta bort funktioner"
-
-#: share/completions/hg.fish:641
-msgid "Web templates to use"
-msgstr ""
-
-#: share/completions/hg.fish:642
-msgid "Template style to use"
-msgstr ""
-
-#: share/completions/hg.fish:644
-#, fuzzy
-msgid "SSL certificate file"
-msgstr "Välj certifikatpolicy"
-
-#: share/completions/hg.fish:651
-#, fuzzy
-msgid "Untrusted configuration options"
-msgstr "Välj konfigurationsinställningar"
-
-#: share/completions/hg.fish:670
-#, fuzzy
-msgid "List the changed files of a revision"
-msgstr "Visa alla engenskaper hos filer, kataloger eller revisioner"
-
-#: share/completions/hg.fish:680
-msgid "For push and pull"
-msgstr ""
-
-#: share/completions/hg.fish:689
-msgid "Revision to tag"
-msgstr ""
-
-#: share/completions/hg.fish:692
-msgid "Use <text> as commit message"
-msgstr ""
-
-#: share/completions/hg.fish:717
-msgid "To new branch head if changesets were unbundled"
-msgstr ""
-
-#: share/completions/hg.fish:727
-#, fuzzy
-msgid "Revision"
-msgstr "Slå ihop revisioner"
-
-#: share/completions/hg.fish:844
-msgid "Or select an existing template-style (--style)"
-msgstr ""
-
-#: share/completions/hg.fish:845
-msgid "Is set"
-msgstr ""
-
 #: share/completions/history.fish:1
 msgid "Match history items that start with the given prefix"
 msgstr ""
@@ -5506,6 +4922,11 @@ msgstr "Starta gränssnitt"
 #: share/completions/ifup.fish:1
 msgid "Network interface"
 msgstr "Nätverkgränssnitt"
+
+#: share/completions/kitchen.fish:3
+#, fuzzy
+msgid "Test if kitchen has yet to be given the main command"
+msgstr "Testa om apt har tagit emot ett underkommando"
 
 #: share/completions/less.fish:3
 msgid "Buffer space"
@@ -5724,6 +5145,457 @@ msgstr "Ange meddelande för tillägg"
 #: share/completions/mv.fish:4
 msgid "Answer for overwrite questions"
 msgstr "Svar till överskrivningsfrågor"
+
+#: share/completions/node.fish:9
+#, fuzzy
+msgid "Print node's version"
+msgstr "Visa kärnversion"
+
+#: share/completions/node.fish:10
+#, fuzzy
+msgid "Evaluate script"
+msgstr "Extrahera skript"
+
+#: share/completions/node.fish:11
+#, fuzzy
+msgid "Print result of --eval"
+msgstr "Visa platt profil"
+
+#: share/completions/obnam.fish:9
+#, fuzzy
+msgid "Adds an encryption key to the repository"
+msgstr "Lägg till fil/katalog till förråd"
+
+#: share/completions/obnam.fish:11
+msgid "Lists the keys associated with each client"
+msgstr ""
+
+#: share/completions/obnam.fish:12
+#, fuzzy
+msgid "Lists the clients in the repository"
+msgstr "Uppdatera förråd"
+
+#: share/completions/obnam.fish:13
+#, fuzzy
+msgid "Compares two generations"
+msgstr "Tolerera slarviga monteringsflaggor"
+
+#: share/completions/obnam.fish:14
+#, fuzzy
+msgid "Dumps the repository"
+msgstr "Uppdatera förråd"
+
+#: share/completions/obnam.fish:15
+#, fuzzy
+msgid "Removes a lock file for a client"
+msgstr "Ta bort alla gz-filer från cache"
+
+#: share/completions/obnam.fish:16
+#, fuzzy
+msgid "Removes backup generations"
+msgstr "Ta bort komplettering"
+
+#: share/completions/obnam.fish:17
+#, fuzzy
+msgid "Checks the consistency of the repository"
+msgstr "Kontrollera hela lagret"
+
+#: share/completions/obnam.fish:18
+msgid "Lists every backup generation"
+msgstr ""
+
+#: share/completions/obnam.fish:19
+msgid "Lists the identifier for every generation"
+msgstr ""
+
+#: share/completions/obnam.fish:20
+#, fuzzy
+msgid "Lists the keys"
+msgstr "Visa pålitliga nycklar"
+
+#: share/completions/obnam.fish:21
+#, fuzzy
+msgid "Lists the toplevel keys"
+msgstr "Visa pålitliga nycklar"
+
+#: share/completions/obnam.fish:22
+#, fuzzy
+msgid "Lists the contents of a given generation"
+msgstr "Visa kataloginnehåll"
+
+#: share/completions/obnam.fish:23
+#, fuzzy
+msgid "Makes the repository available via FUSE"
+msgstr "Uppdatera förråd"
+
+#: share/completions/obnam.fish:24
+msgid "Check if a backup age exceeds a threshold"
+msgstr ""
+
+#: share/completions/obnam.fish:25
+#, fuzzy
+msgid "Removes a client from the repository"
+msgstr "Ange förråd-URL"
+
+#: share/completions/obnam.fish:26
+#, fuzzy
+msgid "Removes a key from the repository"
+msgstr "Skapa lokal kopia av förråd"
+
+#: share/completions/obnam.fish:27
+#, fuzzy
+msgid "Restore files from the repository"
+msgstr "Checka in filer till förråd"
+
+#: share/completions/obnam.fish:28
+#, fuzzy
+msgid "Verifies files in the repository"
+msgstr "Checka in filer till förråd"
+
+#: share/completions/obnam.fish:30
+msgid "Restore setuid/setgid bits in restored files"
+msgstr ""
+
+#: share/completions/obnam.fish:31
+msgid "Do not restore setuid/setgid bits in restored files"
+msgstr ""
+
+#: share/completions/obnam.fish:32
+#, fuzzy
+msgid "Name of client"
+msgstr "NAmn på version at använda som kontrollpunkt"
+
+#: share/completions/obnam.fish:33
+#, fuzzy
+msgid "Compress repository with"
+msgstr "Komprimera till standard ut"
+
+#: share/completions/obnam.fish:34
+msgid "For --nagios-last-backup-age: maximum age"
+msgstr ""
+
+#: share/completions/obnam.fish:35
+msgid "Dump metadata about files"
+msgstr ""
+
+#: share/completions/obnam.fish:36
+#, fuzzy
+msgid "Do not dump metadata about files"
+msgstr "Radera inte byggda filer"
+
+#: share/completions/obnam.fish:37
+#, fuzzy
+msgid "Generate man page"
+msgstr "Generera ett nytt nyckelpar"
+
+#: share/completions/obnam.fish:38
+msgid "Which generation to restore"
+msgstr ""
+
+#: share/completions/obnam.fish:39
+#, fuzzy
+msgid "Show this help message and exit"
+msgstr "Visa version och avsluta"
+
+#: share/completions/obnam.fish:40
+msgid "Policy for what generations to keep when forgetting."
+msgstr ""
+
+#: share/completions/obnam.fish:41
+msgid "Wait TIMEOUT seconds for an existing lock"
+msgstr ""
+
+#: share/completions/obnam.fish:43
+#, fuzzy
+msgid "Do not actually change anything"
+msgstr "Skriv ingenting"
+
+#: share/completions/obnam.fish:44
+#, fuzzy
+msgid "Actually commit changes"
+msgstr "Summera ändringar"
+
+#: share/completions/obnam.fish:45
+msgid "Show only errors, no progress updates"
+msgstr ""
+
+#: share/completions/obnam.fish:46
+msgid "Show errors and progress updates"
+msgstr ""
+
+#: share/completions/obnam.fish:49
+#, fuzzy
+msgid "Simulate failures for files that match REGEXP"
+msgstr "Välj fix som matchar REGEXP"
+
+#: share/completions/obnam.fish:52
+msgid "Be more verbose"
+msgstr ""
+
+#: share/completions/obnam.fish:53
+#, fuzzy
+msgid "Do not be verbose"
+msgstr "Skriv inte över"
+
+#: share/completions/obnam.fish:54
+msgid "Verify N files randomly from the backup"
+msgstr ""
+
+#: share/completions/obnam.fish:55
+#, fuzzy
+msgid "Show version number and exit"
+msgstr "Visa version och avsluta"
+
+#: share/completions/obnam.fish:57
+msgid "Make a checkpoint after a given SIZE"
+msgstr ""
+
+#: share/completions/obnam.fish:58
+#, fuzzy
+msgid "Deduplicate mode"
+msgstr "Läs ock skrivbart läge"
+
+#: share/completions/obnam.fish:60
+#, fuzzy
+msgid "Exclude directories tagged as cache"
+msgstr "Sök i angivna kataloger efter källkod"
+
+#: share/completions/obnam.fish:61
+#, fuzzy
+msgid "Include directories tagged as cache"
+msgstr "Inkluderingskatalog"
+
+#: share/completions/obnam.fish:63
+msgid "Leave checkpoint generations at the end of backup"
+msgstr ""
+
+#: share/completions/obnam.fish:64
+msgid "Omit checkpoint generations at the end of backup"
+msgstr ""
+
+#: share/completions/obnam.fish:65
+#, fuzzy
+msgid "Do not follow mount points"
+msgstr "Radbryt inte långa rader"
+
+#: share/completions/obnam.fish:66
+#, fuzzy
+msgid "Follow mount points"
+msgstr "Monteringskatalog"
+
+#: share/completions/obnam.fish:67
+msgid "Put small files directly into the B-tree"
+msgstr ""
+
+#: share/completions/obnam.fish:68
+msgid "No not put small files into the B-tree"
+msgstr ""
+
+#: share/completions/obnam.fish:70
+#, fuzzy
+msgid "Write out the current configuration"
+msgstr "Ladda om konfiguration för tjänst"
+
+#: share/completions/obnam.fish:71
+#, fuzzy
+msgid "Write out setting names"
+msgstr "Skriv prompten"
+
+#: share/completions/obnam.fish:72
+#, fuzzy
+msgid "Show all options"
+msgstr "Visa hjälp om flaggor"
+
+#: share/completions/obnam.fish:73
+#, fuzzy
+msgid "List config files"
+msgstr "Välj konfigurationsfil"
+
+#: share/completions/obnam.fish:74
+#, fuzzy
+msgid "Clear list of configuration files to read"
+msgstr "Visa rpmkonfigurationsfiler"
+
+#: share/completions/obnam.fish:75
+msgid "PGP key with which to encrypt"
+msgstr ""
+
+#: share/completions/obnam.fish:76
+#, fuzzy
+msgid "Show additional user IDs"
+msgstr "Visa historik för alla användare"
+
+#: share/completions/obnam.fish:77
+#, fuzzy
+msgid "Do not show additional user IDs"
+msgstr "Lagra inte katalognamn"
+
+#: share/completions/obnam.fish:78
+msgid "PGP key id"
+msgstr ""
+
+#: share/completions/obnam.fish:79
+msgid "Size of symmetric key"
+msgstr ""
+
+#: share/completions/obnam.fish:80
+#, fuzzy
+msgid "Use /dev/urandom instead of /dev/random"
+msgstr "Använd rensning istället för radering"
+
+#: share/completions/obnam.fish:81
+msgid "Use default /dev/random"
+msgstr ""
+
+#: share/completions/obnam.fish:83
+msgid "fsck should try to fix problems"
+msgstr ""
+
+#: share/completions/obnam.fish:84
+msgid "fsck should not try to fix problems"
+msgstr ""
+
+#: share/completions/obnam.fish:85
+#, fuzzy
+msgid "Ignore chunks when checking integrity"
+msgstr "Ignorera skiftläge på filnamn"
+
+#: share/completions/obnam.fish:86
+msgid "Check chunks when checking integrity"
+msgstr ""
+
+#: share/completions/obnam.fish:87
+msgid "Do not check data for cient NAME."
+msgstr ""
+
+#: share/completions/obnam.fish:88
+#, fuzzy
+msgid "Check only the last generation"
+msgstr "Återupta senaste installationsoperation"
+
+#: share/completions/obnam.fish:89 share/completions/obnam.fish:95
+#, fuzzy
+msgid "Check all generations"
+msgstr "Fråga installerat paket"
+
+#: share/completions/obnam.fish:90
+#, fuzzy
+msgid "Do not check directories"
+msgstr "Lagra inte katalognamn"
+
+#: share/completions/obnam.fish:91
+#, fuzzy
+msgid "Check directories"
+msgstr "Rekursera till underkataloger"
+
+#: share/completions/obnam.fish:92
+#, fuzzy
+msgid "Do not check files"
+msgstr "Ändra inga filer"
+
+#: share/completions/obnam.fish:93
+#, fuzzy
+msgid "Check files"
+msgstr "Fråga installerat paket"
+
+#: share/completions/obnam.fish:94
+#, fuzzy
+msgid "Do not check any generations"
+msgstr "Ändra inga filer"
+
+#: share/completions/obnam.fish:96
+#, fuzzy
+msgid "Do not check per-client B-trees"
+msgstr "Skriv inte ut taggar"
+
+#: share/completions/obnam.fish:97
+msgid "Check per-client B-trees"
+msgstr ""
+
+#: share/completions/obnam.fish:98
+#, fuzzy
+msgid "Do not check shared B-trees"
+msgstr "Ändra inga filer"
+
+#: share/completions/obnam.fish:99
+#, fuzzy
+msgid "Check shared B-trees"
+msgstr "Fråga installerat paket"
+
+#: share/completions/obnam.fish:102
+msgid "Keep last N logs (10)"
+msgstr ""
+
+#: share/completions/obnam.fish:103
+msgid "Log at LEVEL"
+msgstr ""
+
+#: share/completions/obnam.fish:104
+msgid "Rotate logs larger than SIZE"
+msgstr ""
+
+#: share/completions/obnam.fish:105
+msgid "Set permissions of logfiles to MODE"
+msgstr ""
+
+#: share/completions/obnam.fish:106
+msgid "Options to pass to FUSE"
+msgstr ""
+
+#: share/completions/obnam.fish:107
+msgid "Make memory profiling dumps using METHOD"
+msgstr ""
+
+#: share/completions/obnam.fish:108
+msgid "Make memory profiling dumps at SECONDS"
+msgstr ""
+
+#: share/completions/obnam.fish:109
+msgid "Size of chunks of file data"
+msgstr ""
+
+#: share/completions/obnam.fish:110
+msgid "Encode NUM chunk ids per group"
+msgstr ""
+
+#: share/completions/obnam.fish:111
+msgid "Chunk id level size"
+msgstr ""
+
+#: share/completions/obnam.fish:112
+#, fuzzy
+msgid "Depth of chunk id mapping"
+msgstr "Djup i anroppskedjan"
+
+#: share/completions/obnam.fish:113
+msgid "Chunk id mapping lowest bits skip"
+msgstr ""
+
+#: share/completions/obnam.fish:114
+msgid "Size of LRU cache for B-tree nodes"
+msgstr ""
+
+#: share/completions/obnam.fish:115
+#, fuzzy
+msgid "Size of B-tree nodes on disk"
+msgstr "Visa ändringar i omvänd ordning"
+
+#: share/completions/obnam.fish:116
+msgid "Length of upload queue for B-tree nodes"
+msgstr ""
+
+#: share/completions/obnam.fish:117
+msgid "Use only paramiko, no openssh"
+msgstr ""
+
+#: share/completions/obnam.fish:118
+#, fuzzy
+msgid "Use openssh if available"
+msgstr "Bygg index om inte tillgängligt"
+
+#: share/completions/obnam.fish:120
+msgid "ssh host key check"
+msgstr ""
 
 #: share/completions/perl.fish:6
 msgid "Specify record separator"
@@ -6348,15 +6220,15 @@ msgstr "Byt bakgrundsfärg"
 msgid "Locale"
 msgstr "Lokal"
 
-#: share/completions/sort.fish:12
+#: share/completions/sort.fish:16
 msgid "Write to file"
 msgstr "Skriv till fil"
 
-#: share/completions/sort.fish:14
+#: share/completions/sort.fish:18
 msgid "Set memory buffer size"
 msgstr "Välj minnesbuffertstorlek"
 
-#: share/completions/sort.fish:16
+#: share/completions/sort.fish:20
 msgid "Set temporary directory"
 msgstr "Välj katalog för tillfälligt lagringsutrymme"
 
@@ -6618,7 +6490,7 @@ msgstr ""
 msgid "Test if vagrant has yet to be given the main command"
 msgstr "Testa om apt har tagit emot ett underkommando"
 
-#: share/completions/vagrant.fish:34
+#: share/completions/vagrant.fish:23
 #, fuzzy
 msgid "Lists all available Vagrant boxes"
 msgstr "Visa namnen på alla tillgängliga signaler"
@@ -7870,6 +7742,11 @@ msgstr "Visa varje file MAC-etikett"
 msgid "Include the file flags in a long (-l) output"
 msgstr "Visa filflaggor vid långt (-l) formay"
 
+#: share/functions/__fish_complete_path.fish:1
+#, fuzzy
+msgid "Complete using path"
+msgstr "Tolerera slarviga monteringsflaggor"
+
 #: share/functions/__fish_complete_ppp_peer.fish:1
 msgid "Complete isp name for pon/poff"
 msgstr ""
@@ -8469,68 +8346,52 @@ msgstr ""
 msgid "Complete md5sum sha1 etc"
 msgstr ""
 
-#: share/functions/__fish_config_interactive.fish:65
-#, sh-format
-msgid ""
-"\\nWARNING\\n\\nThe location for fish configuration files has changed to %s."
-"\\nYour old files have been moved to this location.\\nYou can change to a "
-"different location by changing the value of the variable $XDG_CONFIG_HOME.\\n"
-"\\n"
-msgstr ""
-"\\nVARNING\\n\\nLagringsplatsen för fish-konfigureringsfiler har ändrats "
-"till %s. Dina gamla filer har flyttats till denna plats.\\nDu kan ändra "
-"denna plats genom att byta värde på variabeln $XDG_CONFIG_HOME.\\n\\n"
-
 #
-#: share/functions/__fish_config_interactive.fish:82
+#: share/functions/__fish_config_interactive.fish:34
 msgid "Welcome to fish, the friendly interactive shell"
 msgstr "Välkommen till fish, det vänliga interaktiva skalet"
 
 #
-#: share/functions/__fish_config_interactive.fish:83
+#: share/functions/__fish_config_interactive.fish:35
 msgid "Type %shelp%s for instructions on how to use fish"
 msgstr "Skriv %shelp%s för instruktioner om hur man använder fish"
 
-#: share/functions/__fish_config_interactive.fish:173
+#: share/functions/__fish_config_interactive.fish:130
 msgid "Event handler, repaints the prompt when fish_color_cwd changes"
 msgstr "Händelsehanterare, ritar om prompten när fish_color_cwd ändras"
 
-#: share/functions/__fish_config_interactive.fish:180
+#: share/functions/__fish_config_interactive.fish:137
 #, fuzzy
 msgid "Event handler, repaints the prompt when fish_color_cwd_root changes"
 msgstr "Händelsehanterare, ritar om prompten när fish_color_cwd ändras"
 
-#: share/functions/__fish_config_interactive.fish:192
+#: share/functions/__fish_config_interactive.fish:149
 msgid "Start service"
 msgstr "Starta tjänst"
 
-#: share/functions/__fish_config_interactive.fish:193
+#: share/functions/__fish_config_interactive.fish:150
 msgid "Stop service"
 msgstr "Stanna tjänst"
 
-#: share/functions/__fish_config_interactive.fish:194
+#: share/functions/__fish_config_interactive.fish:151
 msgid "Print service status"
 msgstr "Visa status för tjänst"
 
-#: share/functions/__fish_config_interactive.fish:195
+#: share/functions/__fish_config_interactive.fish:152
 msgid "Stop and then start service"
 msgstr "Stanna och starta tjänst"
 
-#: share/functions/__fish_config_interactive.fish:196
+#: share/functions/__fish_config_interactive.fish:153
 msgid "Reload service configuration"
 msgstr "Ladda om konfiguration för tjänst"
 
-#: share/functions/__fish_config_interactive.fish:228
+#: share/functions/__fish_config_interactive.fish:193
 #, sh-format
 msgid "Notify VTE of change to $PWD"
 msgstr ""
 
 #: share/functions/__fish_git_prompt.fish:173
 msgid "Helper function for __fish_git_prompt"
-msgstr ""
-
-#: share/functions/__fish_git_prompt.fish:244
-msgid "svn_upstream"
 msgstr ""
 
 #: share/functions/__fish_git_prompt.fish:348
@@ -8577,6 +8438,11 @@ msgstr "Händelsehanterare, ritar om prompten när fish_color_cwd ändras"
 msgid "Event handler, repaints prompt when any char changes"
 msgstr "Händelsehanterare, ritar om prompten när fish_color_cwd ändras"
 
+#: share/functions/__fish_hg_prompt.fish:23
+#, fuzzy
+msgid "Write out the hg prompt"
+msgstr "Skriv prompten"
+
 #: share/functions/__fish_is_token_n.fish:1
 msgid "Test if current token is on Nth place"
 msgstr ""
@@ -8614,7 +8480,7 @@ msgstr "Visa en lista på alla tillåtna färgnamn"
 msgid "Prints services installed"
 msgstr "Visa status för tjänst"
 
-#: share/functions/__fish_print_help.fish:2
+#: share/functions/__fish_print_help.fish:1
 msgid "Print help message for the specified fish function or builtin"
 msgstr ""
 "Visa hjälpmeddelande för specificerad fish-funktion eller inbyggt kommando"
@@ -8643,6 +8509,10 @@ msgstr "Visa tillgängliga paket"
 #, fuzzy
 msgid "Print mounted devices"
 msgstr "Visa viktiga beroenden"
+
+#: share/functions/__fish_print_packages.fish:13
+msgid "Package"
+msgstr "Paket"
 
 #: share/functions/__fish_print_svn_rev.fish:1
 #, fuzzy
@@ -8698,6 +8568,44 @@ msgstr "Byt namn på standard in"
 msgid "Write out the git prompt"
 msgstr "Skriv prompten"
 
+#: share/functions/abbr.fish:1
+#, fuzzy
+msgid "Manage abbreviations"
+msgstr "Manualsektion"
+
+#: share/functions/abbr.fish:40
+#, fuzzy
+msgid "%s: invalid option -- %s\\n"
+msgstr "%ls: Ogiltigt flagga -- %lc\n"
+
+#: share/functions/abbr.fish:47
+#, fuzzy
+msgid "%s: %s cannot be specified along with %s\\n"
+msgstr "%ls: Värden kan inte anges vid radering\n"
+
+#: share/functions/abbr.fish:56
+#, fuzzy
+msgid "%s: option requires an argument -- %s\\n"
+msgstr "%ls: Flaggan kräver ett argument -- %lc\n"
+
+#: share/functions/abbr.fish:62
+#, fuzzy
+msgid "%s: Unexpected argument -- %s\\n"
+msgstr "%ls: Förväntade argument\n"
+
+#: share/functions/abbr.fish:75
+msgid "%s: abbreviation must have a non-empty key\\n"
+msgstr ""
+
+#: share/functions/abbr.fish:79
+msgid "%s: abbreviation must have a value\\n"
+msgstr ""
+
+#: share/functions/abbr.fish:101
+#, fuzzy
+msgid "%s: no such abbreviation '%s'\\n"
+msgstr "%s: Okänd funktion ”%s”\\n"
+
 #: share/functions/alias.fish:2
 msgid ""
 "Legacy function for creating shellscript functions using an alias-like syntax"
@@ -8705,10 +8613,19 @@ msgstr ""
 "Bakåtkompatibilitetsfunktion för att skapa skalfunktioner med en alias-"
 "liknande syntax"
 
-#: share/functions/alias.fish:34
+#: share/functions/alias.fish:36
 #, fuzzy
 msgid "%s: Expected one or two arguments, got %d\\n"
 msgstr "%ls: Förväntade ett eller två argument, fick %d"
+
+#: share/functions/alias.fish:42
+#, fuzzy
+msgid "%s: Name cannot be empty\\n"
+msgstr "%ls: Den tomma strängen är inte ett tillåtet variabelnamn\n"
+
+#: share/functions/alias.fish:45
+msgid "%s: Body cannot be empty\\n"
+msgstr ""
 
 #: share/functions/contains_seq.fish:1
 msgid "Return true if array contains a sequence"
@@ -8721,6 +8638,10 @@ msgstr "Visa arbetskatalogshistorik (bakåt och frammåt)"
 #: share/functions/dirs.fish:1
 msgid "Print directory stack"
 msgstr "Visa katalogstack"
+
+#: share/functions/export.fish:1
+msgid "Set global variable. Alias for set -g, made for bash compatibility"
+msgstr ""
 
 #: share/functions/fish_config.fish:1
 msgid "Launch fish's web based configuration"
@@ -8739,6 +8660,20 @@ msgstr "Skriv prompten"
 msgid "Update man-page based completions"
 msgstr "Redigera kommando-specifika kompletteringar"
 
+#: share/functions/fish_vi_key_bindings.fish:1
+#, fuzzy
+msgid "vi-like key bindings for fish"
+msgstr "Välj fil med tangentbordsgenvägar"
+
+#: share/functions/fish_vi_prompt.fish:1
+#, fuzzy
+msgid "Displays the current mode"
+msgstr "Visa säkerhetskontext"
+
+#: share/functions/fish_vi_prompt.fish:17
+msgid "Simple vi prompt"
+msgstr ""
+
 #: share/functions/funced.fish:1
 #, fuzzy
 msgid "Edit function definition"
@@ -8754,6 +8689,19 @@ msgstr "%s: Okänd flagga ”%s”\\n"
 msgid "funced: You must specify one function name\n"
 msgstr "%ls: Förväntade exakt ett funktionsnamn\n"
 
+#: share/functions/funced.fish:96
+msgid "Editing failed or was cancelled"
+msgstr ""
+
+#: share/functions/funced.fish:103
+msgid "Edit the file again\\? [Y/n]"
+msgstr ""
+
+#: share/functions/funced.fish:110
+#, fuzzy
+msgid "Cancelled function editing"
+msgstr "funktionsdefinition-block"
+
 #: share/functions/funcsave.fish:2
 msgid "Save the current definition of all specified functions to file"
 msgstr ""
@@ -8767,7 +8715,7 @@ msgstr "%ls: Förväntade ett funktionsnamn\n"
 msgid "%s: Could not create configuration directory\\n"
 msgstr "%s: Kunde inte skapa konfigurationskatalogen\\n"
 
-#: share/functions/funcsave.fish:37
+#: share/functions/funcsave.fish:36
 msgid "%s: Unknown function '%s'\\n"
 msgstr "%s: Okänd funktion ”%s”\\n"
 
@@ -8815,7 +8763,7 @@ msgstr "Visa kataloginnehåll, inklusive dolda filer i långt format"
 msgid "List contents of directory using long format"
 msgstr "Visa kataloginnehåll i långt format"
 
-#: share/functions/ls.fish:7 share/functions/ls.fish:24
+#: share/functions/ls.fish:7 share/functions/ls.fish:32
 msgid "List contents of directory"
 msgstr "Visa kataloginnehåll"
 
@@ -8862,7 +8810,6 @@ msgstr "Gå bakåt i kataloghistorik"
 msgid "The number of positions to skip must be a non-negative integer\\n"
 msgstr "Antalet positioner att hoppa över måste vara ett positivt heltal"
 
-#: share/functions/prompt_pwd.fish:3 share/functions/prompt_pwd.fish:7
 #: share/functions/prompt_pwd.fish:11
 #, fuzzy
 msgid "Print the current working directory, shortened to fit the prompt"
@@ -8906,34 +8853,34 @@ msgstr ""
 msgid "Print the type of a command"
 msgstr "Visa typ av kommando"
 
-#: share/functions/type.fish:84
+#: share/functions/type.fish:90
 msgid "%s is a function with definition\\n"
 msgstr "%s är en funktion med definitionen\\n"
 
-#: share/functions/type.fish:88
+#: share/functions/type.fish:94
 #, fuzzy
 msgid "function"
 msgstr "funktion\\n"
 
-#: share/functions/type.fish:105
+#: share/functions/type.fish:107
 msgid "%s is a builtin\\n"
 msgstr "%s är ett inbyggt kommando\\n"
 
-#: share/functions/type.fish:108
+#: share/functions/type.fish:110
 #, fuzzy
 msgid "builtin"
 msgstr "inbyggt kommando\\n"
 
-#: share/functions/type.fish:132
+#: share/functions/type.fish:130
 msgid "%s is %s\\n"
 msgstr "%s är %s\\n"
 
-#: share/functions/type.fish:135
+#: share/functions/type.fish:133
 #, fuzzy
 msgid "file"
 msgstr "fil\\n"
 
-#: share/functions/type.fish:147
+#: share/functions/type.fish:144
 msgid "%s: Could not find '%s'\\n"
 msgstr "%s: Kunde inte hitta ”%s”\\n"
 
@@ -8954,21 +8901,457 @@ msgstr "%s: För många argument\\n"
 msgid "Edit variable value"
 msgstr "Redigera variabelvärde"
 
-#: share/functions/vared.fish:41
+#: share/functions/vared.fish:40
+#, fuzzy
 msgid ""
-"%s: %s is an array variable. Use %svared%s %s[n] to edit the n:th element of "
-"%s\\n"
+"%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element "
+"of %s\\n"
 msgstr ""
 "%s: %s är en arrayvariabel. Använd %svared%s %s[n] för att redigera det n:te "
 "elementet av %s\\n"
 
-#: share/functions/vared.fish:45
+#: share/functions/vared.fish:44
 msgid ""
 "%s: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s "
 "VARIABLE\\n"
 msgstr ""
 "%s: Förväntade exakt ett argument, fick %s\\n\\nSynopsis:\\n\\t%svared%s "
 "VARIABEL\\n"
+
+#, fuzzy
+#~ msgid "%ls: Expected zero or two parameters, got %d\n"
+#~ msgstr "%ls: Förväntade noll eller två argument, fick %d"
+
+#~ msgid "Current functions are: "
+#~ msgstr "Nuvarande funktioner är: "
+
+#~ msgid "%ls: Not inside of block\n"
+#~ msgstr "%ls: Inte i ett block\n"
+
+#~ msgid "%ls: Not inside of 'if' block\n"
+#~ msgstr "%ls: Inte i ett ”if” block\n"
+
+#~ msgid "%ls: Expected exactly one argument, got %d\n"
+#~ msgstr "%ls: Förväntade exakt ett argument, fick %d\n"
+
+#~ msgid "%ls: 'case' command while not in switch block\n"
+#~ msgstr "%ls: ”case” kommandot kan bara användas i ett ”switch”-block\n"
+
+#~ msgid "%ls: Unknown error"
+#~ msgstr "%ls: Okänt fel"
+
+#~ msgid "%ls: Can not specify scope when erasing array slice\n"
+#~ msgstr "%ls: Kan inte ange definitionsområde vid radering av arraydel\n"
+
+#~ msgid "Could not get user information"
+#~ msgstr "Kunde inte hitta information om användare"
+
+#~ msgid "Could not convert message '%s' to wide character string"
+#~ msgstr "Kunde inte konvertera meddelandet ”%s” till en bred teckensträng"
+
+#~ msgid "%ls: Argument '%s' is not a valid file descriptor\n"
+#~ msgstr "%ls: Argumentet ”%s” är inte en giltig filidentifierare\n"
+
+#~ msgid "Could not set up output file descriptors for pager"
+#~ msgstr "Kunde inte initiera utdata-filidentifierare för visare"
+
+#~ msgid "Could not set up input file descriptors for pager"
+#~ msgstr "Kunde inte initiera indata-filidentifierare för visare"
+
+#~ msgid "Could not open tty for pager"
+#~ msgstr "Kunde inte öppna tty för visare"
+
+#~ msgid "Could not initialize result pipe"
+#~ msgstr "Kunde inte initiera rör för utskrift av resultat"
+
+#
+#~ msgid "Unspecified file descriptors"
+#~ msgstr "Ospecificerad filidentifierare"
+
+#
+#~ msgid "Could not read completions"
+#~ msgstr "Kunde inte läsa kompletteringar"
+
+#~ msgid "Could not expand string '%ls'"
+#~ msgstr "Kunde inte expandera strängen ”%ls”"
+
+#~ msgid "An additional command is required"
+#~ msgstr "Ett till kommand krävs"
+
+#~ msgid ""
+#~ "Could not locate end of block. The 'end' command is missing, misspelled "
+#~ "or a ';' is missing."
+#~ msgstr ""
+#~ "Kunde inte hitta slutet på kodblock. Kommandot ”end” saknas, är felstavat "
+#~ "eller ett ”;” saknas."
+
+#~ msgid "Expected a command name, got token of type '%ls'"
+#~ msgstr ""
+#~ "Förväntade att hitta ett kommandonamn, hittade en symbol av typen ”%ls”"
+
+#~ msgid "'case' builtin not inside of switch block"
+#~ msgstr ""
+#~ "Det inbyggda kommandot ”case” får bara användas i ett ”switch”-block."
+
+#~ msgid "Loop control command while not inside of loop"
+#~ msgstr "Loopstyrningskommandon får bara användas i loopar."
+
+#, fuzzy
+#~ msgid "'%ls' builtin not inside of if block"
+#~ msgstr "Det inbyggda kommandot ”else” får bara användas i ett if-block"
+
+#~ msgid "'end' command outside of block"
+#~ msgstr "Det inbyggda kommandot ”end” får bara användas i ett block"
+
+#~ msgid "Expected redirection specification, got token of type '%ls'"
+#~ msgstr "Förväntade en IO dirigering, hittade en symbol av typen ”%ls”"
+
+#~ msgid ""
+#~ "Encountered redirection when expecting a command name. Fish does not "
+#~ "allow a redirection operation before a command."
+#~ msgstr ""
+#~ "Förväntade ett kommandonamn, hittade en IO dirigering. Fish tillåter into "
+#~ "IO dirigeringar före kommandonamn"
+
+#~ msgid "Invalid IO redirection"
+#~ msgstr "Ogiltig IO omdirigering"
+
+#~ msgid "Requested redirection to something that is not a file descriptor %ls"
+#~ msgstr "IO dirigering till någonting som inte är en filidentifierare"
+
+#~ msgid "Don't preserve the specified attributes"
+#~ msgstr "Behåll inte de angivna attributen"
+
+#~ msgid "Control creation of sparse files"
+#~ msgstr "Kontrollera skapandet av glesa filer"
+
+#~ msgid "All base system packages"
+#~ msgstr "Alla bassystempaket"
+
+#~ msgid "All packages in world"
+#~ msgstr "Alla paket i världen"
+
+#~ msgid "Installed package"
+#~ msgstr "Installerade paket"
+
+#~ msgid "Usage overview of emerge"
+#~ msgstr "Användningsöversikt av emerge"
+
+#~ msgid "Help on subject system"
+#~ msgstr "Hjälp för ämnet system"
+
+#~ msgid "Help on subject config"
+#~ msgstr "Hjäl för ämnet konfiguration"
+
+#~ msgid "Help on subject sync"
+#~ msgstr "Hjälp för ämnet sync"
+
+#~ msgid "Use colors in output"
+#~ msgstr "Använd färger"
+
+#~ msgid "Don't use colors in output"
+#~ msgstr "Använd inte färger"
+
+#, fuzzy
+#~ msgid "Pull in build time dependencies"
+#~ msgstr "Visa byggberoenden"
+
+#, fuzzy
+#~ msgid "Don't pull in build time dependencies"
+#~ msgstr "Fråga efter extra beroenden"
+
+#, fuzzy
+#~ msgid "add the specified files on the next commit"
+#~ msgstr "Lägg till angiven fil fill den nuvarande listan av nyckelringar"
+
+#, fuzzy
+#~ msgid "show changeset information by line for each file"
+#~ msgstr "Visa ändringsinformation för paket"
+
+#, fuzzy
+#~ msgid "create an unversioned archive of a repository revision"
+#~ msgstr "Lägg till fil eller träd utan version till förrådet"
+
+#, fuzzy
+#~ msgid "list repository named branches"
+#~ msgstr "Inaktivera förråd"
+
+#, fuzzy
+#~ msgid "create a changegroup file"
+#~ msgstr "Skapa en kontrollpunktfil"
+
+#, fuzzy
+#~ msgid "output the current or given revision of files"
+#~ msgstr "Visa loggmeddelanden för en uppsättning revisioner och/eller filer"
+
+#, fuzzy
+#~ msgid "make a copy of an existing repository"
+#~ msgstr "Skapa lokal kopia av förråd"
+
+#, fuzzy
+#~ msgid "commit the specified files or all outstanding changes"
+#~ msgstr "Dekryptera angiven fil eller standard in"
+
+#, fuzzy
+#~ msgid "diff repository (or selected files)"
+#~ msgstr "Radera urval"
+
+#, fuzzy
+#~ msgid "forget the specified files on the next commit"
+#~ msgstr "Flytta filen angiven på kommandoraden"
+
+#, fuzzy
+#~ msgid "copy changes from other branches onto the current branch"
+#~ msgstr "Hämta ändringar från förrådet till arbetskopian"
+
+#, fuzzy
+#~ msgid "identify the working copy or specified revision"
+#~ msgstr "Uppdatera arbetskopian till en annan URL"
+
+#, fuzzy
+#~ msgid "import an ordered set of patches"
+#~ msgstr "Visa byteavstånd för matchningar"
+
+#, fuzzy
+#~ msgid "create a new repository in the given directory"
+#~ msgstr "Skapa förråd om det inte redan existerar"
+
+#, fuzzy
+#~ msgid "locate files matching specific patterns"
+#~ msgstr "Visa inte filer som matchar mönster"
+
+#, fuzzy
+#~ msgid "output the current or given revision of the project manifest"
+#~ msgstr "Visa loggmeddelanden för en uppsättning revisioner och/eller filer"
+
+#, fuzzy
+#~ msgid "show changesets not found in the destination"
+#~ msgstr "Fråga paket med angiven grupp"
+
+#, fuzzy
+#~ msgid "show the parents of the working directory or revision"
+#~ msgstr "Ändra arbetskatalog"
+
+#, fuzzy
+#~ msgid "show aliases for remote repositories"
+#~ msgstr "Ta bort inlägg i .cvspass för fjärrförråd"
+
+#, fuzzy
+#~ msgid "pull changes from the specified source"
+#~ msgstr "Fråga paket med angiven grupp"
+
+#, fuzzy
+#~ msgid "push changes to the specified destination"
+#~ msgstr "Fråga paket med angiven grupp"
+
+#, fuzzy
+#~ msgid "remove the specified files on the next commit"
+#~ msgstr "Flytta filen angiven på kommandoraden"
+
+#, fuzzy
+#~ msgid "roll back the last transaction (dangerous)"
+#~ msgstr "Ordna om fixarna i förrådet"
+
+#, fuzzy
+#~ msgid "print the root (top) of the current working directory"
+#~ msgstr "Ändra arbetskatalog"
+
+#, fuzzy
+#~ msgid "show changed files in the working directory"
+#~ msgstr "Ändra arbetskatalog"
+
+#, fuzzy
+#~ msgid "summarize working directory state"
+#~ msgstr "Visa nuvarande katalog"
+
+#, fuzzy
+#~ msgid "list repository tags"
+#~ msgstr "Inaktivera förråd"
+
+#, fuzzy
+#~ msgid "show the tip revision"
+#~ msgstr "Visa tid"
+
+#, fuzzy
+#~ msgid "apply one or more changegroup files"
+#~ msgstr "Läs paket från fil"
+
+#, fuzzy
+#~ msgid "update working directory (or switch revisions)"
+#~ msgstr "Ändra arbetskatalog"
+
+#, fuzzy
+#~ msgid "verify the integrity of the repository"
+#~ msgstr "Ta bort ett inlägg från förråd"
+
+#, fuzzy
+#~ msgid "output version and copyright information"
+#~ msgstr "Ignorera versionsmagiinformation"
+
+#, fuzzy
+#~ msgid "Configuration Files"
+#~ msgstr "Konfigureringsfil"
+
+#, fuzzy
+#~ msgid "Date Formats"
+#~ msgstr "Välj format"
+
+#, fuzzy
+#~ msgid "Diff Formats"
+#~ msgstr "Listformat"
+
+#, fuzzy
+#~ msgid "Environment Variables"
+#~ msgstr "Redigera miljövariabler"
+
+#, fuzzy
+#~ msgid "Specifying File Sets"
+#~ msgstr "Välj konfigurationsfil"
+
+#, fuzzy
+#~ msgid "Configuring hgweb"
+#~ msgstr "Konfigureringsfil"
+
+#, fuzzy
+#~ msgid "Merge Tools"
+#~ msgstr "Sammanslå sorterade filer"
+
+#, fuzzy
+#~ msgid "Specifying Multiple Revisions"
+#~ msgstr "Ange revision"
+
+#, fuzzy
+#~ msgid "File Name Patterns"
+#~ msgstr "Visa inte filer som matchar mönster"
+
+#, fuzzy
+#~ msgid "Specifying Single Revisions"
+#~ msgstr "Ange revision"
+
+#, fuzzy
+#~ msgid "Specifying Revision Sets"
+#~ msgstr "Ange revisionstiollstånd"
+
+#, fuzzy
+#~ msgid "Subrepositories"
+#~ msgstr "Aktivera förråd"
+
+#, fuzzy
+#~ msgid "[+] include names matching the given patterns"
+#~ msgstr "Visa inte filer som matchar mönster"
+
+#, fuzzy
+#~ msgid "[+] exclude names matching the given patterns"
+#~ msgstr "Lista alla moduler som matchar parameter med jokertecken"
+
+#, fuzzy
+#~ msgid "[+]   include names matching the given patterns"
+#~ msgstr "Visa inte filer som matchar mönster"
+
+#, fuzzy
+#~ msgid "[+]   exclude names matching the given patterns"
+#~ msgstr "Lista alla moduler som matchar parameter med jokertecken"
+
+#, fuzzy
+#~ msgid "Annotate the specified revision"
+#~ msgstr "Hjälp för det angivna inbyggda kommandot"
+
+#, fuzzy
+#~ msgid "Use text as commit message"
+#~ msgstr "Läs meddelande för tillägg från fil"
+
+#~ msgid "Read commit message from file"
+#~ msgstr "Läs meddelande för tillägg från fil"
+
+#, fuzzy
+#~ msgid "Record the specified date as commit date"
+#~ msgstr "Hjälp för det angivna kommandot"
+
+#, fuzzy
+#~ msgid "Record the specified user as committer"
+#~ msgstr "Använd angiven sträng som kommentarsträng"
+
+#, fuzzy
+#~ msgid "File to store the bundles into"
+#~ msgstr "Redigera fix-paketbeskrivning"
+
+#, fuzzy
+#~ msgid "Limit number of changes displayed"
+#~ msgstr "Skriv bara ut angivet antal matchningar"
+
+#, fuzzy
+#~ msgid "Display with template"
+#~ msgstr "Visa alla matchningar"
+
+#, fuzzy
+#~ msgid "Specify ssh command to use"
+#~ msgstr "Ange kommando att operera på"
+
+#, fuzzy
+#~ msgid "Specify hg command to run on the remote side"
+#~ msgstr "Välj destinationsadress"
+
+#, fuzzy
+#~ msgid "Search the repository as it is in REV"
+#~ msgstr "Ange förråd-URL"
+
+#, fuzzy
+#~ msgid "Show revisions matching date spec"
+#~ msgstr "Visa bara matchande del"
+
+#, fuzzy
+#~ msgid "Revision to display"
+#~ msgstr "Välj display"
+
+#, fuzzy
+#~ msgid "Specify merge tool"
+#~ msgstr "Ange förtroendemodell"
+
+#, fuzzy
+#~ msgid "Show parents of the specified revision"
+#~ msgstr "Fråga paket med angiven grupp"
+
+#, fuzzy
+#~ msgid "[+] target revision"
+#~ msgstr "Slå ihop revisioner"
+
+#, fuzzy
+#~ msgid "Tipmost revision matching date"
+#~ msgstr "Visa inte filer som matchar mönster"
+
+#, fuzzy
+#~ msgid "Revert to the specified revision"
+#~ msgstr "Flytta filen angiven på kommandoraden"
+
+#, fuzzy
+#~ msgid "For remote clients"
+#~ msgstr "Visa eller ta bort funktioner"
+
+#, fuzzy
+#~ msgid "SSL certificate file"
+#~ msgstr "Välj certifikatpolicy"
+
+#, fuzzy
+#~ msgid "Untrusted configuration options"
+#~ msgstr "Välj konfigurationsinställningar"
+
+#, fuzzy
+#~ msgid "List the changed files of a revision"
+#~ msgstr "Visa alla engenskaper hos filer, kataloger eller revisioner"
+
+#, fuzzy
+#~ msgid "Revision"
+#~ msgstr "Slå ihop revisioner"
+
+#~ msgid ""
+#~ "\\nWARNING\\n\\nThe location for fish configuration files has changed to "
+#~ "%s.\\nYour old files have been moved to this location.\\nYou can change "
+#~ "to a different location by changing the value of the variable "
+#~ "$XDG_CONFIG_HOME.\\n\\n"
+#~ msgstr ""
+#~ "\\nVARNING\\n\\nLagringsplatsen för fish-konfigureringsfiler har ändrats "
+#~ "till %s. Dina gamla filer har flyttats till denna plats.\\nDu kan ändra "
+#~ "denna plats genom att byta värde på variabeln $XDG_CONFIG_HOME.\\n\\n"
 
 #~ msgid "%ls: Missing function definition information."
 #~ msgstr "%ls: Funktionsdefinition saknas."
@@ -8987,9 +9370,6 @@ msgstr ""
 
 #~ msgid "Failed to close file descriptor %d"
 #~ msgstr "Misslyckades med att stänga filidentifierare %d"
-
-#~ msgid "Failed to execute process '%ls'"
-#~ msgstr "Misslyckades med att exekvera processen ”%ls”"
 
 #~ msgid ""
 #~ "Could not send process %d, '%ls' in job %d, '%ls' from group %d to group "
@@ -9089,10 +9469,6 @@ msgstr ""
 #~ msgstr "Skapa lokal kopia av förråd"
 
 #, fuzzy
-#~ msgid "Makes a copy of the repository"
-#~ msgstr "Skapa lokal kopia av förråd"
-
-#, fuzzy
 #~ msgid "Initialize a new source tree as a darcs repository"
 #~ msgstr "Checka in filer till förråd"
 
@@ -9104,10 +9480,6 @@ msgstr ""
 
 #~ msgid "Specify hash of creator patch (see docs)"
 #~ msgstr "Ange hash av skaparfix (se dokumentationen)"
-
-#, fuzzy
-#~ msgid "Name of version"
-#~ msgstr "NAmn på version at använda som kontrollpunkt"
 
 #~ msgid "Send to context stored in FILENAME"
 #~ msgstr "Skicka till sammanhang lagrat i FILNAMN"
@@ -9148,14 +9520,6 @@ msgstr ""
 
 #~ msgid "Use pattern from file"
 #~ msgstr "Använd mönster från fil"
-
-#, fuzzy
-#~ msgid "print information about the working copy"
-#~ msgstr "Hämta ändringar från förrådet till arbetskopian"
-
-#, fuzzy
-#~ msgid "export the repository via HTTP"
-#~ msgstr "Uppdatera förråd"
 
 #~ msgid "Debug option"
 #~ msgstr "Debugflagga"
@@ -9304,9 +9668,6 @@ msgstr ""
 
 #~ msgid "Prefix to strip on patch"
 #~ msgstr "Ta bort <prefix> på fix"
-
-#~ msgid "Use purge instead of remove"
-#~ msgstr "Använd rensning istället för radering"
 
 #~ msgid "Do not run update"
 #~ msgstr "Kör inte uppdatering"
@@ -9482,9 +9843,6 @@ msgstr ""
 #~ msgid "Overwrite"
 #~ msgstr "Skiv över"
 
-#~ msgid "Do not overwrite"
-#~ msgstr "Skriv inte över"
-
 #~ msgid "Reduce memory usage"
 #~ msgstr "Minska minnesanvändning"
 
@@ -9493,9 +9851,6 @@ msgstr ""
 
 #~ msgid "Print license"
 #~ msgstr "Skriv ut licens"
-
-#~ msgid "Compress to stdout"
-#~ msgstr "Komprimera till standard ut"
 
 #~ msgid "Compress file"
 #~ msgstr "Komprimera fil"
@@ -9880,9 +10235,6 @@ msgstr ""
 #~ msgid "Option list is not complete"
 #~ msgstr "Detta kommando accepterar andra flaggor än de här angivna"
 
-#~ msgid "Remove completion"
-#~ msgstr "Ta bort komplettering"
-
 #~ msgid ""
 #~ "The completion should only be used if the specified command has a zero "
 #~ "exit status"
@@ -10014,9 +10366,6 @@ msgstr ""
 #~ msgid "Bring work tree in sync with repository"
 #~ msgstr "Synkronisera arbetsträd med förråd"
 
-#~ msgid "Set watches"
-#~ msgstr "Lägg till övervakning"
-
 #~ msgid "See who is watching a file"
 #~ msgstr "Visa övervakningar på fil"
 
@@ -10028,9 +10377,6 @@ msgstr ""
 
 #~ msgid "Do not use the ~/.cvsrc file"
 #~ msgstr "Ignorera ~/.cvsrc"
-
-#~ msgid "Do not change any files"
-#~ msgstr "Ändra inga filer"
 
 #~ msgid "Cause CVS to be really quiet"
 #~ msgstr "Gör CVS mycket tyst läge"
@@ -10076,9 +10422,6 @@ msgstr ""
 
 #~ msgid "Process directories recursively"
 #~ msgstr "Processa underkataloger rekursivt"
-
-#~ msgid "Use a specified tag"
-#~ msgstr "Använd angiven tagg"
 
 #~ msgid "Specify filenames to be filtered"
 #~ msgstr "Ange filnamn att filtrera"
@@ -10236,9 +10579,6 @@ msgstr ""
 #~ msgid "Report on all tags"
 #~ msgstr "Rapport för alla taggar"
 
-#~ msgid "Show history for all users"
-#~ msgstr "Visa historik för alla användare"
-
 #~ msgid "Show only records for this directory"
 #~ msgstr "Visa bara poster för angiven katalog"
 
@@ -10256,9 +10596,6 @@ msgstr ""
 
 #~ msgid "Print only file info"
 #~ msgstr "Visa utförlig information"
-
-#~ msgid "Do not print tags"
-#~ msgstr "Skriv inte ut taggar"
 
 #~ msgid "Print only rcs filename"
 #~ msgstr "Skriv bara RCS-filnamn"
@@ -10364,9 +10701,6 @@ msgstr ""
 #~ "Leta inte efter filer eller kataloger att lägga till, och lägg inte till "
 #~ "dem automatiskt"
 
-#~ msgid "Summarize changes"
-#~ msgstr "Summera ändringar"
-
 #~ msgid "Suppress informational output"
 #~ msgstr "Tyst läge"
 
@@ -10405,9 +10739,6 @@ msgstr ""
 
 #~ msgid "Forward unsigned messages without extra header"
 #~ msgstr "Skicka vidare osignerade meddelanden utan extra huvud"
-
-#~ msgid "Check the entire repository"
-#~ msgstr "Kontrollera hela lagret"
 
 #~ msgid "Check patches since latest checkpoint"
 #~ msgstr "Kontrollera fixar sedan senaste kontrollpunkt"
@@ -10746,9 +11077,6 @@ msgstr ""
 #~ msgid "Erase function"
 #~ msgstr "Radera funktion"
 
-#~ msgid "Show hidden functions"
-#~ msgstr "Visa dolda funktioner"
-
 #, fuzzy
 #~ msgid "Test if function is defined"
 #~ msgstr "Testa om variabeln är definerad"
@@ -10965,9 +11293,6 @@ msgstr ""
 
 #~ msgid "List all keys with their fingerprints"
 #~ msgstr "Visa alla nycklar och deras fingeravtryck"
-
-#~ msgid "Generate a new key pair"
-#~ msgstr "Generera ett nytt nyckelpar"
 
 #~ msgid "Present a menu which enables you to do all key related tasks"
 #~ msgstr "Visa en meny som låter dig utföra alla nyckelrelaterade aktiviteter"
@@ -11490,9 +11815,6 @@ msgstr ""
 #~ msgid "Print full path of source"
 #~ msgstr "Visa full sökväg till källkod"
 
-#~ msgid "Print flat profile"
-#~ msgstr "Visa platt profil"
-
 #~ msgid "No flat profile"
 #~ msgstr "Visa inte platt profil"
 
@@ -11561,9 +11883,6 @@ msgstr ""
 
 #~ msgid "Save/restore filename"
 #~ msgstr "Spara/återställ filnamn"
-
-#~ msgid "Recurse directories"
-#~ msgstr "Rekursera till underkataloger"
 
 #~ msgid "Display compression ratios"
 #~ msgstr "Visa kompressionsgrad"
@@ -11651,9 +11970,6 @@ msgstr ""
 #~ msgid "Display status column"
 #~ msgstr "Visa statuskolumn"
 
-#~ msgid "Specify key bindings file"
-#~ msgstr "Välj fil med tangentbordsgenvägar"
-
 #~ msgid "Verbose prompt"
 #~ msgstr "Utförlig prompt"
 
@@ -11689,9 +12005,6 @@ msgstr ""
 
 #~ msgid "Multiple blank lines sqeezed"
 #~ msgstr "Slå ihop multipla tomma rader"
-
-#~ msgid "Do not fold long lines"
-#~ msgstr "Radbryt inte långa rader"
 
 #~ msgid "Edit tag"
 #~ msgstr "Redigera markering"
@@ -11840,9 +12153,6 @@ msgstr ""
 #~ msgid "Pager"
 #~ msgstr "Visare"
 
-#~ msgid "Manual sections"
-#~ msgstr "Manualsektion"
-
 #~ msgid "Always reformat"
 #~ msgstr "Formatera alltid om"
 
@@ -11959,9 +12269,6 @@ msgstr ""
 #~ msgid "Do not write mtab"
 #~ msgstr "Skriv inte till mtab"
 
-#~ msgid "Read/Write mode"
-#~ msgstr "Läs ock skrivbart läge"
-
 #~ msgid "Dynamically change postprocessing"
 #~ msgstr "Ändra efterbehyandling dynamiskt"
 
@@ -12003,9 +12310,6 @@ msgstr ""
 
 #~ msgid "Override framerate"
 #~ msgstr "Åsidosätt bildfrekvens"
-
-#~ msgid "Build index if unavailable"
-#~ msgstr "Bygg index om inte tillgängligt"
 
 #~ msgid "Load index from file"
 #~ msgstr "Ladda index från fil"
@@ -12085,9 +12389,6 @@ msgstr ""
 
 #~ msgid "Invoke CPP"
 #~ msgstr "Kör C-förprocessorn"
-
-#~ msgid "Extract script"
-#~ msgstr "Extrahera skript"
 
 #~ msgid "Open folder"
 #~ msgstr "Öppna katalog"
@@ -12182,9 +12483,6 @@ msgstr ""
 #~ msgstr ""
 #~ "Gå förbi de vanliga rutt-tabellerna och skicka direkt till en värd på ett "
 #~ "inkopplat gränssnitt"
-
-#~ msgid "Specifies the number of data bytes to be sent"
-#~ msgstr "Ange antalet bytes av data att sicka"
 
 #~ msgid "Set socket buffer size"
 #~ msgstr "Välj uttags (socket) buffertstorlek"
@@ -12347,9 +12645,6 @@ msgstr ""
 
 #~ msgid "Explain what is done"
 #~ msgstr "Förklara vad som utförs"
-
-#~ msgid "List of rpm configuration files"
-#~ msgstr "Visa rpmkonfigurationsfiler"
 
 #~ msgid "Pipe output through specified command"
 #~ msgstr "Filtrera utdata genom angivet kommando"
@@ -12970,9 +13265,6 @@ msgstr ""
 
 #~ msgid "Print kernel release"
 #~ msgstr "Visa kärnrelese"
-
-#~ msgid "Print kernel version"
-#~ msgstr "Visa kärnversion"
 
 #~ msgid "Print machine name"
 #~ msgstr "Visa maskinnamn"
@@ -13632,9 +13924,6 @@ msgstr ""
 #~ msgid "Move into zipfile (delete files)"
 #~ msgstr "Radera de filer som läggs till arkivet"
 
-#~ msgid "Do not store directory names"
-#~ msgstr "Lagra inte katalognamn"
-
 #~ msgid "Do not compress at all"
 #~ msgstr "Komprimera inte alls"
 
@@ -13988,9 +14277,6 @@ msgstr ""
 
 #~ msgid "Reduced output from portage's displays"
 #~ msgstr "Reducerad utdata från portage"
-
-#~ msgid "Resumes the last merge operation"
-#~ msgstr "Återupta senaste installationsoperation"
 
 #~ msgid ""
 #~ "Matches the search string against the description field as well the "

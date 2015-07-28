@@ -84,14 +84,15 @@ static void launch_fish_with_applescript(NSString *fish_binary_path)
 
 /* This approach asks Terminal to open a script that we control */
 int main(void) {
-    [[NSAutoreleasePool alloc] init];
     
-    /* Get the fish executable. Make sure it's absolute. */
-    NSURL *fish_executable = [[NSBundle mainBundle] URLForResource:@"fish" withExtension:@"" subdirectory:@"base/bin"];
-    if (! fish_executable)
-        die("Could not find fish executable in bundle");
+    @autoreleasepool {
+        /* Get the fish executable. Make sure it's absolute. */
+        NSURL *fish_executable = [[NSBundle mainBundle] URLForResource:@"fish" withExtension:@"" subdirectory:@"base/bin"];
+        if (! fish_executable)
+            die("Could not find fish executable in bundle");
         
-    launch_fish_with_applescript([fish_executable path]);    
+        launch_fish_with_applescript([fish_executable path]);
+    }
     
     /* If we succeeded, it will clean itself up */
     return 0;

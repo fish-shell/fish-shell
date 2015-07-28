@@ -29,6 +29,8 @@ body {
     border-right: none;
     padding-bottom: 15px;
     padding-top: 15px;
+	padding-left: 8px;
+	padding-right: 8px;
     font-size: 17pt;
     text-align: center;
     width: 15%;
@@ -111,6 +113,7 @@ body {
 }
 
 .master_element {
+    cursor: pointer;
     padding-top: 6px;
     padding-bottom: 11px;
     padding-left: 5px;
@@ -231,10 +234,20 @@ body {
 	border-bottom: #444 dotted 1px;
 }
 
- .abbreviation_actions {
-	width: 5em;
+.abbreviation_actions {
+	width: 8em;
 	text-align: right;
 	border-bottom: #444 dotted 1px;
+}
+
+.abbreviation_input {
+	background-color: #111;
+	border: solid 1px #777;
+	height: 1.5em;
+	color: white;
+	font: inherit;
+	padding: 3px;
+	margin: 0;
 }
 
 /* The CSS we apply when a table row is filtered */

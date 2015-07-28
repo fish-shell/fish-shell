@@ -1,2 +1,2 @@
-__fish_complete_svn colorsvn
+complete -c colorsvn -w svn
 

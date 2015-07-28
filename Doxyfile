@@ -835,19 +835,7 @@ RECURSIVE              = NO
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = print_help.c \
-                         xdgmimealias.c \
-                         xdgmimealias.h \
-                         xdgmime.c \
-                         xdgmimeglob.c \
-                         xdgmimeglob.h \
-                         xdgmime.h \
-                         xdgmimeint.c \
-                         xdgmimeint.h \
-                         xdgmimemagic.c \
-                         xdgmimemagic.h \
-                         xdgmimeparent.c \
-                         xdgmimeparent.h
+EXCLUDE                = print_help.c
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded

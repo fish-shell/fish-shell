@@ -7,7 +7,7 @@ open FILES...
 
 \subsection open-description Description
 
-`open` opens a file in its default application, using the `xdg-open` command if it exists, or else the <a href="commands.html#mimedb">mimedb</a> command.
+`open` opens a file in its default application, using the appropriate tool for the operating system. On GNU/Linux, this requires the common but optional `xdg-open` utility, from the `xdg-utils` package.
 
 
 \subsection open-example Example

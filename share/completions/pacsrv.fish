@@ -1,2 +1,1 @@
-
-__fish_complete_pacman pacsrv
+complete -c pacsrc -w pacman

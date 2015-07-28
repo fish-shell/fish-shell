@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-11-25 15:37+0800\n"
+"POT-Creation-Date: 2015-04-13 22:15+0800\n"
 "PO-Revision-Date: 2014-11-15 09:00+0800\n"
 "Last-Translator: David Adam <zanchey@ucc.gu.uwa.edu.au>\n"
 "Language-Team: English <fish-users@lists.sf.net>\n"
@@ -179,7 +179,7 @@ msgstr "%ls: Argument “%ls” must be an integer\n"
 msgid "%ls: --array option requires a single variable name.\n"
 msgstr "%ls: --array option requires a single variable name.\n"
 
-#: builtin.cpp:3065 fish.cpp:519 parser.cpp:765
+#: builtin.cpp:3065 fish.cpp:620 parser.cpp:764
 msgid "Standard input"
 msgstr "Standard input"
 
@@ -533,7 +533,7 @@ msgstr "CPU\t"
 msgid "State\tCommand\n"
 msgstr "State\tCommand\n"
 
-#: builtin_jobs.cpp:99 proc.cpp:847
+#: builtin_jobs.cpp:99 proc.cpp:843
 msgid "stopped"
 msgstr "stopped"
 
@@ -579,31 +579,31 @@ msgstr "%ls: value not completely converted"
 msgid "missing hexadecimal number in escape"
 msgstr "missing hexadecimal number in escape"
 
-#: builtin_printf.cpp:387
+#: builtin_printf.cpp:388
 msgid "Missing hexadecimal number in Unicode escape"
 msgstr "Missing hexadecimal number in Unicode escape"
 
-#: builtin_printf.cpp:401
+#: builtin_printf.cpp:402
 #, c-format
 msgid "Unicode character out of range: \\%c%0*x"
 msgstr "Unicode character out of range: \\%c%0*x"
 
-#: builtin_printf.cpp:669
+#: builtin_printf.cpp:670
 #, c-format
 msgid "invalid field width: %ls"
 msgstr "invalid field width: %ls"
 
-#: builtin_printf.cpp:707
+#: builtin_printf.cpp:708
 #, c-format
 msgid "invalid precision: %ls"
 msgstr "invalid precision: %ls"
 
-#: builtin_printf.cpp:738
+#: builtin_printf.cpp:739
 #, c-format
 msgid "%.*ls: invalid conversion specification"
 msgstr "%.*ls: invalid conversion specification"
 
-#: builtin_printf.cpp:770
+#: builtin_printf.cpp:771
 msgid "printf: not enough arguments"
 msgstr "printf: not enough arguments"
 
@@ -650,17 +650,17 @@ msgid ""
 msgstr ""
 "%ls: Warning: universal scope selected, but a global variable “%ls” exists.\n"
 
-#: builtin_set_color.cpp:142 builtin_set_color.cpp:164
+#: builtin_set_color.cpp:144 builtin_set_color.cpp:166
 #, c-format
 msgid "%ls: Unknown color '%ls'\n"
 msgstr "%ls: Unknown color “%ls”\n"
 
-#: builtin_set_color.cpp:151
+#: builtin_set_color.cpp:153
 #, c-format
 msgid "%ls: Expected an argument\n"
 msgstr "%ls: Expected an argument\n"
 
-#: builtin_set_color.cpp:171
+#: builtin_set_color.cpp:173
 #, c-format
 msgid "%ls: Could not set up terminal\n"
 msgstr "%ls: Could not set up terminal\n"
@@ -691,15 +691,15 @@ msgstr "Unknown option: "
 msgid "Multiple matches for option: "
 msgstr "Multiple matches for option: "
 
-#: env.cpp:313
+#: env.cpp:315
 msgid "Changing language to English"
 msgstr "Changing language to English"
 
-#: env.cpp:1182
+#: env.cpp:1180
 msgid "Tried to pop empty environment stack."
 msgstr "Tried to pop empty environment stack."
 
-#: env_universal_common.cpp:610 path.cpp:279
+#: env_universal_common.cpp:617 path.cpp:279
 msgid ""
 "Unable to create a configuration directory for fish. Your personal settings "
 "will not be saved. Please set the $XDG_CONFIG_HOME variable to a directory "
@@ -709,47 +709,47 @@ msgstr ""
 "will not be saved. Please set the $XDG_CONFIG_HOME variable to a directory "
 "where the current user has write access."
 
-#: event.cpp:168
+#: event.cpp:178
 #, c-format
 msgid "signal handler for %ls (%ls)"
 msgstr "signal handler for %ls (%ls)"
 
-#: event.cpp:172
+#: event.cpp:182
 #, c-format
 msgid "handler for variable '%ls'"
 msgstr "handler for variable “%ls”"
 
-#: event.cpp:178
+#: event.cpp:188
 #, c-format
 msgid "exit handler for process %d"
 msgstr "exit handler for process %d"
 
-#: event.cpp:184 event.cpp:195
+#: event.cpp:194 event.cpp:205
 #, c-format
 msgid "exit handler for job %d, '%ls'"
 msgstr "exit handler for job %d, “%ls”"
 
-#: event.cpp:186
+#: event.cpp:196
 #, c-format
 msgid "exit handler for job with process group %d"
 msgstr "exit handler for job with process group %d"
 
-#: event.cpp:197
+#: event.cpp:207
 #, c-format
 msgid "exit handler for job with job id %d"
 msgstr "exit handler for job with job id %d"
 
-#: event.cpp:203
+#: event.cpp:213
 #, c-format
 msgid "handler for generic event '%ls'"
 msgstr "handler for generic event “%ls”"
 
-#: event.cpp:207
+#: event.cpp:217
 #, c-format
 msgid "Unknown event type '0x%x'"
 msgstr "Unknown event type '0x%x'"
 
-#: event.cpp:621
+#: event.cpp:613
 msgid "Signal list overflow. Signals have been ignored."
 msgstr "Signal list overflow. Signals have been ignored."
 
@@ -767,12 +767,12 @@ msgstr "An error occurred while writing output"
 msgid "An error occurred while redirecting file '%s'"
 msgstr "An error occurred while redirecting file “%s”"
 
-#: exec.cpp:867
+#: exec.cpp:795
 #, c-format
 msgid "Unknown function '%ls'"
 msgstr "Unknown function “%ls”"
 
-#: exec.cpp:1011
+#: exec.cpp:943
 #, c-format
 msgid "Unknown input redirection type %d"
 msgstr "Unknown input redirection type %d"
@@ -806,49 +806,56 @@ msgstr "Last background job"
 msgid "Mismatched brackets"
 msgstr "Mismatched brackets"
 
-#: fish.cpp:321
+#: fish.cpp:330
+msgid ""
+"Old versions of fish appear to be running. You will not be able to share "
+"variable values between old and new fish sessions. For best results, restart "
+"all running instances of fish."
+msgstr ""
+
+#: fish.cpp:420
 #, c-format
 msgid "Invalid value '%s' for debug level switch"
 msgstr "Invalid value “%s” for debug level switch"
 
-#: fish.cpp:362 mimedb.cpp:1343
+#: fish.cpp:461 mimedb.cpp:1343
 #, c-format
 msgid "%s, version %s\n"
 msgstr "%s, version %s\n"
 
-#: fish.cpp:417
+#: fish.cpp:516
 msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "Can not use the no-execute mode when running an interactive session"
 
-#: fish.cpp:518
+#: fish.cpp:619
 #, c-format
 msgid "Error while reading file %ls\n"
 msgstr "Error while reading file %ls\n"
 
-#: fish_indent.cpp:346
+#: fish_indent.cpp:332
 #, c-format
 msgid "%ls, version %s\n"
 msgstr "%ls, version %s\n"
 
-#: input.cpp:481 input.cpp:491
+#: input.cpp:483 input.cpp:493
 msgid "Could not set up terminal"
 msgstr "Could not set up terminal"
 
-#: input.cpp:484
+#: input.cpp:486
 #, c-format
 msgid "Check that your terminal type, '%ls', is supported on this system"
 msgstr "Check that your terminal type, “%ls”, is supported on this system"
 
-#: input.cpp:486
+#: input.cpp:488
 #, c-format
 msgid "Attempting to use '%ls' instead"
 msgstr "Attempting to use “%ls” instead"
 
-#: input.cpp:533
+#: input.cpp:535
 msgid "Error while closing terminfo"
 msgstr "Error while closing terminfo"
 
-#: io.cpp:110
+#: io.cpp:112
 #, c-format
 msgid ""
 "An error occured while reading output from code block on file descriptor %d"
@@ -909,7 +916,7 @@ msgstr "%s: Could not parse mimetype from argument “%s”\n"
 msgid "Unknown"
 msgstr "Unknown"
 
-#: output.cpp:606
+#: output.cpp:608
 #, c-format
 msgid ""
 "Tried to use terminfo string %s on line %ld of %s, which is undefined in "
@@ -1019,150 +1026,150 @@ msgstr "The “%ls” command can not be used immediately after a backgrounded j
 msgid "Backgrounded commands can not be used as conditionals"
 msgstr "Backgrounded commands can not be used as conditionals"
 
-#: parser.cpp:53
+#: parser.cpp:52
 #, c-format
 msgid "Tokenizer error: '%ls'"
 msgstr "Tokenizer error: “%ls”"
 
-#: parser.cpp:58
+#: parser.cpp:57
 #, c-format
 msgid "Tried to evaluate commands using invalid block type '%ls'"
 msgstr "Tried to evaluate commands using invalid block type “%ls”"
 
-#: parser.cpp:63
+#: parser.cpp:62
 #, c-format
 msgid "Unexpected token of type '%ls'"
 msgstr "Unexpected token of type “%ls”"
 
-#: parser.cpp:68 parse_constants.h:253
+#: parser.cpp:67 parse_constants.h:255
 msgid "'while' block"
 msgstr "“while” block"
 
-#: parser.cpp:73 parse_constants.h:258
+#: parser.cpp:72 parse_constants.h:260
 msgid "'for' block"
 msgstr "“for” block"
 
-#: parser.cpp:78 parse_constants.h:263
+#: parser.cpp:77 parse_constants.h:265
 msgid "Block created by breakpoint"
 msgstr "Block created by breakpoint"
 
-#: parser.cpp:83 parse_constants.h:270
+#: parser.cpp:82 parse_constants.h:272
 msgid "'if' conditional block"
 msgstr "“if” conditional block"
 
-#: parser.cpp:88 parse_constants.h:276
+#: parser.cpp:87 parse_constants.h:278
 msgid "function definition block"
 msgstr "function definition block"
 
-#: parser.cpp:93 parse_constants.h:282
+#: parser.cpp:92 parse_constants.h:284
 msgid "function invocation block"
 msgstr "function invocation block"
 
-#: parser.cpp:98 parse_constants.h:287
+#: parser.cpp:97 parse_constants.h:289
 msgid "function invocation block with no variable shadowing"
 msgstr "function invocation block with no variable shadowing"
 
-#: parser.cpp:103 parse_constants.h:293
+#: parser.cpp:102 parse_constants.h:295
 msgid "'switch' block"
 msgstr "“switch” block"
 
-#: parser.cpp:108 parse_constants.h:299
+#: parser.cpp:107 parse_constants.h:301
 msgid "unexecutable block"
 msgstr "unexecutable block"
 
-#: parser.cpp:113 parse_constants.h:305
+#: parser.cpp:112 parse_constants.h:307
 msgid "global root block"
 msgstr "global root block"
 
-#: parser.cpp:118 parse_constants.h:311
+#: parser.cpp:117 parse_constants.h:313
 msgid "command substitution block"
 msgstr "command substitution block"
 
-#: parser.cpp:123 parse_constants.h:317
+#: parser.cpp:122 parse_constants.h:319
 msgid "'begin' unconditional block"
 msgstr "“begin” unconditional block"
 
-#: parser.cpp:128 parse_constants.h:323
+#: parser.cpp:127 parse_constants.h:325
 msgid "Block created by the . builtin"
 msgstr "Block created by the . builtin"
 
-#: parser.cpp:133 parse_constants.h:328
+#: parser.cpp:132 parse_constants.h:330
 msgid "event handler block"
 msgstr "event handler block"
 
-#: parser.cpp:138 parse_constants.h:334
+#: parser.cpp:137 parse_constants.h:336
 msgid "unknown/invalid block"
 msgstr "unknown/invalid block"
 
-#: parser.cpp:475
+#: parser.cpp:474
 #, c-format
 msgid "Could not write profiling information to file '%s'"
 msgstr "Could not write profiling information to file “%s”"
 
-#: parser.cpp:481
+#: parser.cpp:480
 msgid "Time\tSum\tCommand\n"
 msgstr "Time\tSum\tCommand\n"
 
-#: parser.cpp:563
+#: parser.cpp:562
 #, c-format
 msgid "in event handler: %ls\n"
 msgstr "in event handler: %ls\n"
 
-#: parser.cpp:591
+#: parser.cpp:590
 #, c-format
 msgid "from sourcing file %ls\n"
 msgstr "from sourcing file %ls\n"
 
-#: parser.cpp:598
+#: parser.cpp:597
 #, c-format
 msgid "in function '%ls'\n"
 msgstr "in function “%ls”\n"
 
-#: parser.cpp:603
+#: parser.cpp:602
 msgid "in command substitution\n"
 msgstr "in command substitution\n"
 
-#: parser.cpp:616
+#: parser.cpp:615
 #, c-format
 msgid "\tcalled on line %d of file %ls\n"
 msgstr "\tcalled on line %d of file %ls\n"
 
-#: parser.cpp:622
+#: parser.cpp:621
 msgid "\tcalled during startup\n"
 msgstr "\tcalled during startup\n"
 
-#: parser.cpp:626
+#: parser.cpp:625
 msgid "\tcalled on standard input\n"
 msgstr "\tcalled on standard input\n"
 
-#: parser.cpp:643
+#: parser.cpp:642
 #, c-format
 msgid "\twith parameter list '%ls'\n"
 msgstr "\twith parameter list “%ls”\n"
 
-#: parser.cpp:757
+#: parser.cpp:756
 #, c-format
 msgid "%ls (line %d): "
 msgstr "%ls (line %d): "
 
-#: parser.cpp:761
+#: parser.cpp:760
 msgid "Startup"
 msgstr "Startup"
 
-#: parser.cpp:804
+#: parser.cpp:803
 msgid "Job inconsistency"
 msgstr "Job inconsistency"
 
-#: parser.cpp:960
+#: parser.cpp:956
 msgid "End of block mismatch. Program terminating."
 msgstr "End of block mismatch. Program terminating."
 
-#: parser.cpp:1051
+#: parser.cpp:1047
 #, c-format
 msgid "%ls (line %lu): "
 msgstr "%ls (line %lu): "
 
-#: parser.cpp:1055
+#: parser.cpp:1051
 #, c-format
 msgid "%ls: "
 msgstr "%ls: "
@@ -1172,102 +1179,102 @@ msgstr "%ls: "
 msgid "Error while searching for command '%ls'"
 msgstr "Error while searching for command “%ls”"
 
-#: proc.cpp:694
+#: proc.cpp:690
 #, c-format
 msgid "'%ls' has %ls"
 msgstr "“%ls” has %ls"
 
-#: proc.cpp:698
+#: proc.cpp:694
 #, c-format
 msgid "Job %d, '%ls' has %ls"
 msgstr "Job %d, “%ls” has %ls"
 
-#: proc.cpp:790
+#: proc.cpp:786
 #, c-format
 msgid "%ls: %ls'%ls' terminated by signal %ls (%ls)"
 msgstr "%ls: %ls“%ls” terminated by signal %ls (%ls)"
 
-#: proc.cpp:801
+#: proc.cpp:797
 #, c-format
 msgid "%ls: Process %d, '%ls' %ls'%ls' terminated by signal %ls (%ls)"
 msgstr "%ls: Process %d, “%ls” %ls“%ls” terminated by signal %ls (%ls)"
 
-#: proc.cpp:832
+#: proc.cpp:828
 msgid "ended"
 msgstr "ended"
 
-#: proc.cpp:1066
+#: proc.cpp:1065
 msgid "An error occured while reading output from code block"
 msgstr "An error occured while reading output from code block"
 
-#: proc.cpp:1095 proc.cpp:1107
+#: proc.cpp:1094 proc.cpp:1106
 #, c-format
 msgid "Could not send job %d ('%ls') to foreground"
 msgstr "Could not send job %d (“%ls”) to foreground"
 
-#: proc.cpp:1127 proc.cpp:1137 proc.cpp:1152
+#: proc.cpp:1126 proc.cpp:1136 proc.cpp:1151
 msgid "Could not return shell to foreground"
 msgstr "Could not return shell to foreground"
 
-#: proc.cpp:1380 proc.cpp:1406
+#: proc.cpp:1354 proc.cpp:1380
 msgid "Process list pointer"
 msgstr "Process list pointer"
 
-#: proc.cpp:1391
+#: proc.cpp:1365
 #, c-format
 msgid "More than one job in foreground: job 1: '%ls' job 2: '%ls'"
 msgstr "More than one job in foreground: job 1: “%ls” job 2: “%ls”"
 
-#: proc.cpp:1404
+#: proc.cpp:1378
 msgid "Process argument list"
 msgstr "Process argument list"
 
-#: proc.cpp:1405
+#: proc.cpp:1379
 msgid "Process name"
 msgstr "Process name"
 
-#: proc.cpp:1411
+#: proc.cpp:1385
 #, c-format
 msgid "Job '%ls', process '%ls' has inconsistent state 'stopped'=%d"
 msgstr "Job “%ls”, process “%ls” has inconsistent state “stopped”=%d"
 
-#: proc.cpp:1421
+#: proc.cpp:1395
 #, c-format
 msgid "Job '%ls', process '%ls' has inconsistent state 'completed'=%d"
 msgstr "Job “%ls”, process “%ls” has inconsistent state “completed”=%d"
 
-#: reader.cpp:476
+#: reader.cpp:478
 msgid "Could not set terminal mode for new job"
 msgstr "Could not set terminal mode for new job"
 
-#: reader.cpp:523
+#: reader.cpp:525
 msgid "Could not set terminal mode for shell"
 msgstr "Could not set terminal mode for shell"
 
-#: reader.cpp:2054
+#: reader.cpp:2059
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
 msgstr "No TTY for interactive shell (tcgetpgrp failed)"
 
-#: reader.cpp:2069
+#: reader.cpp:2074
 #, c-format
 msgid ""
 "I appear to be an orphaned process, so I am quitting politely. My pid is %d."
 msgstr ""
 "I appear to be an orphaned process, so I am quitting politely. My pid is %d."
 
-#: reader.cpp:2100
+#: reader.cpp:2105
 msgid "Couldn't put the shell in its own process group"
 msgstr "Couldn't put the shell in its own process group"
 
-#: reader.cpp:2110
+#: reader.cpp:2115
 msgid "Couldn't grab control of terminal"
 msgstr "Couldn't grab control of terminal"
 
-#: reader.cpp:2611
+#: reader.cpp:2616
 msgid "Pop null reader block"
 msgstr "Pop null reader block"
 
-#: reader.cpp:2877
+#: reader.cpp:2882
 msgid ""
 "There are stopped jobs. A second attempt to exit will enforce their "
 "termination.\n"
@@ -1275,20 +1282,20 @@ msgstr ""
 "There are stopped jobs. A second attempt to exit will enforce their "
 "termination.\n"
 
-#: reader.cpp:4090
+#: reader.cpp:4115
 #, c-format
 msgid "Unknown keybinding %d"
 msgstr "Unknown keybinding %d"
 
-#: reader.cpp:4201
+#: reader.cpp:4226
 msgid "Error while reading from file descriptor"
 msgstr "Error while reading from file descriptor"
 
-#: reader.cpp:4218
+#: reader.cpp:4243
 msgid "Error while closing input stream"
 msgstr "Error while closing input stream"
 
-#: reader.cpp:4245
+#: reader.cpp:4270
 msgid "Error while opening input stream"
 msgstr "Error while opening input stream"
 
@@ -1518,7 +1525,7 @@ msgstr "Run job in background"
 msgid "Comment"
 msgstr "Comment"
 
-#: tokenizer.cpp:560
+#: tokenizer.cpp:561
 msgid "Invalid token type"
 msgstr "Invalid token type"
 
@@ -1707,7 +1714,7 @@ msgstr "An error occurred while setting up pipe"
 msgid "Array index out of bounds"
 msgstr "Array index out of bounds"
 
-#: parse_constants.h:183
+#: parse_constants.h:185
 #, c-format
 msgid ""
 "The function '%ls' calls itself immediately, which would result in an "
@@ -1716,7 +1723,7 @@ msgstr ""
 "The function “%ls” calls itself immediately, which would result in an "
 "infinite loop."
 
-#: parse_constants.h:187
+#: parse_constants.h:189
 msgid ""
 "The function call stack limit has been exceeded. Do you have an accidental "
 "infinite loop?"
@@ -1724,7 +1731,7 @@ msgstr ""
 "The function call stack limit has been exceeded. Do you have an accidental "
 "infinite loop?"
 
-#: parse_constants.h:190
+#: parse_constants.h:192
 msgid ""
 "Expected a command, but instead found a pipe. Did you mean 'COMMAND; or "
 "COMMAND'? See the help section for the 'or' builtin command by typing 'help "
@@ -1734,7 +1741,7 @@ msgstr ""
 "COMMAND”? See the help section for the “or” builtin command by typing “help "
 "or”."
 
-#: parse_constants.h:193
+#: parse_constants.h:195
 msgid ""
 "Expected a command, but instead found an '&'. Did you mean 'COMMAND; and "
 "COMMAND'? See the help section for the 'and' builtin command by typing 'help "
@@ -1744,49 +1751,49 @@ msgstr ""
 "COMMAND”? See the help section for the “and” builtin command by typing “help "
 "and”."
 
-#: parse_constants.h:196
+#: parse_constants.h:198
 #, c-format
 msgid "Illegal command name '%ls'"
 msgstr "Illegal command name “%ls”"
 
-#: parse_constants.h:199
+#: parse_constants.h:201
 #, c-format
 msgid "Unknown builtin '%ls'"
 msgstr "Unknown builtin “%ls”"
 
-#: parse_constants.h:202
+#: parse_constants.h:204
 #, c-format
 msgid "Unable to expand variable name '%ls'"
 msgstr "Unable to expand variable name “%ls”"
 
-#: parse_constants.h:205
+#: parse_constants.h:207
 #, c-format
 msgid "Unable to find a process '%ls'"
 msgstr "Unable to find a process “%ls”"
 
-#: parse_constants.h:208
+#: parse_constants.h:210
 #, c-format
 msgid "Illegal file descriptor in redirection '%ls'"
 msgstr "Illegal file descriptor in redirection “%ls”"
 
-#: parse_constants.h:211
+#: parse_constants.h:213
 #, c-format
 msgid "No matches for wildcard '%ls'."
 msgstr "No matches for wildcard “%ls”."
 
-#: parse_constants.h:214
+#: parse_constants.h:216
 msgid "break command while not inside of loop"
 msgstr "break command while not inside of loop"
 
-#: parse_constants.h:217
+#: parse_constants.h:219
 msgid "continue command while not inside of loop"
 msgstr "continue command while not inside of loop"
 
-#: parse_constants.h:220
+#: parse_constants.h:222
 msgid "'return' builtin command outside of function definition"
 msgstr "“return” builtin command outside of function definition"
 
-#: parse_constants.h:223
+#: parse_constants.h:225
 #, c-format
 msgid ""
 "Unknown command '%ls'. Did you mean 'set %ls %ls'? See the help section on "
@@ -1795,7 +1802,7 @@ msgstr ""
 "Unknown command “%ls”. Did you mean “set %ls %ls”? See the help section on "
 "the set command by typing 'help set'."
 
-#: parse_constants.h:228
+#: parse_constants.h:230
 #, c-format
 msgid ""
 "The '$' character begins a variable name. The character '%lc', which "
@@ -1808,7 +1815,7 @@ msgstr ""
 "variable names may not be zero characters long. To learn more about variable "
 "expansion in fish, type “help expand-variable”."
 
-#: parse_constants.h:233
+#: parse_constants.h:235
 msgid ""
 "$? is not a valid variable in fish. If you want the exit status of the last "
 "command, try $status."
@@ -1816,7 +1823,7 @@ msgstr ""
 "$? is not a valid variable in fish. If you want the exit status of the last "
 "command, try $status."
 
-#: parse_constants.h:238
+#: parse_constants.h:240
 msgid ""
 "The '$' begins a variable name. It was given at the end of an argument. "
 "Variable names may not be zero characters long. To learn more about variable "
@@ -1826,7 +1833,7 @@ msgstr ""
 "Variable names may not be zero characters long. To learn more about variable "
 "expansion in fish, type “help expand-variable”."
 
-#: parse_constants.h:243
+#: parse_constants.h:245
 #, c-format
 msgid ""
 "Did you mean %ls{$%ls}%ls? The '$' character begins a variable name. A "
@@ -1839,7 +1846,7 @@ msgstr ""
 "variable name, and variable names may not be zero characters long. To learn "
 "more about variable expansion in fish, type “help expand-variable”."
 
-#: parse_constants.h:248
+#: parse_constants.h:250
 msgid ""
 "Did you mean (COMMAND)? In fish, the '$' character is only used for "
 "accessing variables. To learn more about command substitution in fish, type "
@@ -3979,13 +3986,13 @@ msgid ""
 msgstr ""
 "Prints completions for installed packages on the system from /var/db/pkg"
 
-#: share/completions/emerge.fish:12 share/completions/equery.fish:12
+#: share/completions/emerge.fish:13 share/completions/equery.fish:12
 msgid ""
 "Prints completions for all available packages on the system from /usr/portage"
 msgstr ""
 "Prints completions for all available packages on the system from /usr/portage"
 
-#: share/completions/emerge.fish:19
+#: share/completions/emerge.fish:22
 msgid ""
 "Tests if emerge command should have an installed package as potential "
 "completion"
@@ -3993,54 +4000,13 @@ msgstr ""
 "Tests if emerge command should have an installed package as potential "
 "completion"
 
-#: share/completions/emerge.fish:30 share/completions/emerge.fish:31
-msgid "All base system packages"
-msgstr "All base system packages"
-
-#: share/completions/emerge.fish:30 share/completions/emerge.fish:31
-msgid "All packages in world"
-msgstr "All packages in world"
-
-#: share/completions/emerge.fish:30
-msgid "Installed package"
-msgstr "Installed package"
-
-#: share/completions/emerge.fish:31
-#: share/functions/__fish_print_packages.fish:13
-msgid "Package"
-msgstr "Package"
-
-#: share/completions/emerge.fish:35
-msgid "Usage overview of emerge"
-msgstr "Usage overview of emerge"
-
-#: share/completions/emerge.fish:35
-msgid "Help on subject system"
-msgstr "Help on subject system"
-
-#: share/completions/emerge.fish:35
-msgid "Help on subject config"
-msgstr "Help on subject config"
-
-#: share/completions/emerge.fish:35
-msgid "Help on subject sync"
-msgstr "Help on subject sync"
-
-#: share/completions/emerge.fish:57
-msgid "Use colors in output"
-msgstr "Use colors in output"
-
-#: share/completions/emerge.fish:57
-msgid "Don't use colors in output"
-msgstr "Don't use colors in output"
-
-#: share/completions/emerge.fish:81
-msgid "Pull in build time dependencies"
-msgstr "Pull in build time dependencies"
-
-#: share/completions/emerge.fish:81
-msgid "Don't pull in build time dependencies"
-msgstr "Don't pull in build time dependencies"
+#: share/completions/emerge.fish:32
+#, fuzzy
+msgid ""
+"Print completions for all packages including the version compare if that is "
+"already typed"
+msgstr ""
+"Prints completions for installed packages on the system from /var/db/pkg"
 
 #: share/completions/env.fish:2
 msgid "Redefine variable"
@@ -4798,6 +4764,11 @@ msgstr "Start interface"
 #: share/completions/ifup.fish:1
 msgid "Network interface"
 msgstr "Network interface"
+
+#: share/completions/kitchen.fish:3
+#, fuzzy
+msgid "Test if kitchen has yet to be given the main command"
+msgstr "Test if vagrant has yet to be given the main command"
 
 #: share/completions/less.fish:3
 msgid "Buffer space"
@@ -8042,6 +8013,11 @@ msgstr "Event handler, repaints prompt when any color changes"
 msgid "Event handler, repaints prompt when any char changes"
 msgstr "Event handler, repaints prompt when any char changes"
 
+#: share/functions/__fish_hg_prompt.fish:23
+#, fuzzy
+msgid "Write out the hg prompt"
+msgstr "Write out the git prompt"
+
 #: share/functions/__fish_is_token_n.fish:1
 msgid "Test if current token is on Nth place"
 msgstr "Test if current token is on Nth place"
@@ -8098,6 +8074,10 @@ msgstr "Print available lsblk columns"
 msgid "Print mounted devices"
 msgstr "Print mounted devices"
 
+#: share/functions/__fish_print_packages.fish:13
+msgid "Package"
+msgstr "Package"
+
 #: share/functions/__fish_print_svn_rev.fish:1
 msgid "Print svn revisions"
 msgstr "Print svn revisions"
@@ -8146,31 +8126,31 @@ msgstr "Write out the git prompt"
 msgid "Manage abbreviations"
 msgstr "Manage abbreviations"
 
-#: share/functions/abbr.fish:36
+#: share/functions/abbr.fish:40
 msgid "%s: invalid option -- %s\\n"
 msgstr "%s: invalid option -- %s\\n"
 
-#: share/functions/abbr.fish:43
+#: share/functions/abbr.fish:47
 msgid "%s: %s cannot be specified along with %s\\n"
 msgstr "%s: %s cannot be specified along with %s\\n"
 
-#: share/functions/abbr.fish:52
+#: share/functions/abbr.fish:56
 msgid "%s: option requires an argument -- %s\\n"
 msgstr "%s: option requires an argument -- %s\\n"
 
-#: share/functions/abbr.fish:58
+#: share/functions/abbr.fish:62
 msgid "%s: Unexpected argument -- %s\\n"
 msgstr "%s: Unexpected argument -- %s\\n"
 
-#: share/functions/abbr.fish:71
+#: share/functions/abbr.fish:75
 msgid "%s: abbreviation must have a non-empty key\\n"
 msgstr "%s: abbreviation must have a non-empty key\\n"
 
-#: share/functions/abbr.fish:75
+#: share/functions/abbr.fish:79
 msgid "%s: abbreviation must have a value\\n"
 msgstr "%s: abbreviation must have a value\\n"
 
-#: share/functions/abbr.fish:97
+#: share/functions/abbr.fish:101
 msgid "%s: no such abbreviation '%s'\\n"
 msgstr "%s: no such abbreviation “%s”\\n"
 
@@ -8203,6 +8183,11 @@ msgstr "Print the current directory history (the back- and fwd- lists)"
 #: share/functions/dirs.fish:1
 msgid "Print directory stack"
 msgstr "Print directory stack"
+
+#: share/functions/export.fish:1
+#, fuzzy
+msgid "Set global variable. Alias for set -g, made for bash compatibility"
+msgstr "Set global variable. Alias for set -g, made for csh compatibility"
 
 #: share/functions/fish_config.fish:1
 msgid "Launch fish's web based configuration"
@@ -8269,7 +8254,7 @@ msgstr "%s: Expected function name\\n"
 msgid "%s: Could not create configuration directory\\n"
 msgstr "%s: Could not create configuration directory\\n"
 
-#: share/functions/funcsave.fish:37
+#: share/functions/funcsave.fish:36
 msgid "%s: Unknown function '%s'\\n"
 msgstr "%s: Unknown function “%s”\\n"
 
@@ -8460,6 +8445,39 @@ msgid ""
 msgstr ""
 "%s: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s "
 "VARIABLE\\n"
+
+#~ msgid "All base system packages"
+#~ msgstr "All base system packages"
+
+#~ msgid "All packages in world"
+#~ msgstr "All packages in world"
+
+#~ msgid "Installed package"
+#~ msgstr "Installed package"
+
+#~ msgid "Usage overview of emerge"
+#~ msgstr "Usage overview of emerge"
+
+#~ msgid "Help on subject system"
+#~ msgstr "Help on subject system"
+
+#~ msgid "Help on subject config"
+#~ msgstr "Help on subject config"
+
+#~ msgid "Help on subject sync"
+#~ msgstr "Help on subject sync"
+
+#~ msgid "Use colors in output"
+#~ msgstr "Use colors in output"
+
+#~ msgid "Don't use colors in output"
+#~ msgstr "Don't use colors in output"
+
+#~ msgid "Pull in build time dependencies"
+#~ msgstr "Pull in build time dependencies"
+
+#~ msgid "Don't pull in build time dependencies"
+#~ msgstr "Don't pull in build time dependencies"
 
 #~ msgid "%ls: Expected zero or two parameters, got %d\n"
 #~ msgstr "%ls: Expected zero or two parameters, got %d\n"

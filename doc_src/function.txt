@@ -2,7 +2,7 @@
 
 \subsection function-synopsis Synopsis
 \fish{synopsis}
-function [OPTIONS] NAME; BODY; end
+function NAME [OPTIONS]; BODY; end
 \endfish
 
 \subsection function-description Description

@@ -129,9 +129,7 @@ THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH RE
 ----
 
 
-## License for xdgmime and glibc
-
-The xdgmime library, written and copyrighted by Red Hat, Inc, is used by the mimedb command, which is a part of fish. It is released under the LGPL, version 2 or later, or under the Academic Free License, version 2. Version 2 of the LGPL license agreement is included below.
+## License for glibc
 
 Fish contains code from the glibc library, namely the wcstok function. This code is licensed under the LGPL, version 2 or later. Version 2 of the LPGL license agreement is included below.
 

@@ -5,7 +5,7 @@
 # filename completion.  Unfortunatly, this turns out to be a bit
 # complicated to do.
 
-set -l is_assignment "commandline -ct|sgrep '..*='"
+set -l is_assignment "commandline -ct| __fish_sgrep '..*='"
 set -l complete_file_assignment '(commandline -ct|sed -e \'s/=.*/=/\')(complete --do-complete=this_command_does_not_exist\ (commandline -ct|sed -e \'s/.*=//\'))'
 complete -c make --condition $is_assignment -a $complete_file_assignment
 

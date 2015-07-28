@@ -18,7 +18,7 @@ function __fish_complete_cd -d "Completions for the cd command"
 	# That trailing slash ensures that we only expand directories
 
 	set -l ctoken (commandline -ct)
-	if echo $ctoken | sgrep '^/\|^\./\|^\.\./\|^~/' >/dev/null
+	if echo $ctoken | __fish_sgrep '^/\|^\./\|^\.\./\|^~/' >/dev/null
 		# This is an absolute search path
 		# Squelch descriptions per issue 254
 		eval printf '\%s\\n' $ctoken\*/

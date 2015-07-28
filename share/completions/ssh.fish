@@ -15,7 +15,7 @@ complete -x -c ssh -d Hostname -a "
 "
 
 complete -x -c ssh -d User -a "
-(__fish_print_users | sgrep -v '^_')@
+(__fish_print_users | __fish_sgrep -v '^_')@
 "
 complete -c ssh --description "Command to run" -x -a '(__fish_complete_subcommand --fcs-skip=2)'
 
@@ -23,7 +23,7 @@ complete -c ssh -s a --description "Disables forwarding of the authentication ag
 complete -c ssh -s A --description "Enables forwarding of the authentication agent"
 complete -x -c ssh -s b --description "Interface to transmit from" -a "
 (
-	cat /proc/net/arp ^/dev/null| sgrep -v '^IP'|cut -d ' ' -f 1 ^/dev/null
+	cat /proc/net/arp ^/dev/null| __fish_sgrep -v '^IP'|cut -d ' ' -f 1 ^/dev/null
 )
 "
 

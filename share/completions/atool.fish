@@ -13,7 +13,7 @@ complete -c atool -l version -d 'output version information and exit'
 
 ##Options:
 complete -c atool -s e -l each -d 'execute command above for each file specified'
-complete -c atool -s F -l format -d 'override archive format (see below)' -xa "(man atool | sgrep -E '^\s+(\S+)\s+\(\..+\)' | sed -r 's/\s+(\S+)\s+\((.+)\)/\1\t\2/')"
+complete -c atool -s F -l format -d 'override archive format (see below)' -xa "(man atool | __fish_sgrep -E '^\s+(\S+)\s+\(\..+\)' | sed -r 's/\s+(\S+)\s+\((.+)\)/\1\t\2/')"
 complete -c atool -s O -l format-option -x -d 'give specific options to the archiver'
 complete -c atool -s D -l subdir -d 'always create subdirectory when extracting'
 complete -c atool -s f -l force -d 'allow overwriting of local files'

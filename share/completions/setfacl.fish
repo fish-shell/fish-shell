@@ -7,15 +7,15 @@ function __fish_facl_list_spec_keyword
 end
 
 function __fish_facl_starts_with_spec_user
-  echo (commandline -ct) | sgrep -q -E 'u(ser)?:'
+  echo (commandline -ct) | __fish_sgrep -q -E 'u(ser)?:'
 end
 
 function __fish_facl_starts_with_spec_group
-  echo (commandline -ct) | sgrep -q -E 'g(roup)?:'
+  echo (commandline -ct) | __fish_sgrep -q -E 'g(roup)?:'
 end
 
 function __fish_facl_extract_acl
-  echo (commandline -ct) | sgrep -o -E '\w*:'
+  echo (commandline -ct) | __fish_sgrep -o -E '\w*:'
 end
 
 complete -c setfacl    -s m -s x -l modify -l remove -l set -n '__fish_facl_starts_with_spec_user'  -a '(__fish_facl_extract_acl)(__fish_complete_users  | sed "s/\t/:\t/g")'

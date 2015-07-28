@@ -28,11 +28,11 @@ function __fish_not_contain_opt -d "Checks that a specific option is not in the 
 			continue
 		end
 
-		if commandline -cpo | sgrep -- "^-"$i"\|^-[^-]*"$i >/dev/null
+		if commandline -cpo | __fish_sgrep -- "^-"$i"\|^-[^-]*"$i >/dev/null
 			return 1
 		end
 
-		if commandline -ct | sgrep -- "^-"$i"\|^-[^-]*"$i >/dev/null
+		if commandline -ct | __fish_sgrep -- "^-"$i"\|^-[^-]*"$i >/dev/null
 			return 1
 		end
 	end

@@ -124,7 +124,7 @@ function __fish_print_packages
 	else
 		# FIXME?  Seems to be broken
 		if type -q -f emerge
-			emerge -s \^(commandline -tc) |sgrep "^*" |cut -d\  -f3 |cut -d/ -f2
+			emerge -s \^(commandline -tc) | __fish_sgrep "^*" |cut -d\  -f3 |cut -d/ -f2
 			return
 		end
 	end

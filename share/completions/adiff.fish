@@ -1,1 +1,1 @@
-__fish_complete_atool adiff
+complete -c adiff -w atool

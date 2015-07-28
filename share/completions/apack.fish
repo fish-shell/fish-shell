@@ -1,1 +1,1 @@
-__fish_complete_atool apack
+complete -c apack -w atool

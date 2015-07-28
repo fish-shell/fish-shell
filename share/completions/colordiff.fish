@@ -1,2 +1,1 @@
-# Completions for diff
-__fish_complete_diff colordiff
+complete -c colordiff -w diff

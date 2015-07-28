@@ -183,7 +183,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	__fish_reload_key_bindings ^ /dev/null
 
 	# Repaint screen when window changes size
-	function __fish_winch_handler --on-signal winch
+	function __fish_winch_handler --on-signal WINCH
 		commandline -f repaint
 	end
 

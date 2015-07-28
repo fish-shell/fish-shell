@@ -112,7 +112,7 @@ Some characters can not be written directly on the command line. For these chara
 
 - '<code>\\x<i>xx</i></code>', where <code><i>xx</i></code> is a hexadecimal number, represents the ascii character with the specified value. For example, `\x9` is the tab character.
 
-- '<code>\\X<i>xx</i></code>', where <code><i>xx</i></code> is a hexadecimal number, represents a byte of data with the specified value. If you are using a mutibyte encoding, this can be used to enter
+- '<code>\\X<i>xx</i></code>', where <code><i>xx</i></code> is a hexadecimal number, represents a byte of data with the specified value. If you are using a multibyte encoding, this can be used to enter
 invalid strings. Only use this if you know what you are doing.
 
 - '<code>\\<i>ooo</i></code>', where <code><i>ooo</i></code> is an octal number, represents the ascii character with the specified value. For example, `\011` is the tab character.
@@ -236,7 +236,7 @@ There are a few important things that need to be noted about aliases:
 
 - Always take care to add the `$argv` variable to the list of parameters to the wrapped command. This makes sure that if the user specifies any additional parameters to the function, they are passed on to the underlying command.
 
-- If the alias has the same name as the aliased command, it is necessary to refix the call to the program with `command` in order to tell fish that the unction should not call itself, but rather a command with the same name. ailing to do so will cause infinite recursion bugs.
+- If the alias has the same name as the aliased command, it is necessary to refix the call to the program with `command` in order to tell fish that the function should not call itself, but rather a command with the same name. Failing to do so will cause infinite recursion bugs.
 
 To easily create a function of this form, you can use the <a href="commands.html#alias">alias</a> command.
 
@@ -343,7 +343,7 @@ To provide a list of possible completions for myprog, use the `-a` switch. If `m
 complete -c myprog -s o -l output -a "yes no"
 \endfish
 
-There are also special switches for specifying that a switch requires an argument, to disable filename completion, to create completions that are only available in some combinations, etc..  For a complete description of the various switches accepted by the `complete` command, see the documentationfor the <a href="commands.html#complete">complete</a> builtin, or write `complete --help` inside the `fish` shell.
+There are also special switches for specifying that a switch requires an argument, to disable filename completion, to create completions that are only available in some combinations, etc..  For a complete description of the various switches accepted by the `complete` command, see the documentation for the <a href="commands.html#complete">complete</a> builtin, or write `complete --help` inside the `fish` shell.
 
 For examples of how to write your own complex completions, study the completions in `/usr/share/fish/completions`. (The exact path depends on your chosen installation prefix and may be slightly different)
 
@@ -362,7 +362,7 @@ Functions beginning with the string `__fish_print_` print a newline separated li
 
 - `__fish_complete_pids` prints a list of all processes IDs with the command name as description.
 
-- `__fish_complete_suffix SUFFIX` performs file completion allowing only files ending in SUFFIX. The mimetype database is used to find a suitable description.
+- `__fish_complete_suffix SUFFIX` performs file completion allowing only files ending in SUFFIX, with an optional description.
 
 - `__fish_complete_users` prints a list of all users with their full name as description.
 

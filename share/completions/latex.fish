@@ -1,2 +1,2 @@
-__fish_complete_tex latex
+complete -c tex -w latex
 

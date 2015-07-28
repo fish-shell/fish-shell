@@ -198,7 +198,13 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 
   bind -M insert \ef forward-word
 
+  #
+  # Lowercase r, enters replace-one mode
+  #
 
+  bind -m replace-one r force-repaint
+  bind -M replace-one -m default '' delete-char self-insert backward-char force-repaint
+  bind -M replace-one -m default \e cancel force-repaint
 
   #
   # visual mode

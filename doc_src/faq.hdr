@@ -212,7 +212,7 @@ Next, do the following (assuming fish was installed to /usr/local):
 rm -Rf /usr/local/etc/fish /usr/local/share/fish ~/.config/fish
 rm /usr/local/share/man/man1/fish*.1
 cd /usr/local/bin
-rm -f fish mimedb fishd fish_indent
+rm -f fish fish_indent
 \endfish
 
 \htmlonly[block]

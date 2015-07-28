@@ -69,54 +69,6 @@ license.
   suitability of this software for any purpose. It is provided "as is"
   without express or implied warranty.
 
-The xdgmime library, written and copyrighted by Red Hat, Inc, is used
-by the mimedb command, which is a part of fish. It is released under
-the LGPL license.
-
-The copyright for the xdgmime-related files belong to the following people
-xdgmime.c
-   Copyright (C) 2003,2004  Red Hat, Inc.
-   Copyright (C) 2003,2004  Jonathan Blandford <jrb@alum.mit.edu>
-
-xdgmime.h
-   Copyright (C) 2003  Red Hat, Inc.
-   Copyright (C) 2003  Jonathan Blandford <jrb@alum.mit.edu>
-
-xdgmimealias.c, xdgmimealias.h
-   Copyright (C) 2004  Red Hat, Inc.
-   Copyright (C) 2004  Matthias Clasen <mclasen@redhat.com>
-
-xdgmimeglob.c, xdgmimeglob.h
-   Copyright (C) 2003  Red Hat, Inc.
-   Copyright (C) 2003  Jonathan Blandford <jrb@alum.mit.edu>
-
-xdgmimeint.c, xdgmimeint.h
-   Copyright (C) 2003  Red Hat, Inc.
-   Copyright (C) 2003  Jonathan Blandford <jrb@alum.mit.edu>
-
-xdgmimemagic.c, xdgmimemagic.h
-   Copyright (C) 2003  Red Hat, Inc.
-   Copyright (C) 2003  Jonathan Blandford <jrb@alum.mit.edu>
-
-xdgmimeparent.c, xdgmimeparent.h
-   Copyright (C) 2004  Red Hat, Inc.
-   Copyright (C) 2004  Matthias Clasen <mclasen@redhat.com>
-
-  This library is free software; you can redistribute it and/or
-  modify it under the terms of the GNU Lesser General Public
-  License as published by the Free Software Foundation; either
-  version 2 of the License, or (at your option) any later version.
-
-  This library is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-  Lesser General Public License for more details.
-
-  You should have received a copy of the GNU Lesser General Public
-  License along with this library; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-  02110-1301, USA.
-
 Fish contains code from the glibc library, namely the wcstok function
 in fallback.c.  This code is licensed under the LGPL.
 

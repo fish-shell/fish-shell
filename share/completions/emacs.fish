@@ -1,14 +1,58 @@
-#
-# These completions are uncomplete
-#
+# Initialization options
+complete -c emacs -l batch -d "do not do interactive display; implies -q"
+complete -c emacs -l chdir -d "change to directory DIR"
+complete -c emacs -l daemon -d "start a server in the background"
+complete -c emacs -l debug-init -d "enable Emacs Lisp debugger for init file"
+complete -c emacs -l display -s d -d "use X server DISPLAY"
+complete -c emacs -l no-desktop -d "do not load a saved desktop"
+complete -c emacs -l no-init-file -s q -d "load neither ~/.emacs nor default.el"
+complete -c emacs -l no-loadup -o nl -d "do not load loadup.el into bare Emacs"
+complete -c emacs -l no-site-file -d "do not load site-start.el"
+complete -c emacs -l no-site-lisp -o nsl -d "do not add site-lisp directories to load-path"
+complete -c emacs -l no-splash -d "do not display a splash screen on startup"
+complete -c emacs -l no-window-system -o nw -d "do not communicate with X, ignoring $DISPLAY"
+complete -c emacs -l quick -s Q -d "equivalent to: emacs -l  --no-site-file --no-site-lisp --no-splash"
+complete -c emacs -l script -d "run FILE as an Emacs Lisp script"
+complete -c emacs -l terminal -s t -d "use DEVICE for terminal I/O"
+complete -c emacs -l user -s u -d "load ~USER/.emacs instead of your own"
 
-# Primarily complete text files
-complete -c emacs -x -a "(__fish_complete_mime 'text/*')"
+# Action options:
+complete -c emacs -l directory -s L -d "prepend DIR to load-path (with :DIR, append DIR)"
+complete -c emacs -l eval -d "evaluate Emacs Lisp expression EXPR"
+complete -c emacs -l execute -d "evaluate Emacs Lisp expression EXPR"
+complete -c emacs -l file -d "visit FILE using find-file"
+complete -c emacs -l find-file -d "visit FILE using find-file"
+complete -c emacs -l funcall -s f -d "call Emacs Lisp function FUNC with no arguments"
+complete -c emacs -l insert -d "insert contents of FILE into current buffer"
+complete -c emacs -l kill -d "exit without asking for confirmation"
+complete -c emacs -l load -s l -d "load Emacs Lisp FILE using the load function"
+complete -c emacs -l visit -d "visit FILE using find-file"
 
-complete -c emacs -s q --description "Do not load init files"
-complete -c emacs -s u --description "Load users init file" -xa "(__fish_complete_users)"
-complete -c emacs -s t --description "Use file as terminal" -r
-complete -c emacs -s f --description "Execute Lisp function" -x
-complete -c emacs -s l --description "Load Lisp code from file" -r
-complete -c emacs -o nw --description "Do not use X interface"
-complete -uc emacs -s d -o display --description "Create window on the specified display" -x
+# Display options:
+complete -c emacs -l color -xa "auto never always ansi8" -d "override color mode for character terminals"
+complete -c emacs -l background-color -o bg -d "window background color"
+complete -c emacs -l basic-display -s D -d "disable many display features; used for debugging Emacs"
+complete -c emacs -l border-color -o bd -d "main border color"
+complete -c emacs -l border-width -o bw -d "width of main border"
+complete -c emacs -l cursor-color -o -cr -d "color of the Emacs cursor indicating point"
+complete -c emacs -l font -o fn -d "default font; must be fixed-width"
+complete -c emacs -l foreground-color -o fg -d "window foreground color"
+complete -c emacs -l fullheight -o fh -d "make the first frame high as the screen"
+complete -c emacs -l fullscreen -o fs -d "make the first frame fullscreen"
+complete -c emacs -l fullwidth -o fw -d "make the first frame wide as the screen"
+complete -c emacs -l maximized -o mm -d "make the first frame maximized"
+complete -c emacs -l geometry -s g -d "window geometry"
+complete -c emacs -l no-bitmap-icon -o nbi -d "do not use picture of gnu for Emacs icon"
+complete -c emacs -l iconic -d "start Emacs in iconified state"
+complete -c emacs -l internal-border -o ib -d "width between text and main border"
+complete -c emacs -l line-spacing -o lsp -d "additional space to put between lines"
+complete -c emacs -l mouse-color -o ms -d "mouse cursor color in Emacs window"
+complete -c emacs -l name -d "title for initial Emacs frame"
+complete -c emacs -l no-blinking-cursor -o nbc -d "disable blinking cursor"
+complete -c emacs -l reverse-video -s r -o rv -d "switch foreground and background"
+complete -c emacs -l title -s T -d "title for initial Emacs frame"
+complete -c emacs -l vertical-scroll-bars -o vb -d "enable vertical scroll bars"
+complete -c emacs -l xrm -d "set additional X resources"
+complete -c emacs -l parent-id -d "set parent window"
+complete -c emacs -l help -d "display help and exit"
+complete -c emacs -l version -d "output version information and exit"

@@ -4,6 +4,15 @@
 */
 
 #include <fcntl.h>
+#include <errno.h>
+#include <signal.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+#include <memory> // IWYU pragma: keep - suggests <tr1/memory> instead
+#include "common.h"
+#include "proc.h"
+#include "wutil.h"
 #include "signal.h"
 #include "postfork.h"
 #include "iothread.h"

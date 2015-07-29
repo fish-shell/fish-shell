@@ -8,11 +8,9 @@
 */
 #define FISH_EXEC_H
 
-#include <wchar.h>
+#include <stddef.h>
 #include <vector>
 
-#include "proc.h"
-#include "util.h"
 #include "common.h"
 
 /**
@@ -41,6 +39,7 @@
 
 
 */
+class job_t;
 class parser_t;
 void exec_job(parser_t &parser, job_t *j);
 

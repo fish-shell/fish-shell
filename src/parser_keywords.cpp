@@ -3,13 +3,9 @@
 Functions having to do with parser keywords, like testing if a function is a block command.
 */
 
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
-
-#include <stdlib.h>
-#include <stdio.h>
-
-#include "fallback.h"
+#include "fallback.h" // IWYU pragma: keep
 #include "common.h"
 #include "parser_keywords.h"
 

@@ -6,12 +6,14 @@
 #ifndef FISH_PARSE_EXECUTION_H
 #define FISH_PARSE_EXECUTION_H
 
-#include "config.h"
-#include "util.h"
+#include <stddef.h>
+#include "common.h"
+#include "io.h"
+#include "parse_constants.h"
 #include "parse_tree.h"
 #include "proc.h"
 
-class job_t;
+class parser_t;
 struct block_t;
 
 enum parse_execution_result_t

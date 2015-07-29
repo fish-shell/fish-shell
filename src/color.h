@@ -3,9 +3,8 @@
 #ifndef FISH_COLOR_H
 #define FISH_COLOR_H
 
-#include <stdint.h>
-#include <cstddef>
-#include "config.h"
+#include <string.h>
+#include <string>
 #include "common.h"
 
 /* 24 bit color */

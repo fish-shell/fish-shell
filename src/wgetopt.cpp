@@ -61,12 +61,7 @@
 
 #include <stdio.h>
 #include <wchar.h>
-
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
-
+#include "common.h"
 
 /* This needs to come after some library #include
    to get __GNU_LIBRARY__ defined.  */
@@ -89,7 +84,7 @@
 
 #include "wgetopt.h"
 #include "wutil.h"
-#include "fallback.h"
+#include "fallback.h" // IWYU pragma: keep
 
 
 /**
@@ -114,7 +109,7 @@
    because there are many ways it can cause trouble.
    On some systems, it contains special magic macros that don't work
    in GCC.  */
-#include <string.h>
+#include <string.h> // IWYU pragma: keep
 #define  my_index  wcschr
 #else
 

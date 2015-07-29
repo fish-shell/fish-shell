@@ -6,6 +6,7 @@
 #ifndef FISH_LRU_H
 #define FISH_LRU_H
 
+#include <assert.h>
 #include <wchar.h>
 #include <map>
 #include <set>

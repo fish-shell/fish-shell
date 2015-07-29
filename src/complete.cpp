@@ -4,29 +4,23 @@
 */
 #include "config.h"
 
+#include <assert.h>
 #include <stdlib.h>
-#include <stdio.h>
-#include <limits.h>
-#include <string.h>
+#include <stddef.h>
 #include <wchar.h>
 #include <wctype.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <errno.h>
-#include <termios.h>
-#include <ctype.h>
 #include <pwd.h>
-#include <signal.h>
-#include <wchar.h>
 #include <pthread.h>
 #include <algorithm>
+#include <list>
+#include <map>
+#include <set>
+#include <string>
+#include <utility>
 
-#include "fallback.h"
+#include "fallback.h" // IWYU pragma: keep
 #include "util.h"
 
-#include "tokenizer.h"
 #include "wildcard.h"
 #include "proc.h"
 #include "parser.h"
@@ -37,15 +31,13 @@
 #include "exec.h"
 #include "expand.h"
 #include "common.h"
-#include "reader.h"
-#include "history.h"
-#include "intern.h"
 #include "parse_util.h"
-#include "parser_keywords.h"
 #include "wutil.h"
 #include "path.h"
 #include "parse_tree.h"
 #include "iothread.h"
+#include "autoload.h"
+#include "parse_constants.h"
 
 /*
   Completion description strings, mostly for different types of files, such as sockets, block devices, etc.

@@ -5,12 +5,13 @@
 #ifndef FISH_BUILTIN_H
 #define FISH_BUILTIN_H
 
-#include <wchar.h>
+#include <stddef.h>                     // for size_t
+#include <vector>                       // for vector
 
-#include "util.h"
 #include "io.h"
 #include "common.h"
 
+class completion_t;
 class parser_t;
 
 enum

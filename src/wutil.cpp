@@ -12,23 +12,16 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <wchar.h>
-#include <wctype.h>
 #include <string.h>
 #include <dirent.h>
-#include <stdarg.h>
 #include <limits.h>
 #include <libgen.h>
 #include <pthread.h>
+#include <assert.h>
 #include <string>
 #include <map>
 
-
-#if HAVE_LIBINTL_H
-#include <libintl.h>
-#endif
-
 #include "fallback.h"
-#include "util.h"
 
 #include "common.h"
 #include "wutil.h"

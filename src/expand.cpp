@@ -5,27 +5,20 @@ parameter expansion.
 
 */
 
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
+#include <stddef.h>
 #include <wchar.h>
 #include <string.h>
 #include <wctype.h>
 #include <errno.h>
 #include <pwd.h>
-#include <unistd.h>
-#include <limits.h>
-#include <sys/param.h>
-#include <sys/types.h>
-#ifdef HAVE_SYS_SYSCTL_H
-#include <sys/sysctl.h>
-#endif
-#include <termios.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <signal.h>
 #include <algorithm>
 
 #include <assert.h>
@@ -35,7 +28,7 @@ parameter expansion.
 #include <procfs.h>
 #endif
 
-#include "fallback.h"
+#include "fallback.h" // IWYU pragma: keep
 #include "util.h"
 
 #include "common.h"
@@ -46,7 +39,6 @@ parameter expansion.
 #include "expand.h"
 #include "wildcard.h"
 #include "exec.h"
-#include "signal.h"
 #include "tokenizer.h"
 #include "complete.h"
 #include "iothread.h"

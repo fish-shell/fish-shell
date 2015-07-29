@@ -3,20 +3,14 @@
     Library for pooling common strings
 
 */
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
-
-#include <stdlib.h>
-#include <stdio.h>
 #include <wchar.h>
-#include <unistd.h>
-#include <set>
+#include <pthread.h>
+#include <vector>
 #include <algorithm>
 
-#include "fallback.h"
-#include "util.h"
-
-#include "wutil.h"
+#include "fallback.h" // IWYU pragma: keep
 #include "common.h"
 #include "intern.h"
 

@@ -17,18 +17,19 @@
 #include <vector>
 #include <pthread.h>
 #include <string.h>
+#include <stdarg.h>
+#include <stddef.h>
+#include <sys/types.h>
 
 #include <errno.h>
-#include <assert.h>
-#include "util.h"
+#include "config.h"
+#include "fallback.h"
 
 /**
    Avoid writing the type name twice in a common "static_cast-initialization".
    Caveat: This doesn't work with type names containing commas!
 */
 #define CAST_INIT(type, dst, src) type dst = static_cast<type >(src)
-
-class completion_t;
 
 /* Common string type */
 typedef std::wstring wcstring;

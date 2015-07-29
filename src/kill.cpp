@@ -6,26 +6,15 @@
   with the X clipboard.
 */
 
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <wchar.h>
-#include <termios.h>
-#include <unistd.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
+#include <stddef.h>
 #include <algorithm>
+#include <list>
+#include <string>
 
-#include "fallback.h"
-#include "util.h"
-
-#include "wutil.h"
+#include "fallback.h" // IWYU pragma: keep
 #include "kill.h"
-#include "proc.h"
-#include "sanity.h"
 #include "common.h"
 #include "env.h"
 #include "exec.h"

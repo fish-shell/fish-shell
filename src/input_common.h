@@ -6,7 +6,7 @@ Header file for the low level input library
 #ifndef INPUT_COMMON_H
 #define INPUT_COMMON_H
 
-#include <wchar.h>
+#include <stddef.h>
 
 /**
   Use unencoded private-use keycodes for internal characters

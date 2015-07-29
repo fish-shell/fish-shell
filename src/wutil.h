@@ -6,16 +6,12 @@
 #ifndef FISH_WUTIL_H
 #define FISH_WUTIL_H
 
-#include <stdlib.h>
 #include <stdio.h>
-#include <wchar.h>
 #include <dirent.h>
-#include <unistd.h>
-#include <sys/stat.h>
 #include <sys/types.h>
-#include <stdarg.h>
+#include <stddef.h>
+#include <time.h>
 #include <string>
-#include <utility>
 #include <stdint.h>
 #include "common.h"
 

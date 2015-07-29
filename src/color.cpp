@@ -2,7 +2,12 @@
 */
 
 #include "color.h"
-#include "fallback.h"
+#include "fallback.h" // IWYU pragma: keep
+#include <assert.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <wchar.h>
+#include <cstddef>
 
 bool rgb_color_t::try_parse_special(const wcstring &special)
 {

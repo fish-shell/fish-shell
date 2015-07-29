@@ -5,10 +5,13 @@
 #ifndef FISH_HIGHLIGHT_H
 #define FISH_HIGHLIGHT_H
 
-#include <wchar.h>
+#include <assert.h>                     // for assert
+#include <stddef.h>                     // for size_t
+#include <stdint.h>                     // for uint32_t
+#include <vector>                       // for vector
 
+#include "common.h"                     // for wcstring, wcstring_list_t
 #include "env.h"
-#include "util.h"
 #include "color.h"
 
 /* Internally, we specify highlight colors using a set of bits. Each highlight_spec is a 32 bit uint. We divide this into low 16 (foreground) and high 16 (background). Each half we further subdivide into low 8 (primary) and high 8 (modifiers). The primary is not a bitmask; specify exactly one. The modifiers are a bitmask; specify any number */

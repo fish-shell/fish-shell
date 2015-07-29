@@ -1,17 +1,14 @@
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <wchar.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
-#include <libgen.h>
+#include <assert.h>
+#include <string>
+#include <vector>
 
-#include "fallback.h"
-#include "util.h"
-
+#include "fallback.h" // IWYU pragma: keep
 #include "common.h"
 #include "env.h"
 #include "wutil.h"

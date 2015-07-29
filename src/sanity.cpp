@@ -1,30 +1,17 @@
 /** \file sanity.c
   Functions for performing sanity checks on the program state
 */
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
-#include <stdlib.h>
-#include <wchar.h>
-#include <stdio.h>
-#include <errno.h>
-#include <termios.h>
 #include <unistd.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
 
-
-#include "fallback.h"
-#include "util.h"
-
+#include "fallback.h" // IWYU pragma: keep
 #include "common.h"
 #include "sanity.h"
 #include "proc.h"
 #include "history.h"
 #include "reader.h"
 #include "kill.h"
-#include "wutil.h"
 
 
 /**

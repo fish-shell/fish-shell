@@ -6,32 +6,28 @@ wildcards using **.
 
 */
 
-#include "config.h"
-#include <algorithm>
+#include "config.h" // IWYU pragma: keep
 #include <stdlib.h>
-#include <stdio.h>
-#include <limits.h>
 #include <wchar.h>
 #include <unistd.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
 #include <errno.h>
 #include <string.h>
 #include <set>
-
+#include <assert.h>
+#include <stddef.h>
+#include <wctype.h>
+#include <string>
+#include <utility>
 
 #include "fallback.h"
-#include "util.h"
-
 #include "wutil.h"
-#include "complete.h"
 #include "common.h"
 #include "wildcard.h"
 #include "complete.h"
 #include "reader.h"
 #include "expand.h"
-#include "exec.h"
 #include <map>
 
 /**

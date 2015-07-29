@@ -20,10 +20,9 @@
 #ifndef _UTF8_H_
 #define _UTF8_H_
 
-#include <sys/types.h>
+#include <stddef.h>
 
 #include <string>
-#include <wchar.h>
 
 #define UTF8_IGNORE_ERROR		0x01
 #define UTF8_SKIP_BOM			0x02

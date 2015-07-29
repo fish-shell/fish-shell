@@ -12,10 +12,8 @@
 */
 #define FISH_WILDCARD_H
 
-#include <wchar.h>
 #include <vector>
 
-#include "util.h"
 #include "common.h"
 #include "expand.h"
 #include "complete.h"
@@ -26,7 +24,6 @@
 
 #define WILDCARD_RESERVED 0xf400
 
-class completion_t;
 /**
    Enumeration of all wildcard types
 */

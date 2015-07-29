@@ -12,8 +12,11 @@
 #ifndef FISH_SCREEN_H
 #define FISH_SCREEN_H
 
+#include <assert.h>
+#include <stddef.h>
 #include <vector>
 #include <sys/stat.h>
+#include "common.h"
 #include "highlight.h"
 
 class page_rendering_t;

@@ -5,15 +5,18 @@
 #ifndef FISH_HISTORY_H
 #define FISH_HISTORY_H
 
-#include <wchar.h>
 #include "common.h"
-#include "pthread.h"
 #include "wutil.h"
 #include <deque>
 #include <vector>
 #include <utility>
-#include <list>
 #include <set>
+#include <pthread.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <time.h>
+#include <string>
 
 /* fish supports multiple shells writing to history at once. Here is its strategy:
 

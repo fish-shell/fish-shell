@@ -7,35 +7,28 @@
   handling library.
 */
 
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <wchar.h>
-#include <unistd.h>
-#include <termios.h>
-#include <signal.h>
 #include <pthread.h>
-#include <errno.h>
 #include <map>
 #include <set>
+#include <dirent.h>
+#include <stddef.h>
+#include <string>
+#include <utility>
 
 #include "wutil.h"
-#include "fallback.h"
-#include "util.h"
+#include "fallback.h" // IWYU pragma: keep
 
+#include "autoload.h"
 #include "function.h"
-#include "proc.h"
-#include "parser.h"
 #include "common.h"
 #include "intern.h"
 #include "event.h"
 #include "reader.h"
-#include "parse_util.h"
 #include "parser_keywords.h"
 #include "env.h"
-#include "expand.h"
 
 /**
    Table containing all functions

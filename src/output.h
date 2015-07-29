@@ -8,9 +8,10 @@
 #ifndef FISH_OUTPUT_H
 #define FISH_OUTPUT_H
 
-#include <wchar.h>
+#include <stddef.h>
+#include <vector>
+#include "common.h"
 #include "fallback.h"
-#include "screen.h"
 #include "color.h"
 
 /**

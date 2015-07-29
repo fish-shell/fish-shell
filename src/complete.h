@@ -12,11 +12,9 @@
 */
 #define FISH_COMPLETE_H
 
-
-#include <wchar.h>
+#include <vector>
 #include <stdint.h>
 
-#include "util.h"
 #include "common.h"
 /**
  * Use all completions

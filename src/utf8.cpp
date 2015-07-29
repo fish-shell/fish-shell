@@ -16,13 +16,12 @@
 
 #include <sys/types.h>
 #include <stdint.h>
-#include <wchar.h>
 
 #include "utf8.h"
 
 #include <string>
-#include <vector>
 #include <limits>
+#include <algorithm>
 
 #define _NXT	0x80
 #define _SEQ2	0xc0

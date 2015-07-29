@@ -6,6 +6,8 @@ Functions having to do with parser keywords, like testing if a function is a blo
 #ifndef FISH_PARSER_KEYWORD_H
 #define FISH_PARSER_KEYWORD_H
 
+#include "common.h"
+
 /**
    Tests if the specified commands parameters should be interpreted as another command, which will be true if the command is either 'command', 'exec', 'if', 'while', or 'builtin'.  This does not handle "else if" which is more complicated.
 

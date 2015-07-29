@@ -1,11 +1,14 @@
-#include "config.h"
+#include "config.h" // IWYU pragma: keep
 
-#include "pager.h"
-#include "highlight.h"
-#include "input_common.h"
-#include "wutil.h"
+#include <assert.h>
+#include <wchar.h>
+#include <wctype.h>
 #include <vector>
 #include <map>
+#include "util.h"
+#include "wutil.h" // IWYU pragma: keep - needed for wgettext
+#include "pager.h"
+#include "highlight.h"
 
 typedef pager_t::comp_t comp_t;
 typedef std::vector<completion_t> completion_list_t;

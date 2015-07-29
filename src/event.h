@@ -12,7 +12,8 @@
 #ifndef FISH_EVENT_H
 #define FISH_EVENT_H
 
-#include <memory>
+#include <ctime>
+#include <vector>
 
 #include "common.h"
 

@@ -8,38 +8,24 @@
   parsing the code.
 */
 
-#include "config.h"
-
+#include "config.h" // IWYU pragma: keep
 
 #include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <wctype.h>
-
+#include <stdarg.h>
 #include <wchar.h>
-#include <map>
-#include <set>
-#include <algorithm>
-
-#include <time.h>
+#include <string>
 #include <assert.h>
 
 #include "fallback.h"
 #include "util.h"
-
-#include "wutil.h"
+#include "wutil.h" // IWYU pragma: keep
 #include "common.h"
 #include "tokenizer.h"
 #include "parse_util.h"
 #include "expand.h"
-#include "intern.h"
-#include "exec.h"
 #include "env.h"
-#include "signal.h"
 #include "wildcard.h"
 #include "parse_tree.h"
-#include "parser.h"
 #include "builtin.h"
 
 /** Error message for improper use of the exec builtin */

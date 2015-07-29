@@ -10,16 +10,14 @@
 #ifndef FISH_FUNCTION_H
 #define FISH_FUNCTION_H
 
-#include <wchar.h>
+#include <vector>
 #include <map>
 
-#include "util.h"
 #include "common.h"
 #include "event.h"
 #include "env.h"
 
 class parser_t;
-class env_vars_snapshot_t;
 
 /**
    Structure describing a function. This is used by the parser to

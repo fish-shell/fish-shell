@@ -107,9 +107,15 @@ AC_CONFIG_HEADERS(config.h)
 #
 
 AH_BOTTOM([#if __GNUC__ >= 3
+#ifndef __warn_unused
 #define __warn_unused __attribute__ ((warn_unused_result))
+#endif
+#ifndef __sentinel
 #define __sentinel __attribute__ ((sentinel))
+#endif
+#ifndef __packed
 #define __packed __attribute__ ((packed))
+#endif
 #else
 #define __warn_unused
 #define __sentinel

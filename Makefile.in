@@ -828,6 +828,13 @@ depend:
 	./config.status
 .PHONY: depend
 
+# Include What You Use
+iwyu:
+	# Requires the --keep-going flag as it always returns 1
+	# Can't set MAKEFLAGS on a target-specific basic
+	$(MAKE) -k _iwyu CXX=include-what-you-use
+_iwyu: clean $(PROGRAMS)
+.PHONY: iwyu _iwyu
 
 #
 # Cleanup targets

@@ -4,7 +4,7 @@ complete -c python -s d --description "Debug on"
 complete -c python -s E --description "Ignore environment variables"
 complete -c python -s h -l help --description "Display help and exit"
 complete -c python -s i --description "Interactive mode after executing commands"
-complete -c python -s m -d 'Run library module as a script (terminates option list)' -xa "( find /usr/lib/(eval python -V 2>| sed 's/ //; s/\..\$//; s/P/p/') \$PYTHONPATH -maxdepth 1 -name '*.py' -printf '%f\n' | sed 's/.py//')"
+complete -c python -s m -d 'Run library module as a script (terminates option list)' -xa '(python -c "import pkgutil; print(\'\n\'.join([p[1] for p in pkgutil.iter_modules()]))")'
 complete -c python -s O --description "Enable optimizations"
 complete -c python -o OO --description "Remove doc-strings in addition to the -O optimizations"
 complete -c python -s s --description 'Don\'t add user site directory to sys.path'

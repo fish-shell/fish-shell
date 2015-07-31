@@ -33,7 +33,13 @@ function history --description "Deletes an item from history"
                 case --clear
                     set cmd clear
                 case --search
-                	set cmd print
+                    set cmd print
+                case --
+                    set -e argv[$i]
+                    break
+                case -* --*
+                    printf ( _ "%s: invalid option -- %s\n" ) history $argv[1] >&2
+                    return 1
             end
         end
     else

@@ -4009,7 +4009,6 @@ int main(int argc, char **argv)
 
     reader_destroy();
     builtin_destroy();
-    wutil_destroy();
     event_destroy();
     proc_destroy();
 

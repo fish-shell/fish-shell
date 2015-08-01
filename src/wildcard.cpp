@@ -145,7 +145,10 @@ bool wildcard_has(const wcstring &str, bool internal)
 static bool wildcard_match_internal(const wchar_t *str, const wchar_t *wc, bool leading_dots_fail_to_match, bool is_first)
 {
     if (*str == 0 && *wc==0)
+    {
+        /* We're done */
         return true;
+    }
 
     /* Hackish fix for https://github.com/fish-shell/fish-shell/issues/270 . Prevent wildcards from matching . or .., but we must still allow literal matches. */
     if (leading_dots_fail_to_match && is_first && contains(str, L".", L".."))
@@ -160,6 +163,12 @@ static bool wildcard_match_internal(const wchar_t *str, const wchar_t *wc, bool 
         if (leading_dots_fail_to_match && is_first && *str == L'.')
         {
             return false;
+        }
+        
+        /* Common case of * at the end. In that case we can early out since we know it will match. */
+        if (wc[1] == L'\0')
+        {
+            return true;
         }
 
         /* Try all submatches */
@@ -179,8 +188,7 @@ static bool wildcard_match_internal(const wchar_t *str, const wchar_t *wc, bool 
         */
         return false;
     }
-
-    if (*wc == ANY_CHAR)
+    else if (*wc == ANY_CHAR)
     {
         if (is_first && *str == L'.')
         {
@@ -189,9 +197,10 @@ static bool wildcard_match_internal(const wchar_t *str, const wchar_t *wc, bool 
 
         return wildcard_match_internal(str+1, wc+1, leading_dots_fail_to_match, false);
     }
-
-    if (*wc == *str)
+    else if (*wc == *str)
+    {
         return wildcard_match_internal(str+1, wc+1, leading_dots_fail_to_match, false);
+    }
 
     return false;
 }
@@ -603,7 +612,7 @@ static void wildcard_completion_allocate(std::vector<completion_t> *list,
   expansion flags specified. flags can be a combination of
   EXECUTABLES_ONLY and DIRECTORIES_ONLY.
 */
-static bool test_flags(const wchar_t *filename, expand_flags_t flags)
+static bool test_flags(const wcstring &filename, expand_flags_t flags)
 {
     if (flags & DIRECTORIES_ONLY)
     {
@@ -646,6 +655,301 @@ static void insert_completion_if_missing(const wcstring &str, std::vector<comple
         append_completion(out, str);
 }
 
+class wildcard_expander_t
+{
+    /* the set of items we have resolved, used to avoid duplication */
+    std::set<wcstring> completion_set;
+    
+    /* the set of file IDs we have visited, used to avoid symlink loops */
+    std::set<file_id_t> visited_files;
+    
+    /* flags controlling expansion */
+    const expand_flags_t flags;
+    
+    /* resolved items get inserted into here. This is transient of course. */
+    std::vector<completion_t> *resolved;
+    
+    /* whether we have been interrupted */
+    bool did_interrupt;
+    
+    /* whether we have successfully added any completions */
+    bool did_add;
+    
+    /* We are a trailing slash - expand at the end */
+    void expand_trailing_slash(const wcstring &base_dir);
+    
+    /* Given a directory base_dir, which is opened as base_dir_fp, expand an intermediate segment of the wildcard.
+       Treat ANY_STRING_RECURSIVE as ANY_STRING.
+       wc_segment is the wildcard segment for this directory
+       wc_remainder is the wildcard for subdirectories
+     */
+    void expand_intermediate_segment(const wcstring &base_dir, DIR *base_dir_fp, const wcstring &wc_segment, const wchar_t *wc_remainder);
+    
+    /* Given a directory base_dir, which is opened as base_dir_fp, expand the last segment of the wildcard.
+     Treat ANY_STRING_RECURSIVE as ANY_STRING.
+     wc is the wildcard segment to use for matching
+     wc_remainder is the wildcard for subdirectories
+     */
+    void expand_last_segment(const wcstring &base_dir, DIR *base_dir_fp, const wcstring &wc);
+    
+    /* Given a directory base_dir, which is openend as base_dir_fp, call expand() recursively
+       on matching subdirectories.
+       head_wc is the portion before the recursive match
+       wc_remainder is the portion after it, and starts with ANY_STRING_RECURSIVE
+     */
+    void recurse_to_subdirectories(const wcstring &base_dir, DIR *base_dir_fp, const wcstring &head_wc, const wchar_t *wc_remainder);
+    
+    /* Helper to resolve an empty base directory */
+    static DIR *open_dir(const wcstring &base_dir)
+    {
+        return wopendir(base_dir.empty() ? L"." : base_dir);
+    }
+    
+public:
+    
+    wildcard_expander_t(expand_flags_t f, std::vector<completion_t> *r) : flags(f), resolved(r), did_interrupt(false), did_add(false)
+    {
+        assert(resolved != NULL);
+        
+        /* Insert initial completions into our set to avoid duplicates */
+        for (std::vector<completion_t>::const_iterator iter = resolved->begin(); iter != resolved->end(); ++iter)
+        {
+            this->completion_set.insert(iter->completion);
+        }
+    }
+    
+    /* Do wildcard expansion. This is recursive. */
+    void expand(const wcstring &base_dir, const wchar_t *wc);
+    
+    
+    /* Indicate whether we should cancel wildcard expansion. This latches 'interrupt' */
+    bool interrupted()
+    {
+        if (! did_interrupt)
+        {
+            did_interrupt = (is_main_thread() ? reader_interrupted() : reader_thread_job_is_stale());
+        }
+        return did_interrupt;
+    }
+    
+    /* Indicates whether something was added */
+    bool added() const
+    {
+        return this->did_add;
+    }
+};
+
+void wildcard_expander_t::expand_trailing_slash(const wcstring &base_dir)
+{
+    if (interrupted())
+    {
+        return;
+    }
+    
+    if (! (flags & ACCEPT_INCOMPLETE))
+    {
+        /* Trailing slash and not accepting incomplete, e.g. `echo /tmp/`. Insert this file if it exists. */
+        if (waccess(base_dir, F_OK))
+        {
+            append_completion(this->resolved, base_dir);
+            this->did_add = true;
+        }
+    }
+    else
+    {
+        /* Trailing slashes and accepting incomplete, e.g. `echo /tmp/<tab>`. Everything is added. */
+        DIR *dir = open_dir(base_dir);
+        if (dir)
+        {
+            wcstring next;
+            while (wreaddir(dir, next) && ! interrupted())
+            {
+                if (! next.empty() && next.at(0) != L'.')
+                {
+                    const wcstring abs_path = base_dir + next;
+                    if (test_flags(abs_path, this->flags))
+                    {
+                        wildcard_completion_allocate(this->resolved, abs_path, next, L"", flags);
+                        this->did_add = true;
+                    }
+                }
+            }
+            closedir(dir);
+        }
+    }
+}
+
+void wildcard_expander_t::expand_intermediate_segment(const wcstring &base_dir, DIR *base_dir_fp, const wcstring &wc_segment, const wchar_t *wc_remainder)
+{
+    wcstring name_str;
+    while (!interrupted() && wreaddir(base_dir_fp, name_str))
+    {
+        /* Note that it's critical we ignore leading dots here, else we may descend into . and .. */
+        if (! wildcard_match(name_str, wc_segment, true))
+        {
+            /* Doesn't match the wildcard for this segment, skip it */
+            continue;
+        }
+        
+        wcstring full_path = base_dir + name_str;
+        struct stat buf;
+        if (0 != wstat(full_path, &buf) || !S_ISDIR(buf.st_mode))
+        {
+            /* We either can't stat it, or we did but it's not a directory */
+            continue;
+        }
+
+        const file_id_t file_id = file_id_t::file_id_from_stat(&buf);
+        if (!this->visited_files.insert(file_id).second)
+        {
+            /* Symlink loop! This directory was already visited, so skip it */
+            continue;
+        }
+
+        /* We made it through. Perform normal wildcard expansion on this new directory, starting at our tail_wc, which includes the ANY_STRING_RECURSIVE guy. */
+        full_path.push_back(L'/');
+        this->expand(full_path, wc_remainder);
+    }
+}
+
+void wildcard_expander_t::expand_last_segment(const wcstring &base_dir, DIR *base_dir_fp, const wcstring &wc)
+{
+    wcstring name_str;
+    while (wreaddir(base_dir_fp, name_str))
+    {
+        if (flags & ACCEPT_INCOMPLETE)
+        {
+            /* Test for matches before stating file, so as to minimize the number of calls to the much slower stat function. The only expand flag we care about is EXPAND_FUZZY_MATCH; we have no complete flags. */
+            std::vector<completion_t> local_matches;
+            if (wildcard_complete(name_str, wc.c_str(), L"", NULL, &local_matches, flags & EXPAND_FUZZY_MATCH, 0))
+            {
+                const wcstring abs_path = base_dir + name_str;
+                if (test_flags(abs_path, flags))
+                {
+                    wildcard_completion_allocate(this->resolved, abs_path, name_str, wc.c_str(), flags);
+                    this->did_add = true;
+                }
+            }
+        }
+        else
+        {
+            if (wildcard_match(name_str, wc, true /* skip files with leading dots */))
+            {
+                const wcstring abs_path = base_dir + name_str;
+                if (this->completion_set.insert(abs_path).second)
+                {
+                    append_completion(this->resolved, abs_path);
+                    this->did_add = true;
+                }
+            }
+        }
+    }
+}
+
+void wildcard_expander_t::recurse_to_subdirectories(const wcstring &base_dir, DIR *base_dir_fp, const wcstring &head_wc, const wchar_t *wc_remainder)
+{
+    assert(! base_dir.empty());
+    assert(wc_remainder[0] == ANY_STRING_RECURSIVE);
+    // note head_wc may be empty
+    
+    /* Construct a "head + any" wildcard for matching stuff in this directory. Then just match this segment with that, then future segments with the remainder of the wildcard. */
+    wcstring head_any = head_wc;
+    head_any.push_back(ANY_STRING);
+    this->expand_intermediate_segment(base_dir, base_dir_fp, head_any, wc_remainder);
+}
+
+/**
+ The real implementation of wildcard expansion is in this
+ function. Other functions are just wrappers around this one.
+ 
+ This function traverses the relevant directory tree looking for
+ matches, and recurses when needed to handle wildcrards spanning
+ multiple components and recursive wildcards.
+ 
+ Because this function calls itself recursively with substrings,
+ it's important that the parameters be raw pointers instead of wcstring,
+ which would be too expensive to construct for all substrings.
+ 
+ Args:
+ base_dir: the "working directory" against which the wildcard is to be resolved
+ wc: the wildcard string itself, e.g. foo*bar/baz (where * is acutally ANY_CHAR)
+*/
+void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc)
+{
+    assert(wc != NULL);
+    
+    if (interrupted())
+    {
+        return;
+    }
+    
+    /* Get the current segment and compute interesting properties about it. */
+    const size_t wc_len = wcslen(wc);
+    const wchar_t * const next_slash = wcschr(wc, L'/');
+    const bool is_last_segment = (next_slash == NULL);
+    const size_t wc_segment_len = next_slash ? next_slash - wc : wc_len;
+    const wcstring wc_segment = wcstring(wc, wc_segment_len);
+    const bool segment_has_wildcards = wildcard_has(wc_segment, true /* internal, i.e. look for ANY_CHAR instead of ? */);
+    
+    if (wc_segment.empty())
+    {
+        /* Handle empty segment */
+        assert(! segment_has_wildcards);
+        if (is_last_segment)
+        {
+            this->expand_trailing_slash(base_dir);
+        }
+        else
+        {
+            /* Multiple adjacent slashes in the wildcard. Just skip them. */
+            this->expand(base_dir, next_slash + 1);
+        }
+    }
+    else if (! segment_has_wildcards && ! is_last_segment)
+    {
+        /* Literal intermediate match. Note that we may not be able to actually read the directory (#2099) */
+        assert(next_slash != NULL);
+        /* This just trumps everything */
+        this->expand(base_dir + wc_segment + L'/', next_slash + 1);
+    }
+    else
+    {
+        assert(! wc_segment.empty() && (segment_has_wildcards || is_last_segment));
+        DIR *dir = open_dir(base_dir);
+        if (dir)
+        {
+            if (is_last_segment)
+            {
+                /* Last wildcard segment, nonempty wildcard */
+                this->expand_last_segment(base_dir, dir, wc_segment);
+            }
+            else
+            {
+                /* Not the last segment, nonempty wildcard */
+                assert(next_slash != NULL);
+                const wchar_t *wc_remainder = next_slash;
+                while (*wc_remainder == L'/')
+                {
+                    wc_remainder++;
+                }
+                this->expand_intermediate_segment(base_dir, dir, wc_segment, wc_remainder);
+            }
+            
+            /* Recursive wildcards require special handling */
+            size_t asr_idx = wc_segment.find(ANY_STRING_RECURSIVE);
+            if (asr_idx != wcstring::npos)
+            {
+                const wcstring head(wc_segment, 0, asr_idx);
+                const wchar_t *tail = wc + asr_idx; // starts at the ASR wildcard
+                assert(*tail == ANY_STRING_RECURSIVE);
+                rewinddir(dir);
+                this->recurse_to_subdirectories(base_dir, dir, head, tail);
+            }
+            closedir(dir);
+        }
+    }
+}
+
 /**
    The real implementation of wildcard expansion is in this
    function. Other functions are just wrappers around this one.
@@ -657,6 +961,17 @@ static void insert_completion_if_missing(const wcstring &str, std::vector<comple
    Because this function calls itself recursively with substrings,
    it's important that the parameters be raw pointers instead of wcstring,
    which would be too expensive to construct for all substrings.
+ 
+   Args:
+     wc: the wildcard string itself, e.g. foo* (where * is acutally ANY_CHAR)
+     base_dir: the "working directory" against which the wildcard is to be resolved
+     flags: flags controlling expansion
+     out: resolved items get inserted into here
+     completion_set: the set of items we have resolved, used to avoid duplication
+     visited_files: the set of file IDs we have visited, used to avoid symlink loops
+ 
+ Returns:
+   1 if matches were found, 0 if not, -1 on abort (control-C)
  */
 static int wildcard_expand_internal(const wchar_t *wc,
                                     const wchar_t * const base_dir,
@@ -1001,7 +1316,7 @@ static int wildcard_expand(const wchar_t *wc,
 int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_flags_t flags, std::vector<completion_t> *output)
 {
     assert(output != NULL);
-    /* Hackish fix for 1631. We are about to call c_str(), which will produce a string truncated at any embedded nulls. We could fix this by passing around the size, etc. However embedded nulls are never allowed in a filename, so we just check for them and return 0 (no matches) if there is an embedded null. This isn't quite right, e.g. it will fail for \0?, but that is an edge case. */
+    /* Hackish fix for 1631. We are about to call c_str(), which will produce a string truncated at any embedded nulls. We could fix this by passing around the size, etc. However embedded nulls are never allowed in a filename, so we just check for them and return 0 (no matches) if there is an embedded null. */
     if (wc.find(L'\0') != wcstring::npos)
     {
         return 0;

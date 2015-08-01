@@ -53,14 +53,6 @@ static pthread_mutex_t wgettext_lock;
 typedef std::map<wcstring, const wchar_t *> wgettext_map_t;
 static wgettext_map_t wgettext_map;
 
-void wutil_init()
-{
-}
-
-void wutil_destroy()
-{
-}
-
 bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &out_name, bool *out_is_dir)
 {
     struct dirent *d = readdir(dir);

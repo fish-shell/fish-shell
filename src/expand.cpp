@@ -1793,7 +1793,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> *output, expa
         int wc_res;
 
         remove_internal_separator(next, (EXPAND_SKIP_WILDCARDS & flags) ? true : false);
-        const bool has_wildcard = wildcard_has(next, 1);
+        const bool has_wildcard = wildcard_has(next, true /* internal, i.e. ANY_CHAR */);
 
         if (has_wildcard && (flags & EXECUTABLES_ONLY))
         {

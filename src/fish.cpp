@@ -523,7 +523,6 @@ int main(int argc, char **argv)
 
     proc_init();
     event_init();
-    wutil_init();
     builtin_init();
     function_init();
     env_init(&paths);
@@ -636,7 +635,6 @@ int main(int argc, char **argv)
     proc_destroy();
     builtin_destroy();
     reader_destroy();
-    wutil_destroy();
     event_destroy();
 
     if (g_log_forks)

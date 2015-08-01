@@ -1271,23 +1271,15 @@ static int wildcard_expand_internal(const wchar_t *wc,
 
 
 static int wildcard_expand(const wchar_t *wc,
-                           const wchar_t *base_dir,
+                           const wcstring &base_dir,
                            expand_flags_t flags,
                            std::vector<completion_t> *out)
 {
     assert(out != NULL);
     size_t c = out->size();
-
-    /* Make a set of used completion strings so we can do fast membership tests inside wildcard_expand_internal. Otherwise wildcards like '**' are very slow, because we end up with an N^2 membership test.
-    */
-    std::set<wcstring> completion_set;
-    for (std::vector<completion_t>::const_iterator iter = out->begin(); iter != out->end(); ++iter)
-    {
-        completion_set.insert(iter->completion);
-    }
-
-    std::set<file_id_t> visited_files;
-    int res = wildcard_expand_internal(wc, base_dir, flags, out, completion_set, visited_files);
+    
+    wildcard_expander_t expander(flags, out);
+    expander.expand(base_dir, wc);
 
     if (flags & ACCEPT_INCOMPLETE)
     {
@@ -1310,7 +1302,14 @@ static int wildcard_expand(const wchar_t *wc,
             }
         }
     }
-    return res;
+    if (expander.interrupted())
+    {
+        return -1;
+    }
+    else
+    {
+        return expander.added() ? 1 : 0;
+    }
 }
 
 int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_flags_t flags, std::vector<completion_t> *output)
@@ -1321,5 +1320,5 @@ int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_
     {
         return 0;
     }
-    return wildcard_expand(wc.c_str(), base_dir.c_str(), flags, output);
+    return wildcard_expand(wc.c_str(), base_dir, flags, output);
 }

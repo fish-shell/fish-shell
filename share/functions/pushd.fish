@@ -1,5 +1,4 @@
 
-
 function pushd --description 'Push directory to stack'
 	if count $argv >/dev/null
 		# check for --help

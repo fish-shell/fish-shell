@@ -1,5 +1,4 @@
 
-
 function psub --description "Read from stdin into a file and output the filename. Remove the file when the command that called psub exits."
 
 	set -l filename

@@ -44,4 +44,3 @@ function vared --description "Edit variable value"
 		printf (_ '%s: Expected exactly one argument, got %s.\n\nSynopsis:\n\t%svared%s VARIABLE\n') vared (count $argv) (set_color $fish_color_command; echo) (set_color $fish_color_normal; echo)
 	end
 end
-

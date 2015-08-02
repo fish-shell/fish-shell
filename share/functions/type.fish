@@ -148,4 +148,3 @@ function type --description "Print the type of a command"
 
 	return $res
 end
-

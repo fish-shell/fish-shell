@@ -18,4 +18,3 @@ function popd --description "Pop dir from stack"
 	set -e dirstack[1]
 
 end
-

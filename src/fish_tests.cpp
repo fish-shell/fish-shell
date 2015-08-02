@@ -1442,14 +1442,39 @@ static void test_expand()
                 L"Failed to handle dollar sign in variable-skipping expansion");
 
     if (system("mkdir -p /tmp/fish_expand_test/")) err(L"mkdir failed");
+    if (system("mkdir -p /tmp/fish_expand_test/baz/")) err(L"mkdir failed");
+    if (system("mkdir -p /tmp/fish_expand_test/bax/")) err(L"mkdir failed");
     if (system("touch /tmp/fish_expand_test/.foo")) err(L"touch failed");
     if (system("touch /tmp/fish_expand_test/bar")) err(L"touch failed");
+    if (system("touch /tmp/fish_expand_test/bax/xxx")) err(L"touch failed");
+    if (system("touch /tmp/fish_expand_test/baz/xxx")) err(L"touch failed");
 
     // This is checking that .* does NOT match . and .. (https://github.com/fish-shell/fish-shell/issues/270). But it does have to match literal components (e.g. "./*" has to match the same as "*"
-    expand_test(L"/tmp/fish_expand_test/.*", 0, L"/tmp/fish_expand_test/.foo", 0,
+    const wchar_t * const wnull = NULL;
+    expand_test(L"/tmp/fish_expand_test/.*", 0,
+                L"/tmp/fish_expand_test/.foo", wnull,
                 L"Expansion not correctly handling dotfiles");
-    expand_test(L"/tmp/fish_expand_test/./.*", 0, L"/tmp/fish_expand_test/./.foo", 0,
+    
+    expand_test(L"/tmp/fish_expand_test/./.*", 0,
+                L"/tmp/fish_expand_test/./.foo", wnull,
                 L"Expansion not correctly handling literal path components in dotfiles");
+    
+    expand_test(L"/tmp/fish_expand_test/*/xxx", 0,
+                L"/tmp/fish_expand_test/bax/xxx", L"/tmp/fish_expand_test/baz/xxx", wnull,
+                L"Glob did the wrong thing");
+    
+    expand_test(L"/tmp/fish_expand_test/*z/xxx", 0,
+                L"/tmp/fish_expand_test/baz/xxx", wnull,
+                L"Glob did the wrong thing");
+    
+    expand_test(L"/tmp/fish_expand_test/**z/xxx", 0,
+                L"/tmp/fish_expand_test/baz/xxx", wnull,
+                L"Glob did the wrong thing");
+    
+    expand_test(L"/tmp/fish_expand_test/b**", 0,
+                L"/tmp/fish_expand_test/bar", L"/tmp/fish_expand_test/bax", L"/tmp/fish_expand_test/bax/xxx", L"/tmp/fish_expand_test/baz", L"/tmp/fish_expand_test/baz/xxx", wnull,
+                L"Glob did the wrong thing");
+    
 
     if (! expand_test(L"/tmp/fish_expand_test/.*", 0, L"/tmp/fish_expand_test/.foo", 0))
     {

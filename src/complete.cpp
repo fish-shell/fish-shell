@@ -1133,7 +1133,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
     if (use_command)
     {
 
-        if (expand_string(str_cmd, &this->completions, ACCEPT_INCOMPLETE | EXECUTABLES_ONLY | this->expand_flags(), NULL) != EXPAND_ERROR)
+        if (expand_string(str_cmd, &this->completions, FOR_COMPLETIONS | EXECUTABLES_ONLY | this->expand_flags(), NULL) != EXPAND_ERROR)
         {
             if (this->wants_descriptions())
             {
@@ -1143,7 +1143,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
     }
     if (use_implicit_cd)
     {
-        if (!expand_string(str_cmd, &this->completions, ACCEPT_INCOMPLETE | DIRECTORIES_ONLY | this->expand_flags(), NULL))
+        if (!expand_string(str_cmd, &this->completions, FOR_COMPLETIONS | DIRECTORIES_ONLY | this->expand_flags(), NULL))
         {
             // Not valid as implicit cd.
         }
@@ -1173,7 +1173,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
                     size_t prev_count =  this->completions.size();
                     if (expand_string(nxt_completion,
                                       &this->completions,
-                                      ACCEPT_INCOMPLETE | EXECUTABLES_ONLY | this->expand_flags(), NULL) != EXPAND_ERROR)
+                                      FOR_COMPLETIONS | EXECUTABLES_ONLY | this->expand_flags(), NULL) != EXPAND_ERROR)
                     {
                         /* For all new completions, if COMPLETE_NO_CASE is set, then use only the last path component */
                         for (size_t i=prev_count; i< this->completions.size(); i++)
@@ -1610,7 +1610,7 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
 */
 void completer_t::complete_param_expand(const wcstring &str, bool do_file, bool directories_only)
 {
-    expand_flags_t flags = EXPAND_SKIP_CMDSUBST | ACCEPT_INCOMPLETE | this->expand_flags();
+    expand_flags_t flags = EXPAND_SKIP_CMDSUBST | FOR_COMPLETIONS | this->expand_flags();
 
     if (! do_file)
         flags |= EXPAND_SKIP_WILDCARDS;

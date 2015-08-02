@@ -1435,7 +1435,7 @@ static void test_expand()
     expand_test(L"a*", EXPAND_SKIP_WILDCARDS, L"a*", 0,
                 L"Cannot skip wildcard expansion");
 
-    expand_test(L"/bin/l\\0", ACCEPT_INCOMPLETE, 0,
+    expand_test(L"/bin/l\\0", FOR_COMPLETIONS, 0,
                 L"Failed to handle null escape in expansion");
 
     expand_test(L"foo\\$bar", EXPAND_SKIP_VARIABLES, L"foo$bar", 0,

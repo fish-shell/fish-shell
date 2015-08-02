@@ -616,7 +616,7 @@ static int find_job(const struct find_job_data_t *info)
           This is a numeric job string, like '%2'
         */
 
-        if (flags & ACCEPT_INCOMPLETE)
+        if (flags & FOR_COMPLETIONS)
         {
             job_iterator_t jobs;
             while ((j = jobs.next()))
@@ -672,7 +672,7 @@ static int find_job(const struct find_job_data_t *info)
             size_t offset;
             if (match_pid(j->command(), proc, flags, &offset))
             {
-                if (flags & ACCEPT_INCOMPLETE)
+                if (flags & FOR_COMPLETIONS)
                 {
                     append_completion(&completions,
                                       j->command_wcstr() + offset + wcslen(proc),
@@ -703,7 +703,7 @@ static int find_job(const struct find_job_data_t *info)
                     size_t offset;
                     if (match_pid(p->actual_cmd, proc, flags, &offset))
                     {
-                        if (flags & ACCEPT_INCOMPLETE)
+                        if (flags & FOR_COMPLETIONS)
                         {
                             append_completion(&completions,
                                               wcstring(p->actual_cmd, offset + wcslen(proc)),
@@ -763,7 +763,7 @@ static void find_process(const wchar_t *proc, expand_flags_t flags, std::vector<
         size_t offset;
         if (match_pid(process_name, proc, flags, &offset))
         {
-            if (flags & ACCEPT_INCOMPLETE)
+            if (flags & FOR_COMPLETIONS)
             {
                 append_completion(out,
                                   process_name.c_str() + offset + wcslen(proc),
@@ -808,7 +808,7 @@ static bool expand_pid(const wcstring &instr_with_sep, expand_flags_t flags, std
     /* We know we are a process expansion now */
     assert(in[0] == PROCESS_EXPAND);
 
-    if (flags & ACCEPT_INCOMPLETE)
+    if (flags & FOR_COMPLETIONS)
     {
         if (wcsncmp(in+1, SELF_STR, wcslen(in+1))==0)
         {
@@ -849,7 +849,7 @@ static bool expand_pid(const wcstring &instr_with_sep, expand_flags_t flags, std
 
     if (prev_count == out->size())
     {
-        if (!(flags & ACCEPT_INCOMPLETE))
+        if (!(flags & FOR_COMPLETIONS))
         {
             /* We failed to find anything */
             append_syntax_error(errors, 1, FAILED_EXPANSION_PROCESS_ERR_MSG, escape(in+1, ESCAPE_NO_QUOTED).c_str());
@@ -1300,7 +1300,7 @@ static int expand_brackets(parser_t &parser, const wcstring &instr, int flags, s
 
     if (bracket_count > 0)
     {
-        if (!(flags & ACCEPT_INCOMPLETE))
+        if (!(flags & FOR_COMPLETIONS))
         {
             syntax_error = true;
         }
@@ -1682,7 +1682,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> *output, expa
     size_t i;
     int res = EXPAND_OK;
 
-    if ((!(flags & ACCEPT_INCOMPLETE)) && expand_is_clean(input.c_str()))
+    if ((!(flags & FOR_COMPLETIONS)) && expand_is_clean(input.c_str()))
     {
         append_completion(output, input);
         return EXPAND_OK;
@@ -1761,7 +1761,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> *output, expa
         if (!(EXPAND_SKIP_HOME_DIRECTORIES & flags))
             expand_home_directory(next);
 
-        if (flags & ACCEPT_INCOMPLETE)
+        if (flags & FOR_COMPLETIONS)
         {
             if (! next.empty() && next.at(0) == PROCESS_EXPAND)
             {
@@ -1799,7 +1799,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> *output, expa
         {
             // Don't do wildcard expansion for executables. See #785. So do nothing here.
         }
-        else if (((flags & ACCEPT_INCOMPLETE) && (!(flags & EXPAND_SKIP_WILDCARDS))) ||
+        else if (((flags & FOR_COMPLETIONS) && (!(flags & EXPAND_SKIP_WILDCARDS))) ||
                  has_wildcard)
         {
             wcstring start, rest;
@@ -1817,7 +1817,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> *output, expa
 
             std::vector<completion_t> expanded;
             wc_res = wildcard_expand_string(rest, start, flags, &expanded);
-            if (flags & ACCEPT_INCOMPLETE)
+            if (flags & FOR_COMPLETIONS)
             {
                 out->insert(out->end(), expanded.begin(), expanded.end());
             }
@@ -1850,7 +1850,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> *output, expa
         }
         else
         {
-            if (!(flags & ACCEPT_INCOMPLETE))
+            if (!(flags & FOR_COMPLETIONS))
             {
                 append_completion(out, next);
             }
@@ -1874,7 +1874,7 @@ bool expand_one(wcstring &string, expand_flags_t flags, parse_error_list_t *erro
     std::vector<completion_t> completions;
     bool result = false;
 
-    if ((!(flags & ACCEPT_INCOMPLETE)) &&  expand_is_clean(string.c_str()))
+    if ((!(flags & FOR_COMPLETIONS)) &&  expand_is_clean(string.c_str()))
     {
         return true;
     }

@@ -41,7 +41,7 @@ enum
        prefix of the filename. If accept_incomplete is true, only the
        remainder of the string is returned.
     */
-    ACCEPT_INCOMPLETE = 1 << 3,
+    FOR_COMPLETIONS = 1 << 3,
 
     /** Only match files that are executable by the current user. Only applicable together with ACCEPT_INCOMPLETE. */
     EXECUTABLES_ONLY = 1 << 4,

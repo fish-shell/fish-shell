@@ -1,0 +1,5 @@
+complete -c entr  -s r                     -d 'Launches the utility at startup and reloads it if one of the source files change'
+complete -c entr  -s c                     -d 'Clears the screen before running the utility'
+complete -c entr  -s h -l help             -d 'Display help and exit'
+complete -c entr  -s v -l version          -d 'Output version information'
+complete -c entr  -x -a '(__fish_complete_subcommand)'

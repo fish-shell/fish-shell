@@ -411,6 +411,14 @@ complete -c fossil -n '__fish_fossil_command ui server' -l scgi -d 'Use SCGI rat
 complete -c fossil -n __fish_fossil_needs_command -a undo -d 'Undo the changes'
 complete -c fossil -n '__fish_fossil_command undo' -s n -l dry-run -d 'Display actions without running'
 
+# checkout
+complete -c fossil -n __fish_fossil_needs_command -a checkout -d 'Checkout version'
+complete -c fossil -n '__fish_fossil_command checkout' -l force -d 'Ignore edited files'
+complete -c fossil -n '__fish_fossil_command checkout' -l force-missing -d 'Ignore missing content'
+complete -c fossil -n '__fish_fossil_command checkout' -l keep -d 'Only updated the manifest'
+complete -c fossil -n '__fish_fossil_command checkout' -l latest -d 'Update to latest version'
+
+
 # update
 complete -c fossil -n __fish_fossil_needs_command -a update -d 'Update version'
 complete -c fossil -n '__fish_fossil_command update' -l case-sensitive -x -a 'yes no' -d 'Case insensitive file matching'

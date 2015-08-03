@@ -717,6 +717,16 @@ class wildcard_expander_t
      */
     void expand_last_segment(const wcstring &base_dir, DIR *base_dir_fp, const wcstring &wc);
     
+    /* Indicate whether we should cancel wildcard expansion. This latches 'interrupt' */
+    bool interrupted()
+    {
+        if (! did_interrupt)
+        {
+            did_interrupt = (is_main_thread() ? reader_interrupted() : reader_thread_job_is_stale());
+        }
+        return did_interrupt;
+    }
+    
     /* Helper to resolve an empty base directory */
     static DIR *open_dir(const wcstring &base_dir)
     {
@@ -739,21 +749,16 @@ public:
     /* Do wildcard expansion. This is recursive. */
     void expand(const wcstring &base_dir, const wchar_t *wc);
     
-    
-    /* Indicate whether we should cancel wildcard expansion. This latches 'interrupt' */
-    bool interrupted()
+    int status_code() const
     {
-        if (! did_interrupt)
+        if (this->did_interrupt)
         {
-            did_interrupt = (is_main_thread() ? reader_interrupted() : reader_thread_job_is_stale());
+            return -1;
         }
-        return did_interrupt;
-    }
-    
-    /* Indicates whether something was added */
-    bool added() const
-    {
-        return this->did_add;
+        else
+        {
+            return this->did_add ? 1 : 0;
+        }
     }
 };
 
@@ -1309,14 +1314,7 @@ static int wildcard_expand(const wchar_t *wc,
             c.prepend_token_prefix(base_dir);
         }
     }
-    if (expander.interrupted())
-    {
-        return -1;
-    }
-    else
-    {
-        return expander.added() ? 1 : 0;
-    }
+    return expander.status_code();
 }
 
 int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_flags_t flags, std::vector<completion_t> *output)

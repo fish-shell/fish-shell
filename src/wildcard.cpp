@@ -31,19 +31,6 @@ wildcards using **.
 #include <map>
 
 /**
-   This flag is set in the flags parameter of wildcard_expand if the
-   call is part of a recursiv wildcard search. It is used to make sure
-   that the contents of subdirectories are only searched once.
-*/
-#define WILDCARD_RECURSIVE 64
-
-/**
-   The maximum length of a filename token. This is a fallback value,
-   an attempt to find the true value using patchconf is always made.
-*/
-#define MAX_FILE_LENGTH 1024
-
-/**
    Description for generic executable
 */
 #define COMPLETE_EXEC_DESC _( L"Executable" )
@@ -92,9 +79,6 @@ wildcards using **.
    Description for directories
 */
 #define COMPLETE_DIRECTORY_DESC _( L"Directory" )
-
-/** Hashtable containing all descriptions that describe an executable */
-static std::map<wcstring, wcstring> suffix_map;
 
 // Implementation of wildcard_has. Needs to take the length to handle embedded nulls (#1631)
 static bool wildcard_has_impl(const wchar_t *str, size_t len, bool internal)
@@ -1231,7 +1215,7 @@ static int wildcard_expand_internal(const wchar_t *wc,
 
                             new_res = wildcard_expand_internal(wcschr(wc, ANY_STRING_RECURSIVE),
                                                                new_dir.c_str(),
-                                                               flags | WILDCARD_RECURSIVE,
+                                                               flags,
                                                                out,
                                                                completion_set,
                                                                visited_files);

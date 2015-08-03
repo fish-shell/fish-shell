@@ -692,13 +692,6 @@ class wildcard_expander_t
      */
     void expand_last_segment(const wcstring &base_dir, DIR *base_dir_fp, const wcstring &wc);
     
-    /* Given a directory base_dir, which is openend as base_dir_fp, call expand() recursively
-       on matching subdirectories.
-       head_wc is the portion before the recursive match
-       wc_remainder is the portion after it, and starts with ANY_STRING_RECURSIVE
-     */
-    void recurse_to_subdirectories(const wcstring &base_dir, DIR *base_dir_fp, const wcstring &head_wc, const wchar_t *wc_remainder);
-    
     /* Helper to resolve an empty base directory */
     static DIR *open_dir(const wcstring &base_dir)
     {
@@ -846,18 +839,6 @@ void wildcard_expander_t::expand_last_segment(const wcstring &base_dir, DIR *bas
     }
 }
 
-void wildcard_expander_t::recurse_to_subdirectories(const wcstring &base_dir, DIR *base_dir_fp, const wcstring &head_wc, const wchar_t *wc_remainder)
-{
-    assert(! base_dir.empty());
-    assert(wc_remainder[0] == ANY_STRING_RECURSIVE);
-    // note head_wc may be empty
-    
-    /* Construct a "head + any" wildcard for matching stuff in this directory. Then just match this segment with that, then future segments with the remainder of the wildcard. */
-    wcstring head_any = head_wc;
-    head_any.push_back(ANY_STRING);
-    this->expand_intermediate_segment(base_dir, base_dir_fp, head_any, wc_remainder);
-}
-
 /**
  The real implementation of wildcard expansion is in this
  function. Other functions are just wrappers around this one.
@@ -939,11 +920,14 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc)
             size_t asr_idx = wc_segment.find(ANY_STRING_RECURSIVE);
             if (asr_idx != wcstring::npos)
             {
-                const wcstring head(wc_segment, 0, asr_idx);
-                const wchar_t *tail = wc + asr_idx; // starts at the ASR wildcard
-                assert(*tail == ANY_STRING_RECURSIVE);
+                /* Construct a "head + any" wildcard for matching stuff in this directory, and an "any + tail" wildcard for matching stuff in subdirectories. Note that the ANY_STRING_RECURSIVE character is present in both the head and the tail. */
+                const wcstring head_any(wc_segment, 0, asr_idx + 1);
+                const wchar_t *any_tail = wc + asr_idx;
+                assert(head_any.at(head_any.size() - 1) == ANY_STRING_RECURSIVE);
+                assert(any_tail[0] == ANY_STRING_RECURSIVE);
+
                 rewinddir(dir);
-                this->recurse_to_subdirectories(base_dir, dir, head, tail);
+                this->expand_intermediate_segment(base_dir, dir, head_any, any_tail);
             }
             closedir(dir);
         }

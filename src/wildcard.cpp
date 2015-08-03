@@ -769,7 +769,7 @@ void wildcard_expander_t::expand_trailing_slash(const wcstring &base_dir)
         return;
     }
     
-    if (! (flags & FOR_COMPLETIONS))
+    if (! (flags & EXPAND_FOR_COMPLETIONS))
     {
         /* Trailing slash and not accepting incomplete, e.g. `echo /tmp/`. Insert this file if it exists. */
         if (waccess(base_dir, F_OK))
@@ -840,7 +840,7 @@ void wildcard_expander_t::expand_last_segment(const wcstring &base_dir, DIR *bas
     wcstring name_str;
     while (wreaddir(base_dir_fp, name_str))
     {
-        if (flags & FOR_COMPLETIONS)
+        if (flags & EXPAND_FOR_COMPLETIONS)
         {
             /* Test for matches before stating file, so as to minimize the number of calls to the much slower stat function. The only expand flag we care about is EXPAND_FUZZY_MATCH; we have no complete flags. */
             std::vector<completion_t> local_matches;
@@ -1018,7 +1018,7 @@ static int wildcard_expand_internal(const wchar_t *wc,
     const size_t base_dir_len = wcslen(base_dir);
     const size_t wc_len = wcslen(wc);
 
-    if (flags & FOR_COMPLETIONS)
+    if (flags & EXPAND_FOR_COMPLETIONS)
     {
         /*
            Avoid excessive number of returned matches for wc ending with a *
@@ -1083,7 +1083,7 @@ static int wildcard_expand_internal(const wchar_t *wc,
               The last wildcard segment is empty. Insert everything if
               completing, the directory itself otherwise.
             */
-            if (flags & FOR_COMPLETIONS)
+            if (flags & EXPAND_FOR_COMPLETIONS)
             {
                 wcstring next;
                 while (wreaddir(dir, next))
@@ -1111,7 +1111,7 @@ static int wildcard_expand_internal(const wchar_t *wc,
             wcstring name_str;
             while (wreaddir(dir, name_str))
             {
-                if (flags & FOR_COMPLETIONS)
+                if (flags & EXPAND_FOR_COMPLETIONS)
                 {
 
                     const wcstring long_name = make_path(base_dir, name_str);
@@ -1296,7 +1296,7 @@ static int wildcard_expand(const wchar_t *wc,
     wildcard_expander_t expander(flags, out);
     expander.expand(base_dir, wc);
 
-    if (flags & FOR_COMPLETIONS)
+    if (flags & EXPAND_FOR_COMPLETIONS)
     {
         wcstring wc_base;
         const wchar_t *wc_base_ptr = wcsrchr(wc, L'/');

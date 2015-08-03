@@ -36,12 +36,9 @@ enum
     EXPAND_SKIP_WILDCARDS = 1 << 2,
 
     /**
-       Incomplete matches in the last segment are ok (for tab
-       completion). An incomplete match is a wildcard that matches a
-       prefix of the filename. If accept_incomplete is true, only the
-       remainder of the string is returned.
+       The expansion is being done for tab or auto completions. Returned completions may have the wildcard as a prefix instead of a match.
     */
-    FOR_COMPLETIONS = 1 << 3,
+    EXPAND_FOR_COMPLETIONS = 1 << 3,
 
     /** Only match files that are executable by the current user. Only applicable together with ACCEPT_INCOMPLETE. */
     EXECUTABLES_ONLY = 1 << 4,

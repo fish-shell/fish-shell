@@ -1435,7 +1435,7 @@ static void test_expand()
     expand_test(L"a*", EXPAND_SKIP_WILDCARDS, L"a*", 0,
                 L"Cannot skip wildcard expansion");
 
-    expand_test(L"/bin/l\\0", FOR_COMPLETIONS, 0,
+    expand_test(L"/bin/l\\0", EXPAND_FOR_COMPLETIONS, 0,
                 L"Failed to handle null escape in expansion");
 
     expand_test(L"foo\\$bar", EXPAND_SKIP_VARIABLES, L"foo$bar", 0,
@@ -1475,7 +1475,7 @@ static void test_expand()
                 L"/tmp/fish_expand_test/bar", L"/tmp/fish_expand_test/bax", L"/tmp/fish_expand_test/bax/xxx", L"/tmp/fish_expand_test/baz", L"/tmp/fish_expand_test/baz/xxx", wnull,
                 L"Glob did the wrong thing");
     
-    expand_test(L"/tmp/fish_expand_test/BA", FOR_COMPLETIONS,
+    expand_test(L"/tmp/fish_expand_test/BA", EXPAND_FOR_COMPLETIONS,
                 L"/tmp/fish_expand_test/bar", L"/tmp/fish_expand_test/bax/",  L"/tmp/fish_expand_test/baz/", wnull,
                 L"Case insensitive test did the wrong thing");
 

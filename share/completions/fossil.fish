@@ -413,9 +413,10 @@ complete -c fossil -n '__fish_fossil_command undo' -s n -l dry-run -d 'Display a
 
 # checkout
 complete -c fossil -n __fish_fossil_needs_command -a checkout -d 'Checkout version'
+complete -c fossil -n '__fish_fossil_command checkout' -f -a '(fossil tag list)' -d 'Version to check out'
 complete -c fossil -n '__fish_fossil_command checkout' -l force -d 'Ignore edited files'
 complete -c fossil -n '__fish_fossil_command checkout' -l force-missing -d 'Ignore missing content'
-complete -c fossil -n '__fish_fossil_command checkout' -l keep -d 'Only updated the manifest'
+complete -c fossil -n '__fish_fossil_command checkout' -l keep -d 'Only update the manifest'
 complete -c fossil -n '__fish_fossil_command checkout' -l latest -d 'Update to latest version'
 
 

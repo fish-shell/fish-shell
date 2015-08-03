@@ -525,13 +525,10 @@ wcstring wsetlocale(int category, const wchar_t *locale)
     /*
       Use ellipsis if on known unicode system, otherwise use $
     */
-    char *ctype = setlocale(LC_CTYPE, NULL);
-    bool unicode = (strstr(ctype, ".UTF") || strstr(ctype, ".utf"));
-
-    ellipsis_char = unicode ? L'\x2026' : L'$';
+    ellipsis_char = (wcwidth(L'\x2026') > 0) ? L'\x2026' : L'$';
 
     // U+23CE is the "return" character
-    omitted_newline_char = unicode ? L'\x23CE' : L'~';
+    omitted_newline_char = (wcwidth(L'\x23CE') > 0) ? L'\x23CE' : L'~';
 
     if (!res)
         return wcstring();

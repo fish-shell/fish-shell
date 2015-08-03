@@ -826,6 +826,7 @@ void wildcard_expander_t::expand_last_segment(const wcstring &base_dir, DIR *bas
         }
         else
         {
+            // Normal wildcard expansion, not for completions
             if (wildcard_match(name_str, wc, true /* skip files with leading dots */))
             {
                 const wcstring abs_path = base_dir + name_str;
@@ -1277,13 +1278,10 @@ static int wildcard_expand(const wchar_t *wc,
         for (size_t i=c; i<out->size(); i++)
         {
             completion_t &c = out->at(i);
-
-            if (c.flags & COMPLETE_REPLACES_TOKEN)
-            {
-                // completion = base_dir + wc_base + completion
-                c.completion.insert(0, wc_base);
-                c.completion.insert(0, base_dir);
-            }
+            
+            // completion = base_dir + wc_base + completion
+            c.prepend_token_prefix(wc_base);
+            c.prepend_token_prefix(base_dir);
         }
     }
     if (expander.interrupted())

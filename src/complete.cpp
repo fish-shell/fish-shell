@@ -326,6 +326,13 @@ bool completion_t::is_alphabetically_equal_to(const completion_t &a, const compl
     return a.completion == b.completion;
 }
 
+void completion_t::prepend_token_prefix(const wcstring &prefix)
+{
+    if (this->flags & COMPLETE_REPLACES_TOKEN)
+    {
+        this->completion.insert(0, prefix);
+    }
+}
 
 /** Class representing an attempt to compute completions */
 class completer_t
@@ -1647,15 +1654,11 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file, bool 
             debug(3, L"Error while expanding string '%ls'", sep_string.c_str());
         }
         
-        /* Hack hack hack. Any COMPLETE_REPLACES_TOKEN will also stomp the separator. We need to "repair" them by inserting our separator and prefix. */
+        /* Any COMPLETE_REPLACES_TOKEN will also stomp the separator. We need to "repair" them by inserting our separator and prefix. */
         const wcstring prefix_with_sep = wcstring(str, 0, sep_index + 1);
         for (size_t i=0; i < local_completions.size(); i++)
         {
-            completion_t *c = &local_completions.at(i);
-            if (c->flags & COMPLETE_REPLACES_TOKEN)
-            {
-                c->completion.insert(0, prefix_with_sep);
-            }
+            local_completions.at(i).prepend_token_prefix(prefix_with_sep);
         }
         this->completions.insert(this->completions.end(),
                                  local_completions.begin(),

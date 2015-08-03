@@ -1475,6 +1475,11 @@ static void test_expand()
                 L"/tmp/fish_expand_test/bar", L"/tmp/fish_expand_test/bax", L"/tmp/fish_expand_test/bax/xxx", L"/tmp/fish_expand_test/baz", L"/tmp/fish_expand_test/baz/xxx", wnull,
                 L"Glob did the wrong thing");
     
+    expand_test(L"/tmp/fish_expand_test/BA", FOR_COMPLETIONS,
+                L"/tmp/fish_expand_test/bar", L"/tmp/fish_expand_test/bax/",  L"/tmp/fish_expand_test/baz/", wnull,
+                L"Case insensitive test did the wrong thing");
+
+    
 
     if (! expand_test(L"/tmp/fish_expand_test/.*", 0, L"/tmp/fish_expand_test/.foo", 0))
     {

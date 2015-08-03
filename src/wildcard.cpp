@@ -80,6 +80,19 @@ wildcards using **.
 */
 #define COMPLETE_DIRECTORY_DESC _( L"Directory" )
 
+/* Finds an internal (ANY_STRING, etc.) style wildcard, or wcstring::npos */
+static size_t wildcard_find(const wchar_t *wc)
+{
+    for (size_t i=0; wc[i] != L'\0'; i++)
+    {
+        if (wc[i] == ANY_CHAR || wc[i] == ANY_STRING || wc[i] == ANY_STRING_RECURSIVE)
+        {
+            return i;
+        }
+    }
+    return wcstring::npos;
+}
+
 // Implementation of wildcard_has. Needs to take the length to handle embedded nulls (#1631)
 static bool wildcard_has_impl(const wchar_t *str, size_t len, bool internal)
 {
@@ -189,154 +202,178 @@ static bool wildcard_match_internal(const wchar_t *str, const wchar_t *wc, bool 
     return false;
 }
 
-/**
-   Matches the string against the wildcard, and if the wildcard is a
-   possible completion of the string, the remainder of the string is
-   inserted into the out vector.
-*/
-static bool wildcard_complete_internal(const wcstring &orig,
-                                       const wchar_t *str,
-                                       const wchar_t *wc,
-                                       bool is_first,
-                                       const wchar_t *desc,
-                                       wcstring(*desc_func)(const wcstring &),
-                                       std::vector<completion_t> *out,
-                                       expand_flags_t expand_flags,
-                                       complete_flags_t flags)
+
+/* This does something horrible refactored from an even more horrible function */
+static wcstring resolve_description(wcstring *completion, const wchar_t *explicit_desc, wcstring(*desc_func)(const wcstring &))
 {
-    if (!wc || ! str || orig.empty())
+    size_t complete_sep_loc = completion->find(PROG_COMPLETE_SEP);
+    if (complete_sep_loc != wcstring::npos)
     {
-        debug(2, L"Got null string on line %d of file %s", __LINE__, __FILE__);
-        return 0;
+        /* This completion has an embedded description, do not use the generic description */
+        const wcstring description = completion->substr(complete_sep_loc + 1);
+        completion->resize(complete_sep_loc);
+        return description;
     }
-
-    bool has_match = false;
-    string_fuzzy_match_t fuzzy_match(fuzzy_match_exact);
-    const bool at_end_of_wildcard = (*wc == L'\0');
-    const wchar_t *completion_string = NULL;
-
-    // Hack hack hack
-    // Implement EXPAND_FUZZY_MATCH by short-circuiting everything if there are no remaining wildcards
-    if ((expand_flags & EXPAND_FUZZY_MATCH) && ! at_end_of_wildcard && ! wildcard_has(wc, true))
+    else
     {
-        string_fuzzy_match_t local_fuzzy_match = string_fuzzy_match_string(wc, str);
-        if (local_fuzzy_match.type != fuzzy_match_none)
+        const wcstring func_result = (desc_func ? desc_func(*completion) : wcstring());
+        if (! func_result.empty())
         {
-            has_match = true;
-            fuzzy_match = local_fuzzy_match;
-
-            /* If we're not a prefix or exact match, then we need to replace the token. Note that in this case we're not going to call ourselves recursively, so these modified flags won't "leak" except into the completion. */
-            if (match_type_requires_full_replacement(local_fuzzy_match.type))
-            {
-                flags |= COMPLETE_REPLACES_TOKEN;
-                completion_string = orig.c_str();
-            }
-            else
-            {
-                /* Since we are not replacing the token, be careful to only store the part of the string after the wildcard */
-                size_t wc_len = wcslen(wc);
-                assert(wcslen(str) >= wc_len);
-                completion_string = str + wcslen(wc);
-            }
-        }
-    }
-
-    /* Maybe we satisfied the wildcard normally */
-    if (! has_match)
-    {
-        bool file_has_leading_dot = (is_first && str[0] == L'.');
-        if (at_end_of_wildcard && ! file_has_leading_dot)
-        {
-            has_match = true;
-            if (flags & COMPLETE_REPLACES_TOKEN)
-            {
-                completion_string = orig.c_str();
-            }
-            else
-            {
-                completion_string = str;
-            }
-        }
-    }
-
-    if (has_match)
-    {
-        /* Wildcard complete */
-        assert(completion_string != NULL);
-        wcstring out_completion = completion_string;
-        wcstring out_desc = (desc ? desc : L"");
-
-        size_t complete_sep_loc = out_completion.find(PROG_COMPLETE_SEP);
-        if (complete_sep_loc != wcstring::npos)
-        {
-            /* This completion has an embedded description, do not use the generic description */
-            out_desc.assign(out_completion, complete_sep_loc + 1, out_completion.size() - complete_sep_loc - 1);
-            out_completion.resize(complete_sep_loc);
+            return func_result;
         }
         else
         {
-            if (desc_func && !(expand_flags & EXPAND_NO_DESCRIPTIONS))
-            {
-                /*
-                  A description generating function is specified, call
-                  it. If it returns something, use that as the
-                  description.
-                */
-                wcstring func_desc = desc_func(orig);
-                if (! func_desc.empty())
-                    out_desc = func_desc;
-            }
-
+            return explicit_desc ? explicit_desc : L"";
         }
-
-        /* Note: out_completion may be empty if the completion really is empty, e.g. tab-completing 'foo' when a file 'foo' exists. */
-        append_completion(out, out_completion, out_desc, flags, fuzzy_match);
-        return true;
     }
+}
 
-    if (*wc == ANY_STRING)
+/* A transient parameter pack needed by wildcard_complete.f */
+struct wc_complete_pack_t
+{
+    const wcstring &orig; // the original string, transient
+    const wchar_t *desc; // literal description
+    wcstring(*desc_func)(const wcstring &); // function for generating descriptions
+    expand_flags_t expand_flags;
+    wc_complete_pack_t(const wcstring &str) : orig(str) {}
+};
+
+/**
+ Matches the string against the wildcard, and if the wildcard is a
+ possible completion of the string, the remainder of the string is
+ inserted into the out vector.
+ 
+ We ignore ANY_STRING_RECURSIVE here. The consequence is that you cannot
+ tab complete ** wildcards. This is historic behavior.
+ */
+static bool wildcard_complete_internal(const wchar_t *str,
+                                       const wchar_t *wc,
+                                       const wc_complete_pack_t &params,
+                                       complete_flags_t flags,
+                                       std::vector<completion_t> *out,
+                                       bool is_first_call = false)
+{
+    assert(str != NULL);
+    assert(wc != NULL);
+    
+    /* Maybe early out for hidden files. We require that the wildcard match these exactly (i.e. a dot); ANY_STRING not allowed */
+    if (is_first_call && str[0] == L'.' && wc[0] != L'.')
     {
-        bool res=false;
-
-        /* Ignore hidden file */
-        if (is_first && str[0] == L'.')
-            return false;
-
-        /* Try all submatches */
-        for (size_t i=0; str[i] != L'\0'; i++)
+        return false;
+    }
+    
+    /* Locate the next wildcard character position, e.g. ANY_CHAR or ANY_STRING */
+    size_t next_wc_char_pos = wildcard_find(wc);
+    
+    /* Maybe we have no more wildcards at all. */
+    if (next_wc_char_pos == wcstring::npos)
+    {
+        string_fuzzy_match_t match = string_fuzzy_match_string(wc, str);
+        
+        /* If we're allowing fuzzy match, any match is OK. Otherwise we require a prefix match. */
+        bool match_acceptable;
+        if (params.expand_flags & EXPAND_FUZZY_MATCH)
         {
-            const size_t before_count = out->size();
-            if (wildcard_complete_internal(orig, str + i, wc+1, false, desc, desc_func, out, expand_flags, flags))
+            match_acceptable = match.type != fuzzy_match_none;
+        }
+        else
+        {
+            match_acceptable = match_type_shares_prefix(match.type);
+        }
+        
+        if (match_acceptable)
+        {
+            /* Wildcard complete */
+            bool full_replacement = match_type_requires_full_replacement(match.type) || (flags & COMPLETE_REPLACES_TOKEN);
+            
+            /* If we are not replacing the token, be careful to only store the part of the string after the wildcard */
+            assert(!full_replacement || wcslen(wc) <= wcslen(str));
+            wcstring out_completion = full_replacement ? params.orig : str + wcslen(wc);
+            wcstring out_desc = resolve_description(&out_completion, params.desc, params.desc_func);
+            
+            /* Note: out_completion may be empty if the completion really is empty, e.g. tab-completing 'foo' when a file 'foo' exists. */
+            complete_flags_t local_flags = flags | (full_replacement ? COMPLETE_REPLACES_TOKEN : 0);
+            append_completion(out, out_completion, out_desc, local_flags, match);
+        }
+        return match_acceptable;
+    }
+    else if (next_wc_char_pos > 0)
+    {
+        bool result;
+        /* Here we have a non-wildcard prefix. Note that we don't do fuzzy matching for stuff before a wildcard, so just do case comparison and then recurse. */
+        if (wcsncmp(str, wc, next_wc_char_pos) == 0)
+        {
+            // Normal match
+            result = wildcard_complete_internal(str + next_wc_char_pos, wc + next_wc_char_pos, params, flags, out);
+        }
+        else if (wcsncasecmp(str, wc, next_wc_char_pos) == 0)
+        {
+            // Case insensitive match
+            result = wildcard_complete_internal(str + next_wc_char_pos, wc + next_wc_char_pos, params, flags | COMPLETE_REPLACES_TOKEN, out);
+        }
+        else
+        {
+            // No match
+            result = false;
+        }
+        return result;
+    }
+    else
+    {
+        /* Our first character is a wildcard. */
+        assert(next_wc_char_pos == 0);
+        switch (wc[0])
+        {
+            case ANY_CHAR:
             {
-                res = true;
-
-                /* #929: if the recursive call gives us a prefix match, just stop. This is sloppy - what we really want to do is say, once we've seen a match of a particular type, ignore all matches of that type further down the string, such that the wildcard produces the "minimal match." */
-                bool has_prefix_match = false;
-                const size_t after_count = out->size();
-                for (size_t j = before_count; j < after_count; j++)
+                if (str[0] == L'\0')
                 {
-                    if (out->at(j).match.type <= fuzzy_match_prefix)
+                    return false;
+                }
+                else
+                {
+                    return wildcard_complete_internal(str + 1, wc + 1, params, flags, out);
+                }
+                break;
+            }
+                
+            case ANY_STRING:
+            {
+                bool has_match = false;
+                /* Try all submatches. #929: if the recursive call gives us a prefix match, just stop. This is sloppy - what we really want to do is say, once we've seen a match of a particular type, ignore all matches of that type further down the string, such that the wildcard produces the "minimal match." */
+                bool has_prefix_match = false;
+                for (size_t i=0; str[i] != L'\0' && ! has_prefix_match; i++)
+                {
+                    const size_t before_count = out->size();
+                    if (wildcard_complete_internal(str + i, wc + 1, params, flags, out))
                     {
-                        has_prefix_match = true;
-                        break;
+                        has_match = true;
+                        
+                        /* Determine if we have a prefix match */
+                        const size_t after_count = out->size();
+                        for (size_t j = before_count; j < after_count; j++)
+                        {
+                            if (out->at(j).match.type <= fuzzy_match_prefix)
+                            {
+                                has_prefix_match = true;
+                                break;
+                            }
+                        }
                     }
                 }
-                if (has_prefix_match)
-                    break;
+                return has_match;
             }
+                
+            case ANY_STRING_RECURSIVE:
+                /* We don't even try with this one */
+                return false;
+            
+            default:
+                assert(0 && "Unreachable code reached");
+                return false;
         }
-        return res;
-
     }
-    else if (*wc == ANY_CHAR || *wc == *str)
-    {
-        return wildcard_complete_internal(orig, str+1, wc+1, false, desc, desc_func, out, expand_flags, flags);
-    }
-    else if (towlower(*wc) == towlower(*str))
-    {
-        return wildcard_complete_internal(orig, str+1, wc+1, false, desc, desc_func, out, expand_flags, flags | COMPLETE_REPLACES_TOKEN);
-    }
-    return false;
+    assert(0 && "Unreachable code reached");
 }
 
 bool wildcard_complete(const wcstring &str,
@@ -348,7 +385,11 @@ bool wildcard_complete(const wcstring &str,
                        complete_flags_t flags)
 {
     assert(out != NULL);
-    return wildcard_complete_internal(str, str.c_str(), wc, true, desc, desc_func, out, expand_flags, flags);
+    wc_complete_pack_t params(str);
+    params.desc = desc;
+    params.desc_func = desc_func;
+    params.expand_flags = expand_flags;
+    return wildcard_complete_internal(str.c_str(), wc, params, flags, out, true /* first call */);
 }
 
 

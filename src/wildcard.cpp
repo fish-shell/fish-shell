@@ -238,6 +238,23 @@ struct wc_complete_pack_t
     wc_complete_pack_t(const wcstring &str) : orig(str) {}
 };
 
+/* Weirdly specific and non-reusable helper function that makes its one call site much clearer */
+static bool has_prefix_match(const std::vector<completion_t> *comps, size_t first)
+{
+    if (comps != NULL)
+    {
+        const size_t after_count = comps->size();
+        for (size_t j = first; j < after_count; j++)
+        {
+            if (comps->at(j).match.type <= fuzzy_match_prefix)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 /**
  Matches the string against the wildcard, and if the wildcard is a
  possible completion of the string, the remainder of the string is
@@ -281,7 +298,7 @@ static bool wildcard_complete_internal(const wchar_t *str,
             match_acceptable = match_type_shares_prefix(match.type);
         }
         
-        if (match_acceptable)
+        if (match_acceptable && out != NULL)
         {
             /* Wildcard complete */
             bool full_replacement = match_type_requires_full_replacement(match.type) || (flags & COMPLETE_REPLACES_TOKEN);
@@ -299,24 +316,23 @@ static bool wildcard_complete_internal(const wchar_t *str,
     }
     else if (next_wc_char_pos > 0)
     {
-        bool result;
         /* Here we have a non-wildcard prefix. Note that we don't do fuzzy matching for stuff before a wildcard, so just do case comparison and then recurse. */
         if (wcsncmp(str, wc, next_wc_char_pos) == 0)
         {
             // Normal match
-            result = wildcard_complete_internal(str + next_wc_char_pos, wc + next_wc_char_pos, params, flags, out);
+            return wildcard_complete_internal(str + next_wc_char_pos, wc + next_wc_char_pos, params, flags, out);
         }
         else if (wcsncasecmp(str, wc, next_wc_char_pos) == 0)
         {
             // Case insensitive match
-            result = wildcard_complete_internal(str + next_wc_char_pos, wc + next_wc_char_pos, params, flags | COMPLETE_REPLACES_TOKEN, out);
+            return wildcard_complete_internal(str + next_wc_char_pos, wc + next_wc_char_pos, params, flags | COMPLETE_REPLACES_TOKEN, out);
         }
         else
         {
             // No match
-            result = false;
+            return false;
         }
-        return result;
+        assert(0 && "Unreachable code reached");
     }
     else
     {
@@ -339,25 +355,20 @@ static bool wildcard_complete_internal(const wchar_t *str,
                 
             case ANY_STRING:
             {
+                /* Try all submatches. #929: if the recursive call gives us a prefix match, just stop. This is sloppy - what we really want to do is say, once we've seen a match of a particular type, ignore all matches of that type further down the string, such that the wildcard produces the "minimal match.". */
                 bool has_match = false;
-                /* Try all submatches. #929: if the recursive call gives us a prefix match, just stop. This is sloppy - what we really want to do is say, once we've seen a match of a particular type, ignore all matches of that type further down the string, such that the wildcard produces the "minimal match." */
-                bool has_prefix_match = false;
-                for (size_t i=0; str[i] != L'\0' && ! has_prefix_match; i++)
+                for (size_t i=0; str[i] != L'\0'; i++)
                 {
-                    const size_t before_count = out->size();
+                    const size_t before_count = out ? out->size() : 0;
                     if (wildcard_complete_internal(str + i, wc + 1, params, flags, out))
                     {
+                        /* We found a match */
                         has_match = true;
                         
-                        /* Determine if we have a prefix match */
-                        const size_t after_count = out->size();
-                        for (size_t j = before_count; j < after_count; j++)
+                        /* If out is NULL, we don't care about the actual matches. If out is not NULL but we have a prefix match, stop there. */
+                        if (out == NULL || has_prefix_match(out, before_count))
                         {
-                            if (out->at(j).match.type <= fuzzy_match_prefix)
-                            {
-                                has_prefix_match = true;
-                                break;
-                            }
+                            break;
                         }
                     }
                 }
@@ -384,7 +395,8 @@ bool wildcard_complete(const wcstring &str,
                        expand_flags_t expand_flags,
                        complete_flags_t flags)
 {
-    assert(out != NULL);
+    // Note out may be NULL
+    assert(wc != NULL);
     wc_complete_pack_t params(str);
     params.desc = desc;
     params.desc_func = desc_func;
@@ -527,7 +539,13 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath,
                                               const wchar_t *wc,
                                               expand_flags_t expand_flags,
                                               std::vector<completion_t> *out)
-{    
+{
+    /* Check if it will match before stat() */
+    if (! wildcard_complete(filename, wc, NULL, NULL, NULL, expand_flags, 0))
+    {
+        return false;
+    }
+
     struct stat lstat_buf = {}, stat_buf = {};
     int stat_res = -1;
     int stat_errno = 0;
@@ -776,15 +794,10 @@ void wildcard_expander_t::expand_last_segment(const wcstring &base_dir, DIR *bas
     {
         if (flags & EXPAND_FOR_COMPLETIONS)
         {
-            /* Test for matches before stating file, so as to minimize the number of calls to the much slower stat function. The only expand flag we care about is EXPAND_FUZZY_MATCH; we have no complete flags. */
-            std::vector<completion_t> local_matches;
-            if (wildcard_complete(name_str, wc.c_str(), L"", NULL, &local_matches, flags & EXPAND_FUZZY_MATCH, 0))
+            const wcstring filepath = base_dir + name_str;
+            if (wildcard_test_flags_then_complete(filepath, name_str, wc.c_str(), flags, this->resolved))
             {
-                const wcstring filepath = base_dir + name_str;
-                if (wildcard_test_flags_then_complete(filepath, name_str, wc.c_str(), flags, this->resolved))
-                {
-                    this->did_add = true;
-                }
+                this->did_add = true;
             }
         }
         else

@@ -629,7 +629,7 @@ class wildcard_expander_t
     /* Original wildcard we are expanding. */
     const wchar_t * const original_wildcard;
     
-    /* the set of items we have resolved, used to avoid duplication */
+    /* the set of items we have resolved, used to efficiently avoid duplication */
     std::set<wcstring> completion_set;
     
     /* the set of file IDs we have visited, used to avoid symlink loops */
@@ -639,7 +639,7 @@ class wildcard_expander_t
     const expand_flags_t flags;
     
     /* resolved items get inserted into here. This is transient of course. */
-    std::vector<completion_t> *resolved;
+    std::vector<completion_t> *resolved_completions;
     
     /* whether we have been interrupted */
     bool did_interrupt;
@@ -674,6 +674,28 @@ class wildcard_expander_t
         return did_interrupt;
     }
     
+    void add_expansion_result(const wcstring &result)
+    {
+        /* This function is only for the non-completions case */
+        assert(! (this->flags & EXPAND_FOR_COMPLETIONS));
+        if (this->completion_set.insert(result).second)
+        {
+            append_completion(this->resolved_completions, result);
+            this->did_add = true;
+        }
+    }
+    
+    void try_add_completion_result(const wcstring &filepath, const wcstring &filename, const wchar_t *wildcard)
+    {
+        /* This function is only for the completions case */
+        assert(this->flags & EXPAND_FOR_COMPLETIONS);
+        if (wildcard_test_flags_then_complete(filepath, filename, wildcard, this->flags, this->resolved_completions))
+        {
+            this->did_add = true;
+        }
+    }
+
+    
     /* Helper to resolve an empty base directory */
     static DIR *open_dir(const wcstring &base_dir)
     {
@@ -686,14 +708,14 @@ public:
         original_base(orig_base),
         original_wildcard(orig_wc),
         flags(f),
-        resolved(r),
+        resolved_completions(r),
         did_interrupt(false),
         did_add(false)
     {
-        assert(resolved != NULL);
+        assert(resolved_completions != NULL);
         
         /* Insert initial completions into our set to avoid duplicates */
-        for (std::vector<completion_t>::const_iterator iter = resolved->begin(); iter != resolved->end(); ++iter)
+        for (std::vector<completion_t>::const_iterator iter = resolved_completions->begin(); iter != resolved_completions->end(); ++iter)
         {
             this->completion_set.insert(iter->completion);
         }
@@ -727,8 +749,7 @@ void wildcard_expander_t::expand_trailing_slash(const wcstring &base_dir)
         /* Trailing slash and not accepting incomplete, e.g. `echo /tmp/`. Insert this file if it exists. */
         if (waccess(base_dir, F_OK))
         {
-            append_completion(this->resolved, base_dir);
-            this->did_add = true;
+            this->add_expansion_result(base_dir);
         }
     }
     else
@@ -742,11 +763,7 @@ void wildcard_expander_t::expand_trailing_slash(const wcstring &base_dir)
             {
                 if (! next.empty() && next.at(0) != L'.')
                 {
-                    const wcstring filepath = base_dir + next;
-                    if (wildcard_test_flags_then_complete(filepath, next, L"", flags, this->resolved))
-                    {
-                        this->did_add = true;
-                    }
+                    this->try_add_completion_result(base_dir + next, next, L"");
                 }
             }
             closedir(dir);
@@ -794,23 +811,14 @@ void wildcard_expander_t::expand_last_segment(const wcstring &base_dir, DIR *bas
     {
         if (flags & EXPAND_FOR_COMPLETIONS)
         {
-            const wcstring filepath = base_dir + name_str;
-            if (wildcard_test_flags_then_complete(filepath, name_str, wc.c_str(), flags, this->resolved))
-            {
-                this->did_add = true;
-            }
+            this->try_add_completion_result(base_dir + name_str, name_str, wc.c_str());
         }
         else
         {
             // Normal wildcard expansion, not for completions
             if (wildcard_match(name_str, wc, true /* skip files with leading dots */))
             {
-                const wcstring abs_path = base_dir + name_str;
-                if (this->completion_set.insert(abs_path).second)
-                {
-                    append_completion(this->resolved, abs_path);
-                    this->did_add = true;
-                }
+                this->add_expansion_result(base_dir + name_str);
             }
         }
     }

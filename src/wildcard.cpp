@@ -685,21 +685,19 @@ class wildcard_expander_t
         }
     }
     
-    void try_add_completion_result(const wcstring &filepath, const wcstring &filename, const wchar_t *wildcard)
+    void try_add_completion_result(const wcstring &filepath, const wcstring &filename, const wcstring &wildcard)
     {
         /* This function is only for the completions case */
         assert(this->flags & EXPAND_FOR_COMPLETIONS);
         size_t before = this->resolved_completions->size();
-        if (wildcard_test_flags_then_complete(filepath, filename, wildcard, this->flags, this->resolved_completions))
+        if (wildcard_test_flags_then_complete(filepath, filename, wildcard.c_str(), this->flags, this->resolved_completions))
         {
             /* Hack. We added this completion result based on the last component of the wildcard.
                Prepend all prior components of the wildcard to each completion that replaces its token. */
-            wcstring wc_base;
-            const wchar_t *wc_base_ptr = wcsrchr(this->original_wildcard, L'/');
-            if (wc_base_ptr)
-            {
-                wc_base.assign(this->original_wildcard, wc_base_ptr+1);
-            }
+            size_t wc_len = wildcard.size();
+            size_t orig_wc_len = wcslen(this->original_wildcard);
+            assert(wc_len <= orig_wc_len);
+            const wcstring wc_base(this->original_wildcard, orig_wc_len - wc_len);
             
             size_t after = this->resolved_completions->size();
             for (size_t i=before; i < after; i++)
@@ -827,7 +825,7 @@ void wildcard_expander_t::expand_last_segment(const wcstring &base_dir, DIR *bas
     {
         if (flags & EXPAND_FOR_COMPLETIONS)
         {
-            this->try_add_completion_result(base_dir + name_str, name_str, wc.c_str());
+            this->try_add_completion_result(base_dir + name_str, name_str, wc);
         }
         else
         {
@@ -941,9 +939,7 @@ static int wildcard_expand(const wchar_t *wc,
                            expand_flags_t flags,
                            std::vector<completion_t> *out)
 {
-    assert(out != NULL);
-    size_t c = out->size();
-    
+    assert(out != NULL);    
     wildcard_expander_t expander(base_dir, wc, flags, out);
     expander.expand(base_dir, wc);
     return expander.status_code();

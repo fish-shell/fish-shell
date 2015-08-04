@@ -689,12 +689,28 @@ class wildcard_expander_t
     {
         /* This function is only for the completions case */
         assert(this->flags & EXPAND_FOR_COMPLETIONS);
+        size_t before = this->resolved_completions->size();
         if (wildcard_test_flags_then_complete(filepath, filename, wildcard, this->flags, this->resolved_completions))
         {
+            /* Hack. We added this completion result based on the last component of the wildcard.
+               Prepend all prior components of the wildcard to each completion that replaces its token. */
+            wcstring wc_base;
+            const wchar_t *wc_base_ptr = wcsrchr(this->original_wildcard, L'/');
+            if (wc_base_ptr)
+            {
+                wc_base.assign(this->original_wildcard, wc_base_ptr+1);
+            }
+            
+            size_t after = this->resolved_completions->size();
+            for (size_t i=before; i < after; i++)
+            {
+                completion_t &c = this->resolved_completions->at(i);
+                c.prepend_token_prefix(wc_base);
+                c.prepend_token_prefix(this->original_base);
+            }
             this->did_add = true;
         }
     }
-
     
     /* Helper to resolve an empty base directory */
     static DIR *open_dir(const wcstring &base_dir)
@@ -930,25 +946,6 @@ static int wildcard_expand(const wchar_t *wc,
     
     wildcard_expander_t expander(base_dir, wc, flags, out);
     expander.expand(base_dir, wc);
-
-    if (flags & EXPAND_FOR_COMPLETIONS)
-    {
-        wcstring wc_base;
-        const wchar_t *wc_base_ptr = wcsrchr(wc, L'/');
-        if (wc_base_ptr)
-        {
-            wc_base = wcstring(wc, (wc_base_ptr-wc)+1);
-        }
-
-        for (size_t i=c; i<out->size(); i++)
-        {
-            completion_t &c = out->at(i);
-            
-            // completion = base_dir + wc_base + completion
-            c.prepend_token_prefix(wc_base);
-            c.prepend_token_prefix(base_dir);
-        }
-    }
     return expander.status_code();
 }
 

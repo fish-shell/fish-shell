@@ -139,19 +139,26 @@ bool wildcard_has(const wcstring &str, bool internal)
    \param wc The wildcard.
    \param is_first Whether files beginning with dots should not be matched against wildcards.
 */
-static bool wildcard_match_internal(const wchar_t *str, const wchar_t *wc, bool leading_dots_fail_to_match, bool is_first)
+static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const wchar_t *wc, bool leading_dots_fail_to_match, bool is_first, enum fuzzy_match_type_t max_type)
 {
     if (*str == 0 && *wc==0)
     {
         /* We're done */
-        return true;
+        return fuzzy_match_exact;
     }
 
-    /* Hackish fix for https://github.com/fish-shell/fish-shell/issues/270 . Prevent wildcards from matching . or .., but we must still allow literal matches. */
+    /* Hackish fix for #270 . Prevent wildcards from matching . or .., but we must still allow literal matches. */
     if (leading_dots_fail_to_match && is_first && contains(str, L".", L".."))
     {
         /* The string is '.' or '..'. Return true if the wildcard exactly matches. */
-        return ! wcscmp(str, wc);
+        return wcscmp(str, wc) ? fuzzy_match_none : fuzzy_match_exact;
+    }
+    
+    /* Hackish fuzzy match support */
+    if (0 && ! wildcard_has(wc, true))
+    {
+        const string_fuzzy_match_t match = string_fuzzy_match_string(wc, str);
+        return match.type <= max_type ? match.type : fuzzy_match_none;
     }
 
     if (*wc == ANY_STRING || *wc == ANY_STRING_RECURSIVE)
@@ -159,23 +166,23 @@ static bool wildcard_match_internal(const wchar_t *str, const wchar_t *wc, bool 
         /* Ignore hidden file */
         if (leading_dots_fail_to_match && is_first && *str == L'.')
         {
-            return false;
+            return fuzzy_match_none;
         }
         
         /* Common case of * at the end. In that case we can early out since we know it will match. */
         if (wc[1] == L'\0')
         {
-            return true;
+            return fuzzy_match_exact;
         }
 
         /* Try all submatches */
         do
         {
-            if (wildcard_match_internal(str, wc+1, leading_dots_fail_to_match, false))
-                return true;
-        }
-        while (*(str++) != 0);
-        return false;
+            enum fuzzy_match_type_t subresult = wildcard_match_internal(str, wc+1, leading_dots_fail_to_match, false, max_type);
+            if (subresult != fuzzy_match_none)
+                return subresult;
+        } while (*str++ != 0);
+        return fuzzy_match_none;
     }
     else if (*str == 0)
     {
@@ -183,23 +190,23 @@ static bool wildcard_match_internal(const wchar_t *str, const wchar_t *wc, bool 
           End of string, but not end of wildcard, and the next wildcard
           element is not a '*', so this is not a match.
         */
-        return false;
+        return fuzzy_match_none;
     }
     else if (*wc == ANY_CHAR)
     {
         if (is_first && *str == L'.')
         {
-            return false;
+            return fuzzy_match_none;
         }
 
-        return wildcard_match_internal(str+1, wc+1, leading_dots_fail_to_match, false);
+        return wildcard_match_internal(str+1, wc+1, leading_dots_fail_to_match, false, max_type);
     }
     else if (*wc == *str)
     {
-        return wildcard_match_internal(str+1, wc+1, leading_dots_fail_to_match, false);
+        return wildcard_match_internal(str+1, wc+1, leading_dots_fail_to_match, false, max_type);
     }
 
-    return false;
+    return fuzzy_match_none;
 }
 
 
@@ -407,7 +414,8 @@ bool wildcard_complete(const wcstring &str,
 
 bool wildcard_match(const wcstring &str, const wcstring &wc, bool leading_dots_fail_to_match)
 {
-    return wildcard_match_internal(str.c_str(), wc.c_str(), leading_dots_fail_to_match, true /* first */);
+    enum fuzzy_match_type_t match = wildcard_match_internal(str.c_str(), wc.c_str(), leading_dots_fail_to_match, true /* first */, fuzzy_match_exact);
+    return match != fuzzy_match_none;
 }
 
 /**
@@ -889,8 +897,25 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc)
     {
         /* Literal intermediate match. Note that we may not be able to actually read the directory (#2099) */
         assert(next_slash != NULL);
+        const wchar_t *wc_remainder = next_slash;
+        while (*wc_remainder == L'/')
+        {
+            wc_remainder++;
+        }
+        
         /* This just trumps everything */
-        this->expand(base_dir + wc_segment + L'/', next_slash + 1);
+        size_t before = this->resolved_completions->size();
+        this->expand(base_dir + wc_segment + L'/', wc_remainder);
+        if (this->resolved_completions->size() == before)
+        {
+            /* Nothing was found with the literal match. Try a fuzzy match (#94). */
+            DIR *base_dir_fd = open_dir(base_dir);
+            if (base_dir_fd != NULL)
+            {
+                this->expand_intermediate_segment(base_dir, base_dir_fd, wc_segment, wc_remainder);
+                closedir(base_dir_fd);
+            }
+        }
     }
     else
     {
@@ -939,7 +964,7 @@ static int wildcard_expand(const wchar_t *wc,
                            expand_flags_t flags,
                            std::vector<completion_t> *out)
 {
-    assert(out != NULL);    
+    assert(out != NULL);
     wildcard_expander_t expander(base_dir, wc, flags, out);
     expander.expand(base_dir, wc);
     return expander.status_code();

@@ -91,3 +91,8 @@ complete -x -c systemctl -s M -l machine= -d 'Execute operation on a VM or conta
 complete -f -c systemctl -s h -l help -d 'Print a short help and exit'
 complete -f -c systemctl -l version -d 'Print a short version and exit'
 complete -f -c systemctl -l no-pager -d 'Do not pipe output into a pager'
+
+# New options since systemd 220
+complete -f -c systemctl -l firmware-setup -n "__fish_seen_subcommand_from reboot" -d "Reboot to EFI setup"
+complete -f -c systemctl -l now -n "__fish_seen_subcommand_from enable" -d "Also start unit"
+complete -f -c systemctl -l now -n "__fish_seen_subcommand_from disable mask" -d "Also stop unit"

@@ -179,7 +179,7 @@ complete -f -c busctl -n "__fish_seen_subcommand_from list status" -l augment-cr
 complete -f -c busctl -l user
 complete -f -c busctl -l system
 complete -f -c busctl -s H -l host= -a "(__fish_print_hostnames)"
-complete -f -c busctl -s M -l machine= -a "(machinectl list --no-legend --no-pager)"
+complete -f -c busctl -s M -l machine= -a "(__fish_systemd_machines)"
 complete -f -c busctl -l no-pager
 complete -f -c busctl -l no-legend
 complete -f -c busctl -s h -l help

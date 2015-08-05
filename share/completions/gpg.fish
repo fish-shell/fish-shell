@@ -58,13 +58,13 @@ complete -c gpg -l verify-files --description "Identical to '--multifile --verif
 complete -c gpg -l encrypt-files --description "Identical to '--multifile --encrypt'"
 complete -c gpg -l decrypt-files --description "Identical to --multifile --decrypt"
 
-complete -c gpg -l list-keys -xa "(__fish_append , (__fish_complete_gpg_user_id) )" --description "List all keys from the public keyrings, or just the ones given on the command line"
-complete -c gpg -l list-public-keys -xa "(__fish_append , (__fish_complete_gpg_user_id) )" --description "List all keys from the public keyrings, or just the ones given on the command line"
-complete -c gpg -s K -l list-secret-keys -xa "(__fish_append , (__fish_complete_gpg_user_id) )" --description "List all keys from the secret keyrings, or just the ones given on the command line"
-complete -c gpg -l list-sigs -xa "(__fish_append , (__fish_complete_gpg_user_id))" --description "Same as --list-keys, but the signatures are listed too"
+complete -c gpg -s k -l list-keys -xa "(__fish_complete_gpg_user_id)" --description "List all keys from the public keyrings, or just the ones given on the command line"
+complete -c gpg -l list-public-keys -xa "(__fish_complete_gpg_user_id)" --description "List all keys from the public keyrings, or just the ones given on the command line"
+complete -c gpg -s K -l list-secret-keys -xa "(__fish_complete_gpg_user_id)" --description "List all keys from the secret keyrings, or just the ones given on the command line"
+complete -c gpg -l list-sigs -xa "(__fish_complete_gpg_user_id)" --description "Same as --list-keys, but the signatures are listed too"
 
-complete -c gpg -l check-sigs -xa "(__fish_append , (__fish_complete_gpg_user_id))" --description "Same as --list-keys, but the signatures are listed and verified"
-complete -c gpg -l fingerprint -xa "(__fish_append , (__fish_complete_gpg_user_id))" --description "List all keys with their fingerprints"
+complete -c gpg -l check-sigs -xa "(__fish_complete_gpg_user_id)" --description "Same as --list-keys, but the signatures are listed and verified"
+complete -c gpg -l fingerprint -xa "(__fish_complete_gpg_user_id)" --description "List all keys with their fingerprints"
 complete -c gpg -l gen-key --description "Generate a new key pair"
 
 complete -c gpg -l edit-key --description "Present a menu which enables you to do all key related tasks" -xa "(__fish_complete_gpg_user_id)"
@@ -79,8 +79,8 @@ complete -c gpg -l delete-secret-and-public-key -xa "(__fish_complete_gpg_user_i
 complete -c gpg -l gen-revoke -xa "(__fish_complete_gpg_user_id)" --description "Generate a revocation certificate for the complete key"
 complete -c gpg -l desig-revoke -xa "(__fish_complete_gpg_user_id)" --description "Generate a designated revocation certificate for a key"
 
-complete -c gpg -l export -xa "(__fish_append , (__fish_complete_gpg_user_id))" --description 'Export all or the given keys from all keyrings'
-complete -c gpg -l send-keys -xa "(__fish_append , (__fish_complete_gpg_user_id))" --description "Same as --export but sends the keys to a keyserver"
+complete -c gpg -l export -xa "(__fish_complete_gpg_user_id)" --description 'Export all or the given keys from all keyrings'
+complete -c gpg -l send-keys -xa "(__fish_complete_gpg_user_id)" --description "Same as --export but sends the keys to a keyserver"
 complete -c gpg -l export-secret-keys -xa "(__fish_complete_gpg_user_id)" --description "Same as --export, but exports the secret keys instead"
 complete -c gpg -l export-secret-subkeys -xa "(__fish_complete_gpg_user_id)" --description "Same as --export, but exports the secret keys instead"
 
@@ -89,7 +89,7 @@ complete -c gpg -l fast-import -xa "(__fish_complete_gpg_user_id)" --description
 
 complete -c gpg -l recv-keys -xa "(__fish_complete_gpg_key_id)" --description "Import the keys with the given key IDs from a keyserver"
 complete -c gpg -l refresh-keys -xa "(__fish_complete_gpg_key_id)" --description "Request updates from a keyserver for keys that already exist on the local keyring"
-complete -c gpg -l search-keys -xa "(__fish_append , (__fish_complete_gpg_user_id) )" --description "Search the keyserver for the given names"
+complete -c gpg -l search-keys -xa "(__fish_complete_gpg_user_id)" --description "Search the keyserver for the given names"
 complete -c gpg -l update-trustdb --description "Do trust database maintenance"
 complete -c gpg -l check-trustdb --description "Do trust database maintenance without user interaction"
 

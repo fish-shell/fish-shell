@@ -80,7 +80,7 @@ complete -c gpg -l gen-revoke -xa "(__fish_complete_gpg_user_id)" --description 
 complete -c gpg -l desig-revoke -xa "(__fish_complete_gpg_user_id)" --description "Generate a designated revocation certificate for a key"
 
 complete -c gpg -l export -xa "(__fish_complete_gpg_user_id)" --description 'Export all or the given keys from all keyrings'
-complete -c gpg -l send-keys -xa "(__fish_complete_gpg_user_id)" --description "Same as --export but sends the keys to a keyserver"
+complete -c gpg -l send-keys -xa "(__fish_complete_gpg_key_id)" --description "Same as --export but sends the keys to a keyserver"
 complete -c gpg -l export-secret-keys -xa "(__fish_complete_gpg_user_id)" --description "Same as --export, but exports the secret keys instead"
 complete -c gpg -l export-secret-subkeys -xa "(__fish_complete_gpg_user_id)" --description "Same as --export, but exports the secret keys instead"
 

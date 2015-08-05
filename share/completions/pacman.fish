@@ -24,6 +24,9 @@ set -l argument 'not expr -- (commandline --current-token) : "^-.*" > /dev/null'
 
 complete -c pacman -e
 complete -c pacman -f
+# HACK: We only need these two to coerce fish to stop file completion and complete options
+complete -c $progname -n $noopt -a "-D" -d "Modify the package database"
+complete -c $progname -n $noopt -a "-Q" -d "Query the package database"
 # Primary operations
 complete -c $progname -s D -f -l database -n $noopt -d 'Modify the package database'
 complete -c $progname -s Q -f -l query -n $noopt -d 'Query the package database'
@@ -35,16 +38,17 @@ complete -c $progname -s V -f -l version -d 'Display version and exit'
 complete -c $progname -s h -f -l help -d 'Display help'
 
 # General options
-complete -c $progname -s b -l dbpath -d 'Alternative database location' -xa '(__fish_complete_directories)'
-complete -c $progname -s r -l root -d 'Alternative installation root'
-complete -c $progname -s v -l verbose -d 'Output more status messages'
-complete -c $progname -l arch -d 'Alternate architecture' -f
-complete -c $progname -l cachedir -d 'Alternative package cache location'
-complete -c $progname -l config -d 'Alternate config file'
-complete -c $progname -l debug -d 'Display debug messages' -f
-complete -c $progname -l gpgdir -d 'GPG directory to verify signatures'
-complete -c $progname -l logfile -d 'Specify alternative log file'
-complete -c $progname -l noconfirm -d 'Bypass any question' -f
+# Only offer these once a command has been given so they get prominent display
+complete -c $progname -n "not $noopt" -s b -l dbpath -d 'Alternative database location' -xa '(__fish_complete_directories)'
+complete -c $progname -n "not $noopt" -s r -l root -d 'Alternative installation root'
+complete -c $progname -n "not $noopt" -s v -l verbose -d 'Output more status messages'
+complete -c $progname -n "not $noopt" -l arch -d 'Alternate architecture' -f
+complete -c $progname -n "not $noopt" -l cachedir -d 'Alternative package cache location'
+complete -c $progname -n "not $noopt" -l config -d 'Alternate config file'
+complete -c $progname -n "not $noopt" -l debug -d 'Display debug messages' -f
+complete -c $progname -n "not $noopt" -l gpgdir -d 'GPG directory to verify signatures'
+complete -c $progname -n "not $noopt" -l logfile -d 'Specify alternative log file'
+complete -c $progname -n "not $noopt" -l noconfirm -d 'Bypass any question' -f
 
 # Transaction options (sync, remove, upgrade)
 for condition in sync remove upgrade

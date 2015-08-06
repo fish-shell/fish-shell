@@ -396,7 +396,7 @@ complete -c fossil -n '__fish_fossil_subsubcommand tag find' -s t -l type -x -a 
 complete -c fossil -n '__fish_fossil_subsubcommand tag find' -s n -l limit -x -d 'Limit number of tags'
 complete -c fossil -n '__fish_fossil_subsubcommand tag find' -a '(fossil tag list ^/dev/null)' -d 'Tag'
 complete -c fossil -n '__fish_fossil_subcommand tag' -x -a list -d 'List tags'
-complete -c fossil -n '__fish_fossil_subsubcommand tag list ^/dev/null' -l raw -d 'List raw tags'
+complete -c fossil -n '__fish_fossil_subsubcommand tag list' -l raw -d 'List raw tags'
 
 # timeline
 complete -c fossil -n __fish_fossil_needs_command -a timeline -d 'Show timeline'

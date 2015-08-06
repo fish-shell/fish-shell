@@ -1,4 +1,3 @@
-
 complete -c cower -f -s b -l 'brief'            -d 'Show output in a more script friendly format'
 complete -c cower -f -s d -l 'download'         -d 'Download [twice to fetch dependencies]'
 complete -c cower -f -s i -l 'info'             -d 'Show info for target [twice for more details]'
@@ -20,4 +19,5 @@ complete -c cower -f      -l 'timeout'          -d 'Curl timeout in seconds'
 complete -c cower -f -s v -l 'verbose'          -d 'Output more'
 
 # Complete with AUR packages:
-complete -c cower -f --condition 'not expr -- (commandline --current-token) : "^\-.*" > /dev/null' --arguments '(cower --format="%n\n" --search (commandline --current-token))'
+# If the search string is too short, cower prints an annoying message to stderr - ignore that
+complete -c cower -f -n 'not expr -- (commandline --current-token) : "^\-.*" > /dev/null' -a '(cower --format="%n\t%d\n" --search (commandline --current-token) ^/dev/null)'

@@ -39,10 +39,6 @@ function __fish_fossil_subsubsubcommand_only
     and test $argv[3] = $cmd[4]
 end
 
-function __fish_fossil_modified
-    fossil changes --rel-paths | cut -c12-
-    fossil extra --rel-paths
-end
 
 # add
 complete -c fossil -n __fish_fossil_needs_command -a add -x -d 'Add files to checkout'
@@ -50,7 +46,7 @@ complete -c fossil -n '__fish_fossil_command add' -l case-sensitive -x -a 'yes n
 complete -c fossil -n '__fish_fossil_command add' -l dotfiles -d 'Include dotfiles'
 complete -c fossil -n '__fish_fossil_command add' -l ignore -r -d 'Files to ignore'
 complete -c fossil -n '__fish_fossil_command add' -l clean -r -d 'Files to ignore'
-complete -c fossil -n '__fish_fossil_command add' -a '(__fish_fossil_modified)' -x -d 'File'
+complete -c fossil -n '__fish_fossil_command add' -a '(fossil extra --rel-paths ^/dev/null)' -x -d 'File'
 
 # addremove
 complete -c fossil -n __fish_fossil_needs_command -a addremove -f -d 'Remove and add files to checkout'
@@ -119,15 +115,24 @@ complete -c fossil -n '__fish_fossil_command branch' -s R -l repository -r -d 'R
 # cat
 complete -c fossil -n __fish_fossil_needs_command -a cat -d 'Print a file'
 complete -c fossil -n '__fish_fossil_command cat' -s R -l repository -r -d 'Run command on repository'
-complete -c fossil -n '__fish_fossil_command cat' -s r -x -a '(fossil tag list)' -d 'Print specific revision'
+complete -c fossil -n '__fish_fossil_command cat' -s r -x -a '(fossil tag list ^/dev/null)' -d 'Print specific revision'
 
 # changes
-complete -c fossil -n __fish_fossil_needs_command -a cat -d 'List local changes'
+complete -c fossil -n __fish_fossil_needs_command -f -a changes -d 'List local changes'
 complete -c fossil -n '__fish_fossil_command changes' -l abs-paths -d 'Display absolute paths'
 complete -c fossil -n '__fish_fossil_command changes' -l rel-paths -d 'Display relative paths'
 complete -c fossil -n '__fish_fossil_command changes' -l sha1sum -d 'Verify file status using SHA1'
 complete -c fossil -n '__fish_fossil_command changes' -l header -d 'Identify the repository if there are changes'
 complete -c fossil -n '__fish_fossil_command changes' -s v -l verbose -d 'Say (none) if there are no changes'
+
+# checkout
+complete -c fossil -n __fish_fossil_needs_command -f -a 'co checkout' -d 'Checkout version'
+complete -c fossil -n '__fish_fossil_command co checkout' -x -a '(fossil tag list ^/dev/null)' -d 'Version to check out'
+complete -c fossil -n '__fish_fossil_command co checkout' -l force -d 'Ignore edited files'
+complete -c fossil -n '__fish_fossil_command co checkout' -l force-missing -d 'Ignore missing content'
+complete -c fossil -n '__fish_fossil_command co checkout' -l keep -d 'Only update the manifest'
+complete -c fossil -n '__fish_fossil_command co checkout' -l latest -d 'Update to latest version'
+
 
 # clean
 complete -c fossil -n __fish_fossil_needs_command -a clean -d 'Delete all extra files'
@@ -148,6 +153,7 @@ complete -c fossil -n '__fish_fossil_command clone' -l ssl-identity -r -d 'Use S
 
 # commit
 complete -c fossil -n __fish_fossil_needs_command -a 'ci commit' -d 'Create new revision'
+complete -c fossil -n '__fish_fossil_command ci commit' -a '(fossil changes --rel-paths ^/dev/null | cut -c12-)' -x -d 'File'
 complete -c fossil -n '__fish_fossil_command ci commit' -l allow-conflict -d 'Allow unresolved merge conflicts'
 complete -c fossil -n '__fish_fossil_command ci commit' -l allow-empty -d 'Allow empty check-ins'
 complete -c fossil -n '__fish_fossil_command ci commit' -l allow-fork -d 'Allow forking'
@@ -170,15 +176,15 @@ complete -c fossil -n '__fish_fossil_command ci commit' -l tag -x -d 'Assign a t
 # diff
 complete -c fossil -n __fish_fossil_needs_command -a 'diff gdiff' -d 'Show differences'
 complete -c fossil -n '__fish_fossil_command diff gdiff' -l binary -r -d 'Binary files glob pattern'
-complete -c fossil -n '__fish_fossil_command diff gdiff' -l branch -x -a '(fossil tag list)' -d 'Show diff of branch'
+complete -c fossil -n '__fish_fossil_command diff gdiff' -l branch -x -a '(fossil tag list ^/dev/null)' -d 'Show diff of branch'
 complete -c fossil -n '__fish_fossil_command diff gdiff' -l brief -d 'Show file names only'
 complete -c fossil -n '__fish_fossil_command diff gdiff' -s c -l context -x -d 'Context lines'
 complete -c fossil -n '__fish_fossil_command diff gdiff' -l diff-binary -a 'yes no' -x -d 'Include binary files'
-complete -c fossil -n '__fish_fossil_command diff gdiff' -s r -l from -x -a '(fossil tag list)' -d 'Select revision to compare with'
+complete -c fossil -n '__fish_fossil_command diff gdiff' -s r -l from -x -a '(fossil tag list ^/dev/null)' -d 'Select revision to compare with'
 complete -c fossil -n '__fish_fossil_command diff gdiff' -s i -l internal -d 'Use internal diff logic'
 complete -c fossil -n '__fish_fossil_command diff gdiff' -s y -l side-by-side -d 'Side-by-side diff'
 complete -c fossil -n '__fish_fossil_command diff gdiff' -l tk -d 'Launch GUI'
-complete -c fossil -n '__fish_fossil_command diff gdiff' -l to -x -a '(fossil tag list)' -d 'Select revision to compare to'
+complete -c fossil -n '__fish_fossil_command diff gdiff' -l to -x -a '(fossil tag list ^/dev/null)' -d 'Select revision to compare to'
 complete -c fossil -n '__fish_fossil_command diff gdiff' -l unified -d 'Unified diff'
 complete -c fossil -n '__fish_fossil_command diff gdiff' -s v -l verbose -d 'Output complete text'
 complete -c fossil -n '__fish_fossil_command diff gdiff' -s W -l width -x -d 'Line width in side-by-side diff'
@@ -205,11 +211,11 @@ complete -c fossil -n '__fish_fossil_command finfo' -s l -l log -d 'Select log m
 complete -c fossil -n '__fish_fossil_command finfo' -s n -l limit -x -d 'Limit analyzed versions'
 complete -c fossil -n '__fish_fossil_command finfo' -l offset -x -d 'Skip changes'
 complete -c fossil -n '__fish_fossil_command finfo' -s p -l print -d 'Select print mode'
-complete -c fossil -n '__fish_fossil_command finfo' -s r -l revision -x -a '(fossil tag list)' -d 'Print specific revision'
+complete -c fossil -n '__fish_fossil_command finfo' -s r -l revision -x -a '(fossil tag list ^/dev/null)' -d 'Print specific revision'
 complete -c fossil -n '__fish_fossil_command finfo' -s s -l status -d 'Select status mode'
 
 # help
-complete -c fossil -n __fish_fossil_needs_command -a help -d 'Display help'
+complete -c fossil -n __fish_fossil_needs_command -f -a help -d 'Display help'
 complete -c fossil -n '__fish_fossil_command help' -s a -l all -d 'Show main and auxiliary commands'
 complete -c fossil -n '__fish_fossil_command help' -s t -l test -d 'Show test commands only'
 complete -c fossil -n '__fish_fossil_command help' -s x -l aux -d 'Show auxilary commands only'
@@ -237,14 +243,14 @@ complete -c fossil -n '__fish_fossil_command json' -s R -l repository -r -d 'Run
 
 # ls
 complete -c fossil -n __fish_fossil_needs_command -a ls -d 'List files'
-complete -c fossil -n '__fish_fossil_command ls' -a '(fossil tag list)' -d 'Tag'
+complete -c fossil -n '__fish_fossil_command ls' -s r -x -a '(fossil tag list ^/dev/null)' -d 'Tag'
 complete -c fossil -n '__fish_fossil_command ls' -l age -d 'Show commit time'
 complete -c fossil -n '__fish_fossil_command ls' -s v -l verbose -d 'Provide extra information'
 
 # merge
 complete -c fossil -n __fish_fossil_needs_command -a merge -d 'Merge commits'
-complete -c fossil -n '__fish_fossil_command merge' -a '(fossil tag list)' -d 'Tag'
-complete -c fossil -n '__fish_fossil_command merge' -l baseline -a '(fossil tag list)' -x -d 'Use baseline'
+complete -c fossil -n '__fish_fossil_command merge' -a '(fossil tag list ^/dev/null)' -d 'Tag'
+complete -c fossil -n '__fish_fossil_command merge' -l baseline -a '(fossil tag list ^/dev/null)' -x -d 'Use baseline'
 complete -c fossil -n '__fish_fossil_command merge' -l binary -r -d 'Binary files glob pattern'
 complete -c fossil -n '__fish_fossil_command merge' -l case-sensitive -x -a 'yes no' -d 'Case insensitive file matching'
 complete -c fossil -n '__fish_fossil_command merge' -s f -l force -d 'Allow empty merge'
@@ -289,12 +295,15 @@ complete -c fossil -n '__fish_fossil_command rebuild' -l stats -d 'Show statisti
 complete -c fossil -n __fish_fossil_needs_command -a remote-url -d 'Default server URL'
 
 # revert
-complete -c fossil -n __fish_fossil_needs_command -a revert -d 'Revert a commit'
-complete -c fossil -n '__fish_fossil_command revert' -a '(fossil tag list)' -d 'Tag'
-complete -c fossil -n '__fish_fossil_command revert' -s r -x -a '(fossil tag list)' -d 'Revert back to given revision'
+complete -c fossil -n __fish_fossil_needs_command -f -a revert -d 'Revert a commit'
+complete -c fossil -n '__fish_fossil_command revert' -a '(fossil tag list ^/dev/null)' -d 'Tag'
+complete -c fossil -n '__fish_fossil_command revert' -s r -x -a '(fossil tag list ^/dev/null)' -d 'Revert back to given revision'
 
 # rm
 complete -c fossil -n __fish_fossil_needs_command -a 'rm delete' -d 'Remove a file from repository'
+complete -c fossil -n '__fish_fossil_command rm delete' -l hard -d 'Remove files from this checkout'
+complete -c fossil -n '__fish_fossil_command rm delete' -l soft -d 'Skip removing files from this checkout'
+complete -c fossil -n '__fish_fossil_command rm delete' -s n -l dry-run -d 'Display actions without runing'
 complete -c fossil -n '__fish_fossil_command rm delete' -l case-sensitive -x -a 'yes no' -d 'Case insensitive file matching'
 
 # settings
@@ -379,15 +388,15 @@ complete -c fossil -n '__fish_fossil_subcommand tag' -x -a add -d 'Add tag to ch
 complete -c fossil -n '__fish_fossil_subsubcommand tag add' -l raw -d 'Add raw tag'
 complete -c fossil -n '__fish_fossil_subsubcommand tag add' -l propagate -d 'Propagate tag'
 complete -c fossil -n '__fish_fossil_subcommand tag' -x -a remove -d 'Remove tag from check-in'
-complete -c fossil -n '__fish_fossil_subsubcommand tag remove' -a '(fossil tag list)' -d 'Tag'
+complete -c fossil -n '__fish_fossil_subsubcommand tag remove' -a '(fossil tag list ^/dev/null)' -d 'Tag'
 complete -c fossil -n '__fish_fossil_subsubcommand tag remove' -l raw -d 'Remove raw tag'
 complete -c fossil -n '__fish_fossil_subcommand tag' -x -a find -d 'Find tag'
 complete -c fossil -n '__fish_fossil_subsubcommand tag find' -l raw -d 'Find raw tag'
 complete -c fossil -n '__fish_fossil_subsubcommand tag find' -s t -l type -x -a 'ci e' -d 'Find tag type'
 complete -c fossil -n '__fish_fossil_subsubcommand tag find' -s n -l limit -x -d 'Limit number of tags'
-complete -c fossil -n '__fish_fossil_subsubcommand tag find' -a '(fossil tag list)' -d 'Tag'
+complete -c fossil -n '__fish_fossil_subsubcommand tag find' -a '(fossil tag list ^/dev/null)' -d 'Tag'
 complete -c fossil -n '__fish_fossil_subcommand tag' -x -a list -d 'List tags'
-complete -c fossil -n '__fish_fossil_subsubcommand tag list' -l raw -d 'List raw tags'
+complete -c fossil -n '__fish_fossil_subsubcommand tag list ^/dev/null' -l raw -d 'List raw tags'
 
 # timeline
 complete -c fossil -n __fish_fossil_needs_command -a timeline -d 'Show timeline'

@@ -155,10 +155,10 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const
     }
     
     /* Hackish fuzzy match support */
-    if (0 && ! wildcard_has(wc, true))
+    if (! wildcard_has(wc, true))
     {
         const string_fuzzy_match_t match = string_fuzzy_match_string(wc, str);
-        return match.type <= max_type ? match.type : fuzzy_match_none;
+        return (match.type <= max_type ? match.type : fuzzy_match_none);
     }
 
     if (*wc == ANY_STRING || *wc == ANY_STRING_RECURSIVE)
@@ -180,7 +180,9 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const
         {
             enum fuzzy_match_type_t subresult = wildcard_match_internal(str, wc+1, leading_dots_fail_to_match, false, max_type);
             if (subresult != fuzzy_match_none)
+            {
                 return subresult;
+            }
         } while (*str++ != 0);
         return fuzzy_match_none;
     }
@@ -287,7 +289,7 @@ static bool wildcard_complete_internal(const wchar_t *str,
     }
     
     /* Locate the next wildcard character position, e.g. ANY_CHAR or ANY_STRING */
-    size_t next_wc_char_pos = wildcard_find(wc);
+    const size_t next_wc_char_pos = wildcard_find(wc);
     
     /* Maybe we have no more wildcards at all. This includes the empty string. */
     if (next_wc_char_pos == wcstring::npos)
@@ -362,6 +364,12 @@ static bool wildcard_complete_internal(const wchar_t *str,
                 
             case ANY_STRING:
             {
+                /* Hackish. If this is the last character of the wildcard, then just complete with the empty string. This fixes cases like "f*<tab>" -> "f*o" */
+                if (wc[1] == L'\0')
+                {
+                    return wildcard_complete_internal(L"", L"", params, flags, out);
+                }
+                
                 /* Try all submatches. #929: if the recursive call gives us a prefix match, just stop. This is sloppy - what we really want to do is say, once we've seen a match of a particular type, ignore all matches of that type further down the string, such that the wildcard produces the "minimal match.". */
                 bool has_match = false;
                 for (size_t i=0; str[i] != L'\0'; i++)
@@ -416,6 +424,11 @@ bool wildcard_match(const wcstring &str, const wcstring &wc, bool leading_dots_f
 {
     enum fuzzy_match_type_t match = wildcard_match_internal(str.c_str(), wc.c_str(), leading_dots_fail_to_match, true /* first */, fuzzy_match_exact);
     return match != fuzzy_match_none;
+}
+        
+enum fuzzy_match_type_t wildcard_match_fuzzy(const wcstring &str, const wcstring &wc, bool leading_dots_fail_to_match, enum fuzzy_match_type_t max_type)
+{
+    return wildcard_match_internal(str.c_str(), wc.c_str(), leading_dots_fail_to_match, true /* first */, max_type);
 }
 
 /**
@@ -665,6 +678,11 @@ class wildcard_expander_t
      */
     void expand_intermediate_segment(const wcstring &base_dir, DIR *base_dir_fp, const wcstring &wc_segment, const wchar_t *wc_remainder);
     
+    /* Given a directory base_dir, which is opened as base_dir_fp, expand an intermediate literal segment.
+       Use a fuzzy matching algorithm.
+     */
+    void expand_literal_intermediate_segment_with_fuzz(const wcstring &base_dir, DIR *base_dir_fp, const wcstring &wc_segment, const wchar_t *wc_remainder);
+    
     /* Given a directory base_dir, which is opened as base_dir_fp, expand the last segment of the wildcard.
      Treat ANY_STRING_RECURSIVE as ANY_STRING.
      wc is the wildcard segment to use for matching
@@ -825,6 +843,81 @@ void wildcard_expander_t::expand_intermediate_segment(const wcstring &base_dir, 
         this->expand(full_path, wc_remainder);
     }
 }
+        
+void wildcard_expander_t::expand_literal_intermediate_segment_with_fuzz(const wcstring &base_dir, DIR *base_dir_fp, const wcstring &wc_segment, const wchar_t *wc_remainder)
+{
+    // This only works with tab completions
+    // Ordinary wildcard expansion should never go fuzzy
+    wcstring name_str;
+    while (!interrupted() && wreaddir(base_dir_fp, name_str))
+    {
+        /* Don't bother with . and .. */
+        if (contains(name_str, L".", L".."))
+        {
+            continue;
+        }
+        
+        // Skip cases that don't match or match exactly
+        // The match-exactly case was handled directly in expand()
+        const string_fuzzy_match_t match = string_fuzzy_match_string(wc_segment, name_str);
+        if (match.type == fuzzy_match_none || match.type == fuzzy_match_exact)
+        {
+            continue;
+        }
+        
+        wcstring new_full_path = base_dir + name_str;
+        new_full_path.push_back(L'/');
+        struct stat buf;
+        if (0 != wstat(new_full_path, &buf) || !S_ISDIR(buf.st_mode))
+        {
+            /* We either can't stat it, or we did but it's not a directory */
+            continue;
+        }
+        
+        // Ok, this directory matches. Recurse to it.
+        // Then perform serious surgery on each result!
+        // Each result was computed with a prefix of original_wildcard
+        // We need to replace our segment of that with our name_str
+        // We also have to mark the completion as replacing and fuzzy
+        const size_t before = this->resolved_completions->size();
+        
+        this->expand(new_full_path, wc_remainder);
+        const size_t after = this->resolved_completions->size();
+        
+        assert(before <= after);
+        for (size_t i=before; i < after; i++)
+        {
+            completion_t *c = &this->resolved_completions->at(i);
+            // Mark the completion as replacing
+            if (!(c->flags & COMPLETE_REPLACES_TOKEN))
+            {
+                c->flags |= COMPLETE_REPLACES_TOKEN;
+                c->prepend_token_prefix(this->original_wildcard);
+                c->prepend_token_prefix(this->original_base);
+            }
+            // Ok, it's now replacing and is prefixed with the segment base, plus our original wildcard
+            // Replace our segment with name_str
+            // Our segment starts at the length of the original wildcard, minus what we have left to process, minus the length of our segment
+            // This logic is way too picky. Need to clean this up.
+            // One possibility is to send the "resolved wildcard" along with the actual wildcard
+            const size_t original_wildcard_len = wcslen(this->original_wildcard);
+            const size_t wc_remainder_len = wcslen(wc_remainder);
+            const size_t segment_len = wc_segment.length();
+            assert(c->completion.length() >= original_wildcard_len);
+            const size_t segment_start = original_wildcard_len + this->original_base.size() - wc_remainder_len - wc_segment.length() - 1; // -1 for the slash after our segment
+            assert(segment_start < original_wildcard_len);
+            assert(c->completion.substr(segment_start, segment_len) == wc_segment);
+            c->completion.replace(segment_start, segment_len, name_str);
+            
+            // And every match must be made at least as fuzzy as ours
+            if (match.compare(c->match) > 0)
+            {
+                // Our match is fuzzier
+                c->match = match;
+            }
+        }
+    }
+}
 
 void wildcard_expander_t::expand_last_segment(const wcstring &base_dir, DIR *base_dir_fp, const wcstring &wc)
 {
@@ -906,13 +999,14 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc)
         /* This just trumps everything */
         size_t before = this->resolved_completions->size();
         this->expand(base_dir + wc_segment + L'/', wc_remainder);
-        if (this->resolved_completions->size() == before)
+        if ((this->flags & EXPAND_FUZZY_MATCH) && this->resolved_completions->size() == before)
         {
             /* Nothing was found with the literal match. Try a fuzzy match (#94). */
+            assert(this->flags & EXPAND_FOR_COMPLETIONS);
             DIR *base_dir_fd = open_dir(base_dir);
             if (base_dir_fd != NULL)
             {
-                this->expand_intermediate_segment(base_dir, base_dir_fd, wc_segment, wc_remainder);
+                this->expand_literal_intermediate_segment_with_fuzz(base_dir, base_dir_fd, wc_segment, wc_remainder);
                 closedir(base_dir_fd);
             }
         }
@@ -973,6 +1067,8 @@ static int wildcard_expand(const wchar_t *wc,
 int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_flags_t flags, std::vector<completion_t> *output)
 {
     assert(output != NULL);
+    /* Fuzzy matching only if we're doing completions */
+    assert((flags & (EXPAND_FUZZY_MATCH | EXPAND_FOR_COMPLETIONS)) != EXPAND_FUZZY_MATCH);
     /* Hackish fix for 1631. We are about to call c_str(), which will produce a string truncated at any embedded nulls. We could fix this by passing around the size, etc. However embedded nulls are never allowed in a filename, so we just check for them and return 0 (no matches) if there is an embedded null. */
     if (wc.find(L'\0') != wcstring::npos)
     {

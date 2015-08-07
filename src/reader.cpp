@@ -1907,7 +1907,7 @@ static bool handle_completions(const std::vector<completion_t> &comp, bool conti
             assert(el->position >= prefix_start);
             len = el->position - prefix_start;
 
-            if (match_type_requires_full_replacement(best_match_type))
+            if (will_replace_token || match_type_requires_full_replacement(best_match_type))
             {
                 // No prefix
                 prefix.clear();

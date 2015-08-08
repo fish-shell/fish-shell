@@ -10,5 +10,5 @@ end
 
 function prompt_pwd -V args_pre -V args_post --description "Print the current working directory, shortened to fit the prompt"
 	set -l realhome ~
-	echo $PWD | sed -e "s|^$realhome|~|" $args_pre -e 's-\([^/.]\)[^/]*/-\1/-g' $args_post
+	echo $PWD | sed -e "s|^$realhome\$|~|" -e "s|^$realhome/|~/|" $args_pre -e 's-\([^/.]\)[^/]*/-\1/-g' $args_post
 end

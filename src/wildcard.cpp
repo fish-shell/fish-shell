@@ -1053,17 +1053,6 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc)
 }
 
 
-static int wildcard_expand(const wchar_t *wc,
-                           const wcstring &base_dir,
-                           expand_flags_t flags,
-                           std::vector<completion_t> *out)
-{
-    assert(out != NULL);
-    wildcard_expander_t expander(base_dir, wc, flags, out);
-    expander.expand(base_dir, wc);
-    return expander.status_code();
-}
-
 int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_flags_t flags, std::vector<completion_t> *output)
 {
     assert(output != NULL);
@@ -1074,5 +1063,8 @@ int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_
     {
         return 0;
     }
-    return wildcard_expand(wc.c_str(), base_dir, flags, output);
+    
+    wildcard_expander_t expander(base_dir, wc.c_str(), flags, output);
+    expander.expand(base_dir, wc.c_str());
+    return expander.status_code();
 }

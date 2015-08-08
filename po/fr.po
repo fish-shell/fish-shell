@@ -8154,7 +8154,7 @@ msgstr "Bienvenue dans fish, le shell amical et interactif"
 
 #: share/functions/__fish_config_interactive.fish:35
 msgid "Type %shelp%s for instructions on how to use fish"
-msgstr "Tappez %shelp%s pour des instructions sur l'utilisation de fish"
+msgstr "Tapez %shelp%s pour des instructions sur l'utilisation de fish"
 
 #: share/functions/__fish_config_interactive.fish:130
 msgid "Event handler, repaints the prompt when fish_color_cwd changes"

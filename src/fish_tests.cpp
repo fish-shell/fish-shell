@@ -1366,25 +1366,22 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...)
         expected.push_back(wcstring(arg));
     }
     va_end(va);
-
-    wcstring_list_t::const_iterator exp_it = expected.begin(), exp_end = expected.end();
+    
+    std::set<wcstring> remaining(expected.begin(), expected.end());
     std::vector<completion_t>::const_iterator out_it = output.begin(), out_end = output.end();
-    for (; exp_it != exp_end || out_it != out_end; ++exp_it, ++out_it)
+    for (; out_it != out_end; ++out_it)
     {
-        if (exp_it == exp_end || out_it == out_end)
-        {
-            // sizes don't match
-            res = false;
-            break;
-        }
-
-        if (out_it->completion != *exp_it)
+        if (! remaining.erase(out_it->completion))
         {
             res = false;
             break;
         }
     }
-
+    if (! remaining.empty())
+    {
+        res = false;
+    }
+    
     if (!res)
     {
         if ((arg = va_arg(va, wchar_t *)) != 0)

@@ -94,8 +94,6 @@ wchar_t *wrealpath(const wcstring &pathname, wchar_t *resolved_path);
 bool wreaddir(DIR *dir, std::wstring &out_name);
 bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &out_name, bool *out_is_dir);
 
-bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring *out_name, bool *out_is_dir);
-
 /**
    Wide character version of dirname()
 */

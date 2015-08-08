@@ -509,7 +509,7 @@ void safe_report_exec_error(int err, const char *actual_cmd, const char * const 
 
             if (arg_max > 0)
             {
-                format_size_safe(sz2, arg_max);
+                format_size_safe(sz2, static_cast<unsigned long long>(arg_max));
                 debug_safe(0, "The total size of the argument and environment lists %s exceeds the operating system limit of %s.", sz1, sz2);
             }
             else

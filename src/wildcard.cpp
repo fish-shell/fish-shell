@@ -814,7 +814,7 @@ void wildcard_expander_t::expand_trailing_slash(const wcstring &base_dir)
 void wildcard_expander_t::expand_intermediate_segment(const wcstring &base_dir, DIR *base_dir_fp, const wcstring &wc_segment, const wchar_t *wc_remainder)
 {
     wcstring name_str;
-    while (!interrupted() && wreaddir(base_dir_fp, name_str))
+    while (!interrupted() && wreaddir_for_dirs(base_dir_fp, &name_str))
     {
         /* Note that it's critical we ignore leading dots here, else we may descend into . and .. */
         if (! wildcard_match(name_str, wc_segment, true))
@@ -849,7 +849,7 @@ void wildcard_expander_t::expand_literal_intermediate_segment_with_fuzz(const wc
     // This only works with tab completions
     // Ordinary wildcard expansion should never go fuzzy
     wcstring name_str;
-    while (!interrupted() && wreaddir(base_dir_fp, name_str))
+    while (!interrupted() && wreaddir_for_dirs(base_dir_fp, &name_str))
     {
         /* Don't bother with . and .. */
         if (contains(name_str, L".", L".."))

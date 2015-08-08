@@ -115,6 +115,40 @@ bool wreaddir(DIR *dir, std::wstring &out_name)
     return true;
 }
 
+bool wreaddir_for_dirs(DIR *dir, wcstring *out_name)
+{
+    struct dirent *result = NULL;
+    while (result == NULL)
+    {
+        struct dirent *d = readdir(dir);
+        if (!d) break;
+        
+#if HAVE_STRUCT_DIRENT_D_TYPE
+        switch (d->d_type)
+        {
+            // These may be directories
+            case DT_DIR:
+            case DT_LNK:
+            case DT_UNKNOWN:
+                result = d;
+                break;
+                
+            // Nothing else can
+            default:
+                break;
+        }
+#else
+        /* We can't determine if it's a directory or not, so just return it */
+        result = d;
+#endif
+    }
+    if (result && out_name)
+    {
+        *out_name = str2wcstring(result->d_name);
+    }
+    return result != NULL;
+}
+
 
 wchar_t *wgetcwd(wchar_t *buff, size_t sz)
 {

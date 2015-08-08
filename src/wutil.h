@@ -95,6 +95,14 @@ bool wreaddir(DIR *dir, std::wstring &out_name);
 bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &out_name, bool *out_is_dir);
 
 /**
+ Like wreaddir, but skip items that are known to not be directories.
+ If this requires a stat (i.e. the file is a symlink), then return it.
+ Note that this does not guarantee that everything returned is a directory,
+ it's just an optimization for cases where we would check for directories anyways.
+*/
+bool wreaddir_for_dirs(DIR *dir, wcstring *out_name);
+
+/**
    Wide character version of dirname()
 */
 std::wstring wdirname(const std::wstring &path);

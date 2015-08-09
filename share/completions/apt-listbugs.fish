@@ -1,6 +1,6 @@
 #apt-listbugs
 complete -c apt-listbugs -s h -l help --description "Display help and exit"
-complete -f -c apt-listbugs -s s -l severity -a "critical grave"  --description "Set severity"
+complete -f -c apt-listbugs -s s -l severity -a "critical grave" --description "Set severity"
 complete -f -c apt-listbugs -s T -l tag --description "Tags you want to see"
 complete -f -c apt-listbugs -s S -l stats -a "outstanding 'pending upload' resolved done open" --description "Bug-status you want to see"
 complete -f -c apt-listbugs -s l -l showless --description "Ignore bugs in your system"

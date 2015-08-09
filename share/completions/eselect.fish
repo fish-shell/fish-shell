@@ -53,22 +53,15 @@ function __fish_complete_eselect_targets
     eselect --colour=no $cmdl[2..-1] | sgrep '^  [^ -]' | sed -r $sedregexp
 end
 
-complete -c eselect -n "test (__fish_number_of_cmd_args_wo_opts) = 1" \
-    -xa '(__fish_complete_eselect_modules)'
+complete -c eselect -n "test (__fish_number_of_cmd_args_wo_opts) = 1" -xa '(__fish_complete_eselect_modules)'
 
-complete -c eselect -n "test (__fish_number_of_cmd_args_wo_opts) = 1" \
-    -l brief -d 'Make output shorter'
+complete -c eselect -n "test (__fish_number_of_cmd_args_wo_opts) = 1" -l brief -d 'Make output shorter'
 
-complete -c eselect -n "test (__fish_number_of_cmd_args_wo_opts) = 1" \
-    -l colour \
-    -d "=<yes|no|auto> Enable or disable colour output (default 'auto')"
+complete -c eselect -n "test (__fish_number_of_cmd_args_wo_opts) = 1" -l colour -d "=<yes|no|auto> Enable or disable colour output (default 'auto')"
 
-complete -c eselect -n "test (__fish_number_of_cmd_args_wo_opts) = 2" \
-    -xa '(__fish_complete_eselect_actions)'
+complete -c eselect -n "test (__fish_number_of_cmd_args_wo_opts) = 2" -xa '(__fish_complete_eselect_actions)'
 
-complete -c eselect -n "test (__fish_number_of_cmd_args_wo_opts) = 3" \
-    -xa '(__fish_complete_eselect_targets)'
+complete -c eselect -n "test (__fish_number_of_cmd_args_wo_opts) = 3" -xa '(__fish_complete_eselect_targets)'
 
-complete -c eselect -n "test (__fish_number_of_cmd_args_wo_opts) = 3" \
-    -xa '(__fish_complete_eselect_action_options)'
+complete -c eselect -n "test (__fish_number_of_cmd_args_wo_opts) = 3" -xa '(__fish_complete_eselect_action_options)'
 

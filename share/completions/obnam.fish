@@ -1,13 +1,13 @@
 
 function nocommand
-        if commandline | sgrep -qe "add-key\|backup\|client-keys\|clients\|diff\|dump-repo\|force-lock\|forget\|fsck\|generations\|genids\|list-keys\|list-toplevels\|ls\|mount\|nagios-last-backup-age\|remove-client\|remove-key\|restore\|verify"
-                return 1
-        end
-        return 0
+    if commandline | sgrep -qe "add-key\|backup\|client-keys\|clients\|diff\|dump-repo\|force-lock\|forget\|fsck\|generations\|genids\|list-keys\|list-toplevels\|ls\|mount\|nagios-last-backup-age\|remove-client\|remove-key\|restore\|verify"
+        return 1
+    end
+    return 0
 end
 
 complete --command obnam --no-files --condition nocommand --arguments 'add-key' --description 'Adds an encryption key to the repository'
-complete --command obnam            --condition nocommand --arguments 'backup' --description 'Makes a new backup'
+complete --command obnam --condition nocommand --arguments 'backup' --description 'Makes a new backup'
 complete --command obnam --no-files --condition nocommand --arguments 'client-keys' --description 'Lists the keys associated with each client'
 complete --command obnam --no-files --condition nocommand --arguments 'clients' --description 'Lists the clients in the repository'
 complete --command obnam --no-files --condition nocommand --arguments 'diff' --description 'Compares two generations'

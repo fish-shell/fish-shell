@@ -73,7 +73,7 @@ complete -c find -o true --description "Always true"
 
 set -l type_comp 'b\t"Block device" c\t"Character device" d\t"Directory" p\t"Named pipe" f\t"File" l\t"Symbolic link" s\t"Socket"'
 
-complete -c find -o type --description "File is of specified type" -x -a  $type_comp
+complete -c find -o type --description "File is of specified type" -x -a $type_comp
 
 complete -c find -o uid --description "File's owner has specified numeric user ID" -r
 complete -c find -o used --description "File was last accessed specified number of days after its status was last changed" -r

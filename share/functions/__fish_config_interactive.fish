@@ -7,90 +7,90 @@
 function __fish_config_interactive -d "Initializations that should be performed when entering interactive mode"
 
 
-	# Make sure this function is only run once
-	if set -q __fish_config_interactive_done
-		return
-	end
+    # Make sure this function is only run once
+    if set -q __fish_config_interactive_done
+        return
+    end
 
-	set -g __fish_config_interactive_done
+    set -g __fish_config_interactive_done
 
-	# Set the correct configuration directory
-	set -l configdir ~/.config
-	if set -q XDG_CONFIG_HOME
-		set configdir $XDG_CONFIG_HOME
-	end
-	# Set the correct user data directory
-	set -l userdatadir ~/.local/share
-	if set -q XDG_DATA_HOME
-		set userdatadir $XDG_DATA_HOME
-	end
+    # Set the correct configuration directory
+    set -l configdir ~/.config
+    if set -q XDG_CONFIG_HOME
+        set configdir $XDG_CONFIG_HOME
+    end
+    # Set the correct user data directory
+    set -l userdatadir ~/.local/share
+    if set -q XDG_DATA_HOME
+        set userdatadir $XDG_DATA_HOME
+    end
 
-	#
-	# If we are starting up for the first time, set various defaults
-	#
+    #
+    # If we are starting up for the first time, set various defaults
+    #
 
-	if not set -q __fish_init_1_50_0
-		if not set -q fish_greeting
-			set -l line1 (printf (_ 'Welcome to fish, the friendly interactive shell') )
-			set -l line2 (printf (_ 'Type %shelp%s for instructions on how to use fish') (set_color green) (set_color normal))
-			set -U fish_greeting $line1\n$line2
-		end
-		set -U __fish_init_1_50_0
+    if not set -q __fish_init_1_50_0
+        if not set -q fish_greeting
+            set -l line1 (printf (_ 'Welcome to fish, the friendly interactive shell') )
+            set -l line2 (printf (_ 'Type %shelp%s for instructions on how to use fish') (set_color green) (set_color normal))
+            set -U fish_greeting $line1\n$line2
+        end
+        set -U __fish_init_1_50_0
 
-		#
-		# Set various defaults using these throwaway functions
-		#
+        #
+        # Set various defaults using these throwaway functions
+        #
 
-		function set_default -d "Set a universal variable, unless it has already been set"
-			if not set -q $argv[1]
-				set -U -- $argv
-			end
-		end
+        function set_default -d "Set a universal variable, unless it has already been set"
+            if not set -q $argv[1]
+                set -U -- $argv
+            end
+        end
 
-		# Regular syntax highlighting colors
-		set_default fish_color_normal normal
-		set_default fish_color_command 005fd7 purple
-		set_default fish_color_param 00afff cyan
-		set_default fish_color_redirection normal
-		set_default fish_color_comment red
-		set_default fish_color_error red --bold
-		set_default fish_color_escape cyan
-		set_default fish_color_operator cyan
-		set_default fish_color_quote brown
-		set_default fish_color_autosuggestion 555 yellow
-		set_default fish_color_valid_path --underline
+        # Regular syntax highlighting colors
+        set_default fish_color_normal normal
+        set_default fish_color_command 005fd7 purple
+        set_default fish_color_param 00afff cyan
+        set_default fish_color_redirection normal
+        set_default fish_color_comment red
+        set_default fish_color_error red --bold
+        set_default fish_color_escape cyan
+        set_default fish_color_operator cyan
+        set_default fish_color_quote brown
+        set_default fish_color_autosuggestion 555 yellow
+        set_default fish_color_valid_path --underline
 
-		set_default fish_color_cwd green
-		set_default fish_color_cwd_root red
+        set_default fish_color_cwd green
+        set_default fish_color_cwd_root red
 
-		# Background color for matching quotes and parenthesis
-		set_default fish_color_match cyan
+        # Background color for matching quotes and parenthesis
+        set_default fish_color_match cyan
 
-		# Background color for search matches
-		set_default fish_color_search_match --background=purple
+        # Background color for search matches
+        set_default fish_color_search_match --background=purple
 
-		# Background color for selections
-		set_default fish_color_selection --background=purple
+        # Background color for selections
+        set_default fish_color_selection --background=purple
 
-		# Pager colors
-		set_default fish_pager_color_prefix cyan
-		set_default fish_pager_color_completion normal
-		set_default fish_pager_color_description 555 yellow
-		set_default fish_pager_color_progress cyan
+        # Pager colors
+        set_default fish_pager_color_prefix cyan
+        set_default fish_pager_color_completion normal
+        set_default fish_pager_color_description 555 yellow
+        set_default fish_pager_color_progress cyan
 
-		#
-		# Directory history colors
-		#
+        #
+        # Directory history colors
+        #
 
-		set_default fish_color_history_current cyan
+        set_default fish_color_history_current cyan
 
-		#
-		# Remove temporary functions for setting default variable values
-		#
+        #
+        # Remove temporary functions for setting default variable values
+        #
 
-		functions -e set_default
+        functions -e set_default
 
-	end
+    end
 
     #
     # Generate man page completions if not present
@@ -101,157 +101,161 @@ function __fish_config_interactive -d "Initializations that should be performed 
         eval "$__fish_bin_dir/fish -c 'fish_update_completions > /dev/null ^/dev/null' &"
     end
 
-	if status -i
-		#
-		# Print a greeting
-		#
+    if status -i
+        #
+        # Print a greeting
+        #
 
-		if functions -q fish_greeting
-			fish_greeting
-		else
-			if set -q fish_greeting
-				switch "$fish_greeting"
-					case ''
-					# If variable is empty, don't print anything, saves us a fork
+        if functions -q fish_greeting
+            fish_greeting
+        else
+            if set -q fish_greeting
+                switch "$fish_greeting"
+                    case ''
+                        # If variable is empty, don't print anything, saves us a fork
 
-					case '*'
-					echo $fish_greeting
-				end
-			end
-		end
-	end
+                    case '*'
+                        echo $fish_greeting
+                end
+            end
+        end
+    end
 
-	#
-	# This event handler makes sure the prompt is repainted when
-	# fish_color_cwd changes value. Like all event handlers, it can't be
-	# autoloaded.
-	#
+    #
+    # This event handler makes sure the prompt is repainted when
+    # fish_color_cwd changes value. Like all event handlers, it can't be
+    # autoloaded.
+    #
 
-	function __fish_repaint --on-variable fish_color_cwd --description "Event handler, repaints the prompt when fish_color_cwd changes"
-		if status --is-interactive
-			set -e __fish_prompt_cwd
-			commandline -f repaint ^/dev/null
-		end
-	end
+    function __fish_repaint --on-variable fish_color_cwd --description "Event handler, repaints the prompt when fish_color_cwd changes"
+        if status --is-interactive
+            set -e __fish_prompt_cwd
+            commandline -f repaint ^ /dev/null
+        end
+    end
 
-	function __fish_repaint_root --on-variable fish_color_cwd_root --description "Event handler, repaints the prompt when fish_color_cwd_root changes"
-		if status --is-interactive
-			set -e __fish_prompt_cwd
-			commandline -f repaint ^/dev/null
-		end
-	end
+    function __fish_repaint_root --on-variable fish_color_cwd_root --description "Event handler, repaints the prompt when fish_color_cwd_root changes"
+        if status --is-interactive
+            set -e __fish_prompt_cwd
+            commandline -f repaint ^ /dev/null
+        end
+    end
 
-	#
-	# Completions for SysV startup scripts. These aren't bound to any
-	# specific command, so they can't be autoloaded.
-	#
+    #
+    # Completions for SysV startup scripts. These aren't bound to any
+    # specific command, so they can't be autoloaded.
+    #
 
-	complete -x -p "/etc/init.d/*" -a start --description 'Start service'
-	complete -x -p "/etc/init.d/*" -a stop --description 'Stop service'
-	complete -x -p "/etc/init.d/*" -a status --description 'Print service status'
-	complete -x -p "/etc/init.d/*" -a restart --description 'Stop and then start service'
-	complete -x -p "/etc/init.d/*" -a reload --description 'Reload service configuration'
+    complete -x -p "/etc/init.d/*" -a start --description 'Start service'
+    complete -x -p "/etc/init.d/*" -a stop --description 'Stop service'
+    complete -x -p "/etc/init.d/*" -a status --description 'Print service status'
+    complete -x -p "/etc/init.d/*" -a restart --description 'Stop and then start service'
+    complete -x -p "/etc/init.d/*" -a reload --description 'Reload service configuration'
 
-	# Make sure some key bindings are set
-	if not set -q fish_key_bindings
-		set -U fish_key_bindings fish_default_key_bindings
-	end
+    # Make sure some key bindings are set
+    if not set -q fish_key_bindings
+        set -U fish_key_bindings fish_default_key_bindings
+    end
 
-	# Reload key bindings when binding variable change
-	function __fish_reload_key_bindings -d "Reload key bindings when binding variable change" --on-variable fish_key_bindings
-		# do nothing if the key bindings didn't actually change
-		# This could be because the variable was set to the existing value
-		# or because it was a local variable
-		if test "$fish_key_bindings" = "$__fish_active_key_bindings"
-			return
-		end
-		set -g __fish_active_key_bindings "$fish_key_bindings"
-		set -g fish_bind_mode default
-		if test "$fish_key_bindings" = fish_default_key_bindings
-			fish_default_key_bindings
-			# Load user key bindings if they are defined
-			if functions --query fish_user_key_bindings > /dev/null
-				fish_user_key_bindings
-			end
-		else
-			eval $fish_key_bindings ^/dev/null
-		end
-	end
+    # Reload key bindings when binding variable change
+    function __fish_reload_key_bindings -d "Reload key bindings when binding variable change" --on-variable fish_key_bindings
+        # do nothing if the key bindings didn't actually change
+        # This could be because the variable was set to the existing value
+        # or because it was a local variable
+        if test "$fish_key_bindings" = "$__fish_active_key_bindings"
+            return
+        end
+        set -g __fish_active_key_bindings "$fish_key_bindings"
+        set -g fish_bind_mode default
+        if test "$fish_key_bindings" = fish_default_key_bindings
+            fish_default_key_bindings
+            # Load user key bindings if they are defined
+            if functions --query fish_user_key_bindings > /dev/null
+                fish_user_key_bindings
+            end
+        else
+            eval $fish_key_bindings ^ /dev/null
+        end
+    end
 
-	# Load key bindings. Redirect stderr per #1155
-	set -g __fish_active_key_bindings
-	__fish_reload_key_bindings ^ /dev/null
+    # Load key bindings. Redirect stderr per #1155
+    set -g __fish_active_key_bindings
+    __fish_reload_key_bindings ^ /dev/null
 
-	# Repaint screen when window changes size
-	function __fish_winch_handler --on-signal WINCH
-		commandline -f repaint
-	end
+    # Repaint screen when window changes size
+    function __fish_winch_handler --on-signal WINCH
+        commandline -f repaint
+    end
 
 
-	# Notify vte-based terminals when $PWD changes (issue #906)
-	if test "$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal"
-		function __update_vte_cwd --on-variable PWD --description 'Notify VTE of change to $PWD'
-			status --is-command-substitution; and return
-			printf '\033]7;file://%s%s\a' (hostname) (pwd | __fish_urlencode)
-		end
-	end
+    # Notify vte-based terminals when $PWD changes (issue #906)
+    if test "$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal"
+        function __update_vte_cwd --on-variable PWD --description 'Notify VTE of change to $PWD'
+            status --is-command-substitution
+            and return
+            printf '\033]7;file://%s%s\a' (hostname) (pwd | __fish_urlencode)
+        end
+    end
 
-	# The first time a command is not found, look for command-not-found
-	# This is not cheap so we try to avoid doing it during startup
-	# config.fish already installed a handler for noninteractive command-not-found,
-	# so delete it here since we are now interactive
-	functions -e __fish_command_not_found_handler
+    # The first time a command is not found, look for command-not-found
+    # This is not cheap so we try to avoid doing it during startup
+    # config.fish already installed a handler for noninteractive command-not-found,
+    # so delete it here since we are now interactive
+    functions -e __fish_command_not_found_handler
 
-	# Now install our fancy variant
-	function __fish_command_not_found_setup --on-event fish_command_not_found
-		# Remove fish_command_not_found_setup so we only execute this once
-		functions --erase __fish_command_not_found_setup
+    # Now install our fancy variant
+    function __fish_command_not_found_setup --on-event fish_command_not_found
+        # Remove fish_command_not_found_setup so we only execute this once
+        functions --erase __fish_command_not_found_setup
 
-		# First check if we are on OpenSUSE since SUSE's handler has no options
-		# and expects first argument to be a command and second database
-		# also check if there is command-not-found command.
-		if begin; test -f /etc/SuSE-release; and type -q -p command-not-found; end
-			function __fish_command_not_found_handler --on-event fish_command_not_found
-				/usr/bin/command-not-found $argv[1]
-			end
-		# Check for Fedora's handler
-		else if test -f /usr/libexec/pk-command-not-found
-			function __fish_command_not_found_handler --on-event fish_command_not_found
-				/usr/libexec/pk-command-not-found $argv[1]
-			end
-		# Check in /usr/lib, this is where modern Ubuntus place this command
-		else if test -f /usr/lib/command-not-found
-			function __fish_command_not_found_handler --on-event fish_command_not_found
-				/usr/lib/command-not-found -- $argv[1]
-			end
-		# Check for NixOS handler
-		else if test -f /run/current-system/sw/bin/command-not-found
-			function __fish_command_not_found_handler --on-event fish_command_not_found
-				/run/current-system/sw/bin/command-not-found $argv[1]
-			end
-		# Ubuntu Feisty places this command in the regular path instead
-		else if type -q -p command-not-found
-			function __fish_command_not_found_handler --on-event fish_command_not_found
-				command-not-found -- $argv[1]
-			end
-		# pkgfile is an optional, but official, package on Arch Linux
-		# it ships with example handlers for bash and zsh, so we'll follow that format
-		else if type -p -q pkgfile
-			function __fish_command_not_found_handler --on-event fish_command_not_found
-				set -l __packages (pkgfile --binaries --verbose -- $argv[1] ^/dev/null)
-				if test $status -eq 0
-					printf "%s may be found in the following packages:\n" "$argv[1]"
-					printf "  %s\n" $__packages
-				else
-					__fish_default_command_not_found_handler $argv[1]
-				end
-			end
-		# Use standard fish command not found handler otherwise
-		else
-			function __fish_command_not_found_handler --on-event fish_command_not_found
-				__fish_default_command_not_found_handler $argv[1]
-			end
-		end
-		__fish_command_not_found_handler $argv
-	end
+        # First check if we are on OpenSUSE since SUSE's handler has no options
+        # and expects first argument to be a command and second database
+        # also check if there is command-not-found command.
+        if begin
+                test -f /etc/SuSE-release
+                and type -q -p command-not-found
+            end
+            function __fish_command_not_found_handler --on-event fish_command_not_found
+                /usr/bin/command-not-found $argv[1]
+            end
+            # Check for Fedora's handler
+        else if test -f /usr/libexec/pk-command-not-found
+            function __fish_command_not_found_handler --on-event fish_command_not_found
+                /usr/libexec/pk-command-not-found $argv[1]
+            end
+            # Check in /usr/lib, this is where modern Ubuntus place this command
+        else if test -f /usr/lib/command-not-found
+            function __fish_command_not_found_handler --on-event fish_command_not_found
+                /usr/lib/command-not-found -- $argv[1]
+            end
+            # Check for NixOS handler
+        else if test -f /run/current-system/sw/bin/command-not-found
+            function __fish_command_not_found_handler --on-event fish_command_not_found
+                /run/current-system/sw/bin/command-not-found $argv[1]
+            end
+            # Ubuntu Feisty places this command in the regular path instead
+        else if type -q -p command-not-found
+            function __fish_command_not_found_handler --on-event fish_command_not_found
+                command-not-found -- $argv[1]
+            end
+            # pkgfile is an optional, but official, package on Arch Linux
+            # it ships with example handlers for bash and zsh, so we'll follow that format
+        else if type -p -q pkgfile
+            function __fish_command_not_found_handler --on-event fish_command_not_found
+                set -l __packages (pkgfile --binaries --verbose -- $argv[1] ^/dev/null)
+                if test $status -eq 0
+                    printf "%s may be found in the following packages:\n" "$argv[1]"
+                    printf "  %s\n" $__packages
+                else
+                    __fish_default_command_not_found_handler $argv[1]
+                end
+            end
+            # Use standard fish command not found handler otherwise
+        else
+            function __fish_command_not_found_handler --on-event fish_command_not_found
+                __fish_default_command_not_found_handler $argv[1]
+            end
+        end
+        __fish_command_not_found_handler $argv
+    end
 end

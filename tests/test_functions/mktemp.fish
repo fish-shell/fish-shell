@@ -14,19 +14,19 @@ function mktemp
     set -l opts
     while set -q argv[1]
         switch $argv[1]
-        case -d
-            set opts $opts d
-        case -t
-            set opts $opts t
-        case --
-            set -e argv[1]
-            break
-        case '-*'
-            echo "mktemp: unknown flag $argv[1]" >&2
-            _mktemp_help >&2
-            exit 2
-        case '*'
-            break
+            case -d
+                set opts $opts d
+            case -t
+                set opts $opts t
+            case --
+                set -e argv[1]
+                break
+            case '-*'
+                echo "mktemp: unknown flag $argv[1]" >& 2
+                _mktemp_help >& 2
+                exit 2
+            case '*'
+                break
         end
         set -e argv[1]
     end
@@ -40,8 +40,8 @@ function mktemp
     end
 
     if set -q argv[2]
-        echo 'mktemp: too many templates' >&2
-        _mktemp_help >&2
+        echo 'mktemp: too many templates' >& 2
+        _mktemp_help >& 2
         exit 1
     end
 
@@ -57,14 +57,14 @@ function mktemp
             if test $c = X
                 set found_x $found_x X
             else if set -q found_x[1]
-                echo 'mktemp: X\'s may only occur at the end of the template' >&2
-                _mktemp_help >&2
+                echo 'mktemp: X\'s may only occur at the end of the template' >& 2
+                _mktemp_help >& 2
                 exit 1
             end
         end
         if test (count $found_x) -lt 3
-            echo "mktemp: too few X's in template '$template'" >&2
-            _mktemp_usage >&2
+            echo "mktemp: too few X's in template '$template'" >& 2
+            _mktemp_usage >& 2
             exit 1
         end
     end
@@ -75,19 +75,19 @@ function mktemp
     end
     if contains t $opts
         switch $template
-        case '/*'
-            echo "mktemp: invalid template '$template' with -t, template must not be absolute" >&2
-            _mktemp_help >&2
-            exit 1
+            case '/*'
+                echo "mktemp: invalid template '$template' with -t, template must not be absolute" >& 2
+                _mktemp_help >& 2
+                exit 1
         end
 
         switch "$TMPDIR"
-        case ''
-            set template /tmp/$template
-        case '*/'
-            set template $TMPDIR$template
-        case '*'
-            set template $TMPDIR/$template
+            case ''
+                set template /tmp/$template
+            case '*/'
+                set template $TMPDIR$template
+            case '*'
+                set template $TMPDIR/$template
         end
     end
     set args $args $template

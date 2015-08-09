@@ -1,21 +1,21 @@
 #completion for apt-get
 
 function __fish_apt_no_subcommand --description 'Test if apt has yet to be given the subcommand'
-	for i in (commandline -opc)
-		if contains -- $i update upgrade dselect-upgrade dist-upgrade install remove purge source build-dep check clean autoclean
-			return 1
-		end
-	end
-	return 0
+    for i in (commandline -opc)
+        if contains -- $i update upgrade dselect-upgrade dist-upgrade install remove purge source build-dep check clean autoclean
+            return 1
+        end
+    end
+    return 0
 end
 
 function __fish_apt_use_package --description 'Test if apt command should have packages as potential completion'
-	for i in (commandline -opc)
-		if contains -- $i contains install remove purge build-dep
-			return 0
-		end
-	end
-	return 1
+    for i in (commandline -opc)
+        if contains -- $i contains install remove purge build-dep
+            return 0
+        end
+    end
+    return 1
 end
 
 complete -c apt-get -n '__fish_apt_use_package' -a '(__fish_print_packages)' --description 'Package'

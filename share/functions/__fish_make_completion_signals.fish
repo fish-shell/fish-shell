@@ -1,7 +1,8 @@
 function __fish_make_completion_signals --description 'Make list of kill signals for completion'
-    set -q __kill_signals; and return 0
+    set -q __kill_signals
+    and return 0
 
-    if kill -L ^/dev/null >/dev/null
+    if kill -L ^ /dev/null > /dev/null
         # Debian and some related systems use 'kill -L' to write out a numbered list
         # of signals. Use this to complete on both number _and_ on signal name.
         complete -c kill -s L --description "List codes and names of available signals"

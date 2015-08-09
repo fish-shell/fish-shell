@@ -6,27 +6,27 @@ function __fish_complete_dcop -d "Completions for kde dcop"
     set -l com (commandline)
 
     if eval "$com >/dev/null 2>&1"
-	# use dcop output if available
-	eval "$com | sed -e 's/ (default)//; s/^\w[^ ]* \(\w*\)([^)]*)\$/\1/'"
+        # use dcop output if available
+        eval "$com | sed -e 's/ (default)//; s/^\w[^ ]* \(\w*\)([^)]*)\$/\1/'"
 
     else
-	set -l op (commandline -o)
+        set -l op (commandline -o)
 
-	if test (count $op) -le 2
-	    # select an application
-	    dcop | grep -- $op[-1]
-	else
-	    # select a function
-	    set -l o
-	    for i in (seq 1 (count $op))
-		# strip the \ character which causes problems
-		set o[$i] (echo $op[$i] | sed -e 's/\\\//g')
-	    end
+        if test (count $op) -le 2
+            # select an application
+            dcop | grep -- $op[-1]
+        else
+            # select a function
+            set -l o
+            for i in (seq 1 (count $op))
+                # strip the \ character which causes problems
+                set o[$i] (echo $op[$i] | sed -e 's/\\\//g')
+            end
 
-	    set -l idx (seq 2 (expr (count $o) - 1))
-	    # list only function names
-	    dcop $o[$idx] | grep -- $o[-1] | sed -e 's/ (default)//; s/^\w[^ ]* \(\w*\)([^)]*)$/\1/'
-	end
+            set -l idx (seq 2 (expr (count $o) - 1))
+            # list only function names
+            dcop $o[$idx] | grep -- $o[-1] | sed -e 's/ (default)//; s/^\w[^ ]* \(\w*\)([^)]*)$/\1/'
+        end
     end
 end
 

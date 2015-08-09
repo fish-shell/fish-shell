@@ -4,8 +4,8 @@ complete -c commandline -s a -l append --description "Add text to the end of the
 complete -c commandline -s i -l insert --description "Add text at cursor"
 complete -c commandline -s r -l replace --description "Replace selected part"
 
-complete -c commandline -s j -l current-job  --description "Select job under cursor"
-complete -c commandline -s p -l current-process  --description "Select process under cursor"
+complete -c commandline -s j -l current-job --description "Select job under cursor"
+complete -c commandline -s p -l current-process --description "Select process under cursor"
 complete -c commandline -s t -l current-token --description "Select token under cursor"
 complete -c commandline -s b -l current-buffer --description "Select entire command line (default)"
 

@@ -1,11 +1,11 @@
 
 function __fish_invoke_rcd_has_service
-  set tokens (commandline -opc)
-  if [ (count $tokens) -eq 2 ]
-    return 0
-  else
-    return 1
-  end
+    set tokens (commandline -opc)
+    if [ (count $tokens) -eq 2 ]
+        return 0
+    else
+        return 1
+    end
 end
 
 complete -f -c invoke-rc.d -n 'not __fish_invoke_rcd_has_service' -a '(__fish_print_debian_services)'

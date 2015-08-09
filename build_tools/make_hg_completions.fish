@@ -5,4 +5,4 @@
 
 . build_tools/make_vcs_completions_generic.fish
 
-write_completions hg >share/completions/hg.fish
+write_completions hg > share/completions/hg.fish

@@ -3,29 +3,26 @@
 # Author: Tassilo Horn <tassilo@member.fsf.org>
 
 function __fish_emerge_print_installed_pkgs --description 'Prints completions for installed packages on the system from /var/db/pkg'
- if test -d /var/db/pkg
-   find /var/db/pkg/ -type d | cut -d'/' -f5-6 | sort | uniq | \
-       sed 's/-[0-9]\{1,\}\..*$//' | sed -e '/^ *$/d'
-   return
- end
+    if test -d /var/db/pkg
+        find /var/db/pkg/ -type d | cut -d'/' -f5-6 | sort | uniq | sed 's/-[0-9]\{1,\}\..*$//' | sed -e '/^ *$/d'
+        return
+    end
 end
 
 function __fish_emerge_print_all_pkgs --description 'Prints completions for all available packages on the system from /usr/portage'
- if test -d /usr/portage
-   find /usr/portage/ -maxdepth 2 -type d | cut -d'/' -f4-5 | \
-       sed 's/^\(distfiles\|profiles\|eclass\).*$//' | sort | uniq | \
-       sed 's/-[0-9]\{1,\}\..*$//' | sed -e '/^ *$/d'
-   return
- end
+    if test -d /usr/portage
+        find /usr/portage/ -maxdepth 2 -type d | cut -d'/' -f4-5 | sed 's/^\(distfiles\|profiles\|eclass\).*$//' | sort | uniq | sed 's/-[0-9]\{1,\}\..*$//' | sed -e '/^ *$/d'
+        return
+    end
 end
 
 function __fish_emerge_use_installed_package --description 'Tests if emerge command should have an installed package as potential completion'
-  for i in (commandline -opc)
-    if contains -- $i -u --update -C --unmerge -P --prune --config
-      return 0
+    for i in (commandline -opc)
+        if contains -- $i -u --update -C --unmerge -P --prune --config
+            return 0
+        end
     end
-  end
-  return 1
+    return 1
 end
 
 
@@ -46,13 +43,11 @@ end
 
 #########################
 # Actions
-complete -c emerge -n '__fish_emerge_use_installed_package' -xua \
-'system\t"'(_ "All base system packages")'" '\
+complete -c emerge -n '__fish_emerge_use_installed_package' -xua 'system\t"'(_ "All base system packages")'" '\
 'world\t"'(_ "All packages in world")'" '\
 '(__fish_emerge_print_installed_pkgs)\t"'(_ "Installed package")'"'
 
-complete -c emerge -n 'not __fish_emerge_use_installed_package' -xua \
-'system\t"'(_ "All base system packages")'" '\
+complete -c emerge -n 'not __fish_emerge_use_installed_package' -xua 'system\t"'(_ "All base system packages")'" '\
 'world\t"'(_ "All packages in world")'" '\
 '@world\t"'(_ "All packages in world")'" '\
 '@preserved-rebuild\t"'(_ 'Packages that are linked to preserved libs')'" '\
@@ -62,8 +57,7 @@ complete -c emerge -n 'not __fish_emerge_use_installed_package' -xua \
 complete -c emerge -l sync -d "Synchronize the portage tree"
 complete -c emerge -l info -d "Get informations to include in bug reports"
 complete -c emerge -s V -l version -d "Displays the version number of emerge"
-complete -c emerge -s h -l help -d "Displays help information for emerge" -xa \
-'""\t"'(_ "Usage overview of emerge")'" '\
+complete -c emerge -s h -l help -d "Displays help information for emerge" -xa '""\t"'(_ "Usage overview of emerge")'" '\
 'system\t"'(_ "Help on subject system")'" '\
 'config\t"'(_ "Help on subject config")'" '\
 'sync\t"'(_ "Help on subject sync")'"'
@@ -89,8 +83,7 @@ complete -c emerge -s a -l ask -d "Prompt the user before peforming the merge"
 complete -c emerge -s b -l buildpkg -d "Build a binary package additionally"
 complete -c emerge -s B -l buildpkgonly -d "Only build a binary package"
 complete -c emerge -s l -l changelog -d "Show changelog of package. Use with --pretend"
-complete -c emerge -l color -d "Toggle colorized output" -xa \
-'y\t"'(_ "Use colors in output")'" '\
+complete -c emerge -l color -d "Toggle colorized output" -xa 'y\t"'(_ "Use colors in output")'" '\
 'n\t"'(_ "Don't use colors in output")'"'
 
 complete -c emerge -l colums -d "Align output. Use with --pretend"
@@ -116,8 +109,7 @@ complete -c emerge -s t -l tree -d "Show the dependency tree"
 complete -c emerge -s k -l usepkg -d "Use binary package if available"
 complete -c emerge -s K -l usepkgonly -d "Only use binary packages"
 complete -c emerge -s v -l verbose -d "Run  in  verbose  mode"
-complete -c emerge -l with-bdeps -d "Toggle build time dependencies" -xa \
-'y\t"'(_ "Pull in build time dependencies")'" '\
+complete -c emerge -l with-bdeps -d "Toggle build time dependencies" -xa 'y\t"'(_ "Pull in build time dependencies")'" '\
 'n\t"'(_ "Don't pull in build time dependencies")'"'
 
 # END Options

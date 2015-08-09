@@ -1,19 +1,15 @@
-set -l commands list-units list-sockets start stop reload restart try-restart reload-or-restart reload-or-try-restart \
-	isolate kill is-active is-failed status show get-cgroup-attr set-cgroup-attr unset-cgroup-attr set-cgroup help \
-	reset-failed list-unit-files enable disable is-enabled reenable preset mask unmask link load list-jobs cancel dump \
-	list-dependencies snapshot delete daemon-reload daemon-reexec show-environment set-environment unset-environment \
-	default rescue emergency halt poweroff reboot kexec exit suspend hibernate hybrid-sleep switch-root
+set -l commands list-units list-sockets start stop reload restart try-restart reload-or-restart reload-or-try-restart isolate kill is-active is-failed status show get-cgroup-attr set-cgroup-attr unset-cgroup-attr set-cgroup help reset-failed list-unit-files enable disable is-enabled reenable preset mask unmask link load list-jobs cancel dump list-dependencies snapshot delete daemon-reload daemon-reexec show-environment set-environment unset-environment default rescue emergency halt poweroff reboot kexec exit suspend hibernate hybrid-sleep switch-root
 set -l types services sockets mounts service_paths targets automounts timers
 
 function __fish_systemd_properties
-	if type -q /usr/lib/systemd/systemd
-		set IFS "="
-		/usr/lib/systemd/systemd --dump-configuration-items | while read key value
-		if not test -z $value
-			echo $key
-		end
-		end
-	end
+    if type -q /usr/lib/systemd/systemd
+        set IFS "="
+        /usr/lib/systemd/systemd --dump-configuration-items | while read key value
+            if not test -z $value
+                echo $key
+            end
+        end
+    end
 end
 
 complete -f -e -c systemctl
@@ -30,23 +26,23 @@ complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a disab
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a isolate -d 'Start a unit and dependencies and disable all others'
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a set-default -d 'Set the default target to boot into'
 for command in start stop restart try-restart reload-or-restart reload-or-try-restart is-active is-failed is-enabled reenable mask loaded link list-dependencies show status
-	for t in $types
-		complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a "(eval __fish_systemctl_$t)"
-	end
+    for t in $types
+        complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a "(eval __fish_systemctl_$t)"
+    end
 end
 
 # Enable/Disable: Only show units with matching state
 for t in services sockets timers service_paths
-		complete -f -c systemctl -n "__fish_seen_subcommand_from enable" -a "(eval __fish_systemctl_$t --state=disabled)"
-		complete -f -c systemctl -n "__fish_seen_subcommand_from disable" -a "(eval __fish_systemctl_$t --state=enabled)"
+    complete -f -c systemctl -n "__fish_seen_subcommand_from enable" -a "(eval __fish_systemctl_$t --state=disabled)"
+    complete -f -c systemctl -n "__fish_seen_subcommand_from disable" -a "(eval __fish_systemctl_$t --state=enabled)"
 end
 
 # These are useless for the other commands
 # .device in particular creates too much noise
 for t in devices slices scopes swaps
-	for command in status show list-dependencies
-		complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a "(eval __fish_systemctl_$t)"
-	end
+    for command in status show list-dependencies
+        complete -f -c systemctl -n "__fish_seen_subcommand_from $command" -a "(eval __fish_systemctl_$t)"
+    end
 end
 
 complete -f -c systemctl -n "__fish_seen_subcommand_from isolate" -a '(__fish_systemctl_targets)' -d 'Target'

@@ -25,6 +25,6 @@ switch (eval python -V 2>&1 | head -n1 | sed 's/^.*[[:space:]]\([23]\)\..*/\1/')
     case 3
         complete -c python -s q --description 'Don\'t print version and copyright messages on interactive startup'
         complete -c python -s X -x -d 'Set implementation-specific option'
-        complete -c python -s b  -d 'Issue warnings about str(bytes_instance), str(bytearray_instance) and comparing bytes/bytearray with str'
+        complete -c python -s b -d 'Issue warnings about str(bytes_instance), str(bytearray_instance) and comparing bytes/bytearray with str'
         complete -c python -o bb -d 'Issue errors'
 end

@@ -13,7 +13,7 @@ function fish_prompt -d "Write out the prompt"
         set -l git_branch (set_color -o blue)(_git_branch_name)
         if [ (_is_git_dirty) ]
             for i in (git branch -qv --no-color|grep \*|cut -d' ' -f4-|cut -d] -f1|tr , \n)\
-                (git status --porcelain | cut -c 1-2 | uniq)
+ (git status --porcelain | cut -c 1-2 | uniq)
                 switch $i
                     case "*[ahead *"
                         set git_status "$git_status"(set_color red)⬆
@@ -40,28 +40,11 @@ function fish_prompt -d "Write out the prompt"
     end
     set_color -b black
     printf '%s%s%s%s%s%s%s%s%s%s%s%s%s'\
-    (set_color -o white)               \
-    '❰'                                \
-    (set_color green)                  \
-    $USER                              \
-    (set_color white)                  \
-    '❙'                                \
-    (set_color yellow)                 \
-    (echo $PWD | sed -e "s|^$HOME|~|") \
-    (set_color white)                  \
-    $git_info                          \
-    (set_color white)                  \
-    '❱'                                \
-    (set_color white)
+ (set_color -o white) '❰' (set_color green) $USER (set_color white) '❙' (set_color yellow) (echo $PWD | sed -e "s|^$HOME|~|") (set_color white) $git_info (set_color white) '❱' (set_color white)
     if test $laststatus -eq 0
-        printf "%s✔%s≻%s "  \
-        (set_color -o green)\
-        (set_color white)   \
-        (set_color normal)
+        printf "%s✔%s≻%s " (set_color -o green)\
+ (set_color white) (set_color normal)
     else
-        printf "%s✘%s≻%s "  \
-        (set_color -o red)  \
-        (set_color white)   \
-        (set_color normal)
+        printf "%s✘%s≻%s " (set_color -o red) (set_color white) (set_color normal)
     end
 end

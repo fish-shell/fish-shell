@@ -1,42 +1,42 @@
 function __fish_mix_needs_command
-  set cmd (commandline -opc)
-  if [ (count $cmd) -eq 1 -a $cmd[1] = 'mix' ]
-    return 0
-  end
-  return 1
+    set cmd (commandline -opc)
+    if [ (count $cmd) -eq 1 -a $cmd[1] = 'mix' ]
+        return 0
+    end
+    return 1
 end
 
 function __fish_mix_using_command
-  set cmd (commandline -opc)
-  if [ (count $cmd) -gt 1 ]
-    if [ $argv[1] = $cmd[2] ]
-      return 0
+    set cmd (commandline -opc)
+    if [ (count $cmd) -gt 1 ]
+        if [ $argv[1] = $cmd[2] ]
+            return 0
+        end
     end
-  end
-  return 1
+    return 1
 end
 
 
-complete -f -c mix -n '__fish_mix_needs_command' -a archive         -d "Archive this project into a .ez file"
-complete -f -c mix -n '__fish_mix_needs_command' -a clean           -d "Clean generated application files"
-complete -f -c mix -n '__fish_mix_needs_command' -a cmd             -d "Executes the given command"
-complete    -c mix -n '__fish_mix_needs_command' -a compile         -d "Compile source files"
-complete -f -c mix -n '__fish_mix_needs_command' -a deps            -d "List dependencies and their status"
-complete -f -c mix -n '__fish_mix_needs_command' -a deps.clean      -d "Remove the given dependencies' files"
-complete -f -c mix -n '__fish_mix_needs_command' -a deps.compile    -d "Compile dependencies"
-complete -f -c mix -n '__fish_mix_needs_command' -a deps.get        -d "Get all out of date dependencies"
-complete -f -c mix -n '__fish_mix_needs_command' -a deps.unlock     -d "Unlock the given dependencies"
-complete -f -c mix -n '__fish_mix_needs_command' -a deps.update     -d "Update the given dependencies"
-complete -f -c mix -n '__fish_mix_needs_command' -a do              -d "Executes the tasks separated by comma"
-complete -f -c mix -n '__fish_mix_needs_command' -a escriptize      -d "Generates an escript for the project"
-complete -f -c mix -n '__fish_mix_needs_command' -a help            -d "Print help information for tasks"
-complete    -c mix -n '__fish_mix_needs_command' -a local           -d "List local tasks"
-complete    -c mix -n '__fish_mix_needs_command' -a local.install   -d "Install a task or an archive locally"
-complete    -c mix -n '__fish_mix_needs_command' -a local.rebar     -d "Install rebar locally"
-complete    -c mix -n '__fish_mix_needs_command' -a local.uninstall -d "Uninstall local tasks or archives"
-complete    -c mix -n '__fish_mix_needs_command' -a new             -d "Creates a new Elixir project"
-complete -f -c mix -n '__fish_mix_needs_command' -a run             -d "Run the given file or expression"
-complete -f -c mix -n '__fish_mix_needs_command' -a test            -d "Run a project's tests"
+complete -f -c mix -n '__fish_mix_needs_command' -a archive -d "Archive this project into a .ez file"
+complete -f -c mix -n '__fish_mix_needs_command' -a clean -d "Clean generated application files"
+complete -f -c mix -n '__fish_mix_needs_command' -a cmd -d "Executes the given command"
+complete -c mix -n '__fish_mix_needs_command' -a compile -d "Compile source files"
+complete -f -c mix -n '__fish_mix_needs_command' -a deps -d "List dependencies and their status"
+complete -f -c mix -n '__fish_mix_needs_command' -a deps.clean -d "Remove the given dependencies' files"
+complete -f -c mix -n '__fish_mix_needs_command' -a deps.compile -d "Compile dependencies"
+complete -f -c mix -n '__fish_mix_needs_command' -a deps.get -d "Get all out of date dependencies"
+complete -f -c mix -n '__fish_mix_needs_command' -a deps.unlock -d "Unlock the given dependencies"
+complete -f -c mix -n '__fish_mix_needs_command' -a deps.update -d "Update the given dependencies"
+complete -f -c mix -n '__fish_mix_needs_command' -a do -d "Executes the tasks separated by comma"
+complete -f -c mix -n '__fish_mix_needs_command' -a escriptize -d "Generates an escript for the project"
+complete -f -c mix -n '__fish_mix_needs_command' -a help -d "Print help information for tasks"
+complete -c mix -n '__fish_mix_needs_command' -a local -d "List local tasks"
+complete -c mix -n '__fish_mix_needs_command' -a local.install -d "Install a task or an archive locally"
+complete -c mix -n '__fish_mix_needs_command' -a local.rebar -d "Install rebar locally"
+complete -c mix -n '__fish_mix_needs_command' -a local.uninstall -d "Uninstall local tasks or archives"
+complete -c mix -n '__fish_mix_needs_command' -a new -d "Creates a new Elixir project"
+complete -f -c mix -n '__fish_mix_needs_command' -a run -d "Run the given file or expression"
+complete -f -c mix -n '__fish_mix_needs_command' -a test -d "Run a project's tests"
 
 # archive subcommand
 complete -f -c mix -n '__fish_mix_using_command archive' -s o -d "specify output file name"
@@ -72,22 +72,22 @@ complete -c mix -n '__fish_mix_using_command test' -l no-start -d "do not start 
 complete -c mix -n '__fish_mix_using_command test' -l no-color -d "disable color in the output"
 
 # help subcommand
-complete -f -c mix -n '__fish_mix_using_command help' -a archive         -d "Archive this project into a .ez file"
-complete -f -c mix -n '__fish_mix_using_command help' -a clean           -d "Clean generated application files"
-complete -f -c mix -n '__fish_mix_using_command help' -a cmd             -d "Executes the given command"
-complete -f -c mix -n '__fish_mix_using_command help' -a compile         -d "Compile source files"
-complete -f -c mix -n '__fish_mix_using_command help' -a deps            -d "List dependencies and their status"
-complete -f -c mix -n '__fish_mix_using_command help' -a deps.clean      -d "Remove the given dependencies' files"
-complete -f -c mix -n '__fish_mix_using_command help' -a deps.compile    -d "Compile dependencies"
-complete -f -c mix -n '__fish_mix_using_command help' -a deps.get        -d "Get all out of date dependencies"
-complete -f -c mix -n '__fish_mix_using_command help' -a deps.unlock     -d "Unlock the given dependencies"
-complete -f -c mix -n '__fish_mix_using_command help' -a deps.update     -d "Update the given dependencies"
-complete -f -c mix -n '__fish_mix_using_command help' -a do              -d "Executes the tasks separated by comma"
-complete -f -c mix -n '__fish_mix_using_command help' -a escriptize      -d "Generates an escript for the project"
-complete -f -c mix -n '__fish_mix_using_command help' -a local           -d "List local tasks"
-complete -f -c mix -n '__fish_mix_using_command help' -a local.install   -d "Install a task or an archive locally"
-complete -f -c mix -n '__fish_mix_using_command help' -a local.rebar     -d "Install rebar locally"
+complete -f -c mix -n '__fish_mix_using_command help' -a archive -d "Archive this project into a .ez file"
+complete -f -c mix -n '__fish_mix_using_command help' -a clean -d "Clean generated application files"
+complete -f -c mix -n '__fish_mix_using_command help' -a cmd -d "Executes the given command"
+complete -f -c mix -n '__fish_mix_using_command help' -a compile -d "Compile source files"
+complete -f -c mix -n '__fish_mix_using_command help' -a deps -d "List dependencies and their status"
+complete -f -c mix -n '__fish_mix_using_command help' -a deps.clean -d "Remove the given dependencies' files"
+complete -f -c mix -n '__fish_mix_using_command help' -a deps.compile -d "Compile dependencies"
+complete -f -c mix -n '__fish_mix_using_command help' -a deps.get -d "Get all out of date dependencies"
+complete -f -c mix -n '__fish_mix_using_command help' -a deps.unlock -d "Unlock the given dependencies"
+complete -f -c mix -n '__fish_mix_using_command help' -a deps.update -d "Update the given dependencies"
+complete -f -c mix -n '__fish_mix_using_command help' -a do -d "Executes the tasks separated by comma"
+complete -f -c mix -n '__fish_mix_using_command help' -a escriptize -d "Generates an escript for the project"
+complete -f -c mix -n '__fish_mix_using_command help' -a local -d "List local tasks"
+complete -f -c mix -n '__fish_mix_using_command help' -a local.install -d "Install a task or an archive locally"
+complete -f -c mix -n '__fish_mix_using_command help' -a local.rebar -d "Install rebar locally"
 complete -f -c mix -n '__fish_mix_using_command help' -a local.uninstall -d "Uninstall local tasks or archives"
-complete -f -c mix -n '__fish_mix_using_command help' -a new             -d "Creates a new Elixir project"
-complete -f -c mix -n '__fish_mix_using_command help' -a run             -d "Run the given file or expression"
-complete -f -c mix -n '__fish_mix_using_command help' -a test            -d "Run a project's tests"
+complete -f -c mix -n '__fish_mix_using_command help' -a new -d "Creates a new Elixir project"
+complete -f -c mix -n '__fish_mix_using_command help' -a run -d "Run the given file or expression"
+complete -f -c mix -n '__fish_mix_using_command help' -a test -d "Run a project's tests"

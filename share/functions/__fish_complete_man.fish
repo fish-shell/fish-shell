@@ -1,27 +1,27 @@
 
 function __fish_complete_man
-	if test (commandline -ct)
+    if test (commandline -ct)
 
-		# Try to guess what section to search in. If we don't know, we
-		# use [^)]*, which should match any section
+        # Try to guess what section to search in. If we don't know, we
+        # use [^)]*, which should match any section
 
-		set section ""
-		set prev (commandline -poc)
-		set -e prev[1]
-		while count $prev
-			switch $prev[1]
-			case '-**'
+        set section ""
+        set prev (commandline -poc)
+        set -e prev[1]
+        while count $prev
+            switch $prev[1]
+                case '-**'
 
-			case '*'
-				set section $prev[1]
-			end
-			set -e prev[1]
-		end
+                case '*'
+                    set section $prev[1]
+            end
+            set -e prev[1]
+        end
 
-		set section $section"[^)]*"
+        set section $section"[^)]*"
 
-		# Do the actual search
-		apropos (commandline -ct) ^/dev/null | awk '
+        # Do the actual search
+        apropos (commandline -ct) ^ /dev/null | awk '
 		BEGIN { FS="[\t ]- "; OFS="\t"; }
 		# BSD/Darwin
 		/^[^( \t]+\('$section'\)/ {
@@ -48,6 +48,6 @@ function __fish_complete_man
 		  print t[2], sect ": " $2;
 		}
 		'
-	end
+    end
 end
 

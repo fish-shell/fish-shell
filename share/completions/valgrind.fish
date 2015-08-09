@@ -1,12 +1,15 @@
 # Don't go invoking valgrind unless it is installed
 
 set -l skin tool
-if begin ; type valgrind >/dev/null ; and valgrind --version ^/dev/null | sgrep -- '-2\.[012]\.' >/dev/null ^/dev/null ; end
-	# In older versions of Valgrind, the skin selection option was
+if begin
+        type valgrind > /dev/null
+        and valgrind --version ^ /dev/null | sgrep -- '-2\.[012]\.' > /dev/null ^ /dev/null
+    end
+    # In older versions of Valgrind, the skin selection option was
     # '--skin'
-	# But someone decided that it would be fun to change this to
+    # But someone decided that it would be fun to change this to
     # '--tool' for no good reason
-	set skin skin
+    set skin skin
 end
 
 complete -xc valgrind -l $skin --description "Skin" -a "

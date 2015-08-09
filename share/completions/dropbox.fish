@@ -28,9 +28,9 @@ complete -c dropbox -n "__fish_seen_subcommand_from help" -xa "$subcommands"
 complete -c dropbox -n "__fish_seen_subcommand_from start" -s i -l install -d "Auto install dropboxd if not available on the system"
 complete -c dropbox -n "__fish_seen_subcommand_from filestatus stat" -s l -l list -d "Prints out information in a format similar to ls. works best when your console supports color :)"
 complete -c dropbox -n "__fish_seen_subcommand_from filestatus stat ls" -s a -l all -d "Do not ignore entries starting with ."
-complete -c dropbox -n "__fish_seen_subcommand_from autostart lansync" -xa '(echo -e "y\tEnable\nn\tDisable")' 
+complete -c dropbox -n "__fish_seen_subcommand_from autostart lansync" -xa '(echo -e "y\tEnable\nn\tDisable")'
 
-set -l needs_excl_arg "__fish_seen_subcommand_from exclude; and not __fish_seen_subcommand_from list add remove" 
+set -l needs_excl_arg "__fish_seen_subcommand_from exclude; and not __fish_seen_subcommand_from list add remove"
 complete -c dropbox -n $needs_excl_arg -xa list -d "Prints a list of directories currently excluded from syncing"
 complete -c dropbox -n $needs_excl_arg -xa add -d "Adds one or more directories to the exclusion list"
 complete -c dropbox -n $needs_excl_arg -xa remove -d "Removes one or more directories from the exclusion list"

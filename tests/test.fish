@@ -13,7 +13,8 @@ else
     set files_to_test *.in
 end
 
-source test_util.fish (status -f) $argv; or exit
+source test_util.fish (status -f) $argv
+or exit
 
 say -o cyan "Testing high level script functionality"
 
@@ -23,13 +24,13 @@ function test_file
 
     echo -n "Testing file $file ... "
 
-    ../fish <$file >$base.tmp.out ^$base.tmp.err
+    ../fish < $file > $base.tmp.out ^ $base.tmp.err
     set -l tmp_status $status
     set -l res ok
 
-    diff $base.tmp.out $base.out >/dev/null
+    diff $base.tmp.out $base.out > /dev/null
     set -l out_status $status
-    diff $base.tmp.err $base.err >/dev/null
+    diff $base.tmp.err $base.err > /dev/null
     set -l err_status $status
     set -l exp_status (cat $base.status)[1]
 

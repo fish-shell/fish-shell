@@ -2,9 +2,9 @@
 # Utilities for the test runners
 
 if test "$argv[1]" = (status -f)
-    echo 'test_util.fish requires sourcing script as argument to `source`' >&2
-    echo 'use `source test_util.fish (status -f); or exit`' >&2
-    status --print-stack-trace >&2
+    echo 'test_util.fish requires sourcing script as argument to `source`' >& 2
+    echo 'use `source test_util.fish (status -f); or exit`' >& 2
+    status --print-stack-trace >& 2
     exit 1
 end
 
@@ -15,7 +15,8 @@ if set -q argv[2]
 end
 
 function die
-    set -q argv[1]; and echo $argv[1] >&2
+    set -q argv[1]
+    and echo $argv[1] >& 2
     exit 1
 end
 
@@ -29,26 +30,34 @@ if not set -q __fish_is_running_tests
     # set up our test environment and re-run the original script
     set -l script $argv[1]
     switch $script
-    case '/*'
-        # path is absolute
-    case '*'
-        # path is relative, make it absolute
-        set script $PWD/$script
+        case '/*'
+            # path is absolute
+        case '*'
+            # path is relative, make it absolute
+            set script $PWD/$script
     end
     set -l IFS # clear IFS so cmd substitution doesn't split
-    cd (dirname $script); or die
-    set -xl XDG_CONFIG_HOME (printf '%s/tmp.config/%s' $PWD %self); or die
+    cd (dirname $script)
+    or die
+    set -xl XDG_CONFIG_HOME (printf '%s/tmp.config/%s' $PWD %self)
+    or die
     if test -d $XDG_CONFIG_HOME
         # if the dir already exists, we've reused a pid
         # this would be surprising to reuse a fish pid that failed in the past,
         # but clear it anyway
-        rm -r $XDG_CONFIG_HOME; or die
+        rm -r $XDG_CONFIG_HOME
+        or die
     end
-    mkdir -p $XDG_CONFIG_HOME/fish; or die
-    ln -s $PWD/test_functions $XDG_CONFIG_HOME/fish/functions; or die
-    set -l escaped_parent (dirname $PWD | sed -e 's/[\'\\\\]/\\\\&/g'); or die
-    set -l escaped_config (printf '%s/fish' $XDG_CONFIG_HOME | sed -e 's/[\'\\\\]/\\\\&/g'); or die
-    printf 'set fish_function_path \'%s/functions\' \'%s/share/functions\'\n' $escaped_config $escaped_parent > $XDG_CONFIG_HOME/fish/config.fish; or die
+    mkdir -p $XDG_CONFIG_HOME/fish
+    or die
+    ln -s $PWD/test_functions $XDG_CONFIG_HOME/fish/functions
+    or die
+    set -l escaped_parent (dirname $PWD | sed -e 's/[\'\\\\]/\\\\&/g')
+    or die
+    set -l escaped_config (printf '%s/fish' $XDG_CONFIG_HOME | sed -e 's/[\'\\\\]/\\\\&/g')
+    or die
+    printf 'set fish_function_path \'%s/functions\' \'%s/share/functions\'\n' $escaped_config $escaped_parent > $XDG_CONFIG_HOME/fish/config.fish
+    or die
     set -xl __fish_is_running_tests $XDG_CONFIG_HOME
     # set locale information to be consistent
     set -lx LANG C
@@ -60,9 +69,9 @@ if not set -q __fish_is_running_tests
     exec ../fish $script $args_for_test_script
     die 'exec failed'
 else if test "$__fish_is_running_tests" != "$XDG_CONFIG_HOME"
-    echo 'Something went wrong with the test runner.' >&2
-    echo "__fish_is_running_tests: $__fish_is_running_tests" >&2
-    echo "XDG_CONFIG_HOME: $XDG_CONFIG_HOME" >&2
+    echo 'Something went wrong with the test runner.' >& 2
+    echo "__fish_is_running_tests: $__fish_is_running_tests" >& 2
+    echo "XDG_CONFIG_HOME: $XDG_CONFIG_HOME" >& 2
     exit 10
 else
     # we're running tests with a temporary config directory
@@ -71,7 +80,7 @@ else
             # remove the temporary config directory
             # unfortunately if this fails we can't alter the exit status of fish
             if not rm -r "$__fish_is_running_tests"
-                echo "error: Couldn't remove temporary config directory '$__fish_is_running_tests'" >&2
+                echo "error: Couldn't remove temporary config directory '$__fish_is_running_tests'" >& 2
             end
         end
     end
@@ -81,7 +90,7 @@ else
 end
 
 set -l suppress_color
-if not tty 0>&1 >/dev/null
+if not tty 0>& 1 > /dev/null
     set suppress_color yes
 end
 
@@ -106,13 +115,17 @@ function say -V suppress_color
     end
 
     if not set -q argv[2]
-        echo 'usage: say [flags] color string [string...]' >&2
+        echo 'usage: say [flags] color string [string...]' >& 2
         return 1
     end
 
-    if begin; test -n "$suppress_color"; or set_color $color_flags $argv[1]; end
+    if begin
+            test -n "$suppress_color"
+            or set_color $color_flags $argv[1]
+        end
         printf '%s' $argv[2..-1]
-        test -z "$suppress_color"; and set_color reset
+        test -z "$suppress_color"
+        and set_color reset
         if test -z "$suppress_newline"
             echo
         end

@@ -3,7 +3,7 @@
 #
 
 if test -d "$__fish_datadir/man/man1/"
-	complete -c help -x -a '(__fish_print_commands)' --description "Help for this command"
+    complete -c help -x -a '(__fish_print_commands)' --description "Help for this command"
 end
 
 complete -c help -x -a syntax --description 'Introduction to the fish syntax'

@@ -36,7 +36,7 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
         echo -n $branch'✓'
         set_color normal
 
-    # Handle modified or dirty (unknown state)
+        # Handle modified or dirty (unknown state)
     else
         set -l hg_statuses
         set -l modified
@@ -51,12 +51,18 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
 
             # Add a character for each file status if we have one
             switch $line
-                case 'A '               ; set hg_statuses $hg_statuses added
-                case 'M ' ' M'          ; set hg_statuses $hg_statuses modified
-                case 'C '               ; set hg_statuses $hg_statuses copied
-                case 'D ' ' D'          ; set hg_statuses $hg_statuses deleted
-                case '\? '              ; set hg_statuses $hg_statuses untracked
-                case 'U*' '*U' 'DD' 'AA'; set hg_statuses $hg_statuses unmerged
+                case 'A '
+                    set hg_statuses $hg_statuses added
+                case 'M ' ' M'
+                    set hg_statuses $hg_statuses modified
+                case 'C '
+                    set hg_statuses $hg_statuses copied
+                case 'D ' ' D'
+                    set hg_statuses $hg_statuses deleted
+                case '\? '
+                    set hg_statuses $hg_statuses untracked
+                case 'U*' '*U' 'DD' 'AA'
+                    set hg_statuses $hg_statuses unmerged
             end
         end
 

@@ -9,127 +9,137 @@
 
 function __fish_busctl_busnames
     if __fish_contains_opt user
-		set -l mode "--user"
-	else
-		set -l mode "--system"
-	end
-    command busctl $mode list --no-legend --no-pager ^/dev/null | while read a b; echo $a; end
+        set -l mode "--user"
+    else
+        set -l mode "--system"
+    end
+    command busctl $mode list --no-legend --no-pager ^ /dev/null | while read a b
+        echo $a
+    end
 end
 
 function __fish_busctl_has_busname
-	for busname in (__fish_busctl_busnames)
-		if contains -- $busname (commandline -opc)
-		   echo $busname
-		   return 0
-		end
-	end
-	return 1
+    for busname in (__fish_busctl_busnames)
+        if contains -- $busname (commandline -opc)
+            echo $busname
+            return 0
+        end
+    end
+    return 1
 end
 
 function __fish_busctl_has_object
-	for object in (__fish_busctl_objects)
-		if contains -- $object (commandline -opc)
-		   echo $object
-		   return 0
-		end
-	end
-	return 1
+    for object in (__fish_busctl_objects)
+        if contains -- $object (commandline -opc)
+            echo $object
+            return 0
+        end
+    end
+    return 1
 end
 
 function __fish_busctl_has_interface
-	for interface in (__fish_busctl_interfaces)
-		if contains -- $interface (commandline -opc)
-		   echo $interface
-		   return 0
-		end
-	end
-	return 1
+    for interface in (__fish_busctl_interfaces)
+        if contains -- $interface (commandline -opc)
+            echo $interface
+            return 0
+        end
+    end
+    return 1
 end
 
 function __fish_busctl_has_member
-	for member in (__fish_busctl_members $argv)
-		if contains -- $member (commandline -opc)
-		   echo $member
-		   return 0
-		end
-	end
-	return 1
+    for member in (__fish_busctl_members $argv)
+        if contains -- $member (commandline -opc)
+            echo $member
+            return 0
+        end
+    end
+    return 1
 end
 
 function __fish_busctl_has_method
-	__fish_busctl_has_member method
+    __fish_busctl_has_member method
 end
-		 
+
 function __fish_busctl_has_property
-	__fish_busctl_has_member property
+    __fish_busctl_has_member property
 end
 
 function __fish_busctl_has_signature
-	for signature in (__fish_busctl_signature)
-		if contains -- $signature (commandline -opc)
-		   echo $signature
-		   return 0
-		end
-	end
-	return 1
+    for signature in (__fish_busctl_signature)
+        if contains -- $signature (commandline -opc)
+            echo $signature
+            return 0
+        end
+    end
+    return 1
 end
 
 function __fish_busctl_objects
     if __fish_contains_opt user
-		set -l mode "--user"
-	else
-		set -l mode "--system"
-	end
-	set -l busname (__fish_busctl_has_busname)
-    command busctl $mode tree --list --no-legend --no-pager $busname ^/dev/null | while read a b; echo $a; end
+        set -l mode "--user"
+    else
+        set -l mode "--system"
+    end
+    set -l busname (__fish_busctl_has_busname)
+    command busctl $mode tree --list --no-legend --no-pager $busname ^ /dev/null | while read a b
+        echo $a
+    end
 end
 
 function __fish_busctl_interfaces
     if __fish_contains_opt user
-		set -l mode "--user"
-	else
-		set -l mode "--system"
-	end
-	set -l busname (__fish_busctl_has_busname)
-	set -l object (__fish_busctl_has_object)
-    command busctl $mode introspect --list --no-legend --no-pager $busname $object ^/dev/null | while read a b; echo $a; end
+        set -l mode "--user"
+    else
+        set -l mode "--system"
+    end
+    set -l busname (__fish_busctl_has_busname)
+    set -l object (__fish_busctl_has_object)
+    command busctl $mode introspect --list --no-legend --no-pager $busname $object ^ /dev/null | while read a b
+        echo $a
+    end
 end
-	
+
 function __fish_busctl_members
     if __fish_contains_opt user
-		set -l mode "--user"
-	else
-		set -l mode "--system"
-	end
-	set -l busname (__fish_busctl_has_busname)
-	set -l object  (__fish_busctl_has_object)
-	set -l interface (__fish_busctl_has_interface)
-	command busctl $mode introspect --list --no-legend --no-pager $busname $object $interface ^/dev/null | grep "$argv" | while read a b; echo $a; end | sed -e "s/^\.//"
+        set -l mode "--user"
+    else
+        set -l mode "--system"
+    end
+    set -l busname (__fish_busctl_has_busname)
+    set -l object (__fish_busctl_has_object)
+    set -l interface (__fish_busctl_has_interface)
+    command busctl $mode introspect --list --no-legend --no-pager $busname $object $interface ^ /dev/null | grep "$argv" | while read a b
+        echo $a
+    end | sed -e "s/^\.//"
 end
 
 function __fish_busctl_methods
-	__fish_busctl_members method
+    __fish_busctl_members method
 end
 
 function __fish_busctl_properties
-	__fish_busctl_members property
+    __fish_busctl_members property
 end
 
 function __fish_busctl_signals
-	__fish_busctl_members signal
+    __fish_busctl_members signal
 end
 
 function __fish_busctl_signature
     if __fish_contains_opt user
-		set -l mode "--user"
-	else
-		set -l mode "--system"
-	end
-	set -l busname (__fish_busctl_has_busname)
-	set -l object  (__fish_busctl_has_object)
-	set -l interface (__fish_busctl_has_interface)
-	set -l member (__fish_busctl_has_member)
-	command busctl $mode introspect --list --no-legend --no-pager $busname $object $interface ^/dev/null | grep "^.$member " | while read a b c d; echo $c; end
+        set -l mode "--user"
+    else
+        set -l mode "--system"
+    end
+    set -l busname (__fish_busctl_has_busname)
+    set -l object (__fish_busctl_has_object)
+    set -l interface (__fish_busctl_has_interface)
+    set -l member (__fish_busctl_has_member)
+    command busctl $mode introspect --list --no-legend --no-pager $busname $object $interface ^ /dev/null | grep "^.$member " | while read a b c d
+        echo $c
+    end
 end
 
 ### Commands

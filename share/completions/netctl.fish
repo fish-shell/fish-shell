@@ -1,23 +1,23 @@
 function __fish_netctl_needs_command
-  set cmd (commandline -opc)
-  if [ (count $cmd) -eq 1 -a $cmd[1] = 'netctl' ]
-    return 0
-  end
-  return 1
+    set cmd (commandline -opc)
+    if [ (count $cmd) -eq 1 -a $cmd[1] = 'netctl' ]
+        return 0
+    end
+    return 1
 end
 
 function __fish_netctl_using_command
-  set cmd (commandline -opc)
-  if [ (count $cmd) -gt 1 ]
-    if [ $argv[1] = $cmd[2] ]
-      return 0
+    set cmd (commandline -opc)
+    if [ (count $cmd) -gt 1 ]
+        if [ $argv[1] = $cmd[2] ]
+            return 0
+        end
     end
-  end
-  return 1
+    return 1
 end
 
 function __fish_netctl_get_profiles
-  command netctl list | sed -e 's/^[ \t*]*//'
+    command netctl list | sed -e 's/^[ \t*]*//'
 end
 
 complete -f -c netctl -l help -d 'Display help'

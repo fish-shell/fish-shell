@@ -1,19 +1,19 @@
 function __fish_brew_needs_command
-  set cmd (commandline -opc)
-  if [ (count $cmd) -eq 1 -a $cmd[1] = 'brew' ]
-    return 0
-  end
-  return 1
+    set cmd (commandline -opc)
+    if [ (count $cmd) -eq 1 -a $cmd[1] = 'brew' ]
+        return 0
+    end
+    return 1
 end
 
 function __fish_brew_using_command
-  set cmd (commandline -opc)
-  if [ (count $cmd) -gt 1 ]
-    if [ $argv[1] = $cmd[2] ]
-      return 0
+    set cmd (commandline -opc)
+    if [ (count $cmd) -gt 1 ]
+        if [ $argv[1] = $cmd[2] ]
+            return 0
+        end
     end
-  end
-  return 1
+    return 1
 end
 
 function __fish_brew_formulae

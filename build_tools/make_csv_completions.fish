@@ -5,4 +5,4 @@
 
 . build_tools/make_vcs_completions_generic.fish
 
-write_completions csv >share/completions/csv.fish
+write_completions csv > share/completions/csv.fish

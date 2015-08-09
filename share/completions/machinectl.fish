@@ -1,30 +1,28 @@
 complete -f -e -c machinectl
 
-set -l commands list status show start login enable disable poweroff reboot \
-terminate kill bind copy-{to,from} list-images image-status show-image clone rename read-only remove set-limit pull-{tar,raw,dkr} \
-{import,export}-{raw,tar} {list,cancel}-transfers
+set -l commands list status show start login enable disable poweroff reboot terminate kill bind copy-{to,from} list-images image-status show-image clone rename read-only remove set-limit pull-{tar,raw,dkr} {import,export}-{raw,tar} {list,cancel}-transfers
 
 function __fish_systemd_has_machine_image
-	set -l images (__fish_systemd_machine_images)
-	for i in $images ".host"
-		# Include ".host" here because it _is_ a valid machine
-		if contains -- $i (commandline -opc)
-			echo $i
-			return 0
-		end
-	end
-	return 1
+    set -l images (__fish_systemd_machine_images)
+    for i in $images ".host"
+        # Include ".host" here because it _is_ a valid machine
+        if contains -- $i (commandline -opc)
+            echo $i
+            return 0
+        end
+    end
+    return 1
 end
 
 function __fish_systemd_has_machine
-	set -l machines (__fish_systemd_machines)
-	for m in $machines
-		if contains -- $m (commandline -opc)
-			echo $m
-			return 0
-		end
-	end
-	return 1
+    set -l machines (__fish_systemd_machines)
+    for m in $machines
+        if contains -- $m (commandline -opc)
+            echo $m
+            return 0
+        end
+    end
+    return 1
 end
 
 # General options
@@ -44,8 +42,7 @@ complete -f -c machinectl -n "__fish_seen_subcommand_from list-images" -s a -l a
 complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "status" -d "Show information about machine"
 complete -f -c machinectl -n "__fish_seen_subcommand_from status" -s l -l full -d "Do not ellipsize process tree entries"
 complete -x -c machinectl -n "__fish_seen_subcommand_from status" -s n -l lines -d "How many journal lines to show"
-complete -x -A -c machinectl -n "__fish_seen_subcommand_from status" -s o -l output -d "Formatting of journal output" -a \
-'short short-iso short-precise short-monotonic verbose export json json-pretty json-sse cat'
+complete -x -A -c machinectl -n "__fish_seen_subcommand_from status" -s o -l output -d "Formatting of journal output" -a 'short short-iso short-precise short-monotonic verbose export json json-pretty json-sse cat'
 
 complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "show" -d "Show properties of machines"
 complete -x -c machinectl -n "__fish_seen_subcommand_from show" -s p -l property -d "Limit to certain properties"

@@ -1,20 +1,20 @@
 function __fish_tmux_sessions --description 'available sessions'
-        tmux list-sessions -F "#S	#{session_windows} windows created: #{session_created_string} [#{session_width}x#{session_height}]#{session_attached}" | sed 's/0$//;s/1$/ (attached)/' ^/dev/null
+    tmux list-sessions -F "#S	#{session_windows} windows created: #{session_created_string} [#{session_width}x#{session_height}]#{session_attached}" | sed 's/0$//;s/1$/ (attached)/' ^ /dev/null
 end
 
 function __fish_tmux_clients --description 'connected clients'
-        tmux list-clients -F "#{client_tty}	#S: Created: #{client_created_string} [#{client_width}x#{client_height} #{client_termname}]" ^/dev/null
+    tmux list-clients -F "#{client_tty}	#S: Created: #{client_created_string} [#{client_width}x#{client_height} #{client_termname}]" ^ /dev/null
 end
 
 function __fish_tmux_panes --description 'window panes'
-        #fully qualified pane names
-        tmux list-panes -F '#S:#W.#P	session:window.pane' ^/dev/null
+    #fully qualified pane names
+    tmux list-panes -F '#S:#W.#P	session:window.pane' ^ /dev/null
 
-        #panes by themselves
-        tmux list-panes -F '#P	pane' ^/dev/null
+    #panes by themselves
+    tmux list-panes -F '#P	pane' ^ /dev/null
 
-        #windows by themselves
-        tmux list-panes -F '#W	window' ^/dev/null
+    #windows by themselves
+    tmux list-panes -F '#W	window' ^ /dev/null
 end
 
 #don't allow dirs in the completion list...
@@ -24,17 +24,17 @@ complete -c tmux -x
 #these do not require parameters
 complete -c tmux -n '__fish_use_subcommand' -s 2 -d 'Force tmux to assume the terminal supports 256 colours'
 complete -c tmux -n '__fish_use_subcommand' -s 8 -d 'Like -2, but indicates that the terminal supports 88 colours'
-complete -c tmux -n '__fish_use_subcommand' -s l    -d 'Behave as a login shell'
-complete -c tmux -n '__fish_use_subcommand' -s q    -d 'Set the quiet server option'
-complete -c tmux -n '__fish_use_subcommand' -s u    -d 'Flag explicitly informs tmux that UTF-8 is supported'
-complete -c tmux -n '__fish_use_subcommand' -s v    -d 'Request verbose logging'
-complete -c tmux -n '__fish_use_subcommand' -s V    -d 'Report the tmux version'
+complete -c tmux -n '__fish_use_subcommand' -s l -d 'Behave as a login shell'
+complete -c tmux -n '__fish_use_subcommand' -s q -d 'Set the quiet server option'
+complete -c tmux -n '__fish_use_subcommand' -s u -d 'Flag explicitly informs tmux that UTF-8 is supported'
+complete -c tmux -n '__fish_use_subcommand' -s v -d 'Request verbose logging'
+complete -c tmux -n '__fish_use_subcommand' -s V -d 'Report the tmux version'
 
 #these require parameters
-complete -c tmux -n '__fish_use_subcommand' -xs c   -d 'Execute command using the default shell'
-complete -c tmux -n '__fish_use_subcommand' -rs f   -d 'Alternate config file'
-complete -c tmux -n '__fish_use_subcommand' -rs L   -d 'Specify the name of the server socket to use'
-complete -c tmux -n '__fish_use_subcommand' -rs S   -d 'Full path to sever socket. If set, -L is ignored.'
+complete -c tmux -n '__fish_use_subcommand' -xs c -d 'Execute command using the default shell'
+complete -c tmux -n '__fish_use_subcommand' -rs f -d 'Alternate config file'
+complete -c tmux -n '__fish_use_subcommand' -rs L -d 'Specify the name of the server socket to use'
+complete -c tmux -n '__fish_use_subcommand' -rs S -d 'Full path to sever socket. If set, -L is ignored.'
 ###############  End:   Front  Flags ###############
 
 ###############  Begin: Clients and Sessions ###############

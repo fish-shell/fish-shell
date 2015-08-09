@@ -1,12 +1,12 @@
 __fish_make_completion_signals
 
 for i in $__kill_signals
-	set number (echo $i | cut -d " " -f 1)
-	set name (echo $i | cut -d " " -f 2)
-	complete -c killall -o $number -d $name
-	complete -c killall -o $name -d $name
-	complete -c killall -o s -x -a \"$number\tSend\ $name\ signal\"
-	complete -c killall -o s -x -a \"$name\tSend\ $name\ signal\"
+    set number (echo $i | cut -d " " -f 1)
+    set name (echo $i | cut -d " " -f 2)
+    complete -c killall -o $number -d $name
+    complete -c killall -o $name -d $name
+    complete -c killall -o s -x -a \"$number\tSend\ $name\ signal\"
+    complete -c killall -o s -x -a \"$name\tSend\ $name\ signal\"
 end
 
 complete -c killall -xa '(__fish_complete_proc)'

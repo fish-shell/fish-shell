@@ -1,25 +1,25 @@
 # Completion for bundler
 
 function __fish_bundle_no_command --description 'Test if bundle has been given no subcommand'
-  set cmd (commandline -opc)
-  if [ (count $cmd) -eq 1 -a $cmd[1] = 'bundle' ]
-    return 0
-  end
-  return 1
+    set cmd (commandline -opc)
+    if [ (count $cmd) -eq 1 -a $cmd[1] = 'bundle' ]
+        return 0
+    end
+    return 1
 end
 
 function __fish_bundle_using_command --description 'Test if bundle has been given a specific subcommand'
-  set cmd (commandline -opc)
-  if [ (count $cmd) -gt 1 ]
-    if [ $argv[1] = $cmd[2] ]
-      return 0
+    set cmd (commandline -opc)
+    if [ (count $cmd) -gt 1 ]
+        if [ $argv[1] = $cmd[2] ]
+            return 0
+        end
     end
-  end
-  return 1
+    return 1
 end
 
 function __fish_bundled_gems
-  bundle list | sed '1 d' | sed -e 's/\*//g' -e 's/(.*)//g' -e 's/^ *//g' -e 's/ *$//g'
+    bundle list | sed '1 d' | sed -e 's/\*//g' -e 's/(.*)//g' -e 's/^ *//g' -e 's/ *$//g'
 end
 
 # Options for all commands
@@ -56,7 +56,7 @@ complete -f -n '__fish_bundle_using_command install' -c bundle -l no-prune --des
 complete -f -n '__fish_bundle_using_command install' -c bundle -l frozen --description 'Do not allow the Gemfile.lock to be updated after this install'
 
 # Update
-complete -f -n '__fish_bundle_no_command' -c bundle -a 'update'  --description 'Update dependencies to their latest versions'
+complete -f -n '__fish_bundle_no_command' -c bundle -a 'update' --description 'Update dependencies to their latest versions'
 complete -f -n '__fish_bundle_using_command update' -c bundle -l source --description 'The name of a :git or :path source used in the Gemfile'
 complete -f -n '__fish_bundle_using_command update' -c bundle -l local --description 'Do not attempt to fetch gems remotely and use the gem cache instead'
 complete -f -n '__fish_bundle_using_command update' -c bundle -l quiet --description 'Only output warnings and errors'
@@ -145,7 +145,7 @@ complete -f -n '__fish_bundle_using_command init' -c bundle -l gemspec --descrip
 
 # Gem
 complete -f -n '__fish_bundle_no_command' -c bundle -a 'gem' --description 'Create a simple gem, suitable for development with bundler'
-complete -f -n '__fish_bundle_using_command gem' -c bundle -s b -l bin  --description 'Generate a binary for your library'
+complete -f -n '__fish_bundle_using_command gem' -c bundle -s b -l bin --description 'Generate a binary for your library'
 complete -f -n '__fish_bundle_using_command gem' -c bundle -s t -l test --description 'Generate a test directory for your library (rspec or minitest)'
 complete -f -n '__fish_bundle_using_command gem' -c bundle -s e -l edit --description 'Path to your editor'
 complete -f -n '__fish_bundle_using_command gem' -c bundle -l ext --description 'Generate the boilerplate for C extension code'
@@ -155,7 +155,7 @@ complete -f -n '__fish_bundle_no_command' -c bundle -a 'platform' --description 
 complete -f -n '__fish_bundle_using_command platform' -c bundle -l ruby --description 'Only display Ruby directive information'
 
 # Clean
-complete -f -n '__fish_bundle_no_command' -c bundle -a 'clean'    --description 'Cleans up unused gems in your bundler directory'
+complete -f -n '__fish_bundle_no_command' -c bundle -a 'clean' --description 'Cleans up unused gems in your bundler directory'
 complete -f -n '__fish_bundle_using_command clean' -c bundle -l dry-run --description 'Only print out changes, do not actually clean gems'
 complete -f -n '__fish_bundle_using_command clean' -c bundle -l force --description 'Forces clean even if --path is not set'
 

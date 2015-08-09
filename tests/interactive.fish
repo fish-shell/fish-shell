@@ -2,7 +2,8 @@
 #
 # Interactive tests using `expect`
 
-source test_util.fish (status -f); or exit
+source test_util.fish (status -f)
+or exit
 
 say -o cyan "Testing interactive functionality"
 if not type -q expect
@@ -11,8 +12,10 @@ if not type -q expect
 end
 
 function test_file
-    rm -Rf tmp.interactive.config; or die "Couldn't remove tmp.interactive.config"
-    mkdir -p tmp.interactive.config/fish; or die "Couldn't create tmp.interactive.config/fish"
+    rm -Rf tmp.interactive.config
+    or die "Couldn't remove tmp.interactive.config"
+    mkdir -p tmp.interactive.config/fish
+    or die "Couldn't create tmp.interactive.config/fish"
     cat $XDG_CONFIG_HOME/fish/config.fish interactive.config > tmp.interactive.config/fish/config.fish
     or die "Couldn't create tmp.interactive.config/fish/config.fish"
 
@@ -23,15 +26,15 @@ function test_file
     begin
         set -lx XDG_CONFIG_HOME $PWD/tmp.interactive.config
         set -lx TERM dumb
-        expect -n -c 'source interactive.expect.rc' -f $file >$file.tmp.out ^$file.tmp.err
+        expect -n -c 'source interactive.expect.rc' -f $file > $file.tmp.out ^ $file.tmp.err
     end
     set -l tmp_status $status
     set -l res ok
     mv -f interactive.tmp.log $file.tmp.log
 
-    diff $file.tmp.out $file.out >/dev/null
+    diff $file.tmp.out $file.out > /dev/null
     set -l out_status $status
-    diff $file.tmp.err $file.err >/dev/null
+    diff $file.tmp.err $file.err > /dev/null
     set -l err_status $status
     set -l exp_status (cat $file.status)[1]
 

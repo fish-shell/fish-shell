@@ -1,10 +1,10 @@
-complete -c nmcli -s t -l terse   -d 'Output is terse'
-complete -c nmcli -s p -l pretty  -d 'Output is pretty'
-complete -c nmcli -s m -l mode    -xa 'tabular multiline' -d 'Switch between tabular and multiline mode'
-complete -c nmcli -s f -l fields  -xa 'all common' -d 'Specify the output fields'
-complete -c nmcli -s e -l escape  -xa 'yes no' -d 'Whether to escape ":" and "\\" characters'
+complete -c nmcli -s t -l terse -d 'Output is terse'
+complete -c nmcli -s p -l pretty -d 'Output is pretty'
+complete -c nmcli -s m -l mode -xa 'tabular multiline' -d 'Switch between tabular and multiline mode'
+complete -c nmcli -s f -l fields -xa 'all common' -d 'Specify the output fields'
+complete -c nmcli -s e -l escape -xa 'yes no' -d 'Whether to escape ":" and "\\" characters'
 complete -c nmcli -s v -l version -d 'Show nmcli version'
-complete -c nmcli -s h -l help    -d 'Print help information'
+complete -c nmcli -s h -l help -d 'Print help information'
 complete -c nmcli -d 'Command-line tool to control NetworkManager' -x
 
 complete -c nmcli -xa nm -n '__fish_use_subcommand' -d 'Inquiry and change the state of NM' -x

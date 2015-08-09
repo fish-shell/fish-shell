@@ -5,10 +5,10 @@ function __fish_commandline_test
     for i in (commandline -poc)
         switch $i
             case -f --f --fu --fun --func --funct --functi --functio --function
-            set is_function yes
+                set is_function yes
 
             case --
-            break
+                break
 
 
         end
@@ -16,7 +16,7 @@ function __fish_commandline_test
 
     switch $is_function
         case yes
-        return 0
+            return 0
     end
     return 1
 

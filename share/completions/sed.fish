@@ -5,7 +5,8 @@
 # Test if we are using GNU sed
 
 set -l is_gnu
-sed --version >/dev/null ^/dev/null; and set is_gnu --is-gnu
+sed --version > /dev/null ^ /dev/null
+and set is_gnu --is-gnu
 
 # Shared ls switches
 
@@ -16,23 +17,23 @@ __fish_gnu_complete -c sed -s i -l in-place --description "Edit files in place" 
 
 if test -n "$is_gnu"
 
-	# GNU specific features
+    # GNU specific features
 
-	complete -c sed -l silent --description "Silent mode"
-	complete -c sed -s l -l line-length -x --description "Specify line-length"
-	complete -c sed -l posix --description "Disable all GNU extensions"
-	complete -c sed -s r -l regexp-extended --description "Use extended regexp"
-	complete -c sed -s s -l separate --description "Consider files as separate"
-	complete -c sed -s u -l unbuffered --description "Use minimal IO buffers"
-	complete -c sed -l help --description "Display help and exit"
-	complete -c sed -s V -l version --description "Display version and exit"
+    complete -c sed -l silent --description "Silent mode"
+    complete -c sed -s l -l line-length -x --description "Specify line-length"
+    complete -c sed -l posix --description "Disable all GNU extensions"
+    complete -c sed -s r -l regexp-extended --description "Use extended regexp"
+    complete -c sed -s s -l separate --description "Consider files as separate"
+    complete -c sed -s u -l unbuffered --description "Use minimal IO buffers"
+    complete -c sed -l help --description "Display help and exit"
+    complete -c sed -s V -l version --description "Display version and exit"
 
 else
 
-	# If not a GNU system, assume we have standard BSD ls features instead
+    # If not a GNU system, assume we have standard BSD ls features instead
 
-	complete -c sed -s E --description "Use extended regexp"
-	complete -c sed -s a --description "Delay opening files until a command containing the related 'w' function is applied"
-	complete -c sed -s l --description "Use line buffering"
+    complete -c sed -s E --description "Use extended regexp"
+    complete -c sed -s a --description "Delay opening files until a command containing the related 'w' function is applied"
+    complete -c sed -s l --description "Use line buffering"
 
 end

@@ -5,30 +5,30 @@
 # https://github.com/fish-shell/fish-shell/tree/master/share/completions
 
 function __fish_npm_needs_command
-  set cmd (commandline -opc)
+    set cmd (commandline -opc)
 
-  if [ (count $cmd) -eq 1 -a $cmd[1] = 'npm' ]
-    return 0
-  end
+    if [ (count $cmd) -eq 1 -a $cmd[1] = 'npm' ]
+        return 0
+    end
 
-  return 1
+    return 1
 end
 
 function __fish_npm_using_command
-  set cmd (commandline -opc)
+    set cmd (commandline -opc)
 
-  if [ (count $cmd) -gt 1 ]
-    if [ $argv[1] = $cmd[2] ]
-      return 0
+    if [ (count $cmd) -gt 1 ]
+        if [ $argv[1] = $cmd[2] ]
+            return 0
+        end
     end
-  end
 
-  return 1
+    return 1
 end
 
 # return everything that can be used with the npm config get/set commands
 function __fish_npm_settings
-  command npm config ls -l | command grep -o '.* =' | command tr -d '; ' | command tr -d ' ='
+    command npm config ls -l | command grep -o '.* =' | command tr -d '; ' | command tr -d ' ='
 end
 
 # cache
@@ -39,13 +39,13 @@ complete -f -c npm -n '__fish_npm_using_command cache' -a 'ls' -d 'Show the data
 
 # config
 for c in 'c' 'config'
-  complete -f -c npm -n "__fish_npm_needs_command" -a "$c" -d 'Manage the npm configuration files'
-  complete -f -c npm -n "__fish_npm_using_command $c" -a 'set' -d 'Sets the config key to the value'
-  complete -f -c npm -n "__fish_npm_using_command $c" -a 'get' -d 'Echo the config value to stdout'
-  complete -f -c npm -n "__fish_npm_using_command $c" -a 'delete' -d 'Deletes the key from all configuration files'
-  complete -f -c npm -n "__fish_npm_using_command $c" -a 'list' -d 'Show all the config settings'
-  complete -f -c npm -n "__fish_npm_using_command $c" -a 'ls' -d 'Show all the config settings'
-  complete -f -c npm -n "__fish_npm_using_command $c" -a 'edit' -d 'Opens the config file in an editor'
+    complete -f -c npm -n "__fish_npm_needs_command" -a "$c" -d 'Manage the npm configuration files'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a 'set' -d 'Sets the config key to the value'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a 'get' -d 'Echo the config value to stdout'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a 'delete' -d 'Deletes the key from all configuration files'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a 'list' -d 'Show all the config settings'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a 'ls' -d 'Show all the config settings'
+    complete -f -c npm -n "__fish_npm_using_command $c" -a 'edit' -d 'Opens the config file in an editor'
 end
 # get, set also exist as shorthands
 complete -f -c npm -n "__fish_npm_needs_command" -a 'get' -d 'Echo the config value to stdout'
@@ -71,12 +71,12 @@ end
 
 # list
 for c in 'la' 'list' 'll' 'ls'
-  complete -f -c npm -n '__fish_npm_needs_command' -a "$c" -d 'List installed packages'
-  complete -f -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'List packages in the global install prefix instead of in the current project'
-  complete -f -c npm -n "__fish_npm_using_command $c" -l json -d 'Show information in JSON format'
-  complete -f -c npm -n "__fish_npm_using_command $c" -l long -d 'Show extended information'
-  complete -f -c npm -n "__fish_npm_using_command $c" -l parseable -d 'Show parseable output instead of tree view'
-  complete -x -c npm -n "__fish_npm_using_command $c" -l depth -d 'Max display depth of the dependency tree'
+    complete -f -c npm -n '__fish_npm_needs_command' -a "$c" -d 'List installed packages'
+    complete -f -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'List packages in the global install prefix instead of in the current project'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l json -d 'Show information in JSON format'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l long -d 'Show extended information'
+    complete -f -c npm -n "__fish_npm_using_command $c" -l parseable -d 'Show parseable output instead of tree view'
+    complete -x -c npm -n "__fish_npm_using_command $c" -l depth -d 'Max display depth of the dependency tree'
 end
 
 # owner

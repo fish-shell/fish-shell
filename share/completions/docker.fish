@@ -7,26 +7,26 @@
 #
 
 function __fish_docker_using_command
-  set cmd (commandline -opc)
-  if [ (count $cmd) -gt 1 ]
-    if [ $argv[1] = $cmd[2] ]
-      return 0
+    set cmd (commandline -opc)
+    if [ (count $cmd) -gt 1 ]
+        if [ $argv[1] = $cmd[2] ]
+            return 0
+        end
     end
-  end
-  return 1
+    return 1
 end
 
 function __fish_docker_all_containers --description "Show all containers"
-  command docker ps -q -a
+    command docker ps -q -a
 end
 
 
 function __fish_docker_start_containers --description "Show the running containers"
-  command docker ps -q
+    command docker ps -q
 end
 
 function __fish_docker_stop_containers --description "Show the exited containers"
-  command docker ps -a | grep "Exit" | awk '{ print $1 }'
+    command docker ps -a | grep "Exit" | awk '{ print $1 }'
 end
 
 # All docker commands
@@ -68,13 +68,13 @@ complete -c docker -n '__fish_use_subcommand' -xa wait --description "Block unti
 # docker ps
 #
 complete -c docker -f -n '__fish_docker_using_command ps' -a '(__fish_docker_all_containers)' --description "Docker container"
-complete -c docker -s a -l all            --description "Show all containers. Only running containers are shown by default."
-complete -c docker -s q -l quiet==false   --description "Only display numeric IDs"
-complete -c docker -s s -l size=false     --description "Display sizes"
-complete -c docker -s n                   --description "Show n last created containers, include non-running ones. [-1]"
-complete -c docker      -l before-id=""   --description "Show only container created before Id, include non-running ones."
-complete -c docker      -l no-trunc=false --description "Show all containers. Only running containers are shown by default."
-complete -c docker      -l since-id=""    --description "Show only containers created since Id, include non-running ones."
+complete -c docker -s a -l all --description "Show all containers. Only running containers are shown by default."
+complete -c docker -s q -l quiet==false --description "Only display numeric IDs"
+complete -c docker -s s -l size=false --description "Display sizes"
+complete -c docker -s n --description "Show n last created containers, include non-running ones. [-1]"
+complete -c docker -l before-id="" --description "Show only container created before Id, include non-running ones."
+complete -c docker -l no-trunc=false --description "Show all containers. Only running containers are shown by default."
+complete -c docker -l since-id="" --description "Show only containers created since Id, include non-running ones."
 
 #
 # docker start

@@ -44,8 +44,7 @@ complete -c scss -l sass -d "Use the indented Sass syntax."
 #                                        file: always absolute file URIs
 #                                        inline: include the source text in the sourcemap
 #                                        none: no sourcemaps
-complete -c scss -l sourcemap -x -A -d "How to link generated output to the source files." -a \
-"auto\t'(default) relative paths where possible, file URIs elsewhere'
+complete -c scss -l sourcemap -x -A -d "How to link generated output to the source files." -a "auto\t'(default) relative paths where possible, file URIs elsewhere'
 file\t'always absolute file URIs'
 inline\t'include the source text in the sourcemap'
 none\t'no sourcemaps'"

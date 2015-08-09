@@ -21,9 +21,11 @@ complete -c gcc -o std --description "Standard mode" -x -a '
 	gnu++98\t"ISO C++98 plus GNU extentions"
 '
 
-for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17;
-	complete -c gcc -o ftemplate-depth-$i --description "Set maximum template depth"
-end;
+for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17
+
+    complete -c gcc -o ftemplate-depth-$i --description "Set maximum template depth"
+end
+
 
 complete -c gcc -s o --description 'Place output in file' -r
 complete -c gcc -o aux-info --description 'Output to the given filename prototyped declarations for all functions declared and/or defined in a translation unit, including those in header files' -r

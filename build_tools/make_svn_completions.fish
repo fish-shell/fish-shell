@@ -5,4 +5,4 @@
 
 . build_tools/make_vcs_completions_generic.fish
 
-write_completions svn >share/completions/svn.fish
+write_completions svn > share/completions/svn.fish

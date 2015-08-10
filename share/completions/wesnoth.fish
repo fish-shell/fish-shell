@@ -1,9 +1,5 @@
-#
-# Command specific completions for the wesnoth command.
-# These completions where generated from the commands
-# man page by the make_completions.py script, and
-# have been hand edited since.
-#
+# Command specific completions for the wesnoth command from The Battle For Wesnoth (a strategy game)
+# http://www.wesnoth.org/
 
 complete -c wesnoth -l bpp --description 'Number sets BitsPerPixel value'
 complete -c wesnoth -l compress --description '<infile> <outfile> compresses a savefile (infile) that is in text WML format into binary WML format (outfile)'
@@ -24,11 +20,11 @@ complete -c wesnoth -s v -l version --description 'Shows the version number and 
 complete -c wesnoth -s w -l windowed --description 'Runs the game in windowed mode'
 complete -c wesnoth -l no-delay --description 'Runs the game without any delays for graphic benchmarking'
 complete -c wesnoth -l exit-at-end --description 'Exits once the scenario is over, without displaying victory/defeat dialog which requires the user to click OK'
-#complete -c wesnoth -l algorithm<number> --description 'Selects a non-standard algorithm to be used by the AI controller for this side'
-#complete -c wesnoth -l controller<number> --description 'Selects the controller for this side'
+complete -c wesnoth -l algorithm --description 'Selects a non-standard algorithm to be used by the AI controller for this side'
+complete -c wesnoth -l controller --description 'Selects the controller for this side'
 complete -c wesnoth -l era --description 'Use this option to play in the selected era instead of the "Default" era'
 complete -c wesnoth -l nogui --description 'Runs the game without the GUI'
-complete -c wesnoth -l parm<number> --description 'Sets additional parameters for this side'
+complete -c wesnoth -l parm --description 'Sets additional parameters for this side'
 complete -c wesnoth -l scenario --description 'Selects a multiplayer scenario'
-complete -c wesnoth -l side<number> --description 'Selects a faction of the current era for this side'
+complete -c wesnoth -l side --description 'Selects a faction of the current era for this side'
 complete -c wesnoth -l turns --description 'Sets the number of turns for the chosen scenario'

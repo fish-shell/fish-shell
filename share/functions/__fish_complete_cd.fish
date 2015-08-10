@@ -1,53 +1,24 @@
 function __fish_complete_cd -d "Completions for the cd command"
-	#
-	# We can't simply use __fish_complete_directories because of the CDPATH
-	#
-	set -l wd $PWD
-
-	# Check if CDPATH is set
-
-	set -l mycdpath
-
-	if test -z $CDPATH[1]
-		set mycdpath .
-	else
-		set mycdpath $CDPATH
-	end
-
-	# Note how this works: we evaluate $ctoken*/
-	# That trailing slash ensures that we only expand directories
-
-	set -l ctoken (commandline -ct)
-	if echo $ctoken | __fish_sgrep '^/\|^\./\|^\.\./\|^~/' >/dev/null
-		# This is an absolute search path
-		# Squelch descriptions per issue 254
-		eval printf '\%s\\n' $ctoken\*/
-	else
-		# This is a relative search path
-		# Iterate over every directory in CDPATH
-		# and check for possible completions
-
-		for i in $mycdpath
-			# Move to the initial directory first,
-			# in case the CDPATH directory is relative
-			builtin cd $wd ^/dev/null
-			builtin cd $i ^/dev/null
-			
-			if test $status -ne 0
-				# directory does not exists or missing permission
-				continue
-			end
-
-			# What we would really like to do is skip descriptions if all
-			# valid paths are in the same directory, but we don't know how to
-			# do that yet; so instead skip descriptions if CDPATH is just .
-			if test "$mycdpath" = .
-				eval printf '"%s\n"' $ctoken\*/
-			else
-				eval printf '"%s\tin "'$i'"\n"' $ctoken\*/
-			end
+	set -l cdpath $CDPATH
+	[ -z "$cdpath" ]; and set cdpath "."
+	# Remove the real path to "." (i.e. $PWD) from cdpath if we're in it
+	# so it doesn't get printed in the descriptions
+	set -l ind
+	if begin; set ind (contains -i -- $PWD $cdpath)
+		      and contains -- "." $cdpath
+	          end
+			  set -e cdpath[$ind]
+    end
+	for i in $cdpath
+		set -l desc
+		# Don't show description for current directory
+		# and replace $HOME with "~"
+		[ $i = "." ]; or set -l desc (string replace -r -- "^$HOME" "~" "$i")
+		pushd $i
+		for d in (commandline -ct)*/
+			# Check if it's accessible - the glob only matches directories
+			[ -x $d ]; and printf "%s/\t%s\n" $d $desc
 		end
+		popd
 	end
-
-	builtin cd $wd ^/dev/null
 end

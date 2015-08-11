@@ -21,11 +21,6 @@ typedef enum
 } fish_message_type_t;
 
 /**
-   The size of the buffer used for reading from the file
-*/
-#define ENV_UNIVERSAL_BUFFER_SIZE 1024
-
-/**
    Callback data, reflecting a change in universal variables
 */
 struct callback_data_t

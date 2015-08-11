@@ -31,17 +31,7 @@ enum
     FISH_COLOR_NORMAL,
     FISH_COLOR_IGNORE,
     FISH_COLOR_RESET
-}
-;
-
-/**
-   The value to send to set_color to tell it to use a bold font
-*/
-#define FISH_COLOR_BOLD 0x80
-/**
-   The value to send to set_color to tell it to underline the text
-*/
-#define FISH_COLOR_UNDERLINE 0x100
+};
 
 /**
    Sets the fg and bg color. May be called as often as you like, since

@@ -116,11 +116,6 @@ static bool should_test_function(const char *func_name)
 #define LAPS 50
 
 /**
-   The result of one of the test passes
-*/
-#define NUM_ANS L"-7 99999999 1234567 deadbeef DEADBEEFDEADBEEF"
-
-/**
    Number of encountered errors
 */
 static int err_count=0;

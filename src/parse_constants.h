@@ -134,6 +134,7 @@ enum parse_error_code_t
     //tokenizer errors
     parse_error_tokenizer_unterminated_quote,
     parse_error_tokenizer_unterminated_subshell,
+    parse_error_tokenizer_unterminated_slice,
     parse_error_tokenizer_unterminated_escape,
     parse_error_tokenizer_other,
 

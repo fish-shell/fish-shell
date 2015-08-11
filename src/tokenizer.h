@@ -79,13 +79,16 @@ struct tok_t
     /* If an error, this is the error code */
     enum tokenizer_error error;
     
+    /* If an error, this is the offset of the error within the token. A value of 0 means it occurred at 'offset' */
+    size_t error_offset;
+    
     /* Offset of the token */
     size_t offset;
     
     /* Length of the token */
     size_t length;
     
-    tok_t() : type(TOK_NONE), error(TOK_ERROR_NONE), offset(-1), length(-1) {}
+    tok_t() : type(TOK_NONE), error(TOK_ERROR_NONE), error_offset(-1), offset(-1), length(-1) {}
 };
 
 /**
@@ -119,13 +122,15 @@ class tokenizer_t
     bool show_blank_lines;
     /** Last error */
     tokenizer_error error;
+    /** Last error offset, in "global" coordinates (relative to orig_buff) */
+    size_t global_error_offset;
     /* Whether we are squashing errors */
     bool squash_errors;
 
     /* Whether to continue the previous line after the comment */
     bool continue_line_after_comment;
     
-    void call_error(enum tokenizer_error error_type, const wchar_t *error_message);
+    void call_error(enum tokenizer_error error_type, const wchar_t *where, const wchar_t *error_message);
     void read_string();
     void read_comment();
     void tok_next();

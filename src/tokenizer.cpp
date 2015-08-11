@@ -21,7 +21,7 @@ segments.
 #include "tokenizer.h"
 
 /* Wow what a hack */
-#define TOK_CALL_ERROR(t, e, x) do { (t)->call_error((e), (t)->squash_errors ? L"" : (x)); } while (0)
+#define TOK_CALL_ERROR(t, e, x, where) do { (t)->call_error((e), where, (t)->squash_errors ? L"" : (x)); } while (0)
 
 /**
    Error string for unexpected end of string
@@ -38,6 +38,12 @@ segments.
 */
 #define SQUARE_BRACKET_ERROR _( L"Unexpected end of string, square brackets do not match" )
 
+/**
+ Error string for unterminated escape (backslash without continuation)
+ */
+#define UNTERMINATED_ESCAPE_ERROR _( L"Unexpected end of string, incomplete escape sequence" )
+
+
 
 /**
    Error string for invalid redirections
@@ -52,14 +58,15 @@ segments.
 /**
    Set the latest tokens string to be the specified error message
 */
-void tokenizer_t::call_error(enum tokenizer_error error_type, const wchar_t *error_message)
+void tokenizer_t::call_error(enum tokenizer_error error_type, const wchar_t *where, const wchar_t *error_message)
 {
     this->last_type = TOK_ERROR;
     this->error = error_type;
+    this->global_error_offset = where ? where - this->orig_buff : 0;
     this->last_token = error_message;
 }
 
-tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(b), orig_buff(b), last_type(TOK_NONE), last_pos(0), has_next(false), accept_unfinished(false), show_comments(false), show_blank_lines(false), error(TOK_ERROR_NONE), squash_errors(false), continue_line_after_comment(false)
+tokenizer_t::tokenizer_t(const wchar_t *b, tok_flags_t flags) : buff(b), orig_buff(b), last_type(TOK_NONE), last_pos(0), has_next(false), accept_unfinished(false), show_comments(false), show_blank_lines(false), error(TOK_ERROR_NONE), global_error_offset(-1), squash_errors(false), continue_line_after_comment(false)
 {
     assert(b != NULL);
 
@@ -79,14 +86,23 @@ bool tokenizer_t::next(struct tok_t *result)
     {
         return false;
     }
+    
+    const size_t current_pos = this->buff - this->orig_buff;
+    
     result->text = this->last_token;
     result->type = this->last_type;
-    result->offset = last_pos;
+    result->offset = this->last_pos;
     result->error = this->last_type == TOK_ERROR ? this->error : TOK_ERROR_NONE;
     assert(this->buff >= this->orig_buff);
     
+    /* Compute error offset */
+    result->error_offset = 0;
+    if (this->last_type == TOK_ERROR && this->global_error_offset >= this->last_pos && this->global_error_offset < current_pos)
+    {
+        result->error_offset = this->global_error_offset - this->last_pos;
+    }
+    
     assert(this->buff >= this->orig_buff);
-    size_t current_pos = this->buff - this->orig_buff;
     result->length = current_pos >= this->last_pos ? current_pos - this->last_pos : 0;
     
     this->tok_next();
@@ -140,12 +156,15 @@ static int myal(wchar_t c)
 */
 void tokenizer_t::read_string()
 {
-    const wchar_t *start;
     long len;
     int do_loop=1;
-    int paran_count=0;
+    size_t paran_count=0;
+    
+    // up to 96 open parens, before we give up on good error reporting
+    const size_t paran_offsets_max = 96;
+    size_t paran_offsets[paran_offsets_max];
 
-    start = this->buff;
+    const wchar_t * const start = this->buff;
     bool is_first = true;
 
     enum tok_mode_t
@@ -162,12 +181,13 @@ void tokenizer_t::read_string()
         {
             if (*this->buff == L'\\')
             {
+                const wchar_t *error_location = this->buff;
                 this->buff++;
                 if (*this->buff == L'\0')
                 {
                     if ((!this->accept_unfinished))
                     {
-                        TOK_CALL_ERROR(this, TOK_UNTERMINATED_ESCAPE, QUOTE_ERROR);
+                        TOK_CALL_ERROR(this, TOK_UNTERMINATED_ESCAPE, UNTERMINATED_ESCAPE_ERROR, error_location);
                         return;
                     }
                     else
@@ -191,6 +211,7 @@ void tokenizer_t::read_string()
                         case L'(':
                         {
                             paran_count=1;
+                            paran_offsets[0] = this->buff - this->orig_buff;
                             mode = mode_subshell;
                             break;
                         }
@@ -213,11 +234,12 @@ void tokenizer_t::read_string()
                             }
                             else
                             {
+                                const wchar_t *error_loc = this->buff;
                                 this->buff += wcslen(this->buff);
 
                                 if (! this->accept_unfinished)
                                 {
-                                    TOK_CALL_ERROR(this, TOK_UNTERMINATED_QUOTE, QUOTE_ERROR);
+                                    TOK_CALL_ERROR(this, TOK_UNTERMINATED_QUOTE, QUOTE_ERROR, error_loc);
                                     return;
                                 }
                                 do_loop = 0;
@@ -239,6 +261,7 @@ void tokenizer_t::read_string()
 
                 case mode_array_brackets_and_subshell:
                 case mode_subshell:
+                {
                     switch (*this->buff)
                     {
                         case L'\'':
@@ -251,10 +274,11 @@ void tokenizer_t::read_string()
                             }
                             else
                             {
+                                const wchar_t *error_loc = this->buff;
                                 this->buff += wcslen(this->buff);
                                 if ((!this->accept_unfinished))
                                 {
-                                    TOK_CALL_ERROR(this, TOK_UNTERMINATED_QUOTE, QUOTE_ERROR);
+                                    TOK_CALL_ERROR(this, TOK_UNTERMINATED_QUOTE, QUOTE_ERROR, error_loc);
                                     return;
                                 }
                                 do_loop = 0;
@@ -264,9 +288,14 @@ void tokenizer_t::read_string()
                         }
 
                         case L'(':
+                            if (paran_count < paran_offsets_max)
+                            {
+                                paran_offsets[paran_count] = this->buff - this->orig_buff;
+                            }
                             paran_count++;
                             break;
                         case L')':
+                            assert(paran_count > 0);
                             paran_count--;
                             if (paran_count == 0)
                             {
@@ -278,12 +307,15 @@ void tokenizer_t::read_string()
                             break;
                     }
                     break;
+                }
 
                 case mode_array_brackets:
+                {
                     switch (*this->buff)
                     {
                         case L'(':
                             paran_count=1;
+                            paran_offsets[0] = this->buff - this->orig_buff;
                             mode = mode_array_brackets_and_subshell;
                             break;
 
@@ -296,6 +328,7 @@ void tokenizer_t::read_string()
                             break;
                     }
                     break;
+                }
             }
         }
 
@@ -312,12 +345,27 @@ void tokenizer_t::read_string()
         switch (mode)
         {
             case mode_subshell:
-                TOK_CALL_ERROR(this, TOK_UNTERMINATED_SUBSHELL, PARAN_ERROR);
+            {
+                // Determine the innermost opening paran offset by interrogating paran_offsets
+                assert(paran_count > 0);
+                size_t offset_of_open_paran = 0;
+                if (paran_count <= paran_offsets_max)
+                {
+                    offset_of_open_paran = paran_offsets[paran_count - 1];
+                }
+                
+                TOK_CALL_ERROR(this, TOK_UNTERMINATED_SUBSHELL, PARAN_ERROR, this->orig_buff + offset_of_open_paran);
                 break;
+            }
+            
             case mode_array_brackets:
             case mode_array_brackets_and_subshell:
-                TOK_CALL_ERROR(this, TOK_UNTERMINATED_SUBSHELL, SQUARE_BRACKET_ERROR); // TOK_UNTERMINATED_SUBSHELL is a lie but nobody actually looks at it
+            {
+                size_t offset_of_bracket = 0;
+                TOK_CALL_ERROR(this, TOK_UNTERMINATED_SUBSHELL, SQUARE_BRACKET_ERROR, this->orig_buff + offset_of_bracket); // TOK_UNTERMINATED_SUBSHELL is a lie but nobody actually looks at it
                 break;
+            }
+                
             default:
                 assert(0 && "Unexpected mode in read_string");
                 break;
@@ -612,7 +660,7 @@ void tokenizer_t::tok_next()
             size_t consumed = read_redirection_or_fd_pipe(this->buff, &mode, &fd);
             if (consumed == 0 || fd < 0)
             {
-                TOK_CALL_ERROR(this, TOK_OTHER, REDIRECT_ERROR);
+                TOK_CALL_ERROR(this, TOK_OTHER, REDIRECT_ERROR, this->buff);
             }
             else
             {
@@ -626,6 +674,7 @@ void tokenizer_t::tok_next()
         default:
         {
             /* Maybe a redirection like '2>&1', maybe a pipe like 2>|, maybe just a string */
+            const wchar_t *error_location = this->buff;
             size_t consumed = 0;
             enum token_type mode = TOK_NONE;
             int fd = -1;
@@ -637,7 +686,7 @@ void tokenizer_t::tok_next()
                 /* It looks like a redirection or a pipe. But we don't support piping fd 0. Note that fd 0 may be -1, indicating overflow; but we don't treat that as a tokenizer error. */
                 if (mode == TOK_PIPE && fd == 0)
                 {
-                    TOK_CALL_ERROR(this, TOK_OTHER, PIPE_ERROR);
+                    TOK_CALL_ERROR(this, TOK_OTHER, PIPE_ERROR, error_location);
                 }
                 else
                 {

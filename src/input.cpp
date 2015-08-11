@@ -555,7 +555,7 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
        has_commands: there are shell commands that need to be evaluated */
     bool has_commands = false, has_functions = false;
 
-    for (wcstring_list_t::const_iterator it = m.commands.begin(), end = m.commands.end(); it != end; it++)
+    for (wcstring_list_t::const_iterator it = m.commands.begin(), end = m.commands.end(); it != end; ++it)
     {
         if (input_function_get_code(*it) != -1)
             has_functions = true;
@@ -584,7 +584,7 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
     else if (has_functions && !has_commands)
     {
         /* functions are added at the head of the input queue */
-        for (wcstring_list_t::const_reverse_iterator it = m.commands.rbegin(), end = m.commands.rend (); it != end; it++)
+        for (wcstring_list_t::const_reverse_iterator it = m.commands.rbegin(), end = m.commands.rend(); it != end; ++it)
         {
             wchar_t code = input_function_get_code(*it);
             input_function_push_args(code);
@@ -599,7 +599,7 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
            -f execute), we won't see that until all other commands have also
            been run. */
         int last_status = proc_get_last_status();
-        for (wcstring_list_t::const_iterator it = m.commands.begin(), end = m.commands.end(); it != end; it++)
+        for (wcstring_list_t::const_iterator it = m.commands.begin(), end = m.commands.end(); it != end; ++it)
         {
             parser_t::principal_parser().eval(it->c_str(), io_chain_t(), TOP);
         }

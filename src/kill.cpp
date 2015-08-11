@@ -20,17 +20,6 @@
 #include "exec.h"
 #include "path.h"
 
-/**
-   Maximum entries in killring
-*/
-#define KILL_MAX 8192
-
-/** Last kill string */
-//static ll_node_t *kill_last=0;
-
-/** Current kill string */
-//static ll_node_t *kill_current=0;
-
 /** Kill ring */
 typedef std::list<wcstring> kill_list_t;
 static kill_list_t kill_list;

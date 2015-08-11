@@ -58,35 +58,6 @@
 #define COMPLETE_VAR_DESC_VAL _( L"Variable: %ls" )
 
 /**
-   The maximum number of commands on which to perform description
-   lookup. The lookup process is quite time consuming, so this should
-   be set to a pretty low number.
-*/
-#define MAX_CMD_DESC_LOOKUP 10
-
-/**
-   Condition cache value returned from hashtable when this condition
-   has not yet been tested. This value is NULL, so that when the hash
-   table returns NULL, this wil be seen as an untested condition.
-*/
-#define CC_NOT_TESTED 0
-
-/**
-   Condition cache value returned from hashtable when the condition is
-   met. This can be any value, that is a valid pointer, and that is
-   different from CC_NOT_TESTED and CC_FALSE.
-*/
-#define CC_TRUE L"true"
-
-/**
-   Condition cache value returned from hashtable when the condition is
-   not met. This can be any value, that is a valid pointer, and that
-   is different from CC_NOT_TESTED and CC_TRUE.
-
-*/
-#define CC_FALSE L"false"
-
-/**
    The special cased translation macro for completions. The empty
    string needs to be special cased, since it can occur, and should
    not be translated. (Gettext returns the version information as the

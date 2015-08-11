@@ -30,11 +30,6 @@ typedef std::string cstring;
 
 const file_id_t kInvalidFileID = {(dev_t)-1LL, (ino_t)-1LL, (uint64_t)-1LL, -1, -1, (uint32_t)-1};
 
-/**
-   Minimum length of the internal covnersion buffers
-*/
-#define TMP_LEN_MIN 256
-
 #ifndef PATH_MAX
 #ifdef MAXPATHLEN
 #define PATH_MAX MAXPATHLEN

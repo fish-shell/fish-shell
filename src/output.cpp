@@ -31,11 +31,6 @@
 #include "common.h"
 #include "output.h"
 
-/**
- Number of color names in the col array
- */
-#define FISH_COLORS (sizeof(col)/sizeof(wchar_t *))
-
 static int writeb_internal(char c);
 
 

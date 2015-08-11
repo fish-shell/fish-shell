@@ -30,20 +30,9 @@ The fish parser. Contains functions for parsing and evaluating code.
 #include "parse_execution.h"
 
 /**
-   Error message for tokenizer error. The tokenizer message is
-   appended to this message.
-*/
-#define TOK_ERR_MSG _( L"Tokenizer error: '%ls'")
-
-/**
    Error for evaluating in illegal scope
 */
 #define INVALID_SCOPE_ERR_MSG _( L"Tried to evaluate commands using invalid block type '%ls'" )
-
-/**
-   Error for wrong token type
-*/
-#define UNEXPECTED_TOKEN_ERR_MSG _( L"Unexpected token of type '%ls'")
 
 /**
    While block description

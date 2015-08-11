@@ -29,24 +29,6 @@
 #include "common.h"
 #include "wutil.h"
 
-/**
-   Minimum allocated size for data structures. Used to avoid excessive
-   memory allocations for lists, hash tables, etc, which are nearly
-   empty.
-*/
-#define MIN_SIZE 32
-
-/**
-   Maximum number of characters that can be inserted using a single
-   call to sb_printf. This is needed since vswprintf doesn't tell us
-   what went wrong. We don't know if we ran out of space or something
-   else went wrong. We assume that any error is an out of memory-error
-   and try again until we reach this size.  After this size has been
-   reached, it is instead assumed that something was wrong with the
-   format string.
-*/
-#define SB_MAX_SIZE (128*1024*1024)
-
 int wcsfilecmp(const wchar_t *a, const wchar_t *b)
 {
     CHECK(a, 0);

@@ -472,6 +472,26 @@ static void test_tok()
             err(L"Too few tokens returned from tokenizer");
         }
     }
+    
+    /* Test some errors */
+    {
+        tok_t token;
+        tokenizer_t t(L"abc\\", 0);
+        do_test(t.next(&token));
+        do_test(token.type == TOK_ERROR);
+        do_test(token.error == TOK_UNTERMINATED_ESCAPE);
+        do_test(token.error_offset == 3);
+    }
+    
+    {
+        tok_t token;
+        tokenizer_t t(L"abc defg(hij (klm)", 0);
+        do_test(t.next(&token));
+        do_test(t.next(&token));
+        do_test(token.type == TOK_ERROR);
+        do_test(token.error == TOK_UNTERMINATED_SUBSHELL);
+        do_test(token.error_offset == 4);
+    }
 
     /* Test redirection_type_for_string */
     if (redirection_type_for_string(L"<") != TOK_REDIRECT_IN) err(L"redirection_type_for_string failed on line %ld", (long)__LINE__);

@@ -163,6 +163,9 @@ void tokenizer_t::read_string()
     // up to 96 open parens, before we give up on good error reporting
     const size_t paran_offsets_max = 96;
     size_t paran_offsets[paran_offsets_max];
+    
+    // where the open bracket is
+    size_t offset_of_bracket = 0;
 
     const wchar_t * const start = this->buff;
     bool is_first = true;
@@ -219,7 +222,10 @@ void tokenizer_t::read_string()
                         case L'[':
                         {
                             if (this->buff != start)
+                            {
                                 mode = mode_array_brackets;
+                                offset_of_bracket = this->buff - this->orig_buff;
+                            }
                             break;
                         }
 
@@ -361,8 +367,7 @@ void tokenizer_t::read_string()
             case mode_array_brackets:
             case mode_array_brackets_and_subshell:
             {
-                size_t offset_of_bracket = 0;
-                TOK_CALL_ERROR(this, TOK_UNTERMINATED_SUBSHELL, SQUARE_BRACKET_ERROR, this->orig_buff + offset_of_bracket); // TOK_UNTERMINATED_SUBSHELL is a lie but nobody actually looks at it
+                TOK_CALL_ERROR(this, TOK_UNTERMINATED_SLICE, SQUARE_BRACKET_ERROR, this->orig_buff + offset_of_bracket);
                 break;
             }
                 

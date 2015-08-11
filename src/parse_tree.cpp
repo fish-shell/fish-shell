@@ -908,6 +908,10 @@ void parse_ll_t::report_tokenizer_error(const tok_t &tok)
         case TOK_UNTERMINATED_SUBSHELL:
             parse_error_code = parse_error_tokenizer_unterminated_subshell;
             break;
+            
+        case TOK_UNTERMINATED_SLICE:
+            parse_error_code = parse_error_tokenizer_unterminated_slice;
+            break;
 
         case TOK_UNTERMINATED_ESCAPE:
             parse_error_code = parse_error_tokenizer_unterminated_escape;

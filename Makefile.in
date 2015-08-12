@@ -797,14 +797,16 @@ obj:
 fish: $(FISH_OBJS) obj/fish.o $(PCRE2_LIB)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_OBJS) obj/fish.o $(LIBS) -o $@
 
-$(PCRE2_H) $(PCRE2_LIB):
+$(PCRE2_H):
 	(cd $(PCRE2_DIR) && ./configure $(PCRE2_CONFIG) && make)
+
+$(PCRE2_LIB): $(PCRE2_H)
 
 #
 # Build the fish_tests program.
 #
 
-fish_tests: $(FISH_TESTS_OBJS)
+fish_tests: $(FISH_TESTS_OBJS) $(PCRE2_LIB)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_TESTS_OBJS) $(LIBS) -o $@
 
 
@@ -812,7 +814,7 @@ fish_tests: $(FISH_TESTS_OBJS)
 # Build the fish_indent program.
 #
 
-fish_indent: $(FISH_INDENT_OBJS)
+fish_indent: $(FISH_INDENT_OBJS) $(PCRE2_LIB)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(FISH_INDENT_OBJS) $(LIBS) -o $@
 
 

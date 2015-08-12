@@ -399,6 +399,7 @@ static void builtin_missing_argument(parser_t &parser, const wchar_t *cmd, const
 #include "builtin_jobs.cpp"
 #include "builtin_set_color.cpp"
 #include "builtin_printf.cpp"
+#include "builtin_string.cpp"
 
 /* builtin_test lives in builtin_test.cpp */
 int builtin_test(parser_t &parser, wchar_t **argv);
@@ -4123,6 +4124,7 @@ static const builtin_data_t builtin_datas[]=
     { 		L"set_color",  &builtin_set_color, N_(L"Set the terminal color")   },
     { 		L"source",  &builtin_source, N_(L"Evaluate contents of file")   },
     { 		L"status",  &builtin_status, N_(L"Return status information about fish")  },
+    { 		L"string",  &builtin_string, N_(L"Manipulate strings")  },
     { 		L"switch",  &builtin_generic, N_(L"Conditionally execute a block of commands")   },
     { 		L"test",  &builtin_test, N_(L"Test a condition")   },
     { 		L"true",  &builtin_true, N_(L"Return a successful result") },

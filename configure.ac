@@ -24,6 +24,7 @@ conf_arg=$@
 AC_SUBST(HAVE_GETTEXT)
 AC_SUBST(HAVE_DOXYGEN)
 AC_SUBST(LDFLAGS_FISH)
+AC_SUBST(WCHAR_T_BITS)
 
 
 #
@@ -375,17 +376,16 @@ if test x$local_gettext != xno; then
   AC_CHECK_HEADERS([libintl.h])
 fi
 
-AC_CHECK_HEADER(
-  [regex.h],
-  [
-    AC_DEFINE(
-      [HAVE_REGEX_H],
-      [1],
-      [Define to 1 if you have the <regex.h> header file.]
-    )
-  ],
-  [AC_MSG_ERROR([Could not find the header regex.h, needed to build fish])]
-)
+
+#
+# Get the size in bits of wchar_t, needed for configuring the pcre2 build
+# and for code that #includes pcre2.h
+#
+
+AC_CHECK_SIZEOF(wchar_t)
+WCHAR_T_BITS=`expr 8 \* $ac_cv_sizeof_wchar_t`
+AC_DEFINE_UNQUOTED([WCHAR_T_BITS], [$WCHAR_T_BITS], [The size of wchar_t in bits.])
+
 
 #
 # On some platforms (Solaris 10) adding -std=c99 in turn requires that
@@ -784,6 +784,7 @@ if test "$have_working_getopt_long" = yes; then
 else
   AC_MSG_RESULT(no)
 fi
+
 
 # Check for Solaris curses tputs having fixed length parameter list.
 AC_MSG_CHECKING([if we are using non varargs tparm.])

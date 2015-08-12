@@ -1,0 +1,393 @@
+# This set of tests is for UTF-16 and UTF-32 support, including Unicode
+# properties. It is relevant only to the 16-bit and 32-bit libraries. The
+# output is different for each library, so there are separate output files.
+
+/ÃÃÃxxx/IB,utf,no_utf_check
+
+/abc/utf
+    Ã]
+
+/X(\C{3})/utf
+    X\x{11234}Y
+    X\x{11234}YZ
+
+/X(\C{4})/utf
+    X\x{11234}YZ
+    X\x{11234}YZW
+
+/X\C*/utf
+    XYZabcdce
+
+/X\C*?/utf
+    XYZabcde
+
+/X\C{3,5}/utf
+    Xabcdefg
+    X\x{11234}Y
+    X\x{11234}YZ
+    X\x{11234}\x{512}
+    X\x{11234}\x{512}YZ
+    X\x{11234}\x{512}\x{11234}Z
+
+/X\C{3,5}?/utf
+    Xabcdefg
+    X\x{11234}Y
+    X\x{11234}YZ
+    X\x{11234}\x{512}YZ
+    *** Failers
+    X\x{11234}
+
+/a\Cb/utf
+    aXb
+    a\nb
+
+/a\C\Cb/utf
+    a\x{12257}b
+    a\x{12257}\x{11234}b
+    ** Failers
+    a\x{100}b
+
+/ab\Cde/utf
+    abXde
+
+# Check maximum character size 
+
+/\x{ffff}/IB,utf
+
+/\x{10000}/IB,utf
+
+/\x{100}/IB,utf
+
+/\x{1000}/IB,utf
+
+/\x{10000}/IB,utf
+
+/\x{100000}/IB,utf
+
+/\x{10ffff}/IB,utf
+
+/[\x{ff}]/IB,utf
+
+/[\x{100}]/IB,utf
+
+/\x80/IB,utf
+
+/\xff/IB,utf
+
+/\x{D55c}\x{ad6d}\x{C5B4}/IB,utf
+    \x{D55c}\x{ad6d}\x{C5B4}
+
+/\x{65e5}\x{672c}\x{8a9e}/IB,utf
+    \x{65e5}\x{672c}\x{8a9e}
+
+/\x{80}/IB,utf
+
+/\x{084}/IB,utf
+
+/\x{104}/IB,utf
+
+/\x{861}/IB,utf
+
+/\x{212ab}/IB,utf
+
+# This one is here not because it's different to Perl, but because the way
+# the captured single-byte is displayed. (In Perl it becomes a character, and you
+# can't tell the difference.) 
+
+/X(\C)(.*)/utf
+    X\x{1234}
+    X\nabc
+
+# This one is here because Perl gives out a grumbly error message (quite
+# correctly, but that messes up comparisons). 
+
+/a\Cb/utf
+    *** Failers
+    a\x{100}b
+
+/[^ab\xC0-\xF0]/IB,utf
+    \x{f1}
+    \x{bf}
+    \x{100}
+    \x{1000}
+    *** Failers
+    \x{c0}
+    \x{f0}
+
+/Ä€{3,4}/IB,utf
+  \x{100}\x{100}\x{100}\x{100\x{100}
+
+/(\x{100}+|x)/IB,utf
+
+/(\x{100}*a|x)/IB,utf
+
+/(\x{100}{0,2}a|x)/IB,utf
+
+/(\x{100}{1,2}a|x)/IB,utf
+
+/\x{100}/IB,utf
+
+/a\x{100}\x{101}*/IB,utf
+
+/a\x{100}\x{101}+/IB,utf
+
+/[^\x{c4}]/IB
+
+/[\x{100}]/IB,utf
+    \x{100}
+    Z\x{100}
+    \x{100}Z
+    *** Failers
+
+/[\xff]/IB,utf
+    >\x{ff}<
+
+/[^\xff]/IB,utf
+
+/\x{100}abc(xyz(?1))/IB,utf
+
+/\777/I,utf
+  \x{1ff}
+  \777
+
+/\x{100}+\x{200}/IB,utf
+
+/\x{100}+X/IB,utf
+
+/^[\QÄ€\E-\QÅ\E/B,utf
+
+/X/utf
+    XX\x{d800}
+    XX\x{d800}\=no_utf_check
+    XX\x{da00}
+    XX\x{da00}\=no_utf_check
+    XX\x{dc00}
+    XX\x{dc00}\=no_utf_check
+    XX\x{de00}
+    XX\x{de00}\=no_utf_check
+    XX\x{dfff}
+    XX\x{dfff}\=no_utf_check
+    XX\x{110000}
+    XX\x{d800}\x{1234}
+
+/(*UTF16)\x{11234}/
+  abcd\x{11234}pqr
+
+/(*UTF)\x{11234}/I
+  abcd\x{11234}pqr
+
+/(*UTF-32)\x{11234}/
+  abcd\x{11234}pqr
+
+/(*UTF-32)\x{112}/
+  abcd\x{11234}pqr
+
+/(*CRLF)(*UTF16)(*BSR_UNICODE)a\Rb/I
+
+/(*CRLF)(*UTF32)(*BSR_UNICODE)a\Rb/I
+
+/\h/I,utf
+    ABC\x{09}
+    ABC\x{20}
+    ABC\x{a0}
+    ABC\x{1680}
+    ABC\x{180e}
+    ABC\x{2000}
+    ABC\x{202f}
+    ABC\x{205f}
+    ABC\x{3000}
+
+/\v/I,utf
+    ABC\x{0a}
+    ABC\x{0b}
+    ABC\x{0c}
+    ABC\x{0d}
+    ABC\x{85}
+    ABC\x{2028}
+
+/\h*A/I,utf
+    CDBABC
+    \x{2000}ABC
+
+/\R*A/I,bsr=unicode,utf
+    CDBABC
+    \x{2028}A
+
+/\v+A/I,utf
+
+/\s?xxx\s/I,utf
+
+/\sxxx\s/I,utf,tables=2
+    AB\x{85}xxx\x{a0}XYZ
+    AB\x{a0}xxx\x{85}XYZ
+
+/\S \S/I,utf,tables=2
+    \x{a2} \x{84}
+    A Z
+
+/a+/utf
+    a\x{123}aa\=offset=1
+    a\x{123}aa\=offset=2
+    a\x{123}aa\=offset=3
+    a\x{123}aa\=offset=4
+    a\x{123}aa\=offset=5
+    a\x{123}aa\=offset=6
+
+/\x{1234}+/Ii,utf
+
+/\x{1234}+?/Ii,utf
+
+/\x{1234}++/Ii,utf
+
+/\x{1234}{2}/Ii,utf
+
+/[^\x{c4}]/IB,utf
+
+/X+\x{200}/IB,utf
+
+/\R/I,utf
+
+# Check bad offset 
+
+/a/utf
+    \x{10000}\=offset=1
+    \x{10000}ab\=offset=1
+    \x{10000}ab\=offset=2
+    \x{10000}ab\=offset=3
+    \x{10000}ab\=offset=4
+    \x{10000}ab\=offset=5
+
+/í¼€/utf
+
+/\w+\x{C4}/B,utf
+    a\x{C4}\x{C4}
+
+/\w+\x{C4}/B,utf,tables=2
+    a\x{C4}\x{C4}
+    
+/\W+\x{C4}/B,utf
+    !\x{C4}
+ 
+/\W+\x{C4}/B,utf,tables=2
+    !\x{C4}
+
+/\W+\x{A1}/B,utf
+    !\x{A1}
+ 
+/\W+\x{A1}/B,utf,tables=2
+    !\x{A1}
+
+/X\s+\x{A0}/B,utf
+    X\x20\x{A0}\x{A0}
+
+/X\s+\x{A0}/B,utf,tables=2
+    X\x20\x{A0}\x{A0}
+
+/\S+\x{A0}/B,utf
+    X\x{A0}\x{A0}
+
+/\S+\x{A0}/B,utf,tables=2
+    X\x{A0}\x{A0}
+
+/\x{a0}+\s!/B,utf
+    \x{a0}\x20!
+
+/\x{a0}+\s!/B,utf,tables=2
+    \x{a0}\x20!
+
+/(*UTF)abc/never_utf
+
+/abc/utf,never_utf
+
+/A\x{391}\x{10427}\x{ff3a}\x{1fb0}/IBi,utf
+
+/A\x{391}\x{10427}\x{ff3a}\x{1fb0}/IB,utf
+
+/AB\x{1fb0}/IB,utf
+
+/AB\x{1fb0}/IBi,utf
+
+/\x{401}\x{420}\x{421}\x{422}\x{423}\x{424}\x{425}\x{426}\x{427}\x{428}\x{429}\x{42a}\x{42b}\x{42c}\x{42d}\x{42e}\x{42f}/Ii,utf
+    \x{401}\x{420}\x{421}\x{422}\x{423}\x{424}\x{425}\x{426}\x{427}\x{428}\x{429}\x{42a}\x{42b}\x{42c}\x{42d}\x{42e}\x{42f}
+    \x{451}\x{440}\x{441}\x{442}\x{443}\x{444}\x{445}\x{446}\x{447}\x{448}\x{449}\x{44a}\x{44b}\x{44c}\x{44d}\x{44e}\x{44f}
+
+/[â±¥]/Bi,utf
+
+/[^â±¥]/Bi,utf
+
+/[[:blank:]]/B,ucp
+
+/\x{212a}+/Ii,utf
+    KKkk\x{212a}
+
+/s+/Ii,utf
+    SSss\x{17f}
+
+# Non-UTF characters should give errors in both 16-bit and 32-bit modes.
+
+/\x{110000}/utf
+
+/\o{4200000}/utf
+
+/\C/utf
+    \x{110000}
+
+/\x{100}*A/IB,utf
+    A
+
+/\x{100}*\d(?R)/IB,utf
+
+/[Z\x{100}]/IB,utf
+    Z\x{100}
+    \x{100}
+    \x{100}Z
+    *** Failers 
+
+/[z-\x{100}]/IB,utf
+
+/[z\Qa-d]Ä€\E]/IB,utf
+    \x{100}
+    Ä€ 
+
+/[ab\x{100}]abc(xyz(?1))/IB,utf
+
+/\x{100}*\s/IB,utf
+
+/\x{100}*\d/IB,utf
+
+/\x{100}*\w/IB,utf
+
+/\x{100}*\D/IB,utf
+
+/\x{100}*\S/IB,utf
+
+/\x{100}*\W/IB,utf
+
+/[\x{105}-\x{109}]/IBi,utf
+    \x{104}
+    \x{105}
+    \x{109}  
+    ** Failers
+    \x{100}
+    \x{10a} 
+    
+/[z-\x{100}]/IBi,utf
+    Z
+    z
+    \x{39c}
+    \x{178}
+    |
+    \x{80}
+    \x{ff}
+    \x{100}
+    \x{101} 
+    ** Failers
+    \x{102}
+    Y
+    y           
+
+/[z-\x{100}]/IBi,utf
+
+/\x{3a3}B/IBi,utf
+
+# End of testinput12

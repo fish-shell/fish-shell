@@ -1,0 +1,137 @@
+# This is a specialized test for checking, when PCRE2 is compiled with the
+# EBCDIC option but in an ASCII environment, that newline, white space, and \c
+# functionality is working. It catches cases where explicit values such as 0x0a
+# have been used instead of names like CHAR_LF. Needless to say, it is not a
+# genuine EBCDIC test! In patterns, alphabetic characters that follow a
+# backslash must be in EBCDIC code. In data, NL, NEL, LF, ESC, and DEL must be
+# in EBCDIC, but can of course be specified as escapes.
+
+# Test default newline and variations
+
+/^A/m
+    ABC
+    12\x15ABC
+
+/^A/m,newline=any
+    12\x15ABC
+    12\x0dABC
+    12\x0d\x15ABC
+    12\x25ABC
+
+/^A/m,newline=anycrlf
+    12\x15ABC
+    12\x0dABC
+    12\x0d\x15ABC
+    ** Fail
+    12\x25ABC
+
+# Test \h
+
+/^A\à/
+    A B
+    A\x41B 
+
+# Test \H
+
+/^A\»/
+    AB
+    A\x42B 
+    ** Fail
+    A B
+    A\x41B 
+
+# Test \R
+
+/^A\Ÿ/
+    A\x15B
+    A\x0dB
+    A\x25B
+    A\x0bB
+    A\x0cB
+    ** Fail
+    A B
+
+# Test \v
+
+/^A\•/
+    A\x15B
+    A\x0dB
+    A\x25B
+    A\x0bB
+    A\x0cB
+    ** Fail
+    A B
+
+# Test \V
+
+/^A\Â/
+    A B
+    ** Fail
+    A\x15B
+    A\x0dB
+    A\x25B
+    A\x0bB
+    A\x0cB
+    
+# For repeated items, use an atomic group so that the output is the same
+# for DFA matching (otherwise it may show multiple matches).
+
+# Test \h+
+
+/^A(?>\à+)/
+    A B
+
+# Test \H+
+
+/^A(?>\»+)/
+    AB
+    ** Fail
+    A B
+
+# Test \R+
+
+/^A(?>\Ÿ+)/
+    A\x15B
+    A\x0dB
+    A\x25B
+    A\x0bB
+    A\x0cB
+    ** Fail
+    A B
+
+# Test \v+
+
+/^A(?>\•+)/
+    A\x15B
+    A\x0dB
+    A\x25B
+    A\x0bB
+    A\x0cB
+    ** Fail
+    A B
+
+# Test \V+
+
+/^A(?>\Â+)/
+    A B
+    ** Fail
+    A\x15B
+    A\x0dB
+    A\x25B
+    A\x0bB
+    A\x0cB
+    
+# Test \c functionality 
+    
+/\É@\ÉA\Éb\ÉC\Éd\ÉE\Éf\ÉG\Éh\ÉI\ÉJ\ÉK\Él\Ém\ÉN\ÉO\Ép\Éq\Ér\ÉS\ÉT\Éu\ÉV\ÉW\ÉX\Éy\ÉZ/
+    \x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f
+
+/\É[\É\\É]\É^\É_/
+    \x18\x19\x1a\x1b\x1c\x1d\x1e\x1f
+    
+/\É?/
+    A\xffB
+
+/\É&/
+
+# End

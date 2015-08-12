@@ -1,0 +1,4053 @@
+# This set of tests checks the API, internals, and non-Perl stuff for UTF
+# support, including Unicode properties. However, tests that give different
+# results in 8-bit, 16-bit, and 32-bit modes are excluded (see tests 10 and
+# 12).
+
+# PCRE2 and Perl disagree about the characteristics of certain Unicode
+# characters. For example, 061C is considered by Perl to be Arabic, though
+# is it not listed as such in the Unicode Scripts.txt file, and 2066-2069 are
+# graphic and printable according to Perl, though they are actually "isolate"
+# control characters. That is why the following tests are here rather than in
+# test 4.
+
+/^[\p{Arabic}]/utf
+    ** Failers
+No match
+    \x{061c}
+No match
+    
+/^[[:graph:]]+$/utf,ucp
+    ** Failers
+No match
+    \x{61c}
+No match
+    \x{2066}
+No match
+    \x{2067}
+No match
+    \x{2068}
+No match
+    \x{2069}
+No match
+
+/^[[:print:]]+$/utf,ucp
+    ** Failers
+ 0: ** Failers
+    \x{61c}
+No match
+    \x{2066}
+No match
+    \x{2067}
+No match
+    \x{2068}
+No match
+    \x{2069}
+No match
+
+/^[[:^graph:]]+$/utf,ucp
+    \x{09}\x{0a}\x{1D}\x{20}\x{85}\x{a0}\x{61c}\x{1680}
+ 0: \x{09}\x{0a}\x{1d} \x{85}\x{a0}\x{61c}\x{1680}
+    \x{2028}\x{2029}\x{202f}\x{2065}\x{2066}\x{2067}\x{2068}\x{2069}
+ 0: \x{2028}\x{2029}\x{202f}\x{2065}\x{2066}\x{2067}\x{2068}\x{2069}
+
+/^[[:^print:]]+$/utf,ucp
+    \x{09}\x{1D}\x{85}\x{61c}\x{2028}\x{2029}\x{2065}\x{2066}\x{2067}
+ 0: \x{09}\x{1d}\x{85}\x{61c}\x{2028}\x{2029}\x{2065}\x{2066}\x{2067}
+    \x{2068}\x{2069}
+ 0: \x{2068}\x{2069}
+     
+# Perl does not consider U+180e to be a space character. It is true that it
+# does not appear in the Unicode PropList.txt file as such, but in many other
+# sources it is listed as a space, and has been treated as such in PCRE for
+# a long time. 
+
+/^>[[:blank:]]*/utf,ucp
+    >\x{20}\x{a0}\x{1680}\x{180e}\x{2000}\x{202f}\x{9}\x{b}\x{2028} 
+ 0: > \x{a0}\x{1680}\x{180e}\x{2000}\x{202f}\x{09}
+
+/^A\s+Z/utf,ucp
+    A\x{85}\x{180e}\x{2005}Z
+ 0: A\x{85}\x{180e}\x{2005}Z
+
+/^A[\s]+Z/utf,ucp
+    A\x{2005}Z
+ 0: A\x{2005}Z
+    A\x{85}\x{2005}Z
+ 0: A\x{85}\x{2005}Z
+    
+/^[[:graph:]]+$/utf,ucp
+    \x{180e}
+No match
+
+/^[[:print:]]+$/utf,ucp
+    \x{180e}
+ 0: \x{180e}
+
+/^[[:^graph:]]+$/utf,ucp
+    \x{09}\x{0a}\x{1D}\x{20}\x{85}\x{a0}\x{61c}\x{1680}\x{180e}
+ 0: \x{09}\x{0a}\x{1d} \x{85}\x{a0}\x{61c}\x{1680}\x{180e}
+
+/^[[:^print:]]+$/utf,ucp
+    \x{180e}
+No match
+
+# End of U+180E tests.
+
+# ---------------------------------------------------------------------
+
+/\x{110000}/IB,utf
+Failed: error 134 at offset 9: character code point value in \x{} or \o{} is too large
+
+/\o{4200000}/IB,utf
+Failed: error 134 at offset 10: character code point value in \x{} or \o{} is too large
+
+/\x{ffffffff}/utf
+Failed: error 134 at offset 11: character code point value in \x{} or \o{} is too large
+
+/\o{37777777777}/utf
+Failed: error 134 at offset 14: character code point value in \x{} or \o{} is too large
+
+/\x{100000000}/utf
+Failed: error 134 at offset 12: character code point value in \x{} or \o{} is too large
+
+/\o{77777777777}/utf
+Failed: error 134 at offset 14: character code point value in \x{} or \o{} is too large
+
+/\x{d800}/utf
+Failed: error 173 at offset 7: disallowed Unicode code point (>= 0xd800 && <= 0xdfff)
+
+/\o{154000}/utf
+Failed: error 173 at offset 9: disallowed Unicode code point (>= 0xd800 && <= 0xdfff)
+
+/\x{dfff}/utf
+Failed: error 173 at offset 7: disallowed Unicode code point (>= 0xd800 && <= 0xdfff)
+
+/\o{157777}/utf
+Failed: error 173 at offset 9: disallowed Unicode code point (>= 0xd800 && <= 0xdfff)
+
+/\x{d7ff}/utf
+
+/\o{153777}/utf
+
+/\x{e000}/utf
+
+/\o{170000}/utf
+
+/^\x{100}a\x{1234}/utf
+    \x{100}a\x{1234}bcd
+ 0: \x{100}a\x{1234}
+
+/\x{0041}\x{2262}\x{0391}\x{002e}/IB,utf
+------------------------------------------------------------------
+        Bra
+        A\x{2262}\x{391}.
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = 'A'
+Last code unit = '.'
+Subject length lower bound = 4
+    \x{0041}\x{2262}\x{0391}\x{002e}
+ 0: A\x{2262}\x{391}.
+    
+/.{3,5}X/IB,utf
+------------------------------------------------------------------
+        Bra
+        Any{3}
+        Any{0,2}
+        X
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+Last code unit = 'X'
+Subject length lower bound = 4
+    \x{212ab}\x{212ab}\x{212ab}\x{861}X
+ 0: \x{212ab}\x{212ab}\x{212ab}\x{861}X
+
+/.{3,5}?/IB,utf
+------------------------------------------------------------------
+        Bra
+        Any{3}
+        Any{0,2}?
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+Subject length lower bound = 3
+    \x{212ab}\x{212ab}\x{212ab}\x{861}
+ 0: \x{212ab}\x{212ab}\x{212ab}
+
+/(?<=\C)X/utf
+Failed: error 136 at offset 6: \C is not allowed in a lookbehind assertion
+    Should produce an error diagnostic
+    
+/^[ab]/IB,utf
+------------------------------------------------------------------
+        Bra
+        ^
+        [ab]
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Compile options: utf
+Overall options: anchored utf
+Subject length lower bound = 1
+    bar
+ 0: b
+    *** Failers
+No match
+    c
+No match
+    \x{ff}
+No match
+    \x{100}  
+No match
+
+/^[^ab]/IB,utf
+------------------------------------------------------------------
+        Bra
+        ^
+        [\x00-`c-\xff] (neg)
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Compile options: utf
+Overall options: anchored utf
+Subject length lower bound = 1
+    c
+ 0: c
+    \x{ff}
+ 0: \x{ff}
+    \x{100}  
+ 0: \x{100}
+    *** Failers 
+ 0: *
+    aaa
+No match
+  
+/\x{100}*(\d+|"(?1)")/utf
+    1234
+ 0: 1234
+ 1: 1234
+    "1234" 
+ 0: "1234"
+ 1: "1234"
+    \x{100}1234
+ 0: \x{100}1234
+ 1: 1234
+    "\x{100}1234"  
+ 0: \x{100}1234
+ 1: 1234
+    \x{100}\x{100}12ab 
+ 0: \x{100}\x{100}12
+ 1: 12
+    \x{100}\x{100}"12" 
+ 0: \x{100}\x{100}"12"
+ 1: "12"
+    *** Failers 
+No match
+    \x{100}\x{100}abcd
+No match
+
+/\x{100}*/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{100}*+
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+May match empty string
+Options: utf
+Subject length lower bound = 0
+
+/a\x{100}*/IB,utf
+------------------------------------------------------------------
+        Bra
+        a
+        \x{100}*+
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = 'a'
+Subject length lower bound = 1
+
+/ab\x{100}*/IB,utf
+------------------------------------------------------------------
+        Bra
+        ab
+        \x{100}*+
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = 'a'
+Last code unit = 'b'
+Subject length lower bound = 2
+
+/[\x{200}-\x{100}]/utf
+Failed: error 108 at offset 15: range out of order in character class
+
+/[Ā-Ą]/utf
+    \x{100}
+ 0: \x{100}
+    \x{104}
+ 0: \x{104}
+    *** Failers
+No match
+    \x{105}
+No match
+    \x{ff}    
+No match
+
+/[\xFF]/IB
+------------------------------------------------------------------
+        Bra
+        \x{ff}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+First code unit = \xff
+Subject length lower bound = 1
+    >\xff<
+ 0: \xff
+
+/[^\xFF]/IB
+------------------------------------------------------------------
+        Bra
+        [^\x{ff}]
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Subject length lower bound = 1
+
+/[Ä-Ü]/utf
+    Ö # Matches without Study
+ 0: \x{d6}
+    \x{d6}
+ 0: \x{d6}
+    
+/[Ä-Ü]/utf
+    Ö <-- Same with Study
+ 0: \x{d6}
+    \x{d6}
+ 0: \x{d6}
+    
+/[\x{c4}-\x{dc}]/utf
+    Ö # Matches without Study
+ 0: \x{d6}
+    \x{d6} 
+ 0: \x{d6}
+
+/[\x{c4}-\x{dc}]/utf
+    Ö <-- Same with Study
+ 0: \x{d6}
+    \x{d6} 
+ 0: \x{d6}
+
+/[^\x{100}]abc(xyz(?1))/IB,utf
+------------------------------------------------------------------
+        Bra
+        [^\x{100}]
+        abc
+        CBra 1
+        xyz
+        Recurse
+        Ket
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 1
+Options: utf
+Last code unit = 'z'
+Subject length lower bound = 7
+
+/(\x{100}(b(?2)c))?/IB,utf
+------------------------------------------------------------------
+        Bra
+        Brazero
+        CBra 1
+        \x{100}
+        CBra 2
+        b
+        Recurse
+        c
+        Ket
+        Ket
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 2
+May match empty string
+Options: utf
+Subject length lower bound = 0
+
+/(\x{100}(b(?2)c)){0,2}/IB,utf
+------------------------------------------------------------------
+        Bra
+        Brazero
+        Bra
+        CBra 1
+        \x{100}
+        CBra 2
+        b
+        Recurse
+        c
+        Ket
+        Ket
+        Brazero
+        CBra 1
+        \x{100}
+        CBra 2
+        b
+        Recurse
+        c
+        Ket
+        Ket
+        Ket
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 2
+May match empty string
+Options: utf
+Subject length lower bound = 0
+
+/(\x{100}(b(?1)c))?/IB,utf
+------------------------------------------------------------------
+        Bra
+        Brazero
+        CBra 1
+        \x{100}
+        CBra 2
+        b
+        Recurse
+        c
+        Ket
+        Ket
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 2
+May match empty string
+Options: utf
+Subject length lower bound = 0
+
+/(\x{100}(b(?1)c)){0,2}/IB,utf
+------------------------------------------------------------------
+        Bra
+        Brazero
+        Bra
+        CBra 1
+        \x{100}
+        CBra 2
+        b
+        Recurse
+        c
+        Ket
+        Ket
+        Brazero
+        CBra 1
+        \x{100}
+        CBra 2
+        b
+        Recurse
+        c
+        Ket
+        Ket
+        Ket
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 2
+May match empty string
+Options: utf
+Subject length lower bound = 0
+
+/\W/utf
+    A.B
+ 0: .
+    A\x{100}B 
+ 0: \x{100}
+  
+/\w/utf
+    \x{100}X   
+ 0: X
+
+/^\ሴ/IB,utf
+------------------------------------------------------------------
+        Bra
+        ^
+        \x{1234}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Compile options: utf
+Overall options: anchored utf
+Subject length lower bound = 1
+
+/()()()()()()()()()()
+ ()()()()()()()()()()
+ ()()()()()()()()()()
+ ()()()()()()()()()()
+ A (x) (?41) B/x,utf
+    AxxB     
+Matched, but too many substrings
+ 0: AxxB
+ 1: 
+ 2: 
+ 3: 
+ 4: 
+ 5: 
+ 6: 
+ 7: 
+ 8: 
+ 9: 
+10: 
+11: 
+12: 
+13: 
+14: 
+
+/^[\x{100}\E-\Q\E\x{150}]/B,utf
+------------------------------------------------------------------
+        Bra
+        ^
+        [\x{100}-\x{150}]
+        Ket
+        End
+------------------------------------------------------------------
+
+/^[\QĀ\E-\QŐ\E]/B,utf
+------------------------------------------------------------------
+        Bra
+        ^
+        [\x{100}-\x{150}]
+        Ket
+        End
+------------------------------------------------------------------
+
+/^abc./gmx,newline=any,utf
+    abc1 \x0aabc2 \x0babc3xx \x0cabc4 \x0dabc5xx \x0d\x0aabc6 \x{0085}abc7 \x{2028}abc8 \x{2029}abc9 JUNK
+ 0: abc1
+ 0: abc2
+ 0: abc3
+ 0: abc4
+ 0: abc5
+ 0: abc6
+ 0: abc7
+ 0: abc8
+ 0: abc9
+
+/abc.$/gmx,newline=any,utf
+    abc1\x0a abc2\x0b abc3\x0c abc4\x0d abc5\x0d\x0a abc6\x{0085} abc7\x{2028} abc8\x{2029} abc9
+ 0: abc1
+ 0: abc2
+ 0: abc3
+ 0: abc4
+ 0: abc5
+ 0: abc6
+ 0: abc7
+ 0: abc8
+ 0: abc9
+
+/^a\Rb/bsr=unicode,utf
+    a\nb
+ 0: a\x{0a}b
+    a\rb
+ 0: a\x{0d}b
+    a\r\nb
+ 0: a\x{0d}\x{0a}b
+    a\x0bb
+ 0: a\x{0b}b
+    a\x0cb
+ 0: a\x{0c}b
+    a\x{85}b   
+ 0: a\x{85}b
+    a\x{2028}b 
+ 0: a\x{2028}b
+    a\x{2029}b 
+ 0: a\x{2029}b
+    ** Failers
+No match
+    a\n\rb    
+No match
+
+/^a\R*b/bsr=unicode,utf
+    ab
+ 0: ab
+    a\nb
+ 0: a\x{0a}b
+    a\rb
+ 0: a\x{0d}b
+    a\r\nb
+ 0: a\x{0d}\x{0a}b
+    a\x0bb
+ 0: a\x{0b}b
+    a\x0c\x{2028}\x{2029}b
+ 0: a\x{0c}\x{2028}\x{2029}b
+    a\x{85}b   
+ 0: a\x{85}b
+    a\n\rb    
+ 0: a\x{0a}\x{0d}b
+    a\n\r\x{85}\x0cb 
+ 0: a\x{0a}\x{0d}\x{85}\x{0c}b
+
+/^a\R+b/bsr=unicode,utf
+    a\nb
+ 0: a\x{0a}b
+    a\rb
+ 0: a\x{0d}b
+    a\r\nb
+ 0: a\x{0d}\x{0a}b
+    a\x0bb
+ 0: a\x{0b}b
+    a\x0c\x{2028}\x{2029}b
+ 0: a\x{0c}\x{2028}\x{2029}b
+    a\x{85}b   
+ 0: a\x{85}b
+    a\n\rb    
+ 0: a\x{0a}\x{0d}b
+    a\n\r\x{85}\x0cb 
+ 0: a\x{0a}\x{0d}\x{85}\x{0c}b
+    ** Failers
+No match
+    ab  
+No match
+
+/^a\R{1,3}b/bsr=unicode,utf
+    a\nb
+ 0: a\x{0a}b
+    a\n\rb
+ 0: a\x{0a}\x{0d}b
+    a\n\r\x{85}b
+ 0: a\x{0a}\x{0d}\x{85}b
+    a\r\n\r\nb 
+ 0: a\x{0d}\x{0a}\x{0d}\x{0a}b
+    a\r\n\r\n\r\nb 
+ 0: a\x{0d}\x{0a}\x{0d}\x{0a}\x{0d}\x{0a}b
+    a\n\r\n\rb
+ 0: a\x{0a}\x{0d}\x{0a}\x{0d}b
+    a\n\n\r\nb 
+ 0: a\x{0a}\x{0a}\x{0d}\x{0a}b
+    ** Failers
+No match
+    a\n\n\n\rb
+No match
+    a\r
+No match
+
+/\H\h\V\v/utf
+    X X\x0a
+ 0: X X\x{0a}
+    X\x09X\x0b
+ 0: X\x{09}X\x{0b}
+    ** Failers
+No match
+    \x{a0} X\x0a   
+No match
+    
+/\H*\h+\V?\v{3,4}/utf
+    \x09\x20\x{a0}X\x0a\x0b\x0c\x0d\x0a
+ 0: \x{09} \x{a0}X\x{0a}\x{0b}\x{0c}\x{0d}
+    \x09\x20\x{a0}\x0a\x0b\x0c\x0d\x0a
+ 0: \x{09} \x{a0}\x{0a}\x{0b}\x{0c}\x{0d}
+    \x09\x20\x{a0}\x0a\x0b\x0c
+ 0: \x{09} \x{a0}\x{0a}\x{0b}\x{0c}
+    ** Failers 
+No match
+    \x09\x20\x{a0}\x0a\x0b
+No match
+     
+/\H\h\V\v/utf
+    \x{3001}\x{3000}\x{2030}\x{2028}
+ 0: \x{3001}\x{3000}\x{2030}\x{2028}
+    X\x{180e}X\x{85}
+ 0: X\x{180e}X\x{85}
+    ** Failers
+No match
+    \x{2009} X\x0a   
+No match
+    
+/\H*\h+\V?\v{3,4}/utf
+    \x{1680}\x{180e}\x{2007}X\x{2028}\x{2029}\x0c\x0d\x0a
+ 0: \x{1680}\x{180e}\x{2007}X\x{2028}\x{2029}\x{0c}\x{0d}
+    \x09\x{205f}\x{a0}\x0a\x{2029}\x0c\x{2028}\x0a
+ 0: \x{09}\x{205f}\x{a0}\x{0a}\x{2029}\x{0c}\x{2028}
+    \x09\x20\x{202f}\x0a\x0b\x0c
+ 0: \x{09} \x{202f}\x{0a}\x{0b}\x{0c}
+    ** Failers 
+No match
+    \x09\x{200a}\x{a0}\x{2028}\x0b
+No match
+     
+/[\h]/B,utf
+------------------------------------------------------------------
+        Bra
+        [\x09 \xa0\x{1680}\x{180e}\x{2000}-\x{200a}\x{202f}\x{205f}\x{3000}]
+        Ket
+        End
+------------------------------------------------------------------
+    >\x{1680}
+ 0: \x{1680}
+
+/[\h]{3,}/B,utf
+------------------------------------------------------------------
+        Bra
+        [\x09 \xa0\x{1680}\x{180e}\x{2000}-\x{200a}\x{202f}\x{205f}\x{3000}]{3,}+
+        Ket
+        End
+------------------------------------------------------------------
+    >\x{1680}\x{180e}\x{2000}\x{2003}\x{200a}\x{202f}\x{205f}\x{3000}<
+ 0: \x{1680}\x{180e}\x{2000}\x{2003}\x{200a}\x{202f}\x{205f}\x{3000}
+
+/[\v]/B,utf
+------------------------------------------------------------------
+        Bra
+        [\x0a-\x0d\x85\x{2028}-\x{2029}]
+        Ket
+        End
+------------------------------------------------------------------
+
+/[\H]/B,utf
+------------------------------------------------------------------
+        Bra
+        [\x00-\x08\x0a-\x1f!-\x9f\xa1-\xff\x{100}-\x{167f}\x{1681}-\x{180d}\x{180f}-\x{1fff}\x{200b}-\x{202e}\x{2030}-\x{205e}\x{2060}-\x{2fff}\x{3001}-\x{10ffff}]
+        Ket
+        End
+------------------------------------------------------------------
+
+/[\V]/B,utf
+------------------------------------------------------------------
+        Bra
+        [\x00-\x09\x0e-\x84\x86-\xff\x{100}-\x{2027}\x{202a}-\x{10ffff}]
+        Ket
+        End
+------------------------------------------------------------------
+
+/.*$/newline=any,utf
+    \x{1ec5} 
+ 0: \x{1ec5}
+    
+/a\Rb/I,bsr=anycrlf,utf
+Capturing subpattern count = 0
+Options: utf
+\R matches CR, LF, or CRLF
+First code unit = 'a'
+Last code unit = 'b'
+Subject length lower bound = 3
+    a\rb
+ 0: a\x{0d}b
+    a\nb
+ 0: a\x{0a}b
+    a\r\nb
+ 0: a\x{0d}\x{0a}b
+    ** Failers
+No match
+    a\x{85}b
+No match
+    a\x0bb     
+No match
+
+/a\Rb/I,bsr=unicode,utf
+Capturing subpattern count = 0
+Options: utf
+\R matches any Unicode newline
+First code unit = 'a'
+Last code unit = 'b'
+Subject length lower bound = 3
+    a\rb
+ 0: a\x{0d}b
+    a\nb
+ 0: a\x{0a}b
+    a\r\nb
+ 0: a\x{0d}\x{0a}b
+    a\x{85}b
+ 0: a\x{85}b
+    a\x0bb     
+ 0: a\x{0b}b
+    
+/a\R?b/I,bsr=anycrlf,utf
+Capturing subpattern count = 0
+Options: utf
+\R matches CR, LF, or CRLF
+First code unit = 'a'
+Last code unit = 'b'
+Subject length lower bound = 2
+    a\rb
+ 0: a\x{0d}b
+    a\nb
+ 0: a\x{0a}b
+    a\r\nb
+ 0: a\x{0d}\x{0a}b
+    ** Failers
+No match
+    a\x{85}b
+No match
+    a\x0bb     
+No match
+
+/a\R?b/I,bsr=unicode,utf
+Capturing subpattern count = 0
+Options: utf
+\R matches any Unicode newline
+First code unit = 'a'
+Last code unit = 'b'
+Subject length lower bound = 2
+    a\rb
+ 0: a\x{0d}b
+    a\nb
+ 0: a\x{0a}b
+    a\r\nb
+ 0: a\x{0d}\x{0a}b
+    a\x{85}b
+ 0: a\x{85}b
+    a\x0bb     
+ 0: a\x{0b}b
+    ** Failers 
+No match
+ 
+/.*a.*=.b.*/utf,newline=any
+    QQQ\x{2029}ABCaXYZ=!bPQR
+ 0: ABCaXYZ=!bPQR
+    ** Failers
+No match
+    a\x{2029}b
+No match
+    \x61\xe2\x80\xa9\x62 
+No match
+
+/[[:a\x{100}b:]]/utf
+Failed: error 130 at offset 3: unknown POSIX class name
+
+/a[^]b/utf,alt_bsux,allow_empty_class,match_unset_backref
+    a\x{1234}b
+ 0: a\x{1234}b
+    a\nb 
+ 0: a\x{0a}b
+    ** Failers
+No match
+    ab  
+No match
+    
+/a[^]+b/utf,alt_bsux,allow_empty_class,match_unset_backref
+    aXb
+ 0: aXb
+    a\nX\nX\x{1234}b 
+ 0: a\x{0a}X\x{0a}X\x{1234}b
+    ** Failers
+No match
+    ab  
+No match
+
+/(\x{de})\1/
+    \x{de}\x{de}
+ 0: \xde\xde
+ 1: \xde
+
+/X/newline=any,utf,firstline
+    A\x{1ec5}ABCXYZ
+ 0: X
+
+/Xa{2,4}b/utf
+    X\=ps
+Partial match: X
+    Xa\=ps
+Partial match: Xa
+    Xaa\=ps
+Partial match: Xaa
+    Xaaa\=ps
+Partial match: Xaaa
+    Xaaaa\=ps
+Partial match: Xaaaa
+    
+/Xa{2,4}?b/utf
+    X\=ps
+Partial match: X
+    Xa\=ps
+Partial match: Xa
+    Xaa\=ps
+Partial match: Xaa
+    Xaaa\=ps
+Partial match: Xaaa
+    Xaaaa\=ps
+Partial match: Xaaaa
+    
+/Xa{2,4}+b/utf
+    X\=ps
+Partial match: X
+    Xa\=ps
+Partial match: Xa
+    Xaa\=ps
+Partial match: Xaa
+    Xaaa\=ps
+Partial match: Xaaa
+    Xaaaa\=ps
+Partial match: Xaaaa
+    
+/X\x{123}{2,4}b/utf
+    X\=ps
+Partial match: X
+    X\x{123}\=ps
+Partial match: X\x{123}
+    X\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}\x{123}
+    
+/X\x{123}{2,4}?b/utf
+    X\=ps
+Partial match: X
+    X\x{123}\=ps
+Partial match: X\x{123}
+    X\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}\x{123}
+    
+/X\x{123}{2,4}+b/utf
+    X\=ps
+Partial match: X
+    X\x{123}\=ps
+Partial match: X\x{123}
+    X\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}\x{123}
+    
+/X\x{123}{2,4}b/utf
+    Xx\=ps
+No match
+    X\x{123}x\=ps
+No match
+    X\x{123}\x{123}x\=ps
+No match
+    X\x{123}\x{123}\x{123}x\=ps
+No match
+    X\x{123}\x{123}\x{123}\x{123}x\=ps
+No match
+    
+/X\x{123}{2,4}?b/utf
+    Xx\=ps
+No match
+    X\x{123}x\=ps
+No match
+    X\x{123}\x{123}x\=ps
+No match
+    X\x{123}\x{123}\x{123}x\=ps
+No match
+    X\x{123}\x{123}\x{123}\x{123}x\=ps
+No match
+    
+/X\x{123}{2,4}+b/utf
+    Xx\=ps
+No match
+    X\x{123}x\=ps
+No match
+    X\x{123}\x{123}x\=ps
+No match
+    X\x{123}\x{123}\x{123}x\=ps
+No match
+    X\x{123}\x{123}\x{123}\x{123}x\=ps
+No match
+    
+/X\d{2,4}b/utf
+    X\=ps
+Partial match: X
+    X3\=ps
+Partial match: X3
+    X33\=ps
+Partial match: X33
+    X333\=ps
+Partial match: X333
+    X3333\=ps
+Partial match: X3333
+    
+/X\d{2,4}?b/utf
+    X\=ps
+Partial match: X
+    X3\=ps
+Partial match: X3
+    X33\=ps
+Partial match: X33
+    X333\=ps
+Partial match: X333
+    X3333\=ps
+Partial match: X3333
+    
+/X\d{2,4}+b/utf
+    X\=ps
+Partial match: X
+    X3\=ps
+Partial match: X3
+    X33\=ps
+Partial match: X33
+    X333\=ps
+Partial match: X333
+    X3333\=ps
+Partial match: X3333
+
+/X\D{2,4}b/utf
+    X\=ps
+Partial match: X
+    Xa\=ps
+Partial match: Xa
+    Xaa\=ps
+Partial match: Xaa
+    Xaaa\=ps
+Partial match: Xaaa
+    Xaaaa\=ps
+Partial match: Xaaaa
+    
+/X\D{2,4}?b/utf
+    X\=ps
+Partial match: X
+    Xa\=ps
+Partial match: Xa
+    Xaa\=ps
+Partial match: Xaa
+    Xaaa\=ps
+Partial match: Xaaa
+    Xaaaa\=ps
+Partial match: Xaaaa
+    
+/X\D{2,4}+b/utf
+    X\=ps
+Partial match: X
+    Xa\=ps
+Partial match: Xa
+    Xaa\=ps
+Partial match: Xaa
+    Xaaa\=ps
+Partial match: Xaaa
+    Xaaaa\=ps
+Partial match: Xaaaa
+
+/X\D{2,4}b/utf
+    X\=ps
+Partial match: X
+    X\x{123}\=ps
+Partial match: X\x{123}
+    X\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}\x{123}
+    
+/X\D{2,4}?b/utf
+    X\=ps
+Partial match: X
+    X\x{123}\=ps
+Partial match: X\x{123}
+    X\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}\x{123}
+    
+/X\D{2,4}+b/utf
+    X\=ps
+Partial match: X
+    X\x{123}\=ps
+Partial match: X\x{123}
+    X\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}\x{123}
+
+/X[abc]{2,4}b/utf
+    X\=ps
+Partial match: X
+    Xa\=ps
+Partial match: Xa
+    Xaa\=ps
+Partial match: Xaa
+    Xaaa\=ps
+Partial match: Xaaa
+    Xaaaa\=ps
+Partial match: Xaaaa
+    
+/X[abc]{2,4}?b/utf
+    X\=ps
+Partial match: X
+    Xa\=ps
+Partial match: Xa
+    Xaa\=ps
+Partial match: Xaa
+    Xaaa\=ps
+Partial match: Xaaa
+    Xaaaa\=ps
+Partial match: Xaaaa
+    
+/X[abc]{2,4}+b/utf
+    X\=ps
+Partial match: X
+    Xa\=ps
+Partial match: Xa
+    Xaa\=ps
+Partial match: Xaa
+    Xaaa\=ps
+Partial match: Xaaa
+    Xaaaa\=ps
+Partial match: Xaaaa
+
+/X[abc\x{123}]{2,4}b/utf
+    X\=ps
+Partial match: X
+    X\x{123}\=ps
+Partial match: X\x{123}
+    X\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}\x{123}
+    
+/X[abc\x{123}]{2,4}?b/utf
+    X\=ps
+Partial match: X
+    X\x{123}\=ps
+Partial match: X\x{123}
+    X\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}\x{123}
+    
+/X[abc\x{123}]{2,4}+b/utf
+    X\=ps
+Partial match: X
+    X\x{123}\=ps
+Partial match: X\x{123}
+    X\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}\x{123}
+
+/X[^a]{2,4}b/utf
+    X\=ps
+Partial match: X
+    Xz\=ps
+Partial match: Xz
+    Xzz\=ps
+Partial match: Xzz
+    Xzzz\=ps
+Partial match: Xzzz
+    Xzzzz\=ps
+Partial match: Xzzzz
+    
+/X[^a]{2,4}?b/utf
+    X\=ps
+Partial match: X
+    Xz\=ps
+Partial match: Xz
+    Xzz\=ps
+Partial match: Xzz
+    Xzzz\=ps
+Partial match: Xzzz
+    Xzzzz\=ps
+Partial match: Xzzzz
+    
+/X[^a]{2,4}+b/utf
+    X\=ps
+Partial match: X
+    Xz\=ps
+Partial match: Xz
+    Xzz\=ps
+Partial match: Xzz
+    Xzzz\=ps
+Partial match: Xzzz
+    Xzzzz\=ps
+Partial match: Xzzzz
+
+/X[^a]{2,4}b/utf
+    X\=ps
+Partial match: X
+    X\x{123}\=ps
+Partial match: X\x{123}
+    X\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}\x{123}
+    
+/X[^a]{2,4}?b/utf
+    X\=ps
+Partial match: X
+    X\x{123}\=ps
+Partial match: X\x{123}
+    X\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}\x{123}
+    
+/X[^a]{2,4}+b/utf
+    X\=ps
+Partial match: X
+    X\x{123}\=ps
+Partial match: X\x{123}
+    X\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}
+    X\x{123}\x{123}\x{123}\x{123}\=ps
+Partial match: X\x{123}\x{123}\x{123}\x{123}
+
+/(Y)X\1{2,4}b/utf
+    YX\=ps
+Partial match: YX
+    YXY\=ps
+Partial match: YXY
+    YXYY\=ps
+Partial match: YXYY
+    YXYYY\=ps
+Partial match: YXYYY
+    YXYYYY\=ps
+Partial match: YXYYYY
+    
+/(Y)X\1{2,4}?b/utf
+    YX\=ps
+Partial match: YX
+    YXY\=ps
+Partial match: YXY
+    YXYY\=ps
+Partial match: YXYY
+    YXYYY\=ps
+Partial match: YXYYY
+    YXYYYY\=ps
+Partial match: YXYYYY
+    
+/(Y)X\1{2,4}+b/utf
+    YX\=ps
+Partial match: YX
+    YXY\=ps
+Partial match: YXY
+    YXYY\=ps
+Partial match: YXYY
+    YXYYY\=ps
+Partial match: YXYYY
+    YXYYYY\=ps
+Partial match: YXYYYY
+
+/(\x{123})X\1{2,4}b/utf
+    \x{123}X\=ps
+Partial match: \x{123}X
+    \x{123}X\x{123}\=ps
+Partial match: \x{123}X\x{123}
+    \x{123}X\x{123}\x{123}\=ps
+Partial match: \x{123}X\x{123}\x{123}
+    \x{123}X\x{123}\x{123}\x{123}\=ps
+Partial match: \x{123}X\x{123}\x{123}\x{123}
+    \x{123}X\x{123}\x{123}\x{123}\x{123}\=ps
+Partial match: \x{123}X\x{123}\x{123}\x{123}\x{123}
+    
+/(\x{123})X\1{2,4}?b/utf
+    \x{123}X\=ps
+Partial match: \x{123}X
+    \x{123}X\x{123}\=ps
+Partial match: \x{123}X\x{123}
+    \x{123}X\x{123}\x{123}\=ps
+Partial match: \x{123}X\x{123}\x{123}
+    \x{123}X\x{123}\x{123}\x{123}\=ps
+Partial match: \x{123}X\x{123}\x{123}\x{123}
+    \x{123}X\x{123}\x{123}\x{123}\x{123}\=ps
+Partial match: \x{123}X\x{123}\x{123}\x{123}\x{123}
+    
+/(\x{123})X\1{2,4}+b/utf
+    \x{123}X\=ps
+Partial match: \x{123}X
+    \x{123}X\x{123}\=ps
+Partial match: \x{123}X\x{123}
+    \x{123}X\x{123}\x{123}\=ps
+Partial match: \x{123}X\x{123}\x{123}
+    \x{123}X\x{123}\x{123}\x{123}\=ps
+Partial match: \x{123}X\x{123}\x{123}\x{123}
+    \x{123}X\x{123}\x{123}\x{123}\x{123}\=ps
+Partial match: \x{123}X\x{123}\x{123}\x{123}\x{123}
+
+/\bthe cat\b/utf
+    the cat\=ps
+ 0: the cat
+    the cat\=ph
+Partial match: the cat
+
+/abcd*/utf
+    xxxxabcd\=ps
+ 0: abcd
+    xxxxabcd\=ph
+Partial match: abcd
+
+/abcd*/i,utf
+    xxxxabcd\=ps
+ 0: abcd
+    xxxxabcd\=ph
+Partial match: abcd
+    XXXXABCD\=ps
+ 0: ABCD
+    XXXXABCD\=ph
+Partial match: ABCD
+
+/abc\d*/utf
+    xxxxabc1\=ps
+ 0: abc1
+    xxxxabc1\=ph
+Partial match: abc1
+
+/(a)bc\1*/utf
+    xxxxabca\=ps
+ 0: abca
+ 1: a
+    xxxxabca\=ph
+Partial match: abca
+
+/abc[de]*/utf
+    xxxxabcde\=ps
+ 0: abcde
+    xxxxabcde\=ph
+Partial match: abcde
+
+/X\W{3}X/utf
+    X\=ps
+Partial match: X
+
+/\sxxx\s/utf,tables=2
+    AB\x{85}xxx\x{a0}XYZ
+ 0: \x{85}xxx\x{a0}
+    AB\x{a0}xxx\x{85}XYZ
+ 0: \x{a0}xxx\x{85}
+
+/\S \S/utf,tables=2
+    \x{a2} \x{84} 
+ 0: \x{a2} \x{84}
+
+'A#хц'Bx,newline=any,utf
+------------------------------------------------------------------
+        Bra
+        A
+        Ket
+        End
+------------------------------------------------------------------
+
+'A#хц
+  PQ'Bx,newline=any,utf
+------------------------------------------------------------------
+        Bra
+        APQ
+        Ket
+        End
+------------------------------------------------------------------
+  
+/a+#хaa
+  z#XX?/Bx,newline=any,utf
+------------------------------------------------------------------
+        Bra
+        a++
+        z
+        Ket
+        End
+------------------------------------------------------------------
+
+/a+#хaa
+  z#х?/Bx,newline=any,utf
+------------------------------------------------------------------
+        Bra
+        a++
+        z
+        Ket
+        End
+------------------------------------------------------------------
+
+/\g{A}xxx#bXX(?'A'123)(?'A'456)/Bx,newline=any,utf
+------------------------------------------------------------------
+        Bra
+        \1
+        xxx
+        CBra 1
+        456
+        Ket
+        Ket
+        End
+------------------------------------------------------------------
+
+/\g{A}xxx#bх(?'A'123)(?'A'456)/Bx,newline=any,utf
+------------------------------------------------------------------
+        Bra
+        \1
+        xxx
+        CBra 1
+        456
+        Ket
+        Ket
+        End
+------------------------------------------------------------------
+
+/^\cģ/utf
+Failed: error 168 at offset 3: \c must be followed by a printable ASCII character
+
+/(\R*)(.)/s,utf
+    \r\n
+ 0: \x{0d}
+ 1: 
+ 2: \x{0d}
+    \r\r\n\n\r 
+ 0: \x{0d}\x{0d}\x{0a}\x{0a}\x{0d}
+ 1: \x{0d}\x{0d}\x{0a}\x{0a}
+ 2: \x{0d}
+    \r\r\n\n\r\n 
+ 0: \x{0d}\x{0d}\x{0a}\x{0a}\x{0d}
+ 1: \x{0d}\x{0d}\x{0a}\x{0a}
+ 2: \x{0d}
+
+/(\R)*(.)/s,utf
+    \r\n
+ 0: \x{0d}
+ 1: <unset>
+ 2: \x{0d}
+    \r\r\n\n\r 
+ 0: \x{0d}\x{0d}\x{0a}\x{0a}\x{0d}
+ 1: \x{0a}
+ 2: \x{0d}
+    \r\r\n\n\r\n 
+ 0: \x{0d}\x{0d}\x{0a}\x{0a}\x{0d}
+ 1: \x{0a}
+ 2: \x{0d}
+
+/[^\x{1234}]+/Ii,utf
+Capturing subpattern count = 0
+Options: caseless utf
+Subject length lower bound = 1
+
+/[^\x{1234}]+?/Ii,utf
+Capturing subpattern count = 0
+Options: caseless utf
+Subject length lower bound = 1
+
+/[^\x{1234}]++/Ii,utf
+Capturing subpattern count = 0
+Options: caseless utf
+Subject length lower bound = 1
+
+/[^\x{1234}]{2}/Ii,utf
+Capturing subpattern count = 0
+Options: caseless utf
+Subject length lower bound = 2
+
+/f.*/
+    for\=ph
+Partial match: for
+
+/f.*/s
+    for\=ph
+Partial match: for
+
+/f.*/utf
+    for\=ph
+Partial match: for
+
+/f.*/s,utf
+    for\=ph
+Partial match: for
+    
+/\x{d7ff}\x{e000}/utf
+
+/\x{d800}/utf
+Failed: error 173 at offset 7: disallowed Unicode code point (>= 0xd800 && <= 0xdfff)
+
+/\x{dfff}/utf
+Failed: error 173 at offset 7: disallowed Unicode code point (>= 0xd800 && <= 0xdfff)
+
+/\h+/utf
+    \x{1681}\x{200b}\x{1680}\x{2000}\x{202f}\x{3000}
+ 0: \x{1680}\x{2000}\x{202f}\x{3000}
+    \x{3001}\x{2fff}\x{200a}\x{a0}\x{2000}
+ 0: \x{200a}\x{a0}\x{2000}
+
+/[\h\x{e000}]+/B,utf
+------------------------------------------------------------------
+        Bra
+        [\x09 \xa0\x{1680}\x{180e}\x{2000}-\x{200a}\x{202f}\x{205f}\x{3000}\x{e000}]++
+        Ket
+        End
+------------------------------------------------------------------
+    \x{1681}\x{200b}\x{1680}\x{2000}\x{202f}\x{3000}
+ 0: \x{1680}\x{2000}\x{202f}\x{3000}
+    \x{3001}\x{2fff}\x{200a}\x{a0}\x{2000}
+ 0: \x{200a}\x{a0}\x{2000}
+
+/\H+/utf
+    \x{1680}\x{180e}\x{167f}\x{1681}\x{180d}\x{180f}
+ 0: \x{167f}\x{1681}\x{180d}\x{180f}
+    \x{2000}\x{200a}\x{1fff}\x{200b}
+ 0: \x{1fff}\x{200b}
+    \x{202f}\x{205f}\x{202e}\x{2030}\x{205e}\x{2060}
+ 0: \x{202e}\x{2030}\x{205e}\x{2060}
+    \x{a0}\x{3000}\x{9f}\x{a1}\x{2fff}\x{3001}
+ 0: \x{9f}\x{a1}\x{2fff}\x{3001}
+
+/[\H\x{d7ff}]+/B,utf
+------------------------------------------------------------------
+        Bra
+        [\x00-\x08\x0a-\x1f!-\x9f\xa1-\xff\x{100}-\x{167f}\x{1681}-\x{180d}\x{180f}-\x{1fff}\x{200b}-\x{202e}\x{2030}-\x{205e}\x{2060}-\x{2fff}\x{3001}-\x{10ffff}\x{d7ff}]++
+        Ket
+        End
+------------------------------------------------------------------
+    \x{1680}\x{180e}\x{167f}\x{1681}\x{180d}\x{180f}
+ 0: \x{167f}\x{1681}\x{180d}\x{180f}
+    \x{2000}\x{200a}\x{1fff}\x{200b}
+ 0: \x{1fff}\x{200b}
+    \x{202f}\x{205f}\x{202e}\x{2030}\x{205e}\x{2060}
+ 0: \x{202e}\x{2030}\x{205e}\x{2060}
+    \x{a0}\x{3000}\x{9f}\x{a1}\x{2fff}\x{3001}
+ 0: \x{9f}\x{a1}\x{2fff}\x{3001}
+
+/\v+/utf
+    \x{2027}\x{2030}\x{2028}\x{2029}
+ 0: \x{2028}\x{2029}
+    \x09\x0e\x{84}\x{86}\x{85}\x0a\x0b\x0c\x0d
+ 0: \x{85}\x{0a}\x{0b}\x{0c}\x{0d}
+
+/[\v\x{e000}]+/B,utf
+------------------------------------------------------------------
+        Bra
+        [\x0a-\x0d\x85\x{2028}-\x{2029}\x{e000}]++
+        Ket
+        End
+------------------------------------------------------------------
+    \x{2027}\x{2030}\x{2028}\x{2029}
+ 0: \x{2028}\x{2029}
+    \x09\x0e\x{84}\x{86}\x{85}\x0a\x0b\x0c\x0d
+ 0: \x{85}\x{0a}\x{0b}\x{0c}\x{0d}
+
+/\V+/utf
+    \x{2028}\x{2029}\x{2027}\x{2030}
+ 0: \x{2027}\x{2030}
+    \x{85}\x0a\x0b\x0c\x0d\x09\x0e\x{84}\x{86}
+ 0: \x{09}\x{0e}\x{84}\x{86}
+
+/[\V\x{d7ff}]+/B,utf
+------------------------------------------------------------------
+        Bra
+        [\x00-\x09\x0e-\x84\x86-\xff\x{100}-\x{2027}\x{202a}-\x{10ffff}\x{d7ff}]++
+        Ket
+        End
+------------------------------------------------------------------
+    \x{2028}\x{2029}\x{2027}\x{2030}
+ 0: \x{2027}\x{2030}
+    \x{85}\x0a\x0b\x0c\x0d\x09\x0e\x{84}\x{86}
+ 0: \x{09}\x{0e}\x{84}\x{86}
+
+/\R+/bsr=unicode,utf
+    \x{2027}\x{2030}\x{2028}\x{2029}
+ 0: \x{2028}\x{2029}
+    \x09\x0e\x{84}\x{86}\x{85}\x0a\x0b\x0c\x0d
+ 0: \x{85}\x{0a}\x{0b}\x{0c}\x{0d}
+
+/(..)\1/utf
+    ab\=ps
+Partial match: ab
+    aba\=ps
+Partial match: aba
+    abab\=ps
+ 0: abab
+ 1: ab
+
+/(..)\1/i,utf
+    ab\=ps
+Partial match: ab
+    abA\=ps
+Partial match: abA
+    aBAb\=ps
+ 0: aBAb
+ 1: aB
+
+/(..)\1{2,}/utf
+    ab\=ps
+Partial match: ab
+    aba\=ps
+Partial match: aba
+    abab\=ps
+Partial match: abab
+    ababa\=ps
+Partial match: ababa
+    ababab\=ps
+ 0: ababab
+ 1: ab
+    ababab\=ph
+Partial match: ababab
+    abababa\=ps
+ 0: ababab
+ 1: ab
+    abababa\=ph
+Partial match: abababa
+
+/(..)\1{2,}/i,utf
+    ab\=ps
+Partial match: ab
+    aBa\=ps
+Partial match: aBa
+    aBAb\=ps
+Partial match: aBAb
+    AbaBA\=ps
+Partial match: AbaBA
+    abABAb\=ps
+ 0: abABAb
+ 1: ab
+    aBAbaB\=ph
+Partial match: aBAbaB
+    abABabA\=ps
+ 0: abABab
+ 1: ab
+    abaBABa\=ph
+Partial match: abaBABa
+
+/(..)\1{2,}?x/i,utf
+    ab\=ps
+Partial match: ab
+    abA\=ps
+Partial match: abA
+    aBAb\=ps
+Partial match: aBAb
+    abaBA\=ps
+Partial match: abaBA
+    abAbaB\=ps
+Partial match: abAbaB
+    abaBabA\=ps
+Partial match: abaBabA
+    abAbABaBx\=ps
+ 0: abAbABaBx
+ 1: ab
+
+/./utf,newline=crlf
+    \r\=ps
+ 0: \x{0d}
+    \r\=ph
+Partial match: \x{0d}
+  
+/.{2,3}/utf,newline=crlf
+    \r\=ps
+Partial match: \x{0d}
+    \r\=ph
+Partial match: \x{0d}
+    \r\r\=ps
+ 0: \x{0d}\x{0d}
+    \r\r\=ph
+Partial match: \x{0d}\x{0d}
+    \r\r\r\=ps
+ 0: \x{0d}\x{0d}\x{0d}
+    \r\r\r\=ph
+Partial match: \x{0d}\x{0d}\x{0d}
+
+/.{2,3}?/utf,newline=crlf
+    \r\=ps
+Partial match: \x{0d}
+    \r\=ph
+Partial match: \x{0d}
+    \r\r\=ps
+ 0: \x{0d}\x{0d}
+    \r\r\=ph
+Partial match: \x{0d}\x{0d}
+    \r\r\r\=ps
+ 0: \x{0d}\x{0d}
+    \r\r\r\=ph
+ 0: \x{0d}\x{0d}
+
+/[^\x{100}][^\x{1234}][^\x{ffff}][^\x{10000}][^\x{10ffff}]/B,utf
+------------------------------------------------------------------
+        Bra
+        [^\x{100}]
+        [^\x{1234}]
+        [^\x{ffff}]
+        [^\x{10000}]
+        [^\x{10ffff}]
+        Ket
+        End
+------------------------------------------------------------------
+
+/[^\x{100}][^\x{1234}][^\x{ffff}][^\x{10000}][^\x{10ffff}]/Bi,utf
+------------------------------------------------------------------
+        Bra
+     /i [^\x{100}]
+     /i [^\x{1234}]
+     /i [^\x{ffff}]
+     /i [^\x{10000}]
+     /i [^\x{10ffff}]
+        Ket
+        End
+------------------------------------------------------------------
+
+/[^\x{100}]*[^\x{10000}]+[^\x{10ffff}]??[^\x{8000}]{4,}[^\x{7fff}]{2,9}?[^\x{fffff}]{5,6}+/B,utf
+------------------------------------------------------------------
+        Bra
+        [^\x{100}]*
+        [^\x{10000}]+
+        [^\x{10ffff}]??
+        [^\x{8000}]{4}
+        [^\x{8000}]*
+        [^\x{7fff}]{2}
+        [^\x{7fff}]{0,7}?
+        [^\x{fffff}]{5}
+        [^\x{fffff}]?+
+        Ket
+        End
+------------------------------------------------------------------
+
+/[^\x{100}]*[^\x{10000}]+[^\x{10ffff}]??[^\x{8000}]{4,}[^\x{7fff}]{2,9}?[^\x{fffff}]{5,6}+/Bi,utf
+------------------------------------------------------------------
+        Bra
+     /i [^\x{100}]*
+     /i [^\x{10000}]+
+     /i [^\x{10ffff}]??
+     /i [^\x{8000}]{4}
+     /i [^\x{8000}]*
+     /i [^\x{7fff}]{2}
+     /i [^\x{7fff}]{0,7}?
+     /i [^\x{fffff}]{5}
+     /i [^\x{fffff}]?+
+        Ket
+        End
+------------------------------------------------------------------
+
+/(?<=\x{1234}\x{1234})\bxy/I,utf
+Capturing subpattern count = 0
+Max lookbehind = 2
+Options: utf
+First code unit = 'x'
+Last code unit = 'y'
+Subject length lower bound = 2
+
+/(?<!^)ETA/utf
+    ETA
+No match
+
+/\u0100/B,utf,alt_bsux,allow_empty_class,match_unset_backref
+------------------------------------------------------------------
+        Bra
+        \x{100}
+        Ket
+        End
+------------------------------------------------------------------
+
+/[\u0100-\u0200]/B,utf,alt_bsux,allow_empty_class,match_unset_backref
+------------------------------------------------------------------
+        Bra
+        [\x{100}-\x{200}]
+        Ket
+        End
+------------------------------------------------------------------
+
+/\ud800/utf,alt_bsux,allow_empty_class,match_unset_backref
+Failed: error 173 at offset 5: disallowed Unicode code point (>= 0xd800 && <= 0xdfff)
+
+/^a+[a\x{200}]/B,utf
+------------------------------------------------------------------
+        Bra
+        ^
+        a+
+        [a\x{200}]
+        Ket
+        End
+------------------------------------------------------------------
+    aa
+ 0: aa
+
+/[b-d\x{200}-\x{250}]*[ae-h]?#[\x{200}-\x{250}]{0,8}[\x00-\xff]*#[\x{200}-\x{250}]+[a-z]/B,utf
+------------------------------------------------------------------
+        Bra
+        [b-d\x{200}-\x{250}]*+
+        [ae-h]?+
+        #
+        [\x{200}-\x{250}]{0,8}+
+        [\x00-\xff]*
+        #
+        [\x{200}-\x{250}]++
+        [a-z]
+        Ket
+        End
+------------------------------------------------------------------
+
+/[\p{L}]/IB
+------------------------------------------------------------------
+        Bra
+        [\p{L}]
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Subject length lower bound = 1
+
+/[\p{^L}]/IB
+------------------------------------------------------------------
+        Bra
+        [\P{L}]
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Subject length lower bound = 1
+
+/[\P{L}]/IB
+------------------------------------------------------------------
+        Bra
+        [\P{L}]
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Subject length lower bound = 1
+
+/[\P{^L}]/IB
+------------------------------------------------------------------
+        Bra
+        [\p{L}]
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Subject length lower bound = 1
+
+/[abc\p{L}\x{0660}]/IB,utf
+------------------------------------------------------------------
+        Bra
+        [a-c\p{L}\x{660}]
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+Subject length lower bound = 1
+
+/[\p{Nd}]/IB,utf
+------------------------------------------------------------------
+        Bra
+        [\p{Nd}]
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+Subject length lower bound = 1
+    1234
+ 0: 1
+
+/[\p{Nd}+-]+/IB,utf
+------------------------------------------------------------------
+        Bra
+        [+\-\p{Nd}]++
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+Subject length lower bound = 1
+    1234
+ 0: 1234
+    12-34
+ 0: 12-34
+    12+\x{661}-34  
+ 0: 12+\x{661}-34
+    ** Failers
+No match
+    abcd  
+No match
+
+/(?:[\PPa*]*){8,}/
+
+/[\P{Any}]/B
+------------------------------------------------------------------
+        Bra
+        [\P{Any}]
+        Ket
+        End
+------------------------------------------------------------------
+
+/[\P{Any}\E]/B
+------------------------------------------------------------------
+        Bra
+        [\P{Any}]
+        Ket
+        End
+------------------------------------------------------------------
+
+/(\P{Yi}+\277)/
+
+/(\P{Yi}+\277)?/
+
+/(?<=\P{Yi}{3}A)X/
+
+/\p{Yi}+(\P{Yi}+)(?1)/
+
+/(\P{Yi}{2}\277)?/
+
+/[\P{Yi}A]/
+
+/[\P{Yi}\P{Yi}\P{Yi}A]/
+
+/[^\P{Yi}A]/
+
+/[^\P{Yi}\P{Yi}\P{Yi}A]/
+
+/(\P{Yi}*\277)*/
+
+/(\P{Yi}*?\277)*/
+
+/(\p{Yi}*+\277)*/
+
+/(\P{Yi}?\277)*/
+
+/(\P{Yi}??\277)*/
+
+/(\p{Yi}?+\277)*/
+
+/(\P{Yi}{0,3}\277)*/
+
+/(\P{Yi}{0,3}?\277)*/
+
+/(\p{Yi}{0,3}+\277)*/
+
+/\p{Zl}{2,3}+/B,utf
+------------------------------------------------------------------
+        Bra
+        prop Zl {2}
+        prop Zl ?+
+        Ket
+        End
+------------------------------------------------------------------
+      
+ 0: \x{2028}\x{2028}
+    \x{2028}\x{2028}\x{2028}
+ 0: \x{2028}\x{2028}\x{2028}
+    
+/\p{Zl}/B,utf
+------------------------------------------------------------------
+        Bra
+        prop Zl
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{Lu}{3}+/B,utf
+------------------------------------------------------------------
+        Bra
+        prop Lu {3}
+        Ket
+        End
+------------------------------------------------------------------
+
+/\pL{2}+/B,utf
+------------------------------------------------------------------
+        Bra
+        prop L {2}
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{Cc}{2}+/B,utf
+------------------------------------------------------------------
+        Bra
+        prop Cc {2}
+        Ket
+        End
+------------------------------------------------------------------
+
+/^\p{Cf}/utf
+    \x{180e}
+ 0: \x{180e}
+    \x{061c}
+ 0: \x{61c}
+    \x{2066}
+ 0: \x{2066}
+    \x{2067}
+ 0: \x{2067}
+    \x{2068}
+ 0: \x{2068}
+    \x{2069}
+ 0: \x{2069}
+
+/^\p{Cs}/utf
+    \x{dfff}\=no_utf_check
+ 0: \x{dfff}
+    ** Failers
+No match
+    \x{09f} 
+No match
+  
+/^\p{Mn}/utf
+    \x{1a1b}
+ 0: \x{1a1b}
+
+/^\p{Pe}/utf
+    \x{2309}
+ 0: \x{2309}
+    \x{230b}
+ 0: \x{230b}
+
+/^\p{Ps}/utf
+    \x{2308}
+ 0: \x{2308}
+    \x{230a}
+ 0: \x{230a}
+
+/^\p{Sc}+/utf
+    $\x{a2}\x{a3}\x{a4}\x{a5}\x{a6}
+ 0: $\x{a2}\x{a3}\x{a4}\x{a5}
+    \x{9f2}
+ 0: \x{9f2}
+    ** Failers
+No match
+    X
+No match
+    \x{2c2}
+No match
+  
+/^\p{Zs}/utf
+    \ \
+ 0:  
+    \x{a0}
+ 0: \x{a0}
+    \x{1680}
+ 0: \x{1680}
+    \x{2000}
+ 0: \x{2000}
+    \x{2001}     
+ 0: \x{2001}
+    ** Failers
+No match
+    \x{2028}
+No match
+    \x{200d} 
+No match
+  
+# These are here because Perl has problems with the negative versions of the
+# properties and has changed how it behaves for caseless matching.
+      
+/\p{^Lu}/i,utf
+    1234
+ 0: 1
+    ** Failers
+ 0: *
+    ABC 
+No match
+
+/\P{Lu}/i,utf
+    1234
+ 0: 1
+    ** Failers
+ 0: *
+    ABC 
+No match
+
+/\p{Ll}/i,utf
+    a
+ 0: a
+    Az
+ 0: z
+    ** Failers
+ 0: a
+    ABC   
+No match
+
+/\p{Lu}/i,utf
+    A
+ 0: A
+    a\x{10a0}B 
+ 0: \x{10a0}
+    ** Failers 
+ 0: F
+    a
+No match
+    \x{1d00}  
+No match
+
+/\p{Lu}/i,utf
+    A
+ 0: A
+    aZ
+ 0: Z
+    ** Failers
+ 0: F
+    abc   
+No match
+
+/[\x{c0}\x{391}]/i,utf
+    \x{c0}
+ 0: \x{c0}
+    \x{e0} 
+ 0: \x{e0}
+
+# The next two are special cases where the lengths of the different cases of
+# the same character differ. The first went wrong with heap frame storage; the
+# second was broken in all cases. 
+
+/^\x{023a}+?(\x{0130}+)/i,utf
+  \x{023a}\x{2c65}\x{0130}
+ 0: \x{23a}\x{2c65}\x{130}
+ 1: \x{130}
+  
+/^\x{023a}+([^X])/i,utf
+  \x{023a}\x{2c65}X
+ 0: \x{23a}\x{2c65}
+ 1: \x{2c65}
+
+/\x{c0}+\x{116}+/i,utf
+    \x{c0}\x{e0}\x{116}\x{117}
+ 0: \x{c0}\x{e0}\x{116}\x{117}
+
+/[\x{c0}\x{116}]+/i,utf
+    \x{c0}\x{e0}\x{116}\x{117}
+ 0: \x{c0}\x{e0}\x{116}\x{117}
+
+/(\x{de})\1/i,utf
+    \x{de}\x{de}
+ 0: \x{de}\x{de}
+ 1: \x{de}
+    \x{de}\x{fe}
+ 0: \x{de}\x{fe}
+ 1: \x{de}
+    \x{fe}\x{fe}
+ 0: \x{fe}\x{fe}
+ 1: \x{fe}
+    \x{fe}\x{de}
+ 0: \x{fe}\x{de}
+ 1: \x{fe}
+
+/^\x{c0}$/i,utf
+    \x{c0}
+ 0: \x{c0}
+    \x{e0} 
+ 0: \x{e0}
+
+/^\x{e0}$/i,utf
+    \x{c0}
+ 0: \x{c0}
+    \x{e0} 
+ 0: \x{e0}
+
+# The next two should be Perl-compatible, but it fails to match \x{e0}. PCRE
+# will match it only with UCP support, because without that it has no notion
+# of case for anything other than the ASCII letters.  
+
+/((?i)[\x{c0}])/utf
+    \x{c0}
+ 0: \x{c0}
+ 1: \x{c0}
+    \x{e0} 
+ 0: \x{e0}
+ 1: \x{e0}
+
+/(?i:[\x{c0}])/utf
+    \x{c0}
+ 0: \x{c0}
+    \x{e0} 
+ 0: \x{e0}
+
+# These are PCRE's extra properties to help with Unicodizing \d etc. 
+
+/^\p{Xan}/utf
+    ABCD
+ 0: A
+    1234
+ 0: 1
+    \x{6ca}
+ 0: \x{6ca}
+    \x{a6c}
+ 0: \x{a6c}
+    \x{10a7}   
+ 0: \x{10a7}
+    ** Failers
+No match
+    _ABC   
+No match
+
+/^\p{Xan}+/utf
+    ABCD1234\x{6ca}\x{a6c}\x{10a7}_
+ 0: ABCD1234\x{6ca}\x{a6c}\x{10a7}
+    ** Failers
+No match
+    _ABC   
+No match
+
+/^\p{Xan}+?/utf
+    \x{6ca}\x{a6c}\x{10a7}_
+ 0: \x{6ca}
+
+/^\p{Xan}*/utf
+    ABCD1234\x{6ca}\x{a6c}\x{10a7}_
+ 0: ABCD1234\x{6ca}\x{a6c}\x{10a7}
+    
+/^\p{Xan}{2,9}/utf
+    ABCD1234\x{6ca}\x{a6c}\x{10a7}_
+ 0: ABCD1234\x{6ca}
+    
+/^\p{Xan}{2,9}?/utf
+    \x{6ca}\x{a6c}\x{10a7}_
+ 0: \x{6ca}\x{a6c}
+    
+/^[\p{Xan}]/utf
+    ABCD1234_
+ 0: A
+    1234abcd_
+ 0: 1
+    \x{6ca}
+ 0: \x{6ca}
+    \x{a6c}
+ 0: \x{a6c}
+    \x{10a7}   
+ 0: \x{10a7}
+    ** Failers
+No match
+    _ABC   
+No match
+ 
+/^[\p{Xan}]+/utf
+    ABCD1234\x{6ca}\x{a6c}\x{10a7}_
+ 0: ABCD1234\x{6ca}\x{a6c}\x{10a7}
+    ** Failers
+No match
+    _ABC   
+No match
+
+/^>\p{Xsp}/utf
+    >\x{1680}\x{2028}\x{0b}
+ 0: >\x{1680}
+    >\x{a0} 
+ 0: >\x{a0}
+    ** Failers
+No match
+    \x{0b} 
+No match
+
+/^>\p{Xsp}+/utf
+    > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+ 0: > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+
+/^>\p{Xsp}+?/utf
+    >\x{1680}\x{2028}\x{0b}
+ 0: >\x{1680}
+
+/^>\p{Xsp}*/utf
+    > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+ 0: > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+    
+/^>\p{Xsp}{2,9}/utf
+    > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+ 0: > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+    
+/^>\p{Xsp}{2,9}?/utf
+    > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+ 0: > \x{09}
+    
+/^>[\p{Xsp}]/utf
+    >\x{2028}\x{0b}
+ 0: >\x{2028}
+ 
+/^>[\p{Xsp}]+/utf
+    > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+ 0: > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+
+/^>\p{Xps}/utf
+    >\x{1680}\x{2028}\x{0b}
+ 0: >\x{1680}
+    >\x{a0} 
+ 0: >\x{a0}
+    ** Failers
+No match
+    \x{0b} 
+No match
+
+/^>\p{Xps}+/utf
+    > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+ 0: > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+
+/^>\p{Xps}+?/utf
+    >\x{1680}\x{2028}\x{0b}
+ 0: >\x{1680}
+
+/^>\p{Xps}*/utf
+    > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+ 0: > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+    
+/^>\p{Xps}{2,9}/utf
+    > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+ 0: > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+    
+/^>\p{Xps}{2,9}?/utf
+    > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+ 0: > \x{09}
+    
+/^>[\p{Xps}]/utf
+    >\x{2028}\x{0b}
+ 0: >\x{2028}
+ 
+/^>[\p{Xps}]+/utf
+    > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+ 0: > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+
+/^\p{Xwd}/utf
+    ABCD
+ 0: A
+    1234
+ 0: 1
+    \x{6ca}
+ 0: \x{6ca}
+    \x{a6c}
+ 0: \x{a6c}
+    \x{10a7}
+ 0: \x{10a7}
+    _ABC    
+ 0: _
+    ** Failers
+No match
+    [] 
+No match
+
+/^\p{Xwd}+/utf
+    ABCD1234\x{6ca}\x{a6c}\x{10a7}_
+ 0: ABCD1234\x{6ca}\x{a6c}\x{10a7}_
+
+/^\p{Xwd}+?/utf
+    \x{6ca}\x{a6c}\x{10a7}_
+ 0: \x{6ca}
+
+/^\p{Xwd}*/utf
+    ABCD1234\x{6ca}\x{a6c}\x{10a7}_
+ 0: ABCD1234\x{6ca}\x{a6c}\x{10a7}_
+    
+/^\p{Xwd}{2,9}/utf
+    A_B12\x{6ca}\x{a6c}\x{10a7}
+ 0: A_B12\x{6ca}\x{a6c}\x{10a7}
+    
+/^\p{Xwd}{2,9}?/utf
+    \x{6ca}\x{a6c}\x{10a7}_
+ 0: \x{6ca}\x{a6c}
+    
+/^[\p{Xwd}]/utf
+    ABCD1234_
+ 0: A
+    1234abcd_
+ 0: 1
+    \x{6ca}
+ 0: \x{6ca}
+    \x{a6c}
+ 0: \x{a6c}
+    \x{10a7}   
+ 0: \x{10a7}
+    _ABC 
+ 0: _
+    ** Failers
+No match
+    []   
+No match
+ 
+/^[\p{Xwd}]+/utf
+    ABCD1234\x{6ca}\x{a6c}\x{10a7}_
+ 0: ABCD1234\x{6ca}\x{a6c}\x{10a7}_
+
+# A check not in UTF-8 mode 
+
+/^[\p{Xwd}]+/
+    ABCD1234_
+ 0: ABCD1234_
+    
+# Some negative checks 
+
+/^[\P{Xwd}]+/utf
+    !.+\x{019}\x{35a}AB
+ 0: !.+\x{19}\x{35a}
+
+/^[\p{^Xwd}]+/utf
+    !.+\x{019}\x{35a}AB
+ 0: !.+\x{19}\x{35a}
+
+/[\D]/B,utf,ucp
+------------------------------------------------------------------
+        Bra
+        [\P{Nd}]
+        Ket
+        End
+------------------------------------------------------------------
+    1\x{3c8}2
+ 0: \x{3c8}
+
+/[\d]/B,utf,ucp
+------------------------------------------------------------------
+        Bra
+        [\p{Nd}]
+        Ket
+        End
+------------------------------------------------------------------
+    >\x{6f4}<
+ 0: \x{6f4}
+
+/[\S]/B,utf,ucp
+------------------------------------------------------------------
+        Bra
+        [\P{Xsp}]
+        Ket
+        End
+------------------------------------------------------------------
+    \x{1680}\x{6f4}\x{1680}
+ 0: \x{6f4}
+
+/[\s]/B,utf,ucp
+------------------------------------------------------------------
+        Bra
+        [\p{Xsp}]
+        Ket
+        End
+------------------------------------------------------------------
+    >\x{1680}<
+ 0: \x{1680}
+
+/[\W]/B,utf,ucp
+------------------------------------------------------------------
+        Bra
+        [\P{Xwd}]
+        Ket
+        End
+------------------------------------------------------------------
+    A\x{1712}B
+ 0: \x{1712}
+
+/[\w]/B,utf,ucp
+------------------------------------------------------------------
+        Bra
+        [\p{Xwd}]
+        Ket
+        End
+------------------------------------------------------------------
+    >\x{1723}<
+ 0: \x{1723}
+
+/\D/B,utf,ucp
+------------------------------------------------------------------
+        Bra
+        notprop Nd
+        Ket
+        End
+------------------------------------------------------------------
+    1\x{3c8}2
+ 0: \x{3c8}
+
+/\d/B,utf,ucp
+------------------------------------------------------------------
+        Bra
+        prop Nd
+        Ket
+        End
+------------------------------------------------------------------
+    >\x{6f4}<
+ 0: \x{6f4}
+
+/\S/B,utf,ucp
+------------------------------------------------------------------
+        Bra
+        notprop Xsp
+        Ket
+        End
+------------------------------------------------------------------
+    \x{1680}\x{6f4}\x{1680}
+ 0: \x{6f4}
+
+/\s/B,utf,ucp
+------------------------------------------------------------------
+        Bra
+        prop Xsp
+        Ket
+        End
+------------------------------------------------------------------
+    >\x{1680}>
+ 0: \x{1680}
+
+/\W/B,utf,ucp
+------------------------------------------------------------------
+        Bra
+        notprop Xwd
+        Ket
+        End
+------------------------------------------------------------------
+    A\x{1712}B
+ 0: \x{1712}
+
+/\w/B,utf,ucp
+------------------------------------------------------------------
+        Bra
+        prop Xwd
+        Ket
+        End
+------------------------------------------------------------------
+    >\x{1723}<
+ 0: \x{1723}
+
+/[[:alpha:]]/B,ucp
+------------------------------------------------------------------
+        Bra
+        [\p{L}]
+        Ket
+        End
+------------------------------------------------------------------
+
+/[[:lower:]]/B,ucp
+------------------------------------------------------------------
+        Bra
+        [\p{Ll}]
+        Ket
+        End
+------------------------------------------------------------------
+
+/[[:upper:]]/B,ucp
+------------------------------------------------------------------
+        Bra
+        [\p{Lu}]
+        Ket
+        End
+------------------------------------------------------------------
+
+/[[:alnum:]]/B,ucp
+------------------------------------------------------------------
+        Bra
+        [\p{Xan}]
+        Ket
+        End
+------------------------------------------------------------------
+
+/[[:ascii:]]/B,ucp
+------------------------------------------------------------------
+        Bra
+        [\x00-\x7f]
+        Ket
+        End
+------------------------------------------------------------------
+
+/[[:cntrl:]]/B,ucp
+------------------------------------------------------------------
+        Bra
+        [\p{Cc}]
+        Ket
+        End
+------------------------------------------------------------------
+
+/[[:digit:]]/B,ucp
+------------------------------------------------------------------
+        Bra
+        [\p{Nd}]
+        Ket
+        End
+------------------------------------------------------------------
+
+/[[:graph:]]/B,ucp
+------------------------------------------------------------------
+        Bra
+        [[:graph:]]
+        Ket
+        End
+------------------------------------------------------------------
+
+/[[:print:]]/B,ucp
+------------------------------------------------------------------
+        Bra
+        [[:print:]]
+        Ket
+        End
+------------------------------------------------------------------
+
+/[[:punct:]]/B,ucp
+------------------------------------------------------------------
+        Bra
+        [[:punct:]]
+        Ket
+        End
+------------------------------------------------------------------
+
+/[[:space:]]/B,ucp
+------------------------------------------------------------------
+        Bra
+        [\p{Xps}]
+        Ket
+        End
+------------------------------------------------------------------
+
+/[[:word:]]/B,ucp
+------------------------------------------------------------------
+        Bra
+        [\p{Xwd}]
+        Ket
+        End
+------------------------------------------------------------------
+
+/[[:xdigit:]]/B,ucp
+------------------------------------------------------------------
+        Bra
+        [0-9A-Fa-f]
+        Ket
+        End
+------------------------------------------------------------------
+
+# Unicode properties for \b abd \B 
+
+/\b...\B/utf,ucp
+    abc_
+ 0: abc
+    \x{37e}abc\x{376} 
+ 0: abc
+    \x{37e}\x{376}\x{371}\x{393}\x{394} 
+ 0: \x{376}\x{371}\x{393}
+    !\x{c0}++\x{c1}\x{c2} 
+ 0: ++\x{c1}
+    !\x{c0}+++++ 
+ 0: \x{c0}++
+
+# Without PCRE_UCP, non-ASCII always fail, even if < 256  
+
+/\b...\B/utf
+    abc_
+ 0: abc
+    ** Failers 
+ 0: Fai
+    \x{37e}abc\x{376} 
+No match
+    \x{37e}\x{376}\x{371}\x{393}\x{394} 
+No match
+    !\x{c0}++\x{c1}\x{c2} 
+No match
+    !\x{c0}+++++ 
+No match
+
+# With PCRE_UCP, non-UTF8 chars that are < 256 still check properties  
+
+/\b...\B/ucp
+    abc_
+ 0: abc
+    !\x{c0}++\x{c1}\x{c2} 
+ 0: ++\xc1
+    !\x{c0}+++++ 
+ 0: \xc0++
+
+# Some of these are silly, but they check various combinations 
+
+/[[:^alpha:][:^cntrl:]]+/B,utf,ucp
+------------------------------------------------------------------
+        Bra
+        [\P{L}\P{Cc}]++
+        Ket
+        End
+------------------------------------------------------------------
+    123
+ 0: 123
+    abc 
+ 0: abc
+
+/[[:^cntrl:][:^alpha:]]+/B,utf,ucp
+------------------------------------------------------------------
+        Bra
+        [\P{Cc}\P{L}]++
+        Ket
+        End
+------------------------------------------------------------------
+    123
+ 0: 123
+    abc 
+ 0: abc
+
+/[[:alpha:]]+/B,utf,ucp
+------------------------------------------------------------------
+        Bra
+        [\p{L}]++
+        Ket
+        End
+------------------------------------------------------------------
+    abc
+ 0: abc
+
+/[[:^alpha:]\S]+/B,utf,ucp
+------------------------------------------------------------------
+        Bra
+        [\P{L}\P{Xsp}]++
+        Ket
+        End
+------------------------------------------------------------------
+    123
+ 0: 123
+    abc 
+ 0: abc
+
+/[^\d]+/B,utf,ucp
+------------------------------------------------------------------
+        Bra
+        [^\p{Nd}]++
+        Ket
+        End
+------------------------------------------------------------------
+    abc123
+ 0: abc
+    abc\x{123}
+ 0: abc\x{123}
+    \x{660}abc   
+ 0: abc
+
+/\p{Lu}+9\p{Lu}+B\p{Lu}+b/B
+------------------------------------------------------------------
+        Bra
+        prop Lu ++
+        9
+        prop Lu +
+        B
+        prop Lu ++
+        b
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{^Lu}+9\p{^Lu}+B\p{^Lu}+b/B
+------------------------------------------------------------------
+        Bra
+        notprop Lu +
+        9
+        notprop Lu ++
+        B
+        notprop Lu +
+        b
+        Ket
+        End
+------------------------------------------------------------------
+
+/\P{Lu}+9\P{Lu}+B\P{Lu}+b/B
+------------------------------------------------------------------
+        Bra
+        notprop Lu +
+        9
+        notprop Lu ++
+        B
+        notprop Lu +
+        b
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{Han}+X\p{Greek}+\x{370}/B,utf
+------------------------------------------------------------------
+        Bra
+        prop Han ++
+        X
+        prop Greek +
+        \x{370}
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{Xan}+!\p{Xan}+A/B
+------------------------------------------------------------------
+        Bra
+        prop Xan ++
+        !
+        prop Xan +
+        A
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{Xsp}+!\p{Xsp}\t/B
+------------------------------------------------------------------
+        Bra
+        prop Xsp ++
+        !
+        prop Xsp
+        \x09
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{Xps}+!\p{Xps}\t/B
+------------------------------------------------------------------
+        Bra
+        prop Xps ++
+        !
+        prop Xps
+        \x09
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{Xwd}+!\p{Xwd}_/B
+------------------------------------------------------------------
+        Bra
+        prop Xwd ++
+        !
+        prop Xwd
+        _
+        Ket
+        End
+------------------------------------------------------------------
+
+/A+\p{N}A+\dB+\p{N}*B+\d*/B,ucp
+------------------------------------------------------------------
+        Bra
+        A++
+        prop N
+        A++
+        prop Nd
+        B+
+        prop N *+
+        B++
+        prop Nd *+
+        Ket
+        End
+------------------------------------------------------------------
+
+# These behaved oddly in Perl, so they are kept in this test 
+
+/(\x{23a}\x{23a}\x{23a})?\1/i,utf
+    \x{23a}\x{23a}\x{23a}\x{2c65}\x{2c65}
+No match
+
+/(ȺȺȺ)?\1/i,utf
+    ȺȺȺⱥⱥ
+No match
+
+/(\x{23a}\x{23a}\x{23a})?\1/i,utf
+    \x{23a}\x{23a}\x{23a}\x{2c65}\x{2c65}\x{2c65}
+ 0: \x{23a}\x{23a}\x{23a}\x{2c65}\x{2c65}\x{2c65}
+ 1: \x{23a}\x{23a}\x{23a}
+
+/(ȺȺȺ)?\1/i,utf
+    ȺȺȺⱥⱥⱥ
+ 0: \x{23a}\x{23a}\x{23a}\x{2c65}\x{2c65}\x{2c65}
+ 1: \x{23a}\x{23a}\x{23a}
+
+/(\x{23a}\x{23a}\x{23a})\1/i,utf
+    \x{23a}\x{23a}\x{23a}\x{2c65}\x{2c65}
+No match
+
+/(ȺȺȺ)\1/i,utf
+    ȺȺȺⱥⱥ
+No match
+
+/(\x{23a}\x{23a}\x{23a})\1/i,utf
+    \x{23a}\x{23a}\x{23a}\x{2c65}\x{2c65}\x{2c65}
+ 0: \x{23a}\x{23a}\x{23a}\x{2c65}\x{2c65}\x{2c65}
+ 1: \x{23a}\x{23a}\x{23a}
+
+/(ȺȺȺ)\1/i,utf
+    ȺȺȺⱥⱥⱥ
+ 0: \x{23a}\x{23a}\x{23a}\x{2c65}\x{2c65}\x{2c65}
+ 1: \x{23a}\x{23a}\x{23a}
+
+/(\x{2c65}\x{2c65})\1/i,utf
+    \x{2c65}\x{2c65}\x{23a}\x{23a}
+ 0: \x{2c65}\x{2c65}\x{23a}\x{23a}
+ 1: \x{2c65}\x{2c65}
+    
+/(ⱥⱥ)\1/i,utf
+    ⱥⱥȺȺ 
+ 0: \x{2c65}\x{2c65}\x{23a}\x{23a}
+ 1: \x{2c65}\x{2c65}
+    
+/(\x{23a}\x{23a}\x{23a})\1Y/i,utf
+    X\x{23a}\x{23a}\x{23a}\x{2c65}\x{2c65}\x{2c65}YZ
+ 0: \x{23a}\x{23a}\x{23a}\x{2c65}\x{2c65}\x{2c65}Y
+ 1: \x{23a}\x{23a}\x{23a}
+
+/(\x{2c65}\x{2c65})\1Y/i,utf
+    X\x{2c65}\x{2c65}\x{23a}\x{23a}YZ
+ 0: \x{2c65}\x{2c65}\x{23a}\x{23a}Y
+ 1: \x{2c65}\x{2c65}
+
+# These scripts weren't yet in Perl when I added Unicode 6.0.0 to PCRE 
+
+/^[\p{Batak}]/utf
+    \x{1bc0}
+ 0: \x{1bc0}
+    \x{1bff}
+ 0: \x{1bff}
+    ** Failers
+No match
+    \x{1bf4}
+No match
+    
+/^[\p{Brahmi}]/utf
+    \x{11000}
+ 0: \x{11000}
+    \x{1106f}
+ 0: \x{1106f}
+    ** Failers
+No match
+    \x{1104e}
+No match
+    
+/^[\p{Mandaic}]/utf
+    \x{840}
+ 0: \x{840}
+    \x{85e}
+ 0: \x{85e}
+    ** Failers
+No match
+    \x{85c}
+No match
+    \x{85d}    
+No match
+
+/(\X*)(.)/s,utf
+    A\x{300}
+ 0: A
+ 1: 
+ 2: A
+
+/^S(\X*)e(\X*)$/utf
+    Stéréo
+ 0: Ste\x{301}re\x{301}o
+ 1: te\x{301}r
+ 2: \x{301}o
+    
+/^\X/utf
+    ́réo
+ 0: \x{301}
+
+/^a\X41z/alt_bsux,allow_empty_class,match_unset_backref,dupnames
+    aX41z
+ 0: aX41z
+    *** Failers
+No match
+    aAz
+No match
+
+/(?<=ab\Cde)X/utf
+Failed: error 136 at offset 10: \C is not allowed in a lookbehind assertion
+
+/\X/
+    a\=ps
+ 0: a
+    a\=ph
+Partial match: a
+
+/\Xa/
+    aa\=ps
+ 0: aa
+    aa\=ph
+ 0: aa
+
+/\X{2}/
+    aa\=ps
+ 0: aa
+    aa\=ph
+Partial match: aa
+
+/\X+a/
+    a\=ps
+Partial match: a
+    aa\=ps
+ 0: aa
+    aa\=ph
+Partial match: aa
+
+/\X+?a/
+    a\=ps
+Partial match: a
+    ab\=ps
+Partial match: ab
+    aa\=ps
+ 0: aa
+    aa\=ph
+ 0: aa
+    aba\=ps
+ 0: aba
+    
+# These Unicode 6.1.0 scripts are not known to Perl.  
+
+/\p{Chakma}\d/utf,ucp
+    \x{11100}\x{1113c}
+ 0: \x{11100}\x{1113c}
+
+/\p{Takri}\d/utf,ucp
+    \x{11680}\x{116c0}
+ 0: \x{11680}\x{116c0}
+
+/^\X/utf
+    A\=ps
+ 0: A
+    A\=ph
+Partial match: A
+    A\x{300}\x{301}\=ps
+ 0: A\x{300}\x{301}
+    A\x{300}\x{301}\=ph
+Partial match: A\x{300}\x{301}
+    A\x{301}\=ps
+ 0: A\x{301}
+    A\x{301}\=ph
+Partial match: A\x{301}
+    
+/^\X{2,3}/utf
+    A\=ps
+Partial match: A
+    A\=ph
+Partial match: A
+    AA\=ps
+ 0: AA
+    AA\=ph
+Partial match: AA
+    A\x{300}\x{301}\=ps
+Partial match: A\x{300}\x{301}
+    A\x{300}\x{301}\=ph
+Partial match: A\x{300}\x{301}
+    A\x{300}\x{301}A\x{300}\x{301}\=ps
+ 0: A\x{300}\x{301}A\x{300}\x{301}
+    A\x{300}\x{301}A\x{300}\x{301}\=ph
+Partial match: A\x{300}\x{301}A\x{300}\x{301}
+
+/^\X{2}/utf
+    AA\=ps
+ 0: AA
+    AA\=ph
+Partial match: AA
+    A\x{300}\x{301}A\x{300}\x{301}\=ps
+ 0: A\x{300}\x{301}A\x{300}\x{301}
+    A\x{300}\x{301}A\x{300}\x{301}\=ph
+Partial match: A\x{300}\x{301}A\x{300}\x{301}
+    
+/^\X+/utf
+    AA\=ps
+ 0: AA
+    AA\=ph
+Partial match: AA
+
+/^\X+?Z/utf
+    AA\=ps
+Partial match: AA
+    AA\=ph
+Partial match: AA
+
+/A\x{3a3}B/IBi,utf
+------------------------------------------------------------------
+        Bra
+     /i A
+        clist 03a3 03c2 03c3
+     /i B
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: caseless utf
+First code unit = 'A' (caseless)
+Last code unit = 'B' (caseless)
+Subject length lower bound = 3
+
+/[\x{3a3}]/Bi,utf
+------------------------------------------------------------------
+        Bra
+        clist 03a3 03c2 03c3
+        Ket
+        End
+------------------------------------------------------------------
+
+/[^\x{3a3}]/Bi,utf
+------------------------------------------------------------------
+        Bra
+        not clist 03a3 03c2 03c3
+        Ket
+        End
+------------------------------------------------------------------
+
+/[\x{3a3}]+/Bi,utf
+------------------------------------------------------------------
+        Bra
+        clist 03a3 03c2 03c3 ++
+        Ket
+        End
+------------------------------------------------------------------
+
+/[^\x{3a3}]+/Bi,utf
+------------------------------------------------------------------
+        Bra
+        not clist 03a3 03c2 03c3 ++
+        Ket
+        End
+------------------------------------------------------------------
+
+/a*\x{3a3}/Bi,utf
+------------------------------------------------------------------
+        Bra
+     /i a*+
+        clist 03a3 03c2 03c3
+        Ket
+        End
+------------------------------------------------------------------
+
+/\x{3a3}+a/Bi,utf
+------------------------------------------------------------------
+        Bra
+        clist 03a3 03c2 03c3 ++
+     /i a
+        Ket
+        End
+------------------------------------------------------------------
+
+/\x{3a3}*\x{3c2}/Bi,utf
+------------------------------------------------------------------
+        Bra
+        clist 03a3 03c2 03c3 *
+        clist 03a3 03c2 03c3
+        Ket
+        End
+------------------------------------------------------------------
+
+/\x{3a3}{3}/i,utf,aftertext
+    \x{3a3}\x{3c3}\x{3c2}\x{3a3}\x{3c3}\x{3c2}
+ 0: \x{3a3}\x{3c3}\x{3c2}
+ 0+ \x{3a3}\x{3c3}\x{3c2}
+
+/\x{3a3}{2,4}/i,utf,aftertext
+    \x{3a3}\x{3c3}\x{3c2}\x{3a3}\x{3c3}\x{3c2}
+ 0: \x{3a3}\x{3c3}\x{3c2}\x{3a3}
+ 0+ \x{3c3}\x{3c2}
+
+/\x{3a3}{2,4}?/i,utf,aftertext
+    \x{3a3}\x{3c3}\x{3c2}\x{3a3}\x{3c3}\x{3c2}
+ 0: \x{3a3}\x{3c3}
+ 0+ \x{3c2}\x{3a3}\x{3c3}\x{3c2}
+
+/\x{3a3}+./i,utf,aftertext
+    \x{3a3}\x{3c3}\x{3c2}\x{3a3}\x{3c3}\x{3c2}
+ 0: \x{3a3}\x{3c3}\x{3c2}\x{3a3}\x{3c3}\x{3c2}
+ 0+ 
+
+/\x{3a3}++./i,utf,aftertext
+    ** Failers
+No match
+    \x{3a3}\x{3c3}\x{3c2}\x{3a3}\x{3c3}\x{3c2}
+No match
+
+/\x{3a3}*\x{3c2}/Bi,utf
+------------------------------------------------------------------
+        Bra
+        clist 03a3 03c2 03c3 *
+        clist 03a3 03c2 03c3
+        Ket
+        End
+------------------------------------------------------------------
+
+/[^\x{3a3}]*\x{3c2}/Bi,utf
+------------------------------------------------------------------
+        Bra
+        not clist 03a3 03c2 03c3 *+
+        clist 03a3 03c2 03c3
+        Ket
+        End
+------------------------------------------------------------------
+
+/[^a]*\x{3c2}/Bi,utf
+------------------------------------------------------------------
+        Bra
+     /i [^a]*
+        clist 03a3 03c2 03c3
+        Ket
+        End
+------------------------------------------------------------------
+
+/ist/Bi,utf
+------------------------------------------------------------------
+        Bra
+     /i i
+        clist 0053 0073 017f
+     /i t
+        Ket
+        End
+------------------------------------------------------------------
+    ikt
+No match
+
+/is+t/i,utf
+    iSs\x{17f}t
+ 0: iSs\x{17f}t
+    ikt
+No match
+
+/is+?t/i,utf
+    ikt
+No match
+
+/is?t/i,utf
+    ikt
+No match
+
+/is{2}t/i,utf
+    iskt
+No match
+    
+# This property is a PCRE special 
+
+/^\p{Xuc}/utf
+    $abc
+ 0: $
+    @abc
+ 0: @
+    `abc
+ 0: `
+    \x{1234}abc
+ 0: \x{1234}
+    ** Failers
+No match
+    abc     
+No match
+
+/^\p{Xuc}+/utf
+    $@`\x{a0}\x{1234}\x{e000}**
+ 0: $@`\x{a0}\x{1234}\x{e000}
+    ** Failers
+No match
+    \x{9f}
+No match
+
+/^\p{Xuc}+?/utf
+    $@`\x{a0}\x{1234}\x{e000}**
+ 0: $
+    ** Failers
+No match
+    \x{9f}
+No match
+
+/^\p{Xuc}+?\*/utf
+    $@`\x{a0}\x{1234}\x{e000}**
+ 0: $@`\x{a0}\x{1234}\x{e000}*
+    ** Failers
+No match
+    \x{9f}
+No match
+
+/^\p{Xuc}++/utf
+    $@`\x{a0}\x{1234}\x{e000}**
+ 0: $@`\x{a0}\x{1234}\x{e000}
+    ** Failers
+No match
+    \x{9f}
+No match
+
+/^\p{Xuc}{3,5}/utf
+    $@`\x{a0}\x{1234}\x{e000}**
+ 0: $@`\x{a0}\x{1234}
+    ** Failers
+No match
+    \x{9f}
+No match
+
+/^\p{Xuc}{3,5}?/utf
+    $@`\x{a0}\x{1234}\x{e000}**
+ 0: $@`
+    ** Failers
+No match
+    \x{9f}
+No match
+
+/^[\p{Xuc}]/utf
+    $@`\x{a0}\x{1234}\x{e000}**
+ 0: $
+    ** Failers
+No match
+    \x{9f}
+No match
+
+/^[\p{Xuc}]+/utf
+    $@`\x{a0}\x{1234}\x{e000}**
+ 0: $@`\x{a0}\x{1234}\x{e000}
+    ** Failers
+No match
+    \x{9f}
+No match
+
+/^\P{Xuc}/utf
+    abc
+ 0: a
+    ** Failers
+ 0: *
+    $abc
+No match
+    @abc
+No match
+    `abc
+No match
+    \x{1234}abc
+No match
+
+/^[\P{Xuc}]/utf
+    abc
+ 0: a
+    ** Failers
+ 0: *
+    $abc
+No match
+    @abc
+No match
+    `abc
+No match
+    \x{1234}abc
+No match
+    
+# Some auto-possessification tests 
+
+/\pN+\z/B
+------------------------------------------------------------------
+        Bra
+        prop N ++
+        \z
+        Ket
+        End
+------------------------------------------------------------------
+
+/\PN+\z/B
+------------------------------------------------------------------
+        Bra
+        notprop N ++
+        \z
+        Ket
+        End
+------------------------------------------------------------------
+
+/\pN+/B
+------------------------------------------------------------------
+        Bra
+        prop N ++
+        Ket
+        End
+------------------------------------------------------------------
+
+/\PN+/B
+------------------------------------------------------------------
+        Bra
+        notprop N ++
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{Any}+\p{Any} \p{Any}+\P{Any} \p{Any}+\p{L&} \p{Any}+\p{L} \p{Any}+\p{Lu} \p{Any}+\p{Han} \p{Any}+\p{Xan} \p{Any}+\p{Xsp} \p{Any}+\p{Xps} \p{Xwd}+\p{Any} \p{Any}+\p{Xuc}/Bx,ucp
+------------------------------------------------------------------
+        Bra
+        prop Any +
+        prop Any
+        prop Any +
+        notprop Any
+        prop Any +
+        prop L&
+        prop Any +
+        prop L
+        prop Any +
+        prop Lu
+        prop Any +
+        prop Han
+        prop Any +
+        prop Xan
+        prop Any +
+        prop Xsp
+        prop Any +
+        prop Xps
+        prop Xwd +
+        prop Any
+        prop Any +
+        prop Xuc
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{L&}+\p{Any} \p{L&}+\p{L&} \P{L&}+\p{L&} \p{L&}+\p{L} \p{L&}+\p{Lu} \p{L&}+\p{Han} \p{L&}+\p{Xan} \p{L&}+\P{Xan} \p{L&}+\p{Xsp} \p{L&}+\p{Xps} \p{Xwd}+\p{L&} \p{L&}+\p{Xuc}/Bx,ucp
+------------------------------------------------------------------
+        Bra
+        prop L& +
+        prop Any
+        prop L& +
+        prop L&
+        notprop L& ++
+        prop L&
+        prop L& +
+        prop L
+        prop L& +
+        prop Lu
+        prop L& +
+        prop Han
+        prop L& +
+        prop Xan
+        prop L& ++
+        notprop Xan
+        prop L& ++
+        prop Xsp
+        prop L& ++
+        prop Xps
+        prop Xwd +
+        prop L&
+        prop L& +
+        prop Xuc
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{N}+\p{Any} \p{N}+\p{L&} \p{N}+\p{L} \p{N}+\P{L} \p{N}+\P{N} \p{N}+\p{Lu} \p{N}+\p{Han} \p{N}+\p{Xan} \p{N}+\p{Xsp} \p{N}+\p{Xps} \p{Xwd}+\p{N} \p{N}+\p{Xuc}/Bx,ucp
+------------------------------------------------------------------
+        Bra
+        prop N +
+        prop Any
+        prop N +
+        prop L&
+        prop N ++
+        prop L
+        prop N +
+        notprop L
+        prop N ++
+        notprop N
+        prop N ++
+        prop Lu
+        prop N +
+        prop Han
+        prop N +
+        prop Xan
+        prop N ++
+        prop Xsp
+        prop N ++
+        prop Xps
+        prop Xwd +
+        prop N
+        prop N +
+        prop Xuc
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{Lu}+\p{Any} \p{Lu}+\p{L&} \p{Lu}+\p{L} \p{Lu}+\p{Lu} \P{Lu}+\p{Lu} \p{Lu}+\p{Nd} \p{Lu}+\P{Nd} \p{Lu}+\p{Han} \p{Lu}+\p{Xan} \p{Lu}+\p{Xsp} \p{Lu}+\p{Xps} \p{Xwd}+\p{Lu} \p{Lu}+\p{Xuc}/Bx,ucp
+------------------------------------------------------------------
+        Bra
+        prop Lu +
+        prop Any
+        prop Lu +
+        prop L&
+        prop Lu +
+        prop L
+        prop Lu +
+        prop Lu
+        notprop Lu ++
+        prop Lu
+        prop Lu ++
+        prop Nd
+        prop Lu +
+        notprop Nd
+        prop Lu +
+        prop Han
+        prop Lu +
+        prop Xan
+        prop Lu ++
+        prop Xsp
+        prop Lu ++
+        prop Xps
+        prop Xwd +
+        prop Lu
+        prop Lu +
+        prop Xuc
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{Han}+\p{Lu} \p{Han}+\p{L&} \p{Han}+\p{L} \p{Han}+\p{Lu} \p{Han}+\p{Arabic} \p{Arabic}+\p{Arabic} \p{Han}+\p{Xan} \p{Han}+\p{Xsp} \p{Han}+\p{Xps} \p{Xwd}+\p{Han} \p{Han}+\p{Xuc}/Bx,ucp
+------------------------------------------------------------------
+        Bra
+        prop Han +
+        prop Lu
+        prop Han +
+        prop L&
+        prop Han +
+        prop L
+        prop Han +
+        prop Lu
+        prop Han ++
+        prop Arabic
+        prop Arabic +
+        prop Arabic
+        prop Han +
+        prop Xan
+        prop Han +
+        prop Xsp
+        prop Han +
+        prop Xps
+        prop Xwd +
+        prop Han
+        prop Han +
+        prop Xuc
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{Xan}+\p{Any} \p{Xan}+\p{L&} \P{Xan}+\p{L&} \p{Xan}+\p{L} \p{Xan}+\p{Lu} \p{Xan}+\p{Han} \p{Xan}+\p{Xan} \p{Xan}+\P{Xan} \p{Xan}+\p{Xsp} \p{Xan}+\p{Xps} \p{Xwd}+\p{Xan} \p{Xan}+\p{Xuc}/Bx,ucp
+------------------------------------------------------------------
+        Bra
+        prop Xan +
+        prop Any
+        prop Xan +
+        prop L&
+        notprop Xan ++
+        prop L&
+        prop Xan +
+        prop L
+        prop Xan +
+        prop Lu
+        prop Xan +
+        prop Han
+        prop Xan +
+        prop Xan
+        prop Xan ++
+        notprop Xan
+        prop Xan ++
+        prop Xsp
+        prop Xan ++
+        prop Xps
+        prop Xwd +
+        prop Xan
+        prop Xan +
+        prop Xuc
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{Xsp}+\p{Any} \p{Xsp}+\p{L&} \p{Xsp}+\p{L} \p{Xsp}+\p{Lu} \p{Xsp}+\p{Han} \p{Xsp}+\p{Xan} \p{Xsp}+\p{Xsp} \P{Xsp}+\p{Xsp} \p{Xsp}+\p{Xps} \p{Xwd}+\p{Xsp} \p{Xsp}+\p{Xuc}/Bx,ucp
+------------------------------------------------------------------
+        Bra
+        prop Xsp +
+        prop Any
+        prop Xsp ++
+        prop L&
+        prop Xsp ++
+        prop L
+        prop Xsp ++
+        prop Lu
+        prop Xsp +
+        prop Han
+        prop Xsp ++
+        prop Xan
+        prop Xsp +
+        prop Xsp
+        notprop Xsp ++
+        prop Xsp
+        prop Xsp +
+        prop Xps
+        prop Xwd ++
+        prop Xsp
+        prop Xsp +
+        prop Xuc
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{Xwd}+\p{Any} \p{Xwd}+\p{L&} \p{Xwd}+\p{L} \p{Xwd}+\p{Lu} \p{Xwd}+\p{Han} \p{Xwd}+\p{Xan} \p{Xwd}+\p{Xsp} \p{Xwd}+\p{Xps} \p{Xwd}+\p{Xwd} \p{Xwd}+\P{Xwd} \p{Xwd}+\p{Xuc}/Bx,ucp
+------------------------------------------------------------------
+        Bra
+        prop Xwd +
+        prop Any
+        prop Xwd +
+        prop L&
+        prop Xwd +
+        prop L
+        prop Xwd +
+        prop Lu
+        prop Xwd +
+        prop Han
+        prop Xwd +
+        prop Xan
+        prop Xwd ++
+        prop Xsp
+        prop Xwd ++
+        prop Xps
+        prop Xwd +
+        prop Xwd
+        prop Xwd ++
+        notprop Xwd
+        prop Xwd +
+        prop Xuc
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{Xuc}+\p{Any} \p{Xuc}+\p{L&} \p{Xuc}+\p{L} \p{Xuc}+\p{Lu} \p{Xuc}+\p{Han} \p{Xuc}+\p{Xan} \p{Xuc}+\p{Xsp} \p{Xuc}+\p{Xps} \p{Xwd}+\p{Xuc} \p{Xuc}+\p{Xuc} \p{Xuc}+\P{Xuc}/Bx,ucp
+------------------------------------------------------------------
+        Bra
+        prop Xuc +
+        prop Any
+        prop Xuc +
+        prop L&
+        prop Xuc +
+        prop L
+        prop Xuc +
+        prop Lu
+        prop Xuc +
+        prop Han
+        prop Xuc +
+        prop Xan
+        prop Xuc +
+        prop Xsp
+        prop Xuc +
+        prop Xps
+        prop Xwd +
+        prop Xuc
+        prop Xuc +
+        prop Xuc
+        prop Xuc ++
+        notprop Xuc
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{N}+\p{Ll} \p{N}+\p{Nd} \p{N}+\P{Nd}/Bx,ucp
+------------------------------------------------------------------
+        Bra
+        prop N ++
+        prop Ll
+        prop N +
+        prop Nd
+        prop N +
+        notprop Nd
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{Xan}+\p{L} \p{Xan}+\p{N} \p{Xan}+\p{C} \p{Xan}+\P{L} \P{Xan}+\p{N} \p{Xan}+\P{C}/Bx,ucp
+------------------------------------------------------------------
+        Bra
+        prop Xan +
+        prop L
+        prop Xan +
+        prop N
+        prop Xan ++
+        prop C
+        prop Xan +
+        notprop L
+        notprop Xan ++
+        prop N
+        prop Xan +
+        notprop C
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{L}+\p{Xan} \p{N}+\p{Xan} \p{C}+\p{Xan} \P{L}+\p{Xan} \p{N}+\p{Xan} \P{C}+\p{Xan} \p{L}+\P{Xan}/Bx,ucp
+------------------------------------------------------------------
+        Bra
+        prop L +
+        prop Xan
+        prop N +
+        prop Xan
+        prop C ++
+        prop Xan
+        notprop L +
+        prop Xan
+        prop N +
+        prop Xan
+        notprop C +
+        prop Xan
+        prop L ++
+        notprop Xan
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{Xan}+\p{Lu} \p{Xan}+\p{Nd} \p{Xan}+\p{Cc} \p{Xan}+\P{Ll} \P{Xan}+\p{No} \p{Xan}+\P{Cf}/Bx,ucp
+------------------------------------------------------------------
+        Bra
+        prop Xan +
+        prop Lu
+        prop Xan +
+        prop Nd
+        prop Xan ++
+        prop Cc
+        prop Xan +
+        notprop Ll
+        notprop Xan ++
+        prop No
+        prop Xan +
+        notprop Cf
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{Lu}+\p{Xan} \p{Nd}+\p{Xan} \p{Cs}+\p{Xan} \P{Lt}+\p{Xan} \p{Nl}+\p{Xan} \P{Cc}+\p{Xan} \p{Lt}+\P{Xan}/Bx,ucp
+------------------------------------------------------------------
+        Bra
+        prop Lu +
+        prop Xan
+        prop Nd +
+        prop Xan
+        prop Cs ++
+        prop Xan
+        notprop Lt +
+        prop Xan
+        prop Nl +
+        prop Xan
+        notprop Cc +
+        prop Xan
+        prop Lt ++
+        notprop Xan
+        Ket
+        End
+------------------------------------------------------------------
+
+/\w+\p{P} \w+\p{Po} \w+\s \p{Xan}+\s \s+\p{Xan} \s+\w/Bx,ucp
+------------------------------------------------------------------
+        Bra
+        prop Xwd +
+        prop P
+        prop Xwd +
+        prop Po
+        prop Xwd ++
+        prop Xsp
+        prop Xan ++
+        prop Xsp
+        prop Xsp ++
+        prop Xan
+        prop Xsp ++
+        prop Xwd
+        Ket
+        End
+------------------------------------------------------------------
+
+/\w+\P{P} \W+\p{Po} \w+\S \P{Xan}+\s \s+\P{Xan} \s+\W/Bx,ucp
+------------------------------------------------------------------
+        Bra
+        prop Xwd +
+        notprop P
+        notprop Xwd +
+        prop Po
+        prop Xwd +
+        notprop Xsp
+        notprop Xan +
+        prop Xsp
+        prop Xsp +
+        notprop Xan
+        prop Xsp +
+        notprop Xwd
+        Ket
+        End
+------------------------------------------------------------------
+
+/\w+\p{Po} \w+\p{Pc} \W+\p{Po} \W+\p{Pc} \w+\P{Po} \w+\P{Pc}/Bx,ucp
+------------------------------------------------------------------
+        Bra
+        prop Xwd +
+        prop Po
+        prop Xwd ++
+        prop Pc
+        notprop Xwd +
+        prop Po
+        notprop Xwd +
+        prop Pc
+        prop Xwd +
+        notprop Po
+        prop Xwd +
+        notprop Pc
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{Nl}+\p{Xan} \P{Nl}+\p{Xan} \p{Nl}+\P{Xan} \P{Nl}+\P{Xan}/Bx,ucp
+------------------------------------------------------------------
+        Bra
+        prop Nl +
+        prop Xan
+        notprop Nl +
+        prop Xan
+        prop Nl ++
+        notprop Xan
+        notprop Nl +
+        notprop Xan
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{Xan}+\p{Nl} \P{Xan}+\p{Nl} \p{Xan}+\P{Nl} \P{Xan}+\P{Nl}/Bx,ucp
+------------------------------------------------------------------
+        Bra
+        prop Xan +
+        prop Nl
+        notprop Xan ++
+        prop Nl
+        prop Xan +
+        notprop Nl
+        notprop Xan +
+        notprop Nl
+        Ket
+        End
+------------------------------------------------------------------
+
+/\p{Xan}+\p{Nd} \P{Xan}+\p{Nd} \p{Xan}+\P{Nd} \P{Xan}+\P{Nd}/Bx,ucp
+------------------------------------------------------------------
+        Bra
+        prop Xan +
+        prop Nd
+        notprop Xan ++
+        prop Nd
+        prop Xan +
+        notprop Nd
+        notprop Xan +
+        notprop Nd
+        Ket
+        End
+------------------------------------------------------------------
+
+# End auto-possessification tests  
+
+/\w+/B,utf,ucp,auto_callout
+------------------------------------------------------------------
+        Bra
+        Callout 255 0 3
+        prop Xwd ++
+        Callout 255 3 0
+        Ket
+        End
+------------------------------------------------------------------
+    abcd
+--->abcd
+ +0 ^        \w+
+ +3 ^   ^    
+ 0: abcd
+
+/[\p{N}]?+/B,no_auto_possess
+------------------------------------------------------------------
+        Bra
+        [\p{N}]?+
+        Ket
+        End
+------------------------------------------------------------------
+
+/[\p{L}ab]{2,3}+/B,no_auto_possess
+------------------------------------------------------------------
+        Bra
+        [ab\p{L}]{2,3}+
+        Ket
+        End
+------------------------------------------------------------------
+
+/\D+\X \d+\X \S+\X \s+\X \W+\X \w+\X \C+\X \R+\X \H+\X \h+\X \V+\X \v+\X a+\X \n+\X .+\X/Bx
+------------------------------------------------------------------
+        Bra
+        \D+
+        extuni
+        \d+
+        extuni
+        \S+
+        extuni
+        \s+
+        extuni
+        \W+
+        extuni
+        \w+
+        extuni
+        AllAny+
+        extuni
+        \R+
+        extuni
+        \H+
+        extuni
+        \h+
+        extuni
+        \V+
+        extuni
+        \v+
+        extuni
+        a+
+        extuni
+        \x0a+
+        extuni
+        Any+
+        extuni
+        Ket
+        End
+------------------------------------------------------------------
+
+/.+\X/Bsx
+------------------------------------------------------------------
+        Bra
+        AllAny+
+        extuni
+        Ket
+        End
+------------------------------------------------------------------
+
+/\X+$/Bmx
+------------------------------------------------------------------
+        Bra
+        extuni+
+     /m $
+        Ket
+        End
+------------------------------------------------------------------
+
+/\X+\D \X+\d \X+\S \X+\s \X+\W \X+\w \X+. \X+\C \X+\R \X+\H \X+\h \X+\V \X+\v \X+\X \X+\Z \X+\z \X+$/Bx
+------------------------------------------------------------------
+        Bra
+        extuni+
+        \D
+        extuni+
+        \d
+        extuni+
+        \S
+        extuni+
+        \s
+        extuni+
+        \W
+        extuni+
+        \w
+        extuni+
+        Any
+        extuni+
+        AllAny
+        extuni+
+        \R
+        extuni+
+        \H
+        extuni+
+        \h
+        extuni+
+        \V
+        extuni+
+        \v
+        extuni+
+        extuni
+        extuni+
+        \Z
+        extuni++
+        \z
+        extuni+
+        $
+        Ket
+        End
+------------------------------------------------------------------
+
+/\d+\s{0,5}=\s*\S?=\w{0,4}\W*/B,utf,ucp
+------------------------------------------------------------------
+        Bra
+        prop Nd ++
+        prop Xsp {0,5}+
+        =
+        prop Xsp *+
+        notprop Xsp ?
+        =
+        prop Xwd {0,4}+
+        notprop Xwd *+
+        Ket
+        End
+------------------------------------------------------------------
+
+/[RST]+/Bi,utf,ucp
+------------------------------------------------------------------
+        Bra
+        [R-Tr-t\x{17f}]++
+        Ket
+        End
+------------------------------------------------------------------
+    
+/[R-T]+/Bi,utf,ucp
+------------------------------------------------------------------
+        Bra
+        [R-Tr-t\x{17f}]++
+        Ket
+        End
+------------------------------------------------------------------
+
+/[Q-U]+/Bi,utf,ucp
+------------------------------------------------------------------
+        Bra
+        [Q-Uq-u\x{17f}]++
+        Ket
+        End
+------------------------------------------------------------------
+
+/^s?c/Iim,utf
+Capturing subpattern count = 0
+Options: caseless multiline utf
+First code unit at start or follows newline
+Last code unit = 'c' (caseless)
+Subject length lower bound = 1
+    scat
+ 0: sc
+
+/\X?abc/utf,no_start_optimize
+    \xff\x7f\x00\x00\x03\x00\x41\xcc\x80\x41\x{300}\x61\x62\x63\x00\=no_utf_check,offset=06
+ 0: A\x{300}abc
+
+/\x{100}\x{200}\K\x{300}/utf,startchar
+    \x{100}\x{200}\x{300}
+ 0: \x{100}\x{200}\x{300}
+    ^^^^^^^^^^^^^^
+    
+# Test UTF characters in a substitution
+
+/ábc/utf,replace=XሴZ
+    123ábc123
+ 1: 123X\x{1234}Z123
+
+/(?<=abc)(|def)/g,utf,replace=<$0>
+      123abcáyzabcdef789abcሴqr
+ 4: 123abc<>\x{e1}yzabc<><def>789abc<>\x{1234}qr
+
+/[^\xff]((?1))/utf,debug
+Failed: error 140 at offset 11: recursion could loop indefinitely
+
+/[A-`]/iB,utf
+------------------------------------------------------------------
+        Bra
+        [A-z\x{212a}\x{17f}]
+        Ket
+        End
+------------------------------------------------------------------
+    abcdefghijklmno
+ 0: a
+
+/(?<=\K\x{17f})/g,utf,aftertext
+    \x{17f}\x{17f}\x{17f}\x{17f}\x{17f}
+ 0: \x{17f}
+ 0+ \x{17f}\x{17f}\x{17f}\x{17f}
+ 0: \x{17f}
+ 0+ \x{17f}\x{17f}\x{17f}
+ 0: \x{17f}
+ 0+ \x{17f}\x{17f}
+ 0: \x{17f}
+ 0+ \x{17f}
+ 0: \x{17f}
+ 0+ 
+
+/(?<=\K\x{17f})/altglobal,utf,aftertext
+    \x{17f}\x{17f}\x{17f}\x{17f}\x{17f}
+ 0: \x{17f}
+ 0+ \x{17f}\x{17f}\x{17f}\x{17f}
+ 0: \x{17f}
+ 0+ \x{17f}\x{17f}\x{17f}
+ 0: \x{17f}
+ 0+ \x{17f}\x{17f}
+ 0: \x{17f}
+ 0+ \x{17f}
+ 0: \x{17f}
+ 0+ 
+
+"\xa\xf<(.\pZ*\P{Xwd}+^\xa8\3'3yq.::?(?J:()\xd1+!~:3'(8?:)':(?'d'(?'d'^u]!.+.+\\A\Ah(n+?9){7}+\K;(?'X'u'(?'c'(?'z'(?<y>\xb::\xf0'|\xd3(\xae?'w(z\x8?P>l)\x8?P>a)'\H\R\xd1+!!~:3'(?:h$N{26875}\W+?\\=D{2}\x89(?i:Uy0\N({2\xa(\v\x85*){y*\A(()\p{L}+?\P{^Xan}'+?\xff\+pS\?|).{;y*\A(()\p{L}+?\8}\d?1(|)(/1){7}.+[Lp{Me}].\s\xdcC*?(?(<y>))(?<!^)$C((;*?(R))+(\xbf(R))\x8a\X*?\x8a\xb\xd1^9\3*+(\xc1,\k'R'\xb4)\xcc(z\z(?J)(?'X'\x1b(\xb\xd1^9\?'3*+P{^Xan}+?\xff\+(\xc1.]k+\xb'Pm'\xb4)\xcc4f\xa7'\xd1V(?i:U,{2,2})'(?'X'))?-%--\x95$9*\4'|\xd1(\x9c''%\x94$9)#(?'R')3\x7?('P\xed7'\xa8\xb1^u\xeaw\1\0\0\(|(?1){7}.+[\p{Me}].\s\xdcC*^\x14?(?(<y>))(?<!^)$C((;*?(R*?))+(?(R)\x8a\X*?\x8a\xb\xd1^9\3*+|(\xc1,\k'R'\xb4)\xcc! z)\z(?JJ)(?'X';(\xb\xd1^9\?'3*+(\xc1.]k+\xb'Pm'\xb4))':(?'d')(?'RD'(d')|)|$)'|(?<x>\g{d});\g{x}\x11\g{d}\x81\|$((?'X'\'X'(?'W''\x92()'9'\x83*))\xba*\!?^ <){)':;\xcc4'\xd1'(?'X'28))?-%--\x95$9*\4'|\xd1((''e\x94*$9:)*#(?'R')3)\x7?('P\xed')\\x16:;()\x1e\x10*:(?<y>)\xd1+0!~:(?)'d'E:yD!\s(?'R'\x1e;\x10:U))|'\x9g!\xb0*){)\\x16:;()\x1e\x10\x87*:(?<y>)\xd1+!~:(?)'}'\d'E:yD!\s(?'R'\x1e;\x10:U))|'))|)g!\xb0*R+9{29+)#(?'P'})*?pS\{3,}\x85,{0,}l{*UTF)(\xe{7}){3722,{9,}d{2,?|))|{)\(A?&d}}{\xa,}2}){3,}7,l{)22}(,}l:7{2,4}}29\x19+)#?'P'})*v?))\x5"
+Failed: error 122 at offset 1227: unmatched closing parenthesis
+
+/$(&.+[\p{Me}].\s\xdcC*?(?(<y>))(?<!^)$C((;*?(R))+(?(R)){0,6}?|){12\x8a\X*?\x8a\x0b\xd1^9\3*+(\xc1,\k'P'\xb4)\xcc(z\z(?JJ)(?'X'8};(\x0b\xd1^9\?'3*+(\xc1.]k+\x0b'Pm'\xb4\xcc4'\xd1'(?'X'))?-%--\x95$9*\4'|\xd1(''%\x95*$9)#(?'R')3\x07?('P\xed')\\x16:;()\x1e\x10*:(?<y>)\xd1+!~:(?)''(d'E:yD!\s(?'R'\x1e;\x10:U))|')g!\xb0*){29+))#(?'P'})*?/
+
+# End of testinput5 

@@ -1,0 +1,27 @@
+.TH PCRE2_CODE_FREE 3 "21 October 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B pcre2_code_free(pcre2_code *\fIcode\fP);
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function frees the memory used for a compiled pattern, including any
+memory used by the JIT compiler.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

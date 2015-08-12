@@ -1,0 +1,91 @@
+<html>
+<head>
+<title>pcre2_compile specification</title>
+</head>
+<body bgcolor="#FFFFFF" text="#00005A" link="#0066FF" alink="#3399FF" vlink="#2222BB">
+<h1>pcre2_compile man page</h1>
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>
+<p>
+This page is part of the PCRE2 HTML documentation. It was generated
+automatically from the original man page. If there is any nonsense in it,
+please consult the man page, in case the conversion went wrong.
+<br>
+<br><b>
+SYNOPSIS
+</b><br>
+<P>
+<b>#include &#60;pcre2.h&#62;</b>
+</P>
+<P>
+<b>pcre2_code *pcre2_compile(PCRE2_SPTR <i>pattern</i>, PCRE2_SIZE <i>length</i>,</b>
+<b>  uint32_t <i>options</i>, int *<i>errorcode</i>, PCRE2_SIZE *<i>erroroffset,</i></b>
+<b>  pcre2_compile_context *<i>ccontext</i>);</b>
+</P>
+<br><b>
+DESCRIPTION
+</b><br>
+<P>
+This function compiles a regular expression pattern into an internal form. Its
+arguments are:
+<pre>
+  <i>pattern</i>       A string containing expression to be compiled
+  <i>length</i>        The length of the string or PCRE2_ZERO_TERMINATED
+  <i>options</i>       Option bits
+  <i>errorcode</i>     Where to put an error code
+  <i>erroffset</i>     Where to put an error offset
+  <i>ccontext</i>      Pointer to a compile context or NULL
+</pre>
+The length of the string and any error offset that is returned are in code
+units, not characters. A compile context is needed only if you want to change
+<pre>
+  What \R matches (Unicode newlines or CR, LF, CRLF only)
+  PCRE2's character tables
+  The newline character sequence
+  The compile time nested parentheses limit
+</pre>
+or provide an external function for stack size checking. The option bits are:
+<pre>
+  PCRE2_ANCHORED           Force pattern anchoring
+  PCRE2_ALT_BSUX           Alternative handling of \u, \U, and \x
+  PCRE2_ALT_CIRCUMFLEX     Alternative handling of ^ in multiline mode
+  PCRE2_AUTO_CALLOUT       Compile automatic callouts
+  PCRE2_CASELESS           Do caseless matching
+  PCRE2_DOLLAR_ENDONLY     $ not to match newline at end
+  PCRE2_DOTALL             . matches anything including NL
+  PCRE2_DUPNAMES           Allow duplicate names for subpatterns
+  PCRE2_EXTENDED           Ignore white space and # comments
+  PCRE2_FIRSTLINE          Force matching to be before newline
+  PCRE2_MATCH_UNSET_BACKREF  Match unset back references
+  PCRE2_MULTILINE          ^ and $ match newlines within data
+  PCRE2_NEVER_BACKSLASH_C  Lock out the use of \C in patterns
+  PCRE2_NEVER_UCP          Lock out PCRE2_UCP, e.g. via (*UCP)
+  PCRE2_NEVER_UTF          Lock out PCRE2_UTF, e.g. via (*UTF)
+  PCRE2_NO_AUTO_CAPTURE    Disable numbered capturing paren-
+                            theses (named ones available)
+  PCRE2_NO_AUTO_POSSESS    Disable auto-possessification
+  PCRE2_NO_DOTSTAR_ANCHOR  Disable automatic anchoring for .*
+  PCRE2_NO_START_OPTIMIZE  Disable match-time start optimizations
+  PCRE2_NO_UTF_CHECK       Do not check the pattern for UTF validity
+                             (only relevant if PCRE2_UTF is set)
+  PCRE2_UCP                Use Unicode properties for \d, \w, etc.
+  PCRE2_UNGREEDY           Invert greediness of quantifiers
+  PCRE2_UTF                Treat pattern and subjects as UTF strings
+</pre>
+PCRE2 must be built with Unicode support in order to use PCRE2_UTF, PCRE2_UCP
+and related options.
+</P>
+<P>
+The yield of the function is a pointer to a private data structure that
+contains the compiled pattern, or NULL if an error was detected.
+</P>
+<P>
+There is a complete description of the PCRE2 native API in the
+<a href="pcre2api.html"><b>pcre2api</b></a>
+page and a description of the POSIX API in the
+<a href="pcre2posix.html"><b>pcre2posix</b></a>
+page.
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>

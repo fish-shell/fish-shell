@@ -1,0 +1,36 @@
+.TH PCRE2_SUBSTRING_LENGTH_BYNUMBER 3 "22 December 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B int pcre2_substring_length_bynumber(pcre2_match_data *\fImatch_data\fP,
+.B "  uint32_t \fInumber\fP, PCRE2_SIZE *\fIlength\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function returns the length of a matched substring, identified by number.
+The arguments are:
+.sp
+  \fImatch_data\fP   The match data block for the match
+  \fInumber\fP       The substring number
+  \fIlength\fP       Where to return the length, or NULL
+.sp
+The third argument may be NULL if all you want to know is whether or not a
+substring is set. The yield is zero on success, or a negative error code
+otherwise. After a partial match, only substring 0 is available.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

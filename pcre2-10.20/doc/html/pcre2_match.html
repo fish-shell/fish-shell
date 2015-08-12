@@ -1,0 +1,76 @@
+<html>
+<head>
+<title>pcre2_match specification</title>
+</head>
+<body bgcolor="#FFFFFF" text="#00005A" link="#0066FF" alink="#3399FF" vlink="#2222BB">
+<h1>pcre2_match man page</h1>
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>
+<p>
+This page is part of the PCRE2 HTML documentation. It was generated
+automatically from the original man page. If there is any nonsense in it,
+please consult the man page, in case the conversion went wrong.
+<br>
+<br><b>
+SYNOPSIS
+</b><br>
+<P>
+<b>#include &#60;pcre2.h&#62;</b>
+</P>
+<P>
+<b>int pcre2_match(const pcre2_code *<i>code</i>, PCRE2_SPTR <i>subject</i>,</b>
+<b>  PCRE2_SIZE <i>length</i>, PCRE2_SIZE <i>startoffset</i>,</b>
+<b>  uint32_t <i>options</i>, pcre2_match_data *<i>match_data</i>,</b>
+<b>  pcre2_match_context *<i>mcontext</i>);</b>
+</P>
+<br><b>
+DESCRIPTION
+</b><br>
+<P>
+This function matches a compiled regular expression against a given subject
+string, using a matching algorithm that is similar to Perl's. It returns
+offsets to captured substrings. Its arguments are:
+<pre>
+  <i>code</i>         Points to the compiled pattern
+  <i>subject</i>      Points to the subject string
+  <i>length</i>       Length of the subject string
+  <i>startoffset</i>  Offset in the subject at which to start matching
+  <i>options</i>      Option bits
+  <i>match_data</i>   Points to a match data block, for results
+  <i>mcontext</i>     Points to a match context, or is NULL
+</pre>
+A match context is needed only if you want to:
+<pre>
+  Set up a callout function
+  Change the limit for calling the internal function <i>match()</i>
+  Change the limit for calling <i>match()</i> recursively
+  Set custom memory management when the heap is used for recursion
+</pre>
+The <i>length</i> and <i>startoffset</i> values are code
+units, not characters. The options are:
+<pre>
+  PCRE2_ANCHORED          Match only at the first position
+  PCRE2_NOTBOL            Subject string is not the beginning of a line
+  PCRE2_NOTEOL            Subject string is not the end of a line
+  PCRE2_NOTEMPTY          An empty string is not a valid match
+  PCRE2_NOTEMPTY_ATSTART  An empty string at the start of the subject
+                           is not a valid match
+  PCRE2_NO_UTF_CHECK      Do not check the subject for UTF
+                           validity (only relevant if PCRE2_UTF
+                           was set at compile time)
+  PCRE2_PARTIAL_SOFT      Return PCRE2_ERROR_PARTIAL for a partial
+                            match if no full matches are found
+  PCRE2_PARTIAL_HARD      Return PCRE2_ERROR_PARTIAL for a partial match
+                           if that is found before a full match
+</pre>
+For details of partial matching, see the
+<a href="pcre2partial.html"><b>pcre2partial</b></a>
+page. There is a complete description of the PCRE2 native API in the
+<a href="pcre2api.html"><b>pcre2api</b></a>
+page and a description of the POSIX API in the
+<a href="pcre2posix.html"><b>pcre2posix</b></a>
+page.
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>

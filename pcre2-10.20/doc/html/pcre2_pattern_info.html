@@ -1,0 +1,106 @@
+<html>
+<head>
+<title>pcre2_pattern_info specification</title>
+</head>
+<body bgcolor="#FFFFFF" text="#00005A" link="#0066FF" alink="#3399FF" vlink="#2222BB">
+<h1>pcre2_pattern_info man page</h1>
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>
+<p>
+This page is part of the PCRE2 HTML documentation. It was generated
+automatically from the original man page. If there is any nonsense in it,
+please consult the man page, in case the conversion went wrong.
+<br>
+<br><b>
+SYNOPSIS
+</b><br>
+<P>
+<b>#include &#60;pcre2.h&#62;</b>
+</P>
+<P>
+<b>int pcre2_pattern_info(const pcre2 *<i>code</i>, uint32_t <i>what</i>, void *<i>where</i>);</b>
+</P>
+<br><b>
+DESCRIPTION
+</b><br>
+<P>
+This function returns information about a compiled pattern. Its arguments are:
+<pre>
+  <i>code</i>     Pointer to a compiled regular expression
+  <i>what</i>     What information is required
+  <i>where</i>    Where to put the information
+</pre>
+The recognized values for the <i>what</i> argument, and the information they
+request are as follows:
+<pre>
+  PCRE2_INFO_ALLOPTIONS      Final options after compiling
+  PCRE2_INFO_ARGOPTIONS      Options passed to <b>pcre2_compile()</b>
+  PCRE2_INFO_BACKREFMAX      Number of highest back reference
+  PCRE2_INFO_BSR             What \R matches:
+                               PCRE2_BSR_UNICODE: Unicode line endings
+                               PCRE2_BSR_ANYCRLF: CR, LF, or CRLF only
+  PCRE2_INFO_CAPTURECOUNT    Number of capturing subpatterns
+  PCRE2_INFO_FIRSTBITMAP     Bitmap of first code units, or NULL
+  PCRE2_INFO_FIRSTCODEUNIT   First code unit when type is 1
+  PCRE2_INFO_FIRSTCODETYPE   Type of start-of-match information
+                               0 nothing set
+                               1 first code unit is set
+                               2 start of string or after newline
+  PCRE2_INFO_HASCRORLF       Return 1 if explicit CR or LF matches
+                               exist in the pattern
+  PCRE2_INFO_JCHANGED        Return 1 if (?J) or (?-J) was used
+  PCRE2_INFO_JITSIZE         Size of JIT compiled code, or 0
+  PCRE2_INFO_LASTCODEUNIT    Last code unit when type is 1
+  PCRE2_INFO_LASTCODETYPE    Type of must-be-present information
+                               0 nothing set
+                               1 code unit is set
+  PCRE2_INFO_MATCHEMPTY      1 if the pattern can match an
+                               empty string, 0 otherwise
+  PCRE2_INFO_MATCHLIMIT      Match limit if set,
+                               otherwise PCRE2_ERROR_UNSET
+  PCRE2_INFO_MAXLOOKBEHIND   Length (in characters) of the longest
+                               lookbehind assertion
+  PCRE2_INFO_MINLENGTH       Lower bound length of matching strings
+  PCRE2_INFO_NAMEENTRYSIZE   Size of name table entries
+  PCRE2_INFO_NAMECOUNT       Number of named subpatterns
+  PCRE2_INFO_NAMETABLE       Pointer to name table
+  PCRE2_CONFIG_NEWLINE       Code for the newline sequence:
+                               PCRE2_NEWLINE_CR
+                               PCRE2_NEWLINE_LF
+                               PCRE2_NEWLINE_CRLF
+                               PCRE2_NEWLINE_ANY
+                               PCRE2_NEWLINE_ANYCRLF
+  PCRE2_INFO_RECURSIONLIMIT  Recursion limit if set,
+                               otherwise PCRE2_ERROR_UNSET
+  PCRE2_INFO_SIZE            Size of compiled pattern
+</pre>
+If <i>where</i> is NULL, the function returns the amount of memory needed for
+the requested information, in bytes. Otherwise, the <i>where</i> argument must
+point to an unsigned 32-bit integer (uint32_t variable), except for the
+following <i>what</i> values, when it must point to a variable of the type
+shown:
+<pre>
+  PCRE2_INFO_FIRSTBITMAP     const uint8_t *
+  PCRE2_INFO_JITSIZE         size_t
+  PCRE2_INFO_NAMETABLE       PCRE2_SPTR
+  PCRE2_INFO_SIZE            size_t
+</pre>
+The yield of the function is zero on success or:
+<pre>
+  PCRE2_ERROR_NULL           the argument <i>code</i> is NULL
+  PCRE2_ERROR_BADMAGIC       the "magic number" was not found
+  PCRE2_ERROR_BADOPTION      the value of <i>what</i> is invalid
+  PCRE2_ERROR_BADMODE        the pattern was compiled in the wrong mode
+  PCRE2_ERROR_UNSET          the requested information is not set
+</PRE>
+</P>
+<P>
+There is a complete description of the PCRE2 native API in the
+<a href="pcre2api.html"><b>pcre2api</b></a>
+page and a description of the POSIX API in the
+<a href="pcre2posix.html"><b>pcre2posix</b></a>
+page.
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>

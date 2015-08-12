@@ -1,0 +1,31 @@
+.TH PCRE2_JIT_STACK_FREE 3 "21 October 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.SM
+.B void pcre2_jit_stack_free(pcre2_jit_stack *\fIjit_stack\fP);
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function is used to free a JIT stack that was created by
+\fBpcre2_jit_stack_create()\fP when it is no longer needed. For more details,
+see the
+.\" HREF
+\fBpcre2jit\fP
+.\"
+page.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

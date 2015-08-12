@@ -58,6 +58,7 @@ PCRE2_DIR = pcre2-10.20
 PCRE2_CXXFLAGS = -I$(PCRE2_DIR)/src
 PCRE2_LIBDIR = $(PCRE2_DIR)/.libs
 PCRE2_LIB = $(PCRE2_LIBDIR)/libpcre2-$(PCRE2_WIDTH).a
+PCRE2_H = $(PCRE2_DIR)/src/pcre2.h
 PCRE2_CONFIG = --disable-pcre2-8 --enable-pcre2-$(PCRE2_WIDTH) --disable-shared
 
 #
@@ -487,6 +488,8 @@ messages.pot: src/*.cpp src/*.h share/completions/*.fish share/functions/*.fish
 
 builtin.o: $(BUILTIN_FILES)
 
+src/builtin_string.cpp: $(PCRE2_H)
+
 
 #
 # Generate the internal help functions by making doxygen create
@@ -794,8 +797,8 @@ obj:
 fish: $(FISH_OBJS) obj/fish.o $(PCRE2_LIB)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_OBJS) obj/fish.o $(LIBS) -o $@
 
-$(PCRE2_LIB):
-	(cd $(PCRE2_DIR); ./configure $(PCRE2_CONFIG); make)
+$(PCRE2_H) $(PCRE2_LIB):
+	(cd $(PCRE2_DIR) && ./configure $(PCRE2_CONFIG) && make)
 
 #
 # Build the fish_tests program.

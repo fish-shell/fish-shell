@@ -1,0 +1,35 @@
+.TH PCRE2_SET_RECURSION_MEMORY_MANAGEMENT 3 "24 October 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B int pcre2_set_recursion_memory_management(
+.B "  pcre2_match_context *\fImcontext\fP,"
+.B "  void *(*\fIprivate_malloc\fP)(PCRE2_SIZE, void *),"
+.B "  void (*\fIprivate_free\fP)(void *, void *), void *\fImemory_data\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function sets the match context fields for custom memory management when
+PCRE2 is compiled to use the heap instead of the system stack for recursive
+function calls while matching. When PCRE2 is compiled to use the stack (the
+default) this function does nothing. The first argument is a match context, the
+second and third specify the memory allocation and freeing functions, and the
+final argument is an opaque value that is passed to them whenever they are
+called. The result of this function is always zero.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

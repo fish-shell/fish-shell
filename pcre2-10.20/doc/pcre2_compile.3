@@ -1,0 +1,78 @@
+.TH PCRE2_COMPILE 3 "22 April 2015" "PCRE2 10.20"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B pcre2_code *pcre2_compile(PCRE2_SPTR \fIpattern\fP, PCRE2_SIZE \fIlength\fP,
+.B "  uint32_t \fIoptions\fP, int *\fIerrorcode\fP, PCRE2_SIZE *\fIerroroffset,\fP"
+.B "  pcre2_compile_context *\fIccontext\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function compiles a regular expression pattern into an internal form. Its
+arguments are:
+.sp
+  \fIpattern\fP       A string containing expression to be compiled
+  \fIlength\fP        The length of the string or PCRE2_ZERO_TERMINATED
+  \fIoptions\fP       Option bits
+  \fIerrorcode\fP     Where to put an error code
+  \fIerroffset\fP     Where to put an error offset
+  \fIccontext\fP      Pointer to a compile context or NULL
+.sp
+The length of the string and any error offset that is returned are in code
+units, not characters. A compile context is needed only if you want to change
+.sp
+  What \eR matches (Unicode newlines or CR, LF, CRLF only)
+  PCRE2's character tables
+  The newline character sequence
+  The compile time nested parentheses limit
+.sp
+or provide an external function for stack size checking. The option bits are:
+.sp
+  PCRE2_ANCHORED           Force pattern anchoring
+  PCRE2_ALT_BSUX           Alternative handling of \eu, \eU, and \ex
+  PCRE2_ALT_CIRCUMFLEX     Alternative handling of ^ in multiline mode
+  PCRE2_AUTO_CALLOUT       Compile automatic callouts
+  PCRE2_CASELESS           Do caseless matching
+  PCRE2_DOLLAR_ENDONLY     $ not to match newline at end
+  PCRE2_DOTALL             . matches anything including NL
+  PCRE2_DUPNAMES           Allow duplicate names for subpatterns
+  PCRE2_EXTENDED           Ignore white space and # comments
+  PCRE2_FIRSTLINE          Force matching to be before newline
+  PCRE2_MATCH_UNSET_BACKREF  Match unset back references
+  PCRE2_MULTILINE          ^ and $ match newlines within data
+  PCRE2_NEVER_BACKSLASH_C  Lock out the use of \eC in patterns
+  PCRE2_NEVER_UCP          Lock out PCRE2_UCP, e.g. via (*UCP)
+  PCRE2_NEVER_UTF          Lock out PCRE2_UTF, e.g. via (*UTF)
+  PCRE2_NO_AUTO_CAPTURE    Disable numbered capturing paren-
+                            theses (named ones available)
+  PCRE2_NO_AUTO_POSSESS    Disable auto-possessification
+  PCRE2_NO_DOTSTAR_ANCHOR  Disable automatic anchoring for .*
+  PCRE2_NO_START_OPTIMIZE  Disable match-time start optimizations
+  PCRE2_NO_UTF_CHECK       Do not check the pattern for UTF validity
+                             (only relevant if PCRE2_UTF is set)
+  PCRE2_UCP                Use Unicode properties for \ed, \ew, etc.
+  PCRE2_UNGREEDY           Invert greediness of quantifiers
+  PCRE2_UTF                Treat pattern and subjects as UTF strings
+.sp
+PCRE2 must be built with Unicode support in order to use PCRE2_UTF, PCRE2_UCP
+and related options.
+.P
+The yield of the function is a pointer to a private data structure that
+contains the compiled pattern, or NULL if an error was detected.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

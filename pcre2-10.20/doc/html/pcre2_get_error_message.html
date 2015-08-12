@@ -1,0 +1,48 @@
+<html>
+<head>
+<title>pcre2_get_error_message specification</title>
+</head>
+<body bgcolor="#FFFFFF" text="#00005A" link="#0066FF" alink="#3399FF" vlink="#2222BB">
+<h1>pcre2_get_error_message man page</h1>
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>
+<p>
+This page is part of the PCRE2 HTML documentation. It was generated
+automatically from the original man page. If there is any nonsense in it,
+please consult the man page, in case the conversion went wrong.
+<br>
+<br><b>
+SYNOPSIS
+</b><br>
+<P>
+<b>#include &#60;pcre2.h&#62;</b>
+</P>
+<P>
+<b>int pcre2_get_error_message(int <i>errorcode</i>, PCRE2_UCHAR *<i>buffer</i>,</b>
+<b>  PCRE2_SIZE <i>bufflen</i>);</b>
+</P>
+<br><b>
+DESCRIPTION
+</b><br>
+<P>
+This function provides a textual error message for each PCRE2 error code.
+Compilation errors are positive numbers; UTF formatting errors and matching
+errors are negative numbers. The arguments are:
+<pre>
+  <i>errorcode</i>   an error code (positive or negative)
+  <i>buffer</i>      where to put the message
+  <i>bufflen</i>     the length of the buffer (code units)
+</pre>
+The function returns the length of the message, excluding the trailing zero, or
+a negative error code if the buffer is too small.
+</P>
+<P>
+There is a complete description of the PCRE2 native API in the
+<a href="pcre2api.html"><b>pcre2api</b></a>
+page and a description of the POSIX API in the
+<a href="pcre2posix.html"><b>pcre2posix</b></a>
+page.
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>

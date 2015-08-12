@@ -1,0 +1,73 @@
+.TH PCRE2_SUBSTITUTE 3 "11 November 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B int pcre2_substitute(const pcre2_code *\fIcode\fP, PCRE2_SPTR \fIsubject\fP,
+.B "  PCRE2_SIZE \fIlength\fP, PCRE2_SIZE \fIstartoffset\fP,"
+.B "  uint32_t \fIoptions\fP, pcre2_match_data *\fImatch_data\fP,"
+.B "  pcre2_match_context *\fImcontext\fP, PCRE2_SPTR \fIreplacement\fP,"
+.B "  PCRE2_SIZE \fIrlength\fP, PCRE2_UCHAR *\fIoutputbuffer\fP,"
+.B "  PCRE2_SIZE *\fIoutlengthptr\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function matches a compiled regular expression against a given subject
+string, using a matching algorithm that is similar to Perl's. It then makes a
+copy of the subject, substituting a replacement string for what was matched.
+Its arguments are:
+.sp
+  \fIcode\fP          Points to the compiled pattern
+  \fIsubject\fP       Points to the subject string
+  \fIlength\fP        Length of the subject string
+  \fIstartoffset\fP   Offset in the subject at which to start matching
+  \fIoptions\fP       Option bits
+  \fImatch_data\fP    Points to a match data block, or is NULL
+  \fImcontext\fP      Points to a match context, or is NULL
+  \fIreplacement\fP   Points to the replacement string
+  \fIrlength\fP       Length of the replacement string
+  \fIoutputbuffer\fP  Points to the output buffer
+  \fIoutlengthptr\fP  Points to the length of the output buffer
+.sp
+A match context is needed only if you want to:
+.sp
+  Set up a callout function
+  Change the limit for calling the internal function \fImatch()\fP
+  Change the limit for calling \fImatch()\fP recursively
+  Set custom memory management when the heap is used for recursion
+.sp
+The \fIlength\fP, \fIstartoffset\fP and \fIrlength\fP values are code
+units, not characters, as is the contents of the variable pointed at by
+\fIoutlengthptr\fP, which is updated to the actual length of the new string.
+The options are:
+.sp
+  PCRE2_ANCHORED          Match only at the first position
+  PCRE2_NOTBOL            Subject string is not the beginning of a line
+  PCRE2_NOTEOL            Subject string is not the end of a line
+  PCRE2_NOTEMPTY          An empty string is not a valid match
+  PCRE2_NOTEMPTY_ATSTART  An empty string at the start of the subject
+                           is not a valid match
+  PCRE2_NO_UTF_CHECK      Do not check the subject or replacement for
+                           UTF validity (only relevant if PCRE2_UTF
+                           was set at compile time)
+  PCRE2_SUBSTITUTE_GLOBAL Replace all occurrences in the subject
+.sp
+The function returns the number of substitutions, which may be zero if there
+were no matches. The result can be greater than one only when
+PCRE2_SUBSTITUTE_GLOBAL is set.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

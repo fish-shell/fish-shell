@@ -1,0 +1,53 @@
+<html>
+<head>
+<title>pcre2_substring_nametable_scan specification</title>
+</head>
+<body bgcolor="#FFFFFF" text="#00005A" link="#0066FF" alink="#3399FF" vlink="#2222BB">
+<h1>pcre2_substring_nametable_scan man page</h1>
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>
+<p>
+This page is part of the PCRE2 HTML documentation. It was generated
+automatically from the original man page. If there is any nonsense in it,
+please consult the man page, in case the conversion went wrong.
+<br>
+<br><b>
+SYNOPSIS
+</b><br>
+<P>
+<b>#include &#60;pcre2.h&#62;</b>
+</P>
+<P>
+<b>int pcre2_substring_nametable_scan(const pcre2_code *<i>code</i>,</b>
+<b>  PCRE2_SPTR <i>name</i>, PCRE2_SPTR *<i>first</i>, PCRE2_SPTR *<i>last</i>);</b>
+</P>
+<br><b>
+DESCRIPTION
+</b><br>
+<P>
+This convenience function finds, for a compiled pattern, the first and last
+entries for a given name in the table that translates capturing parenthesis
+names into numbers.
+<pre>
+  <i>code</i>    Compiled regular expression
+  <i>name</i>    Name whose entries required
+  <i>first</i>   Where to return a pointer to the first entry
+  <i>last</i>    Where to return a pointer to the last entry
+</pre>
+When the name is found in the table, if <i>first</i> is NULL, the function
+returns a group number, but if there is more than one matching entry, it is not
+defined which one. Otherwise, when both pointers have been set, the yield of
+the function is the length of each entry in code units. If the name is not
+found, PCRE2_ERROR_NOSUBSTRING is returned.
+</P>
+<P>
+There is a complete description of the PCRE2 native API, including the format of
+the table entries, in the
+<a href="pcre2api.html"><b>pcre2api</b></a>
+page, and a description of the POSIX API in the
+<a href="pcre2posix.html"><b>pcre2posix</b></a>
+page.
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>

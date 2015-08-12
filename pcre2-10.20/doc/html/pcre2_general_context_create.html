@@ -1,0 +1,44 @@
+<html>
+<head>
+<title>pcre2_general_context_create specification</title>
+</head>
+<body bgcolor="#FFFFFF" text="#00005A" link="#0066FF" alink="#3399FF" vlink="#2222BB">
+<h1>pcre2_general_context_create man page</h1>
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>
+<p>
+This page is part of the PCRE2 HTML documentation. It was generated
+automatically from the original man page. If there is any nonsense in it,
+please consult the man page, in case the conversion went wrong.
+<br>
+<br><b>
+SYNOPSIS
+</b><br>
+<P>
+<b>#include &#60;pcre2.h&#62;</b>
+</P>
+<P>
+<b>pcre2_general_context *pcre2_general_context_create(</b>
+<b>  void *(*<i>private_malloc</i>)(PCRE2_SIZE, void *),</b>
+<b>  void (*<i>private_free</i>)(void *, void *), void *<i>memory_data</i>);</b>
+</P>
+<br><b>
+DESCRIPTION
+</b><br>
+<P>
+This function creates and initializes a general context. The arguments define
+custom memory management functions and a data value that is passed to them when
+they are called. The <b>private_malloc()</b> function is used to get memory for
+the context. If either of the first two arguments is NULL, the system memory
+management function is used. The result is NULL if no memory could be obtained.
+</P>
+<P>
+There is a complete description of the PCRE2 native API in the
+<a href="pcre2api.html"><b>pcre2api</b></a>
+page and a description of the POSIX API in the
+<a href="pcre2posix.html"><b>pcre2posix</b></a>
+page.
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>

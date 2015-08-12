@@ -1,0 +1,56 @@
+<html>
+<head>
+<title>pcre2_jit_compile specification</title>
+</head>
+<body bgcolor="#FFFFFF" text="#00005A" link="#0066FF" alink="#3399FF" vlink="#2222BB">
+<h1>pcre2_jit_compile man page</h1>
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>
+<p>
+This page is part of the PCRE2 HTML documentation. It was generated
+automatically from the original man page. If there is any nonsense in it,
+please consult the man page, in case the conversion went wrong.
+<br>
+<br><b>
+SYNOPSIS
+</b><br>
+<P>
+<b>#include &#60;pcre2.h&#62;</b>
+</P>
+<P>
+<b>int pcre2_jit_compile(pcre2_code *<i>code</i>, uint32_t <i>options</i>);</b>
+</P>
+<br><b>
+DESCRIPTION
+</b><br>
+<P>
+This function requests JIT compilation, which, if the just-in-time compiler is
+available, further processes a compiled pattern into machine code that executes
+much faster than the <b>pcre2_match()</b> interpretive matching function. Full
+details are given in the
+<a href="pcre2jit.html"><b>pcre2jit</b></a>
+documentation.
+</P>
+<P>
+The first argument is a pointer that was returned by a successful call to
+<b>pcre2_compile()</b>, and the second must contain one or more of the following
+bits:
+<pre>
+  PCRE2_JIT_COMPLETE      compile code for full matching
+  PCRE2_JIT_PARTIAL_SOFT  compile code for soft partial matching
+  PCRE2_JIT_PARTIAL_HARD  compile code for hard partial matching
+</pre>
+The yield of the function is 0 for success, or a negative error code otherwise.
+In particular, PCRE2_ERROR_JIT_BADOPTION is returned if JIT is not supported or
+if an unknown bit is set in <i>options</i>.
+</P>
+<P>
+There is a complete description of the PCRE2 native API in the
+<a href="pcre2api.html"><b>pcre2api</b></a>
+page and a description of the POSIX API in the
+<a href="pcre2posix.html"><b>pcre2posix</b></a>
+page.
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>

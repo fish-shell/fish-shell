@@ -1,0 +1,192 @@
+.TH PCRE2 3 "13 April 2015" "PCRE2 10.20"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH INTRODUCTION
+.rs
+.sp
+PCRE2 is the name used for a revised API for the PCRE library, which is a set
+of functions, written in C, that implement regular expression pattern matching
+using the same syntax and semantics as Perl, with just a few differences. Some
+features that appeared in Python and the original PCRE before they appeared in
+Perl are also available using the Python syntax. There is also some support for
+one or two .NET and Oniguruma syntax items, and there are options for
+requesting some minor changes that give better ECMAScript (aka JavaScript)
+compatibility.
+.P
+The source code for PCRE2 can be compiled to support 8-bit, 16-bit, or 32-bit
+code units, which means that up to three separate libraries may be installed.
+The original work to extend PCRE to 16-bit and 32-bit code units was done by
+Zoltan Herczeg and Christian Persch, respectively. In all three cases, strings
+can be interpreted either as one character per code unit, or as UTF-encoded
+Unicode, with support for Unicode general category properties. Unicode support
+is optional at build time (but is the default). However, processing strings as
+UTF code units must be enabled explicitly at run time. The version of Unicode
+in use can be discovered by running
+.sp
+  pcre2test -C
+.P
+The three libraries contain identical sets of functions, with names ending in
+_8, _16, or _32, respectively (for example, \fBpcre2_compile_8()\fP). However,
+by defining PCRE2_CODE_UNIT_WIDTH to be 8, 16, or 32, a program that uses just
+one code unit width can be written using generic names such as
+\fBpcre2_compile()\fP, and the documentation is written assuming that this is
+the case.
+.P
+In addition to the Perl-compatible matching function, PCRE2 contains an
+alternative function that matches the same compiled patterns in a different
+way. In certain circumstances, the alternative function has some advantages.
+For a discussion of the two matching algorithms, see the
+.\" HREF
+\fBpcre2matching\fP
+.\"
+page.
+.P
+Details of exactly which Perl regular expression features are and are not
+supported by PCRE2 are given in separate documents. See the
+.\" HREF
+\fBpcre2pattern\fP
+.\"
+and
+.\" HREF
+\fBpcre2compat\fP
+.\"
+pages. There is a syntax summary in the
+.\" HREF
+\fBpcre2syntax\fP
+.\"
+page.
+.P
+Some features of PCRE2 can be included, excluded, or changed when the library
+is built. The
+.\" HREF
+\fBpcre2_config()\fP
+.\"
+function makes it possible for a client to discover which features are
+available. The features themselves are described in the
+.\" HREF
+\fBpcre2build\fP
+.\"
+page. Documentation about building PCRE2 for various operating systems can be
+found in the
+.\" HTML <a href="README.txt">
+.\" </a>
+\fBREADME\fP
+.\"
+and
+.\" HTML <a href="NON-AUTOTOOLS-BUILD.txt">
+.\" </a>
+\fBNON-AUTOTOOLS_BUILD\fP
+.\"
+files in the source distribution.
+.P
+The libraries contains a number of undocumented internal functions and data
+tables that are used by more than one of the exported external functions, but
+which are not intended for use by external callers. Their names all begin with
+"_pcre2", which hopefully will not provoke any name clashes. In some
+environments, it is possible to control which external symbols are exported
+when a shared library is built, and in these cases the undocumented symbols are
+not exported.
+.
+.
+.SH "SECURITY CONSIDERATIONS"
+.rs
+.sp
+If you are using PCRE2 in a non-UTF application that permits users to supply
+arbitrary patterns for compilation, you should be aware of a feature that
+allows users to turn on UTF support from within a pattern. For example, an
+8-bit pattern that begins with "(*UTF)" turns on UTF-8 mode, which interprets
+patterns and subjects as strings of UTF-8 code units instead of individual
+8-bit characters. This causes both the pattern and any data against which it is
+matched to be checked for UTF-8 validity. If the data string is very long, such
+a check might use sufficiently many resources as to cause your application to
+lose performance.
+.P
+One way of guarding against this possibility is to use the
+\fBpcre2_pattern_info()\fP function to check the compiled pattern's options for
+PCRE2_UTF. Alternatively, you can set the PCRE2_NEVER_UTF option when calling
+\fBpcre2_compile()\fP. This causes an compile time error if a pattern contains
+a UTF-setting sequence.
+.P
+The use of Unicode properties for character types such as \ed can also be
+enabled from within the pattern, by specifying "(*UCP)". This feature can be
+disallowed by setting the PCRE2_NEVER_UCP option.
+.P
+If your application is one that supports UTF, be aware that validity checking
+can take time. If the same data string is to be matched many times, you can use
+the PCRE2_NO_UTF_CHECK option for the second and subsequent matches to avoid
+running redundant checks.
+.P
+The use of the \eC escape sequence in a UTF-8 or UTF-16 pattern can lead to
+problems, because it may leave the current matching point in the middle of a
+multi-code-unit character. The PCRE2_NEVER_BACKSLASH_C option can be used to
+lock out the use of \eC, causing a compile-time error if it is encountered.
+.P
+Another way that performance can be hit is by running a pattern that has a very
+large search tree against a string that will never match. Nested unlimited
+repeats in a pattern are a common example. PCRE2 provides some protection
+against this: see the \fBpcre2_set_match_limit()\fP function in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page.
+.
+.
+.SH "USER DOCUMENTATION"
+.rs
+.sp
+The user documentation for PCRE2 comprises a number of different sections. In
+the "man" format, each of these is a separate "man page". In the HTML format,
+each is a separate page, linked from the index page. In the plain text format,
+the descriptions of the \fBpcre2grep\fP and \fBpcre2test\fP programs are in
+files called \fBpcre2grep.txt\fP and \fBpcre2test.txt\fP, respectively. The
+remaining sections, except for the \fBpcre2demo\fP section (which is a program
+listing), and the short pages for individual functions, are concatenated in
+\fBpcre2.txt\fP, for ease of searching. The sections are as follows:
+.sp
+  pcre2              this document
+  pcre2-config       show PCRE2 installation configuration information
+  pcre2api           details of PCRE2's native C API
+  pcre2build         building PCRE2
+  pcre2callout       details of the callout feature
+  pcre2compat        discussion of Perl compatibility
+  pcre2demo          a demonstration C program that uses PCRE2
+  pcre2grep          description of the \fBpcre2grep\fP command (8-bit only)
+  pcre2jit           discussion of just-in-time optimization support
+  pcre2limits        details of size and other limits
+  pcre2matching      discussion of the two matching algorithms
+  pcre2partial       details of the partial matching facility
+.\" JOIN
+  pcre2pattern       syntax and semantics of supported regular
+                       expression patterns
+  pcre2perform       discussion of performance issues
+  pcre2posix         the POSIX-compatible C API for the 8-bit library
+  pcre2sample        discussion of the pcre2demo program
+  pcre2stack         discussion of stack usage
+  pcre2syntax        quick syntax reference
+  pcre2test          description of the \fBpcre2test\fP command
+  pcre2unicode       discussion of Unicode and UTF support
+.sp
+In the "man" and HTML formats, there is also a short page for each C library
+function, listing its arguments and results.
+.
+.
+.SH AUTHOR
+.rs
+.sp
+.nf
+Philip Hazel
+University Computing Service
+Cambridge, England.
+.fi
+.P
+Putting an actual email address here is a spam magnet. If you want to email me,
+use my two initials, followed by the two digits 10, at the domain cam.ac.uk.
+.
+.
+.SH REVISION
+.rs
+.sp
+.nf
+Last updated: 13 April 2015
+Copyright (c) 1997-2015 University of Cambridge.
+.fi

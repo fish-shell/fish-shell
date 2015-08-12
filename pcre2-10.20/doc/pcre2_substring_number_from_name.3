@@ -1,0 +1,38 @@
+.TH PCRE2_SUBSTRING_NUMBER_FROM_NAME 3 "21 October 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B int pcre2_substring_number_from_name(const pcre2_code *\fIcode\fP,
+.B "  PCRE2_SPTR \fIname\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This convenience function finds the number of a named substring capturing
+parenthesis in a compiled pattern, provided that it is a unique name. The
+function arguments are:
+.sp
+  \fIcode\fP    Compiled regular expression
+  \fIname\fP    Name whose number is required
+.sp
+The yield of the function is the number of the parenthesis if the name is
+found, or PCRE2_ERROR_NOSUBSTRING if it is not found. When duplicate names are
+allowed (PCRE2_DUPNAMES is set), if the name is not unique,
+PCRE2_ERROR_NOUNIQUESUBSTRING is returned. You can obtain the list of numbers
+with the same name by calling \fBpcre2_substring_nametable_scan()\fP.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

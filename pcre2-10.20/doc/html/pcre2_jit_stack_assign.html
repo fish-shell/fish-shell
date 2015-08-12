@@ -1,0 +1,70 @@
+<html>
+<head>
+<title>pcre2_jit_stack_assign specification</title>
+</head>
+<body bgcolor="#FFFFFF" text="#00005A" link="#0066FF" alink="#3399FF" vlink="#2222BB">
+<h1>pcre2_jit_stack_assign man page</h1>
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>
+<p>
+This page is part of the PCRE2 HTML documentation. It was generated
+automatically from the original man page. If there is any nonsense in it,
+please consult the man page, in case the conversion went wrong.
+<br>
+<br><b>
+SYNOPSIS
+</b><br>
+<P>
+<b>#include &#60;pcre2.h&#62;</b>
+</P>
+<P>
+<b>void pcre2_jit_stack_assign(pcre2_match_context *<i>mcontext</i>,</b>
+<b>  pcre2_jit_callback <i>callback_function</i>, void *<i>callback_data</i>);</b>
+</P>
+<br><b>
+DESCRIPTION
+</b><br>
+<P>
+This function provides control over the memory used by JIT as a run-time stack
+when <b>pcre2_match()</b> or <b>pcre2_jit_match()</b> is called with a pattern
+that has been successfully processed by the JIT compiler. The information that
+determines which stack is used is put into a match context that is subsequently
+passed to a matching function. The arguments of this function are:
+<pre>
+  mcontext       a pointer to a match context
+  callback       a callback function
+  callback_data  a JIT stack or a value to be passed to the callback
+</PRE>
+</P>
+<P>
+If <i>callback</i> is NULL and <i>callback_data</i> is NULL, an internal 32K
+block on the machine stack is used.
+</P>
+<P>
+If <i>callback</i> is NULL and <i>callback_data</i> is not NULL,
+<i>callback_data</i> must be a valid JIT stack, the result of calling
+<b>pcre2_jit_stack_create()</b>.
+</P>
+<P>
+If <i>callback</i> not NULL, it is called with <i>callback_data</i> as an
+argument at the start of matching, in order to set up a JIT stack. If the
+result is NULL, the internal 32K stack is used; otherwise the return value must
+be a valid JIT stack, the result of calling <b>pcre2_jit_stack_create()</b>.
+</P>
+<P>
+You may safely use the same JIT stack for multiple patterns, as long as they
+are all matched in the same thread. In a multithread application, each thread
+must use its own JIT stack. For more details, see the
+<a href="pcre2jit.html"><b>pcre2jit</b></a>
+page.
+</P>
+<P>
+There is a complete description of the PCRE2 native API in the
+<a href="pcre2api.html"><b>pcre2api</b></a>
+page and a description of the POSIX API in the
+<a href="pcre2posix.html"><b>pcre2posix</b></a>
+page.
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>

@@ -1,0 +1,37 @@
+.TH PCRE2_SERIALIZE_GET_NUMBER_OF_CODES 3 "19 January 2015" "PCRE2 10.10"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B int32_t pcre2_serialize_get_number_of_codes(const uint8_t *\fIbytes\fP);
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+The \fIbytes\fP argument must point to a serialized byte stream that was
+originally created by \fBpcre2_serialize_encode()\fP (though it may have been
+saved on disc or elsewhere in the meantime). The function returns the number of
+serialized patterns in the byte stream, or one of the following negative error
+codes:
+.sp
+  PCRE2_ERROR_BADMAGIC  mismatch of id bytes in \fIbytes\fP
+  PCRE2_ERROR_BADMODE   mismatch of variable unit size or PCRE version
+  PCRE2_ERROR_NULL      the argument is NULL
+.sp
+PCRE2_ERROR_BADMAGIC may mean that the data is corrupt, or that it was compiled
+on a system with different endianness.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

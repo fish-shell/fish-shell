@@ -1,0 +1,30 @@
+.TH PCRE2_SET_BSR 3 "22 October 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B int pcre2_set_bsr(pcre2_compile_context *\fIccontext\fP,
+.B "  uint32_t \fIvalue\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function sets the convention for processing \eR within a compile context.
+The second argument must be one of PCRE2_BSR_ANYCRLF or PCRE2_BSR_UNICODE. The
+result is zero for success or PCRE2_ERROR_BADDATA if the second argument is
+invalid.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

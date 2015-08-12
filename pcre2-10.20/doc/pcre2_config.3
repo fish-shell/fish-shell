@@ -1,0 +1,69 @@
+.TH PCRE2_CONFIG 3 "20 April 2014" "PCRE2 10.0"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.SM
+.B int pcre2_config(uint32_t \fIwhat\fP, void *\fIwhere\fP);
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function makes it possible for a client program to find out which optional
+features are available in the version of the PCRE2 library it is using. The
+arguments are as follows:
+.sp
+  \fIwhat\fP     A code specifying what information is required
+  \fIwhere\fP    Points to where to put the information
+.sp
+If \fIwhere\fP is NULL, the function returns the amount of memory needed for
+the requested information. When the information is a string, the value is in
+code units; for other types of data it is in bytes.
+.P
+If \fBwhere\fP is not NULL, for PCRE2_CONFIG_JITTARGET,
+PCRE2_CONFIG_UNICODE_VERSION, and PCRE2_CONFIG_VERSION it must point to a
+buffer that is large enough to hold the string. For all other codes it must
+point to a uint32_t integer variable. The available codes are:
+.sp
+  PCRE2_CONFIG_BSR             Indicates what \eR matches by default:
+                                 PCRE2_BSR_UNICODE
+                                 PCRE2_BSR_ANYCRLF
+  PCRE2_CONFIG_JIT             Availability of just-in-time compiler
+                                support (1=yes 0=no)
+  PCRE2_CONFIG_JITTARGET       Information about the target archi-
+                                 tecture for the JIT compiler
+  PCRE2_CONFIG_LINKSIZE        Configured internal link size (2, 3, 4)
+  PCRE2_CONFIG_MATCHLIMIT      Default internal resource limit
+  PCRE2_CONFIG_NEWLINE         Code for the default newline sequence:
+                                 PCRE2_NEWLINE_CR
+                                 PCRE2_NEWLINE_LF
+                                 PCRE2_NEWLINE_CRLF
+                                 PCRE2_NEWLINE_ANY
+                                 PCRE2_NEWLINE_ANYCRLF
+  PCRE2_CONFIG_PARENSLIMIT     Default parentheses nesting limit
+  PCRE2_CONFIG_RECURSIONLIMIT  Internal recursion depth limit
+  PCRE2_CONFIG_STACKRECURSE    Recursion implementation (1=stack
+                                 0=heap)
+  PCRE2_CONFIG_UNICODE         Availability of Unicode support (1=yes
+                                 0=no)
+  PCRE2_CONFIG_UNICODE_VERSION The Unicode version (a string)
+  PCRE2_CONFIG_VERSION         The PCRE2 version (a string)
+.sp
+The function yields a non-negative value on success or the negative value
+PCRE2_ERROR_BADOPTION otherwise. This is also the result for the
+PCRE2_CONFIG_JITTARGET code if JIT support is not available. When a string is
+requested, the function returns the number of code units used, including the
+terminating zero.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

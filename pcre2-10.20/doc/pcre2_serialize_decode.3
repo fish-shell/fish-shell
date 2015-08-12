@@ -1,0 +1,50 @@
+.TH PCRE2_SERIALIZE_DECODE 3 "19 January 2015" "PCRE2 10.10"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B int32_t pcre2_serialize_decode(pcre2_code **\fIcodes\fP,
+.B "  int32_t \fInumber_of_codes\fP, const uint32_t *\fIbytes\fP,"
+.B "  pcre2_general_context *\fIgcontext\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function decodes a serialized set of compiled patterns back into a list of
+individual patterns. Its arguments are:
+.sp
+  \fIcodes\fP            pointer to a vector in which to build the list
+  \fInumber_of_codes\fP  number of slots in the vector
+  \fIbytes\fP            the serialized byte stream
+  \fIgcontext\fP         pointer to a general context or NULL
+.sp
+The \fIbytes\fP argument must point to a block of data that was originally
+created by \fBpcre2_serialize_encode()\fP, though it may have been saved on
+disc or elsewhere in the meantime. If there are more codes in the serialized
+data than slots in the list, only those compiled patterns that will fit are
+decoded. The yield of the function is the number of decoded patterns, or one of
+the following negative error codes:
+.sp
+  PCRE2_ERROR_BADDATA   \fInumber_of_codes\fP is zero or less
+  PCRE2_ERROR_BADMAGIC  mismatch of id bytes in \fIbytes\fP
+  PCRE2_ERROR_BADMODE   mismatch of variable unit size or PCRE version
+  PCRE2_ERROR_MEMORY    memory allocation failed
+  PCRE2_ERROR_NULL      \fIcodes\fP or \fIbytes\fP is NULL
+.sp
+PCRE2_ERROR_BADMAGIC may mean that the data is corrupt, or that it was compiled
+on a system with different endianness.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

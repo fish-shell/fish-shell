@@ -1,0 +1,32 @@
+.TH PCRE2_GET_STARTCHAR 3 "24 October 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B PCRE2_SIZE pcre2_get_startchar(pcre2_match_data *\fImatch_data\fP);
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+After a successful call of \fBpcre2_match()\fP that was passed the match block
+that is this function's argument, this function returns the code unit offset of
+the character at which the successful match started. For a non-partial match,
+this can be different to the value of \fIovector[0]\fP if the pattern contains
+the \eK escape sequence. After a partial match, however, this value is always
+the same as \fIovector[0]\fP because \eK does not affect the result of a
+partial match.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

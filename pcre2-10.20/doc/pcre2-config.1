@@ -1,0 +1,86 @@
+.TH PCRE2-CONFIG 1 "28 September 2014" "PCRE2 10.00"
+.SH NAME
+pcre2-config - program to return PCRE2 configuration
+.SH SYNOPSIS
+.rs
+.sp
+.nf
+.B pcre2-config  [--prefix] [--exec-prefix] [--version]
+.B "             [--libs8] [--libs16] [--libs32] [--libs-posix]"
+.B "             [--cflags] [--cflags-posix]"
+.fi
+.
+.
+.SH DESCRIPTION
+.rs
+.sp
+\fBpcre2-config\fP returns the configuration of the installed PCRE2 libraries
+and the options required to compile a program to use them. Some of the options
+apply only to the 8-bit, or 16-bit, or 32-bit libraries, respectively, and are
+not available for libraries that have not been built. If an unavailable option
+is encountered, the "usage" information is output.
+.
+.
+.SH OPTIONS
+.rs
+.TP 10
+\fB--prefix\fP
+Writes the directory prefix used in the PCRE2 installation for architecture
+independent files (\fI/usr\fP on many systems, \fI/usr/local\fP on some
+systems) to the standard output.
+.TP 10
+\fB--exec-prefix\fP
+Writes the directory prefix used in the PCRE2 installation for architecture
+dependent files (normally the same as \fB--prefix\fP) to the standard output.
+.TP 10
+\fB--version\fP
+Writes the version number of the installed PCRE2 libraries to the standard
+output.
+.TP 10
+\fB--libs8\fP
+Writes to the standard output the command line options required to link
+with the 8-bit PCRE2 library (\fB-lpcre2-8\fP on many systems).
+.TP 10
+\fB--libs16\fP
+Writes to the standard output the command line options required to link
+with the 16-bit PCRE2 library (\fB-lpcre2-16\fP on many systems).
+.TP 10
+\fB--libs32\fP
+Writes to the standard output the command line options required to link
+with the 32-bit PCRE2 library (\fB-lpcre2-32\fP on many systems).
+.TP 10
+\fB--libs-posix\fP
+Writes to the standard output the command line options required to link with
+PCRE2's POSIX API wrapper library (\fB-lpcre2-posix\fP \fB-lpcre2-8\fP on many
+systems).
+.TP 10
+\fB--cflags\fP
+Writes to the standard output the command line options required to compile
+files that use PCRE2 (this may include some \fB-I\fP options, but is blank on
+many systems).
+.TP 10
+\fB--cflags-posix\fP
+Writes to the standard output the command line options required to compile
+files that use PCRE2's POSIX API wrapper library (this may include some
+\fB-I\fP options, but is blank on many systems).
+.
+.
+.SH "SEE ALSO"
+.rs
+.sp
+\fBpcre2(3)\fP
+.
+.
+.SH AUTHOR
+.rs
+.sp
+This manual page was originally written by Mark Baker for the Debian GNU/Linux
+system. It has been subsequently revised as a generic PCRE2 man page.
+.
+.
+.SH REVISION
+.rs
+.sp
+.nf
+Last updated: 28 September 2014
+.fi

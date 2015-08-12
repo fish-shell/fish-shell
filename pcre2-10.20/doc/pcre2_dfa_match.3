@@ -1,0 +1,72 @@
+.TH PCRE2_DFA_MATCH 3 "12 May 2013" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B int pcre2_dfa_match(const pcre2_code *\fIcode\fP, PCRE2_SPTR \fIsubject\fP,
+.B "  PCRE2_SIZE \fIlength\fP, PCRE2_SIZE \fIstartoffset\fP,"
+.B "  uint32_t \fIoptions\fP, pcre2_match_data *\fImatch_data\fP,"
+.B "  pcre2_match_context *\fImcontext\fP,"
+.B "  int *\fIworkspace\fP, PCRE2_SIZE \fIwscount\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function matches a compiled regular expression against a given subject
+string, using an alternative matching algorithm that scans the subject string
+just once (\fInot\fP Perl-compatible). (The Perl-compatible matching function
+is \fBpcre2_match()\fP.) The arguments for this function are:
+.sp
+  \fIcode\fP         Points to the compiled pattern
+  \fIsubject\fP      Points to the subject string
+  \fIlength\fP       Length of the subject string
+  \fIstartoffset\fP  Offset in the subject at which to start matching
+  \fIoptions\fP      Option bits
+  \fImatch_data\fP   Points to a match data block, for results
+  \fImcontext\fP     Points to a match context, or is NULL
+  \fIworkspace\fP    Points to a vector of ints used as working space
+  \fIwscount\fP      Number of elements in the vector
+.sp
+For \fBpcre2_dfa_match()\fP, a match context is needed only if you want to set
+up a callout function. The \fIlength\fP and \fIstartoffset\fP values are code
+units, not characters. The options are:
+.sp
+  PCRE2_ANCHORED          Match only at the first position
+  PCRE2_NOTBOL            Subject is not the beginning of a line
+  PCRE2_NOTEOL            Subject is not the end of a line
+  PCRE2_NOTEMPTY          An empty string is not a valid match
+  PCRE2_NOTEMPTY_ATSTART  An empty string at the start of the subject
+                           is not a valid match
+  PCRE2_NO_UTF_CHECK      Do not check the subject for UTF
+                           validity (only relevant if PCRE2_UTF
+                           was set at compile time)
+  PCRE2_PARTIAL_SOFT      Return PCRE2_ERROR_PARTIAL for a partial
+                            match if no full matches are found
+  PCRE2_PARTIAL_HARD      Return PCRE2_ERROR_PARTIAL for a partial match
+                           even if there is a full match as well
+  PCRE2_DFA_RESTART       Restart after a partial match
+  PCRE2_DFA_SHORTEST      Return only the shortest match
+.sp
+There are restrictions on what may appear in a pattern when using this matching
+function. Details are given in the
+.\" HREF
+\fBpcre2matching\fP
+.\"
+documentation. For details of partial matching, see the
+.\" HREF
+\fBpcre2partial\fP
+.\"
+page. There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

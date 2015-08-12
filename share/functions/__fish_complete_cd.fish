@@ -1,10 +1,10 @@
 function __fish_complete_cd -d "Completions for the cd command"
 	set -l cdpath $CDPATH
 	[ -z "$cdpath" ]; and set cdpath "."
-	# Remove the real path to "." from cdpath if we're in it
+	# Remove the real path to "." (i.e. $PWD) from cdpath if we're in it
 	# so it doesn't get printed in the descriptions
 	set -l ind
-	if begin; set ind (contains -i -- (realpath .) $cdpath)
+	if begin; set ind (contains -i -- $PWD $cdpath)
 		      and contains -- "." $cdpath
 	          end
 			  set -e cdpath[$ind]

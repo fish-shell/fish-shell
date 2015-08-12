@@ -14,15 +14,9 @@ function __fish_complete_cd -d "Completions for the cd command"
 		# Don't show description for current directory
 		# and replace $HOME with "~"
 		[ $i = "." ]; or set -l desc (echo $i | sed -e "s|$HOME|~|")
-		# Save the real path so we can go back after cd-ing in
-		# even if $i is "."
-		set -l real $PWD
 		pushd $i
 		for d in (commandline -ct)*
-			if begin [ -d $d ]
-				builtin cd $d ^/dev/null # to check permission
-				and builtin cd $real ^/dev/null # go back
-			   end
+			if [ -d $d -a -x $d ]
 			   printf "%s/\t%s\n" $d $desc
 			end
 		end

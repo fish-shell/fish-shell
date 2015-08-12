@@ -1,0 +1,58 @@
+<html>
+<head>
+<title>pcre2_substring_get_bynumber specification</title>
+</head>
+<body bgcolor="#FFFFFF" text="#00005A" link="#0066FF" alink="#3399FF" vlink="#2222BB">
+<h1>pcre2_substring_get_bynumber man page</h1>
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>
+<p>
+This page is part of the PCRE2 HTML documentation. It was generated
+automatically from the original man page. If there is any nonsense in it,
+please consult the man page, in case the conversion went wrong.
+<br>
+<br><b>
+SYNOPSIS
+</b><br>
+<P>
+<b>#include &#60;pcre2.h&#62;</b>
+</P>
+<P>
+<b>int pcre2_substring_get_bynumber(pcre2_match_data *<i>match_data</i>,</b>
+<b>  uint32_t <i>number</i>, PCRE2_UCHAR **<i>bufferptr</i>, PCRE2_SIZE *<i>bufflen</i>);</b>
+</P>
+<br><b>
+DESCRIPTION
+</b><br>
+<P>
+This is a convenience function for extracting a captured substring by number
+into newly acquired memory. The arguments are:
+<pre>
+  <i>match_data</i>    The match data for the match
+  <i>number</i>        Number of the required substring
+  <i>bufferptr</i>     Where to put the string pointer
+  <i>bufflen</i>       Where to put the string length
+</pre>
+The memory in which the substring is placed is obtained by calling the same
+memory allocation function that was used for the match data block. The
+convenience function <b>pcre2_substring_free()</b> can be used to free it when
+it is no longer needed. The yield of the function is zero for success or one of
+the following error numbers:
+<pre>
+  PCRE2_ERROR_NOSUBSTRING   there are no groups of that number
+  PCRE2_ERROR_UNAVAILBLE    the ovector was too small for that group
+  PCRE2_ERROR_UNSET         the group did not participate in the match
+  PCRE2_ERROR_NOMEMORY      memory could not be obtained
+
+</PRE>
+</P>
+<P>
+There is a complete description of the PCRE2 native API in the
+<a href="pcre2api.html"><b>pcre2api</b></a>
+page and a description of the POSIX API in the
+<a href="pcre2posix.html"><b>pcre2posix</b></a>
+page.
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>

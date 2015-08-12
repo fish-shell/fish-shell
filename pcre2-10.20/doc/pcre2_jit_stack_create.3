@@ -1,0 +1,40 @@
+.TH PCRE2_JIT_STACK_CREATE 3 "03 November 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B pcre2_jit_stack *pcre2_jit_stack_create(PCRE2_SIZE \fIstartsize\fP,
+.B "  PCRE2_SIZE \fImaxsize\fP, pcre2_general_context *\fIgcontext\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function is used to create a stack for use by the code compiled by the JIT
+compiler. The first two arguments are a starting size for the stack, and a
+maximum size to which it is allowed to grow. The final argument is a general
+context, for memory allocation functions, or NULL for standard memory
+allocation. The result can be passed to the JIT run-time code by calling
+\fBpcre2_jit_stack_assign()\fP to associate the stack with a compiled pattern,
+which can then be processed by \fBpcre2_match()\fP. If the "fast path" JIT
+matcher, \fBpcre2_jit_match()\fP is used, the stack can be passed directly as
+an argument. A maximum stack size of 512K to 1M should be more than enough for
+any pattern. For more details, see the
+.\" HREF
+\fBpcre2jit\fP
+.\"
+page.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

@@ -1,0 +1,81 @@
+PCRE2-CONFIG(1)             General Commands Manual            PCRE2-CONFIG(1)
+
+
+
+NAME
+       pcre2-config - program to return PCRE2 configuration
+
+SYNOPSIS
+
+       pcre2-config [--prefix] [--exec-prefix] [--version]
+                    [--libs8] [--libs16] [--libs32] [--libs-posix]
+                    [--cflags] [--cflags-posix]
+
+
+DESCRIPTION
+
+       pcre2-config returns the configuration of the installed PCRE2 libraries
+       and the options required to compile a program to use them. Some of  the
+       options  apply  only  to  the  8-bit,  or  16-bit, or 32-bit libraries,
+       respectively, and are not available for libraries that  have  not  been
+       built. If an unavailable option is encountered, the "usage" information
+       is output.
+
+
+OPTIONS
+
+       --prefix  Writes the directory prefix used in  the  PCRE2  installation
+                 for  architecture  independent  files  (/usr on many systems,
+                 /usr/local on some systems) to the standard output.
+
+       --exec-prefix
+                 Writes the directory prefix used in  the  PCRE2  installation
+                 for architecture dependent files (normally the same as --pre-
+                 fix) to the standard output.
+
+       --version Writes the version number of the installed PCRE2 libraries to
+                 the standard output.
+
+       --libs8   Writes  to  the  standard  output  the  command  line options
+                 required to link with the 8-bit PCRE2 library  (-lpcre2-8  on
+                 many systems).
+
+       --libs16  Writes  to  the  standard  output  the  command  line options
+                 required to link with the 16-bit PCRE2 library (-lpcre2-16 on
+                 many systems).
+
+       --libs32  Writes  to  the  standard  output  the  command  line options
+                 required to link with the 32-bit PCRE2 library (-lpcre2-32 on
+                 many systems).
+
+       --libs-posix
+                 Writes  to  the  standard  output  the  command  line options
+                 required to link  with  PCRE2's  POSIX  API  wrapper  library
+                 (-lpcre2-posix -lpcre2-8 on many systems).
+
+       --cflags  Writes  to  the  standard  output  the  command  line options
+                 required to compile files that use PCRE2  (this  may  include
+                 some -I options, but is blank on many systems).
+
+       --cflags-posix
+                 Writes  to  the  standard  output  the  command  line options
+                 required to compile files that use PCRE2's POSIX API  wrapper
+                 library  (this  may  include some -I options, but is blank on
+                 many systems).
+
+
+SEE ALSO
+
+       pcre2(3)
+
+
+AUTHOR
+
+       This manual page was originally written by Mark Baker  for  the  Debian
+       GNU/Linux  system.  It has been subsequently revised as a generic PCRE2
+       man page.
+
+
+REVISION
+
+       Last updated: 28 September 2014

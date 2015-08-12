@@ -1,0 +1,30 @@
+.TH PCRE2_COMPILE_CONTEXT_CREATE 3 "22 October 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B pcre2_compile_context *pcre2_compile_context_create(
+.B "  pcre2_general_context *\fIgcontext\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function creates and initializes a new compile context. If its argument is
+NULL, \fBmalloc()\fP is used to get the necessary memory; otherwise the memory
+allocation function within the general context is used. The result is NULL if
+the memory could not be obtained.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

@@ -1,0 +1,50 @@
+.TH PCRE2_COMPILE 3 "23 March 2015" "PCRE2 10.20"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B int pcre2_callout_enumerate(const pcre2_code *\fIcode\fP,
+.B "  int (*\fIcallback\fP)(pcre2_callout_enumerate_block *, void *),"
+.B "  void *\fIcallout_data\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function scans a compiled regular expression and calls the \fIcallback()\fP
+function for each callout within the pattern. The yield of the function is zero
+for success and non-zero otherwise. The arguments are:
+.sp
+  \fIcode\fP           Points to the compiled pattern
+  \fIcallback\fP       The callback function
+  \fIcallout_data\fP   User data that is passed to the callback
+.sp
+The \fIcallback()\fP function is passed a pointer to a data block containing
+the following fields:
+.sp
+  \fIversion\fP                Block version number
+  \fIpattern_position\fP       Offset to next item in pattern
+  \fInext_item_length\fP       Length of next item in pattern
+  \fIcallout_number\fP         Number for numbered callouts
+  \fIcallout_string_offset\fP  Offset to string within pattern
+  \fIcallout_string_length\fP  Length of callout string
+  \fIcallout_string\fP         Points to callout string or is NULL
+.sp
+The second argument is the callout data that was passed to
+\fBpcre2_callout_enumerate()\fP. The \fBcallback()\fP function must return zero
+for success. Any other value causes the pattern scan to stop, with the value
+being passed back as the result of \fBpcre2_callout_enumerate()\fP.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

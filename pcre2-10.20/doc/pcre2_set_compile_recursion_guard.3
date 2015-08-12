@@ -1,0 +1,34 @@
+.TH PCRE2_SET_COMPILE_RECURSION_GUARD 3 "22 October 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B int pcre2_set_compile_recursion_guard(pcre2_compile_context *\fIccontext\fP,
+.B "  int (*\fIguard_function\fP)(uint32_t, void *), void *\fIuser_data\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function defines, within a compile context, a function that is called
+whenever \fBpcre2_compile()\fP starts to compile a parenthesized part of a
+pattern. The first argument to the function gives the current depth of
+parenthesis nesting, and the second is user data that is supplied when the
+function is set up. The callout function should return zero if all is well, or
+non-zero to force an error. This feature is provided so that applications can
+check the available system stack space, in order to avoid running out. The
+result of \fBpcre2_set_compile_recursion_guard()\fP is always zero.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

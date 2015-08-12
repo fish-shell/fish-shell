@@ -1,0 +1,41 @@
+.TH PCRE2_SUBSTRING_NAMETABLE_SCAN 3 "21 October 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B int pcre2_substring_nametable_scan(const pcre2_code *\fIcode\fP,
+.B "  PCRE2_SPTR \fIname\fP, PCRE2_SPTR *\fIfirst\fP, PCRE2_SPTR *\fIlast\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This convenience function finds, for a compiled pattern, the first and last
+entries for a given name in the table that translates capturing parenthesis
+names into numbers.
+.sp
+  \fIcode\fP    Compiled regular expression
+  \fIname\fP    Name whose entries required
+  \fIfirst\fP   Where to return a pointer to the first entry
+  \fIlast\fP    Where to return a pointer to the last entry
+.sp
+When the name is found in the table, if \fIfirst\fP is NULL, the function
+returns a group number, but if there is more than one matching entry, it is not
+defined which one. Otherwise, when both pointers have been set, the yield of
+the function is the length of each entry in code units. If the name is not
+found, PCRE2_ERROR_NOSUBSTRING is returned.
+.P
+There is a complete description of the PCRE2 native API, including the format of
+the table entries, in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page, and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

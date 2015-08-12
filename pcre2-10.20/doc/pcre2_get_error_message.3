@@ -1,0 +1,36 @@
+.TH PCRE2_GET_ERROR_MESSAGE 3 "21 October 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B int pcre2_get_error_message(int \fIerrorcode\fP, PCRE2_UCHAR *\fIbuffer\fP,
+.B "  PCRE2_SIZE \fIbufflen\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function provides a textual error message for each PCRE2 error code.
+Compilation errors are positive numbers; UTF formatting errors and matching
+errors are negative numbers. The arguments are:
+.sp
+  \fIerrorcode\fP   an error code (positive or negative)
+  \fIbuffer\fP      where to put the message
+  \fIbufflen\fP     the length of the buffer (code units)
+.sp
+The function returns the length of the message, excluding the trailing zero, or
+a negative error code if the buffer is too small.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

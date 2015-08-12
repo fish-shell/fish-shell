@@ -1,0 +1,47 @@
+<html>
+<head>
+<title>pcre2_set_recursion_memory_management specification</title>
+</head>
+<body bgcolor="#FFFFFF" text="#00005A" link="#0066FF" alink="#3399FF" vlink="#2222BB">
+<h1>pcre2_set_recursion_memory_management man page</h1>
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>
+<p>
+This page is part of the PCRE2 HTML documentation. It was generated
+automatically from the original man page. If there is any nonsense in it,
+please consult the man page, in case the conversion went wrong.
+<br>
+<br><b>
+SYNOPSIS
+</b><br>
+<P>
+<b>#include &#60;pcre2.h&#62;</b>
+</P>
+<P>
+<b>int pcre2_set_recursion_memory_management(</b>
+<b>  pcre2_match_context *<i>mcontext</i>,</b>
+<b>  void *(*<i>private_malloc</i>)(PCRE2_SIZE, void *),</b>
+<b>  void (*<i>private_free</i>)(void *, void *), void *<i>memory_data</i>);</b>
+</P>
+<br><b>
+DESCRIPTION
+</b><br>
+<P>
+This function sets the match context fields for custom memory management when
+PCRE2 is compiled to use the heap instead of the system stack for recursive
+function calls while matching. When PCRE2 is compiled to use the stack (the
+default) this function does nothing. The first argument is a match context, the
+second and third specify the memory allocation and freeing functions, and the
+final argument is an opaque value that is passed to them whenever they are
+called. The result of this function is always zero.
+</P>
+<P>
+There is a complete description of the PCRE2 native API in the
+<a href="pcre2api.html"><b>pcre2api</b></a>
+page and a description of the POSIX API in the
+<a href="pcre2posix.html"><b>pcre2posix</b></a>
+page.
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>

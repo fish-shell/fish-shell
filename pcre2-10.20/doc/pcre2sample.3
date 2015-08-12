@@ -1,0 +1,94 @@
+.TH PCRE2SAMPLE 3 "20 October 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH "PCRE2 SAMPLE PROGRAM"
+.rs
+.sp
+A simple, complete demonstration program to get you started with using PCRE2 is
+supplied in the file \fIpcre2demo.c\fP in the \fBsrc\fP directory in the PCRE2
+distribution. A listing of this program is given in the
+.\" HREF
+\fBpcre2demo\fP
+.\"
+documentation. If you do not have a copy of the PCRE2 distribution, you can
+save this listing to re-create the contents of \fIpcre2demo.c\fP.
+.P
+The demonstration program, which uses the PCRE2 8-bit library, compiles the
+regular expression that is its first argument, and matches it against the
+subject string in its second argument. No PCRE2 options are set, and default
+character tables are used. If matching succeeds, the program outputs the
+portion of the subject that matched, together with the contents of any captured
+substrings.
+.P
+If the -g option is given on the command line, the program then goes on to
+check for further matches of the same regular expression in the same subject
+string. The logic is a little bit tricky because of the possibility of matching
+an empty string. Comments in the code explain what is going on.
+.P
+If PCRE2 is installed in the standard include and library directories for your
+operating system, you should be able to compile the demonstration program using
+this command:
+.sp
+  gcc -o pcre2demo pcre2demo.c -lpcre2-8
+.sp
+If PCRE2 is installed elsewhere, you may need to add additional options to the
+command line. For example, on a Unix-like system that has PCRE2 installed in
+\fI/usr/local\fP, you can compile the demonstration program using a command
+like this:
+.sp
+.\" JOINSH
+  gcc -o pcre2demo -I/usr/local/include pcre2demo.c \e
+      -L/usr/local/lib -lpcre2-8
+.sp
+.P
+Once you have compiled and linked the demonstration program, you can run simple
+tests like this:
+.sp
+  ./pcre2demo 'cat|dog' 'the cat sat on the mat'
+  ./pcre2demo -g 'cat|dog' 'the dog sat on the cat'
+.sp
+Note that there is a much more comprehensive test program, called
+.\" HREF
+\fBpcre2test\fP,
+.\"
+which supports many more facilities for testing regular expressions using the
+PCRE2 libraries. The
+.\" HREF
+\fBpcre2demo\fP
+.\"
+program is provided as a simple coding example.
+.P
+If you try to run
+.\" HREF
+\fBpcre2demo\fP
+.\"
+when PCRE2 is not installed in the standard library directory, you may get an
+error like this on some operating systems (e.g. Solaris):
+.sp
+  ld.so.1: a.out: fatal: libpcre2.so.0: open failed: No such file or directory
+.sp
+This is caused by the way shared library support works on those systems. You
+need to add
+.sp
+  -R/usr/local/lib
+.sp
+(for example) to the compile command to get round this problem.
+.
+.
+.SH AUTHOR
+.rs
+.sp
+.nf
+Philip Hazel
+University Computing Service
+Cambridge, England.
+.fi
+.
+.
+.SH REVISION
+.rs
+.sp
+.nf
+Last updated: 20 October 2014
+Copyright (c) 1997-2014 University of Cambridge.
+.fi

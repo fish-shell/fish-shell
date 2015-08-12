@@ -1,0 +1,28 @@
+.TH PCRE2_SUBSTRING_FREE 3 "21 October 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.SM
+.B void pcre2_substring_free(PCRE2_UCHAR *\fIbuffer\fP);
+.
+.SH DESCRIPTION
+.rs
+.sp
+This is a convenience function for freeing the memory obtained by a previous
+call to \fBpcre2_substring_get_byname()\fP or
+\fBpcre2_substring_get_bynumber()\fP. Its only argument is a pointer to the
+string.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

@@ -1,0 +1,48 @@
+.TH PCRE2_JIT_MATCH 3 "03 November 2014" "PCRE2 10.0"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B int pcre2_jit_match(const pcre2_code *\fIcode\fP, PCRE2_SPTR \fIsubject\fP,
+.B "  PCRE2_SIZE \fIlength\fP, PCRE2_SIZE \fIstartoffset\fP,"
+.B "  uint32_t \fIoptions\fP, pcre2_match_data *\fImatch_data\fP,"
+.B "  pcre2_match_context *\fImcontext\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function matches a compiled regular expression that has been successfully
+processed by the JIT compiler against a given subject string, using a matching
+algorithm that is similar to Perl's. It is a "fast path" interface to JIT, and
+it bypasses some of the sanity checks that \fBpcre2_match()\fP applies.
+Its arguments are exactly the same as for
+.\" HREF
+\fBpcre2_match()\fP.
+.\"
+.P
+The supported options are PCRE2_NOTBOL, PCRE2_NOTEOL, PCRE2_NOTEMPTY,
+PCRE2_NOTEMPTY_ATSTART, PCRE2_PARTIAL_HARD, and PCRE2_PARTIAL_SOFT. Unsupported
+options are ignored. The subject string is not checked for UTF validity.
+.P
+The return values are the same as for \fBpcre2_match()\fP plus
+PCRE2_ERROR_JIT_BADOPTION if a matching mode (partial or complete) is requested
+that was not compiled. For details of partial matching, see the
+.\" HREF
+\fBpcre2partial\fP
+.\"
+page.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the JIT API in the
+.\" HREF
+\fBpcre2jit\fP
+.\"
+page.

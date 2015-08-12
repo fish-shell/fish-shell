@@ -1,0 +1,43 @@
+<html>
+<head>
+<title>pcre2_get_mark specification</title>
+</head>
+<body bgcolor="#FFFFFF" text="#00005A" link="#0066FF" alink="#3399FF" vlink="#2222BB">
+<h1>pcre2_get_mark man page</h1>
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>
+<p>
+This page is part of the PCRE2 HTML documentation. It was generated
+automatically from the original man page. If there is any nonsense in it,
+please consult the man page, in case the conversion went wrong.
+<br>
+<br><b>
+SYNOPSIS
+</b><br>
+<P>
+<b>#include &#60;pcre2.h&#62;</b>
+</P>
+<P>
+<b>PCRE2_SPTR pcre2_get_mark(pcre2_match_data *<i>match_data</i>);</b>
+</P>
+<br><b>
+DESCRIPTION
+</b><br>
+<P>
+After a call of <b>pcre2_match()</b> that was passed the match block that is
+this function's argument, this function returns a pointer to the last (*MARK)
+name that was encountered. The name is zero-terminated, and is within the
+compiled pattern. If no (*MARK) name is available, NULL is returned. A (*MARK)
+name may be available after a failed match or a partial match, as well as after
+a successful one.
+</P>
+<P>
+There is a complete description of the PCRE2 native API in the
+<a href="pcre2api.html"><b>pcre2api</b></a>
+page and a description of the POSIX API in the
+<a href="pcre2posix.html"><b>pcre2posix</b></a>
+page.
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>

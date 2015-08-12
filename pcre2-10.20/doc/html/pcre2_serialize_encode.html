@@ -1,0 +1,61 @@
+<html>
+<head>
+<title>pcre2_serialize_encode specification</title>
+</head>
+<body bgcolor="#FFFFFF" text="#00005A" link="#0066FF" alink="#3399FF" vlink="#2222BB">
+<h1>pcre2_serialize_encode man page</h1>
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>
+<p>
+This page is part of the PCRE2 HTML documentation. It was generated
+automatically from the original man page. If there is any nonsense in it,
+please consult the man page, in case the conversion went wrong.
+<br>
+<br><b>
+SYNOPSIS
+</b><br>
+<P>
+<b>#include &#60;pcre2.h&#62;</b>
+</P>
+<P>
+<b>int32_t pcre2_serialize_encode(pcre2_code **<i>codes</i>,</b>
+<b>  int32_t <i>number_of_codes</i>, uint32_t **<i>serialized_bytes</i>,</b>
+<b>  PCRE2_SIZE *<i>serialized_size</i>, pcre2_general_context *<i>gcontext</i>);</b>
+</P>
+<br><b>
+DESCRIPTION
+</b><br>
+<P>
+This function encodes a list of compiled patterns into a byte stream that can
+be saved on disc or elsewhere. Its arguments are:
+<pre>
+  <i>codes</i>             pointer to a vector containing the list
+  <i>number_of_codes</i>   number of slots in the vector
+  <i>serialized_bytes</i>  set to point to the serialized byte stream
+  <i>serialized_size</i>   set to the number of bytes in the byte stream
+  <i>gcontext</i>          pointer to a general context or NULL
+</pre>
+The context argument is used to obtain memory for the byte stream. When the
+serialized data is no longer needed, it must be freed by calling
+<b>pcre2_serialize_free()</b>. The yield of the function is the number of
+serialized patterns, or one of the following negative error codes:
+<pre>
+  PCRE2_ERROR_BADDATA      <i>number_of_codes</i> is zero or less
+  PCRE2_ERROR_BADMAGIC     mismatch of id bytes in one of the patterns
+  PCRE2_ERROR_MEMORY       memory allocation failed
+  PCRE2_ERROR_MIXEDTABLES  the patterns do not all use the same tables
+  PCRE2_ERROR_NULL         an argument other than <i>gcontext</i> is NULL
+</pre>
+PCRE2_ERROR_BADMAGIC means either that a pattern's code has been corrupted, or
+that a slot in the vector does not point to a compiled pattern.
+</P>
+<P>
+There is a complete description of the PCRE2 native API in the
+<a href="pcre2api.html"><b>pcre2api</b></a>
+page and a description of the POSIX API in the
+<a href="pcre2posix.html"><b>pcre2posix</b></a>
+page.
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>

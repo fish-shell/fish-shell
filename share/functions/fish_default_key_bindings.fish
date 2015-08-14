@@ -108,8 +108,8 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind $argv \ed 'set -l cmd (commandline); if test -z "$cmd"; echo; dirh; commandline -f repaint; else; commandline -f kill-word; end'
 	bind $argv \cd delete-or-exit
 
-	bind \ed forward-kill-word
-	bind \ed kill-word
+	bind $argv \ed forward-kill-word
+	bind $argv \ed kill-word
 
 	# Allow reading manpages by pressing F1 (many GUI applications) or Alt+h (like in zsh)
 	bind $argv -k f1 __fish_man_page
@@ -119,15 +119,15 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind $argv \ep '__fish_paginate'
 	
 	# shift-tab does a tab complete followed by a search
-	bind --key btab complete-and-search
+	bind $argv --key btab complete-and-search
 
 	# escape cancels stuff	
-	bind \e cancel
+	bind $argv \e cancel
 
 	# Ignore some known-bad control sequences
 	# https://github.com/fish-shell/fish-shell/issues/1917
-	bind \e\[I 'begin;end'
-	bind \e\[O 'begin;end'
+	bind $argv \e\[I 'begin;end'
+	bind $argv \e\[O 'begin;end'
 
 	# term-specific special bindings
 	switch "$TERM"

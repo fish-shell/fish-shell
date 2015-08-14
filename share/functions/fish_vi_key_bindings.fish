@@ -164,6 +164,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind -M insert \e\[3\;2~ backward-delete-char 
 
   bind -M insert \t complete
+  # shift-tab does a tab complete followed by a search
+  bind -M insert --key btab complete-and-search
 
 	# OS X SnowLeopard doesn't have these keys. Don't show an annoying error message.
 	bind -M insert -k home beginning-of-line 2> /dev/null

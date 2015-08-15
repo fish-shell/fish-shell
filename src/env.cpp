@@ -1354,6 +1354,30 @@ const char * const *env_export_arr(bool recalc)
     return export_array.get();
 }
 
+void env_set_argv(const wchar_t * const * argv)
+{
+    if (*argv)
+    {
+        const wchar_t * const *arg;
+        wcstring sb;
+
+        for (arg=argv; *arg; arg++)
+        {
+            if (arg != argv)
+            {
+                sb.append(ARRAY_SEP_STR);
+            }
+            sb.append(*arg);
+        }
+
+        env_set(L"argv", sb.c_str(), ENV_LOCAL);
+    }
+    else
+    {
+        env_set(L"argv", 0, ENV_LOCAL);
+    }
+}
+
 env_vars_snapshot_t::env_vars_snapshot_t(const wchar_t * const *keys)
 {
     ASSERT_IS_MAIN_THREAD();

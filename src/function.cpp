@@ -387,3 +387,32 @@ int function_get_definition_offset(const wcstring &name)
     const function_info_t *func = function_get(name);
     return func ? func->definition_offset : -1;
 }
+
+void function_prepare_environment(const wcstring &name, const wchar_t * const * argv, const std::map<wcstring, env_var_t> &inherited_vars)
+{
+    /* Three components of the environment:
+     1. argv
+     2. named arguments
+     3. inherited variables
+    */
+    env_set_argv(argv);
+ 
+    const wcstring_list_t named_arguments = function_get_named_arguments(name);
+    if (! named_arguments.empty())
+    {
+        const wchar_t * const *arg;
+        size_t i;
+        for (i=0, arg=argv; i < named_arguments.size(); i++)
+        {
+            env_set(named_arguments.at(i).c_str(), *arg, ENV_LOCAL | ENV_USER);
+            
+            if (*arg)
+                arg++;
+        }
+    }
+    
+    for (std::map<wcstring,env_var_t>::const_iterator it = inherited_vars.begin(), end = inherited_vars.end(); it != end; ++it)
+    {
+        env_set(it->first, it->second.missing() ? NULL : it->second.c_str(), ENV_LOCAL | ENV_USER);
+    }
+}

@@ -774,12 +774,12 @@ void exec_job(parser_t &parser, job_t *j)
                 */
 
                 signal_unblock();
+                const wcstring func_name = p->argv0();
                 wcstring def;
-                bool function_exists = function_get_definition(p->argv0(), &def);
+                bool function_exists = function_get_definition(func_name, &def);
 
-                wcstring_list_t named_arguments = function_get_named_arguments(p->argv0());
-                bool shadows = function_get_shadows(p->argv0());
-                std::map<wcstring,env_var_t> inherit_vars = function_get_inherit_vars(p->argv0());
+                bool shadows = function_get_shadows(func_name);
+                const std::map<wcstring,env_var_t> inherit_vars = function_get_inherit_vars(func_name);
 
                 signal_block();
 
@@ -788,7 +788,7 @@ void exec_job(parser_t &parser, job_t *j)
                     debug(0, _(L"Unknown function '%ls'"), p->argv0());
                     break;
                 }
-                function_block_t *newv = new function_block_t(p, p->argv0(), shadows);
+                function_block_t *newv = new function_block_t(p, func_name, shadows);
                 parser.push_block(newv);
 
                 /*
@@ -797,14 +797,10 @@ void exec_job(parser_t &parser, job_t *j)
                   signals.
                 */
                 signal_unblock();
-                parse_util_set_argv(p->get_argv()+1, named_arguments);
-                for (std::map<wcstring,env_var_t>::const_iterator it = inherit_vars.begin(), end = inherit_vars.end(); it != end; ++it)
-                {
-                    env_set(it->first, it->second.missing() ? NULL : it->second.c_str(), ENV_LOCAL | ENV_USER);
-                }
+                function_prepare_environment(func_name, p->get_argv()+1, inherit_vars);
                 signal_block();
 
-                parser.forbid_function(p->argv0());
+                parser.forbid_function(func_name);
 
                 if (p->next)
                 {

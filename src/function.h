@@ -179,10 +179,13 @@ std::map<wcstring,env_var_t> function_get_inherit_vars(const wcstring &name);
 */
 bool function_copy(const wcstring &name, const wcstring &new_name);
 
-
 /**
    Returns whether this function shadows variables of the underlying function
 */
 int function_get_shadows(const wcstring &name);
+
+/** Prepares the environment for executing a function.
+*/
+void function_prepare_environment(const wcstring &name, const wchar_t * const * argv, const std::map<wcstring, env_var_t> &inherited_vars);
 
 #endif

@@ -2,7 +2,7 @@
 
 function __fish_bundle_no_command --description 'Test if bundle has been given no subcommand'
   set cmd (commandline -opc)
-  if [ (count $cmd) -eq 1 -a $cmd[1] = 'bundle' ]
+  if [ (count $cmd) -eq 1 ]
     return 0
   end
   return 1

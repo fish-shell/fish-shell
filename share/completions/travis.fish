@@ -1,6 +1,6 @@
 function __fish_travis_needs_command
   set cmd (commandline -opc)
-  if [ (count $cmd) -eq 1 -a $cmd[1] = 'travis' ]
+  if [ (count $cmd) -eq 1 ]
     return 0
   end
   return 1

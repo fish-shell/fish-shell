@@ -1,11 +1,7 @@
 function __fish_composer_needs_command
   set cmd (commandline -opc)
 
-  if [ (count $cmd) -eq 1 -a $cmd[1] = 'composer' ]
-    return 0
-  end
-
-  if [ (count $cmd) -eq 1 -a $cmd[1] = 'composer.phar' ]
+  if [ (count $cmd) -eq 1 ]
     return 0
   end
 

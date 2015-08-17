@@ -557,7 +557,7 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
 
     for (wcstring_list_t::const_iterator it = m.commands.begin(), end = m.commands.end(); it != end; ++it)
     {
-        if (input_function_get_code(*it) != -1)
+        if (input_function_get_code(*it) != INPUT_CODE_NONE)
             has_functions = true;
         else
             has_commands = true;
@@ -1103,14 +1103,12 @@ wcstring_list_t input_function_get_names(void)
 
 wchar_t input_function_get_code(const wcstring &name)
 {
-
-    size_t i;
-    for (i = 0; i<(sizeof(code_arr)/sizeof(wchar_t)) ; i++)
+    for (size_t i=0; i < sizeof code_arr / sizeof *code_arr; i++)
     {
         if (name == name_arr[i])
         {
             return code_arr[i];
         }
     }
-    return -1;
+    return INPUT_CODE_NONE;
 }

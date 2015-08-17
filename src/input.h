@@ -194,6 +194,7 @@ bool input_terminfo_get_name(const wcstring &seq, wcstring *out_name);
 wcstring_list_t input_terminfo_get_names(bool skip_null);
 
 /** Returns the input function code for the given input function name. */
+#define INPUT_CODE_NONE (wchar_t(-1))
 wchar_t input_function_get_code(const wcstring &name);
 
 /** Returns a list of all existing input function names */

@@ -408,12 +408,6 @@ static int end_loop = 0;
 /** The stack containing names of files that are being parsed */
 static std::stack<const wchar_t *, std::vector<const wchar_t *> > current_filename;
 
-
-/**
-   Store the pid of the parent process, so the exit function knows whether it should reset the terminal or not.
-*/
-static pid_t original_pid;
-
 /**
    This variable is set to true by the signal handler when ^C is pressed
 */
@@ -2119,12 +2113,6 @@ static void reader_interactive_init()
     {
         wperror(L"tcsetattr");
     }
-
-    /*
-       We need to know our own pid so we'll later know if we are a
-       fork
-    */
-    original_pid = getpid();
 
     env_set(L"_", L"fish", ENV_GLOBAL);
 }

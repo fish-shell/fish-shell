@@ -935,7 +935,7 @@ void completer_t::complete_strings(const wcstring &wc_escaped,
     if (! expand_one(tmp, EXPAND_SKIP_CMDSUBST | EXPAND_SKIP_WILDCARDS | this->expand_flags(), NULL))
         return;
 
-    const wchar_t *wc = parse_util_unescape_wildcards(tmp.c_str());
+    const wcstring wc = parse_util_unescape_wildcards(tmp);
 
     for (size_t i=0; i< possible_comp.size(); i++)
     {
@@ -944,11 +944,9 @@ void completer_t::complete_strings(const wcstring &wc_escaped,
 
         if (next_str)
         {
-            wildcard_complete(next_str, wc, desc, desc_func, &this->completions, this->expand_flags(), flags);
+            wildcard_complete(next_str, wc.c_str(), desc, desc_func, &this->completions, this->expand_flags(), flags);
         }
     }
-
-    free((void *)wc);
 }
 
 /**

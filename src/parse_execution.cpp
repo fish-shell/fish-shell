@@ -613,9 +613,8 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
                     const wcstring &arg = case_args.at(i);
 
                     /* Unescape wildcards so they can be expanded again */
-                    wchar_t *unescaped_arg = parse_util_unescape_wildcards(arg.c_str());
+                    wcstring unescaped_arg = parse_util_unescape_wildcards(arg);
                     bool match = wildcard_match(switch_value_expanded, unescaped_arg);
-                    free(unescaped_arg);
 
                     /* If this matched, we're done */
                     if (match)

@@ -325,7 +325,7 @@ static wcstring block_type_user_presentable_description(parse_token_type_t type)
 }
 
 /** Returns a string description of the given parse node */
-wcstring parse_node_t::describe(void) const
+wcstring parse_node_t::describe() const
 {
     wcstring result = token_type_description(type);
     if (type < FIRST_TERMINAL_TYPE)

@@ -138,10 +138,10 @@ size_t parse_util_get_offset_from_line(const wcstring &str, int line);
 size_t parse_util_get_offset(const wcstring &str, int line, long line_offset);
 
 /**
-   Make a duplicate of the specified string, unescape wildcard
-   characters but not performing any other character transformation.
+   Return the given string, unescaping wildcard characters but not performing
+   any other character transformation.
 */
-wchar_t *parse_util_unescape_wildcards(const wchar_t *in);
+wcstring parse_util_unescape_wildcards(const wcstring &in);
 
 /**
    Checks if the specified string is a help option.

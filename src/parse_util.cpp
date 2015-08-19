@@ -561,74 +561,41 @@ void parse_util_token_extent(const wchar_t *buff,
 
 }
 
-wchar_t *parse_util_unescape_wildcards(const wchar_t *str)
+wcstring parse_util_unescape_wildcards(const wcstring &str)
 {
-    wchar_t *in, *out;
-    wchar_t *unescaped;
-
-    CHECK(str, 0);
-
-    unescaped = wcsdup(str);
-
-    if (!unescaped)
+    wcstring result;
+    result.reserve(str.size());
+    
+    const wchar_t * const cs = str.c_str();
+    for (size_t i=0; cs[i] != L'\0'; i++)
     {
-        DIE_MEM();
-    }
-
-    for (in=out=unescaped; *in; in++)
-    {
-        switch (*in)
+        if (cs[i] == L'*')
         {
-            case L'\\':
-            {
-                switch (*(in + 1))
-                {
-                    case L'*':
-                    case L'?':
-                    {
-                        in++;
-                        *(out++)=*in;
-                        break;
-                    }
-                    case L'\\':
-                    {
-                        in++;
-                        *(out++)=L'\\';
-                        *(out++)=L'\\';
-                        break;
-                    }
-                    default:
-                    {
-                        *(out++)=*in;
-                        break;
-                    }
-                }
-                break;
-            }
-
-            case L'*':
-            {
-                *(out++)=ANY_STRING;
-                break;
-            }
-
-            case L'?':
-            {
-                *(out++)=ANY_CHAR;
-                break;
-            }
-
-            default:
-            {
-                *(out++)=*in;
-                break;
-            }
+            result.push_back(ANY_STRING);
+        }
+        else if (cs[i] == L'?')
+        {
+            result.push_back(ANY_CHAR);
+        }
+        else if (cs[i] == L'\\' && (cs[i+1] == L'*' || cs[i+1] == L'?'))
+        {
+            result.push_back(cs[i+1]);
+            i += 1;
+        }
+        else if (cs[i] == L'\\' && cs[i+1] == L'\\')
+        {
+            // Not a wildcard, but ensure the next iteration
+            // doesn't see this escaped backslash
+            result.append(L"\\\\");
+            i += 1;
+        }
+        else
+        {
+            result.push_back(cs[i]);
         }
     }
-    *out = *in;
-    return unescaped;
+    return result;
 }
-
 
 /**
    Find the outermost quoting style of current token. Returns 0 if

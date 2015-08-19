@@ -386,7 +386,15 @@ wcstring env_get_pwd_slash(void)
     env_var_t pwd = env_get_string(L"PWD");
     if (pwd.missing_or_empty())
     {
-        return L"";
+        wchar_t dir_path[4096];
+        wchar_t *res = wgetcwd(dir_path, 4096);
+        if (res)
+        {
+            pwd = wcstring(dir_path);
+        } else
+        {
+            pwd = env_get_string(L"HOME");
+        };
     }
     if (! string_suffixes_string(L"/", pwd))
     {

@@ -22,7 +22,7 @@ string replace [(-a | --all)] [(-i | --ignore-case)] [(-r | --regex)]
 
 `string` performs operations on strings.
 
-STRING arguments are taken from the command line unless standard input is connected to a pipe or a file, in which case they are read from standard input. It is an error to supply STRING arguments on the command line and on standard input.
+STRING arguments are taken from the command line unless standard input is connected to a pipe or a file, in which case they are read from standard input, one STRING per line. It is an error to supply STRING arguments on the command line and on standard input.
 
 Arguments beginning with `-` are normally interpreted as switches; `--` causes the following arguments not to be treated as switches even if they begin with `-`. Switches and required arguments are recognized only on the command line.
 
@@ -46,7 +46,7 @@ The following subcommands are available:
 
 - `match` tests each STRING against PATTERN and prints matching substrings. Only the first match for each STRING is reported unless `-a` or `--all` is given, in which case all matches are reported. Matching can be made case-insensitive with `-i` or `--ignore-case`. If `-n` or `--index` is given, each match is reported as a 1-based start position and a length. By default, PATTERN is interpreted as a glob pattern matched against each entire STRING argument. If `-r` or `--regex` is given, PATTERN is interpreted as a Perl-compatible regular expression. For a regular expression containing capturing groups, multiple items will be reported for each match, one for the entire match and one for each capturing group. Exit status: 0 if at least one match was found, or 1 otherwise.
 
-- `replace` is similar to `match` but replaces non-overlapping matching substrings with a replacement string and prints the result. By default, PATTERN is treated as a literal substring to be matched. If `-r` or `--regex` is given, PATTERN is interpreted as a Perl-compatible regular expression, and REPLACEMENT can contain C-style escape sequences as well as references to capturing groups by number or name as `$n` or `${n}`. Exit status: 0 if at least one replacement was performed, or 1 otherwise.
+- `replace` is similar to `match` but replaces non-overlapping matching substrings with a replacement string and prints the result. By default, PATTERN is treated as a literal substring to be matched. If `-r` or `--regex` is given, PATTERN is interpreted as a Perl-compatible regular expression, and REPLACEMENT can contain C-style escape sequences like `\t` as well as references to capturing groups by number or name as `$n` or `${n}`. Exit status: 0 if at least one replacement was performed, or 1 otherwise.
 
 
 \subsection string-example Examples

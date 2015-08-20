@@ -1106,7 +1106,7 @@ static wint_t string_last_char(const wcstring &str)
 }
 
 /* Given a null terminated string starting with a backslash, read the escape as if it is unquoted, appending to result. Return the number of characters consumed, or 0 on error */
-static size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_incomplete, bool unescape_special)
+size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_incomplete, bool unescape_special)
 {
     if (input[0] != L'\\')
     {

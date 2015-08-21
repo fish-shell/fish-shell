@@ -8,7 +8,7 @@ complete -c ping -s d --description "Set the SO_DEBUG option on the socket being
 complete -c ping -s F --description "Allocate and set 20 bit flow label on ECHO_REQUEST packets" -x
 complete -c ping -s f --description "Flood ping"
 complete -c ping -s i --description "Wait specified interval of seconds between sending each packet" -x
-complete -c ping -s I --description "Set source address to specified interface address" -x -a "(__fish_print_interfaces; fish_print_addresses)"
+complete -c ping -s I --description "Set source address to specified interface address" -x -a "(__fish_print_interfaces; __fish_print_addresses)"
 complete -c ping -s l --description "Send the specified number of packets without waiting for reply" -x
 complete -c ping -s L --description "Suppress loopback of multicast packets"
 complete -c ping -s n --description "Numeric output only"

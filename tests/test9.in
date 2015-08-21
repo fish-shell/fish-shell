@@ -115,7 +115,7 @@ try_unbalanced_block 'if false'
 
 # BOM checking (see #1518)
 # But only in UTF8
-if locale | sgrep -q -i utf-8
+if locale | __fish_sgrep -q -i utf-8
     echo \uFEFF"echo bom_test" | source
 else
     echo "echo bom_test" | source

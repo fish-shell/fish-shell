@@ -5,7 +5,7 @@ function __fish_print_make_targets
 	# The 'rev | cut | rev' trick removes everything after the last colon
 	for file in GNUmakefile Makefile makefile
 		if test -f $file
-			sgrep -h -o -E '^[^#%=$[:space:]][^#%=$]*:([^=]|$)' $file ^/dev/null | rev | cut -d ":" -f 2- | rev | sed -e 's/^ *//;s/ *$//;s/  */\\
+			__fish_sgrep -h -o -E '^[^#%=$[:space:]][^#%=$]*:([^=]|$)' $file ^/dev/null | rev | cut -d ":" -f 2- | rev | sed -e 's/^ *//;s/ *$//;s/  */\\
 /g' ^/dev/null
 			# On case insensitive filesystems, Makefile and makefile are the same; stop now so we don't double-print 
 			break

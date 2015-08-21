@@ -29,11 +29,11 @@ function __fish_contains_opt -d "Checks if a specific option has been given in t
 			continue
 		end
 
-		if commandline -cpo | sgrep -- "^-"$i"\|^-[^-]*"$i >/dev/null
+		if commandline -cpo | __fish_sgrep -- "^-"$i"\|^-[^-]*"$i >/dev/null
 			return 0
 		end
 
-		if commandline -ct | sgrep -- "^-"$i"\|^-[^-]*"$i >/dev/null
+		if commandline -ct | __fish_sgrep -- "^-"$i"\|^-[^-]*"$i >/dev/null
 			return 0
 		end
 	end

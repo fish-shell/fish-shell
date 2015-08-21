@@ -5,7 +5,7 @@ function __fish_print_users --description "Print a list of local users"
 	else if test -x /usr/bin/dscl # OS X support
 		dscl . -list /Users
 	else
-		sgrep -ve '^#' /etc/passwd | cut -d : -f 1
+		__fish_sgrep -ve '^#' /etc/passwd | cut -d : -f 1
 	end
 end
 

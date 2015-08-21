@@ -4,7 +4,7 @@
 
 if command ls --version 1>/dev/null 2>/dev/null
 	# This is GNU ls
-	function ls --description "List contents of directory"
+	function ls --description "List contents of directory" --wraps ls
 		set -l param --color=auto
 		if isatty 1
 			set param $param --indicator-style=classify

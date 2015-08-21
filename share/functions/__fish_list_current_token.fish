@@ -8,13 +8,19 @@ function __fish_list_current_token -d "List contents of token under the cursor i
 	set val (eval echo (commandline -t))
 	printf "\n"
 	if test -d $val
-		ls $val
+		for f in $val/*
+			echo $f
+		end
 	else
 		set dir (dirname $val)
 		if test $dir != . -a -d $dir
-			ls $dir
+			for f in $dir/*
+				echo $f
+			end
 		else
-			ls
+			for f in *
+				echo $f
+			end
 		end
 	end
 	commandline -f repaint

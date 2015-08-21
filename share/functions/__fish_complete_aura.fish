@@ -10,19 +10,19 @@ function __fish_complete_aura -d 'Complete Aura (ARCH/AUR package manager)' --ar
     set -l listrepos     "(cat /etc/pacman.conf | grep '^\[.\+\]' | sed 's/[]\[]//g')"
     set -l listgroups    "(pacman -Sg | sed 's/\(.*\)/\1\tPackage group/g')"
 
-    set -l noopt     'commandline | not sgrep -qe "-[a-z]*[ABCDLMOQRSTU]\|--aursync\|--save\|--downgrade\|--viewlog\|--abssync\|--orphans\|--database\|--query\|--sync\|--remove\|--upgrade\|--deptest"'
-    set -l database  'commandline | sgrep -qe "-[a-z]*D\|--database"'
-    set -l query     'commandline | sgrep -qe "-[a-z]*Q\|--query"'
-    set -l remove    'commandline | sgrep -qe "-[a-z]*R\|--remove"'
-    set -l sync      'commandline | sgrep -qe "-[a-z]*S\|--sync"'
-    set -l upgrade   'commandline | sgrep -qe "-[a-z]*U\|--upgrade"'
-    set -l aur       'commandline | sgrep -qe "-[a-z]*A\|--aursync"'
-    set -l abs       'commandline | sgrep -qe "-[a-z]*M\|--abssync"'
-    set -l save      'commandline | sgrep -qe "-[a-z]*B\|--save"'
-    set -l downgrade 'commandline | sgrep -qe "-[a-z]*C\|--downgrade"'
-    set -l orphans   'commandline | sgrep -qe "-[a-z]*O\|--orphans"'
-    set -l logfile   'commandline | sgrep -qe "-[a-z]*L\|--viewlog"'
-    set -l search    'commandline | sgrep -qe "-[a-zA]*s\|--search"'
+    set -l noopt     'commandline | not __fish_sgrep -qe "-[a-z]*[ABCDLMOQRSTU]\|--aursync\|--save\|--downgrade\|--viewlog\|--abssync\|--orphans\|--database\|--query\|--sync\|--remove\|--upgrade\|--deptest"'
+    set -l database  'commandline | __fish_sgrep -qe "-[a-z]*D\|--database"'
+    set -l query     'commandline | __fish_sgrep -qe "-[a-z]*Q\|--query"'
+    set -l remove    'commandline | __fish_sgrep -qe "-[a-z]*R\|--remove"'
+    set -l sync      'commandline | __fish_sgrep -qe "-[a-z]*S\|--sync"'
+    set -l upgrade   'commandline | __fish_sgrep -qe "-[a-z]*U\|--upgrade"'
+    set -l aur       'commandline | __fish_sgrep -qe "-[a-z]*A\|--aursync"'
+    set -l abs       'commandline | __fish_sgrep -qe "-[a-z]*M\|--abssync"'
+    set -l save      'commandline | __fish_sgrep -qe "-[a-z]*B\|--save"'
+    set -l downgrade 'commandline | __fish_sgrep -qe "-[a-z]*C\|--downgrade"'
+    set -l orphans   'commandline | __fish_sgrep -qe "-[a-z]*O\|--orphans"'
+    set -l logfile   'commandline | __fish_sgrep -qe "-[a-z]*L\|--viewlog"'
+    set -l search    'commandline | __fish_sgrep -qe "-[a-zA]*s\|--search"'
 
     # By default fish expands the arguments with the option which is not desired
     # due to performance reasons.

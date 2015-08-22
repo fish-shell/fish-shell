@@ -466,7 +466,7 @@ int input_init()
 
     const env_var_t term = env_get_string(L"TERM");
     int errret;
-    if (setupterm(0, STDOUT_FILENO, &errret) == ERR)
+    if (setupterm(const_cast<char *>(wcs2string(term).c_str()), STDOUT_FILENO, &errret) == ERR)
     {
         debug(0, _(L"Could not set up terminal"));
         if (errret == 0)

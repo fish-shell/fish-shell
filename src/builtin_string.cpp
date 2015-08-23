@@ -460,12 +460,11 @@ static const wchar_t *pcre2_strerror(int err_code)
 
 struct compiled_regex_t
 {
-    const wchar_t *argv0;
     pcre2_code *code;
     pcre2_match_data *match;
 
-    compiled_regex_t(const wchar_t *argv0_, const wchar_t *pattern, bool ignore_case)
-        : argv0(argv0_), code(0), match(0)
+    compiled_regex_t(const wchar_t *argv0, const wchar_t *pattern, bool ignore_case)
+        : code(0), match(0)
     {
         // Disable some sequences that can lead to security problems
         uint32_t options = PCRE2_NEVER_UTF;
@@ -885,7 +884,7 @@ public:
             {
                 if (outlen < MAX_REPLACE_SIZE)
                 {
-                    outlen = std::max(2 * outlen, MAX_REPLACE_SIZE);
+                    outlen = std::min(2 * outlen, MAX_REPLACE_SIZE);
                     output = (wchar_t *)realloc(output, sizeof(wchar_t) * outlen);
                     if (output == 0)
                     {

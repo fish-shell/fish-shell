@@ -1626,6 +1626,8 @@ universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_
     }
 #if FISH_NOTIFYD_AVAILABLE
     return strategy_notifyd;
+#elif defined(__CYGWIN__)
+    return strategy_shmem_polling;
 #else
     return strategy_named_pipe;
 #endif

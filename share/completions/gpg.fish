@@ -94,8 +94,8 @@ complete -c gpg -l send-keys -xa "(__fish_complete_gpg_key_id)" --description "S
 complete -c gpg -l export-secret-keys -xa "(__fish_complete_gpg_user_id)" --description "Same as --export, but exports the secret keys instead"
 complete -c gpg -l export-secret-subkeys -xa "(__fish_complete_gpg_user_id)" --description "Same as --export, but exports the secret keys instead"
 
-complete -c gpg -l import -xa "(__fish_complete_gpg_user_id)" --description 'Import/merge keys'
-complete -c gpg -l fast-import -xa "(__fish_complete_gpg_user_id)" --description 'Import/merge keys'
+complete -c gpg -l import --description 'Import/merge keys'
+complete -c gpg -l fast-import --description 'Import/merge keys'
 
 complete -c gpg -l recv-keys -xa "(__fish_complete_gpg_key_id)" --description "Import the keys with the given key IDs from a keyserver"
 complete -c gpg -l refresh-keys -xa "(__fish_complete_gpg_key_id)" --description "Request updates from a keyserver for keys that already exist on the local keyring"

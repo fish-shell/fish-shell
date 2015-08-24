@@ -822,6 +822,24 @@ else
   AC_MSG_RESULT(no)
 fi
 
+# Check for usable FIFO (Cygwin allows only a single reader which causes problems)
+AC_MSG_CHECKING([if we have usable FIFOs.])
+AC_CANONICAL_HOST
+case $host_os in
+  *cygwin* ) usable_fifos=no;;
+         * ) usable_fifos=yes;;
+esac
+if test "x$usable_fifos" = "xyes"; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(
+    [HAVE_USABLE_FIFOS],
+    [1],
+    [Define to 1 if we have usable FIFOs.]
+  )
+else
+  AC_MSG_RESULT(no)
+fi
+
 # Tell the world what we know
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

@@ -1626,8 +1626,10 @@ universal_notifier_t::notifier_strategy_t universal_notifier_t::resolve_default_
     }
 #if FISH_NOTIFYD_AVAILABLE
     return strategy_notifyd;
-#else
+#elif HAVE_USABLE_FIFOS
     return strategy_named_pipe;
+#else
+    return strategy_shmem_polling;
 #endif
 }
 

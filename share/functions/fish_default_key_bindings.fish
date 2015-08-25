@@ -89,8 +89,8 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind $argv \e\[1\;5D backward-word
 	bind $argv \e\[1\;9A history-token-search-backward # iTerm2
 	bind $argv \e\[1\;9B history-token-search-forward # iTerm2
-	bind $argv \e\[1\;9C forward-word #iTerm2
-	bind $argv \e\[1\;9D backward-word #iTerm2
+	bind $argv \e\[1\;9C nextd-or-forward-word #iTerm2
+	bind $argv \e\[1\;9D prevd-or-backward-word #iTerm2
 	# Bash compatibility
 	# https://github.com/fish-shell/fish-shell/issues/89
 	bind $argv \e. history-token-search-backward

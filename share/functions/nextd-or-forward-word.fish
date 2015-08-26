@@ -1,6 +1,6 @@
-
 function nextd-or-forward-word
-	if test -z (commandline)
+	set -l cmd (commandline)
+	if test -z "$cmd"
 		nextd
 		commandline -f repaint
 	else

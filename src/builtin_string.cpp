@@ -34,62 +34,50 @@ static void string_unknown_option(parser_t &parser, const wchar_t *subcmd, const
     builtin_print_help(parser, L"string", stderr_buffer);
 }
 
+static bool string_args_from_stdin()
+{
+    return builtin_stdin != STDIN_FILENO || !isatty(builtin_stdin);
+}
+
 static const wchar_t *string_get_arg_stdin()
 {
-    static wcstring arg;
+    static wcstring warg;
 
-    arg.clear();
-
-    bool eof = false;
-    bool gotarg = false;
-
+    std::string arg;
     for (;;)
     {
-        wchar_t wch = L'\0';
-        mbstate_t state = {};
-        for (;;)
+        char ch = '\0';
+        int rc = read_blocked(builtin_stdin, &ch, 1);
+
+        if (rc < 0)
         {
-            char ch = '\0';
-            if (read_blocked(builtin_stdin, &ch, 1) <= 0)
+            // failure
+            return 0;
+        }
+
+        if (rc == 0)
+        {
+            // eof
+            if (arg.empty())
             {
-                eof = true;
-                break;
+                return 0;
             }
             else
             {
-                size_t n = mbrtowc(&wch, &ch, 1, &state);
-                if (n == size_t(-1))
-                {
-                    // Invalid multibyte sequence: start over
-                    memset(&state, 0, sizeof(state));
-                }
-                else if (n == size_t(-2))
-                {
-                    // Incomplete sequence: continue reading
-                }
-                else
-                {
-                    // Got a complete char (could be L'\0')
-                    break;
-                }
+                break;
             }
         }
 
-        if (eof)
+        if (ch == '\n')
         {
             break;
         }
 
-        if (wch == L'\n')
-        {
-            gotarg = true;
-            break;
-        }
-
-        arg += wch;
+        arg += ch;
     }
 
-    return gotarg ? arg.c_str() : 0;
+    warg = str2wcstring(arg.c_str(), arg.size());
+    return warg.c_str();
 }
 
 static const wchar_t *string_get_arg_argv(int *argidx, wchar_t **argv)
@@ -97,15 +85,15 @@ static const wchar_t *string_get_arg_argv(int *argidx, wchar_t **argv)
     return (argv && argv[*argidx]) ? argv[(*argidx)++] : 0;
 }
 
-static inline const wchar_t *string_get_arg(int *argidx, wchar_t **argv)
+static const wchar_t *string_get_arg(int *argidx, wchar_t **argv)
 {
-    if (isatty(builtin_stdin))
+    if (string_args_from_stdin())
     {
-        return string_get_arg_argv(argidx, argv);
+        return string_get_arg_stdin();
     }
     else
     {
-        return string_get_arg_stdin();
+        return string_get_arg_argv(argidx, argv);
     }
 }
 
@@ -144,7 +132,7 @@ static int string_escape(parser_t &parser, int argc, wchar_t **argv)
     }
 
     int i = w.woptind;
-    if (!isatty(builtin_stdin) && argc > i)
+    if (string_args_from_stdin() && argc > i)
     {
         string_error(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
         return BUILTIN_STRING_ERROR;
@@ -204,7 +192,7 @@ static int string_join(parser_t &parser, int argc, wchar_t **argv)
         return BUILTIN_STRING_ERROR;
     }
 
-    if (!isatty(builtin_stdin) && argc > i)
+    if (string_args_from_stdin() && argc > i)
     {
         string_error(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
         return BUILTIN_STRING_ERROR;
@@ -265,7 +253,7 @@ static int string_length(parser_t &parser, int argc, wchar_t **argv)
     }
 
     int i = w.woptind;
-    if (!isatty(builtin_stdin) && argc > i)
+    if (string_args_from_stdin() && argc > i)
     {
         string_error(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
         return BUILTIN_STRING_ERROR;
@@ -602,11 +590,6 @@ public:
         {
             uint32_t options = 0;
             PCRE2_SIZE offset = ovector[1]; // Start at end of previous match
-            PCRE2_SIZE old_offset = pcre2_get_startchar(regex.match);
-            if (offset <= old_offset)
-            {
-                offset = old_offset + 1;
-            }
 
             if (ovector[0] == ovector[1])
             {
@@ -702,7 +685,7 @@ static int string_match(parser_t &parser, int argc, wchar_t **argv)
         return BUILTIN_STRING_ERROR;
     }
 
-    if (!isatty(builtin_stdin) && argc > i)
+    if (string_args_from_stdin() && argc > i)
     {
         string_error(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
         return BUILTIN_STRING_ERROR;
@@ -984,7 +967,7 @@ static int string_replace(parser_t &parser, int argc, wchar_t **argv)
         return BUILTIN_STRING_ERROR;
     }
 
-    if (!isatty(builtin_stdin) && argc > i)
+    if (string_args_from_stdin() && argc > i)
     {
         string_error(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
         return BUILTIN_STRING_ERROR;
@@ -1082,7 +1065,7 @@ static int string_split(parser_t &parser, int argc, wchar_t **argv)
         return BUILTIN_STRING_ERROR;
     }
 
-    if (!isatty(builtin_stdin) && argc > i)
+    if (string_args_from_stdin() && argc > i)
     {
         string_error(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
         return BUILTIN_STRING_ERROR;
@@ -1262,7 +1245,7 @@ static int string_sub(parser_t &parser, int argc, wchar_t **argv)
     }
 
     int i = w.woptind;
-    if (!isatty(builtin_stdin) && argc > i)
+    if (string_args_from_stdin() && argc > i)
     {
         string_error(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
         return BUILTIN_STRING_ERROR;
@@ -1365,7 +1348,7 @@ static int string_trim(parser_t &parser, int argc, wchar_t **argv)
     }
 
     int i = w.woptind;
-    if (!isatty(builtin_stdin) && argc > i)
+    if (string_args_from_stdin() && argc > i)
     {
         string_error(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
         return BUILTIN_STRING_ERROR;

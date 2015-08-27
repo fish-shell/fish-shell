@@ -4162,6 +4162,7 @@ static void test_string(void)
         { {L"string", L"match", L"-r", L"-n", L"(a)(b)", L"abab", 0}, 0, L"1 2\n1 1\n2 1\n" },
         { {L"string", L"match", L"-r", L"-n", L"-a", L"(a)(b)", L"abab", 0}, 0, L"1 2\n1 1\n2 1\n3 2\n3 1\n4 1\n" },
         { {L"string", L"match", L"-r", L"*", L"", 0},                       2, L"" },
+        { {L"string", L"match", L"-r", L"-a", L"a*", L"b", 0},              0, L"\n\n" },
         { {L"string", L"match", L"-r", L"foo\\Kbar", L"foobar", 0},         0, L"bar\n" },
         { {L"string", L"match", L"-r", L"(foo)\\Kbar", L"foobar", 0},       0, L"bar\nfoo\n" },
         { {L"string", L"match", L"-r", L"(?=ab\\K)", L"ab", 0},             0, L"\n" },

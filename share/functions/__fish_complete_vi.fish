@@ -1,6 +1,6 @@
 #completion for vi/vim
 
-function __fish_complete_vi -d "Compleletions for vi and its aliases" --argument-names cmd
+function __fish_complete_vi -d "Completions for vi and its aliases" --argument-names cmd
 	set -l is_vim
 	if type -q $cmd
 		eval command $cmd --version >/dev/null ^/dev/null; and set -l is_vim vim

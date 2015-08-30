@@ -196,12 +196,13 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		end
 	end
 
+	# Remove the startup command_not_found handler since we're done with it
+	functions -e __fish_startup_command_not_found_handler
+
 	# Now install our fancy variant
 	function __fish_command_not_found_setup --on-event fish_command_not_found
 		# Remove fish_command_not_found_setup so we only execute this once
 		functions --erase __fish_command_not_found_setup
-		# Remove the startup handler since we're done with it
-		functions --erase __fish_startup_command_not_found_handler
 
 		# If the user defined a handler, it takes precedence
 		# It does not need to be executed because it's been defined before the event

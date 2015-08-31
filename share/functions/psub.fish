@@ -49,7 +49,7 @@ function psub --description "Read from stdin into a file and output the filename
 		set TMPDIR /tmp
 	end
 
-	if test $use_fifo = 1
+	if test use_fifo = 1
 		# Write output to pipe. This needs to be done in the background so
 		# that the command substitution exits without needing to wait for
 		# all the commands to exit

@@ -1,0 +1,14 @@
+\section suspend suspend - suspend the current shell
+
+\subsection suspend-synopsis Synopsis
+\fish{synopsis}
+suspend [--force]
+\endfish
+
+\subsection suspend-description Description
+
+`suspend` suspends the current shell. In order to prevent suspending a
+shell that isn't a subshell, it will not suspend a shell if it is a
+login shell, or of `$SHLVLV` is less `$suspend_minimum_SHLVL`, which
+defaults to three. This test is skipped if the `--force` option is
+given or the shell is not interactive.

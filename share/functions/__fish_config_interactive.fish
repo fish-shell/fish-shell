@@ -196,17 +196,19 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		end
 	end
 
-	# The first time a command is not found, look for command-not-found
-	# This is not cheap so we try to avoid doing it during startup
-	# config.fish already installed a handler for noninteractive command-not-found,
-	# so delete it here since we are now interactive
-	functions -e __fish_command_not_found_handler
+	# Remove the startup command_not_found handler since we're done with it
+	functions -e __fish_startup_command_not_found_handler
 
 	# Now install our fancy variant
 	function __fish_command_not_found_setup --on-event fish_command_not_found
 		# Remove fish_command_not_found_setup so we only execute this once
 		functions --erase __fish_command_not_found_setup
 
+		# If the user defined a handler, it takes precedence
+		# It does not need to be executed because it's been defined before the event
+		if type -q __fish_command_not_found_handler
+			return 0
+		end
 		# First check if we are on OpenSUSE since SUSE's handler has no options
 		# and expects first argument to be a command and second database
 		# also check if there is command-not-found command.

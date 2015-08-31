@@ -1,9 +1,6 @@
 # name: Terlar
 # author: terlar - https://github.com/terlar
 
-set -g fish_color_user magenta
-set -g fish_color_host yellow
-
 function fish_prompt --description 'Write out the prompt'
   set -l last_status $status
 

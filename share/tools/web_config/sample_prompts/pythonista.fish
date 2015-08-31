@@ -1,15 +1,11 @@
 # name: Simple Pythonista
 # author: davbo
 
-set normal (set_color normal)
-set magenta (set_color magenta)
-set yellow (set_color yellow)
-set green (set_color green)
-set gray (set_color -o black)
-
-set -g VIRTUAL_ENV_DISABLE_PROMPT true
 
 function fish_prompt
+   if not set -q VIRTUAL_ENV_DISABLE_PROMPT
+      set -g VIRTUAL_ENV_DISABLE_PROMPT true
+   end
    set_color yellow
    printf '%s' (whoami)
    set_color normal

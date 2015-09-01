@@ -22,6 +22,11 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind l forward-char
   bind \e\[C forward-char
   bind \e\[D backward-char
+
+  # Some linux VTs output these (why?)
+  bind \eOC forward-char
+  bind \eOD backward-char
+
   bind -k right forward-char
   bind -k left backward-char
   bind -m insert \n execute
@@ -57,6 +62,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind \e\[B down-or-search
   bind -k down down-or-search
   bind -k up up-or-search
+  bind \eOA up-or-search
+  bind \eOB down-or-search
 
   bind b backward-word
   bind B backward-bigword
@@ -177,6 +184,12 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind -M insert -k down down-or-search
   bind -M insert -k up up-or-search
 
+  # Some linux VTs output these (why?)
+  bind -M insert \eOA up-or-search
+  bind -M insert \eOB down-or-search
+  bind -M insert \eOC forward-char
+  bind -M insert \eOD backward-char
+
   bind -M insert \e\[C forward-char
   bind -M insert \e\[D backward-char
   bind -M insert -k right forward-char
@@ -214,6 +227,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind -M visual \e\[D backward-char
   bind -M visual -k right forward-char
   bind -M visual -k left backward-char
+  bind -M insert \eOC forward-char
+  bind -M insert \eOD backward-char
   bind -M visual h backward-char
   bind -M visual l forward-char
 

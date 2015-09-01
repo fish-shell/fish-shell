@@ -21,6 +21,12 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind $argv -k down down-or-search
 	bind $argv -k up up-or-search
 
+	# Some linux VTs output these (why?)
+	bind $argv \eOA up-or-search
+	bind $argv \eOB down-or-search
+	bind $argv \eOC forward-char
+	bind $argv \eOD backward-char
+
 	bind $argv \e\[C forward-char
 	bind $argv \e\[D backward-char
 	bind $argv -k right forward-char

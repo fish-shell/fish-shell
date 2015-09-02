@@ -1,5 +1,8 @@
 function funced --description 'Edit function definition'
-    set -l editor $EDITOR
+    set -l editor $VISUAL
+    if test -z $editor
+        set -l editor $EDITOR
+    end
     set -l interactive
     set -l funcname
     while set -q argv[1]

@@ -830,7 +830,7 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(con
     {
         this->report_error(statement_node,
                            _(L"Variables may not be used as commands. In fish, please define a function or use 'eval %ls'."),
-                           cmd+1);
+                           cmd);
     }
     else if (wcschr(cmd, L'$'))
     {

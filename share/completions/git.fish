@@ -360,7 +360,7 @@ complete -f -c git -n '__fish_git_using_command rebase' -l no-ff -d 'No fast-for
 ### reset
 complete -c git -n '__fish_git_needs_command'    -a reset -d 'Reset current HEAD to the specified state'
 complete -f -c git -n '__fish_git_using_command reset' -l hard -d 'Reset files in working directory'
-complete -c git -n '__fish_git_using_command reset' -a '(__fish_git_branches)'
+complete -c git -n '__fish_git_using_command reset' -a '(__fish_git_branches)' -d 'Branch'
 complete -f -c git -n '__fish_git_using_command reset' -a '(__fish_git_staged_files)' -d 'File'
 # TODO options
 

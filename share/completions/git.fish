@@ -22,6 +22,10 @@ function __fish_git_modified_files
   command git ls-files -m --exclude-standard ^/dev/null
 end
 
+function __fish_git_staged_files
+  command git diff --staged --name-only ^/dev/null
+end
+
 function __fish_git_add_files
   command git ls-files -mo --exclude-standard ^/dev/null
 end
@@ -357,6 +361,7 @@ complete -f -c git -n '__fish_git_using_command rebase' -l no-ff -d 'No fast-for
 complete -c git -n '__fish_git_needs_command'    -a reset -d 'Reset current HEAD to the specified state'
 complete -f -c git -n '__fish_git_using_command reset' -l hard -d 'Reset files in working directory'
 complete -c git -n '__fish_git_using_command reset' -a '(__fish_git_branches)'
+complete -f -c git -n '__fish_git_using_command reset' -a '(__fish_git_staged_files)' -d 'File'
 # TODO options
 
 ### revert

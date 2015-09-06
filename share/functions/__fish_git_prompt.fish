@@ -346,6 +346,11 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 end
 
 function __fish_git_prompt --description "Prompt function for Git"
+	# If git isn't installed, there's nothing we can do
+	# Return 1 so the calling prompt can deal with it
+	if not command -s git >/dev/null
+		return 1
+	end
 	set -l repo_info (command git rev-parse --git-dir --is-inside-git-dir --is-bare-repository --is-inside-work-tree --short HEAD ^/dev/null)
 	test -n "$repo_info"; or return
 

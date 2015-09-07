@@ -237,7 +237,7 @@ complete -f -c git -n '__fish_git_needs_command' -a clone -d 'Clone a repository
 ### commit
 complete -c git -n '__fish_git_needs_command'    -a commit -d 'Record changes to the repository'
 complete -c git -n '__fish_git_using_command commit' -l amend -d 'Amend the log message of the last commit'
-complete -c git -n '__fish_git_using_command commit' -a '(__fish_git_modified_files)'
+complete -f -c git -n '__fish_git_using_command commit' -a '(__fish_git_modified_files)'
 # TODO options
 
 ### diff

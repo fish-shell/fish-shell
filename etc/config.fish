@@ -37,3 +37,10 @@ if status --is-login
 	end
 end
 
+# Source fish files
+for file in $__fish_sysconfdir/*.fish
+	if test "$file" != "$__fish_sysconfdir/config.fish"
+		source $file
+	end
+end
+

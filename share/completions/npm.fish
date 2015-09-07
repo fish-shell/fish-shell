@@ -31,11 +31,6 @@ function __fish_npm_settings
   command npm config ls -l | command grep -o '.* =' | command tr -d '; ' | command tr -d ' ='
 end
 
-# return everything that can be used with the npm run command
-function __fish_npm_run
-  command npm run | command grep '^  [^ ]' | command tr -d '  '
-end
-
 # cache
 complete -f -c npm -n '__fish_npm_needs_command' -a 'cache' -d "Manipulates package's cache"
 complete -f -c npm -n '__fish_npm_using_command cache' -a 'add' -d 'Add the specified package to the local cache'
@@ -112,8 +107,12 @@ for c in 'up' 'update'
 end
 
 # run
-complete -f -c npm -n "__fish_npm_using_command run" -a '(__fish_npm_run)'
-complete -f -c npm -n "__fish_npm_using_command run-script" -a '(__fish_npm_run)'
+command npm run | command tail -n +2 | command sed "s/^ *//" | while read -l name
+  set -l trim 20
+  read -l value
+  complete -f -c npm -n "__fish_npm_using_command run" -a (printf "%s " "$name") -d (echo "$value" | cut -c1-$trim)
+  complete -f -c npm -n "__fish_npm_using_command run-script" -a (printf "%s " "$name") -d (echo "$value" | cut -c1-$trim)
+end
 
 # misc shorter explanations
 complete -f -c npm -n '__fish_npm_needs_command' -a 'adduser add-user login' -d 'Add a registry user account'

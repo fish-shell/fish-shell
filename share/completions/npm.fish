@@ -58,11 +58,6 @@ end
 # and: https://github.com/fish-shell/fish-shell/pull/2366
 complete -f -c npm -n 'not __fish_npm_needs_option' -a "(__fish_complete_npm)"
 
-# return everything that can be used with the npm config get/set commands
-function __fish_npm_settings
-  command npm config ls -l | command grep -o '.* =' | command tr -d '; ' | command tr -d ' ='
-end
-
 # cache
 complete -f -c npm -n '__fish_npm_needs_command' -a 'cache' -d "Manipulates package's cache"
 complete -f -c npm -n '__fish_npm_using_command cache' -a 'add' -d 'Add the specified package to the local cache'
@@ -82,16 +77,6 @@ end
 # get, set also exist as shorthands
 complete -f -c npm -n "__fish_npm_needs_command" -a 'get' -d 'Echo the config value to stdout'
 complete -f -c npm -n "__fish_npm_needs_command" -a 'set' -d 'Sets the config key to the value'
-complete -f -c npm -n "__fish_npm_using_command set" -a '(__fish_npm_settings)'
-complete -f -c npm -n "__fish_npm_using_command get" -a '(__fish_npm_settings)'
-
-# List of NPM commands
-# one quick-&-dirty way to get them: npm | grep ',' | tr ',' '\n'
-set --local npm_cmds 'add-user' 'adduser' 'apihelp' 'author' 'bin' 'bugs' 'c' 'completion' 'config' 'ddp' 'dedupe' 'deprecate' 'docs' 'edit' 'explore' 'faq' 'find' 'find-dupes' 'get' 'help' 'help-search' 'home' 'i' 'info' 'init' 'install' 'isntall' 'issues' 'la' 'link' 'list' 'll' 'ln' 'login' 'ls' 'outdated' 'owner' 'pack' 'prefix' 'prune' 'publish' 'r' 'rb' 'rebuild' 'remove' 'repo' 'restart' 'rm' 'root' 'run-script' 's' 'se' 'search' 'set' 'show' 'shrinkwrap' 'star' 'stars' 'start' 'stop' 'submodule' 't' 'tag' 'test' 'tst' 'un' 'uninstall' 'unlink' 'unpublish' 'unstar' 'up' 'update' 'v' 'version' 'view' 'whoami'
-
-# help
-complete -f -c npm -n '__fish_npm_needs_command' -a 'help' -d 'Get help on npm'
-complete -f -c npm -n '__fish_npm_using_command help' -a "$npm_cmds"
 
 # install
 for c in 'install' 'isntall' 'i'

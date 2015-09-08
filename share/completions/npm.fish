@@ -1,5 +1,5 @@
 # NPM (https://npmjs.org) completions for Fish shell
-# top 2 fns taken from
+# __fish_npm_needs_* and __fish_npm_using_* taken from:
 # https://stackoverflow.com/questions/16657803/creating-autocomplete-script-with-sub-commands
 # see also Fish's large set of completions for examples:
 # https://github.com/fish-shell/fish-shell/tree/master/share/completions
@@ -25,6 +25,38 @@ function __fish_npm_using_command
 
   return 1
 end
+
+function __fish_npm_needs_option
+  switch (commandline -ct)
+    case "-*"
+      return 0
+  end
+  return 1
+end
+
+function __fish_complete_npm --description "Complete the commandline using npm's 'completion' tool"
+  # npm completion is bash-centric, so we need to translate fish's "commandline" stuff to bash's $COMP_* stuff
+  # COMP_LINE is an array with the words in the commandline
+  set -lx COMP_LINE (commandline -o)
+  # COMP_CWORD is the index of the current word in COMP_LINE
+  # bash starts arrays with 0, so subtract 1
+  set -lx COMP_CWORD (math (count $COMP_LINE) - 1)
+  # COMP_POINT is the index of point/cursor when the commandline is viewed as a string
+  set -lx COMP_POINT (commandline -C)
+  # If the cursor is after the last word, the empty token will disappear in the expansion
+  # Readd it
+  if test (commandline -ct) = ""
+    set COMP_CWORD (math $COMP_CWORD + 1)
+    set COMP_LINE $COMP_LINE ""
+  end
+  npm completion -- $COMP_LINE ^/dev/null
+end
+
+# use npm completion for most of the things,
+# except options completion because it sucks at it.
+# see: https://github.com/npm/npm/issues/9524
+# and: https://github.com/fish-shell/fish-shell/pull/2366
+complete -f -c npm -n 'not __fish_npm_needs_option' -a "(__fish_complete_npm)"
 
 # return everything that can be used with the npm config get/set commands
 function __fish_npm_settings

@@ -472,10 +472,10 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     /* Set the given paths in the environment, if we have any */
     if (paths != NULL)
     {
-        env_set(FISH_DATADIR_VAR, paths->data.c_str(), ENV_GLOBAL | ENV_EXPORT);
-        env_set(FISH_SYSCONFDIR_VAR, paths->sysconf.c_str(), ENV_GLOBAL | ENV_EXPORT);
-        env_set(FISH_HELPDIR_VAR, paths->doc.c_str(), ENV_GLOBAL | ENV_EXPORT);
-        env_set(FISH_BIN_DIR, paths->bin.c_str(), ENV_GLOBAL | ENV_EXPORT);
+        env_set(FISH_DATADIR_VAR, paths->data.c_str(), ENV_GLOBAL);
+        env_set(FISH_SYSCONFDIR_VAR, paths->sysconf.c_str(), ENV_GLOBAL);
+        env_set(FISH_HELPDIR_VAR, paths->doc.c_str(), ENV_GLOBAL);
+        env_set(FISH_BIN_DIR, paths->bin.c_str(), ENV_GLOBAL);
     }
 
     /*

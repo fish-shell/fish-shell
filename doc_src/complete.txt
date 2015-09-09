@@ -3,11 +3,19 @@
 \subsection complete-synopsis Synopsis
 \fish{synopsis}
 complete ( -c | --command | -p | --path ) COMMAND
+        [( -e | --erase )]
         [( -s | --short-option ) SHORT_OPTION]
         [( -l | --long-option | -o | --old-option ) LONG_OPTION]
+        [( -f | --no-files )]
+        [( -r | --require-parameter )]
+        [( -x | --exclusive )]
+        [( -u | --unauthoritative )]
+        [( -A | --authoritative )]
         [( -a | --arguments ) OPTION_ARGUMENTS]
         [( -w | --wraps ) WRAPPED_COMMAND]
+        [( -n | --condition ) CONDITION]
         [( -d | --description ) DESCRIPTION]
+complete ( -C STRING | --do=complete=STRING )
 \endfish
 
 \subsection complete-description Description
@@ -22,7 +30,7 @@ the fish manual.
 
 - `LONG_OPTION` is a multi character option for the command.
 
-- `OPTION_ARGUMENTS` is parameter containing a space-separated list of possible option-arguments, which may contain subshells.
+- `OPTION_ARGUMENTS` is parameter containing a space-separated list of possible option-arguments, which may contain command substitutions.
 
 - `DESCRIPTION` is a description of what the option and/or option arguments do.
 
@@ -30,7 +38,7 @@ the fish manual.
 
 - `-w WRAPPED_COMMAND` or `--wraps=WRAPPED_COMMAND` causes the specified command to inherit completions from the wrapped command.
 
-- `-e` or `--erase` implies that the specified completion should be deleted.
+- `-e` or `--erase` deletes the specified completion.
 
 - `-f` or `--no-files` specifies that the option specified by this completion may not be followed by a filename.
 

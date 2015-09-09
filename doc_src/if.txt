@@ -30,3 +30,12 @@ else
     echo foo.txt and bar.txt do not exist
 end
 \endfish
+
+The following code will print "foo.txt exists and is readable" if foo.txt is a regular file and readable
+\fish
+if begin test -f foo.txt
+   		 and test -r foo.txt
+		 end
+   echo "foo.txt exists and is readable"
+end
+\endfish

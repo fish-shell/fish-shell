@@ -251,6 +251,8 @@ The default value for `$fish_function_path` is `~/.config/fish/functions` `/etc/
 
 It is very important that function definition files only contain the definition for the specified function and nothing else. Otherwise, it is possible that autoloading a function files requires that the function already be loaded, which creates a circular dependency.
 
+Autoloading also won't work for <a href=#event>event handlers</a>, since fish cannot know that a function is supposed to be executed when an event occurs when it hasn't yet loaded the function.
+
 
 \subsubsection syntax-conditional Conditional execution of code and flow control
 
@@ -1112,6 +1114,8 @@ function --on-signal WINCH my_signal_handler
     echo Got WINCH signal!
 end
 \endfish
+
+Please note that event handlers only become active when a function is loaded which means you might need to manually <a href='commands.html#source'>source</a> a function's file instead of relying on <a href=#syntax-function-autoloading>autoloading</a>.
 
 For more information on how to define new event handlers, see the documentation for the <a href='commands.html#function'>function</a> command.
 

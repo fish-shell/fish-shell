@@ -18,5 +18,5 @@ complete -c useradd -s u -l uid --description 'The numerical value of the user\'
 complete -c useradd -s b -l base-dir --description 'The initial path prefix for a new user\'s home directory' -r -a '(__fish_complete_directories)'
 complete -c useradd -s e -l expiredate --description 'The date on which the user account is disabled' -r
 complete -c useradd -s f -l inactive --description 'The number of days after a password has expired before the account will be disabled' -r
-complete -c useradd -s g -l gid --description 'The group name or ID for a new user\'s initial group' -x -a '(sgrep "^[^#]" /etc/group|cut -d : -f 1,3|sed -e "s/:/\n/")'
-complete -c useradd -s s -l shell --description 'Name of the new user\'s login shell' -x -a '(sgrep "^[^#]" /etc/shells)'
+complete -c useradd -s g -l gid --description 'The group name or ID for a new user\'s initial group' -x -a '( __fish_sgrep "^[^#]" /etc/group|cut -d : -f 1,3|sed -e "s/:/\n/")'
+complete -c useradd -s s -l shell --description 'Name of the new user\'s login shell' -x -a '( __fish_sgrep "^[^#]" /etc/shells)'

@@ -4,7 +4,7 @@
 # including mount and df
 
 # Completions for mount
-complete -x -c mount -a '(cat /etc/fstab|sed -e "s/^\([^ \t]*\)[ \t]*\([^ \t]*\).*/\1\n\2/"|sgrep "^/")' --description 'Mount point'
+complete -x -c mount -a '(cat /etc/fstab|sed -e "s/^\([^ \t]*\)[ \t]*\([^ \t]*\).*/\1\n\2/"| __fish_sgrep "^/")' --description 'Mount point'
 complete -c mount -s V --description 'Display version and exit'
 complete -c mount -s h --description 'Display help and exit'
 complete -c mount -s v --description 'Verbose mode'

@@ -9,6 +9,6 @@ complete -f -c apt-show-versions -s v -l verbose --description 'Print verbose in
 complete -f -c apt-show-versions -s i -l initialize --description 'Init or update cache only'
 complete -r -c apt-show-versions -l status-file --description 'Read package from file'
 complete -r -c apt-show-versions -o stf --description 'Read package from file'
-complete -r -c apt-show-versions -l list-dir -a '(ls -Fp .|sgrep /\$) /var/lib/apt/lists /var/state/apt/lists' --description 'Specify APT list dir'
-complete -r -c apt-show-versions -o ld -a '(ls -Fp .|sgrep /\$) /var/lib/apt/lists /var/state/apt/lists' --description 'Specify APT list dir'
+complete -r -c apt-show-versions -l list-dir -a '(ls -Fp .| __fish_sgrep /\$) /var/lib/apt/lists /var/state/apt/lists' --description 'Specify APT list dir'
+complete -r -c apt-show-versions -o ld -a '(ls -Fp .| __fish_sgrep /\$) /var/lib/apt/lists /var/state/apt/lists' --description 'Specify APT list dir'
 

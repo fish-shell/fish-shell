@@ -4,13 +4,13 @@ end
 
 function __fish_complete_eselect_modules
     set -l sedregexp 's/^  ([a-zA-Z0-9_-]*)[ ]*/\1\t/g'
-    __fish_eselect_cmd modules list | sgrep '^  ' | sed -r $sedregexp
+    __fish_eselect_cmd modules list | __fish_sgrep '^  ' | sed -r $sedregexp
 end
 
 function __fish_complete_eselect_actions
     set -l sedregexp 's/^  ([a-zA-Z0-9_-]*)[ ]*/\1\t/g'
     set -l cmdl (commandline -poc)
-    __fish_eselect_cmd $cmdl[2..-1] usage | sgrep '^  [^ -]' | sed -r $sedregexp
+    __fish_eselect_cmd $cmdl[2..-1] usage | __fish_sgrep '^  [^ -]' | sed -r $sedregexp
 end
 
 function __fish_complete_eselect_action_options
@@ -30,7 +30,7 @@ function __fish_complete_eselect_action_options
     set -l findregexp '/^  '$cmdl[-1]'/,/^  [^ ]/p'
 
     set cmdl[-1] usage
-    __fish_eselect_cmd $cmdl[2..-1] | sed -n -re $findregexp | sgrep '^    --' | sed -re $parseregexp
+    __fish_eselect_cmd $cmdl[2..-1] | sed -n -re $findregexp | __fish_sgrep '^    --' | sed -re $parseregexp
 end
 
 function __fish_complete_eselect_targets
@@ -50,7 +50,7 @@ function __fish_complete_eselect_targets
             set cmdl[-1] list
     end
 
-    eselect --colour=no $cmdl[2..-1] | sgrep '^  [^ -]' | sed -r $sedregexp
+    eselect --colour=no $cmdl[2..-1] | __fish_sgrep '^  [^ -]' | sed -r $sedregexp
 end
 
 complete -c eselect -n "test (__fish_number_of_cmd_args_wo_opts) = 1" \

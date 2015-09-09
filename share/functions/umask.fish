@@ -1,13 +1,13 @@
 
 function __fish_umask_parse -d "Internal umask function"
 	# Test if already a valid octal mask, and pad it with zeros
-	if echo $argv | sgrep -E '^0?[0-7]{1,3}$' >/dev/null
+	if echo $argv | __fish_sgrep -E '^0?[0-7]{1,3}$' >/dev/null
 		set -l char_count (echo $argv| wc -c)
 		for i in (seq (math 5 - $char_count)); set argv 0$argv; end
 		echo $argv
 	else
 		# Test if argument really is a valid symbolic mask
-		if not echo $argv | sgrep -E '^(((u|g|o|a|)(=|\+|-)|)(r|w|x)*)(,(((u|g|o|a|)(=|\+|-)|)(r|w|x)*))*$' >/dev/null
+		if not echo $argv | __fish_sgrep -E '^(((u|g|o|a|)(=|\+|-)|)(r|w|x)*)(,(((u|g|o|a|)(=|\+|-)|)(r|w|x)*))*$' >/dev/null
 			printf (_ "%s: Invalid mask '%s'\n") umask $argv >&2
 			return 1
 		end
@@ -72,19 +72,19 @@ function __fish_umask_parse -d "Internal umask function"
 					set mode set
 			end
 
-			if not echo $perm|sgrep -E '^(r|w|x)*$' >/dev/null
+			if not echo $perm| __fish_sgrep -E '^(r|w|x)*$' >/dev/null
 				printf (_ "%s: Invalid mask '%s'\n") umask $argv >&2
 				return
 			end
 
 			set val 0
-			if echo $i |sgrep 'r' >/dev/null
+			if echo $i | __fish_sgrep 'r' >/dev/null
 				set val 4
 			end
-			if echo $i |sgrep 'w' >/dev/null
+			if echo $i | __fish_sgrep 'w' >/dev/null
 				set val (math $val + 2)
 			end
-			if echo $i |sgrep 'x' >/dev/null
+			if echo $i | __fish_sgrep 'x' >/dev/null
 				set val (math $val + 1)
 			end
 

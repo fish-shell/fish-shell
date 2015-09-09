@@ -2,7 +2,7 @@
 # Use 'command git' to avoid interactions for aliases from git to (e.g.) hub
 
 function __fish_git_branches
-  command git branch --no-color -a ^/dev/null | sgrep -v ' -> ' | sed -e 's/^..//' -e 's/^remotes\///'
+  command git branch --no-color -a ^/dev/null | __fish_sgrep -v ' -> ' | sed -e 's/^..//' -e 's/^remotes\///'
 end
 
 function __fish_git_tags
@@ -38,8 +38,8 @@ function __fish_git_ranges
   end
 
   set -l to (commandline -ot | perl -ne 'if (index($_, "..") > 0) { my @parts = split(/\.\./); print $parts[1]; }')
-  for from_ref in (__fish_git_heads | sgrep -e "$from")
-    for to_ref in (__fish_git_heads | sgrep -e "$to")
+  for from_ref in (__fish_git_heads | __fish_sgrep -e "$from")
+    for to_ref in (__fish_git_heads | __fish_sgrep -e "$to")
       printf "%s..%s\n" $from_ref $to_ref
     end
   end
@@ -391,7 +391,7 @@ complete -f -c git -n '__fish_git_using_command status' -l ignore-submodules -x 
 
 ### tag
 complete -f -c git -n '__fish_git_needs_command' -a tag -d 'Create, list, delete or verify a tag object signed with GPG'
-complete -f -c git -n '__fish_git_using_command tag; and __fish_not_contain_opt -s d; and __fish_not_contain_opt -s v; and test (count (commandline -opc | sgrep -v -e \'^-\')) -eq 3' -a '(__fish_git_branches)' -d 'Branch'
+complete -f -c git -n '__fish_git_using_command tag; and __fish_not_contain_opt -s d; and __fish_not_contain_opt -s v; and test (count (commandline -opc | __fish_sgrep -v -e \'^-\')) -eq 3' -a '(__fish_git_branches)' -d 'Branch'
 complete -f -c git -n '__fish_git_using_command tag' -s a -l annotate -d 'Make an unsigned, annotated tag object'
 complete -f -c git -n '__fish_git_using_command tag' -s s -l sign -d 'Make a GPG-signed tag'
 complete -f -c git -n '__fish_git_using_command tag' -s d -l delete -d 'Remove a tag'

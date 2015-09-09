@@ -58,6 +58,21 @@ end
 # and: https://github.com/fish-shell/fish-shell/pull/2366
 complete -f -c npm -n 'not __fish_npm_needs_option' -a "(__fish_complete_npm)"
 
+# list available npm scripts and their parial content
+function __fish_npm_run
+  command npm run | command grep -v '^[^ ]' | command grep -v '^$' | command sed "s/^ *//" | while read -l name
+    set -l trim 20
+    read -l value
+    echo "$value" | cut -c1-$trim | read -l value
+    printf "%s\t%s\n" $name $value
+  end
+end
+
+# run
+for c in run run-script
+    complete -f -c npm -n "__fish_npm_using_command $c" -a "(__fish_npm_run)"
+end
+
 # cache
 complete -f -c npm -n '__fish_npm_needs_command' -a 'cache' -d "Manipulates package's cache"
 complete -f -c npm -n '__fish_npm_using_command cache' -a 'add' -d 'Add the specified package to the local cache'
@@ -121,14 +136,6 @@ end
 for c in 'up' 'update'
     complete -f -c npm -n '__fish_npm_needs_command' -a "$c" -d 'Update package(s)'
     complete -f -c npm -n "__fish_npm_using_command $c" -s g -l global -d 'Update global package(s)'
-end
-
-# run
-command npm run | command tail -n +2 | command sed "s/^ *//" | while read -l name
-  set -l trim 20
-  read -l value
-  complete -f -c npm -n "__fish_npm_using_command run" -a (printf "%s " "$name") -d (echo "$value" | cut -c1-$trim)
-  complete -f -c npm -n "__fish_npm_using_command run-script" -a (printf "%s " "$name") -d (echo "$value" | cut -c1-$trim)
 end
 
 # misc shorter explanations

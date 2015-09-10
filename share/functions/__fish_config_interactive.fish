@@ -297,11 +297,17 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		# Don't allow setting color other than what linux offers (see #2001)
 		functions -e set_color
 		function set_color
-			set -l term_colors black red green yellow blue magenta cyan white normal --bold -o -c --print-colors -u --underline
+			set -l term_colors black red green yellow blue magenta cyan white normal
 			for a in $argv
 				if not contains -- $a $term_colors
-					echo "Color not valid in TERM = linux: $a"
-					return 1
+					switch $a
+						# Also allow options
+						case "-*"
+							continue
+						case "*"
+							echo "Color not valid in TERM = linux: $a"
+							return 1
+					end
 				end
 			end
 			builtin set_color $argv

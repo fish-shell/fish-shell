@@ -31,7 +31,9 @@ function __fish_rbenv_official_rubies
 	if command -s ruby-build >/dev/null
 		ruby-build --definitions
 	else
-		rbenv install --list
+		# Remove trailing spaces, otherwise completion options appear like
+		# "\ \ option"
+		rbenv install --list | sed "s/^[[:space:]]*//"
 	end
 end
 

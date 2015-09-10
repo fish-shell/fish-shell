@@ -1,6 +1,9 @@
 # fish completion for git
 # Use 'command git' to avoid interactions for aliases from git to (e.g.) hub
 
+# All git commands, gotten by running "man git | grep "git-.*" --only-matching
+set __fish_git_commands add am annotate apply archimport archive bisect blame branch bundle cat-file check-attr check-ignore check-mailmap checkout checkout-index check-ref-format cherry cherry-pick citool clean clone column commit commit-tree config count-objects credential credential-cache credential-store cvsexportcommit cvsimport cvsserver daemon describe diff diff-files diff-files diff-index difftool diff-tree fast-export fast-import fetch fetch-pack filter-branch fmt-merge-msg for-each-ref format-patch fsck gc get-tar-commit-id grep gui hash-object help http-backend http-fetch http-push imap-send index-pack init instaweb interpret-trailers log ls-files ls-remote ls-tree mailinfo mailsplit merge merge-base merge-file merge-index merge-one-file mergetool merge-tree mktag mktree mv name-rev notes p4 pack-objects pack-redundant pack-refs parse-remote patch-id prune prune-packed pull push quiltimport read-tree rebase receive-pack reflog relink remote repack replace request-pull rerere reset revert rev-list rev-parse rm send-email send-pack shell sh-i18n shortlog show show-branch show-index show-ref sh-setup stash status stripspace submodule svn symbolic-ref tag unpack-file unpack-objects update-index update-ref update-server-info upload-archive upload-pack var verify-commit verify-pack verify-tag whatchanged write-tree
+
 function __fish_git_branches
   command git branch --no-color -a ^/dev/null | __fish_sgrep -v ' -> ' | sed -e 's/^..//' -e 's/^remotes\///'
 end
@@ -46,37 +49,40 @@ function __fish_git_ranges
 end
 
 function __fish_git_needs_command
-  set cmd (commandline -opc)
-  if [ (count $cmd) -eq 1 -a $cmd[1] = 'git' ]
-    return 0
-  end
-  return 1
+	if __fish_seen_subcommand_from $__fish_git_commands
+		return 1
+	end
+	if __fish_seen_subcommand_from (__fish_git_aliases) (__fish_git_custom_commands)
+		return 1
+	end
+	return 0
 end
 
 function __fish_git_using_command
   set cmd (commandline -opc)
-  if [ (count $cmd) -gt 1 ]
-    if [ $argv[1] = $cmd[2] ]
+  if __fish_seen_subcommand_from $argv
       return 0
-    end
-
-    # aliased command
-    set -l aliased (command git config --get "alias.$cmd[2]" ^ /dev/null | sed 's/ .*$//')
-    if [ $argv[1] = "$aliased" ]
-      return 0
-    end
+  end
+  
+  # aliased command
+  set -l aliases (command git config --get-regexp "^alias\.*" "$argv.*" ^/dev/null | while read -lz key value
+	  begin
+		  set -l IFS "."
+		  echo -n $key | read -l _ name
+		  echo $name
+	  end
+  end)
+  if __fish_seen_subcommand_from $aliases
+	  return 0
   end
   return 1
 end
 
 function __fish_git_stash_using_command
-  set cmd (commandline -opc)
-  if [ (count $cmd) -gt 2 ]
-    if [ $cmd[2] = 'stash' -a $argv[1] = $cmd[3] ]
-      return 0
-    end
-  end
-  return 1
+	if __fish_seen_subcommand_from stash; and __fish_seen_subcommand_from $argv
+		return 0
+	end
+	return 1
 end
 
 function __fish_git_stash_not_using_subcommand
@@ -482,7 +488,11 @@ complete -f -c git -n '__fish_git_using_command submodule; and __fish_git_seen_s
 complete -f -c git -n '__fish_git_needs_command' -a whatchanged -d 'Show logs with difference each commit introduces'
 
 ## Aliases (custom user-defined commands)
-complete -c git -n '__fish_git_needs_command' -a '(__fish_git_aliases)' -d 'Alias (user-defined command)'
+for alias in (__fish_git_aliases)
+	# Use the definition as the description
+	set -l description (command git config --get-regexp "^alias\.$alias" | while read a b; echo $b; end)
+	complete -c git -n '__fish_git_needs_command' -a "$alias" -d "Alias for $description"
+end
 
 ### git clean
 complete -f -c git -n '__fish_git_needs_command' -a clean -d 'Remove untracked files from the working tree'

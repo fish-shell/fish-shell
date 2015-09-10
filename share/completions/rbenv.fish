@@ -28,7 +28,11 @@ function __fish_rbenv_installed_rubies
 end
 
 function __fish_rbenv_official_rubies
-  ruby-build --definitions
+	if command -s ruby-build >/dev/null
+		ruby-build --definitions
+	else
+		rbenv install --list
+	end
 end
 
 function __fish_rbenv_prefixes

@@ -8,6 +8,8 @@
 #endif
 #include "pcre2.h"
 
+#include "wildcard.h"
+
 #define MAX_REPLACE_SIZE size_t(1048576)  // pcre2_substitute maximum output size in wchar_t
 
 enum
@@ -291,14 +293,12 @@ struct match_options_t
 class string_matcher_t
 {
 protected:
-    const wchar_t *argv0;
-    const wchar_t *pattern;
     match_options_t opts;
     int total_matched;
 
 public:
-    string_matcher_t(const wchar_t *argv0_, const wchar_t *pattern_, const match_options_t &opts_)
-        : argv0(argv0_), pattern(pattern_), opts(opts_), total_matched(0)
+    string_matcher_t(const match_options_t &opts_)
+        : opts(opts_), total_matched(0)
     { }
 
     virtual ~string_matcher_t() { }
@@ -308,112 +308,51 @@ public:
 
 class wildcard_matcher_t: public string_matcher_t
 {
-    bool arg_matches(const wchar_t *pat, const wchar_t *arg)
-    {
-        for (; *arg != L'\0'; arg++, pat++)
-        {
-            switch (*pat)
-            {
-                case L'?':
-                    break;
-
-                case L'*':
-                    // skip redundant *
-                    while (*pat == L'*')
-                    {
-                        pat++;
-                    }
-
-                    // * at end matches whatever follows
-                    if (*pat == L'\0')
-                    {
-                        return true;
-                    }
-
-                    while (*arg != L'\0')
-                    {
-                        if (arg_matches(pat, arg++))
-                        {
-                            return true;
-                        }
-                    }
-                    return false;
-
-                case L'[':
-                {
-                    bool negate = false;
-                    if (*++pat == L'^')
-                    {
-                        negate = true;
-                        pat++;
-                    }
-
-                    bool match = false;
-                    wchar_t argch = opts.ignore_case ? towlower(*arg) : *arg;
-                    wchar_t patch, patch2;
-                    while ((patch = *pat++) != L']')
-                    {
-                        if (patch == L'\0')
-                        {
-                            return false; // no closing ]
-                        }
-                        if (*pat == L'-' && (patch2 = *(pat + 1)) != L'\0' && patch2 != L']')
-                        {
-                            if (opts.ignore_case ? towlower(patch) <= argch && argch <= towlower(patch2)
-                                                 : patch <= argch && argch <= patch2)
-                            {
-                                match = true;
-                            }
-                            pat += 2;
-                        }
-                        else if (patch == argch)
-                        {
-                            match = true;
-                        }
-                    }
-                    if (match == negate)
-                    {
-                        return false;
-                    }
-                    pat--;
-                    break;
-                }
-
-                case L'\\':
-                    if (*(pat + 1) != L'\0')
-                    {
-                        pat++;
-                    }
-                    // fall through
-
-                default:
-                    if (opts.ignore_case ? towlower(*arg) != towlower(*pat) : *arg != *pat)
-                    {
-                        return false;
-                    }
-                    break;
-            }
-        }
-        // arg is exhausted - it's a match only if pattern is as well
-        while (*pat == L'*')
-        {
-            pat++;
-        }
-        return *pat == L'\0';
-    }
+    wchar_t *wcpattern;
 
 public:
-    wildcard_matcher_t(const wchar_t *argv0_, const wchar_t *pattern_, const match_options_t &opts_)
-        : string_matcher_t(argv0_, pattern_, opts_)
-    { }
+    wildcard_matcher_t(const wchar_t * /*argv0*/, const wchar_t *pattern, const match_options_t &opts)
+        : string_matcher_t(opts)
+    {
+        wcpattern = parse_util_unescape_wildcards(pattern);
 
-    virtual ~wildcard_matcher_t() { }
+        if (opts.ignore_case)
+        {
+            wchar_t *c = wcpattern;
+            while (*c != L'\0')
+            {
+                *c = towlower(*c);
+                c++;
+            }
+        }
+    }
+
+    virtual ~wildcard_matcher_t()
+    {
+        if (wcpattern != 0)
+        {
+            free(wcpattern);
+        }
+    }
 
     bool report_matches(const wchar_t *arg)
     {
         // Note: --all is a no-op for glob matching since the pattern is always
         // matched against the entire argument
-        bool match = arg_matches(pattern, arg);
+        bool match;
+        if (opts.ignore_case)
+        {
+            wcstring s = arg;
+            for (int i = 0; i < s.length(); i++)
+            {
+                s[i] = towlower(s[i]);
+            }
+            match = wildcard_match(s.c_str(), wcpattern, false);
+        }
+        else
+        {
+            match = wildcard_match(arg, wcpattern, false);
+        }
         if (match)
         {
             total_matched++;
@@ -501,6 +440,7 @@ struct compiled_regex_t
 
 class pcre2_matcher_t: public string_matcher_t
 {
+    const wchar_t *argv0;
     compiled_regex_t regex;
 
     int report_match(const wchar_t *arg, int pcre2_rc)
@@ -549,8 +489,9 @@ class pcre2_matcher_t: public string_matcher_t
     }
 
 public:
-    pcre2_matcher_t(const wchar_t *argv0_, const wchar_t *pattern_, const match_options_t &opts_)
-        : string_matcher_t(argv0_, pattern_, opts_),
+    pcre2_matcher_t(const wchar_t *argv0_, const wchar_t *pattern, const match_options_t &opts)
+        : string_matcher_t(opts),
+          argv0(argv0_),
           regex(argv0_, pattern, opts.ignore_case)
     { }
 
@@ -1294,7 +1235,7 @@ static int string_sub(parser_t &parser, int argc, wchar_t **argv)
 
 static int string_trim(parser_t &parser, int argc, wchar_t **argv)
 {
-    const wchar_t *short_options = L"c:lqr";
+    const wchar_t *short_options = L":c:lqr";
     const struct woption long_options[] =
     {
         { L"chars", required_argument, 0, 'c'},

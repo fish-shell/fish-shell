@@ -10,7 +10,8 @@
 
 #include "wildcard.h"
 
-#define MAX_REPLACE_SIZE size_t(1048576)  // pcre2_substitute maximum output size in wchar_t
+#define MAX_REPLACE_SIZE    size_t(1048576)  // pcre2_substitute maximum output size in wchar_t
+#define STRING_ERR_MISSING  _(L"%ls: Expected argument\n")
 
 enum
 {
@@ -190,7 +191,7 @@ static int string_join(parser_t &parser, int argc, wchar_t **argv)
     const wchar_t *sep;
     if ((sep = string_get_arg_argv(&i, argv)) == 0)
     {
-        string_error(BUILTIN_ERR_MISSING, argv[0]);
+        string_error(STRING_ERR_MISSING, argv[0]);
         return BUILTIN_STRING_ERROR;
     }
 
@@ -308,7 +309,7 @@ public:
 
 class wildcard_matcher_t: public string_matcher_t
 {
-    wchar_t *wcpattern;
+    wcstring wcpattern;
 
 public:
     wildcard_matcher_t(const wchar_t * /*argv0*/, const wchar_t *pattern, const match_options_t &opts)
@@ -318,22 +319,14 @@ public:
 
         if (opts.ignore_case)
         {
-            wchar_t *c = wcpattern;
-            while (*c != L'\0')
+            for (int i = 0; i < wcpattern.length(); i++)
             {
-                *c = towlower(*c);
-                c++;
+                wcpattern[i] = towlower(wcpattern[i]);
             }
         }
     }
 
-    virtual ~wildcard_matcher_t()
-    {
-        if (wcpattern != 0)
-        {
-            free(wcpattern);
-        }
-    }
+    virtual ~wildcard_matcher_t() { }
 
     bool report_matches(const wchar_t *arg)
     {
@@ -347,7 +340,7 @@ public:
             {
                 s[i] = towlower(s[i]);
             }
-            match = wildcard_match(s.c_str(), wcpattern, false);
+            match = wildcard_match(s, wcpattern, false);
         }
         else
         {
@@ -622,7 +615,7 @@ static int string_match(parser_t &parser, int argc, wchar_t **argv)
     const wchar_t *pattern;
     if ((pattern = string_get_arg_argv(&i, argv)) == 0)
     {
-        string_error(BUILTIN_ERR_MISSING, argv[0]);
+        string_error(STRING_ERR_MISSING, argv[0]);
         return BUILTIN_STRING_ERROR;
     }
 
@@ -899,12 +892,12 @@ static int string_replace(parser_t &parser, int argc, wchar_t **argv)
     const wchar_t *pattern, *replacement;
     if ((pattern = string_get_arg_argv(&i, argv)) == 0)
     {
-        string_error(BUILTIN_ERR_MISSING, argv[0]);
+        string_error(STRING_ERR_MISSING, argv[0]);
         return BUILTIN_STRING_ERROR;
     }
     if ((replacement = string_get_arg_argv(&i, argv)) == 0)
     {
-        string_error(BUILTIN_ERR_MISSING, argv[0]);
+        string_error(STRING_ERR_MISSING, argv[0]);
         return BUILTIN_STRING_ERROR;
     }
 
@@ -989,7 +982,7 @@ static int string_split(parser_t &parser, int argc, wchar_t **argv)
                 break;
 
             case ':':
-                string_error(BUILTIN_ERR_MISSING, argv[0]);
+                string_error(STRING_ERR_MISSING, argv[0]);
                 return BUILTIN_STRING_ERROR;
 
             case '?':
@@ -1002,7 +995,7 @@ static int string_split(parser_t &parser, int argc, wchar_t **argv)
     const wchar_t *sep;
     if ((sep = string_get_arg_argv(&i, argv)) == 0)
     {
-        string_error(BUILTIN_ERR_MISSING, argv[0]);
+        string_error(STRING_ERR_MISSING, argv[0]);
         return BUILTIN_STRING_ERROR;
     }
 
@@ -1176,7 +1169,7 @@ static int string_sub(parser_t &parser, int argc, wchar_t **argv)
                 break;
 
             case ':':
-                string_error(BUILTIN_ERR_MISSING, argv[0]);
+                string_error(STRING_ERR_MISSING, argv[0]);
                 return BUILTIN_STRING_ERROR;
 
             case '?':
@@ -1279,7 +1272,7 @@ static int string_trim(parser_t &parser, int argc, wchar_t **argv)
                 break;
 
             case ':':
-                string_error(BUILTIN_ERR_MISSING, argv[0]);
+                string_error(STRING_ERR_MISSING, argv[0]);
                 return BUILTIN_STRING_ERROR;
 
             case '?':
@@ -1353,7 +1346,7 @@ string_subcommands[] =
     int argc = builtin_count_args(argv);
     if (argc <= 1)
     {
-        string_error(BUILTIN_ERR_MISSING, argv[0]);
+        string_error(STRING_ERR_MISSING, argv[0]);
         builtin_print_help(parser, L"string", stderr_buffer);
         return BUILTIN_STRING_ERROR;
     }

@@ -8,15 +8,6 @@
 
 if status --is-login
 
-	#
-	# Set some value for LANG if nothing was set before, and this is a
-	# login shell.
-	#
-
-	if not set -q LANG >/dev/null
-		set -gx LANG en_US.UTF-8
-	end
-
 	# Check for i18n information in
 	# /etc/sysconfig/i18n
 

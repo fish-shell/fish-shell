@@ -549,6 +549,8 @@ The `%` (percent) character at the beginning of a parameter followed by a string
 
 - If the string is the entire word `self`, the shell's PID is the result.
 
+- Otherwise, if the string is the entire word `last`, the last jobs PID is the result.
+
 - Otherwise, if the string is the ID of a job, the result is the process group ID of the job.
 
 - Otherwise, if any child processes match the specified string, their PIDs are the result of the expansion.

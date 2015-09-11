@@ -130,15 +130,6 @@ string match -i 'a??B' Axxb
 # Output:
 # Axxb
 
-string match -i '[aeiou]' A B C D E
-# Output:
-# A
-# E
-
-string match '[^fb]*' foo bar baz qux
-# Output:
-# qux
-
 echo 'ok?' | string match '*\\?'
 # Output:
 # ok?

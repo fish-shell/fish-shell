@@ -15,7 +15,7 @@ complete ( -c | --command | -p | --path ) COMMAND
         [( -w | --wraps ) WRAPPED_COMMAND]
         [( -n | --condition ) CONDITION]
         [( -d | --description ) DESCRIPTION]
-complete ( -C STRING | --do=complete=STRING )
+complete ( -C STRING | --do-complete=STRING )
 \endfish
 
 \subsection complete-description Description

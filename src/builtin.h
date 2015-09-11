@@ -25,7 +25,7 @@ enum
 /**
    Error message on missing argument
 */
-#define BUILTIN_ERR_MISSING _( L"%ls: Expected argument\n" )
+#define BUILTIN_ERR_MISSING _( L"%ls: Expected argument for option %ls\n" )
 
 /**
    Error message on invalid combination of options

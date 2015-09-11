@@ -433,9 +433,19 @@ static int builtin_complete(parser_t &parser, wchar_t **argv)
                 break;
 
             case 'C':
+            {
                 do_complete = true;
-                do_complete_param = w.woptarg ? w.woptarg : reader_get_buffer();
+                const wchar_t *arg = w.woptarg ? w.woptarg : reader_get_buffer();
+                if (arg == NULL)
+                {
+                    // This corresponds to using 'complete -C' in non-interactive mode
+                    // See #2361
+                    builtin_missing_argument(parser, argv[0], argv[w.woptind-1]);
+                    return STATUS_BUILTIN_ERROR;
+                }
+                do_complete_param = arg;
                 break;
+            }
 
             case 'h':
                 builtin_print_help(parser, argv[0], stdout_buffer);

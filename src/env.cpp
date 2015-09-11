@@ -544,7 +544,10 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     }
 
     /* Set PWD */
-    env_set_pwd();
+    if(!env_set_pwd())
+    {
+        debug(0, _(L"env_set_pwd in env_init failed!"));
+    }
 
     /* Set up universal variables. The empty string means to use the deafult path. */
     assert(s_universal_variables == NULL);

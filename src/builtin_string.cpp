@@ -40,11 +40,9 @@ static void string_error(const wchar_t *fmt, ...)
 {
     va_list va;
     va_start(va, fmt);
-    wcstring errstr = vformat_string(fmt, va);
+    stderr_buffer.append(L"string ");
+    append_formatv(stderr_buffer, fmt, va);
     va_end(va);
-
-    stderr_buffer += L"string ";
-    stderr_buffer += errstr;
 }
 
 static void string_unknown_option(parser_t &parser, const wchar_t *subcmd, const wchar_t *opt)

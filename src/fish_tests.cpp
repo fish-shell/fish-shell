@@ -1530,8 +1530,10 @@ static void test_expand()
                 L"", wnull, // We just expect the empty string since this is an exact match
                 L"Wrong fuzzy matching 2");
     
+    // some vswprintfs refuse to append ANY_STRING in a format specifiers, so don't use format_string here
+    const wcstring any_str_str(1, ANY_STRING);
     expand_test(L"/tmp/fish_expand_test/b/xx*", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
-                format_string(L"/tmp/fish_expand_test/bax/xx%lc", (wint_t)ANY_STRING).c_str(), format_string(L"/tmp/fish_expand_test/baz/xx%lc", (wint_t)ANY_STRING).c_str(), wnull,
+                (L"/tmp/fish_expand_test/bax/xx" + any_str_str).c_str(), (L"/tmp/fish_expand_test/baz/xx" + any_str_str).c_str(), wnull,
                 L"Wrong fuzzy matching 3");
     
     expand_test(L"/tmp/fish_expand_test/b/yyy", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,

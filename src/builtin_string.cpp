@@ -386,9 +386,9 @@ public:
     }
 };
 
-static const wchar_t *pcre2_strerror(int err_code)
+static wcstring pcre2_strerror(int err_code)
 {
-    static wchar_t buf[128];
+    wchar_t buf[128];
     pcre2_get_error_message(err_code, (PCRE2_UCHAR *)buf, sizeof(buf) / sizeof(wchar_t));
     return buf;
 }
@@ -420,7 +420,7 @@ struct compiled_regex_t
         if (code == 0)
         {
             string_error(_(L"%ls: Regular expression compile error: %ls\n"),
-                    argv0, pcre2_strerror(err_code));
+                    argv0, pcre2_strerror(err_code).c_str());
             string_error(L"%ls: %ls\n", argv0, pattern);
             string_error(L"%ls: %*ls\n", argv0, err_offset, L"^");
             return;
@@ -461,7 +461,7 @@ class pcre2_matcher_t: public string_matcher_t
         if (pcre2_rc < 0)
         {
             string_error(_(L"%ls: Regular expression match error: %ls\n"),
-                    argv0, pcre2_strerror(pcre2_rc));
+                    argv0, pcre2_strerror(pcre2_rc).c_str());
             return -1;
         }
         if (pcre2_rc == 0)
@@ -836,7 +836,7 @@ public:
         if (pcre2_rc < 0)
         {
             string_error(_(L"%ls: Regular expression substitute error: %ls\n"),
-                    argv0, pcre2_strerror(pcre2_rc));
+                    argv0, pcre2_strerror(pcre2_rc).c_str());
             rc = false;
         }
         else
@@ -1022,6 +1022,7 @@ static int string_split(parser_t &parser, int argc, wchar_t **argv)
         return BUILTIN_STRING_ERROR;
     }
 
+    // we may want to use push_front or push_back, so do not use vector
     std::list<wcstring> splits;
     size_t seplen = wcslen(sep);
     int nsplit = 0;

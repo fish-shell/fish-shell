@@ -58,15 +58,13 @@ static bool string_args_from_stdin()
     return builtin_stdin != STDIN_FILENO || !isatty(builtin_stdin);
 }
 
-static const wchar_t *string_get_arg_stdin()
+static const wchar_t *string_get_arg_stdin(wcstring *storage)
 {
-    static wcstring warg;
-
     std::string arg;
     for (;;)
     {
         char ch = '\0';
-        int rc = read_blocked(builtin_stdin, &ch, 1);
+        long rc = read_blocked(builtin_stdin, &ch, 1);
 
         if (rc < 0)
         {
@@ -94,9 +92,9 @@ static const wchar_t *string_get_arg_stdin()
 
         arg += ch;
     }
-
-    warg = str2wcstring(arg.c_str(), arg.size());
-    return warg.c_str();
+    
+    *storage = str2wcstring(arg);
+    return storage->c_str();
 }
 
 static const wchar_t *string_get_arg_argv(int *argidx, wchar_t **argv)
@@ -104,11 +102,11 @@ static const wchar_t *string_get_arg_argv(int *argidx, wchar_t **argv)
     return (argv && argv[*argidx]) ? argv[(*argidx)++] : 0;
 }
 
-static const wchar_t *string_get_arg(int *argidx, wchar_t **argv)
+static const wchar_t *string_get_arg(int *argidx, wchar_t **argv, wcstring *storage)
 {
     if (string_args_from_stdin())
     {
-        return string_get_arg_stdin();
+        return string_get_arg_stdin(storage);
     }
     else
     {
@@ -158,8 +156,9 @@ static int string_escape(parser_t &parser, int argc, wchar_t **argv)
     }
 
     int nesc = 0;
+    wcstring storage;
     const wchar_t *arg;
-    while ((arg = string_get_arg(&i, argv)) != 0)
+    while ((arg = string_get_arg(&i, argv, &storage)) != 0)
     {
         stdout_buffer += escape(arg, flags);
         stdout_buffer += L'\n';
@@ -219,7 +218,8 @@ static int string_join(parser_t &parser, int argc, wchar_t **argv)
 
     int nargs = 0;
     const wchar_t *arg;
-    while ((arg = string_get_arg(&i, argv)) != 0)
+    wcstring storage;
+    while ((arg = string_get_arg(&i, argv, &storage)) != 0)
     {
         if (!quiet)
         {
@@ -280,7 +280,8 @@ static int string_length(parser_t &parser, int argc, wchar_t **argv)
 
     const wchar_t *arg;
     int nnonempty = 0;
-    while ((arg = string_get_arg(&i, argv)) != 0)
+    wcstring storage;
+    while ((arg = string_get_arg(&i, argv, &storage)) != 0)
     {
         size_t n = wcslen(arg);
         if (n > 0)
@@ -652,7 +653,8 @@ static int string_match(parser_t &parser, int argc, wchar_t **argv)
     }
 
     const wchar_t *arg;
-    while ((arg = string_get_arg(&i, argv)) != 0)
+    wcstring storage;
+    while ((arg = string_get_arg(&i, argv, &storage)) != 0)
     {
         if (!matcher->report_matches(arg))
         {
@@ -696,7 +698,7 @@ class literal_replacer_t: public string_replacer_t
 {
     const wchar_t *pattern;
     const wchar_t *replacement;
-    int patlen;
+    size_t patlen;
 
 public:
     literal_replacer_t(const wchar_t *argv0, const wchar_t *pattern_, const wchar_t *replacement_,
@@ -790,7 +792,7 @@ public:
         }
 
         uint32_t options = opts.all ? PCRE2_SUBSTITUTE_GLOBAL : 0;
-        int arglen = wcslen(arg);
+        size_t arglen = wcslen(arg);
         PCRE2_SIZE outlen = (arglen == 0) ? 16 : 2 * arglen;
         wchar_t *output = (wchar_t *)malloc(sizeof(wchar_t) * outlen);
         if (output == 0)
@@ -934,7 +936,8 @@ static int string_replace(parser_t &parser, int argc, wchar_t **argv)
     }
 
     const wchar_t *arg;
-    while ((arg = string_get_arg(&i, argv)) != 0)
+    wcstring storage;
+    while ((arg = string_get_arg(&i, argv, &storage)) != 0)
     {
         if (!replacer->replace_matches(arg))
         {
@@ -1022,12 +1025,13 @@ static int string_split(parser_t &parser, int argc, wchar_t **argv)
     }
 
     std::list<wcstring> splits;
-    int seplen = wcslen(sep);
+    size_t seplen = wcslen(sep);
     int nsplit = 0;
     const wchar_t *arg;
     if (right)
     {
-        while ((arg = string_get_arg(&i, argv)) != 0)
+        wcstring storage;
+        while ((arg = string_get_arg(&i, argv, &storage)) != 0)
         {
             int nargsplit = 0;
             if (seplen == 0)
@@ -1068,7 +1072,8 @@ static int string_split(parser_t &parser, int argc, wchar_t **argv)
     }
     else
     {
-        while ((arg = string_get_arg(&i, argv)) != 0)
+        wcstring storage;
+        while ((arg = string_get_arg(&i, argv, &storage)) != 0)
         {
             const wchar_t *cur = arg;
             int nargsplit = 0;
@@ -1203,7 +1208,8 @@ static int string_sub(parser_t &parser, int argc, wchar_t **argv)
 
     int nsub = 0;
     const wchar_t *arg;
-    while ((arg = string_get_arg(&i, argv)) != 0)
+    wcstring storage;
+    while ((arg = string_get_arg(&i, argv, &storage)) != 0)
     {
         wcstring::size_type pos = 0;
         wcstring::size_type count = wcstring::npos;
@@ -1306,7 +1312,8 @@ static int string_trim(parser_t &parser, int argc, wchar_t **argv)
 
     const wchar_t *arg;
     int ntrim = 0;
-    while ((arg = string_get_arg(&i, argv)) != 0)
+    wcstring storage;
+    while ((arg = string_get_arg(&i, argv, &storage)) != 0)
     {
         const wchar_t *begin = arg;
         const wchar_t *end = arg + wcslen(arg);

@@ -148,6 +148,33 @@
 		D033781315DC6D5400A634BA /* tools in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02915D1FEA100B9DB63 /* tools */; };
 		D04F7F7C1BA4BF4000B0F227 /* builtin_string.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D04F7F7B1BA4BF4000B0F227 /* builtin_string.cpp */; };
 		D04F7F7D1BA4BF4000B0F227 /* builtin_string.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D04F7F7B1BA4BF4000B0F227 /* builtin_string.cpp */; };
+		D04F7FD51BA4E3AC00B0F227 /* pcre2_compile.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7F8D1BA4DCD900B0F227 /* pcre2_compile.c */; };
+		D04F7FD61BA4E3AC00B0F227 /* pcre2_config.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7F901BA4DCE900B0F227 /* pcre2_config.c */; };
+		D04F7FD71BA4E3AC00B0F227 /* pcre2_context.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7F931BA4DCFA00B0F227 /* pcre2_context.c */; };
+		D04F7FD81BA4E3AC00B0F227 /* pcre2_dfa_match.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7F961BA4DD1100B0F227 /* pcre2_dfa_match.c */; };
+		D04F7FD91BA4E3AC00B0F227 /* pcre2_error.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7F991BA4DD2000B0F227 /* pcre2_error.c */; };
+		D04F7FDA1BA4E3AC00B0F227 /* pcre2_jit_compile.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7FC91BA4DE3500B0F227 /* pcre2_jit_compile.c */; };
+		D04F7FDB1BA4E3AC00B0F227 /* pcre2_maketables.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7F9C1BA4DD4A00B0F227 /* pcre2_maketables.c */; };
+		D04F7FDC1BA4E3AC00B0F227 /* pcre2_match.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7F9F1BA4DD5900B0F227 /* pcre2_match.c */; };
+		D04F7FDD1BA4E3AC00B0F227 /* pcre2_match_data.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7FA21BA4DD6900B0F227 /* pcre2_match_data.c */; };
+		D04F7FDE1BA4E3AC00B0F227 /* pcre2_newline.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7FA51BA4DD7300B0F227 /* pcre2_newline.c */; };
+		D04F7FDF1BA4E3AC00B0F227 /* pcre2_ord2utf.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7FA81BA4DD8400B0F227 /* pcre2_ord2utf.c */; };
+		D04F7FE01BA4E3AC00B0F227 /* pcre2_pattern_info.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7FAB1BA4DDA500B0F227 /* pcre2_pattern_info.c */; };
+		D04F7FE11BA4E3AC00B0F227 /* pcre2_serialize.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7FAE1BA4DDB500B0F227 /* pcre2_serialize.c */; };
+		D04F7FE21BA4E3AC00B0F227 /* pcre2_string_utils.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7FB11BA4DDBF00B0F227 /* pcre2_string_utils.c */; };
+		D04F7FE31BA4E3AC00B0F227 /* pcre2_study.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7FB41BA4DDC900B0F227 /* pcre2_study.c */; };
+		D04F7FE41BA4E3AC00B0F227 /* pcre2_substitute.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7FB71BA4DDEB00B0F227 /* pcre2_substitute.c */; };
+		D04F7FE51BA4E3AC00B0F227 /* pcre2_substring.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7FB81BA4DDEB00B0F227 /* pcre2_substring.c */; };
+		D04F7FE61BA4E3AC00B0F227 /* pcre2_tables.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7FB91BA4DDEB00B0F227 /* pcre2_tables.c */; };
+		D04F7FE71BA4E3AC00B0F227 /* pcre2_ucd.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7FBA1BA4DDEB00B0F227 /* pcre2_ucd.c */; };
+		D04F7FE81BA4E3AC00B0F227 /* pcre2_valid_utf.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7FBB1BA4DDEB00B0F227 /* pcre2_valid_utf.c */; };
+		D04F7FE91BA4E3AC00B0F227 /* pcre2_xclass.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7FBC1BA4DDEB00B0F227 /* pcre2_xclass.c */; };
+		D04F7FF01BA4E5B900B0F227 /* builtin_string.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D04F7F7B1BA4BF4000B0F227 /* builtin_string.cpp */; };
+		D04F7FF11BA4E68200B0F227 /* libpcre2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D04F7FD01BA4E29300B0F227 /* libpcre2.a */; };
+		D04F7FF21BA4E68A00B0F227 /* libpcre2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D04F7FD01BA4E29300B0F227 /* libpcre2.a */; };
+		D04F7FF41BA4E6F300B0F227 /* pcre2_auto_possess.c in Sources */ = {isa = PBXBuildFile; fileRef = D04F7FF31BA4E6F300B0F227 /* pcre2_auto_possess.c */; };
+		D04F7FF91BA4E87B00B0F227 /* pcre2_chartables.c.dist in Sources */ = {isa = PBXBuildFile; fileRef = D04F7FF71BA4E82C00B0F227 /* pcre2_chartables.c.dist */; };
+		D04F7FFA1BA4E9A400B0F227 /* libpcre2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D04F7FD01BA4E29300B0F227 /* libpcre2.a */; };
 		D052D80B1868F7FC003ABCBD /* parse_execution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D052D8091868F7FC003ABCBD /* parse_execution.cpp */; };
 		D07B247315BCC15700D4ADB4 /* add-shell in Resources */ = {isa = PBXBuildFile; fileRef = D07B247215BCC15700D4ADB4 /* add-shell */; };
 		D07B247615BCC4BE00D4ADB4 /* install.sh in Resources */ = {isa = PBXBuildFile; fileRef = D07B247515BCC4BE00D4ADB4 /* install.sh */; };
@@ -217,6 +244,19 @@
 		D0FE8EE8179FB760008C9F21 /* parse_productions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0FE8EE7179FB75F008C9F21 /* parse_productions.cpp */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXBuildRule section */
+		D04F7FF81BA4E84B00B0F227 /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.gcc;
+			filePatterns = "*.dist";
+			fileType = pattern.proxy;
+			isEditable = 1;
+			outputFiles = (
+			);
+			script = "# <com.apple.compilers.gcc>\n";
+		};
+/* End PBXBuildRule section */
+
 /* Begin PBXContainerItemProxy section */
 		D031890715E36CC000D9CC39 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -224,6 +264,20 @@
 			proxyType = 1;
 			remoteGlobalIDString = D0F019EC15A976F30034B3B1;
 			remoteInfo = base;
+		};
+		D04F7FEA1BA4E3DB00B0F227 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D04F7FCF1BA4E29300B0F227;
+			remoteInfo = libpcre2.a;
+		};
+		D04F7FEC1BA4E3DF00B0F227 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D0A084F213B3AC130099B651 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D04F7FCF1BA4E29300B0F227;
+			remoteInfo = libpcre2.a;
 		};
 		D07D265815E33B86009E43F6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -375,6 +429,30 @@
 		D032388A1849D1980032CF2C /* pager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pager.h; sourceTree = "<group>"; };
 		D03EE83814DF88B200FC7150 /* lru.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lru.h; sourceTree = "<group>"; };
 		D04F7F7B1BA4BF4000B0F227 /* builtin_string.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = builtin_string.cpp; sourceTree = "<group>"; };
+		D04F7F8D1BA4DCD900B0F227 /* pcre2_compile.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_compile.c; path = "pcre2-10.20/src/pcre2_compile.c"; sourceTree = SOURCE_ROOT; };
+		D04F7F901BA4DCE900B0F227 /* pcre2_config.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_config.c; path = "pcre2-10.20/src/pcre2_config.c"; sourceTree = SOURCE_ROOT; };
+		D04F7F931BA4DCFA00B0F227 /* pcre2_context.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_context.c; path = "pcre2-10.20/src/pcre2_context.c"; sourceTree = SOURCE_ROOT; };
+		D04F7F961BA4DD1100B0F227 /* pcre2_dfa_match.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_dfa_match.c; path = "pcre2-10.20/src/pcre2_dfa_match.c"; sourceTree = SOURCE_ROOT; };
+		D04F7F991BA4DD2000B0F227 /* pcre2_error.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_error.c; path = "pcre2-10.20/src/pcre2_error.c"; sourceTree = SOURCE_ROOT; };
+		D04F7F9C1BA4DD4A00B0F227 /* pcre2_maketables.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_maketables.c; path = "pcre2-10.20/src/pcre2_maketables.c"; sourceTree = SOURCE_ROOT; };
+		D04F7F9F1BA4DD5900B0F227 /* pcre2_match.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_match.c; path = "pcre2-10.20/src/pcre2_match.c"; sourceTree = SOURCE_ROOT; };
+		D04F7FA21BA4DD6900B0F227 /* pcre2_match_data.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_match_data.c; path = "pcre2-10.20/src/pcre2_match_data.c"; sourceTree = SOURCE_ROOT; };
+		D04F7FA51BA4DD7300B0F227 /* pcre2_newline.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_newline.c; path = "pcre2-10.20/src/pcre2_newline.c"; sourceTree = SOURCE_ROOT; };
+		D04F7FA81BA4DD8400B0F227 /* pcre2_ord2utf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_ord2utf.c; path = "pcre2-10.20/src/pcre2_ord2utf.c"; sourceTree = SOURCE_ROOT; };
+		D04F7FAB1BA4DDA500B0F227 /* pcre2_pattern_info.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_pattern_info.c; path = "pcre2-10.20/src/pcre2_pattern_info.c"; sourceTree = SOURCE_ROOT; };
+		D04F7FAE1BA4DDB500B0F227 /* pcre2_serialize.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_serialize.c; path = "pcre2-10.20/src/pcre2_serialize.c"; sourceTree = SOURCE_ROOT; };
+		D04F7FB11BA4DDBF00B0F227 /* pcre2_string_utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_string_utils.c; path = "pcre2-10.20/src/pcre2_string_utils.c"; sourceTree = SOURCE_ROOT; };
+		D04F7FB41BA4DDC900B0F227 /* pcre2_study.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_study.c; path = "pcre2-10.20/src/pcre2_study.c"; sourceTree = SOURCE_ROOT; };
+		D04F7FB71BA4DDEB00B0F227 /* pcre2_substitute.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_substitute.c; path = "pcre2-10.20/src/pcre2_substitute.c"; sourceTree = SOURCE_ROOT; };
+		D04F7FB81BA4DDEB00B0F227 /* pcre2_substring.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_substring.c; path = "pcre2-10.20/src/pcre2_substring.c"; sourceTree = SOURCE_ROOT; };
+		D04F7FB91BA4DDEB00B0F227 /* pcre2_tables.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_tables.c; path = "pcre2-10.20/src/pcre2_tables.c"; sourceTree = SOURCE_ROOT; };
+		D04F7FBA1BA4DDEB00B0F227 /* pcre2_ucd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_ucd.c; path = "pcre2-10.20/src/pcre2_ucd.c"; sourceTree = SOURCE_ROOT; };
+		D04F7FBB1BA4DDEB00B0F227 /* pcre2_valid_utf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_valid_utf.c; path = "pcre2-10.20/src/pcre2_valid_utf.c"; sourceTree = SOURCE_ROOT; };
+		D04F7FBC1BA4DDEB00B0F227 /* pcre2_xclass.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_xclass.c; path = "pcre2-10.20/src/pcre2_xclass.c"; sourceTree = SOURCE_ROOT; };
+		D04F7FC91BA4DE3500B0F227 /* pcre2_jit_compile.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_jit_compile.c; path = "pcre2-10.20/src/pcre2_jit_compile.c"; sourceTree = SOURCE_ROOT; };
+		D04F7FD01BA4E29300B0F227 /* libpcre2.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpcre2.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		D04F7FF31BA4E6F300B0F227 /* pcre2_auto_possess.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre2_auto_possess.c; path = "pcre2-10.20/src/pcre2_auto_possess.c"; sourceTree = SOURCE_ROOT; };
+		D04F7FF71BA4E82C00B0F227 /* pcre2_chartables.c.dist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = pcre2_chartables.c.dist; path = "pcre2-10.20/src/pcre2_chartables.c.dist"; sourceTree = SOURCE_ROOT; };
 		D052D8091868F7FC003ABCBD /* parse_execution.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = parse_execution.cpp; sourceTree = "<group>"; };
 		D052D80A1868F7FC003ABCBD /* parse_execution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = parse_execution.h; sourceTree = "<group>"; };
 		D07B247215BCC15700D4ADB4 /* add-shell */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = "add-shell"; path = "build_tools/osx_package_scripts/add-shell"; sourceTree = "<group>"; };
@@ -496,6 +574,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				D007693D1990137800CA4627 /* libncurses.dylib in Frameworks */,
+				D04F7FFA1BA4E9A400B0F227 /* libpcre2.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D04F7FCD1BA4E29300B0F227 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -504,6 +590,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D0D02ADC159864D5008E62BD /* libncurses.dylib in Frameworks */,
+				D04F7FF21BA4E68A00B0F227 /* libpcre2.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -512,6 +599,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D0D02A8D15983CFA008E62BD /* libncurses.dylib in Frameworks */,
+				D04F7FF11BA4E68200B0F227 /* libpcre2.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -540,6 +628,36 @@
 				D031890915E36D9800D9CC39 /* base */,
 			);
 			name = "Other Build Products";
+			sourceTree = "<group>";
+		};
+		D04F7F8B1BA4DC7600B0F227 /* pcre */ = {
+			isa = PBXGroup;
+			children = (
+				D04F7FF31BA4E6F300B0F227 /* pcre2_auto_possess.c */,
+				D04F7F8D1BA4DCD900B0F227 /* pcre2_compile.c */,
+				D04F7F901BA4DCE900B0F227 /* pcre2_config.c */,
+				D04F7F931BA4DCFA00B0F227 /* pcre2_context.c */,
+				D04F7F961BA4DD1100B0F227 /* pcre2_dfa_match.c */,
+				D04F7F991BA4DD2000B0F227 /* pcre2_error.c */,
+				D04F7FC91BA4DE3500B0F227 /* pcre2_jit_compile.c */,
+				D04F7F9C1BA4DD4A00B0F227 /* pcre2_maketables.c */,
+				D04F7F9F1BA4DD5900B0F227 /* pcre2_match.c */,
+				D04F7FA21BA4DD6900B0F227 /* pcre2_match_data.c */,
+				D04F7FA51BA4DD7300B0F227 /* pcre2_newline.c */,
+				D04F7FA81BA4DD8400B0F227 /* pcre2_ord2utf.c */,
+				D04F7FAB1BA4DDA500B0F227 /* pcre2_pattern_info.c */,
+				D04F7FAE1BA4DDB500B0F227 /* pcre2_serialize.c */,
+				D04F7FB11BA4DDBF00B0F227 /* pcre2_string_utils.c */,
+				D04F7FB41BA4DDC900B0F227 /* pcre2_study.c */,
+				D04F7FB71BA4DDEB00B0F227 /* pcre2_substitute.c */,
+				D04F7FB81BA4DDEB00B0F227 /* pcre2_substring.c */,
+				D04F7FB91BA4DDEB00B0F227 /* pcre2_tables.c */,
+				D04F7FBA1BA4DDEB00B0F227 /* pcre2_ucd.c */,
+				D04F7FBB1BA4DDEB00B0F227 /* pcre2_valid_utf.c */,
+				D04F7FBC1BA4DDEB00B0F227 /* pcre2_xclass.c */,
+				D04F7FF71BA4E82C00B0F227 /* pcre2_chartables.c.dist */,
+			);
+			name = pcre;
 			sourceTree = "<group>";
 		};
 		D08A328E17B4455100F3A533 /* fish_tests */ = {
@@ -677,6 +795,7 @@
 				D0A0856013B3ACEE0099B651 /* wildcard.cpp */,
 				D0A0852913B3ACEE0099B651 /* wutil.h */,
 				D0A0856113B3ACEE0099B651 /* wutil.cpp */,
+				D04F7F8B1BA4DC7600B0F227 /* pcre */,
 			);
 			name = Sources;
 			path = src;
@@ -718,11 +837,22 @@
 				D0D02A9A15985A75008E62BD /* fish.app */,
 				D0D02AD01598642A008E62BD /* fish_indent */,
 				D00769421990137800CA4627 /* fish_tests */,
+				D04F7FD01BA4E29300B0F227 /* libpcre2.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		D04F7FCE1BA4E29300B0F227 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
 
 /* Begin PBXLegacyTarget section */
 		D0A084F713B3AC130099B651 /* Makefile */ = {
@@ -752,11 +882,30 @@
 			buildRules = (
 			);
 			dependencies = (
+				D04F7FED1BA4E3DF00B0F227 /* PBXTargetDependency */,
 			);
 			name = fish_tests;
 			productName = fish_Xcode;
 			productReference = D00769421990137800CA4627 /* fish_tests */;
 			productType = "com.apple.product-type.tool";
+		};
+		D04F7FCF1BA4E29300B0F227 /* pcre2 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D04F7FD11BA4E29300B0F227 /* Build configuration list for PBXNativeTarget "pcre2" */;
+			buildPhases = (
+				D04F7FCC1BA4E29300B0F227 /* Sources */,
+				D04F7FCD1BA4E29300B0F227 /* Frameworks */,
+				D04F7FCE1BA4E29300B0F227 /* Headers */,
+			);
+			buildRules = (
+				D04F7FF81BA4E84B00B0F227 /* PBXBuildRule */,
+			);
+			dependencies = (
+			);
+			name = pcre2;
+			productName = libpcre2.a;
+			productReference = D04F7FD01BA4E29300B0F227 /* libpcre2.a */;
+			productType = "com.apple.product-type.library.static";
 		};
 		D0D02A9915985A75008E62BD /* fish.app */ = {
 			isa = PBXNativeTarget;
@@ -802,6 +951,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				D04F7FEB1BA4E3DB00B0F227 /* PBXTargetDependency */,
 			);
 			name = fish_shell;
 			productName = fish_Xcode;
@@ -815,6 +965,11 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0640;
+				TargetAttributes = {
+					D04F7FCF1BA4E29300B0F227 = {
+						CreatedOnToolsVersion = 6.4;
+					};
+				};
 			};
 			buildConfigurationList = D0A084F513B3AC130099B651 /* Build configuration list for PBXProject "fish" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -836,6 +991,7 @@
 				D0A564E6168CFDD800AF6161 /* man_pages */,
 				D0A084F713B3AC130099B651 /* Makefile */,
 				D00769101990137800CA4627 /* fish_tests */,
+				D04F7FCF1BA4E29300B0F227 /* pcre2 */,
 			);
 		};
 /* End PBXProject section */
@@ -1093,12 +1249,43 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D04F7FCC1BA4E29300B0F227 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D04F7FD51BA4E3AC00B0F227 /* pcre2_compile.c in Sources */,
+				D04F7FD61BA4E3AC00B0F227 /* pcre2_config.c in Sources */,
+				D04F7FD71BA4E3AC00B0F227 /* pcre2_context.c in Sources */,
+				D04F7FD81BA4E3AC00B0F227 /* pcre2_dfa_match.c in Sources */,
+				D04F7FD91BA4E3AC00B0F227 /* pcre2_error.c in Sources */,
+				D04F7FDA1BA4E3AC00B0F227 /* pcre2_jit_compile.c in Sources */,
+				D04F7FDB1BA4E3AC00B0F227 /* pcre2_maketables.c in Sources */,
+				D04F7FDC1BA4E3AC00B0F227 /* pcre2_match.c in Sources */,
+				D04F7FDD1BA4E3AC00B0F227 /* pcre2_match_data.c in Sources */,
+				D04F7FDE1BA4E3AC00B0F227 /* pcre2_newline.c in Sources */,
+				D04F7FDF1BA4E3AC00B0F227 /* pcre2_ord2utf.c in Sources */,
+				D04F7FE01BA4E3AC00B0F227 /* pcre2_pattern_info.c in Sources */,
+				D04F7FF41BA4E6F300B0F227 /* pcre2_auto_possess.c in Sources */,
+				D04F7FE11BA4E3AC00B0F227 /* pcre2_serialize.c in Sources */,
+				D04F7FE21BA4E3AC00B0F227 /* pcre2_string_utils.c in Sources */,
+				D04F7FE31BA4E3AC00B0F227 /* pcre2_study.c in Sources */,
+				D04F7FE41BA4E3AC00B0F227 /* pcre2_substitute.c in Sources */,
+				D04F7FE51BA4E3AC00B0F227 /* pcre2_substring.c in Sources */,
+				D04F7FE61BA4E3AC00B0F227 /* pcre2_tables.c in Sources */,
+				D04F7FE71BA4E3AC00B0F227 /* pcre2_ucd.c in Sources */,
+				D04F7FE81BA4E3AC00B0F227 /* pcre2_valid_utf.c in Sources */,
+				D04F7FE91BA4E3AC00B0F227 /* pcre2_xclass.c in Sources */,
+				D04F7FF91BA4E87B00B0F227 /* pcre2_chartables.c.dist in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D0D02ACC1598642A008E62BD /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				D030FBF41A4A38F300F7ADA0 /* autoload.cpp in Sources */,
 				D030FBF51A4A38F300F7ADA0 /* builtin.cpp in Sources */,
+				D04F7FF01BA4E5B900B0F227 /* builtin_string.cpp in Sources */,
 				D030FC151A4A391900F7ADA0 /* builtin_test.cpp in Sources */,
 				D030FBF61A4A38F300F7ADA0 /* color.cpp in Sources */,
 				D0D02AD81598649E008E62BD /* common.cpp in Sources */,
@@ -1211,6 +1398,16 @@
 			target = D0F019EC15A976F30034B3B1 /* base */;
 			targetProxy = D031890715E36CC000D9CC39 /* PBXContainerItemProxy */;
 		};
+		D04F7FEB1BA4E3DB00B0F227 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D04F7FCF1BA4E29300B0F227 /* pcre2 */;
+			targetProxy = D04F7FEA1BA4E3DB00B0F227 /* PBXContainerItemProxy */;
+		};
+		D04F7FED1BA4E3DF00B0F227 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D04F7FCF1BA4E29300B0F227 /* pcre2 */;
+			targetProxy = D04F7FEC1BA4E3DF00B0F227 /* PBXContainerItemProxy */;
+		};
 		D07D265715E33B86009E43F6 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = D0D2693B159835CA005D9B9C /* fish_shell */;
@@ -1305,7 +1502,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				SDKROOT = macosx;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/**";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx";
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wunused-macros",
@@ -1395,6 +1592,78 @@
 			};
 			name = "Release_C++11";
 		};
+		D04F7FD21BA4E29300B0F227 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				GCC_INPUT_FILETYPE = sourcecode.c.c;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"LOCALEDIR=\\\"/usr/local/share/locale\\\"",
+					"PREFIX=L\\\"/usr/local\\\"",
+					"DATADIR=L\\\"/usr/local/share\\\"",
+					"SYSCONFDIR=L\\\"/usr/local/etc\\\"",
+					"BINDIR=L\\\"/usr/local/bin\\\"",
+					"DOCDIR=L\\\"/usr/local/share/doc\\\"",
+					"FISH_BUILD_VERSION=\\\"2.2.0-git\\\"",
+					"PCRE2_CODE_UNIT_WIDTH=32",
+					"HAVE_CONFIG_H=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
+				GCC_WARN_UNUSED_VARIABLE = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2";
+				WARNING_CFLAGS = "";
+			};
+			name = Debug;
+		};
+		D04F7FD31BA4E29300B0F227 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				GCC_INPUT_FILETYPE = sourcecode.c.c;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"LOCALEDIR=\\\"/usr/local/share/locale\\\"",
+					"PREFIX=L\\\"/usr/local\\\"",
+					"DATADIR=L\\\"/usr/local/share\\\"",
+					"SYSCONFDIR=L\\\"/usr/local/etc\\\"",
+					"BINDIR=L\\\"/usr/local/bin\\\"",
+					"DOCDIR=L\\\"/usr/local/share/doc\\\"",
+					"FISH_BUILD_VERSION=\\\"2.2.0-git\\\"",
+					"PCRE2_CODE_UNIT_WIDTH=32",
+					"HAVE_CONFIG_H=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
+				GCC_WARN_UNUSED_VARIABLE = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2";
+				WARNING_CFLAGS = "";
+			};
+			name = Release;
+		};
+		D04F7FD41BA4E29300B0F227 /* Release_C++11 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				GCC_INPUT_FILETYPE = sourcecode.c.c;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"LOCALEDIR=\\\"/usr/local/share/locale\\\"",
+					"PREFIX=L\\\"/usr/local\\\"",
+					"DATADIR=L\\\"/usr/local/share\\\"",
+					"SYSCONFDIR=L\\\"/usr/local/etc\\\"",
+					"BINDIR=L\\\"/usr/local/bin\\\"",
+					"DOCDIR=L\\\"/usr/local/share/doc\\\"",
+					"FISH_BUILD_VERSION=\\\"2.2.0-git\\\"",
+					"PCRE2_CODE_UNIT_WIDTH=32",
+					"HAVE_CONFIG_H=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
+				GCC_WARN_UNUSED_VARIABLE = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2";
+				WARNING_CFLAGS = "";
+			};
+			name = "Release_C++11";
+		};
 		D07D267015E33B86009E43F6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1440,7 +1709,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/**";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx";
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wunused-macros",
@@ -1471,7 +1740,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				SDKROOT = macosx;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/**";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx";
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wunused-macros",
@@ -1643,6 +1912,16 @@
 				D007693F1990137800CA4627 /* Debug */,
 				D00769401990137800CA4627 /* Release */,
 				D00769411990137800CA4627 /* Release_C++11 */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D04F7FD11BA4E29300B0F227 /* Build configuration list for PBXNativeTarget "pcre2" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D04F7FD21BA4E29300B0F227 /* Debug */,
+				D04F7FD31BA4E29300B0F227 /* Release */,
+				D04F7FD41BA4E29300B0F227 /* Release_C++11 */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -80,9 +80,6 @@
 /* Define to 1 if realpath accepts null for its second argument. */
 #define HAVE_REALPATH_NULL 1
 
-/* Define to 1 if you have the <regex.h> header file. */
-#define HAVE_REGEX_H 1
-
 /* Define to 1 if you have the <siginfo.h> header file. */
 /* #undef HAVE_SIGINFO_H */
 
@@ -245,6 +242,9 @@
 /* Perform string translations with gettext */
 /* #undef USE_GETTEXT */
 
+/* The size of wchar_t in bits. */
+#define WCHAR_T_BITS 32
+
 /* Macro to enable additional prototypes under BSD */
 /* #undef _NETBSD_SOURCE */
 
@@ -255,9 +255,15 @@
 /* #undef __EXTENSIONS__ */
 
 #if __GNUC__ >= 3
+#ifndef __warn_unused
 #define __warn_unused __attribute__ ((warn_unused_result))
+#endif
+#ifndef __sentinel
 #define __sentinel __attribute__ ((sentinel))
+#endif
+#ifndef __packed
 #define __packed __attribute__ ((packed))
+#endif
 #else
 #define __warn_unused
 #define __sentinel

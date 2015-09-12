@@ -146,6 +146,8 @@
 		D033781115DC6D4C00A634BA /* completions in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02715D1FEA100B9DB63 /* completions */; };
 		D033781215DC6D5200A634BA /* functions in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02815D1FEA100B9DB63 /* functions */; };
 		D033781315DC6D5400A634BA /* tools in CopyFiles */ = {isa = PBXBuildFile; fileRef = D025C02915D1FEA100B9DB63 /* tools */; };
+		D04F7F7C1BA4BF4000B0F227 /* builtin_string.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D04F7F7B1BA4BF4000B0F227 /* builtin_string.cpp */; };
+		D04F7F7D1BA4BF4000B0F227 /* builtin_string.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D04F7F7B1BA4BF4000B0F227 /* builtin_string.cpp */; };
 		D052D80B1868F7FC003ABCBD /* parse_execution.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D052D8091868F7FC003ABCBD /* parse_execution.cpp */; };
 		D07B247315BCC15700D4ADB4 /* add-shell in Resources */ = {isa = PBXBuildFile; fileRef = D07B247215BCC15700D4ADB4 /* add-shell */; };
 		D07B247615BCC4BE00D4ADB4 /* install.sh in Resources */ = {isa = PBXBuildFile; fileRef = D07B247515BCC4BE00D4ADB4 /* install.sh */; };
@@ -372,6 +374,7 @@
 		D03238891849D1980032CF2C /* pager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pager.cpp; sourceTree = "<group>"; };
 		D032388A1849D1980032CF2C /* pager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pager.h; sourceTree = "<group>"; };
 		D03EE83814DF88B200FC7150 /* lru.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lru.h; sourceTree = "<group>"; };
+		D04F7F7B1BA4BF4000B0F227 /* builtin_string.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = builtin_string.cpp; sourceTree = "<group>"; };
 		D052D8091868F7FC003ABCBD /* parse_execution.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = parse_execution.cpp; sourceTree = "<group>"; };
 		D052D80A1868F7FC003ABCBD /* parse_execution.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = parse_execution.h; sourceTree = "<group>"; };
 		D07B247215BCC15700D4ADB4 /* add-shell */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = "add-shell"; path = "build_tools/osx_package_scripts/add-shell"; sourceTree = "<group>"; };
@@ -583,6 +586,7 @@
 				D0A0853413B3ACEE0099B651 /* builtin_ulimit.cpp */,
 				D0F3373A1506DE3C00ECEFC0 /* builtin_test.cpp */,
 				D0CA63F316FC275F00093BD4 /* builtin_printf.cpp */,
+				D04F7F7B1BA4BF4000B0F227 /* builtin_string.cpp */,
 				D0A0853513B3ACEE0099B651 /* builtin.cpp */,
 				D0B6B0FF14E88BA400AD6C10 /* color.h */,
 				D0B6B0FE14E88BA400AD6C10 /* color.cpp */,
@@ -1078,6 +1082,7 @@
 				D00769321990137800CA4627 /* wgetopt.cpp in Sources */,
 				D00769331990137800CA4627 /* wutil.cpp in Sources */,
 				D00769341990137800CA4627 /* input.cpp in Sources */,
+				D04F7F7D1BA4BF4000B0F227 /* builtin_string.cpp in Sources */,
 				D00769351990137800CA4627 /* output.cpp in Sources */,
 				D00769361990137800CA4627 /* intern.cpp in Sources */,
 				D00769371990137800CA4627 /* env_universal_common.cpp in Sources */,
@@ -1179,6 +1184,7 @@
 				D0D02A751598385E008E62BD /* wgetopt.cpp in Sources */,
 				D0D02A7615983869008E62BD /* wutil.cpp in Sources */,
 				D0D02A7715983875008E62BD /* input.cpp in Sources */,
+				D04F7F7C1BA4BF4000B0F227 /* builtin_string.cpp in Sources */,
 				D0D02A781598387E008E62BD /* output.cpp in Sources */,
 				D0D02A7915983888008E62BD /* intern.cpp in Sources */,
 				D0D02A7B15983928008E62BD /* env_universal_common.cpp in Sources */,

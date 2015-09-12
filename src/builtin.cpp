@@ -151,7 +151,7 @@ static std::stack<io_stack_elem_t, std::vector<io_stack_elem_t> > io_stack;
    The file from which builtin functions should attempt to read, use
    instead of stdin.
 */
-static int builtin_stdin;
+int builtin_stdin;
 
 /**
    The underlying IO redirections behind the current builtin. This
@@ -163,7 +163,7 @@ static const io_chain_t *real_io;
 /**
    Counts the number of non null pointers in the specified array
 */
-static int builtin_count_args(const wchar_t * const * argv)
+int builtin_count_args(const wchar_t * const * argv)
 {
     int argc = 1;
     while (argv[argc] != NULL)
@@ -247,7 +247,7 @@ wcstring builtin_help_get(parser_t &parser, const wchar_t *name)
 
 */
 
-static void builtin_print_help(parser_t &parser, const wchar_t *cmd, wcstring &b)
+void builtin_print_help(parser_t &parser, const wchar_t *cmd, wcstring &b)
 {
     if (&b == &stderr_buffer)
     {
@@ -399,10 +399,12 @@ static void builtin_missing_argument(parser_t &parser, const wchar_t *cmd, const
 #include "builtin_jobs.cpp"
 #include "builtin_set_color.cpp"
 #include "builtin_printf.cpp"
-#include "builtin_string.cpp"
 
 /* builtin_test lives in builtin_test.cpp */
 int builtin_test(parser_t &parser, wchar_t **argv);
+
+/* builtin_string lives in builtin_string.cpp */
+int builtin_string(parser_t &parser, wchar_t **argv);
 
 /**
    List a single key binding.

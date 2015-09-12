@@ -97,9 +97,9 @@ FISH_OBJS := obj/function.o obj/builtin.o obj/complete.o obj/env.o obj/exec.o \
 	obj/env_universal_common.o obj/input_common.o obj/event.o obj/signal.o \
 	obj/io.o obj/parse_util.o obj/common.o obj/screen.o obj/path.o \
 	obj/autoload.o obj/parser_keywords.o obj/iothread.o obj/color.o \
-	obj/postfork.o obj/builtin_test.o obj/parse_tree.o obj/parse_productions.o \
-	obj/parse_execution.o obj/pager.o obj/utf8.o obj/fish_version.o \
-	obj/wcstringutil.o
+	obj/postfork.o obj/builtin_string.o obj/builtin_test.o obj/parse_tree.o \
+    obj/parse_productions.o obj/parse_execution.o obj/pager.o obj/utf8.o \
+    obj/fish_version.o obj/wcstringutil.o
 
 FISH_INDENT_OBJS := obj/fish_indent.o obj/print_help.o $(FISH_OBJS) 
 
@@ -110,7 +110,7 @@ FISH_INDENT_OBJS := obj/fish_indent.o obj/print_help.o $(FISH_OBJS)
 BUILTIN_FILES := src/builtin_set.cpp src/builtin_commandline.cpp	\
 	src/builtin_ulimit.cpp src/builtin_complete.cpp	\
 	src/builtin_jobs.cpp src/builtin_set_color.cpp	\
-	src/builtin_printf.cpp src/builtin_string.cpp
+	src/builtin_printf.cpp
 
 
 #

@@ -2,16 +2,32 @@
   Implementation of the string builtin.
 */
 
+#include "config.h" // IWYU pragma: keep
+
 #define PCRE2_CODE_UNIT_WIDTH WCHAR_T_BITS
 #ifdef _WIN32
 #define PCRE2_STATIC
 #endif
 #include "pcre2.h"
 
+#include "builtin.h"
+#include "common.h"
+#include "parser.h"
+#include "parse_util.h"
+#include "wgetopt.h"
 #include "wildcard.h"
+#include "wutil.h"
+#include <unistd.h>
 
 #define MAX_REPLACE_SIZE    size_t(1048576)  // pcre2_substitute maximum output size in wchar_t
 #define STRING_ERR_MISSING  _(L"%ls: Expected argument\n")
+
+/* externs from builtin.cpp */
+extern int builtin_count_args(const wchar_t * const * argv);
+extern wcstring stdout_buffer, stderr_buffer;
+void builtin_print_help(parser_t &parser, const wchar_t *cmd, wcstring &b);
+extern int builtin_stdin;
+
 
 enum
 {

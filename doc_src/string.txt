@@ -1,0 +1,200 @@
+\section string string - manipulate strings
+
+\subsection string-synopsis Synopsis
+\fish{synopsis}
+string length [(-q | --quiet)] [STRING...]
+string sub [(-s | --start) START] [(-l | --length) LENGTH]
+           [(-q | --quiet)] [STRING...]
+string split [(-m | --max) MAX] [(-r | --right)] [(-q | --quiet)]
+             SEP [STRING...]
+string join [(-q | --quiet)] SEP [STRING...]
+string trim [(-l | --left)] [(-r | --right)] [(-c | --chars CHARS)]
+            [(-q | --quiet)] [STRING...]
+string escape [(-n | --no-quoted)] [STRING...]
+string match [(-a | --all)] [(-i | --ignore-case)] [(-r | --regex)]
+             [(-n | --index)] [(-q | --quiet)] PATTERN [STRING...]
+string replace [(-a | --all)] [(-i | --ignore-case)] [(-r | --regex)]
+               [(-q | --quiet)] PATTERN REPLACEMENT [STRING...]
+\endfish
+
+
+\subsection string-description Description
+
+`string` performs operations on strings.
+
+STRING arguments are taken from the command line unless standard input is connected to a pipe or a file, in which case they are read from standard input, one STRING per line. It is an error to supply STRING arguments on the command line and on standard input.
+
+Arguments beginning with `-` are normally interpreted as switches; `--` causes the following arguments not to be treated as switches even if they begin with `-`. Switches and required arguments are recognized only on the command line.
+
+Most subcommands accept a `-q` or `--quiet` switch, which suppresses the usual output but exits with the documented status.
+
+In addition to the exit codes documented below, all the string subcommands exit with a value of 2 to indicate that an error occurred.
+
+The following subcommands are available:
+
+- `length` reports the length of each string argument in characters. Exit status: 0 if at least one non-empty STRING was given, or 1 otherwise.
+
+- `sub` prints a substring of each string argument. The start of the substring can be specified with `-s` or `--start` followed by a 1-based index value. Positive index values are relative to the start of the string and negative index values are relative to the end of the string. The default start value is 1. The length of the substring can be specified with `-l` or `--length`. If the length is not specified, the substring continues to the end of each STRING. Exit status: 0 if at least one substring operation was performed, 1 otherwise.
+
+- `split` splits each STRING on the separator SEP, which can be an empty string. If `-m` or `--max` is specified, at most MAX splits are done on each STRING. If `-r` or `--right` is given, splitting is performed right-to-left. This is useful in combination with `-m` or `--max`. Exit status: 0 if at least one split was performed, or 1 otherwise.
+
+- `join` joins its STRING arguments into a single string separated by SEP, which can be an empty string. Exit status: 0 if at least one join was performed, or 1 otherwise.
+
+- `trim` removes leading and trailing whitespace from each STRING. If `-l` or `--left` is given, only leading whitespace is removed. If `-r` or `--right` is given, only trailing whitespace is trimmed. The `-c` or `--chars` switch causes the characters in CHARS to be removed instead of whitespace. Exit status: 0 if at least one character was trimmed, or 1 otherwise.
+
+- `escape` escapes each STRING such that it can be passed back to `eval` to produce the original argument again. By default, all special characters are escaped, and quotes are used to simplify the output when possible. If `-n` or `--no-quote` is given, the simplifying quoted format is not used. Exit status: 0 if at least one string was escaped, or 1 otherwise.
+
+- `match` tests each STRING against PATTERN and prints matching substrings. Only the first match for each STRING is reported unless `-a` or `--all` is given, in which case all matches are reported. Matching can be made case-insensitive with `-i` or `--ignore-case`. If `-n` or `--index` is given, each match is reported as a 1-based start position and a length. By default, PATTERN is interpreted as a glob pattern matched against each entire STRING argument. If `-r` or `--regex` is given, PATTERN is interpreted as a Perl-compatible regular expression. For a regular expression containing capturing groups, multiple items will be reported for each match, one for the entire match and one for each capturing group. Exit status: 0 if at least one match was found, or 1 otherwise.
+
+- `replace` is similar to `match` but replaces non-overlapping matching substrings with a replacement string and prints the result. By default, PATTERN is treated as a literal substring to be matched. If `-r` or `--regex` is given, PATTERN is interpreted as a Perl-compatible regular expression, and REPLACEMENT can contain C-style escape sequences like `\t` as well as references to capturing groups by number or name as `$n` or `${n}`. Exit status: 0 if at least one replacement was performed, or 1 otherwise.
+
+
+\subsection string-example Examples
+
+\fish
+string length 'hello, world'
+# Output:
+# 12
+
+string length -q $str
+# Equivalent to test -n $str
+\endfish
+
+\fish
+string sub --length 2 abcde
+# Output:
+# ab
+
+string sub -s 2 -l 2 abcde
+# Output:
+# bc
+
+string sub --start=-2 abcde
+# Output:
+# de
+\endfish
+
+\fish
+string split . example.com
+# Output:
+# example
+# com
+
+string split -r -m1 / /usr/local/bin/fish
+# Output:
+# /usr/local/bin
+# fish
+
+string split '' abc
+# Output:
+# a
+# b
+# c
+\endfish
+
+\fish
+seq 3 | string join ...
+# Output:
+# 1...2...3
+\endfish
+
+\fish
+string trim ' abc  '
+# Output:
+# abc
+
+string trim --right --chars=yz xyzzy zany
+# Output:
+# x
+# zan
+\endfish
+
+\fish
+echo \\x07 | string escape
+# Output:
+# \\cg
+\endfish
+
+\fish
+# string match glob examples
+
+string match '?' a
+# Output:
+# a
+
+string match 'a*b' axxb
+# Output:
+# axxb
+
+string match -i 'a??B' Axxb
+# Output:
+# Axxb
+
+echo 'ok?' | string match '*\\?'
+# Output:
+# ok?
+
+# string match regex examples
+
+string match -r 'cat|dog|fish' 'nice dog'
+# Output:
+# dog
+
+string match -r '(\\d\\d?):(\\d\\d):(\\d\\d)' 2:34:56
+# Output:
+# 2:34:56
+# 2
+# 34
+# 56
+
+string match -r '^(\\w{2,4})\\g1$' papa mud murmur
+# Output:
+# papa
+# pa
+# murmur
+# mur
+
+string match -r -a -n at ratatat
+# Output:
+# 2 2
+# 4 2
+# 6 2
+
+string match -r -i '0x[0-9a-f]{1,8}' 'int magic = 0xBadC0de;'
+# Output:
+# 0xBadC0de
+\endfish
+
+\fish
+
+# string replace literal examples
+
+string replace is was 'blue is my favorite'
+# Output:
+# blue was my favorite
+
+string replace 3rd last 1st 2nd 3rd
+# Output:
+# 1st
+# 2nd
+# last
+
+string replace -a ' ' _ 'spaces to underscores'
+# Output:
+# spaces_to_underscores
+
+# string replace regex examples
+
+string replace -r -a '[^\\d.]+' ' ' '0 one two 3.14 four 5x'
+# Output:
+# 0 3.14 5
+
+string replace -r '(\\w+)\\s+(\\w+)' '$2 $1 $$' 'left right'
+# Output:
+# right left $
+
+string replace -r '\s*newline\s*' '\n' 'put a newline here'
+# Output:
+# put a
+# here
+\endfish

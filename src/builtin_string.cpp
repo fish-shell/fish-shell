@@ -1121,11 +1121,11 @@ static int string_sub(parser_t &parser, int argc, wchar_t **argv)
         { 0, 0, 0, 0 }
     };
 
-    int start = 0;
-    int length = -1;
+    long start = 0;
+    long length = -1;
     bool quiet = false;
     wgetopter_t w;
-    wchar_t *endptr = 0;
+    wchar_t *endptr = NULL;
     for (;;)
     {
         int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
@@ -1141,15 +1141,15 @@ static int string_sub(parser_t &parser, int argc, wchar_t **argv)
 
             case 'l':
                 errno = 0;
-                length = int(wcstol(w.woptarg, &endptr, 10));
-                if (*endptr != L'\0' || errno != 0)
+                length = wcstol(w.woptarg, &endptr, 10);
+                if (*endptr != L'\0' || (errno != 0 && errno != ERANGE))
                 {
                     string_error(BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
                     return BUILTIN_STRING_ERROR;
                 }
-                if (length < 0)
+                if (length < 0 || errno == ERANGE)
                 {
-                    string_error(_(L"%ls: Invalid length value '%d'\n"), argv[0], length);
+                    string_error(_(L"%ls: Invalid length value '%ls'\n"), argv[0], w.woptarg);
                     return BUILTIN_STRING_ERROR;
                 }
                 break;
@@ -1160,15 +1160,15 @@ static int string_sub(parser_t &parser, int argc, wchar_t **argv)
 
             case 's':
                 errno = 0;
-                start = int(wcstol(w.woptarg, &endptr, 10));
-                if (*endptr != L'\0' || errno != 0)
+                start = wcstol(w.woptarg, &endptr, 10);
+                if (*endptr != L'\0' || (errno != 0 && errno != ERANGE))
                 {
                     string_error(BUILTIN_ERR_NOT_NUMBER, argv[0], w.woptarg);
                     return BUILTIN_STRING_ERROR;
                 }
-                if (start == 0)
+                if (start == 0 || start == LONG_MIN || errno == ERANGE)
                 {
-                    string_error(_(L"%ls: Invalid start value '%d'\n"), argv[0], start);
+                    string_error(_(L"%ls: Invalid start value '%ls'\n"), argv[0], w.woptarg);
                     return BUILTIN_STRING_ERROR;
                 }
                 break;
@@ -1193,18 +1193,20 @@ static int string_sub(parser_t &parser, int argc, wchar_t **argv)
     int nsub = 0;
     const wchar_t *arg;
     wcstring storage;
-    while ((arg = string_get_arg(&i, argv, &storage)) != 0)
+    while ((arg = string_get_arg(&i, argv, &storage)) != NULL)
     {
-        wcstring::size_type pos = 0;
-        wcstring::size_type count = wcstring::npos;
+        typedef wcstring::size_type size_type;
+        size_type pos = 0;
+        size_type count = wcstring::npos;
         wcstring s(arg);
         if (start > 0)
         {
-            pos = start - 1;
+            pos = static_cast<size_type>(start - 1);
         }
         else if (start < 0)
         {
-            wcstring::size_type n = -start;
+            assert(start != LONG_MIN); // checked above
+            size_type n = static_cast<size_type>(-start);
             pos = n > s.length() ? 0 : s.length() - n;
         }
         if (pos > s.length())
@@ -1214,13 +1216,10 @@ static int string_sub(parser_t &parser, int argc, wchar_t **argv)
 
         if (length >= 0)
         {
-            count = length;
-        }
-        if (pos + count > s.length())
-        {
-            count = wcstring::npos;
+            count = static_cast<size_type>(length);
         }
 
+        // note that std::string permits count to extend past end of string
         if (!quiet)
         {
             stdout_buffer += s.substr(pos, count);

@@ -949,6 +949,45 @@ static int string_replace(parser_t &parser, int argc, wchar_t **argv)
     return rc;
 }
 
+// Given iterators into a string (forward or reverse), splits the haystack iterators
+// about the needle sequence, up to max times. Inserts splits into the output array
+// If the iterators are forward, this does the normal thing.
+// If the iterators are backward, this returns reversed strings, in reversed order!
+// If the needle is empty, split on individual elements (characters)
+template<typename ITER>
+void split_about(ITER haystack_start, ITER haystack_end,
+                 ITER needle_start, ITER needle_end,
+                 wcstring_list_t *output, long max)
+{
+    long remaining = max;
+    ITER haystack_cursor = haystack_start;
+    while (remaining > 0 && haystack_cursor != haystack_end)
+    {
+        ITER split_point;
+        if (needle_start == needle_end)
+        {
+            // empty needle, we split on individual elements
+            split_point = haystack_cursor + 1;
+        }
+        else
+        {
+            split_point = std::search(haystack_cursor, haystack_end, needle_start, needle_end);
+        }
+        if (split_point == haystack_end)
+        {
+            // not found
+            break;
+        }
+        output->push_back(wcstring(haystack_cursor, split_point));
+        remaining--;
+        // need to skip over the needle for the next search
+        // note that the needle may be empty
+        haystack_cursor = split_point + std::distance(needle_start, needle_end);
+    }
+    // trailing component, possibly empty
+    output->push_back(wcstring(haystack_cursor, haystack_end));
+}
+
 static int string_split(parser_t &parser, int argc, wchar_t **argv)
 {
     const wchar_t *short_options = L":m:qr";
@@ -1010,119 +1049,63 @@ static int string_split(parser_t &parser, int argc, wchar_t **argv)
 
     int i = w.woptind;
     const wchar_t *sep;
-    if ((sep = string_get_arg_argv(&i, argv)) == 0)
+    if ((sep = string_get_arg_argv(&i, argv)) == NULL)
     {
         string_error(STRING_ERR_MISSING, argv[0]);
         return BUILTIN_STRING_ERROR;
     }
+    const wchar_t *sep_end = sep + wcslen(sep);
 
     if (string_args_from_stdin() && argc > i)
     {
         string_error(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
         return BUILTIN_STRING_ERROR;
     }
-
-    // we may want to use push_front or push_back, so do not use vector
-    std::list<wcstring> splits;
-    size_t seplen = wcslen(sep);
-    int nsplit = 0;
+    
+    wcstring_list_t splits;
+    size_t arg_count = 0;
+    wcstring storage;
     const wchar_t *arg;
+    while ((arg = string_get_arg(&i, argv, &storage)) != 0)
+    {
+        const wchar_t *arg_end = arg + wcslen(arg);
+        if (right)
+        {
+            typedef std::reverse_iterator<const wchar_t *> reverser;
+            split_about(reverser(arg_end), reverser(arg),
+                        reverser(sep_end), reverser(sep),
+                        &splits, max);
+        }
+        else
+        {
+            split_about(arg, arg_end,
+                        sep, sep_end,
+                        &splits, max);
+        }
+        arg_count++;
+    }
+    
+    // If we are from the right, split_about gave us reversed strings, in reversed order!
     if (right)
     {
-        wcstring storage;
-        while ((arg = string_get_arg(&i, argv, &storage)) != 0)
+        for (size_t i=0; i < splits.size(); i++)
         {
-            int nargsplit = 0;
-            if (seplen == 0)
-            {
-                // Split to individual characters
-                const wchar_t *cur = arg + wcslen(arg) - 1;
-                while (cur > arg && nargsplit < max)
-                {
-                    splits.push_front(wcstring(cur, 1));
-                    cur--;
-                    nargsplit++;
-                    nsplit++;
-                }
-                splits.push_front(wcstring(arg, cur - arg + 1));
-            }
-            else
-            {
-                const wchar_t *end = arg + wcslen(arg);
-                const wchar_t *cur = end - seplen;
-                while (cur >= arg && nargsplit < max)
-                {
-                    if (wcsncmp(cur, sep, seplen) == 0)
-                    {
-                        splits.push_front(wcstring(cur + seplen, end - cur - seplen));
-                        end = cur;
-                        cur -= seplen;
-                        nargsplit++;
-                        nsplit++;
-                    }
-                    else
-                    {
-                        cur--;
-                    }
-                }
-                splits.push_front(wcstring(arg, end - arg));
-            }
+            std::reverse(splits[i].begin(), splits[i].end());
         }
+        std::reverse(splits.begin(), splits.end());
     }
-    else
-    {
-        wcstring storage;
-        while ((arg = string_get_arg(&i, argv, &storage)) != 0)
-        {
-            const wchar_t *cur = arg;
-            int nargsplit = 0;
-            if (seplen == 0)
-            {
-                // Split to individual characters
-                const wchar_t *last = arg + wcslen(arg) - 1;
-                while (cur < last && nargsplit < max)
-                {
-                    splits.push_back(wcstring(cur, 1));
-                    cur++;
-                    nargsplit++;
-                    nsplit++;
-                }
-                splits.push_back(cur);
-            }
-            else
-            {
-                while (cur != 0)
-                {
-                    const wchar_t *ptr = (nargsplit < max) ? wcsstr(cur, sep) : 0;
-                    if (ptr == 0)
-                    {
-                        splits.push_back(cur);
-                        cur = 0;
-                    }
-                    else
-                    {
-                        splits.push_back(wcstring(cur, ptr - cur));
-                        cur = ptr + seplen;
-                        nargsplit++;
-                        nsplit++;
-                    }
-                }
-            }
-        }
-    }
-
+    
     if (!quiet)
     {
-        std::list<wcstring>::const_iterator si = splits.begin();
-        while (si != splits.end())
+        for (wcstring_list_t::const_iterator si = splits.begin(); si != splits.end(); ++si)
         {
             stdout_buffer += *si;
             stdout_buffer += L'\n';
-            si++;
         }
     }
 
-    return (nsplit > 0) ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
+    // we split something if we have more split values than args
+    return (splits.size() > arg_count) ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
 }
 
 static int string_sub(parser_t &parser, int argc, wchar_t **argv)

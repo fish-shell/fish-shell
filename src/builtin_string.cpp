@@ -17,6 +17,8 @@
 #include "wgetopt.h"
 #include "wildcard.h"
 #include "wutil.h"
+#include <iterator>
+#include <algorithm>
 #include <unistd.h>
 
 #define MAX_REPLACE_SIZE    size_t(1048576)  // pcre2_substitute maximum output size in wchar_t

@@ -1259,9 +1259,9 @@ static int string_trim(parser_t &parser, int argc, wchar_t **argv)
         { 0, 0, 0, 0 }
     };
 
-    int leftright = 0;
+    bool do_left = 0, do_right = 0;
     bool quiet = false;
-    wcstring chars = L" \f\n\r\t";
+    wcstring chars_to_trim = L" \f\n\r\t";
     wgetopter_t w;
     for (;;)
     {
@@ -1277,11 +1277,11 @@ static int string_trim(parser_t &parser, int argc, wchar_t **argv)
                 break;
 
             case 'c':
-                chars = w.woptarg;
+                chars_to_trim = w.woptarg;
                 break;
 
             case 'l':
-                leftright |= 1;
+                do_left = true;
                 break;
 
             case 'q':
@@ -1289,7 +1289,7 @@ static int string_trim(parser_t &parser, int argc, wchar_t **argv)
                 break;
 
             case 'r':
-                leftright |= 2;
+                do_right = true;
                 break;
 
             case ':':
@@ -1308,33 +1308,40 @@ static int string_trim(parser_t &parser, int argc, wchar_t **argv)
         string_error(BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
         return BUILTIN_STRING_ERROR;
     }
+    
+    /* if neither left or right is specified, we do both */
+    if (! do_left && ! do_right)
+    {
+        do_left = true;
+        do_right = true;
+    }
 
     const wchar_t *arg;
-    int ntrim = 0;
+    size_t ntrim = 0;
+    
+    wcstring argstr;
     wcstring storage;
     while ((arg = string_get_arg(&i, argv, &storage)) != 0)
     {
-        const wchar_t *begin = arg;
-        const wchar_t *end = arg + wcslen(arg);
-        if (!leftright || (leftright & 1))
+        argstr = arg;
+        // begin and end are respectively the first character to keep on the left,
+        // and first character to trim on the right. The length is thus end - start.
+        size_t begin = 0, end = argstr.size();
+        if (do_right)
         {
-            while (begin != end && chars.find_first_of(begin, 0, 1) != wcstring::npos)
-            {
-                begin++;
-                ntrim++;
-            }
+            size_t last_to_keep = argstr.find_last_not_of(chars_to_trim);
+            end = (last_to_keep == wcstring::npos) ? 0 : last_to_keep + 1;
         }
-        if (!leftright || (leftright & 2))
+        if (do_left)
         {
-            while (begin != end && chars.find_first_of(end - 1, 0, 1) != wcstring::npos)
-            {
-                end--;
-                ntrim++;
-            }
+            size_t first_to_keep = argstr.find_first_not_of(chars_to_trim);
+            begin = (first_to_keep == wcstring::npos ? end : first_to_keep);
         }
+        assert(begin <= end && end <= argstr.size());
+        ntrim += argstr.size() - (end - begin);
         if (!quiet)
         {
-            stdout_buffer += wcstring(begin, end - begin);
+            stdout_buffer.append(argstr, begin, end - begin);
             stdout_buffer += L'\n';
         }
     }

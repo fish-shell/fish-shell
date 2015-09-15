@@ -20,6 +20,9 @@ parameter expansion.
 #include <sys/stat.h>
 #include <unistd.h>
 #include <algorithm>
+#ifdef HAVE_SYS_SYSCTL_H
+#include <sys/sysctl.h> // IWYU pragma: keep - needed for KERN_PROCARGS2
+#endif
 
 #include <assert.h>
 #include <vector>

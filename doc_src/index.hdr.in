@@ -236,7 +236,7 @@ There are a few important things that need to be noted about aliases:
 
 - Always take care to add the `$argv` variable to the list of parameters to the wrapped command. This makes sure that if the user specifies any additional parameters to the function, they are passed on to the underlying command.
 
-- If the alias has the same name as the aliased command, it is necessary to refix the call to the program with `command` in order to tell fish that the function should not call itself, but rather a command with the same name. Failing to do so will cause infinite recursion bugs.
+- If the alias has the same name as the aliased command, it is necessary to prefix the call to the program with `command` in order to tell fish that the function should not call itself, but rather a command with the same name. Failing to do so will cause infinite recursion bugs.
 
 To easily create a function of this form, you can use the <a href="commands.html#alias">alias</a> command.
 

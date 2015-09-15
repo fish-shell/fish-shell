@@ -348,6 +348,13 @@ You can iterate over a list (or a slice) with a for loop:
 <outp>entry: /usr/local/bin</outp>
 \endfish
 
+If you append a list to a string (or to a list), it will build the cross-product:
+\fish{cli-dark}
+>_ set -l a 1 2 3
+>_ set -l 1 a b c
+>_ echo $a$1
+<outp>1a 2a 3a 1b 2b 3b 1c 2c 3c
+\endfish
 
 \section tut_command_substitutions Command Substitutions
 

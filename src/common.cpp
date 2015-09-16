@@ -90,17 +90,8 @@ void show_stackframe()
     int trace_size = 0;
 
     trace_size = backtrace(trace, 32);
-    char **messages = backtrace_symbols(trace, trace_size);
-
-    if (messages)
-    {
-        debug(0, L"Backtrace:");
-        for (int i=0; i<trace_size; i++)
-        {
-            fwprintf(stderr, L"%s\n", messages[i]);
-        }
-        free(messages);
-    }
+    debug(0, L"Backtrace:");
+    backtrace_symbols_fd(trace, trace_size, STDERR_FILENO);
 }
 
 int fgetws2(wcstring *s, FILE *f)

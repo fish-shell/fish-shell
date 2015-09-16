@@ -1181,7 +1181,7 @@ void exec_job(parser_t &parser, job_t *j)
                             const std::string outbuff = wcs2string(stdout_buffer);
                             const std::string errbuff = wcs2string(stderr_buffer);
                             bool builtin_io_done = do_builtin_io(outbuff.data(), outbuff.size(), errbuff.data(), errbuff.size());
-                            if (! builtin_io_done)
+                            if (! builtin_io_done && errno != EPIPE)
                             {
                                 show_stackframe();
                             }

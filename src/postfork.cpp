@@ -569,12 +569,13 @@ bool do_builtin_io(const char *out, size_t outlen, const char *err, size_t errle
     bool success = true;
     if (out && outlen)
     {
-
         if (write_loop(STDOUT_FILENO, out, outlen) < 0)
         {
+            int e = errno;
             debug_safe(0, "Error while writing to stdout");
             safe_perror("write_loop");
             success = false;
+            errno = e;
         }
     }
 

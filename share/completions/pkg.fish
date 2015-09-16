@@ -70,7 +70,7 @@ complete -c pkg -n '__fish_pkg_is autoremove clean delete remove install' -s y -
 complete -c pkg -n '__fish_pkg_is clean' -s a -l all -d "Delete all cached packages"
 
 # delete/remove
-complete -c pkg -n '__fish_pkg_is delete remove upgrade' -xa '(pkg query "%n-%v")' -d 'Package'
+complete -c pkg -n '__fish_pkg_is delete remove upgrade' -xa '(pkg query "%n")'
 complete -c pkg -n '__fish_pkg_is delete remove' -s a -l all -d 'Delete all installed packages'
 complete -c pkg -n '__fish_pkg_is delete remove install upgrade' -s C -l case-sensitive -d "Case sensitive packages"
 complete -c pkg -n '__fish_pkg_is delete remove' -s D -l no-deinstall-script -d "Disable deinstallation scripts"
@@ -81,7 +81,7 @@ complete -c pkg -n '__fish_pkg_is delete remove' -s R -l recursive -d "Remove re
 complete -c pkg -n '__fish_pkg_is delete remove install upgrade' -s x -l regex -d "Treat the package name as regular expression"
 
 # install
-complete -c pkg -n '__fish_pkg_is install' -xa '(pkg search "^"(commandline -ct))' -d 'Package'
+complete -c pkg -n '__fish_pkg_is install' -xa '(pkg rquery -U "%n")'
 complete -c pkg -n '__fish_pkg_is install' -s I -l no-install-scripts -d "Disable installation scripts"
 complete -c pkg -n '__fish_pkg_is install' -s M -l ignore-missing -d "Force installation with missing dependencies"
 complete -c pkg -n '__fish_pkg_is install upgrade' -s F -l fetch-only -d "Do not perform actual installation"

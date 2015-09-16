@@ -18,6 +18,8 @@ function __fish_pkg_subcommand
 		end
 		switch $token
 			# Option parser allows shortened long options
+			case '--*='
+				continue
 			case -{o,j,c,r,C,R} --op\* --j\* --ch\* --ro\* --co\* --re\*
 				set skip_next 1
 				continue

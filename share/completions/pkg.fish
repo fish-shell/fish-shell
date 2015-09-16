@@ -9,18 +9,18 @@ function __fish_pkg_is
 	return 1
 end
 
-complete -c pkg    -s v -l version       -d "Display version and exit"
-complete -c pkg    -s d -l debug         -d "Show debug information"
-complete -c pkg    -s l -l list          -d "List subcommands"
-complete -c pkg -x -s o -l option        -d "Set configuration option"
-complete -c pkg    -s N                  -d "Run sanity test"
-complete -c pkg -x -s j -l jail          -d "Run package manager within jail"
-complete -c pkg -r -s c -l chroot        -d "Run package manager within chroot"
-complete -c pkg -r -s r -l rootdir       -d "Install packages in specified root"
-complete -c pkg -r -s C -l config        -d "Use configuration file"
-complete -c pkg -r -s R -l repo-conf-dir -d "Set repository configuration directory"
-complete -c pkg    -s 4                  -d "Use IPv4"
-complete -c pkg    -s 6                  -d "Use IPv6"
+complete -c pkg -n __fish_use_subcommand    -s v -l version       -d "Display version and exit"
+complete -c pkg -n __fish_use_subcommand    -s d -l debug         -d "Show debug information"
+complete -c pkg -n __fish_use_subcommand    -s l -l list          -d "List subcommands"
+complete -c pkg -n __fish_use_subcommand -x -s o -l option        -d "Set configuration option"
+complete -c pkg -n __fish_use_subcommand    -s N                  -d "Run sanity test"
+complete -c pkg -n __fish_use_subcommand -x -s j -l jail          -d "Run package manager within jail"
+complete -c pkg -n __fish_use_subcommand -r -s c -l chroot        -d "Run package manager within chroot"
+complete -c pkg -n __fish_use_subcommand -r -s r -l rootdir       -d "Install packages in specified root"
+complete -c pkg -n __fish_use_subcommand -r -s C -l config        -d "Use configuration file"
+complete -c pkg -n __fish_use_subcommand -r -s R -l repo-conf-dir -d "Set repository configuration directory"
+complete -c pkg -n __fish_use_subcommand    -s 4                  -d "Use IPv4"
+complete -c pkg -n __fish_use_subcommand    -s 6                  -d "Use IPv6"
 
 complete -c pkg -n __fish_use_subcommand -xa help       -d "Display help for command"
 complete -c pkg -n __fish_use_subcommand -xa add        -d "Install package file"
@@ -70,7 +70,7 @@ complete -c pkg -n '__fish_pkg_is autoremove clean delete remove install' -s y -
 complete -c pkg -n '__fish_pkg_is clean' -s a -l all -d "Delete all cached packages"
 
 # delete/remove
-complete -c pkg -n '__fish_pkg_is delete remove' -xa '(pkg query "%n-%v")' -d 'Package'
+complete -c pkg -n '__fish_pkg_is delete remove upgrade' -xa '(pkg query "%n-%v")' -d 'Package'
 complete -c pkg -n '__fish_pkg_is delete remove' -s a -l all -d 'Delete all installed packages'
 complete -c pkg -n '__fish_pkg_is delete remove install upgrade' -s C -l case-sensitive -d "Case sensitive packages"
 complete -c pkg -n '__fish_pkg_is delete remove' -s D -l no-deinstall-script -d "Disable deinstallation scripts"
@@ -81,7 +81,7 @@ complete -c pkg -n '__fish_pkg_is delete remove' -s R -l recursive -d "Remove re
 complete -c pkg -n '__fish_pkg_is delete remove install upgrade' -s x -l regex -d "Treat the package name as regular expression"
 
 # install
-complete -c pkg -n '__fish_pkg_is install upgrade' -xa '(pkg search "^"(commandline -ct))' -d 'Package'
+complete -c pkg -n '__fish_pkg_is install' -xa '(pkg search "^"(commandline -ct))' -d 'Package'
 complete -c pkg -n '__fish_pkg_is install' -s I -l no-install-scripts -d "Disable installation scripts"
 complete -c pkg -n '__fish_pkg_is install' -s M -l ignore-missing -d "Force installation with missing dependencies"
 complete -c pkg -n '__fish_pkg_is install upgrade' -s F -l fetch-only -d "Do not perform actual installation"

@@ -9,9 +9,16 @@ function __fish_systemd_properties
 	if type -q /usr/lib/systemd/systemd
 		set IFS "="
 		/usr/lib/systemd/systemd --dump-configuration-items | while read key value
-		if not test -z $value
-			echo $key
+			if not test -z $value
+				echo $key
+			end
 		end
+	else if type -q /lib/systemd/systemd # Debian has not merged /lib and /usr/lib
+		set IFS "="
+		/lib/systemd/systemd --dump-configuration-items | while read key value
+			if not test -z $value
+				echo $key
+			end
 		end
 	end
 end

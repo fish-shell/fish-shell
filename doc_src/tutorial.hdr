@@ -348,13 +348,20 @@ You can iterate over a list (or a slice) with a for loop:
 <outp>entry: /usr/local/bin</outp>
 \endfish
 
-If you append a list to a string (or to a list), it will build the cross-product:
+Lists adjacent to other lists or strings are expanded as cartesian products unless quoted (see <a href="index.html#expand-variable">Variable expansion</a>):
+
 \fish{cli-dark}
 >_ set -l a 1 2 3
 >_ set -l 1 a b c
 >_ echo $a$1
-<outp>1a 2a 3a 1b 2b 3b 1c 2c 3c
+<outp>1a 2a 3a 1b 2b 3b 1c 2c 3c</outp>
+>_ echo $a" banana"
+<outp>1 banana 2 banana 3 banana</outp>
+>_ echo "$a banana"
+<outp>1 2 3 banana</outp>
 \endfish
+
+This is similar to <a href="index.html#expand-brace">Brace expansion</a>.
 
 \section tut_command_substitutions Command Substitutions
 

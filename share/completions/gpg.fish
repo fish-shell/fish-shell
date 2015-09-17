@@ -332,3 +332,6 @@ complete -c gpg -l personal-cipher-preferences -x --description "Set the list of
 complete -c gpg -l personal-digest-preferences -x --description "Set the list of personal digest preferences to the specified string"
 complete -c gpg -l personal-compress-preferences -x --description "Set the list of personal compression preferences to the specified string"
 complete -c gpg -l default-preference-list -x --description "Set the list of default preferences to the specified string"
+
+# gpg is sometimes named gpg2
+complete -c gpg2 --wraps gpg

@@ -388,8 +388,8 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
                 ! memcmp(line_start, "---", 3) ||
                 ! memcmp(line_start, "...", 3))
             continue;
-        
-        
+
+
         /* Hackish: fish 1.x rewriting a fish 2.0 history file can produce lines with lots of leading "- cmd: - cmd: - cmd:". Trim all but one leading "- cmd:". */
         const char *double_cmd = "- cmd: - cmd: ";
         const size_t double_cmd_len = strlen(double_cmd);
@@ -398,13 +398,13 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
             /* Skip over just one of the - cmd. In the end there will be just one left. */
             line_start += strlen("- cmd: ");
         }
-        
+
         /* Hackish: fish 1.x rewriting a fish 2.0 history file can produce commands like "when: 123456". Ignore those. */
         const char *cmd_when = "- cmd:    when:";
         const size_t cmd_when_len = strlen(cmd_when);
         if (newline - line_start >= cmd_when_len && ! memcmp(line_start, cmd_when, cmd_when_len))
             continue;
-        
+
 
         /* At this point, we know line_start is at the beginning of an item. But maybe we want to skip this item because of timestamps. A 0 cutoff means we don't care; if we do care, then try parsing out a timestamp. */
         if (cutoff_timestamp != 0)
@@ -733,7 +733,7 @@ history_item_t history_t::item_at_index(size_t idx)
     {
         resolved_new_item_count -= 1;
     }
-    
+
     /* idx=0 corresponds to the last resolved item */
     if (idx < resolved_new_item_count)
     {
@@ -816,7 +816,7 @@ history_item_t history_t::decode_item_fish_2_0(const char *base, size_t len)
 
     size_t indent = 0, cursor = 0;
     std::string key, value, line;
-    
+
     /* Read the "- cmd:" line */
     size_t advance = read_line(base, cursor, len, line);
     trim_leading_spaces(line);
@@ -824,7 +824,7 @@ history_item_t history_t::decode_item_fish_2_0(const char *base, size_t len)
     {
         goto done;
     }
-    
+
     cursor += advance;
     cmd = str2wcstring(value);
 
@@ -1275,7 +1275,7 @@ static void unescape_yaml(std::string *str)
 static wcstring history_filename(const wcstring &name, const wcstring &suffix)
 {
     wcstring path;
-    if (! path_get_config(path))
+    if (! path_get_data(path))
         return L"";
 
     wcstring result = path;

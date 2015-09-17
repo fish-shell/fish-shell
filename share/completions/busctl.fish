@@ -8,10 +8,11 @@
 # To speed this up, we'd need to either keep state or just assume e.g. the first non-option argument to "call" is a busname
 
 function __fish_busctl_busnames
+	set -l mode
     if __fish_contains_opt user
-		set -l mode "--user"
+		set mode "--user"
 	else
-		set -l mode "--system"
+		set mode "--system"
 	end
     command busctl $mode list --no-legend --no-pager ^/dev/null | while read a b; echo $a; end
 end
@@ -75,20 +76,22 @@ function __fish_busctl_has_signature
 end
 
 function __fish_busctl_objects
+	set -l mode
     if __fish_contains_opt user
-		set -l mode "--user"
+		set mode "--user"
 	else
-		set -l mode "--system"
+		set mode "--system"
 	end
 	set -l busname (__fish_busctl_has_busname)
     command busctl $mode tree --list --no-legend --no-pager $busname ^/dev/null | while read a b; echo $a; end
 end
 
 function __fish_busctl_interfaces
+	set -l mode
     if __fish_contains_opt user
-		set -l mode "--user"
+		set mode "--user"
 	else
-		set -l mode "--system"
+		set mode "--system"
 	end
 	set -l busname (__fish_busctl_has_busname)
 	set -l object (__fish_busctl_has_object)
@@ -96,10 +99,11 @@ function __fish_busctl_interfaces
 end
 	
 function __fish_busctl_members
+	set -l mode
     if __fish_contains_opt user
-		set -l mode "--user"
+		set mode "--user"
 	else
-		set -l mode "--system"
+		set mode "--system"
 	end
 	set -l busname (__fish_busctl_has_busname)
 	set -l object  (__fish_busctl_has_object)
@@ -120,10 +124,11 @@ function __fish_busctl_signals
 end
 
 function __fish_busctl_signature
+	set -l mode
     if __fish_contains_opt user
-		set -l mode "--user"
+		set mode "--user"
 	else
-		set -l mode "--system"
+		set mode "--system"
 	end
 	set -l busname (__fish_busctl_has_busname)
 	set -l object  (__fish_busctl_has_object)

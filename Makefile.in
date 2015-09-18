@@ -759,16 +759,16 @@ uninstall-translations:
 
 
 #
-#  Migrate fish_history file.
-#  If $(XDG_DATA_HOME)/fish_history doesn't already exist,
-#  try to move it from the old location, .config/fish/
+# Migrate fish_history file.
+# If $(XDG_DATA_HOME)/fish_history doesn't already exist,
+# try to move it from the old location, .config/fish/
 #
 
-#  fish-data-home = $(XDG_DATA_HOME)/fish || $(HOME)/.local/share/fish
-ifeq ($(XDG_DATA_HOME),)
-fish-data-home := $(HOME)/.local/share/fish
-else
+# fish-data-home = $(XDG_DATA_HOME)/fish || $(HOME)/.local/share/fish
+ifdef XDG_DATA_HOME
 fish-data-home := $(XDG_DATA_HOME)/fish
+else
+sfish-data-home := $(HOME)/.local/share/fish
 endif
 
 $(fish-data-home):
@@ -778,7 +778,18 @@ $(fish-data-home)/fish_history: $(fish-data-home)
 	-mv $(HOME)/.config/fish/fish_history $(fish-data-home)/fish_history
 	touch $(fish-data-home)/fish_history
 
-migrate-history: $(fish-data-home)/fish_history
+migrate-history-as-user: $(fish-data-home)/fish_history
+.PHONY: migrate-history-as-user
+
+# "make install" would mean we're running as root, so we may need
+# to revert to the original user to get their env vars correct for
+# migrating the history file
+migrate-history:
+ifdef SUDO_USER
+	sudo -u $(SUDO_USER) make migrate-history-as-user
+else
+	make migrate-history-as-user
+endif
 .PHONY: migrate-history
 
 

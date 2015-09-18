@@ -140,7 +140,7 @@ static void err(const wchar_t *blah, ...)
     va_list va;
     va_start(va, blah);
     err_count++;
-    
+
     // Xcode's term doesn't support color (even though TERM claims it does)
     bool colorize = ! getenv("RUNNING_IN_XCODE");
 
@@ -294,7 +294,7 @@ static void test_format(void)
         format_long_safe(buff1, j);
         sprintf(buff2, "%d", j);
         do_test(! strcmp(buff1, buff2));
-        
+
         wchar_t wbuf1[128], wbuf2[128];
         format_long_safe(wbuf1, j);
         swprintf(wbuf2, 128, L"%d", j);
@@ -467,7 +467,7 @@ static void test_tok()
             err(L"Too few tokens returned from tokenizer");
         }
     }
-    
+
     /* Test some errors */
     {
         tok_t token;
@@ -477,7 +477,7 @@ static void test_tok()
         do_test(token.error == TOK_UNTERMINATED_ESCAPE);
         do_test(token.error_offset == 3);
     }
-    
+
     {
         tok_t token;
         tokenizer_t t(L"abc defg(hij (klm)", 0);
@@ -487,7 +487,7 @@ static void test_tok()
         do_test(token.error == TOK_UNTERMINATED_SUBSHELL);
         do_test(token.error_offset == 4);
     }
-    
+
     {
         tok_t token;
         tokenizer_t t(L"abc defg[hij (klm)", 0);
@@ -555,7 +555,7 @@ static void test_iothread(void)
     {
         say(L"Expected int to be %d, but instead it was %d", iterations, *int_ptr);
     }
-    
+
     say(L"    (%.02f msec, with max of %d threads)", (end - start) * 1000.0, max_achieved_thread_count);
 
     delete int_ptr;
@@ -707,7 +707,7 @@ static void test_parser()
     {
         err(L"Bad escape in nested command substitution not reported as error");
     }
-    
+
     if (! parse_util_detect_errors(L"false & ; and cat"))
     {
         err(L"'and' command after background not reported as error");
@@ -717,13 +717,13 @@ static void test_parser()
     {
         err(L"'or' command after background not reported as error");
     }
-    
+
     if (parse_util_detect_errors(L"true & ; not cat"))
     {
         err(L"'not' command after background falsely reported as error");
     }
 
-    
+
     if (! parse_util_detect_errors(L"if true & ; end"))
     {
         err(L"backgrounded 'if' conditional not reported as error");
@@ -1295,7 +1295,7 @@ static void test_escape_sequences(void)
     if (escape_code_length(L"\x1b[2J") != 4) err(L"test_escape_sequences failed on line %d\n", __LINE__);
     if (escape_code_length(L"\x1b[38;5;123mABC") != strlen("\x1b[38;5;123m")) err(L"test_escape_sequences failed on line %d\n", __LINE__);
     if (escape_code_length(L"\x1b@") != 2) err(L"test_escape_sequences failed on line %d\n", __LINE__);
-    
+
     // iTerm2 escape sequences
     if (escape_code_length(L"\x1b]50;CurrentDir=/tmp/foo\x07NOT_PART_OF_SEQUENCE") != 25) err(L"test_escape_sequences failed on line %d\n", __LINE__);
     if (escape_code_length(L"\x1b]50;SetMark\x07NOT_PART_OF_SEQUENCE") != 13) err(L"test_escape_sequences failed on line %d\n", __LINE__);
@@ -1391,7 +1391,7 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...)
         expected.push_back(wcstring(arg));
     }
     va_end(va);
-    
+
     std::set<wcstring> remaining(expected.begin(), expected.end());
     std::vector<completion_t>::const_iterator out_it = output.begin(), out_end = output.end();
     for (; out_it != out_end; ++out_it)
@@ -1406,7 +1406,7 @@ static bool expand_test(const wchar_t *in, expand_flags_t flags, ...)
     {
         res = false;
     }
-    
+
     if (!res)
     {
         if ((arg = va_arg(va, wchar_t *)) != 0)
@@ -1463,7 +1463,7 @@ static void test_expand()
 
     expand_test(L"foo\\$bar", EXPAND_SKIP_VARIABLES, L"foo$bar", 0,
                 L"Failed to handle dollar sign in variable-skipping expansion");
-    
+
 
     /*
        b
@@ -1479,7 +1479,7 @@ static void test_expand()
              q
        .foo
      */
-    
+
     if (system("mkdir -p /tmp/fish_expand_test/")) err(L"mkdir failed");
     if (system("mkdir -p /tmp/fish_expand_test/b/")) err(L"mkdir failed");
     if (system("mkdir -p /tmp/fish_expand_test/baz/")) err(L"mkdir failed");
@@ -1498,23 +1498,23 @@ static void test_expand()
     expand_test(L"/tmp/fish_expand_test/.*", 0,
                 L"/tmp/fish_expand_test/.foo", wnull,
                 L"Expansion not correctly handling dotfiles");
-    
+
     expand_test(L"/tmp/fish_expand_test/./.*", 0,
                 L"/tmp/fish_expand_test/./.foo", wnull,
                 L"Expansion not correctly handling literal path components in dotfiles");
-    
+
     expand_test(L"/tmp/fish_expand_test/*/xxx", 0,
                 L"/tmp/fish_expand_test/bax/xxx", L"/tmp/fish_expand_test/baz/xxx", wnull,
                 L"Glob did the wrong thing 1");
-    
+
     expand_test(L"/tmp/fish_expand_test/*z/xxx", 0,
                 L"/tmp/fish_expand_test/baz/xxx", wnull,
                 L"Glob did the wrong thing 2");
-    
+
     expand_test(L"/tmp/fish_expand_test/**z/xxx", 0,
                 L"/tmp/fish_expand_test/baz/xxx", wnull,
                 L"Glob did the wrong thing 3");
-    
+
     expand_test(L"/tmp/fish_expand_test/b**", 0,
                 L"/tmp/fish_expand_test/b", L"/tmp/fish_expand_test/b/x", L"/tmp/fish_expand_test/bar", L"/tmp/fish_expand_test/bax", L"/tmp/fish_expand_test/bax/xxx", L"/tmp/fish_expand_test/baz", L"/tmp/fish_expand_test/baz/xxx", L"/tmp/fish_expand_test/baz/yyy", wnull,
                 L"Glob did the wrong thing 4");
@@ -1547,17 +1547,17 @@ static void test_expand()
     expand_test(L"/tmp/fish_expand_test/b/x", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
                 L"", wnull, // We just expect the empty string since this is an exact match
                 L"Wrong fuzzy matching 2");
-    
+
     // some vswprintfs refuse to append ANY_STRING in a format specifiers, so don't use format_string here
     const wcstring any_str_str(1, ANY_STRING);
     expand_test(L"/tmp/fish_expand_test/b/xx*", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
                 (L"/tmp/fish_expand_test/bax/xx" + any_str_str).c_str(), (L"/tmp/fish_expand_test/baz/xx" + any_str_str).c_str(), wnull,
                 L"Wrong fuzzy matching 3");
-    
+
     expand_test(L"/tmp/fish_expand_test/b/yyy", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
                 L"/tmp/fish_expand_test/baz/yyy", wnull,
                 L"Wrong fuzzy matching 4");
-    
+
     if (! expand_test(L"/tmp/fish_expand_test/.*", 0, L"/tmp/fish_expand_test/.foo", 0))
     {
         err(L"Expansion not correctly handling dotfiles");
@@ -1566,7 +1566,7 @@ static void test_expand()
     {
         err(L"Expansion not correctly handling literal path components in dotfiles");
     }
-    
+
     char saved_wd[PATH_MAX] = {};
     if (NULL == getcwd(saved_wd, sizeof saved_wd))
     {
@@ -1579,17 +1579,17 @@ static void test_expand()
         err(L"chdir failed");
         return;
     }
-    
+
     expand_test(L"b/xx", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
                 L"bax/xxx", L"baz/xxx", wnull,
                 L"Wrong fuzzy matching 5");
-    
+
     if (chdir(saved_wd))
     {
         err(L"chdir failed");
     }
 
-    
+
     if (system("rm -Rf /tmp/fish_expand_test")) err(L"rm failed");
 }
 
@@ -1646,7 +1646,7 @@ static void test_abbreviations(void)
     expanded = reader_expand_abbreviation_in_command(L"gc somebranch", wcslen(L"gc"), &result);
     if (! expanded) err(L"gc not expanded");
     if (result != L"git checkout somebranch") err(L"gc incorrectly expanded on line %ld to '%ls'", (long)__LINE__, result.c_str());
-    
+
     /* space separation */
     expanded = reader_expand_abbreviation_in_command(L"gx somebranch", wcslen(L"gc"), &result);
     if (! expanded) err(L"gx not expanded");
@@ -2166,7 +2166,7 @@ static void test_complete(void)
     completions.clear();
     complete(L"echo \\$Foo", completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.empty());
-    
+
     /* File completions */
     char saved_wd[PATH_MAX + 1] = {};
     if (!getcwd(saved_wd, sizeof saved_wd))
@@ -2213,7 +2213,7 @@ static void test_complete(void)
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
     completions.clear();
-    
+
     // Zero escapes can cause problems. See #1631
     complete(L"cat foo\\0", completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.empty());
@@ -2230,9 +2230,9 @@ static void test_complete(void)
 
     if (chdir(saved_wd)) err(L"chdir failed");
     if (system("rm -Rf '/tmp/complete_test/'")) err(L"rm failed");
-    
+
     complete_set_variable_names(NULL);
-    
+
     /* Test wraps */
     do_test(comma_join(complete_get_wrap_chain(L"wrapper1")) == L"wrapper1");
     complete_add_wrapper(L"wrapper1", L"wrapper2");
@@ -2370,7 +2370,7 @@ static void test_autosuggest_suggest_special()
     perform_one_autosuggestion_special_test(L"cd '5", wd, L"cd '5foo\"bar/'", __LINE__);
 
     perform_one_autosuggestion_special_test(L"cd ~/test_autosuggest_suggest_specia", wd, L"cd ~/test_autosuggest_suggest_special/", __LINE__);
-    
+
     // A single quote should defeat tilde expansion
     perform_one_autosuggestion_special_test(L"cd '~/test_autosuggest_suggest_specia'", wd, L"", __LINE__);
 
@@ -2561,7 +2561,7 @@ static int test_universal_helper(int *x)
         }
         fputc('.', stderr);
     }
-    
+
     /* Last step is to delete the first key */
     uvars.remove(format_string(L"key_%d_%d", *x, 0));
     bool synced = uvars.sync(NULL);
@@ -2570,7 +2570,7 @@ static int test_universal_helper(int *x)
         err(L"Failed to sync universal variables");
     }
     fputc('.', stderr);
-    
+
     return 0;
 }
 
@@ -2578,14 +2578,14 @@ static void test_universal()
 {
     say(L"Testing universal variables");
     if (system("mkdir -p /tmp/fish_uvars_test/")) err(L"mkdir failed");
-    
+
     const int threads = 16;
     for (int i=0; i < threads; i++)
     {
         iothread_perform(test_universal_helper, new int(i));
     }
     iothread_drain_all();
-    
+
     env_universal_t uvars(UVARS_TEST_PATH);
     bool loaded = uvars.load();
     if (! loaded)
@@ -2618,7 +2618,7 @@ static void test_universal()
             }
         }
     }
-    
+
     if (system("rm -Rf /tmp/fish_uvars_test")) err(L"rm failed");
     putc('\n', stderr);
 }
@@ -2633,7 +2633,7 @@ static void test_universal_callbacks()
     if (system("mkdir -p /tmp/fish_uvars_test/")) err(L"mkdir failed");
     env_universal_t uvars1(UVARS_TEST_PATH);
     env_universal_t uvars2(UVARS_TEST_PATH);
-    
+
     /* Put some variables into both */
     uvars1.set(L"alpha", L"1", false);
     uvars1.set(L"beta", L"1", false);
@@ -2642,17 +2642,17 @@ static void test_universal_callbacks()
     uvars1.set(L"lambda", L"1", false);
     uvars1.set(L"kappa", L"1", false);
     uvars1.set(L"omicron", L"1", false);
-    
+
     uvars1.sync(NULL);
     uvars2.sync(NULL);
-    
+
     /* Change uvars1 */
     uvars1.set(L"alpha", L"2", false); //changes value
     uvars1.set(L"beta", L"1", true); //changes export
     uvars1.remove(L"delta"); //erases value
     uvars1.set(L"epsilon", L"1", false); //changes nothing
     uvars1.sync(NULL);
-    
+
     /* Change uvars2. It should treat its value as correct and ignore changes from uvars1. */
     uvars2.set(L"lambda", L"1", false); //same value
     uvars2.set(L"kappa", L"2", false); //different value
@@ -2660,10 +2660,10 @@ static void test_universal_callbacks()
     /* Now see what uvars2 sees */
     callback_data_list_t callbacks;
     uvars2.sync(&callbacks);
-    
+
     /* Sort them to get them in a predictable order */
     std::sort(callbacks.begin(), callbacks.end(), callback_data_less_than);
-    
+
     /* Should see exactly two changes */
     do_test(callbacks.size() == 3);
     do_test(callbacks.at(0).type == SET);
@@ -2676,7 +2676,7 @@ static void test_universal_callbacks()
     do_test(callbacks.at(2).key == L"delta");
     do_test(callbacks.at(2).val == L"");
 
-    
+
     if (system("rm -Rf /tmp/fish_uvars_test")) err(L"rm failed");
 }
 
@@ -2687,7 +2687,7 @@ bool poll_notifier(universal_notifier_t *note)
     {
         result = note->poll();
     }
-    
+
     int fd = note->notification_fd();
     if (! result && fd >= 0)
     {
@@ -2710,17 +2710,17 @@ static void trigger_or_wait_for_notification(universal_notifier_t *notifier, uni
         case universal_notifier_t::strategy_default:
             assert(0 && "strategy_default should be passed");
             break;
-            
+
         case universal_notifier_t::strategy_shmem_polling:
             // nothing required
             break;
-            
+
         case universal_notifier_t::strategy_notifyd:
             // notifyd requires a round trip to the notifyd server, which means we have to wait a little bit to receive it
             // In practice, this seems to be enough
             usleep(1000000 / 25);
             break;
-            
+
         case universal_notifier_t::strategy_named_pipe:
         case universal_notifier_t::strategy_null:
             break;
@@ -2733,13 +2733,13 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
     say(L"Testing universal notifiers with strategy %d", (int)strategy);
     universal_notifier_t *notifiers[16];
     size_t notifier_count = sizeof notifiers / sizeof *notifiers;
-    
+
     // Populate array of notifiers
     for (size_t i=0; i < notifier_count; i++)
     {
         notifiers[i] = universal_notifier_t::new_notifier_for_strategy(strategy, UVARS_TEST_PATH);
     }
-    
+
     // Nobody should poll yet
     for (size_t i=0; i < notifier_count; i++)
     {
@@ -2753,10 +2753,10 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
     for (size_t post_idx=0; post_idx < notifier_count; post_idx++)
     {
         notifiers[post_idx]->post_notification();
-        
+
         // Do special stuff to "trigger" a notification for testing
         trigger_or_wait_for_notification(notifiers[post_idx], strategy);
-        
+
         for (size_t i=0; i < notifier_count; i++)
         {
             // We aren't concerned with the one who posted
@@ -2766,13 +2766,13 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
                 poll_notifier(notifiers[i]);
                 continue;
             }
-            
+
             if (! poll_notifier(notifiers[i]))
             {
                 err(L"Universal variable notifier (%lu) %p polled failed to notice changes, with strategy %d", i, notifiers[i], (int)strategy);
             }
         }
-        
+
         // Named pipes have special cleanup requirements
         if (strategy == universal_notifier_t::strategy_named_pipe)
         {
@@ -2785,7 +2785,7 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
             }
         }
     }
-    
+
     // Nobody should poll now
     for (size_t i=0; i < notifier_count; i++)
     {
@@ -2794,7 +2794,7 @@ static void test_notifiers_with_strategy(universal_notifier_t::notifier_strategy
             err(L"Universal variable notifier polled true after all changes, with strategy %d", (int)strategy);
         }
     }
-    
+
     // Clean up
     for (size_t i=0; i < notifier_count; i++)
     {
@@ -2810,7 +2810,7 @@ static void test_universal_notifiers()
 #if __APPLE__
     test_notifiers_with_strategy(universal_notifier_t::strategy_notifyd);
 #endif
-    
+
     if (system("rm -Rf /tmp/fish_uvars_test/")) err(L"rm failed");
 }
 
@@ -3132,8 +3132,13 @@ void history_tests_t::test_history_merge(void)
 
 static bool install_sample_history(const wchar_t *name)
 {
+    wcstring path;
+    if (! path_get_data(path)) {
+        err(L"Failed to get data directory");
+        return false;
+    }
     char command[512];
-    snprintf(command, sizeof command, "cp tests/%ls ~/.config/fish/%ls_history", name, name);
+    snprintf(command, sizeof command, "cp tests/%ls %ls/%ls_history", name, path.c_str(), name);
     if (system(command))
     {
         err(L"Failed to copy sample history");
@@ -3184,7 +3189,7 @@ static bool history_equals(history_t &hist, const wchar_t * const *strings)
 void history_tests_t::test_history_formats(void)
 {
     const wchar_t *name;
-    
+
     // Test inferring and reading legacy and bash history formats
     name = L"history_sample_fish_1_x";
     say(L"Testing %ls", name);
@@ -3277,7 +3282,7 @@ void history_tests_t::test_history_formats(void)
         test_history.clear();
         fclose(f);
     }
-    
+
     name = L"history_sample_corrupt1";
     say(L"Testing %ls", name);
     if (! install_sample_history(name))
@@ -3291,11 +3296,11 @@ void history_tests_t::test_history_formats(void)
         const wchar_t *expected[] =
         {
             L"no_newline_at_end_of_file",
-            
+
             L"corrupt_prefix",
-            
+
             L"this_command_is_ok",
-            
+
             NULL
         };
         if (! history_equals(test_history, expected))
@@ -3658,13 +3663,13 @@ static wcstring_list_t separate_by_format_specifiers(const wchar_t *format)
             next_specifier = end;
         }
         assert(next_specifier != NULL);
-        
+
         /* Don't return empty strings */
         if (next_specifier > cursor)
         {
             result.push_back(wcstring(cursor, next_specifier - cursor));
         }
-        
+
         /* Walk over the format specifier (if any) */
         cursor = next_specifier;
         if (*cursor == '%')
@@ -3752,7 +3757,7 @@ static void test_error_messages()
         {L"echo foo || echo bar", ERROR_BAD_OR},
         {L"echo foo && echo bar", ERROR_BAD_AND}
     };
-    
+
     parse_error_list_t errors;
     for (size_t i=0; i < sizeof error_tests / sizeof *error_tests; i++)
     {
@@ -4346,7 +4351,7 @@ int main(int argc, char **argv)
             perror("chdir");
         }
     }
-    
+
     setlocale(LC_ALL, "");
     //srand(time(0));
     configure_thread_assertions_for_testing();

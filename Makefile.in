@@ -768,7 +768,7 @@ uninstall-translations:
 ifdef XDG_DATA_HOME
 fish-data-home := $(XDG_DATA_HOME)/fish
 else
-sfish-data-home := $(HOME)/.local/share/fish
+fish-data-home := $(HOME)/.local/share/fish
 endif
 
 $(fish-data-home):

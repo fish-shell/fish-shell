@@ -87,7 +87,7 @@ FISH_OBJS := obj/function.o obj/builtin.o obj/complete.o obj/env.o obj/exec.o \
 	obj/parse_execution.o obj/pager.o obj/utf8.o obj/fish_version.o \
 	obj/wcstringutil.o
 
-FISH_INDENT_OBJS := obj/fish_indent.o obj/print_help.o $(FISH_OBJS) 
+FISH_INDENT_OBJS := obj/fish_indent.o obj/print_help.o $(FISH_OBJS)
 
 #
 # Additional files used by builtin.o
@@ -602,7 +602,7 @@ xcode-install:
 # These 'true' lines are to prevent installs from failing for (e.g.) missing man pages.
 #
 
-install-force: all install-translations
+install-force: all install-translations migrate-history
 	$(INSTALL) -m 755 -d $(DESTDIR)$(bindir)
 	for i in $(PROGRAMS); do\
 		$(INSTALL) -m 755 $$i $(DESTDIR)$(bindir) ; \
@@ -759,6 +759,31 @@ uninstall-translations:
 
 
 #
+#  Migrate fish_history file.
+#  If $(XDG_DATA_HOME)/fish_history doesn't already exist,
+#  try to move it from the old location, .config/fish/
+#
+
+#  fish-data-home = $(XDG_DATA_HOME)/fish || $(HOME)/.local/share/fish
+ifeq ($(XDG_DATA_HOME),)
+fish-data-home := $(HOME)/.local/share/fish
+else
+fish-data-home := $(XDG_DATA_HOME)/fish
+endif
+
+$(fish-data-home):
+	mkdir -p $(fish-data-home)
+
+$(fish-data-home)/fish_history: $(fish-data-home)
+	-mv $(HOME)/.config/fish/fish_history $(fish-data-home)/fish_history
+	touch $(fish-data-home)/fish_history
+
+migrate-history: $(fish-data-home)/fish_history
+.PHONY: migrate-history
+
+
+
+#
 # The build rules for all the commands
 #
 
@@ -767,7 +792,7 @@ uninstall-translations:
 #
 obj/%.o: src/%.cpp | obj
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-	
+
 #
 # obj directory
 #

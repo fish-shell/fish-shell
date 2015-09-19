@@ -1664,6 +1664,53 @@ bool history_t::is_empty(void)
     return empty;
 }
 
+
+/* Populates from older location (in config path, rather than data path)
+   This is accomplished by clearing ourselves, and copying the contents of
+   the old history file to the new history file.  The new contents will
+   automatically be re-mapped later.
+*/
+void history_t::populate_from_config_path()
+{
+    wcstring old_file;
+    if (path_get_config(old_file)) {
+        old_file.append(L"/");
+        old_file.append(name);
+        old_file.append(L"_history");
+        int src_fd = wopen_cloexec(old_file, O_RDONLY, 0);
+        if (src_fd != -1)
+        {
+            wcstring new_file;
+            history_filename(new_file, L"");
+
+            /* clear must come after we've retrieved the new_file name,
+               and before we open destination file descriptor,
+               since it destroys the name and the file */
+            this->clear();
+
+            int dst_fd = wopen_cloexec(new_file, O_WRONLY | O_CREAT, 0644);
+
+            char buf[BUFSIZ];
+            size_t size;
+            while ((size = read(src_fd, buf, BUFSIZ)) > 0) {
+                ssize_t written = write(dst_fd, buf, size);
+                if (written == -1) {
+                    /*
+                      This message does not have high enough priority to
+                      be shown by default.
+                    */
+                    debug(2, L"Error when writing history file");
+                    break;
+                }
+            }
+
+            close(src_fd);
+            close(dst_fd);
+        }
+    }
+}
+
+
 /* Indicate whether we ought to import the bash history file into fish */
 static bool should_import_bash_history_line(const std::string &line)
 {

@@ -1226,7 +1226,7 @@ static bool insert_string(editable_line_t *el, const wcstring &str, bool allow_e
     size_t len = str.size();
     if (len == 0)
         return false;
-    
+
     /* Start inserting. If we are expanding abbreviations, we have to do this after every space (see #1434), so look for spaces. We try to do this efficiently (rather than the simpler character at a time) to avoid expensive work in command_line_changed() */
     size_t cursor = 0;
     while (cursor < len)
@@ -1236,14 +1236,14 @@ static bool insert_string(editable_line_t *el, const wcstring &str, bool allow_e
         size_t char_triggering_expansion_pos = allow_expand_abbreviations ? str.find_first_of(expansion_triggering_chars, cursor) : wcstring::npos;
         bool has_expansion_triggering_char = (char_triggering_expansion_pos != wcstring::npos);
         size_t range_end = (has_expansion_triggering_char ? char_triggering_expansion_pos + 1 : len);
-        
+
         /* Insert from the cursor up to but not including the range end */
         assert(range_end > cursor);
         el->insert_string(str, cursor, range_end - cursor);
-        
+
         update_buff_pos(el, el->position);
         data->command_line_changed(el);
-        
+
         /* If we got an expansion trigger, then the last character we inserted was it (i.e. was a space). Expand abbreviations. */
         if (has_expansion_triggering_char && allow_expand_abbreviations)
         {
@@ -1253,16 +1253,16 @@ static bool insert_string(editable_line_t *el, const wcstring &str, bool allow_e
         }
         cursor = range_end;
     }
-    
+
     if (el == &data->command_line)
     {
         data->suppress_autosuggestion = false;
-        
+
         /* Syntax highlight. Note we must have that buff_pos > 0 because we just added something nonzero to its length  */
         assert(el->position > 0);
         reader_super_highlight_me_plenty(-1);
     }
-    
+
     reader_repaint();
 
     return true;
@@ -1562,7 +1562,7 @@ static void accept_autosuggestion(bool full)
     {
         /* Accepting an autosuggestion clears the pager */
         clear_pager();
-        
+
         /* Accept the autosuggestion */
         if (full)
         {
@@ -1877,7 +1877,7 @@ static bool handle_completions(const std::vector<completion_t> &comp, bool conti
                     break;
             }
         }
-        
+
         /* Determine if we use the prefix. We use it if it's non-empty and it will actually make the command line longer. It may make the command line longer by virtue of not using REPLACE_TOKEN (so it always appends to the command line), or by virtue of replacing the token but being longer than it. */
         bool use_prefix = common_prefix.size() > (will_replace_token ? tok.size() : 0);
         assert(! use_prefix || ! common_prefix.empty());
@@ -2660,7 +2660,13 @@ void reader_set_exit_on_interrupt(bool i)
 
 void reader_import_history_if_necessary(void)
 {
-    /* Import history from bash, etc. if our current history is empty */
+    /* Import history from older location (config path) if our current history is empty */
+    if (data->history && data->history->is_empty())
+    {
+        data->history->populate_from_config_path();
+    }
+
+    /* Import history from bash, etc. if our current history is still empty */
     if (data->history && data->history->is_empty())
     {
         /* Try opening a bash file. We make an effort to respect $HISTFILE; this isn't very complete (AFAIK it doesn't have to be exported), and to really get this right we ought to ask bash itself. But this is better than nothing.
@@ -3157,7 +3163,7 @@ const wchar_t *reader_readline(int nchars)
 
                     editable_line_t *el = data->active_edit_line();
                     insert_string(el, arr, true);
-                    
+
                     /* End paging upon inserting into the normal command line */
                     if (el == &data->command_line)
                     {
@@ -3440,7 +3446,7 @@ const wchar_t *reader_readline(int nchars)
                 {
                     begin--;
                 }
-                
+
                 /* Push end forwards to just past the next newline, or just past the last char. */
                 size_t end = el->position;
                 while (buff[end] != L'\0')

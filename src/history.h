@@ -64,7 +64,7 @@ private:
 
     /** Paths that we require to be valid for this item to be autosuggested */
     path_list_t required_paths;
-    
+
 public:
     const wcstring &str() const
     {
@@ -141,7 +141,7 @@ private:
 
     /** Whether we have a pending item. If so, the most recently added item is ignored by item_at_index. */
     bool has_pending_item;
-    
+
     /** Whether we should disable saving to the file for a time */
     uint32_t disable_automatic_save_counter;
 
@@ -222,7 +222,7 @@ public:
 
     /** Add a new pending history item to the end, and then begin file detection on the items to determine which arguments are paths */
     void add_pending_with_file_detection(const wcstring &str);
-    
+
     /** Resolves any pending history items, so that they may be returned in history searches. */
     void resolve_pending();
 
@@ -235,6 +235,9 @@ public:
 
     /** Irreversibly clears history */
     void clear();
+
+    /** Populates from older location ()in config path, rather than data path) */
+    void populate_from_config_path();
 
     /** Populates from a bash history file */
     void populate_from_bash(FILE *f);

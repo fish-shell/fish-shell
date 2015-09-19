@@ -1680,8 +1680,7 @@ void history_t::populate_from_config_path()
         int src_fd = wopen_cloexec(old_file, O_RDONLY, 0);
         if (src_fd != -1)
         {
-            wcstring new_file;
-            history_filename(new_file, L"");
+            wcstring new_file = history_filename(name, wcstring());
 
             /* clear must come after we've retrieved the new_file name,
                and before we open destination file descriptor,

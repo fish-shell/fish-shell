@@ -30,6 +30,7 @@ Not all terminal emulators support all these features.
 
 `set_color` uses the terminfo database to look up how to change terminal colors on whatever terminal is in use. Some systems have old and incomplete terminfo databases, and may lack color information for terminals that support it.
 
+Note that setting either color to "normal" will reset both back- and foreground colors.
 
 \subsection set_color-example Examples
 
@@ -37,5 +38,5 @@ Not all terminal emulators support all these features.
 set_color red; echo "Roses are red"
 set_color blue; echo "Violets are blue"
 set_color 62A; echo "Eggplants are dark purple"
-set_color normal; echo "Normal is nice too"
+set_color normal; echo "Normal is nice" # This will reset background, too
 \endfish

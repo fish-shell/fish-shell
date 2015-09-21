@@ -2100,8 +2100,9 @@ static void append_switch(wcstring &out,
     append_format(out, L" --%ls %ls", opt.c_str(), esc.c_str());
 }
 
-void complete_print(wcstring &out)
+wcstring complete_print()
 {
+    wcstring out;
     scoped_lock locker(completion_lock);
     scoped_lock locker2(completion_entry_lock);
 
@@ -2171,6 +2172,7 @@ void complete_print(wcstring &out)
         const wcstring &target = wrap_pairs.at(i++);
         append_format(out, L"complete --command %ls --wraps %ls\n", cmd.c_str(), target.c_str());
     }
+    return out;
 }
 
 

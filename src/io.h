@@ -216,6 +216,93 @@ shared_ptr<io_data_t> io_chain_get(io_chain_t &src, int fd);
 /* Given a pair of fds, if an fd is used by the given io chain, duplicate that fd repeatedly until we find one that does not conflict, or we run out of fds. Returns the new fds by reference, closing the old ones. If we get an error, returns false (in which case both fds are closed and set to -1). */
 bool pipe_avoid_conflicts_with_io_chain(int fds[2], const io_chain_t &ios);
 
+/** Class representing the output that a builtin can generate */
+class output_stream_t
+{
+private:
+    // no copying
+    output_stream_t(const output_stream_t &s);
+    void operator=(const output_stream_t &s);
+    
+    wcstring buffer_;
+    
+public:
+    output_stream_t()
+    {
+    }
+    
+    void append(const wcstring &s)
+    {
+        this->buffer_.append(s);
+    }
+    
+    void append(const wchar_t *s)
+    {
+        this->buffer_.append(s);
+    }
+    
+    void append(wchar_t s)
+    {
+        this->buffer_.push_back(s);
+    }
+    
+    void append(const wchar_t *s, size_t amt)
+    {
+        this->buffer_.append(s, amt);
+    }
+    
+    void push_back(wchar_t c)
+    {
+        this->buffer_.push_back(c);
+    }
+    
+    void append_format(const wchar_t *format, ...)
+    {
+        va_list va;
+        va_start(va, format);
+        ::append_formatv(this->buffer_, format, va);
+        va_end(va);
+    }
+    
+    void append_formatv(const wchar_t *format, va_list va_orig)
+    {
+        ::append_formatv(this->buffer_, format, va_orig);
+    }
+    
+    const wcstring &buffer() const
+    {
+        return this->buffer_;
+    }
+    
+    bool empty() const
+    {
+        return buffer_.empty();
+    }
+};
+
+struct io_streams_t
+{
+    output_stream_t out;
+    output_stream_t err;
+    
+    // fd representing stdin. This is not closed by the destructor.
+    int stdin_fd;
+    
+    // Whether this is the first process in a pipeline
+    bool is_first_process_in_pipeline;
+    
+    // Indicates whether stdout and stderr are redirected (e.g. to a file or piped)
+    bool out_is_redirected;
+    bool err_is_redirected;
+    
+    // Actual IO redirections. This is only used by the source builtin. Unowned.
+    const io_chain_t *io_chain;
+    
+    io_streams_t() : stdin_fd(-1), is_first_process_in_pipeline(false), out_is_redirected(false), err_is_redirected(false), io_chain(NULL)
+    {
+    }
+};
+
 /** Print debug information about the specified IO redirection chain to stderr. */
 void io_print(const io_chain_t &chain);
 

@@ -339,7 +339,7 @@ static void input_mapping_insert_sorted(const input_mapping_t &new_mapping)
 }
 
 /* Adds an input mapping */
-void input_mapping_add(const wchar_t *sequence, const wchar_t **commands, size_t commands_len,
+void input_mapping_add(const wchar_t *sequence, const wchar_t * const *commands, size_t commands_len,
                        const wchar_t *mode, const wchar_t *sets_mode)
 {
     CHECK(sequence,);

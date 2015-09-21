@@ -213,11 +213,9 @@ void complete(const wcstring &cmd,
               completion_request_flags_t flags);
 
 /**
-   Print a list of all current completions into the string.
-
-   \param out The string to write completions to
+   Return a list of all current completions.
 */
-void complete_print(wcstring &out);
+wcstring complete_print();
 
 /**
    Tests if the specified option is defined for the specified command

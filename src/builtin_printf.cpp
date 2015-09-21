@@ -57,13 +57,16 @@
 
 struct builtin_printf_state_t
 {
+    /* Out and err streams. Note this is a captured reference! */
+    io_streams_t &streams;
+    
     /* The status of the operation */
     int exit_code;
 
     /* Whether we should stop outputting. This gets set in the case of an error, and also with the \c escape. */
     bool early_exit;
 
-    builtin_printf_state_t() : exit_code(0), early_exit(false)
+    builtin_printf_state_t(io_streams_t &s) : streams(s), exit_code(0), early_exit(false)
     {
     }
 
@@ -205,9 +208,9 @@ void builtin_printf_state_t::fatal_error(const wchar_t *fmt, ...)
     va_start(va, fmt);
     wcstring errstr = vformat_string(fmt, va);
     va_end(va);
-    stderr_buffer.append(errstr);
+    streams.err.append(errstr);
     if (! string_suffixes_string(L"\n", errstr))
-        stderr_buffer.push_back(L'\n');
+        streams.err.push_back(L'\n');
 
     this->exit_code = STATUS_BUILTIN_ERROR;
     this->early_exit = true;
@@ -219,7 +222,7 @@ void builtin_printf_state_t::append_output(wchar_t c)
     if (early_exit)
         return;
 
-    stdout_buffer.push_back(c);
+    streams.out.push_back(c);
 }
 
 void builtin_printf_state_t::append_output(const wchar_t *c)
@@ -228,7 +231,7 @@ void builtin_printf_state_t::append_output(const wchar_t *c)
     if (early_exit)
         return;
 
-    stdout_buffer.append(c);
+    streams.out.append(c);
 }
 
 void builtin_printf_state_t::append_format_output(const wchar_t *fmt, ...)
@@ -239,8 +242,9 @@ void builtin_printf_state_t::append_format_output(const wchar_t *fmt, ...)
 
     va_list va;
     va_start(va, fmt);
-    append_formatv(stdout_buffer, fmt, va);
+    wcstring tmp = vformat_string(fmt, va);
     va_end(va);
+    streams.out.append(tmp);
 }
 
 
@@ -758,9 +762,9 @@ no_more_flag_characters:
     return save_argc - argc;
 }
 
-static int builtin_printf(parser_t &parser, wchar_t **argv)
+static int builtin_printf(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 {
-    builtin_printf_state_t state;
+    builtin_printf_state_t state(streams);
 
     wchar_t *format;
     int args_used;

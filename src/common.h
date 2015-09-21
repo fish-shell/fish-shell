@@ -861,10 +861,10 @@ int common_get_height();
 void common_handle_winch(int signal);
 
 /**
-   Write paragraph of output to the specified stringbuffer, and redo
-   the linebreaks to fit the current screen.
+   Write the given paragraph of output, redoing linebreaks to fit
+   the current screen.
 */
-void write_screen(const wcstring &msg, wcstring &buff);
+wcstring reformat_for_screen(const wcstring &msg);
 
 /**
    Tokenize the specified string into the specified wcstring_list_t.

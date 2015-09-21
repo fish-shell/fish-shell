@@ -23,7 +23,7 @@ enum
 };
 
 
-int builtin_test(parser_t &parser, wchar_t **argv);
+int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv);
 
 namespace test_expressions
 {
@@ -887,7 +887,7 @@ static bool unary_primary_evaluate(test_expressions::token_t token, const wcstri
  * Return status is the final shell status, i.e. 0 for true,
  * 1 for false and 2 for error.
  */
-int builtin_test(parser_t &parser, wchar_t **argv)
+int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 {
     using namespace test_expressions;
 
@@ -912,7 +912,7 @@ int builtin_test(parser_t &parser, wchar_t **argv)
         }
         else
         {
-            builtin_show_error(L"[: the last argument must be ']'\n");
+            streams.err.append(L"[: the last argument must be ']'\n");
             return BUILTIN_TEST_FAIL;
         }
 
@@ -948,7 +948,7 @@ int builtin_test(parser_t &parser, wchar_t **argv)
                 }
                 printf("and returned parse error: %ls\n", err.c_str());
 #endif
-                builtin_show_error(err);
+                streams.err.append(err);
                 return BUILTIN_TEST_FAIL;
             }
             else

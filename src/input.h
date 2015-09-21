@@ -137,7 +137,7 @@ void input_mapping_add(const wchar_t *sequence, const wchar_t *command,
                        const wchar_t *mode = DEFAULT_BIND_MODE,
                        const wchar_t *new_mode = DEFAULT_BIND_MODE);
 
-void input_mapping_add(const wchar_t *sequence, const wchar_t **commands, size_t commands_len,
+void input_mapping_add(const wchar_t *sequence, const wchar_t * const *commands, size_t commands_len,
                        const wchar_t *mode = DEFAULT_BIND_MODE, const wchar_t *new_mode = DEFAULT_BIND_MODE);
 
 struct input_mapping_name_t {

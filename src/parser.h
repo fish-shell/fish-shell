@@ -280,6 +280,9 @@ private:
     */
     const wchar_t *is_function() const;
 
+    /* Helper for stack_trace() */
+    void stack_trace_internal(size_t block_idx, wcstring *out) const;
+
 public:
 
     /** Get the "principal" parser, whatever that is */
@@ -425,9 +428,9 @@ public:
     const wchar_t *current_filename() const;
 
     /**
-       Write a stack trace starting at the specified block to the specified wcstring
+       Return a string representing the current stack trace
     */
-    void stack_trace(size_t block_idx, wcstring &buff) const;
+    wcstring stack_trace() const;
 };
 
 #endif

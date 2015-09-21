@@ -516,7 +516,14 @@ void parser_t::expand_argument_list(const wcstring &arg_list_src, std::vector<co
     }
 }
 
-void parser_t::stack_trace(size_t block_idx, wcstring &buff) const
+wcstring parser_t::stack_trace() const
+{
+    wcstring trace;
+    this->stack_trace_internal(0, &trace);
+    return trace;
+}
+
+void parser_t::stack_trace_internal(size_t block_idx, wcstring *buff) const
 {
     /*
       Check if we should end the recursion
@@ -533,8 +540,8 @@ void parser_t::stack_trace(size_t block_idx, wcstring &buff) const
         */
         const event_block_t *eb = static_cast<const event_block_t *>(b);
         wcstring description = event_get_desc(eb->event);
-        append_format(buff, _(L"in event handler: %ls\n"), description.c_str());
-        buff.append(L"\n");
+        append_format(*buff, _(L"in event handler: %ls\n"), description.c_str());
+        buff->append(L"\n");
 
         /*
           Stop recursing at event handler. No reason to believe that
@@ -561,19 +568,19 @@ void parser_t::stack_trace(size_t block_idx, wcstring &buff) const
             {
                 const source_block_t *sb = static_cast<const source_block_t*>(b);
                 const wchar_t *source_dest = sb->source_file;
-                append_format(buff, _(L"from sourcing file %ls\n"), user_presentable_path(source_dest).c_str());
+                append_format(*buff, _(L"from sourcing file %ls\n"), user_presentable_path(source_dest).c_str());
                 break;
             }
             case FUNCTION_CALL:
             case FUNCTION_CALL_NO_SHADOW:
             {
                 const function_block_t *fb = static_cast<const function_block_t*>(b);
-                append_format(buff, _(L"in function '%ls'\n"), fb->name.c_str());
+                append_format(*buff, _(L"in function '%ls'\n"), fb->name.c_str());
                 break;
             }
             case SUBST:
             {
-                append_format(buff, _(L"in command substitution\n"));
+                append_format(*buff, _(L"in command substitution\n"));
                 break;
             }
 
@@ -585,18 +592,18 @@ void parser_t::stack_trace(size_t block_idx, wcstring &buff) const
 
         if (file)
         {
-            append_format(buff,
+            append_format(*buff,
                           _(L"\tcalled on line %d of file %ls\n"),
                           b->src_lineno,
                           user_presentable_path(file).c_str());
         }
         else if (is_within_fish_initialization)
         {
-            append_format(buff, _(L"\tcalled during startup\n"));
+            append_format(*buff, _(L"\tcalled during startup\n"));
         }
         else
         {
-            append_format(buff, _(L"\tcalled on standard input\n"));
+            append_format(*buff, _(L"\tcalled on standard input\n"));
         }
 
         if (b->type() == FUNCTION_CALL)
@@ -613,17 +620,17 @@ void parser_t::stack_trace(size_t block_idx, wcstring &buff) const
                         tmp.push_back(L' ');
                     tmp.append(process->argv(i));
                 }
-                append_format(buff, _(L"\twith parameter list '%ls'\n"), tmp.c_str());
+                append_format(*buff, _(L"\twith parameter list '%ls'\n"), tmp.c_str());
             }
         }
 
-        append_format(buff, L"\n");
+        append_format(*buff, L"\n");
     }
 
     /*
       Recursively print the next block
     */
-    parser_t::stack_trace(block_idx + 1, buff);
+    parser_t::stack_trace_internal(block_idx + 1, buff);
 }
 
 /**
@@ -753,7 +760,7 @@ wcstring parser_t::current_line()
         line_info.push_back(L'\n');
     }
 
-    parser_t::stack_trace(0, line_info);
+    line_info.append(this->stack_trace());
     return line_info;
 }
 
@@ -1036,7 +1043,7 @@ void parser_t::get_backtrace(const wcstring &src, const parse_error_list_t &erro
             output->append(description);
             output->push_back(L'\n');
         }
-        this->stack_trace(0, *output);
+        output->append(this->stack_trace());
     }
 }
 

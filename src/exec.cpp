@@ -763,6 +763,10 @@ void exec_job(parser_t &parser, job_t *j)
 
         // This is the IO buffer we use for storing the output of a block or function when it is in a pipeline
         shared_ptr<io_buffer_t> block_output_io_buffer;
+        
+        // This is the io_streams we pass to internal builtins
+        std::auto_ptr<io_streams_t> builtin_io_streams;
+        
         switch (p->type)
         {
             case INTERNAL_FUNCTION:
@@ -949,9 +953,14 @@ void exec_job(parser_t &parser, job_t *j)
                 }
                 else
                 {
-                    int old_out = builtin_out_redirect;
-                    int old_err = builtin_err_redirect;
+                    builtin_io_streams.reset(new io_streams_t());
+                    builtin_io_streams->stdin_fd = local_builtin_stdin;
+                    builtin_io_streams->out_is_redirected = has_fd(process_net_io_chain, STDOUT_FILENO);
+                    builtin_io_streams->err_is_redirected = has_fd(process_net_io_chain, STDERR_FILENO);
+                    builtin_io_streams->is_first_process_in_pipeline = (p == j->first_process);
+                    builtin_io_streams->io_chain = &process_net_io_chain;
 
+                    
                     /*
                        Since this may be the foreground job, and since
                        a builtin may execute another foreground job,
@@ -967,20 +976,12 @@ void exec_job(parser_t &parser, job_t *j)
                        to make exec handle things.
                     */
 
-                    builtin_push_io(parser, local_builtin_stdin);
-
-                    builtin_out_redirect = has_fd(process_net_io_chain, STDOUT_FILENO);
-                    builtin_err_redirect = has_fd(process_net_io_chain, STDERR_FILENO);
-
                     const int fg = job_get_flag(j, JOB_FOREGROUND);
                     job_set_flag(j, JOB_FOREGROUND, 0);
 
                     signal_unblock();
                     
-                    p->status = builtin_run(parser, p->get_argv(), process_net_io_chain);
-
-                    builtin_out_redirect=old_out;
-                    builtin_err_redirect=old_err;
+                    p->status = builtin_run(parser, p->get_argv(), *builtin_io_streams);
 
                     signal_block();
 
@@ -1116,6 +1117,10 @@ void exec_job(parser_t &parser, job_t *j)
 
                 const shared_ptr<io_data_t> stdout_io = process_net_io_chain.get_io_for_fd(STDOUT_FILENO);
                 const shared_ptr<io_data_t> stderr_io = process_net_io_chain.get_io_for_fd(STDERR_FILENO);
+                
+                assert(builtin_io_streams.get() != NULL);
+                const wcstring &stdout_buffer = builtin_io_streams->out.buffer();
+                const wcstring &stderr_buffer = builtin_io_streams->err.buffer();
 
                 /* If we are outputting to a file, we have to actually do it, even if we have no output, so that we can truncate the file. Does not apply to /dev/null. */
                 bool must_fork = redirection_is_to_real_file(stdout_io.get()) || redirection_is_to_real_file(stderr_io.get());
@@ -1124,8 +1129,8 @@ void exec_job(parser_t &parser, job_t *j)
                     if (p->next == NULL)
                     {
                         const bool stdout_is_to_buffer = stdout_io && stdout_io->io_mode == IO_BUFFER;
-                        const bool no_stdout_output =  get_stdout_buffer().empty();
-                        const bool no_stderr_output =  get_stderr_buffer().empty();
+                        const bool no_stdout_output =  stdout_buffer.empty();
+                        const bool no_stderr_output =  stderr_buffer.empty();
 
                         if (no_stdout_output && no_stderr_output)
                         {
@@ -1146,7 +1151,7 @@ void exec_job(parser_t &parser, job_t *j)
                             }
 
                             CAST_INIT(io_buffer_t *, io_buffer, stdout_io.get());
-                            const std::string res = wcs2string(get_stdout_buffer());
+                            const std::string res = wcs2string(builtin_io_streams->out.buffer());
                             io_buffer->out_buffer_append(res.data(), res.size());
                             fork_was_skipped = true;
                         }
@@ -1157,9 +1162,8 @@ void exec_job(parser_t &parser, job_t *j)
                             {
                                 printf("fork #-: Skipping fork due to ordinary output for internal builtin for '%ls'\n", p->argv0());
                             }
-                            const wcstring &out = get_stdout_buffer(), &err = get_stderr_buffer();
-                            const std::string outbuff = wcs2string(out);
-                            const std::string errbuff = wcs2string(err);
+                            const std::string outbuff = wcs2string(stdout_buffer);
+                            const std::string errbuff = wcs2string(stderr_buffer);
                             bool builtin_io_done = do_builtin_io(outbuff.data(), outbuff.size(), errbuff.data(), errbuff.size());
                             if (! builtin_io_done)
                             {
@@ -1188,15 +1192,12 @@ void exec_job(parser_t &parser, job_t *j)
 
                     /* Ok, unfortunately, we have to do a real fork. Bummer. We work hard to make sure we don't have to wait for all our threads to exit, by arranging things so that we don't have to allocate memory or do anything except system calls in the child. */
 
-                    /* Get the strings we'll write before we fork (since they call malloc) */
-                    const wcstring &out = get_stdout_buffer(), &err = get_stderr_buffer();
-
                     /* These strings may contain embedded nulls, so don't treat them as C strings */
-                    const std::string outbuff_str = wcs2string(out);
+                    const std::string outbuff_str = wcs2string(stdout_buffer);
                     const char *outbuff = outbuff_str.data();
                     size_t outbuff_len = outbuff_str.size();
 
-                    const std::string errbuff_str = wcs2string(err);
+                    const std::string errbuff_str = wcs2string(stderr_buffer);
                     const char *errbuff = errbuff_str.data();
                     size_t errbuff_len = errbuff_str.size();
 
@@ -1336,9 +1337,6 @@ void exec_job(parser_t &parser, job_t *j)
                 break;
             }
         }
-
-        if (p->type == INTERNAL_BUILTIN)
-            builtin_pop_io(parser);
 
         /*
            Close the pipe the current process uses to read from the

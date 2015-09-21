@@ -1923,7 +1923,7 @@ static void test_is_potential_path()
 }
 
 /** Test the 'test' builtin */
-int builtin_test(parser_t &parser, wchar_t **argv);
+int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv);
 static bool run_one_test_test(int expected, wcstring_list_t &lst, bool bracket)
 {
     parser_t parser(PARSER_TYPE_GENERAL, true);
@@ -1940,7 +1940,8 @@ static bool run_one_test_test(int expected, wcstring_list_t &lst, bool bracket)
         i++;
     }
     argv[i+1] = NULL;
-    int result = builtin_test(parser, argv);
+    io_streams_t streams;
+    int result = builtin_test(parser, streams, argv);
     delete[] argv;
     return expected == result;
 }
@@ -1965,15 +1966,16 @@ static void test_test_brackets()
 {
     // Ensure [ knows it needs a ]
     parser_t parser(PARSER_TYPE_GENERAL, true);
+    io_streams_t streams;
 
     const wchar_t *argv1[] = {L"[", L"foo", NULL};
-    do_test(builtin_test(parser, (wchar_t **)argv1) != 0);
+    do_test(builtin_test(parser, streams, (wchar_t **)argv1) != 0);
 
     const wchar_t *argv2[] = {L"[", L"foo", L"]", NULL};
-    do_test(builtin_test(parser, (wchar_t **)argv2) == 0);
+    do_test(builtin_test(parser, streams, (wchar_t **)argv2) == 0);
 
     const wchar_t *argv3[] = {L"[", L"foo", L"]", L"bar", NULL};
-    do_test(builtin_test(parser, (wchar_t **)argv3) != 0);
+    do_test(builtin_test(parser, streams, (wchar_t **)argv3) != 0);
 
 }
 
@@ -4017,14 +4019,13 @@ static void test_wcstring_tok(void)
     }
 }
 
-int builtin_string(parser_t &parser, wchar_t **argv);
-extern wcstring stdout_buffer;
+int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv);
 static void run_one_string_test(const wchar_t **argv, int expected_rc, const wchar_t *expected_out)
 {
     parser_t parser(PARSER_TYPE_GENERAL, true);
-    wcstring &out = stdout_buffer;
-    out.clear();
-    int rc = builtin_string(parser, const_cast<wchar_t**>(argv));
+    io_streams_t streams;
+    streams.is_first_process_in_pipeline = true; // read from argv instead of stdin
+    int rc = builtin_string(parser, streams, const_cast<wchar_t**>(argv));
     wcstring args;
     for (int i = 0; argv[i] != 0; i++)
     {
@@ -4036,12 +4037,12 @@ static void run_one_string_test(const wchar_t **argv, int expected_rc, const wch
         err(L"Test failed on line %lu: [%ls]: expected return code %d but got %d",
                 __LINE__, args.c_str(), expected_rc, rc);
     }
-    else if (out != expected_out)
+    else if (streams.out.buffer() != expected_out)
     {
         err(L"Test failed on line %lu: [%ls]: expected [%ls] but got [%ls]",
                 __LINE__, args.c_str(),
                 escape_string(expected_out, ESCAPE_ALL).c_str(),
-                escape_string(out, ESCAPE_ALL).c_str());
+                escape_string(streams.out.buffer(), ESCAPE_ALL).c_str());
     }
 }
 

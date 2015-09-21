@@ -24,9 +24,6 @@ Functions used for implementing the set_color builtin.
 #endif
 
 
-/* We know about these buffers */
-extern wcstring stdout_buffer, stderr_buffer;
-
 /**
    Error message for invalid path operations
 */
@@ -42,14 +39,14 @@ extern wcstring stdout_buffer, stderr_buffer;
 */
 #define BUILTIN_SET_ARG_COUNT L"%ls: The number of variable indexes does not match the number of values\n"
 
-static void print_colors(void)
+static void print_colors(io_streams_t &streams)
 {
     const wcstring_list_t result = rgb_color_t::named_color_names();
     size_t i;
     for (i=0; i < result.size(); i++)
     {
-        stdout_buffer.append(result.at(i));
-        stdout_buffer.push_back(L'\n');
+        streams.out.append(result.at(i));
+        streams.out.push_back(L'\n');
     }
 }
 
@@ -65,7 +62,7 @@ static int set_color_builtin_outputter(char c)
 /**
    set_color builtin
 */
-static int builtin_set_color(parser_t &parser, wchar_t **argv)
+static int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 {
     wgetopter_t w;
     /** Variables used for parsing the argument list */
@@ -115,7 +112,7 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
                 break;
 
             case 'h':
-                builtin_print_help(parser, argv[0], stdout_buffer);
+                builtin_print_help(parser, streams, argv[0], streams.out);
                 return STATUS_BUILTIN_OK;
 
             case 'o':
@@ -127,7 +124,7 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
                 break;
 
             case 'c':
-                print_colors();
+                print_colors(streams);
                 return STATUS_BUILTIN_OK;
 
             case '?':
@@ -142,7 +139,7 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
         rgb_color_t fg = rgb_color_t(argv[w.woptind]);
         if (fg.is_none() || fg.is_ignore())
         {
-            append_format(stderr_buffer, _(L"%ls: Unknown color '%ls'\n"), argv[0], argv[w.woptind]);
+            streams.err.append_format(_(L"%ls: Unknown color '%ls'\n"), argv[0], argv[w.woptind]);
             return STATUS_BUILTIN_ERROR;
         }
         fgcolors.push_back(fg);
@@ -150,8 +147,7 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
 
     if (fgcolors.empty() && bgcolor == NULL && !bold && !underline)
     {
-        append_format(stderr_buffer,
-                      _(L"%ls: Expected an argument\n"),
+        streams.err.append_format(_(L"%ls: Expected an argument\n"),
                       argv[0]);
         return STATUS_BUILTIN_ERROR;
     }
@@ -164,14 +160,14 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
     const rgb_color_t bg = rgb_color_t(bgcolor ? bgcolor : L"");
     if (bgcolor && (bg.is_none() || bg.is_ignore()))
     {
-        append_format(stderr_buffer, _(L"%ls: Unknown color '%ls'\n"), argv[0], bgcolor);
+        streams.err.append_format(_(L"%ls: Unknown color '%ls'\n"), argv[0], bgcolor);
         return STATUS_BUILTIN_ERROR;
     }
 
     /* Make sure that the term exists */
     if (cur_term == NULL && setupterm(0, STDOUT_FILENO, &errret) == ERR)
     {
-        append_format(stderr_buffer, _(L"%ls: Could not set up terminal\n"), argv[0]);
+        streams.err.append_format(_(L"%ls: Could not set up terminal\n"), argv[0]);
         return STATUS_BUILTIN_ERROR;
     }
 
@@ -237,7 +233,7 @@ static int builtin_set_color(parser_t &parser, wchar_t **argv)
     output_set_writer(saved_writer_func);
 
     /* Output the collected string */
-    stdout_buffer.append(str2wcstring(builtin_set_color_output));
+    streams.out.append(str2wcstring(builtin_set_color_output));
     builtin_set_color_output.clear();
 
     return STATUS_BUILTIN_OK;

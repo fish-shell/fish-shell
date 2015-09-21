@@ -1,0 +1,45 @@
+.TH PCRE2_JIT_COMPILE 3 "21 October 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B int pcre2_jit_compile(pcre2_code *\fIcode\fP, uint32_t \fIoptions\fP);
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function requests JIT compilation, which, if the just-in-time compiler is
+available, further processes a compiled pattern into machine code that executes
+much faster than the \fBpcre2_match()\fP interpretive matching function. Full
+details are given in the
+.\" HREF
+\fBpcre2jit\fP
+.\"
+documentation.
+.P
+The first argument is a pointer that was returned by a successful call to
+\fBpcre2_compile()\fP, and the second must contain one or more of the following
+bits:
+.sp
+  PCRE2_JIT_COMPLETE      compile code for full matching
+  PCRE2_JIT_PARTIAL_SOFT  compile code for soft partial matching
+  PCRE2_JIT_PARTIAL_HARD  compile code for hard partial matching
+.sp
+The yield of the function is 0 for success, or a negative error code otherwise.
+In particular, PCRE2_ERROR_JIT_BADOPTION is returned if JIT is not supported or
+if an unknown bit is set in \fIoptions\fP.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

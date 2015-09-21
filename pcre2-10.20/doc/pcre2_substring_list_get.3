@@ -1,0 +1,44 @@
+.TH PCRE2_SUBSTRING_LIST_GET 3 "21 October 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B int pcre2_substring_list_get(pcre2_match_data *\fImatch_data\fP,
+.B "  PCRE2_UCHAR ***\fIlistptr\fP, PCRE2_SIZE **\fIlengthsptr\fP);
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This is a convenience function for extracting all the captured substrings after
+a pattern match. It builds a list of pointers to the strings, and (optionally)
+a second list that contains their lengths (in code units), excluding a
+terminating zero that is added to each of them. All this is done in a single
+block of memory that is obtained using the same memory allocation function that
+was used to get the match data block. The convenience function
+\fBpcre2_substring_list_free()\fP can be used to free it when it is no longer
+needed. The arguments are:
+.sp
+  \fImatch_data\fP    The match data block
+  \fIlistptr\fP       Where to put a pointer to the list
+  \fIlengthsptr\fP    Where to put a pointer to the lengths, or NULL
+.sp
+A pointer to a list of pointers is put in the variable whose address is in
+\fIlistptr\fP. The list is terminated by a NULL pointer. If \fIlengthsptr\fP is
+not NULL, a matching list of lengths is created, and its address is placed in
+\fIlengthsptr\fP. The yield of the function is zero on success or
+PCRE2_ERROR_NOMEMORY if sufficient memory could not be obtained.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

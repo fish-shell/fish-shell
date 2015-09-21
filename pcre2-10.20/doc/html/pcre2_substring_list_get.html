@@ -1,0 +1,56 @@
+<html>
+<head>
+<title>pcre2_substring_list_get specification</title>
+</head>
+<body bgcolor="#FFFFFF" text="#00005A" link="#0066FF" alink="#3399FF" vlink="#2222BB">
+<h1>pcre2_substring_list_get man page</h1>
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>
+<p>
+This page is part of the PCRE2 HTML documentation. It was generated
+automatically from the original man page. If there is any nonsense in it,
+please consult the man page, in case the conversion went wrong.
+<br>
+<br><b>
+SYNOPSIS
+</b><br>
+<P>
+<b>#include &#60;pcre2.h&#62;</b>
+</P>
+<P>
+<b>int pcre2_substring_list_get(pcre2_match_data *<i>match_data</i>,</b>
+<b>"  PCRE2_UCHAR ***<i>listptr</i>, PCRE2_SIZE **<i>lengthsptr</i>);</b>
+</P>
+<br><b>
+DESCRIPTION
+</b><br>
+<P>
+This is a convenience function for extracting all the captured substrings after
+a pattern match. It builds a list of pointers to the strings, and (optionally)
+a second list that contains their lengths (in code units), excluding a
+terminating zero that is added to each of them. All this is done in a single
+block of memory that is obtained using the same memory allocation function that
+was used to get the match data block. The convenience function
+<b>pcre2_substring_list_free()</b> can be used to free it when it is no longer
+needed. The arguments are:
+<pre>
+  <i>match_data</i>    The match data block
+  <i>listptr</i>       Where to put a pointer to the list
+  <i>lengthsptr</i>    Where to put a pointer to the lengths, or NULL
+</pre>
+A pointer to a list of pointers is put in the variable whose address is in
+<i>listptr</i>. The list is terminated by a NULL pointer. If <i>lengthsptr</i> is
+not NULL, a matching list of lengths is created, and its address is placed in
+<i>lengthsptr</i>. The yield of the function is zero on success or
+PCRE2_ERROR_NOMEMORY if sufficient memory could not be obtained.
+</P>
+<P>
+There is a complete description of the PCRE2 native API in the
+<a href="pcre2api.html"><b>pcre2api</b></a>
+page and a description of the POSIX API in the
+<a href="pcre2posix.html"><b>pcre2posix</b></a>
+page.
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>

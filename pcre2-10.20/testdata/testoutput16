@@ -1,0 +1,384 @@
+# This test is run only when JIT support is available. It checks JIT complete
+# and partial modes, and things that are different with JIT.
+
+#pattern jitverify
+
+# JIT does not support this pattern (callout at start of condition).
+
+/(?(?C1)(?=a)a)/I
+Capturing subpattern count = 0
+May match empty string
+Subject length lower bound = 0
+JIT compilation was not successful
+
+# The following pattern cannot be compiled by JIT.
+
+/b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*b*/I
+Capturing subpattern count = 0
+May match empty string
+Subject length lower bound = 0
+JIT compilation was not successful
+
+# Check that an infinite recursion loop is caught.
+
+/(?(R)a*(?1)|((?R))b)/
+    aaaabcde
+Failed: error -46: JIT stack limit reached
+
+/abcd/I
+Capturing subpattern count = 0
+First code unit = 'a'
+Last code unit = 'd'
+Subject length lower bound = 4
+JIT compilation was successful
+    abcd
+ 0: abcd (JIT)
+    xyz
+No match (JIT)
+
+/(*NO_JIT)abcd/I
+Capturing subpattern count = 0
+First code unit = 'a'
+Last code unit = 'd'
+Subject length lower bound = 4
+JIT compilation was not successful
+    abcd
+ 0: abcd
+    xyz
+No match
+
+/abcd/
+    abcd
+ 0: abcd (JIT)
+    ab\=ps
+Partial match: ab (JIT)
+    ab\=ph
+Partial match: ab (JIT)
+    xyz
+No match (JIT)
+
+/abcd/jitfast
+    abcd
+ 0: abcd (JIT)
+    ab\=ps
+Partial match: ab (JIT)
+    ab\=ph
+Partial match: ab (JIT)
+    xyz
+No match (JIT)
+
+/abcd/jit=1
+    abcd
+ 0: abcd (JIT)
+    ab\=ps
+Partial match: ab
+    ab\=ph
+Partial match: ab
+    xyz
+No match (JIT)
+    xyz\=ps
+No match
+
+/abcd/jit=1,jitfast
+    abcd
+ 0: abcd (JIT)
+    ab\=ps
+Failed: error -45: bad JIT option
+    ab\=ph
+Failed: error -45: bad JIT option
+    xyz
+No match (JIT)
+    xyz\=ps
+Failed: error -45: bad JIT option
+
+/abcd/jit=2
+    abcd
+ 0: abcd
+    ab\=ps
+Partial match: ab (JIT)
+    ab\=ph
+Partial match: ab
+    xyz
+No match
+
+/abcd/jit=2,jitfast
+    abcd
+Failed: error -45: bad JIT option
+    ab\=ps
+Partial match: ab (JIT)
+    ab\=ph
+Failed: error -45: bad JIT option
+    xyz
+Failed: error -45: bad JIT option
+
+/abcd/jit=3
+    abcd
+ 0: abcd (JIT)
+    ab\=ps
+Partial match: ab (JIT)
+    ab\=ph
+Partial match: ab
+    xyz
+No match (JIT)
+
+/abcd/jit=4
+    abcd
+ 0: abcd
+    ab\=ps
+Partial match: ab
+    ab\=ph
+Partial match: ab (JIT)
+    xyz
+No match
+
+/abcd/jit=5
+    abcd
+ 0: abcd (JIT)
+    ab\=ps
+Partial match: ab
+    ab\=ph
+Partial match: ab (JIT)
+    xyz
+No match (JIT)
+
+/abcd/jit=6
+    abcd
+ 0: abcd
+    ab\=ps
+Partial match: ab (JIT)
+    ab\=ph
+Partial match: ab (JIT)
+    xyz
+No match
+
+/abcd/jit=7
+    abcd
+ 0: abcd (JIT)
+    ab\=ps
+Partial match: ab (JIT)
+    ab\=ph
+Partial match: ab (JIT)
+    xyz
+No match (JIT)
+
+/abcd/I,jit=2
+Capturing subpattern count = 0
+First code unit = 'a'
+Last code unit = 'd'
+Subject length lower bound = 4
+JIT compilation was successful
+
+/(*NO_START_OPT)a(*:m)b/mark
+    a
+No match, mark = m (JIT)
+
+/^12345678abcd/m
+    12345678abcd
+ 0: 12345678abcd (JIT)
+    
+# Limits tests that give different output with JIT. 
+
+/(a+)*zz/I
+Capturing subpattern count = 1
+Starting code units: a z 
+Last code unit = 'z'
+Subject length lower bound = 2
+JIT compilation was successful
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaazzbbbbbb\=find_limits
+Minimum match limit = 3
+ 0: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaazz (JIT)
+ 1: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  aaaaaaaaaaaaaz\=find_limits
+Minimum match limit = 16384
+No match (JIT)
+
+!((?:\s|//.*\\n|/[*](?:\\n|.)*?[*]/)*)!I
+Capturing subpattern count = 1
+May match empty string
+Subject length lower bound = 0
+JIT compilation was successful
+   /* this is a C style comment */\=find_limits
+Minimum match limit = 2
+ 0: /* this is a C style comment */ (JIT)
+ 1: /* this is a C style comment */
+
+/^(?>a)++/
+    aa\=find_limits
+Minimum match limit = 2
+ 0: aa (JIT)
+    aaaaaaaaa\=find_limits
+Minimum match limit = 2
+ 0: aaaaaaaaa (JIT)
+    
+/(a)(?1)++/
+    aa\=find_limits
+Minimum match limit = 2
+ 0: aa (JIT)
+ 1: a
+    aaaaaaaaa\=find_limits
+Minimum match limit = 2
+ 0: aaaaaaaaa (JIT)
+ 1: a
+
+/a(?:.)*?a/ims
+    abbbbbbbbbbbbbbbbbbbbba\=find_limits
+Minimum match limit = 1
+ 0: abbbbbbbbbbbbbbbbbbbbba (JIT)
+    
+/a(?:.(*THEN))*?a/ims
+    abbbbbbbbbbbbbbbbbbbbba\=find_limits
+Minimum match limit = 1
+ 0: abbbbbbbbbbbbbbbbbbbbba (JIT)
+
+/a(?:.(*THEN:ABC))*?a/ims
+    abbbbbbbbbbbbbbbbbbbbba\=find_limits
+Minimum match limit = 1
+ 0: abbbbbbbbbbbbbbbbbbbbba (JIT)
+
+/^(?>a+)(?>b+)(?>c+)(?>d+)(?>e+)/
+     aabbccddee\=find_limits
+Minimum match limit = 6
+ 0: aabbccddee (JIT)
+
+/^(?>(a+))(?>(b+))(?>(c+))(?>(d+))(?>(e+))/
+     aabbccddee\=find_limits
+Minimum match limit = 6
+ 0: aabbccddee (JIT)
+ 1: aa
+ 2: bb
+ 3: cc
+ 4: dd
+ 5: ee
+
+/^(?>(a+))(?>b+)(?>(c+))(?>d+)(?>(e+))/
+     aabbccddee\=find_limits
+Minimum match limit = 6
+ 0: aabbccddee (JIT)
+ 1: aa
+ 2: cc
+ 3: ee
+
+/^(?>(a+))(?>b+)(?>(c+))(?>d+)(?>(e+))/jitfast
+     aabbccddee\=find_limits
+Minimum match limit = 6
+ 0: aabbccddee (JIT)
+ 1: aa
+ 2: cc
+ 3: ee
+     aabbccddee\=jitstack=1
+ 0: aabbccddee (JIT)
+ 1: aa
+ 2: cc
+ 3: ee
+
+/(a+)*zz/
+    aaaaaaaaaaaaaz
+No match (JIT)
+    aaaaaaaaaaaaaz\=match_limit=3000
+Failed: error -47: match limit exceeded
+
+/(*LIMIT_MATCH=3000)(a+)*zz/I
+Capturing subpattern count = 1
+Match limit = 3000
+Starting code units: a z 
+Last code unit = 'z'
+Subject length lower bound = 2
+JIT compilation was successful
+    aaaaaaaaaaaaaz
+Failed: error -47: match limit exceeded
+    aaaaaaaaaaaaaz\=match_limit=60000
+Failed: error -47: match limit exceeded
+
+/(*LIMIT_MATCH=60000)(*LIMIT_MATCH=3000)(a+)*zz/I
+Capturing subpattern count = 1
+Match limit = 3000
+Starting code units: a z 
+Last code unit = 'z'
+Subject length lower bound = 2
+JIT compilation was successful
+    aaaaaaaaaaaaaz
+Failed: error -47: match limit exceeded
+
+/(*LIMIT_MATCH=60000)(a+)*zz/I
+Capturing subpattern count = 1
+Match limit = 60000
+Starting code units: a z 
+Last code unit = 'z'
+Subject length lower bound = 2
+JIT compilation was successful
+    aaaaaaaaaaaaaz
+No match (JIT)
+    aaaaaaaaaaaaaz\=match_limit=3000
+Failed: error -47: match limit exceeded
+
+# These three have infinitely nested recursions. 
+    
+/((?2))((?1))/
+    abc
+Failed: error -46: JIT stack limit reached
+
+/((?(R2)a+|(?1)b))/
+    aaaabcde
+Failed: error -46: JIT stack limit reached
+
+/(?(R)a*(?1)|((?R))b)/
+    aaaabcde
+Failed: error -46: JIT stack limit reached
+    
+# Invalid options disable JIT when called via pcre2_match(), causing the
+# match to happen via the interpreter, but for fast JIT invalid options are
+# ignored, so an unanchored match happens.
+
+/abcd/
+    abcd\=anchored
+ 0: abcd
+    fail abcd\=anchored 
+No match
+    
+/abcd/jitfast
+    abcd\=anchored 
+ 0: abcd (JIT)
+    succeed abcd\=anchored 
+ 0: abcd (JIT)
+    
+# Push/pop does not lose the JIT information, though jitverify applies only to
+# compilation, but serializing (save/load) discards JIT data completely.
+
+/^abc\Kdef/info,push
+** Applies only to compile when pattern is stacked with 'push': jitverify
+Capturing subpattern count = 0
+Compile options: <none>
+Overall options: anchored
+Subject length lower bound = 6
+JIT compilation was successful
+#pop jitverify
+    abcdef
+ 0: def (JIT)
+
+/^abc\Kdef/info,push
+** Applies only to compile when pattern is stacked with 'push': jitverify
+Capturing subpattern count = 0
+Compile options: <none>
+Overall options: anchored
+Subject length lower bound = 6
+JIT compilation was successful
+#save testsaved1
+#load testsaved1
+#pop jitverify
+    abcdef
+ 0: def
+    
+#load testsaved1
+#pop jit,jitverify
+    abcdef
+ 0: def (JIT)
+    
+# Test pattern compilation
+
+/(?:a|b|c|d|e)(?R)/jit=1
+
+/(?:a|b|c|d|e)(?R)(?R)/jit=1
+
+/(a(?:a|b|c|d|e)b){8,16}/jit=1
+
+# End of testinput16

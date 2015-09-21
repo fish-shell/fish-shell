@@ -825,6 +825,9 @@ wcstring escape_string(const wcstring &in, escape_flags_t flags);
    character set.
 */
 
+/** Given a null terminated string starting with a backslash, read the escape as if it is unquoted, appending to result. Return the number of characters consumed, or 0 on error */
+size_t read_unquoted_escape(const wchar_t *input, wcstring *result, bool allow_incomplete, bool unescape_special);
+
 /** Unescapes a string in-place. A true result indicates the string was unescaped, a false result indicates the string was unmodified. */
 bool unescape_string_in_place(wcstring *str, unescape_flags_t escape_special);
 

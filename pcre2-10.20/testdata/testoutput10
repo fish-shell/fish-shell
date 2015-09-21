@@ -1,0 +1,1553 @@
+# This set of tests is for UTF-8 support and Unicode property support, with
+# relevance only for the 8-bit library.
+
+/X(\C{3})/utf
+    X\x{1234}
+ 0: X\x{1234}
+ 1: \x{1234}
+
+/X(\C{4})/utf
+    X\x{1234}YZ
+ 0: X\x{1234}Y
+ 1: \x{1234}Y
+
+/X\C*/utf
+    XYZabcdce
+ 0: XYZabcdce
+
+/X\C*?/utf
+    XYZabcde
+ 0: X
+
+/X\C{3,5}/utf
+    Xabcdefg
+ 0: Xabcde
+    X\x{1234}
+ 0: X\x{1234}
+    X\x{1234}YZ
+ 0: X\x{1234}YZ
+    X\x{1234}\x{512}
+ 0: X\x{1234}\x{512}
+    X\x{1234}\x{512}YZ
+ 0: X\x{1234}\x{512}
+
+/X\C{3,5}?/utf
+    Xabcdefg
+ 0: Xabc
+    X\x{1234}
+ 0: X\x{1234}
+    X\x{1234}YZ
+ 0: X\x{1234}
+    X\x{1234}\x{512}
+ 0: X\x{1234}
+
+/a\Cb/utf
+    aXb
+ 0: aXb
+    a\nb
+ 0: a\x{0a}b
+
+/a\C\Cb/utf
+    a\x{100}b
+ 0: a\x{100}b
+
+/ab\Cde/utf
+    abXde
+ 0: abXde
+
+/a\C\Cb/utf
+    a\x{100}b
+ 0: a\x{100}b
+    ** Failers
+No match
+    a\x{12257}b
+No match
+
+/[Ã]/utf
+Failed: error -8 at offset 0: UTF-8 error: byte 2 top bits not 0x80
+
+/Ã/utf
+Failed: error -3 at offset 0: UTF-8 error: 1 byte missing at end
+
+/ÃÃÃxxx/utf
+Failed: error -8 at offset 0: UTF-8 error: byte 2 top bits not 0x80
+
+/badutf/utf
+    X\xdf
+Failed: error -3: UTF-8 error: 1 byte missing at end at offset 1
+    XX\xef
+Failed: error -4: UTF-8 error: 2 bytes missing at end at offset 2
+    XXX\xef\x80
+Failed: error -3: UTF-8 error: 1 byte missing at end at offset 3
+    X\xf7
+Failed: error -5: UTF-8 error: 3 bytes missing at end at offset 1
+    XX\xf7\x80
+Failed: error -4: UTF-8 error: 2 bytes missing at end at offset 2
+    XXX\xf7\x80\x80
+Failed: error -3: UTF-8 error: 1 byte missing at end at offset 3
+    \xfb
+Failed: error -6: UTF-8 error: 4 bytes missing at end at offset 0
+    \xfb\x80
+Failed: error -5: UTF-8 error: 3 bytes missing at end at offset 0
+    \xfb\x80\x80
+Failed: error -4: UTF-8 error: 2 bytes missing at end at offset 0
+    \xfb\x80\x80\x80
+Failed: error -3: UTF-8 error: 1 byte missing at end at offset 0
+    \xfd
+Failed: error -7: UTF-8 error: 5 bytes missing at end at offset 0
+    \xfd\x80
+Failed: error -6: UTF-8 error: 4 bytes missing at end at offset 0
+    \xfd\x80\x80
+Failed: error -5: UTF-8 error: 3 bytes missing at end at offset 0
+    \xfd\x80\x80\x80
+Failed: error -4: UTF-8 error: 2 bytes missing at end at offset 0
+    \xfd\x80\x80\x80\x80
+Failed: error -3: UTF-8 error: 1 byte missing at end at offset 0
+    \xdf\x7f
+Failed: error -8: UTF-8 error: byte 2 top bits not 0x80 at offset 0
+    \xef\x7f\x80
+Failed: error -8: UTF-8 error: byte 2 top bits not 0x80 at offset 0
+    \xef\x80\x7f
+Failed: error -9: UTF-8 error: byte 3 top bits not 0x80 at offset 0
+    \xf7\x7f\x80\x80
+Failed: error -8: UTF-8 error: byte 2 top bits not 0x80 at offset 0
+    \xf7\x80\x7f\x80
+Failed: error -9: UTF-8 error: byte 3 top bits not 0x80 at offset 0
+    \xf7\x80\x80\x7f
+Failed: error -10: UTF-8 error: byte 4 top bits not 0x80 at offset 0
+    \xfb\x7f\x80\x80\x80
+Failed: error -8: UTF-8 error: byte 2 top bits not 0x80 at offset 0
+    \xfb\x80\x7f\x80\x80
+Failed: error -9: UTF-8 error: byte 3 top bits not 0x80 at offset 0
+    \xfb\x80\x80\x7f\x80
+Failed: error -10: UTF-8 error: byte 4 top bits not 0x80 at offset 0
+    \xfb\x80\x80\x80\x7f
+Failed: error -11: UTF-8 error: byte 5 top bits not 0x80 at offset 0
+    \xfd\x7f\x80\x80\x80\x80
+Failed: error -8: UTF-8 error: byte 2 top bits not 0x80 at offset 0
+    \xfd\x80\x7f\x80\x80\x80
+Failed: error -9: UTF-8 error: byte 3 top bits not 0x80 at offset 0
+    \xfd\x80\x80\x7f\x80\x80
+Failed: error -10: UTF-8 error: byte 4 top bits not 0x80 at offset 0
+    \xfd\x80\x80\x80\x7f\x80
+Failed: error -11: UTF-8 error: byte 5 top bits not 0x80 at offset 0
+    \xfd\x80\x80\x80\x80\x7f
+Failed: error -12: UTF-8 error: byte 6 top bits not 0x80 at offset 0
+    \xed\xa0\x80
+Failed: error -16: UTF-8 error: code points 0xd800-0xdfff are not defined at offset 0
+    \xc0\x8f
+Failed: error -17: UTF-8 error: overlong 2-byte sequence at offset 0
+    \xe0\x80\x8f
+Failed: error -18: UTF-8 error: overlong 3-byte sequence at offset 0
+    \xf0\x80\x80\x8f
+Failed: error -19: UTF-8 error: overlong 4-byte sequence at offset 0
+    \xf8\x80\x80\x80\x8f
+Failed: error -20: UTF-8 error: overlong 5-byte sequence at offset 0
+    \xfc\x80\x80\x80\x80\x8f
+Failed: error -21: UTF-8 error: overlong 6-byte sequence at offset 0
+    \x80
+Failed: error -22: UTF-8 error: isolated 0x80 byte at offset 0
+    \xfe
+Failed: error -23: UTF-8 error: illegal byte (0xfe or 0xff) at offset 0
+    \xff
+Failed: error -23: UTF-8 error: illegal byte (0xfe or 0xff) at offset 0
+
+/badutf/utf
+    XX\xfb\x80\x80\x80\x80
+Failed: error -13: UTF-8 error: 5-byte character is not allowed (RFC 3629) at offset 2
+    XX\xfd\x80\x80\x80\x80\x80
+Failed: error -14: UTF-8 error: 6-byte character is not allowed (RFC 3629) at offset 2
+    XX\xf7\xbf\xbf\xbf
+Failed: error -15: UTF-8 error: code points greater than 0x10ffff are not defined at offset 2
+
+/shortutf/utf
+    XX\xdf\=ph
+Failed: error -3: UTF-8 error: 1 byte missing at end at offset 2
+    XX\xef\=ph
+Failed: error -4: UTF-8 error: 2 bytes missing at end at offset 2
+    XX\xef\x80\=ph
+Failed: error -3: UTF-8 error: 1 byte missing at end at offset 2
+    \xf7\=ph
+Failed: error -5: UTF-8 error: 3 bytes missing at end at offset 0
+    \xf7\x80\=ph
+Failed: error -4: UTF-8 error: 2 bytes missing at end at offset 0
+    \xf7\x80\x80\=ph
+Failed: error -3: UTF-8 error: 1 byte missing at end at offset 0
+    \xfb\=ph
+Failed: error -6: UTF-8 error: 4 bytes missing at end at offset 0
+    \xfb\x80\=ph
+Failed: error -5: UTF-8 error: 3 bytes missing at end at offset 0
+    \xfb\x80\x80\=ph
+Failed: error -4: UTF-8 error: 2 bytes missing at end at offset 0
+    \xfb\x80\x80\x80\=ph
+Failed: error -3: UTF-8 error: 1 byte missing at end at offset 0
+    \xfd\=ph
+Failed: error -7: UTF-8 error: 5 bytes missing at end at offset 0
+    \xfd\x80\=ph
+Failed: error -6: UTF-8 error: 4 bytes missing at end at offset 0
+    \xfd\x80\x80\=ph
+Failed: error -5: UTF-8 error: 3 bytes missing at end at offset 0
+    \xfd\x80\x80\x80\=ph
+Failed: error -4: UTF-8 error: 2 bytes missing at end at offset 0
+    \xfd\x80\x80\x80\x80\=ph
+Failed: error -3: UTF-8 error: 1 byte missing at end at offset 0
+
+/anything/utf
+    X\xc0\x80
+Failed: error -17: UTF-8 error: overlong 2-byte sequence at offset 1
+    XX\xc1\x8f
+Failed: error -17: UTF-8 error: overlong 2-byte sequence at offset 2
+    XXX\xe0\x9f\x80
+Failed: error -18: UTF-8 error: overlong 3-byte sequence at offset 3
+    \xf0\x8f\x80\x80
+Failed: error -19: UTF-8 error: overlong 4-byte sequence at offset 0
+    \xf8\x87\x80\x80\x80
+Failed: error -20: UTF-8 error: overlong 5-byte sequence at offset 0
+    \xfc\x83\x80\x80\x80\x80
+Failed: error -21: UTF-8 error: overlong 6-byte sequence at offset 0
+    \xfe\x80\x80\x80\x80\x80
+Failed: error -23: UTF-8 error: illegal byte (0xfe or 0xff) at offset 0
+    \xff\x80\x80\x80\x80\x80
+Failed: error -23: UTF-8 error: illegal byte (0xfe or 0xff) at offset 0
+    \xc3\x8f
+No match
+    \xe0\xaf\x80
+No match
+    \xe1\x80\x80
+No match
+    \xf0\x9f\x80\x80
+No match
+    \xf1\x8f\x80\x80
+No match
+    \xf8\x88\x80\x80\x80
+Failed: error -13: UTF-8 error: 5-byte character is not allowed (RFC 3629) at offset 0
+    \xf9\x87\x80\x80\x80
+Failed: error -13: UTF-8 error: 5-byte character is not allowed (RFC 3629) at offset 0
+    \xfc\x84\x80\x80\x80\x80
+Failed: error -14: UTF-8 error: 6-byte character is not allowed (RFC 3629) at offset 0
+    \xfd\x83\x80\x80\x80\x80
+Failed: error -14: UTF-8 error: 6-byte character is not allowed (RFC 3629) at offset 0
+    \xf8\x88\x80\x80\x80\=no_utf_check
+No match
+    \xf9\x87\x80\x80\x80\=no_utf_check
+No match
+    \xfc\x84\x80\x80\x80\x80\=no_utf_check
+No match
+    \xfd\x83\x80\x80\x80\x80\=no_utf_check
+No match
+
+/\x{100}/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{100}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xc4
+Last code unit = \x80
+Subject length lower bound = 1
+
+/\x{1000}/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{1000}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xe1
+Last code unit = \x80
+Subject length lower bound = 1
+
+/\x{10000}/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{10000}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xf0
+Last code unit = \x80
+Subject length lower bound = 1
+
+/\x{100000}/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{100000}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xf4
+Last code unit = \x80
+Subject length lower bound = 1
+
+/\x{10ffff}/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{10ffff}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xf4
+Last code unit = \xbf
+Subject length lower bound = 1
+
+/[\x{ff}]/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{ff}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xc3
+Last code unit = \xbf
+Subject length lower bound = 1
+
+/[\x{100}]/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{100}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xc4
+Last code unit = \x80
+Subject length lower bound = 1
+
+/\x80/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{80}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xc2
+Last code unit = \x80
+Subject length lower bound = 1
+
+/\xff/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{ff}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xc3
+Last code unit = \xbf
+Subject length lower bound = 1
+
+/\x{D55c}\x{ad6d}\x{C5B4}/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{d55c}\x{ad6d}\x{c5b4}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xed
+Last code unit = \xb4
+Subject length lower bound = 3
+    \x{D55c}\x{ad6d}\x{C5B4}
+ 0: \x{d55c}\x{ad6d}\x{c5b4}
+
+/\x{65e5}\x{672c}\x{8a9e}/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{65e5}\x{672c}\x{8a9e}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xe6
+Last code unit = \x9e
+Subject length lower bound = 3
+    \x{65e5}\x{672c}\x{8a9e}
+ 0: \x{65e5}\x{672c}\x{8a9e}
+
+/\x{80}/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{80}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xc2
+Last code unit = \x80
+Subject length lower bound = 1
+
+/\x{084}/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{84}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xc2
+Last code unit = \x84
+Subject length lower bound = 1
+
+/\x{104}/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{104}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xc4
+Last code unit = \x84
+Subject length lower bound = 1
+
+/\x{861}/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{861}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xe0
+Last code unit = \xa1
+Subject length lower bound = 1
+
+/\x{212ab}/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{212ab}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xf0
+Last code unit = \xab
+Subject length lower bound = 1
+
+# This one is here not because it's different to Perl, but because the way
+# the captured single-byte is displayed. (In Perl it becomes a character, and you
+# can't tell the difference.)
+
+/X(\C)(.*)/utf
+    X\x{1234}
+ 0: X\x{1234}
+ 1: \x{e1}
+ 2: \x{88}\x{b4}
+    X\nabc
+ 0: X\x{0a}abc
+ 1: \x{0a}
+ 2: abc
+
+# This one is here because Perl gives out a grumbly error message (quite
+# correctly, but that messes up comparisons).
+
+/a\Cb/utf
+    *** Failers
+No match
+    a\x{100}b
+No match
+
+/[^ab\xC0-\xF0]/IB,utf
+------------------------------------------------------------------
+        Bra
+        [\x00-`c-\xbf\xf1-\xff] (neg)
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+Starting code units: \x00 \x01 \x02 \x03 \x04 \x05 \x06 \x07 \x08 \x09 \x0a 
+  \x0b \x0c \x0d \x0e \x0f \x10 \x11 \x12 \x13 \x14 \x15 \x16 \x17 \x18 \x19 
+  \x1a \x1b \x1c \x1d \x1e \x1f \x20 ! " # $ % & ' ( ) * + , - . / 0 1 2 3 4 
+  5 6 7 8 9 : ; < = > ? @ A B C D E F G H I J K L M N O P Q R S T U V W X Y 
+  Z [ \ ] ^ _ ` c d e f g h i j k l m n o p q r s t u v w x y z { | } ~ \x7f 
+  \xc2 \xc3 \xc4 \xc5 \xc6 \xc7 \xc8 \xc9 \xca \xcb \xcc \xcd \xce \xcf \xd0 
+  \xd1 \xd2 \xd3 \xd4 \xd5 \xd6 \xd7 \xd8 \xd9 \xda \xdb \xdc \xdd \xde \xdf 
+  \xe0 \xe1 \xe2 \xe3 \xe4 \xe5 \xe6 \xe7 \xe8 \xe9 \xea \xeb \xec \xed \xee 
+  \xef \xf0 \xf1 \xf2 \xf3 \xf4 \xf5 \xf6 \xf7 \xf8 \xf9 \xfa \xfb \xfc \xfd 
+  \xfe \xff 
+Subject length lower bound = 1
+    \x{f1}
+ 0: \x{f1}
+    \x{bf}
+ 0: \x{bf}
+    \x{100}
+ 0: \x{100}
+    \x{1000}
+ 0: \x{1000}
+    *** Failers
+ 0: *
+    \x{c0}
+No match
+    \x{f0}
+No match
+
+/Ä€{3,4}/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{100}{3}
+        \x{100}?+
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xc4
+Last code unit = \x80
+Subject length lower bound = 3
+  \x{100}\x{100}\x{100}\x{100\x{100}
+ 0: \x{100}\x{100}\x{100}
+
+/(\x{100}+|x)/IB,utf
+------------------------------------------------------------------
+        Bra
+        CBra 1
+        \x{100}++
+        Alt
+        x
+        Ket
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 1
+Options: utf
+Starting code units: x \xc4 
+Subject length lower bound = 1
+
+/(\x{100}*a|x)/IB,utf
+------------------------------------------------------------------
+        Bra
+        CBra 1
+        \x{100}*+
+        a
+        Alt
+        x
+        Ket
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 1
+Options: utf
+Starting code units: a x \xc4 
+Subject length lower bound = 1
+
+/(\x{100}{0,2}a|x)/IB,utf
+------------------------------------------------------------------
+        Bra
+        CBra 1
+        \x{100}{0,2}+
+        a
+        Alt
+        x
+        Ket
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 1
+Options: utf
+Starting code units: a x \xc4 
+Subject length lower bound = 1
+
+/(\x{100}{1,2}a|x)/IB,utf
+------------------------------------------------------------------
+        Bra
+        CBra 1
+        \x{100}
+        \x{100}{0,1}+
+        a
+        Alt
+        x
+        Ket
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 1
+Options: utf
+Starting code units: x \xc4 
+Subject length lower bound = 1
+
+/\x{100}/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{100}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xc4
+Last code unit = \x80
+Subject length lower bound = 1
+
+/a\x{100}\x{101}*/IB,utf
+------------------------------------------------------------------
+        Bra
+        a\x{100}
+        \x{101}*+
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = 'a'
+Last code unit = \x80
+Subject length lower bound = 2
+
+/a\x{100}\x{101}+/IB,utf
+------------------------------------------------------------------
+        Bra
+        a\x{100}
+        \x{101}++
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = 'a'
+Last code unit = \x81
+Subject length lower bound = 3
+
+/[^\x{c4}]/IB
+------------------------------------------------------------------
+        Bra
+        [^\x{c4}]
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Subject length lower bound = 1
+
+/[\x{100}]/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{100}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xc4
+Last code unit = \x80
+Subject length lower bound = 1
+    \x{100}
+ 0: \x{100}
+    Z\x{100}
+ 0: \x{100}
+    \x{100}Z
+ 0: \x{100}
+    *** Failers
+No match
+
+/[\xff]/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{ff}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xc3
+Last code unit = \xbf
+Subject length lower bound = 1
+    >\x{ff}<
+ 0: \x{ff}
+
+/[^\xff]/IB,utf
+------------------------------------------------------------------
+        Bra
+        [^\x{ff}]
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+Subject length lower bound = 1
+
+/\x{100}abc(xyz(?1))/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{100}abc
+        CBra 1
+        xyz
+        Recurse
+        Ket
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 1
+Options: utf
+First code unit = \xc4
+Last code unit = 'z'
+Subject length lower bound = 7
+
+/\777/I,utf
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xc7
+Last code unit = \xbf
+Subject length lower bound = 1
+  \x{1ff}
+ 0: \x{1ff}
+  \777
+ 0: \x{1ff}
+
+/\x{100}+\x{200}/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{100}++
+        \x{200}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xc4
+Last code unit = \x80
+Subject length lower bound = 2
+
+/\x{100}+X/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{100}++
+        X
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xc4
+Last code unit = 'X'
+Subject length lower bound = 2
+
+/^[\QÄ€\E-\QÅ\E/B,utf
+Failed: error 106 at offset 15: missing terminating ] for character class
+
+# This tests the stricter UTF-8 check according to RFC 3629.
+
+/X/utf
+    \x{d800}
+Failed: error -16: UTF-8 error: code points 0xd800-0xdfff are not defined at offset 0
+    \x{d800}\=no_utf_check
+No match
+    \x{da00}
+Failed: error -16: UTF-8 error: code points 0xd800-0xdfff are not defined at offset 0
+    \x{da00}\=no_utf_check
+No match
+    \x{dfff}
+Failed: error -16: UTF-8 error: code points 0xd800-0xdfff are not defined at offset 0
+    \x{dfff}\=no_utf_check
+No match
+    \x{110000}
+Failed: error -15: UTF-8 error: code points greater than 0x10ffff are not defined at offset 0
+    \x{110000}\=no_utf_check
+No match
+    \x{2000000}
+Failed: error -13: UTF-8 error: 5-byte character is not allowed (RFC 3629) at offset 0
+    \x{2000000}\=no_utf_check
+No match
+    \x{7fffffff}
+Failed: error -14: UTF-8 error: 6-byte character is not allowed (RFC 3629) at offset 0
+    \x{7fffffff}\=no_utf_check
+No match
+
+/(*UTF8)\x{1234}/
+  abcd\x{1234}pqr
+ 0: \x{1234}
+
+/(*CRLF)(*UTF)(*BSR_UNICODE)a\Rb/I
+Capturing subpattern count = 0
+Compile options: <none>
+Overall options: utf
+\R matches any Unicode newline
+Forced newline is CRLF
+First code unit = 'a'
+Last code unit = 'b'
+Subject length lower bound = 3
+
+/\h/I,utf
+Capturing subpattern count = 0
+Options: utf
+Starting code units: \x09 \x20 \xc2 \xe1 \xe2 \xe3 
+Subject length lower bound = 1
+    ABC\x{09}
+ 0: \x{09}
+    ABC\x{20}
+ 0:  
+    ABC\x{a0}
+ 0: \x{a0}
+    ABC\x{1680}
+ 0: \x{1680}
+    ABC\x{180e}
+ 0: \x{180e}
+    ABC\x{2000}
+ 0: \x{2000}
+    ABC\x{202f}
+ 0: \x{202f}
+    ABC\x{205f}
+ 0: \x{205f}
+    ABC\x{3000}
+ 0: \x{3000}
+
+/\v/I,utf
+Capturing subpattern count = 0
+Options: utf
+Starting code units: \x0a \x0b \x0c \x0d \xc2 \xe2 
+Subject length lower bound = 1
+    ABC\x{0a}
+ 0: \x{0a}
+    ABC\x{0b}
+ 0: \x{0b}
+    ABC\x{0c}
+ 0: \x{0c}
+    ABC\x{0d}
+ 0: \x{0d}
+    ABC\x{85}
+ 0: \x{85}
+    ABC\x{2028}
+ 0: \x{2028}
+
+/\h*A/I,utf
+Capturing subpattern count = 0
+Options: utf
+Starting code units: \x09 \x20 A \xc2 \xe1 \xe2 \xe3 
+Last code unit = 'A'
+Subject length lower bound = 1
+    CDBABC
+ 0: A
+
+/\v+A/I,utf
+Capturing subpattern count = 0
+Options: utf
+Starting code units: \x0a \x0b \x0c \x0d \xc2 \xe2 
+Last code unit = 'A'
+Subject length lower bound = 2
+
+/\s?xxx\s/I,utf
+Capturing subpattern count = 0
+Options: utf
+Starting code units: \x09 \x0a \x0b \x0c \x0d \x20 x 
+Last code unit = 'x'
+Subject length lower bound = 4
+
+/\sxxx\s/I,utf,tables=2
+Capturing subpattern count = 0
+Options: utf
+Starting code units: \x09 \x0a \x0b \x0c \x0d \x20 \xc2 
+Last code unit = 'x'
+Subject length lower bound = 5
+    AB\x{85}xxx\x{a0}XYZ
+ 0: \x{85}xxx\x{a0}
+    AB\x{a0}xxx\x{85}XYZ
+ 0: \x{a0}xxx\x{85}
+
+/\S \S/I,utf,tables=2
+Capturing subpattern count = 0
+Options: utf
+Starting code units: \x00 \x01 \x02 \x03 \x04 \x05 \x06 \x07 \x08 \x0e \x0f 
+  \x10 \x11 \x12 \x13 \x14 \x15 \x16 \x17 \x18 \x19 \x1a \x1b \x1c \x1d \x1e 
+  \x1f ! " # $ % & ' ( ) * + , - . / 0 1 2 3 4 5 6 7 8 9 : ; < = > ? @ A B C 
+  D E F G H I J K L M N O P Q R S T U V W X Y Z [ \ ] ^ _ ` a b c d e f g h 
+  i j k l m n o p q r s t u v w x y z { | } ~ \x7f \xc0 \xc1 \xc2 \xc3 \xc4 
+  \xc5 \xc6 \xc7 \xc8 \xc9 \xca \xcb \xcc \xcd \xce \xcf \xd0 \xd1 \xd2 \xd3 
+  \xd4 \xd5 \xd6 \xd7 \xd8 \xd9 \xda \xdb \xdc \xdd \xde \xdf \xe0 \xe1 \xe2 
+  \xe3 \xe4 \xe5 \xe6 \xe7 \xe8 \xe9 \xea \xeb \xec \xed \xee \xef \xf0 \xf1 
+  \xf2 \xf3 \xf4 \xf5 \xf6 \xf7 \xf8 \xf9 \xfa \xfb \xfc \xfd \xfe \xff 
+Last code unit = ' '
+Subject length lower bound = 3
+    \x{a2} \x{84}
+ 0: \x{a2} \x{84}
+    A Z
+ 0: A Z
+
+/a+/utf
+    a\x{123}aa\=offset=1
+ 0: aa
+    a\x{123}aa\=offset=2
+Error -36 (bad UTF-8 offset)
+    a\x{123}aa\=offset=3
+ 0: aa
+    a\x{123}aa\=offset=4
+ 0: a
+    a\x{123}aa\=offset=5
+No match
+    a\x{123}aa\=offset=6
+Failed: error -33: bad offset value
+
+/\x{1234}+/Ii,utf
+Capturing subpattern count = 0
+Options: caseless utf
+Starting code units: \xe1 
+Subject length lower bound = 1
+
+/\x{1234}+?/Ii,utf
+Capturing subpattern count = 0
+Options: caseless utf
+Starting code units: \xe1 
+Subject length lower bound = 1
+
+/\x{1234}++/Ii,utf
+Capturing subpattern count = 0
+Options: caseless utf
+Starting code units: \xe1 
+Subject length lower bound = 1
+
+/\x{1234}{2}/Ii,utf
+Capturing subpattern count = 0
+Options: caseless utf
+Starting code units: \xe1 
+Subject length lower bound = 2
+
+/[^\x{c4}]/IB,utf
+------------------------------------------------------------------
+        Bra
+        [^\x{c4}]
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+Subject length lower bound = 1
+
+/X+\x{200}/IB,utf
+------------------------------------------------------------------
+        Bra
+        X++
+        \x{200}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = 'X'
+Last code unit = \x80
+Subject length lower bound = 2
+
+/\R/I,utf
+Capturing subpattern count = 0
+Options: utf
+Starting code units: \x0a \x0b \x0c \x0d \xc2 \xe2 
+Subject length lower bound = 1
+
+/\777/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{1ff}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = \xc7
+Last code unit = \xbf
+Subject length lower bound = 1
+
+/\w+\x{C4}/B,utf
+------------------------------------------------------------------
+        Bra
+        \w++
+        \x{c4}
+        Ket
+        End
+------------------------------------------------------------------
+    a\x{C4}\x{C4}
+ 0: a\x{c4}
+
+/\w+\x{C4}/B,utf,tables=2
+------------------------------------------------------------------
+        Bra
+        \w+
+        \x{c4}
+        Ket
+        End
+------------------------------------------------------------------
+    a\x{C4}\x{C4}
+ 0: a\x{c4}\x{c4}
+
+/\W+\x{C4}/B,utf
+------------------------------------------------------------------
+        Bra
+        \W+
+        \x{c4}
+        Ket
+        End
+------------------------------------------------------------------
+    !\x{C4}
+ 0: !\x{c4}
+
+/\W+\x{C4}/B,utf,tables=2
+------------------------------------------------------------------
+        Bra
+        \W++
+        \x{c4}
+        Ket
+        End
+------------------------------------------------------------------
+    !\x{C4}
+ 0: !\x{c4}
+
+/\W+\x{A1}/B,utf
+------------------------------------------------------------------
+        Bra
+        \W+
+        \x{a1}
+        Ket
+        End
+------------------------------------------------------------------
+    !\x{A1}
+ 0: !\x{a1}
+
+/\W+\x{A1}/B,utf,tables=2
+------------------------------------------------------------------
+        Bra
+        \W+
+        \x{a1}
+        Ket
+        End
+------------------------------------------------------------------
+    !\x{A1}
+ 0: !\x{a1}
+
+/X\s+\x{A0}/B,utf
+------------------------------------------------------------------
+        Bra
+        X
+        \s++
+        \x{a0}
+        Ket
+        End
+------------------------------------------------------------------
+    X\x20\x{A0}\x{A0}
+ 0: X \x{a0}
+
+/X\s+\x{A0}/B,utf,tables=2
+------------------------------------------------------------------
+        Bra
+        X
+        \s+
+        \x{a0}
+        Ket
+        End
+------------------------------------------------------------------
+    X\x20\x{A0}\x{A0}
+ 0: X \x{a0}\x{a0}
+
+/\S+\x{A0}/B,utf
+------------------------------------------------------------------
+        Bra
+        \S+
+        \x{a0}
+        Ket
+        End
+------------------------------------------------------------------
+    X\x{A0}\x{A0}
+ 0: X\x{a0}\x{a0}
+
+/\S+\x{A0}/B,utf,tables=2
+------------------------------------------------------------------
+        Bra
+        \S++
+        \x{a0}
+        Ket
+        End
+------------------------------------------------------------------
+    X\x{A0}\x{A0}
+ 0: X\x{a0}
+
+/\x{a0}+\s!/B,utf
+------------------------------------------------------------------
+        Bra
+        \x{a0}++
+        \s
+        !
+        Ket
+        End
+------------------------------------------------------------------
+    \x{a0}\x20!
+ 0: \x{a0} !
+
+/\x{a0}+\s!/B,utf,tables=2
+------------------------------------------------------------------
+        Bra
+        \x{a0}+
+        \s
+        !
+        Ket
+        End
+------------------------------------------------------------------
+    \x{a0}\x20!
+ 0: \x{a0} !
+
+/A/utf
+  \x{ff000041}
+** Character \x{ff000041} is greater than 0x7fffffff and so cannot be converted to UTF-8
+  \x{7f000041}
+Failed: error -14: UTF-8 error: 6-byte character is not allowed (RFC 3629) at offset 0
+
+/(*UTF8)abc/never_utf
+Failed: error 174 at offset 7: using UTF is disabled by the application
+
+/abc/utf,never_utf
+Failed: error 174 at offset 0: using UTF is disabled by the application
+
+/A\x{391}\x{10427}\x{ff3a}\x{1fb0}/IBi,utf
+------------------------------------------------------------------
+        Bra
+     /i A\x{391}\x{10427}\x{ff3a}\x{1fb0}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: caseless utf
+First code unit = 'A' (caseless)
+Subject length lower bound = 5
+
+/A\x{391}\x{10427}\x{ff3a}\x{1fb0}/IB,utf
+------------------------------------------------------------------
+        Bra
+        A\x{391}\x{10427}\x{ff3a}\x{1fb0}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = 'A'
+Last code unit = \xb0
+Subject length lower bound = 5
+
+/AB\x{1fb0}/IB,utf
+------------------------------------------------------------------
+        Bra
+        AB\x{1fb0}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+First code unit = 'A'
+Last code unit = \xb0
+Subject length lower bound = 3
+
+/AB\x{1fb0}/IBi,utf
+------------------------------------------------------------------
+        Bra
+     /i AB\x{1fb0}
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: caseless utf
+First code unit = 'A' (caseless)
+Last code unit = 'B' (caseless)
+Subject length lower bound = 3
+
+/\x{401}\x{420}\x{421}\x{422}\x{423}\x{424}\x{425}\x{426}\x{427}\x{428}\x{429}\x{42a}\x{42b}\x{42c}\x{42d}\x{42e}\x{42f}/Ii,utf
+Capturing subpattern count = 0
+Options: caseless utf
+Starting code units: \xd0 \xd1 
+Subject length lower bound = 17
+    \x{401}\x{420}\x{421}\x{422}\x{423}\x{424}\x{425}\x{426}\x{427}\x{428}\x{429}\x{42a}\x{42b}\x{42c}\x{42d}\x{42e}\x{42f}
+ 0: \x{401}\x{420}\x{421}\x{422}\x{423}\x{424}\x{425}\x{426}\x{427}\x{428}\x{429}\x{42a}\x{42b}\x{42c}\x{42d}\x{42e}\x{42f}
+    \x{451}\x{440}\x{441}\x{442}\x{443}\x{444}\x{445}\x{446}\x{447}\x{448}\x{449}\x{44a}\x{44b}\x{44c}\x{44d}\x{44e}\x{44f}
+ 0: \x{451}\x{440}\x{441}\x{442}\x{443}\x{444}\x{445}\x{446}\x{447}\x{448}\x{449}\x{44a}\x{44b}\x{44c}\x{44d}\x{44e}\x{44f}
+
+/[â±¥]/Bi,utf
+------------------------------------------------------------------
+        Bra
+     /i \x{2c65}
+        Ket
+        End
+------------------------------------------------------------------
+
+/[^â±¥]/Bi,utf
+------------------------------------------------------------------
+        Bra
+     /i [^\x{2c65}]
+        Ket
+        End
+------------------------------------------------------------------
+
+/\h/I
+Capturing subpattern count = 0
+Starting code units: \x09 \x20 \xa0 
+Subject length lower bound = 1
+
+/\v/I
+Capturing subpattern count = 0
+Starting code units: \x0a \x0b \x0c \x0d \x85 
+Subject length lower bound = 1
+
+/\R/I
+Capturing subpattern count = 0
+Starting code units: \x0a \x0b \x0c \x0d \x85 
+Subject length lower bound = 1
+
+/[[:blank:]]/B,ucp
+------------------------------------------------------------------
+        Bra
+        [\x09 \xa0]
+        Ket
+        End
+------------------------------------------------------------------
+
+/\x{212a}+/Ii,utf
+Capturing subpattern count = 0
+Options: caseless utf
+Starting code units: K k \xe2 
+Subject length lower bound = 1
+    KKkk\x{212a}
+ 0: KKkk\x{212a}
+
+/s+/Ii,utf
+Capturing subpattern count = 0
+Options: caseless utf
+Starting code units: S s \xc5 
+Subject length lower bound = 1
+    SSss\x{17f}
+ 0: SSss\x{17f}
+
+/\x{100}*A/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{100}*+
+        A
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+Starting code units: A \xc4 
+Last code unit = 'A'
+Subject length lower bound = 1
+    A
+ 0: A
+
+/\x{100}*\d(?R)/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{100}*+
+        \d
+        Recurse
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+Starting code units: 0 1 2 3 4 5 6 7 8 9 \xc4 
+Subject length lower bound = 1
+
+/[Z\x{100}]/IB,utf
+------------------------------------------------------------------
+        Bra
+        [Z\x{100}]
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+Starting code units: Z \xc4 \xc5 \xc6 \xc7 \xc8 \xc9 \xca \xcb \xcc \xcd 
+  \xce \xcf \xd0 \xd1 \xd2 \xd3 \xd4 \xd5 \xd6 \xd7 \xd8 \xd9 \xda \xdb \xdc 
+  \xdd \xde \xdf \xe0 \xe1 \xe2 \xe3 \xe4 \xe5 \xe6 \xe7 \xe8 \xe9 \xea \xeb 
+  \xec \xed \xee \xef \xf0 \xf1 \xf2 \xf3 \xf4 \xf5 \xf6 \xf7 \xf8 \xf9 \xfa 
+  \xfb \xfc \xfd \xfe \xff 
+Subject length lower bound = 1
+    Z\x{100}
+ 0: Z
+    \x{100}
+ 0: \x{100}
+    \x{100}Z
+ 0: \x{100}
+    *** Failers 
+No match
+
+/[z-\x{100}]/IB,utf
+------------------------------------------------------------------
+        Bra
+        [z-\xff\x{100}]
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+Starting code units: z { | } ~ \x7f \xc2 \xc3 \xc4 \xc5 \xc6 \xc7 \xc8 \xc9 
+  \xca \xcb \xcc \xcd \xce \xcf \xd0 \xd1 \xd2 \xd3 \xd4 \xd5 \xd6 \xd7 \xd8 
+  \xd9 \xda \xdb \xdc \xdd \xde \xdf \xe0 \xe1 \xe2 \xe3 \xe4 \xe5 \xe6 \xe7 
+  \xe8 \xe9 \xea \xeb \xec \xed \xee \xef \xf0 \xf1 \xf2 \xf3 \xf4 \xf5 \xf6 
+  \xf7 \xf8 \xf9 \xfa \xfb \xfc \xfd \xfe \xff 
+Subject length lower bound = 1
+
+/[z\Qa-d]Ä€\E]/IB,utf
+------------------------------------------------------------------
+        Bra
+        [\-\]adz\x{100}]
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+Starting code units: - ] a d z \xc4 \xc5 \xc6 \xc7 \xc8 \xc9 \xca \xcb \xcc 
+  \xcd \xce \xcf \xd0 \xd1 \xd2 \xd3 \xd4 \xd5 \xd6 \xd7 \xd8 \xd9 \xda \xdb 
+  \xdc \xdd \xde \xdf \xe0 \xe1 \xe2 \xe3 \xe4 \xe5 \xe6 \xe7 \xe8 \xe9 \xea 
+  \xeb \xec \xed \xee \xef \xf0 \xf1 \xf2 \xf3 \xf4 \xf5 \xf6 \xf7 \xf8 \xf9 
+  \xfa \xfb \xfc \xfd \xfe \xff 
+Subject length lower bound = 1
+    \x{100}
+ 0: \x{100}
+    Ä€ 
+ 0: \x{100}
+
+/[ab\x{100}]abc(xyz(?1))/IB,utf
+------------------------------------------------------------------
+        Bra
+        [ab\x{100}]
+        abc
+        CBra 1
+        xyz
+        Recurse
+        Ket
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 1
+Options: utf
+Starting code units: a b \xc4 \xc5 \xc6 \xc7 \xc8 \xc9 \xca \xcb \xcc \xcd 
+  \xce \xcf \xd0 \xd1 \xd2 \xd3 \xd4 \xd5 \xd6 \xd7 \xd8 \xd9 \xda \xdb \xdc 
+  \xdd \xde \xdf \xe0 \xe1 \xe2 \xe3 \xe4 \xe5 \xe6 \xe7 \xe8 \xe9 \xea \xeb 
+  \xec \xed \xee \xef \xf0 \xf1 \xf2 \xf3 \xf4 \xf5 \xf6 \xf7 \xf8 \xf9 \xfa 
+  \xfb \xfc \xfd \xfe \xff 
+Last code unit = 'z'
+Subject length lower bound = 7
+
+/\x{100}*\s/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{100}*+
+        \s
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+Starting code units: \x09 \x0a \x0b \x0c \x0d \x20 \xc4 
+Subject length lower bound = 1
+
+/\x{100}*\d/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{100}*+
+        \d
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+Starting code units: 0 1 2 3 4 5 6 7 8 9 \xc4 
+Subject length lower bound = 1
+
+/\x{100}*\w/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{100}*+
+        \w
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+Starting code units: 0 1 2 3 4 5 6 7 8 9 A B C D E F G H I J K L M N O P 
+  Q R S T U V W X Y Z _ a b c d e f g h i j k l m n o p q r s t u v w x y z 
+  \xc4 
+Subject length lower bound = 1
+
+/\x{100}*\D/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{100}*
+        \D
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+Starting code units: \x00 \x01 \x02 \x03 \x04 \x05 \x06 \x07 \x08 \x09 \x0a 
+  \x0b \x0c \x0d \x0e \x0f \x10 \x11 \x12 \x13 \x14 \x15 \x16 \x17 \x18 \x19 
+  \x1a \x1b \x1c \x1d \x1e \x1f \x20 ! " # $ % & ' ( ) * + , - . / : ; < = > 
+  ? @ A B C D E F G H I J K L M N O P Q R S T U V W X Y Z [ \ ] ^ _ ` a b c 
+  d e f g h i j k l m n o p q r s t u v w x y z { | } ~ \x7f \xc0 \xc1 \xc2 
+  \xc3 \xc4 \xc5 \xc6 \xc7 \xc8 \xc9 \xca \xcb \xcc \xcd \xce \xcf \xd0 \xd1 
+  \xd2 \xd3 \xd4 \xd5 \xd6 \xd7 \xd8 \xd9 \xda \xdb \xdc \xdd \xde \xdf \xe0 
+  \xe1 \xe2 \xe3 \xe4 \xe5 \xe6 \xe7 \xe8 \xe9 \xea \xeb \xec \xed \xee \xef 
+  \xf0 \xf1 \xf2 \xf3 \xf4 \xf5 \xf6 \xf7 \xf8 \xf9 \xfa \xfb \xfc \xfd \xfe 
+  \xff 
+Subject length lower bound = 1
+
+/\x{100}*\S/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{100}*
+        \S
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+Starting code units: \x00 \x01 \x02 \x03 \x04 \x05 \x06 \x07 \x08 \x0e \x0f 
+  \x10 \x11 \x12 \x13 \x14 \x15 \x16 \x17 \x18 \x19 \x1a \x1b \x1c \x1d \x1e 
+  \x1f ! " # $ % & ' ( ) * + , - . / 0 1 2 3 4 5 6 7 8 9 : ; < = > ? @ A B C 
+  D E F G H I J K L M N O P Q R S T U V W X Y Z [ \ ] ^ _ ` a b c d e f g h 
+  i j k l m n o p q r s t u v w x y z { | } ~ \x7f \xc0 \xc1 \xc2 \xc3 \xc4 
+  \xc5 \xc6 \xc7 \xc8 \xc9 \xca \xcb \xcc \xcd \xce \xcf \xd0 \xd1 \xd2 \xd3 
+  \xd4 \xd5 \xd6 \xd7 \xd8 \xd9 \xda \xdb \xdc \xdd \xde \xdf \xe0 \xe1 \xe2 
+  \xe3 \xe4 \xe5 \xe6 \xe7 \xe8 \xe9 \xea \xeb \xec \xed \xee \xef \xf0 \xf1 
+  \xf2 \xf3 \xf4 \xf5 \xf6 \xf7 \xf8 \xf9 \xfa \xfb \xfc \xfd \xfe \xff 
+Subject length lower bound = 1
+
+/\x{100}*\W/IB,utf
+------------------------------------------------------------------
+        Bra
+        \x{100}*
+        \W
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: utf
+Starting code units: \x00 \x01 \x02 \x03 \x04 \x05 \x06 \x07 \x08 \x09 \x0a 
+  \x0b \x0c \x0d \x0e \x0f \x10 \x11 \x12 \x13 \x14 \x15 \x16 \x17 \x18 \x19 
+  \x1a \x1b \x1c \x1d \x1e \x1f \x20 ! " # $ % & ' ( ) * + , - . / : ; < = > 
+  ? @ [ \ ] ^ ` { | } ~ \x7f \xc0 \xc1 \xc2 \xc3 \xc4 \xc5 \xc6 \xc7 \xc8 \xc9 
+  \xca \xcb \xcc \xcd \xce \xcf \xd0 \xd1 \xd2 \xd3 \xd4 \xd5 \xd6 \xd7 \xd8 
+  \xd9 \xda \xdb \xdc \xdd \xde \xdf \xe0 \xe1 \xe2 \xe3 \xe4 \xe5 \xe6 \xe7 
+  \xe8 \xe9 \xea \xeb \xec \xed \xee \xef \xf0 \xf1 \xf2 \xf3 \xf4 \xf5 \xf6 
+  \xf7 \xf8 \xf9 \xfa \xfb \xfc \xfd \xfe \xff 
+Subject length lower bound = 1
+
+/[\x{105}-\x{109}]/IBi,utf
+------------------------------------------------------------------
+        Bra
+        [\x{104}-\x{109}]
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: caseless utf
+Starting code units: \xc4 \xc5 \xc6 \xc7 \xc8 \xc9 \xca \xcb \xcc \xcd \xce 
+  \xcf \xd0 \xd1 \xd2 \xd3 \xd4 \xd5 \xd6 \xd7 \xd8 \xd9 \xda \xdb \xdc \xdd 
+  \xde \xdf \xe0 \xe1 \xe2 \xe3 \xe4 \xe5 \xe6 \xe7 \xe8 \xe9 \xea \xeb \xec 
+  \xed \xee \xef \xf0 \xf1 \xf2 \xf3 \xf4 \xf5 \xf6 \xf7 \xf8 \xf9 \xfa \xfb 
+  \xfc \xfd \xfe \xff 
+Subject length lower bound = 1
+    \x{104}
+ 0: \x{104}
+    \x{105}
+ 0: \x{105}
+    \x{109}  
+ 0: \x{109}
+    ** Failers
+No match
+    \x{100}
+No match
+    \x{10a} 
+No match
+    
+/[z-\x{100}]/IBi,utf
+------------------------------------------------------------------
+        Bra
+        [Zz-\xff\x{39c}\x{3bc}\x{212b}\x{1e9e}\x{212b}\x{178}\x{100}-\x{101}]
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: caseless utf
+Starting code units: Z z { | } ~ \x7f \xc2 \xc3 \xc4 \xc5 \xc6 \xc7 \xc8 
+  \xc9 \xca \xcb \xcc \xcd \xce \xcf \xd0 \xd1 \xd2 \xd3 \xd4 \xd5 \xd6 \xd7 
+  \xd8 \xd9 \xda \xdb \xdc \xdd \xde \xdf \xe0 \xe1 \xe2 \xe3 \xe4 \xe5 \xe6 
+  \xe7 \xe8 \xe9 \xea \xeb \xec \xed \xee \xef \xf0 \xf1 \xf2 \xf3 \xf4 \xf5 
+  \xf6 \xf7 \xf8 \xf9 \xfa \xfb \xfc \xfd \xfe \xff 
+Subject length lower bound = 1
+    Z
+ 0: Z
+    z
+ 0: z
+    \x{39c}
+ 0: \x{39c}
+    \x{178}
+ 0: \x{178}
+    |
+ 0: |
+    \x{80}
+ 0: \x{80}
+    \x{ff}
+ 0: \x{ff}
+    \x{100}
+ 0: \x{100}
+    \x{101} 
+ 0: \x{101}
+    ** Failers
+No match
+    \x{102}
+No match
+    Y
+No match
+    y           
+No match
+
+/[z-\x{100}]/IBi,utf
+------------------------------------------------------------------
+        Bra
+        [Zz-\xff\x{39c}\x{3bc}\x{212b}\x{1e9e}\x{212b}\x{178}\x{100}-\x{101}]
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: caseless utf
+Starting code units: Z z { | } ~ \x7f \xc2 \xc3 \xc4 \xc5 \xc6 \xc7 \xc8 
+  \xc9 \xca \xcb \xcc \xcd \xce \xcf \xd0 \xd1 \xd2 \xd3 \xd4 \xd5 \xd6 \xd7 
+  \xd8 \xd9 \xda \xdb \xdc \xdd \xde \xdf \xe0 \xe1 \xe2 \xe3 \xe4 \xe5 \xe6 
+  \xe7 \xe8 \xe9 \xea \xeb \xec \xed \xee \xef \xf0 \xf1 \xf2 \xf3 \xf4 \xf5 
+  \xf6 \xf7 \xf8 \xf9 \xfa \xfb \xfc \xfd \xfe \xff 
+Subject length lower bound = 1
+
+/\x{3a3}B/IBi,utf
+------------------------------------------------------------------
+        Bra
+        clist 03a3 03c2 03c3
+     /i B
+        Ket
+        End
+------------------------------------------------------------------
+Capturing subpattern count = 0
+Options: caseless utf
+Starting code units: \xce \xcf 
+Last code unit = 'B' (caseless)
+Subject length lower bound = 2
+
+/abc/utf,replace=Ã
+   abc
+Failed: error -3: UTF-8 error: 1 byte missing at end
+
+# End of testinput10

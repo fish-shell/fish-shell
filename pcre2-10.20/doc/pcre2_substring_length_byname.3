@@ -1,0 +1,34 @@
+.TH PCRE2_SUBSTRING_LENGTH_BYNAME 3 "21 October 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B int pcre2_substring_length_byname(pcre2_match_data *\fImatch_data\fP,
+.B "  PCRE2_SPTR \fIname\fP, PCRE2_SIZE *\fIlength\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function returns the length of a matched substring, identified by name.
+The arguments are:
+.sp
+  \fImatch_data\fP   The match data block for the match
+  \fIname\fP         The substring name
+  \fIlength\fP       Where to return the length
+.sp
+The yield is zero on success, or an error code if the substring is not found.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

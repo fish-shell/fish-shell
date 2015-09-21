@@ -1,0 +1,2123 @@
+# This set of tests checks UTF and Unicode property support with the DFA
+# matching functionality of pcre_dfa_match(). A default subject modifier is
+# used to force DFA matching for all tests.
+
+#subject dfa
+
+/\x{100}ab/utf
+  \x{100}ab
+  
+/a\x{100}*b/utf
+    ab
+    a\x{100}b  
+    a\x{100}\x{100}b  
+    
+/a\x{100}+b/utf
+    a\x{100}b  
+    a\x{100}\x{100}b  
+    *** Failers 
+    ab
+     
+/\bX/utf
+    Xoanon
+    +Xoanon
+    \x{300}Xoanon 
+    *** Failers 
+    YXoanon  
+    
+/\BX/utf
+    YXoanon
+    *** Failers
+    Xoanon
+    +Xoanon    
+    \x{300}Xoanon 
+
+/X\b/utf
+    X+oanon
+    ZX\x{300}oanon 
+    FAX 
+    *** Failers 
+    Xoanon  
+    
+/X\B/utf
+    Xoanon  
+    *** Failers
+    X+oanon
+    ZX\x{300}oanon 
+    FAX 
+    
+/[^a]/utf
+    abcd
+    a\x{100}   
+
+/^[abc\x{123}\x{400}-\x{402}]{2,3}\d/utf
+    ab99
+    \x{123}\x{123}45
+    \x{400}\x{401}\x{402}6  
+    *** Failers
+    d99
+    \x{123}\x{122}4   
+    \x{400}\x{403}6  
+    \x{400}\x{401}\x{402}\x{402}6  
+
+/a.b/utf
+    acb
+    a\x7fb
+    a\x{100}b 
+    *** Failers
+    a\nb  
+
+/a(.{3})b/utf
+    a\x{4000}xyb 
+    a\x{4000}\x7fyb 
+    a\x{4000}\x{100}yb 
+    *** Failers
+    a\x{4000}b 
+    ac\ncb 
+
+/a(.*?)(.)/
+    a\xc0\x88b
+
+/a(.*?)(.)/utf
+    a\x{100}b
+
+/a(.*)(.)/
+    a\xc0\x88b
+
+/a(.*)(.)/utf
+    a\x{100}b
+
+/a(.)(.)/
+    a\xc0\x92bcd
+
+/a(.)(.)/utf
+    a\x{240}bcd
+
+/a(.?)(.)/
+    a\xc0\x92bcd
+
+/a(.?)(.)/utf
+    a\x{240}bcd
+
+/a(.??)(.)/
+    a\xc0\x92bcd
+
+/a(.??)(.)/utf
+    a\x{240}bcd
+
+/a(.{3})b/utf
+    a\x{1234}xyb 
+    a\x{1234}\x{4321}yb 
+    a\x{1234}\x{4321}\x{3412}b 
+    *** Failers
+    a\x{1234}b 
+    ac\ncb 
+
+/a(.{3,})b/utf
+    a\x{1234}xyb 
+    a\x{1234}\x{4321}yb 
+    a\x{1234}\x{4321}\x{3412}b 
+    axxxxbcdefghijb 
+    a\x{1234}\x{4321}\x{3412}\x{3421}b 
+    *** Failers
+    a\x{1234}b 
+
+/a(.{3,}?)b/utf
+    a\x{1234}xyb 
+    a\x{1234}\x{4321}yb 
+    a\x{1234}\x{4321}\x{3412}b 
+    axxxxbcdefghijb 
+    a\x{1234}\x{4321}\x{3412}\x{3421}b 
+    *** Failers
+    a\x{1234}b 
+
+/a(.{3,5})b/utf
+    a\x{1234}xyb 
+    a\x{1234}\x{4321}yb 
+    a\x{1234}\x{4321}\x{3412}b 
+    axxxxbcdefghijb 
+    a\x{1234}\x{4321}\x{3412}\x{3421}b 
+    axbxxbcdefghijb 
+    axxxxxbcdefghijb 
+    *** Failers
+    a\x{1234}b 
+    axxxxxxbcdefghijb 
+
+/a(.{3,5}?)b/utf
+    a\x{1234}xyb 
+    a\x{1234}\x{4321}yb 
+    a\x{1234}\x{4321}\x{3412}b 
+    axxxxbcdefghijb 
+    a\x{1234}\x{4321}\x{3412}\x{3421}b 
+    axbxxbcdefghijb 
+    axxxxxbcdefghijb 
+    *** Failers
+    a\x{1234}b 
+    axxxxxxbcdefghijb 
+
+/^[a\x{c0}]/utf
+    *** Failers
+    \x{100}
+
+/(?<=aXb)cd/utf
+    aXbcd
+
+/(?<=a\x{100}b)cd/utf
+    a\x{100}bcd
+
+/(?<=a\x{100000}b)cd/utf
+    a\x{100000}bcd
+    
+/(?:\x{100}){3}b/utf
+    \x{100}\x{100}\x{100}b
+    *** Failers 
+    \x{100}\x{100}b
+
+/\x{ab}/utf
+    \x{ab} 
+    \xc2\xab
+    *** Failers 
+    \x00{ab}
+
+/(?<=(.))X/utf
+    WXYZ
+    \x{256}XYZ 
+    *** Failers
+    XYZ 
+
+/[^a]+/g,utf
+    bcd
+    \x{100}aY\x{256}Z 
+    
+/^[^a]{2}/utf
+    \x{100}bc
+ 
+/^[^a]{2,}/utf
+    \x{100}bcAa
+
+/^[^a]{2,}?/utf
+    \x{100}bca
+
+/[^a]+/gi,utf
+    bcd
+    \x{100}aY\x{256}Z 
+    
+/^[^a]{2}/i,utf
+    \x{100}bc
+ 
+/^[^a]{2,}/i,utf
+    \x{100}bcAa
+
+/^[^a]{2,}?/i,utf
+    \x{100}bca
+
+/\x{100}{0,0}/utf
+    abcd
+ 
+/\x{100}?/utf
+    abcd
+    \x{100}\x{100} 
+
+/\x{100}{0,3}/utf
+    \x{100}\x{100} 
+    \x{100}\x{100}\x{100}\x{100} 
+    
+/\x{100}*/utf
+    abce
+    \x{100}\x{100}\x{100}\x{100} 
+
+/\x{100}{1,1}/utf
+    abcd\x{100}\x{100}\x{100}\x{100} 
+
+/\x{100}{1,3}/utf
+    abcd\x{100}\x{100}\x{100}\x{100} 
+
+/\x{100}+/utf
+    abcd\x{100}\x{100}\x{100}\x{100} 
+
+/\x{100}{3}/utf
+    abcd\x{100}\x{100}\x{100}XX
+
+/\x{100}{3,5}/utf
+    abcd\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}XX
+
+/\x{100}{3,}/utf,no_auto_possess
+    abcd\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}XX
+
+/(?<=a\x{100}{2}b)X/utf
+    Xyyya\x{100}\x{100}bXzzz
+
+/\D*/utf,no_auto_possess
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+/\D*/utf,no_auto_possess
+  \x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}
+
+/\D/utf
+    1X2
+    1\x{100}2 
+  
+/>\S/utf
+    > >X Y
+    > >\x{100} Y
+  
+/\d/utf
+    \x{100}3
+    
+/\s/utf
+    \x{100} X
+    
+/\D+/utf
+    12abcd34
+    *** Failers
+    1234  
+
+/\D{2,3}/utf
+    12abcd34
+    12ab34
+    *** Failers  
+    1234
+    12a34  
+
+/\D{2,3}?/utf
+    12abcd34
+    12ab34
+    *** Failers  
+    1234
+    12a34  
+
+/\d+/utf
+    12abcd34
+    *** Failers
+
+/\d{2,3}/utf
+    12abcd34
+    1234abcd
+    *** Failers  
+    1.4 
+
+/\d{2,3}?/utf
+    12abcd34
+    1234abcd
+    *** Failers  
+    1.4 
+
+/\S+/utf
+    12abcd34
+    *** Failers
+    \    \ 
+
+/\S{2,3}/utf
+    12abcd34
+    1234abcd
+    *** Failers
+    \     \  
+
+/\S{2,3}?/utf
+    12abcd34
+    1234abcd
+    *** Failers
+    \     \  
+
+/>\s+</utf
+    12>      <34
+    *** Failers
+
+/>\s{2,3}</utf
+    ab>  <cd
+    ab>   <ce
+    *** Failers
+    ab>    <cd 
+
+/>\s{2,3}?</utf
+    ab>  <cd
+    ab>   <ce
+    *** Failers
+    ab>    <cd 
+
+/\w+/utf
+    12      34
+    *** Failers
+    +++=*! 
+
+/\w{2,3}/utf
+    ab  cd
+    abcd ce
+    *** Failers
+    a.b.c
+
+/\w{2,3}?/utf
+    ab  cd
+    abcd ce
+    *** Failers
+    a.b.c
+
+/\W+/utf
+    12====34
+    *** Failers
+    abcd 
+
+/\W{2,3}/utf
+    ab====cd
+    ab==cd
+    *** Failers
+    a.b.c
+
+/\W{2,3}?/utf
+    ab====cd
+    ab==cd
+    *** Failers
+    a.b.c
+
+/[\x{100}]/utf
+    \x{100}
+    Z\x{100}
+    \x{100}Z
+    *** Failers 
+
+/[Z\x{100}]/utf
+    Z\x{100}
+    \x{100}
+    \x{100}Z
+    *** Failers 
+
+/[\x{100}\x{200}]/utf
+   ab\x{100}cd
+   ab\x{200}cd
+   *** Failers  
+
+/[\x{100}-\x{200}]/utf
+   ab\x{100}cd
+   ab\x{200}cd
+   ab\x{111}cd 
+   *** Failers  
+
+/[z-\x{200}]/utf
+   ab\x{100}cd
+   ab\x{200}cd
+   ab\x{111}cd 
+   abzcd
+   ab|cd  
+   *** Failers  
+
+/[Q\x{100}\x{200}]/utf
+   ab\x{100}cd
+   ab\x{200}cd
+   Q? 
+   *** Failers  
+
+/[Q\x{100}-\x{200}]/utf
+   ab\x{100}cd
+   ab\x{200}cd
+   ab\x{111}cd 
+   Q? 
+   *** Failers  
+
+/[Qz-\x{200}]/utf
+   ab\x{100}cd
+   ab\x{200}cd
+   ab\x{111}cd 
+   abzcd
+   ab|cd  
+   Q? 
+   *** Failers  
+
+/[\x{100}\x{200}]{1,3}/utf
+   ab\x{100}cd
+   ab\x{200}cd
+   ab\x{200}\x{100}\x{200}\x{100}cd
+   *** Failers  
+
+/[\x{100}\x{200}]{1,3}?/utf
+   ab\x{100}cd
+   ab\x{200}cd
+   ab\x{200}\x{100}\x{200}\x{100}cd
+   *** Failers  
+
+/[Q\x{100}\x{200}]{1,3}/utf
+   ab\x{100}cd
+   ab\x{200}cd
+   ab\x{200}\x{100}\x{200}\x{100}cd
+   *** Failers  
+
+/[Q\x{100}\x{200}]{1,3}?/utf
+   ab\x{100}cd
+   ab\x{200}cd
+   ab\x{200}\x{100}\x{200}\x{100}cd
+   *** Failers  
+
+/(?<=[\x{100}\x{200}])X/utf
+    abc\x{200}X
+    abc\x{100}X 
+    *** Failers
+    X  
+
+/(?<=[Q\x{100}\x{200}])X/utf
+    abc\x{200}X
+    abc\x{100}X 
+    abQX 
+    *** Failers
+    X  
+
+/(?<=[\x{100}\x{200}]{3})X/utf
+    abc\x{100}\x{200}\x{100}X
+    *** Failers
+    abc\x{200}X
+    X  
+
+/[^\x{100}\x{200}]X/utf
+    AX
+    \x{150}X
+    \x{500}X 
+    *** Failers
+    \x{100}X
+    \x{200}X   
+
+/[^Q\x{100}\x{200}]X/utf
+    AX
+    \x{150}X
+    \x{500}X 
+    *** Failers
+    \x{100}X
+    \x{200}X   
+    QX 
+
+/[^\x{100}-\x{200}]X/utf
+    AX
+    \x{500}X 
+    *** Failers
+    \x{100}X
+    \x{150}X
+    \x{200}X   
+
+/[z-\x{100}]/i,utf
+    z
+    Z 
+    \x{100}
+    *** Failers
+    \x{102}
+    y    
+
+/[\xFF]/
+    >\xff<
+
+/[\xff]/utf
+    >\x{ff}<
+
+/[^\xFF]/
+    XYZ
+
+/[^\xff]/utf
+    XYZ
+    \x{123} 
+
+/^[ac]*b/utf
+  xb
+
+/^[ac\x{100}]*b/utf
+  xb
+
+/^[^x]*b/i,utf
+  xb
+
+/^[^x]*b/utf
+  xb
+  
+/^\d*b/utf
+  xb 
+
+/(|a)/g,utf
+    catac
+    a\x{256}a 
+
+/^\x{85}$/i,utf
+    \x{85}
+
+/^abc./gmx,newline=any,utf
+    abc1 \x0aabc2 \x0babc3xx \x0cabc4 \x0dabc5xx \x0d\x0aabc6 \x{0085}abc7 \x{2028}abc8 \x{2029}abc9 JUNK
+
+/abc.$/gmx,newline=any,utf
+    abc1\x0a abc2\x0b abc3\x0c abc4\x0d abc5\x0d\x0a abc6\x{0085} abc7\x{2028} abc8\x{2029} abc9
+
+/^a\Rb/bsr=unicode,utf
+    a\nb
+    a\rb
+    a\r\nb
+    a\x0bb
+    a\x0cb
+    a\x{85}b   
+    a\x{2028}b 
+    a\x{2029}b 
+    ** Failers
+    a\n\rb    
+
+/^a\R*b/bsr=unicode,utf
+    ab
+    a\nb
+    a\rb
+    a\r\nb
+    a\x0bb
+    a\x0c\x{2028}\x{2029}b
+    a\x{85}b   
+    a\n\rb    
+    a\n\r\x{85}\x0cb 
+
+/^a\R+b/bsr=unicode,utf
+    a\nb
+    a\rb
+    a\r\nb
+    a\x0bb
+    a\x0c\x{2028}\x{2029}b
+    a\x{85}b   
+    a\n\rb    
+    a\n\r\x{85}\x0cb 
+    ** Failers
+    ab  
+
+/^a\R{1,3}b/bsr=unicode,utf
+    a\nb
+    a\n\rb
+    a\n\r\x{85}b
+    a\r\n\r\nb 
+    a\r\n\r\n\r\nb 
+    a\n\r\n\rb
+    a\n\n\r\nb 
+    ** Failers
+    a\n\n\n\rb
+    a\r
+
+/\h+\V?\v{3,4}/utf,no_auto_possess
+    \x09\x20\x{a0}X\x0a\x0b\x0c\x0d\x0a
+
+/\V?\v{3,4}/utf,no_auto_possess
+    \x20\x{a0}X\x0a\x0b\x0c\x0d\x0a
+
+/\h+\V?\v{3,4}/utf,no_auto_possess
+    >\x09\x20\x{a0}X\x0a\x0a\x0a<
+
+/\V?\v{3,4}/utf,no_auto_possess
+    >\x09\x20\x{a0}X\x0a\x0a\x0a<
+
+/\H\h\V\v/utf
+    X X\x0a
+    X\x09X\x0b
+    ** Failers
+    \x{a0} X\x0a   
+    
+/\H*\h+\V?\v{3,4}/utf,no_auto_possess
+    \x09\x20\x{a0}X\x0a\x0b\x0c\x0d\x0a
+    \x09\x20\x{a0}\x0a\x0b\x0c\x0d\x0a
+    \x09\x20\x{a0}\x0a\x0b\x0c
+    ** Failers 
+    \x09\x20\x{a0}\x0a\x0b
+     
+/\H\h\V\v/utf
+    \x{3001}\x{3000}\x{2030}\x{2028}
+    X\x{180e}X\x{85}
+    ** Failers
+    \x{2009} X\x0a   
+    
+/\H*\h+\V?\v{3,4}/utf,no_auto_possess
+    \x{1680}\x{180e}\x{2007}X\x{2028}\x{2029}\x0c\x0d\x0a
+    \x09\x{205f}\x{a0}\x0a\x{2029}\x0c\x{2028}\x0a
+    \x09\x20\x{202f}\x0a\x0b\x0c
+    ** Failers 
+    \x09\x{200a}\x{a0}\x{2028}\x0b
+     
+/a\Rb/I,bsr=anycrlf,utf
+    a\rb
+    a\nb
+    a\r\nb
+    ** Failers
+    a\x{85}b
+    a\x0bb     
+
+/a\Rb/I,bsr=unicode,utf
+    a\rb
+    a\nb
+    a\r\nb
+    a\x{85}b
+    a\x0bb     
+    
+/a\R?b/I,bsr=anycrlf,utf
+    a\rb
+    a\nb
+    a\r\nb
+    ** Failers
+    a\x{85}b
+    a\x0bb     
+
+/a\R?b/I,bsr=unicode,utf
+    a\rb
+    a\nb
+    a\r\nb
+    a\x{85}b
+    a\x0bb     
+ 
+/X/newline=any,utf,firstline
+    A\x{1ec5}ABCXYZ
+
+/abcd*/utf
+    xxxxabcd\=ps
+    xxxxabcd\=ph
+
+/abcd*/i,utf
+    xxxxabcd\=ps
+    xxxxabcd\=ph
+    XXXXABCD\=ps
+    XXXXABCD\=ph
+
+/abc\d*/utf
+    xxxxabc1\=ps
+    xxxxabc1\=ph
+
+/abc[de]*/utf
+    xxxxabcde\=ps
+    xxxxabcde\=ph
+
+/\bthe cat\b/utf
+    the cat\=ps
+    the cat\=ph
+
+/ab\Cde/utf
+    abXde
+
+/(?<=ab\Cde)X/utf
+
+/./newline=crlf,utf
+    \r\=ps
+    \r\=ph
+  
+/.{2,3}/newline=crlf,utf
+    \r\=ps
+    \r\=ph
+    \r\r\=ps
+    \r\r\=ph
+    \r\r\r\=ps
+    \r\r\r\=ph
+
+/.{2,3}?/newline=crlf,utf
+    \r\=ps
+    \r\=ph
+    \r\r\=ps
+    \r\r\=ph
+    \r\r\r\=ps
+    \r\r\r\=ph
+
+/[^\x{100}]/utf
+    \x{100}\x{101}X
+
+/[^\x{100}]+/utf
+    \x{100}\x{101}X
+
+/\pL\P{Nd}/utf
+    AB
+    *** Failers
+    A0
+    00
+
+/\X./utf
+    AB
+    A\x{300}BC
+    A\x{300}\x{301}\x{302}BC
+    *** Failers
+    \x{300}
+
+/\X\X/utf
+    ABC
+    A\x{300}B\x{300}\x{301}C
+    A\x{300}\x{301}\x{302}BC
+    *** Failers
+    \x{300}
+
+/^\pL+/utf
+    abcd
+    a
+    *** Failers
+
+/^\PL+/utf
+    1234
+    =
+    *** Failers
+    abcd
+
+/^\X+/utf
+    abcdA\x{300}\x{301}\x{302}
+    A\x{300}\x{301}\x{302}
+    A\x{300}\x{301}\x{302}A\x{300}\x{301}\x{302}
+    a
+    *** Failers
+    \x{300}\x{301}\x{302}
+
+/\X?abc/utf
+    abc
+    A\x{300}abc
+    A\x{300}\x{301}\x{302}A\x{300}A\x{300}A\x{300}abcxyz
+    \x{300}abc
+    *** Failers
+
+/^\X?abc/utf
+    abc
+    A\x{300}abc
+    *** Failers
+    A\x{300}\x{301}\x{302}A\x{300}A\x{300}A\x{300}abcxyz
+    \x{300}abc
+
+/\X*abc/utf
+    abc
+    A\x{300}abc
+    A\x{300}\x{301}\x{302}A\x{300}A\x{300}A\x{300}abcxyz
+    \x{300}abc
+    *** Failers
+
+/^\X*abc/utf
+    abc
+    A\x{300}abc
+    A\x{300}\x{301}\x{302}A\x{300}A\x{300}A\x{300}abcxyz
+    *** Failers
+    \x{300}abc
+
+/^\pL?=./utf
+    A=b
+    =c
+    *** Failers
+    1=2
+    AAAA=b
+
+/^\pL*=./utf
+    AAAA=b
+    =c
+    *** Failers
+    1=2
+
+/^\X{2,3}X/utf
+    A\x{300}\x{301}\x{302}A\x{300}\x{301}\x{302}X
+    A\x{300}\x{301}\x{302}A\x{300}\x{301}\x{302}A\x{300}\x{301}\x{302}X
+    *** Failers
+    X
+    A\x{300}\x{301}\x{302}X
+    A\x{300}\x{301}\x{302}A\x{300}\x{301}\x{302}A\x{300}\x{301}\x{302}A\x{300}\x{301}\x{302}X
+
+/^\pC\pL\pM\pN\pP\pS\pZ</utf
+    \x7f\x{c0}\x{30f}\x{660}\x{66c}\x{f01}\x{1680}<
+    \np\x{300}9!\$ <
+    ** Failers
+    ap\x{300}9!\$ <
+  
+/^\PC/utf
+    X
+    ** Failers
+    \x7f
+  
+/^\PL/utf
+    9
+    ** Failers
+    \x{c0}
+  
+/^\PM/utf
+    X
+    ** Failers
+    \x{30f}
+  
+/^\PN/utf
+    X
+    ** Failers
+    \x{660}
+  
+/^\PP/utf
+    X
+    ** Failers
+    \x{66c}
+  
+/^\PS/utf
+    X
+    ** Failers
+    \x{f01}
+  
+/^\PZ/utf
+    X
+    ** Failers
+    \x{1680}
+    
+/^\p{Cc}/utf
+    \x{017}
+    \x{09f}
+    ** Failers
+    \x{0600}
+  
+/^\p{Cf}/utf
+    \x{601}
+    \x{180e}
+    \x{061c}
+    \x{2066}
+    \x{2067}
+    \x{2068}
+    \x{2069}
+    ** Failers
+    \x{09f}
+  
+/^\p{Cn}/utf
+    ** Failers
+    \x{09f}
+  
+/^\p{Co}/utf
+    \x{f8ff}
+    ** Failers
+    \x{09f}
+  
+/^\p{Cs}/utf
+    \x{dfff}\=no_utf_check
+    ** Failers
+    \x{09f}
+  
+/^\p{Ll}/utf
+    a
+    ** Failers
+    Z
+    \x{e000}
+  
+/^\p{Lm}/utf
+    \x{2b0}
+    ** Failers
+    a
+  
+/^\p{Lo}/utf
+    \x{1bb}
+    ** Failers
+    a
+    \x{2b0}
+  
+/^\p{Lt}/utf
+    \x{1c5}
+    ** Failers
+    a
+    \x{2b0}
+  
+/^\p{Lu}/utf
+    A
+    ** Failers
+    \x{2b0}
+  
+/^\p{Mc}/utf
+    \x{903}
+    ** Failers
+    X
+    \x{300}
+       
+/^\p{Me}/utf
+    \x{488}
+    ** Failers
+    X
+    \x{903}
+    \x{300}
+  
+/^\p{Mn}/utf
+    \x{300}
+    \x{1a1b}
+    ** Failers
+    X
+    \x{903}
+  
+/^\p{Nd}+/utf,no_auto_possess
+    0123456789\x{660}\x{661}\x{662}\x{663}\x{664}\x{665}\x{666}\x{667}\x{668}\x{669}\x{66a}
+    \x{6f0}\x{6f1}\x{6f2}\x{6f3}\x{6f4}\x{6f5}\x{6f6}\x{6f7}\x{6f8}\x{6f9}\x{6fa}
+    \x{966}\x{967}\x{968}\x{969}\x{96a}\x{96b}\x{96c}\x{96d}\x{96e}\x{96f}\x{970}
+    ** Failers
+    X
+  
+/^\p{Nl}/utf
+    \x{16ee}
+    ** Failers
+    X
+    \x{966}
+  
+/^\p{No}/utf
+    \x{b2}
+    \x{b3}
+    ** Failers
+    X
+    \x{16ee}
+  
+/^\p{Pc}/utf
+    \x5f
+    \x{203f}
+    ** Failers
+    X
+    -
+    \x{58a}
+  
+/^\p{Pd}/utf
+    -
+    \x{58a}
+    ** Failers
+    X
+    \x{203f}
+  
+/^\p{Pe}/utf
+    )
+    ]
+    }
+    \x{f3b}
+    \x{2309}
+    \x{230b}
+    ** Failers
+    X
+    \x{203f}
+    (
+    [
+    {
+    \x{f3c}
+
+/^\p{Pf}/utf
+    \x{bb}
+    \x{2019}
+    ** Failers
+    X
+    \x{203f}
+  
+/^\p{Pi}/utf
+    \x{ab}
+    \x{2018}
+    ** Failers
+    X
+    \x{203f}
+  
+/^\p{Po}/utf
+    !
+    \x{37e}
+    ** Failers
+    X
+    \x{203f}
+  
+/^\p{Ps}/utf
+    (
+    [
+    {
+    \x{f3c}
+    \x{2308}
+    \x{230a}
+    ** Failers
+    X
+    )
+    ]
+    }
+    \x{f3b}
+  
+/^\p{Sc}+/utf
+    $\x{a2}\x{a3}\x{a4}\x{a5}\x{a6}
+    \x{9f2}
+    ** Failers
+    X
+    \x{2c2}
+  
+/^\p{Sk}/utf
+    \x{2c2}
+    ** Failers
+    X
+    \x{9f2}
+  
+/^\p{Sm}+/utf
+    +<|~\x{ac}\x{2044}
+    ** Failers
+    X
+    \x{9f2}
+  
+/^\p{So}/utf
+    \x{a6}
+    \x{482}
+    ** Failers
+    X
+    \x{9f2}
+  
+/^\p{Zl}/utf
+    \x{2028}
+    ** Failers
+    X
+    \x{2029}
+  
+/^\p{Zp}/utf
+    \x{2029}
+    ** Failers
+    X
+    \x{2028}
+  
+/^\p{Zs}/utf
+    \ \
+    \x{a0}
+    \x{1680}
+    \x{2000}
+    \x{2001}
+    ** Failers
+    \x{2028}
+    \x{200d}
+  
+/\p{Nd}+(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}+?(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}{2,}(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}{2,}?(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}*(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}*?(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}{2}(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}{2,3}(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}{2,3}?(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}?(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}??(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}*+(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}*+(...)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}*+(....)/utf
+      ** Failers
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Lu}/i,utf
+    A
+    a\x{10a0}B
+    ** Failers
+    a
+    \x{1d00}
+
+/\p{^Lu}/i,utf
+    1234
+    ** Failers
+    ABC
+
+/\P{Lu}/i,utf
+    1234
+    ** Failers
+    ABC
+
+/(?<=A\p{Nd})XYZ/utf
+    A2XYZ
+    123A5XYZPQR
+    ABA\x{660}XYZpqr
+    ** Failers
+    AXYZ
+    XYZ
+    
+/(?<!\pL)XYZ/utf
+    1XYZ
+    AB=XYZ..
+    XYZ
+    ** Failers
+    WXYZ
+
+/[\p{Nd}]/utf
+    1234
+
+/[\p{Nd}+-]+/utf
+    1234
+    12-34
+    12+\x{661}-34
+    ** Failers
+    abcd
+
+/[\P{Nd}]+/utf
+    abcd
+    ** Failers
+    1234
+
+/\D+/utf,no_auto_possess
+    11111111111111111111111111111111111111111111111111111111111111111111111
+    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+     
+/\P{Nd}+/utf,no_auto_possess
+    11111111111111111111111111111111111111111111111111111111111111111111111
+    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+/[\D]+/utf,no_auto_possess
+    11111111111111111111111111111111111111111111111111111111111111111111111
+    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+/[\P{Nd}]+/utf,no_auto_possess
+    11111111111111111111111111111111111111111111111111111111111111111111111
+    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+/[\D\P{Nd}]+/utf,no_auto_possess
+    11111111111111111111111111111111111111111111111111111111111111111111111
+    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+/\pL/utf
+    a
+    A
+
+/\pL/i,utf
+    a
+    A
+    
+/\p{Lu}/utf
+    A
+    aZ
+    ** Failers
+    abc
+
+/\p{Lu}/i,utf
+    A
+    aZ
+    ** Failers
+    abc
+
+/\p{Ll}/utf
+    a
+    Az
+    ** Failers
+    ABC
+
+/\p{Ll}/i,utf
+    a
+    Az
+    ** Failers
+    ABC
+
+/^\x{c0}$/i,utf
+    \x{c0}
+    \x{e0}
+
+/^\x{e0}$/i,utf
+    \x{c0}
+    \x{e0}
+
+/A\x{391}\x{10427}\x{ff3a}\x{1fb0}/utf
+    A\x{391}\x{10427}\x{ff3a}\x{1fb0}
+    ** Failers
+    a\x{391}\x{10427}\x{ff3a}\x{1fb0}
+    A\x{3b1}\x{10427}\x{ff3a}\x{1fb0}
+    A\x{391}\x{1044F}\x{ff3a}\x{1fb0}
+    A\x{391}\x{10427}\x{ff5a}\x{1fb0}
+    A\x{391}\x{10427}\x{ff3a}\x{1fb8}
+
+/A\x{391}\x{10427}\x{ff3a}\x{1fb0}/i,utf
+    A\x{391}\x{10427}\x{ff3a}\x{1fb0}
+    a\x{391}\x{10427}\x{ff3a}\x{1fb0}
+    A\x{3b1}\x{10427}\x{ff3a}\x{1fb0}
+    A\x{391}\x{1044F}\x{ff3a}\x{1fb0}
+    A\x{391}\x{10427}\x{ff5a}\x{1fb0}
+    A\x{391}\x{10427}\x{ff3a}\x{1fb8}
+
+/\x{391}+/i,utf
+    \x{391}\x{3b1}\x{3b1}\x{3b1}\x{391}
+
+/\x{391}{3,5}(.)/i,utf
+    \x{391}\x{3b1}\x{3b1}\x{3b1}\x{391}X
+
+/\x{391}{3,5}?(.)/i,utf
+    \x{391}\x{3b1}\x{3b1}\x{3b1}\x{391}X
+
+/[\x{391}\x{ff3a}]/i,utf
+    \x{391}
+    \x{ff3a}
+    \x{3b1}
+    \x{ff5a}
+    
+/[\x{c0}\x{391}]/i,utf
+    \x{c0}
+    \x{e0}
+
+/[\x{105}-\x{109}]/i,utf
+    \x{104}
+    \x{105}
+    \x{109}
+    ** Failers
+    \x{100}
+    \x{10a}
+    
+/[z-\x{100}]/i,utf
+    Z
+    z
+    \x{39c}
+    \x{178}
+    |
+    \x{80}
+    \x{ff}
+    \x{100}
+    \x{101}
+    ** Failers
+    \x{102}
+    Y
+    y
+
+/[z-\x{100}]/i,utf
+
+/^\X/utf
+    A
+    A\x{300}BC
+    A\x{300}\x{301}\x{302}BC
+    *** Failers
+    \x{300}
+
+/^(\X*)C/utf
+    A\x{300}\x{301}\x{302}BCA\x{300}\x{301}
+    A\x{300}\x{301}\x{302}BCA\x{300}\x{301}C
+
+/^(\X*?)C/utf
+    A\x{300}\x{301}\x{302}BCA\x{300}\x{301}
+    A\x{300}\x{301}\x{302}BCA\x{300}\x{301}C
+
+/^(\X*)(.)/utf
+    A\x{300}\x{301}\x{302}BCA\x{300}\x{301}
+    A\x{300}\x{301}\x{302}BCA\x{300}\x{301}C
+
+/^(\X*?)(.)/utf
+    A\x{300}\x{301}\x{302}BCA\x{300}\x{301}
+    A\x{300}\x{301}\x{302}BCA\x{300}\x{301}C
+
+/^\X(.)/utf
+    *** Failers
+    A\x{300}\x{301}\x{302}
+
+/^\X{2,3}(.)/utf
+    A\x{300}\x{301}B\x{300}X
+    A\x{300}\x{301}B\x{300}C\x{300}\x{301}
+    A\x{300}\x{301}B\x{300}C\x{300}\x{301}X
+    A\x{300}\x{301}B\x{300}C\x{300}\x{301}DA\x{300}X
+    
+/^\X{2,3}?(.)/utf
+    A\x{300}\x{301}B\x{300}X
+    A\x{300}\x{301}B\x{300}C\x{300}\x{301}
+    A\x{300}\x{301}B\x{300}C\x{300}\x{301}X
+    A\x{300}\x{301}B\x{300}C\x{300}\x{301}DA\x{300}X
+
+/^\pN{2,3}X/
+    12X
+    123X
+    *** Failers
+    X
+    1X
+    1234X
+
+/\x{100}/i,utf
+    \x{100}
+    \x{101}
+    
+/^\p{Han}+/utf
+    \x{2e81}\x{3007}\x{2f804}\x{31a0}
+    ** Failers
+    \x{2e7f}
+
+/^\P{Katakana}+/utf
+    \x{3105}
+    ** Failers
+    \x{30ff}
+
+/^[\p{Arabic}]/utf
+    \x{06e9}
+    \x{060b}
+    ** Failers
+    X\x{06e9}
+
+/^[\P{Yi}]/utf
+    \x{2f800}
+    ** Failers
+    \x{a014}
+    \x{a4c6}
+
+/^\p{Any}X/utf
+    AXYZ
+    \x{1234}XYZ
+    ** Failers
+    X
+    
+/^\P{Any}X/utf
+    ** Failers
+    AX
+    
+/^\p{Any}?X/utf
+    XYZ
+    AXYZ
+    \x{1234}XYZ
+    ** Failers
+    ABXYZ
+
+/^\P{Any}?X/utf
+    XYZ
+    ** Failers
+    AXYZ
+    \x{1234}XYZ
+    ABXYZ
+
+/^\p{Any}+X/utf
+    AXYZ
+    \x{1234}XYZ
+    A\x{1234}XYZ
+    ** Failers
+    XYZ
+
+/^\P{Any}+X/utf
+    ** Failers
+    AXYZ
+    \x{1234}XYZ
+    A\x{1234}XYZ
+    XYZ
+
+/^\p{Any}*X/utf
+    XYZ
+    AXYZ
+    \x{1234}XYZ
+    A\x{1234}XYZ
+    ** Failers
+
+/^\P{Any}*X/utf
+    XYZ
+    ** Failers
+    AXYZ
+    \x{1234}XYZ
+    A\x{1234}XYZ
+
+/^[\p{Any}]X/utf
+    AXYZ
+    \x{1234}XYZ
+    ** Failers
+    X
+    
+/^[\P{Any}]X/utf
+    ** Failers
+    AX
+    
+/^[\p{Any}]?X/utf
+    XYZ
+    AXYZ
+    \x{1234}XYZ
+    ** Failers
+    ABXYZ
+
+/^[\P{Any}]?X/utf
+    XYZ
+    ** Failers
+    AXYZ
+    \x{1234}XYZ
+    ABXYZ
+
+/^[\p{Any}]+X/utf
+    AXYZ
+    \x{1234}XYZ
+    A\x{1234}XYZ
+    ** Failers
+    XYZ
+
+/^[\P{Any}]+X/utf
+    ** Failers
+    AXYZ
+    \x{1234}XYZ
+    A\x{1234}XYZ
+    XYZ
+
+/^[\p{Any}]*X/utf
+    XYZ
+    AXYZ
+    \x{1234}XYZ
+    A\x{1234}XYZ
+    ** Failers
+
+/^[\P{Any}]*X/utf
+    XYZ
+    ** Failers
+    AXYZ
+    \x{1234}XYZ
+    A\x{1234}XYZ
+
+/^\p{Any}{3,5}?/utf
+    abcdefgh
+    \x{1234}\n\r\x{3456}xyz
+
+/^\p{Any}{3,5}/utf
+    abcdefgh
+    \x{1234}\n\r\x{3456}xyz
+
+/^\P{Any}{3,5}?/utf
+    ** Failers
+    abcdefgh
+    \x{1234}\n\r\x{3456}xyz
+
+/^\p{L&}X/utf
+     AXY
+     aXY
+     \x{1c5}XY
+     ** Failers
+     \x{1bb}XY
+     \x{2b0}XY
+     !XY
+
+/^[\p{L&}]X/utf
+     AXY
+     aXY
+     \x{1c5}XY
+     ** Failers
+     \x{1bb}XY
+     \x{2b0}XY
+     !XY
+
+/^\p{L&}+X/utf
+     AXY
+     aXY
+     AbcdeXyz
+     \x{1c5}AbXY
+     abcDEXypqreXlmn
+     ** Failers
+     \x{1bb}XY
+     \x{2b0}XY
+     !XY
+
+/^[\p{L&}]+X/utf
+     AXY
+     aXY
+     AbcdeXyz
+     \x{1c5}AbXY
+     abcDEXypqreXlmn
+     ** Failers
+     \x{1bb}XY
+     \x{2b0}XY
+     !XY
+
+/^\p{L&}+?X/utf
+     AXY
+     aXY
+     AbcdeXyz
+     \x{1c5}AbXY
+     abcDEXypqreXlmn
+     ** Failers
+     \x{1bb}XY
+     \x{2b0}XY
+     !XY
+
+/^[\p{L&}]+?X/utf
+     AXY
+     aXY
+     AbcdeXyz
+     \x{1c5}AbXY
+     abcDEXypqreXlmn
+     ** Failers
+     \x{1bb}XY
+     \x{2b0}XY
+     !XY
+
+/^\P{L&}X/utf
+     !XY
+     \x{1bb}XY
+     \x{2b0}XY
+     ** Failers
+     \x{1c5}XY
+     AXY
+
+/^[\P{L&}]X/utf
+     !XY
+     \x{1bb}XY
+     \x{2b0}XY
+     ** Failers
+     \x{1c5}XY
+     AXY
+
+/^\x{023a}+?(\x{0130}+)/i,utf
+  \x{023a}\x{2c65}\x{0130}
+  
+/^\x{023a}+([^X])/i,utf
+  \x{023a}\x{2c65}X
+ 
+/\x{c0}+\x{116}+/i,utf
+    \x{c0}\x{e0}\x{116}\x{117}
+
+/[\x{c0}\x{116}]+/i,utf
+    \x{c0}\x{e0}\x{116}\x{117}
+
+/Check property support in non-UTF-8 mode/
+ 
+/\p{L}{4}/
+    123abcdefg
+    123abc\xc4\xc5zz
+
+/\p{Carian}\p{Cham}\p{Kayah_Li}\p{Lepcha}\p{Lycian}\p{Lydian}\p{Ol_Chiki}\p{Rejang}\p{Saurashtra}\p{Sundanese}\p{Vai}/utf
+    \x{102A4}\x{AA52}\x{A91D}\x{1C46}\x{10283}\x{1092E}\x{1C6B}\x{A93B}\x{A8BF}\x{1BA0}\x{A50A}====
+
+/\x{a77d}\x{1d79}/i,utf
+    \x{a77d}\x{1d79}
+    \x{1d79}\x{a77d}
+
+/\x{a77d}\x{1d79}/utf
+    \x{a77d}\x{1d79}
+    ** Failers
+    \x{1d79}\x{a77d}
+
+/^\p{Xan}/utf
+    ABCD
+    1234
+    \x{6ca}
+    \x{a6c}
+    \x{10a7}
+    ** Failers
+    _ABC
+
+/^\p{Xan}+/utf
+    ABCD1234\x{6ca}\x{a6c}\x{10a7}_
+    ** Failers
+    _ABC
+
+/^\p{Xan}*/utf
+    ABCD1234\x{6ca}\x{a6c}\x{10a7}_
+    
+/^\p{Xan}{2,9}/utf
+    ABCD1234\x{6ca}\x{a6c}\x{10a7}_
+    
+/^[\p{Xan}]/utf
+    ABCD1234_
+    1234abcd_
+    \x{6ca}
+    \x{a6c}
+    \x{10a7}
+    ** Failers
+    _ABC
+ 
+/^[\p{Xan}]+/utf
+    ABCD1234\x{6ca}\x{a6c}\x{10a7}_
+    ** Failers
+    _ABC
+
+/^>\p{Xsp}/utf
+    >\x{1680}\x{2028}\x{0b}
+    ** Failers
+    \x{0b}
+
+/^>\p{Xsp}+/utf,no_auto_possess
+    > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+
+/^>\p{Xsp}*/utf,no_auto_possess
+    > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+    
+/^>\p{Xsp}{2,9}/utf,no_auto_possess
+    > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+    
+/^>[\p{Xsp}]/utf,no_auto_possess
+    >\x{2028}\x{0b}
+ 
+/^>[\p{Xsp}]+/utf,no_auto_possess
+    > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+
+/^>\p{Xps}/utf
+    >\x{1680}\x{2028}\x{0b}
+    >\x{a0}
+    ** Failers
+    \x{0b}
+
+/^>\p{Xps}+/utf
+    > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+
+/^>\p{Xps}+?/utf
+    >\x{1680}\x{2028}\x{0b}
+
+/^>\p{Xps}*/utf
+    > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+    
+/^>\p{Xps}{2,9}/utf
+    > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+    
+/^>\p{Xps}{2,9}?/utf
+    > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+    
+/^>[\p{Xps}]/utf
+    >\x{2028}\x{0b}
+ 
+/^>[\p{Xps}]+/utf
+    > \x{09}\x{0a}\x{0c}\x{0d}\x{a0}\x{1680}\x{2028}\x{0b}
+
+/^\p{Xwd}/utf
+    ABCD
+    1234
+    \x{6ca}
+    \x{a6c}
+    \x{10a7}
+    _ABC
+    ** Failers
+    []
+
+/^\p{Xwd}+/utf
+    ABCD1234\x{6ca}\x{a6c}\x{10a7}_
+
+/^\p{Xwd}*/utf
+    ABCD1234\x{6ca}\x{a6c}\x{10a7}_
+    
+/^\p{Xwd}{2,9}/utf
+    A_12\x{6ca}\x{a6c}\x{10a7}
+    
+/^[\p{Xwd}]/utf
+    ABCD1234_
+    1234abcd_
+    \x{6ca}
+    \x{a6c}
+    \x{10a7}
+    _ABC
+    ** Failers
+    []
+ 
+/^[\p{Xwd}]+/utf
+    ABCD1234\x{6ca}\x{a6c}\x{10a7}_
+
+# Unicode properties for \b abd \B 
+
+/\b...\B/utf,ucp
+    abc_
+    \x{37e}abc\x{376}
+    \x{37e}\x{376}\x{371}\x{393}\x{394}
+    !\x{c0}++\x{c1}\x{c2}
+    !\x{c0}+++++
+
+# Without PCRE_UCP, non-ASCII always fail, even if < 256  
+
+/\b...\B/utf
+    abc_
+    ** Failers
+    \x{37e}abc\x{376}
+    \x{37e}\x{376}\x{371}\x{393}\x{394}
+    !\x{c0}++\x{c1}\x{c2}
+    !\x{c0}+++++
+
+# With PCRE_UCP, non-UTF8 chars that are < 256 still check properties  
+
+/\b...\B/ucp
+    abc_
+    !\x{c0}++\x{c1}\x{c2}
+    !\x{c0}+++++
+    
+# Caseless single negated characters > 127 need UCP support 
+
+/[^\x{100}]/i,utf
+    \x{100}\x{101}X
+
+/[^\x{100}]+/i,utf
+    \x{100}\x{101}XX
+
+/^\X/utf
+    A\=ps
+    A\=ph
+    A\x{300}\x{301}\=ps
+    A\x{300}\x{301}\=ph
+    A\x{301}\=ps
+    A\x{301}\=ph
+    
+/^\X{2,3}/utf
+    A\=ps
+    A\=ph
+    AA\=ps
+    AA\=ph
+    A\x{300}\x{301}\=ps
+    A\x{300}\x{301}\=ph
+    A\x{300}\x{301}A\x{300}\x{301}\=ps
+    A\x{300}\x{301}A\x{300}\x{301}\=ph
+
+/^\X{2}/utf
+    AA\=ps
+    AA\=ph
+    A\x{300}\x{301}A\x{300}\x{301}\=ps
+    A\x{300}\x{301}A\x{300}\x{301}\=ph
+    
+/^\X+/utf
+    AA\=ps
+    AA\=ph
+
+/^\X+?Z/utf
+    AA\=ps
+    AA\=ph
+
+# These are tests for extended grapheme clusters  
+
+/^\X/utf,aftertext
+    G\x{34e}\x{34e}X
+    \x{34e}\x{34e}X
+    \x04X
+    \x{1100}X
+    \x{1100}\x{34e}X
+    \x{1b04}\x{1b04}X
+    *These match up to the roman letters
+    \x{1111}\x{1111}L,L
+    \x{1111}\x{1111}\x{1169}L,L,V
+    \x{1111}\x{ae4c}L, LV
+    \x{1111}\x{ad89}L, LVT
+    \x{1111}\x{ae4c}\x{1169}L, LV, V
+    \x{1111}\x{ae4c}\x{1169}\x{1169}L, LV, V, V
+    \x{1111}\x{ae4c}\x{1169}\x{11fe}L, LV, V, T
+    \x{1111}\x{ad89}\x{11fe}L, LVT, T
+    \x{1111}\x{ad89}\x{11fe}\x{11fe}L, LVT, T, T
+    \x{ad89}\x{11fe}\x{11fe}LVT, T, T
+    *These match just the first codepoint (invalid sequence)
+    \x{1111}\x{11fe}L, T
+    \x{ae4c}\x{1111}LV, L
+    \x{ae4c}\x{ae4c}LV, LV
+    \x{ae4c}\x{ad89}LV, LVT
+    \x{1169}\x{1111}V, L
+    \x{1169}\x{ae4c}V, LV
+    \x{1169}\x{ad89}V, LVT
+    \x{ad89}\x{1111}LVT, L
+    \x{ad89}\x{1169}LVT, V
+    \x{ad89}\x{ae4c}LVT, LV
+    \x{ad89}\x{ad89}LVT, LVT
+    \x{11fe}\x{1111}T, L
+    \x{11fe}\x{1169}T, V
+    \x{11fe}\x{ae4c}T, LV
+    \x{11fe}\x{ad89}T, LVT
+    *Test extend and spacing mark
+    \x{1111}\x{ae4c}\x{0711}L, LV, extend
+    \x{1111}\x{ae4c}\x{1b04}L, LV, spacing mark
+    \x{1111}\x{ae4c}\x{1b04}\x{0711}\x{1b04}L, LV, spacing mark, extend, spacing mark
+    *Test CR, LF, and control
+    \x0d\x{0711}CR, extend
+    \x0d\x{1b04}CR, spacingmark
+    \x0a\x{0711}LF, extend
+    \x0a\x{1b04}LF, spacingmark
+    \x0b\x{0711}Control, extend
+    \x09\x{1b04}Control, spacingmark
+    *There are no Prepend characters, so we can't test Prepend, CR
+    
+/^(?>\X{2})X/utf,aftertext
+    \x{1111}\x{ae4c}\x{1111}\x{ae4c}X
+    
+/^\X{2,4}X/utf,aftertext
+    \x{1111}\x{ae4c}\x{1111}\x{ae4c}X
+    \x{1111}\x{ae4c}\x{1111}\x{ae4c}\x{1111}\x{ae4c}X
+    \x{1111}\x{ae4c}\x{1111}\x{ae4c}\x{1111}\x{ae4c}\x{1111}\x{ae4c}X
+
+/^\X{2,4}?X/utf,aftertext
+    \x{1111}\x{ae4c}\x{1111}\x{ae4c}X
+    \x{1111}\x{ae4c}\x{1111}\x{ae4c}\x{1111}\x{ae4c}X
+    \x{1111}\x{ae4c}\x{1111}\x{ae4c}\x{1111}\x{ae4c}\x{1111}\x{ae4c}X
+
+/\x{1e9e}+/i,utf
+    \x{1e9e}\x{00df}
+
+/[z\x{1e9e}]+/i,utf
+    \x{1e9e}\x{00df}
+
+/\x{00df}+/i,utf
+    \x{1e9e}\x{00df}
+
+/[z\x{00df}]+/i,utf
+    \x{1e9e}\x{00df}
+
+/\x{1f88}+/i,utf
+    \x{1f88}\x{1f80}
+
+/[z\x{1f88}]+/i,utf
+    \x{1f88}\x{1f80}
+
+# Perl matches these 
+
+/\x{00b5}+/i,utf
+    \x{00b5}\x{039c}\x{03bc}
+
+/\x{039c}+/i,utf
+    \x{00b5}\x{039c}\x{03bc}
+
+/\x{03bc}+/i,utf
+    \x{00b5}\x{039c}\x{03bc}
+
+
+/\x{00c5}+/i,utf
+    \x{00c5}\x{00e5}\x{212b}
+
+/\x{00e5}+/i,utf
+    \x{00c5}\x{00e5}\x{212b}
+
+/\x{212b}+/i,utf
+    \x{00c5}\x{00e5}\x{212b}
+
+
+/\x{01c4}+/i,utf
+    \x{01c4}\x{01c5}\x{01c6}
+
+/\x{01c5}+/i,utf
+    \x{01c4}\x{01c5}\x{01c6}
+
+/\x{01c6}+/i,utf
+    \x{01c4}\x{01c5}\x{01c6}
+
+
+/\x{01c7}+/i,utf
+    \x{01c7}\x{01c8}\x{01c9}
+
+/\x{01c8}+/i,utf
+    \x{01c7}\x{01c8}\x{01c9}
+
+/\x{01c9}+/i,utf
+    \x{01c7}\x{01c8}\x{01c9}
+
+
+/\x{01ca}+/i,utf
+    \x{01ca}\x{01cb}\x{01cc}
+
+/\x{01cb}+/i,utf
+    \x{01ca}\x{01cb}\x{01cc}
+
+/\x{01cc}+/i,utf
+    \x{01ca}\x{01cb}\x{01cc}
+
+
+/\x{01f1}+/i,utf
+    \x{01f1}\x{01f2}\x{01f3}
+
+/\x{01f2}+/i,utf
+    \x{01f1}\x{01f2}\x{01f3}
+
+/\x{01f3}+/i,utf
+    \x{01f1}\x{01f2}\x{01f3}
+
+
+/\x{0345}+/i,utf
+    \x{0345}\x{0399}\x{03b9}\x{1fbe}
+
+/\x{0399}+/i,utf
+    \x{0345}\x{0399}\x{03b9}\x{1fbe}
+
+/\x{03b9}+/i,utf
+    \x{0345}\x{0399}\x{03b9}\x{1fbe}
+
+/\x{1fbe}+/i,utf
+    \x{0345}\x{0399}\x{03b9}\x{1fbe}
+
+
+/\x{0392}+/i,utf
+    \x{0392}\x{03b2}\x{03d0}
+
+/\x{03b2}+/i,utf
+    \x{0392}\x{03b2}\x{03d0}
+
+/\x{03d0}+/i,utf
+    \x{0392}\x{03b2}\x{03d0}
+    
+
+/\x{0395}+/i,utf
+    \x{0395}\x{03b5}\x{03f5}
+
+/\x{03b5}+/i,utf
+    \x{0395}\x{03b5}\x{03f5}
+
+/\x{03f5}+/i,utf
+    \x{0395}\x{03b5}\x{03f5}
+
+
+/\x{0398}+/i,utf
+    \x{0398}\x{03b8}\x{03d1}\x{03f4}
+
+/\x{03b8}+/i,utf
+    \x{0398}\x{03b8}\x{03d1}\x{03f4}
+
+/\x{03d1}+/i,utf
+    \x{0398}\x{03b8}\x{03d1}\x{03f4}
+
+/\x{03f4}+/i,utf
+    \x{0398}\x{03b8}\x{03d1}\x{03f4}
+    
+
+/\x{039a}+/i,utf
+    \x{039a}\x{03ba}\x{03f0}
+
+/\x{03ba}+/i,utf
+    \x{039a}\x{03ba}\x{03f0}
+
+/\x{03f0}+/i,utf
+    \x{039a}\x{03ba}\x{03f0}
+    
+
+/\x{03a0}+/i,utf
+    \x{03a0}\x{03c0}\x{03d6}
+
+/\x{03c0}+/i,utf
+    \x{03a0}\x{03c0}\x{03d6}
+
+/\x{03d6}+/i,utf
+    \x{03a0}\x{03c0}\x{03d6}
+
+
+/\x{03a1}+/i,utf
+    \x{03a1}\x{03c1}\x{03f1}
+
+/\x{03c1}+/i,utf
+    \x{03a1}\x{03c1}\x{03f1}
+
+/\x{03f1}+/i,utf
+    \x{03a1}\x{03c1}\x{03f1}
+
+
+/\x{03a3}+/i,utf
+    \x{03A3}\x{03C2}\x{03C3}
+
+/\x{03c2}+/i,utf
+    \x{03A3}\x{03C2}\x{03C3}
+
+/\x{03c3}+/i,utf
+    \x{03A3}\x{03C2}\x{03C3}
+    
+
+/\x{03a6}+/i,utf
+    \x{03a6}\x{03c6}\x{03d5}
+
+/\x{03c6}+/i,utf
+    \x{03a6}\x{03c6}\x{03d5}
+
+/\x{03d5}+/i,utf
+    \x{03a6}\x{03c6}\x{03d5}
+
+
+/\x{03c9}+/i,utf
+    \x{03c9}\x{03a9}\x{2126}
+
+/\x{03a9}+/i,utf
+    \x{03c9}\x{03a9}\x{2126}
+
+/\x{2126}+/i,utf
+    \x{03c9}\x{03a9}\x{2126}
+    
+
+/\x{1e60}+/i,utf
+    \x{1e60}\x{1e61}\x{1e9b}
+
+/\x{1e61}+/i,utf
+    \x{1e60}\x{1e61}\x{1e9b}
+
+/\x{1e9b}+/i,utf
+    \x{1e60}\x{1e61}\x{1e9b}
+    
+
+/\x{1e9e}+/i,utf
+    \x{1e9e}\x{00df}
+
+/\x{00df}+/i,utf
+    \x{1e9e}\x{00df}
+    
+
+/\x{1f88}+/i,utf
+    \x{1f88}\x{1f80}
+
+/\x{1f80}+/i,utf
+    \x{1f88}\x{1f80}
+
+/\x{004b}+/i,utf
+    \x{004b}\x{006b}\x{212a}
+
+/\x{006b}+/i,utf
+    \x{004b}\x{006b}\x{212a}
+
+/\x{212a}+/i,utf
+    \x{004b}\x{006b}\x{212a}
+
+
+/\x{0053}+/i,utf
+    \x{0053}\x{0073}\x{017f}
+
+/\x{0073}+/i,utf
+    \x{0053}\x{0073}\x{017f}
+
+/\x{017f}+/i,utf
+    \x{0053}\x{0073}\x{017f}
+
+/ist/i,utf
+    ikt
+
+/is+t/i,utf
+    iSs\x{17f}t
+    ikt
+
+/is+?t/i,utf
+    ikt
+
+/is?t/i,utf
+    ikt
+
+/is{2}t/i,utf
+    iskt
+
+/^\p{Xuc}/utf
+    $abc
+    @abc
+    `abc
+    \x{1234}abc
+    ** Failers
+    abc
+
+/^\p{Xuc}+/utf
+    $@`\x{a0}\x{1234}\x{e000}**
+    ** Failers
+    \x{9f}
+
+/^\p{Xuc}+?/utf
+    $@`\x{a0}\x{1234}\x{e000}**
+    ** Failers
+    \x{9f}
+
+/^\p{Xuc}+?\*/utf
+    $@`\x{a0}\x{1234}\x{e000}**
+    ** Failers
+    \x{9f}
+
+/^\p{Xuc}++/utf
+    $@`\x{a0}\x{1234}\x{e000}**
+    ** Failers
+    \x{9f}
+
+/^\p{Xuc}{3,5}/utf
+    $@`\x{a0}\x{1234}\x{e000}**
+    ** Failers
+    \x{9f}
+
+/^\p{Xuc}{3,5}?/utf
+    $@`\x{a0}\x{1234}\x{e000}**
+    ** Failers
+    \x{9f}
+
+/^[\p{Xuc}]/utf
+    $@`\x{a0}\x{1234}\x{e000}**
+    ** Failers
+    \x{9f}
+
+/^[\p{Xuc}]+/utf
+    $@`\x{a0}\x{1234}\x{e000}**
+    ** Failers
+    \x{9f}
+
+/^\P{Xuc}/utf
+    abc
+    ** Failers
+    $abc
+    @abc
+    `abc
+    \x{1234}abc
+
+/^[\P{Xuc}]/utf
+    abc
+    ** Failers
+    $abc
+    @abc
+    `abc
+    \x{1234}abc
+
+/^A\s+Z/utf,ucp
+    A\x{2005}Z
+    A\x{85}\x{180e}\x{2005}Z
+
+/^A[\s]+Z/utf,ucp
+    A\x{2005}Z
+    A\x{85}\x{180e}\x{2005}Z
+
+/(?<=\x{100})\x{200}(?=\x{300})/utf,allusedtext
+    \x{100}\x{200}\x{300}
+
+# End of testinput7

@@ -1,0 +1,100 @@
+# This set of tests exercises the serialization/deserialization functions in
+# the library. It does not use UTF or JIT.
+
+#forbid_utf
+
+# Compile several patterns, push them onto the stack, and then write them
+# all to a file.
+
+#pattern push
+
+/(?<NAME>(?&NAME_PAT))\s+(?<ADDR>(?&ADDRESS_PAT))
+  (?(DEFINE)
+  (?<NAME_PAT>[a-z]+)
+  (?<ADDRESS_PAT>\d+)
+  )/x
+/^(?:((.)(?1)\2|)|((.)(?3)\4|.))$/i
+
+#save testsaved1
+
+# Do it again for some more patterns.
+
+/(*MARK:A)(*SKIP:B)(C|X)/mark
+** Ignored when compiled pattern is stacked with 'push': mark
+/(?:(?<n>foo)|(?<n>bar))\k<n>/dupnames
+
+#save testsaved2
+#pattern -push
+
+# Reload the patterns, then pop them one by one and check them.
+
+#load testsaved1
+#load testsaved2
+
+#pop info
+Capturing subpattern count = 2
+Max back reference = 2
+Named capturing subpatterns:
+  n   1
+  n   2
+Options: dupnames
+Starting code units: b f 
+Subject length lower bound = 6
+    foofoo             
+ 0: foofoo
+ 1: foo
+    barbar
+ 0: barbar
+ 1: <unset>
+ 2: bar
+    
+#pop mark
+    C
+ 0: C
+ 1: C
+MK: A
+    D 
+No match, mark = A
+    
+#pop
+    AmanaplanacanalPanama   
+ 0: AmanaplanacanalPanama
+ 1: <unset>
+ 2: <unset>
+ 3: AmanaplanacanalPanama
+ 4: A
+
+#pop info
+Capturing subpattern count = 4
+Named capturing subpatterns:
+  ADDR          2
+  ADDRESS_PAT   4
+  NAME          1
+  NAME_PAT      3
+Options: extended
+Subject length lower bound = 3
+    metcalfe 33
+ 0: metcalfe 33
+ 1: metcalfe
+ 2: 33
+    
+# Check for an error when different tables are used.
+
+/abc/push,tables=1
+/xyz/push,tables=2
+#save testsaved1
+Serialization failed: error -30: patterns do not all use the same character tables
+
+#pop
+    xyz
+ 0: xyz
+
+#pop
+    abc
+ 0: abc
+
+#pop should give an error
+** Can't pop off an empty stack
+    pqr
+
+# End of testinput19 

@@ -1,0 +1,29 @@
+.TH PCRE2_MATCH_CONTEXT_COPY 3 "22 October 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B pcre2_match_context *pcre2_match_context_copy(
+.B "  pcre2_match_context *\fImcontext\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function makes a new copy of a match context, using the memory
+allocation function that was used for the original context. The result is NULL
+if the memory cannot be obtained.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

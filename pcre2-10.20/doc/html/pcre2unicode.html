@@ -1,0 +1,273 @@
+<html>
+<head>
+<title>pcre2unicode specification</title>
+</head>
+<body bgcolor="#FFFFFF" text="#00005A" link="#0066FF" alink="#3399FF" vlink="#2222BB">
+<h1>pcre2unicode man page</h1>
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>
+<p>
+This page is part of the PCRE2 HTML documentation. It was generated
+automatically from the original man page. If there is any nonsense in it,
+please consult the man page, in case the conversion went wrong.
+<br>
+<br><b>
+UNICODE AND UTF SUPPORT
+</b><br>
+<P>
+When PCRE2 is built with Unicode support (which is the default), it has
+knowledge of Unicode character properties and can process text strings in
+UTF-8, UTF-16, or UTF-32 format (depending on the code unit width). However, by
+default, PCRE2 assumes that one code unit is one character. To process a
+pattern as a UTF string, where a character may require more than one code unit,
+you must call
+<a href="pcre2_compile.html"><b>pcre2_compile()</b></a>
+with the PCRE2_UTF option flag, or the pattern must start with the sequence
+(*UTF). When either of these is the case, both the pattern and any subject
+strings that are matched against it are treated as UTF strings instead of
+strings of individual one-code-unit characters.
+</P>
+<P>
+If you do not need Unicode support you can build PCRE2 without it, in which
+case the library will be smaller.
+</P>
+<br><b>
+UNICODE PROPERTY SUPPORT
+</b><br>
+<P>
+When PCRE2 is built with Unicode support, the escape sequences \p{..},
+\P{..}, and \X can be used. The Unicode properties that can be tested are
+limited to the general category properties such as Lu for an upper case letter
+or Nd for a decimal number, the Unicode script names such as Arabic or Han, and
+the derived properties Any and L&. Full lists are given in the
+<a href="pcre2pattern.html"><b>pcre2pattern</b></a>
+and
+<a href="pcre2syntax.html"><b>pcre2syntax</b></a>
+documentation. Only the short names for properties are supported. For example,
+\p{L} matches a letter. Its Perl synonym, \p{Letter}, is not supported.
+Furthermore, in Perl, many properties may optionally be prefixed by "Is", for
+compatibility with Perl 5.6. PCRE does not support this.
+</P>
+<br><b>
+WIDE CHARACTERS AND UTF MODES
+</b><br>
+<P>
+Codepoints less than 256 can be specified in patterns by either braced or
+unbraced hexadecimal escape sequences (for example, \x{b3} or \xb3). Larger
+values have to use braced sequences. Unbraced octal code points up to \777 are
+also recognized; larger ones can be coded using \o{...}.
+</P>
+<P>
+In UTF modes, repeat quantifiers apply to complete UTF characters, not to
+individual code units.
+</P>
+<P>
+In UTF modes, the dot metacharacter matches one UTF character instead of a
+single code unit.
+</P>
+<P>
+The escape sequence \C can be used to match a single code unit, in a UTF mode,
+but its use can lead to some strange effects because it breaks up multi-unit
+characters (see the description of \C in the
+<a href="pcre2pattern.html"><b>pcre2pattern</b></a>
+documentation). The use of \C is not supported in the alternative matching
+function <b>pcre2_dfa_match()</b>, nor is it supported in UTF mode by the JIT
+optimization. If JIT optimization is requested for a UTF pattern that contains
+\C, it will not succeed, and so the matching will be carried out by the normal
+interpretive function.
+</P>
+<P>
+The character escapes \b, \B, \d, \D, \s, \S, \w, and \W correctly test
+characters of any code value, but, by default, the characters that PCRE2
+recognizes as digits, spaces, or word characters remain the same set as in
+non-UTF mode, all with code points less than 256. This remains true even when
+PCRE2 is built to include Unicode support, because to do otherwise would slow
+down matching in many common cases. Note that this also applies to \b
+and \B, because they are defined in terms of \w and \W. If you want
+to test for a wider sense of, say, "digit", you can use explicit Unicode
+property tests such as \p{Nd}. Alternatively, if you set the PCRE2_UCP option,
+the way that the character escapes work is changed so that Unicode properties
+are used to determine which characters match. There are more details in the
+section on
+<a href="pcre2pattern.html#genericchartypes">generic character types</a>
+in the
+<a href="pcre2pattern.html"><b>pcre2pattern</b></a>
+documentation.
+</P>
+<P>
+Similarly, characters that match the POSIX named character classes are all
+low-valued characters, unless the PCRE2_UCP option is set.
+</P>
+<P>
+However, the special horizontal and vertical white space matching escapes (\h,
+\H, \v, and \V) do match all the appropriate Unicode characters, whether or
+not PCRE2_UCP is set.
+</P>
+<P>
+Case-insensitive matching in UTF mode makes use of Unicode properties. A few
+Unicode characters such as Greek sigma have more than two codepoints that are
+case-equivalent, and these are treated as such.
+</P>
+<br><b>
+VALIDITY OF UTF STRINGS
+</b><br>
+<P>
+When the PCRE2_UTF option is set, the strings passed as patterns and subjects
+are (by default) checked for validity on entry to the relevant functions.
+If an invalid UTF string is passed, an negative error code is returned. The
+code unit offset to the offending character can be extracted from the match
+data block by calling <b>pcre2_get_startchar()</b>, which is used for this
+purpose after a UTF error.
+</P>
+<P>
+UTF-16 and UTF-32 strings can indicate their endianness by special code knows
+as a byte-order mark (BOM). The PCRE2 functions do not handle this, expecting
+strings to be in host byte order.
+</P>
+<P>
+The entire string is checked before any other processing takes place. In
+addition to checking the format of the string, there is a check to ensure that
+all code points lie in the range U+0 to U+10FFFF, excluding the surrogate area.
+The so-called "non-character" code points are not excluded because Unicode
+corrigendum #9 makes it clear that they should not be.
+</P>
+<P>
+Characters in the "Surrogate Area" of Unicode are reserved for use by UTF-16,
+where they are used in pairs to encode code points with values greater than
+0xFFFF. The code points that are encoded by UTF-16 pairs are available
+independently in the UTF-8 and UTF-32 encodings. (In other words, the whole
+surrogate thing is a fudge for UTF-16 which unfortunately messes up UTF-8 and
+UTF-32.)
+</P>
+<P>
+In some situations, you may already know that your strings are valid, and
+therefore want to skip these checks in order to improve performance, for
+example in the case of a long subject string that is being scanned repeatedly.
+If you set the PCRE2_NO_UTF_CHECK option at compile time or at match time,
+PCRE2 assumes that the pattern or subject it is given (respectively) contains
+only valid UTF code unit sequences.
+</P>
+<P>
+Passing PCRE2_NO_UTF_CHECK to <b>pcre2_compile()</b> just disables the check for
+the pattern; it does not also apply to subject strings. If you want to disable
+the check for a subject string you must pass this option to <b>pcre2_match()</b>
+or <b>pcre2_dfa_match()</b>.
+</P>
+<P>
+If you pass an invalid UTF string when PCRE2_NO_UTF_CHECK is set, the result
+is undefined and your program may crash or loop indefinitely.
+<a name="utf8strings"></a></P>
+<br><b>
+Errors in UTF-8 strings
+</b><br>
+<P>
+The following negative error codes are given for invalid UTF-8 strings:
+<pre>
+  PCRE2_ERROR_UTF8_ERR1
+  PCRE2_ERROR_UTF8_ERR2
+  PCRE2_ERROR_UTF8_ERR3
+  PCRE2_ERROR_UTF8_ERR4
+  PCRE2_ERROR_UTF8_ERR5
+</pre>
+The string ends with a truncated UTF-8 character; the code specifies how many
+bytes are missing (1 to 5). Although RFC 3629 restricts UTF-8 characters to be
+no longer than 4 bytes, the encoding scheme (originally defined by RFC 2279)
+allows for up to 6 bytes, and this is checked first; hence the possibility of
+4 or 5 missing bytes.
+<pre>
+  PCRE2_ERROR_UTF8_ERR6
+  PCRE2_ERROR_UTF8_ERR7
+  PCRE2_ERROR_UTF8_ERR8
+  PCRE2_ERROR_UTF8_ERR9
+  PCRE2_ERROR_UTF8_ERR10
+</pre>
+The two most significant bits of the 2nd, 3rd, 4th, 5th, or 6th byte of the
+character do not have the binary value 0b10 (that is, either the most
+significant bit is 0, or the next bit is 1).
+<pre>
+  PCRE2_ERROR_UTF8_ERR11
+  PCRE2_ERROR_UTF8_ERR12
+</pre>
+A character that is valid by the RFC 2279 rules is either 5 or 6 bytes long;
+these code points are excluded by RFC 3629.
+<pre>
+  PCRE2_ERROR_UTF8_ERR13
+</pre>
+A 4-byte character has a value greater than 0x10fff; these code points are
+excluded by RFC 3629.
+<pre>
+  PCRE2_ERROR_UTF8_ERR14
+</pre>
+A 3-byte character has a value in the range 0xd800 to 0xdfff; this range of
+code points are reserved by RFC 3629 for use with UTF-16, and so are excluded
+from UTF-8.
+<pre>
+  PCRE2_ERROR_UTF8_ERR15
+  PCRE2_ERROR_UTF8_ERR16
+  PCRE2_ERROR_UTF8_ERR17
+  PCRE2_ERROR_UTF8_ERR18
+  PCRE2_ERROR_UTF8_ERR19
+</pre>
+A 2-, 3-, 4-, 5-, or 6-byte character is "overlong", that is, it codes for a
+value that can be represented by fewer bytes, which is invalid. For example,
+the two bytes 0xc0, 0xae give the value 0x2e, whose correct coding uses just
+one byte.
+<pre>
+  PCRE2_ERROR_UTF8_ERR20
+</pre>
+The two most significant bits of the first byte of a character have the binary
+value 0b10 (that is, the most significant bit is 1 and the second is 0). Such a
+byte can only validly occur as the second or subsequent byte of a multi-byte
+character.
+<pre>
+  PCRE2_ERROR_UTF8_ERR21
+</pre>
+The first byte of a character has the value 0xfe or 0xff. These values can
+never occur in a valid UTF-8 string.
+<a name="utf16strings"></a></P>
+<br><b>
+Errors in UTF-16 strings
+</b><br>
+<P>
+The following negative error codes are given for invalid UTF-16 strings:
+<pre>
+  PCRE_UTF16_ERR1  Missing low surrogate at end of string
+  PCRE_UTF16_ERR2  Invalid low surrogate follows high surrogate
+  PCRE_UTF16_ERR3  Isolated low surrogate
+
+<a name="utf32strings"></a></PRE>
+</P>
+<br><b>
+Errors in UTF-32 strings
+</b><br>
+<P>
+The following negative error codes are given for invalid UTF-32 strings:
+<pre>
+  PCRE_UTF32_ERR1  Surrogate character (range from 0xd800 to 0xdfff)
+  PCRE_UTF32_ERR2  Code point is greater than 0x10ffff
+
+</PRE>
+</P>
+<br><b>
+AUTHOR
+</b><br>
+<P>
+Philip Hazel
+<br>
+University Computing Service
+<br>
+Cambridge, England.
+<br>
+</P>
+<br><b>
+REVISION
+</b><br>
+<P>
+Last updated: 23 November 2014
+<br>
+Copyright &copy; 1997-2014 University of Cambridge.
+<br>
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>

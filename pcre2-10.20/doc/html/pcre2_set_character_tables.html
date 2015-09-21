@@ -1,0 +1,42 @@
+<html>
+<head>
+<title>pcre2_set_character_tables specification</title>
+</head>
+<body bgcolor="#FFFFFF" text="#00005A" link="#0066FF" alink="#3399FF" vlink="#2222BB">
+<h1>pcre2_set_character_tables man page</h1>
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>
+<p>
+This page is part of the PCRE2 HTML documentation. It was generated
+automatically from the original man page. If there is any nonsense in it,
+please consult the man page, in case the conversion went wrong.
+<br>
+<br><b>
+SYNOPSIS
+</b><br>
+<P>
+<b>#include &#60;pcre2.h&#62;</b>
+</P>
+<P>
+<b>int pcre2_set_character_tables(pcre2_compile_context *<i>ccontext</i>,</b>
+<b>  const unsigned char *<i>tables</i>);</b>
+</P>
+<br><b>
+DESCRIPTION
+</b><br>
+<P>
+This function sets a pointer to custom character tables within a compile
+context. The second argument must be the result of a call to
+<b>pcre2_maketables()</b> or NULL to request the default tables. The result is
+always zero.
+</P>
+<P>
+There is a complete description of the PCRE2 native API in the
+<a href="pcre2api.html"><b>pcre2api</b></a>
+page and a description of the POSIX API in the
+<a href="pcre2posix.html"><b>pcre2posix</b></a>
+page.
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>

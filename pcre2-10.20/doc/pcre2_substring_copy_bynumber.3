@@ -1,0 +1,44 @@
+.TH PCRE2_SUBSTRING_COPY_BYNUMBER 3 "13 December 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B int pcre2_substring_copy_bynumber(pcre2_match_data *\fImatch_data\fP,
+.B "  uint32_t \fInumber\fP, PCRE2_UCHAR *\fIbuffer\fP,"
+.B "  PCRE2_SIZE *\fIbufflen\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This is a convenience function for extracting a captured substring into a given
+buffer. The arguments are:
+.sp
+  \fImatch_data\fP    The match data block for the match
+  \fInumber\fP        Number of the required substring
+  \fIbuffer\fP        Buffer to receive the string
+  \fIbufflen\fP       Length of buffer
+.sp
+The \fIbufflen\fP variable is updated with the length of the extracted string,
+excluding the terminating zero. The yield of the function is zero for success
+or one of the following error numbers:
+.sp
+  PCRE2_ERROR_NOSUBSTRING   there are no groups of that number
+  PCRE2_ERROR_UNAVAILBLE    the ovector was too small for that group
+  PCRE2_ERROR_UNSET         the group did not participate in the match
+  PCRE2_ERROR_NOMEMORY      the buffer is too small
+.sp
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

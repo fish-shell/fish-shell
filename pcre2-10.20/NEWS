@@ -1,0 +1,47 @@
+News about PCRE2 releases
+-------------------------
+
+Version 10.20 30-June-2015
+--------------------------
+
+1. Callouts with string arguments and the pcre2_callout_enumerate() function
+have been implemented.
+
+2. The PCRE2_NEVER_BACKSLASH_C option, which locks out the use of \C, is added.
+
+3. The PCRE2_ALT_CIRCUMFLEX option lets ^ match after a newline at the end of a
+subject in multiline mode.
+
+4. The way named subpatterns are handled has been refactored. The previous
+approach had several bugs.
+
+5. The handling of \c in EBCDIC environments has been changed to conform to the
+perlebcdic document. This is an incompatible change.
+
+6. Bugs have been mended, many of them discovered by fuzzers.
+
+
+Version 10.10 06-March-2015
+---------------------------
+
+1. Serialization and de-serialization functions have been added to the API,
+making it possible to save and restore sets of compiled patterns, though
+restoration must be done in the same environment that was used for compilation.
+
+2. The (*NO_JIT) feature has been added; this makes it possible for a pattern
+creator to specify that JIT is not to be used.
+
+3. A number of bugs have been fixed. In particular, bugs that caused building
+on Windows using CMake to fail have been mended.
+
+
+Version 10.00 05-January-2015
+-----------------------------
+
+Version 10.00 is the first release of PCRE2, a revised API for the PCRE
+library. Changes prior to 10.00 are logged in the ChangeLog file for the old
+API, up to item 20 for release 8.36. New programs are recommended to use the
+new library. Programs that use the original (PCRE1) API will need changing
+before linking with the new library.
+
+****

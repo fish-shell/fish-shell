@@ -1,0 +1,148 @@
+# This set of tests is run only with the 8-bit library. It tests the POSIX
+# interface, which is supported only with the 8-bit library. This test should
+# not be run with JIT (which is not available for the POSIX interface).
+    
+#forbid_utf
+#pattern posix
+
+# Test invalid options
+
+/abc/auto_callout
+** Ignored with POSIX interface: auto_callout
+
+/abc/
+   abc\=find_limits
+** Ignored with POSIX interface: find_limits
+ 0: abc
+
+/abc/
+  abc\=partial_hard
+** Ignored with POSIX interface: partial_hard
+ 0: abc
+
+# Real tests
+
+/abc/
+    abc
+ 0: abc
+    *** Failers
+No match: POSIX code 17: match failed
+
+/^abc|def/
+    abcdef
+ 0: abc
+    abcdef\=notbol
+ 0: def
+
+/.*((abc)$|(def))/
+    defabc
+ 0: defabc
+ 1: abc
+ 2: abc
+    defabc\=noteol
+ 0: def
+ 1: def
+ 3: def
+
+/the quick brown fox/
+    the quick brown fox
+ 0: the quick brown fox
+    *** Failers
+No match: POSIX code 17: match failed
+    The Quick Brown Fox
+No match: POSIX code 17: match failed
+
+/the quick brown fox/i
+    the quick brown fox
+ 0: the quick brown fox
+    The Quick Brown Fox
+ 0: The Quick Brown Fox
+
+/abc.def/
+    *** Failers
+No match: POSIX code 17: match failed
+    abc\ndef
+No match: POSIX code 17: match failed
+
+/abc$/
+    abc
+ 0: abc
+    abc\n
+ 0: abc
+
+/(abc)\2/
+Failed: POSIX code 15: bad back reference at offset 7     
+
+/(abc\1)/
+    abc
+No match: POSIX code 17: match failed
+
+/a*(b+)(z)(z)/
+    aaaabbbbzzzz
+ 0: aaaabbbbzz
+ 1: bbbb
+ 2: z
+ 3: z
+    aaaabbbbzzzz\=ovector=0
+Matched without capture
+    aaaabbbbzzzz\=ovector=1
+ 0: aaaabbbbzz
+    aaaabbbbzzzz\=ovector=2
+ 0: aaaabbbbzz
+ 1: bbbb
+
+/ab.cd/
+    ab-cd
+ 0: ab-cd
+    ab=cd
+ 0: ab=cd
+    ** Failers
+No match: POSIX code 17: match failed
+    ab\ncd
+No match: POSIX code 17: match failed
+
+/ab.cd/s
+    ab-cd
+ 0: ab-cd
+    ab=cd
+ 0: ab=cd
+    ab\ncd
+ 0: ab\x0acd
+
+/a(b)c/no_auto_capture
+    abc
+Matched with REG_NOSUB
+
+/a(?P<name>b)c/no_auto_capture
+    abc
+Matched with REG_NOSUB
+
+/a?|b?/
+    abc
+ 0: a
+    ** Failers
+ 0: 
+    ddd\=notempty
+No match: POSIX code 17: match failed
+
+/\w+A/
+   CDAAAAB
+ 0: CDAAAA
+
+/\w+A/ungreedy
+   CDAAAAB
+ 0: CDA
+   
+/\Biss\B/I,aftertext
+** Ignored with POSIX interface: info
+    Mississippi
+ 0: iss
+ 0+ issippi
+
+/abc/\
+Failed: POSIX code 9: bad escape sequence at offset 4     
+
+"(?(?C)"
+Failed: POSIX code 3: pattern error at offset 2     
+
+# End of testdata/testinput16  

@@ -1,0 +1,46 @@
+<html>
+<head>
+<title>pcre2_set_compile_recursion_guard specification</title>
+</head>
+<body bgcolor="#FFFFFF" text="#00005A" link="#0066FF" alink="#3399FF" vlink="#2222BB">
+<h1>pcre2_set_compile_recursion_guard man page</h1>
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>
+<p>
+This page is part of the PCRE2 HTML documentation. It was generated
+automatically from the original man page. If there is any nonsense in it,
+please consult the man page, in case the conversion went wrong.
+<br>
+<br><b>
+SYNOPSIS
+</b><br>
+<P>
+<b>#include &#60;pcre2.h&#62;</b>
+</P>
+<P>
+<b>int pcre2_set_compile_recursion_guard(pcre2_compile_context *<i>ccontext</i>,</b>
+<b>  int (*<i>guard_function</i>)(uint32_t, void *), void *<i>user_data</i>);</b>
+</P>
+<br><b>
+DESCRIPTION
+</b><br>
+<P>
+This function defines, within a compile context, a function that is called
+whenever <b>pcre2_compile()</b> starts to compile a parenthesized part of a
+pattern. The first argument to the function gives the current depth of
+parenthesis nesting, and the second is user data that is supplied when the
+function is set up. The callout function should return zero if all is well, or
+non-zero to force an error. This feature is provided so that applications can
+check the available system stack space, in order to avoid running out. The
+result of <b>pcre2_set_compile_recursion_guard()</b> is always zero.
+</P>
+<P>
+There is a complete description of the PCRE2 native API in the
+<a href="pcre2api.html"><b>pcre2api</b></a>
+page and a description of the POSIX API in the
+<a href="pcre2posix.html"><b>pcre2posix</b></a>
+page.
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>

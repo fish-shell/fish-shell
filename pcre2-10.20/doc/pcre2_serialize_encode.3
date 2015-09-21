@@ -1,0 +1,49 @@
+.TH PCRE2_SERIALIZE_ENCODE 3 "19 January 2015" "PCRE2 10.10"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B int32_t pcre2_serialize_encode(pcre2_code **\fIcodes\fP,
+.B "  int32_t \fInumber_of_codes\fP, uint32_t **\fIserialized_bytes\fP,"
+.B "  PCRE2_SIZE *\fIserialized_size\fP, pcre2_general_context *\fIgcontext\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function encodes a list of compiled patterns into a byte stream that can
+be saved on disc or elsewhere. Its arguments are:
+.sp
+  \fIcodes\fP             pointer to a vector containing the list
+  \fInumber_of_codes\fP   number of slots in the vector
+  \fIserialized_bytes\fP  set to point to the serialized byte stream
+  \fIserialized_size\fP   set to the number of bytes in the byte stream
+  \fIgcontext\fP          pointer to a general context or NULL
+.sp
+The context argument is used to obtain memory for the byte stream. When the
+serialized data is no longer needed, it must be freed by calling
+\fBpcre2_serialize_free()\fP. The yield of the function is the number of
+serialized patterns, or one of the following negative error codes:
+.sp
+  PCRE2_ERROR_BADDATA      \fInumber_of_codes\fP is zero or less
+  PCRE2_ERROR_BADMAGIC     mismatch of id bytes in one of the patterns
+  PCRE2_ERROR_MEMORY       memory allocation failed
+  PCRE2_ERROR_MIXEDTABLES  the patterns do not all use the same tables
+  PCRE2_ERROR_NULL         an argument other than \fIgcontext\fP is NULL
+.sp
+PCRE2_ERROR_BADMAGIC means either that a pattern's code has been corrupted, or
+that a slot in the vector does not point to a compiled pattern.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

@@ -1,0 +1,359 @@
+# This set of tests is run only with the 8-bit library. They must not require 
+# UTF-8 or Unicode property support. */
+    
+#forbid_utf
+
+/a\Cb/
+    aXb
+ 0: aXb
+    a\nb
+ 0: a\x0ab
+    ** Failers (too big char)
+No match
+    A\x{123}B
+** Character \x{123} is greater than 255 and UTF-8 mode is not enabled.
+** Truncation will probably give the wrong result.
+No match
+    A\o{443}B
+** Character \x{123} is greater than 255 and UTF-8 mode is not enabled.
+** Truncation will probably give the wrong result.
+No match
+  
+/\x{100}/I
+Failed: error 134 at offset 6: character code point value in \x{} or \o{} is too large
+
+/\o{400}/I
+Failed: error 134 at offset 6: character code point value in \x{} or \o{} is too large
+
+/  (?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*                          # optional leading comment
+(?:    (?:
+[^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]+    # some number of atom characters...
+(?![^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]) # ..not followed by something that could be part of an atom
+|
+" (?:                      # opening quote...
+[^\\\x80-\xff\n\015"]                #   Anything except backslash and quote
+|                     #    or
+\\ [^\x80-\xff]           #   Escaped something (something != CR)
+)* "  # closing quote
+)                    # initial word
+(?:  (?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*  \.  (?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*   (?:
+[^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]+    # some number of atom characters...
+(?![^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]) # ..not followed by something that could be part of an atom
+|
+" (?:                      # opening quote...
+[^\\\x80-\xff\n\015"]                #   Anything except backslash and quote
+|                     #    or
+\\ [^\x80-\xff]           #   Escaped something (something != CR)
+)* "  # closing quote
+)  )* # further okay, if led by a period
+(?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*  @  (?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*    (?:
+[^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]+    # some number of atom characters...
+(?![^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]) # ..not followed by something that could be part of an atom
+|   \[                         # [
+(?: [^\\\x80-\xff\n\015\[\]] |  \\ [^\x80-\xff]  )*    #    stuff
+\]                        #           ]
+)                           # initial subdomain
+(?:                                  #
+(?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*  \.                        # if led by a period...
+(?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*   (?:
+[^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]+    # some number of atom characters...
+(?![^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]) # ..not followed by something that could be part of an atom
+|   \[                         # [
+(?: [^\\\x80-\xff\n\015\[\]] |  \\ [^\x80-\xff]  )*    #    stuff
+\]                        #           ]
+)                     #   ...further okay
+)*
+# address
+|                     #  or
+(?:
+[^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]+    # some number of atom characters...
+(?![^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]) # ..not followed by something that could be part of an atom
+|
+" (?:                      # opening quote...
+[^\\\x80-\xff\n\015"]                #   Anything except backslash and quote
+|                     #    or
+\\ [^\x80-\xff]           #   Escaped something (something != CR)
+)* "  # closing quote
+)             # one word, optionally followed by....
+(?:
+[^()<>@,;:".\\\[\]\x80-\xff\000-\010\012-\037]  |  # atom and space parts, or...
+\(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)       |  # comments, or...
+
+" (?:                      # opening quote...
+[^\\\x80-\xff\n\015"]                #   Anything except backslash and quote
+|                     #    or
+\\ [^\x80-\xff]           #   Escaped something (something != CR)
+)* "  # closing quote
+# quoted strings
+)*
+<  (?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*                     # leading <
+(?:  @  (?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*    (?:
+[^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]+    # some number of atom characters...
+(?![^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]) # ..not followed by something that could be part of an atom
+|   \[                         # [
+(?: [^\\\x80-\xff\n\015\[\]] |  \\ [^\x80-\xff]  )*    #    stuff
+\]                        #           ]
+)                           # initial subdomain
+(?:                                  #
+(?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*  \.                        # if led by a period...
+(?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*   (?:
+[^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]+    # some number of atom characters...
+(?![^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]) # ..not followed by something that could be part of an atom
+|   \[                         # [
+(?: [^\\\x80-\xff\n\015\[\]] |  \\ [^\x80-\xff]  )*    #    stuff
+\]                        #           ]
+)                     #   ...further okay
+)*
+
+(?:  (?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*  ,  (?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*  @  (?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*    (?:
+[^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]+    # some number of atom characters...
+(?![^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]) # ..not followed by something that could be part of an atom
+|   \[                         # [
+(?: [^\\\x80-\xff\n\015\[\]] |  \\ [^\x80-\xff]  )*    #    stuff
+\]                        #           ]
+)                           # initial subdomain
+(?:                                  #
+(?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*  \.                        # if led by a period...
+(?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*   (?:
+[^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]+    # some number of atom characters...
+(?![^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]) # ..not followed by something that could be part of an atom
+|   \[                         # [
+(?: [^\\\x80-\xff\n\015\[\]] |  \\ [^\x80-\xff]  )*    #    stuff
+\]                        #           ]
+)                     #   ...further okay
+)*
+)* # further okay, if led by comma
+:                                # closing colon
+(?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*  )? #       optional route
+(?:
+[^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]+    # some number of atom characters...
+(?![^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]) # ..not followed by something that could be part of an atom
+|
+" (?:                      # opening quote...
+[^\\\x80-\xff\n\015"]                #   Anything except backslash and quote
+|                     #    or
+\\ [^\x80-\xff]           #   Escaped something (something != CR)
+)* "  # closing quote
+)                    # initial word
+(?:  (?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*  \.  (?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*   (?:
+[^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]+    # some number of atom characters...
+(?![^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]) # ..not followed by something that could be part of an atom
+|
+" (?:                      # opening quote...
+[^\\\x80-\xff\n\015"]                #   Anything except backslash and quote
+|                     #    or
+\\ [^\x80-\xff]           #   Escaped something (something != CR)
+)* "  # closing quote
+)  )* # further okay, if led by a period
+(?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*  @  (?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*    (?:
+[^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]+    # some number of atom characters...
+(?![^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]) # ..not followed by something that could be part of an atom
+|   \[                         # [
+(?: [^\\\x80-\xff\n\015\[\]] |  \\ [^\x80-\xff]  )*    #    stuff
+\]                        #           ]
+)                           # initial subdomain
+(?:                                  #
+(?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*  \.                        # if led by a period...
+(?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*   (?:
+[^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]+    # some number of atom characters...
+(?![^(\040)<>@,;:".\\\[\]\000-\037\x80-\xff]) # ..not followed by something that could be part of an atom
+|   \[                         # [
+(?: [^\\\x80-\xff\n\015\[\]] |  \\ [^\x80-\xff]  )*    #    stuff
+\]                        #           ]
+)                     #   ...further okay
+)*
+#       address spec
+(?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*  > #                  trailing >
+# name and address
+)  (?: [\040\t] |  \(
+(?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  |  \( (?:  [^\\\x80-\xff\n\015()]  |  \\ [^\x80-\xff]  )* \)  )*
+\)  )*                       # optional trailing comment
+/Ix
+Capturing subpattern count = 0
+Contains explicit CR or LF match
+Options: extended
+Starting code units: \x09 \x20 ! " # $ % & ' ( * + - / 0 1 2 3 4 5 6 7 8 
+  9 = ? A B C D E F G H I J K L M N O P Q R S T U V W X Y Z ^ _ ` a b c d e 
+  f g h i j k l m n o p q r s t u v w x y z { | } ~ \x7f 
+Subject length lower bound = 3
+
+/\h/I
+Capturing subpattern count = 0
+Starting code units: \x09 \x20 \xa0 
+Subject length lower bound = 1
+
+/\H/I
+Capturing subpattern count = 0
+Subject length lower bound = 1
+
+/\v/I
+Capturing subpattern count = 0
+Starting code units: \x0a \x0b \x0c \x0d \x85 
+Subject length lower bound = 1
+
+/\V/I
+Capturing subpattern count = 0
+Subject length lower bound = 1
+
+/\R/I
+Capturing subpattern count = 0
+Starting code units: \x0a \x0b \x0c \x0d \x85 
+Subject length lower bound = 1
+
+/[\h]/B
+------------------------------------------------------------------
+        Bra
+        [\x09 \xa0]
+        Ket
+        End
+------------------------------------------------------------------
+    >\x09<
+ 0: \x09
+
+/[\h]+/B
+------------------------------------------------------------------
+        Bra
+        [\x09 \xa0]++
+        Ket
+        End
+------------------------------------------------------------------
+    >\x09\x20\xa0<
+ 0: \x09 \xa0
+
+/[\v]/B
+------------------------------------------------------------------
+        Bra
+        [\x0a-\x0d\x85]
+        Ket
+        End
+------------------------------------------------------------------
+
+/[\H]/B
+------------------------------------------------------------------
+        Bra
+        [\x00-\x08\x0a-\x1f!-\x9f\xa1-\xff]
+        Ket
+        End
+------------------------------------------------------------------
+
+/[^\h]/B
+------------------------------------------------------------------
+        Bra
+        [\x00-\x08\x0a-\x1f!-\x9f\xa1-\xff] (neg)
+        Ket
+        End
+------------------------------------------------------------------
+
+/[\V]/B
+------------------------------------------------------------------
+        Bra
+        [\x00-\x09\x0e-\x84\x86-\xff]
+        Ket
+        End
+------------------------------------------------------------------
+
+/[\x0a\V]/B
+------------------------------------------------------------------
+        Bra
+        [\x00-\x0a\x0e-\x84\x86-\xff]
+        Ket
+        End
+------------------------------------------------------------------
+
+/\777/I
+Failed: error 151 at offset 3: octal value is greater than \377 in 8-bit non-UTF-8 mode
+
+/(*:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF)XX/mark
+Failed: error 176 at offset 259: name is too long in (*MARK), (*PRUNE), (*SKIP), or (*THEN)
+    XX
+     
+/(*:0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDE)XX/mark
+    XX
+ 0: XX
+MK: 0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDE
+
+/\u0100/alt_bsux,allow_empty_class,match_unset_backref,dupnames
+Failed: error 177 at offset 5: character code point value in \u.... sequence is too large
+
+/[\u0100-\u0200]/alt_bsux,allow_empty_class,match_unset_backref,dupnames
+Failed: error 177 at offset 6: character code point value in \u.... sequence is too large
+
+/[^\x00-a]{12,}[^b-\xff]*/B
+------------------------------------------------------------------
+        Bra
+        [b-\xff] (neg){12,}+
+        [\x00-a] (neg)*+
+        Ket
+        End
+------------------------------------------------------------------
+
+/[^\s]*\s* [^\W]+\W+ [^\d]*?\d0 [^\d\w]{4,6}?\w*A/B
+------------------------------------------------------------------
+        Bra
+        [\x00-\x08\x0e-\x1f!-\xff] (neg)*+
+        \s*
+         
+        [0-9A-Z_a-z]++
+        \W+
+         
+        [\x00-/:-\xff] (neg)*+
+        \d
+        0 
+        [\x00-/:-@[-^`{-\xff] (neg){4,6}+
+        \w*
+        A
+        Ket
+        End
+------------------------------------------------------------------
+
+# End of testinput9

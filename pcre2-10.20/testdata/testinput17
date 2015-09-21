@@ -1,0 +1,95 @@
+# This set of tests is run only with the 8-bit library. It tests the POSIX
+# interface, which is supported only with the 8-bit library. This test should
+# not be run with JIT (which is not available for the POSIX interface).
+    
+#forbid_utf
+#pattern posix
+
+# Test invalid options
+
+/abc/auto_callout
+
+/abc/
+   abc\=find_limits
+
+/abc/
+  abc\=partial_hard
+
+# Real tests
+
+/abc/
+    abc
+    *** Failers
+
+/^abc|def/
+    abcdef
+    abcdef\=notbol
+
+/.*((abc)$|(def))/
+    defabc
+    defabc\=noteol
+
+/the quick brown fox/
+    the quick brown fox
+    *** Failers
+    The Quick Brown Fox
+
+/the quick brown fox/i
+    the quick brown fox
+    The Quick Brown Fox
+
+/abc.def/
+    *** Failers
+    abc\ndef
+
+/abc$/
+    abc
+    abc\n
+
+/(abc)\2/
+
+/(abc\1)/
+    abc
+
+/a*(b+)(z)(z)/
+    aaaabbbbzzzz
+    aaaabbbbzzzz\=ovector=0
+    aaaabbbbzzzz\=ovector=1
+    aaaabbbbzzzz\=ovector=2
+
+/ab.cd/
+    ab-cd
+    ab=cd
+    ** Failers
+    ab\ncd
+
+/ab.cd/s
+    ab-cd
+    ab=cd
+    ab\ncd
+
+/a(b)c/no_auto_capture
+    abc
+
+/a(?P<name>b)c/no_auto_capture
+    abc
+
+/a?|b?/
+    abc
+    ** Failers
+    ddd\=notempty
+
+/\w+A/
+   CDAAAAB
+
+/\w+A/ungreedy
+   CDAAAAB
+   
+/\Biss\B/I,aftertext
+    Mississippi
+
+/abc/\
+
+"(?(?C)"
+
+# End of testdata/testinput16  

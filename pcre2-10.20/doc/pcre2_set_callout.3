@@ -1,0 +1,31 @@
+.TH PCRE2_SET_CALLOUT 3 "24 October 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B int pcre2_set_callout(pcre2_match_context *\fImcontext\fP,
+.B "  int (*\fIcallout_function\fP)(pcre2_callout_block *),"
+.B "  void *\fIcallout_data\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function sets the callout fields in a match context (the first argument).
+The second argument specifies a callout function, and the third argument is an
+opaque data time that is passed to it. The result of this function is always
+zero.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

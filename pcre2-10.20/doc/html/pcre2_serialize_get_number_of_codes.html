@@ -1,0 +1,49 @@
+<html>
+<head>
+<title>pcre2_serialize_get_number_of_codes specification</title>
+</head>
+<body bgcolor="#FFFFFF" text="#00005A" link="#0066FF" alink="#3399FF" vlink="#2222BB">
+<h1>pcre2_serialize_get_number_of_codes man page</h1>
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>
+<p>
+This page is part of the PCRE2 HTML documentation. It was generated
+automatically from the original man page. If there is any nonsense in it,
+please consult the man page, in case the conversion went wrong.
+<br>
+<br><b>
+SYNOPSIS
+</b><br>
+<P>
+<b>#include &#60;pcre2.h&#62;</b>
+</P>
+<P>
+<b>int32_t pcre2_serialize_get_number_of_codes(const uint8_t *<i>bytes</i>);</b>
+</P>
+<br><b>
+DESCRIPTION
+</b><br>
+<P>
+The <i>bytes</i> argument must point to a serialized byte stream that was
+originally created by <b>pcre2_serialize_encode()</b> (though it may have been
+saved on disc or elsewhere in the meantime). The function returns the number of
+serialized patterns in the byte stream, or one of the following negative error
+codes:
+<pre>
+  PCRE2_ERROR_BADMAGIC  mismatch of id bytes in <i>bytes</i>
+  PCRE2_ERROR_BADMODE   mismatch of variable unit size or PCRE version
+  PCRE2_ERROR_NULL      the argument is NULL
+</pre>
+PCRE2_ERROR_BADMAGIC may mean that the data is corrupt, or that it was compiled
+on a system with different endianness.
+</P>
+<P>
+There is a complete description of the PCRE2 native API in the
+<a href="pcre2api.html"><b>pcre2api</b></a>
+page and a description of the POSIX API in the
+<a href="pcre2posix.html"><b>pcre2posix</b></a>
+page.
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>

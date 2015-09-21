@@ -1,0 +1,36 @@
+.TH PCRE2_MATCH_DATA_CREATE 3 "22 October 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B pcre2_match_data_create(uint32_t \fIovecsize\fP,
+.B "  pcre2_general_context *\fIgcontext\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function creates a new match data block, which is used for holding the
+result of a match. The first argument specifies the number of pairs of offsets
+that are required. These form the "output vector" (ovector) within the match
+data block, and are used to identify the matched string and any captured
+substrings. There is always one pair of offsets; if \fBovecsize\fP is zero, it
+is treated as one.
+.P
+The second argument points to a general context, for custom memory management,
+or is NULL for system memory management. The result of the function is NULL if
+the memory for the block could not be obtained.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

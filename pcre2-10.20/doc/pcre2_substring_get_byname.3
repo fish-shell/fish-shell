@@ -1,0 +1,48 @@
+.TH PCRE2_SUBSTRING_GET_BYNAME 3 "21 October 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B int pcre2_substring_get_byname(pcre2_match_data *\fImatch_data\fP,
+.B "  PCRE2_SPTR \fIname\fP, PCRE2_UCHAR **\fIbufferptr\fP, PCRE2_SIZE *\fIbufflen\fP);"
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This is a convenience function for extracting a captured substring by name into
+newly acquired memory. The arguments are:
+.sp
+  \fImatch_data\fP    The match data for the match
+  \fIname\fP          Name of the required substring
+  \fIbufferptr\fP     Where to put the string pointer
+  \fIbufflen\fP       Where to put the string length
+.sp
+The memory in which the substring is placed is obtained by calling the same
+memory allocation function that was used for the match data block. The
+convenience function \fBpcre2_substring_free()\fP can be used to free it when
+it is no longer needed. The yield of the function is zero for success or one of
+the following error numbers:
+.sp
+  PCRE2_ERROR_NOSUBSTRING   there are no groups of that name
+  PCRE2_ERROR_UNAVAILBLE    the ovector was too small for that group
+  PCRE2_ERROR_UNSET         the group did not participate in the match
+  PCRE2_ERROR_NOMEMORY      memory could not be obtained
+.sp
+If there is more than one group with the given name, the first one that is set
+is returned. In this situation PCRE2_ERROR_UNSET means that no group with the
+given name was set.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

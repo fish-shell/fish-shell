@@ -1,0 +1,36 @@
+.TH PCRE2_MAKETABLES 3 "21 October 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.SM
+.B const unsigned char *pcre2_maketables(pcre22_general_context *\fIgcontext\fP);
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function builds a set of character tables for character values less than
+256. These can be passed to \fBpcre2_compile()\fP in a compile context in order
+to override the internal, built-in tables (which were either defaulted or made
+by \fBpcre2_maketables()\fP when PCRE2 was compiled). See the
+.\" HREF
+\fBpcre2_set_character_tables()\fP
+.\"
+page. You might want to do this if you are using a non-standard locale.
+.P
+If the argument is NULL, \fBmalloc()\fP is used to get memory for the tables.
+Otherwise it must point to a general context, which can supply pointers to a
+custom memory manager. The function yields a pointer to the tables.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

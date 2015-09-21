@@ -1,0 +1,2232 @@
+# This set of tests is for UTF support, including Unicode properties. The 
+# Unicode tests are all compatible with all versions of Perl >= 5.10, but
+# some of the property tests may differ because of different versions of
+# Unicode in use by PCRE2 and Perl.
+
+#perltest
+
+/a.b/utf
+    acb
+    a\x7fb
+    a\x{100}b
+    *** Failers
+    a\nb
+
+/a(.{3})b/utf
+    a\x{4000}xyb
+    a\x{4000}\x7fyb
+    a\x{4000}\x{100}yb
+    *** Failers
+    a\x{4000}b
+    ac\ncb
+
+/a(.*?)(.)/
+    a\xc0\x88b
+
+/a(.*?)(.)/utf
+    a\x{100}b
+
+/a(.*)(.)/
+    a\xc0\x88b
+
+/a(.*)(.)/utf
+    a\x{100}b
+
+/a(.)(.)/
+    a\xc0\x92bcd
+
+/a(.)(.)/utf
+    a\x{240}bcd
+
+/a(.?)(.)/
+    a\xc0\x92bcd
+
+/a(.?)(.)/utf
+    a\x{240}bcd
+
+/a(.??)(.)/
+    a\xc0\x92bcd
+
+/a(.??)(.)/utf
+    a\x{240}bcd
+
+/a(.{3})b/utf
+    a\x{1234}xyb
+    a\x{1234}\x{4321}yb
+    a\x{1234}\x{4321}\x{3412}b
+    *** Failers
+    a\x{1234}b
+    ac\ncb
+
+/a(.{3,})b/utf
+    a\x{1234}xyb
+    a\x{1234}\x{4321}yb
+    a\x{1234}\x{4321}\x{3412}b
+    axxxxbcdefghijb
+    a\x{1234}\x{4321}\x{3412}\x{3421}b
+    *** Failers
+    a\x{1234}b
+
+/a(.{3,}?)b/utf
+    a\x{1234}xyb
+    a\x{1234}\x{4321}yb
+    a\x{1234}\x{4321}\x{3412}b
+    axxxxbcdefghijb
+    a\x{1234}\x{4321}\x{3412}\x{3421}b
+    *** Failers
+    a\x{1234}b
+
+/a(.{3,5})b/utf
+    a\x{1234}xyb
+    a\x{1234}\x{4321}yb
+    a\x{1234}\x{4321}\x{3412}b
+    axxxxbcdefghijb
+    a\x{1234}\x{4321}\x{3412}\x{3421}b
+    axbxxbcdefghijb
+    axxxxxbcdefghijb
+    *** Failers
+    a\x{1234}b
+    axxxxxxbcdefghijb
+
+/a(.{3,5}?)b/utf
+    a\x{1234}xyb
+    a\x{1234}\x{4321}yb
+    a\x{1234}\x{4321}\x{3412}b
+    axxxxbcdefghijb
+    a\x{1234}\x{4321}\x{3412}\x{3421}b
+    axbxxbcdefghijb
+    axxxxxbcdefghijb
+    *** Failers
+    a\x{1234}b
+    axxxxxxbcdefghijb
+
+/^[a\x{c0}]/utf
+    *** Failers
+    \x{100}
+
+/(?<=aXb)cd/utf
+    aXbcd
+
+/(?<=a\x{100}b)cd/utf
+    a\x{100}bcd
+
+/(?<=a\x{100000}b)cd/utf
+    a\x{100000}bcd
+
+/(?:\x{100}){3}b/utf
+    \x{100}\x{100}\x{100}b
+    *** Failers
+    \x{100}\x{100}b
+
+/\x{ab}/utf
+    \x{ab}
+    \xc2\xab
+    *** Failers
+    \x00{ab}
+
+/(?<=(.))X/utf
+    WXYZ
+    \x{256}XYZ
+    *** Failers
+    XYZ
+
+/[^a]+/g,utf
+    bcd
+    \x{100}aY\x{256}Z
+
+/^[^a]{2}/utf
+    \x{100}bc
+
+/^[^a]{2,}/utf
+    \x{100}bcAa
+
+/^[^a]{2,}?/utf
+    \x{100}bca
+
+/[^a]+/gi,utf
+    bcd
+    \x{100}aY\x{256}Z
+
+/^[^a]{2}/i,utf
+    \x{100}bc
+
+/^[^a]{2,}/i,utf
+    \x{100}bcAa
+
+/^[^a]{2,}?/i,utf
+    \x{100}bca
+
+/\x{100}{0,0}/utf
+    abcd
+
+/\x{100}?/utf
+    abcd
+    \x{100}\x{100}
+
+/\x{100}{0,3}/utf
+    \x{100}\x{100}
+    \x{100}\x{100}\x{100}\x{100}
+
+/\x{100}*/utf
+    abce
+    \x{100}\x{100}\x{100}\x{100}
+
+/\x{100}{1,1}/utf
+    abcd\x{100}\x{100}\x{100}\x{100}
+
+/\x{100}{1,3}/utf
+    abcd\x{100}\x{100}\x{100}\x{100}
+
+/\x{100}+/utf
+    abcd\x{100}\x{100}\x{100}\x{100}
+
+/\x{100}{3}/utf
+    abcd\x{100}\x{100}\x{100}XX
+
+/\x{100}{3,5}/utf
+    abcd\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}XX
+
+/\x{100}{3,}/utf
+    abcd\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}XX
+
+/(?<=a\x{100}{2}b)X/utf,aftertext
+    Xyyya\x{100}\x{100}bXzzz
+
+/\D*/utf
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+/\D*/utf
+  \x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}\x{100}
+
+/\D/utf
+    1X2
+    1\x{100}2
+
+/>\S/utf
+    > >X Y
+    > >\x{100} Y
+
+/\d/utf
+    \x{100}3
+
+/\s/utf
+    \x{100} X
+
+/\D+/utf
+    12abcd34
+    *** Failers
+    1234
+
+/\D{2,3}/utf
+    12abcd34
+    12ab34
+    *** Failers
+    1234
+    12a34
+
+/\D{2,3}?/utf
+    12abcd34
+    12ab34
+    *** Failers
+    1234
+    12a34
+
+/\d+/utf
+    12abcd34
+    *** Failers
+
+/\d{2,3}/utf
+    12abcd34
+    1234abcd
+    *** Failers
+    1.4
+
+/\d{2,3}?/utf
+    12abcd34
+    1234abcd
+    *** Failers
+    1.4
+
+/\S+/utf
+    12abcd34
+    *** Failers
+    \    \
+
+/\S{2,3}/utf
+    12abcd34
+    1234abcd
+    *** Failers
+    \     \
+
+/\S{2,3}?/utf
+    12abcd34
+    1234abcd
+    *** Failers
+    \     \
+
+/>\s+</utf,aftertext
+    12>      <34
+    *** Failers
+
+/>\s{2,3}</utf,aftertext
+    ab>  <cd
+    ab>   <ce
+    *** Failers
+    ab>    <cd
+
+/>\s{2,3}?</utf,aftertext
+    ab>  <cd
+    ab>   <ce
+    *** Failers
+    ab>    <cd
+
+/\w+/utf
+    12      34
+    *** Failers
+    +++=*!
+
+/\w{2,3}/utf
+    ab  cd
+    abcd ce
+    *** Failers
+    a.b.c
+
+/\w{2,3}?/utf
+    ab  cd
+    abcd ce
+    *** Failers
+    a.b.c
+
+/\W+/utf
+    12====34
+    *** Failers
+    abcd
+
+/\W{2,3}/utf
+    ab====cd
+    ab==cd
+    *** Failers
+    a.b.c
+
+/\W{2,3}?/utf
+    ab====cd
+    ab==cd
+    *** Failers
+    a.b.c
+
+/[\x{100}]/utf
+    \x{100}
+    Z\x{100}
+    \x{100}Z
+    *** Failers
+
+/[Z\x{100}]/utf
+    Z\x{100}
+    \x{100}
+    \x{100}Z
+    *** Failers
+
+/[\x{100}\x{200}]/utf
+   ab\x{100}cd
+   ab\x{200}cd
+   *** Failers
+
+/[\x{100}-\x{200}]/utf
+   ab\x{100}cd
+   ab\x{200}cd
+   ab\x{111}cd
+   *** Failers
+
+/[z-\x{200}]/utf
+   ab\x{100}cd
+   ab\x{200}cd
+   ab\x{111}cd
+   abzcd
+   ab|cd
+   *** Failers
+
+/[Q\x{100}\x{200}]/utf
+   ab\x{100}cd
+   ab\x{200}cd
+   Q?
+   *** Failers
+
+/[Q\x{100}-\x{200}]/utf
+   ab\x{100}cd
+   ab\x{200}cd
+   ab\x{111}cd
+   Q?
+   *** Failers
+
+/[Qz-\x{200}]/utf
+   ab\x{100}cd
+   ab\x{200}cd
+   ab\x{111}cd
+   abzcd
+   ab|cd
+   Q?
+   *** Failers
+
+/[\x{100}\x{200}]{1,3}/utf
+   ab\x{100}cd
+   ab\x{200}cd
+   ab\x{200}\x{100}\x{200}\x{100}cd
+   *** Failers
+
+/[\x{100}\x{200}]{1,3}?/utf
+   ab\x{100}cd
+   ab\x{200}cd
+   ab\x{200}\x{100}\x{200}\x{100}cd
+   *** Failers
+
+/[Q\x{100}\x{200}]{1,3}/utf
+   ab\x{100}cd
+   ab\x{200}cd
+   ab\x{200}\x{100}\x{200}\x{100}cd
+   *** Failers
+
+/[Q\x{100}\x{200}]{1,3}?/utf
+   ab\x{100}cd
+   ab\x{200}cd
+   ab\x{200}\x{100}\x{200}\x{100}cd
+   *** Failers
+
+/(?<=[\x{100}\x{200}])X/utf
+    abc\x{200}X
+    abc\x{100}X
+    *** Failers
+    X
+
+/(?<=[Q\x{100}\x{200}])X/utf
+    abc\x{200}X
+    abc\x{100}X
+    abQX
+    *** Failers
+    X
+
+/(?<=[\x{100}\x{200}]{3})X/utf
+    abc\x{100}\x{200}\x{100}X
+    *** Failers
+    abc\x{200}X
+    X
+
+/[^\x{100}\x{200}]X/utf
+    AX
+    \x{150}X
+    \x{500}X
+    *** Failers
+    \x{100}X
+    \x{200}X
+
+/[^Q\x{100}\x{200}]X/utf
+    AX
+    \x{150}X
+    \x{500}X
+    *** Failers
+    \x{100}X
+    \x{200}X
+    QX
+
+/[^\x{100}-\x{200}]X/utf
+    AX
+    \x{500}X
+    *** Failers
+    \x{100}X
+    \x{150}X
+    \x{200}X
+
+/[z-\x{100}]/i,utf
+    z
+    Z
+    \x{100}
+    *** Failers
+    \x{102}
+    y
+
+/[\xFF]/
+    >\xff<
+
+/[\xff]/utf
+    >\x{ff}<
+
+/[^\xFF]/
+    XYZ
+
+/[^\xff]/utf
+    XYZ
+    \x{123}
+
+/^[ac]*b/utf
+  xb
+
+/^[ac\x{100}]*b/utf
+  xb
+
+/^[^x]*b/i,utf
+  xb
+
+/^[^x]*b/utf
+  xb
+
+/^\d*b/utf
+  xb
+
+/(|a)/g,utf
+    catac
+    a\x{256}a
+
+/^\x{85}$/i,utf
+    \x{85}
+
+/^ሴ/utf
+    ሴ
+
+/^\ሴ/utf
+    ሴ
+
+"(?s)(.{1,5})"utf
+    abcdefg
+    ab
+
+/a*\x{100}*\w/utf
+    a
+
+/\S\S/g,utf
+    A\x{a3}BC
+
+/\S{2}/g,utf
+    A\x{a3}BC
+
+/\W\W/g,utf
+    +\x{a3}==
+
+/\W{2}/g,utf
+    +\x{a3}==
+
+/\S/g,utf
+    \x{442}\x{435}\x{441}\x{442}
+
+/[\S]/g,utf
+    \x{442}\x{435}\x{441}\x{442}
+
+/\D/g,utf
+    \x{442}\x{435}\x{441}\x{442}
+
+/[\D]/g,utf
+    \x{442}\x{435}\x{441}\x{442}
+
+/\W/g,utf
+    \x{2442}\x{2435}\x{2441}\x{2442}
+
+/[\W]/g,utf
+    \x{2442}\x{2435}\x{2441}\x{2442}
+
+/[\S\s]*/utf
+    abc\n\r\x{442}\x{435}\x{441}\x{442}xyz
+
+/[\x{41f}\S]/g,utf
+    \x{442}\x{435}\x{441}\x{442}
+
+/.[^\S]./g,utf
+    abc def\x{442}\x{443}xyz\npqr
+
+/.[^\S\n]./g,utf
+    abc def\x{442}\x{443}xyz\npqr
+
+/[[:^alnum:]]/g,utf
+    +\x{2442}
+
+/[[:^alpha:]]/g,utf
+    +\x{2442}
+
+/[[:^ascii:]]/g,utf
+    A\x{442}
+
+/[[:^blank:]]/g,utf
+    A\x{442}
+
+/[[:^cntrl:]]/g,utf
+    A\x{442}
+
+/[[:^digit:]]/g,utf
+    A\x{442}
+
+/[[:^graph:]]/g,utf
+    \x19\x{e01ff}
+
+/[[:^lower:]]/g,utf
+    A\x{422}
+
+/[[:^print:]]/g,utf
+    \x{19}\x{e01ff}
+
+/[[:^punct:]]/g,utf
+    A\x{442}
+
+/[[:^space:]]/g,utf
+    A\x{442}
+
+/[[:^upper:]]/g,utf
+    a\x{442}
+
+/[[:^word:]]/g,utf
+    +\x{2442}
+
+/[[:^xdigit:]]/g,utf
+    M\x{442}
+
+/[^ABCDEFGHIJKLMNOPQRSTUVWXYZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞĀĂĄĆĈĊČĎĐĒĔĖĘĚĜĞĠĢĤĦĨĪĬĮİĲĴĶĹĻĽĿŁŃŅŇŊŌŎŐŒŔŖŘŚŜŞŠŢŤŦŨŪŬŮŰŲŴŶŸŹŻŽƁƂƄƆƇƉƊƋƎƏƐƑƓƔƖƗƘƜƝƟƠƢƤƦƧƩƬƮƯƱƲƳƵƷƸƼǄǇǊǍǏǑǓǕǗǙǛǞǠǢǤǦǨǪǬǮǱǴǶǷǸǺǼǾȀȂȄȆȈȊȌȎȐȒȔȖȘȚȜȞȠȢȤȦȨȪȬȮȰȲȺȻȽȾɁΆΈΉΊΌΎΏΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩΪΫϒϓϔϘϚϜϞϠϢϤϦϨϪϬϮϴϷϹϺϽϾϿЀЁЂЃЄЅІЇЈЉЊЋЌЍЎЏАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯѠѢѤѦѨѪѬѮѰѲѴѶѸѺѼѾҀҊҌҎҐҒҔҖҘҚҜҞҠҢҤҦҨҪҬҮҰҲҴҶҸҺҼҾӀӁӃӅӇӉӋӍӐӒӔӖӘӚӜӞӠӢӤӦӨӪӬӮӰӲӴӶӸԀԂԄԆԈԊԌԎԱԲԳԴԵԶԷԸԹԺԻԼԽԾԿՀՁՂՃՄՅՆՇՈՉՊՋՌՍՎՏՐՑՒՓՔՕՖႠႡႢႣႤႥႦႧႨႩႪႫႬႭႮႯႰႱႲႳႴႵႶႷႸႹႺႻႼႽႾႿჀჁჂჃჄჅḀḂḄḆḈḊḌḎḐḒḔḖḘḚḜḞḠḢḤḦḨḪḬḮḰḲḴḶḸḺḼḾṀṂṄṆṈṊṌṎṐṒṔṖṘṚṜṞṠṢṤṦṨṪṬṮṰṲṴṶṸṺṼṾẀẂẄẆẈẊẌẎẐẒẔẠẢẤẦẨẪẬẮẰẲẴẶẸẺẼẾỀỂỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪỬỮỰỲỴỶỸἈἉἊἋἌἍἎἏἘἙἚἛἜἝἨἩἪἫἬἭἮἯἸἹἺἻἼἽἾἿὈὉὊὋὌὍὙὛὝὟὨὩὪὫὬὭὮὯᾸᾹᾺΆῈΈῊΉῘῙῚΊῨῩῪΎῬῸΌῺΏabcdefghijklmnopqrstuvwxyzªµºßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿāăąćĉċčďđēĕėęěĝğġģĥħĩīĭįıĳĵķĸĺļľŀłńņňŉŋōŏőœŕŗřśŝşšţťŧũūŭůűųŵŷźżžſƀƃƅƈƌƍƒƕƙƚƛƞơƣƥƨƪƫƭưƴƶƹƺƽƾƿǆǉǌǎǐǒǔǖǘǚǜǝǟǡǣǥǧǩǫǭǯǰǳǵǹǻǽǿȁȃȅȇȉȋȍȏȑȓȕȗșțȝȟȡȣȥȧȩȫȭȯȱȳȴȵȶȷȸȹȼȿɀɐɑɒɓɔɕɖɗɘəɚɛɜɝɞɟɠɡɢɣɤɥɦɧɨɩɪɫɬɭɮɯɰɱɲɳɴɵɶɷɸɹɺɻɼɽɾɿʀʁʂʃʄʅʆʇʈʉʊʋʌʍʎʏʐʑʒʓʔʕʖʗʘʙʚʛʜʝʞʟʠʡʢʣʤʥʦʧʨʩʪʫʬʭʮʯΐάέήίΰαβγδεζηθικλμνξοπρςστυφχψωϊϋόύώϐϑϕϖϗϙϛϝϟϡϣϥϧϩϫϭϯϰϱϲϳϵϸϻϼабвгдежзийклмнопрстуфхцчшщъыьэюяѐёђѓєѕіїјљњћќѝўџѡѣѥѧѩѫѭѯѱѳѵѷѹѻѽѿҁҋҍҏґғҕҗҙқҝҟҡңҥҧҩҫҭүұҳҵҷҹһҽҿӂӄӆӈӊӌӎӑӓӕӗәӛӝӟӡӣӥӧөӫӭӯӱӳӵӷӹԁԃԅԇԉԋԍԏաբգդեզէըթժիլխծկհձղճմյնշոչպջռսվտրցւփքօֆևᴀᴁᴂᴃᴄᴅᴆᴇᴈᴉᴊᴋᴌᴍᴎᴏᴐᴑᴒᴓᴔᴕᴖᴗᴘᴙᴚᴛᴜᴝᴞᴟᴠᴡᴢᴣᴤᴥᴦᴧᴨᴩᴪᴫᵢᵣᵤᵥᵦᵧᵨᵩᵪᵫᵬᵭᵮᵯᵰᵱᵲᵳᵴᵵᵶᵷᵹᵺᵻᵼᵽᵾᵿᶀᶁᶂᶃᶄᶅᶆᶇᶈᶉᶊᶋᶌᶍᶎᶏᶐᶑᶒᶓᶔᶕᶖᶗᶘᶙᶚḁḃḅḇḉḋḍḏḑḓḕḗḙḛḝḟḡḣḥḧḩḫḭḯḱḳḵḷḹḻḽḿṁṃṅṇṉṋṍṏṑṓṕṗṙṛṝṟṡṣṥṧṩṫṭṯṱṳṵṷṹṻṽṿẁẃẅẇẉẋẍẏẑẓẕẖẗẘẙẚẛạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹἀἁἂἃἄἅἆἇἐἑἒἓἔἕἠἡἢἣἤἥἦἧἰἱἲἳἴἵἶἷὀὁὂὃὄὅὐὑὒὓὔὕὖὗὠὡὢὣὤὥὦὧὰάὲέὴήὶίὸόὺύὼώᾀᾁᾂᾃᾄᾅᾆᾇᾐᾑᾒᾓᾔᾕᾖᾗᾠᾡᾢᾣᾤᾥᾦᾧᾰᾱᾲᾳᾴᾶᾷιῂῃῄῆῇῐῑῒΐῖῗῠῡῢΰῤῥῦῧῲῳῴῶῷⲁⲃⲅⲇⲉⲋⲍⲏⲑⲓⲕⲗⲙⲛⲝⲟⲡⲣⲥⲧⲩⲫⲭⲯⲱⲳⲵⲷⲹⲻⲽⲿⳁⳃⳅⳇⳉⳋⳍⳏⳑⳓⳕⳗⳙⳛⳝⳟⳡⳣⳤⴀⴁⴂⴃⴄⴅⴆⴇⴈⴉⴊⴋⴌⴍⴎⴏⴐⴑⴒⴓⴔⴕⴖⴗⴘⴙⴚⴛⴜⴝⴞⴟⴠⴡⴢⴣⴤⴥﬀﬁﬂﬃﬄﬅﬆﬓﬔﬕﬖﬗ\d-_^]/utf
+
+/^[^d]*?$/
+    abc
+
+/^[^d]*?$/utf
+    abc
+
+/^[^d]*?$/i
+    abc
+
+/^[^d]*?$/i,utf
+    abc
+
+/(?i)[\xc3\xa9\xc3\xbd]|[\xc3\xa9\xc3\xbdA]/utf
+
+/^[a\x{c0}]b/utf
+    \x{c0}b
+
+/^([a\x{c0}]*?)aa/utf
+    a\x{c0}aaaa/
+
+/^([a\x{c0}]*?)aa/utf
+    a\x{c0}aaaa/
+    a\x{c0}a\x{c0}aaa/
+
+/^([a\x{c0}]*)aa/utf
+    a\x{c0}aaaa/
+    a\x{c0}a\x{c0}aaa/
+
+/^([a\x{c0}]*)a\x{c0}/utf
+    a\x{c0}aaaa/
+    a\x{c0}a\x{c0}aaa/
+
+/A*/g,utf
+    AAB\x{123}BAA
+
+/(abc)\1/i,utf
+   abc
+
+/(abc)\1/utf
+   abc
+
+/a(*:a\x{1234}b)/utf,mark
+    abc
+
+/a(*:a£b)/utf,mark
+    abc
+
+# Noncharacters
+
+/./utf
+    \x{fffe}
+    \x{ffff}
+    \x{1fffe}
+    \x{1ffff}
+    \x{2fffe}
+    \x{2ffff}
+    \x{3fffe}
+    \x{3ffff}
+    \x{4fffe}
+    \x{4ffff}
+    \x{5fffe}
+    \x{5ffff}
+    \x{6fffe}
+    \x{6ffff}
+    \x{7fffe}
+    \x{7ffff}
+    \x{8fffe}
+    \x{8ffff}
+    \x{9fffe}
+    \x{9ffff}
+    \x{afffe}
+    \x{affff}
+    \x{bfffe}
+    \x{bffff}
+    \x{cfffe}
+    \x{cffff}
+    \x{dfffe}
+    \x{dffff}
+    \x{efffe}
+    \x{effff}
+    \x{ffffe}
+    \x{fffff}
+    \x{10fffe}
+    \x{10ffff}
+    \x{fdd0}
+    \x{fdd1}
+    \x{fdd2}
+    \x{fdd3}
+    \x{fdd4}
+    \x{fdd5}
+    \x{fdd6}
+    \x{fdd7}
+    \x{fdd8}
+    \x{fdd9}
+    \x{fdda}
+    \x{fddb}
+    \x{fddc}
+    \x{fddd}
+    \x{fdde}
+    \x{fddf}
+    \x{fde0}
+    \x{fde1}
+    \x{fde2}
+    \x{fde3}
+    \x{fde4}
+    \x{fde5}
+    \x{fde6}
+    \x{fde7}
+    \x{fde8}
+    \x{fde9}
+    \x{fdea}
+    \x{fdeb}
+    \x{fdec}
+    \x{fded}
+    \x{fdee}
+    \x{fdef}
+
+/^\d*\w{4}/utf
+    1234
+    123
+
+/^[^b]*\w{4}/utf
+    aaaa
+    aaa
+
+/^[^b]*\w{4}/i,utf
+    aaaa
+    aaa
+
+/^\x{100}*.{4}/utf
+    \x{100}\x{100}\x{100}\x{100}
+    \x{100}\x{100}\x{100}
+
+/^\x{100}*.{4}/i,utf
+    \x{100}\x{100}\x{100}\x{100}
+    \x{100}\x{100}\x{100}
+
+/^a+[a\x{200}]/utf
+    aa
+
+/^.\B.\B./utf
+    \x{10123}\x{10124}\x{10125}
+
+/^#[^\x{ffff}]#[^\x{ffff}]#[^\x{ffff}]#/utf
+    #\x{10000}#\x{100}#\x{10ffff}#
+    
+# Unicode property support tests 
+
+/^\pC\pL\pM\pN\pP\pS\pZ</utf
+    \x7f\x{c0}\x{30f}\x{660}\x{66c}\x{f01}\x{1680}<
+    \np\x{300}9!\$ < 
+    ** Failers 
+    ap\x{300}9!\$ < 
+  
+/^\PC/utf
+    X
+    ** Failers 
+    \x7f
+  
+/^\PL/utf
+    9
+    ** Failers 
+    \x{c0}
+  
+/^\PM/utf
+    X
+    ** Failers 
+    \x{30f}
+  
+/^\PN/utf
+    X
+    ** Failers 
+    \x{660}
+  
+/^\PP/utf
+    X
+    ** Failers 
+    \x{66c}
+  
+/^\PS/utf
+    X
+    ** Failers 
+    \x{f01}
+  
+/^\PZ/utf
+    X
+    ** Failers 
+    \x{1680}
+    
+/^\p{Cc}/utf
+    \x{017}
+    \x{09f} 
+    ** Failers
+    \x{0600} 
+  
+/^\p{Cf}/utf
+    \x{601}
+    ** Failers
+    \x{09f} 
+  
+/^\p{Cn}/utf
+    \x{e0000}
+    ** Failers
+    \x{09f} 
+  
+/^\p{Co}/utf
+    \x{f8ff}
+    ** Failers
+    \x{09f} 
+  
+/^\p{Ll}/utf
+    a
+    ** Failers 
+    Z
+    \x{e000}  
+  
+/^\p{Lm}/utf
+    \x{2b0}
+    ** Failers
+    a 
+  
+/^\p{Lo}/utf
+    \x{1bb}
+    \x{3400}
+    \x{3401}
+    \x{4d00}
+    \x{4db4}
+    \x{4db5}     
+    ** Failers
+    a 
+    \x{2b0}
+    \x{4db6} 
+  
+/^\p{Lt}/utf
+    \x{1c5}
+    ** Failers
+    a 
+    \x{2b0}
+  
+/^\p{Lu}/utf
+    A
+    ** Failers
+    \x{2b0}
+  
+/^\p{Mc}/utf
+    \x{903}
+    ** Failers
+    X
+    \x{300}
+       
+/^\p{Me}/utf
+    \x{488}
+    ** Failers
+    X
+    \x{903}
+    \x{300}
+  
+/^\p{Mn}/utf
+    \x{300}
+    ** Failers
+    X
+    \x{903}
+  
+/^\p{Nd}+/utf
+    0123456789\x{660}\x{661}\x{662}\x{663}\x{664}\x{665}\x{666}\x{667}\x{668}\x{669}\x{66a}
+    \x{6f0}\x{6f1}\x{6f2}\x{6f3}\x{6f4}\x{6f5}\x{6f6}\x{6f7}\x{6f8}\x{6f9}\x{6fa}
+    \x{966}\x{967}\x{968}\x{969}\x{96a}\x{96b}\x{96c}\x{96d}\x{96e}\x{96f}\x{970}
+    ** Failers
+    X
+  
+/^\p{Nl}/utf
+    \x{16ee}
+    ** Failers
+    X
+    \x{966}
+  
+/^\p{No}/utf
+    \x{b2}
+    \x{b3}
+    ** Failers
+    X
+    \x{16ee}
+  
+/^\p{Pc}/utf
+    \x5f
+    \x{203f}
+    ** Failers
+    X
+    -
+    \x{58a}
+  
+/^\p{Pd}/utf
+    -
+    \x{58a}
+    ** Failers
+    X
+    \x{203f}
+  
+/^\p{Pe}/utf
+    )
+    ]
+    }
+    \x{f3b}
+    ** Failers
+    X
+    \x{203f}
+    (
+    [
+    {
+    \x{f3c}
+  
+/^\p{Pf}/utf
+    \x{bb}
+    \x{2019}
+    ** Failers
+    X
+    \x{203f}
+  
+/^\p{Pi}/utf
+    \x{ab}
+    \x{2018}
+    ** Failers
+    X
+    \x{203f}
+  
+/^\p{Po}/utf
+    !
+    \x{37e}
+    ** Failers
+    X
+    \x{203f}
+  
+/^\p{Ps}/utf
+    (
+    [
+    {
+    \x{f3c}
+    ** Failers
+    X
+    )
+    ]
+    }
+    \x{f3b}
+  
+/^\p{Sk}/utf
+    \x{2c2}
+    ** Failers
+    X
+    \x{9f2}
+  
+/^\p{Sm}+/utf
+    +<|~\x{ac}\x{2044}
+    ** Failers
+    X
+    \x{9f2}
+  
+/^\p{So}/utf
+    \x{a6}
+    \x{482} 
+    ** Failers
+    X
+    \x{9f2}
+  
+/^\p{Zl}/utf
+    \x{2028}
+    ** Failers
+    X
+    \x{2029}
+  
+/^\p{Zp}/utf
+    \x{2029}
+    ** Failers
+    X
+    \x{2028}
+  
+/\p{Nd}+(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}+?(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}{2,}(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}{2,}?(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}*(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}*?(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}{2}(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}{2,3}(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}{2,3}?(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}?(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}??(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}*+(..)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}*+(...)/utf
+      \x{660}\x{661}\x{662}ABC
+  
+/\p{Nd}*+(....)/utf
+      ** Failers
+      \x{660}\x{661}\x{662}ABC
+  
+/(?<=A\p{Nd})XYZ/utf
+    A2XYZ
+    123A5XYZPQR
+    ABA\x{660}XYZpqr
+    ** Failers
+    AXYZ
+    XYZ     
+    
+/(?<!\pL)XYZ/utf
+    1XYZ
+    AB=XYZ.. 
+    XYZ 
+    ** Failers
+    WXYZ 
+
+/[\P{Nd}]+/utf
+    abcd
+    ** Failers
+    1234
+
+/\D+/utf
+    11111111111111111111111111111111111111111111111111111111111111111111111
+    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+     
+/\P{Nd}+/utf
+    11111111111111111111111111111111111111111111111111111111111111111111111
+    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+/[\D]+/utf
+    11111111111111111111111111111111111111111111111111111111111111111111111
+    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+/[\P{Nd}]+/utf
+    11111111111111111111111111111111111111111111111111111111111111111111111
+    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+/[\D\P{Nd}]+/utf
+    11111111111111111111111111111111111111111111111111111111111111111111111
+    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+/\pL/utf
+    a
+    A 
+
+/\pL/i,utf
+    a
+    A 
+    
+/\p{Lu}/utf
+    A
+    aZ
+    ** Failers
+    abc   
+
+/\p{Ll}/utf
+    a
+    Az
+    ** Failers
+    ABC   
+
+/A\x{391}\x{10427}\x{ff3a}\x{1fb0}/utf
+    A\x{391}\x{10427}\x{ff3a}\x{1fb0}
+    ** Failers
+    a\x{391}\x{10427}\x{ff3a}\x{1fb0}   
+    A\x{3b1}\x{10427}\x{ff3a}\x{1fb0}
+    A\x{391}\x{1044F}\x{ff3a}\x{1fb0}
+    A\x{391}\x{10427}\x{ff5a}\x{1fb0}
+    A\x{391}\x{10427}\x{ff3a}\x{1fb8}
+
+/A\x{391}\x{10427}\x{ff3a}\x{1fb0}/i,utf
+    A\x{391}\x{10427}\x{ff3a}\x{1fb0}
+    a\x{391}\x{10427}\x{ff3a}\x{1fb0}   
+    A\x{3b1}\x{10427}\x{ff3a}\x{1fb0}
+    A\x{391}\x{1044F}\x{ff3a}\x{1fb0}
+    A\x{391}\x{10427}\x{ff5a}\x{1fb0}
+    A\x{391}\x{10427}\x{ff3a}\x{1fb8}
+
+/\x{391}+/i,utf
+    \x{391}\x{3b1}\x{3b1}\x{3b1}\x{391}
+
+/\x{391}{3,5}(.)/i,utf
+    \x{391}\x{3b1}\x{3b1}\x{3b1}\x{391}X
+
+/\x{391}{3,5}?(.)/i,utf
+    \x{391}\x{3b1}\x{3b1}\x{3b1}\x{391}X
+
+/[\x{391}\x{ff3a}]/i,utf
+    \x{391}
+    \x{ff3a}
+    \x{3b1}
+    \x{ff5a}   
+    
+/^(\X*)C/utf
+    A\x{300}\x{301}\x{302}BCA\x{300}\x{301} 
+    A\x{300}\x{301}\x{302}BCA\x{300}\x{301}C 
+
+/^(\X*?)C/utf
+    A\x{300}\x{301}\x{302}BCA\x{300}\x{301} 
+    A\x{300}\x{301}\x{302}BCA\x{300}\x{301}C 
+
+/^(\X*)(.)/utf
+    A\x{300}\x{301}\x{302}BCA\x{300}\x{301} 
+    A\x{300}\x{301}\x{302}BCA\x{300}\x{301}C 
+
+/^(\X*?)(.)/utf
+    A\x{300}\x{301}\x{302}BCA\x{300}\x{301} 
+    A\x{300}\x{301}\x{302}BCA\x{300}\x{301}C 
+
+/^\X(.)/utf
+    *** Failers
+    A\x{300}\x{301}\x{302}
+
+/^\X{2,3}(.)/utf
+    A\x{300}\x{301}B\x{300}X
+    A\x{300}\x{301}B\x{300}C\x{300}\x{301}
+    A\x{300}\x{301}B\x{300}C\x{300}\x{301}X
+    A\x{300}\x{301}B\x{300}C\x{300}\x{301}DA\x{300}X
+    
+/^\X{2,3}?(.)/utf
+    A\x{300}\x{301}B\x{300}X
+    A\x{300}\x{301}B\x{300}C\x{300}\x{301}
+    A\x{300}\x{301}B\x{300}C\x{300}\x{301}X
+    A\x{300}\x{301}B\x{300}C\x{300}\x{301}DA\x{300}X
+
+/^\X/utf
+    A
+    A\x{300}BC 
+    A\x{300}\x{301}\x{302}BC 
+    \x{300}  
+
+/^\p{Han}+/utf
+    \x{2e81}\x{3007}\x{2f804}\x{31a0}
+    ** Failers
+    \x{2e7f}  
+
+/^\P{Katakana}+/utf
+    \x{3105}
+    ** Failers
+    \x{30ff}  
+
+/^[\p{Arabic}]/utf
+    \x{06e9}
+    \x{060b}
+    ** Failers
+    X\x{06e9}   
+
+/^[\P{Yi}]/utf
+    \x{2f800}
+    ** Failers
+    \x{a014}
+    \x{a4c6}   
+    
+/^\p{Any}X/utf
+    AXYZ
+    \x{1234}XYZ 
+    ** Failers
+    X  
+    
+/^\P{Any}X/utf
+    ** Failers
+    AX
+    
+/^\p{Any}?X/utf
+    XYZ
+    AXYZ
+    \x{1234}XYZ 
+    ** Failers
+    ABXYZ   
+
+/^\P{Any}?X/utf
+    XYZ
+    ** Failers
+    AXYZ
+    \x{1234}XYZ 
+    ABXYZ   
+
+/^\p{Any}+X/utf
+    AXYZ
+    \x{1234}XYZ
+    A\x{1234}XYZ
+    ** Failers
+    XYZ
+
+/^\P{Any}+X/utf
+    ** Failers
+    AXYZ
+    \x{1234}XYZ
+    A\x{1234}XYZ
+    XYZ
+
+/^\p{Any}*X/utf
+    XYZ
+    AXYZ
+    \x{1234}XYZ
+    A\x{1234}XYZ
+    ** Failers
+
+/^\P{Any}*X/utf
+    XYZ
+    ** Failers
+    AXYZ
+    \x{1234}XYZ
+    A\x{1234}XYZ
+
+/^[\p{Any}]X/utf
+    AXYZ
+    \x{1234}XYZ 
+    ** Failers
+    X  
+    
+/^[\P{Any}]X/utf
+    ** Failers
+    AX
+    
+/^[\p{Any}]?X/utf
+    XYZ
+    AXYZ
+    \x{1234}XYZ 
+    ** Failers
+    ABXYZ   
+
+/^[\P{Any}]?X/utf
+    XYZ
+    ** Failers
+    AXYZ
+    \x{1234}XYZ 
+    ABXYZ   
+
+/^[\p{Any}]+X/utf
+    AXYZ
+    \x{1234}XYZ
+    A\x{1234}XYZ
+    ** Failers
+    XYZ
+
+/^[\P{Any}]+X/utf
+    ** Failers
+    AXYZ
+    \x{1234}XYZ
+    A\x{1234}XYZ
+    XYZ
+
+/^[\p{Any}]*X/utf
+    XYZ
+    AXYZ
+    \x{1234}XYZ
+    A\x{1234}XYZ
+    ** Failers
+
+/^[\P{Any}]*X/utf
+    XYZ
+    ** Failers
+    AXYZ
+    \x{1234}XYZ
+    A\x{1234}XYZ
+
+/^\p{Any}{3,5}?/utf
+    abcdefgh
+    \x{1234}\n\r\x{3456}xyz 
+
+/^\p{Any}{3,5}/utf
+    abcdefgh
+    \x{1234}\n\r\x{3456}xyz 
+
+/^\P{Any}{3,5}?/utf
+    ** Failers
+    abcdefgh
+    \x{1234}\n\r\x{3456}xyz 
+
+/^\p{L&}X/utf
+     AXY
+     aXY
+     \x{1c5}XY
+     ** Failers
+     \x{1bb}XY
+     \x{2b0}XY
+     !XY      
+
+/^[\p{L&}]X/utf
+     AXY
+     aXY
+     \x{1c5}XY
+     ** Failers
+     \x{1bb}XY
+     \x{2b0}XY
+     !XY      
+
+/^\p{L&}+X/utf
+     AXY
+     aXY
+     AbcdeXyz 
+     \x{1c5}AbXY
+     abcDEXypqreXlmn 
+     ** Failers
+     \x{1bb}XY
+     \x{2b0}XY
+     !XY      
+
+/^[\p{L&}]+X/utf
+     AXY
+     aXY
+     AbcdeXyz 
+     \x{1c5}AbXY
+     abcDEXypqreXlmn 
+     ** Failers
+     \x{1bb}XY
+     \x{2b0}XY
+     !XY      
+
+/^\p{L&}+?X/utf
+     AXY
+     aXY
+     AbcdeXyz 
+     \x{1c5}AbXY
+     abcDEXypqreXlmn 
+     ** Failers
+     \x{1bb}XY
+     \x{2b0}XY
+     !XY      
+
+/^[\p{L&}]+?X/utf
+     AXY
+     aXY
+     AbcdeXyz 
+     \x{1c5}AbXY
+     abcDEXypqreXlmn 
+     ** Failers
+     \x{1bb}XY
+     \x{2b0}XY
+     !XY      
+
+/^\P{L&}X/utf
+     !XY
+     \x{1bb}XY
+     \x{2b0}XY
+     ** Failers
+     \x{1c5}XY
+     AXY      
+
+/^[\P{L&}]X/utf
+     !XY
+     \x{1bb}XY
+     \x{2b0}XY
+     ** Failers
+     \x{1c5}XY
+     AXY      
+
+/^(\p{Z}[^\p{C}\p{Z}]+)*$/
+    \xa0!
+
+/^[\pL](abc)(?1)/
+    AabcabcYZ    
+
+/([\pL]=(abc))*X/
+    L=abcX
+
+/^\p{Balinese}\p{Cuneiform}\p{Nko}\p{Phags_Pa}\p{Phoenician}/utf
+    \x{1b00}\x{12000}\x{7c0}\x{a840}\x{10900}
+
+# Check property support in non-UTF mode
+ 
+/\p{L}{4}/
+    123abcdefg
+    123abc\xc4\xc5zz
+
+/\X{1,3}\d/
+  \x8aBCD
+  
+/\X?\d/
+  \x8aBCD 
+
+/\P{L}?\d/
+  \x8aBCD 
+
+/[\PPP\x8a]{1,}\x80/
+    A\x80
+
+/^[\p{Arabic}]/utf
+    \x{604}
+    \x{60e} 
+    \x{656} 
+    \x{657} 
+    \x{658} 
+    \x{659} 
+    \x{65a} 
+    \x{65b} 
+    \x{65c} 
+    \x{65d} 
+    \x{65e} 
+    \x{65f}
+    \x{66a} 
+    \x{6e9} 
+    \x{6ef}
+    \x{6fa}  
+    ** Failers
+    \x{650}
+    \x{651}  
+    \x{652}  
+    \x{653}  
+    \x{654} 
+    \x{655} 
+    
+/^\p{Cyrillic}/utf
+    \x{1d2b} 
+    
+/^\p{Common}/utf
+    \x{589}
+    \x{60c}
+    \x{61f}  
+    \x{964}
+    \x{965}  
+
+/^\p{Inherited}/utf
+    \x{64b}
+    \x{654}
+    \x{655}
+    \x{200c} 
+    ** Failers
+    \x{64a}
+    \x{656}     
+
+/^\p{Shavian}/utf
+    \x{10450}
+    \x{1047f}
+    
+/^\p{Deseret}/utf
+    \x{10400}
+    \x{1044f}
+    
+/^\p{Osmanya}/utf
+    \x{10480}
+    \x{1049d}
+    \x{104a0}
+    \x{104a9}
+    ** Failers
+    \x{1049e}
+    \x{1049f}
+    \x{104aa}           
+
+/\p{Carian}\p{Cham}\p{Kayah_Li}\p{Lepcha}\p{Lycian}\p{Lydian}\p{Ol_Chiki}\p{Rejang}\p{Saurashtra}\p{Sundanese}\p{Vai}/utf
+    \x{102A4}\x{AA52}\x{A91D}\x{1C46}\x{10283}\x{1092E}\x{1C6B}\x{A93B}\x{A8BF}\x{1BA0}\x{A50A}====
+
+/\x{a77d}\x{1d79}/i,utf
+    \x{a77d}\x{1d79}
+    \x{1d79}\x{a77d} 
+
+/\x{a77d}\x{1d79}/utf
+    \x{a77d}\x{1d79}
+    ** Failers 
+    \x{1d79}\x{a77d} 
+
+/(A)\1/i,utf
+    AA
+    Aa
+    aa
+    aA
+
+/(\x{10a})\1/i,utf
+    \x{10a}\x{10a}
+    \x{10a}\x{10b}
+    \x{10b}\x{10b}
+    \x{10b}\x{10a}
+    
+# The next two tests are for property support in non-UTF mode
+
+/(?:\p{Lu}|\x20)+/
+    \x41\x20\x50\xC2\x54\xC9\x20\x54\x4F\x44\x41\x59
+
+/[\p{Lu}\x20]+/
+    \x41\x20\x50\xC2\x54\xC9\x20\x54\x4F\x44\x41\x59
+
+/\p{Avestan}\p{Bamum}\p{Egyptian_Hieroglyphs}\p{Imperial_Aramaic}\p{Inscriptional_Pahlavi}\p{Inscriptional_Parthian}\p{Javanese}\p{Kaithi}\p{Lisu}\p{Meetei_Mayek}\p{Old_South_Arabian}\p{Old_Turkic}\p{Samaritan}\p{Tai_Tham}\p{Tai_Viet}/utf
+    \x{10b00}\x{a6ef}\x{13007}\x{10857}\x{10b78}\x{10b58}\x{a980}\x{110c1}\x{a4ff}\x{abc0}\x{10a7d}\x{10c48}\x{0800}\x{1aad}\x{aac0}
+
+/^\w+/utf,ucp
+    Az_\x{aa}\x{c0}\x{1c5}\x{2b0}\x{3b6}\x{1d7c9}\x{2fa1d}1\x{660}\x{bef}\x{16ee}
+
+/^[[:xdigit:]]*/utf,ucp
+    1a\x{660}\x{bef}\x{16ee}
+  
+/^\d+/utf,ucp
+    1\x{660}\x{bef}\x{16ee}
+  
+/^[[:digit:]]+/utf,ucp
+    1\x{660}\x{bef}\x{16ee}
+
+/^>\s+/utf,ucp
+    >\x{20}\x{a0}\x{1680}\x{2028}\x{2029}\x{202f}\x{9}\x{b} 
+  
+/^>\pZ+/utf,ucp
+    >\x{20}\x{a0}\x{1680}\x{2028}\x{2029}\x{202f}\x{9}\x{b} 
+  
+/^>[[:space:]]*/utf,ucp
+    >\x{20}\x{a0}\x{1680}\x{2028}\x{2029}\x{202f}\x{9}\x{b} 
+
+/^>[[:blank:]]*/utf,ucp
+    >\x{20}\x{a0}\x{1680}\x{2000}\x{202f}\x{9}\x{b}\x{2028} 
+
+/^[[:alpha:]]*/utf,ucp
+    Az\x{aa}\x{c0}\x{1c5}\x{2b0}\x{3b6}\x{1d7c9}\x{2fa1d}
+
+/^[[:alnum:]]*/utf,ucp
+    Az\x{aa}\x{c0}\x{1c5}\x{2b0}\x{3b6}\x{1d7c9}\x{2fa1d}1\x{660}\x{bef}\x{16ee}
+
+/^[[:cntrl:]]*/utf,ucp
+    \x{0}\x{09}\x{1f}\x{7f}\x{9f} 
+
+/^[[:graph:]]*/utf,ucp
+    A\x{a1}\x{a0}
+
+/^[[:print:]]*/utf,ucp
+    A z\x{a0}\x{a1}
+
+/^[[:punct:]]*/utf,ucp
+    .+\x{a1}\x{a0}
+
+/\p{Zs}*?\R/
+    ** Failers
+    a\xFCb   
+
+/\p{Zs}*\R/
+    ** Failers 
+    a\xFCb   
+
+/ⱥ/i,utf
+    ⱥ
+    Ⱥx 
+    Ⱥ 
+
+/[ⱥ]/i,utf
+    ⱥ
+    Ⱥx 
+    Ⱥ 
+
+/Ⱥ/i,utf
+    Ⱥ
+    ⱥ
+    
+# These are tests for extended grapheme clusters  
+
+/^\X/utf,aftertext
+    G\x{34e}\x{34e}X
+    \x{34e}\x{34e}X
+    \x04X
+    \x{1100}X
+    \x{1100}\x{34e}X
+    \x{1b04}\x{1b04}X 
+    *These match up to the roman letters
+    \x{1111}\x{1111}L,L
+    \x{1111}\x{1111}\x{1169}L,L,V
+    \x{1111}\x{ae4c}L, LV
+    \x{1111}\x{ad89}L, LVT
+    \x{1111}\x{ae4c}\x{1169}L, LV, V
+    \x{1111}\x{ae4c}\x{1169}\x{1169}L, LV, V, V
+    \x{1111}\x{ae4c}\x{1169}\x{11fe}L, LV, V, T
+    \x{1111}\x{ad89}\x{11fe}L, LVT, T
+    \x{1111}\x{ad89}\x{11fe}\x{11fe}L, LVT, T, T
+    \x{ad89}\x{11fe}\x{11fe}LVT, T, T
+    *These match just the first codepoint (invalid sequence)
+    \x{1111}\x{11fe}L, T
+    \x{ae4c}\x{1111}LV, L
+    \x{ae4c}\x{ae4c}LV, LV
+    \x{ae4c}\x{ad89}LV, LVT
+    \x{1169}\x{1111}V, L
+    \x{1169}\x{ae4c}V, LV
+    \x{1169}\x{ad89}V, LVT
+    \x{ad89}\x{1111}LVT, L
+    \x{ad89}\x{1169}LVT, V
+    \x{ad89}\x{ae4c}LVT, LV
+    \x{ad89}\x{ad89}LVT, LVT
+    \x{11fe}\x{1111}T, L
+    \x{11fe}\x{1169}T, V
+    \x{11fe}\x{ae4c}T, LV
+    \x{11fe}\x{ad89}T, LVT
+    *Test extend and spacing mark
+    \x{1111}\x{ae4c}\x{0711}L, LV, extend
+    \x{1111}\x{ae4c}\x{1b04}L, LV, spacing mark
+    \x{1111}\x{ae4c}\x{1b04}\x{0711}\x{1b04}L, LV, spacing mark, extend, spacing mark
+    *Test CR, LF, and control
+    \x0d\x{0711}CR, extend
+    \x0d\x{1b04}CR, spacingmark
+    \x0a\x{0711}LF, extend
+    \x0a\x{1b04}LF, spacingmark
+    \x0b\x{0711}Control, extend
+    \x09\x{1b04}Control, spacingmark
+    *There are no Prepend characters, so we can't test Prepend, CR
+    
+/^(?>\X{2})X/utf,aftertext
+    \x{1111}\x{ae4c}\x{1111}\x{ae4c}X
+    
+/^\X{2,4}X/utf,aftertext
+    \x{1111}\x{ae4c}\x{1111}\x{ae4c}X
+    \x{1111}\x{ae4c}\x{1111}\x{ae4c}\x{1111}\x{ae4c}X
+    \x{1111}\x{ae4c}\x{1111}\x{ae4c}\x{1111}\x{ae4c}\x{1111}\x{ae4c}X
+
+/^\X{2,4}?X/utf,aftertext
+    \x{1111}\x{ae4c}\x{1111}\x{ae4c}X
+    \x{1111}\x{ae4c}\x{1111}\x{ae4c}\x{1111}\x{ae4c}X
+    \x{1111}\x{ae4c}\x{1111}\x{ae4c}\x{1111}\x{ae4c}\x{1111}\x{ae4c}X
+
+/\X*Z/utf,no_start_optimize
+  A\x{300}
+
+/\X*(.)/utf,no_start_optimize
+  A\x{1111}\x{ae4c}\x{1169}
+
+# --------------------------------------------
+
+/\x{1e9e}+/i,utf
+    \x{1e9e}\x{00df}
+
+/[z\x{1e9e}]+/i,utf
+    \x{1e9e}\x{00df}
+
+/\x{00df}+/i,utf
+    \x{1e9e}\x{00df}
+
+/[z\x{00df}]+/i,utf
+    \x{1e9e}\x{00df}
+
+/\x{1f88}+/i,utf
+    \x{1f88}\x{1f80} 
+
+/[z\x{1f88}]+/i,utf
+    \x{1f88}\x{1f80} 
+    
+# Characters with more than one other case; test in classes 
+
+/[z\x{00b5}]+/i,utf
+    \x{00b5}\x{039c}\x{03bc}
+
+/[z\x{039c}]+/i,utf
+    \x{00b5}\x{039c}\x{03bc}
+
+/[z\x{03bc}]+/i,utf
+    \x{00b5}\x{039c}\x{03bc}
+
+/[z\x{00c5}]+/i,utf
+    \x{00c5}\x{00e5}\x{212b}
+
+/[z\x{00e5}]+/i,utf
+    \x{00c5}\x{00e5}\x{212b}
+
+/[z\x{212b}]+/i,utf
+    \x{00c5}\x{00e5}\x{212b}
+
+/[z\x{01c4}]+/i,utf
+    \x{01c4}\x{01c5}\x{01c6}
+
+/[z\x{01c5}]+/i,utf
+    \x{01c4}\x{01c5}\x{01c6}
+
+/[z\x{01c6}]+/i,utf
+    \x{01c4}\x{01c5}\x{01c6}
+
+/[z\x{01c7}]+/i,utf
+    \x{01c7}\x{01c8}\x{01c9}
+
+/[z\x{01c8}]+/i,utf
+    \x{01c7}\x{01c8}\x{01c9}
+
+/[z\x{01c9}]+/i,utf
+    \x{01c7}\x{01c8}\x{01c9}
+
+/[z\x{01ca}]+/i,utf
+    \x{01ca}\x{01cb}\x{01cc}
+
+/[z\x{01cb}]+/i,utf
+    \x{01ca}\x{01cb}\x{01cc}
+
+/[z\x{01cc}]+/i,utf
+    \x{01ca}\x{01cb}\x{01cc}
+
+/[z\x{01f1}]+/i,utf
+    \x{01f1}\x{01f2}\x{01f3}
+
+/[z\x{01f2}]+/i,utf
+    \x{01f1}\x{01f2}\x{01f3}
+
+/[z\x{01f3}]+/i,utf
+    \x{01f1}\x{01f2}\x{01f3}
+
+/[z\x{0345}]+/i,utf
+    \x{0345}\x{0399}\x{03b9}\x{1fbe}
+
+/[z\x{0399}]+/i,utf
+    \x{0345}\x{0399}\x{03b9}\x{1fbe}
+
+/[z\x{03b9}]+/i,utf
+    \x{0345}\x{0399}\x{03b9}\x{1fbe}
+
+/[z\x{1fbe}]+/i,utf
+    \x{0345}\x{0399}\x{03b9}\x{1fbe}
+
+/[z\x{0392}]+/i,utf
+    \x{0392}\x{03b2}\x{03d0}
+
+/[z\x{03b2}]+/i,utf
+    \x{0392}\x{03b2}\x{03d0}
+
+/[z\x{03d0}]+/i,utf
+    \x{0392}\x{03b2}\x{03d0}
+
+/[z\x{0395}]+/i,utf
+    \x{0395}\x{03b5}\x{03f5}
+
+/[z\x{03b5}]+/i,utf
+    \x{0395}\x{03b5}\x{03f5}
+
+/[z\x{03f5}]+/i,utf
+    \x{0395}\x{03b5}\x{03f5}
+
+/[z\x{0398}]+/i,utf
+    \x{0398}\x{03b8}\x{03d1}\x{03f4}
+
+/[z\x{03b8}]+/i,utf
+    \x{0398}\x{03b8}\x{03d1}\x{03f4}
+
+/[z\x{03d1}]+/i,utf
+    \x{0398}\x{03b8}\x{03d1}\x{03f4}
+
+/[z\x{03f4}]+/i,utf
+    \x{0398}\x{03b8}\x{03d1}\x{03f4}
+
+/[z\x{039a}]+/i,utf
+    \x{039a}\x{03ba}\x{03f0}
+
+/[z\x{03ba}]+/i,utf
+    \x{039a}\x{03ba}\x{03f0}
+
+/[z\x{03f0}]+/i,utf
+    \x{039a}\x{03ba}\x{03f0}
+
+/[z\x{03a0}]+/i,utf
+    \x{03a0}\x{03c0}\x{03d6} 
+
+/[z\x{03c0}]+/i,utf
+    \x{03a0}\x{03c0}\x{03d6} 
+
+/[z\x{03d6}]+/i,utf
+    \x{03a0}\x{03c0}\x{03d6} 
+
+/[z\x{03a1}]+/i,utf
+    \x{03a1}\x{03c1}\x{03f1}
+
+/[z\x{03c1}]+/i,utf
+    \x{03a1}\x{03c1}\x{03f1}
+
+/[z\x{03f1}]+/i,utf
+    \x{03a1}\x{03c1}\x{03f1}
+
+/[z\x{03a3}]+/i,utf
+    \x{03A3}\x{03C2}\x{03C3}
+
+/[z\x{03c2}]+/i,utf
+    \x{03A3}\x{03C2}\x{03C3}
+
+/[z\x{03c3}]+/i,utf
+    \x{03A3}\x{03C2}\x{03C3}
+
+/[z\x{03a6}]+/i,utf
+    \x{03a6}\x{03c6}\x{03d5} 
+
+/[z\x{03c6}]+/i,utf
+    \x{03a6}\x{03c6}\x{03d5} 
+
+/[z\x{03d5}]+/i,utf
+    \x{03a6}\x{03c6}\x{03d5} 
+
+/[z\x{03c9}]+/i,utf
+    \x{03c9}\x{03a9}\x{2126}
+
+/[z\x{03a9}]+/i,utf
+    \x{03c9}\x{03a9}\x{2126}
+
+/[z\x{2126}]+/i,utf
+    \x{03c9}\x{03a9}\x{2126}
+
+/[z\x{1e60}]+/i,utf
+    \x{1e60}\x{1e61}\x{1e9b}
+
+/[z\x{1e61}]+/i,utf
+    \x{1e60}\x{1e61}\x{1e9b}
+
+/[z\x{1e9b}]+/i,utf
+    \x{1e60}\x{1e61}\x{1e9b}
+
+# Perl 5.12.4 gets these wrong, but 5.15.3 is OK 
+
+/[z\x{004b}]+/i,utf
+    \x{004b}\x{006b}\x{212a}
+
+/[z\x{006b}]+/i,utf
+    \x{004b}\x{006b}\x{212a}
+
+/[z\x{212a}]+/i,utf
+    \x{004b}\x{006b}\x{212a}
+
+/[z\x{0053}]+/i,utf
+    \x{0053}\x{0073}\x{017f}
+
+/[z\x{0073}]+/i,utf
+    \x{0053}\x{0073}\x{017f}
+
+/[z\x{017f}]+/i,utf
+    \x{0053}\x{0073}\x{017f}
+    
+# --------------------------------------  
+
+/(ΣΆΜΟΣ) \1/i,utf
+    ΣΆΜΟΣ ΣΆΜΟΣ
+    ΣΆΜΟΣ σάμος
+    σάμος σάμος
+    σάμος σάμοσ
+    σάμος ΣΆΜΟΣ  
+
+/(σάμος) \1/i,utf
+    ΣΆΜΟΣ ΣΆΜΟΣ
+    ΣΆΜΟΣ σάμος
+    σάμος σάμος
+    σάμος σάμοσ
+    σάμος ΣΆΜΟΣ  
+
+/(ΣΆΜΟΣ) \1*/i,utf
+    ΣΆΜΟΣ\x20
+    ΣΆΜΟΣ ΣΆΜΟΣσάμοςσάμος
+
+# Perl matches these 
+
+/\x{00b5}+/i,utf
+    \x{00b5}\x{039c}\x{03bc}
+
+/\x{039c}+/i,utf
+    \x{00b5}\x{039c}\x{03bc}
+
+/\x{03bc}+/i,utf
+    \x{00b5}\x{039c}\x{03bc}
+
+
+/\x{00c5}+/i,utf
+    \x{00c5}\x{00e5}\x{212b}
+
+/\x{00e5}+/i,utf
+    \x{00c5}\x{00e5}\x{212b}
+
+/\x{212b}+/i,utf
+    \x{00c5}\x{00e5}\x{212b}
+
+
+/\x{01c4}+/i,utf
+    \x{01c4}\x{01c5}\x{01c6}
+
+/\x{01c5}+/i,utf
+    \x{01c4}\x{01c5}\x{01c6}
+
+/\x{01c6}+/i,utf
+    \x{01c4}\x{01c5}\x{01c6}
+
+
+/\x{01c7}+/i,utf
+    \x{01c7}\x{01c8}\x{01c9}
+
+/\x{01c8}+/i,utf
+    \x{01c7}\x{01c8}\x{01c9}
+
+/\x{01c9}+/i,utf
+    \x{01c7}\x{01c8}\x{01c9}
+
+
+/\x{01ca}+/i,utf
+    \x{01ca}\x{01cb}\x{01cc}
+
+/\x{01cb}+/i,utf
+    \x{01ca}\x{01cb}\x{01cc}
+
+/\x{01cc}+/i,utf
+    \x{01ca}\x{01cb}\x{01cc}
+
+
+/\x{01f1}+/i,utf
+    \x{01f1}\x{01f2}\x{01f3}
+
+/\x{01f2}+/i,utf
+    \x{01f1}\x{01f2}\x{01f3}
+
+/\x{01f3}+/i,utf
+    \x{01f1}\x{01f2}\x{01f3}
+
+
+/\x{0345}+/i,utf
+    \x{0345}\x{0399}\x{03b9}\x{1fbe}
+
+/\x{0399}+/i,utf
+    \x{0345}\x{0399}\x{03b9}\x{1fbe}
+
+/\x{03b9}+/i,utf
+    \x{0345}\x{0399}\x{03b9}\x{1fbe}
+
+/\x{1fbe}+/i,utf
+    \x{0345}\x{0399}\x{03b9}\x{1fbe}
+
+
+/\x{0392}+/i,utf
+    \x{0392}\x{03b2}\x{03d0}
+
+/\x{03b2}+/i,utf
+    \x{0392}\x{03b2}\x{03d0}
+
+/\x{03d0}+/i,utf
+    \x{0392}\x{03b2}\x{03d0}
+    
+
+/\x{0395}+/i,utf
+    \x{0395}\x{03b5}\x{03f5}
+
+/\x{03b5}+/i,utf
+    \x{0395}\x{03b5}\x{03f5}
+
+/\x{03f5}+/i,utf
+    \x{0395}\x{03b5}\x{03f5}
+
+
+/\x{0398}+/i,utf
+    \x{0398}\x{03b8}\x{03d1}\x{03f4}
+
+/\x{03b8}+/i,utf
+    \x{0398}\x{03b8}\x{03d1}\x{03f4}
+
+/\x{03d1}+/i,utf
+    \x{0398}\x{03b8}\x{03d1}\x{03f4}
+
+/\x{03f4}+/i,utf
+    \x{0398}\x{03b8}\x{03d1}\x{03f4}
+    
+
+/\x{039a}+/i,utf
+    \x{039a}\x{03ba}\x{03f0}
+
+/\x{03ba}+/i,utf
+    \x{039a}\x{03ba}\x{03f0}
+
+/\x{03f0}+/i,utf
+    \x{039a}\x{03ba}\x{03f0}
+    
+
+/\x{03a0}+/i,utf
+    \x{03a0}\x{03c0}\x{03d6} 
+
+/\x{03c0}+/i,utf
+    \x{03a0}\x{03c0}\x{03d6} 
+
+/\x{03d6}+/i,utf
+    \x{03a0}\x{03c0}\x{03d6} 
+
+
+/\x{03a1}+/i,utf
+    \x{03a1}\x{03c1}\x{03f1}
+
+/\x{03c1}+/i,utf
+    \x{03a1}\x{03c1}\x{03f1}
+
+/\x{03f1}+/i,utf
+    \x{03a1}\x{03c1}\x{03f1}
+
+
+/\x{03a3}+/i,utf
+    \x{03A3}\x{03C2}\x{03C3}
+
+/\x{03c2}+/i,utf
+    \x{03A3}\x{03C2}\x{03C3}
+
+/\x{03c3}+/i,utf
+    \x{03A3}\x{03C2}\x{03C3}
+    
+
+/\x{03a6}+/i,utf
+    \x{03a6}\x{03c6}\x{03d5} 
+
+/\x{03c6}+/i,utf
+    \x{03a6}\x{03c6}\x{03d5} 
+
+/\x{03d5}+/i,utf
+    \x{03a6}\x{03c6}\x{03d5} 
+
+
+/\x{03c9}+/i,utf
+    \x{03c9}\x{03a9}\x{2126}
+
+/\x{03a9}+/i,utf
+    \x{03c9}\x{03a9}\x{2126}
+
+/\x{2126}+/i,utf
+    \x{03c9}\x{03a9}\x{2126}
+    
+
+/\x{1e60}+/i,utf
+    \x{1e60}\x{1e61}\x{1e9b}
+
+/\x{1e61}+/i,utf
+    \x{1e60}\x{1e61}\x{1e9b}
+
+/\x{1e9b}+/i,utf
+    \x{1e60}\x{1e61}\x{1e9b}
+    
+
+/\x{1e9e}+/i,utf
+    \x{1e9e}\x{00df}
+
+/\x{00df}+/i,utf
+    \x{1e9e}\x{00df}
+    
+
+/\x{1f88}+/i,utf
+    \x{1f88}\x{1f80} 
+
+/\x{1f80}+/i,utf
+    \x{1f88}\x{1f80} 
+
+# Perl 5.12.4 gets these wrong, but 5.15.3 is OK 
+
+/\x{004b}+/i,utf
+    \x{004b}\x{006b}\x{212a}
+
+/\x{006b}+/i,utf
+    \x{004b}\x{006b}\x{212a}
+
+/\x{212a}+/i,utf
+    \x{004b}\x{006b}\x{212a}
+
+
+/\x{0053}+/i,utf
+    \x{0053}\x{0073}\x{017f}
+
+/\x{0073}+/i,utf
+    \x{0053}\x{0073}\x{017f}
+
+/\x{017f}+/i,utf
+    \x{0053}\x{0073}\x{017f}
+
+/^\p{Any}*\d{4}/utf
+    1234
+    123 
+
+/^\X*\w{4}/utf
+    1234
+    123  
+
+/^A\s+Z/utf,ucp
+    A\x{2005}Z
+    A\x{85}\x{2005}Z
+
+/^A[\s]+Z/utf,ucp
+    A\x{2005}Z
+    A\x{85}\x{2005}Z
+
+/^[[:graph:]]+$/utf,ucp
+    Letter:ABC
+    Mark:\x{300}\x{1d172}\x{1d17b}
+    Number:9\x{660}
+    Punctuation:\x{66a},;
+    Symbol:\x{6de}<>\x{fffc}
+    Cf-property:\x{ad}\x{600}\x{601}\x{602}\x{603}\x{604}\x{6dd}\x{70f}
+    \x{200b}\x{200c}\x{200d}\x{200e}\x{200f}
+    \x{202a}\x{202b}\x{202c}\x{202d}\x{202e}
+    \x{2060}\x{2061}\x{2062}\x{2063}\x{2064}
+    \x{206a}\x{206b}\x{206c}\x{206d}\x{206e}\x{206f}
+    \x{feff}
+    \x{fff9}\x{fffa}\x{fffb}
+    \x{110bd}
+    \x{1d173}\x{1d174}\x{1d175}\x{1d176}\x{1d177}\x{1d178}\x{1d179}\x{1d17a}
+    \x{e0001}
+    \x{e0020}\x{e0030}\x{e0040}\x{e0050}\x{e0060}\x{e0070}\x{e007f}
+    ** Failers
+    \x{09}
+    \x{0a}
+    \x{1D}
+    \x{20}
+    \x{85}
+    \x{a0}
+    \x{1680}
+    \x{2028}
+    \x{2029}
+    \x{202f}
+    \x{2065}
+    \x{3000}
+    \x{e0002}
+    \x{e001f}
+    \x{e0080} 
+
+/^[[:print:]]+$/utf,ucp
+    Space: \x{a0}
+    \x{1680}\x{2000}\x{2001}\x{2002}\x{2003}\x{2004}\x{2005}
+    \x{2006}\x{2007}\x{2008}\x{2009}\x{200a} 
+    \x{202f}\x{205f} 
+    \x{3000}
+    Letter:ABC
+    Mark:\x{300}\x{1d172}\x{1d17b}
+    Number:9\x{660}
+    Punctuation:\x{66a},;
+    Symbol:\x{6de}<>\x{fffc}
+    Cf-property:\x{ad}\x{600}\x{601}\x{602}\x{603}\x{604}\x{6dd}\x{70f}
+    \x{200b}\x{200c}\x{200d}\x{200e}\x{200f}
+    \x{202a}\x{202b}\x{202c}\x{202d}\x{202e}
+    \x{202f}
+    \x{2060}\x{2061}\x{2062}\x{2063}\x{2064}
+    \x{206a}\x{206b}\x{206c}\x{206d}\x{206e}\x{206f}
+    \x{feff}
+    \x{fff9}\x{fffa}\x{fffb}
+    \x{110bd}
+    \x{1d173}\x{1d174}\x{1d175}\x{1d176}\x{1d177}\x{1d178}\x{1d179}\x{1d17a}
+    \x{e0001}
+    \x{e0020}\x{e0030}\x{e0040}\x{e0050}\x{e0060}\x{e0070}\x{e007f}
+    ** Failers
+    \x{09}
+    \x{1D}
+    \x{85}
+    \x{2028}
+    \x{2029}
+    \x{2065}
+    \x{e0002}
+    \x{e001f}
+    \x{e0080} 
+
+/^[[:punct:]]+$/utf,ucp
+    \$+<=>^`|~
+    !\"#%&'()*,-./:;?@[\\]_{}
+    \x{a1}\x{a7}  
+    \x{37e} 
+    ** Failers
+    abcde  
+
+/^[[:^graph:]]+$/utf,ucp
+    \x{09}\x{0a}\x{1D}\x{20}\x{85}\x{a0}\x{1680}
+    \x{2028}\x{2029}\x{202f}\x{2065}
+    \x{3000}\x{e0002}\x{e001f}\x{e0080}
+    ** Failers
+    Letter:ABC
+    Mark:\x{300}\x{1d172}\x{1d17b}
+    Number:9\x{660}
+    Punctuation:\x{66a},;
+    Symbol:\x{6de}<>\x{fffc}
+    Cf-property:\x{ad}\x{600}\x{601}\x{602}\x{603}\x{604}\x{6dd}\x{70f}
+    \x{200b}\x{200c}\x{200d}\x{200e}\x{200f}
+    \x{202a}\x{202b}\x{202c}\x{202d}\x{202e}
+    \x{2060}\x{2061}\x{2062}\x{2063}\x{2064}
+    \x{206a}\x{206b}\x{206c}\x{206d}\x{206e}\x{206f}
+    \x{feff}
+    \x{fff9}\x{fffa}\x{fffb}
+    \x{110bd}
+    \x{1d173}\x{1d174}\x{1d175}\x{1d176}\x{1d177}\x{1d178}\x{1d179}\x{1d17a}
+    \x{e0001}
+    \x{e0020}\x{e0030}\x{e0040}\x{e0050}\x{e0060}\x{e0070}\x{e007f}
+
+/^[[:^print:]]+$/utf,ucp
+    \x{09}\x{1D}\x{85}\x{2028}\x{2029}\x{2065}
+    \x{e0002}\x{e001f}\x{e0080}
+    ** Failers
+    Space: \x{a0}
+    \x{1680}\x{2000}\x{2001}\x{2002}\x{2003}\x{2004}\x{2005}
+    \x{2006}\x{2007}\x{2008}\x{2009}\x{200a} 
+    \x{202f}\x{205f} 
+    \x{3000}
+    Letter:ABC
+    Mark:\x{300}\x{1d172}\x{1d17b}
+    Number:9\x{660}
+    Punctuation:\x{66a},;
+    Symbol:\x{6de}<>\x{fffc}
+    Cf-property:\x{ad}\x{600}\x{601}\x{602}\x{603}\x{604}\x{6dd}\x{70f}
+    \x{200b}\x{200c}\x{200d}\x{200e}\x{200f}
+    \x{202a}\x{202b}\x{202c}\x{202d}\x{202e}
+    \x{202f}
+    \x{2060}\x{2061}\x{2062}\x{2063}\x{2064}
+    \x{206a}\x{206b}\x{206c}\x{206d}\x{206e}\x{206f}
+    \x{feff}
+    \x{fff9}\x{fffa}\x{fffb}
+    \x{110bd}
+    \x{1d173}\x{1d174}\x{1d175}\x{1d176}\x{1d177}\x{1d178}\x{1d179}\x{1d17a}
+    \x{e0001}
+    \x{e0020}\x{e0030}\x{e0040}\x{e0050}\x{e0060}\x{e0070}\x{e007f}
+
+/^[[:^punct:]]+$/utf,ucp
+    abcde  
+    ** Failers
+    \$+<=>^`|~
+    !\"#%&'()*,-./:;?@[\\]_{}
+    \x{a1}\x{a7}  
+    \x{37e} 
+
+/[RST]+/i,utf,ucp
+    Ss\x{17f}
+    
+/[R-T]+/i,utf,ucp
+    Ss\x{17f}
+
+/[q-u]+/i,utf,ucp
+    Ss\x{17f}
+
+/^s?c/im,utf
+    scat
+    
+# The next four tests are for repeated caseless back references when the 
+# code unit length of the matched text is different to that of the original
+# group in the UTF-8 case.
+
+/^(\x{23a})\1*(.)/i,utf
+    \x{23a}\x{23a}\x{23a}\x{23a}
+    \x{23a}\x{2c65}\x{2c65}\x{2c65}
+    \x{23a}\x{23a}\x{2c65}\x{23a}
+
+/^(\x{23a})\1*(..)/i,utf
+    \x{23a}\x{2c65}\x{2c65}\x{2c65}
+    \x{23a}\x{23a}\x{2c65}\x{23a}
+
+/^(\x{23a})\1*(...)/i,utf
+    \x{23a}\x{2c65}\x{2c65}\x{2c65}
+    \x{23a}\x{23a}\x{2c65}\x{23a}
+
+/^(\x{23a})\1*(....)/i,utf
+    \x{23a}\x{2c65}\x{2c65}\x{2c65}
+    \x{23a}\x{23a}\x{2c65}\x{23a}
+
+/[A-`]/i,utf
+    abcdefghijklmno
+
+"[\S\V\H]"utf
+
+/\C\X*TӅ;
+{0,6}\v+F
+/utf
+    Ӆ\x0a
+
+/\C(\W?ſ)'?{{/utf
+    \\C(\\W?ſ)'?{{
+
+# End of testinput4

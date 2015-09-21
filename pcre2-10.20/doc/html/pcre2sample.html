@@ -1,0 +1,106 @@
+<html>
+<head>
+<title>pcre2sample specification</title>
+</head>
+<body bgcolor="#FFFFFF" text="#00005A" link="#0066FF" alink="#3399FF" vlink="#2222BB">
+<h1>pcre2sample man page</h1>
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>
+<p>
+This page is part of the PCRE2 HTML documentation. It was generated
+automatically from the original man page. If there is any nonsense in it,
+please consult the man page, in case the conversion went wrong.
+<br>
+<br><b>
+PCRE2 SAMPLE PROGRAM
+</b><br>
+<P>
+A simple, complete demonstration program to get you started with using PCRE2 is
+supplied in the file <i>pcre2demo.c</i> in the <b>src</b> directory in the PCRE2
+distribution. A listing of this program is given in the
+<a href="pcre2demo.html"><b>pcre2demo</b></a>
+documentation. If you do not have a copy of the PCRE2 distribution, you can
+save this listing to re-create the contents of <i>pcre2demo.c</i>.
+</P>
+<P>
+The demonstration program, which uses the PCRE2 8-bit library, compiles the
+regular expression that is its first argument, and matches it against the
+subject string in its second argument. No PCRE2 options are set, and default
+character tables are used. If matching succeeds, the program outputs the
+portion of the subject that matched, together with the contents of any captured
+substrings.
+</P>
+<P>
+If the -g option is given on the command line, the program then goes on to
+check for further matches of the same regular expression in the same subject
+string. The logic is a little bit tricky because of the possibility of matching
+an empty string. Comments in the code explain what is going on.
+</P>
+<P>
+If PCRE2 is installed in the standard include and library directories for your
+operating system, you should be able to compile the demonstration program using
+this command:
+<pre>
+  gcc -o pcre2demo pcre2demo.c -lpcre2-8
+</pre>
+If PCRE2 is installed elsewhere, you may need to add additional options to the
+command line. For example, on a Unix-like system that has PCRE2 installed in
+<i>/usr/local</i>, you can compile the demonstration program using a command
+like this:
+<pre>
+  gcc -o pcre2demo -I/usr/local/include pcre2demo.c -L/usr/local/lib -lpcre2-8
+
+</PRE>
+</P>
+<P>
+Once you have compiled and linked the demonstration program, you can run simple
+tests like this:
+<pre>
+  ./pcre2demo 'cat|dog' 'the cat sat on the mat'
+  ./pcre2demo -g 'cat|dog' 'the dog sat on the cat'
+</pre>
+Note that there is a much more comprehensive test program, called
+<a href="pcre2test.html"><b>pcre2test</b>,</a>
+which supports many more facilities for testing regular expressions using the
+PCRE2 libraries. The
+<a href="pcre2demo.html"><b>pcre2demo</b></a>
+program is provided as a simple coding example.
+</P>
+<P>
+If you try to run
+<a href="pcre2demo.html"><b>pcre2demo</b></a>
+when PCRE2 is not installed in the standard library directory, you may get an
+error like this on some operating systems (e.g. Solaris):
+<pre>
+  ld.so.1: a.out: fatal: libpcre2.so.0: open failed: No such file or directory
+</pre>
+This is caused by the way shared library support works on those systems. You
+need to add
+<pre>
+  -R/usr/local/lib
+</pre>
+(for example) to the compile command to get round this problem.
+</P>
+<br><b>
+AUTHOR
+</b><br>
+<P>
+Philip Hazel
+<br>
+University Computing Service
+<br>
+Cambridge, England.
+<br>
+</P>
+<br><b>
+REVISION
+</b><br>
+<P>
+Last updated: 20 October 2014
+<br>
+Copyright &copy; 1997-2014 University of Cambridge.
+<br>
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>

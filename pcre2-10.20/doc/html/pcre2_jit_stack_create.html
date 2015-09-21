@@ -1,0 +1,50 @@
+<html>
+<head>
+<title>pcre2_jit_stack_create specification</title>
+</head>
+<body bgcolor="#FFFFFF" text="#00005A" link="#0066FF" alink="#3399FF" vlink="#2222BB">
+<h1>pcre2_jit_stack_create man page</h1>
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>
+<p>
+This page is part of the PCRE2 HTML documentation. It was generated
+automatically from the original man page. If there is any nonsense in it,
+please consult the man page, in case the conversion went wrong.
+<br>
+<br><b>
+SYNOPSIS
+</b><br>
+<P>
+<b>#include &#60;pcre2.h&#62;</b>
+</P>
+<P>
+<b>pcre2_jit_stack *pcre2_jit_stack_create(PCRE2_SIZE <i>startsize</i>,</b>
+<b>  PCRE2_SIZE <i>maxsize</i>, pcre2_general_context *<i>gcontext</i>);</b>
+</P>
+<br><b>
+DESCRIPTION
+</b><br>
+<P>
+This function is used to create a stack for use by the code compiled by the JIT
+compiler. The first two arguments are a starting size for the stack, and a
+maximum size to which it is allowed to grow. The final argument is a general
+context, for memory allocation functions, or NULL for standard memory
+allocation. The result can be passed to the JIT run-time code by calling
+<b>pcre2_jit_stack_assign()</b> to associate the stack with a compiled pattern,
+which can then be processed by <b>pcre2_match()</b>. If the "fast path" JIT
+matcher, <b>pcre2_jit_match()</b> is used, the stack can be passed directly as
+an argument. A maximum stack size of 512K to 1M should be more than enough for
+any pattern. For more details, see the
+<a href="pcre2jit.html"><b>pcre2jit</b></a>
+page.
+</P>
+<P>
+There is a complete description of the PCRE2 native API in the
+<a href="pcre2api.html"><b>pcre2api</b></a>
+page and a description of the POSIX API in the
+<a href="pcre2posix.html"><b>pcre2posix</b></a>
+page.
+<p>
+Return to the <a href="index.html">PCRE2 index page</a>.
+</p>

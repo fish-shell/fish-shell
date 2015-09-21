@@ -1,0 +1,1456 @@
+.TH PCRE2TEST 1 "20 May 2015" "PCRE 10.20"
+.SH NAME
+pcre2test - a program for testing Perl-compatible regular expressions.
+.SH SYNOPSIS
+.rs
+.sp
+.B pcre2test "[options] [input file [output file]]"
+.sp
+\fBpcre2test\fP is a test program for the PCRE2 regular expression libraries,
+but it can also be used for experimenting with regular expressions. This
+document describes the features of the test program; for details of the regular
+expressions themselves, see the
+.\" HREF
+\fBpcre2pattern\fP
+.\"
+documentation. For details of the PCRE2 library function calls and their
+options, see the
+.\" HREF
+\fBpcre2api\fP
+.\"
+documentation.
+.P
+The input for \fBpcre2test\fP is a sequence of regular expression patterns and
+subject strings to be matched. There are also command lines for setting
+defaults and controlling some special actions. The output shows the result of
+each match attempt. Modifiers on external or internal command lines, the
+patterns, and the subject lines specify PCRE2 function options, control how the
+subject is processed, and what output is produced.
+.P
+As the original fairly simple PCRE library evolved, it acquired many different
+features, and as a result, the original \fBpcretest\fP program ended up with a
+lot of options in a messy, arcane syntax, for testing all the features. The
+move to the new PCRE2 API provided an opportunity to re-implement the test
+program as \fBpcre2test\fP, with a cleaner modifier syntax. Nevertheless, there
+are still many obscure modifiers, some of which are specifically designed for
+use in conjunction with the test script and data files that are distributed as
+part of PCRE2. All the modifiers are documented here, some without much
+justification, but many of them are unlikely to be of use except when testing
+the libraries.
+.
+.
+.SH "PCRE2's 8-BIT, 16-BIT AND 32-BIT LIBRARIES"
+.rs
+.sp
+Different versions of the PCRE2 library can be built to support character
+strings that are encoded in 8-bit, 16-bit, or 32-bit code units. One, two, or
+all three of these libraries may be simultaneously installed. The
+\fBpcre2test\fP program can be used to test all the libraries. However, its own
+input and output are always in 8-bit format. When testing the 16-bit or 32-bit
+libraries, patterns and subject strings are converted to 16- or 32-bit format
+before being passed to the library functions. Results are converted back to
+8-bit code units for output.
+.P
+In the rest of this document, the names of library functions and structures
+are given in generic form, for example, \fBpcre_compile()\fP. The actual
+names used in the libraries have a suffix _8, _16, or _32, as appropriate.
+.
+.
+.SH "INPUT ENCODING"
+.rs
+.sp
+Input to \fBpcre2test\fP is processed line by line, either by calling the C
+library's \fBfgets()\fP function, or via the \fBlibreadline\fP library (see
+below). The input is processed using using C's string functions, so must not
+contain binary zeroes, even though in Unix-like environments, \fBfgets()\fP
+treats any bytes other than newline as data characters. In some Windows
+environments character 26 (hex 1A) causes an immediate end of file, and no
+further data is read.
+.P
+For maximum portability, therefore, it is safest to avoid non-printing
+characters in \fBpcre2test\fP input files. There is a facility for specifying a
+pattern's characters as hexadecimal pairs, thus making it possible to include
+binary zeroes in a pattern for testing purposes. Subject lines are processed
+for backslash escapes, which makes it possible to include any data value.
+.
+.
+.SH "COMMAND LINE OPTIONS"
+.rs
+.TP 10
+\fB-8\fP
+If the 8-bit library has been built, this option causes it to be used (this is
+the default). If the 8-bit library has not been built, this option causes an
+error.
+.TP 10
+\fB-16\fP
+If the 16-bit library has been built, this option causes it to be used. If only
+the 16-bit library has been built, this is the default. If the 16-bit library
+has not been built, this option causes an error.
+.TP 10
+\fB-32\fP
+If the 32-bit library has been built, this option causes it to be used. If only
+the 32-bit library has been built, this is the default. If the 32-bit library
+has not been built, this option causes an error.
+.TP 10
+\fB-b\fP
+Behave as if each pattern has the \fB/fullbincode\fP modifier; the full
+internal binary form of the pattern is output after compilation.
+.TP 10
+\fB-C\fP
+Output the version number of the PCRE2 library, and all available information
+about the optional features that are included, and then exit with zero exit
+code. All other options are ignored.
+.TP 10
+\fB-C\fP \fIoption\fP
+Output information about a specific build-time option, then exit. This
+functionality is intended for use in scripts such as \fBRunTest\fP. The
+following options output the value and set the exit code as indicated:
+.sp
+  ebcdic-nl  the code for LF (= NL) in an EBCDIC environment:
+               0x15 or 0x25
+               0 if used in an ASCII environment
+               exit code is always 0
+  linksize   the configured internal link size (2, 3, or 4)
+               exit code is set to the link size
+  newline    the default newline setting:
+               CR, LF, CRLF, ANYCRLF, or ANY
+               exit code is always 0
+  bsr        the default setting for what \eR matches:
+               ANYCRLF or ANY
+               exit code is always 0
+.sp
+The following options output 1 for true or 0 for false, and set the exit code
+to the same value:
+.sp
+  ebcdic     compiled for an EBCDIC environment
+  jit        just-in-time support is available
+  pcre2-16   the 16-bit library was built
+  pcre2-32   the 32-bit library was built
+  pcre2-8    the 8-bit library was built
+  unicode    Unicode support is available
+.sp
+If an unknown option is given, an error message is output; the exit code is 0.
+.TP 10
+\fB-d\fP
+Behave as if each pattern has the \fBdebug\fP modifier; the internal
+form and information about the compiled pattern is output after compilation;
+\fB-d\fP is equivalent to \fB-b -i\fP.
+.TP 10
+\fB-dfa\fP
+Behave as if each subject line has the \fBdfa\fP modifier; matching is done
+using the \fBpcre2_dfa_match()\fP function instead of the default
+\fBpcre2_match()\fP.
+.TP 10
+\fB-help\fP
+Output a brief summary these options and then exit.
+.TP 10
+\fB-i\fP
+Behave as if each pattern has the \fB/info\fP modifier; information about the
+compiled pattern is given after compilation.
+.TP 10
+\fB-jit\fP
+Behave as if each pattern line has the \fBjit\fP modifier; after successful
+compilation, each pattern is passed to the just-in-time compiler, if available.
+.TP 10
+\fB-pattern\fB \fImodifier-list\fP
+Behave as if each pattern line contains the given modifiers.
+.TP 10
+\fB-q\fP
+Do not output the version number of \fBpcre2test\fP at the start of execution.
+.TP 10
+\fB-S\fP \fIsize\fP
+On Unix-like systems, set the size of the run-time stack to \fIsize\fP
+megabytes.
+.TP 10
+\fB-subject\fP \fImodifier-list\fP
+Behave as if each subject line contains the given modifiers.
+.TP 10
+\fB-t\fP
+Run each compile and match many times with a timer, and output the resulting
+times per compile or match. When JIT is used, separate times are given for the
+initial compile and the JIT compile. You can control the number of iterations
+that are used for timing by following \fB-t\fP with a number (as a separate
+item on the command line). For example, "-t 1000" iterates 1000 times. The
+default is to iterate 500,000 times.
+.TP 10
+\fB-tm\fP
+This is like \fB-t\fP except that it times only the matching phase, not the
+compile phase.
+.TP 10
+\fB-T\fP \fB-TM\fP
+These behave like \fB-t\fP and \fB-tm\fP, but in addition, at the end of a run,
+the total times for all compiles and matches are output.
+.TP 10
+\fB-version\fP
+Output the PCRE2 version number and then exit.
+.
+.
+.SH "DESCRIPTION"
+.rs
+.sp
+If \fBpcre2test\fP is given two filename arguments, it reads from the first and
+writes to the second. If the first name is "-", input is taken from the
+standard input. If \fBpcre2test\fP is given only one argument, it reads from
+that file and writes to stdout. Otherwise, it reads from stdin and writes to
+stdout.
+.P
+When \fBpcre2test\fP is built, a configuration option can specify that it
+should be linked with the \fBlibreadline\fP or \fBlibedit\fP library. When this
+is done, if the input is from a terminal, it is read using the \fBreadline()\fP
+function. This provides line-editing and history facilities. The output from
+the \fB-help\fP option states whether or not \fBreadline()\fP will be used.
+.P
+The program handles any number of tests, each of which consists of a set of
+input lines. Each set starts with a regular expression pattern, followed by any
+number of subject lines to be matched against that pattern. In between sets of
+test data, command lines that begin with # may appear. This file format, with
+some restrictions, can also be processed by the \fBperltest.sh\fP script that
+is distributed with PCRE2 as a means of checking that the behaviour of PCRE2
+and Perl is the same.
+.P
+When the input is a terminal, \fBpcre2test\fP prompts for each line of input,
+using "re>" to prompt for regular expression patterns, and "data>" to prompt
+for subject lines. Command lines starting with # can be entered only in
+response to the "re>" prompt.
+.P
+Each subject line is matched separately and independently. If you want to do
+multi-line matches, you have to use the \en escape sequence (or \er or \er\en,
+etc., depending on the newline setting) in a single line of input to encode the
+newline sequences. There is no limit on the length of subject lines; the input
+buffer is automatically extended if it is too small. There is a replication
+feature that makes it possible to generate long subject lines without having to
+supply them explicitly.
+.P
+An empty line or the end of the file signals the end of the subject lines for a
+test, at which point a new pattern or command line is expected if there is
+still input to be read.
+.
+.
+.SH "COMMAND LINES"
+.rs
+.sp
+In between sets of test data, a line that begins with # is interpreted as a
+command line. If the first character is followed by white space or an
+exclamation mark, the line is treated as a comment, and ignored. Otherwise, the
+following commands are recognized:
+.sp
+  #forbid_utf
+.sp
+Subsequent patterns automatically have the PCRE2_NEVER_UTF and PCRE2_NEVER_UCP
+options set, which locks out the use of the PCRE2_UTF and PCRE2_UCP options and
+the use of (*UTF) and (*UCP) at the start of patterns. This command also forces
+an error if a subsequent pattern contains any occurrences of \eP, \ep, or \eX,
+which are still supported when PCRE2_UTF is not set, but which require Unicode
+property support to be included in the library.
+.P
+This is a trigger guard that is used in test files to ensure that UTF or
+Unicode property tests are not accidentally added to files that are used when
+Unicode support is not included in the library. Setting PCRE2_NEVER_UTF and
+PCRE2_NEVER_UCP as a default can also be obtained by the use of \fB#pattern\fP;
+the difference is that \fB#forbid_utf\fP cannot be unset, and the automatic
+options are not displayed in pattern information, to avoid cluttering up test
+output.
+.sp
+  #load <filename>
+.sp
+This command is used to load a set of precompiled patterns from a file, as
+described in the section entitled "Saving and restoring compiled patterns"
+.\" HTML <a href="#saverestore">
+.\" </a>
+below.
+.\"
+.sp
+  #pattern <modifier-list>
+.sp
+This command sets a default modifier list that applies to all subsequent
+patterns. Modifiers on a pattern can change these settings.
+.sp
+  #perltest
+.sp
+The appearance of this line causes all subsequent modifier settings to be
+checked for compatibility with the \fBperltest.sh\fP script, which is used to
+confirm that Perl gives the same results as PCRE2. Also, apart from comment
+lines, none of the other command lines are permitted, because they and many
+of the modifiers are specific to \fBpcre2test\fP, and should not be used in
+test files that are also processed by \fBperltest.sh\fP. The \fB#perltest\fP
+command helps detect tests that are accidentally put in the wrong file.
+.sp
+  #pop [<modifiers>]
+.sp
+This command is used to manipulate the stack of compiled patterns, as described
+in the section entitled "Saving and restoring compiled patterns"
+.\" HTML <a href="#saverestore">
+.\" </a>
+below.
+.\"
+.sp
+  #save <filename>
+.sp
+This command is used to save a set of compiled patterns to a file, as described
+in the section entitled "Saving and restoring compiled patterns"
+.\" HTML <a href="#saverestore">
+.\" </a>
+below.
+.\"
+.sp
+  #subject <modifier-list>
+.sp
+This command sets a default modifier list that applies to all subsequent
+subject lines. Modifiers on a subject line can change these settings.
+.
+.
+.SH "MODIFIER SYNTAX"
+.rs
+.sp
+Modifier lists are used with both pattern and subject lines. Items in a list
+are separated by commas and optional white space. Some modifiers may be given
+for both patterns and subject lines, whereas others are valid for one or the
+other only. Each modifier has a long name, for example "anchored", and some of
+them must be followed by an equals sign and a value, for example, "offset=12".
+Modifiers that do not take values may be preceded by a minus sign to turn off a
+previous setting.
+.P
+A few of the more common modifiers can also be specified as single letters, for
+example "i" for "caseless". In documentation, following the Perl convention,
+these are written with a slash ("the /i modifier") for clarity. Abbreviated
+modifiers must all be concatenated in the first item of a modifier list. If the
+first item is not recognized as a long modifier name, it is interpreted as a
+sequence of these abbreviations. For example:
+.sp
+  /abc/ig,newline=cr,jit=3
+.sp
+This is a pattern line whose modifier list starts with two one-letter modifiers
+(/i and /g). The lower-case abbreviated modifiers are the same as used in Perl.
+.
+.
+.SH "PATTERN SYNTAX"
+.rs
+.sp
+A pattern line must start with one of the following characters (common symbols,
+excluding pattern meta-characters):
+.sp
+  / ! " ' ` - = _ : ; , % & @ ~
+.sp
+This is interpreted as the pattern's delimiter. A regular expression may be
+continued over several input lines, in which case the newline characters are
+included within it. It is possible to include the delimiter within the pattern
+by escaping it with a backslash, for example
+.sp
+  /abc\e/def/
+.sp
+If you do this, the escape and the delimiter form part of the pattern, but
+since the delimiters are all non-alphanumeric, this does not affect its
+interpretation. If the terminating delimiter is immediately followed by a
+backslash, for example,
+.sp
+  /abc/\e
+.sp
+then a backslash is added to the end of the pattern. This is done to provide a
+way of testing the error condition that arises if a pattern finishes with a
+backslash, because
+.sp
+  /abc\e/
+.sp
+is interpreted as the first line of a pattern that starts with "abc/", causing
+pcre2test to read the next line as a continuation of the regular expression.
+.P
+A pattern can be followed by a modifier list (details below).
+.
+.
+.SH "SUBJECT LINE SYNTAX"
+.rs
+.sp
+Before each subject line is passed to \fBpcre2_match()\fP or
+\fBpcre2_dfa_match()\fP, leading and trailing white space is removed, and the
+line is scanned for backslash escapes. The following provide a means of
+encoding non-printing characters in a visible way:
+.sp
+  \ea         alarm (BEL, \ex07)
+  \eb         backspace (\ex08)
+  \ee         escape (\ex27)
+  \ef         form feed (\ex0c)
+  \en         newline (\ex0a)
+  \er         carriage return (\ex0d)
+  \et         tab (\ex09)
+  \ev         vertical tab (\ex0b)
+  \ennn       octal character (up to 3 octal digits); always
+               a byte unless > 255 in UTF-8 or 16-bit or 32-bit mode
+  \eo{dd...}  octal character (any number of octal digits}
+  \exhh       hexadecimal byte (up to 2 hex digits)
+  \ex{hh...}  hexadecimal character (any number of hex digits)
+.sp
+The use of \ex{hh...} is not dependent on the use of the \fButf\fP modifier on
+the pattern. It is recognized always. There may be any number of hexadecimal
+digits inside the braces; invalid values provoke error messages.
+.P
+Note that \exhh specifies one byte rather than one character in UTF-8 mode;
+this makes it possible to construct invalid UTF-8 sequences for testing
+purposes. On the other hand, \ex{hh} is interpreted as a UTF-8 character in
+UTF-8 mode, generating more than one byte if the value is greater than 127.
+When testing the 8-bit library not in UTF-8 mode, \ex{hh} generates one byte
+for values less than 256, and causes an error for greater values.
+.P
+In UTF-16 mode, all 4-digit \ex{hhhh} values are accepted. This makes it
+possible to construct invalid UTF-16 sequences for testing purposes.
+.P
+In UTF-32 mode, all 4- to 8-digit \ex{...} values are accepted. This makes it
+possible to construct invalid UTF-32 sequences for testing purposes.
+.P
+There is a special backslash sequence that specifies replication of one or more
+characters:
+.sp
+  \e[<characters>]{<count>}
+.sp
+This makes it possible to test long strings without having to provide them as
+part of the file. For example:
+.sp
+  \e[abc]{4}
+.sp
+is converted to "abcabcabcabc". This feature does not support nesting. To
+include a closing square bracket in the characters, code it as \ex5D.
+.P
+A backslash followed by an equals sign marks the end of the subject string and
+the start of a modifier list. For example:
+.sp
+  abc\e=notbol,notempty
+.sp
+A backslash followed by any other non-alphanumeric character just escapes that
+character. A backslash followed by anything else causes an error. However, if
+the very last character in the line is a backslash (and there is no modifier
+list), it is ignored. This gives a way of passing an empty line as data, since
+a real empty line terminates the data input.
+.
+.
+.SH "PATTERN MODIFIERS"
+.rs
+.sp
+There are three types of modifier that can appear in pattern lines, two of
+which may also be used in a \fB#pattern\fP command. A pattern's modifier list
+can add to or override default modifiers that were set by a previous
+\fB#pattern\fP command.
+.
+.
+.\" HTML <a name="optionmodifiers"></a>
+.SS "Setting compilation options"
+.rs
+.sp
+The following modifiers set options for \fBpcre2_compile()\fP. The most common
+ones have single-letter abbreviations. See
+.\" HREF
+\fBpcreapi\fP
+.\"
+for a description of their effects.
+.sp
+      allow_empty_class         set PCRE2_ALLOW_EMPTY_CLASS
+      alt_bsux                  set PCRE2_ALT_BSUX
+      alt_circumflex            set PCRE2_ALT_CIRCUMFLEX
+      anchored                  set PCRE2_ANCHORED
+      auto_callout              set PCRE2_AUTO_CALLOUT
+  /i  caseless                  set PCRE2_CASELESS
+      dollar_endonly            set PCRE2_DOLLAR_ENDONLY
+  /s  dotall                    set PCRE2_DOTALL
+      dupnames                  set PCRE2_DUPNAMES
+  /x  extended                  set PCRE2_EXTENDED
+      firstline                 set PCRE2_FIRSTLINE
+      match_unset_backref       set PCRE2_MATCH_UNSET_BACKREF
+  /m  multiline                 set PCRE2_MULTILINE
+      never_backslash_c         set PCRE2_NEVER_BACKSLASH_C
+      never_ucp                 set PCRE2_NEVER_UCP
+      never_utf                 set PCRE2_NEVER_UTF
+      no_auto_capture           set PCRE2_NO_AUTO_CAPTURE
+      no_auto_possess           set PCRE2_NO_AUTO_POSSESS
+      no_dotstar_anchor         set PCRE2_NO_DOTSTAR_ANCHOR
+      no_start_optimize         set PCRE2_NO_START_OPTIMIZE
+      no_utf_check              set PCRE2_NO_UTF_CHECK
+      ucp                       set PCRE2_UCP
+      ungreedy                  set PCRE2_UNGREEDY
+      utf                       set PCRE2_UTF
+.sp
+As well as turning on the PCRE2_UTF option, the \fButf\fP modifier causes all
+non-printing characters in output strings to be printed using the \ex{hh...}
+notation. Otherwise, those less than 0x100 are output in hex without the curly
+brackets.
+.
+.
+.\" HTML <a name="controlmodifiers"></a>
+.SS "Setting compilation controls"
+.rs
+.sp
+The following modifiers affect the compilation process or request information
+about the pattern:
+.sp
+      bsr=[anycrlf|unicode]     specify \eR handling
+  /B  bincode                   show binary code without lengths
+      callout_info              show callout information
+      debug                     same as info,fullbincode
+      fullbincode               show binary code with lengths
+  /I  info                      show info about compiled pattern
+      hex                       pattern is coded in hexadecimal
+      jit[=<number>]            use JIT
+      jitfast                   use JIT fast path
+      jitverify                 verify JIT use
+      locale=<name>             use this locale
+      memory                    show memory used
+      newline=<type>            set newline type
+      parens_nest_limit=<n>     set maximum parentheses depth
+      posix                     use the POSIX API
+      push                      push compiled pattern onto the stack
+      stackguard=<number>       test the stackguard feature
+      tables=[0|1|2]            select internal tables
+.sp
+The effects of these modifiers are described in the following sections.
+.
+.
+.SS "Newline and \eR handling"
+.rs
+.sp
+The \fBbsr\fP modifier specifies what \eR in a pattern should match. If it is
+set to "anycrlf", \eR matches CR, LF, or CRLF only. If it is set to "unicode",
+\eR matches any Unicode newline sequence. The default is specified when PCRE2
+is built, with the default default being Unicode.
+.P
+The \fBnewline\fP modifier specifies which characters are to be interpreted as
+newlines, both in the pattern and in subject lines. The type must be one of CR,
+LF, CRLF, ANYCRLF, or ANY (in upper or lower case).
+.
+.
+.SS "Information about a pattern"
+.rs
+.sp
+The \fBdebug\fP modifier is a shorthand for \fBinfo,fullbincode\fP, requesting
+all available information.
+.P
+The \fBbincode\fP modifier causes a representation of the compiled code to be
+output after compilation. This information does not contain length and offset
+values, which ensures that the same output is generated for different internal
+link sizes and different code unit widths. By using \fBbincode\fP, the same
+regression tests can be used in different environments.
+.P
+The \fBfullbincode\fP modifier, by contrast, \fIdoes\fP include length and
+offset values. This is used in a few special tests that run only for specific
+code unit widths and link sizes, and is also useful for one-off tests.
+.P
+The \fBinfo\fP modifier requests information about the compiled pattern
+(whether it is anchored, has a fixed first character, and so on). The
+information is obtained from the \fBpcre2_pattern_info()\fP function. Here are
+some typical examples:
+.sp
+    re> /(?i)(^a|^b)/m,info
+  Capturing subpattern count = 1
+  Compile options: multiline
+  Overall options: caseless multiline
+  First code unit at start or follows newline
+  Subject length lower bound = 1
+.sp
+    re> /(?i)abc/info
+  Capturing subpattern count = 0
+  Compile options: <none>
+  Overall options: caseless
+  First code unit = 'a' (caseless)
+  Last code unit = 'c' (caseless)
+  Subject length lower bound = 3
+.sp
+"Compile options" are those specified by modifiers; "overall options" have
+added options that are taken or deduced from the pattern. If both sets of
+options are the same, just a single "options" line is output; if there are no
+options, the line is omitted. "First code unit" is where any match must start;
+if there is more than one they are listed as "starting code units". "Last code
+unit" is the last literal code unit that must be present in any match. This is
+not necessarily the last character. These lines are omitted if no starting or
+ending code units are recorded.
+.P
+The \fBcallout_info\fP modifier requests information about all the callouts in
+the pattern. A list of them is output at the end of any other information that
+is requested. For each callout, either its number or string is given, followed
+by the item that follows it in the pattern.
+.
+.
+.SS "Specifying a pattern in hex"
+.rs
+.sp
+The \fBhex\fP modifier specifies that the characters of the pattern are to be
+interpreted as pairs of hexadecimal digits. White space is permitted between
+pairs. For example:
+.sp
+  /ab 32 59/hex
+.sp
+This feature is provided as a way of creating patterns that contain binary zero
+and other non-printing characters. By default, \fBpcre2test\fP passes patterns
+as zero-terminated strings to \fBpcre2_compile()\fP, giving the length as
+PCRE2_ZERO_TERMINATED. However, for patterns specified in hexadecimal, the
+actual length of the pattern is passed.
+.
+.
+.SS "JIT compilation"
+.rs
+.sp
+The \fB/jit\fP modifier may optionally be followed by an equals sign and a
+number in the range 0 to 7:
+.sp
+  0  disable JIT
+  1  use JIT for normal match only
+  2  use JIT for soft partial match only
+  3  use JIT for normal match and soft partial match
+  4  use JIT for hard partial match only
+  6  use JIT for soft and hard partial match
+  7  all three modes
+.sp
+If no number is given, 7 is assumed. If JIT compilation is successful, the
+compiled JIT code will automatically be used when \fBpcre2_match()\fP is run
+for the appropriate type of match, except when incompatible run-time options
+are specified. For more details, see the
+.\" HREF
+\fBpcre2jit\fP
+.\"
+documentation. See also the \fBjitstack\fP modifier below for a way of
+setting the size of the JIT stack.
+.P
+If the \fBjitfast\fP modifier is specified, matching is done using the JIT
+"fast path" interface, \fBpcre2_jit_match()\fP, which skips some of the sanity
+checks that are done by \fBpcre2_match()\fP, and of course does not work when
+JIT is not supported. If \fBjitfast\fP is specified without \fBjit\fP, jit=7 is
+assumed.
+.P
+If the \fBjitverify\fP modifier is specified, information about the compiled
+pattern shows whether JIT compilation was or was not successful. If
+\fBjitverify\fP is specified without \fBjit\fP, jit=7 is assumed. If JIT
+compilation is successful when \fBjitverify\fP is set, the text "(JIT)" is
+added to the first output line after a match or non match when JIT-compiled
+code was actually used in the match.
+.
+.
+.SS "Setting a locale"
+.rs
+.sp
+The \fB/locale\fP modifier must specify the name of a locale, for example:
+.sp
+  /pattern/locale=fr_FR
+.sp
+The given locale is set, \fBpcre2_maketables()\fP is called to build a set of
+character tables for the locale, and this is then passed to
+\fBpcre2_compile()\fP when compiling the regular expression. The same tables
+are used when matching the following subject lines. The \fB/locale\fP modifier
+applies only to the pattern on which it appears, but can be given in a
+\fB#pattern\fP command if a default is needed. Setting a locale and alternate
+character tables are mutually exclusive.
+.
+.
+.SS "Showing pattern memory"
+.rs
+.sp
+The \fB/memory\fP modifier causes the size in bytes of the memory used to hold
+the compiled pattern to be output. This does not include the size of the
+\fBpcre2_code\fP block; it is just the actual compiled data. If the pattern is
+subsequently passed to the JIT compiler, the size of the JIT compiled code is
+also output. Here is an example:
+.sp
+    re> /a(b)c/jit,memory
+  Memory allocation (code space): 21
+  Memory allocation (JIT code): 1910
+.sp
+.
+.
+.SS "Limiting nested parentheses"
+.rs
+.sp
+The \fBparens_nest_limit\fP modifier sets a limit on the depth of nested
+parentheses in a pattern. Breaching the limit causes a compilation error.
+The default for the library is set when PCRE2 is built, but \fBpcre2test\fP
+sets its own default of 220, which is required for running the standard test
+suite.
+.
+.
+.SS "Using the POSIX wrapper API"
+.rs
+.sp
+The \fB/posix\fP modifier causes \fBpcre2test\fP to call PCRE2 via the POSIX
+wrapper API rather than its native API. This supports only the 8-bit library.
+When the POSIX API is being used, the following pattern modifiers set options
+for the \fBregcomp()\fP function:
+.sp
+  caseless           REG_ICASE
+  multiline          REG_NEWLINE
+  no_auto_capture    REG_NOSUB
+  dotall             REG_DOTALL     )
+  ungreedy           REG_UNGREEDY   ) These options are not part of
+  ucp                REG_UCP        )   the POSIX standard
+  utf                REG_UTF8       )
+.sp
+The \fBaftertext\fP and \fBallaftertext\fP subject modifiers work as described
+below. All other modifiers cause an error.
+.
+.
+.SS "Testing the stack guard feature"
+.rs
+.sp
+The \fB/stackguard\fP modifier is used to test the use of
+\fBpcre2_set_compile_recursion_guard()\fP, a function that is provided to
+enable stack availability to be checked during compilation (see the
+.\" HREF
+\fBpcre2api\fP
+.\"
+documentation for details). If the number specified by the modifier is greater
+than zero, \fBpcre2_set_compile_recursion_guard()\fP is called to set up
+callback from \fBpcre2_compile()\fP to a local function. The argument it
+receives is the current nesting parenthesis depth; if this is greater than the
+value given by the modifier, non-zero is returned, causing the compilation to
+be aborted.
+.
+.
+.SS "Using alternative character tables"
+.rs
+.sp
+The value specified for the \fB/tables\fP modifier must be one of the digits 0,
+1, or 2. It causes a specific set of built-in character tables to be passed to
+\fBpcre2_compile()\fP. This is used in the PCRE2 tests to check behaviour with
+different character tables. The digit specifies the tables as follows:
+.sp
+  0   do not pass any special character tables
+  1   the default ASCII tables, as distributed in
+        pcre2_chartables.c.dist
+  2   a set of tables defining ISO 8859 characters
+.sp
+In table 2, some characters whose codes are greater than 128 are identified as
+letters, digits, spaces, etc. Setting alternate character tables and a locale
+are mutually exclusive.
+.
+.
+.SS "Setting certain match controls"
+.rs
+.sp
+The following modifiers are really subject modifiers, and are described below.
+However, they may be included in a pattern's modifier list, in which case they
+are applied to every subject line that is processed with that pattern. They do
+not affect the compilation process.
+.sp
+      aftertext           show text after match
+      allaftertext        show text after captures
+      allcaptures         show all captures
+      allusedtext         show all consulted text
+  /g  global              global matching
+      mark                show mark values
+      replace=<string>    specify a replacement string
+      startchar           show starting character when relevant
+.sp
+These modifiers may not appear in a \fB#pattern\fP command. If you want them as
+defaults, set them in a \fB#subject\fP command.
+.
+.
+.SS "Saving a compiled pattern"
+.rs
+.sp
+When a pattern with the \fBpush\fP modifier is successfully compiled, it is
+pushed onto a stack of compiled patterns, and \fBpcre2test\fP expects the next
+line to contain a new pattern (or a command) instead of a subject line. This
+facility is used when saving compiled patterns to a file, as described in the
+section entitled "Saving and restoring compiled patterns"
+.\" HTML <a href="#saverestore">
+.\" </a>
+below.
+.\"
+The \fBpush\fP modifier is incompatible with compilation modifiers such as
+\fBglobal\fP that act at match time. Any that are specified are ignored, with a
+warning message, except for \fBreplace\fP, which causes an error. Note that,
+\fBjitverify\fP, which is allowed, does not carry through to any subsequent
+matching that uses this pattern.
+.
+.
+.SH "SUBJECT MODIFIERS"
+.rs
+.sp
+The modifiers that can appear in subject lines and the \fB#subject\fP
+command are of two types.
+.
+.
+.SS "Setting match options"
+.rs
+.sp
+The following modifiers set options for \fBpcre2_match()\fP or
+\fBpcre2_dfa_match()\fP. See
+.\" HREF
+\fBpcreapi\fP
+.\"
+for a description of their effects.
+.sp
+      anchored                  set PCRE2_ANCHORED
+      dfa_restart               set PCRE2_DFA_RESTART
+      dfa_shortest              set PCRE2_DFA_SHORTEST
+      no_utf_check              set PCRE2_NO_UTF_CHECK
+      notbol                    set PCRE2_NOTBOL
+      notempty                  set PCRE2_NOTEMPTY
+      notempty_atstart          set PCRE2_NOTEMPTY_ATSTART
+      noteol                    set PCRE2_NOTEOL
+      partial_hard (or ph)      set PCRE2_PARTIAL_HARD
+      partial_soft (or ps)      set PCRE2_PARTIAL_SOFT
+.sp
+The partial matching modifiers are provided with abbreviations because they
+appear frequently in tests.
+.P
+If the \fB/posix\fP modifier was present on the pattern, causing the POSIX
+wrapper API to be used, the only option-setting modifiers that have any effect
+are \fBnotbol\fP, \fBnotempty\fP, and \fBnoteol\fP, causing REG_NOTBOL,
+REG_NOTEMPTY, and REG_NOTEOL, respectively, to be passed to \fBregexec()\fP.
+Any other modifiers cause an error.
+.
+.
+.SS "Setting match controls"
+.rs
+.sp
+The following modifiers affect the matching process or request additional
+information. Some of them may also be specified on a pattern line (see above),
+in which case they apply to every subject line that is matched against that
+pattern.
+.sp
+      aftertext                 show text after match
+      allaftertext              show text after captures
+      allcaptures               show all captures
+      allusedtext               show all consulted text (non-JIT only)
+      altglobal                 alternative global matching
+      callout_capture           show captures at callout time
+      callout_data=<n>          set a value to pass via callouts
+      callout_fail=<n>[:<m>]    control callout failure
+      callout_none              do not supply a callout function
+      copy=<number or name>     copy captured substring
+      dfa                       use \fBpcre2_dfa_match()\fP
+      find_limits               find match and recursion limits
+      get=<number or name>      extract captured substring
+      getall                    extract all captured substrings
+  /g  global                    global matching
+      jitstack=<n>              set size of JIT stack
+      mark                      show mark values
+      match_limit=>n>           set a match limit
+      memory                    show memory usage
+      offset=<n>                set starting offset
+      ovector=<n>               set size of output vector
+      recursion_limit=<n>       set a recursion limit
+      replace=<string>          specify a replacement string
+      startchar                 show startchar when relevant
+      zero_terminate            pass the subject as zero-terminated
+.sp
+The effects of these modifiers are described in the following sections.
+.
+.
+.SS "Showing more text"
+.rs
+.sp
+The \fBaftertext\fP modifier requests that as well as outputting the part of
+the subject string that matched the entire pattern, \fBpcre2test\fP should in
+addition output the remainder of the subject string. This is useful for tests
+where the subject contains multiple copies of the same substring. The
+\fBallaftertext\fP modifier requests the same action for captured substrings as
+well as the main matched substring. In each case the remainder is output on the
+following line with a plus character following the capture number.
+.P
+The \fBallusedtext\fP modifier requests that all the text that was consulted
+during a successful pattern match by the interpreter should be shown. This
+feature is not supported for JIT matching, and if requested with JIT it is
+ignored (with a warning message). Setting this modifier affects the output if
+there is a lookbehind at the start of a match, or a lookahead at the end, or if
+\eK is used in the pattern. Characters that precede or follow the start and end
+of the actual match are indicated in the output by '<' or '>' characters
+underneath them. Here is an example:
+.sp
+    re> /(?<=pqr)abc(?=xyz)/
+  data> 123pqrabcxyz456\e=allusedtext
+   0: pqrabcxyz
+      <<<   >>>
+.sp
+This shows that the matched string is "abc", with the preceding and following
+strings "pqr" and "xyz" having been consulted during the match (when processing
+the assertions).
+.P
+The \fBstartchar\fP modifier requests that the starting character for the match
+be indicated, if it is different to the start of the matched string. The only
+time when this occurs is when \eK has been processed as part of the match. In
+this situation, the output for the matched string is displayed from the
+starting character instead of from the match point, with circumflex characters
+under the earlier characters. For example:
+.sp
+    re> /abc\eKxyz/
+  data> abcxyz\e=startchar
+   0: abcxyz
+      ^^^
+.sp
+Unlike \fBallusedtext\fP, the \fBstartchar\fP modifier can be used with JIT.
+However, these two modifiers are mutually exclusive.
+.
+.
+.SS "Showing the value of all capture groups"
+.rs
+.sp
+The \fBallcaptures\fP modifier requests that the values of all potential
+captured parentheses be output after a match. By default, only those up to the
+highest one actually used in the match are output (corresponding to the return
+code from \fBpcre2_match()\fP). Groups that did not take part in the match
+are output as "<unset>".
+.
+.
+.SS "Testing callouts"
+.rs
+.sp
+A callout function is supplied when \fBpcre2test\fP calls the library matching
+functions, unless \fBcallout_none\fP is specified. If \fBcallout_capture\fP is
+set, the current captured groups are output when a callout occurs.
+.P
+The \fBcallout_fail\fP modifier can be given one or two numbers. If there is
+only one number, 1 is returned instead of 0 when a callout of that number is
+reached. If two numbers are given, 1 is returned when callout <n> is reached
+for the <m>th time. Note that callouts with string arguments are always given
+the number zero. See "Callouts" below for a description of the output when a
+callout it taken.
+.P
+The \fBcallout_data\fP modifier can be given an unsigned or a negative number.
+This is set as the "user data" that is passed to the matching function, and
+passed back when the callout function is invoked. Any value other than zero is
+used as a return from \fBpcre2test\fP's callout function.
+.
+.
+.SS "Finding all matches in a string"
+.rs
+.sp
+Searching for all possible matches within a subject can be requested by the
+\fBglobal\fP or \fB/altglobal\fP modifier. After finding a match, the matching
+function is called again to search the remainder of the subject. The difference
+between \fBglobal\fP and \fBaltglobal\fP is that the former uses the
+\fIstart_offset\fP argument to \fBpcre2_match()\fP or \fBpcre2_dfa_match()\fP
+to start searching at a new point within the entire string (which is what Perl
+does), whereas the latter passes over a shortened subject. This makes a
+difference to the matching process if the pattern begins with a lookbehind
+assertion (including \eb or \eB).
+.P
+If an empty string is matched, the next match is done with the
+PCRE2_NOTEMPTY_ATSTART and PCRE2_ANCHORED flags set, in order to search for
+another, non-empty, match at the same point in the subject. If this match
+fails, the start offset is advanced, and the normal match is retried. This
+imitates the way Perl handles such cases when using the \fB/g\fP modifier or
+the \fBsplit()\fP function. Normally, the start offset is advanced by one
+character, but if the newline convention recognizes CRLF as a newline, and the
+current character is CR followed by LF, an advance of two characters occurs.
+.
+.
+.SS "Testing substring extraction functions"
+.rs
+.sp
+The \fBcopy\fP and \fBget\fP modifiers can be used to test the
+\fBpcre2_substring_copy_xxx()\fP and \fBpcre2_substring_get_xxx()\fP functions.
+They can be given more than once, and each can specify a group name or number,
+for example:
+.sp
+   abcd\e=copy=1,copy=3,get=G1
+.sp
+If the \fB#subject\fP command is used to set default copy and/or get lists,
+these can be unset by specifying a negative number to cancel all numbered
+groups and an empty name to cancel all named groups.
+.P
+The \fBgetall\fP modifier tests \fBpcre2_substring_list_get()\fP, which
+extracts all captured substrings.
+.P
+If the subject line is successfully matched, the substrings extracted by the
+convenience functions are output with C, G, or L after the string number
+instead of a colon. This is in addition to the normal full list. The string
+length (that is, the return from the extraction function) is given in
+parentheses after each substring, followed by the name when the extraction was
+by name.
+.
+.
+.SS "Testing the substitution function"
+.rs
+.sp
+If the \fBreplace\fP modifier is set, the \fBpcre2_substitute()\fP function is
+called instead of one of the matching functions. Unlike subject strings,
+\fBpcre2test\fP does not process replacement strings for escape sequences. In
+UTF mode, a replacement string is checked to see if it is a valid UTF-8 string.
+If so, it is correctly converted to a UTF string of the appropriate code unit
+width. If it is not a valid UTF-8 string, the individual code units are copied
+directly. This provides a means of passing an invalid UTF-8 string for testing
+purposes.
+.P
+If the \fBglobal\fP modifier is set, PCRE2_SUBSTITUTE_GLOBAL is passed to
+\fBpcre2_substitute()\fP. After a successful substitution, the modified string
+is output, preceded by the number of replacements. This may be zero if there
+were no matches. Here is a simple example of a substitution test:
+.sp
+  /abc/replace=xxx
+      =abc=abc=
+   1: =xxx=abc=
+      =abc=abc=\e=global
+   2: =xxx=xxx=
+.sp
+Subject and replacement strings should be kept relatively short for
+substitution tests, as fixed-size buffers are used. To make it easy to test for
+buffer overflow, if the replacement string starts with a number in square
+brackets, that number is passed to \fBpcre2_substitute()\fP as the size of the
+output buffer, with the replacement string starting at the next character. Here
+is an example that tests the edge case:
+.sp
+  /abc/
+      123abc123\e=replace=[10]XYZ
+   1: 123XYZ123
+      123abc123\e=replace=[9]XYZ
+  Failed: error -47: no more memory
+.sp
+A replacement string is ignored with POSIX and DFA matching. Specifying partial
+matching provokes an error return ("bad option value") from
+\fBpcre2_substitute()\fP.
+.
+.
+.SS "Setting the JIT stack size"
+.rs
+.sp
+The \fBjitstack\fP modifier provides a way of setting the maximum stack size
+that is used by the just-in-time optimization code. It is ignored if JIT
+optimization is not being used. The value is a number of kilobytes. Providing a
+stack that is larger than the default 32K is necessary only for very
+complicated patterns.
+.
+.
+.SS "Setting match and recursion limits"
+.rs
+.sp
+The \fBmatch_limit\fP and \fBrecursion_limit\fP modifiers set the appropriate
+limits in the match context. These values are ignored when the
+\fBfind_limits\fP modifier is specified.
+.
+.
+.SS "Finding minimum limits"
+.rs
+.sp
+If the \fBfind_limits\fP modifier is present, \fBpcre2test\fP calls
+\fBpcre2_match()\fP several times, setting different values in the match
+context via \fBpcre2_set_match_limit()\fP and \fBpcre2_set_recursion_limit()\fP
+until it finds the minimum values for each parameter that allow
+\fBpcre2_match()\fP to complete without error.
+.P
+If JIT is being used, only the match limit is relevant. If DFA matching is
+being used, neither limit is relevant, and this modifier is ignored (with a
+warning message).
+.P
+The \fImatch_limit\fP number is a measure of the amount of backtracking
+that takes place, and learning the minimum value can be instructive. For most
+simple matches, the number is quite small, but for patterns with very large
+numbers of matching possibilities, it can become large very quickly with
+increasing length of subject string. The \fImatch_limit_recursion\fP number is
+a measure of how much stack (or, if PCRE2 is compiled with NO_RECURSE, how much
+heap) memory is needed to complete the match attempt.
+.
+.
+.SS "Showing MARK names"
+.rs
+.sp
+.P
+The \fBmark\fP modifier causes the names from backtracking control verbs that
+are returned from calls to \fBpcre2_match()\fP to be displayed. If a mark is
+returned for a match, non-match, or partial match, \fBpcre2test\fP shows it.
+For a match, it is on a line by itself, tagged with "MK:". Otherwise, it
+is added to the non-match message.
+.
+.
+.SS "Showing memory usage"
+.rs
+.sp
+The \fBmemory\fP modifier causes \fBpcre2test\fP to log all memory allocation
+and freeing calls that occur during a match operation.
+.
+.
+.SS "Setting a starting offset"
+.rs
+.sp
+The \fBoffset\fP modifier sets an offset in the subject string at which
+matching starts. Its value is a number of code units, not characters.
+.
+.
+.SS "Setting the size of the output vector"
+.rs
+.sp
+The \fBovector\fP modifier applies only to the subject line in which it
+appears, though of course it can also be used to set a default in a
+\fB#subject\fP command. It specifies the number of pairs of offsets that are
+available for storing matching information. The default is 15.
+.P
+A value of zero is useful when testing the POSIX API because it causes
+\fBregexec()\fP to be called with a NULL capture vector. When not testing the
+POSIX API, a value of zero is used to cause
+\fBpcre2_match_data_create_from_pattern()\fP to be called, in order to create a
+match block of exactly the right size for the pattern. (It is not possible to
+create a match block with a zero-length ovector; there is always at least one
+pair of offsets.)
+.
+.
+.SS "Passing the subject as zero-terminated"
+.rs
+.sp
+By default, the subject string is passed to a native API matching function with
+its correct length. In order to test the facility for passing a zero-terminated
+string, the \fBzero_terminate\fP modifier is provided. It causes the length to
+be passed as PCRE2_ZERO_TERMINATED. (When matching via the POSIX interface,
+this modifier has no effect, as there is no facility for passing a length.)
+.P
+When testing \fBpcre2_substitute()\fP, this modifier also has the effect of
+passing the replacement string as zero-terminated.
+.
+.
+.SH "THE ALTERNATIVE MATCHING FUNCTION"
+.rs
+.sp
+By default, \fBpcre2test\fP uses the standard PCRE2 matching function,
+\fBpcre2_match()\fP to match each subject line. PCRE2 also supports an
+alternative matching function, \fBpcre2_dfa_match()\fP, which operates in a
+different way, and has some restrictions. The differences between the two
+functions are described in the
+.\" HREF
+\fBpcre2matching\fP
+.\"
+documentation.
+.P
+If the \fBdfa\fP modifier is set, the alternative matching function is used.
+This function finds all possible matches at a given point in the subject. If,
+however, the \fBdfa_shortest\fP modifier is set, processing stops after the
+first match is found. This is always the shortest possible match.
+.
+.
+.SH "DEFAULT OUTPUT FROM pcre2test"
+.rs
+.sp
+This section describes the output when the normal matching function,
+\fBpcre2_match()\fP, is being used.
+.P
+When a match succeeds, \fBpcre2test\fP outputs the list of captured substrings,
+starting with number 0 for the string that matched the whole pattern.
+Otherwise, it outputs "No match" when the return is PCRE2_ERROR_NOMATCH, or
+"Partial match:" followed by the partially matching substring when the
+return is PCRE2_ERROR_PARTIAL. (Note that this is the
+entire substring that was inspected during the partial match; it may include
+characters before the actual match start if a lookbehind assertion, \eK, \eb,
+or \eB was involved.)
+.P
+For any other return, \fBpcre2test\fP outputs the PCRE2 negative error number
+and a short descriptive phrase. If the error is a failed UTF string check, the
+code unit offset of the start of the failing character is also output. Here is
+an example of an interactive \fBpcre2test\fP run.
+.sp
+  $ pcre2test
+  PCRE2 version 9.00 2014-05-10
+.sp
+    re> /^abc(\ed+)/
+  data> abc123
+   0: abc123
+   1: 123
+  data> xyz
+  No match
+.sp
+Unset capturing substrings that are not followed by one that is set are not
+shown by \fBpcre2test\fP unless the \fBallcaptures\fP modifier is specified. In
+the following example, there are two capturing substrings, but when the first
+data line is matched, the second, unset substring is not shown. An "internal"
+unset substring is shown as "<unset>", as for the second data line.
+.sp
+    re> /(a)|(b)/
+  data> a
+   0: a
+   1: a
+  data> b
+   0: b
+   1: <unset>
+   2: b
+.sp
+If the strings contain any non-printing characters, they are output as \exhh
+escapes if the value is less than 256 and UTF mode is not set. Otherwise they
+are output as \ex{hh...} escapes. See below for the definition of non-printing
+characters. If the \fB/aftertext\fP modifier is set, the output for substring
+0 is followed by the the rest of the subject string, identified by "0+" like
+this:
+.sp
+    re> /cat/aftertext
+  data> cataract
+   0: cat
+   0+ aract
+.sp
+If global matching is requested, the results of successive matching attempts
+are output in sequence, like this:
+.sp
+    re> /\eBi(\ew\ew)/g
+  data> Mississippi
+   0: iss
+   1: ss
+   0: iss
+   1: ss
+   0: ipp
+   1: pp
+.sp
+"No match" is output only if the first match attempt fails. Here is an example
+of a failure message (the offset 4 that is specified by the \fBoffset\fP
+modifier is past the end of the subject string):
+.sp
+    re> /xyz/
+  data> xyz\e=offset=4
+  Error -24 (bad offset value)
+.P
+Note that whereas patterns can be continued over several lines (a plain ">"
+prompt is used for continuations), subject lines may not. However newlines can
+be included in a subject by means of the \en escape (or \er, \er\en, etc.,
+depending on the newline sequence setting).
+.
+.
+.
+.SH "OUTPUT FROM THE ALTERNATIVE MATCHING FUNCTION"
+.rs
+.sp
+When the alternative matching function, \fBpcre2_dfa_match()\fP, is used, the
+output consists of a list of all the matches that start at the first point in
+the subject where there is at least one match. For example:
+.sp
+    re> /(tang|tangerine|tan)/
+  data> yellow tangerine\e=dfa
+   0: tangerine
+   1: tang
+   2: tan
+.sp
+Using the normal matching function on this data finds only "tang". The
+longest matching string is always given first (and numbered zero). After a
+PCRE2_ERROR_PARTIAL return, the output is "Partial match:", followed by the
+partially matching substring. Note that this is the entire substring that was
+inspected during the partial match; it may include characters before the actual
+match start if a lookbehind assertion, \eb, or \eB was involved. (\eK is not
+supported for DFA matching.)
+.P
+If global matching is requested, the search for further matches resumes
+at the end of the longest match. For example:
+.sp
+    re> /(tang|tangerine|tan)/g
+  data> yellow tangerine and tangy sultana\e=dfa
+   0: tangerine
+   1: tang
+   2: tan
+   0: tang
+   1: tan
+   0: tan
+.sp
+The alternative matching function does not support substring capture, so the
+modifiers that are concerned with captured substrings are not relevant.
+.
+.
+.SH "RESTARTING AFTER A PARTIAL MATCH"
+.rs
+.sp
+When the alternative matching function has given the PCRE2_ERROR_PARTIAL
+return, indicating that the subject partially matched the pattern, you can
+restart the match with additional subject data by means of the
+\fBdfa_restart\fP modifier. For example:
+.sp
+    re> /^\ed?\ed(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\ed\ed$/
+  data> 23ja\e=P,dfa
+  Partial match: 23ja
+  data> n05\e=dfa,dfa_restart
+   0: n05
+.sp
+For further information about partial matching, see the
+.\" HREF
+\fBpcre2partial\fP
+.\"
+documentation.
+.
+.
+.SH CALLOUTS
+.rs
+.sp
+If the pattern contains any callout requests, \fBpcre2test\fP's callout
+function is called during matching unless \fBcallout_none\fP is specified.
+This works with both matching functions.
+.P
+The callout function in \fBpcre2test\fP returns zero (carry on matching) by
+default, but you can use a \fBcallout_fail\fP modifier in a subject line (as
+described above) to change this and other parameters of the callout.
+.P
+Inserting callouts can be helpful when using \fBpcre2test\fP to check
+complicated regular expressions. For further information about callouts, see
+the
+.\" HREF
+\fBpcre2callout\fP
+.\"
+documentation.
+.P
+The output for callouts with numerical arguments and those with string
+arguments is slightly different.
+.
+.
+.SS "Callouts with numerical arguments"
+.rs
+.sp
+By default, the callout function displays the callout number, the start and
+current positions in the subject text at the callout time, and the next pattern
+item to be tested. For example:
+.sp
+  --->pqrabcdef
+    0    ^  ^     \ed
+.sp
+This output indicates that callout number 0 occurred for a match attempt
+starting at the fourth character of the subject string, when the pointer was at
+the seventh character, and when the next pattern item was \ed. Just
+one circumflex is output if the start and current positions are the same.
+.P
+Callouts numbered 255 are assumed to be automatic callouts, inserted as a
+result of the \fB/auto_callout\fP pattern modifier. In this case, instead of
+showing the callout number, the offset in the pattern, preceded by a plus, is
+output. For example:
+.sp
+    re> /\ed?[A-E]\e*/auto_callout
+  data> E*
+  --->E*
+   +0 ^      \ed?
+   +3 ^      [A-E]
+   +8 ^^     \e*
+  +10 ^ ^
+   0: E*
+.sp
+If a pattern contains (*MARK) items, an additional line is output whenever
+a change of latest mark is passed to the callout function. For example:
+.sp
+    re> /a(*MARK:X)bc/auto_callout
+  data> abc
+  --->abc
+   +0 ^       a
+   +1 ^^      (*MARK:X)
+  +10 ^^      b
+  Latest Mark: X
+  +11 ^ ^     c
+  +12 ^  ^
+   0: abc
+.sp
+The mark changes between matching "a" and "b", but stays the same for the rest
+of the match, so nothing more is output. If, as a result of backtracking, the
+mark reverts to being unset, the text "<unset>" is output.
+.
+.
+.SS "Callouts with string arguments"
+.rs
+.sp
+The output for a callout with a string argument is similar, except that instead
+of outputting a callout number before the position indicators, the callout
+string and its offset in the pattern string are output before the reflection of
+the subject string, and the subject string is reflected for each callout. For
+example:
+.sp
+    re> /^ab(?C'first')cd(?C"second")ef/
+  data> abcdefg
+  Callout (7): 'first'
+  --->abcdefg
+      ^ ^         c
+  Callout (20): "second"
+  --->abcdefg
+      ^   ^       e
+   0: abcdef
+.sp
+.
+.
+.
+.SH "NON-PRINTING CHARACTERS"
+.rs
+.sp
+When \fBpcre2test\fP is outputting text in the compiled version of a pattern,
+bytes other than 32-126 are always treated as non-printing characters and are
+therefore shown as hex escapes.
+.P
+When \fBpcre2test\fP is outputting text that is a matched part of a subject
+string, it behaves in the same way, unless a different locale has been set for
+the pattern (using the \fB/locale\fP modifier). In this case, the
+\fBisprint()\fP function is used to distinguish printing and non-printing
+characters.
+.
+.
+.
+.\" HTML <a name="saverestore"></a>
+.SH "SAVING AND RESTORING COMPILED PATTERNS"
+.rs
+.sp
+It is possible to save compiled patterns on disc or elsewhere, and reload them
+later, subject to a number of restrictions. JIT data cannot be saved. The host
+on which the patterns are reloaded must be running the same version of PCRE2,
+with the same code unit width, and must also have the same endianness, pointer
+width and PCRE2_SIZE type. Before compiled patterns can be saved they must be
+serialized, that is, converted to a stream of bytes. A single byte stream may
+contain any number of compiled patterns, but they must all use the same
+character tables. A single copy of the tables is included in the byte stream
+(its size is 1088 bytes).
+.P
+The functions whose names begin with \fBpcre2_serialize_\fP are used
+for serializing and de-serializing. They are described in the
+.\" HREF
+\fBpcre2serialize\fP
+.\"
+documentation. In this section we describe the features of \fBpcre2test\fP that
+can be used to test these functions.
+.P
+When a pattern with \fBpush\fP modifier is successfully compiled, it is pushed
+onto a stack of compiled patterns, and \fBpcre2test\fP expects the next line to
+contain a new pattern (or command) instead of a subject line. By this means, a
+number of patterns can be compiled and retained. The \fBpush\fP modifier is
+incompatible with \fBposix\fP, and control modifiers that act at match time are
+ignored (with a message). The \fBjitverify\fP modifier applies only at compile
+time. The command
+.sp
+  #save <filename>
+.sp
+causes all the stacked patterns to be serialized and the result written to the
+named file. Afterwards, all the stacked patterns are freed. The command
+.sp
+  #load <filename>
+.sp
+reads the data in the file, and then arranges for it to be de-serialized, with
+the resulting compiled patterns added to the pattern stack. The pattern on the
+top of the stack can be retrieved by the #pop command, which must be followed
+by lines of subjects that are to be matched with the pattern, terminated as
+usual by an empty line or end of file. This command may be followed by a
+modifier list containing only
+.\" HTML <a href="#controlmodifiers">
+.\" </a>
+control modifiers
+.\"
+that act after a pattern has been compiled. In particular, \fBhex\fP,
+\fBposix\fP, and \fBpush\fP are not allowed, nor are any
+.\" HTML <a href="#optionmodifiers">
+.\" </a>
+option-setting modifiers.
+.\"
+The JIT modifiers are, however permitted. Here is an example that saves and
+reloads two patterns.
+.sp
+  /abc/push
+  /xyz/push
+  #save tempfile
+  #load tempfile
+  #pop info
+  xyz
+.sp
+  #pop jit,bincode
+  abc
+.sp
+If \fBjitverify\fP is used with #pop, it does not automatically imply
+\fBjit\fP, which is different behaviour from when it is used on a pattern.
+.
+.
+.
+.SH "SEE ALSO"
+.rs
+.sp
+\fBpcre2\fP(3), \fBpcre2api\fP(3), \fBpcre2callout\fP(3),
+\fBpcre2jit\fP, \fBpcre2matching\fP(3), \fBpcre2partial\fP(d),
+\fBpcre2pattern\fP(3), \fBpcre2serialize\fP(3).
+.
+.
+.SH AUTHOR
+.rs
+.sp
+.nf
+Philip Hazel
+University Computing Service
+Cambridge, England.
+.fi
+.
+.
+.SH REVISION
+.rs
+.sp
+.nf
+Last updated: 20 May 2015
+Copyright (c) 1997-2015 University of Cambridge.
+.fi

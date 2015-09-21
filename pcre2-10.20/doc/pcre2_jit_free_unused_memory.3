@@ -1,0 +1,31 @@
+.TH PCRE2_JIT_FREE_UNUSED_MEMORY 3 "27 October 2014" "PCRE2 10.00"
+.SH NAME
+PCRE2 - Perl-compatible regular expressions (revised API)
+.SH SYNOPSIS
+.rs
+.sp
+.B #include <pcre2.h>
+.PP
+.nf
+.B void pcre2_jit_free_unused_memory(pcre2_general_context *\fIgcontext\fP);
+.fi
+.
+.SH DESCRIPTION
+.rs
+.sp
+This function frees unused JIT executable memory. The argument is a general
+context, for custom memory management, or NULL for standard memory management.
+JIT memory allocation retains some memory in order to improve future JIT
+compilation speed. In low memory conditions,
+\fBpcre2_jit_free_unused_memory()\fB can be used to cause this memory to be
+freed.
+.P
+There is a complete description of the PCRE2 native API in the
+.\" HREF
+\fBpcre2api\fP
+.\"
+page and a description of the POSIX API in the
+.\" HREF
+\fBpcre2posix\fP
+.\"
+page.

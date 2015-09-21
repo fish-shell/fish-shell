@@ -1,0 +1,391 @@
+Building PCRE2 without using autotools
+--------------------------------------
+
+This document has been converted from the PCRE1 document. I have removed a
+number of sections about building in various environments, as they applied only
+to PCRE1 and are probably out of date.
+
+This document contains the following sections:
+
+  General
+  Generic instructions for the PCRE2 C library
+  Stack size in Windows environments
+  Linking programs in Windows environments
+  Calling conventions in Windows environments
+  Comments about Win32 builds
+  Building PCRE2 on Windows with CMake
+  Testing with RunTest.bat
+  Building PCRE2 on native z/OS and z/VM
+
+
+GENERAL
+
+The basic PCRE2 library consists entirely of code written in Standard C, and so
+should compile successfully on any system that has a Standard C compiler and
+library.
+
+The PCRE2 distribution includes a "configure" file for use by the
+configure/make (autotools) build system, as found in many Unix-like
+environments. The README file contains information about the options for
+"configure".
+
+There is also support for CMake, which some users prefer, especially in Windows
+environments, though it can also be run in Unix-like environments. See the
+section entitled "Building PCRE2 on Windows with CMake" below.
+
+Versions of src/config.h and src/pcre2.h are distributed in the PCRE2 tarballs
+under the names src/config.h.generic and src/pcre2.h.generic. These are
+provided for those who build PCRE2 without using "configure" or CMake. If you
+use "configure" or CMake, the .generic versions are not used.
+
+
+GENERIC INSTRUCTIONS FOR THE PCRE2 C LIBRARY
+
+The following are generic instructions for building the PCRE2 C library "by
+hand". If you are going to use CMake, this section does not apply to you; you
+can skip ahead to the CMake section.
+
+ (1) Copy or rename the file src/config.h.generic as src/config.h, and edit the
+     macro settings that it contains to whatever is appropriate for your
+     environment. In particular, you can alter the definition of the NEWLINE
+     macro to specify what character(s) you want to be interpreted as line
+     terminators.
+
+     When you compile any of the PCRE2 modules, you must specify
+     -DHAVE_CONFIG_H to your compiler so that src/config.h is included in the
+     sources.
+
+     An alternative approach is not to edit src/config.h, but to use -D on the
+     compiler command line to make any changes that you need to the
+     configuration options. In this case -DHAVE_CONFIG_H must not be set.
+
+     NOTE: There have been occasions when the way in which certain parameters
+     in src/config.h are used has changed between releases. (In the
+     configure/make world, this is handled automatically.) When upgrading to a
+     new release, you are strongly advised to review src/config.h.generic
+     before re-using what you had previously.
+
+ (2) Copy or rename the file src/pcre2.h.generic as src/pcre2.h.
+
+ (3) EITHER:
+       Copy or rename file src/pcre2_chartables.c.dist as
+       src/pcre2_chartables.c.
+
+     OR:
+       Compile src/dftables.c as a stand-alone program (using -DHAVE_CONFIG_H
+       if you have set up src/config.h), and then run it with the single
+       argument "src/pcre2_chartables.c". This generates a set of standard
+       character tables and writes them to that file. The tables are generated
+       using the default C locale for your system. If you want to use a locale
+       that is specified by LC_xxx environment variables, add the -L option to
+       the dftables command. You must use this method if you are building on a
+       system that uses EBCDIC code.
+
+     The tables in src/pcre2_chartables.c are defaults. The caller of PCRE2 can
+     specify alternative tables at run time.
+
+ (4) For an 8-bit library, compile the following source files from the src
+     directory, setting -DPCRE2_CODE_UNIT_WIDTH=8 as a compiler option. Also
+     set -DHAVE_CONFIG_H if you have set up src/config.h with your
+     configuration, or else use other -D settings to change the configuration
+     as required.
+
+       pcre2_auto_possess.c
+       pcre2_chartables.c
+       pcre2_compile.c
+       pcre2_config.c
+       pcre2_context.c
+       pcre2_dfa_match.c
+       pcre2_error.c
+       pcre2_jit_compile.c
+       pcre2_maketables.c
+       pcre2_match.c
+       pcre2_match_data.c
+       pcre2_newline.c
+       pcre2_ord2utf.c
+       pcre2_pattern_info.c
+       pcre2_serialize.c
+       pcre2_string_utils.c
+       pcre2_study.c
+       pcre2_substitute.c
+       pcre2_substring.c
+       pcre2_tables.c
+       pcre2_ucd.c
+       pcre2_valid_utf.c
+       pcre2_xclass.c
+
+     Make sure that you include -I. in the compiler command (or equivalent for
+     an unusual compiler) so that all included PCRE2 header files are first
+     sought in the src directory under the current directory. Otherwise you run
+     the risk of picking up a previously-installed file from somewhere else.
+
+     Note that you must compile pcre2_jit_compile.c, even if you have not
+     defined SUPPORT_JIT in src/config.h, because when JIT support is not
+     configured, dummy functions are compiled. When JIT support IS configured,
+     pcre2_compile.c #includes other files from the sljit subdirectory, where
+     there should be 16 files, all of whose names begin with "sljit". It also
+     #includes src/pcre2_jit_match.c and src/pcre2_jit_misc.c, so you should
+     not compile these yourself.
+
+ (5) Now link all the compiled code into an object library in whichever form
+     your system keeps such libraries. This is the basic PCRE2 C 8-bit library.
+     If your system has static and shared libraries, you may have to do this
+     once for each type.
+
+ (6) If you want to build a 16-bit library or 32-bit library (as well as, or
+     instead of the 8-bit library) just supply 16 or 32 as the value of
+     -DPCRE2_CODE_UNIT_WIDTH when you are compiling.
+
+ (7) If you want to build the POSIX wrapper functions (which apply only to the
+     8-bit library), ensure that you have the src/pcre2posix.h file and then
+     compile src/pcre2posix.c. Link the result (on its own) as the pcre2posix
+     library.
+
+ (8) The pcre2test program can be linked with any combination of the 8-bit,
+     16-bit and 32-bit libraries (depending on what you selected in
+     src/config.h). Compile src/pcre2test.c; don't forget -DHAVE_CONFIG_H if
+     necessary, but do NOT define PCRE2_CODE_UNIT_WIDTH. Then link with the
+     appropriate library/ies. If you compiled an 8-bit library, pcre2test also
+     needs the pcre2posix wrapper library.
+
+ (9) Run pcre2test on the testinput files in the testdata directory, and check
+     that the output matches the corresponding testoutput files. There are
+     comments about what each test does in the section entitled "Testing PCRE2"
+     in the README file. If you compiled more than one of the 8-bit, 16-bit and
+     32-bit libraries, you need to run pcre2test with the -16 option to do
+     16-bit tests and with the -32 option to do 32-bit tests.
+
+     Some tests are relevant only when certain build-time options are selected.
+     For example, test 4 is for Unicode support, and will not run if you have
+     built PCRE2 without it. See the comments at the start of each testinput
+     file. If you have a suitable Unix-like shell, the RunTest script will run
+     the appropriate tests for you. The command "RunTest list" will output a
+     list of all the tests.
+
+     Note that the supplied files are in Unix format, with just LF characters
+     as line terminators. You may need to edit them to change this if your
+     system uses a different convention.
+
+(10) If you have built PCRE2 with SUPPORT_JIT, the JIT features can be tested
+     by running pcre2test with the -jit option. This is done automatically by
+     the RunTest script. You might also like to build and run the freestanding
+     JIT test program, src/pcre2_jit_test.c.
+
+(11) If you want to use the pcre2grep command, compile and link
+     src/pcre2grep.c; it uses only the basic 8-bit PCRE2 library (it does not
+     need the pcre2posix library).
+
+
+STACK SIZE IN WINDOWS ENVIRONMENTS
+
+The default processor stack size of 1Mb in some Windows environments is too
+small for matching patterns that need much recursion. In particular, test 2 may
+fail because of this. Normally, running out of stack causes a crash, but there
+have been cases where the test program has just died silently. See your linker
+documentation for how to increase stack size if you experience problems. If you
+are using CMake (see "BUILDING PCRE2 ON WINDOWS WITH CMAKE" below) and the gcc
+compiler, you can increase the stack size for pcre2test and pcre2grep by
+setting the CMAKE_EXE_LINKER_FLAGS variable to "-Wl,--stack,8388608" (for
+example). The Linux default of 8Mb is a reasonable choice for the stack, though
+even that can be too small for some pattern/subject combinations.
+
+PCRE2 has a compile configuration option to disable the use of stack for
+recursion so that heap is used instead. However, pattern matching is
+significantly slower when this is done. There is more about stack usage in the
+"pcre2stack" documentation.
+
+
+LINKING PROGRAMS IN WINDOWS ENVIRONMENTS
+
+If you want to statically link a program against a PCRE2 library in the form of
+a non-dll .a file, you must define PCRE2_STATIC before including src/pcre2.h.
+
+
+CALLING CONVENTIONS IN WINDOWS ENVIRONMENTS
+
+It is possible to compile programs to use different calling conventions using
+MSVC. Search the web for "calling conventions" for more information. To make it
+easier to change the calling convention for the exported functions in the
+PCRE2 library, the macro PCRE2_CALL_CONVENTION is present in all the external
+definitions. It can be set externally when compiling (e.g. in CFLAGS). If it is
+not set, it defaults to empty; the default calling convention is then used
+(which is what is wanted most of the time).
+
+
+COMMENTS ABOUT WIN32 BUILDS (see also "BUILDING PCRE2 ON WINDOWS WITH CMAKE")
+
+There are two ways of building PCRE2 using the "configure, make, make install"
+paradigm on Windows systems: using MinGW or using Cygwin. These are not at all
+the same thing; they are completely different from each other. There is also
+support for building using CMake, which some users find a more straightforward
+way of building PCRE2 under Windows.
+
+The MinGW home page (http://www.mingw.org/) says this:
+
+  MinGW: A collection of freely available and freely distributable Windows
+  specific header files and import libraries combined with GNU toolsets that
+  allow one to produce native Windows programs that do not rely on any
+  3rd-party C runtime DLLs.
+
+The Cygwin home page (http://www.cygwin.com/) says this:
+
+  Cygwin is a Linux-like environment for Windows. It consists of two parts:
+
+  . A DLL (cygwin1.dll) which acts as a Linux API emulation layer providing
+    substantial Linux API functionality
+
+  . A collection of tools which provide Linux look and feel.
+
+On both MinGW and Cygwin, PCRE2 should build correctly using:
+
+  ./configure && make && make install
+
+This should create two libraries called libpcre2-8 and libpcre2-posix. These
+are independent libraries: when you link with libpcre2-posix you must also link
+with libpcre2-8, which contains the basic functions.
+
+Using Cygwin's compiler generates libraries and executables that depend on
+cygwin1.dll. If a library that is generated this way is distributed,
+cygwin1.dll has to be distributed as well. Since cygwin1.dll is under the GPL
+licence, this forces not only PCRE2 to be under the GPL, but also the entire
+application. A distributor who wants to keep their own code proprietary must
+purchase an appropriate Cygwin licence.
+
+MinGW has no such restrictions. The MinGW compiler generates a library or
+executable that can run standalone on Windows without any third party dll or
+licensing issues.
+
+But there is more complication:
+
+If a Cygwin user uses the -mno-cygwin Cygwin gcc flag, what that really does is
+to tell Cygwin's gcc to use the MinGW gcc. Cygwin's gcc is only acting as a
+front end to MinGW's gcc (if you install Cygwin's gcc, you get both Cygwin's
+gcc and MinGW's gcc). So, a user can:
+
+. Build native binaries by using MinGW or by getting Cygwin and using
+  -mno-cygwin.
+
+. Build binaries that depend on cygwin1.dll by using Cygwin with the normal
+  compiler flags.
+
+The test files that are supplied with PCRE2 are in UNIX format, with LF
+characters as line terminators. Unless your PCRE2 library uses a default
+newline option that includes LF as a valid newline, it may be necessary to
+change the line terminators in the test files to get some of the tests to work.
+
+
+BUILDING PCRE2 ON WINDOWS WITH CMAKE
+
+CMake is an alternative configuration facility that can be used instead of
+"configure". CMake creates project files (make files, solution files, etc.)
+tailored to numerous development environments, including Visual Studio,
+Borland, Msys, MinGW, NMake, and Unix. If possible, use short paths with no
+spaces in the names for your CMake installation and your PCRE2 source and build
+directories.
+
+The following instructions were contributed by a PCRE1 user, but they should
+also work for PCRE2. If they are not followed exactly, errors may occur. In the
+event that errors do occur, it is recommended that you delete the CMake cache
+before attempting to repeat the CMake build process. In the CMake GUI, the
+cache can be deleted by selecting "File > Delete Cache".
+
+1.  Install the latest CMake version available from http://www.cmake.org/, and
+    ensure that cmake\bin is on your path.
+
+2.  Unzip (retaining folder structure) the PCRE2 source tree into a source
+    directory such as C:\pcre2. You should ensure your local date and time
+    is not earlier than the file dates in your source dir if the release is
+    very new.
+
+3.  Create a new, empty build directory, preferably a subdirectory of the
+    source dir. For example, C:\pcre2\pcre2-xx\build.
+
+4.  Run cmake-gui from the Shell envirornment of your build tool, for example,
+    Msys for Msys/MinGW or Visual Studio Command Prompt for VC/VC++. Do not try
+    to start Cmake from the Windows Start menu, as this can lead to errors.
+
+5.  Enter C:\pcre2\pcre2-xx and C:\pcre2\pcre2-xx\build for the source and
+    build directories, respectively.
+
+6.  Hit the "Configure" button.
+
+7.  Select the particular IDE / build tool that you are using (Visual
+    Studio, MSYS makefiles, MinGW makefiles, etc.)
+
+8.  The GUI will then list several configuration options. This is where
+    you can disable Unicode support or select other PCRE2 optional features.
+
+9.  Hit "Configure" again. The adjacent "Generate" button should now be
+    active.
+
+10. Hit "Generate".
+
+11. The build directory should now contain a usable build system, be it a
+    solution file for Visual Studio, makefiles for MinGW, etc. Exit from
+    cmake-gui and use the generated build system with your compiler or IDE.
+    E.g., for MinGW you can run "make", or for Visual Studio, open the PCRE2
+    solution, select the desired configuration (Debug, or Release, etc.) and
+    build the ALL_BUILD project.
+
+12. If during configuration with cmake-gui you've elected to build the test
+    programs, you can execute them by building the test project. E.g., for
+    MinGW: "make test"; for Visual Studio build the RUN_TESTS project. The
+    most recent build configuration is targeted by the tests. A summary of
+    test results is presented. Complete test output is subsequently
+    available for review in Testing\Temporary under your build dir.
+
+
+TESTING WITH RUNTEST.BAT
+
+If configured with CMake, building the test project ("make test" or building
+ALL_TESTS in Visual Studio) creates (and runs) pcre2_test.bat (and depending
+on your configuration options, possibly other test programs) in the build
+directory. The pcre2_test.bat script runs RunTest.bat with correct source and
+exe paths.
+
+For manual testing with RunTest.bat, provided the build dir is a subdirectory
+of the source directory: Open command shell window. Chdir to the location
+of your pcre2test.exe and pcre2grep.exe programs. Call RunTest.bat with
+"..\RunTest.Bat" or "..\..\RunTest.bat" as appropriate.
+
+To run only a particular test with RunTest.Bat provide a test number argument.
+
+Otherwise:
+
+1. Copy RunTest.bat into the directory where pcre2test.exe and pcre2grep.exe
+   have been created.
+
+2. Edit RunTest.bat to indentify the full or relative location of
+   the pcre2 source (wherein which the testdata folder resides), e.g.:
+
+   set srcdir=C:\pcre2\pcre2-10.00
+
+3. In a Windows command environment, chdir to the location of your bat and
+   exe programs.
+
+4. Run RunTest.bat. Test outputs will automatically be compared to expected
+   results, and discrepancies will be identified in the console output.
+
+To independently test the just-in-time compiler, run pcre2_jit_test.exe.
+
+
+BUILDING PCRE2 ON NATIVE Z/OS AND Z/VM
+
+z/OS and z/VM are operating systems for mainframe computers, produced by IBM.
+The character code used is EBCDIC, not ASCII or Unicode. In z/OS, UNIX APIs and
+applications can be supported through UNIX System Services, and in such an
+environment PCRE2 can be built in the same way as in other systems. However, in
+native z/OS (without UNIX System Services) and in z/VM, special ports are
+required. For details, please see this web site:
+
+  http://www.zaconsultants.net
+
+The site currently has ports for PCRE1 releases, but PCRE2 should follow in due
+course.
+
+You may also download PCRE1 from WWW.CBTTAPE.ORG, file 882. Everything, source
+and executable, is in EBCDIC and native z/OS file formats and this is the
+recommended download site.
+
+=============================
+Last Updated: 15 June 2015

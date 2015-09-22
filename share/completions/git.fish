@@ -2,7 +2,13 @@
 # Use 'command git' to avoid interactions for aliases from git to (e.g.) hub
 
 function __fish_git_branches
-  command git branch --no-color -a ^/dev/null | __fish_sgrep -v ' -> ' | sed -e 's/^..//' -e 's/^remotes\///'
+	command git branch --no-color -a ^/dev/null | __fish_sgrep -v ' -> ' | string trim -c "* " | string replace -r "^remotes/" ""
+end
+
+function __fish_git_unique_remote_branches
+	# Allow all remote branches with one remote without the remote part
+	# This is useful for `git checkout` to automatically create a remote-tracking branch
+	command git branch --no-color -a ^/dev/null | __fish_sgrep -v ' -> ' | string trim -c "* " | string replace -r "^.*/" "" | sort | uniq -u
 end
 
 function __fish_git_tags
@@ -165,6 +171,7 @@ complete -f -c git -n '__fish_git_using_command remote' -a update -d 'Fetches up
 ### show
 complete -f -c git -n '__fish_git_needs_command' -a show -d 'Shows the last commit of a branch'
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_branches)' -d 'Branch'
+complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_unique_remote_branches)' -d 'Remote branch'
 # TODO options
 
 ### show-branch
@@ -193,6 +200,7 @@ complete -f -c git -n '__fish_git_using_command add' -a '(__fish_git_add_files)'
 ### checkout
 complete -f -c git -n '__fish_git_needs_command'    -a checkout -d 'Checkout and switch to a branch'
 complete -f -c git -n '__fish_git_using_command checkout'  -a '(__fish_git_branches)' --description 'Branch'
+complete -f -c git -n '__fish_git_using_command checkout'  -a '(__fish_git_unique_remote_branches)' --description 'Remote branch'
 complete -f -c git -n '__fish_git_using_command checkout'  -a '(__fish_git_tags)' --description 'Tag'
 complete -f -c git -n '__fish_git_using_command checkout' -a '(__fish_git_modified_files)' --description 'File'
 complete -f -c git -n '__fish_git_using_command checkout' -s b -d 'Create a new branch'
@@ -228,6 +236,7 @@ complete -f -c git -n '__fish_git_using_command branch' -l no-merged -d 'List br
 ### cherry-pick
 complete -f -c git -n '__fish_git_needs_command' -a cherry-pick -d 'Apply the change introduced by an existing commit'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -a '(__fish_git_branches)' -d 'Branch'
+complete -f -c git -n '__fish_git_using_command cherry-pick' -a '(__fish_git_unique_remote_branches)' -d 'Remote branch'
 # TODO options
 
 ### clone
@@ -270,6 +279,7 @@ complete -f -c git -n '__fish_git_using_command log' -l pretty -a 'oneline short
 ### merge
 complete -f -c git -n '__fish_git_needs_command' -a merge -d 'Join two or more development histories together'
 complete -f -c git -n '__fish_git_using_command merge' -a '(__fish_git_branches)' -d 'Branch'
+complete -f -c git -n '__fish_git_using_command merge' -a '(__fish_git_unique_remote_branches)' -d 'Remote branch'
 complete -f -c git -n '__fish_git_using_command merge' -l commit -d "Autocommit the merge"
 complete -f -c git -n '__fish_git_using_command merge' -l no-commit -d "Don't autocommit the merge"
 complete -f -c git -n '__fish_git_using_command merge' -l edit -d 'Edit auto-generated merge message'
@@ -314,6 +324,7 @@ complete -f -c git -n '__fish_git_using_command pull' -l no-tags -d 'Disable aut
 complete -f -c git -n '__fish_git_using_command pull' -l progress -d 'Force progress status'
 complete -f -c git -n '__fish_git_using_command pull' -a '(git remote)' -d 'Remote alias'
 complete -f -c git -n '__fish_git_using_command pull' -a '(__fish_git_branches)' -d 'Branch'
+complete -f -c git -n '__fish_git_using_command pull' -a '(__fish_git_unique_remote_branches)' -d 'Remote branch'
 # TODO other options
 
 ### push

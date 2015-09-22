@@ -37,18 +37,21 @@ function __fish_git_add_files
 end
 
 function __fish_git_ranges
-  set -l from (commandline -ot | perl -ne 'if (index($_, "..") > 0) { my @parts = split(/\.\./); print $parts[0]; }')
-  if test -z "$from"
-    __fish_git_branches
-    return 0
-  end
+	set -l both (commandline -ot | string split "..")
+	set -l from $both[1]
+	# If we didn't need to split (or there's nothing _to_ split), complete only the first part
+	# Note that status here is from `string split` because `set` doesn't alter it
+	if test -z "$from" -o $status -gt 0
+		__fish_git_heads
+		return 0
+	end
 
-  set -l to (commandline -ot | perl -ne 'if (index($_, "..") > 0) { my @parts = split(/\.\./); print $parts[1]; }')
-  for from_ref in (__fish_git_heads | __fish_sgrep -e "$from")
-    for to_ref in (__fish_git_heads | __fish_sgrep -e "$to")
-      printf "%s..%s\n" $from_ref $to_ref
-    end
-  end
+	set -l to (set -q both[2]; and echo $both[2])
+	for from_ref in (__fish_git_heads | string match "$from")
+		for to_ref in (__fish_git_heads | string match "*$to*") # if $to is empty, this correctly matches everything
+			printf "%s..%s\n" $from_ref $to_ref
+		end
+	end
 end
 
 function __fish_git_needs_command

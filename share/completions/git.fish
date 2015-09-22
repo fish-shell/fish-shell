@@ -109,7 +109,7 @@ function __fish_git_aliases
         begin
             set -l IFS "."
             echo -n $key | read -l _ name
-            echo $name
+            printf "%s\t%s\n" $name "Alias for $value"
         end
     end
 end
@@ -495,7 +495,7 @@ complete -f -c git -n '__fish_git_using_command submodule; and __fish_git_seen_s
 complete -f -c git -n '__fish_git_needs_command' -a whatchanged -d 'Show logs with difference each commit introduces'
 
 ## Aliases (custom user-defined commands)
-complete -c git -n '__fish_git_needs_command' -a '(__fish_git_aliases)' -d 'Alias (user-defined command)'
+complete -c git -n '__fish_git_needs_command' -a '(__fish_git_aliases)'
 
 ### git clean
 complete -f -c git -n '__fish_git_needs_command' -a clean -d 'Remove untracked files from the working tree'

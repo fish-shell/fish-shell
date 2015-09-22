@@ -70,8 +70,8 @@ function __fish_git_using_command
     end
 
     # aliased command
-    set -l aliased (command git config --get "alias.$cmd[2]" ^ /dev/null | sed 's/ .*$//')
-    if [ $argv[1] = "$aliased" ]
+    set -l aliased (command git config --get "alias.$cmd[2]" ^ /dev/null | string split " ")
+    if [ $argv[1] = "$aliased[1]" ]
       return 0
     end
   end
@@ -121,8 +121,7 @@ function __fish_git_custom_commands
     # if any of these completion results match the name of the builtin git commands,
     # but it's simpler just to blacklist these names. They're unlikely to change,
     # and the failure mode is we accidentally complete a plumbing command.
-    set -l IFS \n
-    for name in (builtin complete -Cgit- | sed 's/^git-\([^[:space:]]*\).*/\1/')
+	for name in (string replace -r "^.*/git-([^/]*)" '$1' $PATH/git-*)
         switch $name
             case cvsserver receive-pack shell upload-archive upload-pack
                 # skip these

@@ -18,6 +18,8 @@ alias NAME=DEFINITION
 
 You cannot create an alias to a function with the same name.
 
+Note that spaces need to be escaped in the call to alias just like in the commandline _even inside the quotes_.
+
 
 \subsection alias-example Example
 
@@ -31,4 +33,8 @@ alias rmi "rm -i"
 function rmi
     rm -i $argv
 end
+
+# This needs to have the spaces escaped or "Chrome.app..." will be seen as an argument to "/Applications/Google":
+
+alias chrome='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome banana'
 \endfish

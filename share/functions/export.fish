@@ -4,7 +4,7 @@ function export --description 'Set global variable. Alias for set -g, made for b
            return 0
         end
         for arg in $argv
-            set -l v (echo $arg|tr '=' \n)
+            set -l v (echo $arg|sed 's/=/\n/')
             set -l c (count $v)
             switch $c
                     case 1

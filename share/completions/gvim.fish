@@ -1,2 +1,2 @@
-__fish_complete_vi gvim
+complete -c gvim -w vim
 

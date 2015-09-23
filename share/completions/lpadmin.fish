@@ -18,12 +18,12 @@ complete -c lpadmin -s o -xa job-page-limit=  -d 'Sets the page limit for per-us
 complete -c lpadmin -s o -xa job-quota-period= -d 'Sets the accounting period for per-user quotas (sec)'
 complete -c lpadmin -s o -xa job-sheets-default= -d 'Sets the default banner page(s) to use for print jobs'
 complete -c lpadmin -s o -d 'Sets a  PPD option for the printer' -xa '(__fish_complete_lpr_option)'
-#complete -c lpadmin -s o -d 'Sets a default server-side option for the destination' -xa '(__fish_complete_lpr_option | sed "s/=/-default=/")'
+#complete -c lpadmin -s o -d 'Sets a default server-side option for the destination' -xa '(__fish_complete_lpr_option | sed -e "s/=/-default=/")'
 complete -c lpadmin -s o -d 'Sets the binary communications program to use when printing' -xa 'port-monitor=none port-monitor=bcp port-monitor=tbcp'
 complete -c lpadmin -s o -d 'Sets the error policy to be used when the printer backend is unable to send the job to the printer. ' -xa 'printer-error-policy=abort-job printer-error-policy=retry-job printer-error-policy=retry-current-job printer-error-policy=stop-printer'
 complete -c lpadmin -s o -xa printer-is-shared=true -d 'Sets the destination to shared/published or unshared/unpublished'
 complete -c lpadmin -s o -xa printer-is-shared=false -d 'Sets the destination to shared/published or unshared/unpublished'
-complete -c lpadmin -s o -d 'Sets the IPP operation policy associated with the destination' -xa "printer-policy=(cat /etc/cups/cupsd.conf | grep \<Policy | sed 's/<Policy \(.\+\)>/\1/')"
+complete -c lpadmin -s o -d 'Sets the IPP operation policy associated with the destination' -xa "printer-policy=(cat /etc/cups/cupsd.conf | grep \<Policy | sed -e 's/<Policy \(.\+\)>/\1/')"
 
 complete -c lpadmin -s u -xa 'allow:all allow:none (__fish_complete_list , __fish_complete_users allow:)' -d 'Sets user-level access control on a destination. Names starting with "@" are interpreted as UNIX group'
 complete -c lpadmin -s u -xa '(__fish_complete_list , __fish_complete_groups allow: @)' -d 'Sets user-level access control on a destination. Names starting with "@" are interpreted as UNIX group'

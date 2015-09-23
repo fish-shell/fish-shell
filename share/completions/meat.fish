@@ -2,8 +2,8 @@
 
 set -l listinstalled "(pacman -Qm | tr ' ' \t)"
 set -l listall       "(pacman -Sl | cut --delim ' ' --fields 2- | tr ' ' \t)"
-set -l listrepos    "(cat /etc/pacman.conf | grep '^\[.\+\]' | sed 's/[]\[]//g')"
-set -l listgroups    "(pacman -Sg | sed 's/\(.*\)/\1\tPackage group/g')"
+set -l listrepos    "(cat /etc/pacman.conf | grep '^\[.\+\]' | sed -e 's/[]\[]//g')"
+set -l listgroups    "(pacman -Sg | sed -e 's/\(.*\)/\1\tPackage group/g')"
 
 
 # Operations:

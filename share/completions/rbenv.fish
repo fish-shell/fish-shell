@@ -33,7 +33,7 @@ function __fish_rbenv_official_rubies
 	else
 		# Remove trailing spaces, otherwise completion options appear like
 		# "\ \ option"
-		rbenv install --list | sed "s/^[[:space:]]*//"
+		rbenv install --list | sed -e "s/^[[:space:]]*//"
 	end
 end
 

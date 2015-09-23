@@ -1,6 +1,6 @@
 
 complete -c lua -s e -d 'Execute string' -x
-complete -c lua -s l -d 'Require library' -xa "( find /usr/lib/lua/ -name \*.so -printf '%f\n' | sed 's/.so//' )"
+complete -c lua -s l -d 'Require library' -xa "( find /usr/lib/lua/ -name \*.so -printf '%f\n' | sed -e 's/.so//' )"
 complete -c lua -s i -d 'Enter interactive mode after executing script'
 complete -c lua -s v -d 'Show version'
 complete -c lua -s h -l help -d 'Print help and exit'

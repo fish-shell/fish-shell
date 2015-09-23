@@ -48,17 +48,17 @@ function __fish_adb_run_command --description 'Runs adb with any -s parameters a
 	end
 
 	# adb returns CRLF (seemingly) so strip CRs
-	adb $sopt shell $argv | sed s/\r//
+	adb $sopt shell $argv | sed -e s/\r//
 end
 
 function __fish_adb_list_packages
-	__fish_adb_run_command pm list packages | sed s/package://
+	__fish_adb_run_command pm list packages | sed -e s/package://
 end
 
 
 function __fish_adb_list_uninstallable_packages
 	# -3 doesn't exactly mean show uninstallable, but it's the closest you can get to with pm list
-	__fish_adb_run_command pm list packages -3 | sed s/package://
+	__fish_adb_run_command pm list packages -3 | sed -e s/package://
 end
 
 # Generic options, must come before command

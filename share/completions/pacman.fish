@@ -7,8 +7,8 @@ set -l progname pacman
 set -l listinstalled "(pacman -Q | tr ' ' \t)"
 # This might be an issue if another package manager is also installed (e.g. for containers)
 set -l listall "(__fish_print_packages)"
-set -l listrepos "(grep '^\[.\+\]' /etc/pacman.conf | sed 's/[]\[]//g')"
-set -l listgroups "(pacman -Sg | sed 's/\(.*\)/\1\tPackage group/g')"
+set -l listrepos "(grep '^\[.\+\]' /etc/pacman.conf | sed -e 's/[]\[]//g')"
+set -l listgroups "(pacman -Sg | sed -e 's/\(.*\)/\1\tPackage group/g')"
 
 set -l noopt 'not __fish_contains_opt -s S -s D -s Q -s R -s U -s T database query sync remove upgrade deptest'
 set -l database '__fish_contains_opt -s D database'

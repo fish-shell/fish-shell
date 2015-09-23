@@ -18,8 +18,8 @@ function __fish_facl_extract_acl
   echo (commandline -ct) | __fish_sgrep -o -E '\w*:'
 end
 
-complete -c setfacl    -s m -s x -l modify -l remove -l set -n '__fish_facl_starts_with_spec_user'  -a '(__fish_facl_extract_acl)(__fish_complete_users  | sed "s/\t/:\t/g")'
-complete -c setfacl    -s m -s x -l modify -l remove -l set -n '__fish_facl_starts_with_spec_group' -a '(__fish_facl_extract_acl)(__fish_complete_groups | sed "s/\t/:\t/g")'
+complete -c setfacl    -s m -s x -l modify -l remove -l set -n '__fish_facl_starts_with_spec_user'  -a '(__fish_facl_extract_acl)(__fish_complete_users  | sed -e "s/\t/:\t/g")'
+complete -c setfacl    -s m -s x -l modify -l remove -l set -n '__fish_facl_starts_with_spec_group' -a '(__fish_facl_extract_acl)(__fish_complete_groups | sed -e "s/\t/:\t/g")'
 complete -c setfacl -f -s m -s x -l modify -l remove -l set -a '(__fish_facl_list_spec_keyword)'
 
 complete -c setfacl    -s b -l remove-all     --description 'Remove all extended ACL entries'

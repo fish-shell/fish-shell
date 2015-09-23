@@ -113,7 +113,7 @@ complete -c rsync -d Hostname -a "
 
 (
 	#Prepend any username specified in the completion to the hostname
-	commandline -ct |sed -ne 's/\(.*@\).*/\1/p'
+	commandline -ct | sed -ne 's/\(.*@\).*/\1/p'
 )(__fish_print_hostnames):
 
 (__fish_print_users)@\tUsername
@@ -129,6 +129,6 @@ complete -c rsync -d "Remote path" -n "commandline -ct| __fish_sgrep -q :" -a "
 	commandline -ct| __fish_sgrep -Eo '.*:+(.*/)?'
 )(
 	#Get the list of remote files from the specified rsync server
-	rsync --list-only (commandline -ct| __fish_sgrep -Eo '.*:+(.*/)?') ^/dev/null | sed '/^d/ s,\$,/, ' | tr -s ' '| cut -d' ' -f 5-
+	rsync --list-only (commandline -ct| __fish_sgrep -Eo '.*:+(.*/)?') ^/dev/null | sed -e '/^d/ s,\$,/, ' | tr -s ' '| cut -d' ' -f 5-
 )
 "

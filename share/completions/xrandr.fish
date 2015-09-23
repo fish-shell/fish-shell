@@ -9,7 +9,7 @@ complete -c xrandr -l screen -d 'Select which screen to manipulate' -x
 complete -c xrandr -l q1    -d 'Use RandR version 1.1 protocol'
 complete -c xrandr -l q12   -d 'Use RandR version 1.2 protocol'
 
-set -l ver (xrandr -v | grep RandR | sed 's/^.\+\s\([0-9\.]\+\)$/\1/')
+set -l ver (xrandr -v | grep RandR | sed -e 's/^.\+\s\([0-9\.]\+\)$/\1/')
 if not expr match $ver '^[0-9.]*$' >/dev/null
     set ver 10
 end

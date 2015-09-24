@@ -1,43 +1,20 @@
-
 function psub --description "Read from stdin into a file and output the filename. Remove the file when the command that called psub exits."
 
 	set -l filename
 	set -l funcname
 	set -l use_fifo 1
-	set -l shortopt -o hf
-	set -l longopt -l help,file
 
-	if getopt -T >/dev/null
-		set longopt
-	end
+	while set -q argv[1]
+			switch $argv[1]
+					case -h --help
+						 __fish_print_help psub
+						return 0
 
-	if not getopt -n psub -Q $shortopt $longopt -- $argv >/dev/null
-		return 1
-	end
-
-	set -l tmp (getopt $shortopt $longopt -- $argv)
-
-	eval set opt $tmp
-
-	while count $opt >/dev/null
-
-		switch $opt[1]
-			case -h --help
-				__fish_print_help psub
-				return 0
-
-			case -f --file
-				set use_fifo 0
-
-			case --
-				set -e opt[1]
-				break
-
+					case -f --file
+						 set use_fifo 0
+					end
+			set -e argv[1]
 		end
-
-		set -e opt[1]
-
-	end
 
 	if not status --is-command-substitution
 		echo psub: Not inside of command substitution >&2
@@ -49,14 +26,14 @@ function psub --description "Read from stdin into a file and output the filename
 		set TMPDIR /tmp
 	end
 
-	if test use_fifo = 1
+	if test $use_fifo = 1
 		# Write output to pipe. This needs to be done in the background so
 		# that the command substitution exits without needing to wait for
 		# all the commands to exit
-		set dir (mktemp -d "$TMPDIR[1]"/.psub.XXXXXXXXXX); or return
-		set filename $dir/psub.fifo
+		while not set filename (mktemp "$TMPDIR[1]"/.psub.XXXXXXXXXX); end
+		rm $filename
 		mkfifo $filename
-		cat >$filename &
+		cat | sh -c "cat </dev/stdin > $filename &"
 	else
 		set filename (mktemp "$TMPDIR[1]"/.psub.XXXXXXXXXX)
 		cat >$filename

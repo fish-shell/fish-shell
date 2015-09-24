@@ -1,10 +1,11 @@
-function export --description 'Set global variable. Alias for set -g, made for bash compatibility'
+function export --description 'Set global variable. Alias for set -gx, made for bash compatibility'
         if test -z "$argv"
            set
            return 0
         end
         for arg in $argv
-            set -l v (echo $arg|tr '=' \n)
+			# Only split on the first =
+            set -l v (echo $arg | string replace "=" "\n")
             set -l c (count $v)
             switch $c
                     case 1

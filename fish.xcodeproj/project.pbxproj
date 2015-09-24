@@ -964,7 +964,7 @@
 		D0A084F213B3AC130099B651 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0640;
+				LastUpgradeCheck = 0700;
 				TargetAttributes = {
 					D04F7FCF1BA4E29300B0F227 = {
 						CreatedOnToolsVersion = 6.4;
@@ -1541,6 +1541,7 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				INFOPLIST_FILE = osx/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ridiculousfish.fish-shell";
 				PRODUCT_NAME = fish;
 				WRAPPER_EXTENSION = app;
 			};
@@ -1810,6 +1811,7 @@
 				);
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				INFOPLIST_FILE = osx/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ridiculousfish.fish-shell";
 				PRODUCT_NAME = fish;
 				WRAPPER_EXTENSION = app;
 			};
@@ -1826,6 +1828,7 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				INFOPLIST_FILE = osx/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.ridiculousfish.fish-shell";
 				PRODUCT_NAME = fish;
 				WRAPPER_EXTENSION = app;
 			};

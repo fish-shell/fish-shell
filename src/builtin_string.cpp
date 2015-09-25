@@ -1358,7 +1358,7 @@ int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     int argc = builtin_count_args(argv);
     if (argc <= 1)
     {
-        string_error(streams, STRING_ERR_MISSING, argv[0]);
+        streams.err.append_format(_(L"string: Expected subcommand\n"));
         builtin_print_help(parser, streams, L"string", streams.err);
         return BUILTIN_STRING_ERROR;
     }
@@ -1376,7 +1376,7 @@ int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     }
     if (subcmd->handler == 0)
     {
-        string_error(streams, _(L"%ls: Unknown subcommand '%ls'\n"), argv[0], argv[1]);
+        streams.err.append_format(_(L"string: Unknown subcommand '%ls'\n"), argv[1]);
         builtin_print_help(parser, streams, L"string", streams.err);
         return BUILTIN_STRING_ERROR;
     }

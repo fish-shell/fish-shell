@@ -13,9 +13,10 @@ function __fish_complete_cd -d "Completions for the cd command"
 		set -l desc
 		# Don't show description for current directory
 		# and replace $HOME with "~"
-		[ $i = "." ]; or set -l desc (echo $i | sed -e "s|$HOME|~|")
+		[ $i = "." ]; or set -l desc (string replace -r -- "^$HOME" "~" "$i")
 		pushd $i
 		for d in (commandline -ct)*
+			# Check if it's an accessible directory
 			if [ -d $d -a -x $d ]
 			   printf "%s/\t%s\n" $d $desc
 			end

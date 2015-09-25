@@ -10,7 +10,7 @@ complete -c cower -f -s f -l 'force'            -d 'Overwrite existing files whe
 complete -c cower -f      -l 'format'           -d 'Print formatted'
 complete -c cower -f -s h -l 'help'             -d 'Display help and quit'
 complete -c cower -f      -l 'ignore' -xa "(pacman -Qq)" -d 'Ignore a package upgrade'
-complete -c cower -f      -l 'ignorerepo' -xa "(cat /etc/pacman.conf | grep '^\[.\+\]' | sed 's/[]\[]//g')" -d 'Ignore a binary repo when checking for updates'
+complete -c cower -f      -l 'ignorerepo' -xa "(__fish_print_pacman_repos)" -d 'Ignore a binary repo when checking for updates'
 complete -c cower -f      -l 'listdelim'        -d 'Specify a delimiter for list formatters'
 complete -c cower -f -s q -l 'quiet'            -d 'Output less'
 complete -c cower -f -s t -l 'target'           -d 'Download targets to DIR'

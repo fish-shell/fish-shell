@@ -971,7 +971,7 @@ if __name__ == "__main__":
         sys.exit(0)
         
     if not WRITE_TO_STDOUT and not output_directory:
-        # Default to ~/.config/fish/generated_completions/
+        # Default to ~/.local/share/fish/generated_completions/
         # Create it if it doesn't exist
         xdg_data_home = os.getenv('XDG_DATA_HOME', '~/.local/share')
         output_directory = os.path.expanduser(xdg_data_home + '/fish/generated_completions/')

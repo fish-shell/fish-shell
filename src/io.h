@@ -288,8 +288,9 @@ struct io_streams_t
     // fd representing stdin. This is not closed by the destructor.
     int stdin_fd;
     
-    // Whether this is the first process in a pipeline
-    bool is_first_process_in_pipeline;
+    // Whether stdin is "directly redirected," meaning it is the recipient of a pipe (foo | cmd) or direct redirection (cmd < foo.txt)
+    // An "indirect redirection" would be e.g. begin ; cmd ; end < foo.txt
+    bool stdin_is_directly_redirected;
     
     // Indicates whether stdout and stderr are redirected (e.g. to a file or piped)
     bool out_is_redirected;
@@ -298,7 +299,7 @@ struct io_streams_t
     // Actual IO redirections. This is only used by the source builtin. Unowned.
     const io_chain_t *io_chain;
     
-    io_streams_t() : stdin_fd(-1), is_first_process_in_pipeline(false), out_is_redirected(false), err_is_redirected(false), io_chain(NULL)
+    io_streams_t() : stdin_fd(-1), stdin_is_directly_redirected(false), out_is_redirected(false), err_is_redirected(false), io_chain(NULL)
     {
     }
 };

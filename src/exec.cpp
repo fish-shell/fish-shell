@@ -953,11 +953,25 @@ void exec_job(parser_t &parser, job_t *j)
                 }
                 else
                 {
+                    // Determine if we have a "direct" redirection for stdin
+                    bool stdin_is_directly_redirected;
+                    if (p != j->first_process)
+                    {
+                        // We must have a pipe
+                        stdin_is_directly_redirected = true;
+                    }
+                    else
+                    {
+                        // We are not a pipe. Check if there is a redirection local to the process that's not IO_CLOSE
+                        const shared_ptr<const io_data_t> stdin_io = io_chain_get(p->io_chain(), STDIN_FILENO);
+                        stdin_is_directly_redirected = stdin_io && stdin_io->io_mode != IO_CLOSE;
+                    }
+                    
                     builtin_io_streams.reset(new io_streams_t());
                     builtin_io_streams->stdin_fd = local_builtin_stdin;
                     builtin_io_streams->out_is_redirected = has_fd(process_net_io_chain, STDOUT_FILENO);
                     builtin_io_streams->err_is_redirected = has_fd(process_net_io_chain, STDERR_FILENO);
-                    builtin_io_streams->is_first_process_in_pipeline = (p == j->first_process);
+                    builtin_io_streams->stdin_is_directly_redirected = stdin_is_directly_redirected;
                     builtin_io_streams->io_chain = &process_net_io_chain;
 
                     

@@ -4024,7 +4024,7 @@ static void run_one_string_test(const wchar_t **argv, int expected_rc, const wch
 {
     parser_t parser(PARSER_TYPE_GENERAL, true);
     io_streams_t streams;
-    streams.is_first_process_in_pipeline = true; // read from argv instead of stdin
+    streams.stdin_is_directly_redirected = false; // read from argv instead of stdin
     int rc = builtin_string(parser, streams, const_cast<wchar_t**>(argv));
     wcstring args;
     for (int i = 0; argv[i] != 0; i++)

@@ -54,7 +54,7 @@ static void string_unknown_option(parser_t &parser, io_streams_t &streams, const
 /* We read from stdin if we are the second or later process in a pipeline. */
 static bool string_args_from_stdin(const io_streams_t &streams)
 {
-    return ! streams.is_first_process_in_pipeline;
+    return streams.stdin_is_directly_redirected;
 }
 
 static const wchar_t *string_get_arg_stdin(wcstring *storage, const io_streams_t &streams)

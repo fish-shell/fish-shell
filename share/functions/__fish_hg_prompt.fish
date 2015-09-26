@@ -37,6 +37,12 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
         return
     end
 
+    set -l bookmark (hg bookmark -q)
+    # Unfortunately, hg bookmark doesn't exit non-zero when there's no bookmark
+    if test -n "$bookmark"
+        set branch "$branch/$bookmark"
+    end
+
     echo -n '|'
 
     set -l repo_status (hg status |cut -c 1-2|sort -u|uniq)

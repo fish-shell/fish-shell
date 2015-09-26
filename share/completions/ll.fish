@@ -1,2 +1,1 @@
-
-__fish_complete_ls ll
+complete -c ll -w ls

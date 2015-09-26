@@ -26,6 +26,12 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
 	if not command -s hg >/dev/null
 		return 1
 	end
+
+	# If we're not in an hg repository, bail
+	if not hg root >/dev/null ^/dev/null
+		return 0
+	end
+
     set -l branch (hg branch ^/dev/null)
     if test -z $branch
         return

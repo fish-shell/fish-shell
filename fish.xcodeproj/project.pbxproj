@@ -1480,6 +1480,7 @@
 		D007FDDA17136EAA00A52BE6 /* Release_C++11 */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				DEAD_CODE_STRIPPING = YES;
@@ -1502,7 +1503,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				SDKROOT = macosx;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx $(SRCROOT)/osx/shared_headers";
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wunused-macros",
@@ -1550,13 +1551,11 @@
 		D007FDDE17136EAA00A52BE6 /* Release_C++11 */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				PRODUCT_NAME = fish;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2";
 			};
 			name = "Release_C++11";
 		};
@@ -1569,7 +1568,6 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2";
 			};
 			name = "Release_C++11";
 		};
@@ -1614,7 +1612,8 @@
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2 $(SRCROOT)/osx/shared_headers/";
+				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = "";
 			};
 			name = Debug;
@@ -1638,7 +1637,8 @@
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2 $(SRCROOT)/osx/shared_headers/";
+				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = "";
 			};
 			name = Release;
@@ -1662,7 +1662,8 @@
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_UNUSED_VARIABLE = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2 $(SRCROOT)/osx/shared_headers/";
+				USE_HEADERMAP = NO;
 				WARNING_CFLAGS = "";
 			};
 			name = "Release_C++11";
@@ -1690,6 +1691,7 @@
 		D0A084F813B3AC130099B651 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = YES;
@@ -1712,7 +1714,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx $(SRCROOT)/osx/shared_headers";
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wunused-macros",
@@ -1723,6 +1725,7 @@
 		D0A084F913B3AC130099B651 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_CPP_EXCEPTIONS = NO;
@@ -1743,7 +1746,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				SDKROOT = macosx;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx $(SRCROOT)/osx/shared_headers";
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wunused-macros",
@@ -1849,7 +1852,6 @@
 				);
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2";
 			};
 			name = Debug;
 		};
@@ -1862,33 +1864,28 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2";
 			};
 			name = Release;
 		};
 		D0D26944159835CA005D9B9C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				PRODUCT_NAME = fish;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2";
 			};
 			name = Debug;
 		};
 		D0D26945159835CA005D9B9C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				PRODUCT_NAME = fish;
-				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2";
 			};
 			name = Release;
 		};

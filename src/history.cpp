@@ -1443,6 +1443,20 @@ bool history_t::save_internal_via_rewrite()
             else
             {
                 wcstring new_name = history_filename(name, wcstring());
+
+                /* Ensure we maintain the ownership and permissions of the original (#2355).
+                 * If the stat fails, we assume (hope) our default permissions are correct. This
+                 * corresponds to e.g. someone running sudo -E as the very first command. If they
+                 * did, it would be tricky to set the permissions correctly. (bash doesn't get this
+                 * case right either). */
+                struct stat sbuf;
+                if (wstat(new_name, &sbuf) >= 0)
+                {
+                   /* Success */
+                    fchown(out_fd, sbuf.st_uid, sbuf.st_gid);
+                    fchmod(out_fd, sbuf.st_mode);
+                }
+
                 if (0 > wrename(tmp_name, new_name))
                 {
                     debug(2, L"Error when renaming history file");

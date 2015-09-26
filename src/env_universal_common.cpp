@@ -847,6 +847,14 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
     
     if (success)
     {
+        /* Ensure we maintain ownership and permissions (#2176) */
+        struct stat sbuf;
+        if (wstat(vars_path, &sbuf) >= 0)
+        {
+            fchown(private_fd, sbuf.st_uid, sbuf.st_gid);
+            fchmod(private_fd, sbuf.st_mode);
+        }
+
         /* Apply new file */
         success = this->move_new_vars_file_into_place(private_file_path, vars_path);
     }

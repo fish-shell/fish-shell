@@ -1556,6 +1556,7 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				PRODUCT_NAME = fish;
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2";
 			};
 			name = "Release_C++11";
 		};
@@ -1568,6 +1569,7 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2";
 			};
 			name = "Release_C++11";
 		};
@@ -1847,6 +1849,7 @@
 				);
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2";
 			};
 			name = Debug;
 		};
@@ -1859,6 +1862,7 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2";
 			};
 			name = Release;
 		};
@@ -1871,6 +1875,7 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				PRODUCT_NAME = fish;
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2";
 			};
 			name = Debug;
 		};
@@ -1883,6 +1888,7 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				PRODUCT_NAME = fish;
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/osx/pcre2";
 			};
 			name = Release;
 		};

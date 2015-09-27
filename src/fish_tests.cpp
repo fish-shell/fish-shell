@@ -1513,6 +1513,15 @@ static void test_expand()
     expand_test(L"/tmp/fish_expand_test/b**", 0,
                 L"/tmp/fish_expand_test/b", L"/tmp/fish_expand_test/b/x", L"/tmp/fish_expand_test/bar", L"/tmp/fish_expand_test/bax", L"/tmp/fish_expand_test/bax/xxx", L"/tmp/fish_expand_test/baz", L"/tmp/fish_expand_test/baz/xxx", L"/tmp/fish_expand_test/baz/yyy", wnull,
                 L"Glob did the wrong thing 4");
+   
+    // a trailing slash should only produce directories
+    expand_test(L"/tmp/fish_expand_test/b*/", 0,
+                L"/tmp/fish_expand_test/b/", L"/tmp/fish_expand_test/baz/", L"/tmp/fish_expand_test/bax/", wnull,
+                L"Glob did the wrong thing 5");
+
+    expand_test(L"/tmp/fish_expand_test/b**/", 0,
+                L"/tmp/fish_expand_test/b/", L"/tmp/fish_expand_test/baz/", L"/tmp/fish_expand_test/bax/", wnull,
+                L"Glob did the wrong thing 6");
     
     expand_test(L"/tmp/fish_expand_test/BA", EXPAND_FOR_COMPLETIONS,
                 L"/tmp/fish_expand_test/bar", L"/tmp/fish_expand_test/bax/",  L"/tmp/fish_expand_test/baz/", wnull,

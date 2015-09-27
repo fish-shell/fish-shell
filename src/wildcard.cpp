@@ -787,7 +787,7 @@ void wildcard_expander_t::expand_trailing_slash(const wcstring &base_dir)
     if (! (flags & EXPAND_FOR_COMPLETIONS))
     {
         /* Trailing slash and not accepting incomplete, e.g. `echo /tmp/`. Insert this file if it exists. */
-        if (waccess(base_dir, F_OK))
+        if (waccess(base_dir, F_OK) == 0)
         {
             this->add_expansion_result(base_dir);
         }

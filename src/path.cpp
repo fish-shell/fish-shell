@@ -276,10 +276,54 @@ static wcstring path_create_config()
     return res;
 }
 
+static wcstring path_create_data()
+{
+    bool done = false;
+    wcstring res;
+
+    const env_var_t xdg_dir  = env_get_string(L"XDG_DATA_HOME");
+    if (! xdg_dir.missing())
+    {
+        res = xdg_dir + L"/fish";
+        if (!create_directory(res))
+        {
+            done = true;
+        }
+    }
+    else
+    {
+        const env_var_t home = env_get_string(L"HOME");
+        if (! home.missing())
+        {
+            res = home + L"/.local/share/fish";
+            if (!create_directory(res))
+            {
+                done = true;
+            }
+        }
+    }
+
+    if (! done)
+    {
+        res.clear();
+
+        debug(0, _(L"Unable to create a data directory for fish. Your history will not be saved. Please set the $XDG_DATA_HOME variable to a directory where the current user has write access."));
+    }
+    return res;
+}
+
 /* Cache the config path */
 bool path_get_config(wcstring &path)
 {
     static const wcstring result = path_create_config();
+    path = result;
+    return ! result.empty();
+}
+
+/* Cache the data path */
+bool path_get_data(wcstring &path)
+{
+    static const wcstring result = path_create_data();
     path = result;
     return ! result.empty();
 }

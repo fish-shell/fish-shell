@@ -20,12 +20,25 @@
 
 /**
    Returns the user configuration directory for fish. If the directory
-   or one of it's parents doesn't exist, they are first created.
+   or one of its parents doesn't exist, they are first created.
 
    \param path The directory as an out param
    \return whether the directory was returned successfully
 */
 bool path_get_config(wcstring &path);
+
+/**
+   Returns the user data directory for fish. If the directory
+   or one of its parents doesn't exist, they are first created.
+
+   Volatile files presumed to be local to the machine,
+   such as the fish_history and all the generated_completions,
+   will be stored in this directory.
+
+   \param path The directory as an out param
+   \return whether the directory was returned successfully
+*/
+bool path_get_data(wcstring &path);
 
 /**
    Finds the full path of an executable. Returns YES if successful.

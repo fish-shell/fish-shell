@@ -6,6 +6,10 @@
 
 #include "fish_version.h"
 
+#ifndef FISH_BUILD_VERSION
+#include "fish-build-version.h"
+#endif
+
 /**
  * Return fish shell version.
  */

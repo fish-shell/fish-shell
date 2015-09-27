@@ -1,7 +1,7 @@
 #completion for totem
 
 complete -c totem -l usage --description 'Output a brief synopsis of command options then quit'
-complete -c totem -s ? -l help --description 'Output  a longer help message then quit'
+complete -c totem -s '?' -l help --description 'Output  a longer help message then quit'
 complete -c totem -l version --description 'Output version information then quit'
 complete -c totem -l play-pause --description 'Tell any running totem instance: Toggle between play and pause'
 complete -c totem -l play --description 'Tell any running totem instance: Play'

@@ -100,8 +100,8 @@
 		D007693B1990137800CA4627 /* parse_productions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0FE8EE7179FB75F008C9F21 /* parse_productions.cpp */; };
 		D007693D1990137800CA4627 /* libncurses.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D0D02A8C15983CFA008E62BD /* libncurses.dylib */; };
 		D0076943199013B900CA4627 /* fish_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0854113B3ACEE0099B651 /* fish_tests.cpp */; };
-		D00F63F119137E9D00FCCDEC /* fish_version.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00F63F019137E9D00FCCDEC /* fish_version.cpp */; };
-		D00F63F219137E9D00FCCDEC /* fish_version.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00F63F019137E9D00FCCDEC /* fish_version.cpp */; };
+		D00F63F119137E9D00FCCDEC /* fish_version.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00F63F019137E9D00FCCDEC /* fish_version.cpp */; settings = {COMPILER_FLAGS = "-I$(DERIVED_FILE_DIR)"; }; };
+		D00F63F219137E9D00FCCDEC /* fish_version.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00F63F019137E9D00FCCDEC /* fish_version.cpp */; settings = {COMPILER_FLAGS = "-I$(DERIVED_FILE_DIR)"; }; };
 		D01A2D24169B736200767098 /* man1 in Copy Files */ = {isa = PBXBuildFile; fileRef = D01A2D23169B730A00767098 /* man1 */; };
 		D01A2D25169B737700767098 /* man1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D01A2D23169B730A00767098 /* man1 */; };
 		D030FBEF1A4A382000F7ADA0 /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0854A13B3ACEE0099B651 /* input.cpp */; };
@@ -929,6 +929,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = D0D02AD31598642A008E62BD /* Build configuration list for PBXNativeTarget "fish_indent" */;
 			buildPhases = (
+				8307B7561BB711880088A2A6 /* ShellScript */,
 				D0D02ACC1598642A008E62BD /* Sources */,
 				D0D02ACD1598642A008E62BD /* Frameworks */,
 			);
@@ -945,6 +946,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = D0D26943159835CA005D9B9C /* Build configuration list for PBXNativeTarget "fish_shell" */;
 			buildPhases = (
+				8307B7551BB7116A0088A2A6 /* ShellScript */,
 				D0D26938159835CA005D9B9C /* Sources */,
 				D0D26939159835CA005D9B9C /* Frameworks */,
 			);
@@ -1012,6 +1014,38 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		8307B7551BB7116A0088A2A6 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/fish-build-version.h",
+				"$(DERIVED_FILE_DIR)/force-fish-build-version.h",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = ./build_tools/xcode_version_gen.sh;
+			showEnvVarsInLog = 0;
+		};
+		8307B7561BB711880088A2A6 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/fish-build-version.h",
+				"$(DERIVED_FILE_DIR)/force-fish-build-version.h",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = ./build_tools/xcode_version_gen.sh;
+			showEnvVarsInLog = 0;
+		};
 		D01A25E01AF58CD0002F9E92 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -1494,7 +1528,6 @@
 					"SYSCONFDIR=L\\\"/usr/local/etc\\\"",
 					"BINDIR=L\\\"/usr/local/bin\\\"",
 					"DOCDIR=L\\\"/usr/local/share/doc\\\"",
-					"FISH_BUILD_VERSION=\\\"2.2.0-git\\\"",
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
@@ -1605,7 +1638,6 @@
 					"SYSCONFDIR=L\\\"/usr/local/etc\\\"",
 					"BINDIR=L\\\"/usr/local/bin\\\"",
 					"DOCDIR=L\\\"/usr/local/share/doc\\\"",
-					"FISH_BUILD_VERSION=\\\"2.2.0-git\\\"",
 					"PCRE2_CODE_UNIT_WIDTH=32",
 					"HAVE_CONFIG_H=1",
 				);
@@ -1630,7 +1662,6 @@
 					"SYSCONFDIR=L\\\"/usr/local/etc\\\"",
 					"BINDIR=L\\\"/usr/local/bin\\\"",
 					"DOCDIR=L\\\"/usr/local/share/doc\\\"",
-					"FISH_BUILD_VERSION=\\\"2.2.0-git\\\"",
 					"PCRE2_CODE_UNIT_WIDTH=32",
 					"HAVE_CONFIG_H=1",
 				);
@@ -1655,7 +1686,6 @@
 					"SYSCONFDIR=L\\\"/usr/local/etc\\\"",
 					"BINDIR=L\\\"/usr/local/bin\\\"",
 					"DOCDIR=L\\\"/usr/local/share/doc\\\"",
-					"FISH_BUILD_VERSION=\\\"2.2.0-git\\\"",
 					"PCRE2_CODE_UNIT_WIDTH=32",
 					"HAVE_CONFIG_H=1",
 				);
@@ -1703,7 +1733,6 @@
 					"SYSCONFDIR=L\\\"/usr/local/etc\\\"",
 					"BINDIR=L\\\"/usr/local/bin\\\"",
 					"DOCDIR=L\\\"/usr/local/share/doc\\\"",
-					"FISH_BUILD_VERSION=\\\"2.2.0-git\\\"",
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -1737,7 +1766,6 @@
 					"SYSCONFDIR=L\\\"/usr/local/etc\\\"",
 					"BINDIR=L\\\"/usr/local/bin\\\"",
 					"DOCDIR=L\\\"/usr/local/share/doc\\\"",
-					"FISH_BUILD_VERSION=\\\"2.2.0-git\\\"",
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;

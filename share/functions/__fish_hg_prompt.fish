@@ -43,7 +43,7 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
 
     echo -n '|'
 
-    set -l repo_status (hg status |cut -c 1-2|sort -u|uniq)
+    set -l repo_status (hg status | cut -c 1-2 | sort -u)
 
     # Show nice color for a clean repo
     if test -z "$repo_status"
@@ -54,15 +54,9 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
     # Handle modified or dirty (unknown state)
     else
         set -l hg_statuses
-        set -l modified
 
         # Take actions for the statuses of the files in the repo
         for line in $repo_status
-
-            # Determine if we are modified or dirty
-            if echo $line | grep -qc '^[AMCD]'
-                set modified 1
-            end
 
             # Add a character for each file status if we have one
             switch $line
@@ -75,7 +69,7 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
             end
         end
 
-        if set -q modified[1]
+        if string match -r '^[AMCD]' $repo_status
             set_color $fish_color_hg_modified
         else
             set_color $fish_color_hg_dirty
@@ -85,7 +79,7 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
 
         # Sort status symbols
         for i in $fish_prompt_hg_status_order
-            if contains $i in $hg_statuses
+            if contains -- $i $hg_statuses
                 set -l color_name fish_color_hg_$i
                 set -l status_name fish_prompt_hg_status_$i
 

@@ -18,21 +18,17 @@ function __fish_apm_needs_command
     return 1
 end
 
-# Returns exit code of 0 if a command (argv[1]) appears once,  exclusions can
-# can be provided (argv[2..-1]) that are ignored, e.g. `get` and `set`
+# Returns exit code of 0 if any command (argv[1..-1]) appears once, ignores flags.
 function __fish_apm_using_command
-    set command $argv[1]
-    if test (count $argv) -gt 1
-        set exclusions $argv[2..-1]
-    end
+    set commands $argv
     set cmd (commandline -opc)
     if test (count $cmd) -gt 1
         set -l command_seen_once 1
         for c in $cmd[2..-1]
             switch $c
-                case '--color' '--no-color' $exclusions
+                case '-*'
                     continue
-                case $argv
+                case $commands
                     # If the command is seen more than once then return 1
                     if test $command_seen_once -eq 1
                         set command_seen_once 0
@@ -40,7 +36,11 @@ function __fish_apm_using_command
                         return 1
                     end
                 case '*'
-                    return 1
+                    if test $command_seen_once -eq 0
+                        return 0
+                    else
+                        return 1
+                    end
             end
         end
         return $command_seen_once

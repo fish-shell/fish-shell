@@ -5,11 +5,7 @@ function __fish_complete_pids -d "Print a list of process identifiers along with
 	set -l SELF %self
 	
 	# Display the tty if available
-	set -l sed_cmds 's/ *([0-9]+) +([^ ].*[^ ]|[^ ]) +([^ ]+) *$/\1'\t'\2 [\3]/'
-	
 	# But not if it's just question marks, meaning no tty
-	set -l sed_cmds $sed_cmds 's/ *\[\?*\] *$//'
-	
-	ps axc -o pid,ucomm,tty | grep -v '^\s*'$SELF'\s' | tail -n +2 | sed -E "-e "$sed_cmds  ^/dev/null
+	ps axc -o pid,ucomm,tty | grep -v '^\s*'$SELF'\s' | tail -n +2 | string replace -r ' *([0-9]+) +([^ ].*[^ ]|[^ ]) +([^ ]+) *$' '$1\t$2 [$3]' | string replace -r ' *\[\?*\] *$' ''
 end
 

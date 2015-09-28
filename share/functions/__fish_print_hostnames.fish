@@ -14,7 +14,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
 
 	# Print hosts with known ssh keys
 	# Does not match hostnames with @directives specified
-	__fish_sgrep -Eoh '^[^#@|, ]*' ~/.ssh/known_hosts{,2} ^/dev/null | sed -E 's/^\[([^]]+)\]:([0-9]+)$/\1/'
+	__fish_sgrep -Eoh '^[^#@|, ]*' ~/.ssh/known_hosts{,2} ^/dev/null | string replace -r '^\[([^]]+)\]:[0-9]+$' '$1'
 
 	# Print hosts from system wide ssh configuration file
 	if [ -e /etc/ssh/ssh_config ]

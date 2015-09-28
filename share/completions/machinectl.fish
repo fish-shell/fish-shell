@@ -2,7 +2,7 @@ complete -f -e -c machinectl
 
 set -l commands list status show start login enable disable poweroff reboot \
 terminate kill bind copy-{to,from} list-images image-status show-image clone rename read-only remove set-limit pull-{tar,raw,dkr} \
-{import,export}-{raw,tar} {list,cancel}-transfers
+{import,export}-{raw,tar} {list,cancel}-transfers shell
 
 function __fish_systemd_has_machine_image
 	set -l images (__fish_systemd_machine_images)
@@ -17,9 +17,15 @@ function __fish_systemd_has_machine_image
 end
 
 function __fish_systemd_has_machine
+	set -l cmd
+	if not count $argv >/dev/null
+		set cmd (commandline -opc)
+	else
+		set cmd $argv
+	end
 	set -l machines (__fish_systemd_machines)
 	for m in $machines
-		if contains -- $m (commandline -opc)
+		if contains -- $m $cmd
 			echo $m
 			return 0
 		end
@@ -71,6 +77,8 @@ complete -f -c machinectl -n "__fish_seen_subcommand_from bind" -l read-only -d 
 complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "copy-to" -d "Copy file or directory to a machine"
 complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "copy-from" -d "Copy file or directory from a machine"
 
+complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "shell" -d "Open a shell on a machine"
+
 # Image commands
 complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "list-images" -d "Show a list of locally installed machines"
 complete -f -c machinectl -n "not __fish_seen_subcommand_from $commands" -a "image-status" -d "Show information about machine images (human-readable)"
@@ -109,6 +117,10 @@ complete -f -c machinectl -n "__fish_seen_subcommand_from start clone rename ima
 # bind copy-to copy-from take paths so we're done (almost, copy-from takes a path _on the machine_),
 # while login takes exactly one machine and nothing else, which fish currently doesn't do
 complete -f -c machinectl -n "__fish_seen_subcommand_from login bind copy-to copy-from; and not __fish_systemd_has_machine" -a "(__fish_systemd_machines)"
+
+complete -f -c machinectl -n "__fish_seen_subcommand_from login bind copy-to copy-from shell; and not __fish_systemd_has_machine" -a "(__fish_systemd_machines)"
+# This is imperfect as we print the _local_ users
+complete -f -c machinectl -n "__fish_seen_subcommand_from shell; and not __fish_systemd_has_machine (commandline -opc | cut -d"@" -f2-)" -a "(__fish_print_users)@(__fish_systemd_machines)"
 
 complete -f -c machinectl -n "__fish_seen_subcommand_from read-only; and not __fish_systemd_has_machine_image" -a "(__fish_systemd_machine_images)"
 complete -f -c machinectl -n "__fish_seen_subcommand_from read-only; and __fish_systemd_has_machine_image" -a "yes no"

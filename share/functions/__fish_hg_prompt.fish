@@ -47,7 +47,7 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
 	# Read branch and bookmark
     set -l branch (cat $root/branch ^/dev/null; or echo default)
 	if set -l bookmark (cat $root/bookmarks.current ^/dev/null)
-		set branch "$branch/$bookmark"
+		set branch "$branch|$bookmark"
 	end
 
     echo -n '|'
@@ -57,7 +57,7 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
     # Show nice color for a clean repo
     if test -z "$repo_status"
         set_color $fish_color_hg_clean
-        echo -n $branch'✓'
+        echo -n "($branch)"'✓'
         set_color normal
 
     # Handle modified or dirty (unknown state)
@@ -84,7 +84,7 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
             set_color $fish_color_hg_dirty
         end
 
-        echo -n $branch'⚡'
+        echo -n "($branch)"'⚡'
 
         # Sort status symbols
         for i in $fish_prompt_hg_status_order

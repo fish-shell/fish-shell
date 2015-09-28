@@ -1,1 +1,1 @@
-complete -c cabal-dev -a '(__fish_complete_cabal)'
+complete -c cabal-dev -w cabal

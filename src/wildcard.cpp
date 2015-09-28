@@ -1027,7 +1027,7 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc)
             }
             else
             {
-                /* Not the last segment, nonempty wldcard */
+                /* Not the last segment, nonempty wildcard */
                 assert(next_slash != NULL);
                 const wchar_t *wc_remainder = next_slash;
                 while (*wc_remainder == L'/')

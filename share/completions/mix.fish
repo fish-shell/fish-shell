@@ -1,3 +1,5 @@
+# Completions for the Elixir build tool mix
+
 function __fish_mix_needs_command
   set cmd (commandline -opc)
   if [ (count $cmd) -eq 1 ]

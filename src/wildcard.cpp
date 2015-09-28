@@ -841,6 +841,9 @@ void wildcard_expander_t::expand_intermediate_segment(const wcstring &base_dir, 
         /* We made it through. Perform normal wildcard expansion on this new directory, starting at our tail_wc, which includes the ANY_STRING_RECURSIVE guy. */
         full_path.push_back(L'/');
         this->expand(full_path, wc_remainder);
+
+        /* Now remove the visited file. This is for #2414: only directories "beneath" us should be considered visited. */
+        this->visited_files.erase(file_id);
     }
 }
         
@@ -1024,7 +1027,7 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc)
             }
             else
             {
-                /* Not the last segment, nonempty wildcard */
+                /* Not the last segment, nonempty wldcard */
                 assert(next_slash != NULL);
                 const wchar_t *wc_remainder = next_slash;
                 while (*wc_remainder == L'/')

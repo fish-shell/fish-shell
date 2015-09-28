@@ -1474,6 +1474,9 @@ static void test_expand()
           yyy
        bax
           xxx
+       lol
+          nub
+             q
        .foo
      */
     
@@ -1481,12 +1484,14 @@ static void test_expand()
     if (system("mkdir -p /tmp/fish_expand_test/b/")) err(L"mkdir failed");
     if (system("mkdir -p /tmp/fish_expand_test/baz/")) err(L"mkdir failed");
     if (system("mkdir -p /tmp/fish_expand_test/bax/")) err(L"mkdir failed");
+    if (system("mkdir -p /tmp/fish_expand_test/lol/nub/")) err(L"mkdir failed");
     if (system("touch /tmp/fish_expand_test/.foo")) err(L"touch failed");
     if (system("touch /tmp/fish_expand_test/b/x")) err(L"touch failed");
     if (system("touch /tmp/fish_expand_test/bar")) err(L"touch failed");
     if (system("touch /tmp/fish_expand_test/bax/xxx")) err(L"touch failed");
     if (system("touch /tmp/fish_expand_test/baz/xxx")) err(L"touch failed");
     if (system("touch /tmp/fish_expand_test/baz/yyy")) err(L"touch failed");
+    if (system("touch /tmp/fish_expand_test/lol/nub/q")) err(L"touch failed");
 
     // This is checking that .* does NOT match . and .. (https://github.com/fish-shell/fish-shell/issues/270). But it does have to match literal components (e.g. "./*" has to match the same as "*"
     const wchar_t * const wnull = NULL;
@@ -1522,6 +1527,10 @@ static void test_expand()
     expand_test(L"/tmp/fish_expand_test/b**/", 0,
                 L"/tmp/fish_expand_test/b/", L"/tmp/fish_expand_test/baz/", L"/tmp/fish_expand_test/bax/", wnull,
                 L"Glob did the wrong thing 6");
+ 
+    expand_test(L"/tmp/fish_expand_test/**/q", 0,
+                L"/tmp/fish_expand_test/lol/nub/q", wnull,
+                L"Glob did the wrong thing 7");
     
     expand_test(L"/tmp/fish_expand_test/BA", EXPAND_FOR_COMPLETIONS,
                 L"/tmp/fish_expand_test/bar", L"/tmp/fish_expand_test/bax/",  L"/tmp/fish_expand_test/baz/", wnull,

@@ -5,19 +5,19 @@ set -l listall "(__fish_print_packages)"
 set -l listrepos "(__fish_print_pacman_repos)"
 set -l listgroups "(pacman -Sg | sed 's/\(.*\)/\1\tPackage group/g')"
 
-set -l noopt 'commandline | not __fish_sgrep -qe "-[a-z]*[ABCDLMOQRSTU]\|--aursync\|--save\|--downgrade\|--viewlog\|--abssync\|--orphans\|--database\|--query\|--sync\|--remove\|--upgrade\|--deptest"'
-set -l database 'commandline | __fish_sgrep -qe "-[a-z]*D\|--database"'
-set -l query 'commandline | __fish_sgrep -qe "-[a-z]*Q\|--query"'
-set -l remove 'commandline | __fish_sgrep -qe "-[a-z]*R\|--remove"'
-set -l sync 'commandline | __fish_sgrep -qe "-[a-z]*S\|--sync"'
-set -l upgrade 'commandline | __fish_sgrep -qe "-[a-z]*U\|--upgrade"'
-set -l aur 'commandline | __fish_sgrep -qe "-[a-z]*A\|--aursync"'
-set -l abs 'commandline | __fish_sgrep -qe "-[a-z]*M\|--abssync"'
-set -l save 'commandline | __fish_sgrep -qe "-[a-z]*B\|--save"'
-set -l downgrade 'commandline | __fish_sgrep -qe "-[a-z]*C\|--downgrade"'
-set -l orphans 'commandline | __fish_sgrep -qe "-[a-z]*O\|--orphans"'
-set -l logfile 'commandline | __fish_sgrep -qe "-[a-z]*L\|--viewlog"'
-set -l search 'commandline | __fish_sgrep -qe "-[a-zA]*s\|--search"'
+set -l noopt 'not __fish_contains_opt -s S -s D -s Q -s R -s U -s T -s A -s B -s C -s L -s M -s O database query sync remove upgrade deptest aursync save downgrade viewlog abssync orphans'
+set -l database '__fish_contains_opt -s D database'
+set -l query '__fish_contains_opt -s Q query'
+set -l remove '__fish_contains_opt -s R remove'
+set -l sync '__fish_contains_opt -s S sync'
+set -l upgrade '__fish_contains_opt -s U upgrade'
+set -l aur '__fish_contains_opt -s A aursync'
+set -l abs '__fish_contains_opt -s M abssync'
+set -l save '__fish_contains_opt -s B save'
+set -l downgrade '__fish_contains_opts -s C downgrade'
+set -l orphans '__fish_contains_opt -s O orphans'
+set -l logfile '__fish_contains_opt -s L viewlog'
+set -l search '__fish_contains_opt -s s search'
 
 # By default fish expands the arguments with the option which is not desired
 # due to performance reasons.

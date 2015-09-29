@@ -17,7 +17,7 @@ complete -c python -s x -d 'Skip first line of source, allowing use of non-Unix 
 complete -c python -a "(__fish_complete_suffix .py)"
 complete -c python -a '-' -d 'Read program from stdin'
 
-switch (eval python -V 2>&1 | head -n1 | sed 's/^.*[[:space:]]\([23]\)\..*/\1/')
+switch (python -V 2>&1 | string replace -r '^.*\s([23])..*' '$1')[1]
     case 2
         complete -c python -s 3 -d 'Warn about Python 3.x incompatibilities that 2to3 cannot trivially fix'
         complete -c python -s t --description "Warn on mixed tabs and spaces"

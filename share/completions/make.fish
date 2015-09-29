@@ -1,13 +1,9 @@
 # Completions for make
 
-# This completion is a bit ugly.  It reenables file completion on
-# assignments, so e.g. 'make foo FILES=<tab>' will recive standard
-# filename completion.  Unfortunatly, this turns out to be a bit
-# complicated to do.
-
-set -l is_assignment "commandline -ct| __fish_sgrep '..*='"
-set -l complete_file_assignment '(commandline -ct|sed -e \'s/=.*/=/\')(complete --do-complete=this_command_does_not_exist\ (commandline -ct|sed -e \'s/.*=//\'))'
-complete -c make --condition $is_assignment -a $complete_file_assignment
+# This completion reenables file completion on
+# assignments, so e.g. 'make foo FILES=<tab>' will receive standard
+# filename completion.
+complete -c make -n 'commandline -ct | string match "*=*"'
 
 complete -x -c make -a "(__fish_print_make_targets)" --description "Target"
 complete -r -c make -s f --description "Use file as makefile" -r

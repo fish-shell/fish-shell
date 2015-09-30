@@ -18,7 +18,9 @@
 #include <assert.h>
 #include <vector>
 #include <algorithm>
+#ifdef HAVE_SPAWN_H
 #include <spawn.h>
+#endif
 #include <wctype.h>
 #include <map>
 #include <string>

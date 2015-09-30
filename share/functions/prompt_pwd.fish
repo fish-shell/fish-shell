@@ -1,14 +1,15 @@
-set -l args_pre
-set -l args_post
+set -l s1
+set -l r1
 switch (uname)
 case Darwin
-	set args_pre $args_pre -e 's|^/private/|/|'
+	set s1 '^/private/'
+	set r1 /
 case 'CYGWIN_*'
-	set args_pre $args_pre -e 's|^/cygdrive/\(.\)|\1/:|'
-	set args_post $args_post -e 's-^\([^/]\)/:/\?-\u\1:/-'
+	set s1 '^/cygdrive/(.)'
+	set r1 '$1:'
 end
 
-function prompt_pwd -V args_pre -V args_post --description "Print the current working directory, shortened to fit the prompt"
-	set -l realhome ~
-	echo $PWD | sed -e "s|^$realhome\$|~|" -e "s|^$realhome/|~/|" $args_pre -e 's-\([^/.]\)[^/]*/-\1/-g' $args_post
+function prompt_pwd -V s1 -V r1 --description "Print the current working directory, shortened to fit the prompt"
+	set realhome ~
+	string replace -r '^'"$realhome"'($|/)' '~$1' $PWD | string replace -r "$s1" "$r1" | string replace -ar '([^/.])[^/]*/' '$1/'
 end

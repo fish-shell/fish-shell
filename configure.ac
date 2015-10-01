@@ -25,6 +25,7 @@ AC_SUBST(HAVE_GETTEXT)
 AC_SUBST(HAVE_DOXYGEN)
 AC_SUBST(LDFLAGS_FISH)
 AC_SUBST(WCHAR_T_BITS)
+AC_SUBST(EXTRA_PCRE2)
 
 
 #
@@ -821,6 +822,77 @@ if test "x$tparm_solaris_kludge" = "xyes"; then
   )
 else
   AC_MSG_RESULT(no)
+fi
+
+EXTRA_PCRE2=
+AC_ARG_WITH(
+  included-pcre2,
+  AS_HELP_STRING(
+    [--without-included-pcre2],
+    [build against the system PCRE2 library instead of the bundled version]
+  ),
+  [included_pcre2=$withval],
+  [included_pcre2=auto]
+)
+
+if test "x$included_pcre2" != "xyes"; then
+
+  # test for pcre2-config
+  # can use either pcre2-config or pkgconfig here but only implement the former for now
+  AC_CHECK_PROG(PCRE2_CONFIG, pcre2-config, pcre2-config)
+
+  if test "x$PCRE2_CONFIG" != "x"; then
+    dnl AC_MSG_CHECKING([for $WCHAR_T_BITS-bit PCRE2])
+    XLIBS="$LIBS"
+    LIBS="$LIBS "`$PCRE2_CONFIG --libs$WCHAR_T_BITS 2>/dev/null`
+    XCXXFLAGS="$CXXFLAGS"
+    CXXFLAGS="$CXXFLAGS"`$PCRE2_CONFIG --cflags`
+
+    # cheat a bit here. the exact library is determined by $WCHAR_T_BITS,
+    # and so AC_CHECK_LIB won't work (can't use a variable as library name)
+    # AC_SEARCH_LIBS will use the existing $LIBS flags with no additional library first
+    AC_SEARCH_LIBS([pcre2_compile_$WCHAR_T_BITS], [],
+      [ working_pcre2=yes
+        AC_MSG_NOTICE([using system PCRE2 library])
+      ],
+      [ # fail case; undo the changes to LIBS/CXXFLAGS
+       working_pcre2=no
+       LIBS="$XLIBS"
+       CXXFLAGS="$XCXXFLAGS"
+      ]
+    )
+  fi
+
+  if test "x$working_pcre2" != "xyes"; then
+    # pcre2 size wrong or pcre2-config not found
+    # is it OK to use the included version?
+    if test "x$included_pcre2" = "xno"; then
+      # complain
+      AC_MSG_ERROR([cannot find system pcre2-config, but --without-included-pcre2 was given.
+Make sure pcre2-config is installed and available in PATH.
+You may need to install the PCRE2 development library for your system.])
+    else
+      # use the internal version
+      included_pcre2=yes
+    fi
+  fi
+fi
+
+# Re-test as value may have changed
+if test "x$included_pcre2" = "xyes"; then
+  # Build configure/Makefile for pcre2
+  AC_MSG_NOTICE([using included PCRE2 library])
+  # unfortunately these get added to the global configuration
+  ac_configure_args="$ac_configure_args --disable-pcre2-8 --enable-pcre2-$WCHAR_T_BITS --disable-shared"
+  AC_CONFIG_SUBDIRS([pcre2-10.20])
+
+  PCRE2_CXXFLAGS='-I$(PCRE2_DIR)/src'
+  PCRE2_LIBS='-L$(PCRE2_LIBDIR) -lpcre2-$(PCRE2_WIDTH)'
+
+  # Make the binary depend on the PCRE2 libraries so they get built
+  EXTRA_PCRE2='$(PCRE2_LIB)'
+  CXXFLAGS="$CXXFLAGS $PCRE2_CXXFLAGS"
+  LIBS="$LIBS $PCRE2_LIBS"
 fi
 
 # Tell the world what we know

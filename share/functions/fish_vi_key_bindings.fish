@@ -5,6 +5,14 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     set init_mode $argv[1]
   end
 
+  # Inherit default key bindings
+  # Do this first so vi-bindings win over default
+  fish_default_key_bindings -M insert
+  fish_default_key_bindings -M default
+
+  # Add a way to get out of insert mode
+  bind -M insert -m default \cc force-repaint
+  bind -M insert -m default \e backward-char force-repaint
 
   ##
   ## command mode
@@ -155,61 +163,6 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 
   bind '"*p' "commandline -i ( xsel -p; echo )[1]"
   bind '"*P' backward-char "commandline -i ( xsel -p; echo )[1]"
-
-  #
-  # insert mode
-  #
-
-  bind -M insert "" self-insert
-  bind -M insert \n execute
-
-  bind -M insert -k dc delete-char
-
-  bind -M insert -k backspace backward-delete-char
-  bind -M insert \x7f backward-delete-char
-  # Mavericks Terminal.app shift-delete
-  bind -M insert \e\[3\;2~ backward-delete-char 
-
-  bind -M insert \t complete
-
-	# OS X SnowLeopard doesn't have these keys. Don't show an annoying error message.
-	bind -M insert -k home beginning-of-line 2> /dev/null
-	bind -M insert -k end end-of-line 2> /dev/null
-	bind -M insert \e\[3\;2~ backward-delete-char # Mavericks Terminal.app shift-delete
-
-	bind -M insert \cx end-of-line
-
-  bind -M insert \e\[A up-or-search
-  bind -M insert \e\[B down-or-search
-  bind -M insert -k down down-or-search
-  bind -M insert -k up up-or-search
-
-  # Some linux VTs output these (why?)
-  bind -M insert \eOA up-or-search
-  bind -M insert \eOB down-or-search
-  bind -M insert \eOC forward-char
-  bind -M insert \eOD backward-char
-
-  bind -M insert \e\[C forward-char
-  bind -M insert \e\[D backward-char
-  bind -M insert -k right forward-char
-  bind -M insert -k left backward-char
-
-  # useful insert mode mappings
-  bind -M insert \ch backward-delete-char
-  bind -M insert \cw backward-kill-word
-  bind -M insert \cu backward-kill-line
-  bind -M insert \cp history-search-backward
-  bind -M insert \cn history-search-forward
-  bind -M insert \cb backward-word
-  bind -M insert \cf forward-word
-
-  bind -M insert -m default \cc force-repaint
-  bind -M insert -m default \e backward-char force-repaint
-
-  bind -M insert \cd exit
-
-  bind -M insert \ef forward-word
 
   #
   # Lowercase r, enters replace-one mode

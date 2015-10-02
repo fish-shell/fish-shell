@@ -10,6 +10,6 @@ case 'CYGWIN_*'
 end
 
 function prompt_pwd -V s1 -V r1 --description "Print the current working directory, shortened to fit the prompt"
-	set home ~
-	string replace -ar '([^/.])[^/]*/' '$1/' (string replace -r "$s1" "$r1" (string replace -r '^'"$home"'($|/)' '~$1' $PWD))
+	set realhome ~
+	string replace -r '^'"$realhome"'($|/)' '~$1' $PWD | string replace -r "$s1" "$r1" | string replace -ar '([^/.])[^/]*/' '$1/'
 end

@@ -485,8 +485,9 @@ messages.pot: src/*.cpp src/*.h share/completions/*.fish share/functions/*.fish
 
 builtin.o: $(BUILTIN_FILES)
 
+ifdef EXTRA_PCRE2
 src/builtin_string.cpp: $(PCRE2_H)
-
+endif
 
 #
 # Generate the internal help functions by making doxygen create
@@ -795,7 +796,11 @@ fish: $(FISH_OBJS) obj/fish.o $(EXTRA_PCRE2)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_OBJS) obj/fish.o $(LIBS) -o $@
 
 $(PCRE2_LIB): $(PCRE2_H)
-	(cd $(PCRE2_DIR) && make libpcre2-$(PCRE2_WIDTH).la)
+	$(MAKE) -C $(PCRE2_DIR) libpcre2-$(PCRE2_WIDTH).la
+
+$(PCRE2_H):
+	(cd $(PCRE2_DIR) && ./config.status)
+
 
 #
 # Build the fish_tests program.
@@ -860,6 +865,7 @@ _iwyu: clean $(PROGRAMS)
 #
 
 distclean: clean
+	$(MAKE) -C $(PCRE2_DIR) distclean
 	rm -f config.status config.log config.h Makefile
 .PHONY: distclean
 
@@ -874,6 +880,7 @@ distclean: clean
 # deleted we won't be able to regenerate them
 
 clean:
+	$(MAKE) -C $(PCRE2_DIR) clean
 	rm -f obj/*.o *.o doc.h doc.tmp doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr
 	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
 	rm -f $(PROGRAMS) fish_tests key_reader

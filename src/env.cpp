@@ -398,7 +398,7 @@ wcstring env_get_pwd_slash(void)
 /* Here is the whitelist of variables that we colon-delimit, both incoming from the environment and outgoing back to it. This is deliberately very short - we don't want to add language-specific values like CLASSPATH. */
 static bool variable_is_colon_delimited_array(const wcstring &str)
 {
-    return contains(str, L"PATH", L"MANPATH", L"CDPATH");
+    return contains(str, L"PATH", L"MANPATH", L"CDPATH", L"LD_LIBRARY_PATH");
 }
 
 void env_init(const struct config_paths_t *paths /* or NULL */)

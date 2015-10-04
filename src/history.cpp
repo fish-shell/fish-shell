@@ -164,10 +164,12 @@ class history_lru_node_t : public lru_node_t
 {
 public:
     time_t timestamp;
+    exec_count_t exec_count;
     path_list_t required_paths;
     history_lru_node_t(const history_item_t &item) :
         lru_node_t(item.str()),
         timestamp(item.timestamp()),
+        exec_count(item.count()),
         required_paths(item.required_paths)
     {}
 };
@@ -197,6 +199,7 @@ public:
         if (node != NULL)
         {
             node->timestamp = std::max(node->timestamp, item.timestamp());
+            node->exec_count += 1;
             /* What to do about paths here? Let's just ignore them */
         }
         else
@@ -226,6 +229,7 @@ bool history_item_t::merge(const history_item_t &item)
     if (this->contents == item.contents)
     {
         this->creation_timestamp = std::max(this->creation_timestamp, item.creation_timestamp);
+        this->exec_count = this->exec_count + item.exec_count;
         if (this->required_paths.size() < item.required_paths.size())
         {
             this->required_paths = item.required_paths;
@@ -239,11 +243,11 @@ bool history_item_t::merge(const history_item_t &item)
     return result;
 }
 
-history_item_t::history_item_t(const wcstring &str) : contents(str), creation_timestamp(time(NULL)), identifier(0)
+history_item_t::history_item_t(const wcstring &str) : contents(str), creation_timestamp(time(NULL)), identifier(0), exec_count(1)
 {
 }
 
-history_item_t::history_item_t(const wcstring &str, time_t when, history_identifier_t ident) : contents(str), creation_timestamp(when), identifier(ident)
+history_item_t::history_item_t(const wcstring &str, time_t when, exec_count_t cnt, history_identifier_t ident) : contents(str), creation_timestamp(when), identifier(ident), exec_count(cnt)
 {
 }
 
@@ -267,7 +271,7 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
 }
 
 /* Append our YAML history format to the provided vector at the given offset, updating the offset */
-static void append_yaml_to_buffer(const wcstring &wcmd, time_t timestamp, const path_list_t &required_paths, history_output_buffer_t *buffer)
+static void append_yaml_to_buffer(const wcstring &wcmd, time_t timestamp, exec_count_t count, const path_list_t &required_paths, history_output_buffer_t *buffer)
 {
     std::string cmd = wcs2string(wcmd);
     escape_yaml(&cmd);
@@ -276,6 +280,10 @@ static void append_yaml_to_buffer(const wcstring &wcmd, time_t timestamp, const 
     char timestamp_str[96];
     snprintf(timestamp_str, sizeof timestamp_str, "%ld", (long) timestamp);
     buffer->append("  when: ", timestamp_str, "\n");
+
+    char count_str[96];
+    snprintf(count_str, sizeof count_str, "%d", count);
+    buffer->append("  count: ", count_str, "\n");
 
     if (! required_paths.empty())
     {
@@ -622,7 +630,7 @@ void history_t::add(const wcstring &str, history_identifier_t ident, bool pendin
         when++;
     }
 
-    this->add(history_item_t(str, when, ident), pending);
+    this->add(history_item_t(str, when, 1, ident), pending);
 }
 
 void history_t::remove(const wcstring &str)
@@ -752,7 +760,7 @@ history_item_t history_t::item_at_index(size_t idx)
     }
 
     /* Index past the valid range, so return an empty history item */
-    return history_item_t(wcstring(), 0);
+    return history_item_t(wcstring(), 0, 0);
 }
 
 /* Read one line, stripping off any newline, and updating cursor. Note that our input string is NOT null terminated; it's just a memory mapped file. */
@@ -812,6 +820,7 @@ history_item_t history_t::decode_item_fish_2_0(const char *base, size_t len)
 {
     wcstring cmd;
     time_t when = 0;
+    exec_count_t count = 1;
     path_list_t paths;
 
     size_t indent = 0, cursor = 0;
@@ -855,6 +864,13 @@ history_item_t history_t::decode_item_fish_2_0(const char *base, size_t len)
             long tmp = strtol(value.c_str(), &end, 0);
             when = tmp;
         }
+        else if (key == "count")
+        {
+            /* Parse an int from the count. Should this fail, strtol returns 0; that's acceptable. */
+            char *end = NULL;
+            long tmp = strtol(value.c_str(), &end, 0);
+            count = (exec_count_t)tmp;
+        }
         else if (key == "paths")
         {
             /* Read lines starting with " - " until we can't read any more */
@@ -878,7 +894,7 @@ history_item_t history_t::decode_item_fish_2_0(const char *base, size_t len)
         }
     }
 done:
-    history_item_t result(cmd, when);
+    history_item_t result(cmd, when, count);
     result.required_paths.swap(paths);
     return result;
 }
@@ -1007,7 +1023,7 @@ history_item_t history_t::decode_item_fish_1_x(const char *begin, size_t length)
     }
 
     out = history_unescape_newlines_fish_1_x(out);
-    return history_item_t(out, timestamp);
+    return history_item_t(out, timestamp, 1);
 }
 
 
@@ -1419,7 +1435,7 @@ bool history_t::save_internal_via_rewrite()
             for (history_lru_cache_t::iterator iter = lru.begin(); iter != lru.end(); ++iter)
             {
                 const history_lru_node_t *node = *iter;
-                append_yaml_to_buffer(node->key, node->timestamp, node->required_paths, &buffer);
+                append_yaml_to_buffer(node->key, node->timestamp, node->exec_count, node->required_paths, &buffer);
                 if (buffer.output_size() >= HISTORY_OUTPUT_BUFFER_SIZE && ! buffer.flush_to_fd(out_fd))
                 {
                     errored = true;
@@ -1538,7 +1554,7 @@ bool history_t::save_internal_via_appending()
         while (first_unwritten_new_item_index < new_items.size())
         {
             const history_item_t &item = new_items.at(first_unwritten_new_item_index);
-            append_yaml_to_buffer(item.str(), item.timestamp(), item.get_required_paths(), &buffer);
+            append_yaml_to_buffer(item.str(), item.timestamp(), item.count(), item.get_required_paths(), &buffer);
             if (buffer.output_size() >= HISTORY_OUTPUT_BUFFER_SIZE)
             {
                 errored = ! buffer.flush_to_fd(out_fd);

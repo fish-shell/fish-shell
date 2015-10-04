@@ -2886,7 +2886,7 @@ void history_tests_t::test_history(void)
         }
 
         /* Record this item */
-        history_item_t item(value, time(NULL));
+        history_item_t item(value, time(NULL), 1);
         item.required_paths = paths;
         before.push_back(item);
         history.add(item);

@@ -3788,12 +3788,14 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     bool save_history = false;
     bool clear_history = false;
     bool merge_history = false;
+    bool print_count = false;
 
     static const struct woption long_options[] =
     {
         { L"prefix", no_argument, 0, 'p' },
         { L"delete", no_argument, 0, 'd' },
         { L"search", no_argument, 0, 's' },
+        { L"search-count", no_argument, 0, 't' },
         { L"contains", no_argument, 0, 'c' },
         { L"save", no_argument, 0, 'v' },
         { L"clear", no_argument, 0, 'l' },
@@ -3812,7 +3814,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     if (! history)
         history = &history_t::history_with_name(L"fish");
 
-    while ((opt = w.wgetopt_long_only(argc, argv, L"pdscvl", long_options, &opt_index)) != EOF)
+    while ((opt = w.wgetopt_long_only(argc, argv, L"pdscvlt", long_options, &opt_index)) != EOF)
     {
         switch (opt)
         {
@@ -3835,6 +3837,10 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
                 break;
             case 'm':
                 merge_history = true;
+                break;
+            case 't':
+                search_history = true;
+                print_count = true;
                 break;
             case 'h':
                 builtin_print_help(parser, streams, argv[0], streams.out);
@@ -3882,6 +3888,13 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
             history_search_t searcher = history_search_t(*history, search_string, search_prefix?HISTORY_SEARCH_TYPE_PREFIX:HISTORY_SEARCH_TYPE_CONTAINS);
             while (searcher.go_backwards())
             {
+                if (print_count) {
+                    history_item_t item = searcher.current_item();
+                    wchar_t count_str[96];
+                    swprintf((wchar_t*)count_str, sizeof count_str, L"%zu", item.count());
+                    streams.out.append(count_str);
+                    streams.out.append(L"\t");
+                }
                 streams.out.append(searcher.current_string());
                 streams.out.append(L"\n");
                 res = STATUS_BUILTIN_OK;

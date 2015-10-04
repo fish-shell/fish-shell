@@ -34,6 +34,8 @@ function history --description "Deletes an item from history"
 				set cmd clear
 			case --search
 				set cmd print
+			case --search-count
+				set cmd print-count
 			case --
 				set -e argv[$i]
 				break
@@ -58,6 +60,12 @@ function history --description "Deletes an item from history"
 		# Note this may end up passing --search twice to the builtin,
 		# but that's harmless
 		builtin history --search $argv
+
+	case print-count
+		# Print matching items
+		# Note this may end up passing --search twice to the builtin,
+		# but that's harmless
+		builtin history --search-count $argv
 
 	case delete
 		# Interactively delete history

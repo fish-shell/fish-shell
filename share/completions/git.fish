@@ -25,15 +25,21 @@ function __fish_git_remotes
 end
 
 function __fish_git_modified_files
-  command git ls-files -m --exclude-standard ^/dev/null
+	# git diff --name-only hands us filenames relative to the git toplevel
+	set -l root (command git rev-parse --show-toplevel)
+	# Print files from the current $PWD as-is, prepend all others with ":/" (relative to toplevel in git-speak)
+	# This is a bit simplistic but finding the lowest common directory and then replacing everything else in $PWD with ".." is a bit annoying
+	string replace -- "$PWD/" "" "$root/"(command git diff --name-only ^/dev/null) | string replace "$root/" ":/"
 end
 
 function __fish_git_staged_files
-  command git diff --staged --name-only ^/dev/null
+	set -l root (command git rev-parse --show-toplevel)
+	string replace -- "$PWD/" "" "$root/"(command git diff --staged --name-only ^/dev/null) | string replace "$root/" ":/"
 end
 
 function __fish_git_add_files
-  command git ls-files -mo --exclude-standard ^/dev/null
+	set -l root (command git rev-parse --show-toplevel)
+	string replace -- "$PWD/" "" "$root/"(command git -C $root ls-files -mo --exclude-standard ^/dev/null) | string replace "$root/" ":/"
 end
 
 function __fish_git_ranges

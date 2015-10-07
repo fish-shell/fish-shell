@@ -17,7 +17,7 @@ function __fish_complete_cd -d "Completions for the cd command"
 		pushd $i
 		for d in (commandline -ct)*/
 			# Check if it's accessible - the glob only matches directories
-			[ -x $d ]; and printf "%s/\t%s\n" $d $desc
+			[ -x $d ]; and printf "%s\t%s\n" $d $desc
 		end
 		popd
 	end

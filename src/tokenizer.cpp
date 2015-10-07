@@ -466,30 +466,32 @@ static size_t read_redirection_or_fd_pipe(const wchar_t *buff, enum token_type *
         errored = true;
     }
 
-    /* Optional characters like & or ?, or the pipe char | */
-    wchar_t opt_char = buff[idx];
-    if (opt_char == L'&')
-    {
-        redirection_mode = TOK_REDIRECT_FD;
-        idx++;
-    }
-    else if (opt_char == L'?')
-    {
-        redirection_mode = TOK_REDIRECT_NOCLOB;
-        idx++;
-    }
-    else if (opt_char == L'|')
-    {
-        /* So the string looked like '2>|'. This is not a redirection - it's a pipe! That gets handled elsewhere. */
-        redirection_mode = TOK_PIPE;
-        idx++;
-    }
-
     /* Don't return valid-looking stuff on error */
     if (errored)
     {
         idx = 0;
         redirection_mode = TOK_NONE;
+    }
+    else
+    {
+        /* Optional characters like & or ?, or the pipe char | */
+        wchar_t opt_char = buff[idx];
+        if (opt_char == L'&')
+        {
+            redirection_mode = TOK_REDIRECT_FD;
+            idx++;
+        }
+        else if (opt_char == L'?')
+        {
+            redirection_mode = TOK_REDIRECT_NOCLOB;
+            idx++;
+        }
+        else if (opt_char == L'|')
+        {
+            /* So the string looked like '2>|'. This is not a redirection - it's a pipe! That gets handled elsewhere. */
+            redirection_mode = TOK_PIPE;
+            idx++;
+        }
     }
 
     /* Return stuff */
@@ -684,7 +686,9 @@ void tokenizer_t::tok_next()
             enum token_type mode = TOK_NONE;
             int fd = -1;
             if (iswdigit(*this->buff))
+            {
                 consumed = read_redirection_or_fd_pipe(this->buff, &mode, &fd);
+            }
 
             if (consumed > 0)
             {

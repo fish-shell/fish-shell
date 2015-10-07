@@ -1,22 +1,54 @@
 language: cpp
-compiler:
-  - gcc
-  - clang
-addons:
-  apt:
-    packages:
-      - bc
-      - doxygen
-      - expect
-      - gettext
-      - libncurses5-dev
 sudo: false
+
+matrix:
+  include:
+    - os: linux
+      compiler: gcc
+      addons:
+        apt:
+          packages:
+            - bc
+            - expect
+            - gettext
+            - libncurses5-dev
+
+    - os: linux
+      compiler: clang
+      addons:
+        apt:
+          sources:
+            # stick with 3.6; the 3.7 Debian binaries do not support ASan yet
+            # https://llvm.org/bugs/show_bug.cgi?id=22757
+            - llvm-toolchain-precise-3.6
+            - ubuntu-toolchain-r-test
+          packages:
+            - clang-3.6
+            - llvm-3.6 # for llvm-symbolizer
+            - bc
+            - expect
+            - gettext
+            - libncurses5-dev
+      env:
+        - CXXFLAGS="-g -fno-omit-frame-pointer -fsanitize=address"
+        - ASAN_SYMBOLIZER_PATH="/usr/bin/llvm-symbolizer-3.6"
+        - ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=0
+      before_install: export CXX=clang++-3.6
+
+    - os: osx
+      before_install:
+        - brew update
+        - brew install pcre2 # use system PCRE2
+
+  fast_finish: true
+
 script:
   - autoreconf
-  - ./configure --prefix=$HOME/prefix
+  - ./configure --prefix=$HOME/prefix || cat config.log
   - make -j2
   - make install
   - make test SHOW_INTERACTIVE_LOG=1
+
 notifications:
   irc:
     channels:
@@ -28,5 +60,3 @@ notifications:
   webhooks:
     urls:
       - https://webhooks.gitter.im/e/61821cec3015bf0f8bb1
-matrix:
-  fast_finish: true

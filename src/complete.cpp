@@ -75,6 +75,8 @@ static const wcstring &C_(const wcstring &s)
 }
 #endif
 
+static void complete_load(const wcstring &name, bool reload);
+
 /* Testing apparatus */
 const wcstring_list_t *s_override_variable_names = NULL;
 
@@ -1316,8 +1318,13 @@ static int short_ok(const wcstring &arg_str, wchar_t nextopt, const wcstring &al
     return 1;
 }
 
-void complete_load(const wcstring &name, bool reload)
+
+/* Load command-specific completions for the specified command. */
+static void complete_load(const wcstring &name, bool reload)
 {
+    // we have to load this as a function, since it may define a --wraps or signature
+    // see #2466
+    function_load(name);
     completion_autoloader.load(name, reload);
 }
 

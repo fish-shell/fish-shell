@@ -235,19 +235,6 @@ bool complete_is_valid_argument(const wcstring &str,
 
 
 /**
-   Load command-specific completions for the specified command. This
-   is done automatically whenever completing any given command, so
-   there is no need to call this except in the case of completions
-   with internal dependencies.
-
-   \param cmd the command for which to load command-specific completions
-   \param reload should the commands completions be reloaded, even if they where
-      previously loaded. (This is set to true on actual completions, so that
-      changed completion are updated in running shells)
-*/
-void complete_load(const wcstring &cmd, bool reload);
-
-/**
    Create a new completion entry
 
    \param completions The array of completions to append to

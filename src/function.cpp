@@ -222,6 +222,15 @@ int function_exists(const wcstring &cmd)
     return loaded_functions.find(cmd) != loaded_functions.end();
 }
 
+void function_load(const wcstring &cmd)
+{
+    if (! parser_keywords_is_reserved(cmd))
+    {
+        scoped_lock lock(functions_lock);
+        load(cmd);
+    }
+}
+
 int function_exists_no_autoload(const wcstring &cmd, const env_vars_snapshot_t &vars)
 {
     if (parser_keywords_is_reserved(cmd))

@@ -130,6 +130,9 @@ void function_set_desc(const wcstring &name, const wcstring &desc);
 */
 int function_exists(const wcstring &name);
 
+/** Attempts to load a function if not yet loaded. This is used by the completion machinery. */
+void function_load(const wcstring &name);
+
 /**
    Returns true if the function with the name name exists, without triggering autoload.
 */

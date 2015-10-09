@@ -147,7 +147,12 @@ static wcstring get_runtime_path()
 {
     wcstring result;
     const char *dir = getenv("XDG_RUNTIME_DIR");
-    if (dir != NULL)
+
+    // Check that the path is actually usable
+    // Technically this is guaranteed by the fdo spec but in practice
+    // it is not always the case: see #1828 and #2222
+    int mode = R_OK | W_OK | X_OK;
+    if (dir != NULL && access(dir, mode) == 0 && check_runtime_path(dir) == 0)
     {
         result = str2wcstring(dir);
     }

@@ -1,0 +1,63 @@
+# tests for string builtin
+# mostly taken from examples
+string length 'hello, world'
+
+string length -q ""; and echo not zero length
+
+string sub --length 2 abcde
+
+string sub -s 2 -l 2 abcde
+
+string sub --start=-2 abcde
+
+string split . example.com
+
+string split -r -m1 / /usr/local/bin/fish
+
+string split '' abc
+
+seq 3 | string join ...
+
+echo ' abc '
+string trim ' abc  '
+
+string trim --right --chars=yz xyzzy zany
+
+echo \x07 | string escape
+
+string match '?' a
+
+string match 'a*b' axxb
+
+string match -i 'a??B' Axxb
+
+echo 'ok?' | string match '*\?'
+
+string match -r 'cat|dog|fish' 'nice dog'
+
+string match -r '(\d\d?):(\d\d):(\d\d)' 2:34:56
+
+string match -r '^(\w{2,4})\g1$' papa mud murmur
+
+string match -r -a -n at ratatat
+
+string match -r -i '0x[0-9a-f]{1,8}' 'int magic = 0xBadC0de;'
+
+string replace is was 'blue is my favorite'
+
+string replace 3rd last 1st 2nd 3rd
+
+string replace -a ' ' _ 'spaces to underscores'
+
+string replace -r -a '[^\d.]+' ' ' '0 one two 3.14 four 5x'
+
+string replace -r '(\w+)\s+(\w+)' '$2 $1 $$' 'left right'
+
+string replace -r '\s*newline\s*' '\n' 'put a newline here'
+
+# test some failure cases
+string match -r '[' 'a[sd' 2>/dev/null; or echo "invalid expression error"
+
+string invalidarg 2>/dev/null; or echo "invalid argument error"
+
+string length 2>/dev/null; or echo "missing argument returns 0"

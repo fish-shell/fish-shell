@@ -9,12 +9,18 @@ function fish_vi_cursor -d 'Set cursor shape for different vi modes'
       if set -q KONSOLE_PROFILE_NAME
         set fcn __fish_cursor_konsole
         set uses_echo 1
-      else if set -q XTERM_LOCALE
+      else if begin; set -q XTERM_LOCALE; or echo $TERM | grep -q xterm; end
         set fcn __fish_cursor_xterm
         set uses_echo 1
       else
         return 1
       end
+    case konsole
+      set fcn __fish_cursor_konsole
+      set uses_echo 1
+    case xterm
+      set fcn __fish_cursor_xterm
+      set uses_echo 1
   end
 
   set -l tmux_prefix

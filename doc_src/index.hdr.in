@@ -912,7 +912,7 @@ You can change these key bindings using the <a href="commands.html#bind">bind</a
 
 \subsection vi-mode Vi mode commands
 
-Vi mode allows for the use of Vi-like commands at the prompt. Initially, <a href="#vi-mode-insert">insert mode</a> is active. @key{Escape} enters <a href="#vi-mode-command">command mode</a>. The commands available in command, insert and visual mode are described below.
+Vi mode allows for the use of Vi-like commands at the prompt. Initially, <a href="#vi-mode-insert">insert mode</a> is active. @key{Escape} enters <a href="#vi-mode-command">command mode</a>. The commands available in command, insert and visual mode are described below. Vi mode builds on top of <a href="#emacs-mode">Emacs mode</a>, so all keybindings mentioned there that do not contradict the ones mentioned here also work.
 
 \subsubsection vi-mode-command Command mode
 

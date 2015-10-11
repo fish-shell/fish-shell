@@ -867,6 +867,8 @@ Similar to bash, fish has Emacs and Vi editing modes. The default editing mode i
 
 - @key{Tab} <a href="#completion">completes</a> the current token.
 
+- @key{Shift,Tab} <a href="#completion">completes</a> the current token, followed by a search. This means you will cycle the list in reverse order.
+
 - @key{Home} or @key{Control,A} moves the cursor to the beginning of the line.
 
 - @key{End} or @key{Control,E} moves to the end of line. If the cursor is already at the end of the line, and an autosuggestion is available, @key{End} or @key{Control,E} accepts the autosuggestion.
@@ -947,6 +949,8 @@ Command mode is also known as normal mode.
 \subsubsection vi-mode-insert Insert mode
 
 - @key{Tab} <a href="#completion">completes</a> the current token.
+
+- @key{Shift,Tab} <a href="#completion">completes</a> the current token, followed by a search. This means you will cycle the list in reverse order.
 
 - @key{Escape} or @key{Control,C} enters <a href="#vi-mode-command">command mode</a>.
 

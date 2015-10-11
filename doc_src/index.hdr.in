@@ -179,7 +179,7 @@ will call the `cat` program with the parameter 'foo.txt', which will print the c
 Pipes usually connect file descriptor 1 (standard output) of the first process to file descriptor 0 (standard input) of the second process. It is possible use a different output file descriptor by prepending the desired FD number and then output redirect symbol to the pipe. For example:
 
 \fish
-make fish 2> | less
+make fish 2>| less
 \endfish
 
 will attempt to build the fish program, and any errors will be shown using the less pager.

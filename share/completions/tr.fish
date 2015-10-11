@@ -18,3 +18,11 @@ complete -c tr -a '[:punct:]'  -d 'all punctuation characters'
 complete -c tr -a '[:space:]'  -d 'all horizontal or vertical whitespace'
 complete -c tr -a '[:upper:]'  -d 'all upper case letters'
 complete -c tr -a '[:xdigit:]' -d 'all hexadecimal digits'
+
+# Additional BSD-specific arguments
+if not command tr --version >/dev/null ^/dev/null
+  complete -c tr -a '[:ideogram:]'  -d 'all ideographic characters'
+  complete -c tr -a '[:phonogram:]' -d 'all phonographic characters'
+  complete -c tr -a '[:rune:]'      -d 'all valid characters'
+  complete -c tr -a '[:special:]'   -d 'all special characters'
+end

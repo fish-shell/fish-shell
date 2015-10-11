@@ -2,33 +2,34 @@
 # Copyright (C) 2014 THE fish'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the fish package.
 # Iuri Rezende Souza <riuri@rocketmail.com>, 2014.
+# Fábio Nogueira <deb-user-ba@ubuntu.com>, 2015.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: fish 1.21.8\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2015-04-13 22:15+0800\n"
-"PO-Revision-Date: 2014-08-25 08:37-0300\n"
-"Last-Translator: Iuri Rezende Souza <riuri@rocketmail.com>\n"
+"PO-Revision-Date: 2015-10-11 20:35-0300\n"
+"Last-Translator: Fábio Nogueira <deb-user-ba@ubuntu.com>\n"
 "Language-Team: Português Brasileiro <>\n"
 "Language: pt_BR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Gtranslator 2.91.6\n"
+"X-Generator: Poedit 1.8.4\n"
 
 #: autoload.cpp:113
-#, fuzzy, c-format
+#, c-format
 msgid "Could not autoload item '%ls', it is already being autoloaded. "
 msgstr ""
-"Não pôde carregar item “%ls” automaticamente, ele já está sendo carregado "
-"automaticamente. "
+"Não foi possível carregar o item “%ls” automaticamente, ele já está sendo "
+"carregado automaticamente. "
 
 #: builtin.cpp:84
 #, c-format
 msgid "Send job %d, '%ls' to foreground\n"
-msgstr "Enviando job %d, “%ls” para foreground\n"
+msgstr "Enviando tarefa %d, “%ls” para o primeiro plano\n"
 
 #: builtin.cpp:352
 #, c-format
@@ -72,7 +73,7 @@ msgstr "%ls: Estado inválido\n"
 #: builtin.cpp:939
 #, c-format
 msgid "%ls: Can not specify scope when removing block\n"
-msgstr "%ls: Não pode especificar escopo ao remover bloco\n"
+msgstr "%ls: Não é possível especificar escopo ao remover bloco\n"
 
 #: builtin.cpp:945
 #, c-format
@@ -111,7 +112,7 @@ msgstr "%ls: Nome de função ilegal “%ls”\n"
 #: builtin.cpp:1672
 #, c-format
 msgid "%ls: Function '%ls' already exists. Cannot create copy '%ls'\n"
-msgstr "%ls: Função “%ls” já existe. Não pode criar cópia “%ls”\n"
+msgstr "%ls: Função “%ls” já existe. Não é possivel criar cópia “%ls”\n"
 
 #: builtin.cpp:2070
 #, c-format
@@ -124,9 +125,9 @@ msgid "%ls: Invalid variable name '%ls'\n"
 msgstr "%ls: Nome inválido de variável “%ls”\n"
 
 #: builtin.cpp:2138
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Cannot find calling job for event handler\n"
-msgstr "%ls: Cannot find calling job for event handler\n"
+msgstr "%ls: Não é possível encontrar tarefa para o manipulador de eventos\n"
 
 #: builtin.cpp:2156
 #, c-format
@@ -145,7 +146,7 @@ msgid ""
 "and can not be used as a function name\n"
 msgstr ""
 "%ls: O nome “%ls” é reservado,\n"
-"e não pode ser usado como nome de função\n"
+"e não pode ser usado como um nome de função\n"
 
 #: builtin.cpp:2248
 #, c-format
@@ -158,7 +159,7 @@ msgid "%ls: Expected one argument, got %d\n"
 msgstr "%ls: Esperava um argumento, obteve %d\n"
 
 #: builtin.cpp:2412
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Seed value '%ls' is not a valid number\n"
 msgstr "%ls: Valor semeado “%ls” não é um número válido\n"
 
@@ -168,9 +169,9 @@ msgid "%ls: Expected zero or one argument, got %d\n"
 msgstr "%ls: Esperava zero ou um argumento, obteve %d\n"
 
 #: builtin.cpp:2593
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Argument '%ls' is out of range\n"
-msgstr "%ls: Argumento “%ls” não é número\n"
+msgstr "%ls: Argumento “%ls” está fora do alcance\n"
 
 #: builtin.cpp:2601 builtin.cpp:3150 builtin.cpp:3817
 #, c-format
@@ -197,13 +198,13 @@ msgid "This is not a login shell\n"
 msgstr "Este não é um shell de login\n"
 
 #: builtin.cpp:3112
-#, fuzzy, c-format
+#, c-format
 msgid "Job control: %ls\n"
-msgstr "Controle de job: %ls\n"
+msgstr "Controle de tarefa: %ls\n"
 
 #: builtin.cpp:3113
 msgid "Only on interactive jobs"
-msgstr "Somente em jobs interativos"
+msgstr "Somente em tarefas interativas"
 
 #: builtin.cpp:3114
 msgid "Never"
@@ -216,7 +217,7 @@ msgstr "Sempre"
 #: builtin.cpp:3192
 #, c-format
 msgid "%ls: Could not find home directory\n"
-msgstr "%ls: Não pôde encontrar diretório home\n"
+msgstr "%ls: Não é possível encontrar o diretório home\n"
 
 #: builtin.cpp:3212 builtin.cpp:3266
 #, c-format
@@ -246,15 +247,15 @@ msgstr "%ls: Permissão negada: “%ls”\n"
 #: builtin.cpp:3281
 #, c-format
 msgid "%ls: Could not set PWD variable\n"
-msgstr "%ls: Não pôde modificar variável PWD\n"
+msgstr "%ls: Não é possível modificar a variável PWD\n"
 
 #: builtin.cpp:3368
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Key not specified\n"
-msgstr "%ls: Key not specified\n"
+msgstr "%ls: Chave não especificada\n"
 
 #: builtin.cpp:3412 builtin.cpp:3420
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Error encountered while sourcing file '%ls':\n"
 msgstr "%ls: Erro encontrado ao interpretar arquivo “%ls”:\n"
 
@@ -266,22 +267,22 @@ msgstr "%ls: “%ls” não é um arquivo\n"
 #: builtin.cpp:3447
 #, c-format
 msgid "%ls: Error while reading file '%ls'\n"
-msgstr "%ls: Erro ao ler arquivo “%ls”\n"
+msgstr "%ls: Erro ao ler o arquivo “%ls”\n"
 
 #: builtin.cpp:3503 builtin.cpp:3682
 #, c-format
 msgid "%ls: There are no suitable jobs\n"
-msgstr "%ls: Não há jobs adequados\n"
+msgstr "%ls: Não há tarefas adequadas\n"
 
 #: builtin.cpp:3531
 #, c-format
 msgid "%ls: Ambiguous job\n"
-msgstr "%ls: Job ambíguo\n"
+msgstr "%ls: Tarefa ambígua\n"
 
 #: builtin.cpp:3537 builtin.cpp:3705 builtin_jobs.cpp:301
 #, c-format
 msgid "%ls: '%ls' is not a job\n"
-msgstr "%ls: “%ls” não é um job\n"
+msgstr "%ls: “%ls” não é uma tarefa\n"
 
 #: builtin.cpp:3568 builtin_jobs.cpp:316
 #, c-format
@@ -294,13 +295,13 @@ msgid ""
 "%ls: Can't put job %d, '%ls' to foreground because it is not under job "
 "control\n"
 msgstr ""
-"%ls: Não pôde colocar job %d, “%ls” em foreground porque não está sob "
-"controle de jobs\n"
+"%ls: Não é possível colocar tarefa %d, “%ls” em primeiro plano porque não "
+"está sob controle de tarefas\n"
 
 #: builtin.cpp:3630
 #, c-format
 msgid "%ls: Unknown job '%ls'\n"
-msgstr "%ls: Job desconhecido “%ls”\n"
+msgstr "%ls: Tarefa desconhecida “%ls”\n"
 
 #: builtin.cpp:3639
 #, c-format
@@ -308,18 +309,17 @@ msgid ""
 "%ls: Can't put job %d, '%ls' to background because it is not under job "
 "control\n"
 msgstr ""
-"%ls: Não pôde colocar job %d, “%ls” em background porque não está sob "
-"controle de jobs\n"
+"%ls: Não é possível colocar tarefa %d, “%ls” em segundo plano porque não "
+"está sob controle de tarefas\n"
 
 #: builtin.cpp:3649
 #, c-format
 msgid "Send job %d '%ls' to background\n"
-msgstr "Enviando job %d “%ls” para background\n"
+msgstr "Enviando tarefa %d “%ls” para segundo plano\n"
 
 #: builtin.cpp:3688
-#, fuzzy
 msgid "(default)"
-msgstr "(default)"
+msgstr "(padrão)"
 
 #: builtin.cpp:3760
 #, c-format
@@ -354,7 +354,7 @@ msgstr "Cria um bloco de código"
 
 #: builtin.cpp:4073
 msgid "Send job to background"
-msgstr "Envia job para background"
+msgstr "Envia tarefa para segundo plano"
 
 #: builtin.cpp:4074
 msgid "Handle fish key bindings"
@@ -441,7 +441,7 @@ msgstr ""
 
 #: builtin.cpp:4094
 msgid "Send job to foreground"
-msgstr "Envia job para foreground"
+msgstr "Envia tarefa para primeiro plano"
 
 #: builtin.cpp:4095
 msgid "Perform a set of commands multiple times"
@@ -465,11 +465,11 @@ msgstr "Executa bloco se a condição é verdadeira"
 
 #: builtin.cpp:4100
 msgid "Print currently running jobs"
-msgstr "Imprime os jobs em execução"
+msgstr "Imprime as tarefas em execução"
 
 #: builtin.cpp:4101
 msgid "Negate exit status of job"
-msgstr "Nega estado de saída do job"
+msgstr "Nega estado de saída da tarefa"
 
 #: builtin.cpp:4102
 msgid "Execute command if previous command failed"
@@ -530,7 +530,7 @@ msgstr "%ls: Unknown input function “%ls”\n"
 
 #: builtin_jobs.cpp:87
 msgid "Job\tGroup\t"
-msgstr "Job\tGrupo\t"
+msgstr "Tarefa\tGrupo\t"
 
 #: builtin_jobs.cpp:89
 msgid "CPU\t"
@@ -564,7 +564,7 @@ msgstr "Comando\n"
 #: builtin_jobs.cpp:344
 #, c-format
 msgid "%ls: There are no jobs\n"
-msgstr "%ls: Não há jobs\n"
+msgstr "%ls: Não há tarefas\n"
 
 #: builtin_printf.cpp:175
 #, c-format
@@ -662,12 +662,12 @@ msgstr ""
 #: builtin_set_color.cpp:144 builtin_set_color.cpp:166
 #, c-format
 msgid "%ls: Unknown color '%ls'\n"
-msgstr "%s: Cor desconhecida “%s”\n"
+msgstr "%ls: Cor desconhecida “%ls”\n"
 
 #: builtin_set_color.cpp:153
 #, c-format
 msgid "%ls: Expected an argument\n"
-msgstr "%s: Esperava um argumento\n"
+msgstr "%ls: Esperava um argumento\n"
 
 #: builtin_set_color.cpp:173
 #, fuzzy, c-format
@@ -679,7 +679,6 @@ msgid "This is a bug. Break on bugreport to debug."
 msgstr ""
 
 #: common.cpp:1936
-#, fuzzy
 msgid "empty"
 msgstr "vazio"
 
@@ -703,7 +702,7 @@ msgstr "Várias possibilidades para opção: "
 
 #: env.cpp:315
 msgid "Changing language to English"
-msgstr "Mudando língua para Português"
+msgstr "Mudando língua para Português do Brasil"
 
 #: env.cpp:1180
 #, fuzzy
@@ -777,7 +776,7 @@ msgstr "Um erro ocorreu ao escrever na saída"
 #: exec.cpp:67
 #, c-format
 msgid "An error occurred while redirecting file '%s'"
-msgstr "Um erro ocorreu ao redirecionar arquivo “%ls”"
+msgstr "Um erro ocorreu ao redirecionar arquivo “%s”"
 
 #: exec.cpp:795
 #, c-format
@@ -799,12 +798,12 @@ msgstr "Processo"
 
 #: expand.cpp:69
 msgid "Job"
-msgstr "Job"
+msgstr "Tarefa"
 
 #: expand.cpp:74
 #, c-format
 msgid "Job: %ls"
-msgstr "Job: %ls"
+msgstr "Tarefa: %ls"
 
 #: expand.cpp:79
 #, fuzzy
@@ -813,7 +812,7 @@ msgstr "Processo shell"
 
 #: expand.cpp:84
 msgid "Last background job"
-msgstr "Último job em background"
+msgstr "Última tarefa em segundo plano"
 
 #: expand.cpp:1419
 #, fuzzy
@@ -853,7 +852,7 @@ msgstr "%ls, versão %s\n"
 
 #: input.cpp:483 input.cpp:493
 msgid "Could not set up terminal"
-msgstr "Não pôde preparar terminal"
+msgstr "Não foi possível preparar terminal"
 
 #: input.cpp:486
 #, c-format
@@ -894,7 +893,7 @@ msgstr "%s: String de localização muito longa\n"
 #: mimedb.cpp:551 mimedb.cpp:559
 #, c-format
 msgid "%s: Could not compile regular expressions %s with error %s\n"
-msgstr "%s: Não pôde compilar expressão regular %s com erro %s\n"
+msgstr "%s: Não é possível compilar a expressão regular %s com erro %s\n"
 
 #: mimedb.cpp:676
 #, fuzzy, c-format
@@ -958,12 +957,12 @@ msgstr "linhas %lu a %lu de %lu"
 
 #: pager.cpp:576
 msgid "(no matches)"
-msgstr "(não encontrado)"
+msgstr "(nenhum resultado)"
 
 #: parse_execution.cpp:555
 #, c-format
 msgid "switch: Expected exactly one argument, got %lu\n"
-msgstr "switch: Esperava exatamente um argumento, obteve %d\n"
+msgstr "switch: Esperava exatamente um argumento, obteve %lu\n"
 
 #: parse_execution.cpp:799
 #, c-format
@@ -1174,7 +1173,7 @@ msgstr "Inicialização"
 
 #: parser.cpp:803
 msgid "Job inconsistency"
-msgstr "Inconsistência de job"
+msgstr "Inconsistência de tarefa"
 
 #: parser.cpp:956
 #, fuzzy
@@ -1184,7 +1183,7 @@ msgstr "Fim de bloco desencontrado. Terminando programa."
 #: parser.cpp:1047
 #, c-format
 msgid "%ls (line %lu): "
-msgstr "%ls (linha %d): "
+msgstr "%ls (linha %lu): "
 
 #: parser.cpp:1051
 #, c-format
@@ -1199,27 +1198,26 @@ msgstr "Erro ao procurar por comando “%ls”"
 #: proc.cpp:690
 #, fuzzy, c-format
 msgid "'%ls' has %ls"
-msgstr "Job %d, “%ls” está %ls"
+msgstr "Tarefa %d, “%ls” está %ls"
 
 #: proc.cpp:694
 #, c-format
 msgid "Job %d, '%ls' has %ls"
-msgstr "Job %d, “%ls” está %ls"
+msgstr "Tarefa %d, “%ls” está %ls"
 
 #: proc.cpp:786
 #, fuzzy, c-format
 msgid "%ls: %ls'%ls' terminated by signal %ls (%ls)"
-msgstr "%ls: Job %d, “%ls” terminado pelo sinal %ls (%ls)"
+msgstr "%ls: Tarefa %d, “%ls” terminado pelo sinal %ls (%ls)"
 
 #: proc.cpp:797
-#, fuzzy, c-format
+#, c-format
 msgid "%ls: Process %d, '%ls' %ls'%ls' terminated by signal %ls (%ls)"
-msgstr ""
-"%ls: Processo %d, “%ls” do job %d, “%ls” terminado pelo sinal %ls (%ls)"
+msgstr "%ls: Processo %d, '%ls' %ls'%ls' terminado pelo sinal %ls (%ls)"
 
 #: proc.cpp:828
 msgid "ended"
-msgstr ""
+msgstr "terminou"
 
 #: proc.cpp:1065
 msgid "An error occured while reading output from code block"
@@ -1228,11 +1226,11 @@ msgstr "Ocorreu um erro ao ler saída de bloco de código"
 #: proc.cpp:1094 proc.cpp:1106
 #, c-format
 msgid "Could not send job %d ('%ls') to foreground"
-msgstr "Não pôde enviar job %d (“%ls”) para foreground"
+msgstr "Não foi possível enviar tarefa %d (“%ls”) para primeiro plano"
 
 #: proc.cpp:1126 proc.cpp:1136 proc.cpp:1151
 msgid "Could not return shell to foreground"
-msgstr "Não pôde retornar shell ao foreground"
+msgstr "Não foi possível retornar shell ao primeiro plano"
 
 # Notas:
 # Adicionar nota
@@ -1247,7 +1245,7 @@ msgstr "Ponteiro de lista de processo"
 #: proc.cpp:1365
 #, c-format
 msgid "More than one job in foreground: job 1: '%ls' job 2: '%ls'"
-msgstr "Mais de um job no foreground: job 1: “%ls” job 2: “%ls”"
+msgstr "Mais de uma tarefa em primeiro plano: tarefa 1: “%ls” tarefa 2: “%ls”"
 
 #: proc.cpp:1378
 msgid "Process argument list"
@@ -1260,20 +1258,21 @@ msgstr "Nome de processo"
 #: proc.cpp:1385
 #, c-format
 msgid "Job '%ls', process '%ls' has inconsistent state 'stopped'=%d"
-msgstr "Job “%ls”, processo “%ls” está em estado inconsistente “parado”=%d"
+msgstr "Tarefa “%ls”, processo “%ls” está em estado inconsistente “parado”=%d"
 
 #: proc.cpp:1395
 #, c-format
 msgid "Job '%ls', process '%ls' has inconsistent state 'completed'=%d"
-msgstr "Job “%ls”, processo “%ls” está em estado inconsistente “completo”=%d"
+msgstr ""
+"Tarefa “%ls”, processo “%ls” está em estado inconsistente “completo”=%d"
 
 #: reader.cpp:478
 msgid "Could not set terminal mode for new job"
-msgstr "Não pôde preparar modo do terminal para novo job"
+msgstr "Não foi possível definir modo do terminal para a nova tarefa"
 
 #: reader.cpp:525
 msgid "Could not set terminal mode for shell"
-msgstr "Não pôde preparar modo do terminal para shell"
+msgstr "Não foi possível preparar modo do terminal para shell"
 
 #: reader.cpp:2059
 msgid "No TTY for interactive shell (tcgetpgrp failed)"
@@ -1288,11 +1287,11 @@ msgstr ""
 
 #: reader.cpp:2105
 msgid "Couldn't put the shell in its own process group"
-msgstr "Não pôde colocar o shell em seu próprio grupo de processos"
+msgstr "Não foi possível colocar o shell em seu próprio grupo de processos"
 
 #: reader.cpp:2115
 msgid "Couldn't grab control of terminal"
-msgstr "Não pôde pegar controle do terminal"
+msgstr "Não foi possível pegar controle do terminal"
 
 #: reader.cpp:2616
 msgid "Pop null reader block"
@@ -1302,7 +1301,8 @@ msgstr ""
 msgid ""
 "There are stopped jobs. A second attempt to exit will enforce their "
 "termination.\n"
-msgstr "Há jobs parados. Uma segunda tentativa de sair forçará seu término.\n"
+msgstr ""
+"Há tarefas paradas. Uma segunda tentativa de sair forçará seu término.\n"
 
 #: reader.cpp:4115
 #, c-format
@@ -1547,7 +1547,7 @@ msgstr "Redirecionar saída para arquivo se o arquivo não existe"
 
 #: tokenizer.cpp:75
 msgid "Run job in background"
-msgstr "Executar job em background"
+msgstr "Executar tarefa em segundo plano"
 
 #: tokenizer.cpp:76
 msgid "Comment"
@@ -1645,7 +1645,7 @@ msgstr "Loop de link simbólico"
 
 #: wildcard.cpp:99
 msgid "Socket"
-msgstr "Socket"
+msgstr "Soquete"
 
 #: wildcard.cpp:103 share/completions/ruby.fish:23
 #: share/functions/__fish_complete_directories.fish:8
@@ -1956,9 +1956,8 @@ msgstr "Print debugging info"
 #: share/functions/__fish_complete_python.fish:14
 #: share/functions/__fish_complete_ssh.fish:59
 #: share/functions/__fish_complete_vi.fish:98
-#, fuzzy
 msgid "Verbose mode"
-msgstr "Verbose mode"
+msgstr "Modo detalhado"
 
 #: share/completions/apropos.fish:14
 #, fuzzy
@@ -2046,9 +2045,8 @@ msgid "Update source and rebuild"
 msgstr "Update source and rebuild"
 
 #: share/completions/apt-build.fish:15
-#, fuzzy
 msgid "Update the repository"
-msgstr "Update the repository"
+msgstr "Atualizar o repositório"
 
 #: share/completions/apt-build.fish:16
 #, fuzzy
@@ -2197,9 +2195,8 @@ msgid "Auto-gen package cache"
 msgstr "Auto-gen package cache"
 
 #: share/completions/apt-cache.fish:25
-#, fuzzy
 msgid "Print all names"
-msgstr "Print all names"
+msgstr "Imprimir todos os nomes"
 
 #: share/completions/apt-cache.fish:26
 #, fuzzy
@@ -2231,9 +2228,8 @@ msgid "Test if apt command should have packages as potential completion"
 msgstr "Test if apt command should have packages as potential completion"
 
 #: share/completions/apt-cdrom.fish:3
-#, fuzzy
 msgid "Add new disc to source list"
-msgstr "Add new disc to source list"
+msgstr "Adicionar novo disco para a lista de fontes"
 
 #: share/completions/apt-cdrom.fish:4
 #, fuzzy
@@ -2241,9 +2237,8 @@ msgid "Report identity of disc"
 msgstr "Report identity of disc"
 
 #: share/completions/apt-cdrom.fish:5 share/completions/mount.fish:7
-#, fuzzy
 msgid "Mount point"
-msgstr "Mount point"
+msgstr "Ponto de montagem"
 
 #: share/completions/apt-cdrom.fish:6
 #, fuzzy
@@ -2256,9 +2251,8 @@ msgid "No mounting"
 msgstr "No mounting"
 
 #: share/completions/apt-cdrom.fish:8
-#, fuzzy
 msgid "Fast copy"
-msgstr "Fast copy"
+msgstr "Cópia rápida"
 
 #: share/completions/apt-cdrom.fish:9
 #, fuzzy
@@ -2266,9 +2260,8 @@ msgid "Thorough package scan"
 msgstr "Thorough package scan"
 
 #: share/completions/apt-cdrom.fish:10
-#, fuzzy
 msgid "No changes"
-msgstr "No changes"
+msgstr "Sem alterações"
 
 #: share/completions/apt-config.fish:4
 #, fuzzy
@@ -2426,9 +2419,8 @@ msgid "Distro upgrade"
 msgstr "Distro upgrade"
 
 #: share/completions/apt-get.fish:28
-#, fuzzy
 msgid "Install one or more packages"
-msgstr "Install one or more packages"
+msgstr "Instalar um ou mais pacotes"
 
 #: share/completions/apt-get.fish:29
 #, fuzzy
@@ -2481,9 +2473,8 @@ msgid "Set a config option"
 msgstr "Set a config option"
 
 #: share/completions/apt-key.fish:2
-#, fuzzy
 msgid "Add a new key"
-msgstr "Add a new key"
+msgstr "Adicionar uma nova chave"
 
 #: share/completions/apt-key.fish:3
 #, fuzzy
@@ -2611,9 +2602,8 @@ msgid "Avoid changelogs from db in named file"
 msgstr "Avoid changelogs from db in named file"
 
 #: share/completions/apt-listchanges.fish:11
-#, fuzzy
 msgid "Insert header"
-msgstr "Insert header"
+msgstr "Inserir cabeçalho"
 
 #: share/completions/apt-listchanges.fish:12
 #, fuzzy
@@ -2690,14 +2680,12 @@ msgid "Move packages from cache to local mirror"
 msgstr "Move packages from cache to local mirror"
 
 #: share/completions/apt-move.fish:9
-#, fuzzy
 msgid "Alias for 'move delete packages'"
-msgstr "Alias for “move delete packages”"
+msgstr "Nome alternativo para “mover pacotes deletados”"
 
 #: share/completions/apt-move.fish:10
-#, fuzzy
 msgid "Alias for 'update'"
-msgstr "Alias for “update”"
+msgstr "Nome alternativo para “update”"
 
 #: share/completions/apt-move.fish:11
 #, fuzzy
@@ -2760,9 +2748,8 @@ msgid "Dir to import"
 msgstr "Dir to import"
 
 #: share/completions/apt-proxy-import.fish:8
-#, fuzzy
 msgid "Change to user"
-msgstr "Change to user"
+msgstr "Alterar para usuário"
 
 #: share/completions/apt-proxy-import.fish:9
 #, fuzzy
@@ -2881,9 +2868,8 @@ msgid "Finish after number of servers"
 msgstr "Finish after number of servers"
 
 #: share/completions/apt-spy.fish:11
-#, fuzzy
 msgid "Use proxy server"
-msgstr "Use proxy server"
+msgstr "Utilizar servidor proxy"
 
 #: share/completions/apt-spy.fish:12
 #, fuzzy
@@ -2911,9 +2897,8 @@ msgid "Update mirror list"
 msgstr "Update mirror list"
 
 #: share/completions/apt-spy.fish:18
-#, fuzzy
 msgid "Version number"
-msgstr "Version number"
+msgstr "Número da versão"
 
 #: share/completions/apt-src.fish:3
 #, fuzzy
@@ -3050,7 +3035,7 @@ msgstr ""
 
 #: share/completions/aptitude.fish:27
 msgid "Cancel all scheduled actions on all packages"
-msgstr ""
+msgstr "Cancelar todas as açoes agendadas em todos os pacotes"
 
 #: share/completions/aptitude.fish:28
 msgid "Update the list of available packages from the apt sources"
@@ -3085,9 +3070,8 @@ msgid "Ignore the packages by future upgrade commands"
 msgstr ""
 
 #: share/completions/aptitude.fish:35
-#, fuzzy
 msgid "Install the packages"
-msgstr "Install new package"
+msgstr "Instalar os pacotes"
 
 #: share/completions/aptitude.fish:36
 #, fuzzy
@@ -3182,14 +3166,12 @@ msgid "Read job from file"
 msgstr "Read job from file"
 
 #: share/completions/at.fish:6
-#, fuzzy
 msgid "Alias for atq"
-msgstr "Alias for atq"
+msgstr "Nome alternativo para atq"
 
 #: share/completions/at.fish:7
-#, fuzzy
 msgid "Alias for atrm"
-msgstr "Alias for atrm"
+msgstr "Nome alternativo para atrm"
 
 #: share/completions/at.fish:8
 #, fuzzy
@@ -3414,7 +3396,7 @@ msgstr ""
 
 #: share/completions/bundle.fish:94 share/completions/bundle.fish:136
 msgid "Generate a visual representation of your dependencies"
-msgstr ""
+msgstr "Gerar uma representação visual de suas dependências"
 
 #: share/completions/bundle.fish:95
 #, fuzzy
@@ -3624,9 +3606,8 @@ msgid "Set CVS user variable."
 msgstr "Set CVS user variable"
 
 #: share/completions/cvs.fish:41
-#, fuzzy
 msgid "Add a new file/directory to the repository"
-msgstr "Add a new file/directory to the repository"
+msgstr "Adicionar um novo arquivo/diretório ao repositório"
 
 #: share/completions/cvs.fish:42
 #, fuzzy
@@ -3644,9 +3625,8 @@ msgid "Checkout sources for editing"
 msgstr "Checkout sources for editing"
 
 #: share/completions/cvs.fish:45
-#, fuzzy
 msgid "Check files into the repository"
-msgstr "Check files into the repository"
+msgstr "Verificar arquivos no repositório"
 
 #: share/completions/cvs.fish:46
 #, fuzzy
@@ -3838,9 +3818,8 @@ msgid "Display help about darcs and darcs commands"
 msgstr "Displays usage information for command"
 
 #: share/completions/darcs.fish:20
-#, fuzzy
 msgid "Add one or more new files or directories"
-msgstr "Add one or more new files or directories"
+msgstr "Adicionar um ou mais novos arquivos ou diretórios"
 
 #: share/completions/darcs.fish:21
 #, fuzzy
@@ -3854,7 +3833,7 @@ msgstr "Do not create file"
 
 #: share/completions/darcs.fish:23
 msgid "Substitute one word for another"
-msgstr ""
+msgstr "Substitue uma palavra por outra"
 
 #: share/completions/darcs.fish:24
 #, fuzzy
@@ -4193,7 +4172,7 @@ msgstr ""
 
 #: share/completions/darcs.fish:1222
 msgid "--repodir=DIRECTORY"
-msgstr ""
+msgstr "--repodir=DIRETÓRIO"
 
 #: share/completions/dcop.fish:34
 #, fuzzy
@@ -4237,9 +4216,8 @@ msgid "Show file systems of specified type"
 msgstr "Show filesystems of specified type"
 
 #: share/completions/df.fish:22
-#, fuzzy
 msgid "Block size"
-msgstr "Block size"
+msgstr "Tamanho do bloco"
 
 #: share/completions/docker.fish:19
 #, fuzzy
@@ -4318,11 +4296,11 @@ msgstr "Don't execute post scripts"
 
 #: share/completions/duply.fish:12
 msgid "Force full backup"
-msgstr ""
+msgstr "Forçar cópia completa de segurança"
 
 #: share/completions/duply.fish:13
 msgid "Force incremental backup"
-msgstr ""
+msgstr "Força cópia incremental de segurança"
 
 #: share/completions/duply.fish:14
 msgid "List all files in backup (as it was at <age>, default: now)"
@@ -4469,9 +4447,8 @@ msgid "print full path to ebuild for package"
 msgstr "Print full path of source"
 
 #: share/completions/fusermount.fish:15 share/completions/sshfs.fish:27
-#, fuzzy
 msgid "Mount options"
-msgstr "Mount options"
+msgstr "Opções de montagem"
 
 #: share/completions/gcc.fish:25
 #, fuzzy
@@ -4942,9 +4919,8 @@ msgid "Update the RubyGems system software"
 msgstr ""
 
 #: share/completions/git.fish:98
-#, fuzzy
 msgid "name"
-msgstr "Username"
+msgstr "nome"
 
 #: share/completions/git.fish:153 share/completions/git.fish:176
 msgid "Branch"
@@ -5242,9 +5218,8 @@ msgstr "Start interface"
 
 #: share/completions/ifconfig.fish:25 share/completions/ifdown.fish:1
 #: share/completions/ifup.fish:1
-#, fuzzy
 msgid "Network interface"
-msgstr "Network interface"
+msgstr "Interface de rede"
 
 #: share/completions/kitchen.fish:3
 #, fuzzy
@@ -5499,9 +5474,8 @@ msgid "Print result of --eval"
 msgstr "Print flat profile"
 
 #: share/completions/obnam.fish:9
-#, fuzzy
 msgid "Adds an encryption key to the repository"
-msgstr "Add a new file/directory to the repository"
+msgstr "Adicionar uma chave criptografada ao repositório"
 
 #: share/completions/obnam.fish:11
 msgid "Lists the keys associated with each client"
@@ -5546,9 +5520,8 @@ msgid "Lists the identifier for every generation"
 msgstr ""
 
 #: share/completions/obnam.fish:20
-#, fuzzy
 msgid "Lists the keys"
-msgstr "List trusted keys"
+msgstr "Lista as chaves"
 
 #: share/completions/obnam.fish:21
 #, fuzzy
@@ -5598,9 +5571,8 @@ msgid "Do not restore setuid/setgid bits in restored files"
 msgstr ""
 
 #: share/completions/obnam.fish:32
-#, fuzzy
 msgid "Name of client"
-msgstr "Negate expression"
+msgstr "Nome do cliente"
 
 #: share/completions/obnam.fish:33
 #, fuzzy
@@ -5975,7 +5947,7 @@ msgstr ""
 
 #: share/completions/perl.fish:15
 msgid "STDIN is UTF-8"
-msgstr ""
+msgstr "STDIN é UTF-8"
 
 #: share/completions/perl.fish:16
 msgid "Enable Unicode conditionally"
@@ -5987,7 +5959,7 @@ msgstr ""
 
 #: share/completions/perl.fish:18
 msgid "STDOUT is UTF-8"
-msgstr ""
+msgstr "STDOUT é UTF-8"
 
 #: share/completions/perl.fish:19
 msgid "STDOUT, STDIN, and STDERR are UTF-8"
@@ -6077,9 +6049,8 @@ msgid "Ports Directory"
 msgstr "Directory"
 
 #: share/completions/portmaster.fish:55
-#, fuzzy
 msgid "Installed Package"
-msgstr "Install new package"
+msgstr "Pacote instalado"
 
 #: share/completions/psql.fish:19
 #, fuzzy
@@ -6310,9 +6281,8 @@ msgid "Dump file information. Must be used with at least one of -l, -c, -d"
 msgstr "Dump file information. Must be used with at least one of -l, -c, -d"
 
 #: share/completions/rpm.fish:63
-#, fuzzy
 msgid "List all the files in each selected package"
-msgstr "List all the files in each selected package"
+msgstr "Listar todos os arquivos em cada pacote selecionado"
 
 #: share/completions/rpm.fish:64
 #, fuzzy
@@ -6522,14 +6492,12 @@ msgid "Don't really uninstall anything"
 msgstr "Don't really uninstall anything"
 
 #: share/completions/rpm.fish:123
-#, fuzzy
 msgid "Install new package"
-msgstr "Install new package"
+msgstr "Instalar novo pacote"
 
 #: share/completions/rpm.fish:124
-#, fuzzy
 msgid "Upgrade existing package"
-msgstr "Upgrade existing package"
+msgstr "Atualizar um pacote existente"
 
 #: share/completions/rpm.fish:125
 #, fuzzy
@@ -6542,9 +6510,8 @@ msgid "Query installed packages"
 msgstr "Query installed packages"
 
 #: share/completions/rpm.fish:127
-#, fuzzy
 msgid "Verify package integrity"
-msgstr "Verify package integrity"
+msgstr "Verificar a integridade do pacote"
 
 #: share/completions/rpm.fish:128
 #, fuzzy
@@ -6582,7 +6549,7 @@ msgstr "Output profiling information to specified file"
 
 #: share/completions/rsync.fish:94
 msgid "Read password from FILE"
-msgstr ""
+msgstr "Ler senha a partir do ARQUIVO"
 
 #: share/completions/rsync.fish:96
 msgid "Limit I/O bandwidth; KBytes per second"
@@ -6616,15 +6583,13 @@ msgid "Require file"
 msgstr "Require file"
 
 #: share/completions/scp.fish:40
-#, fuzzy
 msgid "Bandwidth limit"
-msgstr "Bandwidth limit"
+msgstr "Limite de banda"
 
 #: share/completions/scp.fish:41 share/completions/ssh.fish:39
 #: share/completions/sshfs.fish:25
-#, fuzzy
 msgid "Port"
-msgstr "Port"
+msgstr "Porta"
 
 #: share/completions/screen.fish:1
 #, fuzzy
@@ -6647,14 +6612,12 @@ msgid "Specify line-length"
 msgstr "Specify line-length"
 
 #: share/completions/set.fish:73 share/completions/set_color.fish:1
-#, fuzzy
 msgid "Color"
-msgstr "Color"
+msgstr "Cor"
 
 #: share/completions/set.fish:74 share/completions/set_color.fish:2
-#, fuzzy
 msgid "Change background color"
-msgstr "Change background color"
+msgstr "Alterar cor de fundo"
 
 #: share/completions/set.fish:79
 #, fuzzy
@@ -6662,9 +6625,8 @@ msgid "Locale"
 msgstr "Locale"
 
 #: share/completions/sort.fish:16
-#, fuzzy
 msgid "Write to file"
-msgstr "Write to file"
+msgstr "Escreve para o arquivo"
 
 #: share/completions/sort.fish:18
 #, fuzzy
@@ -6687,9 +6649,8 @@ msgid "Escape character"
 msgstr "Escape character"
 
 #: share/completions/ssh.fish:35
-#, fuzzy
 msgid "User"
-msgstr "User"
+msgstr "Usuário"
 
 #: share/completions/su.fish:5
 #, fuzzy
@@ -6756,7 +6717,7 @@ msgstr "Extrair arquivos do arquivo de lista"
 
 #: share/completions/tar.fish:54
 msgid "Set volume name"
-msgstr "Etiquetar volume"
+msgstr "Definir nome do volume"
 
 #: share/completions/tar.fish:59
 msgid "Exclude file"
@@ -6821,9 +6782,8 @@ msgid "Disables specified type of authentication"
 msgstr "Disables specified type of authentication"
 
 #: share/completions/telnet.fish:20
-#, fuzzy
 msgid "User login"
-msgstr "User login"
+msgstr "Login do usuário"
 
 #: share/completions/telnet.fish:21
 #, fuzzy
@@ -6852,7 +6812,7 @@ msgstr "Evaluate expression"
 
 #: share/completions/tmux.fish:5
 msgid "connected clients"
-msgstr ""
+msgstr "clientes conectados"
 
 #: share/completions/tmux.fish:9
 #, fuzzy
@@ -6994,9 +6954,8 @@ msgid "Test if vim-addons has yet to be given the subcommand"
 msgstr "Test if apt has yet to be given the subcommand"
 
 #: share/completions/w.fish:6
-#, fuzzy
 msgid "Username"
-msgstr "Username"
+msgstr "Nome do usuário"
 
 #: share/completions/wajig.fish:1
 #, fuzzy
@@ -7057,9 +7016,8 @@ msgid "Stop then start a daemon, e.g., gdm, apache (see list-daemons)"
 msgstr ""
 
 #: share/completions/wajig.fish:108
-#, fuzzy
 msgid "Install a RedHat .rpm package"
-msgstr "Install new package"
+msgstr "Instalar um pacote .rpm da RedHat"
 
 #: share/completions/wajig.fish:109
 msgid "Convert a RedHat .rpm file to a Debian .deb file"
@@ -7272,16 +7230,15 @@ msgstr ""
 
 #: share/completions/wpa_cli.fish:23
 msgid "list configured networks"
-msgstr ""
+msgstr "lista redes configuradas"
 
 #: share/completions/wpa_cli.fish:24
 msgid "select a network (disable others)"
-msgstr ""
+msgstr "selecionar uma rede (desabilita outras)"
 
 #: share/completions/wpa_cli.fish:25
-#, fuzzy
 msgid "enable a network"
-msgstr "Enable repository"
+msgstr "habilita uma rede"
 
 #: share/completions/wpa_cli.fish:26
 #, fuzzy
@@ -7289,9 +7246,8 @@ msgid "disable a network"
 msgstr "Disable repository"
 
 #: share/completions/wpa_cli.fish:27
-#, fuzzy
 msgid "add a network"
-msgstr "Add a new key"
+msgstr "Adicionar uma rede"
 
 #: share/completions/wpa_cli.fish:28
 #, fuzzy
@@ -7371,9 +7327,8 @@ msgid "X server display"
 msgstr "X server display"
 
 #: share/completions/xsel.fish:14
-#, fuzzy
 msgid "Error log"
-msgstr "Error log"
+msgstr "Log de erro"
 
 #: share/completions/xterm.fish:101
 msgid "Run program in xterm"
@@ -7536,9 +7491,8 @@ msgid "List all defined repositories"
 msgstr ""
 
 #: share/completions/zypper.fish:33
-#, fuzzy
 msgid "Add a new repository"
-msgstr "Update the repository"
+msgstr "Adicionar um novo repositório"
 
 #: share/completions/zypper.fish:34
 #, fuzzy
@@ -7570,9 +7524,8 @@ msgid "List all defined services"
 msgstr ""
 
 #: share/completions/zypper.fish:40
-#, fuzzy
 msgid "Add a new service"
-msgstr "Add a new key"
+msgstr "Adicionar um novo serviço"
 
 #: share/completions/zypper.fish:41
 #, fuzzy
@@ -7589,9 +7542,8 @@ msgid "Refresh all services"
 msgstr ""
 
 #: share/completions/zypper.fish:44
-#, fuzzy
 msgid "Install packages"
-msgstr "Install new package"
+msgstr "Instalar pacotes"
 
 #: share/completions/zypper.fish:46
 #, fuzzy
@@ -7736,7 +7688,6 @@ msgid "Alias for the gettext command"
 msgstr "Help for the specified command"
 
 #: share/functions/_.fish:9
-#, fuzzy
 msgid "fish"
 msgstr "fish"
 
@@ -7803,9 +7754,8 @@ msgid "Ignore changes in the amount of white space"
 msgstr "Ignore changes in the amount of white space"
 
 #: share/functions/__fish_complete_diff.fish:8
-#, fuzzy
 msgid "Ignore all white space"
-msgstr "Ignore all white space"
+msgstr "Ignorar todos os espaços em branco"
 
 #: share/functions/__fish_complete_diff.fish:9
 #, fuzzy
@@ -7848,9 +7798,8 @@ msgid "Output a normal diff"
 msgstr "Output a normal diff"
 
 #: share/functions/__fish_complete_diff.fish:20
-#, fuzzy
 msgid "Output in two columns"
-msgstr "Output in two columns"
+msgstr "Saída em duas colunas"
 
 #: share/functions/__fish_complete_diff.fish:22
 #, fuzzy
@@ -8583,9 +8532,8 @@ msgid "Operate only on members of changelist"
 msgstr ""
 
 #: share/functions/__fish_complete_svn.fish:134
-#, fuzzy
 msgid "Output in xml"
-msgstr "Output in XML"
+msgstr "Saída in XML"
 
 #: share/functions/__fish_complete_svn.fish:138
 #, fuzzy
@@ -8766,7 +8714,7 @@ msgstr "Start in folder index"
 
 #: share/functions/__fish_complete_vi.fish:49
 msgid "List swap files"
-msgstr ""
+msgstr "Listar arquivos swap"
 
 #: share/functions/__fish_complete_vi.fish:50
 #, fuzzy
@@ -8886,7 +8834,7 @@ msgstr ""
 
 #: share/functions/__fish_config_interactive.fish:34
 msgid "Welcome to fish, the friendly interactive shell"
-msgstr "Bem-vindo ao fish, ou friendly interactive shell"
+msgstr "Bem-vindo ao fish, o friendly interactive shell"
 
 #: share/functions/__fish_config_interactive.fish:35
 msgid "Type %shelp%s for instructions on how to use fish"
@@ -9054,9 +9002,8 @@ msgid "Print mounted devices"
 msgstr "Print important dependencies"
 
 #: share/functions/__fish_print_packages.fish:13
-#, fuzzy
 msgid "Package"
-msgstr "Package"
+msgstr "Pacote"
 
 #: share/functions/__fish_print_svn_rev.fish:1
 #, fuzzy
@@ -9237,7 +9184,7 @@ msgstr ""
 
 #: share/functions/funced.fish:103
 msgid "Edit the file again\\? [Y/n]"
-msgstr ""
+msgstr "Editar o arquivo novamente\\? [S/n]"
 
 #: share/functions/funced.fish:110
 #, fuzzy
@@ -9254,9 +9201,8 @@ msgid "%s: Expected function name\\n"
 msgstr "%ls: Expected function name\n"
 
 #: share/functions/funcsave.fish:26
-#, fuzzy
 msgid "%s: Could not create configuration directory\\n"
-msgstr "%ls: Could not find home directory\n"
+msgstr "%ls: Não foi possível encontrar o diretório home"
 
 #: share/functions/funcsave.fish:36
 #, fuzzy
@@ -9290,7 +9236,7 @@ msgstr ""
 
 #: share/functions/history.fish:5
 msgid "Deletes an item from history"
-msgstr ""
+msgstr "Apaga um item do histórico"
 
 #: share/functions/hostname.fish:7
 msgid "Show or set the system's host name\r"
@@ -9416,9 +9362,8 @@ msgid "%s is a function with definition\\n"
 msgstr "%ls: Missing function definition information."
 
 #: share/functions/type.fish:94
-#, fuzzy
 msgid "function"
-msgstr "function\\n"
+msgstr "função"
 
 #: share/functions/type.fish:107
 #, fuzzy

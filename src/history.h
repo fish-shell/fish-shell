@@ -39,6 +39,7 @@ enum history_search_type_t
 };
 
 typedef uint32_t history_identifier_t;
+typedef uint32_t exec_count_t;
 
 class history_item_t
 {
@@ -48,7 +49,7 @@ class history_item_t
 
 private:
     explicit history_item_t(const wcstring &str);
-    explicit history_item_t(const wcstring &, time_t, history_identifier_t ident = 0);
+    explicit history_item_t(const wcstring &, time_t, exec_count_t, history_identifier_t ident = 0);
 
     /** Attempts to merge two compatible history items together */
     bool merge(const history_item_t &item);
@@ -64,7 +65,10 @@ private:
 
     /** Paths that we require to be valid for this item to be autosuggested */
     path_list_t required_paths;
-    
+
+    /** How often this entry was executed */
+    exec_count_t exec_count;
+
 public:
     const wcstring &str() const
     {
@@ -84,6 +88,11 @@ public:
         return creation_timestamp;
     }
 
+    exec_count_t count() const
+    {
+        return exec_count;
+    }
+
     const path_list_t &get_required_paths() const
     {
         return required_paths;
@@ -93,6 +102,7 @@ public:
     {
         return contents == other.contents &&
                creation_timestamp == other.creation_timestamp &&
+               exec_count == other.exec_count &&
                required_paths == other.required_paths;
     }
 };

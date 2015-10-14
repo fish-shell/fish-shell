@@ -19,6 +19,8 @@ The following options are available:
 
 - `--search` returns history items in keeping with the `--prefix` or `--contains` options.
 
+- `--search-count` like `--search` but also prints how often each command was executed
+
 - `--delete` deletes history items.
 
 - `--prefix` searches or deletes items in the history that begin with the specified text string.

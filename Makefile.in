@@ -880,7 +880,9 @@ distclean: clean
 # deleted we won't be able to regenerate them
 
 clean:
+ifdef EXTRA_PCRE2
 	$(MAKE) -C $(PCRE2_DIR) clean
+endif
 	rm -f obj/*.o *.o doc.h doc.tmp doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr
 	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
 	rm -f $(PROGRAMS) fish_tests key_reader

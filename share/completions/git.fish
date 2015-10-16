@@ -8,7 +8,7 @@ end
 function __fish_git_unique_remote_branches
 	# Allow all remote branches with one remote without the remote part
 	# This is useful for `git checkout` to automatically create a remote-tracking branch
-	command git branch --no-color -a ^/dev/null | __fish_sgrep -v ' -> ' | string trim -c "* " | string replace -r "^.*/" "" | sort | uniq -u
+	command git branch --no-color -a ^/dev/null | __fish_sgrep -v ' -> ' | string trim -c "* " | string replace -r "^remotes/[^/]*/" "" | sort | uniq -u
 end
 
 function __fish_git_tags

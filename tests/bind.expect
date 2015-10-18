@@ -18,7 +18,7 @@ expect_prompt -re {\r\nsuccess\r\n} {
     puts stderr "Couldn't find expected output 'success'"
 }
 # try again without the human typing
-send_line "echo fail\033ddiecho success"
+send_line -h "echo fail\033ddiecho success"
 expect_prompt -re {\r\nsuccess\r\n} {
     puts "success"
 } -nounmatched -re {\r\nfail} {
@@ -28,7 +28,7 @@ expect_prompt -re {\r\nsuccess\r\n} {
 }
 
 # Test lowercase-r replace
-send_line "\033ddiecho TEXT\033hhrAi"
+send_line -h "\033ddiecho TEXT\033hhrAi"
 expect_prompt -re {\r\nTAXT\r\n} {
     puts "replace success"
 } -nounmatched -re {\r\nfail} {
@@ -38,7 +38,7 @@ expect_prompt -re {\r\nTAXT\r\n} {
 }
 
 # still in insert mode, switch back to regular key bindings
-send_line "set -g fish_key_bindings fish_default_key_bindings"
+send_line -h "set -g fish_key_bindings fish_default_key_bindings"
 expect_prompt
 send_line "echo success"
 expect_prompt -re {\r\nsuccess\r\n} {

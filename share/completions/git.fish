@@ -509,18 +509,18 @@ complete -f -c git -n '__fish_git_using_command submodule' -a 'summary' -d 'Show
 complete -f -c git -n '__fish_git_using_command submodule' -a 'foreach' -d 'Run command on each submodule'
 complete -f -c git -n '__fish_git_using_command submodule' -a 'sync' -d 'Sync submodules\' URL with .gitmodules'
 complete -f -c git -n '__fish_git_using_command submodule' -s q -l quiet -d "Only print error messages"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_git_seen_subcommand_from update' -l init -d "Initialize all submodules"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_git_seen_subcommand_from update' -l checkout -d "Checkout the superproject's commit on a detached HEAD in the submodule"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_git_seen_subcommand_from update' -l merge -d "Merge the superproject's commit into the current branch of the submodule"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_git_seen_subcommand_from update' -l rebase -d "Rebase current branch onto the superproject's commit"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_git_seen_subcommand_from update' -s N -l no-fetch -d "Don't fetch new objects from the remote"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_git_seen_subcommand_from update' -l remote -d "Instead of using superproject's SHA-1, use the state of the submodule's remote-tracking branch"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_git_seen_subcommand_from update' -l force -d "Throw away local changes when switching to a different commit and always run checkout"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_git_seen_subcommand_from add' -l force -d "Also add ignored submodule path"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_git_seen_subcommand_from deinit' -l force -d "Remove even with local changes"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_git_seen_subcommand_from status summary' -l cached -d "Use the commit stored in the index"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_git_seen_subcommand_from summary' -l files -d "Compare the commit in the index with submodule HEAD"
-complete -f -c git -n '__fish_git_using_command submodule; and __fish_git_seen_subcommand_from foreach update status' -l recursive -d "Traverse submodules recursively"
+complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from update' -l init -d "Initialize all submodules"
+complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from update' -l checkout -d "Checkout the superproject's commit on a detached HEAD in the submodule"
+complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from update' -l merge -d "Merge the superproject's commit into the current branch of the submodule"
+complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from update' -l rebase -d "Rebase current branch onto the superproject's commit"
+complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from update' -s N -l no-fetch -d "Don't fetch new objects from the remote"
+complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from update' -l remote -d "Instead of using superproject's SHA-1, use the state of the submodule's remote-tracking branch"
+complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from update' -l force -d "Throw away local changes when switching to a different commit and always run checkout"
+complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from add' -l force -d "Also add ignored submodule path"
+complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from deinit' -l force -d "Remove even with local changes"
+complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from status summary' -l cached -d "Use the commit stored in the index"
+complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from summary' -l files -d "Compare the commit in the index with submodule HEAD"
+complete -f -c git -n '__fish_git_using_command submodule; and __fish_seen_subcommand_from foreach update status' -l recursive -d "Traverse submodules recursively"
 
 ## git whatchanged
 complete -f -c git -n '__fish_git_needs_command' -a whatchanged -d 'Show logs with difference each commit introduces'

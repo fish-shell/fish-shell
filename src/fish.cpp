@@ -188,7 +188,11 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
                 base_path.resize(base_path.size() - strlen(suffix));
 
                 paths.data = base_path + L"/share/fish";
+#if defined(SYSCONFDIR)
+                paths.sysconf = L"" SYSCONFDIR L"/fish";
+#else
                 paths.sysconf = base_path + L"/etc/fish";
+#endif
                 paths.doc = base_path + L"/share/doc/fish";
                 paths.bin = base_path + L"/bin";
 

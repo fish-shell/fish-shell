@@ -320,4 +320,13 @@ function __fish_config_interactive -d "Initializations that should be performed 
 			fish_fallback_prompt
 		end
 	end
+
+	if begin set -q KONSOLE_DBUS_SESSION # KDE's konsole
+		or set -q ITERM_PROFILE # iTerm2
+		or string match -q -- "st-*" $TERM # suckless' st
+		or test "$VTE_VERSION" -ge 3600 # Should be all gtk3-vte-based terms after version 3.6.0.0
+		or test "$COLORTERM" = truecolor -o "$COLORTERM" = 24bit # slang expects this
+	   end
+	   set -g fish_term24bit 1
+	end
 end

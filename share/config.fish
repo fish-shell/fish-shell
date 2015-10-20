@@ -50,7 +50,7 @@ end
 # default functions/completions are included in the respective path.
 
 if not set -q fish_function_path
-	set fish_function_path $configdir/fish/functions    $__fish_sysconfdir/functions    $__fish_datadir/functions
+	set fish_function_path $configdir/fish/functions    $__fish_sysconfdir/functions $__fish_datadir/vendor_functions.d   $__fish_datadir/functions
 end
 
 if not contains $__fish_datadir/functions $fish_function_path
@@ -151,4 +151,16 @@ function . --description 'Evaluate contents of file (deprecated, see "source")' 
 	else
 		source $argv
 	end
+end
+
+# As last part of initialization, source the snippets directories
+# Implement precedence (User > Admin > Vendors > Fish) by basically doing "basename"
+set -l sourcelist
+for file in $XDG_CONFIG_HOME/fish/snippets/* $__fish_sysconfdir/snippets/* $__fish_datadir/vendor_snippets.d/*
+	set -l basename (string replace -r '^.*/' '' -- $file)
+	contains -- $basename $sourcelist; and continue
+	set sourcelist $sourcelist $basename
+	# Also skip non-files or unreadable files
+	# This allows one to use e.g. symlinks to /dev/null to "mask" something (like in systemd)
+	[ -f $file -a -r $file ]; and source $file
 end

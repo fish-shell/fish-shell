@@ -156,6 +156,7 @@ end
 # As last part of initialization, source the snippets directories
 # Implement precedence (User > Admin > Vendors > Fish) by basically doing "basename"
 set -l sourcelist
+set -q XDG_CONFIG_HOME; or set -l XDG_CONFIG_HOME ~/.config
 for file in $XDG_CONFIG_HOME/fish/snippets/* $__fish_sysconfdir/snippets/* $__fish_datadir/vendor_snippets.d/*
 	set -l basename (string replace -r '^.*/' '' -- $file)
 	contains -- $basename $sourcelist; and continue

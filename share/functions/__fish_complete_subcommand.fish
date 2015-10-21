@@ -1,4 +1,4 @@
-function __fish_complete_subcommand  -d "Complete subcommand"
+function __fish_complete_subcommand  -d "Complete subcommand" --no-scope-shadowing
 	set -l skip_next 1
     set -l test
     switch "$argv[1]"

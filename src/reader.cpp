@@ -952,8 +952,6 @@ void reader_write_title(const wcstring &cmd)
     }
     proc_pop_interactive();
     set_color(rgb_color_t::reset(), rgb_color_t::reset());
-    // Put the cursor back at the beginning of the line #2453
-    writestr(L"\r");
 }
 
 /**

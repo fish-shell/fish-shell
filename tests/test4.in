@@ -177,3 +177,14 @@ true ; set -NOT_AN_OPTION 2> /dev/null ; echo 9 $status # no passthrough
 false ; set foo (echo A; true) ; echo 10 $status $foo
 true ; set foo (echo B; false) ; echo 11 $status $foo
 true
+
+echo "Verify set -ql behavior" # see 2502
+function setql_check
+  set -l setql_foo val
+  if set -ql setql_foo
+    echo Pass
+  else
+    echo Fail
+  end
+end
+setql_check

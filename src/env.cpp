@@ -93,7 +93,8 @@ struct env_node_t
     const var_entry_t *find_entry(const wcstring &key);
 
     /* Returns the next scope to search in order, respecting the new_scope flag, or NULL if we're done. */
-    env_node_t *next_scope_to_search(void);
+    env_node_t *next_scope_to_search();
+    const env_node_t *next_scope_to_search() const;
 };
 
 class variable_entry_t
@@ -195,10 +196,16 @@ const var_entry_t *env_node_t::find_entry(const wcstring &key)
     return result;
 }
 
-env_node_t *env_node_t::next_scope_to_search(void)
+env_node_t *env_node_t::next_scope_to_search()
 {
     return this->new_scope ? global_env : this->next;
 }
+
+const env_node_t *env_node_t::next_scope_to_search() const
+{
+    return this->new_scope ? global_env : this->next;
+}
+
 
 /**
    Return the current umask value.
@@ -1010,8 +1017,6 @@ env_var_t env_get_string(const wcstring &key, env_mode_flags_t mode)
 
 bool env_exist(const wchar_t *key, env_mode_flags_t mode)
 {
-    env_node_t *env;
-
     CHECK(key, false);
 
     const bool has_scope = mode & (ENV_LOCAL | ENV_GLOBAL | ENV_UNIVERSAL);
@@ -1037,27 +1042,21 @@ bool env_exist(const wchar_t *key, env_mode_flags_t mode)
 
     if (test_local || test_global)
     {
-        env = test_local ? top : global_env;
-
-        while (env)
+        const env_node_t *env = test_local ? top : global_env;
+        while (env != NULL)
         {
-            var_table_t::iterator result = env->env.find(key);
-
+            if (env == global_env && ! test_global)
+            {
+                break;
+            }
+            
+            var_table_t::const_iterator result = env->env.find(key);
             if (result != env->env.end())
             {
                 const var_entry_t &res = result->second;
                 return res.exportv ? test_exported : test_unexported;
             }
-
-            if (has_scope)
-            {
-                if (!test_global || env == global_env) break;
-                env = global_env;
-            }
-            else
-            {
-                env = env->next_scope_to_search();
-            }
+            env = env->next_scope_to_search();
         }
     }
 

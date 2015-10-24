@@ -1,4 +1,4 @@
-function prompt_pwd --description 'Print the current working directory, shortened to fit the prompt'
+function prompt_pwd --description "Print the current working directory, shortened to fit the prompt"
 	# This allows overriding fish_prompt_pwd_dir_length from the outside (global or universal) without leaking it
 	set -q fish_prompt_pwd_dir_length; or set -l fish_prompt_pwd_dir_length 1
 

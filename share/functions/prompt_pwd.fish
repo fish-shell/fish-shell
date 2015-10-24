@@ -1,6 +1,15 @@
-set -q fish_prompt_pwd_abbr; or set -U fish_prompt_pwd_abbr 0
+function prompt_pwd --description 'Print the current working directory, shortened to fit the prompt'
+	# This allows overriding fish_prompt_pwd_dir_length from the outside (global or universal) without leaking it
+	set -q fish_prompt_pwd_dir_length; or set -l fish_prompt_pwd_dir_length 1
 
-function prompt_pwd --description "Print the current working directory, shortened to fit the prompt"
+	# Replace $HOME with "~"
 	set realhome ~
-	string replace -r '^'"$realhome"'($|/)' '~$1' $PWD | string replace -ar '([^/.])([^/]{0,'"$fish_prompt_pwd_abbr"'})[^/]*/' '$1$2/'
+	set -l tmp (string replace -r '^'"$realhome"'($|/)' '~$1' $PWD)
+
+	if [ $fish_prompt_pwd_dir_length -eq 0 ]
+		echo $tmp
+	else
+		# Shorten to at most $fish_prompt_pwd_dir_length characters per directory
+		string replace -ar '(\.?[^/]{'"$fish_prompt_pwd_dir_length"'})[^/]*/' '$1/' $tmp
+	end
 end

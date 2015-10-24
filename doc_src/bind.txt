@@ -31,7 +31,7 @@ When multiple `COMMAND`s are provided, they are all run in the specified order w
 
 If no `SEQUENCE` is provided, all bindings (or just the bindings in the specified `MODE`) are printed. If `SEQUENCE` is provided without `COMMAND`, just the binding matching that sequence is printed.
 
-Key bindings are not saved between sessions by default. To save custom keybindings, edit the `fish_user_key_bindings` function and insert the appropriate `bind` statements.
+Key bindings are not saved between sessions by default. **Bare `bind` statements in <a href="index.html#initialization">config.fish</a> won't have any effect because it is sourced before the default keybindings are setup.** To save custom keybindings, put the `bind` statements into a function called `fish_user_key_bindings`, which will be <a href="tutorial.html#tut_autoload">autoloaded</a>.
 
 Key bindings may use "modes", which mimics Vi's modal input behavior. The default mode is "default", and every bind applies to a single mode. The mode can be viewed/changed with the `$fish_bind_mode` variable.
 

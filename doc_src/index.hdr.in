@@ -958,6 +958,8 @@ Command mode is also known as normal mode.
 
 - @key{Control,B} and @key{Control,F} move the cursor one word left or right. If the cursor is already at the end of the line, and an autosuggestion is available, @key{Control,F} accepts the first word in the suggestion.
 
+- @key{Control,x} moves the cursor to the end of the line. If an autosuggestion is available, it will be accepted completely.
+
 \subsubsection vi-mode-visual Visual mode
 
 - @cursor_key{&larr;,Left} and @cursor_key{&rarr;,Right} extend the selection backward/forward by one character.

@@ -1,6 +1,5 @@
 prefix=@prefix@
 datadir=@datadir@
-completionsdir=${datadir}/fish/vendor_completions.d
 
 Name: fish
 Description: fish, the friendly interactive shell

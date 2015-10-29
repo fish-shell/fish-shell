@@ -26,6 +26,7 @@ AC_SUBST(HAVE_DOXYGEN)
 AC_SUBST(LDFLAGS_FISH)
 AC_SUBST(WCHAR_T_BITS)
 AC_SUBST(EXTRA_PCRE2)
+AC_SUBST(COMPLETIONS_DIR)
 
 
 #
@@ -895,8 +896,18 @@ if test "x$included_pcre2" = "xyes"; then
   LIBS="$LIBS $PCRE2_LIBS"
 fi
 
+AC_ARG_WITH(
+  completions-dir,
+  AS_HELP_STRING(
+    [--with-completions-dir=DIR],
+    [directory for other packages to provide completions @<:@PREFIX/share/fish/vendor_completions.d@:>@]
+  ),
+  [COMPLETIONS_DIR=$withval],
+  [COMPLETIONS_DIR=$(prefix)/share/fish/vendor_completions.d]
+)
+
 # Tell the world what we know
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile share/config.fish])
 AC_OUTPUT
 
 if test ! x$local_found_posix_switch = xyes; then

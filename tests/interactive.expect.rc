@@ -5,7 +5,7 @@ log_file -noappend interactive.tmp.log
 
 set fish ../fish
 
-set timeout 2
+set timeout 4
 
 set send_human {.05 .1 5 .02 .2}
 

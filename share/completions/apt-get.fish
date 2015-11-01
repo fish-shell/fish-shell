@@ -2,7 +2,7 @@
 
 function __fish_apt_no_subcommand --description 'Test if apt has yet to be given the subcommand'
 	for i in (commandline -opc)
-		if contains -- $i update upgrade dselect-upgrade dist-upgrade install remove purge source build-dep check clean autoclean
+		if contains -- $i update upgrade dselect-upgrade dist-upgrade install remove purge source build-dep check clean autoclean changelog
 			return 1
 		end
 	end
@@ -11,7 +11,7 @@ end
 
 function __fish_apt_use_package --description 'Test if apt command should have packages as potential completion'
 	for i in (commandline -opc)
-		if contains -- $i contains install remove purge build-dep
+		if contains -- $i contains install remove purge build-dep changelog
 			return 0
 		end
 	end
@@ -26,6 +26,7 @@ complete -f -n '__fish_apt_no_subcommand' -c apt-get -a 'upgrade' --description 
 complete -f -n '__fish_apt_no_subcommand' -c apt-get -a 'dselect-upgrade' --description 'Use with dselect front-end'
 complete -f -n '__fish_apt_no_subcommand' -c apt-get -a 'dist-upgrade' --description 'Distro upgrade'
 complete -f -n '__fish_apt_no_subcommand' -c apt-get -a 'install' --description 'Install one or more packages'
+complete -f -n '__fish_apt_no_subcommand' -c apt-get -a 'changelog' --description 'Display changelog of one or more packages'
 complete -f -n '__fish_apt_no_subcommand' -c apt-get -a 'purge' --description 'Remove and purge one or more packages'
 complete -f -n '__fish_apt_no_subcommand' -c apt-get -a 'remove' --description 'Remove one or more packages'
 complete -f -n '__fish_apt_no_subcommand' -c apt-get -a 'source' --description 'Fetch source packages'

@@ -5,43 +5,34 @@ function psub --description "Read from stdin into a file and output the filename
 	set -l funcname
 	set -l suffix
 	set -l use_fifo 1
-	set -l shortopt -o hfs:
-	set -l longopt -l help,file,suffix:
 
-	if getopt -T >/dev/null
-		set longopt
-	end
+	while count $argv >/dev/null
 
-	if not getopt -n psub -Q $shortopt $longopt -- $argv >/dev/null
-		return 1
-	end
-
-	set -l tmp (getopt $shortopt $longopt -- $argv)
-
-	eval set opt $tmp
-
-	while count $opt >/dev/null
-
-		switch $opt[1]
+		switch $argv[1]
 			case -h --help
 				__fish_print_help psub
 				return 0
 
 			case -f --file
 				set use_fifo 0
+				set -e argv[1]
 
 			case -s --suffix
-				set suffix $opt[2]
-				set -e opt[1..2]
+				set suffix $argv[2]
+				set -e argv[1..2]
 
 			case --
-				set -e opt[1]
+				set -e argv[1]
 				break
 
+			case "-?"
+				printf "psub: invalid option: '%s'\n" $argv[1]
+				return 1
+
+			case "-*"
+				set opts (printf "-%s\n" (printf $argv[1] |grep -o "\w"))
+				set argv $opts $argv[2..-1]
 		end
-
-		set -e opt[1]
-
 	end
 
 	if not status --is-command-substitution

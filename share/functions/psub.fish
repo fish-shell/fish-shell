@@ -25,13 +25,14 @@ function psub --description "Read from stdin into a file and output the filename
 				set -e argv[1]
 				break
 
-			case "-?"
+			case "-?" "--*"
 				printf "psub: invalid option: '%s'\n" $argv[1]
 				return 1
 
 			case "-*"
 				set opts (printf "-%s\n" (printf $argv[1] |grep -o "\w"))
-				set argv $opts $argv[2..-1]
+				set -e argv[1]
+				set argv $opts $argv
 		end
 	end
 

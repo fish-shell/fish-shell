@@ -2110,20 +2110,24 @@ static void test_complete(void)
     do_test(completions.at(0).completion == L"$Foo1");
     do_test(completions.at(1).completion == L"$Bar1");
 
-    completions.clear();
-    complete(L"echo (/bin/mkdi", completions, COMPLETION_REQUEST_DEFAULT);
-    do_test(completions.size() == 1);
-    do_test(completions.at(0).completion == L"r");
+    if (system("mkdir -p '/tmp/complete_test/'")) err(L"mkdir failed");
+    if (system("touch '/tmp/complete_test/testfile'")) err(L"touch failed");
+    if (system("chmod 700 '/tmp/complete_test/testfile'")) err(L"chmod failed");
 
     completions.clear();
-    complete(L"echo (ls /bin/mkdi", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"echo (/tmp/complete_test/testfil", completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
-    do_test(completions.at(0).completion == L"r");
+    do_test(completions.at(0).completion == L"e");
 
     completions.clear();
-    complete(L"echo (command ls /bin/mkdi", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"echo (ls /tmp/complete_test/testfil", completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
-    do_test(completions.at(0).completion == L"r");
+    do_test(completions.at(0).completion == L"e");
+
+    completions.clear();
+    complete(L"echo (command ls /tmp/complete_test/testfil", completions, COMPLETION_REQUEST_DEFAULT);
+    do_test(completions.size() == 1);
+    do_test(completions.at(0).completion == L"e");
 
     /* Add a function and test completing it in various ways */
     struct function_data_t func_data = {};
@@ -2174,8 +2178,6 @@ static void test_complete(void)
         perror("getcwd");
         exit(-1);
     }
-    if (system("mkdir -p '/tmp/complete_test/'")) err(L"mkdir failed");
-    if (system("touch '/tmp/complete_test/testfile'")) err(L"touch failed");
     if (chdir("/tmp/complete_test/")) err(L"chdir failed");
     complete(L"cat te", completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);

@@ -557,8 +557,13 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
 
     for (wcstring_list_t::const_iterator it = m.commands.begin(), end = m.commands.end(); it != end; ++it)
     {
-        if (input_function_get_code(*it) != INPUT_CODE_NONE)
+        wchar_t code = input_function_get_code(*it);
+        
+        if (code != INPUT_CODE_NONE)
+        {
+            input_function_push_args(code);
             has_functions = true;
+        }
         else
             has_commands = true;
     }
@@ -568,6 +573,36 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
     {
         input_set_bind_mode(m.sets_mode);
         return;
+    }
+
+    /* Add any functions at the end of the commands list
+       to the queue of unread characters. If there was only
+       a single function then set bind mode and return. */
+    size_t count = m.commands.size();
+    if (count >= 1)
+    {
+        size_t index = count - 1;
+        
+        while (index--)
+        {
+            wcstring command = m.commands.at(index);
+            wchar_t code = input_function_get_code(command);
+        
+            if (code != INPUT_CODE_NONE)
+            {
+                input_common_next_ch(code);
+            }
+            else
+            {
+                break;
+            }
+        }
+        
+        if (count == 1)
+        {
+            input_set_bind_mode(m.sets_mode);
+            return;
+        }
     }
 
     if (!allow_commands)
@@ -580,16 +615,6 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
         }
         input_common_next_ch(R_NULL);
         return; /* skip the input_set_bind_mode */
-    }
-    else if (has_functions && !has_commands)
-    {
-        /* functions are added at the head of the input queue */
-        for (wcstring_list_t::const_reverse_iterator it = m.commands.rbegin(), end = m.commands.rend(); it != end; ++it)
-        {
-            wchar_t code = input_function_get_code(*it);
-            input_function_push_args(code);
-            input_common_next_ch(code);
-        }
     }
     else if (has_commands && !has_functions)
     {

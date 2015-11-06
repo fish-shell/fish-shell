@@ -165,9 +165,6 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   # This is complete in vim
   bind -M insert \cx end-of-line
 
-  bind -M insert \cf forward-word
-  bind -M insert \cb backward-word
-
   bind '"*p' "commandline -i ( xsel -p; echo )[1]"
   bind '"*P' backward-char "commandline -i ( xsel -p; echo )[1]"
 

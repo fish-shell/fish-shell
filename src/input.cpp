@@ -582,7 +582,7 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
     if (count >= 1)
     {
         size_t index = count - 1;
-        
+
         while (index--)
         {
             wcstring command = m.commands.at(index);
@@ -598,7 +598,7 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
             }
         }
         
-        if (count == 1)
+        if (!has_commands)
         {
             input_set_bind_mode(m.sets_mode);
             return;

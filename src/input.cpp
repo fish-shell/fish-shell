@@ -570,7 +570,7 @@ static void input_mapping_execute(const input_mapping_t &m, bool allow_commands)
         return;
     }
 
-    if (!allow_commands)
+    if (has_commands && !allow_commands)
     {
         /* We don't want to run commands yet. Put the characters back and return
            R_NULL */

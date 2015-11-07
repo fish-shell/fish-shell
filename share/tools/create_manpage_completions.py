@@ -736,12 +736,14 @@ def parse_manpage_at_path(manpage_path, output_directory):
         fd = lzma.LZMAFile(str(manpage_path), 'r')
         manpage = fd.read()
         if IS_PY3: manpage = manpage.decode('latin-1')
-    else:
+    elif manpage_path.endswith((".1", ".2", ".3", ".4", ".5", ".6", ".7", ".8", ".9")):
         if IS_PY3:
             fd = open(manpage_path, 'r', encoding='latin-1')
         else:
             fd = open(manpage_path, 'r')
         manpage = fd.read()
+    else:
+        return
     fd.close()
 
     manpage = str(manpage)

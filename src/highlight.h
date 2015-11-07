@@ -130,7 +130,7 @@ enum
     PATH_EXPAND_TILDE = 1 << 1
 };
 typedef unsigned int path_flags_t;
-bool is_potential_path(const wcstring &const_path, const wcstring_list_t &directories, path_flags_t flags, wcstring *out_path = NULL);
+bool is_potential_path(const wcstring &const_path, const wcstring_list_t &directories, path_flags_t flags, wcstring *out_suggested_cdpath = NULL);
 
 #endif
 

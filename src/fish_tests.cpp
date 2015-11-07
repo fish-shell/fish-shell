@@ -1921,16 +1921,16 @@ static void test_is_potential_path()
     wcstring tmp;
     do_test(is_potential_path(L"al", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"alpha/");
     do_test(is_potential_path(L"alpha/", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"alpha/");
-    do_test(is_potential_path(L"aard", wds, 0, &tmp) && tmp == L"aardvark");
+    do_test(is_potential_path(L"aard", wds, 0));
 
     do_test(! is_potential_path(L"balpha/", wds, PATH_REQUIRE_DIR, &tmp));
     do_test(! is_potential_path(L"aard", wds, PATH_REQUIRE_DIR, &tmp));
     do_test(! is_potential_path(L"aarde", wds, PATH_REQUIRE_DIR, &tmp));
     do_test(! is_potential_path(L"aarde", wds, 0, &tmp));
 
-    do_test(is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, 0, &tmp) && tmp == L"/tmp/is_potential_path_test/aardvark");
+    do_test(is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, 0));
     do_test(is_potential_path(L"/tmp/is_potential_path_test/al", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"/tmp/is_potential_path_test/alpha/");
-    do_test(is_potential_path(L"/tmp/is_potential_path_test/aardv", wds, 0, &tmp) && tmp == L"/tmp/is_potential_path_test/aardvark");
+    do_test(is_potential_path(L"/tmp/is_potential_path_test/aardv", wds, 0));
 
     do_test(! is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, PATH_REQUIRE_DIR, &tmp));
     do_test(! is_potential_path(L"/tmp/is_potential_path_test/al/", wds, 0, &tmp));
@@ -2325,6 +2325,9 @@ static void test_autosuggest_suggest_special()
     if (system("mkdir -p /tmp/autosuggest_test/4foo\\'bar")) err(L"mkdir failed"); //a path with a single quote
     if (system("mkdir -p /tmp/autosuggest_test/5foo\\\"bar")) err(L"mkdir failed"); //a path with a double quote
     if (system("mkdir -p ~/test_autosuggest_suggest_special/")) err(L"mkdir failed"); //make sure tilde is handled
+    if (system("mkdir -p /tmp/autosuggest_test/start/unique2/unique3/multi4")) err(L"mkdir failed");
+    if (system("mkdir -p /tmp/autosuggest_test/start/unique2/unique3/multi42")) err(L"mkdir failed");
+    if (system("mkdir -p /tmp/autosuggest_test/start/unique2/.hiddenDir/moreStuff")) err(L"mkdir failed");
 
     const wcstring wd = L"/tmp/autosuggest_test/";
     perform_one_autosuggestion_special_test(L"cd /tmp/autosuggest_test/0", wd, L"cd /tmp/autosuggest_test/0foobar/", __LINE__);
@@ -2370,6 +2373,9 @@ static void test_autosuggest_suggest_special()
     perform_one_autosuggestion_special_test(L"cd '5", wd, L"cd '5foo\"bar/'", __LINE__);
 
     perform_one_autosuggestion_special_test(L"cd ~/test_autosuggest_suggest_specia", wd, L"cd ~/test_autosuggest_suggest_special/", __LINE__);
+    
+    perform_one_autosuggestion_special_test(L"cd /tmp/autosuggest_test/start/", wd, L"cd /tmp/autosuggest_test/start/unique2/unique3/", __LINE__);
+    
 
     // A single quote should defeat tilde expansion
     perform_one_autosuggestion_special_test(L"cd '~/test_autosuggest_suggest_specia'", wd, L"", __LINE__);

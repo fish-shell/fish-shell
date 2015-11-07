@@ -136,28 +136,89 @@ bool fs_is_case_insensitive(const wcstring &path, int fd, case_sensitivity_cache
     return result;
 }
 
+/* Given a start point as an absolute path, for any directory that has exactly one non-hidden entity in it which is itself a directory, return that. The result is a relative path. For example, if start_point is '/usr' we may return 'local/bin'.
+ 
+ The result does not have a leading slash, but does have a trailing slash if non-empty. */
+static wcstring descend_unique_hierarchy(const wcstring &start_point)
+{
+    assert(! start_point.empty() && start_point.at(0) == L'/');
+    
+    wcstring unique_hierarchy;
+    wcstring abs_unique_hierarchy = start_point;
+    
+    bool stop_descent = false;
+    DIR *dir;
+    while (!stop_descent && (dir = wopendir(abs_unique_hierarchy)))
+    {
+        /* We keep track of the single unique_entry entry. If we get more than one, it's not unique and we stop the descent. */
+        wcstring unique_entry;
+        
+        bool child_is_dir;
+        wcstring child_entry;
+        while (wreaddir_resolving(dir, abs_unique_hierarchy, child_entry, &child_is_dir))
+        {
+            if (child_entry.empty() || child_entry.at(0) == L'.')
+            {
+                /* Either hidden, or . and .. entries. Skip them. */
+                continue;
+            }
+            else if (child_is_dir && unique_entry.empty())
+            {
+                /* First candidate */
+                unique_entry = child_entry;
+            }
+            else
+            {
+                /* We either have two or more candidates, or the child is not a directory. We're done. */
+                stop_descent = true;
+                break;
+            }
+        }
+        
+        /* We stop if we got two or more entries; also stop if we got zero. */
+        if (unique_entry.empty())
+        {
+            stop_descent = true;
+        }
+        
+        if (! stop_descent)
+        {
+            /* We have an entry in the unique hierarchy! */
+            append_path_component(unique_hierarchy, unique_entry);
+            unique_hierarchy.push_back(L'/');
+            
+            append_path_component(abs_unique_hierarchy, unique_entry);
+            abs_unique_hierarchy.push_back(L'/');
+        }
+        closedir(dir);
+    }
+    return unique_hierarchy;
+}
+
 /* Tests whether the specified string cpath is the prefix of anything we could cd to. directories is a list of possible parent directories (typically either the working directory, or the cdpath). This does I/O!
+ 
+   Hack: if out_suggested_cdpath is not NULL, it returns the autosuggestion for cd. This descends the deepest unique directory hierarchy.
 
    We expect the path to already be unescaped.
 */
-bool is_potential_path(const wcstring &const_path, const wcstring_list_t &directories, path_flags_t flags, wcstring *out_path)
+bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_list_t &directories, path_flags_t flags, wcstring *out_suggested_cdpath)
 {
     ASSERT_IS_BACKGROUND_THREAD();
 
     const bool require_dir = !!(flags & PATH_REQUIRE_DIR);
-    wcstring clean_path;
+    wcstring clean_potential_path_fragment;
     int has_magic = 0;
     bool result = false;
 
-    wcstring path(const_path);
+    wcstring path_with_magic(potential_path_fragment);
     if (flags & PATH_EXPAND_TILDE)
-        expand_tilde(path);
+        expand_tilde(path_with_magic);
 
     //  debug( 1, L"%ls -> %ls ->%ls", path, tilde, unescaped );
 
-    for (size_t i=0; i < path.size(); i++)
+    for (size_t i=0; i < path_with_magic.size(); i++)
     {
-        wchar_t c = path.at(i);
+        wchar_t c = path_with_magic.at(i);
         switch (c)
         {
             case PROCESS_EXPAND:
@@ -181,15 +242,14 @@ bool is_potential_path(const wcstring &const_path, const wcstring_list_t &direct
 
             default:
             {
-                clean_path.push_back(c);
+                clean_potential_path_fragment.push_back(c);
                 break;
             }
 
         }
-
     }
 
-    if (! has_magic && ! clean_path.empty())
+    if (! has_magic && ! clean_potential_path_fragment.empty())
     {
         /* Don't test the same path multiple times, which can happen if the path is absolute and the CDPATH contains multiple entries */
         std::set<wcstring> checked_paths;
@@ -201,7 +261,7 @@ bool is_potential_path(const wcstring &const_path, const wcstring_list_t &direct
         {
             const wcstring &wd = directories.at(wd_idx);
 
-            const wcstring abs_path = apply_working_directory(clean_path, wd);
+            const wcstring abs_path = apply_working_directory(clean_potential_path_fragment, wd);
 
             /* Skip this if it's empty or we've already checked it */
             if (abs_path.empty() || checked_paths.count(abs_path))
@@ -217,8 +277,11 @@ bool is_potential_path(const wcstring &const_path, const wcstring_list_t &direct
                 {
                     result = true;
                     /* Return the path suffix, not the whole absolute path */
-                    if (out_path)
-                        *out_path = clean_path;
+                    if (out_suggested_cdpath)
+                    {
+                        out_suggested_cdpath->assign(clean_potential_path_fragment);
+                        append_path_component(*out_suggested_cdpath, descend_unique_hierarchy(abs_path));
+                    }
                 }
             }
             else
@@ -227,12 +290,11 @@ bool is_potential_path(const wcstring &const_path, const wcstring_list_t &direct
 
                 /* We do not end with a slash; it does not have to be a directory */
                 const wcstring dir_name = wdirname(abs_path);
-                const wcstring base_name = wbasename(abs_path);
-                if (dir_name == L"/" && base_name == L"/")
+                const wcstring filename_fragment = wbasename(abs_path);
+                if (dir_name == L"/" && filename_fragment == L"/")
                 {
+                    /* cd ///.... No autosuggestion.  */
                     result = true;
-                    if (out_path)
-                        *out_path = clean_path;
                 }
                 else if ((dir = wopendir(dir_name)))
                 {
@@ -258,27 +320,36 @@ bool is_potential_path(const wcstring &const_path, const wcstring_list_t &direct
                             prefix_func = string_prefixes_string;
                         }
 
-                        if (prefix_func(base_name, ent) && (! require_dir || is_dir))
+                        if (prefix_func(filename_fragment, ent) && (! require_dir || is_dir))
                         {
                             result = true;
-                            if (out_path)
+                            if (out_suggested_cdpath)
                             {
-                                /* We want to return the path in the same "form" as it was given. Take the given path, get its basename. Append that to the output if the basename actually prefixes the path (which it won't if the given path contains no slashes), and isn't a slash (so we don't duplicate slashes). Then append the directory entry. */
+                                /* We want to return the path in the same "form" as it was given, preserving all magic, etc. Take the given path, get its basename. Append that to the output if the basename actually prefixes the path (which it won't if the given path contains no slashes), and isn't a slash (so we don't duplicate slashes). Then append the directory entry. */
+                                
+                                wcstring suggestion;
+                                const wcstring path_base = wdirname(potential_path_fragment);
 
-                                out_path->clear();
-                                const wcstring path_base = wdirname(const_path);
-
-
-                                if (prefix_func(path_base, const_path))
+                                if (prefix_func(path_base, potential_path_fragment))
                                 {
-                                    out_path->append(path_base);
-                                    if (! string_suffixes_string(L"/", *out_path))
-                                        out_path->push_back(L'/');
+                                    suggestion.append(path_base);
+                                    if (! string_suffixes_string(L"/", *out_suggested_cdpath))
+                                    {
+                                        suggestion.push_back(L'/');
+                                    }
                                 }
-                                out_path->append(ent);
-                                /* We actually do want a trailing / for directories, since it makes autosuggestion a bit nicer */
-                                if (is_dir)
-                                    out_path->push_back(L'/');
+                                append_path_component(suggestion, ent);
+                                
+                                /* A trailing '/' makes autosuggestion a bit nicer and is needed for the singles traversal */
+                                suggestion.push_back(L'/');
+                                
+                                /* Now descend the deepest unique hierarchy we have. */
+                                wcstring start_point = dir_name;
+                                append_path_component(start_point, ent);
+                                append_path_component(suggestion, descend_unique_hierarchy(start_point));
+                                
+                                /* Return our computed suggestion */
+                                out_suggested_cdpath->swap(suggestion);
                             }
                             break;
                         }

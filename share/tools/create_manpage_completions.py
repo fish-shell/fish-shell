@@ -759,7 +759,7 @@ def parse_manpage_at_path(manpage_path, output_directory):
             return
 
     # Ignore the millions of links to BUILTIN(1)
-    if manpage.find('BUILTIN 1') != -1:
+    if 'BUILTIN 1' in manpage or 'builtin.1' in manpage:
         return
 
     # Clear the output list

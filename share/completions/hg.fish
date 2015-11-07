@@ -244,7 +244,7 @@ function __fish_hg_merge_tools
 end
 
 function __fish_hg_sources
-    printf "%s\tsource\n" (__fish_hg paths | cut -d = -f 1)
+    printf "%s\tsource\n" (__fish_hg paths | cut -d " " -f 1)
 end
 
 function __fish_hg_mq_enabled

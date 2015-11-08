@@ -822,7 +822,7 @@ fish_indent: $(FISH_INDENT_OBJS) $(EXTRA_PCRE2)
 # Neat little program to show output from terminal
 #
 
-key_reader: $(FISH_OBJS) key_reader.o
+key_reader: $(FISH_OBJS) $(EXTRA_PCRE2) obj/key_reader.o
 	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $^ $(LIBS) -o $@
 
 

@@ -76,7 +76,6 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind $argv \ce end-of-line
 	bind $argv \ey yank-pop
 	bind $argv \ch backward-delete-char
-	bind $argv \cw backward-kill-word
 	bind $argv \cp up-or-search
 	bind $argv \cn down-or-search
 	bind $argv \cf forward-char

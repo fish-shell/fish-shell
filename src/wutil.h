@@ -143,6 +143,8 @@ struct file_id_t
     uint64_t size;
     time_t change_seconds;
     long change_nanoseconds;
+    time_t mod_seconds;
+    long mod_nanoseconds;
     uint32_t generation;
     
     bool operator==(const file_id_t &rhs) const;
@@ -152,6 +154,9 @@ struct file_id_t
     bool operator<(const file_id_t &rhs) const;
     
     static file_id_t file_id_from_stat(const struct stat *buf);
+    
+    private:
+    int compare_file_id(const file_id_t &rhs) const;
 };
 
 file_id_t file_id_for_fd(int fd);

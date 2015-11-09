@@ -545,15 +545,20 @@ file_id_t file_id_t::file_id_from_stat(const struct stat *buf)
     result.inode = buf->st_ino;
     result.size = buf->st_size;
     result.change_seconds = buf->st_ctime;
+    result.mod_seconds = buf->st_mtime;
     
 #if STAT_HAVE_NSEC
     result.change_nanoseconds = buf->st_ctime_nsec;
+    result.mod_nanoseconds = buf->st_mtime_nsec;
 #elif defined(__APPLE__)
     result.change_nanoseconds = buf->st_ctimespec.tv_nsec;
+    result.mod_nanoseconds = buf->st_mtimespec.tv_nsec;
 #elif defined(_BSD_SOURCE) || defined(_SVID_SOURCE) || defined(_XOPEN_SOURCE)
     result.change_nanoseconds = buf->st_ctim.tv_nsec;
+    result.mod_nanoseconds = buf->st_mtim.tv_nsec;
 #else
     result.change_nanoseconds = 0;
+    result.mod_nanoseconds = 0;
 #endif
 
 #if defined(__APPLE__) || defined(__DragonFly__) || defined(__FreeBSD__) ||  defined(__OpenBSD__) || defined(__NetBSD__)
@@ -590,12 +595,7 @@ file_id_t file_id_for_path(const wcstring &path)
 
 bool file_id_t::operator==(const file_id_t &rhs) const
 {
-    return device == rhs.device &&
-           inode == rhs.inode &&
-           size == rhs.size &&
-           change_seconds == rhs.change_seconds &&
-           change_nanoseconds == rhs.change_nanoseconds &&
-           generation == rhs.generation;
+    return this->compare_file_id(rhs) == 0;
 }
 
 bool file_id_t::operator!=(const file_id_t &rhs) const
@@ -617,7 +617,7 @@ int compare(T a, T b)
     return 0;
 }
 
-bool file_id_t::operator<(const file_id_t &rhs) const
+int file_id_t::compare_file_id(const file_id_t &rhs) const
 {
     /* Compare each field, stopping when we get to a non-equal field */
     int ret = 0;
@@ -627,5 +627,13 @@ bool file_id_t::operator<(const file_id_t &rhs) const
     if (! ret) ret = compare(generation, rhs.generation);
     if (! ret) ret = compare(change_seconds, rhs.change_seconds);
     if (! ret) ret = compare(change_nanoseconds, rhs.change_nanoseconds);
-    return ret < 0;
+    if (! ret) ret = compare(mod_seconds, rhs.mod_seconds);
+    if (! ret) ret = compare(mod_nanoseconds, rhs.mod_nanoseconds);
+    return ret;
+}
+
+
+bool file_id_t::operator<(const file_id_t &rhs) const
+{
+    return this->compare_file_id(rhs) < 0;
 }

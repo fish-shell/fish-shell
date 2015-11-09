@@ -2563,7 +2563,7 @@ static int test_universal_helper(int *x)
         bool synced = uvars.sync(NULL);
         if (! synced)
         {
-            err(L"Failed to sync universal variables");
+            err(L"Failed to sync universal variables after modification");
         }
         fputc('.', stderr);
     }
@@ -2573,7 +2573,7 @@ static int test_universal_helper(int *x)
     bool synced = uvars.sync(NULL);
     if (! synced)
     {
-        err(L"Failed to sync universal variables");
+        err(L"Failed to sync universal variables after deletion");
     }
     fputc('.', stderr);
 

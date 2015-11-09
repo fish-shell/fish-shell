@@ -808,6 +808,7 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
     if (modified.empty())
     {
         this->load_from_path(vars_path, callbacks);
+        UNIVERSAL_LOG("No modifications");
         return false;
     }
     
@@ -823,6 +824,7 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
     if (success)
     {
         success = this->open_and_acquire_lock(vars_path, &vars_fd);
+        if (! success) UNIVERSAL_LOG("open_and_acquire_lock() failed");
     }
 
     /* Read from it */
@@ -831,11 +833,13 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
         assert(vars_fd >= 0);
         this->load_from_fd(vars_fd, callbacks);
     }
+    
 
     /* Open adjacent temporary file */
     if (success)
     {
         success = this->open_temporary_file(directory, &private_file_path, &private_fd);
+        if (! success) UNIVERSAL_LOG("open_temporary_file() failed");
     }
     
     /* Write to it */
@@ -843,6 +847,7 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
     {
         assert(private_fd >= 0);
         success = this->write_to_fd(private_fd, private_file_path);
+        if (! success) UNIVERSAL_LOG("write_to_fd() failed");
     }
     
     if (success)
@@ -854,9 +859,26 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
             fchown(private_fd, sbuf.st_uid, sbuf.st_gid);
             fchmod(private_fd, sbuf.st_mode);
         }
-
+        
+        /* Linux by default stores the mtime with low precision, low enough that updates that occur in quick succession may
+           result in the same mtime (even the nanoseconds field). So manually set the mtime of the new file to a high-precision
+           clock. Note that this is only necessary because Linux aggressively reuses inodes, causing the ABA problem; on other
+           platforms we tend to notice the file has changed due to a different inode (or file size!)
+         
+           It's probably worth finding a simpler solution to this. The tests ran into this, but it's unlikely to affect users.
+         */
+#if HAVE_CLOCK_GETTIME && HAVE_FUTIMENS
+        struct timespec times[2] = {};
+        times[0].tv_nsec = UTIME_OMIT; // don't change ctime
+        if (0 == clock_gettime(CLOCK_REALTIME, &times[1]))
+        {
+            futimens(private_fd, times);
+        }
+#endif
+    
         /* Apply new file */
         success = this->move_new_vars_file_into_place(private_file_path, vars_path);
+        if (! success) UNIVERSAL_LOG("move_new_vars_file_into_place() failed");
     }
     
     if (success)

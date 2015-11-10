@@ -36,9 +36,9 @@ function psub --description "Read from stdin into a file and output the filename
 				set -e argv[1]
 				set argv $opts $argv
 
-                        case "*"
-                                printf "psub: extra operand: '%s'\n" $argv[1]
-                                return 1
+			case "*"
+				printf "psub: extra operand: '%s'\n" $argv[1]
+				return 1
 		end
 	end
 

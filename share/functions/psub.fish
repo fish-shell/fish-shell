@@ -31,7 +31,7 @@ function psub --description "Read from stdin into a file and output the filename
 
 			case "-*"
 				# Ungroup short options: -hfs => -h -f -s
-				set opts (string sub -s 2 -- $argv[1] | string split "" | string replace -r "^" -)
+				set opts "-"(string sub -s 2 -- $argv[1] | string split "")
 				set -e argv[1]
 				set argv $opts $argv
 

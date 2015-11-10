@@ -117,7 +117,7 @@ Use the <a href="commands.html#fish_update_completions">`fish_update_completions
 
 <i>For example if `~/images` is a symlink to `~/Documents/Images`, if I write '`cd images`', my prompt will say `~/Documents/Images`, not `~/images`.</i>
 
-Because it is impossible to consistently keep symlinked directories unresolved. It is indeed possible to do this partially, and many other shells do so. But it was felt there are enough serious corner cases that this is a bad idea. Most such issues have to do with how '..' is handled, and are varitations of the following example:
+Because it is impossible to consistently keep symlinked directories unresolved. It is indeed possible to do this partially, and many other shells do so. But it was felt there are enough serious corner cases that this is a bad idea. Most such issues have to do with how '..' is handled, and are variations of the following example:
 
 Writing `cd images; ls ..` given the above directory structure would list the contents of `~/Documents`, not of `~`, even though using `cd ..` changes the current directory to `~`, and the prompt, the `pwd` builtin and many other directory information sources suggest that the current directory is `~/images` and its parent is `~`. This issue is not possible to fix without either making every single command into a builtin, breaking Unix semantics or implementing kludges in every single command. This issue can also be seen when doing IO redirection.
 

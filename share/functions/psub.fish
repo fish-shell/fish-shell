@@ -19,6 +19,10 @@ function psub --description "Read from stdin into a file and output the filename
 				set -e argv[1]
 
 			case -s --suffix
+				if not set -q argv[2]
+					printf "psub: missing operand\n"
+					return 1
+				end
 				set suffix $argv[2]
 				set -e argv[1..2]
 

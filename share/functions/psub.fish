@@ -56,7 +56,7 @@ function psub --description "Read from stdin into a file and output the filename
 		# that the command substitution exits without needing to wait for
 		# all the commands to exit
 		set dir (mktemp -d "$TMPDIR[1]"/.psub.XXXXXXXXXX); or return
-		set filename $dir/psub.fifo$suffix
+		set filename $dir/psub.fifo"$suffix"
 		mkfifo $filename
 		cat >$filename &
 	else if test -z $suffix
@@ -64,7 +64,7 @@ function psub --description "Read from stdin into a file and output the filename
 		cat >$filename
 	else
 		set dir (mktemp -d "$TMPDIR[1]"/.psub.XXXXXXXXXX)
-		set filename $dir/psub$suffix
+		set filename $dir/psub"$suffix"
 		cat >$filename
 	end
 

@@ -109,6 +109,8 @@ else
     echo 'psub filename does not end with .cc'
 end
 
+diff -q (__fish_print_help psub | psub) (psub -hs banana | psub)
+
 # Test support for unbalanced blocks
 function try_unbalanced_block
     ../fish -c "echo $argv | source " 2>&1 | grep "Missing end" 1>&2

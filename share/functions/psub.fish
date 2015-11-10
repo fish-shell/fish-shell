@@ -30,7 +30,8 @@ function psub --description "Read from stdin into a file and output the filename
 				return 1
 
 			case "-*"
-				set opts (printf "-%s\n" (printf $argv[1] |grep -o "\w"))
+				# Ungroup short options: -hfs => -h -f -s
+				set opts (string sub -s 2 -- $argv[1] | string split "" | string replace -r "^" -)
 				set -e argv[1]
 				set argv $opts $argv
 

@@ -109,6 +109,13 @@ else
     echo 'psub filename does not end with .cc'
 end
 
+set -l filename (echo foo | psub -s .fish)
+if test -e (dirname $filename)
+    echo 'psub directory was not deleted'
+else
+    echo 'psub directory was deleted'
+end
+
 diff -q (__fish_print_help psub | psub) (psub -hs banana | psub)
 
 # Test support for unbalanced blocks

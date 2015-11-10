@@ -1,6 +1,7 @@
 
 function psub --description "Read from stdin into a file and output the filename. Remove the file when the command that called psub exits."
 
+	set -l dir
 	set -l filename
 	set -l funcname
 	set -l suffix
@@ -80,8 +81,11 @@ function psub --description "Read from stdin into a file and output the filename
 	end
 
 	# Make sure we erase file when caller exits
-	function $funcname --on-job-exit caller --inherit-variable filename --inherit-variable funcname
+	function $funcname --on-job-exit caller --inherit-variable filename --inherit-variable dir --inherit-variable funcname
 		command rm $filename
+		if count $dir >/dev/null
+			command rmdir $dir
+		end
 		functions -e $funcname
 	end
 

@@ -269,7 +269,7 @@ function __fish_hg_branches
 end
 
 function __fish_hg_merge_tools
-    for tool in internal:dump internal:fail internal:local internal:merge internal:other internal:prompt
+    for tool in internal:dump internal:fail internal:local internal:merge internal:merge-local internal:merge-other internal:merge3 internal:other internal:prompt internal:union
         printf "$tool\tmerge tool\n"
     end
     for line in (__fish_hg showconfig merge-tools)

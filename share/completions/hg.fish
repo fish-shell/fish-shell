@@ -190,22 +190,35 @@ function __fish_hg_commands
 end
 
 function __fish_hg_labels
-    if set -l labels (__fish_hg debuglabelcomplete ^ /dev/null)
+    if set -l labels (__fish_hg debuglabelcomplete)
         printf "%s\tlabel\n" $labels
     else
         __fish_hg_branches
         __fish_hg_bookmarks
-        printf "%s\ttag\n" (__fish_hg tags | cut -d " " -f 1)
+        for line in (__fish_hg tags)
+            set -l parts (string split ' ' -m 1 $line)
+            printf "%s\ttag\n" $parts[1]
+        end
     end
 end
 
 function __fish_hg_help_topics
-    printf "%s\tcommand\n" (__fish_hg debugcomplete)
-    printf "%s\thelp topic\n" (__fish_hg help | grep "^ [a-zA-Z]" | cut -d " " -f 2)
+    set -l commands (__fish_hg debugcomplete)
+    printf "%s\tcommand\n" $commands
+    for line in (__fish_hg help | grep "^ [a-zA-Z]")
+        set -l parts (string trim $line | string split ' ' -m 1)
+        set -l topic $parts[1]
+        if not contains $topic $commands
+            printf "%s\thelp topic\n" $topic
+        end
+    end
 end
 
 function __fish_hg_config_entries
-    printf "%s\tconfig entry\n" (__fish_hg showconfig | cut -d = -f 1)
+    for line in (__fish_hg showconfig)
+        set -l parts (string split = -m 1 $line)
+        printf "%s\tconfig entry\n" $parts[1]
+    end
 end
 
 function __fish_hg_patches
@@ -213,7 +226,11 @@ function __fish_hg_patches
 end
 
 function __fish_hg_patch_queues
-    printf "%s\tpatch queue\n" (__fish_hg qqueue -l | cut -d " " -f 1)
+    for line in (__fish_hg qqueue)
+        set -l parts (string split '(' -m 1 $line)
+        set -l queue (string trim $parts[1])
+        printf "%s\tpatch queue\n" $queue
+    end
 end
 
 function __fish_hg_status
@@ -227,37 +244,58 @@ end
 
 function __fish_hg_bookmarks
     set -l bookmarks (__fish_hg bookmarks)
-    if begin; test (count $bookmarks) -gt 1; or test $bookmarks != "no bookmarks set"; end
-        printf "%s\tbookmark\n" (printf "%s\n" $bookmarks | cut -c 4- | cut -d " " -f 1)
+    if test "$bookmarks[1]" = "no bookmarks set"
+        return 0
+    end
+    for line in $bookmarks
+        # Bookmarks can contain lots of different characters, including spaces,
+        # but they can't contain colons.  So we use that to split the line.
+        set -l parts (string sub -s 4 $line | string split ':' -m 1)
+        set -l parts (string split ' ' -r -m 1 $parts[1])
+        set -l bookmark (string trim $parts[1])
+        printf "%s\tbookmark\n" $bookmark
     end
 end
 
 function __fish_hg_branches
-    printf "%s\tbranch\n" (__fish_hg branches | cut -d " " -f 1)
+    for line in (__fish_hg branches)
+        # Like with bookmarks, branches can't contain colons, so we use that for
+        # splitting.
+        set -l parts (string split ':' -m 1 $line)
+        set -l parts (string split ' ' -r -m 1 $parts[1])
+        set -l branch (string trim $parts[1])
+        printf "%s\tbranch\n" $branch
+    end
 end
 
 function __fish_hg_merge_tools
     for tool in internal:dump internal:fail internal:local internal:merge internal:other internal:prompt
         printf "$tool\tmerge tool\n"
     end
-    printf "%s\tmerge tool\n" (__fish_hg showconfig merge-tools | cut -d . -f 2)
+    for line in (__fish_hg showconfig merge-tools)
+        set -l parts (string split '.' -m 2 $line)
+        printf "%s\tmerge tool\n" $parts[2]
+    end
 end
 
 function __fish_hg_sources
-    printf "%s\tsource\n" (__fish_hg paths | cut -d " " -f 1)
+    for line in (__fish_hg paths)
+        set -l parts (string split = $line)
+        printf "%s\tsource\n" (string trim $parts[1])
+    end
 end
 
 function __fish_hg_mq_enabled
-    set -l val (__fish_hg showconfig | grep extensions.hgext.mq)
-    if test -z $val
+    if set -l line (__fish_hg showconfig | grep extensions.hgext.mq)
+        set -l parts (string split '=' -m 1 $line)
+        switch $parts[2]
+            case "!*"
+                return 1
+            case "*"
+                return 0
+        end
+    else
         return 1
-    end
-    set -l val (echo $val | cut -d = -f 2)
-    switch $val
-        case "!*"
-            return 1
-        case "*"
-            return 0
     end
 end
 

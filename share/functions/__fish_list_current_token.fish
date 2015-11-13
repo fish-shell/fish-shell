@@ -15,6 +15,9 @@ function __fish_list_current_token -d "List contents of token under the cursor i
 			ls $dir
 		else
 			ls
+			for line in (seq 1 (math (count (fish_prompt))" -1") )
+				printf "\n"
+			end
 		end
 	end
 	commandline -f repaint

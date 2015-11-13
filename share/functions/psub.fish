@@ -1,7 +1,7 @@
 
 function psub --description "Read from stdin into a file and output the filename. Remove the file when the command that called psub exits."
 
-	set -l dir
+	set -l dirname
 	set -l filename
 	set -l funcname
 	set -l suffix
@@ -60,16 +60,16 @@ function psub --description "Read from stdin into a file and output the filename
 		# Write output to pipe. This needs to be done in the background so
 		# that the command substitution exits without needing to wait for
 		# all the commands to exit
-		set dir (mktemp -d "$TMPDIR[1]"/.psub.XXXXXXXXXX); or return
-		set filename $dir/psub.fifo"$suffix"
+		set dirname (mktemp -d "$TMPDIR[1]"/.psub.XXXXXXXXXX); or return
+		set filename $dirname/psub.fifo"$suffix"
 		mkfifo $filename
 		cat >$filename &
 	else if test -z $suffix
 		set filename (mktemp "$TMPDIR[1]"/.psub.XXXXXXXXXX)
 		cat >$filename
 	else
-		set dir (mktemp -d "$TMPDIR[1]"/.psub.XXXXXXXXXX)
-		set filename $dir/psub"$suffix"
+		set dirname (mktemp -d "$TMPDIR[1]"/.psub.XXXXXXXXXX)
+		set filename $dirname/psub"$suffix"
 		cat >$filename
 	end
 
@@ -85,10 +85,10 @@ function psub --description "Read from stdin into a file and output the filename
 	end
 
 	# Make sure we erase file when caller exits
-	function $funcname --on-job-exit caller --inherit-variable filename --inherit-variable dir --inherit-variable funcname
+	function $funcname --on-job-exit caller --inherit-variable filename --inherit-variable dirname --inherit-variable funcname
 		command rm $filename
-		if count $dir >/dev/null
-			command rmdir $dir
+		if count $dirname >/dev/null
+			command rmdir $dirname
 		end
 		functions -e $funcname
 	end

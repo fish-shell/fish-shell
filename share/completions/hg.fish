@@ -297,21 +297,47 @@ function __fish_hg_mq_enabled
     end
 end
 
-function __fish_hg_using_command --argument-names cmd
+function __fish_hg_get_command
     set -l cmdline (commandline -poc)
     set -e cmdline[1]
+    set -l lasttoken ""
     for token in $cmdline
-        # skip over any flags until you find the subcommand
-        if string match -q -- "-*" $token
+        # if the last token was a switch that takes an argument, we just skip
+        # the current token
+        if string match -r -q -- "-R|--repository|--cwd|--config|--encoding|--encodingmode|--color|--pager" $lasttoken
+            set lasttoken ""
             continue
         end
-        if test $token = $cmd
+        # if the current token is a switch of any kind, we can skip it
+        if string match -q -- "-*" $token
+            set lasttoken $token
+            continue
+        end
+        # if we get to here, then we assume that the token is an hg command
+        echo $token
+        return 0
+    end
+    # no hg command was found
+    return 1
+end
+
+function __fish_hg_using_command --argument-names cmd
+    if set -l token (__fish_hg_get_command)
+        if string match -q -- $token $cmd
             return 0
         else
             return 1
         end
     end
     return 1
+end
+
+function __fish_hg_needs_command
+    if __fish_hg_get_command > /dev/null
+        return 1
+    else
+        return 0
+    end
 end
 
 # global options
@@ -335,7 +361,7 @@ complete -c hg -l color -x -a "true false always auto never" -d "when to coloriz
 complete -c hg -l pager -x -a "true false always auto never" -d "when to paginate"
 
 # subcommands
-complete -c hg -n "__fish_use_subcommand" -x -a "(__fish_hg_commands)"
+complete -c hg -n "__fish_hg_needs_command" -x -a "(__fish_hg_commands)"
 
 # hg add
 complete -c hg -n "__fish_hg_using_command add" -f -a "(__fish_hg_status -u)"

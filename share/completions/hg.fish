@@ -1,5 +1,23 @@
+# fish completion for hg
+
+# Mercurial has a global switch to specify the path to the repository on which
+# to run the hg command (-R or --repository).  If that is on the commandline,
+# this function echoes the given path and returns 0.  Otherwise, it returns 1.
+function __fish_hg_get_repo
+    set -l cmdline (commandline -p)
+    if set -l match (string match -r -- "(-R|--repository) +([^ ]+)" $cmdline)
+        echo $match[3]
+        return 0
+    else
+        return 1
+    end
+end
+
 function __fish_hg
     set -lx HGPLAIN 1
+    if set -l repo (__fish_hg_get_repo)
+        set argv $argv -R $repo
+    end
     command hg $argv ^ /dev/null
 end
 

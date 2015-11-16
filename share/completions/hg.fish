@@ -35,6 +35,8 @@ function __fish_hg_commands
                 printf "$command\tmake a copy of an existing repository\n"
             case commit
                 printf "$command\tcommit the specified files or all outstanding changes\n"
+            case config
+                printf "$command\tshow combined config settings from all hgrc files\n"
             case convert
                 printf "$command\tconvert a foreign SCM repository to a Mercurial one\n"
             case copy
@@ -157,8 +159,6 @@ function __fish_hg_commands
                 printf "$command\tprint the root (top) of the current working directory\n"
             case serve
                 printf "$command\tstart stand-alone webserver\n"
-            case showconfig
-                printf "$command\tshow combined config settings from all hgrc files\n"
             case status
                 printf "$command\tshow changed files in the working directory\n"
             case strip
@@ -213,7 +213,7 @@ function __fish_hg_help_topics
 end
 
 function __fish_hg_config_entries
-    for line in (__fish_hg showconfig)
+    for line in (__fish_hg config)
         set -l parts (string split = -m 1 $line)
         printf "%s\tconfig entry\n" $parts[1]
     end
@@ -270,7 +270,7 @@ function __fish_hg_merge_tools
     for tool in internal:dump internal:fail internal:local internal:merge internal:merge-local internal:merge-other internal:merge3 internal:other internal:prompt internal:union
         printf "$tool\tmerge tool\n"
     end
-    for line in (__fish_hg showconfig merge-tools)
+    for line in (__fish_hg config merge-tools)
         set -l parts (string split "." -m 2 $line)
         printf "%s\tmerge tool\n" $parts[2]
     end
@@ -284,7 +284,7 @@ function __fish_hg_sources
 end
 
 function __fish_hg_mq_enabled
-    if set -l line (__fish_hg showconfig | grep extensions.hgext.mq)
+    if set -l line (__fish_hg config | grep extensions.hgext.mq)
         set -l parts (string split "=" -m 1 $line)
         switch $parts[2]
             case "!*"

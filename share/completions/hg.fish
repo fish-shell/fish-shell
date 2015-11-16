@@ -301,9 +301,16 @@ end
 
 function __fish_hg_using_command --argument-names cmd
     set -l cmdline (commandline -poc)
-    if test (count $cmdline) -gt 1
-        if test $cmdline[2] = $cmd
+    set -e cmdline[1]
+    for token in $cmdline
+        # skip over any flags until you find the subcommand
+        if string match -q -- "-*" $token
+            continue
+        end
+        if test $token = $cmd
             return 0
+        else
+            return 1
         end
     end
     return 1

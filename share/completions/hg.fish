@@ -47,8 +47,6 @@ function __fish_hg_commands
                 printf "$command\tuse external program to diff repository (or selected files)\n"
             case forget
                 printf "$command\tforget the specified files on the next commit\n"
-            case glog
-                printf "$command\tshow revision history alongside an ASCII revision graph\n"
             case graft
                 printf "$command\tcopy changes from other branches onto the current branch\n"
             case grep
@@ -695,7 +693,7 @@ for cmd in loc loca locat locate
 end
 
 # hg log
-for cmd in log glog histo histor history
+for cmd in log histo histor history
     complete -c hg -n "__fish_hg_using_command "$cmd -f -a "(__fish_hg_status -cmrd)"
     complete -c hg -n "__fish_hg_using_command "$cmd -s f -l follow -x -d "follow changeset history, or file history across copies and renames"
     complete -c hg -n "__fish_hg_using_command "$cmd -s d -l date -x -d "show revisions matching date spec"

@@ -429,7 +429,6 @@ complete -c hg -n "__fish_hg_using_command branch; and __fish_hg_mq_enabled" -l 
 
 # hg branches
 for cmd in branche branches
-    complete -c hg -n "__fish_hg_using_command $cmd" -s a -l active -x -d "only branches that have unmerged heads"
     complete -c hg -n "__fish_hg_using_command $cmd" -s c -l closed -x -d "normal and closed branches"
     complete -c hg -n "__fish_hg_using_command $cmd; and __fish_hg_mq_enabled" -l mq -d "operate on patch repository"
 end

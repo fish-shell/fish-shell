@@ -13,10 +13,26 @@ function __fish_hg_get_repo
     end
 end
 
+# Mercurial also has a global switch to specify a directory to which to switch
+# before running the command (--cwd).  If it is on the commandline, this
+# function echoes the given path and returns 0.  Otherwise, it returns 1.
+function __fish_hg_get_cwd
+    set -l cmdline (commandline -p)
+    if set -l match (string match -r -- "--cwd +([^ ]+)" $cmdline)
+        echo $match[2]
+        return 0
+    else
+        return 1
+    end
+end
+
 function __fish_hg
     set -lx HGPLAIN 1
     if set -l repo (__fish_hg_get_repo)
         set argv $argv -R $repo
+    end
+    if set -l cwd (__fish_hg_get_cwd)
+        set argv $argv --cwd $cwd
     end
     command hg $argv ^ /dev/null
 end

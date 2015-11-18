@@ -803,6 +803,11 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
     Prior versions of fish used a hard link scheme to support file locking on lockless NFS. The risk here is that if the process crashes or is killed while holding the lock, future instances of fish will not be able to obtain it. This seems to be a greater risk than that of data loss on lockless NFS. Users who put their home directory on lockless NFS are playing with fire anyways.
     */
     const wcstring &vars_path = explicit_vars_path.empty() ? default_vars_path() : explicit_vars_path;
+
+    if (vars_path.empty()) {
+        debug(2, "No universal variable path available");
+        return false;
+    }
     
     /* If we have no changes, just load */
     if (modified.empty())

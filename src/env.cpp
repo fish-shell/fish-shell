@@ -382,6 +382,7 @@ int env_set_pwd()
     wchar_t *res = wgetcwd(dir_path, 4096);
     if (!res)
     {
+        debug(0, _(L"Could not determine current working directory. Is your locale set correctly?"));
         return 0;
     }
     env_set(L"PWD", dir_path, ENV_EXPORT | ENV_GLOBAL);

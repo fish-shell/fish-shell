@@ -7,9 +7,10 @@ function math --description "Perform math calculations in bc"
 				return 0
 		end
 
-		set -lx BC_LINE_LENGTH 0
-		set -l out (echo $argv | bc)
-                test -z "$out"; and return 1
+		# Stitch lines together manually
+		# we can't rely on BC_LINE_LENGTH because some systems don't have a bc version "new" enough
+		set -l out (echo $argv | bc | string replace -r '\\\\$' '' | string join '')
+		test -z "$out"; and return 1
 		echo $out
 		switch $out
 			case 0

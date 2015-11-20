@@ -276,8 +276,8 @@ end
 
 function __fish_hg_bookmarks
     set -l bookmarks (__fish_hg bookmarks)
-    if test "$bookmarks[1]" = "no bookmarks set"
-        return 0
+    if string match -q -- "no bookmarks set" "$bookmarks[1]"
+        return
     end
     for line in $bookmarks
         # Bookmarks can contain lots of different characters, including spaces,

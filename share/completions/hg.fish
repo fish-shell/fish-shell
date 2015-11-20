@@ -320,12 +320,8 @@ end
 function __fish_hg_mq_enabled
     if set -l line (__fish_hg config | grep extensions.hgext.mq)
         set -l parts (string split "=" -m 1 $line)
-        switch $parts[2]
-            case "!*"
-                return 1
-            case "*"
-                return 0
-        end
+        not string match -r -q -- "^!" $parts[2]
+        return
     else
         return 1
     end
@@ -357,21 +353,15 @@ end
 
 function __fish_hg_using_command --argument-names cmd
     if set -l token (__fish_hg_get_command)
-        if string match -q -- $token $cmd
-            return 0
-        else
-            return 1
-        end
+        string match -q -- $token $cmd
+        return
+    else
+        return 1
     end
-    return 1
 end
 
 function __fish_hg_needs_command
-    if __fish_hg_get_command > /dev/null
-        return 1
-    else
-        return 0
-    end
+    not __fish_hg_get_command > /dev/null
 end
 
 # global options

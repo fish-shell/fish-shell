@@ -160,7 +160,7 @@ struct named_color_t
     unsigned char rgb[3];
 };
 
-static const named_color_t named_colors[11] =
+static const named_color_t named_colors[] =
 {
     {L"black", 0, {0, 0, 0}},
     {L"red", 1, {0xFF, 0, 0}},
@@ -171,8 +171,18 @@ static const named_color_t named_colors[11] =
     {L"magenta", 5, {0xFF, 0, 0xFF}},
     {L"purple", 5, {0xFF, 0, 0xFF}},
     {L"cyan", 6, {0, 0xFF, 0xFF}},
-    {L"white", 7, {0xFF, 0xFF, 0xFF}},
-    {L"normal", 8, {0xFF, 0xFF, 0XFF}}
+    {L"grey", 7, {0xE5, 0xE5, 0xE5}},
+    {L"normal", 7, {0xE5, 0xE5, 0XE5}},
+    {L"brgrey", 8, {0x55, 0x55, 0x55}},
+    {L"brred", 9, {0xFF, 0x55, 0x55}},
+    {L"brgreen", 10, {0x55, 0xFF, 0x55}},
+    {L"brbrown", 11, {0xFF, 0xFF, 0x55}},
+    {L"bryellow", 11, {0xFF, 0xFF, 0x55}},
+    {L"brblue", 12, {0x55, 0x55, 0xFF}},
+    {L"brmagenta", 13, {0xFF, 0x55, 0xFF}},
+    {L"brpurple", 13, {0xFF, 0x55, 0xFF}},
+    {L"brcyan", 14, {0x55, 0xFF, 0xFF}},
+    {L"white", 15, {0xFF, 0xFF, 0xFF}},
 };
 
 wcstring_list_t rgb_color_t::named_color_names(void)

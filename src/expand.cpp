@@ -590,8 +590,12 @@ static int find_job(const struct find_job_data_t *info)
 
     const job_t *j;
     int found = 0;
-    // do the empty param check first, because an empty string passes our 'numeric' check
-    if (wcslen(proc)==0)
+    // If we are not doing tab completion, we first check for the single '%'
+    // character, because an empty string will pass the numeric check below.
+    // But if we are doing tab completion, we want all of the job IDs as
+    // completion options, not just the last job backgrounded, so we pass this
+    // first block in favor of the second.
+    if (wcslen(proc)==0 && !(flags & EXPAND_FOR_COMPLETIONS))
     {
         /*
           This is an empty job expansion: '%'

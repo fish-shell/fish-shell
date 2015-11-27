@@ -1,8 +1,7 @@
 # If seq is not installed, then define a function that invokes __fish_fallback_seq
-# test -x in /usr/bin/seq because that's where it usually is and
-# that's substantially cheaper than the type function
+# We can't call type here because that also calls seq
 
-if begin ; not test -x /usr/bin/seq ; and not type -q -f seq; end
+if not command -s seq >/dev/null
 	# No seq command
 	function seq --description "Print sequences of numbers"
 		__fish_fallback_seq $argv

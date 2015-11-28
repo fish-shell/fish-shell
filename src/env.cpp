@@ -394,7 +394,15 @@ wcstring env_get_pwd_slash(void)
     env_var_t pwd = env_get_string(L"PWD");
     if (pwd.missing_or_empty())
     {
-        return L"";
+        wchar_t dir_path[4096];
+        wchar_t *res = wgetcwd(dir_path, 4096);
+        if (res)
+        {
+            pwd = wcstring(dir_path);
+        } else
+        {
+            pwd = env_get_string(L"HOME");
+        };
     }
     if (! string_suffixes_string(L"/", pwd))
     {
@@ -544,7 +552,10 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
     }
 
     /* Set PWD */
-    env_set_pwd();
+    if(!env_set_pwd())
+    {
+        debug(0, _(L"env_set_pwd in env_init failed!"));
+    }
 
     /* Set up universal variables. The empty string means to use the deafult path. */
     assert(s_universal_variables == NULL);

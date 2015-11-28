@@ -331,7 +331,7 @@ static int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         /*
           Do not babble if not interactive
         */
-        if (streams.out_is_redirected)
+        if (!streams.out_is_redirected)
         {
             streams.out.append_format(
                         _(L"%ls: There are no jobs\n"),

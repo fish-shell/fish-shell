@@ -199,6 +199,10 @@ complete -f -c git -n '__fish_git_using_command remote' -a rm -d 'Removes a remo
 complete -f -c git -n '__fish_git_using_command remote' -a show -d 'Shows a remote'
 complete -f -c git -n '__fish_git_using_command remote' -a prune -d 'Deletes all stale tracking branches'
 complete -f -c git -n '__fish_git_using_command remote' -a update -d 'Fetches updates'
+complete -f -c git -n '__fish_git_using_command remote' -a rename -d 'Renames a remote'
+complete -f -c git -n '__fish_git_using_command remote' -a set-head -d 'Sets the default branch for a remote'
+complete -f -c git -n '__fish_git_using_command remote' -a set-url -d 'Changes URLs for a remote'
+complete -f -c git -n '__fish_git_using_command remote' -a set-branches -d 'Changes the list of branches tracked by a remote'
 # TODO options
 
 ### show

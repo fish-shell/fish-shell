@@ -9,6 +9,7 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind $argv "" self-insert
 
 	bind $argv \n execute
+	bind $argv \r execute
 
 	bind $argv \ck kill-line
 	bind $argv \cy yank

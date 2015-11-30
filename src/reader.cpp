@@ -1028,6 +1028,8 @@ void reader_init()
 
     /* Set the mode used for the terminal, initialized to the current mode */
     memcpy(&shell_modes, &terminal_mode_on_startup, sizeof shell_modes);
+    shell_modes.c_iflag &= ~ICRNL;    /* turn off mapping CR (\cM) to NL (\cJ) */
+    shell_modes.c_iflag &= ~INLCR;    /* turn off mapping NL (\cJ) to CR (\cM) */
     shell_modes.c_lflag &= ~ICANON;   /* turn off canonical mode */
     shell_modes.c_lflag &= ~ECHO;     /* turn off echo mode */
     shell_modes.c_iflag &= ~IXON;     /* disable flow control */

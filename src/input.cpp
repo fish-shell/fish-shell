@@ -499,6 +499,7 @@ int input_init()
     {
         input_mapping_add(L"", L"self-insert");
         input_mapping_add(L"\n", L"execute");
+        input_mapping_add(L"\r", L"execute");
         input_mapping_add(L"\t", L"complete");
         input_mapping_add(L"\x3", L"commandline \"\"");
         input_mapping_add(L"\x4", L"exit");

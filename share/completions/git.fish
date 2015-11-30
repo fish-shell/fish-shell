@@ -191,19 +191,29 @@ complete -r -c git -n '__fish_git_using_command filter-branch' -s d -d 'Use this
 complete -c git -n '__fish_git_using_command filter-branch' -s f -l force -d 'Force filter branch to start even w/ refs in refs/original or existing temp directory'
 
 ### remote
+set -l remotecommands add rm show prune update rename set-head set-url set-branches
 complete -f -c git -n '__fish_git_needs_command' -a remote -d 'Manage set of tracked repositories'
 complete -f -c git -n '__fish_git_using_command remote' -a '(__fish_git_remotes)'
-complete -f -c git -n '__fish_git_using_command remote' -s v -l verbose -d 'Be verbose'
-complete -f -c git -n '__fish_git_using_command remote' -a add -d 'Adds a new remote'
-complete -f -c git -n '__fish_git_using_command remote' -a rm -d 'Removes a remote'
-complete -f -c git -n '__fish_git_using_command remote' -a show -d 'Shows a remote'
-complete -f -c git -n '__fish_git_using_command remote' -a prune -d 'Deletes all stale tracking branches'
-complete -f -c git -n '__fish_git_using_command remote' -a update -d 'Fetches updates'
-complete -f -c git -n '__fish_git_using_command remote' -a rename -d 'Renames a remote'
-complete -f -c git -n '__fish_git_using_command remote' -a set-head -d 'Sets the default branch for a remote'
-complete -f -c git -n '__fish_git_using_command remote' -a set-url -d 'Changes URLs for a remote'
-complete -f -c git -n '__fish_git_using_command remote' -a set-branches -d 'Changes the list of branches tracked by a remote'
-# TODO options
+complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -s v -l verbose -d 'Be verbose'
+complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a add -d 'Adds a new remote'
+complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a rm -d 'Removes a remote'
+complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a show -d 'Shows a remote'
+complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a prune -d 'Deletes all stale tracking branches'
+complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a update -d 'Fetches updates'
+complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a rename -d 'Renames a remote'
+complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a set-head -d 'Sets the default branch for a remote'
+complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a set-url -d 'Changes URLs for a remote'
+complete -f -c git -n "__fish_git_using_command remote; and not __fish_seen_subcommand_from $remotecommands" -a set-branches -d 'Changes the list of branches tracked by a remote'
+complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from add " -s f -d 'Once the remote information is set up git fetch <name> is run'
+complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from add " -l tags -d 'Import every tag from a remote with git fetch <name>'
+complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from add " -l no-tags -d "Don't import tags from a remote with git fetch <name>"
+complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from set-branches" -l add -d 'Add to the list of currently tracked branches instead of replacing it'
+complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from set-url" -l push -d 'Manipulate push URLs instead of fetch URLs'
+complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from set-url" -l add -d 'Add new URL instead of changing the existing URLs'
+complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from set-url" -l delete -d 'Remove URLs that match specified URL'
+complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from show" -s n -d 'Remote heads are not queried, cached information is used instead'
+complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from prune" -l dry-run -d 'Report what will be pruned but do not actually prune it'
+complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcommand_from update" -l prune -d 'Prune all remotes that are updated'
 
 ### show
 complete -f -c git -n '__fish_git_needs_command' -a show -d 'Shows the last commit of a branch'

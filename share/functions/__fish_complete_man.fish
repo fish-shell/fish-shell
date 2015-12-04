@@ -35,17 +35,27 @@ function __fish_complete_man
 		    print name, sect ": " $2;
 		  }
 		}
-		# Linux
-		/^[^( \t]+ \('$section'\)/ {
+		# man-db
+		/^[^( \t]+ +\('$section'\)/ {
 		  split($1, t, " ");
 		  sect = substr(t[2], 2, length(t[2]) - 2);
 		  print t[1], sect ": " $2;
 		}
-		# Solaris
-		/^[^( \t]+\t+[^\(\t]/ {
+		# man-db RHEL 5 with [aliases]
+		/^[^( \t]+ +\[.*\] +\('$section'\)/ {
 		  split($1, t, " ");
 		  sect = substr(t[3], 2, length(t[3]) - 2);
-		  print t[2], sect ": " $2;
+		  print t[1], sect ": " $2;
+		}
+		# Solaris 11
+		# Does not display descriptions
+		# Solaris apropos outputs embedded backspace in descriptions
+		/^[0-9]+\. [^( \t]*\('$section'\) / {
+		  split($1, t, " ")
+		  paren = index(t[2], "(");
+		  name = substr(t[2], 1, paren - 1);
+		  sect = substr(t[2], paren + 1, length(t[2]) - paren - 1);
+		  print name, sect
 		}
 		'
 	end

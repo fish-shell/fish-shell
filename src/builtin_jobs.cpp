@@ -319,7 +319,7 @@ static int builtin_jobs(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 */
                 if ((j->flags & JOB_CONSTRUCTED) && !job_is_completed(j))
                 {
-                    builtin_jobs_print(j, mode, !found, streams);
+                    builtin_jobs_print(j, mode, !streams.out_is_redirected, streams);
                     found = 1;
                 }
             }

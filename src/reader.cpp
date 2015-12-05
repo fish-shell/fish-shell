@@ -1045,6 +1045,15 @@ void reader_init()
     shell_modes.c_cc[VDSUSP] = _POSIX_VDISABLE;
 #endif
 #endif
+
+    // We don't use term_steal because this can fail if fd 0 isn't associated
+    // with a tty and this function is run regardless of whether stdin is tied
+    // to a tty. This is harmless in that case. We do it unconditionally
+    // because disabling ICRNL mode (see above) needs to be done at the
+    // earliest possible moment. Doing it here means it will be done within
+    // approximately 1 ms of the start of the shell rather than 250 ms (or
+    // more) when reader_interactive_init is eventually called.
+    tcsetattr(STDIN_FILENO, TCSANOW,&shell_modes);
 }
 
 

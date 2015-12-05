@@ -33,6 +33,8 @@ set -g __fish_svn_prompt_char_token_broken_char 'B'
 # these are paired in groups of two:
 # 1. the character to display in the prompt
 # 2. the colour that should be used to display the character
+#
+# these variables are user-configurable and can be set to customize the display output
 
 set -g __fish_svn_prompt_char_added_display 'A'
 set -g __fish_svn_prompt_char_added_color green
@@ -147,7 +149,7 @@ function __fish_svn_prompt --description "Prompt function for svn"
 		if [ (count $column_status) -ne 0 ];
 			# we only want to display unique status flags (eg: if there are 5 modified files, the prompt should only show the modified status once)
 			set -l column_unique_status (echo $column_status | sort | uniq)
-			# parse the status flags for this column
+			# parse the status flags for this column and create the formatting by calling out to the helper function
 			set -l svn_status_flags (__fish_svn_prompt_parse_status $column_unique_status)
 
 			# the default separator is empty

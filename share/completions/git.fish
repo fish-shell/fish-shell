@@ -284,7 +284,11 @@ complete -f -c git -n '__fish_git_using_command branch' -l no-merged -d 'List br
 complete -f -c git -n '__fish_git_needs_command' -a cherry-pick -d 'Apply the change introduced by an existing commit'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -a '(__fish_git_branches)' -d 'Branch'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -a '(__fish_git_unique_remote_branches)' -d 'Remote branch'
-# TODO options
+complete -f -c git -n '__fish_git_using_command cherry-pick' -s e -l edit -d 'Edit the commit message prior to committing'
+complete -f -c git -n '__fish_git_using_command cherry-pick' -s x -d 'Append info in generated commit on the origin of the cherry-picked change'
+complete -f -c git -n '__fish_git_using_command cherry-pick' -s n -l no-commit -d 'Apply changes without making any commit'
+complete -f -c git -n '__fish_git_using_command cherry-pick' -s s -l signoff -d 'Add Signed-off-by line to the commit message'
+complete -f -c git -n '__fish_git_using_command cherry-pick' -l ff -d 'Fast-forward if possible'
 
 ### clone
 complete -f -c git -n '__fish_git_needs_command' -a clone -d 'Clone a repository into a new directory'

@@ -193,6 +193,12 @@ wcstring_list_t rgb_color_t::named_color_names(void)
     {
         result.push_back(named_colors[i].name);
     }
+    // "normal" isn't really a color and does not have a color palette index or
+    // RGB value. Therefore, it does not appear in the named_colors table.
+    // However, it is a legitimate color name for the "set_color" command so
+    // include it in the publicly known list of colors. This is primarily so it
+    // appears in the output of "set_color --print-colors".
+    result.push_back(L"normal");
     return result;
 }
 

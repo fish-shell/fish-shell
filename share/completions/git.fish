@@ -292,7 +292,16 @@ complete -f -c git -n '__fish_git_using_command cherry-pick' -l ff -d 'Fast-forw
 
 ### clone
 complete -f -c git -n '__fish_git_needs_command' -a clone -d 'Clone a repository into a new directory'
-# TODO options
+complete -f -c git -n '__fish_git_using_command clone' -l no-hardlinks -d 'Copy files instead of using hardlinks'
+complete -f -c git -n '__fish_git_using_command clone' -s q -l quiet  -d 'Operate quietly and do not report progress'
+complete -f -c git -n '__fish_git_using_command clone' -s v -l verbose -d 'Provide more information on what is going on'
+complete -f -c git -n '__fish_git_using_command clone' -s n -l no-checkout -d 'No checkout of HEAD is performed after the clone is complete'
+complete -f -c git -n '__fish_git_using_command clone' -l bare 'Make a bare Git repository'
+complete -f -c git -n '__fish_git_using_command clone' -l mirror 'Set up a mirror of the source repository'
+complete -f -c git -n '__fish_git_using_command clone' -s o -l origin 'Use a specific name of the remote instead of the default'
+complete -f -c git -n '__fish_git_using_command clone' -s b -l branch 'Use a specific branch instead of the one used by the cloned repository'
+complete -f -c git -n '__fish_git_using_command clone' -l depth 'Truncate the history to a specified number of revisions'
+complete -f -c git -n '__fish_git_using_command clone' -l recursive 'Initialize all submodules within the cloned repository'
 
 ### commit
 complete -c git -n '__fish_git_needs_command'    -a commit -d 'Record changes to the repository'

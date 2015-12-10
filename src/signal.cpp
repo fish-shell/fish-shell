@@ -521,8 +521,7 @@ void signal_set_handlers()
     sigaction(SIGCHLD, &act, 0);
 
     /*
-      Ignore sigpipe, it is generated if fishd dies, but we can
-      recover.
+      Ignore sigpipe, which we may get from the universal variable notifier.
     */
     sigaction(SIGPIPE, &act, 0);
 

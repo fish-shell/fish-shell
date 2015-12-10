@@ -129,8 +129,7 @@ function __fish_svn_prompt --description "Prompt function for svn"
 	# 1. perform `svn status`
 	# 2. remove extra lines that aren't necessary
 	# 3. cut the output down to the first 7 columns, as these contain the information needed
-	# 4. replaces newline characters with ":" to work around multi-line string handling
-	set -l svn_status_lines (command svn status | sed -e 's=^Summary of conflicts.*==' -e 's=^  Text conflicts.*==' -e 's=^  Property conflicts.*==' -e 's=^  Tree conflicts.*==' -e 's=.*incoming .* upon update.*==' | cut -c 1-7 | tr '\n' ':')
+	set -l svn_status_lines (command svn status | sed -e 's=^Summary of conflicts.*==' -e 's=^  Text conflicts.*==' -e 's=^  Property conflicts.*==' -e 's=^  Tree conflicts.*==' -e 's=.*incoming .* upon update.*==' | cut -c 1-7)
 
 	# track the last column to contain a status flag
 	set -l last_column 0
@@ -139,10 +138,9 @@ function __fish_svn_prompt --description "Prompt function for svn"
 	for col in (seq 7)
 		# get the output for a particular column
 		# 1. echo the whole status flag text
-		# 2. swap the ":" back to newline characters so we can perform a column based `cut`
-		# 3. cut out the current column of characters
-		# 4. remove spaces and newline characters
-		set -l column_status (echo -n $svn_status_lines | tr ':' '\n' | cut -c $col | tr -d ' \n')
+		# 2. cut out the current column of characters
+		# 3. remove spaces and newline characters
+		set -l column_status (printf '%s\n' $svn_status_lines | cut -c $col | tr -d ' \n')
 
 		# check that the character count is not zero (this would indicate that there are status flags in this column)
 		if [ (count $column_status) -ne 0 ];

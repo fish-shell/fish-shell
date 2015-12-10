@@ -74,7 +74,7 @@ If you wish to use fish as your default shell, use the following command:
 
 	chsh -s /usr/local/bin/fish
 
-chsh will prompt you for your password, and change your default shell.
+chsh will prompt you for your password, and change your default shell. Substitute "/usr/local/bin/fish" with whatever path to fish is in your /etc/shells file.
 
 To switch your default shell back, you can run:
 

@@ -95,16 +95,16 @@ set -g __fish_svn_prompt_flag_names added conflicted deleted ignored modified re
 
 function __fish_svn_prompt_parse_status --argument flag_status_string --description "helper function that does pretty formatting on svn status"
 	# iterate over the different status types
-	for flag_index in (seq (count $__fish_svn_prompt_flag_names))
+	for flag_type in $__fish_svn_prompt_flag_names
 		# resolve the name of the variable for the character representing the current status type
-		set -l flag_name __fish_svn_prompt_char_{$__fish_svn_prompt_flag_names[$flag_index]}_char
+		set -l flag_var_name __fish_svn_prompt_char_{$flag_type}_char
 		# check to see if the status string for this column contains the character representing the current status type
-		if test (echo $flag_status_string | grep -c $$flag_name) -eq 1
+		if test (echo $flag_status_string | grep -c $$flag_var_name) -eq 1
 			# if it does, then get the names of the variables for the display character and colour to format it with
-			set -l flag_display __fish_svn_prompt_char_{$__fish_svn_prompt_flag_names[$flag_index]}_display
-			set -l flag_color __fish_svn_prompt_char_{$__fish_svn_prompt_flag_names[$flag_index]}_color
+			set -l flag_var_display __fish_svn_prompt_char_{$flag_type}_display
+			set -l flag_var_color __fish_svn_prompt_char_{$flag_type}_color
 			# set the colour and print display character, then restore to default display colour
-			printf '%s%s%s' (set_color $$flag_color) $$flag_display (set_color normal)
+			printf '%s%s%s' (set_color $$flag_var_color) $$flag_var_display (set_color normal)
 		end
 	end
 end
@@ -123,8 +123,7 @@ function __fish_svn_prompt --description "Prompt function for svn"
 	end
 
 	# get the current revision number
-	set -l repo_revision_number (command svn info | grep "Last Changed Rev: " | sed "s=Last Changed Rev: ==")
-	printf '(%s%s%s' (set_color $__fish_svn_prompt_color_revision) $repo_revision_number (set_color normal)
+	printf '(%s%s%s' (set_color $__fish_svn_prompt_color_revision) (__fish_print_svn_rev) (set_color normal)
 
 	# resolve the status of the checkout
 	# 1. perform `svn status`
@@ -143,7 +142,7 @@ function __fish_svn_prompt --description "Prompt function for svn"
 		# 2. swap the ":" back to newline characters so we can perform a column based `cut`
 		# 3. cut out the current column of characters
 		# 4. remove spaces and newline characters
-		set -l column_status (echo $svn_status_lines | tr ':' '\n' | cut -c $col | tr -d ' \n')
+		set -l column_status (echo -n $svn_status_lines | tr ':' '\n' | cut -c $col | tr -d ' \n')
 
 		# check that the character count is not zero (this would indicate that there are status flags in this column)
 		if [ (count $column_status) -ne 0 ];
@@ -158,12 +157,14 @@ function __fish_svn_prompt --description "Prompt function for svn"
 				# the prompt separator variable has to be updated with the number of separators needed to represent empty status columns (eg: if a file has the status "A  +" then it should display as "A|||+" in the prompt)
 				set prompt_separator $prompt_separator$__fish_svn_prompt_char_separator
 			end
+
 			# record that the current column was the last one printed to the prompt
 			set last_column $col
 			# print the separator string then the current column's status flags
 			printf '%s%s' $prompt_separator $svn_status_flags
 		end
 	end
+
 	# print the close of the svn status prompt
 	printf ')'
 end

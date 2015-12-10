@@ -1,4 +1,4 @@
-if touch --version ^ /dev/null # GNU
+if touch --version ^ /dev/null > /dev/null # GNU
 	complete -c touch -s a --description "Change access time"
 	complete -c touch -s B -l backward -x --description "Set date back"
 	complete -c touch -s c -l no-create --description "Do not create file"

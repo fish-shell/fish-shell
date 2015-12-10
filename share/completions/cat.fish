@@ -1,4 +1,4 @@
-if cat --version ^ /dev/null # GNU
+if cat --version ^ /dev/null > /dev/null # GNU
 	complete -c cat -s A -l show-all --description "Escape all non-printing characters"
 	complete -c cat -s b -l number-nonblank --description "Number nonblank lines"
 	complete -c cat -s e --description "Escape non-printing characters except tab"

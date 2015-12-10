@@ -12,6 +12,7 @@ if tail --version > /dev/null ^ /dev/null
     complete -c tail -l help -d 'display this help and exit'
     complete -c tail -l version -d 'output version information and exit'
 else # OSX and similar - no longopts (and fewer shortopts)
+    complete -c tail -s b -x -d 'output last K 512 byte blocks'
     complete -c tail -s c -x -d 'output the last K bytes or only K bytes with -r'
     complete -c tail -s f -d 'output appended data as the file grows'
     complete -c tail -s F -d 'Like -f, but also follow renamed or rotated files'

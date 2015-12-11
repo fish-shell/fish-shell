@@ -152,3 +152,11 @@ function . --description 'Evaluate contents of file (deprecated, see "source")' 
 		source $argv
 	end
 end
+
+# Source fish files
+for file in $__fish_datadir/*.fish
+        if test "$file" != "$__fish_datadir/config.fish"
+                source $file
+        end
+end
+

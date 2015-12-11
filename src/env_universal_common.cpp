@@ -147,7 +147,9 @@ static wcstring get_runtime_path()
 {
     wcstring result;
     const char *dir = getenv("XDG_RUNTIME_DIR");
-    if (dir != NULL)
+
+    int mode = R_OK | W_OK | X_OK;
+    if (dir != NULL && access(dir, mode) == 0)
     {
         result = str2wcstring(dir);
     }

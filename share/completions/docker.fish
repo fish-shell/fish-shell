@@ -90,3 +90,18 @@ complete -c docker -f -n '__fish_docker_using_command stop' -a '(__fish_docker_s
 # docker restart
 #
 complete -c docker -f -n '__fish_docker_using_command restart' -a '(__fish_docker_all_containers)' --description "Docker container"
+
+#
+# docker kill
+#
+complete -c docker -f -n '__fish_docker_using_command kill' -a '(__fish_docker_start_containers)' --description "Kill container"
+
+#
+# docker rm
+#
+complete -c docker -f -n '__fish_docker_using_command rm' -a '(__fish_docker_stop_containers)' --description "Remove container"
+
+#
+# docker exec
+#
+complete -c docker -f -n '__fish_docker_using_command exec' -a '(__fish_docker_start_containers)' --description "Run container"

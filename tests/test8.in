@@ -27,3 +27,15 @@ echo $test[1..(count $test)]
 # See issue 1061
 echo "Verify that if statements swallow failure"
 if false ; end ; echo $status
+
+# Verify and/or behavior with if and while statements
+if false ; or true ; echo "success1" ; end
+if false ; and false ; echo "failure1" ; end
+while false ; and false ; or true ; echo "success2"; break ; end
+while false; or begin ; false; or true; end; echo "success3"; end
+if false ; else if false ; and true ; else if false ; and false ; else if false; or true; echo "success 4"; end
+if false ; else if false ; and true ; else if false ; or false ; else if false; echo "failure 4"; end
+if false ; or true | false ; echo "failure5" ; end
+
+# Catch this corner case, which should produce an error
+if false ; or --help ; end

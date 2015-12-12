@@ -194,6 +194,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 			status --is-command-substitution; and return
 			printf '\033]7;file://%s%s\a' (hostname) (pwd | __fish_urlencode)
 		end
+		__update_vte_cwd # Run once because we might have already inherited a PWD from an old tab
 	end
 
 	# Remove the startup command_not_found handler since we're done with it

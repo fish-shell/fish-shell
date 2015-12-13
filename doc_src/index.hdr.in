@@ -500,6 +500,32 @@ end
 The above code demonstrates how to use multiple '`$`' symbols to expand the value of a variable as a variable name. One can think of the `$` symbol as a variable dereference operator. When using this feature together with array brackets, the brackets will always match the innermost `$` dereference. Thus, `$$foo[5]` will always mean the fifth element of the `foo` variable should be dereferenced, not the fifth element of the doubly dereferenced variable `foo`. The latter can instead be expressed as `$$foo[1][5]`.
 
 
+\subsection cartesian-product Cartesian Products
+
+Lists adjacent to other lists or strings are expanded as cartesian products:
+
+Examples:
+\fish
+echo {good,bad}" apples"
+# Outputs 'good apples bad apples'
+
+set -l a x y z
+set -l b 1 2 3
+echo $a$b
+# Outputs 'x1 y1 z1 x2 y2 z2 x3 y3 z3'
+echo $a"-"$b
+# Outputs 'x-1 y-1 z-1 x-2 y-2 z-2 x-3 y-3 z-3'
+
+echo {x,y,z}$b
+# Outputs 'x1 y1 z1 x2 y2 z2 x3 y3 z3'
+
+echo {$b}word
+# Outputs '1word 2word 3word'
+\endfish
+
+Be careful when you try to use braces to separate variable names from text. The dangers noted in the last example above can be avoided by wrapping the variable in double quotes instead of braces (`echo "$b"word`).
+
+
 \subsection expand-index-range Index range expansion
 
 Both command substitution and shell variable expansion support accessing only specific items by providing a set of indices in square brackets. It's often needed to access a sequence of elements. To do this, use the range operator '`..`' for this. A range '`a..b`', where range limits 'a' and 'b' are integer numbers, is expanded into a sequence of indices '`a a+1 a+2 ... b`' or '`a a-1 a-2 ... b`' depending on which of 'a' or 'b' is higher. The negative range limits are calculated from the end of the array or command substitution.

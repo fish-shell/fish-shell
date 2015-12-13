@@ -1,10 +1,20 @@
-
-
-# A list of all known filesystem types, used by various completions,
-# including mount and df
-
 # Completions for mount
-complete -x -c mount -a '(cat /etc/fstab|sed -e "s/^\([^ \t]*\)[ \t]*\([^ \t]*\).*/\1\n\2/"| __fish_sgrep "^/")' --description 'Mount point'
+function __fish_complete_blockdevice
+	set -l cmd (commandline -ct)
+	[ "" = "$cmd" ]; and return
+	for f in $cmd*
+		[ -b $f ]; and printf "%s\t%s\n" $f "Block device"
+		[ -d $f ]; and printf "%s\n" $f/
+	end
+end
+
+complete -x -c mount -a '(__fish_complete_blockdevice)'
+# In case `mount UUID=` and similar also works
+complete -x -c mount -a "(test -r /etc/fstab; and string replace -r '#.*' '' < /etc/fstab | string match -r '.+' | string replace -r ' ([^\s]*) .*' '\tMount point \$1')"
+complete -x -c mount -a "(test -r /etc/fstab; and string replace -r '#.*' '' < /etc/fstab | string match -r '.+' | string replace -r '(^[^\s]*) ([^\s]*) .*' '\$2\tDevice \$1')"
+# In case it doesn't
+# complete -x -c mount -a "(test -r /etc/fstab; and string match -r '^/.*' < /etc/fstab | string replace -r ' ([^\s]*) .*' '\tMount point \$1')"
+# complete -x -c mount -a "(test -r /etc/fstab; and string match -r '^/.*' < /etc/fstab | string replace -r '(^/[^\s]*) ([^\s]*) .*' '\$2\tDevice \$1')"
 complete -c mount -s V --description 'Display version and exit'
 complete -c mount -s h --description 'Display help and exit'
 complete -c mount -s v --description 'Verbose mode'

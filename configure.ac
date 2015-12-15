@@ -13,7 +13,7 @@ m4_syscmd([build_tools/git_version_gen.sh 2>/dev/null])
 AC_PREREQ([2.60])
 AC_INIT(fish,
         m4_esyscmd([cut -f 3 -d ' ' FISH-BUILD-VERSION-FILE | tr -d '\n']),
-        fish-users@lists.sf.net)
+        fish-users@lists.sourceforge.net)
 
 conf_arg=$@
 

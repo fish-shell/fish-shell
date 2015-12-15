@@ -213,7 +213,7 @@
 #define NOMACROS 1
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "fish-users@lists.sf.net"
+#define PACKAGE_BUGREPORT "fish-users@lists.sourceforge.net"
 
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "fish"

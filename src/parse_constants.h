@@ -102,7 +102,9 @@ enum parse_keyword_t
     LAST_KEYWORD = parse_keyword_while
 } __packed;
 
-/* Statement decorations. This matches the order of productions in decorated_statement */
+/* Node tag values */
+
+/* Statement decorations, stored in node tag */
 enum parse_statement_decoration_t
 {
     parse_statement_decoration_none,
@@ -111,12 +113,19 @@ enum parse_statement_decoration_t
     parse_statement_decoration_exec
 };
 
-/* Boolean statement types */
+/* Boolean statement types, stored in node tag */
 enum parse_bool_statement_type_t
 {
     parse_bool_and,
     parse_bool_or,
     parse_bool_not
+};
+
+/* Whether a statement is backgrounded */
+enum parse_optional_background_t
+{
+    parse_no_background,
+    parse_background
 };
 
 /* Parse error code list */

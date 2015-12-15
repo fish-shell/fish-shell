@@ -320,17 +320,16 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(const parse
         {
             /* We have an 'else continuation' (either else-if or else) */
             const parse_node_t &else_cont = *get_child(*else_clause, 1, symbol_else_continuation);
-            assert(else_cont.production_idx < 2);
-            if (else_cont.production_idx == 0)
+            const parse_node_t *maybe_if_clause = get_child(else_cont, 0);
+            if (maybe_if_clause && maybe_if_clause->type == symbol_if_clause)
             {
                 /* it's an 'else if', go to the next one */
-                if_clause = get_child(else_cont, 0, symbol_if_clause);
+                if_clause = maybe_if_clause;
                 else_clause = get_child(else_cont, 1, symbol_else_clause);
             }
             else
             {
                 /* it's the final 'else', we're done */
-                assert(else_cont.production_idx == 1);
                 job_list_to_execute = get_child(else_cont, 1, symbol_job_list);
                 break;
             }

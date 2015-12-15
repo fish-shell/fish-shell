@@ -327,11 +327,7 @@ static wcstring block_type_user_presentable_description(parse_token_type_t type)
 /** Returns a string description of the given parse node */
 wcstring parse_node_t::describe() const
 {
-    wcstring result = token_type_description(type);
-    if (type < FIRST_TERMINAL_TYPE)
-    {
-        append_format(result, L" (prod %d)", this->production_idx);
-    }
+    wcstring result = token_type_description(this->type);
     return result;
 }
 
@@ -1151,7 +1147,7 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2)
         // Get the production for the top of the stack
         parse_stack_element_t &stack_elem = symbol_stack.back();
         parse_node_t &node = nodes.at(stack_elem.node_idx);
-        const production_t *production = production_for_token(stack_elem.type, token1, token2, &node.production_idx, NULL /* error text */);
+        const production_t *production = production_for_token(stack_elem.type, token1, token2, &node.tag);
         if (production == NULL)
         {
             parse_error_failed_production(stack_elem, token1);
@@ -1544,13 +1540,9 @@ bool parse_node_tree_t::argument_list_is_root(const parse_node_t &node) const
 enum parse_statement_decoration_t parse_node_tree_t::decoration_for_plain_statement(const parse_node_t &node) const
 {
     assert(node.type == symbol_plain_statement);
-    enum parse_statement_decoration_t decoration = parse_statement_decoration_none;
-    const parse_node_t *decorated_statement = this->get_parent(node, symbol_decorated_statement);
-    if (decorated_statement != NULL)
-    {
-        decoration = static_cast<enum parse_statement_decoration_t>(decorated_statement->production_idx);
-    }
-    return decoration;
+   const parse_node_t *decorated_statement = this->get_parent(node, symbol_decorated_statement);
+    parse_node_tag_t tag = decorated_statement ? decorated_statement->tag : parse_statement_decoration_none;
+    return static_cast<parse_statement_decoration_t>(tag);
 }
 
 bool parse_node_tree_t::command_for_plain_statement(const parse_node_t &node, const wcstring &src, wcstring *out_cmd) const
@@ -1683,39 +1675,15 @@ parse_node_tree_t::parse_node_list_t parse_node_tree_t::comment_nodes_for_node(c
 enum parse_bool_statement_type_t parse_node_tree_t::statement_boolean_type(const parse_node_t &node)
 {
     assert(node.type == symbol_boolean_statement);
-    switch (node.production_idx)
-    {
-        // These magic numbers correspond to productions for boolean_statement
-        case 0:
-            return parse_bool_and;
-
-        case 1:
-            return parse_bool_or;
-
-        case 2:
-            return parse_bool_not;
-
-        default:
-        {
-            fprintf(stderr, "Unexpected production in boolean statement\n");
-            PARSER_DIE();
-            return (enum parse_bool_statement_type_t)(-1);
-        }
-    }
+    return static_cast<parse_bool_statement_type_t>(node.tag);
 }
 
 bool parse_node_tree_t::job_should_be_backgrounded(const parse_node_t &job) const
 {
     assert(job.type == symbol_job);
-    assert(job.production_idx == 0);
     bool result = false;
     const parse_node_t *opt_background = get_child(job, 2, symbol_optional_background);
-    if (opt_background != NULL)
-    {
-        // We may get the value -1 if the node is not yet materialized (i.e. an incomplete parse tree)
-        assert(opt_background->production_idx == uint8_t(-1) || opt_background->production_idx <= 1);
-        result = (opt_background->production_idx == 1);
-    }
+    result = opt_background != NULL && opt_background->tag == parse_background;
     return result;
 }
 

@@ -66,12 +66,16 @@ wcstring parse_dump_tree(const parse_node_tree_t &tree, const wcstring &src);
 wcstring token_type_description(parse_token_type_t type);
 wcstring keyword_description(parse_keyword_t type);
 
+/* Node flags */
 enum
 {
     /* Flag indicating that the node has associated comment nodes */
-    parse_node_flag_has_comments = 1 << 0
+    parse_node_flag_has_comments = 1 << 0,
 };
 typedef uint8_t parse_node_flags_t;
+
+/* Node-type specific tag value */
+typedef uint8_t parse_node_tag_t;
 
 /** Class for nodes of a parse tree. Since there's a lot of these, the size and order of the fields is important. */
 class parse_node_t
@@ -92,20 +96,23 @@ public:
     /* Number of children */
     uint8_t child_count;
 
-    /* Which production was used */
-    uint8_t production_idx;
-
     /* Type of the node */
     enum parse_token_type_t type;
+    
+    /* Keyword associated with node */
+    enum parse_keyword_t keyword;
 
     /* Node flags */
     parse_node_flags_t flags;
+    
+    /* This is used to store e.g. the statement decoration. */
+    parse_node_tag_t tag;
 
     /* Description */
     wcstring describe(void) const;
 
     /* Constructor */
-    explicit parse_node_t(parse_token_type_t ty) : source_start(SOURCE_OFFSET_INVALID), source_length(0), parent(NODE_OFFSET_INVALID), child_start(0), child_count(0), production_idx(-1), type(ty), flags(0)
+    explicit parse_node_t(parse_token_type_t ty) : source_start(SOURCE_OFFSET_INVALID), source_length(0), parent(NODE_OFFSET_INVALID), child_start(0), child_count(0), type(ty), flags(0), tag(0)
     {
     }
 

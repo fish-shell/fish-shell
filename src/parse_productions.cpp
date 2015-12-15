@@ -4,49 +4,37 @@
 #include "parse_tree.h"
 
 using namespace parse_productions;
-#define NO_PRODUCTION ((production_option_idx_t)(-1))
 
-static bool production_is_empty(const production_t production)
-{
-    return production[0] == token_type_invalid;
-}
+#define NO_PRODUCTION NULL
 
-/* Empty productions are allowed but must be first. Validate that the given production is in the valid range, i.e. it is either not empty or there is a non-empty production after it */
-static bool production_is_valid(const production_options_t production_list, production_option_idx_t which)
-{
-    assert(which >= 0);
-    if (which >= MAX_PRODUCTIONS)
-        return false;
+/* Herein are encoded the productions for our LL2 fish grammar.
+ Each symbol (e.g. symbol_job_list) has a corresponding function (e.g. resolve_job_lits).
+ The function accepts two tokens, representing the first and second lookahead, and returns
+ returns a production representing the rule, or NULL on error. There is also a tag value
+ which is returned by reference; the tag is a sort of node annotation.
+ 
+ Productions are generally a static const array, and we return a pointer to the array (yes, really).
+ */
 
-    bool nonempty_found = false;
-    for (int i=which; i < MAX_PRODUCTIONS; i++)
-    {
-        if (! production_is_empty(production_list[i]))
-        {
-            nonempty_found = true;
-            break;
-        }
-    }
-    return nonempty_found;
-}
+#define RESOLVE(sym) static const production_t * resolve_##sym (const parse_token_t &token1, const parse_token_t &token2, parse_node_tag_t *out_tag)
 
-#define PRODUCTIONS(sym) static const production_options_t productions_##sym
-#define RESOLVE(sym) static production_option_idx_t resolve_##sym (const parse_token_t &token1, const parse_token_t &token2)
-#define RESOLVE_ONLY(sym) static production_option_idx_t resolve_##sym (const parse_token_t &input1, const parse_token_t &input2) { return 0; }
+/* Hacktastic? */
+#define RESOLVE_ONLY(sym) \
+    extern const production_t sym##_only; \
+    static const production_t * resolve_##sym (const parse_token_t &token1, const parse_token_t &token2, parse_node_tag_t *out_tag) { return &sym ## _only ; } \
+    const production_t sym ## _only
 
 #define KEYWORD(x) ((x) + LAST_TOKEN_OR_SYMBOL + 1)
 
+/* Helper macro to define an array */
+#define P static const production_t
 
 /* A job_list is a list of jobs, separated by semicolons or newlines */
-PRODUCTIONS(job_list) =
-{
-    {},
-    {symbol_job, symbol_job_list},
-    {parse_token_type_end, symbol_job_list}
-};
-
 RESOLVE(job_list)
 {
+    P list_end = {};
+    P normal = {symbol_job, symbol_job_list};
+    P empty_line = {parse_token_type_end, symbol_job_list};
     switch (token1.type)
     {
         case parse_token_type_string:
@@ -57,25 +45,24 @@ RESOLVE(job_list)
                 case parse_keyword_else:
                 case parse_keyword_case:
                     // End this job list
-                    return 0;
+                    return &list_end;
 
                 default:
                     // Normal string
-                    return 1;
+                    return &normal;
             }
 
         case parse_token_type_pipe:
         case parse_token_type_redirection:
         case parse_token_type_background:
-            return 1;
+            return &normal;
 
         case parse_token_type_end:
-            // Empty line
-            return 2;
+            return &empty_line;
 
         case parse_token_type_terminate:
             // no more commands, just transition to empty
-            return 0;
+            return &list_end;
 
         default:
             return NO_PRODUCTION;
@@ -84,42 +71,32 @@ RESOLVE(job_list)
 
 /* A job is a non-empty list of statements, separated by pipes. (Non-empty is useful for cases like if statements, where we require a command). To represent "non-empty", we require a statement, followed by a possibly empty job_continuation */
 
-PRODUCTIONS(job) =
-{
-    {symbol_statement, symbol_job_continuation, symbol_optional_background}
-};
-RESOLVE_ONLY(job)
+RESOLVE_ONLY(job) = {symbol_statement, symbol_job_continuation, symbol_optional_background};
 
-PRODUCTIONS(job_continuation) =
-{
-    {},
-    {parse_token_type_pipe, symbol_statement, symbol_job_continuation}
-};
 RESOLVE(job_continuation)
 {
+    P empty = {};
+    P piped = {parse_token_type_pipe, symbol_statement, symbol_job_continuation};
     switch (token1.type)
     {
         case parse_token_type_pipe:
             // Pipe, continuation
-            return 1;
+            return &piped;
 
         default:
             // Not a pipe, no job continuation
-            return 0;
+            return &empty;
     }
 }
 
 /* A statement is a normal command, or an if / while / and etc */
-PRODUCTIONS(statement) =
-{
-    {symbol_boolean_statement},
-    {symbol_block_statement},
-    {symbol_if_statement},
-    {symbol_switch_statement},
-    {symbol_decorated_statement}
-};
 RESOLVE(statement)
 {
+    P boolean = {symbol_boolean_statement};
+    P block = {symbol_block_statement};
+    P ifs = {symbol_if_statement};
+    P switchs = {symbol_switch_statement};
+    P decorated = {symbol_decorated_statement};
     /* The only block-like builtin that takes any parameters is 'function' So go to decorated statements if the subsequent token looks like '--'.
         The logic here is subtle:
             If we are 'begin', then we expect to be invoked with no arguments.
@@ -133,18 +110,18 @@ RESOLVE(statement)
         // Otherwise, if the next token looks like an option (starts with a dash), then parse it as a decorated statement
         if (token1.keyword == parse_keyword_function && token2.is_help_argument)
         {
-            return 4;
+            return &decorated;
         }
         else if (token1.keyword != parse_keyword_function && token2.has_dash_prefix)
         {
-            return 4;
+            return &decorated;
         }
 
         // Likewise if the next token doesn't look like an argument at all. This corresponds to e.g. a "naked if".
         bool naked_invocation_invokes_help = (token1.keyword != parse_keyword_begin && token1.keyword != parse_keyword_end);
         if (naked_invocation_invokes_help && (token2.type == parse_token_type_end || token2.type == parse_token_type_terminate))
         {
-            return 4;
+            return &decorated;
         }
 
     }
@@ -157,29 +134,29 @@ RESOLVE(statement)
                 case parse_keyword_and:
                 case parse_keyword_or:
                 case parse_keyword_not:
-                    return 0;
+                    return &boolean;
 
                 case parse_keyword_for:
                 case parse_keyword_while:
                 case parse_keyword_function:
                 case parse_keyword_begin:
-                    return 1;
+                    return &block;
 
                 case parse_keyword_if:
-                    return 2;
+                    return &ifs;
 
                 case parse_keyword_else:
                     return NO_PRODUCTION;
 
                 case parse_keyword_switch:
-                    return 3;
+                    return &switchs;
 
                 case parse_keyword_end:
                     return NO_PRODUCTION;
 
                     // All other keywords fall through to decorated statement
                 default:
-                    return 4;
+                    return &decorated;
             }
             break;
 
@@ -195,294 +172,216 @@ RESOLVE(statement)
     }
 }
 
-PRODUCTIONS(if_statement) =
-{
-    {symbol_if_clause, symbol_else_clause, symbol_end_command, symbol_arguments_or_redirections_list}
-};
-RESOLVE_ONLY(if_statement)
+RESOLVE_ONLY(if_statement) = {symbol_if_clause, symbol_else_clause, symbol_end_command, symbol_arguments_or_redirections_list};
+RESOLVE_ONLY(if_clause) = { KEYWORD(parse_keyword_if), symbol_job, parse_token_type_end, symbol_job_list };
 
-PRODUCTIONS(if_clause) =
-{
-    { KEYWORD(parse_keyword_if), symbol_job, parse_token_type_end, symbol_job_list }
-};
-RESOLVE_ONLY(if_clause)
-
-PRODUCTIONS(else_clause) =
-{
-    { },
-    { KEYWORD(parse_keyword_else), symbol_else_continuation }
-};
 RESOLVE(else_clause)
 {
+    P empty = {};
+    P else_cont = { KEYWORD(parse_keyword_else), symbol_else_continuation };
     switch (token1.keyword)
     {
         case parse_keyword_else:
-            return 1;
+            return &else_cont;
         default:
-            return 0;
+            return &empty;
     }
 }
 
-PRODUCTIONS(else_continuation) =
-{
-    {symbol_if_clause, symbol_else_clause},
-    {parse_token_type_end, symbol_job_list}
-};
 RESOLVE(else_continuation)
 {
+    P elseif = {symbol_if_clause, symbol_else_clause};
+    P elseonly = {parse_token_type_end, symbol_job_list};
+
     switch (token1.keyword)
     {
         case parse_keyword_if:
-            return 0;
+            return &elseif;
         default:
-            return 1;
+            return &elseonly;
     }
 }
 
-PRODUCTIONS(switch_statement) =
-{
-    { KEYWORD(parse_keyword_switch), symbol_argument, parse_token_type_end, symbol_case_item_list, symbol_end_command, symbol_arguments_or_redirections_list}
-};
-RESOLVE_ONLY(switch_statement)
+RESOLVE_ONLY(switch_statement) = { KEYWORD(parse_keyword_switch), symbol_argument, parse_token_type_end, symbol_case_item_list, symbol_end_command, symbol_arguments_or_redirections_list};
 
-PRODUCTIONS(case_item_list) =
-{
-    {},
-    {symbol_case_item, symbol_case_item_list},
-    {parse_token_type_end, symbol_case_item_list}
-};
 RESOLVE(case_item_list)
 {
-    if (token1.keyword == parse_keyword_case) return 1;
-    else if (token1.type == parse_token_type_end) return 2; //empty line
-    else return 0;
+    P empty = {};
+    P case_item = {symbol_case_item, symbol_case_item_list};
+    P blank_line = {parse_token_type_end, symbol_case_item_list};
+    if (token1.keyword == parse_keyword_case) return &case_item;
+    else if (token1.type == parse_token_type_end) return &blank_line;
+    else return &empty;
 }
 
-PRODUCTIONS(case_item) =
-{
-    {KEYWORD(parse_keyword_case), symbol_argument_list, parse_token_type_end, symbol_job_list}
-};
-RESOLVE_ONLY(case_item)
+RESOLVE_ONLY(case_item) = {KEYWORD(parse_keyword_case), symbol_argument_list, parse_token_type_end, symbol_job_list};
 
-PRODUCTIONS(argument_list) =
-{
-    {},
-    {symbol_argument, symbol_argument_list}
-};
 RESOLVE(argument_list)
 {
+    P empty = {};
+    P arg = {symbol_argument, symbol_argument_list};
     switch (token1.type)
     {
         case parse_token_type_string:
-            return 1;
+            return &arg;
         default:
-            return 0;
+            return &empty;
     }
 }
 
-PRODUCTIONS(freestanding_argument_list) =
-{
-    {},
-    {symbol_argument, symbol_freestanding_argument_list},
-    {parse_token_type_end, symbol_freestanding_argument_list},
-};
 RESOLVE(freestanding_argument_list)
 {
+    P empty = {};
+    P arg = {symbol_argument, symbol_freestanding_argument_list};
+    P semicolon = {parse_token_type_end, symbol_freestanding_argument_list};
+
     switch (token1.type)
     {
         case parse_token_type_string:
-            return 1;
+            return &arg;
         case parse_token_type_end:
-            return 2;
+            return &semicolon;
         default:
-            return 0;
+            return &empty;
     }
 }
 
+RESOLVE_ONLY(block_statement) = {symbol_block_header, symbol_job_list, symbol_end_command, symbol_arguments_or_redirections_list};
 
-PRODUCTIONS(block_statement) =
-{
-    {symbol_block_header, symbol_job_list, symbol_end_command, symbol_arguments_or_redirections_list}
-};
-RESOLVE_ONLY(block_statement)
-
-PRODUCTIONS(block_header) =
-{
-    {symbol_for_header},
-    {symbol_while_header},
-    {symbol_function_header},
-    {symbol_begin_header}
-};
 RESOLVE(block_header)
 {
+    P forh = {symbol_for_header};
+    P whileh = {symbol_while_header};
+    P funch = {symbol_function_header};
+    P beginh = {symbol_begin_header};
+
     switch (token1.keyword)
     {
         case parse_keyword_for:
-            return 0;
+            return &forh;
         case parse_keyword_while:
-            return 1;
+            return &whileh;
         case parse_keyword_function:
-            return 2;
+            return &funch;
         case parse_keyword_begin:
-            return 3;
+            return &beginh;
         default:
             return NO_PRODUCTION;
     }
 }
 
-PRODUCTIONS(for_header) =
-{
-    {KEYWORD(parse_keyword_for), parse_token_type_string, KEYWORD
-        (parse_keyword_in), symbol_argument_list, parse_token_type_end}
-};
-RESOLVE_ONLY(for_header)
-
-PRODUCTIONS(while_header) =
-{
-    {KEYWORD(parse_keyword_while), symbol_job, parse_token_type_end}
-};
-RESOLVE_ONLY(while_header)
-
-PRODUCTIONS(begin_header) =
-{
-    {KEYWORD(parse_keyword_begin)}
-};
-RESOLVE_ONLY(begin_header)
-
-PRODUCTIONS(function_header) =
-{
-    {KEYWORD(parse_keyword_function), symbol_argument, symbol_argument_list, parse_token_type_end}
-};
-RESOLVE_ONLY(function_header)
+RESOLVE_ONLY(for_header) = {KEYWORD(parse_keyword_for), parse_token_type_string, KEYWORD
+    (parse_keyword_in), symbol_argument_list, parse_token_type_end};
+RESOLVE_ONLY(while_header) = {KEYWORD(parse_keyword_while), symbol_job, parse_token_type_end};
+RESOLVE_ONLY(begin_header) = {KEYWORD(parse_keyword_begin)};
+RESOLVE_ONLY(function_header) = {KEYWORD(parse_keyword_function), symbol_argument, symbol_argument_list, parse_token_type_end};
 
 /* A boolean statement is AND or OR or NOT */
-PRODUCTIONS(boolean_statement) =
-{
-    {KEYWORD(parse_keyword_and), symbol_statement},
-    {KEYWORD(parse_keyword_or), symbol_statement},
-    {KEYWORD(parse_keyword_not), symbol_statement}
-};
 RESOLVE(boolean_statement)
 {
+    P ands = {KEYWORD(parse_keyword_and), symbol_statement};
+    P ors = {KEYWORD(parse_keyword_or), symbol_statement};
+    P nots = {KEYWORD(parse_keyword_not), symbol_statement};
+
     switch (token1.keyword)
     {
         case parse_keyword_and:
-            return 0;
+            *out_tag = parse_bool_and;
+            return &ands;
         case parse_keyword_or:
-            return 1;
+            *out_tag = parse_bool_or;
+            return &ors;
         case parse_keyword_not:
-            return 2;
+            *out_tag = parse_bool_not;
+            return &nots;
         default:
             return NO_PRODUCTION;
     }
 }
 
-PRODUCTIONS(decorated_statement) =
-{
-    {symbol_plain_statement},
-    {KEYWORD(parse_keyword_command), symbol_plain_statement},
-    {KEYWORD(parse_keyword_builtin), symbol_plain_statement},
-    {KEYWORD(parse_keyword_exec), symbol_plain_statement}
-};
 RESOLVE(decorated_statement)
 {
+    P plains = {symbol_plain_statement};
+    P cmds = {KEYWORD(parse_keyword_command), symbol_plain_statement};
+    P builtins = {KEYWORD(parse_keyword_builtin), symbol_plain_statement};
+    P execs = {KEYWORD(parse_keyword_exec), symbol_plain_statement};
+
     /* If this is e.g. 'command --help' then the command is 'command' and not a decoration. If the second token is not a string, then this is a naked 'command' and we should execute it as undecorated. */
     if (token2.type != parse_token_type_string || token2.has_dash_prefix)
     {
-        return 0;
+        return &plains;
     }
 
     switch (token1.keyword)
     {
         default:
-            return 0;
+            *out_tag = parse_statement_decoration_none;
+            return &plains;
         case parse_keyword_command:
-            return 1;
+            *out_tag = parse_statement_decoration_command;
+            return &cmds;
         case parse_keyword_builtin:
-            return 2;
+            *out_tag = parse_statement_decoration_builtin;
+            return &builtins;
         case parse_keyword_exec:
-            return 3;
+            *out_tag = parse_statement_decoration_exec;
+            return &execs;
     }
 }
 
-PRODUCTIONS(plain_statement) =
-{
-    {parse_token_type_string, symbol_arguments_or_redirections_list}
-};
-RESOLVE_ONLY(plain_statement)
+RESOLVE_ONLY(plain_statement) = {parse_token_type_string, symbol_arguments_or_redirections_list};
 
-PRODUCTIONS(arguments_or_redirections_list) =
-{
-    {},
-    {symbol_argument_or_redirection, symbol_arguments_or_redirections_list}
-};
 RESOLVE(arguments_or_redirections_list)
 {
+    P empty = {};
+    P value = {symbol_argument_or_redirection, symbol_arguments_or_redirections_list};
     switch (token1.type)
     {
         case parse_token_type_string:
         case parse_token_type_redirection:
-            return 1;
+            return &value;
         default:
-            return 0;
+            return &empty;
     }
 }
 
-PRODUCTIONS(argument_or_redirection) =
-{
-    {symbol_argument},
-    {symbol_redirection}
-};
 RESOLVE(argument_or_redirection)
 {
+    P arg = {symbol_argument};
+    P redir = {symbol_redirection};
     switch (token1.type)
     {
         case parse_token_type_string:
-            return 0;
+            return &arg;
         case parse_token_type_redirection:
-            return 1;
+            return &redir;
         default:
             return NO_PRODUCTION;
     }
 }
 
-PRODUCTIONS(argument) =
-{
-    {parse_token_type_string}
-};
-RESOLVE_ONLY(argument)
-
-PRODUCTIONS(redirection) =
-{
-    {parse_token_type_redirection, parse_token_type_string}
-};
-RESOLVE_ONLY(redirection)
-
-PRODUCTIONS(optional_background) =
-{
-    {},
-    { parse_token_type_background }
-};
+RESOLVE_ONLY(argument) = {parse_token_type_string};
+RESOLVE_ONLY(redirection) = {parse_token_type_redirection, parse_token_type_string};
 
 RESOLVE(optional_background)
 {
+    P empty = {};
+    P background = { parse_token_type_background };
     switch (token1.type)
     {
         case parse_token_type_background:
-            return 1;
+            *out_tag = parse_background;
+            return &background;
         default:
-            return 0;
+            *out_tag = parse_no_background;
+            return &empty;
     }
 }
 
-PRODUCTIONS(end_command) =
-{
-    {KEYWORD(parse_keyword_end)}
-};
-RESOLVE_ONLY(end_command)
+RESOLVE_ONLY(end_command) = {KEYWORD(parse_keyword_end)};
 
-#define TEST(sym) case (symbol_##sym): production_list = & productions_ ## sym ; resolver = resolve_ ## sym ; break;
-const production_t *parse_productions::production_for_token(parse_token_type_t node_type, const parse_token_t &input1, const parse_token_t &input2, production_option_idx_t *out_which_production, wcstring *out_error_text)
+#define TEST(sym) case (symbol_##sym): resolver = resolve_ ## sym ; break;
+const production_t *parse_productions::production_for_token(parse_token_type_t node_type, const parse_token_t &input1, const parse_token_t &input2, parse_node_tag_t *out_tag)
 {
     const bool log_it = false;
     if (log_it)
@@ -490,9 +389,8 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
         fprintf(stderr, "Resolving production for %ls with input token <%ls>\n", token_type_description(node_type).c_str(), input1.describe().c_str());
     }
 
-    /* Fetch the list of productions and the function to resolve them */
-    const production_options_t *production_list = NULL;
-    production_option_idx_t (*resolver)(const parse_token_t &input1, const parse_token_t &input2) = NULL;
+    /* Fetch the function to resolve the list of productions */
+    const production_t * (*resolver)(const parse_token_t &input1, const parse_token_t &input2, parse_node_tag_t *out_tag) = NULL;
     switch (node_type)
     {
             TEST(job_list)
@@ -548,32 +446,17 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
             break;
 
     }
-    PARSE_ASSERT(production_list != NULL);
     PARSE_ASSERT(resolver != NULL);
 
-    const production_t *result = NULL;
-    production_option_idx_t which = resolver(input1, input2);
-
-    if (log_it)
-    {
-        fprintf(stderr, "\tresolved to %u\n", (unsigned)which);
-    }
-
-
-    if (which == NO_PRODUCTION)
+    const production_t *result = resolver(input1, input2, out_tag);
+    if (result == NULL)
     {
         if (log_it)
         {
             fprintf(stderr, "Node type '%ls' has no production for input '%ls' (in %s)\n", token_type_description(node_type).c_str(), input1.describe().c_str(), __FUNCTION__);
         }
-        result = NULL;
     }
-    else
-    {
-        PARSE_ASSERT(production_is_valid(*production_list, which));
-        result = &((*production_list)[which]);
-    }
-    *out_which_production = which;
+
     return result;
 }
 

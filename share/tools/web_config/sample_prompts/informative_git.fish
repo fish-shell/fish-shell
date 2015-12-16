@@ -85,7 +85,7 @@ function fish_prompt --description 'Write out the prompt'
 	echo -n (prompt_pwd)
 	set_color normal
 
-	printf '%s ' (__fish_git_prompt)
+	printf '%s ' (__fish_vcs_prompt)
 
 	if not test $last_status -eq 0
 	set_color $fish_color_error

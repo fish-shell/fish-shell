@@ -348,7 +348,7 @@ You can iterate over a list (or a slice) with a for loop:
 <outp>entry: /usr/local/bin</outp>
 \endfish
 
-Lists adjacent to other lists or strings are expanded as cartesian products unless quoted (see <a href="index.html#expand-variable">Variable expansion</a>):
+Lists adjacent to other lists or strings are expanded as <a href="index.html#cartesian-product">cartesian products</a> unless quoted (see <a href="index.html#expand-variable">Variable expansion</a>):
 
 \fish{cli-dark}
 >_ set -l a 1 2 3

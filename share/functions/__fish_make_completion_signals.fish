@@ -11,7 +11,7 @@ function __fish_make_completion_signals --description 'Make list of kill signals
         # SIGNUM', so we use this instead.
         complete -c kill -s l --description "List names of available signals"
         for i in (seq 31)
-            set -g __kill_signals $signals $i" "(kill -l $i)
+            set -g __kill_signals $__kill_signals $i" "(kill -l $i)
         end
     end
 end

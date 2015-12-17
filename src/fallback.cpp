@@ -1228,8 +1228,8 @@ int backtrace(void **buffer, int size)
 }
 #endif
 
-#ifndef HAVE_BACKTRACE_SYMBOLS
-char ** backtrace_symbols(void *const *buffer, int size)
+#ifndef HAVE_BACKTRACE_SYMBOLS_FD
+char ** backtrace_symbols_fd(void *const *buffer, int size, int fd)
 {
     return 0;
 }

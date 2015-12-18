@@ -1,6 +1,15 @@
 # fish completion for git
 # Use 'command git' to avoid interactions for aliases from git to (e.g.) hub
 
+function __fish_git_commits
+	# Complete commits with their subject line as the description
+	# This allows filtering by subject with the new pager!
+	# Because even subject lines can be quite long,
+	# trim them (abbrev'd hash+tab+subject) to 70 characters
+	command git log --pretty=tformat:"%h"\t"%s" \
+	| string replace -r '(.{70}).+' '$1...'
+end
+
 function __fish_git_branches
 	command git branch --no-color -a ^/dev/null | __fish_sgrep -v ' -> ' | string trim -c "* " | string replace -r "^remotes/" ""
 end
@@ -219,6 +228,7 @@ complete -f -c git -n "__fish_git_using_command remote; and __fish_seen_subcomma
 complete -f -c git -n '__fish_git_needs_command' -a show -d 'Shows the last commit of a branch'
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_branches)' -d 'Branch'
 complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_unique_remote_branches)' -d 'Remote branch'
+complete -f -c git -n '__fish_git_using_command show' -a '(__fish_git_commits)'
 # TODO options
 
 ### show-branch

@@ -7,7 +7,7 @@ For more on fish's design philosophy, see the [design document](http://fishshell
 
 ## Quick Start
 
-fish generally works like other shells, like bash or zsh. A few important differences can be found at <http://fishshell.com/docs/current/tutorial.html> by searching for the magic phrase 'unlike other shells'.
+fish generally works like other shells, like bash or zsh. A few important differences can be found at <http://fishshell.com/docs/current/tutorial.html> by searching for the magic phrase "unlike other shells".
 
 Detailed user documentation is available by running `help` within fish, and also at <http://fishshell.com/docs/current/index.html>
 

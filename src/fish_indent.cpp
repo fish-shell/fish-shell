@@ -92,7 +92,8 @@ static void prettify_node_recursive(const wcstring &source, const parse_node_tre
     /* Increment the indent if we are either a root job_list, or root case_item_list, or in an if or while header (#1665) */
     const bool is_root_job_list = (node_type == symbol_job_list && parent_type != symbol_job_list);
     const bool is_root_case_item_list = (node_type == symbol_case_item_list && parent_type != symbol_case_item_list);
-    const bool is_if_while_header = (node_type == symbol_job && (parent_type == symbol_if_clause || parent_type == symbol_while_header));
+    const bool is_if_while_header = ((node_type == symbol_job || node_type == symbol_andor_job_list) &&
+                                    (parent_type == symbol_if_clause || parent_type == symbol_while_header));
     if (is_root_job_list || is_root_case_item_list || is_if_while_header)
     {
         node_indent += 1;

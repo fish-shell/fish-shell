@@ -295,18 +295,24 @@ parse_execution_result_t parse_execution_context_t::run_if_statement(const parse
             result = parse_execution_cancelled;
             break;
         }
-
+        
+        /* An if condition has a job and a "tail" of andor jobs, e.g. "foo ; and bar; or baz" */
         assert(if_clause != NULL && else_clause != NULL);
-        const parse_node_t &condition = *get_child(*if_clause, 1, symbol_job);
+        const parse_node_t &condition_head = *get_child(*if_clause, 1, symbol_job);
+        const parse_node_t &condition_boolean_tail = *get_child(*if_clause, 3, symbol_andor_job_list);
 
-        /* Check the condition. We treat parse_execution_errored here as failure, in accordance with historic behavior */
-        parse_execution_result_t cond_ret = run_1_job(condition, ib);
-        bool take_branch = (cond_ret == parse_execution_success) && proc_get_last_status() == EXIT_SUCCESS;
+        /* Check the condition and the tail. We treat parse_execution_errored here as failure, in accordance with historic behavior */
+        parse_execution_result_t cond_ret = run_1_job(condition_head, ib);
+        if (cond_ret == parse_execution_success)
+        {
+            cond_ret = run_job_list(condition_boolean_tail, ib);
+        }
+        const bool take_branch = (cond_ret == parse_execution_success) && proc_get_last_status() == EXIT_SUCCESS;
 
         if (take_branch)
         {
             /* condition succeeded */
-            job_list_to_execute = get_child(*if_clause, 3, symbol_job_list);
+            job_list_to_execute = get_child(*if_clause, 4, symbol_job_list);
             break;
         }
         else if (else_clause->child_count == 0)
@@ -651,17 +657,22 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(const pa
 
     parse_execution_result_t ret = parse_execution_success;
 
-    /* The condition and contents of the while loop, as a job and job list respectively */
-    const parse_node_t &while_condition = *get_child(header, 1, symbol_job);
+    /* The conditions of the while loop */
+    const parse_node_t &condition_head = *get_child(header, 1, symbol_job);
+    const parse_node_t &condition_boolean_tail = *get_child(header, 3, symbol_andor_job_list);
 
     /* Run while the condition is true */
     for (;;)
     {
         /* Check the condition */
-        parse_execution_result_t cond_result = this->run_1_job(while_condition, wb);
-
+        parse_execution_result_t cond_ret = this->run_1_job(condition_head, wb);
+        if (cond_ret == parse_execution_success)
+        {
+            cond_ret = run_job_list(condition_boolean_tail, wb);
+        }
+        
         /* We only continue on successful execution and EXIT_SUCCESS */
-        if (cond_result != parse_execution_success || proc_get_last_status() != EXIT_SUCCESS)
+        if (cond_ret != parse_execution_success || proc_get_last_status() != EXIT_SUCCESS)
         {
             break;
         }
@@ -1460,13 +1471,13 @@ parse_execution_result_t parse_execution_context_t::run_1_job(const parse_node_t
 
 parse_execution_result_t parse_execution_context_t::run_job_list(const parse_node_t &job_list_node, const block_t *associated_block)
 {
-    assert(job_list_node.type == symbol_job_list);
+    assert(job_list_node.type == symbol_job_list || job_list_node.type == symbol_andor_job_list);
 
     parse_execution_result_t result = parse_execution_success;
     const parse_node_t *job_list = &job_list_node;
     while (job_list != NULL && ! should_cancel_execution(associated_block))
     {
-        assert(job_list->type == symbol_job_list);
+        assert(job_list->type == symbol_job_list || job_list_node.type == symbol_andor_job_list);
 
         // Try pulling out a job
         const parse_node_t *job = tree.next_node_in_node_list(*job_list, symbol_job, &job_list);

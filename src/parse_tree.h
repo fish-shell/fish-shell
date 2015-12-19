@@ -222,7 +222,7 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags, parse
 # A job_list is a list of jobs, separated by semicolons or newlines
 
     job_list = <empty> |
-                job job_list
+                job job_list |
                 <TOK_END> job_list
 
 # A job is a non-empty list of statements, separated by pipes. (Non-empty is useful for cases like if statements, where we require a command). To represent "non-empty", we require a statement, followed by a possibly empty job_continuation, and then optionally a background specifier '&'
@@ -238,7 +238,7 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags, parse
 # A block is a conditional, loop, or begin/end
 
     if_statement = if_clause else_clause end_command arguments_or_redirections_list
-    if_clause = <IF> job <TOK_END> job_list
+    if_clause = <IF> job <TOK_END> andor_job_list job_list
     else_clause = <empty> |
                  <ELSE> else_continuation
     else_continuation = if_clause else_clause |
@@ -254,15 +254,19 @@ bool parse_tree_from_string(const wcstring &str, parse_tree_flags_t flags, parse
     block_statement = block_header  job_list end_command arguments_or_redirections_list
     block_header = for_header | while_header  | function_header | begin_header
     for_header = FOR var_name IN argument_list <TOK_END>
-    while_header = WHILE job <TOK_END>
+    while_header = WHILE job <TOK_END> andor_job_list
     begin_header = BEGIN
 
 # Functions take arguments, and require at least one (the name). No redirections allowed.
     function_header = FUNCTION argument argument_list <TOK_END>
 
 # A boolean statement is AND or OR or NOT
-
     boolean_statement = AND statement | OR statement | NOT statement
+ 
+# An andor_job_list is zero or more job lists, where each starts with an `and` or `or` boolean statement
+    andor_job_list = <empty> |
+                     job andor_job_list |
+                     <TOK_END> andor_job_list
 
 # A decorated_statement is a command with a list of arguments_or_redirections, possibly with "builtin" or "command" or "exec"
 

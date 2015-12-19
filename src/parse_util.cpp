@@ -759,13 +759,13 @@ static void compute_indents_recursive(const parse_node_tree_t &tree, node_offset
     if (node_idx > *max_visited_node_idx)
         *max_visited_node_idx = node_idx;
 
-    /* We could implement this by utilizing the fish grammar. But there's an easy trick instead: almost everything that wraps a job list should be indented by 1. So just find all of the job lists. One exception is switch, which wraps a case_item_list instead of a job_list. The other exception is job_list itself: a job_list is a job and a job_list, and we want that child list to be indented the same as the parent. So just find all job_lists whose parent is not a job_list, and increment their indent by 1. */
+    /* We could implement this by utilizing the fish grammar. But there's an easy trick instead: almost everything that wraps a job list should be indented by 1. So just find all of the job lists. One exception is switch, which wraps a case_item_list instead of a job_list. The other exception is job_list itself: a job_list is a job and a job_list, and we want that child list to be indented the same as the parent. So just find all job_lists whose parent is not a job_list, and increment their indent by 1. We also want to treat andor_job_list like job_lists */
 
     const parse_node_t &node = tree.at(node_idx);
     const parse_token_type_t node_type = node.type;
 
     /* Increment the indent if we are either a root job_list, or root case_item_list */
-    const bool is_root_job_list = (node_type == symbol_job_list && parent_type != symbol_job_list);
+    const bool is_root_job_list = node_type != parent_type && (node_type == symbol_job_list || node_type == symbol_andor_job_list);
     const bool is_root_case_item_list = (node_type == symbol_case_item_list && parent_type != symbol_case_item_list);
     if (is_root_job_list || is_root_case_item_list)
     {

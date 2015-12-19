@@ -41,6 +41,8 @@ enum parse_token_type_t
     symbol_plain_statement,
     symbol_arguments_or_redirections_list,
     symbol_argument_or_redirection,
+    
+    symbol_andor_job_list,
 
     symbol_argument_list,
 

@@ -168,6 +168,8 @@ wcstring token_type_description(parse_token_type_t type)
         case symbol_case_item:
             return L"case_item";
 
+        case symbol_andor_job_list:
+            return L"andor_job_list";
         case symbol_argument_list:
             return L"argument_list";
         case symbol_freestanding_argument_list:

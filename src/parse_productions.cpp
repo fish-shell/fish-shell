@@ -173,7 +173,7 @@ RESOLVE(statement)
 }
 
 RESOLVE_ONLY(if_statement) = {symbol_if_clause, symbol_else_clause, symbol_end_command, symbol_arguments_or_redirections_list};
-RESOLVE_ONLY(if_clause) = { KEYWORD(parse_keyword_if), symbol_job, parse_token_type_end, symbol_job_list };
+RESOLVE_ONLY(if_clause) = { KEYWORD(parse_keyword_if), symbol_job, parse_token_type_end, symbol_andor_job_list, symbol_job_list };
 
 RESOLVE(else_clause)
 {
@@ -215,6 +215,29 @@ RESOLVE(case_item_list)
 }
 
 RESOLVE_ONLY(case_item) = {KEYWORD(parse_keyword_case), symbol_argument_list, parse_token_type_end, symbol_job_list};
+
+RESOLVE(andor_job_list)
+{
+    P list_end = {};
+    P andor_job = {symbol_job, symbol_andor_job_list};
+    P empty_line = {parse_token_type_end, symbol_andor_job_list};
+    
+    if (token1.type == parse_token_type_end)
+    {
+        return &empty_line;
+    }
+    else if (token1.keyword == parse_keyword_and || token1.keyword == parse_keyword_or)
+    {
+        // Check that the argument to and/or is a string that's not help
+        // Otherwise it's either 'and --help' or a naked 'and', and not part of this list
+        if (token2.type == parse_token_type_string && !token2.is_help_argument)
+        {
+            return &andor_job;
+        }
+    }
+    // All other cases end the list
+    return &list_end;
+}
 
 RESOLVE(argument_list)
 {
@@ -272,7 +295,7 @@ RESOLVE(block_header)
 
 RESOLVE_ONLY(for_header) = {KEYWORD(parse_keyword_for), parse_token_type_string, KEYWORD
     (parse_keyword_in), symbol_argument_list, parse_token_type_end};
-RESOLVE_ONLY(while_header) = {KEYWORD(parse_keyword_while), symbol_job, parse_token_type_end};
+RESOLVE_ONLY(while_header) = {KEYWORD(parse_keyword_while), symbol_job, parse_token_type_end, symbol_andor_job_list};
 RESOLVE_ONLY(begin_header) = {KEYWORD(parse_keyword_begin)};
 RESOLVE_ONLY(function_header) = {KEYWORD(parse_keyword_function), symbol_argument, symbol_argument_list, parse_token_type_end};
 
@@ -415,6 +438,7 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
             TEST(begin_header)
             TEST(function_header)
             TEST(plain_statement)
+            TEST(andor_job_list)
             TEST(arguments_or_redirections_list)
             TEST(argument_or_redirection)
             TEST(argument)

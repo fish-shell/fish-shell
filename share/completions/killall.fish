@@ -1,3 +1,6 @@
+# For Solaris OS, we don't need to generate completions. Since it can hang the PC.
+test (uname) = 'SunOS'; and return
+
 __fish_make_completion_signals
 
 for i in $__kill_signals
@@ -22,7 +25,7 @@ end
 
 complete -c killall -xa '(__fish_complete_proc)'
 
-if killall --verison > /dev/null ^ /dev/null
+if killall --version > /dev/null ^ /dev/null
 	complete -c killall -s e -l exact -d 'Require an exact match for very long names'
 	complete -c killall -s I -l ignore-case -d 'Do case insensitive process name match'
 	complete -c killall -s g -l process-group -d 'Kill the process group to which the process belongs. The kill signal is only sent once per group, even if multiple processes belonging to the same process group were found'

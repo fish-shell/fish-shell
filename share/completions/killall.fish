@@ -6,7 +6,7 @@ for i in $__kill_signals
 	complete -c killall -o $number -d $name
 	complete -c killall -o $name
 	# Doesn't work in OS X; -s is simulate
-	test (uname) != 'Darwin'; and complete -c killall -s s -x -a "$number $name" -d "Send $name signal"
+	test (uname) != 'Darwin'; and complete -c killall -s s -x -a "$number $name"
 end
 
 # Finds and completes all users, and their respective UID.

@@ -350,37 +350,24 @@ static int read_init(const struct config_paths_t &paths)
   Parse the argument list, return the index of the first non-switch
   arguments.
  */
-static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *out_cmds)
+static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
 {
-    int my_optind;
-    int force_interactive=0;
-    bool has_cmd = false;
+    struct option long_options[] =
+    {
+        { "command", required_argument, NULL, 'c' },
+        { "debug-level", required_argument, NULL, 'd' },
+        { "interactive", no_argument, NULL, 'i' } ,
+        { "login", no_argument, NULL, 'l' },
+        { "no-execute", no_argument, NULL, 'n' },
+        { "profile", required_argument, NULL, 'p' },
+        { "help", no_argument, NULL, 'h' },
+        { "version", no_argument, NULL, 'v' },
+        { NULL, 0, NULL, 0 }
+    };
 
     while (1)
     {
-        static struct option
-                long_options[] =
-        {
-            { "command", required_argument, 0, 'c' },
-            { "debug-level", required_argument, 0, 'd' },
-            { "interactive", no_argument, 0, 'i' } ,
-            { "login", no_argument, 0, 'l' },
-            { "no-execute", no_argument, 0, 'n' },
-            { "profile", required_argument, 0, 'p' },
-            { "help", no_argument, 0, 'h' },
-            { "version", no_argument, 0, 'v' },
-            { 0, 0, 0, 0 }
-        }
-        ;
-
-        int opt_index = 0;
-
-        int opt = getopt_long(argc,
-                              argv,
-                              GETOPT_STRING,
-                              long_options,
-                              &opt_index);
-
+        int opt = getopt_long(argc, argv, GETOPT_STRING, long_options, NULL);
         if (opt == -1)
             break;
 
@@ -393,9 +380,7 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *out_c
 
             case 'c':
             {
-                out_cmds->push_back(optarg ? optarg : "");
-                has_cmd = true;
-                is_interactive_session = 0;
+                cmds->push_back(optarg);
                 break;
             }
 
@@ -421,26 +406,25 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *out_c
 
             case 'h':
             {
-                out_cmds->push_back("__fish_print_help fish");
-                has_cmd = true;
+                cmds->push_back("__fish_print_help fish");
                 break;
             }
 
             case 'i':
             {
-                force_interactive = 1;
+                is_interactive_session = 1;
                 break;
             }
 
             case 'l':
             {
-                is_login=1;
+                is_login = 1;
                 break;
             }
 
             case 'n':
             {
-                no_exec=1;
+                no_exec = 1;
                 break;
             }
 
@@ -453,14 +437,12 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *out_c
 
             case 'v':
             {
-                fwprintf(stderr,
-                         _(L"%s, version %s\n"),
-                         PACKAGE_NAME,
+                fwprintf(stderr, _(L"%s, version %s\n"), PACKAGE_NAME,
                          get_fish_version());
                 exit_without_destructors(0);
             }
 
-            case '?':
+            default:
             {
                 exit_without_destructors(1);
             }
@@ -468,24 +450,20 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *out_c
         }
     }
 
-    my_optind = optind;
+    // If our command name begins with a dash that implies we're a login shell.
+    is_login |= argv[0][0] == '-';
 
-    is_login |= (strcmp(argv[0], "-fish") == 0);
-
-    /* We are an interactive session if we are either forced, or have not been given an explicit command to execute and stdin is a tty. */
-    if (force_interactive)
+    // We are an interactive session if we have not been given an explicit
+    // command or file to execute and stdin is a tty. Note that the -i or
+    // --interactive options also force interactive mode.
+    if (cmds->size() == 0 && optind == argc && isatty(STDIN_FILENO))
     {
-        is_interactive_session = true;
-    }
-    else if (is_interactive_session)
-    {
-        is_interactive_session = ! has_cmd && (my_optind == argc) && isatty(STDIN_FILENO);
+        is_interactive_session = 1;
     }
 
-    return my_optind;
+    return optind;
 }
 
-extern int g_fork_count;
 int main(int argc, char **argv)
 {
     int res=1;
@@ -495,7 +473,6 @@ int main(int argc, char **argv)
     setup_fork_guards();
 
     wsetlocale(LC_ALL, L"");
-    is_interactive_session=1;
     program_name=L"fish";
 
     //struct stat tmp;

@@ -4,11 +4,14 @@
 /* Define to 1 if you have the `backtrace' function. */
 #define HAVE_BACKTRACE 1
 
-/* Define to 1 if you have the `backtrace_symbols' function. */
-#define HAVE_BACKTRACE_SYMBOLS 1
+/* Define to 1 if you have the `backtrace_symbols_fd' function. */
+#define HAVE_BACKTRACE_SYMBOLS_FD 1
 
 /* Define to 1 one if the implemented fwprintf is broken */
 /* #undef HAVE_BROKEN_FWPRINTF */
+
+/* Define to 1 if you have the `clock_gettime' function. */
+/* #undef HAVE_CLOCK_GETTIME */
 
 /* Define to 1 if you have the <curses.h> header file. */
 #define HAVE_CURSES_H 1
@@ -28,6 +31,9 @@
 
 /* Define to 1 if you have the `fputwc' function. */
 #define HAVE_FPUTWC 1
+
+/* Define to 1 if you have the `futimens' function. */
+/* #undef HAVE_FUTIMENS */
 
 /* Define to 1 if you have the `futimes' function. */
 #define HAVE_FUTIMES 1
@@ -229,6 +235,9 @@
 
 /* Define to the version of this package. */
 #define PACKAGE_VERSION "2.2.0-git"
+
+/* The size of `wchar_t', as computed by sizeof. */
+#define SIZEOF_WCHAR_T 4
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1

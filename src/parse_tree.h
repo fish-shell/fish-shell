@@ -103,10 +103,10 @@ public:
     enum parse_keyword_t keyword;
 
     /* Node flags */
-    parse_node_flags_t flags;
+    parse_node_flags_t flags:4;
     
     /* This is used to store e.g. the statement decoration. */
-    parse_node_tag_t tag;
+    parse_node_tag_t tag:4;
 
     /* Description */
     wcstring describe(void) const;

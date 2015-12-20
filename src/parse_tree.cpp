@@ -1149,7 +1149,9 @@ void parse_ll_t::accept_tokens(parse_token_t token1, parse_token_t token2)
         // Get the production for the top of the stack
         parse_stack_element_t &stack_elem = symbol_stack.back();
         parse_node_t &node = nodes.at(stack_elem.node_idx);
-        const production_t *production = production_for_token(stack_elem.type, token1, token2, &node.tag);
+        parse_node_tag_t tag = 0;
+        const production_t *production = production_for_token(stack_elem.type, token1, token2, &tag);
+        node.tag = tag;
         if (production == NULL)
         {
             parse_error_failed_production(stack_elem, token1);

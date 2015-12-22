@@ -352,7 +352,7 @@ static int read_init(const struct config_paths_t &paths)
  */
 static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
 {
-    struct option long_options[] =
+    const struct option long_options[] =
     {
         { "command", required_argument, NULL, 'c' },
         { "debug-level", required_argument, NULL, 'd' },

@@ -6,7 +6,6 @@
 cd (dirname (status -f))
 
 # Test files specified on commandline, or all *.in files
-set -q argv[1]
 if set -q argv[1]
     set files_to_test $argv.in
 else

@@ -1,48 +1,55 @@
 # vim: set filetype=expect:
-
 spawn $fish
-
 expect_prompt
 
-# test switching key bindings
-# this should leave the mode in the appropriate state
+# Test switching key bindings to vi mode.
+# This should leave the mode in the appropriate state (i.e., insert mode).
 
-send_line "set -g fish_key_bindings fish_vi_key_bindings"
+send "set -g fish_key_bindings fish_vi_key_bindings\r"
 expect_prompt
-send_line -h "echo fail\033ddiecho success"
+send -h "echo fail\033"
+# Delay needed to allow fish to transition to vi "normal" mode.
+sleep 0.510
+send -h "ddiecho success\r"
 expect_prompt -re {\r\nsuccess\r\n} {
-    puts "success"
+    puts "vi replace line success"
 } -nounmatched -re {\r\nfail} {
-    puts stderr "fail"
-} unmatched {
-    puts stderr "Couldn't find expected output 'success'"
-}
-# try again without the human typing
-send_line -h "echo fail\033ddiecho success"
-expect_prompt -re {\r\nsuccess\r\n} {
-    puts "success"
-} -nounmatched -re {\r\nfail} {
-    puts stderr "fail"
+    puts stderr "vi replace line fail"
 } unmatched {
     puts stderr "Couldn't find expected output 'success'"
 }
 
-# Test lowercase-r replace
-send_line -h "\033ddiecho TEXT\033hhrAi"
+# Verify that a human can transpose words using \et (which is an emacs default
+# binding but should be valid while in vi insert mode).
+send "echo abc def\033"
+# Fish should still be in vi "insert" mode after this delay.
+sleep 0.400
+send "t\r"
+expect_prompt -re {\r\ndef abc\r\n} {
+    puts "vi transpose words success"
+} unmatched {
+    puts stderr "vi transpose words fail"
+}
+
+# Test replacing a single character.
+send -h "echo TEXT\033"
+# Delay needed to allow fish to transition to vi "normal" mode.
+sleep 0.510
+send -h "hhrAi\r"
 expect_prompt -re {\r\nTAXT\r\n} {
-    puts "replace success"
+    puts "vi mode replace success"
 } -nounmatched -re {\r\nfail} {
-    puts stderr "replace fail"
+    puts stderr "vi mode replace fail"
 } unmatched {
     puts stderr "Couldn't find expected output 'TAXT'"
 }
 
-# still in insert mode, switch back to regular key bindings
-send_line -h "set -g fish_key_bindings fish_default_key_bindings"
+# Switch back to regular (emacs mode) key bindings.
+send -h "set -g fish_key_bindings fish_default_key_bindings\r"
 expect_prompt
-send_line "echo success"
+send "echo success\r"
 expect_prompt -re {\r\nsuccess\r\n} {
-    puts "success"
+    puts "emacs success"
 } unmatched {
     puts stderr "Couldn't find expected output 'success'"
 } timeout {

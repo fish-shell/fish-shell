@@ -114,8 +114,8 @@ complete -c $progname -n "$argument; and $sync" -xa "$listall $listgroups"
 
 # Database options
 set -l has_db_opt '__fish_contains_opt asdeps asexplicit'
-complete -c $progname -n "$database; and not $has_as_opt" -xa --asdeps -d 'Mark PACKAGE as dependency'
-complete -c $progname -n "$database; and not $has_as_opt" -xa --asexplicit -d 'Mark PACKAGE as explicitly installed'
+complete -c $progname -n "$database; and not $has_db_opt" -xa --asdeps -d 'Mark PACKAGE as dependency'
+complete -c $progname -n "$database; and not $has_db_opt" -xa --asexplicit -d 'Mark PACKAGE as explicitly installed'
 complete -c $progname -n "$has_db_opt; and $argument; and $database" -xa "$listinstalled"
 
 # Upgrade options

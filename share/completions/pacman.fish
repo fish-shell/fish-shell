@@ -1,6 +1,6 @@
 # Completions for pacman
 # Author: Giorgio Lando <patroclo7@gmail.com>
-# Updated by maxfl, SanskritFritz, faho
+# Updated by maxfl, SanskritFritz, faho, f1u77y
 
 set -l progname pacman
 
@@ -111,6 +111,12 @@ complete -c $progname -n "$sync; and __fish_contains_opt -s u sysupgrade" -s u -
 complete -c $progname -n $sync -s w -l downloadonly -d 'Only download the target packages'
 complete -c $progname -n $sync -s y -l refresh -d 'Download fresh copy of the package list'
 complete -c $progname -n "$argument; and $sync" -xa "$listall $listgroups"
+
+# Database options
+set -l has_db_opt '__fish_contains_opt asdeps asexplicit'
+complete -c $progname -n "$database; and not $has_db_opt" -xa --asdeps -d 'Mark PACKAGE as dependency'
+complete -c $progname -n "$database; and not $has_db_opt" -xa --asexplicit -d 'Mark PACKAGE as explicitly installed'
+complete -c $progname -n "$has_db_opt; and $argument; and $database" -xa "$listinstalled"
 
 # Upgrade options
 # Theoretically, pacman reads packages in all formats that libarchive supports

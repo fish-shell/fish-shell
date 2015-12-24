@@ -1,6 +1,8 @@
 function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind --erase --all
   set -l init_mode insert
+  set -l eol_keys \x24 g\x24 \e\[F
+  set -l bol_keys \x5e 0 g\x5e \e\[H
   if set -q argv[1]
     set init_mode $argv[1]
   end
@@ -51,13 +53,12 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind gg beginning-of-buffer
   bind G end-of-buffer
 
-  bind \x24 end-of-line
-  bind \x5e beginning-of-line
-  bind 0 beginning-of-line
-  bind g\x24 end-of-line
-  bind g\x5e beginning-of-line
-  bind \e\[H beginning-of-line
-  bind \e\[F end-of-line
+  for key in $eol_keys
+      bind $key end-of-line
+  end
+  for key in $bol_keys
+      bind $key beginning-of-line
+  end
 
   bind u history-search-backward
   bind \cr history-search-forward
@@ -190,6 +191,9 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind -M visual h backward-char
   bind -M visual l forward-char
 
+  bind -M visual k up-line
+  bind -M visual j down-line
+
   bind -M visual b backward-word
   bind -M visual B backward-bigword
   bind -M visual ge backward-word
@@ -199,6 +203,14 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind -M visual e forward-word
   bind -M visual E forward-bigword
 
+  for key in $eol_keys
+      bind -M visual $key end-of-line
+  end
+  for key in $bol_keys
+      bind -M visual $key beginning-of-line
+  end
+
+  bind -M visual -m insert  c kill-selection end-selection force-repaint
   bind -M visual -m default d kill-selection end-selection force-repaint
   bind -M visual -m default x kill-selection end-selection force-repaint
   bind -M visual -m default X kill-whole-line end-selection force-repaint

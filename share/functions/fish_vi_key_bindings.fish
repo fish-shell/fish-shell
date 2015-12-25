@@ -1,8 +1,8 @@
 function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind --erase --all
   set -l init_mode insert
-  set -l eol_keys \x24 g\x24 \e\[F
-  set -l bol_keys \x5e 0 g\x5e \e\[H
+  set -l eol_keys \$ g\$ \e\[F
+  set -l bol_keys \^ 0 g\^ \e\[H
   if set -q argv[1]
     set init_mode $argv[1]
   end
@@ -95,8 +95,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 
   bind dd kill-whole-line
   bind D kill-line
-  bind d\x24 kill-line
-  bind d\x5e backward-kill-line
+  bind d\$ kill-line
+  bind d\^ backward-kill-line
   bind dw kill-word
   bind dW kill-bigword
   bind diw forward-char forward-char backward-word kill-word
@@ -114,8 +114,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind -m insert S kill-whole-line force-repaint
   bind -m insert cc kill-whole-line force-repaint
   bind -m insert C kill-line force-repaint
-  bind -m insert c\x24 kill-line force-repaint
-  bind -m insert c\x5e backward-kill-line force-repaint
+  bind -m insert c\$ kill-line force-repaint
+  bind -m insert c\^ backward-kill-line force-repaint
   bind -m insert cw kill-word force-repaint
   bind -m insert cW kill-bigword force-repaint
   bind -m insert ciw forward-char forward-char backward-word kill-word force-repaint
@@ -138,8 +138,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 
   bind yy kill-whole-line yank
   bind Y  kill-whole-line yank
-  bind y\x24 kill-line yank
-  bind y\x5e backward-kill-line yank
+  bind y\$ kill-line yank
+  bind y\^ backward-kill-line yank
   bind yw kill-word yank
   bind yW kill-bigword yank
   bind yiw forward-char forward-char backward-word kill-word yank

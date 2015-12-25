@@ -1053,7 +1053,12 @@ void reader_init()
     // earliest possible moment. Doing it here means it will be done within
     // approximately 1 ms of the start of the shell rather than 250 ms (or
     // more) when reader_interactive_init is eventually called.
-    tcsetattr(STDIN_FILENO, TCSANOW,&shell_modes);
+    //
+    // TODO: Remove this condition when issue #2315 and #1041 are addressed.
+    if (is_interactive_session)
+    {
+        tcsetattr(STDIN_FILENO, TCSANOW,&shell_modes);
+    }
 }
 
 

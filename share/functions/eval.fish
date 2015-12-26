@@ -23,17 +23,17 @@ function eval -S -d "Evaluate parameters as a command"
 	# used interactively, like less, wont work using eval.
 
 	set -l mode
-	if status --is-interactive-job-control
+	if builtin status --is-interactive-job-control
 		set mode interactive
 	else
-		if status --is-full-job-control
+		if builtin status --is-full-job-control
 			set mode full
 		else
 			set mode none
 		end
 	end
-	if status --is-interactive
-		status --job-control full
+	if builtin status --is-interactive
+		builtin status --job-control full
 	end
 	__fish_restore_status $status_copy
 
@@ -60,6 +60,6 @@ function eval -S -d "Evaluate parameters as a command"
 	echo "begin; $argv "\n" ;end <&3 3<&-" | source 3<&0
 	set -l res $status
 
-	status --job-control $mode
+	builtin status --job-control $mode
 	return $res
 end

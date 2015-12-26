@@ -6,9 +6,9 @@ end
 
 function suspend -d "Suspend the current shell."
     if begin contains -- $argv --force
-             or not status --is-interactive
+             or not builtin status --is-interactive
              or begin test $SHLVL -ge $suspend_minimum_SHLVL
-                      and not status --is-login
+                      and not builtin status --is-login
                 end
        end
        kill -STOP %self

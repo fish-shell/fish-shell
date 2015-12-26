@@ -44,7 +44,7 @@ function history --description "Deletes an item from history"
 		end
 	else
 		#Execute history builtin without any argument
-		if status --is-interactive
+		if builtin status --is-interactive
 			builtin history  | eval $pager
 		else
 			builtin history

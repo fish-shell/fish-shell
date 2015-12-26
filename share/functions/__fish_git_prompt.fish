@@ -734,7 +734,7 @@ for var in repaint describe_style show_informative_status showdirtystate showsta
 	set varargs $varargs --on-variable __fish_git_prompt_$var
 end
 function __fish_git_prompt_repaint $varargs --description "Event handler, repaints prompt when functionality changes"
-	if status --is-interactive
+	if builtin status --is-interactive
 		if test $argv[3] = __fish_git_prompt_show_informative_status
 			# Clear characters that have different defaults with/without informative status
 			for name in cleanstate dirtystate invalidstate stagedstate stateseparator untrackedfiles upstream_ahead upstream_behind
@@ -752,7 +752,7 @@ for var in '' _prefix _suffix _bare _merging _cleanstate _invalidstate _upstream
 end
 set varargs $varargs --on-variable __fish_git_prompt_showcolorhints
 function __fish_git_prompt_repaint_color $varargs --description "Event handler, repaints prompt when any color changes"
-	if status --is-interactive
+	if builtin status --is-interactive
 		set -l var $argv[3]
 		set -e _$var
 		set -e _{$var}_done
@@ -772,7 +772,7 @@ for var in cleanstate dirtystate invalidstate stagedstate stashstate statesepara
 	set varargs $varargs --on-variable __fish_git_prompt_char_$var
 end
 function __fish_git_prompt_repaint_char $varargs --description "Event handler, repaints prompt when any char changes"
-	if status --is-interactive
+	if builtin status --is-interactive
 		set -e _$argv[3]
 		commandline -f repaint ^/dev/null
 	end

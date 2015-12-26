@@ -17,25 +17,25 @@ function fish_prompt --description 'Write out the prompt'
 		set -g __fish_classic_git_functions_defined
 
 		function __fish_repaint_user --on-variable fish_color_user --description "Event handler, repaint when fish_color_user changes"
-			if status --is-interactive
+			if builtin status --is-interactive
 				commandline -f repaint ^/dev/null
 			end
 		end
-		
+
 		function __fish_repaint_host --on-variable fish_color_host --description "Event handler, repaint when fish_color_host changes"
-			if status --is-interactive
+			if builtin status --is-interactive
 				commandline -f repaint ^/dev/null
 			end
 		end
-		
+
 		function __fish_repaint_status --on-variable fish_color_status --description "Event handler; repaint when fish_color_status changes"
-			if status --is-interactive
+			if builtin status --is-interactive
 				commandline -f repaint ^/dev/null
 			end
 		end
 
 		function __fish_repaint_bind_mode --on-variable fish_key_bindings --description "Event handler; repaint when fish_key_bindings changes"
-			if status --is-interactive
+			if builtin status --is-interactive
 				commandline -f repaint ^/dev/null
 			end
 		end

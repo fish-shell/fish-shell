@@ -6,7 +6,7 @@
 # Some things should only be done for login terminals
 #
 
-if status --is-login
+if builtin status --is-login
 
 	#
 	# Set some value for LANG if nothing was set before, and this is a

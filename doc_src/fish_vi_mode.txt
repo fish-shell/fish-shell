@@ -1,4 +1,4 @@
-408-600-6421\section fish_vi_mode fish_vi_mode - Enable vi mode
+\section fish_vi_mode fish_vi_mode - Enable vi mode
 
 \subsection fish_vi_mode-synopsis Synopsis
 \fish{synopsis}

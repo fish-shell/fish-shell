@@ -101,7 +101,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         eval "$__fish_bin_dir/fish -c 'fish_update_completions > /dev/null ^/dev/null' &"
     end
 
-	if status -i
+	if builtin status -i
 		#
 		# Print a greeting
 		#
@@ -128,14 +128,14 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	#
 
 	function __fish_repaint --on-variable fish_color_cwd --description "Event handler, repaints the prompt when fish_color_cwd changes"
-		if status --is-interactive
+		if builtin status --is-interactive
 			set -e __fish_prompt_cwd
 			commandline -f repaint ^/dev/null
 		end
 	end
 
 	function __fish_repaint_root --on-variable fish_color_cwd_root --description "Event handler, repaints the prompt when fish_color_cwd_root changes"
-		if status --is-interactive
+		if builtin  status --is-interactive
 			set -e __fish_prompt_cwd
 			commandline -f repaint ^/dev/null
 		end
@@ -191,7 +191,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 	# Notify vte-based terminals when $PWD changes (issue #906)
 	if test "$VTE_VERSION" -ge 3405 -o "$TERM_PROGRAM" = "Apple_Terminal"
 		function __update_vte_cwd --on-variable PWD --description 'Notify VTE of change to $PWD'
-			status --is-command-substitution; and return
+			builtin status --is-command-substitution; and return
 			printf '\033]7;file://%s%s\a' (hostname) (pwd | __fish_urlencode)
 		end
 		__update_vte_cwd # Run once because we might have already inherited a PWD from an old tab

@@ -4,7 +4,7 @@
 if test "$argv[1]" = (status -f)
     echo 'test_util.fish requires sourcing script as argument to `source`' >&2
     echo 'use `source test_util.fish (status -f); or exit`' >&2
-    status --print-stack-trace >&2
+    builtin status --print-stack-trace >&2
     exit 1
 end
 

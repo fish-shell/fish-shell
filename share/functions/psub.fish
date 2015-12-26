@@ -46,7 +46,7 @@ function psub --description "Read from stdin into a file and output the filename
 		end
 	end
 
-	if not status --is-command-substitution
+	if not builtin status --is-command-substitution
 		echo psub: Not inside of command substitution >&2
 		return 1
 	end

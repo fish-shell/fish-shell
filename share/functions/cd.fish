@@ -5,7 +5,7 @@
 function cd --description "Change directory"
 
 	# Skip history in subshells
-	if status --is-command-substitution
+	if builtin status --is-command-substitution
 		builtin cd $argv
 		return $status
 	end
@@ -33,4 +33,3 @@ function cd --description "Change directory"
 
 	return $cd_status
 end
-

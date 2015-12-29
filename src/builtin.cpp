@@ -2345,7 +2345,6 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
 
     switch (argc-w.woptind)
     {
-
         case 0:
         {
             long res;
@@ -2356,8 +2355,9 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
                 srand48_r(time(0), &seed_buffer);
             }
             lrand48_r(&seed_buffer, &res);
-
-            streams.out.append_format( L"%ld\n", labs(res%32767));
+            // The labs() shouldn't be necessary since lrand48 is supposed to
+            // return only positive integers but we're going to play it safe.
+            streams.out.append_format(L"%ld\n", labs(res % 32768));
             break;
         }
 

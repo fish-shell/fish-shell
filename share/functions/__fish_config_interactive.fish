@@ -171,48 +171,38 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		__update_vte_cwd # Run once because we might have already inherited a PWD from an old tab
 	end
 
-	# Remove the startup command_not_found handler since we're done with it
-	functions -e __fish_startup_command_not_found_handler
-
-	# Now install our fancy variant
-	function __fish_command_not_found_setup --on-event fish_command_not_found
-		# Remove fish_command_not_found_setup so we only execute this once
-		functions --erase __fish_command_not_found_setup
-
-		# If the user defined a handler, it takes precedence
-		# It does not need to be executed because it's been defined before the event
-		if type -q __fish_command_not_found_handler
-			return 0
-		end
+	### Command-not-found handlers
+	# This can be overridden by defining a new __fish_command_not_found_handler function
+	if not type -q __fish_command_not_found_handler
 		# First check if we are on OpenSUSE since SUSE's handler has no options
 		# and expects first argument to be a command and second database
 		# also check if there is command-not-found command.
-		if begin; test -f /etc/SuSE-release; and type -q -p command-not-found; end
+		if test -f /etc/SuSE-release; and type -q -p command-not-found
 			function __fish_command_not_found_handler --on-event fish_command_not_found
 				/usr/bin/command-not-found $argv[1]
 			end
-		# Check for Fedora's handler
+			# Check for Fedora's handler
 		else if test -f /usr/libexec/pk-command-not-found
 			function __fish_command_not_found_handler --on-event fish_command_not_found
 				/usr/libexec/pk-command-not-found $argv[1]
 			end
-		# Check in /usr/lib, this is where modern Ubuntus place this command
+			# Check in /usr/lib, this is where modern Ubuntus place this command
 		else if test -f /usr/lib/command-not-found
 			function __fish_command_not_found_handler --on-event fish_command_not_found
 				/usr/lib/command-not-found -- $argv[1]
 			end
-		# Check for NixOS handler
+			# Check for NixOS handler
 		else if test -f /run/current-system/sw/bin/command-not-found
 			function __fish_command_not_found_handler --on-event fish_command_not_found
 				/run/current-system/sw/bin/command-not-found $argv[1]
 			end
-		# Ubuntu Feisty places this command in the regular path instead
+			# Ubuntu Feisty places this command in the regular path instead
 		else if type -q -p command-not-found
 			function __fish_command_not_found_handler --on-event fish_command_not_found
 				command-not-found -- $argv[1]
 			end
-		# pkgfile is an optional, but official, package on Arch Linux
-		# it ships with example handlers for bash and zsh, so we'll follow that format
+			# pkgfile is an optional, but official, package on Arch Linux
+			# it ships with example handlers for bash and zsh, so we'll follow that format
 		else if type -p -q pkgfile
 			function __fish_command_not_found_handler --on-event fish_command_not_found
 				set -l __packages (pkgfile --binaries --verbose -- $argv[1] ^/dev/null)
@@ -223,14 +213,14 @@ function __fish_config_interactive -d "Initializations that should be performed 
 					__fish_default_command_not_found_handler $argv[1]
 				end
 			end
-		# Use standard fish command not found handler otherwise
+			# Use standard fish command not found handler otherwise
 		else
 			function __fish_command_not_found_handler --on-event fish_command_not_found
 				__fish_default_command_not_found_handler $argv[1]
 			end
 		end
-		__fish_command_not_found_handler $argv
 	end
+
 	if test $TERM = "linux" # A linux in-kernel VT with 8 colors and 256/512 glyphs
 		# In a VT we have
 		# black (invisible)

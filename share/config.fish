@@ -19,10 +19,9 @@ end
 
 #
 # Hook up the default as the principal command_not_found handler
-# for starting up since finding and executing a real one is not cheap
-# This will be erased in __fish_command_not_found_setup once we're interactive
+# in case we are not interactive
 #
-function __fish_startup_command_not_found_handler --on-event fish_command_not_found
+status -i; or function __fish_command_not_found_handler --on-event fish_command_not_found
     __fish_default_command_not_found_handler $argv
 end
 

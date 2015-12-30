@@ -516,7 +516,7 @@ int main(int argc, char **argv)
     const io_chain_t empty_ios;
     if (read_init(paths))
     {
-        /* Stop the exit status of any initialization commands (#635) */
+        /* Stomp the exit status of any initialization commands (#635) */
         proc_set_last_status(STATUS_BUILTIN_OK);
 
         /* Run the commands specified as arguments, if any */

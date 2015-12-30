@@ -37,59 +37,42 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		end
 		set -U __fish_init_1_50_0
 
-		#
-		# Set various defaults using these throwaway functions
-		#
-
-		function set_default -d "Set a universal variable, unless it has already been set"
-			if not set -q $argv[1]
-				set -U -- $argv
-			end
-		end
-
 		# Regular syntax highlighting colors
-		set_default fish_color_normal normal
-		set_default fish_color_command 005fd7 purple
-		set_default fish_color_param 00afff cyan
-		set_default fish_color_redirection normal
-		set_default fish_color_comment red
-		set_default fish_color_error red --bold
-		set_default fish_color_escape cyan
-		set_default fish_color_operator cyan
-		set_default fish_color_quote brown
-		set_default fish_color_autosuggestion 555 yellow
-		set_default fish_color_valid_path --underline
+		set -q fish_color_normal; or set -U fish_color_normal normal
+		set -q fish_color_command; or set -U fish_color_command 005fd7 purple
+		set -q fish_color_param; or set -U fish_color_param 00afff cyan
+		set -q fish_color_redirection; or set -U fish_color_redirection normal
+		set -q fish_color_comment; or set -U fish_color_comment red
+		set -q fish_color_error; or set -U fish_color_error red --bold
+		set -q fish_color_escape; or set -U fish_color_escape cyan
+		set -q fish_color_operator; or set -U fish_color_operator cyan
+		set -q fish_color_quote; or set -U fish_color_quote brown
+		set -q fish_color_autosuggestion; or set -U fish_color_autosuggestion 555 yellow
+		set -q fish_color_valid_path; or set -U fish_color_valid_path --underline
 
-		set_default fish_color_cwd green
-		set_default fish_color_cwd_root red
+		set -q fish_color_cwd; or set -U fish_color_cwd green
+		set -q fish_color_cwd_root; or set -U fish_color_cwd_root red
 
 		# Background color for matching quotes and parenthesis
-		set_default fish_color_match cyan
+		set -q fish_color_match; or set -U fish_color_match cyan
 
 		# Background color for search matches
-		set_default fish_color_search_match --background=purple
+		set -q fish_color_search_match; or set -U fish_color_search_match --background=purple
 
 		# Background color for selections
-		set_default fish_color_selection --background=purple
+		set -q fish_color_selection; or set -U fish_color_selection --background=purple
 
 		# Pager colors
-		set_default fish_pager_color_prefix cyan
-		set_default fish_pager_color_completion normal
-		set_default fish_pager_color_description 555 yellow
-		set_default fish_pager_color_progress cyan
+		set -q fish_pager_color_prefix; or set -U fish_pager_color_prefix cyan
+		set -q fish_pager_color_completion; or set -U fish_pager_color_completion normal
+		set -q fish_pager_color_description 555; or set -U fish_pager_color_description 555 yellow
+		set -q fish_pager_color_progress; or set -U fish_pager_color_progress cyan
 
 		#
 		# Directory history colors
 		#
 
-		set_default fish_color_history_current cyan
-
-		#
-		# Remove temporary functions for setting default variable values
-		#
-
-		functions -e set_default
-
+		set -q fish_color_history_current; or set -U fish_color_history_current cyan
 	end
 
     #

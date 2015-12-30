@@ -6,7 +6,7 @@ function __fish_git_commits
 	# This allows filtering by subject with the new pager!
 	# Because even subject lines can be quite long,
 	# trim them (abbrev'd hash+tab+subject) to 70 characters
-	command git log --pretty=tformat:"%h"\t"%s" \
+	command git log --pretty=tformat:"%h"\t"%s" --all \
 	| string replace -r '(.{70}).+' '$1...'
 end
 

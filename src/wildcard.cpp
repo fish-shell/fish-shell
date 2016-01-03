@@ -448,7 +448,7 @@ static wcstring file_get_desc(const wcstring &filename,
                               int lstat_res,
                               const struct stat &lbuf,
                               int stat_res,
-                              struct stat buf,
+                              const struct stat &buf,
                               int err)
 {
     

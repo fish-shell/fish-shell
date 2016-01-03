@@ -573,15 +573,8 @@ int main(int argc, char **argv)
                 }
 
                 const wcstring rel_filename = str2wcstring(file);
-                const wchar_t *abs_filename = wrealpath(rel_filename, NULL);
 
-                if (!abs_filename)
-                {
-                    abs_filename = wcsdup(rel_filename.c_str());
-                }
-
-                reader_push_current_filename(intern(abs_filename));
-                free((void *)abs_filename);
+                reader_push_current_filename(rel_filename.c_str());
 
                 res = reader_read(fd, empty_ios);
 

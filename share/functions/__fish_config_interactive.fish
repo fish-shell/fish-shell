@@ -194,7 +194,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 			# Check for NixOS handler
 		else if test -f /run/current-system/sw/bin/command-not-found
 			function __fish_command_not_found_handler --on-event fish_command_not_found
-				/run/current-system/sw/bin/command-not-found $argv[1]
+				/run/current-system/sw/bin/command-not-found $argv
 			end
 			# Ubuntu Feisty places this command in the regular path instead
 		else if type -q -p command-not-found

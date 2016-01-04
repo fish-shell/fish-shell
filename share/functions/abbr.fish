@@ -76,13 +76,11 @@ function abbr --description "Manage abbreviations"
 		set -l value
 		__fish_abbr_parse_entry $mode_arg key value
 		# ensure the key contains at least one non-space character
-		set -l IFS \n\ \t
-		printf '%s' $key | read -lz key_ __
-		if test -z "$key_"
+		if not string match -qr "\w" -- $key
 			printf ( _ "%s: abbreviation must have a non-empty key\n" ) abbr >&2
 			return 1
 		end
-		if test -z "$value"
+		if not string match -qr "\w" -- $value
 			printf ( _ "%s: abbreviation must have a value\n" ) abbr >&2
 			return 1
 		end
@@ -162,19 +160,18 @@ function __fish_abbr_parse_entry -S -a __input __key __value
 	if test -z "$__value"
 		set __value __
 	end
-	set -l IFS '= '
 	switch $__input
-	case '=*'
-		# read will skip any leading ='s, but we don't want that
-		set __input " $__input"
-		set __key _
-		set IFS '='
-	case ' =*'
-		set __key _
-		set IFS '='
+		case "*=*"
+			# No need for bounds-checking because we already matched before
+			set -l KV (string split "=" -m 1 -- $__input)
+			set $__key $KV[1]
+			set $__value $KV[2]
+		case "* *"
+			set -l KV (string split " " -m 1 -- $__input)
+			set $__key $KV[1]
+			set $__value $KV[2]
+		case "*"
+			set $__key $__input
 	end
-	# use read -z to avoid splitting on newlines
-	# I think we can safely assume there will be no NULs in the input
-	printf "%s" $__input | read -z $__key $__value
 	return 0
 end

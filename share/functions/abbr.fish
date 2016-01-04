@@ -120,7 +120,7 @@ function abbr --description "Manage abbreviations"
 			set -l opt_double_dash ''
 			switch $key ; case '-*'; set opt_double_dash ' --'; end
 			switch $value ; case '-*'; set opt_double_dash ' --'; end
-			echo abbr$opt_double_dash (__fish_abbr_escape "$key") (__fish_abbr_escape "$value")
+			echo abbr$opt_double_dash (string escape -- $key) (string escape -- $value)
 		end
 		return 0
 
@@ -131,20 +131,6 @@ function abbr --description "Manage abbreviations"
 			printf "%s\n" $key
 		end
 		return 0
-	end
-end
-
-function __fish_abbr_escape
-	# Prettify the common case: if everything is alphanumeric,
-	# we do not need escapes.
-	# Do this by deleting alnum characters, and check if there's anything left.
-	# Note we need to preserve spaces, so spaces are not considered alnum
-	if test -z (echo -n "$argv" | tr -d '[:alnum:]_')
-		echo $argv
-	else
-		# Escape via single quotes
-		# printf is nice for stripping the newline that sed outputs
-		printf "'%s'" (echo -n $argv | sed -e s,\\\\,\\\\\\\\,g -e s,\',\\\\\',g)
 	end
 end
 

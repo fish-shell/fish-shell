@@ -109,8 +109,6 @@ function abbr --description "Manage abbreviations"
 
 	case 'show'
 		for i in $fish_user_abbreviations
-			# Disable newline splitting
-			set -lx IFS ''
 			__fish_abbr_parse_entry $i key value
 			
 			# Check to see if either key or value has a leading dash
@@ -140,7 +138,6 @@ function __fish_abbr_get_by_key
 	set -l count (count $fish_user_abbreviations)
 	if test $count -gt 0
 		set -l key $argv[1] # This assumes the key is valid and pre-parsed
-		set -l IFS \n # ensure newline splitting is enabled
 		for i in (seq $count)
 			set -l key_i
 			__fish_abbr_parse_entry $fish_user_abbreviations[$i] key_i

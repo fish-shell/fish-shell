@@ -5,4 +5,4 @@ abbr __abbr1 delta
 abbr __abbr1 delta
 abbr __abbr1 delta
 abbr '~__abbr2' '$xyz'
-abbr -- '--__abbr3' xyz
+abbr -- --__abbr3 xyz

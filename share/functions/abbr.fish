@@ -116,7 +116,7 @@ function abbr --description "Manage abbreviations"
 			set -l opt_double_dash ''
 			switch $key ; case '-*'; set opt_double_dash ' --'; end
 			switch $value ; case '-*'; set opt_double_dash ' --'; end
-			echo abbr$opt_double_dash (string escape -- $key) (string escape -- $value)
+			echo abbr$opt_double_dash (string escape -- $key $value)
 		end
 		return 0
 

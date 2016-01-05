@@ -6,6 +6,7 @@ function type --description "Print the type of a command"
 	set -l mode normal
 	set -l multi no
 	set -l selection all
+	set -l dereference no
 	set -l IFS \n\ \t
 
 	# Parse options
@@ -43,6 +44,9 @@ function type --description "Print the type of a command"
 							set mode path
 						end
 						set selection files
+
+					case -L --dereference
+						set dereference yes
 
 					case -a --all
 						set multi yes
@@ -125,6 +129,9 @@ function type --description "Print the type of a command"
 		for path in $paths
 			set res 0
 			set found 1
+			if test $dereference = yes
+				set path (realpath -- $path)
+			end
 			switch $mode
 				case normal
 					printf (_ '%s is %s\n') $i $path

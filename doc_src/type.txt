@@ -21,6 +21,8 @@ The following options are available:
 
 - `-P` or `--force-path` returns the name of the disk file that would be executed, or nothing if no file with the specified name could be found in the <tt>$PATH</tt>.
 
+- `-L` or `--dereference` dereferences symbolic links in the output.
+
 - `-q` or `--quiet` suppresses all output; this is useful when testing the exit status.
 
 

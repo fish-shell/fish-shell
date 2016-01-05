@@ -312,6 +312,10 @@ body {
 	 height: 12px;
 }
 
+.colorpicker_text_notice {
+	margin: 0px 20px 10px 20px; /* top right bottom left */
+}
+
 .colorpicker_text_sample, .colorpicker_text_sample_tight {
 	font-size: 12pt;
 	padding: 25px;

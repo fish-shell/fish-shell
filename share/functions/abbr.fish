@@ -157,18 +157,20 @@ function __fish_abbr_parse_entry -S -a __input __key __value
 	if test -z "$__value"
 		set __value __
 	end
-	switch $__input
-		case "*=*"
-			# No need for bounds-checking because we already matched before
-			set -l KV (string split "=" -m 1 -- $__input)
-			set $__key $KV[1]
-			set $__value $KV[2]
-		case "* *"
-			set -l KV (string split " " -m 1 -- $__input)
-			set $__key $KV[1]
-			set $__value $KV[2]
-		case "*"
-			set $__key $__input
+	# A "=" _before_ any space - we only read the first possible separator
+	# because the key can contain neither spaces nor "="
+	if string match -qr '^[^ ]+=' -- $__input
+		# No need for bounds-checking because we already matched before
+		set -l KV (string split "=" -m 1 -- $__input)
+		set $__key $KV[1]
+		set $__value $KV[2]
+	else if string match -qr '^[^ ]+ .*' -- $__input
+		set -l KV (string split " " -m 1 -- $__input)
+		set $__key $KV[1]
+		set $__value $KV[2]
+	else
+		# This is needed for `erase` et al, where we want to allow passing a value
+		set $__key $__input
 	end
 	return 0
 end

@@ -31,3 +31,7 @@ abbr -e '~__abbr2'
 abbr -- '--__abbr3' 'xyz'
 abbr | grep __abbr3
 abbr -e '--__abbr3'
+
+# Ensure we are not recognizing later "=" as separators
+abbr d2 env a=b banana
+abbr -l | string match -q d2; or echo "= test failed"

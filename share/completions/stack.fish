@@ -1,7 +1,7 @@
 complete -c stack -f
 
-# (Handmade) generated from
-# Version 1.0.0, Git revision 3bc26237b5b3c387b8fd564459ea4dd88fd58b30 (2939 commits) x86_64
+# Completion for 'stack' haskell build tool (http://docs.haskellstack.org/en/stable/index.html)
+# (Handmade) generated from version 1.0.0
 
 #
 # Options:
@@ -44,7 +44,6 @@ complete -c stack -l stack-yaml -a '(__fish_complete_path)' -d 'Override project
 
 complete -c stack -a build --description 'Build the package(s) in this directory/configuration'
 complete -c stack -a install --description 'Shortcut for \'build --copy-bins\''
-complete -c stack -a uninstall --description 'DEPRECATED: This command performs no actions, and is present for documentation only'
 complete -c stack -a test --description 'Shortcut for \'build --test\''
 complete -c stack -a bench --description 'Shortcut for \'build --bench\''
 complete -c stack -a haddock --description 'Shortcut for \'build --haddock\''
@@ -73,6 +72,6 @@ complete -c stack -a query --description 'Query general build information (exper
 complete -c stack -a ide --description 'IDE-specific commands'
 complete -c stack -a docker --description 'Subcommands specific to Docker use'
 complete -c stack -a config --description 'Subcommands specific to modifying stack.yaml files'
-complete -c stack -a image --description 'Subcommands specific to imaging (EXPERIMENTAL)'
+complete -c stack -a image --description 'Subcommands specific to imaging (experimental)'
 complete -c stack -a hpc --description 'Subcommands specific to Haskell Program Coverage'
-complete -c stack -a sig --description 'Subcommands specific to package signatures (EXPERIMENTAL)'
+complete -c stack -a sig --description 'Subcommands specific to package signatures (experimental)'

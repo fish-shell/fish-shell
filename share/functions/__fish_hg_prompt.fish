@@ -78,7 +78,7 @@ function __fish_hg_prompt --description 'Write out the hg prompt'
             end
         end
 
-        if string match -r '^[AMCD]' $repo_status >/dev/null
+        if string match -qr '^[AMCD]' $repo_status
             set_color $fish_color_hg_modified
         else
             set_color $fish_color_hg_dirty

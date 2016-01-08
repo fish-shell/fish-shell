@@ -1,0 +1,77 @@
+complete -c stack -f
+
+# Completion for 'stack' haskell build tool (http://docs.haskellstack.org/en/stable/index.html)
+# (Handmade) generated from version 1.0.0
+
+#
+# Options:
+#
+
+complete -c stack -l help -d 'Show this help text'
+complete -c stack -l version -d'Show version'
+complete -c stack -l numeric-version -d 'Show only version number'
+complete -c stack -l docker -d 'Run \'stack --docker-help\' for details'
+complete -c stack -l nix -d 'Run \'stack --nix-help\' for details'
+complete -c stack -l verbosity -a 'silent error warn info debug' -d 'Verbosity: silent, error, warn, info, debug'
+complete -c stack -l verbose -d 'Enable verbose mode: verbosity level "debug"'
+complete -c stack -l work-dir -a '(__fish_complete_directories)' -d 'Override work directory (default: .stack-work)'
+complete -c stack -l system-ghc -d 'Enable using the system installed GHC (on the PATH) if available and a matching version'
+complete -c stack -l no-system-ghc -d 'Disable using the system installed GHC (on the PATH) if available and a matching version'
+complete -c stack -l install-ghc -d 'Enable downloading and installing GHC if necessary (can be done manually with stack setup)'
+complete -c stack -l no-install-ghc -d 'Disable downloading and installing GHC if necessary (can be done manually with stack setup)'
+complete -c stack -l arch -r -d 'System architecture, e.g. i386, x86_64'
+complete -c stack -l os -r -d 'Operating system, e.g. linux, windows'
+complete -c stack -l ghc-variant -d 'Specialized GHC variant, e.g. integersimple (implies --no-system-ghc)'
+complete -c stack -l obs -r -d 'Number of concurrent jobs to run'
+complete -c stack -l extra-include-dirs -a '(__fish_complete_directories)' -d 'Extra directories to check for C header files'
+complete -c stack -l extra-lib-dirs -a '(__fish_complete_directories)' -d 'Extra directories to check for libraries'
+complete -c stack -l skip-ghc-check -d 'Enable skipping the GHC version and architecture check'
+complete -c stack -l no-skip-ghc-check -d 'Disable skipping the GHC version and architecture check'
+complete -c stack -l skip-msys -d 'Enable skipping the local MSYS installation (Windows only)'
+complete -c stack -l no-skip-msys -d 'Disable skipping the local MSYS installation (Windows only)'
+complete -c stack -l local-bin-path -a '(__fish_complete_directories)' -d 'Install binaries to DIR'
+complete -c stack -l modify-code-page -d 'Enable setting the codepage to support UTF-8 (Windows only)'
+complete -c stack -l no-modify-code-page -d 'Disable setting the codepage to support UTF-8 (Windows only)'
+complete -c stack -l resolver -d 'Override resolver in project file'
+complete -c stack -l compiler -d 'Use the specified compiler'
+complete -c stack -l terminal -d 'Enable overriding terminal detection in the case of running in a false terminal'
+complete -c stack -l no-terminal -d 'Disable overriding terminal detection in the case of running in a false terminal'
+complete -c stack -l stack-yaml -a '(__fish_complete_path)' -d 'Override project stack.yaml file (overrides any STACK_YAML environment variable)'
+
+#
+# Commands:
+#
+
+complete -c stack -a build --description 'Build the package(s) in this directory/configuration'
+complete -c stack -a install --description 'Shortcut for \'build --copy-bins\''
+complete -c stack -a test --description 'Shortcut for \'build --test\''
+complete -c stack -a bench --description 'Shortcut for \'build --bench\''
+complete -c stack -a haddock --description 'Shortcut for \'build --haddock\''
+complete -c stack -a new --description 'Create a new project from a template. Run \'stack templates\' to see available templates.'
+complete -c stack -a templates --description 'List the templates available for \'stack new\'.'
+complete -c stack -a init --description 'Initialize a stack project based on one or more cabal packages'
+complete -c stack -a solver --description 'Use a dependency solver to try and determine missing extra-deps'
+complete -c stack -a setup --description 'Get the appropriate GHC for your project'
+complete -c stack -a path --description 'Print out handy path information'
+complete -c stack -a unpack --description 'Unpack one or more packages locally'
+complete -c stack -a update --description 'Update the package index'
+complete -c stack -a upgrade --description 'Upgrade to the latest stack (experimental)'
+complete -c stack -a upload --description 'Upload a package to Hackage'
+complete -c stack -a sdist --description 'Create source distribution tarballs'
+complete -c stack -a dot --description 'Visualize your project\'s dependency graph using Graphviz dot'
+complete -c stack -a exec --description 'Execute a command'
+complete -c stack -a ghc --description 'Run ghc'
+complete -c stack -a ghci --description 'Run ghci in the context of package(s) (experimental)'
+complete -c stack -a repl --description 'Run ghci in the context of package(s) (experimental) (alias for \'ghci\')'
+complete -c stack -a runghc --description 'Run runghc'
+complete -c stack -a runhaskell --description 'Run runghc (alias for \'runghc\')'
+complete -c stack -a eval --description 'Evaluate some haskell code inline. Shortcut for \'stack exec ghc -- -e CODE\''
+complete -c stack -a clean --description 'Clean the local packages'
+complete -c stack -a list-dependencies --description 'List the dependencies'
+complete -c stack -a query --description 'Query general build information (experimental)'
+complete -c stack -a ide --description 'IDE-specific commands'
+complete -c stack -a docker --description 'Subcommands specific to Docker use'
+complete -c stack -a config --description 'Subcommands specific to modifying stack.yaml files'
+complete -c stack -a image --description 'Subcommands specific to imaging (experimental)'
+complete -c stack -a hpc --description 'Subcommands specific to Haskell Program Coverage'
+complete -c stack -a sig --description 'Subcommands specific to package signatures (experimental)'

@@ -1,7 +1,7 @@
 # Don't go invoking valgrind unless it is installed
 
 set -l skin tool
-if begin ; type valgrind >/dev/null ; and valgrind --version ^/dev/null | __fish_sgrep -- '-2\.[012]\.' >/dev/null ^/dev/null ; end
+if type -q valgrind; and valgrind --version ^/dev/null | string match -qr -- '-2\.[012]\.'
 	# In older versions of Valgrind, the skin selection option was
     # '--skin'
 	# But someone decided that it would be fun to change this to
@@ -17,16 +17,16 @@ complete -xc valgrind -l $skin --description "Skin" -a "
 	massif\tHeap\ profiler
 "
 
-eval "
-function __fish_valgrind_skin --argument tool
+function __fish_valgrind_skin --argument tool -V skin
 	set -l cmd (commandline -cpo)
-	if contains -- --$skin=\$tool \$cmd
+	# Quote $cmd so the tokens are separated with a space
+	if string match -qr -- "--$skin(=| )$tool" "$cmd"
 		return 0
     end
-	test \$tool = memcheck
-	and echo \$cmd | grep -qve $skin
+	# memcheck is the default tool/skin
+	test $tool = memcheck
+	and not string match -- $skin $cmd
 end
-"
 
 complete -c valgrind -l help --description "Display help and exit"
 complete -c valgrind -l help-debug --description "Display help and debug options"

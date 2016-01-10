@@ -1,16 +1,11 @@
-<div>
+<div title="Background color for illustration only.
+
+fish cannot change the background color of your terminal and it will not be saved. Refer to your terminal documentation to set its background color.">
     <!-- ko with: color_picker -->
-    <div class="colorpicker_text_notice">
-        The background color in the theme preview box below is for
-        illustration only. The displayed background color is not part of the
-        theme and will not be saved. Fish is not able to change the terminal
-        window background color. See your terminal documentation for how to
-        set its background color.
-    </div>
     <div class="colorpicker_text_sample" ng-style="{'background-color': terminalBackgroundColor}">
         <span style="position: absolute; left: 10px; top: 3px;" data-ng-style="{'color': text_color_for_color(terminalBackgroundColor || 'white')}">{{ selectedColorScheme.name }}</span><br>
         <div class="color_picker_background_cells">
-	        <span data-ng-style="{'color': text_color_for_color(terminalBackgroundColor || 'white')}">Background: </span>
+	        <span data-ng-style="{'color': text_color_for_color(terminalBackgroundColor || 'white')}">Background Color (illustration only): </span>
             <div ng-style="{'background-color': color}" ng-repeat="color in sampleTerminalBackgroundColors" ng-click="changeTerminalBackgroundColor(color)"  title="Preview with this background color.
             
 fish cannot change the background color of your terminal. Refer to your terminal documentation to set its background color."></div>

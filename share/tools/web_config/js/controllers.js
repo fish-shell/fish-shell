@@ -92,10 +92,10 @@ controllers.controller("colorsController", function($scope, $http) {
             $scope.changeSelectedColorScheme(currentScheme);
      })};
 
-	$scope.saveThemeButtonTitle = "Set Theme";
+	$scope.saveThemeButtonTitle = "Set Theme w/o Background Color";
 	
 	$scope.noteThemeChanged = function() {
-		$scope.saveThemeButtonTitle = "Set Theme";
+		$scope.saveThemeButtonTitle = "Set Theme w/o Background Color";
 	}
 
     $scope.setTheme = function() {

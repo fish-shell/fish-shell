@@ -273,13 +273,13 @@ This is a short explanation of some of the commonly used words in fish.
 
 - <b>command</b> a program that the shell can run.
 
-- <b>function</b> a block of commands that can be called as if they where a single command. By using functions, it is possible to string together multiple smaller commands into one more advanced command.
+- <b>function</b> a block of commands that can be called as if they were a single command. By using functions, it is possible to string together multiple smaller commands into one more advanced command.
 
 - <b>job</b> a running pipeline or command
 
 - <b>pipeline</b> a set of commands stringed together so that the output of one command is the input of the next command
 
-- <b>redirection</b> a operation that changes one of the input/output streams associated with a job
+- <b>redirection</b> an operation that changes one of the input/output streams associated with a job
 
 - <b>switch</b> a special flag sent as an argument to a command that will alter the behavior of the command. A switch almost always begins with one or two hyphens.
 

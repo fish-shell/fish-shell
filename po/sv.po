@@ -59,7 +59,7 @@ msgstr "%ls: Beskrivning saknas för typ '%ls'\n"
 #: builtin.cpp:798
 #, c-format
 msgid "%ls: No binding found for sequence '%ls'\n"
-msgstr "%ls: Ingen bindning funnen för sekvens '%ls'"
+msgstr "%ls: Ingen bindning funnen för sekvens '%ls'\n"
 
 #: builtin.cpp:834
 #, c-format

@@ -1,0 +1,8 @@
+a:
+echo \en one "two three" four'five six'{7} 'eight
+b:
+echo
+one
+two three
+fourfive six{7}
+eight

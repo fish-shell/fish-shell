@@ -234,9 +234,7 @@ static void write_part(const wchar_t *begin,
         }
 
 //    debug( 0, L"woot2 %ls -> %ls", buff, esc );
-        wcstring tmp = wcstring(begin, end - begin);
-        unescape_string_in_place(&tmp, UNESCAPE_INCOMPLETE);
-        streams.out.append(tmp);
+        streams.out.append(begin, end - begin);
         streams.out.append(L"\n");
 
     }

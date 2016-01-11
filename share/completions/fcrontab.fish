@@ -7,7 +7,7 @@
 
 complete -c fcrontab -s u --description 'User Specify the user whose fcrontab will be managed, or "systab" for the system fcrontab'
 complete -c fcrontab -s l --description 'List user\'s current fcrontab to standard output'
-complete -c fcrontab -s e --description 'Edit user\'s current fcrontab using either the editor specified by the environment variable VIS‐ UAL, or EDITOR if VISUAL is not set'
+complete -c fcrontab -s e --description 'Edit user\'s current fcrontab using either the editor specified by the environment variable VISUAL, or EDITOR if VISUAL is not set'
 complete -c fcrontab -s r --description 'Remove user\'s fcrontab'
 complete -c fcrontab -s z --description 'Reinstall user\'s fcrontab from its source code'
 complete -c fcrontab -s n --description 'Ignore previous version'

@@ -79,9 +79,9 @@ for t in source sink
 	complete -f -c pactl -n "__fish_seen_subcommand_from suspend-$t; and not __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
 	-a "(__fish_pa_complete_type "$t"s)"
 	complete -f -c pactl -n "__fish_seen_subcommand_from suspend-$t; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-	-a '0' -d "Resume"
+	-a '0 false off' -d "Resume"
 	complete -f -c pactl -n "__fish_seen_subcommand_from suspend-$t; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
-	-a '1' -d "Suspend"
+	-a '1 true on' -d "Suspend"
 	complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-port; and not __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
 	-a "(__fish_pa_complete_type "$t"s)"
 	complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-port; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \

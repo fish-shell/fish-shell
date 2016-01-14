@@ -30,6 +30,19 @@ function __fish_pa_list_profiles
 	env LC_ALL=C pactl list cards ^/dev/null | sed -n -e '/Profiles:/,/Active Profile/p' | string match -r '\t\t.*' | string replace -r '\s+([-+\w:]+): (\w.+)' '$1\t$2'
 end
 
+# This is needed to filter out loaded modules
+function __fish_pa_complete_unloaded_modules
+	# We need to get just the module names
+	set -l loaded (__fish_pa_print_type modules | string replace -r '^\w*\t([-\w]+).*' '$1')
+	pulseaudio --dump-modules | while read name description
+		# This is a potential source of slowness, but on my system it's instantaneous
+		# with 73 modules
+		if not contains -- $name $loaded
+			printf "%s\t%s\n" $name $description
+		end
+	end
+end
+
 complete -f -e -c pactl
 complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a "$commands"
 
@@ -46,8 +59,7 @@ complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a remove-sa
 complete -f -c pactl -n "__fish_seen_subcommand_from play-sample remove-sample" -a '(__fish_pa_complete_type samples)'
 
 complete -f -c pactl -n "__fish_seen_subcommand_from unload-module" -a '(__fish_pa_complete_type modules)'
-# TODO: This shows _all_ modules
-complete -f -c pactl -n "__fish_seen_subcommand_from load-module" -a '(pulseaudio --dump-modules | string replace -r " +" "\t")'
+complete -f -c pactl -n "__fish_seen_subcommand_from load-module" -a '(__fish_pa_complete_unloaded_modules)'
 
 complete -f -c pactl -n "__fish_seen_subcommand_from move-sink-input; and not __fish_seen_subcommand_from (__fish_pa_print_type sink-inputs)" \
 -a '(__fish_pa_complete_type sink-inputs)'

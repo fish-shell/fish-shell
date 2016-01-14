@@ -3,8 +3,7 @@
 # Note: Streams are called "sink-input" (for playback) and "source-output" (for recording)
 
 # TODO: Moar commands
-# load-module set-card-profile set-{sink,source}-port set-port-latency-offset set-sink-formats
-# TODO: Figure out how to get available card profiles and ports
+# set-port-latency-offset set-sink-formats
 
 set -l commands stat info list exit {upload,play,remove}-sample {load,unload}-module \
 move-{sink-input,source-output} suspend-{sink,source} set-{card-profile,default-sink,sink-port,source-port,port-latency-offset} \
@@ -21,6 +20,16 @@ function __fish_pa_print_type
 	# Pa allows both a numerical index and a name
 	pactl list short $argv | string replace -r  '(\w+)\t.*' '$1'
 end 
+
+function __fish_pa_list_ports
+	# Yes, this is localized
+	env LC_ALL=C pactl list cards ^/dev/null | sed -n -e '/Ports:/,$p' | string match -r '^\t\t\w.*$' | string replace -r '\s+([-+\w:]+): (\w.+)' '$1\t$2'
+end
+
+function __fish_pa_list_profiles
+	env LC_ALL=C pactl list cards ^/dev/null | sed -n -e '/Profiles:/,/Active Profile/p' | string match -r '\t\t.*' | string replace -r '\s+([-+\w:]+): (\w.+)' '$1\t$2'
+end
+
 complete -f -e -c pactl
 complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a "$commands"
 
@@ -36,8 +45,9 @@ complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a play-samp
 complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a remove-sample -d 'Remove a sample from the cache'
 complete -f -c pactl -n "__fish_seen_subcommand_from play-sample remove-sample" -a '(__fish_pa_complete_type samples)'
 
-# TODO: "list short modules" only shows _loaded_ modules - figure out how to find unloaded ones for load-module
 complete -f -c pactl -n "__fish_seen_subcommand_from unload-module" -a '(__fish_pa_complete_type modules)'
+# TODO: This shows _all_ modules
+complete -f -c pactl -n "__fish_seen_subcommand_from load-module" -a '(pulseaudio --dump-modules | string replace -r " +" "\t")'
 
 complete -f -c pactl -n "__fish_seen_subcommand_from move-sink-input; and not __fish_seen_subcommand_from (__fish_pa_print_type sink-inputs)" \
 -a '(__fish_pa_complete_type sink-inputs)'
@@ -56,6 +66,10 @@ for t in source sink
 	-a '0' -d "Resume"
 	complete -f -c pactl -n "__fish_seen_subcommand_from suspend-$t; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
 	-a '1' -d "Suspend"
+	complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-port; and not __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
+	-a "(__fish_pa_complete_type "$t"s)"
+	complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-port; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
+	-a "(__fish_pa_list_ports)"
 end
 
 # Volume and mute
@@ -73,6 +87,11 @@ for t in source sink source-output sink-input
 	complete -f -c pactl -n "__fish_seen_subcommand_from set-$t-mute; and __fish_seen_subcommand_from (__fish_pa_print_type "$t"s)" \
 	-a "toggle"
 end
+
+complete -f -c pactl -n "__fish_seen_subcommand_from set-card-profile; and not __fish_seen_subcommand_from (__fish_pa_print_type cards)" \
+-a "(__fish_pa_complete_type cards)"
+complete -f -c pactl -n "__fish_seen_subcommand_from set-card-profile; and __fish_seen_subcommand_from (__fish_pa_print_type cards)" \
+-a "(__fish_pa_list_profiles)"
 
 complete -f -c pactl -n "__fish_seen_subcommand_from set-default-sink" -a "(__fish_pa_complete_type sinks)"
 

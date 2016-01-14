@@ -5,7 +5,11 @@
 # TODO: Moar commands
 # set-port-latency-offset set-sink-formats
 
-set -l commands stat info list exit {upload,play,remove}-sample {load,unload}-module \
+
+# HACK: This is the list of commands from pacmd - used so we can use complete -w there
+set -l commands (pacmd help | string match -r '^ +[-\w]+' | string trim)
+# These are the actual commands for pactl - we complete only these, and then the cmd commands in that completion
+set -l ctlcommands stat info list exit {upload,play,remove}-sample {load,unload}-module \
 move-{sink-input,source-output} suspend-{sink,source} set-{card-profile,default-sink,sink-port,source-port,port-latency-offset} \
 set-{sink,source,sink-input,source-output}-{volume,mute} set-sink-formats subscribe
 
@@ -44,7 +48,7 @@ function __fish_pa_complete_unloaded_modules
 end
 
 complete -f -e -c pactl
-complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a "$commands"
+complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a "$ctlcommands"
 
 complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a stat -d 'Show statistics about memory usage'
 complete -f -c pactl -n "not __fish_seen_subcommand_from $commands" -a info -d 'Show info about the daemon'

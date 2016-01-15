@@ -9,7 +9,7 @@ set_color [OPTIONS] [COLOR]
 
 `set_color` changes the foreground and/or background color of the terminal. `COLOR` is one of `black`, `red`, `green`, `brown`, `yellow`, `blue`, `magenta`, `purple`, `cyan`, `brred`, `brgreen`, `brbrown`, `bryellow`, `brblue`, `brmagenta`, `brpurple`, `brcyan`, `white`. The `br`, bright, forms are most useful as background colors. The special color `normal` resets the background and foreground to whatever is normal for your terminal.
 
-If your terminal supports term256 (modern xterms and OS X Terminal and iTerm2), you can specify an RGB value with three or six hex digits, such as A0FF33 or f2f. `fish` will choose the closest supported color. A three digit value is equivalent to specifying each digit twice; e.g., `#2BC` is the same as `#22BBCC`. Hex RGB values can be in lower or uppercase, optionally prefixed with the pound-sign character.
+You can also specify an RGB value with three or six hex digits, such as A0FF33 or f2f. `fish` will choose the closest supported color. A three digit value is equivalent to specifying each digit twice; e.g., `#2BC` is the same as `#22BBCC`. Hex RGB values can be in lower or uppercase, optionally prefixed with the pound-sign character. Depending on the capabilities of your terminal the actual color may be approximated by the closest known matching color in the [ANSI X3.64](https://en.wikipedia.org/wiki/ANSI_escape_code#Colors) color palette.
 
 The following options are available:
 
@@ -21,16 +21,15 @@ The following options are available:
 
 - `-u`, `--underline` sets underlined mode.
 
-
 Calling `set_color normal` will set the terminal background and foreground colors to the defaults for the terminal.
 
-Some terminals use the `--bold` escape sequence to switch to a brighter color set rather than bolding the characters.
+Some terminals use the `--bold` escape sequence to switch to a brighter color set rather than bolding the characters. This only applies to the foreground color. You should probably use the `br` color name variants listed above for both the foreground and background "bright" colors rather than use this option. The only use for this option is on a black&white terminal (e.g., a DEC VT220) to select foreground black text that is bolder than the normal text.
 
 Not all terminal emulators support all these features.
 
-`set_color` uses the terminfo database to look up how to change terminal colors on whatever terminal is in use. Some systems have old and incomplete terminfo databases, and may lack color information for terminals that support it.
+Note 1: Setting either color to "normal" will reset both background and foreground colors to whatever is the default for the terminal.
 
-Note that setting either color to "normal" will reset both background and foreground colors.
+Note 2: Setting the background color only affects subsequently written characters. Fish provides no way to set the background color for the entire terminal window. Configuring the window background color (and other attributes such as its opacity) has to be done using whatever mechanisms the terminal provides.
 
 \subsection set_color-example Examples
 
@@ -40,3 +39,11 @@ set_color blue; echo "Violets are blue"
 set_color 62A; echo "Eggplants are dark purple"
 set_color normal; echo "Normal is nice" # This will reset background, too
 \endfish
+
+\subsection set_color-detection Terminal Capability Detection
+
+Fish uses a heuristic to decide if your terminal supports the 256 color palette (as opposed to the more limited 16 color palette of older terminals). If you've done the equivalent of `set fish_term256 1` that will be true. If the $TERM value contains "256color" (e.g., "xterm-256color") that will be true. If your $TERM value is "xterm" and $TERM_PROGRAM is not set to "Apple_Terminal" that will be true. If your terminal supports the full 256 color palette (which is pretty much every color terminal emulator written in the past decade) you should ensure one of the aforementioned conditions is true.
+
+Many terminals support 24-bit (i.e., true-color) color escape sequences. This includes modern xterms, Gnome Terminal, KDE Konsole, and OS X Terminal and iTerm2. Fish does not currently auto-detect whether a given `$TERM` supports 24-bit colors. You can explicitly enable that support via `set fish_term24bit 1`. If you do so fish will not map your RGB color values to the closest known matching color in the ANSI X3.64 color palette.
+
+The `set_color` command uses the terminfo database to look up how to change terminal colors on whatever terminal is in use. Some systems have old and incomplete terminfo databases, and may lack color information for terminals that support it. Fish will use the [ANSI X3.64](https://en.wikipedia.org/wiki/ANSI_escape_code) escape sequences if the terminfo definition says less than 256 colors are supported; otherwise it will use the terminfo definition.

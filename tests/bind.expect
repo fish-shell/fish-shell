@@ -2,59 +2,124 @@
 spawn $fish
 expect_prompt
 
-# Test switching key bindings to vi mode.
-# This should leave the mode in the appropriate state (i.e., insert mode).
+# Test switching key bindings to vi mode. This should leave the mode in the
+# appropriate state (i.e., insert mode). These initial tests assume the
+# default escape timeout of 500ms is in effect.
 
 send "set -g fish_key_bindings fish_vi_key_bindings\r"
 expect_prompt
-send -h "echo fail\033"
+send "echo fail: default escape timeout"
+send "\033"
 # Delay needed to allow fish to transition to vi "normal" mode.
 sleep 0.510
-send -h "ddiecho success\r"
-expect_prompt -re {\r\nsuccess\r\n} {
-    puts "vi replace line success"
+send "ddi"
+send "echo success: default escape timeout\r"
+expect_prompt -re {\r\nsuccess: default escape timeout\r\n} {
+    puts "vi replace line: default escape timeout"
 } -nounmatched -re {\r\nfail} {
-    puts stderr "vi replace line fail"
+    puts stderr "vi replace line fail: default escape timeout"
 } unmatched {
-    puts stderr "Couldn't find expected output 'success'"
+    puts stderr "couldn't find expected output: replace line, default escape timeout"
 }
 
 # Verify that a human can transpose words using \et (which is an emacs default
 # binding but should be valid while in vi insert mode).
-send "echo abc def\033"
-# Fish should still be in vi "insert" mode after this delay.
+send "echo abc def"
+send "\033"
+# Fish should still be in vi insert mode after this delay to simulate a slow
+# typist.
 sleep 0.400
 send "t\r"
 expect_prompt -re {\r\ndef abc\r\n} {
-    puts "vi transpose words success"
+    puts "vi transpose words: default escape timeout"
 } unmatched {
-    puts stderr "vi transpose words fail"
+    puts stderr "vi transpose words fail: default escape timeout"
 }
 
 # Test replacing a single character.
-send -h "echo TEXT\033"
+send "echo TEXT"
+send "\033"
 # Delay needed to allow fish to transition to vi "normal" mode.
 sleep 0.510
-send -h "hhrAi\r"
+send "hhrAi\r"
 expect_prompt -re {\r\nTAXT\r\n} {
-    puts "vi mode replace success"
+    puts "vi mode replace: default escape timeout"
 } -nounmatched -re {\r\nfail} {
-    puts stderr "vi mode replace fail"
+    puts stderr "vi mode replace fail: default escape timeout"
 } unmatched {
-    puts stderr "Couldn't find expected output 'TAXT'"
+    puts stderr "couldn't find expected output 'TAXT': default escape timeout"
+}
+
+# Verify that changing the escape timeout has an effect. The vi key bindings
+# should still be in effect.
+send "set -g fish_escape_delay_ms 100\r"
+expect_prompt
+send "echo fail: shortened escape timeout"
+send "\033"
+sleep 0.110
+send "ddi"
+send "echo success: shortened escape timeout\r"
+expect_prompt -re {\r\nsuccess: shortened escape timeout\r\n} {
+    puts "vi replace line: shortened escape timeout"
+} -nounmatched -re {\r\nfail} {
+    puts stderr "vi replace line fail: shortened escape timeout"
+} unmatched {
+    puts stderr "couldn't find expected output: replace_line, shortened escape timeout"
+}
+
+# Verify that we don't switch to vi normal mode if we don't wait long enough
+# after sending escape. The vi key bindings should still be in effect.
+send "echo fail: no normal mode"
+send "\033"
+sleep 0.050
+send "ddi"
+send "inserted\r"
+expect_prompt -re {\r\nfail: no normal modediinserted\r\n} {
+    puts "vi normal mode: shortened escape timeout"
+} -nounmatched -re {\r\nfail} {
+    puts stderr "vi normal mode fail: shortened escape timeout"
+} unmatched {
+    puts stderr "couldn't find expected output: no normal mode"
 }
 
 # Switch back to regular (emacs mode) key bindings.
-send -h "set -g fish_key_bindings fish_default_key_bindings\r"
+send "set -g fish_key_bindings fish_default_key_bindings\r"
 expect_prompt
-send "echo success\r"
-expect_prompt -re {\r\nsuccess\r\n} {
-    puts "emacs success"
+
+# Verify the emacs transpose word (\et) behavior using various delays,
+# including none, after the escape character.
+
+# Start by testing with no delay. This should transpose the words.
+send "echo abc def"
+send "\033t\r"
+expect_prompt -re {\r\ndef abc\r\n} {
+    puts "emacs transpose words: no escape delay"
 } unmatched {
-    puts stderr "Couldn't find expected output 'success'"
-} timeout {
-    set msg ""
-    append msg "Timeout after setting fish_key_bindings to fish_default_key_bindings\n" \
-               "\$fish_bind_mode is most likely still set to 'insert'"
-    abort $msg
+    puts stderr "emacs transpose words fail: no escape delay"
+}
+
+# Now test with a delay > 0 and < the escape timeout. This should transpose
+# the words.
+send "set -g fish_escape_delay_ms 100\r"
+expect_prompt
+send "echo ghi jkl"
+send "\033"
+sleep 0.050
+send "t\r"
+expect_prompt -re {\r\njkl ghi\r\n} {
+    puts "emacs transpose words: short escape delay"
+} unmatched {
+    puts stderr "emacs transpose words fail: short escape delay"
+}
+
+# Now test with a delay > the escape timeout. The transposition should not
+# occur and the "t" should become part of the text that is echoed.
+send "echo mno pqr"
+send "\033"
+sleep 0.110
+send "t\r"
+expect_prompt -re {\r\nmno pqrt\r\n} {
+    puts "emacs transpose words: long escape delay"
+} unmatched {
+    puts stderr "emacs transpose words fail: long escape delay"
 }

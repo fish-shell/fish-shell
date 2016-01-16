@@ -1280,42 +1280,51 @@ static wchar_t *param_match2(const complete_entry_opt_t *e,
 }
 
 /**
-   Tests whether a short option is a viable completion
+   Tests whether a short option is a viable completion.
+   arg_str will be like '-xzv', nextopt will be a character like 'f'
+   options will be the list of all options, used to validate the argument.
 */
-static int short_ok(const wcstring &arg_str, wchar_t nextopt, const wcstring &allopt_str)
+static bool short_ok(const wcstring &arg, wchar_t nextopt, const option_list_t &options)
 {
-    const wchar_t *arg = arg_str.c_str();
-    const wchar_t *allopt = allopt_str.c_str();
-    const wchar_t *ptr;
-
-    if (arg[0] != L'-')
-        return arg[0] == L'\0';
-    if (arg[1] == L'-')
-        return 0;
-
-    if (wcschr(arg, nextopt) != 0)
-        return 0;
-
-    for (ptr = arg+1; *ptr; ptr++)
+    /* Empty strings are always 'OK' */
+    if (arg.empty())
     {
-        const wchar_t *tmp = wcschr(allopt, *ptr);
-        /* Unknown option */
-        if (tmp == 0)
-        {
-            /*fwprintf( stderr, L"Unknown option %lc", *ptr );*/
-
-            return 0;
-        }
-
-        if (*(tmp+1) == L':')
-        {
-            /*      fwprintf( stderr, L"Woot %ls", allopt );*/
-            return 0;
-        }
-
+        return true;
     }
-
-    return 1;
+    
+    /* The argument must start with exactly one dash */
+    if (! string_prefixes_string(L"-", arg) || string_prefixes_string(L"--", arg))
+    {
+        return false;
+    }
+    
+    /* Short option must not be already present */
+    if (arg.find(nextopt) != wcstring::npos)
+    {
+        return false;
+    }
+    
+    /* Verify that all characters in our combined short option list are present as short options in the options list. If we get a short option that can't be combined (NO_COMMON), then we stop. */
+    bool result = true;
+    for (size_t i=1; i < arg.size(); i++)
+    {
+        wchar_t arg_char = arg.at(i);
+        const complete_entry_opt_t *match = NULL;
+        for (option_list_t::const_iterator iter = options.begin(); iter != options.end(); ++iter)
+        {
+            if (iter->short_opt == arg_char)
+            {
+                match = &*iter;
+                break;
+            }
+        }
+        if (match == NULL || (match->result_mode & NO_COMMON))
+        {
+            result = false;
+            break;
+        }
+    }
+    return result;
 }
 
 
@@ -1347,11 +1356,6 @@ static int complete_load_no_reload(wcstring *name)
  
    Insert results into comp_out. Return true to perform file completion, false to disable it.
 */
-struct local_options_t
-{
-    wcstring short_opt_str;
-    option_list_t options;
-};
 bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spopt, const wcstring &sstr, bool use_switches)
 {
     const wchar_t * const cmd_orig = scmd_orig.c_str();
@@ -1378,7 +1382,7 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
     }
 
     /* Make a list of lists of all options that we care about */
-    std::vector<local_options_t> all_options;
+    std::vector<option_list_t> all_options;
     {
         scoped_lock lock(completion_lock);
         scoped_lock lock2(completion_entry_lock);
@@ -1386,24 +1390,20 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
         {
             const completion_entry_t *i = *iter;
             const wcstring &match = i->cmd_is_path ? path : cmd;
-            if (! wildcard_match(match, i->cmd))
+            if (wildcard_match(match, i->cmd))
             {
-                continue;
+                /* Copy all of their options into our list */
+                all_options.push_back(i->get_options()); //Oof, this is a lot of copying
             }
-
-            /* Copy all of their options into our list */
-            all_options.push_back(local_options_t());
-            all_options.back().short_opt_str = i->get_short_opt_str();
-            all_options.back().options = i->get_options(); //Oof, this is a lot of copying
         }
     }
 
     /* Now release the lock and test each option that we captured above.
        We have to do this outside the lock because callouts (like the condition) may add or remove completions.
        See https://github.com/ridiculousfish/fishfish/issues/2 */
-    for (std::vector<local_options_t>::const_iterator iter = all_options.begin(); iter != all_options.end(); ++iter)
+    for (std::vector<option_list_t>::const_iterator iter = all_options.begin(); iter != all_options.end(); ++iter)
     {
-        const option_list_t &options = iter->options;
+        const option_list_t &options = *iter;
         use_common=1;
         if (use_switches)
         {
@@ -1505,14 +1505,12 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
                     /*
                       Check if the short style option matches
                     */
-                    if (o->short_opt != L'\0' &&
-                            short_ok(str, o->short_opt, iter->short_opt_str))
+                    if (o->short_opt != L'\0' && short_ok(str, o->short_opt, options))
                     {
+                        // It's a match
                         const wcstring desc = o->localized_desc();
-                        wchar_t completion[2];
-                        completion[0] = o->short_opt;
-                        completion[1] = 0;
-
+                        // Make a "null terminated string"
+                        wchar_t completion[2] = {o->short_opt, L'\0'};
                         append_completion(&this->completions, completion, desc, 0);
 
                     }

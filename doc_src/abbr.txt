@@ -14,7 +14,15 @@ abbr -e word
 
 Abbreviations are user-defined character sequences or words that are replaced with longer phrases after they are entered. For example, a frequently-run command such as `git checkout` can be abbreviated to `gco`. After entering `gco` and pressing @key{Space} or @key{Enter}, the full text `git checkout` will appear in the command line.
 
-Abbreviations are stored, by default, in a universal variable.
+Abbreviations are stored using universal variables. You can create abbreviations directly on the command line, and they will be saved automatically. Do not place them in config.fish, because this will lead to worse startup performance. Alternatively, guard the assignment with another universal variable, like:
+
+\fish
+if not set -q my_fish_abbreviations
+    abbr gco='git checkout'
+    abbr abr='another abbreviation expansion'
+    set -U my_fish_abbreviations 1
+end
+\endfish
 
 The following parameters are available:
 

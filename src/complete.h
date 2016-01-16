@@ -179,11 +179,17 @@ typedef uint32_t completion_request_flags_t;
       If \c condition is empty, the completion is always used.
   \param flags A set of completion flags
 */
+enum complete_option_type_t
+{
+    option_type_args_only, // no option
+    option_type_short, // -x
+    option_type_single_long, // -foo
+    option_type_double_long // --foo
+};
 void complete_add(const wchar_t *cmd,
                   bool cmd_is_path,
-                  wchar_t short_opt,
-                  const wchar_t *long_opt,
-                  int long_mode,
+                  const wcstring &option,
+                  complete_option_type_t option_type,
                   int result_mode,
                   const wchar_t *condition,
                   const wchar_t *comp,

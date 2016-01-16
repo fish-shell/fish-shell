@@ -2157,7 +2157,7 @@ static void test_complete(void)
     do_test(completions.size() == 0);
 
     /* Trailing spaces (#1261) */
-    complete_add(L"foobarbaz", false, 0, NULL, 0, NO_FILES, NULL, L"qux", NULL, COMPLETE_AUTO_SPACE);
+    complete_add(L"foobarbaz", false, wcstring(), option_type_args_only, NO_FILES, NULL, L"qux", NULL, COMPLETE_AUTO_SPACE);
     completions.clear();
     complete(L"foobarbaz ", completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);

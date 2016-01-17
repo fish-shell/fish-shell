@@ -224,23 +224,16 @@ static bool compare_completions_by_order(const completion_entry_t *p1, const com
 /** The lock that guards the list of completion entries */
 static pthread_mutex_t completion_lock = PTHREAD_MUTEX_INITIALIZER;
 
-/**
- * The lock that guards the options list of individual completion entries.
- * If both completion_lock and completion_entry_lock are to be taken,
- * completion_lock must be taken first.
- */
-static pthread_mutex_t completion_entry_lock = PTHREAD_MUTEX_INITIALIZER;
-
 
 void completion_entry_t::add_option(const complete_entry_opt_t &opt)
 {
-    ASSERT_IS_LOCKED(completion_entry_lock);
+    ASSERT_IS_LOCKED(completion_lock);
     options.push_front(opt);
 }
 
 const option_list_t &completion_entry_t::get_options() const
 {
-    ASSERT_IS_LOCKED(completion_entry_lock);
+    ASSERT_IS_LOCKED(completion_lock);
     return options;
 }
 
@@ -543,9 +536,6 @@ void complete_add(const wchar_t *cmd,
     /* Lock the lock that allows us to edit the completion entry list */
     scoped_lock lock(completion_lock);
 
-    /* Lock the lock that allows us to edit individual completion entries */
-    scoped_lock lock2(completion_entry_lock);
-
     completion_entry_t *c;
     c = complete_get_exact_entry(cmd, cmd_is_path);
 
@@ -571,7 +561,6 @@ void complete_add(const wchar_t *cmd,
 bool completion_entry_t::remove_option(wchar_t short_opt, const wchar_t *long_opt, int old_mode)
 {
     ASSERT_IS_LOCKED(completion_lock);
-    ASSERT_IS_LOCKED(completion_entry_lock);
     if ((short_opt == 0) && (long_opt == 0))
     {
         this->options.clear();
@@ -626,7 +615,6 @@ void complete_remove(const wchar_t *cmd,
 {
     CHECK(cmd,);
     scoped_lock lock(completion_lock);
-    scoped_lock lock2(completion_entry_lock);
 
     completion_entry_t tmp_entry(cmd, cmd_is_path, false);
     completion_entry_set_t::iterator iter = completion_set.find(&tmp_entry);
@@ -1160,7 +1148,6 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
     std::vector<option_list_t> all_options;
     {
         scoped_lock lock(completion_lock);
-        scoped_lock lock2(completion_entry_lock);
         for (completion_entry_set_t::const_iterator iter = completion_set.begin(); iter != completion_set.end(); ++iter)
         {
             const completion_entry_t *i = *iter;
@@ -1877,7 +1864,6 @@ wcstring complete_print()
 {
     wcstring out;
     scoped_lock locker(completion_lock);
-    scoped_lock locker2(completion_entry_lock);
 
     // Get a list of all completions in a vector, then sort it by order
     std::vector<const completion_entry_t *> all_completions(completion_set.begin(), completion_set.end());

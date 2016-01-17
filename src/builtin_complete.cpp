@@ -163,114 +163,54 @@ static void  builtin_complete_add(const wcstring_list_t &cmd,
     }
 }
 
-/**
-   Silly function
-*/
-static void builtin_complete_remove3(const wchar_t *cmd,
-                                     int cmd_type,
-                                     wchar_t short_opt,
-                                     const wcstring_list_t &long_opt,
-                                     int long_mode)
+static void builtin_complete_remove_cmd(const wcstring &cmd,
+                                        int cmd_type,
+                                        const wchar_t *short_opt,
+                                        const wcstring_list_t &gnu_opt,
+                                        const wcstring_list_t &old_opt)
 {
-    for (size_t i=0; i<long_opt.size(); i++)
+    bool removed = false;
+    size_t i;
+    for (i=0; short_opt[i] != L'\0'; i++)
     {
-        complete_remove(cmd,
-                        cmd_type,
-                        short_opt,
-                        long_opt.at(i).c_str(),
-                        long_mode);
+        complete_remove(cmd, cmd_type, wcstring(1, short_opt[i]), option_type_short);
+        removed = true;
+    }
+    
+    for (i=0; i < old_opt.size(); i++)
+    {
+        complete_remove(cmd, cmd_type, old_opt.at(i), option_type_single_long);
+        removed = true;
+    }
+    
+    for (i=0; i < gnu_opt.size(); i++)
+    {
+        complete_remove(cmd, cmd_type, gnu_opt.at(i), option_type_double_long);
+        removed = true;
+    }
+    
+    if (! removed)
+    {
+        // This means that all loops were empty
+        complete_remove_all(cmd, cmd_type);
     }
 }
 
-/**
-   Silly function
-*/
-static void  builtin_complete_remove2(const wchar_t *cmd,
-                                      int cmd_type,
-                                      const wchar_t *short_opt,
-                                      const wcstring_list_t &gnu_opt,
-                                      const wcstring_list_t &old_opt)
-{
-    const wchar_t *s = (wchar_t *)short_opt;
-    if (*s)
-    {
-        for (; *s; s++)
-        {
-            if (old_opt.empty() && gnu_opt.empty())
-            {
-                complete_remove(cmd,
-                                cmd_type,
-                                *s,
-                                0,
-                                0);
-
-            }
-            else
-            {
-                builtin_complete_remove3(cmd,
-                                         cmd_type,
-                                         *s,
-                                         gnu_opt,
-                                         0);
-                builtin_complete_remove3(cmd,
-                                         cmd_type,
-                                         *s,
-                                         old_opt,
-                                         1);
-            }
-        }
-    }
-    else if (gnu_opt.empty() && old_opt.empty())
-    {
-        complete_remove(cmd,
-                        cmd_type,
-                        0,
-                        0,
-                        0);
-    }
-    else
-    {
-        builtin_complete_remove3(cmd,
-                                 cmd_type,
-                                 0,
-                                 gnu_opt,
-                                 0);
-        builtin_complete_remove3(cmd,
-                                 cmd_type,
-                                 0,
-                                 old_opt,
-                                 1);
-
-    }
-
-
-}
-
-/**
-   Silly function
-*/
 static void  builtin_complete_remove(const wcstring_list_t &cmd,
                                      const wcstring_list_t &path,
                                      const wchar_t *short_opt,
                                      const wcstring_list_t &gnu_opt,
                                      const wcstring_list_t &old_opt)
 {
+    
     for (size_t i=0; i<cmd.size(); i++)
     {
-        builtin_complete_remove2(cmd.at(i).c_str(),
-                                 COMMAND,
-                                 short_opt,
-                                 gnu_opt,
-                                 old_opt);
+        builtin_complete_remove_cmd(cmd.at(i), COMMAND, short_opt, gnu_opt, old_opt);
     }
 
     for (size_t i=0; i<path.size(); i++)
     {
-        builtin_complete_remove2(path.at(i).c_str(),
-                                 PATH,
-                                 short_opt,
-                                 gnu_opt,
-                                 old_opt);
+        builtin_complete_remove_cmd(path.at(i), PATH, short_opt, gnu_opt, old_opt);
     }
 
 }

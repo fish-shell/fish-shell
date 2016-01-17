@@ -185,7 +185,8 @@ public:
 
     /** Adds or removes an option. */
     void add_option(const complete_entry_opt_t &opt);
-    bool remove_option(wchar_t short_opt, const wchar_t *long_opt, int old_mode);
+    bool remove_option(const wcstring &option, complete_option_type_t type);
+    void remove_all_options();
 
     completion_entry_t(const wcstring &c, bool type, bool author) :
         cmd(c),
@@ -419,7 +420,7 @@ completion_autoload_t::completion_autoload_t() : autoload_t(L"fish_complete_path
 /** Callback when an autoloaded completion is removed */
 void completion_autoload_t::command_removed(const wcstring &cmd)
 {
-    complete_remove(cmd.c_str(), COMMAND, 0, 0, 0);
+    complete_remove_all(cmd, false /* not a path */);
 }
 
 
@@ -559,62 +560,34 @@ void complete_add(const wchar_t *cmd,
    specified short / long option strings. Returns true if it is now
    empty and should be deleted, false if it's not empty. Must be called while locked.
 */
-bool completion_entry_t::remove_option(wchar_t short_opt, const wchar_t *long_opt, int old_mode)
+bool completion_entry_t::remove_option(const wcstring &option, complete_option_type_t type)
 {
     ASSERT_IS_LOCKED(completion_lock);
-    if ((short_opt == 0) && (long_opt == 0))
+    option_list_t::iterator iter = this->options.begin();
+    while (iter != this->options.end())
     {
-        this->options.clear();
-    }
-    else
-    {
-        for (option_list_t::iterator iter = this->options.begin(); iter != this->options.end();)
+        if (iter->option == option && iter->type == type)
         {
-            complete_entry_opt_t &o = *iter;
-            if (o.option.empty())
-            {
-                // Just arguments, no match possible
-                continue;
-            }
-            bool matches = false;
-            bool mode_is_single = (o.type == option_type_single_long);
-            if (o.type == option_type_short)
-            {
-                matches = (short_opt && o.option.at(0) == short_opt);
-            }
-            else
-            {
-                matches = (mode_is_single == old_mode && long_opt && o.option == long_opt);
-            }
-            
-            if (matches)
-            {
-                /*      fwprintf( stderr,
-                      L"remove option -%lc --%ls\n",
-                      o->short_opt?o->short_opt:L' ',
-                      o->long_opt );
-                */
-                /* Destroy this option and go to the next one */
-                iter = this->options.erase(iter);
-            }
-            else
-            {
-                /* Just go to the next one */
-                ++iter;
-            }
+            iter = this->options.erase(iter);
+        }
+        else
+        {
+            /* Just go to the next one */
+            ++iter;
         }
     }
     return this->options.empty();
 }
 
-
-void complete_remove(const wchar_t *cmd,
-                     bool cmd_is_path,
-                     wchar_t short_opt,
-                     const wchar_t *long_opt,
-                     int old_mode)
+void completion_entry_t::remove_all_options()
 {
-    CHECK(cmd,);
+    ASSERT_IS_LOCKED(completion_lock);
+    this->options.clear();
+}
+
+
+void complete_remove(const wcstring &cmd, bool cmd_is_path, const wcstring &option, complete_option_type_t type)
+{
     scoped_lock lock(completion_lock);
 
     completion_entry_t tmp_entry(cmd, cmd_is_path, false);
@@ -622,7 +595,7 @@ void complete_remove(const wchar_t *cmd,
     if (iter != completion_set.end())
     {
         completion_entry_t *entry = *iter;
-        bool delete_it = entry->remove_option(short_opt, long_opt, old_mode);
+        bool delete_it = entry->remove_option(option, type);
         if (delete_it)
         {
             /* Delete this entry */
@@ -631,6 +604,22 @@ void complete_remove(const wchar_t *cmd,
         }
     }
 }
+
+void complete_remove_all(const wcstring &cmd, bool cmd_is_path)
+{
+    scoped_lock lock(completion_lock);
+    
+    completion_entry_t tmp_entry(cmd, cmd_is_path, false);
+    completion_entry_set_t::iterator iter = completion_set.find(&tmp_entry);
+    if (iter != completion_set.end())
+    {
+        completion_entry_t *entry = *iter;
+        entry->remove_all_options();
+        completion_set.erase(iter);
+        delete entry;
+    }
+}
+
 
 /**
    Find the full path and commandname from a command string 'str'.

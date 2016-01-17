@@ -205,12 +205,13 @@ void complete_set_authoritative(const wchar_t *cmd, bool cmd_type, bool authorit
 /**
   Remove a previously defined completion
 */
-void complete_remove(const wchar_t *cmd,
+void complete_remove(const wcstring &cmd,
                      bool cmd_is_path,
-                     wchar_t short_opt,
-                     const wchar_t *long_opt,
-                     int long_mode);
+                     const wcstring &option,
+                     complete_option_type_t type);
 
+/** Removes all completions for a given command */
+void complete_remove_all(const wcstring &cmd, bool cmd_is_path);
 
 /** Find all completions of the command cmd, insert them into out.
  */

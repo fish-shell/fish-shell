@@ -148,6 +148,7 @@ typedef struct complete_entry_opt
             case option_type_double_long:
                 return 2;
         }
+        assert(0 && "Unreachable");
     }
     
 } complete_entry_opt_t;

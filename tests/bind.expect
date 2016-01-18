@@ -76,8 +76,6 @@ send "ddi"
 send "inserted\r"
 expect_prompt -re {\r\nfail: no normal modediinserted\r\n} {
     puts "vi normal mode: shortened escape timeout"
-} -nounmatched -re {\r\nfail} {
-    puts stderr "vi normal mode fail: shortened escape timeout"
 } unmatched {
     puts stderr "couldn't find expected output: no normal mode"
 }

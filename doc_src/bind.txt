@@ -131,3 +131,14 @@ set -g fish_key_bindings fish_vi_key_bindings
 bind -M insert \cc kill-whole-line force-repaint
 \endfish
 Turns on Vi key bindings and rebinds @key{Control,C} to clear the input line.
+
+
+\subsection special-case-escape Special Case: The escape Character
+
+The escape key (or character) poses a special challenge for fish. Consider Vi mode. On the one hand you want to be able to press the escape key to switch from insert to normal mode. On the other hand you want fish to recognize multi-char sequences that begin with an escape character (which is what the function and arrow-keys send) without having the escape character switch to normal mode. So fish needs to wait a little bit to see if the escape introduces a multi-char sequence but not so long that you're left wondering if fish will ever switch to Vi normal mode after you press escape.
+
+Even in emacs mode (the default key bindings) you don't want fish to wait forever for more characters when it sees an escape character to determine if the sequence matches a key binding. On the other hand you want fish to wait a little bit of time so that you can use the escape key as a "meta" key.
+
+The solution is for fish to wait, by default, 500 ms (0.5 seconds) after it sees an escape character for another character that might represent a valid binding. This is the Gnu readline library default escape timeout. It can be configured by setting the `fish_escape_delay_ms` variable to a value between 10 and 5000 ms. It is recommended that this be a universal variable that you set once from an interactive session.
+
+Note: fish versions up thru 2.2.0 used a default of 10 ms and provided no way to configure it. That effectively made it impossible to use escape as a meta key while in emacs mode.

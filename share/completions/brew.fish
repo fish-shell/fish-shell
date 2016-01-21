@@ -76,6 +76,13 @@ complete -f -c brew -n '__fish_brew_using_command create' -l no-fetch -d 'Don\'t
 complete -f -c brew -n '__fish_brew_using_command create' -l set-name -d 'Override name autodetection'
 complete -f -c brew -n '__fish_brew_using_command create' -l set-version -d 'Override version autodetection'
 
+# desc
+complete -f -c brew -n '__fish_brew_needs_command' -a desc -d "Summarize specified formulae in one line"
+complete -f -c brew -n '__fish_brew_using_command desc' -l search -d 'Search names and descriptions'
+complete -f -c brew -n '__fish_brew_using_command desc' -l name -d 'Search only names'
+complete -f -c brew -n '__fish_brew_using_command desc' -l description -d 'Search only descriptions'
+complete -f -c brew -n '__fish_brew_using_command desc' -a '(__fish_brew_formulae)'
+
 # deps
 complete -f -c brew -n '__fish_brew_needs_command' -a deps -d 'Show a formula\'s dependencies'
 complete -f -c brew -n '__fish_brew_using_command deps' -l 1 -d 'Show only 1 level down'

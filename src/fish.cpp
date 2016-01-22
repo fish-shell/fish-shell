@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "config.h"
 
+#include <assert.h>
 #include <limits.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -63,6 +64,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "input.h"
 #include "io.h"
 #include "fish_version.h"
+#include "input_common.h"
+#include "wildcard.h"
 
 /* PATH_MAX may not exist */
 #ifndef PATH_MAX
@@ -483,6 +486,14 @@ int main(int argc, char **argv)
 {
     int res=1;
     int my_optind=0;
+
+    // We can't do this at compile time due to the use of enum symbols.
+    assert(EXPAND_SENTINAL >= EXPAND_RESERVED_BASE &&
+           EXPAND_SENTINAL <= EXPAND_RESERVED_END);
+    assert(ANY_SENTINAL >= WILDCARD_RESERVED_BASE &&
+           ANY_SENTINAL <= WILDCARD_RESERVED_END);
+    assert(R_SENTINAL >= INPUT_COMMON_BASE &&
+           R_SENTINAL <= INPUT_COMMON_END);
 
     set_main_thread();
     setup_fork_guards();

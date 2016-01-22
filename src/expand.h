@@ -26,92 +26,64 @@
 
 enum
 {
-    /** Flag specifying that cmdsubst expansion should be skipped */
+    // Flag specifying that cmdsubst expansion should be skipped.
     EXPAND_SKIP_CMDSUBST = 1 << 0,
-
-    /** Flag specifying that variable expansion should be skipped */
+    // Flag specifying that variable expansion should be skipped.
     EXPAND_SKIP_VARIABLES = 1 << 1,
-
-    /** Flag specifying that wildcard expansion should be skipped */
+    // Flag specifying that wildcard expansion should be skipped.
     EXPAND_SKIP_WILDCARDS = 1 << 2,
-
-    /**
-       The expansion is being done for tab or auto completions. Returned completions may have the wildcard as a prefix instead of a match.
-    */
+    // The expansion is being done for tab or auto completions. Returned
+    // completions may have the wildcard as a prefix instead of a match.
     EXPAND_FOR_COMPLETIONS = 1 << 3,
-
-    /** Only match files that are executable by the current user. Only applicable together with ACCEPT_INCOMPLETE. */
+    // Only match files that are executable by the current user. Only
+    // applicable together with ACCEPT_INCOMPLETE.
     EXECUTABLES_ONLY = 1 << 4,
-
-    /** Only match directories. Only applicable together with ACCEPT_INCOMPLETE. */
+    // Only match directories. Only applicable together with ACCEPT_INCOMPLETE.
     DIRECTORIES_ONLY = 1 << 5,
-
-    /** Don't generate descriptions */
+    // Don't generate descriptions.
     EXPAND_NO_DESCRIPTIONS = 1 << 6,
-
-    /** Don't expand jobs (but you can still expand processes). This is because job expansion is not thread safe. */
+    // Don't expand jobs (but you can still expand processes). This is because
+    // job expansion is not thread safe.
     EXPAND_SKIP_JOBS = 1 << 7,
-
-    /** Don't expand home directories */
+    // Don't expand home directories.
     EXPAND_SKIP_HOME_DIRECTORIES = 1 << 8,
-
-    /** Allow fuzzy matching */
+    // Allow fuzzy matching.
     EXPAND_FUZZY_MATCH = 1 << 9,
-    
-    /** Disallow directory abbreviations like /u/l/b for /usr/local/bin. Only applicable if EXPAND_FUZZY_MATCH is set. */
+    // Disallow directory abbreviations like /u/l/b for /usr/local/bin. Only
+    // applicable if EXPAND_FUZZY_MATCH is set.
     EXPAND_NO_FUZZY_DIRECTORIES = 1 << 10,
-    
-    /** Do expansions specifically to support cd (CDPATH, etc) */
+    // Do expansions specifically to support cd (CDPATH, etc).
     EXPAND_SPECIAL_CD = 1 << 11
 };
 typedef int expand_flags_t;
-
-/**
-  Use unencoded private-use keycodes for internal characters
-*/
-#define EXPAND_RESERVED 0xf000
-/**
-   End of range reserved for expand
- */
-#define EXPAND_RESERVED_END 0xf000f
 
 class completion_t;
 
 enum
 {
-    /** Character represeting a home directory */
-    HOME_DIRECTORY = EXPAND_RESERVED,
-
-    /** Character represeting process expansion */
+    // Character representing a home directory.
+    HOME_DIRECTORY = EXPAND_RESERVED_BASE,
+    // Character representing process expansion.
     PROCESS_EXPAND,
-
-    /** Character representing variable expansion */
+    // Character representing variable expansion.
     VARIABLE_EXPAND,
-
-    /** Character rpresenting variable expansion into a single element*/
+    // Character representing variable expansion into a single element.
     VARIABLE_EXPAND_SINGLE,
-
-    /** Character representing the start of a bracket expansion */
+    // Character representing the start of a bracket expansion.
     BRACKET_BEGIN,
-
-    /** Character representing the end of a bracket expansion */
+    // Character representing the end of a bracket expansion.
     BRACKET_END,
-
-    /** Character representing separation between two bracket elements */
+    // Character representing separation between two bracket elements.
     BRACKET_SEP,
-    /**
-       Separate subtokens in a token with this character.
-    */
+    // Separate subtokens in a token with this character.
     INTERNAL_SEPARATOR,
-
-    /**
-       Character representing an empty variable expansion.
-       Only used transitively while expanding variables.
-    */
+    // Character representing an empty variable expansion. Only used
+    // transitively while expanding variables.
     VARIABLE_EXPAND_EMPTY,
-}
-;
-
+    // This is a special psuedo-char that is not used other than to mark the
+    // end of the the special characters so we can sanity check the enum range.
+    EXPAND_SENTINAL
+};
 
 /** These are the possible return values for expand_string. Note how zero value is the only error. */
 enum expand_error_t

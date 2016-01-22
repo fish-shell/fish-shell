@@ -632,8 +632,8 @@ void tokenizer_t::tok_next()
             /*fwprintf( stderr, L"End of string\n" );*/
             this->has_next = false;
             break;
-        case 13: // carriage return
-        case L'\n':
+        case L'\r': // carriage-return
+        case L'\n': // newline
         case L';':
             this->last_type = TOK_END;
             this->buff++;

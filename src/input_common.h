@@ -8,22 +8,77 @@ Header file for the low level input library
 
 #include <stddef.h>
 
-/**
-  Use unencoded private-use keycodes for internal characters
-*/
-#define INPUT_COMMON_RESERVED 0xe000
+#include "common.h"
 
 enum
 {
-    /**
-       R_NULL is sometimes returned by the input when a character was
-       requested but none could be delivered, or when an exception
-       happened.
-    */
-    R_NULL = INPUT_COMMON_RESERVED,
-    R_EOF
-}
-;
+    R_MIN = INPUT_COMMON_BASE,
+    // R_NULL is sometimes returned by the input when a character was requested
+    // but none could be delivered, or when an exception happened.
+    R_NULL = R_MIN,
+    R_EOF,
+    // Key codes for inputrc-style keyboard functions that are passed on
+    // to the caller of input_read().
+    //
+    // NOTE: If you modify this sequence of symbols you must update the
+    // name_arr, code_arr and desc_arr variables in input.cpp to match!
+    R_BEGINNING_OF_LINE,
+    R_END_OF_LINE,
+    R_FORWARD_CHAR,
+    R_BACKWARD_CHAR,
+    R_FORWARD_WORD,
+    R_BACKWARD_WORD,
+    R_FORWARD_BIGWORD,
+    R_BACKWARD_BIGWORD,
+    R_HISTORY_SEARCH_BACKWARD,
+    R_HISTORY_SEARCH_FORWARD,
+    R_DELETE_CHAR,
+    R_BACKWARD_DELETE_CHAR,
+    R_KILL_LINE,
+    R_YANK,
+    R_YANK_POP,
+    R_COMPLETE,
+    R_COMPLETE_AND_SEARCH,
+    R_BEGINNING_OF_HISTORY,
+    R_END_OF_HISTORY,
+    R_BACKWARD_KILL_LINE,
+    R_KILL_WHOLE_LINE,
+    R_KILL_WORD,
+    R_KILL_BIGWORD,
+    R_BACKWARD_KILL_WORD,
+    R_BACKWARD_KILL_PATH_COMPONENT,
+    R_BACKWARD_KILL_BIGWORD,
+    R_HISTORY_TOKEN_SEARCH_BACKWARD,
+    R_HISTORY_TOKEN_SEARCH_FORWARD,
+    R_SELF_INSERT,
+    R_TRANSPOSE_CHARS,
+    R_TRANSPOSE_WORDS,
+    R_UPCASE_WORD,
+    R_DOWNCASE_WORD,
+    R_CAPITALIZE_WORD,
+    R_VI_ARG_DIGIT,
+    R_VI_DELETE_TO,
+    R_EXECUTE,
+    R_BEGINNING_OF_BUFFER,
+    R_END_OF_BUFFER,
+    R_REPAINT,
+    R_FORCE_REPAINT,
+    R_UP_LINE,
+    R_DOWN_LINE,
+    R_SUPPRESS_AUTOSUGGESTION,
+    R_ACCEPT_AUTOSUGGESTION,
+    R_BEGIN_SELECTION,
+    R_END_SELECTION,
+    R_KILL_SELECTION,
+    R_FORWARD_JUMP,
+    R_BACKWARD_JUMP,
+    R_AND,
+    R_CANCEL,
+    R_MAX = R_CANCEL,
+    // This is a special psuedo-char that is not used other than to mark the
+    // end of the the special characters so we can sanity check the enum range.
+    R_SENTINAL
+};
 
 /**
    Init the library

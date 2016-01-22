@@ -335,7 +335,7 @@ static bool has_expand_reserved(const wcstring &str)
     for (size_t i=0; i < str.size(); i++)
     {
         wchar_t wc = str.at(i);
-        if (wc >= EXPAND_RESERVED && wc <= EXPAND_RESERVED_END)
+        if (wc >= EXPAND_RESERVED_BASE && wc <= EXPAND_RESERVED_END)
         {
             result = true;
             break;

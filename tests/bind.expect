@@ -9,13 +9,6 @@ expect_prompt
 send "set -g fish_key_bindings fish_vi_key_bindings\r"
 expect_prompt
 
-send "echo success: default escape timeout\r"
-expect_prompt -re {\r\nsuccess: default escape timeout\r\n} {
-    puts "prime vi mode: default escape timeout"
-} unmatched {
-    puts stderr "prime vi mode fail: default escape timeout"
-}
-
 send "echo fail: default escape timeout"
 send "\033"
 # Delay needed to allow fish to transition to vi "normal" mode.

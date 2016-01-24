@@ -11,7 +11,7 @@ expect_prompt
 send "echo fail: default escape timeout"
 send "\033"
 # Delay needed to allow fish to transition to vi "normal" mode.
-sleep 0.550
+sleep 0.600
 send "ddi"
 send "echo success: default escape timeout\r"
 expect_prompt -re {\r\nsuccess: default escape timeout\r\n} {

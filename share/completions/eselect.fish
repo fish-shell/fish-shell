@@ -35,7 +35,7 @@ function __fish_complete_eselect_action_options
 end
 
 function __fish_complete_eselect_php_actions
-    set -l sedregexp 's/^  .([0-9]+).   ([A-Za-z0-9\.]+).?+/\1\t\2/'
+    set -l sedregexp 's/^\s*\[([0-9]+)\]\s+([A-Za-z0-9\.]+).*/\1\t\2/'
 
     if test (__fish_print_cmd_args_without_options)[3] = 'set'
         eselect php list (__fish_print_cmd_args_without_options)[-1] | sed -r $sedregexp

@@ -17,8 +17,9 @@ function __fish_complete_eselect_action_options
     set -l parseregexp 's/^    ([a-zA-Z0-9_-]*)[ ]*/\1\t/g'
     set -l cmdl (commandline -poc)
 
-    # Disable further php completion
+    # Alter further php completion
     if [ (__fish_print_cmd_args_without_options)[2] = 'php' ]
+        eselect php list-modules | string split " "
         return
     end
 
@@ -33,12 +34,19 @@ function __fish_complete_eselect_action_options
     __fish_eselect_cmd $cmdl[2..-1] | sed -n -re $findregexp | __fish_sgrep '^    --' | sed -re $parseregexp
 end
 
+function __fish_complete_eselect_php_actions
+    set -l sedregexp 's/^\s*\[([0-9]+)\]\s+([A-Za-z0-9\.]+).*/\1\t\2/'
+
+    if test (__fish_print_cmd_args_without_options)[3] = 'set'
+        eselect php list (__fish_print_cmd_args_without_options)[-1] | sed -r $sedregexp
+    end
+end
+
 function __fish_complete_eselect_targets
     set -l sedregexp 's/^  \[([0-9]+)\][ ]*/\1\t/g'
     set -l cmdl (commandline -poc)
 
     # Disable further php completion
-    # https://github.com/fish-shell/fish-shell/pull/1131
     if [ (__fish_print_cmd_args_without_options)[2] = 'php' ]
         return
     end
@@ -72,3 +80,5 @@ complete -c eselect -n "test (__fish_number_of_cmd_args_wo_opts) = 3" \
 complete -c eselect -n "test (__fish_number_of_cmd_args_wo_opts) = 3" \
     -xa '(__fish_complete_eselect_action_options)'
 
+complete -c eselect -n "test (__fish_number_of_cmd_args_wo_opts) = 4" \
+    -xa '(__fish_complete_eselect_php_actions)'

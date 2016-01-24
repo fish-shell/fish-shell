@@ -8,19 +8,24 @@ expect_prompt
 
 send "set -g fish_key_bindings fish_vi_key_bindings\r"
 expect_prompt
+
+send "echo success: default escape timeout\r"
+expect_prompt -re {\r\nsuccess: default escape timeout\r\n} {
+    puts "prime vi mode: default escape timeout"
+} unmatched {
+    puts stderr "prime vi mode fail: default escape timeout"
+}
+
 send "echo fail: default escape timeout"
-sleep 0.010
 send "\033"
 # Delay needed to allow fish to transition to vi "normal" mode.
-sleep 0.510
+sleep 0.550
 send "ddi"
 send "echo success: default escape timeout\r"
 expect_prompt -re {\r\nsuccess: default escape timeout\r\n} {
     puts "vi replace line: default escape timeout"
-} -nounmatched -re {\r\nfail} {
-    puts stderr "vi replace line fail: default escape timeout"
 } unmatched {
-    puts stderr "couldn't find expected output: replace line, default escape timeout"
+    puts stderr "vi replace line fail: default escape timeout"
 }
 
 # Verify that a human can transpose words using \et (which is an emacs default
@@ -41,7 +46,7 @@ expect_prompt -re {\r\ndef abc\r\n} {
 send "echo TEXT"
 send "\033"
 # Delay needed to allow fish to transition to vi "normal" mode.
-sleep 0.510
+sleep 0.550
 send "hhrAi\r"
 expect_prompt -re {\r\nTAXT\r\n} {
     puts "vi mode replace: default escape timeout"
@@ -57,7 +62,7 @@ send "set -g fish_escape_delay_ms 100\r"
 expect_prompt
 send "echo fail: shortened escape timeout"
 send "\033"
-sleep 0.110
+sleep 0.150
 send "ddi"
 send "echo success: shortened escape timeout\r"
 expect_prompt -re {\r\nsuccess: shortened escape timeout\r\n} {
@@ -101,6 +106,7 @@ expect_prompt -re {\r\ndef abc\r\n} {
 # the words.
 send "set -g fish_escape_delay_ms 100\r"
 expect_prompt
+
 send "echo ghi jkl"
 send "\033"
 sleep 0.050
@@ -115,7 +121,7 @@ expect_prompt -re {\r\njkl ghi\r\n} {
 # occur and the "t" should become part of the text that is echoed.
 send "echo mno pqr"
 send "\033"
-sleep 0.110
+sleep 0.150
 send "t\r"
 expect_prompt -re {\r\nmno pqrt\r\n} {
     puts "emacs transpose words: long escape delay"

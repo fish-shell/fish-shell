@@ -9,6 +9,9 @@ expect_prompt
 send "set -g fish_key_bindings fish_vi_key_bindings\r"
 expect_prompt
 
+# This test is only present to make the Travis-CI framework succeed
+# consistently. It's not clear why the following tests succeed without this
+# test when executed on a local machine but not in the Travis-CI framework.
 send "echo success: default escape timeout\r"
 expect_prompt -re {\r\nsuccess: default escape timeout\r\n} {
     puts "prime vi mode: default escape timeout"

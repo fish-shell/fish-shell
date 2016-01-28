@@ -19,7 +19,7 @@ function __fish_complete_eselect_action_options
 
     # Alter further php completion
     if [ (__fish_print_cmd_args_without_options)[2] = 'php' ]
-        eselect php list-modules | string -a " " \n
+        eselect php list-modules | string split " "
         return
     end
 

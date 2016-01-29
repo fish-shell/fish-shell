@@ -475,7 +475,9 @@ x
 #.
 # Mark up sesitive character entities.
 #.
-:entities
+# We comment out this target because it isn't referenced and if we don't we
+# get warnings about "unused label 'entities'".
+#:entities
 s/</\&lt;/g
 s/>/\&gt;/g
 s/((d))/@/g
@@ -575,7 +577,9 @@ s/\($[$]*\)\([A-Za-z_0-9][A-Za-z_0-9]*\)/@vars{@optr{\1}\2}/g
 # Files
 s/\([^@]\)\([A-Za-z0-9_-][A-Za-z0-9_-]*\.[a-z0-9*][a-z0-9*]*\)/\1@fsfo{\2}/g
 #.
-:commands
+# We comment out this target because it isn't referenced and if we don't we
+# get warnings about "unused label 'commands'".
+#:commands
 #.
 #### This section is built in the Makefile. Just some formatting examples. #####
 #.

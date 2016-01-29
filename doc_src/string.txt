@@ -110,7 +110,7 @@ string trim --right --chars=yz xyzzy zany
 \endfish
 
 \fish
-echo \\x07 | string escape
+echo \x07 | string escape
 # Output:
 # \\cg
 \endfish
@@ -193,7 +193,7 @@ string replace -r '(\\w+)\\s+(\\w+)' '$2 $1 $$' 'left right'
 # Output:
 # right left $
 
-string replace -r '\s*newline\s*' '\n' 'put a newline here'
+string replace -r '\\s*newline\\s*' '\n' 'put a newline here'
 # Output:
 # put a
 # here

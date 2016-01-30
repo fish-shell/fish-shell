@@ -37,9 +37,6 @@ Building the documentation requires Doxygen 1.8.7 or newer.
 
 ### Xcode Build and Install
 
-    autoconf
-    ./configure
-    make lexicon_filter
     xcodebuild install
     sudo ditto /tmp/fish.dst /
 

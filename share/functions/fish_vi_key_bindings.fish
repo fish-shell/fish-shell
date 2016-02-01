@@ -1,29 +1,29 @@
 function fish_vi_key_bindings --description 'vi-like key bindings for fish'
-  bind --erase --all
+  # The default escape timeout is 300ms. But for users of Vi bindings that can
+  # be slightly annoying when trying to switch to Vi "normal" mode. Too,
+  # vi-mode users are unlikely to use escape-as-meta. So set a much shorter
+  # timeout in this case.
+  set -q fish_escape_delay_ms; or set -g fish_escape_delay_ms 10
+
   set -l init_mode insert
   if set -q argv[1]
     set init_mode $argv[1]
   end
 
-  # Inherit default key bindings
-  # Do this first so vi-bindings win over default
+  # Inherit default key bindings.
+  # Do this first so vi-bindings win over default.
+  bind --erase --all
   fish_default_key_bindings -M insert
   fish_default_key_bindings -M default
 
-  # Add a way to get out of insert mode
+  # Add a way to switch from insert to normal (command) mode.
   bind -M insert -m default \cc force-repaint
   bind -M insert -m default \e backward-char force-repaint
 
-  ##
-  ## command mode
-  ##
-
+  #
+  # normal (command) mode
+  #
   bind :q exit
-
-  #
-  # normal (default) mode
-  #
-
   bind \cd exit
   bind \cc 'commandline ""'
   bind h backward-char
@@ -128,9 +128,9 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind -m insert cge backward-kill-word force-repaint
   bind -m insert cgE backward-kill-bigword force-repaint
 
-  bind '~' capitalize-word 
-  bind gu downcase-word 
-  bind gU upcase-word 
+  bind '~' capitalize-word
+  bind gu downcase-word
+  bind gU upcase-word
 
   bind J end-of-line delete-char
   bind K 'man (commandline -t) ^/dev/null; or echo -n \a'
@@ -172,7 +172,6 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   #
   # Lowercase r, enters replace-one mode
   #
-
   bind -m replace-one r force-repaint
   bind -M replace-one -m default '' delete-char self-insert backward-char force-repaint
   bind -M replace-one -m default \e cancel force-repaint
@@ -180,7 +179,6 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   #
   # visual mode
   #
-
   bind -M visual \e\[C forward-char
   bind -M visual \e\[D backward-char
   bind -M visual -k right forward-char

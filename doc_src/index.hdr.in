@@ -759,9 +759,7 @@ The user can change the settings of `fish` by changing the values of certain var
 
 - `fish_greeting`, the greeting message printed on startup.
 
-- `fish_escape_delay_ms` to override the default timeout of 500 ms after
-  seeing an escape character before giving up on matching a key binding. See
-  the documentation for the <a hread='bind.html#special-case-escape'>bind</a> builtin.
+- `fish_escape_delay_ms` overrides the default timeout of 300ms (default key bindings) or 10ms (vi key bindings) after seeing an escape character before giving up on matching a key binding. See the documentation for the <a href='bind.html#special-case-escape'>bind</a> builtin command. This delay facilitates using escape as a meta key.
 
 - `BROWSER`, the user's preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
 

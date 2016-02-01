@@ -28,15 +28,10 @@ Implementation file for the low level input library
 #include "env.h"
 #include "iothread.h"
 
-/**
-   Time in milliseconds to wait for another byte to be available for
-   reading after \\x1b is read before assuming that escape key was
-   pressed, and not an escape sequence.
-
-   This is the value used by the readline library. It can be overridden by
-   setting the fish_escape_delay_ms variable.
-*/
-#define WAIT_ON_ESCAPE_DEFAULT 500
+// Time in milliseconds to wait for another byte to be available for reading
+// after \x1b is read before assuming that escape key was pressed, and not an
+// escape sequence.
+#define WAIT_ON_ESCAPE_DEFAULT 300
 static int wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
 
 /** Characters that have been read and returned by the sequence matching code */

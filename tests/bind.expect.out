@@ -1,9 +1,12 @@
-prime vi mode: default escape timeout
-vi replace line: default escape timeout
-vi transpose words: default escape timeout
-vi mode replace: default escape timeout
-vi replace line: shortened escape timeout
-vi normal mode: shortened escape timeout
-emacs transpose words: no escape delay
-emacs transpose words: short escape delay
-emacs transpose words: long escape delay
+emacs transpose words, default timeout: no delay
+emacs transpose words, default timeout: short delay
+emacs transpose words, default timeout: long delay
+prime vi mode, default timeout
+vi replace line, default timeout: long delay
+vi transpose words, default timeout: short delay
+vi mode replace char, default timeout: long delay
+vi replace line, 100ms timeout: long delay
+vi replace line, 100ms timeout: short delay
+emacs transpose words, 100ms timeout: no delay
+emacs transpose words, 100ms timeout: short delay
+emacs transpose words, 100ms timeout: long delay

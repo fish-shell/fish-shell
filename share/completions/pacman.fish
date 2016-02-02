@@ -10,12 +10,13 @@ set -l listall "(__fish_print_packages)"
 set -l listrepos "(__fish_print_pacman_repos)"
 set -l listgroups "(pacman -Sg | sed 's/\(.*\)/\1\tPackage group/g')"
 
-set -l noopt 'not __fish_contains_opt -s S -s D -s Q -s R -s U -s T database query sync remove upgrade deptest'
+set -l noopt 'not __fish_contains_opt -s S -s D -s Q -s R -s U -s T -s F database query sync remove upgrade deptest files'
 set -l database '__fish_contains_opt -s D database'
 set -l query '__fish_contains_opt -s Q query'
 set -l remove '__fish_contains_opt -s R remove'
 set -l sync '__fish_contains_opt -s S sync'
 set -l upgrade '__fish_contains_opt -s U upgrade'
+set -l files '__fish_contains_opt -s F files'
 
 # By default fish expands the arguments with the option which is not desired
 # due to performance reasons.
@@ -34,6 +35,7 @@ complete -c $progname -s R -f -l remove -n $noopt -d 'Remove packages from the s
 complete -c $progname -s S -f -l sync -n $noopt -d 'Synchronize packages'
 complete -c $progname -s T -f -l deptest -n $noopt -d 'Check dependencies'
 complete -c $progname -s U -f -l upgrade -n $noopt -d 'Upgrade or add a local package'
+complete -c $progname -s F -f -l files -n $noopt -d 'Query the files database'
 complete -c $progname -s V -f -l version -d 'Display version and exit'
 complete -c $progname -s h -f -l help -d 'Display help'
 
@@ -47,6 +49,7 @@ complete -c $progname -n "not $noopt" -l cachedir -d 'Alternative package cache 
 complete -c $progname -n "not $noopt" -l config -d 'Alternate config file'
 complete -c $progname -n "not $noopt" -l debug -d 'Display debug messages' -f
 complete -c $progname -n "not $noopt" -l gpgdir -d 'GPG directory to verify signatures'
+complete -c $progname -n "not $noopt" -l hookdir -d 'Hook file directory'
 complete -c $progname -n "not $noopt" -l logfile -d 'Specify alternative log file'
 complete -c $progname -n "not $noopt" -l noconfirm -d 'Bypass any question' -f
 
@@ -116,7 +119,15 @@ complete -c $progname -n "$argument; and $sync" -xa "$listall $listgroups"
 set -l has_db_opt '__fish_contains_opt asdeps asexplicit'
 complete -c $progname -n "$database; and not $has_db_opt" -xa --asdeps -d 'Mark PACKAGE as dependency'
 complete -c $progname -n "$database; and not $has_db_opt" -xa --asexplicit -d 'Mark PACKAGE as explicitly installed'
+complete -c $progname -n "$database; and not $has_db_opt" -s k -l check -d 'Check database validity'
 complete -c $progname -n "$has_db_opt; and $argument; and $database" -xa "$listinstalled"
+
+# File options - since pacman 5
+complete -c $progname -n "$files" -s y -l refresh -d 'Refresh the files database' -f
+complete -c $progname -n "$files" -s l -l list -d 'List files owned by given packages' -xa $listall
+complete -c $progname -n "$files" -s s -l search -d 'Search packages for matching files'
+complete -c $progname -n "$files" -s q -l quiet -d 'Show less information' -f
+complete -c $progname -n "$files" -l machinereadable -d 'Show in machine readable format: repo\0pkgname\0pkgver\0path\n' -f
 
 # Upgrade options
 # Theoretically, pacman reads packages in all formats that libarchive supports

@@ -34,3 +34,7 @@ complete -c makepkg      -l 'noconfirm'     -d 'Passed to pacman: Do not ask for
 complete -c makepkg      -l 'needed'        -d 'Passed to pacman: Only install what is needed'
 complete -c makepkg      -l 'asdeps'        -d 'Passed to pacman: Install as dependencies'
 complete -c makepkg      -l 'noprogressbar' -d 'Passed to pacman: Do not display a progress bar'
+
+# Since pacman 5
+complete -c makepkg      -l 'packagelist' -d 'List all packages that would be built'
+complete -c makepkg      -l 'printsrcinfo' -d 'Print SRCINFO to stdout'

@@ -123,9 +123,15 @@ complete -c $progname -n "$database; and not $has_db_opt" -s k -l check -d 'Chec
 complete -c $progname -n "$has_db_opt; and $argument; and $database" -xa "$listinstalled"
 
 # File options - since pacman 5
+set -l has_file_opt '__fish_contains_opt list search -s l -s s'
+complete -c $progname -n "$files; and not $has_file_opt" -xa --list -d 'List files owned by given packages'
+complete -c $progname -n "$files; and not $has_file_opt" -xa -l -d 'List files owned by given packages'
+complete -c $progname -n "$files; and not $has_file_opt" -xa --search -d 'Search packages for matching files'
+complete -c $progname -n "$files; and not $has_file_opt" -xa -s -d 'Search packages for matching files'
 complete -c $progname -n "$files" -s y -l refresh -d 'Refresh the files database' -f
 complete -c $progname -n "$files" -s l -l list -d 'List files owned by given packages' -xa $listall
 complete -c $progname -n "$files" -s s -l search -d 'Search packages for matching files'
+complete -c $progname -n "$files" -s o -l owns -d 'Search for packages that include the given files'
 complete -c $progname -n "$files" -s q -l quiet -d 'Show less information' -f
 complete -c $progname -n "$files" -l machinereadable -d 'Show in machine readable format: repo\0pkgname\0pkgver\0path\n' -f
 

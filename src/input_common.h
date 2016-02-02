@@ -35,6 +35,9 @@ void input_common_init(int (*ih)());
 */
 void input_common_destroy();
 
+// Adjust the escape timeout.
+void update_wait_on_escape_ms();
+
 /**
    Function used by input_readch to read bytes from stdin until enough
    bytes have been read to convert them to a wchar_t. Conversion is

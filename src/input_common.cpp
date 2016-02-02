@@ -28,12 +28,11 @@ Implementation file for the low level input library
 #include "env.h"
 #include "iothread.h"
 
-/**
-   Time in milliseconds to wait for another byte to be available for
-   reading after \\x1b is read before assuming that escape key was
-   pressed, and not an escape sequence.
-*/
-#define WAIT_ON_ESCAPE 10
+// Time in milliseconds to wait for another byte to be available for reading
+// after \x1b is read before assuming that escape key was pressed, and not an
+// escape sequence.
+#define WAIT_ON_ESCAPE_DEFAULT 300
+static int wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
 
 /** Characters that have been read and returned by the sequence matching code */
 static std::deque<wint_t> lookahead_list;
@@ -77,6 +76,7 @@ static int (*interrupt_handler)();
 void input_common_init(int (*ih)())
 {
     interrupt_handler = ih;
+    update_wait_on_escape_ms();
 }
 
 void input_common_destroy()
@@ -212,36 +212,48 @@ static wint_t readb()
     return arr[0];
 }
 
+// Update the wait_on_escape_ms value in response to the fish_escape_delay_ms
+// user variable being set.
+void update_wait_on_escape_ms()
+{
+    env_var_t escape_time_ms = env_get_string(L"fish_escape_delay_ms");
+    if (escape_time_ms.missing_or_empty())
+    {
+        wait_on_escape_ms = WAIT_ON_ESCAPE_DEFAULT;
+        return;
+    }
+
+    wchar_t *endptr;
+    long tmp = wcstol(escape_time_ms.c_str(), &endptr, 10);
+
+    if (*endptr != '\0' || tmp < 10 || tmp >= 5000)
+    {
+        fwprintf(stderr, L"ignoring fish_escape_delay_ms: value '%ls' "
+                "is not an integer or is < 10 or >= 5000 ms\n",
+                escape_time_ms.c_str());
+    }
+    else
+    {
+        wait_on_escape_ms = (int)tmp;
+    }
+}
+
+
 wchar_t input_common_readch(int timed)
 {
     if (! has_lookahead())
     {
         if (timed)
         {
-            int count;
             fd_set fds;
-            struct timeval tm=
-            {
-                0,
-                1000 * WAIT_ON_ESCAPE
-            }
-            ;
-
             FD_ZERO(&fds);
             FD_SET(0, &fds);
-            count = select(1, &fds, 0, 0, &tm);
-
-            switch (count)
+            struct timeval tm = {wait_on_escape_ms / 1000,
+                                 1000 * (wait_on_escape_ms % 1000)};
+            int count = select(1, &fds, 0, 0, &tm);
+            if (count <= 0)
             {
-                case 0:
-                    return WEOF;
-
-                case -1:
-                    return WEOF;
-                    break;
-                default:
-                    break;
-
+                return WEOF;
             }
         }
 

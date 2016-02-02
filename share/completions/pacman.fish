@@ -4,11 +4,12 @@
 
 set -l progname pacman
 
-set -l listinstalled "(pacman -Q | tr ' ' \t)"
+set -l listinstalled "(pacman -Q | string replace ' ' \t)"
 # This might be an issue if another package manager is also installed (e.g. for containers)
 set -l listall "(__fish_print_packages)"
 set -l listrepos "(__fish_print_pacman_repos)"
-set -l listgroups "(pacman -Sg | sed 's/\(.*\)/\1\tPackage group/g')"
+# Mask $1 so it won't be taken for a variable
+set -l listgroups "(pacman -Sg | string replace -r '(.+)' '\$1\tPackage group')"
 
 set -l noopt 'not __fish_contains_opt -s S -s D -s Q -s R -s U -s T -s F database query sync remove upgrade deptest files'
 set -l database '__fish_contains_opt -s D database'

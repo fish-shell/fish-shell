@@ -149,8 +149,8 @@ static bool chain_contains_redirection_to_real_file(const io_chain_t &io_chain)
     bool result = false;
     for (size_t idx=0; idx < io_chain.size(); idx++)
     {
-        const shared_ptr<const io_data_t> &io = io_chain.at(idx);
-        if (redirection_is_to_real_file(io.get()))
+        const io_data_t *io = io_chain.at(idx).get();
+        if (redirection_is_to_real_file(io))
         {
             result = true;
             break;

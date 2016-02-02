@@ -194,7 +194,7 @@ void io_print(const io_chain_t &chain)
     fprintf(stderr, "Chain %p (%ld items):\n", &chain, (long)chain.size());
     for (size_t i=0; i < chain.size(); i++)
     {
-        const shared_ptr<const io_data_t> &io = chain.at(i);
+        const shared_ptr<io_data_t> &io = chain.at(i);
         if (io.get() == NULL)
         {
             fprintf(stderr, "\t(null)\n");
@@ -278,7 +278,7 @@ shared_ptr<const io_data_t> io_chain_t::get_io_for_fd(int fd) const
     size_t idx = this->size();
     while (idx--)
     {
-        const shared_ptr<const io_data_t> &data = this->at(idx);
+        const shared_ptr<io_data_t> &data = this->at(idx);
         if (data->fd == fd)
         {
             return data;

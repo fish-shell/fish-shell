@@ -65,7 +65,7 @@ static const wchar_t * const highlight_var[] =
 
 };
 
-/* If the given path looks like it's relative to the working directory, then prepend that working directory. */
+/* If the given path looks like it's relative to the working directory, then prepend that working directory. This operates on unescaped paths only (so a ~ means a literal ~) */
 static wcstring apply_working_directory(const wcstring &path, const wcstring &working_directory)
 {
     if (path.empty() || working_directory.empty())
@@ -76,7 +76,7 @@ static wcstring apply_working_directory(const wcstring &path, const wcstring &wo
     switch (path.at(0))
     {
         case L'/':
-        case L'~':
+        case HOME_DIRECTORY:
             prepend_wd = false;
             break;
         default:
@@ -1218,7 +1218,7 @@ void highlighter_t::color_redirection(const parse_node_t &redirection_node)
             }
             else
             {
-                /* Ok, we successfully expanded our target. Now verify that it works with this redirection. We will probably need it as a path (but not in the case of fd redirections */
+                /* Ok, we successfully expanded our target. Now verify that it works with this redirection. We will probably need it as a path (but not in the case of fd redirections). Note that the target is now unescaped. */
                 const wcstring target_path = apply_working_directory(target, this->working_directory);
                 switch (redirect_type)
                 {

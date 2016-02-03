@@ -2330,7 +2330,7 @@ static void test_autosuggest_suggest_special()
     if (system("mkdir -p /tmp/autosuggest_test/start/unique2/unique3/multi4")) err(L"mkdir failed");
     if (system("mkdir -p /tmp/autosuggest_test/start/unique2/unique3/multi42")) err(L"mkdir failed");
     if (system("mkdir -p /tmp/autosuggest_test/start/unique2/.hiddenDir/moreStuff")) err(L"mkdir failed");
-
+    
     const wcstring wd = L"/tmp/autosuggest_test/";
     perform_one_autosuggestion_special_test(L"cd /tmp/autosuggest_test/0", wd, L"cd /tmp/autosuggest_test/0foobar/", __LINE__);
     perform_one_autosuggestion_special_test(L"cd \"/tmp/autosuggest_test/0", wd, L"cd \"/tmp/autosuggest_test/0foobar/\"", __LINE__);
@@ -2381,6 +2381,16 @@ static void test_autosuggest_suggest_special()
 
     // A single quote should defeat tilde expansion
     perform_one_autosuggestion_special_test(L"cd '~/test_autosuggest_suggest_specia'", wd, L"", __LINE__);
+    
+    // Don't crash on ~ (2696)
+    // note this was wd dependent, hence why we set it
+    char saved_wd[PATH_MAX] = {};
+    if (NULL == getcwd(saved_wd, sizeof saved_wd)) err(L"getcwd failed");
+    if (chdir("/tmp/autosuggest_test/")) err(L"chdir failed");
+
+    if (system("mkdir -p '/tmp/autosuggest_test/~hahaha/path1/path2/'")) err(L"mkdir failed");
+    perform_one_autosuggestion_special_test(L"cd ~haha", wd, L"cd ~hahaha/path1/path2/", __LINE__);
+    if (chdir(saved_wd)) err(L"chdir failed");
 
     if (system("rm -Rf '/tmp/autosuggest_test/'")) err(L"rm failed");
     if (system("rm -Rf ~/test_autosuggest_suggest_special/")) err(L"rm failed");

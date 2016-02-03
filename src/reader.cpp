@@ -165,6 +165,8 @@ static pthread_key_t generation_count_key;
 
 static void set_command_line_and_position(editable_line_t *el, const wcstring &new_str, size_t pos);
 
+static void sort_and_prioritize(std::vector<completion_t> *comps);
+
 void editable_line_t::insert_string(const wcstring &str, size_t start, size_t len)
 {
     // Clamp the range to something valid
@@ -838,14 +840,6 @@ bool reader_data_t::expand_abbreviation_as_necessary(size_t cursor_backtrack)
     return result;
 }
 
-/** Sorts and remove any duplicate completions in the list. */
-static void sort_and_make_unique(std::vector<completion_t> &l)
-{
-    sort(l.begin(), l.end(), completion_t::is_naturally_less_than);
-    l.erase(std::unique(l.begin(), l.end(), completion_t::is_alphabetically_equal_to), l.end());
-}
-
-
 void reader_reset_interrupted()
 {
     interrupted = 0;
@@ -1515,6 +1509,7 @@ struct autosuggestion_context_t
         /* Try normal completions */
         std::vector<completion_t> completions;
         complete(search_string, completions, COMPLETION_REQUEST_AUTOSUGGESTION);
+        sort_and_prioritize(&completions);
         if (! completions.empty())
         {
             const completion_t &comp = completions.at(0);
@@ -1711,11 +1706,7 @@ static fuzzy_match_type_t get_best_match_type(const std::vector<completion_t> &c
     fuzzy_match_type_t best_type = fuzzy_match_none;
     for (size_t i=0; i < comp.size(); i++)
     {
-        const completion_t &el = comp.at(i);
-        if (el.match.type < best_type)
-        {
-            best_type = el.match.type;
-        }
+        best_type = std::min(best_type, comp.at(i).match.type);
     }
     /* If the best type is an exact match, reduce it to prefix match. Otherwise a tab completion will only show one match if it matches a file exactly. (see issue #959) */
     if (best_type == fuzzy_match_exact)
@@ -1725,23 +1716,28 @@ static fuzzy_match_type_t get_best_match_type(const std::vector<completion_t> &c
     return best_type;
 }
 
-/* Order completions such that case insensitive completions come first. */
-static void prioritize_completions(std::vector<completion_t> &comp)
-{
-    fuzzy_match_type_t best_type = get_best_match_type(comp);
 
+/** Sorts and remove any duplicate completions in the completion list, then puts them in priority order. */
+static void sort_and_prioritize(std::vector<completion_t> *comps)
+{
+    fuzzy_match_type_t best_type = get_best_match_type(*comps);
+    
     /* Throw out completions whose match types are less suitable than the best. */
-    size_t i = comp.size();
+    size_t i = comps->size();
     while (i--)
     {
-        if (comp.at(i).match.type > best_type)
+        if (comps->at(i).match.type > best_type)
         {
-            comp.erase(comp.begin() + i);
+            comps->erase(comps->begin() + i);
         }
     }
+    
+    /* Remove duplicates */
+    sort(comps->begin(), comps->end(), completion_t::is_naturally_less_than);
+    comps->erase(std::unique(comps->begin(), comps->end(), completion_t::is_alphabetically_equal_to), comps->end());
 
-    /* Sort the remainder */
-    sort(comp.begin(), comp.end(), compare_completions_by_match_type);
+    /* Sort the remainder by match type. They're already sorted alphabetically */
+    stable_sort(comps->begin(), comps->end(), compare_completions_by_match_type);
 }
 
 /**
@@ -3374,8 +3370,7 @@ const wchar_t *reader_readline(int nchars)
                     data->complete_func(buffcpy, comp, COMPLETION_REQUEST_DEFAULT | COMPLETION_REQUEST_DESCRIPTIONS | COMPLETION_REQUEST_FUZZY_MATCH);
 
                     /* Munge our completions */
-                    sort_and_make_unique(comp);
-                    prioritize_completions(comp);
+                    sort_and_prioritize(&comp);
 
                     /* Record our cycle_command_line */
                     data->cycle_command_line = el->text;

@@ -20,4 +20,4 @@ complete -c cower -f -s v -l 'verbose'          -d 'Output more'
 
 # Complete with AUR packages:
 # If the search string is too short, cower prints an annoying message to stderr - ignore that
-complete -c cower -f -n 'not expr -- (commandline --current-token) : "^\-.*" > /dev/null' -a '(cower --format="%n\t%d\n" --search (commandline --current-token) ^/dev/null)'
+complete -c cower -f -n 'not string match -q -- "-*" (commandline --current-token)' -a '(cower --format="%n\t%d\n" --search (commandline --current-token) ^/dev/null)'

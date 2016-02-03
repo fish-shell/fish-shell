@@ -10,7 +10,7 @@ function __fish_cursor_xterm -d 'Set cursor (xterm)'
       set shape 6
   end
   if contains blink $argv
-    set shape (expr $shape - 1)
+    set shape (math $shape - 1)
   end
   echo -en "\e[$shape q"
 end

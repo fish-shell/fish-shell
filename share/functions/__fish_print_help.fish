@@ -36,7 +36,7 @@ function __fish_print_help --description "Print help message for the specified f
 		end 3<&1
 	end
 	if test -n "$cols"
-		set cols (expr $cols - 4) # leave a bit of space on the right
+		set cols (math $cols - 4) # leave a bit of space on the right
 		set rLL -rLL=$cols[1]n
 	end
 	set help (nroff -man -c -t $rLL "$__fish_datadir/man/man1/$item.1" ^/dev/null)

@@ -42,7 +42,6 @@
 #include "output.h"
 #include <vector>
 #include <algorithm>
-#include <deque>
 
 #define DEFAULT_TERM L"ansi"
 #define MAX_INPUT_FUNCTION_ARGS 20
@@ -539,23 +538,28 @@ wchar_t input_function_pop_arg()
 void input_function_push_args(int code)
 {
     int arity = input_function_arity(code);
-    std::deque<wchar_t> skipped;
+    std::vector<wchar_t> skipped;
 
     for (int i = 0; i < arity; i++)
     {
         wchar_t arg;
 
         // skip and queue up any function codes
+        // See #2357
         while(((arg = input_common_readch(0)) >= R_MIN) && (arg <= R_MAX))
         {
-            skipped.push_front(arg);
+            skipped.push_back(arg);
         }
 
         input_function_push_arg(arg);
     }
 
     // push the function codes back into the input stream
-    std::for_each(skipped.begin(), skipped.end(), input_common_next_ch);
+    size_t idx = skipped.size();
+    while (idx--)
+    {
+        input_common_next_ch(skipped.at(idx));
+    }
 }
 
 /**

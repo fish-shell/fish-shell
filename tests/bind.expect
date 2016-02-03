@@ -39,7 +39,11 @@ expect_prompt -re {\r\nTAXT\r\n} {
 
 # Test 't' binding that contains non-zero arity function (forward-jump) followed
 # by another function (and) https://github.com/fish-shell/fish-shell/issues/2357
-send_line "\033ddiecho TEXT\033hhtTrN"
+send "\033"
+sleep 0.500
+send "ddiecho TEXT\033"
+sleep 0.500
+send "hhtTrN\r"
 expect_prompt -re {\r\nTENT\r\n} {
     puts "t-binding success"
 } -nounmatched -re {\r\nfail} {

@@ -5,24 +5,20 @@ function __fish_complete_lpr_option --description 'Complete lpr option'
 		set -l IFS =
 		echo $optstr | read -l opt val
 		set -l descr
-		# Some seds (e.g. on Mac OS X), don't support \n in the RHS
-		# Use a literal newline instead
-		# http://sed.sourceforge.net/sedfaq4.html#s4.1
-		for l in (lpoptions -l ^ /dev/null | grep $opt | sed 's+\(.*\)/\(.*\):\s*\(.*\)$+\2 \3+; s/ /\\
-/g;')
+		for l in (lpoptions -l ^/dev/null | string match -- "*$opt*" | string replace -r '.*/(.*):\s*(.*)$' '$1 $2' | string split " ")
 			if not set -q descr[1]
 				set descr $l
 				continue
 			end
 			set -l default ''
-			if test (expr substr $l 1 1) = '*'
+			if string match -q '\**' -- $l
 				set default 'Default '
-				set l (echo $l | sed 's/\*//')
+				set l (string sub -s 2 -- $l)
 			end
 			echo $opt=$l\t$default$descr
 		end
 	case '*'
-		lpoptions -l ^ /dev/null | sed 's+\(.*\)/\(.*\):.*$+\1=\t\2+'
+		lpoptions -l ^/dev/null | string replace -r '(.*)/(.*):.*$' '$1=\t$2'
 	end
 
 

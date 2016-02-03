@@ -4,7 +4,7 @@ function __fish_complete_subcommand  -d "Complete subcommand" --no-scope-shadowi
     switch "$argv[1]"
         case '--fcs-skip=*'
             set -l rest
-            echo $argv[1] | tr = ' ' | read test skip_next
+            string replace -a = ' ' -- $argv[1] | read test skip_next
             set -e argv[1]
     end
 

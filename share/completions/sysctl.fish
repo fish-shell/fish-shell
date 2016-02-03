@@ -3,7 +3,7 @@ if type -q -f sysctl
 	if sysctl -h >/dev/null ^/dev/null
 		# Print sysctl keys and values, separated by a tab
 		function __fish_sysctl_values
-			sysctl -a ^/dev/null | tr " = " "\t"
+			sysctl -a ^/dev/null | string replace -a " = " "\t"
 		end
 
 		complete -c sysctl -a '(__fish_sysctl_values)' -f
@@ -32,7 +32,7 @@ if type -q -f sysctl
 	else
 		# OSX sysctl
 		function __fish_sysctl_values
-			sysctl -a ^/dev/null | tr ":" "\t"
+			sysctl -a ^/dev/null | string replace -a ":" "\t"
 		end
 
 		complete -c sysctl -a '(__fish_sysctl_values)' -f

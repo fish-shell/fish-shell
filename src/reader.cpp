@@ -1483,7 +1483,7 @@ struct autosuggestion_context_t
 
         /* Try handling a special command like cd */
         wcstring special_suggestion;
-        if (autosuggest_suggest_special(search_string, working_directory, special_suggestion))
+        if (autosuggest_suggest_special(search_string, working_directory, &special_suggestion))
         {
             this->autosuggestion = special_suggestion;
             return 1;

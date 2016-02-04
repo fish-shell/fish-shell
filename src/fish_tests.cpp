@@ -2302,7 +2302,7 @@ static void test_completion_insertions()
 static void perform_one_autosuggestion_special_test(const wcstring &command, const wcstring &wd, const wcstring &expected, long line)
 {
     wcstring suggestion;
-    bool success = autosuggest_suggest_special(command, wd, suggestion);
+    bool success = autosuggest_suggest_special(command, wd, &suggestion);
     if (! success)
     {
         printf("line %ld: autosuggest_suggest_special() failed for command %ls\n", line, command.c_str());
@@ -2330,8 +2330,11 @@ static void test_autosuggest_suggest_special()
     if (system("mkdir -p /tmp/autosuggest_test/start/unique2/unique3/multi4")) err(L"mkdir failed");
     if (system("mkdir -p /tmp/autosuggest_test/start/unique2/unique3/multi42")) err(L"mkdir failed");
     if (system("mkdir -p /tmp/autosuggest_test/start/unique2/.hiddenDir/moreStuff")) err(L"mkdir failed");
-    
+
     const wcstring wd = L"/tmp/autosuggest_test/";
+    
+    env_set(L"AUTOSUGGEST_TEST_LOC", wd.c_str(), ENV_LOCAL);
+
     perform_one_autosuggestion_special_test(L"cd /tmp/autosuggest_test/0", wd, L"cd /tmp/autosuggest_test/0foobar/", __LINE__);
     perform_one_autosuggestion_special_test(L"cd \"/tmp/autosuggest_test/0", wd, L"cd \"/tmp/autosuggest_test/0foobar/\"", __LINE__);
     perform_one_autosuggestion_special_test(L"cd '/tmp/autosuggest_test/0", wd, L"cd '/tmp/autosuggest_test/0foobar/'", __LINE__);
@@ -2373,6 +2376,8 @@ static void test_autosuggest_suggest_special()
     perform_one_autosuggestion_special_test(L"cd 5", wd, L"cd 5foo\\\"bar/", __LINE__);
     perform_one_autosuggestion_special_test(L"cd \"5", wd, L"cd \"5foo\\\"bar/\"", __LINE__);
     perform_one_autosuggestion_special_test(L"cd '5", wd, L"cd '5foo\"bar/'", __LINE__);
+    
+    //perform_one_autosuggestion_special_test(L"cd $AUTOSUGGEST_TEST_LOC/0", wd, L"cd $AUTOSUGGEST_TEST_LOC/0foobar/", __LINE__);
 
     perform_one_autosuggestion_special_test(L"cd ~/test_autosuggest_suggest_specia", wd, L"cd ~/test_autosuggest_suggest_special/", __LINE__);
     

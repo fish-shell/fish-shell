@@ -755,16 +755,17 @@ All arrays are one-dimensional and cannot contain other arrays, although it is p
 
 \subsection variables-special Special variables
 
-The user can change the settings of `fish` by changing the values of
-certain environment variables.
-
-- `BROWSER`, the user's preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
-
-- `CDPATH`, an array of directories in which to search for the new directory for the `cd` builtin. By default, the fish configuration defines `CDPATH` to be a universal variable with the values `.` and `~`.
+The user can change the settings of `fish` by changing the values of certain variables.
 
 - A large number of variable starting with the prefixes `fish_color` and `fish_pager_color.` See <a href='#variables-color'>Variables for changing highlighting colors</a> for more information.
 
 - `fish_greeting`, the greeting message printed on startup.
+
+- `fish_escape_delay_ms` overrides the default timeout of 300ms (default key bindings) or 10ms (vi key bindings) after seeing an escape character before giving up on matching a key binding. See the documentation for the <a href='bind.html#special-case-escape'>bind</a> builtin command. This delay facilitates using escape as a meta key.
+
+- `BROWSER`, the user's preferred web browser. If this variable is set, fish will use the specified browser instead of the system default browser to display the fish documentation.
+
+- `CDPATH`, an array of directories in which to search for the new directory for the `cd` builtin. By default, the fish configuration defines `CDPATH` to be a universal variable with the values `.` and `~`.
 
 - `LANG`, `LC_ALL`, `LC_COLLATE`, `LC_CTYPE`, `LC_MESSAGES`, `LC_MONETARY`, `LC_NUMERIC` and `LC_TIME` set the language option for the shell and subprograms. See the section <a href='#variables-locale'>Locale variables</a> for more information.
 

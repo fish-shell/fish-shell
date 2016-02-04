@@ -131,3 +131,12 @@ set -g fish_key_bindings fish_vi_key_bindings
 bind -M insert \cc kill-whole-line force-repaint
 \endfish
 Turns on Vi key bindings and rebinds @key{Control,C} to clear the input line.
+
+
+\subsection special-case-escape Special Case: The escape Character
+
+Since the escape key (or character) plays two distinct roles it poses a special challenge for fish. In its first role it stands by itself. In Vi mode, for example, escape is used to switch from insert to normal (aka command) mode. In its second role escape is used as a <a href="https://en.wikipedia.org/wiki/Meta_key">"meta" key</a> where it is only the beginning of some longer character sequence. Coming back to the Vi mode example, sometimes fish is expected to realize that the escape key should be regarded as a meta key, meaning that the escape character is part of a multi-char sequence. Function keys (e.g., F1, F2, etc...) and arrow keys are common cases of multi-char sequences that begin with the escape character. Custom bindings can also be defined that begin with an escape character. Obviously, fish is not supposed to exit insert mode when the escape is part of a longer character sequence.
+
+To be able distinguish between these two roles fish has to wait after it sees an escape character. In this waiting period any additional key presses make the escape key behave as a meta key. Otherwise, it remains an isolated escape key press. The waiting period is set to 300 milliseconds (0.3 seconds) in the default key bindings and 10 milliseconds in the vi key bindings. It can be configured by setting the `fish_escape_delay_ms` variable to a value between 10 and 5000 ms. It is recommended that this be a universal variable that you set once from an interactive session.
+
+Note: fish versions up thru 2.2.0 used a default of 10 ms and provided no way to configure it. That effectively made it impossible to use escape as a meta key.

@@ -303,7 +303,7 @@ static void handle_locale()
 }
 
 
-/** React to modifying hte given variable */
+/** React to modifying the given variable */
 static void react_to_variable_change(const wcstring &key)
 {
     if (var_is_locale(key))
@@ -318,6 +318,10 @@ static void react_to_variable_change(const wcstring &key)
     else if (string_prefixes_string(L"fish_color_", key))
     {
         reader_react_to_color_change();
+    }
+    else if (key == L"fish_escape_delay_ms")
+    {
+        update_wait_on_escape_ms();
     }
 }
 

@@ -221,12 +221,27 @@ static struct config_paths_t determine_config_directory_paths(const char *argv0)
     return paths;
 }
 
-/* Source the file config.fish in the given directory */
+// Source the file config.fish in the given directory.
 static void source_config_in_directory(const wcstring &dir)
 {
-    /* We want to execute a command like 'builtin source dir/config.fish 2>/dev/null' */
+    // If the config.fish file doesn't exist or isn't readable silently return.
+    // Fish versions up thru 2.2.0 would instead try to source the file with
+    // stderr redirected to /dev/null to deal with that possibility.
+    //
+    // This introduces a race condition since the readability of the file can
+    // change between this test and the execution of the 'source' command.
+    // However, that is not a security problem in this context so we ignore it.
+    const wcstring config_pathname = dir + L"/config.fish";
     const wcstring escaped_dir = escape_string(dir, ESCAPE_ALL);
-    const wcstring cmd = L"builtin source " + escaped_dir + L"/config.fish 2>/dev/null";
+    const wcstring escaped_pathname = escaped_dir + L"/config.fish";
+    if (waccess(config_pathname, R_OK) != 0) {
+        debug(2, L"not sourcing %ls (not readable or does not exist)",
+                escaped_pathname.c_str());
+        return;
+    }
+    debug(2, L"sourcing %ls", escaped_pathname.c_str());
+
+    const wcstring cmd = L"builtin source " + escaped_pathname;
     parser_t &parser = parser_t::principal_parser();
     parser.set_is_within_fish_initialization(true);
     parser.eval(cmd, io_chain_t(), TOP);

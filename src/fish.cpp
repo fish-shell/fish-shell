@@ -241,7 +241,7 @@ static void source_config_in_directory(const wcstring &dir)
     }
     debug(2, L"sourcing %ls", escaped_pathname.c_str());
 
-    const wcstring cmd = L"builtin source " + config_pathname;
+    const wcstring cmd = L"builtin source " + escaped_pathname;
     parser_t &parser = parser_t::principal_parser();
     parser.set_is_within_fish_initialization(true);
     parser.eval(cmd, io_chain_t(), TOP);

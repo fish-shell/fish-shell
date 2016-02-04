@@ -232,14 +232,15 @@ static void source_config_in_directory(const wcstring &dir)
     // change between this test and the execution of the 'source' command.
     // However, that is not a security problem in this context so we ignore it.
     const wcstring config_pathname = dir + L"/config.fish";
+    const wcstring escaped_dir = escape_string(dir, ESCAPE_ALL);
+    const wcstring escaped_pathname = escaped_dir + L"/config.fish";
     if (waccess(config_pathname, R_OK) != 0) {
-        debug(2, L"not sourcing \"%ls\" (not readable or does not exist)",
-                config_pathname.c_str());
+        debug(2, L"not sourcing %ls (not readable or does not exist)",
+                escaped_pathname.c_str());
         return;
     }
-    debug(2, L"sourcing \"%ls\"", config_pathname.c_str());
+    debug(2, L"sourcing %ls", escaped_pathname.c_str());
 
-    const wcstring escaped_dir = escape_string(dir, ESCAPE_ALL);
     const wcstring cmd = L"builtin source " + config_pathname;
     parser_t &parser = parser_t::principal_parser();
     parser.set_is_within_fish_initialization(true);

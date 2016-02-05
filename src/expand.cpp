@@ -100,30 +100,28 @@ parameter expansion.
 
 static void remove_internal_separator(wcstring &s, bool conv);
 
-int expand_is_clean(const wchar_t *in)
+/**
+ Test if the specified argument is clean, i.e. it does not contain
+ any tokens which need to be expanded or otherwise altered. Clean
+ strings can be passed through expand_string and expand_one without
+ changing them. About two thirds of all strings are clean, so
+ skipping expansion on them actually does save a small amount of
+ time, since it avoids multiple memory allocations during the
+ expansion process.
+ 
+ \param in the string to test
+ */
+static bool expand_is_clean(const wcstring &in)
 {
+    if (in.empty())
+        return true;
+    
+    /* Test characters that have a special meaning in the first character position */
+    if (wcschr(UNCLEAN_FIRST, in.at(0)) != NULL)
+        return false;
 
-    const wchar_t * str = in;
-
-    CHECK(in, 1);
-
-    /*
-      Test characters that have a special meaning in the first character position
-    */
-    if (wcschr(UNCLEAN_FIRST, *str))
-        return 0;
-
-    /*
-      Test characters that have a special meaning in any character position
-    */
-    while (*str)
-    {
-        if (wcschr(UNCLEAN, *str))
-            return 0;
-        str++;
-    }
-
-    return 1;
+    /* Test characters that have a special meaning in any character position */
+    return in.find_first_of(UNCLEAN) == wcstring::npos;
 }
 
 
@@ -973,7 +971,7 @@ static size_t parse_slice(const wchar_t *in, wchar_t **end_ptr, std::vector<long
     As such, to process a string fully, pass string.size() as last_idx
     instead of string.size()-1.
 */
-static int expand_variables(parser_t &parser, const wcstring &instr, std::vector<completion_t> *out, long last_idx, parse_error_list_t *errors)
+static int expand_variables(const wcstring &instr, std::vector<completion_t> *out, long last_idx, parse_error_list_t *errors)
 {
     const size_t insize = instr.size();
 
@@ -1140,7 +1138,7 @@ static int expand_variables(parser_t &parser, const wcstring &instr, std::vector
                         }
                         assert(stop_pos <= insize);
                         res.append(instr, stop_pos, insize - stop_pos);
-                        is_ok &= expand_variables(parser, res, out, i, errors);
+                        is_ok &= expand_variables(res, out, i, errors);
                     }
                     else
                     {
@@ -1173,7 +1171,7 @@ static int expand_variables(parser_t &parser, const wcstring &instr, std::vector
                                     assert(stop_pos <= insize);
                                     new_in.append(next);
                                     new_in.append(instr, stop_pos, insize - stop_pos);
-                                    is_ok &= expand_variables(parser, new_in, out, i, errors);
+                                    is_ok &= expand_variables(new_in, out, i, errors);
                                 }
                             }
 
@@ -1239,7 +1237,7 @@ static int expand_variables(parser_t &parser, const wcstring &instr, std::vector
                     assert(stop_pos <= insize);
                     res.append(instr, stop_pos, insize - stop_pos);
 
-                    is_ok &= expand_variables(parser, res, out, i, errors);
+                    is_ok &= expand_variables(res, out, i, errors);
                     return is_ok;
                 }
             }
@@ -1257,7 +1255,7 @@ static int expand_variables(parser_t &parser, const wcstring &instr, std::vector
 /**
    Perform bracket expansion
 */
-static int expand_brackets(parser_t &parser, const wcstring &instr, int flags, std::vector<completion_t> *out, parse_error_list_t *errors)
+static int expand_brackets(const wcstring &instr, int flags, std::vector<completion_t> *out, parse_error_list_t *errors)
 {
     bool syntax_error = false;
     int bracket_count=0;
@@ -1327,7 +1325,7 @@ static int expand_brackets(parser_t &parser, const wcstring &instr, int flags, s
                 mod.push_back(BRACKET_END);
             }
 
-            return expand_brackets(parser, mod, 1, out, errors);
+            return expand_brackets(mod, 1, out, errors);
         }
     }
 
@@ -1363,7 +1361,7 @@ static int expand_brackets(parser_t &parser, const wcstring &instr, int flags, s
                 whole_item.append(in, length_preceding_brackets);
                 whole_item.append(item_begin, item_len);
                 whole_item.append(bracket_end + 1);
-                expand_brackets(parser, whole_item, flags, out, errors);
+                expand_brackets(whole_item, flags, out, errors);
 
                 item_begin = pos+1;
                 if (pos == bracket_end)
@@ -1387,7 +1385,7 @@ static int expand_brackets(parser_t &parser, const wcstring &instr, int flags, s
 /**
  Perform cmdsubst expansion
  */
-static int expand_cmdsubst(parser_t &parser, const wcstring &input, std::vector<completion_t> *out_list, parse_error_list_t *errors)
+static int expand_cmdsubst(const wcstring &input, std::vector<completion_t> *out_list, parse_error_list_t *errors)
 {
     wchar_t *paran_begin=0, *paran_end=0;
     std::vector<wcstring> sub_res;
@@ -1467,7 +1465,7 @@ static int expand_cmdsubst(parser_t &parser, const wcstring &input, std::vector<
        of the string is inserted into the tail_expand array list
        */
     std::vector<completion_t> tail_expand;
-    expand_cmdsubst(parser, tail_begin, &tail_expand, errors /* TODO: offset error locations */);
+    expand_cmdsubst(tail_begin, &tail_expand, errors /* TODO: offset error locations */);
 
     /*
        Combine the result of the current command substitution with the
@@ -1681,42 +1679,41 @@ static void remove_internal_separator(wcstring &str, bool conv)
     }
 }
 
-
-int expand_string(const wcstring &input, std::vector<completion_t> *output, expand_flags_t flags, parse_error_list_t *errors)
+int expand_string(const wcstring &input, std::vector<completion_t> *out_completions, expand_flags_t flags, parse_error_list_t *errors)
 {
-    parser_t parser(PARSER_TYPE_ERRORS_ONLY, true /* show errors */);
-
-    size_t i;
     int res = EXPAND_OK;
 
-    if ((!(flags & EXPAND_FOR_COMPLETIONS)) && expand_is_clean(input.c_str()))
+    /* Early out. If we're not completing, and there's no magic in the input, we're done. */
+    if (!(flags & EXPAND_FOR_COMPLETIONS) && expand_is_clean(input))
     {
-        append_completion(output, input);
+        append_completion(out_completions, input);
         return EXPAND_OK;
     }
 
-    std::vector<completion_t> clist1, clist2;
-    std::vector<completion_t> *in = &clist1, *out = &clist2;
+    std::vector<completion_t> incoming, outgoing;
 
+    /* Handle command substitutions */
     if (EXPAND_SKIP_CMDSUBST & flags)
     {
         wchar_t *begin, *end;
-
         if (parse_util_locate_cmdsubst(input.c_str(), &begin, &end, true) != 0)
         {
             append_cmdsub_error(errors, SOURCE_LOCATION_UNKNOWN, L"Command substitutions not allowed");
             return EXPAND_ERROR;
         }
-        append_completion(in, input);
+        append_completion(&incoming, input);
     }
     else
     {
-        int cmdsubst_ok = expand_cmdsubst(parser, input, in, errors);
+        int cmdsubst_ok = expand_cmdsubst(input, &incoming, errors);
         if (! cmdsubst_ok)
+        {
             return EXPAND_ERROR;
+        }
     }
 
-    for (i=0; i < in->size(); i++)
+    /* Expand variables */
+    for (size_t i=0; i < incoming.size(); i++)
     {
         /*
          We accept incomplete strings here, since complete uses
@@ -1724,7 +1721,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> *output, expa
          commandline.
          */
         wcstring next;
-        unescape_string(in->at(i).completion, &next, UNESCAPE_SPECIAL | UNESCAPE_INCOMPLETE);
+        unescape_string(incoming.at(i).completion, &next, UNESCAPE_SPECIAL | UNESCAPE_INCOMPLETE);
 
         if (EXPAND_SKIP_VARIABLES & flags)
         {
@@ -1735,35 +1732,37 @@ int expand_string(const wcstring &input, std::vector<completion_t> *output, expa
                     next[i] = L'$';
                 }
             }
-            append_completion(out, next);
+            append_completion(&outgoing, next);
         }
         else
         {
-            if (!expand_variables(parser, next, out, next.size(), errors))
+            if (!expand_variables(next, &outgoing, next.size(), errors))
             {
                 return EXPAND_ERROR;
             }
         }
     }
 
-    in->clear();
-    std::swap(in, out); // note: this swaps the pointers only (last output is next input)
+    /* Outgoing is new incoming for next round */
+    incoming.clear();
+    incoming.swap(outgoing);
 
-    for (i=0; i < in->size(); i++)
+    /* Expand brackets */
+    for (size_t i=0; i < incoming.size(); i++)
     {
-        const wcstring &next = in->at(i).completion;
-
-        if (!expand_brackets(parser, next, flags, out, errors))
+        const wcstring &next = incoming.at(i).completion;
+        if (!expand_brackets(next, flags, &outgoing, errors))
         {
             return EXPAND_ERROR;
         }
     }
-    in->clear();
-    std::swap(in, out); // note: this swaps the pointers only (last output is next input)
+    incoming.clear();
+    incoming.swap(outgoing);
 
-    for (i=0; i < in->size(); i++)
+    /* Expand home directories and process expansion */
+    for (size_t i=0; i < incoming.size(); i++)
     {
-        wcstring next = in->at(i).completion;
+        wcstring next = incoming.at(i).completion;
 
         if (!(EXPAND_SKIP_HOME_DIRECTORIES & flags))
             expand_home_directory(next);
@@ -1777,26 +1776,26 @@ int expand_string(const wcstring &input, std::vector<completion_t> *output, expa
                  interested in other completions, so we
                  short-circuit and return
                  */
-                expand_pid(next, flags, output, NULL);
+                expand_pid(next, flags, out_completions, NULL);
                 return EXPAND_OK;
             }
             else
             {
-                append_completion(out, next);
+                append_completion(&outgoing, next);
             }
         }
-        else if (! expand_pid(next, flags, out, errors))
+        else if (! expand_pid(next, flags, &outgoing, errors))
         {
             return EXPAND_ERROR;
         }
     }
+    incoming.clear();
+    incoming.swap(outgoing);
 
-    in->clear();
-    std::swap(in, out); // note: this swaps the pointers only (last output is next input)
-
-    for (i=0; i < in->size(); i++)
+    /* Expand wildcards */
+    for (size_t i=0; i < incoming.size(); i++)
     {
-        wcstring next = in->at(i).completion;
+        wcstring next = incoming.at(i).completion;
         int wc_res;
 
         remove_internal_separator(next, (EXPAND_SKIP_WILDCARDS & flags) ? true : false);
@@ -1811,7 +1810,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> *output, expa
         {
             wcstring start, rest;
 
-            if (next[0] == '/')
+            if (next[0] == L'/')
             {
                 start = L"/";
                 rest = next.substr(1);
@@ -1826,7 +1825,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> *output, expa
             wc_res = wildcard_expand_string(rest, start, flags, &expanded);
             if (flags & EXPAND_FOR_COMPLETIONS)
             {
-                out->insert(out->end(), expanded.begin(), expanded.end());
+                outgoing.insert(outgoing.end(), expanded.begin(), expanded.end());
             }
             else
             {
@@ -1843,7 +1842,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> *output, expa
                     {
                         res = EXPAND_WILDCARD_MATCH;
                         std::sort(expanded.begin(), expanded.end(), completion_t::is_naturally_less_than);
-                        out->insert(out->end(), expanded.begin(), expanded.end());
+                        outgoing.insert(outgoing.end(), expanded.begin(), expanded.end());
                         break;
                     }
 
@@ -1859,7 +1858,7 @@ int expand_string(const wcstring &input, std::vector<completion_t> *output, expa
         {
             if (!(flags & EXPAND_FOR_COMPLETIONS))
             {
-                append_completion(out, next);
+                append_completion(&outgoing, next);
             }
         }
     }
@@ -1867,11 +1866,11 @@ int expand_string(const wcstring &input, std::vector<completion_t> *output, expa
     // Hack to un-expand tildes (see #647)
     if (!(flags & EXPAND_SKIP_HOME_DIRECTORIES))
     {
-        unexpand_tildes(input, out);
+        unexpand_tildes(input, &outgoing);
     }
 
     // Return our output
-    output->insert(output->end(), out->begin(), out->end());
+    out_completions->insert(out_completions->end(), outgoing.begin(), outgoing.end());
 
     return res;
 }
@@ -1881,7 +1880,7 @@ bool expand_one(wcstring &string, expand_flags_t flags, parse_error_list_t *erro
     std::vector<completion_t> completions;
     bool result = false;
 
-    if ((!(flags & EXPAND_FOR_COMPLETIONS)) &&  expand_is_clean(string.c_str()))
+    if ((!(flags & EXPAND_FOR_COMPLETIONS)) &&  expand_is_clean(string))
     {
         return true;
     }

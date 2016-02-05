@@ -185,19 +185,6 @@ void expand_tilde(wcstring &input);
 wcstring replace_home_directory_with_tilde(const wcstring &str);
 
 /**
-   Test if the specified argument is clean, i.e. it does not contain
-   any tokens which need to be expanded or otherwise altered. Clean
-   strings can be passed through expand_string and expand_one without
-   changing them. About two thirds of all strings are clean, so
-   skipping expansion on them actually does save a small amount of
-   time, since it avoids multiple memory allocations during the
-   expansion process.
-
-   \param in the string to test
-*/
-int expand_is_clean(const wchar_t *in);
-
-/**
    Testing function for getting all process names.
 */
 std::vector<wcstring> expand_get_all_process_names(void);

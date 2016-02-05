@@ -110,10 +110,8 @@ enum
 ;
 
 
-/**
-   These are the possible return values for expand_string
-*/
-enum
+/** These are the possible return values for expand_string. Note how zero value is the only error. */
+enum expand_error_t
 {
     /** Error */
     EXPAND_ERROR,
@@ -152,7 +150,7 @@ enum
    \param errors Resulting errors, or NULL to ignore
    \return One of EXPAND_OK, EXPAND_ERROR, EXPAND_WILDCARD_MATCH and EXPAND_WILDCARD_NO_MATCH. EXPAND_WILDCARD_NO_MATCH and EXPAND_WILDCARD_MATCH are normal exit conditions used only on strings containing wildcards to tell if the wildcard produced any matches.
 */
-__warn_unused int expand_string(const wcstring &input, std::vector<completion_t> *output, expand_flags_t flags, parse_error_list_t *errors);
+__warn_unused expand_error_t expand_string(const wcstring &input, std::vector<completion_t> *output, expand_flags_t flags, parse_error_list_t *errors);
 
 
 /**

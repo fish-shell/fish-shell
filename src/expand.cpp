@@ -1679,9 +1679,9 @@ static void remove_internal_separator(wcstring &str, bool conv)
     }
 }
 
-int expand_string(const wcstring &input, std::vector<completion_t> *out_completions, expand_flags_t flags, parse_error_list_t *errors)
+expand_error_t expand_string(const wcstring &input, std::vector<completion_t> *out_completions, expand_flags_t flags, parse_error_list_t *errors)
 {
-    int res = EXPAND_OK;
+    expand_error_t res = EXPAND_OK;
 
     /* Early out. If we're not completing, and there's no magic in the input, we're done. */
     if (!(flags & EXPAND_FOR_COMPLETIONS) && expand_is_clean(input))

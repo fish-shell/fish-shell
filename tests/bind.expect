@@ -49,9 +49,8 @@ expect_prompt
 # These vi tests assume the fish_vi_key_bindings default escape timeout of
 # 10ms is in effect; not the 300ms timeout for the default-mode.
 #
-# This test is only present to make the Travis-CI framework succeed
-# consistently. It's not clear why the subsequent tests succeed without this
-# test when executed on a local machine but not in the Travis-CI framework.
+
+# Go through a prompt cycle to let fish catch up, it may be slow due to ASAN
 send "echo success: default escape timeout\r"
 expect_prompt -re {\r\nsuccess: default escape timeout\r\n} {
     puts "prime vi mode, default timeout"
@@ -60,6 +59,8 @@ expect_prompt -re {\r\nsuccess: default escape timeout\r\n} {
 }
 
 send "echo fail: default escape timeout"
+# Sleep to let fish catch up, it may be slow due to ASAN
+sleep 0.02
 send "\033"
 # Delay needed to allow fish to transition to vi "normal" mode.
 sleep 0.020

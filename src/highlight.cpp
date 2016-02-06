@@ -480,13 +480,13 @@ static bool autosuggest_parse_command(const wcstring &buff, wcstring *out_expand
 }
 
 /* We have to return an escaped string here */
-bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_directory, wcstring *out_suggestion)
+bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_directory, completion_t *out_suggestion)
 {
     if (str.empty())
         return false;
 
     ASSERT_IS_BACKGROUND_THREAD();
-
+    
     /* Parse the string */
     wcstring parsed_command;
     parse_node_t last_arg_node(token_type_invalid);
@@ -502,7 +502,7 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
 
         /* We always return true because we recognized the command. This prevents us from falling back to dumber algorithms; for example we won't suggest a non-directory for the cd command. */
         result = true;
-        out_suggestion->clear();
+        out_suggestion->completion.clear();
 
         /* Unescape the parameter */
         wcstring unescaped_dir;
@@ -520,11 +520,12 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
             wcstring escaped_suggested_path = parse_util_escape_string_with_quote(suggested_path, quote);
 
             /* Return it */
-            out_suggestion->assign(str);
-            out_suggestion->erase(last_arg_node.source_start);
-            if (quote != L'\0') out_suggestion->push_back(quote);
-            out_suggestion->append(escaped_suggested_path);
-            if (quote != L'\0') out_suggestion->push_back(quote);
+            wcstring suggestion = str;
+            suggestion.erase(last_arg_node.source_start);
+            if (quote != L'\0') suggestion.push_back(quote);
+            suggestion.append(escaped_suggested_path);
+            if (quote != L'\0') suggestion.push_back(quote);
+            *out_suggestion = completion_t(suggestion, L"", fuzzy_match_exact, COMPLETE_REPLACES_TOKEN);
         }
     }
     else

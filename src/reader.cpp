@@ -1482,10 +1482,10 @@ struct autosuggestion_context_t
             return 0;
 
         /* Try handling a special command like cd */
-        wcstring special_suggestion;
+        completion_t special_suggestion(L"");
         if (autosuggest_suggest_special(search_string, working_directory, &special_suggestion))
         {
-            this->autosuggestion = special_suggestion;
+            this->autosuggestion = special_suggestion.completion;
             return 1;
         }
 

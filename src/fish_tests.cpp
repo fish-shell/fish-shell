@@ -2301,19 +2301,19 @@ static void test_completion_insertions()
 
 static void perform_one_autosuggestion_special_test(const wcstring &command, const wcstring &wd, const wcstring &expected, long line)
 {
-    wcstring suggestion;
+    completion_t suggestion(L"");
     bool success = autosuggest_suggest_special(command, wd, &suggestion);
     if (! success)
     {
         printf("line %ld: autosuggest_suggest_special() failed for command %ls\n", line, command.c_str());
         do_test(success);
     }
-    if (suggestion != expected)
+    if (suggestion.completion != expected)
     {
         printf("line %ld: autosuggest_suggest_special() returned the wrong expected string for command %ls\n", line, command.c_str());
-        printf("  actual: %ls\n", suggestion.c_str());
+        printf("  actual: %ls\n", suggestion.completion.c_str());
         printf("expected: %ls\n", expected.c_str());
-        do_test(suggestion == expected);
+        do_test(suggestion.completion == expected);
     }
 }
 

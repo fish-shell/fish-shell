@@ -165,8 +165,6 @@ static pthread_key_t generation_count_key;
 
 static void set_command_line_and_position(editable_line_t *el, const wcstring &new_str, size_t pos);
 
-static void sort_and_prioritize(std::vector<completion_t> *comps);
-
 void editable_line_t::insert_string(const wcstring &str, size_t start, size_t len)
 {
     // Clamp the range to something valid
@@ -1509,7 +1507,7 @@ struct autosuggestion_context_t
         /* Try normal completions */
         std::vector<completion_t> completions;
         complete(search_string, completions, COMPLETION_REQUEST_AUTOSUGGESTION);
-        sort_and_prioritize(&completions);
+        completions_sort_and_prioritize(&completions);
         if (! completions.empty())
         {
             const completion_t &comp = completions.at(0);
@@ -1683,23 +1681,6 @@ static bool reader_can_replace(const wcstring &in, int flags)
     return true;
 }
 
-/* Compare two completions, ordering completions with better match types first */
-bool compare_completions_by_match_type(const completion_t &a, const completion_t &b)
-{
-    /* Compare match types, unless both completions are prefix (#923) in which case we always want to compare them alphabetically */
-    if (a.match.type != fuzzy_match_prefix || b.match.type != fuzzy_match_prefix)
-    {
-        int match_compare = a.match.compare(b.match);
-        if (match_compare != 0)
-        {
-            return match_compare < 0;
-        }
-    }
-
-    /* Compare using file comparison */
-    return wcsfilecmp(a.completion.c_str(), b.completion.c_str()) < 0;
-}
-
 /* Determine the best match type for a set of completions */
 static fuzzy_match_type_t get_best_match_type(const std::vector<completion_t> &comp)
 {
@@ -1714,30 +1695,6 @@ static fuzzy_match_type_t get_best_match_type(const std::vector<completion_t> &c
         best_type = fuzzy_match_prefix;
     }
     return best_type;
-}
-
-
-/** Sorts and remove any duplicate completions in the completion list, then puts them in priority order. */
-static void sort_and_prioritize(std::vector<completion_t> *comps)
-{
-    fuzzy_match_type_t best_type = get_best_match_type(*comps);
-    
-    /* Throw out completions whose match types are less suitable than the best. */
-    size_t i = comps->size();
-    while (i--)
-    {
-        if (comps->at(i).match.type > best_type)
-        {
-            comps->erase(comps->begin() + i);
-        }
-    }
-    
-    /* Remove duplicates */
-    sort(comps->begin(), comps->end(), completion_t::is_naturally_less_than);
-    comps->erase(std::unique(comps->begin(), comps->end(), completion_t::is_alphabetically_equal_to), comps->end());
-
-    /* Sort the remainder by match type. They're already sorted alphabetically */
-    stable_sort(comps->begin(), comps->end(), compare_completions_by_match_type);
 }
 
 /**
@@ -3370,7 +3327,7 @@ const wchar_t *reader_readline(int nchars)
                     data->complete_func(buffcpy, comp, COMPLETION_REQUEST_DEFAULT | COMPLETION_REQUEST_DESCRIPTIONS | COMPLETION_REQUEST_FUZZY_MATCH);
 
                     /* Munge our completions */
-                    sort_and_prioritize(&comp);
+                    completions_sort_and_prioritize(&comp);
 
                     /* Record our cycle_command_line */
                     data->cycle_command_line = el->text;

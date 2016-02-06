@@ -299,6 +299,44 @@ void completion_t::prepend_token_prefix(const wcstring &prefix)
     }
 }
 
+
+static bool compare_completions_by_match_type(const completion_t &a, const completion_t &b)
+{
+    return a.match.type < b.match.type;
+}
+
+void completions_sort_and_prioritize(std::vector<completion_t> *comps)
+{
+    /* Find the best match type */
+    fuzzy_match_type_t best_type = fuzzy_match_none;
+    for (size_t i=0; i < comps->size(); i++)
+    {
+        best_type = std::min(best_type, comps->at(i).match.type);
+    }
+    /* If the best type is an exact match, reduce it to prefix match. Otherwise a tab completion will only show one match if it matches a file exactly. (see issue #959) */
+    if (best_type == fuzzy_match_exact)
+    {
+        best_type = fuzzy_match_prefix;
+    }
+    
+    /* Throw out completions whose match types are less suitable than the best. */
+    size_t i = comps->size();
+    while (i--)
+    {
+        if (comps->at(i).match.type > best_type)
+        {
+            comps->erase(comps->begin() + i);
+        }
+    }
+    
+    /* Remove duplicates */
+    sort(comps->begin(), comps->end(), completion_t::is_naturally_less_than);
+    comps->erase(std::unique(comps->begin(), comps->end(), completion_t::is_alphabetically_equal_to), comps->end());
+    
+    /* Sort the remainder by match type. They're already sorted alphabetically */
+    stable_sort(comps->begin(), comps->end(), compare_completions_by_match_type);
+}
+
 /** Class representing an attempt to compute completions */
 class completer_t
 {

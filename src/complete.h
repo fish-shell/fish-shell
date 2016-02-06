@@ -125,6 +125,9 @@ public:
     void prepend_token_prefix(const wcstring &prefix);
 };
 
+/** Sorts and remove any duplicate completions in the completion list, then puts them in priority order. */
+void completions_sort_and_prioritize(std::vector<completion_t> *comps);
+
 enum
 {
     COMPLETION_REQUEST_DEFAULT = 0,

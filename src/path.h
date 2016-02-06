@@ -96,4 +96,7 @@ bool path_is_valid(const wcstring &path, const wcstring &working_directory);
 /** Returns whether the two paths refer to the same file */
 bool paths_are_same_file(const wcstring &path1, const wcstring &path2);
 
+/* If the given path looks like it's relative to the working directory, then prepend that working directory. This operates on unescaped paths only (so a ~ means a literal ~) */
+wcstring path_apply_working_directory(const wcstring &path, const wcstring &working_directory);
+
 #endif

@@ -240,6 +240,54 @@ bool path_can_be_implicit_cd(const wcstring &path, wcstring *out_path, const wch
     return result;
 }
 
+/* If the given path looks like it's relative to the working directory, then prepend that working directory. This operates on unescaped paths only (so a ~ means a literal ~) */
+wcstring path_apply_working_directory(const wcstring &path, const wcstring &working_directory)
+{
+    if (path.empty() || working_directory.empty())
+        return path;
+    
+    /* We're going to make sure that if we want to prepend the wd, that the string has no leading / */
+    bool prepend_wd;
+    switch (path.at(0))
+    {
+        case L'/':
+        case HOME_DIRECTORY:
+            prepend_wd = false;
+            break;
+        default:
+            prepend_wd = true;
+            break;
+    }
+    
+    if (! prepend_wd)
+    {
+        /* No need to prepend the wd, so just return the path we were given */
+        return path;
+    }
+    else
+    {
+        /* Remove up to one ./ */
+        wcstring path_component = path;
+        if (string_prefixes_string(L"./", path_component))
+        {
+            path_component.erase(0, 2);
+        }
+        
+        /* Removing leading /s */
+        while (string_prefixes_string(L"/", path_component))
+        {
+            path_component.erase(0, 1);
+        }
+        
+        /* Construct and return a new path */
+        wcstring new_path = working_directory;
+        append_path_component(new_path, path_component);
+        return new_path;
+    }
+}
+
+
+
 static wcstring path_create_config()
 {
     bool done = false;

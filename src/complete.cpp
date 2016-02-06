@@ -362,7 +362,9 @@ public:
                         const wcstring &str,
                         bool use_switches);
 
-    void complete_param_expand(const wcstring &str, bool do_file, bool directories_only = false);
+    void complete_param_expand(const wcstring &str, bool do_file, bool handle_as_special_cd = false);
+    
+    void complete_special_cd(const wcstring &str);
 
     void complete_cmd(const wcstring &str,
                       bool use_function,
@@ -1335,17 +1337,19 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
 }
 
 /**
-   Perform file completion on the specified string
+   Perform generic (not command-specific) expansions on the specified string
 */
-void completer_t::complete_param_expand(const wcstring &str, bool do_file, bool directories_only)
+void completer_t::complete_param_expand(const wcstring &str, bool do_file, bool handle_as_special_cd)
 {
     expand_flags_t flags = EXPAND_SKIP_CMDSUBST | EXPAND_FOR_COMPLETIONS | this->expand_flags();
 
     if (! do_file)
         flags |= EXPAND_SKIP_WILDCARDS;
     
-    if (directories_only && do_file)
-        flags |= DIRECTORIES_ONLY;
+    if (handle_as_special_cd && do_file)
+    {
+        flags |= DIRECTORIES_ONLY | EXPAND_SPECIAL_CD;
+    }
 
     /* Squelch file descriptions per issue 254 */
     if (this->type() == COMPLETE_AUTOSUGGEST || do_file)
@@ -1767,13 +1771,14 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
                     in_redirection = (redirection != NULL);
                 }
                 
-                bool do_file = false, directories_only = false;
+                bool do_file = false, handle_as_special_cd = false;
                 if (in_redirection)
                 {
                     do_file = true;
                 }
                 else
                 {
+                    /* Try completing as an argument */
                     wcstring current_command_unescape, previous_argument_unescape, current_argument_unescape;
                     if (unescape_string(current_command, &current_command_unescape, UNESCAPE_DEFAULT) &&
                             unescape_string(previous_argument, &previous_argument_unescape, UNESCAPE_DEFAULT) &&
@@ -1813,8 +1818,8 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
                     if (completer.empty())
                         do_file = true;
                     
-                    /* Hack. If we're cd, do directories only (#1059) */
-                    directories_only = (current_command_unescape == L"cd");
+                    /* Hack. If we're cd, handle it specially (#1059, others) */
+                    handle_as_special_cd = (current_command_unescape == L"cd");
                     
                     /* And if we're autosuggesting, and the token is empty, don't do file suggestions */
                     if ((flags & COMPLETION_REQUEST_AUTOSUGGESTION) && current_argument_unescape.empty())
@@ -1824,7 +1829,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
                 }
 
                 /* This function wants the unescaped string */
-                completer.complete_param_expand(current_token, do_file, directories_only);
+                completer.complete_param_expand(current_token, do_file, handle_as_special_cd);
             }
         }
     }

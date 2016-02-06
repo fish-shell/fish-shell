@@ -65,52 +65,6 @@ static const wchar_t * const highlight_var[] =
 
 };
 
-/* If the given path looks like it's relative to the working directory, then prepend that working directory. This operates on unescaped paths only (so a ~ means a literal ~) */
-static wcstring apply_working_directory(const wcstring &path, const wcstring &working_directory)
-{
-    if (path.empty() || working_directory.empty())
-        return path;
-
-    /* We're going to make sure that if we want to prepend the wd, that the string has no leading / */
-    bool prepend_wd;
-    switch (path.at(0))
-    {
-        case L'/':
-        case HOME_DIRECTORY:
-            prepend_wd = false;
-            break;
-        default:
-            prepend_wd = true;
-            break;
-    }
-
-    if (! prepend_wd)
-    {
-        /* No need to prepend the wd, so just return the path we were given */
-        return path;
-    }
-    else
-    {
-        /* Remove up to one ./ */
-        wcstring path_component = path;
-        if (string_prefixes_string(L"./", path_component))
-        {
-            path_component.erase(0, 2);
-        }
-
-        /* Removing leading /s */
-        while (string_prefixes_string(L"/", path_component))
-        {
-            path_component.erase(0, 1);
-        }
-
-        /* Construct and return a new path */
-        wcstring new_path = working_directory;
-        append_path_component(new_path, path_component);
-        return new_path;
-    }
-}
-
 /* Determine if the filesystem containing the given fd is case insensitive. */
 typedef std::map<wcstring, bool> case_sensitivity_cache_t;
 bool fs_is_case_insensitive(const wcstring &path, int fd, case_sensitivity_cache_t &case_sensitivity_cache)
@@ -261,7 +215,7 @@ bool is_potential_path(const wcstring &potential_path_fragment, const wcstring_l
         {
             const wcstring &wd = directories.at(wd_idx);
 
-            const wcstring abs_path = apply_working_directory(clean_potential_path_fragment, wd);
+            const wcstring abs_path = path_apply_working_directory(clean_potential_path_fragment, wd);
 
             /* Skip this if it's empty or we've already checked it */
             if (abs_path.empty() || checked_paths.count(abs_path))
@@ -399,7 +353,7 @@ static bool is_potential_cd_path(const wcstring &path, const wcstring &working_d
         while (tokenizer.next(next_path))
         {
             /* Ensure that we use the working directory for relative cdpaths like "." */
-            directories.push_back(apply_working_directory(next_path, working_directory));
+            directories.push_back(path_apply_working_directory(next_path, working_directory));
         }
     }
 
@@ -1226,7 +1180,7 @@ void highlighter_t::color_redirection(const parse_node_t &redirection_node)
             else
             {
                 /* Ok, we successfully expanded our target. Now verify that it works with this redirection. We will probably need it as a path (but not in the case of fd redirections). Note that the target is now unescaped. */
-                const wcstring target_path = apply_working_directory(target, this->working_directory);
+                const wcstring target_path = path_apply_working_directory(target, this->working_directory);
                 switch (redirect_type)
                 {
                     case TOK_REDIRECT_FD:

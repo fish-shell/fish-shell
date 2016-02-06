@@ -59,7 +59,10 @@ enum
     EXPAND_FUZZY_MATCH = 1 << 9,
     
     /** Disallow directory abbreviations like /u/l/b for /usr/local/bin. Only applicable if EXPAND_FUZZY_MATCH is set. */
-    EXPAND_NO_FUZZY_DIRECTORIES = 1 << 10
+    EXPAND_NO_FUZZY_DIRECTORIES = 1 << 10,
+    
+    /** Do expansions specifically to support cd (CDPATH, etc) */
+    EXPAND_SPECIAL_CD = 1 << 11
 };
 typedef int expand_flags_t;
 

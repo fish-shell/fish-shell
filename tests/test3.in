@@ -96,7 +96,7 @@ echo Test 7 $res
 set -e t8
 if true
 	set -lx t8 foo
-	if test (../fish -c "echo $t8") = foo
+	if test (../test/root/bin/fish -c "echo $t8") = foo
 		echo Test 8 pass
 	else
 		echo Test 8 fail
@@ -105,7 +105,7 @@ end
 
 # Test if exported variables go out of scope
 
-if test (../fish -c "echo $t8")
+if test (../test/root/bin/fish -c "echo $t8")
 	echo Test 9 fail
 else
 	echo Test 9 pass
@@ -142,7 +142,7 @@ set -ge __fish_test_universal_variables_variable_foo
 set -Ue __fish_test_universal_variables_variable_foo
 set -Ux __fish_test_universal_variables_variable_foo bar
 set __fish_test_universal_variables_variable_foo baz
-if test (/bin/sh -c 'echo $__fish_test_universal_variables_variable_foo') = baz -a (../fish -c 'echo $__fish_test_universal_variables_variable_foo') = baz
+if test (/bin/sh -c 'echo $__fish_test_universal_variables_variable_foo') = baz -a (../test/root/bin/fish -c 'echo $__fish_test_universal_variables_variable_foo') = baz
   echo Test 12 pass
 else
   echo Test 12 fail
@@ -155,7 +155,7 @@ env | __fish_sgrep __fish_test_universal_variables_variable_foo
 
 set -Ux __fish_test_universal_variables_variable_foo bar
 set -U __fish_test_universal_variables_variable_foo baz
-if test (/bin/sh -c 'echo $__fish_test_universal_variables_variable_foo') = baz -a (../fish -c 'echo $__fish_test_universal_variables_variable_foo') = baz
+if test (/bin/sh -c 'echo $__fish_test_universal_variables_variable_foo') = baz -a (../test/root/bin/fish -c 'echo $__fish_test_universal_variables_variable_foo') = baz
   echo Test 13 pass
 else
   echo Test 13 fail
@@ -163,7 +163,7 @@ end
 
 set -Ux __fish_test_universal_variables_variable_foo bar
 set -u __fish_test_universal_variables_variable_foo bar
-if test (/bin/sh -c 'echo $__fish_test_universal_variables_variable_foo') = '' -a (../fish -c 'echo $__fish_test_universal_variables_variable_foo') = bar
+if test (/bin/sh -c 'echo $__fish_test_universal_variables_variable_foo') = '' -a (../test/root/bin/fish -c 'echo $__fish_test_universal_variables_variable_foo') = bar
   echo Test 14 pass
 else
   echo Test 14 fail
@@ -171,7 +171,7 @@ end
 
 set -Ux __fish_test_universal_variables_variable_foo bar
 set -Uu __fish_test_universal_variables_variable_foo baz
-if test (/bin/sh -c 'echo $__fish_test_universal_variables_variable_foo') = '' -a (../fish -c 'echo $__fish_test_universal_variables_variable_foo') = baz
+if test (/bin/sh -c 'echo $__fish_test_universal_variables_variable_foo') = '' -a (../test/root/bin/fish -c 'echo $__fish_test_universal_variables_variable_foo') = baz
   echo Test 15 pass
 else
   echo Test 15 fail
@@ -242,35 +242,35 @@ set -eU __fish_test_universal_variables_variable_foo
 # Test behavior of universals on startup (#1526)
 echo Testing Universal Startup
 set -U testu 0
-../fish -c 'set -U testu 1'
+../test/root/bin/fish -c 'set -U testu 1'
 echo $testu
-../fish -c 'echo $testu'
+../test/root/bin/fish -c 'echo $testu'
 
-../fish -c 'set -U testu 2'
+../test/root/bin/fish -c 'set -U testu 2'
 echo $testu
-../fish -c 'echo $testu'
+../test/root/bin/fish -c 'echo $testu'
 
-../fish -c 'set -e testu';
+../test/root/bin/fish -c 'set -e testu';
 echo Missing: $testu
-../fish -c 'echo Missing: $testu'
+../test/root/bin/fish -c 'echo Missing: $testu'
 
 # test SHLVL
 # use a subshell to ensure a clean slate
-env SHLVL= ../fish -c 'echo SHLVL: $SHLVL; ../fish -c \'echo SHLVL: $SHLVL\''
+env SHLVL= ../test/root/bin/fish -c 'echo SHLVL: $SHLVL; ../test/root/bin/fish -c \'echo SHLVL: $SHLVL\''
 # exec should decrement SHLVL
-env SHLVL= ../fish -c 'echo SHLVL: $SHLVL; exec ../fish -c \'echo SHLVL: $SHLVL\''
+env SHLVL= ../test/root/bin/fish -c 'echo SHLVL: $SHLVL; exec ../test/root/bin/fish -c \'echo SHLVL: $SHLVL\''
 # garbage SHLVLs should be treated as garbage
-env SHLVL=3foo ../fish -c 'echo SHLVL: $SHLVL'
+env SHLVL=3foo ../test/root/bin/fish -c 'echo SHLVL: $SHLVL'
 # whitespace is allowed though (for bash compatibility)
-env SHLVL="3  " ../fish -c 'echo SHLVL: $SHLVL'
-env SHLVL="  3" ../fish -c 'echo SHLVL: $SHLVL'
+env SHLVL="3  " ../test/root/bin/fish -c 'echo SHLVL: $SHLVL'
+env SHLVL="  3" ../test/root/bin/fish -c 'echo SHLVL: $SHLVL'
 
 # Test transformation of inherited variables
-env DISPLAY="localhost:0.0" ../fish -c 'echo Elements in DISPLAY: (count $DISPLAY)'
+env DISPLAY="localhost:0.0" ../test/root/bin/fish -c 'echo Elements in DISPLAY: (count $DISPLAY)'
 # We can't use PATH for this because the global configuration will modify PATH
 # based on /etc/paths and /etc/paths.d.
 # Exported arrays should use record separator, with a few exceptions. So we can use an arbitrary variable for this.
-env FOO=one\x1etwo\x1ethree\x1efour ../fish -c 'echo Elements in FOO: (count $FOO)'
+env FOO=one\x1etwo\x1ethree\x1efour ../test/root/bin/fish -c 'echo Elements in FOO: (count $FOO)'
 # some must use colon separators!
 set -lx MANPATH man1 man2 man3 ; env | grep MANPATH
 

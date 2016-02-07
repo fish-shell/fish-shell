@@ -31,8 +31,7 @@ share/man/
 toc.txt
 user_doc/
 xcuserdata
-tests/*tmp.*
-tests/foo.txt
+test/
 FISH-BUILD-VERSION-FILE
 version
 messages.pot
@@ -40,4 +39,3 @@ lexicon.txt
 lexicon_filter
 lexicon.log
 DerivedData/
-

@@ -5,7 +5,7 @@ echo hi
 
 
 end | cat | cat | begin ; echo hi ; end | begin ; begin ; echo hi ; end ; end arg
-' | ../fish_indent
+' | ../test/root/bin/fish_indent
 
 echo \nTest2
 echo -n '
@@ -18,7 +18,7 @@ switch aloha
       echo hi
 
 end
-' | ../fish_indent
+' | ../test/root/bin/fish_indent
 
 echo \nTest3
 echo -n '
@@ -32,8 +32,8 @@ function hello_world
    echo hello;
 
    echo hello
-                  end 
-' | ../fish_indent
+                  end
+' | ../test/root/bin/fish_indent
 
 echo \nTest4
 echo -n '
@@ -53,7 +53,7 @@ switch foo #abc
 qqq
    case "*"
        echo sup
-end' | ../fish_indent
+end' | ../test/root/bin/fish_indent
 
 echo \nTest5
 echo -n '
@@ -65,7 +65,7 @@ switch beta
        echo delta
 end
 end
-' | ../fish_indent -i
+' | ../test/root/bin/fish_indent -i
 
 echo \nTest6
 # Test errors
@@ -75,11 +75,11 @@ echo hi
 else
 echo bye
 end; echo alpha "
-' | ../fish_indent
+' | ../test/root/bin/fish_indent
 
 echo \nTest7
 # issue 1665
 echo -n '
 if begin ; false; end; echo hi ; end
 while begin ; false; end; echo hi ; end
-' | ../fish_indent
+' | ../test/root/bin/fish_indent

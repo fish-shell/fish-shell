@@ -2,10 +2,10 @@
 # ensure that builtins that produce no output can still truncate files
 # (bug PCA almost reintroduced!)
 echo "Testing that builtins can truncate files"
-echo abc > /tmp/file_truncation_test.txt
-cat /tmp/file_truncation_test.txt
-echo -n > /tmp/file_truncation_test.txt
-cat /tmp/file_truncation_test.txt
+echo abc > ../test/temp/file_truncation_test.txt
+cat ../test/temp/file_truncation_test.txt
+echo -n > ../test/temp/file_truncation_test.txt
+cat ../test/temp/file_truncation_test.txt
 
 # Test events. 
 
@@ -120,7 +120,7 @@ diff -q (__fish_print_help psub | psub) (psub -hs banana | psub)
 
 # Test support for unbalanced blocks
 function try_unbalanced_block
-    ../fish -c "echo $argv | source " 2>&1 | grep "Missing end" 1>&2
+    ../test/root/bin/fish -c "echo $argv | source " 2>&1 | grep "Missing end" 1>&2
 end
 try_unbalanced_block 'begin'
 try_unbalanced_block 'while true'

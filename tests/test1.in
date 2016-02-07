@@ -33,12 +33,12 @@ end
 # Simple alias tests
 
 function foo
-    echo >foo.txt $argv
+    echo >../test/temp/fish_foo.txt $argv
 end
 
 foo hello
 
-cat foo.txt |read foo
+cat ../test/temp/fish_foo.txt |read foo
 
 if test $foo = hello;
   echo Test 2 pass
@@ -102,7 +102,7 @@ echo Test 5 $sta
 # Verify that we can turn stderr into stdout and then pipe it.
 # Note that the order here seems unspecified - 'errput' appears before 'output', why?
 echo Test redirections
-begin ; echo output ; echo errput 1>&2  ; end 2>&1 | tee /tmp/tee_test.txt ; cat /tmp/tee_test.txt
+begin ; echo output ; echo errput 1>&2  ; end 2>&1 | tee ../test/temp/tee_test.txt ; cat ../test/temp/tee_test.txt
 
 # Verify that we can pipe something other than stdout
 # The first line should be printed, since we output to stdout but pipe stderr to /dev/null
@@ -148,7 +148,7 @@ echo "/bin/echo pipe 12 <&12 12<&-" | source 12<&0
 
 # Make sure while loops don't run forever with no-exec (#1543)
 echo "Checking for infinite loops in no-execute"
-echo "while true; end" | ../fish --no-execute
+echo "while true; end" | ../test/root/bin/fish --no-execute
 
 # Comments allowed in between lines (#1987)
 echo before comment \

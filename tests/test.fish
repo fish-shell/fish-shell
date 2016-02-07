@@ -6,7 +6,6 @@
 cd (dirname (status -f))
 
 # Test files specified on commandline, or all *.in files
-set -q argv[1]
 if set -q argv[1]
     set files_to_test $argv.in
 else
@@ -23,7 +22,7 @@ function test_file
 
     echo -n "Testing file $file ... "
 
-    ../fish <$file >$base.tmp.out ^$base.tmp.err
+    ../test_prefix/bin/fish <$file >$base.tmp.out ^$base.tmp.err
     set -l tmp_status $status
     set -l res ok
 

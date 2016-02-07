@@ -31,6 +31,7 @@ share/man/
 toc.txt
 user_doc/
 xcuserdata
+test_prefix
 tests/*tmp.*
 tests/foo.txt
 FISH-BUILD-VERSION-FILE
@@ -40,4 +41,3 @@ lexicon.txt
 lexicon_filter
 lexicon.log
 DerivedData/
-

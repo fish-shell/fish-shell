@@ -113,7 +113,6 @@ BUILTIN_FILES := src/builtin_set.cpp src/builtin_commandline.cpp	\
 #
 # All objects that the system needs to build fish_tests
 #
-
 FISH_TESTS_OBJS := $(FISH_OBJS) obj/fish_tests.o
 
 
@@ -312,19 +311,19 @@ test_high_level_test_deps = test_fishscript test_interactive
 active_test_goals = $(filter $(test_goals),$(foreach a,$(or $(MAKECMDGOALS),$(.DEFAULT_GOAL)),$(a) $($(a)_test_deps)))
 filter_up_to = $(eval b:=1)$(foreach a,$(2),$(and $(b),$(if $(subst $(1),,$(a)),$(a),$(eval b:=))))
 
-test_low_level: fish_tests $(call filter_up_to,test_low_level,$(active_test_goals))
+test_low_level: test_prep fish_tests $(call filter_up_to,test_low_level,$(active_test_goals))
 	./fish_tests
 .PHONY: test_low_level
 
-test_high_level: test_fishscript test_interactive
+test_high_level: test_prep test_fishscript test_interactive
 .PHONY: test_high_level
 
-test_fishscript: $(PROGRAMS) $(call filter_up_to,test_fishscript,$(active_test_goals))
-	cd tests && ../fish test.fish
+test_fishscript: $(PROGRAMS) test_prep $(call filter_up_to,test_fishscript,$(active_test_goals))
+	cd tests && ../test_prefix/bin/fish test.fish
 .PHONY: test_fishscript
 
-test_interactive: $(PROGRAMS) $(call filter_up_to,test_interactive,$(active_test_goals))
-	cd tests && ../fish interactive.fish
+test_interactive: $(PROGRAMS) test_prep $(call filter_up_to,test_interactive,$(active_test_goals))
+	cd tests && ../test_prefix/bin/fish interactive.fish
 .PHONY: test_interactive
 
 #
@@ -801,27 +800,29 @@ $(PCRE2_LIB): $(PCRE2_H)
 $(PCRE2_H):
 	(cd $(PCRE2_DIR) && ./config.status)
 
+#
+# Prep the environment before running the unit tests.
+#
+test_prep:
+	rm -f test_prefix
+	ln -s $(prefix) test_prefix
+.PHONY: test_prep
 
 #
 # Build the fish_tests program.
 #
-
 fish_tests: $(FISH_TESTS_OBJS) $(EXTRA_PCRE2)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_TESTS_OBJS) $(LIBS) -o $@
-
 
 #
 # Build the fish_indent program.
 #
-
 fish_indent: $(FISH_INDENT_OBJS) $(EXTRA_PCRE2)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(FISH_INDENT_OBJS) $(LIBS) -o $@
-
 
 #
 # Neat little program to show output from terminal
 #
-
 key_reader: $(FISH_OBJS) $(EXTRA_PCRE2) obj/key_reader.o
 	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $^ $(LIBS) -o $@
 
@@ -884,7 +885,7 @@ ifdef EXTRA_PCRE2
 	$(MAKE) -C $(PCRE2_DIR) clean
 endif
 	rm -f obj/*.o *.o doc.h doc.tmp doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr
-	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
+	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt test_prefix
 	rm -f $(PROGRAMS) fish_tests key_reader
 	rm -f command_list.txt command_list_toc.txt toc.txt
 	rm -f doc_src/index.hdr doc_src/commands.hdr

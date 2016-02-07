@@ -120,7 +120,7 @@ diff -q (__fish_print_help psub | psub) (psub -hs banana | psub)
 
 # Test support for unbalanced blocks
 function try_unbalanced_block
-    ../fish -c "echo $argv | source " 2>&1 | grep "Missing end" 1>&2
+    ../test_prefix/bin/fish -c "echo $argv | source " 2>&1 | grep "Missing end" 1>&2
 end
 try_unbalanced_block 'begin'
 try_unbalanced_block 'while true'

@@ -148,7 +148,7 @@ echo "/bin/echo pipe 12 <&12 12<&-" | source 12<&0
 
 # Make sure while loops don't run forever with no-exec (#1543)
 echo "Checking for infinite loops in no-execute"
-echo "while true; end" | ../fish --no-execute
+echo "while true; end" | ../test_prefix/bin/fish --no-execute
 
 # Comments allowed in between lines (#1987)
 echo before comment \

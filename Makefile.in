@@ -23,6 +23,11 @@
 # applications, install them, and recalculate dependencies.
 #
 
+# This is the default value for SHELL but I like to be explicit about such
+# things. Especially in a project like fish where someone might otherwise
+# think fish will be used to execute make recipes.
+SHELL = /bin/sh
+
 # Used by docdir
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 
@@ -113,7 +118,6 @@ BUILTIN_FILES := src/builtin_set.cpp src/builtin_commandline.cpp	\
 #
 # All objects that the system needs to build fish_tests
 #
-
 FISH_TESTS_OBJS := $(FISH_OBJS) obj/fish_tests.o
 
 
@@ -291,12 +295,23 @@ doc/refman.pdf: doc
 	mv refman.pdf ..;
 	rm -r doc/latex;
 
+# Prep the environment for running the unit tests.
+test-prep:
+	rm -rf test_root
+ifdef DESTDIR
+	ln -s $(DESTDIR) test_root
+else
+	mkdir test_root
+endif
+.PHONY: test-prep
 
-#
-# This target runs both the low level code tests and the high level script tests.
-#
-
-test: test_low_level test_high_level
+# The test target runs both the low level code tests and the high level script
+# tests.
+test: DESTDIR = $(PWD)/test_root/
+test: prefix = .
+test: test-prep install-force test_low_level test_high_level
+	@rm -f /tmp/file_truncation_test.txt /tmp/tee_test.txt /tmp/fish_foo.txt
+	@rm -rf /tmp/is_potential_path_test
 .PHONY: test
 
 # We want the various tests to run serially so their output doesn't mix
@@ -319,12 +334,12 @@ test_low_level: fish_tests $(call filter_up_to,test_low_level,$(active_test_goal
 test_high_level: test_fishscript test_interactive
 .PHONY: test_high_level
 
-test_fishscript: $(PROGRAMS) $(call filter_up_to,test_fishscript,$(active_test_goals))
-	cd tests && ../fish test.fish
+test_fishscript: $(call filter_up_to,test_fishscript,$(active_test_goals))
+	cd tests; ../test_root/bin/fish test.fish
 .PHONY: test_fishscript
 
-test_interactive: $(PROGRAMS) $(call filter_up_to,test_interactive,$(active_test_goals))
-	cd tests && ../fish interactive.fish
+test_interactive: $(call filter_up_to,test_interactive,$(active_test_goals))
+	cd tests; ../test_root/bin/fish interactive.fish
 .PHONY: test_interactive
 
 #
@@ -582,7 +597,6 @@ check-legacy-binaries:
 	@true;
 .PHONY: check-legacy-binaries
 
-
 #
 # This check makes sure that the install-sh script is executable. The
 # darcs repo doesn't preserve the executable bit, so this needs to be
@@ -592,7 +606,6 @@ check-legacy-binaries:
 install-sh:
 	if test -x $@; then true; else chmod 755 $@; fi
 .PHONY: install-sh
-
 
 #
 # Try to install after checking for incompatible installed versions.
@@ -611,11 +624,10 @@ xcode-install:
 .PHONY: xcode-install
 
 #
-# Force installation, even in presense of incompatible previous
-# version. This may fail.
-# These 'true' lines are to prevent installs from failing for (e.g.) missing man pages.
+# Force installation, even in presense of incompatible previous version. This
+# may fail. These 'true' lines are to prevent installs from failing for (e.g.)
+# missing man pages.
 #
-
 install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(bindir)
 	for i in $(PROGRAMS); do\
@@ -781,7 +793,7 @@ uninstall-translations:
 #
 obj/%.o: src/%.cpp | obj
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-	
+
 #
 # obj directory
 #
@@ -801,27 +813,21 @@ $(PCRE2_LIB): $(PCRE2_H)
 $(PCRE2_H):
 	(cd $(PCRE2_DIR) && ./config.status)
 
-
 #
 # Build the fish_tests program.
 #
-
 fish_tests: $(FISH_TESTS_OBJS) $(EXTRA_PCRE2)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_TESTS_OBJS) $(LIBS) -o $@
-
 
 #
 # Build the fish_indent program.
 #
-
 fish_indent: $(FISH_INDENT_OBJS) $(EXTRA_PCRE2)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(FISH_INDENT_OBJS) $(LIBS) -o $@
-
 
 #
 # Neat little program to show output from terminal
 #
-
 key_reader: $(FISH_OBJS) $(EXTRA_PCRE2) obj/key_reader.o
 	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $^ $(LIBS) -o $@
 
@@ -860,41 +866,34 @@ _iwyu: clean $(PROGRAMS)
 # Cleanup targets
 #
 
-#
-# distclean should restore the tree to the state right after extracting a tarball.
-#
-
+# Restore the source tree to the state right after extracting a tarball.
 distclean: clean
-	$(MAKE) -C $(PCRE2_DIR) distclean
+	$(MAKE) -C $(PCRE2_DIR) distclean || true
 	rm -f config.status config.log config.h Makefile
 .PHONY: distclean
 
 
+# Remove everything built by the Makefile, but not things that are created by
+# the configure script.
 #
-# clean removes everything built by the makefile, but not things that
-# are created by the configure script.
-#
-
-# Don't delete the docs unless we have Doxygen installed
-# We provide pre-built docs in the tarball, and if they get
-# deleted we won't be able to regenerate them
-
+# Don't delete the docs unless we have Doxygen installed We provide pre-built
+# docs in the tarball, and if they get deleted we won't be able to regenerate
+# them.
 clean:
-ifdef EXTRA_PCRE2
-	$(MAKE) -C $(PCRE2_DIR) clean
-endif
-	rm -f obj/*.o *.o doc.h doc.tmp doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr
+	$(MAKE) -C $(PCRE2_DIR) clean || true
+	rm -f obj/*.o *.o doc.h doc.tmp
+	rm -f doc_src/*.doxygen doc_src/*.cpp doc_src/*.o doc_src/commands.hdr
 	rm -f tests/tmp.err tests/tmp.out tests/tmp.status tests/foo.txt
 	rm -f $(PROGRAMS) fish_tests key_reader
 	rm -f command_list.txt command_list_toc.txt toc.txt
 	rm -f doc_src/index.hdr doc_src/commands.hdr
 	rm -f lexicon_filter lexicon.txt lexicon.log
-	rm -f FISH-BUILD-VERSION-FILE
+	rm -f FISH-BUILD-VERSION-FILE fish.pc
 	if test "$(HAVE_DOXYGEN)" = 1; then \
 		rm -rf doc user_doc share/man; \
 	fi
 	rm -f po/*.gmo
-	rm -rf obj
+	rm -rf obj test_data test_home test_root build
 .PHONY: clean
 
 

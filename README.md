@@ -52,6 +52,32 @@ On RedHat, CentOS, or Amazon EC2:
 
     sudo yum install ncurses-devel
 
+## Testing
+
+### Travis CI Build and Test
+
+You can have the Travis continuous integration tool automatically build and test your changes. This requires you to fork the project on GitHub or have pushed your local fish-shell repository to GitHub.
+
+Login to [Travis CI](https://travis-ci.org/) with your GitHub account and enable your fish-shell clone. To reach that page click the plus-sign to the right of "My Repositories" on the main page for your account or go to your [profile page](https://travis-ci.org/profile/). After you do that every time you push changes to GitHub Travis will automatically build and test those changes. You'll receive an email when the tests are complete telling you whether or not any tests failed. This helps avoid being embarrassed by making a pull-request only to find you introduced a bug or failed to update a unit test. This also ensures that even if you can build and run fish on your system that it can also be built and run on other types of systems.
+
+You'll find the configuration used to control Travis in the `.travis.yml` file.
+
+### Running the Tests On Your Local Server
+
+You can use the build instructions above before running the tests. However, that will update your installed version of fish and is not recommended until you've run the tests. Instead install the fish binary in a temporary location for testing:
+
+    autoconf
+    ./configure --prefix=/tmp/fish.test
+    make [gmake on BSD]
+    make install
+
+Run the unit tests:
+
+    make test
+
+Note: These instructions will work on Mac OS X but do require that you've
+used something like [Homebrew](http://brew.sh/) to install autoconf and related tools.
+
 ## Runtime Dependencies
 
 fish requires a curses implementation, such as ncurses, to run.

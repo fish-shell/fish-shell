@@ -1,4 +1,4 @@
-#!/usr/local/bin/fish
+#!../test_root/bin/fish
 #
 # Fishscript tests
 
@@ -22,7 +22,7 @@ function test_file
 
     echo -n "Testing file $file ... "
 
-    ../fish <$file >$base.tmp.out ^$base.tmp.err
+    ../test_root/bin/fish <$file >$base.tmp.out ^$base.tmp.err
     set -l tmp_status $status
     set -l res ok
 

@@ -2094,18 +2094,18 @@ static void test_complete(void)
     complete_set_variable_names(&names);
 
     std::vector<completion_t> completions;
-    complete(L"$F", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"$F", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 3);
     do_test(completions.at(0).completion == L"oo1");
     do_test(completions.at(1).completion == L"oo2");
     do_test(completions.at(2).completion == L"oo3");
 
     completions.clear();
-    complete(L"$1", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"$1", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.empty());
 
     completions.clear();
-    complete(L"$1", completions, COMPLETION_REQUEST_DEFAULT | COMPLETION_REQUEST_FUZZY_MATCH);
+    complete(L"$1", &completions, COMPLETION_REQUEST_DEFAULT | COMPLETION_REQUEST_FUZZY_MATCH);
     do_test(completions.size() == 2);
     do_test(completions.at(0).completion == L"$Foo1");
     do_test(completions.at(1).completion == L"$Bar1");
@@ -2115,17 +2115,17 @@ static void test_complete(void)
     if (system("chmod 700 '/tmp/complete_test/testfile'")) err(L"chmod failed");
 
     completions.clear();
-    complete(L"echo (/tmp/complete_test/testfil", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"echo (/tmp/complete_test/testfil", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"e");
 
     completions.clear();
-    complete(L"echo (ls /tmp/complete_test/testfil", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"echo (ls /tmp/complete_test/testfil", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"e");
 
     completions.clear();
-    complete(L"echo (command ls /tmp/complete_test/testfil", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"echo (command ls /tmp/complete_test/testfil", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"e");
 
@@ -2137,38 +2137,38 @@ static void test_complete(void)
 
     /* Complete a function name */
     completions.clear();
-    complete(L"echo (scuttlebut", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"echo (scuttlebut", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"t");
 
     /* But not with the command prefix */
     completions.clear();
-    complete(L"echo (command scuttlebut", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"echo (command scuttlebut", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 0);
 
     /* Not with the builtin prefix */
     completions.clear();
-    complete(L"echo (builtin scuttlebut", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"echo (builtin scuttlebut", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 0);
 
     /* Not after a redirection */
     completions.clear();
-    complete(L"echo hi > scuttlebut", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"echo hi > scuttlebut", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 0);
 
     /* Trailing spaces (#1261) */
     complete_add(L"foobarbaz", false, wcstring(), option_type_args_only, NO_FILES, NULL, L"qux", NULL, COMPLETE_AUTO_SPACE);
     completions.clear();
-    complete(L"foobarbaz ", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"foobarbaz ", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"qux");
 
     /* Don't complete variable names in single quotes (#1023) */
     completions.clear();
-    complete(L"echo '$Foo", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"echo '$Foo", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.empty());
     completions.clear();
-    complete(L"echo \\$Foo", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"echo \\$Foo", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.empty());
 
     /* File completions */
@@ -2179,54 +2179,54 @@ static void test_complete(void)
         exit(-1);
     }
     if (chdir("/tmp/complete_test/")) err(L"chdir failed");
-    complete(L"cat te", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"cat te", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
     completions.clear();
-    complete(L"something --abc=te", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"something --abc=te", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
     completions.clear();
-    complete(L"something -abc=te", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"something -abc=te", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
     completions.clear();
-    complete(L"something abc=te", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"something abc=te", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
     completions.clear();
-    complete(L"something abc=stfile", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"something abc=stfile", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 0);
     completions.clear();
-    complete(L"something abc=stfile", completions, COMPLETION_REQUEST_FUZZY_MATCH);
+    complete(L"something abc=stfile", &completions, COMPLETION_REQUEST_FUZZY_MATCH);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"abc=testfile");
     completions.clear();
 
-    complete(L"cat /tmp/complete_test/te", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"cat /tmp/complete_test/te", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
     completions.clear();
-    complete(L"echo sup > /tmp/complete_test/te", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"echo sup > /tmp/complete_test/te", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
     completions.clear();
-    complete(L"echo sup > /tmp/complete_test/te", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"echo sup > /tmp/complete_test/te", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
     completions.clear();
 
     // Zero escapes can cause problems. See #1631
-    complete(L"cat foo\\0", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"cat foo\\0", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.empty());
     completions.clear();
-    complete(L"cat foo\\0bar", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"cat foo\\0bar", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.empty());
     completions.clear();
-    complete(L"cat \\0", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"cat \\0", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.empty());
     completions.clear();
-    complete(L"cat te\\0", completions, COMPLETION_REQUEST_DEFAULT);
+    complete(L"cat te\\0", &completions, COMPLETION_REQUEST_DEFAULT);
     do_test(completions.empty());
     completions.clear();
 
@@ -2404,7 +2404,7 @@ static void test_autosuggest_suggest_special()
 static void perform_one_autosuggestion_should_ignore_test(const wcstring &command, const wcstring &wd, long line)
 {
     completion_list_t comps;
-    complete(command, comps, COMPLETION_REQUEST_AUTOSUGGESTION);
+    complete(command, &comps, COMPLETION_REQUEST_AUTOSUGGESTION);
     do_test(comps.empty());
     if (! comps.empty())
     {
@@ -2473,7 +2473,7 @@ void perf_complete()
         str[0]=c;
         reader_set_buffer(str, 0);
 
-        complete(str, out, COMPLETION_REQUEST_DEFAULT);
+        complete(str, &out, COMPLETION_REQUEST_DEFAULT);
 
         matches += out.size();
         out.clear();
@@ -2493,7 +2493,7 @@ void perf_complete()
 
         reader_set_buffer(str, 0);
 
-        complete(str, out, COMPLETION_REQUEST_DEFAULT);
+        complete(str, &out, COMPLETION_REQUEST_DEFAULT);
 
         matches += out.size();
         out.clear();

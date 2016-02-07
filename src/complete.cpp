@@ -1631,7 +1631,7 @@ bool completer_t::try_complete_user(const wcstring &str)
     return res;
 }
 
-void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps, completion_request_flags_t flags)
+void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_comps, completion_request_flags_t flags)
 {
     /* Determine the innermost subcommand */
     const wchar_t *cmdsubst_begin, *cmdsubst_end;
@@ -1872,7 +1872,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> &comps
         }
     }
 
-    comps = completer.get_completions();
+    *out_comps = completer.get_completions();
 }
 
 

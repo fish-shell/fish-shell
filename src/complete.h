@@ -219,7 +219,7 @@ void complete_remove_all(const wcstring &cmd, bool cmd_is_path);
 /** Find all completions of the command cmd, insert them into out.
  */
 void complete(const wcstring &cmd,
-              std::vector<completion_t> &comp,
+              std::vector<completion_t> *out_comps,
               completion_request_flags_t flags);
 
 /**

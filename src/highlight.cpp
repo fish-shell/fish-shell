@@ -26,6 +26,7 @@
 #include "env.h"
 #include "expand.h"
 #include "common.h"
+#include "complete.h"
 #include "output.h"
 #include "wildcard.h"
 #include "path.h"
@@ -496,6 +497,33 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
     bool result = false;
     if (parsed_command == L"cd" && last_arg_node.type == symbol_argument && last_arg_node.has_source())
     {
+
+        /* We always return true because we recognized the command. This prevents us from falling back to dumber algorithms; for example we won't suggest a non-directory for the cd command. */
+        result = true;
+#if 0
+        std::vector<completion_t> comps;
+        complete(str, &comps, COMPLETION_REQUEST_AUTOSUGGESTION);
+        if (! comps.empty())
+        {
+            *out_suggestion = comps.at(0);
+        }
+        
+        // Hackish to make tests pass
+        if (!(out_suggestion->flags & COMPLETE_REPLACES_TOKEN))
+        {
+            out_suggestion->completion.insert(0, str);
+            out_suggestion->flags |= COMPLETE_REPLACES_TOKEN;
+            
+            wcstring escaped_dir = last_arg_node.get_source(str);
+            wchar_t quote = L'\0';
+            parse_util_get_parameter_info(escaped_dir, 0, &quote, NULL, NULL);
+            if (quote != L'\0') out_suggestion->completion.push_back(quote);
+        }
+        
+        return result;
+#endif
+        
+        
         /* We can possibly handle this specially */
         const wcstring escaped_dir = last_arg_node.get_source(str);
         wcstring suggested_path;

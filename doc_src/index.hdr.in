@@ -413,8 +413,19 @@ Examples:
 
 - `**` matches any files and directories in the current directory and all of its subdirectories.
 
-Note that if no matches are found for a specific wildcard, it will expand into zero arguments, i.e. to nothing. If none of the wildcarded arguments sent to a command result in any matches, the command will not be executed. If this happens when using the shell interactively, a warning will also be printed.
+Note that for most commands, if any wildcard fails to expand, the command is not executed, <a href='#variables-status'>`$status`</a> is set to nonzero, and a warning is printed. This behavior is consistent with setting `shopt -s failglob` in bash. There are exactly 3 exceptions, namely <a href="commands.html#set">`set`</a>, <a href="commands.html#count">`count`</a> and <a href="commands.html#for">`for`</a>. Their globs are permitted to expand to zero arguments, as with `shopt -s nullglob` in bash.
 
+Examples:
+\fish
+ls *.foo
+# Lists the .foo files, or warns if there aren't any.
+
+set foos *.foo
+if test (count $foos) -ge 1
+    ls $foos
+end
+# Lists the .foo files, if any.
+\endfish
 
 \subsection expand-command-substitution Command substitution
 

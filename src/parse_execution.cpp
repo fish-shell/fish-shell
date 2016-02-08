@@ -391,7 +391,7 @@ parse_execution_result_t parse_execution_context_t::run_function_statement(const
     
     /* Get arguments */
     wcstring_list_t argument_list;
-    parse_execution_result_t result = this->determine_arguments(header, &argument_list);
+    parse_execution_result_t result = this->determine_arguments(header, &argument_list, failglob);
 
     if (result == parse_execution_success)
     {
@@ -484,7 +484,7 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(const pars
 
     /* Get the contents to iterate over. */
     wcstring_list_t argument_sequence;
-    parse_execution_result_t ret = this->determine_arguments(header, &argument_sequence);
+    parse_execution_result_t ret = this->determine_arguments(header, &argument_sequence, nullglob);
     if (ret != parse_execution_success)
     {
         return ret;
@@ -611,7 +611,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
 
             /* Expand arguments. A case item list may have a wildcard that fails to expand to anything. We also report case errors, but don't stop execution; i.e. a case item that contains an unexpandable process will report and then fail to match. */
             wcstring_list_t case_args;
-            parse_execution_result_t case_result = this->determine_arguments(arg_list, &case_args);
+            parse_execution_result_t case_result = this->determine_arguments(arg_list, &case_args, failglob);
             if (case_result == parse_execution_success)
             {
                 for (size_t i=0; i < case_args.size(); i++)
@@ -762,34 +762,7 @@ parse_execution_result_t parse_execution_context_t::report_errors(const parse_er
 parse_execution_result_t parse_execution_context_t::report_unmatched_wildcard_error(const parse_node_t &unmatched_wildcard)
 {
     proc_set_last_status(STATUS_UNMATCHED_WILDCARD);
-    // unmatched wildcards are only reported in interactive use because scripts have legitimate reasons
-    // to want to use wildcards without knowing whether they expand to anything.
-    if (get_is_interactive())
-    {
-        // Check if we're running code that was typed at the commandline.
-        // We can't just use `is_block` or the eval level, because `begin; echo *.unmatched; end` would not report
-        // the error even though it's run interactively.
-        // But any non-interactive use must have at least one function / event handler / source on the stack.
-        bool interactive = true;
-        for (size_t i = 0, count = parser->block_count(); i < count; ++i)
-        {
-            switch (parser->block_at_index(i)->type())
-            {
-                case FUNCTION_CALL:
-                case FUNCTION_CALL_NO_SHADOW:
-                case EVENT:
-                case SOURCE:
-                    interactive = false;
-                    break;
-                default:
-                    break;
-            }
-        }
-        if (interactive)
-        {
-            report_error(unmatched_wildcard, WILDCARD_ERR_MSG, get_source(unmatched_wildcard).c_str());
-        }
-    }
+    report_error(unmatched_wildcard, WILDCARD_ERR_MSG, get_source(unmatched_wildcard).c_str());
     return parse_execution_errored;
 }
 
@@ -865,7 +838,7 @@ parse_execution_result_t parse_execution_context_t::handle_command_not_found(con
 
         wcstring_list_t event_args;
         {
-            parse_execution_result_t arg_result = this->determine_arguments(statement_node, &event_args);
+            parse_execution_result_t arg_result = this->determine_arguments(statement_node, &event_args, failglob);
 
             if (arg_result != parse_execution_success)
             {
@@ -964,8 +937,11 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(job_t
     }
     else
     {
+        const globspec_t glob_behavior = (cmd == L"set" || cmd == L"count")
+            ? nullglob
+            : failglob;
         /* Form the list of arguments. The command is the first argument. TODO: count hack, where we treat 'count --help' as different from 'count $foo' that expands to 'count --help'. fish 1.x never successfully did this, but it tried to! */
-        parse_execution_result_t arg_result = this->determine_arguments(statement, &argument_list);
+        parse_execution_result_t arg_result = this->determine_arguments(statement, &argument_list, glob_behavior);
         if (arg_result != parse_execution_success)
         {
             return arg_result;
@@ -992,11 +968,8 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(job_t
 }
 
 /* Determine the list of arguments, expanding stuff. Reports any errors caused by expansion. If we have a wildcard that could not be expanded, report the error and continue. */
-parse_execution_result_t parse_execution_context_t::determine_arguments(const parse_node_t &parent, wcstring_list_t *out_arguments)
+parse_execution_result_t parse_execution_context_t::determine_arguments(const parse_node_t &parent, wcstring_list_t *out_arguments, globspec_t glob_behavior)
 {
-    /* The ultimate result */
-    enum parse_execution_result_t result = parse_execution_success;
-
     /* Get all argument nodes underneath the statement. We guess we'll have that many arguments (but may have more or fewer, if there are wildcards involved) */
     const parse_node_tree_t::parse_node_list_t argument_nodes = tree.find_nodes(parent, symbol_argument);
     out_arguments->reserve(out_arguments->size() + argument_nodes.size());
@@ -1018,16 +991,18 @@ parse_execution_result_t parse_execution_context_t::determine_arguments(const pa
             case EXPAND_ERROR:
             {
                 this->report_errors(errors);
-                result = parse_execution_errored;
+                return parse_execution_errored;
                 break;
             }
 
             case EXPAND_WILDCARD_NO_MATCH:
             {
-                // report the unmatched wildcard error but don't stop processing.
-                // this will only print an error in interactive mode, though it does set the
-                // process status (similar to a command substitution failing)
-                report_unmatched_wildcard_error(arg_node);
+                if (glob_behavior == failglob)
+                {
+                    // report the unmatched wildcard error and stop processing
+                    report_unmatched_wildcard_error(arg_node);
+                    return parse_execution_errored;
+                }
                 break;
             }
 
@@ -1045,7 +1020,7 @@ parse_execution_result_t parse_execution_context_t::determine_arguments(const pa
         }
     }
 
-    return result;
+    return parse_execution_success;
 }
 
 bool parse_execution_context_t::determine_io_chain(const parse_node_t &statement_node, io_chain_t *out_chain)

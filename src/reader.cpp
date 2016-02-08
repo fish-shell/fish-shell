@@ -1481,7 +1481,7 @@ struct autosuggestion_context_t
 
         /* Try handling a special command like cd */
         completion_t special_suggestion(L"");
-        if (autosuggest_suggest_special(search_string, working_directory, &special_suggestion))
+        if (autosuggest_suggest_special(search_string, this->vars, &special_suggestion))
         {
             this->autosuggestion = special_suggestion.completion;
             return 1;
@@ -1506,7 +1506,7 @@ struct autosuggestion_context_t
 
         /* Try normal completions */
         std::vector<completion_t> completions;
-        complete(search_string, &completions, COMPLETION_REQUEST_AUTOSUGGESTION);
+        complete(search_string, &completions, COMPLETION_REQUEST_AUTOSUGGESTION, vars);
         completions_sort_and_prioritize(&completions);
         if (! completions.empty())
         {
@@ -3324,7 +3324,8 @@ const wchar_t *reader_readline(int nchars)
                     const wcstring buffcpy = wcstring(cmdsub_begin, token_end);
 
                     //fprintf(stderr, "Complete (%ls)\n", buffcpy.c_str());
-                    data->complete_func(buffcpy, &comp, COMPLETION_REQUEST_DEFAULT | COMPLETION_REQUEST_DESCRIPTIONS | COMPLETION_REQUEST_FUZZY_MATCH);
+                    complete_flags_t complete_flags = COMPLETION_REQUEST_DEFAULT | COMPLETION_REQUEST_DESCRIPTIONS | COMPLETION_REQUEST_FUZZY_MATCH;
+                    data->complete_func(buffcpy, &comp, complete_flags, env_vars_snapshot_t::current());
 
                     /* Munge our completions */
                     completions_sort_and_prioritize(&comp);

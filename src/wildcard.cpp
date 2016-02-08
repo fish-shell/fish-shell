@@ -644,7 +644,10 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath,
 
 class wildcard_expander_t
 {
-    /* The original string we are expanding */
+    /* Prefix, i.e. effective working directory */
+    const wcstring prefix;
+    
+    /* The original base we are expanding */
     const wcstring original_base;
     
     /* Original wildcard we are expanding. */
@@ -736,15 +739,18 @@ class wildcard_expander_t
         }
     }
     
-    /* Helper to resolve an empty base directory */
-    static DIR *open_dir(const wcstring &base_dir)
+    /* Helper to resolve using our prefix */
+    DIR *open_dir(const wcstring &base_dir) const
     {
-        return wopendir(base_dir.empty() ? L"." : base_dir);
+        wcstring path = this->prefix;
+        append_path_component(path, base_dir);
+        return wopendir(path);
     }
     
 public:
     
-    wildcard_expander_t(const wcstring &orig_base, const wchar_t *orig_wc, expand_flags_t f, std::vector<completion_t> *r) :
+    wildcard_expander_t(const wcstring pref, const wcstring &orig_base, const wchar_t *orig_wc, expand_flags_t f, std::vector<completion_t> *r) :
+        prefix(pref),
         original_base(orig_base),
         original_wildcard(orig_wc),
         flags(f),
@@ -1058,7 +1064,7 @@ void wildcard_expander_t::expand(const wcstring &base_dir, const wchar_t *wc)
 }
 
 
-int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_flags_t flags, std::vector<completion_t> *output)
+int wildcard_expand_string(const wcstring &wc, const wcstring &working_directory, expand_flags_t flags, std::vector<completion_t> *output)
 {
     assert(output != NULL);
     /* Fuzzy matching only if we're doing completions */
@@ -1069,7 +1075,25 @@ int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_
         return 0;
     }
     
-    wildcard_expander_t expander(base_dir, wc.c_str(), flags, output);
+    /* Compute the prefix and base dir. The prefix is what we prepend for filesystem operations (i.e. the working directory), the base_dir is the part of the wildcard consumed thus far, which we also have to append. The difference is that the base_dir is returned as part of the expansion, and the prefix is not.
+     
+     Check for a leading slash. If we find one, we have an absolute path: the prefix is empty, the base dir is /, and the wildcard is the remainder. If we don't find one, the prefix is the working directory, there's base dir is empty.
+     */
+    wcstring prefix, base_dir, effective_wc;
+    if (string_prefixes_string(L"/", wc))
+    {
+        prefix = L"";
+        base_dir = L"/";
+        effective_wc = wc.substr(1);
+    }
+    else
+    {
+        prefix = working_directory;
+        base_dir = L"";
+        effective_wc = wc;
+    }
+    
+    wildcard_expander_t expander(prefix, base_dir, effective_wc.c_str(), flags, output);
     expander.expand(base_dir, wc.c_str());
     return expander.status_code();
 }

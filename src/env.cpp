@@ -1443,3 +1443,5 @@ env_var_t env_vars_snapshot_t::get(const wcstring &key) const
 }
 
 const wchar_t * const env_vars_snapshot_t::highlighting_keys[] = {L"PATH", L"CDPATH", L"fish_function_path", NULL};
+
+const wchar_t * const env_vars_snapshot_t::completing_keys[] = {L"PATH", L"CDPATH", NULL};

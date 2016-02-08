@@ -116,7 +116,7 @@ bool autosuggest_validate_from_history(const history_item_t &item, file_detectio
 /** Given the command line contents 'str', return via reference a suggestion by specially recognizing the command. The suggestion is escaped. Returns true if we recognized the command (even if we couldn't think of a suggestion for it).
 */
 class completion_t;
-bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_directory, completion_t *out_suggestion);
+bool autosuggest_suggest_special(const wcstring &str, const env_vars_snapshot_t &vars, completion_t *out_suggestion);
 
 /* Tests whether the specified string cpath is the prefix of anything we could cd to. directories is a list of possible parent directories (typically either the working directory, or the cdpath). This does I/O!
 

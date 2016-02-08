@@ -58,14 +58,15 @@ enum
   wildcard_expand will continue the matching process.
 
   \param wc The wildcard string
-  \param base_dir The base directory of the filesystem to perform the match against
+  \param working_directory The working directory
   \param flags flags for the search. Can be any combination of EXPAND_FOR_COMPLETIONS and EXECUTABLES_ONLY
   \param out The list in which to put the output
 
   \return 1 if matches where found, 0 otherwise. Return -1 on abort (I.e. ^C was pressed).
 
 */
-int wildcard_expand_string(const wcstring &wc, const wcstring &base_dir, expand_flags_t flags, std::vector<completion_t> *out);
+int wildcard_expand_string(const wcstring &wc, const wcstring &working_directory, expand_flags_t flags, std::vector<completion_t> *out);
+
 /**
    Test whether the given wildcard matches the string. Does not perform any I/O.
 

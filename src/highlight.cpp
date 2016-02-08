@@ -481,7 +481,7 @@ static bool autosuggest_parse_command(const wcstring &buff, wcstring *out_expand
 }
 
 /* We have to return an escaped string here */
-bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_directory, completion_t *out_suggestion)
+bool autosuggest_suggest_special(const wcstring &str, const env_vars_snapshot_t &vars, completion_t *out_suggestion)
 {
     if (str.empty())
         return false;
@@ -500,29 +500,31 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
 
         /* We always return true because we recognized the command. This prevents us from falling back to dumber algorithms; for example we won't suggest a non-directory for the cd command. */
         result = true;
-#if 0
+#if 1
         std::vector<completion_t> comps;
-        complete(str, &comps, COMPLETION_REQUEST_AUTOSUGGESTION);
+        complete(str, &comps, COMPLETION_REQUEST_AUTOSUGGESTION, vars);
         if (! comps.empty())
         {
             *out_suggestion = comps.at(0);
-        }
-        
-        // Hackish to make tests pass
-        if (!(out_suggestion->flags & COMPLETE_REPLACES_TOKEN))
-        {
-            out_suggestion->completion.insert(0, str);
-            out_suggestion->flags |= COMPLETE_REPLACES_TOKEN;
             
-            wcstring escaped_dir = last_arg_node.get_source(str);
-            wchar_t quote = L'\0';
-            parse_util_get_parameter_info(escaped_dir, 0, &quote, NULL, NULL);
-            if (quote != L'\0') out_suggestion->completion.push_back(quote);
+            // Hackish to make tests pass
+            if (!(out_suggestion->flags & COMPLETE_REPLACES_TOKEN))
+            {
+                out_suggestion->completion.insert(0, str);
+                out_suggestion->flags |= COMPLETE_REPLACES_TOKEN;
+                
+                wcstring escaped_dir = last_arg_node.get_source(str);
+                wchar_t quote = L'\0';
+                parse_util_get_parameter_info(escaped_dir, 0, &quote, NULL, NULL);
+                
+                out_suggestion->completion = parse_util_escape_string_with_quote(out_suggestion->completion, quote);
+                
+                if (quote != L'\0') out_suggestion->completion.push_back(quote);
+            }
         }
         
         return result;
 #endif
-        
         
         /* We can possibly handle this specially */
         const wcstring escaped_dir = last_arg_node.get_source(str);
@@ -542,6 +544,12 @@ bool autosuggest_suggest_special(const wcstring &str, const wcstring &working_di
 
         /* Big hack to avoid expanding a tilde inside quotes */
         path_flags_t path_flags = (quote == L'\0') ? PATH_EXPAND_TILDE : 0;
+        env_var_t working_directory = vars.get(L"PWD");
+        if (working_directory.missing_or_empty())
+        {
+            working_directory = L".";
+        }
+        
         if (unescaped && is_potential_cd_path(unescaped_dir, working_directory, path_flags, &suggested_path))
         {
             /* Note: this looks really wrong for strings that have an "unescapable" character in them, e.g. a \t, because parse_util_escape_string_with_quote will insert that character */

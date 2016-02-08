@@ -343,6 +343,7 @@ class completer_t
     const completion_request_flags_t flags;
     const wcstring initial_cmd;
     std::vector<completion_t> completions;
+    const env_vars_snapshot_t &vars; //transient, stack-allocated
 
     /** Table of completions conditions that have already been tested and the corresponding test results */
     typedef std::map<wcstring, bool> condition_cache_t;
@@ -377,9 +378,10 @@ class completer_t
 
 
 public:
-    completer_t(const wcstring &c, completion_request_flags_t f) :
+    completer_t(const wcstring &c, completion_request_flags_t f, const env_vars_snapshot_t &evs) :
         flags(f),
-        initial_cmd(c)
+        initial_cmd(c),
+        vars(evs)
     {
     }
 
@@ -879,7 +881,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
 
     std::vector<completion_t> possible_comp;
 
-    env_var_t cdpath = env_get_string(L"CDPATH");
+    env_var_t cdpath = this->vars.get(L"CDPATH");
     if (cdpath.missing_or_empty())
         cdpath = L".";
 
@@ -906,7 +908,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
         if (use_command)
         {
 
-            const env_var_t path = env_get_string(L"PATH");
+            const env_var_t path = this->vars.get(L"PATH");
             if (!path.missing())
             {
                 wcstring base_path;
@@ -1484,6 +1486,7 @@ bool completer_t::complete_variable(const wcstring &str, size_t start_offset)
         wcstring desc;
         if (this->wants_descriptions())
         {
+            // Can't use this->vars here, it could be any variable
             env_var_t value_unescaped = env_get_string(env_name);
             if (value_unescaped.missing())
                 continue;
@@ -1631,7 +1634,7 @@ bool completer_t::try_complete_user(const wcstring &str)
     return res;
 }
 
-void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_comps, completion_request_flags_t flags)
+void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_comps, completion_request_flags_t flags, const env_vars_snapshot_t &vars)
 {
     /* Determine the innermost subcommand */
     const wchar_t *cmdsubst_begin, *cmdsubst_end;
@@ -1640,7 +1643,7 @@ void complete(const wcstring &cmd_with_subcmds, std::vector<completion_t> *out_c
     const wcstring cmd = wcstring(cmdsubst_begin, cmdsubst_end - cmdsubst_begin);
 
     /* Make our completer */
-    completer_t completer(cmd, flags);
+    completer_t completer(cmd, flags, vars);
 
     wcstring current_command;
     const size_t pos = cmd.size();

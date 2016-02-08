@@ -1804,10 +1804,10 @@ else
 static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<completion_t> *out, expand_flags_t flags, parse_error_list_t *errors)
 {
     expand_error_t result = EXPAND_OK;
-    wcstring next = input;
+    wcstring path_to_expand = input;
     
-    remove_internal_separator(&next, (EXPAND_SKIP_WILDCARDS & flags) ? true : false);
-    const bool has_wildcard = wildcard_has(next, true /* internal, i.e. ANY_CHAR */);
+    remove_internal_separator(&path_to_expand, (EXPAND_SKIP_WILDCARDS & flags) ? true : false);
+    const bool has_wildcard = wildcard_has(path_to_expand, true /* internal, i.e. ANY_CHAR */);
     
     if (has_wildcard && (flags & EXECUTABLES_ONLY))
     {
@@ -1818,62 +1818,50 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
     {
         /* We either have a wildcard, or we don't have a wildcard but we're doing completion expansion (so we want to get the completion of a file path). Note that if EXPAND_SKIP_WILDCARDS is set, we stomped wildcards in remove_internal_separator above, so there actually aren't any.
          
-         So we're going to treat this input as a file path. Compute the base path. This may be literal if we start with / or ./, otherwise it may be CDPATH if the special flag is set.
+         So we're going to treat this input as a file path. Compute the "working directories", which may be CDPATH if the special flag is set.
          */
         
-        wcstring_list_t base_dirs;
-        wcstring path_remainder;
+        const wcstring working_dir = env_get_pwd_slash();
+        wcstring_list_t effective_working_dirs;
         if (! (flags & EXPAND_SPECIAL_CD))
         {
             /* Common case */
-            if (string_prefixes_string(L"/", next))
-            {
-                base_dirs.push_back(L"/");
-                path_remainder = next.substr(1);
-            }
-            else
-            {
-                base_dirs.push_back(L"");
-                path_remainder = next;
-            }
+            effective_working_dirs.push_back(working_dir);
         }
         else
         {
             /* Ignore the CDPATH if we start with ./ or / */
-            if (string_prefixes_string(L"./", next))
+            if (string_prefixes_string(L"./", path_to_expand))
             {
-                base_dirs.push_back(L"");
-                path_remainder = next;
+                effective_working_dirs.push_back(working_dir);
             }
-            else if (string_prefixes_string(L"/", next))
+            else if (string_prefixes_string(L"/", path_to_expand))
             {
-                base_dirs.push_back(L"/");
-                path_remainder = next.substr(1);
+                effective_working_dirs.push_back(working_dir);
             }
             else
             {
                 /* Get the CDPATH and cwd. Perhaps these should be passed in. */
-                const wcstring working_directory = env_get_pwd_slash();
                 env_var_t cdpath = env_get_string(L"CDPATH");
                 if (cdpath.missing_or_empty())
                     cdpath = L".";
                 
                 /* Tokenize it into directories */
                 wcstokenizer tokenizer(cdpath, ARRAY_SEP_STR);
-                wcstring next_path;
-                while (tokenizer.next(next_path))
+                wcstring next_cd_path;
+                while (tokenizer.next(next_cd_path))
                 {
                     /* Ensure that we use the working directory for relative cdpaths like "." */
-                    base_dirs.push_back(path_apply_working_directory(next_path, working_directory));
+                    effective_working_dirs.push_back(path_apply_working_directory(next_cd_path, working_dir));
                 }
             }
         }
         
         result = EXPAND_WILDCARD_NO_MATCH;
         std::vector<completion_t> expanded;
-        for (size_t base_dir_idx = 0; base_dir_idx < base_dirs.size(); base_dir_idx++)
+        for (size_t wd_idx = 0; wd_idx < effective_working_dirs.size(); wd_idx++)
         {
-            int local_wc_res = wildcard_expand_string(path_remainder, base_dirs.at(base_dir_idx), flags, &expanded);
+            int local_wc_res = wildcard_expand_string(path_to_expand, effective_working_dirs.at(wd_idx), flags, &expanded);
             if (local_wc_res > 0)
             {
                 // Something matched,so overall we matched
@@ -1894,7 +1882,7 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
         /* Can't fully justify this check. I think it's that SKIP_WILDCARDS is used when completing to mean don't do file expansions, so if we're not doing file expansions, just drop this completion on the floor. */
         if (!(flags & EXPAND_FOR_COMPLETIONS))
         {
-            append_completion(out, next);
+            append_completion(out, path_to_expand);
         }
     }
     return result;

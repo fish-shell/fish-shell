@@ -78,6 +78,15 @@ function help --description 'Show help for the fish shell'
 		return 1
 	end
 
+	# In Cygwin, start the user-specified browser using cygstart
+	if type -q cygstart
+		if test $fish_browser != "cygstart"
+			# Escaped quotes are necessary to work with spaces in the path
+			# when the command is finally eval'd.
+			set fish_browser cygstart \"$fish_browser\"
+		end
+	end
+
 	set -l fish_help_item $argv[1]
 
 	switch "$fish_help_item"
@@ -109,6 +118,11 @@ function help --description 'Show help for the fish shell'
 	if test -f $__fish_help_dir/index.html
 		# Help is installed, use it
 		set page_url file://$__fish_help_dir/$fish_help_page
+
+		# In Cygwin, we need to convert the base help dir to a Windows path before converting it to a file URL
+		if type -q cygpath
+			set page_url file://(cygpath -m $__fish_help_dir)/$fish_help_page
+		end
 	else
 		# Go to the web. Only include one dot in the version string
 		set -l version_string (echo $FISH_VERSION| cut -d . -f 1,2)

@@ -79,8 +79,12 @@ function help --description 'Show help for the fish shell'
 	end
 
 	# In Cygwin, start the user-specified browser using cygstart
-	if begin; type -q cygstart; and test $fish_browser != "cygstart"; end
-		set fish_browser cygstart \"$fish_browser\"
+	if type -q cygstart
+		if test $fish_browser != "cygstart"
+			# Escaped quotes are necessary to work with spaces in the path
+			# when the command is finally eval'd.
+			set fish_browser cygstart \"$fish_browser\"
+		end
 	end
 
 	set -l fish_help_item $argv[1]

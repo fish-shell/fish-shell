@@ -307,7 +307,7 @@ int wgetopter_t::_wgetopt_internal(int argc, wchar_t **argv, const wchar_t *opts
                exchange them so that the options come first.  */
 
             if (first_nonopt != last_nonopt && last_nonopt != woptind)
-                exchange((wchar_t **) argv);
+                exchange(argv);
             else if (last_nonopt != woptind)
                 first_nonopt = woptind;
 
@@ -330,7 +330,7 @@ int wgetopter_t::_wgetopt_internal(int argc, wchar_t **argv, const wchar_t *opts
             woptind++;
 
             if (first_nonopt != last_nonopt && last_nonopt != woptind)
-                exchange((wchar_t **) argv);
+                exchange(argv);
             else if (first_nonopt == last_nonopt)
                 first_nonopt = woptind;
             last_nonopt = argc;

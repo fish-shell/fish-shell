@@ -4,11 +4,8 @@ function export --description 'Set global variable. Alias for set -gx, made for 
         return 0
     end
     for arg in $argv
-        # Only split on the first =
-        # The literal "\n" is necessary because string doesn't interpret it without -r
-        set -l v (echo $arg | string replace "=" \n)
-        set -l c (count $v)
-        switch $c
+        set -l v (string split -m 1 "=" -- $arg)
+        switch (count $v)
             case 1
                 set -gx $v $$v
             case 2

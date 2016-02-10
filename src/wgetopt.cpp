@@ -294,7 +294,7 @@ const wchar_t * wgetopter_t::_wgetopt_initialize(const wchar_t *optstring)
    If LONG_ONLY is nonzero, '-' as well as '--' can introduce
    long-named options.  */
 
-int wgetopter_t::_wgetopt_internal(int argc, wchar_t *const *argv, const wchar_t *optstring, const struct woption *longopts, int *longind, int long_only)
+int wgetopter_t::_wgetopt_internal(int argc, wchar_t **argv, const wchar_t *optstring, const struct woption *longopts, int *longind, int long_only)
 {
     woptarg = NULL;
 

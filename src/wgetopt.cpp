@@ -280,10 +280,6 @@ const wchar_t * wgetopter_t::_wgetopt_initialize(const wchar_t *optstring)
    `flag' field is nonzero, the value of the option's `val' field
    if the `flag' field is zero.
 
-   The elements of ARGV aren't really const, because we permute them.
-   But we pretend they're const in the prototype to be compatible
-   with other systems.
-
    LONGOPTS is a vector of `struct option' terminated by an
    element containing a name which is zero.
 

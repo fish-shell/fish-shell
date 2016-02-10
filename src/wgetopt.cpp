@@ -294,7 +294,7 @@ const wchar_t * wgetopter_t::_wgetopt_initialize(const wchar_t *optstring)
    If LONG_ONLY is nonzero, '-' as well as '--' can introduce
    long-named options.  */
 
-int wgetopter_t::_wgetopt_internal(int argc, wchar_t *const *argv, const wchar_t *optstring, const struct woption *longopts, int *longind, int long_only)
+int wgetopter_t::_wgetopt_internal(int argc, wchar_t **argv, const wchar_t *optstring, const struct woption *longopts, int *longind, int long_only)
 {
     woptarg = NULL;
 
@@ -585,7 +585,7 @@ int wgetopter_t::_wgetopt_internal(int argc, wchar_t *const *argv, const wchar_t
     }
 }
 
-int wgetopter_t::wgetopt(int argc, wchar_t *const *argv, const wchar_t *optstring)
+int wgetopter_t::wgetopt(int argc, wchar_t **argv, const wchar_t *optstring)
 {
     return _wgetopt_internal(argc, argv, optstring,
                              (const struct woption *) 0,
@@ -593,12 +593,12 @@ int wgetopter_t::wgetopt(int argc, wchar_t *const *argv, const wchar_t *optstrin
                              0);
 }
 
-int wgetopter_t::wgetopt_long(int argc, wchar_t *const *argv, const wchar_t *options, const struct woption *long_options, int *opt_index)
+int wgetopter_t::wgetopt_long(int argc, wchar_t **argv, const wchar_t *options, const struct woption *long_options, int *opt_index)
 {
     return _wgetopt_internal(argc, argv, options, long_options, opt_index, 0);
 }
 
-int wgetopter_t::wgetopt_long_only(int argc, wchar_t *const *argv, const wchar_t *options, const struct woption *long_options, int *opt_index)
+int wgetopter_t::wgetopt_long_only(int argc, wchar_t **argv, const wchar_t *options, const struct woption *long_options, int *opt_index)
 {
     return _wgetopt_internal(argc, argv, options, long_options, opt_index, 1);
 }

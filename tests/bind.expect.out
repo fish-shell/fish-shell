@@ -2,12 +2,14 @@ emacs transpose words, default timeout: no delay
 emacs transpose words, default timeout: short delay
 emacs transpose words, default timeout: long delay
 prime vi mode, default timeout
+vi-mode default timeout set correctly
 vi replace line, default timeout: long delay
 vi transpose words, default timeout: short delay
 vi mode replace char, default timeout: long delay
 vi replace line, 100ms timeout: long delay
 vi replace line, 100ms timeout: short delay
 t-binding success
+default-mode custom timeout set correctly
 emacs transpose words, 100ms timeout: no delay
 emacs transpose words, 100ms timeout: short delay
 emacs transpose words, 100ms timeout: long delay

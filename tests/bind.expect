@@ -21,7 +21,7 @@ expect_prompt -re {\r\ndef abc\r\n} {
 # the words.
 send "echo ghi jkl"
 send "\033"
-sleep 0.200
+sleep 0.250
 send "t\r"
 expect_prompt -re {\r\njkl ghi\r\n} {
     puts "emacs transpose words, default timeout: short delay"
@@ -58,12 +58,20 @@ expect_prompt -re {\r\nsuccess: default escape timeout\r\n} {
     puts stderr "prime vi mode, default timeout"
 }
 
+# Verify the default timeout has been set to the expected value.
+send "echo fish_escape_delay_ms=\$fish_escape_delay_ms\r"
+expect_prompt -re {\r\nfish_escape_delay_ms=10\r\n} {
+    puts "vi-mode default timeout set correctly"
+} unmatched {
+    puts stderr "vi-mode default timeout not set correctly"
+}
+
 send "echo fail: default escape timeout"
-# Sleep to let fish catch up, it may be slow due to ASAN
-sleep 0.02
 send "\033"
-# Delay needed to allow fish to transition to vi "normal" mode.
-sleep 0.020
+# Delay needed to allow fish to transition to vi "normal" mode. The delay is
+# longer than strictly necessary to let fish catch up as it may be slow due to
+# ASAN.
+sleep 0.100
 send "ddi"
 send "echo success: default escape timeout\r"
 expect_prompt -re {\r\nsuccess: default escape timeout\r\n} {
@@ -88,7 +96,7 @@ expect_prompt -re {\r\ndef abc\r\n} {
 send "echo TEXT"
 send "\033"
 # Delay needed to allow fish to transition to vi "normal" mode.
-sleep 0.020
+sleep 0.100
 send "hhrAi\r"
 expect_prompt -re {\r\nTAXT\r\n} {
     puts "vi mode replace char, default timeout: long delay"
@@ -98,11 +106,11 @@ expect_prompt -re {\r\nTAXT\r\n} {
 
 # Verify that changing the escape timeout has an effect.
 send "set -g fish_escape_delay_ms 100\r"
-
 expect_prompt
+
 send "echo fail: lengthened escape timeout"
 send "\033"
-sleep 0.150
+sleep 0.250
 send "ddi"
 send "echo success: lengthened escape timeout\r"
 expect_prompt -re {\r\nsuccess: lengthened escape timeout\r\n} {
@@ -127,9 +135,9 @@ expect_prompt -re {\r\nfail: no normal modediinserted\r\n} {
 # Test 't' binding that contains non-zero arity function (forward-jump) followed
 # by another function (and) https://github.com/fish-shell/fish-shell/issues/2357
 send "\033"
-sleep 0.510
+sleep 0.250
 send "ddiecho TEXT\033"
-sleep 0.510
+sleep 0.250
 send "hhtTrN\r"
 expect_prompt -re {\r\nTENT\r\n} {
     puts "t-binding success"
@@ -140,9 +148,16 @@ expect_prompt -re {\r\nTENT\r\n} {
 }
 
 # Switch back to regular (emacs mode) key bindings.
-# The custom escape timeout of 100ms set earlier should still be in effect.
 send "set -g fish_key_bindings fish_default_key_bindings\r"
 expect_prompt
+
+# Verify the custom escape timeout of 100ms set earlier is still in effect.
+send "echo fish_escape_delay_ms=\$fish_escape_delay_ms\r"
+expect_prompt -re {\r\nfish_escape_delay_ms=100\r\n} {
+    puts "default-mode custom timeout set correctly"
+} unmatched {
+    puts stderr "default-mode custom timeout not set correctly"
+}
 
 # Verify the emacs transpose word (\et) behavior using various delays,
 # including none, after the escape character.
@@ -173,7 +188,7 @@ expect_prompt -re {\r\njkl ghi\r\n} {
 # occur and the "t" should become part of the text that is echoed.
 send "echo mno pqr"
 send "\033"
-sleep 0.120
+sleep 0.250
 send "t\r"
 expect_prompt -re {\r\nmno pqrt\r\n} {
     puts "emacs transpose words, 100ms timeout: long delay"

@@ -77,7 +77,9 @@ function abbr --description "Manage abbreviations"
 		contains -- $mode_arg $fish_user_abbreviations; and return 0
 		set -l key
 		set -l value
-		__fish_abbr_parse_entry $mode_arg key value
+		set -l kv (__fish_abbr_split $mode_arg)
+		set key $kv[1]
+		set value $kv[2]
 		# ensure the key contains at least one non-space character
 		if not string match -qr "\w" -- $key
 			printf ( _ "%s: abbreviation must have a non-empty key\n" ) abbr >&2
@@ -100,8 +102,7 @@ function abbr --description "Manage abbreviations"
 		return 0
 
 	case 'erase'
-		set -l key
-		__fish_abbr_parse_entry $mode_arg key
+		set -l key (__fish_abbr_split $mode_arg)[1]
 		if set -l idx (__fish_abbr_get_by_key $key)
 			set -e fish_user_abbreviations[$idx]
 			return 0
@@ -112,21 +113,20 @@ function abbr --description "Manage abbreviations"
 
 	case 'show'
 		for i in $fish_user_abbreviations
-			__fish_abbr_parse_entry $i key value
+			set -l kv (__fish_abbr_split $i)
+			set -l key $kv[1]
+			set -l value $kv[2]
 			
 			# Check to see if either key or value has a leading dash
 			# If so, we need to write --
-			set -l opt_double_dash ''
-			switch $key ; case '-*'; set opt_double_dash ' --'; end
-			switch $value ; case '-*'; set opt_double_dash ' --'; end
-			echo abbr$opt_double_dash (string escape -- $key $value)
+			string match -q -- '-*' $key $value; and set -l opt_double_dash '--'
+			echo abbr $opt_double_dash (string escape -- $key $value)
 		end
 		return 0
 
 	case 'list'
 		for i in $fish_user_abbreviations
-			set -l key
-			__fish_abbr_parse_entry $i key
+			set -l key (__fish_abbr_split $i)[1]
 			printf "%s\n" $key
 		end
 		return 0
@@ -138,42 +138,29 @@ function __fish_abbr_get_by_key
 		echo "__fish_abbr_get_by_key: expected one argument, got none" >&2
 		return 2
 	end
-	set -l count (count $fish_user_abbreviations)
-	if test $count -gt 0
-		set -l key $argv[1] # This assumes the key is valid and pre-parsed
-		for i in (seq $count)
-			set -l key_i
-			__fish_abbr_parse_entry $fish_user_abbreviations[$i] key_i
-			if test "$key" = "$key_i"
-				echo $i
-				return 0
-			end
+	# Going through all entries is still quicker than calling `seq`
+	set -l keys
+	for kv in $fish_user_abbreviations
+		if string match -qr '^[^ ]+=' -- $kv
+			# No need for bounds-checking because we already matched before
+			set keys $keys (string split "=" -m 1 -- $kv)[1]
+		else if string match -qr '^[^ ]+ .*' -- $kv
+			set keys $keys (string split " " -m 1 -- $kv)[1]
 		end
+	end
+	if set -l idx (contains -i -- $argv[1] $keys)
+		echo $idx
+		return 0
 	end
 	return 1
 end
 
-function __fish_abbr_parse_entry -S -a __input __key __value
-	if test -z "$__key"
-		set __key __
-	end
-	if test -z "$__value"
-		set __value __
-	end
-	# A "=" _before_ any space - we only read the first possible separator
-	# because the key can contain neither spaces nor "="
-	if string match -qr '^[^ ]+=' -- $__input
-		# No need for bounds-checking because we already matched before
-		set -l KV (string split "=" -m 1 -- $__input)
-		set $__key $KV[1]
-		set $__value $KV[2]
-	else if string match -qr '^[^ ]+ .*' -- $__input
-		set -l KV (string split " " -m 1 -- $__input)
-		set $__key $KV[1]
-		set $__value $KV[2]
+function __fish_abbr_split -a input
+	if string match -qr '^[^ ]+=' -- $input
+		string split "=" -m 1 -- $input
+	else if string match -qr '^[^ ]+ .*' -- $input
+		string split " " -m 1 -- $input
 	else
-		# This is needed for `erase` et al, where we want to allow passing a value
-		set $__key $__input
+		echo $input
 	end
-	return 0
 end

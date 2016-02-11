@@ -50,13 +50,17 @@ script:
   - make test SHOW_INTERACTIVE_LOG=1
 
 notifications:
+  # Some items are encrypted so that notifications from other repositories
+  # don't flood the official repositories.
   irc:
     channels:
-      - "irc.oftc.net#fish"
+        #- "irc.oftc.net#fish"
+        secure: "eRk9KGZ5+mrlD2SoI8yg2Sp8OYrh7YPyGe3WCDQUwTnNgNDII34rbM9a6UOA/l7AeWSNY8joLq5xVLCU4wpFgUcJ11SYIpMnLosZK29OW4ubDOHmdBDvJ971rLgAVG9cXngZtIxEVVxN/jnS1Qr8GKZx4DjkaTMgz1pemb4WxCc="
     template:
       - "%{repository}#%{build_number} (%{commit} on %{branch} by %{author}): %{message} Details at %{build_url}"
     use_notice: true
     skip_join: true
   webhooks:
     urls:
-      - https://webhooks.gitter.im/e/61821cec3015bf0f8bb1
+        #- https://webhooks.gitter.im/e/61821cec3015bf0f8bb1
+        secure: fPfOmxnC3MCsfR1oocVFeWLawGcRZkn+8fNHlSOeZ+SqqoZfcCHgQTvQ22TqmVl1yvkXbNlaXjo6dbVzTOAh7r7H0bRMEKBVh3dQS7wqjB1sKivpXd8PAS3BTj5MQpGeJzdHnDuwVlwDktGtfHfhGeq1Go/4IosOq8u+6RTe28g=

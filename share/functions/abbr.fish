@@ -72,6 +72,9 @@ function abbr --description "Manage abbreviations"
 
 	switch $mode
 	case 'add'
+		# Bail out early if the exact abbr is already in
+		# This depends on the separator staying the same, but that's the common case (config.fish)
+		contains -- $mode_arg $fish_user_abbreviations; and return 0
 		set -l key
 		set -l value
 		__fish_abbr_parse_entry $mode_arg key value

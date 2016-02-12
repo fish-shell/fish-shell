@@ -67,7 +67,7 @@ function __fish_print_packages
 		end
 
 		# Remove package version information from output and pipe into cache file
-		zypper --quiet --non-interactive search --type=package | tail -n +4 | sed -E 's/^. \| ((\w|[-_.])+).*/\1\t'$package'/g' > $cache_file &
+		zypper --quiet --non-interactive search --type=package | tail -n +4 | sed -r 's/^. \| ((\w|[-_.])+).*/\1\t'$package'/g' > $cache_file &
 		return
 	end
 

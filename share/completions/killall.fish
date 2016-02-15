@@ -13,7 +13,7 @@ if test (uname) != 'SunOS'
 
 	# Finds and completes all users, and their respective UID.
 	function __make_users_completions
-		set -l users (dscl . list /Users | grep -v '^_.*')
+		set -l users (__fish_print_users)
 		for user in $users
 			set -l uid (id -u $user)
 			# GNU doesn't support UID

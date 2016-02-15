@@ -758,7 +758,7 @@ parse_execution_result_t parse_execution_context_t::report_errors(const parse_er
     return parse_execution_errored;
 }
 
-/* Reoports an unmatched wildcard error and returns parse_execution_errored */
+/* Reports an unmatched wildcard error and returns parse_execution_errored */
 parse_execution_result_t parse_execution_context_t::report_unmatched_wildcard_error(const parse_node_t &unmatched_wildcard)
 {
     proc_set_last_status(STATUS_UNMATCHED_WILDCARD);
@@ -937,9 +937,7 @@ parse_execution_result_t parse_execution_context_t::populate_plain_process(job_t
     }
     else
     {
-        const globspec_t glob_behavior = (cmd == L"set" || cmd == L"count")
-            ? nullglob
-            : failglob;
+        const globspec_t glob_behavior = contains(cmd, L"set", L"count") ? nullglob : failglob;
         /* Form the list of arguments. The command is the first argument. TODO: count hack, where we treat 'count --help' as different from 'count $foo' that expands to 'count --help'. fish 1.x never successfully did this, but it tried to! */
         parse_execution_result_t arg_result = this->determine_arguments(statement, &argument_list, glob_behavior);
         if (arg_result != parse_execution_success)

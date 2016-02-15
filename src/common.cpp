@@ -549,7 +549,7 @@ bool contains_internal(const wchar_t *a, int vararg_handle, ...)
     return res;
 }
 
-/* wcstring variant of contains_internal. The first parameter is a wcstring, the rest are const wchar_t *. vararg_handle exists only to give us a POD-value to apss to va_start */
+/* wcstring variant of contains_internal. The first parameter is a wcstring, the rest are const wchar_t *. vararg_handle exists only to give us a POD-value to pass to va_start */
 __sentinel bool contains_internal(const wcstring &needle, int vararg_handle, ...)
 {
     const wchar_t *arg;

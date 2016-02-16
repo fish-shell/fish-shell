@@ -40,7 +40,7 @@ function history --description "Deletes an item from history"
 				break
 			case "-*" "--*"
 				printf ( _ "%s: invalid option -- %s\n" ) history $argv[1] >& 2
-				return 
+				return 1
 			end
 		end
 	else

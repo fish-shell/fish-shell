@@ -35,10 +35,11 @@ function history --description "Deletes an item from history"
 			case --search
 				set cmd print
 			case --merge
+				set cmd merge
 			case --
 				set -e argv[$i]
 				break
-			case "-*" "--*"
+			case -* --*
 				printf ( _ "%s: invalid option -- %s\n" ) history $argv[1] >& 2
 				return 1
 			end
@@ -54,6 +55,10 @@ function history --description "Deletes an item from history"
 	end
 
 	switch $cmd
+
+	case merge
+		builtin history --merge
+
 	case print
 		# Print matching items
 		# Note this may end up passing --search twice to the builtin,
@@ -125,9 +130,11 @@ function history --description "Deletes an item from history"
 			#Save changes after deleting item(s)
 			builtin history --save
 		end
+
 	case save
 		#Save changes to history file
 		builtin history $argv
+
 	case clear
 		# Erase the entire history
 		echo "Are you sure you want to clear history ? (y/n)"

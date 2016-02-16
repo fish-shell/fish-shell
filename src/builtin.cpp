@@ -3868,6 +3868,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     if (merge_history)
     {
         history->incorporate_external_changes();
+        return STATUS_BUILTIN_OK;
     }
 
     if (search_history)

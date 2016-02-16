@@ -35,6 +35,7 @@ function history --description "Deletes an item from history"
 			case --search
 				set cmd print
 			case --merge
+				set cmd merge
 			case --
 				set -e argv[$i]
 				break
@@ -128,6 +129,8 @@ function history --description "Deletes an item from history"
 	case save
 		#Save changes to history file
 		builtin history $argv
+	case merge
+		builtin history --merge
 	case clear
 		# Erase the entire history
 		echo "Are you sure you want to clear history ? (y/n)"

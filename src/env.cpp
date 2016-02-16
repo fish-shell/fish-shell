@@ -294,11 +294,6 @@ static void handle_locale()
         _nl_msg_cat_cntr++;
 
         fish_dcgettext("fish", "Changing language to English", LC_MESSAGES);
-
-        if (get_is_interactive())
-        {
-            debug(2, _(L"Changing language to English"));
-        }
     }
 }
 

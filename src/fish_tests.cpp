@@ -178,6 +178,17 @@ static wcstring comma_join(const wcstring_list_t &lst)
     return result;
 }
 
+/* Helper to chdir and then update $PWD */
+static int chdir_set_pwd(const char *path)
+{
+    int ret = chdir(path);
+    if (ret == 0)
+    {
+        env_set_pwd();
+    }
+    return ret;
+}
+
 #define do_test(e) do { if (! (e)) err(L"Test failed on line %lu: %s", __LINE__, #e); } while (0)
 
 #define do_test1(e, msg) do { if (! (e)) err(L"Test failed on line %lu: %ls", __LINE__, (msg)); } while (0)
@@ -1574,18 +1585,17 @@ static void test_expand()
         return;
     }
 
-    if (chdir("/tmp/fish_expand_test"))
+    if (chdir_set_pwd("/tmp/fish_expand_test"))
     {
         err(L"chdir failed");
         return;
     }
-    env_set_pwd();
 
     expand_test(L"b/xx", EXPAND_FOR_COMPLETIONS | EXPAND_FUZZY_MATCH,
                 L"bax/xxx", L"baz/xxx", wnull,
                 L"Wrong fuzzy matching 5");
 
-    if (chdir(saved_wd))
+    if (chdir_set_pwd(saved_wd))
     {
         err(L"chdir failed");
     }
@@ -2181,7 +2191,8 @@ static void test_complete(void)
         perror("getcwd");
         exit(-1);
     }
-    if (chdir("/tmp/complete_test/")) err(L"chdir failed");
+    if (chdir_set_pwd("/tmp/complete_test/")) err(L"chdir failed");
+    
     complete(L"cat te", &completions, COMPLETION_REQUEST_DEFAULT, vars);
     do_test(completions.size() == 1);
     do_test(completions.at(0).completion == L"stfile");
@@ -2233,7 +2244,7 @@ static void test_complete(void)
     do_test(completions.empty());
     completions.clear();
 
-    if (chdir(saved_wd)) err(L"chdir failed");
+    if (chdir_set_pwd(saved_wd)) err(L"chdir failed");
     if (system("rm -Rf '/tmp/complete_test/'")) err(L"rm failed");
 
     complete_set_variable_names(NULL);
@@ -2363,8 +2374,7 @@ static void test_autosuggest_suggest_special()
     if (NULL == getcwd(saved_wd, sizeof saved_wd)) err(L"getcwd failed");
     
     const wcstring wd = L"/tmp/autosuggest_test/";
-    if (wchdir(wd)) err(L"chdir failed");
-    env_set_pwd();
+    if (chdir_set_pwd(wcs2string(wd).c_str())) err(L"chdir failed");
     
     env_set(L"AUTOSUGGEST_TEST_LOC", wd.c_str(), ENV_LOCAL);
     
@@ -2424,15 +2434,11 @@ static void test_autosuggest_suggest_special()
     
     // Don't crash on ~ (2696)
     // note this was wd dependent, hence why we set it
-    if (chdir("/tmp/autosuggest_test/")) err(L"chdir failed");
-
-    env_set_pwd();
+    if (chdir_set_pwd("/tmp/autosuggest_test/")) err(L"chdir failed");
     
     if (system("mkdir -p '/tmp/autosuggest_test/~hahaha/path1/path2/'")) err(L"mkdir failed");
     perform_one_autosuggestion_cd_test(L"cd ~haha", vars, L"cd ~hahaha/path1/path2/", __LINE__);
-    if (chdir(saved_wd)) err(L"chdir failed");
-    
-    env_set_pwd();
+    if (chdir_set_pwd(saved_wd)) err(L"chdir failed");
 
     if (system("rm -Rf '/tmp/autosuggest_test/'")) err(L"rm failed");
     if (system("rm -Rf ~/test_autosuggest_suggest_special/")) err(L"rm failed");
@@ -2455,8 +2461,7 @@ static void test_autosuggest_suggest_special2()
     if (NULL == getcwd(saved_wd, sizeof saved_wd)) err(L"getcwd failed");
     
     const wcstring wd = L"/tmp/autosuggest_test/";
-    if (wchdir(wd)) err(L"chdir failed");
-    env_set_pwd();
+    if (chdir_set_pwd(wcs2string(wd).c_str())) err(L"chdir failed");
     
     env_set(L"AUTOSUGGEST_TEST_LOC", wd.c_str(), ENV_LOCAL);
     
@@ -2516,15 +2521,11 @@ static void test_autosuggest_suggest_special2()
     
     // Don't crash on ~ (2696)
     // note this was wd dependent, hence why we set it
-    if (chdir("/tmp/autosuggest_test/")) err(L"chdir failed");
-    
-    env_set_pwd();
+    if (chdir_set_pwd("/tmp/autosuggest_test/")) err(L"chdir failed");
     
     if (system("mkdir -p '/tmp/autosuggest_test/~hahaha/path1/path2/'")) err(L"mkdir failed");
     perform_one_autosuggestion_special_test(L"cd ~haha", vars, L"cd ~hahaha/path1/path2/", __LINE__);
-    if (chdir(saved_wd)) err(L"chdir failed");
-    
-    env_set_pwd();
+    if (chdir_set_pwd(saved_wd)) err(L"chdir failed");
     
     if (system("rm -Rf '/tmp/autosuggest_test/'")) err(L"rm failed");
     if (system("rm -Rf ~/test_autosuggest_suggest_special/")) err(L"rm failed");

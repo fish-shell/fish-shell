@@ -2313,45 +2313,37 @@ static void test_completion_insertions()
     TEST_1_COMPLETION(L"'foo^", L"bar", COMPLETE_REPLACES_TOKEN, false, L"bar ^");
 }
 
-static void perform_one_autosuggestion_special_test(const wcstring &command, const env_vars_snapshot_t &vars, const wcstring &expected, long line)
-{
-    completion_t suggestion(L"");
-    bool success = autosuggest_suggest_special(command, vars, &suggestion);
-    if (! success)
-    {
-        printf("line %ld: autosuggest_suggest_special() failed for command %ls\n", line, command.c_str());
-        do_test(success);
-    }
-    if (suggestion.completion != expected)
-    {
-        printf("line %ld: autosuggest_suggest_special() returned the wrong expected string for command %ls\n", line, command.c_str());
-        printf("  actual: %ls\n", suggestion.completion.c_str());
-        printf("expected: %ls\n", expected.c_str());
-        do_test(suggestion.completion == expected);
-    }
-}
-
 static void perform_one_autosuggestion_cd_test(const wcstring &command, const env_vars_snapshot_t &vars, const wcstring &expected, long line)
 {
     std::vector<completion_t> comps;
     complete(command, &comps,COMPLETION_REQUEST_AUTOSUGGESTION, vars);
     
-    if (comps.empty())
+    bool expects_error = (expected == L"<error>");
+    
+    if (comps.empty() && ! expects_error)
     {
         printf("line %ld: autosuggest_suggest_special() failed for command %ls\n", line, command.c_str());
         do_test(! comps.empty());
         return;
     }
-    
-    completions_sort_and_prioritize(&comps);
-    const completion_t &suggestion = comps.at(0);
-    
-    if (suggestion.completion != expected)
+    else if (! comps.empty() && expects_error)
     {
-        printf("line %ld: complete() for cd returned the wrong expected string for command %ls\n", line, command.c_str());
-        printf("  actual: %ls\n", suggestion.completion.c_str());
-        printf("expected: %ls\n", expected.c_str());
-        do_test(suggestion.completion == expected);
+        printf("line %ld: autosuggest_suggest_special() was expected to fail but did not, for command %ls\n", line, command.c_str());
+        do_test(comps.empty());
+    }
+    
+    if (! comps.empty())
+    {
+        completions_sort_and_prioritize(&comps);
+        const completion_t &suggestion = comps.at(0);
+        
+        if (suggestion.completion != expected)
+        {
+            printf("line %ld: complete() for cd returned the wrong expected string for command %ls\n", line, command.c_str());
+            printf("  actual: %ls\n", suggestion.completion.c_str());
+            printf("expected: %ls\n", expected.c_str());
+            do_test(suggestion.completion == expected);
+        }
     }
 }
 
@@ -2380,153 +2372,65 @@ static void test_autosuggest_suggest_special()
     
     const env_vars_snapshot_t &vars = env_vars_snapshot_t::current();
 
-    perform_one_autosuggestion_cd_test(L"cd /tmp/autosuggest_test/0", vars, L"/tmp/autosuggest_test/0foobar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"/tmp/autosuggest_test/0", vars, L"/tmp/autosuggest_test/0foobar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '/tmp/autosuggest_test/0", vars, L"cd '/tmp/autosuggest_test/0foobar/'", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 0", vars, L"cd 0foobar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"0", vars, L"cd \"0foobar/\"", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '0", vars, L"cd '0foobar/'", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd /tmp/autosuggest_test/0", vars, L"foobar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"/tmp/autosuggest_test/0", vars, L"foobar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '/tmp/autosuggest_test/0", vars, L"foobar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 0", vars, L"foobar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"0", vars, L"foobar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '0", vars, L"foobar/", __LINE__);
 
-    perform_one_autosuggestion_cd_test(L"cd /tmp/autosuggest_test/1", vars, L"cd /tmp/autosuggest_test/1foo\\ bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"/tmp/autosuggest_test/1", vars, L"cd \"/tmp/autosuggest_test/1foo bar/\"", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '/tmp/autosuggest_test/1", vars, L"cd '/tmp/autosuggest_test/1foo bar/'", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 1", vars, L"cd 1foo\\ bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"1", vars, L"cd \"1foo bar/\"", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '1", vars, L"cd '1foo bar/'", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd /tmp/autosuggest_test/1", vars, L"foo bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"/tmp/autosuggest_test/1", vars, L"foo bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '/tmp/autosuggest_test/1", vars, L"foo bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 1", vars, L"foo bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"1", vars, L"foo bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '1", vars, L"foo bar/", __LINE__);
 
-    perform_one_autosuggestion_cd_test(L"cd /tmp/autosuggest_test/2", vars, L"cd /tmp/autosuggest_test/2foo\\ \\ bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"/tmp/autosuggest_test/2", vars, L"cd \"/tmp/autosuggest_test/2foo  bar/\"", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '/tmp/autosuggest_test/2", vars, L"cd '/tmp/autosuggest_test/2foo  bar/'", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 2", vars, L"cd 2foo\\ \\ bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"2", vars, L"cd \"2foo  bar/\"", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '2", vars, L"cd '2foo  bar/'", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd /tmp/autosuggest_test/2", vars, L"foo  bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"/tmp/autosuggest_test/2", vars, L"foo  bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '/tmp/autosuggest_test/2", vars, L"foo  bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 2", vars, L"foo  bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"2", vars, L"foo  bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '2", vars, L"foo  bar/", __LINE__);
 
-    perform_one_autosuggestion_cd_test(L"cd /tmp/autosuggest_test/3", vars, L"cd /tmp/autosuggest_test/3foo\\\\bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"/tmp/autosuggest_test/3", vars, L"cd \"/tmp/autosuggest_test/3foo\\bar/\"", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '/tmp/autosuggest_test/3", vars, L"cd '/tmp/autosuggest_test/3foo\\bar/'", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 3", vars, L"cd 3foo\\\\bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"3", vars, L"cd \"3foo\\bar/\"", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '3", vars, L"cd '3foo\\bar/'", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd /tmp/autosuggest_test/3", vars, L"foo\\bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"/tmp/autosuggest_test/3", vars, L"foo\\bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '/tmp/autosuggest_test/3", vars, L"foo\\bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 3", vars, L"foo\\bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"3", vars, L"foo\\bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '3", vars, L"foo\\bar/", __LINE__);
 
-    perform_one_autosuggestion_cd_test(L"cd /tmp/autosuggest_test/4", vars, L"cd /tmp/autosuggest_test/4foo\\'bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"/tmp/autosuggest_test/4", vars, L"cd \"/tmp/autosuggest_test/4foo'bar/\"", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '/tmp/autosuggest_test/4", vars, L"cd '/tmp/autosuggest_test/4foo\\'bar/'", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 4", vars, L"cd 4foo\\'bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"4", vars, L"cd \"4foo'bar/\"", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '4", vars, L"cd '4foo\\'bar/'", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd /tmp/autosuggest_test/4", vars, L"foo'bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"/tmp/autosuggest_test/4", vars, L"foo'bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '/tmp/autosuggest_test/4", vars, L"foo'bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 4", vars, L"foo'bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"4", vars, L"foo'bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '4", vars, L"foo'bar/", __LINE__);
 
-    perform_one_autosuggestion_cd_test(L"cd /tmp/autosuggest_test/5", vars, L"cd /tmp/autosuggest_test/5foo\\\"bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"/tmp/autosuggest_test/5", vars, L"cd \"/tmp/autosuggest_test/5foo\\\"bar/\"", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '/tmp/autosuggest_test/5", vars, L"cd '/tmp/autosuggest_test/5foo\"bar/'", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd 5", vars, L"cd 5foo\\\"bar/", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd \"5", vars, L"cd \"5foo\\\"bar/\"", __LINE__);
-    perform_one_autosuggestion_cd_test(L"cd '5", vars, L"cd '5foo\"bar/'", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd /tmp/autosuggest_test/5", vars, L"foo\"bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"/tmp/autosuggest_test/5", vars, L"foo\"bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '/tmp/autosuggest_test/5", vars, L"foo\"bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd 5", vars, L"foo\"bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd \"5", vars, L"foo\"bar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '5", vars, L"foo\"bar/", __LINE__);
     
-    //perform_one_autosuggestion_cd_test(L"cd $AUTOSUGGEST_TEST_LOC/0", vars, L"cd $AUTOSUGGEST_TEST_LOC/0foobar/", __LINE__);
-
-    perform_one_autosuggestion_cd_test(L"cd ~/test_autosuggest_suggest_specia", vars, L"cd ~/test_autosuggest_suggest_special/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd $AUTOSUGGEST_TEST_LOC/0", vars, L"foobar/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd ~/test_autosuggest_suggest_specia", vars, L"l/", __LINE__);
     
-    perform_one_autosuggestion_cd_test(L"cd /tmp/autosuggest_test/start/", vars, L"cd /tmp/autosuggest_test/start/unique2/unique3/", __LINE__);
-    
+    perform_one_autosuggestion_cd_test(L"cd /tmp/autosuggest_test/start/", vars, L"unique2/unique3/", __LINE__);
 
     // A single quote should defeat tilde expansion
-    perform_one_autosuggestion_cd_test(L"cd '~/test_autosuggest_suggest_specia'", vars, L"", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd '~/test_autosuggest_suggest_specia'", vars, L"<error>", __LINE__);
     
     // Don't crash on ~ (2696)
     // note this was wd dependent, hence why we set it
     if (chdir_set_pwd("/tmp/autosuggest_test/")) err(L"chdir failed");
     
     if (system("mkdir -p '/tmp/autosuggest_test/~hahaha/path1/path2/'")) err(L"mkdir failed");
-    perform_one_autosuggestion_cd_test(L"cd ~haha", vars, L"cd ~hahaha/path1/path2/", __LINE__);
+    
+    perform_one_autosuggestion_cd_test(L"cd ~haha", vars, L"ha/path1/path2/", __LINE__);
     if (chdir_set_pwd(saved_wd)) err(L"chdir failed");
 
-    if (system("rm -Rf '/tmp/autosuggest_test/'")) err(L"rm failed");
-    if (system("rm -Rf ~/test_autosuggest_suggest_special/")) err(L"rm failed");
-}
-
-static void test_autosuggest_suggest_special2()
-{
-    if (system("mkdir -p '/tmp/autosuggest_test/0foobar'")) err(L"mkdir failed");
-    if (system("mkdir -p '/tmp/autosuggest_test/1foo bar'")) err(L"mkdir failed");
-    if (system("mkdir -p '/tmp/autosuggest_test/2foo  bar'")) err(L"mkdir failed");
-    if (system("mkdir -p '/tmp/autosuggest_test/3foo\\bar'")) err(L"mkdir failed");
-    if (system("mkdir -p /tmp/autosuggest_test/4foo\\'bar")) err(L"mkdir failed"); //a path with a single quote
-    if (system("mkdir -p /tmp/autosuggest_test/5foo\\\"bar")) err(L"mkdir failed"); //a path with a double quote
-    if (system("mkdir -p ~/test_autosuggest_suggest_special/")) err(L"mkdir failed"); //make sure tilde is handled
-    if (system("mkdir -p /tmp/autosuggest_test/start/unique2/unique3/multi4")) err(L"mkdir failed");
-    if (system("mkdir -p /tmp/autosuggest_test/start/unique2/unique3/multi42")) err(L"mkdir failed");
-    if (system("mkdir -p /tmp/autosuggest_test/start/unique2/.hiddenDir/moreStuff")) err(L"mkdir failed");
-    
-    char saved_wd[PATH_MAX] = {};
-    if (NULL == getcwd(saved_wd, sizeof saved_wd)) err(L"getcwd failed");
-    
-    const wcstring wd = L"/tmp/autosuggest_test/";
-    if (chdir_set_pwd(wcs2string(wd).c_str())) err(L"chdir failed");
-    
-    env_set(L"AUTOSUGGEST_TEST_LOC", wd.c_str(), ENV_LOCAL);
-    
-    const env_vars_snapshot_t &vars = env_vars_snapshot_t::current();
-    
-    perform_one_autosuggestion_special_test(L"cd /tmp/autosuggest_test/0", vars, L"cd /tmp/autosuggest_test/0foobar/", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd \"/tmp/autosuggest_test/0", vars, L"cd \"/tmp/autosuggest_test/0foobar/\"", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd '/tmp/autosuggest_test/0", vars, L"cd '/tmp/autosuggest_test/0foobar/'", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd 0", vars, L"cd 0foobar/", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd \"0", vars, L"cd \"0foobar/\"", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd '0", vars, L"cd '0foobar/'", __LINE__);
-    
-    perform_one_autosuggestion_special_test(L"cd /tmp/autosuggest_test/1", vars, L"cd /tmp/autosuggest_test/1foo\\ bar/", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd \"/tmp/autosuggest_test/1", vars, L"cd \"/tmp/autosuggest_test/1foo bar/\"", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd '/tmp/autosuggest_test/1", vars, L"cd '/tmp/autosuggest_test/1foo bar/'", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd 1", vars, L"cd 1foo\\ bar/", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd \"1", vars, L"cd \"1foo bar/\"", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd '1", vars, L"cd '1foo bar/'", __LINE__);
-    
-    perform_one_autosuggestion_special_test(L"cd /tmp/autosuggest_test/2", vars, L"cd /tmp/autosuggest_test/2foo\\ \\ bar/", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd \"/tmp/autosuggest_test/2", vars, L"cd \"/tmp/autosuggest_test/2foo  bar/\"", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd '/tmp/autosuggest_test/2", vars, L"cd '/tmp/autosuggest_test/2foo  bar/'", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd 2", vars, L"cd 2foo\\ \\ bar/", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd \"2", vars, L"cd \"2foo  bar/\"", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd '2", vars, L"cd '2foo  bar/'", __LINE__);
-    
-    perform_one_autosuggestion_special_test(L"cd /tmp/autosuggest_test/3", vars, L"cd /tmp/autosuggest_test/3foo\\\\bar/", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd \"/tmp/autosuggest_test/3", vars, L"cd \"/tmp/autosuggest_test/3foo\\bar/\"", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd '/tmp/autosuggest_test/3", vars, L"cd '/tmp/autosuggest_test/3foo\\bar/'", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd 3", vars, L"cd 3foo\\\\bar/", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd \"3", vars, L"cd \"3foo\\bar/\"", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd '3", vars, L"cd '3foo\\bar/'", __LINE__);
-    
-    perform_one_autosuggestion_special_test(L"cd /tmp/autosuggest_test/4", vars, L"cd /tmp/autosuggest_test/4foo\\'bar/", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd \"/tmp/autosuggest_test/4", vars, L"cd \"/tmp/autosuggest_test/4foo'bar/\"", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd '/tmp/autosuggest_test/4", vars, L"cd '/tmp/autosuggest_test/4foo\\'bar/'", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd 4", vars, L"cd 4foo\\'bar/", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd \"4", vars, L"cd \"4foo'bar/\"", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd '4", vars, L"cd '4foo\\'bar/'", __LINE__);
-    
-    perform_one_autosuggestion_special_test(L"cd /tmp/autosuggest_test/5", vars, L"cd /tmp/autosuggest_test/5foo\\\"bar/", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd \"/tmp/autosuggest_test/5", vars, L"cd \"/tmp/autosuggest_test/5foo\\\"bar/\"", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd '/tmp/autosuggest_test/5", vars, L"cd '/tmp/autosuggest_test/5foo\"bar/'", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd 5", vars, L"cd 5foo\\\"bar/", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd \"5", vars, L"cd \"5foo\\\"bar/\"", __LINE__);
-    perform_one_autosuggestion_special_test(L"cd '5", vars, L"cd '5foo\"bar/'", __LINE__);
-    
-    //perform_one_autosuggestion_special_test(L"cd $AUTOSUGGEST_TEST_LOC/0", vars, L"cd $AUTOSUGGEST_TEST_LOC/0foobar/", __LINE__);
-    
-    perform_one_autosuggestion_special_test(L"cd ~/test_autosuggest_suggest_specia", vars, L"cd ~/test_autosuggest_suggest_special/", __LINE__);
-    
-    perform_one_autosuggestion_special_test(L"cd /tmp/autosuggest_test/start/", vars, L"cd /tmp/autosuggest_test/start/unique2/unique3/", __LINE__);
-    
-    
-    // A single quote should defeat tilde expansion
-    perform_one_autosuggestion_special_test(L"cd '~/test_autosuggest_suggest_specia'", vars, L"", __LINE__);
-    
-    // Don't crash on ~ (2696)
-    // note this was wd dependent, hence why we set it
-    if (chdir_set_pwd("/tmp/autosuggest_test/")) err(L"chdir failed");
-    
-    if (system("mkdir -p '/tmp/autosuggest_test/~hahaha/path1/path2/'")) err(L"mkdir failed");
-    perform_one_autosuggestion_special_test(L"cd ~haha", vars, L"cd ~hahaha/path1/path2/", __LINE__);
-    if (chdir_set_pwd(saved_wd)) err(L"chdir failed");
-    
     if (system("rm -Rf '/tmp/autosuggest_test/'")) err(L"rm failed");
     if (system("rm -Rf ~/test_autosuggest_suggest_special/")) err(L"rm failed");
 }

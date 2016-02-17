@@ -1388,7 +1388,7 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file, bool 
     
     if (handle_as_special_cd && do_file)
     {
-        flags |= DIRECTORIES_ONLY | EXPAND_SPECIAL_CD;
+        flags |= DIRECTORIES_ONLY | EXPAND_SPECIAL_CD | EXPAND_NO_DESCRIPTIONS;
     }
 
     /* Squelch file descriptions per issue 254 */

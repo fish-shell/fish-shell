@@ -1479,18 +1479,6 @@ struct autosuggestion_context_t
         if (reader_thread_job_is_stale())
             return 0;
 
-        /* Try handling a special command like cd */
-        completion_t special_suggestion(L"");
-        if (autosuggest_suggest_special(search_string, this->vars, &special_suggestion))
-        {
-            this->autosuggestion = special_suggestion.completion;
-            return 1;
-        }
-
-        /* Maybe cancel here */
-        if (reader_thread_job_is_stale())
-            return 0;
-
         // Here we do something a little funny
         // If the line ends with a space, and the cursor is not at the end,
         // don't use completion autosuggestions. It ends up being pretty weird seeing stuff get spammed on the right

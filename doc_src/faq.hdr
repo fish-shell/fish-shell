@@ -215,6 +215,11 @@ cd /usr/local/bin
 rm -f fish fish_indent
 \endfish
 
+<hr>
+\section faq-reserved-chars Unicode private-use characters reserved by fish
+
+Fish reserves the <a href="http://www.unicode.org/faq/private_use.html">Unicode private-use character range</a> from U+F600 thru U+F73F for internal use. Any attempt to feed characters in that range to fish will result in them being replaced by the Unicode "replacement character" U+FFFD. This includes both interactive input as well as any file read by fish (but not programs run by fish).
+
 \htmlonly[block]
 </div>
 \endhtmlonly

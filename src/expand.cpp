@@ -1777,29 +1777,6 @@ static expand_error_t expand_stage_home_and_pid(const wcstring &input, std::vect
     }
     return EXPAND_OK;
 }
-#if 0
-if (string_prefixes_string(L"./", path))
-{
-    /* Ignore the CDPATH in this case; just use the working directory */
-    directories.push_back(working_directory);
-}
-else
-{
-    /* Get the CDPATH */
-    env_var_t cdpath = env_get_string(L"CDPATH");
-    if (cdpath.missing_or_empty())
-        cdpath = L".";
-        
-    /* Tokenize it into directories */
-        wcstokenizer tokenizer(cdpath, ARRAY_SEP_STR);
-        wcstring next_path;
-    while (tokenizer.next(next_path))
-    {
-        /* Ensure that we use the working directory for relative cdpaths like "." */
-        directories.push_back(apply_working_directory(next_path, working_directory));
-    }
-}
-#endif
 
 static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<completion_t> *out, expand_flags_t flags, parse_error_list_t *errors)
 {

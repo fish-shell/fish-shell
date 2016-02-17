@@ -2429,6 +2429,7 @@ static void test_autosuggest_suggest_special()
     if (system("mkdir -p '/tmp/autosuggest_test/~hahaha/path1/path2/'")) err(L"mkdir failed");
     
     perform_one_autosuggestion_cd_test(L"cd ~haha", vars, L"ha/path1/path2/", __LINE__);
+    perform_one_autosuggestion_cd_test(L"cd ~hahaha/", vars, L"path1/path2/", __LINE__);
     if (chdir_set_pwd(saved_wd)) err(L"chdir failed");
 
     if (system("rm -Rf '/tmp/autosuggest_test/'")) err(L"rm failed");

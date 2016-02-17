@@ -617,9 +617,8 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath,
     }
     
     /* Compute the description */
-    bool wants_desc = !(expand_flags & EXPAND_NO_DESCRIPTIONS);
     wcstring desc;
-    if (wants_desc)
+    if (!(expand_flags & EXPAND_NO_DESCRIPTIONS))
     {
         desc = file_get_desc(filepath, lstat_res, lstat_buf, stat_res, stat_buf, stat_errno);
         
@@ -631,7 +630,7 @@ static bool wildcard_test_flags_then_complete(const wcstring &filepath,
         }
     }
     
-    /* Append a / if this is a directory */
+    /* Append a / if this is a directory. Note this requirement may be the only reason we have to call stat() in some cases.  */
     if (is_directory)
     {
         return wildcard_complete(filename + L'/', wc, desc.c_str(), NULL, out, expand_flags, COMPLETE_NO_SPACE);
@@ -714,12 +713,76 @@ class wildcard_expander_t
         }
     }
     
+    /* Given a start point as an absolute path, for any directory that has exactly one non-hidden entity in it which is itself a directory, return that. The result is a relative path. For example, if start_point is '/usr' we may return 'local/bin/'.
+     
+     The result does not have a leading slash, but does have a trailing slash if non-empty. */
+    wcstring descend_unique_hierarchy(const wcstring &start_point)
+    {
+        assert(! start_point.empty() && start_point.at(0) == L'/');
+        
+        wcstring unique_hierarchy;
+        wcstring abs_unique_hierarchy = start_point;
+        
+        bool stop_descent = false;
+        DIR *dir;
+        while (!stop_descent && (dir = wopendir(abs_unique_hierarchy)))
+        {
+            /* We keep track of the single unique_entry entry. If we get more than one, it's not unique and we stop the descent. */
+            wcstring unique_entry;
+            
+            bool child_is_dir;
+            wcstring child_entry;
+            while (wreaddir_resolving(dir, abs_unique_hierarchy, child_entry, &child_is_dir))
+            {
+                if (child_entry.empty() || child_entry.at(0) == L'.')
+                {
+                    /* Either hidden, or . and .. entries. Skip them. */
+                    continue;
+                }
+                else if (child_is_dir && unique_entry.empty())
+                {
+                    /* First candidate */
+                    unique_entry = child_entry;
+                }
+                else
+                {
+                    /* We either have two or more candidates, or the child is not a directory. We're done. */
+                    stop_descent = true;
+                    break;
+                }
+            }
+            
+            /* We stop if we got two or more entries; also stop if we got zero. */
+            if (unique_entry.empty())
+            {
+                stop_descent = true;
+            }
+            
+            if (! stop_descent)
+            {
+                /* We have an entry in the unique hierarchy! */
+                append_path_component(unique_hierarchy, unique_entry);
+                unique_hierarchy.push_back(L'/');
+                
+                append_path_component(abs_unique_hierarchy, unique_entry);
+                abs_unique_hierarchy.push_back(L'/');
+            }
+            closedir(dir);
+        }
+        return unique_hierarchy;
+    }
+
+    
     void try_add_completion_result(const wcstring &filepath, const wcstring &filename, const wcstring &wildcard)
     {
         /* This function is only for the completions case */
         assert(this->flags & EXPAND_FOR_COMPLETIONS);
+        
+        wcstring abs_path = this->prefix;
+        append_path_component(abs_path, filepath);
+        
         size_t before = this->resolved_completions->size();
-        if (wildcard_test_flags_then_complete(filepath, filename, wildcard.c_str(), this->flags, this->resolved_completions))
+        if (wildcard_test_flags_then_complete(abs_path, filename, wildcard.c_str(), this->flags, this->resolved_completions))
         {
             /* Hack. We added this completion result based on the last component of the wildcard.
                Prepend all prior components of the wildcard to each completion that replaces its token. */
@@ -735,6 +798,21 @@ class wildcard_expander_t
                 c.prepend_token_prefix(wc_base);
                 c.prepend_token_prefix(this->original_base);
             }
+            
+            /* Hack. Implement EXPAND_SPECIAL_CD by descending the deepest unique hierarchy we can, and then appending any components to each new result. */
+            if (flags & EXPAND_SPECIAL_CD)
+            {
+                wcstring unique_hierarchy = this->descend_unique_hierarchy(abs_path);
+                if (! unique_hierarchy.empty())
+                {
+                    for (size_t i=before; i < after; i++)
+                    {
+                        completion_t &c = this->resolved_completions->at(i);
+                        c.completion.append(unique_hierarchy);
+                    }
+                }
+            }
+            
             this->did_add = true;
         }
     }
@@ -1069,6 +1147,11 @@ int wildcard_expand_string(const wcstring &wc, const wcstring &working_directory
     assert(output != NULL);
     /* Fuzzy matching only if we're doing completions */
     assert((flags & (EXPAND_FUZZY_MATCH | EXPAND_FOR_COMPLETIONS)) != EXPAND_FUZZY_MATCH);
+    
+    /* EXPAND_SPECIAL_CD requires DIRECTORIES_ONLY and EXPAND_FOR_COMPLETIONS and EXPAND_NO_DESCRIPTIONS */
+    assert(!(flags & EXPAND_SPECIAL_CD) ||
+           ((flags & DIRECTORIES_ONLY) && (flags & EXPAND_FOR_COMPLETIONS) && (flags & EXPAND_NO_DESCRIPTIONS)));
+    
     /* Hackish fix for 1631. We are about to call c_str(), which will produce a string truncated at any embedded nulls. We could fix this by passing around the size, etc. However embedded nulls are never allowed in a filename, so we just check for them and return 0 (no matches) if there is an embedded null. */
     if (wc.find(L'\0') != wcstring::npos)
     {

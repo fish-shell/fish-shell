@@ -1929,25 +1929,24 @@ static void test_is_potential_path()
     const wcstring wd = L"/tmp/is_potential_path_test/";
     const wcstring_list_t wds(1, wd);
 
-    wcstring tmp;
-    do_test(is_potential_path(L"al", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"alpha/");
-    do_test(is_potential_path(L"alpha/", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"alpha/");
+    do_test(is_potential_path(L"al", wds, PATH_REQUIRE_DIR));
+    do_test(is_potential_path(L"alpha/", wds, PATH_REQUIRE_DIR));
     do_test(is_potential_path(L"aard", wds, 0));
 
-    do_test(! is_potential_path(L"balpha/", wds, PATH_REQUIRE_DIR, &tmp));
-    do_test(! is_potential_path(L"aard", wds, PATH_REQUIRE_DIR, &tmp));
-    do_test(! is_potential_path(L"aarde", wds, PATH_REQUIRE_DIR, &tmp));
-    do_test(! is_potential_path(L"aarde", wds, 0, &tmp));
+    do_test(! is_potential_path(L"balpha/", wds, PATH_REQUIRE_DIR));
+    do_test(! is_potential_path(L"aard", wds, PATH_REQUIRE_DIR));
+    do_test(! is_potential_path(L"aarde", wds, PATH_REQUIRE_DIR));
+    do_test(! is_potential_path(L"aarde", wds, 0));
 
     do_test(is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, 0));
-    do_test(is_potential_path(L"/tmp/is_potential_path_test/al", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"/tmp/is_potential_path_test/alpha/");
+    do_test(is_potential_path(L"/tmp/is_potential_path_test/al", wds, PATH_REQUIRE_DIR));
     do_test(is_potential_path(L"/tmp/is_potential_path_test/aardv", wds, 0));
 
-    do_test(! is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, PATH_REQUIRE_DIR, &tmp));
-    do_test(! is_potential_path(L"/tmp/is_potential_path_test/al/", wds, 0, &tmp));
-    do_test(! is_potential_path(L"/tmp/is_potential_path_test/ar", wds, 0, &tmp));
+    do_test(! is_potential_path(L"/tmp/is_potential_path_test/aardvark", wds, PATH_REQUIRE_DIR));
+    do_test(! is_potential_path(L"/tmp/is_potential_path_test/al/", wds, 0));
+    do_test(! is_potential_path(L"/tmp/is_potential_path_test/ar", wds, 0));
 
-    do_test(is_potential_path(L"/usr", wds, PATH_REQUIRE_DIR, &tmp) && tmp == L"/usr/");
+    do_test(is_potential_path(L"/usr", wds, PATH_REQUIRE_DIR));
 
 }
 

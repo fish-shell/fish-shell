@@ -1,11 +1,11 @@
 #completion for diskutil
 
 function __fish_diskutil_devices
-    printf '%s\n' /dev/disk*
+    set -l mountpoints /dev/disk*; printf '%s\n' $mountpoints
 end
 
 function __fish_diskutil_mounted_volumes
-    printf '%s\n' /Volumes/*
+    set -l mountpoints /Volumes/*; printf '%s\n' $mountpoints
 end
 
 # list

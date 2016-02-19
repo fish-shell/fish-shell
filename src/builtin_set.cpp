@@ -431,7 +431,6 @@ static int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     int retcode=0;
     int scope;
     int slice=0;
-    int i;
 
     const wchar_t *bad_char = NULL;
 
@@ -793,7 +792,7 @@ static int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv)
         else
         {
             wcstring_list_t val;
-            for (i=w.woptind; i<argc; i++)
+            for (int i=w.woptind; i<argc; i++)
                 val.push_back(argv[i]);
             retcode = my_env_set(dest, val, scope, streams);
         }

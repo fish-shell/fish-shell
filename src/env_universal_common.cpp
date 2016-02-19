@@ -1210,11 +1210,11 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t
             {
                 int err = errno;
                 report_error(err, L"Unable to memory map shared memory object with path '%s'", path);
-                region = NULL;
+                this->region = NULL;
             }
             else
             {
-                region = static_cast<universal_notifier_shmem_t*>(addr);
+                this->region = static_cast<universal_notifier_shmem_t*>(addr);
             }
         }
         

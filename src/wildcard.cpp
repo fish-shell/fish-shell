@@ -139,7 +139,7 @@ bool wildcard_has(const wcstring &str, bool internal)
    \param wc The wildcard.
    \param is_first Whether files beginning with dots should not be matched against wildcards.
 */
-static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const wchar_t *wc, bool leading_dots_fail_to_match, bool is_first, enum fuzzy_match_type_t max_type)
+static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const wchar_t *wc, bool leading_dots_fail_to_match, bool is_first)
 {
     if (*str == 0 && *wc==0)
     {
@@ -154,13 +154,6 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const
         return wcscmp(str, wc) ? fuzzy_match_none : fuzzy_match_exact;
     }
     
-    /* Hackish fuzzy match support */
-    if (! wildcard_has(wc, true))
-    {
-        const string_fuzzy_match_t match = string_fuzzy_match_string(wc, str);
-        return (match.type <= max_type ? match.type : fuzzy_match_none);
-    }
-
     if (*wc == ANY_STRING || *wc == ANY_STRING_RECURSIVE)
     {
         /* Ignore hidden file */
@@ -178,7 +171,7 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const
         /* Try all submatches */
         do
         {
-            enum fuzzy_match_type_t subresult = wildcard_match_internal(str, wc+1, leading_dots_fail_to_match, false, max_type);
+            enum fuzzy_match_type_t subresult = wildcard_match_internal(str, wc+1, leading_dots_fail_to_match, false);
             if (subresult != fuzzy_match_none)
             {
                 return subresult;
@@ -201,11 +194,11 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const
             return fuzzy_match_none;
         }
 
-        return wildcard_match_internal(str+1, wc+1, leading_dots_fail_to_match, false, max_type);
+        return wildcard_match_internal(str+1, wc+1, leading_dots_fail_to_match, false);
     }
     else if (*wc == *str)
     {
-        return wildcard_match_internal(str+1, wc+1, leading_dots_fail_to_match, false, max_type);
+        return wildcard_match_internal(str+1, wc+1, leading_dots_fail_to_match, false);
     }
 
     return fuzzy_match_none;
@@ -237,14 +230,19 @@ static wcstring resolve_description(wcstring *completion, const wchar_t *explici
     }
 }
 
-/* A transient parameter pack needed by wildcard_complete.f */
+/* A transient parameter pack needed by wildcard_complete. */
 struct wc_complete_pack_t
 {
     const wcstring &orig; // the original string, transient
     const wchar_t *desc; // literal description
     wcstring(*desc_func)(const wcstring &); // function for generating descriptions
     expand_flags_t expand_flags;
-    wc_complete_pack_t(const wcstring &str) : orig(str) {}
+    wc_complete_pack_t(const wcstring &str, const wchar_t *des, wcstring(*df)(const wcstring &), expand_flags_t fl) :
+        orig(str),
+        desc(des),
+        desc_func(df),
+        expand_flags(fl)
+    {}
 };
 
 /* Weirdly specific and non-reusable helper function that makes its one call site much clearer */
@@ -412,23 +410,15 @@ bool wildcard_complete(const wcstring &str,
 {
     // Note out may be NULL
     assert(wc != NULL);
-    wc_complete_pack_t params(str);
-    params.desc = desc;
-    params.desc_func = desc_func;
-    params.expand_flags = expand_flags;
+    wc_complete_pack_t params(str, desc, desc_func, expand_flags);
     return wildcard_complete_internal(str.c_str(), wc, params, flags, out, true /* first call */);
 }
 
 
 bool wildcard_match(const wcstring &str, const wcstring &wc, bool leading_dots_fail_to_match)
 {
-    enum fuzzy_match_type_t match = wildcard_match_internal(str.c_str(), wc.c_str(), leading_dots_fail_to_match, true /* first */, fuzzy_match_exact);
+    enum fuzzy_match_type_t match = wildcard_match_internal(str.c_str(), wc.c_str(), leading_dots_fail_to_match, true /* first */);
     return match != fuzzy_match_none;
-}
-        
-enum fuzzy_match_type_t wildcard_match_fuzzy(const wcstring &str, const wcstring &wc, bool leading_dots_fail_to_match, enum fuzzy_match_type_t max_type)
-{
-    return wildcard_match_internal(str.c_str(), wc.c_str(), leading_dots_fail_to_match, true /* first */, max_type);
 }
 
 /**
@@ -827,7 +817,7 @@ class wildcard_expander_t
     
 public:
     
-    wildcard_expander_t(const wcstring pref, const wcstring &orig_base, const wchar_t *orig_wc, expand_flags_t f, std::vector<completion_t> *r) :
+    wildcard_expander_t(const wcstring &pref, const wcstring &orig_base, const wchar_t *orig_wc, expand_flags_t f, std::vector<completion_t> *r) :
         prefix(pref),
         original_base(orig_base),
         original_wildcard(orig_wc),

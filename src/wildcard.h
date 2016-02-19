@@ -77,9 +77,6 @@ int wildcard_expand_string(const wcstring &wc, const wcstring &working_directory
 */
 bool wildcard_match(const wcstring &str, const wcstring &wc, bool leading_dots_fail_to_match = false);
 
-/* Like wildcard_match, but returns a fuzzy match type */
-enum fuzzy_match_type_t wildcard_match_fuzzy(const wcstring &str, const wcstring &wc, bool leading_dots_fail_to_match = false, enum fuzzy_match_type_t max_type = fuzzy_match_none);
-
 /** Check if the specified string contains wildcards */
 bool wildcard_has(const wcstring &, bool internal);
 bool wildcard_has(const wchar_t *, bool internal);

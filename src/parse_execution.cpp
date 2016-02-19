@@ -536,7 +536,6 @@ parse_execution_result_t parse_execution_context_t::run_for_statement(const pars
 parse_execution_result_t parse_execution_context_t::run_switch_statement(const parse_node_t &statement)
 {
     assert(statement.type == symbol_switch_statement);
-    const parse_node_t *matching_case_item = NULL;
 
     parse_execution_result_t result = parse_execution_success;
 
@@ -590,6 +589,7 @@ parse_execution_result_t parse_execution_context_t::run_switch_statement(const p
         const parse_node_t *case_item_list = get_child(statement, 3, symbol_case_item_list);
 
         /* Loop while we don't have a match but do have more of the list */
+        const parse_node_t *matching_case_item = NULL;
         while (matching_case_item == NULL && case_item_list != NULL)
         {
             if (should_cancel_execution(sb))
@@ -990,7 +990,6 @@ parse_execution_result_t parse_execution_context_t::determine_arguments(const pa
             {
                 this->report_errors(errors);
                 return parse_execution_errored;
-                break;
             }
 
             case EXPAND_WILDCARD_NO_MATCH:

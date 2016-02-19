@@ -593,7 +593,6 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode)
 {
     ASSERT_IS_MAIN_THREAD();
     bool has_changed_old = has_changed_exported;
-    bool has_changed_new = false;
     int done=0;
 
     if (val && contains(key, L"PWD", L"HOME"))
@@ -685,7 +684,7 @@ int env_set(const wcstring &key, const wchar_t *val, env_mode_flags_t var_mode)
     else
     {
         // Determine the node
-
+        bool has_changed_new = false;
         env_node_t *preexisting_node = env_get_node(key);
         bool preexisting_entry_exportv = false;
         if (preexisting_node != NULL)
@@ -1315,7 +1314,6 @@ static void update_export_array_if_necessary(bool recalc)
     if (has_changed_exported)
     {
         std::map<wcstring, wcstring> vals;
-        size_t i;
 
         debug(4, L"env_export_arr() recalc");
 
@@ -1324,7 +1322,7 @@ static void update_export_array_if_necessary(bool recalc)
         if (uvars())
         {
             const wcstring_list_t uni = uvars()->get_names(true, false);
-            for (i=0; i<uni.size(); i++)
+            for (size_t i=0; i<uni.size(); i++)
             {
                 const wcstring &key = uni.at(i);
                 const env_var_t val = uvars()->get(key);

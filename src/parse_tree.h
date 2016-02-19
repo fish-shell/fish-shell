@@ -112,7 +112,16 @@ public:
     wcstring describe(void) const;
 
     /* Constructor */
-    explicit parse_node_t(parse_token_type_t ty) : source_start(SOURCE_OFFSET_INVALID), source_length(0), parent(NODE_OFFSET_INVALID), child_start(0), child_count(0), type(ty), flags(0), tag(0)
+    explicit parse_node_t(parse_token_type_t ty) :
+        source_start(SOURCE_OFFSET_INVALID),
+        source_length(0),
+        parent(NODE_OFFSET_INVALID),
+        child_start(0),
+        child_count(0),
+        type(ty),
+        keyword(parse_keyword_none),
+        flags(0),
+        tag(0)
     {
     }
 

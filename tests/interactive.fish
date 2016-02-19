@@ -1,4 +1,4 @@
-#!/usr/local/bin/fish
+#!../test_prefix/bin/fish
 #
 # Interactive tests using `expect`
 

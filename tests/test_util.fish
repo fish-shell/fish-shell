@@ -57,7 +57,7 @@ if not set -q __fish_is_running_tests
         set -lx LC_$var ''
     end
     set -lx LC_CTYPE en_US.UTF-8
-    exec ../fish $script $args_for_test_script
+    exec ../test_prefix/bin/fish $script $args_for_test_script
     die 'exec failed'
 else if test "$__fish_is_running_tests" != "$XDG_CONFIG_HOME"
     echo 'Something went wrong with the test runner.' >&2

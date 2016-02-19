@@ -863,6 +863,8 @@ The following variables are available to change the highlighting colors in fish:
 
 - `fish_color_cwd`, the color used for the current working directory in the default prompt
 
+- `fish_color_autosuggestion`, the color used for autosuggestions
+
 Additionally, the following variables are available to change the highlighting in the completion pager:
 
 - `fish_pager_color_prefix`, the color of the prefix string, i.e. the string that is to be completed

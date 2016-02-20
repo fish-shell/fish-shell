@@ -2,9 +2,8 @@
 # Match colors for grep, if supported
 #
 
-if command grep --color=auto --help 1>/dev/null 2>/dev/null
+if echo | command grep --color=auto "" >/dev/null 2>&1
 	function grep
 		command grep --color=auto $argv
 	end
 end
-

@@ -66,6 +66,9 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind [ history-token-search-backward
   bind ] history-token-search-forward
 
+  bind \x1b prevd force-repaint  # Control-[
+  bind \x1d prevd force-repaint  # Control-]
+
   bind k up-or-search
   bind j down-or-search
   bind \e\[A up-or-search

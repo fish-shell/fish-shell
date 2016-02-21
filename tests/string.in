@@ -55,6 +55,8 @@ string replace -r '(\w+)\s+(\w+)' '$2 $1 $$' 'left right'
 
 string replace -r '\s*newline\s*' '\n' 'put a newline here'
 
+string replace -r -a '(\w)' '$1$1' ab
+
 # test some failure cases
 string match -r '[' 'a[sd' 2>/dev/null; or echo "invalid expression error"
 

@@ -792,7 +792,7 @@ public:
 
         uint32_t options = opts.all ? PCRE2_SUBSTITUTE_GLOBAL : 0;
         size_t arglen = wcslen(arg);
-        PCRE2_SIZE outlen = (arglen == 0) ? 16 : 2 * arglen;
+        PCRE2_SIZE outlen = (arglen == 0) ? 16 + 1 : 2 * arglen + 1;
         wchar_t *output = (wchar_t *)malloc(sizeof(wchar_t) * outlen);
         if (output == 0)
         {

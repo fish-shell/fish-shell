@@ -67,9 +67,7 @@ You'll find the configuration used to control Travis in the `.travis.yml` file.
 You can use the build instructions above before running the tests. However, that will update your installed version of fish and is not recommended until you've run the tests. Instead install the fish binary in a temporary location for testing:
 
     autoconf
-    ./configure --prefix=/tmp/fish.test
-    make [gmake on BSD]
-    make install
+    ./configure
 
 Run the unit tests:
 

@@ -1106,13 +1106,7 @@ Detected errors include:
 
 When the cursor is over a parenthesis or a quote, `fish` also highlights its matching quote or parenthesis.
 
-To customize the syntax highlighting, you can set the environment variables `fish_color_normal`, `fish_color_command`, `fish_color_substitution`, `fish_color_redirection`, `fish_color_end`, `fish_color_error`, `fish_color_param`, `fish_color_comment`, `fish_color_match`, `fish_color_search_match`, `fish_color_cwd`, `fish_pager_color_prefix`, `fish_pager_color_completion`, `fish_pager_color_description`, `fish_pager_color_progress` and `fish_pager_color_secondary`. Usually, the value of these variables will be one of `black`, `red`, `green`, `brown`, `yellow`, `blue`, `magenta`, `purple`, `cyan`, `white` or `normal`, but they can be an array containing any color options for the `set_color` command.
-
-\fish
-set fish_color_error black --background=red --bold
-# Make all commandline errors be written in a black,
-# bold font, with a red background.
-\endfish
+To customize the syntax highlighting, you can set the environment variables listed in the <a href='index.html#variables-color'>Variables for changing highlighting colors</a> section.
 
 \subsection title Programmable title
 

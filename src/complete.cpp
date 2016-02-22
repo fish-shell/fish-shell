@@ -881,10 +881,6 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
 
     std::vector<completion_t> possible_comp;
 
-    env_var_t cdpath = this->vars.get(L"CDPATH");
-    if (cdpath.missing_or_empty())
-        cdpath = L".";
-
     if (use_command)
     {
 

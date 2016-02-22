@@ -1607,9 +1607,9 @@ static void select_completion_in_direction(enum selection_direction_t dir)
 }
 
 /**
-  Flash the screen. This function only changed the color of the
-  current line, since the flash_screen sequnce is rather painful to
-  look at in most terminal emulators.
+  Flash the screen. This function changes the color of the
+  current line momentarily and sends a BEL to maybe flash the
+  screen or emite a sound, depending on how it is configured.
 */
 static void reader_flash()
 {
@@ -1622,6 +1622,7 @@ static void reader_flash()
     }
 
     reader_repaint();
+    writestr(L"\a");
 
     pollint.tv_sec = 0;
     pollint.tv_nsec = 100 * 1000000;

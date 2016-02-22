@@ -1852,6 +1852,7 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
             }
         }
         
+        std::sort(expanded.begin(), expanded.end(), completion_t::is_naturally_less_than);
         out->insert(out->end(), expanded.begin(), expanded.end());
     }
     else

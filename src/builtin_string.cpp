@@ -792,8 +792,8 @@ public:
 
         uint32_t options = opts.all ? PCRE2_SUBSTITUTE_GLOBAL : 0;
         size_t arglen = wcslen(arg);
-        PCRE2_SIZE outlen = (arglen == 0) ? 16 : 2 * arglen;
-        wchar_t *output = (wchar_t *)malloc(sizeof(wchar_t) * outlen);
+        PCRE2_SIZE bufsize = (arglen == 0) ? 16 : 2 * arglen;
+        wchar_t *output = (wchar_t *)malloc(sizeof(wchar_t) * bufsize);
         if (output == 0)
         {
             DIE_MEM();
@@ -801,6 +801,7 @@ public:
         int pcre2_rc = 0;
         for (;;)
         {
+            PCRE2_SIZE outlen = bufsize;
             pcre2_rc = pcre2_substitute(
                             regex.code,
                             PCRE2_SPTR(arg),
@@ -816,10 +817,10 @@ public:
 
             if (pcre2_rc == PCRE2_ERROR_NOMEMORY)
             {
-                if (outlen < MAX_REPLACE_SIZE)
+                if (bufsize < MAX_REPLACE_SIZE)
                 {
-                    outlen = std::min(2 * outlen, MAX_REPLACE_SIZE);
-                    output = (wchar_t *)realloc(output, sizeof(wchar_t) * outlen);
+                    bufsize = std::min(2 * bufsize, MAX_REPLACE_SIZE);
+                    output = (wchar_t *)realloc(output, sizeof(wchar_t) * bufsize);
                     if (output == 0)
                     {
                         DIE_MEM();

@@ -674,7 +674,7 @@ echo $pirate
 
 \subsection variables-universal More on universal variables
 
-Universal variables are variables that are shared between all the users fish sessions on the computer. Fish stores many of its configuration options as universal variables. This means that in order to change fish settings, all you have to do is change the variable value once, and it will be automatically updated for all sessions, and preserved across computer reboots and login/logout.
+Universal variables are variables that are shared between all the users' fish sessions on the computer. Fish stores many of its configuration options as universal variables. This means that in order to change fish settings, all you have to do is change the variable value once, and it will be automatically updated for all sessions, and preserved across computer reboots and login/logout.
 
 To see universal variables in action, start two fish sessions side by side, and issue the following command in one of them `set fish_color_cwd blue`. Since `fish_color_cwd` is a universal variable, the color of the current working directory listing in the prompt will instantly change to blue on both terminals.
 

@@ -65,9 +65,12 @@ end
 set failed (count $failed)
 if test $failed -eq 0
     say green "All tests completed successfully"
-    exit 0
 else
     set plural (test $failed -eq 1; or echo s)
     say red "$failed test$plural failed"
     exit 1
 end
+
+say -o cyan "Testing with fish-spec"
+fish test1.spec.fish
+exit $status

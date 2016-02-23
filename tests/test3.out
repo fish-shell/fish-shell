@@ -35,3 +35,5 @@ SHLVL: 4
 Elements in DISPLAY: 1
 Elements in FOO: 4
 MANPATH=man1:man2:man3
+PATH CDPATH MANPATH
+a_list=item1:item2:item3

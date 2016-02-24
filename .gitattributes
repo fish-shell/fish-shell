@@ -21,4 +21,5 @@ fish.spec.in export-ignore
 /build_tools/make_darcs_completions.fish export-ignore
 /debian export-ignore
 /debian/* export-ignore
-
+/.github export-ignore
+/.github/* export-ignore

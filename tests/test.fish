@@ -1,6 +1,8 @@
-#!../test_root/bin/fish
-#
 # Fishscript tests
+#
+# There is no shebang line because you shouldn't be running this by hand. You
+# should be running it via `make test` to ensure the environment is properly
+# setup.
 
 # Change to directory containing this script
 cd (dirname (status -f))

@@ -64,17 +64,18 @@ You'll find the configuration used to control Travis in the `.travis.yml` file.
 
 ### Running the Tests On Your Local Server
 
-You can use the build instructions above before running the tests. However, that will update your installed version of fish and is not recommended until you've run the tests. Instead install the fish binary in a temporary location for testing:
+You should not build and install fish using the instructions above after
+making changs until you've run the tests. You may or may not need to create an
+appropriate `Makefile` by running the following one time:
 
     autoconf
     ./configure
 
-Run the unit tests:
+To run the unit tests:
 
     make test
 
-Note: These instructions will work on Mac OS X but do require that you've
-used something like [Homebrew](http://brew.sh/) to install autoconf and related tools.
+Note: These instructions will work on Mac OS X as well as Linux but do require that you've used something like [Homebrew](http://brew.sh/) to install autoconf and related tools.
 
 ## Runtime Dependencies
 

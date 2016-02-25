@@ -38,12 +38,12 @@ if not set -q __fish_is_running_tests
     set -l IFS # clear IFS so cmd substitution doesn't split
     cd (dirname $script); or die
 
-    set -lx XDG_DATA_HOME ../test_data
-    rm -rf $XDG_DATA_HOME
+    set -lx XDG_DATA_HOME ../test/data
+    rm -rf $XDG_DATA_HOME/fish
     mkdir -p $XDG_DATA_HOME/fish; or die
 
-    set -lx XDG_CONFIG_HOME ../test_home
-    rm -rf $XDG_CONFIG_HOME
+    set -lx XDG_CONFIG_HOME ../test/home
+    rm -rf $XDG_CONFIG_HOME/fish
     mkdir -p $XDG_CONFIG_HOME/fish; or die
     ln -s $PWD/test_functions $XDG_CONFIG_HOME/fish/functions; or die
 
@@ -59,7 +59,7 @@ if not set -q __fish_is_running_tests
         set -lx LC_$var ''
     end
     set -lx LC_CTYPE en_US.UTF-8
-    exec ../test_root/bin/fish $script $args_for_test_script
+    exec ../test/root/bin/fish $script $args_for_test_script
     die 'exec failed'
 else if test "$__fish_is_running_tests" != "$XDG_CONFIG_HOME"
     echo 'Something went wrong with the test runner.' >&2

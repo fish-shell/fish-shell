@@ -24,7 +24,7 @@ function test_file
 
     echo -n "Testing file $file ... "
 
-    ../test_root/bin/fish <$file >$base.tmp.out ^$base.tmp.err
+    ../test/root/bin/fish <$file >$base.tmp.out ^$base.tmp.err
     set -l tmp_status $status
     set -l res ok
 

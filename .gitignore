@@ -31,9 +31,7 @@ share/man/
 toc.txt
 user_doc/
 xcuserdata
-test_data/
-test_home/
-test_root/
+test/
 FISH-BUILD-VERSION-FILE
 version
 messages.pot

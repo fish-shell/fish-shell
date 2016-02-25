@@ -300,11 +300,12 @@ doc/refman.pdf: doc
 # installed fish using the same prefix; e.g., `./configure --prefix=/usr/local`
 # followed by `make install`.
 test-prep:
-	rm -rf test_root
+	rm -rf test
+	mkdir test test/data test/home test/temp
 ifdef DESTDIR
-	ln -s $(DESTDIR) test_root
+	ln -s $(DESTDIR) test/root
 else
-	mkdir test_root
+	mkdir test/root
 endif
 .PHONY: test-prep
 
@@ -312,7 +313,7 @@ endif
 # tests.
 #
 # Note that doing `make DESTDIR=/some/path/ test` overrides this assignment.
-test: DESTDIR = $(PWD)/test_root/
+test: DESTDIR = $(PWD)/test/root/
 test: prefix = .
 test: test-prep install-force test_low_level test_high_level
 	@rm -f /tmp/file_truncation_test.txt /tmp/tee_test.txt /tmp/fish_foo.txt
@@ -340,11 +341,11 @@ test_high_level: test_fishscript test_interactive
 .PHONY: test_high_level
 
 test_fishscript: $(call filter_up_to,test_fishscript,$(active_test_goals))
-	cd tests; ../test_root/bin/fish test.fish
+	cd tests; ../test/root/bin/fish test.fish
 .PHONY: test_fishscript
 
 test_interactive: $(call filter_up_to,test_interactive,$(active_test_goals))
-	cd tests; ../test_root/bin/fish interactive.fish
+	cd tests; ../test/root/bin/fish interactive.fish
 .PHONY: test_interactive
 
 #
@@ -898,7 +899,7 @@ clean:
 		rm -rf doc user_doc share/man; \
 	fi
 	rm -f po/*.gmo
-	rm -rf obj test_data test_home test_root build
+	rm -rf obj build test
 .PHONY: clean
 
 

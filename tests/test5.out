@@ -1,4 +1,4 @@
 Test 1 pass
 Test 2 pass
 Test 3 pass
-/tmp/fish_wildcard_permissions_test/noaccess/yesaccess/alpha.txt /tmp/fish_wildcard_permissions_test/noaccess/yesaccess/beta.txt /tmp/fish_wildcard_permissions_test/noaccess/yesaccess/delta.txt
+../test/temp/fish_wildcard_permissions_test/noaccess/yesaccess/alpha.txt ../test/temp/fish_wildcard_permissions_test/noaccess/yesaccess/beta.txt ../test/temp/fish_wildcard_permissions_test/noaccess/yesaccess/delta.txt

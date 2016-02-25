@@ -1,6 +1,8 @@
-#!/usr/local/bin/fish
-#
 # Interactive tests using `expect`
+#
+# There is no shebang line because you shouldn't be running this by hand. You
+# should be running it via `make test` to ensure the environment is properly
+# setup.
 
 # Change to directory containing this script
 cd (dirname (status -f))
@@ -13,6 +15,7 @@ else
 end
 
 source test_util.fish (status -f) $argv; or exit
+cat interactive.config >> $XDG_CONFIG_HOME/fish/config.fish
 
 say -o cyan "Testing interactive functionality"
 if not type -q expect
@@ -21,17 +24,9 @@ if not type -q expect
 end
 
 function test_file
-    rm -Rf tmp.interactive.config; or die "Couldn't remove tmp.interactive.config"
-    mkdir -p tmp.interactive.config/fish; or die "Couldn't create tmp.interactive.config/fish"
-    cat $XDG_CONFIG_HOME/fish/config.fish interactive.config > tmp.interactive.config/fish/config.fish
-    or die "Couldn't create tmp.interactive.config/fish/config.fish"
-
     set -l file $argv[1]
-
     echo -n "Testing file $file ... "
-
     begin
-        set -lx XDG_CONFIG_HOME $PWD/tmp.interactive.config
         set -lx TERM dumb
         expect -n -c 'source interactive.expect.rc' -f $file >$file.tmp.out ^$file.tmp.err
     end

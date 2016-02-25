@@ -27,11 +27,11 @@ end
 # Verify that we can do wildcard expansion when we
 # don't have read access to some path components
 # See #2099
-set -l where /tmp/fish_wildcard_permissions_test/noaccess/yesaccess
+set -l where ../test/temp/fish_wildcard_permissions_test/noaccess/yesaccess
 mkdir -p $where
 chmod 300 (dirname $where) # no read permissions
 mkdir -p $where
 touch $where/alpha.txt $where/beta.txt $where/delta.txt
 echo $where/*
 chmod 700 (dirname $where) # so we can delete it
-rm -rf /tmp/fish_wildcard_permissions_test
+rm -rf ../test/temp/fish_wildcard_permissions_test

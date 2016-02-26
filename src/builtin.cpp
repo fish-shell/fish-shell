@@ -3279,7 +3279,7 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     history_t *history = reader_get_history();
     // Use the default history if we have none (which happens if invoked non-interactively, e.g.
     // from webconfig.py.
-    if (!history) history = &history_t::history_with_name(L"fish");
+    if (!history) history = &history_t::history_with_name(history_session_id());
 
     int opt;
     wgetopter_t w;

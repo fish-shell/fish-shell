@@ -610,6 +610,9 @@ static void react_to_variable_change(const wcstring &key) {
         invalidate_termsize(true);  // force fish to update its idea of the terminal size plus vars
     } else if (key == L"FISH_READ_BYTE_LIMIT") {
         env_set_read_limit();
+    } else if (key == L"FISH_HISTFILE") {
+        history_destroy();
+        reader_push(history_session_id().c_str());
     }
 }
 
@@ -1174,7 +1177,7 @@ env_var_t env_get_string(const wcstring &key, env_mode_flags_t mode) {
 
             history_t *history = reader_get_history();
             if (!history) {
-                history = &history_t::history_with_name(L"fish");
+                history = &history_t::history_with_name(history_session_id());
             }
             if (history) history->get_string_representation(&result, ARRAY_SEP_STR);
             return result;

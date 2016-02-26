@@ -5,10 +5,11 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
 	if type -q getent
 		getent hosts 2>/dev/null | tr -s ' ' ' ' | cut -d ' ' -f 2- | tr ' ' '\n'
 	else if test -r /etc/hosts
-		tr -s ' \t' '  ' < /etc/hosts | sed 's/ *#.*//' | cut -s -d ' ' -f 2- | __fish_sgrep -o '[^ ]*'
+		tr -s ' \t' '  ' < /etc/hosts | sed 's/ *#.*//' | sed 's/^[0.]* .*$//' | cut -s -d ' ' -f 2- | __fish_sgrep -o '[^ ]*'
 	end
+	
 	# Print nfs servers from /etc/fstab
-		if test -r /etc/fstab
+	if test -r /etc/fstab
 		__fish_sgrep </etc/fstab "^\([0-9]*\.[0-9]*\.[0-9]*\.[0-9]*\|[a-zA-Z.]*\):"|cut -d : -f 1
 	end
 

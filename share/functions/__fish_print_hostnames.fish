@@ -25,4 +25,9 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
 	if [ -e ~/.ssh/config ]
 		awk -v FS="[ =]+" -v OFS='\n' 'tolower($0) ~ /^ *host[^*?!]*$/{ $1=""; print }' ~/.ssh/config
 	end
+
+  # Search through all the UserKnownHostsFiles in ~/.ssh/config
+  for known_hosts in (egrep -Eoh 'UserKnownHostsFile.*' config | awk '{print $2}' | uniq)
+    sgrep -Eoh '^[^#@|, ]*' $known_hosts ^/dev/null | sed -E 's/^\[([^]]+)\]:([0-9]+)$/\1/'
+  end
 end

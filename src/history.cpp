@@ -17,6 +17,8 @@
 #include <ctype.h>
 #include <wctype.h>
 #include <iterator>
+#include <map>
+#include <algorithm>
 
 #include "fallback.h" // IWYU pragma: keep
 #include "sanity.h"
@@ -31,8 +33,6 @@
 #include "env.h"
 #include "lru.h"
 #include "parse_constants.h"
-#include <map>
-#include <algorithm>
 
 /*
 
@@ -1274,14 +1274,22 @@ static void unescape_yaml(std::string *str)
 
 static wcstring history_filename(const wcstring &name, const wcstring &suffix)
 {
-    wcstring path;
-    if (! path_get_data(path))
-        return L"";
+    wcstring result;
 
-    wcstring result = path;
-    result.append(L"/");
-    result.append(name);
-    result.append(L"_history");
+    const env_var_t history_filename = env_get_string(L"HISTFILE");
+    if (!history_filename.missing_or_empty())
+    {
+        // Store history where requested.
+        result = history_filename;
+    }
+    else
+    {
+        // Use default history file name.
+        if (!path_get_data(result)) return L"";
+        result.append(L"/");
+        result.append(name);
+        result.append(L"_history");
+    }
     result.append(suffix);
     return result;
 }

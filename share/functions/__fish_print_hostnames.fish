@@ -15,8 +15,8 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
 		| string replace -r '[0-9.]*\s*' '' | string trim | string replace -ra '\s+' '\n'
 	end
 	# Print nfs servers from /etc/fstab
-		if test -r /etc/fstab
-		__fish_sgrep </etc/fstab "^\([0-9]*\.[0-9]*\.[0-9]*\.[0-9]*\|[a-zA-Z.]*\):"|cut -d : -f 1
+	if test -r /etc/fstab
+		string match -r '^\s*[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3]:|[a-zA-Z\.]*:' </etc/fstab | string replace -r ':.*' ''
 	end
 
 	# Print hosts with known ssh keys

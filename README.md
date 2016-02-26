@@ -15,9 +15,11 @@ Detailed user documentation is available by running `help` within fish, and also
 
 fish is written in a sane subset of C++98, with a few components from C++TR1. It builds successfully with g++ 4.2 or later, and with clang. It also will build as C++11.
 
-fish can be built using autotools or Xcode. autoconf 2.60 or later is required.
+fish can be built using autotools or Xcode. autoconf 2.60 or later is required to build from git versions, but is not required for releases.
 
 fish depends on a curses implementation, such as ncurses. The headers and libraries are required for building.
+
+fish requires PCRE2 due to the regular expression support contained in the `string` builtin. A copy is included with the source code, and will be used automatically if it does not already exist on your system.
 
 fish requires gettext for translation support.
 
@@ -25,7 +27,7 @@ Building the documentation requires Doxygen 1.8.7 or newer.
 
 ### Autotools Build
 
-    autoconf
+    autoconf [if building from Git]
     ./configure
     make [gmake on BSD]
     sudo make install
@@ -54,32 +56,35 @@ On RedHat, CentOS, or Amazon EC2:
 
 ## Testing
 
-### Travis CI Build and Test
+The source code for fish includes a large collection of tests. If you are making any changes to fish, running these tests is highly recommended to make sure the behaviour remains consistent.
 
-You can have the Travis continuous integration tool automatically build and test your changes. This requires you to fork the project on GitHub or have pushed your local fish-shell repository to GitHub.
+### Local testing
 
-Login to [Travis CI](https://travis-ci.org/) with your GitHub account and enable your fish-shell clone. To reach that page click the plus-sign to the right of "My Repositories" on the main page for your account or go to your [profile page](https://travis-ci.org/profile/). After you do that every time you push changes to GitHub Travis will automatically build and test those changes. You'll receive an email when the tests are complete telling you whether or not any tests failed. This helps avoid being embarrassed by making a pull-request only to find you introduced a bug or failed to update a unit test. This also ensures that even if you can build and run fish on your system that it can also be built and run on other types of systems.
+The tests can be run on your local computer on all operating systems.
 
-You'll find the configuration used to control Travis in the `.travis.yml` file.
-
-### Running the Tests On Your Local Server
-
-You should not build and install fish using the instructions above after
-making changs until you've run the tests. You may or may not need to create an
-appropriate `Makefile` by running the following one time:
+Running the tests is only supported from the Autotools build. On OS X, you will require an installation of autoconf; we suggest using [Homebrew](http://brew.sh/) to install these tools.
 
     autoconf
     ./configure
+    make test [gmake on BSD]
 
-To run the unit tests:
+### Travis CI Build and Test
 
-    make test
+The Travis Continuous Integration services can be used to test your changes across multiple platforms. You will need to [fork the fish-shell repository on GitHub](https://help.github.com/articles/fork-a-repo/), or push a copy of the code to your GitHub account.
 
-Note: These instructions will work on Mac OS X as well as Linux but do require that you've used something like [Homebrew](http://brew.sh/) to install autoconf and related tools.
+ 1. [Sign in to Travis CI](https://travis-ci.org/auth) with your GitHub account, accepting the GitHub access permissions confirmation.
+ 2. Once you're signed in, and your repositories are synchronised, go to your [profile page](https://travis-ci.org/profile) and enable the fish-shell repository.
+ 3. Push your changes to GitHub.
+
+You'll receive an email when the tests are complete telling you whether or not any tests failed.
+
+You'll find the configuration used to control Travis in the `.travis.yml` file.
 
 ## Runtime Dependencies
 
 fish requires a curses implementation, such as ncurses, to run.
+
+fish requires PCRE2 due to the regular expression support contained in the `string` builtin. A bundled version will be compiled in automatically at build time if required.
 
 fish requires a number of utilities to operate, which should be present on any Unix, GNU/Linux or OS X system. These include (but are not limited to) hostname, grep, awk, sed, which, and getopt. fish also requires the bc program.
 

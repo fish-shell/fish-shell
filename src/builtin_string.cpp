@@ -304,9 +304,10 @@ struct match_options_t
     bool all;
     bool ignore_case;
     bool index;
+    bool invert_match;
     bool quiet;
 
-    match_options_t(): all(false), ignore_case(false), index(false), quiet(false) { }
+    match_options_t(): all(false), ignore_case(false), index(false), invert_match(false), quiet(false) { }
 };
 
 class string_matcher_t
@@ -458,7 +459,12 @@ class pcre2_matcher_t: public string_matcher_t
         // Return values: -1 = error, 0 = no match, 1 = match
         if (pcre2_rc == PCRE2_ERROR_NOMATCH)
         {
-            return 0;
+            if (opts.invert_match && !opts.quiet)
+            {               
+                streams.out.append(arg);
+                streams.out.push_back(L'\n');
+            }
+            return opts.invert_match ? 1 : 0;
         }
         if (pcre2_rc < 0)
         {
@@ -477,7 +483,7 @@ class pcre2_matcher_t: public string_matcher_t
         {
             PCRE2_SIZE begin = ovector[2*j];
             PCRE2_SIZE end = ovector[2*j + 1];
-            if (!opts.quiet)
+            if (!opts.quiet && !opts.invert_match)
             {
                 if (begin != PCRE2_UNSET && end != PCRE2_UNSET)
                 {
@@ -489,7 +495,7 @@ class pcre2_matcher_t: public string_matcher_t
                     {
                         streams.out.append(wcstring(&arg[begin], end - begin));
                     }
-                    streams.out.append(L'\n');
+                    streams.out.push_back(L'\n');
                 }
             }
         }
@@ -517,7 +523,7 @@ public:
 
         int matched = 0;
 
-        // See pcre2demo.c for an explanation of this logic
+        // See pcre2demo.c for an explanation of this logic utf
         PCRE2_SIZE arglen = wcslen(arg);
         int rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg), arglen, 0, 0, regex.match, 0));
         if (rc < 0)
@@ -573,12 +579,13 @@ public:
 
 static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv)
 {
-    const wchar_t *short_options = L"ainqr";
+    const wchar_t *short_options = L"ainvqr";
     const struct woption long_options[] =
     {
         { L"all", no_argument, 0, 'a'},
         { L"ignore-case", no_argument, 0, 'i'},
         { L"index", no_argument, 0, 'n'},
+        { L"invert-match", no_argument, 0, 'v'},
         { L"quiet", no_argument, 0, 'q'},
         { L"regex", no_argument, 0, 'r'},
         { 0, 0, 0, 0 }
@@ -610,6 +617,10 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
 
             case 'n':
                 opts.index = true;
+                break;
+
+            case 'v':
+                opts.invert_match = true;
                 break;
 
             case 'q':

@@ -85,9 +85,11 @@ function __fish_load_path_helper_paths
 	# Since we are prepending but want to preserve the order of the input file, we reverse the array, append, and then reverse it again
 	set __fish_tmp_path $__fish_tmp_path[-1..1] 
 	while read -l new_path_comp
-		set -l where (contains -i $new_path_comp $__fish_tmp_path)
-		and set -e __fish_tmp_path[$where]
-		set __fish_tmp_path $new_path_comp $__fish_tmp_path
+		if test -d $new_path_comp
+			set -l where (contains -i $new_path_comp $__fish_tmp_path)
+			and set -e __fish_tmp_path[$where]
+			set __fish_tmp_path $new_path_comp $__fish_tmp_path
+		end
 	end
 	set __fish_tmp_path $__fish_tmp_path[-1..1]
 end

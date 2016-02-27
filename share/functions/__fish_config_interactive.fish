@@ -288,8 +288,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		end
 	end
 
-	if not set -q NVIM_LISTEN_ADDRESS # Neovim will swallow the 24bit sequences, rendering text white
-		and begin
+	if begin
 			set -q KONSOLE_PROFILE_NAME # KDE's konsole
 			or string match -q -- "*:*" $ITERM_SESSION_ID # Supporting versions of iTerm2 will include a colon here
 			or string match -q -- "st-*" $TERM # suckless' st

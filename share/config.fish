@@ -14,7 +14,7 @@ set -g IFS \n\ \t
 # Create the default command_not_found handler
 #
 function __fish_default_command_not_found_handler
-    echo "fish: Unknown command '$argv'" >&2
+	echo "fish: Unknown command '$argv'" >&2
 end
 
 #
@@ -22,7 +22,7 @@ end
 # in case we are not interactive
 #
 status -i; or function __fish_command_not_found_handler --on-event fish_command_not_found
-    __fish_default_command_not_found_handler $argv
+	__fish_default_command_not_found_handler $argv
 end
 
 #
@@ -49,19 +49,19 @@ end
 # default functions/completions are included in the respective path.
 
 if not set -q fish_function_path
-	set fish_function_path $configdir/fish/functions    $__fish_sysconfdir/functions $__fish_datadir/vendor_functions.d   $__fish_datadir/functions
+	set fish_function_path $configdir/fish/functions	$__fish_sysconfdir/functions $__fish_datadir/vendor_functions.d   $__fish_datadir/functions
 end
 
 if not contains $__fish_datadir/functions $fish_function_path
-        set fish_function_path $fish_function_path $__fish_datadir/functions
+	set fish_function_path $fish_function_path $__fish_datadir/functions
 end
 
 if not set -q fish_complete_path
-	set fish_complete_path $configdir/fish/completions  $__fish_sysconfdir/completions  $__fish_datadir/vendor_completions.d  $__fish_datadir/completions $userdatadir/fish/generated_completions
+	set fish_complete_path $configdir/fish/completions	$__fish_sysconfdir/completions	$__fish_datadir/vendor_completions.d  $__fish_datadir/completions $userdatadir/fish/generated_completions
 end
 
 if not contains $__fish_datadir/completions $fish_complete_path
-        set fish_complete_path $fish_complete_path $__fish_datadir/completions
+	set fish_complete_path $fish_complete_path $__fish_datadir/completions
 end
 
 #
@@ -83,13 +83,13 @@ set -g __fish_tmp_path $PATH
 function __fish_load_path_helper_paths
 	# We want to rearrange the path to reflect this order. Delete that path component if it exists and then prepend it.
 	# Since we are prepending but want to preserve the order of the input file, we reverse the array, append, and then reverse it again
-    set __fish_tmp_path $__fish_tmp_path[-1..1] 
-    while read -l new_path_comp
-        set -l where (contains -i $new_path_comp $__fish_tmp_path)
-        and set -e __fish_tmp_path[$where]
-        set __fish_tmp_path $new_path_comp $__fish_tmp_path
-    end
-    set __fish_tmp_path $__fish_tmp_path[-1..1]
+	set __fish_tmp_path $__fish_tmp_path[-1..1] 
+	while read -l new_path_comp
+		set -l where (contains -i $new_path_comp $__fish_tmp_path)
+		and set -e __fish_tmp_path[$where]
+		set __fish_tmp_path $new_path_comp $__fish_tmp_path
+	end
+	set __fish_tmp_path $__fish_tmp_path[-1..1]
 end
 test -r /etc/paths ; and __fish_load_path_helper_paths < /etc/paths 
 for pathfile in /etc/paths.d/* ; __fish_load_path_helper_paths < $pathfile ; end

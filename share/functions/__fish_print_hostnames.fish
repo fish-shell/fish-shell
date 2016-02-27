@@ -2,18 +2,15 @@
 function __fish_print_hostnames -d "Print a list of known hostnames"
 	# HACK: This only deals with ipv4
 
-	# Ignore zero ips
-	# An option like grep's "-v" would make this massively simpler
-	# It can't be grouped because that would lead to one line for the entire thing and one per-group
-	set -l renonzero '^[^0].+|^0.[^0].+|^0.0.[^0].+|^0.0.0.[^0].+'
 	# Print all hosts from /etc/hosts
 	if type -q getent
-		getent hosts | string match -r $renonzero \
+		# Ignore zero ips
+		getent hosts | grep -v '^0.0.0.0' \
 		| string replace -r '[0-9.]*\s*' '' | string split " "
 	else if test -r /etc/hosts
-		# Ignore commented lines
-		string match -r '^[^#\s]+ .*$' </etc/hosts | string match -r $renonzero \
-		| string replace -r '[0-9.]*\s*' '' | string split " "
+		# Ignore commented lines and functionally empty lines
+		grep -v '^\s*0.0.0.0\|^\s*#\|^\s*$' /etc/hosts \
+		| string replace -r '[0-9.]*\s*' '' | string trim | string replace -ra '\s' '\n'
 	end
 	# Print nfs servers from /etc/fstab
 	if test -r /etc/fstab

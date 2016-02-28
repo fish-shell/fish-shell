@@ -971,6 +971,7 @@ parse_execution_result_t parse_execution_context_t::determine_arguments(const pa
     /* Get all argument nodes underneath the statement. We guess we'll have that many arguments (but may have more or fewer, if there are wildcards involved) */
     const parse_node_tree_t::parse_node_list_t argument_nodes = tree.find_nodes(parent, symbol_argument);
     out_arguments->reserve(out_arguments->size() + argument_nodes.size());
+    std::vector<completion_t> arg_expanded;
     for (size_t i=0; i < argument_nodes.size(); i++)
     {
         const parse_node_t &arg_node = *argument_nodes.at(i);
@@ -980,8 +981,8 @@ parse_execution_result_t parse_execution_context_t::determine_arguments(const pa
         const wcstring arg_str = arg_node.get_source(src);
 
         /* Expand this string */
-        std::vector<completion_t> arg_expanded;
         parse_error_list_t errors;
+        arg_expanded.clear();
         int expand_ret = expand_string(arg_str, &arg_expanded, EXPAND_NO_DESCRIPTIONS, &errors);
         parse_error_offset_source_start(&errors, arg_node.source_start);
         switch (expand_ret)
@@ -1010,10 +1011,14 @@ parse_execution_result_t parse_execution_context_t::determine_arguments(const pa
             }
         }
 
-        /* Now copy over any expanded arguments */
-        for (size_t i=0; i < arg_expanded.size(); i++)
+        /* Now copy over any expanded arguments. Do it using swap() to avoid extra allocations; this is called very frequently. */
+        size_t old_arg_count = out_arguments->size();
+        size_t new_arg_count = arg_expanded.size();
+        out_arguments->resize(old_arg_count + new_arg_count);
+        for (size_t i=0; i < new_arg_count; i++)
         {
-            out_arguments->push_back(arg_expanded.at(i).completion);
+            wcstring &new_arg = arg_expanded.at(i).completion;
+            out_arguments->at(old_arg_count + i).swap(new_arg);
         }
     }
 

@@ -1287,7 +1287,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
     return err;
 }
 
-parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, parse_error_list_t *out_errors, bool allow_incomplete)
+parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, parse_error_list_t *out_errors, bool allow_incomplete, parse_node_tree_t *out_tree)
 {
     parse_node_tree_t node_tree;
     parse_error_list_t parse_errors;
@@ -1546,9 +1546,14 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src, pars
     if (has_unclosed_block || has_unclosed_quote)
         res |= PARSER_TEST_INCOMPLETE;
 
-    if (out_errors)
+    if (out_errors != NULL)
     {
         out_errors->swap(parse_errors);
+    }
+    
+    if (out_tree != NULL)
+    {
+        out_tree->swap(node_tree);
     }
 
     return res;

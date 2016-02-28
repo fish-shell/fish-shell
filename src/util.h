@@ -13,7 +13,7 @@
    Returns the larger of two ints
 */
 template<typename T>
-static inline T maxi(T a, T b)
+inline T maxi(T a, T b)
 {
     return a>b?a:b;
 }
@@ -22,7 +22,7 @@ static inline T maxi(T a, T b)
    Returns the smaller of two ints
  */
 template<typename T>
-static inline T mini(T a, T b)
+inline T mini(T a, T b)
 {
     return a<b?a:b;
 }

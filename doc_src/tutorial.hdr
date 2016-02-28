@@ -528,10 +528,10 @@ You can choose among some sample prompts by running `fish_config prompt`. `fish`
 
 `$PATH` is an environment variable containing the directories in which `fish` searches for commands. Unlike other shells, $PATH is a [list](#tut_lists), not a colon-delimited string.
 
-To prepend to `$PATH`, you can write:
+To prepend /usr/local/bin and /usr/sbin to `$PATH`, you can write:
 
 \fish{cli-dark}
->_ set PATH /new/path $PATH
+>_ set PATH /usr/local/bin /usr/sbin $PATH
 \endfish
 
 You can do so directly in `config.fish`, like you might do in other shells with `.profile`. See [this example](#path_example).

@@ -309,7 +309,7 @@ public:
       \param flags Some expand flags to use
       \param output List to insert output into
     */
-    void expand_argument_list(const wcstring &arg_src, expand_flags_t flags, std::vector<completion_t> *output) const;
+    static void expand_argument_list(const wcstring &arg_src, expand_flags_t flags, std::vector<completion_t> *output);
 
     /**
        Returns a string describing the current parser pisition in the format 'FILENAME (line LINE_NUMBER): LINE'.

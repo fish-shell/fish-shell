@@ -1000,8 +1000,7 @@ void completer_t::complete_from_args(const wcstring &str,
     }
     
     std::vector<completion_t> possible_comp;
-    const parser_t parser;
-    parser.expand_argument_list(args, eflags, &possible_comp);
+    parser_t::expand_argument_list(args, eflags, &possible_comp);
 
     if (! is_autosuggest)
     {

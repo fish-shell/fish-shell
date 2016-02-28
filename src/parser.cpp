@@ -465,7 +465,7 @@ void parser_t::emit_profiling(const char *path) const
     }
 }
 
-void parser_t::expand_argument_list(const wcstring &arg_list_src, expand_flags_t eflags, std::vector<completion_t> *output_arg_list) const
+void parser_t::expand_argument_list(const wcstring &arg_list_src, expand_flags_t eflags, std::vector<completion_t> *output_arg_list)
 {
     assert(output_arg_list != NULL);
 

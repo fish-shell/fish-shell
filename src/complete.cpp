@@ -1505,8 +1505,8 @@ bool completer_t::try_complete_variable(const wcstring &str)
     enum {e_unquoted, e_single_quoted, e_double_quoted} mode = e_unquoted;
     const size_t len = str.size();
 
-    /* Get the position of the dollar heading a run of valid variable characters. -1 means none. */
-    size_t variable_start = -1;
+    /* Get the position of the dollar heading a (possibly empty) run of valid variable characters. npos means none. */
+    size_t variable_start = wcstring::npos;
 
     for (size_t in_pos=0; in_pos<len; in_pos++)
     {
@@ -1554,9 +1554,11 @@ bool completer_t::try_complete_variable(const wcstring &str)
         }
     }
 
-    /* Now complete if we have a variable start that's also not the last character */
+    /* Now complete if we have a variable start. Note the variable text may be empty; in that case don't generate an autosuggestion, but do allow tab completion */
+    bool allow_empty = ! (this->flags & COMPLETION_REQUEST_AUTOSUGGESTION);
+    bool text_is_empty = (variable_start == len);
     bool result = false;
-    if (variable_start != static_cast<size_t>(-1) && variable_start + 1 < len)
+    if (variable_start != wcstring::npos && (allow_empty || ! text_is_empty))
     {
         result = this->complete_variable(str, variable_start + 1);
     }

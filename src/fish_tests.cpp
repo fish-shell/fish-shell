@@ -2106,7 +2106,19 @@ static void test_complete(void)
     const env_vars_snapshot_t &vars = env_vars_snapshot_t::current();
 
     std::vector<completion_t> completions;
+    complete(L"$", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    completions_sort_and_prioritize(&completions);
+    do_test(completions.size() == 6);
+    do_test(completions.at(0).completion == L"Bar1");
+    do_test(completions.at(1).completion == L"Bar2");
+    do_test(completions.at(2).completion == L"Bar3");
+    do_test(completions.at(3).completion == L"Foo1");
+    do_test(completions.at(4).completion == L"Foo2");
+    do_test(completions.at(5).completion == L"Foo3");
+
+    completions.clear();
     complete(L"$F", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    completions_sort_and_prioritize(&completions);
     do_test(completions.size() == 3);
     do_test(completions.at(0).completion == L"oo1");
     do_test(completions.at(1).completion == L"oo2");
@@ -2114,13 +2126,15 @@ static void test_complete(void)
 
     completions.clear();
     complete(L"$1", &completions, COMPLETION_REQUEST_DEFAULT, vars);
+    completions_sort_and_prioritize(&completions);
     do_test(completions.empty());
 
     completions.clear();
     complete(L"$1", &completions, COMPLETION_REQUEST_DEFAULT | COMPLETION_REQUEST_FUZZY_MATCH, vars);
+    completions_sort_and_prioritize(&completions);
     do_test(completions.size() == 2);
-    do_test(completions.at(0).completion == L"$Foo1");
-    do_test(completions.at(1).completion == L"$Bar1");
+    do_test(completions.at(0).completion == L"$Bar1");
+    do_test(completions.at(1).completion == L"$Foo1");
 
     if (system("mkdir -p '/tmp/complete_test/'")) err(L"mkdir failed");
     if (system("touch '/tmp/complete_test/testfile'")) err(L"touch failed");

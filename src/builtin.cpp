@@ -1982,7 +1982,7 @@ int define_function(parser_t &parser, io_streams_t &streams, const wcstring_list
         // The leading - here specifies RETURN_IN_ORDER
         int opt = w.wgetopt_long(argc,
                                  argv,
-                                 L"-d:s:j:p:v:e:haSV:",
+                                 L"-d:s:j:p:v:e:w:haSV:",
                                  long_options,
                                  &opt_index);
         if (opt == -1)

@@ -720,28 +720,25 @@ parse_execution_result_t parse_execution_context_t::run_while_statement(const pa
 /* Reports an error. Always returns parse_execution_errored, so you can assign the result to an 'errored' variable */
 parse_execution_result_t parse_execution_context_t::report_error(const parse_node_t &node, const wchar_t *fmt, ...) const
 {
-    if (parser->show_errors)
-    {
-        /* Create an error */
-        parse_error_list_t error_list = parse_error_list_t(1);
-        parse_error_t *error = &error_list.at(0);
-        error->source_start = node.source_start;
-        error->source_length = node.source_length;
-        error->code = parse_error_syntax; //hackish
+    /* Create an error */
+    parse_error_list_t error_list = parse_error_list_t(1);
+    parse_error_t *error = &error_list.at(0);
+    error->source_start = node.source_start;
+    error->source_length = node.source_length;
+    error->code = parse_error_syntax; //hackish
 
-        va_list va;
-        va_start(va, fmt);
-        error->text = vformat_string(fmt, va);
-        va_end(va);
+    va_list va;
+    va_start(va, fmt);
+    error->text = vformat_string(fmt, va);
+    va_end(va);
 
-        this->report_errors(error_list);
-    }
+    this->report_errors(error_list);
     return parse_execution_errored;
 }
 
 parse_execution_result_t parse_execution_context_t::report_errors(const parse_error_list_t &error_list) const
 {
-    if (parser->show_errors && ! parser->cancellation_requested)
+    if (! parser->cancellation_requested)
     {
         if (error_list.empty())
         {

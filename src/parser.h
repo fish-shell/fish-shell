@@ -228,9 +228,6 @@ class parser_t
 {
     friend class parse_execution_context_t;
 private:
-    /** Whether or not we output errors */
-    const bool show_errors;
-
     /** Indication that we should skip all blocks */
     bool cancellation_requested;
 
@@ -283,8 +280,8 @@ public:
     */
     static void skip_all_blocks();
 
-    /** Create a parser of the given type */
-    parser_t(bool show_errors);
+    /** Create a parser */
+    parser_t();
 
     /** Global event blocks */
     event_blockage_list_t global_event_blocks;
@@ -312,7 +309,7 @@ public:
       \param flags Some expand flags to use
       \param output List to insert output into
     */
-    void expand_argument_list(const wcstring &arg_src, expand_flags_t flags, std::vector<completion_t> *output);
+    void expand_argument_list(const wcstring &arg_src, expand_flags_t flags, std::vector<completion_t> *output) const;
 
     /**
        Returns a string describing the current parser pisition in the format 'FILENAME (line LINE_NUMBER): LINE'.

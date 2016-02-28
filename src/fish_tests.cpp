@@ -593,7 +593,7 @@ static void test_parser()
 {
     say(L"Testing parser");
 
-    parser_t parser(true);
+    parser_t parser;
 
     say(L"Testing block nesting");
     if (!parse_util_detect_errors(L"if; end"))
@@ -781,7 +781,6 @@ static void test_parser()
     do_test(comps.at(0).completion == L"alpha");
     do_test(comps.at(1).completion == L"beta gamma");
     do_test(comps.at(2).completion == L"delta");
-
 }
 
 /* Wait a while and then SIGINT the main thread */
@@ -1954,7 +1953,7 @@ static void test_is_potential_path()
 int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv);
 static bool run_one_test_test(int expected, wcstring_list_t &lst, bool bracket)
 {
-    parser_t parser(true);
+    parser_t parser;
     size_t i, count = lst.size();
     wchar_t **argv = new wchar_t *[count+3];
     argv[0] = (wchar_t *)(bracket ? L"[" : L"test");
@@ -1993,7 +1992,7 @@ static bool run_test_test(int expected, const wcstring &str)
 static void test_test_brackets()
 {
     // Ensure [ knows it needs a ]
-    parser_t parser(true);
+    parser_t parser;
     io_streams_t streams;
 
     const wchar_t *argv1[] = {L"[", L"foo", NULL};
@@ -4116,7 +4115,7 @@ static void test_wcstring_tok(void)
 int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv);
 static void run_one_string_test(const wchar_t **argv, int expected_rc, const wchar_t *expected_out)
 {
-    parser_t parser(true);
+    parser_t parser;
     io_streams_t streams;
     streams.stdin_is_directly_redirected = false; // read from argv instead of stdin
     int rc = builtin_string(parser, streams, const_cast<wchar_t**>(argv));

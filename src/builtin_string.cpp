@@ -366,13 +366,11 @@ public:
         {
             match = wildcard_match(arg, wcpattern, false);
         }
-        if (match)
+        if (match ^ opts.invert_match)
         {
             total_matched++;
-        }
-        if (!opts.quiet)
-        {
-            if (match)
+
+            if (!opts.quiet)
             {
                 if (opts.index)
                 {
@@ -460,11 +458,11 @@ class pcre2_matcher_t: public string_matcher_t
         if (pcre2_rc == PCRE2_ERROR_NOMATCH)
         {
             if (opts.invert_match && !opts.quiet)
-            {               
+            {
                 streams.out.append(arg);
                 streams.out.push_back(L'\n');
             }
-            return opts.invert_match ? 1 : 0;
+            return 0;
         }
         if (pcre2_rc < 0)
         {
@@ -523,7 +521,7 @@ public:
 
         int matched = 0;
 
-        // See pcre2demo.c for an explanation of this logic utf
+        // See pcre2demo.c for an explanation of this logic
         PCRE2_SIZE arglen = wcslen(arg);
         int rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg), arglen, 0, 0, regex.match, 0));
         if (rc < 0)
@@ -585,7 +583,7 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
         { L"all", no_argument, 0, 'a'},
         { L"ignore-case", no_argument, 0, 'i'},
         { L"index", no_argument, 0, 'n'},
-        { L"invert-match", no_argument, 0, 'v'},
+        { L"invert", no_argument, 0, 'v'},
         { L"quiet", no_argument, 0, 'q'},
         { L"regex", no_argument, 0, 'r'},
         { 0, 0, 0, 0 }
@@ -1350,6 +1348,7 @@ static const struct string_subcommand
     const wchar_t *name;
     int (*handler)(parser_t &, io_streams_t &, int argc, wchar_t **argv);
 }
+
 string_subcommands[] =
 {
     { L"escape", &string_escape },

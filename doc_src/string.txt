@@ -12,7 +12,7 @@ string trim [(-l | --left)] [(-r | --right)] [(-c | --chars CHARS)]
             [(-q | --quiet)] [STRING...]
 string escape [(-n | --no-quoted)] [STRING...]
 string match [(-a | --all)] [(-i | --ignore-case)] [(-r | --regex)]
-             [(-n | --index)] [(-q | --quiet)] PATTERN [STRING...]
+             [(-n | --index)] [(-q | --quiet)] [(-v | --invert)] PATTERN [STRING...]
 string replace [(-a | --all)] [(-i | --ignore-case)] [(-r | --regex)]
                [(-q | --quiet)] PATTERN REPLACEMENT [STRING...]
 \endfish
@@ -44,7 +44,7 @@ The following subcommands are available:
 
 - `escape` escapes each STRING such that it can be passed back to `eval` to produce the original argument again. By default, all special characters are escaped, and quotes are used to simplify the output when possible. If `-n` or `--no-quote` is given, the simplifying quoted format is not used. Exit status: 0 if at least one string was escaped, or 1 otherwise.
 
-- `match` tests each STRING against PATTERN and prints matching substrings. Only the first match for each STRING is reported unless `-a` or `--all` is given, in which case all matches are reported. Matching can be made case-insensitive with `-i` or `--ignore-case`. If `-n` or `--index` is given, each match is reported as a 1-based start position and a length. By default, PATTERN is interpreted as a glob pattern matched against each entire STRING argument. If `-r` or `--regex` is given, PATTERN is interpreted as a Perl-compatible regular expression. For a regular expression containing capturing groups, multiple items will be reported for each match, one for the entire match and one for each capturing group. Exit status: 0 if at least one match was found, or 1 otherwise.
+- `match` tests each STRING against PATTERN and prints matching substrings. Only the first match for each STRING is reported unless `-a` or `--all` is given, in which case all matches are reported. Matching can be made case-insensitive with `-i` or `--ignore-case`. If `-n` or `--index` is given, each match is reported as a 1-based start position and a length. By default, PATTERN is interpreted as a glob pattern matched against each entire STRING argument. If `-r` or `--regex` is given, PATTERN is interpreted as a Perl-compatible regular expression. For a regular expression containing capturing groups, multiple items will be reported for each match, one for the entire match and one for each capturing group. If --invert or -v is used the selected lines will be only those which do not match the given glob pattern or regular expression.  Exit status: 0 if at least one match was found, or 1 otherwise.
 
 - `replace` is similar to `match` but replaces non-overlapping matching substrings with a replacement string and prints the result. By default, PATTERN is treated as a literal substring to be matched. If `-r` or `--regex` is given, PATTERN is interpreted as a Perl-compatible regular expression, and REPLACEMENT can contain C-style escape sequences like `\t` as well as references to capturing groups by number or name as `$n` or `${n}`. Exit status: 0 if at least one replacement was performed, or 1 otherwise.
 
@@ -106,6 +106,7 @@ The following subcommands are available:
 <bs>c</bs>g
 \endfish
 
+<<<<<<< c1ddfa5c636b8b353e56e10b66601ad1751cafcc
 \subsection string-example-match-glob Match Glob Examples
 
 \fish{cli-dark}
@@ -120,6 +121,65 @@ The following subcommands are available:
 
 >_ echo 'ok?' | string match '*\\?'
 >_ <outp>ok?</outp>
+=======
+\fish
+# string match glob examples
+
+string match '?' a
+# Output:
+# a
+
+string match 'a*b' axxb
+# Output:
+# axxb
+
+string match -i 'a??B' Axxb
+# Output:
+# Axxb
+
+echo 'ok?' | string match '*\\?'
+# Output:
+# ok?
+
+# string match regex examples
+
+string match -r 'cat|dog|fish' 'nice dog'
+# Output:
+# dog
+
+string match -r '(\\d\\d?):(\\d\\d):(\\d\\d)' 2:34:56
+# Output:
+# 2:34:56
+# 2
+# 34
+# 56
+
+string match -r '^(\\w{2,4})\\g1$' papa mud murmur
+# Output:
+# papa
+# pa
+# murmur
+# mur
+
+string match -r -v "c.*[12]" {cat,dog}(seq 1 4) 
+# Output:
+# dog1
+# dog2
+# cat3
+# dog3
+# cat4
+# dog4
+
+string match -r -a -n at ratatat
+# Output:
+# 2 2
+# 4 2
+# 6 2
+
+string match -r -i '0x[0-9a-f]{1,8}' 'int magic = 0xBadC0de;'
+# Output:
+# 0xBadC0de
+>>>>>>> Add inverted matching for globbing/wildcards.
 \endfish
 
 \subsection string-example-match-regex Match Regex Examples

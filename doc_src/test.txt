@@ -12,7 +12,9 @@ Tests the expression given and sets the exit status to 0 if true, and 1 if false
 
 The first form (`test`) is preferred. For compatibility with other shells, the second form is available: a matching pair of square brackets (`[ [EXPRESSION ] ]`).
 
-The following operators are available to examine files and directories:
+This test is mostly POSIX-compatible.
+
+\subsection test-files Operators for files and directories
 
 - `-b FILE` returns true if `FILE` is a block device.
 
@@ -48,7 +50,7 @@ The following operators are available to examine files and directories:
 
 - `-x FILE` returns true if `FILE` is marked as executable.
 
-The following operators are available to compare and examine text strings:
+\subsection test-strings Operators for text strings
 
 - `STRING1 = STRING2` returns true if the strings `STRING1` and `STRING2` are identical.
 
@@ -58,7 +60,7 @@ The following operators are available to compare and examine text strings:
 
 - `-z STRING` returns true if the length of `STRING` is zero.
 
-The following operators are available to compare and examine numbers:
+\subsection test-numbers Operators to compare and examine numbers
 
 - `NUM1 -eq NUM2` returns true if `NUM1` and `NUM2` are numerically equal.
 
@@ -74,7 +76,7 @@ The following operators are available to compare and examine numbers:
 
 Note that only integers are supported. For more complex mathematical operations, including fractions, the `env` program may be useful. Consult the documentation for your operating system.
 
-Expressions can be combined using the following operators:
+\subsection test-combinators Operators to combine expressions
 
 - `COND1 -a COND2` returns true if both `COND1` and `COND2` are true.
 
@@ -117,6 +119,21 @@ if test \( -f /foo -o -f /bar \) -a \( -f /baz -o -f /bat \)
 end.
 \endfish
 
+Numerical comparisons will simply fail if one of the operands is not a number:
+
+\fish
+if test 42 -eq "The answer to life, the universe and everything"
+    echo So long and thanks for all the fish # will not be executed
+end
+\endfish
+
+A common comparison is with $status:
+
+\fish
+if test $status -eq 0
+    echo "Previous command succeeded"
+end
+\endfish
 
 \subsection test-standards Standards
 

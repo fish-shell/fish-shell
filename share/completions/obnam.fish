@@ -1,9 +1,10 @@
 
 function nocommand
-        if commandline | __fish_sgrep -qe "add-key\|backup\|client-keys\|clients\|diff\|dump-repo\|force-lock\|forget\|fsck\|generations\|genids\|list-keys\|list-toplevels\|ls\|mount\|nagios-last-backup-age\|remove-client\|remove-key\|restore\|verify"
+    if __fish_seen_subcommand_from add-key backup client-keys clients diff \
+           dump-repo force-lock forget fsck generations genids list-keys list-toplevels ls mount nagios-last-backup-age remove-client remove-key restore verify
                 return 1
-        end
-        return 0
+    end
+    return 0
 end
 
 complete --command obnam --no-files --condition nocommand --arguments 'add-key' --description 'Adds an encryption key to the repository'

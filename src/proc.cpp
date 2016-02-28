@@ -57,11 +57,6 @@ Some of the code in this file is based on code from the Glibc manual.
 #include "output.h"
 
 /**
-   Size of message buffer
-*/
-#define MESS_SIZE 256
-
-/**
    Size of buffer for reading buffered output
 */
 #define BUFFER_SIZE 4096
@@ -405,25 +400,11 @@ static void handle_child_status(pid_t pid, int status)
         {
             if (pid == p->pid)
             {
-                /*				snprintf( mess,
-                  MESS_SIZE,
-                  "Process %d is %ls from job %ls\n",
-                  (int) pid, p->actual_cmd, j->command );
-                  write( 2, mess, strlen(mess ));
-                */
-
                 mark_process_status(j, p, status);
                 if (p->completed && prev != 0)
                 {
                     if (!prev->completed && prev->pid)
                     {
-                        /*					snprintf( mess,
-                          MESS_SIZE,
-                          "Kill previously uncompleted process %ls (%d)\n",
-                          prev->actual_cmd,
-                          prev->pid );
-                          write( 2, mess, strlen(mess ));
-                        */
                         kill(prev->pid,SIGPIPE);
                     }
                 }
@@ -466,13 +447,6 @@ static void handle_child_status(pid_t pid, int status)
 
            There have been bugs in both subshell handling and in
            builtin handling that have caused this previously...
-        */
-        /*		snprintf( mess,
-          MESS_SIZE,
-          "Process %d not found by %d\n",
-          (int) pid, (int)getpid() );
-
-          write( 2, mess, strlen(mess ));
         */
     }
     return;

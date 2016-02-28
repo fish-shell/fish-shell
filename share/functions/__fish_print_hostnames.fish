@@ -42,6 +42,8 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
 		end
 	end
 	for file in $known_hosts
-		test -r $file; and string replace -ra '(\S+) .*' '$1' <$file | string replace -ra '^\[([0-9.]+)\]:[0-9]+$' '$1' | string split ","
+		# Ignore hosts that are hashed, commented or have custom ports (like [localhost]:2200)
+		test -r $file; and string replace -ra '(\S+) .*' '$1' < $file | string match -r '^[^#|[=]+$' | string split ","
 	end
+	return 0
 end

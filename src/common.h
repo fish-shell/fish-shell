@@ -450,6 +450,17 @@ inline wcstring to_string(const int &x)
     return to_string(static_cast<long>(x));
 }
 
+/* A hackish thing to simulate rvalue references in C++98.
+   The idea is that you can define a constructor to take a moved_ref<T> and then swap() out of it.
+ */
+template<typename T>
+struct moved_ref
+{
+    T &val;
+    
+    explicit moved_ref(T &v) : val(v) { }
+};
+
 wchar_t **make_null_terminated_array(const wcstring_list_t &lst);
 char **make_null_terminated_array(const std::vector<std::string> &lst);
 

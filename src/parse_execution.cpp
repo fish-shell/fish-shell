@@ -66,7 +66,7 @@ static wcstring profiling_cmd_name_for_redirectable_block(const parse_node_t &no
     return result;
 }
 
-parse_execution_context_t::parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, parser_t *p, int initial_eval_level) : tree(t), src(s), parser(p), eval_level(initial_eval_level), executing_node_idx(NODE_OFFSET_INVALID), cached_lineno_offset(0), cached_lineno_count(0)
+parse_execution_context_t::parse_execution_context_t(moved_ref<parse_node_tree_t> t, const wcstring &s, parser_t *p, int initial_eval_level) : tree(t), src(s), parser(p), eval_level(initial_eval_level), executing_node_idx(NODE_OFFSET_INVALID), cached_lineno_offset(0), cached_lineno_count(0)
 {
 }
 

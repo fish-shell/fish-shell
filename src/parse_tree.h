@@ -165,6 +165,13 @@ public:
 class parse_node_tree_t : public std::vector<parse_node_t>
 {
 public:
+    
+    parse_node_tree_t() {}
+    
+    parse_node_tree_t(moved_ref<parse_node_tree_t> t)
+    {
+        this->swap(t.val);
+    }
 
     /* Get the node corresponding to a child of the given node, or NULL if there is no such child. If expected_type is provided, assert that the node has that type.
      */

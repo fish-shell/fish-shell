@@ -121,7 +121,7 @@ private:
     int line_offset_of_character_at_offset(size_t char_idx);
 
 public:
-    parse_execution_context_t(const parse_node_tree_t &t, const wcstring &s, parser_t *p, int initial_eval_level);
+    parse_execution_context_t(moved_ref<parse_node_tree_t> t, const wcstring &s, parser_t *p, int initial_eval_level);
 
     /* Returns the current eval level */
     int current_eval_level() const

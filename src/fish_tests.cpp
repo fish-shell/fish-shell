@@ -751,17 +751,6 @@ static void test_parser()
     }
 
     say(L"Testing basic evaluation");
-#if 0
-    /* This fails now since the parser takes a wcstring&, and NULL converts to wchar_t * converts to wcstring which crashes (thanks C++) */
-    if (!parser.eval(0, 0, TOP))
-    {
-        err(L"Null input when evaluating undetected");
-    }
-#endif
-    if (!parser.eval(L"ls", io_chain_t(), WHILE))
-    {
-        err(L"Invalid block mode when evaluating undetected");
-    }
 
     /* Ensure that we don't crash on infinite self recursion and mutual recursion. These must use the principal parser because we cannot yet execute jobs on other parsers (!) */
     say(L"Testing recursion detection");

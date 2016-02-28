@@ -296,6 +296,11 @@ public:
       \return 0 on success, 1 otherwise
     */
     int eval(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type);
+    
+    /**
+       Evaluate the expressions contained in cmd, which has been parsed into the given parse tree. This takes ownership of the tree.
+     */
+    int eval_acquiring_tree(const wcstring &cmd, const io_chain_t &io, enum block_type_t block_type, moved_ref<parse_node_tree_t> t);
 
     /** Evaluates a block node at the given node offset in the topmost execution context */
     int eval_block_node(node_offset_t node_idx, const io_chain_t &io, enum block_type_t block_type);

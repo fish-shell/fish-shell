@@ -85,7 +85,7 @@ struct block_t
 {
 protected:
     /** Protected constructor. Use one of the subclasses below. */
-    block_t(block_type_t t);
+    explicit block_t(block_type_t t);
 
 private:
     const block_type_t block_type; /**< Type of block. */
@@ -134,7 +134,7 @@ struct if_block_t : public block_t
 struct event_block_t : public block_t
 {
     event_t const event;
-    event_block_t(const event_t &evt);
+    explicit event_block_t(const event_t &evt);
 };
 
 struct function_block_t : public block_t
@@ -147,7 +147,7 @@ struct function_block_t : public block_t
 struct source_block_t : public block_t
 {
     const wchar_t * const source_file;
-    source_block_t(const wchar_t *src);
+    explicit source_block_t(const wchar_t *src);
 };
 
 struct for_block_t : public block_t
@@ -172,7 +172,7 @@ struct fake_block_t : public block_t
 
 struct scope_block_t : public block_t
 {
-    scope_block_t(block_type_t type); //must be BEGIN, TOP or SUBST
+    explicit scope_block_t(block_type_t type); //must be BEGIN, TOP or SUBST
 };
 
 struct breakpoint_block_t : public block_t

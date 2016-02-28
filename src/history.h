@@ -116,7 +116,7 @@ private:
     history_t &operator=(const history_t&);
 
     /** Private creator */
-    history_t(const wcstring &pname);
+    explicit history_t(const wcstring &pname);
 
     /** Privately add an item. If pending, the item will not be returned by history searches until a call to resolve_pending. */
     void add(const history_item_t &item, bool pending = false);
@@ -348,7 +348,7 @@ void history_sanity_check();
 struct file_detection_context_t
 {
     /* Constructor */
-    file_detection_context_t(history_t *hist, history_identifier_t ident = 0);
+    explicit file_detection_context_t(history_t *hist, history_identifier_t ident = 0);
 
     /* Determine which of potential_paths are valid, and put them in valid_paths */
     int perform_file_detection();

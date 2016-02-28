@@ -1318,7 +1318,7 @@ static void test_escape_sequences(void)
 class lru_node_test_t : public lru_node_t
 {
 public:
-    lru_node_test_t(const wcstring &tmp) : lru_node_t(tmp) { }
+    explicit lru_node_test_t(const wcstring &tmp) : lru_node_t(tmp) { }
 };
 
 class test_lru_t : public lru_cache_t<lru_node_test_t>

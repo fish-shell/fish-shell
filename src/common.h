@@ -357,7 +357,7 @@ struct string_fuzzy_match_t
     size_t match_distance_second;
 
     /* Constructor */
-    string_fuzzy_match_t(enum fuzzy_match_type_t t, size_t distance_first = 0, size_t distance_second = 0);
+    explicit string_fuzzy_match_t(enum fuzzy_match_type_t t, size_t distance_first = 0, size_t distance_second = 0);
 
     /* Return -1, 0, 1 if this match is (respectively) better than, equal to, or worse than rhs */
     int compare(const string_fuzzy_match_t &rhs) const;
@@ -486,7 +486,7 @@ class null_terminated_array_t
 
 public:
     null_terminated_array_t() : array(NULL) { }
-    null_terminated_array_t(const string_list_t &argv) : array(make_null_terminated_array(argv))
+    explicit null_terminated_array_t(const string_list_t &argv) : array(make_null_terminated_array(argv))
     {
     }
 
@@ -576,8 +576,8 @@ class scoped_lock
 public:
     void lock(void);
     void unlock(void);
-    scoped_lock(pthread_mutex_t &mutex);
-    scoped_lock(mutex_lock_t &lock);
+    explicit scoped_lock(pthread_mutex_t &mutex);
+    explicit scoped_lock(mutex_lock_t &lock);
     ~scoped_lock();
 };
 
@@ -607,7 +607,7 @@ class scoped_rwlock
 
     /* No copying */
     scoped_rwlock &operator=(const scoped_lock &);
-    scoped_rwlock(const scoped_lock &);
+    explicit scoped_rwlock(const scoped_lock &);
 
 public:
     void lock(void);
@@ -619,8 +619,8 @@ public:
        equivalent to `lock.unlock_shared(); lock.lock();`
      */
     void upgrade(void);
-    scoped_rwlock(pthread_rwlock_t &rwlock, bool shared = false);
-    scoped_rwlock(rwlock_t &rwlock, bool shared = false);
+    explicit scoped_rwlock(pthread_rwlock_t &rwlock, bool shared = false);
+    explicit scoped_rwlock(rwlock_t &rwlock, bool shared = false);
     ~scoped_rwlock();
 };
 
@@ -639,7 +639,7 @@ class scoped_push
     bool restored;
 
 public:
-    scoped_push(T *r): ref(r), saved_value(*r), restored(false)
+    explicit scoped_push(T *r): ref(r), saved_value(*r), restored(false)
     {
     }
 

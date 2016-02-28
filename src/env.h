@@ -101,12 +101,11 @@ class env_var_t : public wcstring
 private:
     bool is_missing;
 public:
-    static env_var_t missing_var(void)
+    static env_var_t missing_var()
     {
-        env_var_t result(L"");
+        env_var_t result((wcstring()));
         result.is_missing = true;
         return result;
-
     }
 
     env_var_t(const env_var_t &x) : wcstring(x), is_missing(x.is_missing) { }

@@ -195,7 +195,7 @@ private:
 
 public:
 
-    move_word_state_machine_t(move_word_style_t st);
+    explicit move_word_state_machine_t(move_word_style_t st);
     bool consume_char(wchar_t c);
     void reset();
 };

@@ -87,7 +87,7 @@ public:
     */
     wcstring_list_t arguments;
 
-    event_t(int t);
+    explicit event_t(int t);
     ~event_t();
 
     static event_t signal_event(int sig);

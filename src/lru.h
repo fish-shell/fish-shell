@@ -35,7 +35,7 @@ public:
     const wcstring key;
 
     /** Constructor */
-    lru_node_t(const wcstring &pkey) : prev(NULL), next(NULL), key(pkey) { }
+    explicit lru_node_t(const wcstring &pkey) : prev(NULL), next(NULL), key(pkey) { }
 
     /** Virtual destructor that does nothing for classes that inherit lru_node_t */
     virtual ~lru_node_t() {}
@@ -117,7 +117,7 @@ protected:
 public:
 
     /** Constructor */
-    lru_cache_t(size_t max_size = 1024) : max_node_count(max_size), node_count(0), mouth(wcstring())
+    explicit lru_cache_t(size_t max_size = 1024) : max_node_count(max_size), node_count(0), mouth(wcstring())
     {
         /* Hook up the mouth to itself: a one node circularly linked list! */
         mouth.prev = mouth.next = &mouth;
@@ -220,7 +220,7 @@ public:
     {
         lru_node_t *node;
     public:
-        iterator(lru_node_t *val) : node(val) { }
+        explicit iterator(lru_node_t *val) : node(val) { }
         void operator++()
         {
             node = lru_cache_t::get_previous(node);

@@ -422,7 +422,7 @@ public:
         return job;
     }
 
-    job_iterator_t(job_list_t &jobs);
+    explicit job_iterator_t(job_list_t &jobs);
     job_iterator_t();
     size_t count() const;
 };

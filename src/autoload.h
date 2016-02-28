@@ -27,7 +27,7 @@ file_access_attempt_t access_file(const wcstring &path, int mode);
 
 struct autoload_function_t : public lru_node_t
 {
-    autoload_function_t(const wcstring &key) : lru_node_t(key), access(), is_loaded(false), is_placeholder(false), is_internalized(false) { }
+    explicit autoload_function_t(const wcstring &key) : lru_node_t(key), access(), is_loaded(false), is_placeholder(false), is_internalized(false) { }
     file_access_attempt_t access; /** The last access attempt */
     bool is_loaded; /** Whether we have actually loaded this function */
     bool is_placeholder; /** Whether we are a placeholder that stands in for "no such function". If this is true, then is_loaded must be false. */

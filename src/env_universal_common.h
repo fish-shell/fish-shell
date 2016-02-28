@@ -75,7 +75,7 @@ class env_universal_t
     static var_table_t read_message_internal(int fd);
     
 public:
-    env_universal_t(const wcstring &path);
+    explicit env_universal_t(const wcstring &path);
     ~env_universal_t();
     
     /* Get the value of the variable with the specified name */

@@ -126,7 +126,7 @@ class builtin_commandline_scoped_transient_t
 {
     size_t token;
     public:
-    builtin_commandline_scoped_transient_t(const wcstring &cmd);
+    explicit builtin_commandline_scoped_transient_t(const wcstring &cmd);
     ~builtin_commandline_scoped_transient_t();
 };
 

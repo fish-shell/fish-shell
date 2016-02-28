@@ -74,7 +74,7 @@ class scoped_buffer_t
     int (* const old_writer)(char);
 
 public:
-    scoped_buffer_t(data_buffer_t *buff) : old_buff(s_writeb_buffer), old_writer(output_get_writer())
+    explicit scoped_buffer_t(data_buffer_t *buff) : old_buff(s_writeb_buffer), old_writer(output_get_writer())
     {
         s_writeb_buffer = buff;
         output_set_writer(s_writeb);

@@ -628,7 +628,7 @@ class parse_ll_t
 public:
 
     /* Constructor */
-    parse_ll_t(enum parse_token_type_t goal) : fatal_errored(false), should_generate_error_messages(true)
+    explicit parse_ll_t(enum parse_token_type_t goal) : fatal_errored(false), should_generate_error_messages(true)
     {
         this->symbol_stack.reserve(16);
         this->nodes.reserve(64);

@@ -56,7 +56,7 @@ public:
 class io_close_t : public io_data_t
 {
 public:
-    io_close_t(int f) :
+    explicit io_close_t(int f) :
         io_data_t(IO_CLOSE, f)
     {
     }
@@ -137,7 +137,7 @@ private:
     /** buffer to save output in */
     std::vector<char> out_buffer;
 
-    io_buffer_t(int f):
+    explicit io_buffer_t(int f):
         io_pipe_t(IO_BUFFER, f, false /* not input */),
         out_buffer()
     {
@@ -195,7 +195,7 @@ class io_chain_t : public std::vector<shared_ptr<io_data_t> >
 {
 public:
     io_chain_t();
-    io_chain_t(const shared_ptr<io_data_t> &);
+    explicit io_chain_t(const shared_ptr<io_data_t> &);
 
     void remove(const shared_ptr<const io_data_t> &element);
     void push_back(const shared_ptr<io_data_t> &element);

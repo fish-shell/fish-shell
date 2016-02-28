@@ -66,7 +66,7 @@ struct builtin_printf_state_t
     /* Whether we should stop outputting. This gets set in the case of an error, and also with the \c escape. */
     bool early_exit;
 
-    builtin_printf_state_t(io_streams_t &s) : streams(s), exit_code(0), early_exit(false)
+    explicit builtin_printf_state_t(io_streams_t &s) : streams(s), exit_code(0), early_exit(false)
     {
     }
 

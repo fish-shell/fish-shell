@@ -173,7 +173,7 @@ private:
     }
 
 public:
-    test_parser(const wcstring_list_t &val) : strings(val)
+    explicit test_parser(const wcstring_list_t &val) : strings(val)
     { }
 
     expression *parse_expression(unsigned int start, unsigned int end);

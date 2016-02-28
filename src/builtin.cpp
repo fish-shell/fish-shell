@@ -2805,7 +2805,7 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
             wcstring tokens;
             tokens.reserve(buff.size());
             bool empty = true;
-
+            
             for (wcstring_range loc = wcstring_tok(buff, ifs); loc.first != wcstring::npos; loc = wcstring_tok(buff, ifs, loc))
             {
                 if (!empty) tokens.push_back(ARRAY_SEP);
@@ -2820,7 +2820,7 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 
             while (i<argc)
             {
-                loc = wcstring_tok(buff, (i+1<argc) ? ifs : L"", loc);
+                loc = wcstring_tok(buff, (i+1<argc) ? ifs : wcstring(), loc);
                 env_set(argv[i], loc.first == wcstring::npos ? L"" : &buff.c_str()[loc.first], place);
 
                 ++i;
@@ -3141,7 +3141,7 @@ static int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     }
     else
     {
-        dir_in = argv[1];
+        dir_in = env_var_t(argv[1]);
     }
 
     bool got_cd_path = false;

@@ -129,7 +129,7 @@ class time_profiler_t
     double start;
 public:
 
-    time_profiler_t(const char *w)
+    explicit time_profiler_t(const char *w)
     {
         if (LOG_TIMES)
         {
@@ -165,7 +165,7 @@ class history_lru_node_t : public lru_node_t
 public:
     time_t timestamp;
     path_list_t required_paths;
-    history_lru_node_t(const history_item_t &item) :
+    explicit history_lru_node_t(const history_item_t &item) :
         lru_node_t(item.str()),
         timestamp(item.timestamp()),
         required_paths(item.required_paths)
@@ -183,7 +183,7 @@ protected:
     }
 
 public:
-    history_lru_cache_t(size_t max) : lru_cache_t<history_lru_node_t>(max) { }
+    explicit history_lru_cache_t(size_t max) : lru_cache_t<history_lru_node_t>(max) { }
 
     /* Function to add a history item */
     void add_item(const history_item_t &item)

@@ -162,8 +162,7 @@ static wcstring user_presentable_path(const wcstring &path)
 }
 
 
-parser_t::parser_t(enum parser_type_t type, bool errors) :
-    parser_type(type),
+parser_t::parser_t(bool errors) :
     show_errors(errors),
     cancellation_requested(false),
     is_within_fish_initialization(false)
@@ -177,7 +176,7 @@ parser_t &parser_t::principal_parser(void)
 {
     ASSERT_IS_NOT_FORKED_CHILD();
     ASSERT_IS_MAIN_THREAD();
-    static parser_t parser(PARSER_TYPE_GENERAL, true);
+    static parser_t parser(true);
     if (! s_principal_parser)
     {
         s_principal_parser = &parser;
@@ -467,20 +466,11 @@ void parser_t::emit_profiling(const char *path) const
     }
 }
 
-void parser_t::expand_argument_list(const wcstring &arg_list_src, std::vector<completion_t> *output_arg_list)
+void parser_t::expand_argument_list(const wcstring &arg_list_src, expand_flags_t eflags, std::vector<completion_t> *output_arg_list)
 {
     assert(output_arg_list != NULL);
-    expand_flags_t eflags = 0;
     if (! show_errors)
         eflags |= EXPAND_NO_DESCRIPTIONS;
-    if (this->parser_type != PARSER_TYPE_GENERAL)
-        eflags |= EXPAND_SKIP_CMDSUBST;
-
-    /* Suppress calling proc_push_interactive off of the main thread. */
-    if (this->parser_type == PARSER_TYPE_GENERAL)
-    {
-        proc_push_interactive(0);
-    }
 
     /* Parse the string as an argument list */
     parse_node_tree_t tree;
@@ -508,11 +498,6 @@ void parser_t::expand_argument_list(const wcstring &arg_list_src, std::vector<co
                 break;
             }
         }
-    }
-
-    if (this->parser_type == PARSER_TYPE_GENERAL)
-    {
-        proc_pop_interactive();
     }
 }
 

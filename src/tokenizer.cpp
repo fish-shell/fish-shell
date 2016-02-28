@@ -89,7 +89,9 @@ bool tokenizer_t::next(struct tok_t *result)
     
     const size_t current_pos = this->buff - this->orig_buff;
     
-    result->text = this->last_token;
+    /* We want to copy our last_token into result->text. If we just do this naively via =, we are liable to trigger std::string's CoW implementation: result->text's storage will be deallocated and instead will acquire a reference to last_token's storage. But last_token will be overwritten soon, which will trigger a new allocation and a copy. So our attempt to re-use result->text's storage will have failed. To ensure that doesn't happen, use assign() with wchar_t */
+    result->text.assign(this->last_token.data(), this->last_token.size());
+    
     result->type = this->last_type;
     result->offset = this->last_pos;
     result->error = this->last_type == TOK_ERROR ? this->error : TOK_ERROR_NONE;

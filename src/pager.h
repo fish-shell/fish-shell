@@ -2,6 +2,9 @@
   Pager support
 */
 
+#ifndef FISH_PAGER_H
+#define FISH_PAGER_H
+
 #include <stddef.h>
 #include <string>
 #include <vector>
@@ -170,3 +173,5 @@ public:
     /* Constructor */
     pager_t();
 };
+
+#endif

@@ -56,7 +56,6 @@ static void debug_safe_int(int level, const char *format, int val)
     debug_safe(level, format, buff);
 }
 
-// PCA These calls to debug are rather sketchy because they may allocate memory. Fortunately they only occur if an error occurs.
 int set_child_group(job_t *j, process_t *p, int print_errors)
 {
     int res = 0;
@@ -76,18 +75,22 @@ int set_child_group(job_t *j, process_t *p, int print_errors)
                 char job_id_buff[128];
                 char getpgid_buff[128];
                 char job_pgid_buff[128];
+                char argv0[64];
+                char command[64];
 
                 format_long_safe(pid_buff, p->pid);
                 format_long_safe(job_id_buff, j->job_id);
                 format_long_safe(getpgid_buff, getpgid(p->pid));
                 format_long_safe(job_pgid_buff, j->pgid);
+                narrow_string_safe(argv0, p->argv0());
+                narrow_string_safe(command, j->command_wcstr());
 
                 debug_safe(1,
                            "Could not send process %s, '%s' in job %s, '%s' from group %s to group %s",
                            pid_buff,
-                           p->argv0_cstr(),
+                           argv0,
                            job_id_buff,
-                           j->command_cstr(),
+                           command,
                            getpgid_buff,
                            job_pgid_buff);
 
@@ -105,9 +108,11 @@ int set_child_group(job_t *j, process_t *p, int print_errors)
     {
         if (tcsetpgrp(0, j->pgid) && print_errors)
         {
-            char job_id_buff[128];
+            char job_id_buff[64];
+            char command_buff[64];
             format_long_safe(job_id_buff, j->job_id);
-            debug_safe(1, "Could not send job %s ('%s') to foreground", job_id_buff, j->command_cstr());
+            narrow_string_safe(command_buff, j->command_wcstr());
+            debug_safe(1, "Could not send job %s ('%s') to foreground", job_id_buff, command_buff);
             safe_perror("tcsetpgrp");
             res = -1;
         }

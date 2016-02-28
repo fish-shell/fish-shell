@@ -453,11 +453,7 @@ static void handle_child_status(pid_t pid, int status)
 }
 
 process_t::process_t() :
-    argv_array(),
-    argv0_narrow(),
-    type(),
     internal_block_node(NODE_OFFSET_INVALID),
-    actual_cmd(),
     pid(0),
     pipe_write_fd(0),
     pipe_read_fd(0),
@@ -480,8 +476,6 @@ process_t::~process_t()
 }
 
 job_t::job_t(job_id_t jobid, const io_chain_t &bio) :
-    command_str(),
-    command_narrow(),
     block_io(bio),
     first_process(NULL),
     pgid(0),

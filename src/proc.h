@@ -123,9 +123,6 @@ private:
 
     null_terminated_array_t<wchar_t> argv_array;
 
-    /* narrow copy of argv0 so we don't have to convert after fork */
-    narrow_string_rep_t argv0_narrow;
-
     io_chain_t process_io_chain;
 
     /* No copying */
@@ -151,7 +148,6 @@ public:
     void set_argv(const wcstring_list_t &argv)
     {
         argv_array.set(argv);
-        argv0_narrow.set(argv.empty() ? L"" : argv[0]);
     }
 
     /** Returns argv */
@@ -173,16 +169,10 @@ public:
     }
 
     /** Returns argv[0], or NULL */
-    const wchar_t *argv0(void) const
+    const wchar_t *argv0() const
     {
         const wchar_t * const *argv = argv_array.get();
         return argv ? argv[0] : NULL;
-    }
-
-    /** Returns argv[0] as a char * */
-    const char *argv0_cstr(void) const
-    {
-        return argv0_narrow.get();
     }
 
     /* IO chain getter and setter */
@@ -278,9 +268,6 @@ class job_t
     */
     wcstring command_str;
 
-    /* narrow copy so we don't have to convert after fork */
-    narrow_string_rep_t command_narrow;
-
     /* The IO chain associated with the block */
     const io_chain_t block_io;
 
@@ -311,17 +298,10 @@ public:
         return command_str;
     }
 
-    /** Returns the command as a char *. */
-    const char *command_cstr() const
-    {
-        return command_narrow.get();
-    }
-
     /** Sets the command */
     void set_command(const wcstring &cmd)
     {
         command_str = cmd;
-        command_narrow.set(cmd);
     }
 
     /**

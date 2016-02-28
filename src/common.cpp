@@ -795,6 +795,24 @@ void format_long_safe(wchar_t buff[64], long val)
     }
 }
 
+void narrow_string_safe(char buff[64], const wchar_t *s)
+{
+    size_t idx = 0;
+    for (size_t widx = 0; s[widx] != L'\0'; widx++)
+    {
+        wchar_t c = s[widx];
+        if (c <= 127)
+        {
+            buff[idx++] = char(c);
+            if (idx + 1 == 64)
+            {
+                break;
+            }
+        }
+    }
+    buff[idx] = '\0';
+}
+
 wcstring reformat_for_screen(const wcstring &msg)
 {
     wcstring buff;

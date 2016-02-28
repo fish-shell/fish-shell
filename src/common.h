@@ -396,6 +396,9 @@ void debug_safe(int level, const char *msg, const char *param1 = NULL, const cha
 void format_long_safe(char buff[64], long val);
 void format_long_safe(wchar_t buff[64], long val);
 
+/** "Narrows" a wide character string. This just grabs any ASCII characters and trunactes. */
+void narrow_string_safe(char buff[64], const wchar_t *s);
+
 
 template<typename T>
 T from_string(const wcstring &x)
@@ -525,36 +528,6 @@ public:
 
 /* Helper function to convert from a null_terminated_array_t<wchar_t> to a null_terminated_array_t<char_t> */
 void convert_wide_array_to_narrow(const null_terminated_array_t<wchar_t> &arr, null_terminated_array_t<char> *output);
-
-/* Helper class to cache a narrow version of a wcstring in a malloc'd buffer, so that we can read it after fork() */
-class narrow_string_rep_t
-{
-private:
-    const char *str;
-
-    /* No copying */
-    narrow_string_rep_t &operator=(const narrow_string_rep_t &);
-    narrow_string_rep_t(const narrow_string_rep_t &x);
-
-public:
-    ~narrow_string_rep_t()
-    {
-        free((void *)str);
-    }
-
-    narrow_string_rep_t() : str(NULL) {}
-
-    void set(const wcstring &s)
-    {
-        free((void *)str);
-        str = wcs2str(s.c_str());
-    }
-
-    const char *get() const
-    {
-        return str;
-    }
-};
 
 bool is_forked_child();
 

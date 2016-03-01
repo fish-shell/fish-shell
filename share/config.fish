@@ -165,3 +165,14 @@ for file in $configdir/fish/conf.d/* $__fish_sysconfdir/conf.d/* $__fish_datadir
 	# This allows one to use e.g. symlinks to /dev/null to "mask" something (like in systemd)
 	[ -f $file -a -r $file ]; and source $file
 end
+
+# Upgrade pre-existing abbreviations from the old "key=value" to the new "key value" syntax
+# This needs to be in share/config.fish because __fish_config_interactive is called after sourcing config.fish, which might contain abbr calls
+if not set -q __fish_init_2_3_0
+	set -l fab
+	for abb in $fish_user_abbreviations
+		set fab $fab (string replace -r '^([^ =]+)=(.*)$' '$1 $2' -- $abb)
+	end
+	set fish_user_abbreviations $fab
+	set -U __fish_init_2_3_0
+end

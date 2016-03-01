@@ -2,7 +2,7 @@
 
 \subsection abbr-synopsis Synopsis
 \fish{synopsis}
-abbr -a word="phrase"
+abbr -a word phrase...
 abbr -s
 abbr -l
 abbr -e word
@@ -25,6 +25,8 @@ The following parameters are available:
 - `-l` or `--list` Lists all abbreviated words.
 
 - `-e WORD` or `--erase WORD` Erase the abbreviation WORD.
+
+Note: fish version 2.1 supported `-a WORD=PHRASE`. This syntax is now deprecated but will still be converted.
 
 \subsection abbr-example Examples
 

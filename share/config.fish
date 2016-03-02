@@ -171,7 +171,7 @@ end
 if not set -q __fish_init_2_3_0
 	set -l fab
 	for abb in $fish_user_abbreviations
-		set fab $fab (string replace -ra '^([^ ]+)=(.*)' '$1 $2' -- $abb)
+		set fab $fab (string replace -r '^([^ =]+)=(.*)$' '$1 $2' -- $abb)
 	end
 	set fish_user_abbreviations $fab
 	set -U __fish_init_2_3_0

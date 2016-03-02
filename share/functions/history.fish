@@ -98,7 +98,7 @@ function history --description "Deletes an item from history"
 				end
 
 				#Following two validations could be embedded with "and" but I find the syntax kind of weird.
-				if not string match -qr '^[0-9]+$'
+				if not string match -qr '^[0-9]+$' $i
 					printf "Invalid input: %s\n" $i
 					continue
 				end

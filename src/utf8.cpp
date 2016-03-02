@@ -36,12 +36,14 @@
 typedef wchar_t utf8_wchar_t;
 #define UTF8_WCHAR_MAX ((size_t)std::numeric_limits<utf8_wchar_t>::max())
 
+typedef std::basic_string<utf8_wchar_t> utf8_wstring_t;
+
 bool is_wchar_ucs2()
 {
     return UTF8_WCHAR_MAX <= 0xFFFF;
 }
 
-static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wchar_t *out, size_t outsize, int flags);
+static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring_t *result, int flags);
 static size_t wchar_to_utf8_internal(const utf8_wchar_t *in, size_t insize, char *out, size_t outsize, int flags);
 
 static bool safe_copy_wchar_to_utf8_wchar(const wchar_t *in, utf8_wchar_t *out, size_t count)
@@ -58,32 +60,6 @@ static bool safe_copy_wchar_to_utf8_wchar(const wchar_t *in, utf8_wchar_t *out, 
         out[i] = c;
     }
     return result;
-}
-
-bool utf8_to_wchar_string(const std::string &str, std::wstring *result)
-{
-    result->clear();
-    const size_t inlen = str.size();
-    if (inlen == 0)
-    {
-        return true;
-    }
-
-    bool success = false;
-    const char *input = str.c_str();
-    size_t outlen = utf8_to_wchar(input, inlen, NULL, 0, 0);
-    if (outlen > 0)
-    {
-        wchar_t *tmp = new wchar_t[outlen];
-        size_t outlen2 = utf8_to_wchar(input, inlen, tmp, outlen, 0);
-        if (outlen2 > 0)
-        {
-            result->assign(tmp, outlen2);
-            success = true;
-        }
-        delete[] tmp;
-    }
-    return success;
 }
 
 bool wchar_to_utf8_string(const std::wstring &str, std::string *result)
@@ -112,9 +88,9 @@ bool wchar_to_utf8_string(const std::wstring &str, std::string *result)
     return success;
 }
 
-size_t utf8_to_wchar(const char *in, size_t insize, wchar_t *out, size_t outsize, int flags)
+size_t utf8_to_wchar(const char *in, size_t insize, std::wstring *out, int flags)
 {
-    if (in == NULL || insize == 0 || (outsize == 0 && out != NULL))
+    if (in == NULL || insize == 0)
     {
         return 0;
     }
@@ -122,21 +98,20 @@ size_t utf8_to_wchar(const char *in, size_t insize, wchar_t *out, size_t outsize
     size_t result;
     if (sizeof(wchar_t) == sizeof(utf8_wchar_t))
     {
-        result = utf8_to_wchar_internal(in, insize, reinterpret_cast<utf8_wchar_t *>(out), outsize, flags);
+        result = utf8_to_wchar_internal(in, insize, reinterpret_cast<utf8_wstring_t *>(out), flags);
+    }
+    else if (out == NULL)
+    {
+        result = utf8_to_wchar_internal(in, insize, NULL, flags);
     }
     else
     {
-        // Allocate a temporary buffer to hold the output
-        // note: outsize may be 0
-        utf8_wchar_t *tmp_output = new utf8_wchar_t[outsize];
-
-        // Invoke the conversion with the temporary
-        result = utf8_to_wchar_internal(in, insize, tmp_output, outsize, flags);
-
-        // Copy back from tmp to the function's output, then clean it up
-        size_t amount_to_copy = std::min(result, outsize);
-        std::copy(tmp_output, tmp_output + amount_to_copy, out);
-        delete[] tmp_output;
+        // Allocate a temporary buffer to hold the output,
+        // invoke the conversion with the temporary,
+        // and then copy it back
+        utf8_wstring_t tmp_output;
+        result = utf8_to_wchar_internal(in, insize, &tmp_output, flags);
+        out->insert(out->end(), tmp_output.begin(), tmp_output.end());
     }
     return result;
 }
@@ -213,9 +188,7 @@ __utf8_forbitten(unsigned char octet)
  *	It takes the following arguments:
  *	in	- input UTF-8 string. It can be null-terminated.
  *	insize	- size of input string in bytes.
- *	out	- result buffer for UCS-2/4 string. If out is NULL,
- *		function returns size of result buffer.
- *	outsize - size of out buffer in wide characters.
+ *	out_string	- result buffer for UCS-2/4 string.
  *
  * RETURN VALUES
  *	The function returns size of result buffer (in wide characters).
@@ -231,19 +204,21 @@ __utf8_forbitten(unsigned char octet)
  *	   not prepare buffer in advance (\0 terminate) but after calling this
  *	   function.
  */
-static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wchar_t *out, size_t outsize, int flags)
+static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring_t *out_string, int flags)
 {
     unsigned char *p, *lim;
-    utf8_wchar_t *wlim, high;
+    utf8_wchar_t high;
     size_t n, total, i, n_bits;
 
-    if (in == NULL || insize == 0 || (outsize == 0 && out != NULL))
+    if (in == NULL || insize == 0)
         return (0);
+    
+    if (out_string != NULL)
+        out_string->clear();
 
     total = 0;
     p = (unsigned char *)in;
     lim = p + insize;
-    wlim = out + outsize;
 
     for (; p < lim; p += n)
     {
@@ -319,15 +294,10 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wchar_t
         }
 
         total++;
-
-        if (out == NULL)
+        if (out_string == NULL)
             continue;
 
-        if (out >= wlim)
-            return (0);		/* no space left */
-
         uint32_t out_val = 0;
-        *out = 0;
         n_bits = 0;
         for (i = 1; i < n; i++)
         {
@@ -364,7 +334,7 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wchar_t
         }
         else
         {
-            *out++ = out_val;
+            out_string->push_back(out_val);
         }
     }
 

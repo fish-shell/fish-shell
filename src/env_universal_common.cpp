@@ -958,7 +958,7 @@ var_table_t env_universal_t::read_message_internal(int fd)
             // Process it if it's a newline (which is true if we are before the end of the buffer)
             if (cursor < bufflen && ! line.empty())
             {
-                if (utf8_to_wchar_string(line, &wide_line))
+                if (utf8_to_wchar(line.data(), line.size(), &wide_line, 0))
                 {
                     env_universal_t::parse_message_internal(wide_line, &result, &storage);
                 }

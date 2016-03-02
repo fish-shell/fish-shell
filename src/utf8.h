@@ -28,11 +28,10 @@
 #define UTF8_SKIP_BOM			0x02
 
 /* Convert a string between UTF8 and UCS-2/4 (depending on size of wchar_t). Returns true if successful, storing the result of the conversion in *result */
-bool utf8_to_wchar_string(const std::string &input, std::wstring *result);
 bool wchar_to_utf8_string(const std::wstring &input, std::string *result);
 
-/* Variants exposed for testing */
-size_t utf8_to_wchar(const char *in, size_t insize, wchar_t *out, size_t outsize, int flags);
+/* Convert a string between UTF8 and UCS-2/4 (depending on size of wchar_t). Returns nonzero if successful, storing the result of the conversion in *out */
+size_t utf8_to_wchar(const char *in, size_t insize, std::wstring *out, int flags);
 size_t wchar_to_utf8(const wchar_t *in, size_t insize, char *out, size_t outsize, int flags);
 
 bool is_wchar_ucs2();

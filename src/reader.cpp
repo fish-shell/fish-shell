@@ -490,6 +490,7 @@ static void update_buff_pos(editable_line_t *el, size_t buff_pos)
 static void term_steal()
 {
 
+    tcgetattr(0, &terminal_mode_for_executing_programs);
     while (1)
     {
         if (tcsetattr(0,TCSANOW,&shell_modes))
@@ -1015,8 +1016,6 @@ void reader_init()
 
     /* Set the mode used for program execution, initialized to the current mode */
     memcpy(&terminal_mode_for_executing_programs, &terminal_mode_on_startup, sizeof terminal_mode_for_executing_programs);
-    terminal_mode_for_executing_programs.c_iflag &= ~IXON;     /* disable flow control */
-    terminal_mode_for_executing_programs.c_iflag &= ~IXOFF;    /* disable flow control */
 
     /* Set the mode used for the terminal, initialized to the current mode */
     memcpy(&shell_modes, &terminal_mode_on_startup, sizeof shell_modes);

@@ -421,7 +421,7 @@ ls *.foo
 # Lists the .foo files, or warns if there aren't any.
 
 set foos *.foo
-if test (count $foos) -ge 1
+if count $foos >/dev/null
     ls $foos
 end
 # Lists the .foo files, if any.

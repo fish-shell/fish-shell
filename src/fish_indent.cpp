@@ -21,13 +21,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 #include "config.h"
 
+#include <getopt.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>
 #include <vector>
-#ifdef HAVE_GETOPT_H
-#include <getopt.h>
-#endif
 #include <assert.h>
 #include <locale.h>
 #include <stddef.h>
@@ -297,40 +295,34 @@ int main(int argc, char *argv[])
         output_type_ansi,
         output_type_html
     } output_type = output_type_plain_text;
-
-    /* Whether to indent (true) or just reformat to one job per line (false) */
     bool do_indent = true;
 
-    while (1)
+    const char *short_opts = "+hvi";
+    const struct option long_opts[] =
     {
-        const struct option long_options[] =
-        {
-            { "no-indent", no_argument, 0, 'i' },
-            { "help", no_argument, 0, 'h' },
-            { "version", no_argument, 0, 'v' },
-            { "html", no_argument, 0, 1 },
-            { "ansi", no_argument, 0, 2 },
-            { 0, 0, 0, 0 }
-        };
+        { "no-indent", no_argument, NULL, 'i' },
+        { "help", no_argument, NULL, 'h' },
+        { "version", no_argument, NULL, 'v' },
+        { "html", no_argument, NULL, 1 },
+        { "ansi", no_argument, NULL, 2 },
+        { NULL, 0, NULL, 0 }
+    };
 
-        int opt_index = 0;
-        int opt = getopt_long(argc, argv, "hvi", long_options, &opt_index);
-        if (opt == -1)
-            break;
-
+    int opt;
+    while ((opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1)
+    {
         switch (opt)
         {
             case 0:
             {
-                break;
+                fwprintf(stderr, _(L"getopt_long() unexpectedly returned zero\n"));
+                exit_without_destructors(127);
             }
 
             case 'h':
             {
                 print_help("fish_indent", 1);
-                exit(0);
-                assert(0 && "Unreachable code reached");
-                break;
+                exit_without_destructors(0);
             }
 
             case 'v':
@@ -359,9 +351,10 @@ int main(int argc, char *argv[])
                 break;
             }
 
-            case '?':
+            default:
             {
-                exit(1);
+                // We assume getopt_long() has already emitted a diagnostic msg.
+                exit_without_destructors(1);
             }
         }
     }

@@ -752,43 +752,6 @@ else
   AC_MSG_RESULT(no)
 fi
 
-# Check if getopt_long exists and works
-AC_MSG_CHECKING([if getopt_long exists and works])
-AC_TRY_LINK(
-  [
-    #if HAVE_GETOPT_H
-    #include <getopt.h>
-    #endif
-  ],
-  [
-    static struct option
-      long_options[] =
-      {
-        0, 0, 0, 0
-      }
-    ;
-    int opt = getopt_long( 0,
-                 0,
-                 0,
-                 long_options,
-                 0 );
-
-  ],
-  have_working_getopt_long=yes,
-  have_working_getopt_long=no
-)
-if test "$have_working_getopt_long" = yes; then
-  AC_MSG_RESULT(yes)
-  AC_DEFINE(
-    [HAVE_WORKING_GETOPT_LONG],
-    [1],
-    [Define to 1 if getopt_long exists and works.]
-  )
-else
-  AC_MSG_RESULT(no)
-fi
-
-
 # Check for Solaris curses tputs having fixed length parameter list.
 AC_MSG_CHECKING([if we are using non varargs tparm.])
 AC_COMPILE_IFELSE(

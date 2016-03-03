@@ -1207,20 +1207,6 @@ int killpg(int pgr, int sig)
 }
 #endif
 
-#ifndef HAVE_WORKING_GETOPT_LONG
-
-int getopt_long(int argc,
-                char * const argv[],
-                const char *optstring,
-                const struct option *longopts,
-                int *longindex)
-{
-    return getopt(argc, argv, optstring);
-}
-
-
-#endif
-
 #ifndef HAVE_BACKTRACE
 int backtrace(void **buffer, int size)
 {

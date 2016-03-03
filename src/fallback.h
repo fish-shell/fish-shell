@@ -413,53 +413,6 @@ extern int _nl_msg_cat_cntr;
 int killpg(int pgr, int sig);
 #endif
 
-
-#ifndef HAVE_WORKING_GETOPT_LONG
-
-/**
-   Struct describing a long getopt option
- */
-struct option
-{
-    /**
-       Name of option
-     */
-    const char *name;
-    /**
-       Flag
-     */
-    int has_arg;
-    /**
-       Flag
-     */
-    int *flag;
-    /**
-       Return value
-     */
-    int val;
-}
-;
-
-#ifndef no_argument
-#define  no_argument 0
-#endif
-
-#ifndef required_argument
-#define  required_argument 1
-#endif
-
-#ifndef optional_argument
-#define  optional_argument 2
-#endif
-
-int getopt_long(int argc,
-                char * const argv[],
-                const char *optstring,
-                const struct option *longopts,
-                int *longindex);
-
-#endif
-
 #ifndef HAVE_SYSCONF
 
 #define _SC_ARG_MAX 1

@@ -4,7 +4,6 @@
 
 #include "config.h"
 
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>
@@ -24,20 +23,13 @@
 #include <sstream>
 #include <algorithm>
 #include <iterator>
-
-#ifdef HAVE_GETOPT_H
-#include <getopt.h>
-#endif
-
 #include <signal.h>
-
 #include <locale.h>
 #include <dirent.h>
 #include <time.h>
 
 #include "fallback.h"
 #include "util.h"
-
 #include "common.h"
 #include "proc.h"
 #include "reader.h"

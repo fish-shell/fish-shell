@@ -12,33 +12,16 @@ matrix:
             - expect
             - gettext
             - libncurses5-dev
+        coverity_scan:
+          project:
+            name: "fish-shell/fish-shell"
+            description: "The friendly interactive shell"
+          notification_email:
+            secure: "lq3AelSInSOqVJI2EZUTrsOrt9ev5c8DHMi7ESyefvv1p+7Qr2gRZmLa+dXLrkPegG+Op9Tykq9zwXRGC4pzC+0OelCKJgqpqkj6LwS8WSamiamAf9ZtPbANwSFMD17f/NTeG/OtBgq6Z87Nur2GEhxmSu3M9IEBOsnOgmCKo84="
+          build_command_prepend: "autoreconf; ./configure; make clean"
+          build_command:   "make -j 4"
+          branch_pattern: coverity_scan_master
 
-    - os: linux
-      compiler: clang
-      addons:
-        apt:
-          sources:
-            # stick with 3.6; the 3.7 Debian binaries do not support ASan yet
-            # https://llvm.org/bugs/show_bug.cgi?id=22757
-            - llvm-toolchain-precise-3.6
-            - ubuntu-toolchain-r-test
-          packages:
-            - clang-3.6
-            - llvm-3.6 # for llvm-symbolizer
-            - bc
-            - expect
-            - gettext
-            - libncurses5-dev
-      env:
-        - CXXFLAGS="-g -fno-omit-frame-pointer -fsanitize=address"
-        - ASAN_SYMBOLIZER_PATH="/usr/bin/llvm-symbolizer-3.6"
-        - ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=0
-      before_install: export CXX=clang++-3.6
-
-    - os: osx
-      before_install:
-        - brew update
-        - brew install pcre2 # use system PCRE2
 
   fast_finish: true
 
@@ -64,3 +47,9 @@ notifications:
     urls:
         #- https://webhooks.gitter.im/e/61821cec3015bf0f8bb1
         secure: fPfOmxnC3MCsfR1oocVFeWLawGcRZkn+8fNHlSOeZ+SqqoZfcCHgQTvQ22TqmVl1yvkXbNlaXjo6dbVzTOAh7r7H0bRMEKBVh3dQS7wqjB1sKivpXd8PAS3BTj5MQpGeJzdHnDuwVlwDktGtfHfhGeq1Go/4IosOq8u+6RTe28g=
+
+env:
+  global:
+   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "CWLImZSKyXzxuHKInSvV1zK6nFt3zDqTYJ4Ex3OGgKV18pT2dnav7d0ZYe6nottmlYPy802a1rIyCa5vEyQ8Q5OWStnuGP3Tlnzy4zDjd49q3CuspY1zXYOYmMGUoxlOJGjxJAStnDCPNK0T3rAy+0/JMO9x77ezrxtA+i5zMPg="

@@ -3305,15 +3305,16 @@ static int builtin_contains(parser_t &parser, io_streams_t &streams, wchar_t ** 
     {
         streams.err.append_format(_(L"%ls: Key not specified\n"), argv[0]);
     }
-
-
-    for (int i=w.woptind+1; i<argc; i++)
+    else
     {
-
-        if (!wcscmp(needle, argv[i]))
+        for (int i=w.woptind+1; i<argc; i++)
         {
-            if (should_output_index) streams.out.append_format( L"%d\n", i-w.woptind);
-            return 0;
+
+            if (!wcscmp(needle, argv[i]))
+            {
+                if (should_output_index) streams.out.append_format( L"%d\n", i-w.woptind);
+                return 0;
+            }
         }
     }
     return 1;

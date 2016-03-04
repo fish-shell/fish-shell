@@ -143,7 +143,7 @@ public:
     int last_nonopt;
     
     
-    wgetopter_t() : woptarg(NULL), woptind(0), nextchar(0), wopterr(0), woptopt('?'), first_nonopt(0), last_nonopt(0)
+    wgetopter_t() : woptarg(NULL), woptind(0), nextchar(0), wopterr(0), woptopt('?'), ordering(), first_nonopt(0), last_nonopt(0)
     {
     }
     

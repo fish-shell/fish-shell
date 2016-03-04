@@ -453,6 +453,7 @@ static void handle_child_status(pid_t pid, int status)
 }
 
 process_t::process_t() :
+    type(), // gets set later
     internal_block_node(NODE_OFFSET_INVALID),
     pid(0),
     pipe_write_fd(0),

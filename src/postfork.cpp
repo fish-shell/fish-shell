@@ -138,7 +138,6 @@ static int handle_child_io(const io_chain_t &io_chain)
     for (size_t idx = 0; idx < io_chain.size(); idx++)
     {
         const io_data_t *io = io_chain.at(idx).get();
-        int tmp;
 
         if (io->io_mode == IO_FD && io->fd == static_cast<const io_fd_t*>(io)->old_fd)
         {
@@ -162,8 +161,8 @@ static int handle_child_io(const io_chain_t &io_chain)
             {
                 // Here we definitely do not want to set CLO_EXEC because our child needs access
                 CAST_INIT(const io_file_t *, io_file, io);
-                if ((tmp=open(io_file->filename_cstr,
-                              io_file->flags, OPEN_MASK))==-1)
+                int tmp = open(io_file->filename_cstr, io_file->flags, OPEN_MASK);
+                if (tmp < 0)
                 {
                     if ((io_file->flags & O_EXCL) &&
                             (errno ==EEXIST))

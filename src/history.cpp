@@ -1690,10 +1690,10 @@ void history_t::populate_from_config_path()
             int dst_fd = wopen_cloexec(new_file, O_WRONLY | O_CREAT, 0644);
 
             char buf[BUFSIZ];
-            size_t size;
+            ssize_t size;
             while ((size = read(src_fd, buf, BUFSIZ)) > 0) {
-                ssize_t written = write(dst_fd, buf, size);
-                if (written == -1) {
+                ssize_t written = write(dst_fd, buf, static_cast<size_t>(size));
+                if (written < 0) {
                     /*
                       This message does not have high enough priority to
                       be shown by default.

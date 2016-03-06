@@ -1,30 +1,14 @@
-#
-# Init file for fish
-#
+# Put system-wide fish configuration entries here
+# or in .fish files in conf.d/
+# Files in conf.d can be overridden by the user
+# by files with the same name in $XDG_CONFIG_HOME/fish/conf.d
 
-#
-# Some things should only be done for login terminals
-#
-
-if status --is-login
-
-	# Check for i18n information in
-	# /etc/sysconfig/i18n
-
-	if test -f /etc/sysconfig/i18n
-		eval (cat /etc/sysconfig/i18n |sed -ne 's/^\([a-zA-Z]*\)=\(.*\)$/set -gx \1 \2;/p')
-	end
-
-	#
-	# Put linux consoles in unicode mode.
-	#
-
-	if test "$TERM" = linux
-		if expr "$LANG" : ".*\.[Uu][Tt][Ff].*" >/dev/null
-			if which unicode_start >/dev/null
-				unicode_start
-			end
-		end
-	end
-end
-
+# This file is run by all fish instances.
+# To include configuration only for login shells, use
+# if status --is-login
+#    ...
+# end
+# To include configuration only for interactive shells, use
+# if status --is-interactiv
+#   ...
+# end

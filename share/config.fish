@@ -176,3 +176,32 @@ if not set -q __fish_init_2_3_0
 	set fish_user_abbreviations $fab
 	set -U __fish_init_2_3_0
 end
+
+#
+# Some things should only be done for login terminals
+# This used to be in etc/config.fish - keep it here to keep the semantics
+#
+
+if status --is-login
+
+	# Check for i18n information in
+	# /etc/sysconfig/i18n
+
+	if test -f /etc/sysconfig/i18n
+		string match -r '^[a-zA-Z]*=.*' < /etc/sysconfig/i18n | while read -l line
+			set -gx (string split '=' -m 1 -- $line | string replace -ra '"([^"]+)"' '$1' | string replace -ra "'([^']+)'" '$1')
+		end
+	end
+
+	#
+	# Put linux consoles in unicode mode.
+	#
+
+	if test "$TERM" = linux
+		if string match -qir '\.UTF' -- $LANG
+			if command -s unicode_start >/dev/null
+				unicode_start
+			end
+		end
+	end
+end

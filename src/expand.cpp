@@ -1908,13 +1908,15 @@ expand_error_t expand_string(const wcstring &input, std::vector<completion_t> *o
         output_storage.clear();
     }
     
-    /* Hack to un-expand tildes (see #647) */
-    if (!(flags & EXPAND_SKIP_HOME_DIRECTORIES))
+    if (total_result != EXPAND_ERROR)
     {
-        unexpand_tildes(input, &completions);
+        /* Hack to un-expand tildes (see #647) */
+        if (!(flags & EXPAND_SKIP_HOME_DIRECTORIES))
+        {
+            unexpand_tildes(input, &completions);
+        }
+        out_completions->insert(out_completions->end(), completions.begin(), completions.end());
     }
-    
-    out_completions->insert(out_completions->end(), completions.begin(), completions.end());
     return total_result;
 }
 

@@ -449,12 +449,16 @@ void env_init(const struct config_paths_t *paths /* or NULL */)
       is to insert valid data
     */
 
-    /*
-      Import environment variables
-    */
-    for (char **p = (environ ? environ : __environ); p && *p; p++)
+    /* Import environment variables. Walk backwards so that the first one out of any duplicates wins (#2784) */
+    const char * const * envp = (environ ? environ : __environ);
+    size_t i = 0;
+    while (envp && envp[i])
     {
-        const wcstring key_and_val = str2wcstring(*p); //like foo=bar
+        i++;
+    }
+    while (i--)
+    {
+        const wcstring key_and_val = str2wcstring(envp[i]); //like foo=bar
         size_t eql = key_and_val.find(L'=');
         if (eql == wcstring::npos)
         {

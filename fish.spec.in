@@ -14,9 +14,15 @@ BuildRequires:          ncurses-devel gettext gcc-c++ autoconf
 BuildRoot:              %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Requires:		bc
-Requires:               python
+Requires:		python
 Requires:		which
 Requires:		man
+
+%if 0%{?rhel_version} >= 700 || 0%{?centos_version} >= 700 || 0%{?fedora}
+Requires:		hostname
+%else
+Requires:		net-tools
+%endif
 
 %description
 

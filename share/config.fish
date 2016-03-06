@@ -188,7 +188,9 @@ if status --is-login
 	# /etc/sysconfig/i18n
 
 	if test -f /etc/sysconfig/i18n
-		eval (cat /etc/sysconfig/i18n |sed -ne 's/^\([a-zA-Z]*\)=\(.*\)$/set -gx \1 \2;/p')
+		string match -r '[a-zA-Z]*=.*' < /etc/sysconfig/i18n | while read -l line
+			set -gx (string split '=' -m 1 -- $line)
+		end
 	end
 
 	#
@@ -196,8 +198,8 @@ if status --is-login
 	#
 
 	if test "$TERM" = linux
-		if expr "$LANG" : ".*\.[Uu][Tt][Ff].*" >/dev/null
-			if which unicode_start >/dev/null
+		if string match -qr '\.[Uu][Tt][Ff]' -- $LANG
+			if command -s unicode_start >/dev/null
 				unicode_start
 			end
 		end

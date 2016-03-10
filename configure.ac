@@ -45,7 +45,6 @@ if test configure -ot configure.ac; then
     # No need to provide any error messages if autoconf fails, the
     # shell and autconf should take care of that themselves
     AC_MSG_NOTICE([running autoconf])
-    pcre2/autogen.sh
     if autoconf; then
       ./configure "$@"
       exit

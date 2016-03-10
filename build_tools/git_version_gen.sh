@@ -28,9 +28,9 @@ test "$VN" = "$VC" || {
 }
 
 # Just run autogen if there still isn't anything there.
-test -f "pcre2/Makefile" || {
+if ! test -f "pcre2/configure" then
     echo "Running pcre2/autogen.sh ..."
-    sh pcre2/autogen.sh  || echo "Hopefully you're using system pcre2. pcre2/autogen.sh may have failed."
-}
+    ./pcre2/autogen.sh
+fi
 
 

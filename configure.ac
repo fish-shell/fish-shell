@@ -1,3 +1,4 @@
+
 #
 # This file is the main build configuration file for fish. It is used
 # to determine your systems capabilities, and tries to adapt fish to
@@ -14,6 +15,7 @@ AC_PREREQ([2.60])
 AC_INIT(fish,
         m4_esyscmd([cut -f 3 -d ' ' FISH-BUILD-VERSION-FILE | tr -d '\n']),
         fish-users@lists.sourceforge.net)
+
 
 conf_arg=$@
 
@@ -43,6 +45,7 @@ if test configure -ot configure.ac; then
     # No need to provide any error messages if autoconf fails, the
     # shell and autconf should take care of that themselves
     AC_MSG_NOTICE([running autoconf])
+    pcre2/autogen.sh
     if autoconf; then
       ./configure "$@"
       exit
@@ -841,6 +844,7 @@ You may need to install the PCRE2 development library for your system.])
     else
       # use the internal version
       included_pcre2=yes
+
     fi
   fi
 fi
@@ -851,7 +855,6 @@ if test "x$included_pcre2" = "xyes"; then
   AC_MSG_NOTICE([using included PCRE2 library])
   # unfortunately these get added to the global configuration
   ac_configure_args="$ac_configure_args --disable-pcre2-8 --enable-pcre2-$WCHAR_T_BITS --disable-shared"
-  AC_CONFIG_SUBDIRS([pcre2])
 
   PCRE2_CXXFLAGS='-I$(PCRE2_DIR)/src'
   PCRE2_LIBS='-L$(PCRE2_LIBDIR) -lpcre2-$(PCRE2_WIDTH)'
@@ -863,6 +866,7 @@ if test "x$included_pcre2" = "xyes"; then
 fi
 
 # Tell the world what we know
+AC_CONFIG_SUBDIRS([pcre2])
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
 

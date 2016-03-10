@@ -26,3 +26,11 @@ test "$VN" = "$VC" || {
 	echo >&2 "FISH_BUILD_VERSION = $VN"
 	echo "FISH_BUILD_VERSION = $VN" >$FBVF
 }
+
+# Just run autogen if there still isn't anything there.
+test -f "pcre2/Makefile" || {
+    echo "Running pcre2/autogen.sh ..."
+    sh pcre2/autogen.sh  || echo "Hopefully you're using system pcre2. pcre2/autogen.sh may have failed."
+}
+
+

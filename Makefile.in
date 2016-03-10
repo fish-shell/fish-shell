@@ -59,7 +59,7 @@ localedir = @localedir@
 #
 
 PCRE2_WIDTH = @WCHAR_T_BITS@
-PCRE2_DIR = pcre2-10.20
+PCRE2_DIR = pcre2
 PCRE2_LIBDIR = $(PCRE2_DIR)/.libs
 PCRE2_LIB = $(PCRE2_LIBDIR)/libpcre2-$(PCRE2_WIDTH).a
 PCRE2_H = $(PCRE2_DIR)/src/pcre2.h

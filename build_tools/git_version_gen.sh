@@ -26,3 +26,11 @@ test "$VN" = "$VC" || {
 	echo >&2 "FISH_BUILD_VERSION = $VN"
 	echo "FISH_BUILD_VERSION = $VN" >$FBVF
 }
+
+# Just run autogen if there still isn't anything there.
+if ! test -f "pcre2/configure" then
+    echo "Running pcre2/autogen.sh ..."
+    ./pcre2/autogen.sh
+fi
+
+

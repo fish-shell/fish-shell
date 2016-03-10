@@ -1,0 +1,3 @@
+[submodule "pcre2"]
+	path = pcre2
+	url = https://github.com/svn2github/pcre2

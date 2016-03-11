@@ -926,10 +926,9 @@ history_item_t history_t::decode_item_fish_1_x(const char *begin, size_t length)
 {
 
     const char *end = begin + length;
-    const char *pos=begin;
-
-    bool was_backslash = 0;
+    const char *pos = begin;
     wcstring out;
+    bool was_backslash = false;
     bool first_char = true;
     bool timestamp_mode = false;
     time_t timestamp = 0;
@@ -937,12 +936,18 @@ history_item_t history_t::decode_item_fish_1_x(const char *begin, size_t length)
     while (1)
     {
         wchar_t c;
-        mbstate_t state;
         size_t res;
+        mbstate_t state = {};
 
-        memset(&state, 0, sizeof(state));
-
-        res = mbrtowc(&c, pos, end-pos, &state);
+        if (MB_CUR_MAX == 1) // single-byte locale
+        {
+            c = (unsigned char)*pos;
+            res = 1;
+        }
+        else
+        {
+            res = mbrtowc(&c, pos, end - pos, &state);
+        }
 
         if (res == (size_t)-1)
         {

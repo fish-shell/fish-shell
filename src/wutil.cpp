@@ -145,30 +145,23 @@ bool wreaddir_for_dirs(DIR *dir, wcstring *out_name)
 }
 
 
-wchar_t *wgetcwd(wchar_t *buff, size_t sz)
+const wcstring wgetcwd()
 {
-    char *buffc = (char *)malloc(sz*MAX_UTF8_BYTES);
-    char *res;
-    wchar_t *ret = 0;
+    wcstring retval;
 
-    if (!buffc)
-    {
-        errno = ENOMEM;
-        return 0;
-    }
-
-    res = getcwd(buffc, sz*MAX_UTF8_BYTES);
+    char *res = getcwd(NULL, 0);
     if (res)
     {
-        if ((size_t)-1 != mbstowcs(buff, buffc, sizeof(wchar_t) * sz))
-        {
-            ret = buff;
-        }
+        retval = str2wcstring(res);
+        free(res);
+    }
+    else
+    {
+        debug(0, _(L"getcwd() failed with errno %d/%s"), errno, strerror(errno));
+        retval = wcstring();
     }
 
-    free(buffc);
-
-    return ret;
+    return retval;
 }
 
 int wchdir(const wcstring &dir)

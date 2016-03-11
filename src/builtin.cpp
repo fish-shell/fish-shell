@@ -1907,18 +1907,18 @@ static int builtin_echo(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     return STATUS_BUILTIN_OK;
 }
 
-/** The pwd builtin. We don't respect -P to resolve symbolic links because we try to always resolve them. */
+// The pwd builtin. We don't respect -P to resolve symbolic links because we
+// try to always resolve them.
 static int builtin_pwd(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 {
-    wchar_t dir_path[4096];
-    wchar_t *res = wgetcwd(dir_path, 4096);
-    if (res == NULL)
+    wcstring res = wgetcwd();
+    if (res.empty())
     {
         return STATUS_BUILTIN_ERROR;
     }
     else
     {
-        streams.out.append(dir_path);
+        streams.out.append(res);
         streams.out.push_back(L'\n');
         return STATUS_BUILTIN_OK;
     }
@@ -2699,9 +2699,8 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 
         while (1)
         {
-            int finished=0;
-
-            wchar_t res=0;
+            int finished = 0;
+            wchar_t res = 0;
             mbstate_t state = {};
 
             while (!finished)
@@ -2713,24 +2712,26 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                     break;
                 }
 
-                size_t sz = mbrtowc(&res, &b, 1, &state);
-
-                switch (sz)
+                if (MB_CUR_MAX == 1) // single-byte locale
                 {
-                    case (size_t)(-1):
-                        memset(&state, '\0', sizeof(state));
-                        break;
+                    res = (unsigned char)b;
+                    finished = 1;
+                }
+                else {
+                    size_t sz = mbrtowc(&res, &b, 1, &state);
+                    switch (sz)
+                    {
+                        case (size_t)-1:
+                            memset(&state, 0, sizeof(state));
+                            break;
 
-                    case (size_t)(-2):
-                        break;
-                    case 0:
-                        finished = 1;
-                        break;
+                        case (size_t)-2:
+                            break;
 
-                    default:
-                        finished=1;
-                        break;
-
+                        default:
+                            finished = 1;
+                            break;
+                    }
                 }
             }
 

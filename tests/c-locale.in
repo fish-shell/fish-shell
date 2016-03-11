@@ -1,0 +1,35 @@
+# Verify that fish can pass through non-ASCII characters in the C/POSIX
+# locale. This is to prevent regression of
+# https://github.com/fish-shell/fish-shell/issues/2802.
+#
+# These tests are needed because the relevant standards allow the functions
+# mbrtowc() and wcrtomb() to treat bytes with the high bit set as either valid
+# or invalid in the C/POSIX locales. GNU libc treats those bytes as invalid.
+# Other libc implementations (e.g., BSD) treat them as valid. We want fish to
+# always treat those bytes as valid.
+
+# The fish in the middle of the pipeline should be receiving a UTF-8 encoded
+# version of the unicode from the echo. It should pass those bytes thru
+# literally since it is in the C locale. We verify this by first passing the
+# echo output directly to the `xxd` program then via a fish instance. The
+# output should be "58c3bb58" for the first statement and "58c3bc58" for the
+# second.
+echo -n X\u00fbX | \
+  xxd --plain
+echo X\u00fcX | env LC_ALL=C ../test/root/bin/fish -c 'read foo; echo -n $foo' | \
+  xxd --plain
+
+# This test is subtle. Despite the presence of the \u00fc unicode char (a "u"
+# with an umlaut) the fact the locale is C/POSIX will cause the \xfc byte to
+# be emitted rather than the usual UTF-8 sequence \xc3\xbc. That's because the
+# few single-byte unicode chars (that are not ASCII) are generally in the
+# ISO-8859-1 char set which is encompased by the C locale. The output should
+# be "59fc59".
+env LC_ALL=C ../test/root/bin/fish -c 'echo -n Y\u00fcY' | \
+  xxd --plain
+
+# The user can specify a wide unicode character (one requiring more than a
+# single byte). In the C/POSIX locales we substitute a question-mark for the
+# unencodable wide char. The output should be "543f54".
+env LC_ALL=C ../test/root/bin/fish -c 'echo -n T\u01fdT' | \
+  xxd --plain

@@ -263,16 +263,17 @@ wchar_t input_common_readch(int timed)
         while (1)
         {
             wint_t b = readb();
-            char bb;
 
-            size_t sz;
+            if (MB_CUR_MAX == 1) // single-byte locale, all values are legal
+            {
+                return (unsigned char)b;
+            }
 
             if ((b >= R_NULL) && (b < R_NULL + 1000))
                 return b;
 
-            bb=b;
-
-            sz = mbrtowc(&res, &bb, 1, &state);
+            char bb = b;
+            size_t sz = mbrtowc(&res, &bb, 1, &state);
 
             switch (sz)
             {

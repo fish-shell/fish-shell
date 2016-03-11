@@ -103,8 +103,7 @@ int fgetws2(wcstring *s, FILE *f)
     {
         errno=0;
 
-        c = getwc(f);
-
+        c = fgetwc(f);
         if (errno == EILSEQ || errno == EINTR)
         {
             continue;
@@ -148,8 +147,19 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len)
 
     wcstring result;
     result.reserve(in_len);
-    mbstate_t state = {};
     size_t in_pos = 0;
+
+    if (MB_CUR_MAX == 1) // single-byte locale, all values are legal
+    {
+        while (in_pos < in_len)
+        {
+            result.push_back((unsigned char)in[in_pos]);
+            in_pos++;
+        }
+        return result;
+    }
+
+    mbstate_t state = {};
     while (in_pos < in_len)
     {
         wchar_t wc = 0;
@@ -165,12 +175,12 @@ static wcstring str2wcs_internal(const char *in, const size_t in_len)
         {
             use_encode_direct = true;
         }
-        else if (ret == (size_t)(-2))
+        else if (ret == (size_t)-2)
         {
             /* Incomplete sequence */
             use_encode_direct = true;
         }
-        else if (ret == (size_t)(-1))
+        else if (ret == (size_t)-1)
         {
             /* Invalid data */
             use_encode_direct = true;
@@ -266,9 +276,7 @@ std::string wcs2string(const wcstring &input)
     std::string result;
     result.reserve(input.size());
 
-    mbstate_t state;
-    memset(&state, 0, sizeof(state));
-
+    mbstate_t state = {};
     char converted[MB_LEN_MAX + 1];
 
     for (size_t i=0; i < input.size(); i++)
@@ -276,11 +284,21 @@ std::string wcs2string(const wcstring &input)
         wchar_t wc = input[i];
         if (wc == INTERNAL_SEPARATOR)
         {
+            // Do nothing.
         }
-        else if ((wc >= ENCODE_DIRECT_BASE) &&
-                 (wc < ENCODE_DIRECT_BASE+256))
+        else if (wc >= ENCODE_DIRECT_BASE && wc < ENCODE_DIRECT_BASE + 256)
         {
             result.push_back(wc - ENCODE_DIRECT_BASE);
+        }
+        else if (MB_CUR_MAX == 1) // single-byte locale (C/POSIX/ISO-8859)
+        {
+            // If `wc` contains a wide character we emit a question-mark.
+            if (wc & ~0xFF)
+            {
+                wc = '?';
+            }
+            converted[0] = wc;
+            result.append(converted, 1);
         }
         else
         {
@@ -311,38 +329,47 @@ std::string wcs2string(const wcstring &input)
 */
 static char *wcs2str_internal(const wchar_t *in, char *out)
 {
-    size_t res=0;
-    size_t in_pos=0;
-    size_t out_pos = 0;
-    mbstate_t state;
-
     CHECK(in, 0);
     CHECK(out, 0);
 
-    memset(&state, 0, sizeof(state));
+    size_t in_pos = 0;
+    size_t out_pos = 0;
+    mbstate_t state = {};
 
     while (in[in_pos])
     {
         if (in[in_pos] == INTERNAL_SEPARATOR)
         {
+            // Do nothing.
         }
-        else if ((in[in_pos] >= ENCODE_DIRECT_BASE) &&
-                 (in[in_pos] < ENCODE_DIRECT_BASE+256))
+        else if (in[in_pos] >= ENCODE_DIRECT_BASE &&
+                 in[in_pos] < ENCODE_DIRECT_BASE + 256)
         {
             out[out_pos++] = in[in_pos]- ENCODE_DIRECT_BASE;
         }
+        else if (MB_CUR_MAX == 1) // single-byte locale (C/POSIX/ISO-8859)
+        {
+            // If `wc` contains a wide character we emit a question-mark.
+            if (in[in_pos] & ~0xFF)
+            {
+                out[out_pos++] = '?';
+            }
+            else
+            {
+                out[out_pos++] = (unsigned char)in[in_pos];
+            }
+        }
         else
         {
-            res = wcrtomb(&out[out_pos], in[in_pos], &state);
-
-            if (res == (size_t)(-1))
+            size_t len = wcrtomb(&out[out_pos], in[in_pos], &state);
+            if (len == (size_t)-1)
             {
                 debug(1, L"Wide character %d has no narrow representation", in[in_pos]);
                 memset(&state, 0, sizeof(state));
             }
             else
             {
-                out_pos += res;
+                out_pos += len;
             }
         }
         in_pos++;

@@ -158,29 +158,13 @@ int vswprintf(wchar_t *out, size_t n, const wchar_t *filter, va_list va);
 #endif
 
 #ifndef HAVE_FGETWC
-/**
-   Fallback implementation of fgetwc
-*/
+// Fallback implementation of fgetwc.
 wint_t fgetwc(FILE *stream);
-
-/**
-   Fallback implementation of getwc
-*/
-wint_t getwc(FILE *stream);
-
 #endif
 
 #ifndef HAVE_FPUTWC
-
-/**
-   Fallback implementation of fputwc
-*/
+// Fallback implementation of fputwc.
 wint_t fputwc(wchar_t wc, FILE *stream);
-/**
-   Fallback implementation of putwc
-*/
-wint_t putwc(wchar_t wc, FILE *stream);
-
 #endif
 
 #ifndef HAVE_WCSTOK

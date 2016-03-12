@@ -1453,7 +1453,10 @@ bool history_t::save_internal_via_rewrite()
                 if (wstat(new_name, &sbuf) >= 0)
                 {
                    /* Success */
-                    fchown(out_fd, sbuf.st_uid, sbuf.st_gid);
+                    if (0 > fchown(out_fd, sbuf.st_uid, sbuf.st_gid))
+                    {
+                        debug(2, L"Error when changing ownership of history file");
+                    }
                     fchmod(out_fd, sbuf.st_mode);
                 }
 

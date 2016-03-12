@@ -859,22 +859,23 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
         success = this->write_to_fd(private_fd, private_file_path);
         if (! success) UNIVERSAL_LOG("write_to_fd() failed");
     }
-    
+
     if (success)
     {
         /* Ensure we maintain ownership and permissions (#2176) */
         struct stat sbuf;
         if (wstat(vars_path, &sbuf) >= 0)
         {
-            fchown(private_fd, sbuf.st_uid, sbuf.st_gid);
+            if (0 > fchown(private_fd, sbuf.st_uid, sbuf.st_gid))
+                UNIVERSAL_LOG("fchown() failed");
             fchmod(private_fd, sbuf.st_mode);
         }
-        
+
         /* Linux by default stores the mtime with low precision, low enough that updates that occur in quick succession may
            result in the same mtime (even the nanoseconds field). So manually set the mtime of the new file to a high-precision
            clock. Note that this is only necessary because Linux aggressively reuses inodes, causing the ABA problem; on other
            platforms we tend to notice the file has changed due to a different inode (or file size!)
-         
+
            It's probably worth finding a simpler solution to this. The tests ran into this, but it's unlikely to affect users.
          */
 #if HAVE_CLOCK_GETTIME && HAVE_FUTIMENS

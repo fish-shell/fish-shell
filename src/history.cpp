@@ -1453,16 +1453,19 @@ bool history_t::save_internal_via_rewrite()
                 if (wstat(new_name, &sbuf) >= 0)
                 {
                    /* Success */
-                    if (0 > fchown(out_fd, sbuf.st_uid, sbuf.st_gid))
+                    if (fchown(out_fd, sbuf.st_uid, sbuf.st_gid) == -1)
                     {
-                        debug(2, L"Error when changing ownership of history file");
+                        debug(2, L"Error %d when changing ownership of history file", errno);
                     }
-                    fchmod(out_fd, sbuf.st_mode);
+                    if (fchmod(out_fd, sbuf.st_mode) == -1)
+                    {
+                        debug(2, L"Error %d when changing mode of history file", errno);
+                    }
                 }
 
-                if (0 > wrename(tmp_name, new_name))
+                if (wrename(tmp_name, new_name) == -1)
                 {
-                    debug(2, L"Error when renaming history file");
+                    debug(2, L"Error %d when renaming history file", errno);
                 }
             }
             close(out_fd);

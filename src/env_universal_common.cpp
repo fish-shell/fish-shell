@@ -866,9 +866,10 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
         struct stat sbuf;
         if (wstat(vars_path, &sbuf) >= 0)
         {
-            if (0 > fchown(private_fd, sbuf.st_uid, sbuf.st_gid))
+            if (fchown(private_fd, sbuf.st_uid, sbuf.st_gid) == -1)
                 UNIVERSAL_LOG("fchown() failed");
-            fchmod(private_fd, sbuf.st_mode);
+            if (fchmod(private_fd, sbuf.st_mode) == -1)
+                UNIVERSAL_LOG("fchmod() failed");
         }
 
         /* Linux by default stores the mtime with low precision, low enough that updates that occur in quick succession may

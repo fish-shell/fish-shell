@@ -550,34 +550,30 @@ int main(int argc, char **argv)
             }
             reader_exit(0, 0);
         }
+        else if (my_optind == argc)
+        {
+            // Interactive mode
+            check_running_fishd();
+            res = reader_read(STDIN_FILENO, empty_ios);
+        }
         else
         {
-            if (my_optind == argc)
+            char *file = *(argv+(my_optind++));
+            int fd = open(file, O_RDONLY);
+            if (fd == -1)
             {
-                // Interactive mode
-                check_running_fishd();
-                res = reader_read(STDIN_FILENO, empty_ios);
+                perror(file);
             }
             else
             {
-                char **ptr;
-                char *file = *(argv+(my_optind++));
-                int i;
-                int fd;
-
-
-                if ((fd = open(file, O_RDONLY)) == -1)
-                {
-                    wperror(L"open");
-                    return 1;
-                }
-
                 // OK to not do this atomically since we cannot have gone multithreaded yet
                 set_cloexec(fd);
 
                 if (*(argv+my_optind))
                 {
                     wcstring sb;
+                    char **ptr;
+                    int i;
                     for (i=1,ptr = argv+my_optind; *ptr; i++, ptr++)
                     {
                         if (i != 1)

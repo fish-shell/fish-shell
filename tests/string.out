@@ -1,3 +1,10 @@
+dog
+diz
+dog
+diz
+.
+y
+.
 12
 ab
 bc
@@ -45,3 +52,5 @@ aabb
 invalid expression error
 invalid argument error
 missing argument returns 0
+no regexp invert match
+no glob invert match

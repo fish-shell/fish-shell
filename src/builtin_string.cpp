@@ -329,17 +329,15 @@ public:
 
 class wildcard_matcher_t: public string_matcher_t
 {
+private:
     wcstring wcpattern;
-
 public:
     wildcard_matcher_t(const wchar_t * /*argv0*/, const wchar_t *pattern, const match_options_t &opts, io_streams_t &streams)
-        : string_matcher_t(opts, streams)
+    : string_matcher_t(opts, streams), wcpattern(parse_util_unescape_wildcards(pattern))
     {
-        wcpattern = parse_util_unescape_wildcards(pattern);
-
         if (opts.ignore_case)
         {
-            for (int i = 0; i < wcpattern.length(); i++)
+            for (size_t i = 0; i < wcpattern.length(); i++)
             {
                 wcpattern[i] = towlower(wcpattern[i]);
             }
@@ -356,7 +354,7 @@ public:
         if (opts.ignore_case)
         {
             wcstring s = arg;
-            for (int i = 0; i < s.length(); i++)
+            for (size_t i = 0; i < s.length(); i++)
             {
                 s[i] = towlower(s[i]);
             }
@@ -404,9 +402,9 @@ struct compiled_regex_t
     {
         // Disable some sequences that can lead to security problems
         uint32_t options = PCRE2_NEVER_UTF;
-#if PCRE2_CODE_UNIT_WIDTH < 32
-        options |= PCRE2_NEVER_BACKSLASH_C;
-#endif
+        #if PCRE2_CODE_UNIT_WIDTH < 32
+                options |= PCRE2_NEVER_BACKSLASH_C;
+        #endif
 
         int err_code = 0;
         PCRE2_SIZE err_offset = 0;
@@ -462,42 +460,48 @@ class pcre2_matcher_t: public string_matcher_t
                 streams.out.append(arg);
                 streams.out.push_back(L'\n');
             }
-            return 0;
+        
+            return opts.invert_match ? 1 : 0;
         }
-        if (pcre2_rc < 0)
+        else if (pcre2_rc < 0)
         {
             string_error(streams, _(L"%ls: Regular expression match error: %ls\n"),
                     argv0, pcre2_strerror(pcre2_rc).c_str());
             return -1;
         }
-        if (pcre2_rc == 0)
+        else if (pcre2_rc == 0)
         {
             // The output vector wasn't big enough. Should not happen.
             string_error(streams, _(L"%ls: Regular expression internal error\n"), argv0);
             return -1;
         }
+
+        else if (opts.invert_match)
+            return 0;
+
         PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(regex.match);
+
         for (int j = 0; j < pcre2_rc; j++)
         {
             PCRE2_SIZE begin = ovector[2*j];
             PCRE2_SIZE end = ovector[2*j + 1];
-            if (!opts.quiet && !opts.invert_match)
+
+            if (begin != PCRE2_UNSET && end != PCRE2_UNSET && !opts.quiet)
             {
-                if (begin != PCRE2_UNSET && end != PCRE2_UNSET)
+                if (opts.index)
                 {
-                    if (opts.index)
-                    {
-                        streams.out.append_format(L"%lu %lu", (unsigned long)(begin + 1), (unsigned long)(end - begin));
-                    }
-                    else if (end > begin) // may have end < begin if \K is used
-                    {
-                        streams.out.append(wcstring(&arg[begin], end - begin));
-                    }
-                    streams.out.push_back(L'\n');
+                    streams.out.append_format(L"%lu %lu", (unsigned long)(begin + 1), (unsigned long)(end - begin));
                 }
+                else if (end > begin) // may have end < begin if \K is used
+                {
+                    streams.out.append(wcstring(&arg[begin], end - begin));
+                }
+                streams.out.push_back(L'\n');
             }
         }
-        return 1;
+
+        return opts.invert_match ? 0 : 1;
+
     }
 
 public:
@@ -648,6 +652,13 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
         string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
         return BUILTIN_STRING_ERROR;
     }
+    
+    if (opts.all && opts.invert_match) {
+        streams.err.append_format(BUILTIN_ERR_COMBO2, L"string match", L"-a can't be used with --invert/-v. Try removing the '--all'/'-a' option.\n");
+        
+        return BUILTIN_STRING_ERROR;
+    }
+    
 
     string_matcher_t *matcher;
     if (regex)
@@ -759,7 +770,7 @@ class regex_replacer_t: public string_replacer_t
     compiled_regex_t regex;
     wcstring replacement;
 
-    wcstring interpret_escapes(const wchar_t *orig)
+    static wcstring interpret_escapes(const wchar_t *orig)
     {
         wcstring result;
 
@@ -791,6 +802,7 @@ public:
 
     bool replace_matches(const wchar_t *arg)
     {
+
         // A return value of true means all is well (even if no replacements
         // were performed), false indicates an unrecoverable error.
         if (regex.code == 0)
@@ -823,6 +835,7 @@ public:
                             PCRE2_ZERO_TERMINATED,
                             (PCRE2_UCHAR *)output,
                             &outlen);
+        
 
             if (pcre2_rc == PCRE2_ERROR_NOMEMORY)
             {
@@ -1058,7 +1071,7 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
                 return BUILTIN_STRING_ERROR;
         }
     }
-
+    
     int i = w.woptind;
     const wchar_t *sep;
     if ((sep = string_get_arg_argv(&i, argv)) == NULL)
@@ -1073,7 +1086,7 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
         string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
         return BUILTIN_STRING_ERROR;
     }
-    
+
     wcstring_list_t splits;
     size_t arg_count = 0;
     wcstring storage;
@@ -1100,9 +1113,9 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
     // If we are from the right, split_about gave us reversed strings, in reversed order!
     if (right)
     {
-        for (size_t i=0; i < splits.size(); i++)
+        for (size_t j = 0; j < splits.size(); j++)
         {
-            std::reverse(splits[i].begin(), splits[i].end());
+            std::reverse(splits[j].begin(), splits[j].end());
         }
         std::reverse(splits.begin(), splits.end());
     }
@@ -1115,7 +1128,7 @@ static int string_split(parser_t &parser, io_streams_t &streams, int argc, wchar
             streams.out.append(L'\n');
         }
     }
-
+    
     // we split something if we have more split values than args
     return (splits.size() > arg_count) ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
 }
@@ -1302,14 +1315,14 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
         string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
         return BUILTIN_STRING_ERROR;
     }
-    
+
     /* if neither left or right is specified, we do both */
     if (! do_left && ! do_right)
     {
         do_left = true;
         do_right = true;
     }
-
+    
     const wchar_t *arg;
     size_t ntrim = 0;
     

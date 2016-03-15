@@ -1,5 +1,14 @@
 # tests for string builtin
 # mostly taken from examples
+
+string match -r -v "c.*" dog can cat diz
+
+string match -v "c*" dog can cat diz
+
+string match -q -r -v "c*" dog can cat diz; and string match -q -v "c*" dog can cat diz; or echo "."
+
+string match -r -v x y; and string match -q -r -v x y; and echo "."
+
 string length 'hello, world'
 
 string length -q ""; and echo not zero length
@@ -63,3 +72,7 @@ string match -r '[' 'a[sd' 2>/dev/null; or echo "invalid expression error"
 string invalidarg 2>/dev/null; or echo "invalid argument error"
 
 string length 2>/dev/null; or echo "missing argument returns 0"
+
+string match -r -v "[dcantg].*" dog can cat diz; or echo "no regexp invert match"
+
+string match -v "???" dog can cat diz; or echo "no glob invert match"

@@ -44,8 +44,8 @@ const file_id_t kInvalidFileID = {(dev_t)-1LL, (ino_t)-1LL, (uint64_t)-1LL, -1, 
 /* Lock to protect wgettext */
 static pthread_mutex_t wgettext_lock;
 
-/* Maps string keys to (immortal) pointers to string values. */
-typedef std::map<wcstring, const wchar_t *> wgettext_map_t;
+/* Map used as cache by wgettext. */
+typedef std::map<wcstring, wcstring> wgettext_map_t;
 static wgettext_map_t wgettext_map;
 
 bool wreaddir_resolving(DIR *dir, const std::wstring &dir_path, std::wstring &out_name, bool *out_is_dir)
@@ -488,16 +488,18 @@ const wchar_t *wgettext(const wchar_t *in)
     wcstring key = in;
     scoped_lock lock(wgettext_lock);
 
-    // Reference to pointer to string
-    const wchar_t *& val = wgettext_map[key];
-    if (val == NULL)
+    wcstring &val = wgettext_map[key];
+    if (val.empty())
     {
         cstring mbs_in = wcs2string(key);
         char *out = fish_gettext(mbs_in.c_str());
-        val = wcsdup(format_string(L"%s", out).c_str()); //note that this writes into the map!
+        val = format_string(L"%s", out).c_str();
     }
     errno = err;
-    return val; //looks dangerous but is safe, since the string is stored in the map
+
+    // The returned string is stored in the map
+    // TODO: If we want to shrink the map, this would be a problem
+    return val.c_str();
 }
 
 int wmkdir(const wcstring &name, int mode)

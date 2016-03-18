@@ -186,7 +186,6 @@ public:
     /** Adds or removes an option. */
     void add_option(const complete_entry_opt_t &opt);
     bool remove_option(const wcstring &option, complete_option_type_t type);
-    void remove_all_options();
 
     completion_entry_t(const wcstring &c, bool type, bool author) :
         cmd(c),
@@ -201,20 +200,20 @@ public:
 struct completion_entry_set_comparer
 {
     /** Comparison for std::set */
-    bool operator()(completion_entry_t *p1, completion_entry_t *p2) const
+    bool operator()(const completion_entry_t &p1, const completion_entry_t &p2) const
     {
         /* Paths always come last for no particular reason */
-        if (p1->cmd_is_path != p2->cmd_is_path)
+        if (p1.cmd_is_path != p2.cmd_is_path)
         {
-            return p1->cmd_is_path < p2->cmd_is_path;
+            return p1.cmd_is_path < p2.cmd_is_path;
         }
         else
         {
-            return p1->cmd < p2->cmd;
+            return p1.cmd < p2.cmd;
         }
     }
 };
-typedef std::set<completion_entry_t *, completion_entry_set_comparer> completion_entry_set_t;
+typedef std::set<completion_entry_t, completion_entry_set_comparer> completion_entry_set_t;
 static completion_entry_set_t completion_set;
 
 // Comparison function to sort completions by their order field
@@ -520,46 +519,28 @@ bool completer_t::condition_test(const wcstring &condition)
 }
 
 
-/** Search for an exactly matching completion entry. Must be called while locked. */
-static completion_entry_t *complete_find_exact_entry(const wcstring &cmd, const bool cmd_is_path)
-{
-    ASSERT_IS_LOCKED(completion_lock);
-    completion_entry_t *result = NULL;
-    completion_entry_t tmp_entry(cmd, cmd_is_path, false);
-    completion_entry_set_t::iterator iter = completion_set.find(&tmp_entry);
-    if (iter != completion_set.end())
-    {
-        result = *iter;
-    }
-    return result;
-}
-
 /** Locate the specified entry. Create it if it doesn't exist. Must be called while locked. */
-static completion_entry_t *complete_get_exact_entry(const wcstring &cmd, bool cmd_is_path)
+static completion_entry_t &complete_get_exact_entry(const wcstring &cmd, bool cmd_is_path)
 {
     ASSERT_IS_LOCKED(completion_lock);
-    completion_entry_t *c;
 
-    c = complete_find_exact_entry(cmd, cmd_is_path);
+    std::pair<completion_entry_set_t::iterator, bool> ins =
+        completion_set.insert(completion_entry_t(cmd, cmd_is_path, false));
 
-    if (c == NULL)
-    {
-        c = new completion_entry_t(cmd, cmd_is_path, false);
-        completion_set.insert(c);
-    }
-
-    return c;
+    // NOTE SET_ELEMENTS_ARE_IMMUTABLE: Exposing mutable access here is only
+    // okay as long as callers do not change any field that matters to ordering
+    // - affecting order without telling std::set invalidates its internal state
+    return const_cast<completion_entry_t&>(*ins.first);
 }
 
 
 void complete_set_authoritative(const wchar_t *cmd, bool cmd_is_path, bool authoritative)
 {
-    completion_entry_t *c;
-
     CHECK(cmd,);
     scoped_lock lock(completion_lock);
-    c = complete_get_exact_entry(cmd, cmd_is_path);
-    c->authoritative = authoritative;
+
+    completion_entry_t &c = complete_get_exact_entry(cmd, cmd_is_path);
+    c.authoritative = authoritative;
 }
 
 
@@ -580,8 +561,7 @@ void complete_add(const wchar_t *cmd,
     /* Lock the lock that allows us to edit the completion entry list */
     scoped_lock lock(completion_lock);
 
-    completion_entry_t *c;
-    c = complete_get_exact_entry(cmd, cmd_is_path);
+    completion_entry_t &c = complete_get_exact_entry(cmd, cmd_is_path);
 
     /* Create our new option */
     complete_entry_opt_t opt;
@@ -594,7 +574,7 @@ void complete_add(const wchar_t *cmd,
     if (desc) opt.desc = desc;
     opt.flags = flags;
 
-    c->add_option(opt);
+    c.add_option(opt);
 }
 
 /**
@@ -621,28 +601,23 @@ bool completion_entry_t::remove_option(const wcstring &option, complete_option_t
     return this->options.empty();
 }
 
-void completion_entry_t::remove_all_options()
-{
-    ASSERT_IS_LOCKED(completion_lock);
-    this->options.clear();
-}
-
 
 void complete_remove(const wcstring &cmd, bool cmd_is_path, const wcstring &option, complete_option_type_t type)
 {
     scoped_lock lock(completion_lock);
 
     completion_entry_t tmp_entry(cmd, cmd_is_path, false);
-    completion_entry_set_t::iterator iter = completion_set.find(&tmp_entry);
+    completion_entry_set_t::iterator iter = completion_set.find(tmp_entry);
     if (iter != completion_set.end())
     {
-        completion_entry_t *entry = *iter;
-        bool delete_it = entry->remove_option(option, type);
+        // const_cast: See SET_ELEMENTS_ARE_IMMUTABLE
+        completion_entry_t &entry = const_cast<completion_entry_t&>(*iter);
+
+        bool delete_it = entry.remove_option(option, type);
         if (delete_it)
         {
             /* Delete this entry */
             completion_set.erase(iter);
-            delete entry;
         }
     }
 }
@@ -652,14 +627,7 @@ void complete_remove_all(const wcstring &cmd, bool cmd_is_path)
     scoped_lock lock(completion_lock);
     
     completion_entry_t tmp_entry(cmd, cmd_is_path, false);
-    completion_entry_set_t::iterator iter = completion_set.find(&tmp_entry);
-    if (iter != completion_set.end())
-    {
-        completion_entry_t *entry = *iter;
-        entry->remove_all_options();
-        completion_set.erase(iter);
-        delete entry;
-    }
+    completion_set.erase(tmp_entry);
 }
 
 
@@ -1187,12 +1155,12 @@ bool completer_t::complete_param(const wcstring &scmd_orig, const wcstring &spop
         scoped_lock lock(completion_lock);
         for (completion_entry_set_t::const_iterator iter = completion_set.begin(); iter != completion_set.end(); ++iter)
         {
-            const completion_entry_t *i = *iter;
-            const wcstring &match = i->cmd_is_path ? path : cmd;
-            if (wildcard_match(match, i->cmd))
+            const completion_entry_t &i = *iter;
+            const wcstring &match = i.cmd_is_path ? path : cmd;
+            if (wildcard_match(match, i.cmd))
             {
                 /* Copy all of their options into our list */
-                all_options.push_back(i->get_options()); //Oof, this is a lot of copying
+                all_options.push_back(i.get_options()); //Oof, this is a lot of copying
             }
         }
     }
@@ -1909,7 +1877,11 @@ wcstring complete_print()
     scoped_lock locker(completion_lock);
 
     // Get a list of all completions in a vector, then sort it by order
-    std::vector<const completion_entry_t *> all_completions(completion_set.begin(), completion_set.end());
+    std::vector<const completion_entry_t *> all_completions;
+    for (completion_entry_set_t::const_iterator i = completion_set.begin(); i != completion_set.end(); ++i)
+    {
+        all_completions.push_back(&*i);
+    }
     sort(all_completions.begin(), all_completions.end(), compare_completions_by_order);
 
     for (std::vector<const completion_entry_t *>::const_iterator iter = all_completions.begin(); iter != all_completions.end(); ++iter)

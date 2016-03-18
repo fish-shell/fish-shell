@@ -129,7 +129,7 @@ static int check_runtime_path(const char * path)
      */
 
     struct stat statpath;
-    u_int uid = geteuid();
+    uid_t uid = geteuid();
 
     if (mkdir(path, S_IRWXU) != 0 && errno != EEXIST)
         return errno;

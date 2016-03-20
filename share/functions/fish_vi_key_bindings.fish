@@ -200,6 +200,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind -M visual W forward-bigword
   bind -M visual e forward-word
   bind -M visual E forward-bigword
+  bind -M visual o swap-selection-start-stop force-repaint
 
   for key in $eol_keys
       bind -M visual $key end-of-line

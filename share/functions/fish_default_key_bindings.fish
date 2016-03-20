@@ -16,6 +16,7 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind $argv \t complete
 
 	bind $argv \e\n "commandline -i \n"
+	bind $argv \e\r "commandline -i \n"
 
 	bind $argv \e\[A up-or-search
 	bind $argv \e\[B down-or-search

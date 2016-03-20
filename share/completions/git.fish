@@ -323,6 +323,7 @@ complete -f -c git -n '__fish_git_using_command commit' -a '(__fish_git_modified
 complete -c git -n '__fish_git_needs_command'    -a diff -d 'Show changes between commits, commit and working tree, etc'
 complete -c git -n '__fish_git_using_command diff' -a '(__fish_git_ranges)' -d 'Branch'
 complete -c git -n '__fish_git_using_command diff' -l cached -d 'Show diff of changes in the index'
+complete -c git -n '__fish_git_using_command diff' -l no-index -d 'Compare two paths on the filesystem'
 # TODO options
 
 ### difftool

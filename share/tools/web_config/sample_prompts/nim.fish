@@ -47,16 +47,7 @@ function fish_prompt
     set_color -o green
     echo -n ]
     
-    # Check if acpi exists
-    if not set -q __fish_nim_prompt_has_acpi
-    	if type acpi > /dev/null
-    		set -g __fish_nim_prompt_has_acpi ''
-    	else
-    		set -g __fish_nim_prompt_has_acpi '' # empty string
-    	end
-    end
-    	
-    if test "$__fish_nim_prompt_has_acpi"
+    if type -q acpi
 		if [ (acpi -a 2> /dev/null | grep off) ]
 			echo -n '─['
 			set_color -o red

@@ -79,10 +79,10 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
   bind B backward-bigword
   bind ge backward-word
   bind gE backward-bigword
-  bind w forward-word
-  bind W forward-bigword
-  bind e forward-word
-  bind E forward-bigword
+  bind w forward-word forward-char
+  bind W forward-bigword forward-char
+  bind e forward-char forward-word backward-char
+  bind E forward-bigword backward-char
 
   bind x delete-char
   bind X backward-delete-char

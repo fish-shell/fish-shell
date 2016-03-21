@@ -14,7 +14,7 @@ If `DIRECTORY` is a relative path, the paths found in the `CDPATH` environment v
 
 Note that the shell will attempt to change directory without requiring `cd` if the name of a directory is provided (starting with `.`, `/` or `~`, or ending with `/`).
 
-Fish also ships a wrapper function around `cd` that understands `cd -` as changing to the previous directory. See <a href="commands.html#prevd">`prevd`</a>.
+Fish also ships a wrapper function around the builtin `cd` that understands `cd -` as changing to the previous directory. See also <a href="commands.html#prevd">`prevd`</a>. This wrapper function maintains a history of the 25 most recently visited directories in the `$dirprev` and `$dirnext` global variables.
 
 \subsection cd-example Examples
 

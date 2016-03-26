@@ -1088,7 +1088,7 @@ function on_exit --on-process %self
 end
 \endfish
 
-Right after reading /usr/share/fish/config.fish and before reading /etc/fish/config.fish, fish will also read files in ~/.config/fish/conf.d/, /etc/fish/conf.d and /usr/share/fish/vendor_conf.d (the exact values depend on $XDG_CONFIG_HOME, $__fish_sysconfdir and $__fish_datadir). If there are files with the same name in two or all of these, fish will only attempt to read the first (skipping all files with that name if it is unreadable). ~/.config takes precedence over /etc/ which takes precedence over /usr. The path to the latter can also be gotten via `pkg-config` as "confdir", and is meant for third-party applications to integrate with fish.
+Right after reading /usr/share/fish/config.fish and before reading /etc/fish/config.fish, fish will also read files ending in ".fish" in ~/.config/fish/conf.d/, /etc/fish/conf.d and /usr/share/fish/vendor_conf.d (the exact values depend on $XDG_CONFIG_HOME, $__fish_sysconfdir and $__fish_datadir). If there are files with the same name in two or all of these, fish will only attempt to read the first (skipping all files with that name if it is unreadable). ~/.config takes precedence over /etc/ which takes precedence over /usr. The path to the latter can also be gotten via `pkg-config` as "confdir", and is meant for third-party applications to integrate with fish.
 
 \section other Other features
 

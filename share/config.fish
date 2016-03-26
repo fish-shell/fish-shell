@@ -157,7 +157,7 @@ end
 # As last part of initialization, source the conf directories
 # Implement precedence (User > Admin > Vendors > Fish) by basically doing "basename"
 set -l sourcelist
-for file in $configdir/fish/conf.d/* $__fish_sysconfdir/conf.d/* $__fish_datadir/vendor_conf.d/*
+for file in $configdir/fish/conf.d/*.fish $__fish_sysconfdir/conf.d/*.fish $__fish_datadir/vendor_conf.d/*.fish
 	set -l basename (string replace -r '^.*/' '' -- $file)
 	contains -- $basename $sourcelist; and continue
 	set sourcelist $sourcelist $basename

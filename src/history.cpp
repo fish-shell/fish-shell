@@ -56,6 +56,9 @@ Our history format is intended to be valid YAML. Here it is:
 /** Default buffer size for flushing to the history file */
 #define HISTORY_OUTPUT_BUFFER_SIZE (4096 * 4)
 
+namespace
+{
+
 /* Helper class for certain output. This is basically a string that allows us to ensure we only flush at record boundaries, and avoids the copying of ostringstream. Have you ever tried to implement your own streambuf? Total insanity. */
 class history_output_buffer_t
 {
@@ -168,7 +171,7 @@ public:
     explicit history_lru_node_t(const history_item_t &item) :
         lru_node_t(item.str()),
         timestamp(item.timestamp()),
-        required_paths(item.required_paths)
+        required_paths(item.get_required_paths())
     {}
 };
 
@@ -207,9 +210,31 @@ public:
     }
 };
 
-static pthread_mutex_t hist_lock = PTHREAD_MUTEX_INITIALIZER;
+class history_collection_t
+{
+    pthread_mutex_t m_lock;
+    std::map<wcstring, history_t *> m_histories;
 
-static std::map<wcstring, history_t *> histories;
+public:
+    history_collection_t()
+    {
+        VOMIT_ON_FAILURE_NO_ERRNO(pthread_mutex_init(&m_lock, NULL));
+    }
+    ~history_collection_t()
+    {
+        for (std::map<wcstring, history_t*>::const_iterator i = m_histories.begin(); i != m_histories.end(); ++i)
+        {
+            delete i->second;
+        }
+        pthread_mutex_destroy(&m_lock);
+    }
+    history_t& alloc(const wcstring &name);
+    void save();
+};
+
+} //anonymous namespace
+
+static history_collection_t histories;
 
 static wcstring history_filename(const wcstring &name, const wcstring &suffix);
 
@@ -524,14 +549,19 @@ static size_t offset_of_next_item(const char *begin, size_t mmap_length, history
     return result;
 }
 
-history_t & history_t::history_with_name(const wcstring &name)
+history_t & history_collection_t::alloc(const wcstring &name)
 {
     /* Note that histories are currently never deleted, so we can return a reference to them without using something like shared_ptr */
-    scoped_lock locker(hist_lock);
-    history_t *& current = histories[name];
+    scoped_lock locker(m_lock);
+    history_t *& current = m_histories[name];
     if (current == NULL)
         current = new history_t(name);
     return *current;
+}
+
+history_t & history_t::history_with_name(const wcstring &name)
+{
+    return histories.alloc(name);
 }
 
 history_t::history_t(const wcstring &pname) :
@@ -1809,13 +1839,19 @@ void history_init()
 }
 
 
-void history_destroy()
+void history_collection_t::save()
 {
     /* Save all histories */
-    for (std::map<wcstring, history_t *>::iterator iter = histories.begin(); iter != histories.end(); ++iter)
+    for (std::map<wcstring, history_t *>::iterator iter = m_histories.begin(); iter != m_histories.end(); ++iter)
     {
-        iter->second->save();
+        history_t *hist = iter->second;
+        hist->save();
     }
+}
+
+void history_destroy()
+{
+    histories.save();
 }
 
 

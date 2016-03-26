@@ -2645,9 +2645,11 @@ static void test_universal()
     if (system("mkdir -p /tmp/fish_uvars_test/")) err(L"mkdir failed");
 
     const int threads = 16;
+    static int ctx[threads];
     for (int i=0; i < threads; i++)
     {
-        iothread_perform(test_universal_helper, new int(i));
+        ctx[i] = i;
+        iothread_perform(test_universal_helper, &ctx[i]);
     }
     iothread_drain_all();
 

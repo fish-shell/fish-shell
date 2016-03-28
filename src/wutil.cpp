@@ -493,7 +493,7 @@ const wchar_t *wgettext(const wchar_t *in)
     {
         cstring mbs_in = wcs2string(key);
         char *out = fish_gettext(mbs_in.c_str());
-        val = format_string(L"%s", out).c_str();
+        val = format_string(L"%s", out);
     }
     errno = err;
 

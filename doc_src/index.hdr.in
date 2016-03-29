@@ -399,7 +399,19 @@ If a star (`*`) or a question mark (`?`) is present in the parameter, `fish` att
 
 - `*` can match any string of characters not containing '/'. This includes matching an empty string.
 
-- `**` matches any string of characters. This includes matching an empty string. The string may include the `/` character but does not need to.
+- `**` matches any string of characters. This includes matching an empty string. The matched string may include the `/` character; that is, it recurses into subdirectories. Note that augmenting this wildcard with other strings will not match files in the current working directory (`$PWD`) if you separate the strings with a slash ("/"). This is unlike other shells such as zsh. For example, `**\/*.fish` in zsh will match `.fish` files in the PWD but in fish will only match such files in a subdirectory. In fish you should type `***.fish` to match files in the PWD as well as subdirectories.
+
+Other shells, such as zsh, provide a rich glob syntax for restricting the files matched by globs. For example, `**(.)`, to only match regular files. Fish prefers to defer such features to programs, such as `find`, rather than reinventing the wheel. Thus, if you want to limit the wildcard expansion to just regular files the fish approach is to define and use a function. For example,
+
+\fish{cli-dark}
+function ff --description 'Like ** but only returns plain files.'
+    # This also ignores .git directories.
+    find . \( -name .git -type d -prune \) -o -type f | \
+        sed -n -e '/^\.\/\.git$/n' -e 's/^\.\///p'
+end
+\endfish
+
+You would then use it in place of `**` like this, `my_prog (ff)`, to pass only regular files in or below $PWD to `my_prog`.
 
 Wildcard matches are sorted case insensitively. When sorting matches containing numbers, consecutive digits are considered to be one element, so that the strings '1' '5' and '12' would be sorted in the order given.
 

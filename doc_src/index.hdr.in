@@ -909,7 +909,7 @@ Similar to bash, fish has Emacs and Vi editing modes. The default editing mode i
 
 \subsection emacs-mode Emacs mode commands
 
-- @key{Tab} <a href="#completion">completes</a> the current token.
+- @key{Tab} <a href="#completion">completes</a> the current token. @key{Shift, Tab} completes the current token and starts the pager's search mode.
 
 - @key{Home} or @key{Control,A} moves the cursor to the beginning of the line.
 
@@ -935,7 +935,7 @@ Similar to bash, fish has Emacs and Vi editing modes. The default editing mode i
 
 - @key{Control,L} clears and repaints the screen.
 
-- @key{Control,W} moves the previous word to the <a href="#killring">killring</a>.
+- @key{Control,W} moves the previous path component (everything up to the previous "/") to the <a href="#killring">killring</a>.
 
 - @key{Alt,D} moves the next word to the <a href="#killring">killring</a>.
 
@@ -950,6 +950,11 @@ Similar to bash, fish has Emacs and Vi editing modes. The default editing mode i
 - @key{Alt,U} makes the current word uppercase.
 
 - @key{Alt,H} (or @key{F1}) shows the manual page for the current command, if one exists.
+
+- @key{Control, t} transposes the last two characters
+
+- @key{Alt,t} transposes the last two words
+
 
 You can change these key bindings using the <a href="commands.html#bind">bind</a> builtin command.
 

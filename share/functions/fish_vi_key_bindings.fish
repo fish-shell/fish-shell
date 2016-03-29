@@ -3,13 +3,14 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # be slightly annoying when trying to switch to Vi "normal" mode. Too,
     # vi-mode users are unlikely to use escape-as-meta. So set a much shorter
     # timeout in this case.
-    set -q fish_escape_delay_ms; or set -g fish_escape_delay_ms 10
+    set -q fish_escape_delay_ms
+    or set -g fish_escape_delay_ms 10
 
     set -l init_mode insert
     set -l eol_keys \$ g\$ \e\[F
     set -l bol_keys \^ 0 g\^ \e\[H
     if set -q argv[1]
-	set init_mode $argv[1]
+        set init_mode $argv[1]
     end
 
     # Inherit default key bindings.
@@ -55,10 +56,10 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind G end-of-buffer
 
     for key in $eol_keys
-	bind $key end-of-line
+        bind $key end-of-line
     end
     for key in $bol_keys
-	bind $key beginning-of-line
+        bind $key beginning-of-line
     end
 
     bind u history-search-backward
@@ -138,7 +139,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind K 'man (commandline -t) ^/dev/null; or echo -n \a'
 
     bind yy kill-whole-line yank
-    bind Y  kill-whole-line yank
+    bind Y kill-whole-line yank
     bind y\$ kill-line yank
     bind y\^ backward-kill-line yank
     bind yw kill-word yank
@@ -204,13 +205,13 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -M visual o swap-selection-start-stop force-repaint
 
     for key in $eol_keys
-	bind -M visual $key end-of-line
+        bind -M visual $key end-of-line
     end
     for key in $bol_keys
-	bind -M visual $key beginning-of-line
+        bind -M visual $key beginning-of-line
     end
 
-    bind -M visual -m insert  c kill-selection end-selection force-repaint
+    bind -M visual -m insert c kill-selection end-selection force-repaint
     bind -M visual -m default d kill-selection end-selection force-repaint
     bind -M visual -m default x kill-selection end-selection force-repaint
     bind -M visual -m default X kill-whole-line end-selection force-repaint
@@ -218,7 +219,7 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -M visual -m default '"*y' "commandline -s | xsel -p" end-selection force-repaint
 
     bind -M visual -m default \cc end-selection force-repaint
-    bind -M visual -m default \e  end-selection force-repaint
+    bind -M visual -m default \e end-selection force-repaint
 
     set fish_bind_mode $init_mode
 end

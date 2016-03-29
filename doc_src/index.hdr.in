@@ -295,7 +295,7 @@ Help on a specific builtin can also be obtained with the `-h` parameter. For ins
 
 \section autosuggestions Autosuggestions
 
-fish suggests commands as you type, based on command history, completions, and valid file paths. As you type commands, you will see a completion offered after the cursor, in a muted gray color (which can be changed with the `fish_color_autosuggestion` variable).
+fish suggests commands as you type, based on command history, completions, and valid file paths. As you type commands, you will see a suggestion offered after the cursor, in a muted gray color (which can be changed with the `fish_color_autosuggestion` variable).
 
 To accept the autosuggestion (replacing the command line contents), press right arrow or @key{Control,F}. To accept the first suggested word, press @key{Alt,&rarr;,Right} or @key{Alt,F}. If the autosuggestion is not what you want, just ignore it: it won't execute unless you accept it.
 

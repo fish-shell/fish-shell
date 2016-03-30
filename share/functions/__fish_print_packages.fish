@@ -54,6 +54,12 @@ function __fish_print_packages
 
 	# Zypper needs caching as it is slow
 	if type -q -f zypper
+		# Use libzypp cache file if available
+		if test -f /var/cache/zypp/solv/@System/solv.idx
+			cat /var/cache/zypp/solv/*/solv.idx | awk '!/application:|srcpackage:|product:|pattern:|patch:/ {print $1'\t$package'}'
+			return
+		end
+
 		# If the cache is less than five minutes old, we do not recalculate it
 
 		set -l cache_file $XDG_CACHE_HOME/.zypper-cache.$USER

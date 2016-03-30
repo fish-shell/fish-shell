@@ -37,7 +37,7 @@ git archive --format=tar --prefix="$prefix"/ HEAD > "$path"
 # Don't run autoheader since configure.ac runs it. autoconf is enough.
 autoconf
 ./configure --with-doxygen
-make user_doc share/man
+make doc share/man
 echo $VERSION > version
 cd /tmp
 rm -f "$prefix"

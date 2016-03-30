@@ -266,29 +266,23 @@ prof: all
 #
 # User documentation, describing the features of the fish shell.
 #
-
-# Depend on the sources (*.hdr.in) and manually make the
-# intermediate *.hdr and doc.h files if needed
-# The sed command deletes everything including and after the first -, for simpler version numbers
-# Cleans up the user_doc/html directory once Doxygen is done.
-
-user_doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FILES) lexicon_filter
+# Depend on the sources (*.hdr.in) and manually make the intermediate *.hdr
+# and doc.h files if needed. The sed command deletes everything including and
+# after the first -, for simpler version numbers. Cleans up the user_doc/html
+# directory once Doxygen is done.
+#
+doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h \
+    $(HDR_FILES) lexicon_filter
 	(cat Doxyfile.user; echo INPUT_FILTER=./lexicon_filter; \
-	echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | $(SED) "s/-.*//") | doxygen - && touch user_doc; \
-	cd user_doc/html && rm -f bc_s.png bdwn.png closed.png ftv2*.png nav*.png open.png sync_*.png tab*.* doxygen.* dynsections.js jquery.js pages.html
-
-#
-# Source code documentation. Also includes user documentation.
-#
-
-doc: src/*.h src/*.cpp doc.h Doxyfile lexicon_filter
-	(cat Doxyfile; echo INPUT_FILTER=./lexicon_filter; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION)) | doxygen - ;
-
+	echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | $(SED) "s/-.*//") | \
+		doxygen - && touch user_doc; \
+	cd user_doc/html && rm -f bc_s.png bdwn.png closed.png ftv2*.png \
+		nav*.png open.png sync_*.png tab*.* doxygen.* dynsections.js \
+		jquery.js pages.html
 
 #
 # PDF version of the source code documentation.
 #
-
 doc/refman.pdf: doc
 	cd doc/latex && \
 	make &&  \

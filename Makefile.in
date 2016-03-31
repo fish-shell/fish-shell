@@ -268,7 +268,7 @@ prof: all
 #
 # Depend on the sources (*.hdr.in) and manually make the intermediate *.hdr
 # and doc.h files if needed. The sed command deletes everything including and
-# after the first -, for simpler version numbers Cleans up the user_doc/html
+# after the first -, for simpler version numbers. Cleans up the user_doc/html
 # directory once Doxygen is done.
 #
 doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h \

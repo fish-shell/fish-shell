@@ -56,7 +56,7 @@ is transformed into:
 
 `@cmnd{echo} @args{hello} @args{world}`
 
-which is then transformed by Doxygen into an HTML version (`make user_doc`):
+which is then transformed by Doxygen into an HTML version (`make doc`):
 
 `<span class="command">echo</span> <span class="argument">hello</span> <span class="argument">world</span>`
 

@@ -213,7 +213,7 @@ endif
 #
 
 ifeq ($(HAVE_DOXYGEN), 1)
-  user_doc=user_doc
+  user_doc=doc
   share_man=share/man
 else
   user_doc=

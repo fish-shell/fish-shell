@@ -1,0 +1,8 @@
+rules:
+rule-configurations:
+    # This is the default value (as of the time I wrote this) but I'm making
+    # it explicit since it needs to agree with the value used by clang-format.
+    # Thus, if we ever change the fish style to allow longer lines this should
+    # be changed (as well as the corresponding clang-format config).
+    - key: LONG_LINE
+      value: 100

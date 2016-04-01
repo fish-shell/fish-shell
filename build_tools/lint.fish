@@ -33,7 +33,7 @@ end
 if test $all = no
     # We haven't been asked to lint all the source. If there are uncommitted
     # changes lint those, else lint the files in the most recent commit.
-    set pending (git status --short --untracked-files=all | sed -e 's/^ *//')
+    set pending (git status --porcelain --short --untracked-files=all | sed -e 's/^ *//')
     if count $pending > /dev/null
         # There are pending changes so lint those files.
         for arg in $pending
@@ -41,24 +41,18 @@ if test $all = no
         end
     else
         # No pending changes so lint the files in the most recent commit.
-        set files (git show --name-only --pretty=oneline head | tail --lines=+2)
+        set files (git show --porcelain --name-only --pretty=oneline head | tail --lines=+2)
     end
 
     # Filter out the non-C/C++ files.
-    for file in $files
-        if string match -q -- '*.cpp' $file
-            set c_files $c_files $file
-        else if string match -q -- '*.c' $file
-            set c_files $c_files $file
-        end
-    end
+    set c_files (string match -r '.*\.c(?:pp)?$' -- $files)
 else
     set c_files src/*.cpp
 end
 
 # We now have a list of files to check so run the linters.
 if set -q c_files[1]
-    if command -s cppcheck > /dev/null
+    if type -q cppcheck
         echo
         echo ========================================
         echo Running cppcheck
@@ -67,7 +61,7 @@ if set -q c_files[1]
             --inline-suppr --enable=$cppchecks $cppcheck_args $c_files
     end
 
-    if command -s oclint > /dev/null
+    if types -q oclint
         echo
         echo ========================================
         echo Running oclint

@@ -16,7 +16,7 @@ brew install oclint
 brew install cppcheck
 ```
 
-To install the lint checkers on Linux distros that use Aot:
+To install the lint checkers on Linux distros that use Apt:
 
 ```
 sudo apt-get install clang

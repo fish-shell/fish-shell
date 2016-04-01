@@ -865,6 +865,13 @@ iwyu:
 _iwyu: clean $(PROGRAMS)
 .PHONY: iwyu _iwyu
 
+# Lint the code.
+lint:
+	build_tools/lint.fish $(CXX) $(CXXFLAGS)
+lint-all:
+	build_tools/lint.fish $(CXX) --all $(CXXFLAGS)
+.PHONY: lint lint-all
+
 #
 # Cleanup targets
 #
@@ -891,6 +898,7 @@ clean:
 	rm -f command_list.txt command_list_toc.txt toc.txt
 	rm -f doc_src/index.hdr doc_src/commands.hdr
 	rm -f lexicon_filter lexicon.txt lexicon.log
+	rm -f compile_commands.json xcodebuild.log
 	rm -f FISH-BUILD-VERSION-FILE fish.pc
 	if test "$(HAVE_DOXYGEN)" = 1; then \
 		rm -rf doc user_doc share/man; \

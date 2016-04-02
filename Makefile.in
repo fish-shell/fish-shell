@@ -872,11 +872,19 @@ iwyu:
 _iwyu: clean $(PROGRAMS)
 .PHONY: iwyu _iwyu
 
-# Lint the code.
+# Lint the code. This only deals with C++ files.
 lint:
 	build_tools/lint.fish $(CXX) $(CXXFLAGS)
 lint-all:
 	build_tools/lint.fish $(CXX) --all $(CXXFLAGS)
+.PHONY: lint lint-all
+
+# Run the code through the style refomatter. This handles both C++ files and
+# fish scripts (*.fish).
+style:
+	build_tools/style.fish
+style-all:
+	build_tools/style.fish --all
 .PHONY: lint lint-all
 
 #

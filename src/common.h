@@ -1,3 +1,4 @@
+// WTF
 /** \file common.h
 	Prototypes for various functions, mostly string utilities, that are used by most parts of fish.
 */

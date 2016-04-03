@@ -573,14 +573,6 @@ int wgetopter_t::_wgetopt_internal(int argc, wchar_t **argv, const wchar_t *opts
     }
 }
 
-int wgetopter_t::wgetopt(int argc, wchar_t **argv, const wchar_t *optstring)
-{
-    return _wgetopt_internal(argc, argv, optstring,
-                             (const struct woption *) 0,
-                             (int *) 0,
-                             0);
-}
-
 int wgetopter_t::wgetopt_long(int argc, wchar_t **argv, const wchar_t *options, const struct woption *long_options, int *opt_index)
 {
     return _wgetopt_internal(argc, argv, options, long_options, opt_index, 0);

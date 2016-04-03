@@ -143,8 +143,7 @@ struct file_id_t
     long change_nanoseconds;
     time_t mod_seconds;
     long mod_nanoseconds;
-    uint32_t generation;
-    
+        
     bool operator==(const file_id_t &rhs) const;
     bool operator!=(const file_id_t &rhs) const;
     

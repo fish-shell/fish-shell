@@ -28,7 +28,7 @@
 
 typedef std::string cstring;
 
-const file_id_t kInvalidFileID = {(dev_t)-1LL, (ino_t)-1LL, (uint64_t)-1LL, -1, -1, (uint32_t)-1};
+const file_id_t kInvalidFileID = {(dev_t)-1LL, (ino_t)-1LL, (uint64_t)-1LL, -1, -1, -1, -1};
 
 #ifndef PATH_MAX
 #ifdef MAXPATHLEN
@@ -555,12 +555,7 @@ file_id_t file_id_t::file_id_from_stat(const struct stat *buf)
     result.change_nanoseconds = 0;
     result.mod_nanoseconds = 0;
 #endif
-
-#if defined(__APPLE__) || defined(__DragonFly__) || defined(__FreeBSD__) ||  defined(__OpenBSD__) || defined(__NetBSD__)
-    result.generation = buf->st_gen;
-#else
-    result.generation = 0;
-#endif
+    
     return result;
 }
 
@@ -619,7 +614,6 @@ int file_id_t::compare_file_id(const file_id_t &rhs) const
     if (! ret) ret = compare(device, rhs.device);
     if (! ret) ret = compare(inode, rhs.inode);
     if (! ret) ret = compare(size, rhs.size);
-    if (! ret) ret = compare(generation, rhs.generation);
     if (! ret) ret = compare(change_seconds, rhs.change_seconds);
     if (! ret) ret = compare(change_nanoseconds, rhs.change_nanoseconds);
     if (! ret) ret = compare(mod_seconds, rhs.mod_seconds);

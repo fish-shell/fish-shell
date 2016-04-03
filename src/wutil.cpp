@@ -28,7 +28,7 @@
 
 typedef std::string cstring;
 
-const file_id_t kInvalidFileID = {(dev_t)-1LL, (ino_t)-1LL, (uint64_t)-1LL, -1, -1, (uint32_t)-1};
+const file_id_t kInvalidFileID = {(dev_t)-1LL, (ino_t)-1LL, (uint64_t)-1LL, -1, -1, -1, -1, (uint32_t)-1};
 
 #ifndef PATH_MAX
 #ifdef MAXPATHLEN

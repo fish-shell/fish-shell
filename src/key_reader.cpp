@@ -82,9 +82,9 @@ int main(int argc, char **argv)
             if ((c=input_common_readch(0)) == EOF)
                 break;
             if ((c > 31) && (c != 127))
-                sprintf(scratch, "dec: %d hex: %x char: %c\n", c, c, c);
+                sprintf(scratch, "dec: %u hex: %x char: %c\n", c, c, c);
             else
-                sprintf(scratch, "dec: %d hex: %x\n", c, c);
+                sprintf(scratch, "dec: %u hex: %x\n", c, c);
             writestr(scratch);
         }
         /* reset the terminal to the saved mode */

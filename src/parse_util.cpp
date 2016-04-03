@@ -1020,14 +1020,16 @@ static const wchar_t *error_format_for_character(wchar_t wc)
 
 void parse_util_expand_variable_error(const wcstring &token, size_t global_token_pos, size_t dollar_pos, parse_error_list_t *errors)
 {
-    // Note that dollar_pos is probably VARIABLE_EXPAND or VARIABLE_EXPAND_SINGLE, not a literal dollar sign
+    // Note that dollar_pos is probably VARIABLE_EXPAND or VARIABLE_EXPAND_SINGLE,
+    // not a literal dollar sign.
     assert(errors != NULL);
     assert(dollar_pos < token.size());
     const bool double_quotes = (token.at(dollar_pos) == VARIABLE_EXPAND_SINGLE);
     const size_t start_error_count = errors->size();
     const size_t global_dollar_pos = global_token_pos + dollar_pos;
     const size_t global_after_dollar_pos = global_dollar_pos + 1;
-    wchar_t char_after_dollar = (dollar_pos + 1 >= token.size() ? L'\0' : token.at(dollar_pos + 1));
+    wchar_t char_after_dollar = dollar_pos + 1 >= token.size() ? 0 : token.at(dollar_pos + 1);
+
     switch (char_after_dollar)
     {
         case BRACKET_BEGIN:

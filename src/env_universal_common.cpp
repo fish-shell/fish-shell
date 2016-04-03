@@ -663,47 +663,44 @@ bool env_universal_t::load()
     return success;
 }
 
-bool env_universal_t::open_temporary_file(const wcstring &directory, wcstring *out_path, int *out_fd)
+bool env_universal_t::open_temporary_file(const wcstring &directory, wcstring *out_path,
+        int *out_fd)
 {
-    /* Create and open a temporary file for writing within the given directory */
-    /* Try to create a temporary file, up to 10 times. We don't use mkstemps because we want to open it CLO_EXEC. This should almost always succeed on the first try. */
-    assert(! string_suffixes_string(L"/", directory));
-    
+    // Create and open a temporary file for writing within the given directory. Try to create a
+    // temporary file, up to 10 times. We don't use mkstemps because we want to open it CLO_EXEC.
+    // This should almost always succeed on the first try.
+    assert(!string_suffixes_string(L"/", directory));
+
     bool success = false;
+    int saved_errno;
     const wcstring tmp_name_template = directory + L"/fishd.tmp.XXXXXX";
     wcstring tmp_name;
+
     for (size_t attempt = 0; attempt < 10 && ! success; attempt++)
     {
         int result_fd = -1;
         char *narrow_str = wcs2str(tmp_name_template.c_str());
 #if HAVE_MKOSTEMP
         result_fd = mkostemp(narrow_str, O_CLOEXEC);
-        if (result_fd >= 0)
-        {
-            tmp_name = str2wcstring(narrow_str);
-        }
 #else
-        if (mktemp(narrow_str))
+        // cppcheck-suppress redundantAssignment
+        result_fd = mkstemp(narrow_str);
+        if (result_fd != -1)
         {
-            /* It was successfully templated; try opening it atomically */
-            tmp_name = str2wcstring(narrow_str);
-            result_fd = wopen_cloexec(tmp_name, O_WRONLY | O_CREAT | O_EXCL | O_TRUNC, 0644);
+            fcntl(result_fd, F_SETFD, O_CLOEXEC);
         }
 #endif
-        
-        if (result_fd >= 0)
-        {
-            /* Success */
-            *out_fd = result_fd;
-            *out_path = str2wcstring(narrow_str);
-            success = true;
-        }
+
+        saved_errno = errno;
+        success = result_fd != -1;
+        *out_fd = result_fd;
+        *out_path = str2wcstring(narrow_str);
         free(narrow_str);
     }
-    if (! success)
+
+    if (!success)
     {
-        int err = errno;
-        report_error(err, L"Unable to open file '%ls'", tmp_name.c_str());
+        report_error(saved_errno, L"Unable to open file '%ls'", out_path->c_str());
     }
     return success;
 }
@@ -1228,6 +1225,7 @@ class universal_notifier_shmem_poller_t : public universal_notifier_t
         
         /* Read the current seed */
         this->poll();
+        // cppcheck-suppress memleak // addr not really leaked
     }
     
     public:

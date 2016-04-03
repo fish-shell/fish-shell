@@ -147,7 +147,6 @@ public:
     {
     }
     
-    int wgetopt(int argc, wchar_t **argv, const wchar_t *optstring);
     int wgetopt_long(int argc, wchar_t **argv, const wchar_t *options, const struct woption *long_options, int *opt_index);
     int wgetopt_long_only(int argc, wchar_t **argv, const wchar_t *options, const struct woption *long_options, int *opt_index);
 };

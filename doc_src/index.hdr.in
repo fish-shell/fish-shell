@@ -528,22 +528,24 @@ The above code demonstrates how to use multiple '`$`' symbols to expand the valu
 Lists adjacent to other lists or strings are expanded as cartesian products:
 
 Examples:
-\fish
-echo {good,bad}" apples"
-# Outputs 'good apples bad apples'
+\fish{cli-dark}
+>_ echo {good,bad}" apples"
+<outp>good apples bad apples</outp>
 
-set -l a x y z
-set -l b 1 2 3
-echo $a$b
-# Outputs 'x1 y1 z1 x2 y2 z2 x3 y3 z3'
-echo $a"-"$b
-# Outputs 'x-1 y-1 z-1 x-2 y-2 z-2 x-3 y-3 z-3'
+>_ set -l a x y z
+>_ set -l b 1 2 3
 
-echo {x,y,z}$b
-# Outputs 'x1 y1 z1 x2 y2 z2 x3 y3 z3'
+>_ echo $a$b
+<outp>x1 y1 z1 x2 y2 z2 x3 y3 z3</outp>
 
-echo {$b}word
-# Outputs '1word 2word 3word'
+>_ echo $a"-"$b
+<outp>x-1 y-1 z-1 x-2 y-2 z-2 x-3 y-3 z-3</outp>
+
+>_ echo {x,y,z}$b
+<outp>x1 y1 z1 x2 y2 z2 x3 y3 z3</outp>
+
+>_ echo {$b}word
+<outp>1word 2word 3word</outp>
 \endfish
 
 Be careful when you try to use braces to separate variable names from text. The dangers noted in the last example above can be avoided by wrapping the variable in double quotes instead of braces (`echo "$b"word`).

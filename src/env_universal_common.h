@@ -167,13 +167,7 @@ public:
     virtual bool notification_fd_became_readable(int fd);
 };
 
-bool universal_log_enabled();
-#define UNIVERSAL_LOG(x) do { if (universal_log_enabled()) fprintf(stderr, "UNIVERSAL LOG: %s\n", x); } while (0)
-
 /* Environment variable for requesting a particular universal notifier. See fetch_default_strategy_from_environment for names. */
 #define UNIVERSAL_NOTIFIER_ENV_NAME "fish_universal_notifier"
-
-/* Environment variable for enabling universal variable logging (to stderr) */
-#define UNIVERSAL_LOGGING_ENV_NAME "fish_universal_log"
 
 #endif

@@ -183,6 +183,9 @@ void io_chain_t::append(const io_chain_t &chain)
     this->insert(this->end(), chain.begin(), chain.end());
 }
 
+#if 0
+// This isn't used so the lint tools were complaining about its presence. I'm keeping it in the
+// source because it could be useful for debugging.
 void io_print(const io_chain_t &chain)
 {
     if (chain.empty())
@@ -206,6 +209,7 @@ void io_print(const io_chain_t &chain)
         }
     }
 }
+#endif
 
 /* If the given fd is used by the io chain, duplicates it repeatedly until an fd not used in the io chain is found, or we run out. If we return a new fd or an error, closes the old one. Any fd created is marked close-on-exec. Returns -1 on failure (in which case the given fd is still closed). */
 static int move_fd_to_unused(int fd, const io_chain_t &io_chain)

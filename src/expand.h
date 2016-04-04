@@ -168,7 +168,6 @@ bool expand_abbreviation(const wcstring &src, wcstring *output);
 
 /* Terrible hacks */
 bool fish_xdm_login_hack_hack_hack_hack(std::vector<std::string> *cmds, int argc, const char * const *argv);
-bool fish_openSUSE_dbus_hack_hack_hack_hack(std::vector<completion_t> *args);
 
 
 #endif

@@ -27,9 +27,7 @@ enum
     FISH_COLOR_MAGENTA,
     FISH_COLOR_CYAN,
     FISH_COLOR_WHITE,
-    /** The default fg color of the terminal */
-    FISH_COLOR_NORMAL,
-    FISH_COLOR_IGNORE,
+    FISH_COLOR_NORMAL,  // the default fg color of the terminal
     FISH_COLOR_RESET
 };
 
@@ -41,9 +39,8 @@ enum
    screen to flicker, the function takes care to write as little as
    possible.
 
-   Possible values for color are any form the FISH_COLOR_* enum,
-   FISH_COLOR_IGNORE and FISH_COLOR_RESET. FISH_COLOR_IGNORE will
-   leave the color unchanged, and FISH_COLOR_RESET will perform an
+   Possible values for color are any form the FISH_COLOR_* enum
+   and FISH_COLOR_RESET. FISH_COLOR_RESET will perform an
    exit_attribute_mode, even if set_color thinks it is already in
    FISH_COLOR_NORMAL mode.
 

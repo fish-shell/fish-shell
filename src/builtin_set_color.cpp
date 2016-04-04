@@ -137,7 +137,7 @@ static int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **
     for (; w.woptind < argc; w.woptind++)
     {
         rgb_color_t fg = rgb_color_t(argv[w.woptind]);
-        if (fg.is_none() || fg.is_ignore())
+        if (fg.is_none())
         {
             streams.err.append_format(_(L"%ls: Unknown color '%ls'\n"), argv[0], argv[w.woptind]);
             return STATUS_BUILTIN_ERROR;
@@ -155,10 +155,10 @@ static int builtin_set_color(parser_t &parser, io_streams_t &streams, wchar_t **
     // #1323: We may have multiple foreground colors. Choose the best one.
     // If we had no foreground coor, we'll get none(); if we have at least one we expect not-none
     const rgb_color_t fg = best_color(fgcolors, output_get_color_support());
-    assert(fgcolors.empty() || !(fg.is_none() || fg.is_ignore()));
+    assert(fgcolors.empty() || !fg.is_none());
 
     const rgb_color_t bg = rgb_color_t(bgcolor ? bgcolor : L"");
-    if (bgcolor && (bg.is_none() || bg.is_ignore()))
+    if (bgcolor && bg.is_none())
     {
         streams.err.append_format(_(L"%ls: Unknown color '%ls'\n"), argv[0], bgcolor);
         return STATUS_BUILTIN_ERROR;

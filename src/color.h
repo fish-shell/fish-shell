@@ -1,5 +1,4 @@
-/** \file color.h Color class.
-  */
+// Color class.
 #ifndef FISH_COLOR_H
 #define FISH_COLOR_H
 
@@ -24,8 +23,7 @@ class rgb_color_t
         type_named,
         type_rgb,
         type_normal,
-        type_reset,
-        type_ignore
+        type_reset
     };
     unsigned char type:4;
 
@@ -79,17 +77,8 @@ public:
     /** Returns the normal special color */
     static rgb_color_t normal();
 
-    /** Returns the ignore special color */
-    static rgb_color_t ignore();
-
     /** Returns the none special color */
     static rgb_color_t none();
-
-    /** Returns whether the color is the ignore special color */
-    bool is_ignore(void) const
-    {
-        return type == type_ignore;
-    }
 
     /** Returns whether the color is the normal special color */
     bool is_normal(void) const

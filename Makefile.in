@@ -53,6 +53,9 @@ mandir = @mandir@
 sysconfdir = @sysconfdir@
 docdir = @docdir@
 localedir = @localedir@
+extra_completionsdir = @extra_completionsdir@
+extra_functionsdir = @extra_functionsdir@
+extra_snippetsdir = @extra_snippetsdir@
 
 #
 # pcre2
@@ -224,7 +227,7 @@ endif
 # Make everything needed for installing fish
 #
 
-all: $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc
+all: $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc share/__fish_build_paths.fish
 	@echo fish has now been built.
 	@echo Use \'$(MAKE) install\' to install fish.
 .PHONY: all
@@ -467,6 +470,9 @@ doc.h: $(HDR_FILES)
 		-e "s,@sysconfdir\@,$(sysconfdir),g" \
 		-e "s,@datadir\@,$(datadir),g" \
 		-e "s,@docdir\@,$(docdir),g" \
+		-e "s,@extra_completionsdir\@,$(extra_completionsdir),g" \
+		-e "s,@extra_functionsdir\@,$(extra_functionsdir),g" \
+		-e "s,@extra_snippetsdir\@,$(extra_snippetsdir),g" \
 		-e "s|@configure_input\@|$@, generated from $@.in by the Makefile. DO NOT MANUALLY EDIT THIS FILE!|g" \
 		-e "s,@prefix\@,$(prefix),g" \
 		-e "s,@fish_build_version\@,$(FISH_BUILD_VERSION),g" \
@@ -657,9 +663,9 @@ install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish/conf.d
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/completions
-	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/vendor_completions.d
-	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/vendor_functions.d
-	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/vendor_conf.d
+	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_completionsdir)
+	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_functionsdir)
+	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_snippetsdir)
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/functions
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/man/man1
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools
@@ -669,6 +675,7 @@ install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config/sample_prompts
 	$(INSTALL) -m 644 etc/config.fish                  $(DESTDIR)$(sysconfdir)/fish/
 	$(INSTALL) -m 644 share/config.fish                $(DESTDIR)$(datadir)/fish/
+	$(INSTALL) -m 644 share/__fish_build_paths.fish    $(DESTDIR)$(datadir)/fish/
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/pkgconfig
 	$(INSTALL) -m 644 fish.pc $(DESTDIR)$(datadir)/pkgconfig
 	for i in $(COMPLETIONS_DIR_FILES:%='%'); do \
@@ -899,7 +906,7 @@ clean:
 	rm -f doc_src/index.hdr doc_src/commands.hdr
 	rm -f lexicon_filter lexicon.txt lexicon.log
 	rm -f compile_commands.json xcodebuild.log
-	rm -f FISH-BUILD-VERSION-FILE fish.pc
+	rm -f FISH-BUILD-VERSION-FILE fish.pc share/__fish_build_paths.fish
 	if test "$(HAVE_DOXYGEN)" = 1; then \
 		rm -rf doc user_doc share/man; \
 	fi

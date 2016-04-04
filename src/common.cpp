@@ -689,11 +689,6 @@ void debug(int level, const char *msg, ...)
     errno = errno_old;
 }
 
-void print_stderr(const wcstring &str)
-{
-    fprintf(stderr, "%ls\n", str.c_str());
-}
-
 void read_ignore(int fd, void *buff, size_t count)
 {
     size_t ignore __attribute__((unused));

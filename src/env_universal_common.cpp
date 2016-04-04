@@ -498,7 +498,7 @@ void env_universal_t::load_from_fd(int fd, callback_data_list_t *callbacks)
     const file_id_t current_file = file_id_for_fd(fd);
     if (current_file == last_read_file)
     {
-        UNIVERSAL_LOG("Sync elided based on fstat()");
+        debug(5, L"universal log sync elided based on fstat()");
     }
     else
     {
@@ -525,7 +525,7 @@ bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t 
     /* Check to see if the file is unchanged. We do this again in load_from_fd, but this avoids opening the file unnecessarily. */
     if (last_read_file != kInvalidFileID && file_id_for_path(path) == last_read_file)
     {
-        UNIVERSAL_LOG("Sync elided based on fast stat()");
+        debug(5, L"universal log sync elided based on fast stat()");
         return true;
     }
     
@@ -533,7 +533,7 @@ bool env_universal_t::load_from_path(const wcstring &path, callback_data_list_t 
     int fd = wopen_cloexec(path, O_RDONLY);
     if (fd >= 0)
     {
-        UNIVERSAL_LOG("Reading from file");
+        debug(5, L"universal log reading from file");
         this->load_from_fd(fd, callbacks);
         close(fd);
         result = true;
@@ -788,7 +788,7 @@ bool env_universal_t::open_and_acquire_lock(const wcstring &path, int *out_fd)
 /* Returns true if modified variables were written, false if not. (There may still be variable changes due to other processes on a false return). */
 bool env_universal_t::sync(callback_data_list_t *callbacks)
 {
-    UNIVERSAL_LOG("sync");
+    debug(5, L"universal log sync");
     scoped_lock locker(lock);
     /* Our saving strategy:
     
@@ -810,7 +810,7 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
     const wcstring &vars_path = explicit_vars_path.empty() ? default_vars_path() : explicit_vars_path;
 
     if (vars_path.empty()) {
-        debug(2, "No universal variable path available");
+        debug(2, L"No universal variable path available");
         return false;
     }
     
@@ -818,7 +818,7 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
     if (modified.empty())
     {
         this->load_from_path(vars_path, callbacks);
-        UNIVERSAL_LOG("No modifications");
+        debug(5, L"universal log no modifications");
         return false;
     }
     
@@ -828,13 +828,13 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
     int private_fd = -1;
     wcstring private_file_path;
     
-    UNIVERSAL_LOG("Performing full sync");
+    debug(5, L"universal log performing full sync");
     
     /* Open the file */
     if (success)
     {
         success = this->open_and_acquire_lock(vars_path, &vars_fd);
-        if (! success) UNIVERSAL_LOG("open_and_acquire_lock() failed");
+        if (! success) debug(5, L"universal log open_and_acquire_lock() failed");
     }
 
     /* Read from it */
@@ -849,7 +849,7 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
     if (success)
     {
         success = this->open_temporary_file(directory, &private_file_path, &private_fd);
-        if (! success) UNIVERSAL_LOG("open_temporary_file() failed");
+        if (! success) debug(5, L"universal log open_temporary_file() failed");
     }
     
     /* Write to it */
@@ -857,7 +857,7 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
     {
         assert(private_fd >= 0);
         success = this->write_to_fd(private_fd, private_file_path);
-        if (! success) UNIVERSAL_LOG("write_to_fd() failed");
+        if (! success) debug(5, L"universal log write_to_fd() failed");
     }
 
     if (success)
@@ -867,9 +867,9 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
         if (wstat(vars_path, &sbuf) >= 0)
         {
             if (fchown(private_fd, sbuf.st_uid, sbuf.st_gid) == -1)
-                UNIVERSAL_LOG("fchown() failed");
+                debug(5, L"universal log fchown() failed");
             if (fchmod(private_fd, sbuf.st_mode) == -1)
-                UNIVERSAL_LOG("fchmod() failed");
+                debug(5, L"universal log fchmod() failed");
         }
 
         /* Linux by default stores the mtime with low precision, low enough that updates that occur in quick succession may
@@ -890,7 +890,7 @@ bool env_universal_t::sync(callback_data_list_t *callbacks)
     
         /* Apply new file */
         success = this->move_new_vars_file_into_place(private_file_path, vars_path);
-        if (! success) UNIVERSAL_LOG("move_new_vars_file_into_place() failed");
+        if (! success) debug(5, L"universal log move_new_vars_file_into_place() failed");
     }
     
     if (success)
@@ -983,7 +983,7 @@ void env_universal_t::parse_message_internal(const wcstring &msgstr, var_table_t
 {
     const wchar_t *msg = msgstr.c_str();
     
-    //  debug( 3, L"parse_message( %ls );", msg );
+    // debug(3, L"parse_message( %ls );", msg);
     
     if (msg[0] == L'#')
         return;
@@ -1745,9 +1745,3 @@ static bool bool_from_env_var(const char *name, bool default_value)
     const char *var = getenv(name);
     return var ? from_string<bool>(var) : default_value;
 }
-
-bool universal_log_enabled()
-{
-    return bool_from_env_var(UNIVERSAL_LOGGING_ENV_NAME, false);
-}
-

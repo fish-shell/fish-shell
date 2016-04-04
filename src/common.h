@@ -811,9 +811,6 @@ ssize_t read_loop(int fd, void *buff, size_t count);
 void debug(int level, const char *msg, ...);
 void debug(int level, const wchar_t *msg, ...);
 
-/** Writes a string to stderr, followed by a newline */
-void print_stderr(const wcstring &str);
-
 /**
    Replace special characters with backslash escape sequences. Newline is
    replaced with \n, etc.

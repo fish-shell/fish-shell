@@ -3,18 +3,13 @@
 \subsection string-synopsis Synopsis
 \fish{synopsis}
 string length [(-q | --quiet)] [STRING...]
-string sub [(-s | --start) START] [(-l | --length) LENGTH]
-           [(-q | --quiet)] [STRING...]
-string split [(-m | --max) MAX] [(-r | --right)] [(-q | --quiet)]
-             SEP [STRING...]
+string sub [(-s | --start) START] [(-l | --length) LENGTH] [(-q | --quiet)] [STRING...]
+string split [(-m | --max) MAX] [(-r | --right)] [(-q | --quiet)] SEP [STRING...]
 string join [(-q | --quiet)] SEP [STRING...]
-string trim [(-l | --left)] [(-r | --right)] [(-c | --chars CHARS)]
-            [(-q | --quiet)] [STRING...]
+string trim [(-l | --left)] [(-r | --right)] [(-c | --chars CHARS)] [(-q | --quiet)] [STRING...]
 string escape [(-n | --no-quoted)] [STRING...]
-string match [(-a | --all)] [(-i | --ignore-case)] [(-r | --regex)]
-             [(-n | --index)] [(-q | --quiet)] PATTERN [STRING...]
-string replace [(-a | --all)] [(-i | --ignore-case)] [(-r | --regex)]
-               [(-q | --quiet)] PATTERN REPLACEMENT [STRING...]
+string match [(-a | --all)] [(-i | --ignore-case)] [(-r | --regex)] [(-n | --index)] [(-q | --quiet)] PATTERN [STRING...]
+string replace [(-a | --all)] [(-i | --ignore-case)] [(-r | --regex)] [(-q | --quiet)] PATTERN REPLACEMENT [STRING...]
 \endfish
 
 
@@ -130,7 +125,7 @@ string match -i 'a??B' Axxb
 # Output:
 # Axxb
 
-echo 'ok?' | string match '*\\?'
+echo 'ok?' | string match '*\?'
 # Output:
 # ok?
 
@@ -140,14 +135,14 @@ string match -r 'cat|dog|fish' 'nice dog'
 # Output:
 # dog
 
-string match -r '(\\d\\d?):(\\d\\d):(\\d\\d)' 2:34:56
+string match -r '(\d\d?):(\d\d):(\d\d)' <asis>2:34:56</asis>
 # Output:
 # 2:34:56
 # 2
 # 34
 # 56
 
-string match -r '^(\\w{2,4})\\g1$' papa mud murmur
+string match -r '^(\w{{2,4}})\g1$' papa mud murmur
 # Output:
 # papa
 # pa
@@ -160,7 +155,7 @@ string match -r -a -n at ratatat
 # 4 2
 # 6 2
 
-string match -r -i '0x[0-9a-f]{1,8}' 'int magic = 0xBadC0de;'
+string match -r -i <regex>'0x[0-9a-f]{{1,8}}'</regex> 'int magic = 0xBadC0de;'
 # Output:
 # 0xBadC0de
 \endfish
@@ -185,15 +180,15 @@ string replace -a ' ' _ 'spaces to underscores'
 
 # string replace regex examples
 
-string replace -r -a '[^\\d.]+' ' ' '0 one two 3.14 four 5x'
+string replace -r -a '[^\d.]+' ' ' '0 one two 3.14 four 5x'
 # Output:
 # 0 3.14 5
 
-string replace -r '(\\w+)\\s+(\\w+)' '$2 $1 $$' 'left right'
+string replace -r '(\w+)\s+(\w+)' '$2 $1 $$' 'left right'
 # Output:
 # right left $
 
-string replace -r '\\s*newline\\s*' '\n' 'put a newline here'
+string replace -r '\s*newline\s*' '\n' 'put a newline here'
 # Output:
 # put a
 # here

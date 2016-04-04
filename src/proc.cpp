@@ -94,15 +94,21 @@ size_t job_iterator_t::count() const
     return this->job_list->size();
 }
 
+#if 0
+// This isn't used so the lint tools were complaining about its presence. I'm keeping it in the
+// source because it could be useful for debugging. However, it would probably be better to add a
+// verbose or debug option to the builtin `jobs` command.
 void print_jobs(void)
 {
     job_iterator_t jobs;
     job_t *j;
-    while ((j = jobs.next()))
-    {
-        printf("%p -> %ls -> (foreground %d, complete %d, stopped %d, constructed %d)\n", j, j->command_wcstr(), job_get_flag(j, JOB_FOREGROUND), job_is_completed(j), job_is_stopped(j), job_get_flag(j, JOB_CONSTRUCTED));
+    while (j = jobs.next()) {
+        printf("%p -> %ls -> (foreground %d, complete %d, stopped %d, constructed %d)\n",
+                j, j->command_wcstr(), job_get_flag(j, JOB_FOREGROUND), job_is_completed(j),
+                job_is_stopped(j), job_get_flag(j, JOB_CONSTRUCTED));
     }
 }
+#endif
 
 int is_interactive_session=0;
 int is_subshell=0;

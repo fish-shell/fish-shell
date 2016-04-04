@@ -2887,8 +2887,7 @@ public:
     static void test_history(void);
     static void test_history_merge(void);
     static void test_history_formats(void);
-    static void test_history_speed(void);
-
+    // static void test_history_speed(void);
     static void test_history_races(void);
     static void test_history_races_pound_on_history();
 };
@@ -3378,6 +3377,8 @@ void history_tests_t::test_history_formats(void)
     }
 }
 
+#if 0
+// This test isn't run at this time. It was added by commit b9283d48 but not actually enabled.
 void history_tests_t::test_history_speed(void)
 {
     say(L"Testing history speed (pid is %d)", getpid());
@@ -3403,6 +3404,7 @@ void history_tests_t::test_history_speed(void)
     hist->clear();
     delete hist;
 }
+#endif
 
 static void test_new_parser_correctness(void)
 {
@@ -4483,8 +4485,8 @@ int main(int argc, char **argv)
     if (should_test_function("history_merge")) history_tests_t::test_history_merge();
     if (should_test_function("history_races")) history_tests_t::test_history_races();
     if (should_test_function("history_formats")) history_tests_t::test_history_formats();
-    //history_tests_t::test_history_speed();
     if (should_test_function("string")) test_string();
+    // history_tests_t::test_history_speed();
 
     say(L"Encountered %d errors in low-level tests", err_count);
     if (s_test_run_count == 0)

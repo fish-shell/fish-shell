@@ -3925,6 +3925,8 @@ static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **ar
     return STATUS_BUILTIN_ERROR;
 }
 
+#if 0
+// Disabled for the 2.2.0 release: https://github.com/fish-shell/fish-shell/issues/1809.
 int builtin_parse(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 {
     struct sigaction act;
@@ -3966,6 +3968,7 @@ int builtin_parse(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     }
     return STATUS_BUILTIN_OK;
 }
+#endif
 
 int builtin_true(parser_t &parser, io_streams_t &streams, wchar_t **argv)
 {
@@ -3992,6 +3995,7 @@ static const builtin_data_t builtin_datas[]=
 {
     { 		L"[",  &builtin_test, N_(L"Test a condition")   },
 #if 0
+    // Disabled for the 2.2.0 release: https://github.com/fish-shell/fish-shell/issues/1809.
     { 		L"__fish_parse",  &builtin_parse, N_(L"Try out the new parser")  },
 #endif
     { 		L"and",  &builtin_generic, N_(L"Execute command if previous command suceeded")  },

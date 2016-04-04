@@ -304,7 +304,9 @@ struct io_streams_t
     }
 };
 
-/** Print debug information about the specified IO redirection chain to stderr. */
+#if 0
+// Print debug information about the specified IO redirection chain to stderr.
 void io_print(const io_chain_t &chain);
+#endif
 
 #endif

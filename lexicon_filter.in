@@ -46,9 +46,12 @@
     # Then if it's inline. Remove and process immediately...
     /^\\fish.*$/ {
         # Catch @ symbol
-        s/@/@at/
+        s/@/@at/g
         # Catch & symbol
-        s/&\([^a-z]\)/@amp\1/
+        s/&\([^a-z]\)/@amp\1/g
+        # Catch {{ & }} symbols
+        s/{{/@curlyL/g
+        s/}}/@curlyR/g
         s/^\\fish//
         s/\\endfish//
         b html
@@ -58,12 +61,12 @@
     # Inside \fish block. Process...
     /\\endfish/!{
         # Catch @ symbol
-        s/@/@at/
+        s/@/@at/g
         # Catch & symbol
-        s/&\([^a-z]\)/@amp\1/
+        s/&\([^a-z]\)/@amp\1/g
         # Catch {{ & }} symbols
-        s/{{/@curlyL/
-        s/}}/@curlyR/
+        s/{{/@curlyL/g
+        s/}}/@curlyR/g
         # Preprocess HTML and HTML-like formatting
         /<[^>]*>/ {
             b html
@@ -493,7 +496,7 @@ s/>/\&gt;/g
 s/@amp/\&amp;/g
 s/@curlyL/\{/g
 s/@curlyR/\}/g
-s/@at/@/g
+s/@at/@atat/g
 #.
 # Final post processing
 s/};\([^]]\)/}@redr{;}\1/g
@@ -512,6 +515,7 @@ s/\\\([()]\)/@optr{@bksl{\1}}/g
 s/\([()]\)/@optr{\1}/g
 s/\\\\\([cdgnstwx?]\)/@bksl{\1}/g
 s/\\n/@bksl{n}/
+s/%\([diouxXfgGeEsbmy]\)/@pcnt{\1}/g
 s/ \\$//
 #.
 # Uncomment the folowing two lines (ss) to log the final output, sent to Doxygen.

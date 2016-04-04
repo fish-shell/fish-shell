@@ -110,6 +110,9 @@ s|</i>|}|
 s|<u>|@undr{|
 s|<u [^>]*>|@undr{|
 s|</u>|}|
+# Backslash (when escaping output)
+s|<bs>|@bksl{|
+s|</bs>|}|
 t html
 #.
 # Some handy non-standard extensions
@@ -507,6 +510,7 @@ s/ \]$/ @args{]}/g
 s/\]}\]$/]]}/
 s/\\\([()]\)/@optr{@bksl{\1}}/g
 s/\([()]\)/@optr{\1}/g
+s/\\\\\([cdgnstwx?]\)/@bksl{\1}/g
 s/\\n/@bksl{n}/
 s/ \\$//
 #.

@@ -26,7 +26,7 @@ The following options are available:
 
 \subsection type-example Example
 
-\fish
-type fg
-# Outputs the string 'fg is a shell builtin'.
+\fish{cli-dark}
+>_ type fg
+<outp>fg is a builtin</outp>
 \endfish

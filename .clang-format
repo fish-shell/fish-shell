@@ -1,0 +1,8 @@
+# Use the Google style with these modifications:
+#
+# 1) lines can be up to 100 chars long rather than 80, and
+# 2) use a four space indent rather than two spaces.
+#
+BasedOnStyle: Google
+ColumnLimit: 100
+IndentWidth: 4

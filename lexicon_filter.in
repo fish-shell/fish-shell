@@ -496,7 +496,7 @@ s/>/\&gt;/g
 s/@amp/\&amp;/g
 s/@curlyL/\{/g
 s/@curlyR/\}/g
-s/@at/@atat/g
+s/@at/@atat{ }/g
 #.
 # Final post processing
 s/};\([^]]\)/}@redr{;}\1/g

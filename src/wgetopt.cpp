@@ -515,7 +515,7 @@ int wgetopter_t::_wgetopt_internal(int argc, wchar_t **argv, const wchar_t *opts
         {
             if (wopterr)
             {
-                fwprintf(stderr, _(L"%ls: Invalid option -- %lc\n"), argv[0], c);
+                fwprintf(stderr, _(L"%ls: Invalid option -- %lc\n"), argv[0], (wint_t)c);
             }
             woptopt = c;
 
@@ -554,7 +554,7 @@ int wgetopter_t::_wgetopt_internal(int argc, wchar_t **argv, const wchar_t *opts
                     {
                         /* 1003.2 specifies the format of this message.  */
                         fwprintf(stderr, _(L"%ls: Option requires an argument -- %lc\n"),
-                                 argv[0], c);
+                                 argv[0], (wint_t)c);
                     }
                     woptopt = c;
                     if (optstring[0] == ':')

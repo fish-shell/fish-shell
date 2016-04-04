@@ -794,7 +794,7 @@ public:
         size_t arglen = wcslen(arg);
         PCRE2_SIZE bufsize = (arglen == 0) ? 16 : 2 * arglen;
         wchar_t *output = (wchar_t *)malloc(sizeof(wchar_t) * bufsize);
-        if (output == 0)
+        if (output == NULL)
         {
             DIE_MEM();
         }
@@ -820,8 +820,9 @@ public:
                 if (bufsize < MAX_REPLACE_SIZE)
                 {
                     bufsize = std::min(2 * bufsize, MAX_REPLACE_SIZE);
+                    // cppcheck-suppress memleakOnRealloc
                     output = (wchar_t *)realloc(output, sizeof(wchar_t) * bufsize);
-                    if (output == 0)
+                    if (output == NULL)
                     {
                         DIE_MEM();
                     }

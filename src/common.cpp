@@ -1111,12 +1111,6 @@ static void escape_string_internal(const wchar_t *orig_in, size_t in_len, wcstri
 
 wcstring escape(const wchar_t *in, escape_flags_t flags)
 {
-    if (!in)
-    {
-        debug(0, L"%s called with null input", __func__);
-        FATAL_EXIT();
-    }
-
     wcstring result;
     escape_string_internal(in, wcslen(in), &result, flags);
     return result;

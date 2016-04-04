@@ -458,10 +458,8 @@ static void test_tok()
             if (types[i] != token.type)
             {
                 err(L"Tokenization error:");
-                wprintf(L"Token number %d of string \n'%ls'\n, got token type %ld\n",
-                        i+1,
-                        str,
-                        (long)token.type);
+                wprintf(L"Token number %zu of string \n'%ls'\n, got token type %ld\n",
+                        i + 1, str, (long)token.type);
             }
             i++;
         }

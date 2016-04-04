@@ -862,6 +862,28 @@ if test "x$included_pcre2" = "xyes"; then
   LIBS="$LIBS $PCRE2_LIBS"
 fi
 
+# Alllow configurable extra directories
+AC_SUBST(extra_completionsdir)
+AC_ARG_WITH([extra-completionsdir],
+            AS_HELP_STRING([--with-extra-completionsdir=DIR],
+                           [path for extra completions]),
+            [extra_completionsdir=$withval],
+            [extra_completionsdir='${datadir}/fish/vendor_completions.d'])
+
+AC_SUBST(extra_functionsdir)
+AC_ARG_WITH([extra_functionsdir],
+            AS_HELP_STRING([--with-extra-functionsdir=DIR],
+                           [path for extra functions]),
+            [extra_functionsdir=$withval],
+            [extra_functionsdir='${datadir}/fish/vendor_functions.d'])
+
+AC_SUBST(extra_snippetsdir)
+AC_ARG_WITH([extra-snippetsdir],
+            AS_HELP_STRING([--with-extra-snippetsdir=DIR],
+                           [path for extra snippets]),
+            [extra_snippetsdir=$withval],
+            [extra_snippetsdir='${datadir}/fish/vendor_conf.d'])
+
 # Tell the world what we know
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT

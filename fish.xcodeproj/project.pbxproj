@@ -24,7 +24,6 @@
 			buildPhases = (
 				D07D266915E33B86009E43F6 /* CopyFiles */,
 				D07D266B15E33B86009E43F6 /* Copy Files */,
-				D01A25E11AF58D8C002F9E92 /* ShellScript */,
 				D01A2CA716965ADD00767098 /* CopyFiles */,
 			);
 			dependencies = (
@@ -55,7 +54,6 @@
 				D0F019FC15A977B40034B3B1 /* CopyFiles */,
 				D033780F15DC6D2A00A634BA /* CopyFiles */,
 				D01A2C9B16964C8200767098 /* Copy Files */,
-				D01A25E01AF58CD0002F9E92 /* ShellScript */,
 			);
 			dependencies = (
 				D0F01A1315AA36280034B3B1 /* PBXTargetDependency */,
@@ -1047,32 +1045,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = ./build_tools/xcode_version_gen.sh;
-		};
-		D01A25E01AF58CD0002F9E92 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "mkdir -p -m 755 \"${TARGET_BUILD_DIR}/base/share/fish/vendor_completions.d\"";
-		};
-		D01A25E11AF58D8C002F9E92 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 8;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-			shellPath = /bin/sh;
-			shellScript = "mkdir -p -m 755 \"${INSTALL_ROOT}/${INSTALL_PATH}/share/fish/vendor_completions.d\"";
 		};
 		D0A564EB168CFDDE00AF6161 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;

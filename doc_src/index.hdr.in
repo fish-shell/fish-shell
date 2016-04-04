@@ -247,11 +247,21 @@ Functions can be defined on the commandline or in a configuration file, but they
 
 Fish automatically searches through any directories in the array variable `$fish_function_path`, and any functions defined are automatically loaded when needed. A function definition file must have a filename consisting of the name of the function plus the suffix '`.fish`'.
 
-The default value for `$fish_function_path` is `~/.config/fish/functions` `/etc/fish/functions` `/usr/share/fish/functions`. The exact path to the last two of these may be slightly different depending on what install path prefix was chosen at configuration time. The rationale behind having three different directories is that the first one is for user specific functions, the second one is for system-wide additional functions and the last one is for default fish functions. The path list is searched in order, meaning that by default, the system administrator can override default fish functions, and the user can override functions defined by the system administrator.
+By default, Fish searches the following for functions, using the first available file that it finds:
+- A directory for end-users to keep their own functions, usually `~/.config/fish/functions` (controlled by the `XDG_CONFIG_HOME` environment variable).
+- A directory for systems administrators to install functions for all users on the system, usually `/etc/fish/functions`.
+- A directory for third-party software vendors to ship their own functions for their software, usually `/usr/share/fish/vendor_functions.d`.
+- The functions shipped with fish, usually installed in `/usr/share/fish/functions`.
+
+These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.
+
+This wide search may be confusing. If you are unsure, your functions probably belong in `~/.config/fish/functions`.
 
 It is very important that function definition files only contain the definition for the specified function and nothing else. Otherwise, it is possible that autoloading a function files requires that the function already be loaded, which creates a circular dependency.
 
-Autoloading also won't work for <a href=#event>event handlers</a>, since fish cannot know that a function is supposed to be executed when an event occurs when it hasn't yet loaded the function. See there for details.
+Autoloading also won't work for <a href=#event>event handlers</a>, since fish cannot know that a function is supposed to be executed when an event occurs when it hasn't yet loaded the function. See the <a href=#event>event handlers</a> section for more information.
+
+If you are developing another program, you may wish to install functions which are available for all users of the fish shell on a system. They can be installed to the "vendor" functions directory. As this path may vary from system to system, the `pkgconfig` framework should be used to discover this path with the output of `pkg-config --variable functionsdir fish`.
 
 
 \subsubsection syntax-conditional Conditional execution of code and flow control
@@ -381,9 +391,20 @@ Functions beginning with the string `__fish_print_` print a newline separated li
 
 Completions can be defined on the commandline or in a configuration file, but they can also be automatically loaded. Fish automatically searches through any directories in the array variable `$fish_complete_path`, and any completions defined are automatically loaded when needed. A completion file must have a filename consisting of the name of the command to complete and the suffix '`.fish`'.
 
-The default value for `$fish_complete_path` is `~/.config/fish/completions` `/etc/fish/completions` `/usr/share/fish/vendor_completions.d` `/usr/share/fish/completions` `~/.local/share/generated_completions`. (Some paths may be slightly different depending on where fish is installed). If a suitable file is found in one of these directories, it will be automatically loaded and the search will be stopped. The large number of directories searched may be confusing. It is to allow, respectively, user-specific completions, system-wide completions, completions installed by other packages, default completions that ship with fish, and finally, completions generated from manual pages. If you are unsure, put your completions in `~/.config/fish/completions`.
+By default, Fish searches the following for completions, using the first available file that it finds:
+- A directory for end-users to keep their own completions, usually `~/.config/fish/completions` (controlled by the `XDG_CONFIG_HOME` environment variable);
+- A directory for systems administrators to install completions for all users on the system, usually `/etc/fish/completions`;
+- A directory for third-party software vendors to ship their own completions for their software, usually `/usr/share/fish/vendor_completions.d`;
+- The completions shipped with fish, usually installed in `/usr/share/fish/completions`; and
+- Completions automatically generated from the operating system's manual, usually stored in `~/.local/share/generated_completions`.
 
-If you have written new completions for a common Unix command, please consider sharing your work by submitting it via the instructions in <a href="#more-help">Further help and development</a>. If you are developing another program and would like to ship completions with your program, install them to `/usr/share/fish/vendor_completions.d` or similar directory. Systems using the `pkgconfig` framework can discover this path from the output of `pkg-config --variable completionsdir fish`.
+These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.
+
+This wide search may be confusing. If you are unsure, your completions probably belong in `~/.config/fish/completions`.
+
+If you have written new completions for a common Unix command, please consider sharing your work by submitting it via the instructions in <a href="#more-help">Further help and development</a>.
+
+If you are developing another program and would like to ship completions with your program, install them to the "vendor" completions directory. As this path may vary from system to system, the `pkgconfig` framework should be used to discover this path with the output of `pkg-config --variable completionsdir fish`.
 
 
 \section expand Parameter expansion (Globbing)
@@ -1085,9 +1106,27 @@ Note that functions cannot be started in the background. Functions that are stop
 
 \section initialization Initialization files
 
-On startup, `fish` evaluates the files `/usr/share/fish/config.fish` (Or `/usr/local/fish...` if you installed fish in `/usr/local`), `/etc/fish/config.fish` (Or `~/etc/fish/...` if you installed fish in your home directory) and `~/.config/fish/config.fish` (Or any other directory specified by the `$XDG_CONFIG_HOME` variable), in that order.
+On startup, Fish evaluates a number of configuration files, which can be used to control the behavior of the shell.
 
-The first file should not be directly edited, the second one is meant for systemwide configuration and the last one is meant for user configuration. If you want to run a command only on starting an interactive shell, use the exit status of the command `status --is-interactive` to determine if the shell is interactive. If you want to run a command only when using a login shell, use `status --is-login` instead.
+Configuration files are evaluated in the following order:
+- Configuration shipped with fish, which should not be edited, usually `/usr/share/fish/config.fish`.
+- System-wide configuration files, where administrators can include initialization that should be run for all users on the system - similar to `/etc/profile` for POSIX-style shells - usually `/etc/fish/config.fish`;
+- "Unit" configuration files ending in `.fish`, in the directories:
+  - `~/.config/fish/conf.d/`
+  - `/etc/fish/conf.d`
+  - `/usr/share/fish/vendor_conf.d`
+
+  If there are multiple files with the same name in these directories, only the first will be executed.
+
+- User initialization, usually in `~/.config/fish/config.fish` (controlled by the `XDG_CONFIG_HOME` environment variable).
+
+These paths are controlled by parameters set at build, install, or run time, and may vary from the defaults listed above.
+
+This wide search may be confusing. If you are unsure, use `~/.config/fish/config.fish`.
+
+These files are all executed on the startup of every shell. If you want to run a command only on starting an interactive shell, use the exit status of the command `status --is-interactive` to determine if the shell is interactive. If you want to run a command only when using a login shell, use `status --is-login` instead. This will speed up the starting of non-interactive or non-login shells.
+
+If you are developing another program, you may wish to install configuration which is run for all users of the fish shell on a system. This is discouraged; if not carefully written, they may have side-effects or slow the startup of the shell. Additionally, users of other shells will not benefit from the Fish-specific configuration. However, if they are absolutely required, you may install them to the "vendor" configuration directory. As this path may vary from system to system, the `pkgconfig` framework should be used to discover this path with the output of `pkg-config --variable confdir fish`.
 
 Examples:
 
@@ -1107,7 +1146,6 @@ function on_exit --on-process %self
 end
 \endfish
 
-Right after reading /usr/share/fish/config.fish and before reading /etc/fish/config.fish, fish will also read files ending in ".fish" in ~/.config/fish/conf.d/, /etc/fish/conf.d and /usr/share/fish/vendor_conf.d (the exact values depend on $XDG_CONFIG_HOME, $__fish_sysconfdir and $__fish_datadir). If there are files with the same name in two or all of these, fish will only attempt to read the first (skipping all files with that name if it is unreadable). ~/.config takes precedence over /etc/ which takes precedence over /usr. The path to the latter can also be gotten via `pkg-config` as "confdir", and is meant for third-party applications to integrate with fish.
 
 \section other Other features
 

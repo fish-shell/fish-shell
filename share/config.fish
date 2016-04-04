@@ -45,11 +45,20 @@ end
 # __fish_datadir, __fish_sysconfdir, __fish_help_dir, __fish_bin_dir
 # are expected to have been set up by read_init from fish.cpp
 
+# Grab extra directories (as specified by the build process, usually for
+# third-party packages to ship completions &c.
+set -l __extra_completionsdir
+set -l __extra_functionsdir
+set -l __extra_snippetsdir
+if test -f $__fish_datadir/__fish_build_paths.fish
+    source $__fish_datadir/__fish_build_paths.fish
+end
+
 # Set up function and completion paths. Make sure that the fish
 # default functions/completions are included in the respective path.
 
 if not set -q fish_function_path
-	set fish_function_path $configdir/fish/functions	$__fish_sysconfdir/functions $__fish_datadir/vendor_functions.d   $__fish_datadir/functions
+	set fish_function_path $configdir/fish/functions $__fish_sysconfdir/functions $__extra_functionsdir $__fish_datadir/functions
 end
 
 if not contains $__fish_datadir/functions $fish_function_path
@@ -57,7 +66,7 @@ if not contains $__fish_datadir/functions $fish_function_path
 end
 
 if not set -q fish_complete_path
-	set fish_complete_path $configdir/fish/completions	$__fish_sysconfdir/completions	$__fish_datadir/vendor_completions.d  $__fish_datadir/completions $userdatadir/fish/generated_completions
+	set fish_complete_path $configdir/fish/completions $__fish_sysconfdir/completions $__extra_completionsdir $__fish_datadir/completions $userdatadir/fish/generated_completions
 end
 
 if not contains $__fish_datadir/completions $fish_complete_path
@@ -155,9 +164,9 @@ function . --description 'Evaluate contents of file (deprecated, see "source")' 
 end
 
 # As last part of initialization, source the conf directories
-# Implement precedence (User > Admin > Vendors > Fish) by basically doing "basename"
+# Implement precedence (User > Admin > Extra (e.g. vendors) > Fish) by basically doing "basename"
 set -l sourcelist
-for file in $configdir/fish/conf.d/*.fish $__fish_sysconfdir/conf.d/*.fish $__fish_datadir/vendor_conf.d/*.fish
+for file in $configdir/fish/conf.d/*.fish $__fish_sysconfdir/conf.d/*.fish $__extra_snippetsdir/*.fish
 	set -l basename (string replace -r '^.*/' '' -- $file)
 	contains -- $basename $sourcelist; and continue
 	set sourcelist $sourcelist $basename

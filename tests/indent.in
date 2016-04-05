@@ -83,3 +83,9 @@ echo -n '
 if begin ; false; end; echo hi ; end
 while begin ; false; end; echo hi ; end
 ' | ../test/root/bin/fish_indent
+
+echo \nTest redir formatting
+# issue 2899
+echo -n '
+echo < stdin >>appended yes 2>&1 no > stdout maybe 2>&    4 | cat 2>| cat
+' | ../test/root/bin/fish_indent

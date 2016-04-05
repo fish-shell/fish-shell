@@ -1,6 +1,4 @@
-/** \file color.cpp Color class implementation
-*/
-
+// Color class implementation.
 #include "color.h"
 #include "fallback.h" // IWYU pragma: keep
 #include <assert.h>
@@ -20,10 +18,6 @@ bool rgb_color_t::try_parse_special(const wcstring &special)
     else if (! wcscasecmp(name, L"reset"))
     {
         this->type = type_reset;
-    }
-    else if (! wcscasecmp(name, L"ignore"))
-    {
-        this->type = type_ignore;
     }
     else
     {
@@ -240,22 +234,22 @@ rgb_color_t rgb_color_t::normal()
 {
     return rgb_color_t(type_normal);
 }
+
 rgb_color_t rgb_color_t::reset()
 {
     return rgb_color_t(type_reset);
 }
-rgb_color_t rgb_color_t::ignore()
-{
-    return rgb_color_t(type_ignore);
-}
+
 rgb_color_t rgb_color_t::none()
 {
     return rgb_color_t(type_none);
 }
+
 rgb_color_t rgb_color_t::white()
 {
     return rgb_color_t(type_named, 7);
 }
+
 rgb_color_t rgb_color_t::black()
 {
     return rgb_color_t(type_named, 0);
@@ -382,8 +376,6 @@ wcstring rgb_color_t::description() const
             return L"reset";
         case type_normal:
             return L"normal";
-        case type_ignore:
-            return L"ignore";
         default:
             abort();
             return L"";

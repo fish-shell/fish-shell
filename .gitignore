@@ -39,3 +39,5 @@ lexicon.txt
 lexicon_filter
 lexicon.log
 DerivedData/
+compile_commands.json
+xcodebuild.log

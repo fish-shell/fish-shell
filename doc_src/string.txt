@@ -3,13 +3,18 @@
 \subsection string-synopsis Synopsis
 \fish{synopsis}
 string length [(-q | --quiet)] [STRING...]
-string sub [(-s | --start) START] [(-l | --length) LENGTH] [(-q | --quiet)] [STRING...]
-string split [(-m | --max) MAX] [(-r | --right)] [(-q | --quiet)] SEP [STRING...]
+string sub [(-s | --start) START] [(-l | --length) LENGTH] [(-q | --quiet)]
+           [STRING...]
+string split [(-m | --max) MAX] [(-r | --right)] [(-q | --quiet)] SEP
+             [STRING...]
 string join [(-q | --quiet)] SEP [STRING...]
-string trim [(-l | --left)] [(-r | --right)] [(-c | --chars CHARS)] [(-q | --quiet)] [STRING...]
+string trim [(-l | --left)] [(-r | --right)] [(-c | --chars CHARS)]
+            [(-q | --quiet)] [STRING...]
 string escape [(-n | --no-quoted)] [STRING...]
-string match [(-a | --all)] [(-i | --ignore-case)] [(-r | --regex)] [(-n | --index)] [(-q | --quiet)] PATTERN [STRING...]
-string replace [(-a | --all)] [(-i | --ignore-case)] [(-r | --regex)] [(-q | --quiet)] PATTERN REPLACEMENT [STRING...]
+string match [(-a | --all)] [(-i | --ignore-case)] [(-r | --regex)]
+             [(-n | --index)] [(-q | --quiet)] PATTERN [STRING...]
+string replace [(-a | --all)] [(-i | --ignore-case)] [(-r | --regex)]
+               [(-q | --quiet)] PATTERN REPLACEMENT [STRING...]
 \endfish
 
 

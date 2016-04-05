@@ -13,7 +13,6 @@ set -e argv[1]
 
 if test "$argv[1]" = "--all"
     set all yes
-    set c_files src/
     set cppchecks "$cppchecks,unusedFunction"
     set -e argv[1]
 end
@@ -30,7 +29,9 @@ if test (uname -m) = "x86_64"
     set cppcheck_args -D__x86_64__ -D__LP64__ $cppcheck_args
 end
 
-if test $all = no
+if test $all = yes
+    set c_files src/*.cpp
+else
     # We haven't been asked to lint all the source. If there are uncommitted
     # changes lint those, else lint the files in the most recent commit.
     set pending (git status --porcelain --short --untracked-files=all | sed -e 's/^ *//')
@@ -44,10 +45,8 @@ if test $all = no
         set files (git show --porcelain --name-only --pretty=oneline head | tail --lines=+2)
     end
 
-    # Filter out the non-C/C++ files.
+    # Extract just the C/C++ files.
     set c_files (string match -r '.*\.c(?:pp)?$' -- $files)
-else
-    set c_files src/*.cpp
 end
 
 # We now have a list of files to check so run the linters.
@@ -61,10 +60,7 @@ if set -q c_files[1]
         # IMHO, writes its diagnostic messages to stderr. Anyone running
         # this who wants to capture its output will expect those messages to be
         # written to stdout.
-        cppcheck -q --verbose --std=posix --std=c11 --language=c++ \
-            --template "[{file}:{line}]: {severity} ({id}): {message}" \
-            --suppress=missingIncludeSystem \
-            --inline-suppr --enable=$cppchecks $cppcheck_args $c_files 2>&1
+        cppcheck -q --verbose --std=posix --std=c11 --language=c++ --template "[{file}:{line}]: {severity} ({id}): {message}" --suppress=missingIncludeSystem --inline-suppr --enable=$cppchecks $cppcheck_args $c_files 2>& 1
     end
 
     if type -q oclint
@@ -82,20 +78,19 @@ if set -q c_files[1]
                 oclint-xcodebuild xcodebuild.log > /dev/null
             end
             if test $all = yes
-                oclint-json-compilation-database -e '/pcre2-10.20/' \
-                    -- -enable-global-analysis 2>&1
+                oclint-json-compilation-database -e '/pcre2-10.20/' -- -enable-global-analysis 2>& 1
             else
                 set i_files
                 for f in $c_files
                     set i_files $i_files -i $f
                 end
                 echo oclint-json-compilation-database -e '/pcre2-10.20/' $i_files
-                oclint-json-compilation-database -e '/pcre2-10.20/' $i_files 2>&1
+                oclint-json-compilation-database -e '/pcre2-10.20/' $i_files 2>& 1
             end
         else
             # Presumably we're on Linux or other platform not requiring special
             # handling for oclint to work.
-            oclint $c_files -- $argv 2>&1
+            oclint $c_files -- $argv 2>& 1
         end
     end
 else

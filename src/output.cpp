@@ -246,25 +246,17 @@ void set_color(rgb_color_t c, rgb_color_t c2)
         was_underline=0;
     }
 
-    if (! last_color2.is_normal() &&
-            ! last_color2.is_reset() &&
-            ! last_color2.is_ignore())
+    if (!last_color2.is_normal() && !last_color2.is_reset())
     {
-        /*
-             Background was set
-             */
-        last_bg_set=1;
+        // Background was set.
+        last_bg_set = 1;
     }
 
-    if (! c2.is_normal() &&
-            ! c2.is_ignore())
+    if (!c2.is_normal())
     {
-        /*
-             Background is set
-             */
-        bg_set=1;
-        if (c==c2)
-            c = (c2==rgb_color_t::white())?rgb_color_t::black():rgb_color_t::white();
+        // Background is set.
+        bg_set = 1;
+        if (c == c2) c = (c2==rgb_color_t::white())?rgb_color_t::black():rgb_color_t::white();
     }
 
     if ((enter_bold_mode != 0) && (strlen(enter_bold_mode) > 0))

@@ -16,6 +16,49 @@
 #include <vector>
 #include <algorithm>
 
+// This array provides strings for each symbol in enum parse_token_type_t in parse_constants.h.
+wcstring parser_token_types[] = {
+    L"token_type_invalid",
+    L"symbol_job_list",
+    L"symbol_job",
+    L"symbol_job_continuation",
+    L"symbol_statement",
+    L"symbol_block_statement",
+    L"symbol_block_header",
+    L"symbol_for_header",
+    L"symbol_while_header",
+    L"symbol_begin_header",
+    L"symbol_function_header",
+    L"symbol_if_statement",
+    L"symbol_if_clause",
+    L"symbol_else_clause",
+    L"symbol_else_continuation",
+    L"symbol_switch_statement",
+    L"symbol_case_item_list",
+    L"symbol_case_item",
+    L"symbol_boolean_statement",
+    L"symbol_decorated_statement",
+    L"symbol_plain_statement",
+    L"symbol_arguments_or_redirections_list",
+    L"symbol_argument_or_redirection",
+    L"symbol_andor_job_list",
+    L"symbol_argument_list",
+    L"symbol_freestanding_argument_list",
+    L"symbol_argument",
+    L"symbol_redirection",
+    L"symbol_optional_background",
+    L"symbol_end_command",
+    L"parse_token_type_string",
+    L"parse_token_type_pipe",
+    L"parse_token_type_redirection",
+    L"parse_token_type_background",
+    L"parse_token_type_end",
+    L"parse_token_type_terminate",
+    L"parse_special_type_parse_error",
+    L"parse_special_type_tokenizer_error",
+    L"parse_special_type_comment",
+    };
+
 using namespace parse_productions;
 
 static bool production_is_empty(const production_t *production)

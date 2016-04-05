@@ -91,3 +91,7 @@ while begin
     end
     echo hi
 end
+
+Test redir formatting
+
+echo yes 2>&1 no >stdout maybe 2>&4

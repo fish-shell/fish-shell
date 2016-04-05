@@ -11,6 +11,8 @@
 #define PARSE_ASSERT(a) assert(a)
 #define PARSER_DIE() do { fprintf(stderr, "Parser dying!\n"); exit_without_destructors(-1); } while (0)
 
+// IMPORTANT: If the following enum is modified you must update the corresponding parser_token_types
+// array in parse_tree.cpp.
 enum parse_token_type_t
 {
     token_type_invalid,
@@ -41,7 +43,7 @@ enum parse_token_type_t
     symbol_plain_statement,
     symbol_arguments_or_redirections_list,
     symbol_argument_or_redirection,
-    
+
     symbol_andor_job_list,
 
     symbol_argument_list,
@@ -80,6 +82,8 @@ enum parse_token_type_t
     FIRST_PARSE_TOKEN_TYPE = parse_token_type_string,
     LAST_PARSE_TOKEN_TYPE = parse_token_type_end
 } __packed;
+// Array of strings corresponding to the enums above instantiated in parse_tree.cpp.
+extern wcstring parser_token_types[];
 
 /* These must be maintained in sorted order (except for none, which isn't a keyword). This enables us to do binary search. */
 enum parse_keyword_t

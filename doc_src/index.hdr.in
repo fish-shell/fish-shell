@@ -1111,7 +1111,7 @@ On startup, Fish evaluates a number of configuration files, which can be used to
 Configuration files are evaluated in the following order:
 - Configuration shipped with fish, which should not be edited, usually `/usr/share/fish/config.fish`.
 - System-wide configuration files, where administrators can include initialization that should be run for all users on the system - similar to `/etc/profile` for POSIX-style shells - usually `/etc/fish/config.fish`;
-- "Unit" configuration files ending in `.fish`, in the directories:
+- Configuration snippets in files ending in `.fish`, in the directories:
   - `~/.config/fish/conf.d/`
   - `/etc/fish/conf.d`
   - `/usr/share/fish/vendor_conf.d`

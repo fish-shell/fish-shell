@@ -55,7 +55,7 @@ docdir = @docdir@
 localedir = @localedir@
 extra_completionsdir = @extra_completionsdir@
 extra_functionsdir = @extra_functionsdir@
-extra_snippetsdir = @extra_snippetsdir@
+extra_confdir = @extra_confdir@
 
 #
 # pcre2
@@ -472,7 +472,7 @@ doc.h: $(HDR_FILES)
 		-e "s,@docdir\@,$(docdir),g" \
 		-e "s,@extra_completionsdir\@,$(extra_completionsdir),g" \
 		-e "s,@extra_functionsdir\@,$(extra_functionsdir),g" \
-		-e "s,@extra_snippetsdir\@,$(extra_snippetsdir),g" \
+		-e "s,@extra_confdir\@,$(extra_confdir),g" \
 		-e "s|@configure_input\@|$@, generated from $@.in by the Makefile. DO NOT MANUALLY EDIT THIS FILE!|g" \
 		-e "s,@prefix\@,$(prefix),g" \
 		-e "s,@fish_build_version\@,$(FISH_BUILD_VERSION),g" \
@@ -665,7 +665,7 @@ install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/completions
 	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_completionsdir)
 	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_functionsdir)
-	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_snippetsdir)
+	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_confdir)
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/functions
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/man/man1
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools

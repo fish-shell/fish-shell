@@ -49,7 +49,7 @@ end
 # third-party packages to ship completions &c.
 set -l __extra_completionsdir
 set -l __extra_functionsdir
-set -l __extra_snippetsdir
+set -l __extra_confdir
 if test -f $__fish_datadir/__fish_build_paths.fish
     source $__fish_datadir/__fish_build_paths.fish
 end
@@ -166,7 +166,7 @@ end
 # As last part of initialization, source the conf directories
 # Implement precedence (User > Admin > Extra (e.g. vendors) > Fish) by basically doing "basename"
 set -l sourcelist
-for file in $configdir/fish/conf.d/*.fish $__fish_sysconfdir/conf.d/*.fish $__extra_snippetsdir/*.fish
+for file in $configdir/fish/conf.d/*.fish $__fish_sysconfdir/conf.d/*.fish $__extra_confdir/*.fish
 	set -l basename (string replace -r '^.*/' '' -- $file)
 	contains -- $basename $sourcelist; and continue
 	set sourcelist $sourcelist $basename

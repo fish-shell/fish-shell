@@ -2,7 +2,7 @@ prefix=@prefix@
 datadir=@datadir@
 completionsdir=@extra_completionsdir@
 functionsdir=@extra_functionsdir@
-confdir=@extra_snippetsdir@
+confdir=@extra_confdir@
 
 Name: fish
 Description: fish, the friendly interactive shell

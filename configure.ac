@@ -877,12 +877,12 @@ AC_ARG_WITH([extra_functionsdir],
             [extra_functionsdir=$withval],
             [extra_functionsdir='${datadir}/fish/vendor_functions.d'])
 
-AC_SUBST(extra_snippetsdir)
-AC_ARG_WITH([extra-snippetsdir],
-            AS_HELP_STRING([--with-extra-snippetsdir=DIR],
-                           [path for extra snippets]),
-            [extra_snippetsdir=$withval],
-            [extra_snippetsdir='${datadir}/fish/vendor_conf.d'])
+AC_SUBST(extra_confdir)
+AC_ARG_WITH([extra-confdir],
+            AS_HELP_STRING([--with-extra-confdir=DIR],
+                           [path for extra conf]),
+            [extra_confdir=$withval],
+            [extra_confdir='${datadir}/fish/vendor_conf.d'])
 
 # Tell the world what we know.
 AC_CONFIG_FILES([Makefile])

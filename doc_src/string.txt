@@ -57,7 +57,7 @@ The following subcommands are available:
 
 >_ set str foo
 >_ string length -q $str; echo $status
-1
+0
 # Equivalent to test -n $str
 \endfish
 
@@ -103,7 +103,7 @@ The following subcommands are available:
 
 \fish{cli-dark}
 >_ echo \\x07 | string escape
-<bs>c</bs>g
+<bs>cg</bs>
 \endfish
 
 \subsection string-example-match-glob Match Glob Examples

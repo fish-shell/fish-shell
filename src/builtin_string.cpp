@@ -351,6 +351,7 @@ public:
         // Note: --all is a no-op for glob matching since the pattern is always
         // matched against the entire argument
         bool match;
+    
         if (opts.ignore_case)
         {
             wcstring s = arg;
@@ -533,13 +534,18 @@ public:
             // pcre2 match error
             return false;
         }
-        if (rc == 0)
+        else if (rc == 0)
         {
             // no match
             return true;
         }
         matched++;
         total_matched++;
+    
+        if (opts.invert_match)
+        {
+            return true;
+        }
 
         // Report any additional matches
         PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(regex.match);
@@ -652,13 +658,6 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
         string_error(streams, BUILTIN_ERR_TOO_MANY_ARGUMENTS, argv[0]);
         return BUILTIN_STRING_ERROR;
     }
-    
-    if (opts.all && opts.invert_match) {
-        streams.err.append_format(BUILTIN_ERR_COMBO2, L"string match", L"-a can't be used with --invert/-v. Try removing the '--all'/'-a' option.\n");
-        
-        return BUILTIN_STRING_ERROR;
-    }
-    
 
     string_matcher_t *matcher;
     if (regex)

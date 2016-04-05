@@ -47,6 +47,8 @@ function __fish_print_gpg_algo -d "Complete using all algorithms of the type spe
 	# expire when the function goes out of scope, and the original locale
 	# will take effect again.
 	set -lx LC_ALL C
+
+	# XXX this misses certain ciphers in gpg --version - redo this entirely and use fish's annoying  group printing as a feature finally!
 	gpg --version | __fish_sgrep "$argv:"| __fish_sgrep -v "Home:"|cut -d : -f 2 |tr , \n|tr -d " "
 end
 

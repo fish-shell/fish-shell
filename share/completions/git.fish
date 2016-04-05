@@ -11,13 +11,13 @@ function __fish_git_commits
 end
 
 function __fish_git_branches
-	command git branch --no-color -a ^/dev/null | __fish_sgrep -v ' -> ' | string trim -c "* " | string replace -r "^remotes/" ""
+	command git branch --no-color -a ^/dev/null | string match -r -v ' -> ' | string trim -c "* " | string replace -r "^remotes/" ""
 end
 
 function __fish_git_unique_remote_branches
 	# Allow all remote branches with one remote without the remote part
 	# This is useful for `git checkout` to automatically create a remote-tracking branch
-	command git branch --no-color -a ^/dev/null | __fish_sgrep -v ' -> ' | string trim -c "* " | string replace -r "^remotes/[^/]*/" "" | sort | uniq -u
+	command git branch --no-color -a ^/dev/null | string match -r -v ' -> ' | string trim -c "* " | string replace -r "^remotes/[^/]*/" "" | sort | uniq -u
 end
 
 function __fish_git_tags
@@ -473,7 +473,7 @@ complete -f -c git -n '__fish_git_using_command status' -l ignore-submodules -x 
 
 ### tag
 complete -f -c git -n '__fish_git_needs_command' -a tag -d 'Create, list, delete or verify a tag object signed with GPG'
-complete -f -c git -n '__fish_git_using_command tag; and __fish_not_contain_opt -s d; and __fish_not_contain_opt -s v; and test (count (commandline -opc | __fish_sgrep -v -e \'^-\')) -eq 3' -a '(__fish_git_branches)' -d 'Branch'
+complete -f -c git -n '__fish_git_using_command tag; and __fish_not_contain_opt -s d; and __fish_not_contain_opt -s v; and test (count (commandline -opc | string match -r -v \'^-\')) -eq 3' -a '(__fish_git_branches)' -d 'Branch'
 complete -f -c git -n '__fish_git_using_command tag' -s a -l annotate -d 'Make an unsigned, annotated tag object'
 complete -f -c git -n '__fish_git_using_command tag' -s s -l sign -d 'Make a GPG-signed tag'
 complete -f -c git -n '__fish_git_using_command tag' -s d -l delete -d 'Remove a tag'

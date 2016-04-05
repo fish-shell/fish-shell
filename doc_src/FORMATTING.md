@@ -56,7 +56,7 @@ is transformed into:
 
 `@cmnd{echo} @args{hello} @args{world}`
 
-which is then transformed by Doxygen into an HTML version (`make user_doc`):
+which is then transformed by Doxygen into an HTML version (`make doc`):
 
 `<span class="command">echo</span> <span class="argument">hello</span> <span class="argument">world</span>`
 
@@ -160,6 +160,8 @@ The following can be used in \\fish blocks to render some fish scenarios. These 
 - `<error>`: \<error\>This would be shown as an error.\</error\>
 - `<asis>`: \<asis\>This test will not be parsed for fish markup.\</asis\>
 - `<outp>`: \<outp\>This would be rendered as command/script output.\</outp\>
+- `<bs>`: Render the contents with a preceding backslash. Useful when presenting output.
+- `{{` and `}}`: Required when wanting curly braces in regular expression example.
 
 ### Prompts and cursors
 

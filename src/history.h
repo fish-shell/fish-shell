@@ -43,7 +43,6 @@ typedef uint32_t history_identifier_t;
 class history_item_t
 {
     friend class history_t;
-    friend class history_lru_node_t;
     friend class history_tests_t;
 
 private:
@@ -115,14 +114,8 @@ private:
     history_t(const history_t&);
     history_t &operator=(const history_t&);
 
-    /** Private creator */
-    explicit history_t(const wcstring &pname);
-
     /** Privately add an item. If pending, the item will not be returned by history searches until a call to resolve_pending. */
     void add(const history_item_t &item, bool pending = false);
-
-    /** Destructor */
-    ~history_t();
 
     /** Lock for thread safety */
     pthread_mutex_t lock;
@@ -208,6 +201,12 @@ private:
     static history_item_t decode_item(const char *base, size_t len, history_file_type_t type);
 
 public:
+    /** Constructor */
+    explicit history_t(const wcstring &);
+
+    /** Destructor */
+    ~history_t();
+
     /** Returns history with the given name, creating it if necessary */
     static history_t & history_with_name(const wcstring &name);
 

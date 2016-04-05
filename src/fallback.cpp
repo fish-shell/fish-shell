@@ -606,7 +606,7 @@ static FILE *fw_data;
 
 static void fw_writer(wchar_t c)
 {
-    putwc(c, fw_data);
+    fputwc(c, fw_data);
 }
 
 /*
@@ -648,33 +648,30 @@ int wprintf(const wchar_t *filter, ...)
 #endif
 
 #ifndef HAVE_FGETWC
-
 wint_t fgetwc(FILE *stream)
 {
-    wchar_t res=0;
-    mbstate_t state;
-    memset(&state, '\0', sizeof(state));
+    wchar_t res;
+    mbstate_t state = {};
 
     while (1)
     {
         int b = fgetc(stream);
-        char bb;
-
-        int sz;
-
         if (b == EOF)
+        {
             return WEOF;
+        }
 
-        bb=b;
+        if (MB_CUR_MAX == 1) // single-byte locale, all values are legal
+        {
+            return b;
+        }
 
-        sz = mbrtowc(&res, &bb, 1, &state);
-
+        char bb = b;
+        size_t sz = mbrtowc(&res, &bb, 1, &state);
         switch (sz)
         {
             case -1:
-                memset(&state, '\0', sizeof(state));
                 return WEOF;
-
             case -2:
                 break;
             case 0:
@@ -683,35 +680,40 @@ wint_t fgetwc(FILE *stream)
                 return res;
         }
     }
-
 }
-
-
-wint_t getwc(FILE *stream)
-{
-    return fgetwc(stream);
-}
-
-
 #endif
 
 #ifndef HAVE_FPUTWC
-
 wint_t fputwc(wchar_t wc, FILE *stream)
 {
-    int res;
-    char s[MB_CUR_MAX+1];
-    memset(s, 0, MB_CUR_MAX+1);
-    wctomb(s, wc);
-    res = fputs(s, stream);
-    return res==EOF?WEOF:wc;
-}
+    int res = 0;
+    mbstate_t state = {};
+    char s[MB_CUR_MAX + 1] = {};
 
-wint_t putwc(wchar_t wc, FILE *stream)
-{
-    return fputwc(wc, stream);
-}
+    if (MB_CUR_MAX == 1) // single-byte locale (C/POSIX/ISO-8859)
+    {
+        // If `wc` contains a wide character we emit a question-mark.
+        if (wc & ~0xFF)
+        {
+            wc = '?';
+        }
+        s[0] = (char)wc;
+        res = fputs(s, stream);
+    }
+    else
+    {
+        size_t len = wcrtomb(s, wc, &state);
+        if (len == (size_t)-1)
+        {
+            debug(1, L"Wide character %d has no narrow representation", wc);
+        }
+        else {
+            res = fputs(s, stream);
+        }
+    }
 
+    return res == EOF ? WEOF : wc;
+}
 #endif
 
 #ifndef HAVE_WCSTOK

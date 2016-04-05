@@ -11,6 +11,7 @@ nextd [ -l | --list ] [POS]
 
 If the `-l` or `--list` flag is specified, the current directory history is also displayed.
 
+Note that the `cd` command limits directory history to the 25 most recently visited directories. The history is stored in the `$dirprev` and `$dirnext` variables which this command manipulates.
 
 \subsection nextd-example Example
 

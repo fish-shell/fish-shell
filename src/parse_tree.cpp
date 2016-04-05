@@ -690,7 +690,7 @@ void parse_ll_t::dump_stack(void) const
         }
     }
 
-    fprintf(stderr, "Stack dump (%lu elements):\n", symbol_stack.size());
+    fprintf(stderr, "Stack dump (%zu elements):\n", symbol_stack.size());
     for (size_t idx = 0; idx < lines.size(); idx++)
     {
         fprintf(stderr, "    %ls\n", lines.at(idx).c_str());
@@ -1685,9 +1685,8 @@ enum parse_bool_statement_type_t parse_node_tree_t::statement_boolean_type(const
 bool parse_node_tree_t::job_should_be_backgrounded(const parse_node_t &job) const
 {
     assert(job.type == symbol_job);
-    bool result = false;
     const parse_node_t *opt_background = get_child(job, 2, symbol_optional_background);
-    result = opt_background != NULL && opt_background->tag == parse_background;
+    bool result = opt_background != NULL && opt_background->tag == parse_background;
     return result;
 }
 

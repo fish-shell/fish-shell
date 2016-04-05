@@ -842,8 +842,6 @@ int parser_t::eval_acquiring_tree(const wcstring &cmd, const io_chain_t &io, enu
         return 0;
     }
 
-    //print_stderr(block_stack_description());
-    
     /* Determine the initial eval level. If this is the first context, it's -1; otherwise it's the eval level of the top context. This is sort of wonky because we're stitching together a global notion of eval level from these separate objects. A better approach would be some profile object that all contexts share, and that tracks the eval levels on its own. */
     int exec_eval_level = (execution_contexts.empty() ? -1 : execution_contexts.back()->current_eval_level());
     

@@ -174,8 +174,8 @@ tt, code, pre, .fish {
 .comment, .suggest { color: #555; }
 .command, .function, .binary { color: #223aa4; }
 .argument, .path, .file  { color: #5961cf; }
-.string { color: #6c6d08; }
 .operator, .variable, .match, .history { color: #1c8885; }
+.string, .string .operator { color: #858904; }
 
 /* Synopsis variant */
 .synopsis {

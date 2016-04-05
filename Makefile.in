@@ -53,6 +53,9 @@ mandir = @mandir@
 sysconfdir = @sysconfdir@
 docdir = @docdir@
 localedir = @localedir@
+extra_completionsdir = @extra_completionsdir@
+extra_functionsdir = @extra_functionsdir@
+extra_snippetsdir = @extra_snippetsdir@
 
 #
 # pcre2
@@ -103,7 +106,7 @@ FISH_OBJS := obj/function.o obj/builtin.o obj/complete.o obj/env.o obj/exec.o \
     obj/parse_productions.o obj/parse_execution.o obj/pager.o obj/utf8.o \
     obj/fish_version.o obj/wcstringutil.o
 
-FISH_INDENT_OBJS := obj/fish_indent.o obj/print_help.o $(FISH_OBJS) 
+FISH_INDENT_OBJS := obj/fish_indent.o obj/print_help.o $(FISH_OBJS)
 
 #
 # Additional files used by builtin.o
@@ -213,7 +216,7 @@ endif
 #
 
 ifeq ($(HAVE_DOXYGEN), 1)
-  user_doc=user_doc
+  user_doc=doc
   share_man=share/man
 else
   user_doc=
@@ -224,7 +227,7 @@ endif
 # Make everything needed for installing fish
 #
 
-all: $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc
+all: $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc share/__fish_build_paths.fish
 	@echo fish has now been built.
 	@echo Use \'$(MAKE) install\' to install fish.
 .PHONY: all
@@ -238,7 +241,7 @@ FISH-BUILD-VERSION-FILE: FORCE
 -include FISH-BUILD-VERSION-FILE
 CXXFLAGS += -DFISH_BUILD_VERSION=\"$(FISH_BUILD_VERSION)\"
 .PHONY: FORCE
-fish_version.o: FISH-BUILD-VERSION-FILE
+obj/fish_version.o: FISH-BUILD-VERSION-FILE
 
 
 #
@@ -266,29 +269,23 @@ prof: all
 #
 # User documentation, describing the features of the fish shell.
 #
-
-# Depend on the sources (*.hdr.in) and manually make the
-# intermediate *.hdr and doc.h files if needed
-# The sed command deletes everything including and after the first -, for simpler version numbers
-# Cleans up the user_doc/html directory once Doxygen is done.
-
-user_doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h $(HDR_FILES) lexicon_filter
+# Depend on the sources (*.hdr.in) and manually make the intermediate *.hdr
+# and doc.h files if needed. The sed command deletes everything including and
+# after the first -, for simpler version numbers. Cleans up the user_doc/html
+# directory once Doxygen is done.
+#
+doc: $(HDR_FILES_SRC) Doxyfile.user $(HTML_SRC) $(HELP_SRC) doc.h \
+    $(HDR_FILES) lexicon_filter
 	(cat Doxyfile.user; echo INPUT_FILTER=./lexicon_filter; \
-	echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | $(SED) "s/-.*//") | doxygen - && touch user_doc; \
-	cd user_doc/html && rm -f bc_s.png bdwn.png closed.png ftv2*.png nav*.png open.png sync_*.png tab*.* doxygen.* dynsections.js jquery.js pages.html
-
-#
-# Source code documentation. Also includes user documentation.
-#
-
-doc: src/*.h src/*.cpp doc.h Doxyfile lexicon_filter
-	(cat Doxyfile; echo INPUT_FILTER=./lexicon_filter; echo PROJECT_NUMBER=$(FISH_BUILD_VERSION)) | doxygen - ;
-
+	echo PROJECT_NUMBER=$(FISH_BUILD_VERSION) | $(SED) "s/-.*//") | \
+		doxygen - && touch user_doc; \
+	cd user_doc/html && rm -f arrow*.png bc_s.png bdwn.png closed.png \
+		doc.png folder*.png ftv2*.png nav*.png open.png splitbar.png \
+		sync_*.png tab*.* doxygen.* dynsections.js jquery.js pages.html
 
 #
 # PDF version of the source code documentation.
 #
-
 doc/refman.pdf: doc
 	cd doc/latex && \
 	make &&  \
@@ -473,6 +470,9 @@ doc.h: $(HDR_FILES)
 		-e "s,@sysconfdir\@,$(sysconfdir),g" \
 		-e "s,@datadir\@,$(datadir),g" \
 		-e "s,@docdir\@,$(docdir),g" \
+		-e "s,@extra_completionsdir\@,$(extra_completionsdir),g" \
+		-e "s,@extra_functionsdir\@,$(extra_functionsdir),g" \
+		-e "s,@extra_snippetsdir\@,$(extra_snippetsdir),g" \
 		-e "s|@configure_input\@|$@, generated from $@.in by the Makefile. DO NOT MANUALLY EDIT THIS FILE!|g" \
 		-e "s,@prefix\@,$(prefix),g" \
 		-e "s,@fish_build_version\@,$(FISH_BUILD_VERSION),g" \
@@ -663,9 +663,9 @@ install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(sysconfdir)/fish/conf.d
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/completions
-	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/vendor_completions.d
-	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/vendor_functions.d
-	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/vendor_conf.d
+	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_completionsdir)
+	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_functionsdir)
+	$(INSTALL) -m 755 -d $(DESTDIR)$(extra_snippetsdir)
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/functions
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/man/man1
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools
@@ -675,6 +675,7 @@ install-force: all install-translations
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/fish/tools/web_config/sample_prompts
 	$(INSTALL) -m 644 etc/config.fish                  $(DESTDIR)$(sysconfdir)/fish/
 	$(INSTALL) -m 644 share/config.fish                $(DESTDIR)$(datadir)/fish/
+	$(INSTALL) -m 644 share/__fish_build_paths.fish    $(DESTDIR)$(datadir)/fish/
 	$(INSTALL) -m 755 -d $(DESTDIR)$(datadir)/pkgconfig
 	$(INSTALL) -m 644 fish.pc $(DESTDIR)$(datadir)/pkgconfig
 	for i in $(COMPLETIONS_DIR_FILES:%='%'); do \
@@ -871,6 +872,13 @@ iwyu:
 _iwyu: clean $(PROGRAMS)
 .PHONY: iwyu _iwyu
 
+# Lint the code.
+lint:
+	build_tools/lint.fish $(CXX) $(CXXFLAGS)
+lint-all:
+	build_tools/lint.fish $(CXX) --all $(CXXFLAGS)
+.PHONY: lint lint-all
+
 #
 # Cleanup targets
 #
@@ -897,7 +905,8 @@ clean:
 	rm -f command_list.txt command_list_toc.txt toc.txt
 	rm -f doc_src/index.hdr doc_src/commands.hdr
 	rm -f lexicon_filter lexicon.txt lexicon.log
-	rm -f FISH-BUILD-VERSION-FILE fish.pc
+	rm -f compile_commands.json xcodebuild.log
+	rm -f FISH-BUILD-VERSION-FILE fish.pc share/__fish_build_paths.fish
 	if test "$(HAVE_DOXYGEN)" = 1; then \
 		rm -rf doc user_doc share/man; \
 	fi

@@ -382,7 +382,7 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
             case 0:
             {
                 fwprintf(stderr, _(L"getopt_long() unexpectedly returned zero\n"));
-                exit_without_destructors(127);
+                exit(127);
             }
 
             case 'c':
@@ -405,8 +405,9 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
                 }
                 else
                 {
-                    debug(0, _(L"Invalid value '%s' for debug level switch"), optarg);
-                    exit_without_destructors(1);
+                    fwprintf(stderr, _(L"Invalid value '%s' for debug level switch"),
+                            optarg);
+                    exit(1);
                 }
                 break;
             }
@@ -444,15 +445,15 @@ static int fish_parse_opt(int argc, char **argv, std::vector<std::string> *cmds)
 
             case 'v':
             {
-                fwprintf(stderr, _(L"%s, version %s\n"), PACKAGE_NAME,
+                fwprintf(stdout, _(L"%s, version %s\n"), PACKAGE_NAME,
                          get_fish_version());
-                exit_without_destructors(0);
+                exit(0);
             }
 
             default:
             {
                 // We assume getopt_long() has already emitted a diagnostic msg.
-                exit_without_destructors(1);
+                exit(1);
             }
 
         }
@@ -550,34 +551,30 @@ int main(int argc, char **argv)
             }
             reader_exit(0, 0);
         }
+        else if (my_optind == argc)
+        {
+            // Interactive mode
+            check_running_fishd();
+            res = reader_read(STDIN_FILENO, empty_ios);
+        }
         else
         {
-            if (my_optind == argc)
+            char *file = *(argv+(my_optind++));
+            int fd = open(file, O_RDONLY);
+            if (fd == -1)
             {
-                // Interactive mode
-                check_running_fishd();
-                res = reader_read(STDIN_FILENO, empty_ios);
+                perror(file);
             }
             else
             {
-                char **ptr;
-                char *file = *(argv+(my_optind++));
-                int i;
-                int fd;
-
-
-                if ((fd = open(file, O_RDONLY)) == -1)
-                {
-                    wperror(L"open");
-                    return 1;
-                }
-
                 // OK to not do this atomically since we cannot have gone multithreaded yet
                 set_cloexec(fd);
 
                 if (*(argv+my_optind))
                 {
                     wcstring sb;
+                    char **ptr;
+                    int i;
                     for (i=1,ptr = argv+my_optind; *ptr; i++, ptr++)
                     {
                         if (i != 1)

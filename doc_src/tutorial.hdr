@@ -27,6 +27,7 @@
 - <a href="#tut_path">$PATH</a>
 - <a href="#tut_startup">Startup</a>
 - <a href="#tut_autoload">Autoloading Functions</a>
+- <a href="#tut_universal">Universal Variables</a>
 - <a href="#tut_more">Ready for more?</a>
 
 \htmlonly[block]

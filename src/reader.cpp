@@ -4026,6 +4026,17 @@ const wchar_t *reader_readline(int nchars)
                 break;
             }
 
+            case R_SWAP_SELECTION_START_STOP:
+            {
+                if (!data->sel_active) break;
+                size_t tmp = data->sel_begin_pos;
+                data->sel_begin_pos = data->command_line.position;
+                data->sel_start_pos = data->command_line.position;
+                editable_line_t *el = data->active_edit_line();
+                update_buff_pos(el, tmp);
+                break;
+            }
+
             case R_END_SELECTION:
             {
                 data->sel_active = false;

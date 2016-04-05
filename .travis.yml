@@ -18,22 +18,19 @@ matrix:
       addons:
         apt:
           sources:
-            # stick with 3.6; the 3.7 Debian binaries do not support ASan yet
-            # https://llvm.org/bugs/show_bug.cgi?id=22757
-            - llvm-toolchain-precise-3.6
+            - llvm-toolchain-precise-3.8
             - ubuntu-toolchain-r-test
           packages:
-            - clang-3.6
-            - llvm-3.6 # for llvm-symbolizer
+            - clang-3.8
+            - llvm-3.8 # for llvm-symbolizer
             - bc
             - expect
             - gettext
             - libncurses5-dev
       env:
         - CXXFLAGS="-g -fno-omit-frame-pointer -fsanitize=address"
-        - ASAN_SYMBOLIZER_PATH="/usr/bin/llvm-symbolizer-3.6"
-        - ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=0
-      before_install: export CXX=clang++-3.6
+        - ASAN_OPTIONS=check_initialization_order=1:detect_stack_use_after_return=1:detect_leaks=1
+      before_install: export CXX=clang++-3.8
 
     - os: osx
       before_install:

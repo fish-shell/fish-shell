@@ -26,6 +26,7 @@ fish_tests
 fish.pc
 seq
 set_color
+share/__fish_build_paths.fish
 share/man/
 toc.txt
 user_doc/

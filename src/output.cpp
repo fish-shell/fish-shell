@@ -386,32 +386,35 @@ int writeb(tputs_arg_t b)
 
 int writech(wint_t ch)
 {
-    mbstate_t state;
-    size_t i;
     char buff[MB_LEN_MAX+1];
-    size_t bytes;
+    size_t len;
 
-    if ((ch >= ENCODE_DIRECT_BASE) &&
-            (ch < ENCODE_DIRECT_BASE+256))
+    if (ch >= ENCODE_DIRECT_BASE && ch < ENCODE_DIRECT_BASE + 256)
     {
         buff[0] = ch - ENCODE_DIRECT_BASE;
-        bytes=1;
+        len = 1;
+    }
+    else if (MB_CUR_MAX == 1) // single-byte locale (C/POSIX/ISO-8859)
+    {
+        // If `wc` contains a wide character we emit a question-mark.
+        if (ch & ~0xFF)
+        {
+            ch = '?';
+        }
+        buff[0] = ch;
+        len = 1;
     }
     else
     {
-        memset(&state, 0, sizeof(state));
-        bytes= wcrtomb(buff, ch, &state);
-
-        switch (bytes)
+        mbstate_t state = {};
+        len = wcrtomb(buff, ch, &state);
+        if (len == (size_t)-1)
         {
-            case (size_t)(-1):
-            {
-                return 1;
-            }
+            return 1;
         }
     }
 
-    for (i=0; i<bytes; i++)
+    for (size_t i = 0; i < len; i++)
     {
         out(buff[i]);
     }
@@ -420,29 +423,26 @@ int writech(wint_t ch)
 
 void writestr(const wchar_t *str)
 {
-    char *pos;
-
     CHECK(str,);
 
-    //  while( *str )
-    //    writech( *str++ );
+    if (MB_CUR_MAX == 1) // single-byte locale (C/POSIX/ISO-8859)
+    {
+        while( *str )
+        {
+            writech( *str++ );
+        }
+        return;
+    }
 
-    /*
-       Check amount of needed space
-       */
-    size_t len = wcstombs(0, str, 0);
-
+    size_t len = wcstombs(0, str, 0);  // figure amount of space needed
     if (len == (size_t)-1)
     {
         debug(1, L"Tried to print invalid wide character string");
         return;
     }
 
+    // Convert the string.
     len++;
-
-    /*
-       Convert
-       */
     char *buffer, static_buffer[256];
     if (len <= sizeof static_buffer)
         buffer = static_buffer;
@@ -456,7 +456,7 @@ void writestr(const wchar_t *str)
     /*
        Write
        */
-    for (pos = buffer; *pos; pos++)
+    for (char *pos = buffer; *pos; pos++)
     {
         out(*pos);
     }

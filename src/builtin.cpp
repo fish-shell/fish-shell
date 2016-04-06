@@ -3375,7 +3375,7 @@ static int builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **arg
     parser.push_block(new source_block_t(fn_intern));
     reader_push_current_filename(fn_intern);
 
-    env_set_argv((argc>2)?(argv+2):(argv+1));
+    env_set_argv(argc > 1 ? argv + 2 : argv + 1);
 
     res = reader_read(fd, streams.io_chain ? *streams.io_chain : io_chain_t());
 

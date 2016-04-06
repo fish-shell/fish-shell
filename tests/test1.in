@@ -166,5 +166,11 @@ function always_fails
     end
 end
 
-always_fails ; echo $status
+# Verify $argv set correctly in sourced scripts.
+# Issue #139
+echo 'echo "source argv {$argv}"' | source
+echo 'echo "source argv {$argv}"' | source -
+echo 'echo "source argv {$argv}"' | source - abc
+echo 'echo "source argv {$argv}"' | source - abc def
 
+always_fails ; echo $status

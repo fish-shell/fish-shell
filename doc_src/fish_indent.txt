@@ -11,6 +11,8 @@ fish_indent [OPTIONS]
 
 The following options are available:
 
+- `-d` or `--dump` dumps information about the parsed fish commands to stderr
+
 - `-i` or `--no-indent` do not indent commands; only reformat to one job per line
 
 - `-v` or `--version` displays the current fish version and then exits

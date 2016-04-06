@@ -54,32 +54,6 @@ On RedHat, CentOS, or Amazon EC2:
 
     sudo yum install ncurses-devel
 
-## Testing
-
-The source code for fish includes a large collection of tests. If you are making any changes to fish, running these tests is highly recommended to make sure the behaviour remains consistent.
-
-### Local testing
-
-The tests can be run on your local computer on all operating systems.
-
-Running the tests is only supported from the Autotools build. On OS X, you will require an installation of autoconf; we suggest using [Homebrew](http://brew.sh/) to install these tools.
-
-    autoconf
-    ./configure
-    make test [gmake on BSD]
-
-### Travis CI Build and Test
-
-The Travis Continuous Integration services can be used to test your changes across multiple platforms. You will need to [fork the fish-shell repository on GitHub](https://help.github.com/articles/fork-a-repo/), or push a copy of the code to your GitHub account.
-
- 1. [Sign in to Travis CI](https://travis-ci.org/auth) with your GitHub account, accepting the GitHub access permissions confirmation.
- 2. Once you're signed in, and your repositories are synchronised, go to your [profile page](https://travis-ci.org/profile) and enable the fish-shell repository.
- 3. Push your changes to GitHub.
-
-You'll receive an email when the tests are complete telling you whether or not any tests failed.
-
-You'll find the configuration used to control Travis in the `.travis.yml` file.
-
 ## Runtime Dependencies
 
 fish requires a curses implementation, such as ncurses, to run.
@@ -115,6 +89,10 @@ To switch your default shell back, you can run:
 	chsh -s /bin/bash
 
 Substitute /bin/bash with /bin/tcsh or /bin/zsh as appropriate.
+
+## Contributing Changes to the Code
+
+See the [Guide for Developers](CONTRIBUTING.md).
 
 ## Contact Us
 

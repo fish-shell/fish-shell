@@ -12,6 +12,26 @@ Ultimately we want lint free code. However, at the moment a lot of cleanup is re
 
 To make linting the code easy there are two make targets: `lint` and `lint-all`. The latter does just what the name implies. The former will lint any modified but not committed `*.cpp` files. If there is no uncommitted work it will lint the files in the most recent commit.
 
+### Dealing With Lint Warnings
+
+You are strongly encouraged to address a lint warning by refactoring the code, changing variable names, or whatever action is implied by the warning.
+
+### Suppressing Lint Warnings
+
+Once in a while the lint tools emit a false positive warning. For example, cppcheck might suggest a memory leak is present when that is not the case. To suppress that cppcheck warning you should insert a line like the following immediately prior to the line cppcheck warned about:
+
+```
+// cppcheck-suppress memleak // addr not really leaked
+```
+
+The explanatory portion of the suppression comment is optional. For other types of warnings replace "memleak" with the value inside the parenthesis (e.g., "nullPointerRedundantCheck") from a warning like the following:
+
+```
+[src/complete.cpp:1727]: warning (nullPointerRedundantCheck): Either the condition 'cmd_node' is redundant or there is possible null pointer dereference: cmd_node.
+```
+
+Suppressing oclint warnings is more complicated to describe so I'll refer you to the [OCLint HowTo](http://docs.oclint.org/en/latest/howto/suppress.html#annotations) on the topic.
+
 ## Ensuring Your Changes Conform to the Style Guides
 
 The following sections discuss the specific rules for the style that should be used when writing fish code. To ensure your changes conform to the style rules you simply need to run
@@ -26,6 +46,16 @@ If you want to check the style of the entire code base run
 
 ```
 make style-all
+```
+
+### Suppressing Reformatting of the Code
+
+If you have a good reason for doing so you can tell `clang-format` to not reformat a block of code by enclosing it in comments like this:
+
+```
+// clang-format off
+code to ignore
+// clang-format on
 ```
 
 ## Fish Script Style Guide
@@ -47,6 +77,38 @@ The first word of global variable names should generally be `fish` for public va
 1. Always attach braces to the surrounding context.
 
 1. Indent with spaces, not tabs and use four spaces per indent.
+
+1. Comments should always use the C++ style; i.e., each line of the comment should begin with a `//` and should be limited to 100 characters. Comments that do not begin a line should be separated from the previous text by two spaces.
+
+## Testing
+
+The source code for fish includes a large collection of tests. If you are making any changes to fish, running these tests is highly recommended to make sure the behaviour remains consistent.
+
+You are also strongly encouraged to add tests when changing the functionality of fish. Especially if you are fixing a bug to help ensure there are no regressions in the future (i.e., we don't reintroduce the bug).
+
+### Local testing
+
+The tests can be run on your local computer on all operating systems.
+
+Running the tests is only supported from the autotools build and not xcodebuild. On OS X, you will need to install autoconf &mdash; we suggest using [Homebrew](http://brew.sh/) to install these tools.
+
+    autoconf
+    ./configure
+    make test [gmake on BSD]
+
+### Travis CI Build and Test
+
+The Travis Continuous Integration services can be used to test your changes using multiple configurations. This is the same service that the fish shell project uses to ensure new changes haven't broken anything. Thus it is a really good idea that you leverage Travis CI before making a pull-request to avoid embarrasment at breaking the build.
+
+You will need to [fork the fish-shell repository on GitHub](https://help.github.com/articles/fork-a-repo/). Then setup Travis to test your changes before you make a pull-request:
+
+1. [Sign in to Travis CI](https://travis-ci.org/auth) with your GitHub account, accepting the GitHub access permissions confirmation.
+1. Once you're signed in, and your repositories are synchronised, go to your [profile page](https://travis-ci.org/profile) and enable the fish-shell repository.
+1. Push your changes to GitHub.
+
+You'll receive an email when the tests are complete telling you whether or not any tests failed.
+
+You'll find the configuration used to control Travis in the `.travis.yml` file.
 
 ## Installing the Required Tools
 

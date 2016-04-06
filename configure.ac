@@ -15,8 +15,6 @@ AC_INIT(fish,
         m4_esyscmd([cut -f 3 -d ' ' FISH-BUILD-VERSION-FILE | tr -d '\n']),
         fish-users@lists.sourceforge.net)
 
-conf_arg=$@
-
 #
 # List of output variables produced by this configure script
 #

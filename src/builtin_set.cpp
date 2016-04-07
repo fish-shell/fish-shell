@@ -64,16 +64,22 @@ static int my_env_set(const wchar_t *key, const wcstring_list_t &val, int scope,
         /* Fix for https://github.com/fish-shell/fish-shell/issues/199 . Return success if any path setting succeeds. */
         bool any_success = false;
 
-        /* Don't bother validating (or complaining about) values that are already present */
+        /* Don't bother validating (or complaining about) values that are already present.
+           When determining already-present values, use ENV_DEFAULT instead of the passed-in scope because in:
+              set -l PATH stuff $PATH
+           where we are temporarily shadowing a variable, we want to compare against the shadowed value, not the
+           (missing) local value.
+           Also don't bother to complain about relative paths, which don't start with /.
+        */
         wcstring_list_t existing_values;
-        const env_var_t existing_variable = env_get_string(key, scope);
+        const env_var_t existing_variable = env_get_string(key, ENV_DEFAULT);
         if (! existing_variable.missing_or_empty())
             tokenize_variable_array(existing_variable, existing_values);
 
         for (i=0; i< val.size() ; i++)
         {
             const wcstring &dir = val.at(i);
-            if (list_contains_string(existing_values, dir))
+            if (!string_prefixes_string(L"/", dir) || list_contains_string(existing_values, dir))
             {
                 any_success = true;
                 continue;

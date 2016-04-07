@@ -35,14 +35,14 @@ else
     # We haven't been asked to lint all the source. If there are uncommitted
     # changes lint those, else lint the files in the most recent commit.
     set pending (git status --porcelain --short --untracked-files=all | sed -e 's/^ *//')
-    if count $pending > /dev/null
+    if set -q pending[1]
         # There are pending changes so lint those files.
         for arg in $pending
             set files $files (string split -m 1 ' ' $arg)[2]
         end
     else
         # No pending changes so lint the files in the most recent commit.
-        set files (git show --porcelain --name-only --pretty=oneline head | tail --lines=+2)
+        set files (git show --word-diff=porcelain --name-only --pretty=oneline head)[2..-1]
     end
 
     # Extract just the C/C++ files.

@@ -821,7 +821,7 @@ $(PCRE2_LIB): $(PCRE2_H)
 	$(MAKE) -C $(PCRE2_DIR) libpcre2-$(PCRE2_WIDTH).la
 
 $(PCRE2_H):
-	(cd $(PCRE2_DIR) && ./config.status --enable-maintainer-mode)
+	(cd $(PCRE2_DIR) && ./config.status)
 
 #
 # Build the fish_tests program.

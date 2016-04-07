@@ -1737,9 +1737,3 @@ bool universal_notifier_t::notification_fd_became_readable(int fd)
 {
     return false;
 }
-
-static bool bool_from_env_var(const char *name, bool default_value)
-{
-    const char *var = getenv(name);
-    return var ? from_string<bool>(var) : default_value;
-}

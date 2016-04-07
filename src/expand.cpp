@@ -1800,36 +1800,47 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
         
         const wcstring working_dir = env_get_pwd_slash();
         wcstring_list_t effective_working_dirs;
-        if (! (flags & EXPAND_SPECIAL_CD))
+        bool for_cd = !!(flags & EXPAND_SPECIAL_FOR_CD);
+        bool for_command = !!(flags & EXPAND_SPECIAL_FOR_COMMAND);
+        if (!for_cd && !for_command)
         {
             /* Common case */
             effective_working_dirs.push_back(working_dir);
         }
         else
         {
-            /* Ignore the CDPATH if we start with ./ or / */
-            if (string_prefixes_string(L"./", path_to_expand))
-            {
-                effective_working_dirs.push_back(working_dir);
-            }
-            else if (string_prefixes_string(L"/", path_to_expand))
+            /* Either EXPAND_SPECIAL_FOR_COMMAND or EXPAND_SPECIAL_FOR_CD. We can handle these mostly the same.
+               There's the following differences:
+               1. An empty CDPATH should be treated as '.', but an empty PATH should be left empty (no commands can be found).
+               2. PATH is only "one level," while CDPATH is multiple levels. That is, input like 'foo/bar' should resolve
+                  against CDPATH, but not PATH.
+
+               In either case, we ignore the path if we start with ./ or /.
+               Also ignore it if we are doing command completion and we contain a slash, per IEEE 1003.1, chapter 8 under PATH
+             */
+            if (string_prefixes_string(L"./", path_to_expand) ||
+                string_prefixes_string(L"/", path_to_expand) ||
+                (for_command && path_to_expand.find(L'/') != wcstring::npos))
             {
                 effective_working_dirs.push_back(working_dir);
             }
             else
             {
-                /* Get the CDPATH and cwd. Perhaps these should be passed in. */
-                env_var_t cdpath = env_get_string(L"CDPATH");
-                if (cdpath.missing_or_empty())
-                    cdpath = L".";
+                /* Get the PATH/CDPATH and cwd. Perhaps these should be passed in.
+                   An empty CDPATH implies just the current directory, while an empty PATH is left empty.
+                 */
+                env_var_t paths = env_get_string(for_cd ? L"CDPATH" : L"PATH");
+                if (paths.missing_or_empty())
+                    paths = for_cd ? L"." : L"";
                 
                 /* Tokenize it into directories */
-                wcstokenizer tokenizer(cdpath, ARRAY_SEP_STR);
-                wcstring next_cd_path;
-                while (tokenizer.next(next_cd_path))
+                wcstokenizer tokenizer(paths, ARRAY_SEP_STR);
+                wcstring next_path;
+                while (tokenizer.next(next_path))
                 {
                     /* Ensure that we use the working directory for relative cdpaths like "." */
-                    effective_working_dirs.push_back(path_apply_working_directory(next_cd_path, working_dir));
+                    effective_working_dirs.push_back(path_apply_working_directory(next_path, working_dir));
+
                 }
             }
         }

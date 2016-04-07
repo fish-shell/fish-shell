@@ -789,8 +789,8 @@ class wildcard_expander_t
                 c.prepend_token_prefix(this->original_base);
             }
             
-            /* Hack. Implement EXPAND_SPECIAL_CD by descending the deepest unique hierarchy we can, and then appending any components to each new result. */
-            if (flags & EXPAND_SPECIAL_CD)
+            /* Hack. Implement EXPAND_SPECIAL_FOR_CD by descending the deepest unique hierarchy we can, and then appending any components to each new result. */
+            if (flags & EXPAND_SPECIAL_FOR_CD)
             {
                 wcstring unique_hierarchy = this->descend_unique_hierarchy(abs_path);
                 if (! unique_hierarchy.empty())
@@ -1138,8 +1138,8 @@ int wildcard_expand_string(const wcstring &wc, const wcstring &working_directory
     /* Fuzzy matching only if we're doing completions */
     assert((flags & (EXPAND_FUZZY_MATCH | EXPAND_FOR_COMPLETIONS)) != EXPAND_FUZZY_MATCH);
     
-    /* EXPAND_SPECIAL_CD requires DIRECTORIES_ONLY and EXPAND_FOR_COMPLETIONS and EXPAND_NO_DESCRIPTIONS */
-    assert(!(flags & EXPAND_SPECIAL_CD) ||
+    /* EXPAND_SPECIAL_FOR_CD requires DIRECTORIES_ONLY and EXPAND_FOR_COMPLETIONS and EXPAND_NO_DESCRIPTIONS */
+    assert(!(flags & EXPAND_SPECIAL_FOR_CD) ||
            ((flags & DIRECTORIES_ONLY) && (flags & EXPAND_FOR_COMPLETIONS) && (flags & EXPAND_NO_DESCRIPTIONS)));
     
     /* Hackish fix for 1631. We are about to call c_str(), which will produce a string truncated at any embedded nulls. We could fix this by passing around the size, etc. However embedded nulls are never allowed in a filename, so we just check for them and return 0 (no matches) if there is an embedded null. */

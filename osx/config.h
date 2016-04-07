@@ -197,9 +197,6 @@
 /* Define to 1 if the winsize struct and TIOCGWINSZ macro exist */
 #define HAVE_WINSIZE 1
 
-/* Define to 1 if getopt_long exists and works. */
-#define HAVE_WORKING_GETOPT_LONG 1
-
 /* Define to 1 if the _nl_msg_cat_cntr symbol is exported. */
 /* #undef HAVE__NL_MSG_CAT_CNTR */
 

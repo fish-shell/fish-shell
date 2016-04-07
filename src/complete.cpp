@@ -851,8 +851,7 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
 
     if (use_command)
     {
-
-        if (expand_string(str_cmd, &this->completions, EXPAND_FOR_COMPLETIONS | EXECUTABLES_ONLY | this->expand_flags(), NULL) != EXPAND_ERROR)
+        if (expand_string(str_cmd, &this->completions, EXPAND_SPECIAL_FOR_COMMAND | EXPAND_FOR_COMPLETIONS | EXECUTABLES_ONLY | this->expand_flags(), NULL) != EXPAND_ERROR)
         {
             if (this->wants_descriptions())
             {
@@ -869,52 +868,8 @@ void completer_t::complete_cmd(const wcstring &str_cmd, bool use_function, bool 
     }
     if (str_cmd.find(L'/') == wcstring::npos && str_cmd.at(0) != L'~')
     {
-        if (use_command)
-        {
-
-            const env_var_t path = this->vars.get(L"PATH");
-            if (!path.missing())
-            {
-                wcstring base_path;
-                wcstokenizer tokenizer(path, ARRAY_SEP_STR);
-                while (tokenizer.next(base_path))
-                {
-                    if (base_path.empty())
-                        continue;
-
-                    /* Make sure the base path ends with a slash */
-                    if (base_path.at(base_path.size() - 1) != L'/')
-                        base_path.push_back(L'/');
-
-                    wcstring nxt_completion = base_path;
-                    nxt_completion.append(str_cmd);
-
-                    size_t prev_count =  this->completions.size();
-                    expand_flags_t expand_flags = EXPAND_FOR_COMPLETIONS | EXECUTABLES_ONLY | EXPAND_NO_FUZZY_DIRECTORIES | this->expand_flags();
-                    if (expand_string(nxt_completion,
-                                      &this->completions,
-                                      expand_flags, NULL) != EXPAND_ERROR)
-                    {
-                        /* For all new completions, if COMPLETE_REPLACES_TOKEN is set, then use only the last path component */
-                        for (size_t i=prev_count; i< this->completions.size(); i++)
-                        {
-                            completion_t &c =  this->completions.at(i);
-                            if (c.flags & COMPLETE_REPLACES_TOKEN)
-                            {
-
-                                c.completion.erase(0, base_path.size());
-                            }
-                        }
-                    }
-                }
-                if (this->wants_descriptions())
-                    this->complete_cmd_desc(str_cmd);
-            }
-        }
-
         if (use_function)
         {
-            //function_get_names( &possible_comp, cmd[0] == L'_' );
             wcstring_list_t names = function_get_names(str_cmd.at(0) == L'_');
             for (size_t i=0; i < names.size(); i++)
             {
@@ -1361,7 +1316,7 @@ void completer_t::complete_param_expand(const wcstring &str, bool do_file, bool 
     
     if (handle_as_special_cd && do_file)
     {
-        flags |= DIRECTORIES_ONLY | EXPAND_SPECIAL_CD | EXPAND_NO_DESCRIPTIONS;
+        flags |= DIRECTORIES_ONLY | EXPAND_SPECIAL_FOR_CD | EXPAND_NO_DESCRIPTIONS;
     }
 
     /* Squelch file descriptions per issue 254 */

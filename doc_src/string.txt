@@ -106,7 +106,6 @@ The following subcommands are available:
 <bs>c</bs>g
 \endfish
 
-<<<<<<< c1ddfa5c636b8b353e56e10b66601ad1751cafcc
 \subsection string-example-match-glob Match Glob Examples
 
 \fish{cli-dark}
@@ -121,65 +120,14 @@ The following subcommands are available:
 
 >_ echo 'ok?' | string match '*\\?'
 >_ <outp>ok?</outp>
-=======
-\fish
-# string match glob examples
 
-string match '?' a
-# Output:
-# a
-
-string match 'a*b' axxb
-# Output:
-# axxb
-
-string match -i 'a??B' Axxb
-# Output:
-# Axxb
-
-echo 'ok?' | string match '*\\?'
-# Output:
-# ok?
-
-# string match regex examples
-
-string match -r 'cat|dog|fish' 'nice dog'
-# Output:
-# dog
-
-string match -r '(\\d\\d?):(\\d\\d):(\\d\\d)' 2:34:56
-# Output:
-# 2:34:56
-# 2
-# 34
-# 56
-
-string match -r '^(\\w{2,4})\\g1$' papa mud murmur
-# Output:
-# papa
-# pa
-# murmur
-# mur
-
-string match -r -v "c.*[12]" {cat,dog}(seq 1 4) 
-# Output:
-# dog1
-# dog2
-# cat3
-# dog3
-# cat4
-# dog4
-
-string match -r -a -n at ratatat
-# Output:
-# 2 2
-# 4 2
-# 6 2
-
-string match -r -i '0x[0-9a-f]{1,8}' 'int magic = 0xBadC0de;'
-# Output:
-# 0xBadC0de
->>>>>>> Add inverted matching for globbing/wildcards.
+>_ string match -r -v "c.*[12]" {cat,dog}(seq 1 4) 
+<outp>dog1</outp>
+<outp>dog2</outp>
+<outp>cat3</outp>
+<outp>dog3</outp>
+<outp>cat4</outp>
+<outp>dog4</outp>
 \endfish
 
 \subsection string-example-match-regex Match Regex Examples

@@ -28,7 +28,6 @@
 extern int builtin_count_args(const wchar_t * const * argv);
 void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *cmd, output_stream_t &b);
 
-
 enum
 {
     BUILTIN_STRING_OK = 0,
@@ -65,29 +64,20 @@ static const wchar_t *string_get_arg_stdin(wcstring *storage, const io_streams_t
         char ch = '\0';
         long rc = read_blocked(streams.stdin_fd, &ch, 1);
 
-        if (rc < 0)
-        {
-            // failure
+        if (rc < 0) // failure
             return 0;
-        }
-
+        
         if (rc == 0)
         {
             // eof
             if (arg.empty())
-            {
                 return 0;
-            }
             else
-            {
                 break;
-            }
         }
 
         if (ch == '\n')
-        {
             break;
-        }
 
         arg += ch;
     }
@@ -104,13 +94,10 @@ static const wchar_t *string_get_arg_argv(int *argidx, wchar_t **argv)
 static const wchar_t *string_get_arg(int *argidx, wchar_t **argv, wcstring *storage, const io_streams_t &streams)
 {
     if (string_args_from_stdin(streams))
-    {
         return string_get_arg_stdin(storage, streams);
-    }
+
     else
-    {
         return string_get_arg_argv(argidx, argv);
-    }
 }
 
 static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wchar_t **argv)
@@ -129,9 +116,8 @@ static int string_escape(parser_t &parser, io_streams_t &streams, int argc, wcha
         int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
 
         if (c == -1)
-        {
             break;
-        }
+        
         switch (c)
         {
             case 0:
@@ -183,9 +169,8 @@ static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_
         int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
 
         if (c == -1)
-        {
             break;
-        }
+        
         switch (c)
         {
             case 0:
@@ -223,17 +208,14 @@ static int string_join(parser_t &parser, io_streams_t &streams, int argc, wchar_
         if (!quiet)
         {
             if (nargs > 0)
-            {
                 streams.out.append(sep);
-            }
+
             streams.out.append(arg);
         }
         nargs++;
     }
     if (nargs > 0 && !quiet)
-    {
         streams.out.push_back(L'\n');
-    }
 
     return (nargs > 1) ? BUILTIN_STRING_OK : BUILTIN_STRING_NONE;
 }
@@ -254,9 +236,8 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, wcha
         int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
 
         if (c == -1)
-        {
             break;
-        }
+
         switch (c)
         {
             case 0:
@@ -285,10 +266,10 @@ static int string_length(parser_t &parser, io_streams_t &streams, int argc, wcha
     while ((arg = string_get_arg(&i, argv, &storage, streams)) != 0)
     {
         size_t n = wcslen(arg);
+
         if (n > 0)
-        {
             nnonempty++;
-        }
+        
         if (!quiet)
         {
             streams.out.append(to_string(n));
@@ -312,78 +293,75 @@ struct match_options_t
 
 class string_matcher_t
 {
-protected:
-    match_options_t opts;
-    io_streams_t &streams;
-    int total_matched;
+    protected:
+        match_options_t opts;
+        io_streams_t &streams;
+        int total_matched;
 
-public:
-    string_matcher_t(const match_options_t &opts_, io_streams_t &streams_)
-        : opts(opts_), streams(streams_), total_matched(0)
-    { }
+    public:
+        string_matcher_t(const match_options_t &opts_, io_streams_t &streams_)
+            : opts(opts_), streams(streams_), total_matched(0)
+        { }
 
-    virtual ~string_matcher_t() { }
-    virtual bool report_matches(const wchar_t *arg) = 0;
-    int match_count() { return total_matched; }
+        virtual ~string_matcher_t() { }
+        virtual bool report_matches(const wchar_t *arg) = 0;
+        int match_count() { return total_matched; }
 };
 
 class wildcard_matcher_t: public string_matcher_t
 {
-private:
-    wcstring wcpattern;
-public:
-    wildcard_matcher_t(const wchar_t * /*argv0*/, const wchar_t *pattern, const match_options_t &opts, io_streams_t &streams)
-    : string_matcher_t(opts, streams), wcpattern(parse_util_unescape_wildcards(pattern))
-    {
-        if (opts.ignore_case)
+    private:
+        wcstring wcpattern;
+    public:
+        wildcard_matcher_t(const wchar_t * /*argv0*/, const wchar_t *pattern, const match_options_t &opts, io_streams_t &streams)
+        : string_matcher_t(opts, streams), wcpattern(parse_util_unescape_wildcards(pattern))
         {
-            for (size_t i = 0; i < wcpattern.length(); i++)
+            if (opts.ignore_case)
             {
-                wcpattern[i] = towlower(wcpattern[i]);
-            }
-        }
-    }
-
-    virtual ~wildcard_matcher_t() { }
-
-    bool report_matches(const wchar_t *arg)
-    {
-        // Note: --all is a no-op for glob matching since the pattern is always
-        // matched against the entire argument
-        bool match;
-    
-        if (opts.ignore_case)
-        {
-            wcstring s = arg;
-            for (size_t i = 0; i < s.length(); i++)
-            {
-                s[i] = towlower(s[i]);
-            }
-            match = wildcard_match(s, wcpattern, false);
-        }
-        else
-        {
-            match = wildcard_match(arg, wcpattern, false);
-        }
-        if (match ^ opts.invert_match)
-        {
-            total_matched++;
-
-            if (!opts.quiet)
-            {
-                if (opts.index)
+                for (size_t i = 0; i < wcpattern.length(); i++)
                 {
-                    streams.out.append_format(L"1 %lu\n", wcslen(arg));
-                }
-                else
-                {
-                    streams.out.append(arg);
-                    streams.out.append(L'\n');
+                    wcpattern[i] = towlower(wcpattern[i]);
                 }
             }
         }
-        return true;
-    }
+
+        virtual ~wildcard_matcher_t() { }
+
+        bool report_matches(const wchar_t *arg)
+        {
+            // Note: --all is a no-op for glob matching since the pattern is always
+            // matched against the entire argument
+            bool match;
+        
+            if (opts.ignore_case)
+            {
+                wcstring s = arg;
+                for (size_t i = 0; i < s.length(); i++)
+                    s[i] = towlower(s[i]);
+                
+                match = wildcard_match(s, wcpattern, false);
+            }
+            else
+                match = wildcard_match(arg, wcpattern, false);
+            
+            if (match ^ opts.invert_match)
+            {
+                total_matched++;
+
+                if (!opts.quiet)
+                {
+                    if (opts.index)
+                        streams.out.append_format(L"1 %lu\n", wcslen(arg));
+                    
+                    else
+                    {
+                        streams.out.append(arg);
+                        streams.out.append(L'\n');
+                    }
+                }
+            }
+            return true;
+        }
 };
 
 static wcstring pcre2_strerror(int err_code)
@@ -419,8 +397,8 @@ struct compiled_regex_t
             0);
         if (code == 0)
         {
-            string_error(streams, _(L"%ls: Regular expression compile error: %ls\n"),
-                    argv0, pcre2_strerror(err_code).c_str());
+            string_error(streams, _(L"%ls: Regular expression compile error: %ls\n"), argv0,
+                                    pcre2_strerror(err_code).c_str());
             string_error(streams, L"%ls: %ls\n", argv0, pattern);
             string_error(streams, L"%ls: %*ls\n", argv0, err_offset, L"^");
             return;
@@ -428,21 +406,16 @@ struct compiled_regex_t
 
         match = pcre2_match_data_create_from_pattern(code, 0);
         if (match == 0)
-        {
             DIE_MEM();
-        }
     }
 
     ~compiled_regex_t()
     {
         if (match != 0)
-        {
             pcre2_match_data_free(match);
-        }
+
         if (code != 0)
-        {
             pcre2_code_free(code);
-        }
     }
 };
 
@@ -491,12 +464,12 @@ class pcre2_matcher_t: public string_matcher_t
             {
                 if (opts.index)
                 {
-                    streams.out.append_format(L"%lu %lu", (unsigned long)(begin + 1), (unsigned long)(end - begin));
+                    streams.out.append_format(L"%lu %lu", (unsigned long)(begin + 1),
+                                              (unsigned long)(end - begin));
                 }
                 else if (end > begin) // may have end < begin if \K is used
-                {
                     streams.out.append(wcstring(&arg[begin], end - begin));
-                }
+                
                 streams.out.push_back(L'\n');
             }
         }
@@ -518,34 +491,26 @@ public:
     {
         // A return value of true means all is well (even if no matches were
         // found), false indicates an unrecoverable error.
-        if (regex.code == 0)
-        {
-            // pcre2_compile() failed
+        if (regex.code == 0) // pcre2_compile() failed
             return false;
-        }
 
         int matched = 0;
 
         // See pcre2demo.c for an explanation of this logic
         PCRE2_SIZE arglen = wcslen(arg);
         int rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg), arglen, 0, 0, regex.match, 0));
-        if (rc < 0)
-        {
-            // pcre2 match error
+
+        if (rc < 0) // pcre2 match error
             return false;
-        }
-        else if (rc == 0)
-        {
-            // no match
+        
+        else if (rc == 0) // no match
             return true;
-        }
+        
         matched++;
         total_matched++;
     
         if (opts.invert_match)
-        {
             return true;
-        }
 
         // Report any additional matches
         PCRE2_SIZE *ovector = pcre2_get_ovector_pointer(regex.match);
@@ -557,24 +522,21 @@ public:
             if (ovector[0] == ovector[1])
             {
                 if (ovector[0] == arglen)
-                {
                     break;
-                }
+                
                 options = PCRE2_NOTEMPTY_ATSTART | PCRE2_ANCHORED;
             }
 
             rc = report_match(arg, pcre2_match(regex.code, PCRE2_SPTR(arg), arglen, offset, options, regex.match, 0));
+            
             if (rc < 0)
-            {
                 return false;
-            }
+            
             if (rc == 0)
             {
-                if (options == 0)
-                {
-                    // All matches found
+                if (options == 0) // All matches found
                     break;
-                }
+                
                 ovector[1] = offset + 1;
                 continue;
             }
@@ -607,9 +569,8 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
         int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
 
         if (c == -1)
-        {
             break;
-        }
+        
         switch (c)
         {
             case 0:
@@ -661,13 +622,10 @@ static int string_match(parser_t &parser, io_streams_t &streams, int argc, wchar
 
     string_matcher_t *matcher;
     if (regex)
-    {
         matcher = new pcre2_matcher_t(argv[0], pattern, opts, streams);
-    }
+    
     else
-    {
         matcher = new wildcard_matcher_t(argv[0], pattern, opts, streams);
-    }
 
     const wchar_t *arg;
     wcstring storage;
@@ -730,10 +688,10 @@ public:
     bool replace_matches(const wchar_t *arg)
     {
         wcstring result;
+
         if (patlen == 0)
-        {
             result = arg;
-        }
+        
         else
         {
             int replaced = 0;
@@ -776,9 +734,8 @@ class regex_replacer_t: public string_replacer_t
         while (*orig != L'\0')
         {
             if (*orig == L'\\')
-            {
                 orig += read_unquoted_escape(orig, &result, true, false);
-            }
+            
             else
             {
                 result += *orig;
@@ -843,10 +800,10 @@ public:
                     bufsize = std::min(2 * bufsize, MAX_REPLACE_SIZE);
                     // cppcheck-suppress memleakOnRealloc
                     output = (wchar_t *)realloc(output, sizeof(wchar_t) * bufsize);
+                    
                     if (output == NULL)
-                    {
                         DIE_MEM();
-                    }
+                    
                     continue;
                 }
                 string_error(streams, _(L"%ls: Replacement string too large\n"), argv0);
@@ -948,14 +905,13 @@ static int string_replace(parser_t &parser, io_streams_t &streams, int argc, wch
     }
 
     string_replacer_t *replacer;
+
     if (regex)
-    {
         replacer = new regex_replacer_t(argv[0], pattern, replacement, opts, streams);
-    }
+    
     else
-    {
         replacer = new literal_replacer_t(argv[0], pattern, replacement, opts, streams);
-    }
+    
 
     const wchar_t *arg;
     wcstring storage;
@@ -994,9 +950,8 @@ void split_about(ITER haystack_start, ITER haystack_end,
             split_point = haystack_cursor + 1;
         }
         else
-        {
             split_point = std::search(haystack_cursor, haystack_end, needle_start, needle_end);
-        }
+        
         if (split_point == haystack_end)
         {
             // not found
@@ -1153,9 +1108,8 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
         int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
 
         if (c == -1)
-        {
             break;
-        }
+        
         switch (c)
         {
             case 0:
@@ -1231,15 +1185,13 @@ static int string_sub(parser_t &parser, io_streams_t &streams, int argc, wchar_t
             size_type n = static_cast<size_type>(-start);
             pos = n > s.length() ? 0 : s.length() - n;
         }
+
         if (pos > s.length())
-        {
             pos = s.length();
-        }
 
         if (length >= 0)
-        {
             count = static_cast<size_type>(length);
-        }
+        
 
         // note that std::string permits count to extend past end of string
         if (!quiet)
@@ -1274,9 +1226,8 @@ static int string_trim(parser_t &parser, io_streams_t &streams, int argc, wchar_
         int c = w.wgetopt_long(argc, argv, short_options, long_options, 0);
 
         if (c == -1)
-        {
             break;
-        }
+        
         switch (c)
         {
             case 0:
@@ -1394,10 +1345,10 @@ int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     }
 
     const string_subcommand *subcmd = &string_subcommands[0];
+
     while (subcmd->name != 0 && wcscmp(subcmd->name, argv[1]) != 0)
-    {
         subcmd++;
-    }
+    
     if (subcmd->handler == 0)
     {
         streams.err.append_format(_(L"string: Unknown subcommand '%ls'\n"), argv[1]);

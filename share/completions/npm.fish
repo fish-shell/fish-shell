@@ -60,7 +60,7 @@ complete -f -c npm -n 'not __fish_npm_needs_option' -a "(__fish_complete_npm)"
 
 # list available npm scripts and their parial content
 function __fish_npm_run
-  command npm run | command grep -v '^[^ ]' | command grep -v '^$' | command sed "s/^ *//" | while read -l name
+  command npm run | string match -r -v '^[^ ]|^$' | string trim | while read -l name
     set -l trim 20
     read -l value
     echo "$value" | cut -c1-$trim | read -l value

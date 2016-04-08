@@ -43,8 +43,7 @@ struct resource_t
        The implicit multiplier used when setting getting values
     */
     int multiplier;
-}
-;
+};
 
 /**
    Array of resource_t structs, describing all known resource types.

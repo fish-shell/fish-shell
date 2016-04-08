@@ -85,19 +85,13 @@ The following special input functions are available:
 
 - `delete-char`, delete one character to the right of the cursor
 
-- `delete-line`, delete the entire line
-
 - `downcase-word`, make the current word lowercase
-
-- `dump-functions`, print a list of all key-bindings
 
 - `end-of-history`, move to the end of the history
 
 - `end-of-line`, move to the end of the line
 
 - `end-selection`, end selecting text
-
-- `explain`, print a description of possible problems with the current command
 
 - `forward-bigword`, move one whitespace-delimited word to the right
 

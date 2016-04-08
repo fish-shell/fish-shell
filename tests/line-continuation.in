@@ -7,19 +7,18 @@ tin echo builtin echo
 true; an\
 d echo true
 
-i\
+\i\
 f\
  true
 	echo if true
 \
-en\
+\145n\
 d\
 ;
 
-"i\
-f\
-" true
-	echo quoted if true
+'if'\
+ true
+	echo if true
 "\
 en\
 d\

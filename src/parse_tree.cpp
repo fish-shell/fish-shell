@@ -1254,19 +1254,6 @@ static parse_keyword_t keyword_with_name(const wchar_t *name)
     return result;
 }
 
-static wcstring strip_line_continuation(const wcstring text)
-{
-    wcstring result = text;
-    const wcstring pattern = L"\\\n";
-    size_t pos = result.find(pattern);
-    while (pos != wcstring::npos)
-    {
-        result.erase(pos, pattern.length());
-        pos = result.find(pattern, pos);
-    }
-    return result;
-}
-
 /* Given a token, returns the keyword it matches, or parse_keyword_none. */
 static parse_keyword_t keyword_for_token(token_type tok, const wcstring &token)
 {
@@ -1279,9 +1266,8 @@ static parse_keyword_t keyword_for_token(token_type tok, const wcstring &token)
     /* If tok_txt is clean (which most are), we can compare it directly. Otherwise we have to expand it. We only expand quotes, and we don't want to do expensive expansions like tilde expansions. So we do our own "cleanliness" check; if we find a character not in our allowed set we know it's not a keyword, and if we never find a quote we don't have to expand! Note that this lowercase set could be shrunk to be just the characters that are in keywords. */
     parse_keyword_t result = parse_keyword_none;
     bool needs_expand = false, all_chars_valid = true;
-    const wcstring tmp = strip_line_continuation(token);
-    const wchar_t *tok_txt = tmp.c_str();
-    const wchar_t *chars_allowed_in_keywords = L"abcdefghijklmnopqrstuvwxyz'\"";
+    const wchar_t *tok_txt = token.c_str();
+    const wchar_t *chars_allowed_in_keywords = L"abcdefghijklmnopqrstuvwxyz0123456789'\"\\\n";
     for (size_t i=0; tok_txt[i] != L'\0'; i++)
     {
         wchar_t c = tok_txt[i];
@@ -1291,7 +1277,7 @@ static parse_keyword_t keyword_for_token(token_type tok, const wcstring &token)
             break;
         }
         // If we encounter a quote, we need expansion
-        needs_expand = needs_expand || c == L'"' || c == L'\'';
+        needs_expand = needs_expand || c == L'"' || c == L'\'' || c == L'\\';
     }
     
     if (all_chars_valid)

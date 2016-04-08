@@ -1818,8 +1818,9 @@ static expand_error_t expand_stage_wildcards(const wcstring &input, std::vector<
                In either case, we ignore the path if we start with ./ or /.
                Also ignore it if we are doing command completion and we contain a slash, per IEEE 1003.1, chapter 8 under PATH
              */
-            if (string_prefixes_string(L"./", path_to_expand) ||
-                string_prefixes_string(L"/", path_to_expand) ||
+            if (string_prefixes_string(L"/", path_to_expand) ||
+                string_prefixes_string(L"./", path_to_expand) ||
+                string_prefixes_string(L"../", path_to_expand) ||
                 (for_command && path_to_expand.find(L'/') != wcstring::npos))
             {
                 effective_working_dirs.push_back(working_dir);

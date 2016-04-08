@@ -286,8 +286,8 @@ function __fish_git_prompt_show_upstream --description "Helper function for __fi
 		set -l os
 		set -l commits (command git rev-list --left-right $upstream...HEAD ^/dev/null; set os $status)
 		if test $os -eq 0
-			set -l behind (count (for arg in $commits; echo $arg; end | grep '^<'))
-			set -l ahead (count (for arg in $commits; echo $arg; end | grep -v '^<'))
+			set -l behind (count (for arg in $commits; echo $arg; end | string match -r '^<'))
+			set -l ahead (count (for arg in $commits; echo $arg; end | string match -r -v '^<'))
 			set count "$behind	$ahead"
 		else
 			set count

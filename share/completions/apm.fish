@@ -61,7 +61,7 @@ end
 
 # Lists all apm config items
 function __fish_apm_config_items
-    apm config list | grep -v '^;\|^$' | tr "\ =\ " "\t"
+    apm config list | string match -r -v "^\s*;|^\s*\$" | string replace "\w*=\w*" \t
 end
 
 # Lists all installed atom packages
@@ -69,7 +69,7 @@ function __fish_apm_list_packages
     apm list -b
 end
 
-if apm -h ^| grep -q "Atom Package Manager"
+if apm -h ^| string match -q "Atom Package Manager*"
     # Completions for Atom Package Manager
 
     ##################

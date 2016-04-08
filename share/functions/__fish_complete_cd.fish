@@ -1,7 +1,7 @@
 function __fish_complete_cd -d "Completions for the cd command"
 	set -l token (commandline -ct)
-	# Absolute path - no descriptions and no CDPATH
-	if string match -q '/*' -- $token
+	# Absolute path or explicitly from the current directory - no descriptions and no CDPATH
+	if string match -qr '^\.?\.?/.*' -- $token
 		for d in $token*/
 			# Check if it's accessible - the glob only matches directories
 			[ -x $d ]; and printf "%s\n" $d

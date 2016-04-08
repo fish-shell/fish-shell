@@ -1,3 +1,18 @@
+dog
+diz
+exit 0
+exit 0
+dog
+diz
+exit 0
+exit 0
+exit 1
+exit 1
+y
+exit 0
+exit 1
+exit 0
+exit 1
 12
 ab
 bc
@@ -45,3 +60,5 @@ aabb
 invalid expression error
 invalid argument error
 missing argument returns 0
+no regexp invert match
+no glob invert match

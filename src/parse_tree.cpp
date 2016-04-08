@@ -1254,6 +1254,12 @@ static parse_keyword_t keyword_with_name(const wchar_t *name)
     return result;
 }
 
+static bool is_keyword_char(wchar_t c)
+{
+    return (c >= L'a' && c <= L'z') || (c >= L'A' && c <= L'Z') || (c >= L'0' && c <= L'9')
+            || c == L'\'' || c == L'"' || c == L'\\' || c == '\n';
+}
+
 /* Given a token, returns the keyword it matches, or parse_keyword_none. */
 static parse_keyword_t keyword_for_token(token_type tok, const wcstring &token)
 {
@@ -1267,17 +1273,16 @@ static parse_keyword_t keyword_for_token(token_type tok, const wcstring &token)
     parse_keyword_t result = parse_keyword_none;
     bool needs_expand = false, all_chars_valid = true;
     const wchar_t *tok_txt = token.c_str();
-    const wchar_t *chars_allowed_in_keywords = L"abcdefghijklmnopqrstuvwxyz'\"";
     for (size_t i=0; tok_txt[i] != L'\0'; i++)
     {
         wchar_t c = tok_txt[i];
-        if (! wcschr(chars_allowed_in_keywords, c))
+        if (! is_keyword_char(c))
         {
             all_chars_valid = false;
             break;
         }
         // If we encounter a quote, we need expansion
-        needs_expand = needs_expand || c == L'"' || c == L'\'';
+        needs_expand = needs_expand || c == L'"' || c == L'\'' || c == L'\\';
     }
     
     if (all_chars_valid)

@@ -1267,7 +1267,7 @@ static parse_keyword_t keyword_for_token(token_type tok, const wcstring &token)
     parse_keyword_t result = parse_keyword_none;
     bool needs_expand = false, all_chars_valid = true;
     const wchar_t *tok_txt = token.c_str();
-    const wchar_t *chars_allowed_in_keywords = L"abcdefghijklmnopqrstuvwxyz0123456789'\"\\\n";
+    const wchar_t *chars_allowed_in_keywords = L"abcdefghijklmnopqrstuvwxyz0123456789UX'\"\\\n";
     for (size_t i=0; tok_txt[i] != L'\0'; i++)
     {
         wchar_t c = tok_txt[i];

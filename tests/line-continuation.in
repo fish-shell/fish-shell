@@ -1,0 +1,26 @@
+ech\
+o echo
+
+buil\
+tin echo builtin echo
+
+true; an\
+d echo true
+
+i\
+f\
+ true
+	echo if true
+\
+en\
+d\
+;
+
+"i\
+f\
+" true
+	echo quoted if true
+"\
+en\
+d\
+";

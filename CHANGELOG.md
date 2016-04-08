@@ -1,3 +1,157 @@
+# fish 2.2.0 (released July 12, 2015)
+
+### Significant changes ###
+
+ * Abbreviations: the new `abbr` command allows for interactively-expanded abbreviations, allowing quick access to frequently-used commands (#731).
+ * Vi mode: run `fish_vi_mode` to switch fish into the key bindings and prompt familiar to users of the Vi editor (#65).
+ * New inline and interactive pager, which will be familiar to users of zsh (#291).
+ * Underlying architectural changes: the `fishd` universal variable server has been removed as it was a source of many bugs and security problems. Notably, old fish sessions will not be able to communicate universal variable changes with new fish sessions. For best results, restart all running instances of `fish`.
+ * The web-based configuration tool has been redesigned, featuring a prompt theme chooser and other improvements.
+ * New German, Brazilian Portuguese, and Chinese translations.
+
+### Backward-incompatible changes ###
+
+These are kept to a minimum, but either change undocumented features or are too hard to use in their existing forms. These changes may break existing scripts.
+
+ * `commandline` no longer interprets functions "in reverse", instead behaving as expected (#1567).
+ * The previously-undocumented `CMD_DURATION` variable is now set for all commands and contains the execution time of the last command in milliseconds (#1585). It is no longer exported to other commands (#1896).
+ * `if` / `else` conditional statements now return values consistent with the Single Unix Specification, like other shells (#1443).
+ * A new "top-level" local scope has been added, allowing local variables declared on the commandline to be visible to subsequent commands. (#1908)
+
+### Other notable fixes and improvements ###
+
+ * New documentation design (#1662), which requires a Doxygen version 1.8.7 or newer to build.
+ * Fish now defines a default directory for other packages to provide completions. By default this is `/usr/share/fish/vendor-completions.d`; on systems with `pkgconfig` installed this path is discoverable with `pkg-config --variable completionsdir fish`.
+ * A new parser removes many bugs; all existing syntax should keep working.
+ * New `fish_preexec` and `fish_postexec` events are fired before and after job execution respectively (#1549).
+ * Unmatched wildcards no longer prevent a job from running. Wildcards used interactively will still print an error, but the job will proceed and the wildcard will expand to zero arguments (#1482).
+ * The `.` command is deprecated and the `source` command is preferred (#310).
+ * `bind` supports "bind modes", which allows bindings to be set for a particular named mode, to support the implementation of Vi mode.
+ * A new `export` alias, which behaves like other shells (#1833).
+ * `command` has a new `--search` option to print the name of the disk file that would be executed, like other shells' `command -v` (#1540).
+ * `commandline` has a new `--paging-mode` option to support the new pager.
+ * `complete` has a new `--wraps` option, which allows a command to (recursively) inherit the completions of a wrapped command (#393), and `complete -e` now correctly erases completions (#380).
+ * Completions are now generated from manual pages by default on the first run of fish (#997).
+ * `fish_indent` can now produce colorized (`--ansi`) and HTML (`--html`) output (#1827).
+ * `functions --erase` now prevents autoloaded functions from being reloaded in the current session.
+ * `history` has a new `--merge` option, to incorporate history from other sessions into the current session (#825).
+ * `jobs` returns 1 if there are no active jobs (#1484).
+ * `read` has several new options:
+  * `--array` to break input into an array (#1540)
+  * `--null` to break lines on NUL characters rather than newlines (#1694)
+  * `--nchars` to read a specific number of characters (#1616)
+  * `--right-prompt` to display a right-hand-side prompt during interactive read (#1698).
+ * `type` has a new `-q` option to suppress output (#1540 and, like other shells, `type -a` now prints all matches for a command (#261).
+ * Pressing F1 now shows the manual page for the current command (#1063).
+ * `fish_title` functions have access to the arguments of the currently running argument as `$argv[1]` (#1542).
+ * The OS command-not-found handler is used on Arch Linux (#1925), nixOS (#1852), openSUSE and Fedora (#1280).
+ * `Alt`+`.` searches backwards in the token history, mapping to the same behavior as inserting the last argument of the previous command, like other shells (#89).
+ * The `SHLVL` environment variable is incremented correctly (#1634 & #1693).
+ * Added completions for `adb` (#1165 & #1211), `apt` (#2018), `aura` (#1292), `composer` (#1607), `cygport` (#1841), `dropbox` (#1533), `elixir` (#1167), `fossil`, `heroku` (#1790), `iex` (#1167), `kitchen` (#2000), `nix` (#1167), `node`/`npm` (#1566), `opam` (#1615), `setfacl` (#1752), `tmuxinator` (#1863), and `yast2` (#1739).
+ * Improved completions for `brew` (#1090 & #1810), `bundler` (#1779), `cd` (#1135), `emerge` (#1840),`git` (#1680, #1834 & #1951), `man` (#960), `modprobe` (#1124), `pacman` (#1292), `rpm` (#1236), `rsync` (#1872), `scp` (#1145), `ssh` (#1234), `sshfs` (#1268), `systemctl` (#1462, #1950 & #1972), `tmux` (#1853), `vagrant` (#1748), `yum` (#1269), and `zypper` (#1787).
+
+---
+
+# fish 2.1.2  (released Feb 24, 2015)
+
+fish 2.1.2 contains a workaround for a filesystem bug in Mac OS X Yosemite. #1859
+
+Specifically, after installing fish 2.1.1 and then rebooting, "Verify Disk" in Disk Utility will report "Invalid number of hard links." We don't have any reports of data loss or other adverse consequences. fish 2.1.2 avoids triggering the bug, but does not repair an already affected filesystem. To repair the filesystem, you can boot into Recovery Mode and use Repair Disk from Disk Utility. Linux and versions of OS X prior to Yosemite are believed to be unaffected.
+
+There are no other changes in this release.
+
+---
+
+# fish 2.1.1 (released September 26, 2014)
+
+__Important:__ if you are upgrading, stop all running instances of `fishd` as soon as possible after installing this release; it will be restarted automatically. On most systems, there will be no further action required. Note that some environments (where `XDG_RUNTIME_DIR` is set), such as Fedora 20, will require a restart of all running fish processes before universal variables work as intended.
+
+Distributors are highly encouraged to call `killall fishd`, `pkill fishd` or similar in installation scripts, or to warn their users to do so.
+
+### Security fixes
+ * The fish_config web interface now uses an authentication token to protect requests and only responds to requests from the local machine with this token, preventing a remote code execution attack. (closing CVE-2014-2914). #1438
+ * `psub` and `funced` are no longer vulnerable to attacks which allow local privilege escalation and data tampering (closing CVE-2014-2906 and CVE-2014-3856). #1437
+ * `fishd` uses a secure path for its socket, preventing a local privilege escalation attack (closing CVE-2014-2905). #1436
+ * `__fish_print_packages` is no longer vulnerable to attacks which would allow local privilege escalation and data tampering (closing CVE-2014-3219). #1440
+
+### Other fixes
+ * `fishd` now ignores SIGPIPE, fixing crashes using tools like GNU Parallel and which occurred more often as a result of the other `fishd` changes. #1084 & #1690
+
+---
+
+# fish 2.1.0
+
+Significant Changes
+-------------------
+
+* **Tab completions will fuzzy-match files.** #568
+
+  When tab-completing a file, fish will first attempt prefix matches (`foo` matches `foobar`), then substring matches (`ooba` matches `foobar`), and lastly subsequence matches (`fbr` matches `foobar`). For example, in a directory with files foo1.txt, foo2.txt, foo3.txt…, you can type only the numeric part and hit tab to fill in the rest.
+
+  This feature is implemented for files and executables. It is not yet implemented for options (like `--foobar`), and not yet implemented across path components (like `/u/l/b` to match `/usr/local/bin`).
+
+* **Redirections now work better across pipelines.** #110, #877
+
+  In particular, you can pipe stderr and stdout together, for example, with `cmd ^&1 | tee log.txt`, or the more familiar `cmd 2>&1 | tee log.txt`.
+
+* **A single `%` now expands to the last job backgrounded.** #1008
+
+  Previously, a single `%` would pid-expand to either all backgrounded jobs, or all jobs owned by your user. Now it expands to the last job backgrounded. If no job is in the background, it will fail to expand. In particular, `fg %` can be used to put the most recent background job in the foreground.
+
+Other Notable Fixes
+-------------------
+
+* alt-U and alt+C now uppercase and capitalize words, respectively. #995
+
+* VTE based terminals should now know the working directory. #906
+
+* The autotools build now works on Mavericks. #968
+
+* The end-of-line binding (ctrl+E) now accepts autosuggestions. #932
+
+* Directories in `/etc/paths` (used on OS X) are now prepended instead of appended, similar to other shells. #927
+
+* Option-right-arrow (used for partial autosuggestion completion) now works on iTerm2. #920
+
+* Tab completions now work properly within nested subcommands. #913
+
+* `printf` supports \e, the escape character. #910
+
+* `fish_config history` no longer shows duplicate items. #900
+
+* `$fish_user_paths` is now prepended to $PATH instead of appended. #888
+
+* Jobs complete when all processes complete. #876
+
+
+  For example, in previous versions of fish, `sleep 10 | echo Done` returns control immediately, because echo does not read from stdin. Now it does not complete until sleep exits (presumably after 10 seconds).
+
+* Better error reporting for square brackets. #875
+
+* fish no longer tries to add `/bin` to `$PATH` unless PATH is totally empty. #852
+
+* History token substitution (alt-up) now works correctly inside subshells. #833
+
+* Flow control is now disabled, freeing up ctrl-S and ctrl-Q for other uses. #814
+
+* sh-style variable setting like `foo=bar` now produces better error messages. #809
+
+* Commands with wildcards no longer produce autosuggestions. #785
+
+* funced no longer freaks out when supplied with no arguments. #780
+
+* fish.app now works correctly in a directory containing spaces. #774
+
+* Tab completion cycling no longer occasionally fails to repaint. #765
+
+* Comments now work in eval'd strings. #684
+
+* History search (up-arrow) now shows the item matching the autosuggestion, if that autosuggestion was truncated. #650
+
+* Ctrl-T now transposes characters, as in other shells. #128
+
+---
+
 # fish 2.0.0
 
 Significant Changes

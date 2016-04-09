@@ -58,8 +58,7 @@ struct winsize
        Number of columns
      */
     unsigned short ws_col;
-}
-;
+};
 
 #endif
 

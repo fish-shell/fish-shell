@@ -28,7 +28,7 @@ int fish_wcswidth(const wchar_t *str, size_t n);
    be the currently compiled function. If we aren't using C99 or
    later, older versions of GCC had __FUNCTION__.
 */
-#if __STDC_VERSION__ < 199901L
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ < 199901L
 # if __GNUC__ >= 2
 #  define __func__ __FUNCTION__
 # else
@@ -71,8 +71,7 @@ struct winsize
        Number of columns
      */
     unsigned short ws_col;
-}
-;
+};
 
 #endif
 

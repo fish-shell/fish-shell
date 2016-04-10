@@ -1078,9 +1078,11 @@ bool parse_ll_t::top_node_handle_terminal_types(parse_token_t token)
 
         if (matched)
         {
-            // Success. Tell the node that it matched this token, and what its source range is
-            // In the parse phase, we only set source ranges for terminal types. We propagate ranges to parent nodes afterwards.
+            // Success. Tell the node that it matched this token, and what its source range is in
+            // the parse phase, we only set source ranges for terminal types. We propagate ranges to
+            // parent nodes afterwards.
             parse_node_t &node = node_for_top_symbol();
+            node.keyword = token.keyword;
             node.source_start = token.source_start;
             node.source_length = token.source_length;
         }

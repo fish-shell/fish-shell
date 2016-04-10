@@ -102,10 +102,10 @@ static void dump_node(indent_t node_indent, const parse_node_t &node, const wcst
         nextc_str[1] = L'c';
         nextc_str[2] = nextc + '@';
     }
-    fwprintf(stderr, L"{off %4d, len %4d, indent %2u, %ls} [%ls|%ls|%ls]\n",
+    fwprintf(stderr, L"{off %4d, len %4d, indent %2u, kw %ls, %ls} [%ls|%ls|%ls]\n",
             node.source_start, node.source_length, node_indent,
-            parser_token_types[node.type], prevc_str, source.substr(node.source_start,
-            node.source_length).c_str(), nextc_str);
+            keyword_description(node.keyword).c_str(), parser_token_types[node.type],
+            prevc_str, source.substr(node.source_start, node.source_length).c_str(), nextc_str);
 }
 
 static void prettify_node_recursive(const wcstring &source, const parse_node_tree_t &tree,
@@ -153,7 +153,13 @@ static void prettify_node_recursive(const wcstring &source, const parse_node_tre
     else if ((node_type >= FIRST_PARSE_TOKEN_TYPE && node_type <= LAST_PARSE_TOKEN_TYPE) ||
             node_type == parse_special_type_parse_error)
     {
-        if (node.has_source())
+        if (node.keyword != parse_keyword_none)
+        {
+            append_whitespace(node_indent, do_indent, *has_new_line, out_result);
+            out_result->append(keyword_description(node.keyword));
+            *has_new_line = false;
+        }
+        else if (node.has_source())
         {
             // Some type representing a particular token.
             if (prev_node_type != parse_token_type_redirection)

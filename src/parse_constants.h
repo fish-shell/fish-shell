@@ -83,7 +83,7 @@ enum parse_token_type_t
     LAST_PARSE_TOKEN_TYPE = parse_token_type_end
 } __packed;
 // Array of strings corresponding to the enums above instantiated in parse_tree.cpp.
-extern wcstring parser_token_types[];
+extern const wchar_t * const parser_token_types[];
 
 /* These must be maintained in sorted order (except for none, which isn't a keyword). This enables us to do binary search. */
 enum parse_keyword_t

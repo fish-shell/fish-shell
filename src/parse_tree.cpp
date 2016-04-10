@@ -17,7 +17,7 @@
 #include <algorithm>
 
 // This array provides strings for each symbol in enum parse_token_type_t in parse_constants.h.
-wcstring parser_token_types[] = {
+const wchar_t * const parser_token_types[] = {
     L"token_type_invalid",
     L"symbol_job_list",
     L"symbol_job",

@@ -104,7 +104,7 @@ static void dump_node(indent_t node_indent, const parse_node_t &node, const wcst
     }
     fwprintf(stderr, L"{off %4d, len %4d, indent %2u, kw %ls, %ls} [%ls|%ls|%ls]\n",
             node.source_start, node.source_length, node_indent,
-            keyword_description(node.keyword).c_str(), parser_token_types[node.type],
+            keyword_description(node.keyword), token_type_description(node.type),
             prevc_str, source.substr(node.source_start, node.source_length).c_str(), nextc_str);
 }
 

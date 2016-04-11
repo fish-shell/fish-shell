@@ -17,7 +17,7 @@
 #include <algorithm>
 
 // This array provides strings for each symbol in enum parse_token_type_t in parse_constants.h.
-const wchar_t * const parser_token_types[] = {
+const wchar_t * const token_type_map[] = {
     L"token_type_invalid",
     L"symbol_job_list",
     L"symbol_job",
@@ -165,101 +165,16 @@ void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt)
     }
 }
 
-/** Returns a string description of the given token type */
-wcstring token_type_description(parse_token_type_t type)
+// Returns a string description for the given token type.
+const wchar_t *token_type_description(parse_token_type_t type)
 {
-    switch (type)
-    {
-        case token_type_invalid:
-            return L"invalid";
+    if (type >= 0 && type <= LAST_TOKEN_TYPE) return token_type_map[type];
 
-        case symbol_job_list:
-            return L"job_list";
-        case symbol_job:
-            return L"job";
-        case symbol_job_continuation:
-            return L"job_continuation";
-
-        case symbol_statement:
-            return L"statement";
-        case symbol_block_statement:
-            return L"block_statement";
-        case symbol_block_header:
-            return L"block_header";
-        case symbol_for_header:
-            return L"for_header";
-        case symbol_while_header:
-            return L"while_header";
-        case symbol_begin_header:
-            return L"begin_header";
-        case symbol_function_header:
-            return L"function_header";
-
-        case symbol_if_statement:
-            return L"if_statement";
-        case symbol_if_clause:
-            return L"if_clause";
-        case symbol_else_clause:
-            return L"else_clause";
-        case symbol_else_continuation:
-            return L"else_continuation";
-
-        case symbol_switch_statement:
-            return L"switch_statement";
-        case symbol_case_item_list:
-            return L"case_item_list";
-        case symbol_case_item:
-            return L"case_item";
-
-        case symbol_andor_job_list:
-            return L"andor_job_list";
-        case symbol_argument_list:
-            return L"argument_list";
-        case symbol_freestanding_argument_list:
-            return L"freestanding_argument_list";
-
-        case symbol_boolean_statement:
-            return L"boolean_statement";
-        case symbol_decorated_statement:
-            return L"decorated_statement";
-        case symbol_plain_statement:
-            return L"plain_statement";
-        case symbol_arguments_or_redirections_list:
-            return L"arguments_or_redirections_list";
-        case symbol_argument_or_redirection:
-            return L"argument_or_redirection";
-        case symbol_argument:
-            return L"symbol_argument";
-        case symbol_redirection:
-            return L"symbol_redirection";
-        case symbol_optional_background:
-            return L"optional_background";
-        case symbol_end_command:
-            return L"symbol_end_command";
-
-
-        case parse_token_type_string:
-            return L"token_string";
-        case parse_token_type_pipe:
-            return L"token_pipe";
-        case parse_token_type_redirection:
-            return L"token_redirection";
-        case parse_token_type_background:
-            return L"token_background";
-        case parse_token_type_end:
-            return L"token_end";
-        case parse_token_type_terminate:
-            return L"token_terminate";
-
-        case parse_special_type_parse_error:
-            return L"parse_error";
-        case parse_special_type_tokenizer_error:
-            return L"tokenizer_error";
-        case parse_special_type_comment:
-            return L"comment";
-
-    }
-    return format_string(L"Unknown token type %ld", static_cast<long>(type));
+    // This leaks memory but it should never be run unless we have a bug elsewhere in the code.
+    const wcstring d = format_string(L"unknown_token_type_%ld", static_cast<long>(type));
+    wchar_t *d2 = new wchar_t[d.size() + 1];
+    // cppcheck-suppress memleak
+    return std::wcscpy(d2, d.c_str());
 }
 
 #define LONGIFY(x) L ## x
@@ -291,23 +206,22 @@ keyword_map[] =
     KEYWORD_MAP(while)
 };
 
-wcstring keyword_description(parse_keyword_t k)
+const wchar_t *keyword_description(parse_keyword_t type)
 {
-    if (k >= 0 && k <= LAST_KEYWORD)
-    {
-        return keyword_map[k].name;
-    }
-    else
-    {
-        return format_string(L"Unknown keyword type %ld", static_cast<long>(k));
-    }
+    if (type >= 0 && type <= LAST_KEYWORD) return keyword_map[type].name;
+
+    // This leaks memory but it should never be run unless we have a bug elsewhere in the code.
+    const wcstring d = format_string(L"unknown_keyword_%ld", static_cast<long>(type));
+    wchar_t *d2 = new wchar_t[d.size() + 1];
+    // cppcheck-suppress memleak
+    return std::wcscpy(d2, d.c_str());
 }
 
 static wcstring token_type_user_presentable_description(parse_token_type_t type, parse_keyword_t keyword = parse_keyword_none)
 {
     if (keyword != parse_keyword_none)
     {
-        return format_string(L"keyword '%ls'", keyword_description(keyword).c_str());
+        return format_string(L"keyword '%ls'", keyword_description(keyword));
     }
 
     switch (type)
@@ -338,7 +252,7 @@ static wcstring token_type_user_presentable_description(parse_token_type_t type,
             return L"end of the input";
 
         default:
-            return format_string(L"a %ls", token_type_description(type).c_str());
+            return format_string(L"a %ls", token_type_description(type));
     }
 }
 
@@ -383,7 +297,7 @@ wcstring parse_token_t::describe() const
     wcstring result = token_type_description(type);
     if (keyword != parse_keyword_none)
     {
-        append_format(result, L" <%ls>", keyword_description(keyword).c_str());
+        append_format(result, L" <%ls>", keyword_description(keyword));
     }
     return result;
 }
@@ -542,7 +456,7 @@ struct parse_stack_element_t
         wcstring result = token_type_description(type);
         if (keyword != parse_keyword_none)
         {
-            append_format(result, L" <%ls>", keyword_description(keyword).c_str());
+            append_format(result, L" <%ls>", keyword_description(keyword));
         }
         return result;
     }
@@ -611,7 +525,8 @@ class parse_ll_t
                 {
                     parse_token_type_t type = production_element_type(elem);
                     parse_keyword_t keyword = production_element_keyword(elem);
-                    fprintf(stderr, "\t%ls <%ls>\n", token_type_description(type).c_str(), keyword_description(keyword).c_str());
+                    fprintf(stderr, "\t%ls <%ls>\n", token_type_description(type),
+                            keyword_description(keyword));
                     count++;
                 }
             }

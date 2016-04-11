@@ -409,7 +409,7 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
     const bool log_it = false;
     if (log_it)
     {
-        fprintf(stderr, "Resolving production for %ls with input token <%ls>\n", token_type_description(node_type).c_str(), input1.describe().c_str());
+        fprintf(stderr, "Resolving production for %ls with input token <%ls>\n", token_type_description(node_type), input1.describe().c_str());
     }
 
     /* Fetch the function to resolve the list of productions */
@@ -452,14 +452,14 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
         case parse_token_type_background:
         case parse_token_type_end:
         case parse_token_type_terminate:
-            fprintf(stderr, "Terminal token type %ls passed to %s\n", token_type_description(node_type).c_str(), __FUNCTION__);
+            fprintf(stderr, "Terminal token type %ls passed to %s\n", token_type_description(node_type), __FUNCTION__);
             PARSER_DIE();
             break;
 
         case parse_special_type_parse_error:
         case parse_special_type_tokenizer_error:
         case parse_special_type_comment:
-            fprintf(stderr, "Special type %ls passed to %s\n", token_type_description(node_type).c_str(), __FUNCTION__);
+            fprintf(stderr, "Special type %ls passed to %s\n", token_type_description(node_type), __FUNCTION__);
             PARSER_DIE();
             break;
 
@@ -477,7 +477,7 @@ const production_t *parse_productions::production_for_token(parse_token_type_t n
     {
         if (log_it)
         {
-            fprintf(stderr, "Node type '%ls' has no production for input '%ls' (in %s)\n", token_type_description(node_type).c_str(), input1.describe().c_str(), __FUNCTION__);
+            fprintf(stderr, "Node type '%ls' has no production for input '%ls' (in %s)\n", token_type_description(node_type), input1.describe().c_str(), __FUNCTION__);
         }
     }
 

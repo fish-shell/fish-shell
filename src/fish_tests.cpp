@@ -3628,11 +3628,11 @@ static void test_new_parser_ll2(void)
         const parse_node_tree_t::parse_node_list_t node_list = tree.find_nodes(tree.at(0), tests2[i].type);
         if (node_list.size() == 0)
         {
-            err(L"Failed to find node of type '%ls'", token_type_description(tests2[i].type).c_str());
+            err(L"Failed to find node of type '%ls'", token_type_description(tests2[i].type));
         }
         else if (node_list.size() > 1)
         {
-            err(L"Found too many nodes of type '%ls'", token_type_description(tests2[i].type).c_str());
+            err(L"Found too many nodes of type '%ls'", token_type_description(tests2[i].type));
         }
     }
 }

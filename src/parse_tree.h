@@ -63,8 +63,8 @@ typedef unsigned int parse_tree_flags_t;
 
 wcstring parse_dump_tree(const parse_node_tree_t &tree, const wcstring &src);
 
-wcstring token_type_description(parse_token_type_t type);
-wcstring keyword_description(parse_keyword_t type);
+const wchar_t *token_type_description(parse_token_type_t type);
+const wchar_t *keyword_description(parse_keyword_t type);
 
 /* Node flags */
 enum

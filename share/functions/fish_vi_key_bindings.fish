@@ -19,6 +19,8 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     fish_default_key_bindings -M insert
     fish_default_key_bindings -M default
 
+    # Remove the default self-insert bindings in default mode
+    bind -e "" -M default
     # Add way to kill current command line while in insert mode.
     bind -M insert \cc 'commandline ""'
     # Add a way to switch from insert to normal (command) mode.

@@ -92,39 +92,34 @@ extern "C" {
     int _NSGetExecutablePath(char* buf, uint32_t* bufsize);
 }
 
-/* Return the path to the current executable. This needs to be realpath'd. */
+// Return the path to the current executable. This needs to be realpath'd.
 static std::string get_executable_path(const char *argv0)
 {
-    char buff[PATH_MAX];
+    char buff[PATH_MAX + 1];
+
 #if __APPLE__
-    {
-        /* Returns 0 on success, -1 if the buffer is too small */
-        uint32_t buffSize = sizeof buff;
-        if (0 == _NSGetExecutablePath(buff, &buffSize))
-            return std::string(buff);
-
-        /* Loop until we're big enough */
-        char *mbuff = (char *)malloc(buffSize);
-        while (0 > _NSGetExecutablePath(mbuff, &buffSize))
-            mbuff = (char *)realloc(mbuff, buffSize);
-
-        /* Return the string */
-        std::string result = mbuff;
-        free(mbuff);
-        return result;
-    }
-#endif
-    {
-        /* On other Unixes, try /proc directory. This might be worth breaking out into macros. */
-        if (0 < readlink("/proc/self/exe", buff, sizeof buff) || // Linux
-                0 < readlink("/proc/curproc/file", buff, sizeof buff) || // BSD
-                0 < readlink("/proc/self/path/a.out", buff, sizeof buff)) // Solaris
-        {
-            return std::string(buff);
+    // On OS X use it's proprietary API to get the path to the executable.
+    uint32_t buffSize = sizeof buff;
+    if (_NSGetExecutablePath(buff, &buffSize) == 0) return std::string(buff);
+#else
+    // On non-OS X UNIXes, try /proc directory.
+    ssize_t len;
+    len = readlink("/proc/self/exe", buff, sizeof buff);  // Linux
+    if (len == -1) {
+        len = readlink("/proc/curproc/file", buff, sizeof buff);  // BSD
+        if (len == -1) {
+            len = readlink("/proc/self/path/a.out", buff, sizeof buff);  // Solaris
         }
     }
+    if (len > 0) {
+        buff[len] = '\0';
+        return std::string(buff);
+    }
+#endif
 
-    /* Just return argv0, which probably won't work (i.e. it's not an absolute path or a path relative to the working directory, but instead something the caller found via $PATH). We'll eventually fall back to the compile time paths. */
+    // Just return argv0, which probably won't work (i.e. it's not an absolute path or a path
+    // relative to the working directory, but instead something the caller found via $PATH). We'll
+    // eventually fall back to the compile time paths.
     return std::string(argv0 ? argv0 : "");
 }
 

@@ -34,13 +34,8 @@ if test $all = yes
 else
     # We haven't been asked to lint all the source. If there are uncommitted
     # changes lint those, else lint the files in the most recent commit.
-    set pending (git status --porcelain --short --untracked-files=all | sed -e 's/^ *//')
-    if set -q pending[1]
-        # There are pending changes so lint those files.
-        for arg in $pending
-            set files $files (string split -m 1 ' ' $arg)[2]
-        end
-    else
+    set files (git status --porcelain --short --untracked-files=all | sed -e 's/^ *[^ ]* *//')
+    if not set -q files[1]
         # No pending changes so lint the files in the most recent commit.
         set files (git show --word-diff=porcelain --name-only --pretty=oneline head)[2..-1]
     end
@@ -56,10 +51,9 @@ if set -q c_files[1]
         echo ========================================
         echo Running cppcheck
         echo ========================================
-        # The stderr to stdout redirection is because cppcheck, incorrectly
-        # IMHO, writes its diagnostic messages to stderr. Anyone running
-        # this who wants to capture its output will expect those messages to be
-        # written to stdout.
+        # The stderr to stdout redirection is because cppcheck, incorrectly IMHO, writes its
+        # diagnostic messages to stderr. Anyone running this who wants to capture its output will
+        # expect those messages to be written to stdout.
         cppcheck -q --verbose --std=posix --std=c11 --language=c++ --template "[{file}:{line}]: {severity} ({id}): {message}" --suppress=missingIncludeSystem --inline-suppr --enable=$cppchecks $cppcheck_args $c_files 2>& 1
     end
 
@@ -68,10 +62,9 @@ if set -q c_files[1]
         echo ========================================
         echo Running oclint
         echo ========================================
-        # The stderr to stdout redirection is because oclint, incorrectly
-        # writes its final summary counts of the errors detected to stderr.
-        # Anyone running this who wants to capture its output will expect those
-        # messages to be written to stdout.
+        # The stderr to stdout redirection is because oclint, incorrectly writes its final summary
+        # counts of the errors detected to stderr. Anyone running this who wants to capture its
+        # output will expect those messages to be written to stdout.
         if test (uname -s) = "Darwin"
             if not test -f compile_commands.json
                 xcodebuild > xcodebuild.log

@@ -6,6 +6,7 @@
 # This runs C++ files and fish scripts (*.fish) through their respective code
 # formatting programs.
 #
+set git_clang_format no
 set c_files
 set f_files
 set all no
@@ -21,17 +22,21 @@ if set -q argv[1]
 end
 
 if test $all = yes
+    set files (git status --porcelain --short --untracked-files=all | sed -e 's/^ *[^ ]* *//')
+    if set -q files[1]
+        echo
+        echo You have uncommited changes. Cowardly refusing to restyle the entire code base.
+        echo
+        exit 1
+    end
     set c_files src/*.h src/*.cpp
     set f_files ***.fish
 else
-    # We haven't been asked to reformat all the source. If there are uncommitted
-    # changes reformat those, else reformat the files in the most recent commit.
-    set pending (git status --porcelain --short --untracked-files=all | sed -e 's/^ *//')
-    if count $pending > /dev/null
-        # There are pending changes so lint those files.
-        for arg in $pending
-            set files $files (string split -m 1 ' ' $arg)[2]
-        end
+    # We haven't been asked to reformat all the source. If there are uncommitted changes reformat
+    # those using `git clang-format`. Else reformat the files in the most recent commit.
+    set files (git status --porcelain --short --untracked-files=all | sed -e 's/^ *[^ ]* *//')
+    if set -q files[1]
+        set git_clang_format yes
     else
         # No pending changes so lint the files in the most recent commit.
         set files (git show --name-only --pretty=oneline head | tail --lines=+2)
@@ -45,18 +50,32 @@ end
 
 # Run the C++ reformatter if we have any C++ files.
 if set -q c_files[1]
-    if type -q clang-format
+    if test $git_clang_format = yes
+        if type -q git-clang-format
+            echo
+            echo ========================================
+            echo Running git-clang-format
+            echo ========================================
+            git add $c_files
+            git-clang-format
+        else
+            echo
+            echo 'WARNING: Cannot find git-clang-format command'
+            echo
+        end
+    else if type -q clang-format
         echo
         echo ========================================
         echo Running clang-format
         echo ========================================
         for file in $c_files
-            clang-format $file > $file.new
+            clang-format $file >$file.new
             if cmp --quiet $file $file.new
                 echo $file was correctly formatted
                 rm $file.new
             else
                 echo $file was NOT correctly formatted
+                chmod --reference=$file $file.new
                 mv $file.new $file
             end
         end
@@ -78,12 +97,13 @@ if set -q f_files[1]
     echo Running fish_indent
     echo ========================================
     for file in $f_files
-        fish_indent < $file > $file.new
+        fish_indent <$file >$file.new
         if cmp --quiet $file $file.new
             echo $file was correctly formatted
             rm $file.new
         else
             echo $file was NOT correctly formatted
+            chmod --reference=$file $file.new
             mv $file.new $file
         end
     end

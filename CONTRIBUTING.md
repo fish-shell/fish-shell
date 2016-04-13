@@ -40,13 +40,17 @@ The following sections discuss the specific rules for the style that should be u
 make style
 ```
 
-before commiting your change. If you've already committed your changes that's okay since it will then check the files in the most recent commit. This can be useful after you've merged someone elses change and want to check that it's style is acceptable.
+before commiting your change. That will run `git-clang-format` to rewrite just the lines you're modifying.
+
+If you've already committed your changes that's okay since it will then check the files in the most recent commit. This can be useful after you've merged someone elses change and want to check that it's style is acceptable. However, in that case it will run `clang-format` to ensure the entire file, not just the lines modified by the commit, conform to the style.
 
 If you want to check the style of the entire code base run
 
 ```
 make style-all
 ```
+
+That command will refuse to restyle any files if you have uncommitted changes.
 
 ### Suppressing Reformatting of the Code
 

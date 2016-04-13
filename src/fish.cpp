@@ -62,9 +62,9 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include "input_common.h"
 #include "wildcard.h"
 
-/* PATH_MAX may not exist */
+// PATH_MAX may not exist.
 #ifndef PATH_MAX
-#define PATH_MAX 1024
+#define PATH_MAX 4096
 #endif
 
 /* If we are doing profiling, the filename to output to */
@@ -95,7 +95,7 @@ extern "C" {
 // Return the path to the current executable. This needs to be realpath'd.
 static std::string get_executable_path(const char *argv0)
 {
-    char buff[PATH_MAX + 1];
+    char buff[PATH_MAX];
 
 #if __APPLE__
     // On OS X use it's proprietary API to get the path to the executable.
@@ -104,11 +104,11 @@ static std::string get_executable_path(const char *argv0)
 #else
     // On non-OS X UNIXes, try /proc directory.
     ssize_t len;
-    len = readlink("/proc/self/exe", buff, sizeof buff);  // Linux
+    len = readlink("/proc/self/exe", buff, sizeof buff - 1);  // Linux
     if (len == -1) {
-        len = readlink("/proc/curproc/file", buff, sizeof buff);  // BSD
+        len = readlink("/proc/curproc/file", buff, sizeof buff - 1);  // BSD
         if (len == -1) {
-            len = readlink("/proc/self/path/a.out", buff, sizeof buff);  // Solaris
+            len = readlink("/proc/self/path/a.out", buff, sizeof buff - 1);  // Solaris
         }
     }
     if (len > 0) {

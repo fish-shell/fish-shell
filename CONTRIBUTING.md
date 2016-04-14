@@ -70,7 +70,33 @@ make style-all
 
 That command will refuse to restyle any files if you have uncommitted changes.
 
-### Suppressing Reformatting of the Code
+### Configuring Your Editor for Fish C++ Code
+
+#### ViM
+
+As of ViM 7.4 it does not recognize triple-slash comments as used by Doxygen and the OS X Xcode IDE to flag comments that explain the following C symbol. This means the `gq` key binding to reformat such comments doesn't behave as expected. You can fix that by adding the following to your vimrc:
+
+```
+autocmd Filetype c,cpp setlocal comments^=:///
+```
+
+If you use ViM I recommend the [vim-clang-format plugin](https://github.com/rhysd/vim-clang-format) by [@rhysd](https://github.com/rhysd).
+
+You can also get ViM to provide reasonably correct behavior by installing
+
+http://www.vim.org/scripts/script.php?script_id=2636
+
+#### Emacs
+
+If you use Emacs: TBD
+
+### Configuring Your Editor for Fish Scripts
+
+If you use ViM: TBD
+
+If you use Emacs: TBD
+
+### Suppressing Reformatting of C++ Code
 
 If you have a good reason for doing so you can tell `clang-format` to not reformat a block of code by enclosing it in comments like this:
 
@@ -82,11 +108,11 @@ code to ignore
 
 ## Fish Script Style Guide
 
-Fish scripts such as those in the *share/functions* and *tests* directories should be formatted using the `fish_indent` command.
+1. Fish scripts such as those in the *share/functions* and *tests* directories should be formatted using the `fish_indent` command.
 
-Function names should be all lowercase with undescores separating words. Private functions should begin with an underscore. The first word should be `fish` if the function is unique to fish.
+1. Function names should be all lowercase with undescores separating words. Private functions should begin with an underscore. The first word should be `fish` if the function is unique to fish.
 
-The first word of global variable names should generally be `fish` for public vars or `_fish` for private vars to minimize the possibility of name clashes with user defined vars.
+1. The first word of global variable names should generally be `fish` for public vars or `_fish` for private vars to minimize the possibility of name clashes with user defined vars.
 
 ## C++ Style Guide
 

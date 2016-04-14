@@ -2988,6 +2988,33 @@ int builtin_false(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     return STATUS_BUILTIN_ERROR;
 }
 
+/// An implementation of the external realpath command that doesn't support any options. It's meant
+/// to be used only by scripts which need to be portable. In general scripts shouldn't invoke this
+/// directly. They should just use `realpath` which will fallback to this builtin if an external
+/// command cannot be found. This behaves like the external `realpath --canonicalize-existing`;
+/// that is, it requires all path components, including the final, to exist.
+int builtin_fish_realpath(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    int argc = builtin_count_args(argv);
+
+    if (argc != 2) {
+        streams.err.append_format(_(L"%ls: Expected one argument, got %d\n"), argv[0], argc - 1);
+        return STATUS_BUILTIN_ERROR;
+    }
+
+    wchar_t *real_path = wrealpath(argv[1], NULL);
+    if (real_path) {
+        // Yay! We could resolve the path.
+        streams.out.append(real_path);
+        free((void *)real_path);
+    } else {
+        // The path isn't a simple filename and couldn't be resolved to an absolute path.
+        streams.err.append_format(_(L"%ls: Invalid path: %ls\n"), argv[0], argv[1]);
+        return STATUS_BUILTIN_ERROR;
+    }
+    streams.out.append(L"\n");
+    return STATUS_BUILTIN_OK;
+}
+
 // END OF BUILTIN COMMANDS
 // Below are functions for handling the builtin commands.
 // THESE MUST BE SORTED BY NAME! Completion lookup uses binary search.
@@ -3027,6 +3054,8 @@ static const builtin_data_t builtin_datas[] = {
     {L"exit", &builtin_exit, N_(L"Exit the shell")},
     {L"false", &builtin_false, N_(L"Return an unsuccessful result")},
     {L"fg", &builtin_fg, N_(L"Send job to foreground")},
+    {L"fish_realpath", &builtin_fish_realpath,
+     N_(L"Convert path to absolute path without symlinks")},
     {L"for", &builtin_generic, N_(L"Perform a set of commands multiple times")},
     {L"function", &builtin_generic, N_(L"Define a new function")},
     {L"functions", &builtin_functions, N_(L"List or remove functions")},

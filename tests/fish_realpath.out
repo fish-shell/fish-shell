@@ -1,0 +1,5 @@
+first invalid path handled okay
+/
+fish
+fish/real_file
+pwd-resolved-to-itself

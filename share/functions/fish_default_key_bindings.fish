@@ -109,7 +109,7 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind $argv \el __fish_list_current_token
 	bind $argv \ew 'set tok (commandline -pt); if test $tok[1]; echo; whatis $tok[1]; commandline -f repaint; end'
 	bind $argv \cl 'clear; commandline -f repaint'
-	bind $argv \cc 'commandline ""'
+	bind $argv \cc __fish_cancel_commandline
 	bind $argv \cu backward-kill-line
 	bind $argv \cw backward-kill-path-component
 	bind $argv \ed 'set -l cmd (commandline); if test -z "$cmd"; echo; dirh; commandline -f repaint; else; commandline -f kill-word; end'

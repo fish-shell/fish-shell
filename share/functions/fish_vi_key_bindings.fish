@@ -22,22 +22,20 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     # Remove the default self-insert bindings in default mode
     bind -e "" -M default
     # Add way to kill current command line while in insert mode.
-    bind -M insert \cc 'commandline ""'
+    bind -M insert \cc __fish_cancel_commandline
     # Add a way to switch from insert to normal (command) mode.
     bind -M insert -m default \e backward-char force-repaint
 
-    #
-    # normal (command) mode
-    #
+    # Default (command) mode
     bind :q exit
     bind \cd exit
-    bind \cc 'commandline ""'
+    bind -m insert \cc __fish_cancel_commandline
     bind h backward-char
     bind l forward-char
     bind \e\[C forward-char
     bind \e\[D backward-char
 
-    # Some linux VTs output these (why?)
+    # Some terminals output these when they're in in keypad mode.
     bind \eOC forward-char
     bind \eOD backward-char
 

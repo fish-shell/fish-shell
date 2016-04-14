@@ -51,7 +51,7 @@ set prompt_counter 1
 proc expect_prompt {args} {
     global prompt_counter
     upvar expect_out expect_out
-    set prompt_pat [list -re "(?:\\r\\n?|^)prompt $prompt_counter>(?:$|\\r)"]
+    set prompt_pat [list -re "(?:\\r\\n?|^)(?:\\\[.\\\] )?prompt $prompt_counter>(?:$|\\r)"]
     if {[llength $args] == 1 && [string match "\n*" $args]} {
         set args [join $args]
     }

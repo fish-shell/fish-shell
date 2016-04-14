@@ -1,6 +1,6 @@
 function fish_vi_key_bindings --description 'vi-like key bindings for fish'
 	if test "$fish_key_bindings" != "fish_vi_key_bindings"
-		set fish_key_bindings fish_vi_key_bindings # This triggers the handler, which calls us again and ensures the user_key_bindings are executed
+		set -g fish_key_bindings fish_vi_key_bindings # This triggers the handler, which calls us again and ensures the user_key_bindings are executed
 		return
 	end
     # The default escape timeout is 300ms. But for users of Vi bindings that can

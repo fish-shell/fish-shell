@@ -2,7 +2,7 @@
 function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fish" -a mode
 	if not set -q mode[1]
 		if test "$fish_key_bindings" != "fish_default_key_bindings"
-			set fish_key_bindings fish_default_key_bindings # This triggers the handler, which calls us again and ensures the user_key_bindings are executed
+			set -g fish_key_bindings fish_default_key_bindings # This triggers the handler, which calls us again and ensures the user_key_bindings are executed
 			return
 		end
 		# Clear earlier bindings, if any

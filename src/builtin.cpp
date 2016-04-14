@@ -3980,72 +3980,97 @@ int builtin_false(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     return STATUS_BUILTIN_ERROR;
 }
 
-/*
-  END OF BUILTIN COMMANDS
-  Below are functions for handling the builtin commands.
-  THESE MUST BE SORTED BY NAME! Completion lookup uses binary search.
-*/
+/// An implementation of the external realpath command that doesn't support any options. It's meant
+/// to be used only by scripts which need to be portable. In general scripts shouldn't invoke this
+/// directly. They should just use `realpath` which will fallback to this builtin if an external
+/// command cannot be found. This behaves like the external `realpath --canonicalize-existing`;
+/// that is, it requires all path components, including the final, to exist.
+int builtin_fish_realpath(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
+    int argc = builtin_count_args(argv);
 
-/**
-   Data about all the builtin commands in fish.
-   Functions that are bound to builtin_generic are handled directly by the parser.
-   NOTE: These must be kept in sorted order!
-*/
-static const builtin_data_t builtin_datas[]=
-{
-    { 		L"[",  &builtin_test, N_(L"Test a condition")   },
+    if (argc != 2) {
+        streams.err.append_format(_(L"%ls: Expected one argument, got %d\n"), argv[0], argc - 1);
+        return STATUS_BUILTIN_ERROR;
+    }
+
+    wchar_t *real_path = wrealpath(argv[1], NULL);
+    if (real_path) {
+        // Yay! We could resolve the path.
+        streams.out.append(real_path);
+        free((void *)real_path);
+    } else {
+        // The path isn't a simple filename and couldn't be resolved to an absolute path.
+        streams.err.append_format(_(L"%ls: Invalid path: %ls\n"), argv[0], argv[1]);
+        return STATUS_BUILTIN_ERROR;
+    }
+    streams.out.append(L"\n");
+    return STATUS_BUILTIN_OK;
+}
+
+// END OF BUILTIN COMMANDS
+// Below are functions for handling the builtin commands.
+// THESE MUST BE SORTED BY NAME! Completion lookup uses binary search.
+
+// Data about all the builtin commands in fish.
+// Functions that are bound to builtin_generic are handled directly by the parser.
+// NOTE: These must be kept in sorted order!
+static const builtin_data_t builtin_datas[] = {
+    {L"[", &builtin_test, N_(L"Test a condition")},
 #if 0
     // Disabled for the 2.2.0 release: https://github.com/fish-shell/fish-shell/issues/1809.
     { 		L"__fish_parse",  &builtin_parse, N_(L"Try out the new parser")  },
 #endif
-    { 		L"and",  &builtin_generic, N_(L"Execute command if previous command suceeded")  },
-    { 		L"begin",  &builtin_generic, N_(L"Create a block of code")   },
-    { 		L"bg",  &builtin_bg, N_(L"Send job to background")   },
-    { 		L"bind",  &builtin_bind, N_(L"Handle fish key bindings")  },
-    { 		L"block",  &builtin_block, N_(L"Temporarily block delivery of events") },
-    { 		L"break",  &builtin_break_continue, N_(L"Stop the innermost loop")   },
-    { 		L"breakpoint",  &builtin_breakpoint, N_(L"Temporarily halt execution of a script and launch an interactive debug prompt")   },
-    { 		L"builtin",  &builtin_builtin, N_(L"Run a builtin command instead of a function") },
-    { 		L"case",  &builtin_generic, N_(L"Conditionally execute a block of commands")   },
-    { 		L"cd",  &builtin_cd, N_(L"Change working directory")   },
-    { 		L"command",   &builtin_command, N_(L"Run a program instead of a function or builtin")   },
-    { 		L"commandline",  &builtin_commandline, N_(L"Set or get the commandline")   },
-    { 		L"complete",  &builtin_complete, N_(L"Edit command specific completions")   },
-    { 		L"contains",  &builtin_contains, N_(L"Search for a specified string in a list")   },
-    { 		L"continue",  &builtin_break_continue, N_(L"Skip the rest of the current lap of the innermost loop")   },
-    { 		L"count",  &builtin_count, N_(L"Count the number of arguments")   },
-    {       L"echo",  &builtin_echo, N_(L"Print arguments") },
-    { 		L"else",  &builtin_generic, N_(L"Evaluate block if condition is false")   },
-    { 		L"emit",  &builtin_emit, N_(L"Emit an event") },
-    { 		L"end",  &builtin_generic, N_(L"End a block of commands")   },
-    { 		L"exec",  &builtin_generic, N_(L"Run command in current process")  },
-    { 		L"exit",  &builtin_exit, N_(L"Exit the shell") },
-    { 		L"false",  &builtin_false, N_(L"Return an unsuccessful result") },
-    { 		L"fg",  &builtin_fg, N_(L"Send job to foreground")   },
-    { 		L"for",  &builtin_generic, N_(L"Perform a set of commands multiple times")   },
-    { 		L"function",  &builtin_generic, N_(L"Define a new function")   },
-    { 		L"functions",  &builtin_functions, N_(L"List or remove functions")   },
-    { 		L"history",  &builtin_history, N_(L"History of commands executed by user")   },
-    { 		L"if",  &builtin_generic, N_(L"Evaluate block if condition is true")   },
-    { 		L"jobs",  &builtin_jobs, N_(L"Print currently running jobs")   },
-    { 		L"not",  &builtin_generic, N_(L"Negate exit status of job")  },
-    { 		L"or",  &builtin_generic, N_(L"Execute command if previous command failed")  },
-    { 		L"printf",  &builtin_printf, N_(L"Prints formatted text")  },
-    { 		L"pwd",  &builtin_pwd, N_(L"Print the working directory")  },
-    { 		L"random",  &builtin_random, N_(L"Generate random number")  },
-    { 		L"read",  &builtin_read, N_(L"Read a line of input into variables")   },
-    { 		L"return",  &builtin_return, N_(L"Stop the currently evaluated function")   },
-    { 		L"set",  &builtin_set, N_(L"Handle environment variables")   },
-    { 		L"set_color",  &builtin_set_color, N_(L"Set the terminal color")   },
-    { 		L"source",  &builtin_source, N_(L"Evaluate contents of file")   },
-    { 		L"status",  &builtin_status, N_(L"Return status information about fish")  },
-    { 		L"string",  &builtin_string, N_(L"Manipulate strings")  },
-    { 		L"switch",  &builtin_generic, N_(L"Conditionally execute a block of commands")   },
-    { 		L"test",  &builtin_test, N_(L"Test a condition")   },
-    { 		L"true",  &builtin_true, N_(L"Return a successful result") },
-    { 		L"ulimit",  &builtin_ulimit, N_(L"Set or get the shells resource usage limits")  },
-    { 		L"while",  &builtin_generic, N_(L"Perform a command multiple times")   }
-};
+    {L"and", &builtin_generic, N_(L"Execute command if previous command suceeded")},
+    {L"begin", &builtin_generic, N_(L"Create a block of code")},
+    {L"bg", &builtin_bg, N_(L"Send job to background")},
+    {L"bind", &builtin_bind, N_(L"Handle fish key bindings")},
+    {L"block", &builtin_block, N_(L"Temporarily block delivery of events")},
+    {L"break", &builtin_break_continue, N_(L"Stop the innermost loop")},
+    {L"breakpoint", &builtin_breakpoint,
+     N_(L"Temporarily halt execution of a script and launch an interactive debug prompt")},
+    {L"builtin", &builtin_builtin, N_(L"Run a builtin command instead of a function")},
+    {L"case", &builtin_generic, N_(L"Conditionally execute a block of commands")},
+    {L"cd", &builtin_cd, N_(L"Change working directory")},
+    {L"command", &builtin_command, N_(L"Run a program instead of a function or builtin")},
+    {L"commandline", &builtin_commandline, N_(L"Set or get the commandline")},
+    {L"complete", &builtin_complete, N_(L"Edit command specific completions")},
+    {L"contains", &builtin_contains, N_(L"Search for a specified string in a list")},
+    {L"continue", &builtin_break_continue,
+     N_(L"Skip the rest of the current lap of the innermost loop")},
+    {L"count", &builtin_count, N_(L"Count the number of arguments")},
+    {L"echo", &builtin_echo, N_(L"Print arguments")},
+    {L"else", &builtin_generic, N_(L"Evaluate block if condition is false")},
+    {L"emit", &builtin_emit, N_(L"Emit an event")},
+    {L"end", &builtin_generic, N_(L"End a block of commands")},
+    {L"exec", &builtin_generic, N_(L"Run command in current process")},
+    {L"exit", &builtin_exit, N_(L"Exit the shell")},
+    {L"false", &builtin_false, N_(L"Return an unsuccessful result")},
+    {L"fg", &builtin_fg, N_(L"Send job to foreground")},
+    {L"fish_realpath", &builtin_fish_realpath,
+     N_(L"Convert path to absolute path without symlinks")},
+    {L"for", &builtin_generic, N_(L"Perform a set of commands multiple times")},
+    {L"function", &builtin_generic, N_(L"Define a new function")},
+    {L"functions", &builtin_functions, N_(L"List or remove functions")},
+    {L"history", &builtin_history, N_(L"History of commands executed by user")},
+    {L"if", &builtin_generic, N_(L"Evaluate block if condition is true")},
+    {L"jobs", &builtin_jobs, N_(L"Print currently running jobs")},
+    {L"not", &builtin_generic, N_(L"Negate exit status of job")},
+    {L"or", &builtin_generic, N_(L"Execute command if previous command failed")},
+    {L"printf", &builtin_printf, N_(L"Prints formatted text")},
+    {L"pwd", &builtin_pwd, N_(L"Print the working directory")},
+    {L"random", &builtin_random, N_(L"Generate random number")},
+    {L"read", &builtin_read, N_(L"Read a line of input into variables")},
+    {L"return", &builtin_return, N_(L"Stop the currently evaluated function")},
+    {L"set", &builtin_set, N_(L"Handle environment variables")},
+    {L"set_color", &builtin_set_color, N_(L"Set the terminal color")},
+    {L"source", &builtin_source, N_(L"Evaluate contents of file")},
+    {L"status", &builtin_status, N_(L"Return status information about fish")},
+    {L"string", &builtin_string, N_(L"Manipulate strings")},
+    {L"switch", &builtin_generic, N_(L"Conditionally execute a block of commands")},
+    {L"test", &builtin_test, N_(L"Test a condition")},
+    {L"true", &builtin_true, N_(L"Return a successful result")},
+    {L"ulimit", &builtin_ulimit, N_(L"Set or get the shells resource usage limits")},
+    {L"while", &builtin_generic, N_(L"Perform a command multiple times")}};
 
 #define BUILTIN_COUNT (sizeof builtin_datas / sizeof *builtin_datas)
 

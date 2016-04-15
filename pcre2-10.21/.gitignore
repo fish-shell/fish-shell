@@ -1,0 +1,15 @@
+!config.h.in
+!configure
+!doc/
+.deps
+.dirstamp
+.libs/
+*.la
+*.lo
+*.pc
+libtool
+pcre2_chartables.c
+pcre2-config
+pcre2test
+pcre2.h
+stamp-h1

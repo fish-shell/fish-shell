@@ -32,6 +32,7 @@ toc.txt
 user_doc/
 xcuserdata
 test/
+tests/*.tmp.*
 FISH-BUILD-VERSION-FILE
 version
 messages.pot

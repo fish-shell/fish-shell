@@ -27,7 +27,8 @@ if status --is-interactive
 			or test "$VTE_VERSION" -ge 3600 # Should be all gtk3-vte-based terms after version 3.6.0.0
 			or test "$COLORTERM" = truecolor -o "$COLORTERM" = 24bit # slang expects this
 		end
-		set -g fish_term24bit 1
+		# Only set it if it isn't to allow override by setting to 0
+		set -q fish_term24bit; or set -g fish_term24bit 1
 	end
 else
 	# Hook up the default as the principal command_not_found handler

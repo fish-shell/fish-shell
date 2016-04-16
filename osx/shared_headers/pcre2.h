@@ -5,7 +5,7 @@
 /* This is the public header file for the PCRE library, second API, to be
 #included by applications that call PCRE2 functions.
 
-           Copyright (c) 2015 University of Cambridge
+           Copyright (c) 2016 University of Cambridge
 
 -----------------------------------------------------------------------------
 Redistribution and use in source and binary forms, with or without
@@ -42,9 +42,9 @@ POSSIBILITY OF SUCH DAMAGE.
 /* The current PCRE version information. */
 
 #define PCRE2_MAJOR          10
-#define PCRE2_MINOR          20
+#define PCRE2_MINOR          21
 #define PCRE2_PRERELEASE     
-#define PCRE2_DATE           2015-06-30
+#define PCRE2_DATE           2016-01-12
 
 /* When an application links to a PCRE DLL in Windows, the symbols that are
 imported have to be identified as such. When building PCRE2, the appropriate
@@ -120,6 +120,8 @@ D   is inspected during pcre2_dfa_match() execution
 #define PCRE2_UTF                 0x00080000u  /* C J M D */
 #define PCRE2_NEVER_BACKSLASH_C   0x00100000u  /* C       */
 #define PCRE2_ALT_CIRCUMFLEX      0x00200000u  /*   J M D */
+#define PCRE2_ALT_VERBNAMES       0x00400000u  /* C       */
+#define PCRE2_USE_OFFSET_LIMIT    0x00800000u  /*   J M D */
 
 /* These are for pcre2_jit_compile(). */
 
@@ -144,9 +146,13 @@ sanity checks). */
 #define PCRE2_DFA_RESTART         0x00000040u
 #define PCRE2_DFA_SHORTEST        0x00000080u
 
-/* This is an additional option for pcre2_substitute(). */
+/* These are additional options for pcre2_substitute(). */
 
-#define PCRE2_SUBSTITUTE_GLOBAL   0x00000100u
+#define PCRE2_SUBSTITUTE_GLOBAL           0x00000100u
+#define PCRE2_SUBSTITUTE_EXTENDED         0x00000200u
+#define PCRE2_SUBSTITUTE_UNSET_EMPTY      0x00000400u
+#define PCRE2_SUBSTITUTE_UNKNOWN_UNSET    0x00000800u
+#define PCRE2_SUBSTITUTE_OVERFLOW_LENGTH  0x00001000u
 
 /* Newline and \R settings, for use in compile contexts. The newline values
 must be kept in step with values set in config.h and both sets must all be
@@ -233,6 +239,12 @@ numbers must not be changed. */
 #define PCRE2_ERROR_RECURSIONLIMIT    (-53)
 #define PCRE2_ERROR_UNAVAILABLE       (-54)
 #define PCRE2_ERROR_UNSET             (-55)
+#define PCRE2_ERROR_BADOFFSETLIMIT    (-56)
+#define PCRE2_ERROR_BADREPESCAPE      (-57)
+#define PCRE2_ERROR_REPMISSINGBRACE   (-58)
+#define PCRE2_ERROR_BADSUBSTITUTION   (-59)
+#define PCRE2_ERROR_BADSUBSPATTERN    (-60)
+#define PCRE2_ERROR_TOOMANYREPLACE    (-61)
 
 /* Request types for pcre2_pattern_info() */
 
@@ -259,6 +271,7 @@ numbers must not be changed. */
 #define PCRE2_INFO_NEWLINE              20
 #define PCRE2_INFO_RECURSIONLIMIT       21
 #define PCRE2_INFO_SIZE                 22
+#define PCRE2_INFO_HASBACKSLASHC        23
 
 /* Request types for pcre2_config(). */
 
@@ -291,6 +304,7 @@ define special values to indicate zero-terminated strings and unset offsets in
 the offset vector (ovector). */
 
 #define PCRE2_SIZE            size_t
+#define PCRE2_SIZE_MAX        SIZE_MAX
 #define PCRE2_ZERO_TERMINATED (~(PCRE2_SIZE)0)
 #define PCRE2_UNSET           (~(PCRE2_SIZE)0)
 
@@ -388,6 +402,8 @@ PCRE2_EXP_DECL void      pcre2_compile_context_free(pcre2_compile_context *); \
 PCRE2_EXP_DECL int       pcre2_set_bsr(pcre2_compile_context *, uint32_t); \
 PCRE2_EXP_DECL int       pcre2_set_character_tables(pcre2_compile_context *, \
                            const unsigned char *); \
+PCRE2_EXP_DECL int       pcre2_set_max_pattern_length(pcre2_compile_context *, \
+                           PCRE2_SIZE); \
 PCRE2_EXP_DECL int       pcre2_set_newline(pcre2_compile_context *, uint32_t); \
 PCRE2_EXP_DECL int       pcre2_set_parens_nest_limit(pcre2_compile_context *, \
                            uint32_t); \
@@ -405,6 +421,8 @@ PCRE2_EXP_DECL int       pcre2_set_callout(pcre2_match_context *, \
                            int (*)(pcre2_callout_block *, void *), void *); \
 PCRE2_EXP_DECL int       pcre2_set_match_limit(pcre2_match_context *, \
                            uint32_t); \
+PCRE2_EXP_DECL int       pcre2_set_offset_limit(pcre2_match_context *, \
+                           PCRE2_SIZE); \
 PCRE2_EXP_DECL int       pcre2_set_recursion_limit(pcre2_match_context *, \
                            uint32_t); \
 PCRE2_EXP_DECL int       pcre2_set_recursion_memory_management( \
@@ -606,8 +624,10 @@ pcre2_compile are called by application code. */
 #define pcre2_set_character_tables            PCRE2_SUFFIX(pcre2_set_character_tables_)
 #define pcre2_set_compile_recursion_guard     PCRE2_SUFFIX(pcre2_set_compile_recursion_guard_)
 #define pcre2_set_match_limit                 PCRE2_SUFFIX(pcre2_set_match_limit_)
+#define pcre2_set_max_pattern_length          PCRE2_SUFFIX(pcre2_set_max_pattern_length_)
 #define pcre2_set_newline                     PCRE2_SUFFIX(pcre2_set_newline_)
 #define pcre2_set_parens_nest_limit           PCRE2_SUFFIX(pcre2_set_parens_nest_limit_)
+#define pcre2_set_offset_limit                PCRE2_SUFFIX(pcre2_set_offset_limit_)
 #define pcre2_set_recursion_limit             PCRE2_SUFFIX(pcre2_set_recursion_limit_)
 #define pcre2_set_recursion_memory_management PCRE2_SUFFIX(pcre2_set_recursion_memory_management_)
 #define pcre2_substitute                      PCRE2_SUFFIX(pcre2_substitute_)

@@ -144,5 +144,8 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 			bind $argv \eOc forward-word
 			bind $argv \eOd backward-word
 	end
-end
 
+	# Make it easy to turn an unexecuted command into a comment in the shell history. Also,
+	# remove the commenting chars so the command can be further edited then executed.
+	bind \e\# __fish_toggle_comment_commandline
+end

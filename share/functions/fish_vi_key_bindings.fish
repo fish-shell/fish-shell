@@ -222,4 +222,12 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind -M visual -m default \e end-selection force-repaint
 
     set fish_bind_mode $init_mode
+
+    # Make it easy to turn an unexecuted command into a comment in the shell history. Also, remove
+    # the commenting chars so the command can be further edited then executed.
+    bind -M default \# __fish_toggle_comment_commandline
+    bind -M visual \# __fish_toggle_comment_commandline
+    bind -M default \e\# __fish_toggle_comment_commandline
+    bind -M insert \e\# __fish_toggle_comment_commandline
+    bind -M visual \e\# __fish_toggle_comment_commandline
 end

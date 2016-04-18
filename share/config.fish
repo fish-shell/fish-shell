@@ -17,12 +17,25 @@ function __fish_default_command_not_found_handler
 	echo "fish: Unknown command '$argv'" >&2
 end
 
-#
-# Hook up the default as the principal command_not_found handler
-# in case we are not interactive
-#
-status -i; or function __fish_command_not_found_handler --on-event fish_command_not_found
-	__fish_default_command_not_found_handler $argv
+if status --is-interactive
+	# Enable truecolor/24-bit support for select terminals
+	if not set -q NVIM_LISTEN_ADDRESS # Neovim will swallow the 24bit sequences, rendering text white
+		and begin
+			set -q KONSOLE_PROFILE_NAME # KDE's konsole
+			or string match -q -- "*:*" $ITERM_SESSION_ID # Supporting versions of iTerm2 will include a colon here
+			or string match -q -- "st-*" $TERM # suckless' st
+			or test "$VTE_VERSION" -ge 3600 # Should be all gtk3-vte-based terms after version 3.6.0.0
+			or test "$COLORTERM" = truecolor -o "$COLORTERM" = 24bit # slang expects this
+		end
+		# Only set it if it isn't to allow override by setting to 0
+		set -q fish_term24bit; or set -g fish_term24bit 1
+	end
+else
+	# Hook up the default as the principal command_not_found handler
+	# in case we are not interactive
+	function __fish_command_not_found_handler --on-event fish_command_not_found
+		__fish_default_command_not_found_handler $argv
+	end
 end
 
 #

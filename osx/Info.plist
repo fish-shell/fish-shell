@@ -6,8 +6,6 @@
 	<string>fish shell</string>
 	<key>CFBundleExecutable</key>
 	<string>${EXECUTABLE_NAME}</string>
-	<key>CFBundleIconFile</key>
-	<string>fish_term_icon</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -17,17 +15,17 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.0</string>
+	<string>2.2</string>
 	<key>CFBundleVersion</key>
-	<string>289.5</string>
+	<string>295.5</string>
 	<key>LSApplicationCategoryType</key>
-	<string>public.app-category.productivity</string>
+	<string>public.app-category.developer-tools</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>10.6</string>
 	<key>LSUIElement</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2012, ridiculous_fish
+	<string>Copyright © 2016, ridiculous_fish
 All rights reserved.</string>
 </dict>
 </plist>

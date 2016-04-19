@@ -1,3 +1,57 @@
+# fish 2.3b1
+
+## Significant Changes
+
+- A new `string` builtin to handle... strings! (#2296)
+- Allow using escape as the Meta modifier key, by waiting after seeing an escape character wait up to 300ms for an additional character. This is consistent with readline (e.g. bash) and can be configured via the fish_escape_delay_ms variable. This allows using escape as the Meta modifier. (#1356)
+- Add new directories for vendor functions and configuration snippets (#2500)
+
+# Backward-incompatible changes
+
+- Unmatched globs will now cause an error, except when used with `for`, `set` or `count` (#2719)
+- `and` and `or` will now bind to the closest `if` or `while`, allowing compound conditions without `begin` and `end` (#1428)
+- `set -ql` now searches up to function scope for variables (#2502)
+- `status -f` will now behave the same when run as the main script or using `source` (#2643)
+- `source` no longer puts the file name in `$argv` if no arguments are given (#139)
+
+# Other notable fixes and improvements
+
+- Fish no longer silences errors in config.fish (#2702)
+- Move the history file to $XDG_DATA_HOME/fish (or ~/.local/share if it has not been set)
+- Directory autosuggestions will now descend as far as possible if there is only one child directory (#2531)
+- Add support for bright colors (#1464)
+- Allow Ctrl-J (\cj) to be bound separately from Ctrl-M (\cm) (#217)
+- psub now has a "-s"/"&#x2013;suffix" option to name the temporary file with that suffix
+- Enable 24-bit colors on select terminals (#2495)
+- Support for SVN status in the prompt (#2582)
+- Mercurial and SVN support have been added to the Classic + Git (now Classic + VCS) prompt (via the new \__fish_vcs_prompt function) (#2592)
+- export now handles variables with a "=" in the value (#2403)
+- New completions for:
+    -   alsactl
+    -   Archlinux's asp, makepkg
+    -   Atom's apm (#2390)
+    -   entr - the "Event Notify Test Runner" (#2265)
+    -   Fedora's dnf (#2638)
+    -   OSX diskutil (#2738)
+    -   pkgng (#2395)
+    -   pulseaudio's pacmd and pactl
+    -   rust's rustc and cargo (#2409)
+    -   sysctl (#2214)
+    -   systemd's machinectl (#2158), busctl (#2144), systemd-nspawn, systemd-analyze, localectl, timedatectl
+    -   and more
+- Fish no longer has a function called sgrep, freeing it for user customization (#2245)
+- A rewrite of the completions for cd, fixing a few bugs (#2299, #2300, #562)
+- Linux VTs now run in a simplified mode to avoid issues (#2311)
+- The vi-bindings now inherit from the emacs bindings
+- Fish will also execute fish_user_key_bindings when in vi-mode
+- `funced` will now also check $VISUAL (#2268)
+- A new `suspend` function (#2269)
+- Subcommand completion now works better with split /usr (#2141)
+- The command-not-found-handler can now be overridden by defining a function called __fish_command_not_found_handler in config.fish (#2332)
+- A few fixes to the Sorin theme
+- PWD shortening in the prompt can now be configured via the fish_prompt_pwd_dir_length variable, set to the length per path component (#2473)
+- fish now ships a skeleton file for /etc/fish/config.fish that only contains some documentation, the included code has been moved to the corresponding file in /usr (#2799)
+
 # fish 2.2.0 (released July 12, 2015)
 
 ### Significant changes ###

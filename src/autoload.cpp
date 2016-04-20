@@ -122,7 +122,7 @@ static bool script_name_precedes_script_name(const builtin_script_t &script1,
     return wcscmp(script1.name, script2.name) < 0;
 }
 
-// Check whether the given command is loaded.
+/// Check whether the given command is loaded.
 bool autoload_t::has_tried_loading(const wcstring &cmd) {
     scoped_lock locker(lock);
     autoload_function_t *func = this->get_node(cmd);
@@ -150,17 +150,17 @@ autoload_function_t *autoload_t::get_autoloaded_function_with_creation(const wcs
     return func;
 }
 
-// This internal helper function does all the real work. By using two functions, the internal
-// function can return on various places in the code, and the caller can take care of various
-// cleanup work.
-//
-//   cmd: the command name ('grep')
-//   really_load: whether to actually parse it as a function, or just check it it exists
-//   reload: whether to reload it if it's already loaded
-//   path_list: the set of paths to check
-//
-//   Result: if really_load is true, returns whether the function was loaded. Otherwise returns
-//   whether the function existed.
+/// This internal helper function does all the real work. By using two functions, the internal
+/// function can return on various places in the code, and the caller can take care of various
+/// cleanup work.
+///
+///   cmd: the command name ('grep')
+///   really_load: whether to actually parse it as a function, or just check it it exists
+///   reload: whether to reload it if it's already loaded
+///   path_list: the set of paths to check
+///
+/// Result: if really_load is true, returns whether the function was loaded. Otherwise returns
+/// whether the function existed.
 bool autoload_t::locate_file_and_maybe_load_it(const wcstring &cmd, bool really_load, bool reload,
                                                const wcstring_list_t &path_list) {
     // Note that we are NOT locked in this function!

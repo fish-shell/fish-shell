@@ -84,6 +84,8 @@ The first word of global variable names should generally be `fish` for public va
 
 1. Comments should always use the C++ style; i.e., each line of the comment should begin with a `//` and should be limited to 100 characters. Comments that do not begin a line should be separated from the previous text by two spaces.
 
+1. Comments that document the purpose of a function or class should begin with three slashes, `///`, so that OS X Xcode (and possibly other ideas) will extract the comment and show it in the "Quick Help" window when the cursor is on the symbol.
+
 ## Testing
 
 The source code for fish includes a large collection of tests. If you are making any changes to fish, running these tests is highly recommended to make sure the behaviour remains consistent.

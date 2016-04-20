@@ -71,7 +71,7 @@
 // The send stuff to foreground message.
 #define FG_MSG _(L"Send job %d, '%ls' to foreground\n")
 
-// Datastructure to describe a builtin.
+/// Datastructure to describe a builtin.
 struct builtin_data_t {
     // Name of the builtin.
     const wchar_t *name;
@@ -92,7 +92,7 @@ bool builtin_data_t::operator<(const builtin_data_t *other) const {
     return wcscmp(this->name, other->name) < 0;
 }
 
-// Counts the number of non null pointers in the specified array.
+/// Counts the number of non null pointers in the specified array.
 int builtin_count_args(const wchar_t *const *argv) {
     int argc = 1;
     while (argv[argc] != NULL) {
@@ -101,8 +101,8 @@ int builtin_count_args(const wchar_t *const *argv) {
     return argc;
 }
 
-// This function works like wperror, but it prints its result into the streams.err string instead of
-// to stderr. Used by the builtin commands.
+/// This function works like wperror, but it prints its result into the streams.err string instead
+/// to stderr. Used by the builtin commands.
 static void builtin_wperror(const wchar_t *s, io_streams_t &streams) {
     char *err = strerror(errno);
     if (s != NULL) {
@@ -116,7 +116,7 @@ static void builtin_wperror(const wchar_t *s, io_streams_t &streams) {
     }
 }
 
-// Count the number of times the specified character occurs in the specified string.
+/// Count the number of times the specified character occurs in the specified string.
 static int count_char(const wchar_t *str, wchar_t c) {
     int res = 0;
     for (; *str; str++) {
@@ -148,10 +148,10 @@ wcstring builtin_help_get(parser_t &parser, io_streams_t &streams, const wchar_t
     return out;
 }
 
-// Print help for the specified builtin. If \c b is sb_err, also print the line information.
-//
-// If \c b is the buffer representing standard error, and the help message is about to be printed to
-// an interactive screen, it may be shortened to fit the screen.
+/// Print help for the specified builtin. If \c b is sb_err, also print the line information.
+///
+/// If \c b is the buffer representing standard error, and the help message is about to be printed
+/// to an interactive screen, it may be shortened to fit the screen.
 void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
                         output_stream_t &b) {
     bool is_stderr = (&b == &streams.err);
@@ -227,14 +227,14 @@ void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *
     }
 }
 
-// Perform error reporting for encounter with unknown option.
+/// Perform error reporting for encounter with unknown option.
 static void builtin_unknown_option(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
                                    const wchar_t *opt) {
     streams.err.append_format(BUILTIN_ERR_UNKNOWN, cmd, opt);
     builtin_print_help(parser, streams, cmd, streams.err);
 }
 
-// Perform error reporting for encounter with missing argument.
+/// Perform error reporting for encounter with missing argument.
 static void builtin_missing_argument(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
                                      const wchar_t *opt) {
     streams.err.append_format(BUILTIN_ERR_MISSING, cmd, opt);
@@ -269,8 +269,8 @@ int builtin_test(parser_t &parser, io_streams_t &streams, wchar_t **argv);
 // builtin_string lives in builtin_string.cpp
 int builtin_string(parser_t &parser, io_streams_t &streams, wchar_t **argv);
 
-// List a single key binding.
-// Returns false if no binding with that sequence and mode exists.
+/// List a single key binding.
+/// Returns false if no binding with that sequence and mode exists.
 static bool builtin_bind_list_one(const wcstring &seq, const wcstring &bind_mode,
                                   io_streams_t &streams) {
     std::vector<wcstring> ecmds;
@@ -317,7 +317,7 @@ static bool builtin_bind_list_one(const wcstring &seq, const wcstring &bind_mode
     return true;
 }
 
-// List all current key bindings.
+/// List all current key bindings.
 static void builtin_bind_list(const wchar_t *bind_mode, io_streams_t &streams) {
     const std::vector<input_mapping_name_t> lst = input_mapping_get_names();
 
@@ -331,10 +331,10 @@ static void builtin_bind_list(const wchar_t *bind_mode, io_streams_t &streams) {
     }
 }
 
-// Print terminfo key binding names to string buffer used for standard output.
-//
-// \param all if set, all terminfo key binding names will be printed. If not set, only ones that
-// are defined for this terminal are printed.
+/// Print terminfo key binding names to string buffer used for standard output.
+///
+/// \param all if set, all terminfo key binding names will be printed. If not set, only ones that
+/// are defined for this terminal are printed.
 static void builtin_bind_key_names(int all, io_streams_t &streams) {
     const wcstring_list_t names = input_terminfo_get_names(!all);
     for (size_t i = 0; i < names.size(); i++) {
@@ -344,7 +344,7 @@ static void builtin_bind_key_names(int all, io_streams_t &streams) {
     }
 }
 
-// Print all the special key binding functions to string buffer used for standard output.
+/// Print all the special key binding functions to string buffer used for standard output.
 static void builtin_bind_function_names(io_streams_t &streams) {
     wcstring_list_t names = input_function_get_names();
 
@@ -354,7 +354,7 @@ static void builtin_bind_function_names(io_streams_t &streams) {
     }
 }
 
-// Wraps input_terminfo_get_sequence(), appending the correct error messages as needed.
+/// Wraps input_terminfo_get_sequence(), appending the correct error messages as needed.
 static int get_terminfo_sequence(const wchar_t *seq, wcstring *out_seq, io_streams_t &streams) {
     if (input_terminfo_get_sequence(seq, out_seq)) {
         return 1;
@@ -380,7 +380,7 @@ static int get_terminfo_sequence(const wchar_t *seq, wcstring *out_seq, io_strea
     return 0;
 }
 
-// Add specified key binding.
+/// Add specified key binding.
 static int builtin_bind_add(const wchar_t *seq, const wchar_t *const *cmds, size_t cmds_len,
                             const wchar_t *mode, const wchar_t *sets_mode, int terminfo,
                             io_streams_t &streams) {
@@ -399,12 +399,12 @@ static int builtin_bind_add(const wchar_t *seq, const wchar_t *const *cmds, size
     return 0;
 }
 
-// Erase specified key bindings
-//
-// \param seq an array of all key bindings to erase
-// \param all if specified, _all_ key bindings will be erased
-// \param mode if specified, only bindings from that mode will be erased. If not given and \c all is
-// \c false, \c DEFAULT_BIND_MODE will be used.
+/// Erase specified key bindings
+///
+/// \param seq an array of all key bindings to erase
+/// \param all if specified, _all_ key bindings will be erased
+/// \param mode if specified, only bindings from that mode will be erased. If not given and \c all
+/// is \c false, \c DEFAULT_BIND_MODE will be used.
 static int builtin_bind_erase(wchar_t **seq, int all, const wchar_t *mode, int use_terminfo,
                               io_streams_t &streams) {
     if (all) {
@@ -439,7 +439,7 @@ static int builtin_bind_erase(wchar_t **seq, int all, const wchar_t *mode, int u
     }
 }
 
-// The bind builtin, used for setting character sequences.
+/// The bind builtin, used for setting character sequences.
 static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wgetopter_t w;
     enum { BIND_INSERT, BIND_ERASE, BIND_KEY_NAMES, BIND_FUNCTION_NAMES };
@@ -594,7 +594,7 @@ static int builtin_bind(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     return res;
 }
 
-// The block builtin, used for temporarily blocking events.
+/// The block builtin, used for temporarily blocking events.
 static int builtin_block(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wgetopter_t w;
     enum {
@@ -699,9 +699,9 @@ static int builtin_block(parser_t &parser, io_streams_t &streams, wchar_t **argv
     return STATUS_BUILTIN_OK;
 }
 
-// The builtin builtin, used for giving builtins precedence over functions. Mostly handled by the
-// parser. All this code does is some additional operational modes, such as printing a list of all
-// builtins, printing help, etc.
+/// The builtin builtin, used for giving builtins precedence over functions. Mostly handled by the
+/// parser. All this code does is some additional operational modes, such as printing a list of all
+/// builtins, printing help, etc.
 static int builtin_builtin(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int argc = builtin_count_args(argv);
     int list = 0;
@@ -753,7 +753,7 @@ static int builtin_builtin(parser_t &parser, io_streams_t &streams, wchar_t **ar
     return STATUS_BUILTIN_OK;
 }
 
-// Implementation of the builtin emit command, used to create events.
+/// Implementation of the builtin emit command, used to create events.
 static int builtin_emit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wgetopter_t w;
     int argc = builtin_count_args(argv);
@@ -796,8 +796,8 @@ static int builtin_emit(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     return STATUS_BUILTIN_OK;
 }
 
-// Implementation of the builtin 'command'. Actual command running is handled by the parser, this
-// just processes the flags.
+/// Implementation of the builtin 'command'. Actual command running is handled by the parser, this
+/// just processes the flags.
 static int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wgetopter_t w;
     int argc = builtin_count_args(argv);
@@ -856,8 +856,8 @@ static int builtin_command(parser_t &parser, io_streams_t &streams, wchar_t **ar
     return found ? STATUS_BUILTIN_OK : STATUS_BUILTIN_ERROR;
 }
 
-// A generic bultin that only supports showing a help message. This is only a placeholder that
-// prints the help message. Useful for commands that live in the parser.
+/// A generic bultin that only supports showing a help message. This is only a placeholder that
+/// prints the help message. Useful for commands that live in the parser.
 static int builtin_generic(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wgetopter_t w;
     int argc = builtin_count_args(argv);
@@ -898,7 +898,7 @@ static int builtin_generic(parser_t &parser, io_streams_t &streams, wchar_t **ar
     return STATUS_BUILTIN_ERROR;
 }
 
-// Return a definition of the specified function. Used by the functions builtin.
+/// Return a definition of the specified function. Used by the functions builtin.
 static wcstring functions_def(const wcstring &name) {
     CHECK(!name.empty(), L"");
     wcstring out;
@@ -1004,7 +1004,7 @@ static wcstring functions_def(const wcstring &name) {
     return out;
 }
 
-// The functions builtin, used for listing and erasing functions.
+/// The functions builtin, used for listing and erasing functions.
 static int builtin_functions(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wgetopter_t w;
     int i;
@@ -1252,12 +1252,12 @@ static unsigned int builtin_echo_digit(wchar_t wc, unsigned int base) {
     return UINT_MAX;
 }
 
-// Parse a numeric escape sequence in str, returning whether we succeeded. Also return the number of
-// characters consumed and the resulting value. Supported escape sequences:
-//
-// \0nnn: octal value, zero to three digits
-// \nnn: octal value, one to three digits
-// \xhh: hex value, one to two digits
+/// Parse a numeric escape sequence in str, returning whether we succeeded. Also return the number
+/// of characters consumed and the resulting value. Supported escape sequences:
+///
+/// \0nnn: octal value, zero to three digits
+/// \nnn: octal value, one to three digits
+/// \xhh: hex value, one to two digits
 static bool builtin_echo_parse_numeric_sequence(const wchar_t *str, size_t *consumed,
                                                 unsigned char *out_val) {
     bool success = false;
@@ -1299,10 +1299,10 @@ static bool builtin_echo_parse_numeric_sequence(const wchar_t *str, size_t *cons
     return success;
 }
 
-// The echo builtin.
-//
-// Bash only respects -n if it's the first argument. We'll do the same. We also support a new option
-// -s to mean "no spaces"
+/// The echo builtin.
+///
+/// Bash only respects -n if it's the first argument. We'll do the same. We also support a new
+/// option -s to mean "no spaces"
 static int builtin_echo(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     /* Skip first arg */
     if (!*argv++) return STATUS_BUILTIN_ERROR;
@@ -1453,8 +1453,8 @@ static int builtin_echo(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     return STATUS_BUILTIN_OK;
 }
 
-// The pwd builtin. We don't respect -P to resolve symbolic links because we
-// try to always resolve them.
+/// The pwd builtin. We don't respect -P to resolve symbolic links because we
+/// try to always resolve them.
 static int builtin_pwd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wcstring res = wgetcwd();
     if (res.empty()) {
@@ -1466,7 +1466,7 @@ static int builtin_pwd(parser_t &parser, io_streams_t &streams, wchar_t **argv) 
     }
 }
 
-// Adds a function to the function set. It calls into function.cpp to perform any heavy lifting.
+/// Adds a function to the function set. It calls into function.cpp to perform any heavy lifting.
 int define_function(parser_t &parser, io_streams_t &streams, const wcstring_list_t &c_args,
                     const wcstring &contents, int definition_line_offset, wcstring *out_err) {
     wgetopter_t w;
@@ -1811,7 +1811,7 @@ static int builtin_random(parser_t &parser, io_streams_t &streams, wchar_t **arg
     return STATUS_BUILTIN_OK;
 }
 
-// The read builtin. Reads from stdin and stores the values in environment variables.
+/// The read builtin. Reads from stdin and stores the values in environment variables.
 static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wgetopter_t w;
     wcstring buff;
@@ -2134,7 +2134,7 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     return exit_res;
 }
 
-// The status builtin. Gives various status information on fish.
+/// The status builtin. Gives various status information on fish.
 static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wgetopter_t w;
     enum {
@@ -2304,7 +2304,7 @@ static int builtin_status(parser_t &parser, io_streams_t &streams, wchar_t **arg
     return res;
 }
 
-// The exit builtin. Calls reader_exit to exit and returns the value specified.
+/// The exit builtin. Calls reader_exit to exit and returns the value specified.
 static int builtin_exit(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int argc = builtin_count_args(argv);
 
@@ -2337,8 +2337,8 @@ static int builtin_exit(parser_t &parser, io_streams_t &streams, wchar_t **argv)
     return (int)ec;
 }
 
-// The cd builtin. Changes the current directory to the one specified or to $HOME if none is
-// specified. The directory can be relative to any directory in the CDPATH variable.
+/// The cd builtin. Changes the current directory to the one specified or to $HOME if none is
+/// specified. The directory can be relative to any directory in the CDPATH variable.
 static int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     env_var_t dir_in;
     wcstring dir;
@@ -2404,7 +2404,7 @@ static int builtin_cd(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     return res;
 }
 
-// Implementation of the builtin count command, used to count the number of arguments sent to it.
+/// Implementation of the builtin count command, used to count the number of arguments sent to it.
 static int builtin_count(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int argc;
     argc = builtin_count_args(argv);
@@ -2412,8 +2412,8 @@ static int builtin_count(parser_t &parser, io_streams_t &streams, wchar_t **argv
     return !(argc - 1);
 }
 
-// Implementation of the builtin contains command, used to check if a specified string is part of a
-// list.
+/// Implementation of the builtin contains command, used to check if a specified string is part of
+/// a list.
 static int builtin_contains(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     wgetopter_t w;
     int argc;
@@ -2473,9 +2473,7 @@ static int builtin_contains(parser_t &parser, io_streams_t &streams, wchar_t **a
     return 1;
 }
 
-/**
-   The  . (dot) builtin, sometimes called source. Evaluates the contents of a file.
-*/
+/// The  . (dot) builtin, sometimes called source. Evaluates the contents of a file.
 static int builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     ASSERT_IS_MAIN_THREAD();
     int fd;
@@ -2539,11 +2537,11 @@ static int builtin_source(parser_t &parser, io_streams_t &streams, wchar_t **arg
     return res;
 }
 
-// Make the specified job the first job of the job list. Moving jobs around in the list makes the
-// list reflect the order in which the jobs were used.
+/// Make the specified job the first job of the job list. Moving jobs around in the list makes the
+/// list reflect the order in which the jobs were used.
 static void make_first(job_t *j) { job_promote(j); }
 
-// Builtin for putting a job in the foreground.
+/// Builtin for putting a job in the foreground.
 static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     job_t *j = NULL;
 
@@ -2632,7 +2630,7 @@ static int builtin_fg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     return j != 0;
 }
 
-// Helper function for builtin_bg().
+/// Helper function for builtin_bg().
 static int send_to_bg(parser_t &parser, io_streams_t &streams, job_t *j, const wchar_t *name) {
     if (j == 0) {
         streams.err.append_format(_(L"%ls: Unknown job '%ls'\n"), L"bg", name);
@@ -2654,7 +2652,7 @@ static int send_to_bg(parser_t &parser, io_streams_t &streams, job_t *j, const w
     return STATUS_BUILTIN_OK;
 }
 
-// Builtin for putting a job in the background.
+/// Builtin for putting a job in the background.
 static int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int res = STATUS_BUILTIN_OK;
 
@@ -2700,8 +2698,8 @@ static int builtin_bg(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     return res;
 }
 
-// This function handles both the 'continue' and the 'break' builtins that are used for loop
-// control.
+/// This function handles both the 'continue' and the 'break' builtins that are used for loop
+/// control.
 static int builtin_break_continue(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int is_break = (wcscmp(argv[0], L"break") == 0);
     int argc = builtin_count_args(argv);
@@ -2740,7 +2738,7 @@ static int builtin_break_continue(parser_t &parser, io_streams_t &streams, wchar
     return STATUS_BUILTIN_OK;
 }
 
-// Implementation of the builtin breakpoint command, used to launch the interactive debugger.
+/// Implementation of the builtin breakpoint command, used to launch the interactive debugger.
 static int builtin_breakpoint(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     parser.push_block(new breakpoint_block_t());
 
@@ -2751,7 +2749,7 @@ static int builtin_breakpoint(parser_t &parser, io_streams_t &streams, wchar_t *
     return proc_get_last_status();
 }
 
-// Function for handling the \c return builtin.
+/// Function for handling the \c return builtin.
 static int builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int argc = builtin_count_args(argv);
     int status = proc_get_last_status();
@@ -2801,7 +2799,7 @@ static int builtin_return(parser_t &parser, io_streams_t &streams, wchar_t **arg
     return status;
 }
 
-// History of commands executed by user.
+/// History of commands executed by user.
 static int builtin_history(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
     int argc = builtin_count_args(argv);
 
@@ -3079,7 +3077,7 @@ void builtin_destroy() {}
 
 int builtin_exists(const wcstring &cmd) { return !!builtin_lookup(cmd); }
 
-// Return true if the specified builtin should handle it's own help, false otherwise.
+/// Return true if the specified builtin should handle it's own help, false otherwise.
 static int internal_help(const wchar_t *cmd) {
     CHECK(cmd, 0);
     return contains(cmd, L"for", L"while", L"function", L"if", L"end", L"switch", L"case", L"count",

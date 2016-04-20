@@ -51,9 +51,9 @@
 
 namespace {
 
-// Helper class for certain output. This is basically a string that allows us to ensure we only
-// flush at record boundaries, and avoids the copying of ostringstream. Have you ever tried to
-// implement your own streambuf? Total insanity.
+/// Helper class for certain output. This is basically a string that allows us to ensure we only
+/// flush at record boundaries, and avoids the copying of ostringstream. Have you ever tried to
+/// implement your own streambuf? Total insanity.
 class history_output_buffer_t {
     // A null-terminated C string.
     std::vector<char> buffer;
@@ -64,10 +64,10 @@ class history_output_buffer_t {
     static size_t safe_strlen(const char *s) { return s ? strlen(s) : 0; }
 
    public:
-    // Add a bit more to HISTORY_OUTPUT_BUFFER_SIZE because we flush once we've exceeded that size.
+    /// Add a bit more to HISTORY_OUTPUT_BUFFER_SIZE because we flush once we've exceeded that size.
     history_output_buffer_t() : buffer(HISTORY_OUTPUT_BUFFER_SIZE + 128, '\0'), offset(0) {}
 
-    // Append one or more strings.
+    /// Append one or more strings.
     void append(const char *s1, const char *s2 = NULL, const char *s3 = NULL) {
         const char *ptrs[4] = {s1, s2, s3, NULL};
         const size_t lengths[4] = {safe_strlen(s1), safe_strlen(s2), safe_strlen(s3), 0};
@@ -95,14 +95,14 @@ class history_output_buffer_t {
         assert(buffer.at(buffer.size() - 1) == '\0');
     }
 
-    // Output to a given fd, resetting our buffer. Returns true on success, false on error.
+    /// Output to a given fd, resetting our buffer. Returns true on success, false on error.
     bool flush_to_fd(int fd) {
         bool result = write_loop(fd, &buffer.at(0), offset) >= 0;
         offset = 0;
         return result;
     }
 
-    // Return how much data we've accumulated.
+    /// Return how much data we've accumulated.
     size_t output_size() const { return offset; }
 };
 
@@ -126,7 +126,7 @@ class time_profiler_t {
     }
 };
 
-// Lock a file via fcntl; returns true on success, false on failure.
+/// Lock a file via fcntl; returns true on success, false on failure.
 static bool history_file_lock(int fd, short type) {
     assert(type == F_RDLCK || type == F_WRLCK);
     struct flock flk = {};
@@ -136,8 +136,8 @@ static bool history_file_lock(int fd, short type) {
     return ret != -1;
 }
 
-// Our LRU cache is used for restricting the amount of history we have, and limiting how long we
-// order it.
+/// Our LRU cache is used for restricting the amount of history we have, and limiting how long we
+/// order it.
 class history_lru_node_t : public lru_node_t {
    public:
     time_t timestamp;
@@ -150,13 +150,13 @@ class history_lru_node_t : public lru_node_t {
 
 class history_lru_cache_t : public lru_cache_t<history_lru_node_t> {
    protected:
-    // Override to delete evicted nodes.
+    /// Override to delete evicted nodes.
     virtual void node_was_evicted(history_lru_node_t *node) { delete node; }
 
    public:
     explicit history_lru_cache_t(size_t max) : lru_cache_t<history_lru_node_t>(max) {}
 
-    // Function to add a history item.
+    /// Function to add a history item.
     void add_item(const history_item_t &item) {
         // Skip empty items.
         if (item.empty()) return;
@@ -197,15 +197,15 @@ static history_collection_t histories;
 
 static wcstring history_filename(const wcstring &name, const wcstring &suffix);
 
-// Replaces newlines with a literal backslash followed by an n, and replaces backslashes with two
-// backslashes.
+/// Replaces newlines with a literal backslash followed by an n, and replaces backslashes with two
+/// backslashes.
 static void escape_yaml(std::string *str);
 
-// Inverse of escape_yaml.
+/// Inverse of escape_yaml.
 static void unescape_yaml(std::string *str);
 
-// We can merge two items if they are the same command. We use the more recent timestamp, more
-// recent identifier, and the longer list of required paths.
+/// We can merge two items if they are the same command. We use the more recent timestamp, more
+/// recent identifier, and the longer list of required paths.
 bool history_item_t::merge(const history_item_t &item) {
     bool result = false;
     if (this->contents == item.contents) {
@@ -246,7 +246,7 @@ bool history_item_t::matches_search(const wcstring &term, enum history_search_ty
     }
 }
 
-// Append our YAML history format to the provided vector at the given offset, updating the offset.
+/// Append our YAML history format to the provided vector at the given offset, updating the offset.
 static void append_yaml_to_buffer(const wcstring &wcmd, time_t timestamp,
                                   const path_list_t &required_paths,
                                   history_output_buffer_t *buffer) {
@@ -270,9 +270,9 @@ static void append_yaml_to_buffer(const wcstring &wcmd, time_t timestamp,
     }
 }
 
-// Parse a timestamp line that looks like this: spaces, "when:", spaces, timestamp, newline
-// The string is NOT null terminated; however we do know it contains a newline, so stop when we
-// reach it
+/// Parse a timestamp line that looks like this: spaces, "when:", spaces, timestamp, newline
+/// The string is NOT null terminated; however we do know it contains a newline, so stop when we
+/// reach it.
 static bool parse_timestamp(const char *str, time_t *out_when) {
     const char *cursor = str;
     // Advance past spaces.
@@ -295,8 +295,8 @@ static bool parse_timestamp(const char *str, time_t *out_when) {
     return false;
 }
 
-// Returns a pointer to the start of the next line, or NULL. The next line must itself end with a
-// newline. Note that the string is not null terminated.
+/// Returns a pointer to the start of the next line, or NULL. The next line must itself end with a
+/// newline. Note that the string is not null terminated.
 static const char *next_line(const char *start, size_t length) {
     // Handle the hopeless case.
     if (length < 1) return NULL;
@@ -323,11 +323,11 @@ static const char *next_line(const char *start, size_t length) {
     return nextline;
 }
 
-// Support for iteratively locating the offsets of history items.
-// Pass the address and length of a mapped region.
-// Pass a pointer to a cursor size_t, initially 0.
-// If custoff_timestamp is nonzero, skip items created at or after that timestamp.
-// Returns (size_t)(-1) when done.
+/// Support for iteratively locating the offsets of history items.
+/// Pass the address and length of a mapped region.
+/// Pass a pointer to a cursor size_t, initially 0.
+/// If custoff_timestamp is nonzero, skip items created at or after that timestamp.
+/// Returns (size_t)(-1) when done.
 static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length,
                                            size_t *inout_cursor, time_t cutoff_timestamp) {
     size_t cursor = *inout_cursor;
@@ -415,8 +415,8 @@ static size_t offset_of_next_item_fish_2_0(const char *begin, size_t mmap_length
     return result;
 }
 
-// Same as offset_of_next_item_fish_2_0, but for fish 1.x (pre fishfish).
-// Adapted from history_populate_from_mmap in history.c
+/// Same as offset_of_next_item_fish_2_0, but for fish 1.x (pre fishfish).
+/// Adapted from history_populate_from_mmap in history.c
 static size_t offset_of_next_item_fish_1_x(const char *begin, size_t mmap_length,
                                            size_t *inout_cursor, time_t cutoff_timestamp) {
     if (mmap_length == 0 || *inout_cursor >= mmap_length) return (size_t)(-1);
@@ -456,7 +456,7 @@ static size_t offset_of_next_item_fish_1_x(const char *begin, size_t mmap_length
     return result;
 }
 
-// Returns the offset of the next item based on the given history type, or -1.
+/// Returns the offset of the next item based on the given history type, or -1.
 static size_t offset_of_next_item(const char *begin, size_t mmap_length,
                                   history_file_type_t mmap_type, size_t *inout_cursor,
                                   time_t cutoff_timestamp) {
@@ -695,8 +695,8 @@ history_item_t history_t::item_at_index(size_t idx) {
     return history_item_t(wcstring(), 0);
 }
 
-// Read one line, stripping off any newline, and updating cursor. Note that our input string is NOT
-// null terminated; it's just a memory mapped file.
+/// Read one line, stripping off any newline, and updating cursor. Note that our input string is NOT
+/// null terminated; it's just a memory mapped file.
 static size_t read_line(const char *base, size_t cursor, size_t len, std::string &result) {
     // Locate the newline.
     assert(cursor <= len);
@@ -713,7 +713,7 @@ static size_t read_line(const char *base, size_t cursor, size_t len, std::string
     }
 }
 
-// Trims leading spaces in the given string, returning how many there were.
+/// Trims leading spaces in the given string, returning how many there were.
 static size_t trim_leading_spaces(std::string &str) {
     size_t i = 0, max = str.size();
     while (i < max && str[i] == ' ') i++;
@@ -738,7 +738,7 @@ static bool extract_prefix_and_unescape_yaml(std::string *key, std::string *valu
     return where != std::string::npos;
 }
 
-// Decode an item via the fish 2.0 format.
+/// Decode an item via the fish 2.0 format.
 history_item_t history_t::decode_item_fish_2_0(const char *base, size_t len) {
     wcstring cmd;
     time_t when = 0;
@@ -812,8 +812,8 @@ history_item_t history_t::decode_item(const char *base, size_t len, history_file
     }
 }
 
-// Remove backslashes from all newlines. This makes a string from the history file better formated
-// for on screen display.
+/// Remove backslashes from all newlines. This makes a string from the history file better formated
+/// for on screen display.
 static wcstring history_unescape_newlines_fish_1_x(const wcstring &in_str) {
     wcstring out;
     for (const wchar_t *in = in_str.c_str(); *in; in++) {
@@ -828,7 +828,7 @@ static wcstring history_unescape_newlines_fish_1_x(const wcstring &in_str) {
     return out;
 }
 
-// Decode an item via the fish 1.x format. Adapted from fish 1.x's item_get().
+/// Decode an item via the fish 1.x format. Adapted from fish 1.x's item_get().
 history_item_t history_t::decode_item_fish_1_x(const char *begin, size_t length) {
     const char *end = begin + length;
     const char *pos = begin;
@@ -901,7 +901,7 @@ history_item_t history_t::decode_item_fish_1_x(const char *begin, size_t length)
     return history_item_t(out, timestamp);
 }
 
-// Try to infer the history file type based on inspecting the data.
+/// Try to infer the history file type based on inspecting the data.
 static history_file_type_t infer_file_type(const char *data, size_t len) {
     history_file_type_t result = history_type_unknown;
     if (len > 0) {  // old fish started with a #
@@ -928,8 +928,8 @@ void history_t::populate_from_mmap(void) {
     }
 }
 
-// Do a private, read-only map of the entirety of a history file with the given name. Returns true
-// if successful. Returns the mapped memory region by reference.
+/// Do a private, read-only map of the entirety of a history file with the given name. Returns true
+/// if successful. Returns the mapped memory region by reference.
 bool history_t::map_file(const wcstring &name, const char **out_map_start, size_t *out_map_len,
                          file_id_t *file_id) {
     bool result = false;
@@ -1042,13 +1042,13 @@ bool history_search_t::go_backwards() {
     return false;
 }
 
-// Goes to the end (forwards).
+/// Goes to the end (forwards).
 void history_search_t::go_to_end(void) { prev_matches.clear(); }
 
-// Returns if we are at the end, which is where we start.
+/// Returns if we are at the end, which is where we start.
 bool history_search_t::is_at_end(void) const { return prev_matches.empty(); }
 
-// Goes to the beginning (backwards).
+/// Goes to the beginning (backwards).
 void history_search_t::go_to_beginning(void) {
     // Go backwards as far as we can.
     while (go_backwards())
@@ -1087,7 +1087,7 @@ static void escape_yaml(std::string *str) {
     replace_all(str, "\n", "\\n");   // replace newline with backslash + literal n
 }
 
-// This function is called frequently, so it ought to be fast.
+/// This function is called frequently, so it ought to be fast.
 static void unescape_yaml(std::string *str) {
     size_t cursor = 0, size = str->size();
     while (cursor < size) {
@@ -1397,7 +1397,7 @@ bool history_t::save_internal_via_appending() {
     return ok;
 }
 
-// Save the specified mode to file; optionally also vacuums.
+/// Save the specified mode to file; optionally also vacuums.
 void history_t::save_internal(bool vacuum) {
     ASSERT_IS_LOCKED(lock);
 
@@ -1475,9 +1475,9 @@ bool history_t::is_empty(void) {
     return empty;
 }
 
-// Populates from older location (in config path, rather than data path) This is accomplished by
-// clearing ourselves, and copying the contents of the old history file to the new history file.
-// The new contents will automatically be re-mapped later.
+/// Populates from older location (in config path, rather than data path) This is accomplished by
+/// clearing ourselves, and copying the contents of the old history file to the new history file.
+/// The new contents will automatically be re-mapped later.
 void history_t::populate_from_config_path() {
     wcstring old_file;
     if (path_get_config(old_file)) {
@@ -1510,7 +1510,7 @@ void history_t::populate_from_config_path() {
     }
 }
 
-// Indicate whether we ought to import the bash history file into fish.
+/// Indicate whether we ought to import the bash history file into fish.
 static bool should_import_bash_history_line(const std::string &line) {
     if (line.empty()) return false;
 
@@ -1717,7 +1717,7 @@ void history_t::add_pending_with_file_detection(const wcstring &str) {
     }
 }
 
-// Very simple, just mark that we have no more pending items.
+/// Very simple, just mark that we have no more pending items.
 void history_t::resolve_pending() {
     scoped_lock locker(lock);
     this->has_pending_item = false;

@@ -39,7 +39,7 @@ else
         set git_clang_format yes
     else
         # No pending changes so lint the files in the most recent commit.
-        set files (git show --name-only --pretty=oneline head | tail --lines=+2)
+        set files (git show --name-only --pretty=oneline | tail --lines=+2)
     end
 
     # Extract just the C/C++ files.

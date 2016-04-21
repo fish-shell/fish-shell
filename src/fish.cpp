@@ -15,17 +15,14 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 
-
 /** \file fish.c
 	The main loop of <tt>fish</tt>.
 */
-
 #include "config.h"
 
 #include <assert.h>
 #include <getopt.h>
 #include <limits.h>
-#include <stddef.h>
 #include <stdint.h>
 #include <sys/stat.h>
 #include <string>
@@ -37,22 +34,23 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <sys/socket.h> // IWYU pragma: keep - suggests internal header
+#include <sys/socket.h> // IWYU pragma: keep
 #include <sys/un.h>
 #include <pwd.h>
 #include <locale.h>
+#include <memory>
+#include <stdbool.h>
 
 #include "fallback.h" // IWYU pragma: keep
 #include "common.h"
 #include "reader.h"
 #include "builtin.h"
 #include "function.h"
-#include "wutil.h"
+#include "wutil.h"  // IWYU pragma: keep
 #include "env.h"
 #include "proc.h"
 #include "parser.h"
 #include "expand.h"
-#include "intern.h"
 #include "event.h"
 #include "history.h"
 #include "path.h"

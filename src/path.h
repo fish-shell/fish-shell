@@ -5,11 +5,12 @@
   name can be found in the PATH, and various other path-related
   issues.
 */
-
 #ifndef FISH_PATH_H
 #define FISH_PATH_H
 
 #include <stddef.h>
+#include <stdbool.h>
+
 #include "common.h"
 #include "env.h"
 

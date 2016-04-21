@@ -3,13 +3,11 @@
 */
 
 #ifndef FISH_EXEC_H
-/**
-   Header guard
-*/
 #define FISH_EXEC_H
 
 #include <stddef.h>
 #include <vector>
+#include <stdbool.h>
 
 #include "common.h"
 

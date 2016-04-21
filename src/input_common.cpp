@@ -1,27 +1,30 @@
 /** \file input_common.c
 
 Implementation file for the low level input library
-
 */
 #include "config.h"
 
-
 #include <string.h>
 #include <errno.h>
-#include <sys/time.h>
 #include <unistd.h>
 #include <list>
 #include <queue>
-#include <cwchar>                       // for wint_t
-#include <deque>                        // for deque
-#include <utility>                      // for swap, pair
+#include <deque>
+#include <utility>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#include <stdbool.h>
+#include <memory>
+#include <cwctype>
+#include <wchar.h>
+#include <wctype.h>
+#include <sys/types.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "fallback.h" // IWYU pragma: keep
 #include "util.h"
-
 #include "common.h"
 #include "input_common.h"
 #include "env_universal_common.h"

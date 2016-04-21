@@ -1,14 +1,14 @@
 /** \file intern.c
 
     Library for pooling common strings
-
 */
-#include "config.h" // IWYU pragma: keep
-
 #include <wchar.h>
 #include <pthread.h>
 #include <vector>
 #include <algorithm>
+#include <memory>
+#include <stddef.h>
+#include <stdbool.h>
 
 #include "fallback.h" // IWYU pragma: keep
 #include "common.h"

@@ -1,28 +1,27 @@
 /** \file builtin_complete.c Functions defining the complete builtin
 
 Functions used for implementing the complete builtin.
-
 */
-#include "config.h"
-
 #include <stdlib.h>
-#include <stdio.h>
 #include <wchar.h>
-#include <wctype.h>
-#include <sys/types.h>
-#include <termios.h>
-#include <signal.h>
+#include <string>
+#include <vector>
+#include <memory>  // IWYU pragma: keep
+#include <stdbool.h>
 
-#include "fallback.h"
-#include "util.h"
-
-#include "wutil.h"
+#include "fallback.h"  // IWYU pragma: keep
 #include "builtin.h"
 #include "common.h"
 #include "complete.h"
 #include "wgetopt.h"
 #include "parser.h"
 #include "reader.h"
+#include "env.h"
+#include "io.h"
+#include "parse_constants.h"
+#include "proc.h"
+#include "parse_util.h"
+#include "wutil.h"  // IWYU pragma: keep
 
 /*
   builtin_complete_* are a set of rather silly looping functions that

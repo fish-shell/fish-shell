@@ -4,8 +4,7 @@
   Some of the code in this file is based on code from the Glibc
   manual, though the changes performed have been massive.
 */
-
-#include "config.h" // IWYU pragma: keep
+#include "config.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -24,17 +23,16 @@
 #include <wctype.h>
 #include <map>
 #include <string>
-#include <memory> // IWYU pragma: keep - suggests <tr1/memory> instead
-#include <utility>
-
+#include <memory>
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
+#include <stdbool.h>
 
-#include "fallback.h" // IWYU pragma: keep
+#include "fallback.h"  // IWYU pragma: keep
 #include "postfork.h"
 #include "common.h"
-#include "wutil.h"
+#include "wutil.h"  // IWYU pragma: keep
 #include "proc.h"
 #include "exec.h"
 #include "parser.h"
@@ -42,7 +40,6 @@
 #include "function.h"
 #include "env.h"
 #include "signal.h"
-#include "parse_util.h"
 #include "io.h"
 #include "parse_tree.h"
 #include "reader.h"

@@ -2,24 +2,23 @@
 
   Functions that we may safely call after fork(), of which there are very few. In particular we cannot allocate memory, since we're insane enough to call fork from a multithreaded process.
 */
-
 #ifndef FISH_POSTFORK_H
 #define FISH_POSTFORK_H
 
-#include <stddef.h>
-#include <unistd.h>
-
 #include "config.h"
-#include "io.h"
 
+#include <unistd.h>
 #if HAVE_SPAWN_H
 #include <spawn.h>
 #endif
-
 #ifndef FISH_USE_POSIX_SPAWN
 #define FISH_USE_POSIX_SPAWN HAVE_SPAWN_H
 #endif
+#include <stdbool.h>
 
+class io_chain_t;
+class job_t;
+class process_t;
 
 /**
    This function should be called by both the parent process and the
@@ -33,8 +32,6 @@
 
    Returns 0 on sucess, -1 on failiure.
 */
-class job_t;
-class process_t;
 int set_child_group(job_t *j, process_t *p, int print_errors);
 
 /**

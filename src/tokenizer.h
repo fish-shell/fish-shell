@@ -5,11 +5,12 @@
     tokenizing multiple strings and disposing of unused string
     segments.
 */
-
 #ifndef FISH_TOKENIZER_H
 #define FISH_TOKENIZER_H
 
 #include <stddef.h>
+#include <stdbool.h>
+
 #include "common.h"
 
 /**

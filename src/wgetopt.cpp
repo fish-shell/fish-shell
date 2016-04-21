@@ -53,8 +53,6 @@
 
 #include <stdio.h>
 #include <wchar.h>
-#include "common.h"
-
 /* This needs to come after some library #include
    to get __GNU_LIBRARY__ defined.  */
 #ifdef  __GNU_LIBRARY__
@@ -74,10 +72,10 @@
    GNU application programs can use a third alternative mode in which
    they can distinguish the relative order of options and other arguments.  */
 
+#include "common.h"
 #include "wgetopt.h"
-#include "wutil.h"
+#include "wutil.h"  // IWYU pragma: keep
 #include "fallback.h" // IWYU pragma: keep
-
 
 /**
    Use translation functions if available

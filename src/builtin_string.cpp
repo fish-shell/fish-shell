@@ -1,25 +1,37 @@
 /** \file builtin_string.cpp
   Implementation of the string builtin.
 */
-
-#include "config.h" // IWYU pragma: keep
+#include "config.h"
 
 #define PCRE2_CODE_UNIT_WIDTH WCHAR_T_BITS
 #ifdef _WIN32
 #define PCRE2_STATIC
 #endif
-#include "pcre2.h"
+#include <iterator>
+#include <algorithm>
+#include <assert.h>
+#include <limits.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <wchar.h>
+#include <wctype.h>
+#include <string>
+#include <vector>
+#include <sys/types.h>
+#include <stdbool.h>
 
+#include "pcre2.h"
 #include "builtin.h"
 #include "common.h"
-#include "parser.h"
 #include "parse_util.h"
 #include "wgetopt.h"
 #include "wildcard.h"
-#include "wutil.h"
-#include <iterator>
-#include <algorithm>
-#include <unistd.h>
+#include "fallback.h"  // IWYU pragma: keep
+#include "io.h"
+#include "wutil.h"  // IWYU pragma: keep
+
+class parser_t;
 
 #define MAX_REPLACE_SIZE    size_t(1048576)  // pcre2_substitute maximum output size in wchar_t
 #define STRING_ERR_MISSING  _(L"%ls: Expected argument\n")

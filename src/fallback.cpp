@@ -7,46 +7,44 @@
    incomplete. lrand28_r internally uses the regular (bad) rand_r
    function, the gettext function doesn't actually do anything, etc.
 */
-
 #include "config.h"
 
-
+// IWYU likes to recommend adding term.h when we want ncurses.h.
+// IWYU pragma: no_include term.h
 #include <stdlib.h>
-#include <stdio.h>
+#include <stdio.h>  // IWYU pragma: keep
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <errno.h>
-#include <fcntl.h>
+#include <sys/types.h>  // IWYU pragma: keep
+#include <sys/stat.h>  // IWYU pragma: keep
+#include <errno.h>  // IWYU pragma: keep
+#include <fcntl.h>  // IWYU pragma: keep
 #include <wchar.h>
 #include <wctype.h>
 #include <string.h>
-#include <dirent.h>
-#include <stdarg.h>
-#include <limits.h>
-#include <assert.h>
-
+#include <dirent.h>  // IWYU pragma: keep
+#include <stdarg.h>  // IWYU pragma: keep
+#include <limits.h>  // IWYU pragma: keep
+#include <assert.h>  // IWYU pragma: keep
 #if HAVE_GETTEXT
 #include <libintl.h>
 #endif
-
 #if HAVE_NCURSES_H
-#include <ncurses.h>
+#include <ncurses.h>  // IWYU pragma: keep
 #elif HAVE_NCURSES_CURSES_H
 #include <ncurses/curses.h>
 #else
 #include <curses.h>
 #endif
-
 #if HAVE_TERM_H
-#include <term.h>
+#include <term.h>  // IWYU pragma: keep
 #elif HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>
 #endif
+#include <signal.h>  // IWYU pragma: keep
+#include <wchar.h>  // IWYU pragma: keep
 
-#include "fallback.h"
-#include "util.h"
-
+#include "fallback.h"  // IWYU pragma: keep
+#include "util.h"  // IWYU pragma: keep
 
 #ifndef HAVE___ENVIRON
 
@@ -1338,8 +1336,6 @@ int fish_wcswidth(const wchar_t *str, size_t n)
  *
  * Latest version: http://www.cl.cam.ac.uk/~mgk25/ucs/wcwidth.c
  */
-
-#include <wchar.h>
 
 struct interval
 {

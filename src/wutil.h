@@ -9,10 +9,10 @@
 #include <stdio.h>
 #include <dirent.h>
 #include <sys/types.h>
-#include <stddef.h>
 #include <time.h>
 #include <string>
-#include <stdint.h>
+#include <stdbool.h>
+
 #include "common.h"
 
 /**

@@ -1,8 +1,26 @@
+
 # Guidelines For Developers
 
 This document provides guidelines for making changes to the fish-shell project. This includes rules for how to format the code, naming conventions, etc. It also includes recommended best practices such as creating a Travis-CI account so you can verify your changes pass all the tests before making a pull-request.
 
 See the bottom of this document for help on installing the linting and style reformatting tools discussed in the following sections.
+
+Fish source should limit the C++ features it uses to those available in C++03. That allows fish to use a few components from [C++TR1](https://en.wikipedia.org/wiki/C%2B%2B_Technical_Report_1) such as `shared_ptr`. It also allows fish to be built and run on OS X Snow Leopard (released in 2009); the oldest OS X release we still support.
+
+## Include What You Use
+
+You should not depend on symbols being visible to a `*.cpp` module from `#include` statements inside another header file. In other words if your module does `#include "common.h"` and that header does `#include "signal.h"` your module should pretend that sub-include is not present. It should instead directly `#include "signal.h"` if it needs any symbol from that header. That makes the actual dependencies much clearer. It also makes it easy to modify the headers included by a specific header file without having to worry that will break any module (or header) that includes a particular header.
+
+To help enforce this rule the `make lint` (and `make lint-all`) command will run the [include-what-you-use](http://include-what-you-use.org/) tool. The IWYU you project is on [github](https://github.com/include-what-you-use/include-what-you-use).
+
+To install the tool on OS X you'll need to add a [formula](https://github.com/jasonmp85/homebrew-iwyu) then install it:
+
+```
+brew tap jasonmp85/iwyu
+brew install iwyu
+```
+
+On Ubuntu you can install it via `sudo apt-get install iwyu`.
 
 ## Lint Free Code
 

@@ -1,7 +1,9 @@
-#include "parse_productions.h"
-#include <assert.h>
 #include <stdio.h>
+
 #include "parse_tree.h"
+#include "parse_productions.h"
+#include "parse_constants.h"
+#include "common.h"
 
 using namespace parse_productions;
 

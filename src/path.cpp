@@ -1,5 +1,3 @@
-#include "config.h" // IWYU pragma: keep
-
 #include <wchar.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -11,7 +9,7 @@
 #include "fallback.h" // IWYU pragma: keep
 #include "common.h"
 #include "env.h"
-#include "wutil.h"
+#include "wutil.h"  // IWYU pragma: keep
 #include "path.h"
 #include "expand.h"
 

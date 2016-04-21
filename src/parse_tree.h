@@ -2,18 +2,19 @@
 
     Programmatic representation of fish code.
 */
-
 #ifndef FISH_PARSE_PRODUCTIONS_H
 #define FISH_PARSE_PRODUCTIONS_H
 
 #include <assert.h>
 #include <stddef.h>
-#include <stdint.h>
+#include <vector>
+#include <memory>
+#include <sys/types.h>
+#include <stdbool.h>
 
 #include "common.h"
 #include "tokenizer.h"
 #include "parse_constants.h"
-#include <vector>
 
 class parse_node_tree_t;
 

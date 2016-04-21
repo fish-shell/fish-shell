@@ -5,19 +5,15 @@
 
   Type ^C to exit the program.
 */
-#include "config.h"
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <termios.h>
-#include <unistd.h>
 #include <locale.h>
 #include <termcap.h>
 
 #include "common.h"
-#include "fallback.h"
-
+#include "fallback.h"  // IWYU pragma: keep
 #include "input_common.h"
 
 int writestr(char *str)

@@ -1,11 +1,13 @@
 #ifndef FISH_ENV_UNIVERSAL_COMMON_H
 #define FISH_ENV_UNIVERSAL_COMMON_H
 
-#include <string>
-#include <set>
 #include <pthread.h>
 #include <stdio.h>
+#include <stdbool.h>
+#include <set>
+#include <memory>
 #include <vector>
+
 #include "common.h"
 #include "wutil.h"
 #include "env.h"

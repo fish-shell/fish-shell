@@ -9,14 +9,19 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include <memory> // IWYU pragma: keep - suggests <tr1/memory> instead
+#include <memory>
+#if FISH_USE_POSIX_SPAWN
+#include <spawn.h>
+#endif
+
 #include "common.h"
 #include "proc.h"
-#include "wutil.h"
+#include "wutil.h"  // IWYU pragma: keep
 #include "signal.h"
 #include "postfork.h"
 #include "iothread.h"
 #include "exec.h"
+#include "io.h"
 
 #ifndef JOIN_THREADS_BEFORE_FORK
 #define JOIN_THREADS_BEFORE_FORK 0

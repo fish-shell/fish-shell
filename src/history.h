@@ -2,8 +2,8 @@
 #ifndef FISH_HISTORY_H
 #define FISH_HISTORY_H
 
+// IWYU pragma: no_include <cstddef>
 #include <pthread.h>
-#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
@@ -12,8 +12,11 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <memory>
+#include <stdbool.h>
+
 #include "common.h"
-#include "wutil.h"
+#include "wutil.h"  // IWYU pragma: keep
 
 // Fish supports multiple shells writing to history at once. Here is its strategy:
 //

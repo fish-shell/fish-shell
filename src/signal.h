@@ -1,12 +1,12 @@
 /** \file signal.h
 
 The library for various signal related issues
-
 */
 #ifndef FISH_SIGNALH
 #define FISH_SIGNALH
 
 #include <signal.h>
+#include <stdbool.h>
 
 /**
    Get the integer signal value representing the specified signal, or

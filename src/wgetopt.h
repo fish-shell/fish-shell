@@ -47,7 +47,7 @@ Cambridge, MA 02139, USA.  */
 #ifndef FISH_WGETOPT_H
 #define FISH_WGETOPT_H
 
-#include <wchar.h>
+#include <stddef.h>
 
 class wgetopter_t
 {

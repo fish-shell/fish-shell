@@ -1,29 +1,23 @@
 /** \file builtin_jobs.c
   Functions for executing the jobs builtin.
 */
-#include "config.h"
+#include "config.h"  // IWYU pragma: keep
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <wchar.h>
-#include <unistd.h>
-#include <termios.h>
 #include <errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <string.h>
-#include <wctype.h>
+#include <stdbool.h>
+#ifdef HAVE__PROC_SELF_STAT
+#include <sys/time.h>
+#endif
 
-#include "fallback.h"
-#include "util.h"
-
+#include "fallback.h"  // IWYU pragma: keep
 #include "wutil.h"
 #include "builtin.h"
 #include "proc.h"
-#include "parser.h"
 #include "common.h"
 #include "wgetopt.h"
+#include "io.h"
 
+class parser_t;
 
 /**
    Print modes for the jobs builtin

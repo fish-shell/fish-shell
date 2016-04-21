@@ -1,13 +1,11 @@
 /** \file output.c
  Generic output functions
  */
-
 #include "config.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
 #if HAVE_NCURSES_H
 #include <ncurses.h>
 #elif HAVE_NCURSES_CURSES_H
@@ -15,24 +13,24 @@
 #else
 #include <curses.h>
 #endif
-
 #if HAVE_TERM_H
 #include <term.h>
 #elif HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>
 #endif
-
 #include <wchar.h>
 #include <limits.h>
 #include <string>
+#include <vector>
+#include <memory>
 
-#include "fallback.h"
-#include "wutil.h" // IWYU pragma: keep - needed for wgettext
+#include "fallback.h"  // IWYU pragma: keep
+#include "wutil.h"  // IWYU pragma: keep
 #include "common.h"
 #include "output.h"
+#include "color.h"
 
 static int writeb_internal(char c);
-
 
 /**
  The function used for output

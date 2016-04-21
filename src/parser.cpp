@@ -1,20 +1,17 @@
 /** \file parser.c
 
 The fish parser. Contains functions for parsing and evaluating code.
-
 */
-
-#include "config.h" // IWYU pragma: keep
-
 #include <stdio.h>
 #include <wchar.h>
 #include <assert.h>
-#include <string>
 #include <algorithm>
+#include <memory>
+#include <stdbool.h>
 
-#include "fallback.h"
+#include "fallback.h"  // IWYU pragma: keep
 #include "common.h"
-#include "wutil.h"
+#include "wutil.h"  // IWYU pragma: keep
 #include "proc.h"
 #include "parser.h"
 #include "function.h"
@@ -24,10 +21,12 @@ The fish parser. Contains functions for parsing and evaluating code.
 #include "sanity.h"
 #include "event.h"
 #include "intern.h"
-#include "signal.h" // IWYU pragma: keep - needed for CHECK_BLOCK
 #include "parse_util.h"
 #include "parse_tree.h"
 #include "parse_execution.h"
+#include "parse_constants.h"
+
+class io_chain_t;
 
 /**
    Error for evaluating in illegal scope

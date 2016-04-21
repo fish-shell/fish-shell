@@ -2,10 +2,7 @@
 
   These functions are used for storing and retrieving tab-completion data, as well as for performing tab-completion.
 */
-#include "config.h"
-
 #include <assert.h>
-#include <stdlib.h>
 #include <stddef.h>
 #include <wchar.h>
 #include <wctype.h>
@@ -17,10 +14,11 @@
 #include <set>
 #include <string>
 #include <utility>
+#include <memory>
+#include <stdbool.h>
 
-#include "fallback.h" // IWYU pragma: keep
+#include "fallback.h"  // IWYU pragma: keep
 #include "util.h"
-
 #include "wildcard.h"
 #include "proc.h"
 #include "parser.h"
@@ -32,7 +30,7 @@
 #include "expand.h"
 #include "common.h"
 #include "parse_util.h"
-#include "wutil.h"
+#include "wutil.h"  // IWYU pragma: keep
 #include "path.h"
 #include "parse_tree.h"
 #include "iothread.h"

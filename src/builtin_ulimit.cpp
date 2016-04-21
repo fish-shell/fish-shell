@@ -3,24 +3,19 @@
 Functions used for implementing the ulimit builtin.
 
 */
-#include "config.h"
-
-#include <stdlib.h>
-#include <stdio.h>
 #include <wchar.h>
-#include <wctype.h>
-#include <sys/time.h>
 #include <sys/resource.h>
-#include <unistd.h>
 #include <errno.h>
 
-#include "fallback.h"
+#include "fallback.h"  // IWYU pragma: keep
 #include "util.h"
-
 #include "builtin.h"
 #include "common.h"
 #include "wgetopt.h"
+#include "io.h"
+#include "wutil.h"  // IWYU pragma: keep
 
+class parser_t;
 
 /**
    Struct describing a resource limit

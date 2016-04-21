@@ -6,8 +6,6 @@
 
    Non-fatal errors are printed as soon as they are encountered; otherwise you would have to wait for the execution to finish to see them.
 */
-
-#include "parse_execution.h"
 #include <assert.h>
 #include <errno.h>
 #include <stdarg.h>
@@ -18,8 +16,11 @@
 #include <wchar.h>
 #include <wctype.h>
 #include <string>
-#include <memory> // IWYU pragma: keep - suggests <tr1/memory> instead
+#include <memory>
 #include <vector>
+#include <stdbool.h>
+
+#include "parse_execution.h"
 #include "env.h"
 #include "event.h"
 #include "tokenizer.h"
@@ -35,6 +36,11 @@
 #include "function.h"
 #include "builtin.h"
 #include "exec.h"
+#include "common.h"
+#include "io.h"
+#include "parse_constants.h"
+#include "parse_tree.h"
+#include "proc.h"
 
 /* These are the specific statement types that support redirections */
 static bool specific_statement_type_is_redirectable_block(const parse_node_t &node)

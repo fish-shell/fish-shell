@@ -2,16 +2,17 @@
 
    Provides the "linkage" between a parse_node_tree_t and actual execution structures (job_t, etc.).
 */
-
 #ifndef FISH_PARSE_EXECUTION_H
 #define FISH_PARSE_EXECUTION_H
 
 #include <stddef.h>
+
 #include "common.h"
 #include "io.h"
 #include "parse_constants.h"
 #include "parse_tree.h"
 #include "proc.h"
+#include <stdbool.h>
 
 class parser_t;
 struct block_t;

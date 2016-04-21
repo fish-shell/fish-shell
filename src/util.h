@@ -5,10 +5,6 @@
 #ifndef FISH_UTIL_H
 #define FISH_UTIL_H
 
-#include <wchar.h>
-#include <stdarg.h>
-#include <unistd.h>
-
 /**
    Returns the larger of two ints
 */

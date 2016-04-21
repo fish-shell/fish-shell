@@ -1,16 +1,13 @@
 /** \file input.c
 
     Functions for reading a character of input from stdin.
-
 */
-
 #include "config.h"
 
 #include <assert.h>
 #include <errno.h>
 #include <unistd.h>
 #include <wchar.h>
-
 #if HAVE_NCURSES_H
 #include <ncurses.h>
 #elif HAVE_NCURSES_CURSES_H
@@ -18,17 +15,19 @@
 #else
 #include <curses.h>
 #endif
-
 #if HAVE_TERM_H
 #include <term.h>
 #elif HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>
 #endif
-
 #include <wctype.h>
+#include <vector>
+#include <algorithm>
+#include <memory>
+#include <string>
 
 #include "fallback.h" // IWYU pragma: keep
-#include "wutil.h" // IWYU pragma: keep - needed for wgettext
+#include "wutil.h" // IWYU pragma: keep
 #include "reader.h"
 #include "proc.h"
 #include "common.h"
@@ -37,11 +36,9 @@
 #include "parser.h"
 #include "env.h"
 #include "event.h"
-#include "signal.h" // IWYU pragma: keep - needed for CHECK_BLOCK
+#include "signal.h" // IWYU pragma: keep
 #include "io.h"
 #include "output.h"
-#include <vector>
-#include <algorithm>
 
 #define DEFAULT_TERM L"ansi"
 #define MAX_INPUT_FUNCTION_ARGS 20

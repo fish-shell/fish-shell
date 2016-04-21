@@ -6,16 +6,14 @@
 */
 
 #ifndef FISH_COMPLETE_H
-
-/**
-   Header guard
-*/
 #define FISH_COMPLETE_H
 
 #include <vector>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "common.h"
+
 /**
  * Use all completions
  */

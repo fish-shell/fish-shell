@@ -5,19 +5,17 @@ future, the tokenizer should be extended to support marks,
 tokenizing multiple strings and disposing of unused string
 segments.
 */
-
-#include "config.h" // IWYU pragma: keep
-
 #include <wchar.h>
 #include <wctype.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <assert.h>
 #include <string>
+#include <limits.h>
 
 #include "fallback.h" // IWYU pragma: keep
 #include "common.h"
-#include "wutil.h" // IWYU pragma: keep - needed for wgettext
+#include "wutil.h"  // IWYU pragma: keep
 #include "tokenizer.h"
 
 /* Wow what a hack */

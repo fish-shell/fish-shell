@@ -1,22 +1,18 @@
 /** \file io.c
 
 Utilities for io redirection.
-
 */
-#include "config.h" // IWYU pragma: keep
-
-
 #include <stdio.h>
 #include <errno.h>
 #include <assert.h>
 #include <unistd.h>
+#include <stddef.h>
 
 #include "fallback.h" // IWYU pragma: keep
-#include "wutil.h"
+#include "wutil.h"  // IWYU pragma: keep
 #include "exec.h"
 #include "common.h"
 #include "io.h"
-
 
 io_data_t::~io_data_t()
 {

@@ -4,14 +4,15 @@
 /**
    Constants for various character classifications. Each character of a command string can be classified as one of the following types.
 */
-
 #ifndef FISH_OUTPUT_H
 #define FISH_OUTPUT_H
 
-#include <stddef.h>
 #include <vector>
+#include <stddef.h>
+#include <stdbool.h>
+
 #include "common.h"
-#include "fallback.h"
+#include "fallback.h"  // IWYU pragma: keep
 #include "color.h"
 
 /**

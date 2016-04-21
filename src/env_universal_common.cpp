@@ -3,46 +3,46 @@
 
    The utility library for universal variables. Used both by the
    client library and by the daemon.
-
 */
 #include "config.h"
 
-#include "env_universal_common.h"
-
 #include <fcntl.h>
-#include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <sys/file.h>
-#include <sys/socket.h>
-#include <arpa/inet.h> // IWYU pragma: keep - needed for htonl
+#include <arpa/inet.h> // IWYU pragma: keep
 #include <pwd.h>
 #include <assert.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <wchar.h>
 #include <wctype.h>
-#include <map>
-#include <utility>
-
+#include <string>
+#include <stdbool.h>
+#include <sys/socket.h>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#include <map>
+#include <utility>
+#include <netinet/in.h>
+// We need the ioctl.h header so we can check if SIOCGIFHWADDR is defined by it so we know if we're
+// on a Linux system.
+#include <sys/ioctl.h>  // IWYU pragma: keep
+// We need the sys/file.h for the flock() declaration on Linux but not OS X.
+#include <sys/file.h>  // IWYU pragma: keep
 
+#include "env_universal_common.h"
 #include "fallback.h" // IWYU pragma: keep
 #include "util.h"
-
 #include "common.h"
 #include "wutil.h"
 #include "utf8.h"
+#include "env.h"
 
 #if __APPLE__
 #define FISH_NOTIFYD_AVAILABLE 1

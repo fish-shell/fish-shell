@@ -1,5 +1,4 @@
 // History functions, part of the user interface.
-#include "history.h"
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -16,10 +15,12 @@
 #include <algorithm>
 #include <iterator>
 #include <map>
+#include <pthread.h>
+
 #include "common.h"
-#include "config.h"
 #include "env.h"
 #include "fallback.h"  // IWYU pragma: keep
+#include "history.h"
 #include "iothread.h"
 #include "lru.h"
 #include "parse_constants.h"
@@ -28,7 +29,7 @@
 #include "reader.h"
 #include "sanity.h"
 #include "signal.h"
-#include "wutil.h"
+#include "wutil.h"  // IWYU pragma: keep
 
 // Our history format is intended to be valid YAML. Here it is:
 //

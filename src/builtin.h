@@ -2,14 +2,15 @@
 #ifndef FISH_BUILTIN_H
 #define FISH_BUILTIN_H
 
-#include <stddef.h>  // for size_t
-#include <vector>    // for vector
+#include <stddef.h>
+#include <vector>
 
 #include "common.h"
-#include "io.h"
 
 class completion_t;
 class parser_t;
+class output_stream_t;
+struct io_streams_t;
 
 enum { COMMAND_NOT_BUILTIN, BUILTIN_REGULAR, BUILTIN_FUNCTION };
 
@@ -97,4 +98,22 @@ wcstring builtin_help_get(parser_t &parser, const wchar_t *cmd);
 int define_function(parser_t &parser, io_streams_t &streams, const wcstring_list_t &c_args,
                     const wcstring &contents, int definition_line_offset, wcstring *out_err);
 
+// Print help for the specified builtin. If \c b is sb_err, also print the line information.
+void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
+                        output_stream_t &b);
+
+// Counts the number of non null pointers in the specified array.
+int builtin_count_args(const wchar_t *const *argv);
+
+// Perform error reporting for encounter with unknown option.
+void builtin_unknown_option(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
+                            const wchar_t *opt);
+
+// Perform error reporting for encounter with missing argument.
+void builtin_missing_argument(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
+                              const wchar_t *opt);
+
+// This function works like wperror, but it prints its result into the streams.err string instead
+// to stderr. Used by the builtin commands.
+void builtin_wperror(const wchar_t *s, io_streams_t &streams);
 #endif

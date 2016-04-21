@@ -6,20 +6,16 @@
    benefit from using a more clever memory allocation scheme, perhaps
    an evil combination of talloc, string buffers and reference
    counting.
-
 */
-
 #ifndef FISH_EXPAND_H
-/**
-   Header guard
-*/
 #define FISH_EXPAND_H
 
-#include "config.h"                     // for __warn_unused
+#include "config.h"
 
-#include <wchar.h>
-#include <string>                       // for string
-#include <vector>                       // for vector
+#include <string>
+#include <vector>
+#include <stddef.h>
+#include <stdbool.h>
 
 #include "common.h"
 #include "parse_constants.h"

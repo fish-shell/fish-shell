@@ -2,19 +2,16 @@
 
 Functions for reading a character of input from stdin, using the
 inputrc information for key bindings.
-
 */
-
 #ifndef FISH_INPUT_H
 #define FISH_INPUT_H
 
 #include <stddef.h>
-#include <string>
 #include <vector>
+#include <stdbool.h>
 
 #include "common.h"
 #include "env.h"
-#include "input_common.h"
 
 #define DEFAULT_BIND_MODE L"default"
 #define FISH_BIND_MODE_VAR L"fish_bind_mode"

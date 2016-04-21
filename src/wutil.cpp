@@ -20,11 +20,11 @@
 #include <assert.h>
 #include <string>
 #include <map>
-
-#include "fallback.h"
+#include <memory>
 
 #include "common.h"
-#include "wutil.h"
+#include "fallback.h"  // IWYU pragma: keep
+#include "wutil.h"  // IWYU pragma: keep
 
 typedef std::string cstring;
 

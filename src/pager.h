@@ -1,13 +1,15 @@
 /** \file pager.h
   Pager support
 */
-
 #ifndef FISH_PAGER_H
 #define FISH_PAGER_H
 
 #include <stddef.h>
 #include <string>
 #include <vector>
+#include <memory>
+#include <stdbool.h>
+
 #include "common.h"
 #include "complete.h"
 #include "screen.h"

@@ -1,33 +1,29 @@
 /** \file builtin_commandline.c Functions defining the commandline builtin
 
 Functions used for implementing the commandline builtin.
-
 */
-#include "config.h"
-
 #include <stdlib.h>
-#include <stdio.h>
 #include <wchar.h>
-#include <wctype.h>
-#include <sys/types.h>
-#include <termios.h>
-#include <signal.h>
+#include <assert.h>
+#include <pthread.h>
+#include <errno.h>
+#include <cstring>
+#include <stdbool.h>
 
-#include "fallback.h"
+#include "fallback.h"  // IWYU pragma: keep
 #include "util.h"
-
-#include "wutil.h"
 #include "builtin.h"
 #include "common.h"
 #include "wgetopt.h"
 #include "reader.h"
 #include "proc.h"
-#include "parser.h"
 #include "tokenizer.h"
-#include "input_common.h"
 #include "input.h"
-
 #include "parse_util.h"
+#include "io.h"
+#include "wutil.h"  // IWYU pragma: keep
+
+class parser_t;
 
 /**
    Which part of the comandbuffer are we operating on

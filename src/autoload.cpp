@@ -1,5 +1,4 @@
 // The classes responsible for autoloading functions and completions.
-#include "autoload.h"
 #include <assert.h>
 #include <errno.h>
 #include <sys/stat.h>
@@ -9,12 +8,17 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <pthread.h>
+#include <stddef.h>
+#include <set>
+#include <time.h>
+#include <stdbool.h>
+
+#include "autoload.h"
 #include "common.h"
-#include "config.h"  // IWYU pragma: keep
 #include "env.h"
 #include "exec.h"
-#include "signal.h"  // IWYU pragma: keep - needed for CHECK_BLOCK
-#include "wutil.h"
+#include "wutil.h"  // IWYU pragma: keep
 
 // The time before we'll recheck an autoloaded file.
 static const int kAutoloadStalenessInterval = 15;

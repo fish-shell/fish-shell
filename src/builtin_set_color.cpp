@@ -5,10 +5,6 @@ Functions used for implementing the set_color builtin.
 */
 #include "config.h"
 
-#include "builtin.h"
-#include "color.h"
-#include "output.h"
-
 #if HAVE_NCURSES_H
 #include <ncurses.h>
 #elif HAVE_NCURSES_CURSES_H
@@ -16,13 +12,29 @@ Functions used for implementing the set_color builtin.
 #else
 #include <curses.h>
 #endif
-
 #if HAVE_TERM_H
 #include <term.h>
 #elif HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>
 #endif
+#include <unistd.h>
+#include <assert.h>
+#include <string>
+#include <vector>
+#include <memory>
+#include <stdlib.h>
+#include <stdbool.h>
 
+#include "builtin.h"
+#include "color.h"
+#include "output.h"
+#include "wgetopt.h"
+#include "proc.h"
+#include "io.h"
+#include "common.h"
+#include "wutil.h"  // IWYU pragma: keep
+
+class parser_t;
 
 /**
    Error message for invalid path operations

@@ -3,31 +3,17 @@
 
   Contains datastructures such as automatically growing array lists, priority queues, etc.
 */
-
-#include "config.h"
-
-
-#include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
-#include <math.h>
-#include <sys/time.h>
-#include <stdarg.h>
-#include <string.h>
-#include <ctype.h>
 #include <wctype.h>
-#include <unistd.h>
 #include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
 #include <errno.h>
-#include <assert.h>
+#include <sys/time.h>
 
-#include "fallback.h"
+#include "fallback.h"  // IWYU pragma: keep
 #include "util.h"
-
 #include "common.h"
-#include "wutil.h"
+#include "wutil.h"  // IWYU pragma: keep
 
 int wcsfilecmp(const wchar_t *a, const wchar_t *b)
 {

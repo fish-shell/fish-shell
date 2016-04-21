@@ -1,18 +1,17 @@
 /** \file event.c
 
   Functions for handling event triggers
-
 */
-#include "config.h" // IWYU pragma: keep
-
 #include <signal.h>
-#include <algorithm>
 #include <assert.h>
-#include <stddef.h>
+#include <unistd.h>
+#include <memory>
+#include <algorithm>
 #include <string>
+#include <stdbool.h>
 
 #include "fallback.h" // IWYU pragma: keep
-#include "wutil.h" // IWYU pragma: keep - needed for gettext
+#include "wutil.h" // IWYU pragma: keep
 #include "input_common.h"
 #include "proc.h"
 #include "parser.h"
@@ -20,7 +19,6 @@
 #include "event.h"
 #include "signal.h"
 #include "io.h"
-
 
 /**
    Number of signals that can be queued before an overflow occurs

@@ -2,9 +2,10 @@
 
 Functions having to do with parser keywords, like testing if a function is a block command.
 */
-
 #ifndef FISH_PARSER_KEYWORD_H
 #define FISH_PARSER_KEYWORD_H
+
+#include <stdbool.h>
 
 #include "common.h"
 

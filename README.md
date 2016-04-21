@@ -13,9 +13,9 @@ Detailed user documentation is available by running `help` within fish, and also
 
 ## Building
 
-fish is written in a sane subset of C++98, with a few components from C++TR1. It builds successfully with g++ 4.2 or later, and with clang. It also will build as C++11.
+Fish can be built using a C++11 environment but only requires C++03. It builds successfully with g++ 4.2 or later, and with clang. This allows fish to run on older systems such as OS X Snow Leopard (released in 2009).
 
-fish can be built using autotools or Xcode. autoconf 2.60 or later is required to build from git versions, but is not required for releases.
+Fish can be built using autotools or Xcode. autoconf 2.60 or later is required to build from git versions, but is not required for releases.
 
 fish depends on a curses implementation, such as ncurses. The headers and libraries are required for building.
 

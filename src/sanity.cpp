@@ -1,8 +1,6 @@
 /** \file sanity.c
   Functions for performing sanity checks on the program state
 */
-#include "config.h" // IWYU pragma: keep
-
 #include <unistd.h>
 
 #include "fallback.h" // IWYU pragma: keep
@@ -12,7 +10,6 @@
 #include "history.h"
 #include "reader.h"
 #include "kill.h"
-
 
 /**
    Status from earlier sanity checks

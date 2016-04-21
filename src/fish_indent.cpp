@@ -1,3 +1,4 @@
+// The fish_indent program.
 /*
 Copyright (C) 2014 ridiculous_fish
 
@@ -14,10 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
-
-// The fish_indent proegram.
-#include "config.h"
-
 #include <getopt.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -27,11 +24,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 #include <locale.h>
 #include <stddef.h>
 #include <string>
+#include <memory>
+#include <wctype.h>
+#include <stdbool.h>
 
 #include "color.h"
 #include "highlight.h"
 #include "parse_constants.h"
-#include "wutil.h"
+#include "wutil.h"  // IWYU pragma: keep
 #include "common.h"
 #include "output.h"
 #include "env.h"

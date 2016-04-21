@@ -4,11 +4,10 @@ String expansion functions. These functions perform several kinds of
 parameter expansion.
 
 */
-
-#include "config.h" // IWYU pragma: keep
+// IWYU pragma: no_include <cstddef>
+#include "config.h"
 
 #include <stdlib.h>
-#include <stdio.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <wchar.h>
@@ -16,38 +15,43 @@ parameter expansion.
 #include <wctype.h>
 #include <errno.h>
 #include <pwd.h>
-#include <dirent.h>
-#include <sys/stat.h>
 #include <unistd.h>
 #include <algorithm>
 #ifdef HAVE_SYS_SYSCTL_H
-#include <sys/sysctl.h> // IWYU pragma: keep - needed for KERN_PROCARGS2
+#include <sys/sysctl.h>  // IWYU pragma: keep
 #endif
-
 #include <assert.h>
 #include <vector>
-
 #ifdef SunOS
 #include <procfs.h>
+#endif
+#include <memory>  // IWYU pragma: keep
+#include <stdio.h>
+#if __APPLE__
+#include <sys/proc.h>
+#else
+#include <sys/stat.h>
+#include <dirent.h>
 #endif
 
 #include "fallback.h" // IWYU pragma: keep
 #include "util.h"
-
 #include "common.h"
-#include "wutil.h"
+#include "wutil.h"  // IWYU pragma: keep
 #include "env.h"
 #include "proc.h"
-#include "parser.h"
 #include "path.h"
 #include "expand.h"
 #include "wildcard.h"
 #include "exec.h"
-#include "tokenizer.h"
 #include "complete.h"
 #include "iothread.h"
-
 #include "parse_util.h"
+#include "parse_constants.h"
+#ifdef KERN_PROCARGS2
+#else
+#include "tokenizer.h"
+#endif
 
 /**
    Description for child process

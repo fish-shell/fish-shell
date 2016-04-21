@@ -5,15 +5,13 @@ output to screen efficiently by keeping an internal representation
 of the current screen contents and trying to find the most
 efficient way for transforming that to the desired screen content.
 */
-
+// IWYU pragma: no_include <cstddef>
 #include "config.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
 #include <unistd.h>
-
 #if HAVE_NCURSES_H
 #include <ncurses.h>
 #elif HAVE_NCURSES_CURSES_H
@@ -21,23 +19,19 @@ efficient way for transforming that to the desired screen content.
 #else
 #include <curses.h>
 #endif
-
 #if HAVE_TERM_H
 #include <term.h>
 #elif HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>
 #endif
-
 #include <wchar.h>
 #include <time.h>
-
 #include <assert.h>
 #include <algorithm>
 #include <string>
 #include <vector>
 
-
-#include "fallback.h"
+#include "fallback.h"  // IWYU pragma: keep
 #include "common.h"
 #include "util.h"
 #include "output.h"

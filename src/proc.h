@@ -7,18 +7,19 @@
   needed.
 
 */
-
 #ifndef FISH_PROC_H
 #define FISH_PROC_H
+#include "config.h"  // IWYU pragma: keep
 
 #include <signal.h>
-#include <sys/time.h>
 #include <list>
-#include <assert.h>                     // for assert
-#include <stddef.h>                     // for size_t
-#include <termios.h>                    // for pid_t, termios
+#include <assert.h>
+#include <stddef.h>
+#include <termios.h>
+#include <unistd.h>
+#include <stdbool.h>
+#include <sys/time.h>  // IWYU pragma: keep
 
-#include "config.h"                     // for HAVE__PROC_SELF_STAT
 #include "io.h"
 #include "common.h"
 #include "parse_tree.h"

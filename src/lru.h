@@ -2,7 +2,6 @@
 
     Least-recently-used cache implementation
 */
-
 #ifndef FISH_LRU_H
 #define FISH_LRU_H
 
@@ -11,6 +10,7 @@
 #include <map>
 #include <set>
 #include <list>
+
 #include "common.h"
 
 /** A predicate to compare dereferenced pointers */

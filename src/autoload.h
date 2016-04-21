@@ -6,6 +6,8 @@
 #include <stddef.h>
 #include <time.h>
 #include <set>
+#include <stdbool.h>
+
 #include "common.h"
 #include "lru.h"
 

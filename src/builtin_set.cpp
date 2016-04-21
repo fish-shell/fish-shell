@@ -3,28 +3,30 @@
 Functions used for implementing the set builtin.
 
 */
-#include "config.h"
-
 #include <stdlib.h>
-#include <stdio.h>
 #include <wchar.h>
 #include <wctype.h>
-#include <sys/types.h>
-#include <termios.h>
-#include <signal.h>
 #include <vector>
 #include <algorithm>
-#include "fallback.h"
-#include "util.h"
+#include <sys/stat.h>
+#include <string>
+#include <memory>
+#include <errno.h>
+#include <set>
+#include <iterator>
+#include <stdbool.h>
 
-#include "wutil.h"
+#include "fallback.h"  // IWYU pragma: keep
+#include "wutil.h"  // IWYU pragma: keep
 #include "builtin.h"
 #include "env.h"
 #include "expand.h"
 #include "common.h"
 #include "wgetopt.h"
 #include "proc.h"
-#include "parser.h"
+#include "io.h"
+
+class parser_t;
 
 /**
    Error message for invalid path operations

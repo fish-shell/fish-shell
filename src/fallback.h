@@ -1,16 +1,23 @@
-
 #ifndef FISH_FALLBACK_H
 #define FISH_FALLBACK_H
 
-#include <stdio.h>
+#include "config.h"
+
+// IWYU likes to recommend adding <term.h> when we want <ncurses.h>. If we add <term.h> it breaks
+// compiling several modules that include this header because they use symbols which are defined as
+// macros in <term.h>.
+// IWYU pragma: no_include <term.h>
 #include <stdint.h>
-#include <stdarg.h>
-#include <wctype.h>
-#include <wchar.h>
-#include <limits.h>
-#include <sys/time.h>
-#include <sys/types.h>
 #include <signal.h>
+#include <unistd.h>
+// The following include must be kept despite what IWYU says. That's because of the interaction
+// between the weak linking of `wcsdup` and `wcscasecmp` via `#define`s below and the declarations
+// in <wchar.h>. At least on OS X if we don't do this we get compilation errors do to the macro
+// substitution if wchar.h is included after this header.
+#include <wchar.h>  // IWYU pragma: keep
+#if HAVE_NCURSES_H
+#include <ncurses.h>  // IWYU pragma: keep
+#endif
 
 /** fish's internal versions of wcwidth and wcswidth, which can use an internal implementation if the system one is busted. */
 int fish_wcwidth(wchar_t wc);

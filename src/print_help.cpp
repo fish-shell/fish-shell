@@ -1,12 +1,9 @@
-
 /** \file print_help.c
   Print help message for the specified command
 */
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stddef.h>
 #include <sys/types.h>
 
 #include "print_help.h"

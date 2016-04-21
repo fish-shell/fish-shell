@@ -5,14 +5,11 @@
     paramaters.
 
 */
-
 #ifndef FISH_WILDCARD_H
-/**
-   Header guard
-*/
 #define FISH_WILDCARD_H
 
 #include <vector>
+#include <stdbool.h>
 
 #include "common.h"
 #include "expand.h"

@@ -3,16 +3,12 @@
 Various functions, mostly string utilities, that are used by most
 parts of fish.
 */
-
 #include "config.h"
 
-
 #include <unistd.h>
-
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
-
 #include <stdlib.h>
 #include <termios.h>
 #include <wchar.h>
@@ -22,28 +18,26 @@ parts of fish.
 #include <assert.h>
 #include <math.h>
 #include <signal.h>
-
-
 #ifdef HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
-
 #include <sys/stat.h>
 #include <wctype.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdarg.h>
+#include <stddef.h>
 #include <locale.h>
 #include <sys/time.h>
 #include <algorithm>
-
 #ifdef HAVE_EXECINFO_H
 #include <execinfo.h>
 #endif
+#include <stdint.h>
+#include <stdbool.h>
 
-#include "fallback.h"
-
-#include "wutil.h"
+#include "fallback.h"  // IWYU pragma: keep
+#include "wutil.h"  // IWYU pragma: keep
 #include "common.h"
 #include "expand.h"
 #include "wildcard.h"

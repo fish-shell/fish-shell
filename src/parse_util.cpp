@@ -7,26 +7,26 @@
   used in many places in fish and that are somehow related to
   parsing the code.
 */
-
-#include "config.h" // IWYU pragma: keep
-
 #include <stdlib.h>
 #include <stdarg.h>
 #include <wchar.h>
 #include <string>
 #include <assert.h>
+#include <stdio.h>
+#include <memory>
+#include <stdbool.h>
 
-#include "fallback.h"
+#include "fallback.h"  // IWYU pragma: keep
 #include "util.h"
-#include "wutil.h" // IWYU pragma: keep
+#include "wutil.h"  // IWYU pragma: keep
 #include "common.h"
 #include "tokenizer.h"
 #include "parse_util.h"
 #include "expand.h"
-#include "env.h"
 #include "wildcard.h"
 #include "parse_tree.h"
 #include "builtin.h"
+#include "parse_constants.h"
 
 /** Error message for improper use of the exec builtin */
 #define EXEC_ERR_MSG _(L"The '%ls' command can not be used in a pipeline")

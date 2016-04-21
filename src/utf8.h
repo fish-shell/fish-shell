@@ -21,7 +21,6 @@
 #define _UTF8_H_
 
 #include <stddef.h>
-
 #include <string>
 
 #define UTF8_IGNORE_ERROR		0x01

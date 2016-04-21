@@ -1,29 +1,26 @@
 /** \file common.h
 	Prototypes for various functions, mostly string utilities, that are used by most parts of fish.
 */
-
 #ifndef FISH_COMMON_H
-/**
-   Header guard
-*/
 #define FISH_COMMON_H
+#include "config.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>
-#include <termios.h>
 #include <string>
 #include <sstream>
 #include <vector>
 #include <pthread.h>
 #include <string.h>
-#include <stdarg.h>
-#include <stddef.h>
 #include <sys/types.h>
-
 #include <errno.h>
-#include "config.h"
-#include "fallback.h"
+#include <termios.h>
+#include <memory>
+#include <stdbool.h>
+
+#include "fallback.h"  // IWYU pragma: keep
+#include "signal.h"  // IWYU pragma: keep
 
 /**
    Avoid writing the type name twice in a common "static_cast-initialization".

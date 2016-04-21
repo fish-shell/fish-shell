@@ -1,21 +1,14 @@
 /** \file fish_tests.c
   Various bug and feature tests. Compiled and run by make test.
 */
-
-#include "config.h"
-
+// IWYU pragma: no_include <cstring>
 #include <stdlib.h>
 #include <stdio.h>
 #include <wchar.h>
 #include <string.h>
 #include <unistd.h>
-#include <errno.h>
-#include <unistd.h>
-#include <termios.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/wait.h>
-#include <fcntl.h>
 #include <stdarg.h>
 #include <libgen.h>
 #include <iostream>
@@ -25,31 +18,36 @@
 #include <iterator>
 #include <signal.h>
 #include <locale.h>
-#include <dirent.h>
 #include <time.h>
+#include <assert.h>
+#include <limits.h>
+#include <pthread.h>
+#include <stddef.h>
+#include <memory>
+#include <set>
+#include <vector>
+#include <wctype.h>
+#include <stdbool.h>
+#include <sys/select.h>
 
-#include "fallback.h"
+#include "fallback.h"  // IWYU pragma: keep
 #include "util.h"
 #include "common.h"
 #include "proc.h"
 #include "reader.h"
 #include "builtin.h"
 #include "function.h"
-#include "autoload.h"
 #include "complete.h"
-#include "wutil.h"
+#include "wutil.h"  // IWYU pragma: keep
 #include "env.h"
 #include "expand.h"
 #include "parser.h"
 #include "tokenizer.h"
-#include "output.h"
-#include "exec.h"
 #include "event.h"
 #include "path.h"
 #include "history.h"
 #include "highlight.h"
 #include "iothread.h"
-#include "postfork.h"
 #include "signal.h"
 #include "parse_tree.h"
 #include "parse_util.h"
@@ -59,6 +57,12 @@
 #include "utf8.h"
 #include "env_universal_common.h"
 #include "wcstringutil.h"
+#include "color.h"
+#include "io.h"
+#include "lru.h"
+#include "parse_constants.h"
+#include "screen.h"
+#include "input_common.h"
 
 static const char * const * s_arguments;
 static int s_test_run_count = 0;

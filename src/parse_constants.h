@@ -2,9 +2,8 @@
 
     Constants used in the programmatic representation of fish code.
 */
-
-#ifndef fish_parse_constants_h
-#define fish_parse_constants_h
+#ifndef FISH_PARSE_CONSTANTS_H
+#define FISH_PARSE_CONSTANTS_H
 
 #include "config.h"
 

@@ -5,12 +5,12 @@
 #ifndef FISH_HIGHLIGHT_H
 #define FISH_HIGHLIGHT_H
 
-#include <assert.h>                     // for assert
-#include <stddef.h>                     // for size_t
-#include <stdint.h>                     // for uint32_t
-#include <vector>                       // for vector
+#include <assert.h>
+#include <stdint.h>
+#include <vector>
+#include <stdbool.h>
 
-#include "common.h"                     // for wcstring, wcstring_list_t
+#include "common.h"
 #include "env.h"
 #include "color.h"
 

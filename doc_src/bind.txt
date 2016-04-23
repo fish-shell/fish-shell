@@ -131,7 +131,7 @@ The following special input functions are available:
 \subsection bind-example Examples
 
 \fish
-bind \cd 'exit'
+bind \\cd 'exit'
 \endfish
 Causes `fish` to exit when @key{Control,D} is pressed.
 
@@ -142,7 +142,7 @@ Performs a history search when the @key{Page Up} key is pressed.
 
 \fish
 set -g fish_key_bindings fish_vi_key_bindings
-bind -M insert \cc kill-whole-line force-repaint
+bind -M insert \\cc kill-whole-line force-repaint
 \endfish
 Turns on Vi key bindings and rebinds @key{Control,C} to clear the input line.
 

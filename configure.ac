@@ -836,6 +836,8 @@ if test "x$included_pcre2" != "xyes"; then
             else
               # use the internal version
               included_pcre2=yes
+              LIBS="$XLIBS"
+              CXXFLAGS="$XCXXFLAGS"
             fi
           ]
         )

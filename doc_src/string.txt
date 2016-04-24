@@ -103,7 +103,7 @@ The following subcommands are available:
 
 \fish{cli-dark}
 >_ echo \\x07 | string escape
-<bs>cg</bs>
+\bksl{cg}
 \endfish
 
 \subsection string-example-match-glob Match Glob Examples
@@ -136,7 +136,7 @@ The following subcommands are available:
 >_ string match -r 'cat|dog|fish' 'nice dog'
 \outp{dog}
 
->_ string match -r '(\\d\\d?):(\\d\\d):(\\d\\d)' <asis>2:34:56</asis>
+>_ string match -r '(\\d\\d?):(\\d\\d):(\\d\\d)' \asis{2:34:56}
 \outp{2:34:56}
 \outp{2}
 \outp{34}

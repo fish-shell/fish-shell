@@ -154,14 +154,15 @@ The following can be used in \\fish blocks to render some fish scenarios. These 
 
 ### Custom formatting tags
 
-- `<s>`: auto\<s\>suggestion\</s\>.
-- `<m>`: \<m\>Matched\</m\> items, such as tab completions.
-- `<sm>`: Matched items \<sm\>searched\<sm\> for, like grep results.
-- `<error>`: \<error\>This would be shown as an error.\</error\>
-- `<asis>`: \<asis\>This text will not be parsed for fish markup.\</asis\>
-- `<bs>`: Render the contents with a preceding backslash. Useful when presenting output.
 - `{{` and `}}`: Required when wanting curly braces in regular expression example.
+- `\\asis`: \\asis\{This text will not be parsed for fish markup.\}
+- `\\bksl`: \\bksl\{Render the contents with a preceding backslash. Useful when presenting output.}
+- `\\eror`: \\eror\{This would be shown as an error.\}
+- `\\mtch`: \\mtch\{Matched\} items, such as tab completions.
 - `\\outp`: \\outp\{This would be rendered as command/script output.\}
+- `\\sgst`: auto\\sgst\{suggestion\}.
+- `\\smtc`: Matched items \\smtc\{searched\} for, like grep results.
+- `\\undr`: \\undr\{These words are underlined\}.
 
 ### Prompts and cursors
 

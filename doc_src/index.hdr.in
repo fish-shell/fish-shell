@@ -70,7 +70,7 @@ rm "cumbersome filename.txt"
 Will remove the file 'cumbersome filename.txt', while
 
 \fish
-rm <asis>cumbersome filename.txt</asis>
+rm \asis{cumbersome filename.txt}
 \endfish
 
 would remove the two files 'cumbersome' and 'filename.txt'.

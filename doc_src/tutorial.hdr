@@ -56,7 +56,7 @@ When you start `fish`, you should see this:
 \fish{cli-dark}
 \outp{Welcome to fish, the friendly interactive shell}
 \outp{Type <span class="cwd">help</span> for instructions on how to use fish}
-<asis>you@hostname</asis> ~>____
+\asis{you@hostname} ~>____
 \endfish
 
 `fish` comes with a default prompt that shows your username, hostname, and working directory. You'll see <a href="#tut_prompt">how to change your prompt</a> further down. From now on, we'll pretend your prompt is just a '`>`' to save space.
@@ -99,7 +99,7 @@ Commands can be chained with semicolons.
 You'll quickly notice that `fish` performs syntax highlighting as you type. Invalid commands are colored red by default:
 
 \fish{cli-dark}
->_ <error>/bin/mkd</error>
+>_ \eror{/bin/mkd}
 \endfish
 
 A command may be invalid because it does not exist, or refers to a file that you cannot execute. When the command becomes valid, it is shown in a different color:
@@ -111,7 +111,7 @@ A command may be invalid because it does not exist, or refers to a file that you
 `fish` will underline valid file paths as you type them:
 
 \fish{cli-dark}
->_ cat <u>~/somefi</u>___
+>_ cat \undr{~/somefi}___
 \endfish
 
 This tells you that there exists a file that starts with '`somefi`', which is useful feedback as you type.
@@ -170,19 +170,19 @@ stdin and stdout can be redirected via the familiar &lt; and &gt;. Unlike other 
 `fish` suggests commands as you type, and shows the suggestion to the right of the cursor, in gray. For example:
 
 \fish{cli-dark}
->_ <error>/bin/h</error><s>___ostname</s>
+>_ \eror{/bin/h}\sgst{___ostname}
 \endfish
 
 It knows about paths and options:
 
 \fish{cli-dark}
->_ grep --i<s>___gnore-case</s>
+>_ grep --i\sgst{___gnore-case}
 \endfish
 
 And history too. Type a command once, and you can re-summon it by just typing a few letters:
 
 \fish{cli-dark}
->_ <error>r</error><s>___sync -avze ssh . myname@somelonghost.com:/some/long/path/doo/dee/doo/dee/doo</s>
+>_ \eror{r<}\sgst{___sync -avze ssh . myname@somelonghost.com:/some/long/path/doo/dee/doo/dee/doo}
 \endfish
 
 To accept the autosuggestion, hit @cursor_key{&rarr;,right arrow} or @key{Control,F}. To accept a single word of the autosuggestion, @key{Alt,&rarr;} (right arrow). If the autosuggestion is not what you want, just ignore it.
@@ -194,14 +194,14 @@ To accept the autosuggestion, hit @cursor_key{&rarr;,right arrow} or @key{Contro
 Press @key{Tab}, and `fish` will attempt to complete the command, argument, or path:
 
 \fish{cli-dark}
->_ <error>/pri</error> @key{Tab} &rarr; /private/
+>_ \eror{/pri} @key{Tab} &rarr; /private/
 \endfish
 
 If there's more than one possibility, it will list them:
 
 \fish{cli-dark}
->_ <error>~/stuff/s</error> @key{Tab}
-\outp{<m>~/stuff/s</m>cript.sh  <i>(Executable, 4.8kB)</i>  <m>~/stuff/s</m>ources/  <i>(Directory)</i>}
+>_ \eror{~/stuff/s} @key{Tab}
+\outp{\mtch{~/stuff/s}cript.sh  <i>(Executable, 4.8kB)</i>  \mtch{~/stuff/s}ources/  <i>(Directory)</i>}
 \endfish
 
 Hit tab again to cycle through the possibilities.
@@ -211,7 +211,7 @@ Hit tab again to cycle through the possibilities.
 \fish{cli-dark}
 >_ git merge pr @key{Tab} &rarr; git merge prompt_designer
 >_ git checkout b @key{Tab}
-\outp{<m>b</m>uiltin_list_io_merge <i>(Branch)</i> <m>b</m>uiltin_set_color <i>(Branch)</i> <m>b</m>usted_events <i>(Tag)</i>}
+\outp{\mtch{b}uiltin_list_io_merge <i>(Branch)</i> \mtch{b}uiltin_set_color <i>(Branch)</i> \mtch{b}usted_events <i>(Tag)</i>}
 \endfish
 
 Try hitting tab and see what `fish` can do!
@@ -275,7 +275,7 @@ Unlike other shells, `fish` does not have an export command. Instead, a variable
 \fish{cli-dark}
 >_ set -x MyVariable SomeValue
 >_ env | grep MyVariable
-\outp{<sm>MyVariable</sm>=SomeValue}
+\outp{\smtc{MyVariablem}=SomeValue}
 \endfish
 
 You can erase a variable with `-e` or `--erase`
@@ -506,7 +506,7 @@ You can define your own prompt:
 >_ function fish_prompt
     echo "New Prompt % "
 end
-<asis>New Prompt % </asis>___
+\asis{New Prompt % }___
 \endfish
 
 Multiple lines are OK. Colors can be set via `set_color`, passing it named ANSI colors, or hex RGB values:

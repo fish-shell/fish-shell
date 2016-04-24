@@ -789,6 +789,7 @@ else
   AC_MSG_RESULT(no)
 fi
 
+pcre2_min_version=10.21
 EXTRA_PCRE2=
 AC_ARG_WITH(
   included-pcre2,
@@ -817,8 +818,28 @@ if test "x$included_pcre2" != "xyes"; then
     # and so AC_CHECK_LIB won't work (can't use a variable as library name)
     # AC_SEARCH_LIBS will use the existing $LIBS flags with no additional library first
     AC_SEARCH_LIBS([pcre2_compile_$WCHAR_T_BITS], [],
-      [ working_pcre2=yes
-        AC_MSG_NOTICE([using system PCRE2 library])
+      [ # pcre2 lib found, check for minimum version
+        pcre2_version=`$PCRE2_CONFIG --version`
+        AS_VERSION_COMPARE([$pcre2_version], [$pcre2_min_version],
+          [ # version < minimum
+            AC_MSG_NOTICE([system PCRE2 library version $pcre2_version, need $pcre2_min_version or later])
+            if test "x$included_pcre2" = "xno"; then
+              # complain about pcre2 version
+              AC_MSG_ERROR([system PCRE2 library is too old, but --without-included-pcre2 was given.])
+            else
+              # use the internal version; undo changes to LIBS/CXXFLAGS
+              included_pcre2=yes
+              LIBS="$XLIBS"
+              CXXFLAGS="$XCXXFLAGS"
+            fi
+          ],
+          [ # version == minimum
+            working_pcre2=yes
+          ],
+          [ # version > minimum
+            working_pcre2=yes
+          ]
+        )
       ],
       [ # fail case; undo the changes to LIBS/CXXFLAGS
        working_pcre2=no
@@ -828,7 +849,9 @@ if test "x$included_pcre2" != "xyes"; then
     )
   fi
 
-  if test "x$working_pcre2" != "xyes"; then
+  if test "x$working_pcre2" = "xyes"; then
+    AC_MSG_NOTICE([using system PCRE2 library])
+  else
     # pcre2 size wrong or pcre2-config not found
     # is it OK to use the included version?
     if test "x$included_pcre2" = "xno"; then

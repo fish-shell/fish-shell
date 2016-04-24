@@ -834,29 +834,35 @@ if test "x$included_pcre2" != "xyes"; then
             fi
           ],
           [ # version == minimum
-            AC_MSG_NOTICE([using system PCRE2 library])
+            working_pcre2=yes
           ],
           [ # version > minimum
-            AC_MSG_NOTICE([using system PCRE2 library])
+            working_pcre2=yes
           ]
         )
       ],
-      [ # fail case
-        # pcre2 size wrong or pcre2-config not found
-        # is it OK to use the included version?
-        if test "x$included_pcre2" = "xno"; then
-          # complain
-          AC_MSG_ERROR([cannot find system pcre2-config, but --without-included-pcre2 was given.
-Make sure pcre2-config is installed and available in PATH.
-You may need to install the PCRE2 development library for your system.])
-        else
-          # use the internal version; undo changes to LIBS/CXXFLAGS
-          included_pcre2=yes
-          LIBS="$XLIBS"
-          CXXFLAGS="$XCXXFLAGS"
-        fi
+      [ # fail case; undo the changes to LIBS/CXXFLAGS
+       working_pcre2=no
+       LIBS="$XLIBS"
+       CXXFLAGS="$XCXXFLAGS"
       ]
     )
+  fi
+
+  if test "x$working_pcre2" = "xyes"; then
+    AC_MSG_NOTICE([using system PCRE2 library])
+  else
+    # pcre2 size wrong or pcre2-config not found
+    # is it OK to use the included version?
+    if test "x$included_pcre2" = "xno"; then
+      # complain
+      AC_MSG_ERROR([cannot find system pcre2-config, but --without-included-pcre2 was given.
+Make sure pcre2-config is installed and available in PATH.
+You may need to install the PCRE2 development library for your system.])
+    else
+      # use the internal version
+      included_pcre2=yes
+    fi
   fi
 fi
 

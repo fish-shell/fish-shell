@@ -21,7 +21,6 @@
 #include <algorithm>
 #include <unistd.h>
 
-#define MAX_REPLACE_SIZE    size_t(1048576)  // pcre2_substitute maximum output size in wchar_t
 #define STRING_ERR_MISSING  _(L"%ls: Expected argument\n")
 
 /* externs from builtin.cpp */
@@ -801,7 +800,6 @@ public:
 
     bool replace_matches(const wchar_t *arg)
     {
-
         // A return value of true means all is well (even if no replacements
         // were performed), false indicates an unrecoverable error.
         if (regex.code == 0)
@@ -810,17 +808,18 @@ public:
             return false;
         }
 
-        uint32_t options = opts.all ? PCRE2_SUBSTITUTE_GLOBAL : 0;
+        uint32_t options = PCRE2_SUBSTITUTE_OVERFLOW_LENGTH | PCRE2_SUBSTITUTE_EXTENDED |
+                           (opts.all ? PCRE2_SUBSTITUTE_GLOBAL : 0);
         size_t arglen = wcslen(arg);
         PCRE2_SIZE bufsize = (arglen == 0) ? 16 : 2 * arglen;
         wchar_t *output = (wchar_t *)malloc(sizeof(wchar_t) * bufsize);
-        if (output == NULL)
-        {
-            DIE_MEM();
-        }
         int pcre2_rc = 0;
         for (;;)
         {
+            if (output == NULL)
+            {
+                DIE_MEM();
+            }
             PCRE2_SIZE outlen = bufsize;
             pcre2_rc = pcre2_substitute(
                             regex.code,
@@ -835,22 +834,12 @@ public:
                             (PCRE2_UCHAR *)output,
                             &outlen);
 
-            if (pcre2_rc == PCRE2_ERROR_NOMEMORY)
+            if (pcre2_rc == PCRE2_ERROR_NOMEMORY && bufsize < outlen)
             {
-                if (bufsize < MAX_REPLACE_SIZE)
-                {
-                    bufsize = std::min(2 * bufsize, MAX_REPLACE_SIZE);
-                    // cppcheck-suppress memleakOnRealloc
-                    output = (wchar_t *)realloc(output, sizeof(wchar_t) * bufsize);
-                    if (output == NULL)
-                    {
-                        DIE_MEM();
-                    }
-                    continue;
-                }
-                string_error(streams, _(L"%ls: Replacement string too large\n"), argv0);
-                free(output);
-                return false;
+                bufsize = outlen;
+                // cppcheck-suppress memleakOnRealloc
+                output = (wchar_t *)realloc(output, sizeof(wchar_t) * bufsize);
+                continue;
             }
             break;
         }

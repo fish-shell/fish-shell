@@ -789,7 +789,7 @@ else
   AC_MSG_RESULT(no)
 fi
 
-MIN_PCRE2_VERSION=10.21
+pcre2_min_version=10.21
 EXTRA_PCRE2=
 AC_ARG_WITH(
   included-pcre2,
@@ -819,49 +819,44 @@ if test "x$included_pcre2" != "xyes"; then
     # AC_SEARCH_LIBS will use the existing $LIBS flags with no additional library first
     AC_SEARCH_LIBS([pcre2_compile_$WCHAR_T_BITS], [],
       [ # pcre2 lib found, check for minimum version
-        AC_MSG_CHECKING([for PCRE2 $MIN_PCRE2_VERSION or later])
-        PCRE2_VERSION=`$PCRE2_CONFIG --version`
-        AX_COMPARE_VERSION([$PCRE2_VERSION], [ge], [$MIN_PCRE2_VERSION],
-          [ # version ok
-            working_pcre2=yes
-            AC_MSG_RESULT([yes])
-            AC_MSG_NOTICE([using system PCRE2 library])
-          ],
-          [ # minimum version not satisfied
-            AC_MSG_RESULT([no])
-            AC_MSG_NOTICE([system PCRE2 library version $PCRE2_VERSION, need $MIN_PCRE2_VERSION or later])
+        pcre2_version=`$PCRE2_CONFIG --version`
+        AS_VERSION_COMPARE([$pcre2_version], [$pcre2_min_version],
+          [ # version < minimum
+            AC_MSG_NOTICE([system PCRE2 library version $pcre2_version, need $pcre2_min_version or later])
             if test "x$included_pcre2" = "xno"; then
               # complain about pcre2 version
               AC_MSG_ERROR([system PCRE2 library is too old, but --without-included-pcre2 was given.])
             else
-              # use the internal version
+              # use the internal version; undo changes to LIBS/CXXFLAGS
               included_pcre2=yes
               LIBS="$XLIBS"
               CXXFLAGS="$XCXXFLAGS"
             fi
+          ],
+          [ # version == minimum
+            AC_MSG_NOTICE([using system PCRE2 library])
+          ],
+          [ # version > minimum
+            AC_MSG_NOTICE([using system PCRE2 library])
           ]
         )
       ],
-      [ # fail case; undo the changes to LIBS/CXXFLAGS
-       working_pcre2=no
-       LIBS="$XLIBS"
-       CXXFLAGS="$XCXXFLAGS"
-      ]
-    )
-  fi
-
-  if test "x$working_pcre2" != "xyes"; then
-    # pcre2 size wrong or pcre2-config not found
-    # is it OK to use the included version?
-    if test "x$included_pcre2" = "xno"; then
-      # complain
-      AC_MSG_ERROR([cannot find system pcre2-config, but --without-included-pcre2 was given.
+      [ # fail case
+        # pcre2 size wrong or pcre2-config not found
+        # is it OK to use the included version?
+        if test "x$included_pcre2" = "xno"; then
+          # complain
+          AC_MSG_ERROR([cannot find system pcre2-config, but --without-included-pcre2 was given.
 Make sure pcre2-config is installed and available in PATH.
 You may need to install the PCRE2 development library for your system.])
-    else
-      # use the internal version
-      included_pcre2=yes
-    fi
+        else
+          # use the internal version; undo changes to LIBS/CXXFLAGS
+          included_pcre2=yes
+          LIBS="$XLIBS"
+          CXXFLAGS="$XCXXFLAGS"
+        fi
+      ]
+    )
   fi
 fi
 

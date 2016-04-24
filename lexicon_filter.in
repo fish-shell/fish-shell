@@ -71,6 +71,8 @@
         /<[^>]*>/ {
             b html
         }
+        # Preprocess specially recognized commands.
+        s/\\outp/@outp/g
         # Process the rest
         b process
     }

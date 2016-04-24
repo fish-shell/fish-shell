@@ -54,8 +54,8 @@ If you have a strong understanding of other shells, and want to know what `fish`
 When you start `fish`, you should see this:
 
 \fish{cli-dark}
-<outp>Welcome to fish, the friendly interactive shell</outp>
-<outp>Type <span class="cwd">help</span> for instructions on how to use fish</outp>
+\outp{Welcome to fish, the friendly interactive shell}
+\outp{Type <span class="cwd">help</span> for instructions on how to use fish}
 <asis>you@hostname</asis> ~>____
 \endfish
 
@@ -68,7 +68,7 @@ When you start `fish`, you should see this:
 
 \fish{cli-dark}
 >_ echo hello world
-<outp>hello world</outp>
+\outp{hello world}
 \endfish
 
 You can include a literal space in an argument with a backslash, or by using single or double quotes:
@@ -77,7 +77,7 @@ You can include a literal space in an argument with a backslash, or by using sin
 >_ mkdir My\ Files
 >_ cp ~/Some\ File 'My Files'
 >_ ls "My Files"
-<outp>Some File</outp>
+\outp{Some File}
 \endfish
 
 Commands can be chained with semicolons.
@@ -89,8 +89,8 @@ Commands can be chained with semicolons.
 
 \fish{cli-dark}
 >_ man set
-<outp>set - handle shell variables</outp>
-<outp>  Synopsis...</outp>
+\outp{set - handle shell variables}
+\outp{  Synopsis...}
 \endfish
 
 
@@ -125,25 +125,25 @@ These colors, and many more, can be changed by running `fish_config`, or by modi
 
 \fish{cli-dark}
 >_ ls *.jpg
-<outp>lena.jpg</outp>
-<outp>meena.jpg</outp>
-<outp>santa maria.jpg</outp>
+\outp{lena.jpg}
+\outp{meena.jpg}
+\outp{santa maria.jpg}
 \endfish
 
 You can include multiple wildcards:
 
 \fish{cli-dark}
 >_ ls l*.p*
-<outp>lena.png</outp>
-<outp>lesson.pdf</outp>
+\outp{lena.png}
+\outp{lesson.pdf}
 \endfish
 
 Especially powerful is the recursive wildcard ** which searches directories recursively:
 
 \fish{cli-dark}
 >_ ls /var/**.log
-<outp>/var/log/system.log</outp>
-<outp>/var/run/sntp.log</outp>
+\outp{/var/log/system.log}
+\outp{/var/run/sntp.log}
 \endfish
 
 If that directory traversal is taking a long time, you can @key{Control,C} out of it.
@@ -155,7 +155,7 @@ You can pipe between commands with the usual vertical bar:
 
 \fish{cli-dark}
 >_ echo hello world | wc
-<outp>       1       2      12</outp>
+\outp{       1       2      12}
 \endfish
 
 stdin and stdout can be redirected via the familiar &lt; and &gt;. Unlike other shells, stderr is redirected with a caret ^
@@ -201,7 +201,7 @@ If there's more than one possibility, it will list them:
 
 \fish{cli-dark}
 >_ <error>~/stuff/s</error> @key{Tab}
-<outp><m>~/stuff/s</m>cript.sh  <i>(Executable, 4.8kB)</i>  <m>~/stuff/s</m>ources/  <i>(Directory)</i></outp>
+\outp{<m>~/stuff/s</m>cript.sh  <i>(Executable, 4.8kB)</i>  <m>~/stuff/s</m>ources/  <i>(Directory)</i>}
 \endfish
 
 Hit tab again to cycle through the possibilities.
@@ -211,7 +211,7 @@ Hit tab again to cycle through the possibilities.
 \fish{cli-dark}
 >_ git merge pr @key{Tab} &rarr; git merge prompt_designer
 >_ git checkout b @key{Tab}
-<outp><m>b</m>uiltin_list_io_merge <i>(Branch)</i> <m>b</m>uiltin_set_color <i>(Branch)</i> <m>b</m>usted_events <i>(Tag)</i></outp>
+\outp{<m>b</m>uiltin_list_io_merge <i>(Branch)</i> <m>b</m>uiltin_set_color <i>(Branch)</i> <m>b</m>usted_events <i>(Tag)</i>}
 \endfish
 
 Try hitting tab and see what `fish` can do!
@@ -222,16 +222,16 @@ Like other shells, a dollar sign performs variable substitution:
 
 \fish{cli-dark}
 >_ echo My home directory is $HOME
-<outp>My home directory is /home/tutorial</outp>
+\outp{My home directory is /home/tutorial}
 \endfish
 
 Variable substitution also occurs in double quotes, but not single quotes:
 
 \fish{cli-dark}
 >_ echo "My current directory is $PWD"
-<outp>My current directory is /home/tutorial</outp>
+\outp{My current directory is /home/tutorial}
 >_ echo 'My current directory is $PWD'
-<outp>My current directory is $PWD</outp>
+\outp{My current directory is $PWD}
 \endfish
 
 Unlike other shells, `fish` has no dedicated syntax for setting variables. Instead it has an ordinary command: `set`, which takes a variable name, and then its value.
@@ -239,7 +239,7 @@ Unlike other shells, `fish` has no dedicated syntax for setting variables. Inste
 \fish{cli-dark}
 >_ set name 'Mister Noodle'
 >_ echo $name
-<outp>Mister Noodle</outp>
+\outp{Mister Noodle}
 \endfish
 
 (Notice the quotes: without them, `Mister` and `Noodle` would have been separate arguments, and `$name` would have been made into a list of two elements.)
@@ -249,7 +249,7 @@ Unlike other shells, variables are not further split after substitution:
 \fish{cli-dark}
 >_ mkdir $name
 >_ ls
-<outp>Mister Noodle</outp>
+\outp{Mister Noodle}
 \endfish
 
 In bash, this would have created two directories "Mister" and "Noodle". In `fish`, it created only one: the variable had the value "Mister Noodle", so that is the argument that was passed to `mkdir`, spaces and all. Other shells use the term "arrays", rather than lists.
@@ -262,7 +262,7 @@ Unlike other shells, `fish` stores the exit status of the last command in `$stat
 \fish{cli-dark}
 >_ false
 >_ echo $status
-<outp>1</outp>
+\outp{1}
 \endfish
 
 Zero is considered success, and non-zero is failure.
@@ -275,7 +275,7 @@ Unlike other shells, `fish` does not have an export command. Instead, a variable
 \fish{cli-dark}
 >_ set -x MyVariable SomeValue
 >_ env | grep MyVariable
-<outp><sm>MyVariable</sm>=SomeValue</outp>
+\outp{<sm>MyVariable</sm>=SomeValue}
 \endfish
 
 You can erase a variable with `-e` or `--erase`
@@ -283,7 +283,7 @@ You can erase a variable with `-e` or `--erase`
 \fish{cli-dark}
 >_ set -e MyVariable
 >_ env | grep MyVariable
-<outp>(no output)</outp>
+\outp{(no output)}
 \endfish
 
 
@@ -297,7 +297,7 @@ Other variables, like `$PATH`, really do have multiple values. During variable e
 
 \fish{cli-dark}
 >_ echo $PATH
-<outp>/usr/bin /bin /usr/sbin /sbin /usr/local/bin</outp>
+\outp{/usr/bin /bin /usr/sbin /sbin /usr/local/bin}
 \endfish
 
 Lists cannot contain other lists: there is no recursion.  A variable is a list of strings, full stop.
@@ -306,7 +306,7 @@ Get the length of a list with `count`:
 
 \fish{cli-dark}
 >_ count $PATH
-<outp>5</outp>
+\outp{5}
 \endfish
 
 You can append (or prepend) to a list by setting the list to itself, with some additional arguments. Here we append /usr/local/bin to $PATH:
@@ -320,20 +320,20 @@ You can access individual elements with square brackets. Indexing starts at 1 fr
 
 \fish{cli-dark}
 >_ echo $PATH
-<outp>/usr/bin /bin /usr/sbin /sbin /usr/local/bin</outp>
+\outp{/usr/bin /bin /usr/sbin /sbin /usr/local/bin}
 >_ echo $PATH[1]
-<outp>/usr/bin</outp>
+\outp{/usr/bin}
 >_ echo $PATH[-1]
-<outp>/usr/local/bin</outp>
+\outp{/usr/local/bin}
 \endfish
 
 You can also access ranges of elements, known as "slices:"
 
 \fish{cli-dark}
 >_ echo $PATH[1..2]
-<outp>/usr/bin /bin</outp>
+\outp{/usr/bin /bin}
 >_ echo $PATH[-1..2]
-<outp>/usr/local/bin /sbin /usr/sbin /bin</outp>
+\outp{/usr/local/bin /sbin /usr/sbin /bin}
 \endfish
 
 You can iterate over a list (or a slice) with a for loop:
@@ -342,11 +342,11 @@ You can iterate over a list (or a slice) with a for loop:
 >_ for val in $PATH
     echo "entry: $val"
   end
-<outp>entry: /usr/bin/</outp>
-<outp>entry: /bin</outp>
-<outp>entry: /usr/sbin</outp>
-<outp>entry: /sbin</outp>
-<outp>entry: /usr/local/bin</outp>
+\outp{entry: /usr/bin/}
+\outp{entry: /bin}
+\outp{entry: /usr/sbin}
+\outp{entry: /sbin}
+\outp{entry: /usr/local/bin}
 \endfish
 
 Lists adjacent to other lists or strings are expanded as <a href="index.html#cartesian-product">cartesian products</a> unless quoted (see <a href="index.html#expand-variable">Variable expansion</a>):
@@ -355,11 +355,11 @@ Lists adjacent to other lists or strings are expanded as <a href="index.html#car
 >_ set -l a 1 2 3
 >_ set -l 1 a b c
 >_ echo $a$1
-<outp>1a 2a 3a 1b 2b 3b 1c 2c 3c</outp>
+\outp{1a 2a 3a 1b 2b 3b 1c 2c 3c}
 >_ echo $a" banana"
-<outp>1 banana 2 banana 3 banana</outp>
+\outp{1 banana 2 banana 3 banana}
 >_ echo "$a banana"
-<outp>1 2 3 banana</outp>
+\outp{1 2 3 banana}
 \endfish
 
 This is similar to <a href="index.html#expand-brace">Brace expansion</a>.
@@ -370,7 +370,7 @@ Command substitutions use the output of one command as an argument to another. U
 
 \fish{cli-dark}
 >_ echo In (pwd), running (uname)
-<outp>In /home/tutorial, running FreeBSD</outp>
+\outp{In /home/tutorial, running FreeBSD}
 \endfish
 
 A common idiom is to capture the output of a command in a variable:
@@ -378,7 +378,7 @@ A common idiom is to capture the output of a command in a variable:
 \fish{cli-dark}
 >_ set os (uname)
 >_ echo $os
-<outp>Linux</outp>
+\outp{Linux}
 \endfish
 
 Command substitutions are not expanded within quotes. Instead, you can temporarily close the quotes, add the command substitution, and reopen them, all in the same argument:
@@ -386,7 +386,7 @@ Command substitutions are not expanded within quotes. Instead, you can temporari
 \fish{cli-dark}
 >_ touch <i class="quote">"testing_"</i>(date +%s)<i class="quote">".txt"</i>
 >_ ls *.txt
-<outp>testing_1360099791.txt</outp>
+\outp{testing_1360099791.txt}
 \endfish
 
 
@@ -396,7 +396,7 @@ Unlike other shells, `fish` does not have special syntax like &amp;&amp; or || t
 
 \fish{cli-dark}
 >_ cp file1.txt file1_bak.txt; and echo "Backup successful"; or echo "Backup failed"
-<outp>Backup failed</outp>
+\outp{Backup failed}
 \endfish
 
 
@@ -441,9 +441,9 @@ A `fish` function is a list of commands, which may optionally take arguments. Un
      echo Hello $argv
   end
 >_ say_hello
-<outp>Hello</outp>
+\outp{Hello}
 >_ say_hello everybody!
-<outp>Hello everybody!</outp>
+\outp{Hello everybody!}
 \endfish
 
 Unlike other shells, `fish` does not have aliases or special prompt syntax. Functions take their place.
@@ -452,7 +452,7 @@ You can list the names of all functions with the `functions` keyword (note the p
 
 \fish{cli-dark}
 >_ functions
-<outp>alias, cd, delete-or-exit, dirh, dirs, down-or-search, eval, export, fish_command_not_found_setup, fish_config, fish_default_key_bindings, fish_prompt, fish_right_prompt, fish_sigtrap_handler, fish_update_completions, funced, funcsave, grep, help, history, isatty, ls, man, math, nextd, nextd-or-forward-word, open, popd, prevd, prevd-or-backward-word, prompt_pwd, psub, pushd, seq, setenv, trap, type, umask, up-or-search, vared</outp>
+\outp{alias, cd, delete-or-exit, dirh, dirs, down-or-search, eval, export, fish_command_not_found_setup, fish_config, fish_default_key_bindings, fish_prompt, fish_right_prompt, fish_sigtrap_handler, fish_update_completions, funced, funcsave, grep, help, history, isatty, ls, man, math, nextd, nextd-or-forward-word, open, popd, prevd, prevd-or-backward-word, prompt_pwd, psub, pushd, seq, setenv, trap, type, umask, up-or-search, vared}
 \endfish
 
 You can see the source for any function by passing its name to `functions`:
@@ -473,10 +473,10 @@ While loops:
 >_ while true
     echo <i class="quote">"Loop forever"</i>
 end
-<outp>Loop forever</outp>
-<outp>Loop forever</outp>
-<outp>Loop forever</outp>
-<outp>...</outp>
+\outp{Loop forever}
+\outp{Loop forever}
+\outp{Loop forever}
+\outp{...}
 \endfish
 
 For loops can be used to iterate over a list. For example, a list of files:

@@ -28,5 +28,5 @@ The following options are available:
 
 \fish{cli-dark}
 >_ type fg
-<outp>fg is a builtin</outp>
+\outp{fg is a builtin}
 \endfish

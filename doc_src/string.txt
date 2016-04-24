@@ -53,7 +53,7 @@ The following subcommands are available:
 
 \fish{cli-dark}
 >_ string length 'hello, world'
-<outp>12</outp>
+\outp{12}
 
 >_ set str foo
 >_ string length -q $str; echo $status
@@ -63,42 +63,42 @@ The following subcommands are available:
 
 \fish{cli-dark}
 >_ string sub --length 2 abcde
-<outp>ab</outp>
+\outp{ab}
 
 >_ string sub -s 2 -l 2 abcde
-<outp>bc</outp>
+\outp{bc}
 
 >_ string sub --start=-2 abcde
-<outp>de</outp>
+\outp{de}
 \endfish
 
 \fish{cli-dark}
 >_ string split . example.com
-<outp>example</outp>
-<outp>com</outp>
+\outp{example}
+\outp{com}
 
 >_ string split -r -m1 / /usr/local/bin/fish
-<outp>/usr/local/bin</outp>
-<outp>fish</outp>
+\outp{/usr/local/bin}
+\outp{fish}
 
 >_ string split '' abc
-<outp>a</outp>
-<outp>b</outp>
-<outp>c</outp>
+\outp{a}
+\outp{b}
+\outp{c}
 \endfish
 
 \fish{cli-dark}
 >_ seq 3 | string join ...
-<outp>1...2...3</outp>
+\outp{1...2...3}
 \endfish
 
 \fish{cli-dark}
 >_ string trim ' abc  '
-<outp>abc</outp>
+\outp{abc}
 
 >_ string trim --right --chars=yz xyzzy zany
-<outp>x</outp>
-<outp>zan</outp>
+\outp{x}
+\outp{zan}
 \endfish
 
 \fish{cli-dark}
@@ -110,78 +110,78 @@ The following subcommands are available:
 
 \fish{cli-dark}
 >_ string match '?' a
-<outp>a</outp>
+\outp{a}
 
 >_ string match 'a*b' axxb
-<outp>axxb</outp>
+\outp{axxb}
 
 >_ string match -i 'a??B' Axxb
-<outp>Axxb</outp>
+\outp{Axxb}
 
 >_ echo 'ok?' | string match '*\\?'
->_ <outp>ok?</outp>
+>_ \outp{ok?}
 
 >_ string match -r -v "c.*[12]" {cat,dog}(seq 1 4)
-<outp>dog1</outp>
-<outp>dog2</outp>
-<outp>cat3</outp>
-<outp>dog3</outp>
-<outp>cat4</outp>
-<outp>dog4</outp>
+\outp{dog1}
+\outp{dog2}
+\outp{cat3}
+\outp{dog3}
+\outp{cat4}
+\outp{dog4}
 \endfish
 
 \subsection string-example-match-regex Match Regex Examples
 
 \fish{cli-dark}
 >_ string match -r 'cat|dog|fish' 'nice dog'
-<outp>dog</outp>
+\outp{dog}
 
 >_ string match -r '(\\d\\d?):(\\d\\d):(\\d\\d)' <asis>2:34:56</asis>
-<outp>2:34:56</outp>
-<outp>2</outp>
-<outp>34</outp>
-<outp>56</outp>
+\outp{2:34:56}
+\outp{2}
+\outp{34}
+\outp{56}
 
 >_ string match -r '^(\\w{{2,4}})\\g1$' papa mud murmur
-<outp>papa</outp>
-<outp>pa</outp>
-<outp>murmur</outp>
-<outp>mur</outp>
+\outp{papa}
+\outp{pa}
+\outp{murmur}
+\outp{mur}
 
 >_ string match -r -a -n at ratatat
-<outp>2 2</outp>
-<outp>4 2</outp>
-<outp>6 2</outp>
+\outp{2 2}
+\outp{4 2}
+\outp{6 2}
 
 >_ string match -r -i '0x[0-9a-f]{{1,8}}' 'int magic = 0xBadC0de;'
-<outp>0xBadC0de</outp>
+\outp{0xBadC0de}
 \endfish
 
 \subsection string-example-replace-literal Replace Literal Examples
 
 \fish{cli-dark}
 >_ string replace is was 'blue is my favorite'
-<outp>blue was my favorite</outp>
+\outp{blue was my favorite}
 
 >_ string replace 3rd last 1st 2nd 3rd
-<outp>1st</outp>
-<outp>2nd</outp>
-<outp>last</outp>
+\outp{1st}
+\outp{2nd}
+\outp{last}
 
 >_ string replace -a ' ' _ 'spaces to underscores'
-<outp>spaces_to_underscores</outp>
+\outp{spaces_to_underscores}
 \endfish
 
 \subsection string-example-replace-Regex Replace Regex Examples
 
 \fish{cli-dark}
 >_ string replace -r -a '[^\\d.]+' ' ' '0 one two 3.14 four 5x'
-<outp>0 3.14 5</outp>
+\outp{0 3.14 5}
 
 >_ string replace -r '(\\w+)\\s+(\\w+)' '$2 $1 $$' 'left right'
-<outp>right left $</outp>
+\outp{right left $}
 
 >_ string replace -r '\\s*newline\\s*' '\\n' 'put a newline here'
-<outp>put a</outp>
-<outp>here</outp>
+\outp{put a}
+\outp{here}
 \endfish

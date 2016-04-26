@@ -3,14 +3,16 @@
     Various mostly unrelated utility functions related to parsing,
     loading and evaluating fish code.
 */
-
 #ifndef FISH_PARSE_UTIL_H
 #define FISH_PARSE_UTIL_H
 
 #include <stddef.h>
 #include <vector>
+#include <stdbool.h>
+
 #include "common.h"
 #include "parse_constants.h"
+#include "tokenizer.h"
 
 /**
    Find the beginning and end of the first subshell in the specified string.

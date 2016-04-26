@@ -12,8 +12,9 @@
 #ifndef FISH_EVENT_H
 #define FISH_EVENT_H
 
-#include <ctime>
+#include <unistd.h>
 #include <vector>
+#include <stdbool.h>
 
 #include "common.h"
 

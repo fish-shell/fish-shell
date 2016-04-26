@@ -1,7 +1,6 @@
 /** \file iothread.h
     Handles IO that may hang.
 */
-
 #ifndef FISH_IOTHREAD_H
 #define FISH_IOTHREAD_H
 

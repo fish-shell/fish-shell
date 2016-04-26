@@ -859,18 +859,10 @@ depend:
 	cp config.h /tmp/fish_make_depend/
 	mv $(subst obj/,/tmp/fish_make_depend/src/,$(FISH_ALL_OBJS:.o=.cpp)) /tmp/fish_make_depend/
 	cd /tmp/fish_make_depend && \
-	    makedepend -f$(CURDIR)/Makefile.in -pobj/ -Y -Isrc *.cpp
+		makedepend -f$(CURDIR)/Makefile.in -pobj/ -Y -Isrc *.cpp
 	rm -Rf /tmp/fish_make_depend
 	./config.status
 .PHONY: depend
-
-# Include What You Use
-iwyu:
-	# Requires the --keep-going flag as it always returns 1
-	# Can't set MAKEFLAGS on a target-specific basic
-	$(MAKE) -k _iwyu CXX=include-what-you-use
-_iwyu: clean $(PROGRAMS)
-.PHONY: iwyu _iwyu
 
 # Lint the code. This only deals with C++ files.
 lint:
@@ -894,7 +886,7 @@ style-all:
 # Restore the source tree to the state right after extracting a tarball.
 distclean: clean
 	$(MAKE) -C $(PCRE2_DIR) distclean || true
-	rm -f config.status config.log config.h Makefile
+	rm -f config.status config.log config.h Makefile osx/config.h
 .PHONY: distclean
 
 

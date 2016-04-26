@@ -18,13 +18,12 @@ the end of the list is reached, at which point regular searching will
 commence.
 
 */
-
 #include "config.h"
-#include <algorithm>
 
+// IWYU pragma: no_include <type_traits>
+#include <algorithm>
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdint.h>
 #include <string.h>
 #include <errno.h>
 #include <termios.h>
@@ -34,25 +33,22 @@ commence.
 #include <wctype.h>
 #include <stack>
 #include <pthread.h>
-
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
-
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
-
 #include <signal.h>
 #include <fcntl.h>
 #include <wchar.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <memory>
 
-
-#include "fallback.h"
+#include "fallback.h"  // IWYU pragma: keep
 #include "util.h"
-
-#include "wutil.h"
+#include "wutil.h"  // IWYU pragma: keep
 #include "highlight.h"
 #include "reader.h"
 #include "proc.h"
@@ -79,6 +75,8 @@ commence.
 #include "pager.h"
 #include "color.h"
 #include "event.h"
+#include "io.h"
+#include "parse_constants.h"
 
 /**
    Maximum length of prefix string when printing completion

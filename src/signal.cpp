@@ -1,28 +1,23 @@
 /** \file signal.c
 
 The library for various signal related issues
-
 */
-
-#include "config.h" // IWYU pragma: keep
-
-#include <wchar.h>
 #include <stdio.h>
 #include <signal.h>
 #include <errno.h>
-
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
+#include <pthread.h>
+#include <stdbool.h>
 
 #include "common.h"
 #include "fallback.h" // IWYU pragma: keep
-#include "wutil.h"
+#include "wutil.h"  // IWYU pragma: keep
 #include "signal.h"
 #include "event.h"
 #include "reader.h"
 #include "proc.h"
-
 
 /**
    Struct describing an entry for the lookup table used to convert

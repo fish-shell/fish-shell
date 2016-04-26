@@ -1,9 +1,7 @@
 /** \file highlight.c
   Functions for syntax highlighting
 */
-
-#include "config.h" // IWYU pragma: keep
-
+// IWYU pragma: no_include <cstddef>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
@@ -13,10 +11,13 @@
 #include <map>
 #include <set>
 #include <string>
+#include <memory>
+#include <utility>
+#include <limits.h>
+#include <wctype.h>
 
-#include "fallback.h"
-
-#include "wutil.h"
+#include "fallback.h"  // IWYU pragma: keep
+#include "wutil.h"  // IWYU pragma: keep
 #include "highlight.h"
 #include "tokenizer.h"
 #include "parse_util.h"
@@ -26,12 +27,12 @@
 #include "env.h"
 #include "expand.h"
 #include "common.h"
-#include "complete.h"
 #include "output.h"
 #include "wildcard.h"
 #include "path.h"
 #include "history.h"
 #include "parse_tree.h"
+#include "color.h"
 
 #define CURSOR_POSITION_INVALID ((size_t)(-1))
 

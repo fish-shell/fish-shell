@@ -1,11 +1,11 @@
 // Color class implementation.
-#include "color.h"
-#include "fallback.h" // IWYU pragma: keep
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <wchar.h>
-#include <cstddef>
+
+#include "color.h"
+#include "fallback.h"  // IWYU pragma: keep
+#include "common.h"
 
 bool rgb_color_t::try_parse_special(const wcstring &special)
 {

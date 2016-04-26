@@ -1,14 +1,15 @@
 /** \file env.h
   Prototypes for functions for setting and getting environment variables.
 */
-
 #ifndef FISH_ENV_H
 #define FISH_ENV_H
 
-#include <wchar.h>
 #include <stdint.h>
 #include <string>
 #include <map>
+#include <stddef.h>
+#include <memory>
+#include <stdbool.h>
 
 #include "common.h"
 

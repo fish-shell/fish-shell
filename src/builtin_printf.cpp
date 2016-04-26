@@ -49,11 +49,24 @@
 
 /* This file has been imported from source code of printf command in GNU Coreutils version 6.9 */
 
+#include <errno.h>
+#include <limits.h>
+#include <locale.h>
+#include <wchar.h>
+#include <wctype.h>
 #include <stdio.h>
 #include <sys/types.h>
-#include <inttypes.h>
+#include <stdarg.h>
+#include <string.h>
+#include <stdbool.h>
 
 #include "common.h"
+#include "io.h"
+#include "wutil.h"  // IWYU pragma: keep
+#include "proc.h"
+#include "builtin.h"
+
+class parser_t;
 
 struct builtin_printf_state_t
 {

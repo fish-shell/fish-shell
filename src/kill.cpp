@@ -5,13 +5,12 @@
   and paste with a memory of previous cuts. It supports integration
   with the X clipboard.
 */
-
-#include "config.h" // IWYU pragma: keep
-
 #include <stddef.h>
 #include <algorithm>
 #include <list>
 #include <string>
+#include <memory>
+#include <stdbool.h>
 
 #include "fallback.h" // IWYU pragma: keep
 #include "kill.h"

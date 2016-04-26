@@ -12,14 +12,16 @@
 #include <vector>
 #include <string>
 #include <stddef.h>
+#include <stdbool.h>
 
-#include "io.h"
 #include "common.h"
 #include "complete.h"
 #include "highlight.h"
 #include "parse_constants.h"
 
 class history_t;
+class env_vars_snapshot_t;
+class io_chain_t;
 
 /* Helper class for storing a command line */
 class editable_line_t
@@ -229,7 +231,6 @@ void reader_set_complete_function(complete_function_t);
 /**
  The type of a highlight function.
  */
-class env_vars_snapshot_t;
 typedef void (*highlight_function_t)(const wcstring &, std::vector<highlight_spec_t> &, size_t, wcstring_list_t *, const env_vars_snapshot_t &vars);
 
 /**

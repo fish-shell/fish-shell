@@ -18,6 +18,8 @@
 #include <sys/stat.h>
 #include "common.h"
 #include "highlight.h"
+#include <stdbool.h>
+#include <memory>
 
 class page_rendering_t;
 

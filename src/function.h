@@ -6,12 +6,12 @@
   is taken care of by the parser and to some degree the builtin
   handling library.
 */
-
 #ifndef FISH_FUNCTION_H
 #define FISH_FUNCTION_H
 
 #include <vector>
 #include <map>
+#include <stdbool.h>
 
 #include "common.h"
 #include "event.h"

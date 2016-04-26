@@ -3,32 +3,27 @@
 Fish needs it's own globbing implementation to support
 tab-expansion of globbed parameters. Also provides recursive
 wildcards using **.
-
 */
-
-#include "config.h" // IWYU pragma: keep
-#include <stdlib.h>
 #include <wchar.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <dirent.h>
 #include <errno.h>
-#include <string.h>
 #include <set>
 #include <assert.h>
-#include <stddef.h>
-#include <wctype.h>
 #include <string>
 #include <utility>
+#include <stdbool.h>
+#include <sys/types.h>
+#include <memory>
 
-#include "fallback.h"
-#include "wutil.h"
+#include "fallback.h"  // IWYU pragma: keep
+#include "wutil.h"  // IWYU pragma: keep
 #include "common.h"
 #include "wildcard.h"
 #include "complete.h"
 #include "reader.h"
 #include "expand.h"
-#include <map>
 
 /**
    Description for generic executable

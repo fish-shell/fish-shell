@@ -2,13 +2,13 @@
 
     Programmatic representation of fish code.
 */
-
 #ifndef FISH_PARSE_TREE_CONSTRUCTION_H
 #define FISH_PARSE_TREE_CONSTRUCTION_H
 
-#include <stdint.h>                     // for uint8_t, uint32_t
-#include "common.h"                     // for wcstring
-#include "parse_constants.h"            // for parse_token_type_t, etc
+#include <sys/types.h>
+#include <stdbool.h>
+
+#include "parse_constants.h"
 
 struct parse_token_t;
 

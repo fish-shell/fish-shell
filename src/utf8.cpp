@@ -13,15 +13,12 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-
 #include <sys/types.h>
-#include <stdint.h>
-
-#include "utf8.h"
-
+#include <stdint.h>  // IWYU pragma: keep
 #include <string>
 #include <limits>
-#include <algorithm>
+
+#include "utf8.h"
 
 #define _NXT	0x80
 #define _SEQ2	0xc0

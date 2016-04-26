@@ -1,22 +1,22 @@
 /** \file parser.h
   The fish parser.
 */
-
 #ifndef FISH_PARSER_H
 #define FISH_PARSER_H
 
-#include <stddef.h>                     // for size_t
-#include <list>                         // for _List_const_iterator, list, etc
+#include <stddef.h>
+#include <list>
+#include <vector>
+#include <stdbool.h>
 
 #include "common.h"
 #include "proc.h"
 #include "event.h"
 #include "parse_tree.h"
-#include "io.h"
 #include "parse_constants.h"
 #include "expand.h"
 
-#include <vector>
+class io_chain_t;
 
 /**
    event_blockage_t represents a block on events of the specified type

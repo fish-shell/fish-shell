@@ -6,9 +6,7 @@
   is taken care of by the parser and to some degree the builtin
   handling library.
 */
-
-#include "config.h" // IWYU pragma: keep
-
+// IWYU pragma: no_include <type_traits>
 #include <wchar.h>
 #include <pthread.h>
 #include <map>
@@ -17,10 +15,10 @@
 #include <stddef.h>
 #include <string>
 #include <utility>
+#include <memory>
 
-#include "wutil.h"
+#include "wutil.h"  // IWYU pragma: keep
 #include "fallback.h" // IWYU pragma: keep
-
 #include "autoload.h"
 #include "function.h"
 #include "common.h"

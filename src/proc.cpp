@@ -7,45 +7,40 @@ will call proc to create representations of the running jobs as
 needed.
 
 Some of the code in this file is based on code from the Glibc manual.
-
 */
+// IWYU pragma: no_include <__bit_reference>
 #include "config.h"
 
-#include <stdlib.h>
 #include <stdio.h>
 #include <sys/wait.h>
 #include <wchar.h>
-#include <string.h>
 #include <errno.h>
 #include <termios.h>
 #include <pthread.h>
 #include <wctype.h>
-#include <algorithm>
-#include <memory> // IWYU pragma: keep - suggests <tr1/memory> instead
+#include <memory>
 #include <vector>
-
 #include <unistd.h>
 #include <signal.h>
-#include <sys/time.h>
-
 #if HAVE_TERM_H
 #include <term.h>
 #elif HAVE_NCURSES_TERM_H
 #include <ncurses/term.h>
 #endif
-
 #ifdef HAVE_SIGINFO_H
 #include <siginfo.h>
 #endif
-
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#include <sys/types.h>
+#include <stdbool.h>
+#include <sys/time.h>  // IWYU pragma: keep
+#include <algorithm>  // IWYU pragma: keep
 
 #include "fallback.h" // IWYU pragma: keep
 #include "util.h"
-
-#include "wutil.h"
+#include "wutil.h"  // IWYU pragma: keep
 #include "proc.h"
 #include "common.h"
 #include "reader.h"
@@ -53,8 +48,9 @@ Some of the code in this file is based on code from the Glibc manual.
 #include "parser.h"
 #include "signal.h"
 #include "event.h"
-
 #include "output.h"
+#include "io.h"
+#include "parse_tree.h"
 
 /**
    Size of buffer for reading buffered output

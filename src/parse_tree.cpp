@@ -1,20 +1,21 @@
 #include <assert.h>
 #include <stdarg.h>
 #include <stddef.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <wchar.h>
 #include <string>
+#include <vector>
+#include <algorithm>
+#include <cwchar>
+
 #include "common.h"
 #include "parse_constants.h"
 #include "parse_productions.h"
 #include "parse_tree.h"
 #include "tokenizer.h"
-#include "fallback.h"
-#include "wutil.h" // IWYU pragma: keep - needed for wgettext
+#include "fallback.h"  // IWYU pragma: keep
+#include "wutil.h"  // IWYU pragma: keep
 #include "proc.h"
-#include <vector>
-#include <algorithm>
 
 // This array provides strings for each symbol in enum parse_token_type_t in parse_constants.h.
 const wchar_t * const token_type_map[] = {

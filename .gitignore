@@ -24,6 +24,7 @@ fish
 fish_indent
 fish_tests
 fish.pc
+osx/config.h
 seq
 set_color
 share/__fish_build_paths.fish

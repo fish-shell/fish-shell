@@ -1,8 +1,6 @@
 /** \file env.c
   Functions for setting and getting environment variables.
 */
-#include "config.h" // IWYU pragma: keep
-
 #include <stdlib.h>
 #include <wchar.h>
 #include <locale.h>
@@ -19,10 +17,11 @@
 #include <wctype.h>
 #include <utility>
 #include <vector>
+#include <sys/types.h>
+#include <stdbool.h>
 
-#include "fallback.h"
-
-#include "wutil.h"
+#include "fallback.h"  // IWYU pragma: keep
+#include "wutil.h"  // IWYU pragma: keep
 #include "proc.h"
 #include "common.h"
 #include "env.h"
@@ -34,8 +33,8 @@
 #include "input.h"
 #include "event.h"
 #include "path.h"
-
 #include "fish_version.h"
+#include "input_common.h"
 
 /** Value denoting a null string */
 #define ENV_NULL L"\x1d"

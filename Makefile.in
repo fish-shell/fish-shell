@@ -23,18 +23,21 @@
 # applications, install them, and recalculate dependencies.
 #
 
+#
 # This is the default value for SHELL but I like to be explicit about such
 # things. Especially in a project like fish where someone might otherwise
 # think fish will be used to execute make recipes.
+#
 SHELL = /bin/sh
 
+#
 # Used by docdir
+#
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 
 #
 # Programs
 #
-
 CXX := @CXX@
 INSTALL:=@INSTALL@
 SED := @SED@
@@ -43,7 +46,6 @@ SED := @SED@
 #
 # Installation directories
 #
-
 prefix = @prefix@
 exec_prefix = @exec_prefix@
 datarootdir = @datarootdir@
@@ -60,7 +62,6 @@ extra_confdir = @extra_confdir@
 #
 # pcre2
 #
-
 PCRE2_WIDTH = @WCHAR_T_BITS@
 PCRE2_DIR = pcre2-10.21
 PCRE2_LIBDIR = $(PCRE2_DIR)/.libs
@@ -71,7 +72,6 @@ EXTRA_PCRE2 = @EXTRA_PCRE2@
 #
 # Various flags
 #
-
 MACROS = -DLOCALEDIR=\"$(localedir)\" -DPREFIX=L\"$(prefix)\" -DDATADIR=L\"$(datadir)\" -DSYSCONFDIR=L\"$(sysconfdir)\" -DBINDIR=L\"$(bindir)\" -DDOCDIR=L\"$(docdir)\"
 CXXFLAGS = @CXXFLAGS@ -iquote. -iquote./src/ $(MACROS) $(EXTRA_CXXFLAGS)
 CPPFLAGS = @CPPFLAGS@
@@ -82,29 +82,30 @@ LDFLAGS_FISH = ${LDFLAGS} @LDFLAGS_FISH@
 #
 # Set to 1 if we have gettext
 #
-
 HAVE_GETTEXT=@HAVE_GETTEXT@
 
 #
 # Set to 1 if we have doxygen
 #
-
 HAVE_DOXYGEN=@HAVE_DOXYGEN@
 
 #
 # All objects that the system needs to build fish, except fish.o
 #
-
-FISH_OBJS := obj/function.o obj/builtin.o obj/builtin_commandline.o obj/builtin_complete.o obj/builtin_jobs.o obj/builtin_printf.o obj/builtin_set.o obj/builtin_set_color.o obj/builtin_string.o obj/builtin_test.o obj/builtin_ulimit.o obj/complete.o obj/env.o obj/exec.o \
-	obj/expand.o obj/highlight.o obj/history.o obj/kill.o obj/parser.o \
-	obj/proc.o obj/reader.o obj/sanity.o obj/tokenizer.o obj/wildcard.o \
-	obj/wgetopt.o obj/wutil.o obj/input.o obj/output.o obj/intern.o \
-	obj/env_universal_common.o obj/input_common.o obj/event.o obj/signal.o \
-	obj/io.o obj/parse_util.o obj/common.o obj/screen.o obj/path.o \
-	obj/autoload.o obj/parser_keywords.o obj/iothread.o obj/color.o \
-	obj/postfork.o obj/parse_tree.o \
-    obj/parse_productions.o obj/parse_execution.o obj/pager.o obj/utf8.o \
-    obj/fish_version.o obj/wcstringutil.o
+FISH_OBJS := obj/autoload.o obj/builtin.o obj/builtin_commandline.o \
+	obj/builtin_complete.o obj/builtin_jobs.o obj/builtin_printf.o \
+	obj/builtin_set.o obj/builtin_set_color.o obj/builtin_string.o \
+	obj/builtin_test.o obj/builtin_ulimit.o obj/color.o obj/common.o \
+	obj/complete.o obj/env.o obj/env_universal_common.o obj/event.o \
+	obj/exec.o obj/expand.o obj/fallback.o obj/fish_version.o \
+	obj/function.o obj/highlight.o obj/history.o obj/input.o \
+	obj/input_common.o obj/intern.o obj/io.o obj/iothread.o obj/kill.o \
+	obj/output.o obj/pager.o obj/parse_execution.o \
+	obj/parse_productions.o obj/parse_tree.o obj/parse_util.o \
+	obj/parser.o obj/parser_keywords.o obj/path.o obj/postfork.o \
+	obj/proc.o obj/reader.o obj/sanity.o obj/screen.o obj/signal.o \
+	obj/tokenizer.o obj/utf8.o obj/util.o obj/wcstringutil.o \
+	obj/wgetopt.o obj/wildcard.o obj/wutil.o
 
 FISH_INDENT_OBJS := obj/fish_indent.o obj/print_help.o $(FISH_OBJS)
 
@@ -113,14 +114,12 @@ FISH_INDENT_OBJS := obj/fish_indent.o obj/print_help.o $(FISH_OBJS)
 #
 FISH_TESTS_OBJS := $(FISH_OBJS) obj/fish_tests.o
 
-
 #
 # All of the sources that produce object files
 # (that is, are not themselves #included in other source files)
 #
 FISH_ALL_OBJS := $(sort $(FISH_OBJS) $(FISH_INDENT_OBJS) $(FISH_TESTS_OBJS) \
                    obj/fish.o obj/key_reader.o)
-
 
 #
 # Files containing user documentation
@@ -130,70 +129,58 @@ FISH_ALL_OBJS := $(sort $(FISH_OBJS) $(FISH_INDENT_OBJS) $(FISH_TESTS_OBJS) \
 # These files are the source files, they contain a few @FOO@-style substitutions
 # Note that this order defines the order that they appear in the documentation
 #
-
-HDR_FILES_SRC := doc_src/index.hdr.in doc_src/tutorial.hdr doc_src/design.hdr doc_src/license.hdr doc_src/commands.hdr.in doc_src/faq.hdr
+HDR_FILES_SRC := doc_src/index.hdr.in doc_src/tutorial.hdr doc_src/design.hdr \
+	doc_src/license.hdr doc_src/commands.hdr.in doc_src/faq.hdr
 
 
 #
 # These are the generated result files
 #
-
 HDR_FILES := $(HDR_FILES_SRC:.hdr.in=.hdr)
 
 # Use a pattern rule so that Make knows to only issue one invocation
 # per http://www.gnu.org/software/make/manual/make.html#Pattern-Intro
 
-
 #
 # Files containing documentation for external commands.
 #
-
 HELP_SRC := $(wildcard doc_src/*.txt)
 
 #
 # HTML includes needed for HTML help
 #
-
-HTML_SRC := doc_src/user_doc.header.html doc_src/user_doc.footer.html doc_src/user_doc.css
+HTML_SRC := doc_src/user_doc.header.html doc_src/user_doc.footer.html \
+	doc_src/user_doc.css
 
 #
 # Files in the test directory
 #
-
 TEST_IN := $(wildcard tests/test*.in)
 
 #
 # Files in ./share/completions/
 #
-
 COMPLETIONS_DIR_FILES := $(wildcard share/completions/*.fish) share/completions/..fish
-
 
 #
 # Files in ./share/functions/
 #
-
 FUNCTIONS_DIR_FILES := $(wildcard share/functions/*.fish)
-
 
 #
 # Programs to install
 #
-
 PROGRAMS := fish fish_indent
 
 #
 # Manual pages to install
 #
-
 MANUALS := $(addsuffix .1, $(addprefix share/man/man1/,	\
 	$(PROGRAMS)))
-
 
 #
 # All translation message catalogs
 #
-
 TRANSLATIONS_SRC := $(wildcard po/*.po)
 ifdef HAVE_GETTEXT
 	TRANSLATIONS := $(TRANSLATIONS_SRC:.po=.gmo)
@@ -204,7 +191,6 @@ endif
 #
 # If Doxygen is not available, don't attempt to build the documentation
 #
-
 ifeq ($(HAVE_DOXYGEN), 1)
   user_doc=doc
   share_man=share/man
@@ -216,7 +202,6 @@ endif
 #
 # Make everything needed for installing fish
 #
-
 all: $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc share/__fish_build_paths.fish
 	@echo fish has now been built.
 	@echo Use \'$(MAKE) install\' to install fish.
@@ -225,7 +210,6 @@ all: $(PROGRAMS) $(user_doc) $(share_man) $(TRANSLATIONS) fish.pc share/__fish_b
 #
 # Pull version information
 #
-
 FISH-BUILD-VERSION-FILE: FORCE
 	@./build_tools/git_version_gen.sh
 -include FISH-BUILD-VERSION-FILE
@@ -233,24 +217,20 @@ CXXFLAGS += -DFISH_BUILD_VERSION=\"$(FISH_BUILD_VERSION)\"
 .PHONY: FORCE
 obj/fish_version.o: FISH-BUILD-VERSION-FILE
 
-
 #
 # These dependencies make sure that autoconf and configure are run
 # when the source code for the build configuration has changed.
 #
-
 configure: configure.ac
 	./config.status --recheck
 
 Makefile: Makefile.in configure
 	./config.status
 
-
 #
 # Build fish with some debug flags specified. This is GCC specific,
 # and should only be used when debuging fish.
 #
-
 prof: EXTRA_CXXFLAGS += -pg
 prof: LDFLAGS += -pg
 prof: all
@@ -282,10 +262,12 @@ doc/refman.pdf: doc
 	mv refman.pdf ..;
 	rm -r doc/latex;
 
+#
 # Prep the environment for running the unit tests. When specifying DESTDIR on
 # the command line (e.g., `make DESTDIR=/usr/local/`) you must have previously
 # installed fish using the same prefix; e.g., `./configure --prefix=/usr/local`
 # followed by `make install`.
+#
 test-prep:
 	rm -rf test
 	mkdir test test/data test/home test/temp
@@ -296,10 +278,12 @@ else
 endif
 .PHONY: test-prep
 
+#
 # The test target runs both the low level code tests and the high level script
 # tests.
 #
 # Note that doing `make DESTDIR=/some/path/ test` overrides this assignment.
+#
 test: DESTDIR = $(PWD)/test/root/
 test: prefix = .
 test: test-prep install-force test_low_level test_high_level
@@ -307,13 +291,16 @@ test: test-prep install-force test_low_level test_high_level
 	@rm -rf /tmp/is_potential_path_test
 .PHONY: test
 
+#
 # We want the various tests to run serially so their output doesn't mix
 # We can do that by adding ordering dependencies based on what goals are being used.
-
+#
 test_goals := test_low_level test_fishscript test_interactive
 
+#
 # The following variables define targets that depend on the tests. If any more targets
 # are added that depend, directly or indirectly, on tests, they need to be recorded here.
+#
 test_test_deps = test_low_level $(test_high_level_test_deps)
 test_high_level_test_deps = test_fishscript test_interactive
 
@@ -339,7 +326,6 @@ test_interactive: $(call filter_up_to,test_interactive,$(active_test_goals))
 # commands.hdr collects documentation on all commands, functions and
 # builtins
 #
-
 doc_src/commands.hdr:$(HELP_SRC) doc_src/commands.hdr.in
 	-rm command_list.tmp command_list_toc.tmp $@
 	for i in `printf "%s\n" $(HELP_SRC)|sort`; do \
@@ -354,7 +340,6 @@ doc_src/commands.hdr:$(HELP_SRC) doc_src/commands.hdr.in
 	mv command_list.tmp command_list.txt
 	mv command_list_toc.tmp command_list_toc.txt
 	cat $@.in | awk '{if ($$0 ~ /@command_list_toc@/) { system("cat command_list_toc.txt"); } else if ($$0 ~ /@command_list@/){ system("cat command_list.txt");} else{ print $$0;}}' >$@
-
 
 toc.txt: $(HDR_FILES:index.hdr=index.hdr.in)
 	-rm toc.tmp $@
@@ -384,7 +369,6 @@ doc_src/index.hdr: toc.txt doc_src/index.hdr.in
 # colour defaults from __fish_config_interactive to set the docs colours when
 # used in a 'cli' style context.
 #
-
 lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES) share/functions/__fish_config_interactive.fish
 	-rm lexicon.tmp lexicon_catalog.tmp lexicon_catalog.txt $@
 	# Scan sources for commands/functions/binaries/colours. If GNU sed was portable, this could be much smarter.
@@ -415,7 +399,6 @@ lexicon.txt: doc_src/commands.hdr $(FUNCTIONS_DIR_FILES) $(COMPLETIONS_DIR_FILES
 # HTML, a style context can be applied through the /fish{style} block and
 # providing suitable CSS in user_doc.css.in
 #
-
 lexicon_filter: lexicon.txt lexicon_filter.in
 	-rm $@.tmp $@
 	# Set the shebang as sed can reside in multiple places.
@@ -437,7 +420,6 @@ lexicon_filter: lexicon.txt lexicon_filter.in
 # file that can be parsed by Doxygen to generate the user
 # documentation.
 #
-
 doc.h: $(HDR_FILES)
 	cat $(HDR_FILES) >$@
 
@@ -447,14 +429,15 @@ doc.h: $(HDR_FILES)
 # internal help functions, that can be parsed to Doxygen to generate
 # the internal help function text.
 #
-
 %.doxygen:%.txt
 	echo  "/** \page " `basename $*` >$@;
 	cat $*.txt >>$@;
 	echo "*/" >>$@
 
+#
 # Depend on Makefile because I don't see a better way of rebuilding
 # if any of the paths change.
+#
 %: %.in Makefile FISH-BUILD-VERSION-FILE
 	$(SED) <$< >$@ \
 		-e "s,@sysconfdir\@,$(sysconfdir),g" \
@@ -471,14 +454,12 @@ doc.h: $(HDR_FILES)
 #
 # Compile translation files to binary format
 #
-
 %.gmo:
 	msgfmt -o $@ $*.po
 
 #
 # Update existing po file or copy messages.pot
 #
-
 %.po:messages.pot
 	if test -f $*.po; then \
 		msgmerge -U --backup=existing $*.po messages.pot;\
@@ -489,7 +470,6 @@ doc.h: $(HDR_FILES)
 #
 # Create a template translation object
 #
-
 messages.pot: src/*.cpp src/*.h share/completions/*.fish share/functions/*.fish
 	xgettext -k_ -kN_ src/*.cpp src/*.h -o messages.pot
 	xgettext -j -k_ -kN_ -k--description -LShell --from-code=UTF-8 share/completions/*.fish share/functions/*.fish -o messages.pot
@@ -524,7 +504,6 @@ endif
 #
 # There ought to be something simpler.
 #
-
 share/man: $(HELP_SRC) lexicon_filter
 	-mkdir share/man
 	touch share/man
@@ -540,7 +519,6 @@ share/man: $(HELP_SRC) lexicon_filter
 # Check for an incompatible installed fish version, and fail with an
 # error if found
 #
-
 check-uninstall:
 	if test -f $(DESTDIR)$(sysconfdir)/fish.d/fish_function.fish -o -f $(DESTDIR)$(sysconfdir)/fish.d/fish_complete.fish; then \
 		echo;\
@@ -596,7 +574,6 @@ check-legacy-binaries:
 # darcs repo doesn't preserve the executable bit, so this needs to be
 # run after checkout.
 #
-
 install-sh:
 	if test -x $@; then true; else chmod 755 $@; fi
 .PHONY: install-sh
@@ -604,7 +581,6 @@ install-sh:
 #
 # Try to install after checking for incompatible installed versions.
 #
-
 install: all install-sh check-uninstall install-force check-legacy-binaries
 	@echo fish is now installed on your system.
 	@echo To run fish, type \'fish\' in your terminal.
@@ -716,11 +692,9 @@ install-force: all install-translations
 	done;
 .PHONY: install-force
 
-
 #
 # Uninstall this fish version
 #
-
 uninstall: uninstall-translations
 	-for i in $(PROGRAMS); do \
 		rm -f $(DESTDIR)$(bindir)/$$i; \
@@ -747,7 +721,6 @@ uninstall: uninstall-translations
 # the sysadmin. But if 'make install' detects a file confligt, it
 # suggests using this target.
 #
-
 uninstall-legacy: uninstall
 	-rm -f $(DESTDIR)$(sysconfdir)/fish.d/fish_interactive.fish
 	-rm -f $(DESTDIR)$(sysconfdir)/fish.d/fish_complete.fish
@@ -781,7 +754,6 @@ uninstall-translations:
 	rm -f $(DESTDIR)$(localedir)/*/LC_MESSAGES/fish.mo
 .PHONY: uninstall-translations
 
-
 #
 # The build rules for all the commands
 #
@@ -801,8 +773,7 @@ obj:
 #
 # Build the fish program.
 #
-
-fish: $(FISH_OBJS) obj/fish.o $(EXTRA_PCRE2)
+fish: obj/fish.o $(FISH_OBJS) $(EXTRA_PCRE2)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $(FISH_OBJS) obj/fish.o $(LIBS) -o $@
 
 $(PCRE2_LIB): $(PCRE2_H)
@@ -829,7 +800,6 @@ fish_indent: $(FISH_INDENT_OBJS) $(EXTRA_PCRE2)
 key_reader: $(FISH_OBJS) $(EXTRA_PCRE2) obj/key_reader.o
 	$(CXX) $(CXXFLAGS) $(LDFLAGS_FISH) $^ $(LIBS) -o $@
 
-
 #
 # Update dependencies
 # Unfortunately makedepend cannot handle source files in one directory
@@ -852,15 +822,19 @@ depend:
 	./config.status
 .PHONY: depend
 
+#
 # Lint the code. This only deals with C++ files.
+#
 lint:
 	build_tools/lint.fish $(CXX) $(CXXFLAGS)
 lint-all:
 	build_tools/lint.fish $(CXX) --all $(CXXFLAGS)
 .PHONY: lint lint-all
 
+#
 # Run the code through the style refomatter. This handles both C++ files and
 # fish scripts (*.fish).
+#
 style:
 	build_tools/style.fish
 style-all:
@@ -871,19 +845,22 @@ style-all:
 # Cleanup targets
 #
 
+#
 # Restore the source tree to the state right after extracting a tarball.
+#
 distclean: clean
 	$(MAKE) -C $(PCRE2_DIR) distclean || true
 	rm -f config.status config.log config.h Makefile osx/config.h
 .PHONY: distclean
 
-
+#
 # Remove everything built by the Makefile, but not things that are created by
 # the configure script.
 #
 # Don't delete the docs unless we have Doxygen installed We provide pre-built
 # docs in the tarball, and if they get deleted we won't be able to regenerate
 # them.
+#
 clean:
 	$(MAKE) -C $(PCRE2_DIR) clean || true
 	rm -f obj/*.o *.o doc.h doc.tmp
@@ -958,8 +935,8 @@ obj/builtin_ulimit.o: src/signal.h src/io.h src/util.h src/wgetopt.h
 obj/builtin_ulimit.o: src/wutil.h
 obj/color.o: src/color.h src/common.h config.h src/fallback.h src/signal.h
 obj/common.o: config.h src/signal.h src/fallback.h src/wutil.h src/common.h
-obj/common.o: src/expand.h src/parse_constants.h src/wildcard.h
-obj/common.o: src/complete.h src/util.cpp src/util.h src/fallback.cpp
+obj/common.o: src/expand.h src/parse_constants.h src/util.h src/wildcard.h
+obj/common.o: src/complete.h
 obj/complete.o: src/fallback.h config.h src/signal.h src/util.h
 obj/complete.o: src/wildcard.h src/common.h src/expand.h
 obj/complete.o: src/parse_constants.h src/complete.h src/proc.h src/io.h
@@ -990,6 +967,7 @@ obj/expand.o: src/wutil.h src/env.h src/proc.h src/io.h src/parse_tree.h
 obj/expand.o: src/tokenizer.h src/parse_constants.h src/path.h src/expand.h
 obj/expand.o: src/wildcard.h src/complete.h src/exec.h src/iothread.h
 obj/expand.o: src/parse_util.h
+obj/fallback.o: config.h src/signal.h src/fallback.h src/util.h
 obj/fish.o: config.h src/fallback.h src/signal.h src/common.h src/reader.h
 obj/fish.o: src/complete.h src/highlight.h src/env.h src/color.h
 obj/fish.o: src/parse_constants.h src/builtin.h src/function.h src/event.h
@@ -1112,6 +1090,8 @@ obj/signal.o: src/parse_tree.h src/tokenizer.h
 obj/tokenizer.o: src/fallback.h config.h src/signal.h src/common.h
 obj/tokenizer.o: src/wutil.h src/tokenizer.h
 obj/utf8.o: src/utf8.h
+obj/util.o: src/fallback.h config.h src/signal.h src/util.h src/common.h
+obj/util.o: src/wutil.h
 obj/wcstringutil.o: src/common.h config.h src/fallback.h src/signal.h
 obj/wcstringutil.o: src/wcstringutil.h
 obj/wgetopt.o: config.h src/common.h src/fallback.h src/signal.h

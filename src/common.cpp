@@ -42,9 +42,6 @@ parts of fish.
 #include "expand.h"
 #include "wildcard.h"
 
-#include "util.cpp"
-#include "fallback.cpp"
-
 #define NOT_A_WCHAR (static_cast<wint_t>(WEOF))
 
 struct termios shell_modes;

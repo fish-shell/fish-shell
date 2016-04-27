@@ -687,7 +687,7 @@ bool env_universal_t::open_temporary_file(const wcstring &directory, wcstring *o
         result_fd = mkstemp(narrow_str);
         if (result_fd != -1)
         {
-            fcntl(result_fd, F_SETFD, O_CLOEXEC);
+            fcntl(result_fd, F_SETFD, FD_CLOEXEC);
         }
 #endif
 

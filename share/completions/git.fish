@@ -11,13 +11,13 @@ function __fish_git_commits
 end
 
 function __fish_git_branches
-	command git branch --no-color -a ^/dev/null | string match -r -v ' -> ' | string trim -c "* " | string replace -r "^remotes/" ""
+	command git branch --no-color -a $argv ^/dev/null | string match -r -v ' -> ' | string trim -c "* " | string replace -r "^remotes/" ""
 end
 
 function __fish_git_unique_remote_branches
 	# Allow all remote branches with one remote without the remote part
 	# This is useful for `git checkout` to automatically create a remote-tracking branch
-	command git branch --no-color -a ^/dev/null | string match -r -v ' -> ' | string trim -c "* " | string replace -r "^remotes/[^/]*/" "" | sort | uniq -u
+	command git branch --no-color -a $argv ^/dev/null | string match -r -v ' -> ' | string trim -c "* " | string replace -r "^remotes/[^/]*/" "" | sort | uniq -u
 end
 
 function __fish_git_tags
@@ -292,8 +292,8 @@ complete -f -c git -n '__fish_git_using_command branch' -l no-merged -d 'List br
 
 ### cherry-pick
 complete -f -c git -n '__fish_git_needs_command' -a cherry-pick -d 'Apply the change introduced by an existing commit'
-complete -f -c git -n '__fish_git_using_command cherry-pick' -a '(__fish_git_branches)' -d 'Branch'
-complete -f -c git -n '__fish_git_using_command cherry-pick' -a '(__fish_git_unique_remote_branches)' -d 'Remote branch'
+complete -f -c git -n '__fish_git_using_command cherry-pick' -a '(__fish_git_branches --no-merged)' -d 'Branch'
+complete -f -c git -n '__fish_git_using_command cherry-pick' -a '(__fish_git_unique_remote_branches --no-merged)' -d 'Remote branch'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s e -l edit -d 'Edit the commit message prior to committing'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s x -d 'Append info in generated commit on the origin of the cherry-picked change'
 complete -f -c git -n '__fish_git_using_command cherry-pick' -s n -l no-commit -d 'Apply changes without making any commit'

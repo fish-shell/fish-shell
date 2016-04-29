@@ -32,16 +32,6 @@
 
 class parser_t;
 
-/// Error message for invalid path operations.
-#define BUILTIN_SET_PATH_ERROR L"%ls: Warning: path component %ls may not be valid in %ls.\n"
-
-/// Hint for invalid path operation with a colon.
-#define BUILTIN_SET_PATH_HINT L"%ls: Did you mean 'set %ls $%ls %ls'?\n"
-
-/// Error for mismatch between index count and elements.
-#define BUILTIN_SET_ARG_COUNT \
-    L"%ls: The number of variable indexes does not match the number of values\n"
-
 static void print_colors(io_streams_t &streams) {
     const wcstring_list_t result = rgb_color_t::named_color_names();
     size_t i;

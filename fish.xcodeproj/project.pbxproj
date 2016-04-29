@@ -126,6 +126,10 @@
 		D01243641CD3DAE200C64313 /* builtin_set_color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0C861EA16CC7054003B5A04 /* builtin_set_color.cpp */; };
 		D01243651CD3DAE200C64313 /* builtin_ulimit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853413B3ACEE0099B651 /* builtin_ulimit.cpp */; };
 		D01243661CD3DAE200C64313 /* builtin_printf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0CA63F316FC275F00093BD4 /* builtin_printf.cpp */; };
+		D01243681CD4015600C64313 /* util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855E13B3ACEE0099B651 /* util.cpp */; };
+		D01243691CD4015C00C64313 /* util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0855E13B3ACEE0099B651 /* util.cpp */; };
+		D012436A1CD4018100C64313 /* fallback.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853E13B3ACEE0099B651 /* fallback.cpp */; };
+		D012436B1CD4019700C64313 /* fallback.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853E13B3ACEE0099B651 /* fallback.cpp */; };
 		D01A2D24169B736200767098 /* man1 in Copy Files */ = {isa = PBXBuildFile; fileRef = D01A2D23169B730A00767098 /* man1 */; };
 		D01A2D25169B737700767098 /* man1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D01A2D23169B730A00767098 /* man1 */; };
 		D030FBEF1A4A382000F7ADA0 /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0854A13B3ACEE0099B651 /* input.cpp */; };
@@ -1332,6 +1336,7 @@
 				D030FBFC1A4A38F300F7ADA0 /* parse_productions.cpp in Sources */,
 				D030FBFD1A4A38F300F7ADA0 /* parse_tree.cpp in Sources */,
 				D030FBFE1A4A38F300F7ADA0 /* parse_execution.cpp in Sources */,
+				D012436B1CD4019700C64313 /* fallback.cpp in Sources */,
 				D030FC001A4A38F300F7ADA0 /* function.cpp in Sources */,
 				D030FC011A4A38F300F7ADA0 /* highlight.cpp in Sources */,
 				D030FC021A4A38F300F7ADA0 /* history.cpp in Sources */,
@@ -1360,6 +1365,7 @@
 				D030FC131A4A38F300F7ADA0 /* wgetopt.cpp in Sources */,
 				D030FC141A4A38F300F7ADA0 /* wildcard.cpp in Sources */,
 				D0D02ADA159864AB008E62BD /* wutil.cpp in Sources */,
+				D01243691CD4015C00C64313 /* util.cpp in Sources */,
 				D0D02AD615986492008E62BD /* fish_indent.cpp in Sources */,
 				D00F63F219137E9D00FCCDEC /* fish_version.cpp in Sources */,
 			);
@@ -1399,6 +1405,7 @@
 				D0D02A6A1598381A008E62BD /* exec.cpp in Sources */,
 				D0F5B46519CFCDE80090665E /* wcstringutil.cpp in Sources */,
 				D0D02A6B1598381F008E62BD /* expand.cpp in Sources */,
+				D012436A1CD4018100C64313 /* fallback.cpp in Sources */,
 				D00F63F119137E9D00FCCDEC /* fish_version.cpp in Sources */,
 				D0D02A6C15983829008E62BD /* highlight.cpp in Sources */,
 				D0D02A6D1598382C008E62BD /* history.cpp in Sources */,
@@ -1420,6 +1427,7 @@
 				D0D02A89159839DF008E62BD /* fish.cpp in Sources */,
 				D0C52F371765284C00BFAB82 /* parse_tree.cpp in Sources */,
 				D0FE8EE8179FB760008C9F21 /* parse_productions.cpp in Sources */,
+				D01243681CD4015600C64313 /* util.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

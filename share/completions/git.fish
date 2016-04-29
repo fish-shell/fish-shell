@@ -172,7 +172,7 @@ function __fish_git_custom_commands
 end
 
 # general options
-complete -f -c git -n 'not __fish_git_needs_command' -l help -d 'Display the manual of a git command'
+complete -f -c git -l help -d 'Display the manual of a git command'
 
 #### fetch
 complete -f -c git -n '__fish_git_needs_command' -a fetch -d 'Download objects and refs from another repository'

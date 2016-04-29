@@ -112,6 +112,20 @@
 		D0076943199013B900CA4627 /* fish_tests.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0854113B3ACEE0099B651 /* fish_tests.cpp */; };
 		D00F63F119137E9D00FCCDEC /* fish_version.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00F63F019137E9D00FCCDEC /* fish_version.cpp */; settings = {COMPILER_FLAGS = "-I$(DERIVED_FILE_DIR)"; }; };
 		D00F63F219137E9D00FCCDEC /* fish_version.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D00F63F019137E9D00FCCDEC /* fish_version.cpp */; settings = {COMPILER_FLAGS = "-I$(DERIVED_FILE_DIR)"; }; };
+		D01243591CD3DAD100C64313 /* builtin_commandline.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853013B3ACEE0099B651 /* builtin_commandline.cpp */; };
+		D012435A1CD3DAD100C64313 /* builtin_complete.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853113B3ACEE0099B651 /* builtin_complete.cpp */; };
+		D012435B1CD3DAD100C64313 /* builtin_jobs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853213B3ACEE0099B651 /* builtin_jobs.cpp */; };
+		D012435C1CD3DAD100C64313 /* builtin_set.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853313B3ACEE0099B651 /* builtin_set.cpp */; };
+		D012435D1CD3DAD100C64313 /* builtin_set_color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0C861EA16CC7054003B5A04 /* builtin_set_color.cpp */; };
+		D012435E1CD3DAD100C64313 /* builtin_ulimit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853413B3ACEE0099B651 /* builtin_ulimit.cpp */; };
+		D012435F1CD3DAD100C64313 /* builtin_printf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0CA63F316FC275F00093BD4 /* builtin_printf.cpp */; };
+		D01243601CD3DAE200C64313 /* builtin_commandline.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853013B3ACEE0099B651 /* builtin_commandline.cpp */; };
+		D01243611CD3DAE200C64313 /* builtin_complete.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853113B3ACEE0099B651 /* builtin_complete.cpp */; };
+		D01243621CD3DAE200C64313 /* builtin_jobs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853213B3ACEE0099B651 /* builtin_jobs.cpp */; };
+		D01243631CD3DAE200C64313 /* builtin_set.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853313B3ACEE0099B651 /* builtin_set.cpp */; };
+		D01243641CD3DAE200C64313 /* builtin_set_color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0C861EA16CC7054003B5A04 /* builtin_set_color.cpp */; };
+		D01243651CD3DAE200C64313 /* builtin_ulimit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0853413B3ACEE0099B651 /* builtin_ulimit.cpp */; };
+		D01243661CD3DAE200C64313 /* builtin_printf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0CA63F316FC275F00093BD4 /* builtin_printf.cpp */; };
 		D01A2D24169B736200767098 /* man1 in Copy Files */ = {isa = PBXBuildFile; fileRef = D01A2D23169B730A00767098 /* man1 */; };
 		D01A2D25169B737700767098 /* man1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = D01A2D23169B730A00767098 /* man1 */; };
 		D030FBEF1A4A382000F7ADA0 /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D0A0854A13B3ACEE0099B651 /* input.cpp */; };
@@ -1298,8 +1312,15 @@
 			files = (
 				D030FBF41A4A38F300F7ADA0 /* autoload.cpp in Sources */,
 				D030FBF51A4A38F300F7ADA0 /* builtin.cpp in Sources */,
-				D04F7FF01BA4E5B900B0F227 /* builtin_string.cpp in Sources */,
+				D01243591CD3DAD100C64313 /* builtin_commandline.cpp in Sources */,
+				D012435A1CD3DAD100C64313 /* builtin_complete.cpp in Sources */,
+				D012435B1CD3DAD100C64313 /* builtin_jobs.cpp in Sources */,
+				D012435C1CD3DAD100C64313 /* builtin_set.cpp in Sources */,
+				D012435D1CD3DAD100C64313 /* builtin_set_color.cpp in Sources */,
+				D012435E1CD3DAD100C64313 /* builtin_ulimit.cpp in Sources */,
 				D030FC151A4A391900F7ADA0 /* builtin_test.cpp in Sources */,
+				D012435F1CD3DAD100C64313 /* builtin_printf.cpp in Sources */,
+				D04F7FF01BA4E5B900B0F227 /* builtin_string.cpp in Sources */,
 				D030FBF61A4A38F300F7ADA0 /* color.cpp in Sources */,
 				D0D02AD81598649E008E62BD /* common.cpp in Sources */,
 				D030FBF71A4A38F300F7ADA0 /* complete.cpp in Sources */,
@@ -1349,7 +1370,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				D0D02A7C159839D5008E62BD /* autoload.cpp in Sources */,
+				D01243601CD3DAE200C64313 /* builtin_commandline.cpp in Sources */,
+				D01243611CD3DAE200C64313 /* builtin_complete.cpp in Sources */,
+				D01243621CD3DAE200C64313 /* builtin_jobs.cpp in Sources */,
+				D01243631CD3DAE200C64313 /* builtin_set.cpp in Sources */,
+				D01243641CD3DAE200C64313 /* builtin_set_color.cpp in Sources */,
+				D01243651CD3DAE200C64313 /* builtin_ulimit.cpp in Sources */,
 				D0D02A7D159839D5008E62BD /* builtin_test.cpp in Sources */,
+				D01243661CD3DAE200C64313 /* builtin_printf.cpp in Sources */,
+				D04F7F7C1BA4BF4000B0F227 /* builtin_string.cpp in Sources */,
 				D0D02A7E159839D5008E62BD /* color.cpp in Sources */,
 				D0D02A7F159839D5008E62BD /* common.cpp in Sources */,
 				D0D02A80159839D5008E62BD /* event.cpp in Sources */,
@@ -1384,7 +1413,6 @@
 				D0D02A751598385E008E62BD /* wgetopt.cpp in Sources */,
 				D0D02A7615983869008E62BD /* wutil.cpp in Sources */,
 				D0D02A7715983875008E62BD /* input.cpp in Sources */,
-				D04F7F7C1BA4BF4000B0F227 /* builtin_string.cpp in Sources */,
 				D0D02A781598387E008E62BD /* output.cpp in Sources */,
 				D0D02A7915983888008E62BD /* intern.cpp in Sources */,
 				D0D02A7B15983928008E62BD /* env_universal_common.cpp in Sources */,

@@ -3,7 +3,8 @@ function __fish_cancel_commandline
     set -l cmd (commandline)
     if test -n "$cmd"
         commandline -C 1000000
-        echo -n (set_color -b bryellow black)"^C"(set_color normal)
+        # set a color, output ^C, restore color, clear to EOL (to erase any autosuggestion)
+        echo -n (set_color -b bryellow black)"^C"(set_color normal)\033"[0K"
         for i in (seq (commandline -L))
             echo ""
         end

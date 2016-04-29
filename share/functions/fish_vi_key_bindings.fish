@@ -1,10 +1,15 @@
 function fish_vi_key_bindings --description 'vi-like key bindings for fish'
-    # The default escape timeout is 300ms. But for users of Vi bindings that can
-    # be slightly annoying when trying to switch to Vi "normal" mode. Too,
-    # vi-mode users are unlikely to use escape-as-meta. So set a much shorter
-    # timeout in this case.
-    set -q fish_escape_delay_ms
-    or set -g fish_escape_delay_ms 10
+	if test "$fish_key_bindings" != "fish_vi_key_bindings"
+		# Allow the user to set the variable universally
+		set -q fish_key_bindings; or set -g fish_key_bindings
+		set fish_key_bindings fish_vi_key_bindings # This triggers the handler, which calls us again and ensures the user_key_bindings are executed
+		return
+	end
+
+    # The default escape timeout is 300ms. But for users of Vi bindings that can be slightly
+    # annoying when trying to switch to Vi "normal" mode. So set a shorter timeout in this case
+    # unless the user has explicitly set the delay.
+    set -q fish_escape_delay_ms; or set -g fish_escape_delay_ms 100
 
     set -l init_mode insert
     set -l eol_keys \$ g\$ \e\[F

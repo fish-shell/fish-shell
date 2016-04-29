@@ -873,7 +873,7 @@ bool reader_thread_job_is_stale()
     return (void*)(uintptr_t) s_generation_count != pthread_getspecific(generation_count_key);
 }
 
-void reader_write_title(const wcstring &cmd)
+void reader_write_title(const wcstring &cmd, bool reset_cursor_position)
 {
     const env_var_t term_str = env_get_string(L"TERM");
 
@@ -944,6 +944,10 @@ void reader_write_title(const wcstring &cmd)
     }
     proc_pop_interactive();
     set_color(rgb_color_t::reset(), rgb_color_t::reset());
+    if (reset_cursor_position && ! lst.empty()) {
+        // Put the cursor back at the beginning of the line #2453
+        writestr(L"\r");
+    }
 }
 
 /**
@@ -1002,8 +1006,10 @@ static void exec_prompt()
         proc_pop_interactive();
     }
 
-    /* Write the screen title */
-    reader_write_title(L"");
+    // Write the screen title.
+    // Do not reset the cursor position: exec_prompt is called when there may still be output
+    // on the line from the previous command (#2499) and we need our PROMPT_SP hack to work
+    reader_write_title(L"", false);
 }
 
 void reader_init()

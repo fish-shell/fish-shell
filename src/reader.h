@@ -117,8 +117,9 @@ void reader_pop_current_filename();
    finishes.
 
    \param cmd Command line string passed to \c fish_title if is defined.
+   \param reset_cursor_position If set, issue a \r so the line driver knows where we are
 */
-void reader_write_title(const wcstring &cmd);
+void reader_write_title(const wcstring &cmd, bool reset_cursor_position = true);
 
 /**
    Call this function to tell the reader that a repaint is needed, and

@@ -5,6 +5,7 @@
 - A new `string` builtin to handle... strings! This builtin will measure, split, search and replace text strings, including using regular expressions. It can also be used to turn lists into plain strings using `join`. `string` can be used in place of `sed`, `grep`, `tr`, `cut`, and `awk` in many situations. (#2296)
 - Allow using escape as the Meta modifier key, by waiting after seeing an escape character wait up to 300ms for an additional character. This is consistent with readline (e.g. bash) and can be configured via the `fish_escape_delay_ms variable`. This allows using escape as the Meta modifier. (#1356)
 - Add new directories for vendor functions and configuration snippets (#2500)
+- A new `fish_realpath` builtin and associated `realpath` function should allow scripts to resolve path names via `realpath` regardless of whether there is an external command of that name; albeit with some limitations. See the associated documentation.
 
 # Backward-incompatible changes
 

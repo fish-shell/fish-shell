@@ -850,7 +850,7 @@ style-all:
 #
 distclean: clean
 	$(MAKE) -C $(PCRE2_DIR) distclean || true
-	rm -f config.status config.log config.h Makefile osx/config.h
+	rm -f config.status config.log config.h Makefile
 .PHONY: distclean
 
 #

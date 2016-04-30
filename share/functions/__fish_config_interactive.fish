@@ -46,8 +46,12 @@ function __fish_config_interactive -d "Initializations that should be performed 
 		set -q fish_color_error; or set -U fish_color_error red --bold
 		set -q fish_color_escape; or set -U fish_color_escape cyan
 		set -q fish_color_operator; or set -U fish_color_operator cyan
+		set -q fish_color_end; or set -U fish_color_end green
 		set -q fish_color_quote; or set -U fish_color_quote brown
 		set -q fish_color_autosuggestion; or set -U fish_color_autosuggestion 555 yellow
+		set -q fish_color_user; or set -U fish_color_user green
+
+		set -q fish_color_host; or set -U fish_color_host normal
 		set -q fish_color_valid_path; or set -U fish_color_valid_path --underline
 
 		set -q fish_color_cwd; or set -U fish_color_cwd green

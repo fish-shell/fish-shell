@@ -206,9 +206,6 @@
 /* Define to 1 if the _sys_errs array is available. */
 /* #undef HAVE__SYS__ERRS */
 
-/* Define to 1 if the __environ symbol is exported. */
-/* #undef HAVE___ENVIRON */
-
 /* Define to 1 to disable ncurses macros that conflict with the STL */
 #define NCURSES_NOMACROS 1
 

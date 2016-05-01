@@ -45,8 +45,6 @@
 
 /// At init, we read all the environment variables from this array.
 extern char **environ;
-/// This should be the same thing as \c environ, but it is possible only one of the two work...
-extern char **__environ;
 
 bool g_log_forks = false;
 bool g_use_posix_spawn = false;  // will usually be set to true
@@ -311,7 +309,7 @@ void env_init(const struct config_paths_t *paths /* or NULL */) {
     // Import environment variables. Walk backwards so that the first one out of any duplicates wins
     // (#2784).
     wcstring key, val;
-    const char *const *envp = (environ ? environ : __environ);
+    const char *const *envp = environ;
     size_t i = 0;
     while (envp && envp[i]) {
         i++;

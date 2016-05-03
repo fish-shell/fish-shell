@@ -268,49 +268,4 @@ void parse_error_offset_source_start(parse_error_list_t *errors, size_t amt);
 #define ERROR_BAD_COMMAND_ASSIGN_ERR_MSG \
     _(L"Unsupported use of '='. In fish, please use 'set %ls %ls'.")
 
-/// While block description.
-#define WHILE_BLOCK N_(L"'while' block")
-
-/// For block description.
-#define FOR_BLOCK N_(L"'for' block")
-
-/// Breakpoint block.
-#define BREAKPOINT_BLOCK N_(L"Block created by breakpoint")
-
-/// If block description.
-#define IF_BLOCK N_(L"'if' conditional block")
-
-/// Function definition block description.
-#define FUNCTION_DEF_BLOCK N_(L"function definition block")
-
-/// Function invocation block description.
-#define FUNCTION_CALL_BLOCK N_(L"function invocation block")
-
-/// Function invocation block description.
-#define FUNCTION_CALL_NO_SHADOW_BLOCK N_(L"function invocation block with no variable shadowing")
-
-/// Switch block description.
-#define SWITCH_BLOCK N_(L"'switch' block")
-
-/// Fake block description.
-#define FAKE_BLOCK N_(L"unexecutable block")
-
-/// Top block description.
-#define TOP_BLOCK N_(L"global root block")
-
-/// Command substitution block description.
-#define SUBST_BLOCK N_(L"command substitution block")
-
-/// Begin block description.
-#define BEGIN_BLOCK N_(L"'begin' unconditional block")
-
-/// Source block description.
-#define SOURCE_BLOCK N_(L"Block created by the . builtin")
-
-/// Source block description.
-#define EVENT_BLOCK N_(L"event handler block")
-
-/// Unknown block description.
-#define UNKNOWN_BLOCK N_(L"unknown/invalid block")
-
 #endif

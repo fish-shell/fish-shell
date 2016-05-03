@@ -68,7 +68,7 @@ class wgetopter_t {
     int woptind;
 
     // The next char to be scanned in the option-element in which the last option character we
-    // returned was found. This allows us to pick up the scan where we left off. 
+    // returned was found. This allows us to pick up the scan where we left off.
     //
     // If this is zero, or a null string, it means resume the scan by advancing to the next
     // ARGV-element.

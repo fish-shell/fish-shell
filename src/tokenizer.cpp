@@ -686,8 +686,7 @@ bool move_word_state_machine_t::consume_char_path_components(wchar_t c) {
             case s_separator: {
                 if (!iswspace(c) && !is_path_component_character(c)) {
                     consumed = true;  // consumed separator
-                }
-                else {
+                } else {
                     state = s_end;
                 }
                 break;

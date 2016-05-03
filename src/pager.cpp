@@ -584,26 +584,27 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
     // Handle the case of nothing selected yet.
     if (selected_completion_idx == PAGER_SELECTION_NONE) {
         switch (direction) {
-            // These directions do something sane.
             case direction_south:
             case direction_page_south:
             case direction_next:
-            case direction_prev:
+            case direction_prev: {
+                // These directions do something sane.
                 if (direction == direction_prev) {
                     selected_completion_idx = completion_infos.size() - 1;
                 } else {
                     selected_completion_idx = 0;
                 }
                 return true;
-
-            // These do nothing.
+            }
             case direction_north:
             case direction_page_north:
             case direction_east:
             case direction_west:
             case direction_deselect:
-            default:
+            default: {
+                // These do nothing.
                 return false;
+            }
         }
     }
 
@@ -651,7 +652,6 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
                 }
                 break;
             }
-
             case direction_page_south: {
                 if (current_row + page_height < rendering.rows) {
                     current_row += page_height;
@@ -675,7 +675,6 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
                 }
                 break;
             }
-
             case direction_east: {
                 // Go east, wrapping to the next row. There is no "row memory," so if we run off the
                 // end, wrap.
@@ -688,7 +687,6 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
                 }
                 break;
             }
-
             case direction_west: {
                 // Go west, wrapping to the previous row.
                 if (current_col > 0) {
@@ -699,10 +697,10 @@ bool pager_t::select_next_completion_in_direction(selection_direction_t directio
                 }
                 break;
             }
-
-            default:
+            default: {
                 assert(0 && "Unknown cardinal direction");
                 break;
+            }
         }
 
         // Compute the new index based on the changed row.

@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,7 +16,6 @@
 #include <algorithm>
 #include <iterator>
 #include <map>
-#include <pthread.h>
 
 #include "common.h"
 #include "env.h"
@@ -473,9 +473,9 @@ static size_t offset_of_next_item(const char *begin, size_t mmap_length,
                 offset_of_next_item_fish_1_x(begin, mmap_length, inout_cursor, cutoff_timestamp);
             break;
         }
-        default:
-        case history_type_unknown: {
-            // Oh well
+        case history_type_unknown:
+        default: {
+            // Oh well.
             result = (size_t)(-1);
             break;
         }
@@ -804,12 +804,13 @@ done:
 
 history_item_t history_t::decode_item(const char *base, size_t len, history_file_type_t type) {
     switch (type) {
-        case history_type_fish_1_x:
+        case history_type_fish_1_x: {
             return history_t::decode_item_fish_1_x(base, len);
-        case history_type_fish_2_0:
+        }
+        case history_type_fish_2_0: {
             return history_t::decode_item_fish_2_0(base, len);
-        default:
-            return history_item_t(L"");
+        }
+        default: { return history_item_t(L""); }
     }
 }
 

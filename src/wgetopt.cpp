@@ -45,7 +45,7 @@
 // Don't include stdlib.h for non-GNU C libraries because some of them contain conflicting
 // prototypes for getopt.
 #include <stdlib.h>
-#endif // GNU C library.
+#endif  // GNU C library.
 
 // This version of `getopt' appears to the caller like standard Unix `getopt' but it behaves
 // differently for the user, since it allows the user to intersperse the options with the other
@@ -105,10 +105,10 @@ static wchar_t *my_index(const wchar_t *str, int chr) {
 // gcc with -traditional declares the built-in strlen to return int, and has done so at least since
 // version 2.4.5. -- rms.
 extern int wcslen(const wchar_t *);
-#endif // not __STDC__
-#endif // __GNUC__
+#endif  // not __STDC__
+#endif  // __GNUC__
 
-#endif // not __GNU_LIBRARY__
+#endif  // not __GNU_LIBRARY__
 
 // Exchange two adjacent subsequences of ARGV. One subsequence is elements
 // [first_nonopt,last_nonopt) which contains all the non-options that have been skipped so far. The
@@ -303,10 +303,12 @@ int wgetopter_t::_wgetopt_internal(int argc, wchar_t **argv, const wchar_t *opts
         const struct woption *pfound = NULL;
         int exact = 0;
         int ambig = 0;
-        int indfound = 0; // set to zero by Anton
+        int indfound = 0;  // set to zero by Anton
         int option_index;
 
-        for (nameend = nextchar; *nameend && *nameend != '='; nameend++) /* Do nothing.  */;
+        for (nameend = nextchar; *nameend && *nameend != '='; nameend++) {
+           // Do nothing.
+	}
 
         // Test all long options for either exact match or abbreviated matches.
         for (p = longopts, option_index = 0; p->name; p++, option_index++)
@@ -344,7 +346,7 @@ int wgetopter_t::_wgetopt_internal(int argc, wchar_t **argv, const wchar_t *opts
                     woptarg = nameend + 1;
                 else {
                     if (wopterr) {
-                        if (argv[woptind - 1][1] == '-') // --option
+                        if (argv[woptind - 1][1] == '-')  // --option
                             fwprintf(stderr, _(L"%ls: Option '--%ls' doesn't allow an argument\n"),
                                      argv[0], pfound->name);
                         else
@@ -380,7 +382,7 @@ int wgetopter_t::_wgetopt_internal(int argc, wchar_t **argv, const wchar_t *opts
         // short option.
         if (!long_only || argv[woptind][1] == '-' || my_index(optstring, *nextchar) == NULL) {
             if (wopterr) {
-                if (argv[woptind][1] == '-') // --option
+                if (argv[woptind][1] == '-')  // --option
                     fwprintf(stderr, _(L"%ls: Unrecognized option '--%ls'\n"), argv[0], nextchar);
                 else
                     // +option or -option

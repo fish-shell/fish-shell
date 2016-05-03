@@ -4,16 +4,16 @@
 
 // IWYU pragma: no_include <cstddef>
 #include <pthread.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
 #include <deque>
+#include <memory>
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
-#include <memory>
-#include <stdbool.h>
 
 #include "common.h"
 #include "wutil.h"  // IWYU pragma: keep

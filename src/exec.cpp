@@ -257,23 +257,16 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t *out_chain,
         shared_ptr<io_data_t> out;  // gets allocated via new
 
         switch (in->io_mode) {
-            default:
-                // Unknown type, should never happen.
-                fprintf(stderr, "Unknown io_mode %ld\n", (long)in->io_mode);
-                abort();
-                break;
-
-            // These redirections don't need transmogrification. They can be passed through.
             case IO_PIPE:
             case IO_FD:
             case IO_BUFFER:
             case IO_CLOSE: {
+                // These redirections don't need transmogrification. They can be passed through.
                 out = in;
                 break;
             }
-
-            // Transmogrify file redirections.
             case IO_FILE: {
+                // Transmogrify file redirections.
                 int fd;
                 CAST_INIT(io_file_t *, in_file, in.get());
                 if ((fd = open(in_file->filename_cstr, in_file->flags, OPEN_MASK)) == -1) {
@@ -286,6 +279,12 @@ static bool io_transmogrify(const io_chain_t &in_chain, io_chain_t *out_chain,
 
                 opened_fds.push_back(fd);
                 out.reset(new io_fd_t(in->fd, fd, false));
+                break;
+            }
+            default: {
+                // Unknown type, should never happen.
+                fprintf(stderr, "Unknown io_mode %ld\n", (long)in->io_mode);
+                abort();
                 break;
             }
         }

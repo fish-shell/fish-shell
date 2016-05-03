@@ -412,12 +412,11 @@ int builtin_set(parser_t &parser, io_streams_t &streams, wchar_t **argv) {
                 builtin_print_help(parser, streams, argv[0], streams.out);
                 return 0;
             }
-            case '?':
+            case '?': {
                 builtin_unknown_option(parser, streams, argv[0], argv[w.woptind - 1]);
                 return 1;
-
-            default:
-                break;
+            }
+            default: { break; }
         }
     }
 

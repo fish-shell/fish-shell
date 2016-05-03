@@ -540,13 +540,15 @@ wcstring parse_util_escape_string_with_quote(const wcstring &cmd, wchar_t quote)
                 case L'\n':
                 case L'\t':
                 case L'\b':
-                case L'\r':
+                case L'\r': {
                     unescapable = true;
                     break;
-                default:
+                }
+                default: {
                     if (c == quote) result.push_back(L'\\');
                     result.push_back(c);
                     break;
+                }
             }
         }
 
@@ -815,21 +817,25 @@ static wcstring truncate_string(const wcstring &str) {
 /// For example, if wc is @, then the variable name was $@ and we suggest $argv.
 static const wchar_t *error_format_for_character(wchar_t wc) {
     switch (wc) {
-        case L'?':
+        case L'?': {
             return ERROR_NOT_STATUS;
-        case L'#':
+        }
+        case L'#': {
             return ERROR_NOT_ARGV_COUNT;
-        case L'@':
+        }
+        case L'@': {
             return ERROR_NOT_ARGV_AT;
-        case L'*':
+        }
+        case L'*': {
             return ERROR_NOT_ARGV_STAR;
+        }
         case L'$':
         case VARIABLE_EXPAND:
         case VARIABLE_EXPAND_SINGLE:
-        case VARIABLE_EXPAND_EMPTY:
+        case VARIABLE_EXPAND_EMPTY: {
             return ERROR_NOT_PID;
-        default:
-            return ERROR_BAD_VAR_CHAR1;
+        }
+        default: { return ERROR_BAD_VAR_CHAR1; }
     }
 }
 
@@ -1156,7 +1162,6 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                                                           BACKGROUND_IN_CONDITIONAL_ERROR_MSG);
                             break;
                         }
-
                         case symbol_job_list: {
                             // This isn't very complete, e.g. we don't catch 'foo & ; not and bar'.
                             assert(node_tree.get_child(*job_parent, 0) == &node);
@@ -1195,9 +1200,7 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                             }
                             break;
                         }
-
-                        default:
-                            break;
+                        default: { break; }
                     }
                 }
             } else if (node.type == symbol_plain_statement) {
@@ -1268,23 +1271,24 @@ parser_test_error_bits_t parse_util_detect_errors(const wcstring &buff_src,
                             if (loop_or_function_header != NULL) {
                                 switch (loop_or_function_header->type) {
                                     case symbol_while_header:
-                                    case symbol_for_header:
+                                    case symbol_for_header: {
                                         // This is a loop header, so we can break or continue.
                                         found_loop = true;
                                         end_search = true;
                                         break;
-
-                                    case symbol_function_header:
+                                    }
+                                    case symbol_function_header: {
                                         // This is a function header, so we cannot break or
                                         // continue. We stop our search here.
                                         found_loop = false;
                                         end_search = true;
                                         break;
-
-                                    default:
+                                    }
+                                    default: {
                                         // Most likely begin / end style block, which makes no
                                         // difference.
                                         break;
+                                    }
                                 }
                             }
                             ancestor = node_tree.get_parent(*ancestor);

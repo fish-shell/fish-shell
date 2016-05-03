@@ -256,10 +256,10 @@ void input_set_bind_mode(const wcstring &bm) {
 int input_function_arity(int function) {
     switch (function) {
         case R_FORWARD_JUMP:
-        case R_BACKWARD_JUMP:
+        case R_BACKWARD_JUMP: {
             return 1;
-        default:
-            return 0;
+        }
+        default: { return 0; }
     }
 }
 

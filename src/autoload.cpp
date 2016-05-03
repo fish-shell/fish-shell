@@ -1,18 +1,18 @@
 // The classes responsible for autoloading functions and completions.
 #include <assert.h>
 #include <errno.h>
+#include <pthread.h>
+#include <stdbool.h>
+#include <stddef.h>
 #include <sys/stat.h>
+#include <time.h>
 #include <unistd.h>
 #include <wchar.h>
 #include <algorithm>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
-#include <pthread.h>
-#include <stddef.h>
-#include <set>
-#include <time.h>
-#include <stdbool.h>
 
 #include "autoload.h"
 #include "common.h"

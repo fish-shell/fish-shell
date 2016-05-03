@@ -94,7 +94,7 @@ static enum fuzzy_match_type_t wildcard_match_internal(const wchar_t *str, const
                                                        bool leading_dots_fail_to_match,
                                                        bool is_first) {
     if (*str == 0 && *wc == 0) {
-        return fuzzy_match_exact; // we're done
+        return fuzzy_match_exact;  // we're done
     }
 
     // Hackish fix for issue #270. Prevent wildcards from matching . or .., but we must still allow
@@ -261,7 +261,6 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
                 }
                 break;
             }
-
             case ANY_STRING: {
                 // Hackish. If this is the last character of the wildcard, then just complete with
                 // the empty string. This fixes cases like "f*<tab>" -> "f*o".
@@ -289,14 +288,14 @@ static bool wildcard_complete_internal(const wchar_t *str, const wchar_t *wc,
                 }
                 return has_match;
             }
-
-            case ANY_STRING_RECURSIVE:
+            case ANY_STRING_RECURSIVE: {
                 // We don't even try with this one.
                 return false;
-
-            default:
+            }
+            default: {
                 assert(0 && "Unreachable code reached");
                 return false;
+            }
         }
     }
     assert(0 && "Unreachable code reached");
@@ -535,9 +534,9 @@ class wildcard_expander_t {
             wcstring child_entry;
             while (wreaddir_resolving(dir, abs_unique_hierarchy, child_entry, &child_is_dir)) {
                 if (child_entry.empty() || child_entry.at(0) == L'.') {
-                    continue; // either hidden, or . and .. entries -- skip them
+                    continue;  // either hidden, or . and .. entries -- skip them
                 } else if (child_is_dir && unique_entry.empty()) {
-                    unique_entry = child_entry; // first candidate
+                    unique_entry = child_entry;  // first candidate
                 } else {
                     // We either have two or more candidates, or the child is not a directory. We're
                     // done.

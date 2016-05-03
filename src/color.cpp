@@ -311,20 +311,26 @@ rgb_color_t::rgb_color_t(const std::string &str) : type(), flags() {
 
 wcstring rgb_color_t::description() const {
     switch (type) {
-        case type_none:
+        case type_none: {
             return L"none";
-        case type_named:
+        }
+        case type_named: {
             return format_string(L"named(%d: %ls)", (int)data.name_idx,
                                  name_for_color_idx(data.name_idx));
-        case type_rgb:
+        }
+        case type_rgb: {
             return format_string(L"rgb(0x%02x%02x%02x)", data.color.rgb[0], data.color.rgb[1],
                                  data.color.rgb[2]);
-        case type_reset:
+        }
+        case type_reset: {
             return L"reset";
-        case type_normal:
+        }
+        case type_normal: {
             return L"normal";
-        default:
+        }
+        default: {
             abort();
             return L"";
+        }
     }
 }

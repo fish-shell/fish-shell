@@ -1,4 +1,3 @@
-//
 // Functions for executing builtin functions.
 //
 // How to add a new builtin function:
@@ -1895,17 +1894,18 @@ static int builtin_read(parser_t &parser, io_streams_t &streams, wchar_t **argv)
                 nchars = fish_wcstoi(w.woptarg, &end, 10);
                 if (errno || *end != 0) {
                     switch (errno) {
-                        case ERANGE:
+                        case ERANGE: {
                             streams.err.append_format(_(L"%ls: Argument '%ls' is out of range\n"),
                                                       argv[0], w.woptarg);
                             builtin_print_help(parser, streams, argv[0], streams.err);
                             return STATUS_BUILTIN_ERROR;
-
-                        default:
+                        }
+                        default: {
                             streams.err.append_format(
                                 _(L"%ls: Argument '%ls' must be an integer\n"), argv[0], w.woptarg);
                             builtin_print_help(parser, streams, argv[0], streams.err);
                             return STATUS_BUILTIN_ERROR;
+                        }
                     }
                 }
                 break;

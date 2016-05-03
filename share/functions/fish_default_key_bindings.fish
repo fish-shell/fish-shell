@@ -133,7 +133,7 @@ function fish_default_key_bindings -d "Default (Emacs-like) key bindings for fis
 	bind $argv \ep '__fish_paginate'
 	
 	# shift-tab does a tab complete followed by a search
-	bind --key btab complete-and-search
+	bind $argv --key btab complete-and-search
 
 	# escape cancels stuff	
 	bind \e cancel

@@ -1,5 +1,7 @@
 // Various bug and feature tests. Compiled and run by make test.
+
 // IWYU pragma: no_include <cstring>
+// IWYU pragma: no_include <cstddef>
 #include <assert.h>
 #include <libgen.h>
 #include <limits.h>

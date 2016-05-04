@@ -270,4 +270,12 @@ long sysconf(int name);
 double nan(char *tagp);
 #endif
 
+#ifndef HAVE_BACKTRACE
+int backtrace(void **buffer, int size);
+#endif
+
+#ifndef HAVE_BACKTRACE_SYMBOLS_FD
+char **backtrace_symbols_fd(void *const *buffer, int size, int fd);
+#endif
+
 #endif

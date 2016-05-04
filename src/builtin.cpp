@@ -163,7 +163,7 @@ wcstring builtin_help_get(parser_t &parser, io_streams_t &streams, const wchar_t
 /// to an interactive screen, it may be shortened to fit the screen.
 void builtin_print_help(parser_t &parser, io_streams_t &streams, const wchar_t *cmd,
                         output_stream_t &b) {
-    bool is_stderr = (&b == &streams.err);
+    bool is_stderr = &b == &streams.err;
     if (is_stderr) {
         b.append(parser.current_line());
     }

@@ -595,7 +595,7 @@ static void compute_indents_recursive(const parse_node_tree_t &tree, node_offset
     const bool is_root_job_list = node_type != parent_type && (node_type == symbol_job_list ||
                                                                node_type == symbol_andor_job_list);
     const bool is_root_case_item_list =
-        (node_type == symbol_case_item_list && parent_type != symbol_case_item_list);
+        node_type == symbol_case_item_list && parent_type != symbol_case_item_list;
     if (is_root_job_list || is_root_case_item_list) {
         node_indent += 1;
     }
@@ -845,7 +845,7 @@ void parse_util_expand_variable_error(const wcstring &token, size_t global_token
     // dollar sign.
     assert(errors != NULL);
     assert(dollar_pos < token.size());
-    const bool double_quotes = (token.at(dollar_pos) == VARIABLE_EXPAND_SINGLE);
+    const bool double_quotes = token.at(dollar_pos) == VARIABLE_EXPAND_SINGLE;
     const size_t start_error_count = errors->size();
     const size_t global_dollar_pos = global_token_pos + dollar_pos;
     const size_t global_after_dollar_pos = global_dollar_pos + 1;
@@ -1043,7 +1043,7 @@ parser_test_error_bits_t parse_util_detect_errors_in_argument(const parse_node_t
             switch (unesc.at(idx)) {
                 case VARIABLE_EXPAND:
                 case VARIABLE_EXPAND_SINGLE: {
-                    wchar_t next_char = (idx + 1 < unesc_size ? unesc.at(idx + 1) : L'\0');
+                    wchar_t next_char = idx + 1 < unesc_size ? unesc.at(idx + 1) : L'\0';
 
                     if (next_char != VARIABLE_EXPAND && next_char != VARIABLE_EXPAND_SINGLE &&
                         !wcsvarchr(next_char)) {

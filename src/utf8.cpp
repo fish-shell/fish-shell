@@ -127,9 +127,8 @@ static int __utf8_forbitten(unsigned char octet);
 
 static int __wchar_forbitten(utf8_wchar_t sym) {
     // Surrogate pairs.
-    if (sym >= 0xd800 && sym <= 0xdfff) return (-1);
-
-    return (0);
+    if (sym >= 0xd800 && sym <= 0xdfff) return -1;
+    return 0;
 }
 
 static int __utf8_forbitten(unsigned char octet) {
@@ -138,11 +137,11 @@ static int __utf8_forbitten(unsigned char octet) {
         case 0xc1:
         case 0xf5:
         case 0xff: {
-            return (-1);
+            return -1;
         }
     }
 
-    return (0);
+    return 0;
 }
 
 /// This function translates UTF-8 string into UCS-2 or UCS-4 string (all symbols will be in local
@@ -170,7 +169,7 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring
     utf8_wchar_t high;
     size_t n, total, i, n_bits;
 
-    if (in == NULL || insize == 0) return (0);
+    if (in == NULL || insize == 0) return 0;
 
     if (out_string != NULL) out_string->clear();
 
@@ -179,7 +178,7 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring
     lim = p + insize;
 
     for (; p < lim; p += n) {
-        if (__utf8_forbitten(*p) != 0 && (flags & UTF8_IGNORE_ERROR) == 0) return (0);
+        if (__utf8_forbitten(*p) != 0 && (flags & UTF8_IGNORE_ERROR) == 0) return 0;
 
         // Get number of bytes for one wide character.
         n = 1;  // default: 1 byte. Used when skipping bytes
@@ -201,13 +200,13 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring
             n = 6;
             high = (utf8_wchar_t)(*p & 0x01);
         } else {
-            if ((flags & UTF8_IGNORE_ERROR) == 0) return (0);
+            if ((flags & UTF8_IGNORE_ERROR) == 0) return 0;
             continue;
         }
 
         // Does the sequence header tell us truth about length?
         if (lim - p <= n - 1) {
-            if ((flags & UTF8_IGNORE_ERROR) == 0) return (0);
+            if ((flags & UTF8_IGNORE_ERROR) == 0) return 0;
             n = 1;
             continue;  // skip
         }
@@ -218,7 +217,7 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring
                 if ((p[i] & 0xc0) != _NXT) break;
             }
             if (i != n) {
-                if ((flags & UTF8_IGNORE_ERROR) == 0) return (0);
+                if ((flags & UTF8_IGNORE_ERROR) == 0) return 0;
                 n = 1;
                 continue;  // skip
             }
@@ -256,7 +255,7 @@ static size_t utf8_to_wchar_internal(const char *in, size_t insize, utf8_wstring
         }
     }
 
-    return (total);
+    return total;
 }
 
 /// This function translates UCS-2/4 symbols (given in local machine byte order) into UTF-8 string.
@@ -278,7 +277,7 @@ static size_t wchar_to_utf8_internal(const utf8_wchar_t *in, size_t insize, char
     unsigned char *p, *lim;
     size_t total, n;
 
-    if (in == NULL || insize == 0 || (outsize == 0 && out != NULL)) return (0);
+    if (in == NULL || insize == 0 || (outsize == 0 && out != NULL)) return 0;
 
     w = in;
     wlim = w + insize;
@@ -288,7 +287,7 @@ static size_t wchar_to_utf8_internal(const utf8_wchar_t *in, size_t insize, char
     for (; w < wlim; w++) {
         if (__wchar_forbitten(*w) != 0) {
             if ((flags & UTF8_IGNORE_ERROR) == 0)
-                return (0);
+                return 0;
             else
                 continue;
         }
@@ -297,7 +296,7 @@ static size_t wchar_to_utf8_internal(const utf8_wchar_t *in, size_t insize, char
 
         const int32_t w_wide = *w;
         if (w_wide < 0) {
-            if ((flags & UTF8_IGNORE_ERROR) == 0) return (0);
+            if ((flags & UTF8_IGNORE_ERROR) == 0) return 0;
             continue;
         } else if (w_wide <= 0x0000007f)
             n = 1;
@@ -316,7 +315,7 @@ static size_t wchar_to_utf8_internal(const utf8_wchar_t *in, size_t insize, char
 
         if (out == NULL) continue;
 
-        if (lim - p <= n - 1) return (0); /* no space left */
+        if (lim - p <= n - 1) return 0;  // no space left
 
         // Extract the wchar_t as big-endian. If wchar_t is UCS-16, the first two bytes will be 0.
         unsigned char oc[4];
@@ -376,5 +375,5 @@ static size_t wchar_to_utf8_internal(const utf8_wchar_t *in, size_t insize, char
         p += n;
     }
 
-    return (total);
+    return total;
 }

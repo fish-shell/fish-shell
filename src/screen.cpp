@@ -89,7 +89,7 @@ static size_t try_sequence(const char *seq, const wchar_t *str) {
 /// Returns the number of columns left until the next tab stop, given the current cursor postion.
 static size_t next_tab_stop(size_t in) {
     // Assume tab stops every 8 characters if undefined.
-    size_t tab_width = (init_tabs > 0 ? (size_t)init_tabs : 8);
+    size_t tab_width = init_tabs > 0 ? (size_t)init_tabs : 8;
     return ((in / tab_width) + 1) * tab_width;
 }
 
@@ -496,8 +496,8 @@ static void s_move(screen_t *s, data_buffer_t *b, int new_x, int new_y) {
 
     // Use the bulk ('multi') output for cursor movement if it is supported and it would be shorter
     // Note that this is required to avoid some visual glitches in iTerm (issue #1448).
-    bool use_multi = (multi_str != NULL && multi_str[0] != '\0' &&
-                      abs(x_steps) * strlen(str) > strlen(multi_str));
+    bool use_multi = multi_str != NULL && multi_str[0] != '\0' &&
+        abs(x_steps) * strlen(str) > strlen(multi_str);
     if (use_multi) {
         char *multi_param = tparm(multi_str, abs(x_steps));
         writembs(multi_param);
@@ -699,12 +699,12 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
     for (size_t i = 0; i < scr->desired.line_count(); i++) {
         const line_t &o_line = scr->desired.line(i);
         line_t &s_line = scr->actual.create_line(i);
-        size_t start_pos = (i == 0 ? left_prompt_width : 0);
+        size_t start_pos = i == 0 ? left_prompt_width : 0;
         int current_width = 0;
 
         // If this is the last line, maybe we should clear the screen.
         const bool should_clear_screen_this_line =
-            (need_clear_screen && i + 1 == scr->desired.line_count() && clr_eos != NULL);
+            need_clear_screen && i + 1 == scr->desired.line_count() && clr_eos != NULL;
 
         // Note that skip_remaining is a width, not a character count.
         size_t skip_remaining = start_pos;
@@ -788,7 +788,7 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
             clear_remainder = true;
         } else {
             int prev_width =
-                (s_line.text.empty() ? 0 : fish_wcswidth(&s_line.text.at(0), s_line.text.size()));
+                s_line.text.empty() ? 0 : fish_wcswidth(&s_line.text.at(0), s_line.text.size());
             clear_remainder = prev_width > current_width;
         }
         if (clear_remainder) {
@@ -842,7 +842,7 @@ static void s_update(screen_t *scr, const wchar_t *left_prompt, const wchar_t *r
 }
 
 /// Returns true if we are using a dumb terminal.
-static bool is_dumb(void) { return (!cursor_up || !cursor_down || !cursor_left || !cursor_right); }
+static bool is_dumb(void) { return !cursor_up || !cursor_down || !cursor_left || !cursor_right; }
 
 struct screen_layout_t {
     // The left prompt that we're going to use.

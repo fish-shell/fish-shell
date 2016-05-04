@@ -89,8 +89,8 @@ static unsigned long squared_difference(long p1, long p2) {
 static unsigned char convert_color(const unsigned char rgb[3], const uint32_t *colors,
                                    size_t color_count) {
     long r = rgb[0], g = rgb[1], b = rgb[2];
-    unsigned long best_distance = (unsigned long)(-1);
-    unsigned char best_index = (unsigned char)(-1);
+    unsigned long best_distance = (unsigned long)-1;
+    unsigned char best_index = (unsigned char)-1;
     for (unsigned char idx = 0; idx < color_count; idx++) {
         uint32_t color = colors[idx];
         long test_r = (color >> 16) & 0xFF, test_g = (color >> 8) & 0xFF,
@@ -288,7 +288,7 @@ unsigned char rgb_color_t::to_name_index() const {
     } else if (type == type_rgb) {
         return term8_color_for_rgb(data.color.rgb);
     } else {
-        return (unsigned char)(-1);  // this is an error
+        return (unsigned char)-1;  // this is an error
     }
 }
 

@@ -1,3 +1,17 @@
+# fish 2.3b2 (released May 5, 2016)
+
+## Significant changes
+
+- A new `fish_realpath` builtin and associated function to allow the use of `realpath` even on those platforms that don't ship an appropriate command (#2932).
+- Alt-# toggles the current command line between commented and uncommented states, making it easy to save a command in history without executing it.
+- The `fish_vi_mode` function is now deprecated in favour of `fish_vi_key_bindings`.
+
+## Other notable fixes and improvements
+
+- Fix the build on Cygwin (#2952) and RedHat Enterprise Linux/CentOS 5 (#2955).
+- Avoid confusing the terminal line driver with non-printing characters in `fish_title` (#2453).
+- Improved completions for busctl, git (#2585, #2879, #2984), and netctl.
+
 # fish 2.3b1 (released April 19, 2016)
 
 ## Significant Changes
@@ -7,7 +21,7 @@
 - Add new directories for vendor functions and configuration snippets (#2500)
 - A new `fish_realpath` builtin and associated `realpath` function should allow scripts to resolve path names via `realpath` regardless of whether there is an external command of that name; albeit with some limitations. See the associated documentation.
 
-# Backward-incompatible changes
+## Backward-incompatible changes
 
 - Unmatched globs will now cause an error, except when used with `for`, `set` or `count` (#2719)
 - `and` and `or` will now bind to the closest `if` or `while`, allowing compound conditions without `begin` and `end` (#1428)
@@ -16,7 +30,7 @@
 - `source` no longer puts the file name in `$argv` if no arguments are given (#139)
 - History files are stored under the `XDG_DATA_HOME` hierarchy (by default, in `~/.local/share`), and existing history will be moved on first use (#744)
 
-# Other notable fixes and improvements
+## Other notable fixes and improvements
 
 - Fish no longer silences errors in config.fish (#2702)
 - Directory autosuggestions will now descend as far as possible if there is only one child directory (#2531)

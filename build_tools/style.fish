@@ -30,7 +30,7 @@ if test $all = yes
         exit 1
     end
     set c_files src/*.h src/*.cpp
-    set f_files ***.fish
+    set f_files share/***.fish
 else
     # We haven't been asked to reformat all the source. If there are uncommitted changes reformat
     # those using `git clang-format`. Else reformat the files in the most recent commit.

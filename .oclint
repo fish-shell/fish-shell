@@ -1,11 +1,20 @@
 rules:
 rule-configurations:
+    #
     # This is the default value (as of the time I wrote this) but I'm making
     # it explicit since it needs to agree with the value used by clang-format.
     # Thus, if we ever change the fish style to allow longer or shorter lines
     # this should be changed (as well as the corresponding .clang-format file).
+    #
     - key: LONG_LINE
       value: 100
+    #
+    # The default limit for the length of variable names is 20. Long names are
+    # problematic but twenty chars results in way too many errors. So increase
+    # the limit to something more reasonable.
+    #
+    - key: LONG_VARIABLE_NAME
+      value: 30
 
 disable-rules:
     #

@@ -1,0 +1,9 @@
+math 3 / 2
+math 10/6
+math -s0 10 / 6
+math -s3 10/6
+math '10 % 6'
+math -s0 '10 % 6'
+math '23 % 7'
+math -s6 '5 / 3 * 0.3'
+true
